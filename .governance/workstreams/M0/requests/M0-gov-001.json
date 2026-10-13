@@ -15,7 +15,10 @@
   "dispatch_ref": "qualification/M0-gov-001",
   "measurement_jobs": 1,
   "samples": 1,
-  "status": "PLANNED",
+  "status": "RECORDED",
+  "run_id": 38431615407,
+  "run_attempt": 1,
+  "evidence_ref": "docs/evidence/M0/GOV-001-manual.json",
   "supersedes_request": null,
   "purpose": "Exercise real intent/checkout/receipt handoff, not another product performance sample."
 }

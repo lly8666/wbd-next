@@ -2,13 +2,14 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "GOVERNANCE_BOOTSTRAP",
+  "phase": "GOVERNANCE_READY",
+  "governance_evidence": "docs/evidence/M0/GOV-001-manual.json",
   "product_design": "PENDING_DISCUSSION",
   "product_qualification": "NOT_RUN",
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "治理验收后讨论 Rust 重构与具体模块方案；现在不启动产品实现。",
+  "next_decision": "治理已验收；下一步与用户讨论 Rust 重构与具体模块方案，现在不启动产品实现。",
   "hot_read_set": ["AGENTS.md", "PROJECT_CHARTER.md", ".governance/project.json", ".governance/registry.json", "START_HERE.md"],
   "history_index": "docs/history/INDEX.md"
 }

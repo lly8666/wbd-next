@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "governance",
+  "kind": "governance",
+  "role_id": "M0",
+  "request_id": "M0-gov-001",
+  "request_ref": "a8ab8c76ab056b21fa9391a4e577ec8d8bfb009e",
+  "source_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "harness_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "config_sha256": "f7fd993240859ae217738ca7505675157c76e5b95eca9713a08e90d1ecbdcb8a",
+  "scenario": "governance-selftest",
+  "seed": 0,
+  "run_id": 38431615407,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38431615407",
+  "workflow": ".github/workflows/governance.yml",
+  "dispatch_ref": "qualification/M0-gov-001",
+  "github_conclusion": "success",
+  "result": "PASS",
+  "tests_passed": 34,
+  "artifact_verified": true,
+  "artifact": {
+    "id": 11831291272,
+    "name": "governance-38431615407-1",
+    "size_bytes": 2895,
+    "sha256": "98ccfbe9844f7b80915c3cbba3b9f04266f24e81a14839d4f0463db1d668de3d",
+    "expires_at": "2026-11-12T16:34:38Z",
+    "availability_at_review": "AVAILABLE",
+    "manifest_files_verified": 5,
+    "mismatches": 0
+  },
+  "live_recovery_observation": {
+    "state": "RECOVERY_REQUIRED",
+    "reason": "Pending intent found the exact existing run instead of suggesting another dispatch.",
+    "found_run_id": 38431615407,
+    "action": "READ_EXISTING_RUN"
+  },
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "fresh_chat_drill": "NOT_RUN"
+}
