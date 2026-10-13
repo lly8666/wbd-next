@@ -152,13 +152,30 @@ def validate_request(request):
          "invalid workflow")
     need(integer(request.get("samples"), 1) and integer(request.get("measurement_jobs"), 1), "invalid samples/jobs")
     if request["kind"] == "performance":
-        need(request["samples"] == request["measurement_jobs"] == 1, "one performance sample/job per Action")
+        mode = request.get("mode", "single")
+        need(mode in {"single", "paired_ab"}, "unknown performance mode")
+        need(request["measurement_jobs"] == 1, "one measurement job/VM per Action")
+        if mode == "single":
+            need(request["samples"] == 1 and not request.get("legs"), "single mode needs one sample")
+        else:
+            legs = request.get("legs")
+            need(request["samples"] == 2 and isinstance(legs, list) and len(legs) == 2,
+                 "paired_ab needs exactly two sequential legs")
+            need(all(isinstance(leg, dict) for leg in legs), "invalid paired legs")
+            need([leg.get("label") for leg in legs] in (["A", "B"], ["B", "A"]), "order must be AB or BA")
+            for leg in legs:
+                need(isinstance(leg.get("source_sha"), str) and SHA.fullmatch(leg["source_sha"]), "invalid leg SOURCE")
+                need(isinstance(leg.get("build_manifest_sha256"), str)
+                     and DIGEST.fullmatch(leg["build_manifest_sha256"]), "missing pinned leg build")
+            need(legs[0]["source_sha"] != legs[1]["source_sha"], "comparison needs distinct sources")
+            need(next(leg for leg in legs if leg["label"] == "B")["source_sha"] == request["source_sha"],
+                 "request SOURCE must identify candidate B")
     previous = request.get("supersedes_request")
     need(previous is None or (isinstance(previous, str) and IDENT.fullmatch(previous)
                              and previous != request["request_id"]), "invalid supersession")
 
 
-def verify_receipt(request, receipt, run):
+def verify_receipt(request, receipt, run, jobs=None):
     """Match exact provenance; a self-authored JSON PASS alone is never sufficient."""
     validate_request(request)
     for key in ("request_id", "role_id", "kind", "source_sha", "harness_sha", "config_sha256", "scenario", "seed"):
@@ -171,6 +188,33 @@ def verify_receipt(request, receipt, run):
     if receipt["result"] == "PASS":
         need(run.get("status") == "completed" and run.get("conclusion") == "success", "unfinished/failed run is not PASS")
         need(receipt.get("artifact_verified") is True, "PASS requires artifact verification")
+    if request["kind"] == "performance" and request.get("mode") == "paired_ab":
+        need(receipt.get("mode") == "paired_ab", "receipt lost paired identity")
+        legs = receipt.get("legs")
+        need(isinstance(legs, list) and len(legs) == 2 and all(isinstance(leg, dict) for leg in legs),
+             "missing observed paired legs")
+        need(isinstance(jobs, list), "paired receipt requires independently fetched GitHub jobs")
+        need(integer(legs[0].get("job_id"), 1) and legs[0].get("job_id") == legs[1].get("job_id"),
+             "comparison must run on one GitHub job")
+        matched = [job for job in jobs if job.get("id") == legs[0]["job_id"]]
+        need(len(matched) == 1 and matched[0].get("run_id") == run["id"]
+             and matched[0].get("run_attempt") == run["run_attempt"], "job does not belong to this run/attempt")
+        previous_end = None
+        for expected, actual in zip(request["legs"], legs):
+            for key in ("label", "source_sha", "build_manifest_sha256"):
+                need(actual.get(key) == expected[key], f"paired leg mismatch: {key}")
+            for key in ("config_sha256", "scenario", "seed", "harness_sha"):
+                need(actual.get(key) == request[key], f"paired leg changed common {key}")
+            start, end = actual.get("start_monotonic_ns"), actual.get("end_monotonic_ns")
+            need(integer(start) and integer(end) and start < end, "invalid leg interval")
+            need(previous_end is None or previous_end <= start, "paired legs overlap or reverse time")
+            previous_end = end
+            need(actual.get("result") in RESULTS, "unknown leg result")
+            if receipt["result"] == "PASS":
+                need(actual["result"] == "PASS", "failed/unrun leg cannot become paired PASS")
+        if receipt["result"] == "PASS":
+            need(matched[0].get("status") == "completed" and matched[0].get("conclusion") == "success",
+                 "paired measurement job is not successful")
     return True
 
 
@@ -256,7 +300,7 @@ def validate_repo(root):
             need(request["role_id"] == role["id"], "request wrong owner")
             need(request["request_id"] not in all_ids, "duplicate request ID")
             all_ids.add(request["request_id"])
-    if project["product_design"] == "PENDING_DISCUSSION":
+    if project["product_design"] == "PENDING_DISCUSSION" or project.get("product_implementation") == "NOT_STARTED":
         for prefix in policy["product_paths_pending_design"]:
             need(not (root / prefix).exists(), f"product development not assigned: {prefix}")
     return {"result": "PASS", "scope": "governance_structure_only", "roles": len(roles),

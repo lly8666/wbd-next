@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "scope": "THEORY_ONLY_NOT_PRODUCT_QUALIFICATION",
+  "inner_ip_mbps_per_direction": 500,
+  "packet_bytes": [1200, 512, 128],
+  "rtt_ms": [150, 300],
+  "rttvar_ms": 5,
+  "feedback_ms": 2,
+  "headroom_factor": 1.25,
+  "descriptor_bytes": 64,
+  "slab_bytes": [1536, 768, 256],
+  "fec_k": 20,
+  "fec_parity": [4, 8, 10, 12, 16, 20],
+  "loss_probabilities": [0.01, 0.03, 0.05, 0.08, 0.1, 0.2, 0.3],
+  "record_overhead": 31,
+  "ip_tcp_overhead": 40,
+  "fec_header": 56
+}

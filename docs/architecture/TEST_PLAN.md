@@ -1,0 +1,66 @@
+# Actions：先编译、复用产物、广覆盖而不穷举
+
+本文件是待实现的产品夹具契约。当前实际 workflow 只有治理/模型验证，不能把本文列出的测试写成已经完成。
+
+## 1. 一次构建，多次验证
+
+构建 job 固定 product SOURCE、legacy SOURCE、Cargo.lock、Rust toolchain、Go toolchain、C/汇编编译器、target/features/profile。产物含库/控制程序/预编译test二进制、manifest、SOURCE、文件size/hash、工具链和ISA能力说明。Linux x64、Linux ARM64、Windows x64 各自构建；cross-build成功不等于native性能通过。
+
+Rust使用固定release配置（初始opt-level3、thin LTO、保留line tables用于profile；以构建耗时/运行证据再调），旧新对比不能偷偷使用不同性能flags。portable 不用 `target-cpu=native` 编译给别的VM，SIMD走runtime dispatch。依赖/编译缓存只加速构建，不能代替来源验证。AWS-LC/ISA-L native对象按目标固定，避免“Rust源码相同、Cflags不同”被忽略。
+
+消费测试run按 build run/attempt/artifact ID 下载，逐文件验hash、目标和来源，再执行已有二进制；测试 job 不现场重编译、不下载浮动依赖。相同SOURCE可复用几十个功能run，不能把过期artifact只剩hash称可重现。编译器sanitizer版本单独build id，不参与正常CPU比较。R0先实现最小单目标闭环，再扩三目标，不先造远程编译平台。
+
+## 2. 同一 Action 内顺序 A/B（2026-10-14 覆盖旧约定）
+
+性能隔离单位是 **一个场景/配置/seed的实验**。独立资格仍一 run 一个测量 job；新旧比较允许该 job **连续两条测量 leg**，A/B或B/A。两个jobs即使同workflow也不是同VM，不合格；同时跑两程序争用也不合格。
+
+request声明 `mode=paired_ab`、共同scenario/seed/effective config、两个完整SOURCE、两个build manifest hash、预定order。receipt每leg记录相同job ID、实际runner identity、起止单调时间、实际source/config与结果。verifier拒绝跨job、时间重叠、错误source/config、缺leg。A/B差异只有被测产品；一方不支持的行为单独说明，不能让新版本off对旧版本on。
+
+每leg之前：停止上条程序→确认owned namespace/进程/队列清理→相同拓扑重建→同样热身。默认热身10s、测量60s，弱网三阶段/恢复用120s，生命周期/长测按实际周期最少时长。编译/下载/压缩不在计时段。顺序在request前确定，不按看到的结果换顺序。关键结论需要时另一个run做反向BA，保留全部结果。
+
+同VM只消除了硬件型号差异，不能消除宿主争用随时间改变。每leg记录 CPU型号/flags、逻辑核/实际cgroup quota、频率可观测值、内存、内核、虚拟化、PSI/steal、后台负载、NIC有效buffer、各进程CPU-s、进程/内核drops和queue age。做轻量同源RTT/注入器校准，出现背景变化给INCONCLUSIVE，不按两个不同型号CPU的“百分比”作优劣结论。
+
+功能测试可一个job顺序运行多个便宜断言；不要把所有功能也限制成独立120s run。模块各自request命名，Actions并行运行在各自VM即可，禁止多性能实验挤同一VM。
+
+## 3. 容量阶梯与停止
+
+先做注入器/原路径空载基线，再 Normal10Mbps/方向、Game3Mbps/方向（逻辑业务，非每lane各3M）。按10→50→100→200→500Mbps上升，大包/实际混合优先；极小包单列PPS阶梯，不默认500Mbps小包也同价。FEC20:20和Game副本先算所需wire带宽，超过已知链路能力的组合只做模型标记。
+
+满足以下证据组合才判容量：输入实际注入率、CPU/调度压力、收发drops、队列年龄斜率、吞吐随负载饱和；不能看到总CPU80%就称够用，也不能看到一个owner满核就全部甩给host。分类为：
+
+- `HOST_CAPACITY_LIMITED`：宿主/注入器/内核资源已限制，无法公平测更高负载；停止该资源维度更重的点。
+- `DATAPLANE_BOTTLENECK`：背景正常，产品单线程/锁/分配/编码达到上限；保留profile并优化，不用runner标签掩盖。
+- `INVALID_INJECTOR`：负载/损伤/包率没按计划送出，不能评价产品；少量skip按实际偏差容忍，不能一slot就整场作废。
+- `INCONCLUSIVE`：两leg背景差异或样本不足，不能宣布回归/改进。
+
+一旦达到上限，不继续更高带宽/更多lane/更重FEC浪费Actions；继续较低负载的密码、MTU、生命周期等正交功能。用测得每包/每字节成本、实测可共享占比、wire需求给容量区间，至少列输入与误差；超出实际验证区域都标 **PROJECTED_NOT_TESTED**。不能线性外推越过cache/memorybandwidth拐点仍当通过。
+
+## 4. 分层覆盖账本
+
+不用全部笛卡尔积。以下锚点全覆盖，其余用pairwise+实际风险组合；每个配置有“已生效回执+对应test ID”，不能只测解析成功。
+
+| 层 | 工况/断言 |
+|---|---|
+| 纯核心/向量 | GF256旧新/标量/SIMD、k1..20/parity4/8/10/12/16/20、短/不对齐、损坏/重复；3种AEAD/HP/KDF、nonce/seq wrap、bitmappage、budget/timer/freedhandle |
+| 正常首到 | UDP/TCP/混合双向和单向，64/128/256/512/1200/MTU内最大；1包/s稀疏、10ms批突发、持续满速；payload完整和每流首次到达 |
+| 弱网 | RTT10/50/150/300/600ms；off IID0/1/5%，高损10/20/30%预算退化；固定FEC按模型选必要点；数据/反馈非对称损失；乱序/重复 |
+| 突发/相关 | Gilbert-Elliott，预声明seed/状态时间；Game各lane独立与共享黑洞两类；100ms/1s/10s单向黑洞及恢复；80s留R6专项 |
+| FEC档位 | Normal off、固定全部档、auto普通/激进；上/下行不同档、on↔off、旧block drain、sizeclass sparse flush；Game2/4固定档不误启auto |
+| MTU/真实业务 | outer1400/1500、真实TCPoptions/peerMSS、内层budget−1/等于/+1；UDP大报文/多fragment、TCP大write经真实MSS分段；IPv4 DF/非DF、合法ICMP错误；超限拒绝有计数不静默挂死 |
+| 生命周期 | A→A+B→B；新lane失败旧lane继续；idle关闭后首个payload重建；keepalive丢失不冒充无业务；auth/generation/多client隔离；断开/重连/退出清理 |
+| 系统/产品 | DNS1.1.1.1与8.8.8.8互备、LAN直连/其他隧道、可选中国IP分流、IPv6默认拦截空路由；GUI切服/保存/真实生效；Linux服务重启；portable不泄漏文件 |
+
+baseline RTT必须同源码/同job条件校准；包含内核/驱动时间，不能只测函数调用。hosted Windows没有Npcap/权限时，相应项明确UNSUPPORTED；模拟driver可验功能但不能替代真实抓包/吞吐资格。Linux ARM hosted native用于ISA正确性与该host性能，不能冒充用户ARM机器。
+
+旧夹具借鉴入口：原 `docs/REALPATH_TEST_FIXTURE_GUIDE.md`、`scripts/` 和对应workflow；R0按实际参数/产物schema移植最小adapter。不要直接复制整套旧STATUS/历史失败规则。沿用损伤阶段实测校验、10ms业务首到桶、effective config、两端进程/host CPU、socket级drop、包长账本和hash。每个模块识别自己的request与run，不帮别人重复dispatch。
+
+## 5. 分析与判定
+
+- UDP以发送序号和接收首次时间计数；TCP既测持续stream，也测多条独立业务连接的短请求/响应，不只用iperf吞吐。大write不是一个线上TCP超大包，应验实际segmentation/PMTU。
+- 延迟报告 p50/p95/p99/p99.9、超业务deadline数、未到达数、最大连续有offered而无delivery时长；稀疏自然空桶不判HOL。随机业务内容加可验证hash，避免压缩/去重巧合。
+- 用 wire trace的方向/长度/seq/ACK/timestamp摘要检查TCP-like/TLS-like、握手/票据、同密文重传、无IP碎片异常。只保存有界header摘要/必要失败切片，不持久海量业务pcap。
+- 低损off比较 p³ 的适用条件；FEC按实际partial k、repair到达/相关trace oracle验，不拿20:20保证任何loss都零业务损失。判定器的允许带来源写进config/manifest。
+- 统计CPU-s/GiB delivered与CPU-s/Mpacket，RSS/峰值/slab在用/活跃shadow、owner等待/queue age/syscalls/scheduler wakeups；diagnostic mode与普通默认off性能分开。
+- PASS/FAIL、CAPACITY_LIMITED、UNSUPPORTED、NOT_RUN、INCONCLUSIVE分别留痕；程序失败不能让aggregate workflow绿灯变成通过。先看实际业务，再看microbenchmark。
+
+每阶段只保留能解释结论的小摘要、hash和必要失败日志。模型/单测绿灯不能填产品资格。R6完成才进入可交付前状态，物理验收仍另列。

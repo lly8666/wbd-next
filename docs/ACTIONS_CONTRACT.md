@@ -1,6 +1,6 @@
 # Actions 契约
 
-当前唯一可执行流程是 `.github/workflows/governance.yml`，scope 为 `governance`。没有产品构建或性能夹具，任何产品 PASS 都属于错误声明。
+当前唯一可执行流程是 `.github/workflows/governance.yml`，scope 为治理与理论计算检查。没有产品构建或性能夹具，任何产品 PASS 都属于错误声明。产品夹具实施方案见 `architecture/TEST_PLAN.md`。
 
 ## 请求
 
@@ -8,7 +8,9 @@
 
 `schema_version, request_id, role_id, task_id, assignment_epoch, reservation_revision, kind, source_sha, harness_sha, config_sha256, scenario, seed, workflow, dispatch_ref, measurement_jobs, samples, status, supersedes_request`
 
-source/harness 必须完整 40 位 SHA，config 是实际最终生效配置的 SHA-256。performance 的 measurement_jobs 和 samples 均为 1。数组场景与 multi-leg 不允许；一次同配置预声明损伤波形可以。
+source/harness 必须完整40位SHA，config为实际最终生效配置的SHA-256。performance固定一个scenario/seed和一个measurement_job；默认`mode=single,samples=1`。**2026-10-14用户覆盖旧multi-leg禁令：新旧性能比较使用`mode=paired_ab,samples=2`，同一个job/VM顺序AB或BA，不同job不算同机。** 一次同配置预声明损伤波形可以，不允许矩阵装进一个性能实验。
+
+paired请求增加有序`legs`两项，每项`label(A或B),source_sha,build_manifest_sha256`，A为父/旧基线、B为候选；顶层source_sha为B。构建产物提前生成可复用，每leg验证实际hash。共享config/scenario/seed/harness，不能两leg悄悄变工况。receipt逐leg记录上述字段及`job_id,start_monotonic_ns,end_monotonic_ns,result`；核GitHub jobs API实际run/attempt/job，时间不能重叠，失败/未跑不得聚成PASS。缺结果保留原失败且标缺失，不伪造leg。所有构建身份和运行日志仍须人工/夹具交叉核验，JSON一致不是来源证明。
 
 status 为 PLANNED/DISPATCHED/RECORDED；没有读取 manifest 前不可 RECORDED。结果记录到 `docs/evidence/<role>/` 并在 cursor 引用。字段规范由工具校验，不允许使用 latest/HEAD 等浮动字符串替代来源。
 

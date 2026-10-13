@@ -96,10 +96,13 @@ jobs:
       - name: Observe live continuity (separate from test qualification)
         continue-on-error: true
         run: python tools/governance.py audit --role "$WBD_ROLE_ID" > out/continuity.json
+      - name: Reproduce design arithmetic (not product qualification)
+        id: model
+        run: python tools/cost_model.py > out/cost-model.json
       - name: Record observed results and manifest
         if: always()
         env:
-          OBSERVED_RESULT: ${{ steps.identity.outcome == 'success' && steps.structure.outcome == 'success' && steps.drills.outcome == 'success' && 'PASS' || 'FAIL' }}
+          OBSERVED_RESULT: ${{ steps.identity.outcome == 'success' && steps.structure.outcome == 'success' && steps.drills.outcome == 'success' && steps.model.outcome == 'success' && 'PASS' || 'FAIL' }}
         run: python tools/governance.py receipt --result "$OBSERVED_RESULT" --output out
       - name: Preserve small evidence bundle
         if: always()

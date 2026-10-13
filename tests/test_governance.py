@@ -166,12 +166,53 @@ class EvidenceDrills(unittest.TestCase):
             with self.assertRaises(g.ContractError):
                 g.verify_receipt(request(), receipt, run)
 
-    def test_performance_matrix_and_serial_ab_rejected(self):
+    def test_undeclared_multi_sample_and_multi_job_rejected(self):
         for key in ("samples", "measurement_jobs"):
             value = request()
             value[key] = 2
             with self.assertRaises(g.ContractError):
                 g.validate_request(value)
+
+    def paired(self, order="AB"):
+        value = request()
+        source = {"A": B, "B": A}
+        value.update(mode="paired_ab", samples=2, legs=[
+            {"label": label, "source_sha": source[label], "build_manifest_sha256": label.lower()*64}
+            for label in order])
+        receipt, run = receipt_and_run()
+        receipt.update(mode="paired_ab", samples=2, legs=[
+            dict(leg, job_id=321, config_sha256=value["config_sha256"], scenario=value["scenario"],
+                 seed=value["seed"], harness_sha=value["harness_sha"], result="PASS",
+                 start_monotonic_ns=i*200, end_monotonic_ns=i*200+100)
+            for i, leg in enumerate(value["legs"])])
+        jobs = [{"id": 321, "run_id": 123, "run_attempt": 1, "status": "completed", "conclusion": "success"}]
+        return value, receipt, run, jobs
+
+    def test_declared_ab_and_ba_same_job_accepted(self):
+        for order in ("AB", "BA"):
+            self.assertTrue(g.verify_receipt(*self.paired(order)))
+
+    def test_paired_wrong_source_build_config_job_and_overlap_rejected(self):
+        for key, wrong in (("source_sha", "e"*40), ("build_manifest_sha256", "e"*64),
+                           ("config_sha256", "e"*64), ("job_id", 999), ("start_monotonic_ns", 50),
+                           ("result", "NOT_RUN"), ("label", "A")):
+            with self.subTest(key=key):
+                value, receipt, run, jobs = self.paired()
+                receipt["legs"][1][key] = wrong
+                with self.assertRaises(g.ContractError):
+                    g.verify_receipt(value, receipt, run, jobs)
+
+    def test_paired_requires_actual_job_of_same_attempt(self):
+        for jobs in (None, [], [{"id": 321, "run_id": 123, "run_attempt": 2}]):
+            value, receipt, run, _ = self.paired()
+            with self.assertRaises(g.ContractError):
+                g.verify_receipt(value, receipt, run, jobs)
+
+    def test_paired_request_cannot_hide_other_scenarios_or_sources(self):
+        value, _, _, _ = self.paired()
+        for mutation in (dict(samples=3), dict(measurement_jobs=2), dict(source_sha=B), dict(mode="matrix")):
+            with self.assertRaises(g.ContractError):
+                g.validate_request(dict(value, **mutation))
 
     def test_existing_request_found_without_dispatch(self):
         _, run = receipt_and_run()
