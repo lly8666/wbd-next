@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "reservation_revision": 1,
+  "roles": [
+    {"id":"M0","name":"集成与治理","state":"active","branch":"main","assignment_epoch":1,"global_writer":true,"allowed_paths":["*"],"owned_semantics":["governance","integration"],"prompt":"docs/prompts/M0.md","cursor":".governance/workstreams/M0/cursor.json","goal":"交付公开治理骨架并通过 Actions，保留产品规划待讨论","done_when":"治理验证和中断恢复演练通过，固定提示词与远端可接续事实齐全"},
+    {"id":"M1","name":"运行时与内存（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M1.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
+    {"id":"M2","name":"恢复与反馈（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M2.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
+    {"id":"M3","name":"编码与数据保护（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M3.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
+    {"id":"M4","name":"平台与产品接入（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M4.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"}
+  ]
+}

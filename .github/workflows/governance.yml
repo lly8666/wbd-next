@@ -1,0 +1,111 @@
+name: Governance
+run-name: "${{ inputs.role_id || 'M0' }}|${{ inputs.request_id || github.sha }}|governance"
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      role_id:
+        description: Active role owning this request
+        required: true
+        default: M0
+      request_id:
+        description: Unique request ID already recorded on the selected branch
+        required: true
+      declared_source:
+        description: Exact 40-character SHA of frozen selected ref
+        required: true
+      request_ref:
+        description: Separate full commit SHA containing the request receipt
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: governance-${{ github.ref }}-${{ inputs.role_id || 'M0' }}-${{ inputs.request_id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  governance:
+    name: Governance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      WBD_ROLE_ID: ${{ inputs.role_id || 'M0' }}
+      WBD_REQUEST_ID: ${{ inputs.request_id }}
+      WBD_DECLARED_SOURCE: ${{ inputs.declared_source }}
+      WBD_REQUEST_REF: ${{ inputs.request_ref }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify checkout and request identity
+        id: identity
+        shell: bash
+        run: |
+          mkdir -p out
+          python - <<'PY'
+          import json, os, subprocess
+          from tools import governance as g
+          actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          g.need(actual == os.environ['GITHUB_SHA'], 'checkout does not match event SOURCE')
+          expected = os.environ.get('WBD_DECLARED_SOURCE')
+          g.need(not expected or actual == expected, 'declared SOURCE changed before checkout')
+          role = os.environ['WBD_ROLE_ID']
+          registry = json.load(open('.governance/registry.json'))
+          g.need(any(r['id'] == role and r['state'] == 'active' for r in registry['roles']), 'unassigned role')
+          rid = os.environ.get('WBD_REQUEST_ID')
+          g.need(not rid or bool(g.IDENT.fullmatch(rid)), 'invalid request ID')
+          if os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
+              api = g.GitHub(os.environ['GITHUB_REPOSITORY'])
+              control = api.file('.governance/registry.json', api.head('main'))
+              owners = [r for r in g.validate_registry(control) if r['id'] == role and r['state'] == 'active']
+              g.need(len(owners) == 1, 'live assignment is not active')
+              owner = owners[0]
+              request_ref = os.environ['WBD_REQUEST_REF']
+              request = api.file(f'.governance/workstreams/{role}/requests/{rid}.json', request_ref)
+              g.validate_request(request)
+              g.need(request['role_id'] == role and request['request_id'] == rid, 'wrong intent identity')
+              g.need(request['assignment_epoch'] == owner['assignment_epoch'] and request['reservation_revision'] == control['reservation_revision'], 'stale request assignment')
+              comparison = api.get(f"compare/{request_ref}...{api.head(owner['branch'])}?per_page=1")
+              g.need(comparison['status'] in ('ahead', 'identical'), 'intent is not on assigned branch')
+              g.need(request['dispatch_ref'] == os.environ['GITHUB_REF_NAME'], 'wrong dispatch ref')
+              g.need(request['source_sha'] == actual and request['harness_sha'] == actual, 'wrong request SOURCE')
+              config = {'scenario': 'governance-selftest', 'product': False}
+              import hashlib
+              g.need(request['config_sha256'] == hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest(), 'wrong effective configuration')
+              g.need(request['kind'] == 'governance' and request['scenario'] == config['scenario'] and request['seed'] == 0, 'wrong test scope')
+              g.need(request['workflow'] == '.github/workflows/governance.yml', 'wrong workflow')
+              query = api.get('actions/workflows/governance.yml/runs?event=workflow_dispatch&per_page=100')
+              matches = g.discover_request_runs(request, query['workflow_runs'], complete=query['total_count'] <= 100)
+              g.need(len(matches) == 1 and matches[0]['id'] == int(os.environ['GITHUB_RUN_ID']), 'duplicate or unidentified execution')
+          print(json.dumps({'actual_source': actual, 'role': role, 'scope': 'governance'}))
+          PY
+      - name: Validate repository contracts
+        id: structure
+        run: python tools/governance.py validate > out/structure.json
+      - name: Exercise recovery and evidence failures
+        id: drills
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee out/drills.log
+      - name: Observe live continuity (separate from test qualification)
+        continue-on-error: true
+        run: python tools/governance.py audit --role "$WBD_ROLE_ID" > out/continuity.json
+      - name: Record observed results and manifest
+        if: always()
+        env:
+          OBSERVED_RESULT: ${{ steps.identity.outcome == 'success' && steps.structure.outcome == 'success' && steps.drills.outcome == 'success' && 'PASS' || 'FAIL' }}
+        run: python tools/governance.py receipt --result "$OBSERVED_RESULT" --output out
+      - name: Preserve small evidence bundle
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: governance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 30

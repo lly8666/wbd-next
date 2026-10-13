@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+out/
+.env
+.env.*
+!.env.example
+*.pcap
+*.pcapng
+*.key
+*.pfx
+*.p12
+target/

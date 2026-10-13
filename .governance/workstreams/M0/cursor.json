@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "reservation_revision": 1,
+  "assignment_epoch": 1,
+  "sequence": 0,
+  "checkpoint_sha": null,
+  "progress": "in_progress",
+  "task_id": "GOV-001",
+  "current_task": "建立治理骨架与 Actions 演练，不实现产品数据面",
+  "why_now": "让后续可替换聊天与并行模块有可靠远端入口",
+  "done_when": "精确提交的治理检查与恢复演练通过，公开仓库可接续",
+  "next_action": "完成初始提交并推送，运行治理 Actions，核验后补 cursor-only H",
+  "unverified": true,
+  "last_tested_source": null,
+  "evidence_refs": [],
+  "open_requests": [],
+  "context_refs": ["docs/devlog/M0/GOV-001-bootstrap.md"],
+  "partial_summary": "首次治理提交，尚未运行 Actions；产品设计待讨论。"
+}

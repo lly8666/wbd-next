@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "max_hot_bytes": 32768,
+  "max_hot_files": 8,
+  "max_cursor_bytes": 8192,
+  "max_cursor_refs": 8,
+  "max_delta_commits": 64,
+  "max_paths_per_commit": 256,
+  "max_total_delta_paths": 1024,
+  "max_live_requests_per_role": 12,
+  "performance_samples_per_run": 1,
+  "tests_environment": "GITHUB_ACTIONS_ONLY",
+  "source_sha_format": "FULL_40_HEX",
+  "history_policy": "APPEND_ONLY_OR_EXPLICIT_SUPERSESSION",
+  "product_paths_pending_design": ["src/", "crates/", "Cargo.toml", "Cargo.lock"]
+}
