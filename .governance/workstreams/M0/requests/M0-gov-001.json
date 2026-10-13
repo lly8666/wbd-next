@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "request_id": "M0-gov-001",
+  "role_id": "M0",
+  "task_id": "GOV-001",
+  "assignment_epoch": 1,
+  "reservation_revision": 1,
+  "kind": "governance",
+  "source_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "harness_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "config_sha256": "f7fd993240859ae217738ca7505675157c76e5b95eca9713a08e90d1ecbdcb8a",
+  "scenario": "governance-selftest",
+  "seed": 0,
+  "workflow": ".github/workflows/governance.yml",
+  "dispatch_ref": "qualification/M0-gov-001",
+  "measurement_jobs": 1,
+  "samples": 1,
+  "status": "PLANNED",
+  "supersedes_request": null,
+  "purpose": "Exercise real intent/checkout/receipt handoff, not another product performance sample."
+}

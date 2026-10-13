@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "scope": "governance",
+  "kind": "governance",
+  "role_id": "M0",
+  "request_id": "event-38431203189",
+  "source_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "harness_sha": "b8effd936d386fa90b189e773e24d77616b94363",
+  "config_sha256": "f7fd993240859ae217738ca7505675157c76e5b95eca9713a08e90d1ecbdcb8a",
+  "run_id": 38431203189,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38431203189",
+  "workflow": ".github/workflows/governance.yml",
+  "github_conclusion": "success",
+  "result": "PASS",
+  "tests_passed": 34,
+  "artifact_verified": true,
+  "artifact": {
+    "id": 11830409659,
+    "name": "governance-38431203189-1",
+    "size_bytes": 2769,
+    "sha256": "e6979b8568e61575b6fcfe5aca6e84ecbe3018d42b121cbb08588945cd81b012",
+    "retention_days": 30,
+    "availability_at_review": "AVAILABLE",
+    "manifest_files_verified": 5,
+    "mismatches": 0
+  },
+  "continuity_at_run": "RECOVERY_REQUIRED",
+  "continuity_reason": "Initial bootstrap had no S/H checkpoint; expected, independent from tests.",
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "fresh_chat_drill": "NOT_RUN"
+}
