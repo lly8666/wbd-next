@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "PLAN-001",
+  "request_id": "event-38476692329",
+  "source_sha": "a6c92f516d9deafea4f1f21af37c181a209de565",
+  "harness_sha": "a6c92f516d9deafea4f1f21af37c181a209de565",
+  "config_sha256": "f7fd993240859ae217738ca7505675157c76e5b95eca9713a08e90d1ecbdcb8a",
+  "scope": "governance_and_design_arithmetic_only",
+  "result": "PASS",
+  "artifact_verified": true,
+  "run_id": 38476692329,
+  "run_attempt": 1,
+  "job_id": 115569000280,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38476692329",
+  "workflow": ".github/workflows/governance.yml",
+  "github_conclusion": "success",
+  "tests": 46,
+  "artifact_id": 11854880705,
+  "artifact_sha256": "bceb4ed58be55a684e3fcdcfbd1c90191e83078e1139fc78e8a4cb073e000dcc",
+  "manifest_files_verified": 6,
+  "size_or_hash_mismatches": 0,
+  "model_sha256": "f6340efbaf1953ceee272cf31d0d8fed1086628ba3fdc6c25510a6797a290404",
+  "observed_examples": {
+    "iid_p30_fec2020_source_residual_fraction": 0.0013010796404352906,
+    "inner500m_1200b_off_p05_outer_ip_mbps": 557.3864583333334,
+    "inner500m_1200b_fec2020_first_outer_ip_mbps": 1105.8333333333333,
+    "inner500m_1200b_rtt300_shadow_mib": 70.75732421875,
+    "inner500m_128b_rtt300_shadow_mib": 136.308349609375
+  },
+  "continuity_at_source": "RECOVERY_REQUIRED_UNACKNOWLEDGED_S_EXPECTED_BEFORE_H",
+  "product_implementation": "NOT_STARTED",
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "fresh_chat_drill": "NOT_RUN",
+  "limitations": [
+    "No Rust binary, real paired product benchmark or native driver test was executed.",
+    "Mathematical assumptions are explicit; IID models do not prove burst-loss performance.",
+    "Post-source documentation receipts do not silently change the tested SOURCE.",
+    "Main required check exists but admin bypass remains enabled as previously recorded."
+  ]
+}

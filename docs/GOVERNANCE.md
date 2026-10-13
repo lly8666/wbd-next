@@ -60,7 +60,7 @@ checkpoint_sha 与 last_tested_source 独立：前者表示交接覆盖到哪里
 
 记录 run_id、run_attempt、workflow、job、实际 checkout SOURCE、配置 hash、产物 hash 与环境。相同 request_id 出现两条 run 时标记重复，不能挑更好的一条；重跑用新的 request_id 并引用 supersedes_request。
 
-性能：一个 Action 一条测量，禁止 matrix、同 runner 顺序 AB、多配置腿或隐含第二负载。预声明的同配置损伤波形允许。不同模块独立 Actions 可并行。功能/unit 多 job 不等于性能资格。
+性能：一个 Action 一个场景/配置/seed、一个测量 job。2026-10-14 用户要求已覆盖旧顺序AB禁令：旧新性能必须在同 job/VM 顺序AB或BA，声明两份完整SOURCE和构建hash，按 ACTIONS_CONTRACT 校验两leg时间/身份。禁止并发争用、跨job冒充同机、隐含多配置矩阵。预声明同配置损伤波形允许。不同模块独立Actions可并行，功能/unit批量执行不等于性能资格。
 
 run-name 供人路由，manifest 和 GitHub API 才用于核验。正常分支 CI 使用 event + SHA + run_id 的身份；手动请求将 request_id 放入 run-name。禁止只凭“最近绿色”认领结果。
 
