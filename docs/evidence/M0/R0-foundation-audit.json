@@ -171,5 +171,15 @@
   "physical": "NOT_RUN",
   "workers": "M1-M4_RESERVED",
   "audit_limit": "Checks local checked-in evidence metadata and source anchors only; does not re-execute historical program or query GitHub run state",
-  "next_action": "R0 minimal Rust record framing vs actual pinned old Go wire oracle golden/explicit offsets and rejection tests under Actions compiled-once/consume; no pseudo AEAD and no product V4 enablement"
+  "next_action": "R0 minimal Rust record framing vs actual pinned old Go wire oracle golden/explicit offsets and rejection tests under Actions compiled-once/consume; no pseudo AEAD and no product V4 enablement",
+  "source_sha": "35d599b288ea19c3cead36b22ec561e4820ef38e",
+  "cursor_h_validation_recovery": {
+    "failed_h_sha": "b9bb7aef5a76ec8fff0085297744b5a7de64dad1",
+    "failed_governance_run": 38521896495,
+    "failed_job": 115713271238,
+    "failed_step": "Validate repository contracts",
+    "exact_cause": "R0-foundation-audit.json lacked required source_sha equal to cursor.last_tested_source; repository validator requires this even when cursor.unverified=true",
+    "status": "FIXED_BY_FORWARD_SUBSTANTIVE_RECEIPT_AND_FOLLOWUP_CURSOR_ONLY_H",
+    "safety": "R0 phase remains partial, no product qualification promotion"
+  }
 }

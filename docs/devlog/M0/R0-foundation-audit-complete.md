@@ -14,3 +14,4 @@
 **done_when**：source-lock同步、44case统一锚点、旧回归绿、cross漏触发修正并双目标复用验证、准确证据落库、cursor-only H。不继续增加新的治理层。
 
 **唯一next_action**：转回实际基础编解码，围绕00/05锁原Go记录格式，对Rust record外帧长度/offset以真实oracle做golden与失败拒绝，用Actions真实编译/消费，明确无AEAD实现不得伪造成功开密/业务输入。
+**H恢复记录（不可抹除）**：第一次cursor-only H `b9bb7aef5a76ec8fff0085297744b5a7de64dad1` 对应Governance [38521896495](https://github.com/lly8666/wbd-next/actions/runs/38521896495) FAILED于 `Validate repository contracts`。确定根因：本次新建的 evidence JSON 缺少必要字段 `source_sha`，虽然已有测试精确SOURCE在 `code_shas` 和 `source_two.sha`，但治理校验要求 `evidence.source_sha == cursor.last_tested_source`，包括unverified cursor。因此本恢复提交补 `source_sha=35d599b...`、保留失败run并在后续独立H重新确认；原始失败与修复不会虚报为连续全绿。
