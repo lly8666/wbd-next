@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 10,
-  "checkpoint_sha": "40a2a343d1f937f2aff4d9136147cef6ddef8263",
+  "sequence": 11,
+  "checkpoint_sha": "f5ae7ddf95363a61ca7d27d9157c049c16df7242",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "R0已验证共享Rust类型/单目标构建、固定Go V3/V4 goldens与真实TLS opt-in、实际Go CLI V4 fail-closed，以及原生Go-C-Rust ABI sentinel。本轮新增Rust wbd-platform最低契约与内存fake TxDriver/MonoClock：accepted_prefix/uncertain_index、PN seal失败烧号、非法outcome、KernelLoan/stop等待和checked deadline共7项Actions PASS；不是真实OS驱动或已可用产品engine。",
-  "why_now": "cursor seq9唯一动作要求R0先用fake driver/fake clock显式检验发送/关闭所有权边界，不把跨语言ABI probe成功误判为实际syscall/稳态数据通路成熟。",
-  "done_when": "R0类型/编解码golden/锁SOURCE与toolchain、原Go协商、ABI/fake-driver/multi-target build及其消费者证据齐全后再启正式worker；当前仅Linux fake-platform 子项完成，总R0未完成。",
-  "next_action": "在Actions对 Windows x64 与 Linux ARM64 做实质的跨目标Rust平台/ABI编译和C头layout验证，并验证编译产物架构与符号；严格区分cross-build与native execution，不能把未运行目标测试标PASS。其后核R0剩余合同，再考虑正式激活M1–M4；生产V4维持DISABLED。",
+  "current_task": "R0已验Rust共享类型/单目标build、旧Go V3/V4 goldens与受保护TLS、Go生产V4能力早期拒绝、Linux x64 Go-C-Rust原生R0 ABI sentinel、Rust fake clock/driver I01-B01 7例。本轮Windows x64与Linux ARM64的Rust wbd-engine ABI sentinel、wbd-platform及目标C11布局/链接均跨目标编译/产物消费成功，未在相应目标运行；源程序features=0，不存在Rust稳态数据面。",
+  "why_now": "cursor seq10要求将Linux native资格与Windows/ARM区别开，真实编译C头静态offset与Rust动态库链接、产物machine/export；首轮ARM交叉系统缺crti.o失败，通过安装cross libc-dev作为可解释修复后新SOURCE全部通过。",
+  "done_when": "R0共享类型/协议codec golden、锁SOURCE/toolchain、原Go协商、C/平台ABI和fake-clock/platform-driver、构建消费者和必要多目标目标布局/执行分类齐备，才可审查foundation是否足以正式派R1工作；此轮仅跨目标编译门完成，全R0未满足。",
+  "next_action": "在R0新增最小Rust wbd-codec，对00-CONTRACTS中的WBC4 receipt-control bundle和WBG4 Game envelope做严格显式offset编解码、规范golden、TLV超限/重复receipt/未知type/flags/length以及u64边界反例；Actions编译一次、独立consumer核对SOURCE/二进制并执行。暂不宣称Rust receipt/Game业务数据面实现，不启用Go生产V4，M1–M4继续reserved。",
   "unverified": true,
-  "last_tested_source": "1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2",
+  "last_tested_source": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
   "evidence_refs": [
-    "docs/evidence/M0/R0-platform-fake.json"
+    "docs/evidence/M0/R0-cross-abi.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-platform-fake-complete.md",
+    "docs/devlog/M0/R0-cross-abi-complete.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/evidence/M0/R0-native-abi.json"
+    "docs/evidence/M0/R0-native-abi.json",
+    "docs/evidence/M0/R0-platform-fake.json"
   ],
-  "partial_summary": "SOURCE 1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2，R0 fake platform/clock Actions run38516057707 attempt1 build115695007988/consume115695101127 SUCCESS，Rust 7/7 PASS 0失败，binary sha256 0555ab255bf701e535689dc8ec8fef37f1c1ef8b9ac0aec9e9b5e16411aac422，build artifact11872072639/result11872227435；同SOURCE旧Rust build 38516057741、Go-C-Rust native ABI38516057635、Governance38516057624均PASS，证据收据S 40a2a343 Governance38516277885 PASS。R0 fake-only，native syscall/真实engine/Windows/ARM/产品/性能/物理NOT_RUN；生产V4禁用，M1–M4reserved。"
+  "partial_summary": "首轮S 148202e0 run38517436489 failure: ARM build115699286631 ld missing crti.o，Windows build115699286940 success但consumer skipped，Linux x64原生ABI回归38517436496 success。修复S 8ce2224a: install libc6-dev-arm64-cross；跨目标Actions run38517556825 attempt1 2 build (ARM115699659948/WIN115699659556)+2 consumer(ARM115699825062/WIN115699825141) success；aarch64 ELF64 machine183与WIN PE32+ machine0x8664，各编wbd-engine cdylib、wbd-platform rlib和目标C链接exe，C info24B/config16B/token8B布局静态断言、5个Rust ABI动态exports实物复核。ARM build artifact11872133561/result11871754041；WIN build11871923790/result11871374112，SHA详R0-cross-abi.json。相同修复SOURCE Governance run38517556771 success；收据S f5ae7ddf Governance run38517856316 success。严格CROSS_BUILD_PASS，目标原生执行、目标Go/cgo、真实平台I/O、Rust steady engine、产品/性能/物理NOT_RUN；V4 features0、生产V4 DISABLED，M1–M4 reserved。"
 }
