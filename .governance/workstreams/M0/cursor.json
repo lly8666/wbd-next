@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 42,
-  "checkpoint_sha": "5f158bc8683b87b4f70e6af004b06ca115befc51",
+  "sequence": 43,
+  "checkpoint_sha": "ba5749bb7e9efede91f81da43796985212af570f",
   "progress": "partial",
-  "task_id": "R1-M0-M1-PARITY-READY-INTEGRATION-005",
-  "current_task": "M0 M1 parity-ready main scoped integration COMPLETE: code SOURCE cc12651c22f5f6c8b36a802a0d477fd82b51be0c, owner 29/29 Actions38603099803, real FEC full-packet+deadline3/3 Actions38603099961, total 9/9 same SOURCE Actions SUCCESS incl R0 native ABI. Imported M1 worker SOURCE20809638 as 3 runtime files, M1 H dceb2a7c Governance38599017708 PASS; no live V4/raw/product/perf. M2 user-requested handoff issue recovered by M0: S9a25ae17 and cursor H2ebd4759, Governance38602789109 PASS, original 22/22 M2 code unchanged. Evidence S5f158bc8683b87b4f70e6af004b06ca115befc51 Gov38603621378 SUCCESS.",
-  "why_now": "M0 cursor seq41 checkpoint831aa1b1→H148e3616 was cursor-only Governance38601879153 SUCCESS. Existing M1 parity worked on isolated worker SOURCE20809638; actual M3 authenticated FEC-on + M4 IPv4/TCP in main required true no-HOL integration. User additionally authorized M0 to handle M2 handoff; original M2 H control-movement error hid invalid main-only local context_ref, recovered with fact artifact.",
-  "done_when": "Code SOURCE cc12651c22f5f6c8b36a802a0d477fd82b51be0c verifies 29/29 r1_ owner tests Actions38603099803, 3/3 full-packet FEC on with real M3 parity in separately bounded queue and 33ms deadline Actions38603099961, 9/9 scoped Actions same SOURCE SUCCESS, build and consumer artifacts/hashes in evidence. M2 H recovery S9a25ae17 / H2ebd4759 Governance38602789109 SUCCESS with last_tested_source fb916f2 still22/22, failed run38598929953 attempts1–3 retained accurately. Evidence S5f158bc8683b87b4f70e6af004b06ca115befc51 Governance38603621378 PASS. H-only next. No production/raw/WinArm native/perf/physical/product qualification.",
-  "next_action": "M0 next atomic task: select M2 R2-M2-GLOBAL-SPARSE-002 process-global sparse repair allocator after reviewing recovered M2 H seq7 and native source fb916f2467d40b6cc0612d1182525a553d8e6872, compose main-owned actual send/completion byte accounting using existing M1/M4 bounded interfaces in scoped Actions, verify process hard-cap and NoHOL at one exact main SOURCE. If actual kernel completion unavailable, explicitly limit in-process proof; do not enable Go V4 or claim product/performance. Do not change M2 worker code until separate assignment.",
+  "task_id": "R2-M0-GLOBAL-SPARSE-MAIN-INTEGRATION-006",
+  "current_task": "M0 scoped M2 global sparse ledger imported and composed with full IPv4/TCP frozen repair bytes and M4 sink; main final CODE SOURCE58ff8d00659c0b4576f473e5e7957cbce0ef17ea R2 actual in-process 11/11 run38634557650, 9/9 triggered same-source Actions SUCCESS. Pure M2 22/22 at intermediate SOURCE01bd8693 run38634484494 (not same SOURCE). First SOURCEf9940910 FAIL workflow count15 vs22 and Arena fixture return1 vs2, corrected; evidence Sba5749bb7e9efede91f81da43796985212af570f Governance38635004118 SUCCESS. No actual process actor/raw/product.",
+  "why_now": "M0 seq42 checkpoint5f158bc8→H c900de85 only cursor, Governance38603747056 PASS. All worker branches prior tasks completed; M2 recovered H2ebd4759 Governance38602789109 PASS; M0 main owned global sparse integration needed to prevent per-client 32KiB multiplier.",
+  "done_when": "Exact scoped Rust global 22/22 source01bd8693 run38634484494 compiled-once, and final main source58ff8d00 R2 full packet integration11/11 run38634557650 9/9 final SOURCE Actions SUCCESS, build/results SHA256 recorded docs/evidence/M0/R2-global-sparse-main-integration.json. Evidence Sba5749bb Governance38635004118 PASS. H cursor-only. No live process actor, raw sendmmsg, Go V4, native Win/ARM execution, 500Mbps/perf/product/physical qualification.",
+  "next_action": "M0 next one atomic governance action: formally assign four independent next tasks to idle M1-M4 on main registry rev2 epoch1, record exact current worker heads/cursors and no root scope expansions. M1 ready-only bounded batch; M2 pure process-grant batch completion; M3 FEC expiry/retirement pressure adversarial proof; M4 bounded IPv4/TCP RX validation. Keep M0 next main integration separate after assignment. Do not claim worker automatically running.",
   "unverified": true,
-  "last_tested_source": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+  "last_tested_source": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M1-parity-main-integration.json"
+    "docs/evidence/M0/R2-global-sparse-main-integration.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-M1-parity-main-integration.md",
+    "docs/devlog/M0/R2-global-sparse-main-integration.md",
     "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 checkpoint41 clean, imported worker M1 parity module/wake at main SOURCEcc12651c; actual FEC parity produced at32ms sealed PN1, deferred to absolute33ms, next systematic PN2 sent at32.5ms without HOL, whole IPv4/TCP and authenticated RX duplicate suppress; code SOURCE Actions38603099803 29/29 and 38603099961 3/3, nine same-code-source workflows SUCCESS. M2 issue fixed: old H1384 Governance38598929953 failed main moving attempts1/2, retry attempt3 uncovered missing main-only context_ref, artifact11915160297, M0 recovered S9a25ae17 and H2ebd4759 Gov38602789109 PASS, M2 code unchanged and native22/22 remains scoped only. Evidence main S5f158bc8 Governance38603621378 PASS. This H seq42 only. Product/GoV4/raw/perf/physical NOT_RUN. Next one M2 process quota + completion actor scoped main integration."
+  "partial_summary": "M0 imported scoped M2 global repair grant ledger under main, actual frozen record full IPv4/TCP bytes settle with M4 in-process ReadyPacketSink, two TunnelKeys/directions zero-F, NotSent refunded and Uncertain debited, fresh no quota HOL. First main CODEf9940910 failed R2 pure gate due old 15 expected vs22 passing and engine 10/11 due two Arena returns; code01bd8693 pure22/22 PASS, final code58ff8d00 R2 11/11 PASS 9/9 final source Actions. Evidence Sba5749bb Gov38635004118 SUCCESS. This H seq43 checkpoint evidence S. Production/raw/kernel process actor/perf/physical NOT_RUN. Four workers idle; next main role assignment decision."
 }
