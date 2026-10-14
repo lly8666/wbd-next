@@ -1,0 +1,11 @@
+# M3 G2 checker one-shot sync — actual own Governance
+
+M0 authorization: `docs/decisions/M0-M3-one-shot-G2-checker-sync.md`, M0 code SOURCE `4973ac22ee808a80a269399e955ec93d1e56664a` Governance [38585124872](https://github.com/lly8666/wbd-next/actions/runs/38585124872) SUCCESS and actual M3 past history/adversarial run38585125032 SUCCESS.
+
+Worker preflight branch HEAD exactly `56907bdb4630d0a5a6a29c2d9cd029c89086566e`; main script Git blob `1d27c4ec8d02035fc53d4e657f2cd7427373f8df` equalled M0 pre-approved blob. Created single-parent commit `63712142104637f451e13d18eecec26187e63819` with sole diff `tools/worker_scope_ci.py`; no main merge, reset, force, or root Cargo/ABI/CI/registry changes.
+
+M3 own first Governance [38587358359](https://github.com/lly8666/wbd-next/actions/runs/38587358359) **FAIL overall** despite passing per-commit full G2 scope audit: `governance.py validate` exit2 from earlier untyped M3→M0 coordination JSON erroneously placed in strict dispatchable requests folder. The original memo was archived with full provenance in `docs/evidence/M3/R1-M3-G2-ANCESTRY-BOUND-001-archive.json`; M3-owned deletion `c98aea62014f600dfd5655718e49b73c11d0731c` removed only that stale live request path. No rewrite of M0-owned root checker.
+
+M3 own final SOURCE `c98aea62014f600dfd5655718e49b73c11d0731c`: [Governance38588209791](https://github.com/lly8666/wbd-next/actions/runs/38588209791) **SUCCESS attempt1**; 69/69 G2 ancestry fully reviewed, 42 M3 scoped +27 M0 main ancestors, structure PASS, 58/58 unit drills PASS. Governance artifact11906835694 (zip digest sha256:7f539116a3595e2450485ab72a3cd28012fac4bad6e6597b0fcbec69cebdb534). Non-gating `Observe live continuity` step exited2 because cursor checkpoint predates authorized root script and cleanup, **not** a CLEAN observation. After evidence S, M3 cursor-only H will create a new checkpoint, and must run its own Governance again. Workstream remains `partial` for product.
+
+Previous unchanged FEC RX SOURCE `ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94` native [38568299178](https://github.com/lly8666/wbd-next/actions/runs/38568299178) 55/55 PASS not rerun now. No FEC-on real business, V4 production, native Windows/ARM, ISA-L, performance or physical proof.

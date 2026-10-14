@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "branch": "work/m3-r1-codec",
+  "task_id": "R1-M3-G2-CHECKER-MIRROR-008",
+  "source_sha": "c98aea62014f600dfd5655718e49b73c11d0731c",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_M3_OWN_ONE_SHOT_CHECKER_MIRROR_AND_GOVERNANCE_SCOPE_ONLY",
+  "artifact_verified": false,
+  "m0_authorization": {
+    "decision": "docs/decisions/M0-M3-one-shot-G2-checker-sync.md",
+    "evidence": "docs/evidence/M0/R1-M3-one-shot-checker-sync.json",
+    "code_source": "4973ac22ee808a80a269399e955ec93d1e56664a",
+    "main_governance_run": 38585124872,
+    "ancestry_adversarial_run": 38585125032,
+    "reviewed_parent": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "sole_script": "tools/worker_scope_ci.py",
+    "approved_tool_blob_sha": "1d27c4ec8d02035fc53d4e657f2cd7427373f8df",
+    "scope": "EXACT_ONCE_ONLY_ROOT_TOOL_EXCEPTION_NO_GENERAL_M3_OWNERSHIP"
+  },
+  "performed": {
+    "mirror_commit": "63712142104637f451e13d18eecec26187e63819",
+    "parent": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "commit_parents": 1,
+    "changed_paths": [
+      "tools/worker_scope_ci.py"
+    ],
+    "mirrored_blob_sha": "1d27c4ec8d02035fc53d4e657f2cd7427373f8df",
+    "fast_forward_expected_lease": true,
+    "root_Cargo_lock_registry_shared_CI_ABI": "UNCHANGED",
+    "file_content_byte_identical_to_live_main": true,
+    "active_request_cleanup_source": "c98aea62014f600dfd5655718e49b73c11d0731c",
+    "removed_live_request": ".governance/workstreams/M3/requests/R1-M3-G2-ANCESTRY-BOUND-001.json",
+    "archived_request": "docs/evidence/M3/R1-M3-G2-ANCESTRY-BOUND-001-archive.json"
+  },
+  "own_github_actions": {
+    "initial_approved_tool_push": {
+      "source": "63712142104637f451e13d18eecec26187e63819",
+      "run_id": 38587358359,
+      "job_id": 115932788116,
+      "status": "completed",
+      "conclusion": "failure",
+      "step_success": "Attest live main role for actual branch and audit each worker commit path",
+      "failed_step": "Validate repository contracts",
+      "cause": "Non-dispatchable G2 coordination JSON was stored as *.json under live M3/requests, violates governance.validate_request typed test request schema; archived and removed as M3-owned path before final rerun.",
+      "role_scope": "PASS",
+      "not_a_clean_own_governance": true
+    },
+    "final_stable_source": {
+      "source_sha": "c98aea62014f600dfd5655718e49b73c11d0731c",
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38588209791,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "job_id": 115935778016,
+      "actual_worker_commit_compare": {
+        "base": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+        "status": "ahead",
+        "total": 69,
+        "returned": 69,
+        "scope_M3_commits_checked": 42,
+        "exempt_main_ancestors": 27
+      },
+      "role_scope": "ROLE_SCOPE_PASS",
+      "repository_structure": "PASS",
+      "unit_drills": 58,
+      "unit_failures": 0,
+      "observational_continuity_step": {
+        "is_mandatory": false,
+        "observed_exit_code": 2,
+        "reason": "Earlier M3 cursor checkpoint predates a deliberately authorized root-script mirror and request cleanup; report NOT_CLEAN until post-evidence new cursor-only H, do not represent as product proof."
+      },
+      "evidence_artifact": {
+        "id": 11906835694,
+        "digest": "sha256:7f539116a3595e2450485ab72a3cd28012fac4bad6e6597b0fcbec69cebdb534",
+        "expires_at": "2026-11-13T15:20:07Z"
+      },
+      "artifact_download_content_verified": false
+    }
+  },
+  "prior_codec_unchanged": {
+    "code_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+    "native_run": 38568299178,
+    "tests_passed": 55,
+    "tests_failed": 0,
+    "qualifier": "Historical independent scoped Rust FEC RX test evidence; not rerun by this script-only task"
+  },
+  "next": "M3 evidence S then cursor-only H sequence11 with new checkpoint, and independently verify H own Governance/continuity. M0 retains production Go V4 disabled; no product/perf/physical pass.",
+  "not_qualified": {
+    "FEC_on_business": "NOT_RUN",
+    "ISA_L": "NOT_RUN",
+    "Windows_ARM_native": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_Go_V4": "DISABLED"
+  }
+}

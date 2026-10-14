@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "request_id": "R1-M3-G2-ANCESTRY-BOUND-001",
+  "requester": "M3",
+  "assignee": "M0",
+  "status": "OPEN_REQUIRES_M0_OWNED_GOVERNANCE_DECISION",
+  "kind": "G2 worker scope ancestry checkpoint or bound maintenance",
+  "source_branch": "work/m3-r1-codec",
+  "worker_head_with_failed_H": "d8042d75c2e71837c83648e015c9b8ed73e9a34c",
+  "tested_codec_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+  "evidence_S": "4ab3c9c927dceace95ef5c29d33f28e5b455e9e7",
+  "evidence_file": "docs/evidence/M3/R1-M3-FEC-RX-007.json",
+  "verified_R1_native": {
+    "run_id": 38568299178,
+    "passed": 55,
+    "failed": 0,
+    "binary_sha256": "5b61f3afd8a008fb293d0a8abe2b39f91de749b5c8e1ea88d94bbf41bdfeb7c2"
+  },
+  "verified_matching_source_actions": {
+    "total": 7,
+    "passed": 7
+  },
+  "exact_H_failure": {
+    "run_id": 38569111816,
+    "job_id": 115869312509,
+    "conclusion": "failure",
+    "diagnostic": "ROLE_SCOPE_FAILED: incomplete or diverged bounded G2 activation ancestry"
+  },
+  "replayable_git_data": {
+    "comparator": "GET /repos/lly8666/wbd-next/compare/83bd720368b9be68b3c4c94d7462d20cf4d796db...d8042d75c2e71837c83648e015c9b8ed73e9a34c?per_page=100",
+    "status": "ahead",
+    "total_commits": 66,
+    "returned_commits": 66,
+    "ahead_by": 66,
+    "behind_by": 0,
+    "published_code_limit": "tools/worker_scope_ci.py: require 0<=total_commits<=64 and len(commits)==total",
+    "proven_cause": "A complete non-diverged 66-commit ancestry fails fixed size bound 64; not an AES/FEC test failure and not resolvable with worker cursor-only change",
+    "main_snapshot": "33efd8785c3a579ae715831f8d895ac4e20dfaf1"
+  },
+  "request": "M0 review and authorize a renewed bounded G2 activation checkpoint or safe increase of worker ancestry audit capacity with full per-commit path review; preserve existing G2 role/scope guarantees, M3-approved restricted crypto-root merge, and exact 7/7 source evidence. Implement only in M0-owned main tools/CI, run a real worker-branch scope attestation against the unchanged M3 FEC RX tested SOURCE and subsequent cursor H. Do NOT instruct M3 to rebase/reset/force-push and do not disable checks.",
+  "m3_constraints": "M3 must not modify tools/worker_scope_ci.py, shared governance, root Cargo or shared ABI; M3 cursor remains partial/unverified at seq10 until real Governance passes.",
+  "product": "NOT_RUN",
+  "needs_ack": true,
+  "archive_note": {
+    "kind": "RESOLVED_COORDINATION_MEMO_NOT_DISPATCHABLE_REQUEST",
+    "archived_from": ".governance/workstreams/M3/requests/R1-M3-G2-ANCESTRY-BOUND-001.json",
+    "original_blob_sha": "7ddb8dcd2071536c46f57bb56bf6df07a26d2db3",
+    "resolution": "docs/decisions/M0-M3-one-shot-G2-checker-sync.md",
+    "m0_authorizing_source": "4973ac22ee808a80a269399e955ec93d1e56664a",
+    "accepted_script_blob": "1d27c4ec8d02035fc53d4e657f2cd7427373f8df",
+    "m3_exception_commit": "63712142104637f451e13d18eecec26187e63819",
+    "owner_removed_active_request_commit": "c98aea62014f600dfd5655718e49b73c11d0731c",
+    "note": "Original JSON lacked dispatchable role_id/task_id/harness_sha/digest fields and blocked governance.py validate; the prior ad hoc M0 request is preserved here rather than in formal live request directory."
+  }
+}
