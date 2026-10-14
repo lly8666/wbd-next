@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-M2-ROOT-SYNC-001",
+  "source_sha": "fbe331b73c367c6fb3f75a477a9ada13784ef72b",
+  "result": "PASS_MAIN_GATE_ONLY",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "scope": "ONE_REVIEWED_M2_WORKER_MAIN_SYNC_AUTHORIZATION_AND_UNIT_GATE",
+  "handoff_start": {
+    "m0_head": "565c17aebac57860214f3b97554af79356c80a03",
+    "m0_sequence": 27,
+    "m0_checkpoint_sha": "eb0fcdbf1c5f7882f5279b9b5c5b754c26661158",
+    "m0_checkpoint_to_head_commits": [
+      "565c17aebac57860214f3b97554af79356c80a03"
+    ],
+    "m0_checkpoint_delta_scope": "CURSOR_ONLY",
+    "m0_governance_run": 38556706852,
+    "handoff": "CLEAN",
+    "m2_branch": "work/m2-r2-recovery",
+    "m2_head": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+    "m2_sequence": 2,
+    "m2_merge_base": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+    "m2_ahead_commits": 4,
+    "m2_behind_main_commits": 31,
+    "m2_progress": "partial",
+    "m2_open_requests": 0,
+    "open_prs": 0
+  },
+  "previous_qualification": {
+    "main_authenticated_receipt_source": "29ebcb19863602ae1fc059fa3524837e90944da9",
+    "run_id": 38555987945,
+    "actual_native_tests": "3/3 PASS",
+    "same_source_affected_workflows": "7/7 SUCCESS",
+    "historical_g2_filter_fixed_run_id": 38555987719,
+    "M2_pure_receipt_source": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+    "M2_pure_receipt_worker_native_run_id": 38538225302,
+    "M2_native_tests": "8/8 PASS",
+    "historical_M2_g2_failure_run_id": 38538225378,
+    "issue2": "CLOSED_MAIN_ROOT_FIXED_NOT_RETRONACTIVELY_PASS",
+    "issue1": "OPEN_GO_V4_LIVE_ADMISSION_AND_KEY_BINDING_NOT_RUN"
+  },
+  "action": {
+    "main_s_sha": "fbe331b73c367c6fb3f75a477a9ada13784ef72b",
+    "paths": [
+      "tools/worker_scope_ci.py",
+      "tests/test_worker_scope_ci.py",
+      "docs/decisions/M0-M2-recovery-root-sync.md"
+    ],
+    "reviewed_role": "M2",
+    "approved_first_parent": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+    "main_parent_requires_ancestor_of_live_main": true,
+    "main_parent_must_include_source": "29ebcb19863602ae1fc059fa3524837e90944da9",
+    "parents_exact": 2,
+    "relative_to_main_second_parent_only_role_paths": true,
+    "maximum_unique_paths": 16,
+    "protected_paths": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "crates/wbd-recovery/Cargo.toml"
+    ],
+    "renames_must_respect_role_scope": true,
+    "no_force_push": true,
+    "M0_modified_M2_worker_branch": false
+  },
+  "test": {
+    "workflow": ".github/workflows/governance.yml",
+    "run_id": 38557463199,
+    "attempt": 1,
+    "head_sha": "fbe331b73c367c6fb3f75a477a9ada13784ef72b",
+    "job_id": 115830046250,
+    "conclusion": "success",
+    "unit_suite": "python -m unittest discover -s tests -v",
+    "unit_test_count": 60,
+    "unit_test_passed": 60,
+    "specific": [
+      "test_one_m0_reviewed_m2_merge_scope_and_role_rejects",
+      "test_m2_main_sync_remote_ancestry_and_changed_tree"
+    ],
+    "note": "Governance main job passed; the non-fatal live-continuity audit subprocess exited 1 with continue-on-error. Its standalone audit is NOT asserted PASS. Exact remote compare and refs were inspected separately."
+  },
+  "status": {
+    "M2_actual_sync": "NOT_RUN",
+    "M2_worker_head_after_M0": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+    "M2_next_budget_tests": "NOT_RUN",
+    "M2_next_budget_task": "AUTHORIZED_AFTER_OWNED_SAFE_SYNC_AND_ACTIONS_ONLY",
+    "Go_V4_live_admission": "NOT_RUN",
+    "actual_network": "NOT_RUN",
+    "complete_product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "Go_V4_production": "DISABLED"
+  },
+  "next_action": "M2 writer alone: refresh M2 exact HEAD, use approved two-parent merge if still 2cd993a; retain main root and own M2 files; fast-forward expected SHA only, Actions worker-native/G2/Governance; evidence S/H. Then independently implement M2 R2-M2-BUDGET-001 1s F/R/L per-direction bounded sparse allowance with fake-clock native test. M0 next inspect M2 merge/actions; if present verify worker test before user notification. Do not notify on M0 reviewed gate alone."
+}
