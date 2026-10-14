@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "repository": "lly8666/wbd-next",
+  "role_id": "M0",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "task_id": "R1-M0-G2-M3-ANCESTRY-001",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "MAIN_BOUND_96_COMPLETE_M3_ANCHOR_HISTORY_SCOPE_AUDIT_ONLY",
+  "source_sha": "c00356739359db90a864f0894d8cdd965b2df132",
+  "preflight": {
+    "previous_m0_h": "64a5b099aebf3e3c2d77dfc0d2b9be88f7af2b3a",
+    "previous_cursor_seq": 35,
+    "previous_cursor_checkpoint": "6358820ba111a21ed308ab335d4c008ddaf1f4c0",
+    "previous_m0_h_governance_run": 38581577046,
+    "previous_h_error_run": 38581125976,
+    "previous_h_error": "two nonexistent main cursor references, corrected and Governance SUCCESS",
+    "M3_original_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+    "M3_worker_head": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "M3_old_h_governance_failures": [
+      38569000801,
+      38569111816,
+      38569516952
+    ]
+  },
+  "remediation": {
+    "previous_limit": 64,
+    "new_limit": 96,
+    "github_compare_per_page": 100,
+    "maximum_untruncated_page": 100,
+    "full_commit_count": 67,
+    "checked_worker_scope_commits": 40,
+    "approved_main_ancestor_commits": 27,
+    "source_file": "tools/worker_scope_ci.py",
+    "full_parent_path_rename_review": true,
+    "unique_sha_required": true,
+    "status_requires_ahead_or_identical": true,
+    "reviewed_M3_sync_guards_preserved": true,
+    "branch_and_epoch_checks_preserved": true,
+    "tests_file": "tests/test_g2_ancestry_capacity.py",
+    "adversarial_tests_passed": 10,
+    "initial_code_source": "1125f8a39c39d12c96054b5e7ec494419ff25b7d",
+    "final_code_source": "c00356739359db90a864f0894d8cdd965b2df132",
+    "initial_workflow_discovery_correction": "c00356739359db90a864f0894d8cdd965b2df132"
+  },
+  "actual_actions": {
+    "same_source": "c00356739359db90a864f0894d8cdd965b2df132",
+    "runs": [
+      {
+        "id": 38582967916,
+        "workflow": "governance",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 38582968224,
+        "workflow": "g2-m3-ancestry",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "success": 2,
+    "total": 2,
+    "main_governance": {
+      "run_id": 38582967916,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "M3_full_history": {
+      "run_id": 38582968224,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 115917415887,
+      "remote_m3_head": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+      "worker_commit_count": 40,
+      "main_ancestor_count": 27,
+      "total": 67,
+      "adversarial_tests": 10,
+      "artifact_id": 11903487977,
+      "artifact_digest": "sha256:cbe5e8da6c7f6fe570b59f4d6f52709f3992a10aff4847cc13bf2ee6aaa6e86b"
+    }
+  },
+  "limits": {
+    "M3_worker_current_H": "STILL_FAILED_LEGACY_CHECKER_ON_WORKER_BRANCH",
+    "M3_worker_branch_written_by_M0": false,
+    "M3_future_governance_requires": "explicit M0-approved and fully attested branch tool synchronization; never reset/force push/waive scope",
+    "production_Go_V4": "DISABLED_FEATURE0",
+    "live_os_driver": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "Plan one controlled G2 main-to-M3 worker checker sync satisfying allowed path and per-commit ancestry, without giving M3 blanket rights to tools; have M3 writer perform any permitted branch update and reattest own H. Then M0 implement real timer-backed FEC parity separate queue scheduling; do not call G2 worker H CLEAN yet."
+}
