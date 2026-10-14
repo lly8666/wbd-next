@@ -4,18 +4,18 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 4,
-  "checkpoint_sha": "e254518c3382cc63bddba8b145f9aa64ad6918dd",
+  "sequence": 5,
+  "checkpoint_sha": "0a05eb6952184538dcebeff944ebecb9a58a7edf",
   "progress": "partial",
-  "task_id": "R1-M3-AES-RECORD-002",
-  "current_task": "Completed scoped real Rust ChaCha, AES128-GCM and AES256-GCM Seal/Open with independent exact 8B HP; 14 standalone Go AES reference wires and six pinned old Go ChaCha golden exact in native Rust Actions.",
-  "why_now": "M0 root Cargo/lock pinned aws-lc-rs/chacha20/aes and M3 reviewed main dependency sync accepted; after real ChaCha-only Actions proof, next independent cipher-boundary task AES128/256 with pinned old-Go suite.go contract.",
-  "done_when": "Real native Rust compiled-once 15/15 r1_ PASS (6 budget+5 ChaCha+4 AES); 14 independently generated Go stdlib AES vectors and six original Go ChaCha byte-exact; 7/7 matching source worker/R0/G2/Governance Actions PASS; evidence S+cursor-only H. Strictly excludes product E2E, old Go native AES package job, replay metadata.",
-  "next_action": "M3 next single atom: bounded, authenticated per-lane PN replay window with explicit capacity-derived reordering horizon, retired floor, 256PN lazy tagged pages, page reuse/wrap/jump/duplicate tests; integrate only after C03/C04 native Actions. M0 next integration atom: trusted suite-separated key admission, M1-owned record slices, M4 driver, single-source Normal/FECoff authenticated first business packet, no false E2E claim.",
+  "task_id": "R1-M3-REPLAY-003",
+  "current_task": "Authenticated, bounded per-lane PN replay window implemented in record_replay.rs, real AEAD-first unique delivery gate and 256bit lazy tagged page ring with N/256+1 physical pages.",
+  "why_now": "Previous M3 AES/ChaCha record 8B HP all three suites independently native-proven; module05 requires after-AEAD replay dedup so old duplicate PN cannot be delivered even with valid authentication; 8 MiB per-lane hard metadata bound and effective horizon reported.",
+  "done_when": "Actions worker native compiled-once 23/23 r1 PASS (6 FrameBudget+5 ChaCha+4 AES+8 new replay), seven same-SOURCE workflows PASS including governance retry2; strict error/duplicate/floor/large PN+MAX boundary covered, evidence S then cursor-only H. No main replay integration or product claim.",
+  "next_action": "M0: consume ReplayProtectedLaneRx only after lane admission, update normal/off RX first-packet test to include after-auth PN duplicate/late/tamper rejection and owned-buffer stop at ONE main SOURCE; M3 next independent task: old-Go-differential LINK reassembly ±MTU, overlap/conflict and timeout tests (M3-only paths) once M0 scopes confirmed. Never touch root Cargo/ABI.",
   "unverified": true,
-  "last_tested_source": "5f5d87ec365ff5ace537e504778abafc2ada85ec",
+  "last_tested_source": "36778ac78031dd45d2f373071146da565af17275",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-AES-RECORD-002.json"
+    "docs/evidence/M3/R1-M3-REPLAY-003.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -24,7 +24,8 @@
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
-    "docs/devlog/M3/R1-M3-AES-RECORD-002.md"
+    "docs/devlog/M3/R1-M3-AES-RECORD-002.md",
+    "docs/devlog/M3/R1-M3-REPLAY-003.md"
   ],
-  "partial_summary": "M3 sequence3 proven real ChaCha record 8B HP at 5a14bb9e worker38550461756 11/11, H governance38550906809 success. New AES SOURCE 5f5d87ec uses aws-lc-rs AES128/256 GCM authentic AEAD, distinct once-keyed AES HP sample16 encrypted first8, suite IDs1/2/3, preserves default ChaCha. 14 independent Go stdlib V3 fixture wires generated from pinned Go suite.go/keys.go algorithm and matched 14/14 Python cryptography HKDF+AESGCM+ECB before S; Rust exact AES bytes+tamper/wrong suite/full MTU/PN tests. Worker native38555898661 15/15 r1 PASS, binary sha256 4b657654676b76ba1b7a993f4ea3fed4f1ffde8b07caa51d0bb6f4a74f90cca9; same SOURCE seven Actions success: governance38555898487, R0 codec38555898920, framing38555898638, link/FEC38555898573, G2 38555898747, audit38555898647. Evidence S e254518c; H cursor-only. Original Go suite package native in this atom NOT_RUN, M0 Normal/FECoff business E2E/replay/V4 KDF/product/physical/perf still NOT_RUN. No root/shared ABI/CI edits."
+  "partial_summary": "M3 seq4 prior AES 3 genuine suites with full 8B HP/native 15/15, H b676b0b governance38556395606 attempt2 PASS. Replay implementation S e1e0769 new AEAD-first wrapper, N=nextpow2(rate*max(Tcache+2R,FEC+2R)*1.25), metadata cap and lazy 256PN tagged bitmap N/256+1 boundary pages. S1 native run38557594354 failed 2 test-only E0716 temp borrows; S2 dc0913c native38557713321 failed remaining E0716; final SOURCE36778ac78031dd45d2f373071146da565af17275 worker-native38557810459 23/23 r1 PASS including 8 replay C03/C04 and existing budget/3suite cases, 7 workflows same SOURCE final success: R0 codec38557810406, framing38557810401, LINK/FEC38557810497, G2 38557810455, audit38557810438, Governance38557810510 attempt1 FAIL control/main moved attempt2 PASS. Evidence S0a05eb6 and cursor-only H seq5. Replay not yet M0 integrated; existing ChaCha-only Normal/off native first packet main separate SOURCE8731690 run38552615723 2/2 PASS WITHOUT replay. V4 admission/product/perf/physical NOT_RUN. Root Cargo/lock/shared ABI unchanged."
 }
