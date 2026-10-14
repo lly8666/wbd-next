@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "R0_CROSS_TARGET_RUST_C_ABI_LAYOUT_AND_SYMBOLS",
+  "result": "CROSS_BUILD_PASS",
+  "source_sha": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
+  "target_runner": "ubuntu-24.04-x86_64",
+  "rust_compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "code_commits": [
+    "148202e0ec17ed693687c0c97582809e7b329eda",
+    "8ce2224a734d45490c66b582f53057f1bfd40ae2"
+  ],
+  "workflow": ".github/workflows/r0-cross-abi.yml",
+  "first_attempt_failure": {
+    "source_sha": "148202e0ec17ed693687c0c97582809e7b329eda",
+    "run_id": 38517436489,
+    "run_attempt": 1,
+    "conclusion": "failure",
+    "linux_arm64_build_job_id": 115699286631,
+    "linux_arm64_error": "aarch64-linux-gnu-gcc link failed: cannot find crti.o; cross libc dev package was absent; Rust code compiled before final link",
+    "windows_x64_build_job_id": 115699286940,
+    "windows_x64_build_conclusion": "success",
+    "consume_jobs": "skipped (needs entire build matrix success)",
+    "remediation": "add libc6-dev-arm64-cross only to ARM target dependency list, committed as 8ce2224",
+    "classification": "INFRA_CROSS_TOOLCHAIN_DEPENDENCY_MISSING_NOT_ABI_FUNCTION_TEST"
+  },
+  "successful_run": {
+    "id": 38517556825,
+    "attempt": 1,
+    "head_sha": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38517556825",
+    "jobs": [
+      {
+        "id": 115699659948,
+        "target": "aarch64-unknown-linux-gnu",
+        "stage": "build",
+        "conclusion": "success"
+      },
+      {
+        "id": 115699659556,
+        "target": "x86_64-pc-windows-gnu",
+        "stage": "build",
+        "conclusion": "success"
+      },
+      {
+        "id": 115699825062,
+        "target": "aarch64-unknown-linux-gnu",
+        "stage": "consume",
+        "conclusion": "success"
+      },
+      {
+        "id": 115699825141,
+        "target": "x86_64-pc-windows-gnu",
+        "stage": "consume",
+        "conclusion": "success"
+      }
+    ],
+    "targets": {
+      "aarch64-unknown-linux-gnu": {
+        "toolchain": "aarch64-linux-gnu-gcc with libc6-dev-arm64-cross and binutils-aarch64-linux-gnu",
+        "build_artifact": {
+          "id": 11872133561,
+          "name": "r0-cross-build-aarch64-unknown-linux-gnu-38517556825-1",
+          "size_bytes": 225530,
+          "digest": "sha256:939dd2c5116d603311b89579905b0d12e29ddef7e47fde0569a60ca1c4330e15"
+        },
+        "result_artifact": {
+          "id": 11871754041,
+          "name": "r0-cross-result-aarch64-unknown-linux-gnu-38517556825-1",
+          "size_bytes": 698,
+          "digest": "sha256:19fce745ac881d058d827bb806826ea9fe809c91e07a33f53b8c1ed1b6bf3734"
+        },
+        "machine": "ELF64 little endian e_machine=183 AArch64",
+        "native_dynamic_library_sha256": "9d8c0d07af424c8018875678434282285e8b707cd4731e745a68c6df7ab09f72",
+        "linked_C_executable_sha256": "2f7579485acb6a68fee4a4f60c0ce09cb913bb405eed4db56a6af1cffa7e26cb",
+        "platform_rlib_sha256": "cb97a836059c2dfdda081c8b8fcfcf9df228bb6a0a80476a3216aa998431075f",
+        "target_native_execution": "NOT_RUN"
+      },
+      "x86_64-pc-windows-gnu": {
+        "toolchain": "x86_64-w64-mingw32-gcc and binutils-mingw-w64-x86-64",
+        "build_artifact": {
+          "id": 11871923790,
+          "name": "r0-cross-build-x86_64-pc-windows-gnu-38517556825-1",
+          "size_bytes": 572716,
+          "digest": "sha256:256e0e28347a40efce1225e2eca23649648aff59d57f5f4452896fda6a2ac8b3"
+        },
+        "result_artifact": {
+          "id": 11871374112,
+          "name": "r0-cross-result-x86_64-pc-windows-gnu-38517556825-1",
+          "size_bytes": 695,
+          "digest": "sha256:df9f8b6968f7ac429d57655427fa3ce2df79097144e4861f90a9e81995f0074b"
+        },
+        "machine": "PE32+ x86_64 machine=0x8664 optional header magic=0x20b",
+        "native_dynamic_library_sha256": "83ec86ce9ab8f26029aecfba1d3ac3eaf75318b6a439aa020177ad474fefe041",
+        "linked_C_executable_sha256": "d2cd56fb181602c3d0483c469b404d9908b7b7fa7402078a75e45db502f9630d",
+        "platform_rlib_sha256": "ef75061ac00d624eaea6ed7f1eac6a71f97167168fa0695b5b462aca61b24c4f",
+        "target_native_execution": "NOT_RUN"
+      }
+    },
+    "observed_exports": [
+      "wbd_r0_abi_query",
+      "wbd_r0_engine_open",
+      "wbd_r0_engine_close",
+      "wbd_r0_lane_open",
+      "wbd_r0_lane_close"
+    ],
+    "c_static_asserts": "target compiled C11 sizeof/alignof/offsetof WbdAbiInfoV1(24B),WbdAbiConfigV1(16B),Engine/Lane token(8B) and 64bit pointers; linked all exported Rust symbols into cross-target binary; NOT EXECUTED",
+    "consumer_verification": "independent per-target consumer validated new SOURCE SHA/run/attempt/target, exact source file hashes, three binary SHA256/length, target ELF/PE machine header and actual shared-library export names using target binutils; no cross-target binary execution",
+    "v4_features": 0
+  },
+  "same_source_governance": {
+    "id": 38517556771,
+    "source_sha": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
+    "conclusion": "success"
+  },
+  "previous_source_regressions": [
+    {
+      "run_id": 38517436496,
+      "source_sha": "148202e0ec17ed693687c0c97582809e7b329eda",
+      "workflow": "r0-native-abi.yml",
+      "conclusion": "success",
+      "scope": "Linux x64 native Rust/C/old-Go cgo only; not the fix SOURCE"
+    },
+    {
+      "run_id": 38517436504,
+      "source_sha": "148202e0ec17ed693687c0c97582809e7b329eda",
+      "workflow": "governance.yml",
+      "conclusion": "success",
+      "scope": "Governance only"
+    }
+  ],
+  "limits": {
+    "compiled_platform": "CROSS_BUILD_PASS_ONLY",
+    "target_native_execution": "NOT_RUN",
+    "target_ffi_function_execution": "NOT_RUN",
+    "target_Go_cgo": "NOT_RUN",
+    "target_OS_driver": "NOT_RUN",
+    "real_Rust_steady_engine": "NOT_IMPLEMENTED",
+    "real_V4_admission": "DISABLED",
+    "wire_codec_receipt_game": "NOT_IMPLEMENTED",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "R0最小wbd-codec实现WBC4 receipt-control bundle与WBG4 shared Game envelope严格显式offset编解码，真实Rust golden/非法长度、flags、重复/未知type边界和Actions预编译消费；避免广告能力，先保持Go V4生产拒绝。"
+}
