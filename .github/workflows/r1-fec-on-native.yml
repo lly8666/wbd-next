@@ -43,7 +43,8 @@ jobs:
                  'crates/wbd-codec/src/record_crypto.rs','crates/wbd-codec/src/record_replay.rs',
                  'crates/wbd-codec/src/record_frame.rs','crates/wbd-codec/src/path_budget.rs',
                  'crates/wbd-codec/src/fec_math.rs','crates/wbd-codec/src/fec_tx.rs',
-                 'crates/wbd-codec/src/fec_rx.rs','crates/wbd-codec/src/link_fec_wire.rs',
+                 'crates/wbd-codec/src/fec_rx.rs','crates/wbd-codec/src/fec_block_id.rs',
+                 'crates/wbd-codec/src/link_fec_wire.rs',
                  'crates/wbd-platform/src/r1.rs','crates/wbd-platform/src/ipv4_tcp.rs',
                  'crates/wbd-engine/tests/r1_fec_on.rs']
           meta={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
@@ -52,7 +53,7 @@ jobs:
                 'test_binary_sha256':sha('r1-fec-build/test.bin'),
                 'lock_sha256':sha('Cargo.lock'),
                 'source_parts_sha256':{p:sha(p) for p in parts},
-                'scope':'M1_ARENA_M3_FEC_AEAD_REPLAY_M4_FULL_IPV4_TCP_CHECKSUM_IN_PROCESS_ONLY'}
+                'scope':'M1_ARENA_M3_FEC_AEAD_REPLAY_POST_AUTH_BLOCKID_SCOPE_M4_FULL_IPV4_TCP_IN_PROCESS_ONLY'}
           pathlib.Path('r1-fec-build/manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
           print(json.dumps(meta,indent=2))
           PY
@@ -108,8 +109,8 @@ jobs:
                   'test_log_sha256':hashlib.sha256(log.encode()).hexdigest(),
                   'native_tests_passed':n,'test_exit':int(os.environ['TEST_EXIT']),
                   'result':'PASS' if ok else 'FAIL',
-                  'scope':'R1_IN_PROCESS_FULL_IPV4_TCP_MTU_CHECKSUM_REAL_FEC_AEAD_REPLAY_RS20_ONLY',
-                  'not_qualified':'GO_V4_ADMISSION;NATIVE_RAW_CARRIER;LIVE_BLOCK_ID_WRAP;PERFORMANCE;PRODUCTION_V4;PHYSICAL'}
+                  'scope':'R1_IN_PROCESS_IPV4_TCP_MTU_REAL_FEC_AEAD_REPLAY_POST_AUTH_ID_SCOPE_RS20_ONLY',
+                  'not_qualified':'GO_V4_ADMISSION;AUTHENTICATED_SENDER_GENERATION;NATIVE_RAW_CARRIER;LIVE_BLOCK_ID_WRAP;PERFORMANCE;PRODUCTION_V4;PHYSICAL'}
           pathlib.Path('r1-fec-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result,indent=2))
           if not ok:sys.exit(1)

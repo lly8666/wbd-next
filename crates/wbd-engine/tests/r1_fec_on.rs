@@ -2,7 +2,8 @@
 //! In-process sink, NOT real raw socket, Go V4 production or performance qualification.
 use std::io;
 use wbd_codec::fec_tx::FecTxOwner;
-use wbd_codec::fec_rx::{FecRxOwner,Config,Direction,Scope,Deliver};
+use wbd_codec::fec_rx::{FecRxOwner,Config,Direction,Deliver};
+use wbd_codec::fec_block_id::{AuthenticatedContext,FecBlockIdOwner,IdConfig,IdError};
 use wbd_codec::link_fec_wire::{inspect_fec_header,FEC_HEADER,FecShardPhase};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,CryptoError,RecordSuite};
@@ -32,6 +33,17 @@ fn fec_rx(b:&FrameBudget)->FecRxOwner{
  max_heavy_blocks:4,max_compact_blocks:8,first_id_ext:1}).unwrap()
 }
 
+// This hardcoded generation is a scoped test input, NOT a verified Go V4
+// binding. Never wire production FEC RX until admission substantiates it.
+fn trusted_fixture()->AuthenticatedContext{
+ AuthenticatedContext{epoch:77,direction:Direction::ClientToServer,trusted_generation:0}
+}
+fn scoped_ids()->FecBlockIdOwner{
+ FecBlockIdOwner::new(IdConfig{
+  epoch:77,direction:Direction::ClientToServer,anchor:0,retired_floor:0,
+  max_forward:1024,max_reorder:1024,max_heavy:4,max_compact:8
+ }).unwrap()
+}
 fn tuple()->Ipv4Tuple<'static>{
  Ipv4Tuple{src_ip:&[192,0,2,40],dst_ip:&[198,51,100,40],src_port:43000,dst_port:443}
 }
@@ -99,7 +111,7 @@ fn send(a:&mut Arena,tx:&mut LaneTxCrypto,owner:&mut TxOwner,
  pn
 }
 fn receive(a:&mut Arena,owner:&mut RxOwner,
- rx:&mut ReplayProtectedLaneRx,fec:&mut FecRxOwner,wire:&[u8],at:u64,seq:u32)->Deliver{
+ rx:&mut ReplayProtectedLaneRx,fec:&mut FecRxOwner,ids:&mut FecBlockIdOwner,wire:&[u8],at:u64,seq:u32)->Deliver{
  let mut unique=a.allocate().unwrap();
  assert_eq!(wire[0],0x45);
  assert_eq!(u16::from_be_bytes([wire[2],wire[3]]) as usize,wire.len());
@@ -110,10 +122,14 @@ fn receive(a:&mut Arena,owner:&mut RxOwner,
  let mut packet=owner.take_ready(MonoNs(at)).expect("no block wait");
  let open=rx.open_unique_in_place(packet.wire_mut()).unwrap();
  assert_eq!(open.kind,AUTHENTICATED_LINK_KIND);
+ // PN replay and AEAD have already succeeded: only NOW observe the 56B WF ID.
+ let authenticated=trusted_fixture(); // generation from fixture, not raw WF!
+ let observation=ids.observe_wire_after_auth(
+   open.payload,budget().max_fec_wire_datagram(),authenticated,at/1_000_000).unwrap();
  assert_eq!(inspect_fec_header(open.payload).unwrap().block_id,1);
- let result=fec.push_after_auth(open.payload,Scope{
-  epoch:77,direction:Direction::ClientToServer,id_ext:1
- },at/1_000_000).unwrap();
+ assert_eq!(observation.id_ext,1);
+ let result=fec.push_after_auth(
+   open.payload,observation.rx_scope(authenticated),at/1_000_000).unwrap();
  drop(packet);assert_eq!(a.drain_returns(),1);result
 }
 #[test]
@@ -127,21 +143,24 @@ fn r1_m0_fec_on_systematic_first_business_before_parity_and_replay(){
  let mut tx=LaneTxCrypto::new(keys(),b.record_wire_mtu).unwrap();
  let mut rx=ReplayProtectedLaneRx::new(keys(),b.record_wire_mtu,replay_config()).unwrap();
  let mut fec=fec_rx(&b);
+ let mut ids=scoped_ids();
  let mut ta=Arena::new(301,8,256,1,80000).unwrap();
  let mut ra=Arena::new(302,8,256,1,80000).unwrap();
  let mut to=TxOwner::new(limits(),limits()).unwrap();
  let mut ro=RxOwner::new(limits()).unwrap();
  let mut sink=Sink::default();
  assert_eq!(send(&mut ta,&mut tx,&mut to,&mut sink,&batch.systematic[0],0),0);
- let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],1,0);
+ let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,&sink.frames[0],1,0);
  assert_eq!(d.systematic,vec![(0,payload.to_vec())]);assert!(d.recovered.is_empty());
  assert_eq!(sink.calls,1);
+ assert_eq!((ids.stats().highest,ids.stats().distinct_accepted),(1,1));
  let mut duplicate=sink.frames[0][40..].to_vec();
  assert_eq!(rx.open_unique_in_place(&mut duplicate),Err(UniqueOpenError::Duplicate));
  let mut corrupted=sink.frames[0][40..].to_vec();let last=corrupted.len()-1;corrupted[last]^=1;
  assert_eq!(rx.open_unique_in_place(&mut corrupted),
   Err(UniqueOpenError::InvalidRecord(CryptoError::Authentication)));
  assert_eq!(rx.max_seen(),Some(0));assert_eq!(fec.stats().systematic,1);
+ assert_eq!(ids.stats().distinct_accepted,1); // auth/replay rejection did not mutate scope
  assert!(ftx.flush_due(31).unwrap().parity.is_empty());
  assert!(!ftx.flush_due(32).unwrap().parity.is_empty());
  // Tight IPv4 576, MSS536, record31, FEC56: 449 business bytes exactly.
@@ -194,6 +213,7 @@ fn r1_m0_fec_on_missing_real_rs20_source_recovers_only_once(){
  let mut rx=ReplayProtectedLaneRx::new_for_suite(
   keys(),b.record_wire_mtu,RecordSuite::Aes128Gcm,replay_config()).unwrap();
  let mut fec=fec_rx(&b);
+ let mut ids=scoped_ids();
  let mut ta=Arena::new(303,8,256,1,80000).unwrap();
  let mut ra=Arena::new(304,8,256,1,80000).unwrap();
  let mut to=TxOwner::new(limits(),limits()).unwrap();
@@ -202,16 +222,20 @@ fn r1_m0_fec_on_missing_real_rs20_source_recovers_only_once(){
  send(&mut ta,&mut tx,&mut to,&mut sink,&a.systematic[0],0); // original PN0 lost
  send(&mut ta,&mut tx,&mut to,&mut sink,&z.systematic[0],1); // PN1 received
  send(&mut ta,&mut tx,&mut to,&mut sink,&parity[0],33_000_000); // PN2 received
- let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[1],2,1);
+ let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,&sink.frames[1],2,1);
  assert_eq!(d.systematic,vec![(1,right.to_vec())]);assert!(d.recovered.is_empty());
- let p=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[2],34_000_000,2);
+ let p=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,&sink.frames[2],34_000_000,2);
  assert!(p.systematic.is_empty());assert_eq!(p.recovered,vec![(0,left.to_vec())]);
- let late=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],35_000_000,0);
+ let late=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,&sink.frames[0],35_000_000,0);
  assert!(late.systematic.is_empty()&&late.recovered.is_empty());
  assert_eq!((fec.stats().systematic,fec.stats().recovered),(1,1));
  let mut replay=sink.frames[2][40..].to_vec();
  assert_eq!(rx.open_unique_in_place(&mut replay),Err(UniqueOpenError::Duplicate));
  assert_eq!(rx.max_seen(),Some(2));
+ assert_eq!(ids.stats().distinct_accepted,1);
+ assert_eq!(ids.stats().duplicates,2); // authenticated multi-shard same ID
+ ids.advance_retired_floor(1);
+ assert_eq!(ids.preview(1,trusted_fixture()),Err(IdError::Retired));
  assert_eq!(to.stop(),0);assert_eq!(ro.stop(),0);
  assert_eq!(ta.stop().loaned,0);assert!(ta.quiesced());
  assert_eq!(ra.stop().loaned,0);assert!(ra.quiesced());

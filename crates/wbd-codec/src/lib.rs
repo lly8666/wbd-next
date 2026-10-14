@@ -16,6 +16,8 @@ pub mod link_reassembly;
 pub mod fec_math;
 pub mod fec_tx;
 pub mod fec_rx;
+/// Authenticated-input WF BlockID scope; requires trusted V4 owner generation.
+pub mod fec_block_id;
 /// Unique path MTU budget accounting for Normal/FEC off.
 pub mod path_budget;
 
