@@ -62,6 +62,17 @@ def audit():
     packages = tomllib.loads(Path("Cargo.lock").read_text())["package"]
     toolchain = tomllib.loads(Path("rust-toolchain.toml").read_text())["toolchain"]
     members = {p.rsplit("/", 1)[-1] for p in workspace["workspace"]["members"]}
+    # Every native/cross gate that consumes this lock MUST retrigger when
+    # pinned toolchains/source qualification inputs change.
+    for workflow in (
+        "r0-build.yml", "r0-go-vectors.yml", "r0-v4-tls.yml",
+        "r0-go-control.yml", "r0-native-abi.yml", "r0-platform-fake.yml",
+        "r0-codec.yml", "r0-cross-abi.yml",
+    ):
+        body = Path(".github/workflows", workflow).read_text()
+        prefix = body.partition("permissions:")[0]
+        require('"r0/source-lock.json"' in prefix,
+                f"workflow {workflow} fails to trigger when source-lock changes")
     require(members == EXPECTED_WORKSPACE, "current workspace not four approved crates")
     require(set(lock["rust"]["crates"]) == members == set(m["workspace_expected"]),
             "source-lock/manifest/workspace crates drift")

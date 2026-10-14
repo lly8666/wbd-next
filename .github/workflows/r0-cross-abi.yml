@@ -10,6 +10,7 @@ on:
       - "crates/wbd-engine/**"
       - "crates/wbd-platform/**"
       - "r0/abi/**"
+      - "r0/source-lock.json"
       - "tools/r0_cross_abi.py"
       - ".github/workflows/r0-cross-abi.yml"
 permissions:
