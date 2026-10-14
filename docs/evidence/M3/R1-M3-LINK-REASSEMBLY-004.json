@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-LINK-REASSEMBLY-004",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "714d057e9a86d1bed6a6f6ce157853cf613fcccd",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_NATIVE_SCOPED_LINK_REASSEMBLY_ORACLE_AND_CAPACITY_ONLY",
+  "implementation": {
+    "path": "crates/wbd-codec/src/link_reassembly.rs",
+    "tests_path": "crates/wbd-codec/src/link_reassembly_tests.rs",
+    "test_mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "old_go_repository": "lly8666/wobuzhidao",
+    "old_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "old_go_source_paths": [
+      "internal/linkdata/datagram_fragment.go",
+      "internal/linkdata/datagram_fragment_test.go"
+    ],
+    "old_go_fixture": "r0/fixtures/legacy-link-fec-wire-v1.txt",
+    "semantics": [
+      "20B LINK header strictly on fragmented or reserved-magic escaped datagram; ordinary <=frame mtu is borrowed without state/timer/new 20B",
+      "FixedOff WF passes as ordinary; AdaptiveOff WF must be escaped; magic WBDLFRG1 always escaped",
+      "frame <= configured mtu; strict old-Go field parser first; metadata count <= ceil(total/(owner-authorized-min-mtu-20))",
+      "stable assembly key (tunnel_epoch, direction, packet_id_ext) and low32 wire packet_id equality",
+      "original Go wire first/last bytes at mtu64 exact; reverse out-of-order, identical duplicate, max65535 payload and mtu1400/1500",
+      "one bounded assembly owner max16 slots; per-owner payload <=1048560 bytes and charged metadata <=1048576 bytes, retired max64",
+      "incomplete 5s absolute monotonic TTL, duplicate cannot renew; completed/conflicted/evicted compact retired for 10s from retire time",
+      "oldest victim deterministic by created time + scope; incomplete assembly cannot block complete independent packet or ordinary healthy packet",
+      "one final owned Vec for completed multi-fragment packet, original fragment storage retained only while bounded assembly pending",
+      "large count never preallocates count-sized vector; bounded sparse BTreeMap of actually received parts; no runtime threads, no wall clock"
+    ],
+    "deliberate_incompatibility": {
+      "conflict_policy": "PINNED_GO retains first fragment on conflicting duplicate and may complete later; current module06 REQUIRES whole assembly fail + compact retirement, which this Rust code implements",
+      "max_count_policy": "PINNED_GO accepts sparse declared count65535 with total65535 even for mtu64; current module06 REQUIRES min-frame-budget-derived plausible count and no attacker-sized part vector; incompatible pathological header now rejected",
+      "scope": "LINK payload compatibility for valid old-Go frames proved; neither historical conflicting duplicate semantics nor arbitrary malformed metadata replay promised byte-equivalent",
+      "production_claim": "NOT_CLAIMED"
+    },
+    "test_names": [
+      "r1_link_mtu_go_64_minus_equal_plus_one_exact_wire_reverse_delivery",
+      "r1_link_magic_wf_escape_go_bytes_normal_hot_bypass",
+      "r1_link_out_of_order_missing_a_does_not_block_b",
+      "r1_link_conflict_stronger_than_go_retires_and_fails_closed",
+      "r1_link_ttl_absolute_5s_compact_10s_no_duplicate_extension",
+      "r1_link_sixteen_slots_seventeenth_evicts_no_small_packet_hol",
+      "r1_link_malformed_count_id_epoch_and_generation_are_scoped",
+      "r1_link_max_65535_datagram_1400_1500_and_framebudget_plusone"
+    ]
+  },
+  "native_actions": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "source_sha": "714d057e9a86d1bed6a6f6ce157853cf613fcccd",
+    "run_id": 38560097240,
+    "attempt": 1,
+    "conclusion": "success",
+    "status": "completed",
+    "build_job": 115838748181,
+    "consume_job": 115838971798,
+    "toolchain": "Rust 1.85.1",
+    "platform": "GitHub Actions native Ubuntu Linux x64",
+    "compiled_once": true,
+    "tests_passed": 31,
+    "tests_failed": 0,
+    "existing_budget": 6,
+    "existing_chacha": 5,
+    "existing_aes": 4,
+    "existing_replay": 8,
+    "new_link": 8,
+    "binary_sha256": "aac5aea047120b09690b063e3feac9ddf92a28e207455333284712338ec56419",
+    "test_log_sha256": "5f299acf451c60366815a630fcfe8e2cc35c9769711bf59991af796bbdb72e67",
+    "build_artifact": {
+      "id": 11891478284,
+      "digest": "sha256:e7c8d61f2e5d64f52c804bf9e373d0e80a44556c7111e7e8c5104272cda130fd",
+      "expires": "2026-11-13T11:56:38Z"
+    },
+    "result_artifact": {
+      "id": 11891398273,
+      "digest": "sha256:6a9e4afe29c8eabb5c8e8122e8e8a8bcdf3e4fd4de347856151dec56e01bda2e",
+      "expires": "2026-11-13T11:56:51Z"
+    }
+  },
+  "same_source_other_actions": [
+    {
+      "workflow": ".github/workflows/r0-codec.yml",
+      "run_id": 38560097328,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-record-framing.yml",
+      "run_id": 38560097319,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-link-fec-wire.yml",
+      "run_id": 38560097591,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "run_id": 38560097509,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "run_id": 38560097349,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38560097363,
+      "conclusion": "success",
+      "attempt": 1
+    }
+  ],
+  "history": [
+    {
+      "source_sha": "b36295ba6edc8ba016d62ed6af8cd6584e58faae",
+      "worker_run_id": 38559909516,
+      "result": "FAIL_NATIVE_30_PASS_1_FAIL",
+      "reason": "Test incorrectly expected table InvalidLayout for count65535 total65; immutable historical inspect_link correctly rejects count>total as WireError::InvalidFragment first. No module correctness regression. Test fixed and new count65 total65 guard case added on tested SOURCE."
+    }
+  ],
+  "no_unauthorized_changes": {
+    "root_Cargo_and_lock": "UNCHANGED_BY_M3",
+    "shared_ABI": "UNCHANGED",
+    "shared_CI": "UNCHANGED",
+    "main_branch": "UNCHANGED_BY_M3",
+    "frozen_R0_codec_13_test_selection": "PASS_UNCHANGED",
+    "normal_off_extra_LINK20": "NONE_FOR_ORDINARY"
+  },
+  "limits": {
+    "actual_original_Go_linkdata_native_run_for_this_atom": "NOT_RUN (pinned source read-only + Rust exact golden wire and semantic model)",
+    "full_app_live_first_packet_LINK_fragment_reassembly": "NOT_RUN",
+    "authenticated_input_source": "REQUIRES_M0_TO_PASS_SUCCESSFUL_AEAD_OPEN_RECORD",
+    "packet_id_extension_and_tunnel_epoch": "REQUIRES_M0_OWNED_AUTHENTICATED_SCOPE",
+    "real_timer_wiring": "NOT_RUN (explicit expire(now_ms) verified with synthetic monotonic clock)",
+    "win_arm_native": "NOT_RUN",
+    "FEC_on_GF256_parity": "NOT_IMPLEMENTED_IN_THIS_ATOM",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "M0 integrate new LINK table only after authentic ReplayProtectedLaneRx success, bind epoch/direction/ext packet ID and monotonic timer; verify first fragmented Normal/off two-part delivery + conflict retirement vs plain ordinary on one main SOURCE. M3 next task may independently implement genuine FEC codec using original Go oracle, not synthetic parity."
+}
