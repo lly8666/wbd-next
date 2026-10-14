@@ -3,6 +3,13 @@
 version = 4
 
 [[package]]
+name = "wbd-codec"
+version = "0.1.0"
+dependencies = [
+ "wbd-types",
+]
+
+[[package]]
 name = "wbd-engine"
 version = "0.1.0"
 dependencies = [

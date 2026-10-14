@@ -1,0 +1,73 @@
+name: R0 WBC4 WBG4 Rust wire codec golden
+run-name: "M0|${{ github.sha }}|r0-wire-codec"
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "crates/wbd-codec/**"
+      - "r0/source-lock.json"
+      - "tools/r0_codec_bundle.py"
+      - ".github/workflows/r0-codec.yml"
+permissions:
+  contents: read
+concurrency:
+  group: r0-codec-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compile pinned Rust wire codec once, no test execution here
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo build --release --locked -p wbd-codec
+          cargo test --release --locked -p wbd-codec --no-run
+          test_bin="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
+          test -n "$test_bin"
+          python tools/r0_codec_bundle.py pack \
+            --out r0-codec-bundle --binary "$test_bin" \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" --rust "$(rustc --version)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-codec-bundle/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-codec-bundle
+      - name: Verify exact SOURCE and precompiled binary then run 13 codec anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_codec_bundle.py consume \
+            --manifest r0-codec-bundle/manifest.json \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-codec-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-codec-result/
+          if-no-files-found: warn
+          retention-days: 30
