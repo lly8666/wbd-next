@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 10,
-  "checkpoint_sha": "4ab3c9c927dceace95ef5c29d33f28e5b455e9e7",
+  "sequence": 11,
+  "checkpoint_sha": "a42c45fb866cdf882f93790d5d05a11bcce11603",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-RX-007",
-  "current_task": "Bounded authenticated-input FEC RX Heavy/Compact owner implemented with streaming first delivery, final metadata cross-check, actual old-Go RS20 missing-only e×e recovery, 3s/10s absolute timers, pressure compaction and no BlockID resurrection at retired floor.",
-  "why_now": "FEC scalar GF256 and bounded 32ms source-first FEC TX were proven; this RX atom adds the complementary immutable final authority and bounded retired dedup while keeping record AEAD+PN replay and actual timers caller-owned.",
-  "done_when": "Final SOURCE ab7ef93a native compiled-once 55/55 r1 tests PASS (9 FEC RX+46 previously scoped codec) and seven same-source Actions SUCCESS including frozen R0+Governance; evidence S and cursor-only H. Original Go decoder package, product E2E, ISA-L performance remain not run.",
-  "next_action": "M0 first full FEC-on business single-SOURCE integration: ReplayProtectedLaneRx authenticates/filters PN before passing 56B wire to FecRxOwner::push_after_auth with trusted epoch/direction/extended BlockID and owner monotonic timer; FecTxOwner returns systematic separate from parity and M1/M4 prove real send priority. M3 next atomic optional capped e×e decode coefficient cache or separately authorized native ISA-L dispatch with actual toolchain/FFI target proof. No product PASS yet.",
+  "task_id": "R1-M3-G2-CHECKER-MIRROR-008",
+  "current_task": "M0 one-time authorized Git blob-only G2 worker checker mirrored; own 69/69 exact G2 ancestry and 58/58 Governance drills PASS after archiving resolved non-dispatchable M3 coordination memo outside live requests.",
+  "why_now": "Previous FEC RX native55/55 remained blocked at H due historic G2 bound64; M0 approved single-file checker mirror at exact parent, without granting general tools ownership; M3 performed restricted transfer and own run.",
+  "done_when": "Worker exact single-parent one-file checker mirror commit63712142, blob1d27c4ec identical main; own stable SOURCEc98aea62 Governance38588209791 PASS full69/69 (42 M3+27 main), structure and 58/58 PASS; evidence S a42c45fb Governance38588856204 PASS; H cursor-only seq11 with post-H Governance to check. Product remains partial.",
+  "next_action": "M0 may consume successful M3 branch G2 handoff and integrate actual FEC-on authenticated business with ReplayProtectedLaneRx, bounded TX source-priority, RX with trusted extended BlockID and owner timer on one main SOURCE. M3 may next prove bounded e×e decode coeff cache or target-specific ISA-L if separately prioritized; do not edit root checker again.",
   "unverified": true,
-  "last_tested_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+  "last_tested_source": "c98aea62014f600dfd5655718e49b73c11d0731c",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-RX-007.json"
+    "docs/evidence/M3/R1-M3-G2-CHECKER-MIRROR-008.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/architecture/modules/00-CONTRACTS.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
     "docs/devlog/M3/R1-M3-AES-RECORD-002.md",
     "docs/devlog/M3/R1-M3-REPLAY-003.md",
     "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md",
     "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md",
     "docs/devlog/M3/R1-M3-FEC-TX-006.md",
-    "docs/devlog/M3/R1-M3-FEC-RX-007.md"
+    "docs/devlog/M3/R1-M3-FEC-RX-007.md",
+    "docs/devlog/M3/R1-M3-G2-checker-mirror-008.md"
   ],
-  "partial_summary": "M3 seq9 TX H5bdb3c00 governance38565345898 PASS; RX initial SOURCE b245f6d GitHub worker38567620117 compiled 50/54 passed but four failures: recovered-only delivered lengths not preserved in Compact; conflict count duplicated blocked retries. Fixed SOURCE fa79ed19 worker38567923729 54/54 PASS. Additional security audit found mid-push pressure Compact eviction can advance retired_floor and resurrect older formerly unseen ID. Final SOURCE ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94 added post-eviction floor checks and ninth regression; compiled-once worker38568299178 Linux Rust1.85.1 55/55 PASS, binary sha256 5b61f3afd8a008fb293d0a8abe2b39f91de749b5c8e1ea88d94bbf41bdfeb7c2. Seven matching source Actions successful: worker38568299178, R0 codec38568298918, framing38568299209, old Go LINK/FEC38568299180, G2 38568299218, audit38568299021, Governance38568298913. FEC RX first authenticated streaming immediately delivered; real RS20 e×e missing recovery after final, Heavy3s/Compact10s bounded and retired floor. Evidence S4ab3c9c; cursor-only H seq10. M0 AEAD+PN+FEC-on first real business/driver scheduling NOT_RUN; original Go decoder package and SIMD Windows/ARM/performance/product/physical NOT_RUN. Root Cargo/lock/shared ABI/CI unchanged."
+  "partial_summary": "Previous M3 FEC RX CODE SOURCE ab7ef93a native55/55 PASS and 7/7 Actions. Seq10 H d8042d75 role G2 failed bound64, prior request memo 56907bdb. M0 authorized one-time script mirror decision docs/decisions/M0-M3-one-shot-G2-checker-sync.md, CODE SOURCE4973ac22 and real G2 test38585125032 PASS 67/67. M3 committed exact one-parent sole tools/worker_scope_ci.py commit63712142, approved blob1d27c4ec, unchanged registry revision2 epoch1; first own Governance38587358359 G2 PASS but whole FAIL structure invalid M3 request memo schema. Cleanup c98aea62014f600dfd5655718e49b73c11d0731c removed invalid formal request, archived original in docs/evidence/M3 at evidence S a42c45fb. Own Governance38588209791 SUCCESS: 69/69 G2 ancestry (42 M3+27 main), 58/58 tests, structure PASS, live-continuity non-gating observe exit2 before checkpoint (do not claim CLEAN). Evidence S a42c45fb Governance38588856204 SUCCESS. H seq11 checkpoint S cursor-only; H own Governance and continuity must be verified separately. No Cargo/lock/shared ABI/workflow/registry modifications and no actual FEC-on product/V4/WinARM/ISA-L/perf/physical execution."
 }
