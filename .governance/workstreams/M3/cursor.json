@@ -4,8 +4,8 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 7,
-  "checkpoint_sha": "d67185111a8480f367e19d424598a542d8968f25",
+  "sequence": 8,
+  "checkpoint_sha": "a3509e65e7ac110c139d685efc0514b01ae96d21",
   "progress": "partial",
   "task_id": "R1-M3-FEC-SCALAR-005",
   "current_task": "Completed genuine old-Go-compatible GF256 RS20:R scalar systematic/partial parity and missing-only e-by-e direct reconstruction, fixed old Go generator and wire oracles, all six profiles and k1..20 native verified.",
@@ -19,8 +19,7 @@
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-G2-worker-activation.md",
-    "docs/decisions/M0-R0-parallel-worker-readiness.md",
+    "docs/decisions/M0-M3-crypto-root-sync.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
@@ -29,5 +28,5 @@
     "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md",
     "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md"
   ],
-  "partial_summary": "M3 seq6 LINK old Go scoped reassembly SOURCE714d057e native31/31 H5569f9ef Governance38560538418 PASS. New FEC scalar S fe8601e native38561671696 E0308 test type fail; S2 ef5c14c native38561843437 36/38 PASS two bad golden test expectations (partial k2 sends min(k,R)=2 not 4, copy of 56B old-Go source header added 3 zero bytes), corrected at final SOURCE0215c051456dc0e245dbbd413157dfd2e18c2cfc and standalone Go source checked in. Native compiled-once 38562179474 Rust1.85.1 Linux38/38 PASS (new FEC7, prior31), binary SHA256 0aabdb30e9ffd872ff7f9e8990e4ee77c3fc1ae1d17ec2c54ae8a79e08acd479; all seven SAME SOURCE Actions successful: worker38562179474, R0 codec38562179605, framing38562179521, LINK/FEC38562179303, G2 38562179601, audit38562179565, governance38562179365. Go1.23.2 independent generator/parity oracle compiled locally and checked into oracles; original Go package direct FEC native test NOT_RUN. Genuine GF0x11d 40x20 Vandermonde inverse, partial min(k,R), streaming immediate 56B, final parity metadata, e-by-e missing-only inverse; SIMD/ISA-L native and timed FEC block/Heavy-Compact/Rust product-on NOT_IMPLEMENTED or NOT_RUN. Evidence S d67185111a; H cursor only seq7. No root Cargo/lock, shared ABI or CI edits."
+  "partial_summary": "M3 seq6 LINK old Go scoped reassembly SOURCE714d057e native31/31 H5569f9ef Governance38560538418 PASS. New FEC scalar S fe8601e native38561671696 E0308 test type fail; S2 ef5c14c native38561843437 36/38 PASS two bad golden test expectations (partial k2 sends min(k,R)=2 not 4, copy of 56B old-Go source header added 3 zero bytes), corrected at final SOURCE0215c051456dc0e245dbbd413157dfd2e18c2cfc and standalone Go source checked in. Native compiled-once 38562179474 Rust1.85.1 Linux38/38 PASS (new FEC7, prior31), binary SHA256 0aabdb30e9ffd872ff7f9e8990e4ee77c3fc1ae1d17ec2c54ae8a79e08acd479; all seven SAME SOURCE Actions successful: worker38562179474, R0 codec38562179605, framing38562179521, LINK/FEC38562179303, G2 38562179601, audit38562179565, governance38562179365. Go1.23.2 independent generator/parity oracle compiled locally and checked into oracles; original Go package direct FEC native test NOT_RUN. Genuine GF0x11d 40x20 Vandermonde inverse, partial min(k,R), streaming immediate 56B, final parity metadata, e-by-e missing-only inverse; SIMD/ISA-L native and timed FEC block/Heavy-Compact/Rust product-on NOT_IMPLEMENTED or NOT_RUN. Evidence S d67185111a; H cursor only seq7. No root Cargo/lock, shared ABI or CI edits. H1 89863bd7 Governance38562731727 FAIL structurally because context_refs=9 > max_refs8; preserved in evidence S2 a3509e65. H2 cursor-only seq8 checkpoint S2 and exactly8 refs. Proven Rust SOURCE and compiled-once worker unchanged."
 }
