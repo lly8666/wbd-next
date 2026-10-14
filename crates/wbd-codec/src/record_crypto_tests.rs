@@ -94,3 +94,117 @@ use crate::record_crypto::*;
         }
     }
 
+
+
+// C01 exact old Go AES suite differential: this is NOT just Rust roundtrip.
+// V3 suite-domain-separated HKDF C2S keys are pinned in the independent
+// oracle's Go source comments and verified with PyCA AES/HKDF separately.
+const AES_V3: &str = include_str!("../oracles/aes_wire_go_v3.txt");
+fn aes_v3_keys(suite: RecordSuite) -> DirectionKeys {
+    let (aead,iv,hp)=match suite {
+        RecordSuite::Aes128Gcm=>(
+            "05bac544ed5965eec3f555074486839cadaac6372bbb645c26dcf43c312c1cdc",
+            "1cb11fe4d87e283dfb2dfa5b",
+            "50920f50e971e66a1e329a6c3fab175d8ddb103fb8462a8d9100415543263eb9"),
+        RecordSuite::Aes256Gcm=>(
+            "8b3e7e908449fd44fecede8d34f6e29c01efdda5e9f569dd679b8847833781c3",
+            "50acc6123b6403da143ac402",
+            "7fbb9de569b6269d2db6c3f4dc81d14904cfade82f0dc61bc10b09dafa5b168c"),
+        _=>panic!("AES suite only"),
+    };
+    DirectionKeys {
+        aead_key: unhex(aead).try_into().unwrap(),
+        iv: unhex(iv).try_into().unwrap(),
+        hp_key: unhex(hp).try_into().unwrap(),
+    }
+}
+fn aes_suite(id: u8) -> RecordSuite {
+    RecordSuite::try_from(id).unwrap()
+}
+#[test]
+fn r1_crypto_aes_14_go_stdlib_vectors_byte_exact_and_authenticated() {
+    let mut count=[0usize;2];
+    for line in AES_V3.lines().filter(|x|!x.starts_with('#')&&!x.is_empty()) {
+        let x:Vec<_>=line.split('|').collect();
+        assert_eq!(x.len(),6);
+        let suite=aes_suite(x[0].parse::<u8>().unwrap());
+        let idx=if suite==RecordSuite::Aes128Gcm{0}else{1};
+        let pn=x[1].parse::<u64>().unwrap();
+        let kind=x[2].parse::<u8>().unwrap();
+        let pad=x[3].parse::<usize>().unwrap();
+        let payload=unhex(x[4]);
+        let expected=unhex(x[5]);
+        let mut wire=vec![0u8;expected.len()];
+        wire[CIPHER_OFFSET+1..CIPHER_OFFSET+1+payload.len()].copy_from_slice(&payload);
+        let mut tx=LaneTxCrypto::from_test_pn_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,pn,suite);
+        assert_eq!(tx.seal_in_place(kind,&mut wire,payload.len(),pad).unwrap(),(pn,expected.len()));
+        assert_eq!(wire,expected,"Go AES suite={:?} PN={pn}",suite);
+        let rx=LaneRxCrypto::new_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,suite).unwrap();
+        let opened=rx.open_in_place(&mut wire).unwrap();
+        assert_eq!((opened.pn,opened.kind,opened.payload),(pn,kind,payload.as_slice()));
+        count[idx]+=1;
+    }
+    assert_eq!(count,[7,7]);
+}
+#[test]
+fn r1_crypto_aes_auth_tamper_wrong_suite_and_direction_fail_closed() {
+    for suite in [RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm] {
+        let line=AES_V3.lines().find(|x|x.starts_with(&format!("{}|7|",suite as u8))).unwrap();
+        let old=unhex(line.split('|').nth(5).unwrap());
+        let rx=LaneRxCrypto::new_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,suite).unwrap();
+        // Mutate every byte: must not emit any authenticated business.
+        for i in 0..old.len() {
+            let mut corrupted=old.clone();corrupted[i]^=0x80;
+            assert!(rx.open_in_place(&mut corrupted).is_err(),
+                "suite {:?} tamper at index {}",suite,i);
+        }
+        let other=if suite==RecordSuite::Aes128Gcm {RecordSuite::Aes256Gcm}
+                  else {RecordSuite::Aes128Gcm};
+        let wrong=LaneRxCrypto::new_for_suite(aes_v3_keys(other),MAX_WIRE_LEN,other).unwrap();
+        assert_eq!(wrong.open_in_place(&mut old.clone()),Err(CryptoError::Authentication));
+        let mut altered=aes_v3_keys(suite);
+        altered.iv[0]^=1;
+        let wrong_iv=LaneRxCrypto::new_for_suite(altered,MAX_WIRE_LEN,suite).unwrap();
+        assert_eq!(wrong_iv.open_in_place(&mut old.clone()),Err(CryptoError::Authentication));
+        let mut altered=aes_v3_keys(suite);
+        altered.hp_key[0]^=1;
+        let wrong_hp=LaneRxCrypto::new_for_suite(altered,MAX_WIRE_LEN,suite).unwrap();
+        assert_eq!(wrong_hp.open_in_place(&mut old.clone()),Err(CryptoError::Authentication));
+        assert_eq!(rx.open_in_place(&mut old.clone()).unwrap().payload,b"short");
+    }
+    for bad in [0,4,255] {
+        assert_eq!(RecordSuite::try_from(bad),Err(CryptoError::UnsupportedSuite));
+    }
+}
+#[test]
+fn r1_crypto_aes_boundary_hp_tag_overlap_reordering_and_max_wire() {
+    for suite in [RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm] {
+        let mut tx=LaneTxCrypto::new_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,suite).unwrap();
+        let rx=LaneRxCrypto::new_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,suite).unwrap();
+        let mut wires=Vec::new();
+        for len in [0,1,15,16,17,31,1024,MAX_WIRE_LEN-31] {
+            let payload=(0..len).map(|i|(i%251) as u8).collect::<Vec<_>>();
+            let mut wire=vec![0;31+len];
+            wire[CIPHER_OFFSET+1..CIPHER_OFFSET+1+len].copy_from_slice(&payload);
+            tx.seal_in_place(0,&mut wire,len,0).unwrap();
+            wires.push((wire,payload));
+        }
+        // Reverse arrival is legal independent AEAD. Replay/window is deliberately not in M3 yet.
+        for (mut wire,payload) in wires.into_iter().rev() {
+            let rec=rx.open_in_place(&mut wire).unwrap();
+            assert_eq!(rec.payload,payload.as_slice());
+        }
+        let mut short=vec![0;FIXED_WIRE_OVERHEAD-1];
+        assert_eq!(tx.seal_in_place(0,&mut short,0,0),Err(CryptoError::Capacity));
+    }
+}
+#[test]
+fn r1_crypto_aes_burn_pn_on_fail_and_refuse_wrap() {
+    for suite in [RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm] {
+        let mut tx=LaneTxCrypto::from_test_pn_for_suite(aes_v3_keys(suite),MAX_WIRE_LEN,u64::MAX-1,suite);
+        let mut tiny=[0;FIXED_WIRE_OVERHEAD];
+        assert_eq!(tx.seal_in_place(0,&mut tiny,1,0),Err(CryptoError::Capacity));
+        assert_eq!(tx.seal_in_place(0,&mut tiny,0,0).unwrap().0,u64::MAX);
+        assert_eq!(tx.seal_in_place(0,&mut tiny,0,0),Err(CryptoError::PnExhausted));
+    }
+}
