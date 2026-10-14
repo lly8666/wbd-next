@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-REAL-OUTER-REPAIR-001",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "ec81bb412c0250e2384e39b7d5727d0675a29891",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "NATIVE_LINUX_X64_IN_PROCESS_M4_ACTUAL_IPV4_TCP_BYTES_M2_BUDGET_M1_ORIGINAL_FROZEN_REPAIR",
+  "preflight": {
+    "previous_m0_h": "33efd8785c3a579ae715831f8d895ac4e20dfaf1",
+    "m0_sequence": 32,
+    "previous_checkpoint": "c75ddbec0a60b651f1fb6a62aada83e1168a5786",
+    "previous_governance_run": 38566807812,
+    "continuity": "ONE_CURSOR_ONLY_H_CLEAN",
+    "registry_revision": 2,
+    "epoch": 1,
+    "m4_worker_source": "46a38c07016e55dead72ed3cbf1b954890412b15",
+    "m4_worker_head_preflight": "ad5eea274cbc81e09caf757491a482a3ef1ab8fa",
+    "m4_worker_native_run": 38566384288,
+    "m4_worker_tests": "12/12_PASS",
+    "m4_worker_evidence": "docs/evidence/M4/R1-M4-IPV4-TCP-READY-002.json"
+  },
+  "changes": {
+    "main_source_sha": "ec81bb412c0250e2384e39b7d5727d0675a29891",
+    "imported_worker_m4_blob_sha": "a49899b915b231792ec2cca9af194dc9cce02924",
+    "m0_changed_worker_refs": false,
+    "files": [
+      "crates/wbd-platform/src/ipv4_tcp.rs",
+      "crates/wbd-platform/src/lib.rs",
+      "crates/wbd-engine/src/recovery_ingress.rs",
+      "crates/wbd-engine/tests/r2_receipt_ingress.rs",
+      ".github/workflows/r2-auth-receipt.yml",
+      ".github/workflows/r1-ipv4-tcp-native.yml",
+      "docs/devlog/M0/R2-real-ipv4-tcp-budgeted-repair.md"
+    ],
+    "semantics": [
+      "M4 build validates tuple, persona/options, IPv4 total length, MTU and scratch before M2 budget or driver",
+      "M2 reserve debits exact fully serialized bytes, including valid negotiated timestamp options",
+      "M4 ReadyPacketSink sees full packet buffer whose length was reserved, no heap wire clone on submit",
+      "M1 original frozen PN, SeqOffset, ciphertext unchanged, presentation ACK/IPID can change without re-seal",
+      "EAGAIN NotSent refunded, short/ambiguous IoFailed and EINTR charged Uncertain, Accepted charged but not peer ACK",
+      "bad tuple/MTU/scratch rejects atomically without quota debit or driver call",
+      "independent scalar checksum oracle in M0 validates real IPv4/TCP bytes, not mere byte arithmetic estimate"
+    ]
+  },
+  "M0_native_integrated": {
+    "workflow": "r2-auth-receipt",
+    "run_id": 38572097988,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "runner": "ubuntu-24.04 x86_64 Rust1.85.1",
+    "compiled_once": true,
+    "tests": 10,
+    "failed": 0,
+    "build_job": 115879672120,
+    "consume_job": 115880017721,
+    "binary_sha256": "baa93d256a4059f45b542e97c78eb44eb1e6c1470e2f7aacfdfde9176706571e",
+    "log_sha256": "bb5902d3dd229969acb038c9d774ac0190f0d6de46943efa7be4287289b07a12",
+    "artifacts": [
+      {
+        "id": 11897843142,
+        "digest": "sha256:c254ea9a83c70cd35cbacd636ddc78607cb52e09835a980630ee14ecd5fd73c8"
+      },
+      {
+        "id": 11896984321,
+        "digest": "sha256:797ed62b0c7550114a865d82ae0c7ceb6b3cf172a67020022f7c5e6b5d99b371"
+      }
+    ]
+  },
+  "M4_native_package": {
+    "workflow": "r1-ipv4-tcp-native",
+    "run_id": 38572097873,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "runner": "ubuntu-24.04 x86_64 Rust1.85.1",
+    "compiled_once": true,
+    "tests": 12,
+    "failed": 0,
+    "build_job": 115879673996,
+    "consume_job": 115879887772,
+    "binary_sha256": "b02ff991e17d5c63dd38d22ca91082db0ef6ebed223cf238f011a45c5a85e0f7",
+    "log_sha256": "c03ceee50ef2a459a0884f74d8fdae6717b07bbea646d89016c7cad8e4cbc3b2",
+    "artifacts": [
+      {
+        "id": 11898072934,
+        "digest": "sha256:7ce72d3532a2d22956da3e799fa297292b4cf6ff898a627b7743c4bedceab3c6"
+      },
+      {
+        "id": 11896904435,
+        "digest": "sha256:2252efafbbccb497d0eeb4764deed0bcf8f75eaff8bfd6137a72b720ceb46432"
+      }
+    ]
+  },
+  "same_source_actions": {
+    "total": 9,
+    "success": 9,
+    "runs": [
+      {
+        "run_id": 38572097880,
+        "workflow": "governance",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097988,
+        "workflow": "r2-auth-receipt",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097873,
+        "workflow": "r1-ipv4-tcp-native",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097454,
+        "workflow": "r0-static-qualification-audit",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097531,
+        "workflow": "g2-scoped-bootstrap-native",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097780,
+        "workflow": "r0-fake-platform",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097657,
+        "workflow": "r1-normal-off-replay",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097442,
+        "workflow": "r0-native-abi",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38572097597,
+        "workflow": "r0-cross-abi",
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "cross_abi": {
+    "run_id": 38572097597,
+    "all_jobs": [
+      {
+        "id": 115879668927,
+        "name": "build (aarch64-unknown-linux-gnu, aarch64-linux-gnu-gcc, gcc-aarch64-linux-gnu libc6-dev-arm64-cr...",
+        "conclusion": "success"
+      },
+      {
+        "id": 115879669235,
+        "name": "build (x86_64-pc-windows-gnu, x86_64-w64-mingw32-gcc, gcc-mingw-w64-x86-64 nasm, binutils-mingw-w...",
+        "conclusion": "success"
+      },
+      {
+        "id": 115882515049,
+        "name": "consume (aarch64-unknown-linux-gnu, binutils-aarch64-linux-gnu)",
+        "conclusion": "success"
+      },
+      {
+        "id": 115882515052,
+        "name": "consume (x86_64-pc-windows-gnu, binutils-mingw-w64-x86-64)",
+        "conclusion": "success"
+      }
+    ],
+    "target_runtime": "NOT_RUN_CROSS_COMPILE_AND_CONSUME_ONLY"
+  },
+  "owner_refs_at_receipt": {
+    "work/m1-r1-runtime": "49d886d639b7ba93aca00cfc0e305b23017d0cc8",
+    "work/m2-r2-recovery": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "work/m3-r1-codec": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "work/m4-r1-platform": "ad5eea274cbc81e09caf757491a482a3ef1ab8fa"
+  },
+  "worker_M1_observation": {
+    "native_source": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
+    "worker_native_run": 38567433037,
+    "native_tests": "19/19_PASS",
+    "branch_handoff": "ready_for_integration",
+    "old_shared_R0_ABI_harness_failed_run": 38567433175,
+    "next_M0_shared_issue": "fix root unfiltered 3 passed sentinel, review and integrate wake/stop"
+  },
+  "worker_M3_observation": {
+    "native_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+    "worker_native_run": 38568299178,
+    "native_tests": "55/55_PASS",
+    "next_M0_product_task": "FEC-on with replay-before-owner integration"
+  },
+  "not_qualified": {
+    "actual_Go_V4_exporter_and_trusted_session_tuple": "NOT_RUN",
+    "native_kernel_AF_PACKET_sendmmsg": "NOT_RUN",
+    "global_process_multi_client_sparse_quota": "NOT_RUN",
+    "live_Linux_raw_packet": "NOT_RUN",
+    "native_Windows_ARM": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "After fresh main/worker status, M0 independently fix shared R0 ABI harness count failure run38567433175 while importing M1 verified wake/stop owner source81cbc57, then M3 FEC-on integration. Multi-client sparse quota and trusted live Go V4 remain later scoped atoms."
+}
