@@ -16,6 +16,53 @@ from tools import governance as g
 
 G2_BASE = "83bd720368b9be68b3c4c94d7462d20cf4d796db"
 
+G2_ACTIVATION_MAX_COMMITS = 96  # per_page=100; no truncated audit may pass
+
+def complete_g2_ancestry(compare):
+    """Validate a COMPLETE non-diverged bounded immutable GitHub commit page."""
+    total=compare.get("total_commits",-1)
+    commits=compare.get("commits")
+    g.need(compare.get("status") in {"ahead","identical"} and
+           type(total) is int and 0<=total<=G2_ACTIVATION_MAX_COMMITS and
+           isinstance(commits,list) and len(commits)==total,
+           "incomplete or diverged bounded G2 activation ancestry")
+    ids=[x.get("sha") for x in commits if isinstance(x,dict)]
+    g.need(len(ids)==total and all(isinstance(v,str) and g.SHA.fullmatch(v) for v in ids)
+           and len(set(ids))==total,
+           "invalid or repeated G2 activation SHA")
+    return commits
+
+def audit_worker_history(api,role,source,control_sha):
+    """Every commit's FULL path list, parent count and exceptional sync reviewed."""
+    compare=api.get(f"compare/{G2_BASE}...{source}?per_page=100")
+    edges=[]
+    for commit in complete_g2_ancestry(compare):
+        sha=commit["sha"]
+        on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
+        g.need(on_main.get("status") in {"ahead","identical","diverged","behind"},
+               "main ancestor status indeterminate")
+        ancestor=on_main["status"] in {"ahead","identical"}
+        detail=g.commit_delta(api,sha,256)
+        sync={}
+        if detail["parents"]==2 and not ancestor:
+            if role["id"]=="M3":
+                sync_paths=review_m3_main_sync(api,role,sha,control_sha)
+            elif role["id"]=="M2":
+                sync_paths=review_m2_main_sync(api,role,sha,control_sha)
+            else:
+                g.need(False,"unreviewed role attempted two-parent merge")
+            merged=api.get(f"commits/{sha}?per_page=1")
+            sync={"approved_main_sync":True,
+                  "first_parent":merged["parents"][0]["sha"],
+                  "sync_paths":sync_paths}
+        edges.append(dict(detail,is_main_ancestor=ancestor,**sync))
+    return {
+        "activation_commits":len(edges),
+        "scope_commits_checked":verify_worker_commits(role,edges),
+        "main_integration_commits_exempt":sum(x["is_main_ancestor"] for x in edges),
+    }
+
+
 def resolve_role(registry, ref_name, declared=""):
     roles = g.validate_registry(registry)
     active = [r for r in roles if r["state"]=="active" and r["branch"]==ref_name]
@@ -178,35 +225,9 @@ def main():
     }
     if role["id"]!="M0":
         g.need(not role["global_writer"],"worker cannot be global integrator")
-        compare=api.get(f"compare/{G2_BASE}...{source}?per_page=100")
-        total=compare.get("total_commits",-1)
-        g.need(compare.get("status") in {"ahead","identical"} and
-               0<=total<=64 and len(compare.get("commits",[]))==total,
-               "incomplete or diverged bounded G2 activation ancestry")
-        edges=[]
-        for commit in compare["commits"]:
-            sha=commit["sha"]
-            on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
-            g.need(on_main.get("status") in {"ahead","identical","diverged","behind"},
-                   "main ancestor status indeterminate")
-            ancestor=on_main["status"] in {"ahead","identical"}
-            # Never fetch a worker change only from net diff: verify each commit.
-            detail=g.commit_delta(api,sha,256)
-            sync={}
-            if detail["parents"]==2 and not ancestor:
-                if role["id"]=="M3":
-                    sync_paths=review_m3_main_sync(api,role,sha,control_sha)
-                elif role["id"]=="M2":
-                    sync_paths=review_m2_main_sync(api,role,sha,control_sha)
-                else:
-                    g.need(False, "unreviewed role attempted two-parent merge")
-                merged=api.get(f"commits/{sha}?per_page=1")
-                sync={"approved_main_sync":True,
-                      "first_parent":merged["parents"][0]["sha"],
-                      "sync_paths":sync_paths}
-            edges.append(dict(detail,is_main_ancestor=ancestor,**sync))
-        result["scope_commits_checked"]=verify_worker_commits(role,edges)
-        result["main_integration_commits_exempt"]=sum(x["is_main_ancestor"] for x in edges)
+        verified=audit_worker_history(api,role,source,control_sha)
+        result["scope_commits_checked"]=verified["scope_commits_checked"]
+        result["main_integration_commits_exempt"]=verified["main_integration_commits_exempt"]
     else:
         g.need(ref=="main" and role["global_writer"], "M0 must own main")
     g.need(api.head("main")==control_sha and api.head(ref)==source,

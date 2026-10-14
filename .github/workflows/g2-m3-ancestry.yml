@@ -1,0 +1,64 @@
+name: M0 G2 actual M3 complete ancestry review
+run-name: "M0|${{ github.sha }}|g2-m3-ancestry"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/g2-m3-ancestry.yml"
+      - "tools/worker_scope_ci.py"
+      - "tests/test_g2_ancestry_capacity.py"
+permissions:
+  contents: read
+concurrency:
+  group: g2-m3-ancestry-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  remote-m3-scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      M3_EXPECTED_HEAD: "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Adversarial complete ancestry regression
+        run: python -m unittest tests.test_g2_ancestry_capacity -v
+      - name: Authenticate every immutable worker commit and path against main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python3 - <<'PY'
+          import os,json,pathlib
+          from tools import governance as g
+          from tools import worker_scope_ci as w
+          api=g.GitHub(os.environ['GITHUB_REPOSITORY'])
+          control=api.head('main')
+          g.need(control==os.environ['GITHUB_SHA'],'main moved')
+          worker=api.head('work/m3-r1-codec')
+          g.need(worker==os.environ['M3_EXPECTED_HEAD'],'M3 moved during review')
+          reg=api.file('.governance/registry.json',control)
+          role=w.resolve_role(reg,'work/m3-r1-codec','M3')
+          cursor=api.file(role['cursor'],worker)
+          g.validate_cursor(cursor,role,reg['reservation_revision'])
+          result=w.audit_worker_history(api,role,worker,control)
+          g.need(result['activation_commits']>=67,'actual long ancestry not exercised')
+          g.need(result['activation_commits']==result['scope_commits_checked']+
+                 result['main_integration_commits_exempt'],'skipped worker commit')
+          g.need(api.head('main')==control and api.head('work/m3-r1-codec')==worker,
+                 'branch moved during audit')
+          receipt={'result':'PASS','role':'M3','worker_source_sha':worker,'main_sha':control,
+                   'scope':'ALL_ACTUAL_G2_IMMUTABLE_COMMITS_AND_APPROVED_MAIN_SYNC',
+                   'product':'NOT_RUN',**result}
+          pathlib.Path('out/attestation.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: g2-m3-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: warn
+          retention-days: 30
