@@ -327,6 +327,6 @@ mod tests {
         let fence=BorrowFence::default();
         assert_eq!(submit_connected_udp(&tx,&f,&fence),not_sent(TxError::IoFailed));
         assert_eq!(fence.outstanding(),0);
-        assert_eq!(submit_connected_udp(&tx,&[],&fence),TxBatchOutcome::copied_all(0));
+        assert_eq!(submit_connected_udp::<Frozen>(&tx,&[],&fence),TxBatchOutcome::copied_all(0));
     }
 }
