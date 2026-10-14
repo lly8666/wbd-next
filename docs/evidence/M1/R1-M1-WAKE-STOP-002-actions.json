@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-WAKE-STOP-002",
+  "source_sha": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "verification_scope": "WORKER_NATIVE_ONLY_R01_R02_M01; no integrated product/ABI credential",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38567433037,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38567433037",
+    "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "runner": "ubuntu-24.04 x86_64-unknown-linux-gnu",
+    "build_job_id": 115863602607,
+    "consumer_job_id": 115863723685,
+    "compiled_once": true,
+    "consumer_verified_input_manifest": true,
+    "passed": 19,
+    "failed": 0,
+    "filtered_abi_tests": 3,
+    "previous_r1_tests": 10,
+    "new_r1_tests": 9,
+    "result_artifact_id": 11896616899,
+    "result_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38567433037/artifacts/11896616899",
+    "build_artifact_id": 11896606774,
+    "result_json_sha256": "a61807e0ad340bc8c3cab682eae5b72c3e177f5ecbd34d8a070d49cc36ace455",
+    "test_log_sha256": "66e11f9c793ff4ceb3a6dc685aba489461b0e283ab4e386fb005870a7c234971",
+    "binary_sha256": "c786ba8ac6c89d563ce4c6d20752ba862467520123fe73f4dba5fa148cb6ce03",
+    "new_test_names": [
+      "runtime::wake::tests::r1_wake_full_repair_does_not_block_fresh_r02",
+      "runtime::wake::tests::r1_wake_fake_monotonic_deadline_recheck_r02",
+      "runtime::wake::tests::r1_wake_idle_single_packet_push_before_arm_r01",
+      "runtime::wake::tests::r1_wake_stop_before_delivery_and_reject_late_offer_r02",
+      "runtime::wake::tests::r1_wake_publish_during_armed_recheck_r01",
+      "runtime::wake::tests::r1_wake_return_after_park_wakes_stopped_owner_m01",
+      "runtime::wake::tests::r1_wake_stop_during_inflight_publish_never_returns_false_quiesce_r02",
+      "runtime::wake::tests::r1_wake_token_publish_at_park_boundary_r01",
+      "runtime::wake::tests::r1_wake_stop_with_full_return_backlog_and_last_frozen_loan_m01"
+    ]
+  },
+  "direct_artifact_review": "Downloaded Actions result ZIP 11896616899 and opened result.json and test.log. Verified exact SOURCE, run_id, attempt, 19 PASS names, SHA256 of both files and binary SHA against consume-job report.",
+  "exact_source_other_actions": [
+    {
+      "name": "Governance",
+      "run": 38567433171,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "G2 bootstrap",
+      "run": 38567433122,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "R0 qualification audit",
+      "run": 38567433089,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "R0 cross ABI",
+      "run": 38567433119,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "R0 native ABI",
+      "run": 38567433175,
+      "status": "FAIL"
+    }
+  ],
+  "previous_source_failures": [
+    {
+      "source": "203eac4afef8497e485f9b7e9ed5116e2b3b73a8",
+      "workflow": "Governance",
+      "run": 38566785008,
+      "status": "FAIL",
+      "cause": "control or source moved mid-audit while main HEAD advanced; current-source Governance SUCCESS"
+    },
+    {
+      "source": "203eac4afef8497e485f9b7e9ed5116e2b3b73a8",
+      "workflow": "R0 native ABI",
+      "run": 38566785047,
+      "status": "FAIL",
+      "cause": "unfiltered Rust binary passed 21 tests (rc 0); harness searched substring '3 passed' which was not present"
+    }
+  ],
+  "known_shared_ci_blocker": {
+    "run": 38567433175,
+    "source_sha": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
+    "observed": "Rust ABI binary rc 0, 22 passed/0 failed; shared tools/r0_abi_bundle.py requires unfiltered stdout substring '3 passed', so consumer reports FAIL. Earlier 13 passed was an accidental substring match.",
+    "owning_role": "M0",
+    "requested_fix": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
+    "status": "OPEN; do not mark R0 native ABI or all-CI PASS"
+  },
+  "local_proof": {
+    "R01": "Bounded std publish-before-arm, armed second-check and park boundary have deterministic tests",
+    "R02": "Full repair channel independent of fresh, explicit stop rejects late offer, deadline uses MonoNs, true in-flight producer cannot cause false quiescence",
+    "M01": "Frozen loan final-drop wake and full return backlog included in stop drain",
+    "memory_no_extra_payload_copy": "No additional payload clone introduced by wake layer; Arc<WakeGate> shared only during setup; buffers move through bounded channels"
+  },
+  "not_run": {
+    "rtrb_spsc": "NOT_RUN",
+    "loom_exhaustive": "NOT_RUN",
+    "eventfd_mio_waker": "NOT_RUN",
+    "actual_driver_or_network": "NOT_RUN",
+    "Windows_native": "NOT_RUN",
+    "throughput_performance": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "V4": "DISABLED",
+    "ABI_features": 0
+  },
+  "note": "Native R1 scoped proof PASS; root R0-native-ABI workflow explicitly FAILED for shared harness selector. OWNER_RUNTIME_READY=false, ARENA_READY=false. M1 cannot edit root workflows/Cargo/ABI."
+}

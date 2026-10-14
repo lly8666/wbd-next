@@ -29,3 +29,8 @@ Initial worker SOURCE `203eac4afef8497e485f9b7e9ed5116e2b3b73a8` compiled once a
 Two unrelated exact initial-S CI failures must be retained, not concealed:
 - Governance 38566785008 reported `control or source moved mid-audit` while M0 was committing to main. No M1 path violation was reported; must check final H Governance on its own SOURCE.
 - R0 native ABI 38566785047 ran its Rust binary and found **21 passed**; its shared `tools/r0_abi_bundle.py` insists that stdout contain substring `3 passed`. Previously `13 passed` incidentally contained this string; adding 8 named R1 tests makes `21 passed` not match. The native R0 ABI workflow is **FAIL**, even though the Rust execution returned rc0. M1 cannot edit root tool. Shared test ownership request `.governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md` submitted to M0; root CI not declared passing.
+
+## Final code SOURCE and verification boundary
+Final code SOURCE `81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2` adds a 9th new deterministic stop/inflight publication test. Native Actions run 38567433037 on the same SOURCE returned **19/19 PASS**, compiled binary once and consumed the exact SHA256-pinned build artifact. Exact action hashes and case names live in `docs/evidence/M1/R1-M1-WAKE-STOP-002-actions.json`.
+
+Other exact SOURCE actions: Governance38567433171 SUCCESS, G2-boot38567433122 SUCCESS, static-audit38567433089 SUCCESS, cross-ABI38567433119 SUCCESS; native-ABI38567433175 **FAIL** on the shared string-marker bug (its Rust binary 22/22 actual PASS, but the workflow is legitimately failed). Root harness is outside M1 scope; it must not be marked all-green. Product/perf/physical NOT_RUN, V4 DISABLED.
