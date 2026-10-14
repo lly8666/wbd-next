@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 8,
-  "checkpoint_sha": "a3509e65e7ac110c139d685efc0514b01ae96d21",
+  "sequence": 9,
+  "checkpoint_sha": "3a67408c4f9962ef6dd28beeb8a9a846a6a6d3ef",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-SCALAR-005",
-  "current_task": "Completed genuine old-Go-compatible GF256 RS20:R scalar systematic/partial parity and missing-only e-by-e direct reconstruction, fixed old Go generator and wire oracles, all six profiles and k1..20 native verified.",
-  "why_now": "Previous M3 FrameBudget, genuine AEAD three suites, replay and LINK reassembly all native proven; module07 requires pinned 0x11d systematic generator and only-missing e-by-e recovery before timed FEC owner or ISA-L.",
-  "done_when": "Native compiled-once worker SOURCE 0215c051 38/38 PASS (7 new genuine FEC, 31 previous codec cases); seven SOURCE same Actions PASS incl original-Go LINK/FEC regression+Governance; independent Go1.23.2 generator and byte oracle checked in; evidence S then cursor-only H. No SIMD/product FEC-on claim.",
-  "next_action": "Next M3 independent atom: bounded FEC TX streaming source immediate and first-at+32ms partial/20-source full parity using real fec_math, with size class/profile block identity and capacity checks. Next separate RX atomic: authenticated streaming first-delivery, final metadata, e-by-e recovery, heavy/compact bounded; ISA-L native toolchain and GPU SIMD not claimed. M0 owns FEC-on single-source integration and Cargo/ABI.",
+  "task_id": "R1-M3-FEC-TX-006",
+  "current_task": "Implemented bounded FEC TX direction owner: real GF256 systematic immediate wire, full20 close now, first-source+32ms absolute sparse flush, profile20 256/512/MTU classes and one shared BlockID allocated on first source, source-priority separate TxBatch, 3-block memory cap and oldest pressure close.",
+  "why_now": "After real Go-compatible RS20 scalar math passed worker 38/38, implement module07 TX owner timers and size-class state against pinned Go fastblock_encoder/size_class_encoder before FEC RX Heavy/Compact or performance SIMD.",
+  "done_when": "Actions SOURCE 971f320f compiled-once native Rust1.85.1 worker 46/46 PASS, eight new FEC TX owner tests plus prior38; exact seven source workflows including historical R0 and Governance PASS; evidence S and cursor-only H. Does not claim actual driver send order, native Go FEC package or FEC-on product.",
+  "next_action": "Next M3 single atomic: authenticated FEC RX block owner with streaming systematic immediate delivery and immutable final metadata, missing-only e-by-e recover, bounded Heavy3s/Compact10s and pressure retirement, then native Actions S/evidence/H; M0 integrate verified FEC TX/RX with real lane record/PN/link and test FEC-on on one main SOURCE. ISA-L SIMD needs separate toolchain/safety/CPU proof; root Cargo/ABI remain M0-owned.",
   "unverified": true,
-  "last_tested_source": "0215c051456dc0e245dbbd413157dfd2e18c2cfc",
+  "last_tested_source": "971f320f3145d3779fd94df6acc63ac0f1d808d0",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-SCALAR-005.json"
+    "docs/evidence/M3/R1-M3-FEC-TX-006.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-M3-crypto-root-sync.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
     "docs/devlog/M3/R1-M3-AES-RECORD-002.md",
     "docs/devlog/M3/R1-M3-REPLAY-003.md",
     "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md",
-    "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md"
+    "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md",
+    "docs/devlog/M3/R1-M3-FEC-TX-006.md"
   ],
-  "partial_summary": "M3 seq6 LINK old Go scoped reassembly SOURCE714d057e native31/31 H5569f9ef Governance38560538418 PASS. New FEC scalar S fe8601e native38561671696 E0308 test type fail; S2 ef5c14c native38561843437 36/38 PASS two bad golden test expectations (partial k2 sends min(k,R)=2 not 4, copy of 56B old-Go source header added 3 zero bytes), corrected at final SOURCE0215c051456dc0e245dbbd413157dfd2e18c2cfc and standalone Go source checked in. Native compiled-once 38562179474 Rust1.85.1 Linux38/38 PASS (new FEC7, prior31), binary SHA256 0aabdb30e9ffd872ff7f9e8990e4ee77c3fc1ae1d17ec2c54ae8a79e08acd479; all seven SAME SOURCE Actions successful: worker38562179474, R0 codec38562179605, framing38562179521, LINK/FEC38562179303, G2 38562179601, audit38562179565, governance38562179365. Go1.23.2 independent generator/parity oracle compiled locally and checked into oracles; original Go package direct FEC native test NOT_RUN. Genuine GF0x11d 40x20 Vandermonde inverse, partial min(k,R), streaming immediate 56B, final parity metadata, e-by-e missing-only inverse; SIMD/ISA-L native and timed FEC block/Heavy-Compact/Rust product-on NOT_IMPLEMENTED or NOT_RUN. Evidence S d67185111a; H cursor only seq7. No root Cargo/lock, shared ABI or CI edits. H1 89863bd7 Governance38562731727 FAIL structurally because context_refs=9 > max_refs8; preserved in evidence S2 a3509e65. H2 cursor-only seq8 checkpoint S2 and exactly8 refs. Proven Rust SOURCE and compiled-once worker unchanged."
+  "partial_summary": "M3 prior FEC scalar 38/38 native SOURCE0215c051; last H2 a1e663a45dc84fb76cb67f0b6caf3a82e1b4ec37, Governance38563029695 PASS sequence8. This R1-M3-FEC-TX-006 SOURCE971f320f3145d3779fd94df6acc63ac0f1d808d0 genuine scalar RS20 parity bounded FecTxOwner with 32ms first-at deadline/full20 immediate, separate ready systematic/parity, only configured 20:20 size classes256/512/MTU; all classes share extended64 BlockID allocated on first source with wire0 skipped. On profile/MTU change old groups closed; on byte pressure oldest group closed. native compiled-once worker38564745459 Rust1.85.1 Linux46/46 PASS (8 new TX +38 prior), binary_sha256 0516914d18708aa80dd10017fe59fa1ed5cfe08f7c8525b2d303d3bc04e0f5fa; all seven exact SOURCE Actions PASS: worker38564745459, R0 codec38564744675, framing38564744923, Go LINK/FEC38564744745, G2 38564744722, audit38564744903, Governance38564744708. Evidence S3a67408c. Native old Go package under this TX atom NOT_RUN; actual M0 scheduler send-first/driver, ISA-L SIMD/performance/real FEC RX Heavy/Compact/FEC-on product NOT_RUN. No root/shared ABI/CI edits. H cursor-only seq9."
 }
