@@ -175,5 +175,32 @@
     "actually_parallel_execution": false
   },
   "readiness_boundary": "Ready to initiate explicit M0 G2 authorization transaction; NOT granted worker write permission until registry/branches/cursors pass governance. Independent implementation can begin after that transaction, not after R5, and actual simultaneous work requires separate worker sessions.",
-  "next_action": "Execute bounded G2 activation/bootstrap from checked baseline, explicitly assign M1-M4 nonoverlapping branch/paths/epoch; static/product gates remain limited; verify Governance and changed code tests; main only for integration."
+  "next_action": "Execute bounded G2 activation/bootstrap from checked baseline, explicitly assign M1-M4 nonoverlapping branch/paths/epoch; static/product gates remain limited; verify Governance and changed code tests; main only for integration.",
+  "review_source_commit": "6efaa1371f67ae974efbcb960e19cbf265f0b4c6",
+  "static_verification": {
+    "source_sha": "6efaa1371f67ae974efbcb960e19cbf265f0b4c6",
+    "attempt": 1,
+    "qualification_audit": {
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "run_id": 38528184760,
+      "job_id": 115733435495,
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 11877280166,
+      "zip_digest": "sha256:0b6ce2ece4ebe63250b04b4a4f679b9eb123ba7276897f9147232ea82dd23ede"
+    },
+    "governance": {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38528184766,
+      "job_id": 115733434684,
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 11876980800,
+      "zip_digest": "sha256:dc2625f52e1f6e2b0667690228e08ed6f8d0dbbe175f5d2fd66cdbb2e4e603a7"
+    },
+    "scope": "Local source-lock/workspace/current reserved registry/canonical 10 gate/44 ID metadata + governance structural permissions only; NO native product compiler or actual branch activation.",
+    "real_worker_branches_checked": "NOT_EXISTING_AS_ACTIVE_BRANCHES",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  }
 }
