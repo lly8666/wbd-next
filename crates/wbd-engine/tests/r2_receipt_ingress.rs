@@ -86,7 +86,8 @@ fn r2_m0_real_authenticated_health_only_releases_original_m1_shadow() {
     let ingress=bound();
 
     let mut corrupt=reply(true);
-    corrupt[corrupt.len()-1]^=0x80;
+    let last=corrupt.len()-1;
+    corrupt[last]^=0x80;
     assert!(matches!(ingress.accept_one(&mut corrupt,&mut shadow,MonoNs(11)),
         Err(ReceiptIngressError::Crypto(_))));
     assert_eq!(shadow.outstanding(),1);
