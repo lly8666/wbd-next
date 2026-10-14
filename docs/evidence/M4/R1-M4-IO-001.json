@@ -89,5 +89,16 @@
     "physical": "NOT_RUN"
   },
   "integration": "M0_SHARED_HARNESS_FIX_PENDING; M4_SCOPED_TESTS_PASS",
-  "no_root_or_abi_change": true
+  "no_root_or_abi_change": true,
+  "h_checkpoint_correction": {
+    "observed_run_id": 38538754749,
+    "attempt": 1,
+    "head_sha": "2d2dcc633e4f7f57f51bfa0d0741c96b975e97cf",
+    "workflow": "governance.yml",
+    "conclusion": "FAIL",
+    "cause": "worker_scope_ci: unverified work cannot be ready for integration",
+    "h_content_only_cursor": true,
+    "proposed_new_progress": "partial",
+    "correction_policy": "Record this failure and make new evidence S then cursor-only H without hiding earlier H."
+  }
 }
