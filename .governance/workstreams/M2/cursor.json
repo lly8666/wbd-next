@@ -4,26 +4,25 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 5,
-  "checkpoint_sha": "a33e5f7cac9166fdb45e5db6645d22b610fb0184",
+  "sequence": 6,
+  "checkpoint_sha": "8297df981f2f5351f0ab094c826bf6f404ede4b1",
   "progress": "partial",
-  "task_id": "R2-M2-BUDGET-001",
-  "current_task": "R2-M2-BUDGET-001 pure per-direction 1s repair ledger implemented and native-scoped Actions verified; integration remains unqualified",
-  "why_now": "After M0-reviewed worker/main two-parent sync cfc77b9 and 14/14 Actions, M0 decision authorized 1s F/R/L bounded sparse repair budget under M2-only crate paths.",
-  "done_when": "Actual Actions compiled-once R2 fake clock F/R/L budget tests 7 new + 8 existing passing, 8MTU pacer/epoch refund/uncertain/expiry cases, no network/shared-root edits; S+evidence S+cursor-only H.",
-  "next_action": "No new M2 task claimed. M0 owns cross-client shared sparse quota allocation and platform accepted-prefix/wire-byte integration and Go V4 admission binding; review if further task should be assigned.",
+  "task_id": "R2-M2-GLOBAL-SPARSE-002",
+  "current_task": "R2-M2-GLOBAL-SPARSE-002 pure process-global grant allocator complete at native-scoped level; M0 real integration outstanding",
+  "why_now": "Main active M2 goal assigned R2-M2-GLOBAL-SPARSE-002 in M0 decision 2026-10-14; prior local 1s sparse quota otherwise multiplies across clients without a process-wide cap.",
+  "done_when": "Actions compiled-once native r2_ tests include 7 new global multi-client/direction/epoch/grant/refund/timeout/departure cases; 22/22 PASS; evidence S and cursor-only H; no shared modules/socket/Root Cargo.",
+  "next_action": "No further M2 implementation task claimed; M0 owns process actor integration/driver completion/actual per-direction byte routing and quota fairness/performance. Wait for next formal main assignment.",
   "unverified": true,
-  "last_tested_source": "4f485269b3af4b1aba46cce602a3996a720c8538",
+  "last_tested_source": "fb916f2467d40b6cc0612d1182525a553d8e6872",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-BUDGET-001.json"
+    "docs/evidence/M2/R2-M2-GLOBAL-SPARSE-002.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/decisions/M0-M2-recovery-root-sync.md",
-    "docs/evidence/M2/R2-M2-MAIN-SYNC-001.json",
-    "docs/evidence/M2/R2-M2-RECEIPT-001.json",
-    "docs/devlog/M2/R2-M2-BUDGET-001.md"
+    "docs/evidence/M2/R2-M2-BUDGET-001.json",
+    "docs/devlog/M2/R2-M2-GLOBAL-SPARSE-002.md"
   ],
-  "partial_summary": "M0-authorized worker sync cfc77b9 from exact M2 HEAD2cd993a + main35dfef8 passed 14/14; sync evidence S9e786cf/H76037765 after correction (first H0cae696 Governance38559787614 failed mixed evidence SOURCE; corrected H Governance38560192366 SUCCESS). Budget code SOURCE4f485269 new budget.rs plus lib mod, M2 owned only. Pure F accepted bytes, R reserve->Accepted/Uncertain debit or NotSent same-epoch refund, 1s max(F/10,32768) non-additive with absolute cap, 8MTU pacer, bounded pending timeout conservative old debt, fake MonoNs, no fresh HOL. Worker-native38561012183 compiled-once 15/15 r2_ (8 old receipt + 7 new budget), Governance38561012060, corrected G2 38561012041, R0 static38561012396 all SUCCESS. Evidence receipt S a33e5f7 Governance38561345272 SUCCESS, this H acknowledges it. Real platform partial/uncertain adapter, process-wide multi-client sparse allocator, real traffic, product/perf/physical NOT_RUN, Go V4 DISABLED. Atomic task closed; next M0 integration decision."
+  "partial_summary": "Authority main registry M2 active rev2 epoch1, branch started clean seq5 Hbe5e722 Governance38561581854 SUCCESS. Pure new GLOBAL-SPARSE SOURCE fb916f2, only recovery global_sparse.rs + lib.rs and M2 devlog; local F/R 1s max(F/10,32768) still applies, separate hard aggregate process cap via finite per-TunnelKey/direction grant expiry, NotSent original-epoch refund, Uncertain/timeout/departure conservative debit, no fresh HOL/global mutex. Compiled-once native r2_ run38598294561 22/22 (7 new) SUCCESS; G2 38598294562 SUCCESS; static38598294559 SUCCESS. SOURCE Governance38598294660 FAIL control or source moved mid-audit (M0 main changed concurrently), not a Rust failure. Exact evidence S8297df9 Governance38598682806 SUCCESS, failed run retained in receipt. No real process integration, network, performance, physical or product run. H checkpoint S8297df9 last_tested_source fb916f2, task closed pending M0."
 }
