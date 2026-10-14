@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-PARALLEL-WORKER-ASSIGN-007",
+  "source_sha": "7d291133e38f87da32ab56f5f99c0f1a54c4d5af",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_REGISTRY_AND_G2_ASSIGNMENT_ONLY",
+  "artifact_verified": true,
+  "preflight": {
+    "main_before": "a911e945673f73c09d79655eb85629f0375a3c88",
+    "m0_cursor_sequence": 43,
+    "m0_checkpoint": "ba5749bb7e9efede91f81da43796985212af570f",
+    "m0_h_governance": 38635139983,
+    "all_roles_active": true,
+    "no_persistent_workers_new_source_at_assignment": true
+  },
+  "source_changes": [
+    ".governance/registry.json",
+    ".governance/project.json",
+    "docs/decisions/M0-parallel-worker-atoms-2026-10-15.md"
+  ],
+  "tasks": [
+    {
+      "role_id": "M1",
+      "branch": "work/m1-r1-runtime",
+      "task_id": "R1-M1-READY-BATCH-004",
+      "goal": "R1-M1-READY-BATCH-004: Add an owner-local bounded ready-only <=32 batch drain to existing TxOwner, preserving Fresh first on first dispatch and alternating fair repair/parity progress; reuse caller-provided preallocated output storage, no per-batch ciphertext clone, and maintain absolute MonoNs deadlines/stop/return ownership. Must not implement syscalls or modify root dependency/driver.",
+      "done_when": "Exact own SOURCE compiled-once native r1_ tests: empty/1/32/33 packet batch capacity, full independent repair/parity vs fresh, first systematic ahead of due/undue parity, bounded secondary progress under persistent fresh, stop and last frozen loan/return. Keep all preceding M1 tests and own evidence S/H/Governance; no production SPSC/loom/eventfd claim.",
+      "allowed_paths": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/",
+        "docs/devlog/M1/",
+        "docs/evidence/M1/",
+        ".governance/workstreams/M1/cursor.json",
+        ".governance/workstreams/M1/requests/"
+      ],
+      "assignment_epoch": 1
+    },
+    {
+      "role_id": "M2",
+      "branch": "work/m2-r2-recovery",
+      "task_id": "R2-M2-GLOBAL-BATCH-COMPLETION-003",
+      "goal": "R2-M2-GLOBAL-BATCH-COMPLETION-003: Extend pure wbd-recovery global allocator for bounded batch completion bookkeeping over independently reserved repair candidates from multiple TunnelKey/directions. Accept a platform-agnostic validated result representation (accepted prefix, at most one uncertain slot, suffix definitely NotAttempted only with evidence), never depend on platform crate. Preserve original-epoch NotSent refunds, Uncertain debit, duplicate/old callbacks fail closed and process hard quota; do not touch M0 engine sender.",
+      "done_when": "Exact own SOURCE compiled-once native r2_ fake-MonoNs tests for 0/1/32/33 mapping, accepted prefix vs ambiguous index and not-attempted suffix, two tunnels/both directions, epoch cutover, double completion, expired/departed grants and fresh not HOL. Preserve 22 previous r2_ tests; S/evidence/H and Governance. No raw sendmmsg product/driver or root Cargo changes.",
+      "allowed_paths": [
+        "crates/wbd-recovery/",
+        "docs/devlog/M2/",
+        "docs/evidence/M2/",
+        ".governance/workstreams/M2/cursor.json",
+        ".governance/workstreams/M2/requests/"
+      ],
+      "assignment_epoch": 1
+    },
+    {
+      "role_id": "M3",
+      "branch": "work/m3-r1-codec",
+      "task_id": "R1-M3-FEC-RETIRE-PRESSURE-010",
+      "goal": "R1-M3-FEC-RETIRE-PRESSURE-010: Strengthen bounded FecRxOwner and FecBlockIdOwner heavy→compact→retired under capacity and timer pressure, including authenticated-input multi-block out-of-order systematic/final parity, no duplicate business resurrection and valid first-source delivery. Only codec own files; do not invent a trusted Go V4 exporter or modify authenticated input provenance.",
+      "done_when": "Exact SOURCE compiled-once native r1_ deterministic fake-MonoNs tests: 3s heavy/10s compact, late callbacks, small heavy/compact byte caps, BlockID wrap across trusted explicit generation, wrong epoch/direction/half-space, old parity and malformed final conflict, 20:R parity profile and known Go 56B oracle; rejected/late never reopen retired data. Retain earlier 67 r1_ tests and own S/evidence/H/Governance. New implementation only if failing counterexample proves necessary.",
+      "allowed_paths": [
+        "crates/wbd-codec/",
+        "docs/devlog/M3/",
+        "docs/evidence/M3/",
+        ".governance/workstreams/M3/cursor.json",
+        ".governance/workstreams/M3/requests/"
+      ],
+      "assignment_epoch": 1
+    },
+    {
+      "role_id": "M4",
+      "branch": "work/m4-r1-platform",
+      "task_id": "R1-M4-IPV4-TCP-RX-PARSE-004",
+      "goal": "R1-M4-IPV4-TCP-RX-PARSE-004: Add strict, bounded IPv4/TCP one-full-DATA-packet byte parser for incoming carrier packets with trusted tuple/MTU/length/flags/options and independent IP/TCP pseudoheader checksum validation. Provide caller-anchored seq32→u64 nearest extension with fail-closed half-space ambiguity; do not implement arbitrary TCP stream reassembly or real AF_PACKET live reader.",
+      "done_when": "Exact own SOURCE compiled-once platform r1_ tests on byte-exact existing IPv4/TCP writer outputs, checksums independently, version/IHL/options/total length/data offset truncation, fragments, malformed flags, wrong tuple/source or checksum, MTU±1 and seq32 wrap/half-space ambiguity, back-to-back unrelated packet not HOL; no pre-auth payload ever treated as verified business. Own S/evidence/H/Governance. Kernel raw RX/Windows/physical NOT_RUN.",
+      "allowed_paths": [
+        "crates/wbd-platform/",
+        "r1/go-bridge/",
+        "docs/devlog/M4/",
+        "docs/evidence/M4/",
+        ".governance/workstreams/M4/cursor.json",
+        ".governance/workstreams/M4/requests/"
+      ],
+      "assignment_epoch": 1
+    }
+  ],
+  "previous_worker_refs": [
+    {
+      "role_id": "M1",
+      "head": "dceb2a7c12b76483c0d4d83ed71cb1ea2d5e348b",
+      "cursor_seq": 4,
+      "governance_run": 38599017708
+    },
+    {
+      "role_id": "M2",
+      "head": "2ebd475956d65ab1ae05a46cff223c9970755e34",
+      "cursor_seq": 7,
+      "governance_run": 38602789109
+    },
+    {
+      "role_id": "M3",
+      "head": "faa018944f0981aa8835c2766cf33c021faa4fa1",
+      "cursor_seq": 12,
+      "governance_run": 38599242646
+    },
+    {
+      "role_id": "M4",
+      "head": "47eb4107a53facc5de6b0c2ea48fb90a19eea68a",
+      "cursor_seq": 6,
+      "governance_run": 38598800683
+    }
+  ],
+  "same_source_checks": [
+    {
+      "workflow": "governance",
+      "run_id": 38635343395,
+      "source_sha": "7d291133e38f87da32ab56f5f99c0f1a54c4d5af",
+      "attempt": 1,
+      "result": "SUCCESS",
+      "scope": "ROLE_AND_REGISTRY_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38635343384,
+      "source_sha": "7d291133e38f87da32ab56f5f99c0f1a54c4d5af",
+      "attempt": 1,
+      "result": "SUCCESS",
+      "scope": "SCOPED_FIVE_CRATE_BOOTSTRAP_NOT_NEW_WORKER_TASKS"
+    }
+  ],
+  "decision_ref": "docs/decisions/M0-parallel-worker-atoms-2026-10-15.md",
+  "claims": [
+    "all roles active, paths unchanged, no rev/epoch bump",
+    "four distinct formal next atoms each with role-only code prefixes and explicit acceptance gates",
+    "worker agents still must independently pull registry, implement own code S, run Actions, evidence S/H; tasks not started merely from main decision"
+  ],
+  "not_qualified": [
+    "FOUR_NEW_WORKER_CODE_TESTS_NOT_RUN",
+    "PRODUCTION_GO_V4_NOT_READY",
+    "AF_PACKET_REAL_NOT_RUN",
+    "LINUX_SENDMMSG_MAIN_INTEGRATION_NOT_RUN",
+    "WINDOWS_ARM_NATIVE_NOT_RUN",
+    "500MBPS_P99_CPU_PERFORMANCE_NOT_RUN",
+    "PRODUCT_NOT_RUN",
+    "PHYSICAL_NOT_RUN"
+  ],
+  "next_action": "M0 next independent integration: review and import previously qualified M4 Linux kernel sendmmsg batch into main with existing M1 bounded frozen ready records, source-exact native Actions and unprivileged UDP fixture; no AF_PACKET product claim. Worker assignment complete; do not create additional governance loops."
+}
