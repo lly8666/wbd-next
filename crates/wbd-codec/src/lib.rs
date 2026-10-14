@@ -16,6 +16,8 @@ pub mod link_fec_wire;
 pub mod link_reassembly;
 /// Genuine old-Go RS(20,R) GF256 scalar parity and missing-only recovery.
 pub mod fec_math;
+/// Bounded first-source FEC TX block owner.
+pub mod fec_tx;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 

@@ -356,3 +356,8 @@ mod link_reassembly_tests;
 #[cfg(test)]
 #[path = "fec_math_tests.rs"]
 mod fec_math_tests;
+
+// Genuine FEC TX owner R1 tests under frozen-R0-excluded LINK tree.
+#[cfg(test)]
+#[path = "fec_tx_tests.rs"]
+mod fec_tx_tests;
