@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 22,
-  "checkpoint_sha": "e0679be8a931bbcda85df4635066b2e5b75e052e",
+  "sequence": 23,
+  "checkpoint_sha": "5fb62161b2ec5eebadc8ef87ab0eb0e9caee6395",
   "progress": "partial",
-  "task_id": "R1-M0-GO-PATHMTU-001",
-  "current_task": "完成一个M0独属原子事项：为M3 FrameBudget 缺少的旧Go pathmtu原生包测试补Actions编译一次+跨job复用产物并记录实际证据。source e8599f7 原Go 10/10 PASS，evidence S e0679be；不代表M3 Rust crypto或Normal/off产品闭环通过。",
-  "why_now": "M0上轮R1巡检恢复后 checkpoint70879975→main旧HEADedb275de仅cursor-only H且治理38540461976成功。M3 work/m3-r1-codec seq2指出 pinned old-Go pathmtu 尚未原生执行；该跨角色根Actions配置只能M0维护，先独立消除真实证据缺口，不阻挡worker自身真AEAD开发。",
-  "done_when": "新main SOURCE e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40 的 Actions 38543117078 attempt1 native Go internal/pathmtu 预编译build115782469803 / 验hash消费115782651812 SUCCESS, 10项顶层全PASS、七项指定反例存在且exit0，main Governance38543117065 success。证据S e0679be8a931bbcda85df4635066b2e5b75e052e 治理38543415883 success；独立H仅cursor，不改worker HEAD。",
-  "next_action": "M0下一个且仅一个原子任务：审核并钉牢与Rust1.85.1兼容的真实AEAD/HP依赖版本、许可和根Cargo.lock/单向依赖图，回应M3的aws-lc-rs+chacha20+aes请求；交给M3在独立scope实现真实Rust Seal/Open+8B HP。M3源码与已通过的M1 owner/M4只读driver可消费且H确认后，再由M0串行合入同一main SOURCE 并通过Actions做首个in-process Normal/FEC-off真实业务seal→wire→authenticated open→delivery闭环；在此之前不做mock拼接、不宣称产品/性能/生产V4合格。",
+  "task_id": "R1-M0-CRYPTO-DEPS-001",
+  "current_task": "M0 R1 shared root crypto dependency contract pinned and Actions-native API qualified at narrow scope. root SOURCE 1ae49bd aws-lc-rs1.18.1 nonFIPS+alloc, chacha20 0.9.1, aes 0.8.4 and exact Actions-derived Cargo.lock; independent NASM cross-builder fix SOURCE f2a7a84 with new Windows GNU/ARM64 build+consume. Real Rust record crypto remains M3-owned NOT_IMPLEMENTED.",
+  "why_now": "M3 worker branch seq2 requested real Rust 8B HP/AEAD dependency pin but cannot modify root Cargo/lock. M0 live main seq22 checkpoint e0679be→HEAD12827b had only cursor H and governance38543577353 success. This independent G2 interface/build pin lets M3 start real C01-C04 implementation without mock; worker scopes/branches remain untouched.",
+  "done_when": "Exact integration SOURCE 1ae49bd644a4624db331c80d2dce6a8d181189e0 native r1-crypto-deps Actions38546167104 build-once+consume 5/5 success, static audit38546166994/native ABI38546166985/12 other source-scoped Actions success; cross at same SOURCE38546166970 FAILED Windows GNU due missing NASM, recorded unchanged. Exact follow-up SOURCE f2a7a84dd8985e80964dac8b65e7b92652a07e8e cross ABI38546390977 build and artifact consumption for aarch64 Linux and win x64 GNU both SUCCESS; native target execution NOT_RUN; same-source governance38546390961 success. Evidence receipt S 5fb62161b2ec5eebadc8ef87ab0eb0e9caee6395 governance38546928645 success; no claim of single-SOURCE all-15 green, Go-vs-Rust record-vector or product pass.",
+  "next_action": "M0 one atom next: inspect M3 branch ancestry and current worker edits, coordinate non-force main-root Cargo/lock integration according to worker_scope_ci main-ancestor exemption and reviewed merge rules so M3 can legally compile pinned externals, without rewriting M3's commits. M3 (not M0) implements actual rust LaneTxCrypto/LaneRxCrypto AEAD+exact 8B HP (05/C01-C04) and separate SOURCE/H evidence. After ready M1/M3/M4 interfaces, M0 single SOURCE Actions first authentic in-process Normal/FEC-off business packet; M2 independent, production V4 disabled.",
   "unverified": true,
-  "last_tested_source": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40",
+  "last_tested_source": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
   "evidence_refs": [
-    "docs/evidence/M0/R1-go-pathmtu-native.json"
+    "docs/evidence/M0/R1-crypto-dependency-lock.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-go-pathmtu-native.md",
-    "docs/devlog/M0/R1-normal-off-integration-ports.md",
+    "docs/devlog/M0/R1-crypto-dependency-lock.md",
     "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/source-lock.json"
   ],
-  "partial_summary": "M0新接手核main seq21 checkpoint70879975至HEADedb275只有cursor H，Governance38540461976 SUCCESS/CLEAN(not PASS)。registry revision2 epoch1, 四worker HEAD M1e511f133 seq2 ready_local；M2 2cd993a seq2 pure receipt partial；M3 4776cc2 seq2 FrameBudget6/6 SOURCE3aa121e但AEAD/HP NOT_IMPLEMENTED；M4 b831d72 seq2 platform fake+UDP partial。M0独立实质SOURCE e8599f7 写入.github/workflows/r1-go-pathmtu.yml并写计划日志；Actions run38543117078 build+consume SUCCESS, pinned wobuzhidao@a7a82db / Go1.23.12 LinuxX64 native 10/10 original pathmtu tests PASS, 必需7名存在，二进制SHA256 82c271c20fe222b31a377c0d0674257d45ac30af42769a0e6ada3935020411ba；build artifact11883381295 digest428887..., result artifact11883391413 digestc59980...；同SOURCE Governance38543117065 PASS。证据收据S e0679be8，Governance38543415883 SUCCESS。不改M1-M4任何ref，不混M3 Rust SOURCE3aa121e测例和旧Go证明；Go生产V4 DISABLED、Normal/off Rust业务E2E NOT_RUN、性能物理NOT_RUN。下个M0单一atom为crypto dependencies root review/lock。"
+  "partial_summary": "M0 checked 6 exact main commits from checkpoint e0679be to current: H12827b cursor-only; S5f4c755 workflow test E0382 Nonce move failure Actions38545556252, S6b390932 fixed, native Actions38545741173 5/5; S1ae49bd shared Cargo.toml+wbd-codec manifest-only+actual Actions Cargo.lock+source-lock+audit, 15 Actions 14 SUCCESS including crypto38546167104 5/5, static38546166994, native ABI38546166985, governance38546166923; cross38546166970 FAILED missing Windows NASM (ARM64 build success); S f2a7a84 cross workflow adds nasm and Actions38546390977 full windows GNU/ARM64 build+consume success plus governance38546390961; evidence S5fb62161 with governance38546928645 success. Different SOURCES are never combined into one qualification. Crypto pin rust1.85.1 aws-lc-rs=1.18.1 default off non-fips+alloc, chacha20=0.9.1, aes=0.8.4; root Cargo.lock sha256 4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36; license obligations provisional. M3 branch4776cc2 still needs true AEAD and shared roots synchronized lawfully; M4 head a8dd64d seq4 ready. No worker refs modified by M0, no GitHub PRs. Native targets cross execution, Rust authenticated business E2E, Go production V4/performance/physical all NOT_RUN/DISABLED. Next only legal worker base sync, then M3-owned crypto, later M0 same-SOURCE integration."
 }
