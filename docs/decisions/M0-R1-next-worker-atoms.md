@@ -33,3 +33,7 @@ M4 existing HEAD `a8dd64dd25817b695280274495e1350ceccc4cae`, cursor seq4 `ready_
 - **M3** has existing independent next FEC streaming direction after scalar/Go oracles, but its own worker cursor controls when it takes a new atom. Do not forcibly reassign while that producer is active.
 - Production Go V4 remains disabled; actual product, performance, physical and Windows native execution are `NOT_RUN`.
 - If either worker HEAD moves or role registry identity changes before its next writer turn, that writer must refresh exact refs and validate ancestry/permissions before starting. This M0 decision grants **tasks, not a pass**; no worker implementation or worker CI results are asserted from assignment-only tests.
+
+## Verification of assignment-only M0 source
+
+Both Actions on exact M0 **assignment** SOURCE [`c135d6dedc5d09ab10d7394370292bbfa64e9205`](https://github.com/lly8666/wbd-next/commit/c135d6dedc5d09ab10d7394370292bbfa64e9205) completed SUCCESS: [Governance #38564565449](https://github.com/lly8666/wbd-next/actions/runs/38564565449), and [G2 scoped bootstrap native #38564565586](https://github.com/lly8666/wbd-next/actions/runs/38564565586). These are registration/G2 regression checks, not tests of the new M1/M4 implementations, which remain **NOT_STARTED** at receipt time. Source-exact receipt `docs/evidence/M0/R1-idle-worker-assign.json` records their identities and unchanged worker refs.

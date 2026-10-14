@@ -69,5 +69,24 @@
     "physical": "NOT_RUN",
     "performance": "NOT_RUN",
     "production_go_v4": "DISABLED"
-  }
+  },
+  "source_sha": "c135d6dedc5d09ab10d7394370292bbfa64e9205",
+  "artifact_verified": false,
+  "policy_checks": [
+    {
+      "run_id": 38564565449,
+      "run_attempt": 1,
+      "workflow": "governance",
+      "source_sha": "c135d6dedc5d09ab10d7394370292bbfa64e9205",
+      "result": "SUCCESS"
+    },
+    {
+      "run_id": 38564565586,
+      "run_attempt": 1,
+      "workflow": "g2-scoped-bootstrap-native",
+      "source_sha": "c135d6dedc5d09ab10d7394370292bbfa64e9205",
+      "result": "SUCCESS"
+    }
+  ],
+  "not_tested": "Assigned worker implementation NOT_STARTED; previous worker native 10/10 and 6/6 are historical task proofs only; main validation is scoped registration/protocol."
 }
