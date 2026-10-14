@@ -4,6 +4,9 @@
 //! No FFI types or wire layouts are defined here.
 #![forbid(unsafe_code)]
 
+/// R1 bounded, borrowed-handle driver API; legacy root types are R0 fixtures.
+pub mod r1;
+
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
 
@@ -87,6 +90,7 @@ impl BorrowFence {
     }
     /// For an owned shutdown after begin_stop, wait until the driver has
     /// completed or cancelled every outstanding kernel loan.
+    #[cfg(test)] // R0 blocking correctness fixture ONLY; absent from production build.
     pub fn wait_drained(&self) {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         while state.outstanding > 0 {
