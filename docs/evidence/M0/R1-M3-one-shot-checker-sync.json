@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "task_id": "R1-M0-M3-G2-CHECKER-TRANSFER-002",
+  "source_sha": "4973ac22ee808a80a269399e955ec93d1e56664a",
+  "result": "PASS_MAIN_AUTHORIZATION_ONLY",
+  "artifact_verified": true,
+  "preflight": {
+    "main_before": "cfeb181674883afc3eddb2b036729a100621ac83",
+    "m0_sequence": 36,
+    "checkpoint": "d320cc4ffa7babe4f9ac754f3e4a0a8cfd132085",
+    "previous_cursor_h_governance": 38583837915,
+    "registry_revision": 2,
+    "epoch": 1,
+    "m3_old_head": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "m3_previous_own_H_run": 38569516952,
+    "m3_H_result": "FAIL_LEGACY_LOCAL_64_BOUND",
+    "m3_native_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+    "m3_native55_run": 38568299178
+  },
+  "authorization": {
+    "strategy": "ONE_SINGLE_PARENT_WORKER_COMMIT_ONLY_NO_FULL_MAIN_MERGE",
+    "approved_worker_parent": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "approved_path": "tools/worker_scope_ci.py",
+    "main_tool_blob_sha": "1d27c4ec8d02035fc53d4e657f2cd7427373f8df",
+    "live_main_blob_equality_required": true,
+    "main_immutable_full_history_approval_anchor": "c00356739359db90a864f0894d8cdd965b2df132",
+    "only_M3_role": true,
+    "revision_epoch_unchanged": true,
+    "allowed_paths_registry_not_expanded": true,
+    "worker_commit_parent_exact": true,
+    "worker_extra_paths_forbidden": true,
+    "force_push_or_rebase": "FORBIDDEN",
+    "further_root_edit": "REQUIRES_SEPARATE_APPROVAL",
+    "validation": "Every other worker commit still verified individually and compared with current main; M3 special commit must have only tools/worker_scope_ci.py content byte-for-byte identical to current M0-owned source."
+  },
+  "actual_source_checks": {
+    "triggered": 2,
+    "success": 2,
+    "runs": [
+      {
+        "id": 38585124872,
+        "workflow": "governance",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 38585125032,
+        "workflow": "g2-m3-ancestry",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "governance": {
+      "run_id": 38585124872,
+      "result": "SUCCESS"
+    },
+    "real_live_M3_ancestry": {
+      "run_id": 38585125032,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "worker_ref": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+      "total_commit_count": 67,
+      "scope_commits": 40,
+      "main_ancestors": 27,
+      "job_id": 115924940972,
+      "artifact": {
+        "id": 11905200641,
+        "digest": "sha256:f931b571173c5eafc6be5eabe95a72cfef889e4693364ff0f3e4a13bf5e02640"
+      },
+      "adversarial_ancestry_tests": 10,
+      "adversarial_single_tool_transfer_tests": 11
+    }
+  },
+  "source_changes": [
+    "tools/worker_scope_ci.py",
+    "tests/test_g2_m3_tool_refresh.py",
+    ".github/workflows/g2-m3-ancestry.yml",
+    "docs/decisions/M0-M3-one-shot-G2-checker-sync.md"
+  ],
+  "remaining_boundary": {
+    "worker_branch_written_by_M0": false,
+    "worker_source_script_synced": false,
+    "M3_own_cursor_H_governance": "NOT_YET_REATTESTED",
+    "M3_NEXT_ACT": "M3 writer: verify active rev2 epoch1 and exact branch parent, copy the M0 main tools/worker_scope_ci.py blob alone to worker branch in one parent commit, with expected-ref fast-forward. Then inspect native/governance Actions on new worker SOURCE. Do not count M0's root read-only attestation as M3 H PASS.",
+    "M0_NEXT_ACT": "After independently attested M3 checker mirror and own clean H, integrate M1/M4 parity priority and bounded FEC timer without cross-lane HOL; otherwise progress a separately scoped M0-only product boundary.",
+    "production_Go_V4": "DISABLED",
+    "real_raw_socket": "NOT_RUN",
+    "live_FEC_timers": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  }
+}
