@@ -4,25 +4,26 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 2,
-  "checkpoint_sha": "bdd79c93d7eaf6cd4196e60580e028d87e801666",
+  "sequence": 3,
+  "checkpoint_sha": "983c3c6216be73586b5960bcc1416ec84bdc2eed",
   "progress": "partial",
-  "task_id": "R1-M3-BUDGET-001",
-  "current_task": "FrameBudget Rust/native passed against pinned old-Go oracle literals; direct original Go pathmtu native job pending M0 workflow ownership",
-  "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
-  "done_when": "Actions native Rust/old Go oracle with one deduction each, fresh off no extra wire, no upstream duplicate accounting, S+H.",
-  "next_action": "Start next independent M3 atomic for REAL record AEAD Seal/Open + exact 8B HP after M0 coordinates root Cargo/Cargo.lock dependencies; M0 also to run original Go pathmtu package natively if full oracle done_when requires it.",
+  "task_id": "R1-M3-CHACHA-RECORD-001",
+  "current_task": "Completed scoped real ChaCha20-Poly1305 record in-place Seal/Open with exact 8B HP and pinned six old-Go wire oracles, awaiting M0 same-source Normal/off integration; AES128/AES256 and replay bitmap still unimplemented.",
+  "why_now": "M0 committed real native Go pathmtu 10/10 and pinned Rust1.85.1 aws-lc-rs/chacha20/aes Cargo.lock; M0 explicitly authorized precise safe M3 main-sync, performed at merge 41c408fb with 14/14 matching Actions, enabling first authentic Rust record path.",
+  "done_when": "Native compiled-once Rust worker 11 r1 cases PASS including five true ChaCha AEAD/HP8 against six original Go bytes; frozen R0 13 codec suite and all same-SOURCE triggered regressions + Governance success; evidence receipt S then cursor-only H. No claim AES/production.",
+  "next_action": "Next M3 atomic: implement real AES128/256 GCM Seal/Open and exact AES block HP8 with independent Go vectors and tamper cases, without claiming either before Actions. In parallel M0 may integrate proven ChaCha-only Normal/FECoff single packet with M1/M4 using docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md; shared ABI/root edits remain M0.",
   "unverified": true,
-  "last_tested_source": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+  "last_tested_source": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-BUDGET-001.json"
+    "docs/evidence/M3/R1-M3-CHACHA-RECORD-001.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/decisions/M0-G2-worker-activation.md",
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
+    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
+    "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md"
   ],
-  "partial_summary": "S 85529385→44975170→3aa121e4: unified codec::path_budget and six R1 tests, literal pinned Go pathmtu matrix; no ordinary Normal/fixed-off LINK header. Actual M3 native compiled-once Actions 38538473699 attempt1 PASS 6/6 at exact SOURCE 3aa121e4; six existing R0/G2 plus governance on SOURCE all success. S1 frozen R0 harness counted 19 not 13 despite original tests passing; S2 refactor lacked test imports; S3 fixed. Evidence S d8c98c89 and H checkpoint. Old Go native internal/pathmtu tests NOT_RUN (M0 workflow request). Real AEAD/8B HP/3cipher, integration, product/perf/physical NOT_RUN; no root Cargo, lock or ABI edits. H1 33917193 governance38539494325 failed structural schema (evidence.source_sha absent, devlog misfiled as open intent). Correction S bdd79c93 added source_sha; H2 moves M0 devlog under context_refs and leaves only formal test intents under open_requests. All non-governance and R1 test results remain exact SOURCE 3aa121e4, not inherited by docs commits."
+  "partial_summary": "M0 ROOT pinned aws-lc-rs=1.18.1/chacha20=.9.1/aes=.8.4, direct original Go pathmtu native run38543117078 10/10; main sync reviewed merge 41c408fb first parent prior M3 4776cc2 second parent main795d0e5; 14/14 sync Actions success, root manifests unchanged. First real crypto SOURCE acaf5523 worker 11/11 PASS but frozen R0 count 18 vs 13 FAIL; corrected tests namespace at SOURCE5a14bb9. 7/7 exact matching final SOURCE 5a14 Actions success; worker compiled-once 38550461756 11/11 PASS including 5 true ChaCha/HP8 and six byte-exact old-Go record vectors, legacy R0 codec 38550461727 PASS. Evidence S983c3c; H only cursor. AES128/AES256, replay and Normal/FECoff integrated M0 E2E/product/perf/physical NOT_RUN. No root Cargo/lock or ABI authored by M3."
 }
