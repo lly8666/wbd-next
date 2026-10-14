@@ -185,6 +185,28 @@
       "run_id": 38523394776,
       "run_attempt": 1,
       "workflow": ".github/workflows/r0-record-framing.yml"
+    },
+    {
+      "gate": "R0-LINK-FEC-WIRE",
+      "evidence": "docs/evidence/M0/R0-link-fec-wire.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "NATIVE_OLD_GO_LINK_FEC_AND_RUST_WIRE_ONLY",
+      "scope": "Real pinned Go LINK MTU64 fragmented/reassembled + FEC systematic source/final parity header and Rust structural wire. No Rust FEC GF/reassembly/full L01.",
+      "actual_file": "crates/wbd-codec/src/link_fec_wire.rs",
+      "require_anchor": [
+        "r0_l01_pinned_go_mtu_minus_equal_plus_one_exact_link_bytes",
+        "r0_l01_magic_and_wf_escape_exact_old_go_wire_modes",
+        "r0_l01_invalid_index_count_total_id_flags_and_truncation_reject",
+        "r0_l01_fragment_max_length_65535_and_zero_or_invalid_budget",
+        "r0_fec_go_streaming_header_56b_exact_and_small_mtu_boundary",
+        "r0_fec_go_final_parity_header_only_profile_and_length",
+        "r0_fec_reject_incompatible_headers_profile_flags_lengths"
+      ],
+      "source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+      "run_id": 38525749707,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-link-fec-wire.yml"
     }
   ],
   "case_coverage": [
@@ -309,8 +331,15 @@
     },
     {
       "id": "L01",
-      "status": "NOT_RUN",
-      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+      "status": "PARTIAL_R0_WIRE_ONLY",
+      "gate": "R0-LINK-FEC-WIRE",
+      "tests": [
+        "r0_l01_pinned_go_mtu_minus_equal_plus_one_exact_link_bytes",
+        "r0_l01_magic_and_wf_escape_exact_old_go_wire_modes",
+        "r0_l01_invalid_index_count_total_id_flags_and_truncation_reject",
+        "r0_l01_fragment_max_length_65535_and_zero_or_invalid_budget"
+      ],
+      "limits": "LINK MTU±1, reserved magic/WF escape and fragment header/bounds only; no real MSS, owner reassembly resource/timeout, rotation/network, or full L01."
     },
     {
       "id": "L02",
@@ -440,7 +469,8 @@
       "Windows x64 & Linux ARM64 cross-target C ABI layout/link only",
       "Rust WBC4/WBG4 strict wire encoding/decoding fixtures",
       "Actions compiled once with separate consumers and SHA input/binary checks",
-      "Pinned old Go actual encrypted tlsrecord record Seal/Open six oracle vectors + Rust opaque 5B header/8B protected PN/framing HP sample/length. Rust authenticated AEAD and HP remain NOT_IMPLEMENTED."
+      "Pinned old Go actual encrypted tlsrecord record Seal/Open six oracle vectors + Rust opaque 5B header/8B protected PN/framing HP sample/length. Rust authenticated AEAD and HP remain NOT_IMPLEMENTED.",
+      "Pinned old-Go LINK Fragmenter/Reassembler and FEC FastBlockEncoder actual source/parity header with MTU±1 + Rust strict 20B LINK and 56B FEC wire layout; only header, no Rust parity/decode."
     ],
     "blockers": [
       {
@@ -449,7 +479,7 @@
       },
       {
         "key": "R0-LINK-FEC-BOUNDARIES",
-        "why": "Rust LINK/FEC wire lengths, MTU boundary and FEC primitive golden not implemented; no qualified steady dataplane"
+        "why": "LINK 20B and FEC 56B wire headers, MTU±1/magic/WF and old Go systematic/final headers verified; real Rust FEC GF(256) generator/parity/decoder, live FrameBudget carrier/MSS owner and reassembly pressure/timers NOT_IMPLEMENTED."
       },
       {
         "key": "R0-GO-CONTROL-INTEGRATION",
@@ -469,6 +499,6 @@
       }
     ]
   },
-  "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only. Original-Go real record witness plus Rust opaque structural framing is recorded as R0-RECORD-FRAMING; it does not upgrade full C01–C04.",
+  "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only. Original-Go real record witness plus Rust opaque structural framing is recorded as R0-RECORD-FRAMING; it does not upgrade full C01–C04. L01 is PARTIAL_R0_WIRE_ONLY, NOT complete L01, based on actual old-Go LINK/FEC header tests and Rust structural parsing.",
   "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run."
 }

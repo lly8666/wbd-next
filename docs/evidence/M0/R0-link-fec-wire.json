@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "LINK_FEC_WIRE_MTU_ORACLE",
+  "source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+  "result": "PASS",
+  "scope": "Actual pinned old Go LINK Fragmenter/Reassembler and FEC FastBlockEncoder first systematic source/partial parity headers + Rust pure wire schema/MTU. No Rust GF coding, recovery, scheduling or production network.",
+  "old_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "toolchains": {
+    "go": "go1.23.12",
+    "rust": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "native Ubuntu24.04 Linux x64"
+  },
+  "workflow": ".github/workflows/r0-link-fec-wire.yml",
+  "run_id": 38525749707,
+  "run_attempt": 1,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38525749707",
+  "build_job_id": 115725557837,
+  "consume_job_id": 115725775612,
+  "build_artifact": {
+    "id": 11875990603,
+    "name": "r0-link-fec-build-38525749707-1",
+    "bytes": 6651734,
+    "zip_sha256": "2447c4f422274bbef694dec97bbf6a27f52b0e00da805ba766b822c9c6d1d0eb"
+  },
+  "result_artifact": {
+    "id": 11875806102,
+    "name": "r0-link-fec-result-38525749707-1",
+    "bytes": 2017,
+    "zip_sha256": "b6afaa71f06ac0a79acb1b44d90522030c32e74d0908d293926754f4ad87ef05"
+  },
+  "precompiled_binaries_sha256": {
+    "rust": "80cfa3e6419cc3e538b820848b8e74f5228b80eb2243832fefcb50b5ebc3545c",
+    "link_go": "7c94ae4fadced84619da27d5120080612f0e6ee52ed5990717f2a4720d2cdea6",
+    "fec_go": "a263e483a143b2f329133d6d4aae29f5c486b97c5b40cf2fd2316769776c24ce"
+  },
+  "logs_sha256": {
+    "rust": "9ac54eeead11582d273d89c95e2418a8c78c68b7949b3f08cd4fb427b24f504a",
+    "link_go": "e803d756b048e20bce922677141e3a4c7e032182d82e8b8ed48f02e6b34ed822",
+    "fec_go": "a93d3becc59ce5523692ad0571ca888675c66832f7808437a1196eb4952f0820"
+  },
+  "tests": {
+    "rust": {
+      "passed": 7,
+      "failed": 0,
+      "names": [
+        "r0_l01_pinned_go_mtu_minus_equal_plus_one_exact_link_bytes",
+        "r0_l01_magic_and_wf_escape_exact_old_go_wire_modes",
+        "r0_l01_invalid_index_count_total_id_flags_and_truncation_reject",
+        "r0_l01_fragment_max_length_65535_and_zero_or_invalid_budget",
+        "r0_fec_go_streaming_header_56b_exact_and_small_mtu_boundary",
+        "r0_fec_go_final_parity_header_only_profile_and_length",
+        "r0_fec_reject_incompatible_headers_profile_flags_lengths"
+      ]
+    },
+    "go_link": {
+      "passed": 2,
+      "failed": 0,
+      "names": [
+        "TestR0LinkPinnedRealGoMtu63_64_65Wire",
+        "TestR0LinkPinnedRealGoMagicWFandInvalidLength"
+      ]
+    },
+    "go_fec": {
+      "passed": 2,
+      "failed": 0,
+      "names": [
+        "TestR0FecPinnedActualStreamingSourceAndFinalParityHeaders",
+        "TestR0FecPinnedRealGoProfilesWireBounds"
+      ]
+    }
+  },
+  "observations": {
+    "link": "Original Go fragmentation at LINK MTU64 keeps len63,64 unwrapped and splits len65 into two 20B-header frames (44+21B payload) with same packetID. WBDLFRG1 prefix escapes; adaptive FEC-off 'WF' escapes; fixed off keeps WF unchanged.",
+    "fec": "Original Go FastBlockEncoderWithParity using actual ReedSolomon20x20 emits systematic first source with 56B header flag1 and configured 20:4 parity count, dataCount placeholder20, own original length3; k1 Flush emits one final parity shard with header flag0, dataCount1 and parity profile4. Six supported 20:R profile control headers validated by Go tests; no parity payload bytes fixture.",
+    "rust": "Rust pure wire module validates fixed LINK20B, FEC56B explicit big-endian offsets, MTU±1, 65535 logical length, truncated/invalid/profile/flags, and mode-specific magic/WF escape. Output is opaque borrowed or copied wire, no business delivery."
+  },
+  "precompiled_consumption": "All 3 native Rust/old-Go test binaries compiled in build job once; separate consume job verified exact SOURCE/run/attempt/oldGo/source-lock/compiler, input SHA256 and 3 binary length/hash, and executed without rebuild.",
+  "same_source_regressions": [
+    {
+      "workflow": "r0-record-framing.yml",
+      "run_id": 38525749428,
+      "source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+      "result": "success",
+      "build_job_id": 115725556668,
+      "consume_job_id": 115725761379
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "run_id": 38525749607,
+      "source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+      "result": "success",
+      "scope": "old 9 historical gates static until receipt"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38525749571,
+      "source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+      "result": "success"
+    }
+  ],
+  "regression_failure_and_repair": {
+    "failing_source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+    "workflow": "r0-codec.yml",
+    "run_id": 38525749599,
+    "conclusion": "failure",
+    "build_job_id": 115725558065,
+    "consume_job_id": 115725641698,
+    "cause": "Old 13-test WBC4/WBG4 consumer included 7 newly-added Rust link_fec_wire tests, yielding 20 passed/0 failed but inventory expected 13. Test selection failure, not protocol assertion.",
+    "repair_source_sha": "449d15d47b261c50f42cc19e5b4406bf0dddd1af",
+    "repair": "tools/r0_codec_bundle.py adds --skip link_fec_wire:: while retaining --skip record_frame:: to isolate the original 13 top-level WBC4/WBG4 tests.",
+    "successful_retest": {
+      "run_id": 38525921690,
+      "conclusion": "success",
+      "build_job_id": 115726119620,
+      "consume_job_id": 115726212083,
+      "build_artifact_id": 11875572816,
+      "result_artifact_id": 11875686328
+    },
+    "repair_governance": {
+      "run_id": 38525921661,
+      "conclusion": "success"
+    }
+  },
+  "r0_case_coverage": {
+    "L01": "PARTIAL_R0_WIRE_ONLY; fixed LINK MTU±1, escaping and malformed wire; no real network MSS, owner reassembly resource/rotation or full L01"
+  },
+  "not_qualified": {
+    "rust_fec_math": "NOT_IMPLEMENTED",
+    "rust_fec_recovery": "NOT_IMPLEMENTED",
+    "rust_reassembly_owner": "NOT_IMPLEMENTED",
+    "link_mtu_actual_os": "NOT_RUN",
+    "real_os_io": "NOT_RUN",
+    "go_prod_v4": "DISABLED",
+    "rust_aead_hp": "NOT_IMPLEMENTED",
+    "windows_arm_native": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "parallel_readiness": "This completes a key shared wire/MTU contract anchor only. M1–M4 are reserved; formal registry branch/path ownership allocation remains an independent M0 action after interface-readiness review, not automatic on green tests.",
+  "next_action": "Review R0 common-interface readiness for formal parallel R1 worker assignments; pin FrameBudget owner/record encryption API responsibilities and per-worker branch/allowed_paths/epoch, then make explicit registry decision without product V4 enablement."
+}

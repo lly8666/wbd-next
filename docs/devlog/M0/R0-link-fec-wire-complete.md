@@ -1,0 +1,19 @@
+# M0 R0 真实旧Go LINK/FEC wire + Rust MTU 兼容性锚点 — 完成收据
+
+2026-10-14。远端main seq15 checkpoint `ca39ff2e52142da6a2082dc7bfa27b2fff1b0b6c` 到HEAD `19361ddd0da148e12df3877ada36621ca244d938` 只有cursor-only H，Governance38524046574 SUCCESS，0 open PR，M0唯一active/main writer epoch1/revision1，交接CLEAN。
+
+**why_now**：R0的record、WBC4/WBG4已经锁定真实旧Go来源，但是20B LINK和56B FEC两种外头/FrameBudget尚无Rust对照。并行worker若各自发明FEC标志/长度，会破坏普通包首到和MTU；先以固定原Go算法实测wire作基础。
+
+**实质S**：[ed21a3c](https://github.com/lly8666/wbd-next/commit/ed21a3c1fd3ca9b728337e04d1053938a5e7a36a)。从旧库 `lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984` 精确读取 `internal/linkdata/datagram_fragment.go`、`internal/fec/fec.go`、`fastblock_encoder.go`：LINK unwrapped普通包增加**0B**新头，分片20B `WBDLFRG1` magic8/version1/reserved0/index u16BE/count u16BE/total u16BE/packet id u32BE；FEC shard56B `WF` version1/blockID u32BE/shard index/profile/dataCount/shardSize/streaming flag/20×length u16BE。新增 `wbd-codec::link_fec_wire`纯wire结构编码检查，`r0/fixtures/legacy-link-fec-wire-v1.txt`6个源锚点。MTU64下63/64字节不分片，65字节拆44+21（每片头20B），原字节以WBDLFRG1开头要escape，adaptive FEC-off的WF前缀escape但fixed off原样。20:4 k1 streaming source flag1、count20占位、own length3，flush后的final parity flag0/dataCount1/仍配置parity4，56B校验。**parity fixture仅固定头部，不提供或宣称payload parity golden**；旧Go在测试中调用真实NewReedSolomon20x20与FastBlockEncoder生成1份parity作为有意义的原始代码见证。
+
+**源实测**：[Actions38525749707](https://github.com/lly8666/wbd-next/actions/runs/38525749707) attempt1 SOURCE ed21a3c，Ubuntu24.04 x64 Go1.23.12/Rust1.85.1，build115725557837只编译Rust codec单测及原Go两个包 `internal/linkdata`,`internal/fec` 的测试二进制一次；consumer115725775612核 exact SOURCE/run/attempt/Go SHA/编译器/所有inputs SHA256/三份二进制bytes+hash，再直接执行Rust 7/7 PASS、Go LINK2/2 PASS、Go FEC2/2 PASS，0失败。build artifact11875990603 sha256 2447c4f422274bbef694dec97bbf6a27f52b0e00da805ba766b822c9c6d1d0eb，result11875806102 sha256 b6afaa71f06ac0a79acb1b44d90522030c32e74d0908d293926754f4ad87ef05。Rust binary 80cfa3e6419cc3e538b820848b8e74f5228b80eb2243832fefcb50b5ebc3545c、Go LINK binary 7c94ae4fadced84619da27d5120080612f0e6ee52ed5990717f2a4720d2cdea6、Go FEC binary a263e483a143b2f329133d6d4aae29f5c486b97c5b40cf2fd2316769776c24ce。完整测试ID及log SHA参`docs/evidence/M0/R0-link-fec-wire.json`；压缩档摘要由GitHub报告，未另行下载zip做独立外部验证。
+
+**旧regressions与真实修复**：同SOURCE原record wire工作流38525749428 success、资格静态审计38525749607 success、Governance38525749571 success。原WBC4/WBG4 workflow38525749599却因consumer旧断言13/13却同时执行了新增7组 `link_fec_wire::`，实际运行20/20 assertions PASS、0 Rust测试FAIL，旧scope的测试总数硬断言FAILED。保留此失败；后续修复S [449d15d](https://github.com/lly8666/wbd-next/commit/449d15d47b261c50f42cc19e5b4406bf0dddd1af) 仅修改 `tools/r0_codec_bundle.py` 增加跳过新module，从而WBC4/WBG4原13组独立运行。[38525921690](https://github.com/lly8666/wbd-next/actions/runs/38525921690) build115726119620 / consume115726212083 SUCCESS，Governance38525921661 SUCCESS。绝不将第一笔错计数当作原13 suite已通过。
+
+**manifest资格**：新scope`R0-LINK-FEC-WIRE`写唯一`r0/qualification-manifest.json`第10项，L01仅`PARTIAL_R0_WIRE_ONLY`，B01/R01/I01/C01仍partial fake，总44 ID中仅5部分覆盖，39完全NOT_RUN，任何完整架构ID都不是PASS。静态审计对新Go两组入口、Rust测试锚点和fixture数量设了闸。产品/性能/物理NOT_RUN，Rust真实GF(256)/reassembly/owner budget或跨OS runtime并未验证。
+
+**并行开发时间条件**：M1–M4现在均reserved，无可写分支/allowed_paths。R0设计底座已含类型/clock/ABI sentinel/fake平台、Go入场/Go真实 record、WBC4/WBG4与LINK/FEC最小wire，允许下一原子评估是只要补FrameBudget唯一owner和Rust record crypto trait即可分离M1/M3/M4。按11，M3三cipher属于R1任务，不应被错误地要求R0先全部实现；M2纯recovery state可以准备，但真实receipt/send联调受M1 runtime组合影响。只要M0完成正式G2 registry路径/分支/epoch授权并锁共享接口就能真正并行，**不需要等R5、物理或性能验证；不是已授权现在就有并行worker在运行，更没有固定几天日历承诺**。
+
+**本子任务done_when**：真实旧Go、Rust各scope的native Actions compiled-once/consumer成功、旧13-suite计数修复、证据/唯一manifest/治理收口。达成。
+
+**唯一下一动作**：R0公共接口ready-for-split审计：检查FrameBudget单一计算归属、record seal/open trait与ABI边界、workspace生产依赖/目录冲突，草拟可执行M1–M4的branch、allowed_paths、owned semantics和R1/R2阶段进入条件；满足则以独立明确registry G2任务正式激活并行writer，仍Go生产V4 fail-closed且未发布产品资格。

@@ -23,6 +23,7 @@ EXPECTED_GATES = {
     "R0-CROSS-ABI": "CROSS_BUILD_PASS",
     "R0-WIRE-CODEC": "PASS",
     "R0-RECORD-FRAMING": "PASS",
+    "R0-LINK-FEC-WIRE": "PASS",
 }
 ALLOWED_MODES = {
     "NATIVE_LINUX_X64_TEST",
@@ -34,6 +35,7 @@ ALLOWED_MODES = {
     "CROSS_BUILD_ONLY_NO_TARGET_EXECUTION",
     "NATIVE_LINUX_X64_RUST_WIRE_ONLY",
     "NATIVE_OLD_GO_SEAL_OPEN_AND_RUST_OPAQUE_FRAME",
+    "NATIVE_OLD_GO_LINK_FEC_AND_RUST_WIRE_ONLY",
 }
 EXPECTED_IDS = {
     f"{prefix}{n:02d}"
@@ -44,6 +46,7 @@ EXPECTED_IDS = {
     for n in range(1, end + 1)
 }
 PARTIAL_IDS = {"B01", "R01", "I01", "C01"}
+PARTIAL_WIRE_IDS = {"L01"}
 
 def require(condition, message):
     if not condition:
@@ -167,6 +170,28 @@ def audit():
             require(ev["not_qualified"]["rust_aead"]=="NOT_IMPLEMENTED" and
                     ev["not_qualified"]["rust_hp"]=="NOT_IMPLEMENTED",
                     "structural probe falsely claimed real Rust crypto")
+        if gate=="R0-LINK-FEC-WIRE":
+            fixture=Path("r0/fixtures/legacy-link-fec-wire-v1.txt").read_text()
+            require(sum(1 for line in fixture.splitlines() if line and not line.startswith("#"))==6,
+                    "six locked original-Go LINK/FEC fixed wire examples missing")
+            for file, anchors in (
+                ("r0/go_overlay/internal/linkdata/r0_link_wire_oracle_test.go", (
+                    "TestR0LinkPinnedRealGoMtu63_64_65Wire",
+                    "TestR0LinkPinnedRealGoMagicWFandInvalidLength")),
+                ("r0/go_overlay/internal/fec/r0_fec_wire_oracle_test.go", (
+                    "TestR0FecPinnedActualStreamingSourceAndFinalParityHeaders",
+                    "TestR0FecPinnedRealGoProfilesWireBounds")),
+            ):
+                body=Path(file).read_text()
+                for name in anchors:
+                    require(name in body, f"real legacy Go oracle test missing: {name}")
+            require(ev["tests"]["rust"]["passed"]==7 and
+                    ev["tests"]["go_link"]["passed"]==2 and
+                    ev["tests"]["go_fec"]["passed"]==2,
+                    "actual Rust and old Go LINK/FEC tests count mismatch")
+            require(ev["not_qualified"]["rust_fec_math"]=="NOT_IMPLEMENTED" and
+                    ev["r0_case_coverage"]["L01"].startswith("PARTIAL"),
+                    "LINK/FEC header falsely claimed full parity or L01")
         gate_sources[gate]=g["source_sha"]
         evidence_hashes[gate]=sha256(p)
     coverage=m["case_coverage"]
@@ -179,6 +204,14 @@ def audit():
             for test in x["tests"]:
                 require(test in Path("crates/wbd-platform/src/lib.rs").read_text(),
                         f"unanchored R0 fake case {x['id']}: {test}")
+        elif x["id"] in PARTIAL_WIRE_IDS:
+            require(x["status"]=="PARTIAL_R0_WIRE_ONLY" and
+                    x["gate"]=="R0-LINK-FEC-WIRE" and
+                    x.get("tests") and x.get("limits"),
+                    f"{x['id']} full L01 improperly promoted")
+            for anchor in x["tests"]:
+                require(anchor in Path("crates/wbd-codec/src/link_fec_wire.rs").read_text(),
+                        "R0 LINK MTU case source anchor missing: "+anchor)
         else:
             require(x["status"]=="NOT_RUN" and x.get("reason"), f"{x['id']} unproved ID marked PASS")
     exit_gate=m["r0_foundation_exit"]
@@ -199,7 +232,8 @@ def audit():
       "historical_source_sha_by_gate":gate_sources,
       "case_ids":len(coverage),
       "partial_r0_fake_only_ids":sorted(PARTIAL_IDS),
-      "not_run_case_count":len(EXPECTED_IDS)-len(PARTIAL_IDS),
+      "partial_r0_wire_only_ids":sorted(PARTIAL_WIRE_IDS),
+      "not_run_case_count":len(EXPECTED_IDS)-len(PARTIAL_IDS)-len(PARTIAL_WIRE_IDS),
       "live_external_run_status":"NOT_CHECKED_IN_THIS_AUDIT",
       "product":"NOT_RUN","performance":"NOT_RUN","physical":"NOT_RUN",
       "windows_arm_target_native_execution":"NOT_RUN",
