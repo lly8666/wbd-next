@@ -280,13 +280,19 @@ impl FecRxOwner{
    self.bytes.saturating_add(extra)>self.cfg.max_heavy_bytes{
    self.compact_heavy(id);
   }
+  // Capacity compaction may itself advance the monotone retired floor.
+  // Recheck AFTER each such mutation: a late but previously admitted ID
+  // must never reappear as a fresh Heavy block behind a new floor.
+  if self.floor.is_some_and(|floor|id<=floor){return Err(RxError::Retired);}
   if !self.heavy.contains_key(&id)&&!self.compact.contains_key(&id){
    if extra<=self.cfg.max_heavy_bytes{self.room(extra);}
+   if self.floor.is_some_and(|floor|id<=floor){return Err(RxError::Retired);}
    if extra<=self.cfg.max_heavy_bytes{
     self.heavy.insert(id,Heavy::new(id,self.clock,view.header.parity_count));
    }else{
     self.compact_insert(id,Compact{profile:view.header.parity_count,
      meta:None,delivered:0,lengths:[0;20],started:self.clock,blocked:false});
+    if self.floor.is_some_and(|floor|id<=floor){return Err(RxError::Retired);}
    }
   }
   if let Some(c)=self.compact.get_mut(&id){

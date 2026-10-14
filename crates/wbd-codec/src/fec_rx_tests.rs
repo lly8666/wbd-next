@@ -136,3 +136,25 @@ fn r1_rx_real_rs_full_erasure_six_profiles_streaming_late(){
   }
  }
 }
+
+
+#[test]
+fn r1_rx_capacity_retire_floor_cannot_resurrect_older_new_block() {
+ // One heavy shard at a time; compact only one previously delivered ID.
+ // Receiving an older, hitherto unseen authenticated ID can force the
+ // old Heavy to Compact, and the compact capacity retire floor moves.
+ // Admission MUST recheck that floor after eviction, not just before.
+ let (ten,_)=wire(10,4,&[b"AAAAA"]);
+ let (twenty,_)=wire(20,4,&[b"BBBBB"]);
+ let (five,_)=wire(5,4,&[b"CCCCC"]);
+ let mut rx=FecRxOwner::new(cfg(5,1)).unwrap();
+ assert_eq!(rx.push_after_auth(&ten[0],id(10),1).unwrap().systematic.len(),1);
+ assert_eq!(rx.push_after_auth(&twenty[0],id(20),2).unwrap().systematic.len(),1);
+ assert_eq!((rx.stats().heavy,rx.stats().compact),(1,1));
+ assert_eq!(rx.push_after_auth(&five[0],id(5),3),Err(RxError::Retired));
+ assert_eq!(rx.stats().floor,Some(10));
+ assert_eq!(rx.stats().heavy,0);
+ assert_eq!(rx.push_after_auth(&ten[0],id(10),4),Err(RxError::Retired));
+ // Newer ID remains in Compact and must not be delivered twice.
+ assert!(rx.push_after_auth(&twenty[0],id(20),5).unwrap().systematic.is_empty());
+}
