@@ -4,27 +4,27 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 12,
-  "checkpoint_sha": "29ad2aa37874df0fb44ec08efb5274f1b0145265",
+  "sequence": 13,
+  "checkpoint_sha": "0b4f004e719de3b2275b3dfcf8f8e7fdd81bcc9d",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "R0已验旧Go V3/V4真实TLS/控制V4早期拒绝、Rust类型、Linux native Go↔C↔Rust ABI sentinel、Rust fake driver/clock和Windows x64/ARM64 cross-build。本轮加入纯Rust wbd-codec，WBC4 receipt 20+40B pages/TLV及WBG4 16B Game envelope严格显式offset、独立手写golden/非法输入/PN与budget边界在Actions原生Rust 13项PASS；仍无真实Rust业务AEAD/receipt/Game engine。",
-  "why_now": "seq11唯一下一动作要求在进一步建立引擎前锁定00/08/09明确WBC4/WBG4 wire布局，以独立源码golden和失败关闭反例证明结构；该codec仅wire层，不能据此广告V4产品。",
-  "done_when": "R0共享类型/来源/toolchain锁及受保护Go协商、原生和多目标ABI、平台fake driver/clock、WBC4/WBG4 wire golden与测试消费者形成可审计foundation；必须再审计统一test manifest及source-lock是否涵盖真实阶段退出条件，当前R0总体仍partial、产品未资格化。",
-  "next_action": "按R0退出合同做一次原子审计和修正：核对r0/source-lock.json里历史bootstrap快照与当前wbd-types/wbd-codec/wbd-platform/wbd-engine四crate、各Actions SOURCE/target及test ID映射的不一致；形成唯一manifest和明确R0已验/未验门、worker M1–M4正式分派前阻断项。只更新可信来源和证据，不启用生产V4或臆造完整R0通过。",
+  "current_task": "R0四crate types/codec/platform/engine共享骨架、旧Go V3/V4测试受保护TLS与Go生产V4 fail-closed、Linux原生Go↔C↔Rust ABI sentinel、fake-platform与Windows/ARM cross-build已有精确Actions；本轮修正历史source-lock并建立唯一8项历史gate/44案例manifest、Actions静态防漂移审计，发现并修复source-lock没有触发cross工作流的漏项，S2两个跨目标编译+消费重跑成功。R0仍为foundation partial，Rust真实数据面未完成。",
+  "why_now": "cursor seq12唯一任务是对账 stale R0_BOOTSTRAP types-only source-lock 与既有四crate、固定Go SOURCE/工具链、历史run和44个架构反例ID，避免正式分工按错误的未跑/已测状态决策。审计中发现cross输入锁未列push.paths，需作为同原子可信来源修复。",
+  "done_when": "source-lock与实际workspace/所有使用者workflow一致，8项历史gate可回溯具体SOURCE/run、44个反例的部分与未跑不虚构完整PASS；待按模块00/05/06/07补最小record/LINK/FEC wire与真实Go oracle，形成可靠基础后才独立评估R0退出及正式角色分配。",
+  "next_action": "在R0围绕00-CONTRACTS与05-RECORD-CRYPTO，读取固定旧Go实际record wire格式/向量，以最小Rust record framing 外头/长度/PN与kind显式偏移golden、错误预算和短输入拒绝为一个原子任务；不得用伪AEAD替代真实开密或宣称三cipher record已经实现。只在Actions编译一次+独立消费验证，之后安排LINK/FEC wire/MTU底座；Go生产V4继续DISABLED、M1–M4仍reserved。",
   "unverified": true,
-  "last_tested_source": "fdcacde4dae62cb6591d030d93ced7715b919118",
+  "last_tested_source": "35d599b288ea19c3cead36b22ec561e4820ef38e",
   "evidence_refs": [
-    "docs/evidence/M0/R0-codec-wire.json"
+    "docs/evidence/M0/R0-foundation-audit.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-codec-wire-complete.md",
+    "docs/devlog/M0/R0-foundation-audit-complete.md",
+    "r0/source-lock.json",
+    "r0/qualification-manifest.json",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/08-RECOVERY.md",
-    "docs/architecture/modules/09-PIPELINE-GAME.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/evidence/M0/R0-cross-abi.json"
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "SOURCE fdcacde4dae62cb6591d030d93ced7715b919118，Actions native Rust WBC4/WBG4 codec run38519636181 attempt1 build115706153296/consume115706242766 success 13/13 (WBC4 receipt72B, legacyTLV21B, WBG4 19B手写golden；重复/flags/schema/size/budget/PN/u64边界)，unit binary SHA256 3b26811fff9f691d44a47829f423ae0da83034efb267dd051ea7b7a331bcb2fc；build artifact11873081899/result11873086957，详细SHA在R0-codec-wire.json。同SOURCE fake-platform38519636182/types38519636189/Windows+ARM cross38519636196/Governance38519636197/native Go-C-Rust ABI38519636220均success；收据S 29ad2aa37874df0fb44ec08efb5274f1b0145265 Governance run38519928232 success。R0 codec只解析/编码已认证V4 plaintext；真实AEAD/receipt处理/Game pipeline/WindowsARM native OS执行/产品/性能/物理NOT_RUN，production V4 DISABLED/features=0，M1–M4 reserved。"
+  "partial_summary": "R0锁与manifest首实质S c66416c837108a2538394a446f3b91a18fd213e6：现有四crate/types/codec/platform/engine，旧Go SHA a7a82db31fe736ffedee330795a3234d358f1984/Go1.23.12，Rust1.85.1，8历史gate、44架构反例仅B01/R01/I01/C01 4部分fake/40 NOT_RUN。该SOURCE审计38521076297、Go control38521076319、Go vectors38521076265、V4TLS38521076264、Rusttypes38521076283、platform38521076295、nativeABI38521076275、codec38521076328、governance38521076251均SUCCESS；发现cross workflow未监听source-lock不虚称此SOURCE有cross。第二修复S 35d599b288ea19c3cead36b22ec561e4820ef38e：审计38521306796 SUCCESS、WindowsARM cross build+consume38521307048四job成功、governance38521306875成功，Windows/ARM目标native执行NOT_RUN。证据收据S 0b4f004e719de3b2275b3dfcf8f8e7fdd81bcc9d 静态审计38521787846和Governance38521787840 SUCCESS。R0=partial，真实Rust record AEAD/LINK/FEC/engine/OS IO未实现，生产V4 features0 fail-closed，产品/性能/物理NOT_RUN，M1–M4 reserved。"
 }
