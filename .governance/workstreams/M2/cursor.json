@@ -4,14 +4,14 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 6,
-  "checkpoint_sha": "8297df981f2f5351f0ab094c826bf6f404ede4b1",
+  "sequence": 7,
+  "checkpoint_sha": "9a25ae179e8bfd050f25c289930d81af5b96b896",
   "progress": "partial",
   "task_id": "R2-M2-GLOBAL-SPARSE-002",
-  "current_task": "R2-M2-GLOBAL-SPARSE-002 pure process-global grant allocator complete at native-scoped level; M0 real integration outstanding",
-  "why_now": "Main active M2 goal assigned R2-M2-GLOBAL-SPARSE-002 in M0 decision 2026-10-14; prior local 1s sparse quota otherwise multiplies across clients without a process-wide cap.",
-  "done_when": "Actions compiled-once native r2_ tests include 7 new global multi-client/direction/epoch/grant/refund/timeout/departure cases; 22/22 PASS; evidence S and cursor-only H; no shared modules/socket/Root Cargo.",
-  "next_action": "No further M2 implementation task claimed; M0 owns process actor integration/driver completion/actual per-direction byte routing and quota fairness/performance. Wait for next formal main assignment.",
+  "current_task": "M2 R2-M2-GLOBAL-SPARSE-002 scoped allocator already complete at CODE fb916f24, 22/22 native38598294561 SUCCESS; evidence S8297df98 Governance38598682806 SUCCESS. M0 recovered cursor main-only ref structure failure after H1384b306 Governance38598929953 attempt3 ROLE_SCOPE_PASS but missing branch file. Recovery log S9a25ae17; replacement H seq7 only. Product/driver/perf NOT_RUN.",
+  "why_now": "M0 explicit user request to handle M2 issue; Governance38598929953 attempts1/2 failed concurrent main control movement; rerun attempt3 showed actual missing context_ref to main-only assignment decision absent on M2 branch, while code and owner assignment unchanged.",
+  "done_when": "M2 native source fb916f2467d40b6cc0612d1182525a553d8e6872 remains 22/22 scoped PASS Actions38598294561. M0 recovered log S9a25ae179e8bfd050f25c289930d81af5b96b896; local branch-invalid context_ref excluded only, current main registry still authoritative rev2 epoch1; replacement cursor-only H sequence7 Governance required; no new production or test qualification.",
+  "next_action": "M0 review M2 exact native22/22/evidence and recovery H result, later integrate actor global quotas and actual driver accounting on a dedicated main SOURCE. M2 itself waits for new explicit scoped assignment; do not claim live V4, 500Mbps, or product PASS.",
   "unverified": true,
   "last_tested_source": "fb916f2467d40b6cc0612d1182525a553d8e6872",
   "evidence_refs": [
@@ -19,10 +19,9 @@
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/evidence/M2/R2-M2-BUDGET-001.json",
     "docs/devlog/M2/R2-M2-GLOBAL-SPARSE-002.md"
   ],
-  "partial_summary": "Authority main registry M2 active rev2 epoch1, branch started clean seq5 Hbe5e722 Governance38561581854 SUCCESS. Pure new GLOBAL-SPARSE SOURCE fb916f2, only recovery global_sparse.rs + lib.rs and M2 devlog; local F/R 1s max(F/10,32768) still applies, separate hard aggregate process cap via finite per-TunnelKey/direction grant expiry, NotSent original-epoch refund, Uncertain/timeout/departure conservative debit, no fresh HOL/global mutex. Compiled-once native r2_ run38598294561 22/22 (7 new) SUCCESS; G2 38598294562 SUCCESS; static38598294559 SUCCESS. SOURCE Governance38598294660 FAIL control or source moved mid-audit (M0 main changed concurrently), not a Rust failure. Exact evidence S8297df9 Governance38598682806 SUCCESS, failed run retained in receipt. No real process integration, network, performance, physical or product run. H checkpoint S8297df9 last_tested_source fb916f2, task closed pending M0."
+  "partial_summary": "Recovery by M0, not M2 development: original H1384b306 Governance38598929953 attempt1/2 FAIL main control moved, same H rerun attempt3 ROLE_SCOPE_PASS then structure FAIL from missing docs/decisions/M0-parallel-worker-atoms-2026-10-14.md on M2 branch. Actual artifact11915160297 captured reason. This decision remains on main and is authoritative in registry, but not a valid M2 branch-local cursor reference. Removed just absent hot ref, retained existing 3 local refs; recovered log S9a25ae17. M2 code SOURCE fb916f24 native22/22 unchanged; last_tested_source preserved; no product/performance verification. H sequence7 required."
 }
