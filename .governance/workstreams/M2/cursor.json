@@ -4,22 +4,25 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 0,
-  "checkpoint_sha": null,
-  "progress": "planned",
+  "sequence": 1,
+  "checkpoint_sha": "4d103921cd2e0830d83bf4272e3f7a65598fdb38",
+  "progress": "ready_for_integration",
   "task_id": "R2-M2-RECEIPT-001",
-  "current_task": "R2 receipt pure event state, PN holes and bounded repair",
+  "current_task": "R2-M2-RECEIPT-001 pure receipt/frozen repair state completed at native-scoped level; awaiting M0 interface integration",
   "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
   "done_when": "Actions compiled-once receipt gap/unreported/duplicate/expiry tests, no invented cumulative prefix or live network; S+H.",
-  "next_action": "Implement minimal typed receipt event and bitmap page state tests in crates/wbd-recovery/ without engine/platform imports; have M0 approve root Cargo changes.",
+  "next_action": "M0 resolve authenticated M3/M1 adapter issue #1 and historical G2 one-test filter issue #2 before product integration; no new M2 work started.",
   "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "last_tested_source": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+  "evidence_refs": [
+    "docs/evidence/M2/R2-M2-RECEIPT-001.json"
+  ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-G2-worker-activation.md",
-    "docs/decisions/M0-R0-parallel-worker-readiness.md",
-    "docs/architecture/modules/00-CONTRACTS.md"
+    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/devlog/M2/R2-M2-RECEIPT-001.md",
+    "docs/decisions/M0-G2-worker-activation.md"
   ],
-  "partial_summary": "BOOTSTRAP_ONLY at G2; Build pure wbd-recovery Rust state machine for authenticated receipt, skipped control/burned PN, same sealed frame repair candidate, fake deadlines and no socket. No worker implementation or own Actions results yet. First worker S then cursor-only H needed; until then REMOTE_CONTINUITY=RECOVERY_REQUIRED by design (null checkpoint). No task is authorized outside own allowed_paths. Product/performance/physical NOT_RUN, V4 DISABLED."
+  "partial_summary": "First M2 bootstrap-to-S transition: code S 7b02154 implemented pure authenticated ReceiptPage/ReceiptState with no cumulative prefix, control/burned/unreported holes safe, duplicate/old report semantics, 3 original witnesses or PTO, <=2 accepted/uncertain repair attempts, 32 candidates/poll, TTL/20ms queue, same FrozenRecordHandle and late ACK preflight. Exact-source compiled-once worker-native run38538225302 attempt1 8/8 r2_ PASS with binary SHA256 8b702fd9..., Governance run38538225279 PASS, static audit38538225295 PASS. Legacy G2 run38538225378 FAILED solely hardcoded 1-test count despite actual 9/9 test binary PASS; M0 GitHub issue #2. Authenticated M3/M1 binding issue #1. Evidence receipt S 4d103921 and Governance run38538732698 PASS. No engine/platform/root Cargo/socket changes. Integration, 1s F/R/L budget, performance/physical/product NOT_RUN; V4 DISABLED. Task closed; no next M2 atom claimed."
 }
