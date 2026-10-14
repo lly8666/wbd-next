@@ -1,0 +1,91 @@
+name: R0 opt-in Go V4 TLS admission
+run-name: "M0|${{ github.sha }}|r0-v4-real-tls"
+
+on:
+  push:
+    paths:
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+      - "r0/source-lock.json"
+      - "tools/r0_v4_tls.py"
+      - ".github/workflows/r0-v4-tls.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-v4-tls-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Build pinned Go TLS plus non-test opt-in V4 entrypoints
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          cp r0/go_overlay/internal/realityfront/admission_v4.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/admission_v4_test.go legacy/internal/realityfront/
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r0-v4-tls.test" ./internal/realityfront
+          )
+          python tools/r0_v4_tls.py pack \
+            --out r0-v4-artifact \
+            --binary r0-v4-tls.test \
+            --source "$GITHUB_SHA" \
+            --old "$(git -C legacy rev-parse HEAD)" \
+            --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --go-version "$(go version)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-v4-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-v4-artifact/
+          retention-days: 30
+          if-no-files-found: error
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-v4-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-v4-artifact
+      - name: Verify provenance and execute precompiled TLS peer tests
+        run: |
+          python tools/r0_v4_tls.py consume \
+            --manifest r0-v4-artifact/manifest.json \
+            --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-v4-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-v4-out/
+          retention-days: 30
+          if-no-files-found: warn
