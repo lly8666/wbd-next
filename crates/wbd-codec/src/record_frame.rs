@@ -226,3 +226,9 @@ mod tests {
 #[cfg(test)]
 #[path = "record_crypto_tests.rs"]
 mod record_crypto_tests;
+
+// R1 replay verification belongs to the record_frame:: namespace, ensuring
+// frozen legacy R0 codec still selects the same historical 13 wire tests.
+#[cfg(test)]
+#[path = "record_replay_tests.rs"]
+mod record_replay_tests;
