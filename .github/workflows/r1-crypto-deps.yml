@@ -78,7 +78,7 @@ jobs:
               let mut data=vec![1,2,3,0];
               let tag=k.seal_in_place_separate_tag(nonce,Aad::from(&aad[..]),&mut data).unwrap();
               data.extend_from_slice(tag.as_ref());
-              assert_eq!(k.open_in_place(nonce,Aad::from(&aad[..]),&mut data).unwrap(), &[1,2,3,0]);
+              assert_eq!(k.open_in_place(Nonce::assume_unique_for_key([3u8;12]),Aad::from(&aad[..]),&mut data).unwrap(), &[1,2,3,0]);
           }
           #[test] fn aead_chacha(){test_aead(&CHACHA20_POLY1305);}
           #[test] fn aead_aes128(){test_aead(&AES_128_GCM);}
