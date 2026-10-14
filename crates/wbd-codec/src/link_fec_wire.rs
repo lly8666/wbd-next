@@ -346,3 +346,23 @@ mod tests {
 #[cfg(test)]
 #[path = "path_budget_tests.rs"]
 mod path_budget_tests;
+
+// R1 tests below LINK namespace preserve frozen historic R0 13 count.
+#[cfg(test)]
+#[path = "link_reassembly_tests.rs"]
+mod link_reassembly_tests;
+
+// R1 real GF(256) scalar math tests isolated beneath frozen R0 LINK subtree.
+#[cfg(test)]
+#[path = "fec_math_tests.rs"]
+mod fec_math_tests;
+
+// Genuine FEC TX owner R1 tests under frozen-R0-excluded LINK tree.
+#[cfg(test)]
+#[path = "fec_tx_tests.rs"]
+mod fec_tx_tests;
+
+// R1 FEC RX state tests isolated under LINK from frozen R0 historical cases.
+#[cfg(test)]
+#[path="fec_rx_tests.rs"]
+mod fec_rx_tests;
