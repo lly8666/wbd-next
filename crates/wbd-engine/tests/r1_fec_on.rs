@@ -152,7 +152,7 @@ fn r1_m0_fec_on_systematic_first_business_before_parity_and_replay(){
  let edge_batch=edge_fec.submit(&edge_payload,0,4,b.max_fec_wire_datagram(),false).unwrap();
  assert_eq!(edge_batch.systematic[0].len(),b.max_fec_wire_datagram());
  let mut edge_tx=LaneTxCrypto::new(keys(),b.record_wire_mtu).unwrap();
- let mut edge_arena=Arena::new(309,1,640,1,100_000).unwrap();
+ let mut edge_arena=Arena::new(309,1,768,1,100_000).unwrap();
  let mut edge_unique=edge_arena.allocate().unwrap();
  let edge_shard=&edge_batch.systematic[0];
  edge_unique.writable()[14..14+edge_shard.len()].copy_from_slice(edge_shard);
