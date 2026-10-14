@@ -175,14 +175,15 @@ pub fn build<'b, H: FrozenRecordHandle>(
     ip[9] = TCP_PROTOCOL;
     ip[12..16].copy_from_slice(tuple.src_ip);
     ip[16..20].copy_from_slice(tuple.dst_ip);
-    ip[10..12].copy_from_slice(&finish_checksum(sum_words(ip)).to_be_bytes());
+    let ip_checksum = finish_checksum(sum_words(ip));
+    ip[10..12].copy_from_slice(&ip_checksum.to_be_bytes());
 
     tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
     tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
     // 64-bit owner seq is stable across retransmission; only wire32 wraps.
     tcp[4..8].copy_from_slice(&(record.metadata().seq.0 as u32).to_be_bytes());
     tcp[8..12].copy_from_slice(&presentation.ack32.to_be_bytes());
-    tcp[12] = ((TCP_HEADER_LEN + options.len()) / 4) as u8 << 4;
+    tcp[12] = (((TCP_HEADER_LEN + options.len()) / 4) as u8) << 4;
     tcp[13] = TCP_DATA_FLAGS;
     tcp[14..16].copy_from_slice(&presentation.advertised_window.to_be_bytes());
     tcp[TCP_HEADER_LEN..TCP_HEADER_LEN + options.len()].copy_from_slice(options);
@@ -190,12 +191,9 @@ pub fn build<'b, H: FrozenRecordHandle>(
 
     // TCP one’s-complement pseudoheader: IPv4 src/dst, 00 06, TCP length.
     // Works with odd record lengths and every negotiated option length.
-    let mut sum = sum_words(tuple.src_ip) + sum_words(tuple.dst_ip)
+    let sum = sum_words(tuple.src_ip) + sum_words(tuple.dst_ip)
         + u64::from(TCP_PROTOCOL) + tcp.len() as u64 + sum_words(tcp);
     tcp[16..18].copy_from_slice(&finish_checksum(sum).to_be_bytes());
-    // Keep the one-pass arithmetic explicit; overflow impossible for <=65535B.
-    sum = 0;
-    let _ = sum;
     Ok(&scratch[..plan.required])
 }
 
@@ -205,6 +203,7 @@ mod tests {
     use wbd_types::{BufferKey, LaneKey, RecordPn, SeqOffset, TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata};
 
+    #[derive(Clone)]
     struct TestFrozen { wire: Vec<u8>, seq: SeqOffset }
     impl FrozenRecordHandle for TestFrozen {
         fn origin(&self) -> BufferOrigin {
