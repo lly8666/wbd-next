@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 9,
-  "checkpoint_sha": "6c9244115e5c122c58375d312326ea0894ffa1b3",
+  "sequence": 10,
+  "checkpoint_sha": "40a2a343d1f937f2aff4d9136147cef6ddef8263",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "R0共享类型与单目标build，固定原Go V3/V4 golden+真实TLS以及Go控制V4 fail-closed已验证。本轮原生R0 Rust cdylib↔C11/旧Go cgo ABI版本/大小、opaque token/generation、错误和失败关闭在Linux x64通过；真实业务engine仍未实现，features=0。",
-  "why_now": "按seq8唯一下一动作，用同一原生Rust动态库在独立C二进制与固定旧Go模块cgo中真实调用来验证ABI旧size/version、错误码、generation、close和容量，不用Python代数假装ABI真实通过。",
-  "done_when": "R0协议/共享类型/来源与toolchain锁、原Go TLS与C/平台ABI、fake-clock/platform-fake-driver、Windows/ARM多目标构建消费齐备后才正式分配纵向worker；当前仅 Linux native R0 ABI sentinel 子项完成，R0总资格未满足。",
-  "next_action": "在Actions实现并原生执行 R0 fake-clock + fake-platform driver 的 TxBatchOutcome accepted_prefix/uncertain_index、buffer借用/stop关闭、失败PN不复用反例与预编译产物消费（参考00-CONTRACTS.md与11的I01/B01）；仍禁止生产V4、M1–M4保持reserved，Windows/ARM之后单独测。",
+  "current_task": "R0已验证共享Rust类型/单目标构建、固定Go V3/V4 goldens与真实TLS opt-in、实际Go CLI V4 fail-closed，以及原生Go-C-Rust ABI sentinel。本轮新增Rust wbd-platform最低契约与内存fake TxDriver/MonoClock：accepted_prefix/uncertain_index、PN seal失败烧号、非法outcome、KernelLoan/stop等待和checked deadline共7项Actions PASS；不是真实OS驱动或已可用产品engine。",
+  "why_now": "cursor seq9唯一动作要求R0先用fake driver/fake clock显式检验发送/关闭所有权边界，不把跨语言ABI probe成功误判为实际syscall/稳态数据通路成熟。",
+  "done_when": "R0类型/编解码golden/锁SOURCE与toolchain、原Go协商、ABI/fake-driver/multi-target build及其消费者证据齐全后再启正式worker；当前仅Linux fake-platform 子项完成，总R0未完成。",
+  "next_action": "在Actions对 Windows x64 与 Linux ARM64 做实质的跨目标Rust平台/ABI编译和C头layout验证，并验证编译产物架构与符号；严格区分cross-build与native execution，不能把未运行目标测试标PASS。其后核R0剩余合同，再考虑正式激活M1–M4；生产V4维持DISABLED。",
   "unverified": true,
-  "last_tested_source": "b719f28ac2b112150e39133a9cabc8e7d32b8771",
+  "last_tested_source": "1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2",
   "evidence_refs": [
-    "docs/evidence/M0/R0-native-abi.json"
+    "docs/evidence/M0/R0-platform-fake.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-native-abi-complete.md",
+    "docs/devlog/M0/R0-platform-fake-complete.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/evidence/M0/R0-go-control-mode.json"
+    "docs/evidence/M0/R0-native-abi.json"
   ],
-  "partial_summary": "新SOURCE b719f28ac2b112150e39133a9cabc8e7d32b8771; fixed oldGo SHA a7a82db31fe736ffedee330795a3234d358f1984; native ABI Actions run38514286818 attempt1 build115689490267/consume115689666206 success，Rust 3/C 1/Go cgo4 native PASS，ABI v1 info24/config16/token8 features0；buildZIP 11869919968 resultZIP11871535056并由consumer验4个binary SHA256与输入；相同SOURCE r0-build run38514286840 Governance38514286805成功，receipt S 6c924411 Governance run38514545218成功。R0 ABI仅probe，Go原app链接、Rust数据面、fakeclock/platform-driver、Windows/ARM/产品/性能/物理NOT_RUN，M1–M4 reserved。"
+  "partial_summary": "SOURCE 1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2，R0 fake platform/clock Actions run38516057707 attempt1 build115695007988/consume115695101127 SUCCESS，Rust 7/7 PASS 0失败，binary sha256 0555ab255bf701e535689dc8ec8fef37f1c1ef8b9ac0aec9e9b5e16411aac422，build artifact11872072639/result11872227435；同SOURCE旧Rust build 38516057741、Go-C-Rust native ABI38516057635、Governance38516057624均PASS，证据收据S 40a2a343 Governance38516277885 PASS。R0 fake-only，native syscall/真实engine/Windows/ARM/产品/性能/物理NOT_RUN；生产V4禁用，M1–M4reserved。"
 }
