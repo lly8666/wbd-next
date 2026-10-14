@@ -30,7 +30,7 @@ jobs:
             exe: r0-cross-link
           - target: x86_64-pc-windows-gnu
             cc: x86_64-w64-mingw32-gcc
-            gcc: gcc-mingw-w64-x86-64
+            gcc: gcc-mingw-w64-x86-64 nasm
             binutils: binutils-mingw-w64-x86-64
             exe: r0-cross-link.exe
     steps:
