@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 9,
-  "checkpoint_sha": "3a67408c4f9962ef6dd28beeb8a9a846a6a6d3ef",
+  "sequence": 10,
+  "checkpoint_sha": "4ab3c9c927dceace95ef5c29d33f28e5b455e9e7",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-TX-006",
-  "current_task": "Implemented bounded FEC TX direction owner: real GF256 systematic immediate wire, full20 close now, first-source+32ms absolute sparse flush, profile20 256/512/MTU classes and one shared BlockID allocated on first source, source-priority separate TxBatch, 3-block memory cap and oldest pressure close.",
-  "why_now": "After real Go-compatible RS20 scalar math passed worker 38/38, implement module07 TX owner timers and size-class state against pinned Go fastblock_encoder/size_class_encoder before FEC RX Heavy/Compact or performance SIMD.",
-  "done_when": "Actions SOURCE 971f320f compiled-once native Rust1.85.1 worker 46/46 PASS, eight new FEC TX owner tests plus prior38; exact seven source workflows including historical R0 and Governance PASS; evidence S and cursor-only H. Does not claim actual driver send order, native Go FEC package or FEC-on product.",
-  "next_action": "Next M3 single atomic: authenticated FEC RX block owner with streaming systematic immediate delivery and immutable final metadata, missing-only e-by-e recover, bounded Heavy3s/Compact10s and pressure retirement, then native Actions S/evidence/H; M0 integrate verified FEC TX/RX with real lane record/PN/link and test FEC-on on one main SOURCE. ISA-L SIMD needs separate toolchain/safety/CPU proof; root Cargo/ABI remain M0-owned.",
+  "task_id": "R1-M3-FEC-RX-007",
+  "current_task": "Bounded authenticated-input FEC RX Heavy/Compact owner implemented with streaming first delivery, final metadata cross-check, actual old-Go RS20 missing-only e×e recovery, 3s/10s absolute timers, pressure compaction and no BlockID resurrection at retired floor.",
+  "why_now": "FEC scalar GF256 and bounded 32ms source-first FEC TX were proven; this RX atom adds the complementary immutable final authority and bounded retired dedup while keeping record AEAD+PN replay and actual timers caller-owned.",
+  "done_when": "Final SOURCE ab7ef93a native compiled-once 55/55 r1 tests PASS (9 FEC RX+46 previously scoped codec) and seven same-source Actions SUCCESS including frozen R0+Governance; evidence S and cursor-only H. Original Go decoder package, product E2E, ISA-L performance remain not run.",
+  "next_action": "M0 first full FEC-on business single-SOURCE integration: ReplayProtectedLaneRx authenticates/filters PN before passing 56B wire to FecRxOwner::push_after_auth with trusted epoch/direction/extended BlockID and owner monotonic timer; FecTxOwner returns systematic separate from parity and M1/M4 prove real send priority. M3 next atomic optional capped e×e decode coefficient cache or separately authorized native ISA-L dispatch with actual toolchain/FFI target proof. No product PASS yet.",
   "unverified": true,
-  "last_tested_source": "971f320f3145d3779fd94df6acc63ac0f1d808d0",
+  "last_tested_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-TX-006.json"
+    "docs/evidence/M3/R1-M3-FEC-RX-007.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
     "docs/devlog/M3/R1-M3-AES-RECORD-002.md",
     "docs/devlog/M3/R1-M3-REPLAY-003.md",
     "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md",
     "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md",
-    "docs/devlog/M3/R1-M3-FEC-TX-006.md"
+    "docs/devlog/M3/R1-M3-FEC-TX-006.md",
+    "docs/devlog/M3/R1-M3-FEC-RX-007.md"
   ],
-  "partial_summary": "M3 prior FEC scalar 38/38 native SOURCE0215c051; last H2 a1e663a45dc84fb76cb67f0b6caf3a82e1b4ec37, Governance38563029695 PASS sequence8. This R1-M3-FEC-TX-006 SOURCE971f320f3145d3779fd94df6acc63ac0f1d808d0 genuine scalar RS20 parity bounded FecTxOwner with 32ms first-at deadline/full20 immediate, separate ready systematic/parity, only configured 20:20 size classes256/512/MTU; all classes share extended64 BlockID allocated on first source with wire0 skipped. On profile/MTU change old groups closed; on byte pressure oldest group closed. native compiled-once worker38564745459 Rust1.85.1 Linux46/46 PASS (8 new TX +38 prior), binary_sha256 0516914d18708aa80dd10017fe59fa1ed5cfe08f7c8525b2d303d3bc04e0f5fa; all seven exact SOURCE Actions PASS: worker38564745459, R0 codec38564744675, framing38564744923, Go LINK/FEC38564744745, G2 38564744722, audit38564744903, Governance38564744708. Evidence S3a67408c. Native old Go package under this TX atom NOT_RUN; actual M0 scheduler send-first/driver, ISA-L SIMD/performance/real FEC RX Heavy/Compact/FEC-on product NOT_RUN. No root/shared ABI/CI edits. H cursor-only seq9."
+  "partial_summary": "M3 seq9 TX H5bdb3c00 governance38565345898 PASS; RX initial SOURCE b245f6d GitHub worker38567620117 compiled 50/54 passed but four failures: recovered-only delivered lengths not preserved in Compact; conflict count duplicated blocked retries. Fixed SOURCE fa79ed19 worker38567923729 54/54 PASS. Additional security audit found mid-push pressure Compact eviction can advance retired_floor and resurrect older formerly unseen ID. Final SOURCE ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94 added post-eviction floor checks and ninth regression; compiled-once worker38568299178 Linux Rust1.85.1 55/55 PASS, binary sha256 5b61f3afd8a008fb293d0a8abe2b39f91de749b5c8e1ea88d94bbf41bdfeb7c2. Seven matching source Actions successful: worker38568299178, R0 codec38568298918, framing38568299209, old Go LINK/FEC38568299180, G2 38568299218, audit38568299021, Governance38568298913. FEC RX first authenticated streaming immediately delivered; real RS20 e×e missing recovery after final, Heavy3s/Compact10s bounded and retired floor. Evidence S4ab3c9c; cursor-only H seq10. M0 AEAD+PN+FEC-on first real business/driver scheduling NOT_RUN; original Go decoder package and SIMD Windows/ARM/performance/product/physical NOT_RUN. Root Cargo/lock/shared ABI/CI unchanged."
 }
