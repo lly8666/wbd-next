@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "R0_WIRE_ONLY_WBC4_WBG4_CODEC",
+  "source_sha": "fdcacde4dae62cb6591d030d93ced7715b919118",
+  "phase": "R0_FOUNDATION_IN_PROGRESS",
+  "result": "PASS",
+  "language": "Rust (no external crates, wbd-codec depends only on wbd-types)",
+  "compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "target": "x86_64-unknown-linux-gnu",
+  "workflow": ".github/workflows/r0-codec.yml",
+  "run_id": 38519636181,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38519636181",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115706153296,
+  "consumer_job_id": 115706242766,
+  "build_artifact": {
+    "id": 11873081899,
+    "name": "r0-codec-build-38519636181-1",
+    "bytes": 472806,
+    "zip_digest": "sha256:643d1d6ef359ed1ba04b32a34b6caebbbd3c3e85a95420c809b38c2a3dd963cc"
+  },
+  "result_artifact": {
+    "id": 11873086957,
+    "name": "r0-codec-result-38519636181-1",
+    "bytes": 1391,
+    "zip_digest": "sha256:704a43972f4cac11bc75548ccc7b450d8aabe145be1f1bdb98fc315a028e681b"
+  },
+  "precompiled_test_binary_sha256": "3b26811fff9f691d44a47829f423ae0da83034efb267dd051ea7b7a331bcb2fc",
+  "test_log_sha256": "1a0da9c1e3d5022f6df65d7ecb98d3d803916cfd06544ec75d23e35c3bd02468",
+  "test_result": {
+    "passed": 13,
+    "failed": 0,
+    "scope": "native Rust wire parsing/encoding only",
+    "test_names": [
+      "r0_wbc4_golden_receipt_exact_wire_and_roundtrip",
+      "r0_wbc4_golden_legacy_tlv_bytes_not_v3_sniffing",
+      "r0_wbc4_truncated_header_or_tlv_cannot_emit_output",
+      "r0_wbc4_reject_schema_magic_declared_size_and_tlv_overflow",
+      "r0_wbc4_reject_duplicate_receipt_and_tlv_count_over_eight",
+      "r0_wbc4_receipt_page_count_flags_and_fixed_length",
+      "r0_wbc4_receipt_bit_alignment_future_and_ack_delay_bounds",
+      "r0_wbc4_receipt_duplicate_page_and_eight_page_boundary",
+      "r0_wbc4_max_pn_and_max_u16_budget_do_not_wrap",
+      "r0_wbc4_empty_and_eight_tlvs_are_bounded",
+      "r0_wbg4_golden_exact_big_endian_and_roundtrip",
+      "r0_wbg4_game_reject_all_truncations_and_malformed_frames",
+      "r0_wbg4_zero_and_max_payload_id_preserve_bytes"
+    ]
+  },
+  "wire_contract": {
+    "WBC4": {
+      "header": "magic WBC4 4B | schema1B=1 | count1B <=8 | total_len:u16BE inclusive header",
+      "tlv": "type:u8 receipt=1/legacyhealth=2/quality=3 | flags:u8=0 | len:u16BE | value",
+      "receipt": "20B fields largest_data_pn:u64BE, ack_delay_us:u32BE <=10000, report_seq:u32BE, page_count:u8 <=8, flags0, reserved:u16=0; each page 40B base:u64BE multiple of256 + bitmap32B lsb-first",
+      "fixed_golden_receipt_bytes": 72,
+      "fixed_golden_legacy_tlvs_bytes": 21,
+      "validated": "explicit offsets, truncation, unknown type/schema, count, TLV length, reserved/flags, duplicate receipt/page bases, future set PN, u64 max, MTU payload budget supplied by caller"
+    },
+    "WBG4": {
+      "header": "magic WBG4 | LogicalPacketId:u64BE | payload_len:u16BE | flags:u16BE=0, fixed 16B",
+      "golden_bytes": 19,
+      "validated": "exact payload_len, no surplus/truncated payload, no nonzero flags, 0..65535 payload, u64::MAX ID, checked frame budget"
+    }
+  },
+  "consumer_validation": "build-only job produced precompiled test binary, source/run/attempt/target/compiler test-inventory exact-input SHA256 and binary length/hash; separate consume job downloaded artifact, verified all and executed only the compiled Rust binary; Python made no wire encoding/decoding decisions",
+  "same_source_regressions": [
+    {
+      "workflow": ".github/workflows/r0-platform-fake.yml",
+      "run_id": 38519636182,
+      "build_job_id": 115706153344,
+      "consume_job_id": 115706223405,
+      "conclusion": "success",
+      "build_artifact_id": 11873101976,
+      "result_artifact_id": 11873018816
+    },
+    {
+      "workflow": ".github/workflows/r0-build.yml",
+      "run_id": 38519636189,
+      "build_job_id": 115706153440,
+      "consume_job_id": 115706232743,
+      "conclusion": "success",
+      "build_artifact_id": 11872614697,
+      "result_artifact_id": 11872709466
+    },
+    {
+      "workflow": ".github/workflows/r0-cross-abi.yml",
+      "run_id": 38519636196,
+      "windows_build_job_id": 115706153786,
+      "arm_build_job_id": 115706154091,
+      "windows_consumer_job_id": 115706338366,
+      "arm_consumer_job_id": 115706338392,
+      "conclusion": "success",
+      "qualification": "CROSS_BUILD_ONLY",
+      "windows_build_artifact_id": 11872799296,
+      "arm_build_artifact_id": 11873421443,
+      "windows_result_artifact_id": 11873136864,
+      "arm_result_artifact_id": 11872993981
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38519636197,
+      "job_id": 115706153738,
+      "conclusion": "success",
+      "qualification": "GOVERNANCE_ONLY"
+    },
+    {
+      "workflow": ".github/workflows/r0-native-abi.yml",
+      "run_id": 38519636220,
+      "build_job_id": 115706153981,
+      "consume_job_id": 115706303640,
+      "conclusion": "success",
+      "qualification": "PINNED_GO_C_RUST_NATIVE_ABI_ONLY",
+      "build_artifact_id": 11873058463,
+      "result_artifact_id": 11873411459
+    }
+  ],
+  "limitations": {
+    "only_wire_codec": "PASS",
+    "authenticated_receipt_scope": "NOT_IMPLEMENTED",
+    "real_rust_steady_engine": "NOT_IMPLEMENTED",
+    "go_actual_control_enable_v4": "DISABLED",
+    "cross_lane_game_dedup": "NOT_IMPLEMENTED",
+    "live_epoch_bindings": "NOT_WIRED",
+    "real_AEAD": "NOT_RUN",
+    "target_windows_arm_native_executions": "NOT_RUN",
+    "source_lock_latest_snapshot": "PENDING_AUDIT",
+    "product_qualification": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "单独审计R0 source-lock/qualification历史快照与workspace四crate的实际现状、统一反例ID/test manifest和已证明/尚未证明的阶段退出条件；先事实审计再决定正式分派，不能启用V4生产能力。"
+}

@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0 Windows x64 + Linux ARM64 Rust engine ABI sentinel/platform rlib 和目标C ABI布局/链接跨目标编译: SOURCE 8ce2224 run38517556825 attempt1, 两目标build/consume 4 jobs SUCCESS, 实际PE32+/ELF64 machine及五导出符号/二进制SHA核验；无目标原生执行。先前SOURCE 148202e0 run38517436489 ARM缺crti.o失败、Windows build成功已留痕并用libc6-dev-arm64-cross修复。下一原子任务以R0 shared codec 最小WBC4控制bundle/WBG4 Game envelope显式offset和golden/非法长度反例+Actions预编译消费者推进；生产V4 features=0，M1–M4 reserved。",
+  "next_decision": "R0 WBC4/WBG4 wire-only Rust codec: SOURCE fdcacde, Actions run38519636181 attempt1 build/consume native Linux x64 13/13 PASS，固定WBC4 receipt72B/legacy TLV21B和WBG4 19B golden，receipt 20+40×pages(≤8)、旧格式/非法flags/type/size/budget/未来PN/256对齐/重复receipt及u64/u16边界；同SOURCE Rust platform38519636182/types38519636189/native Go-C-Rust ABI38519636220/Windows+ARM cross38519636196/Governance38519636197均成功。该codec无真实加密/认证/receipt处理/Game数据面，不激活生产V4。下一原子任务审计R0 source-lock/qualification与当前workspace及test-ID→manifest实际覆盖差异，确认分工前阻断项；M1–M4 reserved。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
