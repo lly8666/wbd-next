@@ -2,6 +2,9 @@
 //! Authoritative protocol contract: docs/architecture/modules/00-CONTRACTS.md.
 #![forbid(unsafe_code)]
 
+/// M0 Rust-only cross-worker buffer ownership hand-off contract; M1 owns concrete arena.
+pub mod buffer_contract;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct MonoNs(pub u64);
 

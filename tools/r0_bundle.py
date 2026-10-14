@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 FILES = ("libwbd_types.rlib", "wbd-types-test")
-INPUTS = ("Cargo.lock", "rust-toolchain.toml", "r0/source-lock.json")
+INPUTS = ("Cargo.lock", "rust-toolchain.toml", "r0/source-lock.json", "crates/wbd-types/src/lib.rs", "crates/wbd-types/src/buffer_contract.rs")
 
 
 def sha256(path):

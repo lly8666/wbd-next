@@ -17,7 +17,7 @@ OLD = "a7a82db31fe736ffedee330795a3234d358f1984"
 RUST = "rustc 1.85.1 (4eb161250 2025-03-15)"
 INPUTS = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
-    "crates/wbd-types/src/lib.rs",
+    "crates/wbd-types/src/lib.rs", "crates/wbd-types/src/buffer_contract.rs",
     "crates/wbd-codec/Cargo.toml", "crates/wbd-codec/src/lib.rs",
     "crates/wbd-codec/src/record_frame.rs",
     "crates/wbd-codec/src/link_fec_wire.rs", "r0/fixtures/legacy-link-fec-wire-v1.txt",

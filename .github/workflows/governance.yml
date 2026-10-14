@@ -1,5 +1,5 @@
 name: Governance
-run-name: "${{ inputs.role_id || 'M0' }}|${{ inputs.request_id || github.sha }}|governance"
+run-name: "${{ inputs.role_id || github.ref_name }}|${{ inputs.request_id || github.sha }}|governance"
 
 on:
   push:
@@ -24,7 +24,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: governance-${{ github.ref }}-${{ inputs.role_id || 'M0' }}-${{ inputs.request_id || github.run_id }}
+  group: governance-${{ github.ref }}-${{ inputs.role_id || github.ref_name }}-${{ inputs.request_id || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     env:
-      WBD_ROLE_ID: ${{ inputs.role_id || 'M0' }}
+      WBD_DECLARED_ROLE: ${{ inputs.role_id || '' }}
       WBD_REQUEST_ID: ${{ inputs.request_id }}
       WBD_DECLARED_SOURCE: ${{ inputs.declared_source }}
       WBD_REQUEST_REF: ${{ inputs.request_ref }}
@@ -42,6 +42,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Attest live main role for actual branch and audit each worker commit path
+        id: role
+        shell: bash
+        run: python tools/worker_scope_ci.py
       - name: Verify checkout and request identity
         id: identity
         shell: bash
@@ -55,8 +59,12 @@ jobs:
           expected = os.environ.get('WBD_DECLARED_SOURCE')
           g.need(not expected or actual == expected, 'declared SOURCE changed before checkout')
           role = os.environ['WBD_ROLE_ID']
-          registry = json.load(open('.governance/registry.json'))
-          g.need(any(r['id'] == role and r['state'] == 'active' for r in registry['roles']), 'unassigned role')
+          attested = json.load(open('out/role-identity.json'))
+          g.need(attested["role_id"]==role and
+                 attested["branch"]==os.environ["GITHUB_REF_NAME"] and
+                 attested["source_sha"]==actual and
+                 attested["result"]=="ROLE_SCOPE_PASS",
+                 "role identity is not based on live main/ref evidence")
           rid = os.environ.get('WBD_REQUEST_ID')
           g.need(not rid or bool(g.IDENT.fullmatch(rid)), 'invalid request ID')
           if os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
@@ -104,7 +112,7 @@ jobs:
       - name: Record observed results and manifest
         if: always()
         env:
-          OBSERVED_RESULT: ${{ steps.identity.outcome == 'success' && steps.structure.outcome == 'success' && steps.drills.outcome == 'success' && steps.model.outcome == 'success' && 'PASS' || 'FAIL' }}
+          OBSERVED_RESULT: ${{ steps.role.outcome == 'success' && steps.identity.outcome == 'success' && steps.structure.outcome == 'success' && steps.drills.outcome == 'success' && steps.model.outcome == 'success' && 'PASS' || 'FAIL' }}
         run: python tools/governance.py receipt --result "$OBSERVED_RESULT" --output out
       - name: Preserve small evidence bundle
         if: always()

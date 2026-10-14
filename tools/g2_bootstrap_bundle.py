@@ -15,6 +15,7 @@ import sys
 FILES = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
     "crates/wbd-types/Cargo.toml", "crates/wbd-types/src/lib.rs",
+    "crates/wbd-types/src/buffer_contract.rs",
     "crates/wbd-codec/Cargo.toml", "crates/wbd-codec/src/lib.rs",
     "crates/wbd-engine/Cargo.toml", "crates/wbd-engine/src/lib.rs",
     "crates/wbd-engine/src/runtime/mod.rs",

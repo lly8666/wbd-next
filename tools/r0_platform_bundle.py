@@ -16,7 +16,7 @@ import sys
 
 FILES = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
-    "crates/wbd-types/src/lib.rs", "crates/wbd-platform/Cargo.toml",
+    "crates/wbd-types/src/lib.rs", "crates/wbd-types/src/buffer_contract.rs", "crates/wbd-platform/Cargo.toml",
     "crates/wbd-platform/src/lib.rs", "r0/source-lock.json",
     "tools/r0_platform_bundle.py", ".github/workflows/r0-platform-fake.yml",
 )

@@ -1,0 +1,75 @@
+name: R1 R2 worker real native tests
+run-name: "${{ github.ref_name }}|${{ github.sha }}|worker-native"
+on:
+  push:
+    branches:
+      - "work/**"
+    paths:
+      - "crates/wbd-engine/src/runtime/**"
+      - "crates/wbd-engine/src/memory/**"
+      - "crates/wbd-engine/tests/**"
+      - "crates/wbd-recovery/**"
+      - "crates/wbd-codec/**"
+      - "crates/wbd-platform/**"
+      - "r1/go-bridge/**"
+permissions:
+  contents: read
+concurrency:
+  group: worker-native-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Select exact package from branch and compile actual unit test binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          case "$GITHUB_REF_NAME" in
+            work/m1-r1-runtime) package=wbd-engine; prefix=wbd_engine ;;
+            work/m2-r2-recovery) package=wbd-recovery; prefix=wbd_recovery ;;
+            work/m3-r1-codec) package=wbd-codec; prefix=wbd_codec ;;
+            work/m4-r1-platform) package=wbd-platform; prefix=wbd_platform ;;
+            *) echo "unassigned branch" >&2; exit 1 ;;
+          esac
+          cargo test --locked -p "$package" --no-run
+          binary="$(find target/debug/deps -maxdepth 1 -type f -name "$prefix-*" -perm -u+x | head -n 1)"
+          test -n "$binary"
+          python3 tools/worker_native_bundle.py pack --binary "$binary" \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: worker-native-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: worker-native-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: worker-native-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: worker-native-build/
+      - name: Verify unchanged binary/provenance and execute worker new tests (never R0 counts)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/worker_native_bundle.py consume \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: worker-native-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: worker-native-result/
+          if-no-files-found: warn
+          retention-days: 30

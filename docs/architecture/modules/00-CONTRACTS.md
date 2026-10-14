@@ -26,6 +26,18 @@ BufferKey只在所属arena/owner上下文有效。跨owner消息的队列端点�
 
 错误分层：`Malformed/Unsupported/Stale/Duplicate/Late/NoCapacity/WouldBlock/IoUncertain/FatalLane/FatalEngine`。NoCapacity必须带受限资源；Duplicate/Late不是payload corruption。fatal只关闭受影响lane；共享engine invariant破坏才engine级关闭。任何错误不得输出未认证业务或伪造成功发送。
 
+## M0 交付给四 worker 的可编译 Buffer 契约（G2/R1 首包）
+
+公共Rust-only API 为 `wbd-types::buffer_contract`：`BufferOrigin{owner_arena,BufferKey(slot,generation)}`、`FrozenMetadata{LaneKey,SeqOffset,RecordPn,carrier_snapshot}`、`UniqueSealable`、`FrozenRecordHandle` 和 `driver_read(&Frozen)->DriverRead<'_>`。**这是最小所有权/借用接口而非真实内存池/性能证明，也不属于C ABI**。
+
+- M1唯一分配者：arena生成`UniqueSealable`实现，有唯一可写窗口；所有headroom+payload+tag预分配同一内存；不跨owner传活裸slice，归还时检查owner+generation并提供bounded return queue/backlog。
+- M3 seal：先分配PN（失败也烧号），持有`&mut [u8]`独占写窗口，就地AEAD/HP，成功后消费该唯一buffer调用`freeze(written_range,metadata)`；失败不能发布未认证密文，不能为封装分配第二份packet object。
+- M2 recovery：只持有/复制`FrozenRecordHandle`的**handle**并引用既有PN/seq及同一密文，不重新Seal、不重新生成PN；若实际M1实现的clone复制payload，则不满足性能门。
+- M4 driver：对冻结handle调用`driver_read`取得与handle寿命绑定的只读片段；若OS异步借用需再登记驱动lease，在真实completion/cancel后才归还owner。驱动不可取得密文可写访问。
+- M0负责接口签名、模块连接和端到端回归，不自造第二个arena、第二份加密记录；目前仅有类型与mock测试，`R1 Normal/FEC off`真正首包和重复buffer复制数都还**NOT_RUN**。
+
+具体slab/backlog、共享引用计数优化和有界关闭是M1/M4实现的实测要求。旧`wbd-platform::BorrowFence::wait_drained()`无限等待、按批Vec分类和锁/Arc都是**R0 fake correctness harness**，不是生产性能路径；生产停止必须提供单调deadline、超时仍有借用时不free的显式未清理状态（可以上报/隔离/留待完成），禁止超时强制释放仍被driver持有的缓冲区。Normal/off首包测试优先于新FEC/repair开发与任何性能百分比宣称。
+
 ## V4 admission：最小一次性升级
 
 原Go `realityfront/admission.go`、V3十字节policy、一次TLS保护的请求/回复保留。V4请求/回复在各自V3内容后附**24B扩展**：schema:u16=1，features:u16，tunnel_epoch:16B，feedback_page_limit:u8=8，reserved:3B=0；网络整数均大端。features固定bit0=receipt_v1、bit1=shared_game_v1，其他拒绝；Normal也使用相同明确版本，不嗅探新旧格式。
