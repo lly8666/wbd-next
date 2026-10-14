@@ -1,11 +1,124 @@
 {
   "schema_version": 1,
-  "reservation_revision": 1,
+  "reservation_revision": 2,
   "roles": [
-    {"id":"M0","name":"集成与治理","state":"active","branch":"main","assignment_epoch":1,"global_writer":true,"allowed_paths":["*"],"owned_semantics":["governance","integration"],"prompt":"docs/prompts/M0.md","cursor":".governance/workstreams/M0/cursor.json","goal":"交付可接续架构/科学指标/迁移方案及治理验证，再协调正式产品分工","done_when":"当前任务满足cursor退出条件，精确证据和下一阶段边界齐全"},
-    {"id":"M1","name":"运行时与内存（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M1.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
-    {"id":"M2","name":"恢复与反馈（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M2.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
-    {"id":"M3","name":"编码与数据保护（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M3.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"},
-    {"id":"M4","name":"平台与产品接入（候选）","state":"reserved","branch":null,"assignment_epoch":0,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M4.md","cursor":null,"goal":"等待产品设计与正式分配","done_when":"尚未分配"}
+    {
+      "id": "M0",
+      "name": "集成与治理",
+      "state": "active",
+      "branch": "main",
+      "assignment_epoch": 1,
+      "global_writer": true,
+      "allowed_paths": [
+        "*"
+      ],
+      "owned_semantics": [
+        "governance",
+        "integration"
+      ],
+      "prompt": "docs/prompts/M0.md",
+      "cursor": ".governance/workstreams/M0/cursor.json",
+      "goal": "交付可接续架构/科学指标/迁移方案及治理验证，再协调正式产品分工",
+      "done_when": "当前任务满足cursor退出条件，精确证据和下一阶段边界齐全"
+    },
+    {
+      "id": "M1",
+      "name": "运行时与内存",
+      "state": "active",
+      "branch": "work/m1-r1-runtime",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/",
+        "docs/devlog/M1/",
+        "docs/evidence/M1/",
+        ".governance/workstreams/M1/cursor.json",
+        ".governance/workstreams/M1/requests/"
+      ],
+      "owned_semantics": [
+        "runtime_owner",
+        "buffer_arena",
+        "normal_off_scheduler"
+      ],
+      "prompt": "docs/prompts/M1.md",
+      "cursor": ".governance/workstreams/M1/cursor.json",
+      "goal": "R1 bounded TX/RX owner, arena, queue/wakeup and Normal/off scheduling with fake clock and no HOL",
+      "done_when": "A native Actions fake-clock compiled once consumer proves first runtime/arena stop and capacity cases; no actual network, root ABI or product V4 claim"
+    },
+    {
+      "id": "M2",
+      "name": "恢复与反馈",
+      "state": "active",
+      "branch": "work/m2-r2-recovery",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-recovery/",
+        "docs/devlog/M2/",
+        "docs/evidence/M2/",
+        ".governance/workstreams/M2/cursor.json",
+        ".governance/workstreams/M2/requests/"
+      ],
+      "owned_semantics": [
+        "receipt_state",
+        "shadow_repair",
+        "recovery_budget"
+      ],
+      "prompt": "docs/prompts/M2.md",
+      "cursor": ".governance/workstreams/M2/cursor.json",
+      "goal": "R2 pure authenticated-receipt state, bounded shadow repair and time/budget decisions without socket or cipher",
+      "done_when": "Actions native pure state tests for holes/duplicate/expiry/uncertain with explicit untested integration; no socket/cipher"
+    },
+    {
+      "id": "M3",
+      "name": "编码与数据保护",
+      "state": "active",
+      "branch": "work/m3-r1-codec",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-codec/",
+        "docs/devlog/M3/",
+        "docs/evidence/M3/",
+        ".governance/workstreams/M3/cursor.json",
+        ".governance/workstreams/M3/requests/"
+      ],
+      "owned_semantics": [
+        "record_crypto",
+        "link_mtu_budget",
+        "fec_codec"
+      ],
+      "prompt": "docs/prompts/M3.md",
+      "cursor": ".governance/workstreams/M3/cursor.json",
+      "goal": "R1 single FrameBudget owner and true independent authenticated record AEAD+8B HP, followed by LINK/FEC",
+      "done_when": "Pinned old-Go oracle and actual Rust compiled tests for path budget and real cipher boundaries, no fake crypto or product V4"
+    },
+    {
+      "id": "M4",
+      "name": "平台与产品接入",
+      "state": "active",
+      "branch": "work/m4-r1-platform",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-platform/",
+        "r1/go-bridge/",
+        "docs/devlog/M4/",
+        "docs/evidence/M4/",
+        ".governance/workstreams/M4/cursor.json",
+        ".governance/workstreams/M4/requests/"
+      ],
+      "owned_semantics": [
+        "platform_driver",
+        "go_bridge_adapter",
+        "lifecycle_integration"
+      ],
+      "prompt": "docs/prompts/M4.md",
+      "cursor": ".governance/workstreams/M4/cursor.json",
+      "goal": "R1 bounded platform I/O send outcome/borrow-stop with Go cold control bridge; Windows driver evidence clearly separated",
+      "done_when": "Actions driver native or fake truthfully qualified, no active V4 on Go, no unsafe shutdown borrow release"
+    }
   ]
 }

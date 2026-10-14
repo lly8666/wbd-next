@@ -3,6 +3,12 @@
 //! C ABI is owned by engine alone; wbd-types stays pure Rust and no pointers
 //! or arena BufferKeys ever cross this FFI boundary.
 
+// M0-owned composition hooks. Worker M1 owns the implementations below.
+#[path = "runtime/mod.rs"]
+pub mod runtime;
+#[path = "memory/mod.rs"]
+pub mod memory;
+
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;
 

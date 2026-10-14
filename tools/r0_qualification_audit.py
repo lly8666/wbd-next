@@ -12,7 +12,7 @@ import sys
 import tomllib
 
 ROOT = Path(".")
-EXPECTED_WORKSPACE = {"wbd-types", "wbd-codec", "wbd-platform", "wbd-engine"}
+EXPECTED_WORKSPACE = {"wbd-types", "wbd-codec", "wbd-platform", "wbd-engine", "wbd-recovery"}
 EXPECTED_GATES = {
     "R0-TYPES": "PASS",
     "R0-GO-GOLDEN": "PASS",
@@ -78,7 +78,7 @@ def audit():
         prefix = body.partition("permissions:")[0]
         require('"r0/source-lock.json"' in prefix,
                 f"workflow {workflow} fails to trigger when source-lock changes")
-    require(members == EXPECTED_WORKSPACE, "current workspace not four approved crates")
+    require(members == EXPECTED_WORKSPACE, "current workspace does not match G2 five-crate bootstrap")
     require(set(lock["rust"]["crates"]) == members == set(m["workspace_expected"]),
             "source-lock/manifest/workspace crates drift")
     require({p["name"] for p in packages} == members, "Cargo.lock package list drift")
@@ -119,10 +119,25 @@ def audit():
             "project qualification was promoted")
     roles={r["id"]:r for r in registry["roles"]}
     require(roles["M0"]["state"]=="active" and roles["M0"]["branch"]=="main" and
-            registry["reservation_revision"]==1 and roles["M0"]["assignment_epoch"]==1,
-            "M0 writer changed")
-    require(all(roles[r]["state"]=="reserved" for r in ("M1","M2","M3","M4")),
-            "worker reservation unexpectedly promoted")
+            registry["reservation_revision"]==2 and roles["M0"]["assignment_epoch"]==1,
+            "M0 integration writer/revision changed")
+    expected_worker_paths = {
+      "M1": ("work/m1-r1-runtime", ("crates/wbd-engine/src/runtime/","crates/wbd-engine/src/memory/")),
+      "M2": ("work/m2-r2-recovery", ("crates/wbd-recovery/",)),
+      "M3": ("work/m3-r1-codec", ("crates/wbd-codec/",)),
+      "M4": ("work/m4-r1-platform", ("crates/wbd-platform/","r1/go-bridge/")),
+    }
+    for role,(branch,paths) in expected_worker_paths.items():
+        spec = roles[role]
+        require(spec["state"]=="active" and spec["branch"]==branch and
+                spec["assignment_epoch"]==1 and spec["global_writer"] is False and
+                all(p in spec["allowed_paths"] for p in paths) and
+                f".governance/workstreams/{role}/cursor.json" in spec["allowed_paths"],
+                f"{role} worker scope/epoch/branch drift")
+        local_cursor=read_json(f".governance/workstreams/{role}/cursor.json")
+        require(local_cursor["role_id"]==role and local_cursor["branch"]==branch and
+                local_cursor["reservation_revision"]==2 and local_cursor["assignment_epoch"]==1,
+                f"{role} bootstrap cursor identity drift")
     gates = m["evidence_gates"]
     require({g["gate"] for g in gates} == set(EXPECTED_GATES) and len(gates)==len(EXPECTED_GATES),
             "historic gate inventory drift")
@@ -216,9 +231,9 @@ def audit():
             require(x["status"]=="NOT_RUN" and x.get("reason"), f"{x['id']} unproved ID marked PASS")
     exit_gate=m["r0_foundation_exit"]
     require(exit_gate["status"]=="BLOCKED_NOT_QUALIFIED" and
-            exit_gate["ready_for_worker_allocation"]=="READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE" and
-            exit_gate.get("allocation_decision_ref")=="docs/decisions/M0-R0-parallel-worker-readiness.md" and
-            Path(exit_gate["allocation_decision_ref"]).is_file(),
+            exit_gate["ready_for_worker_allocation"]=="SCOPED_WORKERS_ACTIVATED_UNQUALIFIED" and
+            exit_gate.get("activation_decision_ref")=="docs/decisions/M0-G2-worker-activation.md" and
+            Path(exit_gate["activation_decision_ref"]).is_file(),
             "R0 exit was promoted by metadata")
     required_blockers={"R0-WIRE-RECORD","R0-LINK-FEC-BOUNDARIES","R0-GO-CONTROL-INTEGRATION",
                        "R0-ENGINE-PLATFORM","R0-NATIVE-MULTI-OS","R0-PRODUCT"}
@@ -234,6 +249,7 @@ def audit():
       "historical_source_sha_by_gate":gate_sources,
       "case_ids":len(coverage),
       "partial_r0_fake_only_ids":sorted(PARTIAL_IDS),
+      "worker_activation": "SCOPED_M1_M4_ACTIVE_BRANCH_CURSOR_METADATA_ONLY",
       "partial_r0_wire_only_ids":sorted(PARTIAL_WIRE_IDS),
       "not_run_case_count":len(EXPECTED_IDS)-len(PARTIAL_IDS)-len(PARTIAL_WIRE_IDS),
       "live_external_run_status":"NOT_CHECKED_IN_THIS_AUDIT",

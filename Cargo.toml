@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/wbd-types", "crates/wbd-platform", "crates/wbd-engine", "crates/wbd-codec"]
+members = ["crates/wbd-types", "crates/wbd-platform", "crates/wbd-engine", "crates/wbd-codec", "crates/wbd-recovery"]
 
 [workspace.package]
 edition = "2021"

@@ -2,16 +2,16 @@
   "schema_version": 1,
   "role_id": "M0",
   "branch": "main",
-  "reservation_revision": 1,
+  "reservation_revision": 2,
   "assignment_epoch": 1,
   "sequence": 17,
   "checkpoint_sha": "b5768b2fe02f4678afaef0dd1353204b4161f4cc",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "M0已完成R0 scoped并行派工就绪G2事实审查，明确M1 runtime/memory子路径、M2纯recovery新crate、M3 codec path_budget与三cipher真正AEAD/HP、M4 platform/Go冷桥的独占职责；M0独占root Cargo/lock、types、engine ABI lib.rs/C ABI、CI/governance和整合。现有四crate R0证据10范围门；FrameBudget API/真实crypto/新recovery缺失均可作为被授权worker的首批分立实现，不必由M0先做完整R1/R3/R5。当前registry未修改，M1–M4仍reserved、无工作分支或worker cursor，生产V4保持禁用。",
-  "why_now": "cursor seq16唯一任务是对R0共享接口和四条worker写入边界进行可执行就绪审查，避免基础wire/golden已证明却继续串行完成各模块全部实现；同时避免仅凭文档把reserved当active。审查以确切remote HEAD和Actions以及00/01/02/03/04/05/06/08/09/11接口为依据。",
-  "done_when": "该R0静态review已固定唯一FrameBudget owner、Rust record AEAD/HP与platform、recovery纯状态、root依赖/ABI集成边界，四worker候选分支/无冲突allowed_paths/owned_semantics/first atom及下一G2前置事务；决策/真实Actions与未实施权限事实落库并完成H。整个R0产品仍partial/unverified。",
-  "next_action": "执行独立G2正式并行派工激活事务：以精确共享SOURCE创建work/m1-r1-runtime、work/m2-r2-recovery、work/m3-r1-codec、work/m4-r1-platform四条唯一分支并建立每条独立worker cursor/任务/epoch1；M0串行bootstrap wbd-recovery Cargo/workspace与engine runtime/memory测试挂点、锁根依赖及新单元CI，修正r0/source-lock和静态审计当前“四crate+all reserved”历史假设；将main registry revision1→2的M1–M4 active与互斥allowed_paths/semantics一致授权，验证所有涉及分支/cursor/Actions与Governance，最后单独M0 cursor-only H。仍不得启用生产V4；若G2权限/状态不能原子确认则明确BLOCKED而非假并行。",
+  "current_task": "M0 G2 scoped worker activation source: authorizes M1–M4 unique work branches for R1/R2 only, bootstraps five-crate workspace plus M1 module hooks and maintains C ABI features=0. Registry revision2/epoch1 updated together; worker code delivery NOT_STARTED and V4 production DISABLED.",
+  "why_now": "G2 decision previously passed 38528184760/38528184766 and M0 cursor seq17 permits bounded four-role activation; revision must be reflected in M0 main cursor in same registry transition S for continuous structural Governance.",
+  "done_when": "Four worker branches at one exact shared G2 source commit, main registry active/epoch1/revision2, each bootstrap cursor and disjoint paths validated; Cargo locked workspace build & recovery scaffold native Actions PASS, R0 test sources scoped, producer sessions NOT_AUTOMATICALLY_RUNNING.",
+  "next_action": "Verify all four worker branch heads and cursor bootstraps from common activated G2 SOURCE, exact impacted Actions/workspace native compile and governance, record G2 receipt then separate cursor-only H. After H, M0 continue shared integration and send M1–M4 their assigned first atoms; do not impersonate worker implementation or enable V4.",
   "unverified": true,
   "last_tested_source": "7f23c291d7b09d33d7a047583ba6e1b35d3c0a84",
   "evidence_refs": [
@@ -25,5 +25,5 @@
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "审查时HEAD 7f23c291d7b09d33d7a047583ba6e1b35d3c0a84/cursor seq16 checkpoint8def136，远端仅cursor-only H、治理38526648689 success、0 PR/未完Actions、M0 active而其他4个reserved。R0已有旧Go TLS/record、Rust types/codec/platform fake/ABI、LINK20B/FEC56B与MTU等10范围门；缺Rust FrameBudget path_budget/真三cipher和wbd-recovery。SOURCE决策S 6efaa1371f67ae974efbcb960e19cbf265f0b4c6 G2 worker职责分支/路径/epoch及可执行前置，资格静态audit38528184760 job115733435495 SUCCESS、Governance38528184766 job115733434684 SUCCESS；收据S b5768b2fe02f4678afaef0dd1353204b4161f4cc 静态审计38528427838 job115734221104与Governance38528427780 job115734220388均SUCCESS。唯一本期结论READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE，项目R0 FOUNDATION partial、44 case 5部分/39 NOT_RUN，Go生产V4 FAIL_CLOSED/features=0、M1-M4未实际激活、产品/性能/物理NOT_RUN。下一原子按决策实施实际G2授权/编译接线；并行worker会话不会自动启动。"
+  "partial_summary": "审查时HEAD 7f23c291d7b09d33d7a047583ba6e1b35d3c0a84/cursor seq16 checkpoint8def136，远端仅cursor-only H、治理38526648689 success、0 PR/未完Actions、M0 active而其他4个reserved。R0已有旧Go TLS/record、Rust types/codec/platform fake/ABI、LINK20B/FEC56B与MTU等10范围门；缺Rust FrameBudget path_budget/真三cipher和wbd-recovery。SOURCE决策S 6efaa1371f67ae974efbcb960e19cbf265f0b4c6 G2 worker职责分支/路径/epoch及可执行前置，资格静态audit38528184760 job115733435495 SUCCESS、Governance38528184766 job115733434684 SUCCESS；收据S b5768b2fe02f4678afaef0dd1353204b4161f4cc 静态审计38528427838 job115734221104与Governance38528427780 job115734220388均SUCCESS。唯一本期结论READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE，项目R0 FOUNDATION partial、44 case 5部分/39 NOT_RUN，Go生产V4 FAIL_CLOSED/features=0、M1-M4未实际激活、产品/性能/物理NOT_RUN。下一原子按决策实施实际G2授权/编译接线；并行worker会话不会自动启动。 G2 transition S bumps only reservation_revision on M0 cursor for valid main Governance; a separate H will checkpoint tested source and assignment. M1-M4 initial cursor sequence0/ checkpoint null is PLANNED and requires first worker S/H before CLEAN; no worker has started code."
 }

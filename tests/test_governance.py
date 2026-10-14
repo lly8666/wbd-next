@@ -10,6 +10,8 @@ from tools import governance as g
 
 ROOT = Path(__file__).resolve().parents[1]
 A, B = "a" * 40, "b" * 40
+# Governance revision is an assignment property; tests must not freeze epoch1 rev1.
+REVISION = json.loads((ROOT / ".governance/registry.json").read_text(encoding="utf-8"))["reservation_revision"]
 
 
 def registry():
@@ -30,7 +32,7 @@ def request():
             "kind": "performance", "scenario": "one-predeclared-waveform", "seed": 7,
             "workflow": ".github/workflows/measure.yml", "samples": 1, "measurement_jobs": 1,
             "status": "DISPATCHED", "supersedes_request": None, "assignment_epoch": 1,
-            "reservation_revision": 1, "dispatch_ref": "qualification/M0-drill-001"}
+            "reservation_revision": REVISION, "dispatch_ref": "qualification/M0-drill-001"}
 
 
 def receipt_and_run():
@@ -47,7 +49,7 @@ class ContinuityDrills(unittest.TestCase):
 
     def classify(self, paths=None, **kwargs):
         commits = [] if paths is None else [{"sha": B, "paths": paths, "parents": 1}]
-        return g.classify_continuity(self.role, 1, self.cursor, commits, **kwargs)["state"]
+        return g.classify_continuity(self.role, REVISION, self.cursor, commits, **kwargs)["state"]
 
     def test_cursor_only_h_is_clean_but_unverified(self):
         self.assertEqual(self.classify([self.role["cursor"]], previous_sequence=0), "CLEAN")
@@ -92,7 +94,7 @@ class ContinuityDrills(unittest.TestCase):
         self.assertEqual(self.classify(["modules/runtime-other/a.rs"]), "BLOCKED")
 
     def test_merge_needs_explicit_review(self):
-        result = g.classify_continuity(self.role, 1, self.cursor,
+        result = g.classify_continuity(self.role, REVISION, self.cursor,
                                       [{"sha": B, "paths": [self.role["cursor"]], "parents": 2}])
         self.assertEqual(result["state"], "BLOCKED")
 
@@ -127,7 +129,7 @@ class ContinuityDrills(unittest.TestCase):
                       "paths": git("diff-tree", "--no-commit-id", "--name-only", "-r", sha).splitlines()}
                      for sha in git("rev-list", "--reverse", f"{substantive}..HEAD").splitlines()]
             self.cursor["checkpoint_sha"] = substantive
-            result = g.classify_continuity(self.role, 1, self.cursor, edges, previous_sequence=0)
+            result = g.classify_continuity(self.role, REVISION, self.cursor, edges, previous_sequence=0)
             self.assertEqual(result["state"], "RECOVERY_REQUIRED")
             self.assertEqual(len(result["commits"]), 2)
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "branch": "work/m4-r1-platform",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "sequence": 0,
+  "checkpoint_sha": null,
+  "progress": "planned",
+  "task_id": "R1-M4-IO-001",
+  "current_task": "R1 platform TxBatchOutcome driver prefix and borrower stop",
+  "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
+  "done_when": "Actions isolated driver prefix/uncertain/stop tests, source exact and native-vs-fake separated; no Windows native without runner/real driver, S+H.",
+  "next_action": "Add R1 platform driver primitive with existing TxBatchOutcome and BorrowFence tests; propose changes to ABI/root to M0, do not touch old Go remote.",
+  "unverified": true,
+  "last_tested_source": null,
+  "evidence_refs": [],
+  "open_requests": [],
+  "context_refs": [
+    "docs/decisions/M0-G2-worker-activation.md",
+    "docs/decisions/M0-R0-parallel-worker-readiness.md",
+    "docs/architecture/modules/00-CONTRACTS.md"
+  ],
+  "partial_summary": "BOOTSTRAP_ONLY at G2; Implement platform native Linux fake/real driver boundary preserving lease and partial syscall, Go cold bridge only under new project r1/go-bridge; production V4 remains fail-closed. No worker implementation or own Actions results yet. First worker S then cursor-only H needed; until then REMOTE_CONTINUITY=RECOVERY_REQUIRED by design (null checkpoint). No task is authorized outside own allowed_paths. Product/performance/physical NOT_RUN, V4 DISABLED."
+}

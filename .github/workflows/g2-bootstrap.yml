@@ -1,0 +1,74 @@
+name: G2 five-crate scoped-worker bootstrap binary proof
+run-name: "M0|${{ github.sha }}|g2-scoped-bootstrap-native"
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "crates/wbd-codec/**"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-platform/**"
+      - "crates/wbd-recovery/**"
+      - "r0/source-lock.json"
+      - ".governance/registry.json"
+      - "tools/g2_bootstrap_bundle.py"
+      - ".github/workflows/g2-bootstrap.yml"
+permissions:
+  contents: read
+concurrency:
+  group: g2-bootstrap-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Actual pinned five-crate workspace compile and recovery bootstrap native Rust binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo test --locked --workspace --no-run
+          binary="$(find target/debug/deps -maxdepth 1 -type f -name 'wbd_recovery-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          python3 tools/g2_bootstrap_bundle.py pack \
+            --binary "$binary" --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: g2-bootstrap-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: g2-bootstrap-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: g2-bootstrap-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: g2-bootstrap-build/
+      - name: Verify exact code/registry manifest and reuse compiled recovery test binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/g2_bootstrap_bundle.py consume \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: g2-bootstrap-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: g2-bootstrap-result/
+          if-no-files-found: warn
+          retention-days: 30

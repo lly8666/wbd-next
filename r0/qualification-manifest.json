@@ -4,13 +4,14 @@
   "owner": "M0",
   "control_branch": "main",
   "baseline_checkpoint": "29ad2aa37874df0fb44ec08efb5274f1b0145265",
-  "scope": "R0_FOUNDATION_PARTIAL_ONLY; historic SOURCEs are immutable, manifest status is not a new test qualification",
+  "scope": "R0_FOUNDATION_PARTIAL_ONLY; historic SOURCEs are immutable, manifest status is not a new test qualification; 5th recovery crate is G2 scaffold only, not an R0 historic gate PASS.",
   "source_lock": "r0/source-lock.json",
   "workspace_expected": [
     "wbd-types",
     "wbd-codec",
     "wbd-platform",
-    "wbd-engine"
+    "wbd-engine",
+    "wbd-recovery"
   ],
   "expected_legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
   "native_target": "x86_64-unknown-linux-gnu",
@@ -459,7 +460,7 @@
   ],
   "r0_foundation_exit": {
     "status": "BLOCKED_NOT_QUALIFIED",
-    "ready_for_worker_allocation": "READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE",
+    "ready_for_worker_allocation": "SCOPED_WORKERS_ACTIVATED_UNQUALIFIED",
     "completed_anchors": [
       "Rust shared typed workspace (4 crates) with locked Cargo",
       "Old Go source SHA and V3/V4 test vectors",
@@ -499,7 +500,8 @@
       }
     ],
     "allocation_decision_ref": "docs/decisions/M0-R0-parallel-worker-readiness.md",
-    "allocation_limit": "Only independent scoped first R1/R2 module tasks after M0 bootstraps workspace/branch/cursor/ownership; R0 product remains BLOCKED_NOT_QUALIFIED, M1-M4 presently RESERVED"
+    "allocation_limit": "Four worker scopes active for R1/R2 first atoms; no Rust production qualification, M0 sole integrator, receipt manifest frozen to historic SOURCES; workers must explicitly write their own isolated work branches.",
+    "activation_decision_ref": "docs/decisions/M0-G2-worker-activation.md"
   },
   "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only. Original-Go real record witness plus Rust opaque structural framing is recorded as R0-RECORD-FRAMING; it does not upgrade full C01–C04. L01 is PARTIAL_R0_WIRE_ONLY, NOT complete L01, based on actual old-Go LINK/FEC header tests and Rust structural parsing.",
   "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run."
