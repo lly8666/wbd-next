@@ -29,6 +29,13 @@ def resolve_role(registry, ref_name, declared=""):
 # This is NOT blanket merge permission or authority from a worker-local file.
 M3_APPROVED_PRE_SYNC_HEAD = "4776cc2bc17a78fc67e0898a11b439632037219a"
 M0_CRYPTO_LOCK_SOURCE = "1ae49bd644a4624db331c80d2dce6a8d181189e0"
+# One reviewed M2 restoration to the source that contains the M0-authenticated
+# Rust ingress AND the fixed historical G2 selector. Not generic permission.
+M2_APPROVED_PRE_SYNC_HEAD = "2cd993a9675d38dcbe161bdebf093c0890734fdf"
+M0_M2_INGRESS_SOURCE = "29ebcb19863602ae1fc059fa3524837e90944da9"
+M2_SYNC_PROTECTED = frozenset({
+    "Cargo.toml", "Cargo.lock", "crates/wbd-recovery/Cargo.toml",
+})
 
 
 def verify_worker_commits(role, commits):
@@ -41,19 +48,25 @@ def verify_worker_commits(role, commits):
             # M0 commits on main are already under main-role validation.
             continue
         if item.get("parents")==2:
-            g.need(role["id"]=="M3" and
-                   item.get("first_parent")==M3_APPROVED_PRE_SYNC_HEAD and
+            approved_first = {
+                "M3": M3_APPROVED_PRE_SYNC_HEAD,
+                "M2": M2_APPROVED_PRE_SYNC_HEAD,
+            }
+            g.need(role["id"] in approved_first and
+                   item.get("first_parent")==approved_first[role["id"]] and
                    item.get("approved_main_sync") is True,
-                   "worker merge commit requires exact M0 approval")
-            # This is the tree difference against the actual main second parent,
-            # NOT GitHub's conventional per-commit first-parent merge delta.
+                   "worker merge commit requires exact M0-approved first parent")
+            # The checker puts sync_paths from a FULL main-parent->merge tree
+            # comparison here. A first-parent-only delta cannot attest scope.
             paths=item.get("sync_paths", [])
-            g.need(bool(paths) and len(paths)<=32 and
-                   all(g.path_ok(p) and
-                       p not in {"Cargo.toml","Cargo.lock","crates/wbd-codec/Cargo.toml"} and
+            limit = 16 if role["id"]=="M2" else 32
+            protected = (M2_SYNC_PROTECTED if role["id"]=="M2" else
+                         {"Cargo.toml","Cargo.lock","crates/wbd-codec/Cargo.toml"})
+            g.need(bool(paths) and len(paths)<=limit and
+                   all(g.path_ok(p) and p not in protected and
                        any(g.under(p,q) for q in role["allowed_paths"])
                        for p in paths),
-                   "M3 merge overwrote main-root pins or escaped worker scope")
+                   "reviewed merge regressed main-owned contracts or escaped role scope")
             checked += 1
             continue
         g.need(item.get("parents")==1, "worker merge commit requires M0 review")
@@ -97,6 +110,43 @@ def review_m3_main_sync(api, role, sha, control_sha):
                any(g.under(p,q) for q in role["allowed_paths"])
                for p in paths), "M3 sync merged unauthorized tree changes")
     return sorted(paths)
+
+def review_m2_main_sync(api, role, sha, control_sha):
+    """Review ONE M2 current-base merge, preserving main contracts and ownership.
+
+    G2 status is a scope proof, not an execution qualification. An authorized
+    M2 writer still must safely merge without force and run native Actions.
+    """
+    g.need(role["id"]=="M2", "only M2 has this reviewed recovery sync")
+    detail=api.get(f"commits/{sha}?per_page=100")
+    parents=detail.get("parents", [])
+    g.need(len(parents)==2 and
+           parents[0]["sha"]==M2_APPROVED_PRE_SYNC_HEAD,
+           "M2 merge must retain exact original M2 HEAD as first parent")
+    main_parent=parents[1]["sha"]
+    for before,after in ((main_parent,control_sha),(M0_M2_INGRESS_SOURCE,main_parent)):
+        compare=api.get(f"compare/{before}...{after}?per_page=1")
+        g.need(compare.get("status") in {"ahead","identical"},
+               "M2 merge second parent lacks current approved main ingress/CI source")
+    # Unlike conventional merge-commit commit_delta, this covers M2's
+    # resulting tree versus actual M0 main, including rename old/new paths.
+    net=api.get(f"compare/{main_parent}...{sha}?per_page=100")
+    g.need(net.get("status")=="ahead" and
+           0<net.get("total_commits",0)<=12 and
+           len(net.get("commits",[]))==net["total_commits"],
+           "M2 main-to-sync ancestry incomplete, diverged, or unbounded")
+    files=net.get("files",[])
+    g.need(0<len(files)<=16, "M2 main-to-sync tree difference unbounded")
+    paths={p for f in files for p in
+           (f.get("filename"),f.get("previous_filename")) if p}
+    g.need(0<len(paths)<=16, "M2 sync rename paths missing or unbounded")
+    g.need(not paths.intersection(M2_SYNC_PROTECTED),
+           "M2 sync must not revert root Cargo.lock/dependency manifests")
+    g.need(all(g.path_ok(p) and
+               any(g.under(p,q) for q in role["allowed_paths"])
+               for p in paths), "M2 sync includes unauthorised main-owned paths")
+    return sorted(paths)
+
 
 def main():
     repo=os.environ["GITHUB_REPOSITORY"]
@@ -144,7 +194,12 @@ def main():
             detail=g.commit_delta(api,sha,256)
             sync={}
             if detail["parents"]==2 and not ancestor:
-                sync_paths=review_m3_main_sync(api,role,sha,control_sha)
+                if role["id"]=="M3":
+                    sync_paths=review_m3_main_sync(api,role,sha,control_sha)
+                elif role["id"]=="M2":
+                    sync_paths=review_m2_main_sync(api,role,sha,control_sha)
+                else:
+                    g.need(False, "unreviewed role attempted two-parent merge")
                 merged=api.get(f"commits/{sha}?per_page=1")
                 sync={"approved_main_sync":True,
                       "first_parent":merged["parents"][0]["sha"],
