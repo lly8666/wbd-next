@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-OWNER-001",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "branch": "work/m1-r1-runtime",
+  "source_sha": "46571e69baa83bd01061ccbf03f03de7f4ab277d",
+  "source_url": "https://github.com/lly8666/wbd-next/commit/46571e69baa83bd01061ccbf03f03de7f4ab277d",
+  "test": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38538248506,
+    "run_attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38538248506",
+    "status": "completed",
+    "conclusion": "success",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "os": "ubuntu-24.04",
+    "build_job_id": 115766342503,
+    "build_status": "success",
+    "consume_job_id": 115766456497,
+    "consume_status": "success",
+    "compiled_once": true,
+    "unchanged_binary_consumed": true,
+    "binary_sha256": "0a7b6eecd0eb6ff9ee359e95575a28a935c0b697fe84e4f1472e8fc3528cb286",
+    "test_log_sha256": "d449f71c3624dbcb04294cc6d57d8c50799cbf658de88462f42e2eebe9830fb6",
+    "build_artifact_id": 11881416231,
+    "result_artifact_id": 11880339456,
+    "result_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38538248506/artifacts/11880339456",
+    "result": "PASS_SCOPED_WORKER_TESTS",
+    "passed": 10,
+    "failed": 0,
+    "ignored": 0,
+    "filtered_old_tests": 3,
+    "test_names": [
+      "memory::tests::r1_arena_capacity_budget_classes_and_invalid_window",
+      "memory::tests::r1_buffer_contract_freeze_shares_allocation_and_metadata",
+      "memory::tests::r1_return_queue_full_backlog_never_loses_slot",
+      "memory::tests::r1_stop_last_clone_return_race_is_not_quiesced_early",
+      "memory::tests::r1_return_backlog_concurrent_final_drops_fully_drains",
+      "runtime::tests::r1_runtime_capacity_rule_and_bounded_rejection_returns_ownership",
+      "runtime::tests::r1_runtime_fake_clock_drops_expired_without_waiting_or_leaking",
+      "runtime::tests::r1_runtime_fresh_not_blocked_by_full_repair_and_first_packet_ready",
+      "runtime::tests::r1_runtime_repair_progress_after_bounded_fresh_burst",
+      "runtime::tests::r1_runtime_rx_owner_stop_and_tx_progress_are_independent"
+    ]
+  },
+  "other_workflows_at_receipt": [
+    {
+      "id": 38538248562,
+      "name": "governance",
+      "conclusion": "success"
+    },
+    {
+      "id": 38538248529,
+      "name": "r0-qualification-audit",
+      "conclusion": "success"
+    },
+    {
+      "id": 38538248547,
+      "name": "g2-bootstrap",
+      "conclusion": "success"
+    },
+    {
+      "id": 38538248467,
+      "name": "r0-native-abi",
+      "conclusion": "success"
+    },
+    {
+      "id": 38538249949,
+      "name": "r0-cross-abi",
+      "conclusion": "success"
+    }
+  ],
+  "implementation_proof": {
+    "buffer_contract": "UniqueSealable -> FrozenRecordHandle implemented with origin+generation and immutable bytes",
+    "allocation": "Box slab moved into Arc once on freeze; clone only Arc pointer/refcount; pointer equality asserted; no full-buffer clone",
+    "bounds": "arena fixed slots, conservative charged byte budget, queue slots and bytes, monotonic expiry",
+    "returns": "full bounded sync_channel falls back to preallocated backlog max equal to outstanding loan bound; final drop and stop tested",
+    "fresh_vs_repair": "fresh and repair have independent fixed quotas; initial fresh immediately dispatches ahead of queued repair",
+    "fake_clock": "MonoNs explicit and age expiration without sleeps"
+  },
+  "scope_status": {
+    "B01": "PARTIAL_LOCAL_BOUNDARY_PASS; no driver, seal, or wire loop",
+    "M01": "PARTIAL_ARENA_AND_RETURN_PASS; no jumbo, full 512MiB profile, Miri or multigeneration resize",
+    "R01": "PARTIAL_FAKE_OWNER_PASS; no rtrb/loom/waker/OS fairness proof",
+    "actual_transport": "NOT_RUN",
+    "end_to_end_normal_off": "NOT_RUN",
+    "real_aead_auth": "NOT_RUN",
+    "real_fec": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_v4": "DISABLED",
+    "abi_features": "0"
+  },
+  "open_request": ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+  "notes": "All PASS statements here describe only the exact compiled native test binary at source_sha. Ready constants remain false; no claim of production engine readiness."
+}
