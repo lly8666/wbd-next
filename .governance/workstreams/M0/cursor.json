@@ -4,26 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 38,
-  "checkpoint_sha": "895bebe1c54a921ade5d8fff056a70b9aedbefd7",
+  "sequence": 39,
+  "checkpoint_sha": "8c1d413274863ebb8a2a91efdc28d078e56511a9",
   "progress": "partial",
-  "task_id": "R1-M0-PARALLEL-WORKER-ASSIGN-003",
-  "current_task": "M0 proactively assigned four idle active workers before own integration. Main registry exact code SOURCE6f5c891d: M1 bounded FEC parity ready priority; M2 pure process-global multi-client sparse repair cap/grants; M3 authenticated BlockID32→64 scope and wrap; M4 Linux nonblocking sendmmsg real kernel loopback fixture, not raw AF_PACKET. All roles still reservation_rev2 epoch1 same branches/allowed paths and worker refs. SOURCE Actions Governance38592016440 + G2 five-crate-native38592016227 both SUCCESS. Evidence S895bebe1 Governance38592279932 SUCCESS. New worker code/test still NOT_STARTED; M3 previous H Governance38589331920 succeeded.",
-  "why_now": "M0 seq37 checkpointb4da7bc0→HEAD1a8a184f only cursor H Governance38585845817 SUCCESS. M1 seq3 native19/19 already integrated to main, M2 seq5 native15/15 already integrated, M3 seq11 prior exact own checker sync H d81c4afe Governance38589331920 succeeded, M4 seq5 native12/12 already integrated. Waiting for M0 to finish another cross-module atom would unnecessarily serialize independent owned development.",
-  "done_when": "Main assignment SOURCE6f5c891d349062c7206b07a0f916a5f2a8de6ea4 updates only M1-M4 goal and done_when, project next_decision and adds docs decision/evidence, without changing writer ownership, branches, reservation revision2 or assignment epoch1. Same SOURCE Governance38592016440 SUCCESS and G2 scoped five-crate native38592016227 SUCCESS. Independent evidence S895bebe1c54a921ade5d8fff056a70b9aedbefd7 Governance38592279932 SUCCESS. H cursor-only. Worker implementation and new test results not run; no product/performance/physical or V4 production claim.",
-  "next_action": "M0 next OWN atom R1-M0-FEC-OUTER-FIRST-002: take existing actual authenticated FEC-on M1/M3 2/2 main business and byte-exact M4 IPv4/TCP envelope, compose full packet send with actual FEC metadata MTU and PN replay first-delivery, verify source-exact native Actions. Never change M1 parity queue, M2 global allocator, M3 BlockID helper or M4 Linux batch driver while their independent tasks run. After workers each complete own SOURCE/evidence/H, M0 consumes and integrates. Production Go V4 remains disabled.",
+  "task_id": "R1-M0-FEC-OUTER-FIRST-002",
+  "current_task": "SCOPED COMPLETE: actual M1 immutable Arena/TxOwner + M3 AEAD/PN replay/FEC-on systematic and RS20 plus M4 complete IPv4/TCP DATA bytes on main CODE SOURCE37fac368, native Actions38598402946 2/2 PASS with exact compiled-once artifact and independent checksums/576B MTU. Same SOURCE eight other historical scoped workflows SUCCESS. Evidence S8c1d413 Governance38599084430 SUCCESS; not raw socket/Go V4/product/perf qualification. Two earlier test-fixture SOURCE b9327671/e972611b failed and were corrected, not silently converted to PASS.",
+  "why_now": "M0 seq38 checkpoint895bebe1→main HEAD e0b96f24 was only prior cursor H, no outstanding main Actions; M0 independently owns FEC first full packet composition, without touching active worker paths. M1-M4 all new task branches progressed concurrently. Exact-source native tests required actual M4 packet wrapper rather than composing historic green results.",
+  "done_when": "Only M0 integration tests/workflow changed in code S b9327671,e972611b,37fac368; final SOURCE37fac368 Actions38598402946/1 two native tests PASS full IPv4 TCP+FEC/record/PN checks, compiled once artifact11912556088/result11912591172 SHA256 in docs/evidence/M0/R1-FEC-outer-first.json. Exact same source eight other scoped workflows all SUCCESS. Initial runs38598103666 0/2 and38598323241 1/2 FAIL fixture errors recorded. Evidence S8c1d413274863ebb8a2a91efdc28d078e56511a9 Governance38599084430/1 SUCCESS. This H cursor-only; Go V4/AF_PACKET/Linux raw/Windows/ARM/perf/physical/product NOT_RUN.",
+  "next_action": "M0 next atom: refresh M1–M4 exact remote HEAD/cursors, inspect every new worker commit and pending Actions requests, verify each source/artifact and G2 before any merge. Current observed heads M1 dceb2a7c (4 commits), M2 1384b306 (3), M3 faa01894 (3), M4 47eb4107 (4), all after assignment; these are observations NOT yet qualified by M0. Then select one independently qualified worker atom for main integration with new source-exact Actions, never mix source green or assume root ABI FAIL passed.",
   "unverified": true,
-  "last_tested_source": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+  "last_tested_source": "37fac368d8eca42b6e021e40d8423423ed502c77",
   "evidence_refs": [
-    "docs/evidence/M0/R1-parallel-worker-assignments.json"
+    "docs/evidence/M0/R1-FEC-outer-first.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/devlog/M0/R1-FEC-outer-first.md",
     "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
-    "docs/architecture/modules/02-RUNTIME.md",
-    "docs/architecture/modules/04-CARRIER-IO.md",
-    "docs/architecture/modules/07-FEC.md",
-    "docs/architecture/modules/08-RECOVERY.md"
+    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 clean seq37 checkpointb4da7bc0→H1a8a184f Governance38585845817 success. M3 corrected own historical G2 and seq11 worker H d81c4afe Governance38589331920 PASS, others old worker atoms qualified. Assigned independent owner work in main CODE SOURCE6f5c891d to M1 FEC parity queue, M2 global sparse allocator, M3 BlockID extended identity, M4 Linux sendmmsg kernel fixture; no role epoch/allowed path/branch changes. Same source Governance38592016440 and G2-native38592016227 PASS. Evidence S895bebe1 Governance38592279932 success. This H seq38. Worker implementation NOT_STARTED (agents must run), all new native tests NOT_RUN; production Go V4/raw driver/native target/perf/product/physical NOT_RUN. M0 next compose existing native authenticated FEC first business with real M4 IPv4/TCP full packet before integrating newly assigned tasks."
+  "partial_summary": "M0 preflight CLEAN seq38. Genuinely full IPv4/TCP packet, 576B MTU, independent checksum and frozen record repair presentation through authenticated FEC-on 2/2; source b9327671 fail0/2 (seq fixture and invalid slab), e972611b fail1/2 (invalid slab); fixed 37fac368 source native run38598402946 SUCCESS 2/2, build artifact SHA and test result SHA recorded, eight sibling same-source Actions SUCCESS. Evidence S8c1d413 Governance38599084430 SUCCESS. Workers M1-M4 advanced own branches and H, not integrated/qualified by M0. No live Go V4/raw/Win/Arm/perf/product/physical; no performance or full product PASS. H seq39."
 }
