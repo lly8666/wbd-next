@@ -95,5 +95,20 @@
     "abi_features": "0"
   },
   "open_request": ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
-  "notes": "All PASS statements here describe only the exact compiled native test binary at source_sha. Ready constants remain false; no claim of production engine readiness."
+  "notes": "All PASS statements here describe only the exact compiled native test binary at source_sha. Ready constants remain false; no claim of production engine readiness.",
+  "result": "PASS",
+  "artifact_verified": true,
+  "artifact_review": {
+    "method": "Downloaded exact GitHub Actions result artifact ZIP 11880339456 and inspected result.json and test.log; cross-checked source_sha, run_id, attempt, 10 names, compiler-once, binary and log SHA with GitHub consume job logs.",
+    "artifact_id": 11880339456,
+    "result_json_sha256": "a451032d06a3da1781b6bc47f2f382c14bb0afd83c743895615f393379f0df04",
+    "result_log_sha256": "d449f71c3624dbcb04294cc6d57d8c50799cbf658de88462f42e2eebe9830fb6",
+    "scope": "PASS means exact native 10-case worker subset only, not product qualification"
+  },
+  "governance_followup": {
+    "failed_run_id": 38538729612,
+    "failed_source_sha": "f72aedf0a0834fbf68e859b1610857b3d08baa7d",
+    "reason": "H cursor included URL references in evidence_refs; governance requires relative file paths.",
+    "resolution": "Remove URLs from next cursor H evidence_refs; keep Actions URLs inside this evidence receipt. Mark verified only because exact artifact contents were reviewed."
+  }
 }
