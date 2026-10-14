@@ -4,8 +4,8 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 1,
-  "checkpoint_sha": "d8c98c89b793265f2430688a298a002be35abe23",
+  "sequence": 2,
+  "checkpoint_sha": "bdd79c93d7eaf6cd4196e60580e028d87e801666",
   "progress": "partial",
   "task_id": "R1-M3-BUDGET-001",
   "current_task": "FrameBudget Rust/native passed against pinned old-Go oracle literals; direct original Go pathmtu native job pending M0 workflow ownership",
@@ -17,13 +17,12 @@
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-BUDGET-001.json"
   ],
-  "open_requests": [
-    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
-  ],
+  "open_requests": [],
   "context_refs": [
     "docs/decisions/M0-G2-worker-activation.md",
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
-    "docs/architecture/modules/00-CONTRACTS.md"
+    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
   ],
-  "partial_summary": "S 85529385→44975170→3aa121e4: unified codec::path_budget and six R1 tests, literal pinned Go pathmtu matrix; no ordinary Normal/fixed-off LINK header. Actual M3 native compiled-once Actions 38538473699 attempt1 PASS 6/6 at exact SOURCE 3aa121e4; six existing R0/G2 plus governance on SOURCE all success. S1 frozen R0 harness counted 19 not 13 despite original tests passing; S2 refactor lacked test imports; S3 fixed. Evidence S d8c98c89 and H checkpoint. Old Go native internal/pathmtu tests NOT_RUN (M0 workflow request). Real AEAD/8B HP/3cipher, integration, product/perf/physical NOT_RUN; no root Cargo, lock or ABI edits."
+  "partial_summary": "S 85529385→44975170→3aa121e4: unified codec::path_budget and six R1 tests, literal pinned Go pathmtu matrix; no ordinary Normal/fixed-off LINK header. Actual M3 native compiled-once Actions 38538473699 attempt1 PASS 6/6 at exact SOURCE 3aa121e4; six existing R0/G2 plus governance on SOURCE all success. S1 frozen R0 harness counted 19 not 13 despite original tests passing; S2 refactor lacked test imports; S3 fixed. Evidence S d8c98c89 and H checkpoint. Old Go native internal/pathmtu tests NOT_RUN (M0 workflow request). Real AEAD/8B HP/3cipher, integration, product/perf/physical NOT_RUN; no root Cargo, lock or ABI edits. H1 33917193 governance38539494325 failed structural schema (evidence.source_sha absent, devlog misfiled as open intent). Correction S bdd79c93 added source_sha; H2 moves M0 devlog under context_refs and leaves only formal test intents under open_requests. All non-governance and R1 test results remain exact SOURCE 3aa121e4, not inherited by docs commits."
 }
