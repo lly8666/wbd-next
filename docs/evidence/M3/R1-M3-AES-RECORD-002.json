@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-AES-RECORD-002",
+  "source_sha": "5f5d87ec365ff5ace537e504778abafc2ada85ec",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_3_REAL_RECORD_AEAD_SUITES_AND_FULL_HP8_ONLY",
+  "reference": {
+    "old_go_repo": "lly8666/wobuzhidao",
+    "old_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "old_go_sources": [
+      "internal/tlsrecord/keys.go",
+      "internal/tlsrecord/suite.go",
+      "internal/tlsrecord/suite_test.go",
+      "internal/tlsrecord/record.go"
+    ],
+    "reproducible_oracle_source": "crates/wbd-codec/oracles/aes_v3_go_reference.go",
+    "independent_go_stdlib_fixture": "crates/wbd-codec/oracles/aes_wire_go_v3.txt",
+    "key_inputs": {
+      "master": "32 bytes of 0x6d",
+      "nonce": "nonce[i]=i*7+3 for i=0..15",
+      "hkdf": "HKDF-SHA256(master,nonce,'WBD-TLSLIKE-V3/'+suite+'/c2s'),76B"
+    },
+    "exact_byte_vectors": {
+      "AES_128_GCM": 7,
+      "AES_256_GCM": 7,
+      "total": 14
+    },
+    "oracle_execution": {
+      "environment": "local Go 1.23.2 linux/amd64 (not a GitHub Actions native old-Go package run)",
+      "cmd": "go run crates/wbd-codec/oracles/aes_v3_go_reference.go",
+      "status": "PASS_GENERATED_14_REFERENCE_ROWS"
+    },
+    "second_crypto_implementation_check": {
+      "environment": "local Python cryptography AESGCM + AES ECB + HKDF",
+      "status": "14/14 byte-identical Go stdlib wire",
+      "native_CI": false
+    },
+    "pinned_oldGo_suite_test_native_for_this_atom": "NOT_RUN; Go standard-lib independently reproduced Go suite_test.go algorithm and library vectors (not substituted for live old Go package test)"
+  },
+  "implemented": {
+    "suites": [
+      {
+        "id": 1,
+        "algorithm": "ChaCha20-Poly1305",
+        "hp": "raw ChaCha20 8-byte"
+      },
+      {
+        "id": 2,
+        "algorithm": "AES-128-GCM",
+        "key_bytes": 16,
+        "hp": "independent AES-128 ECB on sample16 first8"
+      },
+      {
+        "id": 3,
+        "algorithm": "AES-256-GCM",
+        "key_bytes": 32,
+        "hp": "independent AES-256 ECB on sample16 first8"
+      }
+    ],
+    "native_modules": [
+      "crates/wbd-codec/src/record_crypto.rs",
+      "crates/wbd-codec/src/record_crypto_tests.rs"
+    ],
+    "suite_ids_exact_old_go": true,
+    "legacy_chacha_constructor_and_six_go_vectors_unchanged": true,
+    "aad": "actual TLS-like outer5 || unmasked PN8",
+    "nonce": "12B lane IV XOR (00000000 || PN_BE64)",
+    "min_record_bytes": 31,
+    "HP_sample": "first 16 bytes of ciphertext+AEAD tag; can overlap tag; ALWAYS full 8B PN mask",
+    "pem": "not applicable",
+    "lane_independent_aead_and_hp_context": true,
+    "wrapping_pn": false,
+    "original_owned_wire": "in-place mutating caller owned single wire buffer; no new Vec allocation from sealer",
+    "test_scope": [
+      "Go standard-lib 14 AES byte vectors exact",
+      "zero/1/15/16/17/31/1024/max payload boundaries",
+      "AUTH fails tampering each header/pn/cipher/tag byte",
+      "wrong suite/IV/HP key fail",
+      "invalid suite reject",
+      "out-of-order independent record opens",
+      "AES failed seal burns PN and MAX expires",
+      "ChaCha six frozen Go independent oracle strings preserved",
+      "FrameBudget six literal old Go MTU cases preserved"
+    ]
+  },
+  "native_actions": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38555898661,
+    "attempt": 1,
+    "source_sha": "5f5d87ec365ff5ace537e504778abafc2ada85ec",
+    "status": "completed",
+    "conclusion": "success",
+    "toolchain": "Rust 1.85.1",
+    "platform": "ubuntu-24.04 Linux X64",
+    "build_job": 115824820706,
+    "consume_job": 115825085097,
+    "compiled_once": true,
+    "r1_rust_tests": 15,
+    "failed": 0,
+    "r1_budget_tests": 6,
+    "r1_chacha_tests": 5,
+    "r1_aes_tests": 4,
+    "binary_sha256": "4b657654676b76ba1b7a993f4ea3fed4f1ffde8b07caa51d0bb6f4a74f90cca9",
+    "test_log_sha256": "97558c4021bbae88987c2d0f1996177bf0a5aed657448522da1553742c42e441",
+    "build_artifact": {
+      "id": 11890531468,
+      "digest": "sha256:321216402eeb823259eaa74a5a4932b7474dedc3a563455f09880d7f378dbb78"
+    },
+    "result_artifact": {
+      "id": 11890181691,
+      "digest": "sha256:37cdf2ee65011637af143b4e86964aaf3f5f9908d1d9b4236515d54a01061aee"
+    }
+  },
+  "same_source_other_actions": [
+    {
+      "workflow": ".github/workflows/r0-codec.yml",
+      "run_id": 38555898920,
+      "conclusion": "success",
+      "meaning": "frozen R0 historical 13 tests remain isolated from new R1 tests"
+    },
+    {
+      "workflow": ".github/workflows/r0-record-framing.yml",
+      "run_id": 38555898638,
+      "conclusion": "success"
+    },
+    {
+      "workflow": ".github/workflows/r0-link-fec-wire.yml",
+      "run_id": 38555898573,
+      "conclusion": "success"
+    },
+    {
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "run_id": 38555898747,
+      "conclusion": "success"
+    },
+    {
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "run_id": 38555898647,
+      "conclusion": "success"
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38555898487,
+      "conclusion": "success"
+    }
+  ],
+  "inheritance": {
+    "prior_chacha_test_source": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
+    "main_to_m3_lock_merge": "41c408fb43d049029e6613e429ecc8fde2c81758",
+    "M0_root_pins": {
+      "aws-lc-rs": "=1.18.1",
+      "chacha20": "=0.9.1",
+      "aes": "=0.8.4"
+    },
+    "no_M3_edits": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "crates/wbd-codec/Cargo.toml",
+      "wbd-types",
+      "shared ABI"
+    ]
+  },
+  "limits": {
+    "self_assigned_v4_key_derivation": "NOT_IMPLEMENTED",
+    "Rx_replay_bitmap_and_authenticated_retired_floor": "NOT_IMPLEMENTED",
+    "M0_M1_M4_single_source_normal_fec_off_business_first_delivery": "NOT_RUN",
+    "old_Go_package_n3_AES_native_Action_this_atom": "NOT_RUN",
+    "production_V4": "DISABLED",
+    "integration": "NOT_RUN",
+    "target_native_windows_arm": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN"
+  },
+  "next_action": "Next independent M3 atom: implement bounded authenticated replay window per module05, with exact capacity/floor/late/duplicate/out-of-order tests (C03/C04). M0 should connect all three suite choices to authenticated negotiated V4 key derivation and M1-owned wire/driver, then run first Normal/FEC-off in-process single-source Actions E2E (ownership governed by M0)."
+}
