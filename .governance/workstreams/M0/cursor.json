@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 40,
-  "checkpoint_sha": "983e44143fa87f80881824dd0ce306d4da1294b8",
+  "sequence": 41,
+  "checkpoint_sha": "831aa1b11079515b419248a75a15dfa1c454ae3e",
   "progress": "partial",
-  "task_id": "R1-M0-FEC-OUTER-FIRST-002",
-  "current_task": "R1-M0-FEC-OUTER-FIRST-002 SCOPED COMPLETE, native FEC-on full IPv4/TCP source37fac368 Actions38598402946 2/2 plus eight same-source historical scoped workflows SUCCESS. Evidence S8c1d413 Governance38599084430 SUCCESS. H e2a7c565 Governance38599307864 FAILED exact validator missing top-level evidence.source_sha, corrected recovered evidence S983e4414 Governance38599524115 SUCCESS. This replacement H seq40 cursor-only. Product/Go V4/raw/perf/physical NOT_RUN.",
-  "why_now": "M0 seq38 CLEAN and independent composed first FEC-on M4 full-packet needed; exact test fixture failures b932/e972 fixed before code SOURCE37fac. Initial H seq39 e2a7 failed validator because JSON omitted mandatory top-level source_sha; actual same-source source 37fac was already explicitly present in exact_source.sha. S983e corrects only evidence/schema and records failed run; code not retested or altered.",
-  "done_when": "M0 code final 37fac368d8eca42b6e021e40d8423423ed502c77 full IPv4/TCP FEC-on first business+RS20 2/2 Actions38598402946 PASS compiled-once binary SHA863108aa, artifact builds11912556088 result11912591172. Other eight Actions of exact code SOURCE SUCCESS. Earlier native FAIL0/2 at b932 run38598103666 and FAIL1/2 at e972 run38598323241 recorded. Evidence S8c1d413 Governance38599084430 PASS, first H e2a7 Governance38599307864 FAIL top-level SOURCE, recovered S983e44143fa87f80881824dd0ce306d4da1294b8 Governance38599524115 PASS. This H-only. No raw/GoV4/WinArm/perf/physical/product.",
-  "next_action": "M0 next atom: refresh M1–M4 exact remote HEAD/cursors, inspect every new worker commit and pending Actions requests, verify each source/artifact and G2 before any merge. Current observed heads M1 dceb2a7c (4 commits), M2 1384b306 (3), M3 faa01894 (3), M4 47eb4107 (4), all after assignment; these are observations NOT yet qualified by M0. Then select one independently qualified worker atom for main integration with new source-exact Actions, never mix source green or assume root ABI FAIL passed.",
+  "task_id": "R1-M0-M3-BLOCKID-MAIN-INTEGRATION-004",
+  "current_task": "M0 independently imported M3 post-auth authenticated-input BlockID32->64 helper into main SOURCE544cf6870bab32ebfc79cd8fa29abc3762d57cfa. Exact SOURCE codec 67/67 Actions38601058414 and FEC-on 2/2 Actions38601058523, 13/13 scoped Actions SUCCESS including real R0 native ABI/Go wire, G2, normal-off and receipt. Evidence S831aa1b11079515b419248a75a15dfa1c454ae3e Governance38601728148 SUCCESS. M3 worker original SOURCEdcee7e85, evidence5a0bc5ad Hfaa01894 and own Governance38599242646 PASS. This H cursor-only. No Go V4 trusted generation/product/raw/perf qualification.",
+  "why_now": "M0 seq40 checkpoint983e4414->H b9b24d95 Governance38599633999 SUCCESS and only cursor since checkpoint. M1-M4 branches had moved on own scopes; M3 had verified native source and own H, making pure scoped codec + M0-owned post-AEAD/PN integration the first independently eligible main atom. Never conflate M1/M2/M4 failed old-source actions.",
+  "done_when": "M3 exact code source dcee7e85424064581ada22544883b3acd0eaaca5 tested own 67/67 worker-native38598331547, G2 and Governance retry. Main CODE SOURCE544cf6870bab32ebfc79cd8fa29abc3762d57cfa 13/13 triggered workflows SUCCESS, codec67/67 run38601058414 build/consume artifact hashes and FEC-on2/2 run38601058523 exact same source. Post-auth scope uses only explicit trusted_generation=0 test fixture and maintains V4 DISABLED. Evidence S831aa1b1 Governance38601728148 PASS. H only cursor change. Product/raw native WinArm/performance/physical still NOT_RUN.",
+  "next_action": "M0 next single integration atom R1-M0-M1-PARITY-READY-INTEGRATION-005: inspect M1 worker SOURCE20809638ba86eed25aee463a7bbba9a002761799 native29/29 run38598602128, H dceb2a7c Governance38599017708 SUCCESS; on main compose separately bounded parity-ready with actual authenticated FEC source+32ms eligibility, prove no fresh HOL and native same-source regressions. M0 main R0 ABI filtered PASS at SOURCE544cf687; old M1 branch R0 ABI run38598602157 remains FAIL and cannot be borrowed. M2 H run38598929953 FAILED due live-main movement and must worker recover first, M4 old fake-platform run38598122098 FAIL. Do not enable V4/raw, no feature0 activation.",
   "unverified": true,
-  "last_tested_source": "37fac368d8eca42b6e021e40d8423423ed502c77",
+  "last_tested_source": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
   "evidence_refs": [
-    "docs/evidence/M0/R1-FEC-outer-first.json"
+    "docs/evidence/M0/R1-M3-blockid-main-integration.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-FEC-outer-first.md",
+    "docs/devlog/M0/R1-M3-blockid-main-integration.md",
     "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 source-exact native full IPv4/TCP FEC first packet + RS20 2/2 PASS at 37fac368 (#38598402946), 8 historical scopes same SOURCE success, two previous fixture failures retained. Evidence S8c1d413 Governance38599084430 SUCCESS. H seq39 e2a7c565 Governance38599307864 FAIL structure missing evidence SOURCE, so recovery S983e4414 added required top-level source_sha and literal failure history, Governance38599524115 SUCCESS. Replacement H seq40 checkpoint recovery S. M1–M4 worker heads progressed concurrently, do not merge until per-commit and Actions audit; product/perf/physical/raw/GoV4 NOT_RUN."
+  "partial_summary": "M0 seq40 CLEAN at H b9b24d95 (Gov38599633999). Audited all four worker post-assignment per-commit scopes and exact runs; M1 native29/29 + old worker R0 ABI FAIL, M2 native22/22 + H GovFAIL control moved, M3 native67/67/H GovPASS, M4 native21/21 + old branch R0 platform fake FAIL. Imported only M3 codec helper on main CODE SOURCE544cf687, FEC-on test order actual IPv4/TCP -> AEAD and PN replay -> BlockID32 extended via trust-bound fixture -> FecRxOwner; 67/67 and 2/2 native same SOURCE, 13/13 other triggered workflows all SUCCESS. Build and result artifacts/binary hashes in evidence S831aa1b1 Gov38601728148 SUCCESS. This H seq41. Real authenticated generation/Go V4 raw/Win ARM performance/product/physical NOT_RUN. Next M1 parity-ready integration, no infinite governance."
 }
