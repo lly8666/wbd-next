@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "repository": "lly8666/wbd-next",
+  "role_id": "M0",
+  "task_id": "R1-M0-M1-WAKE-ROOT-001",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "1e4e1c353160ad075981763f677519d85b2066a5",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "MAIN_NATIVE_M1_BOUNDED_STD_OWNER_WAKE_STOP_RETURN_AND_REAL_R0_ABI_RUST_C_GO",
+  "preflight": {
+    "M0_previous_head": "3382449683f3b18d6f30e895fb91a7970f3a8f59",
+    "M0_sequence": 33,
+    "M0_checkpoint": "15df096947872ed13f7b6e9f685dea33afff0d17",
+    "M0_delta_since_checkpoint": "CURSOR_ONLY_H",
+    "previous_governance_run": 38574005388,
+    "registry_revision": 2,
+    "epoch": 1,
+    "M1_worker_source": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
+    "M1_worker_head": "49d886d639b7ba93aca00cfc0e305b23017d0cc8",
+    "M1_cursor_seq": 3,
+    "M1_worker_native_run": 38567433037,
+    "M1_worker_native": "19/19 PASS",
+    "M1_worker_R0_native_abi_failure_run": 38567433175
+  },
+  "source_sequence": [
+    {
+      "sha": "26db6ef4db002c147053f89363b92c58c7b05b04",
+      "action": "import exact M1 runtime/wake and memory/return and first ABI filter+new native workflow",
+      "observed": "r1 wake19/19, R1 Normal, R2 ingress, G2, cross ABI, static success; R0 native FAIL due escaped regex and Governance FAIL because control moved during audit",
+      "preserve_failures": true
+    },
+    {
+      "sha": "653be8bf421d71a2d6480580e9481239bda2f18e",
+      "action": "correct double-escaped raw regex in root 3-test selector",
+      "observed": "R0 native ABI Actions38575421918 SUCCESS, Governance38575421819 SUCCESS; new M1 native not triggered at this SHA"
+    },
+    {
+      "sha": "1e4e1c353160ad075981763f677519d85b2066a5",
+      "action": "bind R0 ABI and M1 native workflow path triggers so both execute on one exact source",
+      "observed": "both native workflows and Governance success SAME SHA"
+    }
+  ],
+  "main_implementation": {
+    "exact_owned_M1_blobs": [
+      "crates/wbd-engine/src/runtime/wake.rs",
+      "crates/wbd-engine/src/runtime/mod.rs",
+      "crates/wbd-engine/src/memory/mod.rs"
+    ],
+    "main_owned_changes": [
+      "tools/r0_abi_bundle.py",
+      "tests/test_r0_abi_exact_filter.py",
+      ".github/workflows/r1-wake-stop-native.yml",
+      ".github/workflows/r0-native-abi.yml",
+      "docs/devlog/M0/R1-M1-wake-root-integration.md"
+    ],
+    "worker_branches_touched_by_M0": false,
+    "go_v4_feature0": true,
+    "properties": [
+      "std OS thread park/unpark with atomic SeqCst armed/recheck avoids lost wakeup at owner wait",
+      "bounded distinct fresh and repair queues; full repair never blocks fresh; no unbounded channels",
+      "stop fences out new publications and waits/drains actual in-flight offers before declaring quiesced",
+      "last FrozenRecord loan/drop and full return backlog notify owner; no early arena/loan release",
+      "R0 libtest 'r0_abi_' filtered and all exactly three named successful ABI cases required; never substring '3 passed' from unfiltered 13/22 test totals",
+      "R0 actual native C and old Go cgo ABI probes still executed unchanged, ABI feature0 production disabled"
+    ]
+  },
+  "native_M1": {
+    "run_id": 38576030914,
+    "attempt": 1,
+    "conclusion": "success",
+    "runner": "ubuntu-24.04 Linux x64",
+    "rust": "1.85.1",
+    "compiled_once": true,
+    "build_job": 115893244860,
+    "consume_job": 115893580969,
+    "tests": 19,
+    "new_wake_tests": 9,
+    "previous_tests": 10,
+    "binary_sha256": "edaa20cd24acecd96011eb5e78e1131b56550b6ae85f7ae0d871dbf3ad1fbcec",
+    "log_sha256": "de3219dd380b20809d81fbeb90632efcd1feb60553f9ddf4b9443bd3edf91b32",
+    "build_artifact": {
+      "id": 11900350864,
+      "digest": "sha256:5638bc9576b25c9c4aca14d2dcccd6ca3dcd6d31c30fb9804c8aaedb864035ae"
+    },
+    "result_artifact": {
+      "id": 11900890244,
+      "digest": "sha256:65b778bb5b8fb5a6a88d8d45516720abbbb8e8fa832a851f367c9ae94c269eeb"
+    }
+  },
+  "native_R0_ABI": {
+    "run_id": 38576030909,
+    "attempt": 1,
+    "conclusion": "success",
+    "runner": "ubuntu-24.04 Linux x64",
+    "build_job": 115893245005,
+    "consume_job": 115893840017,
+    "real_rust_selected_tests": 3,
+    "real_C_smoke": "PASS",
+    "real_old_Go_cgo_tests": 4,
+    "feature_flags": 0,
+    "build_artifact": {
+      "id": 11899144081,
+      "digest": "sha256:081c409713bb40a7066a8b05fdd26c7159b2e89b6f88998da748e047ea4c3e22"
+    },
+    "result_artifact": {
+      "id": 11899893083,
+      "digest": "sha256:e51e8fa6cc5f731def12afad2dd31d923f15f174a70bfb6c282604454eb67000"
+    }
+  },
+  "same_source_actions": {
+    "count": 3,
+    "passed": 3,
+    "runs": [
+      {
+        "workflow": "governance",
+        "run_id": 38576030936,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r1-wake-stop-native",
+        "run_id": 38576030914,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38576030909,
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "prior_code_exact_source_regressions": {
+    "source": "26db6ef4db002c147053f89363b92c58c7b05b04",
+    "runs": [
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38575231306,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance",
+        "run_id": 38575231422,
+        "conclusion": "failure"
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38575231285,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r1-normal-off-replay",
+        "run_id": 38575231302,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38575231305,
+        "conclusion": "failure"
+      },
+      {
+        "workflow": "r1-wake-stop-native",
+        "run_id": 38575231410,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run_id": 38575231473,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38575231588,
+        "conclusion": "success"
+      }
+    ],
+    "note": "These are historical at initial code source, not claimed as final main SHA; no Rust/M1 code changed between this source and final SHA"
+  },
+  "owner_refs_at_receipt": {
+    "M1": "49d886d639b7ba93aca00cfc0e305b23017d0cc8",
+    "M2": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "M3": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "M4": "ad5eea274cbc81e09caf757491a482a3ef1ab8fa"
+  },
+  "not_qualified": {
+    "rtrb_SPSC": "NOT_RUN",
+    "loom": "NOT_RUN",
+    "eventfd": "NOT_RUN",
+    "native_network": "NOT_RUN",
+    "Go_V4_live_admission": "NOT_RUN",
+    "Windows_ARM_native": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "V4_production": "DISABLED"
+  },
+  "next_action": "After refresh M0 import reviewed M3 real FEC TX+RX SOURCE ab7ef93 with replay-before-FEC, exact wire 56B authenticated metadata, streaming first delivery, missing-only real RS20 e×e recovery; M0-engine first business FEC-on native tests. Do not touch worker branch. Separate future process-global sparse budget and real Go V4 admission."
+}
