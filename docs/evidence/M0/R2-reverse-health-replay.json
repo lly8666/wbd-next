@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-REVERSE-REPLAY-001",
+  "branch": "main",
+  "repository": "lly8666/wbd-next",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "9f8ad3e2d94c60d347519fedc3409fe94184baf3",
+  "artifact_verified": true,
+  "result": "PASS",
+  "scope": "R2_IN_PROCESS_REVERSE_HEALTH_AEAD_FIRST_PN_REPLAY_TO_M2_FROZEN_SHADOW_NATIVE_LINUX_X64",
+  "preflight": {
+    "M0_head": "3f589968e7b966d6862dc2ea0b4b4c1cba149f45",
+    "M0_sequence": 29,
+    "checkpoint_sha": "3be8d2860740fee5d5835eb0e7634a9f582f649f",
+    "checkpoint_to_head": "ONE_CURSOR_ONLY_H",
+    "governance_previous_run": 38560869174,
+    "continuity": "CLEAN",
+    "M1_branch_head": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+    "M4_branch_head": "a8dd64dd25817b695280274495e1350ceccc4cae",
+    "M2_branch_at_receipt": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "M3_branch_at_receipt": "0215c051456dc0e245dbbd413157dfd2e18c2cfc",
+    "active_registry_revision": 2,
+    "epoch": 1
+  },
+  "changes": [
+    "crates/wbd-engine/src/recovery_ingress.rs",
+    "crates/wbd-engine/tests/r2_receipt_ingress.rs",
+    ".github/workflows/r2-auth-receipt.yml",
+    "docs/devlog/M0/R2-reverse-health-replay.md"
+  ],
+  "security_properties": [
+    "BoundReceiptIngress takes only ReplayProtectedLaneRx rather than raw LaneRxCrypto, still requires equal authenticated data/reverse lane and nonzero equal logical epoch",
+    "unique reverse wire PN is authenticated by real M3 ChaCha/AES AEAD+8 byte HP before M2 WBC4 decode/on_receipt",
+    "authentic repeated Health and retired PN return Replay(Duplicate/Retired) without re-entering M2 receipt history or releasing shadow",
+    "invalid AEAD tag never advances receiver high watermark; wrong lane/epoch and wrong key do not authorize",
+    "M1 FrozenRecord original bytes and same allocation survive accepted/uncertain/not-sent M4 in-process sink; result is not peer receipt",
+    "read only replay_info/stats/max_seen reports actual bounded tagged page coverage; even misaligned 256 PN 80B requires 2 tagged pages",
+    "valid different Health and LINK packets must have independent non-reused PN under same reverse suite key; test false LINK PN1 and positive receipt PN0 out of order"
+  ],
+  "actual_native": {
+    "run_id": 38562167674,
+    "run_attempt": 1,
+    "workflow": ".github/workflows/r2-auth-receipt.yml",
+    "result": "PASS",
+    "runner": "ubuntu-24.04 Linux x64",
+    "rust": "1.85.1",
+    "compiled_once": true,
+    "build_job": 115845677716,
+    "consumer_job": 115846014935,
+    "tests": 6,
+    "failed": 0,
+    "binary_sha256": "ea206c4a80c953a3b80c3bbf768e622a4a6e908c68c00ca5fdf351f01320a8da",
+    "cargo_lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "log_sha256": "043d5d6b692b8852019a3ddc9e4ef98a1679aa47d557811e518de52333cb5eda",
+    "build_artifact": {
+      "id": 11892567069,
+      "digest": "sha256:dbe33e4f1bfa6d6bba91db421a61917e872a8710fa0df511152df57cd7b6d0c7"
+    },
+    "result_artifact": {
+      "id": 11892701800,
+      "digest": "sha256:27fea62cec5200e7a06d6123a8eeabdd09abe113291a19a22af11cc4c6651e67"
+    }
+  },
+  "same_source_actions": {
+    "source": "9f8ad3e2d94c60d347519fedc3409fe94184baf3",
+    "triggered": 7,
+    "success": 7,
+    "runs": [
+      {
+        "run_id": 38562167671,
+        "workflow": "r0-static-qualification-audit",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167735,
+        "workflow": "governance",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167668,
+        "workflow": "r1-normal-off-replay",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167674,
+        "workflow": "r2-auth-receipt",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167569,
+        "workflow": "g2-scoped-bootstrap-native",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167568,
+        "workflow": "r0-native-abi",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38562167570,
+        "workflow": "r0-cross-abi",
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "cross_abi": {
+    "run_id": 38562167570,
+    "all_jobs": [
+      {
+        "name": "build (aarch64-unknown-linux-gnu, aarch64-linux-gnu-gcc, gcc-aarch64-linux-gnu libc6-dev-arm64-cr...",
+        "job_id": 115845677033,
+        "conclusion": "success"
+      },
+      {
+        "name": "build (x86_64-pc-windows-gnu, x86_64-w64-mingw32-gcc, gcc-mingw-w64-x86-64 nasm, binutils-mingw-w...",
+        "job_id": 115845677576,
+        "conclusion": "success"
+      },
+      {
+        "name": "consume (x86_64-pc-windows-gnu, binutils-mingw-w64-x86-64)",
+        "job_id": 115846218035,
+        "conclusion": "success"
+      },
+      {
+        "name": "consume (aarch64-unknown-linux-gnu, binutils-aarch64-linux-gnu)",
+        "job_id": 115846218169,
+        "conclusion": "success"
+      }
+    ],
+    "cross_compiled_and_consumed": true,
+    "target_native_runtime": "NOT_RUN"
+  },
+  "M1_status": {
+    "head": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+    "seq": 2,
+    "progress": "ready_for_integration",
+    "source": "46571e69baa83bd01061ccbf03f03de7f4ab277d",
+    "native_run_id": 38538248506,
+    "native_tests": "10/10",
+    "included_in_main_composition": true,
+    "next_owner_atom": "M1 bounded real wakeup/queue stop concurrency and clock tests only on independently assigned new task; SPSC/loom shared Cargo pins require M0 review"
+  },
+  "M4_status": {
+    "head": "a8dd64dd25817b695280274495e1350ceccc4cae",
+    "seq": 4,
+    "progress": "ready_for_integration",
+    "source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+    "native_run_id": 38538117103,
+    "native_tests": "6/6",
+    "included_in_main_composition": true,
+    "next_owner_atom": "M4 real Linux platform send outcome/driver branch after explicit bounded assignment, no Windows native/AF_PACKET claim from old 6/6"
+  },
+  "M2_status": {
+    "head": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "seq": 5,
+    "current_task": "R2-M2-BUDGET-001",
+    "tested_source": "4f485269b3af4b1aba46cce602a3996a720c8538",
+    "native_run_id": 38561012183,
+    "native_tests": "15/15",
+    "status": "completed pure local ledger; not integrated with M4 actual platform or global sparse budget"
+  },
+  "not_qualified": {
+    "live_Go_V4_session_admission_exporter": "NOT_RUN",
+    "real_packet_carrier": "NOT_RUN",
+    "real_owner_live_global_1s_budget": "NOT_RUN",
+    "cross_target_native_execution": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_go_V4": "DISABLED_FEATURE0"
+  },
+  "next_action": "One M0 atom after refresh: integrate M2 independent pure 1s F/R/L budget into M4 ready-only send classification and real M1 frozen repair via engine in-process scope, same SOURCE native tests, keeping global multi-client quota and Go V4 admission NOT_RUN. M1/M4 independent new atoms need M0 explicit scope and separate branch authority; do not write worker refs."
+}
