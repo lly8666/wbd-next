@@ -6,13 +6,13 @@
 
 示例固定每方向内层 IP 500Mbps、无分片，λ=B/(8P)，V=5ms。FEC/副本/fragment 会进一步增加 record PPS。
 
-| 平均内层包长 | records/s（off） | RTT150ms flight | RTT300ms flight | 400ms shadow 槽 | 700ms shadow 槽 |
+| 平均内层包长 | records/s（off） | RTT150ms flight | RTT300ms flight | 410ms shadow 槽 | 710ms shadow 槽 |
 |---|---:|---:|---:|---:|---:|
 | 1200B | 52,083 | 7,813 | 15,625 | 32,768 | 65,536 |
 | 512B | 122,070 | 18,311 | 36,621 | 65,536 | 131,072 |
 | 128B | 488,281 | 73,242 | 146,484 | 262,144 | 524,288 |
 
-槽已含 25% 暂态余量并向上取 2 次幂，实际 payload 内存按活跃数量、slab 容量加描述符算，不等于 slot_count×MTU。1200B、700ms，1536B slab 加 64B 描述符约 **70.8MiB**；128B、700ms，256B slab 加描述符约 **136.3MiB**，超过默认 128MiB/方向。这种小包极限要选容量档或明确降低修复覆盖，不能无证据承诺全部支持。
+槽已含25%暂态余量并向上取2次幂，payload按活跃数量×slab、元数据按slots计算。96B/slot包括64B hot entry、24B timer node及索引余量，是设计预算，实际布局必须测。1200B、710ms、1536B slab约**73.7MiB**；128B、710ms、256B slab约**153.8MiB**，已超过默认128MiB/方向。未含FEC、其他队列及扩容双代重叠；小包极限要选容量档或明确降低修复覆盖，不能承诺全部支持。
 
 4096 对 500Mbps/1200B 只覆盖约 **78.6ms**；它若门控 fresh 就会限制吞吐。新架构不门控，缓存仅决定重传命中率。适量内存可以合理换恢复余量，并非“绝不能扩大4096”。对 cache hit、expiry、pressure abandonment 分别计数。
 

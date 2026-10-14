@@ -1,5 +1,7 @@
 # 有界、无 HOL 的外层快速恢复
 
+逐字段、状态机和反例实施契约见[08-RECOVERY](modules/08-RECOVERY.md)。本页给总策略与计算；实现不得自行补出一套累计可靠窗口。
+
 ## 目标及不保证的部分
 
 低丢包约 1–5%、缓存和主机容量充足时，尽量在一个额外 RTT 内修补首次损失，最多重传两次。高丢包时牺牲恢复率，保持新业务、延迟和系统可运行。FEC on 不等于“内层肯定补到了”，off 也不是完整可靠 TCP；业务自己的可靠传输负责最终可靠性。
@@ -20,9 +22,9 @@ FEC heavy 保留原约 3s 恢复语义和到期机制，配合共享字节上限
 
 借鉴 RACK 的时间和后到达证据，保留本协议的独立 record 语义。RX 合并发送真实 receipt bitmap：每页 base PN64 + 256bit 位图（40B），通用 body 固定字段上限 32B，单 record 至多 8 页且受当前 MTU 限制。页表示明确覆盖范围内的真实到达，未报告页不等于全部丢失。control PN 与 data PN 可共享递增空间，但只有 data shadow 参与修复。
 
-发现新 gap/闭合 gap 约 2ms 内合并报告；持续顺序接收约 10ms 内发送累计真实前缀和必要页，优先捎带已有双向数据/health。不能为了捎带而超时等待。报告丢失时，重复有限未确认范围或覆盖近期窗口，不无限保存 dirty 页。反馈本身不 eliciting ACK，不给丢失的反馈再生成 NACK 风暴。静默业务不因这条 2ms/10ms 规则持续发包；旧 keepalive/质量报告仍按配置和 idle 语义。
+发现新gap/闭合gap约2ms内合并报告；持续顺序接收约10ms内发送明确received页，没有必须追齐的真实累计前缀。只与同样ready的health/quality合并control bundle，不给每个data追加固定尾、不等待捎带。每页初报加一次有限重复，更新则重新dirty；反馈不eliciting ACK，不产生ACK-of-ACK风暴。静默无dirty则停止receipt；旧keepalive/质量报告仍按配置和idle语义。
 
-TX 仅处理 bitmap 改变的词和新确认的连续范围，用 ring 完整 PN 校验定位，不在每个 ACK 扫整个缓存。晚到 ACK、重复报告、回绕、page 被覆盖的情况要有确定测试。内存 pressure 后查不到 shadow 就结束本包修复，不回头重建/重加密。
+TX仅处理bitmap改变的词和其中匹配shadow，用ring完整PN校验定位，不在每个ACK扫整个缓存。未报告页、control/预留失败PN均不是丢包证据。晚到ACK、重复报告、回绕、page覆盖须确定测试；压力后找不到shadow即结束修复，不重新构造/加密。
 
 有至少 3 个后到数据 record 证明且超过时间重排序门限时，首轮 repair 可进入队列；单包/尾包没有后到数据，使用 PTO。严重 reorder 可抬高时间门限，但不能重新引入应用有序交付。第一次和第二次 repair 共享最多两次的总限制，包括 tail probe；每 lane 一次 timer 到期最多挑一个 tail 候选，再重新安排，而非扫尾把所有包复制一遍。
 
@@ -46,7 +48,7 @@ TX 仅处理 bitmap 改变的词和新确认的连续范围，用 ring 完整 PN
 
 ## 4. 定时和缓存参数
 
-令 R=max(SRTT, 最近可信 RTT)，V=RTTVAR，A=2ms 合并反馈上界：
+令R=max(SRTT,最近可信且扣除受限ack_delay后的RTT)，V=RTTVAR，A=10ms（顺序反馈允许的最长合并等待；gap的2ms不能冒充全部反馈上界）：
 
 ```
 W = clamp(R/32, 2ms, 20ms)                 # 初始重排序时间
@@ -58,9 +60,9 @@ Nslots = next_power_of_two(1.25 × data_record_PPS × Tcache)
 
 RTT 从可辨识的未重传样本取值，遵守歧义排除；反馈携带的 ack delay 只扣除可信且被 cap 的部分。没有 RTT 样本时用 bootstrap 测量和保守初值；不能把 0 当 RTT。两次 PTO 机会已计入寿命，不同时照搬 TCP 无穷指数退避再坚持同一短缓存期限。高抖动/长 RTT 超过 3s 支持范围应报告恢复受限。
 
-V=5ms 时：RTT150ms 得 PTO172ms/Tcache400ms；单程150ms（RTT300ms）得 PTO322ms/Tcache700ms。后者不能误写为前者。实际间隔以测到的参数输出，200ms/500ms 不能随手冻结成所有线路的常量。
+V=5ms时：RTT150ms得PTO180ms/Tcache410ms；单程150ms（RTT300ms）得PTO330ms/Tcache710ms。后者不能误写为前者。v1用2ms计算的172/322ms已经被本轮修正；实际间隔以测到的参数输出，不能冻结成所有线路的常量。
 
-按 PPS 而非 Mbps 算 shadow。初始高吞吐 profile 给一发送方向至多 128MiB shadow，总 endpoint 所有 client/lane 有共享上限（起始 512MiB，低内存设备自动选择更低预算并报告有效值）；256MiB/方向可作为显式容量档。内存是按需提交的分页 ring，不启动即填满。64B/slot 是布局预算而非已测事实；实际 `size_of`、slab rounding、allocator 开销进入 manifest 指标。
+按PPS而非Mbps算shadow。初始高吞吐profile一发送方向至多128MiB，总endpoint所有client/lane共享上限512MiB，低内存设备降低有效值；256MiB/方向只能从同一总额分配。分页按需提交，模型采用96B/slot预算：64B hot entry、24B timer node及索引/对齐余量。这是预算而非实测Rust布局；实际size_of、slab rounding、allocator和扩容双代重叠另进manifest指标。
 
 正常策略：先释放确认→到期/次数耗尽→压力下最旧 repair-only shadow。扩容量在控制周期/分页边界完成，不搬移整个活跃 ring。首次发送队列独立；shadow 不够只表示本包可能不能修复，不能制造硬吞吐窗口。多个 lane/client 不各自重复领取全部内存上限。
 

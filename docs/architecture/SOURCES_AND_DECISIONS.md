@@ -34,3 +34,23 @@
 | Actions能力 | [GitHub hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)：平台可用性仍须实际manifest验证，不固定假定所有runner四核同型号 |
 
 本轮不承诺“99%不可识别”、500Mbps已达标、Rust固定倍数收益或普通TLS同等开销。实际协议仍有包级恢复、FEC、复制、TUN与用户态收发成本。优化收益以成本账本和同VM配对证据判断。
+
+## PLAN-002：逐模块细化核对
+
+同一旧SOURCE追加读取 `faketcp/{bootstrap_stream,transition,packet,npcap_send_batch}.go`、`tlsrecord/{keys,suite,decoder}.go`、`realityfront/{admission,policy_v3}.go`、`fec/{fec,fastblock_encoder,fastcodec}.go`。确认：旧steady没有timestamp；HP是8B；旧bootstrap限额不是steady窗口；partial的header parity档与实际发送数不同；Npcap队列返回字节包含16B队列头。上述差异必须写成测试向量，不能由agent凭协议常识填空。
+
+| 模块选择 / 借鉴点 | 核对的一手来源 | 本项目取舍 |
+|---|---|---|
+| 无锁SPSC和唤醒 | [rtrb 0.4.0](https://docs.rs/rtrb/0.4.0/rtrb/)、[Mio Waker](https://docs.rs/mio/latest/mio/struct.Waker.html) | 复用成熟队列；armed二次检查是需Loom验证的本地桥接协议，库安全不自动证明不会漏唤醒 |
+| owner本地时间轮 | [Tokio实现](https://github.com/tokio-rs/tokio/blob/master/tokio/src/runtime/time/wheel/mod.rs) | 借分层/非空桶方法，用索引节点；不照抄unsafe intrusive链表或整套async调度器 |
+| 句柄复用/并发验证 | [slotmap](https://docs.rs/slotmap/latest/slotmap/)、[Loom](https://docs.rs/loom/latest/loom/) | 身份含generation；旧completion无权释放新对象；Loom只测自有并发包装，驱动需另测 |
+| 已发状态与尾探测 | [Quinn packet spaces](https://github.com/quinn-rs/quinn/blob/main/quinn-proto/src/connection/spaces.rs) | 借分离状态与有限尾探测，不迁QUIC新PN重封装/cwnd/stream顺序依赖 |
+| driver临时内存 | [Npcap pcap_next_ex](https://npcap.com/guide/wpcap/pcap_next_ex.html)、[Wintun API](https://git.zx2c4.com/wintun/about/) | 下次读取前owned copy；Release/Send归还借用，quiesce后才关闭session |
+| 批量发送部分成功 | [Npcap sendqueue教程](https://npcap.com/guide/npcap-tutorial.html)、[sendmmsg](https://man7.org/linux/man-pages/man2/sendmmsg.2.html) | 明确prefix/suffix/uncertain，不能把整批成功或失败都猜成一种 |
+| 显式nonce与HP | [aws-lc-rs AEAD](https://docs.rs/aws-lc-rs/latest/aws_lc_rs/aead/index.html) | LessSafeKey用于既定独立nonce；HP用raw AES/ChaCha，不误用QUIC 5B mask |
+
+选型已定；R0锁Cargo/C源码完整版本与target构建证明。以上latest/master链接是本次核对入口，不允许生产下载浮动依赖。SPSC、时间轮、稀疏矩阵都是针对具体成本选择，不声称存在一个适合所有硬件的“数学最快程序”。
+
+本轮自行推导的e×e缺源恢复用`tools/design_models.py`与完整20×20解法、原始数据三方核对。Python模型不依赖ISA-L，因此能检查代数，不能证明Rust unsafe wrapper、旧Go wire一致或真实CPU提速；这些仍在R0/R3实测门。模型SOURCE和Actions结果另留evidence。
+
+明确替代v1的点：receipt没有真实累计前缀；桥接保留未确认bootstrap尾；V4一次性绑定新能力和epoch；元数据96B/slot；PTO反馈等待按10ms而非2ms；重传冻结record/seq而不冻结全部TCP/IP外观字段。历史PLAN-001证据保持原样，不改历史数字冒充当时已采用新模型。

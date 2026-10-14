@@ -40,13 +40,13 @@ class ModelTests(unittest.TestCase):
         self.assertAlmostEqual(m.repair_iid(p)["residual"], residual)
 
     def test_rtt_and_one_way_are_not_interchangeable(self):
-        self.assertEqual(m.timers(150, 5, 2)["cache_ms"], 400)
-        self.assertEqual(m.timers(300, 5, 2)["cache_ms"], 700)
-        self.assertTrue(m.timers(2000, 5, 2)["horizon_capped"])
+        self.assertEqual(m.timers(150, 5, 10)["cache_ms"], 410)
+        self.assertEqual(m.timers(300, 5, 10)["cache_ms"], 710)
+        self.assertTrue(m.timers(2000, 5, 10)["horizon_capped"])
 
     def test_capacity_scale_and_small_packet_memory_limit(self):
-        normal = m.capacity(500, 1200, 300, 700, 1.25, 64, 1536)
-        small = m.capacity(500, 128, 300, 700, 1.25, 64, 256)
+        normal = m.capacity(500, 1200, 300, 710, 1.25, 96, 1536)
+        small = m.capacity(500, 128, 300, 710, 1.25, 96, 256)
         self.assertEqual(normal["slots"], 65536)
         self.assertEqual(small["slots"], 524288)
         self.assertLess(normal["shadow_mib"], 128)

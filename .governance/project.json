@@ -7,11 +7,12 @@
   "product_design": "DESIGN_READY",
   "product_implementation": "NOT_STARTED",
   "architecture_ref": "docs/architecture/README.md",
+  "module_design_ref": "docs/architecture/modules/README.md",
   "product_qualification": "NOT_RUN",
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "按详细方案先做R0共享接口/精确旧版来源/构建产物契约，再正式激活模块；当前只交付方案与治理/模型验证。",
+  "next_decision": "按模块施工说明00/11先做R0共享接口/旧Go向量/平台ABI/构建产物契约，再正式激活模块；本轮仍仅设计与模型验证。",
   "hot_read_set": ["AGENTS.md", "PROJECT_CHARTER.md", ".governance/project.json", ".governance/registry.json", "START_HERE.md"],
   "history_index": "docs/history/INDEX.md"
 }

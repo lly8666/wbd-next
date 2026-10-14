@@ -98,7 +98,9 @@ jobs:
         run: python tools/governance.py audit --role "$WBD_ROLE_ID" > out/continuity.json
       - name: Reproduce design arithmetic (not product qualification)
         id: model
-        run: python tools/cost_model.py > out/cost-model.json
+        run: |
+          python tools/cost_model.py > out/cost-model.json
+          python tools/design_models.py > out/design-model.json
       - name: Record observed results and manifest
         if: always()
         env:

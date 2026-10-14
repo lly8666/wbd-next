@@ -12,6 +12,8 @@ Normal 是一条 lane 的同一引擎。Game 在一个逻辑方向只做一次 L
 
 ## 只按当前任务读取
 
+实施入口是 **[模块施工说明 v2](modules/README.md)**：逐模块的结构、接口、执行顺序和反例门已经细化。该目录对receipt、桥接、KDF/admission、内存与解码的明确修订优先于v1总览；不必一次读完所有模块。
+
 | 文档 | 解决的问题 |
 |---|---|
 | [HOT_PATH.md](HOT_PATH.md) | 模块、所有权、线程、跨语言边界、Normal/Game、FEC/加密选择 |

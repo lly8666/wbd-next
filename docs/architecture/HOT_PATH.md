@@ -1,5 +1,7 @@
 # 引擎与模块设计
 
+实施细节以[模块施工说明v2](modules/README.md)为准。本文保留总览；模块页明确V4协商、bootstrap退休、无漏唤醒队列、e×e缺源解码、96B shadow槽预算和固定密文/动态外观头的区别。
+
 ## 1. 运行边界
 
 一个客户端/服务端进程：原 Go 控制层加载同目录的 Rust `wbd_engine` 动态库；Windows GUI 仍为原 C# 方案。动态库及依赖随 portable 包放在同一目录，不运行时解压到系统目录。Linux 同样使用固定安装目录的库，不另开数据面微服务。
@@ -32,7 +34,7 @@ Go control ↔ 有界命令/快照 ↔ engine
 
 - 正常繁忙 endpoint 从 TX/RX 两个独立 owner 开始；驱动必须阻塞等待时可有专用 I/O waiter。线程数按 endpoint/shard 定，不按 client/lane/FEC block 建线程或异步 task。
 - 同一逻辑 tunnel 的 RX/FEC 保持在一个 owner；多客户端按稳定 hash 分片。每 owner 管自己的 slab、计时器、状态表，避免每包中央 map/锁。
-- 跨 owner 用有界 SPSC 队列；动态多生产者只能在冷入口汇合。只有空→非空唤醒，不每包系统唤醒。队列里携带 handle 和明确释放责任。
+- 跨 owner 用有界 SPSC 队列；动态多生产者只能在冷入口汇合。用armed+二次检查协议合并唤醒，不仅凭empty边沿判断；具体见02，避免消费者睡下时丢失事件。队列携带handle和明确释放责任。
 - 每轮至多处理 32 个已经 ready 的包或约 100µs CPU 工作，然后检查另一类任务。**不等待凑满 batch**，稀疏包立即发；100µs 是待校准公平性参数，不是额外 sleep。
 - RX 必须先交付可独立交付的 systematic，再做恢复计算。FEC 单个 block 的矩阵工作若在目标 ARM 上持续超过预算，使用一个有界编解码工作队列，最多一个该 block 的任务，完成按 generation 校验；不要无证据先引入工作窃取/线程池层层嵌套。
 - 定时器采用 owner 本地的分桶到期表与非空桶索引，按实际 deadline 唤醒。最高精度约 1ms，不给每条 record 建 OS timer，也不每毫秒扫所有空槽。长寿命任务分层分桶。
@@ -63,11 +65,11 @@ FEC 首版继续旧 GF(256) generator 和 56B header，LINK/MTU 语义不趁机�
 
 **FEC 选 Intel ISA-L 的 GF(2^8) erasure-code 子集，Rust 小型 FFI 包装，加标量参照后端。** 旧 Go 已经通过 klauspost/reedsolomon LowLevel/custom matrix 做 SIMD，包括 ARM NEON；这里目标是批量矩阵核、共享 Game 运算、缓存和内存所有权改善，不是第一次 SIMD。ISA-L 接受自定义矩阵，可保留旧 generator。只编译需要的编码文件；固定 upstream tag/commit 和许可证，不引入整个压缩/存储栈。
 
-完整 k20 编码一次 fused call；partial k=1..19 只算 active columns，parity=min(active_k,配置 parity)，已知零尾不误算为丢包。解码只恢复缺失 originals，不重建 parity。预计算各档 tables；每 owner 至多缓存 64 份近期解码矩阵（按 active_k、profile、具体可用行键控），未命中正常计算，不建无界全组合 cache。短 shard/不满足 ISA 函数最小长度的尾部用 scalar 或内部 scratch；scratch padding 不上网。
+完整k20编码一次fused call；partial只算active columns，实际发送parity=min(active_k,配置parity)，header仍记配置档。解码对e个缺源求逆e×e矩阵，再构造直接输出系数，不重建parity；公式/输入顺序见07。每owner至多缓存64份近期矩阵，短shard走标量；没有无界组合cache，scratch padding不上网。
 
 ISA-L 依赖调用者保证长度、别名、指针边界；FFI 一处验证并封装，系统调用错误路径也测试。x86_64 和 ARM64 使用 runtime ISA 分派；Windows x64 构建验证其受支持的 MSVC/汇编路径。无法得到合格向量后端时只能明确 FALLBACK，不能假报 SIMD。见官方 README 的编译要求。
 
-**AEAD 选 aws-lc-rs 非 FIPS 后端**：AES-128-GCM、AES-256-GCM、ChaCha20-Poly1305，独立 record nonce、原地 seal/open、预建 key context。保持旧 KDF/AAD/nonce/HP 的逐字节测试向量。header protection 若主库未暴露所需 raw AES/ChaCha 原语，仅该小部分用 RustCrypto `aes`/`chacha20`；不再堆第二套完整 AEAD。低频 bootstrap TLS 不搬到新密码库。
+**AEAD选aws-lc-rs非FIPS后端**：AES-128-GCM、AES-256-GCM、ChaCha20-Poly1305，显式独立nonce、原地seal/open、预建key。保留旧V3向量作为迁移oracle，V4新admission绑定对应新KDF向量，不能声称key逐字节不变。原AAD/nonce/8B HP格式不改；HP原语用RustCrypto aes/chacha20，不用QUIC的5B HP包装。低频bootstrap TLS不搬到新密码库。
 
 不删除认证/完整性/nonce 不复用来换“性能”；这些同时保护正确性。真正优先删除重复 clone、重复编码、全表扫描、串行等待和多余封装。新增依赖 license/平台支持/portable flags 由 R0 固定，单凭网上 benchmark 不能宣布比旧版本快。
 
