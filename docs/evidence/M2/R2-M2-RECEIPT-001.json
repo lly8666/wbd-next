@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RECEIPT-001",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+  "result": "PASS_SCOPED_R2_NATIVE_WITH_UNRELATED_HISTORICAL_G2_CI_FAILURE",
+  "scope": "Pure authenticated receipt / PN gap, unreported page, duplicate, expiry and bounded frozen-handle repair tests in wbd-recovery only",
+  "validation": {
+    "worker_native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38538225302,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 115766264403,
+      "consume_job_id": 115766379942,
+      "tests_passed": 8,
+      "tests_failed": 0,
+      "filter": "r2_",
+      "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+      "runner": "ubuntu-24.04 x86_64",
+      "compiled_once": true,
+      "binary_sha256": "8b702fd99d67b3ef9138b42a68830fbb42abd6ca6b0866bbe44701b1d45e0f40",
+      "test_log_sha256": "7c44e47740efd4e69434e76500e64e067d985514223104ce7978f14b62daaa15",
+      "build_artifact": {
+        "id": 11880413963,
+        "digest": "sha256:754ff32bee5e34f2be9cd10fea15ef8978e75b1d849c05e77856b68cb03148d9",
+        "expires_at": "2026-11-13T08:52:40Z"
+      },
+      "result_artifact": {
+        "id": 11881450665,
+        "digest": "sha256:eb766769e053e4862b64fef469610766e6bed5464423583d2c82a40f3765b088",
+        "expires_at": "2026-11-13T08:52:49Z"
+      },
+      "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38538225302"
+    },
+    "governance": {
+      "run_id": 38538225279,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 115766264490,
+      "artifact_id": 11880587998,
+      "artifact_digest": "sha256:0620db2eb4cac7a3f267f7d5e5e3a4670ce478dd0f7d9c1cb7b05d3c7614ca4f"
+    },
+    "r0_static_audit": {
+      "run_id": 38538225295,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 11880592956
+    },
+    "g2_historical_scaffold": {
+      "run_id": 38538225378,
+      "attempt": 1,
+      "conclusion": "failure",
+      "build_job_id": 115766265136,
+      "consume_job_id": 115766396506,
+      "actual_full_binary_tests_passed": 9,
+      "actual_full_binary_tests_failed": 0,
+      "failure_reason": "root g2_bootstrap_bundle.py consume requires exactly 1 passed in full crate test binary, now 9 passed",
+      "result_artifact_id": 11881187462,
+      "result_digest": "sha256:ff755c7e52109bd1631612e08df7786813ba3ea9ea4b879cd549f571e44b6a83",
+      "m0_issue": "https://github.com/lly8666/wbd-next/issues/2"
+    }
+  },
+  "tests": [
+    "r2_ack_between_candidate_and_dispatch_cancels_repair",
+    "r2_duplicate_old_report_late_positive_and_serial_wrap_release_once",
+    "r2_hard_expiry_precedes_late_ack_and_releases_once",
+    "r2_bounded_shadow_and_32_candidates_per_tick_failed_send_no_charge",
+    "r2_invalid_bits_scope_and_stale_feedback_cannot_release_or_create_gap",
+    "r2_pn_holes_control_burned_and_unreported_page_never_invent_loss",
+    "r2_queue_timeout_revokes_old_candidate_and_rearms_boundedly",
+    "r2_uncertain_counts_attempts_no_same_evidence_double_retry_original_cipher"
+  ],
+  "interface_escalation": "https://github.com/lly8666/wbd-next/issues/1",
+  "unverified": [
+    "M3 authentication/typed trust boundary adapter",
+    "M1 actual frozen-handle sharing and TX integration",
+    "global 1s budget and large PPS",
+    "engine/platform/socket runtime",
+    "product/performance/physical"
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "production_v4": "DISABLED",
+  "next_action": "M0 review authenticated adapter and historical G2 bootstrap test selector; M2 atom is closed pending integration."
+}
