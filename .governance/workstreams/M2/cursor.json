@@ -4,25 +4,26 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 4,
-  "checkpoint_sha": "9e786cf6c80a055be3a031c6b834a98be626984e",
+  "sequence": 5,
+  "checkpoint_sha": "a33e5f7cac9166fdb45e5db6645d22b610fb0184",
   "progress": "partial",
-  "task_id": "R2-M2-MAIN-SYNC-001",
-  "current_task": "Reviewed M0 main→M2 two-parent merge fully checked and recorded; no budget code yet",
-  "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
-  "done_when": "Exact approved two-parent merge with only M2 paths, main Cargo retained; actual merge-source M2 native/G2/Governance+R0 Actions verified; evidence S/H.",
-  "next_action": "Authorized next separate atom R2-M2-BUDGET-001: pure 1s per-direction F/R/L with sparse 32KiB floor, 10% cap, 8MTU burst, refund and uncertain; no engine/platform/root Cargo changes.",
+  "task_id": "R2-M2-BUDGET-001",
+  "current_task": "R2-M2-BUDGET-001 pure per-direction 1s repair ledger implemented and native-scoped Actions verified; integration remains unqualified",
+  "why_now": "After M0-reviewed worker/main two-parent sync cfc77b9 and 14/14 Actions, M0 decision authorized 1s F/R/L bounded sparse repair budget under M2-only crate paths.",
+  "done_when": "Actual Actions compiled-once R2 fake clock F/R/L budget tests 7 new + 8 existing passing, 8MTU pacer/epoch refund/uncertain/expiry cases, no network/shared-root edits; S+evidence S+cursor-only H.",
+  "next_action": "No new M2 task claimed. M0 owns cross-client shared sparse quota allocation and platform accepted-prefix/wire-byte integration and Go V4 admission binding; review if further task should be assigned.",
   "unverified": true,
-  "last_tested_source": "cfc77b9b21339defb30f4f799b1fe62f37b57772",
+  "last_tested_source": "4f485269b3af4b1aba46cce602a3996a720c8538",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-MAIN-SYNC-001.json"
+    "docs/evidence/M2/R2-M2-BUDGET-001.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-M2-recovery-root-sync.md",
     "docs/architecture/modules/08-RECOVERY.md",
+    "docs/decisions/M0-M2-recovery-root-sync.md",
     "docs/evidence/M2/R2-M2-MAIN-SYNC-001.json",
-    "docs/evidence/M2/R2-M2-RECEIPT-001.json"
+    "docs/evidence/M2/R2-M2-RECEIPT-001.json",
+    "docs/devlog/M2/R2-M2-BUDGET-001.md"
   ],
-  "partial_summary": "Worker HEAD2cd993a first-parent + exact main HEAD35dfef8 second-parent, true merge SOURCE cfc77b9 with only three M2 private changed paths against main; root Cargo.lock/root Cargo.toml/recovery Cargo.toml unchanged. Authenticated M0 ingress SOURCE29ebcb ancestor; all fourteen merge-source Actions SUCCESS including worker-native38558987984 8/8, Governance38558988090, G2 corrected historical filter38558987961, and R0 regressions. Evidence S9e786cf Governance38559486601 SUCCESS; old test failure on old source remains historical FAIL. Cursor H checkpoint to evidence S, product/performance/physical NOT_RUN and Go V4 disabled. Next independent authorized atom budget R2-M2-BUDGET-001. First sync cursor H0cae696 failed Governance38559787614 Validate because evidence_refs combined SOURCE7b02154 and current SOURCEcfc77b9. History remains at old path under context_refs; evidence_refs now only exact cfc SOURCE. Corrected H-only."
+  "partial_summary": "M0-authorized worker sync cfc77b9 from exact M2 HEAD2cd993a + main35dfef8 passed 14/14; sync evidence S9e786cf/H76037765 after correction (first H0cae696 Governance38559787614 failed mixed evidence SOURCE; corrected H Governance38560192366 SUCCESS). Budget code SOURCE4f485269 new budget.rs plus lib mod, M2 owned only. Pure F accepted bytes, R reserve->Accepted/Uncertain debit or NotSent same-epoch refund, 1s max(F/10,32768) non-additive with absolute cap, 8MTU pacer, bounded pending timeout conservative old debt, fake MonoNs, no fresh HOL. Worker-native38561012183 compiled-once 15/15 r2_ (8 old receipt + 7 new budget), Governance38561012060, corrected G2 38561012041, R0 static38561012396 all SUCCESS. Evidence receipt S a33e5f7 Governance38561345272 SUCCESS, this H acknowledges it. Real platform partial/uncertain adapter, process-wide multi-client sparse allocator, real traffic, product/perf/physical NOT_RUN, Go V4 DISABLED. Atomic task closed; next M0 integration decision."
 }
