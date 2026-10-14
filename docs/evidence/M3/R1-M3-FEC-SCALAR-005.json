@@ -205,5 +205,15 @@
     "physical": "NOT_RUN",
     "production_V4": "DISABLED"
   },
-  "next_action": "Next M3 atomic: bounded FEC streaming TX block owner with first source immediate and 32ms absolute flush, profiles/size class/NoCapacity, using real fec_math parity. Next M3 independent RX owner: authenticated streaming immediate delivery, final metadata authority, capped heavy/compact and recovered-only e, tested before M0 FEC-on E2E. SIMD/ISA-L only after oracle and toolchain/FFI gate; M0 owns shared ABI/root Cargo/driver."
+  "next_action": "Next M3 atomic: bounded FEC streaming TX block owner with first source immediate and 32ms absolute flush, profiles/size class/NoCapacity, using real fec_math parity. Next M3 independent RX owner: authenticated streaming immediate delivery, final metadata authority, capped heavy/compact and recovered-only e, tested before M0 FEC-on E2E. SIMD/ISA-L only after oracle and toolchain/FFI gate; M0 owns shared ABI/root Cargo/driver.",
+  "handoff_governance_history": [
+    {
+      "commit_sha": "89863bd7f54432b643e7b4f5a67d84218d479cfc",
+      "run_id": 38562731727,
+      "attempt": 1,
+      "conclusion": "failure",
+      "diagnostic": "ROLE_SCOPE_FAILED: unbounded context_refs; M3 cursor had nine refs while tools/governance.py validate_cursor max_refs=8. Code SOURCE 0215c051 remained native 38/38 and seven same-source Actions SUCCESS; H1 failure is structural and retained.",
+      "remedy": "Evidence-only S2, cursor-only H2 sequence8, cap context_refs at eight. Do not rewrite tested code/source claim."
+    }
+  ]
 }
