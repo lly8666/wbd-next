@@ -4,22 +4,26 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 0,
-  "checkpoint_sha": null,
-  "progress": "planned",
+  "sequence": 1,
+  "checkpoint_sha": "d8c98c89b793265f2430688a298a002be35abe23",
+  "progress": "partial",
   "task_id": "R1-M3-BUDGET-001",
-  "current_task": "R1 single owner FrameBudget and old Go pathmtu oracle",
+  "current_task": "FrameBudget Rust/native passed against pinned old-Go oracle literals; direct original Go pathmtu native job pending M0 workflow ownership",
   "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
   "done_when": "Actions native Rust/old Go oracle with one deduction each, fresh off no extra wire, no upstream duplicate accounting, S+H.",
-  "next_action": "Implement bounded FrameBudget codec module and Go source golden; authenticated three cipher LaneTx/LaneRx comes in next independent M3 atom.",
+  "next_action": "Start next independent M3 atomic for REAL record AEAD Seal/Open + exact 8B HP after M0 coordinates root Cargo/Cargo.lock dependencies; M0 also to run original Go pathmtu package natively if full oracle done_when requires it.",
   "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
-  "open_requests": [],
+  "last_tested_source": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+  "evidence_refs": [
+    "docs/evidence/M3/R1-M3-BUDGET-001.json"
+  ],
+  "open_requests": [
+    "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
+  ],
   "context_refs": [
     "docs/decisions/M0-G2-worker-activation.md",
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "BOOTSTRAP_ONLY at G2; Implement codec/path_budget as ONLY MTU/peer MSS real-header/record31/FEC56/Game16 ledger, with Go pathmtu/budget.go golden and <=/> edges; do not claim AEAD yet. No worker implementation or own Actions results yet. First worker S then cursor-only H needed; until then REMOTE_CONTINUITY=RECOVERY_REQUIRED by design (null checkpoint). No task is authorized outside own allowed_paths. Product/performance/physical NOT_RUN, V4 DISABLED."
+  "partial_summary": "S 85529385→44975170→3aa121e4: unified codec::path_budget and six R1 tests, literal pinned Go pathmtu matrix; no ordinary Normal/fixed-off LINK header. Actual M3 native compiled-once Actions 38538473699 attempt1 PASS 6/6 at exact SOURCE 3aa121e4; six existing R0/G2 plus governance on SOURCE all success. S1 frozen R0 harness counted 19 not 13 despite original tests passing; S2 refactor lacked test imports; S3 fixed. Evidence S d8c98c89 and H checkpoint. Old Go native internal/pathmtu tests NOT_RUN (M0 workflow request). Real AEAD/8B HP/3cipher, integration, product/perf/physical NOT_RUN; no root Cargo, lock or ABI edits."
 }
