@@ -6,6 +6,8 @@
 
 /// R0 opaque TLS-like record structural segmentation (not authentication).
 pub mod record_frame;
+/// Real independent ChaCha AEAD and full eight-byte PN header protection.
+pub mod record_crypto;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
