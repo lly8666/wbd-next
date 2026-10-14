@@ -1,0 +1,94 @@
+name: R0 Go control V4 fail-closed gate
+run-name: "M0|${{ github.sha }}|r0-go-control-v4-gate"
+
+on:
+  push:
+    paths:
+      - "r0/go_overlay/internal/runtimeentry/r0_admission_mode.go"
+      - "r0/go_overlay/internal/runtimeentry/r0_admission_mode_test.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/source-lock.json"
+      - "tools/r0_go_control_patch.py"
+      - "tools/r0_go_control_gate.py"
+      - ".github/workflows/r0-go-control.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-go-control-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Patch exact pinned real Go control callsites and compile four binaries once
+        env:
+          GOTOOLCHAIN: local
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          python tools/r0_go_control_patch.py
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r0-runtime.test" ./internal/runtimeentry
+            go test -c -o "$GITHUB_WORKSPACE/r0-realityfront.test" ./internal/realityfront
+            go build -o "$GITHUB_WORKSPACE/r0-client" ./cmd/wbd-client
+            go build -o "$GITHUB_WORKSPACE/r0-server" ./cmd/wbd-server
+          )
+          python tools/r0_go_control_gate.py pack \
+            --out r0-control-build \
+            --source "$GITHUB_SHA" \
+            --legacy "$(git -C legacy rev-parse HEAD)" \
+            --run-id "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --go "$(go version)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-control-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-control-build/
+          retention-days: 30
+          if-no-files-found: error
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-control-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-control-build
+      - name: Validate four compiled binaries and execute real control gates
+        run: |
+          python tools/r0_go_control_gate.py consume \
+            --manifest r0-control-build/manifest.json \
+            --source "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-control-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-control-out/
+          retention-days: 30
+          if-no-files-found: warn
