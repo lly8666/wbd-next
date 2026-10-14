@@ -87,13 +87,23 @@ def audit():
         c = tomllib.loads(Path(f"crates/{crate}/Cargo.toml").read_text())
         require(c["package"]["name"] == crate, f"crate package mismatch: {crate}")
         deps = set(c.get("dependencies", {}))
-        require(deps <= {"wbd-types"}, f"R0 crate new external/inverted dependency: {crate}")
-        if crate == "wbd-types":
-            require(not deps, "types must be pure")
-        elif crate != "wbd-engine":
-            require(deps == {"wbd-types"}, f"crate dependency mismatch: {crate}")
+        # R1 composition is M0-owned and strictly one-way. Keep every
+        # lower-level crate pure types-only and engine as the sole importer.
+        expected = (set() if crate=="wbd-types" else
+                    {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"}
+                    if crate=="wbd-engine" else {"wbd-types"})
+        require(deps == expected,
+                f"crate {crate} dependency is not the locked one-way R1 graph")
         for k,v in c.get("dependencies", {}).items():
-            require(v.get("path") == "../wbd-types", f"wrong dependency pin: {k}")
+            require(v.get("path") == f"../{k}",
+                    f"wrong internal-only source pin for {crate}->{k}")
+    lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
+    require(lock_deps["wbd-engine"]==
+            {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"},
+            "Cargo.lock lost R1 engine assembly edges")
+    for crate in members - {"wbd-engine"}:
+        require(lock_deps[crate]==(set() if crate=="wbd-types" else {"wbd-types"}),
+                f"Cargo.lock inverted dependency: {crate}")
     require(lock["schema_version"] == m["schema_version"] == 1, "manifest schema mismatch")
     require(lock["phase"] == project["phase"] == "R0_FOUNDATION_IN_PROGRESS", "unexpected phase promotion")
     require(lock["qualification"]["canonical_manifest"] == m["source_lock"].replace("source-lock.json","qualification-manifest.json") ==

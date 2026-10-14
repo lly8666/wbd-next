@@ -13,6 +13,9 @@ dependencies = [
 name = "wbd-engine"
 version = "0.1.0"
 dependencies = [
+ "wbd-codec",
+ "wbd-platform",
+ "wbd-recovery",
  "wbd-types",
 ]
 

@@ -37,6 +37,17 @@
       "wbd-platform": "R0_FAKE_IO_CONTRACT_ONLY",
       "wbd-engine": "R0_ABI_SENTINEL_ONLY_FEATURES_ZERO",
       "wbd-recovery": "R1_R2_WORKER_BOOTSTRAP_API_ONLY_RECOVERY_NOT_IMPLEMENTED"
+    },
+    "engine_assembly_edges": {
+      "role": "M0_INTEGRATION_ONLY",
+      "allowed_from_engine": [
+        "wbd-types",
+        "wbd-codec",
+        "wbd-platform",
+        "wbd-recovery"
+      ],
+      "lower_crate_reverse_dependencies": "FORBIDDEN",
+      "behavior": "R1_COMPILE_ONLY_NO_REAL_NORMAL_FEC_OFF_RUST_BUSINESS_PATH"
     }
   },
   "qualification": {
@@ -55,5 +66,5 @@
     "performance": "NOT_RUN",
     "physical": "NOT_RUN"
   },
-  "change_note": "Five-crate workspace includes unqualified R1/R2 recovery pure types scaffold; historic R0 gate SOURCEs unchanged. Never infer recovered packets or product V4 from crate presence."
+  "change_note": "M0 R1-only one-way workspace dependency wiring for future Normal/FEC-off integration; R0 ABI sentinel features=0 and historical 10 evidence gates remain scoped to their original SOURCEs, no real engine/admission qualification."
 }
