@@ -41,6 +41,7 @@ jobs:
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           parts=['crates/wbd-engine/src/runtime/wake.rs',
                  'crates/wbd-engine/src/runtime/mod.rs',
+                 'crates/wbd-engine/src/runtime/parity.rs',
                  'crates/wbd-engine/src/memory/mod.rs',
                  'crates/wbd-engine/src/lib.rs','Cargo.lock']
           m={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
@@ -48,7 +49,7 @@ jobs:
              'target':'x86_64-unknown-linux-gnu',
              'binary_sha256':sha('r1-wake-build/owner.test'),
              'inputs':{p:sha(p) for p in parts},
-             'scope':'M1_REAL_BOUNDED_STD_PARK_UNPARK_RETURN_STOP_NATIVE_R01_R02_M01'}
+             'scope':'M1_BOUNDED_PARITY_ABSOLUTE_WAKE_FRESH_REPAIR_STOP_NATIVE_R01_R02_M01'}
           pathlib.Path('r1-wake-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           print(json.dumps(m,indent=2))
           PY
@@ -69,7 +70,7 @@ jobs:
         with:
           name: r1-wake-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-wake-build
-      - name: Verify binary+source and run all 19 real R1 owner tests
+      - name: Verify binary+source and run all 29 real R1 owner tests
         shell: bash
         run: |
           set -euo pipefail
@@ -105,13 +106,17 @@ jobs:
                     'r1_wake_stop_with_full_return_backlog_and_last_frozen_loan_m01',
                     'r1_wake_stop_during_inflight_publish_never_returns_false_quiesce_r02',
                     'r1_wake_return_after_park_wakes_stopped_owner_m01',
-                    'r1_wake_fake_monotonic_deadline_recheck_r02']
-          ok=(int(os.environ['TEST_EXIT'])==0 and count==19 and len(names)==19
-              and len(set(names))==19 and all(x in names for x in expected))
+                    'r1_wake_fake_monotonic_deadline_recheck_r02',
+                    'r1_parity_first_fresh_before_32ms_fec_due_and_no_early_wake',
+                    'r1_parity_only_absolute_fake_deadline_wakes_parked_owner',
+                    'r1_parity_bounded_repair_parity_fairness_under_continuous_fresh',
+                    'r1_parity_stop_full_three_classes_and_frozen_return_race']
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==29 and len(names)==29
+              and len(set(names))==29 and all(x in names for x in expected))
           record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
                   'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
-                  'scope':'M1_REAL_STD_OWNER_WAKE_STOP_R01_R02_M01_NATIVE',
+                  'scope':'M1_PARITY_BOUNDED_WAKE_STOP_FAIRNESS_R01_R02_M01_NATIVE',
                   'not_qualified':'RTRB_SPSC;LOOM;EVENTFD;REAL_RAW_DRIVER;GO_V4;PRODUCT;PERFORMANCE;PHYSICAL'}
           pathlib.Path('r1-wake-result/result.json').write_text(json.dumps(record,indent=2)+'\n')
           print(json.dumps(record,indent=2))

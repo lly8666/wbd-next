@@ -240,3 +240,83 @@ fn r1_m0_fec_on_missing_real_rs20_source_recovers_only_once(){
  assert_eq!(ta.stop().loaned,0);assert!(ta.quiesced());
  assert_eq!(ra.stop().loaned,0);assert!(ra.quiesced());
 }
+
+// M0 SOURCE-composed R01/R02/F01: genuine generated parity is sealed once,
+// parked in M1's bounded parity-only READY queue and emitted as M4 full
+// IPv4/TCP only at an absolute MonoNs deadline. Systematic never waits.
+#[test]
+fn r1_m0_authenticated_fec_parity_ready_deadline_no_fresh_hol(){
+ let b=budget();
+ let mut ftx=FecTxOwner::new(1,4096).unwrap();
+ let source=ftx.submit(b"FIRST",0,4,b.max_fec_wire_datagram(),false).unwrap();
+ assert_eq!(source.systematic.len(),1);
+ assert!(ftx.flush_due(31).unwrap().parity.is_empty());
+ let parity=ftx.flush_due(32).unwrap().parity;
+ assert!(!parity.is_empty());
+ assert_eq!(inspect_fec_header(&parity[0]).unwrap().block_id,1);
+ let mut ta=Arena::new(311,8,256,1,80_000).unwrap();
+ let mut ra=Arena::new(312,8,256,1,80_000).unwrap();
+ let mut tx=LaneTxCrypto::new(keys(),b.record_wire_mtu).unwrap();
+ let mut rx=ReplayProtectedLaneRx::new(keys(),b.record_wire_mtu,replay_config()).unwrap();
+ let mut owner=TxOwner::with_parity(limits(),limits(),
+   QueueLimits{slots:2,bytes:512,max_age_ns:100_000_000}).unwrap();
+ let mut ro=RxOwner::new(limits()).unwrap();
+ let mut fec=fec_rx(&b);
+ let mut ids=scoped_ids();
+ let mut sink=Sink::default();
+ // Source PN0 sent before any parity-ready enqueue or 32ms FEC flush.
+ assert_eq!(send(&mut ta,&mut tx,&mut owner,&mut sink,
+   &source.systematic[0],0),0);
+ let received=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,
+   &sink.frames[0],1,0);
+ assert_eq!(received.systematic,vec![(0,b"FIRST".to_vec())]);
+ // M3 produced real final parity at 32ms; M1 is independently allowed
+ // to defer an immutable, already-sealed record until the exact 33ms due.
+ let shard=&parity[0];
+ assert!(shard.len()+FIXED_WIRE_OVERHEAD<=256);
+ let mut unique=ta.allocate().unwrap();
+ unique.writable()[14..14+shard.len()].copy_from_slice(shard);
+ let (parity_pn,wire_len)=tx.seal_in_place(
+   AUTHENTICATED_LINK_KIND,unique.writable(),shard.len(),0).unwrap();
+ assert_eq!(parity_pn,1);
+ let frozen=unique.freeze(0..wire_len,FrozenMetadata{
+   lane:lane(),pn:RecordPn(parity_pn),seq:SeqOffset(parity_pn),carrier_snapshot:4
+ }).unwrap();
+ let orig=frozen.bytes().to_vec();
+ owner.offer_parity(frozen,MonoNs(32_000_000),MonoNs(33_000_000)).unwrap();
+ assert_eq!(owner.parity_state(),(1,orig.len(),0));
+ assert_eq!(owner.parity_deadline(MonoNs(32_000_000)),Some(MonoNs(33_000_000)));
+ assert!(owner.next_ready(MonoNs(32_999_999)).is_none());
+ // New systematic from next block may progress while parity is NOT due:
+ // the old block's deferred FEC is never a fresh packet gate.
+ let second=ftx.submit(b"NEXT",32,4,b.max_fec_wire_datagram(),false).unwrap();
+ assert_eq!(second.systematic.len(),1);
+ assert_eq!(send(&mut ta,&mut tx,&mut owner,&mut sink,
+   &second.systematic[0],32_500_000),2);
+ assert_eq!(owner.parity_state().0,1);
+ assert_eq!(owner.parity_deadline(MonoNs(32_999_999)),Some(MonoNs(33_000_000)));
+ assert!(owner.next_ready(MonoNs(32_999_999)).is_none());
+ let ready=owner.next_ready(MonoNs(33_000_000)).unwrap();
+ assert_eq!(ready.kind,TxKind::Parity);
+ assert_eq!(ready.record.metadata().pn,RecordPn(parity_pn));
+ assert_eq!(ready.record.bytes(),orig);
+ let mut bytes=[0u8;576];
+ let outer=build(tuple(),presentation(parity_pn),&ready.record,None,
+   b.effective_packet_mtu,&mut bytes).unwrap();
+ check_outer(outer,&orig,parity_pn as u32);
+ assert_eq!(sink.try_send(outer).unwrap(),outer.len());
+ assert_eq!(sink.frames.len(),3);
+ drop(ready);assert_eq!(ta.drain_returns(),1);
+ assert_eq!(owner.parity_state().0,0);
+ // Out-of-order PN1 still authenticates after PN0, then the identical
+ // block ID is observed after authentication and never redelivers FIRST.
+ let p=receive(&mut ra,&mut ro,&mut rx,&mut fec,&mut ids,
+   &sink.frames[2],33_000_001,1);
+ assert!(p.systematic.is_empty()&&p.recovered.is_empty());
+ assert_eq!(fec.stats().systematic,1);
+ assert_eq!(ids.stats().distinct_accepted,1);
+ assert_eq!(ids.stats().duplicates,1);
+ assert_eq!(owner.stop(),0);assert_eq!(ro.stop(),0);
+ assert_eq!(ta.stop().loaned,0);assert!(ta.quiesced());
+ assert_eq!(ra.stop().loaned,0);assert!(ra.quiesced());
+}
