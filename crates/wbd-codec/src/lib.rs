@@ -6,6 +6,8 @@
 
 /// R0 opaque TLS-like record structural segmentation (not authentication).
 pub mod record_frame;
+/// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
+pub mod link_fec_wire;
 
 use wbd_types::LogicalPacketId;
 

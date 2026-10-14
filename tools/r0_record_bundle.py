@@ -20,6 +20,7 @@ INPUTS = (
     "crates/wbd-types/src/lib.rs",
     "crates/wbd-codec/Cargo.toml", "crates/wbd-codec/src/lib.rs",
     "crates/wbd-codec/src/record_frame.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs", "r0/fixtures/legacy-link-fec-wire-v1.txt",
     "r0/fixtures/legacy-record-wire-v1.txt",
     "r0/go_overlay/internal/tlsrecord/r0_record_wire_oracle_test.go",
     "r0/source-lock.json",

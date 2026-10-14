@@ -20,7 +20,8 @@ INPUTS = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
     "crates/wbd-types/src/lib.rs",
     "crates/wbd-codec/Cargo.toml", "crates/wbd-codec/src/lib.rs",
-    "crates/wbd-codec/src/record_frame.rs", "r0/fixtures/legacy-record-wire-v1.txt",
+    "crates/wbd-codec/src/record_frame.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs", "r0/fixtures/legacy-link-fec-wire-v1.txt", "r0/fixtures/legacy-record-wire-v1.txt",
     "r0/source-lock.json", "tools/r0_codec_bundle.py",
     ".github/workflows/r0-codec.yml",
 )
