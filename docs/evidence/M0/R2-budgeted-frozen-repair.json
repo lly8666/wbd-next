@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-BUDGET-REPAIR-001",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "f8b2dcd3549e28905ac9d86e0d3750a6de54d594",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "R2_NATIVE_LINUX_X64_IN_PROCESS_BUDGETED_FROZEN_REPAIR_M1_M2_M4_NO_REAL_RAW_NETWORK",
+  "preflight": {
+    "main_start_head": "a080ac15f63b0b0f7c112c6721b1898c625d9c54",
+    "m0_sequence": 31,
+    "previous_checkpoint_sha": "3026b22a12f7c57d3495e06c31ec706c8aa37ba2",
+    "checkpoint_to_head": "ONE_CURSOR_ONLY_H",
+    "previous_M0_governance_run": 38565106862,
+    "continuity": "CLEAN",
+    "registry_revision": 2,
+    "epoch": 1,
+    "m2_head_at_source": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "m2_owner_seq": 5,
+    "m2_owned_budget_source": "4f485269b3af4b1aba46cce602a3996a720c8538",
+    "m2_native_source_run": 38561012183,
+    "m2_native_tests": "15/15 PASS",
+    "m2_final_H_governance_run": 38561581854
+  },
+  "source_changes": {
+    "main_source": "f8b2dcd3549e28905ac9d86e0d3750a6de54d594",
+    "files": [
+      "crates/wbd-recovery/src/budget.rs",
+      "crates/wbd-recovery/src/lib.rs",
+      "crates/wbd-engine/src/recovery_ingress.rs",
+      "crates/wbd-engine/tests/r2_receipt_ingress.rs",
+      ".github/workflows/r2-auth-receipt.yml",
+      ".github/workflows/r2-pure-budget-native.yml",
+      "docs/devlog/M0/R2-budgeted-frozen-repair.md"
+    ],
+    "worker_budget_source_imported_byte_for_byte": true,
+    "worker_refs_changed_by_M0": false,
+    "unbudgeted_submit_repair_once_overload": "NONE",
+    "real_non_default_carrier": "FAIL_CLOSED_NOT_CONNECTED"
+  },
+  "asserted_truths": [
+    "M2 pure per-direction one second F/R/L cap formula max(F/10,32768), not additive, retains absolute and pending bounds, has 8 MTU token pacer",
+    "M0 repair preflight and budget reserve precede M4 ready-only call; rejected reserve cannot reach syscall",
+    "budget wire debit in this model equals immutable sealed record size plus fixed 20 byte IPv4 and 20 byte TCP; no CLI options or native driver integrated",
+    "Accepted debits quota; EAGAIN definite NotSent refunds original epoch; short send Uncertain retains debit; unknown outcome never refunds",
+    "syscall accepted result does not release shadow or count as authenticated peer receipt",
+    "M1 old frozen PN, seq and ciphertext reused unchanged; no new Seal or PN, M4 sink readonly during submit",
+    "M2 pure 1s source native tests prove sparse floor, 10 percent integer cap, epoch rollover, uncertain timeout debit and max burst under fake clock; M0 test proved exact cross crate invocation only"
+  ],
+  "integrated_native": {
+    "workflow": ".github/workflows/r2-auth-receipt.yml",
+    "run_id": 38566091472,
+    "run_attempt": 1,
+    "result": "PASS",
+    "runner": "ubuntu-24.04 linux x64",
+    "toolchain": "Rust1.85.1",
+    "compiled_once": true,
+    "tests_passed": 8,
+    "tests_failed": 0,
+    "build_job": 115859023842,
+    "consumer_job": 115859486610,
+    "binary_sha256": "d0bc836376a50ad51d47734036da19e904e19105ff1ec4d10d0b9dafed9d0c6d",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "log_sha256": "42635487fab43bb9181276d6858a1fa7d2d15cfa22b7731e8e3c4cad2a7ea5ea",
+    "build_artifact": {
+      "id": 11896370286,
+      "digest": "sha256:4ff1466554956bffd5d20199d07aabec96e3d4ca9d7c48860a2482bce5da7868"
+    },
+    "result_artifact": {
+      "id": 11896610174,
+      "digest": "sha256:a7a7027deb35df3f179859d5acb219ec81cde461886d9d06fc0e1fd27439a9ee"
+    }
+  },
+  "imported_M2_pure_native": {
+    "workflow": ".github/workflows/r2-pure-budget-native.yml",
+    "run_id": 38566091400,
+    "run_attempt": 1,
+    "result": "PASS",
+    "runner": "ubuntu-24.04 linux x64",
+    "toolchain": "Rust1.85.1",
+    "compiled_once": true,
+    "tests_passed": 15,
+    "tests_failed": 0,
+    "build_job": 115859022927,
+    "consumer_job": 115859151426,
+    "binary_sha256": "ae2ad31b1b83bf538ef3ef4b7535662d1ab8590a15764a42541b059c2bb8cbad",
+    "log_sha256": "e7121284ca30957db51d2c4c64025a31f03b490d6073df84b46e68516a2f623f",
+    "build_artifact": {
+      "id": 11895136654,
+      "digest": "sha256:4667d2c55bc20afc5badc1cff5703a2efe3aadcadb0dd3487c6fcb8143bf20a7"
+    },
+    "result_artifact": {
+      "id": 11896235183,
+      "digest": "sha256:2d5ad0f34cac3cacf281d5f19f7a842bee99d2601414674bdea13096689c99de"
+    }
+  },
+  "same_source_actions": {
+    "source": "f8b2dcd3549e28905ac9d86e0d3750a6de54d594",
+    "triggered": 8,
+    "success": 8,
+    "runs": [
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38566091348,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance",
+        "run_id": 38566091463,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r2-pure-budget-native",
+        "run_id": 38566091400,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38566091280,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run_id": 38566091472,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r1-normal-off-replay",
+        "run_id": 38566091532,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38566091530,
+        "run_attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38566091572,
+        "run_attempt": 1,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "cross_target": {
+    "run_id": 38566091572,
+    "job_outcomes": [
+      {
+        "id": 115859022561,
+        "name": "build (x86_64-pc-windows-gnu, x86_64-w64-mingw32-gcc, gcc-mingw-w64-x86-64 nasm, binutils-mingw-w...",
+        "conclusion": "success"
+      },
+      {
+        "id": 115859023131,
+        "name": "build (aarch64-unknown-linux-gnu, aarch64-linux-gnu-gcc, gcc-aarch64-linux-gnu libc6-dev-arm64-cr...",
+        "conclusion": "success"
+      },
+      {
+        "id": 115859571761,
+        "name": "consume (x86_64-pc-windows-gnu, binutils-mingw-w64-x86-64)",
+        "conclusion": "success"
+      },
+      {
+        "id": 115859571839,
+        "name": "consume (aarch64-unknown-linux-gnu, binutils-aarch64-linux-gnu)",
+        "conclusion": "success"
+      }
+    ],
+    "cross_build": "PASS",
+    "cross_target_native_execution": "NOT_RUN"
+  },
+  "concurrent_worker_heads_observed": {
+    "M1": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+    "M2": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "M3": "5bdb3c0021ff99f951073c283b5d75f947e51ad0",
+    "M4": "46a38c07016e55dead72ed3cbf1b954890412b15"
+  },
+  "not_qualified": {
+    "real_carrier_ipv4_tcp_bytes": "NOT_RUN",
+    "live_Go_V4_auth_session_exporter": "NOT_RUN",
+    "process_wide_multi_client_sparse_quota": "NOT_RUN",
+    "actual_kernel_sendmmsg_partial": "NOT_RUN",
+    "native_Windows_Arm": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "M0 next first check worker M4 new R1-M4-IPV4-TCP-READY-002 actual source and main vs worker, then replace test-only fixed IPv4/TCP 40B carrier estimate with authenticated validated M4 actual envelope wire total from its native-qualified bytes, keeping same borrowed frozen PN/seq. Also need process-wide sparse quota separate atom and Go V4 session binding; do not treat in-process PASS as production."
+}
