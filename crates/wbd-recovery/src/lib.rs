@@ -4,6 +4,11 @@
 pub use wbd_types::{LaneKey, MonoNs, RecordPn};
 pub mod receipt;
 pub mod budget;
+pub mod global_sparse;
+pub use global_sparse::{
+    GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError, GlobalRepairSnapshot,
+    GlobalReservationId, GrantId, GrantLease,
+};
 pub use budget::{
     BudgetDirection, BudgetError, BudgetSnapshot, RepairBudget, RepairBudgetConfig,
     ReservationId, WireDirection,
