@@ -261,9 +261,13 @@ class RepositoryDrills(unittest.TestCase):
         with self.assertRaises(g.ContractError):
             g.validate_repo(self.root)
 
-    def test_unassigned_product_code_rejected(self):
-        (self.root / "src").mkdir()
-        with self.assertRaises(g.ContractError):
+    def test_product_code_rejected_when_phase_not_started(self):
+        # Restore pre-R0 phase in an isolated fixture: the copied Cargo/crates
+        # must then be rejected. This prevents the guard from silently weakening
+        # when R0 legitimately begins on main.
+        self.mutate(".governance/project.json",
+                    lambda value: value.update(product_implementation="NOT_STARTED"))
+        with self.assertRaisesRegex(g.ContractError, "product development not assigned"):
             g.validate_repo(self.root)
 
     def test_verified_claim_without_evidence_rejected(self):
