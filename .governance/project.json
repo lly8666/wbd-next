@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0 native ABI probe in Actions directly called Rust 1.85.1 cdylib via C and pinned old Go1.23.12 cgo: SOURCE b719f28, run38514286818 attempt1 Linux x64, Rust 3/C 1/Go 4 tests PASS, version/size/stale/opaque/generation/error/close; exported features=0, no real engine. 下一原子任务先做 R0 fake clock + fake platform driver 的 send prefix/uncertain/lease-close 反例与编译产物消费；Windows/ARM ABI及真实V4业务仍NOT_RUN，M1–M4 reserved。",
+  "next_decision": "R0 wbd-platform fake TxDriver/MonoClock/borrow-fence：SOURCE 1f1f8e9, Actions run38516057707 attempt1 Rust 7/7 PASS，build/consume源码+二进制hash确认；同SHA原生Go-C-Rust ABI 38516057635、Rust types 38516057741、Governance38516057624均成功。纯内存测试/非真实OS网络/不构成完整R0或产品资格。下一原子任务做Windows x64与Linux ARM64的跨目标 ABI/layout/build gate，严格标注cross不是native；M1–M4 reserved、生产V4 DISABLED。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

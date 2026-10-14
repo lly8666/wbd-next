@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "FAKE_CLOCK_PLATFORM_DRIVER_SEND_AND_CLOSE",
+  "source_sha": "1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2",
+  "phase": "R0_FOUNDATION_IN_PROGRESS",
+  "result": "PASS",
+  "scope": "R0 Rust wbd-platform intra-language deterministic fake TxDriver/MonoClock test and BorrowFence; native Linux amd64 Actions binary execution; NOT native OS I/O",
+  "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "workflow": ".github/workflows/r0-platform-fake.yml",
+  "run_id": 38516057707,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38516057707",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115695007988,
+  "consumer_job_id": 115695101127,
+  "build_artifact": {
+    "id": 11872072639,
+    "name": "r0-platform-fake-build-38516057707-1",
+    "bytes": 488959,
+    "zip_digest": "sha256:3c9455177db7755748aed83714ffbe410f58a760a496fb763aac33fde054d19d"
+  },
+  "result_artifact": {
+    "id": 11872227435,
+    "name": "r0-platform-fake-result-38516057707-1",
+    "bytes": 1235,
+    "zip_digest": "sha256:edcef246e0edefe741044129dfda0da88138a2686b0d6fb3595c551c4975017c"
+  },
+  "test_binary_sha256": "0555ab255bf701e535689dc8ec8fef37f1c1ef8b9ac0aec9e9b5e16411aac422",
+  "precompiled_consumption": "build compiled once and made SHA256/size/source manifest; independent consume job verified binary and exact Rust SOURCE hash before running. Result archive hash is GitHub provided and ZIP was not separately downloaded for independent verification.",
+  "tests": {
+    "passed": 7,
+    "failed": 0,
+    "exit_code": 0,
+    "names": [
+      "r0_i01_prefix_partial_uncertain_does_not_count_as_ack",
+      "r0_i01_zero_prefix_failure_does_not_block_fresh",
+      "r0_c01_failed_seal_burns_pn_and_u64_never_wraps",
+      "r0_i01_invalid_driver_accounting_is_fail_closed",
+      "r0_b01_stop_waits_for_driver_borrow_and_rejects_new_loans",
+      "r0_b01_fake_driver_returns_while_holding_a_live_loan",
+      "r0_r01_injected_fake_clock_saturates_and_never_uses_wall_time"
+    ]
+  },
+  "tested_claims": [
+    "I01 driver accepted_prefix=2, uncertain_index=2 preserves 2 syscall-accepted/1 uncertain/1 not-attempted, no receiver ACK inferred",
+    "I01 zero accepted prefix with WouldBlock does not gate independent later fresh frame; all PN remain unique",
+    "C01 seal failure consumes reserved PN and u64::MAX exhaustion fails closed rather than wrapping",
+    "I01 malformed contradictory TxBatchOutcome rejects all caller-side count changes",
+    "B01 begin_stop blocks new driver loans; wait_drained completes only after existing loan releases; immutable byte allocation remains alive after owner drop",
+    "B01 fake driver returns uncertain send while still holding KernelLoan and old owner dropping cannot free bytes",
+    "R01 injected MonoNs clock tests before/due boundary and overflow without wall clock"
+  ],
+  "same_source_regressions": [
+    {
+      "workflow": ".github/workflows/r0-native-abi.yml",
+      "run_id": 38516057635,
+      "conclusion": "success",
+      "build_job_id": 115695007716,
+      "consume_job_id": 115695202061,
+      "build_artifact_id": 11871209411,
+      "result_artifact_id": 11872340506,
+      "build_zip_sha256": "03aa53cd79c2705c348174c12f708d5c546fa65f11aa8d701e5b2887b9eb36c4",
+      "result_zip_sha256": "0f538a452b9e53e754334090901444b04b6b4b4ce77defec1531af19b6cb551d",
+      "scope": "native Rust C pinned Go ABI sentinel unaffected; separate test job"
+    },
+    {
+      "workflow": ".github/workflows/r0-build.yml",
+      "run_id": 38516057741,
+      "conclusion": "success",
+      "build_job_id": 115695008123,
+      "consume_job_id": 115695088421,
+      "build_artifact_id": 11871946622,
+      "result_artifact_id": 11872282084,
+      "scope": "Rust shared type regression"
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38516057624,
+      "conclusion": "success",
+      "job_id": 115695007659,
+      "scope": "governance/design only"
+    }
+  ],
+  "not_qualified": {
+    "actual_rust_engine": "NOT_IMPLEMENTED",
+    "production_v4": "DISABLED_FEATURES_ZERO",
+    "physical_platform_driver": "NOT_IMPLEMENTED",
+    "native_syscall_prefix_partial": "NOT_RUN",
+    "native_kernel_loan_close": "NOT_RUN",
+    "real_AEAD_seal": "NOT_RUN",
+    "native_GO_C_RUST_in_this_subtask": "OUT_OF_SCOPE_REGRESSION_SEPARATE",
+    "Windows_x64": "NOT_RUN",
+    "Linux_ARM64": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "在 GitHub Actions 锁定Rust/C与Go工具链，以 Windows x64 和 Linux ARM64 进行真实跨目标产物构建与 ABI C struct layout 验证；分别记录是 cross-build 或 native，并对无法执行的目标明确标记 NOT_RUN；生产V4继续禁用、M1–M4 reserved。"
+}
