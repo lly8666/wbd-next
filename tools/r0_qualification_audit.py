@@ -22,6 +22,7 @@ EXPECTED_GATES = {
     "R0-FAKE-PLATFORM": "PASS",
     "R0-CROSS-ABI": "CROSS_BUILD_PASS",
     "R0-WIRE-CODEC": "PASS",
+    "R0-RECORD-FRAMING": "PASS",
 }
 ALLOWED_MODES = {
     "NATIVE_LINUX_X64_TEST",
@@ -32,6 +33,7 @@ ALLOWED_MODES = {
     "NATIVE_LINUX_X64_RUST_FAKE_DRIVER",
     "CROSS_BUILD_ONLY_NO_TARGET_EXECUTION",
     "NATIVE_LINUX_X64_RUST_WIRE_ONLY",
+    "NATIVE_OLD_GO_SEAL_OPEN_AND_RUST_OPAQUE_FRAME",
 }
 EXPECTED_IDS = {
     f"{prefix}{n:02d}"
@@ -149,6 +151,22 @@ def audit():
         source=Path(g["actual_file"]).read_text()
         for anchor in g["require_anchor"]:
             require(anchor in source,f"{gate} code test anchor missing: {anchor}")
+        if gate=="R0-RECORD-FRAMING":
+            go_oracle=Path("r0/go_overlay/internal/tlsrecord/r0_record_wire_oracle_test.go").read_text()
+            fixture=Path("r0/fixtures/legacy-record-wire-v1.txt").read_text()
+            for go_test in (
+                "TestR0RecordRealPinnedGoSealAndOpenSixFixtures",
+                "TestR0RecordRealGoLengthFailClosedWithoutMagicScan",
+            ):
+                require(go_test in go_oracle,f"pinned Go oracle entrypoint missing: {go_test}")
+            require(sum(1 for line in fixture.splitlines() if line and not line.startswith("#"))==6,
+                    "six locked Go encrypted wire fixtures missing")
+            require(ev["original_go_oracle"]["top_level_passed"]==2 and
+                    ev["rust_opaque_frame"]["passed"]==6,
+                    "Go real cipher/Rust structural framing test counts overclaimed")
+            require(ev["not_qualified"]["rust_aead"]=="NOT_IMPLEMENTED" and
+                    ev["not_qualified"]["rust_hp"]=="NOT_IMPLEMENTED",
+                    "structural probe falsely claimed real Rust crypto")
         gate_sources[gate]=g["source_sha"]
         evidence_hashes[gate]=sha256(p)
     coverage=m["case_coverage"]

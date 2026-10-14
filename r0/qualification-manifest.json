@@ -166,6 +166,25 @@
       "run_id": 38519636181,
       "run_attempt": 1,
       "workflow": ".github/workflows/r0-codec.yml"
+    },
+    {
+      "gate": "R0-RECORD-FRAMING",
+      "evidence": "docs/evidence/M0/R0-record-framing.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "NATIVE_OLD_GO_SEAL_OPEN_AND_RUST_OPAQUE_FRAME",
+      "scope": "Six pinned-original-Go actual AEAD Seal/Open wire goldens and Rust structural opaque frame offsets/lengths; no Rust AEAD/HP, PN/kind or product",
+      "actual_file": "crates/wbd-codec/src/record_frame.rs",
+      "require_anchor": [
+        "r0_record_pinned_go_six_real_wire_oracles_have_exact_offsets",
+        "r0_record_zero_to_minimum_and_all_truncated_prefixes_fail_closed",
+        "r0_record_hp_sample_can_overlap_tag_of_short_record",
+        "r0_record_kind_is_encrypted_not_a_wire_field_and_pn_is_masked"
+      ],
+      "source_sha": "e2fa27f2a912da60155f7fffceaab906fb52abe0",
+      "run_id": 38523394776,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-record-framing.yml"
     }
   ],
   "case_coverage": [
@@ -420,12 +439,13 @@
       "Rust fake-clock/TxBatchOutcome/KernelLoan fake driver",
       "Windows x64 & Linux ARM64 cross-target C ABI layout/link only",
       "Rust WBC4/WBG4 strict wire encoding/decoding fixtures",
-      "Actions compiled once with separate consumers and SHA input/binary checks"
+      "Actions compiled once with separate consumers and SHA input/binary checks",
+      "Pinned old Go actual encrypted tlsrecord record Seal/Open six oracle vectors + Rust opaque 5B header/8B protected PN/framing HP sample/length. Rust authenticated AEAD and HP remain NOT_IMPLEMENTED."
     ],
     "blockers": [
       {
         "key": "R0-WIRE-RECORD",
-        "why": "Real Rust record seal/open including three ciphers, PN/header protection, short sample, old wire golden not implemented; codec currently only WBC4/WBG4 control/payload wrappers"
+        "why": "Rust opaque outer record framing now tested against actual pinned Go six encrypted wire oracles; real Rust three-cipher record seal/open/AEAD/header-protection/PN+kind authenticated dispatch still NOT_IMPLEMENTED."
       },
       {
         "key": "R0-LINK-FEC-BOUNDARIES",
@@ -449,6 +469,6 @@
       }
     ]
   },
-  "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only.",
+  "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only. Original-Go real record witness plus Rust opaque structural framing is recorded as R0-RECORD-FRAMING; it does not upgrade full C01–C04.",
   "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run."
 }

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "PINNED_LEGACY_GO_ACTUAL_RECORD_WIRE_AND_RUST_OPAQUE_FRAMING",
+  "source_sha": "e2fa27f2a912da60155f7fffceaab906fb52abe0",
+  "result": "PASS",
+  "scope": "Original pinned Go native tlsrecord Seal/Open validated six canonical encrypted wire goldens; Rust wbd-codec structural opaque frame only. DOES NOT execute Rust AEAD, header protection, unauthenticated PN or kind dispatch.",
+  "legacy_repo": "lly8666/wobuzhidao",
+  "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "rust_compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "go_compiler": "go1.23.12",
+  "target": "x86_64-unknown-linux-gnu",
+  "workflow": ".github/workflows/r0-record-framing.yml",
+  "run_id": 38523394776,
+  "run_attempt": 1,
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38523394776",
+  "build_job_id": 115718053277,
+  "consumer_job_id": 115718227079,
+  "build_artifact": {
+    "id": 11874747579,
+    "name": "r0-record-build-38523394776-1",
+    "size_bytes": 3666391,
+    "zip_sha256": "b7e4503b9a12d55c41e9a0d552a1daca16c46336ed822804f9e119d63b8a9ecc"
+  },
+  "result_artifact": {
+    "id": 11875091493,
+    "name": "r0-record-result-38523394776-1",
+    "size_bytes": 1671,
+    "zip_sha256": "f810adf402c49067c21070c0d69fd57b72150432983688821abd2077914af01a"
+  },
+  "rust_binary_sha256": "c746f376949fb2069239326f30f6fe13bd78fac2e190fc322dc99a6f1d7daf72",
+  "go_binary_sha256": "8db80d82bbd31c1a06090e6a3af5d62aa27cc09b553f349c80925a4aae3bf81f",
+  "rust_log_sha256": "a665b6816022f510e68011067db0c7bf2f2c94cb2e51fcdaf18cb9044f5caf24",
+  "go_log_sha256": "d39dce52143ec300c9f5ded286a8c3a32d983f4d883e88042ae1d7be3b8076d4",
+  "original_go_oracle": {
+    "original_paths": [
+      "internal/tlsrecord/record.go",
+      "internal/tlsrecord/decoder.go",
+      "internal/tlsrecord/vector_test.go"
+    ],
+    "fixture": "r0/fixtures/legacy-record-wire-v1.txt",
+    "cases": [
+      "pn0-empty",
+      "pn1-ascii",
+      "pn-cross32",
+      "pn-max-minus1",
+      "pn-max",
+      "pn7-padded"
+    ],
+    "actual_calls": "Go go test -c compiled original internal/tlsrecord with R0 overlay test; test calls original sealRecord with pinned keys/PN/kind/padding and real Opener.OpenRecord on each exact fixed wire, and original Decoder.OpenPayload tests invalid length no resync",
+    "test_names": [
+      "TestR0RecordRealPinnedGoSealAndOpenSixFixtures",
+      "TestR0RecordRealGoLengthFailClosedWithoutMagicScan"
+    ],
+    "top_level_passed": 2,
+    "failures": 0,
+    "mode": "OLD_GO_REAL_AEAD_AND_HP_RUNNING_ONLY_WITHIN_ORIGINAL_GO"
+  },
+  "rust_opaque_frame": {
+    "fixed": "outer 0x17 0x03 0x03 then BE body_len:u16; protectedPN[5:13] opaque; ciphertext_and_tag[13:end]; final AEAD tag length16; HP sample[13:29]",
+    "lengths": {
+      "outer_header": 5,
+      "protected_pn": 8,
+      "tag": 16,
+      "minimum_body": 26,
+      "minimum_record": 31,
+      "max_body": 16640,
+      "max_wire": 16645
+    },
+    "tests": [
+      "r0_record_pinned_go_six_real_wire_oracles_have_exact_offsets",
+      "r0_record_multi_frame_opaque_prefix_no_delivery_or_magic_scan",
+      "r0_record_zero_to_minimum_and_all_truncated_prefixes_fail_closed",
+      "r0_record_header_type_version_length_and_wire_budget_reject",
+      "r0_record_hp_sample_can_overlap_tag_of_short_record",
+      "r0_record_kind_is_encrypted_not_a_wire_field_and_pn_is_masked"
+    ],
+    "passed": 6,
+    "failed": 0,
+    "mode": "RUST_OPAQUE_PARSER_ONLY_NO_PN_UNMASK_OR_KIND"
+  },
+  "consumer": "Two precompiled native test binaries (Rust and pinned Go) were built in build job, manifest pinned SOURCE/run/attempt/original Go SHA/compiler, all exact input file SHA256 and binary length/SHA256; independent consumer verified and executed both without recompiling",
+  "same_source_regressions": [
+    {
+      "workflow": ".github/workflows/r0-codec.yml",
+      "run_id": 38523394984,
+      "conclusion": "success",
+      "scope": "Existing WBC4/WBG4 13 Rust tests remain separate; 6 record tests filtered out"
+    },
+    {
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "run_id": 38523394792,
+      "conclusion": "success",
+      "scope": "Pre-receipt original 8 gate metadata static audit; does not include new result yet"
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38523394740,
+      "conclusion": "success"
+    }
+  ],
+  "not_qualified": {
+    "rust_aead": "NOT_IMPLEMENTED",
+    "rust_hp": "NOT_IMPLEMENTED",
+    "rust_authenticated_kind": "NOT_IMPLEMENTED",
+    "rust_authenticated_pn": "NOT_IMPLEMENTED",
+    "real_three_cipher_record": "NOT_RUN",
+    "rust_record_delivery": "NOT_RUN",
+    "go_v4_production": "DISABLED_FAIL_CLOSED",
+    "link_fec_wire": "NOT_RUN",
+    "target_windows_arm_native_execution": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "在R0按00与06/07锁原Go LINK/FEC wire framing与MTU黄金向量（重点L01），Rust minimal length/offset parser 对照Actions原Go oracle；真实FEC实现和业务引擎不在该原子范围。"
+}

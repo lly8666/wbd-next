@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0 source-lock reconciled to four crates and pinned Go/Rust scopes; r0/qualification-manifest.json catalogs eight historical source/run-qualified gates plus 44 architecture test IDs (B01/R01/I01/C01 PARTIAL_FAKE, 40 NOT_RUN). SOURCE c66416c audit38521076297 + seven native/Go workflows + governance green; SOURCE 35d599b source-lock cross workflow trigger fix, audit38521306796/cross ABI 38521307048 (Windows x64 and ARM64 cross-only)/governance38521306875 success. R0 partial; true Rust record AEAD/HP golden and LINK/FEC/MTU unimplemented; real engine/data I/O and production V4 disabled, M1-M4 reserved. Next only minimal R0 record framing vs pinned Go oracle explicit-offset/golden boundary, no pseudo-AEAD.",
+  "next_decision": "R0 real pinned old-Go tlsrecord wire oracle + Rust opaque framing: SOURCE e2fa27f Actions record run38523394776 build115718053277/consume115718227079 Linux x64 success, Rust structural 6/6 plus original Go actual Seal/Open 2/2 top-level (six encrypted wire fixtures) PASS; precompiled hashes in docs/evidence/M0/R0-record-framing.json. WBC4/WBG4 codec 13/13 run38523394984, R0 static38523394792 and Governance38523394740 success same SOURCE. Canonical R0 qualification-manifest now 9 scopes, 44 architecture IDs only 4 partial fake/40 NOT_RUN; original Go PN/kind authenticated but Rust no AEAD/HP and parsed protected PN remains opaque; R0 partial, production V4 disabled, M1-M4 reserved. Next sole R0 LINK/FEC wire framing/MTU with locked original Go oracle, not business engine.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
