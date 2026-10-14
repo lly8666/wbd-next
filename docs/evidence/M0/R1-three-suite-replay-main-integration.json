@@ -203,8 +203,12 @@
     "worker_cursor_governance_conclusion": "failure",
     "failure_step": "Validate repository contracts",
     "scope_step": "ROLE_SCOPE_PASS",
-    "M2_resume_approval": "PENDING_OWN_CURSOR_H_GOVERNANCE_CLEAN",
-    "note": "M0 did not modify worker HEAD; M2 writer owns H repair and next pure budget work."
+    "M2_resume_approval": "AUTHORIZED_PURE_R2_NEXT_ATOM_AFTER_VERIFIED_MERGE_S_H",
+    "note": "Worker independently corrected prior H failure on own cursor-only HEAD 76037765, Governance38560192366 SUCCESS; source cfc77b9 14/14 PASS. Eligible for separately authorized R2-M2-BUDGET-001, not product recovery. M0 never wrote worker refs.",
+    "worker_cursor_H_corrected_sha": "76037765f99850455b80c752e1a93485675d8350",
+    "worker_cursor_H_corrected_sequence": 4,
+    "worker_cursor_H_governance_run": 38560192366,
+    "worker_cursor_H_governance_conclusion": "success"
   },
   "not_qualified": {
     "R2_reverse_control_replay": "NOT_RUN_M0_LEGACY_RAW_CRYPTO_INGRESS",
