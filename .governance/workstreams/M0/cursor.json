@@ -4,18 +4,25 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 4,
-  "checkpoint_sha": "faf6fd402ef2242e3aadd46b30760d31fb0251c3",
-  "progress": "planned",
+  "sequence": 5,
+  "checkpoint_sha": "a71f63b0f0917d098d7fe32f0b577a7c4d9beeef",
+  "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "PLAN-002已交付12份模块施工说明及代数证据；下一阶段R0实际接口/旧Go向量/依赖与构建入口待开工",
-  "why_now": "模块设计已定且51项治理/模型检查通过；先核实际ABI/平台和来源，再激活并行角色，避免实现者各造公共接口",
-  "done_when": "R0最小类型/ABI、旧Go与V4向量、依赖及单目标构建消费契约验证，正式分配模块后进入纵向实现",
-  "next_action": "接到后续开发任务先核远端，读modules/00和11实施R0；不重做PLAN-002或重复38505985662，不部署物理机",
-  "unverified": false,
-  "last_tested_source": "ac1ac76dbac92b7ffb494efca65064751a28b91b",
-  "evidence_refs": ["docs/evidence/M0/PLAN-002-module-design.json"],
+  "current_task": "R0首子任务已提交：纯Rust共享类型/来源锁及Linux x64 Actions预编译构建-消费完成；旧Go/V4向量、C与平台ABI、三目标构建仍未完成",
+  "why_now": "00/11要求先以真实来源和可执行构建契约消除公共接口歧义；已在相同task内修复R0阶段状态与旧治理反例假设，未越权激活worker",
+  "done_when": "R0最小类型/ABI、旧Go与V4向量、依赖及单目标构建消费契约验证，正式分配模块后进入纵向实现；当前仅types/build子项完成，不满足R0总done_when",
+  "next_action": "按旧SOURCE a7a82db31fe736ffedee330795a3234d358f1984在Actions编译并生成V3原Go向量与V4 24B admission golden，核对字节/错误，不以Python代数替代Go或ABI探针",
+  "unverified": true,
+  "last_tested_source": "c1f5ce14dbbf8e2b79dafa0e71e452b2b494849c",
+  "evidence_refs": [
+    "docs/evidence/M0/R0-contract-types-build.json"
+  ],
   "open_requests": [],
-  "context_refs": ["docs/devlog/M0/PLAN-002-complete.md", "docs/architecture/modules/README.md"],
-  "partial_summary": "unverified=false仅对应所列治理/代数SOURCE；1163组FEC代数对照通过，旧Go编译/ISA-L/Rust安全与性能未跑。产品NOT_STARTED，物理NOT_RUN，M1–M4仍reserved。"
+  "context_refs": [
+    "docs/devlog/M0/R0-contract-bootstrap.md",
+    "docs/devlog/M0/R0-contract-observation.md",
+    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
+  ],
+  "partial_summary": "types证据：R0 run38507997009 attempt1 build115669801143/consume115669889266, 5/5 Rust unit及sha256消费PASS，SOURCE=c1f5ce1；Governance c1f5ce1 run38507997045 FAIL(阶段状态)，0e67ac3 run38508197056 FAIL(阶段相关旧test)，修正后a71f63b run38508304713 attempt1 job115670766822 success。旧Go/V4/平台ABI/ISA-L/产品与性能/物理均NOT_RUN，M1–M4 reserved。"
 }
