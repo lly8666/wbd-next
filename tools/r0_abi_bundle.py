@@ -77,6 +77,22 @@ def pack(a):
     print(json.dumps(manifest, indent=2))
 
 
+RUST_ABI_CASES = frozenset({
+    "r0_abi_token_domains_and_generation",
+    "r0_abi_never_wraps_generations",
+    "r0_abi_capacity_rejects_without_stealing_live_tokens",
+})
+
+
+def verify_three_rust_abi_cases(stdout):
+    """Attest the exact native libtest ABI group, not a substring count."""
+    names = re.findall(r"^test (?:[a-zA-Z0-9_]+::)*(r0_abi_[a-zA-Z0-9_]+) \\.\\.\\. ok$", stdout, re.M)
+    result = re.search(r"^test result: ok\\. (\\d+) passed; (\\d+) failed; (\\d+) ignored; (\\d+) measured; (\\d+) filtered out;", stdout, re.M)
+    if (result is None or tuple(map(int, result.groups()[:4])) != (3, 0, 0, 0)
+            or len(names) != 3 or frozenset(names) != RUST_ABI_CASES):
+        raise ValueError("R0 native Rust ABI exact test set/count mismatch")
+
+
 def consume(a):
     path = Path(a.manifest)
     m = json.loads(path.read_text())
@@ -101,15 +117,19 @@ def consume(a):
     env = dict(os.environ, LD_LIBRARY_PATH=str(root) + os.pathsep + os.environ.get("LD_LIBRARY_PATH", ""))
     records = []
     tests = [
-        ("rust", [str(root / "r0_abi_rust.test"), "--nocapture"], "3 passed"),
+        ("rust", [str(root / "r0_abi_rust.test"), "r0_abi_", "--nocapture"], None),
         ("C", [str(root / "r0_abi_c")], "R0_NATIVE_C_ABI_PASS"),
         ("Go", [str(root / "r0_abi_go.test"), "-test.v", "-test.run", "^TestR0Abi"], "--- PASS: TestR0AbiGoToRustCapacityNoClaimOfRealEngine"),
     ]
     for label, cmd, marker in tests:
         result = subprocess.run(cmd, text=True, capture_output=True, timeout=90, env=env)
         records.append("=== " + label + " ===\n" + result.stdout + result.stderr)
-        if result.returncode != 0 or marker not in result.stdout:
+        if result.returncode != 0 or (marker is not None and marker not in result.stdout):
             raise RuntimeError(label + " ABI execution failed: rc " + str(result.returncode) + "\n" + (result.stdout + result.stderr)[-3000:])
+        if label == "rust":
+            # R0 selector is a real Rust libtest filter. Do not count M1's
+            # growing r1_ suite or accept 13/23 as a substring of "3 passed".
+            verify_three_rust_abi_cases(result.stdout)
     report = "\n".join(records)
     top = len(re.findall(r"^--- PASS: TestR0Abi", records[2], re.M))
     if top != 4:

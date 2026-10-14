@@ -7,6 +7,8 @@ use wbd_types::MonoNs;
 use wbd_types::buffer_contract::{checked_wire_range, FrozenRecordHandle, UniqueSealable};
 use crate::memory::{FrozenRecord, UniqueBuffer};
 
+/// M1 R1 thread wake/stop proof; NOT a qualified SPSC or OS eventfd.
+pub mod wake;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

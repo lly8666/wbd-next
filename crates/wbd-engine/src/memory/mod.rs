@@ -6,7 +6,8 @@
  
  use std::collections::VecDeque;
  use std::ops::Range;
- use std::sync::{mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError}, Arc, Mutex};
+ use std::sync::{mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError}, Arc, Mutex, OnceLock};
+ use crate::runtime::wake::WakeGate;
  use wbd_types::{next_generation, BufferKey};
  use wbd_types::buffer_contract::{
      checked_wire_range, BufferContractError, BufferOrigin, FrozenMetadata,
@@ -32,6 +33,7 @@
      tx: SyncSender<Returned>,
      backlog: Mutex<VecDeque<Returned>>,
      max_backlog: usize,
+     wake: OnceLock<Arc<WakeGate>>,
  }
  impl ReturnPath {
      fn post(&self, item: Returned) {
@@ -46,6 +48,9 @@
              // safely freed; no driver borrow is represented by this type.
              Err(TrySendError::Disconnected(_item)) => {}
          }
+         // Return is published before its notification, even when the
+         // channel was full and it entered the bounded fallback backlog.
+         if let Some(gate) = self.wake.get() { gate.notify(); }
      }
  }
  
@@ -177,9 +182,15 @@
              returns: Arc::new(ReturnPath {
                  tx, backlog: Mutex::new(VecDeque::with_capacity(count)),
                  max_backlog: count,
+                 wake: OnceLock::new(),
              }),
              loaned: 0, retired: 0, charged_bytes: charged, stopping: false,
          })
+     }
+     /// Attach exactly one owner consumer gate. Register before its first park;
+     /// a prior returned item remains visible to the double-check anyway.
+     pub fn register_wake(&mut self, gate: Arc<WakeGate>) -> bool {
+         self.returns.wake.set(gate).is_ok()
      }
      pub fn allocate(&mut self) -> Result<UniqueBuffer, BufferContractError> {
          if self.stopping { return Err(BufferContractError::OwnerStopping); }

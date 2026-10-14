@@ -1,0 +1,123 @@
+name: M0 R1 real M1 wake/stop owner native
+run-name: "M0|${{ github.sha }}|r1-wake-stop-native"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r1-wake-stop-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-types/**"
+permissions:
+  contents: read
+concurrency:
+  group: r1-wake-stop-native-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Compile once actual Linux Rust native M1 wake/stop and arena tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo test --release --locked -p wbd-engine --lib --no-run
+          binary="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          mkdir r1-wake-build
+          cp "$binary" r1-wake-build/owner.test
+          python3 - <<'PY'
+          import os,hashlib,pathlib,json
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          parts=['crates/wbd-engine/src/runtime/wake.rs',
+                 'crates/wbd-engine/src/runtime/mod.rs',
+                 'crates/wbd-engine/src/memory/mod.rs',
+                 'crates/wbd-engine/src/lib.rs','Cargo.lock']
+          m={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+             'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'toolchain':'1.85.1',
+             'target':'x86_64-unknown-linux-gnu',
+             'binary_sha256':sha('r1-wake-build/owner.test'),
+             'inputs':{p:sha(p) for p in parts},
+             'scope':'M1_REAL_BOUNDED_STD_PARK_UNPARK_RETURN_STOP_NATIVE_R01_R02_M01'}
+          pathlib.Path('r1-wake-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r1-wake-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-wake-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r1-wake-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-wake-build
+      - name: Verify binary+source and run all 19 real R1 owner tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,pathlib,hashlib,json
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open('r1-wake-build/manifest.json'))
+          assert m['source_sha']==os.environ['GITHUB_SHA']
+          assert m['run_id']==os.environ['GITHUB_RUN_ID'] and m['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert m['toolchain']=='1.85.1' and m['target']=='x86_64-unknown-linux-gnu'
+          assert sha('r1-wake-build/owner.test')==m['binary_sha256']
+          for p,v in m['inputs'].items():assert sha(p)==v,p
+          PY
+          chmod +x r1-wake-build/owner.test
+          mkdir r1-wake-result
+          set +e
+          r1-wake-build/owner.test r1_ --nocapture >r1-wake-result/tests.log 2>&1
+          ec=$?
+          set -e
+          cat r1-wake-result/tests.log
+          TEST_EXIT="$ec" python3 - <<'PY'
+          import os,json,pathlib,hashlib,re,sys
+          m=json.load(open('r1-wake-build/manifest.json'))
+          l=pathlib.Path('r1-wake-result/tests.log').read_text()
+          count_match=re.search(r'test result: ok\. (\d+) passed; 0 failed',l)
+          count=int(count_match.group(1)) if count_match else 0
+          names=re.findall(r'^test [\w:]+::(r1_\w+) \.\.\. ok$',l,re.M)
+          expected=['r1_wake_idle_single_packet_push_before_arm_r01',
+                    'r1_wake_publish_during_armed_recheck_r01',
+                    'r1_wake_token_publish_at_park_boundary_r01',
+                    'r1_wake_full_repair_does_not_block_fresh_r02',
+                    'r1_wake_stop_before_delivery_and_reject_late_offer_r02',
+                    'r1_wake_stop_with_full_return_backlog_and_last_frozen_loan_m01',
+                    'r1_wake_stop_during_inflight_publish_never_returns_false_quiesce_r02',
+                    'r1_wake_return_after_park_wakes_stopped_owner_m01',
+                    'r1_wake_fake_monotonic_deadline_recheck_r02']
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==19 and len(names)==19
+              and len(set(names))==19 and all(x in names for x in expected))
+          record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
+                  'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
+                  'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
+                  'scope':'M1_REAL_STD_OWNER_WAKE_STOP_R01_R02_M01_NATIVE',
+                  'not_qualified':'RTRB_SPSC;LOOM;EVENTFD;REAL_RAW_DRIVER;GO_V4;PRODUCT;PERFORMANCE;PHYSICAL'}
+          pathlib.Path('r1-wake-result/result.json').write_text(json.dumps(record,indent=2)+'\n')
+          print(json.dumps(record,indent=2))
+          if not ok:sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r1-wake-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-wake-result/
+          if-no-files-found: warn
+          retention-days: 30
