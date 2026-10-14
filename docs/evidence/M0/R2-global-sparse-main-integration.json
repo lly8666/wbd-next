@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-GLOBAL-SPARSE-MAIN-INTEGRATION-006",
+  "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "scope": "M2_GLOBAL_SPARSE_M1_FROZEN_M4_FULL_IPV4_TCP_IN_PROCESS_TEST_ONLY",
+  "qualification": "SCOPED_NATIVE_ONLY_NOT_PRODUCT",
+  "artifact_verified": true,
+  "starting_head": "c900de8522c8fc4f82c966131776e175426d24aa",
+  "worker": {
+    "source_sha": "fb916f2467d40b6cc0612d1182525a553d8e6872",
+    "evidence_sha": "8297df981f2f5351f0ab094c826bf6f404ede4b1",
+    "recovered_fact_S": "9a25ae179e8bfd050f25c289930d81af5b96b896",
+    "cursor_H": "2ebd475956d65ab1ae05a46cff223c9970755e34",
+    "h_gov_run": 38602789109,
+    "worker_native_run": 38598294561,
+    "tests": "22/22",
+    "role_scope": "M2 owned recovery pure state only"
+  },
+  "code_changes": [
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/lib.rs",
+    "crates/wbd-engine/src/recovery_ingress.rs",
+    "crates/wbd-engine/tests/r2_receipt_ingress.rs",
+    ".github/workflows/r2-auth-receipt.yml",
+    ".github/workflows/r2-pure-budget-native.yml"
+  ],
+  "main_history": [
+    {
+      "source_sha": "f9940910df5255c9f3df2d9a23a2c83582cec2f2",
+      "r2_pure_run": 38634331931,
+      "result": "FAIL_WORKFLOW_COUNT_15_ACTUAL_22_PASS",
+      "r2_integration_run": 38634331994,
+      "integration_result": "FAIL_TEST_FIXTURE_EXPECTED_ONE_ARENA_RETURN_ACTUAL_TWO_10_OF_11_PASS"
+    },
+    {
+      "source_sha": "01bd8693d478329af1168f55a3cbcd9f1a82b79a",
+      "r2_pure_run": 38634484494,
+      "result": "PASS_22_OF_22_EXACT_SOURCE",
+      "r2_pure_compiled_once": {
+        "build_job": 116094036992,
+        "consume_job": 116094192354,
+        "binary_sha256": "20de92b057132b83c1b3087bce33fc4dae7ba72ef37df06e9eefd5c609eee445",
+        "log_sha256": "8603814a1e8b6a108627919c87e4e90876a3783829917572bacf3a1929f9ad41",
+        "build_artifact": {
+          "id": 11927567635,
+          "digest": "sha256:2ffdaf4d7fbb186fd853c478fee5a306ccb389fbabb56f5c8ee378d9ae72a9ec"
+        },
+        "result_artifact": {
+          "id": 11926903055,
+          "digest": "sha256:c8457561ad27eb30f64a13c56fb217fd4098cb73997a925760c235a5b7e49a9f"
+        }
+      }
+    },
+    {
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "r2_integration_run": 38634557650,
+      "result": "PASS_11_OF_11_IN_PROCESS",
+      "r2_integration_compiled_once": {
+        "build_job": 116094283411,
+        "consume_job": 116094614666,
+        "binary_sha256": "fe1b2d559ff8364b4ff0353bce15b62c23d0d8878f39fa05ba9f2fdd6d4136ef",
+        "log_sha256": "16617a46a39a68c35e3219daa59e9b6caa0770d1ede0951a8d27e83975b25f17",
+        "build_artifact": {
+          "id": 11927932381,
+          "digest": "sha256:b85865a0a2454f8f3559436f8597bf17255a73f09828f48acecc71fcbcdd3a88"
+        },
+        "result_artifact": {
+          "id": 11927058027,
+          "digest": "sha256:d99bfe2bf03650735534965a6388a622152be5400f7f6c7b594dd808349c1916"
+        }
+      }
+    }
+  ],
+  "checks": [
+    "imported unchanged M2 pure global_sparse one-owner allocator; local per-direction 1s max(F/10,32768) and process aggregate hard cap",
+    "M0 submit_global_repair_once checks ReceiptState candidate and trusted grant matching FrozenRecord TunnelKey, builds actual whole IPv4/TCP packet and charges len(packet) before any M4-ready sink call",
+    "M4 definite EAGAIN returns NotSent and exact original-epoch refund; short syscall is Uncertain and retains debit without peer-ACK assertion",
+    "two different TunnelKeys, both directions registered against one global hard cap; grant expiry/revoke and independent zero-F 32KiB local floor; no global per-client free cap multiplication",
+    "fresh confirmation not conditioned on global repair cap; FEC/Normal existing tests unaffected",
+    "original ciphertext/PN/seq retained, checksum verified independently, stop/return two owner-frozen records correct"
+  ],
+  "scoped_same_final_code_source_actions": [
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38634557737,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38634557641,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38634557661,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38634557636,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38634557623,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38634557650,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38634557730,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38634557647,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38634557628,
+      "source_sha": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "qualifies": "ONLY_OWN_WORKFLOW_SCOPE"
+    }
+  ],
+  "source_boundaries": [
+    "22/22 pure tests at 01bd8693, rather than falsely claiming they ran again on 58ff8d00 (only M0 fixture was modified afterwards)",
+    "M2 integration 11/11 exact 58ff8d00 with 9/9 triggered workflows on same exact SOURCE",
+    "previous FAIL workflows are preserved, not laundered"
+  ],
+  "nonclaims": [
+    "REAL_PROCESS_ACTOR_SCHEDULING",
+    "KERNEL_BATCH_SENDMMSG_COMPOSITION",
+    "LIVE_RAW_AF_PACKET",
+    "VERIFIED_GO_V4_GENERATION",
+    "NATIVE_WINDOWS_ARM_EXECUTION",
+    "P99_CPU_500MBPS",
+    "PRODUCT",
+    "PHYSICAL"
+  ],
+  "next_action": "M0 formally issue four new independent role atoms on main registry: M1 bounded ready batch, M2 bounded batch completion for global grants, M3 FEC pressure/retired identity proofs, M4 strict IPv4/TCP RX parser; M0 next independently compose platform Linux sendmmsg batch with actual frozen packet bytes only after M4 evidence and registry; avoid overlapping worker implementation."
+}

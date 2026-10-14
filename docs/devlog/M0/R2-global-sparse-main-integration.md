@@ -1,0 +1,15 @@
+# M0 R2-M0-GLOBAL-SPARSE-MAIN-INTEGRATION-006 · 2026-10-15
+
+## Preflight
+M0 main checkpoint5f158bc8→H c900de85 only cursor, Governance38603747056 SUCCESS; registry rev2 epoch1 all active. M2 branch recovery S9a25ae17 / H2ebd4759 Governance38602789109 PASS. M1/M3/M4 branch HEADs and cursors unchanged since previously audited. Chosen M2 pure source fb916f24 with 22/22 independent worker-native test, no M2 worker path modified.
+
+## M0 scope
+M0 imported the unchanged M2 `global_sparse.rs` and pure export into main, added `submit_global_repair_once` composition only to M0 engine. Caller supplies externally trusted per-direction grant; before a syscall, M0 preflights a genuine repair candidate and immutable M1 frozen ciphertext, builds M4 full IPv4/TCP packet, reserves exact full packet bytes from shared M2 process cap plus local per-direction allowance, then maps M4 sink outcome: full accepted (not ACK), EAGAIN definitely NotSent (original-epoch refund), short/other uncertain conservatively charged. A test exercises two distinct TunnelKeys, three registered directions, sparse F=0, shared process cap, grant revoke/hold, NotSent/Uncertain, authenticated context remains test fixture. Does NOT hook actual production process scheduling/kernel/network.
+
+## Actual exact SOURCE tests and failures
+- First SOURCE `f9940910df5255c9f3df2d9a23a2c83582cec2f2` had a **genuine failing Actions** pure M2 run38634331931: all 22 native tests passed but old main workflow only accepted 15; and integration run38634331994: 10/11 passed, M0 test erroneously expected one Arena return when two tunnel frozen handles existed.
+- Intermediate SOURCE `01bd8693d478329af1168f55a3cbcd9f1a82b79a` updated R2 worker native main gate to EXACT 22 and hashed `global_sparse.rs`. [Actions38634484494](https://github.com/lly8666/wbd-next/actions/runs/38634484494) SUCCESS 22/22. Note it is **not the final integration SOURCE**.
+- Final CODE SOURCE **`58ff8d00659c0b4576f473e5e7957cbce0ef17ea`**, corrected two-record Arena fixture. [R2 full-packet Actions38634557650](https://github.com/lly8666/wbd-next/actions/runs/38634557650) **11/11 SUCCESS**, binary SHA256 fe1b2d559ff8364b4ff0353bce15b62c23d0d8878f39fa05ba9f2fdd6d4136ef, build artifact11927932381 sha256:b85865a0a2454f8f3559436f8597bf17255a73f09828f48acecc71fcbcdd3a88, result11927058027 sha256:d99bfe2bf03650735534965a6388a622152be5400f7f6c7b594dd808349c1916. **9/9** triggered workflows on final SOURCE SUCCESS including native ABI and cross ABI **compile-only**. Source-binary-consumer manifest checked within each run.
+
+## Next and nonclaims
+M0 can now issue a next parallel atomic assignment for all four idle worker roles after rechecking HEAD and branch-local cursor references. Scoped native/budget integration does not establish real kernel completion, authenticated V4 generation, AF_PACKET, Windows/ARM native, 500 Mbps, product p99, or physical qualification. No feature flag enabled. One next M0 step: issue formal assignments in the main registry, then wait for each worker independently verified S/evidence/H before importing their work. Avoid designing a permanent scheduler framework now.
