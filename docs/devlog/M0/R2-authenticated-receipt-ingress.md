@@ -9,3 +9,20 @@ This atom imports byte-for-byte M2 worker `crates/wbd-recovery/src/lib.rs` and `
 Three required test scopes: authentic encrypted control releases original frozen payload; any tag error/wrong kind or wrong lane/epoch/key refuses release; candidate uses original frozen bytes and M4 outcome counts attempts without masquerading as receipt. Actions compile exact Rust1.85.1 x64 binary once, upload binary manifest, verify SHA and inputs in separate consume. G2 `--exact` historical scaffold must execute exactly 1 test even when M2 adds 8 r2_ tests; M2 native 8/8 and failed legacy G2 38538225378 retain independent source. Main ABIs feature0, product/performance/physical NOT_RUN, production Go V4 DISABLED, full encrypted live feedback, replay bitmap, global direction 1s repair budget, native raw driver and actual Go exporter NOT_RUN. No changes to config CLI GUI because internal test-only module, not an enabled user feature.
 
 Next: after Actions, annotate M0 issues#1/#2 with exact scope, record evidence and cursor-only H; M2 next independent atom can proceed on pure R2 budget/2-send gate only after published verification and role writer checks remote cursor/assigned task. Do not tell user M2 production recovery is ready.
+
+## Exact checked Actions outcome
+
+The first integration source `40fb0d95e3101186704a6f38addab5eecc84cc51` retains explicit failed runs: ingress 38555876322, G2 38555876395 and native ABI 38555876452. Cause was M0-owned E0502 in the test's adversarial-byte indexing, fixed by a local length variable in S `29ebcb19863602ae1fc059fa3524837e90944da9`. No fail is relabeled.
+
+At final test SOURCE `29ebcb19863602ae1fc059fa3524837e90944da9`, **7/7 triggered Actions completed SUCCESS**, no cross-source composition:
+- r0-static-qualification-audit run38555987782 attempt1 success
+- governance run38555987656 attempt1 success
+- r2-auth-receipt run38555987945 attempt1 success
+- r1-normal-off-chacha run38555987928 attempt1 success
+- g2-scoped-bootstrap-native run38555987719 attempt1 success
+- r0-native-abi run38555987729 attempt1 success
+- r0-cross-abi run38555987832 attempt1 success
+
+[True native ingress run38555987945](https://github.com/lly8666/wbd-next/actions/runs/38555987945) Rust1.85.1 x64 build job115825118023 compiled once; separate hash-verifying consumer115825415412 executed **3/3 PASS**. Binary SHA `648ded828e734f176864a83e446d2a7a37c78b549a7638a572c1158b5b141bac`; Cargo.lock `4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36`; test log SHA `b5e22c376b00ce15932c8b4ecf625e696d46eec5ba9db8591aa0701fecdc3b8d`. Build artifact11889368004, result11889198119. Historical G2 [failure 38538225378](https://github.com/lly8666/wbd-next/actions/runs/38538225378) stays FAILED. The current main's preexisting `--exact` G2 selector now passes with real M2 source at run38555987719; no worker ref has been updated. Main is ready for **scoped in-process adapter** only, not Go V4 authentication binding/production.
+
+M2 resumption is contingent on worker-owned legal sync of current main to its branch, and a separately assigned pure budget atom. M0 will not force/rebase the worker ref. Eventual condition monitor must check this before alerting. Full receipt sender generation / reverse key from real Go admission / Rx replay policy / 1s budget / actual native network all NOT_RUN.
