@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-BUDGET-001",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "4f485269b3af4b1aba46cce602a3996a720c8538",
+  "result": "PASS_SCOPED_PURE_R2_BUDGET_NATIVE_ONLY",
+  "scope": "wbd-recovery pure MonoNs 1-second F/R/L reserve-before-send state: integer max(F/10,32768) not sum; bounded sparse allowance, 8 outer MTU pacer, NotSent original epoch refund, Accepted/Uncertain charged once, bounded pending timeout and fresh independent; no socket or cipher",
+  "runs": {
+    "native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38561012183,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 115841787143,
+      "consume_job_id": 115841904084,
+      "compiled_once": true,
+      "tests_passed": 15,
+      "tests_failed": 0,
+      "previous_receipt_tests": 8,
+      "new_budget_tests": 7,
+      "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+      "runner": "ubuntu-24.04 Linux X64",
+      "binary_sha256": "a8f63c13de18e2dce8331ab035c6347b3c113b262f85eaee09cb1c11dc51452f",
+      "log_sha256": "8a002a24c0ccfc692e6a2429835b92bcff4c9a020d51231ab88f72766df0fe0d",
+      "build_artifact": {
+        "id": 11891589578,
+        "digest": "sha256:9a73d3d105601c7978daff40645429bb5785c6b0dafcb3bb2b4e67499ab1acc0"
+      },
+      "result_artifact": {
+        "id": 11891864345,
+        "digest": "sha256:cc28a8c9d9d8efe36684a6518371c90d47806dd38b10050490a61c9a237d07fc"
+      }
+    },
+    "governance": {
+      "run_id": 38561012060,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 11891349722,
+      "digest": "sha256:9d08ffbe2b4e858de10624521b3c949d1a056e38a341c403f64b3de31d009744"
+    },
+    "g2_historical": {
+      "run_id": 38561012041,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_artifact_id": 11891584635,
+      "result_artifact_id": 11892450322,
+      "digest": "sha256:191e749b484f4b1c4e5e720f9b7f2656897363239c4ba8970efb843944d54c2f"
+    },
+    "r0_static": {
+      "run_id": 38561012396,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 11891659380,
+      "digest": "sha256:2bf42c72d2664cc787c64cf7f38d640ec76a0f497ee36e9073d6ccef8e14a23a"
+    }
+  },
+  "new_tests": [
+    "r2_budget_boundary_keeps_old_epoch_refunds_out_of_new_quota",
+    "r2_budget_high_rate_ten_percent_integer_and_epoch_absolute_cap",
+    "r2_budget_capacity_timeout_conservative_debt_and_clock_reversal",
+    "r2_budget_pacer_eight_mtu_and_unreported_fresh_not_blocked",
+    "r2_budget_rejects_bad_config_wrong_tunnel_and_expired_original",
+    "r2_budget_uncertain_charged_notsent_refunds_once_and_generation_stays",
+    "r2_budget_sparse_32k_absolute_floor_not_percentage_or_sum"
+  ],
+  "not_tested": [
+    "M0 live multi-client global sparse quota fairness",
+    "M1/M4 platform accepted_prefix and partial syscall integration",
+    "actual carrier byte measurements and dynamic MTU",
+    "real network/authenticated receipt with budget",
+    "large PPS/timer performance",
+    "product/performance/physical qualification",
+    "Go V4 live admission"
+  ],
+  "source_retains": {
+    "receipt_state": "same frozen ciphertext handle, <=2 repair attempts in prior isolated module tests",
+    "abi": "unchanged",
+    "RECOVERY_ENGINE_READY": false
+  },
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "production_v4": "DISABLED",
+  "next_action": "M0 decide shared cross-client quota allocator and actual TX-budget integration; stop this M2 atom."
+}
