@@ -6,11 +6,11 @@ use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite,CryptoErro
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_frame::{AUTHENTICATED_HEALTH_KIND,AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
 use wbd_engine::memory::{Arena,FrozenRecord};
-use wbd_engine::recovery_ingress::{BoundReceiptIngress,ReceiptIngressError,submit_repair_once};
+use wbd_engine::recovery_ingress::{BoundReceiptIngress,ReceiptIngressError,submit_repair_once,submit_global_repair_once};
 use wbd_platform::r1::{submit_ready,ReadyPacketSink};
 use wbd_platform::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona,PacketError};
 use wbd_recovery::{ReceiptConfig,ReceiptState,RepairSendResult,
-    RepairBudget, RepairBudgetConfig, BudgetDirection, BudgetError, WireDirection};
+    RepairBudget, RepairBudgetConfig, BudgetDirection, BudgetError, WireDirection, GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError};
 use wbd_types::{LaneKey,MonoNs,RecordPn,SeqOffset,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,FrozenRecordHandle,UniqueSealable};
 
@@ -481,4 +481,96 @@ fn r2_m0_m4_invalid_outer_packet_scratch_mtu_tuple_never_debits_or_sends(){
     assert_eq!(shadow.outstanding(),1);
     drop(candidate);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
+}
+
+fn multi_broker(wire:u64)->GlobalRepairAllocator{
+ GlobalRepairAllocator::new(GlobalRepairConfig{
+     max_bytes_per_epoch:2*wire, max_directions:4,
+     max_grant_bytes:wire, max_grant_lifetime_ns:50_000_000,
+     max_pending:4,max_pending_bytes:4*wire
+ },MonoNs(0)).unwrap()
+}
+fn other_lane()->LaneKey{
+ LaneKey{tunnel:TunnelKey{slot:6,generation:3},slot:2,generation:7}
+}
+fn other_original(a:&mut Arena)->FrozenRecord{
+ let payload=b"other";
+ let mut tx=LaneTxCrypto::new(data_keys(),536).unwrap();
+ let mut b=a.allocate().unwrap();
+ b.writable()[14..14+payload.len()].copy_from_slice(payload);
+ let (pn,len)=tx.seal_in_place(AUTHENTICATED_LINK_KIND,b.writable(),payload.len(),0).unwrap();
+ b.freeze(0..len,FrozenMetadata{
+   lane:other_lane(),pn:RecordPn(pn),seq:SeqOffset(0),carrier_snapshot:11
+ }).unwrap()
+}
+fn local_cfg()->RepairBudgetConfig{
+ RepairBudgetConfig{outer_mtu:536,max_repair_bytes_per_epoch:100_000,
+ max_pending_reservations:8,max_pending_bytes:4096,io_timeout_ns:1_000_000}
+}
+#[test]
+fn r2_m0_global_sparse_exact_outer_bytes_multi_tunnel_direction_and_notsent(){
+ let mut a=Arena::new(401,2,256,1,80_000).unwrap();
+ let first=original(&mut a,0);
+ let second=other_original(&mut a);
+ let first_bytes=first.bytes().to_vec();
+ let second_bytes=second.bytes().to_vec();
+ let first_wire=outer_wire_bytes(&first);
+ let second_wire=outer_wire_bytes(&second);
+ assert!(first_wire>=second_wire);
+ let dir1=BudgetDirection{tunnel:lane().tunnel,direction:WireDirection::ClientToServer};
+ let dir2=BudgetDirection{tunnel:other_lane().tunnel,direction:WireDirection::ClientToServer};
+ let reverse=BudgetDirection{tunnel:lane().tunnel,direction:WireDirection::ServerToClient};
+ let mut global=multi_broker(first_wire);
+ for dir in [dir1,dir2,reverse]{
+    global.register(dir,local_cfg(),MonoNs(0)).unwrap();
+ }
+ assert_eq!(global.local_snapshot(dir1).unwrap().fresh_confirmed_bytes,0);
+ assert_eq!(global.local_snapshot(dir2).unwrap().epoch_repair_limit,32768);
+ let g1=global.grant(dir1,first_wire,10_000_000,MonoNs(1)).unwrap();
+ let g2=global.grant(dir2,second_wire,10_000_000,MonoNs(1)).unwrap();
+ assert_eq!(global.grant(reverse,first_wire,10_000_000,MonoNs(1)),
+     Err(GlobalRepairError::GlobalCap));
+ let mut s1=state();
+ let mut s2=ReceiptState::new(other_lane(),ReceiptConfig{
+     max_shadow_entries:8,pto_ns:100,reorder_window_ns:5}).unwrap();
+ s1.on_sent(first.clone(),MonoNs(0),MonoNs(500_000_000)).unwrap();
+ s2.on_sent(second.clone(),MonoNs(0),MonoNs(500_000_000)).unwrap();
+ let c1=s1.on_timer(MonoNs(100)).candidates.remove(0);
+ let c2=s2.on_timer(MonoNs(100)).candidates.remove(0);
+ let mut blocked=Sink{mode:1,..Sink::default()};
+ let mut scratch=[0u8;536];
+ assert_eq!(submit_global_repair_once(&mut s1,&mut global,g1,&c1,
+     &mut blocked,trusted_tuple(),presentation(),None,536,&mut scratch,MonoNs(100)).unwrap(),
+     RepairSendResult::NotSent);
+ assert_eq!(global.snapshot().charged_repairs,0);
+ assert_eq!(global.snapshot().held_unused_grants,first_wire+second_wire);
+ assert_eq!(blocked.datagrams.len(),0);
+ global.revoke(g1,MonoNs(101)).unwrap();
+ assert_eq!(global.snapshot().held_unused_grants,second_wire);
+ let gv=global.grant(reverse,first_wire,10_000_000,MonoNs(102)).unwrap();
+ assert_eq!(gv.direction(),reverse);
+ let mut uncertain=Sink{mode:2,..Sink::default()};
+ assert_eq!(submit_global_repair_once(&mut s2,&mut global,g2,&c2,
+     &mut uncertain,trusted_tuple(),presentation(),None,536,&mut scratch,MonoNs(103)).unwrap(),
+     RepairSendResult::Uncertain);
+ assert_eq!(global.snapshot().charged_repairs,second_wire);
+ assert_eq!(global.snapshot().pending,0);
+ assert_eq!(global.snapshot().held_unused_grants,first_wire);
+ assert_eq!(uncertain.datagrams.len(),1);
+ assert_valid_packet(&uncertain.datagrams[0],&second,40);
+ assert_eq!(&uncertain.datagrams[0][40..],second_bytes);
+ assert_eq!(first.bytes(),first_bytes);
+ assert_eq!(second.bytes(),second_bytes);
+ assert_eq!(s2.outstanding(),1); // syscall copy/short != peer receipt
+ // Confirmed F on the process owner is never blocked by repair caps:
+ global.on_fresh_accepted(dir1,first_wire,MonoNs(104)).unwrap();
+ assert_eq!(global.local_snapshot(dir1).unwrap().fresh_confirmed_bytes,first_wire);
+ assert_eq!(global.snapshot().charged_repairs,second_wire);
+ assert_eq!(global.grant(dir1,first_wire,10_000_000,MonoNs(105)),
+     Err(GlobalRepairError::GlobalCap)); // reverse grant held and uncertainty still charged
+ global.revoke(gv,MonoNs(106)).unwrap();
+ assert_eq!(global.snapshot().held_unused_grants,0);
+ assert_eq!(global.snapshot().charged_repairs,second_wire);
+ drop(c1);drop(c2);drop(s1);drop(s2);drop(first);drop(second);
+ assert_eq!(a.drain_returns(),1);
 }

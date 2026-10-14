@@ -17,7 +17,7 @@
  use std::io::ErrorKind;
  use wbd_recovery::{AuthenticatedReceipt, ReceiptPage, ReceiptState,
                     Release, RepairCandidate, RepairSendResult,
-                    RepairBudget, BudgetError};
+                    RepairBudget, BudgetError, GlobalRepairAllocator, GlobalRepairError, GrantLease};
  use wbd_types::{DataError, LaneKey, MonoNs, RecordPn};
  use wbd_types::buffer_contract::FrozenRecordHandle;
 
@@ -25,7 +25,7 @@
  pub enum ReceiptIngressError {
      UnboundLaneEpoch, Crypto(CryptoError), Control(CodecError),
      Replay(UniqueOpenError), NotHealth, MissingReceipt, Recovery(DataError),
-     StaleCandidate, Budget(BudgetError), Packet(PacketError), DriverOutcome,
+     StaleCandidate, Budget(BudgetError), GlobalBudget(GlobalRepairError), Packet(PacketError), DriverOutcome,
  }
 
  /// A one-direction RX capability. Construct ONLY from trusted engine session
@@ -139,3 +139,44 @@
          .map_err(ReceiptIngressError::Budget)?;
      Ok(disposition)
  }
+
+/// One process-owner grant, a caller-trusted tuple, and a true M4 ready-only
+/// syscall result settle the SAME full IPv4/TCP bytes globally and locally.
+/// The caller MUST obtain the lease from independently authenticated
+/// TunnelKey/direction routing. No production driver/admission is enabled.
+/// Preflight and packet validation happen BEFORE spending the global grant.
+pub fn submit_global_repair_once<S: ReadyPacketSink,H: FrozenRecordHandle>(
+    state:&mut ReceiptState<H>, global:&mut GlobalRepairAllocator,
+    grant:GrantLease, candidate:&RepairCandidate<H>, sink:&mut S,
+    tuple:Ipv4Tuple<'_>, presentation:Presentation,
+    authenticated_options:Option<&[u8]>, outer_mtu:usize,
+    scratch:&mut [u8], now:MonoNs
+) -> Result<RepairSendResult,ReceiptIngressError>{
+    if !state.preflight(candidate,now){
+        return Err(ReceiptIngressError::StaleCandidate);
+    }
+    // The grant is a trusted process-owner capability and must not be
+    // reassigned across the original frozen record's TunnelKey.
+    if grant.direction().tunnel != candidate.frozen().metadata().lane.tunnel {
+        return Err(ReceiptIngressError::GlobalBudget(GlobalRepairError::StaleGrant));
+    }
+    let packet=ipv4_tcp::build(tuple,presentation,candidate.frozen(),
+        authenticated_options,outer_mtu,scratch)
+        .map_err(ReceiptIngressError::Packet)?;
+    let wire_bytes=u64::try_from(packet.len())
+        .map_err(|_|ReceiptIngressError::GlobalBudget(GlobalRepairError::InvalidGrant))?;
+    let reservation=global.reserve(grant,candidate,wire_bytes,now)
+        .map_err(ReceiptIngressError::GlobalBudget)?;
+    let result=match sink.try_send(packet) {
+        Ok(n) if n==packet.len()=>RepairSendResult::Accepted,
+        Err(ref err) if err.kind()==ErrorKind::WouldBlock=>RepairSendResult::NotSent,
+        Ok(_)|Err(_)=>RepairSendResult::Uncertain,
+    };
+    // On failure in the shadow, leave reservation alive: owner timer must
+    // retain the conservative (possibly sent) debit.
+    state.on_send_result(candidate,result,now)
+        .map_err(ReceiptIngressError::Recovery)?;
+    global.complete(reservation,result,now)
+        .map_err(ReceiptIngressError::GlobalBudget)?;
+    Ok(result)
+}
