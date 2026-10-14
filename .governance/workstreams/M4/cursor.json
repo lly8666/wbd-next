@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 5,
-  "checkpoint_sha": "e0b9784bff40ace59709b5d8633e8df93b62c415",
+  "sequence": 6,
+  "checkpoint_sha": "ba2e920cb0152803e6e377bdcba6ebd508535b29",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-IPV4-TCP-READY-002",
-  "current_task": "M4 scoped byte-exact immutable record IPv4/TCP-like steady DATA outer packet completed",
-  "why_now": "M0 assigned explicit independent M4 within-role task via main registry goal/done_when and docs/decisions/M0-R1-next-worker-atoms.md; active M4 branch and existing registry revision2/epoch1 paths remained unchanged.",
-  "done_when": "Own native Rust Actions compile-once tests compare actual 20B IPv4+20B TCP header/checksum and seq32 wrap against pinned old-Go facts, <=MTU, odd size/fail closed, frozen record bytes unchanged; S/evidence/H; no AF_PACKET/sendmmsg/Windows native/physical claim.",
-  "next_action": "M0 to import the proven bounded byte-level IPv4/TCP DATA envelope into an M0-owned same-SOURCE integration with real trusted cold tuple/persona and M1/M3 record; main-only historic R0 filter must be used when integrating. No further M4 atom without new assignment; do not enable Go production V4 or claim AF_PACKET/Windows native.",
+  "task_id": "R1-M4-LINUX-BATCH-TX-003",
+  "current_task": "Native Linux x86_64 GNU bounded nonblocking sendmmsg syscall and safe batch stop completed",
+  "why_now": "M0 main G2 explicit R1-M4-LINUX-BATCH-TX-003 assignment rev2 epoch1 in docs/decisions/M0-parallel-worker-atoms-2026-10-14.md; real syscall uses only M4-owned paths and scope-limited ABI island.",
+  "done_when": "Native Linux Actions tests compile once and actually invoke kernel nonblocking sendmmsg on loopback where supported, verify 0/n/all accepted prefix, EAGAIN definite NotSent, interrupted/short ambiguous, immutable frozen payload, batch cap and stop/loan safety. If libc ABI declarations or pinned dependency cannot be audited inside owned crate, file exact root dependency request to M0 and do not fake syscall PASS. Own S/evidence/H; no raw AF_PACKET/Windows/cold admission/product claim.",
+  "next_action": "M0 alone to review audited x86_64 GNU sendmmsg ABI island and integrate native datagram batch primitive on a single main SOURCE with main-only historical R0 filter; no AF_PACKET/Windows/product claim. M4 waits for a new main-registered task without changing shared Cargo/ABI/CI or Go V4.",
   "unverified": false,
-  "last_tested_source": "46a38c07016e55dead72ed3cbf1b954890412b15",
+  "last_tested_source": "6e72152f616e9bc836e3b66cd8742915abf6b5b3",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-IPV4-TCP-READY-002.json"
+    "docs/evidence/M4/R1-M4-LINUX-BATCH-TX-003.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-IPV4-TCP-READY-002 SCOPED DONE_WHEN MET. New ipv4_tcp.rs and lib module exported under authorized crates/wbd-platform/. Source 46a38c07016e55dead72ed3cbf1b954890412b15 native Actions38566384288/1 PASS 12/12 (new6 byte/MTU/checksum/wrap/error/immutable tests + old6 including Linux UDP smoke); direct artifacts binary ZIP SHA and test.log verified, evidence docs/evidence/M4/R1-M4-IPV4-TCP-READY-002.json result=PASS artifact_verified=true. Pinned old-Go packet.go blob 6ac1f9b3... read-only byte oracle, actual Go oracle process NOT_RUN. Initial source 8dcf8a0a compile FAIL run38566246104, repaired; retain failures. Same S G2/static/cross-ABI/governance PASS, historical R0 fake workflow run38566384219 FAIL because old branch harness counted all 19 PASS versus exact 7; M0 main filter separate S40a8a53 run38538899575 PASS. Evidence S e0b9784bff40ace59709b5d8633e8df93b62c415 Governance38566943039/1 SUCCESS. Qualified packet bytes only; actual OS AF_PACKET/sendmmsg/Windows driver, async kernel stop, M1/M3 integrated authenticated first packet, physical/perf/product NOT_RUN; Go production V4 DISABLED. No root/ABI/other role writes."
+  "partial_summary": "Scoped R1-M4-LINUX-BATCH-TX-003 DONE_WHEN met on exact code SOURCE 6e72152f616e9bc836e3b66cd8742915abf6b5b3. Native Linux x86_64 GNU compiled-once worker Actions38598122174/1 PASS 21/21 (9 new kernel sendmmsg/ABI/stop/error cases + 12 older R1), ZIP/manifest/native binary/test.log SHA256 directly inspected. Real native IPv4 UDP loopback all/partial/32 batch and unprivileged AF_UNIX EAGAIN tests; EINTR and hypothetical short only deterministic classifier tests. Previous SOURCE16ef1eb2 worker38598037734 compiled FAIL due test generic type, retained. Same source G2/native, static audit, crossABI, Governance PASS. Historical branch R0 fake workflow38598122098 FAIL because unfiltered 28 successful tests vs required7; M0's prior main-only r0_ filter is on a different SOURCE. Evidence S ba2e920cb0152803e6e377bdcba6ebd508535b29 governance38598591939 PASS. FFI island Linux x86_64 GNU audited; other module unsafe deny. AF_PACKET/Windows, async OS loan, real raw TCP, integrated product, perf/physical NOT_RUN; production Go V4 DISABLED."
 }
