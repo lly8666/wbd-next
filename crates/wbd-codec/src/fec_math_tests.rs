@@ -123,7 +123,9 @@ fn r1_fec_invalid_profile_lengths_missing_and_bad_parity_fail_closed() {
     assert_eq!(rs.encode_active(&[],4),Err(FecMathError::InvalidSource));
     assert_eq!(rs.encode_active(&[b"x"],5),Err(FecMathError::UnsupportedProfile));
     assert_eq!(rs.encode_active(&[b""],4),Err(FecMathError::InvalidSource));
-    assert_eq!(rs.encode_active(&[&[1u8;1];21],4),Err(FecMathError::InvalidSource));
+    let one=[1u8];
+    let too_many=[one.as_slice();21];
+    assert_eq!(rs.encode_active(&too_many,4),Err(FecMathError::InvalidSource));
     let src=[1u8,2,3];
     assert_eq!(rs.streaming_wire(0,20,&src,4,4096),Err(FecMathError::InvalidSource));
     assert_eq!(rs.final_parity_wires(1,&[&src],4,FEC_HEADER),Err(FecMathError::InvalidLength));
