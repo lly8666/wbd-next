@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "V4_GO_REAL_TLS_OPT_IN_ENTRYPOINTS",
+  "source_sha": "6aaba145289ea7771469ee5e462cce03361a432f",
+  "harness_sha": "6aaba145289ea7771469ee5e462cce03361a432f",
+  "legacy_repository": "lly8666/wobuzhidao",
+  "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "go_toolchain": "go1.23.12",
+  "result": "PASS",
+  "scope": "Linux x64 fixed legacy Go original TLS1.3/uTLS/FakeTCP + new non-test opt-in V4 admission Go entrypoints; five compiled test groups, no Rust dataplane",
+  "artifact_verified": true,
+  "verification_method": "Actions consume job validates exact both SOURCE identities + input sha256, precompiled Go binary bytes/hash before executing; independent ZIP extraction not repeated",
+  "workflow": ".github/workflows/r0-v4-tls.yml",
+  "run_id": 38510931409,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38510931409",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115679018829,
+  "consume_job_id": 115679162138,
+  "build_artifact": {
+    "id": 11869084710,
+    "name": "r0-v4-build-38510931409-1",
+    "bytes": 6642717,
+    "digest": "sha256:4f270279cecb85464ffd65ed1055413f451655626f504071aba7f0b5de149c11"
+  },
+  "result_artifact": {
+    "id": 11869970326,
+    "name": "r0-v4-result-38510931409-1",
+    "bytes": 940,
+    "digest": "sha256:d515a5c5111f7e10dadee38964fe84758098385ff16a6427f83073e424cf10b5"
+  },
+  "tests": {
+    "passed": 5,
+    "failed": 0,
+    "exit_code": 0,
+    "filter": "^TestR0V4",
+    "test_names": [
+      "TestR0V4ActualProtectedPeerHandshakeAllCiphers",
+      "TestR0V4LaneJoinEpochAndDuplicateRejected",
+      "TestR0V4WrongEpochAndIdentityReject",
+      "TestR0V4FeatureGateAndBoundedStore",
+      "TestR0V4OldGoV3RejectsActualTLSUpgrade"
+    ]
+  },
+  "observations": [
+    "All three ciphertext suites have matching authentic TLS-derived C2S/S2C keys on both peers, with direction separation.",
+    "New logical epoch allocated only after identity validation; duplicate active lane/unknown epoch and cross-user join were rejected.",
+    "Explicit ReleaseLane required and used in fixture; no automatic lifecycle integration claim.",
+    "Old V3 EstablishServer rejected V4 in real TLS fixture without silent fallback.",
+    "Production non-test V4 entrypoints compiled alongside original unmodified Go admission and handshake sources; normal application callers remain on V2/V3."
+  ],
+  "governance": {
+    "run_id": 38510931562,
+    "source_sha": "6aaba145289ea7771469ee5e462cce03361a432f",
+    "conclusion": "success",
+    "scope": "governance_and_design_model_not_product"
+  },
+  "limitations": {
+    "production_application_dispatch": "NOT_WIRED",
+    "rust_v4_features": "NOT_IMPLEMENTED",
+    "actual_capability_advertisement": "DISABLED_DEFAULT_REQUIRE_EXPLICIT_READY",
+    "epoch_store_lifecycle_in_real_app": "NOT_WIRED",
+    "same_tls_request_replay_reply_reuse": "NOT_RUN",
+    "cross_lifecycle_rotation_and_lease": "NOT_RUN",
+    "go_rust_abi": "NOT_RUN",
+    "platform_abi": "NOT_RUN",
+    "native_windows_arm": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "在原控制应用调用点接入显式opt-in V4 readiness/effective config和epoch store生命周期；保留生产默认关闭及V2/V3不变，跑Actions可重复验收，然后Go↔C/平台ABI。"
+}
