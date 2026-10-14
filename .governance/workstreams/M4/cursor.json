@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 4,
-  "checkpoint_sha": "99a9c16acdf6ab479389bccb5207dc59eb3bbaee",
+  "sequence": 5,
+  "checkpoint_sha": "e0b9784bff40ace59709b5d8633e8df93b62c415",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-IO-001",
-  "current_task": "R1-M4-IO-001 scoped driver prefix/borrow-stop verified, handed off to M0",
-  "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
-  "done_when": "Actions isolated driver prefix/uncertain/stop tests, source exact and native-vs-fake separated; no Windows native without runner/real driver, S+H.",
-  "next_action": "Wait for M0 to assign next independent M4 atom and/or integrate this isolated scoped implementation after M3 real AEAD/8B HP. M4 does not write root ABI/workflows or enable Go production V4.",
+  "task_id": "R1-M4-IPV4-TCP-READY-002",
+  "current_task": "M4 scoped byte-exact immutable record IPv4/TCP-like steady DATA outer packet completed",
+  "why_now": "M0 assigned explicit independent M4 within-role task via main registry goal/done_when and docs/decisions/M0-R1-next-worker-atoms.md; active M4 branch and existing registry revision2/epoch1 paths remained unchanged.",
+  "done_when": "Own native Rust Actions compile-once tests compare actual 20B IPv4+20B TCP header/checksum and seq32 wrap against pinned old-Go facts, <=MTU, odd size/fail closed, frozen record bytes unchanged; S/evidence/H; no AF_PACKET/sendmmsg/Windows native/physical claim.",
+  "next_action": "M0 to import the proven bounded byte-level IPv4/TCP DATA envelope into an M0-owned same-SOURCE integration with real trusted cold tuple/persona and M1/M3 record; main-only historic R0 filter must be used when integrating. No further M4 atom without new assignment; do not enable Go production V4 or claim AF_PACKET/Windows native.",
   "unverified": false,
-  "last_tested_source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+  "last_tested_source": "46a38c07016e55dead72ed3cbf1b954890412b15",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-IO-001.json"
+    "docs/evidence/M4/R1-M4-IPV4-TCP-READY-002.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-IO-001 scoped DONE_WHEN MET. Code SOURCE bcf0bcacd51029abe5c8af429a000ee8853ceb3d, 6/6 native Actions run38538117103/1 (five fake, one Linux UDP smoke) fully artifact-reviewed in docs/evidence/M4/R1-M4-IO-001.json; direct build/result ZIP, binary and log SHA256 verified. M0 main SOURCE40a8a53c fixed R0 historical filter and its separate run38538899575/1 7/7 success; old worker 38538117164/1 remains FAIL. Closure evidence S59defb0ecb5114bea7c57e720d95305baef23948 governance38543516962 SUCCESS. Earlier H 2dce8dd01eaa4abd4fd1aabb1738bbf9539196b7 governance38543686945 FAIL: reviewed PASS evidence fields missing; correction S99a9c16acdf6ab479389bccb5207dc59eb3bbaee adds independently inspected artifact result=PASS and artifact_verified=true; governance38544048840 SUCCESS. ready_for_integration only isolated platform API; real AF_PACKET/sendmmsg, OS async kernel-borrow stop, native Windows, true M3 AEAD/HP Normal/off business/physical/performance NOT_RUN. No shared/root writes, Go V4 DISABLED. Next step M0 integration/assignment after M3 real crypto."
+  "partial_summary": "R1-M4-IPV4-TCP-READY-002 SCOPED DONE_WHEN MET. New ipv4_tcp.rs and lib module exported under authorized crates/wbd-platform/. Source 46a38c07016e55dead72ed3cbf1b954890412b15 native Actions38566384288/1 PASS 12/12 (new6 byte/MTU/checksum/wrap/error/immutable tests + old6 including Linux UDP smoke); direct artifacts binary ZIP SHA and test.log verified, evidence docs/evidence/M4/R1-M4-IPV4-TCP-READY-002.json result=PASS artifact_verified=true. Pinned old-Go packet.go blob 6ac1f9b3... read-only byte oracle, actual Go oracle process NOT_RUN. Initial source 8dcf8a0a compile FAIL run38566246104, repaired; retain failures. Same S G2/static/cross-ABI/governance PASS, historical R0 fake workflow run38566384219 FAIL because old branch harness counted all 19 PASS versus exact 7; M0 main filter separate S40a8a53 run38538899575 PASS. Evidence S e0b9784bff40ace59709b5d8633e8df93b62c415 Governance38566943039/1 SUCCESS. Qualified packet bytes only; actual OS AF_PACKET/sendmmsg/Windows driver, async kernel stop, M1/M3 integrated authenticated first packet, physical/perf/product NOT_RUN; Go production V4 DISABLED. No root/ABI/other role writes."
 }
