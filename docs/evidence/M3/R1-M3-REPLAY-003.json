@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-REPLAY-003",
+  "source_sha": "36778ac78031dd45d2f373071146da565af17275",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_NATIVE_SCOPED_AUTHENTICATED_REPLAY_GATE_ONLY",
+  "task_owner": "M3 codec module (no M0/shared ABI edits)",
+  "source_file": "crates/wbd-codec/src/record_replay.rs",
+  "tests_file": "crates/wbd-codec/src/record_replay_tests.rs",
+  "anchored_codec": [
+    "crates/wbd-codec/src/record_crypto.rs",
+    "crates/wbd-codec/src/record_frame.rs"
+  ],
+  "proven_behavior": {
+    "owner": "ReplayProtectedLaneRx created with exact suite 1/2/3 and per-direction independently derived keys",
+    "trust_boundary": "no public raw PN observation; AEAD authenticated open, kind + marker validation, THEN PN replay bit/floor update; duplicates/retired never yielded as OpenedRecord",
+    "legacy_compatibility": "LaneRxCrypto::open_in_place unchanged for already M0-owned ChaCha integration; raw opener does not claim dedup; integration must explicitly migrate to new wrapper",
+    "metadata_layout": "Each tagged 256-PN page uses 40 bytes: u64 absolute page index tag and four u64 bit words. Allocated N/256+1 pages to cover misaligned N-PN interval. Extra page is required to prevent resurrection at page boundary.",
+    "config": "N=requested next power of 2 of ceil(PN_rate * max(Tcache+2RTT,FEC_horizon+2RTT)*1.25), min 256; cap by caller metadata budget and per-lane hard 8MiB, reduce N by factor 2 until N/256+1 pages fit",
+    "effective_reporting": [
+      "requested_window_pn",
+      "effective_window_pn",
+      "allocated_metadata_bytes",
+      "hard_budget_bytes",
+      "effective_reorder_ms",
+      "required_horizon_ms",
+      "limited_by_budget"
+    ],
+    "resource": "O(actual budget) one-time allocation using try_reserve_exact; O(1) processing for each authenticated PN including 2^52 gaps, no ring sweeping, no hash map or runtime timer",
+    "floor": "retired_floor=max_seen.saturating_sub(effective_window_pn-1) monotonic; PN below floor irrevocably retired within same lane epoch",
+    "transitions": "first PN sets max_seen; in-window out-of-order first accept; repeated authentic PN duplicate; stale old PN retired; giant jumps lazy tagged page reset; no 64-bit PN wrap",
+    "invalid": "bad tag/HP/outer/kind cannot move max_seen; invalid_records separately counted",
+    "per_lane": "independent ReplayProtectedLaneRx for each direction/lane; cross-lane logical dedup remains LINK/Game/FEC responsibility",
+    "proof_tests": [
+      "r1_replay_effective_config_reports_real_page_overhead_and_budget_shrink",
+      "r1_replay_rejects_invalid_rate_metadata_and_overflow_without_allocating",
+      "r1_replay_three_real_suites_auth_first_duplicate_tamper_wrong_key",
+      "r1_replay_256_tagged_boundary_no_resurrection_with_two_physical_pages",
+      "r1_replay_large_authenticated_jump_is_constant_page_rotation_and_floor_monotone",
+      "r1_replay_max_u64_never_wraps_or_reaccepts_expired_pn",
+      "r1_replay_authenticated_out_of_order_and_independent_lane_windows",
+      "r1_replay_metadata_pressure_fails_closed_and_no_invalid_record_advances_floor"
+    ]
+  },
+  "native_actions": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "source_sha": "36778ac78031dd45d2f373071146da565af17275",
+    "run_id": 38557810459,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "toolchain": "Rust 1.85.1",
+    "platform": "GitHub Ubuntu24.04 native Linux x64",
+    "build_job": 115831193301,
+    "consumer_job": 115831465864,
+    "compiled_once": true,
+    "worker_r1_test_count": 23,
+    "failed": 0,
+    "budget": 6,
+    "chacha": 5,
+    "aes": 4,
+    "replay": 8,
+    "test_binary_sha256": "ea5b2f5dfb65ede16c7d4423d9620ecb9d6e52ad2bda6226223377028e4bd4e2",
+    "test_log_sha256": "d2a99f8266f0ec046c7556d37d99cf87a3102e075ed133f56432a3fa907a7288",
+    "build_artifact": {
+      "id": 11889849832,
+      "digest": "sha256:2778d2b48ad056bcaebec5e6756de4825265f4d47456eda638a5390dfc18ce33",
+      "expires": "2026-11-13T11:37:32Z"
+    },
+    "result_artifact": {
+      "id": 11890439615,
+      "digest": "sha256:0018e0b483043fd8251e9fafdb1b34994a2e7207125d43b427f62379f2015d12",
+      "expires": "2026-11-13T11:37:42Z"
+    }
+  },
+  "same_source_regression": [
+    {
+      "workflow": ".github/workflows/r0-codec.yml",
+      "run_id": 38557810406,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-record-framing.yml",
+      "run_id": 38557810401,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-link-fec-wire.yml",
+      "run_id": 38557810497,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "run_id": 38557810455,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "run_id": 38557810438,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38557810510,
+      "conclusion": "success",
+      "attempt": 2,
+      "retry_reason": "Attempt1 ROLE_SCOPE_FAILED: control or source moved mid-audit, not Rust replay failure"
+    }
+  ],
+  "preserved_failures": [
+    {
+      "source": "e1e0769465fd4a83e2a33e3b343539c419a51c55",
+      "worker_run": 38557594354,
+      "conclusion": "failure",
+      "reason": "Two E0716 test-only Rust temporary borrow errors; no executable binary built"
+    },
+    {
+      "source": "dc0913c58b67c69b357cbf2725e161781a1b2981",
+      "worker_run": 38557713321,
+      "conclusion": "failure",
+      "reason": "One remaining E0716 test-only temporary borrow error in boundary matcher"
+    },
+    {
+      "source": "36778ac78031dd45d2f373071146da565af17275",
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38557810510,
+      "attempt": 1,
+      "conclusion": "failure",
+      "reason": "ROLE_SCOPE_FAILED control/source moved mid-audit during concurrent M0 main updates; attempt2 separately completed success"
+    }
+  ],
+  "protected_scope": {
+    "root_Cargo_manifest": "UNMODIFIED_BY_M3",
+    "root_Cargo_lock": "UNMODIFIED_BY_M3",
+    "shared_abi": "UNMODIFIED",
+    "main": "NOT_WRITTEN_BY_M3",
+    "frozen_r0_count": "13 historical tests still isolated by record_frame R1 test namespace",
+    "pinned_old_go_pathmtu_separate": "M0 run38543117078 10/10 old Go; not replay differential test",
+    "chacha_aes_go_compat": "Carried same 6 Go ChaCha and 14 independent Go AES literal vectors; Rust native all corresponding r1 tests PASS on exact SOURCE"
+  },
+  "not_qualified": {
+    "M0_integrated_replay_in_main": "NOT_RUN",
+    "M0_ChaCha_normal_off_first_packet": "SEPARATE_MAIN_SOURCE_873169078353fcf6b653e613bd6181eaf0da4c5e_NATIVE_RUN38552615723_PASS_2_OF_2_WITHOUT_REPLAY",
+    "real_V4_authenticated_exporter_integration": "NOT_RUN",
+    "multiple_records_per_tcp_payload": "NOT_RUN",
+    "cross_lane_business_dedup": "NOT_RUN",
+    "Windows_ARM_native": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "M0 may connect ReplayProtectedLaneRx into the true normal/off first-business RX ownership and test duplicate/late/tamper before delivery on ONE main SOURCE. M3 next bounded atom: actual native LINK fragment reassembly ±MTU and overlap/conflicting/shard timeout proof against original Go, without fabricating FEC-on product."
+}
