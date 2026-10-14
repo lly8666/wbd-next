@@ -216,7 +216,9 @@ def audit():
             require(x["status"]=="NOT_RUN" and x.get("reason"), f"{x['id']} unproved ID marked PASS")
     exit_gate=m["r0_foundation_exit"]
     require(exit_gate["status"]=="BLOCKED_NOT_QUALIFIED" and
-            exit_gate["ready_for_worker_allocation"]=="NOT_YET_DECIDED",
+            exit_gate["ready_for_worker_allocation"]=="READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE" and
+            exit_gate.get("allocation_decision_ref")=="docs/decisions/M0-R0-parallel-worker-readiness.md" and
+            Path(exit_gate["allocation_decision_ref"]).is_file(),
             "R0 exit was promoted by metadata")
     required_blockers={"R0-WIRE-RECORD","R0-LINK-FEC-BOUNDARIES","R0-GO-CONTROL-INTEGRATION",
                        "R0-ENGINE-PLATFORM","R0-NATIVE-MULTI-OS","R0-PRODUCT"}

@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "SCOPED_R1_R2_PARALLEL_ASSIGNMENT_READINESS",
+  "source_sha": "7f23c291d7b09d33d7a047583ba6e1b35d3c0a84",
+  "reviewed_head": "7f23c291d7b09d33d7a047583ba6e1b35d3c0a84",
+  "result": "STATIC_SCOPED_ASSIGNMENT_READY_NOT_ACTIVATED",
+  "decision": "READY_FOR_SCOPED_G2_TRANSACTION_NOT_ACTIVE",
+  "decision_ref": "docs/decisions/M0-R0-parallel-worker-readiness.md",
+  "proof_kind": "REVIEW_OF_CHECKED_IN_SOURCE_AND_PREVIOUS_ACTIONS; NOT_COMPILED_NEW_FEATURE_OR_PRODUCT",
+  "handoff": {
+    "prior_checkpoint_sha": "8def1367960a87c34dda9ffad81512e28850872c",
+    "cursor_sequence": 16,
+    "commit_after_checkpoint": {
+      "sha": "7f23c291d7b09d33d7a047583ba6e1b35d3c0a84",
+      "paths": [
+        ".governance/workstreams/M0/cursor.json"
+      ]
+    },
+    "governance_at_reviewed_head": {
+      "run_id": 38526648689,
+      "job_id": 115728470193,
+      "conclusion": "success"
+    },
+    "open_pull_requests": 0,
+    "active_incomplete_runs": 0,
+    "continuity": "CLEAN"
+  },
+  "facts": {
+    "rust_workspace_crates": [
+      "wbd-types",
+      "wbd-codec",
+      "wbd-platform",
+      "wbd-engine"
+    ],
+    "planned_recovery_crate": "wbd-recovery currently ABSENT",
+    "rust_frame_budget_calculator": "ABSENT (codec/path_budget specified by 06, M3 implements)",
+    "rust_authenticated_seal_open": "ABSENT (M3 owns; no plaintext delivery from R0 structural wire parser)",
+    "engine": "FFI_SENTINEL_ONLY, features=0",
+    "linux_native_record_layout": "PASS_SCOPED",
+    "linux_native_link_fec_mtu": "PASS_SCOPED",
+    "windows_arm_native_execution": "NOT_RUN",
+    "go_v4_production": "DISABLED_FAIL_CLOSED",
+    "r0_foundation": "IN_PROGRESS",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "historic_scope_gates": 10,
+    "architecture_test_id_full_pass": 0,
+    "architecture_test_id_partial": [
+      "B01",
+      "R01",
+      "I01",
+      "C01",
+      "L01"
+    ],
+    "architecture_test_id_not_run": 39
+  },
+  "source_evidence": {
+    "old_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "link_fec_source_sha": "ed21a3c1fd3ca9b728337e04d1053938a5e7a36a",
+    "link_fec_run_id": 38525749707,
+    "link_fec_job_ids": {
+      "build": 115725557837,
+      "consumer": 115725775612
+    },
+    "link_fec_counts": {
+      "rust": 7,
+      "old_go_link": 2,
+      "old_go_fec": 2
+    },
+    "original_record_run_id": 38525749428,
+    "codec_scope_filter_fix_source_sha": "449d15d47b261c50f42cc19e5b4406bf0dddd1af",
+    "codec_scope_filter_fixed_run_id": 38525921690,
+    "old_failed_codec_filter_run_id": 38525749599,
+    "old_failed_codec_filter_summary": "20 Rust assertions passed, old 13-test count invariant failed; fixed on separate source, not erased"
+  },
+  "candidate_assignments": [
+    {
+      "role": "M1",
+      "branch": "work/m1-r1-runtime",
+      "assignment_epoch": 1,
+      "allowed_paths": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/",
+        "docs/devlog/M1/",
+        "docs/evidence/M1/"
+      ],
+      "semantics": [
+        "runtime_owner",
+        "buffer_arena",
+        "normal_off_scheduler"
+      ],
+      "entry": "isolated fake-clock owner/memory/stop tests"
+    },
+    {
+      "role": "M2",
+      "branch": "work/m2-r2-recovery",
+      "assignment_epoch": 1,
+      "allowed_paths": [
+        "crates/wbd-recovery/",
+        "docs/devlog/M2/",
+        "docs/evidence/M2/"
+      ],
+      "semantics": [
+        "receipt_state",
+        "shadow_repair",
+        "recovery_budget"
+      ],
+      "entry": "pure feedback/PN-hole/repair state machine tests"
+    },
+    {
+      "role": "M3",
+      "branch": "work/m3-r1-codec",
+      "assignment_epoch": 1,
+      "allowed_paths": [
+        "crates/wbd-codec/",
+        "docs/devlog/M3/",
+        "docs/evidence/M3/"
+      ],
+      "semantics": [
+        "record_crypto",
+        "link_mtu_budget",
+        "fec_codec"
+      ],
+      "entry": "path_budget and real record crypto interface/goldens"
+    },
+    {
+      "role": "M4",
+      "branch": "work/m4-r1-platform",
+      "assignment_epoch": 1,
+      "allowed_paths": [
+        "crates/wbd-platform/",
+        "r1/go-bridge/",
+        "docs/devlog/M4/",
+        "docs/evidence/M4/"
+      ],
+      "semantics": [
+        "platform_driver",
+        "go_bridge_adapter",
+        "lifecycle_integration"
+      ],
+      "entry": "native driver prefix/borrow/stop and Go-control bridge"
+    }
+  ],
+  "main_only": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/wbd-types/",
+    "crates/wbd-engine/src/lib.rs",
+    "r0/abi/",
+    "tools/",
+    "tests/",
+    ".github/",
+    ".governance/",
+    "docs/architecture/"
+  ],
+  "required_in_next_single_g2_transaction": [
+    "main registry reservation_revision 1→2; worker active branches, unique prefixes/semantic owners, epoch=1 and exact scopes",
+    "create all four worker refs anchored to a known common SOURCE with distinct cursor files on their own branches; propagate revised registry snapshot and cursor identity",
+    "bootstrap wbd-recovery crate/workspace and owner module compilation hooks without changing features=0",
+    "update r0 source-lock and static audit current-four-crate/all-workers-reserved assumptions; preserve historic qualification SOURCEs",
+    "run Governance/current native impacted Actions and verify no branch/epoch/cursor permission conflicts",
+    "do not write old Go repository, do not enable V4 or pretend worker sessions are running automatically"
+  ],
+  "status_flags": {
+    "workers_active": 0,
+    "workers_reserved": 4,
+    "branches_created": false,
+    "cursors_created": false,
+    "registry_modified": false,
+    "code_bootstrap_performed": false,
+    "actually_parallel_execution": false
+  },
+  "readiness_boundary": "Ready to initiate explicit M0 G2 authorization transaction; NOT granted worker write permission until registry/branches/cursors pass governance. Independent implementation can begin after that transaction, not after R5, and actual simultaneous work requires separate worker sessions.",
+  "next_action": "Execute bounded G2 activation/bootstrap from checked baseline, explicitly assign M1-M4 nonoverlapping branch/paths/epoch; static/product gates remain limited; verify Governance and changed code tests; main only for integration."
+}
