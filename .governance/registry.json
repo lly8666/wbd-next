@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-WAKE-STOP-002: bounded owner wake/stop race-free publish/armed/recheck using current std-only runtime; R01/R02 and M01 deterministic native proof; do not claim rtrb/loom/OS-event production hot path.",
-      "done_when": "Own native Rust Actions compile-once consumer proves lost-wakeup/stop/full queue+loan-return interleavings with named R01/R02/M01; keep fresh independent, no std blocking on ready path, no new shared dependencies, S/evidence/H; root SPSC/loom still M0 deferred."
+      "goal": "R1-M1-FEC-PARITY-READY-003: integrate an owned, strictly bounded, independent parity-ready queue and absolute-deadline wake/stop into existing std TX owner; never HOL-block fresh systematic or ordinary fresh; no FEC encoding, root deps or driver edit.",
+      "done_when": "Exact worker native compiled-once Rust r1_ tests cover first fresh before 32ms parity, parity-only wake at an absolute fake MonoNs deadline, repair/parity/fresh queue full+stop+return races, bounded parity service/fairness and no wrong early wake. Keep existing M1 tests passing, own S/evidence/H and Governance; real rtrb/loom/eventfd remains separate M0 dependency pin."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2 pure authenticated-receipt state, bounded shadow repair and time/budget decisions without socket or cipher",
-      "done_when": "Actions native pure state tests for holes/duplicate/expiry/uncertain with explicit untested integration; no socket/cipher"
+      "goal": "R2-M2-GLOBAL-SPARSE-002: implement purely in wbd-recovery a bounded process-wide multi-client/direction repair byte allocator with per-tunnel grants and aggregate hard ceilings, preserving existing per-direction 1s max(F/10,32768) semantics and sparse traffic never blocked merely by zero F.",
+      "done_when": "Own fake MonoNs r2_ native proofs over >=2 TunnelKeys, both directions, >=2 epochs, global limits, grant/expiry, double-completion, NotSent old-epoch refund, Uncertain conservative debit, client departure and no fresh HOL; source S/evidence/H and own Governance. No socket, Cargo/root or per-packet global mutex; M0 later composes actual submit path."
     },
     {
       "id": "M3",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1 single FrameBudget owner and true independent authenticated record AEAD+8B HP, followed by LINK/FEC",
-      "done_when": "Pinned old-Go oracle and actual Rust compiled tests for path budget and real cipher boundaries, no fake crypto or product V4"
+      "goal": "R1-M3-FEC-BLOCKID-SCOPE-009: add a strictly bounded authenticated-input 32-bit FEC wire BlockID to 64-bit extended-ID reconstruction/retirement helper, preserving trusted epoch+direction identity and fail-closed half-space ambiguity, without changing AEAD/PN uniqueness or inventing a Go session exporter.",
+      "done_when": "Old-Go 56B metadata oracle and Rust native r1_ tests for ID 0/reserved, 0xffffffff→1 wrap, zero-length jumps, >halfspace ambiguity, 3s/10s expiration, retired floors, adversarial old delayed parity and wrong generation/direction; prove rejected or duplicate input cannot resurrect FEC delivered state. Own S/evidence/H; no root/G2 checker changes; full live V4 binding NOT_RUN."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-IPV4-TCP-READY-002: exact bounded IPv4/TCP-like non-bootstrap DATA packet header+checksum/seq32 wire builder around immutable sealed record, real MTU and reject path; I01/I03 tests; no raw OS TX or V4 admission claim.",
-      "done_when": "Own native Rust Actions compile-once tests compare actual 20B IPv4+20B TCP header/checksum and seq32 wrap against pinned old-Go facts, <=MTU, odd size/fail closed, frozen record bytes unchanged; S/evidence/H; no AF_PACKET/sendmmsg/Windows native/physical claim."
+      "goal": "R1-M4-LINUX-BATCH-TX-003: implement bounded Linux nonblocking ready-only batch kernel transmit semantics (sendmmsg MSG_DONTWAIT up to32), borrowed immutable full packet slices, accurately classify definite accepted prefix/NotSent vs uncertain, stop/borrow fence; prove using unprivileged Linux UDP loopback as a syscall fixture, NOT claim AF_PACKET live raw TCP.",
+      "done_when": "Native Linux Actions tests compile once and actually invoke kernel nonblocking sendmmsg on loopback where supported, verify 0/n/all accepted prefix, EAGAIN definite NotSent, interrupted/short ambiguous, immutable frozen payload, batch cap and stop/loan safety. If libc ABI declarations or pinned dependency cannot be audited inside owned crate, file exact root dependency request to M0 and do not fake syscall PASS. Own S/evidence/H; no raw AF_PACKET/Windows/cold admission/product claim."
     }
   ]
 }
