@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 33,
-  "checkpoint_sha": "15df096947872ed13f7b6e9f685dea33afff0d17",
+  "sequence": 34,
+  "checkpoint_sha": "0edb6f9d19af89f010be66b2d3a40eb81e9cb2f8",
   "progress": "partial",
-  "task_id": "R2-M0-REAL-OUTER-REPAIR-001",
-  "current_task": "M0 integrated M4 IPv4/TCP packet builder with M2 exact whole-packet repair budget and M1 frozen record. Main CODE ec81bb41: M0 R2 native10/10 and M4 platform native12/12, 9/9 exact-source Actions success; evidence S15df0969 Governance38573567284 success.",
-  "why_now": "M0 seq32 H33efd878 was single cursor commit over c75ddbec; Governance38566807812 succeeded. M4 native worker 46a38c source was ready, and main prior repair charged guessed 40-byte overhead while M4 sink saw record only.",
-  "done_when": "M0 exact main code ec81bb41 packages real verified IP/TCP packet with trusted test tuple/options/MTU and scratch, budget reserves its exact length, sends same wire to M4; ciphertext PN/seq unchanged. Linux Rust native R2 10/10 run38572097988 and platform 12/12 run38572097873. All 9/9 Actions success including Governance/G2/R0/R1 and cross build artifact consume only. Evidence/project/devlog commit S15df0969 Governance38573567284 success, H cursor-only.",
-  "next_action": "Next M0 atom: import verified M1 wake-stop source 81cbc57 (worker native 19/19) and fix shared R0 ABI unfiltered test-count harness causing M1 run38567433175 to fail. Then review M3 FEC source ab7ef93 for FEC-on integration. Global sparse quota and real Go V4/network remain separate unverified tasks.",
+  "task_id": "R1-M0-M1-WAKE-ROOT-001",
+  "current_task": "M0 imported M1 native-proven std owner wake/stop and Arena final return notifications, fixed shared native R0 ABI unfiltered-count selector. Main final CODE SOURCE1e4e1c35 compiled-once R1 owner19/19 Actions38576030914, real Rust3+C1+Go4 ABI Actions38576030909, Governance38576030936 all SUCCESS on same SOURCE. Evidence/project S0edb6f9d Governance38576658884 success. Initial S26db regex bug and audit failure preserved.",
+  "why_now": "M0 seq33 checkpoint15df0969→HEAD33824496 one cursor-only H Governance38574005388 SUCCESS. M1 worker exact CODE81cbc57 native19/19, historical R0 ABI harness run38567433175 legitimately FAILED because full Rust suite counted22 not substring '3 passed'; M0 owns script and integration.",
+  "done_when": "M0 main imported exact M1 wake.rs, runtime/mod.rs and memory/mod.rs; std park/unpark SeqCst double-check, bounded fresh/repair queue and loan-return stop sequencing. Script selects only r0_abi_ with explicit three named cases and summary; C/Go native retained. M0 standalone negative Python unit tests. Final main SOURCE1e4e1c353160ad075981763f677519d85b2066a5 native owner19/19 #38576030914, native R0 ABI Rust3+C+Go4 #38576030909 and Governance #38576030936 all SUCCESS. Earlier S26db6ef4 ABI/Governance failure and S653be8 root-only pass retained. Evidence S0edb6f9d19af89f010be66b2d3a40eb81e9cb2f8 Governance38576658884 success; H only M0 cursor, not worker refs. No rtrb/loom/eventfd/real OS socket or V4 production claim.",
+  "next_action": "Next independent M0 atom after fresh registry and M3 seq10/H Governance: review independent tested M3 FEC TX/RX exact SOURCEab7ef93 (native55/55) and integrate real FEC-on link 56B, authenticated ReplayProtectedLaneRx before FecRxOwner, streaming systematic first business and missing-only RS20 recovery under M1 owner/M4 send classification. Use one compiled-once main SOURCE and exact native Actions; do not claim Go live V4 or FEC product. Separately schedule process-wide multi-client sparse budget and M1 rtrb/loom root deps if actually needed.",
   "unverified": true,
-  "last_tested_source": "ec81bb412c0250e2384e39b7d5727d0675a29891",
+  "last_tested_source": "1e4e1c353160ad075981763f677519d85b2066a5",
   "evidence_refs": [
-    "docs/evidence/M0/R2-real-ipv4-tcp-budgeted-repair.json"
+    "docs/evidence/M0/R1-M1-wake-root-integration.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R2-real-ipv4-tcp-budgeted-repair.md",
+    "docs/devlog/M0/R1-M1-wake-root-integration.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/04-CARRIER-IO.md",
-    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/architecture/modules/02-RUNTIME.md",
+    "docs/architecture/modules/03-MEMORY.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 main code ec81bb41 imported worker-M4 real IPv4/TCP envelope. M2 budget charges actual whole packet including negotiated options and M4 sink sees identical full bytes. Native R2 10/10 and platform 12/12 at same SOURCE; 9/9 triggered Actions success. Receipt S15df0969 Governance38573567284 success. Next M0 M1 owner wake-stop import plus shared ABI test filter fix. No worker refs touched. OS raw network, Go live V4, product/perf/physical not run."
+  "partial_summary": "M0 clean seq33 checkpoint15df0969→H33824496 Governance38574005388 PASS. M1 actual wake-stop worker SOURCE81cbc57 native19/19 had old root ABI harness false-fail run38567433175. M0 imported exact M1 owner runtime/wake + memory; first main source26db6ef4 owner19/19, R1/R2/G2 ABI cross/static PASS but R0 native FAIL due overescaped regex, Governance failed while main moved; corrected S653be8 R0 native PASS, then main CODE SOURCE1e4e1c35 coupled R0 and owner workflows to run together: M1 native19/19 run38576030914, R0 ABI Rust3/3+C native+Go4/4 run38576030909, Governance38576030936 all SUCCESS. Evidence S0edb6f9d Governance38576658884 success. No role branch mutated, ABI features0 V4 disabled. Next M0 integrate M3 FEC real TX/RX after AEAD replay from verified M3 SOURCEab7ef93. rtrb/loom, OS raw driver, Go V4 live session, native Win/ARM, perf/physical/product NOT_RUN."
 }
