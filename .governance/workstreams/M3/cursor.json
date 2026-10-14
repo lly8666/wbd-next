@@ -4,18 +4,18 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 5,
-  "checkpoint_sha": "0a05eb6952184538dcebeff944ebecb9a58a7edf",
+  "sequence": 6,
+  "checkpoint_sha": "51e8bed1b2c0ea9d6dab3f19e359a7d25596f3fd",
   "progress": "partial",
-  "task_id": "R1-M3-REPLAY-003",
-  "current_task": "Authenticated, bounded per-lane PN replay window implemented in record_replay.rs, real AEAD-first unique delivery gate and 256bit lazy tagged page ring with N/256+1 physical pages.",
-  "why_now": "Previous M3 AES/ChaCha record 8B HP all three suites independently native-proven; module05 requires after-AEAD replay dedup so old duplicate PN cannot be delivered even with valid authentication; 8 MiB per-lane hard metadata bound and effective horizon reported.",
-  "done_when": "Actions worker native compiled-once 23/23 r1 PASS (6 FrameBudget+5 ChaCha+4 AES+8 new replay), seven same-SOURCE workflows PASS including governance retry2; strict error/duplicate/floor/large PN+MAX boundary covered, evidence S then cursor-only H. No main replay integration or product claim.",
-  "next_action": "M0: consume ReplayProtectedLaneRx only after lane admission, update normal/off RX first-packet test to include after-auth PN duplicate/late/tamper rejection and owned-buffer stop at ONE main SOURCE; M3 next independent task: old-Go-differential LINK reassembly ±MTU, overlap/conflict and timeout tests (M3-only paths) once M0 scopes confirmed. Never touch root Cargo/ABI.",
+  "task_id": "R1-M3-LINK-REASSEMBLY-004",
+  "current_task": "Completed bounded LINK reassembly slow path for authenticated bytes: ordinary zero-copy, old Go 20B wire and golden MTU boundary, out-of-order, deterministic 16-slot eviction, 5s/10s retire, scoped epoch/direction/extended ID and no attack-sized parts[count] allocation.",
+  "why_now": "Previous M3 AES/ChaCha/PN replay all native proven, module06 requires bounded LINK fragment reassembly without adding LINK20 to ordinary Normal/FEC-off packet, retaining old-Go valid wire semantics with stricter fail-closed conflict handling.",
+  "done_when": "Rust1.85.1 native compiled-once worker 31/31 scoped r1 tests PASS including 8 new LINK cases and unchanged 23 earlier Budget/AEAD/replay; seven same-SOURCE Actions including Governance PASS. Evidence S, then cursor-only H; no M0 live fragmented Normal/off E2E claimed.",
+  "next_action": "M0: integrate link_reassembly.rs after real authenticated replay-protected record RX, supply epoch/direction/extended32 ID and MonoNs-based ms owner timer; test one real fragmented Normal-off first delivery+late/conflict and no ordinary HOL on one main SOURCE. M3 next task: genuine FEC systematic/parity codec against old Go oracle and profile vectors if M0 priority, never fake parity; root/ABI owned by M0.",
   "unverified": true,
-  "last_tested_source": "36778ac78031dd45d2f373071146da565af17275",
+  "last_tested_source": "714d057e9a86d1bed6a6f6ce157853cf613fcccd",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-REPLAY-003.json"
+    "docs/evidence/M3/R1-M3-LINK-REASSEMBLY-004.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -25,7 +25,8 @@
     "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
     "docs/devlog/M3/R1-M3-CHACHA-RECORD-001.md",
     "docs/devlog/M3/R1-M3-AES-RECORD-002.md",
-    "docs/devlog/M3/R1-M3-REPLAY-003.md"
+    "docs/devlog/M3/R1-M3-REPLAY-003.md",
+    "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md"
   ],
-  "partial_summary": "M3 seq4 prior AES 3 genuine suites with full 8B HP/native 15/15, H b676b0b governance38556395606 attempt2 PASS. Replay implementation S e1e0769 new AEAD-first wrapper, N=nextpow2(rate*max(Tcache+2R,FEC+2R)*1.25), metadata cap and lazy 256PN tagged bitmap N/256+1 boundary pages. S1 native run38557594354 failed 2 test-only E0716 temp borrows; S2 dc0913c native38557713321 failed remaining E0716; final SOURCE36778ac78031dd45d2f373071146da565af17275 worker-native38557810459 23/23 r1 PASS including 8 replay C03/C04 and existing budget/3suite cases, 7 workflows same SOURCE final success: R0 codec38557810406, framing38557810401, LINK/FEC38557810497, G2 38557810455, audit38557810438, Governance38557810510 attempt1 FAIL control/main moved attempt2 PASS. Evidence S0a05eb6 and cursor-only H seq5. Replay not yet M0 integrated; existing ChaCha-only Normal/off native first packet main separate SOURCE8731690 run38552615723 2/2 PASS WITHOUT replay. V4 admission/product/perf/physical NOT_RUN. Root Cargo/lock/shared ABI unchanged."
+  "partial_summary": "M3 seq5 replay SOURCE 36778ac7 native 23/23 and H ef3e8e44 Governance38558539953 SUCCESS. New LINK code S b36295ba worker native38559909516 30/31 PASS 1 test-only error: count65535 total65 is rejected earlier by old-Go base parser; corrected exact test and min-MTU count65 guard at SOURCE714d057e9a86d1bed6a6f6ce157853cf613fcccd. Worker native38560097240 31/31 PASS (8 LINK+8 replay+4 AES+5 ChaCha+6 budget), binary SHA256 aac5aea047120b09690b063e3feac9ddf92a28e207455333284712338ec56419. Seven same-SOURCE actions PASS: worker38560097240, R0 codec38560097328, framing38560097319, LINK/FEC38560097591, G2 38560097509, audit38560097349, governance38560097363. Old Go valid LINK MTU 64 fixture and 1400/1500 max65535 tested; intentionally stricter conflict retire and count guard than pinned Go. Reassembly only accepts authenticated-link bytes by integration contract; M0 owner has NOT yet integrated new table or real timer; product/perf/physical/V4 NOT_RUN. Evidence S51e8bed1; cursor-only H seq6. No root/shared ABI/CI changes."
 }
