@@ -73,4 +73,46 @@ class WorkerRoleTests(unittest.TestCase):
         with self.assertRaises(g.ContractError):
             w.verify_worker_commits(roles()["roles"][1],[merge])
 
+    def test_m3_main_sync_remote_tree_and_root_pins(self):
+        main_parent = "b" * 40
+        control = "c" * 40
+        proposed = "d" * 40
+        class Api:
+            def __init__(self):
+                self.path="crates/wbd-codec/src/path_budget.rs"
+                self.lock_status="ahead"
+                self.first_parent=w.M3_APPROVED_PRE_SYNC_HEAD
+                self.total=8
+            def get(self, endpoint):
+                if endpoint.startswith("commits/"):
+                    return {"parents":[{"sha":self.first_parent},{"sha":main_parent}]}
+                if endpoint.startswith("compare/"):
+                    query=endpoint.partition("?")[0]
+                    if query=="compare/"+main_parent+"..."+control:
+                        return {"status":"ahead"}
+                    if query=="compare/"+w.M0_CRYPTO_LOCK_SOURCE+"..."+main_parent:
+                        return {"status":self.lock_status}
+                    if query=="compare/"+main_parent+"..."+proposed:
+                        return {"status":"ahead","total_commits":self.total,
+                                "commits":[{} for _ in range(self.total)],
+                                "files":[{"filename":self.path}]}
+                raise AssertionError("unexpected "+endpoint)
+        role=dict(roles()["roles"][1])
+        role["id"]="M3"
+        role["allowed_paths"]=["crates/wbd-codec/"]
+        self.assertEqual(w.review_m3_main_sync(Api(),role,proposed,control),
+                         ["crates/wbd-codec/src/path_budget.rs"])
+        for field, value in [
+            ("path","Cargo.lock"),
+            ("path","crates/wbd-codec/Cargo.toml"),
+            ("path",".github/workflows/governance.yml"),
+            ("lock_status","diverged"),
+            ("first_parent","e"*40),
+            ("total",13)
+        ]:
+            api=Api()
+            setattr(api,field,value)
+            with self.subTest(field=field), self.assertRaises(g.ContractError):
+                w.review_m3_main_sync(api,role,proposed,control)
+
 if __name__=="__main__": unittest.main()
