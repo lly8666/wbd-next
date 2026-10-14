@@ -20,3 +20,12 @@ First probe SOURCE 5f4c755 run38545556252 **FAILED** (Rust test harness E0382 co
 
 ## Scope / next single atom
 M0 root dependency/lock pin approval only. Original Go oracle M0 pathmtu at its separate SOURCE, M3 FrameBudget Rust at SOURCE3aa121e4, and new crypto API probe at SOURCE6b3909 do **not** combine into product pass. M3 must sync main root Cargo/lock before implementing genuine codec `LaneTxCrypto`/`LaneRxCrypto` and C01-C04 old Go differential wire+tamper+PN and 8B HP; worker retains all real crypto implementation ownership. M1 owner, M4 driver, M2 receipt remain independent. After M3 real S/H and worker integration available, M0 same-SOURCE Actions native in-process Normal/FEC off first packet. Production V4 DISABLED, Rust E2E/perf/physical NOT_RUN; no config/CLI/GUI change (internal dependency-only).
+
+
+## Observed postscript — exact original failure and cross-toolchain fix
+
+At integrated SOURCE [1ae49bd](https://github.com/lly8666/wbd-next/commit/1ae49bd644a4624db331c80d2dce6a8d181189e0), 14/15 Actions were SUCCESS including static audit, native ABI and native crypto API smoke; the [cross ABI run 38546166970](https://github.com/lly8666/wbd-next/actions/runs/38546166970) was **FAILED**, specifically Windows GNU `aws-lc-sys` could not find NASM. ARM64 build had passed. This failure is retained.
+
+M0-only workflow toolchain correction [f2a7a84](https://github.com/lly8666/wbd-next/commit/f2a7a84dd8985e80964dac8b65e7b92652a07e8e) adds `nasm` only to Windows GNU CI build prerequisites. [Cross ABI Actions 38546390977](https://github.com/lly8666/wbd-next/actions/runs/38546390977) now verified SUCCESS for both ARM64 and Windows GNU **compile, C ABI link, build artifact hash, separate consume and static target inspection**; native execution of these cross targets remains NOT_RUN. Same-source governance38546390961 SUCCESS. Source `f2a7a84` differs from `1ae49bd`, so **do not assemble 14 old green + new green into a same-SOURCE qualification**. This atom approves the pinned manifest/lock and independently observed cross-toolchain repair, but it cannot claim Rust business wire compatibility or entire-product PASS.
+
+Definitive receipts: `docs/evidence/M0/R1-crypto-dependency-lock.json`. M0 did not touch M3 or any worker branch. Stable pinned versions must be brought to M3 using its legal branch sync process; M3 crypto implementation is still owned by M3, not by this M0 probe.
