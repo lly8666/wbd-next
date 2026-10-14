@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-INTEGRATION-PATROL-001",
+  "source_sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+  "code_sources": [
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "scope": "Engine one-way wbd-codec+platform+recovery link/Cargo.lock; static audit dependency whitelist and pinned scope; first packet integration ports documentation"
+    },
+    {
+      "sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+      "scope": "G2 historic scaffold-only and platform historic r0_ test name filters, no relaxing expected counts"
+    }
+  ],
+  "result": "PASS_PUBLIC_WIRING_AND_SCOPED_HISTORIC_CI_ONLY",
+  "preflight": {
+    "main_start": "694bfaae5ef03827e057726c73262b2110f5d5a2",
+    "prior_checkpoint": "572de3c508a797124b12e3f32830ca43d1ffea5c",
+    "M0_cursor_seq": 19,
+    "continuity": "CLEAN: one cursor-only H since prior checkpoint",
+    "registry_revision": 2,
+    "active_workers": [
+      "M1",
+      "M2",
+      "M3",
+      "M4"
+    ],
+    "pull_requests_at_start": 0,
+    "worker_requests_at_start": 0
+  },
+  "live_change_notice": "During patrol M1/M2/M3/M4 independently pushed new source/Actions. Early no-new-source finding describes only initial snapshot and is superseded by later recorded exact SHA.",
+  "worker_progress_observed": [
+    {
+      "role": "M1",
+      "branch": "work/m1-r1-runtime",
+      "head_at_last_check": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+      "cursor_sequence": 2,
+      "cursor_checkpoint": "0a65e40598e4b7fbcbb407274c83767bf53fcda0",
+      "cursor_progress": "ready_for_integration",
+      "cursor_unverified": false,
+      "first_source_sha": "46571e69baa83bd01061ccbf03de7f4ab277d",
+      "worker_run": 38538248506,
+      "conclusion": "success",
+      "rust_native_cases": 10,
+      "governance_repaired_run": 38539033023,
+      "governance_conclusion": "success",
+      "request": ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+      "request_resolution": "TRIAGED_DEFER_EXTERNAL_RTRB_AND_LOOM_APPROVAL: first owner/arena model and native tests work without them; future production SPSC/loom require M0 pinned version/license/dependency graph and non-inverted root Cargo approval, not yet qualified or added"
+    },
+    {
+      "role": "M2",
+      "branch": "work/m2-r2-recovery",
+      "head_at_last_check": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+      "cursor_sequence": 2,
+      "cursor_progress": "partial",
+      "cursor_unverified": true,
+      "first_source_sha": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+      "worker_run": 38538225302,
+      "conclusion": "success",
+      "rust_native_cases": 8,
+      "governance_repaired_run": 38539068727,
+      "governance_conclusion": "success",
+      "old_g2_run": 38538225378,
+      "old_g2_conclusion": "failure",
+      "old_g2_cause": "Old G2 consumer executed 9 passing tests incl 8 new R2 tests and demanded exactly one bootstrap. Main scoped-filter fix source40a8a53 PASS, worker source was not retroactively retested."
+    },
+    {
+      "role": "M3",
+      "branch": "work/m3-r1-codec",
+      "head_at_last_check": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+      "cursor_sequence": 0,
+      "cursor_progress": "planned",
+      "cursor_unverified": true,
+      "initial_source_error": "44975170db18cd9be4eebf73ceaf101c6e32e540 missing imports LINK_HEADER and MAX_WIRE_LEN in path_budget_tests.rs, compile FAILED 38538349987",
+      "repaired_source_sha": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+      "worker_run": 38538473699,
+      "conclusion": "success",
+      "r0_codec_regression_run": 38538473703,
+      "r0_codec_result": "success",
+      "governance_run": 38538473609,
+      "governance_conclusion": "success",
+      "cursor_handoff": "FIRST_WORKER_H_NOT_YET_VERIFIED"
+    },
+    {
+      "role": "M4",
+      "branch": "work/m4-r1-platform",
+      "head_at_last_check": "b831d72a8d18b072b54dacc5614b900824ee2fe9",
+      "cursor_sequence": 2,
+      "cursor_progress": "partial",
+      "cursor_unverified": true,
+      "first_source_sha": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+      "worker_run": 38538117103,
+      "conclusion": "success",
+      "rust_native_cases": 6,
+      "native_scope": "Five fake/bounded driver cases plus Linux UDP socket smoke. NOT AF_PACKET, sendmmsg, Windows real native or performance qualification",
+      "governance_repaired_run": 38538965938,
+      "governance_conclusion": "success",
+      "request": ".governance/workstreams/M4/requests/M4-M0-R0-platform-filter.md",
+      "request_resolution": "RESOLVED_ON_MAIN_SOURCE40a8a53; new main exact R0 filter run38538899575 SUCCESS. Worker branch not rewritten; historic worker failure remains truthful",
+      "old_r0_run": 38538117164,
+      "old_r0_conclusion": "failure",
+      "old_r0_cause": "Old unfiltered 13/13 Rust tests passed but exact 7 suite assertion failed."
+    }
+  ],
+  "common_dependency_graph": {
+    "workspace": [
+      "wbd-types",
+      "wbd-codec",
+      "wbd-platform",
+      "wbd-recovery",
+      "wbd-engine"
+    ],
+    "engine_direct_dependencies": [
+      "wbd-types",
+      "wbd-codec",
+      "wbd-platform",
+      "wbd-recovery"
+    ],
+    "lower_level_dependencies": "Each of codec/platform/recovery depends only on types; types has none; no inversion",
+    "external_dependencies_added": 0,
+    "rust_toolchain": "1.85.1",
+    "r0_engine_ffi_features": 0,
+    "production_v4": "DISABLED_FAIL_CLOSED",
+    "qualification": "COMPILE_ONLY_ENGINE_ASSEMBLY_EDGE; no normal/fec off business data path"
+  },
+  "M0_real_actions": [
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "g2-bootstrap",
+      "run": 38538320148,
+      "conclusion": "success",
+      "scope": "Five-crate actual --locked compile + separate recovery stub consumer"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-qualification-audit",
+      "run": 38538320136,
+      "conclusion": "success",
+      "scope": "One-way dependency graph Cargo.toml/Cargo.lock exact whitelist"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-native-abi",
+      "run": 38538319960,
+      "conclusion": "success"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-cross-abi",
+      "run": 38538320140,
+      "conclusion": "success",
+      "native_target_execution": "NOT_RUN"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "governance",
+      "run": 38538320018,
+      "conclusion": "success"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-build",
+      "run": 38538320080,
+      "conclusion": "success"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-codec",
+      "run": 38538320025,
+      "conclusion": "success"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-record-framing",
+      "run": 38538319977,
+      "conclusion": "success"
+    },
+    {
+      "sha": "93503a4fc7d6bec305e20ae361cb5472905668d0",
+      "workflow": "r0-link-fec-wire",
+      "run": 38538320162,
+      "conclusion": "success"
+    },
+    {
+      "sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+      "workflow": "g2-bootstrap",
+      "run": 38538899469,
+      "conclusion": "success",
+      "build_job": 115768504587,
+      "consume_job": 115768602368,
+      "build_artifact": 11881343166,
+      "build_digest": "sha256:920fe3cf1a7963394d3fcc048707c44432b8a8f67d99793f860d020aeed2747c",
+      "result_artifact": 11881880007,
+      "result_digest": "sha256:e557fdf9998473c0d262b5ae91e0e1915bf94b9363e16d680ca52b5f88c8200f",
+      "exact_test_scope": "1 old bootstrap only"
+    },
+    {
+      "sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+      "workflow": "r0-platform-fake",
+      "run": 38538899575,
+      "conclusion": "success",
+      "build_job": 115768505193,
+      "consume_job": 115768618150,
+      "build_artifact": 11880928441,
+      "build_digest": "sha256:184cc0d8542e3affaa5378f46287def6c8e0f299e05f141c89ca32dbc879be75",
+      "result_artifact": 11880524250,
+      "result_digest": "sha256:e061ac33f2fc1e1a2fa52de01b2cc6b4f3b6cc0219e5e5f17dc70c912f4235ab",
+      "exact_test_scope": "7 old r0_ tests only"
+    },
+    {
+      "sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+      "workflow": "governance",
+      "run": 38538899485,
+      "conclusion": "success"
+    }
+  ],
+  "worker_branch_mutation": "NONE_BY_M0; leave refs untouched because worker sessions may hold unpublished working trees. Exact old failures retained, not silently marked new source PASS.",
+  "R1_normal_fec_off_true_aead_open_delivery": "NOT_RUN",
+  "M3_true_rust_aead_hp": "NOT_IMPLEMENTED_AS_OF_INSPECTED_WORKER_SOURCES",
+  "R1_worker_combined_source": "NOT_YET_CREATED",
+  "linux_af_packet_and_windows_native": "NOT_RUN",
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Wait for M3 true Rust crypto Seal/Open and branch S/H plus M1/M4 needed adapters; M0 then safely compose their tested commits on one main SOURCE, implement native in-process Normal/FEC off exact business payload end-to-end, separate later real OS I/O. M1 rtrb/loom versions pending M0 separate dependency approval, not permitted to bypass pin/audit."
+}
