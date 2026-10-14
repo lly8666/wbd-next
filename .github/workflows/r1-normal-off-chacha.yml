@@ -1,5 +1,5 @@
-name: M0 R1 Normal FEC-off actual ChaCha first packet
-run-name: "M0|${{ github.sha }}|r1-normal-off-chacha"
+name: M0 R1 Normal FEC-off three-suite replay protected first packet
+run-name: "M0|${{ github.sha }}|r1-normal-off-replay"
 on:
   push:
     branches: [main]
@@ -15,7 +15,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: r1-first-chacha-${{ github.ref }}-${{ github.sha }}
+  group: r1-first-auth-replay-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 jobs:
   build:
@@ -40,7 +40,8 @@ jobs:
           import pathlib,json,hashlib,os
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           parts=['crates/wbd-engine/src/memory/mod.rs','crates/wbd-engine/src/runtime/mod.rs',
-                 'crates/wbd-codec/src/record_crypto.rs','crates/wbd-codec/src/path_budget.rs',
+                 'crates/wbd-codec/src/record_crypto.rs','crates/wbd-codec/src/record_replay.rs',
+                 'crates/wbd-codec/src/record_frame.rs','crates/wbd-codec/src/path_budget.rs',
                  'crates/wbd-platform/src/r1.rs','crates/wbd-engine/tests/r1_normal_off_chacha.rs']
           meta={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
                 'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
@@ -48,7 +49,7 @@ jobs:
                 'test_binary_sha256':sha('r1-normal-build/test.bin'),
                 'lock_sha256':sha('Cargo.lock'),
                 'source_parts_sha256':{p:sha(p) for p in parts},
-                'scope':'M1_REAL_ARENA_M3_REAL_CHACHA_AEAD_HP8_M4_IN_PROCESS_READY_SINK_NOT_PRODUCTION'}
+                'scope':'M1_REAL_ARENA_M3_REAL_CHACHA_AES_HP8_AUTHENTICATED_PN_REPLAY_M4_IN_PROCESS_NOT_PRODUCTION'}
           pathlib.Path('r1-normal-build/manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
           print(json.dumps(meta,indent=2))
           PY
@@ -70,7 +71,7 @@ jobs:
         with:
           name: r1-normal-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-normal-build
-      - name: Verify exact source/lock/test binary and execute native two-case pipeline
+      - name: Verify exact source/lock/test binary and execute native three-case authenticated replay pipeline
         shell: bash
         run: |
           set -euo pipefail
@@ -97,15 +98,15 @@ jobs:
           m=json.load(open('r1-normal-build/manifest.json'))
           log=pathlib.Path('r1-normal-result/tests.log').read_text()
           n=log.count(' ... ok')
-          ok=int(os.environ['TEST_EXIT'])==0 and n==2 and '2 passed; 0 failed' in log
+          ok=int(os.environ['TEST_EXIT'])==0 and n==3 and '3 passed; 0 failed' in log
           result={'source_sha':m['source_sha'],'run_id':m['run_id'],
                   'attempt':m['attempt'],'binary_sha256':m['test_binary_sha256'],
                   'lock_sha256':m['lock_sha256'],
                   'test_log_sha256':hashlib.sha256(log.encode()).hexdigest(),
                   'native_tests_passed':n,'test_exit':int(os.environ['TEST_EXIT']),
                   'result':'PASS' if ok else 'FAIL',
-                  'scope':'R1_IN_PROCESS_CHACHA_NORMAL_FEC_OFF_ONLY',
-                  'not_qualified':'GO_V4_ADMISSION;NATIVE_RAW_CARRIER;AES_GCM;RX_REPLAY;PERFORMANCE;PRODUCTION_V4;PHYSICAL'}
+                  'scope':'R1_IN_PROCESS_CHACHA_AES_REPLAY_NORMAL_FEC_OFF_ONLY',
+                  'not_qualified':'GO_V4_ADMISSION;NATIVE_RAW_CARRIER;R2_RECEIPT_REPLAY_ADMISSION;PERFORMANCE;PRODUCTION_V4;PHYSICAL'}
           pathlib.Path('r1-normal-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result,indent=2))
           if not ok:sys.exit(1)

@@ -6,8 +6,10 @@
 
 /// R0 opaque TLS-like record structural segmentation (not authentication).
 pub mod record_frame;
-/// First real authenticated ChaCha lane record; no replay window or AES qualification.
+/// Authenticated ChaCha/AES128/AES256 record AEAD and complete eight-byte HP.
 pub mod record_crypto;
+/// Per-admitted-lane authenticated PN uniqueness and bounded replay window.
+pub mod record_replay;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
 /// Unique path MTU budget accounting for Normal/FEC off.

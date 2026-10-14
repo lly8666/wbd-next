@@ -5,7 +5,8 @@
  use std::sync::Arc;
  use std::time::Instant;
  use wbd_codec::path_budget::{FecReservation,FrameBudget,FrameBudgetInput};
- use wbd_codec::record_crypto::{CryptoError,DirectionKeys,LaneRxCrypto,LaneTxCrypto};
+ use wbd_codec::record_crypto::{CryptoError,DirectionKeys,LaneRxCrypto,LaneTxCrypto,RecordSuite};
+ use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
  use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
  use wbd_engine::memory::Arena;
  use wbd_engine::runtime::{QueueLimits,RxOwner,TxKind,TxOwner};
@@ -24,6 +25,14 @@
  }
  fn limits() -> QueueLimits {
      QueueLimits {slots:4,bytes:1024,max_age_ns:1_000_000}
+ }
+ fn replay_config() -> ReplayWindowConfig {
+     // 1000 PN/s, 100ms cache, 0 FEC, no real time signal: 256 PN
+     // coverage uses exactly TWO tagged pages = 80 bytes.
+     ReplayWindowConfig {
+         pn_per_second:1_000,cache_horizon_ms:100,
+         fec_horizon_ms:0,rtt_ms:0,metadata_budget_bytes:80
+     }
  }
  fn budget() -> FrameBudget {
      FrameBudget::derive(FrameBudgetInput {
@@ -88,11 +97,15 @@
      assert_eq!(frozen.bytes(),before);
      assert_eq!(owner.queued(),(0,1)); // repair remains pending, not sent
 
-     let opener=LaneRxCrypto::new(keys(),mtu.record_wire_mtu).unwrap();
+     let mut opener=ReplayProtectedLaneRx::new(keys(),mtu.record_wire_mtu,replay_config()).unwrap();
+     assert_eq!((opener.info().effective_window_pn,opener.info().allocated_metadata_bytes),(256,80));
      let mut altered=sink.frames[0].clone();
      let last=altered.len()-1;
      altered[last]^=0x40;
-     assert!(matches!(opener.open_in_place(&mut altered),Err(CryptoError::Authentication)));
+     assert_eq!(opener.open_unique_in_place(&mut altered),
+         Err(UniqueOpenError::InvalidRecord(CryptoError::Authentication)));
+     assert_eq!(opener.max_seen(),None); // invalid unauthenticated PN cannot shift floor
+     assert_eq!(opener.stats().invalid_records,1);
      // Only an authenticated opener may create application delivery.
      let mut rx_arena=Arena::new(32,2,256,1,80_000).unwrap();
      let mut rx_owner=RxOwner::new(limits()).unwrap();
@@ -100,12 +113,18 @@
      rx_unique.writable()[..used].copy_from_slice(&sink.frames[0]);
      rx_owner.offer(rx_unique,0..used,MonoNs(2)).unwrap();
      let mut packet=rx_owner.take_ready(MonoNs(2)).expect("ready, no ACK/FEC wait");
-     let authenticated=opener.open_in_place(packet.wire_mut()).unwrap();
+     let authenticated=opener.open_unique_in_place(packet.wire_mut()).unwrap();
      assert_eq!(authenticated.pn,pn);
      assert_eq!(authenticated.kind,AUTHENTICATED_LINK_KIND);
      let delivered=authenticated.payload.to_vec();
      assert_eq!(delivered,business);
+     assert_eq!(opener.stats().delivered,1);
      drop(packet);
+     // Another valid, already sealed repair copy must never reach business.
+     let mut repair_duplicate=sink.frames[0].clone();
+     assert_eq!(opener.open_unique_in_place(&mut repair_duplicate),Err(UniqueOpenError::Duplicate));
+     assert_eq!(opener.stats().delivered,1);
+     assert_eq!(opener.stats().duplicates,1);
      assert_eq!(rx_arena.report().loaned,0);
      assert_eq!(rx_owner.stop(),0);
      assert!(rx_arena.stop().stopping);
@@ -154,4 +173,67 @@
      drop(frozen);
      assert_eq!(arena.drain_returns(),1);
      assert_eq!(arena.report().loaned,0);
+ }
+
+
+ #[test]
+ fn r1_normal_off_three_actual_suites_replay_is_checked_after_auth_not_wire_pn() {
+     let mtu=budget();
+     for suite in [RecordSuite::ChaCha20Poly1305,RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm] {
+         let mut tx=LaneTxCrypto::new_for_suite(keys(),mtu.record_wire_mtu,suite).unwrap();
+         let mut rx=ReplayProtectedLaneRx::new_for_suite(
+             keys(),mtu.record_wire_mtu,suite,replay_config()).unwrap();
+         assert_eq!(rx.info().allocated_metadata_bytes,80);
+         let mut send_arena=Arena::new(60+suite as u32,1,256,1,60_000).unwrap();
+         let mut receive_arena=Arena::new(70+suite as u32,1,256,1,60_000).unwrap();
+         let mut owner=RxOwner::new(limits()).unwrap();
+         let mut sink=InProcessSink::default();
+         let payloads:[&[u8];2]=[b"\x00safe\xff",b"\x00next\x00packet"];
+         for (index,payload) in payloads.into_iter().enumerate() {
+             // This is an actual M1-owned buffer, not a fake FrozenRecord.
+             let mut unique=send_arena.allocate().unwrap();
+             unique.writable()[14..14+payload.len()].copy_from_slice(payload);
+             let (pn,len)=tx.seal_in_place(
+                 AUTHENTICATED_LINK_KIND,unique.writable(),payload.len(),0).unwrap();
+             assert_eq!(pn,index as u64);
+             assert_eq!(len,payload.len()+FIXED_WIRE_OVERHEAD); // no LINK/FEC tax
+             let frozen=unique.freeze(0..len,FrozenMetadata {
+                 lane:lane(),pn:RecordPn(pn),seq:SeqOffset(index as u64),
+                 carrier_snapshot:99
+             }).unwrap();
+             let outcome=submit_ready(&mut sink,std::slice::from_ref(&frozen));
+             assert_eq!(outcome.accepted_prefix,1);
+             assert_eq!(outcome.uncertain_index,None);
+             assert_eq!(frozen.bytes(),&sink.frames[index]);
+             drop(frozen);
+             assert_eq!(send_arena.drain_returns(),1);
+             let mut recv=receive_arena.allocate().unwrap();
+             recv.writable()[..len].copy_from_slice(&sink.frames[index]);
+             owner.offer(recv,0..len,MonoNs(index as u64)).unwrap();
+             let mut packet=owner.take_ready(MonoNs(index as u64)).unwrap();
+             let opened=rx.open_unique_in_place(packet.wire_mut()).unwrap();
+             assert_eq!(opened.pn,pn);
+             assert_eq!(opened.kind,AUTHENTICATED_LINK_KIND);
+             assert_eq!(opened.payload,payload);
+             drop(packet);
+             assert_eq!(receive_arena.drain_returns(),1);
+         }
+         assert_eq!(sink.calls,2);
+         assert_eq!(rx.stats().delivered,2);
+         let mut duplicate=sink.frames[0].clone();
+         assert_eq!(rx.open_unique_in_place(&mut duplicate),Err(UniqueOpenError::Duplicate));
+         let mut tampered=sink.frames[1].clone();
+         let last=tampered.len()-1;
+         tampered[last]^=0x40; // authentic PN check must NOT happen before tag
+         assert_eq!(rx.open_unique_in_place(&mut tampered),
+             Err(UniqueOpenError::InvalidRecord(CryptoError::Authentication)));
+         assert_eq!(rx.max_seen(),Some(1));
+         assert_eq!(rx.stats().delivered,2);
+         assert_eq!((rx.stats().duplicates,rx.stats().invalid_records),(1,1));
+         assert_eq!(owner.stop(),0);
+         assert_eq!(receive_arena.stop().loaned,0);
+         assert!(receive_arena.quiesced());
+         assert_eq!(send_arena.stop().loaned,0);
+         assert!(send_arena.quiesced());
+     }
  }
