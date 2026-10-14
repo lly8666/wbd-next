@@ -30,12 +30,12 @@ fn r1_fec_old_go_independent_k2_partial_parity_exact_bytes() {
     let rs=ReedSolomon20::new().unwrap();
     let a=[1u8,2,3];let b=[0xa0,0xb1,0xc2,0xd3,0xe4];
     let out=rs.encode_active(&[&a,&b],4).unwrap();
+    // The independent Go generator computes all four rows, but pinned Go
+    // FastBlockEncoder sends only min(k,R) = 2 for a k=2 partial block.
     assert_eq!(out,vec![vec![0xc0,0x81,0xa7,0xe6,0xfb],
-                        vec![0x67,0x58,0xbb,0x84,0xf9],
-                        vec![0xf3,0xdf,0x1b,0x37,0x10],
-                        vec![0xed,0x71,0xb4,0x28,0xcc]]);
+                        vec![0x67,0x58,0xbb,0x84,0xf9]]);
     let mut hdr=meta(2,5,4);hdr.lengths[0]=3;
-    let candidates=vec![(20,out[0].as_slice()),(22,out[2].as_slice())];
+    let candidates=vec![(21,out[1].as_slice()),(20,out[0].as_slice())];
     let recovered=rs.recover_missing(&hdr,&[None,None],&candidates).unwrap();
     assert_eq!(recovered,vec![(0,a.to_vec()),(1,b.to_vec())]);
 }
@@ -59,8 +59,14 @@ fn r1_fec_go_streaming_header_and_partial_final_wire_exact_geometry() {
     let rs=ReedSolomon20::new().unwrap();
     let src=[0xaa,0xbb,0xcc];
     let wire=rs.streaming_wire(0x01020304,0,&src,4,59).unwrap();
-    let golden="5746010001020304001404140003000100030000000000000000000000000000000000000000000000000000000000000000000000000000000000aabbcc";
-    let expected=(0..golden.len()).step_by(2).map(|i|u8::from_str_radix(&golden[i..i+2],16).unwrap()).collect::<Vec<_>>();
+    // Read exact immutable pinned-old-Go byte fixture; do not hand-copy
+    // the 56B header's many reserved zeros.
+    let old_go=include_str!("../../../r0/fixtures/legacy-link-fec-wire-v1.txt");
+    let row=old_go.lines().find(|line|line.starts_with("fec-source|")).unwrap();
+    let golden=row.split('|').nth(1).unwrap();
+    let expected=(0..golden.len()).step_by(2)
+        .map(|i|u8::from_str_radix(&golden[i..i+2],16).unwrap()).collect::<Vec<_>>();
+    assert_eq!((wire.len(),expected.len()),(59,59));
     assert_eq!(wire,expected);
     let head=inspect_fec_frame(&wire,59).unwrap();
     assert_eq!(head.header.phase,FecShardPhase::StreamingSource);
