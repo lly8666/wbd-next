@@ -1,0 +1,103 @@
+name: R0 cross Rust C ABI
+run-name: "M0|${{ github.sha }}|r0-cross-abi"
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-platform/**"
+      - "r0/abi/**"
+      - "tools/r0_cross_abi.py"
+      - ".github/workflows/r0-cross-abi.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            cc: aarch64-linux-gnu-gcc
+            gcc: gcc-aarch64-linux-gnu
+            binutils: binutils-aarch64-linux-gnu
+            exe: r0-cross-link
+          - target: x86_64-pc-windows-gnu
+            cc: x86_64-w64-mingw32-gcc
+            gcc: gcc-mingw-w64-x86-64
+            binutils: binutils-mingw-w64-x86-64
+            exe: r0-cross-link.exe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Cross-compile Rust and link target C without target execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ${{ matrix.gcc }} ${{ matrix.binutils }}
+          rustup toolchain install 1.85.1 --profile minimal
+          rustup target add --toolchain 1.85.1 "${{ matrix.target }}"
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc
+          cargo build --release --locked --target "${{ matrix.target }}" -p wbd-engine -p wbd-platform
+          platform="$(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name 'libwbd_platform-*.rlib' | head -n1)"
+          test -n "$platform"
+          "${{ matrix.cc }}" -std=c11 -Wall -Wextra -Werror -I r0/abi/include \
+            r0/abi/tests/cross_layout.c -L "target/${{ matrix.target }}/release" \
+            -lwbd_engine -o "${{ matrix.exe }}"
+          python tools/r0_cross_abi.py pack --out "r0-cross-abi-${{ matrix.target }}" \
+            --target "${{ matrix.target }}" --linked "${{ matrix.exe }}" \
+            --platform "$platform" --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" \
+            --rust "$(rustc --version)" --cc "$("${{ matrix.cc }}" -dumpmachine)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-cross-build-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-cross-abi-${{ matrix.target }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            binutils: binutils-aarch64-linux-gnu
+          - target: x86_64-pc-windows-gnu
+            binutils: binutils-mingw-w64-x86-64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-cross-build-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-cross-abi-${{ matrix.target }}
+      - name: Inspect provenance, target headers and exports only
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ${{ matrix.binutils }}
+          python tools/r0_cross_abi.py consume \
+            --target "${{ matrix.target }}" \
+            --manifest "r0-cross-abi-${{ matrix.target }}/manifest.json" \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-cross-result-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-cross-abi-result/
+          if-no-files-found: warn
+          retention-days: 30
