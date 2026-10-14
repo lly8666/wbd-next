@@ -366,3 +366,8 @@ mod fec_tx_tests;
 #[cfg(test)]
 #[path="fec_rx_tests.rs"]
 mod fec_rx_tests;
+
+// M3 authenticated-input BlockID wrap/retire proofs excluded from frozen R0.
+#[cfg(test)]
+#[path="fec_block_id_tests.rs"]
+mod fec_block_id_tests;

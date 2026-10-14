@@ -20,6 +20,8 @@ pub mod fec_math;
 pub mod fec_tx;
 /// Authenticated-input bounded Heavy/Compact FEC RX owner.
 pub mod fec_rx;
+/// Bounded authenticated generation-aware WF BlockID32 to u64 extension.
+pub mod fec_block_id;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
