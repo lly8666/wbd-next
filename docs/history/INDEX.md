@@ -4,6 +4,6 @@
 
 整理触发：阶段完成、约 20–30 项变更或热上下文达到预算。整理不是删除失败；OPEN 风险不因年龄变成已解决。
 
-PLAN-002逐模块细化见`docs/devlog/M0/PLAN-002-design.md`、`docs/architecture/modules/README.md`。receipt/桥接/计时和内存估算明确修订v1，PLAN-001当时的历史数字与证据不改写。日常接续只读cursor当前引用。
+PLAN-002逐模块细化及51项检查见`docs/devlog/M0/PLAN-002-complete.md`、`docs/architecture/modules/README.md`。receipt/桥接/计时和内存估算明确修订v1，PLAN-001当时的历史数字与证据不改写。日常接续只读cursor当前引用。
 
 原日志、收据保持稳定路径，必要时用 supersedes/superseded_by 指向继任记录。大 artifact 会过期，hash 不能代替原内容；重要摘要与身份信息须留 Git。
