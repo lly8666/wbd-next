@@ -346,3 +346,8 @@ mod tests {
 #[cfg(test)]
 #[path = "path_budget_tests.rs"]
 mod path_budget_tests;
+
+// R1 tests below LINK namespace preserve frozen historic R0 13 count.
+#[cfg(test)]
+#[path = "link_reassembly_tests.rs"]
+mod link_reassembly_tests;

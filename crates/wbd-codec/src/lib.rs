@@ -12,6 +12,8 @@ pub mod record_crypto;
 pub mod record_replay;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
+/// Bounded reassembly of already-authenticated LINK fragments.
+pub mod link_reassembly;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
