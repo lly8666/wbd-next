@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-REPLAY-THREE-SUITE-001",
+  "source_sha": "ad0ae13fcbccab96dbee3540e7fa73ca40639cfe",
+  "result": "PASS",
+  "artifact_verified": true,
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "pass_scope": "R1_NORMAL_FIXED_FEC_OFF_AUTHENTICATED_THREE_SUITE_REPLAY_PROTECTED_FIRST_BUSINESS_PACKET_IN_PROCESS_NATIVE_LINUX_X64",
+  "evidence_kind": "COMBINED_EXACT_SOURCE_NATIVE_FUNCTIONAL",
+  "preflight": {
+    "main_previous_HEAD": "35dfef868b9f16f2bd63f93bc2b30fddb745fd1c",
+    "cursor_sequence": 28,
+    "cursor_checkpoint_sha": "decea19d16f28e61f73b37700c6f54476dcc913d",
+    "delta_after_checkpoint": "ONE_CURSOR_ONLY_H",
+    "previous_main_governance_run_id": 38557889164,
+    "registry_revision": 2,
+    "M0_epoch": 1,
+    "role_M3_tested_source": "36778ac78031dd45d2f373071146da565af17275",
+    "role_M3_HEAD": "ef3e8e44a8e97cd348cd2794a083e870a37fce72",
+    "role_M3_worker_native_run_id": 38557810459,
+    "role_M3_native_unit_passed": 23,
+    "role_M3_governance_run": "38557810510_ATTEMPT2_SUCCESS_ATTEMPT1_FAILED_CONTROL_SHA_DRIFT",
+    "role_M1_head": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+    "role_M4_head": "a8dd64dd25817b695280274495e1350ceccc4cae"
+  },
+  "integrated_code": {
+    "main_source_sha": "ad0ae13fcbccab96dbee3540e7fa73ca40639cfe",
+    "M0_did_not_write_worker_refs": true,
+    "M3_imports": [
+      "crates/wbd-codec/src/record_crypto.rs",
+      "crates/wbd-codec/src/record_crypto_tests.rs",
+      "crates/wbd-codec/src/record_replay.rs",
+      "crates/wbd-codec/src/record_replay_tests.rs",
+      "crates/wbd-codec/src/record_frame.rs",
+      "crates/wbd-codec/oracles/aes_wire_go_v3.txt",
+      "crates/wbd-codec/oracles/aes_v3_go_reference.go"
+    ],
+    "M0_main_exports": [
+      "crates/wbd-codec/src/lib.rs"
+    ],
+    "M0_native_integration": [
+      "crates/wbd-engine/tests/r1_normal_off_chacha.rs"
+    ],
+    "workflows": [
+      ".github/workflows/r1-normal-off-chacha.yml",
+      ".github/workflows/r1-record-auth-replay.yml"
+    ],
+    "go_oracles": {
+      "chacha_fixed_vectors": 6,
+      "go_aes_reference_vectors": 14,
+      "go_aes_original_package_direct_execution": "NOT_RUN",
+      "python_secondary_validation": "M3_INDEPENDENT_SOURCE_PRIOR_EVIDENCE_ONLY"
+    },
+    "all_suites": [
+      "ChaCha20Poly1305",
+      "AES128GCM",
+      "AES256GCM"
+    ],
+    "actual_replay_properties": [
+      "AEAD/record-kind authenticates before PN is observed or changes replay state",
+      "same sealed PN duplicate never delivers business again",
+      "tampered protected wire cannot advance max_seen or deliver",
+      "fixed FEC off ordinary packet has exactly 31B authenticated record overhead",
+      "two 40-byte tagged pages cover a configured 256-PN metadata window",
+      "M1 unique/frozen real handle and returned buffer after M4 readonly in-process copied sink",
+      "fresh first packet not blocked by queued repair and loan-stop lifetime protected"
+    ]
+  },
+  "native_codec": {
+    "run_id": 38559667762,
+    "attempt": 1,
+    "result": "PASS",
+    "native_count": 23,
+    "build_job": 115837334609,
+    "consumer_job": 115837640765,
+    "rust": "1.85.1",
+    "runner": "ubuntu-24.04 linux x64",
+    "compiled_once": true,
+    "test_binary_sha256": "6c0347dd448a4184414e24a2b518e0341f64cf0f4cd116fc29e79b8ac337af0c",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "log_sha256": "4cf198a2d8bac3bb1f8257a24f6bb14e8fac2f7749338d895bd344cd3c569748",
+    "build_artifact": {
+      "id": 11892042384,
+      "zip_digest": "sha256:fe2a5e918b7aa54e7d75e4a85b1283988d63edd8392b11328e65a07e68acdb19"
+    },
+    "result_artifact": {
+      "id": 11892112342,
+      "zip_digest": "sha256:6de3133eac4c2b891379a5f98d56445331ca62ec21ce9de57c5b146aea24c9e2"
+    }
+  },
+  "native_first_packet": {
+    "run_id": 38559667856,
+    "attempt": 1,
+    "result": "PASS",
+    "native_count": 3,
+    "build_job": 115837335052,
+    "consumer_job": 115837651481,
+    "rust": "1.85.1",
+    "runner": "ubuntu-24.04 linux x64",
+    "compiled_once": true,
+    "test_binary_sha256": "630f5613773ac472c5355bb375875c4e119431e8c4dd86de739ecf33d4d5a972",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "log_sha256": "e567c10f58bfd52b27558a8351d8deeca9e4472d0048d6419d2feb2b37f0f956",
+    "build_artifact": {
+      "id": 11891512723,
+      "zip_digest": "sha256:c2ef6690588d35ecf4c75ab499641d44db7014809f4c95ddd27cd31e9b0a5535"
+    },
+    "result_artifact": {
+      "id": 11891033323,
+      "zip_digest": "sha256:0b28630ec423d1ccd8c09e6c1573a733035a6e44afdbe9f12d09c862f8d2b27a"
+    }
+  },
+  "same_source_regression": {
+    "triggered": 11,
+    "passed": 11,
+    "all_source_sha": "ad0ae13fcbccab96dbee3540e7fa73ca40639cfe",
+    "runs": [
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38559667888,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "governance",
+        "run_id": 38559667744,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run_id": 38559667851,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r1-record-auth-replay",
+        "run_id": 38559667762,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r0-record-wire-framing",
+        "run_id": 38559667832,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r1-normal-off-replay",
+        "run_id": 38559667856,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38559667783,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r0-wire-codec",
+        "run_id": 38559667880,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r0-link-fec-mtu",
+        "run_id": 38559667848,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38559667760,
+        "attempt": 1,
+        "result": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38559667775,
+        "attempt": 1,
+        "result": "success"
+      }
+    ],
+    "cross_target_execution": "NOT_RUN"
+  },
+  "M2_observation_during_M0": {
+    "head_at_receipt": "76037765f99850455b80c752e1a93485675d8350",
+    "merge_source_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772",
+    "merge_parents": [
+      "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+      "35dfef868b9f16f2bd63f93bc2b30fddb745fd1c"
+    ],
+    "merge_source_worker_native_run": 38558987984,
+    "merge_source_triggered_actions": "14/14_SUCCESS",
+    "worker_evidence_source": "9e786cf6c80a055be3a031c6b834a98be626984e",
+    "worker_evidence_governance_success": 38559486601,
+    "worker_cursor_governance_run": 38559787614,
+    "worker_cursor_governance_conclusion": "failure",
+    "failure_step": "Validate repository contracts",
+    "scope_step": "ROLE_SCOPE_PASS",
+    "M2_resume_approval": "PENDING_OWN_CURSOR_H_GOVERNANCE_CLEAN",
+    "note": "M0 did not modify worker HEAD; M2 writer owns H repair and next pure budget work."
+  },
+  "not_qualified": {
+    "R2_reverse_control_replay": "NOT_RUN_M0_LEGACY_RAW_CRYPTO_INGRESS",
+    "trusted_Go_V4_exporter_admission": "NOT_RUN",
+    "native_raw_tcp_carrier": "NOT_RUN",
+    "Windows_Arm_native_execution": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_go_V4": "DISABLED_FAIL_CLOSED"
+  },
+  "next_action": "After safe fresh remote and M2 handoff check, next M0 atom integrate authenticated reverse Health/control replay dedup into BoundReceiptIngress with true M3 ReplayProtectedLaneRx and same-source native R2 regression. Do not assert trusted Go V4 session keys or enable production."
+}
