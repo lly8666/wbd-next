@@ -120,7 +120,14 @@ fn r1_link_malformed_count_id_epoch_and_generation_are_scoped(){
     let frames=fragment_compat(&vec![0x5a;65],64,LinkMode::FixedOff,1).unwrap();
     let mut r=receiver(64,LinkMode::FixedOff);
     assert_eq!(r.push_after_record_auth(&frames[0],id(2),0),Err(ReassemblyError::InvalidScope));
-    let mut bad=frames[0].clone();bad[12..14].copy_from_slice(&u16::MAX.to_be_bytes());
+    let mut malformed=frames[0].clone();
+    malformed[12..14].copy_from_slice(&u16::MAX.to_be_bytes());
+    // The existing strict Go-format wire inspector rejects count > total first.
+    assert_eq!(r.push_after_record_auth(&malformed,id(1),0),
+               Err(ReassemblyError::Wire(WireError::InvalidFragment)));
+    // This count passes the base wire inspector (count <= total=65) but is
+    // impossible for our owner-authorized minimum TX chunk budget of 44B.
+    let mut bad=frames[0].clone();bad[12..14].copy_from_slice(&65u16.to_be_bytes());
     assert_eq!(r.push_after_record_auth(&bad,id(1),0),Err(ReassemblyError::InvalidLayout));
     assert_eq!(r.state().assemblies,0);
     let mut epoch=id(1);epoch.tunnel_epoch=2;
