@@ -273,6 +273,14 @@ func TestR0GoV4ExporterAndHKDFDomainSeparation(t *testing.T) {
     master:=make([]byte,32)
     for i:=range master {master[i]=byte(i)}
     suites:=[]struct{name string;id uint8}{{"chacha20-poly1305",1},{"aes-128-gcm",2},{"aes-256-gcm",3}}
+    // Observed in the first pinned-Go Actions run (38509549705) and now
+    // frozen as regression goldens. A SHA check guards drift but does not,
+    // by itself, independently prove the V4 design is correct.
+    expected := map[string][2]string{
+        "chacha20-poly1305": {"ab52003578ce47f32c6ca03ac8223bc5077dbb03daac022a36c21f66f6db2253", "5835468c258178f6faa80fd0c66445a4aa7dcc913cc34b00ea971f055896ca01"},
+        "aes-128-gcm": {"ef06ef058a13dac1738a5194af35f6b7171b1f092b76b78b6ebe0ea9546d053f", "5ccde5e9dcdc9de4278d492462f294ee248ccb860c8bc3159d8b474dffab6dd9"},
+        "aes-256-gcm": {"c04520a8c61bd91bafb84efde2e7ba2abb9773102e0fed3d3e1dc4b34917d753", "1a946f21a125f7bc48ceb6cf39f8bee6b6387013c04746f37ae451dd21a5653b"},
+    }
     keys:=map[string][76]byte{}
     for _,s:=range suites {
         c2s,err:=r0V4HKDF(master,result.IncarnationNonce,s.name,"c2s")
@@ -286,7 +294,15 @@ func TestR0GoV4ExporterAndHKDFDomainSeparation(t *testing.T) {
         if err!=nil || bytes.Equal(c2s[:],old.C2S.AEADKey[:]) {
             t.Fatalf("V3/V4 KDF shared material for suite %s: %v",s.name,err)
         }
+        if fmt.Sprintf("%x",sha256.Sum256(c2s[:])) != expected[s.name][0] ||
+           fmt.Sprintf("%x",sha256.Sum256(s2c[:])) != expected[s.name][1] {
+            t.Fatalf("V4 HKDF golden drift for %s",s.name)
+        }
         t.Logf("R0 V4 %s c2s-sha256=%x s2c-sha256=%x",s.name,sha256.Sum256(c2s[:]),sha256.Sum256(s2c[:]))
+    }
+    if fmt.Sprintf("%x",fingerprint) != "8f6e83e2e9d20452ffb40ed6461225373dd849a50f20fc6f25571aa5e42c51cd" ||
+       fmt.Sprintf("%x",v3hash) != "25a0a67859e75aaeb9ecce39cf455d475e934a59e61c566d0246cfb63a9046b0" {
+        t.Fatal("exporter context golden drift")
     }
     t.Logf("R0 V4 exporter context=%x V3 context=%x",fingerprint,v3hash)
 }
