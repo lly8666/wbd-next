@@ -572,5 +572,5 @@ fn r2_m0_global_sparse_exact_outer_bytes_multi_tunnel_direction_and_notsent(){
  assert_eq!(global.snapshot().held_unused_grants,0);
  assert_eq!(global.snapshot().charged_repairs,second_wire);
  drop(c1);drop(c2);drop(s1);drop(s2);drop(first);drop(second);
- assert_eq!(a.drain_returns(),1);
+ assert_eq!(a.drain_returns(),2); // two independently frozen tunnel records
 }
