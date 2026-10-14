@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M1-PARITY-READY-INTEGRATION-005",
+  "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "BOUNDED_M1_PARITY_READY_PLUS_M3_REAL_FEC_AEAD_PLUS_M4_IPv4_TCP_IN_PROCESS_NATIVE_ONLY",
+  "start_main": "148e361622d9ddbf8168dc714d4055be4300b7f2",
+  "worker": {
+    "role_id": "M1",
+    "branch": "work/m1-r1-runtime",
+    "first_code_source": "cfaf19e705d1b7295ccb3bee95baa799ce1052b3",
+    "final_code_source": "20809638ba86eed25aee463a7bbba9a002761799",
+    "evidence_source": "206d60192f21116220fb5709d9469c7f86623363",
+    "cursor_h_source": "dceb2a7c12b76483c0d4d83ed71cb1ea2d5e348b",
+    "h_governance": {
+      "run_id": 38599017708,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "native": {
+      "run_id": 38598602128,
+      "attempt": 1,
+      "result": "success",
+      "tests": "29/29"
+    },
+    "old_source_r0_native_abi": {
+      "run_id": 38598602157,
+      "conclusion": "failure",
+      "reason": "worker branch old shared tools/r0_abi_bundle.py expected hardcoded 3 passed; Rust reported 32 passed 0 failed rc0, but consumer failed; main has filtered selector",
+      "qualification": "FAIL_NOT_CONVERTED_TO_PASS"
+    },
+    "imported_files": [
+      "crates/wbd-engine/src/runtime/mod.rs",
+      "crates/wbd-engine/src/runtime/parity.rs",
+      "crates/wbd-engine/src/runtime/wake.rs"
+    ],
+    "worker_changes_reviewed": "two code commits cfaf19e 20809638, evidence S206d6019, cursor-only Hdceb2a7c; changes in allowed M1 paths"
+  },
+  "main_integration": {
+    "code_source": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+    "changed_paths": [
+      "crates/wbd-engine/src/runtime/mod.rs",
+      "crates/wbd-engine/src/runtime/wake.rs",
+      "crates/wbd-engine/src/runtime/parity.rs",
+      "crates/wbd-engine/tests/r1_fec_on.rs",
+      ".github/workflows/r1-wake-stop-native.yml",
+      ".github/workflows/r1-fec-on-native.yml"
+    ],
+    "source_order": "real M3 FEC systematic -> immutable AEAD frozen record -> M1 fresh priority / independently bounded parity-ready with MonoNs absolute eligible_at -> M4 real full IPv4/TCP bytes -> AEAD/PN replay -> trusted test-only BlockID scope -> FecRxOwner",
+    "new_native_case": "r1_m0_authenticated_fec_parity_ready_deadline_no_fresh_hol",
+    "assertions": [
+      "M3 genuine streaming systematic delivered before parity32ms",
+      "parity materialized only after real FEC flush_due(32ms), sealed once as frozen PN1",
+      "optional M1 parity queue separately bounded slots2 bytes512 max_age_ns100ms",
+      "parity record not due at32,999,999ns and due exactly33,000,000ns, no early packet",
+      "new M3 systematic from next block sealed as PN2 and M1 fresh dispatched at32.5ms while earlier parity PN1 waits",
+      "full IPv420/TCP20 checksum independently verified; frozen parity bytes and PN unchanged",
+      "post-AEAD PN replay and test-only generation fixture BlockID verification before FEC first-delivery; parity duplicate block ID never redelivers first",
+      "Arena and owner stop release loans without falsely freeing queued bytes"
+    ],
+    "wake_native": {
+      "run_id": 38603099803,
+      "attempt": 1,
+      "conclusion": "success",
+      "tests": 29,
+      "failed": 0,
+      "build_job": 115987012069,
+      "consume_job": 115987436458,
+      "compiled_once": true,
+      "binary_sha256": "abda3ccc0dacc1874fa1401a46fd4e13d5c2fb476b1660245dad76b423a6987d",
+      "test_log_sha256": "c1dd21f14e66d20a2efb1f9852758e0552cd2234e9ac1dbc70661eb3ffcc0634",
+      "build_artifact": {
+        "id": 11914436475,
+        "digest": "sha256:72db35ea8fe3a7e944f306ea9efb5d4d4f1a9a2ad12ef0a68015acd034fdd31b"
+      },
+      "result_artifact": {
+        "id": 11914576474,
+        "digest": "sha256:67c956beb43e38269c0fcb275f6d6dbcffb1880c5fb064e545f5d77ec81dfe32"
+      }
+    },
+    "fec_native": {
+      "run_id": 38603099961,
+      "attempt": 1,
+      "conclusion": "success",
+      "tests": 3,
+      "failed": 0,
+      "build_job": 115987023021,
+      "consume_job": 115987445623,
+      "compiled_once": true,
+      "binary_sha256": "4565449b9fa9efc0be2ee5845659cb57ba2c4e7b6dfbbac0f3a01380ece1ac69",
+      "test_log_sha256": "0f6d1515fb2a9ec84fab824cf0b94fd7246c75279605952310b8ac31771cc327",
+      "build_artifact": {
+        "id": 11914496469,
+        "digest": "sha256:2ea417ba3ef8e51adf004eebb4ee0aa9581b6c3d79fb462a392a38022ee8f61b"
+      },
+      "result_artifact": {
+        "id": 11913888634,
+        "digest": "sha256:b0afdfe8d007a044dc2e88fcf94e88f27dcffd922b11b2feecc26f0c6f9af4ee"
+      }
+    }
+  },
+  "same_source_actions": [
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38603099961,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38603099803,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38603099984,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38603099874,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38603099784,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38603100063,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38603099519,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38603099585,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38603099615,
+      "attempt": 1,
+      "source_sha": "cc12651c22f5f6c8b36a802a0d477fd82b51be0c",
+      "conclusion": "SUCCESS",
+      "qualification": "WORKFLOW_SCOPE_ONLY"
+    }
+  ],
+  "m2_recovered": {
+    "role": "M2",
+    "original_code_source": "fb916f2467d40b6cc0612d1182525a553d8e6872",
+    "native_run": 38598294561,
+    "native_scope": "22/22 pure fake MonoNs state model PASS",
+    "prior_cursor_h": "1384b306982c881542f8390b15b48cb2f74fcf08",
+    "prior_gov_run": 38598929953,
+    "prior_failures": "attempt1/2 live main control moved, M0 retried attempt3 role-scope passed but structure failed because M2 branch cursor referenced missing main-only docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
+    "failed_artifact": {
+      "id": 11915160297,
+      "digest": "sha256:039d9643ebfb1ac201a0257f377e546421d12f54876a91a6ad35887c16670383"
+    },
+    "recovered_fact_S": "9a25ae179e8bfd050f25c289930d81af5b96b896",
+    "recovered_cursor_only_H": "2ebd475956d65ab1ae05a46cff223c9970755e34",
+    "recovered_H_gov": {
+      "run_id": 38602789109,
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    "role_cursor_sequence": 7,
+    "fix": "M0 explicitly recorded recovered facts in M2-owned devlog and removed ONLY missing main-only decision from branch-local cursor context refs; main registry decision remains authoritative. No code or native evidence changed.",
+    "product": "NOT_RUN"
+  },
+  "nonclaims": [
+    "GO_V4_PRODUCTION",
+    "AUTHENTICATED_GENERATION_V4",
+    "AF_PACKET_RAW_CARRIER",
+    "LINUX_SENDMMSG_PRODUCT",
+    "RTRB_LOOM_EVENTFD",
+    "500MBPS_CPU_P99",
+    "NATIVE_WIN_ARM_EXECUTION",
+    "PHYSICAL",
+    "PRODUCT"
+  ],
+  "next_action": "M0 choose one next separately source-qualified atom: M2 process-global sparse grant/actual completion byte-accounting actor integration on main (M2 cursor now fixed), after exact main scope tests; raw driver and V4 remain disabled. Do not treat old worker-source ABI failure as main PASS or native model as actual network."
+}
