@@ -4,26 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 34,
-  "checkpoint_sha": "0edb6f9d19af89f010be66b2d3a40eb81e9cb2f8",
+  "sequence": 35,
+  "checkpoint_sha": "6358820ba111a21ed308ab335d4c008ddaf1f4c0",
   "progress": "partial",
-  "task_id": "R1-M0-M1-WAKE-ROOT-001",
-  "current_task": "M0 imported M1 native-proven std owner wake/stop and Arena final return notifications, fixed shared native R0 ABI unfiltered-count selector. Main final CODE SOURCE1e4e1c35 compiled-once R1 owner19/19 Actions38576030914, real Rust3+C1+Go4 ABI Actions38576030909, Governance38576030936 all SUCCESS on same SOURCE. Evidence/project S0edb6f9d Governance38576658884 success. Initial S26db regex bug and audit failure preserved.",
-  "why_now": "M0 seq33 checkpoint15df0969→HEAD33824496 one cursor-only H Governance38574005388 SUCCESS. M1 worker exact CODE81cbc57 native19/19, historical R0 ABI harness run38567433175 legitimately FAILED because full Rust suite counted22 not substring '3 passed'; M0 owns script and integration.",
-  "done_when": "M0 main imported exact M1 wake.rs, runtime/mod.rs and memory/mod.rs; std park/unpark SeqCst double-check, bounded fresh/repair queue and loan-return stop sequencing. Script selects only r0_abi_ with explicit three named cases and summary; C/Go native retained. M0 standalone negative Python unit tests. Final main SOURCE1e4e1c353160ad075981763f677519d85b2066a5 native owner19/19 #38576030914, native R0 ABI Rust3+C+Go4 #38576030909 and Governance #38576030936 all SUCCESS. Earlier S26db6ef4 ABI/Governance failure and S653be8 root-only pass retained. Evidence S0edb6f9d19af89f010be66b2d3a40eb81e9cb2f8 Governance38576658884 success; H only M0 cursor, not worker refs. No rtrb/loom/eventfd/real OS socket or V4 production claim.",
-  "next_action": "Next independent M0 atom after fresh registry and M3 seq10/H Governance: review independent tested M3 FEC TX/RX exact SOURCEab7ef93 (native55/55) and integrate real FEC-on link 56B, authenticated ReplayProtectedLaneRx before FecRxOwner, streaming systematic first business and missing-only RS20 recovery under M1 owner/M4 send classification. Use one compiled-once main SOURCE and exact native Actions; do not claim Go live V4 or FEC product. Separately schedule process-wide multi-client sparse budget and M1 rtrb/loom root deps if actually needed.",
+  "task_id": "R1-M0-FEC-ON-BUSINESS-001",
+  "current_task": "M0 imported genuine verified M3 RS20 LINK FEC TX/RX and native original M3 test gates into main; composed M1 real FrozenRecord+TxOwner/RxOwner, ChaCha/AES128 real AEAD+HP, authenticated unique PN replay before FEC Rx, M4 readonly in-process sink. Main final CODE6096b44a: complete M3 r1 native55/55 Actions38580140883, genuine FEC-on immediate first systematic+missing-only recovery2/2 Actions38580140682, all10/10 affected same SOURCE Actions SUCCESS. Evidence S6358820b Governance38580839888 success.",
+  "why_now": "M0 seq34 checkpoint0edb6f9d→main77795ade single cursor H Governance38576949459 SUCCESS. M3 independently CODE ab7ef93 Actions38568299178 55/55 and seven same-source Actions pass, but product AEAD/replay/M1/M4 integration not done. M3 worker H later fails root scope ancestry cap64 with historical66; separate request awaits M0 root fix.",
+  "done_when": "Main CODE SOURCE6096b44ac3cb22e98288d5723df0908a71a321c9 imports exact M3 link_reassembly/fec_math/fec_tx/fec_rx/link_fec_wire plus four original codec-native tests; genuine Rust FEC-on systematic first business before parity32ms and AES128 k2/R4 old-Go RS20 missing-only with original PN late dedup, M1 actual arenas and M4 sink. Native compiled-once 55/55 M3 codec run38580140883 and 2/2 engine composite run38580140682, all10/10 triggered exact-source Actions including G2/governance and frozen R0 Go codec. Intermediate S1e511b7 r1-codec23/55 FAIL because missing M3 test modules, corrected at final source and failure retained. Evidence/project S6358820ba111a21ed308ab335d4c008ddaf1f4c0 Governance38580839888 SUCCESS, H only cursor. Production V4 disabled; true live keys/driver/native Win/Arm/performance/physical/product NOT_RUN.",
+  "next_action": "M0 next single atom handle M3 exact G2 ancestry bound request .governance/workstreams/M3/requests/R1-M3-G2-ANCESTRY-BOUND-001.json: worker fully ahead66 activation commits beyond fixed64 cap. Review ancestry/per-commit scope and authorize safe larger bounded audit or fresh checkpoint via main tools with negative tests, without weakening role/paths or resetting worker; run Actions at exact SOURCE then M3 writer can submit its own clean H. After that M0 actual FEC-on parity separate priority/bounded timer and live wrap-safe BlockID integration. Do not claim production V4.",
   "unverified": true,
-  "last_tested_source": "1e4e1c353160ad075981763f677519d85b2066a5",
+  "last_tested_source": "6096b44ac3cb22e98288d5723df0908a71a321c9",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M1-wake-root-integration.json"
+    "docs/evidence/M0/R1-FEC-on-first-business.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M3/requests/R1-M3-G2-ANCESTRY-BOUND-001.json"
+  ],
   "context_refs": [
-    "docs/devlog/M0/R1-M1-wake-root-integration.md",
+    "docs/devlog/M0/R1-FEC-on-first-business.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/02-RUNTIME.md",
-    "docs/architecture/modules/03-MEMORY.md",
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
+    "docs/architecture/modules/06-FEC.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 clean seq33 checkpoint15df0969→H33824496 Governance38574005388 PASS. M1 actual wake-stop worker SOURCE81cbc57 native19/19 had old root ABI harness false-fail run38567433175. M0 imported exact M1 owner runtime/wake + memory; first main source26db6ef4 owner19/19, R1/R2/G2 ABI cross/static PASS but R0 native FAIL due overescaped regex, Governance failed while main moved; corrected S653be8 R0 native PASS, then main CODE SOURCE1e4e1c35 coupled R0 and owner workflows to run together: M1 native19/19 run38576030914, R0 ABI Rust3/3+C native+Go4/4 run38576030909, Governance38576030936 all SUCCESS. Evidence S0edb6f9d Governance38576658884 success. No role branch mutated, ABI features0 V4 disabled. Next M0 integrate M3 FEC real TX/RX after AEAD replay from verified M3 SOURCEab7ef93. rtrb/loom, OS raw driver, Go V4 live session, native Win/ARM, perf/physical/product NOT_RUN."
+  "partial_summary": "M0 seq34 H77795ade Governance38576949459 SUCCESS/CLEAN; M3 tested SOURCEab7ef93 native55/55 and7/7 source Actions success, but M3 worker cursor H fails due root G2 ancestry bounded64 vs66 ahead, request R1-M3-G2-ANCESTRY-BOUND-001 OPEN. Main first CODE S1e511b7 imported FEC modules but codec 23/55 FAIL missing four original M3 tests; CODE S8912f24 M0 FEC-on tests2/2 native PASS; final CODE S6096b44 includes M3 original 4 test modules and link_fec_wire anchor, codec55/55 Actions38580140883, real M0 first systematic and AES128 RS20 recover2/2 Actions38580140682, 10/10 source Actions pass including FEC-off, R2, frozen R0 Go/G2/Governance. Evidence S6358820b Governance38580839888 success. No worker ref changed. Live extended blockID wrap, Go session key/epoch binding, parity priority under real scheduler, OS raw I/O, native Win/Arm, performance/physical/product NOT_RUN, Go V4 disabled. M0 next fix M3 G2 ancestry cap carefully while preserving per-commit checks."
 }
