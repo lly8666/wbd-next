@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-BLOCKID-SCOPE-009",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "dcee7e85424064581ada22544883b3acd0eaaca5",
+  "result": "PASS_SCOPED_BOUNDED_AUTHENTICATED_INPUT_FEC_BLOCKID32_TO64_RECONSTRUCTION_ONLY",
+  "governance_assignment": {
+    "registry_source": "main",
+    "M0_code_source": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+    "M0_main_governance": 38592016440,
+    "M0_five_crate_native": 38592016227,
+    "workstream_unchanged": true
+  },
+  "code": {
+    "module": "crates/wbd-codec/src/fec_block_id.rs",
+    "tests": "crates/wbd-codec/src/fec_block_id_tests.rs",
+    "export": "crates/wbd-codec/src/lib.rs",
+    "r0_skipped_test_mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "old_go_fixture": "r0/fixtures/legacy-link-fec-wire-v1.txt",
+    "old_go_pin": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984"
+  },
+  "proof": {
+    "authenticated_boundary": "Caller MUST call ONLY after AEAD record open + PN anti-replay and must provide independently authenticated tunnel epoch,direction AND trusted generation. Plain WF header has no generation or exporter and cannot establish these by itself.",
+    "first_step": "Strict old-Go 56B FEC header and exact total payload budget are checked by inspect_fec_frame before ID observer mutates state.",
+    "arithmetic": "u32 modulo nearest anchor with positive <=65535 and reordered-backward <=65535; halfspace 0x80000000 and larger ambiguous reverse distances rejected. No guessing about skipped full generations; u64 overflow rejected.",
+    "zero_wire_id": "Reserved/rejected without allocating or changing highwater/timers; identical ID treated as duplicate with no new highwater.",
+    "wrap": "0xffffffff->wire1 yields u64 0x100000001, skipping reserved wire0, only with separate trusted new-generation input.",
+    "scope": "Wrong epoch/direction/generation rejected prior to state/time mutation; caller auth source must substantiate generation; does not invent Go exporter.",
+    "resource": "Per direction+epoch at most64 heavy and8192 compact ID timestamps; Heavy from first_seen 3000ms absolute, Compact after transition 10000ms absolute, old timers never renewed; late callback honors original 3s due timestamp.",
+    "retirement": "Capacity pressure moves oldest heavy to compact and retires lowest compact ID on cap, monotonically advances durable retired_floor; admission checks floor again after pressure, old duplicate or previously unseen ID cannot resurrect.",
+    "composition": "Independent test uses genuine FecTxOwner real wire and authenticated-scope mapping into bounded FecRxOwner; initial systematic first-delivered exactly once; duplicate parity and expired originals cannot cause second delivery.",
+    "scope_limit": "No assertion that this helper itself authenticates, protects PN, implements V4 exporter or Session generation source, measures performance, or turns on FEC-on production."
+  },
+  "tests": {
+    "new": 12,
+    "existing": 55,
+    "all": 67,
+    "failed": 0,
+    "named": [
+      "r1_blockid_pinned_go_56b_source_and_final_parity_wire_oracle",
+      "r1_blockid_zero_reserved_and_zero_length_duplicate_never_advances",
+      "r1_blockid_wrap_ffffffff_to_one_skips_reserved_zero_and_uses_new_generation",
+      "r1_blockid_halfspace_and_far_jumps_are_fail_closed_not_guessed",
+      "r1_blockid_wrong_epoch_direction_generation_have_no_side_effects",
+      "r1_blockid_heavy_3s_compact_10s_absolute_no_extension",
+      "r1_blockid_late_timer_callback_expires_heavy_and_compact_together",
+      "r1_blockid_pressure_oldest_compaction_floor_no_resurrection",
+      "r1_blockid_old_parity_wrong_generation_and_retired_floor_not_reopened",
+      "r1_blockid_real_fec_rx_first_delivery_no_duplicate_after_compact",
+      "r1_blockid_invalid_old_go_wire_does_not_advance_scope_or_budget",
+      "r1_blockid_config_bounds_and_u64_exhaustion"
+    ]
+  },
+  "actions": {
+    "worker_native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38598331547,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "platform": "GitHub Actions native Ubuntu Linux x86_64 Rust1.85.1 compiled-once",
+      "jobs": {
+        "build": 115970737525,
+        "consume": 115970998669
+      },
+      "tests_passed": 67,
+      "failed": 0,
+      "filtered_out": 26,
+      "binary_sha256": "bfdad8b43e8cd011d0bb0deb51a4d558924d7ccf6c761e8e2ee3d3a049cfe453",
+      "log_sha256": "34ca1d2e414d6a0e9d521b0ce13c1ebb8f700a517da246629f1a30e5b77c744e",
+      "build_artifact": {
+        "id": 11911317588,
+        "digest": "sha256:3d65953579f398bda0d8835f4d1c96cdc06d0d7eace184c1ce732aea26962f4c",
+        "expires_at": "2026-11-13T16:28:43Z"
+      },
+      "result_artifact": {
+        "id": 11913235783,
+        "digest": "sha256:959aad88d53bfd42b8635b2a73ec0c51d717bc57f76d0c2dbd79931bb7a9ec01",
+        "expires_at": "2026-11-13T16:29:11Z"
+      }
+    },
+    "same_source": [
+      {
+        "workflow": ".github/workflows/r0-qualification-audit.yml",
+        "run_id": 38598331400,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/g2-bootstrap.yml",
+        "run_id": 38598331353,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-codec.yml",
+        "run_id": 38598331440,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-record-framing.yml",
+        "run_id": 38598331432,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-link-fec-wire.yml",
+        "run_id": 38598331503,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/governance.yml",
+        "run_id": 38598331481,
+        "conclusion": "success",
+        "attempt": 2
+      }
+    ],
+    "governance_first_attempt": {
+      "run_id": 38598331481,
+      "attempt": 1,
+      "conclusion": "failure",
+      "diagnostic": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "evidence": "Main branch advanced during per-commit remote audit; M3 source remained immutable. No worker scope violation or code regression was identified; failed job rerun at same SOURCE after live-main refresh.",
+      "retry": {
+        "same_run_id": 38598331481,
+        "attempt": 2,
+        "conclusion": "success"
+      }
+    },
+    "verified_matching_source_workflows": 7,
+    "all_success_on_final_attempt": true
+  },
+  "non_claims": {
+    "original_go_native_run_this_atom": "NOT_RUN (frozen Go fixture and existing separate old-Go regression workflow passed)",
+    "runtime_sender_generation_binding": "NOT_IMPLEMENTED_BY_M3; M0 must authenticate trusted generation in live V4 context; fail closed until then",
+    "M0_single_source_business_FEC_on_with_blockid": "NOT_RUN",
+    "wallclock_or_background_timers": "NOT_IMPLEMENTED",
+    "native_Windows_ARM": "NOT_RUN",
+    "ISA_L_SIMD": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "Go_V4_production": "DISABLED",
+    "root_Cargo_lock_shared_CI_ABI": "NOT_MODIFIED"
+  },
+  "next_action": "M0 review independent true-authenticated generation binding feasibility; if cannot substantiate generation per record, do not enable this source helper in production. Integrate with post-auth FecRxOwner and owner timer only on real main SOURCE. M3 after successful evidence S/H remains idle until new assignment."
+}
