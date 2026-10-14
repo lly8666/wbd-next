@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 43,
-  "checkpoint_sha": "ba5749bb7e9efede91f81da43796985212af570f",
+  "sequence": 44,
+  "checkpoint_sha": "8fc03bc8ad7594c967d332759d0335fde2d891f0",
   "progress": "partial",
-  "task_id": "R2-M0-GLOBAL-SPARSE-MAIN-INTEGRATION-006",
-  "current_task": "M0 scoped M2 global sparse ledger imported and composed with full IPv4/TCP frozen repair bytes and M4 sink; main final CODE SOURCE58ff8d00659c0b4576f473e5e7957cbce0ef17ea R2 actual in-process 11/11 run38634557650, 9/9 triggered same-source Actions SUCCESS. Pure M2 22/22 at intermediate SOURCE01bd8693 run38634484494 (not same SOURCE). First SOURCEf9940910 FAIL workflow count15 vs22 and Arena fixture return1 vs2, corrected; evidence Sba5749bb7e9efede91f81da43796985212af570f Governance38635004118 SUCCESS. No actual process actor/raw/product.",
-  "why_now": "M0 seq42 checkpoint5f158bc8→H c900de85 only cursor, Governance38603747056 PASS. All worker branches prior tasks completed; M2 recovered H2ebd4759 Governance38602789109 PASS; M0 main owned global sparse integration needed to prevent per-client 32KiB multiplier.",
-  "done_when": "Exact scoped Rust global 22/22 source01bd8693 run38634484494 compiled-once, and final main source58ff8d00 R2 full packet integration11/11 run38634557650 9/9 final SOURCE Actions SUCCESS, build/results SHA256 recorded docs/evidence/M0/R2-global-sparse-main-integration.json. Evidence Sba5749bb Governance38635004118 PASS. H cursor-only. No live process actor, raw sendmmsg, Go V4, native Win/ARM execution, 500Mbps/perf/product/physical qualification.",
-  "next_action": "M0 next one atomic governance action: formally assign four independent next tasks to idle M1-M4 on main registry rev2 epoch1, record exact current worker heads/cursors and no root scope expansions. M1 ready-only bounded batch; M2 pure process-grant batch completion; M3 FEC expiry/retirement pressure adversarial proof; M4 bounded IPv4/TCP RX validation. Keep M0 next main integration separate after assignment. Do not claim worker automatically running.",
+  "task_id": "R1-M0-PARALLEL-WORKER-ASSIGN-007",
+  "current_task": "User-requested four new worker atomic tasks formally registered on main revision2 epoch1, assignment SOURCE7d291133e38f87da32ab56f5f99c0f1a54c4d5af Governance38635343395 and G2 scoped bootstrap38635343384 both SUCCESS. M1 R1-M1-READY-BATCH-004; M2 R2-M2-GLOBAL-BATCH-COMPLETION-003; M3 R1-M3-FEC-RETIRE-PRESSURE-010; M4 R1-M4-IPV4-TCP-RX-PARSE-004. Previous work all closed at own H, no role branches modified. Evidence S8fc03bc8ad7594c967d332759d0335fde2d891f0 Governance38635578197 SUCCESS. New worker code/tests NOT_RUN; no new writer or assignment_epoch bump.",
+  "why_now": "M0 M2 global sparse SOURCE58ff8d00 integration11/11 9/9 Actions, pure22/22 at separate source01bd8693, evidence Sba5749bb Governance38635004118 SUCCESS, M0 H a911e945 Governance38635139983 SUCCESS. All four workers previously scoped completed, latest HEAD unchanged and no outstanding Actions; user explicitly asked whether new parallel tasks should be assigned. Assigned independent next atoms in existing scopes.",
+  "done_when": "Exact assignment code SOURCE7d291133e38f87da32ab56f5f99c0f1a54c4d5af records 4 distinct role goals/done_when on main with rev2 epoch1 unchanged. Governance38635343395 SUCCESS and G2 scoped bootstrap38635343384 SUCCESS same SOURCE; evidence S8fc03bc8ad7594c967d332759d0335fde2d891f0 Governance38635578197 SUCCESS. M0 H cursor-only seq44. New worker implementation/Actions strictly NOT_RUN until each role commits own S/evidence/H. Product, real raw, live V4, perf/physical still NOT_RUN.",
+  "next_action": "M0 next independently authorized integration atom R1-M0-M4-KERNEL-BATCH-MAIN-008: audit M4 already completed Linux sendmmsg SOURCE6e72152f616e9bc836e3b66cd8742915abf6b5b3 / H47eb4107 and exact kernel loopback Actions38598122174, import into main with M1 immutable ready-only batch under main-owned integration tests, run same SOURCE native kernel syscall fixture; no raw AF_PACKET product/native Windows claim. Four new worker tasks remain assigned independently and no need to redistribute until their individual completion.",
   "unverified": true,
-  "last_tested_source": "58ff8d00659c0b4576f473e5e7957cbce0ef17ea",
+  "last_tested_source": "7d291133e38f87da32ab56f5f99c0f1a54c4d5af",
   "evidence_refs": [
-    "docs/evidence/M0/R2-global-sparse-main-integration.json"
+    "docs/evidence/M0/R1-parallel-worker-assignments-2026-10-15.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R2-global-sparse-main-integration.md",
-    "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
+    "docs/devlog/M0/R1-parallel-worker-assignments-2026-10-15.md",
+    "docs/decisions/M0-parallel-worker-atoms-2026-10-15.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 imported scoped M2 global repair grant ledger under main, actual frozen record full IPv4/TCP bytes settle with M4 in-process ReadyPacketSink, two TunnelKeys/directions zero-F, NotSent refunded and Uncertain debited, fresh no quota HOL. First main CODEf9940910 failed R2 pure gate due old 15 expected vs22 passing and engine 10/11 due two Arena returns; code01bd8693 pure22/22 PASS, final code58ff8d00 R2 11/11 PASS 9/9 final source Actions. Evidence Sba5749bb Gov38635004118 SUCCESS. This H seq43 checkpoint evidence S. Production/raw/kernel process actor/perf/physical NOT_RUN. Four workers idle; next main role assignment decision."
+  "partial_summary": "M0 seq43 H a911e945 Gov38635139983 SUCCESS for M2 global sparse in-process main integration; all worker branches unchanged and idle. Formal next four role assignments SOURCE7d291133: M1 ready-batch-004, M2 global-batch-completion-003, M3 FEC-retire-pressure-010, M4 IPv4-TCP-RX-parse-004; registry rev2 epoch1 and per-role prefixes unchanged. Exact assignment Governance38635343395 and G2 bootstrap38635343384 SUCCESS, evidence S8fc03bc8 Gov38635578197 SUCCESS. H seq44; no worker code started or product qualified. M0 next import qualified M4 existing sendmmsg kernel fixture on separate main source, with same source Actions; GoV4/raw/nativeWinARM/perf/physical NOT_RUN."
 }
