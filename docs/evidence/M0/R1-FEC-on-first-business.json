@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-FEC-ON-BUSINESS-001",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6096b44ac3cb22e98288d5723df0908a71a321c9",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "R1_NATIVE_LINUX_X64_IN_PROCESS_AUTHENTICATED_FEC_ON_SYSTEMATIC_FIRST_AND_RS20_MISSING_ONLY_WITH_M1_M4",
+  "preflight": {
+    "M0_seq": 34,
+    "M0_previous_H": "77795ade1bde5b02605b7e7350a6b10cd5a88a25",
+    "M0_checkpoint": "0edb6f9d19af89f010be66b2d3a40eb81e9cb2f8",
+    "M0_checkpoint_to_H": "ONE_CURSOR_ONLY_H",
+    "M0_H_governance": 38576949459,
+    "registry_revision": 2,
+    "epoch": 1,
+    "M3_native_tested_source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+    "M3_native_run": 38568299178,
+    "M3_worker_test_count": 55,
+    "M3_tested_source_all_Actions": "7/7 SUCCESS",
+    "M3_worker_HEAD": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "M3_cursor_sequence": 10,
+    "M3_cursor_H_governance": "FAILED_38569000801_38569111816_38569516952",
+    "M3_request": ".governance/workstreams/M3/requests/R1-M3-G2-ANCESTRY-BOUND-001.json",
+    "M3_64_commit_audit_bound_vs_66_history": "G2_BLOCK_NOT_AEAD_FEC_CODE_FAILURE"
+  },
+  "source_path_groups": {
+    "M3_code_imported": [
+      "crates/wbd-codec/src/link_reassembly.rs",
+      "crates/wbd-codec/src/fec_math.rs",
+      "crates/wbd-codec/src/fec_tx.rs",
+      "crates/wbd-codec/src/fec_rx.rs",
+      "crates/wbd-codec/src/link_fec_wire.rs"
+    ],
+    "M3_original_native_test_sources": [
+      "crates/wbd-codec/src/link_reassembly_tests.rs",
+      "crates/wbd-codec/src/fec_math_tests.rs",
+      "crates/wbd-codec/src/fec_tx_tests.rs",
+      "crates/wbd-codec/src/fec_rx_tests.rs"
+    ],
+    "M0_main_composition": [
+      "crates/wbd-codec/src/lib.rs",
+      "crates/wbd-engine/tests/r1_fec_on.rs",
+      ".github/workflows/r1-fec-on-native.yml",
+      ".github/workflows/r1-record-auth-replay.yml",
+      "docs/devlog/M0/R1-FEC-on-first-business.md"
+    ],
+    "worker_refs_touched_by_M0": false
+  },
+  "qualified_truths": [
+    "FEC source-first immediate delivery with genuine 56B systematic old-Go provisional metadata, no parity/ACK/32ms wait",
+    "One real ChaCha authenticated PN0 passes M3 replay before M3 RX FEC; replay copy/invalid tag not forwarded",
+    "Missing first AES128 original PN0 (actual authenticated ciphertext exists but withheld from receiver) recovered only from authentic parity PN2 after immediate PN1 systematic delivery",
+    "Original PN0 arriving later within auth replay window is accepted uniquely by AEAD but FEC Compact suppresses duplicate business",
+    "One 32ms clock deadline from first source produces exact k2/R4 min2 RS20 genuine missing-only parity, not fake synthetic recovery",
+    "M1 unique/frozen Arena + actual TX fresh/RX packet owners, M4 in-process ready sink receives actual sealed wire, no product OS driver",
+    "All original 55 M3 r1 codec tests now compiled in exact native main source, no borrowed 55 from worker green alone",
+    "Old FEC-off first packet, R2 feedback and R0 wire-format Go fixture and G2 native workflows remain passing at this source"
+  ],
+  "main_source_sequence": [
+    {
+      "sha": "1e511b7cb7111ab0bd1ad356d345ad2c920c180c",
+      "action": "import M3 FEC runtime modules and set codec 55-case gate",
+      "observed": "codec Actions38579189612 FAILED: executed only23 r1 tests because four M3 original source test includes omitted; expected55. R0/G2 and other root Actions executed separately, no full green claim"
+    },
+    {
+      "sha": "8912f24f657f57134c6575eeb3803860f3e35e69",
+      "action": "main adds two actual authenticated FEC-on business paths and compile-once native workflow",
+      "observed": "FEC-on Actions38579547702 2/2 SUCCESS, but full codec original55 not triggered and prior missing test gate unresolved"
+    },
+    {
+      "sha": "6096b44ac3cb22e98288d5723df0908a71a321c9",
+      "action": "import remaining M3 original link FEC native tests and M3 link_fec_wire.rs include anchors",
+      "observed": "10/10 affected Actions SUCCESS incl full55 and FEC-on2"
+    }
+  ],
+  "native_codec": {
+    "workflow": ".github/workflows/r1-record-auth-replay.yml",
+    "run_id": 38580140883,
+    "attempt": 1,
+    "result": "PASS",
+    "rust": "1.85.1",
+    "runner": "ubuntu-24.04 Linux x64",
+    "compiled_once": true,
+    "build_job": 115907561667,
+    "consumer_job": 115907989386,
+    "tests": 55,
+    "failed": 0,
+    "binary_sha256": "16ee73b12989e86a856ec2cc04bffd639f8742c3e4569848e7f0f467a89eba4e",
+    "log_sha256": "82e0e0b8e42b037f4989bc25ff9e205f38b3d803536e4a7fbe6e173fbfaba58e",
+    "artifacts": [
+      {
+        "id": 11902790872,
+        "digest": "sha256:0a364965a1809b925b353281f8b27164312e72cac6c1568fbb10bb3aa2f733f7"
+      },
+      {
+        "id": 11902189059,
+        "digest": "sha256:4336476e52120c99247319dd6fbfda14f67b7c4d970496bbccb340246560a538"
+      }
+    ]
+  },
+  "native_FEC_on": {
+    "workflow": ".github/workflows/r1-fec-on-native.yml",
+    "run_id": 38580140682,
+    "attempt": 1,
+    "result": "PASS",
+    "rust": "1.85.1",
+    "runner": "ubuntu-24.04 Linux x64",
+    "compiled_once": true,
+    "build_job": 115907561532,
+    "consumer_job": 115907962838,
+    "tests": 2,
+    "failed": 0,
+    "binary_sha256": "0da30e2da9ba0deeaf898ea7d715564baf1c6cf1a7bb8b38395abd77fc79945b",
+    "log_sha256": "88d5ab48d55e9afc659947e871a5c78a5a4ade899e9f3aaec04f285894f8414d",
+    "artifacts": [
+      {
+        "id": 11901584223,
+        "digest": "sha256:4c58a6f87570800e7e1d7466d901fd507a47a8c328d47d68b450f257a2118749"
+      },
+      {
+        "id": 11901344366,
+        "digest": "sha256:dab071ffa202e31301f11d2d2ca16d5f8a54afbce2f4a3fe99927cb4d6d1ad88"
+      }
+    ]
+  },
+  "same_source_Actions": {
+    "source": "6096b44ac3cb22e98288d5723df0908a71a321c9",
+    "triggered": 10,
+    "passed": 10,
+    "runs": [
+      {
+        "run_id": 38580140618,
+        "workflow": "r0-static-qualification-audit",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140679,
+        "workflow": "governance",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140603,
+        "workflow": "r2-auth-receipt",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140801,
+        "workflow": "r0-wire-codec",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140883,
+        "workflow": "r1-record-auth-replay",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140636,
+        "workflow": "r1-normal-off-replay",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140627,
+        "workflow": "r0-link-fec-mtu",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140841,
+        "workflow": "g2-scoped-bootstrap-native",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140682,
+        "workflow": "r1-fec-on-native",
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 38580140878,
+        "workflow": "r0-record-wire-framing",
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "owner_refs_at_receipt": {
+    "M1": "49d886d639b7ba93aca00cfc0e305b23017d0cc8",
+    "M2": "be5e722e1e0b6f875571304b67852977d69f391a",
+    "M3": "56907bdb4630d0a5a6a29c2d9cd029c89086566e",
+    "M4": "ad5eea274cbc81e09caf757491a482a3ef1ab8fa"
+  },
+  "not_qualified": {
+    "M3_worker_cursor_H_governance": "FAIL_INDEPENDENT_ROOT_G2_BOUND_64",
+    "live_extended_block_id_wrap": "NOT_RUN",
+    "live_authenticated_session_epoch_direction_keys": "NOT_RUN",
+    "native_raw_carrier": "NOT_RUN",
+    "real_FEC_parity_ready_priority_under_OS_load": "NOT_RUN",
+    "live_long_running_FEC_timers": "NOT_RUN",
+    "original_old_Go_decoder_package": "NOT_RUN",
+    "Windows_ARM_native": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "Go_V4_production": "DISABLED_FEATURE0"
+  },
+  "next_action": "M0 separate G2 atom resolve M3 historical 66-commit scoped ancestry audit hard cap64 WITHOUT weakening per-commit path checks; reattest H and notify M3 writer. Then next actual FEC business atom enforce independent parity queue/priority and real bounded timer integration with M1; live Go V4 keys/session and raw OS I/O later. Do not claim live FEC product."
+}
