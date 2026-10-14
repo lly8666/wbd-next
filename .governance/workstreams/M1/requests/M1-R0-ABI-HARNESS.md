@@ -9,3 +9,7 @@ A separate Governance run 38566785008 failed `control or source moved mid-audit`
 
 ## Reconfirmation on final code SOURCE
 M1 corrected stop/inflight race in `81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2`; new worker native [38567433037](https://github.com/lly8666/wbd-next/actions/runs/38567433037) compiled once and passed **19/19** (old 10 + new 9). R0 native ABI [38567433175](https://github.com/lly8666/wbd-next/actions/runs/38567433175) again **FAILED** because unfiltered Rust test binary actually reports **22 passed / 0 failed / rc0** instead of the hardcoded `"3 passed"` substring. No M1 ABI entrypoint or Cargo/lock modifications; issue remains at the shared test selector. M0 please own exact-filter fix, not M1.
+
+## New parity-atom observed worker branch discrepancy
+
+On M1 parity initial SOURCE `cfaf19e705d1b7295ccb3bee95baa799ce1052b3`, native ABI Action [38598099978](https://github.com/lly8666/wbd-next/actions/runs/38598099978) FAILED its consumer after compiling; the Rust executable rc0 actually reports 31/31 tests successful. Main `tools/r0_abi_bundle.py` blob `c7a22ce51b6ab059a847a83de0a1570e533108b5` already filters `r0_abi_`, but worker branch has old shared blob `c2b42b64a5763fecd01385d150d56ab8d6a7cc97`. Please M0 coordinate a non-worker-owned shared harness update/rebase/integration rather than requiring M1 to modify `tools/` outside allowed paths. Worker native parity proof remains independently scoped; R0 ABI workflow is NOT PASS.

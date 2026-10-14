@@ -34,8 +34,13 @@
      pub fn offer(
          &mut self, record: FrozenRecord, now: MonoNs, eligible_at: MonoNs,
      ) -> Result<(), (OfferError, FrozenRecord)> {
-         self.expire(now);
          let bytes = record.bytes().len();
+         // Only sweep the bounded parity queue on admission pressure;
+         // no O(slots) scan for every ready FEC record.
+         if self.pending.len() >= self.limit.slots
+             || bytes > self.limit.bytes.saturating_sub(self.charged_bytes) {
+             self.expire(now);
+         }
          let expiry = MonoNs(now.0.saturating_add(self.limit.max_age_ns));
          // FEC parity cannot be retained beyond its queue's age budget;
          // callers choose an earlier eligible deadline or must drop.
@@ -70,7 +75,15 @@
          removed
      }
      pub fn is_ready(&mut self, now: MonoNs) -> bool {
-         self.expire(now);
+         // Since ready_at <= expiry and entries are ordered by ready_at,
+         // no later item can expire without the head ALREADY being due.
+         // Thus the first-ready hot path is O(1); stale due heads are
+         // reclaimed as needed. Full scans occur only on admission pressure.
+         while self.pending.front().is_some_and(|p| now.0 > p.expiry.0) {
+             let old = self.pending.pop_front().unwrap();
+             self.charged_bytes -= old.wire_bytes;
+             self.expired += 1;
+         }
          self.pending.front().is_some_and(|p| now.0 >= p.ready_at.0)
      }
      pub fn take_ready(&mut self, now: MonoNs) -> Option<FrozenRecord> {
@@ -79,14 +92,12 @@
          self.charged_bytes -= item.wire_bytes;
          Some(item.record)
      }
-     /// Absolute monotonic earliest future wake: either ready time or
-     /// first expiry; never silently wait for a 32ms batch if fresh exists.
+     /// Because eligible_at <= expiry was checked on admission, the
+     /// earliest *ready* head is also earlier than every item expiry.
+     /// Peek only (O(1)); no full parity scan per systematic packet.
      pub fn next_deadline(&mut self, now: MonoNs) -> Option<MonoNs> {
-         self.expire(now);
-         self.pending.iter().map(|p| {
-             let first_expire = MonoNs(p.expiry.0.saturating_add(1));
-             MonoNs(p.ready_at.0.min(first_expire.0))
-         }).min_by_key(|d| d.0)
+         self.is_ready(now);
+         self.pending.front().map(|item| item.ready_at)
      }
      pub fn len(&self) -> usize { self.pending.len() }
      pub fn charged_bytes(&self) -> usize { self.charged_bytes }
@@ -273,6 +284,23 @@ mod tests {
         producer.stop();
         assert!(owner.wait_ready(&gate,||MonoNs(32_000_000),||false).is_none());
         assert_eq!(owner.parity_state().0,0);
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn r1_parity_expiry_behind_nonexpired_ready_head_never_leaks_or_hol() {
+        let mut arena=a();
+        let mut queue=ParityReady::new(
+            QueueLimits { slots:2,bytes:2,max_age_ns:50 }
+        ).unwrap();
+        // Older ready deadline but younger age is intentionally at head.
+        queue.offer(rec(&mut arena,1),MonoNs(40),MonoNs(45)).unwrap();
+        queue.offer(rec(&mut arena,2),MonoNs(0),MonoNs(50)).unwrap();
+        assert_eq!(queue.next_deadline(MonoNs(51)),Some(MonoNs(45)));
+        assert_eq!(queue.take_ready(MonoNs(51)).unwrap().bytes(),&[1]);
+        // Later-in-ready-order entry is expired and cannot be delivered.
+        assert!(queue.take_ready(MonoNs(51)).is_none());
+        assert_eq!(queue.expired_count(),1);
+        assert_eq!(queue.charged_bytes(),0);
         assert_eq!(arena.report().loaned,0);
     }
     #[test]
