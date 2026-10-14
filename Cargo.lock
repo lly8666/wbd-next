@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
+name = "wbd-engine"
+version = "0.1.0"
+dependencies = [
+ "wbd-types",
+]
+
+[[package]]
 name = "wbd-types"
 version = "0.1.0"

@@ -1,0 +1,111 @@
+name: R0 native Go C Rust ABI sentinel
+run-name: "M0|${{ github.sha }}|r0-native-abi"
+
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-types/**"
+      - "r0/abi/**"
+      - "r0/source-lock.json"
+      - "tools/r0_abi_bundle.py"
+      - ".github/workflows/r0-native-abi.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-native-abi-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Compile one native Rust cdylib, C harness, pinned Go cgo tests, Rust units
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+          CGO_ENABLED: "1"
+          GO111MODULE: "on"
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo build --release -p wbd-engine --locked
+          cargo test --release -p wbd-engine --locked --no-run
+          rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n1)"
+          test -n "$rust_test"
+          cc -std=c11 -Wall -Wextra -Werror -I r0/abi/include \
+            r0/abi/tests/smoke.c -o r0_abi_c \
+            -L target/release -lwbd_engine -Wl,-rpath,'$ORIGIN'
+          mkdir -p legacy/internal/r0bridge
+          cp r0/abi/old_go_probe/bridge.go r0/abi/old_go_probe/bridge_test.go legacy/internal/r0bridge/
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/r0/abi/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r0_abi_go.test" ./internal/r0bridge
+          )
+          python tools/r0_abi_bundle.py pack \
+            --out r0-abi-bundle \
+            --source "$GITHUB_SHA" \
+            --old "$(git -C legacy rev-parse HEAD)" \
+            --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --go "$(go version)" \
+            --rust "$(rustc --version)" \
+            --rust-test "$rust_test"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-abi-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-abi-bundle/
+          retention-days: 30
+          if-no-files-found: error
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-abi-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-abi-bundle
+      - name: Verify four native binary hashes and execute Rust, C, pinned Go cgo
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_abi_bundle.py consume \
+            --manifest r0-abi-bundle/manifest.json \
+            --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-abi-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-abi-out/
+          if-no-files-found: warn
+          retention-days: 30
