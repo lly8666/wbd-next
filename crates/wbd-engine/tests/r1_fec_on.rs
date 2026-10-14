@@ -99,12 +99,12 @@ fn send(a:&mut Arena,tx:&mut LaneTxCrypto,owner:&mut TxOwner,
  pn
 }
 fn receive(a:&mut Arena,owner:&mut RxOwner,
- rx:&mut ReplayProtectedLaneRx,fec:&mut FecRxOwner,wire:&[u8],at:u64)->Deliver{
+ rx:&mut ReplayProtectedLaneRx,fec:&mut FecRxOwner,wire:&[u8],at:u64,seq:u32)->Deliver{
  let mut unique=a.allocate().unwrap();
  assert_eq!(wire[0],0x45);
  assert_eq!(u16::from_be_bytes([wire[2],wire[3]]) as usize,wire.len());
  let record=&wire[40..];
- check_outer(wire,record,0); // this test uses seq=PN, all below 2^32
+ check_outer(wire,record,seq); // independent expected seq from the original TX
  unique.writable()[..record.len()].copy_from_slice(record);
  owner.offer(unique,0..record.len(),MonoNs(at)).unwrap();
  let mut packet=owner.take_ready(MonoNs(at)).expect("no block wait");
@@ -133,7 +133,7 @@ fn r1_m0_fec_on_systematic_first_business_before_parity_and_replay(){
  let mut ro=RxOwner::new(limits()).unwrap();
  let mut sink=Sink::default();
  assert_eq!(send(&mut ta,&mut tx,&mut to,&mut sink,&batch.systematic[0],0),0);
- let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],1);
+ let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],1,0);
  assert_eq!(d.systematic,vec![(0,payload.to_vec())]);assert!(d.recovered.is_empty());
  assert_eq!(sink.calls,1);
  let mut duplicate=sink.frames[0][40..].to_vec();
@@ -202,11 +202,11 @@ fn r1_m0_fec_on_missing_real_rs20_source_recovers_only_once(){
  send(&mut ta,&mut tx,&mut to,&mut sink,&a.systematic[0],0); // original PN0 lost
  send(&mut ta,&mut tx,&mut to,&mut sink,&z.systematic[0],1); // PN1 received
  send(&mut ta,&mut tx,&mut to,&mut sink,&parity[0],33_000_000); // PN2 received
- let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[1],2);
+ let d=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[1],2,1);
  assert_eq!(d.systematic,vec![(1,right.to_vec())]);assert!(d.recovered.is_empty());
- let p=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[2],34_000_000);
+ let p=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[2],34_000_000,2);
  assert!(p.systematic.is_empty());assert_eq!(p.recovered,vec![(0,left.to_vec())]);
- let late=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],35_000_000);
+ let late=receive(&mut ra,&mut ro,&mut rx,&mut fec,&sink.frames[0],35_000_000,0);
  assert!(late.systematic.is_empty()&&late.recovered.is_empty());
  assert_eq!((fec.stats().systematic,fec.stats().recovered),(1,1));
  let mut replay=sink.frames[2][40..].to_vec();
