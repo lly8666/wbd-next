@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "G2-001",
+  "subtask": "FOUR_ROLE_SCOPED_ACTIVATION_AND_FIVE_CRATE_BOOTSTRAP",
+  "source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+  "result": "PASS_SCOPED_ALLOCATION_AND_BUILD_NOT_PRODUCT",
+  "scope": "M0 G2/registry revision2 four scoped worker branches/cursors and five crate build plus unchanged R0/old Go regression, not implementation of four worker tasks or release",
+  "control_branch": "main",
+  "original_control_head": "b6604f1405fb311ad63cc55dee5d1b8a65abc7be",
+  "governance_revision_before": 1,
+  "governance_revision_after": 2,
+  "activation_source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+  "registry": {
+    "M0": {
+      "state": "active",
+      "branch": "main",
+      "epoch": 1,
+      "writer": "global"
+    },
+    "M1": {
+      "state": "active",
+      "branch": "work/m1-r1-runtime",
+      "epoch": 1,
+      "scope": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/"
+      ]
+    },
+    "M2": {
+      "state": "active",
+      "branch": "work/m2-r2-recovery",
+      "epoch": 1,
+      "scope": [
+        "crates/wbd-recovery/"
+      ]
+    },
+    "M3": {
+      "state": "active",
+      "branch": "work/m3-r1-codec",
+      "epoch": 1,
+      "scope": [
+        "crates/wbd-codec/"
+      ]
+    },
+    "M4": {
+      "state": "active",
+      "branch": "work/m4-r1-platform",
+      "epoch": 1,
+      "scope": [
+        "crates/wbd-platform/",
+        "r1/go-bridge/"
+      ]
+    },
+    "worker_shared_control": {
+      "all_branch_heads": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+      "all_cursor_sequence": 0,
+      "all_cursor_checkpoint": null,
+      "all_cursor_revision": 2,
+      "all_cursor_epoch": 1,
+      "all_worker_first_substantive_task": "NOT_STARTED",
+      "worker_sessions_running": "NOT_OBSERVED_AND_NOT_AUTOMATIC"
+    },
+    "source_paths_restricted": "Workers also own only their own .governance/workstreams/Mi/cursor.json and requests/, plus their personal devlog/evidence; M0 owns Cargo root, types, engine ABI lib.rs, all CI and common controls."
+  },
+  "bootstrap": {
+    "workspace": [
+      "wbd-types",
+      "wbd-codec",
+      "wbd-platform",
+      "wbd-engine",
+      "wbd-recovery"
+    ],
+    "rust_toolchain": "1.85.1",
+    "scaffold": "wbd-recovery pure Rust wbd-types-only crate with RECOVERY_ENGINE_READY=false; engine runtime/memory module hooks OWNER_RUNTIME_READY=false, ARENA_READY=false",
+    "rust_dependency_status": "No third-party crate dependencies introduced by G2",
+    "engine_abi": "v1 sentinel features=0; no actual product",
+    "source_lock": "r0/source-lock.json",
+    "qualification_manifest": "r0/qualification-manifest.json",
+    "qualification": "Historic R0 10 scope sources still immutable; 44 architecture test IDs 5 PARTIAL,39 NOT_RUN,no full PASS"
+  },
+  "proof": {
+    "source": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+    "attempt": 1,
+    "g2_native": {
+      "run_id": 38531136641,
+      "conclusion": "success",
+      "build_job_id": 115743035789,
+      "consume_job_id": 115743154391,
+      "build_artifact_id": 11877532760,
+      "build_artifact_digest": "sha256:25c0af64cb8e992fc8f4e98b6d32f412602f62415ed73553418df9b9428a3844",
+      "result_artifact_id": 11878102322,
+      "result_artifact_digest": "sha256:5d33ac1e67fcebf8bf6e3e54db34cef94c1f35e364d760f99b94ff23713e4586",
+      "recovery_precompiled_test_binary_sha256": "928393d30db56245bf5ff6c0fc81b17742ce3a4e566f057759d49e635c24e16c",
+      "result": "PASS_BOOTSTRAP_ONLY",
+      "bootstrap_unit_tests": 1,
+      "workspace_build": "cargo test --locked --workspace --no-run",
+      "consumer": "Independent job validated all input SHA256 and binary size/SHA256 then executed binary; no recompilation",
+      "real_recovery": "NOT_IMPLEMENTED"
+    },
+    "qualification_static": {
+      "run_id": 38531136490,
+      "job_id": 115743035959,
+      "conclusion": "success",
+      "artifact_id": 11878575618,
+      "artifact_digest": "sha256:89fe77b03dd98ddd8c6b66dc6f853de60697cbf8779c6be785f2d90184be88df"
+    },
+    "main_governance": {
+      "run_id": 38531136491,
+      "conclusion": "success"
+    },
+    "worker_governance": [
+      {
+        "role": "M1",
+        "run_id": 38531172259,
+        "conclusion": "success",
+        "source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db"
+      },
+      {
+        "role": "M2",
+        "run_id": 38531181545,
+        "conclusion": "success",
+        "source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db"
+      },
+      {
+        "role": "M3",
+        "run_id": 38531187784,
+        "conclusion": "success",
+        "source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db"
+      },
+      {
+        "role": "M4",
+        "run_id": 38531197940,
+        "conclusion": "success",
+        "source_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db"
+      }
+    ],
+    "same_source_main_actions": [
+      {
+        "scope": "R0 native ABI",
+        "run_id": 38531136646,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 Windows/ARM cross ABI only",
+        "run_id": 38531136512,
+        "conclusion": "success",
+        "target_native_execution": "NOT_RUN"
+      },
+      {
+        "scope": "R0 record real old Go oracle",
+        "run_id": 38531136555,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 old Go vectors",
+        "run_id": 38531136524,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 Go V4 fail closed control",
+        "run_id": 38531136499,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 Rust types",
+        "run_id": 38531136493,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 platform fake",
+        "run_id": 38531136489,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 LINK FEC wire old Go oracle",
+        "run_id": 38531136481,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 Go TLS V4 test only",
+        "run_id": 38531136468,
+        "conclusion": "success"
+      },
+      {
+        "scope": "R0 WBC4/WBG4 codec",
+        "run_id": 38531136439,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "limits": {
+    "go_original_repository_writes": "NONE",
+    "worker_first_code_commits": "NOT_RUN",
+    "simultaneously_running_worker_agents": "NOT_OBSERVED",
+    "first_worker_clean_handoff": "NOT_YET; seq0/checkpoint null intentionally RECOVERY_REQUIRED until worker first S/H",
+    "native_windows_arm_execution": "NOT_RUN",
+    "rust_true_aead_header_protection": "NOT_IMPLEMENTED",
+    "rust_fec_math": "NOT_IMPLEMENTED",
+    "rust_recovery_state_machine": "NOT_IMPLEMENTED",
+    "native_os_network_driver": "NOT_IMPLEMENTED",
+    "production_v4": "DISABLED_FAIL_CLOSED",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "phase": "R0_FOUNDATION_IN_PROGRESS"
+  },
+  "next_action": "M0 support M1/M2/M3/M4 first scoped atomic worker source/Actions/S/H; serially integrate requested shared API/dependency changes and test combinations. Workers must each actually be invoked in their own sessions before concurrent code work exists. Keep R0/R1 product gates distinct and V4 disabled."
+}
