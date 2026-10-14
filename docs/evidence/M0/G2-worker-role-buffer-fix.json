@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "G2-FIX-001",
+  "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+  "result": "PASS_SCOPED_CI_AND_BUFFER_CONTRACT_ONLY",
+  "scope": "M0 repairs worker Actions authority and R0 test suite partition, and defines Rust-only buffer ownership traits; no worker code/hotpath/real Normal/off data plane qualified",
+  "user_findings": [
+    {
+      "id": 1,
+      "issue": "Push Governance on M1 wrote role_id M0 and audited M0",
+      "resolution": "Fixed live main-registry branch role attestation; observed M1/M2/M3/M4 distinct role_id in actual branch governance logs and receipts",
+      "status": "PASS_GOVERNANCE_IDENTITY"
+    },
+    {
+      "id": 2,
+      "issue": "Old G2 exactly1 and platform exactly7 false failures when new worker tests added",
+      "resolution": "Old suites now filter exact G2 scaffold or r0_ platform names; newly authored worker-native-tests.yml checks actual r1_/r2_ native compiled tests with strictly positive names and separate consume job",
+      "status": "PASS_OLD_SCOPES; NEW_WORKER_TESTS_NOT_YET_EXECUTED"
+    },
+    {
+      "id": 3,
+      "issue": "Lack cross-module buffer API leading to chained packet copying",
+      "resolution": "Shared Rust-only UniqueSealable mutable writer consumed into FrozenRecordHandle immutable owning handle; M2 repair handle reuse, M4 driver_read borrowed bytes; BufferOrigin owner+generation and invalid bounds",
+      "status": "CONTRACT_AND_3_MOCK_TESTS_PASS; REAL_ARENA_ZERO_COPY_NOT_RUN"
+    },
+    {
+      "id": 4,
+      "issue": "R0 platform fake Mutex Arc Vec unbounded wait unsuitable for production",
+      "resolution": "00-CONTRACTS and M0-R1-worker-CI-buffer-hotpath-gates mandate M4 fixed bounded stop with outstanding loan preservation, reusable batch ring, no per-packet global mutex; explicitly never promote fake harness to production",
+      "status": "M4_IMPLEMENTATION_PENDING"
+    }
+  ],
+  "code": {
+    "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+    "governance_workflow": ".github/workflows/governance.yml",
+    "identity_auditor": "tools/worker_scope_ci.py",
+    "worker_suite": ".github/workflows/worker-native-tests.yml",
+    "worker_binary_manifest": "tools/worker_native_bundle.py",
+    "types_module": "crates/wbd-types/src/buffer_contract.rs",
+    "types_entry": "crates/wbd-types/src/lib.rs",
+    "handoff_contract": "docs/architecture/modules/00-CONTRACTS.md",
+    "decision": "docs/decisions/M0-R1-worker-CI-buffer-hotpath-gates.md"
+  },
+  "main_source_same": [
+    {
+      "workflow": "governance",
+      "run_id": 38534653691,
+      "conclusion": "success",
+      "job_id": 115754487159,
+      "role_id": "M0",
+      "governance_py_drills_pass": 56,
+      "new_scope_drills_pass": 5,
+      "artifact_id": 11879512762,
+      "digest": "sha256:1207f747a62b38f7c074e796cd9b98f87e8d1a5c4b2e21249988546df9d54152"
+    },
+    {
+      "workflow": "R0 native wbd-types",
+      "run_id": 38534653728,
+      "conclusion": "success",
+      "tests_passed": 8,
+      "new_buffer_contract_mock_tests": 3,
+      "build_artifact_id": 11879012520,
+      "build_digest": "sha256:aba4897f090caed47d53fdb791ed9c0fbde6709d159e21cbf58279caaa59e33a",
+      "result_artifact_id": 11878892917,
+      "result_digest": "sha256:6b57e34426f1a3e100bfa42e8a2da905e7e09e8b3b411c18f1091e84ef16a7ed"
+    },
+    {
+      "workflow": "G2 historic scaffold",
+      "run_id": 38534653804,
+      "conclusion": "success",
+      "scoped_tests_passed": 1,
+      "build_job_id": 115754488481,
+      "consume_job_id": 115754597178,
+      "build_artifact_id": 11879367208,
+      "build_digest": "sha256:13d3fa2ca4e9369b0ce7d68b003a21d4b639e4adfd37430a8b1d85d18719586b",
+      "result_artifact_id": 11879697446,
+      "result_digest": "sha256:a5fc8c53ade7c3500400c3dd81851cade9df3681a230ecda7f70e492bbf12a3e"
+    },
+    {
+      "workflow": "R0 fake platform",
+      "run_id": 38534653582,
+      "conclusion": "success",
+      "scoped_tests_passed": 7,
+      "build_artifact_id": 11878992657,
+      "build_digest": "sha256:26531561802f2fa0251c6f60b545f442ad93b05e567ce37849bef2a08e34e391",
+      "result_artifact_id": 11879572704,
+      "result_digest": "sha256:f507c832acec27ab4c9afca49a7429a64c11d8431b919a0f0de88152f64eab52"
+    },
+    {
+      "workflow": "R0 codec WBC4 WBG4",
+      "run_id": 38534653733,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 TLS record",
+      "run_id": 38534653844,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 LINK FEC wire",
+      "run_id": 38534653882,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38534653713,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38534653767,
+      "conclusion": "success",
+      "target_native_execution": "NOT_RUN"
+    },
+    {
+      "workflow": "R0 qualification static audit",
+      "run_id": 38534653690,
+      "conclusion": "success"
+    }
+  ],
+  "real_role_identity_attestations": [
+    {
+      "role": "M1",
+      "branch": "work/m1-r1-runtime",
+      "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+      "run_id": 38534772050,
+      "job_id": 115754869661,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS",
+      "role_id_reported": "M1",
+      "scope_commits_checked": 0,
+      "bootstrap_handoff": "BOOTSTRAP_RECOVERY_REQUIRED",
+      "artifact_id": 11879232533,
+      "artifact_digest": "sha256:09e2d736319e6aa6ff0d8335dd046c51d27436c14ad3f1f8dd534ed466e260d3"
+    },
+    {
+      "role": "M2",
+      "branch": "work/m2-r2-recovery",
+      "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+      "run_id": 38534784309,
+      "job_id": 115754909550,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS",
+      "role_id_reported": "M2",
+      "scope_commits_checked": 0,
+      "bootstrap_handoff": "BOOTSTRAP_RECOVERY_REQUIRED",
+      "artifact_id": 11879622788,
+      "artifact_digest": "sha256:af6f137fadb9e7a4267cc9296b2afd59c6ddf7fdf34639d64c32aa14c0f12616"
+    },
+    {
+      "role": "M3",
+      "branch": "work/m3-r1-codec",
+      "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+      "run_id": 38534794170,
+      "job_id": 115754942511,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS",
+      "role_id_reported": "M3",
+      "scope_commits_checked": 0,
+      "bootstrap_handoff": "BOOTSTRAP_RECOVERY_REQUIRED",
+      "artifact_id": 11879503222,
+      "artifact_digest": "sha256:e6df27b14a6d1412978474ecf38a4c4595920b3feec47fb1824fa5972a681926"
+    },
+    {
+      "role": "M4",
+      "branch": "work/m4-r1-platform",
+      "source_sha": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+      "run_id": 38534806623,
+      "job_id": 115754984850,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS",
+      "role_id_reported": "M4",
+      "scope_commits_checked": 0,
+      "bootstrap_handoff": "BOOTSTRAP_RECOVERY_REQUIRED",
+      "artifact_id": 11879647876,
+      "artifact_digest": "sha256:76a1804615490f362118df7cb0a46dd139d0293f0c61b87a40d375d4bdd6727a"
+    }
+  ],
+  "worker_branches_all_synced_to_SOURCE": true,
+  "worker_regression_workflows_per_branch": 10,
+  "worker_regression_results": "M1/M2/M3/M4 each 10/10 workflow runs SUCCESS at exact SOURCE after M0 fast-forward (old historic R0/G2 plus Governance); not real worker-specific new tests",
+  "new_worker_test_entry_real_execution": "NOT_RUN: no worker code containing r1_/r2_ tests has yet been authored; newly installed workflow will require actual positive-count tests and source/artifact provenance",
+  "R1_normal_fec_off_business_roundtrip": "NOT_RUN",
+  "M4_bounded_drain_and_ring": "NOT_IMPLEMENTED; assigned to M4",
+  "M1_zero_copy_arena": "NOT_IMPLEMENTED; assigned to M1",
+  "M3_authentic_rust_aead_hp": "NOT_IMPLEMENTED; assigned to M3",
+  "M2_receipt_state": "NOT_IMPLEMENTED; assigned to M2",
+  "go_v4_production": "DISABLED_FAIL_CLOSED",
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "First worker S/Actions/H for real module tests and M0 compose actual Normal/FEC-off Rust business packet loopback on one source; then driver/native integration and performance measurements. M4 must implement bounded loan preserving stop and reduce hotpath locks/Vec/Arc before qualification."
+}
