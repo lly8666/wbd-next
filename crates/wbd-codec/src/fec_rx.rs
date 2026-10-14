@@ -69,6 +69,14 @@ impl Compact{
  fn from_heavy(h:Heavy,now:u64)->Self{
   let mut lengths=[0u16;20];
   for (i,s) in h.sources.iter().enumerate(){if let Some(s)=s{lengths[i]=s.len() as u16;}}
+  // Recovered-only sources have no retained systematic payload, but their
+  // authenticated final lengths MUST survive Heavy→Compact. Otherwise a
+  // late genuine source is falsely treated as a conflicting first delivery.
+  if let Some(meta)=h.meta{
+   for (i,length) in lengths.iter_mut().enumerate(){
+    if h.delivered&(1u32<<i)!=0{*length=meta.lens[i];}
+   }
+  }
   Self{profile:h.profile,meta:h.meta,delivered:h.delivered,
    lengths,started:now,blocked:false}
  }
@@ -243,6 +251,8 @@ impl FecRxOwner{
   Ok((out,done))
  }
  fn conflict(&mut self,id:u64){
+  // Count distinct new fences, not every further frame hitting a tombstone.
+  if self.compact.get(&id).is_some_and(|c|c.blocked){return;}
   self.stats.conflicts+=1;
   if let Some(h)=self.heavy.remove(&id){
    self.bytes-=h.bytes;
