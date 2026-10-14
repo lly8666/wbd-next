@@ -125,5 +125,13 @@
   "performance": "NOT_RUN",
   "physical": "NOT_RUN",
   "three_cipher_aead": "NOT_IMPLEMENTED",
-  "m0_request": "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
+  "m0_request": "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md",
+  "source_sha": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+  "governance_handoff_history": {
+    "first_h_commit": "33917193460aa70c4cf19202eb0602ba0b982a66",
+    "first_h_run_id": 38539494325,
+    "first_h_run_result": "FAIL",
+    "first_h_reason": "governance.py validate requires evidence.source_sha matching cursor.last_tested_source; proof JSON accidentally used tested_source_sha only. Also cursor.open_requests may only reference formal Actions intent JSON validated by validate_request, not a plain M0 coordination devlog.",
+    "correction": "Add evidence.source_sha and move M0 coordination devlog from open_requests to context_refs in next cursor-only H; no code, ABI, or frozen CI edits."
+  }
 }
