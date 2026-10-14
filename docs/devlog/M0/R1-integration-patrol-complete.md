@@ -19,3 +19,5 @@
 **并发安全**：M0没有push/force/update任何work refs，所有四方分支提交属于独立worker；本轮未合并它们的实现到main。全体当下历史10个R0 scope均限于各原始精准SOURCE，其绿灯加上worker分支测试**不能自动合成为真正R1业务收发**。Rust三cipher认证seal/open、real combined engine、R1 Normal/FEC-off业务payload端到端尚未交付，Go生产V4仍DISABLED。M2 receipt不挡Normal首包，M4热路径CPU和实际OS驱动后续测。
 
 **本轮done_when**：核远端roles/branches/requests/runs、解决M0持有的根engine依赖方向和两旧Actions误报、观察实际native编译和旧源测试、将不同worker scope及请求处置/真正首包必要条件写明。已满足。下一唯一动作：在M3真实Rust加密接口+自持S/H与M1/M4集成就绪后，由M0将实际通过的worker模块版本安全合入单一main SOURCE，运行一个Rust业务input→Seal→Normal/off wire→真实Open认证→业务delivery 的完整native闭环；纯in-process与OS driver、Go生产升级和性能分开，不等R2/FEC阻塞首包。
+
+**M0 H恢复事实**：第一次cursor-only H [`b79a140`](https://github.com/lly8666/wbd-next/commit/b79a1404ae08115dae4cae2b72eadac07cc178dc) 的 [Governance 38539971191](https://github.com/lly8666/wbd-next/actions/runs/38539971191) **FAILED** 于 validate_repo，因为M0的context_refs误包含仅存在worker分支的 M1/M4 request 文件；并非编译/协议失败。源码和前述通过的run不改名、不重记。纠正：worker requests仍在本JSON及日志里精确注明，但只把main确实有的文件留在M0 cursor context_refs；需新收据S和cursor-only H后再次验证。

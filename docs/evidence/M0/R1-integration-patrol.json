@@ -223,5 +223,14 @@
   "product": "NOT_RUN",
   "performance": "NOT_RUN",
   "physical": "NOT_RUN",
-  "next_action": "Wait for M3 true Rust crypto Seal/Open and branch S/H plus M1/M4 needed adapters; M0 then safely compose their tested commits on one main SOURCE, implement native in-process Normal/FEC off exact business payload end-to-end, separate later real OS I/O. M1 rtrb/loom versions pending M0 separate dependency approval, not permitted to bypass pin/audit."
+  "next_action": "Wait for M3 true Rust crypto Seal/Open and branch S/H plus M1/M4 needed adapters; M0 then safely compose their tested commits on one main SOURCE, implement native in-process Normal/FEC off exact business payload end-to-end, separate later real OS I/O. M1 rtrb/loom versions pending M0 separate dependency approval, not permitted to bypass pin/audit.",
+  "failed_M0_handoff_and_recovery": {
+    "failed_h_sha": "b79a1404ae08115dae4cae2b72eadac07cc178dc",
+    "failed_run_id": 38539971191,
+    "failed_job_id": 115772019097,
+    "failed_step": "Validate repository contracts",
+    "actual_cause": "M0 cursor context_refs included work-branch-only .governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md and M4/requests/M4-M0-R0-platform-filter.md, absent from main checkout; governance validate_repo requires every cursor reference to exist in current branch",
+    "correction": "Leave external worker-only request paths cited in this evidence and devlog, remove them from M0 main cursor context_refs, then new cursor-only H checkpointing this corrective S",
+    "qualification": "Original SOURCE engine dependency and legacy scope Actions retained exact PASS; failed governance H remains FAILED"
+  }
 }
