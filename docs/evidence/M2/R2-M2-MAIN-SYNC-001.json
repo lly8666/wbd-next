@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-MAIN-SYNC-001",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772",
+  "result": "PASS_SCOPED_TWO_PARENT_SYNC_AND_ACTUAL_ACTIONS",
+  "scope": "M0-reviewed one-off actual worker main-sync; tree relative to second parent has exactly three M2-only files; no root Cargo or manifest changes",
+  "first_parent": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+  "second_parent": "35dfef868b9f16f2bd63f93bc2b30fddb745fd1c",
+  "main_includes_authenticated_ingress": "29ebcb19863602ae1fc059fa3524837e90944da9",
+  "second_parent_tree": "0ef09cad404745b854a5edbebda061237b68df0f",
+  "merge_tree": "95047fbe99d12a9df0b5fe4122397c4d8dfd1fdb",
+  "changed_paths_vs_main": [
+    ".governance/workstreams/M2/cursor.json",
+    "docs/devlog/M2/R2-M2-RECEIPT-001.md",
+    "docs/evidence/M2/R2-M2-RECEIPT-001.json"
+  ],
+  "protected_main_paths_unchanged": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/wbd-recovery/Cargo.toml"
+  ],
+  "runs": [
+    {
+      "id": 38558988090,
+      "attempt": 1,
+      "name": "governance",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987925,
+      "attempt": 1,
+      "name": "r0-v4-real-tls",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558988001,
+      "attempt": 1,
+      "name": "r0-link-fec-mtu",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987933,
+      "attempt": 1,
+      "name": "r0-wire-codec",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987984,
+      "attempt": 1,
+      "name": "worker-native",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987944,
+      "attempt": 1,
+      "name": "r0-fake-platform",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987920,
+      "attempt": 1,
+      "name": "r0-build",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987997,
+      "attempt": 1,
+      "name": "r0-static-qualification-audit",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987961,
+      "attempt": 1,
+      "name": "g2-scoped-bootstrap-native",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558988008,
+      "attempt": 1,
+      "name": "r0-go-control-v4-gate",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987980,
+      "attempt": 1,
+      "name": "r0-go-vectors",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558988032,
+      "attempt": 1,
+      "name": "r0-native-abi",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987945,
+      "attempt": 1,
+      "name": "r0-record-wire-framing",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    },
+    {
+      "id": 38558987966,
+      "attempt": 1,
+      "name": "r0-cross-abi",
+      "conclusion": "success",
+      "head_sha": "cfc77b9b21339defb30f4f799b1fe62f37b57772"
+    }
+  ],
+  "worker_native": {
+    "run_id": 38558987984,
+    "build_job_id": 115835078622,
+    "consume_job_id": 115835182440,
+    "passed": 8,
+    "failed": 0,
+    "filter": "r2_",
+    "binary_sha256": "8b702fd99d67b3ef9138b42a68830fbb42abd6ca6b0866bbe44701b1d45e0f40",
+    "log_sha256": "9107b05a37c2c15e55d9dd76e3ed79de64aa3f6fc4e70f9a0f1ae57a2046c565",
+    "build_artifact": {
+      "id": 11890672613,
+      "digest": "sha256:e71bee73d7c9287d6dc67beb3696e7f8bd16e80db517efed47b3edd9c576df3e"
+    },
+    "result_artifact": {
+      "id": 11891112216,
+      "digest": "sha256:4ba93d97a55e2b185c3e817d7bb906029b47338452769ed4f0c6d8c60271ac15"
+    }
+  },
+  "governance": {
+    "run_id": 38558988090,
+    "result_artifact_id": 11891726542,
+    "digest": "sha256:c9ac3f68e8717f19b16e429b411fd3480fed71ebf08afe519b034aad1a003c74"
+  },
+  "g2_bootstrap": {
+    "run_id": 38558987961,
+    "result_artifact_id": 11892076300,
+    "digest": "sha256:8928bde4398458162356689998ff644ce5e1c3ba8e143ac27657a72898d5e195"
+  },
+  "issue_2": "CLOSED_MAIN_FILTER_FIXED",
+  "issue_1": "OPEN_LIVE_GO_V4_BINDING_UNVERIFIED",
+  "scope_qualification": "R2_PURE_STATE_ONLY",
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "production_v4": "DISABLED",
+  "next_action": "R2-M2-BUDGET-001 independently scoped pure 1s F/R/L ledger, after H and review exact-source result."
+}
