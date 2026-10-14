@@ -4,26 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 19,
-  "checkpoint_sha": "572de3c508a797124b12e3f32830ca43d1ffea5c",
+  "sequence": 20,
+  "checkpoint_sha": "59bd12708c7f32f47ac5f99da15ac803f22ede81",
   "progress": "partial",
-  "task_id": "G2-FIX-001",
-  "current_task": "M0按用户G2审查4点修复：worker governance不再因push defaults变为M0，现动态匹配live main registry→实际ref→role/epoch/cursor，逐commit限制worker路径；R0 G2 exact1、platform fake r0_7范围分开、新worker-native需R1/R2真实测试且预编译跨job复用；Rust wbd-types增加跨模块UniqueSealable/FrozenRecordHandle/DriverRead的可编译所有权接口及3条mock测试。M4真实低CPU平台驱动有界stop/复用batch仍未实现，已进入强制验收合同。Normal/FEC off Rust一包端到端尚NOT_RUN。",
-  "why_now": "用户直接发现M1 Actions artefact误记录role_id=M0、老测试计数硬编码、共享buffer对象缺失和R0平台假驱动不可作为生产性能路径。M0在非越权范围内修复共用CI/类型/审核门；真实arena、record密码学、driver是M1/M3/M4任务而非由M0替代完成。",
-  "done_when": "同一个精确SOURCE 0845e...主线10个Actions全部success，包括Go record/LINK/FEC/ABI回归、Python 56测试+新5个角色负例、Rust types8/8（3新buffer mock）、G2旧1/1与platform7/7过滤；四work branches lease快进到SOURCE且各10/10回归success，实测Governance各显示role_id=M1/M2/M3/M4并真实执行对应audit（各自cursor仍bootstrap RECOVERY_REQUIRED，无worker实质提交）；收据S 572de3c治理38535615972 success，独立cursor-only H。M4真实热路径/Normal业务仍明确unverified。",
-  "next_action": "M0优先将R1 Normal/FEC off真实一包业务闭环作为集成目标：促M1先完成零多余全包复制的owned arena/handle与TX/RX owner，M3优先FrameBudget和真实三cipher中首个加密Seal/Open+HP，M4完成限定真实I/O/有界stop/read-only loan，M2纯Receipt状态可独立并行不阻塞Normal；各worker首次独立S→Actions worker-native R1/R2实际测试→cursor-only H。M0负责root Cargo/ABI/共享接口依赖及把真实Rust input→record密文→authenticated open→delivery接成单个SOURCE native loopback proof（in-process与OS native分开），无真实证据不标product或CPU PASS，生产Go V4维持DISABLED。",
+  "task_id": "R1-M0-INTEGRATION-PATROL-001",
+  "current_task": "M0按用户授权进行一次live GitHub M1–M4集成巡检并处理公共阻断：当轮初始work分支无新SOURCE，但巡检过程中四方均提交真实新源。M1 10项owned arena/owner局部Native测试成功、H seq2最新Governance绿；M2 8项纯receipt状态Native测试成功/H seq2 partial；M3 FrameBudget首编译import错误由M3自行修复，native codec和R0回归成功，但真实AEAD/HP和独立完整H尚未确认；M4 6项R1平台Native测试成功（含Linux UDP smoke）/H seq2 partial。M0仅在main把wbd-engine组合依赖拓展至codec/platform/recovery、Cargo.lock/source-lock/audit锁单向图，并把历史G2 1项与R0平台7项消费者严格按名称过滤，解决真实worker R2/M4新测试误报。生产V4仍DISABLED，完整Rust Normal/FEC off实际业务未运行。",
+  "why_now": "用户明确要求M0只检查workers最新提交/Actions/requests、处理共享Root依赖/CI阻断并准备R1 Normal/FEC off真端到端。发现engine只有types依赖，静态审计阻止M0组装；同时M2/M4真实R1/R2 tests通过但历史G2/平台夹具因额外测试误报失败；这两项属于M0公共所有权。不能修改worker独占的runtime/codec/platform/recovery实现。",
+  "done_when": "main共享依赖SOURCE 93503a4fc7d6bec305e20ae361cb5472905668d0在13个相关GitHub Actions（含five-crate编译/ABI/旧Go/record/LINK/FEC等）全success；followup S 40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36严格G2旧1/1 run38538899469和平台旧7/7 run38538899575 build/consume与治理38538899485全success；证据S 59bd12708c7f32f47ac5f99da15ac803f22ede81 Governance38539742988 success，独立H仅改M0 cursor。worker refs未被M0覆盖、M1的rtrb/loom依赖请求已记录为后续单独审核、M4的旧平台误报请求已由main修复但其旧失败run不改写，R1真业务没有假PASS。",
+  "next_action": "M0下一次先刷新四worker的独立SOURCE/H和接口请求；如M3已交付真实Rust authenticated record Seal/Open+8B HP且H确认，并具备M1 owned buffer及M4 readonly driver/loopback，将四人已验证的最小改动按主线唯一集成依赖顺序、带epoch和路径校验串行合入单一SOURCE，实际在Actions预编译+独立consumer运行Normal/FEC off 的Rust业务输入→PN预留→真正Seal/wire→driver send→真正Open认证→业务delivery闭环；允许最初in-process限定资格但不能冒充原生OS设备和生产V4。M2 receipt可继续并行不阻塞首包；M1 rtrb/loom版本/许可/锁文件在独立M0审核后才引入且不倒置依赖。没有AEAD真实代码前仅继续协调，不以mock或旧Go Seal代替Rust产品资格。",
   "unverified": true,
-  "last_tested_source": "0845e739ef5d506ff44ad1d6637cc3986929ccd5",
+  "last_tested_source": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
   "evidence_refs": [
-    "docs/evidence/M0/G2-worker-role-buffer-fix.json"
+    "docs/evidence/M0/R1-integration-patrol.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-R1-worker-CI-buffer-hotpath-gates.md",
-    "docs/devlog/M0/G2-worker-role-buffer-fix-complete.md",
+    "docs/devlog/M0/R1-integration-patrol-complete.md",
+    "docs/devlog/M0/R1-normal-off-integration-ports.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/evidence/M0/G2-worker-activation.json"
+    "r0/source-lock.json",
+    ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+    ".governance/workstreams/M4/requests/M4-M0-R0-platform-filter.md"
   ],
-  "partial_summary": "入口main 789777e1f6253426595fd12a359d49cdcd916ba6、cursor seq18 checkpoint8c1ab72，检查无增量未确认S、无PR/未完run，role rev2 5 active。实质S 0845e739ef5d506ff44ad1d6637cc3986929ccd5修复真实role/每commit scope、老scope filter和worker-native入口、types共享buffer traits并严格区分mock与热路径。main Actions 38534653691 Governance Python56/56, 38534653728 Rust types8/8, 38534653804 G2 old1/1,38534653582 platform fake7/7,38534653733 codec,38534653844 record,38534653882 LINK/FEC,38534653713 native ABI,38534653767 cross ABI,38534653690 static 全SUCCESS。四工作分支确切快进到S，分支各10/10 Actions SUCCESS；角色真实Governance M1 run38534772050 job115754869661 artifact11879232533, M2 38534784309 job115754909550 artifact11879622788, M3 38534794170 job115754942511 artifact11879503222, M4 38534806623 job115754984850 artifact11879647876，分别role_id正确且scope attestation PASS/checkpoint-null BOOTSTRAP_RECOVERY_REQUIRED，0 worker自写commit，worker-native新测试NOT_RUN。收据S 572de3c508a797124b12e3f32830ca43d1ffea5c治理38535615972 job115757645884 success。真实M1 zero-copy/真实M3 AEAD+HP/真实M4 bounded hotpath仍NOT_IMPLEMENTED，Normal/FEC-off端到端、物理/性能/产品NOT_RUN，生产V4 DISABLED。下一动作不是更多R0假验证，而是并行首原子后M0接通真实Normal/off单包。"
+  "partial_summary": "初始main HEAD694bfaae5ef03827e057726c73262b2110f5d5a2, checkpoint572de3c seq19仅cursor H CLEAN; 工程巡检时M1/M2/M3/M4各自推送首次R1/R2源码，M0未改变四work refs。M1源46571e69 原生worker38538248506 10/10PASS 后序seq2治理38539033023 success；M2源7b02154e原生38538225302 8PASS、seq2治理38539068727 success但partial；M3源3aa121e4 native38538473699+old codec38538473703 success，之前初始路径测试编译错误已自己修，待其首次S/H；M4源bcf0bca worker38538117103 6PASS（5fake+1LinuxUDP smoke）、seq2治理38538965938 success但partial，旧平台38538117164误报13 passed vs7预期。M0共享依赖S 93503a4fc7d6bec305e20ae361cb5472905668d0 Cargo fivecrate真实native G2 run38538320148、R0静态38538320136、ABI38538319960、crossABI38538320140等同SOURCE全部SUCCESS；S 40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36把旧G2 test过滤exact1 run38538899469和platform旧r0_7 run38538899575修复，main治理38538899485 success。M1 请求rtrb/loom在没有版本/锁审查前暂缓，不阻挡局部arena；M4提交的shared harness请求已在M0main修复，不能反写原失败工单的测试结论。收据S 59bd12708c7f32f47ac5f99da15ac803f22ede81治理38539742988 success。R1 Normal/FECoff真实Rust AEAD/HP与业务交付NOT_RUN，R0 phase partial、生产V4 DISABLED、产品/性能/物理 NOT_RUN。"
 }
