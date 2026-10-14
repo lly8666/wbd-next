@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-IDLE-WORKER-ASSIGN-001",
+  "source_base_sha": "c51d7a769cadeb4203beb0e1e88e55e3ccd761e8",
+  "branch": "main",
+  "result": "ASSIGNED_NOT_IMPLEMENTED",
+  "scope": "M0_MAIN_G2_NEXT_ATOMS_FOR_EXISTING_ACTIVE_M1_AND_M4_ONLY",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "registry_revision_changed": false,
+  "permissions_changed": false,
+  "preflight": {
+    "m0_seq": 30,
+    "m0_cursor_only_h": "c51d7a769cadeb4203beb0e1e88e55e3ccd761e8",
+    "m0_governance": 38562827163,
+    "M1": {
+      "branch": "work/m1-r1-runtime",
+      "head": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+      "cursor_seq": 2,
+      "source": "46571e69baa83bd01061ccbf03f03de7f4ab277d",
+      "native_run": 38538248506,
+      "native": "10/10"
+    },
+    "M4": {
+      "branch": "work/m4-r1-platform",
+      "head": "a8dd64dd25817b695280274495e1350ceccc4cae",
+      "cursor_seq": 4,
+      "source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+      "native_run": 38538117103,
+      "native": "6/6"
+    }
+  },
+  "new_tasks": [
+    {
+      "role_id": "M1",
+      "task_id": "R1-M1-WAKE-STOP-002",
+      "anchor": "docs/architecture/modules/02-RUNTIME.md",
+      "counterexamples": [
+        "R01",
+        "R02",
+        "M01"
+      ],
+      "within_existing_paths": true,
+      "requires_root_dependency": false,
+      "test": "native Actions compiled-once true std thread producer/consumer wake+stop new r1_ tests",
+      "rtrb_loom": "SEPARATE_M0_DEP_REQUEST"
+    },
+    {
+      "role_id": "M4",
+      "task_id": "R1-M4-IPV4-TCP-READY-002",
+      "anchor": "docs/architecture/modules/04-CARRIER-IO.md",
+      "counterexamples": [
+        "I01",
+        "I03"
+      ],
+      "within_existing_paths": true,
+      "requires_root_dependency": false,
+      "test": "native Actions exact IPv4/TCP serializer checksum/MTU/wrap new r1_ tests",
+      "real_AF_PACKET": "NOT_RUN"
+    }
+  ],
+  "worker_source_changes": "NONE",
+  "worker_branch_moves": "NONE",
+  "worker_test_actions": "NOT_RUN_FOR_NEW_TASKS",
+  "M0_next_action": "Integrate independently proven M2 1s per-direction budget in M0 in-process repair entry with M4 result handling; M1/M4 owners may independently start their scoped atoms after live ref validation.",
+  "qualification": {
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_go_v4": "DISABLED"
+  }
+}

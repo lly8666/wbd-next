@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1 bounded TX/RX owner, arena, queue/wakeup and Normal/off scheduling with fake clock and no HOL",
-      "done_when": "A native Actions fake-clock compiled once consumer proves first runtime/arena stop and capacity cases; no actual network, root ABI or product V4 claim"
+      "goal": "R1-M1-WAKE-STOP-002: bounded owner wake/stop race-free publish/armed/recheck using current std-only runtime; R01/R02 and M01 deterministic native proof; do not claim rtrb/loom/OS-event production hot path.",
+      "done_when": "Own native Rust Actions compile-once consumer proves lost-wakeup/stop/full queue+loan-return interleavings with named R01/R02/M01; keep fresh independent, no std blocking on ready path, no new shared dependencies, S/evidence/H; root SPSC/loom still M0 deferred."
     },
     {
       "id": "M2",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1 bounded platform I/O send outcome/borrow-stop with Go cold control bridge; Windows driver evidence clearly separated",
-      "done_when": "Actions driver native or fake truthfully qualified, no active V4 on Go, no unsafe shutdown borrow release"
+      "goal": "R1-M4-IPV4-TCP-READY-002: exact bounded IPv4/TCP-like non-bootstrap DATA packet header+checksum/seq32 wire builder around immutable sealed record, real MTU and reject path; I01/I03 tests; no raw OS TX or V4 admission claim.",
+      "done_when": "Own native Rust Actions compile-once tests compare actual 20B IPv4+20B TCP header/checksum and seq32 wrap against pinned old-Go facts, <=MTU, odd size/fail closed, frozen record bytes unchanged; S/evidence/H; no AF_PACKET/sendmmsg/Windows native/physical claim."
     }
   ]
 }
