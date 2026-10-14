@@ -88,7 +88,7 @@
     "performance": "NOT_RUN",
     "physical": "NOT_RUN"
   },
-  "integration": "M0_SHARED_HARNESS_FIX_PENDING; M4_SCOPED_TESTS_PASS",
+  "integration": "READY_FOR_M0_SCOPED_INTEGRATION_ONLY; HISTORICAL_WORKER_R0_FAIL_PRESERVED",
   "no_root_or_abi_change": true,
   "h_checkpoint_correction": {
     "observed_run_id": 38538754749,
@@ -100,5 +100,34 @@
     "h_content_only_cursor": true,
     "proposed_new_progress": "partial",
     "correction_policy": "Record this failure and make new evidence S then cursor-only H without hiding earlier H."
+  },
+  "followup_main_harness_resolution": {
+    "original_m4_worker_run": 38538117164,
+    "original_m4_worker_result": "FAIL_OLD_HARNESS_FILTER; 13/13 assertions PASS; historical outcome unchanged",
+    "resolved_on_branch": "main",
+    "harness_fix_source": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+    "fix_path": "tools/r0_platform_bundle.py",
+    "fix_change": "R0 consumer uses only the r0_ test filter; maintains exact 7-case inventory",
+    "independent_main_validation": {
+      "run_id": 38538899575,
+      "attempt": 1,
+      "workflow": "r0-platform-fake.yml",
+      "status": "SUCCESS",
+      "test_scope": "7/7 historical R0 platform fake assertions on main SOURCE, not M4 worker code"
+    },
+    "integration_retest": "NOT_RUN",
+    "request_disposition": "RESOLVED_MAIN_ONLY; do not rewrite M4 historical failing run",
+    "worker_scoped_qualification": "M4 6/6 tests at unchanged source bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+    "broader_not_run": [
+      "Linux AF_PACKET/sendmmsg native",
+      "real OS async loan cancellation/stop",
+      "Windows Npcap/Wintun native",
+      "integrated Normal/FEC off real AEAD/HP business delivery",
+      "performance",
+      "physical"
+    ],
+    "production_go_v4": "DISABLED",
+    "current_atomic_done_when": "MET_IN_ISOLATED_M4_SCOPE",
+    "next_owner": "M0 integration after M3 real codec handoff"
   }
 }

@@ -8,3 +8,6 @@ Source `bcf0bcacd51029abe5c8af429a000ee8853ceb3d`; role M4 task `R1-M4-IO-001`; 
 - G2 constraint: M4 did not edit `tools/`, `.github/`, root Cargo/ABI, M0 docs, or original Go repo. No extra permission requested; M0 can implement the shared harness change. This blocks an all-green R0 workflow but not the separately proven six M4 isolated unit tests.
 
 Native qualification after M4 S: FAKE_R1_PASS=5 tests; LINUX_NATIVE_UDP_SMOKE_PASS=1; LINUX_AF_PACKET/SENDMMSG=NOT_RUN; WINDOWS_NPCAP/WINTUN_NATIVE=NOT_RUN; real OS kernel borrow stop=NOT_RUN; production Normal/FEC-off full crypto/wire/open=NOT_RUN; Go V4=DISABLED.
+## Resolution (confirmed on remote main, 2026-10-14)
+
+RESOLVED_ON_MAIN only: M0 updated `tools/r0_platform_bundle.py` at exact main `40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36`, kept the seven-test inventory, and obtained GitHub Actions `38538899575/attempt1` SUCCESS (7/7 R0 fake). No M4 branch root/tool change or retroactive rerun; original M4 historical `38538117164/attempt1` remains FAIL. R1 M4 test result `38538117103/attempt1` 6/6 PASS unaffected. This request is no longer open; M0 owns any future shared harness update or all-worker SOURCE integration.
