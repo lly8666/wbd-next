@@ -129,5 +129,29 @@
     "production_go_v4": "DISABLED",
     "current_atomic_done_when": "MET_IN_ISOLATED_M4_SCOPE",
     "next_owner": "M0 integration after M3 real codec handoff"
+  },
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "M4 R1 isolated Rust 5 fake tests + Linux connected UDP smoke 1 native test ONLY; no AF_PACKET/Windows/AEAD/product qualification",
+  "artifact_review": {
+    "evidence_type": "DIRECT_INSPECTION_OF_ORIGINAL_ACTIONS_ZIPS",
+    "source_sha": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+    "run_id": 38538117103,
+    "attempt": 1,
+    "build_zip_sha256": "69320f97d3b304367b60c42c60014f70885c938789a8532a3dafca0598d4b356",
+    "result_zip_sha256": "7e823e4473e45d59fe743edc0d59d53221d72e44aa92cc60b61267d4ba24b352",
+    "manifest_binary_sha256": "95a5aa49ce5a11182c83ceb4e9e5722bc39c512ecb238881790840cead41fbeb",
+    "inspected_binary_sha256": "95a5aa49ce5a11182c83ceb4e9e5722bc39c512ecb238881790840cead41fbeb",
+    "inspected_test_log_sha256": "9a47982c70ec961783138a1aee050f08719cfa7942712fbd976b3be7fe147b49",
+    "inspected_test_result": "6 passed; 0 failed; 7 filtered out",
+    "downstream_full_integration": "NOT_RUN"
+  },
+  "h_structural_fix": {
+    "failing_h_sha": "2dce8dd01eaa4abd4fd1aabb1738bbf9539196b7",
+    "governance_run_id": 38543686945,
+    "attempt": 1,
+    "conclusion": "FAIL",
+    "observed_reason": "verified cursor lacks reviewed PASS evidence",
+    "remediation": "after direct artifact inspection, add top-level reviewed PASS and artifact_verified=true; preserve earlier FAIL and make new S then cursor-only H"
   }
 }
