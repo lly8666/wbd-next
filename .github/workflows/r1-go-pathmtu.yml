@@ -1,0 +1,150 @@
+name: R1 pinned original Go pathmtu native oracle
+run-name: "M0|${{ github.sha }}|r1-old-go-pathmtu"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r1-go-pathmtu.yml"
+      - "r0/source-lock.json"
+permissions:
+  contents: read
+concurrency:
+  group: r1-old-go-pathmtu-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Compile exact original Go internal/pathmtu test binary once
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          python3 - <<'PY'
+          import json
+          lock = json.load(open('r0/source-lock.json'))
+          assert lock['legacy']['source_sha'] == 'a7a82db31fe736ffedee330795a3234d358f1984'
+          assert lock['legacy']['go_toolchain'] == 'go1.23.12'
+          PY
+          test "$(go version)" = "go version go1.23.12 linux/amd64"
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r1-pathmtu-go.test" ./internal/pathmtu
+          )
+          mkdir r1-pathmtu-build
+          mv r1-pathmtu-go.test r1-pathmtu-build/r1-pathmtu-go.test
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          def sha(path): return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          info = {
+            'schema_version':1,'new_source_sha':os.environ['GITHUB_SHA'],
+            'legacy_source_sha':'a7a82db31fe736ffedee330795a3234d358f1984',
+            'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'go_version':'go1.23.12','package':'./internal/pathmtu',
+            'binary_sha256':sha('r1-pathmtu-build/r1-pathmtu-go.test'),
+            'source_lock_sha256':sha('r0/source-lock.json'),
+            'scope':'original pinned Go pathmtu native unit tests; NOT Rust, NOT A/B, NOT product'
+          }
+          pathlib.Path('r1-pathmtu-build/manifest.json').write_text(json.dumps(info,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r1-pathmtu-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-pathmtu-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r1-pathmtu-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-pathmtu-build
+      - name: Verify provenance and hash, then run all original native Go pathmtu tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          info=json.load(open('r1-pathmtu-build/manifest.json'))
+          sha=lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert info['schema_version']==1
+          assert info['new_source_sha']==os.environ['GITHUB_SHA']
+          assert info['legacy_source_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert info['run_id']==os.environ['GITHUB_RUN_ID']
+          assert info['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert info['go_version']=='go1.23.12'
+          assert info['package']=='./internal/pathmtu'
+          assert json.load(open('r0/source-lock.json'))['legacy']['source_sha']==info['legacy_source_sha']
+          assert sha('r0/source-lock.json')==info['source_lock_sha256']
+          assert sha('r1-pathmtu-build/r1-pathmtu-go.test')==info['binary_sha256']
+          PY
+          chmod +x r1-pathmtu-build/r1-pathmtu-go.test
+          mkdir r1-pathmtu-result
+          set +e
+          ./r1-pathmtu-build/r1-pathmtu-go.test -test.v -test.count=1 > r1-pathmtu-result/tests.log 2>&1
+          test_exit=$?
+          set -e
+          cat r1-pathmtu-result/tests.log
+          TEST_EXIT="$test_exit" python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,sys
+          info=json.load(open('r1-pathmtu-build/manifest.json'))
+          logfile=pathlib.Path('r1-pathmtu-result/tests.log')
+          log=logfile.read_text()
+          passes=re.findall(r'^--- PASS: (Test\w+)',log,re.M)
+          failures=re.findall(r'^--- FAIL: (Test\w+)',log,re.M)
+          required={
+            'TestMTUMatrixAllRequiredOuterSizes',
+            'TestAllFixedFECProfilesHaveSameMTUOverhead',
+            'TestPeerMSSAndMissingMSSFallback',
+            'TestActualHeadersLocalCeilingAndRecordLimitAllConstrainCarrier',
+            'TestInvalidBudgetsFailClosed',
+            'TestDeriveTunnelInterfaceMTU',
+            'TestAutoRecordWireLimitAndSingleRecordInnerMTU'
+          }
+          exit_code=int(os.environ['TEST_EXIT'])
+          ok=exit_code==0 and not failures and required.issubset(set(passes))
+          result={
+            'new_source_sha':info['new_source_sha'],
+            'legacy_source_sha':info['legacy_source_sha'],
+            'run_id':info['run_id'],'attempt':info['attempt'],
+            'binary_sha256':info['binary_sha256'],
+            'log_sha256':hashlib.sha256(logfile.read_bytes()).hexdigest(),
+            'native_go_top_level_passes':len(passes),
+            'required_seven_present':required.issubset(set(passes)),
+            'exit_code':exit_code,'result':'PASS' if ok else 'FAIL',
+            'qualification':'ORIGINAL_GO_PATHMTU_ONLY; M3_RUST_SOURCE_SEPARATE; R1_E2E_NOT_RUN'
+          }
+          pathlib.Path('r1-pathmtu-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          if not ok: sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r1-pathmtu-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-pathmtu-result/
+          if-no-files-found: warn
+          retention-days: 30
