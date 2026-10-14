@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 1,
-  "checkpoint_sha": "54734f280807c64435c67df12fa3c722aafd1c0d",
-  "progress": "ready_for_integration",
+  "sequence": 2,
+  "checkpoint_sha": "9720c770242a13d0dec446d044252bfceb32d69b",
+  "progress": "partial",
   "task_id": "R1-M4-IO-001",
   "current_task": "R1 platform TxBatchOutcome driver prefix and borrower stop",
   "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
   "done_when": "Actions isolated driver prefix/uncertain/stop tests, source exact and native-vs-fake separated; no Windows native without runner/real driver, S+H.",
-  "next_action": "M0 to scope the historical R0 platform fake harness to r0_ tests and verify its own replacement Actions run; then compose the isolated M4 boundary into the M1/M3 Normal/FEC-off first-packet path.",
+  "next_action": "M0 to filter historical R0 fake-platform runner to r0_ and record new Actions qualification; only then consider R1 M4 isolated interface for M1/M3 Normal/FEC-off integration.",
   "unverified": true,
   "last_tested_source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
   "evidence_refs": [
@@ -25,5 +25,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-IO-001 scoped code S bcf0bcacd51029abe5c8af429a000ee8853ceb3d; worker native Actions 38538117103/1 PASS 6/6 (5 fake, 1 native Linux connected UDP only). Evidence S 54734f280807c64435c67df12fa3c722aafd1c0d. R0-platform-fake 38538117164/1 workflow FAIL because it ran 13/13 passing assertions but M0 legacy checker requires unfiltered 7-count; explicit M0 request open. Synchronous frozen driver_read has no packet clone/Vec/locks; async CAS fence uses bounded Instant stop and preserves pending kernel loan. No AF_PACKET/sendmmsg, Npcap/Wintun, real async OS borrow, integrated AEAD Normal/off or performance qualification. Go production V4 DISABLED; unverified=true refers to integration/native-driver limits, not scoped tests."
+  "partial_summary": "R1-M4-IO-001 scoped implementation source bcf0bcacd51029abe5c8af429a000ee8853ceb3d verified Actions 38538117103/1 6/6 (fake5, Linux UDP native1). Real AF_PACKET, Windows native, full Normal/off codec/engine, kernel async borrow and performance NOT_RUN; V4 DISABLED. R0 fake Actions 38538117164/1 FAIL due unfiltered 13 passed vs literal expected7; M0 request open. First H 2d2dcc633e4f7f57f51bfa0d0741c96b975e97cf failed governance 38538754749/1 because ready_for_integration+unverified true; correction documented evidence S 9720c770242a13d0dec446d044252bfceb32d69b. State stays partial+unverified pending shared harness and real driver/integration. No unauthorized changes."
 }
