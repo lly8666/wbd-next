@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-FEC-OUTER-FIRST-002",
+  "result": "PASS_SCOPED_IN_PROCESS_NATIVE_ONLY",
+  "repo": "lly8666/wbd-next",
+  "branch": "main",
+  "registry_reservation_revision": 2,
+  "assignment_epoch": 1,
+  "start_head": "e0b96f2401e0c5b2f0df8acc4bc980c87f2b7a6f",
+  "code_history": [
+    {
+      "source_sha": "b93276717ecde7c1e606257932b5eaf7abb5908c",
+      "files": [
+        "crates/wbd-engine/tests/r1_fec_on.rs",
+        ".github/workflows/r1-fec-on-native.yml"
+      ],
+      "native_run": 38598103666,
+      "attempt": 1,
+      "result": "FAIL",
+      "native_tests": "0/2",
+      "cause": "RX fixture incorrectly expected TCP seq0 for later actual seq1/2; edge Arena used unsupported 640B class"
+    },
+    {
+      "source_sha": "e972611b2f21809dd640b24234863823d843d34e",
+      "files": [
+        "crates/wbd-engine/tests/r1_fec_on.rs"
+      ],
+      "native_run": 38598323241,
+      "attempt": 1,
+      "result": "FAIL",
+      "native_tests": "1/2",
+      "cause": "actual RX seq expectations repaired; edge Arena 640B invalid class remained"
+    },
+    {
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "files": [
+        "crates/wbd-engine/tests/r1_fec_on.rs"
+      ],
+      "native_run": 38598402946,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "native_tests": "2/2",
+      "cause": "use supported 768B Arena slab, record still capped at 536B; RX expected seq passed explicitly"
+    }
+  ],
+  "exact_source": {
+    "sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+    "run_id": 38598402946,
+    "attempt": 1,
+    "workflow": "r1-fec-on-native",
+    "result": "SUCCESS",
+    "test_cases": [
+      "r1_m0_fec_on_systematic_first_business_before_parity_and_replay",
+      "r1_m0_fec_on_missing_real_rs20_source_recovers_only_once"
+    ],
+    "native_tests_passed": 2,
+    "native_tests_failed": 0,
+    "compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "runner": "ubuntu-24.04",
+    "compile_once": true,
+    "artifact_consumed_across_jobs": true,
+    "binary_sha256": "863108aab45608696b4e5f6bdd3841fe843e08c1304147b4c5c680c315bdb23d",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "test_log_sha256": "49312646740c79344578eccf48899979f61961dd20c2e2001c83ac1c2812e915",
+    "build_artifact": {
+      "id": 11912556088,
+      "name": "r1-fec-build-38598402946-1",
+      "zip_sha256": "c704937d4389cc3ebb01072201580f581a9fccd1e748c08fe7e96c79daf7a412"
+    },
+    "result_artifact": {
+      "id": 11912591172,
+      "name": "r1-fec-result-38598402946-1",
+      "zip_sha256": "c7c6ceafbdd84203487cfd759eb8996f6e5083bc6be12d407ddd52e0f76724ea"
+    }
+  },
+  "sibling_actions_same_source": [
+    {
+      "workflow": "governance",
+      "run_id": 38598402559,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38598403165,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38598402546,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38598402779,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38598402671,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38598402881,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38598402762,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38598402810,
+      "attempt": 1,
+      "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+      "result": "SUCCESS",
+      "claim": "AFFECTED_HISTORIC_SCOPE_ONLY"
+    }
+  ],
+  "checks": [
+    "actual M3 genuine FEC TX output full 56B metadata (after authentication only), streaming source reaches business before parity32ms",
+    "M1 owned frozen record and TxOwner fresh dispatch into actual M4 IPv4/TCP builder; no new Seal on repair presentation change",
+    "packet length IPv420+TCP20+record, DF/flags/seq/checksum independently byte verified; ceiling 576B includes MSS536 and FEC+record",
+    "near-edge 449B source plus FEC56/record31 exactly fits 576B; 575B MTU and 575B scratch reject untouched; explicit 4B TCP options reject 580B",
+    "M1 RX owner, real AEAD open and PN replay, then real FecRxOwner first delivery, genuine RS20 missing only once, late original suppressed",
+    "same-SOURCE manifest now includes crates/wbd-platform/src/ipv4_tcp.rs hash"
+  ],
+  "nonclaims": [
+    "GO_V4_ADMISSION_DISABLED",
+    "AF_PACKET_LIVE_NOT_RUN",
+    "LINUX_SENDMMSG_PRODUCT_NOT_RUN",
+    "LIVE_BLOCK_ID32_TO_64_NOT_RUN",
+    "NATIVE_WINDOWS_ARM_NOT_RUN",
+    "PERFORMANCE_NOT_RUN",
+    "REAL_NETWORK_NOT_RUN",
+    "PHYSICAL_NOT_RUN"
+  ],
+  "concurrent_workers": "M1 M2 M3 M4 branch heads advanced after M0 task start, cursor qualifications must be independently audited before integration",
+  "next_action": "M0 audit new M1-M4 branch per-commit diffs, outstanding Actions and exact cursor/evidence; integrate one separately qualified worker atomic task on main with same-source native proof. Do not start unauthorized worker code."
+}
