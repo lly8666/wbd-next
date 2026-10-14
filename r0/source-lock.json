@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "role": "M0",
-  "phase": "R0_CONTRACT_BOOTSTRAP",
+  "phase": "R0_FOUNDATION_IN_PROGRESS",
   "legacy": {
     "repository": "lly8666/wobuzhidao",
     "source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
@@ -9,26 +9,49 @@
     "go_directive": "1.23.1",
     "go_toolchain": "go1.23.12",
     "verified_remote_commit": true,
-    "compiled": false
+    "compiled": true,
+    "compiled_scope": "ACTIONS_TEST_ONLY_PINNED_LEGACY_CHECKOUT_WITH_R0_OVERLAY; production V4 still DISABLED; original remote repository untouched"
   },
   "rust": {
     "toolchain": "1.85.1",
     "edition": "2021",
     "target": "x86_64-unknown-linux-gnu",
     "crates": [
-      "wbd-types"
+      "wbd-types",
+      "wbd-codec",
+      "wbd-platform",
+      "wbd-engine"
     ],
     "dependencies": "no_external_deps_yet",
     "isa_l_sha": "NOT_LOCKED",
-    "aws_lc_rs_sha": "NOT_LOCKED"
+    "aws_lc_rs_sha": "NOT_LOCKED",
+    "cross_targets": [
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-gnu"
+    ],
+    "cross_targets_execution": "NOT_RUN; cross-compiled and C ABI layout/link inspected on Linux x64 runner only",
+    "crate_scope": {
+      "wbd-types": "R0_SHARED_TYPES_ONLY",
+      "wbd-codec": "R0_WBC4_WBG4_WIRE_ONLY",
+      "wbd-platform": "R0_FAKE_IO_CONTRACT_ONLY",
+      "wbd-engine": "R0_ABI_SENTINEL_ONLY_FEATURES_ZERO"
+    }
   },
   "qualification": {
-    "scope": "internal_types_precompiled_linux_x64_only",
-    "legacy_go_vectors": "NOT_RUN",
-    "go_rust_abi": "NOT_RUN",
-    "platform_abi": "NOT_RUN",
-    "product": "NOT_STARTED",
+    "scope": "R0_FOUNDATION_PARTIAL_HISTORIC_ACTIONS_PROOFS_NOT_PRODUCT",
+    "canonical_manifest": "r0/qualification-manifest.json",
+    "legacy_go_vectors": "ACTIONS_PASS_PINNED_GO_TEST_ONLY",
+    "legacy_go_tls_v4": "ACTIONS_PASS_TEST_ONLY_NO_PRODUCTION_ENTRY",
+    "legacy_go_production_v4": "DISABLED_FAIL_CLOSED",
+    "go_rust_abi": "ACTIONS_PASS_NATIVE_LINUX_X64_SENTINEL_ONLY",
+    "platform_abi": "ACTIONS_PASS_NATIVE_LINUX_X64_SENTINEL_AND_CROSS_BUILD_WIN_X64_LINUX_ARM64_ONLY",
+    "fake_platform_clock": "ACTIONS_PASS_NATIVE_LINUX_X64_FAKE_ONLY",
+    "wbc4_wbg4_wire": "ACTIONS_PASS_NATIVE_LINUX_X64_WIRE_ONLY",
+    "windows_arm_native_execution": "NOT_RUN",
+    "rust_business_engine": "NOT_IMPLEMENTED",
+    "product": "NOT_RUN",
     "performance": "NOT_RUN",
     "physical": "NOT_RUN"
-  }
+  },
+  "change_note": "R0 source-lock records pinned inputs and scoped claims; historic test receipts remain immutable and are indexed by r0/qualification-manifest.json; changing this file is not a new product proof."
 }

@@ -1,0 +1,44 @@
+name: R0 source and qualification ledger audit
+run-name: "M0|${{ github.sha }}|r0-static-qualification-audit"
+
+on:
+  push:
+    paths:
+      - "r0/source-lock.json"
+      - "r0/qualification-manifest.json"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - "docs/evidence/M0/R0-*.json"
+      - "tools/r0_qualification_audit.py"
+      - ".github/workflows/r0-qualification-audit.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-source-qualification-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  static-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Validate immutable source locks, actual historic receipt anchors and conservative R0 ID coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 --version
+          python3 tools/r0_qualification_audit.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-qualification-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-qualification-audit-result/
+          if-no-files-found: warn
+          retention-days: 30

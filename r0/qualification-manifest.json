@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-CONTRACT-001",
+  "owner": "M0",
+  "control_branch": "main",
+  "baseline_checkpoint": "29ad2aa37874df0fb44ec08efb5274f1b0145265",
+  "scope": "R0_FOUNDATION_PARTIAL_ONLY; historic SOURCEs are immutable, manifest status is not a new test qualification",
+  "source_lock": "r0/source-lock.json",
+  "workspace_expected": [
+    "wbd-types",
+    "wbd-codec",
+    "wbd-platform",
+    "wbd-engine"
+  ],
+  "expected_legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "native_target": "x86_64-unknown-linux-gnu",
+  "cross_targets": [
+    "aarch64-unknown-linux-gnu",
+    "x86_64-pc-windows-gnu"
+  ],
+  "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
+  "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "evidence_gates": [
+    {
+      "gate": "R0-TYPES",
+      "evidence": "docs/evidence/M0/R0-contract-types-build.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "NATIVE_LINUX_X64_TEST",
+      "scope": "wbd-types five Rust shared-type unit anchors; no stable dataplane",
+      "actual_file": "crates/wbd-types/src/lib.rs",
+      "require_anchor": [
+        "#[test]"
+      ],
+      "source_sha": "c1f5ce14dbbf8e2b79dafa0e71e452b2b494849c",
+      "run_id": 38507997009,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-build.yml"
+    },
+    {
+      "gate": "R0-GO-GOLDEN",
+      "evidence": "docs/evidence/M0/R0-go-vectors.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "PINNED_LEGACY_GO_TEST",
+      "scope": "old Go V3 and test-only V4 request/reply/Exporter/HKDF 5 vectors",
+      "actual_file": "r0/legacy_v3_v4_probe_test.go",
+      "require_anchor": [
+        "TestR0PinnedGoV3RequestReplyGolden",
+        "TestR0V4Admission24ByteExtensionGolden",
+        "TestR0V4RejectMalformedAndDowngrade",
+        "TestR0GoV4ExporterAndHKDFDomainSeparation",
+        "TestR0OriginalGoCipherPolicyIsExplicit"
+      ],
+      "source_sha": "87ad54b044e5faa974d47ba2a7015a75760328cd",
+      "run_id": 38509701636,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-go-vectors.yml"
+    },
+    {
+      "gate": "R0-GO-TLS",
+      "evidence": "docs/evidence/M0/R0-v4-real-tls.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "PINNED_LEGACY_GO_TEST_TLS",
+      "scope": "5 Go real protected TLS test-only V4 admission/identity/epoch rejection tests, not production dispatch",
+      "actual_file": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+      "require_anchor": [
+        "TestR0V4ActualProtectedPeerHandshakeAllCiphers",
+        "TestR0V4LaneJoinEpochAndDuplicateRejected",
+        "TestR0V4WrongEpochAndIdentityReject",
+        "TestR0V4FeatureGateAndBoundedStore",
+        "TestR0V4OldGoV3RejectsActualTLSUpgrade"
+      ],
+      "source_sha": "6aaba145289ea7771469ee5e462cce03361a432f",
+      "run_id": 38510931409,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-v4-tls.yml"
+    },
+    {
+      "gate": "R0-GO-CONTROL",
+      "evidence": "docs/evidence/M0/R0-go-control-mode.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "PINNED_LEGACY_GO_CONTROL_CLI_TEST",
+      "scope": "compiled pinned Go CLI and library guarded fail-closed admission-version=4, no actual app V4 engine",
+      "actual_file": "r0/go_overlay/internal/runtimeentry/r0_admission_mode_test.go",
+      "require_anchor": [
+        "TestR0"
+      ],
+      "source_sha": "b1e1cf627c18674433ef45c9fc2eaf172734ebe6",
+      "run_id": 38512634751,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-go-control.yml"
+    },
+    {
+      "gate": "R0-NATIVE-ABI",
+      "evidence": "docs/evidence/M0/R0-native-abi.json",
+      "result_key": "test_result",
+      "expected": "PASS",
+      "mode": "NATIVE_GO_C_RUST_LINUX_X64_SENTINEL",
+      "scope": "Rust cdylib + C C11 executable + pinned Go cgo native execution with opaque tokens, no real engine",
+      "actual_file": "r0/abi/old_go_probe/bridge_test.go",
+      "require_anchor": [
+        "TestR0Abi"
+      ],
+      "source_sha": "b719f28ac2b112150e39133a9cabc8e7d32b8771",
+      "run_id": 38514286818,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-native-abi.yml"
+    },
+    {
+      "gate": "R0-FAKE-PLATFORM",
+      "evidence": "docs/evidence/M0/R0-platform-fake.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "NATIVE_LINUX_X64_RUST_FAKE_DRIVER",
+      "scope": "7 Rust fake clock / Tx prefix / buffer lease / failed PN anchors, not kernel network",
+      "actual_file": "crates/wbd-platform/src/lib.rs",
+      "require_anchor": [
+        "r0_i01_prefix_partial_uncertain_does_not_count_as_ack",
+        "r0_i01_zero_prefix_failure_does_not_block_fresh",
+        "r0_c01_failed_seal_burns_pn_and_u64_never_wraps",
+        "r0_i01_invalid_driver_accounting_is_fail_closed",
+        "r0_b01_stop_waits_for_driver_borrow_and_rejects_new_loans",
+        "r0_b01_fake_driver_returns_while_holding_a_live_loan",
+        "r0_r01_injected_fake_clock_saturates_and_never_uses_wall_time"
+      ],
+      "source_sha": "1f1f8e9af7fd4f7620ead56d7fbc16d1d26c07c2",
+      "run_id": 38516057707,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-platform-fake.yml"
+    },
+    {
+      "gate": "R0-CROSS-ABI",
+      "evidence": "docs/evidence/M0/R0-cross-abi.json",
+      "result_key": "result",
+      "expected": "CROSS_BUILD_PASS",
+      "mode": "CROSS_BUILD_ONLY_NO_TARGET_EXECUTION",
+      "scope": "Rust ARM64 Linux + Windows x64 cdylib and platform rlib, C struct/link, ELF/PE machine/export, no target execution",
+      "actual_file": "r0/abi/tests/cross_layout.c",
+      "require_anchor": [
+        "_Static_assert",
+        "wbd_r0_abi_query",
+        "wbd_r0_engine_open"
+      ],
+      "source_sha": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
+      "run_id": 38517556825,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-cross-abi.yml"
+    },
+    {
+      "gate": "R0-WIRE-CODEC",
+      "evidence": "docs/evidence/M0/R0-codec-wire.json",
+      "result_key": "result",
+      "expected": "PASS",
+      "mode": "NATIVE_LINUX_X64_RUST_WIRE_ONLY",
+      "scope": "13 Rust WBC4/WBG4 golden and malformed inputs; no AEAD/receipt validation/data-path",
+      "actual_file": "crates/wbd-codec/src/lib.rs",
+      "require_anchor": [
+        "r0_wbc4_golden_receipt_exact_wire_and_roundtrip",
+        "r0_wbg4_golden_exact_big_endian_and_roundtrip",
+        "r0_wbc4_reject_duplicate_receipt_and_tlv_count_over_eight"
+      ],
+      "source_sha": "fdcacde4dae62cb6591d030d93ced7715b919118",
+      "run_id": 38519636181,
+      "run_attempt": 1,
+      "workflow": ".github/workflows/r0-codec.yml"
+    }
+  ],
+  "case_coverage": [
+    {
+      "id": "B01",
+      "status": "PARTIAL_R0_FAKE_ONLY",
+      "gate": "R0-FAKE-PLATFORM",
+      "tests": [
+        "r0_b01_stop_waits_for_driver_borrow_and_rejects_new_loans",
+        "r0_b01_fake_driver_returns_while_holding_a_live_loan"
+      ],
+      "limits": "only borrow/stop fake; Prepare/reply/Detach other interleavings NOT_RUN"
+    },
+    {
+      "id": "B02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "B03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "B04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "R01",
+      "status": "PARTIAL_R0_FAKE_ONLY",
+      "gate": "R0-FAKE-PLATFORM",
+      "tests": [
+        "r0_r01_injected_fake_clock_saturates_and_never_uses_wall_time"
+      ],
+      "limits": "only injected deadline/overflow, not 100k timer owner wakeup/state machine"
+    },
+    {
+      "id": "R02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "R03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "R04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "M01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "M02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "M03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "M04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "I01",
+      "status": "PARTIAL_R0_FAKE_ONLY",
+      "gate": "R0-FAKE-PLATFORM",
+      "tests": [
+        "r0_i01_prefix_partial_uncertain_does_not_count_as_ack",
+        "r0_i01_zero_prefix_failure_does_not_block_fresh",
+        "r0_i01_invalid_driver_accounting_is_fail_closed"
+      ],
+      "limits": "fake outcome only, no syscall, half-record or real OS driver"
+    },
+    {
+      "id": "I02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "I03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "I04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "C01",
+      "status": "PARTIAL_R0_FAKE_ONLY",
+      "gate": "R0-FAKE-PLATFORM",
+      "tests": [
+        "r0_c01_failed_seal_burns_pn_and_u64_never_wraps"
+      ],
+      "limits": "failure PN burn only, not 3-cipher Rust record AEAD/HP/golden"
+    },
+    {
+      "id": "C02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "C03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "C04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "L01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "L02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "L03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "L04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F05",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "F06",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A05",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "A06",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "G01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "G02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "G03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "G04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "P01",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "P02",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "P03",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    },
+    {
+      "id": "P04",
+      "status": "NOT_RUN",
+      "reason": "No R0 native evidence for full architecture/11 contract scenario; design text is not test proof"
+    }
+  ],
+  "r0_foundation_exit": {
+    "status": "BLOCKED_NOT_QUALIFIED",
+    "ready_for_worker_allocation": "NOT_YET_DECIDED",
+    "completed_anchors": [
+      "Rust shared typed workspace (4 crates) with locked Cargo",
+      "Old Go source SHA and V3/V4 test vectors",
+      "Go TLS V4 opt-in test fixture plus compiled fail-closed app gate",
+      "Linux x64 native opaque Rust/C/cgo sentinel",
+      "Rust fake-clock/TxBatchOutcome/KernelLoan fake driver",
+      "Windows x64 & Linux ARM64 cross-target C ABI layout/link only",
+      "Rust WBC4/WBG4 strict wire encoding/decoding fixtures",
+      "Actions compiled once with separate consumers and SHA input/binary checks"
+    ],
+    "blockers": [
+      {
+        "key": "R0-WIRE-RECORD",
+        "why": "Real Rust record seal/open including three ciphers, PN/header protection, short sample, old wire golden not implemented; codec currently only WBC4/WBG4 control/payload wrappers"
+      },
+      {
+        "key": "R0-LINK-FEC-BOUNDARIES",
+        "why": "Rust LINK/FEC wire lengths, MTU boundary and FEC primitive golden not implemented; no qualified steady dataplane"
+      },
+      {
+        "key": "R0-GO-CONTROL-INTEGRATION",
+        "why": "Pinned Go real production callsites still reject V4; Rust sentinel reports feature=0; actual epoch lifecycle/Go-to-Rust runtime wiring is not implemented"
+      },
+      {
+        "key": "R0-ENGINE-PLATFORM",
+        "why": "No real engine or OS network driver; native Linux sample was ABI/lifecycle and simulated Tx only"
+      },
+      {
+        "key": "R0-NATIVE-MULTI-OS",
+        "why": "Windows x64 and ARM64 targets were only cross-built; target-native FFI/OS I/O not executed, cannot call cross-compiled code product-qualified"
+      },
+      {
+        "key": "R0-PRODUCT",
+        "why": "Product/performance/physical qualification NOT_RUN; reserved workers require explicit authorized registry assignment and path ownership; not automatically activated"
+      }
+    ]
+  },
+  "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only.",
+  "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run."
+}

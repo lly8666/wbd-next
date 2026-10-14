@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""R0 foundation source/evidence audit — static metadata only.
+
+Runs in GitHub Actions, does not compile, execute product/test binaries,
+fetch current workflow status, or qualify real network/I/O/crypto performance.
+Historical Actions run states must first be verified from their GitHub records.
+"""
+import hashlib
+import json
+from pathlib import Path
+import sys
+import tomllib
+
+ROOT = Path(".")
+EXPECTED_WORKSPACE = {"wbd-types", "wbd-codec", "wbd-platform", "wbd-engine"}
+EXPECTED_GATES = {
+    "R0-TYPES": "PASS",
+    "R0-GO-GOLDEN": "PASS",
+    "R0-GO-TLS": "PASS",
+    "R0-GO-CONTROL": "PASS",
+    "R0-NATIVE-ABI": "PASS",
+    "R0-FAKE-PLATFORM": "PASS",
+    "R0-CROSS-ABI": "CROSS_BUILD_PASS",
+    "R0-WIRE-CODEC": "PASS",
+}
+ALLOWED_MODES = {
+    "NATIVE_LINUX_X64_TEST",
+    "PINNED_LEGACY_GO_TEST",
+    "PINNED_LEGACY_GO_TEST_TLS",
+    "PINNED_LEGACY_GO_CONTROL_CLI_TEST",
+    "NATIVE_GO_C_RUST_LINUX_X64_SENTINEL",
+    "NATIVE_LINUX_X64_RUST_FAKE_DRIVER",
+    "CROSS_BUILD_ONLY_NO_TARGET_EXECUTION",
+    "NATIVE_LINUX_X64_RUST_WIRE_ONLY",
+}
+EXPECTED_IDS = {
+    f"{prefix}{n:02d}"
+    for prefix, end in (
+        ("B", 4), ("R", 4), ("M", 4), ("I", 4), ("C", 4),
+        ("L", 4), ("F", 6), ("A", 6), ("G", 4), ("P", 4)
+    )
+    for n in range(1, end + 1)
+}
+PARTIAL_IDS = {"B01", "R01", "I01", "C01"}
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+def read_json(path):
+    return json.loads(Path(path).read_text())
+
+def sha256(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def audit():
+    lock = read_json("r0/source-lock.json")
+    m = read_json("r0/qualification-manifest.json")
+    project = read_json(".governance/project.json")
+    registry = read_json(".governance/registry.json")
+    workspace = tomllib.loads(Path("Cargo.toml").read_text())
+    packages = tomllib.loads(Path("Cargo.lock").read_text())["package"]
+    toolchain = tomllib.loads(Path("rust-toolchain.toml").read_text())["toolchain"]
+    members = {p.rsplit("/", 1)[-1] for p in workspace["workspace"]["members"]}
+    require(members == EXPECTED_WORKSPACE, "current workspace not four approved crates")
+    require(set(lock["rust"]["crates"]) == members == set(m["workspace_expected"]),
+            "source-lock/manifest/workspace crates drift")
+    require({p["name"] for p in packages} == members, "Cargo.lock package list drift")
+    require(not any(p.get("source") for p in packages), "third-party crate declared unexpectedly")
+    for crate in members:
+        c = tomllib.loads(Path(f"crates/{crate}/Cargo.toml").read_text())
+        require(c["package"]["name"] == crate, f"crate package mismatch: {crate}")
+        deps = set(c.get("dependencies", {}))
+        require(deps <= {"wbd-types"}, f"R0 crate new external/inverted dependency: {crate}")
+        if crate == "wbd-types":
+            require(not deps, "types must be pure")
+        elif crate != "wbd-engine":
+            require(deps == {"wbd-types"}, f"crate dependency mismatch: {crate}")
+        for k,v in c.get("dependencies", {}).items():
+            require(v.get("path") == "../wbd-types", f"wrong dependency pin: {k}")
+    require(lock["schema_version"] == m["schema_version"] == 1, "manifest schema mismatch")
+    require(lock["phase"] == project["phase"] == "R0_FOUNDATION_IN_PROGRESS", "unexpected phase promotion")
+    require(lock["qualification"]["canonical_manifest"] == m["source_lock"].replace("source-lock.json","qualification-manifest.json") ==
+            "r0/qualification-manifest.json", "canonical R0 manifest path drift")
+    require(lock["legacy"]["source_sha"] == m["expected_legacy_source"] ==
+            "a7a82db31fe736ffedee330795a3234d358f1984", "legacy pin changed")
+    require(lock["legacy"]["go_toolchain"] == "go1.23.12", "pinned Go compiler changed")
+    require(lock["legacy"]["compiled"] is True and "TEST_ONLY" in lock["legacy"]["compiled_scope"],
+            "Go compiled test scope missing or claimed product")
+    require(lock["rust"]["toolchain"] == toolchain["channel"] == "1.85.1", "Rust toolchain mismatch")
+    require(workspace["workspace"]["package"]["rust-version"] == "1.85.1", "Rust MSRV mismatch")
+    require(lock["rust"]["target"] == m["native_target"] == "x86_64-unknown-linux-gnu", "native target mismatch")
+    expected_cross = {"x86_64-pc-windows-gnu", "aarch64-unknown-linux-gnu"}
+    require(set(lock["rust"]["cross_targets"]) == set(m["cross_targets"]) == expected_cross,
+            "cross target inventory changed")
+    require("NOT_RUN" in lock["rust"]["cross_targets_execution"], "cross target execution overclaimed")
+    require(m["production_go_v4"] == "DISABLED_FAIL_CLOSED", "production V4 claimed")
+    require(m["capabilities"] == "R0_ABI_SENTINEL_FEATURES_ZERO", "Rust engine falsely advertising capabilities")
+    for key in ("product", "performance", "physical", "windows_arm_native_execution"):
+        require(lock["qualification"][key] == "NOT_RUN", f"{key} was promoted without real evidence")
+    require(lock["qualification"]["rust_business_engine"] == "NOT_IMPLEMENTED", "steady engine false-positive")
+    require(project["product_qualification"] == project["physical"] == "NOT_RUN",
+            "project qualification was promoted")
+    roles={r["id"]:r for r in registry["roles"]}
+    require(roles["M0"]["state"]=="active" and roles["M0"]["branch"]=="main" and
+            registry["reservation_revision"]==1 and roles["M0"]["assignment_epoch"]==1,
+            "M0 writer changed")
+    require(all(roles[r]["state"]=="reserved" for r in ("M1","M2","M3","M4")),
+            "worker reservation unexpectedly promoted")
+    gates = m["evidence_gates"]
+    require({g["gate"] for g in gates} == set(EXPECTED_GATES) and len(gates)==len(EXPECTED_GATES),
+            "historic gate inventory drift")
+    evidence_hashes={}
+    gate_sources={}
+    for g in gates:
+        gate=g["gate"]
+        require(g["mode"] in ALLOWED_MODES, "new evidence mode")
+        require(g["result_key"] in ("result","test_result"), "unsupported evidence result key")
+        require(g["expected"]==EXPECTED_GATES[gate], f"{gate} self-promoted outcome")
+        require(g["evidence"].startswith("docs/evidence/M0/R0-") and
+                g["evidence"].endswith(".json"), f"{gate} not a supported R0 evidence path")
+        p=Path(g["evidence"])
+        ev=read_json(p)
+        require(ev["source_sha"]==g["source_sha"],f"{gate} evidence SOURCE mismatch")
+        actual_run=ev["successful_run"] if gate=="R0-CROSS-ABI" else ev
+        actual_id=actual_run.get("id") if gate=="R0-CROSS-ABI" else actual_run["run_id"]
+        actual_attempt=actual_run["attempt"] if gate=="R0-CROSS-ABI" else actual_run["run_attempt"]
+        require(actual_id==g["run_id"] and actual_attempt==g["run_attempt"]==1,
+                f"{gate} historical run identity mismatch")
+        require(ev["workflow"]==g["workflow"],f"{gate} workflow mismatch")
+        require(ev[g["result_key"]]==g["expected"],f"{gate} proof is not historic PASS")
+        if gate=="R0-CROSS-ABI":
+            require(all(t["target_native_execution"]=="NOT_RUN"
+                       for t in ev["successful_run"]["targets"].values()),
+                    "target-native execution falsely claimed")
+            require(ev["first_attempt_failure"]["conclusion"]=="failure",
+                    "failed first ARM64 attempt improperly hidden")
+        source=Path(g["actual_file"]).read_text()
+        for anchor in g["require_anchor"]:
+            require(anchor in source,f"{gate} code test anchor missing: {anchor}")
+        gate_sources[gate]=g["source_sha"]
+        evidence_hashes[gate]=sha256(p)
+    coverage=m["case_coverage"]
+    require(len(coverage)==len(EXPECTED_IDS) and
+            {x["id"] for x in coverage}==EXPECTED_IDS, "case ID inventory missing/duplicate")
+    for x in coverage:
+        if x["id"] in PARTIAL_IDS:
+            require(x["status"]=="PARTIAL_R0_FAKE_ONLY" and x["gate"]=="R0-FAKE-PLATFORM" and
+                    x.get("tests") and x.get("limits"),f"{x['id']}: fake test misrepresented")
+            for test in x["tests"]:
+                require(test in Path("crates/wbd-platform/src/lib.rs").read_text(),
+                        f"unanchored R0 fake case {x['id']}: {test}")
+        else:
+            require(x["status"]=="NOT_RUN" and x.get("reason"), f"{x['id']} unproved ID marked PASS")
+    exit_gate=m["r0_foundation_exit"]
+    require(exit_gate["status"]=="BLOCKED_NOT_QUALIFIED" and
+            exit_gate["ready_for_worker_allocation"]=="NOT_YET_DECIDED",
+            "R0 exit was promoted by metadata")
+    required_blockers={"R0-WIRE-RECORD","R0-LINK-FEC-BOUNDARIES","R0-GO-CONTROL-INTEGRATION",
+                       "R0-ENGINE-PLATFORM","R0-NATIVE-MULTI-OS","R0-PRODUCT"}
+    require({b["key"] for b in exit_gate["blockers"]}==required_blockers,
+            "R0 product/foundation blockers were dropped")
+    result={
+      "schema_version":1,
+      "result":"STATIC_AUDIT_PASS",
+      "claim":"R0 foundation source-lock and historic evidence consistency ONLY; no test/product qualification",
+      "source_lock_sha256":sha256("r0/source-lock.json"),
+      "qualification_manifest_sha256":sha256("r0/qualification-manifest.json"),
+      "evidence_sha256_by_gate":evidence_hashes,
+      "historical_source_sha_by_gate":gate_sources,
+      "case_ids":len(coverage),
+      "partial_r0_fake_only_ids":sorted(PARTIAL_IDS),
+      "not_run_case_count":len(EXPECTED_IDS)-len(PARTIAL_IDS),
+      "live_external_run_status":"NOT_CHECKED_IN_THIS_AUDIT",
+      "product":"NOT_RUN","performance":"NOT_RUN","physical":"NOT_RUN",
+      "windows_arm_target_native_execution":"NOT_RUN",
+      "go_production_v4":"DISABLED",
+    }
+    out=Path("r0-qualification-audit-result")
+    out.mkdir(exist_ok=True)
+    (out/"audit.json").write_text(json.dumps(result,indent=2)+"\n")
+    print(json.dumps(result,indent=2))
+
+if __name__=="__main__":
+    try:
+        audit()
+    except Exception as exc:
+        print("R0_STATIC_AUDIT_FAIL:",str(exc),file=sys.stderr)
+        sys.exit(1)
