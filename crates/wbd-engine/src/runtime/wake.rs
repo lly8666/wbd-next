@@ -55,6 +55,12 @@
  }
  impl<T> OwnerProducer<T> {
      pub fn try_push(&self, item: T) -> Result<(), PushError<T>> {
+         self.try_push_inner(item, || {})
+     }
+     // The test hook is monomorphized away in normal operation; it forces a
+     // real producer to pause after observing not-stopped but before publish.
+     fn try_push_inner<F: FnOnce()>(&self, item: T, after_check: F)
+         -> Result<(), PushError<T>> {
          // A producer already inside try_push at the stop linearization
          // point remains visible to the drain via the inflight counter.
          self.gate.inflight.fetch_add(1, SeqCst);
@@ -62,6 +68,7 @@
              self.gate.inflight.fetch_sub(1, SeqCst);
              return Err(PushError::Stopping(item));
          }
+         after_check();
          let result = match self.tx.try_send(item) {
              Ok(()) => { self.gate.notify(); Ok(()) }
              Err(TrySendError::Full(item)) => Err(PushError::Full(item)),
@@ -164,15 +171,22 @@
      /// Explicit nonblocking stop: drop queued handles, then query arena.
      /// Never report quiesced while an in-flight producer or loan remains.
      /// This avoids claiming that kernel/driver borrows have been released.
-     pub fn stop_step(&mut self, arena: &mut Arena) -> StopProgress {
-         assert!(self.gate.bind_current(), "owner consumer cannot migrate threads");
-         self.gate.request_stop();
+     fn cancel_queued(&mut self) {
          while let Ok(item) = self.ready.try_recv() { drop(item); }
          if let Some(repair) = self.repair.as_ref() {
              while let Ok(item) = repair.try_recv() { drop(item); }
          }
-         let status = arena.stop();
+     }
+     pub fn stop_step(&mut self, arena: &mut Arena) -> StopProgress {
+         assert!(self.gate.bind_current(), "owner consumer cannot migrate threads");
+         self.gate.request_stop();
+         self.cancel_queued();
          let inflight = self.gate.inflight.load(SeqCst);
+         // If there is no publisher still inside try_push, cancel once
+         // MORE: a pre-stop producer can publish after our first drain.
+         // New producers cannot publish because stop is already visible.
+         if inflight == 0 { self.cancel_queued(); }
+         let status = arena.stop();
          if status.loaned == 0 && inflight == 0 { StopProgress::Quiesced }
          else { StopProgress::Pending {loans:status.loaned, inflight} }
      }
@@ -330,6 +344,31 @@
          assert_eq!(owner.stop_step(&mut a),StopProgress::Quiesced);
          assert_eq!(a.report().free,3);
          assert!(a.quiesced());
+     }
+     #[test]
+     fn r1_wake_stop_during_inflight_publish_never_returns_false_quiesce_r02() {
+         let (sender,mut owner)=single::<u8>(1).unwrap();
+         let entered=Arc::new(Barrier::new(2));
+         let release=Arc::new(Barrier::new(2));
+         let entered2=Arc::clone(&entered);
+         let release2=Arc::clone(&release);
+         let publishing=thread::spawn(move || {
+             sender.try_push_inner(99,|| {
+                 entered2.wait(); // in-flight but not yet enqueued
+                 release2.wait(); // owner has already requested stop
+             }).unwrap();
+         });
+         entered.wait();
+         let mut a=arena(1);
+         owner.gate().request_stop();
+         assert_eq!(owner.stop_step(&mut a),
+             StopProgress::Pending{loans:0,inflight:1});
+         release.wait();
+         publishing.join().unwrap();
+         // A pre-stop offer may finish publication, but its payload cannot
+         // be delivered after stop or hide behind a false quiesce.
+         assert_eq!(owner.stop_step(&mut a),StopProgress::Quiesced);
+         assert!(matches!(owner.wait(||MonoNs(0),None,||false),WakeEvent::Stopped));
      }
      #[test]
      fn r1_wake_return_after_park_wakes_stopped_owner_m01() {

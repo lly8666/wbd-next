@@ -22,3 +22,10 @@ All tests are under M1-owned lib source and selected by the existing compile-onc
 
 ## Explicit boundaries
 This is real std OS-thread park/unpark synchronization, not `rtrb`, Loom-exhaustive interleavings, eventfd/mio Waker, timer wheel, raw socket, target Windows native testing, physical test or performance claim. `OWNER_RUNTIME_READY` and `ARENA_READY` remain false; ABI features0, Go V4 disabled. The existing G2 dependency request `.governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md` remains open for M0. No new public ABI, Cargo or root CI modifications.
+
+## Review after initial source S
+Initial worker SOURCE `203eac4afef8497e485f9b7e9ed5116e2b3b73a8` compiled once and ran 18/18 native R1 tests in Actions 38566785197 (verified result artifact 11895097567). Concurrency review exposed a stronger deterministic test: producer can enter `try_push` just before stop yet publish after the owner's first drain. A follow-on S adds an explicit in-flight counter barrier case and a second drain after all publishers exit, so stop cannot declare quiescence with a hidden queued item. This follow-on code must receive its OWN native Actions qualification; old 18/18 does not pass it.
+
+Two unrelated exact initial-S CI failures must be retained, not concealed:
+- Governance 38566785008 reported `control or source moved mid-audit` while M0 was committing to main. No M1 path violation was reported; must check final H Governance on its own SOURCE.
+- R0 native ABI 38566785047 ran its Rust binary and found **21 passed**; its shared `tools/r0_abi_bundle.py` insists that stdout contain substring `3 passed`. Previously `13 passed` incidentally contained this string; adding 8 named R1 tests makes `21 passed` not match. The native R0 ABI workflow is **FAIL**, even though the Rust execution returned rc0. M1 cannot edit root tool. Shared test ownership request `.governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md` submitted to M0; root CI not declared passing.
