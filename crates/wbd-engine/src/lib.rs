@@ -8,6 +8,8 @@
 pub mod runtime;
 #[path = "memory/mod.rs"]
 pub mod memory;
+/// M0 bounded authentication/receipt assembly; no production V4 enablement.
+pub mod recovery_ingress;
 
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;
