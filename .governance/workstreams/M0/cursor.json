@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 21,
-  "checkpoint_sha": "7087997543d149091f4f20021ab34570d07112dd",
+  "sequence": 22,
+  "checkpoint_sha": "e0679be8a931bbcda85df4635066b2e5b75e052e",
   "progress": "partial",
-  "task_id": "R1-M0-INTEGRATION-PATROL-001",
-  "current_task": "M0按用户授权进行一次live GitHub M1–M4集成巡检并处理公共阻断：当轮初始work分支无新SOURCE，但巡检过程中四方均提交真实新源。M1 10项owned arena/owner局部Native测试成功、H seq2最新Governance绿；M2 8项纯receipt状态Native测试成功/H seq2 partial；M3 FrameBudget首编译import错误由M3自行修复，native codec和R0回归成功，但真实AEAD/HP和独立完整H尚未确认；M4 6项R1平台Native测试成功（含Linux UDP smoke）/H seq2 partial。M0仅在main把wbd-engine组合依赖拓展至codec/platform/recovery、Cargo.lock/source-lock/audit锁单向图，并把历史G2 1项与R0平台7项消费者严格按名称过滤，解决真实worker R2/M4新测试误报。生产V4仍DISABLED，完整Rust Normal/FEC off实际业务未运行。",
-  "why_now": "首个H b79a140 的Governance38539971191 FAILED于M0 context_refs使用仅存在M1/M4各自分支的请求文件；纠正S 7087997543d149091f4f20021ab34570d07112dd独立保留失败证据；本H不更改R1 root代码和真实已运行测试，只恢复 main cursor 的分支本地可读取引用。",
-  "done_when": "main共享依赖SOURCE 93503a4fc7d6bec305e20ae361cb5472905668d0在13个相关GitHub Actions（含five-crate编译/ABI/旧Go/record/LINK/FEC等）全success；followup S 40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36严格G2旧1/1 run38538899469和平台旧7/7 run38538899575 build/consume与治理38538899485全success；证据S 59bd12708c7f32f47ac5f99da15ac803f22ede81 Governance38539742988 success，独立H仅改M0 cursor。worker refs未被M0覆盖、M1的rtrb/loom依赖请求已记录为后续单独审核、M4的旧平台误报请求已由main修复但其旧失败run不改写，R1真业务没有假PASS。",
-  "next_action": "M0下一次先刷新四worker的独立SOURCE/H和接口请求；如M3已交付真实Rust authenticated record Seal/Open+8B HP且H确认，并具备M1 owned buffer及M4 readonly driver/loopback，将四人已验证的最小改动按主线唯一集成依赖顺序、带epoch和路径校验串行合入单一SOURCE，实际在Actions预编译+独立consumer运行Normal/FEC off 的Rust业务输入→PN预留→真正Seal/wire→driver send→真正Open认证→业务delivery闭环；允许最初in-process限定资格但不能冒充原生OS设备和生产V4。M2 receipt可继续并行不阻塞首包；M1 rtrb/loom版本/许可/锁文件在独立M0审核后才引入且不倒置依赖。没有AEAD真实代码前仅继续协调，不以mock或旧Go Seal代替Rust产品资格。",
+  "task_id": "R1-M0-GO-PATHMTU-001",
+  "current_task": "完成一个M0独属原子事项：为M3 FrameBudget 缺少的旧Go pathmtu原生包测试补Actions编译一次+跨job复用产物并记录实际证据。source e8599f7 原Go 10/10 PASS，evidence S e0679be；不代表M3 Rust crypto或Normal/off产品闭环通过。",
+  "why_now": "M0上轮R1巡检恢复后 checkpoint70879975→main旧HEADedb275de仅cursor-only H且治理38540461976成功。M3 work/m3-r1-codec seq2指出 pinned old-Go pathmtu 尚未原生执行；该跨角色根Actions配置只能M0维护，先独立消除真实证据缺口，不阻挡worker自身真AEAD开发。",
+  "done_when": "新main SOURCE e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40 的 Actions 38543117078 attempt1 native Go internal/pathmtu 预编译build115782469803 / 验hash消费115782651812 SUCCESS, 10项顶层全PASS、七项指定反例存在且exit0，main Governance38543117065 success。证据S e0679be8a931bbcda85df4635066b2e5b75e052e 治理38543415883 success；独立H仅cursor，不改worker HEAD。",
+  "next_action": "M0下一个且仅一个原子任务：审核并钉牢与Rust1.85.1兼容的真实AEAD/HP依赖版本、许可和根Cargo.lock/单向依赖图，回应M3的aws-lc-rs+chacha20+aes请求；交给M3在独立scope实现真实Rust Seal/Open+8B HP。M3源码与已通过的M1 owner/M4只读driver可消费且H确认后，再由M0串行合入同一main SOURCE 并通过Actions做首个in-process Normal/FEC-off真实业务seal→wire→authenticated open→delivery闭环；在此之前不做mock拼接、不宣称产品/性能/生产V4合格。",
   "unverified": true,
-  "last_tested_source": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+  "last_tested_source": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40",
   "evidence_refs": [
-    "docs/evidence/M0/R1-integration-patrol.json"
+    "docs/evidence/M0/R1-go-pathmtu-native.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-integration-patrol-complete.md",
+    "docs/devlog/M0/R1-go-pathmtu-native.md",
     "docs/devlog/M0/R1-normal-off-integration-ports.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/source-lock.json"
   ],
-  "partial_summary": "初始main HEAD694bfaae5ef03827e057726c73262b2110f5d5a2, checkpoint572de3c seq19仅cursor H CLEAN; 工程巡检时M1/M2/M3/M4各自推送首次R1/R2源码，M0未改变四work refs。M1源46571e69 原生worker38538248506 10/10PASS 后序seq2治理38539033023 success；M2源7b02154e原生38538225302 8PASS、seq2治理38539068727 success但partial；M3源3aa121e4 native38538473699+old codec38538473703 success，之前初始路径测试编译错误已自己修，待其首次S/H；M4源bcf0bca worker38538117103 6PASS（5fake+1LinuxUDP smoke）、seq2治理38538965938 success但partial，旧平台38538117164误报13 passed vs7预期。M0共享依赖S 93503a4fc7d6bec305e20ae361cb5472905668d0 Cargo fivecrate真实native G2 run38538320148、R0静态38538320136、ABI38538319960、crossABI38538320140等同SOURCE全部SUCCESS；S 40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36把旧G2 test过滤exact1 run38538899469和platform旧r0_7 run38538899575修复，main治理38538899485 success。M1 请求rtrb/loom在没有版本/锁审查前暂缓，不阻挡局部arena；M4提交的shared harness请求已在M0main修复，不能反写原失败工单的测试结论。收据S 59bd12708c7f32f47ac5f99da15ac803f22ede81治理38539742988 success。R1 Normal/FECoff真实Rust AEAD/HP与业务交付NOT_RUN，R0 phase partial、生产V4 DISABLED、产品/性能/物理 NOT_RUN。 M0交接恢复：原H b79a1404ae08115dae4cae2b72eadac07cc178dc 治理38539971191 FAIL，因为context_refs跨worker分支引用不存在于main。恢复收据S 7087997543d149091f4f20021ab34570d07112dd独立注明真实失败；本H seq21 仅把context_refs限制到main真实文件，仍在docs/evidence/M0/R1-integration-patrol.json和日志记录M1/M4 request的远端ref，没有改动或快进work branches。真实Normal/off E2E仍NOT_RUN。"
+  "partial_summary": "M0新接手核main seq21 checkpoint70879975至HEADedb275只有cursor H，Governance38540461976 SUCCESS/CLEAN(not PASS)。registry revision2 epoch1, 四worker HEAD M1e511f133 seq2 ready_local；M2 2cd993a seq2 pure receipt partial；M3 4776cc2 seq2 FrameBudget6/6 SOURCE3aa121e但AEAD/HP NOT_IMPLEMENTED；M4 b831d72 seq2 platform fake+UDP partial。M0独立实质SOURCE e8599f7 写入.github/workflows/r1-go-pathmtu.yml并写计划日志；Actions run38543117078 build+consume SUCCESS, pinned wobuzhidao@a7a82db / Go1.23.12 LinuxX64 native 10/10 original pathmtu tests PASS, 必需7名存在，二进制SHA256 82c271c20fe222b31a377c0d0674257d45ac30af42769a0e6ada3935020411ba；build artifact11883381295 digest428887..., result artifact11883391413 digestc59980...；同SOURCE Governance38543117065 PASS。证据收据S e0679be8，Governance38543415883 SUCCESS。不改M1-M4任何ref，不混M3 Rust SOURCE3aa121e测例和旧Go证明；Go生产V4 DISABLED、Normal/off Rust业务E2E NOT_RUN、性能物理NOT_RUN。下个M0单一atom为crypto dependencies root review/lock。"
 }
