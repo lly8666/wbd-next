@@ -16,6 +16,56 @@ from tools import governance as g
 
 G2_BASE = "83bd720368b9be68b3c4c94d7462d20cf4d796db"
 
+G2_ACTIVATION_MAX_COMMITS = 96  # per_page=100; no truncated audit may pass
+
+def complete_g2_ancestry(compare):
+    """Validate a COMPLETE non-diverged bounded immutable GitHub commit page."""
+    total=compare.get("total_commits",-1)
+    commits=compare.get("commits")
+    g.need(compare.get("status") in {"ahead","identical"} and
+           type(total) is int and 0<=total<=G2_ACTIVATION_MAX_COMMITS and
+           isinstance(commits,list) and len(commits)==total,
+           "incomplete or diverged bounded G2 activation ancestry")
+    ids=[x.get("sha") for x in commits if isinstance(x,dict)]
+    g.need(len(ids)==total and all(isinstance(v,str) and g.SHA.fullmatch(v) for v in ids)
+           and len(set(ids))==total,
+           "invalid or repeated G2 activation SHA")
+    return commits
+
+def audit_worker_history(api,role,source,control_sha):
+    """Every commit's FULL path list, parent count and exceptional sync reviewed."""
+    compare=api.get(f"compare/{G2_BASE}...{source}?per_page=100")
+    edges=[]
+    for commit in complete_g2_ancestry(compare):
+        sha=commit["sha"]
+        on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
+        g.need(on_main.get("status") in {"ahead","identical","diverged","behind"},
+               "main ancestor status indeterminate")
+        ancestor=on_main["status"] in {"ahead","identical"}
+        detail=g.commit_delta(api,sha,256)
+        sync={}
+        if (role["id"]=="M3" and not ancestor and detail["parents"]==1
+                and detail["paths"]==[M3_G2_REFRESH_PATH]):
+            sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
+        if detail["parents"]==2 and not ancestor:
+            if role["id"]=="M3":
+                sync_paths=review_m3_main_sync(api,role,sha,control_sha)
+            elif role["id"]=="M2":
+                sync_paths=review_m2_main_sync(api,role,sha,control_sha)
+            else:
+                g.need(False,"unreviewed role attempted two-parent merge")
+            merged=api.get(f"commits/{sha}?per_page=1")
+            sync={"approved_main_sync":True,
+                  "first_parent":merged["parents"][0]["sha"],
+                  "sync_paths":sync_paths}
+        edges.append(dict(detail,is_main_ancestor=ancestor,**sync))
+    return {
+        "activation_commits":len(edges),
+        "scope_commits_checked":verify_worker_commits(role,edges),
+        "main_integration_commits_exempt":sum(x["is_main_ancestor"] for x in edges),
+    }
+
+
 def resolve_role(registry, ref_name, declared=""):
     roles = g.validate_registry(registry)
     active = [r for r in roles if r["state"]=="active" and r["branch"]==ref_name]
@@ -28,7 +78,49 @@ def resolve_role(registry, ref_name, declared=""):
 # One reviewed, non-force M3 incorporation of M0's pinned crypto-lock main.
 # This is NOT blanket merge permission or authority from a worker-local file.
 M3_APPROVED_PRE_SYNC_HEAD = "4776cc2bc17a78fc67e0898a11b439632037219a"
+
+# M0 one-time, exact-source G2 checker refresh. NOT a generic tools/ grant.
+# The M3 writer must create a SINGLE-PARENT commit directly on this parent,
+# touching exactly one file, whose Git blob is byte-identical to live M0 main.
+M3_G2_REFRESH_PARENT = "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
+M0_G2_REFRESH_ANCHOR = "c00356739359db90a864f0894d8cdd965b2df132"
+M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
+
+
+def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
+    """One reviewed M0-owned script mirror, anchored to one M3 first parent."""
+    g.need(role["id"]=="M3","G2 checker refresh is M3-only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M3_G2_REFRESH_PATH],
+           "M3 checker refresh must be sole path in a single-parent commit")
+    commit=api.get(f"commits/{sha}?per_page=1")
+    parents=commit.get("parents",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==M3_G2_REFRESH_PARENT,
+           "M3 checker refresh requires exact verified previous worker HEAD")
+    # M0's complete 67/67 proof is immutable and must be an ancestor of live
+    # control. Preserve epoch/role/live-ref checks in caller.
+    anchor=api.get(f"compare/{M0_G2_REFRESH_ANCHOR}...{control_sha}?per_page=1")
+    g.need(anchor.get("status") in {"ahead","identical"},
+           "M0 full history G2 approval not on current main")
+    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={control_sha}")
+    actual=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==actual.get("sha") and
+           isinstance(reviewed.get("sha"),str) and reviewed["sha"]!= "",
+           "M3 checker refresh is not byte-identical to main-owned checker")
+    return {"approved_g2_tool_refresh":True,
+            "first_parent":M3_G2_REFRESH_PARENT,
+            "sync_paths":[M3_G2_REFRESH_PATH]}
+
+
 M0_CRYPTO_LOCK_SOURCE = "1ae49bd644a4624db331c80d2dce6a8d181189e0"
+# One reviewed M2 restoration to the source that contains the M0-authenticated
+# Rust ingress AND the fixed historical G2 selector. Not generic permission.
+M2_APPROVED_PRE_SYNC_HEAD = "2cd993a9675d38dcbe161bdebf093c0890734fdf"
+M0_M2_INGRESS_SOURCE = "29ebcb19863602ae1fc059fa3524837e90944da9"
+M2_SYNC_PROTECTED = frozenset({
+    "Cargo.toml", "Cargo.lock", "crates/wbd-recovery/Cargo.toml",
+})
 
 
 def verify_worker_commits(role, commits):
@@ -40,20 +132,34 @@ def verify_worker_commits(role, commits):
         if item["is_main_ancestor"]:
             # M0 commits on main are already under main-role validation.
             continue
+        if item.get("approved_g2_tool_refresh") is True:
+            g.need(role["id"]=="M3" and item.get("parents")==1 and
+                   item.get("first_parent")==M3_G2_REFRESH_PARENT and
+                   item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
+                   item.get("paths")==[M3_G2_REFRESH_PATH],
+                   "M3 one-time checker refresh violated M0 pin")
+            checked += 1
+            continue
         if item.get("parents")==2:
-            g.need(role["id"]=="M3" and
-                   item.get("first_parent")==M3_APPROVED_PRE_SYNC_HEAD and
+            approved_first = {
+                "M3": M3_APPROVED_PRE_SYNC_HEAD,
+                "M2": M2_APPROVED_PRE_SYNC_HEAD,
+            }
+            g.need(role["id"] in approved_first and
+                   item.get("first_parent")==approved_first[role["id"]] and
                    item.get("approved_main_sync") is True,
-                   "worker merge commit requires exact M0 approval")
-            # This is the tree difference against the actual main second parent,
-            # NOT GitHub's conventional per-commit first-parent merge delta.
+                   "worker merge commit requires exact M0-approved first parent")
+            # The checker puts sync_paths from a FULL main-parent->merge tree
+            # comparison here. A first-parent-only delta cannot attest scope.
             paths=item.get("sync_paths", [])
-            g.need(bool(paths) and len(paths)<=32 and
-                   all(g.path_ok(p) and
-                       p not in {"Cargo.toml","Cargo.lock","crates/wbd-codec/Cargo.toml"} and
+            limit = 16 if role["id"]=="M2" else 32
+            protected = (M2_SYNC_PROTECTED if role["id"]=="M2" else
+                         {"Cargo.toml","Cargo.lock","crates/wbd-codec/Cargo.toml"})
+            g.need(bool(paths) and len(paths)<=limit and
+                   all(g.path_ok(p) and p not in protected and
                        any(g.under(p,q) for q in role["allowed_paths"])
                        for p in paths),
-                   "M3 merge overwrote main-root pins or escaped worker scope")
+                   "reviewed merge regressed main-owned contracts or escaped role scope")
             checked += 1
             continue
         g.need(item.get("parents")==1, "worker merge commit requires M0 review")
@@ -98,6 +204,43 @@ def review_m3_main_sync(api, role, sha, control_sha):
                for p in paths), "M3 sync merged unauthorized tree changes")
     return sorted(paths)
 
+def review_m2_main_sync(api, role, sha, control_sha):
+    """Review ONE M2 current-base merge, preserving main contracts and ownership.
+
+    G2 status is a scope proof, not an execution qualification. An authorized
+    M2 writer still must safely merge without force and run native Actions.
+    """
+    g.need(role["id"]=="M2", "only M2 has this reviewed recovery sync")
+    detail=api.get(f"commits/{sha}?per_page=100")
+    parents=detail.get("parents", [])
+    g.need(len(parents)==2 and
+           parents[0]["sha"]==M2_APPROVED_PRE_SYNC_HEAD,
+           "M2 merge must retain exact original M2 HEAD as first parent")
+    main_parent=parents[1]["sha"]
+    for before,after in ((main_parent,control_sha),(M0_M2_INGRESS_SOURCE,main_parent)):
+        compare=api.get(f"compare/{before}...{after}?per_page=1")
+        g.need(compare.get("status") in {"ahead","identical"},
+               "M2 merge second parent lacks current approved main ingress/CI source")
+    # Unlike conventional merge-commit commit_delta, this covers M2's
+    # resulting tree versus actual M0 main, including rename old/new paths.
+    net=api.get(f"compare/{main_parent}...{sha}?per_page=100")
+    g.need(net.get("status")=="ahead" and
+           0<net.get("total_commits",0)<=12 and
+           len(net.get("commits",[]))==net["total_commits"],
+           "M2 main-to-sync ancestry incomplete, diverged, or unbounded")
+    files=net.get("files",[])
+    g.need(0<len(files)<=16, "M2 main-to-sync tree difference unbounded")
+    paths={p for f in files for p in
+           (f.get("filename"),f.get("previous_filename")) if p}
+    g.need(0<len(paths)<=16, "M2 sync rename paths missing or unbounded")
+    g.need(not paths.intersection(M2_SYNC_PROTECTED),
+           "M2 sync must not revert root Cargo.lock/dependency manifests")
+    g.need(all(g.path_ok(p) and
+               any(g.under(p,q) for q in role["allowed_paths"])
+               for p in paths), "M2 sync includes unauthorised main-owned paths")
+    return sorted(paths)
+
+
 def main():
     repo=os.environ["GITHUB_REPOSITORY"]
     ref=os.environ["GITHUB_REF_NAME"]
@@ -128,30 +271,9 @@ def main():
     }
     if role["id"]!="M0":
         g.need(not role["global_writer"],"worker cannot be global integrator")
-        compare=api.get(f"compare/{G2_BASE}...{source}?per_page=100")
-        total=compare.get("total_commits",-1)
-        g.need(compare.get("status") in {"ahead","identical"} and
-               0<=total<=64 and len(compare.get("commits",[]))==total,
-               "incomplete or diverged bounded G2 activation ancestry")
-        edges=[]
-        for commit in compare["commits"]:
-            sha=commit["sha"]
-            on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
-            g.need(on_main.get("status") in {"ahead","identical","diverged","behind"},
-                   "main ancestor status indeterminate")
-            ancestor=on_main["status"] in {"ahead","identical"}
-            # Never fetch a worker change only from net diff: verify each commit.
-            detail=g.commit_delta(api,sha,256)
-            sync={}
-            if detail["parents"]==2 and not ancestor:
-                sync_paths=review_m3_main_sync(api,role,sha,control_sha)
-                merged=api.get(f"commits/{sha}?per_page=1")
-                sync={"approved_main_sync":True,
-                      "first_parent":merged["parents"][0]["sha"],
-                      "sync_paths":sync_paths}
-            edges.append(dict(detail,is_main_ancestor=ancestor,**sync))
-        result["scope_commits_checked"]=verify_worker_commits(role,edges)
-        result["main_integration_commits_exempt"]=sum(x["is_main_ancestor"] for x in edges)
+        verified=audit_worker_history(api,role,source,control_sha)
+        result["scope_commits_checked"]=verified["scope_commits_checked"]
+        result["main_integration_commits_exempt"]=verified["main_integration_commits_exempt"]
     else:
         g.need(ref=="main" and role["global_writer"], "M0 must own main")
     g.need(api.head("main")==control_sha and api.head(ref)==source,
