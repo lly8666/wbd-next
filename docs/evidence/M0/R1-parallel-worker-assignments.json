@@ -67,5 +67,25 @@
     "performance": "NOT_RUN",
     "physical": "NOT_RUN",
     "native_WinARM": "NOT_RUN"
-  }
+  },
+  "source_sha": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+  "governance_checks": [
+    {
+      "workflow": "governance",
+      "run_id": 38592016440,
+      "attempt": 1,
+      "source_sha": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38592016227,
+      "attempt": 1,
+      "source_sha": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+      "result": "SUCCESS",
+      "qualification": "Actual pinned five-crate workspace bootstrap regression, not worker's new tasks"
+    }
+  ],
+  "source_actions_all_success": true,
+  "completed_worker_code_for_new_tasks": false
 }

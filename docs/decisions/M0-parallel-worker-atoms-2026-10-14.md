@@ -48,3 +48,7 @@ M0 next independent **R1-M0-FEC-OUTER-FIRST-002**: join existing main-native aut
 
 ## Gates and nonclaims
 Worker tests use existing `worker-native-tests.yml` / `worker_native_bundle.py` dynamic r1_/r2_ selection and real compiled-once artifact hash. On a newly failing historic root ABI test, M0 must repair the shared harness; worker must not silently edit root files. Independent exact worker SOURCE + evidence S + cursor-only H Governance required before M0 considers integration. No implicit new M1–M4 process starts from this assignment. No feature0 activation, Go exporter/auth session, AF_PACKET product, native Win/Arm, p99 or physical qualification.
+
+## Exact assignment SOURCE verification
+
+Main assignment SOURCE [`6f5c891d349062c7206b07a0f916a5f2a8de6ea4`](https://github.com/lly8666/wbd-next/commit/6f5c891d349062c7206b07a0f916a5f2a8de6ea4) passed both same-source registration/governance [#38592016440](https://github.com/lly8666/wbd-next/actions/runs/38592016440) and scoped five-crate G2 native bootstrap [#38592016227](https://github.com/lly8666/wbd-next/actions/runs/38592016227), all **2/2 SUCCESS**. No new M1/M2/M3/M4 implementation, new worker native result, performance, or product qualification is implied. Record `docs/evidence/M0/R1-parallel-worker-assignments.json`.
