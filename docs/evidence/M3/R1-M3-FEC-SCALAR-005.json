@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-SCALAR-005",
+  "source_sha": "0215c051456dc0e245dbbd413157dfd2e18c2cfc",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_GENUINE_OLD_GO_GF256_SCALAR_RS20_PARITY_AND_E_BY_E_RECOVERY_ONLY",
+  "code": {
+    "src": "crates/wbd-codec/src/fec_math.rs",
+    "tests": "crates/wbd-codec/src/fec_math_tests.rs",
+    "root_export": "crates/wbd-codec/src/lib.rs",
+    "test_mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "go_oracle_source": "crates/wbd-codec/oracles/fec_go_golden/main.go",
+    "oracle_type": "independent Go1.23.2 standard library standalone reproduction of pinned original Go gfPow/gfMul/gfInv/buildGenerator/fastblock_encoder active parity, NOT native old Go package",
+    "old_go_repo": "lly8666/wobuzhidao",
+    "pinned_old_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "pinned_old_go_source_paths": [
+      "internal/fec/fec.go",
+      "internal/fec/fastblock_encoder.go",
+      "internal/fec/block.go"
+    ],
+    "existing_original_go_wire_fixture": "r0/fixtures/legacy-link-fec-wire-v1.txt"
+  },
+  "math": {
+    "polynomial": "GF(256) primitive 0x11d",
+    "generator": "40x20 systematic normalized Vandermonde, x=row+1; G=V*inverse(V[0..20]); input rows0..19 identity; parity rows20..39",
+    "generator_40x20_sha256_from_go": "9b088545cf582889595c88b673a5698c3b2f8970831764b6d28dc1824a855b8e",
+    "go_row_20_hex": "ad7844977b136e1d3d0f80c82dcb816fd5bd393f",
+    "go_row_39_hex": "2d3116115a1370ccaae04903660fc1067673e3a7",
+    "go_k2_inputs_hex": [
+      "010203",
+      "a0b1c2d3e4"
+    ],
+    "go_k2_profile": 4,
+    "go_k2_sent_parity_count": 2,
+    "go_k2_parity_hex": [
+      "c081a7e6fb",
+      "6758bb84f9"
+    ],
+    "go_k2_math_unsent_next_rows_hex": [
+      "f3df1b3710",
+      "ed71b428cc"
+    ],
+    "go_k20_L17_input_formula": "src[i][j] = u8(i*13 + j*7 + 5), i 0..19 j 0..16",
+    "go_k20_L17_parity_20_rows_sha256": "d4426c727db351c42e0663ff25754142680bd92412d5e9134586acd61d7603f1",
+    "go_k20_L17_p0_hex": "38ea8c704dc02fc2603eb8e3bc6b5ef11f",
+    "go_k20_L17_p19_hex": "e2ef1c2cc4fec55fa1e46fb29033e66a85",
+    "systematic": "streaming source immediately yields 56B Go header flags1, count placeholder20, own original len only and opaque source body, original r0 golden source59B exact",
+    "final_parity": "flags0 authoritative actual k/maxlen/lengths, parity header configured R even if emitted min(k,R) < R; valid k1..20 profiles 4/8/10/12/16/20",
+    "shorter_sources": "read only actual source.len(); padded trailing bytes and inactive columns are mathematically zero, no dirty pool tail consumption",
+    "receive": "sort distinct parity absolute indices20..20+R-1, select lowest e, recover only missing active columns by e-by-e GF inverse and direct D coefficients, no 20x20 parity re-encoding",
+    "trusted_final_metadata": "Caller must already authenticate, validate final FEC authority, profile/block ID and lengths. This library only validates local dimensions and supplied parity bodies.",
+    "input_bounds": "1<=k<=20, 1<=source_len<=65535, source/parity indices and body size exact, wire limit explicit, rejects profile0/non-family/missing parity/duplicate parity.",
+    "backend": "pure Rust scalar reference only, not ISA-L and not native SIMD; no unsafe code",
+    "testing": {
+      "r1_math_tests": 7,
+      "all_profiles": [
+        4,
+        8,
+        10,
+        12,
+        16,
+        20
+      ],
+      "active_k": "1..20 inclusive",
+      "lengths": [
+        1,
+        15,
+        31,
+        32,
+        63,
+        64,
+        65,
+        512
+      ],
+      "e_samples": [
+        1,
+        2,
+        3,
+        4,
+        20
+      ],
+      "oracle_cases": [
+        "literal Go G row20 and row39",
+        "Go k2 min(k,R) exactly two sent parity bodies",
+        "Go k20 p0 and p19 exact bytes",
+        "Go frozen streaming 56B+3B frame",
+        "partial final parity metadata"
+      ],
+      "poison_test": "inactive source columns and zero tail are not read; recovery original lengths trimmed",
+      "missing_matrix": "e-by-e inverse tested for all k/profile/length sample grid, full e20 recovery from 20 parity",
+      "limits": "full loss-subset enumeration and target SIMD/cycles not claimed"
+    }
+  },
+  "actions": {
+    "native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38562179474,
+      "source_sha": "0215c051456dc0e245dbbd413157dfd2e18c2cfc",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "toolchain": "Rust 1.85.1",
+      "target": "native GitHub Linux x86_64",
+      "compiled_once": true,
+      "build_job_id": 115845717143,
+      "consumer_job_id": 115845954706,
+      "total_r1_tests": 38,
+      "failed": 0,
+      "from_prior": 31,
+      "new_fec": 7,
+      "binary_sha256": "0aabdb30e9ffd872ff7f9e8990e4ee77c3fc1ae1d17ec2c54ae8a79e08acd479",
+      "log_sha256": "bbd1869555bc7f4d5a9b64a68bd66ce98386b05827a10d0b4f9fbc73f491c1c3",
+      "build_artifact": {
+        "id": 11893471180,
+        "digest": "sha256:a169e110e3a899fd52a045041aca6cba93eaf0be7b676eca717d49bc4c9f1a30",
+        "expires": "2026-11-13T12:13:46Z"
+      },
+      "result_artifact": {
+        "id": 11892207073,
+        "digest": "sha256:014cf13a899e3b2f9b5cfdbf4a4d7529804cfd2ef3aa468e6481ac490f62c975",
+        "expires": "2026-11-13T12:13:55Z"
+      }
+    },
+    "same_source_other": [
+      {
+        "workflow": ".github/workflows/r0-codec.yml",
+        "run_id": 38562179605,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-record-framing.yml",
+        "run_id": 38562179521,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-link-fec-wire.yml",
+        "run_id": 38562179303,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/g2-bootstrap.yml",
+        "run_id": 38562179601,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/r0-qualification-audit.yml",
+        "run_id": 38562179565,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": ".github/workflows/governance.yml",
+        "run_id": 38562179365,
+        "conclusion": "success",
+        "attempt": 1
+      }
+    ],
+    "history": [
+      {
+        "source_sha": "fe8601e4cf92f02f4949445db0ee90495ed9fa6b",
+        "native_run_id": 38561671696,
+        "result": "FAILED_BUILD",
+        "reason": "Rust test E0308: reference &[u8;1] array repeated 21 is not &[&[u8]], corrected explicit slice coercion; math tests not run"
+      },
+      {
+        "source_sha": "ef5c14cf2afc3348fab8e7e3362a1ca30d8477c2",
+        "native_run_id": 38561843437,
+        "result": "FAILED_TEST_36_PASS_2_FAIL",
+        "reason": "two faulty oracle assertions: Go FastBlock sends min(k,R)=2 not R=4 for partial k2; manually copied WF source golden contained three extra reserved-zero bytes vs immutable R0 fixture. Actual GF parity, generator, all k/profile/e inverse cases passed."
+      },
+      {
+        "source_sha": "0215c051456dc0e245dbbd413157dfd2e18c2cfc",
+        "result": "FINAL_TESTED",
+        "native_run_id": 38562179474,
+        "worker": "PASS_38_OF_38",
+        "same_source_actions": "7_OF_7_SUCCESS"
+      }
+    ]
+  },
+  "qualification": {
+    "root_Cargo_and_lock": "NOT_MODIFIED_BY_M3",
+    "shared_ABI_types": "NOT_MODIFIED",
+    "shared_workflows": "NOT_MODIFIED",
+    "frozen_R0_historical_13_codec_tests": "PASS",
+    "SIMD_ISA_L": "NOT_IMPLEMENTED_NOT_RUN",
+    "target_x86_avx_native": "SCALAR_ONLY",
+    "target_ARM_NEON_native": "NOT_RUN",
+    "target_Windows_native": "NOT_RUN",
+    "actual_original_go_fec_package_native_in_this_atom": "NOT_RUN (standalone independently reproduced Go algorithms and unchanged separate R0 Go LINK/FEC tests)",
+    "old_go_partial_wire_oracle": "ONLY_STREAMING_SOURCE_AND_FINAL_METADATA_AND_SCALAR_PARITY; Go product end-to-end not compared",
+    "block_owner_32ms_timer": "NOT_IMPLEMENTED",
+    "FEC_RX_heavy_compact_block_state": "NOT_IMPLEMENTED",
+    "recovery_owner_3s_10s": "NOT_IMPLEMENTED",
+    "decode_coeff_table_cache_64": "NOT_IMPLEMENTED",
+    "performance_CPU_cycles": "NOT_MEASURED",
+    "M0_integrated_FEC_on_real_business": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "Next M3 atomic: bounded FEC streaming TX block owner with first source immediate and 32ms absolute flush, profiles/size class/NoCapacity, using real fec_math parity. Next M3 independent RX owner: authenticated streaming immediate delivery, final metadata authority, capped heavy/compact and recovered-only e, tested before M0 FEC-on E2E. SIMD/ISA-L only after oracle and toolchain/FFI gate; M0 owns shared ABI/root Cargo/driver."
+}
