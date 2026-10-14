@@ -48,4 +48,29 @@ class WorkerRoleTests(unittest.TestCase):
             with self.assertRaises(g.ContractError):
                 w.verify_worker_commits(role,[edge])
 
+    def test_one_m0_reviewed_m3_main_sync_preserves_worker_scope(self):
+        role=dict(roles()["roles"][1])
+        role["id"]="M3"
+        role["allowed_paths"]=["crates/wbd-codec/", "docs/evidence/M3/",
+                                ".governance/workstreams/M3/cursor.json"]
+        merge={"parents":2,"is_main_ancestor":False,
+               "first_parent":w.M3_APPROVED_PRE_SYNC_HEAD,
+               "approved_main_sync":True,
+               "paths":["Cargo.lock"], # Conventional merge first-parent delta is NOT authority.
+               "sync_paths":["crates/wbd-codec/src/path_budget.rs",
+                             ".governance/workstreams/M3/cursor.json"]}
+        self.assertEqual(w.verify_worker_commits(role,[merge]),1)
+        for mutation in [
+            {"approved_main_sync":False},
+            {"first_parent":"f"*40},
+            {"sync_paths":["Cargo.lock"]},
+            {"sync_paths":["crates/wbd-codec/Cargo.toml"]},
+            {"sync_paths":["crates/wbd-engine/src/lib.rs"]},
+            {"sync_paths":[]},
+        ]:
+            with self.subTest(mutation=mutation), self.assertRaises(g.ContractError):
+                w.verify_worker_commits(role,[dict(merge,**mutation)])
+        with self.assertRaises(g.ContractError):
+            w.verify_worker_commits(roles()["roles"][1],[merge])
+
 if __name__=="__main__": unittest.main()
