@@ -1,13 +1,7 @@
-# R1-M3-FEC-TX-006 — bounded source-first TX owner
+# R1-M3-FEC-TX-006 — tested native evidence
 
-Uses pinned old Go a7a82db3 internal/fec/fastblock_encoder.go and size_class_encoder.go semantics, and proven Rust fec_math.rs scalar real parity.
+Verified SOURCE 971f320f3145d3779fd94df6acc63ac0f1d808d0, compiled-once GitHub native worker [38564745459](https://github.com/lly8666/wbd-next/actions/runs/38564745459) attempt1 SUCCESS: 46/46 r1 worker tests, including eight new genuine FEC systematic-first TX owner cases and existing 38 budget/crypto/replay/LINK/RS math cases. Binary SHA256 0516914d18708aa80dd10017fe59fa1ed5cfe08f7c8525b2d303d3bc04e0f5fa. All seven exact-SOURCE Actions SUCCESS: worker38564745459, R0 codec38564744675, R0 framing38564744923, old-Go LINK/FEC regression38564744745, G2 bootstrap38564744722, audit38564744903, Governance38564744708.
 
-submit(source,mono_ms,profile,wire_limit,large_fragment_hint) produces two distinct queues: systematic now, parity separate. Owner must give ready systematic priority before parity. No driver success claim.
+New M3-only module fec_tx.rs exposes FecTxOwner and TxBatch distinct systematic/parity queues. Source is ready on admit; parity on full block/32ms absolute first-source deadline/profile or MTU incompatibility/explicit stop/pressure. Uses real proven fec_math GF0x11d parity and exact pinned Go partial k2 bytes. At most 3 classes in 20:20 using 256/512/current wire payload max; lower fixed profiles remain one class. A shared extended block ID allocates when first source arrives, not on flush, so interleaved size classes do not reuse or reorder IDs. Large LINK fragment hint selects biggest class. Configured R stays on final 56B header while emitted parity min(k,R). Owner-provided memory cap at most 3*20*65535 bytes, closes oldest group to preserve already accepted source under pressure.
 
-One open block per class, max three classes (256/512/MTU only profile20); profiles4/8/10/12/16 one block. Globally shared extended block ID reserved on first source, low32 wire avoids reserved zero. One owned copy of each source within configured bytes <= 3*20*65535.
-
-First-source+32ms absolute deadline never renewed; full20 closes without waiting. Partial r_sent=min(k,R), wire header configured R, authoritative final source lengths and Go GF0x11d parity. Large LINK fragment hint stays in largest class.
-
-Profile or wire_limit change closes old before new; memory pressure closes oldest deterministically; explicit owner-supplied monotonic clock, no OS background timer.
-
-CODE SOURCE Actions PENDING. SIMD ISA-L, heavy/compact RX, M0 first FEC-on payload, scheduling CPU p99, Windows/ARM native/product/perf NOT_RUN. Root Cargo/ABI unchanged.
+Critical limits: binary-output order separation is a scheduling contract, NOT proof of actual driver scheduling or send outcome. Timer integration is owner responsibility. Scalar encoding has no ISA-L, no measured CPU 100us bound. RX heavy/compact absent, and M0 has not integrated FEC-on same-SOURCE business; product/performance/physical/native-Windows ARM all NOT_RUN. Original Go package native in this atom NOT_RUN; independently checked Go math/old Go source semantics and R0 LINK/FEC workflow only. Root Cargo/ABI/CI untouched. JSON evidence docs/evidence/M3/R1-M3-FEC-TX-006.json.

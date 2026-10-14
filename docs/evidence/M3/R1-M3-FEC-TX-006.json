@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-TX-006",
+  "source_sha": "971f320f3145d3779fd94df6acc63ac0f1d808d0",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_GENUINE_GF256_SYSTEMATIC_FIRST_BOUNDED_TX_OWNER_ONLY",
+  "code": {
+    "owner": "crates/wbd-codec/src/fec_tx.rs",
+    "tests": "crates/wbd-codec/src/fec_tx_tests.rs",
+    "test_mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "module_export": "crates/wbd-codec/src/lib.rs",
+    "semantic_oracle": {
+      "original_repository": "lly8666/wobuzhidao",
+      "go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "paths": [
+        "internal/fec/fastblock_encoder.go",
+        "internal/fec/size_class_encoder.go",
+        "internal/fec/fec.go"
+      ],
+      "independent_reference": "crates/wbd-codec/oracles/fec_go_golden/main.go",
+      "exact_old_go_k2_parity_hex": [
+        "c081a7e6fb",
+        "6758bb84f9"
+      ],
+      "actual_original_go_package_native_in_this_atom": "NOT_RUN"
+    }
+  },
+  "tx_behavior": {
+    "authentic_codec": "ReedSolomon20 GF(256) polynomial0x11d systematic Vandermonde from preceding tested FEC math SOURCE0215c051; emits mathematically real configured-R parity.",
+    "submit": "FecTxOwner::submit returns separate TxBatch.systematic immediately and TxBatch.parity, without waiting until block close. Output sources must get a sender send opportunity before parity; driver call ordering itself is M0/M1.",
+    "deadline": "First source sets first_at +32ms fixed monotonic deadline. Later additions do not renew. flush_due explicitly called by owner, no OS timer/poller created by codec.",
+    "full20": "Twentieth source closes immediately and returns exactly min(20,R)=R parity with no 32ms delay.",
+    "partial": "k active sources => r_sent=min(k,configured R) real parity rows indices20..20+r_sent-1, final header preserves configured R, authoritative k/lengths/max shard size, inactive 20-k zero columns.",
+    "sizing": "Only configured R=20 uses up to three independent class ceilings256/512/(wire_limit-56); R=4/8/10/12/16 single class, following pinned old-Go policy. Forced large LINK fragment hint keeps short tail in largest class.",
+    "global_identity": "One extended64 BlockID allocator for all classes, reserved at the first arriving source rather than closure, low32 zero skipped. Rotation epoch and trusted extension remain caller-owned.",
+    "reconfiguration": "Profile or actual FEC wire limit change closes all old groups and yields old parity in separate queue before starting new block. No partial source migration into incompatible budget.",
+    "budgets": "Maximum 3 active blocks, <=20 sources each; actual source retention capped by caller memory budget <=3*20*65535 bytes; oldest first closed when source would exceed budget; invalid submit rejects without consuming IDs/bytes.",
+    "telemetry": [
+      "source_shards",
+      "parity_shards",
+      "full_blocks",
+      "partial_blocks",
+      "pressure_closes",
+      "reconfig_closes",
+      "pending_blocks",
+      "pending_sources",
+      "retained_bytes",
+      "class_count",
+      "closed_by_k",
+      "closed_by_r",
+      "closed_by_class_k"
+    ],
+    "time": "Monotone millisecond input clamped against last observed; no background timers; owner must call flush_due at deadline.",
+    "contract": "Owner must schedule all ready systematic before parity and use authenticated record/PN seal downstream. No claim that a real OS sent sources first."
+  },
+  "testing": {
+    "new_tests": 8,
+    "all_r1_tests": 46,
+    "previous_tests": 38,
+    "cases": [
+      "r1_tx_sparse_first_source_immediate_32ms_absolute_not_extended",
+      "r1_tx_full20_closes_on_twentieth_without_delay_and_profile_r",
+      "r1_tx_interleaved_20_20_256_512_mtu_share_block_ids_at_start",
+      "r1_tx_large_fragment_hint_and_lower_profile_single_group",
+      "r1_tx_reconfigure_flushes_old_profile_and_mtu_preserves_new_identity",
+      "r1_tx_capacity_closes_oldest_no_silent_drop_invalid_is_atomic",
+      "r1_tx_old_go_k2_parity_golden_and_final_lengths",
+      "r1_tx_extended_id_wrap_skip_reserved_zero_and_monotone_clock"
+    ],
+    "exact_go_byte_parity": "k2 partial profile4 real Go parity bytes C081A7E6FB / 6758BB84F9",
+    "frozen_r0_codec_historical_13": "PASS"
+  },
+  "github_actions": {
+    "native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38564745459,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "source_sha": "971f320f3145d3779fd94df6acc63ac0f1d808d0",
+      "platform": "GitHub native Ubuntu Linux x86_64",
+      "toolchain": "Rust1.85.1",
+      "compiled_once": true,
+      "build_job_id": 115854447588,
+      "consumer_job_id": 115854773464,
+      "tests_passed": 46,
+      "failed": 0,
+      "binary_sha256": "0516914d18708aa80dd10017fe59fa1ed5cfe08f7c8525b2d303d3bc04e0f5fa",
+      "log_sha256": "cda3282387ee7100c9a1238ca6b5eab0190aa2eb6ab7fc9b21893dd096c220cd",
+      "build_artifact": {
+        "id": 11894015526,
+        "digest": "sha256:5e553c3dcc65f191cfccdcf4e4ac3a5acd4bc84a9c921731003f381215524ebf",
+        "expires_at": "2026-11-13T12:34:25Z"
+      },
+      "result_artifact": {
+        "id": 11894130799,
+        "digest": "sha256:5b713b5f66c197d5912acf8fa37ff526d64d4772540782d56b6e8fe9a2c89f7e",
+        "expires_at": "2026-11-13T12:34:34Z"
+      }
+    },
+    "same_source_other": [
+      {
+        "workflow": ".github/workflows/r0-codec.yml",
+        "run_id": 38564744675,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-record-framing.yml",
+        "run_id": 38564744923,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-link-fec-wire.yml",
+        "run_id": 38564744745,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/g2-bootstrap.yml",
+        "run_id": 38564744722,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-qualification-audit.yml",
+        "run_id": 38564744903,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/governance.yml",
+        "run_id": 38564744708,
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ],
+    "scope_history": "No failed Actions/test commit in this FEC-TX atom. The preceding FEC-SCALAR-005 kept its original two worker failures and H1 unbounded context_refs failure in the preceding evidence."
+  },
+  "limits": {
+    "no_M3_root_Cargo_lock_or_shared_ABI_edits": true,
+    "no_M3_shared_CI_edits": true,
+    "SIMD_ISAL": "NOT_IMPLEMENTED",
+    "hardware_simd_runtime": "NOT_RUN",
+    "real_owner_timer_wakeup": "NOT_RUN",
+    "source_priority_with_driver": "NOT_RUN",
+    "source_send_outcome": "NOT_RUN",
+    "burst_100us_continuous_cpu_cap": "NOT_MEASURED",
+    "TX_block_owner_persistent_across_profile_switch_with_draining_generation": "NOT_IMPLEMENTED; old open groups closed on switch",
+    "FEC_RX_heavy_compact_and_missing_source_first_delivery": "NOT_IMPLEMENTED",
+    "native_Windows_ARM": "NOT_RUN",
+    "integrated_main_FEC_on_end_to_end": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_V4": "DISABLED"
+  },
+  "next_action": "Next M3 atomic implement bounded FEC RX heavy/compact owner with authenticated streaming source first-delivery, immutable final metadata, exact missing-only e-by-e recovery, 3s heavy/10s compact and pressure retirement, then real GitHub Actions evidence; M0 owns integration with actual record/replay/LINK/driver and shared ABI. ISA-L SIMD needs a separate pinned native toolchain matrix proof."
+}
