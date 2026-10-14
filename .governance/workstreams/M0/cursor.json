@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 6,
-  "checkpoint_sha": "ec10631c32fcb3e806e481aabeded40aca97f47c",
+  "sequence": 7,
+  "checkpoint_sha": "f2a1c639c202a46f0fe110e48d8e97992e6d49b2",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "R0共享Rust类型和Linux x64预编译消费已先期通过；本轮在固定原Go SOURCE的编译测试确认V3原wire、V4 24B测试适配golden、3cipher exporter/KDF摘要；生产V4 TLS admission和Go/C/平台ABI仍未完成",
-  "why_now": "按seq5唯一next_action完成旧Go实际编译与V4 golden，冻结经Go Actions观测的KDF/context摘要以防未来wire漂移，不用Python代数代替真实Go测试",
-  "done_when": "R0最小类型/ABI、旧Go与V4向量、依赖及单目标构建消费契约验证，正式分配模块后进入纵向实现；当前仅types/build/Go测试向量子项完成，R0总done_when未满足",
-  "next_action": "将V4 24B、features、epoch和domain-separated KDF接入原Go真正受TLS保护的admission请求/回复路径，在Actions运行真实双方交互与错epoch/旧版本/重放拒绝门；之后才推进Go↔C及平台ABI探针，M1–M4暂不激活",
+  "current_task": "R0 Go V4显式opt-in非测试入口在原Go TLS1.3/uTLS及FakeTCP路线上实际通过五组编译后测试；V3维持不变。原应用调用/实际Rust能力、Replay/完整生命周期/C及平台ABI尚未接入，R0总体仍partial",
+  "why_now": "原V3和V4 Go golden先期通过；通过真实TLS双方验证特性门、真实独立密钥与认证后epoch绑定，避免把wire数学/静态向量冒充建连能力",
+  "done_when": "R0最小类型/ABI、旧Go与V4向量、依赖及单目标构建消费契约验证，正式分配模块后进入纵向实现；当前仅类型/旧Go golden/显式Go V4 TLS子项完成，总R0未完成",
+  "next_action": "在固定旧Go源的实际控制应用调用点明确接入V4能力readiness/effective config及epoch store退出释放；Actions验证默认关闭、原V3不变和V4未满足能力拒绝；之后再做Go↔C/平台ABI原生探针，M1–M4继续reserved",
   "unverified": true,
-  "last_tested_source": "87ad54b044e5faa974d47ba2a7015a75760328cd",
+  "last_tested_source": "6aaba145289ea7771469ee5e462cce03361a432f",
   "evidence_refs": [
-    "docs/evidence/M0/R0-go-vectors.json"
+    "docs/evidence/M0/R0-v4-real-tls.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-go-vectors-complete.md",
+    "docs/devlog/M0/R0-v4-tls-complete.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/devlog/M0/R0-contract-observation.md"
+    "docs/evidence/M0/R0-go-vectors.json"
   ],
-  "partial_summary": "Go SOURCE=87ad54b044e5faa974d47ba2a7015a75760328cd; old=a7a82db31fe736ffedee330795a3234d358f1984; run38509701636 attempt1 build115675132618/consume115675294926 success，5/5测试通过，build ZIP11869028319/result ZIP11869257734；首轮de585696 run38509549705也5/5，冻结摘要后重新测试；receipt S=ec10631c3 Governance run38509901953 success。V4适配仅测试夹具，TLS生产/ABI/ARM/Windows/产品/性能/物理NOT_RUN；M1–M4 reserved。"
+  "partial_summary": "SOURCE 6aaba145289ea7771469ee5e462cce03361a432f + legacy a7a82db31fe736ffedee330795a3234d358f1984；R0 run38510931409 attempt1 build115679018829/consume115679162138：Go V4 TLS真实双方三cipher及epoch负面5/5 PASS，预编译产物hash消费；Governance 38510931562、receipt S f2a1c639 的治理run38511127452均success。仅显式opt-in入口，原控制调用未接、Rust能力不广告、Replay/生命周期、C/平台ABI及产品/性能/物理NOT_RUN；M1–M4 reserved。"
 }
