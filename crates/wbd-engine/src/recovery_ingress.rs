@@ -3,11 +3,14 @@
  //! caller must supply the verified direction-separated RX crypto key,
  //! nonzero logical tunnel epoch and lane mapping from authenticated admission.
  //! Never accept raw receipt bytes, unauthenticated TCP ACK or peer-supplied
- //! lane/epoch to release a shadow entry. NOT an RX replay bitmap or product.
+ //! lane/epoch to release a shadow entry. Uses M3's AEAD-first RX PN replay
+ //! window; no product or live Go admission qualification.
  #![forbid(unsafe_code)]
 
  use wbd_codec::{decode_control, CodecError, ControlTlv};
- use wbd_codec::record_crypto::{CryptoError, LaneRxCrypto};
+ use wbd_codec::record_crypto::CryptoError;
+ use wbd_codec::record_replay::{ReplayProtectedLaneRx, ReplayWindowInfo, ReplayStats,
+                                UniqueOpenError};
  use wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND;
  use wbd_platform::r1::{submit_ready, ReadyPacketSink};
  use wbd_recovery::{AuthenticatedReceipt, ReceiptPage, ReceiptState,
@@ -18,7 +21,7 @@
  #[derive(Debug)]
  pub enum ReceiptIngressError {
      UnboundLaneEpoch, Crypto(CryptoError), Control(CodecError),
-     NotHealth, MissingReceipt, Recovery(DataError),
+     Replay(UniqueOpenError), NotHealth, MissingReceipt, Recovery(DataError),
      StaleCandidate, DriverOutcome,
  }
 
@@ -26,7 +29,7 @@
  /// state: feedback direction crypto and logical lane/epoch must already have
  /// been bound by authenticated Go V4 admission (not by feedback packet data).
  pub struct BoundReceiptIngress {
-     reverse_rx: LaneRxCrypto,
+     reverse_rx: ReplayProtectedLaneRx,
      data_lane: LaneKey,
      logical_epoch: [u8; 16],
      control_budget: usize,
@@ -36,7 +39,7 @@
      /// Does *not* authenticate a Go V4 session or derive keys. It verifies
      /// the explicit already-authenticated lane and epoch inputs agree.
      pub fn from_verified_session(
-         reverse_rx: LaneRxCrypto,
+         reverse_rx: ReplayProtectedLaneRx,
          data_lane: LaneKey, authenticated_feedback_lane: LaneKey,
          data_epoch: [u8; 16], authenticated_feedback_epoch: [u8; 16],
          control_budget: usize,
@@ -52,16 +55,25 @@
 
      pub fn lane(&self) -> LaneKey { self.data_lane }
      pub fn logical_epoch(&self) -> [u8; 16] { self.logical_epoch }
+     /// Effective epoch-lane RX replay horizon/budget; source config comes
+     /// from the authenticated owner, never the untrusted Health payload.
+     pub fn replay_info(&self) -> ReplayWindowInfo { self.reverse_rx.info() }
+     pub fn replay_stats(&self) -> ReplayStats { self.reverse_rx.stats() }
+     pub fn replay_max_seen(&self) -> Option<u64> { self.reverse_rx.max_seen() }
 
      /// Open and authenticate exactly one reverse-direction Health record;
      /// only then parse bounded WBC4 control and construct M2 receipt evidence.
-     /// Any error returns before state.on_receipt, preserving shadow bytes.
+     /// Authentic PN uniqueness is checked BEFORE parsing Health/Receipt.
+     /// Duplicate, retired and failed AEAD never call state.on_receipt.
      pub fn accept_one<H: FrozenRecordHandle>(
-         &self, encrypted_wire: &mut [u8],
+         &mut self, encrypted_wire: &mut [u8],
          state: &mut ReceiptState<H>, now: MonoNs,
      ) -> Result<Vec<Release<H>>, ReceiptIngressError> {
-         let opened = self.reverse_rx.open_in_place(encrypted_wire)
-             .map_err(ReceiptIngressError::Crypto)?;
+         let opened = self.reverse_rx.open_unique_in_place(encrypted_wire)
+             .map_err(|err|match err {
+                 UniqueOpenError::InvalidRecord(crypto) => ReceiptIngressError::Crypto(crypto),
+                 other => ReceiptIngressError::Replay(other),
+             })?;
          if opened.kind != AUTHENTICATED_HEALTH_KIND {
              return Err(ReceiptIngressError::NotHealth);
          }

@@ -2,7 +2,8 @@
 //! bounded ready-only sink. Test-only trusted key/epoch; no live Go admission.
 use std::io::{self,ErrorKind};
 use wbd_codec::{encode_control,ControlTlv,Receipt,ReceiptPage as WirePage};
-use wbd_codec::record_crypto::{DirectionKeys,LaneRxCrypto,LaneTxCrypto};
+use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite,CryptoError};
+use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_frame::{AUTHENTICATED_HEALTH_KIND,AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
 use wbd_engine::memory::{Arena,FrozenRecord};
 use wbd_engine::recovery_ingress::{BoundReceiptIngress,ReceiptIngressError,submit_repair_once};
@@ -40,6 +41,19 @@ fn original(a:&mut Arena,pn_expected:u64)->FrozenRecord{
         lane:lane(),pn:RecordPn(pn),seq:SeqOffset(0),carrier_snapshot:11
     }).unwrap()
 }
+fn reply_with_tx(tx:&mut LaneTxCrypto,received:bool,seq:u32)->Vec<u8>{
+    let mut bitmap=[0u8;32];
+    if received {bitmap[0]=1;}
+    let body=encode_control(&[ControlTlv::Receipt(Receipt{
+        largest_data_pn:0,ack_delay_us:100,report_seq:seq,
+        pages:vec![WirePage{base_pn:0,bitmap}]
+    })],512).unwrap();
+    let mut w=vec![0;body.len()+FIXED_WIRE_OVERHEAD];
+    w[14..14+body.len()].copy_from_slice(&body);
+    let (_,used)=tx.seal_in_place(AUTHENTICATED_HEALTH_KIND,&mut w,body.len(),0).unwrap();
+    assert_eq!(w.len(),used);
+    w
+}
 fn reply(received:bool)->Vec<u8>{
     let mut bitmap=[0u8;32];
     if received {bitmap[0]=1;}
@@ -55,9 +69,16 @@ fn reply(received:bool)->Vec<u8>{
     assert_eq!(n,w.len());
     w
 }
+fn replay_config()->ReplayWindowConfig {
+    ReplayWindowConfig { pn_per_second:1_000,cache_horizon_ms:100,
+        fec_horizon_ms:0,rtt_ms:0,metadata_budget_bytes:80 }
+}
+fn reverse_receiver(suite:RecordSuite)->ReplayProtectedLaneRx{
+    ReplayProtectedLaneRx::new_for_suite(reverse_keys(),536,suite,replay_config()).unwrap()
+}
 fn bound()->BoundReceiptIngress{
     BoundReceiptIngress::from_verified_session(
-        LaneRxCrypto::new(reverse_keys(),536).unwrap(),
+        reverse_receiver(RecordSuite::ChaCha20Poly1305),
         lane(),lane(),epoch(),epoch(),512
     ).unwrap()
 }
@@ -83,7 +104,7 @@ fn r2_m0_real_authenticated_health_only_releases_original_m1_shadow() {
     let mut shadow=state();
     shadow.on_sent(original.clone(),MonoNs(0),MonoNs(2000)).unwrap();
     assert_eq!(shadow.outstanding(),1);
-    let ingress=bound();
+    let mut ingress=bound();
 
     let mut corrupt=reply(true);
     let last=corrupt.len()-1;
@@ -93,7 +114,12 @@ fn r2_m0_real_authenticated_health_only_releases_original_m1_shadow() {
     assert_eq!(shadow.outstanding(),1);
     let mut false_kind=vec![0;FIXED_WIRE_OVERHEAD];
     let mut data_seal=LaneTxCrypto::new(reverse_keys(),536).unwrap();
-    data_seal.seal_in_place(AUTHENTICATED_LINK_KIND,&mut false_kind,0,0).unwrap();
+    // The wire PN must be genuinely unique. Burn a local PN0 (never published)
+    // and authenticate an unrelated LINK record at PN1. The genuine
+    // Health PN0 may then arrive out of order within the same replay window.
+    let mut unpublished=[0;FIXED_WIRE_OVERHEAD];
+    data_seal.seal_in_place(AUTHENTICATED_HEALTH_KIND,&mut unpublished,0,0).unwrap();
+    assert_eq!(data_seal.seal_in_place(AUTHENTICATED_LINK_KIND,&mut false_kind,0,0).unwrap().0,1);
     assert!(matches!(ingress.accept_one(&mut false_kind,&mut shadow,MonoNs(11)),
         Err(ReceiptIngressError::NotHealth)));
     assert_eq!(shadow.outstanding(),1);
@@ -106,7 +132,10 @@ fn r2_m0_real_authenticated_health_only_releases_original_m1_shadow() {
     assert_eq!(released[0].frozen.bytes(),old);
     assert_eq!(shadow.outstanding(),0);
     let mut another=reply(true);
-    assert!(ingress.accept_one(&mut another,&mut shadow,MonoNs(13)).unwrap().is_empty());
+    assert!(matches!(ingress.accept_one(&mut another,&mut shadow,MonoNs(13)),
+        Err(ReceiptIngressError::Replay(UniqueOpenError::Duplicate))));
+    assert_eq!(ingress.replay_stats().delivered,2); // LINK PN1 + Health PN0
+    assert_eq!(ingress.replay_stats().duplicates,1);
     drop(released);drop(original);
     assert_eq!(arena.drain_returns(),1);
     assert_eq!(arena.report().loaned,0);
@@ -120,7 +149,7 @@ fn r2_m0_bad_lane_epoch_or_key_never_authorizes_receipt() {
         (lane(),lane(),[0;16],[0;16]),
     ] {
         assert!(matches!(BoundReceiptIngress::from_verified_session(
-            LaneRxCrypto::new(reverse_keys(),536).unwrap(),
+            reverse_receiver(RecordSuite::ChaCha20Poly1305),
             data_lane,feedback_lane,ep,reverse_ep,512
         ),Err(ReceiptIngressError::UnboundLaneEpoch)));
     }
@@ -128,8 +157,8 @@ fn r2_m0_bad_lane_epoch_or_key_never_authorizes_receipt() {
     let frozen=original(&mut arena,0);
     let mut shadow=state();
     shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(2000)).unwrap();
-    let wrong=BoundReceiptIngress::from_verified_session(
-        LaneRxCrypto::new(data_keys(),536).unwrap(),
+    let mut wrong=BoundReceiptIngress::from_verified_session(
+        ReplayProtectedLaneRx::new(data_keys(),536,replay_config()).unwrap(),
         lane(),lane(),epoch(),epoch(),512
     ).unwrap();
     let mut feedback=reply(true);
@@ -165,4 +194,103 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     assert_eq!(shadow.outstanding(),1); // unknown syscall outcome is NOT receipt
     drop(first);drop(second);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
+}
+
+
+#[test]
+fn r2_m0_authenticated_reverse_replay_duplicate_and_bad_tag_never_repeat_receipt() {
+    let mut arena=Arena::new(89,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let original_bytes=frozen.bytes().to_vec();
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(2000)).unwrap();
+    let mut ingress=bound();
+    assert_eq!(ingress.replay_info().effective_window_pn,256);
+    assert_eq!(ingress.replay_info().allocated_metadata_bytes,80);
+    let mut tx=LaneTxCrypto::new(reverse_keys(),536).unwrap();
+    let first=reply_with_tx(&mut tx,false,1); // PN0: authentic negative evidence
+    assert!(ingress.accept_one(&mut first.clone(),&mut shadow,MonoNs(10)).unwrap().is_empty());
+    assert_eq!(shadow.outstanding(),1);
+    assert_eq!(ingress.replay_max_seen(),Some(0));
+    // This is an actually valid AEAD record: it must not even REENTER M2,
+    // despite M2's independent idempotent receipts/late positive handling.
+    assert!(matches!(ingress.accept_one(&mut first.clone(),&mut shadow,MonoNs(11)),
+        Err(ReceiptIngressError::Replay(UniqueOpenError::Duplicate))));
+    assert_eq!(ingress.replay_stats().duplicates,1);
+    let second=reply_with_tx(&mut tx,true,2); // PN1
+    let mut tampered=second.clone();
+    let last=tampered.len()-1;tampered[last]^=1;
+    assert!(matches!(ingress.accept_one(&mut tampered,&mut shadow,MonoNs(12)),
+        Err(ReceiptIngressError::Crypto(CryptoError::Authentication))));
+    assert_eq!(ingress.replay_max_seen(),Some(0)); // failed tag cannot poison floor
+    assert_eq!(shadow.outstanding(),1);
+    let released=ingress.accept_one(&mut second.clone(),&mut shadow,MonoNs(13)).unwrap();
+    assert_eq!(released.len(),1);
+    assert_eq!(released[0].frozen.bytes(),original_bytes);
+    assert_eq!(shadow.outstanding(),0);
+    assert!(matches!(ingress.accept_one(&mut second.clone(),&mut shadow,MonoNs(14)),
+        Err(ReceiptIngressError::Replay(UniqueOpenError::Duplicate))));
+    assert_eq!(ingress.replay_stats().delivered,2);
+    assert_eq!(ingress.replay_stats().duplicates,2);
+    assert_eq!(ingress.replay_stats().invalid_records,1);
+    drop(released);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
+}
+
+#[test]
+fn r2_m0_retired_valid_health_cannot_release_shadow_after_authenticated_pn_jump() {
+    let mut arena=Arena::new(90,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(2000)).unwrap();
+    let mut ingress=bound();
+    let mut tx=LaneTxCrypto::new(reverse_keys(),536).unwrap();
+    let low=reply_with_tx(&mut tx,false,1); // PN0
+    let retired_positive=reply_with_tx(&mut tx,true,2); // PN1
+    assert!(ingress.accept_one(&mut low.clone(),&mut shadow,MonoNs(10)).unwrap().is_empty());
+    for _ in 2..257 { let _=reply_with_tx(&mut tx,false,1); } // legal unique PN2..256, unsent
+    let advanced=reply_with_tx(&mut tx,false,3); // PN257 -> retired floor 2
+    assert!(ingress.accept_one(&mut advanced.clone(),&mut shadow,MonoNs(11)).unwrap().is_empty());
+    assert_eq!(ingress.replay_max_seen(),Some(257));
+    assert_eq!(ingress.replay_stats().retired,0);
+    assert!(matches!(ingress.accept_one(&mut retired_positive.clone(),&mut shadow,MonoNs(12)),
+        Err(ReceiptIngressError::Replay(UniqueOpenError::Retired))));
+    assert_eq!(ingress.replay_stats().retired,1);
+    assert_eq!(shadow.outstanding(),1);
+    let high=reply_with_tx(&mut tx,true,4); // PN258, authentic new acknowledgement
+    let released=ingress.accept_one(&mut high.clone(),&mut shadow,MonoNs(13)).unwrap();
+    assert_eq!(released.len(),1);
+    assert_eq!(shadow.outstanding(),0);
+    assert_eq!(ingress.replay_stats().delivered,3);
+    drop(released);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
+}
+
+#[test]
+fn r2_m0_reverse_three_actual_suites_health_is_aead_first_and_one_time() {
+    for (i,suite) in [RecordSuite::ChaCha20Poly1305,RecordSuite::Aes128Gcm,
+                      RecordSuite::Aes256Gcm].into_iter().enumerate() {
+        let mut ingress=BoundReceiptIngress::from_verified_session(
+            reverse_receiver(suite),lane(),lane(),epoch(),epoch(),512).unwrap();
+        let mut arena=Arena::new(91+i as u32,1,256,1,60_000).unwrap();
+        let frozen=original(&mut arena,0);
+        let mut shadow=state();
+        shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(2000)).unwrap();
+        let mut tx=LaneTxCrypto::new_for_suite(reverse_keys(),536,suite).unwrap();
+        let valid=reply_with_tx(&mut tx,true,1);
+        let mut broken=valid.clone();broken[14]^=0x80;
+        assert!(matches!(ingress.accept_one(&mut broken,&mut shadow,MonoNs(5)),
+            Err(ReceiptIngressError::Crypto(_))));
+        assert_eq!(ingress.replay_max_seen(),None);
+        assert_eq!(shadow.outstanding(),1);
+        let result=ingress.accept_one(&mut valid.clone(),&mut shadow,MonoNs(6)).unwrap();
+        assert_eq!(result.len(),1);
+        assert_eq!(result[0].pn,RecordPn(0));
+        assert_eq!(shadow.outstanding(),0);
+        assert!(matches!(ingress.accept_one(&mut valid.clone(),&mut shadow,MonoNs(7)),
+            Err(ReceiptIngressError::Replay(UniqueOpenError::Duplicate))));
+        assert_eq!(ingress.replay_stats().delivered,1);
+        drop(result);drop(shadow);drop(frozen);
+        assert_eq!(arena.drain_returns(),1);
+    }
 }
