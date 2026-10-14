@@ -160,5 +160,15 @@
     "PHYSICAL_NOT_RUN"
   ],
   "concurrent_workers": "M1 M2 M3 M4 branch heads advanced after M0 task start, cursor qualifications must be independently audited before integration",
-  "next_action": "M0 audit new M1-M4 branch per-commit diffs, outstanding Actions and exact cursor/evidence; integrate one separately qualified worker atomic task on main with same-source native proof. Do not start unauthorized worker code."
+  "next_action": "M0 audit new M1-M4 branch per-commit diffs, outstanding Actions and exact cursor/evidence; integrate one separately qualified worker atomic task on main with same-source native proof. Do not start unauthorized worker code.",
+  "source_sha": "37fac368d8eca42b6e021e40d8423423ed502c77",
+  "handoff_recovery": {
+    "failed_h_sha": "e2a7c565a1454b897d44a8602f5537d7bd760192",
+    "failed_governance_run": 38599307864,
+    "attempt": 1,
+    "observed": "FAIL_STRUCTURE_ONLY",
+    "error": "evidence is for a different SOURCE",
+    "root_cause": "evidence JSON omitted top-level source_sha even though exact_source.sha matched code",
+    "fix": "set source_sha to verified code SOURCE; do not reinterpret source or rerun native tests"
+  }
 }

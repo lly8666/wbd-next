@@ -14,3 +14,6 @@ M3 real FEC-on systematic before 32ms parity; M1 actual Arena/FrozenRecord/TxOwn
 
 ## Done and next
 This **single M0 scoped atom** meets native in-process done_when only; **Go V4 production, real Linux AF_PACKET/sendmmsg carrier, native Windows/ARM, 500Mbps/p99, physical and end-to-end product are NOT_RUN**. Do not turn design/worker isolated PASS into product PASS. M1–M4 branch refs advanced during M0's work; do not overwrite their branches. **One next action:** refresh each worker's exact HEAD/cursor, check every new commit and Actions/evidence (including still-running requests), integrate only a separately qualified worker S into main with new same-SOURCE native gate. Stop this atom; no extra governance layer.
+
+## Cursor H recovery (2026-10-15)
+Initial cursor-only H `e2a7c565a1454b897d44a8602f5537d7bd760192` Governance [#38599307864](https://github.com/lly8666/wbd-next/actions/runs/38599307864) **FAIL** in structure validator: `evidence is for a different SOURCE`. The evidence receipt contained `exact_source.sha` but lacked mandatory **top-level** `source_sha`. M0 recovered this specific schema field from real same-source Actions #38598402946 and immutable code commit `37fac368`; no product test or cryptographic implementation changed. New evidence correction S followed by cursor-only replacement H checkpoint. Do not claim failed H was CLEAN.
