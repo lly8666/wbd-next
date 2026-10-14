@@ -8,6 +8,8 @@
 pub mod record_frame;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
+/// Sole ledger for outer path, record and optional encapsulation budgets.
+pub mod path_budget;
 
 use wbd_types::LogicalPacketId;
 
