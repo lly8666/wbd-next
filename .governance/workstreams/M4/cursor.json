@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 3,
-  "checkpoint_sha": "59defb0ecb5114bea7c57e720d95305baef23948",
+  "sequence": 4,
+  "checkpoint_sha": "99a9c16acdf6ab479389bccb5207dc59eb3bbaee",
   "progress": "ready_for_integration",
   "task_id": "R1-M4-IO-001",
   "current_task": "R1-M4-IO-001 scoped driver prefix/borrow-stop verified, handed off to M0",
   "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
   "done_when": "Actions isolated driver prefix/uncertain/stop tests, source exact and native-vs-fake separated; no Windows native without runner/real driver, S+H.",
-  "next_action": "Wait for M0 to define an independent next M4 atom after M3 real AEAD+8B HP contract; M0 alone integrates this verified driver primitive with M1/M3 on one SOURCE and runs Normal/FEC-off authenticated first-packet test. M4 must not change root Cargo/ABI or enable Go V4.",
+  "next_action": "Wait for M0 to assign next independent M4 atom and/or integrate this isolated scoped implementation after M3 real AEAD/8B HP. M4 does not write root ABI/workflows or enable Go production V4.",
   "unverified": false,
   "last_tested_source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
   "evidence_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "SCOPED M4 task done_when MET: source bcf0bcacd51029abe5c8af429a000ee8853ceb3d, worker native run38538117103/1 PASS 6/6 (5 fake, 1 Linux OS UDP smoke), exact artifact hashes in docs/evidence/M4/R1-M4-IO-001.json. Original worker r0-platform-fake run38538117164/1 is genuinely FAIL because old harness executed all 13 passing tests but expected 7. M0 fixed shared r0_ harness only on main source40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36, main Actions run38538899575/1 SUCCESS 7/7; different SOURCE, no retroactive worker PASS. M4 resolution evidence S59defb0ecb5114bea7c57e720d95305baef23948 governance run38543516962/1 success. Ready_for_integration only for isolated M4 Rust platform API: actual Linux AF_PACKET/sendmmsg, Windows Npcap/Wintun, async OS borrow shutdown, real AEAD Normal/FEC off engine delivery and performance/product/physical all NOT_RUN; Go V4 DISABLED. No shared/root files changed, no new M4 task assigned."
+  "partial_summary": "R1-M4-IO-001 scoped DONE_WHEN MET. Code SOURCE bcf0bcacd51029abe5c8af429a000ee8853ceb3d, 6/6 native Actions run38538117103/1 (five fake, one Linux UDP smoke) fully artifact-reviewed in docs/evidence/M4/R1-M4-IO-001.json; direct build/result ZIP, binary and log SHA256 verified. M0 main SOURCE40a8a53c fixed R0 historical filter and its separate run38538899575/1 7/7 success; old worker 38538117164/1 remains FAIL. Closure evidence S59defb0ecb5114bea7c57e720d95305baef23948 governance38543516962 SUCCESS. Earlier H 2dce8dd01eaa4abd4fd1aabb1738bbf9539196b7 governance38543686945 FAIL: reviewed PASS evidence fields missing; correction S99a9c16acdf6ab479389bccb5207dc59eb3bbaee adds independently inspected artifact result=PASS and artifact_verified=true; governance38544048840 SUCCESS. ready_for_integration only isolated platform API; real AF_PACKET/sendmmsg, OS async kernel-borrow stop, native Windows, true M3 AEAD/HP Normal/off business/physical/performance NOT_RUN. No shared/root writes, Go V4 DISABLED. Next step M0 integration/assignment after M3 real crypto."
 }
