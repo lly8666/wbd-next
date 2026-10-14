@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 11,
-  "checkpoint_sha": "f5ae7ddf95363a61ca7d27d9157c049c16df7242",
+  "sequence": 12,
+  "checkpoint_sha": "29ad2aa37874df0fb44ec08efb5274f1b0145265",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
-  "current_task": "R0已验Rust共享类型/单目标build、旧Go V3/V4 goldens与受保护TLS、Go生产V4能力早期拒绝、Linux x64 Go-C-Rust原生R0 ABI sentinel、Rust fake clock/driver I01-B01 7例。本轮Windows x64与Linux ARM64的Rust wbd-engine ABI sentinel、wbd-platform及目标C11布局/链接均跨目标编译/产物消费成功，未在相应目标运行；源程序features=0，不存在Rust稳态数据面。",
-  "why_now": "cursor seq10要求将Linux native资格与Windows/ARM区别开，真实编译C头静态offset与Rust动态库链接、产物machine/export；首轮ARM交叉系统缺crti.o失败，通过安装cross libc-dev作为可解释修复后新SOURCE全部通过。",
-  "done_when": "R0共享类型/协议codec golden、锁SOURCE/toolchain、原Go协商、C/平台ABI和fake-clock/platform-driver、构建消费者和必要多目标目标布局/执行分类齐备，才可审查foundation是否足以正式派R1工作；此轮仅跨目标编译门完成，全R0未满足。",
-  "next_action": "在R0新增最小Rust wbd-codec，对00-CONTRACTS中的WBC4 receipt-control bundle和WBG4 Game envelope做严格显式offset编解码、规范golden、TLV超限/重复receipt/未知type/flags/length以及u64边界反例；Actions编译一次、独立consumer核对SOURCE/二进制并执行。暂不宣称Rust receipt/Game业务数据面实现，不启用Go生产V4，M1–M4继续reserved。",
+  "current_task": "R0已验旧Go V3/V4真实TLS/控制V4早期拒绝、Rust类型、Linux native Go↔C↔Rust ABI sentinel、Rust fake driver/clock和Windows x64/ARM64 cross-build。本轮加入纯Rust wbd-codec，WBC4 receipt 20+40B pages/TLV及WBG4 16B Game envelope严格显式offset、独立手写golden/非法输入/PN与budget边界在Actions原生Rust 13项PASS；仍无真实Rust业务AEAD/receipt/Game engine。",
+  "why_now": "seq11唯一下一动作要求在进一步建立引擎前锁定00/08/09明确WBC4/WBG4 wire布局，以独立源码golden和失败关闭反例证明结构；该codec仅wire层，不能据此广告V4产品。",
+  "done_when": "R0共享类型/来源/toolchain锁及受保护Go协商、原生和多目标ABI、平台fake driver/clock、WBC4/WBG4 wire golden与测试消费者形成可审计foundation；必须再审计统一test manifest及source-lock是否涵盖真实阶段退出条件，当前R0总体仍partial、产品未资格化。",
+  "next_action": "按R0退出合同做一次原子审计和修正：核对r0/source-lock.json里历史bootstrap快照与当前wbd-types/wbd-codec/wbd-platform/wbd-engine四crate、各Actions SOURCE/target及test ID映射的不一致；形成唯一manifest和明确R0已验/未验门、worker M1–M4正式分派前阻断项。只更新可信来源和证据，不启用生产V4或臆造完整R0通过。",
   "unverified": true,
-  "last_tested_source": "8ce2224a734d45490c66b582f53057f1bfd40ae2",
+  "last_tested_source": "fdcacde4dae62cb6591d030d93ced7715b919118",
   "evidence_refs": [
-    "docs/evidence/M0/R0-cross-abi.json"
+    "docs/evidence/M0/R0-codec-wire.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-cross-abi-complete.md",
+    "docs/devlog/M0/R0-codec-wire-complete.md",
     "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/architecture/modules/09-PIPELINE-GAME.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/evidence/M0/R0-native-abi.json",
-    "docs/evidence/M0/R0-platform-fake.json"
+    "docs/evidence/M0/R0-cross-abi.json"
   ],
-  "partial_summary": "首轮S 148202e0 run38517436489 failure: ARM build115699286631 ld missing crti.o，Windows build115699286940 success但consumer skipped，Linux x64原生ABI回归38517436496 success。修复S 8ce2224a: install libc6-dev-arm64-cross；跨目标Actions run38517556825 attempt1 2 build (ARM115699659948/WIN115699659556)+2 consumer(ARM115699825062/WIN115699825141) success；aarch64 ELF64 machine183与WIN PE32+ machine0x8664，各编wbd-engine cdylib、wbd-platform rlib和目标C链接exe，C info24B/config16B/token8B布局静态断言、5个Rust ABI动态exports实物复核。ARM build artifact11872133561/result11871754041；WIN build11871923790/result11871374112，SHA详R0-cross-abi.json。相同修复SOURCE Governance run38517556771 success；收据S f5ae7ddf Governance run38517856316 success。严格CROSS_BUILD_PASS，目标原生执行、目标Go/cgo、真实平台I/O、Rust steady engine、产品/性能/物理NOT_RUN；V4 features0、生产V4 DISABLED，M1–M4 reserved。"
+  "partial_summary": "SOURCE fdcacde4dae62cb6591d030d93ced7715b919118，Actions native Rust WBC4/WBG4 codec run38519636181 attempt1 build115706153296/consume115706242766 success 13/13 (WBC4 receipt72B, legacyTLV21B, WBG4 19B手写golden；重复/flags/schema/size/budget/PN/u64边界)，unit binary SHA256 3b26811fff9f691d44a47829f423ae0da83034efb267dd051ea7b7a331bcb2fc；build artifact11873081899/result11873086957，详细SHA在R0-codec-wire.json。同SOURCE fake-platform38519636182/types38519636189/Windows+ARM cross38519636196/Governance38519636197/native Go-C-Rust ABI38519636220均success；收据S 29ad2aa37874df0fb44ec08efb5274f1b0145265 Governance run38519928232 success。R0 codec只解析/编码已认证V4 plaintext；真实AEAD/receipt处理/Game pipeline/WindowsARM native OS执行/产品/性能/物理NOT_RUN，production V4 DISABLED/features=0，M1–M4 reserved。"
 }
