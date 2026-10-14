@@ -361,3 +361,8 @@ mod fec_math_tests;
 #[cfg(test)]
 #[path = "fec_tx_tests.rs"]
 mod fec_tx_tests;
+
+// R1 FEC RX state tests isolated under LINK from frozen R0 historical cases.
+#[cfg(test)]
+#[path="fec_rx_tests.rs"]
+mod fec_rx_tests;

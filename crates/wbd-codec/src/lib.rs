@@ -18,6 +18,8 @@ pub mod link_reassembly;
 pub mod fec_math;
 /// Bounded first-source FEC TX block owner.
 pub mod fec_tx;
+/// Authenticated-input bounded Heavy/Compact FEC RX owner.
+pub mod fec_rx;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
