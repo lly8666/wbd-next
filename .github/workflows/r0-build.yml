@@ -1,0 +1,80 @@
+name: R0 precompiled types contract
+run-name: "M0|${{ github.sha }}|r0-build"
+
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "r0/source-lock.json"
+      - "tools/r0_bundle.py"
+      - ".github/workflows/r0-build.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-build-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build single target; precompile unit binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo build -p wbd-types --locked
+          cargo test -p wbd-types --locked --no-run
+          test_bin="$(find target/debug/deps -maxdepth 1 -type f -name 'wbd_types-*' -perm -u+x | head -n 1)"
+          test -n "$test_bin"
+          python tools/r0_bundle.py pack \
+            --out r0-artifact \
+            --test-binary "$test_bin" \
+            --source "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --target x86_64-unknown-linux-gnu
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-artifact/
+          if-no-files-found: error
+          retention-days: 30
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-artifact
+      - name: Verify provenance/hashes and execute precompiled binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_bundle.py consume \
+            --manifest r0-artifact/manifest.json \
+            --source "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --target x86_64-unknown-linux-gnu
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-unit-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-test-result.json
+          if-no-files-found: ignore
+          retention-days: 30
