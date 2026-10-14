@@ -4,9 +4,9 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 1,
+  "sequence": 2,
   "checkpoint_sha": "4d103921cd2e0830d83bf4272e3f7a65598fdb38",
-  "progress": "ready_for_integration",
+  "progress": "partial",
   "task_id": "R2-M2-RECEIPT-001",
   "current_task": "R2-M2-RECEIPT-001 pure receipt/frozen repair state completed at native-scoped level; awaiting M0 interface integration",
   "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
@@ -24,5 +24,5 @@
     "docs/devlog/M2/R2-M2-RECEIPT-001.md",
     "docs/decisions/M0-G2-worker-activation.md"
   ],
-  "partial_summary": "First M2 bootstrap-to-S transition: code S 7b02154 implemented pure authenticated ReceiptPage/ReceiptState with no cumulative prefix, control/burned/unreported holes safe, duplicate/old report semantics, 3 original witnesses or PTO, <=2 accepted/uncertain repair attempts, 32 candidates/poll, TTL/20ms queue, same FrozenRecordHandle and late ACK preflight. Exact-source compiled-once worker-native run38538225302 attempt1 8/8 r2_ PASS with binary SHA256 8b702fd9..., Governance run38538225279 PASS, static audit38538225295 PASS. Legacy G2 run38538225378 FAILED solely hardcoded 1-test count despite actual 9/9 test binary PASS; M0 GitHub issue #2. Authenticated M3/M1 binding issue #1. Evidence receipt S 4d103921 and Governance run38538732698 PASS. No engine/platform/root Cargo/socket changes. Integration, 1s F/R/L budget, performance/physical/product NOT_RUN; V4 DISABLED. Task closed; no next M2 atom claimed."
+  "partial_summary": "First M2 bootstrap-to-S transition: code S 7b02154 implemented pure authenticated ReceiptPage/ReceiptState with no cumulative prefix, control/burned/unreported holes safe, duplicate/old report semantics, 3 original witnesses or PTO, <=2 accepted/uncertain repair attempts, 32 candidates/poll, TTL/20ms queue, same FrozenRecordHandle and late ACK preflight. Exact-source compiled-once worker-native run38538225302 attempt1 8/8 r2_ PASS with binary SHA256 8b702fd9..., Governance run38538225279 PASS, static audit38538225295 PASS. Legacy G2 run38538225378 FAILED solely hardcoded 1-test count despite actual 9/9 test binary PASS; M0 GitHub issue #2. Authenticated M3/M1 binding issue #1. Evidence receipt S 4d103921 and Governance run38538732698 PASS. No engine/platform/root Cargo/socket changes. Integration, 1s F/R/L budget, performance/physical/product NOT_RUN; V4 DISABLED. Task closed; no next M2 atom claimed. Cursor-only H a548d7a triggered Governance38538934331 FAIL because worker_scope_ci requires ready_for_integration => unverified=false; corrected status to partial (integration not proven) in cursor-only H2, no code or evidence claim changed."
 }
