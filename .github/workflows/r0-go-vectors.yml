@@ -1,0 +1,92 @@
+name: R0 pinned Go V3 and V4 golden probe
+run-name: "M0|${{ github.sha }}|r0-go-vectors"
+
+on:
+  push:
+    paths:
+      - "r0/legacy_v3_v4_probe_test.go"
+      - "r0/source-lock.json"
+      - "tools/r0_go_vector.py"
+      - ".github/workflows/r0-go-vectors.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-go-vectors-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Compile the original Go V3 package plus R0-only golden probe once
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          go version
+          cp r0/legacy_v3_v4_probe_test.go legacy/internal/realityfront/r0_contract_probe_test.go
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r0-legacy-probe.test" ./internal/realityfront
+          )
+          python tools/r0_go_vector.py pack \
+            --out r0-go-artifact \
+            --binary r0-legacy-probe.test \
+            --old-sha "$(git -C legacy rev-parse HEAD)" \
+            --new-sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --go-version "$(go version)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-go-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-go-artifact/
+          if-no-files-found: error
+          retention-days: 30
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-go-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-go-artifact
+      - name: Verify hashes/provenance, then run precompiled old Go binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_go_vector.py consume \
+            --manifest r0-go-artifact/manifest.json \
+            --new-sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-go-probe-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-go-out/
+          if-no-files-found: warn
+          retention-days: 30
