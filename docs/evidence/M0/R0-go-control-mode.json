@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "PINNED_GO_CONTROL_V4_FAIL_CLOSED_CALLSITES",
+  "result": "PASS",
+  "source_sha": "b1e1cf627c18674433ef45c9fc2eaf172734ebe6",
+  "legacy_repository": "lly8666/wobuzhidao",
+  "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "go_toolchain": "go1.23.12",
+  "target": "linux-amd64",
+  "workflow": ".github/workflows/r0-go-control.yml",
+  "run_id": 38512634751,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38512634751",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115684380330,
+  "consume_job_id": 115684594712,
+  "governance": {
+    "run_id": 38512634892,
+    "source_sha": "b1e1cf627c18674433ef45c9fc2eaf172734ebe6",
+    "conclusion": "success",
+    "scope": "repository_governance_only"
+  },
+  "build_artifact": {
+    "id": 11870551418,
+    "name": "r0-control-build-38512634751-1",
+    "zip_sha256": "d121d89e3aba8c72b71e26e8a423019650a39099b2ae89e34aaa3daab616dc0e",
+    "bytes": 29779269
+  },
+  "result_artifact": {
+    "id": 11870931356,
+    "name": "r0-control-result-38512634751-1",
+    "zip_sha256": "8e0dcf4cb94d6c68b9fd6e152786104b86208696ced11812f1a48e62d007f14c",
+    "bytes": 1121
+  },
+  "artifact_consumption": "Actions consume job verified exact new and legacy SOURCE, six input file SHA256, all four compiled binary size/hash, executed tests and Linux CLI without recompilation; external artifact ZIP independently not downloaded",
+  "patch_guards": {
+    "legacy_files": {
+      "internal/runtimeentry/lifecycle.go": "f574fe9eb506c1bc66ef27775b1aa313b95b713c",
+      "cmd/wbd-client/main_linux.go": "b239b92006504500c76fb9148f735c484a0f011c",
+      "cmd/wbd-server/main_linux.go": "930976ec6b2d7fa82f98378c7aa985fb4e8e4363"
+    },
+    "algorithm": "Git blob SHA1 and exact unique source anchor per patch; abort before any write if mismatch; old public repository unchanged"
+  },
+  "tested": [
+    "TestR0EffectiveAdmissionDefaultsAndV3: PASS",
+    "TestR0V4RequestFailsClosedBeforeClientLaneOpen: PASS",
+    "TestR0V4RequestFailsClosedBeforeServerResources: PASS",
+    "TestR0InvalidOrDowngradedAdmissionVersionRejected: PASS",
+    "Original TestV3ProtectedFixedAdmissionKeys: PASS",
+    "Original TestRequireV3RejectsLegacyV2WithoutAllocating: PASS",
+    "Linux client/server --admission-version=4,5,2 early reject each; six cases PASS",
+    "Original server --check-config with ephemeral TLS cert: effective-admission-version=3, v4-capabilities=not-implemented, credential/route key redacted: PASS"
+  ],
+  "top_level_compiled_tests_passed": 6,
+  "top_level_compiled_tests_failed": 0,
+  "cli_negative_scenarios_passed": 6,
+  "server_check_config": "PASS",
+  "scope": "R0 Go CLI/readiness gate and real runtimeentry callsites on Linux only; only legacy Go V3 dataplane effective. Non-test V4 TLS opt-in handshake exists but cannot be dispatched from unready application",
+  "limits": {
+    "production_v4": "DISABLED",
+    "rust_engine_receipt_game": "NOT_IMPLEMENTED",
+    "server_epoch_store_runtime": "NOT_CREATED_WHILE_V4_DISABLED",
+    "epoch_release_lane_lifecycle": "NOT_WIRED",
+    "real_v4_runtime_binding": "NOT_RUN",
+    "windows_cli": "NOT_WIRED",
+    "go_c_rust_native_abi": "NOT_RUN",
+    "multi_target_compilation": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "Compile and run native Go-to-C-to-Rust ABI sentinel test in Actions: version/size, opaque handle generation, error mapping and rejection of incompatible sizes; keep V4 disabled until Rust feature and lifecycle readiness"
+}
