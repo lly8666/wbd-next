@@ -69,7 +69,8 @@ fn r1_replay_three_real_suites_auth_first_duplicate_tamper_wrong_key() {
         assert_eq!(rx.open_unique_in_place(&mut tampered),Err(UniqueOpenError::InvalidRecord(CryptoError::Authentication)));
         assert_eq!(rx.max_seen(),None);
         assert_eq!(rx.stats().invalid_records,1);
-        let first=rx.open_unique_in_place(&mut original.clone()).unwrap();
+        let mut first_wire=original.clone();
+        let first=rx.open_unique_in_place(&mut first_wire).unwrap();
         assert_eq!((first.pn,first.payload),(4,b"a\0b".as_slice()));
         assert_eq!(rx.open_unique_in_place(&mut original.clone()),Err(UniqueOpenError::Duplicate));
         assert_eq!(rx.max_seen(),Some(4));
@@ -89,10 +90,11 @@ fn r1_replay_256_tagged_boundary_no_resurrection_with_two_physical_pages() {
     let mut rx=receiver(RecordSuite::ChaCha20Poly1305,cfg(1_000,100,0,80));
     // With a 256-PN interval, [1..256] occupies two pages; allocating only
     // one 256-bit page would falsely treat PN 1 as fresh after PN 256.
-    for pn in [1u64,256,255,1,256,512,257,255,257] {
-        let expected=match pn {1 if rx.stats().delivered==3 => "duplicate", 256 if rx.stats().delivered==3 => "duplicate",
-            255 if rx.stats().delivered==5 => "retired",
-            257 if rx.stats().delivered==7 => "duplicate", _=>"first"};
+    for (pn,expected) in [
+        (1u64,"first"),(256,"first"),(255,"first"),
+        (1,"duplicate"),(256,"duplicate"),(512,"first"),
+        (257,"first"),(255,"retired"),(257,"duplicate"),
+    ] {
         let actual=rx.open_unique_in_place(&mut wire(RecordSuite::ChaCha20Poly1305,pn,b"tag"));
         match expected {
             "duplicate"=>assert_eq!(actual,Err(UniqueOpenError::Duplicate),"pn {pn}"),
