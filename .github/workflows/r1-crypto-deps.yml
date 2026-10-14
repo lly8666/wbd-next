@@ -1,0 +1,186 @@
+name: M0 R1 native Rust crypto dependency probe
+run-name: "M0|${{ github.sha }}|r1-crypto-deps"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r1-crypto-deps.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/wbd-codec/Cargo.toml"
+      - "rust-toolchain.toml"
+permissions:
+  contents: read
+concurrency:
+  group: r1-crypto-deps-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Pin actual workspace graph and compile native crypto API probes once
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          python3 - <<'PY'
+          import pathlib,tomllib
+          root=pathlib.Path('Cargo.toml')
+          codec=pathlib.Path('crates/wbd-codec/Cargo.toml')
+          ws={'aws-lc-rs':'{ version = "=1.18.1", default-features = false, features = ["non-fips", "alloc"] }',
+              'chacha20':'{ version = "=0.9.1" }', 'aes':'{ version = "=0.8.4" }'}
+          meta=tomllib.loads(root.read_text())
+          if 'dependencies' not in meta['workspace']:
+              root.write_text(root.read_text()+'\n[workspace.dependencies]\n'+
+                              ''.join(f'{k} = {v}\n' for k,v in ws.items()))
+          else:
+              for name,v in ws.items():
+                  spec=meta['workspace']['dependencies'][name]
+                  assert spec['version']=='='+{'aws-lc-rs':'1.18.1','chacha20':'0.9.1','aes':'0.8.4'}[name]
+                  if name=='aws-lc-rs':
+                      assert spec['features']==['non-fips','alloc'] and spec['default-features'] is False
+          meta=tomllib.loads(codec.read_text())
+          if 'aws-lc-rs' not in meta['dependencies']:
+              codec.write_text(codec.read_text()+''.join(f'{k} = {{ workspace = true }}\n' for k in ws))
+          else:
+              for k in ws: assert meta['dependencies'][k]=={'workspace':True}
+          PY
+          if grep -q 'name = "aws-lc-rs"' Cargo.lock; then
+            cargo metadata --locked --format-version 1 >/dev/null
+          else
+            cargo generate-lockfile
+          fi
+          python3 - <<'PY'
+          import tomllib
+          pkg={p['name']:p for p in tomllib.load(open('Cargo.lock','rb'))['package']}
+          for name,version in [('aws-lc-rs','1.18.1'),('chacha20','0.9.1'),('aes','0.8.4')]:
+              assert pkg[name]['version']==version
+              assert pkg[name]['source']=='registry+https://github.com/rust-lang/crates.io-index'
+              assert len(pkg[name]['checksum'])==64
+          assert set(pkg['wbd-codec']['dependencies'])=={'wbd-types','aws-lc-rs','chacha20','aes'}
+          print('actual resolved 3 direct crypto crate pins confirmed')
+          PY
+          mkdir -p crates/wbd-codec/tests
+          cat > crates/wbd-codec/tests/m0_crypto_dep_api.rs <<'RS'
+          use aws_lc_rs::aead::{Aad,LessSafeKey,Nonce,UnboundKey,AES_128_GCM,AES_256_GCM,CHACHA20_POLY1305};
+          fn test_aead(a: &'static aws_lc_rs::aead::Algorithm) {
+              let kb=vec![7u8;a.key_len()];
+              let k=LessSafeKey::new(UnboundKey::new(a,&kb).unwrap());
+              let nonce=Nonce::assume_unique_for_key([3u8;12]);
+              let aad=b"outer5-pn8";
+              let mut data=vec![1,2,3,0];
+              let tag=k.seal_in_place_separate_tag(nonce,Aad::from(&aad[..]),&mut data).unwrap();
+              data.extend_from_slice(tag.as_ref());
+              assert_eq!(k.open_in_place(nonce,Aad::from(&aad[..]),&mut data).unwrap(), &[1,2,3,0]);
+          }
+          #[test] fn aead_chacha(){test_aead(&CHACHA20_POLY1305);}
+          #[test] fn aead_aes128(){test_aead(&AES_128_GCM);}
+          #[test] fn aead_aes256(){test_aead(&AES_256_GCM);}
+          #[test] fn hp_chacha_eight(){
+              use chacha20::cipher::{KeyIvInit,StreamCipher,StreamCipherSeek};
+              let mut c=chacha20::ChaCha20::new_from_slices(&[0u8;32],&[0u8;12]).unwrap();
+              c.seek(7u64*64);
+              let mut mask=[0u8;8];
+              c.apply_keystream(&mut mask);
+              assert_ne!(mask,[0;8]);
+          }
+          #[test] fn hp_aes_eight(){
+              use aes::cipher::{generic_array::GenericArray,BlockEncrypt,KeyInit};
+              let c=aes::Aes128::new(GenericArray::from_slice(&[0u8;16]));
+              let mut b=GenericArray::clone_from_slice(&[0u8;16]);
+              c.encrypt_block(&mut b);
+              assert_ne!(&b[..8],&[0u8;8]);
+          }
+          RS
+          cargo test --release --locked -p wbd-codec --test m0_crypto_dep_api --no-run
+          binary="$(find target/release/deps -maxdepth 1 -type f -name 'm0_crypto_dep_api-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          mkdir r1-crypto-build
+          cp "$binary" r1-crypto-build/crypto.test
+          cp Cargo.lock r1-crypto-build/Cargo.lock
+          python3 - <<'PY'
+          import pathlib,json,hashlib,os,tomllib,base64
+          sha=lambda f:hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest()
+          p={v['name']:v for v in tomllib.load(open('Cargo.lock','rb'))['package']}
+          meta={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+                'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'rust':'1.85.1',
+                'lock_sha256':sha('Cargo.lock'),'binary_sha256':sha('r1-crypto-build/crypto.test'),
+                'versions':{n:p[n]['version'] for n in ('aws-lc-rs','chacha20','aes')},
+                'direct_checksums':{n:p[n]['checksum'] for n in ('aws-lc-rs','chacha20','aes')}}
+          pathlib.Path('r1-crypto-build/manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
+          print('BEGIN_ROOT_CARGO_LOCK_BASE64')
+          print(base64.b64encode(pathlib.Path('Cargo.lock').read_bytes()).decode())
+          print('END_ROOT_CARGO_LOCK_BASE64')
+          print(json.dumps(meta,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r1-crypto-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-crypto-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r1-crypto-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-crypto-build
+      - name: Verify frozen binary/lock/run source and execute five native API smokes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,tomllib,json,hashlib,os
+          meta=json.load(open('r1-crypto-build/manifest.json'))
+          sha=lambda f:hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest()
+          assert meta['source_sha']==os.environ['GITHUB_SHA']
+          assert meta['run_id']==os.environ['GITHUB_RUN_ID'] and meta['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert meta['rust']=='1.85.1'
+          assert meta['binary_sha256']==sha('r1-crypto-build/crypto.test')
+          assert meta['lock_sha256']==sha('r1-crypto-build/Cargo.lock')
+          pkg={p['name']:p for p in tomllib.load(open('r1-crypto-build/Cargo.lock','rb'))['package']}
+          for n,v in meta['versions'].items():
+              assert pkg[n]['version']==v and pkg[n]['checksum']==meta['direct_checksums'][n]
+          PY
+          chmod +x r1-crypto-build/crypto.test
+          mkdir r1-crypto-result
+          set +e
+          r1-crypto-build/crypto.test --nocapture > r1-crypto-result/tests.log 2>&1
+          exitcode=$?
+          set -e
+          cat r1-crypto-result/tests.log
+          TEST_EXIT="$exitcode" python3 - <<'PY'
+          import pathlib,json,os,hashlib,sys
+          m=json.load(open('r1-crypto-build/manifest.json'))
+          log=pathlib.Path('r1-crypto-result/tests.log').read_text()
+          n=log.count(' ... ok')
+          code=int(os.environ['TEST_EXIT'])
+          ok=code==0 and n==5
+          result={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
+                  'binary_sha256':m['binary_sha256'],'lock_sha256':m['lock_sha256'],
+                  'tests_passed':n,'exit_code':code,'result':'PASS' if ok else 'FAIL',
+                  'scope':'NATIVE_CRYPTO_API_SMOKES_ONLY_NOT_GO_ORACLE_OR_PRODUCT'}
+          pathlib.Path('r1-crypto-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          if not ok:sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r1-crypto-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-crypto-result/
+          if-no-files-found: warn
+          retention-days: 30
