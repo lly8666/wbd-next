@@ -14,6 +14,8 @@ pub mod record_replay;
 pub mod link_fec_wire;
 /// Bounded reassembly of already-authenticated LINK fragments.
 pub mod link_reassembly;
+/// Genuine old-Go RS(20,R) GF256 scalar parity and missing-only recovery.
+pub mod fec_math;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 

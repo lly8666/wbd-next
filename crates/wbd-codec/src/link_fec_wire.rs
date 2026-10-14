@@ -351,3 +351,8 @@ mod path_budget_tests;
 #[cfg(test)]
 #[path = "link_reassembly_tests.rs"]
 mod link_reassembly_tests;
+
+// R1 real GF(256) scalar math tests isolated beneath frozen R0 LINK subtree.
+#[cfg(test)]
+#[path = "fec_math_tests.rs"]
+mod fec_math_tests;
