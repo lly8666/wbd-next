@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "PINNED_GO_V3_V4_ADMISSION_GOLDEN",
+  "result": "PASS",
+  "scope": "exact pinned original Go realityfront V3 encoder/decoder plus R0 TEST-ONLY V4 24B admission/wire/exporter/HKDF probe; Linux X64 compiled tests only",
+  "source_sha": "87ad54b044e5faa974d47ba2a7015a75760328cd",
+  "harness_sha": "87ad54b044e5faa974d47ba2a7015a75760328cd",
+  "legacy_repository": "lly8666/wobuzhidao",
+  "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "legacy_package": "internal/realityfront",
+  "go_toolchain": "go1.23.12",
+  "workflow": ".github/workflows/r0-go-vectors.yml",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38509701636",
+  "run_id": 38509701636,
+  "run_attempt": 1,
+  "run_event": "push",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115675132618,
+  "consume_job_id": 115675294926,
+  "artifact_verified": true,
+  "artifact_verification_kind": "Actions consume job checked SOURCE, legacy SOURCE, Go build manifest, harness/source-lock SHA-256, binary size/hash and executed precompiled Go test binary; no separate ZIP download verified",
+  "build_artifact": {
+    "id": 11869028319,
+    "name": "r0-go-build-38509701636-1",
+    "size_bytes": 6628788,
+    "zip_sha256": "e8af6adcf01bec07ba49fe1ccc1525f38b5dc5226ab585b0f62d6b9273682960"
+  },
+  "result_artifact": {
+    "id": 11869257734,
+    "name": "r0-go-probe-result-38509701636-1",
+    "size_bytes": 1688,
+    "zip_sha256": "bd13f0a7f2d62dec692ba5560058befd35bd02aae69b152d5d471c44a8101071"
+  },
+  "test_counts": {
+    "top_level_pass": 5,
+    "top_level_fail": 0,
+    "exit_code": 0,
+    "compiled_once": true,
+    "consumer_rebuild": false
+  },
+  "tests": [
+    "TestR0PinnedGoV3RequestReplyGolden",
+    "TestR0V4Admission24ByteExtensionGolden",
+    "TestR0V4RejectMalformedAndDowngrade",
+    "TestR0GoV4ExporterAndHKDFDomainSeparation",
+    "TestR0OriginalGoCipherPolicyIsExplicit"
+  ],
+  "checks": {
+    "v3_original_go_request_reply": "STATIC_HEX_GOLDEN_MATCHED",
+    "v4_24b_wire": "STATIC_HEX_GOLDEN_MATCHED",
+    "v4_invalid_and_downgrade": "REJECTED_IN_PROBE",
+    "v4_exporter_and_hkdf": "FROZEN_ACTIONS_OBSERVED_DIGESTS_MATCHED",
+    "legacy_v3_rejects_v4": "CONFIRMED",
+    "three_v3_cipher_policies": "CONFIRMED"
+  },
+  "context_digest": {
+    "v4_sha256": "8f6e83e2e9d20452ffb40ed6461225373dd849a50f20fc6f25571aa5e42c51cd",
+    "v3_sha256": "25a0a67859e75aaeb9ecce39cf455d475e934a59e61c566d0246cfb63a9046b0"
+  },
+  "v4_kdf_digest": {
+    "chacha20-poly1305": {
+      "c2s": "ab52003578ce47f32c6ca03ac8223bc5077dbb03daac022a36c21f66f6db2253",
+      "s2c": "5835468c258178f6faa80fd0c66445a4aa7dcc913cc34b00ea971f055896ca01"
+    },
+    "aes-128-gcm": {
+      "c2s": "ef06ef058a13dac1738a5194af35f6b7171b1f092b76b78b6ebe0ea9546d053f",
+      "s2c": "5ccde5e9dcdc9de4278d492462f294ee248ccb860c8bc3159d8b474dffab6dd9"
+    },
+    "aes-256-gcm": {
+      "c2s": "c04520a8c61bd91bafb84efde2e7ba2abb9773102e0fed3d3e1dc4b34917d753",
+      "s2c": "1a946f21a125f7bc48ceb6cf39f8bee6b6387013c04746f37ae451dd21a5653b"
+    }
+  },
+  "prior_observation": {
+    "source_sha": "de585696c1ff0b199f2649340a567427295e438a",
+    "run_id": 38509549705,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "note": "First successful frozen-Go run produced exact digests; subsequent change pinned digests as assertions, then retested at current SOURCE"
+  },
+  "go_production_v4": "NOT_IMPLEMENTED",
+  "actual_tls_protected_v4_peer_handshake": "NOT_RUN",
+  "v4_authenticated_epoch_lease_rotation_and_replay": "NOT_RUN",
+  "rust_abi": "NOT_RUN",
+  "platform_abi": "NOT_RUN",
+  "arm_and_windows": "NOT_RUN",
+  "product_qualification": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Implement V4 protected admission into the actual Go control path with epoch/feature binding and real client-server TLS exchange/rejections, then Actions; only after it, Go/C platform ABI probe"
+}

@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0第一原子子任务的Rust共享类型/来源/单目标构建消费已进入实现；旧Go原始向量、V4 admission golden、C/平台ABI与三目标编译未验证，未达R0总done_when前M1–M4保持reserved。",
+  "next_decision": "R0已由精确旧Go SOURCE编译并验证V3实际wire和R0 Go测试适配V4 24B admission golden/KDF摘要（SOURCE 87ad54b，run38509701636）；下一步把V4纳入生产受TLS保护的Go admission并跑真实双方协商/拒绝测试，随后C/平台ABI和多目标build；M1–M4继续reserved。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
