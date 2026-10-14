@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-FEC-PARITY-READY-003: integrate an owned, strictly bounded, independent parity-ready queue and absolute-deadline wake/stop into existing std TX owner; never HOL-block fresh systematic or ordinary fresh; no FEC encoding, root deps or driver edit.",
-      "done_when": "Exact worker native compiled-once Rust r1_ tests cover first fresh before 32ms parity, parity-only wake at an absolute fake MonoNs deadline, repair/parity/fresh queue full+stop+return races, bounded parity service/fairness and no wrong early wake. Keep existing M1 tests passing, own S/evidence/H and Governance; real rtrb/loom/eventfd remains separate M0 dependency pin."
+      "goal": "R1-M1-READY-BATCH-004: Add an owner-local bounded ready-only <=32 batch drain to existing TxOwner, preserving Fresh first on first dispatch and alternating fair repair/parity progress; reuse caller-provided preallocated output storage, no per-batch ciphertext clone, and maintain absolute MonoNs deadlines/stop/return ownership. Must not implement syscalls or modify root dependency/driver.",
+      "done_when": "Exact own SOURCE compiled-once native r1_ tests: empty/1/32/33 packet batch capacity, full independent repair/parity vs fresh, first systematic ahead of due/undue parity, bounded secondary progress under persistent fresh, stop and last frozen loan/return. Keep all preceding M1 tests and own evidence S/H/Governance; no production SPSC/loom/eventfd claim."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2-M2-GLOBAL-SPARSE-002: implement purely in wbd-recovery a bounded process-wide multi-client/direction repair byte allocator with per-tunnel grants and aggregate hard ceilings, preserving existing per-direction 1s max(F/10,32768) semantics and sparse traffic never blocked merely by zero F.",
-      "done_when": "Own fake MonoNs r2_ native proofs over >=2 TunnelKeys, both directions, >=2 epochs, global limits, grant/expiry, double-completion, NotSent old-epoch refund, Uncertain conservative debit, client departure and no fresh HOL; source S/evidence/H and own Governance. No socket, Cargo/root or per-packet global mutex; M0 later composes actual submit path."
+      "goal": "R2-M2-GLOBAL-BATCH-COMPLETION-003: Extend pure wbd-recovery global allocator for bounded batch completion bookkeeping over independently reserved repair candidates from multiple TunnelKey/directions. Accept a platform-agnostic validated result representation (accepted prefix, at most one uncertain slot, suffix definitely NotAttempted only with evidence), never depend on platform crate. Preserve original-epoch NotSent refunds, Uncertain debit, duplicate/old callbacks fail closed and process hard quota; do not touch M0 engine sender.",
+      "done_when": "Exact own SOURCE compiled-once native r2_ fake-MonoNs tests for 0/1/32/33 mapping, accepted prefix vs ambiguous index and not-attempted suffix, two tunnels/both directions, epoch cutover, double completion, expired/departed grants and fresh not HOL. Preserve 22 previous r2_ tests; S/evidence/H and Governance. No raw sendmmsg product/driver or root Cargo changes."
     },
     {
       "id": "M3",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-FEC-BLOCKID-SCOPE-009: add a strictly bounded authenticated-input 32-bit FEC wire BlockID to 64-bit extended-ID reconstruction/retirement helper, preserving trusted epoch+direction identity and fail-closed half-space ambiguity, without changing AEAD/PN uniqueness or inventing a Go session exporter.",
-      "done_when": "Old-Go 56B metadata oracle and Rust native r1_ tests for ID 0/reserved, 0xffffffff→1 wrap, zero-length jumps, >halfspace ambiguity, 3s/10s expiration, retired floors, adversarial old delayed parity and wrong generation/direction; prove rejected or duplicate input cannot resurrect FEC delivered state. Own S/evidence/H; no root/G2 checker changes; full live V4 binding NOT_RUN."
+      "goal": "R1-M3-FEC-RETIRE-PRESSURE-010: Strengthen bounded FecRxOwner and FecBlockIdOwner heavy→compact→retired under capacity and timer pressure, including authenticated-input multi-block out-of-order systematic/final parity, no duplicate business resurrection and valid first-source delivery. Only codec own files; do not invent a trusted Go V4 exporter or modify authenticated input provenance.",
+      "done_when": "Exact SOURCE compiled-once native r1_ deterministic fake-MonoNs tests: 3s heavy/10s compact, late callbacks, small heavy/compact byte caps, BlockID wrap across trusted explicit generation, wrong epoch/direction/half-space, old parity and malformed final conflict, 20:R parity profile and known Go 56B oracle; rejected/late never reopen retired data. Retain earlier 67 r1_ tests and own S/evidence/H/Governance. New implementation only if failing counterexample proves necessary."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-LINUX-BATCH-TX-003: implement bounded Linux nonblocking ready-only batch kernel transmit semantics (sendmmsg MSG_DONTWAIT up to32), borrowed immutable full packet slices, accurately classify definite accepted prefix/NotSent vs uncertain, stop/borrow fence; prove using unprivileged Linux UDP loopback as a syscall fixture, NOT claim AF_PACKET live raw TCP.",
-      "done_when": "Native Linux Actions tests compile once and actually invoke kernel nonblocking sendmmsg on loopback where supported, verify 0/n/all accepted prefix, EAGAIN definite NotSent, interrupted/short ambiguous, immutable frozen payload, batch cap and stop/loan safety. If libc ABI declarations or pinned dependency cannot be audited inside owned crate, file exact root dependency request to M0 and do not fake syscall PASS. Own S/evidence/H; no raw AF_PACKET/Windows/cold admission/product claim."
+      "goal": "R1-M4-IPV4-TCP-RX-PARSE-004: Add strict, bounded IPv4/TCP one-full-DATA-packet byte parser for incoming carrier packets with trusted tuple/MTU/length/flags/options and independent IP/TCP pseudoheader checksum validation. Provide caller-anchored seq32→u64 nearest extension with fail-closed half-space ambiguity; do not implement arbitrary TCP stream reassembly or real AF_PACKET live reader.",
+      "done_when": "Exact own SOURCE compiled-once platform r1_ tests on byte-exact existing IPv4/TCP writer outputs, checksums independently, version/IHL/options/total length/data offset truncation, fragments, malformed flags, wrong tuple/source or checksum, MTU±1 and seq32 wrap/half-space ambiguity, back-to-back unrelated packet not HOL; no pre-auth payload ever treated as verified business. Own S/evidence/H/Governance. Kernel raw RX/Windows/physical NOT_RUN."
     }
   ]
 }
