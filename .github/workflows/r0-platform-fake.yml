@@ -1,0 +1,80 @@
+name: R0 fake clock platform driver contracts
+run-name: "M0|${{ github.sha }}|r0-fake-platform"
+
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "crates/wbd-platform/**"
+      - "r0/source-lock.json"
+      - "tools/r0_platform_bundle.py"
+      - ".github/workflows/r0-platform-fake.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r0-platform-fake-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compile native Rust platform/clock tests once
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo build --release -p wbd-platform --locked
+          cargo test --release -p wbd-platform --locked --no-run
+          test_bin="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_platform-*' -perm -u+x | head -n 1)"
+          test -n "$test_bin"
+          python tools/r0_platform_bundle.py pack \
+            --out r0-platform-fake-bundle \
+            --binary "$test_bin" \
+            --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" \
+            --rust "$(rustc --version)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-platform-fake-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-platform-fake-bundle/
+          if-no-files-found: error
+          retention-days: 30
+
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-platform-fake-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-platform-fake-bundle
+      - name: Verify source and binary SHA256; execute precompiled fake-driver anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_platform_bundle.py consume \
+            --manifest r0-platform-fake-bundle/manifest.json \
+            --source "$GITHUB_SHA" \
+            --run "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-platform-fake-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-platform-fake-result/
+          if-no-files-found: warn
+          retention-days: 30

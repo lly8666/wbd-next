@@ -10,5 +10,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "wbd-platform"
+version = "0.1.0"
+dependencies = [
+ "wbd-types",
+]
+
+[[package]]
 name = "wbd-types"
 version = "0.1.0"
