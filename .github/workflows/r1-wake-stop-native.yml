@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/r1-wake-stop-native.yml"
+      - ".github/workflows/r0-native-abi.yml"
+      - "tools/r0_abi_bundle.py"
+      - "tests/test_r0_abi_exact_filter.py"
       - "Cargo.toml"
       - "Cargo.lock"
       - "rust-toolchain.toml"
