@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-GLOBAL-SPARSE-002",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "fb916f2467d40b6cc0612d1182525a553d8e6872",
+  "result": "PASS_SCOPED_NATIVE_WITH_SOURCE_GOVERNANCE_RACE_FAILURE",
+  "scope": "Pure single-owner process global (TunnelKey,direction) repair grant allocator in wbd-recovery, no mutex/socket/cipher/root dependency; absolute aggregate cap prevents multiplying 32KiB sparse allowance across clients.",
+  "code_paths": [
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/lib.rs"
+  ],
+  "target": "x86_64-unknown-linux-gnu",
+  "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "tests": {
+    "native": {
+      "run_id": 38598294561,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 115970609343,
+      "consume_job_id": 115970766193,
+      "compiled_once": true,
+      "tests_passed": 22,
+      "tests_failed": 0,
+      "new_global_tests": 7,
+      "existing_r2_tests": 15,
+      "binary_sha256": "e98fb4ede203796f29d72a7cf09c224485d73765918df004cc86a3772eae9678",
+      "test_log_sha256": "3e55b5c517d10571d63d7232cc0118ee9fc6af18a665ac579477b6154dfeb408",
+      "build_artifact": {
+        "id": 11911317466,
+        "digest": "sha256:19630b7186cff1e1df0ee0e0e00ba4f4648794305eb87f901675986990942036",
+        "expires_at": "2026-11-13T16:28:13Z"
+      },
+      "result_artifact": {
+        "id": 11912395870,
+        "digest": "sha256:5ca9f57ff4a2a6b97488b0e0df54683d7d7384da32a5b49d4efe6b228e838a84",
+        "expires_at": "2026-11-13T16:28:27Z"
+      }
+    },
+    "historic_g2": {
+      "run_id": 38598294562,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 115970610957,
+      "consume_job_id": 115970928242,
+      "build_artifact_id": 11913115771,
+      "result_artifact_id": 11910647642,
+      "result_digest": "sha256:800393096bcc0a15d597785141abf41b141fb51b16c44ba6adc3dbf69f28e964"
+    },
+    "static": {
+      "run_id": 38598294559,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 115970609714,
+      "artifact_id": 11913060699,
+      "digest": "sha256:77ec358902b09cc45723b92692b71300cd02e4d3d865cc01f3acd803ab7dd469"
+    },
+    "source_governance": {
+      "run_id": 38598294660,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 115970611668,
+      "failed_step": "Attest live main role for actual branch and audit each worker commit path",
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "artifact_id": 11912995825,
+      "digest": "sha256:c7c997f4d5c3e8a81b94cd0d8fb9cb0e94c7d70c527f2c7009ef891b53b4f61b"
+    }
+  },
+  "tests_added": [
+    "r2_global_sparse_no_f_per_client_multiplier_and_two_directions",
+    "r2_global_grant_expiry_revoke_never_refunds_submitted_bytes",
+    "r2_global_notsent_refund_same_epoch_and_duplicate_completion",
+    "r2_global_old_epoch_notsent_does_not_fund_new_grant",
+    "r2_global_aggregate_cap_two_epochs_and_grant_boundary_fail_closed",
+    "r2_global_uncertain_timeout_client_departure_bounded_and_no_fresh_hol",
+    "r2_global_pending_timeout_retains_debt_and_no_stale_client_reuse"
+  ],
+  "global_contract": {
+    "one_owner_mutable_no_mutex": true,
+    "hard_cap_per_process_epoch": true,
+    "max_registration": true,
+    "grant_expiry_and_revoke": true,
+    "sparse_no_F": true,
+    "retire_reclaims_unused_only": true,
+    "actual_driver_preflight_required": true
+  },
+  "unverified": [
+    "Actual process actor ownership and cross-thread handoff",
+    "M1/M4 accepted-prefix send results and real MTU bytes",
+    "Integration of budgets with authenticated receipt in engine",
+    "Hotpath CPU and scheduling fairness",
+    "Real packet loss, full Go V4 auth, native non-Linux, physical and product"
+  ],
+  "source_governance_recheck": "PENDING_EVIDENCE_S_PUSH_CHECK",
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "go_v4": "DISABLED",
+  "next_action": "Observe the independent evidence S governance; then cursor-only H. M0 integrates shared real-world actor; no new M2 atom started."
+}

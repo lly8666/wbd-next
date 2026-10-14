@@ -9,3 +9,12 @@ Inject fake MonoNs into all APIs. Only confirmed first sends update F and are al
 New `r2_global_*` fake-clock tests cover 2+ tunnels, both directions, zero-F sparse, aggregate limit, grant expiry/revoke, old epoch refund, double completion, two epochs, bound/exhaustion, uncertain timeout, client exit and fresh independent delivery. Test-only FakeFrozen uses Arc<[u8]> to ensure candidates originate as original immutable ciphertext; no actual product crypto/network is run.
 
 Limitations passed to M0: process actor/routing verification, actual M1/M4 syscalls and completion provenance, actual shared driver byte accounting, production global process actor performance/fairness and live Go V4 admission remain separate NOT_RUN. This new pure owner-local state makes no performance or full-product claim. No new task is started after its native evidence S→H.
+
+## Actual exact-source Actions (2026-10-14 UTC)
+
+- [worker-native 38598294561 attempt 1](https://github.com/lly8666/wbd-next/actions/runs/38598294561): **SUCCESS**, compiled-once native Rust 1.85.1 x86_64, 22/22 scoped r2_ tests (15 previously validated receipt/local-budget + **7 newly authored process-global**). Binary SHA256 e98fb4ede203796f29d72a7cf09c224485d73765918df004cc86a3772eae9678, log SHA256 3e55b5c517d10571d63d7232cc0118ee9fc6af18a665ac579477b6154dfeb408. Build job115970609343 / consume115970766193, result artifact11912395870.
+- [G2 bootstrap 38598294562 attempt 1](https://github.com/lly8666/wbd-next/actions/runs/38598294562): **SUCCESS**; historical scaffold only, NOT counted toward new 22 tests.
+- [R0 static 38598294559 attempt 1](https://github.com/lly866/wbd-next/actions/runs/38598294559): **SUCCESS**; shared static qualification gate, not R2 product claim.
+- [Governance 38598294660 attempt 1](https://github.com/lly8666/wbd-next/actions/runs/38598294660): **FAILURE** at 'Attest live main role' with exact `ROLE_SCOPE_FAILED: control or source moved mid-audit` while M0 moved main. This is an immutable observed FAIL, NOT retroactively relabeled; no code compile/test failure in 22 native tests. Trigger fresh governance by the separately committed evidence S, review its actual completion before H.
+
+The original source remains fb916f2467d40b6cc0612d1182525a553d8e6872; downstream evidence S and cursor H are not asserted to have rerun native tests. Product/performance/physical/Go live admission NOT_RUN; production V4 DISABLED. M0 must compose actual process-shared actor and syscall/fresh scheduling and measure CPU separately.
