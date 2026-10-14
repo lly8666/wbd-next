@@ -4,26 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 18,
-  "checkpoint_sha": "8c1ab7254941fbeb9d495fb838f7bf8fc3953130",
+  "sequence": 28,
+  "checkpoint_sha": "decea19d16f28e61f73b37700c6f54476dcc913d",
   "progress": "partial",
-  "task_id": "G2-001",
-  "current_task": "M0已正式完成G2角色分配：main registry revision2、M1–M4 active/epoch1、四个非重叠工作分支及其bootstrap cursor seq0、worker源码/请求权限；Rust workspace五crate含wbd-recovery非产品脚手架、engine runtime/memory M1挂点。M0独占共享type/root ABI/Cargo/CI和集成，生产V4仍禁用。四个worker尚未由独立会话产生任何功能实现提交；真实Rust recovery/AEAD/FEC/网络引擎未完成。",
-  "why_now": "上一cursor seq17授权执行独立G2事务，用户确认继续并追问M0未来是否负责R系列：M0负责阶段集成、跨模块API/质量以及必要公共基础开发，独立模块工作必须由各自active worker完成。所有分支需可核对真实ref/cursor/测试，不将registry写入假作并发编码已发生。",
-  "done_when": "独立source S 83bd720...已建立四分支每个精确同源HEAD、role+cursor epoch1/revision2/seq0；native Actions实际编译5crate与独立consumer test 1/1 scaffold、R0历史回归及主线和分支Governance全部success；证据收据S 8c1ab72 Governance success、最终H仅更新M0 cursor。G2派工已完成，R0/产品仍partial。",
-  "next_action": "M0继续R系列公共接口与跨worker集成：协调M1 owner/arena、M2 recovery pure state、M3 path_budget/真实AEAD、M4 platform bridge各分支首项S→Actions→H，对Root Cargo/C API/共享wbd-types修改先登记G2影响再在main串行实施；首次各worker cursor seq0 checkpoint null需其本人第一笔S/H形成CLEAN。之后以真实SOURCE组合R1 Normal/off，不代写所有worker功能，不开启生产V4；用户可从各worker会话切入。当前无自动后台work。",
+  "task_id": "R2-M0-M2-ROOT-SYNC-001",
+  "current_task": "M0 reviewed one exact two-parent main→M2 worker sync without rewriting M2 history: checker permits M2 HEAD2cd993a only with main containing authentic receipt integration SOURCE29ebcb and corrected G2 historical selector. Main code SOURCE fbe331b7 Governance38557463199 60/60 Python unit suite, receipt S decea19 Governance38557719211 SUCCESS. M2 branch is not yet synchronized; pure 1s F/R/L budget task not started.",
+  "why_now": "M0 seq27 checkpointeb0fcdb→main565c17 only cursor-only H, Governance38556706852 SUCCESS/CLEAN. M2 at2cd993a seq2 diverged 4 behind main31 since base0845e7; M2 native pure receipt8/8 at SOURCE7b02154 already passed but older G2 whole-binary count fails; M0 main SOURCE29ebcb had exact 3/3 native reverse ChaCha authenticated feedback→M2 shadow and fixed G2 test filtered at Actions38555987719, issue #2 closed. Prior checker only special-case M3 merge, M2 cannot legally bring root fix to worker otherwise.",
+  "done_when": "Main code S fbe331b73c367c6fb3f75a477a9ada13784ef72b tools/worker_scope_ci.py allows exactly one M2 two-parent sync with first parent2cd993a and second a verified main ancestor that contains29ebcb; net tree comparison against second/main parent at most16 M2-authorized paths, no changed Cargo.toml/Cargo.lock/recovery Cargo.toml, unrelated merges denied. Tests/test_worker_scope_ci.py added exact role/ancestor/rename/path/bounds denial tests. Governance run38557463199 completed SUCCESS, 60/60 native Python governance unit tests PASSED; nonfatal live continuity subprocess exit1 still NOT_PASS. Evidence+project S decea19d16f28e61f73b37700c6f54476dcc913d governance38557719211 SUCCESS. H only M0 cursor. No worker ref modified and M2 own merge/not started, product/perf/physical NOT_RUN.",
+  "next_action": "M2 active writer only: re-fetch registry, M2 branch and main; if M2 HEAD still 2cd993a, make true 2-parent [2cd993a,new verified main], resulting diff vs main ONLY M2 paths <=16 and preserve root Cargo/lock; fast-forward expected worker ref without force. Then own precise SOURCE worker-native 8/8, G2 historical selector + Governance and impacted R0 regressions, evidence S and cursor-only H. Once successfully synced, independently implement pure per-direction F/R/L 1s R2 budget R2-M2-BUDGET-001 with sparse exemption, capped attempts, absolute resource bounds, 8MTU transition burst, fake-clock native tests. M0 next observes M2 actual S/H; issue#1 Go live admission remains separately open. Do not notify user of M2 readiness on reviewed gate alone; existing hourly condition watcher checks actual synchronization and worker test before informing.",
   "unverified": true,
-  "last_tested_source": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+  "last_tested_source": "fbe331b73c367c6fb3f75a477a9ada13784ef72b",
   "evidence_refs": [
-    "docs/evidence/M0/G2-worker-activation.json"
+    "docs/evidence/M0/R2-M2-ROOT-SYNC-001.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/G2-worker-activation-complete.md",
-    "docs/decisions/M0-G2-worker-activation.md",
+    "docs/decisions/M0-M2-recovery-root-sync.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "r0/qualification-manifest.json"
+    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "G2 SOURCE 83bd720368b9be68b3c4c94d7462d20cf4d796db main registry revision1→2，M1 work/m1-r1-runtime、M2 work/m2-r2-recovery、M3 work/m3-r1-codec、M4 work/m4-r1-platform均 active epoch1；四条branch HEAD均该SOURCE且各cursor seq0/phase planned/checkpoint null/revision2。native G2 build/consume Actions38531136641 jobs115743035789/115743154391 SUCCESS五crate cargo test --locked --workspace --no-run和实际1/1非产品恢复脚手架test，binary SHA928393d30db56245bf5ff6c0fc81b17742ce3a4e566f057759d49e635c24e16c、artifacts11877532760/11878102322。静态audit38531136490、主治理38531136491、分支M1 38531172259/M2 38531181545/M3 38531187784/M4 38531197940均SUCCESS；同SOURCE R0 Go/TLS/ABI/codec/record/LINK/FEC/fake/cross等10workflow全SUCCESS。收据S 8c1ab7254941fbeb9d495fb838f7bf8fc3953130治理38531728769 success。G2只授权可并行独立任务，当前0 worker功能交付、R0 10历史scope有44架构ID仅5部分39 NOT_RUN、真实RustAEAD/HP/recovery/OS I/O NOT_IMPLEMENTED、目标native WindowsARM/产品/性能/物理NOT_RUN；Go生产V4 DISABLED、M0仍负责公共基础与R系列集成。"
+  "partial_summary": "M0 remote START_HERE/AGENTS/PROJECT/registry revision2 M0 seq27 H565c17 main, M2 HEAD2cd993a seq2 four worker-only commits diverged main31 behind. M0 checkpointeb0fcd→HEAD565c only H Governance38556706852 SUCCESS; no pending runs/open PR. M2 native receipt CODE7b02154 8/8 Actions38538225302, historical G2 old38538225378 FAIL, ROOT issue#2 corrected on main and closed. Main authenticated Rust adapter CODE29ebcb 3/3 Actions38555987945 + matching G238555987719 success; issue#1 actual Go V4 exporter/lane binding OPEN. M0 S fbe331b reviewed exact M2 first-parent2cd993a second/main ancestor includes ingress29ebcb, main-relative M2-owned paths max16, root Cargo/lock/recovery manifest forbidden, unrelated merges rejected; M3 previous rule preserved. New synthetic positive/negative tests, Governance38557463199 60/60 PASS, nonfatal observe-live-continuity step exit1 not claimed PASS. Evidence/project S decea19d governance38557719211 success; M2 worker ref remained 2cd993a9675d38dcbe161bdebf093c0890734fdf, never touched by M0. Next M2 writer actual nonforce sync and SOURCE verification, then pure F/R/L 1s bounded budget with sparse exception. Go V4 production disabled, real network/performance/physical NOT_RUN."
 }

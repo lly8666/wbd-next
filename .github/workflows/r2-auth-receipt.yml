@@ -1,0 +1,123 @@
+name: M0 R2 authenticated receipt ingress and borrowed repair
+run-name: "M0|${{ github.sha }}|r2-auth-receipt"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r2-auth-receipt.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-recovery/**"
+      - "crates/wbd-codec/**"
+      - "crates/wbd-platform/**"
+      - "crates/wbd-types/**"
+permissions:
+  contents: read
+concurrency:
+  group: r2-auth-receipt-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compile once actual M0/M1/M2/M3/M4 Rust R2 ingress test
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo test --release --locked -p wbd-engine --test r2_receipt_ingress --no-run
+          binary="$(find target/release/deps -maxdepth 1 -type f -name 'r2_receipt_ingress-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          mkdir r2-auth-build
+          cp "$binary" r2-auth-build/ingress.test
+          python3 - <<'PY'
+          import os,hashlib,pathlib,json
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          paths=['crates/wbd-engine/src/recovery_ingress.rs',
+                 'crates/wbd-engine/tests/r2_receipt_ingress.rs',
+                 'crates/wbd-recovery/src/receipt.rs',
+                 'crates/wbd-codec/src/record_crypto.rs',
+                 'crates/wbd-engine/src/memory/mod.rs',
+                 'crates/wbd-platform/src/r1.rs']
+          m={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
+             'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+             'toolchain':'1.85.1','target':'x86_64-unknown-linux-gnu',
+             'binary_sha256':sha('r2-auth-build/ingress.test'),
+             'lock_sha256':sha('Cargo.lock'),
+             'inputs':{p:sha(p) for p in paths},
+             'scope':'M0_IN_PROCESS_REAL_M3_AUTH_CONTROL_TO_M2_REAL_FROZEN_RECEIPT_AND_M4_ATTEMPTS_NOT_PRODUCT'}
+          pathlib.Path('r2-auth-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r2-auth-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-auth-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r2-auth-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-auth-build
+      - name: Check identical native Rust binary and source then verify three real ingress gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib
+          m=json.load(open('r2-auth-build/manifest.json'))
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert m['source_sha']==os.environ['GITHUB_SHA']
+          assert m['run_id']==os.environ['GITHUB_RUN_ID'] and m['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert m['target']=='x86_64-unknown-linux-gnu' and m['toolchain']=='1.85.1'
+          assert sha('r2-auth-build/ingress.test')==m['binary_sha256']
+          assert sha('Cargo.lock')==m['lock_sha256']
+          for p,s in m['inputs'].items(): assert sha(p)==s,p
+          PY
+          chmod +x r2-auth-build/ingress.test
+          mkdir -p r2-auth-result
+          set +e
+          r2-auth-build/ingress.test --nocapture >r2-auth-result/tests.log 2>&1
+          code=$?
+          set -e
+          cat r2-auth-result/tests.log
+          TEST_EXIT="$code" python3 - <<'PY'
+          import os,pathlib,json,hashlib,sys
+          log=pathlib.Path('r2-auth-result/tests.log').read_text()
+          m=json.load(open('r2-auth-build/manifest.json'))
+          n=log.count(' ... ok')
+          ec=int(os.environ['TEST_EXIT'])
+          ok=ec==0 and n==3 and '3 passed; 0 failed' in log
+          out={'source_sha':m['source_sha'],'run_id':m['run_id'],
+               'attempt':m['attempt'],'binary_sha256':m['binary_sha256'],
+               'lock_sha256':m['lock_sha256'],
+               'log_sha256':hashlib.sha256(log.encode()).hexdigest(),
+               'native_test_count':n,'exit_code':ec,'result':'PASS' if ok else 'FAIL',
+               'scope':'R2_M0_IN_PROCESS_AUTHENTICATED_FEEDBACK_AND_SHADOW_HANDOFF_ONLY',
+               'not_qualified':'LIVE_GO_V4_ADMISSION;AUTHENTICATED_SESSION_KEY_EXPORT;NETWORK_RX;GLOBAL_1S_BUDGET;PRODUCTION_V4;PERFORMANCE;PHYSICAL'}
+          pathlib.Path('r2-auth-result/result.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          if not ok:sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r2-auth-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-auth-result/
+          if-no-files-found: warn
+          retention-days: 30

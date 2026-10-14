@@ -48,4 +48,149 @@ class WorkerRoleTests(unittest.TestCase):
             with self.assertRaises(g.ContractError):
                 w.verify_worker_commits(role,[edge])
 
+    def test_one_m0_reviewed_m3_main_sync_preserves_worker_scope(self):
+        role=dict(roles()["roles"][1])
+        role["id"]="M3"
+        role["allowed_paths"]=["crates/wbd-codec/", "docs/evidence/M3/",
+                                ".governance/workstreams/M3/cursor.json"]
+        merge={"parents":2,"is_main_ancestor":False,
+               "first_parent":w.M3_APPROVED_PRE_SYNC_HEAD,
+               "approved_main_sync":True,
+               "paths":["Cargo.lock"], # Conventional merge first-parent delta is NOT authority.
+               "sync_paths":["crates/wbd-codec/src/path_budget.rs",
+                             ".governance/workstreams/M3/cursor.json"]}
+        self.assertEqual(w.verify_worker_commits(role,[merge]),1)
+        for mutation in [
+            {"approved_main_sync":False},
+            {"first_parent":"f"*40},
+            {"sync_paths":["Cargo.lock"]},
+            {"sync_paths":["crates/wbd-codec/Cargo.toml"]},
+            {"sync_paths":["crates/wbd-engine/src/lib.rs"]},
+            {"sync_paths":[]},
+        ]:
+            with self.subTest(mutation=mutation), self.assertRaises(g.ContractError):
+                w.verify_worker_commits(role,[dict(merge,**mutation)])
+        with self.assertRaises(g.ContractError):
+            w.verify_worker_commits(roles()["roles"][1],[merge])
+
+    def test_m3_main_sync_remote_tree_and_root_pins(self):
+        main_parent = "b" * 40
+        control = "c" * 40
+        proposed = "d" * 40
+        class Api:
+            def __init__(self):
+                self.path="crates/wbd-codec/src/path_budget.rs"
+                self.lock_status="ahead"
+                self.first_parent=w.M3_APPROVED_PRE_SYNC_HEAD
+                self.total=8
+            def get(self, endpoint):
+                if endpoint.startswith("commits/"):
+                    return {"parents":[{"sha":self.first_parent},{"sha":main_parent}]}
+                if endpoint.startswith("compare/"):
+                    query=endpoint.partition("?")[0]
+                    if query=="compare/"+main_parent+"..."+control:
+                        return {"status":"ahead"}
+                    if query=="compare/"+w.M0_CRYPTO_LOCK_SOURCE+"..."+main_parent:
+                        return {"status":self.lock_status}
+                    if query=="compare/"+main_parent+"..."+proposed:
+                        return {"status":"ahead","total_commits":self.total,
+                                "commits":[{} for _ in range(self.total)],
+                                "files":[{"filename":self.path}]}
+                raise AssertionError("unexpected "+endpoint)
+        role=dict(roles()["roles"][1])
+        role["id"]="M3"
+        role["allowed_paths"]=["crates/wbd-codec/"]
+        self.assertEqual(w.review_m3_main_sync(Api(),role,proposed,control),
+                         ["crates/wbd-codec/src/path_budget.rs"])
+        for field, value in [
+            ("path","Cargo.lock"),
+            ("path","crates/wbd-codec/Cargo.toml"),
+            ("path",".github/workflows/governance.yml"),
+            ("lock_status","diverged"),
+            ("first_parent","e"*40),
+            ("total",13)
+        ]:
+            api=Api()
+            setattr(api,field,value)
+            with self.subTest(field=field), self.assertRaises(g.ContractError):
+                w.review_m3_main_sync(api,role,proposed,control)
+
+    def test_one_m0_reviewed_m2_merge_scope_and_role_rejects(self):
+        role=dict(roles()["roles"][1])
+        role["id"]="M2"
+        role["allowed_paths"]=[
+            "crates/wbd-recovery/","docs/devlog/M2/","docs/evidence/M2/",
+            ".governance/workstreams/M2/cursor.json",
+        ]
+        merge={"parents":2,"is_main_ancestor":False,
+               "first_parent":w.M2_APPROVED_PRE_SYNC_HEAD,
+               "approved_main_sync":True,
+               "paths":["Cargo.toml"], # first-parent merge diff is not authority
+               "sync_paths":["docs/evidence/M2/R2-M2-RECEIPT-001.json",
+                             ".governance/workstreams/M2/cursor.json"]}
+        self.assertEqual(w.verify_worker_commits(role,[merge]),1)
+        for mutation in [
+            {"approved_main_sync":False},
+            {"first_parent":"f"*40},
+            {"sync_paths":[]},
+            {"sync_paths":["Cargo.lock"]},
+            {"sync_paths":["Cargo.toml"]},
+            {"sync_paths":["crates/wbd-recovery/Cargo.toml"]},
+            {"sync_paths":["crates/wbd-codec/src/record_crypto.rs"]},
+            {"sync_paths":[".governance/workstreams/M1/cursor.json"]},
+            {"sync_paths":["docs/evidence/M2/"+str(i) for i in range(17)]},
+        ]:
+            with self.subTest(mutation=mutation), self.assertRaises(g.ContractError):
+                w.verify_worker_commits(role,[dict(merge,**mutation)])
+        with self.assertRaises(g.ContractError):
+            w.verify_worker_commits(roles()["roles"][1],[merge])
+
+    def test_m2_main_sync_remote_ancestry_and_changed_tree(self):
+        main_parent = "b"*40
+        control = "c"*40
+        proposal = "d"*40
+        class Api:
+            def __init__(self):
+                self.file="docs/evidence/M2/R2-M2-RECEIPT-001.json"
+                self.expected_first=w.M2_APPROVED_PRE_SYNC_HEAD
+                self.ingress_status="ahead"
+                self.main_status="ahead"
+                self.commits=5
+                self.old_path=None
+            def get(self, endpoint):
+                if endpoint.startswith("commits/"):
+                    return {"parents":[{"sha":self.expected_first},
+                                       {"sha":main_parent}]}
+                if endpoint.startswith("compare/"):
+                    query=endpoint.partition("?")[0]
+                    if query=="compare/"+main_parent+"..."+control:
+                        return {"status":self.main_status}
+                    if query=="compare/"+w.M0_M2_INGRESS_SOURCE+"..."+main_parent:
+                        return {"status":self.ingress_status}
+                    if query=="compare/"+main_parent+"..."+proposal:
+                        return {"status":"ahead","total_commits":self.commits,
+                                "commits":[{} for _ in range(self.commits)],
+                                "files":[{"filename":self.file,
+                                          "previous_filename":self.old_path}]}
+                raise AssertionError("unexpected endpoint "+endpoint)
+        role=dict(roles()["roles"][1])
+        role["id"]="M2"
+        role["allowed_paths"]=["docs/evidence/M2/"]
+        self.assertEqual(w.review_m2_main_sync(Api(),role,proposal,control),
+                         ["docs/evidence/M2/R2-M2-RECEIPT-001.json"])
+        for field,value in [
+            ("expected_first","e"*40),
+            ("ingress_status","diverged"),
+            ("main_status","behind"),
+            ("commits",13),
+            ("file","Cargo.lock"),
+            ("file","crates/wbd-recovery/Cargo.toml"),
+            ("file","tools/worker_scope_ci.py"),
+            ("old_path","crates/wbd-engine/src/lib.rs"),
+        ]:
+            api=Api()
+            setattr(api,field,value)
+            with self.subTest(field=field),self.assertRaises(g.ContractError):
+                w.review_m2_main_sync(api,role,proposal,control)
+
 if __name__=="__main__": unittest.main()

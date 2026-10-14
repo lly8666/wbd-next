@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R2-M0-M2-INGRESS-001",
+  "branch": "main",
+  "source_sha": "29ebcb19863602ae1fc059fa3524837e90944da9",
+  "result": "PASS_IN_PROCESS_AUTHENTICATED_RECEIPT_HANDOFF_ONLY",
+  "artifact_verified": true,
+  "role": {
+    "reservation_revision": 2,
+    "assignment_epoch": 1
+  },
+  "scope": "M0 M1 M2 M3 M4 actual Rust in-process Health AEAD Open to WBC4 control/typed receipt, one M1 frozen record released after verified feedback, bounded repair submit results; NOT live Go V4 production",
+  "m2_import": {
+    "branch": "work/m2-r2-recovery",
+    "head": "2cd993a9675d38dcbe161bdebf093c0890734fdf",
+    "code_source": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+    "native_worker_run": 38538225302,
+    "native_worker_tests_passed": 8,
+    "import_files": {
+      "crates/wbd-recovery/src/lib.rs": "e70c66c2d00397b19acab08f79f0f5e5ea65ee9a",
+      "crates/wbd-recovery/src/receipt.rs": "0612175305e8c884ce6c8eff215be115955e344a"
+    },
+    "worker_branch_written_by_M0": false
+  },
+  "failed_first_source": {
+    "sha": "40fb0d95e3101186704a6f38addab5eecc84cc51",
+    "cause": "M0-owned integration test E0502 indexing corrupt[corrupt.len()-1] mutable and immutable borrow, not a crypto/receipt runtime failure",
+    "failed_runs": {
+      "native_ingress": 38555876322,
+      "g2_bootstrap": 38555876395,
+      "native_abi": 38555876452
+    },
+    "unchanged_history": "FAILED"
+  },
+  "fix": {
+    "sha": "29ebcb19863602ae1fc059fa3524837e90944da9",
+    "path": "crates/wbd-engine/tests/r2_receipt_ingress.rs",
+    "change": "local last index before exclusive mutable byte tamper",
+    "rust_toolchain": "1.85.1"
+  },
+  "native": {
+    "run_id": 38555987945,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 115825118023,
+    "consume_job_id": 115825415412,
+    "binary_sha256": "648ded828e734f176864a83e446d2a7a37c78b549a7638a572c1158b5b141bac",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "log_sha256": "b5e22c376b00ce15932c8b4ecf625e696d46eec5ba9db8591aa0701fecdc3b8d",
+    "build_artifact": {
+      "id": 11889368004,
+      "digest": "sha256:b2b0d97f2f0c658d00f85d34e1d4af1ab672bed2d6ddf24c0949e7f17483d6e1"
+    },
+    "result_artifact": {
+      "id": 11889198119,
+      "digest": "sha256:4f86a50bf5b5bb08a8a5386ad0b6436f0c2ff78122ca45f56c78a3b64de23a47"
+    },
+    "native_tests": 3,
+    "failed": 0,
+    "tests": [
+      "r2_m0_real_authenticated_health_only_releases_original_m1_shadow",
+      "r2_m0_bad_lane_epoch_or_key_never_authorizes_receipt",
+      "r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack"
+    ],
+    "scope_checks": [
+      "real M3 direction-specific ChaCha20-Poly1305 Seal/Open before WBC4 parse",
+      "wrong key, bad auth tag, wrong kind and lane/epoch mismatch do not release M2 shadow",
+      "M2 typed receipt uses M1 Arc-shared actual FrozenRecord and verifies same ciphertext pointer on Release",
+      "M4 submit_ready handles Accepted/Uncertain/NotSent with no re-Seal and no false ACK",
+      "completed syscall is not authenticated feedback",
+      "original M2 isolated 8/8 unmodified"
+    ]
+  },
+  "same_source_regressions": {
+    "total": 7,
+    "success": 7,
+    "runs": [
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38555987782,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "governance",
+        "run_id": 38555987656,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run_id": 38555987945,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "r1-normal-off-chacha",
+        "run_id": 38555987928,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38555987719,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38555987729,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38555987832,
+        "conclusion": "success",
+        "attempt": 1
+      }
+    ],
+    "g2_issue_2": {
+      "issue": "https://github.com/lly8666/wbd-next/issues/2",
+      "first_historical_failure": {
+        "source": "7b02154e04b95452e40964c3b7d58368e534e0f5",
+        "run": 38538225378,
+        "conclusion": "failure",
+        "reason": "original G2 full-binary count check despite 9/9 actual test pass"
+      },
+      "current_main_tool": "tools/g2_bootstrap_bundle.py",
+      "actual_argument": "--exact tests::bootstrap_is_not_product_qualification",
+      "current_run": 38555987719,
+      "current_run_conclusion": "success",
+      "m2_worker_branch_sync": "NOT_DONE"
+    }
+  },
+  "open_issue_1": {
+    "issue": "https://github.com/lly8666/wbd-next/issues/1",
+    "scope_resolved": "RUST_IN_PROCESS_TYPED_AUTHENTICATED_FEEDBACK_TO_M2_SHADOW",
+    "still_unverified": "ACTUAL_GO_V4_ADMISSION_KDF_EPOCH_BINDING_NETWORK_REVERSE_KEYS"
+  },
+  "not_qualified": {
+    "Go_admission": "NOT_RUN",
+    "rust_from_live_admission_identity": "NOT_RUN",
+    "feedback_over_real_network": "NOT_RUN",
+    "rx_replay_bitmap": "NOT_IMPLEMENTED",
+    "global_1s_F_R_L_budget": "NOT_RUN",
+    "complete_R2_product": "NOT_RUN",
+    "production_v4": "DISABLED",
+    "cross_platform_native_execution": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "M0 review and authorize one specific non-force M2 branch main-sync after worker head2cd993a; current worker branch diverged and carries pre-fix G2 tool. Then M2 independent pure F/R/L epoch accounting atom under existing owned crates/wbd-recovery with Actions, not live production. M0 no worker ref writes."
+}

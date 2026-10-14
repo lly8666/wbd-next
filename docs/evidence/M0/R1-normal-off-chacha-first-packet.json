@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-NORMAL-OFF-CHACHA-001",
+  "source_sha": "873169078353fcf6b653e613bd6181eaf0da4c5e",
+  "result": "PASS",
+  "artifact_verified": true,
+  "pass_scope": "R1_NORMAL_FIXED_FEC_OFF_CHACHA_AUTHENTICATED_FIRST_PACKET_IN_PROCESS_NATIVE_LINUX_X64",
+  "repository": "lly8666/wbd-next",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "s_code_source": "873169078353fcf6b653e613bd6181eaf0da4c5e",
+  "code_inputs": {
+    "M1": {
+      "head": "e511f13359afa267a7ca7dc02f25892ef8f1d3ce",
+      "tested_source": "46571e69baa83bd01061ccbf03f03de7f4ab277d",
+      "native_test_run": 38538248506,
+      "paths": [
+        "crates/wbd-engine/src/memory/mod.rs",
+        "crates/wbd-engine/src/runtime/mod.rs"
+      ],
+      "qualification": "LOCAL_R1_OWNER_ONLY"
+    },
+    "M3": {
+      "head": "ef35e6d886013c7be3da5fcdd88caa42b6de3f5b",
+      "tested_source": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
+      "native_test_run": 38550461756,
+      "paths": [
+        "crates/wbd-codec/src/record_crypto.rs",
+        "crates/wbd-codec/src/record_crypto_tests.rs",
+        "crates/wbd-codec/src/record_frame.rs",
+        "crates/wbd-codec/src/link_fec_wire.rs",
+        "crates/wbd-codec/src/path_budget.rs",
+        "crates/wbd-codec/src/path_budget_tests.rs"
+      ],
+      "qualification": "REAL_CHACHA_RECORD_AND_BUDGET_ONLY"
+    },
+    "M4": {
+      "head": "a8dd64dd25817b695280274495e1350ceccc4cae",
+      "tested_source": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+      "native_test_run": 38538117103,
+      "paths": [
+        "crates/wbd-platform/src/r1.rs"
+      ],
+      "qualification": "BOUNDED_DRIVER_LEDGER_PLUS_SEPARATE_UDP_SMOKE_ONLY"
+    }
+  },
+  "main_integration_paths": [
+    "crates/wbd-engine/src/memory/mod.rs",
+    "crates/wbd-engine/src/runtime/mod.rs",
+    "crates/wbd-codec/src/lib.rs",
+    "crates/wbd-codec/src/record_crypto.rs",
+    "crates/wbd-codec/src/record_crypto_tests.rs",
+    "crates/wbd-codec/src/record_frame.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs",
+    "crates/wbd-codec/src/path_budget.rs",
+    "crates/wbd-codec/src/path_budget_tests.rs",
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-platform/src/r1.rs",
+    "crates/wbd-engine/tests/r1_normal_off_chacha.rs",
+    ".github/workflows/r1-normal-off-chacha.yml"
+  ],
+  "M0_updated_worker_refs": "NONE",
+  "native_first_packet": {
+    "workflow": ".github/workflows/r1-normal-off-chacha.yml",
+    "run_id": 38552615723,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "status": "completed",
+    "build_job_id": 115813956843,
+    "consume_job_id": 115814309653,
+    "test_binary_sha256": "189c07e6949f8918e76676329258a50f983a8ae14baef5c539295702c4249e63",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "test_log_sha256": "5912b055c18af209e73580e67c81b56c8b116454bbcda4c73a70723fa144edcc",
+    "build_artifact": {
+      "id": 11887855168,
+      "digest": "sha256:0621d6ca356b83e486cdb727ad63a3cc0f04161690928429228cf0a744496152"
+    },
+    "result_artifact": {
+      "id": 11887422163,
+      "digest": "sha256:5b019b604a90bfdea234781e4266847dd7aba2a90dbf6cfe1c2c07706c8e8b8d"
+    },
+    "native_platform": "Linux x64 Ubuntu-24.04",
+    "rust": "1.85.1",
+    "compiled_once": true,
+    "separate_consumer_hash_checked": true,
+    "top_level_passed": 2,
+    "failed": 0,
+    "tests": [
+      "r1_normal_off_chacha_real_owner_seal_frozen_ready_driver_authenticated_delivery",
+      "r1_normal_off_chacha_invalid_capacity_burns_pn_without_publishing_business"
+    ],
+    "gates": [
+      "bounded M1 unique allocation/frozen generation and Arc-shared immutable ciphertext",
+      "M3 real ChaCha20-Poly1305 in-place Seal/Open, 8B HP, failure PN burned",
+      "Normal fixed FEC off exactly one 31B record overhead, no extra LINK20 or FEC56",
+      "M1 fresh TX prioritizes over queued repair, same frozen record for shadow, one seal and one send",
+      "M4 readonly ReadyPacketSink with accepted_prefix=1 (NOT peer ACK)",
+      "RX M1 owner receive, M3 authentication success before payload delivery",
+      "tamper causes Authentication err and zero application delivery",
+      "stop with retained frozen loan does not release before driver-like completion"
+    ]
+  },
+  "regression": {
+    "same_source_shas_required": true,
+    "total_workflows": 10,
+    "completed_success": 10,
+    "actual": [
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38552615756,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance",
+        "run_id": 38552615684,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38552615659,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-link-fec-mtu",
+        "run_id": 38552615730,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r1-normal-off-chacha",
+        "run_id": 38552615723,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38552615774,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-fake-platform",
+        "run_id": 38552615848,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-wire-codec",
+        "run_id": 38552615746,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-record-wire-framing",
+        "run_id": 38552615733,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38552615735,
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ],
+    "cross_target_native_execution": "NOT_RUN"
+  },
+  "not_qualified": {
+    "real_go_V4_admission_and_exporter": "NOT_RUN",
+    "real_tcp_like_raw_network_driver": "NOT_RUN",
+    "windows_arm_native_execution": "NOT_RUN",
+    "aes_128_256_GCM": "NOT_IMPLEMENTED",
+    "rx_replay_bitmap": "NOT_IMPLEMENTED",
+    "fec_on_game": "NOT_RUN",
+    "go_production_v4": "DISABLED_FAIL_CLOSED",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "full_product": "NOT_RUN"
+  },
+  "next_action": "Review M3 next AES/bitmap branch S/H after exact re-fetch, then add genuine RX replay/dup and target-native platform tests only with owner-delivered source; R1 in-process ChaCha first packet scope completed."
+}

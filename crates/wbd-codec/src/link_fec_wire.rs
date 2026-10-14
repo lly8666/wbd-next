@@ -340,3 +340,9 @@ mod tests {
         assert_eq!(inspect_fec_header(&parity),Err(WireError::InvalidShard));
     }
 }
+
+// R1 tests are scoped under LINK so R0 legacy codec --skip link_fec_wire::
+// still runs EXACTLY its historical 13-test list, without root CI edits.
+#[cfg(test)]
+#[path = "path_budget_tests.rs"]
+mod path_budget_tests;
