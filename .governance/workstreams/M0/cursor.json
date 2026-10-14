@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 1,
   "assignment_epoch": 1,
-  "sequence": 13,
-  "checkpoint_sha": "0b4f004e719de3b2275b3dfcf8f8e7fdd81bcc9d",
+  "sequence": 14,
+  "checkpoint_sha": "e8b8125022333cb9818e734973da8ec179400f95",
   "progress": "partial",
   "task_id": "R0-CONTRACT-001",
   "current_task": "R0四crate types/codec/platform/engine共享骨架、旧Go V3/V4测试受保护TLS与Go生产V4 fail-closed、Linux原生Go↔C↔Rust ABI sentinel、fake-platform与Windows/ARM cross-build已有精确Actions；本轮修正历史source-lock并建立唯一8项历史gate/44案例manifest、Actions静态防漂移审计，发现并修复source-lock没有触发cross工作流的漏项，S2两个跨目标编译+消费重跑成功。R0仍为foundation partial，Rust真实数据面未完成。",
-  "why_now": "cursor seq12唯一任务是对账 stale R0_BOOTSTRAP types-only source-lock 与既有四crate、固定Go SOURCE/工具链、历史run和44个架构反例ID，避免正式分工按错误的未跑/已测状态决策。审计中发现cross输入锁未列push.paths，需作为同原子可信来源修复。",
+  "why_now": "上一cursor-only H b9bb7aef 的Governance run38521896495失败，精确原因是R0新evidence缺source_sha顶层字段。修复S e8b8125补齐并写入原始失败事实，静态审计38522117472和Governance38522117589均成功；本H仅重新确认来源正确的收据，不改变R0任务/资格。",
   "done_when": "source-lock与实际workspace/所有使用者workflow一致，8项历史gate可回溯具体SOURCE/run、44个反例的部分与未跑不虚构完整PASS；待按模块00/05/06/07补最小record/LINK/FEC wire与真实Go oracle，形成可靠基础后才独立评估R0退出及正式角色分配。",
   "next_action": "在R0围绕00-CONTRACTS与05-RECORD-CRYPTO，读取固定旧Go实际record wire格式/向量，以最小Rust record framing 外头/长度/PN与kind显式偏移golden、错误预算和短输入拒绝为一个原子任务；不得用伪AEAD替代真实开密或宣称三cipher record已经实现。只在Actions编译一次+独立消费验证，之后安排LINK/FEC wire/MTU底座；Go生产V4继续DISABLED、M1–M4仍reserved。",
   "unverified": true,
@@ -26,5 +26,5 @@
     "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "R0锁与manifest首实质S c66416c837108a2538394a446f3b91a18fd213e6：现有四crate/types/codec/platform/engine，旧Go SHA a7a82db31fe736ffedee330795a3234d358f1984/Go1.23.12，Rust1.85.1，8历史gate、44架构反例仅B01/R01/I01/C01 4部分fake/40 NOT_RUN。该SOURCE审计38521076297、Go control38521076319、Go vectors38521076265、V4TLS38521076264、Rusttypes38521076283、platform38521076295、nativeABI38521076275、codec38521076328、governance38521076251均SUCCESS；发现cross workflow未监听source-lock不虚称此SOURCE有cross。第二修复S 35d599b288ea19c3cead36b22ec561e4820ef38e：审计38521306796 SUCCESS、WindowsARM cross build+consume38521307048四job成功、governance38521306875成功，Windows/ARM目标native执行NOT_RUN。证据收据S 0b4f004e719de3b2275b3dfcf8f8e7fdd81bcc9d 静态审计38521787846和Governance38521787840 SUCCESS。R0=partial，真实Rust record AEAD/LINK/FEC/engine/OS IO未实现，生产V4 features0 fail-closed，产品/性能/物理NOT_RUN，M1–M4 reserved。"
+  "partial_summary": "R0锁与manifest首实质S c66416c837108a2538394a446f3b91a18fd213e6：现有四crate/types/codec/platform/engine，旧Go SHA a7a82db31fe736ffedee330795a3234d358f1984/Go1.23.12，Rust1.85.1，8历史gate、44架构反例仅B01/R01/I01/C01 4部分fake/40 NOT_RUN。该SOURCE审计38521076297、Go control38521076319、Go vectors38521076265、V4TLS38521076264、Rusttypes38521076283、platform38521076295、nativeABI38521076275、codec38521076328、governance38521076251均SUCCESS；发现cross workflow未监听source-lock不虚称此SOURCE有cross。第二修复S 35d599b288ea19c3cead36b22ec561e4820ef38e：审计38521306796 SUCCESS、WindowsARM cross build+consume38521307048四job成功、governance38521306875成功，Windows/ARM目标native执行NOT_RUN。证据收据S 0b4f004e719de3b2275b3dfcf8f8e7fdd81bcc9d 静态审计38521787846和Governance38521787840 SUCCESS。R0=partial，真实Rust record AEAD/LINK/FEC/engine/OS IO未实现，生产V4 features0 fail-closed，产品/性能/物理NOT_RUN，M1–M4 reserved。 恢复事实：首个cursor-only H b9bb7aef5a76ec8fff0085297744b5a7de64dad1 的Governance38521896495 FAILED于证据SOURCE字段缺失；后续实质S e8b8125022333cb9818e734973da8ec179400f95补 evidence.source_sha=35d599b288ea19c3cead36b22ec561e4820ef38e及失败日志，静态审计38522117472与治理38522117589均SUCCESS。本cursor seq14 checkpoint该修复S；生产V4仍禁用，R0 partial。"
 }
