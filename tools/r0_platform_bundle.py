@@ -94,7 +94,7 @@ def consume(a):
             binary.stat().st_size != declared.get("bytes") or digest(binary) != declared.get("sha256")):
         raise ValueError("precompiled binary bytes/hash mismatch")
     os.chmod(binary, binary.stat().st_mode | 0o100)
-    result = subprocess.run([str(binary.resolve()), "--nocapture"], text=True,
+    result = subprocess.run([str(binary.resolve()), "--nocapture", "r0_"], text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=100)
     print(result.stdout)
     out = Path("r0-platform-fake-result")

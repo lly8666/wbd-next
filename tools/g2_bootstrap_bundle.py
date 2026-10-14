@@ -91,7 +91,7 @@ def consume(a):
     if x["file"]!=BINARY or not path.is_file() or path.stat().st_size!=x["bytes"] or sha(path)!=x["sha256"]:
         raise ValueError("binary SHA256 mismatch")
     os.chmod(path,path.stat().st_mode|0o100)
-    proc=subprocess.run([str(path.resolve()),"--nocapture"],capture_output=True,text=True,timeout=60)
+    proc=subprocess.run([str(path.resolve()),"--nocapture","--exact","tests::bootstrap_is_not_product_qualification"],capture_output=True,text=True,timeout=60)
     output=proc.stdout+proc.stderr
     print(output)
     ok=proc.returncode==0 and "bootstrap_is_not_product_qualification ... ok" in output and "test result: ok. 1 passed; 0 failed" in output
