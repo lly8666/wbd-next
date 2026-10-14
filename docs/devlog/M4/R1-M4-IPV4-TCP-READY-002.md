@@ -1,0 +1,22 @@
+# R1-M4-IPV4-TCP-READY-002 · bounded steady IPv4/TCP DATA bytes
+
+- M0 formal assignment: main registry revision2, M4 active epoch1, unchanged exclusive branch `work/m4-r1-platform`, via `docs/decisions/M0-R1-next-worker-atoms.md` at main SOURCE `c135d6dedc5d09ab10d7394370292bbfa64e9205`.
+- Prior M4 branch H `a8dd64dd25817b695280274495e1350ceccc4cae` cursor sequence4, no uncheckpointed changes. M0 shared harness and original six R1 tests already proven in prior atom. No main/root/ABI/other worker ownership changed.
+
+## Implementation
+
+Only `crates/wbd-platform/src/ipv4_tcp.rs` and module registration in owned `src/lib.rs`. `build<H: FrozenRecordHandle>` takes M0 canonical `driver_read`, frozen wire and M1-provided immutable seq64 (wire32=low32) and emits actual caller-scratch IPv4 20B + TCP 20B + optional explicitly supplied authenticated-session TCP bytes (only validated DATA-compatible timestamps) + verbatim sealed record. Serialized IPv4 uses 0x45, DF0x4000, TCP proto6, 64/128 persona TTL, total length includes record, TCP flags PSH|ACK, live ACK/window/IPID separate from PN/seq. TCP pseudoheader checksum computes entire TCP header+record including odd final byte. Exact tuple lengths/ports, supported options, 65535 IPv4 max, actual MTU and caller capacity validated **before scratch modification**. Required capacity and overhead exposed by `measure`; no `Vec`, lock, Arc clone, syscall or re-seal on hot path. Does NOT mark driver accepted prefix as peer authenticated receipt.
+
+Old Go read-only pin `lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984`, `internal/faketcp/packet.go` blob `6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b`; old `packet_test.go` blob `2b91a805c82abe04e34e34fd46845c73b7e80a4d`. Golden 46/47B even/odd packet matches byte-for-byte pinned Go field/checksum model; an independent byte-wise reference verifies both TCP+IPv4 checksums and corruption. This Actions does **not** execute original Go source itself; do not conflate tests with native original Go oracle execution.
+
+## Real Actions and failures
+
+- Initial S `8dcf8a0a07cf294f0f8669776c707529bf1aa3d9`, worker native `38566246104/1` **FAIL** at compile (as-u8 shift syntax, TestFrozen required Clone, simultaneous mutable/immutable IP checksum borrow). R0/g2 jobs on that source also compilation-FAIL; retained, not re-labelled PASS.
+- Repaired and tested exact SOURCE `46a38c07016e55dead72ed3cbf1b954890412b15`: `worker-native-tests.yml` `38566384288/1` **SUCCESS 12/12**: six new byte-level tests (I01/I03: exact golden/odd parity/corruption/wrap/MTU minus1/scratch/tuple/options/immutable retransmit) plus original six M4 R1 tests. Linux runner real Rust1.85.1 x86_64, build-once, separate consumer hash matched. Build artifact 11895576786 ZIP SHA `deb70cc422ae0b0fb38be3eca05e0d343efa27c3e341ae8141ef4aad36a8a98d`, binary SHA `15f681774f4a069580c9dc9b327fb7ef720760bfa899ebf539321184a4ff08b3`; result artifact 11895177025 ZIP SHA `6bade6375fa8fe16f9300450fc152338805e49d6be97e17c4cfa95d277540e75`, log SHA `2ca9ee9a8d692fccb0e154ddae15b7d42c67359efe4e53a75c2e16ed7d77d87c`. Original ZIPs and manifest/result/test.log directly downloaded and validated against one source and hashes.
+- Same SOURCE G2/bootstrap `38566384234`, static audit `38566384323`, cross ABI `38566384222`, Governance `38566384263`: SUCCESS. Historic branch `r0-platform-fake` `38566384219/1` **FAIL** from an old unfiltered consumer: all 19 Rust assertions passed (7 old r0 + 12 r1) but old harness expects *exactly seven*. M0 already fixed this on **main** SOURCE `40a8a53c...`, run `38538899575/1` 7/7; M4 cannot change M0-owned `tools/r0_platform_bundle.py`, and old failure stays recorded. No same-SOURCE all-workflow-green claim.
+
+## Handoff and rollback
+
+Scoped packet-bytes atom is eligible for M0 integration once evidence S and cursor-only H Governance both pass. This is **not** Linux AF_PACKET/sendmmsg/TUN, not native Windows Npcap/Wintun, not kernel driver, not full actual M1/M3 packet delivery or Go production V4; those remain NOT_RUN, Go V4 DISABLED. Integration owner M0 can import `wbd_platform::ipv4_tcp` with a real authenticated persona/tuple snapshot in one SOURCE alongside shared corrected harness; M4 does not wire production entry. Rollback by omitting/reverting only `pub mod ipv4_tcp` call site from M0 engine; other R1 driver primitive/ABI and record ciphertext unchanged.
+
+Next M4 atom is **not implied** by this implementation: await separate M0 scope/permissions and integration need.

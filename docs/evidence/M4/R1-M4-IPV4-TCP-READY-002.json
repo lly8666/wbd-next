@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-IPV4-TCP-READY-002",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "46a38c07016e55dead72ed3cbf1b954890412b15",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "BOUNDED_IPV4_TCP_DATA_PACKET_BYTES_ONLY",
+  "pinned_oracle": {
+    "repo": "lly8666/wobuzhidao",
+    "revision": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "file": "internal/faketcp/packet.go",
+    "blob_sha": "6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b",
+    "related_test_blob": "2b91a805c82abe04e34e34fd46845c73b7e80a4d",
+    "verified_facts": [
+      "IPv4 version/IHL=0x45; 20B IP with DF=0x4000; TTL=64 legacy or 128 Windows11 persona",
+      "TCP DATA ACK|PSH=0x18, TCP data offset=5 baseline 20B, options only negotiated state, no SYN options",
+      "IPv4 TCP pseudoheader one’s-complement checksum and padded odd final byte",
+      "src=192.0.2.40 dst=198.51.100.40 srcport43000 dst443 seq100 ack200 win1024 IPID21 record='record' golden length46"
+    ],
+    "pinned_golden_hex": "4500002e0015400040064e31c0000228c6336428a7f801bb00000064000000c850180400cc2900007265636f7264",
+    "pinned_odd_golden_hex": "4500002f0015400040064e30c0000228c6336428a7f801bb00000064000000c850180400ab2800007265636f726421",
+    "caveat": "Golden byte values checked with separate arithmetic/reference model and rust unit tests; original Go packet.go was read at pinned commit, Go package was not executed as part of this Actions run."
+  },
+  "source_changes": [
+    "crates/wbd-platform/src/ipv4_tcp.rs",
+    "crates/wbd-platform/src/lib.rs (scoped module export)"
+  ],
+  "actions_native": {
+    "run_id": 38566384288,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "head_sha": "46a38c07016e55dead72ed3cbf1b954890412b15",
+    "conclusion": "SUCCESS",
+    "environment": "GitHub Actions Ubuntu native x86_64-unknown-linux-gnu Rust1.85.1",
+    "build_job_id": 115860001448,
+    "consumer_job_id": 115860129913,
+    "compile_once": true,
+    "verified_source_and_manifest": true,
+    "build_artifact": {
+      "id": 11895576786,
+      "zip_sha256": "deb70cc422ae0b0fb38be3eca05e0d343efa27c3e341ae8141ef4aad36a8a98d",
+      "manifest_sha256": "a3cc3f435606acb585921da8609eb73d1320f8060e91e3e14f3ff5cd04fcf3c2",
+      "native_test_binary_sha256": "15f681774f4a069580c9dc9b327fb7ef720760bfa899ebf539321184a4ff08b3"
+    },
+    "result_artifact": {
+      "id": 11895177025,
+      "zip_sha256": "6bade6375fa8fe16f9300450fc152338805e49d6be97e17c4cfa95d277540e75",
+      "result_json_sha256": "df192b3b4c67253176acaea4a971590031495e459c73dd934eb25dd2c549a69e",
+      "test_log_sha256": "2ca9ee9a8d692fccb0e154ddae15b7d42c67359efe4e53a75c2e16ed7d77d87c"
+    },
+    "tests_passed": 12,
+    "tests_failed": 0,
+    "new_tests": 6,
+    "previous_r1_tests": 6,
+    "new_test_names": [
+      "r1_ipv4_tcp_authenticated_timestamp_explicit_not_implicit",
+      "r1_ipv4_tcp_go_pinned_legacy_exact_golden_even_record",
+      "r1_ipv4_tcp_exact_mtu_minus_one_and_scratch_failure_atomic",
+      "r1_ipv4_tcp_reject_ipv6_zero_ports_options_and_empty",
+      "r1_ipv4_tcp_seq32_wrap_preserves_sealed_record_on_repair",
+      "r1_ipv4_tcp_odd_and_even_checksum_independent_and_corruption"
+    ],
+    "qualification": "REAL_RUST_CPU_SERIALIZED_IP_TCP_BYTES_ON_NATIVE_LINUX_RUNNER, no native raw socket"
+  },
+  "first_source_failed": {
+    "source_sha": "8dcf8a0a07cf294f0f8669776c707529bf1aa3d9",
+    "native_worker_run": 38566246104,
+    "conclusion": "FAIL",
+    "affected_regressions": [
+      38566245873,
+      38566245872
+    ],
+    "compiler_errors": [
+      "Rust parser ambiguous as-u8 <<4 expression",
+      "FrozenRecordHandle requires Clone on test fixture",
+      "E0502 mutable & immutable IP borrow in same expression"
+    ],
+    "fix_source_sha": "46a38c07016e55dead72ed3cbf1b954890412b15",
+    "retained_not_rewritten": true
+  },
+  "exact_source_regressions": [
+    {
+      "id": 38566384234,
+      "workflow": "g2-bootstrap",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38566384323,
+      "workflow": "r0-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38566384263,
+      "workflow": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38566384222,
+      "workflow": "r0-cross-abi",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38566384219,
+      "workflow": "r0-platform-fake",
+      "result": "FAIL_HISTORIC_TEST_FILTER",
+      "actual": "19/19 PASS (7 old r0 + 12 r1); branch's stale R0 consumer expects exactly 7",
+      "claim": "NOT_A_NEW_ASSERTION_FAILURE"
+    }
+  ],
+  "historic_fix": {
+    "owner": "M0",
+    "main_source": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+    "main_run": 38538899575,
+    "result": "SUCCESS_HISTORIC_R0_7_ONLY",
+    "note": "M0-owned tooling not modified on M4 branch; no same-SOURCE all-green claim, M0 can combine its filter and this worker implementation on main."
+  },
+  "counterexamples": {
+    "I01": "Real serialized bytes and independent checksum checks, past driver prefix/uncertain scoped tests remain passing; accepted syscall is not authenticated peer receipt.",
+    "I03": "MTU exact fit vs mtu-1, scratch shortage, IPv4 maximum length, options/tuple rejection, odd payload parity, seq32 wrap, same frozen bytes on repair."
+  },
+  "invariants": [
+    "No new dependency/ABI/production Go V4 change; no allocation, lock or Arc clone in serializer, caller provides scratch",
+    "IPv4 IHL=5 and TCP DATA offset5 without options, total length includes full sealed record; no extra LINK header",
+    "Full preflight validates tuple, options, record length, MTU and scratch before any write",
+    "TCP seq32 cast from frozen SeqOffset; only outer ACK/window/IPID/persona change on retransmission, payload is immutable",
+    "No network send, no kernel checksum offload or device claim"
+  ],
+  "not_run": [
+    "Linux AF_PACKET/sendmmsg/recvmmsg",
+    "Windows Npcap/Wintun native",
+    "true asynchronous kernel loan in OS backend",
+    "actual full M1/M3 authenticated data path linked to this packet",
+    "old Go native packet.go oracle job",
+    "live network/physical/performance/product"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SCOPED_BYTE_LEVEL_INTEGRATION_ONLY"
+}
