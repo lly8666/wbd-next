@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-BUDGET-001",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "branch": "work/m3-r1-codec",
+  "tested_source_sha": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+  "status": "PASS_RUST_SCOPED_BUDGET__DIRECT_GO_PATHMTU_NOT_RUN",
+  "source_scope": "crates/wbd-codec/src/path_budget.rs, path_budget_tests.rs, link_fec_wire.rs, lib.rs",
+  "legacy_oracle": {
+    "repository": "lly8666/wobuzhidao",
+    "commit_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "source_path": "internal/pathmtu/budget.go",
+    "source_blob_sha": "d6b6c83eee8b6337e8d66fa84a651b5f631784f0",
+    "test_path": "internal/pathmtu/budget_test.go",
+    "test_blob_sha": "ffed03f36be84e4fb968876cc0298cf8b31c46a5",
+    "golden_source": "Pinned Go test's explicit six outer-MTU by off/on matrix plus MSS, options, local, record, TUN and edge cases",
+    "native_go_pathmtu_actions": "NOT_RUN",
+    "qualification_caveat": "R1 Rust compiled tests assert hand-transcribed pinned Go literal expected results; the old Go pathmtu test package was NOT directly executed by this M3 workflow."
+  },
+  "native_actions": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38538473699,
+    "attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38538473699",
+    "build_job_id": 115767100308,
+    "consume_job_id": 115767218918,
+    "branch": "work/m3-r1-codec",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "compiled_once": true,
+    "status": "success",
+    "tests_passed": 6,
+    "tests_failed": 0,
+    "filtered_out": 26,
+    "test_names": [
+      "link_fec_wire::path_budget_tests::r1_budget_adaptive_current_off_and_game_once_per_logical_packet",
+      "link_fec_wire::path_budget_tests::r1_budget_go_invalid_boundary_fail_closed",
+      "link_fec_wire::path_budget_tests::r1_budget_go_mss_headers_local_and_record_limit",
+      "link_fec_wire::path_budget_tests::r1_budget_go_tun_floor_and_auto_record_cap",
+      "link_fec_wire::path_budget_tests::r1_budget_go_six_mtu_oracle_and_exact_overheads",
+      "link_fec_wire::path_budget_tests::r1_budget_normal_off_minus_equal_plus_one_no_new_link_header"
+    ],
+    "compiled_test_binary_sha256": "bd97bf0b0f2ca7dbd6f6a00062b2b5306a2d2f4a29c74f246c0e0c7ee30cae8f",
+    "test_log_sha256": "fc4f61f936198fff0062eecb2ffc78b927a89a3201e8050832757ec14fe5dd99",
+    "build_artifact": {
+      "id": 11880982832,
+      "digest": "sha256:17fcde88ddcb2582c23bc2c4f4b8c94b4698400357e1db555df1cb931859d790",
+      "expires_at": "2026-11-13T08:54:46Z"
+    },
+    "result_artifact": {
+      "id": 11880923003,
+      "digest": "sha256:28676d7e3284ad0372d6f64b98a15af734da891fc3e7c7be1254e82705a3e5ba",
+      "expires_at": "2026-11-13T08:54:59Z"
+    }
+  },
+  "same_source_regressions": [
+    {
+      "workflow": "r0-codec.yml",
+      "run_id": 38538473703,
+      "attempt": 1,
+      "result": "success",
+      "scope": "historical 13 R0 WBC4/WBG4 tests"
+    },
+    {
+      "workflow": "r0-link-fec-wire.yml",
+      "run_id": 38538474048,
+      "attempt": 1,
+      "result": "success",
+      "scope": "existing Rust LINK/FEC wire and pinned Go LINK/FEC (not Go pathmtu)"
+    },
+    {
+      "workflow": "r0-record-framing.yml",
+      "run_id": 38538473770,
+      "attempt": 1,
+      "result": "success"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "run_id": 38538473610,
+      "attempt": 1,
+      "result": "success"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "run_id": 38538473730,
+      "attempt": 1,
+      "result": "success"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38538473609,
+      "attempt": 1,
+      "result": "success"
+    }
+  ],
+  "history": [
+    {
+      "source": "85529385e9378e7f4f1dfd90f1826800ccd0f5d7",
+      "worker_native_run_id": 38537962159,
+      "worker_native": "6/6 PASS",
+      "r0_codec_run_id": 38537962144,
+      "r0_codec": "FAIL HARNESS COUNT: 19 total vs frozen 13, while 13 original R0 assertions passed"
+    },
+    {
+      "source": "44975170db18cd9be4eebf73ceaf101c6e32e540",
+      "worker_native_run_id": 38538349987,
+      "r0_codec_run_id": 38538349934,
+      "issue": "FAIL compilation: moved tests missing imports for MAX_WIRE_LEN and LINK_HEADER"
+    },
+    {
+      "source": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+      "result": "Rust scope and all same-source regressions success"
+    }
+  ],
+  "semantic_contract": {
+    "single_owner": "Actual IP+TCP headers, peer MSS, record 31B, optional FEC 56B, LINK 20B only for fragments, Game 16B once per logical packet.",
+    "ordinary_normal_fixed_off": "No LINK 20B header and no FEC 56B when payload <= link_frame_mtu and no reserved magic.",
+    "adaptive_current_off": "Reserve FEC overhead in capacity without appending FEC/LINK headers on ordinary packet.",
+    "integration": "M0/M1/M4 should consume derived link_frame_mtu and record_wire_mtu unchanged; do not re-deduct. record_payload_mtu bounds complete FEC or plain LINK datagram; link_fragment_payload_mtu is only for fragmented chunks.",
+    "remaining_limits": "Peer MSS may force LINK fragmentation below nominal shared TUN MTU. Startup padding uses only available record slack. No actual AEAD, record delivery, sockets, V4 enablement, load or physical testing."
+  },
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "three_cipher_aead": "NOT_IMPLEMENTED",
+  "m0_request": "docs/devlog/M3/M0-REQUEST-AEAD-AND-ORACLE.md"
+}
