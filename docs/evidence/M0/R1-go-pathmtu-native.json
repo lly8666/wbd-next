@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-GO-PATHMTU-001",
+  "source_sha": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40",
+  "result": "PASS_PINNED_OLD_GO_NATIVE_PATHMTU_ONLY",
+  "build_protocol": "ONE_NATIVE_PACKAGE_COMPILED_ONCE_AND_REUSED_UNCHANGED_IN_SEPARATE_ACTIONS_CONSUME_JOB",
+  "repository_source": {
+    "owner_repo": "lly8666/wbd-next",
+    "source_sha": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40",
+    "branch": "main"
+  },
+  "old_source": {
+    "owner_repo": "lly8666/wobuzhidao",
+    "source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "package": "./internal/pathmtu",
+    "go_toolchain": "go1.23.12",
+    "platform": "ubuntu-24.04 Linux X64"
+  },
+  "run": {
+    "id": 38543117078,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "build_job": 115782469803,
+    "consume_job": 115782651812,
+    "build_artifact": {
+      "id": 11883381295,
+      "name": "r1-pathmtu-build-38543117078-1",
+      "digest": "sha256:4288872122594c161dde217e7e7397b7c6ff3d02159419957f81b990357a9157"
+    },
+    "result_artifact": {
+      "id": 11883391413,
+      "name": "r1-pathmtu-result-38543117078-1",
+      "digest": "sha256:c59980e3c06e518e663bb813d24dfc2988c6ce3591a5a38dcb91fb786e0781b4"
+    },
+    "binary_sha256": "82c271c20fe222b31a377c0d0674257d45ac30af42769a0e6ada3935020411ba",
+    "test_log_sha256": "1a5040c718568db2ab93127d66737d69962cc2fc707bc894b3aac459fc5fe11f",
+    "native_go_top_level_passes": 10,
+    "required_seven_present": true,
+    "exit_code": 0
+  },
+  "main_governance": {
+    "id": 38543117065,
+    "conclusion": "success",
+    "source_sha": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40"
+  },
+  "separate_m3_rust_proof": {
+    "source_sha": "3aa121e4c10a80c4175ccfb057f3e64b01e4b382",
+    "native_run": 38538473699,
+    "tests": "6/6 FrameBudget at its own branch SOURCE; cannot combine with new main Go source as single qualified build"
+  },
+  "boundaries": {
+    "m3_real_aead_hp": "NOT_IMPLEMENTED",
+    "rust_normal_fec_off_business": "NOT_RUN",
+    "production_v4": "DISABLED",
+    "abi_native_target": "NOT_RUN_IN_THIS_ATOM",
+    "paired_performance": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "worker_branch_writes_by_m0": "NONE",
+  "next_action": "M0 review pin/lock exact compatible Rust real AEAD/8B HP library versions and dependency direction for M3, then worker M3 implements true Seal/Open; integrate on one SOURCE only after S/H and M1/M4 adapters."
+}

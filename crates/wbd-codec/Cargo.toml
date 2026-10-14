@@ -7,3 +7,6 @@ license.workspace = true
 
 [dependencies]
 wbd-types = { path = "../wbd-types" }
+aws-lc-rs = { workspace = true }
+chacha20 = { workspace = true }
+aes = { workspace = true }

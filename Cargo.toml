@@ -6,3 +6,8 @@ members = ["crates/wbd-types", "crates/wbd-platform", "crates/wbd-engine", "crat
 edition = "2021"
 rust-version = "1.85.1"
 license = "MIT"
+
+[workspace.dependencies]
+aws-lc-rs = { version = "=1.18.1", default-features = false, features = ["non-fips", "alloc"] }
+chacha20 = { version = "=0.9.1" }
+aes = { version = "=0.8.4" }

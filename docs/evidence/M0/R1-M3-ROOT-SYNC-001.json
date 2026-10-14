@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-ROOT-SYNC-001",
+  "source_sha": "f3bced85a4f75bceb7fa3cf0b86984c9815e7e84",
+  "result": "PASS_MAIN_REVIEW_GATE_UNIT_AND_GOVERNANCE_ONLY",
+  "checkpoint_preflight": {
+    "m0_role": "active",
+    "m0_branch": "main",
+    "registry_revision": 2,
+    "epoch": 1,
+    "main_start": "396c30dc3b8a0a464a14c53887f764cadde4633e",
+    "m0_cursor_seq": 24,
+    "m0_cursor_checkpoint": "875e287712849a72c31d97e86ec5b9b0a1df9f6a",
+    "checkpoint_to_main": [
+      "396c30dc3b8a0a464a14c53887f764cadde4633e"
+    ],
+    "handoff": "CLEAN_ONLY_NOT_PRODUCT_PASS",
+    "m3_branch": "work/m3-r1-codec",
+    "m3_head": "4776cc2bc17a78fc67e0898a11b439632037219a",
+    "m3_pre_sync_commit_count": 7,
+    "m3_cursor_seq": 2,
+    "m3_progress": "partial",
+    "open_prs": 0,
+    "unresolved_active_action_runs": 0
+  },
+  "code_changes": [
+    {
+      "sha": "81b3b2dfd510ebd1f32f9c956e2e9faf7450a68d",
+      "paths": [
+        "tools/worker_scope_ci.py",
+        "tests/test_worker_scope_ci.py",
+        "docs/decisions/M0-M3-crypto-root-sync.md"
+      ],
+      "scope": "single reviewed two-parent M3 crypto main sync, no generic merge bypass"
+    },
+    {
+      "sha": "f3bced85a4f75bceb7fa3cf0b86984c9815e7e84",
+      "paths": [
+        "tests/test_worker_scope_ci.py"
+      ],
+      "scope": "real remote API reviewer synthetic ancestry, root pin and bounds test"
+    }
+  ],
+  "test_observation": {
+    "schema": "GitHub Actions push",
+    "head_sha": "f3bced85a4f75bceb7fa3cf0b86984c9815e7e84",
+    "workflow": ".github/workflows/governance.yml",
+    "run_id": 38548723439,
+    "attempt": 1,
+    "job_id": 115801145643,
+    "conclusion": "success",
+    "tests": "python -m unittest discover -s tests -v",
+    "scope": "58/58 governance/drill native Python unit tests pass including test_one_m0_reviewed_m3_main_sync_preserves_worker_scope and test_m3_main_sync_remote_tree_and_root_pins",
+    "m0_independent_first_source_run": {
+      "source_sha": "81b3b2dfd510ebd1f32f9c956e2e9faf7450a68d",
+      "run_id": 38548520617,
+      "conclusion": "success"
+    },
+    "live_continuity_action_step": {
+      "name": "Observe live continuity",
+      "continue_on_error": true,
+      "exit_code": 1,
+      "qualified": false,
+      "note": "Governance workflow finished success because this observational step is explicitly continue-on-error. Separate GitHub remote branch/compare/run checks used for the handoff; not reported as audited PASS."
+    }
+  },
+  "reviewed_contract": {
+    "worker": "M3",
+    "first_parent_exact": "4776cc2bc17a78fc67e0898a11b439632037219a",
+    "main_parent_requires_ancestor_of_live_main": true,
+    "main_parent_contains_root_crypto_lock_sha": "1ae49bd644a4624db331c80d2dce6a8d181189e0",
+    "only_two_parents": true,
+    "main_tree_net_allowed_paths_count_max": 32,
+    "prohibited_main_tree_changes": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "crates/wbd-codec/Cargo.toml"
+    ],
+    "must_remain_worker_owned_paths": true,
+    "fast_forward_only": true,
+    "m0_updated_worker_branch": false,
+    "future_worker_merge_actual_execution": "NOT_RUN"
+  },
+  "scope_guard": {
+    "M3_branch_head_updated_by_M0": "NONE",
+    "M3_actual_main_sync": "NOT_RUN",
+    "M3_real_rust_AEAD_8B_HP": "NOT_IMPLEMENTED_AS_OF_PRE_SYNC_HEAD",
+    "M3_direct_oldGo_pathmtu": "SEPARATE_MAIN_SOURCE_ONLY",
+    "M3_framebudget_native": "PASS_SEPARATE_M3_SOURCE_3aa121e4_RUN_38538473699_6_OF_6",
+    "R1_NORMAL_FEC_OFF_E2E": "NOT_RUN",
+    "Go_V4_production": "DISABLED",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "M3 authorized writer, after refreshing M3 exact head and main registry, merges newest main into M3 branch using exact reviewed 2-parent path only if first parent remains 4776cc2, preserving Cargo root; M3 runs Actions then S/H and implements real record crypto C01-C04. M0 next integration is after that delivered tested worker state, no worker branch reset/force by M0."
+}

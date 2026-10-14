@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-CRYPTO-DEPS-001",
+  "result": "DEPENDENCY_PIN_AND_NATIVE_API_SMOKE_PASS_SCOPE_ONLY",
+  "source_sha": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
+  "post_source_fix_sha": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
+  "assignment": {
+    "branch": "main",
+    "reservation_revision": 2,
+    "epoch": 1
+  },
+  "inputs": {
+    "rust_toolchain": "1.85.1",
+    "root_manifest": "Cargo.toml",
+    "codec_manifest": "crates/wbd-codec/Cargo.toml",
+    "lock": "Cargo.lock",
+    "lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+    "root_source_lock": "r0/source-lock.json",
+    "versions": {
+      "aws-lc-rs": "=1.18.1",
+      "chacha20": "=0.9.1",
+      "aes": "=0.8.4"
+    },
+    "aws_lc_features": [
+      "non-fips",
+      "alloc"
+    ]
+  },
+  "first_probe_failed": {
+    "sha": "5f4c75571c2a3e5f1a6cf1d99785f6810ebdb2ce",
+    "run_id": 38545556252,
+    "conclusion": "failure",
+    "cause": "M0 test-only E0382 moved Nonce then reused, NOT a dependency MSRV failure"
+  },
+  "fixed_candidate_probe": {
+    "sha": "6b39093225fe7400af70c6847cb260b2b6769371",
+    "run_id": 38545741173,
+    "attempt": 1,
+    "conclusion": "success",
+    "compiled_once_native_smokes": 5,
+    "build_artifact": {
+      "id": 11883859074,
+      "digest": "sha256:3bb114e6e818ad84cadd14292db4f03303c3102edaa36de426ee4b033bf25e33"
+    },
+    "result_artifact": {
+      "id": 11884900180,
+      "digest": "sha256:e03096d70709e391a63a77733d2a5ecacabd2bd6fa949a25f350988ee071f2df"
+    }
+  },
+  "root_integration": {
+    "source_sha": "1ae49bd644a4624db331c80d2dce6a8d181189e0",
+    "num_workflows": 15,
+    "successful": 14,
+    "failed": 1,
+    "same_source_run_success": {
+      "crypto_api": 38546167104,
+      "governance": 38546166923,
+      "static_lock_audit": 38546166994,
+      "native_abi": 38546166985,
+      "go_pathmtu": 38546167097,
+      "r0_build": 38546167057,
+      "g2_native": 38546167127,
+      "r0_link_fec": 38546166948,
+      "r0_wire_codec": 38546167146,
+      "r0_record_framing": 38546167247,
+      "r0_go_control": 38546167248,
+      "r0_go_vectors": 38546166894,
+      "r0_v4_real_tls": 38546167355,
+      "r0_fake_platform": 38546167058
+    },
+    "crypto_api_artifacts": {
+      "build": {
+        "id": 11885035081,
+        "digest": "sha256:9430b0ade942dcaa6925b8fdb72d77c7ea334415610d4258af91f8278aa6a51a"
+      },
+      "result": {
+        "id": 11884273781,
+        "digest": "sha256:bec2b9a6585c07ca5ca1afa14bd0d3ca68d6da2d42fd796d0eddd7ec47a6ece6"
+      }
+    },
+    "failed_cross": {
+      "run_id": 38546166970,
+      "conclusion": "failure",
+      "windows_build_job": 115792645455,
+      "cause": "aws-lc-sys NASM command not found in Windows GNU x64 cross builder",
+      "arm64_build": "success",
+      "windows_native_executed": false
+    }
+  },
+  "nasm_followup": {
+    "source_sha": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
+    "scope": "Only .github/workflows/r0-cross-abi.yml Windows GNU matrix adds nasm; did not mutate worker branches or cipher",
+    "run_id": 38546390977,
+    "attempt": 1,
+    "conclusion": "success",
+    "jobs": {
+      "arm64_build": 115793400327,
+      "windows_gnu_build": 115793400546,
+      "arm64_consume": 115793920427,
+      "windows_gnu_consume": 115793920613
+    },
+    "arm64_build_artifact": {
+      "id": 11884462718,
+      "digest": "sha256:a107ff9ba5994b88d530e7c595c5eb4f73f779f2c3901e80ee8edfcf4707edf7"
+    },
+    "win_gnu_build_artifact": {
+      "id": 11884462739,
+      "digest": "sha256:3371d6db629ca66387e0b64a7ae75a854d9c96619044989191b83e333d308bea"
+    },
+    "arm64_result_artifact": {
+      "id": 11884437961,
+      "digest": "sha256:40b5c9212b7922a9e1fc5d9fce9547d85126b51b1f337dcc7a3f74a2a2f4412a"
+    },
+    "win_gnu_result_artifact": {
+      "id": 11883799762,
+      "digest": "sha256:a1c1038d1ea4e3667079d141d3957aa2287ce4918fd677c91a9ff9fc3bc2688a"
+    },
+    "governance_run": 38546390961,
+    "governance_conclusion": "success",
+    "target_native_execution": "NOT_RUN"
+  },
+  "license_review": "provisional: aws-lc-rs ISC AND (Apache-2.0 OR ISC), aws-lc-sys third-party compound obligations need redistribution review; aes/chacha20 MIT OR Apache-2.0",
+  "scope_guard": {
+    "worker_branches_pushed_by_M0": "NONE",
+    "m3_real_record_aead_hp": "NOT_IMPLEMENTED",
+    "go_compatibility_crypto_vectors": "NOT_RUN_IN_R1_RUST",
+    "normal_fecoff_true_rust_business": "NOT_RUN",
+    "production_v4": "DISABLED",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "all_15_on_single_source": "NOT_RUN_DO_NOT_COMPOSE_SEPARATE_SOURCE_RUNS"
+  },
+  "next_action": "Coordinate M3 scoped access to approved root lock through safe branch ancestry protocol, then M3 own actual rust authenticated record+8B HP C01-C04; M0 next integration after M3 H is single-source Normal FEC-off first business packet Actions.",
+  "evidence_source_meaning": "Final observed tested SOURCE for root crypto pins plus corrected cross harness. Actual direct dependency integration code remains separately anchored at root_integration.source_sha 1ae49bd; no same-SOURCE composite PASS.",
+  "failed_cursor_h": {
+    "sha": "26ba6b0d9ed85bffe730239a7131521eef1e67d8",
+    "governance_run_id": 38547127557,
+    "conclusion": "failure",
+    "cause": "governance validate_repo requires evidence_refs[].source_sha == M0 cursor.last_tested_source. Evidence initially labeled 1ae49bd root dependency SOURCE while cursor labeled f2a7a84 last cross-ABI test SOURCE.",
+    "correction": "Use final tested f2a7a84 evidence top-level source_sha and preserve exact root code SOURCE 1ae49bd under root_integration; cursor H still follows an independently reviewed receipt S."
+  }
+}

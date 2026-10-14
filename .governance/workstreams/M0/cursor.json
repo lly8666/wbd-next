@@ -4,26 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 18,
-  "checkpoint_sha": "8c1ab7254941fbeb9d495fb838f7bf8fc3953130",
+  "sequence": 25,
+  "checkpoint_sha": "55de2cd0672cb5a165c27c886f15fe926374965f",
   "progress": "partial",
-  "task_id": "G2-001",
-  "current_task": "M0已正式完成G2角色分配：main registry revision2、M1–M4 active/epoch1、四个非重叠工作分支及其bootstrap cursor seq0、worker源码/请求权限；Rust workspace五crate含wbd-recovery非产品脚手架、engine runtime/memory M1挂点。M0独占共享type/root ABI/Cargo/CI和集成，生产V4仍禁用。四个worker尚未由独立会话产生任何功能实现提交；真实Rust recovery/AEAD/FEC/网络引擎未完成。",
-  "why_now": "上一cursor seq17授权执行独立G2事务，用户确认继续并追问M0未来是否负责R系列：M0负责阶段集成、跨模块API/质量以及必要公共基础开发，独立模块工作必须由各自active worker完成。所有分支需可核对真实ref/cursor/测试，不将registry写入假作并发编码已发生。",
-  "done_when": "独立source S 83bd720...已建立四分支每个精确同源HEAD、role+cursor epoch1/revision2/seq0；native Actions实际编译5crate与独立consumer test 1/1 scaffold、R0历史回归及主线和分支Governance全部success；证据收据S 8c1ab72 Governance success、最终H仅更新M0 cursor。G2派工已完成，R0/产品仍partial。",
-  "next_action": "M0继续R系列公共接口与跨worker集成：协调M1 owner/arena、M2 recovery pure state、M3 path_budget/真实AEAD、M4 platform bridge各分支首项S→Actions→H，对Root Cargo/C API/共享wbd-types修改先登记G2影响再在main串行实施；首次各worker cursor seq0 checkpoint null需其本人第一笔S/H形成CLEAN。之后以真实SOURCE组合R1 Normal/off，不代写所有worker功能，不开启生产V4；用户可从各worker会话切入。当前无自动后台work。",
+  "task_id": "R1-M0-M3-ROOT-SYNC-001",
+  "current_task": "M0 reviewed and implemented one exact main-to-M3 crypto Cargo dependency sync boundary on main. M3 branch not modified; actual M3 merge and crypto remain NOT_RUN/NOT_IMPLEMENTED.",
+  "why_now": "M0 seq24 checkpoint875e287 to old main396c30d had only a verified cursor-only H run38547429267 SUCCESS/CLEAN. M3 4776cc2 seq2 has 7 worker-only FrameBudget commits; main 19 ahead from shared base and pins genuine Rust1.85.1 crypto Cargo.lock. Unqualified two-parent work merges were formerly denied. Only M0 may coordinate shared-branch/root policy, not substitute M3 development.",
+  "done_when": "S81b3b2df main worker_scope_ci.py exact M3 first-parent=4776cc2 two-parent merge review: second parent is main ancestor containing locked SHA1ae49bd, resulting tree net-diff vs main at most32 M3-owned paths and may NOT change root Cargo/lock/codec manifest; other merges rejected. Governance38548520617 SUCCESS. S f3bced85 adds API ancestry/tree negative tests, Governance38548723439 SUCCESS with 58/58 tests; continue-on-error live continuity observation exited1, not counted as PASS. Evidence S2363e265 Governance38548962949 SUCCESS, project.next_decision S55de2cd Governance38549048698 SUCCESS. M3 actual merge NOT_RUN; M0 no worker branch writes. H only cursor after reviewed S.",
+  "next_action": "On next M0 handoff refresh main/M3 registry/cursors/runs. If M3 still 4776cc2, leave branch to the active M3 writer to merge latest verified main with parents [4776cc2,main], preserving all M3 paths plus exact root Cargo/lock, then M3 own Actions S/H and true AEAD/PN8/HP8 tests (modules 00,05,11 C01-C04). If M3 head changed, re-review without force/rebase. After M3 real rust crypto+M1/M4 integrations pass at exact refs, M0 combine same-source native Normal/FECoff one packet in-process first-business delivery; not before.",
   "unverified": true,
-  "last_tested_source": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+  "last_tested_source": "f3bced85a4f75bceb7fa3cf0b86984c9815e7e84",
   "evidence_refs": [
-    "docs/evidence/M0/G2-worker-activation.json"
+    "docs/evidence/M0/R1-M3-ROOT-SYNC-001.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/G2-worker-activation-complete.md",
-    "docs/decisions/M0-G2-worker-activation.md",
+    "docs/decisions/M0-M3-crypto-root-sync.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "r0/qualification-manifest.json"
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "G2 SOURCE 83bd720368b9be68b3c4c94d7462d20cf4d796db main registry revision1→2，M1 work/m1-r1-runtime、M2 work/m2-r2-recovery、M3 work/m3-r1-codec、M4 work/m4-r1-platform均 active epoch1；四条branch HEAD均该SOURCE且各cursor seq0/phase planned/checkpoint null/revision2。native G2 build/consume Actions38531136641 jobs115743035789/115743154391 SUCCESS五crate cargo test --locked --workspace --no-run和实际1/1非产品恢复脚手架test，binary SHA928393d30db56245bf5ff6c0fc81b17742ce3a4e566f057759d49e635c24e16c、artifacts11877532760/11878102322。静态audit38531136490、主治理38531136491、分支M1 38531172259/M2 38531181545/M3 38531187784/M4 38531197940均SUCCESS；同SOURCE R0 Go/TLS/ABI/codec/record/LINK/FEC/fake/cross等10workflow全SUCCESS。收据S 8c1ab7254941fbeb9d495fb838f7bf8fc3953130治理38531728769 success。G2只授权可并行独立任务，当前0 worker功能交付、R0 10历史scope有44架构ID仅5部分39 NOT_RUN、真实RustAEAD/HP/recovery/OS I/O NOT_IMPLEMENTED、目标native WindowsARM/产品/性能/物理NOT_RUN；Go生产V4 DISABLED、M0仍负责公共基础与R系列集成。"
+  "partial_summary": "M0 preflight checkpoint875e287→main396c30d only H + Governance38547429267 success. Registry revision2 epoch1 active. M3 branch head4776cc2 seq2 7 worker-only commits since G2 base0845e7, no actual crypto; main19 ahead root pin. S81b3b2 reviewed one exact merge with protected main Cargo lock/manifests, Governance38548520617 PASS. S f3bced85 added test_m3_main_sync_remote_tree_and_root_pins plus first-parent/role/root reject tests; Governance38548723439 completed success, 58 Python governance tests pass, continue-on-error observe-live-continuity substep exit1 NOT_PASS. Evidence S2363e265 governance38548962949 SUCCESS; project pointer S55de2cd governance38549048698 SUCCESS. All commits main-only; M3 remains at4776cc2, M0 performed no branch merge. Real M3 AEAD+8B HP/Go record vectors, M1/M3/M4 combined business Normal/off E2E, production V4, performance, physical remain NOT_RUN/DISABLED. Next M3 writer lawful 2-parent main root sync, then independent crypto; M0 later same SOURCE integration."
 }

@@ -1,0 +1,21 @@
+# M0 G2 worker身份与R1 buffer/热路径边界修复 — 实测完成
+
+2026-10-14，用户复核G2 SOURCE `8c1ab7254941fbeb9d495fb838f7bf8fc3953130`发现4项阻断。M0重新读取远端main HEAD `789777e1f6253426595fd12a359d49cdcd916ba6`、cursor seq18/checkpoint `8c1ab7254941fbeb9d495fb838f7bf8fc3953130`，其间仅1个cursor-only H，主线Governance38531899790 SUCCESS，四branch均为G2初源83bd720，无worker实质提交/未结束Actions/PR，control revision2 M0+M1–M4 active epoch1；CLEAN。
+
+**Why now**：此前worker branch的push workflow继续默认`M0`，导致M1检查artifact显示role M0、continuity查main；两个R0 consumer未过滤测试名称，后续新测试可能误打断旧scope；M1/M3/M2/M4唯一buffer所有权无共享Rust签名；R0平台fake的Mutex/Arc/Vec与无限`wait_drained`不是生产热路径。
+
+**源实质S**：[0845e739ef5d506ff44ad1d6637cc3986929ccd5](https://github.com/lly8666/wbd-next/commit/0845e739ef5d506ff44ad1d6637cc3986929ccd5)。改`.github/workflows/governance.yml`：先在真实checkout中调用`tools/worker_scope_ci.py`，GitHub read-token读取实时main registry，根据`GITHUB_REF_NAME`解析role且验证declared role，核cursor/revision/epoch；逐commit审新worker自G2原基线的写入范围和父数（main已认可集成祖先可跳过），核所有ref未移动，写`WBD_ROLE_ID`到GITHUB_ENV并输出role-identity.json，后续identity/audit/receipt用同一role。5个新Python负例覆盖冒充、非法目录、未知血统/merge与正常隔离。初始worker cursor sequence0/checkpoint=null仍需第一S/H才CLEAN；报告BOOTSTRAP_RECOVERY_REQUIRED，不把新scope检查绿灯误称完整交接。
+
+**legacy与新worker test隔离**：`tools/g2_bootstrap_bundle.py`只运行`--exact tests::bootstrap_is_not_product_qualification`，`tools/r0_platform_bundle.py`只运行`r0_`开头的旧7个固定案例，严格校验老scope数量+名字。新`.github/workflows/worker-native-tests.yml`按worker branch +工作源码变化选择wbd-engine/wbd-recovery/wbd-codec/wbd-platform，以Rust1.85.1 Actions预编译一次，独立consumer核SHA256输入+binary并执行**至少一条实际r1_或r2_新测试**；未有新代码就不可宣称worker PASS。该新测试入口本轮没有worker独立代码触发，status NOT_RUN，不伪称已验证worker算法。
+
+**跨模块buffer API已实落**：`crates/wbd-types/src/buffer_contract.rs`新Rust-only `BufferOrigin`、`FrozenMetadata`、`UniqueSealable`独占可写&consume-freeze、`FrozenRecordHandle`只读可保留、`driver_read`借用片段，以及边界检查。M1提供真实arena且所有handle必须有owner/generation和有界return队列，M3预留PN后在唯一字节窗口Seal/HP，M2复用冻结handle不重复密文/PN，M4借只读。测试3个mock语义/身份/非法range通过；**mock freeze自身仍复制Vec到Arc，不能证明真实零拷贝、低CPU或生产路径**。由M1真实实现 + M4生命周期和性能测试证明。更新00合同与唯一决策 `docs/decisions/M0-R1-worker-CI-buffer-hotpath-gates.md`，对M4明示借用型driver完成或cancel前不可free、begin_stop禁新借用、单调deadline/DrainTimedOut需保留未完成loan，取消无界`wait_drained`用于生产，并预分配batch/避免每包Mutex+Arc/Vec路径；M0不越权替M4写平台实现。
+
+**真实Actions资格，精确同一SOURCE**：main `0845e...`受影响的10工作流全SUCCESS：Governance [38534653691](https://github.com/lly8666/wbd-next/actions/runs/38534653691) job115754487159含5个新负例，总56/56 Python测试 PASS；Rust types [38534653728](https://github.com/lly8666/wbd-next/actions/runs/38534653728) 8/8 PASS（新buffer mock3）；G2旧夹具 [38534653804](https://github.com/lly8666/wbd-next/actions/runs/38534653804) build115754488481/consumer115754597178 exact1/1 PASS；R0 fake平台 [38534653582](https://github.com/lly8666/wbd-next/actions/runs/38534653582) filtered7/7 PASS；codec38534653733、record38534653844、LINK/FEC38534653882、native ABI38534653713、cross ABI38534653767、R0静态资格38534653690全SUCCESS。所有构建/consumer artifact ID、zip摘要和角色运行见`docs/evidence/M0/G2-worker-role-buffer-fix.json`；仍只是范围资格。
+
+**真正M1而非M0的证据**：把四条未有worker提交的分支分别用GitHub非force lease快进至精确0845e...，核四个分支都在该commit。新治理Actions M1 [38534772050](https://github.com/lly8666/wbd-next/actions/runs/38534772050) job115754869661，日志/receipt和GITHUB_ENV确认为role_id=M1、audit--role M1且ROLE_SCOPE_PASS；M2 [38534784309](https://github.com/lly8666/wbd-next/actions/runs/38534784309) role_id=M2，M3 [38534794170](https://github.com/lly8666/wbd-next/actions/runs/38534794170) role_id=M3，M4 [38534806623](https://github.com/lly8666/wbd-next/actions/runs/38534806623) role_id=M4，均SUCCESS。各role`scope_commits_checked=0`因为尚无worker自己的source commit；只能证明CI现在认对身份及提交门已建立，真实越权source在生产检查中的运行尚NOT_RUN。每条分支10/10被这次共享main快进触发的回归工作流success；不是每位worker已提交10组真实新产品测试。worker_native新workflow未触发、NOT_RUN。
+
+**M4未完成项**：mutex/refcount/每批Vec与无界drain的热路径替换仍由M4负责，不能把协议gate当修复完毕。Normal/FEC off 从实际业务字节进入Rust arena→真实Rust recordSeal→真实wire→Rust Open→业务出口未实现，端到端与CPU性能仍NOT_RUN。Go生产V4 FAIL_CLOSED、没有写原旧仓库，R0 phase partial，Windows ARM仅cross-build，无物理。具体验收定义见决策文档；从此优先首包贯通而非继续添无业务价值的foundation proof。
+
+**done_when**：当前M0原子已修正确切Actions身份、老suite过滤、动态新worker测试入口、共享buffer签名及热路径验收阻断，并在真实GitHub Actions证明原老范围未回退、四个worker身份产物已更正。需要独立收据S和cursor-only H后收口。
+
+**下一唯一动作**：M0推动M1/M3/M4分别首个真实实现原子并串行接线，在相同SOURCE的Action下演示Normal/FEC-off一包业务闭环，M2纯恢复并行但不得成为Normal首包的阻断。M4完成有界stop与减少锁/Arc/Vec路径前不宣称最终CPU优越性；生产V4不得提前开放。

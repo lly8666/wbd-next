@@ -9,4 +9,8 @@ license.workspace = true
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
+# M0-owned composition-only edges. Lower-layer workers must not depend on engine.
 wbd-types = { path = "../wbd-types" }
+wbd-codec = { path = "../wbd-codec" }
+wbd-platform = { path = "../wbd-platform" }
+wbd-recovery = { path = "../wbd-recovery" }
