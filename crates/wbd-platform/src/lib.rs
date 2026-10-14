@@ -4,6 +4,9 @@
 //! No FFI types or wire layouts are defined here.
 #![forbid(unsafe_code)]
 
+/// R1 verified, bounded ready-only adapter; production native AF_PACKET/Windows not enabled.
+pub mod r1;
+
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
 

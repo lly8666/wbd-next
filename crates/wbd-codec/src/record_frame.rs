@@ -220,3 +220,9 @@ mod tests {
         }
     }
 }
+
+// Worker R1 real-crypto tests are scoped beneath record_frame so the frozen
+// historical R0 wire-codec --skip record_frame:: remains exactly 13 tests.
+#[cfg(test)]
+#[path = "record_crypto_tests.rs"]
+mod record_crypto_tests;

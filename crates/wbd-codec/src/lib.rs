@@ -6,8 +6,12 @@
 
 /// R0 opaque TLS-like record structural segmentation (not authentication).
 pub mod record_frame;
+/// First real authenticated ChaCha lane record; no replay window or AES qualification.
+pub mod record_crypto;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
+/// Unique path MTU budget accounting for Normal/FEC off.
+pub mod path_budget;
 
 use wbd_types::LogicalPacketId;
 
