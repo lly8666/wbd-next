@@ -12,6 +12,10 @@ pub mod record_crypto;
 pub mod record_replay;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
+pub mod link_reassembly;
+pub mod fec_math;
+pub mod fec_tx;
+pub mod fec_rx;
 /// Unique path MTU budget accounting for Normal/FEC off.
 pub mod path_budget;
 
