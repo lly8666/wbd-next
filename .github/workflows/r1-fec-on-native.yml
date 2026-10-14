@@ -44,14 +44,15 @@ jobs:
                  'crates/wbd-codec/src/record_frame.rs','crates/wbd-codec/src/path_budget.rs',
                  'crates/wbd-codec/src/fec_math.rs','crates/wbd-codec/src/fec_tx.rs',
                  'crates/wbd-codec/src/fec_rx.rs','crates/wbd-codec/src/link_fec_wire.rs',
-                 'crates/wbd-platform/src/r1.rs','crates/wbd-engine/tests/r1_fec_on.rs']
+                 'crates/wbd-platform/src/r1.rs','crates/wbd-platform/src/ipv4_tcp.rs',
+                 'crates/wbd-engine/tests/r1_fec_on.rs']
           meta={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
                 'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
                 'target':'x86_64-unknown-linux-gnu','rust':'1.85.1',
                 'test_binary_sha256':sha('r1-fec-build/test.bin'),
                 'lock_sha256':sha('Cargo.lock'),
                 'source_parts_sha256':{p:sha(p) for p in parts},
-                'scope':'M1_REAL_ARENA_M3_REAL_CHACHA_AES_HP8_AUTHENTICATED_PN_REPLAY_M4_IN_PROCESS_NOT_PRODUCTION'}
+                'scope':'M1_ARENA_M3_FEC_AEAD_REPLAY_M4_FULL_IPV4_TCP_CHECKSUM_IN_PROCESS_ONLY'}
           pathlib.Path('r1-fec-build/manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
           print(json.dumps(meta,indent=2))
           PY
@@ -73,7 +74,7 @@ jobs:
         with:
           name: r1-fec-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-fec-build
-      - name: Verify exact source/lock/test binary and execute two actual AEAD replay FEC-on business cases
+      - name: Verify exact source/lock/test binary and execute two full IPv4/TCP packet AEAD replay FEC-on business cases
         shell: bash
         run: |
           set -euo pipefail
@@ -107,7 +108,7 @@ jobs:
                   'test_log_sha256':hashlib.sha256(log.encode()).hexdigest(),
                   'native_tests_passed':n,'test_exit':int(os.environ['TEST_EXIT']),
                   'result':'PASS' if ok else 'FAIL',
-                  'scope':'R1_IN_PROCESS_REAL_AEAD_REPLAY_M1_M4_FEC_ON_RS20_ONLY',
+                  'scope':'R1_IN_PROCESS_FULL_IPV4_TCP_MTU_CHECKSUM_REAL_FEC_AEAD_REPLAY_RS20_ONLY',
                   'not_qualified':'GO_V4_ADMISSION;NATIVE_RAW_CARRIER;LIVE_BLOCK_ID_WRAP;PERFORMANCE;PRODUCTION_V4;PHYSICAL'}
           pathlib.Path('r1-fec-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result,indent=2))
