@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 31,
-  "checkpoint_sha": "3026b22a12f7c57d3495e06c31ec706c8aa37ba2",
+  "sequence": 32,
+  "checkpoint_sha": "c75ddbec0a60b651f1fb6a62aada83e1168a5786",
   "progress": "partial",
-  "task_id": "R1-M0-IDLE-WORKER-ASSIGN-001",
-  "current_task": "M0 assigned new within-role owned native atomic tasks to M1 R1-M1-WAKE-STOP-002 (std thread armed/SeqCst double-check, no lost-wakeup/stop) and M4 R1-M4-IPV4-TCP-READY-002 (accurate real IPv4/TCP packet bytes+checksum/MTU/seq-wrap) on main registry existing revision2 epoch1; owner paths/branches unchanged. Assignment policy Actions success but workers have NOT implemented new code.",
-  "why_now": "M0 seq30 checkpoint7d5b99a→main c51d7a only cursor H with Governance38562827163 success. M1 independently source46571e native10/10 with current H e511f133 seq2 ready_for_integration, already imported M0 first packet; M4 sourcebcf0bc native6/6 with H a8dd64d seq4 ready_for_integration, in-process sink imported M0. Both new tasks are independent of M2 repair budget M0 integration and M3 scalar FEC continuity.",
-  "done_when": "M0 main S c135d6dedc5d09ab10d7394370292bbfa64e9205 updates only M1/M4 goals+done_when in registry (no epoch/revision/branch/allowed/owned semantics changes), project next decision, doc decision and assignment receipt. Assignment SOURCE Actions Governance38564565449 SUCCESS and G2 native38564565586 SUCCESS; separate evidence S3026b22a12f7c57d3495e06c31ec706c8aa37ba2 Governance38564903092 SUCCESS. Exact source of evidence c135; worker implementation/test results for NEW tasks NOT_RUN. H only cursor. No worker ref changes or Go V4 activation.",
-  "next_action": "M0 next atom refresh M2 seq5 budget SOURCE4f485269b3af4b1aba46cce602a3996a720c8538 and current M4/platform, integrate existing 1s F/R/L quota reservations/debit/refund into M0-owned submit_repair_once in-process, with exact wire bytes and Accepted/NotSent/Uncertain; native worker/source-rigorous CI. M1 and M4 independent active writers should refresh main assignment doc+registry, own branch cursor/head and start their NEW scoped tasks with own code S+evidence S+cursor-only H. M0 separately review M1 rtrb/loom deps request, do not claim rtrb or actual AF_PACKET/Windows from their new atoms.",
+  "task_id": "R2-M0-BUDGET-REPAIR-001",
+  "current_task": "M0 imported exact M2 source4f485269 true per-direction 1s F/R/L budget and wired the existing M0-owned submit_repair_once entry to require budget.reserve before M4 readonly send of original M1 FrozenRecord. Same SOURCE f8b2dcd native M2 pure15/15 + M0 R2 integration8/8 + 8/8 affected Actions SUCCESS, evidence S c75ddbec Governance38566588520 SUCCESS. Only test-only no-options IPv420+TCP20 overhead budgeted; real carrier and global multi-client sparse quota not yet integrated.",
+  "why_now": "M0 seq31 checkpoint3026b22→HEADa080ac15 only cursor H Governance38565106862 SUCCESS CLEAN. M2 independent budget SOURCE4f485269 worker-native38561012183 15/15 real passed and H be5e722 Governance38561581854 SUCCESS, but main previous R2 repair path allowed M4 submit without consuming any M2 one-second F/R/L reservation. M1/M4 worker next scopes assigned separately, M0 integration is sole owner of composition.",
+  "done_when": "Main CODE S f8b2dcd3549e28905ac9d86e0d3750a6de54d594 imported exact M2 recovery/budget.rs and lib.rs, changed M0 engine recovery_ingress.rs to budget-taking only, no unbudgeted overload; native R2 tests accepted exact frozen record +40B pseudo outer bytes, NotSent refund, Uncertain conservative debit, stale candidate and bad tunnel/MTU no call. Compiled-once Rust1.85.1 Linux x64 same-source R2 engine native8/8 run38566091472 and M2 pure native15/15 run38566091400 SUCCESS. Exactly8/8 triggered Actions SUCCESS incl R1 Normal/off, G2, native ABI, cross-build ABI (cross target native execution NOT_RUN), Governance and static. Evidence/project S c75ddbec0a60b651f1fb6a62aada83e1168a5786 Governance38566588520 SUCCESS; H only cursor. No worker ref changed; product/performance/physical and Go V4 remain NOT_RUN/disabled.",
+  "next_action": "One new M0 atom after refresh: check M4 actual R1-M4-IPV4-TCP-READY-002 producer HEAD/cursor/source and Actions; once real byte-level outer IPv4/TCP serialization is native-qualified, replace test-only 40B overhead assumption with validated actual carrier envelope byte total in same-source engine test. Otherwise M0 independently advance bounded process-wide shared sparse repair allowance across tunnels without blocking fresh, reviewing public semantics with M2. Do not enable Go V4 or claim kernel sendmmsg/native Windows. M1 separate wake/stop task writer owns tests and branch.",
   "unverified": true,
-  "last_tested_source": "c135d6dedc5d09ab10d7394370292bbfa64e9205",
+  "last_tested_source": "f8b2dcd3549e28905ac9d86e0d3750a6de54d594",
   "evidence_refs": [
-    "docs/evidence/M0/R1-idle-worker-assign.json"
+    "docs/evidence/M0/R2-budgeted-frozen-repair.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-R1-next-worker-atoms.md",
-    "docs/architecture/modules/02-RUNTIME.md",
-    "docs/architecture/modules/03-MEMORY.md",
+    "docs/devlog/M0/R2-budgeted-frozen-repair.md",
+    "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/04-CARRIER-IO.md",
+    "docs/architecture/modules/08-RECOVERY.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "Role reservation2 epoch1 unchanged. M1 HEAD e511f133 seq2 first owner ready; M4 HEAD a8dd64d seq4 first platform ready; both initial native qualified scoped source only, code already consumed by M0 in-process. M0 task assignment via main registry goals/do-when and docs decision on CODE SOURCEc135d6 Governance38564565449 G2-native38564565586 both SUCCESS; receipt S3026b22 Governance38564903092 SUCCESS. Next M1 real thread park/unpark armed double-check stop under std existing bounded queues, deterministic r1_ Actions; rtrb/loom remains M0 pin request separately. Next M4 pure true IPv4/TCP-like header/wire/checksum seq32/MTU from sealed record, without OS raw send. Existing M2 15/15 budget SOURCE4f485269 awaits M0 integration, M3 active FEC continuation. Worker HEAD/epoch/reservation/owned paths not touched. New worker code/tests NOT_RUN; Go V4 production disabled; product/perf/physical NOT_RUN."
+  "partial_summary": "M0 clean from seq31 checkpoint3026b22a→head a080ac15 cursor-only H and Governance38565106862 SUCCESS. M2 budget worker source4f485269 native15/15 and H be5e722 success. M0 S f8b2dcd imported worker exact M2 budget.rs/lib.rs to main; now M0 submit_repair_once preflight and budget.reserve before ready-only M4, returning explicit BudgetError, same frozen M1 original PN/seq/wire. Accepted and Uncertain charged, definite NotSent refunds, wrong tunnel/MTU rejected before syscall, shadow only authentic Health. Main same SOURCE Rust M2 budget native15/15 Actions38566091400 binary SHAae2ad31b and M0 R2 integrated8/8 Actions38566091472 binary SHAd0bc8363, all8/8 affected Actions SUCCESS incl ABI/G2/normal. Evidence/project S c75ddbec Governance38566588520 success. Current wire estimate strict fixed IPv4/TCP40B unqualified real kernel; process-wide multi-client sparse 32KiB quota allocator, actual M4 packet serializer, Go V4 exporter/admission/raw driver/nativeWin/ARM/perf/physical/product NOT_RUN. New M1 wake-stop and M4 TCP envelope atom remain independently owned; M0 did not move their refs."
 }
