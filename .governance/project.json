@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0 WBC4/WBG4 wire-only Rust codec: SOURCE fdcacde, Actions run38519636181 attempt1 build/consume native Linux x64 13/13 PASS，固定WBC4 receipt72B/legacy TLV21B和WBG4 19B golden，receipt 20+40×pages(≤8)、旧格式/非法flags/type/size/budget/未来PN/256对齐/重复receipt及u64/u16边界；同SOURCE Rust platform38519636182/types38519636189/native Go-C-Rust ABI38519636220/Windows+ARM cross38519636196/Governance38519636197均成功。该codec无真实加密/认证/receipt处理/Game数据面，不激活生产V4。下一原子任务审计R0 source-lock/qualification与当前workspace及test-ID→manifest实际覆盖差异，确认分工前阻断项；M1–M4 reserved。",
+  "next_decision": "R0 source-lock reconciled to four crates and pinned Go/Rust scopes; r0/qualification-manifest.json catalogs eight historical source/run-qualified gates plus 44 architecture test IDs (B01/R01/I01/C01 PARTIAL_FAKE, 40 NOT_RUN). SOURCE c66416c audit38521076297 + seven native/Go workflows + governance green; SOURCE 35d599b source-lock cross workflow trigger fix, audit38521306796/cross ABI 38521307048 (Windows x64 and ARM64 cross-only)/governance38521306875 success. R0 partial; true Rust record AEAD/HP golden and LINK/FEC/MTU unimplemented; real engine/data I/O and production V4 disabled, M1-M4 reserved. Next only minimal R0 record framing vs pinned Go oracle explicit-offset/golden boundary, no pseudo-AEAD.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

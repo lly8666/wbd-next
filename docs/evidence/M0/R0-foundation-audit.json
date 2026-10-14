@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "SOURCE_LOCK_AND_R0_44_CASE_AUDIT",
+  "result": "STATIC_AUDIT_PASS_R0_FOUNDATION_PARTIAL",
+  "code_shas": [
+    "c66416c837108a2538394a446f3b91a18fd213e6",
+    "35d599b288ea19c3cead36b22ec561e4820ef38e"
+  ],
+  "predecessor_cursor_sha": "1d773acfe7d17227486554b339350ee5228b183b",
+  "qualification_manifest": "r0/qualification-manifest.json",
+  "source_lock": "r0/source-lock.json",
+  "scope": "Four-workspace crate and pinned-Go/Rust source metadata reconciliation, historical receipt inventory and static consistency checks; never a replacement for compiled/native tests",
+  "historic_gate_count": 8,
+  "case_id_count": 44,
+  "partial_fake_case_ids": [
+    "B01",
+    "R01",
+    "I01",
+    "C01"
+  ],
+  "not_run_case_count": 40,
+  "fully_qualified_architecture_ids": 0,
+  "source_one": {
+    "sha": "c66416c837108a2538394a446f3b91a18fd213e6",
+    "attempt": 1,
+    "runs": [
+      {
+        "kind": "audit",
+        "run_id": 38521076297,
+        "conclusion": "success",
+        "build_job_id": 115710658952,
+        "consume_job_id": null
+      },
+      {
+        "kind": "codec",
+        "run_id": 38521076328,
+        "conclusion": "success",
+        "build_job_id": 115710659071,
+        "consume_job_id": 115710751518
+      },
+      {
+        "kind": "go-control",
+        "run_id": 38521076319,
+        "conclusion": "success",
+        "build_job_id": 115710659096,
+        "consume_job_id": 115710866884
+      },
+      {
+        "kind": "platform-fake",
+        "run_id": 38521076295,
+        "conclusion": "success",
+        "build_job_id": 115710658877,
+        "consume_job_id": 115710748479
+      },
+      {
+        "kind": "types",
+        "run_id": 38521076283,
+        "conclusion": "success",
+        "build_job_id": 115710659266,
+        "consume_job_id": 115710751916
+      },
+      {
+        "kind": "native-abi",
+        "run_id": 38521076275,
+        "conclusion": "success",
+        "build_job_id": 115710658910,
+        "consume_job_id": 115710848281
+      },
+      {
+        "kind": "go-vectors",
+        "run_id": 38521076265,
+        "conclusion": "success",
+        "build_job_id": 115710658932,
+        "consume_job_id": 115710814013
+      },
+      {
+        "kind": "go-v4-tls",
+        "run_id": 38521076264,
+        "conclusion": "success",
+        "build_job_id": 115710658782,
+        "consume_job_id": 115710860495
+      },
+      {
+        "kind": "governance",
+        "run_id": 38521076251,
+        "conclusion": "success",
+        "build_job_id": 115710658497,
+        "consume_job_id": null
+      }
+    ],
+    "cross_abi": "NOT_TRIGGERED_DUE_TO_MISSING_PUSH_PATH_IN_OLD_WORKFLOW",
+    "static_artifact_id": 11874091674,
+    "static_zip_sha256": "2f172f32215f84e1a3eed0eca00d090cec29a503007a3235ec30e0b3c29cebe3"
+  },
+  "source_two": {
+    "sha": "35d599b288ea19c3cead36b22ec561e4820ef38e",
+    "attempt": 1,
+    "static_audit": {
+      "run": 38521306796,
+      "job": 115711382002,
+      "conclusion": "success",
+      "artifact": 11873634026,
+      "zip_sha256": "f431e20c5196369fa52047ab6d261b4826ec0feeec0993eedb906ae4cceb39f8"
+    },
+    "governance": {
+      "run": 38521306875,
+      "job": 115711382176,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "run": 38521307048,
+      "conclusion": "success",
+      "build_jobs": {
+        "linux_arm64": 115711383762,
+        "windows_x64": 115711383944
+      },
+      "consume_jobs": {
+        "linux_arm64": 115711602507,
+        "windows_x64": 115711602535
+      },
+      "linux_arm64": {
+        "build_artifact": 11873488389,
+        "result_artifact": 11873164167,
+        "build_zip_sha256": "c5ab1683aafd8db69bb4d3965d5b8e3754c8eaf0d99ea8ef3104ae17abbc221f",
+        "result_zip_sha256": "1db827834ced75f9cc17befe7b65143548da7f9e55c87cd014e63b18374504bf",
+        "target_native_execution": "NOT_RUN"
+      },
+      "windows_x64": {
+        "build_artifact": 11873574346,
+        "result_artifact": 11873198967,
+        "build_zip_sha256": "5a772cc02fd285f3bb1d95219e8132e5b70cbacc3b9c035eb3dbbfbcc0bc003b",
+        "result_zip_sha256": "35dd4a61e35035fa93a4706ad4213ca499c47dfc839b33dd4aaa6a277e828f52",
+        "target_native_execution": "NOT_RUN"
+      }
+    }
+  },
+  "input_sha256": {
+    "source_lock": "af03203d418106cd8d05eec2a9ee6867b39928e167b8b0979912a0ed1ac5727f",
+    "qualification_manifest": "36f3704ccb5c003cae064125b27e361e47d833cebd71e817969e4cb363fa5e58"
+  },
+  "findings": [
+    {
+      "key": "STALE_BOOTSTRAP_LOCK",
+      "status": "FIXED",
+      "explanation": "Changed original wbd-types-only and Go compiled=false/no ABI proof to qualified test-only scopes, retained original old Go repository and toolchain SHA."
+    },
+    {
+      "key": "MISSING_CROSS_TRIGGER",
+      "status": "FIXED_AND_CROSS_CONSUMED",
+      "explanation": "Source-lock was used by the cross-target binary manifest but absent from workflow push paths; added it and auditor regression check; Windows/ARM full build + consume completed on fix source."
+    },
+    {
+      "key": "HISTORIC_PROOFS",
+      "status": "SCOPED",
+      "explanation": "Eight gates point to exact historical source/run, no combination into single product build; 44 cases show 4 partial fake subsets and 40 not run."
+    }
+  ],
+  "remaining_blockers": [
+    "real Rust record AEAD/header-protection and old Go record golden",
+    "LINK/FEC wire/golden and MTU boundaries",
+    "real steady Rust engine and OS IO",
+    "Go actual V4 epoch/runtime lifecycle and ABI data plane integration",
+    "Windows/ARM native target code execution",
+    "all product/performance/physical qualification"
+  ],
+  "production_v4": "DISABLED_FEATURES_ZERO",
+  "product_qualification": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "workers": "M1-M4_RESERVED",
+  "audit_limit": "Checks local checked-in evidence metadata and source anchors only; does not re-execute historical program or query GitHub run state",
+  "next_action": "R0 minimal Rust record framing vs actual pinned old Go wire oracle golden/explicit offsets and rejection tests under Actions compiled-once/consume; no pseudo AEAD and no product V4 enablement"
+}
