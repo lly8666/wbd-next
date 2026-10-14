@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 30,
-  "checkpoint_sha": "7d5b99a75a538f9ac895f4043864cb7b0bda4257",
+  "sequence": 31,
+  "checkpoint_sha": "3026b22a12f7c57d3495e06c31ec706c8aa37ba2",
   "progress": "partial",
-  "task_id": "R2-M0-REVERSE-REPLAY-001",
-  "current_task": "M0 bound Rust test-only reverse Health/Receipt to M3 authenticated ReplayProtectedLaneRx instead of unwindowed LaneRxCrypto. Authentic replay PN duplicates and retired records now rejected before M2 receipt updates, invalid ciphertext cannot poison PN floor. Actual M1 FrozenRecord/M2 shadow/M4 ready send remain verified at main SOURCE9f8ad3e. R2 native compiled once/consumed 6/6 plus 7/7 same-SOURCE Actions SUCCESS; no Go V4 live admission.",
-  "why_now": "M0 seq29 checkpoint3be8d286→main3f589968 one cursor H Governance38560869174 PASS/CLEAN; prior main ad0ae13 R1 3-suite AEAD-first anti-replay native3/3 and codec23/23 PASS, but R2 reverse BoundReceiptIngress still raw LaneRxCrypto, replayable valid Health could reenter M2 state. Role M0 owns engine composition; M3 replay code separately validated. M1 and M4 owner source already integrated for first packet; roles currently await next atomic assignment.",
-  "done_when": "Main code S9f8ad3e2d94c60d347519fedc3409fe94184baf3 changed only M0 engine recovery_ingress.rs, native r2_receipt_ingress.rs, dedicated build-consume workflow, devlog. Dedicated Actions38562167674 Rust1.85.1 x64 build job115845677716 consumer job115846014935 6/6 actual native tests PASS, verified binary SHAea206c4a... lock4147b117... log043d5d6b...; authentic duplicate rejected, tampered cannot move PN floor, retired valid positive cannot release, all three genuine suites, M1 FrozenRecord and M4 repair outcomes. Seven/seven same SOURCE Actions SUCCESS: R2 ingress, R1 Normal-off, G2, R0 native ABI, cross ABI build+consume (NO cross target native execution), governance, static. Evidence/project S7d5b99a75a538f9ac895f4043864cb7b0bda4257 governance run38562621659 SUCCESS. Cursor H one path only. No worker branch write and Go V4 production/test/native driver/physical/perf NOT_RUN.",
-  "next_action": "On next M0 atom refresh worker M2 current seq5 pure R2-M2-BUDGET-001 native15/15 SOURCE4f485269, main and M4 refs; integrate M2 actual 1s F/R/L budget reserve/Accepted/NotSent/Uncertain into existing M0-owned submit_repair_once with M1 frozen and M4 readonly in-process sink under same-source Rust Actions. Preserve 8MTU burst, epoch/wire debit and immutable PN; no product/global multi-client quota claim. M1 next independent task needs explicit M0 assignment for bounded queue wakeup and concurrency stop; M4 next independently bounded real Linux carrier/send outcomes, no native Windows claim. Distinct new atoms and do not write worker refs.",
+  "task_id": "R1-M0-IDLE-WORKER-ASSIGN-001",
+  "current_task": "M0 assigned new within-role owned native atomic tasks to M1 R1-M1-WAKE-STOP-002 (std thread armed/SeqCst double-check, no lost-wakeup/stop) and M4 R1-M4-IPV4-TCP-READY-002 (accurate real IPv4/TCP packet bytes+checksum/MTU/seq-wrap) on main registry existing revision2 epoch1; owner paths/branches unchanged. Assignment policy Actions success but workers have NOT implemented new code.",
+  "why_now": "M0 seq30 checkpoint7d5b99a→main c51d7a only cursor H with Governance38562827163 success. M1 independently source46571e native10/10 with current H e511f133 seq2 ready_for_integration, already imported M0 first packet; M4 sourcebcf0bc native6/6 with H a8dd64d seq4 ready_for_integration, in-process sink imported M0. Both new tasks are independent of M2 repair budget M0 integration and M3 scalar FEC continuity.",
+  "done_when": "M0 main S c135d6dedc5d09ab10d7394370292bbfa64e9205 updates only M1/M4 goals+done_when in registry (no epoch/revision/branch/allowed/owned semantics changes), project next decision, doc decision and assignment receipt. Assignment SOURCE Actions Governance38564565449 SUCCESS and G2 native38564565586 SUCCESS; separate evidence S3026b22a12f7c57d3495e06c31ec706c8aa37ba2 Governance38564903092 SUCCESS. Exact source of evidence c135; worker implementation/test results for NEW tasks NOT_RUN. H only cursor. No worker ref changes or Go V4 activation.",
+  "next_action": "M0 next atom refresh M2 seq5 budget SOURCE4f485269b3af4b1aba46cce602a3996a720c8538 and current M4/platform, integrate existing 1s F/R/L quota reservations/debit/refund into M0-owned submit_repair_once in-process, with exact wire bytes and Accepted/NotSent/Uncertain; native worker/source-rigorous CI. M1 and M4 independent active writers should refresh main assignment doc+registry, own branch cursor/head and start their NEW scoped tasks with own code S+evidence S+cursor-only H. M0 separately review M1 rtrb/loom deps request, do not claim rtrb or actual AF_PACKET/Windows from their new atoms.",
   "unverified": true,
-  "last_tested_source": "9f8ad3e2d94c60d347519fedc3409fe94184baf3",
+  "last_tested_source": "c135d6dedc5d09ab10d7394370292bbfa64e9205",
   "evidence_refs": [
-    "docs/evidence/M0/R2-reverse-health-replay.json"
+    "docs/evidence/M0/R1-idle-worker-assign.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R2-reverse-health-replay.md",
-    "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/05-RECORD-CRYPTO.md",
-    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/decisions/M0-R1-next-worker-atoms.md",
+    "docs/architecture/modules/02-RUNTIME.md",
+    "docs/architecture/modules/03-MEMORY.md",
+    "docs/architecture/modules/04-CARRIER-IO.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 remote seq29 checkpoint3be8d286→HEAD3f589968 one H governance38560869174 PASS CLEAN. Main R2 reverse Health still raw AEAD; M0 S9f8ad3 changes BoundReceiptIngress to own actual M3 ReplayProtectedLaneRx, authenticated PN replay gating before M2 on_receipt, distinct Replay Duplicate/Retired errors, read-only real metadata. Native R2 6/6 same-source run38562167674 Linux x64 Rust1.85.1 compiled-once/consume hash-verified, original M1 frozen shadow and M4 exact send dispositions preserved, all three suites authenticated and PN replay rejected. Same source 7/7 Actions success including R1 Normal/off and cross ABI build-only. Evidence/project S7d5b99a governance38562621659 success. M1 HEAD e511f133 seq2 initial native10/10, M4 HEAD a8dd64d seq4 native6/6 both ready_for_integration initial only and already main in-process consumed; need new bounded worker atoms for real wakeup and OS backend. M2 pure F/R/L budget seq5 source4f485269 native15/15 independently, next M0 integrate budget into in-process M4 send path. No Go V4 admission/session exporter/real raw carrier/Win native, full product/performance/physical qualification; ABI feature0 and Go V4 DISABLED."
+  "partial_summary": "Role reservation2 epoch1 unchanged. M1 HEAD e511f133 seq2 first owner ready; M4 HEAD a8dd64d seq4 first platform ready; both initial native qualified scoped source only, code already consumed by M0 in-process. M0 task assignment via main registry goals/do-when and docs decision on CODE SOURCEc135d6 Governance38564565449 G2-native38564565586 both SUCCESS; receipt S3026b22 Governance38564903092 SUCCESS. Next M1 real thread park/unpark armed double-check stop under std existing bounded queues, deterministic r1_ Actions; rtrb/loom remains M0 pin request separately. Next M4 pure true IPv4/TCP-like header/wire/checksum seq32/MTU from sealed record, without OS raw send. Existing M2 15/15 budget SOURCE4f485269 awaits M0 integration, M3 active FEC continuation. Worker HEAD/epoch/reservation/owned paths not touched. New worker code/tests NOT_RUN; Go V4 production disabled; product/perf/physical NOT_RUN."
 }
