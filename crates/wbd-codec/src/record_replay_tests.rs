@@ -95,7 +95,8 @@ fn r1_replay_256_tagged_boundary_no_resurrection_with_two_physical_pages() {
         (1,"duplicate"),(256,"duplicate"),(512,"first"),
         (257,"first"),(255,"retired"),(257,"duplicate"),
     ] {
-        let actual=rx.open_unique_in_place(&mut wire(RecordSuite::ChaCha20Poly1305,pn,b"tag"));
+        let mut owned=wire(RecordSuite::ChaCha20Poly1305,pn,b"tag");
+        let actual=rx.open_unique_in_place(&mut owned);
         match expected {
             "duplicate"=>assert_eq!(actual,Err(UniqueOpenError::Duplicate),"pn {pn}"),
             "retired"=>assert_eq!(actual,Err(UniqueOpenError::Retired),"pn {pn}"),
