@@ -4,26 +4,27 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 2,
-  "checkpoint_sha": "0a65e40598e4b7fbcbb407274c83767bf53fcda0",
+  "sequence": 3,
+  "checkpoint_sha": "0a1d51546073d9ea32c3ef9bc8900377131beb33",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-OWNER-001",
-  "current_task": "R1-M1-OWNER-001 scoped TX/RX owner and bounded arena native proof COMPLETE; awaiting M0 integration",
-  "why_now": "M0 G2 revision2 authorizes strictly isolated first R1/R2 task after locked R0 types/codec/ABI/wire oracles; worker branch is a new scope, not a product qualified engine.",
-  "done_when": "GitHub Actions native compiled-once proof of stop/return/fairness with explicit B01/M01/R01 partial scope; standalone M1 branch with S+H, no product readiness.",
-  "next_action": "M0 review M1 S/evidence and SPSC/loom dependency request, integrate shared hooks/real record+driver in its own scope; M1 next atomic only after newly assigned task or integration boundary is clear.",
+  "task_id": "R1-M1-WAKE-STOP-002",
+  "current_task": "R1-M1-WAKE-STOP-002 scoped std wake/stop/return proof COMPLETE; M0 integration and shared R0 ABI harness fix pending",
+  "why_now": "M0 main registry goal/done_when assigned R1-M1-WAKE-STOP-002 without changing M1 rev2 epoch1 or allowed paths; docs/decisions/M0-R1-next-worker-atoms.md is control-plane assignment.",
+  "done_when": "Own native Rust Actions compile-once consumer proves lost-wakeup/stop/full queue+loan-return interleavings with named R01/R02/M01; keep fresh independent, no std blocking on ready path, no new shared dependencies, S/evidence/H; root SPSC/loom still M0 deferred.",
+  "next_action": "M0 to review M1 wake/stop S2=81cbc57, native Actions38567433037 and evidence; fix shared tools/r0_abi_bundle.py unfiltered '3 passed' sentinel (run38567433175 FAIL); handle shared rtrb/loom request before product integration. M1 waits for a new explicit scoped task.",
   "unverified": false,
-  "last_tested_source": "46571e69baa83bd01061ccbf03f03de7f4ab277d",
+  "last_tested_source": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-OWNER-001-actions.json"
+    "docs/evidence/M1/R1-M1-WAKE-STOP-002-actions.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md"
+    ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+    ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
   ],
   "context_refs": [
     "docs/decisions/M0-G2-worker-activation.md",
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M1-OWNER-001 own done_when met at exact source 46571e69: 10/10 native r1_ unit tests PASS, compile-once build/consume #38538248506 SUCCESS, M1 Governance and R0 regressions SUCCESS. Arena returns last frozen clone nonblocking including full return queue; frozen bytes share Box through Arc; TX/RX distinct bounded queues with fake MonoNs, fresh never waits on queued repair. B01/M01/R01 PARTIAL_LOCAL_PROOF only. S 46571e69, evidence S 4704a58d; artifact audit/evidence fix S 0a65e405 after H governance invalid evidence_refs failure at run 38538729612; this corrected H cursor-only. No rtrb/loom/armed OS signal/timer wheel/driver/true crypto/M2 shadow/network/V4; product/perf/physical NOT_RUN. Production readiness false, ABI features=0. Request M0 shared Cargo/loom and integration; no writes outside M1 paths."
+  "partial_summary": "R1-M1-WAKE-STOP-002 local done_when satisfied at exact SOURCE 81cbc57: 19/19 worker native compiled-once Actions38567433037 SUCCESS (9 new R01/R02/M01 + 10 existing R1); inspected result ZIP11896616899/test log and hashes. Std OS-thread bounded queue, SeqCst armed/recheck, ready-only fresh/repair distinct slots, return-path notify, in-flight stop guard + extra drain and bounded pending stop; no per-record payload clone. Governance S2 38567433171 SUCCESS; G2/static/cross SUCCESS. R0 native ABI Actions38567433175 FAIL (Rust 22/22 rc0 but M0 shared harness unfiltered stdout expects '3 passed'); request M1-R0-ABI-HARNESS.md open. No all-CI/product qualification claim. Previous SOURCE 203eac4 18/18; S1=203eac4 S2=81cbc57 evidence S=0a1d515. rtrb/loom/eventfd/network/Windows/driver/perf/physical NOT_RUN; production Go V4 disabled, engine ABI features0. Await M0 shared fix and integration; H cursor-only follows."
 }
