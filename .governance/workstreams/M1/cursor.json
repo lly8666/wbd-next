@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 3,
-  "checkpoint_sha": "0a1d51546073d9ea32c3ef9bc8900377131beb33",
+  "sequence": 4,
+  "checkpoint_sha": "206d60192f21116220fb5709d9469c7f86623363",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-WAKE-STOP-002",
-  "current_task": "R1-M1-WAKE-STOP-002 scoped std wake/stop/return proof COMPLETE; M0 integration and shared R0 ABI harness fix pending",
-  "why_now": "M0 main registry goal/done_when assigned R1-M1-WAKE-STOP-002 without changing M1 rev2 epoch1 or allowed paths; docs/decisions/M0-R1-next-worker-atoms.md is control-plane assignment.",
-  "done_when": "Own native Rust Actions compile-once consumer proves lost-wakeup/stop/full queue+loan-return interleavings with named R01/R02/M01; keep fresh independent, no std blocking on ready path, no new shared dependencies, S/evidence/H; root SPSC/loom still M0 deferred.",
-  "next_action": "M0 to review M1 wake/stop S2=81cbc57, native Actions38567433037 and evidence; fix shared tools/r0_abi_bundle.py unfiltered '3 passed' sentinel (run38567433175 FAIL); handle shared rtrb/loom request before product integration. M1 waits for a new explicit scoped task.",
+  "task_id": "R1-M1-FEC-PARITY-READY-003",
+  "current_task": "R1-M1-FEC-PARITY-READY-003 scoped parity-ready TX deadline/stop proof COMPLETE, M0 composition and shared harness sync pending",
+  "why_now": "M0 main registry rev2 epoch1 assigned R1-M1-FEC-PARITY-READY-003 in docs/decisions/M0-parallel-worker-atoms-2026-10-14.md; M1 branch unchanged and prior H verified.",
+  "done_when": "Exact worker native compiled-once Rust r1_ tests cover first fresh before 32ms parity, parity-only wake at an absolute fake MonoNs deadline, repair/parity/fresh queue full+stop+return races, bounded parity service/fairness and no wrong early wake. Keep existing M1 tests passing, own S/evidence/H and Governance; real rtrb/loom/eventfd remains separate M0 dependency pin.",
+  "next_action": "M0 consume exact M1 source 20809638 and native Actions38598602128 evidence; integrate only with M3 authenticated FEC parity and M4 driver on main. M0 coordinate shared R0 ABI harness synchronization (branch old selector run38598602157 FAIL); M1 await next explicit scoped atom.",
   "unverified": false,
-  "last_tested_source": "81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2",
+  "last_tested_source": "20809638ba86eed25aee463a7bbba9a002761799",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-WAKE-STOP-002-actions.json"
+    "docs/evidence/M1/R1-M1-FEC-PARITY-READY-003-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M1-WAKE-STOP-002 local done_when satisfied at exact SOURCE 81cbc57: 19/19 worker native compiled-once Actions38567433037 SUCCESS (9 new R01/R02/M01 + 10 existing R1); inspected result ZIP11896616899/test log and hashes. Std OS-thread bounded queue, SeqCst armed/recheck, ready-only fresh/repair distinct slots, return-path notify, in-flight stop guard + extra drain and bounded pending stop; no per-record payload clone. Governance S2 38567433171 SUCCESS; G2/static/cross SUCCESS. R0 native ABI Actions38567433175 FAIL (Rust 22/22 rc0 but M0 shared harness unfiltered stdout expects '3 passed'); request M1-R0-ABI-HARNESS.md open. No all-CI/product qualification claim. Previous SOURCE 203eac4 18/18; S1=203eac4 S2=81cbc57 evidence S=0a1d515. rtrb/loom/eventfd/network/Windows/driver/perf/physical NOT_RUN; production Go V4 disabled, engine ABI features0. Await M0 shared fix and integration; H cursor-only follows."
+  "partial_summary": "R1-M1-FEC-PARITY-READY-003 scoped done_when met at exact source 20809638: worker native Actions38598602128 SUCCESS compiled once, 29/29 r1_ (19 prior+10 parity), actual result artifact11910593258 and binary/log hashes inspected. Independent slot/byte/age bounded parity, absolute fake MonoNs deadline, FEC/off no parity allocation, fresh first before 32ms, repair/parity finite fairness, O(1) hot ready peek, stop/return backlog. Governance38598602253, G2 38598602233, R0 audit38598602378, cross-ABI38598602272 SUCCESS; R0 native ABI38598602157 FAIL on stale worker branch shared tools/r0_abi_bundle.py '3 passed' marker (actual Rust 32/32 rc0), M0 request open. Code S cfaf19e then optimized S 20809638, evidence S 206d6019, cursor-only H follows. No M3 FEC encoding integration, rtrb/loom/eventfd/driver/Windows/perf/product/physical, V4 disabled, feature0. Not an all-CI PASS or product qualification."
 }
