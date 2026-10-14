@@ -13,3 +13,6 @@ M1 corrected stop/inflight race in `81cbc57ae97ea8664c70e3ade6ecc718cc08d5d2`; n
 ## New parity-atom observed worker branch discrepancy
 
 On M1 parity initial SOURCE `cfaf19e705d1b7295ccb3bee95baa799ce1052b3`, native ABI Action [38598099978](https://github.com/lly8666/wbd-next/actions/runs/38598099978) FAILED its consumer after compiling; the Rust executable rc0 actually reports 31/31 tests successful. Main `tools/r0_abi_bundle.py` blob `c7a22ce51b6ab059a847a83de0a1570e533108b5` already filters `r0_abi_`, but worker branch has old shared blob `c2b42b64a5763fecd01385d150d56ab8d6a7cc97`. Please M0 coordinate a non-worker-owned shared harness update/rebase/integration rather than requiring M1 to modify `tools/` outside allowed paths. Worker native parity proof remains independently scoped; R0 ABI workflow is NOT PASS.
+
+## Final parity-source repeat of same old worker-only harness failure
+Exact SOURCE `20809638ba86eed25aee463a7bbba9a002761799`, [R0 native ABI38598602157](https://github.com/lly8666/wbd-next/actions/runs/38598602157) consumer FAIL with Rust `rc0, 32 passed, 0 failed` on unfiltered binary and branch-old `"3 passed"` string marker. Worker native [38598602128](https://github.com/lly8666/wbd-next/actions/runs/38598602128) independently 29/29 PASS. Request remains M0-owned; no M1 shared test/harness write.

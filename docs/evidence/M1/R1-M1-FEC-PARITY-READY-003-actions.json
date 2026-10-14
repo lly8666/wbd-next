@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-FEC-PARITY-READY-003",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "20809638ba86eed25aee463a7bbba9a002761799",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "PASS_SCOPED_WORKER_NATIVE_ONLY_R01_R02_M01; not an integrated FEC encoder/driver or R0 ABI qualification",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38598602128,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38598602128",
+    "build_job": 115971668274,
+    "consume_job": 115971809057,
+    "runner": "ubuntu-24.04 x86_64-unknown-linux-gnu",
+    "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "compiled_once": true,
+    "consumer_exact_binary_hash_verified": true,
+    "tests_passed": 29,
+    "tests_failed": 0,
+    "previous_m1_r1": 19,
+    "new_parity_r1": 10,
+    "filtered_non_r1_tests": 3,
+    "artifact_build_id": 11912686220,
+    "artifact_result_id": 11910593258,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38598602128/artifacts/11910593258",
+    "artifact_result_json_sha256": "e9f3ae59f0e8e0138fd591f1e3cd239888014c93517e7129caa9dd6b97838063",
+    "artifact_test_log_sha256": "af14dc6d5348065e2e70de14e6aa43f93ba582bc519729fae53c40af5cbd0f2d",
+    "binary_sha256": "4998018c821588e07204a1b01d179a38624c20750601ca23300c18ca34d3a571",
+    "reviewed": "Downloaded GitHub artifact result ZIP and inspected result.json + test.log. Verified exact SOURCE, run_id/attempt, all 29 individually passing cases, binary hash, log hash and artifact file digest.",
+    "new_tests": [
+      "r1_parity_age_boundary_drops_expired_owned_record_and_zero_charge",
+      "r1_parity_capacity_slots_bytes_and_independent_fresh_repair",
+      "r1_parity_bounded_repair_parity_fairness_under_continuous_fresh",
+      "r1_parity_expiry_behind_nonexpired_ready_head_never_leaks_or_hol",
+      "r1_parity_out_of_order_deadlines_do_not_hol_or_expire_wrong",
+      "r1_parity_only_absolute_fake_deadline_wakes_parked_owner",
+      "r1_parity_first_fresh_before_32ms_fec_due_and_no_early_wake",
+      "r1_parity_rejects_slot_budget_and_retains_no_extra_payload_copy",
+      "r1_parity_wake_stop_cancels_delayed_parity_before_delivery",
+      "r1_parity_stop_full_three_classes_and_frozen_return_race"
+    ]
+  },
+  "other_actions_same_source": [
+    {
+      "id": 38598602253,
+      "name": "Governance",
+      "conclusion": "success"
+    },
+    {
+      "id": 38598602233,
+      "name": "G2 scoped bootstrap",
+      "conclusion": "success"
+    },
+    {
+      "id": 38598602378,
+      "name": "R0 qualification audit",
+      "conclusion": "success"
+    },
+    {
+      "id": 38598602272,
+      "name": "R0 cross ABI",
+      "conclusion": "success"
+    },
+    {
+      "id": 38598602157,
+      "name": "R0 native ABI",
+      "conclusion": "failure"
+    }
+  ],
+  "known_shared_ci_fail": {
+    "run_id": 38598602157,
+    "conclusion": "FAIL",
+    "detail": "Branch-local old tools/r0_abi_bundle.py consumes Rust test binary unfiltered and expects literal '3 passed'; actual test binary returned rc0 with 32/32 tests passed; consumer failed. This is NOT a workflow PASS, despite its Rust binary success.",
+    "main_has_fix": "main tools/r0_abi_bundle.py blob c7a22ce51b6ab059a847a83de0a1570e533108b5 filters r0_abi_; worker branch shared blob c2b42b64a5763fecd01385d150d56ab8d6a7cc97 still old",
+    "owner": "M0",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
+    "status": "OPEN"
+  },
+  "first_code_source": {
+    "sha": "cfaf19e705d1b7295ccb3bee95baa799ce1052b3",
+    "run": 38598099985,
+    "result": "28/28 native PASS, superseded by later M1 code source"
+  },
+  "proof": {
+    "bounded": "Owner-local preallocated ordered parity queue, slots/bytes/age limits, no payload copying, stop releases unsent handles; full repair/parity never consumes fresh quota",
+    "earliest_fresh": "Normal/off remains no-parity; first fresh dispatch occurs ahead of parity at 32ms",
+    "deadline": "Absolute fake MonoNs due with existing SeqCst armed recheck / std park/unpark, no early parity or per-packet sleep",
+    "fairness": "At most 10 consecutive fresh before secondary repair/parity service, alternating secondary when both ready",
+    "expiry": "O(1) ready-head check with age reclamation, O(slots) sweep only under optional parity admission pressure, no unbounded retry",
+    "return": "Return queue full + final frozen clone after stop tested",
+    "counterexamples": [
+      "R01",
+      "R02",
+      "M01"
+    ]
+  },
+  "limitations": {
+    "root_rtrb_loom_eventfd": "NOT_RUN",
+    "real_m3_fec_encoding_and_pipeline": "NOT_RUN",
+    "actual_driver_network": "NOT_RUN",
+    "root_abi_qualification": "FAIL_SEPARATE_SHARED_HARNESS",
+    "cross_platform": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_go_v4": "DISABLED",
+    "engine_feature_flags": 0
+  }
+}
