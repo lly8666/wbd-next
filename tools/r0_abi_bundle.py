@@ -86,8 +86,8 @@ RUST_ABI_CASES = frozenset({
 
 def verify_three_rust_abi_cases(stdout):
     """Attest the exact native libtest ABI group, not a substring count."""
-    names = re.findall(r"^test (?:[a-zA-Z0-9_]+::)*(r0_abi_[a-zA-Z0-9_]+) \\.\\.\\. ok$", stdout, re.M)
-    result = re.search(r"^test result: ok\\. (\\d+) passed; (\\d+) failed; (\\d+) ignored; (\\d+) measured; (\\d+) filtered out;", stdout, re.M)
+    names = re.findall(r"^test (?:[a-zA-Z0-9_]+::)*(r0_abi_[a-zA-Z0-9_]+) \.\.\. ok$", stdout, re.M)
+    result = re.search(r"^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored; (\d+) measured; (\d+) filtered out;", stdout, re.M)
     if (result is None or tuple(map(int, result.groups()[:4])) != (3, 0, 0, 0)
             or len(names) != 3 or frozenset(names) != RUST_ABI_CASES):
         raise ValueError("R0 native Rust ABI exact test set/count mismatch")
