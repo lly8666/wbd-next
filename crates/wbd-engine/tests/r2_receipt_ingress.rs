@@ -8,7 +8,8 @@ use wbd_codec::record_frame::{AUTHENTICATED_HEALTH_KIND,AUTHENTICATED_LINK_KIND,
 use wbd_engine::memory::{Arena,FrozenRecord};
 use wbd_engine::recovery_ingress::{BoundReceiptIngress,ReceiptIngressError,submit_repair_once};
 use wbd_platform::r1::{submit_ready,ReadyPacketSink};
-use wbd_recovery::{ReceiptConfig,ReceiptState,RepairSendResult};
+use wbd_recovery::{ReceiptConfig,ReceiptState,RepairSendResult,
+    RepairBudget, RepairBudgetConfig, BudgetDirection, BudgetError, WireDirection};
 use wbd_types::{LaneKey,MonoNs,RecordPn,SeqOffset,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,FrozenRecordHandle,UniqueSealable};
 
@@ -29,6 +30,19 @@ fn state()->ReceiptState<FrozenRecord>{
     ReceiptState::new(lane(),ReceiptConfig{
         max_shadow_entries:8,pto_ns:100,reorder_window_ns:5
     }).unwrap()
+}
+fn budget_with(tunnel:TunnelKey,outer_mtu:u64)->RepairBudget{
+    RepairBudget::new(BudgetDirection{tunnel,direction:WireDirection::ClientToServer},
+        RepairBudgetConfig {
+            outer_mtu,max_repair_bytes_per_epoch:100_000,
+            max_pending_reservations:8,max_pending_bytes:4_096,
+            io_timeout_ns:1_000_000,
+        },MonoNs(0)).unwrap()
+}
+fn budget()->RepairBudget {budget_with(lane().tunnel,536)}
+fn outer_wire_bytes(frozen:&FrozenRecord)->u64 {
+    frozen.bytes().len() as u64
+        + wbd_engine::recovery_ingress::TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD
 }
 fn original(a:&mut Arena,pn_expected:u64)->FrozenRecord{
     let business=b"\x00R2-original\xff";
@@ -174,23 +188,35 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     let mut arena=Arena::new(88,1,256,1,60_000).unwrap();
     let frozen=original(&mut arena,0);
     let sealed=frozen.bytes().to_vec();
+    let wire=outer_wire_bytes(&frozen);
+    let mut budget=budget();
+    // Only the M4-confirmed FIRST send earns F credit; neither receipt nor
+    // control and neither Uncertain repair creates fresh bytes.
+    budget.on_fresh_accepted(wire,MonoNs(0)).unwrap();
+    assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire);
+    assert_eq!(budget.snapshot().epoch_repair_limit,32_768);
     let mut shadow=state();
     shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
     let first=shadow.on_timer(MonoNs(100)).candidates.remove(0);
     assert!(std::ptr::eq(first.frozen().bytes().as_ptr(),frozen.bytes().as_ptr()));
     let mut wouldblock=Sink{mode:1,..Sink::default()};
-    assert!(matches!(submit_repair_once(&mut shadow,&first,&mut wouldblock,MonoNs(100)),
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&first,&mut wouldblock,MonoNs(100)),
         Ok(RepairSendResult::NotSent)));
     assert_eq!(shadow.outstanding(),1);
+    assert_eq!(budget.snapshot().charged_repair_bytes,0); // definite EAGAIN refund
+    assert_eq!(budget.snapshot().pending_count,0);
     let noimmediate=shadow.on_timer(MonoNs(101));
     assert!(noimmediate.candidates.is_empty());
     let second=shadow.on_timer(MonoNs(200)).candidates.remove(0);
     let mut short=Sink{mode:2,..Sink::default()};
-    assert!(matches!(submit_repair_once(&mut shadow,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
         Ok(RepairSendResult::Uncertain)));
-    assert!(matches!(submit_repair_once(&mut shadow,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
         Err(ReceiptIngressError::StaleCandidate)));
     assert_eq!(frozen.bytes(),sealed);
+    assert_eq!(budget.snapshot().charged_repair_bytes,wire);
+    assert_eq!(budget.snapshot().pending_count,0);
+    assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire);
     assert_eq!(shadow.outstanding(),1); // unknown syscall outcome is NOT receipt
     drop(first);drop(second);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
@@ -293,4 +319,60 @@ fn r2_m0_reverse_three_actual_suites_health_is_aead_first_and_one_time() {
         drop(result);drop(shadow);drop(frozen);
         assert_eq!(arena.drain_returns(),1);
     }
+}
+
+
+#[test]
+fn r2_m0_budget_real_frozen_m4_accepted_charges_exact_outer_wire_without_ack(){
+    let mut arena=Arena::new(92,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let sealed=frozen.bytes().to_vec();
+    let wire=outer_wire_bytes(&frozen);
+    let mut budget=budget();
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
+    let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
+    let mut sink=Sink::default();
+    assert_eq!(submit_repair_once(&mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100))
+        .unwrap(),RepairSendResult::Accepted);
+    assert_eq!(sink.datagrams,vec![sealed.clone()]);
+    assert_eq!(frozen.bytes(),sealed);
+    assert_eq!(budget.snapshot().charged_repair_bytes,wire);
+    assert_eq!(budget.snapshot().fresh_confirmed_bytes,0); // repair does NOT earn F
+    assert_eq!(budget.snapshot().pending_count,0);
+    assert_eq!(shadow.outstanding(),1); // M4 copied != authenticated peer ACK
+    assert!(matches!(submit_repair_once(
+        &mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100)),
+        Err(ReceiptIngressError::StaleCandidate)));
+    assert_eq!(sink.datagrams.len(),1);
+    assert_eq!(budget.snapshot().charged_repair_bytes,wire);
+    drop(candidate);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
+}
+
+#[test]
+fn r2_m0_budget_rejects_small_mtu_and_other_tunnel_before_driver(){
+    let mut arena=Arena::new(93,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let wire=outer_wire_bytes(&frozen);
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
+    let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
+    let mut sink=Sink::default();
+    let mut smaller=budget_with(lane().tunnel,wire-1);
+    assert!(matches!(submit_repair_once(
+        &mut shadow,&mut smaller,&candidate,&mut sink,MonoNs(100)),
+        Err(ReceiptIngressError::Budget(BudgetError::InvalidFrame))));
+    assert_eq!(smaller.snapshot().charged_repair_bytes,0);
+    assert_eq!(sink.datagrams.len(),0);
+    let mut other=budget_with(
+        TunnelKey{slot:99,generation:3},536);
+    assert!(matches!(submit_repair_once(
+        &mut shadow,&mut other,&candidate,&mut sink,MonoNs(100)),
+        Err(ReceiptIngressError::Budget(BudgetError::WrongTunnel))));
+    assert_eq!(other.snapshot().charged_repair_bytes,0);
+    assert_eq!(shadow.outstanding(),1);
+    assert_eq!(frozen.bytes().len() as u64+40,wire);
+    drop(candidate);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
 }

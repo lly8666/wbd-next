@@ -1,0 +1,114 @@
+name: M0 R2 true M2 native receipt and 1s repair budget
+run-name: "M0|${{ github.sha }}|r2-pure-budget-native"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r2-pure-budget-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-recovery/**"
+      - "crates/wbd-types/**"
+permissions:
+  contents: read
+concurrency:
+  group: r2-pure-budget-native-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compile once original M2 pure Rust receipt and F/R/L tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo test --release --locked -p wbd-recovery --no-run
+          binary="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_recovery-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          mkdir r2-budget-build
+          cp "$binary" r2-budget-build/budget.test
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          parts=['crates/wbd-recovery/src/receipt.rs','crates/wbd-recovery/src/budget.rs',
+                 'crates/wbd-recovery/src/lib.rs','Cargo.lock']
+          m={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
+             'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+             'toolchain':'1.85.1','target':'x86_64-unknown-linux-gnu',
+             'binary_sha256':sha('r2-budget-build/budget.test'),
+             'inputs':{p:sha(p) for p in parts},
+             'scope':'M2_REAL_PURE_RECEIPT_AND_1S_F_R_L_BUDGET_FAKE_CLOCK_NATIVE'}
+          pathlib.Path('r2-budget-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r2-budget-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-budget-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r2-budget-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-budget-build
+      - name: Hash attest exact binary and execute 15 true M2 r2 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib
+          m=json.load(open('r2-budget-build/manifest.json'))
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert m['source_sha']==os.environ['GITHUB_SHA']
+          assert m['run_id']==os.environ['GITHUB_RUN_ID'] and m['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert m['toolchain']=='1.85.1' and m['target']=='x86_64-unknown-linux-gnu'
+          assert sha('r2-budget-build/budget.test')==m['binary_sha256']
+          for p,h in m['inputs'].items():assert sha(p)==h,p
+          PY
+          chmod +x r2-budget-build/budget.test
+          mkdir r2-budget-result
+          set +e
+          r2-budget-build/budget.test r2_ --nocapture >r2-budget-result/tests.log 2>&1
+          exit_code=$?
+          set -e
+          cat r2-budget-result/tests.log
+          TEST_EXIT="$exit_code" python3 - <<'PY'
+          import os,json,pathlib,hashlib,re,sys
+          m=json.load(open('r2-budget-build/manifest.json'))
+          log=pathlib.Path('r2-budget-result/tests.log').read_text()
+          ok_line=re.search(r'test result: ok\. (\d+) passed; 0 failed',log)
+          n=int(ok_line.group(1)) if ok_line else 0
+          status='PASS' if n==15 and int(os.environ['TEST_EXIT'])==0 else 'FAIL'
+          out={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
+               'binary_sha256':m['binary_sha256'],'input_sha256':m['inputs'],
+               'log_sha256':hashlib.sha256(log.encode()).hexdigest(),
+               'native_test_count':n,'exit_code':int(os.environ['TEST_EXIT']),
+               'result':status,
+               'scope':'M2_IMPORTED_PURE_1S_F_R_L_AND_RECEIPT_NATIVE',
+               'not_qualified':'GLOBAL_MULTI_CLIENT_SPARSE_QUOTA;REAL_DRIVER;GO_V4_ADMISSION;PRODUCT;PERFORMANCE;PHYSICAL'}
+          pathlib.Path('r2-budget-result/result.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          if status!='PASS':sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r2-budget-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r2-budget-result/
+          if-no-files-found: warn
+          retention-days: 30

@@ -3,6 +3,11 @@
 #![forbid(unsafe_code)]
 pub use wbd_types::{LaneKey, MonoNs, RecordPn};
 pub mod receipt;
+pub mod budget;
+pub use budget::{
+    BudgetDirection, BudgetError, BudgetSnapshot, RepairBudget, RepairBudgetConfig,
+    ReservationId, WireDirection,
+};
 pub use receipt::{
     AuthenticatedReceipt, PollResult, ReceiptConfig, ReceiptPage, ReceiptState,
     Release, ReleaseReason, RepairCandidate, RepairSendResult,

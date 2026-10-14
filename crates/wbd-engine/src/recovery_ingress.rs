@@ -14,7 +14,8 @@
  use wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND;
  use wbd_platform::r1::{submit_ready, ReadyPacketSink};
  use wbd_recovery::{AuthenticatedReceipt, ReceiptPage, ReceiptState,
-                    Release, RepairCandidate, RepairSendResult};
+                    Release, RepairCandidate, RepairSendResult,
+                    RepairBudget, BudgetError};
  use wbd_types::{DataError, LaneKey, MonoNs, RecordPn};
  use wbd_types::buffer_contract::FrozenRecordHandle;
 
@@ -22,7 +23,7 @@
  pub enum ReceiptIngressError {
      UnboundLaneEpoch, Crypto(CryptoError), Control(CodecError),
      Replay(UniqueOpenError), NotHealth, MissingReceipt, Recovery(DataError),
-     StaleCandidate, DriverOutcome,
+     StaleCandidate, Budget(BudgetError), DriverOutcome,
  }
 
  /// A one-direction RX capability. Construct ONLY from trusted engine session
@@ -95,24 +96,54 @@
      }
  }
 
- /// Driver syscall result is NOT peer receipt: M2 records accepted/uncertain
- /// attempt cost, while true shadow release only occurs via accept_one().
- /// Uses original candidate frozen bytes; no new Seal/PN and no payload copy.
+ /// This in-process R2 step assumes the frozen TLS-like record is one
+ /// ordinary IPv4(20B)+TCP(20B) DATA segment, no options/VLAN/encapsulation.
+ /// It charges IP total wire bytes, never only encrypted payload length.
+ /// Actual envelope construction is M4's separately assigned task; until
+ /// then real nonbaseline carrier bytes MUST NOT use this adapter.
+ pub const TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD: u64 = 40;
+
+ /// Budgeted single repair dispatch. Only the original M1 frozen PN/seq/wire
+ /// is borrowed for M4's ready-only syscall path; no re-seal or new record.
+ /// Caller owns one M2 budget per authenticated tunnel+logical direction
+ /// across its lanes and separately records actually accepted fresh bytes.
+ /// A failed reserve never touches the driver or M2 receipt state.
  pub fn submit_repair_once<S: ReadyPacketSink,H: FrozenRecordHandle>(
-     state: &mut ReceiptState<H>, candidate: &RepairCandidate<H>,
-     sink: &mut S, now: MonoNs,
+     state: &mut ReceiptState<H>, budget: &mut RepairBudget,
+     candidate: &RepairCandidate<H>, sink: &mut S, now: MonoNs,
  ) -> Result<RepairSendResult, ReceiptIngressError> {
      if !state.preflight(candidate,now) {
          return Err(ReceiptIngressError::StaleCandidate);
      }
+     let record_len = u64::try_from(candidate.frozen().bytes().len())
+         .map_err(|_|ReceiptIngressError::Budget(BudgetError::InvalidFrame))?;
+     let outer_wire_bytes = record_len.checked_add(TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD)
+         .filter(|n| *n <= u16::MAX as u64)
+         .ok_or(ReceiptIngressError::Budget(BudgetError::InvalidFrame))?;
+     // Reserve BEFORE the driver call; capacity, direction and epoch pacing
+     // errors cannot become a send that escaped accounting.
+     let reservation=budget.reserve(candidate,outer_wire_bytes,now)
+         .map_err(ReceiptIngressError::Budget)?;
      let outcome=submit_ready(sink,std::slice::from_ref(candidate.frozen()));
      let disposition=match (outcome.accepted_prefix,outcome.uncertain_index,outcome.error) {
          (1,None,None) => RepairSendResult::Accepted,
          (0,Some(0),Some(_)) => RepairSendResult::Uncertain,
          (0,None,Some(_)) => RepairSendResult::NotSent,
-         _ => return Err(ReceiptIngressError::DriverOutcome),
+         // Unknown driver classifications must conservatively count as an
+         // uncertain attempt: NEVER refund a possibly transmitted record.
+         _ => {
+             state.on_send_result(candidate,RepairSendResult::Uncertain,now)
+                 .map_err(ReceiptIngressError::Recovery)?;
+             budget.on_send_result(reservation,RepairSendResult::Uncertain,now)
+                 .map_err(ReceiptIngressError::Budget)?;
+             return Err(ReceiptIngressError::DriverOutcome);
+         }
      };
+     // An improbable state failure retains the M2 pending reservation,
+     // which times out as conservatively charged Uncertain, not free credit.
      state.on_send_result(candidate,disposition,now)
          .map_err(ReceiptIngressError::Recovery)?;
+     budget.on_send_result(reservation,disposition,now)
+         .map_err(ReceiptIngressError::Budget)?;
      Ok(disposition)
  }

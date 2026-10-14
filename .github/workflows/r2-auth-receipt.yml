@@ -1,4 +1,4 @@
-name: M0 R2 authenticated replay gated receipt ingress and borrowed repair
+name: M0 R2 authentic replay + 1s repair byte budget composed
 run-name: "M0|${{ github.sha }}|r2-auth-receipt"
 on:
   push:
@@ -43,6 +43,7 @@ jobs:
           paths=['crates/wbd-engine/src/recovery_ingress.rs',
                  'crates/wbd-engine/tests/r2_receipt_ingress.rs',
                  'crates/wbd-recovery/src/receipt.rs',
+                 'crates/wbd-recovery/src/budget.rs',
                  'crates/wbd-codec/src/record_crypto.rs',
                  'crates/wbd-codec/src/record_replay.rs',
                  'crates/wbd-engine/src/memory/mod.rs',
@@ -53,7 +54,7 @@ jobs:
              'binary_sha256':sha('r2-auth-build/ingress.test'),
              'lock_sha256':sha('Cargo.lock'),
              'inputs':{p:sha(p) for p in paths},
-             'scope':'M0_IN_PROCESS_M3_AUTHENTICATED_REPLAY_UNIQUE_CONTROL_M2_REAL_FROZEN_RECEIPT_AND_M4_ATTEMPTS_NOT_PRODUCT'}
+             'scope':'M0_IN_PROCESS_M3_AUTH_REPLAY_M2_ACTUAL_BUDGET_M1_FROZEN_M4_DISPOSITIONS_NOT_PRODUCT'}
           pathlib.Path('r2-auth-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           print(json.dumps(m,indent=2))
           PY
@@ -75,7 +76,7 @@ jobs:
         with:
           name: r2-auth-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r2-auth-build
-      - name: Check identical native Rust binary and source then verify six authentic ingress and replay gates
+      - name: Check identical native Rust binary and source then verify eight authentic feedback and real-budget integration gates
         shell: bash
         run: |
           set -euo pipefail
@@ -103,14 +104,14 @@ jobs:
           m=json.load(open('r2-auth-build/manifest.json'))
           n=log.count(' ... ok')
           ec=int(os.environ['TEST_EXIT'])
-          ok=ec==0 and n==6 and '6 passed; 0 failed' in log
+          ok=ec==0 and n==8 and '8 passed; 0 failed' in log
           out={'source_sha':m['source_sha'],'run_id':m['run_id'],
                'attempt':m['attempt'],'binary_sha256':m['binary_sha256'],
                'lock_sha256':m['lock_sha256'],
                'log_sha256':hashlib.sha256(log.encode()).hexdigest(),
                'native_test_count':n,'exit_code':ec,'result':'PASS' if ok else 'FAIL',
-               'scope':'R2_M0_IN_PROCESS_AEAD_FIRST_REPLAY_GATED_FEEDBACK_AND_SHADOW_HANDOFF_ONLY',
-               'not_qualified':'LIVE_GO_V4_ADMISSION;AUTHENTICATED_SESSION_KEY_EXPORT;NETWORK_RX;GLOBAL_1S_BUDGET;PRODUCTION_V4;PERFORMANCE;PHYSICAL'}
+               'scope':'R2_M0_IN_PROCESS_AEAD_FIRST_FEEDBACK_AND_M2_1S_BUDGETED_READY_REPAIR_ONLY',
+               'not_qualified':'LIVE_GO_V4_ADMISSION;AUTHENTICATED_SESSION_KEY_EXPORT;NETWORK_RX;GLOBAL_MULTI_CLIENT_SPARSE_QUOTA;REAL_TCP_OUTER_BYTES;PRODUCTION_V4;PERFORMANCE;PHYSICAL'}
           pathlib.Path('r2-auth-result/result.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
           if not ok:sys.exit(1)
