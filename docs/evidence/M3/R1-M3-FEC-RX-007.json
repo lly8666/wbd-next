@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-RX-007",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+  "result": "PASS_SCOPED_NATIVE_AUTHENTICATED_INPUT_FEC_RX_HEAVY_COMPACT_AND_REAL_MISSING_ONLY_RS20",
+  "code": {
+    "owner": "crates/wbd-codec/src/fec_rx.rs",
+    "tests": "crates/wbd-codec/src/fec_rx_tests.rs",
+    "mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "export": "crates/wbd-codec/src/lib.rs",
+    "existing_tx": "crates/wbd-codec/src/fec_tx.rs",
+    "real_recovery": "crates/wbd-codec/src/fec_math.rs",
+    "existing_go_generator": "crates/wbd-codec/oracles/fec_go_golden/main.go",
+    "old_go_repository": "lly8666/wobuzhidao",
+    "pinned_old_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "old_go_decoder_source": "internal/fec/block.go",
+    "Go_decoder_native_in_this_atom": "NOT_RUN"
+  },
+  "trust_and_semantics": {
+    "input_boundary": "FecRxOwner::push_after_auth MUST be called only after actual caller-owned AEAD record authentication and PN replay rejection; WF-only parsing is NOT authentication",
+    "identity": "Config(epoch,direction,first_id_ext) binds one direction+epoch; Scope(epoch,direction,id_ext) supplied from separately trusted extended BlockID owner, checked against low32 wire and monotonic retired floor",
+    "streaming_first": "Authenticated 56B flags1 provisional streaming systematic delivers original body immediately, without waiting for final k or parity; stores an owned source solely while heavy and within bounded bytes",
+    "parity_first": "Final parity 56B flags0 provides immutable authoritative k, profile, size and per-source lengths; no missing estimate before final exists",
+    "final_conflict": "Already received streaming source index and length checked before final metadata admitted; same extended ID changed R, conflicting duplicate bytes, malformed final lengths fail closed into compact blocked tombstone",
+    "missing_only": "Only unreceived active source indices decoded using prior Go-normalized GF0x11d RS20 e×e inverse and direct parity coefficients; no padding/stale inactive source delivery; recovered originals delivered exactly once",
+    "no_redelivery": "Heavy→Compact persists recovered-only delivered bits AND authentic final lengths so late systematic is duplicate, including recovered sources never stored as raw systematic payloads",
+    "lifecycle": "Heavy first_seen+3000ms absolute, Compact transition+10000ms absolute; owner supplies monotonic clock; duplicates do not refresh timestamps. Manual expire(now_ms) works without new packets or background thread",
+    "pressure": "MaxHeavy source+parity bytes configurable <=64*20*65535; at most64 heavy entries; Compact max8192 entries with metadata/delivered bitmap only, allows late unreceived systematic first delivery but no parity recovery/reopen",
+    "retirement": "Compact expiry/capacity evicts and moves explicit monotonically increasing retired floor. Admission checks floor before and AFTER any pressure-driven compaction; old unseen IDs cannot resurrect on mid-push capacity eviction",
+    "error_boundary": "Invalid raw FEC schema/epoch/ID does not allocate or advance floor; profile conflicts and contradictory authenticated metadata tombstone the block, never undo already given original"
+  },
+  "tests": {
+    "new_named": [
+      "r1_rx_source_immediate_without_final_duplicate_cannot_extend_heavy",
+      "r1_rx_parity_first_final_e2_exact_go_k2_no_redelivery",
+      "r1_rx_first_systematic_then_only_missing_e2_and_very_late_no_duplicate",
+      "r1_rx_malformed_final_metadata_mixed_profile_and_duplicate_body_fail_closed",
+      "r1_rx_pressure_compacts_recovery_work_but_keeps_first_delivery",
+      "r1_rx_explicit_floor_on_compact_capacity_and_ten_second_expiry",
+      "r1_rx_scope_wrong_epoch_id_and_bad_wire_no_state_mutation",
+      "r1_rx_real_rs_full_erasure_six_profiles_streaming_late",
+      "r1_rx_capacity_retire_floor_cannot_resurrect_older_new_block"
+    ],
+    "cases": 9,
+    "prior_cases": 46,
+    "total_cases": 55,
+    "rs_profiles": [
+      4,
+      8,
+      10,
+      12,
+      16,
+      20
+    ],
+    "pinned_oracle_parity_k2": "two old-Go scalar bytes C081A7E6FB and 6758BB84F9 tested through real FEC TX and RX e2 recovery",
+    "historical_r0_codec_count": "unchanged frozen 13"
+  },
+  "observed_actions": {
+    "worker_native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38568299178,
+      "attempt": 1,
+      "source_sha": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+      "status": "completed",
+      "conclusion": "success",
+      "build_job": 115866537832,
+      "consume_job": 115866873290,
+      "target": "GitHub Actions native Linux x86_64 Rust1.85.1",
+      "compiled_once": true,
+      "r1_tests_passed": 55,
+      "r1_tests_failed": 0,
+      "binary_sha256": "5b61f3afd8a008fb293d0a8abe2b39f91de749b5c8e1ea88d94bbf41bdfeb7c2",
+      "test_log_sha256": "4c7bb1a84a465a18b45e3559b5272c04656df86605917069476908de2622e676",
+      "build_artifact": {
+        "id": 11895329355,
+        "digest": "sha256:d186df80a7951748ae218f90ab92aaf686b99978ed8314322601b4a64259c8fb",
+        "expires": "2026-11-13T13:01:30Z"
+      },
+      "result_artifact": {
+        "id": 11896423271,
+        "digest": "sha256:b028ec8825e25fcc05b07ce8f8d3b333df767a10b03e58ada86e338d5bad0694",
+        "expires": "2026-11-13T13:01:44Z"
+      }
+    },
+    "same_source": [
+      {
+        "workflow": ".github/workflows/r0-codec.yml",
+        "run_id": 38568298918,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-record-framing.yml",
+        "run_id": 38568299209,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-link-fec-wire.yml",
+        "run_id": 38568299180,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/g2-bootstrap.yml",
+        "run_id": 38568299218,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-qualification-audit.yml",
+        "run_id": 38568299021,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/governance.yml",
+        "run_id": 38568298913,
+        "conclusion": "success"
+      }
+    ],
+    "failure_history": [
+      {
+        "source": "b245f6de38d9eff7d30cefdd8720dc4ada349fc4",
+        "worker_run": 38567620117,
+        "result": "FAIL_50_OF_54_PASS_4_FAILED",
+        "cause": "Heavy→Compact did not carry final authoritative lengths for recovered-only indices; valid late original was misdiagnosed as conflicting duplicate. Conflict counter counted retries of already-blocked tombstones. Corrected in fa79ed19."
+      },
+      {
+        "source": "fa79ed192febe680ac5058c3bccd42a641678e9a",
+        "worker_run": 38567923729,
+        "result": "PASS_54_OF_54",
+        "follow_up": "Additional audit found a capacity/floor race: pressure eviction could advance retired floor after initial identity check, potentially recreating older unseen ID."
+      },
+      {
+        "source": "ab7ef93ad5b976a3f83cbe9b5f94191b442b0d94",
+        "result": "FINAL_PASS_55_OF_55",
+        "worker_run": 38568299178,
+        "fix": "Recheck retired floor after heavy compaction and after room-making, plus new named test preventing revival of an older ID."
+      }
+    ]
+  },
+  "untested": {
+    "real_aeAD_and_PN_integration": "NOT_RUN (pre-authenticated input is caller contract)",
+    "actual_original_Go_decoder_native_in_this_atom": "NOT_RUN",
+    "FEC_on_actual_business_packet_one_main_SOURCE": "NOT_RUN",
+    "trusted_extended_BlockID_owner": "CALLER_REQUIRED_NOT_INTEGRATED",
+    "timer_wakeup": "NOT_RUN_EXPLICIT_FAKE_MONOTONIC_TIME_ONLY",
+    "SIMD_ISAL": "NOT_IMPLEMENTED",
+    "recovery_table_cache64": "NOT_IMPLEMENTED",
+    "native_Windows_ARM": "NOT_RUN",
+    "p99_CPU_and_memory_profiler": "NOT_MEASURED",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_V4": "DISABLED",
+    "root_Cargo_lock_shared_ABI_CI": "NOT_MODIFIED_BY_M3"
+  },
+  "next_action": "M0 should call FecRxOwner only after authentic ReplayProtectedLaneRx, bind epoch/direction/trusted BlockID extension and mono timer, and run source-priority FEC-on real business first delivery and missing-only recovery under one main SOURCE. M3 next independent atom: bounded recovery coefficient/table cache and/or native ISA-L runtime backend only after explicit pinned toolchain ABI and target proof. No product PASS by this receipt."
+}
