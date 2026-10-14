@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-IO-001",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "bcf0bcacd51029abe5c8af429a000ee8853ceb3d",
+  "cargo_package": "wbd-platform",
+  "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "environment": "GitHub Actions Ubuntu-24.04 x86_64 native Linux",
+  "r1_native": {
+    "run_id": 38538117103,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "build_job_id": 115765897889,
+    "consume_job_id": 115765991794,
+    "conclusion": "PASS_SCOPED_WORKER_TESTS",
+    "tests_passed": 6,
+    "tests_failed": 0,
+    "exact_binary_sha256": "95a5aa49ce5a11182c83ceb4e9e5722bc39c512ecb238881790840cead41fbeb",
+    "exact_test_log_sha256": "9a47982c70ec961783138a1aee050f08719cfa7942712fbd976b3be7fe147b49",
+    "compiled_once": true,
+    "build_artifact": {
+      "id": 11880513779,
+      "digest_sha256": "69320f97d3b304367b60c42c60014f70885c938789a8532a3dafca0598d4b356"
+    },
+    "result_artifact": {
+      "id": 11880932382,
+      "digest_sha256": "7e823e4473e45d59fe743edc0d59d53221d72e44aa92cc60b61267d4ba24b352"
+    },
+    "fake_tests": [
+      "r1_driver_bounded_batch_and_invalid_accounting_fail_closed",
+      "r1_borrow_stop_timeout_preserves_live_frozen_memory_until_completion",
+      "r1_driver_wouldblock_and_interrupt_do_not_reclassify_suffix",
+      "r1_borrow_stop_and_acquire_race_is_fenced",
+      "r1_driver_prefix_uncertain_and_untouched_are_constant_size"
+    ],
+    "linux_native_udp_smoke": [
+      "r1_linux_native_udp_single_wire_roundtrip_not_af_packet"
+    ],
+    "limits": "OS UDP datagram smoke; not AF_PACKET/sendmmsg or carrier persona"
+  },
+  "regressions": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38538116951,
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "run_id": 38538117160,
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "run_id": 38538117088,
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-cross-abi.yml",
+      "run_id": 38538117161,
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-platform-fake.yml",
+      "run_id": 38538117164,
+      "attempt": 1,
+      "conclusion": "FAIL",
+      "actual_binary_assertions": "13/13 PASS (7 historical R0 + 6 new R1)",
+      "historical_r0_assertions": "7/7 PASS",
+      "failure_reason": "Unfiltered test binary output expected literal 7 passed; got 13; must be repaired by M0-owned tools/r0_platform_bundle.py",
+      "result_artifact_id": 11881162162,
+      "request_ref": ".governance/workstreams/M4/requests/M4-M0-R0-platform-filter.md"
+    }
+  ],
+  "qualifications": {
+    "fake_driver": "PASS_SCOPED_5_TESTS",
+    "linux_native_udp": "PASS_SMOKE_1_TEST",
+    "linux_native_af_packet_sendmmsg": "NOT_RUN",
+    "linux_actual_async_kernel_borrow_stop": "NOT_RUN",
+    "windows_native_npcap": "NOT_RUN",
+    "windows_native_wintun": "NOT_RUN",
+    "end_to_end_normal_fec_off_crypto_wire": "NOT_RUN",
+    "go_v4_production": "DISABLED",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "integration": "M0_SHARED_HARNESS_FIX_PENDING; M4_SCOPED_TESTS_PASS",
+  "no_root_or_abi_change": true
+}
