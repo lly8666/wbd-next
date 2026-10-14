@@ -3,7 +3,7 @@
   "role_id": "M0",
   "task_id": "R1-M0-CRYPTO-DEPS-001",
   "result": "DEPENDENCY_PIN_AND_NATIVE_API_SMOKE_PASS_SCOPE_ONLY",
-  "source_sha": "1ae49bd644a4624db331c80d2dce6a8d181189e0",
+  "source_sha": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
   "post_source_fix_sha": "f2a7a84dd8985e80964dac8b65e7b92652a07e8e",
   "assignment": {
     "branch": "main",
@@ -131,5 +131,13 @@
     "physical": "NOT_RUN",
     "all_15_on_single_source": "NOT_RUN_DO_NOT_COMPOSE_SEPARATE_SOURCE_RUNS"
   },
-  "next_action": "Coordinate M3 scoped access to approved root lock through safe branch ancestry protocol, then M3 own actual rust authenticated record+8B HP C01-C04; M0 next integration after M3 H is single-source Normal FEC-off first business packet Actions."
+  "next_action": "Coordinate M3 scoped access to approved root lock through safe branch ancestry protocol, then M3 own actual rust authenticated record+8B HP C01-C04; M0 next integration after M3 H is single-source Normal FEC-off first business packet Actions.",
+  "evidence_source_meaning": "Final observed tested SOURCE for root crypto pins plus corrected cross harness. Actual direct dependency integration code remains separately anchored at root_integration.source_sha 1ae49bd; no same-SOURCE composite PASS.",
+  "failed_cursor_h": {
+    "sha": "26ba6b0d9ed85bffe730239a7131521eef1e67d8",
+    "governance_run_id": 38547127557,
+    "conclusion": "failure",
+    "cause": "governance validate_repo requires evidence_refs[].source_sha == M0 cursor.last_tested_source. Evidence initially labeled 1ae49bd root dependency SOURCE while cursor labeled f2a7a84 last cross-ABI test SOURCE.",
+    "correction": "Use final tested f2a7a84 evidence top-level source_sha and preserve exact root code SOURCE 1ae49bd under root_integration; cursor H still follows an independently reviewed receipt S."
+  }
 }
