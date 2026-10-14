@@ -23,9 +23,9 @@
       "wbd-engine",
       "wbd-recovery"
     ],
-    "dependencies": "no_external_deps_yet",
+    "dependencies": "R1_CODED_PINNED_EXTERNAL_CRYPTO_APIS_NO_RECORD_CRYPTO_IMPLEMENTATION",
     "isa_l_sha": "NOT_LOCKED",
-    "aws_lc_rs_sha": "NOT_LOCKED",
+    "aws_lc_rs_sha": "CRATES_IO_LOCK_CHECKSUM_ONLY_NO_VENDORED_UPSTREAM_GIT_COMMIT",
     "cross_targets": [
       "aarch64-unknown-linux-gnu",
       "x86_64-pc-windows-gnu"
@@ -33,7 +33,7 @@
     "cross_targets_execution": "NOT_RUN; cross-compiled and C ABI layout/link inspected on Linux x64 runner only",
     "crate_scope": {
       "wbd-types": "R0_SHARED_TYPES_ONLY",
-      "wbd-codec": "R0_WBC4_WBG4_WIRE_ONLY",
+      "wbd-codec": "R0_WIRE_AND_M3_FRAME_BUDGET_PLUS_R1_EXTERNAL_CRYPTO_DEPENDENCIES_ONLY_REAL_SEAL_OPEN_NOT_IMPLEMENTED",
       "wbd-platform": "R0_FAKE_IO_CONTRACT_ONLY",
       "wbd-engine": "R0_ABI_SENTINEL_ONLY_FEATURES_ZERO",
       "wbd-recovery": "R1_R2_WORKER_BOOTSTRAP_API_ONLY_RECOVERY_NOT_IMPLEMENTED"
@@ -48,6 +48,26 @@
       ],
       "lower_crate_reverse_dependencies": "FORBIDDEN",
       "behavior": "R1_COMPILE_ONLY_NO_REAL_NORMAL_FEC_OFF_RUST_BUSINESS_PATH"
+    },
+    "crypto_dependencies": {
+      "cargo_lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+      "build_source_sha": "6b39093225fe7400af70c6847cb260b2b6769371",
+      "build_run_id": 38545741173,
+      "build_attempt": 1,
+      "rust_toolchain": "1.85.1",
+      "pins": {
+        "aws-lc-rs": "=1.18.1",
+        "chacha20": "=0.9.1",
+        "aes": "=0.8.4"
+      },
+      "features": {
+        "aws-lc-rs": [
+          "non-fips",
+          "alloc"
+        ]
+      },
+      "purpose": "R1 dependency graph and native 5 API probes only; M3 real AEAD+HP and old Go compatibility NOT_RUN",
+      "license_review": "aws-lc-rs ISC AND (Apache-2.0 OR ISC); aws-lc-sys has additional multi-license third-party notices to review before distribution; aes/chacha20 MIT OR Apache-2.0"
     }
   },
   "qualification": {
@@ -66,5 +86,5 @@
     "performance": "NOT_RUN",
     "physical": "NOT_RUN"
   },
-  "change_note": "M0 R1-only one-way workspace dependency wiring for future Normal/FEC-off integration; R0 ABI sentinel features=0 and historical 10 evidence gates remain scoped to their original SOURCEs, no real engine/admission qualification."
+  "change_note": "M0 coordination R1 exact rust1.85.1 crypto pins from GitHub Actions compiled API, Cargo.lock resolved in Actions; engine and ABI features0, no Rust authenticated record or production V4 enablement."
 }

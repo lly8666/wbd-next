@@ -81,8 +81,24 @@ def audit():
     require(members == EXPECTED_WORKSPACE, "current workspace does not match G2 five-crate bootstrap")
     require(set(lock["rust"]["crates"]) == members == set(m["workspace_expected"]),
             "source-lock/manifest/workspace crates drift")
-    require({p["name"] for p in packages} == members, "Cargo.lock package list drift")
-    require(not any(p.get("source") for p in packages), "third-party crate declared unexpectedly")
+    package_names = {p["name"] for p in packages}
+    require(members.issubset(package_names), "Cargo.lock lost an internal workspace crate")
+    externals = [p for p in packages if p["name"] not in members]
+    require(len(externals) >= 3, "R1 crypto lock omitted registry dependency closure")
+    require(all(p.get("source") == "registry+https://github.com/rust-lang/crates.io-index"
+                and len(p.get("checksum", "")) == 64 for p in externals),
+            "R1 external Cargo.lock provenance/checksum invalid")
+    by_name = {p["name"]: p for p in packages}
+    for name, version in (("aws-lc-rs", "1.18.1"), ("chacha20", "0.9.1"), ("aes", "0.8.4")):
+        require(by_name[name]["version"] == version, f"unapproved crypto version: {name}")
+    workspace_deps = workspace["workspace"].get("dependencies", {})
+    for name, version in (("aws-lc-rs", "1.18.1"), ("chacha20", "0.9.1"), ("aes", "0.8.4")):
+        require(workspace_deps[name]["version"] == "=" + version, f"crypto manifest pin drift: {name}")
+    require(workspace_deps["aws-lc-rs"]["features"] == ["non-fips", "alloc"]
+            and workspace_deps["aws-lc-rs"]["default-features"] is False,
+            "unexpected aws-lc-rs feature set or FIPS build")
+    require(lock["rust"]["crypto_dependencies"]["cargo_lock_sha256"] == sha256("Cargo.lock"),
+            "source lock no longer matches generated R1 crypto Cargo.lock")
     for crate in members:
         c = tomllib.loads(Path(f"crates/{crate}/Cargo.toml").read_text())
         require(c["package"]["name"] == crate, f"crate package mismatch: {crate}")
@@ -91,17 +107,26 @@ def audit():
         # lower-level crate pure types-only and engine as the sole importer.
         expected = (set() if crate=="wbd-types" else
                     {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"}
-                    if crate=="wbd-engine" else {"wbd-types"})
+                    if crate=="wbd-engine" else
+                    {"wbd-types","aws-lc-rs","chacha20","aes"}
+                    if crate=="wbd-codec" else {"wbd-types"})
         require(deps == expected,
                 f"crate {crate} dependency is not the locked one-way R1 graph")
         for k,v in c.get("dependencies", {}).items():
-            require(v.get("path") == f"../{k}",
-                    f"wrong internal-only source pin for {crate}->{k}")
+            if k in members:
+                require(v.get("path") == f"../{k}",
+                        f"wrong internal source pin for {crate}->{k}")
+            else:
+                require(crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"}
+                        and v=={"workspace":True},
+                        f"R1 crypto must only be consumed by codec: {crate}->{k}")
     lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
     require(lock_deps["wbd-engine"]==
             {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"},
             "Cargo.lock lost R1 engine assembly edges")
-    for crate in members - {"wbd-engine"}:
+    require(lock_deps["wbd-codec"]=={"wbd-types","aws-lc-rs","chacha20","aes"},
+            "Cargo.lock codec crypto direct dependencies drift")
+    for crate in members - {"wbd-engine", "wbd-codec"}:
         require(lock_deps[crate]==(set() if crate=="wbd-types" else {"wbd-types"}),
                 f"Cargo.lock inverted dependency: {crate}")
     require(lock["schema_version"] == m["schema_version"] == 1, "manifest schema mismatch")
