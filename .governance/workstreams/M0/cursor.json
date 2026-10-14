@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 25,
-  "checkpoint_sha": "55de2cd0672cb5a165c27c886f15fe926374965f",
+  "sequence": 26,
+  "checkpoint_sha": "dc76aebd51a31694d8742317d17cd6f14c95a1a7",
   "progress": "partial",
-  "task_id": "R1-M0-M3-ROOT-SYNC-001",
-  "current_task": "M0 reviewed and implemented one exact main-to-M3 crypto Cargo dependency sync boundary on main. M3 branch not modified; actual M3 merge and crypto remain NOT_RUN/NOT_IMPLEMENTED.",
-  "why_now": "M0 seq24 checkpoint875e287 to old main396c30d had only a verified cursor-only H run38547429267 SUCCESS/CLEAN. M3 4776cc2 seq2 has 7 worker-only FrameBudget commits; main 19 ahead from shared base and pins genuine Rust1.85.1 crypto Cargo.lock. Unqualified two-parent work merges were formerly denied. Only M0 may coordinate shared-branch/root policy, not substitute M3 development.",
-  "done_when": "S81b3b2df main worker_scope_ci.py exact M3 first-parent=4776cc2 two-parent merge review: second parent is main ancestor containing locked SHA1ae49bd, resulting tree net-diff vs main at most32 M3-owned paths and may NOT change root Cargo/lock/codec manifest; other merges rejected. Governance38548520617 SUCCESS. S f3bced85 adds API ancestry/tree negative tests, Governance38548723439 SUCCESS with 58/58 tests; continue-on-error live continuity observation exited1, not counted as PASS. Evidence S2363e265 Governance38548962949 SUCCESS, project.next_decision S55de2cd Governance38549048698 SUCCESS. M3 actual merge NOT_RUN; M0 no worker branch writes. H only cursor after reviewed S.",
-  "next_action": "On next M0 handoff refresh main/M3 registry/cursors/runs. If M3 still 4776cc2, leave branch to the active M3 writer to merge latest verified main with parents [4776cc2,main], preserving all M3 paths plus exact root Cargo/lock, then M3 own Actions S/H and true AEAD/PN8/HP8 tests (modules 00,05,11 C01-C04). If M3 head changed, re-review without force/rebase. After M3 real rust crypto+M1/M4 integrations pass at exact refs, M0 combine same-source native Normal/FECoff one packet in-process first-business delivery; not before.",
+  "task_id": "R1-M0-NORMAL-OFF-CHACHA-001",
+  "current_task": "Integrated one exact main source of M1 actual arena/owner, M3 real ChaCha record AEAD/8B HP, M4 readonly borrowed ready-only driver and M0 authenticated in-process Normal fixed/FEC-off first business packet. 2/2 native tests + 10/10 triggered same SOURCE Actions SUCCESS. This qualifies only IN_PROCESS_CHACHA_PACKET, not product or native raw network.",
+  "why_now": "From main seq25 checkpoint55de2cd→HEAD795d0e only H with Governance38549178834 success/CLEAN. M3 independently merged permitted main crypto lock 41c408fb and published real ChaCha code SOURCE5a14bb9 worker run38550461756 11/11 and 7/7 affected regressions; M1 e511f133 and M4 a8dd64d scopes ready. M0 unique main integrator combines only approved exact worker implementations, no worker branch writes.",
+  "done_when": "Main code S873169078353fcf6b653e613bd6181eaf0da4c5e Actions38552615723 attempt1 Rust1.85.1 Linux x64: build job115813956843 compiled exactly one integration binary; consume job115814309653 verified binary SHA189c07e6949f8918e76676329258a50f983a8ae14baef5c539295702c4249e63 and Cargo.lock SHA4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36; 2/2 native real ChaCha authenticated packet tests success, tamper rejected and failure PN burned, memory borrow-stop/repair no HOL. Exactly 10/10 same-SOURCE triggered workflows SUCCESS including cross ABI compile+consume, native ABI, R0 wire/LINK and Governance. Evidence S dc76aebd51a31694d8742317d17cd6f14c95a1a7 governance38553024811 SUCCESS. H only M0 cursor; no worker HEAD changes.",
+  "next_action": "One M0 atom only after refresh: inspect M3 exact new HEAD/cursor for actual AES128/256 or RX replay/bitmap implementation S/H plus independent Actions; if ready review and integrate precisely with new same-source impacted native tests. Otherwise coordinate one first-packet extension for authenticated RX replay/dedup only when M3-owned real replay module exists, or M4 real carrier when supplied. Do not add second mock, duplicate crypto, make Go V4 production active, or imply performance/physical PASS.",
   "unverified": true,
-  "last_tested_source": "f3bced85a4f75bceb7fa3cf0b86984c9815e7e84",
+  "last_tested_source": "873169078353fcf6b653e613bd6181eaf0da4c5e",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M3-ROOT-SYNC-001.json"
+    "docs/evidence/M0/R1-normal-off-chacha-first-packet.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-M3-crypto-root-sync.md",
+    "docs/devlog/M0/R1-normal-off-chacha-first-packet.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 preflight checkpoint875e287→main396c30d only H + Governance38547429267 success. Registry revision2 epoch1 active. M3 branch head4776cc2 seq2 7 worker-only commits since G2 base0845e7, no actual crypto; main19 ahead root pin. S81b3b2 reviewed one exact merge with protected main Cargo lock/manifests, Governance38548520617 PASS. S f3bced85 added test_m3_main_sync_remote_tree_and_root_pins plus first-parent/role/root reject tests; Governance38548723439 completed success, 58 Python governance tests pass, continue-on-error observe-live-continuity substep exit1 NOT_PASS. Evidence S2363e265 governance38548962949 SUCCESS; project pointer S55de2cd governance38549048698 SUCCESS. All commits main-only; M3 remains at4776cc2, M0 performed no branch merge. Real M3 AEAD+8B HP/Go record vectors, M1/M3/M4 combined business Normal/off E2E, production V4, performance, physical remain NOT_RUN/DISABLED. Next M3 writer lawful 2-parent main root sync, then independent crypto; M0 later same SOURCE integration."
+  "partial_summary": "M0 remotes main795d0e seq25 H only; M3 advanced worker head ef35e6d seq3, safe root lock merge41c408fb, real ChaCha record codec SOURCE5a14bb9 all 7 same-source Actions SUCCESS worker native 11/11, byte-exact 6 Go record oracles. M1 e511f133 seq2 ready, M4 a8dd64d seq4 ready, M2 independent. M0 integration main S8731690 imported exact M1 memory/runtime blobs, M3 real codec/pathbudget and M4 r1 driver API with root export only, plus tests and dedicated compile-once Actions. Direct R1 first business native Actions38552615723 build+consume SUCCESS 2/2, binary SHA189c07e, log SHA5912b055c, result artifact11887422163/sha5b019b6. Exactly 10/10 same SOURCE triggered runs SUCCESS including linux/Windows GNU cross builds but target execution NOT_RUN. Evidence Sdc76aeb governance38553024811 success. Real M1 Arc frozen and M3 AEAD+8B HP sealed in-place, M4 submit ready sink in-process simulated copied OS send; receives M1 buffer, M3 real authenticated open, payload equals initial; tamper/no delivery, capacity burns PN, shadow not HOL, stop pending loan not premature free. No real Go V4 admission exporter, native raw transport, replay bitmap, AES, production V4, perf or physical qualification. Product=NOT_RUN. Next M0 inspect independent M3 real AES/replay S/H, then precise extension only after worker proofs."
 }
