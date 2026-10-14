@@ -6,6 +6,8 @@
 
 /// R1 bounded, borrowed-handle driver API; legacy root types are R0 fixtures.
 pub mod r1;
+/// Scoped IPv4/TCP-like steady DATA bytes builder, not a raw OS driver.
+pub mod ipv4_tcp;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
