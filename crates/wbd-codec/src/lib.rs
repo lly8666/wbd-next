@@ -4,6 +4,9 @@
 //! never serialize native Rust/C structs as protocol bytes.
 #![forbid(unsafe_code)]
 
+/// R0 opaque TLS-like record structural segmentation (not authentication).
+pub mod record_frame;
+
 use wbd_types::LogicalPacketId;
 
 const CONTROL_MAGIC: &[u8; 4] = b"WBC4";

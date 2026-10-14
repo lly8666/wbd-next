@@ -1,0 +1,97 @@
+name: R0 actual pinned Go record oracle and Rust opaque framing
+run-name: "M0|${{ github.sha }}|r0-record-wire-framing"
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-types/**"
+      - "crates/wbd-codec/**"
+      - "r0/fixtures/legacy-record-wire-v1.txt"
+      - "r0/go_overlay/internal/tlsrecord/**"
+      - "r0/source-lock.json"
+      - "tools/r0_record_bundle.py"
+      - ".github/workflows/r0-record-framing.yml"
+permissions:
+  contents: read
+concurrency:
+  group: r0-record-framing-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: "1.23.12"
+          check-latest: false
+          cache: false
+      - name: Compile Rust framing probes and pinned Go real tlsrecord Seal/Open only once
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo build --release --locked -p wbd-codec
+          cargo test --release --locked -p wbd-codec --no-run
+          rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
+          test -n "$rust_test"
+          cp r0/go_overlay/internal/tlsrecord/r0_record_wire_oracle_test.go legacy/internal/tlsrecord/r0_record_wire_oracle_test.go
+          cp r0/fixtures/legacy-record-wire-v1.txt legacy/internal/tlsrecord/r0_record_wire_v1.txt
+          (
+            cd legacy
+            go test -c -o "$GITHUB_WORKSPACE/r0-record-go.test" ./internal/tlsrecord
+          )
+          python tools/r0_record_bundle.py pack \
+            --source "$GITHUB_SHA" --old "$(git -C legacy rev-parse HEAD)" \
+            --rust "$(rustc --version)" --go "$(go version)" \
+            --rust-test "$rust_test" --go-test r0-record-go.test \
+            --out r0-record-framing-bundle --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r0-record-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-record-framing-bundle/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r0-record-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-record-framing-bundle
+      - name: Verify source, two compiled binaries and execute actual Go and Rust tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r0_record_bundle.py consume \
+            --manifest r0-record-framing-bundle/manifest.json \
+            --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r0-record-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r0-record-framing-result/
+          if-no-files-found: warn
+          retention-days: 30

@@ -20,6 +20,7 @@ INPUTS = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
     "crates/wbd-types/src/lib.rs",
     "crates/wbd-codec/Cargo.toml", "crates/wbd-codec/src/lib.rs",
+    "crates/wbd-codec/src/record_frame.rs", "r0/fixtures/legacy-record-wire-v1.txt",
     "r0/source-lock.json", "tools/r0_codec_bundle.py",
     ".github/workflows/r0-codec.yml",
 )
@@ -95,7 +96,7 @@ def consume(a):
         digest(binary)!=expected.get("sha256")):
         raise ValueError("compiled Rust codec binary drift")
     os.chmod(binary,binary.stat().st_mode|0o100)
-    result=subprocess.run([str(binary.resolve()),"--nocapture"],text=True,
+    result=subprocess.run([str(binary.resolve()),"--nocapture","--skip","record_frame::"],text=True,
                           capture_output=True,timeout=100)
     log=result.stdout+result.stderr
     output=Path("r0-codec-result")
