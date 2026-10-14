@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "subtask": "NATIVE_GO_C_RUST_ABI_SENTINEL",
+  "source_sha": "b719f28ac2b112150e39133a9cabc8e7d32b8771",
+  "old_go_repository": "lly8666/wobuzhidao",
+  "old_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "target": "x86_64-unknown-linux-gnu",
+  "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "go_toolchain": "go1.23.12",
+  "workflow": ".github/workflows/r0-native-abi.yml",
+  "run_id": 38514286818,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38514286818",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "build_job_id": 115689490267,
+  "consume_job_id": 115689666206,
+  "build_artifact": {
+    "id": 11869919968,
+    "name": "r0-abi-build-38514286818-1",
+    "size_bytes": 2786422,
+    "zip_sha256": "a0de3ee97a6227ccfcdf92df2d11165ff069c2e474ec0ddb97f9d451216c5a56"
+  },
+  "result_artifact": {
+    "id": 11871535056,
+    "name": "r0-abi-result-38514286818-1",
+    "size_bytes": 1238,
+    "zip_sha256": "842dbf65aa102bb0be789bddb7c7e4f881fb8bf8d6e329e1c8b29b524f3f51f5"
+  },
+  "artifacts_consumer_check": "SHA256 and bytes for four precompiled binary files + SHA256 exact 13 source inputs + new source/old source/run/target/attempt manifest, dynamically load compiled Rust cdylib; no recompile in consume. External ZIP independent download NOT_DONE",
+  "native_binary_sha256": {
+    "libwbd_engine.so": "a55f95031a569510b99fd1d7bc7a0b69180250c5de38c8d703070ce8d5510a5c",
+    "r0_abi_c": "46b6f6450aa4fe57ad39bc0589b2c9b36d07ea8404040d6c399ee21619ff858e",
+    "r0_abi_go.test": "b15837924088e3efc05e0edc65d3e2f82700ba0fee8186f20c446c93b66c1063",
+    "r0_abi_rust.test": "1263b752936a2f337cb0f7a3bd946b139dbf3d37d37780abfbd085aacfb5f129"
+  },
+  "test_log_sha256": "cb6d7f10fd656f1653ef4c51a7628ce752572c2068698f980d9dce185a19f400",
+  "test_result": "PASS",
+  "test_counts": {
+    "rust_units": 3,
+    "native_c_executable": 1,
+    "old_go_cgo_groups": 4,
+    "failures": 0
+  },
+  "abi_contract": {
+    "version": 1,
+    "info_bytes": 24,
+    "config_bytes": 16,
+    "engine_token_bytes": 8,
+    "lane_token_bytes": 8,
+    "capability_features": 0,
+    "transport": "native dynamic Rust cdylib + C11 gcc executable and Go 1.23.12 cgo from old source tree",
+    "engine_limit_probe_only": 4,
+    "lane_limit_probe_only": 16
+  },
+  "tested": [
+    "Rust internal 32-bit generation exhaustion retires slot instead of wrapping",
+    "Rust engine and lane token separate namespaces, recycled generation changes, parent close invalidates lanes",
+    "Rust bounded probe allocation checks NO_CAPACITY and retains live tokens",
+    "C compiled-time struct layout/offset static assertions and real native calls into Rust exported symbols",
+    "C rejects null and old/mismatched sizes, version, flags/reserved without producing handles",
+    "C rejects type-swapped, stale and duplicate close; tests parent engine cascade close",
+    "Go cgo in pinned old module checks exact native widths/version and capabilities=0",
+    "Go cgo checks invalid input_size before read, NULL_ARG, unsupported and error mapping",
+    "Go cgo checks capacity of 4 engine/16 lane probe and stale on parent close",
+    "Compiled binary reuse and hash verification"
+  ],
+  "other_same_source_runs": [
+    {
+      "workflow": ".github/workflows/r0-build.yml",
+      "run_id": 38514286840,
+      "conclusion": "success",
+      "scope": "Rust wbd-types precompiled consumer only",
+      "build_artifact_id": 11870104529,
+      "build_zip_sha256": "6cccdc23131222af3771517e2403bf2077a1c63dc650d1d6f7c9614caff4c5b1"
+    },
+    {
+      "workflow": ".github/workflows/governance.yml",
+      "run_id": 38514286805,
+      "conclusion": "success",
+      "scope": "governance and design model only"
+    }
+  ],
+  "limitations": {
+    "native_ffi_scope": "R0 sentinel, no real steady engine. Header ABI is provisional v1 for R0; no BufferKey exported",
+    "real_engine": "NOT_IMPLEMENTED",
+    "actual_Go_app_linkage": "NOT_WIRED",
+    "rust_receipt_shared_game": "NOT_IMPLEMENTED",
+    "real_V4_admission_dispatch": "DISABLED",
+    "epoch_lease_release_real_lifecycle": "NOT_WIRED",
+    "invalid_nonnull_pointer_behavior": "CALLER_PRECONDITION_NOT_TESTED",
+    "windows_arm_native_abi": "NOT_RUN",
+    "platform_fake_driver": "NOT_RUN",
+    "fake_clock": "NOT_RUN",
+    "multi_target_build": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "在R0实现并Actions编译/消费 fake-clock 与 fake platform driver 的 send accepted_prefix/uncertain_index、leased buffer shutdown和失败PN不可复用反例（按I01/B01边界），保留V4产品禁用；之后跨架构真实构建探针"
+}

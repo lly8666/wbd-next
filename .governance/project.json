@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "R0 Linux真实Go控制入口fail-closed接线已在精确旧Go SOURCE编译并通过4项runtimeentry/2项V3保护回归/6项CLI拒绝及server check-config（SOURCE b1e1cf6，run38512634751）；生产V4依旧禁用因Rust receipt/Game/ABI尚不存在。下一原子任务做真实Go↔C↔Rust ABI原生尺寸、版本、opaque token与错误路径探针；M1–M4维持reserved。",
+  "next_decision": "R0 native ABI probe in Actions directly called Rust 1.85.1 cdylib via C and pinned old Go1.23.12 cgo: SOURCE b719f28, run38514286818 attempt1 Linux x64, Rust 3/C 1/Go 4 tests PASS, version/size/stale/opaque/generation/error/close; exported features=0, no real engine. 下一原子任务先做 R0 fake clock + fake platform driver 的 send prefix/uncertain/lease-close 反例与编译产物消费；Windows/ARM ABI及真实V4业务仍NOT_RUN，M1–M4 reserved。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
