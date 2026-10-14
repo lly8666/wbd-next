@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-CONTRACT-001",
+  "source_sha": "c1f5ce14dbbf8e2b79dafa0e71e452b2b494849c",
+  "harness_sha": "c1f5ce14dbbf8e2b79dafa0e71e452b2b494849c",
+  "result": "PASS",
+  "scope": "single_target_rust_wbd_types_precompiled_unit_and_artifact_consume_only",
+  "artifact_verified": true,
+  "verification_kind": "Actions consumer verified SOURCE+input sha256+artifact byte lengths/hash then ran precompiled test binary; separate offline archive verification not performed",
+  "run_id": 38507997009,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/r0-build.yml",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38507997009",
+  "github_status": "completed",
+  "github_conclusion": "success",
+  "build_job_id": 115669801143,
+  "consume_job_id": 115669889266,
+  "unit_tests": {
+    "passed": 5,
+    "failed": 0,
+    "ignored": 0,
+    "target": "x86_64-unknown-linux-gnu",
+    "recompiled_in_consume": false
+  },
+  "artifacts": [
+    {
+      "id": 11868362971,
+      "name": "r0-build-38507997009-1",
+      "archive_sha256": "65168fdfb903ae5315c7671d01b584ccc6bb8e91709ffe375bb0e3b22b24c3c1",
+      "size_bytes": 1735682
+    },
+    {
+      "id": 11868717157,
+      "name": "r0-unit-result-38507997009-1",
+      "archive_sha256": "7ac7f6a8b1e82bd312710ad36a564eea86152af380504ce1143ed3f909c2b690",
+      "size_bytes": 407
+    }
+  ],
+  "go_source_commit_verified": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "legacy_go_compiled": "NOT_RUN",
+  "go_v3_golden": "NOT_RUN",
+  "go_v4_golden": "NOT_RUN",
+  "go_rust_abi": "NOT_RUN",
+  "platform_abi": "NOT_RUN",
+  "arm64_windows_build": "NOT_RUN",
+  "product_qualification": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "governance_failure_on_initial_s": {
+    "run_id": 38507997045,
+    "reason": "project.product_implementation=NOT_STARTED disallowed first Cargo/crates paths; correct phase separately in a subsequent S; do not treat that workflow as success"
+  },
+  "next_action": "Actions编译旧Go并核V3已发行向量以及V4 24B admission golden，不借Python代数PASS；未完成R0门不激活M1–M4"
+}

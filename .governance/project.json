@@ -2,17 +2,23 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "ARCHITECTURE_READY",
+  "phase": "R0_FOUNDATION_IN_PROGRESS",
   "governance_evidence": "docs/evidence/M0/GOV-001-manual.json",
   "product_design": "DESIGN_READY",
-  "product_implementation": "NOT_STARTED",
+  "product_implementation": "R0_FOUNDATION_IN_PROGRESS",
   "architecture_ref": "docs/architecture/README.md",
   "module_design_ref": "docs/architecture/modules/README.md",
   "product_qualification": "NOT_RUN",
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "按模块施工说明00/11先做R0共享接口/旧Go向量/平台ABI/构建产物契约，再正式激活模块；本轮仍仅设计与模型验证。",
-  "hot_read_set": ["AGENTS.md", "PROJECT_CHARTER.md", ".governance/project.json", ".governance/registry.json", "START_HERE.md"],
+  "next_decision": "R0第一原子子任务的Rust共享类型/来源/单目标构建消费已进入实现；旧Go原始向量、V4 admission golden、C/平台ABI与三目标编译未验证，未达R0总done_when前M1–M4保持reserved。",
+  "hot_read_set": [
+    "AGENTS.md",
+    "PROJECT_CHARTER.md",
+    ".governance/project.json",
+    ".governance/registry.json",
+    "START_HERE.md"
+  ],
   "history_index": "docs/history/INDEX.md"
 }
