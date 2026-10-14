@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-CHACHA-RECORD-001",
+  "source_sha": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "branch": "work/m3-r1-codec",
+  "result": "PASS_SCOPED_REAL_CHACHA_RECORD_AND_HP8_ONLY",
+  "active_merge": {
+    "sha": "41c408fb43d049029e6613e429ecc8fde2c81758",
+    "parents": [
+      "4776cc2bc17a78fc67e0898a11b439632037219a",
+      "795d0e53bbba6fc2665d1477ecf2edad4c599920"
+    ],
+    "m0_review": "docs/decisions/M0-M3-crypto-root-sync.md",
+    "result": "PASS_REVIEWED_M0_MAIN_SYNC_NO_ROOT_REWRITE",
+    "inherited_locked_versions": {
+      "aws-lc-rs": "1.18.1",
+      "chacha20": "0.9.1",
+      "aes": "0.8.4"
+    },
+    "source_branch_checks": "14/14 source sync Actions success, including cross compile; no product qualification"
+  },
+  "code": {
+    "module": "crates/wbd-codec/src/record_crypto.rs",
+    "tests": "crates/wbd-codec/src/record_crypto_tests.rs",
+    "test_mount": "crates/wbd-codec/src/record_frame.rs",
+    "algorithm": "aws-lc-rs authentic CHACHA20_POLY1305 explicit nonce and independent RustCrypto ChaCha20 HP",
+    "implemented_cipher": [
+      "ChaCha20-Poly1305"
+    ],
+    "not_implemented_ciphers": [
+      "AES-128-GCM",
+      "AES-256-GCM"
+    ],
+    "nonce": "IV12 XOR (00000000 || PN_be64)",
+    "aad": "outer5 || unmasked PN8",
+    "hp": "sample ciphertext+tag first16B; u32 little-endian block counter, 12B nonce, full8B mask",
+    "overhead_bytes": 31,
+    "one_buffer": "Sealer mutates original unique caller wire buffer; payload prepositioned at offset14; no second record Vec.",
+    "authenticated_scope": "Only after AEAD success and inner marker+kind parse may payload be exposed; RX replay/epoch window not implemented.",
+    "pn": "Burns reserved PN even if capacity/validation fails; terminal MAX never wraps.",
+    "compatible_go_source": {
+      "repo": "lly8666/wobuzhidao",
+      "sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "paths": [
+        "internal/tlsrecord/record.go",
+        "internal/tlsrecord/keys.go",
+        "internal/tlsrecord/suite.go"
+      ]
+    },
+    "oracles": "six literal pinned real old Go ChaCha record wire fixtures: minimum, ASCII, PN>u32, MAX-1, MAX, padded zero-containing business"
+  },
+  "actions": {
+    "native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38550461756,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "build_job_id": 115806877588,
+      "consume_job_id": 115807056708,
+      "source_sha": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
+      "target": "x86_64-unknown-linux-gnu",
+      "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+      "compiled_once": true,
+      "r1_pass": 11,
+      "r1_fail": 0,
+      "r1_budget": 6,
+      "r1_real_crypto": 5,
+      "tests": [
+        "record_frame::record_crypto_tests::r1_crypto_chacha_failed_seal_burns_pn_and_does_not_return_wire",
+        "record_frame::record_crypto_tests::r1_crypto_chacha_health_padding_and_zero_business_payload",
+        "record_frame::record_crypto_tests::r1_crypto_chacha_authentication_tampering_never_delivers_payload",
+        "record_frame::record_crypto_tests::r1_crypto_chacha_max_pn_exhausts_without_wrap",
+        "record_frame::record_crypto_tests::r1_crypto_chacha_six_pinned_real_go_wire_vectors_exact"
+      ],
+      "binary_sha256": "04f4a20e7be42dd2d734620bd65fd76bc7b52fc1cb3097f8b44c9a19d28ea2d4",
+      "log_sha256": "930f4aca8344ca26689337894bc0c3fcc9b43ccddb27011c4361fda8f7a694df",
+      "build_artifact": {
+        "id": 11886421896,
+        "digest": "sha256:d6e113703bc03367af762b2fd7266e04057ee349b70203e8cd685fb7dba4a96c",
+        "expires": "2026-11-13T10:34:24Z"
+      },
+      "result_artifact": {
+        "id": 11886461685,
+        "digest": "sha256:2adbd32d12855cd8ea8902f457e4fd77847db61887d4e8e2a90961254a468ff7",
+        "expires": "2026-11-13T10:34:34Z"
+      }
+    },
+    "regressions": [
+      {
+        "workflow": "r0-codec.yml",
+        "run_id": 38550461727,
+        "attempt": 1,
+        "conclusion": "success",
+        "scope": "frozen historical R0 13 WBC4 WBG4 tests"
+      },
+      {
+        "workflow": "r0-record-framing.yml",
+        "run_id": 38550461888,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-link-fec-wire.yml",
+        "run_id": 38550461914,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "g2-bootstrap.yml",
+        "run_id": 38550461730,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-qualification-audit.yml",
+        "run_id": 38550461872,
+        "attempt": 1,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance.yml",
+        "run_id": 38550461916,
+        "attempt": 1,
+        "conclusion": "success"
+      }
+    ],
+    "history": [
+      {
+        "source": "acaf5523df15f88265a6d76dbee033cb48c97151",
+        "worker_run": 38550207978,
+        "worker_r1": "11/11 PASS",
+        "frozen_r0_run": 38550207991,
+        "frozen_r0": "FAIL historical harness selected new crypto tests, 18 instead of exactly 13; historical tests passed"
+      },
+      {
+        "source": "5a14bb9e1c39be8569b5ebcc98b775a6b882bedb",
+        "fix": "Move five new crypto tests into record_frame test subtree explicitly skipped by old 13-anchor workflow; no root/shared CI modifications.",
+        "result": "7/7 triggered Actions workflows PASS"
+      }
+    ]
+  },
+  "separate_m0_native_go_pathmtu": {
+    "source_sha": "e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40",
+    "run_id": 38543117078,
+    "attempt": 1,
+    "result": "PASS_PINNED_OLD_GO_NATIVE_PATHMTU_ONLY",
+    "go_tests": 10,
+    "old_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "note": "Native Go pathmtu and M3 Rust crypto are separate source/run claims."
+  },
+  "scope_guard": {
+    "aes128_aead_hp": "NOT_IMPLEMENTED",
+    "aes256_aead_hp": "NOT_IMPLEMENTED",
+    "replay_window": "NOT_IMPLEMENTED",
+    "lane_epoch_and_v4_exporter": "M0_OWNED_NOT_TESTED_IN_THIS_ATOM",
+    "frozen_record_owner_handoff": "NOT_INTEGRATED",
+    "rust_normal_fec_off_business_e2e": "NOT_RUN",
+    "product": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "go_v4_production": "DISABLED",
+    "root_manifest_lock_abi_modified_by_M3": false,
+    "rollback": "Omit record_crypto module export (M0 integration) and retain tested FrameBudget; no wire version change was introduced."
+  },
+  "next_action": "M0 integrate trusted direction key material and M1-owned UniqueSealable/FrozenRecord with this M3 in-place ChaCha API; verify Normal/FEC-off single packet seal/open/return on one Actions SOURCE. M3 next independent atoms: true AES128/256 AEAD+8B HP, authenticated record PN replay window, M0 coordination for public signatures if needed; do not claim three ciphers before full proofs."
+}
