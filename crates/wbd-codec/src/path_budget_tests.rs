@@ -1,5 +1,7 @@
 //! R1 FrameBudget tests located under LINK module to isolate legacy R0 13-test harness.
 use crate::path_budget::*;
+use crate::record_frame::MAX_WIRE_LEN;
+use crate::link_fec_wire::LINK_HEADER;
     use crate::link_fec_wire::{fragment_compat,inspect_link,LinkMode,LinkView,LINK_MAGIC};
     fn input(outer:usize,fec:FecReservation)->FrameBudgetInput {
         FrameBudgetInput { connection_mtu:outer, local_packet_mtu:0, ipv4_header_len:20,
