@@ -1,6 +1,6 @@
 # M0 · R1 pinned original Go pathmtu native oracle (2026-10-14)
 
-**Owner / atom:** M0 R1-M0-GO-PATHMTU-001. **Source:** the commit introducing this workflow (to be confirmed by remote ref). **Initial status:** Actions PENDING; this file does not claim any pass.
+**Owner / atom:** M0 R1-M0-GO-PATHMTU-001. **Source:** the commit introducing this workflow (to be confirmed by remote ref). **Initial S status:** Actions PENDING at time of workflow push (preserved). **Observed after run:** exact source `e8599f7ad512e9e4ad0e2ac4cbb58cb819891a40`, Actions [38543117078](https://github.com/lly8666/wbd-next/actions/runs/38543117078) attempt 1 build115782469803/consume115782651812 **SUCCESS**; old native `internal/pathmtu` **10 top-level Go tests PASS**, seven required names present, exit=0. Compiled binary SHA256 `82c271c20fe222b31a377c0d0674257d45ac30af42769a0e6ada3935020411ba`; build artifact 11883381295 and result artifact 11883391413. Same-SOURCE Governance [38543117065](https://github.com/lly8666/wbd-next/actions/runs/38543117065) SUCCESS. Evidence: `docs/evidence/M0/R1-go-pathmtu-native.json`. This does not test M3 Rust against Go in the same binary.
 
 ## Why now
 
