@@ -12,7 +12,9 @@
  use wbd_codec::record_replay::{ReplayProtectedLaneRx, ReplayWindowInfo, ReplayStats,
                                 UniqueOpenError};
  use wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND;
- use wbd_platform::r1::{submit_ready, ReadyPacketSink};
+ use wbd_platform::r1::ReadyPacketSink;
+ use wbd_platform::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketError};
+ use std::io::ErrorKind;
  use wbd_recovery::{AuthenticatedReceipt, ReceiptPage, ReceiptState,
                     Release, RepairCandidate, RepairSendResult,
                     RepairBudget, BudgetError};
@@ -23,7 +25,7 @@
  pub enum ReceiptIngressError {
      UnboundLaneEpoch, Crypto(CryptoError), Control(CodecError),
      Replay(UniqueOpenError), NotHealth, MissingReceipt, Recovery(DataError),
-     StaleCandidate, Budget(BudgetError), DriverOutcome,
+     StaleCandidate, Budget(BudgetError), Packet(PacketError), DriverOutcome,
  }
 
  /// A one-direction RX capability. Construct ONLY from trusted engine session
@@ -96,51 +98,41 @@
      }
  }
 
- /// This in-process R2 step assumes the frozen TLS-like record is one
- /// ordinary IPv4(20B)+TCP(20B) DATA segment, no options/VLAN/encapsulation.
- /// It charges IP total wire bytes, never only encrypted payload length.
- /// Actual envelope construction is M4's separately assigned task; until
- /// then real nonbaseline carrier bytes MUST NOT use this adapter.
- pub const TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD: u64 = 40;
-
- /// Budgeted single repair dispatch. Only the original M1 frozen PN/seq/wire
- /// is borrowed for M4's ready-only syscall path; no re-seal or new record.
- /// Caller owns one M2 budget per authenticated tunnel+logical direction
- /// across its lanes and separately records actually accepted fresh bytes.
- /// A failed reserve never touches the driver or M2 receipt state.
+ /// Actual M4 IPv4+TCP DATA envelope of the original M1 frozen ciphertext.
+ /// Trusted cold tuple/options/persona are provided by the caller; their live
+ /// Go V4 admission binding is NOT implemented here. MTU and scratch are
+ /// verified before budget or any driver call. Caller owns bounded scratch.
+ ///
+ /// The old unbudgeted/record-only repair sender has no public overload.
+ /// This handler never re-seals the record or creates a new PN/Seq, and sends
+ /// exactly the same full bytes it charges to the M2 ledger.
  pub fn submit_repair_once<S: ReadyPacketSink,H: FrozenRecordHandle>(
      state: &mut ReceiptState<H>, budget: &mut RepairBudget,
-     candidate: &RepairCandidate<H>, sink: &mut S, now: MonoNs,
+     candidate: &RepairCandidate<H>, sink: &mut S,
+     tuple: Ipv4Tuple<'_>, presentation: Presentation,
+     authenticated_options: Option<&[u8]>, outer_mtu: usize,
+     scratch: &mut [u8], now: MonoNs,
  ) -> Result<RepairSendResult, ReceiptIngressError> {
      if !state.preflight(candidate,now) {
          return Err(ReceiptIngressError::StaleCandidate);
      }
-     let record_len = u64::try_from(candidate.frozen().bytes().len())
+     let packet=ipv4_tcp::build(
+         tuple,presentation,candidate.frozen(),authenticated_options,
+         outer_mtu,scratch).map_err(ReceiptIngressError::Packet)?;
+     let wire_bytes=u64::try_from(packet.len())
          .map_err(|_|ReceiptIngressError::Budget(BudgetError::InvalidFrame))?;
-     let outer_wire_bytes = record_len.checked_add(TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD)
-         .filter(|n| *n <= u16::MAX as u64)
-         .ok_or(ReceiptIngressError::Budget(BudgetError::InvalidFrame))?;
-     // Reserve BEFORE the driver call; capacity, direction and epoch pacing
-     // errors cannot become a send that escaped accounting.
-     let reservation=budget.reserve(candidate,outer_wire_bytes,now)
+     let reservation=budget.reserve(candidate,wire_bytes,now)
          .map_err(ReceiptIngressError::Budget)?;
-     let outcome=submit_ready(sink,std::slice::from_ref(candidate.frozen()));
-     let disposition=match (outcome.accepted_prefix,outcome.uncertain_index,outcome.error) {
-         (1,None,None) => RepairSendResult::Accepted,
-         (0,Some(0),Some(_)) => RepairSendResult::Uncertain,
-         (0,None,Some(_)) => RepairSendResult::NotSent,
-         // Unknown driver classifications must conservatively count as an
-         // uncertain attempt: NEVER refund a possibly transmitted record.
-         _ => {
-             state.on_send_result(candidate,RepairSendResult::Uncertain,now)
-                 .map_err(ReceiptIngressError::Recovery)?;
-             budget.on_send_result(reservation,RepairSendResult::Uncertain,now)
-                 .map_err(ReceiptIngressError::Budget)?;
-             return Err(ReceiptIngressError::DriverOutcome);
-         }
+     // M4 ReadyPacketSink::try_send is nonblocking and borrows exact full
+     // IPv4/TCP bytes. As in M4 submit_ready: only EAGAIN means definite
+     // NotSent; short send and every other I/O error are Uncertain.
+     let disposition=match sink.try_send(packet) {
+         Ok(n) if n==packet.len() => RepairSendResult::Accepted,
+         Err(ref err) if err.kind()==ErrorKind::WouldBlock => RepairSendResult::NotSent,
+         Ok(_) | Err(_) => RepairSendResult::Uncertain,
      };
-     // An improbable state failure retains the M2 pending reservation,
-     // which times out as conservatively charged Uncertain, not free credit.
+     // A state failure retains the bounded reservation, which M2 timers
+     // eventually charge as Uncertain, never mistaken for a refund.
      state.on_send_result(candidate,disposition,now)
          .map_err(ReceiptIngressError::Recovery)?;
      budget.on_send_result(reservation,disposition,now)

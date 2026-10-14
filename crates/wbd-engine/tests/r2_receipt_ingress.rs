@@ -8,6 +8,7 @@ use wbd_codec::record_frame::{AUTHENTICATED_HEALTH_KIND,AUTHENTICATED_LINK_KIND,
 use wbd_engine::memory::{Arena,FrozenRecord};
 use wbd_engine::recovery_ingress::{BoundReceiptIngress,ReceiptIngressError,submit_repair_once};
 use wbd_platform::r1::{submit_ready,ReadyPacketSink};
+use wbd_platform::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona,PacketError};
 use wbd_recovery::{ReceiptConfig,ReceiptState,RepairSendResult,
     RepairBudget, RepairBudgetConfig, BudgetDirection, BudgetError, WireDirection};
 use wbd_types::{LaneKey,MonoNs,RecordPn,SeqOffset,TunnelKey};
@@ -40,9 +41,45 @@ fn budget_with(tunnel:TunnelKey,outer_mtu:u64)->RepairBudget{
         },MonoNs(0)).unwrap()
 }
 fn budget()->RepairBudget {budget_with(lane().tunnel,536)}
+fn trusted_tuple()->Ipv4Tuple<'static>{
+    Ipv4Tuple{src_ip:&[192,0,2,40],dst_ip:&[198,51,100,40],
+              src_port:43000,dst_port:443}
+}
+fn presentation()->Presentation{
+    Presentation{ack32:200,advertised_window:1024,ip_id:21,persona:PacketPersona::Legacy}
+}
 fn outer_wire_bytes(frozen:&FrozenRecord)->u64 {
-    frozen.bytes().len() as u64
-        + wbd_engine::recovery_ingress::TEST_ONLY_IPV4_TCP_FIXED_OVERHEAD
+    ipv4_tcp::measure(frozen.bytes().len(),None).unwrap().required as u64
+}
+fn submit_test<S:ReadyPacketSink>(
+    shadow:&mut ReceiptState<FrozenRecord>, budget:&mut RepairBudget,
+    candidate:&wbd_recovery::RepairCandidate<FrozenRecord>,
+    sink:&mut S,now:MonoNs,
+)->Result<RepairSendResult,ReceiptIngressError>{
+    let mut scratch=[0u8;536];
+    submit_repair_once(shadow,budget,candidate,sink,trusted_tuple(),
+                       presentation(),None,536,&mut scratch,now)
+}
+// Independent arithmetic checksum oracle: not M4's code path.
+fn packet_checksum(bytes:&[u8])->u16{
+    let mut n=0u64;
+    for (i,&v) in bytes.iter().enumerate() {
+        n+=(v as u64)<<if i%2==0 {8} else {0};
+    }
+    while n>65535{n=(n&65535)+(n>>16);}
+    !(n as u16)
+}
+fn assert_valid_packet(pkt:&[u8],frozen:&FrozenRecord,overhead:usize){
+    assert_eq!(pkt[0],0x45);
+    assert_eq!(pkt.len(),u16::from_be_bytes([pkt[2],pkt[3]]) as usize);
+    assert_eq!(packet_checksum(&pkt[..20]),0);
+    let mut pseudo=Vec::from(&pkt[12..20]);
+    pseudo.extend_from_slice(&[0,6]);
+    pseudo.extend_from_slice(&((pkt.len()-20) as u16).to_be_bytes());
+    pseudo.extend_from_slice(&pkt[20..]);
+    assert_eq!(packet_checksum(&pseudo),0);
+    assert_eq!(&pkt[24..28], &(frozen.metadata().seq.0 as u32).to_be_bytes());
+    assert_eq!(&pkt[overhead..],frozen.bytes());
 }
 fn original(a:&mut Arena,pn_expected:u64)->FrozenRecord{
     let business=b"\x00R2-original\xff";
@@ -101,7 +138,7 @@ struct Sink{datagrams:Vec<Vec<u8>>,mode:u8}
 impl ReadyPacketSink for Sink{
     fn try_send(&mut self,wire:&[u8])->io::Result<usize>{
         if self.mode==1{return Err(io::Error::from(ErrorKind::WouldBlock))}
-        if self.mode==2{return Ok(wire.len()-1)}
+        if self.mode==2{self.datagrams.push(wire.to_vec());return Ok(wire.len()-1)}
         self.datagrams.push(wire.to_vec());
         Ok(wire.len())
     }
@@ -200,7 +237,7 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     let first=shadow.on_timer(MonoNs(100)).candidates.remove(0);
     assert!(std::ptr::eq(first.frozen().bytes().as_ptr(),frozen.bytes().as_ptr()));
     let mut wouldblock=Sink{mode:1,..Sink::default()};
-    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&first,&mut wouldblock,MonoNs(100)),
+    assert!(matches!(submit_test(&mut shadow,&mut budget,&first,&mut wouldblock,MonoNs(100)),
         Ok(RepairSendResult::NotSent)));
     assert_eq!(shadow.outstanding(),1);
     assert_eq!(budget.snapshot().charged_repair_bytes,0); // definite EAGAIN refund
@@ -209,14 +246,17 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     assert!(noimmediate.candidates.is_empty());
     let second=shadow.on_timer(MonoNs(200)).candidates.remove(0);
     let mut short=Sink{mode:2,..Sink::default()};
-    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
         Ok(RepairSendResult::Uncertain)));
-    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
         Err(ReceiptIngressError::StaleCandidate)));
     assert_eq!(frozen.bytes(),sealed);
     assert_eq!(budget.snapshot().charged_repair_bytes,wire);
     assert_eq!(budget.snapshot().pending_count,0);
     assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire);
+    assert_eq!(short.datagrams.len(),1);
+    assert_valid_packet(&short.datagrams[0],&frozen,40);
+    assert_eq!(&short.datagrams[0][40..],sealed.as_slice());
     assert_eq!(shadow.outstanding(),1); // unknown syscall outcome is NOT receipt
     drop(first);drop(second);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
@@ -333,15 +373,17 @@ fn r2_m0_budget_real_frozen_m4_accepted_charges_exact_outer_wire_without_ack(){
     shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
     let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
     let mut sink=Sink::default();
-    assert_eq!(submit_repair_once(&mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100))
+    assert_eq!(submit_test(&mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100))
         .unwrap(),RepairSendResult::Accepted);
-    assert_eq!(sink.datagrams,vec![sealed.clone()]);
+    assert_eq!(sink.datagrams.len(),1);
+    assert_valid_packet(&sink.datagrams[0],&frozen,40);
+    assert_eq!(&sink.datagrams[0][40..],sealed.as_slice());
     assert_eq!(frozen.bytes(),sealed);
     assert_eq!(budget.snapshot().charged_repair_bytes,wire);
     assert_eq!(budget.snapshot().fresh_confirmed_bytes,0); // repair does NOT earn F
     assert_eq!(budget.snapshot().pending_count,0);
     assert_eq!(shadow.outstanding(),1); // M4 copied != authenticated peer ACK
-    assert!(matches!(submit_repair_once(
+    assert!(matches!(submit_test(
         &mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100)),
         Err(ReceiptIngressError::StaleCandidate)));
     assert_eq!(sink.datagrams.len(),1);
@@ -360,19 +402,83 @@ fn r2_m0_budget_rejects_small_mtu_and_other_tunnel_before_driver(){
     let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
     let mut sink=Sink::default();
     let mut smaller=budget_with(lane().tunnel,wire-1);
-    assert!(matches!(submit_repair_once(
+    assert!(matches!(submit_test(
         &mut shadow,&mut smaller,&candidate,&mut sink,MonoNs(100)),
         Err(ReceiptIngressError::Budget(BudgetError::InvalidFrame))));
     assert_eq!(smaller.snapshot().charged_repair_bytes,0);
     assert_eq!(sink.datagrams.len(),0);
     let mut other=budget_with(
         TunnelKey{slot:99,generation:3},536);
-    assert!(matches!(submit_repair_once(
+    assert!(matches!(submit_test(
         &mut shadow,&mut other,&candidate,&mut sink,MonoNs(100)),
         Err(ReceiptIngressError::Budget(BudgetError::WrongTunnel))));
     assert_eq!(other.snapshot().charged_repair_bytes,0);
     assert_eq!(shadow.outstanding(),1);
-    assert_eq!(frozen.bytes().len() as u64+40,wire);
+    assert_eq!(ipv4_tcp::measure(frozen.bytes().len(),None).unwrap().required as u64,wire);
+    drop(candidate);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
+}
+
+
+#[test]
+fn r2_m0_m4_actual_ipv4_tcp_options_wire_bytes_budget_and_checksum(){
+    let mut arena=Arena::new(95,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
+    let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
+    let options=[1,1,8,10,0,0,0,1,0,0,0,2,0,0,0,0];
+    let measure=ipv4_tcp::measure(frozen.bytes().len(),Some(&options)).unwrap();
+    assert_eq!(measure.overhead,56);
+    let mut budget=budget();
+    let mut sink=Sink::default();
+    let mut scratch=[0x5a;536];
+    let mut ack=presentation();ack.ack32=345;ack.ip_id=123;
+    let result=submit_repair_once(&mut shadow,&mut budget,&candidate,
+        &mut sink,trusted_tuple(),ack,Some(&options),536,&mut scratch,MonoNs(100));
+    assert_eq!(result.unwrap(),RepairSendResult::Accepted);
+    assert_eq!(sink.datagrams.len(),1);
+    assert_eq!(sink.datagrams[0].len(),measure.required);
+    assert_eq!(sink.datagrams[0][32]>>4,9);
+    assert_eq!(&sink.datagrams[0][40..56],&options);
+    assert_eq!(&sink.datagrams[0][28..32],&345u32.to_be_bytes());
+    assert_valid_packet(&sink.datagrams[0],&frozen,56);
+    assert_eq!(budget.snapshot().charged_repair_bytes,measure.required as u64);
+    assert_eq!(budget.snapshot().fresh_confirmed_bytes,0);
+    assert_eq!(shadow.outstanding(),1);
+    drop(candidate);drop(shadow);drop(frozen);
+    assert_eq!(arena.drain_returns(),1);
+}
+#[test]
+fn r2_m0_m4_invalid_outer_packet_scratch_mtu_tuple_never_debits_or_sends(){
+    let mut arena=Arena::new(96,1,256,1,60_000).unwrap();
+    let frozen=original(&mut arena,0);
+    let mut shadow=state();
+    shadow.on_sent(frozen.clone(),MonoNs(0),MonoNs(1000)).unwrap();
+    let candidate=shadow.on_timer(MonoNs(100)).candidates.remove(0);
+    let wire=outer_wire_bytes(&frozen) as usize;
+    let mut budget=budget();
+    let mut sink=Sink::default();
+    let mut scratch=[0x5a;536];
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&candidate,
+        &mut sink,trusted_tuple(),presentation(),None,wire-1,
+        &mut scratch,MonoNs(100)),
+        Err(ReceiptIngressError::Packet(PacketError::MtuExceeded{..}))));
+    let mut too_small=[0u8;1];
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&candidate,
+        &mut sink,trusted_tuple(),presentation(),None,536,
+        &mut too_small,MonoNs(100)),
+        Err(ReceiptIngressError::Packet(PacketError::ScratchTooSmall{..}))));
+    let bad=Ipv4Tuple{src_ip:&[0,0,0,0],..trusted_tuple()};
+    assert!(matches!(submit_repair_once(&mut shadow,&mut budget,&candidate,
+        &mut sink,bad,presentation(),None,536,
+        &mut scratch,MonoNs(100)),
+        Err(ReceiptIngressError::Packet(PacketError::InvalidIpv4Tuple))));
+    assert!(scratch.iter().all(|x|*x==0x5a)); // preflight failure is atomic
+    assert_eq!(budget.snapshot().charged_repair_bytes,0);
+    assert_eq!(budget.snapshot().pending_count,0);
+    assert!(sink.datagrams.is_empty());
+    assert_eq!(shadow.outstanding(),1);
     drop(candidate);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
 }

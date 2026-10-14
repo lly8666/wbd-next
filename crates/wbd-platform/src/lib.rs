@@ -6,6 +6,8 @@
 
 /// R1 verified, bounded ready-only adapter; production native AF_PACKET/Windows not enabled.
 pub mod r1;
+/// Authentic-data packet envelope builder; not an OS raw sender.
+pub mod ipv4_tcp;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
