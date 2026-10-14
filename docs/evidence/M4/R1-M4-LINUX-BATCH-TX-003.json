@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-LINUX-BATCH-TX-003",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "6e72152f616e9bc836e3b66cd8742915abf6b5b3",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Linux x86_64 GNU glibc real sendmmsg(MSG_DONTWAIT) on unprivileged UDP datagram loopback; no raw AF_PACKET or product carrier claim",
+  "assignment": {
+    "main_decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-14.md",
+    "source_sha": "6f5c891d349062c7206b07a0f916a5f2a8de6ea4",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "allowed_paths_unchanged": true
+  },
+  "native": {
+    "run_id": 38598122174,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "result": "SUCCESS",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "environment": "GitHub Actions native Linux x86_64",
+    "build_job_id": 115970014437,
+    "consume_job_id": 115970159588,
+    "compiled_once": true,
+    "hash_verified_by_separate_consumer": true,
+    "tests_passed": 21,
+    "tests_failed": 0,
+    "added_tests": [
+      "r1_linux_sendmmsg_x86_64_glibc_ffi_layout_audited",
+      "r1_linux_sendmmsg_real_kernel_udp_all_and_immutable_bytes",
+      "r1_linux_sendmmsg_real_kernel_partial_udp_emsgsize_prefix_only",
+      "r1_linux_sendmmsg_real_kernel_cap32_not_33rd",
+      "r1_linux_sendmmsg_real_kernel_unix_backpressure_eagain_notsent",
+      "r1_linux_sendmmsg_deterministic_classifier_eintr_short_and_zero",
+      "r1_linux_sendmmsg_stop_keeps_borrowed_bytes_until_return",
+      "r1_linux_sendmmsg_stop_vs_atomic_submission_registration",
+      "r1_linux_sendmmsg_preflight_reject_invalid_without_writing"
+    ],
+    "previous_tests": 12,
+    "filtered_r0_tests": 7,
+    "build_artifact": {
+      "id": 11912860549,
+      "zip_sha256": "c339b51e3d67476f39d2d41fa57108a43c24a3b401b6fd090b1d9995917f6809",
+      "manifest_sha256": "e98706ac63d19ffe3596d82999b5ce2dfb035624b1977afb0a216a20838d041b",
+      "binary_sha256": "8fd3361966517caf8ef8b3b80bd75ece072073466c0480096fcef3a929ac2f85"
+    },
+    "result_artifact": {
+      "id": 11913225459,
+      "zip_sha256": "4bf5c862a6dc7853c887d834e9bd743383362444fcdfd8c0b670b82a49a8a704",
+      "result_json_sha256": "b2e6b9b075f7fda92ac8df8325b087bc5d537023ae8a13490dd215bbce7e6d93",
+      "log_sha256": "ea9e39c47a10f74d396e0c2b5c25dff89b60a675f3bae1a5536d521973857e43"
+    },
+    "artifact_inspection": "Both actual ZIP files downloaded and independently SHA256-hashed; manifest/result/log/native binary hashes matched; 21 named tests listed and all ok, compiled-once run verified by separate consumer.",
+    "qualification_split": {
+      "linux_kernel_sendmmsg_actual_native": "PASS_ACTUAL_SYSCALL_CONNECTED_UDP_BATCH_AND_PARTIAL",
+      "linux_kernel_eagain_actual_native": "PASS_ACTUAL_SYSCALL_UNIX_DATAGRAM_BACKPRESSURE",
+      "libc_abi_layout_actual_native": "PASS_X86_64_GNU_ONLY",
+      "eintr_and_short_completion": "PASS_DETERMINISTIC_RESULT_CLASSIFICATION_ONLY; NOT_KERNEL_INJECTED",
+      "kernel_loan_async": "NOT_APPLICABLE_SYNCHRONOUS_COPYED_SENDMMSG; BORROW_FENCE_GUARD_PASS",
+      "linux_af_packet_raw_tcp": "NOT_RUN",
+      "linux_aarch64_or_musl": "NOT_RUN_COMPILE_GATED",
+      "windows_npcap_wintun_native": "NOT_RUN",
+      "product_complete_or_go_v4": "NOT_RUN_OR_DISABLED",
+      "performance_and_physical": "NOT_RUN"
+    }
+  },
+  "ffi_audit": {
+    "constraints": "module #[allow(unsafe_code)] in owned wbd-platform only, crate-wide forbid changed to deny; other platform code continues deny; Linux x86_64 GNU cfg only; no external crates or shared Cargo manifest changes",
+    "declarations": "C repr CIovec, CMsghdr, CMmsghdr and libc sendmmsg; x86_64 GNU Linux offsets/sizes verified with native Rust offset_of/size_of tests against glibc structs",
+    "message_flags": "MSG_DONTWAIT=0x40, EAGAIN=11, EINTR=4 (Linux x86_64 GNU ABI)",
+    "safety": "caller owns FD and frozen record handles during synchronous syscall; fixed stack arrays <=32 each point to live immutable record; kernel copies the UDP datagrams on syscall return; no stale pointer escape or kernel loan after return",
+    "stop": "borrow-fence synchronized AtomicUsize CAS batch guard; begin_stop excludes new submission; outstanding synchronous batch counts until syscall returns; last-release Condvar mutex used only if STOP bit set",
+    "outcome": "Positive number of sendmmsg complete datagrams -> accepted_prefix; suffix definitively not sent by that syscall but exact post-prefix errno lost. Partial reports IoFailed, batch cap reports WouldBlock; EAGAIN is NotSent, EINTR/unknown errno IoUncertain, hypothetical short msg_len quarantined as one uncertain record",
+    "limitations": "Datagrams atomic on Linux; short-completion case was injection classified only. No physical AF_PACKET, async driver lease or Npcap. No source-level performance benchmark."
+  },
+  "source_changes": [
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-platform/src/r1.rs",
+    "crates/wbd-platform/src/linux_batch.rs"
+  ],
+  "retained_failures": [
+    {
+      "source_sha": "16ef1eb2b7610dfee56baf33cb50e2cd9f4b3fa2",
+      "run_id": 38598037734,
+      "workflow": "worker-native",
+      "conclusion": "FAIL_COMPILE",
+      "cause": "new empty-slice test lacked Frozen generic type selection",
+      "resolution_source": "6e72152f616e9bc836e3b66cd8742915abf6b5b3"
+    },
+    {
+      "source_sha": "6e72152f616e9bc836e3b66cd8742915abf6b5b3",
+      "run_id": 38598122098,
+      "workflow": "r0-platform-fake",
+      "conclusion": "FAIL_HISTORIC_UNFILTERED_COUNT",
+      "actual": "28/28 Rust assertions PASS: old 7 + scoped R1 21, but branch R0 parser expects exactly old 7. M0-fixed harness already exists on different main SOURCE.",
+      "m0_main_fix_sha": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36"
+    }
+  ],
+  "same_source_regressions": [
+    {
+      "id": 38598122115,
+      "workflow": "g2-bootstrap",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38598122356,
+      "workflow": "r0-static-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38598122049,
+      "workflow": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38598122071,
+      "workflow": "r0-cross-abi",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38598122098,
+      "workflow": "r0-platform-fake",
+      "result": "FAIL_OLD_TEST_INVENTORY_FILTER"
+    }
+  ],
+  "integration": "READY_FOR_M0_SCOPED_LINUX_GNU_SYSCALL_REVIEW; NO_NATIVE_RAW_CARRIER_PRODUCT_PASS",
+  "production_go_v4": "DISABLED"
+}
