@@ -38,13 +38,13 @@ jobs:
           import os,json,hashlib,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           parts=['crates/wbd-recovery/src/receipt.rs','crates/wbd-recovery/src/budget.rs',
-                 'crates/wbd-recovery/src/lib.rs','Cargo.lock']
+                 'crates/wbd-recovery/src/lib.rs','crates/wbd-recovery/src/global_sparse.rs','Cargo.lock']
           m={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
              'run_id':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
              'toolchain':'1.85.1','target':'x86_64-unknown-linux-gnu',
              'binary_sha256':sha('r2-budget-build/budget.test'),
              'inputs':{p:sha(p) for p in parts},
-             'scope':'M2_REAL_PURE_RECEIPT_AND_1S_F_R_L_BUDGET_FAKE_CLOCK_NATIVE'}
+             'scope':'M2_PURE_RECEIPT_AND_GLOBAL_SPARSE_1S_GRANTS_FAKE_CLOCK_NATIVE'}
           pathlib.Path('r2-budget-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           print(json.dumps(m,indent=2))
           PY
@@ -66,7 +66,7 @@ jobs:
         with:
           name: r2-budget-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r2-budget-build
-      - name: Hash attest exact binary and execute 15 true M2 r2 tests
+      - name: Hash attest exact binary and execute 22 true M2 r2 tests
         shell: bash
         run: |
           set -euo pipefail
@@ -93,14 +93,14 @@ jobs:
           log=pathlib.Path('r2-budget-result/tests.log').read_text()
           ok_line=re.search(r'test result: ok\. (\d+) passed; 0 failed',log)
           n=int(ok_line.group(1)) if ok_line else 0
-          status='PASS' if n==15 and int(os.environ['TEST_EXIT'])==0 else 'FAIL'
+          status='PASS' if n==22 and int(os.environ['TEST_EXIT'])==0 else 'FAIL'
           out={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                'binary_sha256':m['binary_sha256'],'input_sha256':m['inputs'],
                'log_sha256':hashlib.sha256(log.encode()).hexdigest(),
                'native_test_count':n,'exit_code':int(os.environ['TEST_EXIT']),
                'result':status,
-               'scope':'M2_IMPORTED_PURE_1S_F_R_L_AND_RECEIPT_NATIVE',
-               'not_qualified':'GLOBAL_MULTI_CLIENT_SPARSE_QUOTA;REAL_DRIVER;GO_V4_ADMISSION;PRODUCT;PERFORMANCE;PHYSICAL'}
+               'scope':'M2_IMPORTED_RECEIPT_1S_AND_GLOBAL_SPARSE_NATIVE',
+               'not_qualified':'REAL_MULTI_CLIENT_PROCESS_ACTOR;REAL_DRIVER;GO_V4_ADMISSION;PRODUCT;PERFORMANCE;PHYSICAL'}
           pathlib.Path('r2-budget-result/result.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
           if status!='PASS':sys.exit(1)
