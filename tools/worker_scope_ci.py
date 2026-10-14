@@ -44,6 +44,9 @@ def audit_worker_history(api,role,source,control_sha):
         ancestor=on_main["status"] in {"ahead","identical"}
         detail=g.commit_delta(api,sha,256)
         sync={}
+        if (role["id"]=="M3" and not ancestor and detail["parents"]==1
+                and detail["paths"]==[M3_G2_REFRESH_PATH]):
+            sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
         if detail["parents"]==2 and not ancestor:
             if role["id"]=="M3":
                 sync_paths=review_m3_main_sync(api,role,sha,control_sha)
@@ -75,6 +78,41 @@ def resolve_role(registry, ref_name, declared=""):
 # One reviewed, non-force M3 incorporation of M0's pinned crypto-lock main.
 # This is NOT blanket merge permission or authority from a worker-local file.
 M3_APPROVED_PRE_SYNC_HEAD = "4776cc2bc17a78fc67e0898a11b439632037219a"
+
+# M0 one-time, exact-source G2 checker refresh. NOT a generic tools/ grant.
+# The M3 writer must create a SINGLE-PARENT commit directly on this parent,
+# touching exactly one file, whose Git blob is byte-identical to live M0 main.
+M3_G2_REFRESH_PARENT = "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
+M0_G2_REFRESH_ANCHOR = "c00356739359db90a864f0894d8cdd965b2df132"
+M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
+
+
+def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
+    """One reviewed M0-owned script mirror, anchored to one M3 first parent."""
+    g.need(role["id"]=="M3","G2 checker refresh is M3-only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M3_G2_REFRESH_PATH],
+           "M3 checker refresh must be sole path in a single-parent commit")
+    commit=api.get(f"commits/{sha}?per_page=1")
+    parents=commit.get("parents",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==M3_G2_REFRESH_PARENT,
+           "M3 checker refresh requires exact verified previous worker HEAD")
+    # M0's complete 67/67 proof is immutable and must be an ancestor of live
+    # control. Preserve epoch/role/live-ref checks in caller.
+    anchor=api.get(f"compare/{M0_G2_REFRESH_ANCHOR}...{control_sha}?per_page=1")
+    g.need(anchor.get("status") in {"ahead","identical"},
+           "M0 full history G2 approval not on current main")
+    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={control_sha}")
+    actual=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==actual.get("sha") and
+           isinstance(reviewed.get("sha"),str) and reviewed["sha"]!= "",
+           "M3 checker refresh is not byte-identical to main-owned checker")
+    return {"approved_g2_tool_refresh":True,
+            "first_parent":M3_G2_REFRESH_PARENT,
+            "sync_paths":[M3_G2_REFRESH_PATH]}
+
+
 M0_CRYPTO_LOCK_SOURCE = "1ae49bd644a4624db331c80d2dce6a8d181189e0"
 # One reviewed M2 restoration to the source that contains the M0-authenticated
 # Rust ingress AND the fixed historical G2 selector. Not generic permission.
@@ -93,6 +131,14 @@ def verify_worker_commits(role, commits):
                "worker ancestry unknown")
         if item["is_main_ancestor"]:
             # M0 commits on main are already under main-role validation.
+            continue
+        if item.get("approved_g2_tool_refresh") is True:
+            g.need(role["id"]=="M3" and item.get("parents")==1 and
+                   item.get("first_parent")==M3_G2_REFRESH_PARENT and
+                   item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
+                   item.get("paths")==[M3_G2_REFRESH_PATH],
+                   "M3 one-time checker refresh violated M0 pin")
+            checked += 1
             continue
         if item.get("parents")==2:
             approved_first = {
