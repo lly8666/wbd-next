@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-BLOCKID-MAIN-INTEGRATION-004",
+  "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+  "branch": "main",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "ONLY_SCOPED_NATIVE_POST_AUTH_FEC_BLOCKID_COMPOSITION_AND_R0_REGRESSIONS",
+  "from_main": "b9b24d95b3be80f7e57502b1e7c4d3278abc56ac",
+  "worker": {
+    "role": "M3",
+    "code_sha": "dcee7e85424064581ada22544883b3acd0eaaca5",
+    "evidence_sha": "5a0bc5ad6d2689a54dc5eb7428c778fb7239e263",
+    "cursor_h_sha": "faa018944f0981aa8835c2766cf33c021faa4fa1",
+    "code_native_run": 38598331547,
+    "code_native_tests": "67/67",
+    "code_governance_run": 38598331481,
+    "code_governance_attempt1": "FAIL_MAIN_MOVED_DURING_AUDIT",
+    "code_governance_attempt2": "SUCCESS",
+    "h_governance_run": 38599242646,
+    "h_governance": "SUCCESS",
+    "reviewed_commits": [
+      {
+        "sha": "dcee7e85424064581ada22544883b3acd0eaaca5",
+        "kind": "codec/tests/devlog",
+        "scope": "OWNED_ONLY"
+      },
+      {
+        "sha": "5a0bc5ad6d2689a54dc5eb7428c778fb7239e263",
+        "kind": "docs/evidence",
+        "scope": "OWNED_ONLY"
+      },
+      {
+        "sha": "faa018944f0981aa8835c2766cf33c021faa4fa1",
+        "kind": "cursor-only H",
+        "scope": "OWNED_ONLY"
+      }
+    ]
+  },
+  "integration": {
+    "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+    "changed_paths": [
+      "crates/wbd-codec/src/fec_block_id.rs",
+      "crates/wbd-codec/src/fec_block_id_tests.rs",
+      "crates/wbd-codec/src/lib.rs",
+      "crates/wbd-codec/src/link_fec_wire.rs",
+      "crates/wbd-engine/tests/r1_fec_on.rs",
+      ".github/workflows/r1-record-auth-replay.yml",
+      ".github/workflows/r1-fec-on-native.yml"
+    ],
+    "tested_order": "M4 full IPv4/TCP bytes -> M1 RxOwner -> M3 AEAD+PN replay -> validated 56B WF/BlockID32-to-u64 -> FecRxOwner -> first business",
+    "generation_source": "TRUSTED_GENERATION_0_FIXTURE_ONLY_NOT_PRODUCTION_GO_V4",
+    "compiler": "rustc 1.85.1 x86_64-unknown-linux-gnu",
+    "codec": {
+      "run_id": 38601058414,
+      "attempt": 1,
+      "passed": 67,
+      "failed": 0,
+      "compiled_once": true,
+      "build_job": 115980114902,
+      "consume_job": 115980626800,
+      "binary_sha256": "a4e94995ae0db41bef39182007f9fc8cf5f103289c0548631426c1b48628730b",
+      "log_sha256": "d02cc9ad8a54d65038ef3275cb378e3ba1cf9341446dc0bc5c66b73c4f3b1c33",
+      "build_artifact_id": 11913516844,
+      "build_zip_sha256": "e58e5b7bb51970f2e8c2b5cda4d10979c79f09d685e6ab9b37cd1cd06c8525cf",
+      "result_artifact_id": 11913124038,
+      "result_zip_sha256": "5711b2141a416b3a6917243f13597829186e9deaac24c87445c6bb234aaf9e7e"
+    },
+    "fec_outer": {
+      "run_id": 38601058523,
+      "attempt": 1,
+      "passed": 2,
+      "failed": 0,
+      "compiled_once": true,
+      "build_job": 115980119730,
+      "consume_job": 115980495977,
+      "binary_sha256": "6c23cb001be9085249c474fe83ed2f4e88591e9b01c72469a22909ccc40c568f",
+      "log_sha256": "49312646740c79344578eccf48899979f61961dd20c2e2001c83ac1c2812e915",
+      "build_artifact_id": 11913516792,
+      "build_zip_sha256": "6fbbc9feb74c383bb52456d6f04f2558fe6ffc880901a6355a7d0b7364cc953b",
+      "result_artifact_id": 11913009010,
+      "result_zip_sha256": "efee31e5d08a9572941dd33d9e42622bbfecc0c73726e8e3b75019a69e053b1e"
+    },
+    "cargo_lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36"
+  },
+  "same_source_actions": [
+    {
+      "workflow": "governance",
+      "run_id": 38601058536,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38601058517,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38601058378,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38601058431,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-record-wire-framing",
+      "run_id": 38601058335,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-record-auth-replay",
+      "run_id": 38601058414,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-link-fec-mtu",
+      "run_id": 38601058294,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38601058319,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38601058403,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38601058705,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38601058397,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38601058523,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-wire-codec",
+      "run_id": 38601058559,
+      "attempt": 1,
+      "source_sha": "544cf6870bab32ebfc79cd8fa29abc3762d57cfa",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    }
+  ],
+  "other_workers": {
+    "M1": {
+      "head": "dceb2a7c12b76483c0d4d83ed71cb1ea2d5e348b",
+      "native": "29/29 SUCCESS 38598602128",
+      "h": "SUCCESS 38599017708",
+      "old_branch_r0_abi": "FAIL 38598602157 unfiltered 32/32"
+    },
+    "M2": {
+      "head": "1384b306982c881542f8390b15b48cb2f74fcf08",
+      "native": "22/22 SUCCESS 38598294561",
+      "h": "FAIL 38598929953 main moved during live audit"
+    },
+    "M3": {
+      "head": "faa018944f0981aa8835c2766cf33c021faa4fa1",
+      "imported": "this M3 scoped code only"
+    },
+    "M4": {
+      "head": "47eb4107a53facc5de6b0c2ea48fb90a19eea68a",
+      "native": "21/21 SUCCESS 38598122174",
+      "h": "SUCCESS 38598800683",
+      "old_branch_r0_fake": "FAIL 38598122098 unfiltered 28/28"
+    }
+  },
+  "unqualified": [
+    "LIVE_V4_GENERATION_BINDING",
+    "GO_V4_PRODUCTION",
+    "AF_PACKET_RAW",
+    "SENDMMSG_PRODUCT",
+    "NATIVE_WIN_ARM",
+    "PERFORMANCE",
+    "PRODUCT",
+    "PHYSICAL"
+  ],
+  "next_action": "M0 next separate atom: inspect and integrate M1 parity-ready main source20809638 with existing authenticated FEC-on first business, preserve no-HOL, reuse main R0 ABI filter; exact-source Actions. M2 H failure remains worker-owned, M4 old root fake gate is not PASS."
+}

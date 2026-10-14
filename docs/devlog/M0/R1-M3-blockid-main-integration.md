@@ -1,0 +1,15 @@
+# M0 R1-M0-M3-BLOCKID-MAIN-INTEGRATION-004 — 2026-10-15
+
+## Why and exact imported commits
+M0 checkpoint983e4414→H b9b24d95 only cursor change, Governance38599633999 SUCCESS. Registry rev2 epoch1. New M1 four, M2 three, M3 three, M4 four commits examined individually; no worker ownership changes. M3 code dcee7e85, evidence 5a0bc5ad, cursor-only H faa01894; worker native38598331547 **67/67**, Governance38598331481 attempt1 FAIL because main moved mid audit, attempt2 SUCCESS, H Governance38599242646 SUCCESS. The first M3 H Governance38599105109 FAIL is preserved, not treated as PASS.
+
+## M0 code SOURCE and tests
+Main CODE SOURCE **544cf6870bab32ebfc79cd8fa29abc3762d57cfa** imports only M3 bounded post-auth BlockID module/tests, adds codec registrations, extends existing M0 FEC-on test path **real IPv4/TCP → AEAD/PN replay → WF metadata validated → BlockID ext observer → real FecRxOwner / RS20 first delivery**. Hardcoded trusted generation=0 is an explicit test fixture only. It is not sourced from authenticated production V4, so live FEC-on remains OFF. The original record remains immutable and source-first remains unblocked.
+
+Same SOURCE: codec native [#38601058414](https://github.com/lly8666/wbd-next/actions/runs/38601058414) **67/67** build/consume SUCCESS; build ZIP SHA256 e58e5b7bb51970f2e8c2b5cda4d10979c79f09d685e6ab9b37cd1cd06c8525cf; result ZIP 5711b2141a416b3a6917243f13597829186e9deaac24c87445c6bb234aaf9e7e. FEC full-packet native [#38601058523](https://github.com/lly8666/wbd-next/actions/runs/38601058523) **2/2** SUCCESS, build ZIP 6fbbc9feb74c383bb52456d6f04f2558fe6ffc880901a6355a7d0b7364cc953b, result ZIP efee31e5d08a9572941dd33d9e42622bbfecc0c73726e8e3b75019a69e053b1e. Both jobs verify compiled-once binary and source/lock manifest SHA. All **13/13** triggered same-code-SOURCE Actions SUCCESS including actual R0 native ABI and old LINK/FEC wire tests, normal/off, receipt, G2, static/governance, and cross ABI **compile only**. See exact run IDs, SHA256 of binaries/logs in evidence JSON. No old worker-green results were promoted to main SOURCE.
+
+## Discrepancies not laundered
+M1 old branch run38598602157 R0 ABI failed due unfiltered 32/32 vs hardcoded 3 count, despite independent 29/29 worker test; main run38601058319 native ABI succeeds on the **main** source only. M2 latest cursor H run38598929953 FAILED live main control moved; no M0 worker cursor rewrite. M4 old worker r0-fake-platform run38598122098 FAIL unfiltered 28/28, despite kernel sendmmsg native21/21 and H SUCCESS. These scope failures cannot be combined with other SOURCE green. M0 imported no M1/M2/M4 new code here.
+
+## Done and one next action
+M3 scoped main import with authenticated-**input** BlockID helper and regression is complete. Production exporter/generation binding, live AF_PACKET, Linux batch product, native Win/Arm execution, performance and physical remain NOT_RUN/disabled. Next separate M0 atom: review M1 20809638 bounded parity-ready queue with authenticated FEC-on first systematic, test no-HOL/fairness on main SOURCE. M2 H must recover on M2 branch first; do not turn old harness failures to PASS.
