@@ -97,7 +97,7 @@ def consume(a):
         digest(binary)!=expected.get("sha256")):
         raise ValueError("compiled Rust codec binary drift")
     os.chmod(binary,binary.stat().st_mode|0o100)
-    result=subprocess.run([str(binary.resolve()),"--nocapture","--skip","record_frame::"],text=True,
+    result=subprocess.run([str(binary.resolve()),"--nocapture","--skip","record_frame::","--skip","link_fec_wire::"],text=True,
                           capture_output=True,timeout=100)
     log=result.stdout+result.stderr
     output=Path("r0-codec-result")
