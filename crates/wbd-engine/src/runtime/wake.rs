@@ -38,6 +38,42 @@
              if let Some(t) = self.target.get() { t.unpark(); }
          }
      }
+     /// Owner-local readiness/deadline probe. Share this exact armed +
+     /// second-inspection protocol with TX's FEC parity-ready scheduling,
+     /// instead of introducing a second sleeper or per-packet timer.
+     /// The caller's probe moves READY handles, not ciphertext bytes.
+     /// A None result means stop was observed: caller must cancel queues.
+     pub fn wait_scheduled<T, C, P>(&self, now: C, mut probe: P) -> Option<T>
+     where C: Fn() -> MonoNs, P: FnMut(MonoNs) -> (Option<T>, Option<MonoNs>) {
+         assert!(self.bind_current(), "owner consumer cannot migrate threads");
+         loop {
+             if self.is_stopping() { return None; }
+             let (first, _) = probe(now());
+             if self.is_stopping() { return None; }
+             if let Some(item) = first { return Some(item); }
+             self.armed.store(true, SeqCst);
+             // Second inspection includes stop, fresh/repair, returned leases
+             // and the next ABSOLUTE parity eligibility deadline.
+             if self.is_stopping() { self.disarm(); return None; }
+             let (second, deadline) = probe(now());
+             if self.is_stopping() { self.disarm(); return None; }
+             if let Some(item) = second {
+                 self.disarm();
+                 return Some(item);
+             }
+             match deadline {
+                 None => thread::park(),
+                 Some(due) => {
+                     let remaining = due.0.saturating_sub(now().0);
+                     if remaining > 0 {
+                         thread::park_timeout(Duration::from_nanos(remaining));
+                     }
+                 }
+             }
+             self.disarm();
+             // Spurious wakes and fake clock notifications always re-probe.
+         }
+     }
      pub fn request_stop(&self) {
          if !self.stopping.swap(true, SeqCst) { self.notify(); }
      }

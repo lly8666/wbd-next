@@ -9,6 +9,8 @@ use crate::memory::{FrozenRecord, UniqueBuffer};
 
 /// M1 R1 thread wake/stop proof; NOT a qualified SPSC or OS eventfd.
 pub mod wake;
+pub mod parity;
+use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -90,7 +92,8 @@ impl<T> Bounded<T> {
     fn used_bytes(&self) -> usize { self.used_bytes }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum TxKind { Fresh, Repair }
+pub enum TxKind { Fresh, Repair, Parity }
+pub enum TxWait { Dispatch(TxDispatch), Returned }
 pub struct TxDispatch {
     pub kind: TxKind,
     pub record: FrozenRecord,
@@ -102,15 +105,44 @@ pub struct TxDispatch {
 pub struct TxOwner {
     fresh: Bounded<FrozenRecord>,
     repair: Bounded<FrozenRecord>,
+    parity: Option<ParityReady>,
     consecutive_fresh: u8,
+    next_secondary_parity: bool,
     stopping: bool,
 }
 impl TxOwner {
     pub fn new(fresh: QueueLimits, repair: QueueLimits) -> Option<Self> {
         Some(Self {
             fresh: Bounded::new(fresh)?, repair: Bounded::new(repair)?,
-            consecutive_fresh: 0, stopping: false,
+            parity: None, consecutive_fresh: 0,
+            next_secondary_parity: false, stopping: false,
         })
+    }
+    /// Off/Normal uses new() and never allocates a parity queue.
+    /// Optional FEC has its OWN slots, bytes and age, no fresh HOL.
+    pub fn with_parity(
+        fresh: QueueLimits, repair: QueueLimits, parity: QueueLimits
+    ) -> Option<Self> {
+        let mut owner = Self::new(fresh, repair)?;
+        owner.parity = Some(ParityReady::new(parity)?);
+        Some(owner)
+    }
+    pub fn offer_parity(
+        &mut self, record: FrozenRecord, now: MonoNs, eligible_at: MonoNs
+    ) -> Result<(), (OfferError, FrozenRecord)> {
+        if self.stopping { return Err((OfferError::Stopping, record)); }
+        match self.parity.as_mut() {
+            Some(queue) => queue.offer(record, now, eligible_at),
+            None => Err((OfferError::Full, record)),
+        }
+    }
+    pub fn parity_deadline(&mut self, now: MonoNs) -> Option<MonoNs> {
+        if self.stopping { return None; }
+        self.parity.as_mut().and_then(|q| q.next_deadline(now))
+    }
+    pub fn parity_state(&self) -> (usize, usize, usize) {
+        self.parity.as_ref().map_or((0,0,0),
+            |p| (p.len(),p.charged_bytes(),p.expired_count()))
     }
     fn offer(&mut self, kind: TxKind, record: FrozenRecord, at: MonoNs)
         -> Result<(), (OfferError, FrozenRecord)>
@@ -120,6 +152,7 @@ impl TxOwner {
         match kind {
             TxKind::Fresh => self.fresh.offer(record, size, at),
             TxKind::Repair => self.repair.offer(record, size, at),
+            TxKind::Parity => unreachable!("parity uses a due-time owner entry"),
         }
     }
     pub fn offer_fresh(&mut self, record: FrozenRecord, at: MonoNs)
@@ -132,30 +165,61 @@ impl TxOwner {
         if self.stopping { return None; }
         let has_fresh = !self.fresh.is_empty(now);
         let has_repair = !self.repair.is_empty(now);
-        let kind = match (has_fresh, has_repair) {
-            (false, false) => return None,
-            (true, false) => TxKind::Fresh,
-            (false, true) => TxKind::Repair,
-            (true, true) if self.consecutive_fresh >= 10 => TxKind::Repair,
-            (true, true) => TxKind::Fresh,
-        };
+        let has_parity = self.parity.as_mut().is_some_and(|p| p.is_ready(now));
+        if !has_fresh && !has_repair && !has_parity { return None; }
+        // At most ten consecutive fresh records while a secondary class
+        // is eligible. Alternate repair/parity service opportunities so
+        // neither is starved; no 32ms parity gate may delay first fresh.
+        let use_fresh = has_fresh && (self.consecutive_fresh < 10
+            || (!has_repair && !has_parity));
+        let kind = if use_fresh { TxKind::Fresh }
+        else if has_repair && has_parity {
+            if self.next_secondary_parity { TxKind::Parity } else { TxKind::Repair }
+        } else if has_parity { TxKind::Parity }
+        else if has_repair { TxKind::Repair }
+        else { TxKind::Fresh };
         let record = match kind {
             TxKind::Fresh => {
                 self.consecutive_fresh = self.consecutive_fresh.saturating_add(1);
-                self.fresh.take(now).unwrap()
+                self.fresh.take(now).expect("fresh was ready")
             }
             TxKind::Repair => {
                 self.consecutive_fresh = 0;
-                self.repair.take(now).unwrap()
+                self.next_secondary_parity = true;
+                self.repair.take(now).expect("repair was ready")
+            }
+            TxKind::Parity => {
+                self.consecutive_fresh = 0;
+                self.next_secondary_parity = false;
+                self.parity.as_mut().and_then(|p| p.take_ready(now))
+                    .expect("parity deadline ready")
             }
         };
         Some(TxDispatch {kind, record})
     }
-    /// Cancels unsent handles, but dispatched handles live until consumers
-    /// release them; arena stop must still wait for those last returns.
+    /// Drop all OWNED, unsent handles (including parity), but never free
+    /// dispatched/driver-borrowed records. Arena stop waits for last lease.
     pub fn stop(&mut self) -> usize {
         self.stopping = true;
         self.fresh.clear() + self.repair.clear()
+            + self.parity.as_mut().map_or(0, |p| p.clear())
+    }
+    /// Reuses M1's existing SeqCst armed/second-check + std thread token
+    /// wake. A fake MonoNs clock drives deterministic deadlines; OS only
+    /// parks while no work is eligible. No synchronous parity encode.
+    pub fn wait_ready<C, R>(
+        &mut self, gate: &wake::WakeGate, now: C, mut returned: R,
+    ) -> Option<TxWait>
+    where C: Fn() -> MonoNs, R: FnMut() -> bool {
+        let outcome = gate.wait_scheduled(now, |at| {
+            let event = self.next_ready(at).map(TxWait::Dispatch)
+                .or_else(|| returned().then_some(TxWait::Returned));
+            let deadline = if event.is_some() { None }
+                else { self.parity_deadline(at) };
+            (event, deadline)
+        });
+        if outcome.is_none() { self.stop(); }
+        outcome
     }
     pub fn queued(&self) -> (usize, usize) { (self.fresh.len(), self.repair.len()) }
     pub fn used_bytes(&self) -> (usize, usize) {
