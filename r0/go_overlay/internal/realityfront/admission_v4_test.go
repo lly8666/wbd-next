@@ -9,6 +9,7 @@ import (
     "crypto/tls"
     "errors"
     "io"
+    "github.com/lly8666/wobuzhidao/internal/faketcp"
     "testing"
     "time"
 )
@@ -419,4 +420,91 @@ func TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback(t *testing.T) {
     store.mu.Unlock()
     if !valid {t.Fatal("commit not active after protected reply and detach")}
     if err:=store.ReleaseLane("rollback",tunnel,1,s.Epoch);err!=nil {t.Fatal(err)}
+}
+
+
+// B01/B02: a package-private bridge receives a real protected, frozen Go
+// admission, and Commit can follow only the real FakeTCP Detach boundary.
+// This mock proves ordering, NOT a native Rust owner or production capability.
+type v4RecordingOwner struct {
+    prepared,committed,aborted int
+    boundary uint32
+    identity [16]byte
+    failPrepare,failCommit bool
+}
+func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32) (v4PreparedOwner,error) {
+    b.prepared++
+    b.boundary=boundary
+    b.identity=s.TunnelID()
+    if b.failPrepare {return nil,ErrAdmissionUnsupported}
+    if _,err:=s.MarshalColdBundle();err!=nil {return nil,err}
+    return &v4RecordingPending{b:b},nil
+}
+type v4RecordingPending struct {b *v4RecordingOwner; committed bool}
+func (p *v4RecordingPending) commit(early []faketcp.TransitionPacket) error {
+    if p.committed {return ErrAdmissionParams}
+    if p.b.failCommit {return ErrAdmissionUnsupported}
+    p.b.committed++;p.committed=true
+    return nil
+}
+func (p *v4RecordingPending) abort() {
+    if !p.committed {p.b.aborted++;p.committed=true}
+}
+func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
+    *V4ClientSession,*V4ServerSession,error,error) {
+    t.Helper()
+    cert:=makeServerCert(t)
+    key:=[]byte("0123456789abcdef0123456789abcdef")
+    assoc,peer:=newAssociationPeer(t)
+    defer assoc.Close()
+    defer peer.Close()
+    type result struct {s *V4ServerSession;err error}
+    ch:=make(chan result,1)
+    go func(){
+        s,e:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+            TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
+            ExpectedUsername:"protected-owner",ExpectedPassword:"secret",ServerLimit:1400,
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,ownerBridge:b})
+        ch<-result{s,e}
+    }()
+    c,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+        Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
+        ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
+    },V4ClientOptions{DataPlaneReady:true})
+    select {
+    case r:= <-ch:return c,r.s,ce,r.err
+    case <-time.After(5*time.Second):t.Fatal("private bridge TLS blocked");return nil,nil,nil,nil
+    }
+}
+func TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort(t *testing.T){
+    for _,fail:=range []string{"prepare","commit","none"} {
+        t.Run(fail,func(t *testing.T){
+            store,_:=NewV4EpochStore(1)
+            b:=&v4RecordingOwner{failPrepare:fail=="prepare",failCommit:fail=="commit"}
+            c,s,ce,se:=v4PairWithPrivateBridge(t,b,store)
+            store.mu.Lock()
+            n:=len(store.entries)
+            store.mu.Unlock()
+            if b.prepared!=1 || b.identity!=[16]byte{0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,
+                   0x38,0x39,0x61,0x62,0x63,0x64,0x65,0x66} {
+                t.Fatalf("bridge never saw protected immutable identity: %+v",b)
+            }
+            if fail!="none" {
+                if se==nil||b.committed!=0||n!=0 {
+                    t.Fatalf("failed bridge published epoch: server=%v n=%d owner=%+v",se,n,b)
+                }
+                if b.aborted==0 {t.Fatal("pre-commit reservation not aborted")}
+                return
+            }
+            if ce!=nil||se!=nil || c==nil||s==nil ||
+                b.committed!=1||b.aborted!=0||n!=1 {
+                t.Fatalf("protected commit absent: client=%v server=%v owner=%+v epoch=%d",ce,se,b,n)
+            }
+            snap,e:=s.ColdSnapshot()
+            if e!=nil||snap.TunnelID()!=b.identity {t.Fatal("after-commit cold owner lost provenance")}
+            if err:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,s.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
 }

@@ -101,7 +101,8 @@ def consume(args):
         "tests_passed": passed,
         "tests_failed": failed,
         "exit_code": run.returncode,
-        "result": "PASS" if run.returncode == 0 and passed == 11 and failed == 0 and rollback_pass else "FAIL",
+        "result": "PASS" if run.returncode == 0 and passed == 12 and failed == 0 and rollback_pass and
+                      "TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort" in run.stdout else "FAIL",
         "scope": manifest["scope"],
         "v4_production_dispatch_wired": False,
         "v4_rust_capabilities_advertised": False,
