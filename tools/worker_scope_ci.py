@@ -47,6 +47,9 @@ def audit_worker_history(api,role,source,control_sha):
         if (role["id"]=="M3" and not ancestor and detail["parents"]==1
                 and detail["paths"]==[M3_G2_REFRESH_PATH]):
             sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
+        if (role["id"]=="M2" and not ancestor and detail["parents"]==1
+                and detail["paths"]==[M2_G2_REFRESH_PATH]):
+            sync=review_m2_g2_single_file_refresh(api,role,sha,control_sha)
         if detail["parents"]==2 and not ancestor:
             if role["id"]=="M3":
                 sync_paths=review_m3_main_sync(api,role,sha,control_sha)
@@ -85,6 +88,36 @@ M3_APPROVED_PRE_SYNC_HEAD = "4776cc2bc17a78fc67e0898a11b439632037219a"
 M3_G2_REFRESH_PARENT = "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
 M0_G2_REFRESH_ANCHOR = "c00356739359db90a864f0894d8cdd965b2df132"
 M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
+
+# Exact one-time M2 root checker refresh after the old worker 64-commit
+# history limit. The source-owned script remains the MAIN-owned version,
+# still checking every commit and every changed path, bounded <=96/100.
+M2_G2_REFRESH_PARENT = "018a07c880473a896d40c0d97a59250212f7dad8"
+M2_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
+M0_M2_REFRESH_CONTROL_ANCHOR = "af8a8b40853845b6e876224d579bfb567df48e6c"
+
+def review_m2_g2_single_file_refresh(api,role,sha,control_sha):
+    """Approve just one exact-parent byte-identical M0 checker sync on M2."""
+    g.need(role["id"]=="M2","M2 checker refresh is M2-only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M2_G2_REFRESH_PATH],
+           "M2 checker refresh must be sole path single-parent commit")
+    item=api.get(f"commits/{sha}?per_page=1")
+    parents=item.get("parents",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==M2_G2_REFRESH_PARENT,
+           "M2 checker refresh requires exact frozen blocked worker H")
+    anchor=api.get(f"compare/{M0_M2_REFRESH_CONTROL_ANCHOR}...{control_sha}?per_page=1")
+    g.need(anchor.get("status") in {"ahead","identical"},
+           "M2 checker refresh control anchor not on authoritative main")
+    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={control_sha}")
+    actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==actual.get("sha") and
+           isinstance(actual.get("sha"),str) and bool(actual["sha"]),
+           "M2 checker refresh must copy byte-identical live M0 tool")
+    return {"approved_m2_g2_tool_refresh":True,
+            "first_parent":M2_G2_REFRESH_PARENT,
+            "sync_paths":[M2_G2_REFRESH_PATH]}
 
 
 def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
@@ -138,6 +171,14 @@ def verify_worker_commits(role, commits):
                    item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
                    item.get("paths")==[M3_G2_REFRESH_PATH],
                    "M3 one-time checker refresh violated M0 pin")
+            checked += 1
+            continue
+        if item.get("approved_m2_g2_tool_refresh") is True:
+            g.need(role["id"]=="M2" and item.get("parents")==1 and
+                   item.get("first_parent")==M2_G2_REFRESH_PARENT and
+                   item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
+                   item.get("paths")==[M2_G2_REFRESH_PATH],
+                   "M2 exact checker refresh violated M0 policy pin")
             checked += 1
             continue
         if item.get("parents")==2:
