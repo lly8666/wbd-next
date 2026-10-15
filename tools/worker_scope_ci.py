@@ -121,7 +121,7 @@ M0_M2_HISTORICAL_TOOL_SOURCE = "e9a4455dd4c20253a4e740e76bf7339fa4a6cc25"
 M0_M2_HISTORICAL_TOOL_BLOB = "26983e630ab2fbf28466dac457923904aaa6be60"
 # One new permitted worker-only checker transition off the exact blocked
 # M2 evidence S. It does NOT grant general tools/, merges, or root CI.
-M2_G2_SECOND_REFRESH_PARENT = "deff79215b6214aeafb28ede45d1aa28d118459b"
+M2_G2_SECOND_REFRESH_PARENT = "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c"
 # M3 second checker mirror is already complete. Freeze its original approved
 # source, too, before any further main tool change invalidates its history.
 M0_M3_SECOND_TOOL_SOURCE = "940498ccb2f3834e4287813bb250ebfb97f507fb"
