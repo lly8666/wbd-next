@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "branch": "work/m2-r2-recovery",
+  "task_id": "R2-M2-REVERSE-GRANT-OWNER-BENCH-006",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "25642589f0feb12b44304fd21842c507a9314d35",
+  "result": "NATIVE_SCOPED_R2_44_OF_44_PASS__GOVERNANCE_BLOCKED_G2_BASE_65_OVER_64",
+  "previous_handoff": {
+    "cursor_H": "eb2b0ffa3720db1cffb2e1ae86f619ecc7275073",
+    "checkpoint": "c4e69939903cbce3c204cf475750625a2d3bfe11",
+    "sequence": 10,
+    "h_governance_run_id": 38675209267,
+    "conclusion": "success",
+    "G2_BASE_commit_distance": 64,
+    "status": "CLEAN"
+  },
+  "source_changes": [
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "docs/devlog/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.md"
+  ],
+  "qualification": {
+    "worker_native": {
+      "run_id": 38678654629,
+      "attempt": 1,
+      "conclusion": "success",
+      "tests_passed": 44,
+      "prior_tests": 38,
+      "new_tests": 6,
+      "build_job_id": 116237929742,
+      "consume_job_id": 116238017948,
+      "compiled_once": true,
+      "binary_sha256": "756ca9054680bce83b1d4b215fb4c6866aab7b58762296392e9b14ee486a1eaa",
+      "log_sha256": "c7d8438c8c66778786de8fc4f47ced8a1c3716fbf2218e48dbccddda712bcebd",
+      "build_artifact": {
+        "id": 11947306930,
+        "digest": "sha256:a1928ea859267454e15b9c7fd0519a44cf5719f7ab6a13d35ae0876fca1da20e"
+      },
+      "result_artifact": {
+        "id": 11947096537,
+        "digest": "sha256:647f21f3049ba03c14892eaf0f977271bd98f88acdc2a0b982d5112ba7e33ef4"
+      }
+    },
+    "g2_scoped_bootstrap": {
+      "run_id": 38678654565,
+      "conclusion": "success",
+      "build_job_id": 116237929829,
+      "consume_job_id": 116238094798,
+      "result_artifact_id": 11947066657,
+      "digest": "sha256:71759194bcde86f95f9d58927f8808941199fe416bde8b9042b5e12c8a944539"
+    },
+    "r0_static": {
+      "run_id": 38678654572,
+      "conclusion": "success",
+      "job_id": 116237929797,
+      "artifact_id": 11947696516,
+      "digest": "sha256:161ad3595a066719d4b13763907bc4794aca58496de42964cb471833c02a07e1"
+    },
+    "source_governance": {
+      "run_id": 38678654568,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116237929734,
+      "artifact_id": 11947701588,
+      "digest": "sha256:cd7a3e775a773fc0bfb584be3ab2f3148539cf75c2c690c9bc04df41261d0f71",
+      "error": "ROLE_SCOPE_FAILED: incomplete or diverged bounded G2 activation ancestry",
+      "root_cause": "Worker checker G2_BASE fixed to 83bd720368b9be68b3c4c94d7462d20cf4d796db hard 64 max commits; former H=64, new S=65; cannot be changed from M2 allowed paths."
+    }
+  },
+  "p0_component": {
+    "scenario": "synthetic R2 two-scope owner+grant+32-slot settlement, no actual AEAD, no wire, no driver, no peer deliver inference",
+    "same_source": true,
+    "same_runner_job_id": 116238017948,
+    "sequence": "AB/BA/AB",
+    "pairs": 3,
+    "iterations_per_arm": 128,
+    "slots_per_cycle": 32,
+    "accepted_per_arm": 4096,
+    "cpu_measure": "Linux /proc/self/stat user+system process CPU ticks (coarse, not per-thread/record)",
+    "memory_measure": "Linux /proc/self/status VmRSS and VmData growth KiB (process proxy; not heap allocation count)",
+    "dynamic_allocation_count": "NOT_INSTRUMENTED",
+    "max_pending_slots": 32,
+    "max_pending_bytes": 44800,
+    "observations": [
+      {
+        "pair": 1,
+        "order": "AB",
+        "arm": "legacy",
+        "wall_ns": 54110699,
+        "cpu_ticks": 5,
+        "rss_growth_kib": 48,
+        "vm_growth_kib": 0
+      },
+      {
+        "pair": 1,
+        "order": "AB",
+        "arm": "scoped",
+        "wall_ns": 58344291,
+        "cpu_ticks": 6,
+        "rss_growth_kib": 8,
+        "vm_growth_kib": 0
+      },
+      {
+        "pair": 2,
+        "order": "BA",
+        "arm": "scoped",
+        "wall_ns": 69644079,
+        "cpu_ticks": 7,
+        "rss_growth_kib": 4,
+        "vm_growth_kib": 0
+      },
+      {
+        "pair": 2,
+        "order": "BA",
+        "arm": "legacy",
+        "wall_ns": 53341996,
+        "cpu_ticks": 6,
+        "rss_growth_kib": 4,
+        "vm_growth_kib": 0
+      },
+      {
+        "pair": 3,
+        "order": "AB",
+        "arm": "legacy",
+        "wall_ns": 52213861,
+        "cpu_ticks": 5,
+        "rss_growth_kib": 0,
+        "vm_growth_kib": 0
+      },
+      {
+        "pair": 3,
+        "order": "AB",
+        "arm": "scoped",
+        "wall_ns": 55401550,
+        "cpu_ticks": 5,
+        "rss_growth_kib": 0,
+        "vm_growth_kib": 0
+      }
+    ],
+    "product_perf": "NOT_RUN"
+  },
+  "new_tests": [
+    "r2_owner_zero_one_typed_scope_and_repeat_completion",
+    "r2_owner_two_scopes_32_mixed_stale_and_33_no_false_refund",
+    "r2_owner_ack_before_grant_wrong_reverse_epoch_is_not_delivery",
+    "r2_owner_expired_grants_stale_epoch_unknown_suffix_keeps_debt",
+    "r2_owner_epoch_cutover_uncertain_and_notsent_preserve_original_debt",
+    "r2_owner_component_p0_source_locked_repeated_ab_ba_cpu_rss"
+  ],
+  "request_ref": ".governance/workstreams/M2/requests/M2-G2-ANCESTRY-BOUND-006.md",
+  "nonclaims": [
+    "Public ReceiptOpenFacts values are not cryptographic proof",
+    "Go V4 exporter, Rust engine integration and M4 real driver are M0 owned",
+    "No actual heap allocation counter or actual wire performance",
+    "Product, physical, native Windows ARM and 500Mbps/P99 NOT_RUN"
+  ],
+  "next_action": "M0 must authorize corrected bounded Governance worker ancestry or new branch/epoch, preserving exact 44/44 native and historical Governance FAIL; do not mark M2 task ready for integration."
+}

@@ -25,3 +25,28 @@ Six new `r2_owner_*` native tests, retaining all previous **38**:
 ## SOURCE/CI/evidence
 
 Only a real source-exact compiled-once GitHub worker-native Actions native binary may qualify `r2_` tests and cost logs. Preserve historical failed runs, do not rerun old source to claim PASS. Code S, evidence S and cursor-only H must each be immutable with separate Governance. All product/Go V4 authenticated exporter, real raw AF_PACKET, native Win/ARM, end-to-end 500Mbps, CPU/RSS product targets, physical remain **NOT_RUN**.
+
+## Observed SOURCE code-native and governance 2026-10-15
+
+- Code SOURCE [25642589](https://github.com/lly8666/wbd-next/commit/25642589f0feb12b44304fd21842c507a9314d35) native [38678654629](https://github.com/lly8666/wbd-next/actions/runs/38678654629) attempt1 **SUCCESS** 44/44 `r2_` unit tests (previous38 + new6), source-exact compiled-once binary. Build job116237929742 / consume116238017948. Binary SHA256 `756ca9054680bce83b1d4b215fb4c6866aab7b58762296392e9b14ee486a1eaa`, log SHA256 `c7d8438c8c66778786de8fc4f47ced8a1c3716fbf2218e48dbccddda712bcebd`. Build artifact11947306930 digest sha256:a1928ea859267454e15b9c7fd0519a44cf5719f7ab6a13d35ae0876fca1da20e, result11947096537 digest sha256:647f21f3049ba03c14892eaf0f977271bd98f88acdc2a0b982d5112ba7e33ef4.
+- Same code source historic G2 [38678654565](https://github.com/lly8666/wbd-next/actions/runs/38678654565) **SUCCESS** build116237929829 consume116238094798, result11947066657 digest sha256:71759194bcde86f95f9d58927f8808941199fe416bde8b9042b5e12c8a944539.
+- Same source R0 static [38678654572](https://github.com/lly8666/wbd-next/actions/runs/38678654572) **SUCCESS** job116237929797, artifact11947696516 sha256:161ad3595a066719d4b13763907bc4794aca58496de42964cb471833c02a07e1.
+- Same source Governance [38678654568](https://github.com/lly8666/wbd-next/actions/runs/38678654568) attempt1 **FAIL** job116237929734: `ROLE_SCOPE_FAILED: incomplete or diverged bounded G2 activation ancestry`, artifact11947701588 digest sha256:cd7a3e775a773fc0bfb584be3ab2f3148539cf75c2c690c9bc04df41261d0f71. Investigation of immutable branch verifier `tools/worker_scope_ci.py` finds hard `total_commits<=64` from G2_BASE `83bd720368b9be68b3c4c94d7462d20cf4d796db`; GitHub compare previous cursor H `eb2b0ffa` exactly64, current SOURCE `25642589` **65**. This is deterministic structural gate exhaustion, not concurrent main movement and NOT a Rust test failure. No M2 authority to change root CI, reset baseline or rewrite non-force branch history. Therefore this worker atom is **BLOCKED in governance**, not completed / qualified ready for integration. Fresh evidence and cursor Governance will likely fail the same cap until M0 intervenes. Preserve all historical results.
+
+### Actual measured P0 component results (synthetic, 1 native job)
+
+`R2_OWNER_COMPONENT_P0` in the native log emitted per arm, same exact SOURCE, same runner and binary: 3 sequential comparison pairs AB/BA/AB, each arm 128 cycles ×32 slots = 4096 accepted synthetic reservations. Units: elapsed wall ns per entire 128-cycle scenario, CPU ticks process-wide, procfs VmRSS/VmData **growth** KiB (not actual heap allocation counters). All 6 arms reported `dynamic_allocation_count=NOT_INSTRUMENTED`, `bounded_pending_slots=32`, `bounded_pending_bytes=44800`, `actual_wire_bytes=0`, `driver_calls=0`, `authenticated_go_v4=NOT_RUN`.
+
+| Pair | Order | Arm | Wall ns | Process CPU ticks | VmRSS +KiB | VmData +KiB |
+|---|---|---|---:|---:|---:|---:|
+| 1 | AB | legacy | 54110699 | 5 | 48 | 0 |
+| 1 | AB | scoped | 58344291 | 6 | 8 | 0 |
+| 2 | BA | scoped | 69644079 | 7 | 4 | 0 |
+| 2 | BA | legacy | 53341996 | 6 | 4 | 0 |
+| 3 | AB | legacy | 52213861 | 5 | 0 | 0 |
+| 3 | AB | scoped | 55401550 | 5 | 0 | 0 |
+
+Host tick granularity and shared process memory, plus sub-second leg durations, prevent rigorous CPU-s / heap allocation or product-performance claims. `Instant` wraps construction of fake frozen repair candidates, owner budgets and completion; no pure callback isolation. No crypto/network/p99/500Mbps product verdict.
+
+## M0-controlled governance unblock request
+See `.governance/workstreams/M2/requests/M2-G2-ANCESTRY-BOUND-006.md`. Request: M0 design a fresh bounded and auditable worker role-scope ancestry approach for >64 accumulated M2 commits (including safe workflow propagation to the worker branch), or formally reassign a new worker branch/epoch. Do not force rewrite, silently increase unbounded limits, or exempt path auditing. Until corrected, M2 records `progress=blocked`; exact source 44/44 test result is valid but Governance is FAIL.
