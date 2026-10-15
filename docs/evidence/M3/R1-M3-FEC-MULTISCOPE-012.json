@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-MULTISCOPE-012",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "4787d94617afe72c511f3f2299d1b060c2930c6c",
+  "result": "PASS_SCOPED_FEC_MULTISCOPE_NATIVE_TEST_ONLY_NO_CODEC_PRODUCTION_ALGORITHM_CHANGE",
+  "changes": [
+    "crates/wbd-codec/src/fec_multiscope_tests.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs (R1-only test mount under frozen R0 excluded LINK subtree)"
+  ],
+  "implementation_changed": false,
+  "tests": {
+    "environment": "GitHub Actions native Ubuntu x86_64 Rust1.85.1 compiled-once",
+    "run_id": 38674583861,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 116225156846,
+    "consumer_job_id": 116225302522,
+    "total": 94,
+    "passed": 94,
+    "failed": 0,
+    "prior": 85,
+    "new": 9,
+    "filtered_out": 26,
+    "binary_sha256": "8f1a5392c71eb266f94a9c3c4f63e1eccf7313a8963129fe6892d1e02f252234",
+    "log_sha256": "6c2edda547ff5050a2b1ed47a8dcef09af4fb006ca2ff9e9668c0d778ba28125",
+    "build_artifact": {
+      "id": 11945596387,
+      "digest": "sha256:8b06c11f0ad9bb84b0dd41fdcc9a8c2939156e401e1ed08983a4c5662444bd24",
+      "expires_at": "2026-11-14T03:07:34Z"
+    },
+    "consumer_artifact": {
+      "id": 11945234283,
+      "digest": "sha256:0d3cb5f6ed6e5e5d0f5b5cdee608ea9ed7c29f0a21c8c8557a9703f85e306e43",
+      "expires_at": "2026-11-14T03:07:45Z"
+    },
+    "new_cases": [
+      "r1_multiscope_four_live_tunnel_direction_scopes_pn0_blockid1_independent",
+      "r1_multiscope_misrouted_true_aead_ciphertext_denied_without_peer_pn_mutation",
+      "r1_multiscope_opposite_direction_keys_and_replayed_ciphertext_do_not_cross",
+      "r1_multiscope_one_tunnel_expiration_and_delayed_parity_do_not_retire_peer",
+      "r1_multiscope_one_tunnel_pressure_exhausts_compact_without_peer_revival",
+      "r1_multiscope_rekey_isolation_old_ciphertext_parity_and_pn0_new_epoch",
+      "r1_multiscope_blockid_wrap_ffffffff_to_one_in_distinct_trusted_generations",
+      "r1_multiscope_old_go_56b_oracle_identical_wire_separately_aead_admitted",
+      "r1_multiscope_unbound_and_origin_mismatch_cannot_admit_other_scope"
+    ],
+    "design": {
+      "real_aead": "Independent real ChaCha20-Poly1305 seal/open, distinct direction/tunnel/rekey keys; real PN=0 in each scope, ReplayProtectedLaneRx unique first and duplicate rejection independently",
+      "fake_provenance": "Positive FecOrigin only minted via cfg(test) test_only and is NOT a real authenticated Go V4 session exporter",
+      "scope": "Two tunnels x both directions, same lane number PN=0 and wire BlockID=1 concurrently. Original direction/tunnel/epoch/generation bound separately per AuthFecScopeGate.",
+      "invalid_routing": "Wrong external tunnel route rejected prior to AEAD; ciphertext encrypted on different key fails real AEAD even when rerouted as target tunnel; peer PN0 remains available",
+      "retirement": "Only one tunnel timer expiry of absolute Heavy3s+Compact10s rejects its late parity; independent peer remains live and recovers genuinely missing data",
+      "caps": "Heavy/Compact maximum 1, four-byte heavy budget, 3 successive IDs force monotone retired floor only in pressured tunnel; old ID cannot resurrect peer's unrelated scope",
+      "rekey": "Old AEAD source/parity does not authenticate after rekey; new epoch and generation 1 with independent key accepts new PN0 and BlockID 0x100000001; old epoch retirement cannot touch new",
+      "wrap": "Both wire 0xffffffff and 1 accepted only in separate trusted generations; wrong-generation packet rejected before FEC",
+      "old_go": "Exact pinned old-Go 56-byte WF source fixture (59-byte total) is admitted independently into two scopes with distinct real AEAD keys; no fixture reinterpretation as trusted provenance",
+      "default_deny": "Missing origin and cross-tunnel origin mismatch deny before decryption and replay mutation"
+    }
+  },
+  "same_source_actions": [
+    {
+      "name": "r0-qualification-audit.yml",
+      "run_id": 38674583886,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "g2-bootstrap.yml",
+      "run_id": 38674583984,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "worker-native-tests.yml",
+      "run_id": 38674583861,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "r0-codec.yml",
+      "run_id": 38674583961,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "r0-record-framing.yml",
+      "run_id": 38674584033,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "r0-link-fec-wire.yml",
+      "run_id": 38674583841,
+      "conclusion": "success",
+      "attempt": 1
+    },
+    {
+      "name": "governance.yml",
+      "run_id": 38674583957,
+      "conclusion": "success",
+      "attempt": 3
+    }
+  ],
+  "governance": {
+    "run_id": 38674583957,
+    "final_attempt": 3,
+    "final_conclusion": "success",
+    "previous_failures": [
+      {
+        "attempt": 1,
+        "job_id": 116225157669,
+        "conclusion": "failure",
+        "diagnostic": "ROLE_SCOPE_FAILED: control or source moved mid-audit"
+      },
+      {
+        "attempt": 2,
+        "job_id": 116225732758,
+        "conclusion": "failure",
+        "diagnostic": "ROLE_SCOPE_FAILED: control or source moved mid-audit"
+      }
+    ],
+    "successful_job_id": 116226414225,
+    "successful_artifact": {
+      "id": 11946210290,
+      "digest": "sha256:9f539c3dd31d856d4653d38b533965de6f8e29b90167fc3b03f4d7f416d27f2a"
+    },
+    "note": "Live M0 main advanced during attempt1/2 full worker scope audits. Worker SOURCE was held fixed; no policy/CI/test relaxation; attempt3 succeeded at identical SOURCE."
+  },
+  "cannot_claim": {
+    "genuine_session_origin_binding": "NOT_RUN; FecOrigin test-only constructor only",
+    "live_Go_V4_handshake_exporter": "NOT_IMPLEMENTED_AND_NOT_RUN",
+    "production_FEC_on": "DISABLED",
+    "actual_kernel_product_end_to_end": "NOT_RUN",
+    "native_Windows_ARM": "NOT_RUN",
+    "SIMD_ISAL": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "root_Cargo_shared_ABI_CI_registry": "UNCHANGED",
+    "conclusion_scope": "Deterministic unit isolation of four synthetic independently keyed trusted contexts; not live authenticated V4 traffic"
+  },
+  "next": "Verify evidence-only S Governance and then cursor-only H sequence15 Governance. Afterwards M3 idle until next M0 formal assignment; no new origin/exporter or root edits."
+}
