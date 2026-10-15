@@ -578,5 +578,33 @@
     "physical": "NOT_RUN",
     "performance": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_scoped_normal_off_bidirectional": {
+    "code_source_sha": "b3aa0e283e7b2063b903e3c83dec699ec9cffaed",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-scoped-normal-off-bidirectional.json",
+    "source": "actual credential-checked Go V4 TLS session and original private Go hook with exact post-reply SenderNext",
+    "server_tx": "normal-build Rust S2C LaneTxCrypto -> M1 ScopedOwner TxOwner fresh -> FrozenRecord generation-fenced LoanBatch -> test C byte copy -> independently authenticated Go client Opener",
+    "client_rx": "Go C2S Sealer -> same normal-build Rust ScopedOwner RX borrowed batch -> AEAD/PN -> M3 LINK reassembly -> complete candidate callback",
+    "tests": "Go 4 top-level, three cipher suites; Rust scope 1/1",
+    "path_budget": "SYNTHETIC_TEST_INPUT_ONLY connection_MTU=1200 peer_MSS=536, no production M4 effective MTU path",
+    "negative": [
+      "before Detach rejects TX",
+      "MSS budget rejection",
+      "unescaped LINK magic rejected",
+      "PN and exact TCP seq monotone",
+      "after Stop rejects TX",
+      "existing RX replay/fragment/stop negatives"
+    ],
+    "normal_build_rust_tx": "IMPLEMENTED_COMPONENT",
+    "actual_runtimeentry_go_v4": "DISABLED_FAIL_CLOSED",
+    "actual_go_application_socket": "NOT_RUN",
+    "real_linux_tun_raw": "NOT_RUN",
+    "m4_driver_held_loan_B01_B04": "NOT_RUN",
+    "production_authenticated_cold_command": "NOT_IMPLEMENTED",
+    "production_abi_features": 0,
+    "product_qualification": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }

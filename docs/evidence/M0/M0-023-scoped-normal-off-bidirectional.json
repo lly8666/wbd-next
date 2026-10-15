@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "go-protected-v4-to-normal-build-rust-scoped-normal-off-s2c-tx-and-c2s-rx",
+  "source_sha": "b3aa0e283e7b2063b903e3c83dec699ec9cffaed",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "GitHub Actions native build job compiles once; consume checks exact GITHUB_SHA/run/attempt, all declared source input hashes and prebuilt Go/Rust/CDylib binary SHA256, then executes exact artifacts. GitHub artifact digest independently read via API; archive ZIP bytes not locally downloaded for independent verification.",
+  "changed_paths": [
+    "crates/wbd-engine/src/runtime/early_rx.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "implementation": {
+    "ordinary_compiled": "Private ProtectedScopedOwner now uses its prepared real S2C/C2S LaneTxCrypto TX component, actual M1 EarlyRxOwner-delegated ScopedOwner TxOwner fresh, immutable FrozenRecord from Rust unique slab, and only generation-fenced ready batch; same object already runs C2S RX borrowed packet AEAD/PN and M3 Normal/off LINK reassembly.",
+    "control_order": "Go credential+policy checked -> frozen V4 keys and exact RX boundary -> Prepare both actual TX/RX owners & crypto -> protected Go reply -> Go DetachTransition -> CommitAdmission(exact Go SenderNext) -> RX/TX Active. No TX ready or new crypto state before Commit.",
+    "wire_and_seq": "S2C TX uses the negotiated server-to-client key and cipher and starts PN=0; initial TX SeqOffset is exact Go SenderNext after protected reply, next seq advances by sealed complete wire bytes and fails closed on u32 wrap, no sequence rollback after seal or queue failure; FrameBudget supplied by caller enforces fixed-FEC-off budget and escaping guard.",
+    "memory_and_stop": "In-place Rust AEAD seal inside existing M1 UniqueBuffer followed by freeze into same allocation; queue/dispatch uses immutable frozen bytes and scoped checked_tx_ready; Stop clears queued owner TX and refuses subsequent publication; test FFI never holds borrowed Rust wire pointers after synchronous return.",
+    "probe_caution": "Feature-only test C symbol is NOT built or exported by normal ABI; it is merely a synchronous observation/byte copy from real ScopedOwner loan to independently authenticating Go client's tlsrecord.Opener. A self-consistent 248B cold is not independent credential proof.",
+    "limits_and_missing": "Path values 1200/536 were explicitly supplied synthetic test parameters (not M4 observed MTU/MSS); this single-packet sender deliberately rejects fragmented/escaped Normal packets rather than silently sending malformed wire. Actual Go production runtime and TUN/raw sink disabled. No delivery to real user app."
+  },
+  "tests": {
+    "source": "real protected Go TLS exporter via unchanged EstablishServerV4",
+    "go_top_level": [
+      "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+      "TestR0V4NativeRustProtectedAEADReplayAllCiphers",
+      "TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",
+      "TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst"
+    ],
+    "cipher_suite_subtests": [
+      "ChaCha20-Poly1305",
+      "AES-128-GCM",
+      "AES-256-GCM"
+    ],
+    "new_case_observed": [
+      "Pre Commit/Detach feature adapter and Rust core reject S2C TX",
+      "Rust M1 scoped frozen TX first packet opens with independent actual Go V4 S2C Opener at PN0 and exact protected-reply Go SenderNext",
+      "Second Rust TX PN1 and next TCP seq exactly prior sealed record bytes later, Go authenticates same expected plaintext",
+      "Small explicit peer MSS budget and missing LINK magic escape reject, no emitted TX record",
+      "Actual Go C2S packet reaches SAME Rust scoped owner RX+M3 complete LINK callback",
+      "Stop and release denies old Rust TX generation",
+      "Existing Go protected three cipher RX AEAD replay and LINK reassembly tests all green",
+      "Rust owner separate pre-Commit TX rejection and loan Stop cases"
+    ]
+  },
+  "actions": {
+    "native_owner": {
+      "run_id": 38775855824,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "build_job_id": 116563176452,
+      "consume_job_id": 116563851804,
+      "build_artifact": {
+        "id": 11993826604,
+        "digest": "sha256:9df00df05dde359bb627080ef34285ebbe599cd306ec9de5c793f05b2a06d550"
+      },
+      "result_artifact": {
+        "id": 11993571840,
+        "digest": "sha256:e4102bfb41741116bec95c7226d67f317231b354cae2bf731b25e8cab4d45032"
+      }
+    },
+    "native_functional": {
+      "run_id": 38775855700,
+      "result": "SUCCESS",
+      "plan_job": 116563176076,
+      "build_job": 116563246151,
+      "verify_jobs": [
+        116563670816,
+        116563670947,
+        116563670966,
+        116563670974,
+        116563671001
+      ],
+      "build_artifact": {
+        "id": 11994350098,
+        "digest": "sha256:f36c0bcbd1cf7e11b9418625243e3cf1a2fa8d245d1c18c95d532c0493835314"
+      }
+    },
+    "native_abi": {
+      "run_id": 38775855712,
+      "result": "SUCCESS",
+      "jobs": [
+        116563175952,
+        116563648416
+      ],
+      "result_artifact": {
+        "id": 11993506797,
+        "digest": "sha256:6824afc46fe2b034f457a85a4551f562df0650f7f3ed1107129e2eb37f4f7c6d"
+      }
+    },
+    "cross_abi": {
+      "run_id": 38775855703,
+      "result": "SUCCESS",
+      "jobs": [
+        116563175638,
+        116563176421,
+        116564030780,
+        116564030827
+      ],
+      "windows_arm_execution": "NOT_RUN",
+      "result_artifacts": [
+        {
+          "id": 11994095983,
+          "digest": "sha256:1762a66f073f644e464639f28eda809c9596a97c59e60802b047104f9aa0faa4"
+        },
+        {
+          "id": 11992954548,
+          "digest": "sha256:9a98890fa11698b8782fb92540d3fd62ff8b3f2664633c3eb84a1a733e0a3e3c"
+        }
+      ]
+    },
+    "g2": {
+      "run_id": 38775855752,
+      "result": "SUCCESS",
+      "jobs": [
+        116563175690,
+        116563505326
+      ]
+    },
+    "governance": {
+      "run_id": 38775855798,
+      "result": "SUCCESS",
+      "job_id": 116563175977,
+      "artifact": {
+        "id": 11992654845,
+        "digest": "sha256:5c4ca95bf4f770e5ee23176d827f2e36db768c4f49cd7bc2b4fded34a2eb21fa"
+      },
+      "selftests": "NOT_RUN",
+      "design_models": "NOT_RUN"
+    },
+    "maintenance": {
+      "run_id": 38775855672,
+      "result": "SUCCESS",
+      "job_id": 116563175516,
+      "tests": "169/169 PASS",
+      "artifact": {
+        "id": 11994160595,
+        "digest": "sha256:b03dfcb065b23750a0a39a3ece2e7c8208883cc0fbd7d046932d89608e4b0115"
+      }
+    },
+    "r0_static": {
+      "run_id": 38775855623,
+      "result": "SUCCESS",
+      "job_id": 116563175757,
+      "artifact": {
+        "id": 11992634725,
+        "digest": "sha256:68a6b259bfb0a81546f9374a4cd4a3d7af295a7e20e6855edcf28801cb5f9295"
+      }
+    }
+  },
+  "unrun": [
+    "Real M4 negotiated effective FrameBudget from actual network path and peer MSS",
+    "Production Go runtimeentry V4 admission authenticated control-to-Rust installer (features0/no public cold install)",
+    "Actual TUN/raw/AF_PACKET Linux RX/TX and application sink",
+    "M4 actual driver-held kernel I/O loan Stop B01–B04",
+    "Full fragmented and escaped business TX through M3 fragmenter",
+    "Negative failure of actual Go protected reply after Rust TX component Prepare under OS carrier",
+    "Physical real device; 500Mbps and CPU"
+  ],
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "next_action": "Integrate production trusted Go V4 owner capability to the ordinary ScopedOwner TX/RX and actual M4 effective FrameBudget/TUN/raw reader+writer, preserving exact SenderNext and driver borrow lease Stop. Prove first true Linux namespace bidirectional Normal/FEC-off business packet and B01–B04 before enabling capability."
+}
