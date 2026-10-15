@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M4-LINUX-RX-BATCH-MAIN-011",
+  "branch": "main",
+  "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M4 genuine Linux x86_64 GNU recvmmsg + prior sendmmsg via unprivileged UDP sockets, strict full IPv4/TCP parser and real M3 AEAD/PN replay, not raw AF_PACKET or production Go V4",
+  "start_head": "2e3912ff7a4aed59400356598ae54cd7045bae30",
+  "M0_seq_before": 47,
+  "M0_H_before_governance": 38670384584,
+  "worker_acceptance": [
+    {
+      "role_id": "M1",
+      "task": "R1-M1-RX-READY-BATCH-005",
+      "code_source": "e0a9f64d5c17d8085c52f09a083b9689535f00d1",
+      "tests": "51/51",
+      "native_run": 38669368706,
+      "code_governance": 38669368814,
+      "evidence_S": "1f5cbecdc33759c1f6b8cac253b3b9c7159cad68",
+      "H": "fa518d65b53460346db710c3715076299ff140c6",
+      "H_governance": 38669632237,
+      "scope": "Owner RX queued uniquely borrowed caller-preallocated <=32; two-lane fair/no HOL; not crypto authentication",
+      "historical_failure": "worker root R0 ABI38669368889 hardcoded count marker, Rust54/54 actual PASS but action FAIL"
+    },
+    {
+      "role_id": "M2",
+      "task": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004",
+      "code_source": "06fe27ae516cdef6b144c736a2166a5f6d4b209f",
+      "tests": "33/33",
+      "native_run": 38669519161,
+      "code_governance": 38669519113,
+      "evidence_S": "5c652c22ce2c4953226d6370e3886cac07202f74",
+      "H": "43c0e985a265c701e51354d7d05a0bb885d1457f",
+      "H_governance": 38669865546,
+      "scope": "Pure authenticated-receipt typed-owner race and global grant batch; no live verified crypto or driver",
+      "historical_failure": "initial source15b696f9 native32/33 failed fake MonoNs registration reversed run38669397068; fixed source06fe27ae"
+    },
+    {
+      "role_id": "M3",
+      "task": "R1-M3-AUTH-FEC-SCOPE-GATE-011",
+      "code_source": "42382c60ee51689d49c480411af3df2acc9e9a7d",
+      "tests": "85/85",
+      "native_run": 38669822925,
+      "code_governance": 38669822950,
+      "governance_attempt": 5,
+      "evidence_S": "24955c5ed65af27cf0b336d5b6482bc3c53edd83",
+      "H": "f56a6720887bac7471a1e29b24b55b8d25bfb73d",
+      "H_governance": 38670975617,
+      "scope": "Real AEAD and bounded PN replay before FEC, positive origin constructor cfg(test) ONLY, production origin NOT implemented",
+      "historical_failure": "first test build failed and second83/85; CODE Governance attempts 1-4 main control moving, attempt5 PASS exact code"
+    },
+    {
+      "role_id": "M4",
+      "task": "R1-M4-LINUX-RX-BATCH-005",
+      "code_source": "2a4bc0e856f84042da292a4fae93d2a32d2d10db",
+      "tests": "42/42",
+      "native_run": 38669449668,
+      "code_governance": 38669449658,
+      "evidence_S": "c272f0e0412657b633da22f5b2003adc7345a39f",
+      "H": "7bbd60d14bba82678fa68a0bc8edba3775f5f9eb",
+      "H_governance": 38669770858,
+      "scope": "Real nonblocking Linux x86_64 GNU recvmmsg UDP fixture, <=32, truncation/stop, no raw AF_PACKET",
+      "historical_failure": "old root r0-fake-platform38669449646 count gate FAIL despite platform native42/42 PASS"
+    }
+  ],
+  "role_scope": "Each branch audited since previous owned H, only own role code/evidence/cursor/requests; each final H cursor-only and H Governance SUCCESS; no new branch tasks assigned by this M0 atom",
+  "main_changes": [
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-platform/src/linux_rx_batch.rs",
+    "crates/wbd-engine/tests/r1_linux_batch_kernel.rs",
+    ".github/workflows/r1-ipv4-tcp-native.yml",
+    ".github/workflows/r1-linux-kernel-batch-native.yml"
+  ],
+  "tested": [
+    "actual unprivileged Linux sendmmsg full IPv4/TCP encrypted packets followed by Linux recvmmsg batch 3 fresh frozen unique PNs, independently checked carrier checksums and strict complete packet parse before AEAD replay",
+    "old sender fresh record ownership remains frozen; real M3 LaneRxCrypto AEAD/PN replay gates exactly first business delivery, duplicate cannot redeliver",
+    "real kernel delivered large datagram into insufficient receive slot marked Truncated and never parsed; valid subsequent unrelated socket packet still delivered",
+    "forged encrypted bytes + recomputed TCP checksum still refused by AEAD without updating replay floor, next valid ciphertext admitted",
+    "bounded 32 recv batch with 33rd retained, pure classified kernel short or EINTR is not falsely called real injected EINTR, stop borrowing fence"
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38671465633,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38671465600,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r1-ipv4-tcp-native",
+      "run_id": 38671465556,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r0-fake-platform",
+      "run_id": 38671465641,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38671465603,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38671465661,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38671465554,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38671465585,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r1-linux-kernel-batch-native",
+      "run_id": 38671465682,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38671465639,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38671465640,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38671465567,
+      "source_sha": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "scope": "OWN_WORKFLOW_ONLY"
+    }
+  ],
+  "compiled_once": {
+    "ipv4": {
+      "run_id": 38671465556,
+      "passed": 42,
+      "binary": "0b6ad32ee75d678727b457ebc96379ae0f7637d8d637491a29743d6fae9e6153",
+      "log_sha256": "53ec12c01df111f9fdb422b2100b5db15afa5101e976f62bf8cf9d93853720f6",
+      "build_job": 116215323185,
+      "consumer_job": 116215406481,
+      "build_artifact": {
+        "id": 11943848439,
+        "digest": "sha256:73e4625c8e72d0cd26023b086f9365c4b4b75aa059fa0ab37563039469cb48e8"
+      },
+      "result_artifact": {
+        "id": 11944482128,
+        "digest": "sha256:ced28c5829a5ae51f39710cd8dadb4d20fa58cbcee98ebc2d84dcbf977acc89f"
+      }
+    },
+    "kernel": {
+      "run_id": 38671465682,
+      "platform_tests": 42,
+      "engine_tests": 5,
+      "platform_binary": "0b6ad32ee75d678727b457ebc96379ae0f7637d8d637491a29743d6fae9e6153",
+      "engine_binary": "cb4d113c12ff7e232c0578ee6b339331a4c239b12aa83eb5316e393c91a5fe93",
+      "platform_log_sha256": "ee91b6fea8d7e465f83f1641d4a950b699b6efe0fbb4c96a51d78ac444463446",
+      "engine_log_sha256": "7b2f541c3ed333e88d1b594d666a0bffb21b32f4f86b2057dc420853079636ba",
+      "build_job": 116215323379,
+      "consumer_job": 116215573959,
+      "build_artifact": {
+        "id": 11944602123,
+        "digest": "sha256:29ec7e86ed43b8c3bb8f0e0dbdcd926cedd0e4f88ea3707530fec2829db30bf7"
+      },
+      "result_artifact": {
+        "id": 11944298404,
+        "digest": "sha256:0b6c9ca42826a90055dc9159744ed452f798831d6cd739a475f777c61e423f97"
+      }
+    }
+  },
+  "cross_abi_limit": "R0 Windows GNU and Linux ARM cross-ABI jobs build/inspect source artifacts only, not native runtime execution",
+  "not_qualified": [
+    "REAL_AF_PACKET_RAW_RX_TX",
+    "VERIFIED_GO_V4_COLD_SESSION_ORIGIN_EXPORTER",
+    "PRODUCTION_RX_ACTOR",
+    "NATIVE_WINDOWS_ARM",
+    "LIVE_PERFORMANCE_500MBPS_P99_CPU_RSS",
+    "PHYSICAL",
+    "PRODUCT"
+  ],
+  "next_action": "M0 choose next one atom: integrate M3 85-case gated AEAD/PN FEC typed origin with carefully TEST-ONLY fixture or M1 RX ready batch/M2 epoch race into main. Highest end-to-end critical path remains actual Go V4 authenticated cold-to-steady exporter and raw AF_PACKET. Four workers now await fresh next task; issue next independently under existing registry rev2 epoch1 after scope checks, do not silently assume sessions running."
+}
