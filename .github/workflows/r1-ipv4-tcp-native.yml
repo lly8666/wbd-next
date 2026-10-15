@@ -87,23 +87,7 @@ jobs:
           log=pathlib.Path('r1-outer-result/tests.log').read_text()
           match=re.search(r'test result: ok\. (\d+) passed; 0 failed',log)
           count=int(match.group(1)) if match else 0
-          names=re.findall(r'^test [\\w:]+::(r1_\\w+) \\.\\.\\. ok
-          result={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],'binary_sha256':m['binary_sha256'],
-                  'log_sha256':hashlib.sha256(log.encode()).hexdigest(),'native_tests':count,
-                  'result':'PASS' if ok else 'FAIL','scope':'M4_ACTUAL_IPV4_TCP_AND_LINUX_GNU_SENDMMSG_NATIVE_NOT_AF_PACKET',
-                  'not_qualified':'REAL_AF_PACKET;GO_V4_LIVE;NATIVE_WINDOWS_ARM;PERFORMANCE;PHYSICAL'}
-          pathlib.Path('r1-outer-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
-          print(json.dumps(result,indent=2))
-          if not ok:sys.exit(1)
-          PY
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
-        with:
-          name: r1-outer-result-${{ github.run_id }}-${{ github.run_attempt }}
-          path: r1-outer-result/
-          if-no-files-found: warn
-          retention-days: 30
-,log,re.M)
+          names=re.findall(r'^test [\w:]+::(r1_\w+) \.\.\. ok$',log,re.M)
           required={
             'r1_driver_lease_actual_udp_0_1_32_33_prefix_suffix_and_rx',
             'r1_driver_lease_actual_udp_partial_prefix_oversized_and_unsent_suffix',
