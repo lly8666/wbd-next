@@ -12,11 +12,11 @@ use std::sync::{Mutex, OnceLock};
 use wbd_types::{LaneKey, TunnelKey, MonoNs};
 use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
-use crate::runtime::early_rx::{EarlyRxOwner,EarlyLimits,EarlyAccepted};
+use crate::runtime::early_rx::EarlyAccepted;
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
-use crate::v4_owner_crypto::ProtectedScopedCrypto;
-use crate::runtime::{QueueLimits, RxOwner, TxOwner, RxPacket};
-use crate::runtime::generation::{ScopeToken, ScopedOwner, LoanBatch};
+use crate::v4_owner_crypto::ProtectedScopedOwner;
+use crate::runtime::RxPacket;
+use crate::runtime::generation::LoanBatch;
 
 const OK: i32 = 0;
 const INVALID: i32 = 1;
@@ -32,8 +32,7 @@ const PH_STOPPED: u32 = 3;
 const PH_STOPPING: u32 = 4;
 
 struct Probe {
-    owner: EarlyRxOwner,
-    token: ScopeToken,
+    owner: ProtectedScopedOwner,
     arena: Arena,
     phase: u32,
     rx_boundary: u32,
@@ -42,7 +41,6 @@ struct Probe {
     drained:bool,
     held_rx:Option<LoanBatch<RxPacket>>,
     cold_identity: ColdIdentity,
-    protected_crypto: ProtectedScopedCrypto,
 }
 
 struct Probes {
@@ -76,37 +74,19 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
         tunnel_id:identity.tunnel_id, go_lane_id:identity.go_lane_id,
         server:true,
     };
-    data.preflight_untrusted_owner(&expected).map_err(|_| INVALID)?;
-    // Crypto setup is production-compiled and common to the future owner.
-    // This test-only FFI cannot become a production source of trust.
-    let protected_crypto=ProtectedScopedCrypto::prepare_from_protected_go(&data,&expected)
-        .map_err(|_| INVALID)?;
-    // Separate locally minted opaque token; Go's wire epoch/lane is NOT a
-    // Rust owner generation and cannot select an existing owner.
+    // The real production-compiled composition now installs BOTH
+    // ScopedOwner queues and two AEAD directions as ONE prepared owner.
+    // This FFI is test-tagged only, never independent authentication.
     let handle = (u64::from(generation) << 32) | 0x5642;
-    let max_wire = usize::from(identity.server_limit);
-    let fresh = QueueLimits {
-        slots: 32, bytes:max_wire.saturating_mul(32), max_age_ns:50_000_000,
-    };
-    let rx = QueueLimits {
-        slots:64, bytes:max_wire.saturating_mul(64), max_age_ns:50_000_000,
-    };
-    let Some(tx_owner) = TxOwner::new(fresh, fresh) else {return Err(INVALID)};
-    let Some(rx_owner) = RxOwner::new(rx) else {return Err(INVALID)};
-    let Some(owner) = ScopedOwner::new(handle,generation,lane,tx_owner,rx_owner)
-        else {return Err(INVALID)};
-    // Bounded owner-local test-only arena; input Go []byte is copied into a
-    // uniquely owned Rust slab before the cgo call returns. No Go pointer kept.
-    let Some(mut owner)=EarlyRxOwner::new(owner,EarlyLimits {
-        slots:32,bytes:max_wire.saturating_mul(32),
-    }) else {return Err(INVALID)};
-    let token=owner.token();
-    if owner.prepare(&token,u64::from(boundary)).is_err(){return Err(BAD_STAGE)}
+    let owner=ProtectedScopedOwner::prepare_from_protected_go(
+        &data,&expected,handle,boundary,
+    ).map_err(|_| INVALID)?;
+    // Only the test harness uses this bounded arena to copy incoming FakeTCP
+    // bytes; the future production adapter will supply existing owner slabs.
     let Ok(arena)=Arena::new(generation,32,2048,32,1_000_000) else {return Err(INVALID)};
     state.slots.insert(handle, Probe {
-        owner,token,arena,phase:PH_PREPARED,rx_boundary:boundary,
+        owner,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        protected_crypto,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -131,7 +111,7 @@ fn probe_stage(handle:u64,seq:u32,bytes:&[u8])->i32 {
     }
     let Ok(mut buffer)=p.arena.allocate() else {return FULL};
     buffer.writable()[..len].copy_from_slice(bytes);
-    match p.owner.offer(&p.token,buffer,0..len,
+    match p.owner.offer_early(buffer,0..len,
         u64::from(p.rx_boundary)+u64::from(distance),MonoNs(0)) {
         Ok(EarlyAccepted::Staged)=>{
             p.staged_count+=1;p.staged_bytes+=len as u32;OK
@@ -163,7 +143,7 @@ fn probe_hold_rx(handle:u64)->Result<(u32,u32,u64),i32>{
     let Ok(mut state)=registry().lock() else{return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else{return Err(UNKNOWN)};
     if p.phase!=PH_COMMITTED||p.drained||p.held_rx.is_some(){return Err(BAD_STAGE)}
-    let batch=p.owner.drain_rx(&p.token,MonoNs(0),Vec::with_capacity(32))
+    let batch=p.owner.drain_rx(MonoNs(0),Vec::with_capacity(32))
         .map_err(|_|BAD_STAGE)?;
     let summary=summarize_borrowed_rx(&batch);
     if summary.0!=p.staged_count||summary.1!=p.staged_bytes{return Err(BAD_STAGE)}
@@ -186,7 +166,7 @@ fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
     let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
     if p.phase!=PH_COMMITTED||p.drained{return Err(BAD_STAGE)}
-    let batch=p.owner.drain_rx(&p.token,MonoNs(0),Vec::with_capacity(32))
+    let batch=p.owner.drain_rx(MonoNs(0),Vec::with_capacity(32))
         .map_err(|_|BAD_STAGE)?;
     let (count,len,digest)=summarize_borrowed_rx(&batch);
     // Normal drain relinquishes the loan before Stop; the separate held-RX
@@ -212,11 +192,7 @@ fn probe_commit(handle:u64,early_count:u32,early_bytes:u32,tx_boundary:u32) -> i
     // The Go protected reply and FakeTCP Detach were completed by the
     // private Go caller. Rust now moves all already-copied early bytes from
     // its staged, bounded owner into its inert RX, atomically.
-    if probe.owner.detach(&probe.token).is_err(){return BAD_STAGE}
-    if probe.protected_crypto.commit_after_detach(
-        probe.token.serial(),probe.cold_identity.go_lane_id,
-        probe.cold_identity.logical_epoch,tx_boundary,
-    ).is_err(){return BAD_STAGE}
+    if probe.owner.commit_after_detach(tx_boundary).is_err(){return BAD_STAGE}
     probe.phase=PH_COMMITTED;
     OK
 }
@@ -226,7 +202,7 @@ fn probe_abort(handle:u64)->i32 {
     if p.phase==PH_COMMITTED {return OK} // Go defer abort after commit is benign
     if p.phase!=PH_PREPARED {return BAD_STAGE}
     if let Some(mut p)=state.slots.remove(&handle) {
-        let _=p.owner.stop(&p.token);
+        let _=p.owner.stop();
         return OK;
     }
     UNKNOWN
@@ -236,7 +212,7 @@ fn probe_stop(handle:u64)->i32 {
     let Some(p)=state.slots.get_mut(&handle) else {return UNKNOWN};
     if p.phase==PH_STOPPED {return OK}
     if p.phase!=PH_COMMITTED && p.phase!=PH_STOPPING {return BAD_STAGE}
-    let Ok(retired)=p.owner.stop(&p.token) else {return BAD_STAGE};
+    let Ok(retired)=p.owner.stop() else {return BAD_STAGE};
     if !retired.ready.batch_handles_released(){
         p.phase=PH_STOPPING;
         return STOP_INCOMPLETE; // no forced free, quiesced claim or release
@@ -258,9 +234,7 @@ fn probe_open_unique(handle:u64,wire:&mut [u8])->Result<(u64,u8,u64),i32>{
     let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
     if p.phase!=PH_COMMITTED {return Err(BAD_STAGE)}
-    p.protected_crypto.open_unique_after_active(
-        p.token.serial(),p.cold_identity.logical_epoch,wire,
-    ).map_err(|_| INVALID)
+    p.owner.open_unique_after_active(wire).map_err(|_| INVALID)
 }
 
 #[no_mangle]
@@ -387,6 +361,20 @@ mod tests {
     fn r0_m0_native_probe_local_fresh_generation_and_bounded_phases(){
         let a=candidate();
         let first=probe_prepare(&a,0).unwrap();
+        // The actual RX/TX ScopedOwner+AEAD object must never expose its
+        // RX queue or plaintext before BOTH directions commit.
+        assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
+        let mut precommit_record=vec![0u8;31];
+        assert_eq!(probe_open_unique(first,&mut precommit_record).err(),Some(BAD_STAGE));
+        // A self-consistent cold grammar with an impossible wire limit
+        // cannot half-install RX when TX construction fails, nor vice versa.
+        let mut too_small_rx=a;
+        too_small_rx[62..64].copy_from_slice(&1u16.to_be_bytes());
+        assert_eq!(probe_prepare(&too_small_rx,0).err(),Some(INVALID));
+        let mut too_small_tx=a;
+        too_small_tx[60..62].copy_from_slice(&1u16.to_be_bytes());
+        assert_eq!(probe_prepare(&too_small_tx,0).err(),Some(INVALID));
+        assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
         assert_eq!(probe_commit(first,65,65,777),INVALID);
         assert_eq!(probe_commit(first,1,1401*64,777),INVALID);
         assert_eq!(probe_stop(first),BAD_STAGE);
