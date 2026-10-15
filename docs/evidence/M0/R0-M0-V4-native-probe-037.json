@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "b23cf780d36042612a1f21a05c8062226b7748a6",
+  "result": "PARTIAL_REAL_GO_TLS_PRIVATE_PREPARE_COMMIT_TO_RUST_SCOPED_OWNER_PROBE_PASS__PRODUCTION_AUTHORITY_NOT_GRANTED",
+  "progress": "partial",
+  "unverified": true,
+  "source_commits": {
+    "go_private_bridge": "fec41dcf5e6fdeb190b41bcb0430d63769385e43",
+    "test_expected_abort_correction": "3179144c78e839c395f02faa89025441f0034ef3",
+    "rust_test_only_candidate": "1acb3e09392aabd777626542c750307900081a9d",
+    "go_cgo_private_adapter": "44d00718ee0b56347be966807aa781a78bb1c667",
+    "source_exact_native_workflow": "4fb9fcfa5f5c3bef564dc786581fc47e247cc07d",
+    "production_symbol_negative_gate": "b23cf780d36042612a1f21a05c8062226b7748a6"
+  },
+  "backend_contract": {
+    "old_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "actual_order": [
+      "real_go_TLS_credentials_and_protected_request",
+      "Go_verified_frozen_snapshot",
+      "FakeTCP_PrepareTransition_exact_RX_boundary",
+      "private_v4OwnerBridge.prepare_real_Rust_ScopedOwner_candidate",
+      "Go_protected_reply_write",
+      "FakeTCP_DetachTransition",
+      "private_v4PreparedOwner.commit_owned_early_metadata",
+      "Go_V4_epoch_finish_true"
+    ],
+    "abort": "prepare/reply/detach/native_commit failure => abort prepared owner if one exists and rollback Go epoch; never publish lane",
+    "authorization": "private Go same-package real verified session callsite only; Rust raw bytes cannot authenticate caller by themselves",
+    "fresh_rust_owner_generation": true,
+    "GO_RX_seq_boundary_preserved": true,
+    "actual_early_record_payload_moved_to_Rust": false,
+    "release_after_stop": true,
+    "no_go_pointer_retained": true,
+    "module_feature": "m0_v4_probe Linux-only Rust feature; Go build tag wbd_v4_native_probe",
+    "normal_cdylib_test_symbol_export": "NONE confirmed with native nm -D before probe-feature build",
+    "features_in_production_abi": 0,
+    "production_activation": false
+  },
+  "exact_actions": [
+    {
+      "workflow": "r0-v4-real-tls",
+      "run": 38707227117,
+      "source": "3179144c78e839c395f02faa89025441f0034ef3",
+      "result": "success",
+      "scope": "12 full top-level real TLS tests including private recording backend reject/commit and rollback"
+    },
+    {
+      "workflow": "r0-v4-cold-native",
+      "run": 38707227092,
+      "source": "3179144c78e839c395f02faa89025441f0034ef3",
+      "result": "success",
+      "scope": "Go real cold bytes native Rust parser, not owner"
+    },
+    {
+      "workflow": "m0-v4-native-probe",
+      "run": 38707920138,
+      "source": "4fb9fcfa5f5c3bef564dc786581fc47e247cc07d",
+      "result": "success",
+      "build_id": 11959660750,
+      "result_id": 11958724904
+    },
+    {
+      "workflow": "m0-v4-native-probe",
+      "run": 38708333395,
+      "source": "b23cf780d36042612a1f21a05c8062226b7748a6",
+      "attempt": 1,
+      "result": "success",
+      "build_job": 116333214164,
+      "consume_job": 116333906104,
+      "build_artifact": {
+        "id": 11959242527,
+        "digest": "sha256:1625f095d2244e41d4f6a9b5abaa425c3891502adab7dce758eb63d9b3bd7d64"
+      },
+      "result_artifact": {
+        "id": 11959262590,
+        "digest": "sha256:bfd6bd35a6a4144d35679d3340da66a70f6e891dbc5b05a3df5dcc05af903cd2"
+      },
+      "real_native_go_tests": "1/1 pinned TLS→Rust cgo fresh generation twice PASSED",
+      "rust_probe_native": "1/1 fresh-generation, strict phases, early 64 cap and Stop tests PASSED",
+      "negative_compile": "normal no-feature Rust cdylib actual nm -D export test probe symbols ABSENT",
+      "rust_test_only_cdylib": true,
+      "compiled_once_each_binary": true,
+      "source_and_binary_sha256": true
+    },
+    {
+      "workflow": "governance",
+      "run": 38708333353,
+      "source": "b23cf780d36042612a1f21a05c8062226b7748a6",
+      "conclusion": "success"
+    }
+  ],
+  "product_limits": {
+    "genuine_positive_authenticated_Rust_owner": "NOT_RUN: Rust probe accepts raw C bytes only as INERT test-only candidate",
+    "production_ABI": "features=0, no native probe symbols",
+    "early_rx_payload_transfer": "NOT_RUN: only Go-owned early count and bytes passed",
+    "AEAD_crypto_owner_installed": "NOT_RUN",
+    "positive_FecOrigin": "NOT_RUN",
+    "real_OS_driver_borrow_Stop_B01_B04": "NOT_RUN",
+    "Go_to_Rust_application_E2E": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "native_Windows_Arm": "NOT_RUN",
+    "throughput_500Mbps": "NOT_QUALIFIED",
+    "M3_cpu_measurement": "prior physically inconsistent, new M3 task015 pending"
+  },
+  "next_action": "M0 retain protected Go session-only authority, wire real versioned Rust owner generation with actual early packet byte ownership and B01-B04 Stop-held-driver leases; integrate only verified M1 early RX and M4 burst work after their own S/H; add negative testing for arbitrary raw grammar never enabling production and keep production ABI features0 until genuine E2E."
+}
