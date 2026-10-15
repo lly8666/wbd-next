@@ -74,6 +74,8 @@ type V4ClientSession struct {
     // Only EstablishClientV4 after verified protected reply and KDF may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
+    // Freeze once, so caller-mutable Negotiated fields never mint new authority.
+    verifiedCold V4ColdSessionSnapshot
 }
 type V4ServerSession struct {
     *ServerAdmissionSession
@@ -81,6 +83,7 @@ type V4ServerSession struct {
     // Only EstablishServerV4 after credentials, protected reply and Detach may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
+    verifiedCold V4ColdSessionSnapshot
 }
 
 type v4Entry struct {
@@ -320,11 +323,14 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
+    frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false)
+    if err!=nil{return nil,err}
     success=true
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
+        verifiedCold:frozen,
     },nil
 }
 
@@ -404,6 +410,9 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
+    // Prepare the immutable copy; publish only after protected reply+detach.
+    frozen,err:=v4ColdSnapshot(result,epoch,req.Username,true)
+    if err!=nil{return nil,err}
     boundary,err:=assoc.PrepareTransition(int(cfg.ServerLimit))
     if err!=nil{return nil,err}
     reply,err:=v4ReplyWire(result,ext)
@@ -422,6 +431,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
+        verifiedCold:frozen,
     },nil
 }
 
@@ -456,14 +466,26 @@ func (s *V4ClientSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
        s.ClientAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    return v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false)
+    if err!=nil{return V4ColdSessionSnapshot{},err}
+    // An apparently valid post-TLS edit to cipher, limits or key material
+    // must not yield a fresh "authenticated" authority.
+    if current!=s.verifiedCold || s.ClientAdmissionSession.TLS.Keys!=s.verifiedCold.keys {
+        return V4ColdSessionSnapshot{},ErrAdmissionParams
+    }
+    return s.verifiedCold,nil
 }
 func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
     if s==nil || !s.coldAuthenticated || s.ServerAdmissionSession==nil ||
        s.ServerAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    return v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true)
+    if err!=nil{return V4ColdSessionSnapshot{},err}
+    if current!=s.verifiedCold || s.ServerAdmissionSession.TLS.Keys!=s.verifiedCold.keys {
+        return V4ColdSessionSnapshot{},ErrAdmissionParams
+    }
+    return s.verifiedCold,nil
 }
 func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool)(V4ColdSessionSnapshot,error){
     var out V4ColdSessionSnapshot

@@ -206,25 +206,60 @@ func TestR0V4ColdSnapshotNilForgedAndMutatedSessionDenied(t *testing.T){
     tunnel:=[]byte("0123456789abcdef")
     c,s,ce,se:=v4Pair(t,store,"real",tunnel,1,v4TestPolicy(1,CipherChaCha),[16]byte{})
     if ce!=nil||se!=nil{t.Fatalf("TLS: %v %v",ce,se)}
-    // A success marker is only a provenance guard: independently validate
-    // the immutable fields again before creating a cold snapshot.
+    // Only the protected handshake path mints the private frozen witness.
     original:=c.Negotiated
+    baseEpoch:=c.Epoch
+    basePrincipal:=c.authenticatedPrincipal
+    baseTLSKeys:=c.TLS.Keys
+    baseline,err:=c.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    fake:=&V4ClientSession{
+        ClientAdmissionSession:c.ClientAdmissionSession,Epoch:c.Epoch,
+        coldAuthenticated:true,authenticatedPrincipal:c.authenticatedPrincipal,
+    }
+    if _,err:=fake.ColdSnapshot();!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("self-asserted auth boolean minted a cold witness: %v",err)
+    }
     cases:=[]func(){func(){c.Negotiated.RecordVersion=3},
         func(){c.Epoch=[16]byte{}},
         func(){c.Negotiated.LaneID=0},
         func(){c.Negotiated.TunnelID=[]byte{1}},
-        func(){c.Negotiated.Keys.C2S=c.Negotiated.Keys.S2C}}
+        func(){c.Negotiated.Keys.C2S=c.Negotiated.Keys.S2C},
+        // These look grammatically valid but were never negotiated.
+        func(){c.Negotiated.ClientLimit--},
+        func(){c.Negotiated.ServerLimit--},
+        func(){c.Negotiated.Policy.Cipher=CipherAES128},
+        func(){c.Negotiated.IncarnationNonce[0]^=0xff},
+        func(){c.Negotiated.Keys.C2S.AEADKey[0]^=0xff},
+        func(){c.authenticatedPrincipal="imposter"},
+        func(){c.TLS.Keys.C2S.IV[0]^=0xff}}
     for i,mutate:=range cases{
         c.Negotiated=original
-        c.Epoch=s.Epoch
+        c.Epoch=baseEpoch
+        c.authenticatedPrincipal=basePrincipal
+        c.TLS.Keys=baseTLSKeys
         mutate()
         if _,err:=c.ColdSnapshot();!errors.Is(err,ErrAdmissionParams){
-            t.Fatalf("mutated cold session %d not rejected: %v",i,err)
+            t.Fatalf("post-auth client edit %d minted a cold witness: %v",i,err)
         }
     }
     c.Negotiated=original
-    c.Epoch=s.Epoch
-    if _,err:=c.ColdSnapshot();err!=nil{t.Fatal(err)}
+    c.Epoch=baseEpoch
+    c.authenticatedPrincipal=basePrincipal
+    c.TLS.Keys=baseTLSKeys
+    recovered,err:=c.ColdSnapshot()
+    if err!=nil||recovered!=baseline{t.Fatalf("original cold witness not recovered: %v",err)}
+    serverOriginal:=s.Negotiated
+    serverTLSKeys:=s.TLS.Keys
+    serverCold,err:=s.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    s.Negotiated.ServerLimit--
+    if _,err:=s.ColdSnapshot();!errors.Is(err,ErrAdmissionParams){t.Fatalf("server limit edit: %v",err)}
+    s.Negotiated=serverOriginal
+    s.TLS.Keys.S2C.HPKey[0]^=0xff
+    if _,err:=s.ColdSnapshot();!errors.Is(err,ErrAdmissionParams){t.Fatalf("server TLS key edit: %v",err)}
+    s.TLS.Keys=serverTLSKeys
+    if got,err:=s.ColdSnapshot();err!=nil||got!=serverCold{t.Fatalf("server freeze recovery: %v",err)}
     if err:=store.ReleaseLane("real",tunnel,1,s.Epoch);err!=nil{t.Fatal(err)}
 }
 func TestR0V4ColdSnapshotTunnelRotationDoesNotReuseEpochOrKeys(t *testing.T){
