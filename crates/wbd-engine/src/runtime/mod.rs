@@ -13,6 +13,8 @@ pub mod parity;
 pub mod batch;
 pub mod rx_batch;
 pub mod generation;
+#[cfg(test)] mod generation_release;
+#[cfg(test)] mod loan_stop;
 use parity::ParityReady;
 // The qualified owner APIs remain unreachable from the production ABI or
 // untrusted Go V4 cold bytes until M0 implements authenticated transition.
