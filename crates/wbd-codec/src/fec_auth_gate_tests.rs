@@ -36,7 +36,7 @@ fn origin(generation:u32)->FecOrigin{
 }
 fn gate(suite:RecordSuite,attested:bool)->AuthFecScopeGate{
     AuthFecScopeGate::new(keys(),suite,MAX_WIRE_LEN,replay(),
-        id_cfg(0,0),fec_cfg(1),LANE,TUNNEL,TUNNEL,attested.then(||origin(0))).unwrap()
+        id_cfg(0,0),fec_cfg(1),LANE,TUNNEL,attested.then(||origin(0))).unwrap()
 }
 fn tx(suite:RecordSuite)->LaneTxCrypto{
     LaneTxCrypto::new_for_suite(keys(),MAX_WIRE_LEN,suite).unwrap()
@@ -210,7 +210,7 @@ fn r1_authgate_old_generation_refused_with_explicit_origin_even_at_wrap(){
     let mut rx=fec_cfg(u32::MAX as u64);
     rx.max_heavy_bytes=16000;
     let mut gate=AuthFecScopeGate::new(keys(),RecordSuite::Aes128Gcm,
-        MAX_WIRE_LEN,replay(),cfg,rx,LANE,TUNNEL,TUNNEL,Some(origin(0))).unwrap();
+        MAX_WIRE_LEN,replay(),cfg,rx,LANE,TUNNEL,Some(origin(0))).unwrap();
     let mut sender=tx(RecordSuite::Aes128Gcm);
     let (prior,_)=fec(u32::MAX as u64,&[b"prior"]);
     let (new,_)=fec(0x1_0000_0001,&[b"next"]);
