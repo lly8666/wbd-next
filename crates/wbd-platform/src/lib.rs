@@ -2,12 +2,19 @@
 //! The fake driver and fake clock live only in tests. This crate cannot
 //! depend on wbd-engine; only the engine will compose real clocks/drivers.
 //! No FFI types or wire layouts are defined here.
-#![forbid(unsafe_code)]
+// All modules deny unsafe except the audited, Linux x86_64 GNU sendmmsg FFI island.
+// A crate-level forbid would also forbid that narrowly scoped native syscall.
+#![deny(unsafe_code)]
 
-/// R1 verified, bounded ready-only adapter; production native AF_PACKET/Windows not enabled.
+/// R1 bounded, borrowed-handle driver API; legacy root types are R0 fixtures.
 pub mod r1;
-/// Authentic-data packet envelope builder; not an OS raw sender.
+/// Scoped IPv4/TCP-like steady DATA bytes builder, not a raw OS driver.
 pub mod ipv4_tcp;
+
+// ABI island: the other platform modules still deny unsafe Rust code.
+#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_batch;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
@@ -92,6 +99,7 @@ impl BorrowFence {
     }
     /// For an owned shutdown after begin_stop, wait until the driver has
     /// completed or cancelled every outstanding kernel loan.
+    #[cfg(test)] // R0 blocking correctness fixture ONLY; absent from production build.
     pub fn wait_drained(&self) {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         while state.outstanding > 0 {

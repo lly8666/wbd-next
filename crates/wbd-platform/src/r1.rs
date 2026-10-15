@@ -27,7 +27,7 @@ impl BatchResult {
         if outcome.accepted_prefix > count { return Err(TxError::InvalidOutcome); }
         let valid = match (outcome.uncertain_index, outcome.error) {
             (None, None) => outcome.accepted_prefix == count,
-            (None, Some(TxError::WouldBlock | TxError::IoFailed)) =>
+            (None, Some(TxError::WouldBlock | TxError::IoFailed | TxError::Stopping)) =>
                 outcome.accepted_prefix < count,
             (Some(i), Some(TxError::IoUncertain)) =>
                 i == outcome.accepted_prefix && i < count,
@@ -155,6 +155,14 @@ pub enum BorrowError { Stopping, TooManyLoans }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StopResult { Drained, Pending { outstanding: usize } }
 
+/// RAII guard for a copied synchronous syscall: one borrowed fence count per
+/// entire batch, but no Arc clone, mutex, heap buffer, or per-record lifetime
+/// bookkeeping. The caller's &[FrozenHandle] keeps memory alive for sendmmsg.
+pub struct ReadyBatchGuard<'a> { fence: &'a BorrowFence }
+impl Drop for ReadyBatchGuard<'_> {
+    fn drop(&mut self) { self.fence.release_one(); }
+}
+
 /// An OS completion token *owns* a frozen allocation, not a borrowed raw
 /// pointer. Move this token to the backend's completion/cancel bookkeeping.
 /// Dropping is ONLY permitted after driver completion or confirmed cancel;
@@ -168,16 +176,36 @@ impl<H: FrozenRecordHandle> KernelLoan<H> {
 }
 impl<H: FrozenRecordHandle> Drop for KernelLoan<H> {
     fn drop(&mut self) {
-        let old = self.fence.state.fetch_sub(1, Ordering::AcqRel);
-        debug_assert!(old & COUNT_MASK != 0);
-        if old & COUNT_MASK == 1 {
-            // Pair with the stop waiter's mutex so wakeups cannot be lost.
-            let _guard = self.fence.wait_lock.lock().unwrap_or_else(|e| e.into_inner());
-            self.fence.released.notify_all();
-        }
+        self.fence.release_one();
     }
 }
 impl BorrowFence {
+    fn release_one(&self) {
+        let old = self.state.fetch_sub(1, Ordering::AcqRel);
+        debug_assert!(old & COUNT_MASK != 0);
+        // A hot-path last release is lock-free unless a shutdown is waiting.
+        if old & STOP != 0 && old & COUNT_MASK == 1 {
+            let _guard = self.wait_lock.lock().unwrap_or_else(|e| e.into_inner());
+            self.released.notify_all();
+        }
+    }
+
+    /// Enter a bounded ready-only copied-syscall batch. begin_stop is atomic
+    /// with the CAS registration; shutdown cannot drain while a send is live.
+    pub fn try_enter_ready(&self) -> Result<ReadyBatchGuard<'_>, BorrowError> {
+        let mut cur = self.state.load(Ordering::Acquire);
+        loop {
+            if cur & STOP != 0 { return Err(BorrowError::Stopping); }
+            if cur & COUNT_MASK == COUNT_MASK { return Err(BorrowError::TooManyLoans); }
+            match self.state.compare_exchange_weak(
+                cur, cur + 1, Ordering::AcqRel, Ordering::Acquire,
+            ) {
+                Ok(_) => return Ok(ReadyBatchGuard { fence: self }),
+                Err(updated) => cur = updated,
+            }
+        }
+    }
+
     /// Takes ownership, NOT a clone, and returns it on failed acquisition.
     /// The common synchronous send should never acquire a loan at all.
     pub fn try_loan<H: FrozenRecordHandle>(self: &Arc<Self>, record: H)

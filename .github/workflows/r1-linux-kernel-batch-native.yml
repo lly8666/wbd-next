@@ -1,0 +1,146 @@
+name: M0 Linux sendmmsg batch actual kernel with M1 frozen AEAD and M4 full IPv4 TCP
+run-name: "M0|${{ github.sha }}|r1-linux-kernel-batch-native"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r1-linux-kernel-batch-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-platform/**"
+      - "crates/wbd-engine/**"
+      - "crates/wbd-codec/**"
+      - "crates/wbd-types/**"
+permissions:
+  contents: read
+concurrency:
+  group: r1-linux-batch-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - name: Compile two exact native Rust binaries once for independent consumption
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          cargo test --release --locked -p wbd-platform --lib --no-run
+          cargo test --release --locked -p wbd-engine --test r1_linux_batch_kernel --no-run
+          platform="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_platform-*' -perm -u+x | head -n 1)"
+          integration="$(find target/release/deps -maxdepth 1 -type f -name 'r1_linux_batch_kernel-*' -perm -u+x | head -n 1)"
+          test -n "$platform" && test -n "$integration"
+          mkdir -p r1-linux-batch-build
+          cp "$platform" r1-linux-batch-build/platform.test
+          cp "$integration" r1-linux-batch-build/integration.test
+          python3 - <<'PY'
+          import os,pathlib,json,hashlib
+          sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          parts=['crates/wbd-platform/src/lib.rs','crates/wbd-platform/src/r1.rs',
+                 'crates/wbd-platform/src/linux_batch.rs',
+                 'crates/wbd-platform/src/ipv4_tcp.rs',
+                 'crates/wbd-engine/src/runtime/mod.rs',
+                 'crates/wbd-engine/src/memory/mod.rs',
+                 'crates/wbd-engine/tests/r1_linux_batch_kernel.rs',
+                 'crates/wbd-codec/src/record_crypto.rs',
+                 'crates/wbd-codec/src/record_replay.rs','Cargo.lock']
+          m={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+             'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'toolchain':'1.85.1',
+             'target':'x86_64-unknown-linux-gnu',
+             'platform_binary_sha256':sha('r1-linux-batch-build/platform.test'),
+             'integration_binary_sha256':sha('r1-linux-batch-build/integration.test'),
+             'inputs':{p:sha(p) for p in parts},
+             'scope':'M4_REAL_KERNEL_SENDMMSG_UDP_M1_FROZEN_M3_AEAD_M4_FULL_TCP_IN_UDP_FIXTURE'}
+          pathlib.Path('r1-linux-batch-build/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r1-linux-batch-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-linux-batch-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: r1-linux-batch-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-linux-batch-build/
+      - name: Verify exact compiled binary sources and execute 21 platform plus two M0 integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,pathlib,json,hashlib
+          sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          m=json.load(open('r1-linux-batch-build/manifest.json'))
+          assert m['source_sha']==os.environ['GITHUB_SHA']
+          assert m['run_id']==os.environ['GITHUB_RUN_ID'] and m['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+          assert m['toolchain']=='1.85.1' and m['target']=='x86_64-unknown-linux-gnu'
+          assert sha('r1-linux-batch-build/platform.test')==m['platform_binary_sha256']
+          assert sha('r1-linux-batch-build/integration.test')==m['integration_binary_sha256']
+          for p,h in m['inputs'].items(): assert sha(p)==h,p
+          PY
+          chmod +x r1-linux-batch-build/platform.test r1-linux-batch-build/integration.test
+          mkdir -p r1-linux-batch-result
+          set +e
+          r1-linux-batch-build/platform.test r1_ --nocapture >r1-linux-batch-result/platform.log 2>&1
+          platform_exit=$?
+          r1-linux-batch-build/integration.test --nocapture >r1-linux-batch-result/integration.log 2>&1
+          integration_exit=$?
+          set -e
+          cat r1-linux-batch-result/platform.log
+          cat r1-linux-batch-result/integration.log
+          PLATFORM_EXIT="$platform_exit" INTEGRATION_EXIT="$integration_exit" python3 - <<'PY'
+          import os,pathlib,json,hashlib,re,sys
+          m=json.load(open('r1-linux-batch-build/manifest.json'))
+          p=pathlib.Path('r1-linux-batch-result/platform.log').read_text()
+          i=pathlib.Path('r1-linux-batch-result/integration.log').read_text()
+          pn=re.search(r'test result: ok\. (\d+) passed; 0 failed',p)
+          inn=re.search(r'test result: ok\. (\d+) passed; 0 failed',i)
+          np=int(pn.group(1)) if pn else 0
+          ni=int(inn.group(1)) if inn else 0
+          must_platform=['r1_linux_sendmmsg_real_kernel_udp_all_and_immutable_bytes',
+             'r1_linux_sendmmsg_real_kernel_partial_udp_emsgsize_prefix_only',
+             'r1_linux_sendmmsg_real_kernel_cap32_not_33rd',
+             'r1_linux_sendmmsg_real_kernel_unix_backpressure_eagain_notsent']
+          must_main=['r1_m0_linux_batch_real_kernel_full_tcp_m1_frozen_aead_replay',
+             'r1_m0_linux_batch_cap32_stop_and_unattempted_suffix_udp']
+          ok=(int(os.environ['PLATFORM_EXIT'])==0
+              and int(os.environ['INTEGRATION_EXIT'])==0
+              and np==21 and ni==2
+              and all(t+' ... ok' in p for t in must_platform)
+              and all(t+' ... ok' in i for t in must_main))
+          result={'source_sha':m['source_sha'],'run_id':m['run_id'],
+              'attempt':m['attempt'],
+              'platform_binary_sha256':m['platform_binary_sha256'],
+              'integration_binary_sha256':m['integration_binary_sha256'],
+              'platform_log_sha256':hashlib.sha256(p.encode()).hexdigest(),
+              'integration_log_sha256':hashlib.sha256(i.encode()).hexdigest(),
+              'native_platform_tests':np,'main_integration_tests':ni,
+              'result':'PASS' if ok else 'FAIL',
+              'platform_exit':int(os.environ['PLATFORM_EXIT']),
+              'integration_exit':int(os.environ['INTEGRATION_EXIT']),
+              'scope':'LINUX_GNU_X64_REAL_SENDMMSG_CONNECTED_UDP_ONLY_FULL_TCP_BYTE_COPY_NO_RAW_AF_PACKET',
+              'not_qualified':'GO_V4_ADMISSION;AF_PACKET_RAW;WINDOWS_ARM_NATIVE;DRIVER_RX;PRODUCT;PERFORMANCE;PHYSICAL'}
+          pathlib.Path('r1-linux-batch-result/result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          if not ok:sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: r1-linux-batch-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: r1-linux-batch-result/
+          if-no-files-found: warn
+          retention-days: 30
