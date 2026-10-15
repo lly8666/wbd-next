@@ -89,45 +89,62 @@ jobs:
           import hashlib,json,os,pathlib,platform,re,resource,subprocess,time
           tests=[("aead","p0_aead_1000b_seal_verified_unique_open"),
                  ("linux_udp_batch","p0_linux_udp_sendmmsg_recvmmsg_batch32")]
+          repeated={label:[] for label,_ in tests}
+          for repetition in range(3):
+              for label,case in tests:
+                  before=resource.getrusage(resource.RUSAGE_CHILDREN)
+                  start=time.monotonic_ns()
+                  p=subprocess.run(["./p0-build/perf.test","--exact",case,"--nocapture"],
+                       text=True,capture_output=True,timeout=240,check=False)
+                  elapsed=time.monotonic_ns()-start
+                  after=resource.getrusage(resource.RUSAGE_CHILDREN)
+                  log=p.stdout+p.stderr
+                  pathlib.Path(f"p0-result/{label}-repeat{repetition+1}.log").write_text(log)
+                  print(f"REPEAT {repetition+1} {label}",log)
+                  if p.returncode!=0:
+                      raise RuntimeError(f"{label} repeat {repetition+1} exit {p.returncode}")
+                  marker=re.search(r"P0_RESULT ([^\n]+)",log)
+                  assert marker, f"missing measurement: {label}"
+                  a=json.loads(marker.group(1))
+                  assert a["ops"]>0 and a["business_bytes"]>0 and a["elapsed_ns"]>=1_000_000_000, (
+                      "measurement under 1 second: "+label)
+                  assert all(a[k]>0 for k in ["sample_p50_ns","sample_p95_ns","sample_p99_ns"])
+                  assert a["sample_p50_ns"]<=a["sample_p95_ns"]<=a["sample_p99_ns"]
+                  assert a["qualifies_product"] is False
+                  cpu=(after.ru_utime-before.ru_utime)+(after.ru_stime-before.ru_stime)
+                  repeated[label].append({
+                      "repeat":repetition+1,"sample":a,"child_cpu_user_s":after.ru_utime-before.ru_utime,
+                      "child_cpu_system_s":after.ru_stime-before.ru_stime,
+                      "child_cpu_total_s":cpu,
+                      "child_maxrss_kib_cumulative_peak":after.ru_maxrss,
+                      "wrapper_elapsed_ns":elapsed,
+                      "log_sha256":hashlib.sha256(log.encode()).hexdigest(),
+                      "cpu_s_per_GiB_business":cpu*1024**3/a["business_bytes"]})
           report=[]
-          for label,case in tests:
-              before=resource.getrusage(resource.RUSAGE_CHILDREN)
-              start=time.monotonic_ns()
-              p=subprocess.run(["./p0-build/perf.test","--exact",case,"--nocapture"],
-                   text=True,capture_output=True,timeout=240,check=False)
-              elapsed=time.monotonic_ns()-start
-              after=resource.getrusage(resource.RUSAGE_CHILDREN)
-              log=p.stdout+p.stderr
-              pathlib.Path(f"p0-result/{label}.log").write_text(log)
-              print(log)
-              if p.returncode!=0: raise RuntimeError(f"{label} test failed: exit {p.returncode}")
-              marker=re.search(r"P0_RESULT (\{[^\n]*\})",log)
-              assert marker, f"missing measurement: {label}"
-              a=json.loads(marker.group(1))
-              assert a["ops"]>0 and a["business_bytes"]>0 and a["elapsed_ns"]>0
-              assert all(a[k]>0 for k in ["sample_p50_ns","sample_p95_ns","sample_p99_ns"])
-              assert a["sample_p50_ns"]<=a["sample_p95_ns"]<=a["sample_p99_ns"]
-              assert a["qualifies_product"] is False
-              r={"label":label,"sample":a,"child_cpu_user_s":after.ru_utime-before.ru_utime,
-                 "child_cpu_system_s":after.ru_stime-before.ru_stime,
-                 "child_cpu_total_s":(after.ru_utime-before.ru_utime)+(after.ru_stime-before.ru_stime),
-                 "child_maxrss_kib_observed":after.ru_maxrss,
-                 "wrapper_elapsed_ns":elapsed,"log_sha256":hashlib.sha256(log.encode()).hexdigest(),
-                 "cpu_s_per_GiB_business":((after.ru_utime-before.ru_utime)+(after.ru_stime-before.ru_stime))*1024**3/a["business_bytes"]}
-              report.append(r)
+          import statistics
+          for label,_ in tests:
+              rows=repeated[label]
+              bps=[x["sample"]["bytes_per_second"] for x in rows]
+              p99=[x["sample"]["sample_p99_ns"] for x in rows]
+              report.append({"label":label,"repeats":rows,
+                   "median_bytes_per_second":statistics.median(bps),
+                   "min_bytes_per_second":min(bps),"max_bytes_per_second":max(bps),
+                   "bytes_per_second_cv":statistics.pstdev(bps)/statistics.mean(bps),
+                   "median_sample_p99_ns":statistics.median(p99),
+                   "p99_range_ns":[min(p99),max(p99)]})
           cpuinfo=pathlib.Path("/proc/cpuinfo").read_text()
           model=next((x.split(":",1)[1].strip() for x in cpuinfo.splitlines() if x.startswith("model name")), "unknown")
           cgroup=pathlib.Path("/sys/fs/cgroup/cpu.max")
           m=json.load(open("p0-build/manifest.json"))
           result={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
-                  "binary_sha256":m["binary_sha256"],"status":"MEASURED_P0_NOT_PRODUCT_PASS",
+                  "binary_sha256":m["binary_sha256"],"status":"MEASURED_P0_REPEATED_NOT_PRODUCT_PASS",
                   "runner":os.environ.get("RUNNER_NAME"),"job":os.environ.get("GITHUB_JOB"),
                   "host":platform.uname()._asdict(),"cpu_model":model,
                   "cgroup_cpu_max":cgroup.read_text().strip() if cgroup.exists() else None,
-                  "cases":report,"limitations":["single-host hosted CI timing subject to noise",
+                  "cases":report,"limitations":["three >=1-second same-host repeated legs, no independent host calibration",
                    "AEAD+HP+PN replay 1000B payload not full stack",
                    "UDP sendmmsg/recvmmsg 32x256 fixture not AF_PACKET",
-                   "not old/new paired A/B, no P1 product data plane",
+                   "no old/new product A/B, no P1 product data plane",
                    "no 500Mbps capacity, no real business end-to-end p99"]}
           pathlib.Path("p0-result/result.json").write_text(json.dumps(result,indent=2)+"\n")
           print(json.dumps(result,indent=2))

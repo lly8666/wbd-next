@@ -30,8 +30,8 @@ fn report(case:&str,samples:Vec<u64>,ops:u64,bytes:u64,elapsed_ns:u64){
 }
 #[test]
 fn p0_aead_1000b_seal_verified_unique_open() {
- const WARM:usize=1024;
- const N:usize=25000;
+ const WARM:usize=8192;
+ const N:usize=2_000_000;
  const PAYLOAD:usize=1000;
  let mut tx=LaneTxCrypto::new(keys(),1200).unwrap();
  let mut rx=ReplayProtectedLaneRx::new(keys(),1200,ReplayWindowConfig{
@@ -68,7 +68,7 @@ impl FrozenRecordHandle for Frame {
 #[test]
 fn p0_linux_udp_sendmmsg_recvmmsg_batch32() {
  const BATCH:usize=32;const PAYLOAD:usize=256;
- const WARM:usize=64;const N:usize=1500;
+ const WARM:usize=256;const N:usize=20_000;
  let rx=UdpSocket::bind("127.0.0.1:0").unwrap();
  rx.set_read_timeout(Some(Duration::from_millis(200))).unwrap();
  let tx=UdpSocket::bind("127.0.0.1:0").unwrap();
