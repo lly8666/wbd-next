@@ -7,7 +7,7 @@ P=w.M3_G2_REFRESH_PATH
 PRE=w.M3_G2_REFRESH_PARENT
 SHA="d"*40
 MAIN="c"*40
-BLOB="b"*40
+BLOB=w.M0_M3_HISTORICAL_TOOL_BLOB
 role={"id":"M3","allowed_paths":["crates/wbd-codec/","docs/devlog/M3/","docs/evidence/M3/",
           ".governance/workstreams/M3/cursor.json",".governance/workstreams/M3/requests/"]}
 
@@ -23,7 +23,7 @@ class API:
         if path.startswith("compare/"):
             return {"status":self.anchor}
         if path.startswith("contents/"):
-            return {"type":"file","sha":self.mainblob if f"ref={MAIN}" in path else self.blob}
+            return {"type":"file","sha":self.mainblob if f"ref={w.M0_M3_HISTORICAL_TOOL_SOURCE}" in path else self.blob}
         raise AssertionError(path)
 
 def edge(extra=None):
@@ -44,6 +44,9 @@ class OneShotControlTransfer(unittest.TestCase):
         with self.assertRaises(g.ContractError):w.review_m3_g2_single_file_refresh(API(parent="a"*40),role,SHA,MAIN)
     def test_disallow_extra_root_path(self):
         with self.assertRaises(g.ContractError):w.review_m3_g2_single_file_refresh(API(files=[P,"Cargo.lock"]),role,SHA,MAIN)
+    def test_disallow_modified_historical_main_blob(self):
+        with self.assertRaises(g.ContractError):
+            w.review_m3_g2_single_file_refresh(API(mainblob="f"*40),role,SHA,MAIN)
     def test_disallow_modified_blob(self):
         with self.assertRaises(g.ContractError):w.review_m3_g2_single_file_refresh(API(blob="f"*40),role,SHA,MAIN)
     def test_disallow_non_main_approved_ancestry(self):
