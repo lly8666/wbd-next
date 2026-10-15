@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-GO-V4-COLD-BOUNDARY-MAIN-015",
+  "branch": "main",
+  "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "ORIGINAL_PINNED_GO_REAL_TLS_AUTHENTICATED_SESSION_TO_EPHEMERAL_248B_COPY_TO_RUST_UNTRUSTED_CANDIDATE_ONLY",
+  "before": {
+    "main_H": "275fa23ed67810581c760122bc17e16ce17254f1",
+    "m0_cursor_sequence": 50,
+    "checkpoint_sha": "bed61eb9fd4f0066f08f16433600379ea4f80d83",
+    "H_governance": 38674960955,
+    "worker_branches_at_start": {
+      "M1": "d60a69312cc9878e3b09a1598280c89dfd4da6d8",
+      "M2": "c4e69939903cbce3c204cf475750625a2d3bfe11",
+      "M3": "4787d94617afe72c511f3f2299d1b060c2930c6c",
+      "M4": "6144a2d39e72af04a4f6c398bd3879bc26e7a28e"
+    },
+    "worker_tasks_not_yet_accepted": true
+  },
+  "pinned_old_go": {
+    "repo": "lly8666/wobuzhidao",
+    "source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go_version": "1.23.12"
+  },
+  "changed": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+    "crates/wbd-engine/src/cold_v4.rs",
+    "crates/wbd-engine/src/lib.rs",
+    "tools/r0_v4_tls.py",
+    "tools/r0_abi_bundle.py",
+    ".github/workflows/r0-v4-cold-native.yml"
+  ],
+  "schema": "WBCO v1, exactly 248B BE: magic[0..4],version[4..6],total[6..8],side[8],go_lane[9],cipher[10],reserved[11],tunnelID16[12..28],logical_epoch16[28..44],incarnation16[44..60],client+server record limits u16[60..64],domain-separated SHA256 principal digest[64..96],C2S material76[96..172],S2C material76[172..248]",
+  "verification": [
+    "Go ColdSnapshot from actual protected V4 admission only; zero/fake/mutated session rejected before encode; source-exact old Go TLS peer drives ephemeral interop",
+    "Rust parses exact copied bytes into UntrustedColdV4 only; rejects bad version/size/field, missing identity/direction-key, zero local owner generation and wrong expected epoch/lane/tunnel/side",
+    "Production Rust C ABI remains features=0, no cold install or positive FEC origin constructors, byte grammar cannot attest caller authentication itself",
+    "Real Go TLS exporter keys emitted to runner temp file mode0600 only for same-job native Rust consumer, removed before result artifact upload; binary manifest/provenance and logs do not contain key bytes",
+    "Old Go runtime V4 remains disabled, server PrepareTransition/DetachTransition RX boundary and early queue remain not transferred into Rust as production-authorized commands"
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "governance",
+      "run_id": 38675661613,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38675661630,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-v4-real-tls",
+      "run_id": 38675661651,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38675661641,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-go-control-v4-gate",
+      "run_id": 38675661661,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38675661706,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r1-linux-kernel-batch-native",
+      "run_id": 38675661768,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38675661657,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38675661861,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-v4-cold-native",
+      "run_id": 38675661675,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38675661677,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38675661662,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38675661665,
+      "source_sha": "1d6ed7603f94b106b7731dfb99eb2faff9bf155e",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "native_go_tls": {
+    "run_id": 38675661651,
+    "native_tests": "10/10",
+    "binary_sha256": "4601a7f62234ef200848e77bc87dd40decfa08f044c9806c6e3e2d76facc4b89",
+    "log_sha256": "8e513cf48ff863a97b77c3fcda038ef0e59c9cd2791d1e95eea6ce3583301599",
+    "build_artifact": {
+      "id": 11946151305,
+      "digest": "sha256:29814ec337286b82edfb43b05e6e1277f0178c0a52a9fb123ddf5aa7831d947c"
+    },
+    "result_artifact": {
+      "id": 11945936616,
+      "digest": "sha256:6c3efe7afb7c502dfa97cc214b9f41fa15afc57b22807498960568058d925236"
+    }
+  },
+  "native_cross_language": {
+    "run_id": 38675661675,
+    "go_tls_real_case": "1/1",
+    "rust_parser_tests": "4/4",
+    "compiled_once": true,
+    "consumer_job": 116228927460,
+    "build_job": 116228557732,
+    "binary_sha256": {
+      "go": "4601a7f62234ef200848e77bc87dd40decfa08f044c9806c6e3e2d76facc4b89",
+      "rust": "0f613c719630ab6f5837d97c0ce5c0f41bea8a7339d14ef4c5882f6b4866d61d"
+    },
+    "test_log_sha256": {
+      "go": "36a553a1ea316a4c23e6b968ab72e6f65abdd424b9ecbf368c981a1383a65363",
+      "rust": "2b3827da5db9ac533e4a3a01787bbc0944f374b64be8d4ace356a92547d086f2"
+    },
+    "build_artifact": {
+      "id": 11946231332,
+      "digest": "sha256:3e2900339ca60cb6df9230986ce243534e486f86a608f7331d43f23ee23dc884"
+    },
+    "result_artifact": {
+      "id": 11946551165,
+      "digest": "sha256:2a81b757f6c1f7042c94ff1c328f118d4a2369e899cfd6eecc5b7df937254695"
+    }
+  },
+  "native_abi": {
+    "run_id": 38675661861,
+    "conclusion": "SUCCESS",
+    "build_artifact": {
+      "id": 11945687883,
+      "digest": "sha256:93bffd69bf875736785777dca96d6393a7a078784740c2f14ce79ca6a8932389"
+    },
+    "result_artifact": {
+      "id": 11945936731,
+      "digest": "sha256:aec95d7cc307da6ede8bf52fbe3cfacebcd0f3e9421036597d69d23909fb08cf"
+    }
+  },
+  "performance_readiness": {
+    "component_microbench": "CAN_START_PLANNING_AND_RUNNING_NOW_ON_SCOPED_NATIVE_COMPONENTS",
+    "paired_full_dataplane": "BLOCKED_BY_AUTHENTICATED_GO_RUST_ACTIVE_OWNER_AND_RAW_DRIVER",
+    "capacity_ladder_mbps": [
+      10,
+      50,
+      100,
+      200,
+      500
+    ],
+    "per_leg_default": "10s warmup, 60s measurement, same job sequential old/new with identical effective config and seed",
+    "metrics": [
+      "first business delivery p50,p95,p99,p99.9",
+      "delivered throughput",
+      "CPU-seconds per GiB",
+      "RSS",
+      "wire bytes",
+      "drops",
+      "queue age"
+    ],
+    "current_benchmark_results": "NOT_RUN",
+    "reference": "docs/architecture/TEST_PLAN.md"
+  },
+  "unqualified": [
+    "Go-to-Rust trusted owner install/CommitAdmission",
+    "exact server RX/TX boundaries/early queue and bootstrap retiring",
+    "production FecOrigin",
+    "AF_PACKET raw TX/RX",
+    "Windows/ARM native execution",
+    "paired A/B CPU/p99 and 500Mbps",
+    "product and physical"
+  ],
+  "next_action": "M0 P0 component microbenchmark scaffold with source locked reproducible measurement, no product claim, OR separate trusted Rust owner cold command with real authenticated call capability and exact server transition boundary. Worker third wave in progress; don't reassign."
+}
