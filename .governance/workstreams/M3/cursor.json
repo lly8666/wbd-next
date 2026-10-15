@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 13,
-  "checkpoint_sha": "b4ed727b38cbf5166c812ba63af68080d0099951",
+  "sequence": 14,
+  "checkpoint_sha": "24955c5ed65af27cf0b336d5b6482bc3c53edd83",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-RETIRE-PRESSURE-010",
-  "current_task": "M0-assigned FEC RX Heavy→Compact→Retired pressure/catch-up hardened from native proven counterexample. Added 8 fake-monotonic clock/race/adversarial tests; fixed late Heavy timer to start Compact at original first_seen+3s, so one overdue callback also enforces +10s Compact deadline. Preserves pressure/normal transitions.",
-  "why_now": "M0 assigned retire-pressure-010 explicitly required counterexample before codec change. Test-only SOURCE 538a890 native 74/75 caught overdue callback preserving Compact too long; minimal scoped RX fix then compiled-once 75/75 and frozen R0+G2+Governance passed.",
-  "done_when": "Final tested SOURCE e8d62776 75/75 scoped R1 native PASS (8 new +67 existing), seven exact SOURCE Actions SUCCESS incl Governance38667240599 attempt2 after main drift attempt1. Error history retained: first test-only build fail baa02cb, executable fail 538a890, fix e8d62776. Evidence S b4ed727b Governance38667642957 attempt1 SUCCESS; cursor-only H seq13 checked separately.",
-  "next_action": "No unassigned M3 development. Await next formal main registry task. M0 integrate after actual authenticated V4 epoch/direction/trusted-generation, AEAD+PN replay, and real FEC business proof; do NOT claim production or invent old Go exporter. No M3 root/shared ABI/CI changes.",
+  "task_id": "R1-M3-AUTH-FEC-SCOPE-GATE-011",
+  "current_task": "Completed M0-assigned fail-closed typed post-auth FEC scope gate: sealed FecOrigin with no production constructor, origin+lane+tunnel checks before real ChaCha/AES AEAD and replay, authenticated WF56 and trusted BlockID generation before FecRxOwner first-delivery/missing-only.",
+  "why_now": "M0 main formally assigned scope gate atom011 after M3 bounded FEC retirement fix; no old Go exporter or source of authenticated V4 generation can be invented. Keep default production closed until separately reviewed M0 session provenance.",
+  "done_when": "Exact CODE SOURCE42382c60 native compiled-once 85/85 PASS (10 new,75 prior); six same-source R0/G2/audit Actions PASS; Governance38669822950 attempt5 PASS after attempts1-4 main drift. Evidence S24955c5e Governance38670808015 FIRST PASS; H seq14 cursor-only and own H Governance to be checked.",
+  "next_action": "Await next M0 formal task. M0 must prove and provide actual V4 authenticated session origin for lane+tunnel/epoch/direction/generation, and validate real post-AEAD PN replay before enabling FEC-on. Test-only FecOrigin::test_only is NOT production provenance. Do not change Go exporter/ABI/root build or silently activate live FEC.",
   "unverified": true,
-  "last_tested_source": "e8d62776ebf3258c038155f4637bd1524d6282b7",
+  "last_tested_source": "42382c60ee51689d49c480411af3df2acc9e9a7d",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-RETIRE-PRESSURE-010.json"
+    "docs/evidence/M3/R1-M3-AUTH-FEC-SCOPE-GATE-011.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/07-FEC.md",
-    "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md",
+    "docs/devlog/M3/R1-M3-REPLAY-003.md",
     "docs/devlog/M3/R1-M3-FEC-TX-006.md",
     "docs/devlog/M3/R1-M3-FEC-RX-007.md",
     "docs/devlog/M3/R1-M3-FEC-BLOCKID-SCOPE-009.md",
     "docs/devlog/M3/R1-M3-FEC-RETIRE-PRESSURE-010.md",
-    "docs/evidence/M3/R1-M3-FEC-RETIRE-PRESSURE-010.json"
+    "docs/devlog/M3/R1-M3-AUTH-FEC-SCOPE-GATE-011.md"
   ],
-  "partial_summary": "M3 seq12 Hfaa01894 Governance38599242646 attempt3 SUCCESS. New M0 main rev2 epoch1 assignment FEC-RETIRE-PRESSURE-010 from M0 SOURCE7d291133 Gov38635343395/G2 38635343384 PASS. Test-only SOURCEbaa02cb worker38667039100 BUILD FAIL from test tuple of unsized slice, fixed test SOURCE538a890 worker38667119023 74/75 actual PASS/FAIL: r1_retire_late_heavy_timer_catches_up_through_compact_10s_without_resurrection observed (Heavy,Compact)=(0,1) at now=first+3s+10s+1 vs expected (0,0). Root cause FecRxOwner overdue timer incorrectly set Compact start to current callback time. CODE SOURCEe8d62776ebf3258c038155f4637bd1524d6282b7 fixed only RX clock transfer by compact_heavy_at(original Heavy deadline); pressure/normal transition still owner now. Native compiled-once worker38667240535 Rust x64 75/75 PASS (8 new+67 prior), binary sha256 297083a86dad20e7a7950b4591e9a8ede9736252fbbac8936575b4cfeeee472e. All seven exact SOURCE Actions PASS: native38667240535, oldGo LINK/FEC38667240561, codec38667240611, framing38667240690, G2 38667240693, audit38667240651, Governance38667240599 attempt2 SUCCESS (attempt1 concurrent main moved mid audit). Evidence S b4ed727b Governance38667642957 attempt1 PASS. Cursor-only H seq13 checkpoint S; H Governance pending. Product V4 exporter, live AEAD+PN/FEC-on, ISA-L, WinARM/performance/physical NOT_RUN, M3 root/ABI/CI unchanged. Await next assignment."
+  "partial_summary": "Previous seq13 H6fe26165 Governance38667890659 PASS, M0 rev2 epoch1 assigned R1-M3-AUTH-FEC-SCOPE-GATE-011. New codec AuthFecScopeGate owns genuine ReplayProtectedLaneRx and bounded FecBlockIdOwner+FecRxOwner; FecOrigin sealed private fields and cfg(test) positive-only constructor, so production absent origin rejects before decrypt/replay. Tests 10 suite ChaCha/AES128/AES256 real AEAD+PN, wrong lane/tunnel, epoch/direction/generation constructor mismatches, FEC halfspace, old Go WF56 oracle, expired parity, only missing recovered. CODE SOURCE42382c60ee51689d49c480411af3df2acc9e9a7d native38669822925 compiled once 85/85 PASS (75 prior); binary sha256 829d8e33429e9c9083dc72a516980afd3568115fafa971396ba7ff2fcda9e89f. Initial SOURCE f6b2c8f build fail test duplicated tunnel arg, b09d17a compiled83/85 with two overstrict initial floor failures, minimal gate fix then full PASS. Six other SOURCE R0/G2/audit workflows PASS, Governance38669822950 attempt1..4 FAIL due moving M0 main control mid audit, attempt5 PASS unchanged CODE. Evidence S24955c5e Governance38670808015 attempt1 PASS. H seq14 cursor-only checkpoint S, H own Governance pending. Production V4 origin constructor/handshake/exporter and product FEC-on/WinARM/SIMD/perf/physical all NOT_RUN, M3 no root/CI/ABI changes."
 }
