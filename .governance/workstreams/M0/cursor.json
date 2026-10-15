@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 71,
-  "checkpoint_sha": "5e6fe8367b44d73c14cccea6271f89af1541d9a4",
+  "sequence": 72,
+  "checkpoint_sha": "ad1ebb7fe0a089efce425013cc8019f10f20ad45",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023 scoped crypto subatom CLOSED, overall product task PARTIAL. Main CODE S adb34a47 plus workflow fix f8aeb193 and Go negative mock signature S35db3d01. Actual protected Go private callsite → production-compiled Rust ProtectedScopedCrypto preflights both C2S RX/S2C TX AEAD directions, exact post-protected-reply Go SenderNext at Commit, and real ReplayProtectedLaneRx validates 3 ciphers plus PN out-of-order 2,0,1, duplicate/damaged/wrong-direction rejects. Native build/consume 38757554801 SUCCESS; Go real TLS 38757554763 12/12 PASS; Go cold/native 38757554795 Go1/Rust4 PASS; governance 38757554918 PASS. Evidence S5e6fe836 Governance38758554845 and R0 static38758554945 PASS. Earlier malformed CI/mismatched Go mock failures preserved, maintenance169 PASS only exact f8aeb193 source 38757397271. No production owner Active, true business delivery or M4 kernel loan proof. Production features0. H70 Governance38758796606 was FAIL (old GOV004 evidence ref SOURCE mismatch), corrected by H71; preserve original failure.",
-  "why_now": "User continued after verified H69 CLEAN. Implemented one bounded existing Go V4 → normal-build Rust crypto/PN integration atom (not a new business-delivery path), repaired actual Actions YAML and Go mock failures with new SOURCE commits, inspected exact build/consume jobs, artifact digests, negative cases and not-run scopes. Evidence S succeeded. Close with H-only to avoid repeat maintenance/native dispatch. Recovered H70 Governance run38758796606 FAILURE: cursor evidence_refs also included historical GOV004 whose evidence source e2c2657e differs from last_tested_source 35db3d01; authoritative scope audit requires every cursor evidence ref match this SOURCE. H71 corrects only M0 cursor metadata, retains original failed run; historical GOV004 stays in context/log, not falsely re-sourced.",
-  "done_when": "THIS ATOM: exact protected Go TLS private caller, two-direction Rust cryptographic preflight/PN + version/epoch/generation check, post-Detach TX boundary, negative old/replay/damage/direction Stop, source-locked Actions and S evidence MET. FORMAL M0 023: NOT_MET until production ScopedOwner RX/TX install confirms both, actual authenticated early/business delivery, M4 real kernel driver lease Stop B01–B04 and fail-close E2E. All physical/perf/500Mbps NOT_RUN. H70 only cursor; expect lightweight push Governance and conditional scope skip. H70 failure preserved; H71 must resolve only evidence_refs source mismatch and pass ordinary push Governance, no full maintenance/product tests.",
-  "next_action": "Wire existing Go V4 private protected admission and production-compiled ProtectedScopedCrypto into the real Rust ScopedOwner RX/TX dispatch (not the test probe), with both-owner confirmation before Active and authenticated bounded early delivery; prove fail-close/Stop and first bidirectional Normal/FEC-off application delivery plus held M4 Linux kernel driver loan B01–B04 in exact-source Actions before enabling any feature.",
+  "current_task": "M0 assigned 023 dual-owner composition subatom CLOSED; formal product task remains PARTIAL. CODE S 0f1351bf now composes M1 real EarlyRxOwner/ScopedOwner with two direction Rust AEAD/PN as one normal-build ProtectedScopedOwner. Existing private Go V4 trusted callsite stays Prepare→protected reply→Detach→Commit(exact SenderNext). Test-tagged C probe delegates to the same normal-build owner, no alternate activation. Exact CODE Actions native Go→Rust 38761554851 build+consume SUCCESS (Go 2 top-level/3 cipher subtests, Rust scoped 1), native-functional38761554967 all groups SUCCESS, native ABI38761554960, cross ABI38761554842, G2 native38761554939, Governance38761554893, static38761554892 SUCCESS. Evidence S ad1ebb7f Governance38762210625 and R0 static38762210833 SUCCESS. Production Go ABI features0 and positive physical/product qualification NOT_RUN.",
+  "why_now": "User requested continue after H71. Recovered exact remote main and registry rev2 epoch1; no open PR/unended actions. One bounded normal-build product composition atom moved real ScopedOwner, EarlyRxOwner, and authenticated Rust record+PN into one privately assembled control lifetime rather than parallel test-only owner state. Existing private Go TLS callsite and tagged native tests exercise it. Strict Actions source/run/job/binary hashes and mandatory scopes verified. S evidence and H separated.",
+  "done_when": "THIS ATOM MET: Both RX/TX queue owners and C2S/S2C crypto preconstructed before preparation publish; no pre-Commit RX dispatch or AEAD; invalid one-sided setup rejects without half install; actual owner Detach then exact TX-boundary Commit; duplicate Commit/replay/wrong direction/corruption/Stop retained-loan negatives pass exact-source Actions. Formal M0 023 NOT_MET: actual authenticated early RX through owner to real business exit, Normal/off bidirectional first arrival, M4 real kernel loan Stop B01–B04, physical and 500Mbps NOT_RUN. Governance push only is identity/structure; full tools need maintenance exact SOURCE.",
+  "next_action": "Integrate authenticated early+subsequent RX delivery through THIS normal-build ProtectedScopedOwner and its actual ScopedOwner-owned RX ready batches, binding real Go Detach records and M4 reader lease; prove both-direction Normal/FEC-off business first arrival, bounded early/Stop B01–B04, stale generation and no half activation using exact-source Actions. Do not create a parallel test-only delivery path or enable features.",
   "unverified": true,
-  "last_tested_source": "35db3d01bc1bd22deb355676c9558909626f9203",
+  "last_tested_source": "0f1351bfc5b2ec4f32d1a38667d61c0cf50584c2",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-protected-owner-crypto.json"
+    "docs/evidence/M0/M0-023-scoped-owner-dual-install.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-protected-owner-crypto.md",
+    "docs/devlog/M0/M0-023-scoped-owner-dual-install.md",
+    "docs/evidence/M0/M0-023-protected-owner-crypto.json",
     "r0/qualification-manifest.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 source-exact protected Go→Rust compiled normal AEAD/PN crypto atom success: 3 ciphers, trusted private Go hook, correct TX boundary, PN replay/rotation/Stop negatives; Go TLS12/12, cold 1+4, native probe build/consume PASS; evidence S static/Governance PASS. Full ScopedOwner production Active/business/driver Stop not proven; features0, product/physical/500Mbps NOT_RUN. One next owner-dispatch integration action."
+  "partial_summary": "Source-exact Go protected V4 → real Rust scoped RX/TX owner dual-install preflight and AEAD/PN lifecycle passed; CODE 0f1351bf, S evidence ad1ebb7f, Governance & R0 audit success, H72 cursor-only. Business exit and M4 kernel driver held Stop NOT_RUN, production ABI features0, product/physical/performance NOT_RUN."
 }
