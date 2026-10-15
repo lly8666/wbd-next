@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "06fe27ae516cdef6b144c736a2166a5f6d4b209f",
+  "result": "PASS_SCOPED_PURE_R2_NATIVE_33_OF_33",
+  "scope": "Pure recovery receipt race gate and process-global allocator completion: authenticated receipt owner/lane association, pre-reserve positive ACK race suppression, independent driver result charging, stale tunnel generation, old epoch NotSent, 32/33 bounds, departure/timeouts, no peer ACK inferred from kernel send success.",
+  "code_paths": [
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/receipt.rs"
+  ],
+  "first_failed_source": {
+    "sha": "15b696f9f5f5ddf94701309288ed76c04c87d829",
+    "worker_native_run_id": 38669397068,
+    "attempt": 1,
+    "conclusion": "failure",
+    "tests_passed": 32,
+    "tests_failed": 1,
+    "cause": "one fake clock fixture requested a grant at 999999981ns after another direction reserve at 999999982ns; correctly returned ClockReversed; fixture corrected in new SOURCE",
+    "source_governance": {
+      "run_id": 38669397096,
+      "conclusion": "success"
+    }
+  },
+  "qualification": {
+    "worker_native": {
+      "run_id": 38669519161,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 116209071001,
+      "consume_job_id": 116209159828,
+      "tests_passed": 33,
+      "tests_failed": 0,
+      "previous_tests": 28,
+      "new_tests": 5,
+      "compiled_once": true,
+      "test_filter": "r2_",
+      "binary_sha256": "85b1ee0af7a5893d06d71175732c9e0511dc512d37ea382ad288cd11d986b4a8",
+      "log_sha256": "9f6e62508b9508e94816f2d28f5c3de20c30fc22c9e03ec65fcceba5127f8bae",
+      "build_artifact": {
+        "id": 11943219536,
+        "digest": "sha256:a83d866df7738b0190b9c3b757fa411abb02cb3fda88ffeab5c3289c1c816c5a"
+      },
+      "result_artifact": {
+        "id": 11942904810,
+        "digest": "sha256:84ae235924aa329c86007f0050b221dd75411b6463dcbba69c7378756ee8ed17"
+      }
+    },
+    "historic_g2": {
+      "run_id": 38669519263,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 116209071448,
+      "consume_job_id": 116209287763,
+      "result_artifact_id": 11943164900,
+      "result_digest": "sha256:d902d1fe5abf8873a58189e391b2101fdb1db33b964ebba5a3d5bef6e72262f8"
+    },
+    "r0_static": {
+      "run_id": 38669519110,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 116209071634,
+      "artifact_id": 11942019421,
+      "digest": "sha256:c14f3d38fad5989a4e3a77d2b7c4940cd9d3d43390b8dd6b7684153ef744110b"
+    },
+    "source_governance": {
+      "run_id": 38669519113,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 116209071212,
+      "artifact_id": 11942769988,
+      "digest": "sha256:c0b87e4957f35e85a79c80ba1ddd31c5eb16ab9932149a40a747617c2f6551f4"
+    }
+  },
+  "new_tests": [
+    "r2_race_late_ack_before_reserve_rejects_stale_without_refund",
+    "r2_race_ack_during_batch_is_not_kernel_or_peer_delivery",
+    "r2_race_departed_tunnel_generation_cannot_resurrect_or_refund",
+    "r2_race_old_epoch_mixed_callback_never_funds_new_grant",
+    "r2_race_32_33_bounded_callback_after_timeout_is_all_stale"
+  ],
+  "implementation_caveat": "ReceiptState and AuthenticatedReceipt are pure typed trust boundaries, NOT cryptographic authentication. M0 must bind verified M3 opened record to correct lane/direction and re-preflight immediately before real driver submission; process allocator does not prove actual syscall result. ACK does not refund already-reserved repair.",
+  "unverified": [
+    "Actual M0 authenticated record open and verified reverse direction",
+    "M4 Linux/Windows driver bytes and callback ordering",
+    "Atomic engine preflight immediately before real syscall",
+    "Real data plane, CPU, product, Go V4 live session, performance and physical"
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "go_v4": "DISABLED",
+  "recovery_engine_ready": false,
+  "next_action": "Observe evidence-S Governance; cursor-only H and H Governance; stop M2 atom, M0 integration owns real driver/trust boundary."
+}
