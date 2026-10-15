@@ -1,0 +1,24 @@
+# R1-M4-UDP-RX-BURST-STOP-010 — unprivileged RX 33-overflow burst and stop isolation
+
+## Authority and clean recovery
+Main M4 goal `R1-M4-UDP-RX-BURST-STOP-010`, registry revision2/epoch1 active, exclusive branch `work/m4-r1-platform`, allowed path `crates/wbd-platform/`. Formal M0 decision `docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md`. Prior seq13 H `44534bac2bcad48779cd7321295b013e004f9942` fully qualified. Upon task resumption discovered CODE source `04cd9150778c3628345991ceee3c13d162383977` already committed to M4-owned `linux_driver_outcome_lease.rs` but cursor still seq13. Native first-source run `38705021784` **FAIL_COMPILE** Rust E0502 for tests borrowing original `tiny` and `whole` while their mutable references remain live; G2 run `38705021846` also failed. Recovery corrected ONLY those two test accessors to use `slots[0]` and `slots[1]`, final CODE SOURCE `0a53ea23ec064489155a008e02839a59a9b15cf0`. No other code, root/Cargo/ABI/Go/CI changes; no duplicate implementation.
+
+## Exact scope and threat boundary
+`receive_tagged` wraps the existing real Linux `recvmmsg` copied-UDP `RxBatchOutcome` into a `ScopedRxReceipt` borrowing the exact original `ScopedUdpOwner`. `entry_for` rejects stopped owners or a different owner's address, even if both generations happen to equal 505: no old callback to new context. This only gates untrusted UDP metadata and does NOT authenticate AEAD/PN, Go protected ColdSnapshot, or business delivery. Caller owns RX buffers, no hot cloning/copying, no extra syscalls, <=32 native stack descriptors per call. The previous explicit deferred GenerationLoan remains separate: copied UDP syscall does **not** imply an async driver-owned buffer loan.
+
+Four NEW native Rust tests establish:
+1. 24 rounds of 33 real localhost UDP datagrams per round, first `recvmmsg` receives only32; untouched 33rd caller-owned memory/pointer unchanged; next syscall receives queued overflow without starvation and following returns WouldBlock.
+2. Actual 96B UDP received into7B preallocated slot produces `Truncated`, no parse; following complete8B datagram is available, then EAGAIN, then late4B arrival correctly received.
+3. STOP/rotate two independently bound kernel sockets with generation303->304; old pre-stop receipt immediately becomes nondispatchable after STOP; old late raw UDP arrival not promoted to new ready queue, old frozen Arc/PN retained until old completion; new owner handles fresh datagram.
+4. Two independent owner contexts with equal numeric generation505 cannot swap receipts. Owner pointer identity not a source of Go V4 authentication. Actual AF_PACKET privileged positive remains NOT_RUN.
+
+## Exact native Actions/real artifact audit
+Final SOURCE `0a53ea23ec064489155a008e02839a59a9b15cf0` worker-native Actions run [38706481672](https://github.com/lly8666/wbd-next/actions/runs/38706481672) attempt1 SUCCESS. Rust 1.85.1 Linux x86_64 GNU **75/75 R1 PASS**, 4 new +71 previous, 7 historic R0 filtered. Compiled once job116327043262, downloaded exactly compiled executable in consumer job116327160295, both SUCCESS.
+
+- Build artifact11958627455 archive SHA256 `c8289b0324a8e6668db96d5e74554304327145d5cb6866a356e4a98d7e49cbd2`, manifest `bd54979f25d7798201ae2f9d6ddc5544c53786567584a61eef45b8e5449d0804`, executable `cac9cab043b1289ecb1096093cbaeeaf4423fd1e45c0b9fac2eeeef20d8a827f` 11158048 bytes.
+- Result artifact11958477633 archive SHA256 `b33a52b9f5731988cd423fcb822b3f98de9b8c864a4a02925eb376ac0ba5d57c`, result.json `294e213852fcb6bbe92e8d60721b13e68e6cd723af82748b6a058ed37c845947`, test.log `ce63d8e270a2a735a0d9f3ff7f019a2a10bacd6d0d42fc6e4ab0170c3d1e47c1`. ZIPs downloaded and all hashes recomputed independently; manifest/source/binary/run/attempt agree.
+- Same final SOURCE code Governance run38706481909, G2 38706481740, static audit38706482340, cross-ABI build38706481698 SUCCESS. Cross build **not** native Win/ARM. Same-source historic `r0-fake-platform` run38706482025 **FAIL** due old root R0 exact seven-case count even though **82/82 actual Rust assertions passed**. M0 owns root harness; not all workflows green.
+- Runner lacks CAP_NET_RAW and printed `RAW_RX_NOT_RUN`. No actual positive AF_PACKET raw socket RX/TX happened. Negative isolated cap-drop EPERM syscall test remains among 71 previous successful R1 tests.
+
+## Integration and stop condition
+Pure caller-owned copied UDP outcome/STOP ownership gate is source-qualified, not product qualified. Production Go V4 remains **DISABLED**, real authenticated Go→Rust ownership and protected RX, native Windows/ARM, physical/ambient sniffing, P1–P3/performance/500Mbps all **NOT_RUN**. All writes within M4 role scope; revert final changes in `linux_driver_outcome_lease.rs` only. M0 review/merge required before product; worker finishes evidence S Governance and cursor-only H then waits for **new** main task.
