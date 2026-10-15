@@ -67,7 +67,9 @@ jobs:
   measure:
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 14
+    # Previous same-worker SOURCE run38684106420 produced 21/24 rows but reached
+    # the 14-min runner limit; only extend wall budget, NOT active >=1s gates.
+    timeout-minutes: 22
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: {persist-credentials: false}
