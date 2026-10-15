@@ -60,7 +60,7 @@ jobs:
         with:
           name: r1-outer-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-outer-build
-      - name: Hash verify binary and 71 exact platform R1 tests
+      - name: Hash verify binary and 75 exact platform R1 tests
         shell: bash
         run: |
           set -euo pipefail
@@ -97,8 +97,14 @@ jobs:
             'r1_driver_lease_waiter_delayed_completion_two_generation_isolation',
             'r1_driver_lease_eintr_uncertain_wouldblock_replay_policy_pure',
           }
-          ok=(int(os.environ['TEST_EXIT'])==0 and count==71
-              and len(names)==71 and len(set(names))==71
+          required.update({
+            'r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation',
+            'r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted',
+            'r1_udp_rx_stopped_old_borrowed_receipt_cannot_dispatch_to_rotated_owner',
+            'r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts',
+          })
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==75
+              and len(names)==75 and len(set(names))==75
               and required.issubset(set(names)))
           result={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],'binary_sha256':m['binary_sha256'],
                   'log_sha256':hashlib.sha256(log.encode()).hexdigest(),'native_tests':count,

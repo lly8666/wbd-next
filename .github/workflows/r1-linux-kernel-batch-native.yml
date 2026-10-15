@@ -81,7 +81,7 @@ jobs:
         with:
           name: r1-linux-batch-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-linux-batch-build/
-      - name: Verify exact compiled binaries and execute 71 platform plus six M0 integration tests
+      - name: Verify exact compiled binaries and execute 75 platform plus six M0 integration tests
         shell: bash
         run: |
           set -euo pipefail
@@ -134,10 +134,15 @@ jobs:
              'r1_driver_lease_delayed_generation_rejected_late_no_free_after_stop',
              'r1_driver_lease_waiter_delayed_completion_two_generation_isolation',
              'r1_driver_lease_eintr_uncertain_wouldblock_replay_policy_pure']
+          must_new_platform.extend([
+             'r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation',
+             'r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted',
+             'r1_udp_rx_stopped_old_borrowed_receipt_cannot_dispatch_to_rotated_owner',
+             'r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts'])
           ok=(int(os.environ['PLATFORM_EXIT'])==0
               and int(os.environ['INTEGRATION_EXIT'])==0
-              and np==71 and ni==6
-              and len(platform_names)==71 and len(set(platform_names))==71
+              and np==75 and ni==6
+              and len(platform_names)==75 and len(set(platform_names))==75
               and all(t in platform_names for t in must_new_platform)
               and all(t+' ... ok' in p for t in must_platform)
               and all(t+' ... ok' in i for t in must_main))

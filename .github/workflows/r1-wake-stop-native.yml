@@ -130,8 +130,20 @@ jobs:
                     'r1_owner_release_fresh_first_stale_stop_aba_no_resubmission',
                     'r1_owner_release_ready_0_1_32_33_tx_rx_two_lanes',
                     'r1_owner_release_old_batch_held_stop_new_scope_stale_after_32']
-          ok=(int(os.environ['TEST_EXIT'])==0 and count==79 and len(names)==79
-              and len(set(names))==79 and all(x in names for x in expected))
+          new_early=[
+              'r1_early_rx_prepare_caller_only_before_exact_after_overlap_overflow',
+              'r1_early_rx_zero_then_one_after_detach_immediate_no_hol',
+              'r1_early_rx_32_cap_33rd_full_still_owned_not_free_until_drop',
+              'r1_early_rx_byte_cap_and_owner_prealloc_mismatch_fail_closed',
+              'r1_early_rx_stop_pre_detach_twice_held_frozen_late_return',
+              'r1_early_rx_old_32_held_rotate_fresh_new_scope_not_hol',
+              'r1_early_rx_stop_after_detach_does_not_free_loan_and_aba_stale',
+              'r1_early_rx_rotation_discards_undelivered_tail_no_old_new_mix',
+          ]
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==87 and len(names)==87
+              and len(set(names))==87
+              and all(x in names for x in expected+new_early)
+              and '1 ignored' in l)
           record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
                   'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
