@@ -458,6 +458,11 @@ func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
     assoc,peer:=newAssociationPeer(t)
     defer assoc.Close()
     defer peer.Close()
+    // Optional tagged test-only bridge gets the actual association to
+    // inject raw records between protected Prepare and real Detach.
+    if native,ok:=b.(interface{bindTestAssociation(*faketcp.ServerAssociation)});ok {
+        native.bindTestAssociation(assoc)
+    }
     type result struct {s *V4ServerSession;err error}
     ch:=make(chan result,1)
     go func(){

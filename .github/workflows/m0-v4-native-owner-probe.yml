@@ -11,6 +11,9 @@ on:
       - "crates/wbd-engine/src/lib.rs"
       - "crates/wbd-engine/src/cold_v4.rs"
       - "crates/wbd-engine/src/v4_probe_bridge.rs"
+      - "crates/wbd-engine/src/runtime/early_rx.rs"
+      - "crates/wbd-engine/src/runtime/generation.rs"
+      - "crates/wbd-engine/src/memory/mod.rs"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go"
@@ -69,6 +72,9 @@ jobs:
           paths=["Cargo.toml","Cargo.lock","crates/wbd-engine/Cargo.toml",
             "crates/wbd-engine/src/lib.rs","crates/wbd-engine/src/cold_v4.rs",
             "crates/wbd-engine/src/v4_probe_bridge.rs",
+            "crates/wbd-engine/src/runtime/early_rx.rs",
+            "crates/wbd-engine/src/runtime/generation.rs",
+            "crates/wbd-engine/src/memory/mod.rs",
             "r0/go_overlay/internal/realityfront/admission_v4.go",
             "r0/go_overlay/internal/realityfront/admission_v4_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
@@ -141,7 +147,8 @@ jobs:
             "actual_go_TLS_to_test_only_Rust_candidate":good_go,"Rust_generation_and_phase":good_rust,
             "go_log_sha256":sha(go),"rust_log_sha256":sha(rust),
             "binary_sha256":data["binary_sha256"],
-            "actual_early_payload_transfer":"NOT_RUN","positive_Rust_auth_authority":"NOT_RUN",
+            "actual_early_payload_transfer":"TEST_ONLY_GO_FAKETCP_DETACH_BYTES_COPIED_AND_HASH_VERIFIED_IN_RUST",
+            "positive_Rust_auth_authority":"NOT_RUN",
             "driver_loan_stop":"NOT_RUN","production_ABI_features":0,
             "product":"NOT_RUN","physical":"NOT_RUN"}
           pathlib.Path("native-probe-result/result.json").write_text(json.dumps(result,indent=2)+"\n")

@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing")
+import ("errors";"testing";"hash/fnv")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -10,6 +10,11 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
     var first uint64
     for i:=0;i<2;i++{
         b:=&v4NativeRustProbe{}
+        if i==0 {
+            // Real FakeTCP packets queued after Prepare and before protected
+            // reply, then delivered from real Detach to Rust-owned RX slabs.
+            b.injectEarly=[][]byte{{0x01,0x41,0x45,0x41,0x44}, {0x02,0x46,0x45,0x43}}
+        }
         c,s,ce,se:=v4PairWithPrivateBridge(t,b,store)
         if ce!=nil||se!=nil||c==nil||s==nil{
             t.Fatalf("real protected TLS %d: client=%v server=%v",i,ce,se)
@@ -19,6 +24,20 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
             t.Fatalf("Rust owner not committed after Go detach: phase=%d err=%v",phase,e)
         }
         if i==1 && b.handle==first{t.Fatal("Rust generation reused")}
+        count,size,digest,e:=b.drainEarly()
+        if e!=nil{t.Fatal(e)}
+        gohash:=fnv.New64a()
+        var goSize int
+        for _,p:=range s.EarlyRecords{
+            goSize+=len(p.Payload)
+            if _,e:=gohash.Write(p.Payload);e!=nil{t.Fatal(e)}
+        }
+        if count!=uint32(len(s.EarlyRecords))||size!=uint32(goSize)||digest!=gohash.Sum64(){
+            t.Fatalf("Go Detach bytes not physically Rust-owned: n=%d/%d bytes=%d/%d hash=%x/%x",
+                count,len(s.EarlyRecords),size,goSize,digest,gohash.Sum64())
+        }
+        if i==0 && count!=2{t.Fatal("injected real transition packets never crossed Rust FFI")}
+        if _,_,_,e:=b.drainEarly();e==nil{t.Fatal("duplicate Rust early drain allowed")}
         if i==0{first=b.handle}
         cc,ce:=c.ColdSnapshot();ss,se:=s.ColdSnapshot()
         if ce!=nil||se!=nil||cc.Epoch()!=ss.Epoch()||
