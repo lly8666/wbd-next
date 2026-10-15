@@ -9,7 +9,10 @@
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
-use wbd_types::{LaneKey, TunnelKey};
+use wbd_types::{LaneKey, TunnelKey, MonoNs};
+use wbd_types::buffer_contract::UniqueSealable;
+use crate::memory::Arena;
+use crate::runtime::early_rx::{EarlyRxOwner,EarlyLimits,EarlyAccepted};
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
 use crate::runtime::{QueueLimits, RxOwner, TxOwner};
 use crate::runtime::generation::{ScopeToken, ScopedOwner};
@@ -26,10 +29,14 @@ const PH_COMMITTED: u32 = 2;
 const PH_STOPPED: u32 = 3;
 
 struct Probe {
-    owner: ScopedOwner,
+    owner: EarlyRxOwner,
     token: ScopeToken,
+    arena: Arena,
     phase: u32,
-    _rx_boundary: u32,
+    rx_boundary: u32,
+    staged_count:u32,
+    staged_bytes:u32,
+    drained:bool,
     cold_identity: ColdIdentity,
 }
 
@@ -79,28 +86,91 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     let Some(rx_owner) = RxOwner::new(rx) else {return Err(INVALID)};
     let Some(owner) = ScopedOwner::new(handle,generation,lane,tx_owner,rx_owner)
         else {return Err(INVALID)};
-    let token = owner.token();
+    // Bounded owner-local test-only arena; input Go []byte is copied into a
+    // uniquely owned Rust slab before the cgo call returns. No Go pointer kept.
+    let Some(mut owner)=EarlyRxOwner::new(owner,EarlyLimits {
+        slots:32,bytes:max_wire.saturating_mul(32),
+    }) else {return Err(INVALID)};
+    let token=owner.token();
+    if owner.prepare(&token,u64::from(boundary)).is_err(){return Err(BAD_STAGE)}
+    let Ok(arena)=Arena::new(generation,32,2048,32,1_000_000) else {return Err(INVALID)};
     state.slots.insert(handle, Probe {
-        owner,token,phase:PH_PREPARED,_rx_boundary:boundary,
-        cold_identity:identity,
+        owner,token,arena,phase:PH_PREPARED,rx_boundary:boundary,
+        staged_count:0,staged_bytes:0,drained:false,cold_identity:identity,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
     Ok(handle)
 }
+// This stages the ACTUAL Go-owned DetachTransition packet bytes, but remains
+// a test-only inert RX queue: NOT AEAD authentication and NOT a production lane.
+fn probe_stage(handle:u64,seq:u32,bytes:&[u8])->i32 {
+    let Ok(mut state)=registry().lock() else {return BAD_STAGE};
+    let Some(p)=state.slots.get_mut(&handle) else {return UNKNOWN};
+    if p.phase!=PH_PREPARED || p.drained{return BAD_STAGE;}
+    let len=bytes.len();
+    if len==0 || len>usize::from(p.cold_identity.server_limit) ||
+       p.staged_count>=32 || p.staged_bytes.checked_add(len as u32).is_none(){
+        return INVALID;
+    }
+    // TCP sequence wraps; use bounded signed-ahead distance only. Never
+    // reinterpret a pre-boundary or opposite-half serial as fresh early RX.
+    let distance=seq.wrapping_sub(p.rx_boundary);
+    if distance>u32::from(p.cold_identity.server_limit).saturating_mul(MAX_EARLY) {
+        return INVALID;
+    }
+    let Ok(mut buffer)=p.arena.allocate() else {return FULL};
+    buffer.writable()[..len].copy_from_slice(bytes);
+    match p.owner.offer(&p.token,buffer,0..len,
+        u64::from(p.rx_boundary)+u64::from(distance),MonoNs(0)) {
+        Ok(EarlyAccepted::Staged)=>{
+            p.staged_count+=1;p.staged_bytes+=len as u32;OK
+        }
+        Ok(EarlyAccepted::Ready)=>BAD_STAGE,
+        Err(_)=>INVALID,
+    }
+}
+
+// An independent test-only digest of the bytes physically received by
+// Rust's owned RX slabs after Detach; this does not decrypt or deliver traffic.
+fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
+    let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
+    let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
+    if p.phase!=PH_COMMITTED||p.drained{return Err(BAD_STAGE)}
+    let batch=p.owner.drain_rx(&p.token,MonoNs(0),Vec::with_capacity(32))
+        .map_err(|_|BAD_STAGE)?;
+    let mut count=0u32;
+    let mut len=0u32;
+    let mut digest=0xcbf29ce484222325u64; // FNV-1a, matches Go hash/fnv
+    for mut packet in batch.recycle() {
+        count+=1;
+        let data=packet.wire_mut();
+        len+=data.len() as u32;
+        for byte in data.iter() {
+            digest=(digest^u64::from(*byte)).wrapping_mul(0x100000001b3);
+        }
+    }
+    if count!=p.staged_count||len!=p.staged_bytes{return Err(BAD_STAGE)}
+    p.drained=true;
+    Ok((count,len,digest))
+}
+
 fn probe_commit(handle:u64,early_count:u32,early_bytes:u32) -> i32 {
     let Ok(mut state)=registry().lock() else {return BAD_STAGE};
     let Some(probe)=state.slots.get_mut(&handle) else {return UNKNOWN};
     if probe.phase!=PH_PREPARED {return BAD_STAGE}
     let max_wire=u32::from(probe.cold_identity.server_limit);
-    if early_count>MAX_EARLY ||
-       early_bytes>max_wire.saturating_mul(MAX_EARLY) ||
+    if early_count>32 || early_count!=probe.staged_count ||
+       early_bytes!=probe.staged_bytes ||
+       early_bytes>max_wire.saturating_mul(32) ||
        (early_count==0 && early_bytes!=0) ||
        (early_count>0 && early_bytes<early_count) {
         return INVALID;
     }
-    // Metadata-only receipt of Go Detach evidence, not yet early payload RX
-    // or positive packet delivery. Keeping it inert is intentional.
+    // The Go protected reply and FakeTCP Detach were completed by the
+    // private Go caller. Rust now moves all already-copied early bytes from
+    // its staged, bounded owner into its inert RX, atomically.
+    if probe.owner.detach(&probe.token).is_err(){return BAD_STAGE}
     probe.phase=PH_COMMITTED;
     OK
 }
@@ -121,7 +191,7 @@ fn probe_stop(handle:u64)->i32 {
     if p.phase==PH_STOPPED {return OK}
     if p.phase!=PH_COMMITTED {return BAD_STAGE}
     let Ok(retired)=p.owner.stop(&p.token) else {return BAD_STAGE};
-    if !retired.batch_handles_released(){return BAD_STAGE}
+    if !retired.ready.batch_handles_released(){return BAD_STAGE}
     p.phase=PH_STOPPED;
     OK
 }
@@ -150,6 +220,30 @@ pub unsafe extern "C" fn wbd_m0_test_probe_prepare(
             unsafe{out.write(handle)};
             OK
         },
+        Err(e)=>e,
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_stage(
+    handle:u64,seq:u32,data:*const u8,len:usize
+)->i32 {
+    if data.is_null()||len==0||len>2048{return INVALID}
+    // SAFETY: cgo keeps one Go-owned nonempty []byte alive for this strictly
+    // synchronous call; copy occurs before returning to Go.
+    let bytes=unsafe{std::slice::from_raw_parts(data,len)};
+    probe_stage(handle,seq,bytes)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_drain(
+    handle:u64,count:*mut u32,bytes:*mut u32,digest:*mut u64
+)->i32 {
+    if count.is_null()||bytes.is_null()||digest.is_null(){return INVALID}
+    match probe_drain(handle) {
+        Ok((n,len,hash))=>{
+            // SAFETY: caller supplied valid owned integer output slots.
+            unsafe{count.write(n);bytes.write(len);digest.write(hash)};
+            OK
+        }
         Err(e)=>e,
     }
 }
@@ -206,9 +300,23 @@ mod tests {
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);
         assert_eq!(probe_release(first),OK);
-        let second=probe_prepare(&a,0).unwrap();
+        let second=probe_prepare(&a,100).unwrap();
         assert_ne!(first,second);
-        assert_eq!(probe_abort(second),OK);
+        assert_eq!(probe_stage(second,99,&[1]),INVALID);
+        assert_eq!(probe_stage(second,100,&[11,22,33]),OK);
+        assert_eq!(probe_stage(second,103,&[44,55]),OK);
+        assert_eq!(probe_commit(second,1,5),INVALID); // metadata can't lie
+        assert_eq!(probe_commit(second,2,5),OK);
+        let (n,bytes,digest)=probe_drain(second).unwrap();
+        let expected=[11u8,22,33,44,55].iter().fold(0xcbf29ce484222325u64,
+            |v,b|(v^u64::from(*b)).wrapping_mul(0x100000001b3));
+        assert_eq!((n,bytes,digest),(2,5,expected));
+        assert_eq!(probe_drain(second).err(),Some(BAD_STAGE));
+        assert_eq!(probe_stop(second),OK);
+        assert_eq!(probe_release(second),OK);
+        let third=probe_prepare(&a,100).unwrap();
+        assert_ne!(third,second);
+        assert_eq!(probe_abort(third),OK);
         assert_eq!(probe_commit(second,0,0),UNKNOWN);
         let mut corrupt=a;corrupt[0]=0;
         assert_eq!(probe_prepare(&corrupt,0).err(),Some(INVALID));
