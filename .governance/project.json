@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 M3-015 exact worker CODE0ecb459c9686254625a045ea19b85ae0e8d43080 Release validated by M0 workflow CODE3f1b458de2c66cbfa5567c147909c9b2b22d06f5 Action38734823257 build116421354527+measure116421742715 SUCCESS artifacts11972220985/11973392890, native1/1 24/24 rows 8 warmups 179 matched CPU/wall windows schedstat_ns CPU_INCONCLUSIVE0 max ratio1.0102, source-locked component 192B FEC3.046x 896B FEC2.547x but AEAD896 0.945x; evidence docs/evidence/M0/R1-M0-M3-015-0ecb-exact-release-049.json. Go authenticated product FecOrigin, physical, 500Mbps, packet p99 NOT_RUN; M3 own S/H still pending. M0 next trusted Go V4 Rust production AEAD/PN owner and actual M4 kernel held B01-B04; features0.",
+  "next_decision": "M0 PR#4 governance integration complete on merged main SOURCE 0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d: 17 automatically triggered workflows, 16 SUCCESS / 1 expected main workflow_run scope skip, 0 failures; native-functional38739018109 Rust1.85.1 compiled-once 8 groups 334/334 required and 2 explicit benchmark ignore; Go real TLS38739018043 12/12, maintenance38739018122 163/163, central worker scope38739018145 four exact worker HEAD/checkpoints PASS; Governance38739018217, ABI38739018192 and cross38739018071 SUCCESS. Evidence docs/evidence/M0/GOV-003-PR4-main-integration.json. Not product benchmark, physical or real AEAD Go→Rust positive. Registered M0 023 next trusted Go V4 admission to Rust AEAD/PN owner plus actual M4 held kernel loan Stop B01-B04, features0.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

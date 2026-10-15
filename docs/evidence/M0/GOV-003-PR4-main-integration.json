@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "M0-GOV-003-PR4-SAFE-MERGE",
+  "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+  "result": "SCOPED_GOVERNANCE_CI_MAIN_MERGE_PASS",
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "why_now": "User explicitly instructed governance fix in isolated PR #4 and M0 merge after current small task; preceding M0 M3-015 exact Release scoped acceptance completed at H61f65682 Governance38737554350 PASS.",
+  "continuity": {
+    "prior_M0_cursor_sequence": 67,
+    "prior_cursor_H": "61f65682df04f0aaac5ef19c13e6fa496f341a1e",
+    "prior_cursor_checkpoint": "16ca80e2477075a847c697e8ca455f92452542a8",
+    "checkpoint_to_merge_total_commits": 8,
+    "verified_each_commit": [
+      "1b4be2e84c08e2bcdf36d12b6ae08857fc373df9",
+      "a66f03a6eb7d6abd8c5e10016721702c4b8028b8",
+      "6d6f1184fcc9e71aa37da75f543ba7f287991d4c",
+      "444c51e48de0063bb91c354e45078fcc158cee06",
+      "adaeafc747396d701ebaf50d178e0589c9807b87",
+      "61f65682df04f0aaac5ef19c13e6fa496f341a1e",
+      "3c407ede24962bfdba84fcfda942e583a83e933f",
+      "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d"
+    ],
+    "merge_commit_delta_paths": 52,
+    "open_M0_requests": [],
+    "worker_heads_matching_checkpoint": {
+      "M1": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+      "M2": "c74a4fd71712411b1fb5b326d95d746116a04844",
+      "M3": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+      "M4": "e19772fe65d8cfb347da3c7b182c25180ba91d37"
+    }
+  },
+  "pr": {
+    "number": 4,
+    "url": "https://github.com/lly8666/wbd-next/pull/4",
+    "title": "governance: incremental scope audit and shared native functional CI",
+    "previous_base_sha": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+    "last_head_sha": "3c407ede24962bfdba84fcfda942e583a83e933f",
+    "merged": true,
+    "merge_method": "merge",
+    "merged_main_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+    "final_net_files": 52,
+    "modified_product_crates_in_merge_net": false,
+    "affected": "Governance/tooling/CI/registry task description and documentation; no Go or Rust production crate changes on first-parent merged diff; main project.json and M0 current cursor preserved.",
+    "scope": "main-approved incremental per-commit worker scope audits, one compiled-once Rust1.85.1 source-locked native Release build consumed by eight functional groups, Go V4 real TLS native preserved, old duplicated workflows removed only where replacement covers mandatory IDs.",
+    "published_pr_branch_source": "444c51e48de0063bb91c354e45078fcc158cee06",
+    "published_pr_branch_governance": 38736284748,
+    "published_pr_branch_native": 38736284616,
+    "published_pr_branch_go_tls": 38736284582,
+    "published_pr_branch_scope": 38736284708,
+    "last_pr_doc_head_maintenance": 38737686211,
+    "note": "PR branch runs were reviewed only for pre-merge safety, not substituted for merged main SOURCE."
+  },
+  "merged_source_actions": {
+    "completed": 17,
+    "success": 16,
+    "skipped": 1,
+    "failed": 0,
+    "pending": 0,
+    "successful_workflows": [
+      {
+        "workflow": "governance",
+        "run_id": 38739018217,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "maintenance_163",
+        "run_id": 38739018122,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "central_worker_scope",
+        "run_id": 38739018145,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "native_functional_334",
+        "run_id": 38739018109,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "go_TLS_V4",
+        "run_id": 38739018043,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_static_qualification",
+        "run_id": 38739018060,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_build",
+        "run_id": 38739018047,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_wire_codec",
+        "run_id": 38739018083,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_go_vectors",
+        "run_id": 38739018051,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_go_control_V4",
+        "run_id": 38739018105,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_link_fec_mtu",
+        "run_id": 38739018150,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_record_wire_framing",
+        "run_id": 38739018123,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_native_ABI",
+        "run_id": 38739018192,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_cross_ABI",
+        "run_id": 38739018071,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "r0_fake_platform",
+        "run_id": 38739018138,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      },
+      {
+        "workflow": "g2_bootstrap",
+        "run_id": 38739018108,
+        "status": "success",
+        "source_sha": "0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d",
+        "attempt": 1
+      }
+    ],
+    "expected_skipped": {
+      "run_id": 38739077231,
+      "workflow": "central scope workflow_run self-event on main",
+      "reason": "worker-only workflow_run audit correctly bypasses main Governance events; explicit main push scope run38739018145 passed"
+    },
+    "governance": {
+      "run_id": 38739018217,
+      "job_id": 116435604613,
+      "result": "success"
+    },
+    "maintenance": {
+      "run_id": 38739018122,
+      "job_id": 116435605695,
+      "tests": 163,
+      "passed": 163,
+      "artifact": {
+        "id": 11975190327,
+        "digest": "sha256:90d96710d3066d596c883b889bf97555138aa96a72dd38a34a9d6f0d2c941f55"
+      }
+    },
+    "central_scope": {
+      "run_id": 38739018145,
+      "job_id": 116435604293,
+      "result": "success",
+      "worker_source_count": 4,
+      "artifact": {
+        "id": 11975040503,
+        "digest": "sha256:51cbd8f4faf57bfb73c1a0f7da69e5816bf904912583860f1370f17beb7dee19"
+      }
+    },
+    "native": {
+      "run_id": 38739018109,
+      "plan_job": 116435604357,
+      "build_job": 116435673865,
+      "result": "8/8 groups SUCCESS",
+      "required": 334,
+      "passed": 334,
+      "failed": 0,
+      "explicitly_ignored_benchmarks": [
+        "link_fec_wire::fec_p0_cost_tests::r1_steady_release_same_source_fresh_vs_reused_owner_cost",
+        "runtime::generation_release::r1_owner_release_component_actual_dispatch_repeats"
+      ],
+      "group_jobs": {
+        "codec": {
+          "job_id": 116436122536,
+          "passed": 98,
+          "artifact_id": 11976090020
+        },
+        "engine": {
+          "job_id": 116436123011,
+          "passed": 87,
+          "artifact_id": 11974955703
+        },
+        "fec": {
+          "job_id": 116436122527,
+          "passed": 3,
+          "artifact_id": 11975435292
+        },
+        "kernel": {
+          "job_id": 116436122626,
+          "passed": 6,
+          "artifact_id": 11974764732
+        },
+        "normal": {
+          "job_id": 116436122681,
+          "passed": 3,
+          "artifact_id": 11974940678
+        },
+        "platform": {
+          "job_id": 116436122686,
+          "passed": 75,
+          "artifact_id": 11976005032
+        },
+        "receipt": {
+          "job_id": 116436122731,
+          "passed": 11,
+          "artifact_id": 11975070613
+        },
+        "recovery": {
+          "job_id": 116436122861,
+          "passed": 51,
+          "artifact_id": 11974829424
+        }
+      },
+      "artifact_build": {
+        "id": 11975365315,
+        "digest": "sha256:802e131545f1d763bdf2b572e8e97a550b71ff9835ee41c73ec458569043031e"
+      },
+      "artifact_result_digests": {
+        "codec": "sha256:b22d2da8b43b576cf11ee315531b778d17fef329b730e1573ca6e89ff5baaa61",
+        "engine": "sha256:8167bad6ae27e03fbe5c31b2900b02ed8375a8ffecbd946c221d12444e8b1db8",
+        "fec": "sha256:ec4c46b48f7f848e0b4b38828539be259375041fe5fc0ec23665092620558f8",
+        "kernel": "sha256:ad736ff3c2d0e2207d984c7ee88bd6dca0c824e89f3c5d2b75a3953eabf023ba",
+        "normal": "sha256:4762886f9104debf5d9c766d2a30643d85e0b03c93f0e186019149170ebef5e9",
+        "platform": "sha256:7e74a6fd35a1e01403ecb86c7a95ed860488f85d7f29ad7abfa9f3567d91b3a8",
+        "receipt": "sha256:731405b721adfc7f53ed9bfe0bc983b20b1716a79f232a37f4b19c65ea4ef25b",
+        "recovery": "sha256:458725e97903484691f34e1d7322c05cb44cfbefc5d8c3f0a02b37a17da432f1"
+      },
+      "note": "All group test log summaries and passed required IDs examined; normal ignored benchmarks excluded, not PASS claims. This replaces redundant functional build work, not product CPU p99 evidence."
+    },
+    "go_tls": {
+      "run_id": 38739018043,
+      "build_job": 116435603875,
+      "consume_job": 116435924103,
+      "required": 12,
+      "passed": 12,
+      "build_artifact": {
+        "id": 11974579933,
+        "digest": "sha256:c0cce6272ecf760634bde14e7615fdfc3960d8f8be6e0622cdd773de21f701fa"
+      },
+      "result_artifact": {
+        "id": 11974945656,
+        "digest": "sha256:bceba7b69b162935efdd05d2fefc291515b9b90a70dc32282d88542f44522fad"
+      }
+    },
+    "abi": {
+      "native_run_id": 38739018192,
+      "cross_run_id": 38739018071,
+      "result": "success",
+      "note": "cross ABI binary inspection is not native Windows/ARM execution"
+    }
+  },
+  "negative_boundaries": [
+    "No new Rust-Go authenticated positive production admission/AEAD PN",
+    "No active production FecOrigin",
+    "No real AF_PACKET/native WindowsARM, physical 500Mbps, business E2E or packet p99 qualification",
+    "No performance A/B performed in this governance task",
+    "Worker source heads unchanged; worker final own S/H still independently required"
+  ],
+  "next_action": "Resume M0 assigned R0-M0-V4-PROTECTED-OWNER-COMMIT-023: true trusted Go V4 protected provenance to Rust AEAD/PN generation, forged self-consistent 248B rejection and M4 genuine driver loan Stop B01–B04; keep production feature bits0 pending real E2E."
+}
