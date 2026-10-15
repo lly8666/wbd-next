@@ -142,14 +142,18 @@ fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
     let mut count=0u32;
     let mut len=0u32;
     let mut digest=0xcbf29ce484222325u64; // FNV-1a, matches Go hash/fnv
-    for mut packet in batch.recycle() {
+    // LoanBatch::recycle() intentionally DROPS all packet contents, it is
+    // NOT a bytes-view API. Inspect the generation-bound borrowed slice
+    // before dropping the batch, then let its ledger/arena return once.
+    for packet in batch.as_slice() {
         count+=1;
-        let data=packet.wire_mut();
+        let data=&packet.buffer.m0_inert_probe_bytes()[packet.wire.clone()];
         len+=data.len() as u32;
         for byte in data.iter() {
             digest=(digest^u64::from(*byte)).wrapping_mul(0x100000001b3);
         }
     }
+    drop(batch);
     if count!=p.staged_count||len!=p.staged_bytes{return Err(BAD_STAGE)}
     p.drained=true;
     Ok((count,len,digest))
