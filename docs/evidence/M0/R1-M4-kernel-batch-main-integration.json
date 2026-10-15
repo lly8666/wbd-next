@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M4-KERNEL-BATCH-MAIN-008",
+  "branch": "main",
+  "source_sha": "17bb909aad62f4bd3d7b68f427feb9e88e429e01",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Linux x86_64 GNU real sendmmsg on unprivileged UDP plus real frozen AEAD record inside byte-exact IPv4/TCP envelope; NOT AF_PACKET, GO_V4 or product",
+  "workflow_runs": [
+    {
+      "run_id": 38667409709,
+      "name": "governance",
+      "status": "SUCCESS",
+      "source_sha": "17bb909aad62f4bd3d7b68f427feb9e88e429e01"
+    },
+    {
+      "run_id": 38667409612,
+      "name": "r1-ipv4-tcp-native",
+      "status": "SUCCESS",
+      "native_tests": "21/21",
+      "source_sha": "17bb909aad62f4bd3d7b68f427feb9e88e429e01",
+      "build_artifact": 11942076674,
+      "result_artifact": 11942511459
+    },
+    {
+      "run_id": 38667409653,
+      "name": "r1-linux-kernel-batch-native",
+      "status": "SUCCESS",
+      "platform_tests": "21/21",
+      "full_packet_kernel_tests": "2/2",
+      "source_sha": "17bb909aad62f4bd3d7b68f427feb9e88e429e01",
+      "build_job": 116202397222,
+      "consumer_job": 116202636213,
+      "platform_binary_sha256": "ee893985bb79057e021e5ddc109dc71ab7ef6fb86bf23a930c4f85096acc7e2d",
+      "integration_binary_sha256": "a456366c9d955fd6777b3b8389fb41252d01952d0717dd1fe9bc7d02e9a3e157",
+      "build_artifact": {
+        "id": 11943120875,
+        "digest": "sha256:ff575c64945ff61e97edebd17b4938b199c85e9a9e8bead9993129e5a9a7b362"
+      },
+      "result_artifact": {
+        "id": 11942071658,
+        "digest": "sha256:f8aaa9db431416b23950a86863d52870a6539a0643b088afd6c1c1692f73c210"
+      }
+    }
+  ],
+  "prior_failures": [
+    {
+      "source_sha": "dac23cdb5716df5daa36bc5a301155ae4dac695e",
+      "run_id": 38667156675,
+      "conclusion": "FAIL",
+      "cause": "21/21 actual Rust R1 native tests passed but old CI asserted exact 12, repaired at 93a2ac32 and final source 17bb909a"
+    }
+  ],
+  "worker": {
+    "role_id": "M4",
+    "source_sha": "6e72152f616e9bc836e3b66cd8742915abf6b5b3",
+    "native_run": 38598122174,
+    "cursor_H": "47eb4107a53facc5de6b0c2ea48fb90a19eea68a"
+  },
+  "unqualified": [
+    "AF_PACKET_RAW_RX_TX",
+    "GO_V4_AUTHENTICATED_HANDOFF",
+    "LINUX_NON_X64_GNU",
+    "WINDOWS_NATIVE",
+    "PRODUCT",
+    "PERFORMANCE",
+    "PHYSICAL"
+  ],
+  "recovery": "M0 prior turn had exact code/source final Actions but evidence publishing was rejected; M0 recovered this fact from unchanged remote source and actual Actions; no invented tests"
+}
