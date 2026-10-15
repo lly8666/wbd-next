@@ -8,6 +8,7 @@ import ("errors";"testing";"hash/fnv")
 func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
     store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
     var first uint64
+    var stillBorrowed *v4NativeRustProbe
     for i:=0;i<2;i++{
         b:=&v4NativeRustProbe{}
         if i==0 {
@@ -24,8 +25,14 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
             t.Fatalf("Rust owner not committed after Go detach: phase=%d err=%v",phase,e)
         }
         if i==1 && b.handle==first{t.Fatal("Rust generation reused")}
-        count,size,digest,e:=b.drainEarly()
-        if e!=nil{t.Fatal(e)}
+        var count,size uint32
+        var digest uint64
+        if i==0 {
+            count,size,digest,err=b.holdEarly()
+        } else {
+            count,size,digest,err=b.drainEarly()
+        }
+        if err!=nil{t.Fatal(err)}
         gohash:=fnv.New64a()
         var goSize int
         for _,p:=range s.EarlyRecords{
@@ -44,13 +51,35 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
             cc.DirectionKeys()!=ss.DirectionKeys(){
             t.Fatal("in-process Rust candidate not sourced from true Go TLS")
         }
-        if e:=b.stopAndRelease();e!=nil{t.Fatal(e)}
-        if _,e:=b.state();!errors.Is(e,errV4NativeProbe){
-            t.Fatal("released Rust generation still addressable")
+        if i==0 {
+            pending,e:=b.stopPending()
+            if e!=nil||!pending{t.Fatalf("Stop must stay incomplete while RX borrowed: %v %v",pending,e)}
+            if phase,e:=b.state();e!=nil||phase!=4{
+                t.Fatalf("incomplete Stop lost retirement state: %d %v",phase,e)
+            }
+            if e:=b.stopAndRelease();e==nil{
+                t.Fatal("released Rust generation while RX driver still borrowed")
+            }
+            stillBorrowed=b // old slab remains alive while next Go TLS creates a NEW Rust owner
+        } else {
+            if e:=b.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,e:=b.state();!errors.Is(e,errV4NativeProbe){
+                t.Fatal("released Rust generation still addressable")
+            }
         }
         if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,s.Epoch);e!=nil{
             t.Fatal(e)
         }
+    }
+    if stillBorrowed==nil{t.Fatal("no prior Rust loan held across fresh Go TLS")}
+    if e:=stillBorrowed.returnHeld();e!=nil{t.Fatal(e)}
+    if e:=stillBorrowed.returnHeld();e==nil{t.Fatal("double return of old RX loan")}
+    if pending,e:=stillBorrowed.stopPending();e!=nil||pending{
+        t.Fatalf("old scoped Stop did not quiesce after loan return: %v %v",pending,e)
+    }
+    if e:=stillBorrowed.stopAndRelease();e!=nil{t.Fatal(e)}
+    if _,e:=stillBorrowed.state();!errors.Is(e,errV4NativeProbe){
+        t.Fatal("old generation visible after final lease return")
     }
     b:=&v4NativeRustProbe{}
     if _,e:=b.prepare(V4ColdSessionSnapshot{},0);e==nil{

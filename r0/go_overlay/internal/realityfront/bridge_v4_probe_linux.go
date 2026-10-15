@@ -9,6 +9,8 @@ extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t
 extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
+extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
+extern int32_t wbd_m0_test_probe_return_held_rx(uint64_t);
 extern int32_t wbd_m0_test_probe_abort(uint64_t);
 extern int32_t wbd_m0_test_probe_stop(uint64_t);
 extern int32_t wbd_m0_test_probe_release(uint64_t);
@@ -113,6 +115,29 @@ func (b *v4NativeRustProbe) drainEarly()(uint32,uint32,uint64,error){
     code:=C.wbd_m0_test_probe_drain(C.uint64_t(b.handle),&count,&size,&digest)
     if code!=0{return 0,0,0,fmt.Errorf("%w: drain=%d",errV4NativeProbe,int(code))}
     return uint32(count),uint32(size),uint64(digest),nil
+}
+// Retain real Rust-owned RX slabs while Stop is attempted; test feature only.
+func (b *v4NativeRustProbe) holdEarly()(uint32,uint32,uint64,error){
+    if !b.committed||b.handle==0{return 0,0,0,errV4NativeProbe}
+    var count C.uint32_t
+    var size C.uint32_t
+    var digest C.uint64_t
+    code:=C.wbd_m0_test_probe_hold_rx(C.uint64_t(b.handle),&count,&size,&digest)
+    if code!=0{return 0,0,0,fmt.Errorf("%w: hold=%d",errV4NativeProbe,int(code))}
+    return uint32(count),uint32(size),uint64(digest),nil
+}
+func (b *v4NativeRustProbe) stopPending()(bool,error){
+    if !b.committed||b.handle==0{return false,errV4NativeProbe}
+    code:=C.wbd_m0_test_probe_stop(C.uint64_t(b.handle))
+    if code==5{return true,nil} // explicit Stop incomplete
+    if code==0{return false,nil}
+    return false,fmt.Errorf("%w: stop pending=%d",errV4NativeProbe,int(code))
+}
+func (b *v4NativeRustProbe) returnHeld()error{
+    if b.handle==0{return errV4NativeProbe}
+    code:=C.wbd_m0_test_probe_return_held_rx(C.uint64_t(b.handle))
+    if code!=0{return fmt.Errorf("%w: return held=%d",errV4NativeProbe,int(code))}
+    return nil
 }
 func (b *v4NativeRustProbe) stopAndRelease()error{
     if !b.committed||b.handle==0{return errV4NativeProbe}

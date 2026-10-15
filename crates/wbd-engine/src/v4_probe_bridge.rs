@@ -14,19 +14,21 @@ use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
 use crate::runtime::early_rx::{EarlyRxOwner,EarlyLimits,EarlyAccepted};
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
-use crate::runtime::{QueueLimits, RxOwner, TxOwner};
-use crate::runtime::generation::{ScopeToken, ScopedOwner};
+use crate::runtime::{QueueLimits, RxOwner, TxOwner, RxPacket};
+use crate::runtime::generation::{ScopeToken, ScopedOwner, LoanBatch};
 
 const OK: i32 = 0;
 const INVALID: i32 = 1;
 const UNKNOWN: i32 = 2;
 const BAD_STAGE: i32 = 3;
 const FULL: i32 = 4;
+const STOP_INCOMPLETE: i32 = 5;
 const MAX_PROBES: usize = 16;
 const MAX_EARLY: u32 = 64;
 const PH_PREPARED: u32 = 1;
 const PH_COMMITTED: u32 = 2;
 const PH_STOPPED: u32 = 3;
+const PH_STOPPING: u32 = 4;
 
 struct Probe {
     owner: EarlyRxOwner,
@@ -37,6 +39,7 @@ struct Probe {
     staged_count:u32,
     staged_bytes:u32,
     drained:bool,
+    held_rx:Option<LoanBatch<RxPacket>>,
     cold_identity: ColdIdentity,
 }
 
@@ -96,7 +99,7 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     let Ok(arena)=Arena::new(generation,32,2048,32,1_000_000) else {return Err(INVALID)};
     state.slots.insert(handle, Probe {
         owner,token,arena,phase:PH_PREPARED,rx_boundary:boundary,
-        staged_count:0,staged_bytes:0,drained:false,cold_identity:identity,
+        staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -131,6 +134,45 @@ fn probe_stage(handle:u64,seq:u32,bytes:&[u8])->i32 {
     }
 }
 
+// Read immutable-in-this-phase bytes WHILE the LoanBatch still owns them.
+// recycle() destroys the bytes; a hash after recycle would be meaningless.
+fn summarize_borrowed_rx(batch:&LoanBatch<RxPacket>)->(u32,u32,u64){
+    let mut count=0u32;
+    let mut len=0u32;
+    let mut digest=0xcbf29ce484222325u64;
+    for packet in batch.as_slice(){
+        count+=1;
+        let data=&packet.buffer.m0_inert_probe_bytes()[packet.wire.clone()];
+        len+=data.len() as u32;
+        for byte in data {
+            digest=(digest^u64::from(*byte)).wrapping_mul(0x100000001b3);
+        }
+    }
+    (count,len,digest)
+}
+// B04 owner-only Stop/late-loan probe: the actual Rust-owned RX buffers stay
+// borrowed through Stop. This is NOT an M4 kernel or production driver lease.
+fn probe_hold_rx(handle:u64)->Result<(u32,u32,u64),i32>{
+    let Ok(mut state)=registry().lock() else{return Err(BAD_STAGE)};
+    let Some(p)=state.slots.get_mut(&handle) else{return Err(UNKNOWN)};
+    if p.phase!=PH_COMMITTED||p.drained||p.held_rx.is_some(){return Err(BAD_STAGE)}
+    let batch=p.owner.drain_rx(&p.token,MonoNs(0),Vec::with_capacity(32))
+        .map_err(|_|BAD_STAGE)?;
+    let summary=summarize_borrowed_rx(&batch);
+    if summary.0!=p.staged_count||summary.1!=p.staged_bytes{return Err(BAD_STAGE)}
+    p.drained=true;
+    p.held_rx=Some(batch);
+    Ok(summary)
+}
+fn probe_return_held_rx(handle:u64)->i32{
+    let Ok(mut state)=registry().lock() else{return BAD_STAGE};
+    let Some(p)=state.slots.get_mut(&handle) else{return UNKNOWN};
+    if p.phase!=PH_STOPPING{return BAD_STAGE}
+    let Some(batch)=p.held_rx.take() else{return BAD_STAGE};
+    drop(batch); // original generation loan ledger is decremented ONCE
+    OK
+}
+
 // An independent test-only digest of the bytes physically received by
 // Rust's owned RX slabs after Detach; this does not decrypt or deliver traffic.
 fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
@@ -139,20 +181,9 @@ fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
     if p.phase!=PH_COMMITTED||p.drained{return Err(BAD_STAGE)}
     let batch=p.owner.drain_rx(&p.token,MonoNs(0),Vec::with_capacity(32))
         .map_err(|_|BAD_STAGE)?;
-    let mut count=0u32;
-    let mut len=0u32;
-    let mut digest=0xcbf29ce484222325u64; // FNV-1a, matches Go hash/fnv
-    // LoanBatch::recycle() intentionally DROPS all packet contents, it is
-    // NOT a bytes-view API. Inspect the generation-bound borrowed slice
-    // before dropping the batch, then let its ledger/arena return once.
-    for packet in batch.as_slice() {
-        count+=1;
-        let data=&packet.buffer.m0_inert_probe_bytes()[packet.wire.clone()];
-        len+=data.len() as u32;
-        for byte in data.iter() {
-            digest=(digest^u64::from(*byte)).wrapping_mul(0x100000001b3);
-        }
-    }
+    let (count,len,digest)=summarize_borrowed_rx(&batch);
+    // Normal drain relinquishes the loan before Stop; the separate held-RX
+    // path below proves that Stop cannot free a batch still with its driver.
     drop(batch);
     if count!=p.staged_count||len!=p.staged_bytes{return Err(BAD_STAGE)}
     p.drained=true;
@@ -193,9 +224,12 @@ fn probe_stop(handle:u64)->i32 {
     let Ok(mut state)=registry().lock() else {return BAD_STAGE};
     let Some(p)=state.slots.get_mut(&handle) else {return UNKNOWN};
     if p.phase==PH_STOPPED {return OK}
-    if p.phase!=PH_COMMITTED {return BAD_STAGE}
+    if p.phase!=PH_COMMITTED && p.phase!=PH_STOPPING {return BAD_STAGE}
     let Ok(retired)=p.owner.stop(&p.token) else {return BAD_STAGE};
-    if !retired.ready.batch_handles_released(){return BAD_STAGE}
+    if !retired.ready.batch_handles_released(){
+        p.phase=PH_STOPPING;
+        return STOP_INCOMPLETE; // no forced free, quiesced claim or release
+    }
     p.phase=PH_STOPPED;
     OK
 }
@@ -250,6 +284,24 @@ pub unsafe extern "C" fn wbd_m0_test_probe_drain(
         }
         Err(e)=>e,
     }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_hold_rx(
+    handle:u64,count:*mut u32,bytes:*mut u32,digest:*mut u64
+)->i32 {
+    if count.is_null()||bytes.is_null()||digest.is_null(){return INVALID}
+    match probe_hold_rx(handle){
+        Ok((n,len,hash))=>{
+            // SAFETY: caller owns output integer slots.
+            unsafe{count.write(n);bytes.write(len);digest.write(hash)};
+            OK
+        },
+        Err(e)=>e,
+    }
+}
+#[no_mangle]
+pub extern "C" fn wbd_m0_test_probe_return_held_rx(handle:u64)->i32{
+    probe_return_held_rx(handle)
 }
 #[no_mangle]
 pub extern "C" fn wbd_m0_test_probe_commit(handle:u64,n:u32,bytes:u32)->i32{
@@ -326,5 +378,23 @@ mod tests {
         assert_eq!(probe_prepare(&corrupt,0).err(),Some(INVALID));
         let mut forged_client=a;forged_client[8]=0;
         assert_eq!(probe_prepare(&forged_client,0).err(),Some(INVALID));
+        // A real Rust-owned early slab remains borrowed across Stop. Old
+        // quiescence must be INCOMPLETE while a new generation can progress.
+        let fourth=probe_prepare(&a,200).unwrap();
+        assert_eq!(probe_stage(fourth,200,&[5,6]),OK);
+        assert_eq!(probe_commit(fourth,1,2),OK);
+        assert_eq!(probe_hold_rx(fourth).unwrap().0,1);
+        assert_eq!(probe_stop(fourth),STOP_INCOMPLETE);
+        assert_eq!(probe_release(fourth),BAD_STAGE);
+        let fifth=probe_prepare(&a,300).unwrap();
+        assert_ne!(fourth,fifth);
+        assert_eq!(probe_commit(fifth,0,0),OK);
+        assert_eq!(probe_stop(fifth),OK);
+        assert_eq!(probe_release(fifth),OK);
+        assert_eq!(probe_drain(fourth).err(),Some(BAD_STAGE));
+        assert_eq!(probe_return_held_rx(fourth),OK);
+        assert_eq!(probe_return_held_rx(fourth),BAD_STAGE);
+        assert_eq!(probe_stop(fourth),OK);
+        assert_eq!(probe_release(fourth),OK);
     }
 }
