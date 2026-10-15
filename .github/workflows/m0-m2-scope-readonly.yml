@@ -1,0 +1,73 @@
+name: M0 read-only M2 full source/scope acceptance
+run-name: "M0|${{ github.sha }}|g2-m2-ancestry"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-m2-scope-readonly.yml"
+      - "tools/worker_scope_ci.py"
+      - "tests/test_g2_m2_tool_refresh.py"
+      - "tests/test_g2_m2_second_refresh.py"
+permissions:
+  contents: read
+concurrency:
+  group: g2-m2-ancestry-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  worker-history:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fail-closed M2 sole tool mirror plus complete history regressions
+        run: |
+          python -m unittest discover -s tests -p 'test_g2_m2_tool_refresh.py' -v
+          python -m unittest discover -s tests -p 'test_g2_m2_second_refresh.py' -v
+          python -m unittest discover -s tests -p 'test_g2_ancestry_capacity.py' -v
+      - name: Review immutable M2 worker head, paths and pinned native CODE
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python3 - <<'PY'
+          import json,os,pathlib
+          from tools import governance as g
+          from tools import worker_scope_ci as w
+          api=g.GitHub(os.environ['GITHUB_REPOSITORY'])
+          control=api.head('main')
+          g.need(control==os.environ['GITHUB_SHA'],'control moved before M2 review')
+          worker=api.head('work/m2-r2-recovery')
+          g.need(bool(g.SHA.fullmatch(worker)),'bad live worker sha')
+          reg=api.file('.governance/registry.json',control)
+          role=w.resolve_role(reg,'work/m2-r2-recovery','M2')
+          cursor=api.file(role['cursor'],worker)
+          g.validate_cursor(cursor,role,reg['reservation_revision'])
+          reviewed='ba7b45138cd416dcd3ce315c7111c9429829afdd'
+          c=api.get(f'compare/{reviewed}...{worker}?per_page=1')
+          g.need(c.get('status') in {'ahead','identical'},
+                 'M2 tested native CODE no longer ancestor of current worker')
+          result=w.audit_worker_history(api,role,worker,control)
+          g.need(result['activation_commits']>=30,'M2 full history not reviewed')
+          g.need(result['activation_commits']==result['scope_commits_checked']+
+                 result['main_integration_commits_exempt'],
+                 'one or more M2 commits not accounted for')
+          g.need(api.head('main')==control and api.head('work/m2-r2-recovery')==worker,
+                 'M2 or main ref changed while auditing')
+          receipt={'result':'PASS','main_sha':control,'worker_sha':worker,
+                   'tested_native_code_sha':reviewed,'native_run_id':38689135611,
+                   'native_result':'51/51 PASS','native_binary_sha256':
+                   'd87a717b7b18e82c60cda4fdff85da6bbf3c9bdfed35eda827ea7c93329dc92c',
+                   'worker_h_governance':'NOT_PASSED','product':'NOT_RUN',**result}
+          pathlib.Path('out/review.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: g2-m2-readonly-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
