@@ -68,7 +68,7 @@ impl FrozenRecordHandle for Frame {
 #[test]
 fn p0_linux_udp_sendmmsg_recvmmsg_batch32() {
  const BATCH:usize=32;const PAYLOAD:usize=256;
- const WARM:usize=256;const N:usize=20_000;
+ const WARM:usize=512;const N:usize=120_000;
  let rx=UdpSocket::bind("127.0.0.1:0").unwrap();
  rx.set_read_timeout(Some(Duration::from_millis(200))).unwrap();
  let tx=UdpSocket::bind("127.0.0.1:0").unwrap();
