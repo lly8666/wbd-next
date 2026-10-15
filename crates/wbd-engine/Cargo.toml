@@ -8,6 +8,11 @@ license.workspace = true
 [lib]
 crate-type = ["rlib", "cdylib"]
 
+[features]
+# NEVER enable on production builds: exposed raw C methods are only native
+# test probes, not independent Go TLS credential or production FecOrigin proofs.
+m0_v4_probe = []
+
 [dependencies]
 # M0-owned composition-only edges. Lower-layer workers must not depend on engine.
 wbd-types = { path = "../wbd-types" }
