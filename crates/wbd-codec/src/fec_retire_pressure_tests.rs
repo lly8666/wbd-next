@@ -78,7 +78,8 @@ fn r1_retire_parity_first_r_profiles_recover_only_missing_never_redeliver(){
         assert_eq!(parity.len(),3);
         let h=inspect_fec_frame(&parity[0],1500).unwrap().header;
         assert_eq!(h.parity_count,r);
-        assert_eq!((h.data_count,h.lengths[..3]),(3,[1,2,3]));
+        assert_eq!(h.data_count,3);
+        assert_eq!(&h.lengths[..3],&[1,2,3]);
         let mut rx=FecRxOwner::new(rx_cfg(256,2,3,1)).unwrap();
         // One systematic delivered immediately despite no final metadata.
         assert_eq!(rx.push_after_auth(&source[0],scope(50),10).unwrap().systematic,
