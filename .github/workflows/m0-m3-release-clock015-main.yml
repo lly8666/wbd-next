@@ -1,0 +1,251 @@
+name: M0 integrated M3-015 Linux CPU-wall Release rescue validation
+run-name: "M0|${{ github.sha }}|M3-MAIN-SOURCE-clock015-long-window"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-m3-release-clock015-main.yml"
+permissions:
+  contents: read
+concurrency:
+  group: m0-m3-release-steady-${{ github.sha }}
+  cancel-in-progress: false
+env:
+  M3_SOURCE: ${{ github.sha }}
+  M3_TEST: link_fec_wire::fec_p0_cost_tests::r1_steady_release_same_source_fresh_vs_reused_owner_cost
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wbd-next
+          ref: ${{ github.sha }}
+          path: m3
+          persist-credentials: false
+      - name: Compile ONCE exact worker code in Release with pinned toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C m3 rev-parse HEAD)" = "$M3_SOURCE"
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(cd m3 && rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          (cd m3 && cargo test --release --locked -p wbd-codec --lib --no-run)
+          binary="$(find m3/target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n1)"
+          test -n "$binary"
+          mkdir m3-build
+          cp "$binary" m3-build/codec-release.test
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          worker=["Cargo.lock","Cargo.toml","rust-toolchain.toml",
+                  "crates/wbd-codec/src/lib.rs","crates/wbd-codec/src/link_fec_wire.rs",
+                  "crates/wbd-codec/src/fec_p0_cost_tests.rs"]
+          for p in worker: assert pathlib.Path("m3",p).is_file(),p
+          m={"m0_workflow_source":os.environ["GITHUB_SHA"],
+             "m3_worker_source":os.environ["M3_SOURCE"],
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "rust":"1.85.1","profile":"release",
+             "test_selector":os.environ["M3_TEST"],
+             "binary_sha256":sha("m3-build/codec-release.test"),
+             "worker_inputs_sha256":{p:sha("m3/"+p) for p in worker},
+             "workflow_sha256":sha(".github/workflows/m0-m3-release-clock015-main.yml"),
+             "qualification":"SCOPED_M3_015_CLOCK_WINDOWS_NOT_PRODUCT"}
+          pathlib.Path("m3-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: m3-release-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-build/
+          retention-days: 30
+          if-no-files-found: error
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04
+    # Previous same-worker SOURCE run38684106420 produced 21/24 rows but reached
+    # the 14-min runner limit; only extend wall budget, NOT active >=1s gates.
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wbd-next
+          ref: ${{ github.sha }}
+          path: m3
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: m3-release-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-build/
+      - name: Verify exact corrected M3 CPU-wall raw windows and unchanged native binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C m3 rev-parse HEAD)" = "$M3_SOURCE"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open("m3-build/manifest.json"))
+          assert m["m0_workflow_source"]==os.environ["GITHUB_SHA"]
+          assert m["m3_worker_source"]==os.environ["M3_SOURCE"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["profile"]=="release" and m["rust"]=="1.85.1"
+          assert m["test_selector"]==os.environ["M3_TEST"]
+          assert sha("m3-build/codec-release.test")==m["binary_sha256"]
+          assert sha(".github/workflows/m0-m3-release-clock015-main.yml")==m["workflow_sha256"]
+          for p,d in m["worker_inputs_sha256"].items(): assert sha("m3/"+p)==d,p
+          PY
+          chmod +x m3-build/codec-release.test
+          mkdir m3-result
+          ./m3-build/codec-release.test --exact "$M3_TEST" --ignored --nocapture > m3-result/test.log 2>&1
+          cat m3-result/test.log
+          python3 - <<'PY'
+          import collections, hashlib, json, os, pathlib, platform, re, statistics
+          log=pathlib.Path("m3-result/test.log").read_text()
+          assert re.search(r"test result: ok\. 1 passed; 0 failed; 0 ignored",log), "M3-015 native test did not PASS as 1/1"
+          def tagged(prefix):
+              result=[]
+              for line in log.splitlines():
+                  if prefix+" " not in line:continue
+                  raw=line.split(prefix+" ",1)[1]
+                  result.append(dict(kv.split("=",1) for kv in raw.split() if "=" in kv))
+              return result
+          rows=tagged("M3_STEADY_RELEASE")
+          warm=tagged("M3_CLOCK_WARMUP")
+          windows=tagged("M3_CLOCK_WINDOW")
+          samples=tagged("M3_BATCH_SAMPLE")
+          assert len(rows)==24 and len(warm)==8 and len(samples)==24, (
+              "M3-015 raw Release cardinality",len(rows),len(warm),len(samples))
+          modes={"fresh_aead","steady_aead","fresh_fec","steady_fec"}
+          sizes={"192","896"}
+          warm_keys=set()
+          for w in warm:
+              assert w["profile"]=="RELEASE" and w["mode"] in modes and w["shard_len"] in sizes
+              assert int(w["active_wall_ns"])>=1050000000 and int(w["windows"])>0
+              assert w["clock_backend"] in ("schedstat_ns","sched_runtime_us","CPU_INCONCLUSIVE")
+              warm_keys.add((w["shard_len"],w["mode"]))
+          assert len(warm_keys)==8
+          bywindow=collections.defaultdict(list)
+          bysample={}
+          def key(r):
+              return (r["shard_len"],r["mode"],r["repeat"])
+          for w in windows:
+              assert w["profile"]=="RELEASE" and w["shard_len"] in sizes and w["mode"] in modes
+              assert w["repeat"] in {"0","1","2"}
+              assert w["clock_backend"] in ("schedstat_ns","sched_runtime_us","CPU_INCONCLUSIVE")
+              assert int(w["wall_ns"])>0
+              valid=w["cpu_valid"]=="true"
+              assert w["cpu_valid"] in ("true","false")
+              if valid:
+                  assert w["clock_backend"]!="CPU_INCONCLUSIVE" and int(w["cpu_ns"])>=0
+                  assert int(w["cpu_ns"])*100<=int(w["wall_ns"])*102, ("CPU>wall window",w)
+              else:
+                  assert int(w["cpu_ns"])==0
+              bywindow[key(w)].append(w)
+          for x in samples:
+              assert x["profile"]=="RELEASE" and x["shard_len"] in sizes and x["mode"] in modes
+              assert x["repeat"] in {"0","1","2"}
+              nums=[int(z) for z in x["batch_avg_ns_per_record"].split(",")]
+              assert nums and len(nums)<=2048 and all(z>=0 for z in nums)
+              assert key(x) not in bysample, "duplicate batch sample"
+              bysample[key(x)]=nums
+          seen=set()
+          qualifying=True
+          backend_used=set()
+          for r in rows:
+              assert r["profile"]=="RELEASE" and r["source"]=="ACTION_SHA_REQUIRED"
+              assert r["origin"]=="cfg_test_only" and r["backend"]=="real_chacha_aead_hp8"
+              assert r["transport"]=="NOT_RUN" and r["throughput"]=="NOT_QUALIFIED"
+              assert r["steady_product_p99"]=="NOT_QUALIFIED" and r["preseal_excluded"]=="true"
+              assert r["tunnels"]=="2" and r["directions"]=="2" and r["scope_count"]=="4"
+              assert r["records_per_batch"]=="64" and r["shard_len"] in sizes
+              assert r["mode"] in modes and r["repeat"] in {"0","1","2"}
+              k=key(r)
+              assert k not in seen, ("duplicate Release row",k)
+              seen.add(k)
+              wc=int(r["clock_windows"])
+              n=int(r["records"])
+              total_wall=int(r["same_window_wall_ns"])
+              total_cpu=int(r["same_window_cpu_ns"])
+              assert wc>0 and n==wc*128*64, (k,"missing real records")
+              assert total_wall>=1125000000 and float(r["active_wall_s"])>=1.125
+              assert int(r["sample_count"])==len(bysample[k])
+              assert int(r["p50_batch_avg_ns_per_record"])<=int(r["p99_batch_avg_ns_per_record"])
+              group=bywindow[k]
+              assert len(group)==wc and [int(x["index"]) for x in group]==list(range(wc)), (
+                  "missing, duplicate or reordered CPU windows",k)
+              assert sum(int(x["wall_ns"]) for x in group)==total_wall, ("wrong wall aggregate",k)
+              valid=(r["clock_status"]=="OK")
+              assert r["clock_status"] in ("OK","CPU_INCONCLUSIVE") and (
+                  r["cpu_ratio_valid"]==str(valid).lower())
+              assert r["clock_backend"] in ("schedstat_ns","sched_runtime_us","CPU_INCONCLUSIVE")
+              if valid:
+                  assert r["clock_backend"]!="CPU_INCONCLUSIVE"
+                  assert all(x["cpu_valid"]=="true" and
+                             x["clock_backend"]==r["clock_backend"] for x in group)
+                  assert sum(int(x["cpu_ns"]) for x in group)==total_cpu
+                  assert total_cpu>0 and total_cpu*100<=total_wall*102, ("CPU aggregate",k)
+                  assert abs(float(r["cpu_us_per_record"])-total_cpu/1000/n)<0.00001
+                  backend_used.add(r["clock_backend"])
+              else:
+                  qualifying=False
+                  assert r["clock_backend"]=="CPU_INCONCLUSIVE" and total_cpu==0
+                  assert float(r["thread_cpu_s"])==0 and float(r["cpu_us_per_record"])==0
+          assert len(seen)==24 and len(bywindow)==24 and len(bysample)==24
+          assert all((size,mode,rep) in seen for size in sizes for mode in modes for rep in ("0","1","2"))
+          metrics={}
+          if qualifying:
+              for size in sizes:
+                  for kind in ("aead","fec"):
+                      def median(mode):
+                          v=[float(x["cpu_us_per_record"]) for x in rows
+                             if x["shard_len"]==size and x["mode"]==mode]
+                          assert len(v)==3 and min(v)>0
+                          return statistics.median(v)
+                      f=median("fresh_"+kind);steady=median("steady_"+kind)
+                      metrics[size+"_"+kind]={"fresh_median_cpu_us_per_record":f,
+                          "steady_median_cpu_us_per_record":steady,
+                          "fresh_over_steady_component_cpu_ratio":f/steady,
+                          "qualification":"SCOPED_COMPONENT_ONLY_NOT_PRODUCT"}
+          cgroup=pathlib.Path("/sys/fs/cgroup/cpu.max")
+          info=pathlib.Path("/proc/cpuinfo").read_text()
+          model=next((x.split(":",1)[1].strip() for x in info.splitlines()
+                      if x.startswith("model name")),"unknown")
+          m=json.load(open("m3-build/manifest.json"))
+          report={
+              "source_sha":m["m3_worker_source"],"m0_workflow_source":m["m0_workflow_source"],
+              "run_id":m["run_id"],"attempt":m["attempt"],"profile":"release",
+              "binary_sha256":m["binary_sha256"],"rust_native_test":"1 passed",
+              "results":rows,"clock_warmups":warm,"clock_windows":windows,
+              "raw_batch_average_samples":samples,
+              "medians":metrics,"cpu_backends":sorted(backend_used),
+              "cpu_qualification":"SCOPED_VALID_SAME_WINDOW" if qualifying else "CPU_INCONCLUSIVE",
+              "result":"SCOPED_M3_015_RELEASE_RAW_TRACE_PASS_NOT_PRODUCT",
+              "log_sha256":hashlib.sha256(log.encode()).hexdigest(),
+              "runner":os.environ.get("RUNNER_NAME"),"host":platform.uname()._asdict(),
+              "cpu_model":model,"cgroup_cpu_max":cgroup.read_text().strip() if cgroup.exists() else None,
+              "limitations":["real source-locked Linux Rust Release; no Go V4 authenticated origin",
+                             "not product, network driver, 500Mbps, ISA-L or physical",
+                             "batch average p99 is not per-packet p99",
+                             "historical M3-014 CPU metrics invalid",
+                             "M3 own final governance and source S/H separate"]}
+          pathlib.Path("m3-result/result.json").write_text(json.dumps(report,indent=2)+"\n")
+          print(json.dumps({k:v for k,v in report.items()
+                            if k not in ("results","clock_warmups","clock_windows",
+                                         "raw_batch_average_samples")},indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: m3-release-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-result/
+          retention-days: 30
+          if-no-files-found: warn

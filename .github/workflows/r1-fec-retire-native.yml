@@ -75,7 +75,7 @@ jobs:
         with:
           name: r1-fec-retire-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-fec-retire-build/
-      - name: Verify binary exact SOURCE and execute 97 native R1 codec tests with dedicated M3 release benchmark ignored
+      - name: Verify binary exact SOURCE and execute 98 native R1 codec tests with dedicated M3 release benchmark ignored
         shell: bash
         run: |
           set -euo pipefail
@@ -123,9 +123,11 @@ jobs:
           ignored_match=re.search(r'test result: ok\. \d+ passed; 0 failed; (\d+) ignored;',log)
           ignored=int(ignored_match.group(1)) if ignored_match else -1
           additional='r1_steady_four_scope_auth_replay_pressure_and_independent_expiry'
+          cpu_clock='r1_cpu_probe_same_window_valid_and_invalid_accounting'
           dedicated='r1_steady_release_same_source_fresh_vs_reused_owner_cost'
-          good=(int(os.environ['TEST_EXIT'])==0 and count==97 and ignored==1
+          good=(int(os.environ['TEST_EXIT'])==0 and count==98 and ignored==1
               and additional+' ... ok' in log
+              and cpu_clock+' ... ok' in log
               and dedicated+' ... ignored' in log
               and all(name+' ... ok' in log for name in required))
           out={'source_sha':m['source_sha'],'run_id':m['run_id'],
