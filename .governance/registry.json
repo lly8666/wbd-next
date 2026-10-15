@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-READY-BATCH-004: Add an owner-local bounded ready-only <=32 batch drain to existing TxOwner, preserving Fresh first on first dispatch and alternating fair repair/parity progress; reuse caller-provided preallocated output storage, no per-batch ciphertext clone, and maintain absolute MonoNs deadlines/stop/return ownership. Must not implement syscalls or modify root dependency/driver.",
-      "done_when": "Exact own SOURCE compiled-once native r1_ tests: empty/1/32/33 packet batch capacity, full independent repair/parity vs fresh, first systematic ahead of due/undue parity, bounded secondary progress under persistent fresh, stop and last frozen loan/return. Keep all preceding M1 tests and own evidence S/H/Governance; no production SPSC/loom/eventfd claim."
+      "goal": "R1-M1-RX-READY-BATCH-005: Extend M1 owned RxOwner with caller-preallocated bounded <=32 ready-drain of uniquely-owned RX buffers and per-lane fair ingress; never authenticate or claim business delivery. Preserve first-arrival, unrelated-lane independence, stop/return and max slots/bytes/age.",
+      "done_when": "Exact own-source compiled-once native r1_ tests for empty/1/32/33, caller capacity0/full, no hot-path copy/allocation, two lanes with head obstruction, expiry/stop/loan return races. Preserve 39 previous tests; source S, native Actions, evidence S, cursor-only H and Governance; no production raw socket or Rust ABI changes."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2-M2-GLOBAL-BATCH-COMPLETION-003: Extend pure wbd-recovery global allocator for bounded batch completion bookkeeping over independently reserved repair candidates from multiple TunnelKey/directions. Accept a platform-agnostic validated result representation (accepted prefix, at most one uncertain slot, suffix definitely NotAttempted only with evidence), never depend on platform crate. Preserve original-epoch NotSent refunds, Uncertain debit, duplicate/old callbacks fail closed and process hard quota; do not touch M0 engine sender.",
-      "done_when": "Exact own SOURCE compiled-once native r2_ fake-MonoNs tests for 0/1/32/33 mapping, accepted prefix vs ambiguous index and not-attempted suffix, two tunnels/both directions, epoch cutover, double completion, expired/departed grants and fresh not HOL. Preserve 22 previous r2_ tests; S/evidence/H and Governance. No raw sendmmsg product/driver or root Cargo changes."
+      "goal": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004: Strengthen pure M2 multi-tunnel batch grant completion against late ACK, stale generation, old epoch NotSent, client departure, repeat uncertain callback and mixed accepted-prefix repair; ensure no peer-delivery inference from kernel accepted outcomes and no fresh HOL. Only pure wbd-recovery types; no actual syscall.",
+      "done_when": "Exact own-source native r2_ deterministic MonoNs adversarial tests for 2 TunnelKeys and both directions, 0/1/32/33 mixed outcomes, >epoch late response, expired/departed grant, duplicate completion, bounded batch storage and unchanged process cap; preserve 28 earlier tests, own S/evidence/H Governance. Do not invent retransmission success."
     },
     {
       "id": "M3",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-FEC-RETIRE-PRESSURE-010: Strengthen bounded FecRxOwner and FecBlockIdOwner heavy→compact→retired under capacity and timer pressure, including authenticated-input multi-block out-of-order systematic/final parity, no duplicate business resurrection and valid first-source delivery. Only codec own files; do not invent a trusted Go V4 exporter or modify authenticated input provenance.",
-      "done_when": "Exact SOURCE compiled-once native r1_ deterministic fake-MonoNs tests: 3s heavy/10s compact, late callbacks, small heavy/compact byte caps, BlockID wrap across trusted explicit generation, wrong epoch/direction/half-space, old parity and malformed final conflict, 20:R parity profile and known Go 56B oracle; rejected/late never reopen retired data. Retain earlier 67 r1_ tests and own S/evidence/H/Governance. New implementation only if failing counterexample proves necessary."
+      "goal": "R1-M3-AUTH-FEC-SCOPE-GATE-011: Add pure, fail-closed typed authenticated FEC scope admission tying already-verified record lane/direction/trusted epoch/generation and PN replay result to FecBlockIdOwner/FecRxOwner; reject absent origin, halfspace, stale retired IDs and unauthenticated field speculation. No Go exporter or ABI work.",
+      "done_when": "Exact own native r1_ fake-MonoNs tests: validated provenance permits first systematic immediately, wrong lane/tunnel/epoch/generation, replay before FEC, delayed parity and retired expiry rejected; old-Go 56B wire oracle preserved; keep prior 75 native cases and S/evidence/H Governance; Go V4 live binding remains NOT_RUN."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-IPV4-TCP-RX-PARSE-004: Add strict, bounded IPv4/TCP one-full-DATA-packet byte parser for incoming carrier packets with trusted tuple/MTU/length/flags/options and independent IP/TCP pseudoheader checksum validation. Provide caller-anchored seq32→u64 nearest extension with fail-closed half-space ambiguity; do not implement arbitrary TCP stream reassembly or real AF_PACKET live reader.",
-      "done_when": "Exact own SOURCE compiled-once platform r1_ tests on byte-exact existing IPv4/TCP writer outputs, checksums independently, version/IHL/options/total length/data offset truncation, fragments, malformed flags, wrong tuple/source or checksum, MTU±1 and seq32 wrap/half-space ambiguity, back-to-back unrelated packet not HOL; no pre-auth payload ever treated as verified business. Own S/evidence/H/Governance. Kernel raw RX/Windows/physical NOT_RUN."
+      "goal": "R1-M4-LINUX-RX-BATCH-005: Implement an explicitly unprivileged Linux x86_64 GNU bounded nonblocking recvmmsg batch fixture with caller supplied <=32 buffers, MSG_DONTWAIT, truncated datagram metadata fail closed and atomic stop borrowing. Reuse strict IPv4/TCP RX parser only when complete bytes are available; no AF_PACKET raw reader, Npcap, recv driver activation.",
+      "done_when": "Compiled-once own-source native platform r1_ tests execute real Linux UDP loopback recvmmsg with 0/1/32/33, EAGAIN, truncated/corrupt input, immutable lifetime and stop race; classifier-only EINTR/ambiguous noted separately. Keep previous 31 tests and own S/evidence/H Governance; no root Cargo/dependency edits."
     }
   ]
 }
