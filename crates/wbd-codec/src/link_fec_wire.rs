@@ -376,3 +376,8 @@ mod fec_block_id_tests;
 #[cfg(test)]
 #[path="fec_retire_pressure_tests.rs"]
 mod fec_retire_pressure_tests;
+
+// M3 typed FEC auth-scope gate real AEAD+replay tests excluded from frozen R0.
+#[cfg(test)]
+#[path="fec_auth_gate_tests.rs"]
+mod fec_auth_gate_tests;

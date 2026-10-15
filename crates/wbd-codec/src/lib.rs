@@ -22,6 +22,8 @@ pub mod fec_tx;
 pub mod fec_rx;
 /// Bounded authenticated generation-aware WF BlockID32 to u64 extension.
 pub mod fec_block_id;
+/// Fail-closed typed real-record post-AEAD+PN FEC scope gate.
+pub mod fec_auth_gate;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
