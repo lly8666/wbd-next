@@ -1,0 +1,33 @@
+# R2-M2-RACK-POSITIVE-WITNESS-INDEX-008
+
+## Authority and CLEAN handoff
+
+2026-10-15 live main `.governance/registry.json` revision2 assignment_epoch1 M2 active branch `work/m2-r2-recovery` formally assigned `R2-M2-RACK-POSITIVE-WITNESS-INDEX-008`; control decision `docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md` remains **main-only**, not a worker dependency. Previous M2 cursor seq15 task `R2-M2-BOUNDED-TIMER-BURST-007`, evidence S `f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c`, final H `014d636eaf0319ca3c0a456901b383d94b7214f1`; S→H compare changed **only** M2 cursor, H Governance [38692656343](https://github.com/lly8666/wbd-next/actions/runs/38692656343) **SUCCESS**, no open requests. ROOT checker bounded full-history page `<=99`, branch at G2 activation base exactly79 commits, new code/evidence/H remain under limit. Role owns only recovery crate plus M2 logs, evidence, requests and cursor; no M0 root/CI, Go V4, driver, ABI or cross-role edits.
+
+## Before: genuine O(10k logN) positive-ACK regression
+
+The existing pure `ReceiptState::on_receipt` used `refresh_rack_wakes()` for each **fresh authenticated positive** receipt with a new RTT witness. That function walked `entries.keys()` and rebuilt every shadow's wake key, including ~10k unaffected originals, even when one acknowledged PN was far outside them. Each ACK could cost O(live shadow log N), violating bounded per-event work in a continuous positive receipt stream. Timer polling itself was already indexed and <=32 wake events; making ACKs full-table work would still stall the owner despite a fast timer.
+
+## Fix: dynamic RACK earliest-prefix view, original PTO deadlines unchanged
+
+One independent owner-local `BTreeSet<(original_last_sent_ns,RecordPn)>` **RACK-eligible index** complements existing expiry and PTO/queue `BTreeSet` indexes. Each eligible shadow has at most one RACK key, always removed eagerly on real ACK, queue, send result, hard expiry or timeout. No tombstone backlog. Membership requires previously reported missing, zero charged attempts, not queued and original rearm `<=last_sent`; a later NotSent rearm is `now+PTO` after a due event, so its base `max(last_sent+PTO,rearm)` is already no later than a RACK candidate's rearm and cannot be accelerated using the old witness. Accepted and Uncertain attempts have their old negative evidence cleared and cannot reuse it.
+
+RACK's three latest distinct verified original-send witnesses are sorted by sent time; an original missing shadow is eligible iff its send time is **strictly before** the oldest of those three witnesses. Thus eligibility is a prefix of the independently sorted RACK index. The first index node is the earliest RACK deadline at `last_sent + min(PTO,latest_ack_age+reorder)`. The scalar latest RTT and witness threshold can change after **every** fresh positive ACK *without touching any other shadow/index key*. `on_timer` and `next_deadline` compare this dynamically evaluated prefix head against the independent base wake head (and hard expiry). Polling removes at most32 selected queued/PTO/RACK wake events and emits at most32 frozen candidates, reindexing only the selected entries; hard expiry still releases every actually expired record once, independent of candidate cap. This preserves exact possible RACK/PTO deadline changes without per-positive O(N) rebuild.
+
+The index membership rule is explicit: in current R2 code, `rearm_at=last_sent` at first registration, while a NotSent event can arise only after the candidate's original PTO/RACK due and sets `rearm_at=now+PTO`; the latter is always later than base PTO. There is **no earlier** RACK deadline for such a deferred entry. A future change in this invariant requires updating the scheduler and tests, not silently indexing deferred candidates. No extra authentication: all receipt inputs remain M0-supplied **after** AEAD/replay/session pin and existing `ReceiptRouteScope` comparison; pure code cannot establish trust from raw bytes.
+
+## Actual operation measurement and fake-mono counterexamples
+
+The `#[cfg(test)] last_receipt_index_ops()` counter reports exact BTreeSet insert/delete operations made for the current receipt (not CPU or heap allocation count). Any receipt has at most eight 256-bit report pages, so the only per-receipt index mutations are the positive released records and newly missing entries explicitly covered by those pages; **no O(10k) witness cascade**. Every RACK witness scalar update is O(3), and `next_deadline` reads at most the three ordered-index heads. `last_timer_index_pops()` continues counting actual extracted index wake/expiry nodes.
+
+Four new deterministic `r2_rack_*` native fixtures, retaining the previous **51** tests, exercise:
+- 10k live missing records and **1→32→33** separate authenticated positive witnesses: changed receipt index operations <=4 for a one-PN report despite 10k originals; updated dynamic RACK timing `now+4`, no stale early PTO/RACK key, 32-candidate cap.
+- 10k live, **32** positives within one bitmap then **33rd**: explicit page-bound index operations, eager ACK, newest witness changes RACK due without 10k index rebuild, replay cannot re-release or manufacture witness.
+- 10k live + 3 witnesses followed by a monotonic jump to hard expiry: release all actually expired 10030 shadows once, all expiry/wake/RACK indexes empty, no retained state.
+- NotSent first repair and **three** later genuine witnesses: old negative evidence cannot bypass rearm deadline, old candidate cannot be completed again.
+
+Test source uses in-memory `FakeFrozen` and fake monotonic nanoseconds, no genuine AEAD, actual Go V4 or packets. Baseline prior 51/51 R2 unit tests remain unchanged. Target new source-exact compiled-once native **55/55**. Complexity is bounded by the report's max 8 pages (up to 2048 data PNs) plus O(logN) per actually changed shadow, instead of O(live N) per positive witness; memory index entries bounded by configured max_shadow_entries (one extra key per eligible shadow). No unsafe allocator instrumentation, CPU clock sampling, heap allocation counts, real packet throughput or p99 metrics; report **NOT_INSTRUMENTED**, do not estimate them.
+
+## Qualification and nonclaims
+
+Only `crates/wbd-recovery/src/receipt.rs` and this M2 devlog for code SOURCE; evidence S / cursor-only H follow actual source-specific GitHub worker-native, G2, static, Governance runs. Preserve every historical FAIL and exact attempt ID. Crypto/authenticated open, Rust owner/engine integration, Go V4 production, real AF_PACKET driver, native Windows/ARM, 500Mbps, CPU/RSS/p99 product and physical remain M0-owned **NOT_RUN**; this is not a product qualification.
