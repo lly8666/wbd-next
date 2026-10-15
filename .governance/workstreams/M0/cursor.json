@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 60,
-  "checkpoint_sha": "d87fe6b559da1d1ae9aae81a87ca3732041f7d35",
+  "sequence": 61,
+  "checkpoint_sha": "5acb975e430d3d0f8d1d798fc3be85785e7d96b0",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0 M2-first actual module integration acceptance: exact M2 worker H014d636e Governance38692656343 PASS; M2 51/51 and scoped source main a8e5a77; M1 80/80 imported 002b388; M4 71/71 imported 2a1c578; M3 98 Debug imported a387d1bb. Main Go protected V4 pre-Detach rollback and post-Detach Go epoch commit TLS 11/11 run38695761347 SUCCESS. Main CODE2f8b2c9 r1-auth-record38696580529 and r1-fec-retire38696580521 both 97 native PASS + 1 dedicated release benchmark ignored, Governance38696580565 SUCCESS. M3 prior 24-row Release CPU values INVALID (22/24 > active wall). Registry e88a6a scoped M0-M4 next wave rev2 epoch1 unchanged, five crate bootstrap38696146961 and Gov38696146850 SUCCESS. Rust owner authentic Go origin and B01-B04 actual stop still NOT_RUN.",
-  "why_now": "User asked to resume after interruption, handle M2 first, merge all module work, assign next tasks and continue M0 integration. M2 full worker H now PASS, historical G2 immutable-tool approval repaired; imported all scoped sources with main native regression confirmation. Generic R1 Release had selected dedicated M3 multi-minute test; M0 isolated it from generic validation and corrected exact inventory to 97 pass 1 ignored, preserving old failures. Next bottleneck is real authenticated Go V4 session to independently fresh Rust ScopedOwner and precise boundary, not further general mock benchmarks.",
-  "done_when": "Current M0 integration/next-wave atom accepted within scope: main CODE2f8b2c9 Governance38696580565 SUCCESS and two exact native R1 Release workers38696580529 +38696580521 each 97 passed 0 failed 1 intentionally ignored; actual Go V4 TLS11/11 38695761347 SUCCESS; M2 native51/51,H Gov38692656343 PASS, M1 80/80,H Gov38689191231 PASS, M4 71/71,H Gov38689255498 PASS, M3 Debug98/98,H Gov38688674718 PASS with invalid CPU ratio quarantined. Next task goals registered rev2 epoch1, source S evidence d87fe6b5 Governance38697046364 SUCCESS. Full auth Go→Rust owner, early/Stop B01-B04, raw positive, native WinARM, 500Mbps and physical NOT_RUN.",
-  "next_action": "M0 own R0-M0-V4-PROTECTED-OWNER-COMMIT-023: implement real private Go authenticated ColdSnapshot to Rust newly allocated owner generation on trusted session callsite only, exact PrepareTransition/protected reply/DetachTransition/CommitAdmission boundaries, early RX cap, Go control lifecycle and Rust M1/M4 lease Stop B01-B04 source-exact native. 248-byte grammar is UNTRUSTED; no public bytes-to-authority, no production ABI feature, live FEC or P0 capacity claim. Coordinate M1 early boundary010, M2 RACK-positive O(N) cost008, M3 same-window CPU015, M4 actual UDP burst Stop010 after their own native/evidence S/H. Keep old rejected/cancelled Actions evidence.",
+  "current_task": "M0 real protected Go V4 TLS→Rust ScopedOwner native TEST-ONLY probe established: private Go v4OwnerBridge called after genuine credential-checked TLS/verified ColdSnapshot and FakeTCP PrepareTransition, Rust locally mints independent generation; only after protected reply/Detach does Go call native Rust probe Commit then Go epoch finish(true), with rejected Prepare vs aborted created owner distinct. Production non-feature CDylib nm shows no test-only symbols. Same SOURCE b23cf780d36042612a1f21a05c8062226b7748a6 native CI38708333395 SUCCESS Go1/1 Rust1/1 and no-probe normal export negative; Governance38708333353 SUCCESS. Go TLS12/12 run38707227117 SUCCESS. Evidence-only S5acb975e430d3d0f8d1d798fc3be85785e7d96b0 Gov38708811313 SUCCESS. Actual Rust trusted production owner, early payload buffer, hardware driver held lease, AEAD/FEC and 500Mbps NOT_RUN.",
+  "why_now": "Earlier H seq60 main four M1–M4 scoped module integrations were complete but M0 own B01–B04 actual Go→Rust secured owner edge was absent. Explicitly staged Go privately before protected reply, native Rust-test-only with fresh generation, bounded metadata and abort/stop state; verified real same-process Go1.23.12 + Rust1.85.1 with source-exact binary manifests. Added negative symbol export check so the raw C test-only probe never becomes a production ABI capability. No worker branch was touched or broadened.",
+  "done_when": "This M0 partial atom's protected Go→Rust native TEST-ONLY integration and negative symbol gate PASS at exact CODE b23cf780 Action38708333395 attempt1 build/consume SUCCESS, artifacts11959242527/11959262590, main Gov38708333353 PASS; real protected Go TLS12/12 Action38707227117 PASS, evidence S5acb975e Gov38708811313 PASS. Remaining full task's genuine Rust positive authenticated owner install, actual early RX byte ownership, true driver loan Stop, full B01–B04, product E2E, native WinARM, positive raw and 500Mbps NOT_RUN. M0 sequence61 H cursor-only.",
+  "next_action": "M0 R0-M0-V4-PROTECTED-OWNER-COMMIT-023 remains PARTIAL: replace the inert TEST-ONLY FFI candidate with private production-quality authenticated Go session→Rust admission, fresh owner generation and real early RX payload ownership bound by exact Prepare/reply/Detach; integrate M1 early RX and M4 held driver lease after worker scope/native S/H, test B01–B04, preserve Go/ABI failure rollback, prohibit raw 248B-to-authority and keep production C ABI features0 until true E2E. Follow M2 RACK indexed witness008, M3 clock015 after workers submit. Do not repurpose m0_v4_probe as a product capability.",
   "unverified": true,
-  "last_tested_source": "2f8b2c900a0bd086b21a32448fb6462c8432824b",
+  "last_tested_source": "b23cf780d36042612a1f21a05c8062226b7748a6",
   "evidence_refs": [
-    "docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json"
+    "docs/evidence/M0/R0-M0-V4-native-probe-037.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R0-M0-V4-owner-wave-integration-033.md",
-    "docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
+    "docs/devlog/M0/R0-M0-native-Go-Rust-owner-evidence-037.md",
+    "docs/devlog/M0/R0-M0-production-probe-symbol-negative-036.md",
+    "docs/devlog/M0/R0-M0-native-Go-Rust-candidate-probe-035.md",
+    "docs/devlog/M0/R0-M0-private-Go-owner-prepare-034.md",
+    "docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md"
   ],
-  "partial_summary": "M0 seq59→60: M2 full R2 51/51 H014d636e Gov38692656343 SUCCESS and main integration a8e5a77; M1 80/80 main002b388, M4 71/71 main2a1c578, M3 Debug98 main a387d1bb but Release CPU22/24 physically inconsistent (invalid). Go protected TLS actual commit-after-Detach+nonce rollback 11/11 run38695761347. M0 current CODE2f8b2c9 native R1 record38696580529 + FEC-retire38696580521 both97 pass 1 ignored dedicated cost, Gov38696580565 SUCCESS. New registry task wave e88a6a rev2epoch1, no worker branch edits; evidence S d87fe6b5 Gov38697046364. M0 real authenticated Go→Rust generation owner B01–B04 and product still NOT_RUN."
+  "partial_summary": "M0 seq60→61: real pinned Go TLS verified ColdSnapshot→unexported Go Prepare/Commit after exact FakeTCP boundary→in-process native Rust ScopedOwner fresh TEST-ONLY generation and Stop/Release; Go TLS12/12 CI38707227117 and Rust+Go native CI38708333395 SUCCESS. Normal Rust cdylib no test probe export (actual nm -D) PASS; main CODE b23cf780 Gov38708333353 PASS, evidence S5acb975e Gov38708811313 PASS. NO production Rust auth grant, early payload transfer, true driver held lease, E2E, physical or 500Mbps. M1–M4 new tasks remain assigned, no worker writes."
 }
