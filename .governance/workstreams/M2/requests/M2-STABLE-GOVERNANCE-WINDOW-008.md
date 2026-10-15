@@ -1,6 +1,6 @@
 # M2 → M0 — stable main control interval for source-exact R2 Governance
 
-**Status:** OPEN / BLOCKED — prior H scope PASS, but independent live-HEAD evidence S3 scope FAIL due moving main
+**Status:** SUPERSEDED — moving-main race documented; current deterministic blocker is second historic checker blob mismatch in M2-SECOND-CHECKER-IMMUTABLE-BLOB-008.md
 **Worker:** M2 `work/m2-r2-recovery`, registry rev2 epoch1, task `R2-M2-RACK-POSITIVE-WITNESS-INDEX-008`
 **CODE SOURCE:** `7875137949f61fead1374d2933798c61814adb92`; exact compiled-once worker-native [#38706944249](https://github.com/lly8666/wbd-next/actions/runs/38706944249) **55/55 PASS**, G2 [#38706944163](https://github.com/lly8666/wbd-next/actions/runs/38706944163) PASS, R0 static [#38706944248](https://github.com/lly8666/wbd-next/actions/runs/38706944248) PASS.
 
@@ -27,3 +27,7 @@ An attempt2 re-run of OLD evidence S2 `1e54d80134a121068099e72c3a8ed30db436d51b`
 
 ## Live-HEAD S3 still blocked
 M2 created evidence S3 `9f4c3574caf49afdbfb38a5dbd9fdba7c8d13a85` on already audited cursor H `0c8f3bb68adcaf417aae737e1cdf981d936ab145`. S3 **remained actual HEAD** throughout [Governance #38711507683](https://github.com/lly8666/wbd-next/actions/runs/38711507683) attempt1, which **FAILED** with `ROLE_SCOPE_FAILED: control or source moved mid-audit`, job116343744144, artifact11960592215 sha256:57fe0d746d5f7ba9d936252c41e66a38ffe346f4c214a494aa5b56c3334c29d3. Unlike old S2 rerun, there was no stale branch-ref issue. Thus M0 still needs a stable main-control audit interval or strict approved pinned-control alternative. Native R2 55/55 and G2/static PASS; product NOT_RUN. No source/path/governance failures erased or relabeled.
+
+## Superseding root cause confirmed
+
+Evidence S4 `28aa619ad31d61891a479ea4743db2b55f232c59` [Governance #38712108247](https://github.com/lly8666/wbd-next/actions/runs/38712108247) **FAIL** `ROLE_SCOPE_FAILED: second M2 checker mirror must copy byte-identical current main tool`. The current deterministic blocker is no longer solely main moving; the live equality predicate can never remain stable after M0 changes its root script. See the **open** request `M2-SECOND-CHECKER-IMMUTABLE-BLOB-008.md`. Earlier scope-run and moving-main failures remain historical FAIL.

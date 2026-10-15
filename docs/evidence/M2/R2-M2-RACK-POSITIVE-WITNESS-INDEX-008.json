@@ -7,7 +7,7 @@
   "assignment_epoch": 1,
   "source_sha": "7875137949f61fead1374d2933798c61814adb92",
   "code_source": "7875137949f61fead1374d2933798c61814adb92",
-  "result": "PURE_R2_NATIVE_55_55_PASS__H_GOV_SUCCESS__EVIDENCE_GOV_BLOCKED_MAIN_MOVEMENT",
+  "result": "R2_NATIVE_55_55_PASS__GOVERNANCE_BLOCKED_HISTORIC_SECOND_CHECKER_LIVE_BLOB",
   "prev_handoff": {
     "H": "014d636eaf0319ca3c0a456901b383d94b7214f1",
     "checkpoint": "f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c",
@@ -119,7 +119,7 @@
     "Real driver/kernel, engine ABI and physical NOT_RUN",
     "No WinARM native, CPU/RSS product, 500Mbps or p99 evidence"
   ],
-  "next_action": "M0 coordinate stable main-control audit window or approved equally strict pinned-control policy, preserving all source/HEAD/role/path validations. M2 native55/55+G2/static PASS; H Governance38709247413 SUCCESS but evidence S3 Gov38711507683 FAIL, so task remains BLOCKED. Product/auth/physical NOT_RUN.",
+  "next_action": "M0 fix root-owned v2 historical second checker mirror equality to immutable approved main source d902842/... blob86c213 (not current main cf46d8), retaining exact parent, one-file path and bounded full-history audit. Coordinate permitted worker refresh if necessary. Native55/55 and G2/static PASS but current scope FAILED, no product claims or M2 root modification.",
   "governance_blocker": {
     "reason": "Repeated GitHub main branch movement during full audit; first source attempt also remote API disconnect. M2 cannot change root scope attest policy or force main quiescence.",
     "source_governance_run_id": 38706944070,
@@ -146,7 +146,7 @@
       "retry_attempt2_done": true,
       "change_to_code_after_tests": false
     },
-    "request_ref": ".governance/workstreams/M2/requests/M2-STABLE-GOVERNANCE-WINDOW-008.md",
+    "request_ref": ".governance/workstreams/M2/requests/M2-SECOND-CHECKER-IMMUTABLE-BLOB-008.md",
     "no_generic_tool_permission": true,
     "latest_evidence_rerun": {
       "source_sha": "1e54d80134a121068099e72c3a8ed30db436d51b",
@@ -159,7 +159,7 @@
       "digest": "sha256:6fd465ae21bb47e3027ea44f5ffe7abc33b6dbdde13db139dc637727c8e421c5",
       "interpretation": "The legitimate cursor-only H already advanced the live branch HEAD, so an old S2 cannot be revalidated as branch HEAD; do not retry that historical run. Correct next step is a new evidence S3 from the validated H."
     },
-    "resolution": "UNRESOLVED. H0c8f3bb ROLE_SCOPE_PASS, but fresh S3 while live HEAD failed due main movement, independently of stale-ref mistake. M0 stable window/rigorous pinned-control alternative still needed.",
+    "resolution": "BLOCKED: old stable-control race is not the current primary issue. M0 must pin second approved script mirror against exact immutable approved main source/blob rather than mutable current main, then authorize strict worker checker propagation/branch migration as needed with full commit path checking.",
     "recovery_attempts": [
       {
         "source_sha": "9f4c3574caf49afdbfb38a5dbd9fdba7c8d13a85",
@@ -172,7 +172,27 @@
         "artifact_id": 11960592215,
         "digest": "sha256:57fe0d746d5f7ba9d936252c41e66a38ffe346f4c214a494aa5b56c3334c29d3"
       }
-    ]
+    ],
+    "current_deterministic_root_cause": {
+      "source_sha": "28aa619ad31d61891a479ea4743db2b55f232c59",
+      "governance_run_id": 38712108247,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116345754702,
+      "reason": "ROLE_SCOPE_FAILED: second M2 checker mirror must copy byte-identical current main tool",
+      "artifact": {
+        "id": 11960752841,
+        "digest": "sha256:383aa1dbf1229fa5000004b1ba349022885c488af0df1dfe16bb5289f19aff7e"
+      },
+      "approved_second_sync_commit": "0a120eec1d503c5e4b79ad69800c40e74dc244cc",
+      "approved_parent": "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c",
+      "historical_main_source": "d902842a31fd6b032a5f1bab515b93c21f28b0aa",
+      "historical_approved_tool_git_blob": "86c213e122c5c0a7b636105f3be4d1fb2ecc7899",
+      "current_main_observed": "529af37f710d09426f8f1422e8dbcf29157548ad",
+      "current_main_tool_git_blob": "cf46d814142b09aeaa10053d4c7b8ac581d08d33",
+      "main_ancestry_from_approval": "ahead",
+      "cause": "Historical second allowed checker sync compares its old immutable blob with mutable live main checker, retroactively invalidating previously main-approved one-file commit even under a stable audit window."
+    }
   },
   "current_handoff_attestation": {
     "H": "0c8f3bb68adcaf417aae737e1cdf981d936ab145",
