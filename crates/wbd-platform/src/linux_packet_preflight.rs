@@ -224,6 +224,14 @@ pub struct PacketPreflightBorrow<'a> {
     _fd:&'a OwnedFd,
     _guard:ReadyBatchGuard<'a>,
 }
+impl PacketPreflightBorrow<'_> {
+    /// Internal test-only visibility: inert protocol-zero FD never leaves
+    /// its RAII guard; no production RX dispatch is introduced.
+    #[cfg(test)]
+    pub(crate) fn test_only_inert_raw_fd(&self)->c_int {
+        self._fd.as_raw_fd()
+    }
+}
 
 /// Opens an inactive protocol-0 AF_PACKET FD, only after validating actual
 /// ifname/index/MTU and a positive effective CAP_NET_RAW check.

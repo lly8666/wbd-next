@@ -25,6 +25,10 @@ pub mod linux_rx_batch;
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_packet_preflight;
+/// Strict pure AF_PACKET sockaddr_ll RX metadata gate and inert test-only RX.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_raw_rx_contract;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
