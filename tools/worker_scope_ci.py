@@ -16,7 +16,7 @@ from tools import governance as g
 
 G2_BASE = "83bd720368b9be68b3c4c94d7462d20cf4d796db"
 
-G2_ACTIVATION_MAX_COMMITS = 96  # per_page=100; no truncated audit may pass
+G2_ACTIVATION_MAX_COMMITS = 99  # per_page=100; full 99 must be visible, 100 rejected
 
 def complete_g2_ancestry(compare):
     """Validate a COMPLETE non-diverged bounded immutable GitHub commit page."""
@@ -46,10 +46,25 @@ def audit_worker_history(api,role,source,control_sha):
         sync={}
         if (role["id"]=="M3" and not ancestor and detail["parents"]==1
                 and detail["paths"]==[M3_G2_REFRESH_PATH]):
-            sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
+            # The original historical sync is immutable. A SECOND one-shot
+            # parent permits M3 to receive our current checker and full 98-page
+            # continuation; arbitrary root changes still fail.
+            item=api.get(f"commits/{sha}?per_page=1")
+            parents=item.get("parents",[])
+            g.need(len(parents)==1,"M3 tool sync must have one parent")
+            if parents[0].get("sha")==M3_G2_SECOND_REFRESH_PARENT:
+                sync=review_m3_g2_second_single_file_refresh(api,role,sha,control_sha)
+            else:
+                sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
         if (role["id"]=="M2" and not ancestor and detail["parents"]==1
                 and detail["paths"]==[M2_G2_REFRESH_PATH]):
-            sync=review_m2_g2_single_file_refresh(api,role,sha,control_sha)
+            item=api.get(f"commits/{sha}?per_page=1")
+            parents=item.get("parents",[])
+            g.need(len(parents)==1,"M2 tool sync must have one parent")
+            if parents[0].get("sha")==M2_G2_SECOND_REFRESH_PARENT:
+                sync=review_m2_g2_second_single_file_refresh(api,role,sha,control_sha)
+            else:
+                sync=review_m2_g2_single_file_refresh(api,role,sha,control_sha)
         if detail["parents"]==2 and not ancestor:
             if role["id"]=="M3":
                 sync_paths=review_m3_main_sync(api,role,sha,control_sha)
@@ -90,6 +105,9 @@ M0_G2_REFRESH_ANCHOR = "c00356739359db90a864f0894d8cdd965b2df132"
 M0_M3_HISTORICAL_TOOL_SOURCE = "404d37028a4c0d9949c379647dd1299609822cc7"
 M0_M3_HISTORICAL_TOOL_BLOB = "1d27c4ec8d02035fc53d4e657f2cd7427373f8df"
 M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
+# The 014 M3 worker H is already at 95 ancestry commits; one strict tool
+# mirror + evidence S + cursor-only H require 98, within GitHub's full 100.
+M3_G2_SECOND_REFRESH_PARENT = "5eafc5065c5ee1b0d6d67610a458e970e08f3d75"
 
 # Exact one-time M2 root checker refresh after the old worker 64-commit
 # history limit. The source-owned script remains the MAIN-owned version,
@@ -97,6 +115,17 @@ M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
 M2_G2_REFRESH_PARENT = "018a07c880473a896d40c0d97a59250212f7dad8"
 M2_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
 M0_M2_REFRESH_CONTROL_ANCHOR = "af8a8b40853845b6e876224d579bfb567df48e6c"
+# Fix a retroactive policy bug: compare the original M2 mirror with the
+# immutable main-owned reviewer SOURCE, never with a changing live main blob.
+M0_M2_HISTORICAL_TOOL_SOURCE = "e9a4455dd4c20253a4e740e76bf7339fa4a6cc25"
+M0_M2_HISTORICAL_TOOL_BLOB = "26983e630ab2fbf28466dac457923904aaa6be60"
+# One new permitted worker-only checker transition off the exact blocked
+# M2 evidence S. It does NOT grant general tools/, merges, or root CI.
+M2_G2_SECOND_REFRESH_PARENT = "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c"
+# M3 second checker mirror is already complete. Freeze its original approved
+# source, too, before any further main tool change invalidates its history.
+M0_M3_SECOND_TOOL_SOURCE = "940498ccb2f3834e4287813bb250ebfb97f507fb"
+M0_M3_SECOND_TOOL_BLOB = "817934b16c6e088069ad9b4c265c93daacda7759"
 
 def review_m2_g2_single_file_refresh(api,role,sha,control_sha):
     """Approve just one exact-parent byte-identical M0 checker sync on M2."""
@@ -108,19 +137,48 @@ def review_m2_g2_single_file_refresh(api,role,sha,control_sha):
     parents=item.get("parents",[])
     g.need(len(parents)==1 and parents[0].get("sha")==M2_G2_REFRESH_PARENT,
            "M2 checker refresh requires exact frozen blocked worker H")
-    anchor=api.get(f"compare/{M0_M2_REFRESH_CONTROL_ANCHOR}...{control_sha}?per_page=1")
-    g.need(anchor.get("status") in {"ahead","identical"},
-           "M2 checker refresh control anchor not on authoritative main")
-    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={control_sha}")
+    for anchor_sha in (M0_M2_REFRESH_CONTROL_ANCHOR,M0_M2_HISTORICAL_TOOL_SOURCE):
+        anchor=api.get(f"compare/{anchor_sha}...{control_sha}?per_page=1")
+        g.need(anchor.get("status") in {"ahead","identical"},
+               "historical M2 checker approval source is not on authoritative main")
+    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={M0_M2_HISTORICAL_TOOL_SOURCE}")
     actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
     g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
-           reviewed.get("sha")==actual.get("sha") and
-           isinstance(actual.get("sha"),str) and bool(actual["sha"]),
-           "M2 checker refresh must copy byte-identical live M0 tool")
+           reviewed.get("sha")==M0_M2_HISTORICAL_TOOL_BLOB and
+           reviewed.get("sha")==actual.get("sha"),
+           "M2 old checker mirror does not match immutable main-approved blob")
     return {"approved_m2_g2_tool_refresh":True,
             "first_parent":M2_G2_REFRESH_PARENT,
             "sync_paths":[M2_G2_REFRESH_PATH]}
 
+
+def review_m2_g2_second_single_file_refresh(api,role,sha,control_sha):
+    """One exact new M2 tool sync: sole file/direct parent and main-owned blob.
+
+    This is a bridge until M2 runs the corrected checker on its worker branch;
+    no generic tool write or checkout-based scope bypass is authorized.
+    """
+    g.need(role["id"]=="M2","second M2 checker refresh is M2-only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M2_G2_REFRESH_PATH],
+           "second M2 tool sync must be sole path in single-parent commit")
+    item=api.get(f"commits/{sha}?per_page=1")
+    parents=item.get("parents",[])
+    g.need(len(parents)==1 and
+           parents[0].get("sha")==M2_G2_SECOND_REFRESH_PARENT,
+           "second M2 checker mirror must directly follow blocked evidence S")
+    for anchor_sha in (M0_M2_REFRESH_CONTROL_ANCHOR,M0_M2_HISTORICAL_TOOL_SOURCE):
+        anchor=api.get(f"compare/{anchor_sha}...{control_sha}?per_page=1")
+        g.need(anchor.get("status") in {"ahead","identical"},
+               "second M2 checker mirror missing immutable reviewed main ancestry")
+    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={control_sha}")
+    actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           bool(reviewed.get("sha")) and reviewed.get("sha")==actual.get("sha"),
+           "second M2 checker mirror must copy byte-identical current main tool")
+    return {"approved_m2_g2_tool_refresh_v2":True,
+            "first_parent":M2_G2_SECOND_REFRESH_PARENT,
+            "sync_paths":[M2_G2_REFRESH_PATH]}
 
 def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
     """One reviewed M0-owned script mirror, anchored to one M3 first parent."""
@@ -154,6 +212,33 @@ def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
             "sync_paths":[M3_G2_REFRESH_PATH]}
 
 
+def review_m3_g2_second_single_file_refresh(api,role,sha,control_sha):
+    """Second one-shot exact parent + live M0 tool blob; never arbitrary tools/."""
+    g.need(role["id"]=="M3","second M3 checker refresh is M3-only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M3_G2_REFRESH_PATH],
+           "second M3 checker refresh must be single parent, sole root file")
+    item=api.get(f"commits/{sha}?per_page=1")
+    parents=item.get("parents",[])
+    g.need(len(parents)==1 and
+           parents[0].get("sha")==M3_G2_SECOND_REFRESH_PARENT,
+           "second M3 checker refresh must follow exact blocked M3 H")
+    for anchor_sha in (M0_G2_REFRESH_ANCHOR,M0_M3_HISTORICAL_TOOL_SOURCE,
+                       M0_M3_SECOND_TOOL_SOURCE):
+        anchor=api.get(f"compare/{anchor_sha}...{control_sha}?per_page=1")
+        g.need(anchor.get("status") in {"ahead","identical"},
+               "second M3 checker approval source not on immutable main history")
+    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={M0_M3_SECOND_TOOL_SOURCE}")
+    actual=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==M0_M3_SECOND_TOOL_BLOB and
+           reviewed.get("sha")==actual.get("sha"),
+           "second M3 checker mirror not byte-identical to immutable M0 source")
+    return {"approved_m3_g2_tool_refresh_v2":True,
+            "first_parent":M3_G2_SECOND_REFRESH_PARENT,
+            "sync_paths":[M3_G2_REFRESH_PATH]}
+
+
 M0_CRYPTO_LOCK_SOURCE = "1ae49bd644a4624db331c80d2dce6a8d181189e0"
 # One reviewed M2 restoration to the source that contains the M0-authenticated
 # Rust ingress AND the fixed historical G2 selector. Not generic permission.
@@ -181,12 +266,28 @@ def verify_worker_commits(role, commits):
                    "M3 one-time checker refresh violated M0 pin")
             checked += 1
             continue
+        if item.get("approved_m3_g2_tool_refresh_v2") is True:
+            g.need(role["id"]=="M3" and item.get("parents")==1 and
+                   item.get("first_parent")==M3_G2_SECOND_REFRESH_PARENT and
+                   item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
+                   item.get("paths")==[M3_G2_REFRESH_PATH],
+                   "second one-time M3 checker mirror violated M0 pin")
+            checked += 1
+            continue
         if item.get("approved_m2_g2_tool_refresh") is True:
             g.need(role["id"]=="M2" and item.get("parents")==1 and
                    item.get("first_parent")==M2_G2_REFRESH_PARENT and
                    item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
                    item.get("paths")==[M2_G2_REFRESH_PATH],
                    "M2 exact checker refresh violated M0 policy pin")
+            checked += 1
+            continue
+        if item.get("approved_m2_g2_tool_refresh_v2") is True:
+            g.need(role["id"]=="M2" and item.get("parents")==1 and
+                   item.get("first_parent")==M2_G2_SECOND_REFRESH_PARENT and
+                   item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
+                   item.get("paths")==[M2_G2_REFRESH_PATH],
+                   "second M2 checker mirror violated M0 strict policy pin")
             checked += 1
             continue
         if item.get("parents")==2:
