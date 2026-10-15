@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-LINUX-RX-BATCH-005",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "2a4bc0e856f84042da292a4fae93d2a32d2d10db",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "ACTUAL_NATIVE_LINUX_X86_64_GNU_RECVMMSG_UNPRIVILEGED_UDP_FIXTURE_ONLY",
+  "assignment": {
+    "main_decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave2.md",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "permissions_unchanged": true,
+    "allowed_changes": [
+      "crates/wbd-platform/src/linux_rx_batch.rs",
+      "crates/wbd-platform/src/lib.rs"
+    ]
+  },
+  "implementation": {
+    "symbol": "wbd_platform::linux_rx_batch::receive_ready_udp",
+    "syscall": "Linux GNU x86_64 libc recvmmsg(fd,mmsghdr*,vlen<=32,MSG_DONTWAIT|MSG_TRUNC,NULL)",
+    "return_contract": "Bounded stack-fixed RxBatchOutcome {requested, attempted, received, status, entries[32]}; Complete vs Truncated with kernel wire_len and bounded caller buffer capacity, never exposes truncation to parser",
+    "buffer_ownership": "Caller provides &mut [&mut[u8]] unique owned buffers; kernel writes only for syscall duration; no heap, packet clone, mutex or per-record Arc in RX receive hot path",
+    "synchronization": "Reuse R1 BorrowFence.try_enter_ready atomic CAS guard: stop blocks new call and cannot consider in-flight borrowed writable buffer drained until syscall completion",
+    "parser_gate": "parse_complete refuses unused, truncated or invalid capacity; calls previously proven strict one-packet IPv4/TCP parser only with fully received bytes, returns UnauthenticatedData<'a> (no AEAD/PN replay/business delivery)",
+    "api_safety": "Narrow existing crate-level #[deny(unsafe_code)] with #[allow(unsafe_code)] only on cfg Linux x86_64 GNU FFI module; audited repr(C) CIovec/CMsghdr/CMmsghdr offsets, null timespec; no root Cargo/lock or ABI ownership edit",
+    "semantics": "EAGAIN returns no received packet, no retries/waits/spin; EINTR/unknown errno marked no-data uncertain status only in deterministic classifier test; short/truncated whole datagram consumed and never treated as complete, no arbitrary stream/HOL"
+  },
+  "native": {
+    "source_sha": "2a4bc0e856f84042da292a4fae93d2a32d2d10db",
+    "run_id": 38669449668,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "status": "SUCCESS",
+    "rust_toolchain": "rustc 1.85.1",
+    "native_target": "x86_64-unknown-linux-gnu",
+    "compile_once": true,
+    "build_job": 116208843012,
+    "consumer_job": 116208933883,
+    "tests_passed": 42,
+    "tests_failed": 0,
+    "prior_r1_tests": 31,
+    "new_tests": 11,
+    "full_artifact_review": "Both ZIPs directly downloaded and SHA256-checked; manifest/source/run ID/binary and result test.log SHA validated, 42 test names 42 ok lines and test result 42 passed 0 failed independently inspected.",
+    "build_artifact": {
+      "id": 11943329466,
+      "zip_sha256": "df9279406045ee6ba2db9c21b8d53888af235b955d4ec635927ccc4c5c8addee",
+      "manifest_sha256": "ba379d171c702442f425c823c4817198061e1c344b3c05c460aff9349eec1d82",
+      "binary_sha256": "940714282c4ea3f2507af0992e944dcde9ac36826f1e6338e708452c7d6864a1",
+      "binary_bytes": 9624512
+    },
+    "result_artifact": {
+      "id": 11943249502,
+      "zip_sha256": "8f1e47b9d27d68f35699c95b8fed5846c8327b52129a0fddf62c3f93e4d7c449",
+      "result_json_sha256": "0213b633f42690c419bf6011b1b549d6bb5f36fd21e73d982a83be2587028720",
+      "test_log_sha256": "ee49b8a7204aacf0a828093fc87e3787f94ff2ec81c6b8f7ab9846ee8daa3c09"
+    },
+    "new_test_names": [
+      "r1_linux_recvmmsg_native_abi_layout_and_flags",
+      "r1_linux_recvmmsg_actual_kernel_udp_zero_and_eagain",
+      "r1_linux_recvmmsg_actual_kernel_udp_one_exact_owned_slice",
+      "r1_linux_recvmmsg_actual_kernel_udp_32_of_33_cap_and_next_ready",
+      "r1_linux_recvmmsg_actual_kernel_udp_partial_ready_prefix_and_no_hol",
+      "r1_linux_recvmmsg_actual_kernel_udp_truncation_no_parse_and_good_after",
+      "r1_linux_recvmmsg_actual_kernel_udp_corrupt_packet_then_valid_no_hol",
+      "r1_linux_recvmmsg_deterministic_classifier_eintr_short_and_trunc_flags",
+      "r1_linux_recvmmsg_preflight_empty_buffer_never_consumes_kernel_datagram",
+      "r1_linux_recvmmsg_stop_borrow_fence_pending_and_no_post_stop_mutation",
+      "r1_linux_recvmmsg_stop_vs_registration_race_atomic"
+    ],
+    "validation_provenance": {
+      "real_linux_kernel_udp_recvmmsg": "PASS; 0/1/partial/32/33, real EAGAIN, short buffer MSG_TRUNC metadata, actual next independent ready datagram and malformed-IP payload no HOL",
+      "native_x86_64_gnu_abi": "PASS audited sizeof iovec=16, msghdr=56, mmsghdr=64 and offsets",
+      "stop_buffer_borrow": "PASS direct BorrowFence guard and deterministic stop race; no actual external driver shutdown",
+      "unknown_errno_eintr_or_inconsistent_msg_len": "PASS PURE CLASSIFIER INJECTION ONLY, NOT KERNEL-INDUCED",
+      "strict_parser_return": "PASS CPU-side only, ciphertext remains UNAUTHENTICATED"
+    }
+  },
+  "history_failures": [
+    {
+      "source_sha": "64922c7c4db309c7ba7fad2042444191cd1fb6c4",
+      "workflow": "worker-native",
+      "run_id": 38669395372,
+      "result": "FAIL_COMPILE",
+      "cause": "two test assertions compared &[u8; N] with array [u8;N]; fixed at source 2a4bc0e...",
+      "retained": true
+    },
+    {
+      "source_sha": "2a4bc0e856f84042da292a4fae93d2a32d2d10db",
+      "workflow": "r0-fake-platform",
+      "run_id": 38669449646,
+      "result": "FAIL_HISTORICAL_UNFILTERED_R0_COUNT",
+      "actual": "49/49 Rust assertions PASS (7 r0 + 42 r1), old branch R0 consumer expected only original 7 and returned nonzero; M0 root-owned exact-filter fix exists on separate main SOURCE",
+      "retained": true
+    }
+  ],
+  "same_source_runs": [
+    {
+      "id": 38669449653,
+      "workflow": "r0-static-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38669449693,
+      "workflow": "g2-scoped-bootstrap-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38669449554,
+      "workflow": "r0-cross-abi",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38669449658,
+      "workflow": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38669449646,
+      "workflow": "r0-fake-platform",
+      "result": "FAIL_HISTORIC_FILTER",
+      "test_assertions": "49/49 PASS"
+    }
+  ],
+  "not_run": [
+    "real AF_PACKET raw IPv4/TCP receive or recvmmsg with raw sockets",
+    "Npcap/Wintun/Windows native or ARM/musl native",
+    "kernel RX interface capture direction/VLAN/BPF/filter and device shutdown",
+    "user Go V4 trusted cold admission/session exporter",
+    "integrated M3 AEAD+PN replay delivery on exactly this source",
+    "live raw network, physical tests, bandwidth/CPU/p99 production perf"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SCOPED_NATIVE_RECVMMSG_UDP_FIXTURE_REVIEW_ONLY"
+}
