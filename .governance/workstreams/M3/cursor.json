@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 12,
-  "checkpoint_sha": "5a0bc5ad6d2689a54dc5eb7428c778fb7239e263",
+  "sequence": 13,
+  "checkpoint_sha": "b4ed727b38cbf5166c812ba63af68080d0099951",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-BLOCKID-SCOPE-009",
-  "current_task": "M0-assigned authenticated FEC wire32-to-extended64 scope and retirement helper completed: strict old-Go 56B wire, trusted epoch/direction/generation, fail-closed half-space, FFFFFFFF->1 wrap, bounded ±65535 distance, Heavy3s/Compact10s and monotone retirement, no re-delivery after retired.",
-  "why_now": "New main registry M0 seq38 assigned R1-M3-FEC-BLOCKID-SCOPE-009 after successful M3 own script/G2 H; need prevent ambiguous late parity and u32 wrap and stale cross-generation ID reuse before FEC-on integration.",
-  "done_when": "At tested SOURCE dcee7e85 native Rust compiled-once 67/67 PASS, including12 new BLOCKID and55 existing; seven exact SOURCE Actions PASS, Governance38598331481 attempt1 FAIL on concurrent main control drift, attempt2 SUCCESS on same SOURCE; evidence S 5a0bc5ad then cursor-only H seq12 and own H Governance checked. No production V4 session exporter or authenticated generation source assumed.",
-  "next_action": "Await explicit M0 task. M0 must provide truly authenticated epoch/direction/generation and trusted extended BlockID anchor from established V4 owner; until proven no FEC-on product admission. Do not infer generation from old Go WF header. No M3 root tools/ABI/Cargo/CI edits; optional next atom only when assigned.",
+  "task_id": "R1-M3-FEC-RETIRE-PRESSURE-010",
+  "current_task": "M0-assigned FEC RX Heavy→Compact→Retired pressure/catch-up hardened from native proven counterexample. Added 8 fake-monotonic clock/race/adversarial tests; fixed late Heavy timer to start Compact at original first_seen+3s, so one overdue callback also enforces +10s Compact deadline. Preserves pressure/normal transitions.",
+  "why_now": "M0 assigned retire-pressure-010 explicitly required counterexample before codec change. Test-only SOURCE 538a890 native 74/75 caught overdue callback preserving Compact too long; minimal scoped RX fix then compiled-once 75/75 and frozen R0+G2+Governance passed.",
+  "done_when": "Final tested SOURCE e8d62776 75/75 scoped R1 native PASS (8 new +67 existing), seven exact SOURCE Actions SUCCESS incl Governance38667240599 attempt2 after main drift attempt1. Error history retained: first test-only build fail baa02cb, executable fail 538a890, fix e8d62776. Evidence S b4ed727b Governance38667642957 attempt1 SUCCESS; cursor-only H seq13 checked separately.",
+  "next_action": "No unassigned M3 development. Await next formal main registry task. M0 integrate after actual authenticated V4 epoch/direction/trusted-generation, AEAD+PN replay, and real FEC business proof; do NOT claim production or invent old Go exporter. No M3 root/shared ABI/CI changes.",
   "unverified": true,
-  "last_tested_source": "dcee7e85424064581ada22544883b3acd0eaaca5",
+  "last_tested_source": "e8d62776ebf3258c038155f4637bd1524d6282b7",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-BLOCKID-SCOPE-009.json"
+    "docs/evidence/M3/R1-M3-FEC-RETIRE-PRESSURE-010.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/07-FEC.md",
-    "docs/devlog/M3/R1-M3-REPLAY-003.md",
-    "docs/devlog/M3/R1-M3-LINK-REASSEMBLY-004.md",
     "docs/devlog/M3/R1-M3-FEC-SCALAR-005.md",
     "docs/devlog/M3/R1-M3-FEC-TX-006.md",
     "docs/devlog/M3/R1-M3-FEC-RX-007.md",
-    "docs/devlog/M3/R1-M3-FEC-BLOCKID-SCOPE-009.md"
+    "docs/devlog/M3/R1-M3-FEC-BLOCKID-SCOPE-009.md",
+    "docs/devlog/M3/R1-M3-FEC-RETIRE-PRESSURE-010.md",
+    "docs/evidence/M3/R1-M3-FEC-RETIRE-PRESSURE-010.json"
   ],
-  "partial_summary": "M3 prior seq11 H d81c4afef2a9d70a36ca2727f4640d3bc30171f1 Governance38589331920 SUCCESS; main M0 seq38 assigned R1-M3-FEC-BLOCKID-SCOPE-009 registry rev2 epoch1 CODE SOURCE6f5c891d Governance38592016440 and five-crate-native38592016227 SUCCESS. M3 new FecBlockIdOwner code SOURCE dcee7e85424064581ada22544883b3acd0eaaca5: strictly post-auth old-Go WF56 frame and trusted generation-aware extended BlockID, modulo32 bounded max65535, ID0 reject, FFFFFFFF->1, halfspace ambiguity fail closed, Heavy3s/Compact10s, compact quota floor and no resurrection, old-Go byte fixture/actual FecTx+FecRx dedup. Rust compiled-once worker38598331547 67/67 PASS (12 new+55 prior), binary sha256 bfdad8b43e8cd011d0bb0deb51a4d558924d7ccf6c761e8e2ee3d3a049cfe453. Same SOURCE seven workflows all SUCCESS, but Governance38598331481 attempt1 FAIL control or source moved mid audit because concurrent main update, rerun attempt2 SUCCESS, no code changes. Evidence S 5a0bc5ad. H seq12 cursor-only checkpoint S; H own Governance pending. Real external V4 authenticated generation proof, original Go pkg native new task, driver, SIMD WinARM/perf/product/physical NOT_RUN; root shared ABI/CI/Cargo unchanged. After H, wait for explicit new assignment."
+  "partial_summary": "M3 seq12 Hfaa01894 Governance38599242646 attempt3 SUCCESS. New M0 main rev2 epoch1 assignment FEC-RETIRE-PRESSURE-010 from M0 SOURCE7d291133 Gov38635343395/G2 38635343384 PASS. Test-only SOURCEbaa02cb worker38667039100 BUILD FAIL from test tuple of unsized slice, fixed test SOURCE538a890 worker38667119023 74/75 actual PASS/FAIL: r1_retire_late_heavy_timer_catches_up_through_compact_10s_without_resurrection observed (Heavy,Compact)=(0,1) at now=first+3s+10s+1 vs expected (0,0). Root cause FecRxOwner overdue timer incorrectly set Compact start to current callback time. CODE SOURCEe8d62776ebf3258c038155f4637bd1524d6282b7 fixed only RX clock transfer by compact_heavy_at(original Heavy deadline); pressure/normal transition still owner now. Native compiled-once worker38667240535 Rust x64 75/75 PASS (8 new+67 prior), binary sha256 297083a86dad20e7a7950b4591e9a8ede9736252fbbac8936575b4cfeeee472e. All seven exact SOURCE Actions PASS: native38667240535, oldGo LINK/FEC38667240561, codec38667240611, framing38667240690, G2 38667240693, audit38667240651, Governance38667240599 attempt2 SUCCESS (attempt1 concurrent main moved mid audit). Evidence S b4ed727b Governance38667642957 attempt1 PASS. Cursor-only H seq13 checkpoint S; H Governance pending. Product V4 exporter, live AEAD+PN/FEC-on, ISA-L, WinARM/performance/physical NOT_RUN, M3 root/ABI/CI unchanged. Await next assignment."
 }
