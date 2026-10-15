@@ -12,6 +12,7 @@ use wbd_engine::memory::Arena;
 use wbd_engine::runtime::{TxOwner,TxKind,QueueLimits};
 use wbd_platform::ipv4_tcp::{build,Ipv4Tuple,Presentation,PacketPersona};
 use wbd_platform::linux_batch::submit_connected_udp;
+use wbd_platform::linux_rx_batch::{receive_ready_udp,parse_complete,RxEntry,RxStatus,ParseGateError};
 use wbd_platform::rx_ipv4_tcp::{parse_data_packet,TrustedRx,RxError};
 use wbd_platform::r1::{BorrowFence,BatchResult,StopResult};
 use wbd_platform::{TxBatchOutcome,TxDisposition,TxError};
@@ -189,6 +190,100 @@ fn r1_m0_ipv4_tcp_parser_checksum_forgery_cannot_bypass_aead_or_hol(){
  assert_eq!(opened.pn,0);
  assert_eq!(opened.payload,b"\x00first\xff");
  assert_eq!(rx.stats().delivered,1);
+ assert_eq!(owner.stop(),0);
+ drop(packets);drop(ready);
+ assert_eq!(arena.drain_returns(),3);
+ assert_eq!(arena.stop().loaned,0);
+}
+
+
+#[test]
+fn r1_m0_real_kernel_send_and_recvmmsg_batch_strict_parse_aead_first_delivery() {
+ let(mut arena,mut owner,ready,originals,packets)=make();
+ let (tx,rx_sock)=sockets();
+ let tx_fence=BorrowFence::default();let rx_fence=BorrowFence::default();
+ assert_eq!(submit_connected_udp(&tx,&packets,&tx_fence),TxBatchOutcome::copied_all(3));
+ let mut slots=[[0u8;576];3];
+ let mut refs:Vec<&mut [u8]>=slots.iter_mut().map(|s|s.as_mut_slice()).collect();
+ let outcome=receive_ready_udp(&rx_sock,&mut refs,&rx_fence);
+ assert_eq!(outcome.received,3);
+ assert_eq!(outcome.status,RxStatus::Ready);
+ let trusted=TrustedRx{tuple:tuple(),persona:PacketPersona::Legacy,mtu:576,authenticated_options:None};
+ let mut receiver=ReplayProtectedLaneRx::new(keys(),536,ReplayWindowConfig{
+  pn_per_second:1000,cache_horizon_ms:100,fec_horizon_ms:0,rtt_ms:0,metadata_budget_bytes:80
+ }).unwrap();
+ let expected:[&[u8];3]=[b"\x00first\xff",b"\x01second",b"\x00third"];
+ for i in 0..3 {
+  let entry=outcome.entry(i).unwrap();
+  assert_eq!(entry, RxEntry::Complete{len:packets[i].bytes().len()});
+  let raw=&slots[i][..packets[i].bytes().len()];
+  assert_eq!(raw,packets[i].bytes());
+  verify(raw,&originals[i],ready[i].record.metadata());
+  let parsed=parse_complete(entry,&slots[i],trusted).unwrap(); // STILL UNAUTHENTICATED
+  assert_eq!(parsed.ciphertext,&originals[i]);
+  assert_eq!(parsed.extend_seq_against(ready[i].record.metadata().seq.0),
+    Ok(ready[i].record.metadata().seq.0));
+  let mut sealed=parsed.ciphertext.to_vec();
+  let opened=receiver.open_unique_in_place(&mut sealed).unwrap();
+  assert_eq!(opened.pn,i as u64);
+  assert_eq!(opened.payload,expected[i]);
+ }
+ assert_eq!(receiver.stats().delivered,3);
+ tx.send(packets[0].bytes()).unwrap(); // replay over a second genuine kernel receive
+ let mut dup_raw=[0u8;576];
+ let mut dup_views=[dup_raw.as_mut_slice()];
+ let dup_out=receive_ready_udp(&rx_sock,&mut dup_views,&rx_fence);
+ assert_eq!(dup_out.received,1);
+ let parsed=parse_complete(dup_out.entries[0],&dup_raw,trusted).unwrap();
+ let mut duplicate=parsed.ciphertext.to_vec();
+ assert_eq!(receiver.open_unique_in_place(&mut duplicate),Err(UniqueOpenError::Duplicate));
+ assert_eq!(receiver.stats().delivered,3);
+ assert_eq!(tx_fence.outstanding(),0);
+ assert_eq!(rx_fence.wait_drained_until(Instant::now()),StopResult::Drained);
+ assert_eq!(owner.stop(),0);
+ drop(packets);drop(ready);
+ assert_eq!(arena.drain_returns(),3);
+ assert_eq!(arena.stop().loaned,0);
+}
+#[test]
+fn r1_m0_real_kernel_recvmmsg_truncation_and_forged_checksum_no_aead_hol(){
+ let(mut arena,mut owner,ready,_,packets)=make();
+ let (tx,rx_sock)=sockets();
+ tx.send(&[0x11u8;200]).unwrap();
+ let mut forged=packets[0].bytes().to_vec();
+ forged[40]^=0x80;
+ forged[36..38].copy_from_slice(&[0,0]);
+ let tcp=&forged[20..];let mut pseudo=Vec::from(&forged[12..20]);
+ pseudo.extend_from_slice(&[0,6]);
+ pseudo.extend_from_slice(&(tcp.len() as u16).to_be_bytes());
+ pseudo.extend_from_slice(tcp);
+ let crc=checksum(&pseudo);
+ forged[36..38].copy_from_slice(&crc.to_be_bytes());
+ tx.send(&forged).unwrap();
+ tx.send(packets[0].bytes()).unwrap();
+ let mut small=[0xa5u8;8];let mut bad=[0u8;576];let mut good=[0u8;576];
+ let mut views=[small.as_mut_slice(),bad.as_mut_slice(),good.as_mut_slice()];
+ let fence=BorrowFence::default();
+ let got=receive_ready_udp(&rx_sock,&mut views,&fence);
+ assert_eq!(got.received,3);
+ assert_eq!(got.entry(0),Some(RxEntry::Truncated{wire_len:200,capacity:8}));
+ let trusted=TrustedRx{tuple:tuple(),persona:PacketPersona::Legacy,mtu:576,authenticated_options:None};
+ assert_eq!(parse_complete(got.entries[0],&small,trusted),Err(ParseGateError::Truncated));
+ let suspicious=parse_complete(got.entries[1],&bad,trusted).unwrap();
+ assert_eq!(suspicious.ciphertext,&forged[40..]);
+ let mut rx=ReplayProtectedLaneRx::new(keys(),536,ReplayWindowConfig{
+  pn_per_second:1000,cache_horizon_ms:100,fec_horizon_ms:0,rtt_ms:0,metadata_budget_bytes:80
+ }).unwrap();
+ let mut tampered=suspicious.ciphertext.to_vec();
+ assert!(matches!(rx.open_unique_in_place(&mut tampered),Err(UniqueOpenError::InvalidRecord(_))));
+ assert_eq!(rx.max_seen(),None);
+ let authenticated=parse_complete(got.entries[2],&good,trusted).unwrap();
+ let mut original=authenticated.ciphertext.to_vec();
+ let opened=rx.open_unique_in_place(&mut original).unwrap();
+ assert_eq!(opened.pn,0);
+ assert_eq!(opened.payload,b"\x00first\xff");
+ assert_eq!(rx.stats().delivered,1);
+ assert_eq!(fence.wait_drained_until(Instant::now()),StopResult::Drained);
  assert_eq!(owner.stop(),0);
  drop(packets);drop(ready);
  assert_eq!(arena.drain_returns(),3);

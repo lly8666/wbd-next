@@ -17,6 +17,10 @@ pub mod rx_ipv4_tcp;
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_batch;
+/// Bounded synchronous Linux recvmmsg RX; UDP kernel fixture, never AF_PACKET.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_rx_batch;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
