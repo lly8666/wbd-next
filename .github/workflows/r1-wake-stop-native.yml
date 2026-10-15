@@ -123,7 +123,7 @@ jobs:
                     'r1_ready_owner_stop_and_fake_age_expiry_have_no_ready_resurrection',
                     'r1_ready_owner_p0_component_warmup_repeat_provenance']
           ok=(int(os.environ['TEST_EXIT'])==0 and count==71 and len(names)==71
-              and len(set(names))==29 and all(x in names for x in expected))
+              and len(set(names))==71 and all(x in names for x in expected))
           record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
                   'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
