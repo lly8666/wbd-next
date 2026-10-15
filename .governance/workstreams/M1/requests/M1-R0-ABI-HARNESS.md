@@ -23,3 +23,6 @@ Native `worker-native-tests.yml` [38667033577](https://github.com/lly8666/wbd-ne
 ## R1-M1-RX-READY-BATCH-005 repeated worker branch stale harness
 
 Exact worker SOURCE `e0a9f64d5c17d8085c52f09a083b9689535f00d1` compiled native worker [38669368706](https://github.com/lly8666/wbd-next/actions/runs/38669368706) 51/51 PASS. The same-source R0 native ABI workflow [38669368889](https://github.com/lly8666/wbd-next/actions/runs/38669368889) **FAILED** because the legacy branch-local unfiltered root harness demands literal `"3 passed"`, while Rust ABI test binary returned rc0 and 54/54 PASS. Main already contains a corrected R0-prefixed selector; please M0 coordinate shared harness synchronization/merge. This failed workflow is explicitly NOT_PASS and does not authorize M1 root edits.
+
+## Latest M1 006 observed root CI mismatch
+At exact source d60a69312cc9878e3b09a1598280c89dfd4da6d8, worker-native run 38674812277 passed 63 tests, whereas old shared R0 ABI workflow 38674812438 failed after its Rust binary passed 66 tests. M0 remains owner of the shared ABI test selector and worker branch synchronization. Governance code-source run 38674812385 separately failed twice because main moved during audit.

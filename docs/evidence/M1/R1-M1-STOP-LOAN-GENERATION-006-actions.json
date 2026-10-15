@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-STOP-LOAN-GENERATION-006",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "d60a69312cc9878e3b09a1598280c89dfd4da6d8",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "M1_OWNER_LOCAL_SCOPED_GENERATION_NATIVE_ONLY",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38674812277,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38674812277",
+    "runner": "ubuntu-24.04 linux x86_64",
+    "toolchain": "rustc 1.85.1",
+    "build_job": 116225894109,
+    "consume_job": 116225986089,
+    "compiled_once": true,
+    "passed": 63,
+    "failed": 0,
+    "previous_r1": 51,
+    "new_generation_r1": 12,
+    "filtered_r0_tests": 3,
+    "result_artifact_id": 11945891464,
+    "build_artifact_id": 11945214562,
+    "result_url": "https://github.com/lly8666/wbd-next/actions/runs/38674812277/artifacts/11945891464",
+    "result_json_sha256": "4f46500a2bc74fca81b2db70e6b1407bc2f672e6150c26e21c14d2e1222f910c",
+    "test_log_sha256": "f84d0e3664ef4315df5a8d069e5848ab2f5d35f739004e89c3ebb70468ee5805",
+    "binary_sha256": "83a1cafcc3679ee51263d8f164e04fc7eecba53d56fb71e56fad9993e96dd286",
+    "direct_artifact_review": "Downloaded GH artifact11945891464 ZIP to container, opened result.json and test.log, computed independent SHA256 digests and matched source_sha, run id, 63 individual test names, new 12 r1_scope_ tests, log and binary SHA recorded in consumer.",
+    "new_tests": [
+      "r1_scope_empty_capacity_zero_is_a_nonallocating_ready_probe",
+      "r1_scope_one_mixed_tx_rx_exact_loan_stop_fence_and_last_return",
+      "r1_scope_exact_32_tx_and_rx_use_caller_preallocated_storage",
+      "r1_scope_33_split_32_plus_one_both_directions_no_tail_loss",
+      "r1_scope_two_lane_generations_stale_callback_cannot_resubmit_ciphertext",
+      "r1_scope_aba_restarted_owner_same_ids_rejects_old_token",
+      "r1_scope_rotate_does_not_wait_old_loan_first_new_fresh_immediate",
+      "r1_scope_stop_during_ready_releases_only_queued_not_dispatched",
+      "r1_scope_fake_clock_expiry_drops_old_without_leaking_or_early_fresh",
+      "r1_scope_stop_last_frozen_clone_return_backlog_and_rx_mix",
+      "r1_scope_generation_exhausted_or_reused_lane_fails_without_retire",
+      "r1_scope_nonempty_caller_batch_and_zero_spare_capacity_reject_without_loss"
+    ]
+  },
+  "initial_compiler_fail": {
+    "source_sha": "eaa0d48229123d05a8f3a812227eb615e67874d1",
+    "run_id": 38674720074,
+    "result": "FAIL",
+    "cause": "4 Rust test harness compile errors: Option::unwrap_or_else closure signature and Debug bounds for owner types. Corrected in M1 scope code SOURCE d60a693, exact new SOURCE native63/63 PASS."
+  },
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38674812385,
+      "attempt": 2,
+      "status": "FAIL",
+      "cause": "Governance attempt1 and attempt2 both reported 'control or source moved mid-audit' while M0 main was advancing; code path violation not observed; final H must be checked independently."
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38674812533,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38674812389,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38674812361,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38674812438,
+      "conclusion": "FAIL"
+    }
+  ],
+  "known_shared_ci_blocker": {
+    "run_id": 38674812438,
+    "status": "FAIL",
+    "reason": "Old shared branch-local tools/r0_abi_bundle.py searches unfiltered stdout for literal '3 passed'. Rust ABI binary returned rc0 and all 66 tests PASS; the root workflow is STILL FAIL.",
+    "owner": "M0",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+  },
+  "local_proof": {
+    "scope_generation": "Arc identity + nonwrapping serial rejects stale and ABA tokens, full caller-provided TX lane metadata compares tunnel/lane generations",
+    "bounded_drains": "Caller-preallocated Vec handles 0/1/32/33, no ciphertext clone, <=32 each direction, unchanged previous TX/RX priority and expiry",
+    "stop_and_borrow": "Queued work canceled on transition, dispatched TX frozen/RX unique handles live in ledger-counted LoanBatch, retired batch fence stays pending until drop/recycle, final FrozenRecord clone reflected by Arena.loaned",
+    "fresh_after_rotation": "Preallocated next generation owners can accept fresh before previous held frozen loans return as long as arena has free slots",
+    "trust_boundary": "No authenticated origin source, caller-supplied lane metadata; not proof against a forged token or metadata"
+  },
+  "not_run": {
+    "cryptographic_authentication": "NOT_RUN",
+    "actual_kernel_send_and_receive": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "native_windows_arm": "NOT_RUN",
+    "rtrb_loom_eventfd": "NOT_RUN",
+    "Go_V4": "DISABLED",
+    "engine_features": 0
+  }
+}
