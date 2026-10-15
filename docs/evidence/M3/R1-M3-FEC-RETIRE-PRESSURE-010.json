@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-RETIRE-PRESSURE-010",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "e8d62776ebf3258c038155f4637bd1524d6282b7",
+  "result": "PASS_SCOPED_BOUND_FEC_RX_RETIRE_PRESSURE_ONE_COUNTEREXAMPLE_DRIVEN_FIX_75_OF_75",
+  "assignment": "Main M0 registry rev2 epoch1, M0 worker assignment SOURCE7d291133e38f87da32ab56f5f99c0f1a54c4d5af Governance38635343395 and G2 bootstrap38635343384 pass; requested no code change unless deterministic failing counterexample.",
+  "code_changes": [
+    {
+      "file": "crates/wbd-codec/src/fec_retire_pressure_tests.rs",
+      "purpose": "eight real authenticated-input RX/BlockID cross-pressure adversarial tests under frozen R0 exclusion"
+    },
+    {
+      "file": "crates/wbd-codec/src/link_fec_wire.rs",
+      "purpose": "mount R1-only deterministic tests; historical frozen R0 selector unchanged"
+    },
+    {
+      "file": "crates/wbd-codec/src/fec_rx.rs",
+      "purpose": "single proven fix: on overdue Heavy timer use original first_seen+3000ms as Compact start; normal completion/pressure compaction still uses actual owner time"
+    }
+  ],
+  "bug_proof": {
+    "first_test_only_source": "baa02cb271ff0462f518644ceaf8498fd1c9b110",
+    "run_id": 38667039100,
+    "build_job": 116201247791,
+    "first_outcome": "BUILD_FAIL_IN_TEST_ONLY",
+    "reason": "Test assertion attempted unsized slice in tuple; Rust E0277/E0308. No codec executable, cannot count this as failing product counterexample.",
+    "corrected_test_only_source": "538a8905604efcffe15ab2d194292f4ac79d6bc7",
+    "native_run_id": 38667119023,
+    "consume_job": 116201663216,
+    "executable_cases": 75,
+    "passing": 74,
+    "failing": 1,
+    "failing_test": "link_fec_wire::fec_retire_pressure_tests::r1_retire_late_heavy_timer_catches_up_through_compact_10s_without_resurrection",
+    "exact_assertion": "After source first_seen=100 and one late expire at 100+3000+10000+1, expected (Heavy,Compact)=(0,0), observed=(0,1).",
+    "root_cause": "FecRxOwner::expire transitioned overdue Heavy using self.clock (late callback time) to start Compact rather than the immutable first_seen+3000ms deadline, artificially extending retained ID lifetime.",
+    "minimal_fix": "New compact_heavy_at(id, absolute_deadline) for expire only; pressure and normal completion still use compact_heavy(id) and the actual clock. Same expire invocation reevaluates Compact+10000ms and advances retired floor.",
+    "no_source_or_scope_suppression": true
+  },
+  "verified_new_cases": [
+    "r1_retire_late_heavy_timer_catches_up_through_compact_10s_without_resurrection",
+    "r1_retire_multi_block_oldest_pressure_late_systematic_compact_first_delivery",
+    "r1_retire_parity_first_r_profiles_recover_only_missing_never_redeliver",
+    "r1_retire_malformed_final_conflict_tombstones_while_other_blocks_survive",
+    "r1_retire_capacity_floor_cannot_recreate_old_unseen_block_or_old_parity",
+    "r1_retire_wire_wrap_trusted_epoch_direction_generation_and_rx_delivery",
+    "r1_retire_blockid_late_timer_heavy_and_compact_expire_in_single_event",
+    "r1_retire_go_pinned_56b_source_oracle_wrong_generation_does_not_alloc"
+  ],
+  "assertions": {
+    "monotonic_fake_clock": "No OS timers or wall clock. RX Heavy due at first_seen+3000ms, compact expires at that deadline+10000ms even when timer callback is overdue; late source/parity cannot resurrect retired block.",
+    "pressure": "Small max_heavy_bytes and heavy+compact count constraints, oldest compaction and recheck retired floor after any pressure mutation, first-delivery even after compact, no re-delivery.",
+    "profiles": "All six configured parity R=[4,8,10,12,16,20] tested using actual FecTxOwner real GF0x11d parity, final 56B length authority, parity first relative to missing originals, missing-only recovered once.",
+    "authentication_boundary": "Tests explicitly simulate already-authenticated inputs to post-auth entrypoints, binding epoch/direction/trusted ext generation; they DO NOT exercise cryptographic record AEAD+PN integration.",
+    "wrap": "Wire BlockID 0xffffffff→1 across explicitly trusted generation0→1, reject wrong epoch/direction/generation, retire obsolete generation.",
+    "malformed_final": "Contradictory authenticated final metadata tombstones block and preserves unaffected block; duplicates do not raise new conflict count or deliver twice.",
+    "go_oracle": "Pinned older Go 56-byte FEC source wire fixture fec-source plus authentic TX scalar parity; old Go receiver package native not run in this atom.",
+    "frozen_r0_selector": "R1 tests excluded from historical R0 13-case codec suite; regular frozen R0 Actions passed.",
+    "preserved_prior_tests": 67,
+    "new_tests": 8,
+    "total_tests": 75
+  },
+  "github_actions": {
+    "native": {
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "run_id": 38667240535,
+      "attempt": 1,
+      "build_job": 116201877979,
+      "consumer_job": 116202013880,
+      "target": "GitHub native Ubuntu Linux x86_64 Rust1.85.1 compiled-once",
+      "conclusion": "success",
+      "passed": 75,
+      "failed": 0,
+      "filtered_out": 26,
+      "binary_sha256": "297083a86dad20e7a7950b4591e9a8ede9736252fbbac8936575b4cfeeee472e",
+      "log_sha256": "64aedc526e54e4de2547d021fd8a8f600363c95fb401986be45dbed0956a097f",
+      "build_artifact": {
+        "id": 11942805614,
+        "digest": "sha256:4ca2930b42f337c1abf71c3ed3afcf622f7b464d2aac42c9d82c7c3e3a3050f1",
+        "expires_at": "2026-11-14T01:44:31Z"
+      },
+      "result_artifact": {
+        "id": 11943140499,
+        "digest": "sha256:06ec171c51cacfff0c1c8fad3cb032d7bd2b881a4e7b9a51b27127fbdc1cd60b",
+        "expires_at": "2026-11-14T01:44:43Z"
+      }
+    },
+    "same_source_other": [
+      {
+        "workflow": ".github/workflows/r0-qualification-audit.yml",
+        "run_id": 38667240651,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-codec.yml",
+        "run_id": 38667240611,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/g2-bootstrap.yml",
+        "run_id": 38667240693,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-link-fec-wire.yml",
+        "run_id": 38667240561,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/r0-record-framing.yml",
+        "run_id": 38667240690,
+        "conclusion": "success"
+      },
+      {
+        "workflow": ".github/workflows/governance.yml",
+        "run_id": 38667240599,
+        "attempt": 2,
+        "conclusion": "success"
+      }
+    ],
+    "governance_first_attempt": {
+      "run_id": 38667240599,
+      "attempt": 1,
+      "conclusion": "failure",
+      "exact_diagnostic": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "interpretation": "Live main moved during full remote Git scope audit. Same immutable worker code source, no policy relaxation; reran failed job and attempt2 SUCCESS."
+    }
+  },
+  "not_qualified": {
+    "M0_real_V4_generation_context": "NOT_RUN",
+    "actual_PN_AEAD_replay_integration": "NOT_RUN",
+    "FEC_on_main_real_business": "NOT_RUN",
+    "independent_original_Go_decoder_native_in_atom": "NOT_RUN",
+    "SIMD_ISAL": "NOT_IMPLEMENTED",
+    "Windows_ARM_native": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_GoV4": "DISABLED",
+    "root_Cargo_lock_registry_shared_ABI_shared_CI": "UNCHANGED",
+    "handoff": "Only source tests qualified here; evidence S then cursor-only H must each pass Governance before final handoff."
+  },
+  "next_action": "After clean cursor H own Governance, M3 remains idle awaiting new main registry task. M0 must prove genuine trusted V4 generation and AEAD/replay + FEC-on first business integration separately; no enabling production V4 from this evidence."
+}
