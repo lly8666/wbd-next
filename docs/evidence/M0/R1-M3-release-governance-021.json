@@ -175,5 +175,14 @@
     "P1–P3 500Mbps",
     "physical"
   ],
-  "next_action": "On next M0 recovery, resolve exact already-dispatched Release run38685587150 before reruns; M3 role must follow exact approved second root checker mirror and make one corrected CPU sampling code commit, then native release measurement under a new M0 source-locked workflow and own evidence S/H Governance. Independent M0 next production-critical path remains authentic Go V4→Rust generation owner B01–B04, OFF until verified."
+  "next_action": "On next M0 recovery, resolve exact already-dispatched Release run38685587150 before reruns; M3 role must follow exact approved second root checker mirror and make one corrected CPU sampling code commit, then native release measurement under a new M0 source-locked workflow and own evidence S/H Governance. Independent M0 next production-critical path remains authentic Go V4→Rust generation owner B01–B04, OFF until verified.",
+  "source_sha": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+  "historical_h_governance_failure": {
+    "h_sha": "5ac5cc9d39620ed66b999158990ae112b756f334",
+    "run_id": 38686485637,
+    "conclusion": "failure",
+    "reason": "evidence is for a different SOURCE",
+    "root_cause": "evidence JSON omitted required source_sha while cursor last_tested_source points to CODE940498; S fixed without changing testing or claims",
+    "status": "PRESERVED_NOT_WAIVED"
+  }
 }
