@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 6,
-  "checkpoint_sha": "ba2e920cb0152803e6e377bdcba6ebd508535b29",
+  "sequence": 7,
+  "checkpoint_sha": "7bc5d3d95e732533becfea5b3e00d255974d3644",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-LINUX-BATCH-TX-003",
-  "current_task": "Native Linux x86_64 GNU bounded nonblocking sendmmsg syscall and safe batch stop completed",
-  "why_now": "M0 main G2 explicit R1-M4-LINUX-BATCH-TX-003 assignment rev2 epoch1 in docs/decisions/M0-parallel-worker-atoms-2026-10-14.md; real syscall uses only M4-owned paths and scope-limited ABI island.",
-  "done_when": "Native Linux Actions tests compile once and actually invoke kernel nonblocking sendmmsg on loopback where supported, verify 0/n/all accepted prefix, EAGAIN definite NotSent, interrupted/short ambiguous, immutable frozen payload, batch cap and stop/loan safety. If libc ABI declarations or pinned dependency cannot be audited inside owned crate, file exact root dependency request to M0 and do not fake syscall PASS. Own S/evidence/H; no raw AF_PACKET/Windows/cold admission/product claim.",
-  "next_action": "M0 alone to review audited x86_64 GNU sendmmsg ABI island and integrate native datagram batch primitive on a single main SOURCE with main-only historical R0 filter; no AF_PACKET/Windows/product claim. M4 waits for a new main-registered task without changing shared Cargo/ABI/CI or Go V4.",
+  "task_id": "R1-M4-IPV4-TCP-RX-PARSE-004",
+  "current_task": "M4 strict bounded full IPv4/TCP-like DATA RX byte parser and fail-closed seq32 nearest-extension completed.",
+  "why_now": "M0 formal main registry revision2 epoch1 parallel worker assignment, docs/decisions/M0-parallel-worker-atoms-2026-10-15.md, granted own M4 RX parse004 after prior Linux batch003 scoped H.",
+  "done_when": "Exact own SOURCE compiled-once platform r1_ tests on byte-exact existing IPv4/TCP writer outputs, checksums independently, version/IHL/options/total length/data offset truncation, fragments, malformed flags, wrong tuple/source or checksum, MTU±1 and seq32 wrap/half-space ambiguity, back-to-back unrelated packet not HOL; no pre-auth payload ever treated as verified business. Own S/evidence/H/Governance. Kernel raw RX/Windows/physical NOT_RUN.",
+  "next_action": "M0 reviews/imports this independently native-proven strict IPv4/TCP one-packet RX parser into the authenticated M3 open/PN replay path on main; no unauthenticated payload as business; no actual AF_PACKET/Windows claim. M4 waits for next new main role task, no root/shared Cargo/workflows/ABI edits or Go V4 enable.",
   "unverified": false,
-  "last_tested_source": "6e72152f616e9bc836e3b66cd8742915abf6b5b3",
+  "last_tested_source": "dd5a7dc7370d31a15afcbb4b71c53202ae89df90",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-LINUX-BATCH-TX-003.json"
+    "docs/evidence/M4/R1-M4-IPV4-TCP-RX-PARSE-004.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "Scoped R1-M4-LINUX-BATCH-TX-003 DONE_WHEN met on exact code SOURCE 6e72152f616e9bc836e3b66cd8742915abf6b5b3. Native Linux x86_64 GNU compiled-once worker Actions38598122174/1 PASS 21/21 (9 new kernel sendmmsg/ABI/stop/error cases + 12 older R1), ZIP/manifest/native binary/test.log SHA256 directly inspected. Real native IPv4 UDP loopback all/partial/32 batch and unprivileged AF_UNIX EAGAIN tests; EINTR and hypothetical short only deterministic classifier tests. Previous SOURCE16ef1eb2 worker38598037734 compiled FAIL due test generic type, retained. Same source G2/native, static audit, crossABI, Governance PASS. Historical branch R0 fake workflow38598122098 FAIL because unfiltered 28 successful tests vs required7; M0's prior main-only r0_ filter is on a different SOURCE. Evidence S ba2e920cb0152803e6e377bdcba6ebd508535b29 governance38598591939 PASS. FFI island Linux x86_64 GNU audited; other module unsafe deny. AF_PACKET/Windows, async OS loan, real raw TCP, integrated product, perf/physical NOT_RUN; production Go V4 DISABLED."
+  "partial_summary": "R1-M4-IPV4-TCP-RX-PARSE-004 scoped DONE_WHEN met. Source dd5a7dc7370d31a15afcbb4b71c53202ae89df90 adds only rx_ipv4_tcp.rs and owned lib module; parser validates exact complete IPv4/TCP DATA bytes/tuple/persona/MTU/options, independent checksums, no preauth business, seq32->u64 nearest guard with half-space ambiguity fail-closed. Compiled-once native worker Actions38667179420/1 SUCCESS 31/31 (10 new RX tests+21 prior), directly inspected build/result ZIP manifest/native binary/log checksums in docs/evidence/M4/R1-M4-IPV4-TCP-RX-PARSE-004.json (PASS/artifact_verified). Earlier S312cd2f worker38667039568 FAIL29/31, S927a821 worker38667111409 FAIL30/31 due test oracle fixture expectations; preserved. Same tested SOURCE G2/quality/crossABI/Governance success. Historical branch r0 fake workflow38667179416 FAIL despite 38/38 native test assertions passing because M0-owned R0 exact-filter fix only main different SOURCE, not hidden/relabelled. Evidence S 7bc5d3d95e732533becfea5b3e00d255974d3644 Governance38667440180 SUCCESS. Scope ONLY offline byte RX parser; AF_PACKET/recvmmsg/Windows/real driver, same-source M3 authenticated output, Go V4 product/perf/physical NOT_RUN, Go V4 production DISABLED."
 }
