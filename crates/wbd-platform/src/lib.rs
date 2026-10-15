@@ -17,6 +17,10 @@ pub mod rx_ipv4_tcp;
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_batch;
+/// Audited unprivileged Linux x86_64 GNU nonblocking recvmmsg UDP fixture.
+#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_rx_batch;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
