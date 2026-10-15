@@ -51,7 +51,9 @@ jobs:
                  'crates/wbd-engine/src/memory/mod.rs',
                  'crates/wbd-engine/tests/r1_linux_batch_kernel.rs',
                  'crates/wbd-codec/src/record_crypto.rs',
-                 'crates/wbd-codec/src/record_replay.rs','Cargo.lock']
+                 'crates/wbd-codec/src/record_replay.rs',
+                 'crates/wbd-codec/src/fec_auth_gate.rs',
+                 'crates/wbd-codec/src/fec_rx.rs','Cargo.lock']
           m={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
              'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'toolchain':'1.85.1',
              'target':'x86_64-unknown-linux-gnu',
@@ -79,7 +81,7 @@ jobs:
         with:
           name: r1-linux-batch-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-linux-batch-build/
-      - name: Verify exact compiled binary sources and execute 42 platform plus five M0 integration tests
+      - name: Verify exact compiled binary sources and execute 42 platform plus six M0 integration tests
         shell: bash
         run: |
           set -euo pipefail
@@ -121,10 +123,11 @@ jobs:
              'r1_m0_linux_batch_cap32_stop_and_unattempted_suffix_udp',
              'r1_m0_ipv4_tcp_parser_checksum_forgery_cannot_bypass_aead_or_hol',
              'r1_m0_real_kernel_send_and_recvmmsg_batch_strict_parse_aead_first_delivery',
-             'r1_m0_real_kernel_recvmmsg_truncation_and_forged_checksum_no_aead_hol']
+             'r1_m0_real_kernel_recvmmsg_truncation_and_forged_checksum_no_aead_hol',
+             'r1_m0_kernel_recv_strict_packet_without_go_origin_never_consumes_aead_pn']
           ok=(int(os.environ['PLATFORM_EXIT'])==0
               and int(os.environ['INTEGRATION_EXIT'])==0
-              and np==42 and ni==5
+              and np==42 and ni==6
               and all(t+' ... ok' in p for t in must_platform)
               and all(t+' ... ok' in i for t in must_main))
           result={'source_sha':m['source_sha'],'run_id':m['run_id'],

@@ -5,7 +5,10 @@
 use std::net::UdpSocket;
 use std::sync::Arc;
 use std::time::{Duration,Instant};
-use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto};
+use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
+use wbd_codec::fec_auth_gate::{AuthFecScopeGate,AdmissionError};
+use wbd_codec::fec_block_id::IdConfig;
+use wbd_codec::fec_rx::{Config as FecRxConfig,Direction};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_frame::AUTHENTICATED_LINK_KIND;
 use wbd_engine::memory::Arena;
@@ -284,6 +287,68 @@ fn r1_m0_real_kernel_recvmmsg_truncation_and_forged_checksum_no_aead_hol(){
  assert_eq!(opened.payload,b"\x00first\xff");
  assert_eq!(rx.stats().delivered,1);
  assert_eq!(fence.wait_drained_until(Instant::now()),StopResult::Drained);
+ assert_eq!(owner.stop(),0);
+ drop(packets);drop(ready);
+ assert_eq!(arena.drain_returns(),3);
+ assert_eq!(arena.stop().loaned,0);
+}
+
+
+#[test]
+fn r1_m0_kernel_recv_strict_packet_without_go_origin_never_consumes_aead_pn() {
+ let (mut arena,mut owner,ready,_originals,packets)=make();
+ let (tx,recv)=sockets();
+ let tx_fence=BorrowFence::default();
+ let rx_fence=BorrowFence::default();
+ assert_eq!(submit_connected_udp(&tx,&packets[..1],&tx_fence),
+     TxBatchOutcome::copied_all(1));
+ let mut storage=[[0u8;576];1];
+ let mut views=[storage[0].as_mut_slice()];
+ let got=receive_ready_udp(&recv,&mut views,&rx_fence);
+ assert_eq!(got.received,1);
+ let carrier=parse_complete(got.entries[0],&storage[0],TrustedRx{
+     tuple:tuple(),persona:PacketPersona::Legacy,mtu:576,authenticated_options:None
+ }).unwrap();
+ let mut sealed=carrier.ciphertext.to_vec();
+ let untouched=sealed.clone();
+ let replay_cfg=||ReplayWindowConfig{
+     pn_per_second:1000,cache_horizon_ms:100,fec_horizon_ms:100,
+     rtt_ms:0,metadata_budget_bytes:80
+ };
+ let id=IdConfig{
+     epoch:7,direction:Direction::ClientToServer,
+     anchor:0,retired_floor:0,max_forward:1024,max_reorder:1024,
+     max_heavy:4,max_compact:4
+ };
+ let fec=FecRxConfig{
+     epoch:7,direction:Direction::ClientToServer,max_wire:536,
+     max_heavy_bytes:6000,max_heavy_blocks:4,max_compact_blocks:4,
+     first_id_ext:1
+ };
+ // Public main-integration callers CANNOT mint positive FecOrigin.
+ // Until a separately reviewed authenticated Go V4 session origin exists,
+ // FEC is DENIED BEFORE AEAD, PN replay or FEC wire state mutation.
+ let mut gate=AuthFecScopeGate::new(
+     keys(),RecordSuite::ChaCha20Poly1305,536,replay_cfg(),id,fec,41,987,None
+ ).unwrap();
+ for now in [1,3,14_000] {
+     assert_eq!(gate.accept_record_on_lane(&mut sealed,41,987,now),
+         Err(AdmissionError::AbsentOrigin));
+     assert_eq!(sealed,untouched);
+ }
+ assert_eq!(gate.stats().denied_before_open,3);
+ assert_eq!(gate.stats().replay_rejected,0);
+ assert_eq!(gate.block_id_stats().distinct_accepted,0);
+ assert_eq!(gate.fec_stats().heavy,0);
+ // Genuine M3 AEAD+PN owner can still open exact ciphertext, proving
+ // FEC denial neither mutates the packet nor consumes a replay PN.
+ let mut decoder=ReplayProtectedLaneRx::new(keys(),536,replay_cfg()).unwrap();
+ let first=decoder.open_unique_in_place(&mut sealed).unwrap();
+ assert_eq!(first.pn,0);
+ assert_eq!(first.payload,b"\x00first\xff");
+ assert_eq!(decoder.stats().delivered,1);
+ assert_eq!(tx_fence.outstanding(),0);
+ assert_eq!(rx_fence.wait_drained_until(Instant::now()),StopResult::Drained);
  assert_eq!(owner.stop(),0);
  drop(packets);drop(ready);
  assert_eq!(arena.drain_returns(),3);

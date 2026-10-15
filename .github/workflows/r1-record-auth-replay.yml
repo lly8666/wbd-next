@@ -44,6 +44,8 @@ jobs:
                  'crates/wbd-codec/src/fec_rx.rs','crates/wbd-codec/src/fec_block_id.rs',
                  'crates/wbd-codec/src/fec_block_id_tests.rs',
                  'crates/wbd-codec/src/fec_retire_pressure_tests.rs',
+                 'crates/wbd-codec/src/fec_auth_gate.rs',
+                 'crates/wbd-codec/src/fec_auth_gate_tests.rs',
                  'crates/wbd-codec/src/link_fec_wire.rs',
                  'crates/wbd-codec/oracles/aes_wire_go_v3.txt']
           data={'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
@@ -74,7 +76,7 @@ jobs:
         with:
           name: r1-auth-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-auth-codec-build
-      - name: Verify source and precompiled binary then execute 75 true R1 tests
+      - name: Verify source and precompiled binary then execute 85 true R1 tests
         shell: bash
         run: |
           set -euo pipefail
@@ -102,13 +104,13 @@ jobs:
           s=pathlib.Path('r1-auth-codec-result/tests.log').read_text()
           match=re.search(r'test result: ok\. (\d+) passed; 0 failed',s)
           passed=int(match.group(1)) if match else 0
-          ok=int(os.environ['TEST_EXIT'])==0 and passed==75
+          ok=int(os.environ['TEST_EXIT'])==0 and passed==85
           report={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['test_binary_sha256'],'cargo_lock_sha256':m['cargo_lock_sha256'],
                   'log_sha256':hashlib.sha256(s.encode()).hexdigest(),
                   'r1_actual_native_passed':passed,'test_exit':int(os.environ['TEST_EXIT']),
                   'result':'PASS' if ok else 'FAIL',
-                  'scope':'R1_AEAD_REPLAY_LINK_RS20_FEC_TX_RX_BLOCKID_RETIRE_PRESSURE_NATIVE_MODULE_TESTS',
+                  'scope':'R1_AEAD_REPLAY_LINK_RS20_FEC_TX_RX_BLOCKID_RETIRE_AND_AUTH_GATE_TEST_ORIGIN_ONLY',
                   'not_qualified':'LIVE_GO_V4_ADMISSION;PRODUCT;PERFORMANCE;PHYSICAL'}
           pathlib.Path('r1-auth-codec-result/result.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))

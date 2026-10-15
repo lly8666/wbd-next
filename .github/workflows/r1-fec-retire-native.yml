@@ -40,6 +40,8 @@ jobs:
           parts=['crates/wbd-codec/src/fec_rx.rs',
                  'crates/wbd-codec/src/fec_block_id.rs',
                  'crates/wbd-codec/src/fec_retire_pressure_tests.rs',
+                 'crates/wbd-codec/src/fec_auth_gate.rs',
+                 'crates/wbd-codec/src/fec_auth_gate_tests.rs',
                  'crates/wbd-codec/src/link_fec_wire.rs',
                  'crates/wbd-codec/src/fec_tx.rs',
                  'crates/wbd-codec/src/fec_math.rs',
@@ -72,7 +74,7 @@ jobs:
         with:
           name: r1-fec-retire-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-fec-retire-build/
-      - name: Verify binary exact SOURCE and execute exactly 75 native R1 codec tests
+      - name: Verify binary exact SOURCE and execute exactly 85 native R1 codec tests
         shell: bash
         run: |
           set -euo pipefail
@@ -108,15 +110,15 @@ jobs:
              'r1_retire_wire_wrap_trusted_epoch_direction_generation_and_rx_delivery',
              'r1_retire_blockid_late_timer_heavy_and_compact_expire_in_single_event',
              'r1_retire_go_pinned_56b_source_oracle_wrong_generation_does_not_alloc']
-          good=(int(os.environ['TEST_EXIT'])==0 and count==75
+          good=(int(os.environ['TEST_EXIT'])==0 and count==85
               and all(name+' ... ok' in log for name in required))
           out={'source_sha':m['source_sha'],'run_id':m['run_id'],
               'attempt':m['attempt'],'binary_sha256':m['binary_sha256'],
               'log_sha256':hashlib.sha256(log.encode()).hexdigest(),
               'native_tests_passed':count,'test_exit':int(os.environ['TEST_EXIT']),
-              'new_adversarial_cases':len(required),'old_cases':67,
+              'new_adversarial_cases':len(required),'old_cases':75,
               'result':'PASS' if good else 'FAIL',
-              'scope':'PURE_M3_FAKE_CLOCK_RETIRE_PRESSURE_POST_AUTH_INPUT_ONLY',
+              'scope':'M3_FAKE_CLOCK_RETIRE_AND_REAL_POST_AEAD_PN_ORIGIN_GATE_TEST_ONLY',
               'not_qualified':'GO_V4_LIVE_GENERATION;RAW_AF_PACKET;NATIVE_WINDOWS_ARM;PERFORMANCE;PRODUCT;PHYSICAL'}
           pathlib.Path('r1-fec-retire-result/result.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))

@@ -101,6 +101,11 @@ impl FecRxOwner{
  }
  pub fn stats(&self)->Stats{Stats{heavy:self.heavy.len(),heavy_bytes:self.bytes,
   compact:self.compact.len(),floor:self.floor,..self.stats}}
+ /// FEC wire payload budget, distinct from encrypted record outer wire limit.
+ pub(crate) fn max_wire(&self)->usize{self.cfg.max_wire}
+ /// Trusted downstream scope gate may advance the conservative shared floor.
+ /// Never rewinds an expired or pressure-retired block.
+ pub(crate) fn advance_retired_floor(&mut self,id:u64){self.retire(id);}
  fn retire(&mut self,id:u64){
   let floor=self.floor.map_or(id,|x|x.max(id));self.floor=Some(floor);
   let gone=self.heavy.range(..=floor).map(|(&key,_)|key).collect::<Vec<_>>();
