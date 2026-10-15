@@ -11,3 +11,11 @@ Save source/commit/runner/test binary SHA/artifacts/full raw clock rows, CPU and
 The corrected final SOURCE additionally emits M3_CLOCK_WINDOW for every paired observed window (raw wall_ns/cpu_ns and backend) and M3_BATCH_SAMPLE with up to 2048 unaltered batch-average elapsed times per leg, both outside the observed timing. It also logs actual M3_CLOCK_WARMUP active ns per mode. The M0 Release checker should ensure aggregated raw windows match each row exactly and verify CPU<=wall*1.02 in every window, not only the aggregate.
 
 Governance coordination: prior M3 test SHA 30016fa0 Governance run38706745738 attempt1 failed due main tool drift; main control has since pinned the second checker mirror to immutable historical source 940498cc and old main blob 817934b, which should remove that historical cause. A second audit of original SOURCE was requested, outcome must be tracked before completion.
+
+## Exact-source Release run failure and M3 remediation
+
+Old exact workflow Actions 38713050270 worker SOURCE 79535dd5 compiled Release successfully but the measured test failed Rust exit 101: artifact 11960409585 test.log `M3_CLOCK_INVALID CpuOverWall wall_ns=3374368 start=schedstat_ns 5041597 end=9041392`. Tiny 3.374ms windows are sensitive to ~1ms schedstat granularity. NO 24/24 Release PASS on that exact source.
+
+Fix on M3: keep strict per-window CPU <= wall*1.02, both probes within wall and preseal outside; lengthen RELEASE paired windows from 128 x64 to 3072 x64 authentic records (Debug stays at 128 x64), retaining real AEAD unique PN, four scopes, raw window and batch output. M0's main SOURCE run38714087982 with similar long-window fix passed 24/24 but uses DIFFERENT CODE and cannot qualify M3 freeze.
+
+M0 ACTION REQUIRED: repin `m0-m3-release-clock015-exact.yml` to new M3 CODE SHA after this fix, compile once and measure SAME code on single runner, verifying 24 Release rows and record count == clock_windows * 3072 * 64, minimum warmup/active 1.05/1.125s and `clock_status=OK`, CPU<=wall*1.02, raw samples/window completeness. If CPU_INCONCLUSIVE, no ratio. Preserve native binary hash and artifact. M3 then evidence S and cursor-only H own Governance. Do not claim V4 product, live FEC or 500Mbps.

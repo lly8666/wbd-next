@@ -547,11 +547,12 @@ fn measure_reuse_leg(
     aead:&mut [ReusedScope], fec:&mut [ReusedScope],
     scratch:&mut Vec<u8>, target:Duration,
 )->ReuseCostResult{
-    // Batch 128 consecutive groups of 64 per clock window, so we do NOT
-    // charge high-resolution CPU probes once for every 64 records.
-    // Produce all unique-PN AEAD ciphertext before starting that window;
-    // a persistent RX context consumes each ciphertext exactly once.
-    const BATCHES_PER_WINDOW:usize=128;
+    // M3-015 failed exact Release run38713050270 at wall=3.374368ms and
+    // schedstat CPU=3.999795ms, quantized ~1ms on a tiny sampling window.
+    // Preserve matched probes and the strict <=1.02 physical accounting;
+    // use 3072 x 64-record batches in Release, 128 in Debug.
+    // Real unique-PN AEAD preseal remains OUTSIDE both clock windows.
+    let batches_per_window:usize=if cfg!(debug_assertions){128}else{3072};
     let mut active_ns=0u128;
     let mut cpu_total=0u128;
     let mut cpu_valid=true;
@@ -563,15 +564,15 @@ fn measure_reuse_leg(
     while active_ns<target.as_nanos() || count==0{
         let staged=match leg{
             ReuseCostLeg::SteadyAead=>Some(
-                (0..BATCHES_PER_WINDOW).map(|_|prepare_reused(aead,shard_len))
+                (0..batches_per_window).map(|_|prepare_reused(aead,shard_len))
                     .collect::<Vec<_>>()),
             ReuseCostLeg::SteadyFec=>Some(
-                (0..BATCHES_PER_WINDOW).map(|_|prepare_reused(fec,shard_len))
+                (0..batches_per_window).map(|_|prepare_reused(fec,shard_len))
                     .collect::<Vec<_>>()),
             _=>None,
         };
         let clock=PairedClock::begin();
-        for i in 0..BATCHES_PER_WINDOW{
+        for i in 0..batches_per_window{
             let started=Instant::now();
             match leg{
                 ReuseCostLeg::FreshAead=>batch(Mode::AeadOnly,source,scratch),
