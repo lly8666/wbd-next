@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 11,
-  "checkpoint_sha": "f7fc373ee6bf67e7bd1463d16b2dd03381229aab",
+  "sequence": 12,
+  "checkpoint_sha": "b67e282e5531c624ac1efa53d6245b89e13b6197",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-RAW-RECEIVE-CONTRACT-007",
-  "current_task": "Linux x86_64 GNU AF_PACKET pure sockaddr_ll RX owner metadata and bounded inert test-only recvmmsg contract completed; no live raw capture.",
-  "why_now": "M0 wave4 formal role assignment R1-M4-RAW-RECEIVE-CONTRACT-007, registry revision2 epoch1 active M4, owned paths and branch unchanged.",
-  "done_when": "Retain own52 previous R1 native tests; unprivileged no-cap negative exact EPERM, pure validated sockaddr_ll/classifier tests, and any actual raw loopback receive only when runner CAP_NET_RAW is genuinely present (report as SKIP/NOT_RUN otherwise), no invented native packet success; compiled-once own SOURCE tests and evidence S/H Governance, mark product/raw-live not qualified.",
-  "next_action": "M0 independently reviews scoped Linux x64 AF_PACKET sockaddr metadata and inert protocol-zero test RX; any positive raw packet receive and Go V4 owner trust activation require separate source-scoped authorization and native evidence. No live physical/ambient capture, production Go V4 remains DISABLED. M4 waits for a new formal main task; no further own implementation until assigned.",
+  "task_id": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008",
+  "current_task": "M4 test-only explicit opt-in isolated 'lo' AF_PACKET SOCK_RAW nonblocking bounded owned TX/RX lifecycle; CAP_NET_RAW gated and BPF self-only filter staged; positive raw traffic NOT_RUN on unprivileged runner.",
+  "why_now": "Formal main registry M4 R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008 assignment rev2 epoch1 active, after clean M4 -007 cursor-only H.",
+  "done_when": "Preserve previous60/60 scoped R1 tests; run exact native capability-negative and conditional positive controlled loopback raw packet checks when runner privilege allows, otherwise report positive RAW_RX_NOT_RUN rather than fake PASS. Include setup/teardown/STOP/truncation under loopback and source-attested own build/consume evidence S, cursor H Governance. No Go V4, cross-role, ABI or root dependencies.",
+  "next_action": "M0 may source-review test-only isolated loopback AF_PACKET BPF/raw lifecycle. Actual positive raw packet reception remains RAW_RX_NOT_RUN because native runner lacked CAP_NET_RAW; a separately authorized privileged fixture is needed before calling raw RX tested. Never bind physical interfaces or activate production Go V4. M4 wait for NEW main formal task and do not self-extend.",
   "unverified": false,
-  "last_tested_source": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
+  "last_tested_source": "7fdad158f07b9b130b7d05160d63714d1b40d33c",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-RAW-RECEIVE-CONTRACT-007.json"
+    "docs/evidence/M4/R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-RAW-RECEIVE-CONTRACT-007 source ae0b63b011512805f28f0cebff957cc662b0fb3c native Actions38678579974/1 compiled-once 60/60 PASS (8 new+52 prior), artifact-verified ZIP/manifest/binary/result/log exact SHA; pure Linux sockaddr_ll/ifindex/ETH_P_IP/PACKET_HOST/gen/truncation/MTU and strict unauthenticated IPv4/TCP parser, optional cfg(test) recvmmsg only on inactive protocol0 AF_PACKET FD when true CAP_NET_RAW; no positive raw packet/loopback traffic proof, no physical capture. First CODE66a333d Actions38678512743 FAIL COMPILE fixture E0277/E0308; historical root r0-fake38678579999 FAIL old exact7 count though 67/67 assertions PASS, retained. Original evidence S aec70a2036bb907ef76610557c96aa519fa101ba Governance38678797644 SUCCESS; first cursor H dc4b9541d8768fef737135cdb402d99f59094588 Governance38678944235 FAIL structure because evidence result used PASS_SCOPED_NATIVE_ONLY, not standardized PASS; repaired evidence S f7fc373ee6bf67e7bd1463d16b2dd03381229aab (result PASS, scoped explicitly elsewhere) Governance38679059068 SUCCESS. This cursor-only H seq11 covers corrected evidence and previous failed H without hiding either. No AF_PACKET live, native Win/Arm, product/performance/physical; Go production V4 DISABLED."
+  "partial_summary": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008 scoped code+unprivileged native evidence completed: code SOURCE7fdad158f07b9b130b7d05160d63714d1b40d33c cfg(test)-ONLY opt-in AF_PACKET SOCK_RAW loopback 'lo' ifindex/MTU gated, protocol0 owned FDs, kernel classic BPF exact own tuple+process cookie attached BEFORE lo-only RX bind, nonblocking <=32 recvmmsg stack buffers, source exact test-only self-frame TX, sockaddr/gen/truncation/STOP and RAII. Actual native run38683027173/1 compiled-once 64/64 PASS (4 new+60 previous) ZIP/manifest/binary/result/log SHA independently verified; actual stdout explicitly RAW_RX_NOT_RUN (runner lacks CAP_NET_RAW), so NO positive raw packet send/receive or truncation on privileged FD is qualified. Preserved native compile failure first SOURCEd89975d4 run38682980950 E0502 test fixture; final SOURCE old branch r0-fake38683027118 FAIL old 7-inventory despite 71/71 actual Rust assertions PASS. Final CODE same-source Governance38683027067, G2, static, crossABI SUCCESS; evidence S b67e282e5531c624ac1efa53d6245b89e13b6197 Governance38683252280 SUCCESS. No real raw RX product, Go V4 exporter, native Windows/ARM, perf/physical; Go V4 production DISABLED."
 }
