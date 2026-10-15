@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 69,
-  "checkpoint_sha": "765e56434a9fdf69a652b5a78d0708fb25082308",
+  "sequence": 70,
+  "checkpoint_sha": "5e6fe8367b44d73c14cccea6271f89af1541d9a4",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "GOV-004 PR#5 architecture/CI handoff atomic CLOSED: merged main SOURCE e2c2657edd74a45d87f5074a65d1b715b6705a65, candidate318fba67, no Go/Rust product code or worker ref edits. Contract Prepare→protected reply→Detach→Commit→RX/TX owner confirm→Active now single canonical order. Same merged SOURCE maintenance38743199711 169/169 PASS, push Governance38743199809 identity/structure PASS with drills/model NOT_RUN, G2 native build+consume38743199565 PASS. Evidence S765e56434a9fdf69a652b5a78d0708fb25082308 Governance38743602861 PASS. The M0 023 trusted product path remains partial; no authenticated Rust production AEAD/PN Normal/off first business, true kernel loan Stop B01-B04, physical/500Mbps qualification.",
-  "why_now": "User supplied architecture agent final handoff sentence after interruption. Remote PR#5 was open and current main unchanged; exact Actions candidate169/169 and artifacts inspected, merged via PR after one-commit scope/authority review. Verified merged main exact-source CI rather than treating candidate PASS as main PASS. S/H now conclude the requested governance/architecture atom.",
-  "done_when": "GOV004 merge scope met: PR#5 merged e2c2657e, main maintenance169 PASS + lightweight push Governance PASS with selftests/model NOT_RUN, G2 native PASS; GOV004 evidence S Governance PASS. H69 must change only M0 cursor, trigger only lightweight push Governance plus conditional skip, NOT launch governance-maintenance or native full reruns. Product task023 remains NOT_MET.",
-  "next_action": "M0 resume assigned 023 using actual Go V4 authenticated protected callsite to Rust production ScopedOwner AEAD/PN with forbidden arbitrary self-consistent 248B cold install. Use real Prepare→protected reply→Detach→Commit→two-owner Active; next true Normal/off first delivery/Stop and M4 held Linux lease B01–B04 in source-exact Actions. Do not add another test-only activation pipeline or enable production features without E2E.",
+  "current_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023 scoped crypto subatom CLOSED, overall product task PARTIAL. Main CODE S adb34a47 plus workflow fix f8aeb193 and Go negative mock signature S35db3d01. Actual protected Go private callsite → production-compiled Rust ProtectedScopedCrypto preflights both C2S RX/S2C TX AEAD directions, exact post-protected-reply Go SenderNext at Commit, and real ReplayProtectedLaneRx validates 3 ciphers plus PN out-of-order 2,0,1, duplicate/damaged/wrong-direction rejects. Native build/consume 38757554801 SUCCESS; Go real TLS 38757554763 12/12 PASS; Go cold/native 38757554795 Go1/Rust4 PASS; governance 38757554918 PASS. Evidence S5e6fe836 Governance38758554845 and R0 static38758554945 PASS. Earlier malformed CI/mismatched Go mock failures preserved, maintenance169 PASS only exact f8aeb193 source 38757397271. No production owner Active, true business delivery or M4 kernel loan proof. Production features0.",
+  "why_now": "User continued after verified H69 CLEAN. Implemented one bounded existing Go V4 → normal-build Rust crypto/PN integration atom (not a new business-delivery path), repaired actual Actions YAML and Go mock failures with new SOURCE commits, inspected exact build/consume jobs, artifact digests, negative cases and not-run scopes. Evidence S succeeded. Close with H-only to avoid repeat maintenance/native dispatch.",
+  "done_when": "THIS ATOM: exact protected Go TLS private caller, two-direction Rust cryptographic preflight/PN + version/epoch/generation check, post-Detach TX boundary, negative old/replay/damage/direction Stop, source-locked Actions and S evidence MET. FORMAL M0 023: NOT_MET until production ScopedOwner RX/TX install confirms both, actual authenticated early/business delivery, M4 real kernel driver lease Stop B01–B04 and fail-close E2E. All physical/perf/500Mbps NOT_RUN. H70 only cursor; expect lightweight push Governance and conditional scope skip.",
+  "next_action": "Wire existing Go V4 private protected admission and production-compiled ProtectedScopedCrypto into the real Rust ScopedOwner RX/TX dispatch (not the test probe), with both-owner confirmation before Active and authenticated bounded early delivery; prove fail-close/Stop and first bidirectional Normal/FEC-off application delivery plus held M4 Linux kernel driver loan B01–B04 in exact-source Actions before enabling any feature.",
   "unverified": true,
-  "last_tested_source": "e2c2657edd74a45d87f5074a65d1b715b6705a65",
+  "last_tested_source": "35db3d01bc1bd22deb355676c9558909626f9203",
   "evidence_refs": [
+    "docs/evidence/M0/M0-023-protected-owner-crypto.json",
     "docs/evidence/M0/GOV-004-bridge-handoff-ci-main.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/GOV-004-bridge-handoff-ci.md",
-    "docs/evidence/M0/GOV-003-PR4-main-integration.json",
+    "docs/devlog/M0/M0-023-protected-owner-crypto.md",
+    "r0/qualification-manifest.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "GOV004 PR5 architecture/CI merged and source-exact governance/maintenance/native passed; S765e564 Governance PASS. Product owner023 remains partial and capability0; hand off to real trusted Go V4→Rust AEAD/PN owner, then Normal/off actual business and held driver B01–B04. The one-purpose H69 should not trigger full tool selftests."
+  "partial_summary": "M0 source-exact protected Go→Rust compiled normal AEAD/PN crypto atom success: 3 ciphers, trusted private Go hook, correct TX boundary, PN replay/rotation/Stop negatives; Go TLS12/12, cold 1+4, native probe build/consume PASS; evidence S static/Governance PASS. Full ScopedOwner production Active/business/driver Stop not proven; features0, product/physical/500Mbps NOT_RUN. One next owner-dispatch integration action."
 }
