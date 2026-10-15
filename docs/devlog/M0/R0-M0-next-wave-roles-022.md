@@ -1,0 +1,11 @@
+# M0 next worker wave & Release diagnostic closure (2026-10-15)
+
+Authorized M0 continuing active main rev2 epoch1 after H `b7f7bd55` cursor seq58 Governance38686642270 SUCCESS. New assigned CODE SOURCE `19f6f7b85068a79e5ec033b6c24538d937beb506` changes only main registry goals/done_when for M1/M2/M4, project next_decision, scoped decision file and closing request note. **M3 untouched** and still owns correction of its old Release CPU clock; worker branches not modified by M0.
+
+M1 009: ScopedOwner/RetiredScope frozen loan STOP and generation reuse, 75/75 previous native. M2 007: 10k fake-monotonic receipt/repair timer bursts, <=32 candidates/poll and no fresh HOL with 44/44 previous. M4 009: unprivileged native UDP driver accepted-prefix / uncertain outcome and outstanding buffer lease lifecycle 0/1/32/33 with 64/64 previous; privileged raw positive stays NOT_RUN.
+
+Exact CODE Actions at `19f6f7b85068a79e5ec033b6c24538d937beb506`: Governance [38687993976](https://github.com/lly8666/wbd-next/actions/runs/38687993976) SUCCESS; G2 bootstrap [38687994043](https://github.com/lly8666/wbd-next/actions/runs/38687994043) successful build and consume. Digests in sibling JSON. No native next-worker feature test yet; this only validates baseline/shared assignment.
+
+Closed former pending M0 Action 38685587150: pinned M3 CODE 88a12027 Rust Release real native1/1 and **24/24** completed in one job (successful). 22/24 measured thread-CPU seconds exceed active wall seconds×1.02, so per-record CPU, fresh:steady and CPU improvements **not accepted** until M3 changes test measurement bounds and reruns source-exact. Root concern is CPU probe before vs after timer and not a real product bandwidth claim. Source and artifacts are in sibling JSON; never splice first 21/24 cancelled attempt into successful second run.
+
+M0 next owned critical product item: Go V4 frozen authenticated session -> Rust independent owner generation trusted admission bridge B01–B04, exact Prepare/Detach/Commit and stop-held-driver lease. Do not promote a 248-byte self-contained grammar to authenticated authority; no production ABI features enabled and no Go TLS library rewrite. Independent M1/M2/M4 worker work is useful to that integration but not a substitute for it.

@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-WORKER-NEXT-WAVE-022",
+  "source_sha": "19f6f7b85068a79e5ec033b6c24538d937beb506",
+  "result": "M0_ROLE_ASSIGNMENT_NATIVE_AND_GOV_SUCCESS__M3_PERF_DIAGNOSTIC_CLOSED_NOT_ACCEPTED",
+  "registry": {
+    "repository": "lly8666/wbd-next",
+    "control_branch": "main",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "role_paths_changed": false,
+    "role_branches_changed": false,
+    "M3_role_changed": false
+  },
+  "assignment": {
+    "source": "19f6f7b85068a79e5ec033b6c24538d937beb506",
+    "decision": "docs/decisions/M0-next-wave-owner-repair-driver-2026-10-15.md",
+    "roles": [
+      {
+        "role": "M1",
+        "task_id": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009",
+        "branch": "work/m1-r1-runtime",
+        "old_H": "08bacd9f16a5ee8c6d95082f43dee4a2fb456291",
+        "previous_native": 75,
+        "previous_governance": 38683183557,
+        "status": "NEW_TASK_ASSIGNED_OLD_IMPLEMENTATION_PENDING_M0_INTEGRATION"
+      },
+      {
+        "role": "M2",
+        "task_id": "R2-M2-BOUNDED-TIMER-BURST-007",
+        "branch": "work/m2-r2-recovery",
+        "old_H": "901abe61d3c45dc6c6a34467fac3b6e384ab4295",
+        "previous_native": 44,
+        "previous_governance": 38684127224,
+        "status": "NEW_TASK_ASSIGNED_NO_PRODUCT_AUTH_CLAIM"
+      },
+      {
+        "role": "M4",
+        "task_id": "R1-M4-DRIVER-OUTCOME-LEASE-009",
+        "branch": "work/m4-r1-platform",
+        "old_H": "1f70712b2d9fdba6b9f95afd14db444f89080322",
+        "previous_native": 64,
+        "previous_governance": 38683395043,
+        "status": "NEW_TASK_ASSIGNED_RAW_CAPABILITY_POSITIVE_NOT_RUN"
+      }
+    ]
+  },
+  "code_actions": [
+    {
+      "run_id": 38687993976,
+      "workflow": ".github/workflows/governance.yml",
+      "attempt": 1,
+      "source_sha": "19f6f7b85068a79e5ec033b6c24538d937beb506",
+      "conclusion": "success",
+      "artifact_id": 11950594144,
+      "digest": "sha256:7b026a2410201a2af5f312945f8ab57413d5671ae84cad5b96c59f79d8fe931c"
+    },
+    {
+      "run_id": 38687994043,
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "attempt": 1,
+      "source_sha": "19f6f7b85068a79e5ec033b6c24538d937beb506",
+      "conclusion": "success",
+      "build_artifact_id": 11950374475,
+      "build_digest": "sha256:24aec62c9e8a8a1289a867f766ab9fb7eefe1bfcf0ed407ea211549d0027c1c3",
+      "result_artifact_id": 11950524122,
+      "result_digest": "sha256:7a2081f6676ceb2ebcd2431f1126a2ba7d11e7e8e2515dfb50c98aa55555e759"
+    }
+  ],
+  "release_request_closed": {
+    "id": 38685587150,
+    "m0_workflow_source": "93a3110cc6dd979dacc75afd9fbbee941d18f043",
+    "M3_worker_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+    "attempt": 1,
+    "result": "success",
+    "build_job": "success",
+    "measure_job": "success",
+    "actual_release_measured_rows": 24,
+    "required": 24,
+    "native_test": "1 passed",
+    "build_artifact_id": 11949324855,
+    "build_digest": "sha256:257d0b03a52db09fdee811ed1cd0e28819b3a79e372a434df0b3182def1da1fc",
+    "result_artifact_id": 11950996858,
+    "result_digest": "sha256:936bde2de4ce63fc0239f05f70ff7379c98167ba6dfd6c74eedef0a7c285ae3b",
+    "test_log_sha256": "dfec7f72c884a9e746f0d251aa50d0c6c57ce78b17d2766149b1af05ba08154b",
+    "rows_with_thread_cpu_time_above_1_02x_active_wall": 22,
+    "measurement_result": "INVALID_CPU_SCOPE_NO_RELATIVE_SPEEDUP_ACCEPTANCE",
+    "why": "/proc/thread-self/stat reads before wall start and after wall elapsed, counts outside probe overhead, per batch",
+    "worker_technical_acceptance": "BLOCKED_M3_MUST_FIX_AND_RERUN_OWN_CODE"
+  },
+  "source_limits": {
+    "M0_actual_go_tls_cold_witness": "SOURCE81703542_GO_V4_PROTECTED_VALIDATED_ONLY",
+    "Rust_authenticated_owner_install": "NOT_RUN",
+    "Go_to_Rust_ffi_production": "NOT_RUN",
+    "real_raw_capability_pos": "NOT_RUN",
+    "native_win_arm": "NOT_RUN",
+    "R1_normal_off_first_packet": "NOT_RUN",
+    "performance_500Mbps": "NOT_QUALIFIED",
+    "physical": "NOT_RUN",
+    "production_abi_features": 0
+  },
+  "next_action": "M0 build a trustworthy Go protected authenticated ColdSnapshot -> Rust fresh scoped generation Prepare/Detach/CommitAdmission boundary with B01–B04 race/stop tests while M1, M2, M4 execute their new independent scoped tasks and M3 fixes its CPU-scope benchmark. Do not activate product or merge unqualified worker code."
+}
