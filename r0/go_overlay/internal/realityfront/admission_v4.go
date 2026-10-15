@@ -71,10 +71,16 @@ type V4ServerOptions struct {
 type V4ClientSession struct {
     *ClientAdmissionSession
     Epoch [16]byte
+    // Only EstablishClientV4 after verified protected reply and KDF may set this.
+    coldAuthenticated bool
+    authenticatedPrincipal string
 }
 type V4ServerSession struct {
     *ServerAdmissionSession
     Epoch [16]byte
+    // Only EstablishServerV4 after credentials, protected reply and Detach may set this.
+    coldAuthenticated bool
+    authenticatedPrincipal string
 }
 
 type v4Entry struct {
@@ -318,6 +324,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,
+        coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
     },nil
 }
 
@@ -414,5 +421,86 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             TLS:&ServerSession{Hello:hello,Keys:keys},
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,
+        coldAuthenticated:true, authenticatedPrincipal:req.Username,
     },nil
 }
+
+
+// V4ColdSessionSnapshot is a cold, Go-only view of a real protected V4
+// admission. All fields are private: callers cannot create a *positive*
+// snapshot from untrusted wire bytes or an operator's DataPlaneReady boolean.
+// It is NOT a Rust C ABI, Prepared/CommitAdmission, live lease, or proof that
+// the still-disabled runtimeentry V4 data plane can be switched on.
+//
+// Rust's TunnelKey/LaneKey generation and exact RX/TX transition boundaries
+// are local owner decisions, NOT derivable from Go's wire TunnelID/LaneID.
+type V4ColdSessionSnapshot struct {
+    server bool
+    principal string
+    tunnelID [16]byte
+    epoch [16]byte
+    incarnation [16]byte
+    laneID uint8
+    cipher uint8
+    clientLimit uint16
+    serverLimit uint16
+    keys tlsrecord.KeyPair
+}
+
+// ColdSnapshot is copy-only. It never calls engine_create, activates FEC,
+// touches the ABI, or changes the legacy runtime V4 fail-closed gate.
+// A snapshot must still be consumed by a separately reviewed versioned
+// cold Rust command with fresh owner generation and strict sequence boundaries.
+func (s *V4ClientSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
+    if s==nil || !s.coldAuthenticated || s.ClientAdmissionSession==nil ||
+       s.ClientAdmissionSession.TLS==nil {
+        return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
+    }
+    return v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false)
+}
+func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
+    if s==nil || !s.coldAuthenticated || s.ServerAdmissionSession==nil ||
+       s.ServerAdmissionSession.TLS==nil {
+        return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
+    }
+    return v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true)
+}
+func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool)(V4ColdSessionSnapshot,error){
+    var out V4ColdSessionSnapshot
+    if principal=="" || epoch==[16]byte{} || result.RecordVersion!=V4RecordVersion ||
+       len(result.TunnelID)!=16 || !validAdmissionLaneID(result.LaneID) ||
+       result.ClientLimit==0 || result.ServerLimit==0 ||
+       result.Policy.Schema!=PolicySchemaV3 || result.Policy.SupportedNow()!=nil {
+        return out,ErrAdmissionParams
+    }
+    // A real protected exporter yields two independent, nonzero direction
+    // keys. These checks are defensive, not a substitute for authentication.
+    if result.Keys.C2S==result.Keys.S2C ||
+       result.Keys.C2S==(tlsrecord.Keys{}) ||
+       result.Keys.S2C==(tlsrecord.Keys{}) {
+        return out,ErrAdmissionParams
+    }
+    copy(out.tunnelID[:],result.TunnelID)
+    out.server=server
+    out.principal=principal
+    out.epoch=epoch
+    out.incarnation=result.IncarnationNonce
+    out.laneID=result.LaneID
+    out.cipher=result.Policy.Cipher
+    out.clientLimit=result.ClientLimit
+    out.serverLimit=result.ServerLimit
+    out.keys=result.Keys // fixed-array value copy, never alias source buffers
+    return out,nil
+}
+
+// Getters return copies. No serialization, public constructor or engine
+// command is exposed before the authenticated Go→Rust C ABI review.
+func (s V4ColdSessionSnapshot) Principal()string{return s.principal}
+func (s V4ColdSessionSnapshot) ServerSide()bool{return s.server}
+func (s V4ColdSessionSnapshot) TunnelID()[16]byte{return s.tunnelID}
+func (s V4ColdSessionSnapshot) Epoch()[16]byte{return s.epoch}
+func (s V4ColdSessionSnapshot) Incarnation()[16]byte{return s.incarnation}
+func (s V4ColdSessionSnapshot) LaneID()uint8{return s.laneID}
+func (s V4ColdSessionSnapshot) Cipher()uint8{return s.cipher}
+func (s V4ColdSessionSnapshot) RecordLimits()(uint16,uint16){return s.clientLimit,s.serverLimit}
+func (s V4ColdSessionSnapshot) DirectionKeys()tlsrecord.KeyPair{return s.keys}

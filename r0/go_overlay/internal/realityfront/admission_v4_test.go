@@ -162,3 +162,87 @@ func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
     case <-time.After(5*time.Second):t.Fatal("legacy TLS rejection timeout")
     }
 }
+
+
+func TestR0V4ColdSnapshotActualAuthenticatedTLSAllCiphers(t *testing.T){
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        store,err:=NewV4EpochStore(2)
+        if err!=nil{t.Fatal(err)}
+        tunnel:=[]byte("0123456789abcdef")
+        c,s,ce,se:=v4Pair(t,store,"cold-user",tunnel,1,v4TestPolicy(1,cipher),[16]byte{})
+        if ce!=nil||se!=nil{t.Fatalf("TLS peer failed cipher %d: %v %v",cipher,ce,se)}
+        cc,e:=c.ColdSnapshot();if e!=nil{t.Fatal(e)}
+        ss,e:=s.ColdSnapshot();if e!=nil{t.Fatal(e)}
+        if cc.ServerSide()||!ss.ServerSide()||cc.Principal()!="cold-user"||ss.Principal()!="cold-user" ||
+           cc.TunnelID()!=ss.TunnelID()||cc.Epoch()!=ss.Epoch()||
+           cc.Incarnation()!=ss.Incarnation()||cc.LaneID()!=1||ss.LaneID()!=1 ||
+           cc.Cipher()!=cipher||ss.Cipher()!=cipher||
+           cc.DirectionKeys()!=ss.DirectionKeys()||cc.DirectionKeys().C2S==cc.DirectionKeys().S2C {
+            t.Fatalf("protected snapshot lost identity/direction/cipher: %d",cipher)
+        }
+        if a,b:=cc.RecordLimits();a!=1400||b!=1400 {t.Fatalf("limits %d %d",a,b)}
+        if cc.Epoch()==[16]byte{} {t.Fatal("no authenticated epoch")}
+        // Caller mutation cannot rewrite snapshot's fixed, private fields.
+        copied:=cc.TunnelID();copied[0]^=0xff
+        if cc.TunnelID()!=ss.TunnelID(){t.Fatal("snapshot tunnel aliases caller")}
+        keyCopy:=cc.DirectionKeys();keyCopy.C2S.AEADKey[0]^=0xff
+        if cc.DirectionKeys()!=ss.DirectionKeys(){t.Fatal("snapshot keys alias caller")}
+        c.Negotiated.TunnelID[0]^=0xff
+        if cc.TunnelID()!=ss.TunnelID(){t.Fatal("snapshot borrowed Go session storage")}
+        if err:=store.ReleaseLane("cold-user",tunnel,1,ss.Epoch());err!=nil{t.Fatal(err)}
+    }
+}
+func TestR0V4ColdSnapshotNilForgedAndMutatedSessionDenied(t *testing.T){
+    var client *V4ClientSession
+    if _,err:=client.ColdSnapshot();!errors.Is(err,ErrAdmissionUnsupported){t.Fatal(err)}
+    var server *V4ServerSession
+    if _,err:=server.ColdSnapshot();!errors.Is(err,ErrAdmissionUnsupported){t.Fatal(err)}
+    if _,err:=(&V4ClientSession{}).ColdSnapshot();!errors.Is(err,ErrAdmissionUnsupported){t.Fatal(err)}
+    if _,err:=(&V4ServerSession{}).ColdSnapshot();!errors.Is(err,ErrAdmissionUnsupported){t.Fatal(err)}
+    store,_:=NewV4EpochStore(1)
+    tunnel:=[]byte("0123456789abcdef")
+    c,s,ce,se:=v4Pair(t,store,"real",tunnel,1,v4TestPolicy(1,CipherChaCha),[16]byte{})
+    if ce!=nil||se!=nil{t.Fatalf("TLS: %v %v",ce,se)}
+    // A success marker is only a provenance guard: independently validate
+    // the immutable fields again before creating a cold snapshot.
+    original:=c.Negotiated
+    cases:=[]func(){func(){c.Negotiated.RecordVersion=3},
+        func(){c.Epoch=[16]byte{}},
+        func(){c.Negotiated.LaneID=0},
+        func(){c.Negotiated.TunnelID=[]byte{1}},
+        func(){c.Negotiated.Keys.C2S=c.Negotiated.Keys.S2C}}
+    for i,mutate:=range cases{
+        c.Negotiated=original
+        c.Epoch=s.Epoch
+        mutate()
+        if _,err:=c.ColdSnapshot();!errors.Is(err,ErrAdmissionParams){
+            t.Fatalf("mutated cold session %d not rejected: %v",i,err)
+        }
+    }
+    c.Negotiated=original
+    c.Epoch=s.Epoch
+    if _,err:=c.ColdSnapshot();err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLane("real",tunnel,1,s.Epoch);err!=nil{t.Fatal(err)}
+}
+func TestR0V4ColdSnapshotTunnelRotationDoesNotReuseEpochOrKeys(t *testing.T){
+    store,_:=NewV4EpochStore(2)
+    tunnel:=[]byte("abcdefghijklmnop")
+    policy:=v4TestPolicy(2,CipherChaCha)
+    c1,s1,ce,se:=v4Pair(t,store,"user",tunnel,1,policy,[16]byte{})
+    if ce!=nil||se!=nil{t.Fatalf("first TLS %v %v",ce,se)}
+    first,_:=c1.ColdSnapshot()
+    joined,s2,ce,se:=v4Pair(t,store,"user",tunnel,2,policy,c1.Epoch)
+    if ce!=nil||se!=nil{t.Fatalf("joined TLS %v %v",ce,se)}
+    second,_:=joined.ColdSnapshot()
+    if first.Epoch()!=second.Epoch()||first.LaneID()==second.LaneID()||
+       first.DirectionKeys()==second.DirectionKeys()||
+       first.Incarnation()==second.Incarnation(){t.Fatal("lane scopes aliased")}
+    if err:=store.ReleaseLane("user",tunnel,2,s2.Epoch);err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLane("user",tunnel,1,s1.Epoch);err!=nil{t.Fatal(err)}
+    c3,s3,ce,se:=v4Pair(t,store,"user",tunnel,1,policy,[16]byte{})
+    if ce!=nil||se!=nil{t.Fatalf("restart TLS %v %v",ce,se)}
+    restarted,_:=c3.ColdSnapshot()
+    if first.Epoch()==restarted.Epoch()||first.Incarnation()==restarted.Incarnation()||
+       first.DirectionKeys()==restarted.DirectionKeys(){t.Fatal("reused new logical scope")}
+    if err:=store.ReleaseLane("user",tunnel,1,s3.Epoch);err!=nil{t.Fatal(err)}
+}

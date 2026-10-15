@@ -55,7 +55,7 @@ def pack(args):
         "bytes": target.stat().st_size,
         "sha256": digest(target),
         "test_filter": "^TestR0V4",
-        "scope": "original TLS1.3/uTLS+FakeTCP with non-test opt-in V4 Go admission; test-only ready flag; no Rust dataplane/ABI/real device",
+        "scope": "pinned real TLS V4 admission plus authenticated cold snapshot with private fields; no Rust C ABI/activation/raw driver",
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))
@@ -97,7 +97,7 @@ def consume(args):
         "tests_passed": passed,
         "tests_failed": failed,
         "exit_code": run.returncode,
-        "result": "PASS" if run.returncode == 0 and passed == 5 and failed == 0 else "FAIL",
+        "result": "PASS" if run.returncode == 0 and passed == 8 and failed == 0 else "FAIL",
         "scope": manifest["scope"],
         "v4_production_dispatch_wired": False,
         "v4_rust_capabilities_advertised": False,
