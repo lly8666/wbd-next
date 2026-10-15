@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-STOP-LOAN-GENERATION-006: Within existing M1 runtime and owned tests, prove one owner-scoped generation transition safely drains preallocated <=32 TX and RX ready batches, old-generation callbacks cannot resubmit already-frozen ciphertext, first fresh on a new scope not blocked by late loan returns, and stop/borrow fences give exact last-loan ownership. No syscall, external dependency or source of authentication.",
-      "done_when": "Own SOURCE compiled-once native r1_ tests of 0/1/32/33, two lane generations, mixed RX/TX loan returns, ABA/stale owner token, stop during ready and fake-clock expiry, no heap during hot drains and complete prior51/51 tests; own evidence S and cursor-only H Governance."
+      "goal": "R1-M1-GENERATION-READY-OWNER-BENCH-007: Under existing runtime owned paths, extend generation-scoped Tx/Rx loan-batch ready composition to reject outdated mixed old/new ready dispatches without hot-path copy/allocation, and add source-attested owned runtime component P0 measurement (strictly not product throughput). No Go authenticated provenance/driver calls.",
+      "done_when": "Retain own prior63 scoped native r1_ cases. Add 0/1/32/33 two-lane old+new generation, stop concurrently, stale token and no reordered first fresh tests. Native source-exact compiled-once executable, dedicated warmup/repeat CPU/latency provenance artifact where valid, no claimed 500Mbps or AF_PACKET; own evidence S/cursor H Governance."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2-M2-RECEIPT-REVERSE-SCOPE-005: Add pure fail-closed receipt-route admission contract requiring caller-supplied trusted reverse direction, TunnelKey/generation/epoch/PN scope before AuthenticatedReceipt or process-global batch grant settlement; stale/forward/cross-lane input never refunds an old repair or advances ACK. No cryptographic admission constructor, driver syscall or peer delivery inference.",
-      "done_when": "Own source compiled-once native r2_ deterministic MonoNs tests covering two tunnels both directions, stale epoch/rotation, ACK before grant, NotSent original epoch, Uncertain conservative debit, duplicate out-of-order receipt and 32/33 batch, retaining previous33/33 tests, own evidence S/H Governance."
+      "goal": "R2-M2-REVERSE-GRANT-OWNER-BENCH-006: Keep process-global grant ACK/repair ledger bounded under two trusted-caller reverse receipt scopes and stale epochs; add source-locked pure R2 component P0 cost measurement separate from wire or driver. Do not allow raw user-provided receipt metadata to masquerade as AEAD/PN-proven and do not infer delivery from sendmmsg.",
+      "done_when": "Retain own38 R2 native tests, add 0/1/32/33 mixed stale reverse/ACK and expiry cases preserving global bytes/call caps, include repeated measured scenario CPU/alloc evidence with explicit fake trust and no product metric; own source-exact compiled-once native result, evidence S/H Governance."
     },
     {
       "id": "M3",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-AF_PACKET-PREFLIGHT-006: Implement narrowly cfg-gated Linux AF_PACKET capability and FD ownership preflight within wbd-platform, retaining unprivileged UDP sendmmsg/recvmmsg fixtures unchanged. Validate interface index, protocol/packet_type, MTU and owned borrowing lifetimes; on missing CAP_NET_RAW return typed EPERM with no fake fallback, no live raw activation, no new Cargo dependency/root ABI.",
-      "done_when": "Own SOURCE native tests and unprivileged Linux capability-negative cases with exact errno and rollback/close; classifier and lifecycle tests for bad iface/truncation/stop/generation, preserve42/42 previous native tests, evidence S/H Governance. Do not claim AF_PACKET data exchange or live TCP unless an exact privileged fixture is separately authorized and executed."
+      "goal": "R1-M4-RAW-RECEIVE-CONTRACT-007: Narrow Linux x64 GNU AF_PACKET RX metadata and ownership contract on CAP_NET_RAW gated test-only loopback/raw FD preflight, with bounded nonblocking receive, explicit ifindex/proto/packet_type/MTU/truncation/generation/stop checks and fail-closed EPERM without UDP fallback. Do NOT attach to untrusted physical interfaces, capture ambient traffic, or enable production V4/raw dispatch; no root ABI dependencies.",
+      "done_when": "Retain own52 previous R1 native tests; unprivileged no-cap negative exact EPERM, pure validated sockaddr_ll/classifier tests, and any actual raw loopback receive only when runner CAP_NET_RAW is genuinely present (report as SKIP/NOT_RUN otherwise), no invented native packet success; compiled-once own SOURCE tests and evidence S/H Governance, mark product/raw-live not qualified."
     }
   ]
 }
