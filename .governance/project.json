@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 current CODE 8721ffd29781ce559a4a4945c52db0919ba4f895 exact native Go/Rust probe Action38730197098 (build116405800096, consume116406430894, Go1/1 Rust1/1 PASS, artifacts11969694026/11969519150) held Rust early-RX LoanBatch Stop_INCOMPLETE while fresh real Go protected TLS makes independent new Rust generation; return old loan then Stop success. Same CODE Governance38730197153, ABI38730197194, cross38730197145, kernel38730197204 all SUCCESS. Evidence docs/evidence/M0/R0-M0-held-early-rx-stop-048.json. This is B04 Rust-owner TEST-ONLY subgate only: M4 actual kernel driver held RX loan, trusted positive Rust AEAD/PN/FEC origin, production features0, E2E/500Mbps/physical NOT_RUN. M2/M3 own worker S/H not confirmed; next true Go-auth Rust owner and M4 kernel Stop.",
+  "next_decision": "M0 M3-015 exact worker CODE0ecb459c9686254625a045ea19b85ae0e8d43080 Release validated by M0 workflow CODE3f1b458de2c66cbfa5567c147909c9b2b22d06f5 Action38734823257 build116421354527+measure116421742715 SUCCESS artifacts11972220985/11973392890, native1/1 24/24 rows 8 warmups 179 matched CPU/wall windows schedstat_ns CPU_INCONCLUSIVE0 max ratio1.0102, source-locked component 192B FEC3.046x 896B FEC2.547x but AEAD896 0.945x; evidence docs/evidence/M0/R1-M0-M3-015-0ecb-exact-release-049.json. Go authenticated product FecOrigin, physical, 500Mbps, packet p99 NOT_RUN; M3 own S/H still pending. M0 next trusted Go V4 Rust production AEAD/PN owner and actual M4 kernel held B01-B04; features0.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R1-M0-M3-015-EXACT-SOURCE-RELEASE",
+  "result": "SCOPED_M3_015_RELEASE_PASS_NOT_PRODUCT",
+  "progress": "partial",
+  "unverified": true,
+  "source_sha": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+  "harness_source_sha": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+  "exact_worker_source_sha": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+  "worker_registry": "M3 active, rev2 epoch1 branch work/m3-r1-codec",
+  "why_now": "M3 fixed CPU clock measurement on its owned source; prior exact CODE79535 Release38713050270 failed invalid short CPU>wall, main prior CODE06d80 successful but cannot qualify different worker source; M0 owns exact source release workflow and source identity.",
+  "debug_governance": {
+    "debug_run": 38733840785,
+    "debug_build_job": 116418006237,
+    "debug_consume_job": 116418217006,
+    "debug_result": "99/99 Debug PASS exact worker source",
+    "debug_build_artifact": {
+      "id": 11970494025,
+      "digest": "sha256:0060dc0fcd4cdc01622b3fcb8204a6899741d2e2d0692f2713531ea7c9a59479"
+    },
+    "debug_result_artifact": {
+      "id": 11970279281,
+      "digest": "sha256:4855171c8cb5d30547defd0e2236a6f9e315d2685d2b11f0197f1f206320ce1c"
+    },
+    "governance_run": 38733840776,
+    "governance_job": 116418006203,
+    "governance": "success",
+    "governance_artifact": {
+      "id": 11971573461,
+      "digest": "sha256:4dea034877452daf8241392feb3562314751194c20e6d7bd0ba233132bf6e674"
+    }
+  },
+  "release": {
+    "run_id": 38734823257,
+    "attempt": 1,
+    "event": "push",
+    "workflow": ".github/workflows/m0-m3-release-clock015-exact.yml",
+    "status": "completed",
+    "conclusion": "success",
+    "build_job": 116421354527,
+    "measure_job": 116421742715,
+    "build_artifact": {
+      "id": 11972220985,
+      "name": "m3-release-build-38734823257-1",
+      "digest": "sha256:e70c121938422a9b040f98eba5f5b78e307153ac552fd541440dfcd0cfa12636"
+    },
+    "result_artifact": {
+      "id": 11973392890,
+      "name": "m3-release-result-38734823257-1",
+      "digest": "sha256:6addb6dbbcb3c7ee7bc74b8b85ed02022851d773684bbee7f52ea51e246e5473"
+    },
+    "native_test": "1/1 passed; 124 filtered; ~962.28s; Rust 1.85.1 Release compiled-once, exact worker commit and source hashes checked",
+    "native_binary_sha256": "e7e95bc1eaa812a4698782ce20bd551df93e644139d97d844e7fca95f77e9724",
+    "raw_log_sha256": "09d979d130a85f7d04123e133d209d419137c7039bf922a670fb7c940898c114",
+    "matrix": {
+      "shard_bytes": [
+        192,
+        896
+      ],
+      "modes": [
+        "fresh_aead",
+        "steady_aead",
+        "fresh_fec",
+        "steady_fec"
+      ],
+      "repeats": 3,
+      "rows": 24,
+      "distinct_series": 24,
+      "warmups": 8,
+      "window_count": 179,
+      "batch_sample_rows": 24,
+      "batch_records": 64,
+      "batches_per_release_window": 3072,
+      "scope_count": 4,
+      "tunnels": 2,
+      "directions": 2,
+      "warmup_active_min_seconds_observed": 1.09624865,
+      "measurement_active_min_seconds_observed": 1.126571021,
+      "clock_backend": "schedstat_ns",
+      "clock_status": "OK",
+      "cpu_inconclusive_windows": 0,
+      "invalid_cpu_windows": 0,
+      "observed_max_window_cpu_over_wall": 1.0101647951285153,
+      "strict_max_accepted": 1.02,
+      "checked_raw_window_aggregate_and_order": true,
+      "preseal_outside_active_measurement": true,
+      "within_one_measure_job_vm": true,
+      "compiled_once_binary_reused": true,
+      "order": "forward (fresh_aead,steady_aead,fresh_fec,steady_fec),reverse,forward per shard size"
+    },
+    "scoped_component_median_cpu_us_per_record": {
+      "192B": {
+        "aead": {
+          "fresh": 0.440514107,
+          "steady": 0.424249098,
+          "fresh_over_steady": 1.0383383466851825
+        },
+        "fec": {
+          "fresh": 3.201527181,
+          "steady": 1.051086466,
+          "fresh_over_steady": 3.0459218005000928
+        }
+      },
+      "896B": {
+        "aead": {
+          "fresh": 0.678709827,
+          "steady": 0.718255809,
+          "fresh_over_steady": 0.9449416468276696
+        },
+        "fec": {
+          "fresh": 3.443201584,
+          "steady": 1.351852813,
+          "fresh_over_steady": 2.5470240183610877
+        }
+      }
+    },
+    "cpu_qualification": "SCOPED_VALID_SAME_WINDOW",
+    "product_qualification": "NOT_RUN"
+  },
+  "source_control": {
+    "code_commit": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+    "workflow_changes": "source pin on both checkouts and env, run-name, records-per-window 3072*64",
+    "main_code_governance_run": 38734823238,
+    "status": "success",
+    "pending_h_commit": "0db49cceb8363a61e344f53ce7b82e79bfa31e59",
+    "pending_h_governance_run": 38735977070,
+    "pending_h_governance": "success",
+    "m3_branch_written_by_m0": false
+  },
+  "limitations": [
+    "M3 uses cfg_test_only synthetic FecOrigin; no production Go V4 authenticated FecOrigin or feature activation",
+    "M3 source-exact Debug and component Release validity does NOT qualify Go-Rust engine, platform, business data, physical 500Mbps, per-packet p99 or production allocation",
+    "896B AEAD steady component CPU slower than fresh by these medians (ratio 0.945); no broad speedup claim",
+    "M3 worker must publish its OWN evidence S, source-exact Governance and cursor-only H; M0 did not amend worker branch",
+    "Old M3 014 100Hz/outside wall clock measurements remain invalid"
+  ],
+  "next_action": "M3 worker records this exact Action38734823257 job/artifact/hashes in M3-own evidence S and cursor-only H. M0 resumes R0-M0-V4-PROTECTED-OWNER-COMMIT-023 trusted Go V4 admission to Rust AEAD/PN and actual M4 kernel held Stop B01-B04; production feature bits0 until genuine E2E."
+}
