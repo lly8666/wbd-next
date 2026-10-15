@@ -18,7 +18,7 @@
 
 ## 当前允许的工作
 
-详细架构、科学成本模型、迁移清单、Actions验证契约与治理工具。具体产品实现由正式分配的阶段任务启动；当前未开始。权威入口为 `docs/architecture/README.md`。
+详细架构、科学成本模型、迁移清单、Actions验证契约与治理工具，以及 main registry 正式分配的阶段实现。实施进度读取当前 project/角色 cursor，不能从本章程推断“尚未开始”或“已经完成”。设计入口为 `docs/architecture/README.md`。
 
 ## 当前不做
 

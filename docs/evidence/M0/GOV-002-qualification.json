@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+  "scope": "GOVERNANCE_AND_FUNCTIONAL_CI_MIGRATION_ONLY",
+  "result": "PASS_GOVERNANCE_AND_HOSTED_FUNCTIONAL",
+  "artifact_verified": true,
+  "incorporated_main": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+  "artifacts": [
+    {
+      "run_id": 38736284748,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11973661676,
+      "name": "governance-maintenance-38736284748-1",
+      "size_bytes": 4949,
+      "zip_sha256": "401172f9a960fa5b23960d1058852c826c5f66f71eded361734147d14fbc1cca"
+    },
+    {
+      "run_id": 38736284708,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11973357090,
+      "name": "central-scope-38736284708-1",
+      "size_bytes": 3014,
+      "zip_sha256": "e58499c84a1c29a800c877b3dabd510a8f0d11ed885da73d2b4035c9bf2b0876"
+    },
+    {
+      "run_id": 38736284582,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974361252,
+      "name": "r0-v4-result-38736284582-1",
+      "size_bytes": 1179,
+      "zip_sha256": "1209c6d9777dd80b2e3c270cbe0736bc468c914c1e7c35c6f7ca11914d67a3ca"
+    },
+    {
+      "run_id": 38736284582,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974046344,
+      "name": "r0-v4-build-38736284582-1",
+      "size_bytes": 6671705,
+      "zip_sha256": "e1d3ab89aa8640e82a94dea179e8364f3439a04c6408ef334f9c968a7ccc750e"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974766020,
+      "name": "native-codec-38736284616-1",
+      "size_bytes": 6156,
+      "zip_sha256": "3054f79459441e1e209ce35f657e0cede5d0da86f0749b65097b982427918096"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974501290,
+      "name": "native-receipt-38736284616-1",
+      "size_bytes": 1656,
+      "zip_sha256": "cb0cfac8bb3cebd7e20d1ee6ed340255cc433643964b710ef304506a3e86f214"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974216314,
+      "name": "native-recovery-38736284616-1",
+      "size_bytes": 3508,
+      "zip_sha256": "e2f0679fab07e52d1d130600e4e58e0558d2bb5febc2fcaa49fb038c681b25d0"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974051450,
+      "name": "native-normal-38736284616-1",
+      "size_bytes": 1171,
+      "zip_sha256": "def840ece4bb083080d818643901c0948fbe07a849f2aa25026bd09660c14693"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974031433,
+      "name": "native-fec-38736284616-1",
+      "size_bytes": 1112,
+      "zip_sha256": "03cf6351263ac15b58914d92e053b749e195ca44e7453e03d2ce7d87b260594f"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11974021494,
+      "name": "native-build-38736284616-1",
+      "size_bytes": 5823211,
+      "zip_sha256": "1fd3dde954ef4346f58f1075f5e1161649a223dd0bb9f88217bd101da6b424e2"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11973811627,
+      "name": "native-engine-38736284616-1",
+      "size_bytes": 5117,
+      "zip_sha256": "eccb320d4fb397852ef54131020734f4f086657d5d0702b2bce506d7fe3fab9e"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11973801614,
+      "name": "native-kernel-38736284616-1",
+      "size_bytes": 1329,
+      "zip_sha256": "bd4fb37380945e799307706c64d6d2ecc05fc81d87b2200f605e54f8cbe3c7ef"
+    },
+    {
+      "run_id": 38736284616,
+      "run_attempt": 1,
+      "source_sha": "444c51e48de0063bb91c354e45078fcc158cee06",
+      "conclusion": "success",
+      "artifact_id": 11973267186,
+      "name": "native-platform-38736284616-1",
+      "size_bytes": 4333,
+      "zip_sha256": "2274f7510bd9dd4502d22e43836fd48fefe72f19afcad3d5bb1217304aa8363b"
+    }
+  ],
+  "governance": {
+    "run_id": 38736284748,
+    "run_attempt": 1,
+    "tests_passed": 163,
+    "repository_structure": "PASS",
+    "r0_ledger": "PASS"
+  },
+  "native": {
+    "run_id": 38736284616,
+    "run_attempt": 1,
+    "manifest_sha256": "d27ffc3b4d9f0bc9d4d3cbdc110205436a12051d0990c7b2e06c1c4a1803563a",
+    "target": "x86_64-unknown-linux-gnu",
+    "rust": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "profile": "release",
+    "features": "default",
+    "required_total": 334,
+    "groups": [
+      {
+        "group": "codec",
+        "required": 98,
+        "passed": 98,
+        "ignored": [
+          "link_fec_wire::fec_p0_cost_tests::r1_steady_release_same_source_fresh_vs_reused_owner_cost"
+        ],
+        "result": "PASS",
+        "binary_sha256": "5f33ebc11d6963b3ef83a4af157b9e9cb8dea2386b32927490429dcd98266722",
+        "log_sha256": "5734c977404975a33f553b96886ec6a67241df28c60a965708429b8b46cd7540"
+      },
+      {
+        "group": "engine",
+        "required": 87,
+        "passed": 87,
+        "ignored": [
+          "runtime::generation_release::r1_owner_release_component_actual_dispatch_repeats"
+        ],
+        "result": "PASS",
+        "binary_sha256": "56d6468253ff66d6c01045ddabf1eda44d01ee4964921cfa5ced1d97e8474ba9",
+        "log_sha256": "1fe2c0655e72ad7075fd06c8fabba1ed2ff820e66bd803fb84a45cfa7ae1ea40"
+      },
+      {
+        "group": "fec",
+        "required": 3,
+        "passed": 3,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "fe3de8a7228f0e690b50f7d8674595a01c816c30e1dddc157d951e5f1a5f51f5",
+        "log_sha256": "0f6d1515fb2a9ec84fab824cf0b94fd7246c75279605952310b8ac31771cc327"
+      },
+      {
+        "group": "kernel",
+        "required": 6,
+        "passed": 6,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "8118584d4810144db1a848805c37d44fdd27a39ae52db24cc8690b4531c546c0",
+        "log_sha256": "9adab9c0bb86ce4c783fbb82692c096121b775254e697c79f995c5879236d2c4"
+      },
+      {
+        "group": "normal",
+        "required": 3,
+        "passed": 3,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "37ab3aef9bd82551a8bf9288d066ae158f47be8560f960f9a8543dad3bcbf2a7",
+        "log_sha256": "e567c10f58bfd52b27558a8351d8deeca9e4472d0048d6419d2feb2b37f0f956"
+      },
+      {
+        "group": "platform",
+        "required": 75,
+        "passed": 75,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "f612c8fe5210d82d2893ad0f59c3d49905f416b3721ee2d8b488c1a1b760e2d0",
+        "log_sha256": "26631c1f65cf6cd705a4097f51c3729ef34c9d10ea5b6589e503ace36d848cf4"
+      },
+      {
+        "group": "receipt",
+        "required": 11,
+        "passed": 11,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "0124df088818a5a0c6047d5b37933da21ee032434876e059a50f1b194c39356c",
+        "log_sha256": "7e2e5d151051ed5a26e28cccc89c883bda035cf5a037285973e4db8ee708709d"
+      },
+      {
+        "group": "recovery",
+        "required": 51,
+        "passed": 51,
+        "ignored": [],
+        "result": "PASS",
+        "binary_sha256": "3bc70e43373fb52e347cb38a89c748980d096d4eb1f57f9a2993fd57dfe26118",
+        "log_sha256": "7c39fbb5d2e76a91cb2585c5e03fab4295ea5d4034d30b97810428b0c78450d8"
+      }
+    ]
+  },
+  "go_tls": {
+    "run_id": 38736284582,
+    "run_attempt": 1,
+    "required": 12,
+    "passed": 12,
+    "binary_sha256": "b31386dc2de319fede554155897bca0dc07685f5aee3c4fa99ffcaa3d6926cbd",
+    "log_sha256": "089c87a1e61b980d2d5df483e8b1a161f9acbfd632401d6b70a523cfb6e87fe2",
+    "scope": "pinned real TLS V4 admission plus authenticated cold snapshot with private fields; no Rust C ABI/activation/raw driver"
+  },
+  "central_scope": {
+    "run_id": 38736284708,
+    "run_attempt": 1,
+    "roles": [
+      {
+        "role": "M1",
+        "source_sha": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+        "checkpoint_sha": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+        "delta_count": 0,
+        "result": "ROLE_SCOPE_PASS",
+        "handoff": "NOT_EVALUATED"
+      },
+      {
+        "role": "M2",
+        "source_sha": "c74a4fd71712411b1fb5b326d95d746116a04844",
+        "checkpoint_sha": "c74a4fd71712411b1fb5b326d95d746116a04844",
+        "delta_count": 0,
+        "result": "ROLE_SCOPE_PASS",
+        "handoff": "NOT_EVALUATED"
+      },
+      {
+        "role": "M3",
+        "source_sha": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+        "checkpoint_sha": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+        "delta_count": 0,
+        "result": "ROLE_SCOPE_PASS",
+        "handoff": "NOT_EVALUATED"
+      },
+      {
+        "role": "M4",
+        "source_sha": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
+        "checkpoint_sha": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
+        "delta_count": 0,
+        "result": "ROLE_SCOPE_PASS",
+        "handoff": "NOT_EVALUATED"
+      }
+    ],
+    "note": "Real worker heads currently equal reviewed checkpoints. Non-empty deltas and negative cases are covered by Actions unit regression; workflow_run activation awaits main integration."
+  },
+  "historical_failures": [
+    {
+      "run_id": 38700748266,
+      "source_sha": "1b4be2e84c08e2bcdf36d12b6ae08857fc373df9",
+      "result": "FAIL",
+      "cause": "Uncaptured stdout split libtest outcome lines; retained required IDs; use normal captured stdout."
+    },
+    {
+      "run_id": 38701120518,
+      "source_sha": "a66f03a6eb7d6abd8c5e10016721702c4b8028b8",
+      "result": "FAIL",
+      "cause": "Existing Markdown coordination requests misread as JSON dispatch intents; type distinction added."
+    }
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "merged_main": "NOT_RUN",
+  "integration": "READY_FOR_M0_SAFE_BOUNDARY_MERGE",
+  "worker_branches_modified": false
+}
