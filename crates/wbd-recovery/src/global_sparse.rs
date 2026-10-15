@@ -14,7 +14,7 @@
 use std::collections::BTreeMap;
 use crate::budget::{BudgetDirection, BudgetError, RepairBudget, RepairBudgetConfig,
                     ReservationId, WireDirection};
-use crate::receipt::{AuthenticatedReceipt, ReceiptState, Release, RepairCandidate, RepairSendResult};
+use crate::receipt::{AuthenticatedReceipt, ReceiptRouteScope, ScopedAuthenticatedReceipt, ReceiptState, Release, RepairCandidate, RepairSendResult};
 use wbd_types::buffer_contract::FrozenRecordHandle;
 use wbd_types::{DataError, MonoNs, TunnelKey};
 
@@ -50,6 +50,7 @@ pub enum GlobalRepairError {
     DuplicateBatchId,
     StaleCandidate,
     WrongReceiptLane,
+    WrongReceiptScope,
     Receipt(DataError),
     Local(BudgetError),
 }
@@ -121,6 +122,7 @@ struct Grant {
 }
 struct DirectionAccount {
     local: RepairBudget,
+    receipt_route: Option<ReceiptRouteScope>,
     grant: Option<Grant>,
     io_timeout_ns: u64,
 }
@@ -138,6 +140,8 @@ struct Pending {
     direction: DirectionId,
     grant_id: GrantId,
     local_id: ReservationId,
+    lane: wbd_types::LaneKey,
+    pn: wbd_types::RecordPn,
     epoch: u64,
     bytes: u64,
     until: MonoNs,
@@ -202,6 +206,7 @@ impl GlobalRepairAllocator {
         }
         let account = DirectionAccount {
             local: RepairBudget::new(direction, local_config, now)?,
+            receipt_route: None,
             io_timeout_ns: local_config.io_timeout_ns,
             grant: None,
         };
@@ -355,6 +360,7 @@ impl GlobalRepairAllocator {
         self.pending_bytes += wire_bytes;
         self.pending.insert(GlobalReservationId(next), Pending {
             direction: key, grant_id: lease.id, local_id,
+            lane: candidate.frozen().metadata().lane, pn: candidate.pn(),
             epoch: self.current.index, bytes: wire_bytes, until,
         });
         Ok(GlobalReservationId(next))
@@ -392,6 +398,73 @@ impl GlobalRepairAllocator {
         }
         self.advance(now)?;
         shadow.on_receipt(receipt, now).map_err(GlobalRepairError::Receipt)
+    }
+
+
+    /// Bind the trusted M0-originated session once, before grants/reservations.
+    /// A changed epoch or lane must retire the old tunnel then register anew;
+    /// never overwrite an active generation containing in-flight callbacks.
+    pub fn bind_receipt_route(&mut self,direction:BudgetDirection,
+        route:ReceiptRouteScope,now:MonoNs)->Result<(),GlobalRepairError> {
+        if route.outbound_lane().tunnel!=direction.tunnel
+            || route.outbound_direction()!=direction.direction {
+            return Err(GlobalRepairError::WrongReceiptScope);
+        }
+        self.advance(now)?;
+        let key=DirectionId::new(direction);
+        let acc=self.accounts.get(&key).ok_or(GlobalRepairError::NotRegistered)?;
+        if let Some(old)=acc.receipt_route {
+            return if old==route {Ok(())} else {Err(GlobalRepairError::WrongReceiptScope)};
+        }
+        if acc.grant.is_some() || self.pending.values().any(|p|p.direction==key) {
+            return Err(GlobalRepairError::WrongReceiptScope);
+        }
+        self.accounts.get_mut(&key).expect("registered").receipt_route=Some(route);
+        Ok(())
+    }
+
+    /// Checked reverse-route receipt; never turns kernel Accepted/TCP ACK into
+    /// peer delivery. Requires exact independently pinned session identity.
+    pub fn observe_scoped_receipt<H:FrozenRecordHandle>(
+        &mut self,direction:BudgetDirection,shadow:&mut ReceiptState<H>,
+        scoped:&ScopedAuthenticatedReceipt,now:MonoNs
+    )->Result<Vec<Release<H>>,GlobalRepairError> {
+        let key=DirectionId::new(direction);
+        if self.accounts.get(&key).and_then(|a|a.receipt_route)!=Some(scoped.route())
+            || scoped.route().outbound_lane()!=shadow.lane()
+            || scoped.route().outbound_direction()!=direction.direction {
+            return Err(GlobalRepairError::WrongReceiptScope);
+        }
+        self.observe_authenticated_receipt(direction,shadow,scoped.receipt(),now)
+    }
+
+    /// An ordered mixed-client batch must validate all of its independently
+    /// pinned session, generation, direction, lane and PN scopes before ANY
+    /// NotSent refund. Stack array <=32; no global mutex or heap clone.
+    pub fn complete_scoped_batch(&mut self,
+        slots:&[(GlobalReservationId,ReceiptRouteScope)],
+        outcome:ValidatedRepairBatchOutcome,now:MonoNs
+    )->Result<BatchCompletionCounts,GlobalRepairError> {
+        if slots.len()>32 || slots.len()!=outcome.total {
+            return Err(GlobalRepairError::InvalidBatch);
+        }
+        let mut ids=[GlobalReservationId(0);32];
+        for (i,(id,scope)) in slots.iter().enumerate() {
+            if ids[..i].contains(id) {return Err(GlobalRepairError::DuplicateBatchId);}
+            let p=self.pending.get(id).ok_or(GlobalRepairError::StaleGrant)?;
+            let acc=self.accounts.get(&p.direction).ok_or(GlobalRepairError::StaleGrant)?;
+            if acc.receipt_route!=Some(*scope)
+                || scope.outbound_lane()!=p.lane
+                || DirectionId::new(BudgetDirection {
+                    tunnel:scope.outbound_lane().tunnel,
+                    direction:scope.outbound_direction()
+                })!=p.direction
+                || !scope.contains_data_pn(p.pn) {
+                return Err(GlobalRepairError::WrongReceiptScope);
+            }
+            ids[i]=*id;
+        }
+        self.complete_batch(&ids[..slots.len()],outcome,now)
     }
 
     /// A completion is consumed exactly once, never coerced into proof of peer
@@ -1162,6 +1235,209 @@ mod tests {
             Err(GlobalRepairError::StaleGrant));
         assert_eq!(x.snapshot(),snap);
         assert!(x.snapshot().overdue_uncertain_bytes>=1400);
+    }
+
+
+    fn route(d:BudgetDirection,epoch:u8,first:u64,last:u64)->ReceiptRouteScope {
+        let out=LaneKey{tunnel:d.tunnel,slot:1,generation:1};
+        let reverse=LaneKey{tunnel:d.tunnel,slot:2,generation:7};
+        ReceiptRouteScope::checked(out,reverse,d.direction,
+            [epoch;16],(RecordPn(first),RecordPn(last)),
+            (RecordPn(1),RecordPn(1000))).unwrap()
+    }
+    fn opened(d:BudgetDirection,epoch:u8,pn:u64)
+        -> crate::receipt::ReceiptOpenFacts {
+        crate::receipt::ReceiptOpenFacts {
+            verified_reverse_lane:LaneKey{tunnel:d.tunnel,slot:2,generation:7},
+            verified_reverse_direction:match d.direction {
+                WireDirection::ClientToServer=>WireDirection::ServerToClient,
+                WireDirection::ServerToClient=>WireDirection::ClientToServer
+            },
+            verified_tunnel_epoch:[epoch;16],
+            control_record_pn:RecordPn(pn),
+        }
+    }
+    fn positive(pn:u64)->Vec<crate::receipt::ReceiptPage> {
+        let base=pn/256*256;
+        let mut bitmap=[0u8;32];
+        bitmap[((pn-base)/8) as usize]|=1 << ((pn-base)%8);
+        vec![crate::receipt::ReceiptPage{base_pn:RecordPn(base),bitmap}]
+    }
+    fn scoped_receipt(
+        pinned:ReceiptRouteScope,facts:crate::receipt::ReceiptOpenFacts,
+        pn:u64,seq:u32
+    )->Result<ScopedAuthenticatedReceipt,DataError> {
+        ScopedAuthenticatedReceipt::checked_after_open(
+            pinned,facts,RecordPn(pn),seq,positive(pn))
+    }
+
+    #[test]
+    fn r2_scope_forward_stale_epoch_rotation_and_pn_fail_before_receipt() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let scope=route(a,7,10,30);
+        let facts=opened(a,7,10);
+        assert!(scoped_receipt(scope,facts,12,1).is_ok());
+        let mut forward=facts;
+        forward.verified_reverse_direction=WireDirection::ClientToServer;
+        assert!(matches!(scoped_receipt(scope,forward,12,1),Err(DataError::Stale)));
+        let mut other=facts;
+        other.verified_reverse_lane=opened(b,7,10).verified_reverse_lane;
+        assert!(matches!(scoped_receipt(scope,other,12,1),Err(DataError::Stale)));
+        other=facts;other.verified_reverse_lane.generation+=1;
+        assert!(matches!(scoped_receipt(scope,other,12,1),Err(DataError::Stale)));
+        other=facts;other.verified_tunnel_epoch=[8;16];
+        assert!(matches!(scoped_receipt(scope,other,12,1),Err(DataError::Stale)));
+        other=facts;other.control_record_pn=RecordPn(1001);
+        assert!(matches!(scoped_receipt(scope,other,12,1),Err(DataError::Stale)));
+        assert!(matches!(scoped_receipt(scope,facts,9,1),Err(DataError::Stale)));
+        assert!(matches!(scoped_receipt(scope,facts,31,1),Err(DataError::Stale)));
+        assert!(matches!(ReceiptRouteScope::checked(
+            scope.outbound_lane(),scope.outbound_lane(),a.direction,[0;16],
+            (RecordPn(1),RecordPn(2)),(RecordPn(1),RecordPn(2))),
+            Err(DataError::Malformed)));
+        // Largest=20 is valid but the bit for 9 is outside pinned [10,30].
+        assert!(matches!(ScopedAuthenticatedReceipt::checked_after_open(
+            scope,facts,RecordPn(20),1,positive(9)),Err(DataError::Stale)));
+    }
+
+    #[test]
+    fn r2_scope_ack_before_grant_and_old_report_never_forged() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(2800,2);
+        add(&mut x,a,0);add(&mut x,b,0);
+        let ra=route(a,7,1,40);
+        let rb=route(b,9,1,40);
+        x.bind_receipt_route(a,ra,MonoNs(0)).unwrap();
+        x.bind_receipt_route(b,rb,MonoNs(0)).unwrap();
+        let (mut shadow,c)=race_shadow(a,12,1);
+        let scoped=scoped_receipt(ra,opened(a,7,12),12,9).unwrap();
+        assert_eq!(x.observe_scoped_receipt(a,&mut shadow,&scoped,MonoNs(2))
+            .unwrap().len(),1);
+        assert_eq!(x.observe_scoped_receipt(a,&mut shadow,&scoped,MonoNs(3))
+            .unwrap().len(),0);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(shadow.outstanding(),0);
+        let lease=x.grant(a,1400,100_000,MonoNs(4)).unwrap();
+        let before=x.snapshot();
+        assert_eq!(x.reserve_if_still_missing(lease,&shadow,&c,1400,MonoNs(4)),
+            Err(GlobalRepairError::StaleCandidate));
+        assert_eq!(x.snapshot(),before);
+        let bad=scoped_receipt(rb,opened(b,9,12),12,10).unwrap();
+        assert!(matches!(x.observe_scoped_receipt(a,&mut shadow,&bad,MonoNs(4)),
+            Err(GlobalRepairError::WrongReceiptScope)));
+        x.on_fresh_accepted(b,200,MonoNs(5)).unwrap();
+        assert_eq!(x.local_snapshot(b).unwrap().fresh_confirmed_bytes,200);
+    }
+
+    #[test]
+    fn r2_scope_four_clients_directions_mixed_batch_rejects_cross_scope() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(1,WireDirection::ServerToClient);
+        let c=dir(2,WireDirection::ClientToServer);
+        let d=dir(2,WireDirection::ServerToClient);
+        let dirs=[a,b,c,d];
+        let mut x=global(5600,4);
+        for dir in dirs {add(&mut x,dir,0);}
+        let routes=dirs.map(|dir|route(dir,7,1,80));
+        for (dir,sc) in dirs.into_iter().zip(routes) {
+            x.bind_receipt_route(dir,sc,MonoNs(0)).unwrap();
+        }
+        let grants=dirs.map(|dir|x.grant(dir,1400,100_000,MonoNs(1)).unwrap());
+        let mut ids=Vec::new();
+        for (i,((dir,sc),lease)) in dirs.into_iter().zip(routes).zip(grants).enumerate() {
+            let (shadow,candidate)=race_shadow(dir,10+i as u64,1);
+            let id=x.reserve_if_still_missing(lease,&shadow,&candidate,1400,MonoNs(1)).unwrap();
+            ids.push((id,sc));
+        }
+        let wrong=vec![ids[0],(ids[1].0,routes[2]),ids[2],ids[3]];
+        let outcome=ValidatedRepairBatchOutcome::checked(
+            4,1,Some(1),BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        let before=x.snapshot();
+        assert_eq!(x.complete_scoped_batch(&wrong,outcome,MonoNs(2)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        assert_eq!(x.snapshot(),before);
+        let counts=x.complete_scoped_batch(&ids,outcome,MonoNs(2)).unwrap();
+        assert_eq!(counts,BatchCompletionCounts{accepted:1,uncertain:1,
+            definitely_not_sent:2,held_unproven:0});
+        assert_eq!(x.snapshot().charged_repairs,2800);
+        assert_eq!(x.snapshot().held_unused_grants,2800);
+        assert_eq!(x.complete_scoped_batch(&ids,outcome,MonoNs(3)),
+            Err(GlobalRepairError::StaleGrant));
+        x.on_fresh_accepted(d,500,MonoNs(3)).unwrap();
+        assert_eq!(x.local_snapshot(d).unwrap().fresh_confirmed_bytes,500);
+    }
+
+    #[test]
+    fn r2_scope_epoch_rollover_departure_old_notsent_and_uncertain_debit() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(4200,2);
+        x.register(a,wide_cfg(),MonoNs(999_999_980)).unwrap();
+        x.register(b,wide_cfg(),MonoNs(999_999_980)).unwrap();
+        let ra=route(a,7,1,60);let rb=route(b,7,1,60);
+        x.bind_receipt_route(a,ra,MonoNs(999_999_980)).unwrap();
+        x.bind_receipt_route(b,rb,MonoNs(999_999_980)).unwrap();
+        let ga=x.grant(a,1400,1000,MonoNs(999_999_981)).unwrap();
+        let gb=x.grant(b,1400,1000,MonoNs(999_999_981)).unwrap();
+        let (sa,ca)=race_shadow(a,10,999_999_982);
+        let (sb,cb)=race_shadow(b,20,999_999_982);
+        let ia=x.reserve_if_still_missing(ga,&sa,&ca,1400,MonoNs(999_999_982)).unwrap();
+        let ib=x.reserve_if_still_missing(gb,&sb,&cb,1400,MonoNs(999_999_982)).unwrap();
+        let mixed=ValidatedRepairBatchOutcome::checked(
+            2,0,Some(0),BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        assert_eq!(x.complete_scoped_batch(&[(ia,ra),(ib,rb)],mixed,
+            MonoNs(1_000_000_001)).unwrap(),
+            BatchCompletionCounts{accepted:0,uncertain:1,
+                definitely_not_sent:1,held_unproven:0});
+        assert_eq!(x.snapshot().previous_epoch_charged,1400);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(x.snapshot().held_unused_grants,0);
+        assert_eq!(x.bind_receipt_route(a,route(a,8,1,60),MonoNs(1_000_000_002)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        x.retire_tunnel(a.tunnel,MonoNs(1_000_000_003)).unwrap();
+        let anew=BudgetDirection {
+            tunnel:TunnelKey{slot:1,generation:3},direction:WireDirection::ClientToServer};
+        x.register(anew,wide_cfg(),MonoNs(1_000_000_004)).unwrap();
+        let ranew=route(anew,8,1,60);
+        x.bind_receipt_route(anew,ranew,MonoNs(1_000_000_004)).unwrap();
+        let g=x.grant(anew,4200,100_000,MonoNs(1_000_000_005)).unwrap();
+        assert_eq!(g.bytes(),4200);
+        assert_eq!(x.complete_scoped_batch(&[(ia,ra)],
+            ValidatedRepairBatchOutcome::checked(
+                1,0,None,BatchSuffixEvidence::ProvenNotAttempted).unwrap(),
+            MonoNs(1_000_000_006)),Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.snapshot().held_unused_grants,4200);
+        assert_eq!(x.snapshot().charged_repairs,0);
+    }
+
+    #[test]
+    fn r2_scope_32_33_bounded_registration_and_old_callback_fail_closed() {
+        let (mut x,ids,dirs,leases)=wide_candidates();
+        // Untagged old grants cannot silently acquire a session scope.
+        let a=route(dirs[0],7,1,80);
+        assert_eq!(x.bind_receipt_route(dirs[0],a,MonoNs(465_000_001)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        let mut batch:Vec<(GlobalReservationId,ReceiptRouteScope)>=ids.iter()
+            .copied().map(|id|(id,a)).collect();
+        let partial=ValidatedRepairBatchOutcome::checked(
+            32,16,Some(16),BatchSuffixEvidence::Unproven).unwrap();
+        let before=x.snapshot();
+        assert_eq!(x.complete_scoped_batch(&batch,partial,MonoNs(465_000_001)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        assert_eq!(x.snapshot(),before);
+        batch.push((ids[0],a));
+        assert_eq!(x.complete_scoped_batch(&batch,partial,MonoNs(465_000_001)),
+            Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(ValidatedRepairBatchOutcome::all_accepted(33),
+            Err(GlobalRepairError::InvalidBatch));
+        // Old unscoped contract still receives no peer-delivery credit.
+        assert_eq!(x.complete_batch(&ids,
+            ValidatedRepairBatchOutcome::all_accepted(32).unwrap(),
+            MonoNs(465_000_002)).unwrap().accepted,32);
+        assert_eq!(x.snapshot().charged_repairs,44_800);
+        let _=leases;
     }
 
 }

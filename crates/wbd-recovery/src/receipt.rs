@@ -67,6 +67,99 @@ impl AuthenticatedReceipt {
     }
 }
 
+
+/// Session policy pinned by M0 independently from the inbound receipt.
+/// Pure data comparison only: NOT an authenticated session constructor.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct ReceiptRouteScope {
+    outbound_lane:LaneKey,
+    reverse_lane:LaneKey,
+    outbound_direction:crate::budget::WireDirection,
+    tunnel_epoch:[u8;16],
+    first_data_pn:RecordPn,
+    last_data_pn:RecordPn,
+    first_control_pn:RecordPn,
+    last_control_pn:RecordPn,
+}
+impl ReceiptRouteScope {
+    pub fn checked(
+        outbound_lane:LaneKey,reverse_lane:LaneKey,
+        outbound_direction:crate::budget::WireDirection,
+        tunnel_epoch:[u8;16],
+        data_pns:(RecordPn,RecordPn),control_pns:(RecordPn,RecordPn)
+    )->Result<Self,DataError> {
+        if outbound_lane.tunnel!=reverse_lane.tunnel ||
+            tunnel_epoch==[0u8;16] || data_pns.0>data_pns.1 ||
+            control_pns.0>control_pns.1 {
+            return Err(DataError::Malformed);
+        }
+        Ok(Self {outbound_lane,reverse_lane,outbound_direction,tunnel_epoch,
+            first_data_pn:data_pns.0,last_data_pn:data_pns.1,
+            first_control_pn:control_pns.0,last_control_pn:control_pns.1})
+    }
+    pub fn outbound_lane(&self)->LaneKey {self.outbound_lane}
+    pub fn outbound_direction(&self)->crate::budget::WireDirection {self.outbound_direction}
+    pub fn contains_data_pn(&self,pn:RecordPn)->bool {
+        pn>=self.first_data_pn && pn<=self.last_data_pn
+    }
+    fn reverse_direction(&self)->crate::budget::WireDirection {
+        use crate::budget::WireDirection::{ClientToServer,ServerToClient};
+        match self.outbound_direction {ClientToServer=>ServerToClient,ServerToClient=>ClientToServer}
+    }
+    fn matches_open(&self,opened:ReceiptOpenFacts)->bool {
+        opened.verified_reverse_lane==self.reverse_lane &&
+        opened.verified_reverse_direction==self.reverse_direction() &&
+        opened.verified_tunnel_epoch==self.tunnel_epoch &&
+        opened.control_record_pn>=self.first_control_pn &&
+        opened.control_record_pn<=self.last_control_pn
+    }
+}
+/// Caller-supplied observations from M0 after AEAD, PN replay and trusted
+/// session lookup; plain public values cannot themselves establish trust.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct ReceiptOpenFacts {
+    pub verified_reverse_lane:LaneKey,
+    pub verified_reverse_direction:crate::budget::WireDirection,
+    pub verified_tunnel_epoch:[u8;16],
+    pub control_record_pn:RecordPn,
+}
+/// Parsed authenticated receipt bound to the independent pinned route.
+/// This type checks scope but performs NO cryptographic verification.
+pub struct ScopedAuthenticatedReceipt {
+    route:ReceiptRouteScope,
+    receipt:AuthenticatedReceipt,
+}
+impl ScopedAuthenticatedReceipt {
+    pub fn checked_after_open(
+        pinned:ReceiptRouteScope,opened:ReceiptOpenFacts,
+        largest_data_pn:RecordPn,report_seq:u32,pages:Vec<ReceiptPage>
+    )->Result<Self,DataError> {
+        if !pinned.matches_open(opened) || !pinned.contains_data_pn(largest_data_pn) {
+            return Err(DataError::Stale);
+        }
+        // Positive bitmap bits outside the independent session PN scope
+        // cannot retire a shadow even when largest_data_pn is valid.
+        for page in &pages {
+            for (byte_index,byte) in page.bitmap.iter().enumerate() {
+                for bit in 0..8 {
+                    if (*byte & (1u8<<bit))!=0 {
+                        let pn=page.base_pn.0.checked_add((byte_index*8+bit) as u64)
+                            .ok_or(DataError::Malformed)?;
+                        if !pinned.contains_data_pn(RecordPn(pn)) {
+                            return Err(DataError::Stale);
+                        }
+                    }
+                }
+            }
+        }
+        let receipt=AuthenticatedReceipt::after_authenticated_open(
+            pinned.outbound_lane,largest_data_pn,report_seq,pages)?;
+        Ok(Self {route:pinned,receipt})
+    }
+    pub fn route(&self)->ReceiptRouteScope {self.route}
+    pub fn receipt(&self)->&AuthenticatedReceipt {&self.receipt}
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ReleaseReason {
     ReceivedByPeer,

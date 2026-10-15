@@ -15,6 +15,7 @@ pub use budget::{
     ReservationId, WireDirection,
 };
 pub use receipt::{
+    ReceiptOpenFacts, ReceiptRouteScope, ScopedAuthenticatedReceipt,
     AuthenticatedReceipt, PollResult, ReceiptConfig, ReceiptPage, ReceiptState,
     Release, ReleaseReason, RepairCandidate, RepairSendResult,
 };
