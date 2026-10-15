@@ -382,7 +382,12 @@ mod fec_retire_pressure_tests;
 #[path="fec_auth_gate_tests.rs"]
 mod fec_auth_gate_tests;
 
-// M3-012 independently authenticated four-scope FEC tests, test-only provenance.
+// M3-012 multitenant tunnel/direction/generation isolation tests beneath frozen R0.
 #[cfg(test)]
 #[path="fec_multiscope_tests.rs"]
 mod fec_multiscope_tests;
+
+// M3-013 real-AEAD post-auth FEC P0 component cost tests; frozen R0 excludes LINK.
+#[cfg(test)]
+#[path="fec_p0_cost_tests.rs"]
+mod fec_p0_cost_tests;

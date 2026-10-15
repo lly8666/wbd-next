@@ -6,21 +6,25 @@
 
 /// R0 opaque TLS-like record structural segmentation (not authentication).
 pub mod record_frame;
-/// Authenticated ChaCha/AES128/AES256 record AEAD and complete eight-byte HP.
+/// Real independent ChaCha AEAD and full eight-byte PN header protection.
 pub mod record_crypto;
-/// Per-admitted-lane authenticated PN uniqueness and bounded replay window.
+/// Bounded per-lane authenticated replay admission; separate from raw crypto.
 pub mod record_replay;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
 pub mod link_fec_wire;
+/// Bounded reassembly of already-authenticated LINK fragments.
 pub mod link_reassembly;
+/// Genuine old-Go RS(20,R) GF256 scalar parity and missing-only recovery.
 pub mod fec_math;
+/// Bounded first-source FEC TX block owner.
 pub mod fec_tx;
+/// Authenticated-input bounded Heavy/Compact FEC RX owner.
 pub mod fec_rx;
-/// Authenticated-input WF BlockID scope; requires trusted V4 owner generation.
+/// Bounded authenticated generation-aware WF BlockID32 to u64 extension.
 pub mod fec_block_id;
-/// Fail-closed post-AEAD+PN FEC gate: production FecOrigin is not constructible.
+/// Fail-closed typed real-record post-AEAD+PN FEC scope gate.
 pub mod fec_auth_gate;
-/// Unique path MTU budget accounting for Normal/FEC off.
+/// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
 use wbd_types::LogicalPacketId;
