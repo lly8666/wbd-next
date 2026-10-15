@@ -16,10 +16,18 @@ from tools import governance as g
 
 G2_BASE = "83bd720368b9be68b3c4c94d7462d20cf4d796db"
 
-G2_ACTIVATION_MAX_COMMITS = 99  # per_page=100; full 99 must be visible, 100 rejected
+# Real GitHub compare supports pagination. Inspect EVERY immutable activation
+# commit, with a conservative resource/rate budget rather than a 99-commit
+# cliff. Past this bound require an M0-reviewed checkpoint/rebase policy.
+G2_ACTIVATION_MAX_COMMITS = 512
+G2_ACTIVATION_PAGE_SIZE = 80
 
-def complete_g2_ancestry(compare):
-    """Validate a COMPLETE non-diverged bounded immutable GitHub commit page."""
+def complete_g2_ancestry(compare, expected_source=None):
+    """Validate ALL immutable GitHub compare entries, never a prefix.
+
+    The caller must collect every required page first; a truncated response
+    must never be accepted just because its individual commits look valid.
+    """
     total=compare.get("total_commits",-1)
     commits=compare.get("commits")
     g.need(compare.get("status") in {"ahead","identical"} and
@@ -30,13 +38,52 @@ def complete_g2_ancestry(compare):
     g.need(len(ids)==total and all(isinstance(v,str) and g.SHA.fullmatch(v) for v in ids)
            and len(set(ids))==total,
            "invalid or repeated G2 activation SHA")
+    if expected_source is not None:
+        g.need(bool(g.SHA.fullmatch(expected_source)) and
+               ((total>0 and ids[-1]==expected_source) or
+                (total==0 and expected_source==G2_BASE)),
+               "G2 compare terminal SHA differs from frozen worker SOURCE")
     return commits
+
+
+def fetch_complete_g2_ancestry(api, source):
+    """Paginate fixed source/anchor with strict cardinality and page identity.
+
+    A changing worker branch cannot alter this frozen-SHA compare. Missing,
+    duplicated, reordered or cross-snapshot pages are rejected, and every
+    commit is still audited individually by audit_worker_history().
+    """
+    g.need(isinstance(source,str) and bool(g.SHA.fullmatch(source)),
+           "worker SOURCE must be an immutable full SHA")
+    base=f"compare/{G2_BASE}...{source}?per_page={G2_ACTIVATION_PAGE_SIZE}"
+    first=api.get(base+"&page=1")
+    total=first.get("total_commits")
+    g.need(first.get("status") in {"ahead","identical"} and
+           type(total) is int and 0<=total<=G2_ACTIVATION_MAX_COMMITS and
+           first.get("behind_by",0)==0,
+           "invalid or unbounded G2 compare or diverged activation")
+    chunks=[]
+    for page in range(1,(total+G2_ACTIVATION_PAGE_SIZE-1)//G2_ACTIVATION_PAGE_SIZE+1):
+        current=first if page==1 else api.get(base+f"&page={page}")
+        items=current.get("commits")
+        required=min(G2_ACTIVATION_PAGE_SIZE,
+                     total-(page-1)*G2_ACTIVATION_PAGE_SIZE)
+        g.need(current.get("status")==first["status"] and
+               current.get("total_commits")==total and
+               current.get("ahead_by",total)==first.get("ahead_by",total) and
+               current.get("behind_by",0)==0 and
+               isinstance(items,list) and len(items)==required,
+               "G2 compare missing/inconsistent paginated commit page")
+        chunks.extend(items)
+    complete=dict(first,commits=chunks)
+    return complete_g2_ancestry(complete,expected_source=source)
+
 
 def audit_worker_history(api,role,source,control_sha):
     """Every commit's FULL path list, parent count and exceptional sync reviewed."""
-    compare=api.get(f"compare/{G2_BASE}...{source}?per_page=100")
+    commits=fetch_complete_g2_ancestry(api,source)
     edges=[]
-    for commit in complete_g2_ancestry(compare):
+    for commit in commits:
         sha=commit["sha"]
         on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
         g.need(on_main.get("status") in {"ahead","identical","diverged","behind"},
