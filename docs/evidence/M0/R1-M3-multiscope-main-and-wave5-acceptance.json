@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-MULTISCOPE-MAIN-018",
+  "branch": "main",
+  "result": "PASS_SCOPED_NATIVE_WITH_BLOCKED_M2",
+  "source_sha": "404d37028a4c0d9949c379647dd1299609822cc7",
+  "artifact_verified": true,
+  "m0_predecessor": {
+    "head": "af8a8b40853845b6e876224d579bfb567df48e6c",
+    "sequence": 53,
+    "checkpoint": "7cbd59e77297236ca3589d8e3268976448c344dd",
+    "H_governance": 38678134027
+  },
+  "M3_worker_test_origin": {
+    "source_sha": "4787d94617afe72c511f3f2299d1b060c2930c6c",
+    "exact_blob": "67bac381e21362b8f3d9038486ad0dbf22fae8cd",
+    "new_tests": 9,
+    "only_cfg_test_FecOrigin": true,
+    "code_import_source": "46ff7c2d064df120822cc4aacb56806b7f9892f4"
+  },
+  "M0_native_94": [
+    {
+      "run_id": 38679677353,
+      "workflow": "r1-record-auth-replay",
+      "source_sha": "46ff7c2d064df120822cc4aacb56806b7f9892f4",
+      "passed": 94,
+      "binary_sha256": "bd884032029c34bc69c87bd69bc39f6eefd647c4761b35fc4ee7a6f3974d0a8e",
+      "log_sha256": "2187c3d8c16af42f44eedfa29f5d5a101b965a1f43a60a7cc36e75cd4efd8671",
+      "build_artifact": {
+        "id": 11947164119,
+        "digest": "sha256:524084fc00a29e00ae8ee64a47a2ab9ec927a8a5c52f17a56e58061783f357f4"
+      },
+      "result_artifact": {
+        "id": 11947423669,
+        "digest": "sha256:3d4eb5543ddf99d181a292e07edb85bbef6e9ff020b794e868fe1fec9ed7eb71"
+      }
+    },
+    {
+      "run_id": 38679677359,
+      "workflow": "r1-fec-retire-native",
+      "source_sha": "46ff7c2d064df120822cc4aacb56806b7f9892f4",
+      "passed": 94,
+      "binary_sha256": "bd884032029c34bc69c87bd69bc39f6eefd647c4761b35fc4ee7a6f3974d0a8e",
+      "log_sha256": "f4edff10f1638c80f4e274a7269c82f613b9feb1c2ae38ca95565263351e2834",
+      "build_artifact": {
+        "id": 11946993131,
+        "digest": "sha256:77cd1830e12f571b30a2cfd295ada7ddc53dd19b98f8cfbb96e10c0a2f6fcba9"
+      },
+      "result_artifact": {
+        "id": 11946698245,
+        "digest": "sha256:d5ac68f277da34328c5af4d471a9b3e565b73de4e423b7b27272011f6bae5d79"
+      }
+    }
+  ],
+  "P0_first_source_failure": {
+    "source": "46ff7c2d064df120822cc4aacb56806b7f9892f4",
+    "run_id": 38679677311,
+    "reason": "UDP fast runner 20000 batches measured 0.9165s below unchanged >=1s gate; Rust tests PASS but Action FAILURE",
+    "first_source_successes": 12,
+    "total": 13
+  },
+  "P0_final": {
+    "source": "404d37028a4c0d9949c379647dd1299609822cc7",
+    "actions_success": 11,
+    "actions_total": 11,
+    "run_id": 38679808846,
+    "build_artifact": {
+      "id": 11947284093,
+      "digest": "sha256:070ab206a07c90b105a741964d4344da4cddb66a0a4f8e28abf70a2a65d16396"
+    },
+    "result_artifact": {
+      "id": 11947334071,
+      "digest": "sha256:4b5ce21a840fff21270b55377ee45fd22b2cff50e8737d17d415135aa4191892"
+    },
+    "repeats": 3,
+    "aead_1000B_median_Bps": 600397401.239,
+    "aead_p99_per_record_ns": 1683,
+    "linux_UDP_32x256_median_Bps": 55181559.259,
+    "UDP_p99_per_batch_ns": 171661,
+    "native_business_product": false
+  },
+  "accepted_workers": [
+    {
+      "role": "M1",
+      "source": "0979314cacf8931a90840ad312dd50e9e2777d04",
+      "native": 38678588923,
+      "passed": 71,
+      "evidence_S": "c8506836ca7395a3ef75a12d890b85313ea5468f",
+      "S_gov": 38679110643,
+      "H": "6ad61c34596815d8688664af018e33669da39c59",
+      "H_gov": 38679184618,
+      "scope": "Owner generation/ready batch no Go auth; debug P0 only",
+      "historical_failure": 38678588872
+    },
+    {
+      "role": "M3",
+      "source": "0573798b27fa6fd6327ed1b997ee8cd50b0da526",
+      "native": 38678836564,
+      "passed": 96,
+      "evidence_S": "55a1248c3d37eb5f9f01826e43cf6e061f16747a",
+      "S_gov": 38679104152,
+      "H": "f198eb0c28900b68bdfb0df28b3b822e19e09bb2",
+      "H_gov": 38679326550,
+      "scope": "Test-only origin Debug P0 includes owner constructor",
+      "historical_failure": 38678774484
+    },
+    {
+      "role": "M4",
+      "source": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
+      "native": 38678579974,
+      "passed": 60,
+      "evidence_S": "f7fc373ee6bf67e7bd1463d16b2dd03381229aab",
+      "S_gov": 38679059068,
+      "H": "bd413690f7b62c2161b8ef704251e211684fdc69",
+      "H_gov": 38679197418,
+      "scope": "Raw RX metadata/inert protocol0 FD, actual received raw traffic NOT_RUN",
+      "historical_failure": 38678579999
+    }
+  ],
+  "M2_blocked": {
+    "role": "M2",
+    "source": "25642589f0feb12b44304fd21842c507a9314d35",
+    "native": 38678654629,
+    "tests_passed": 44,
+    "source_gov_failure": 38678654568,
+    "evidence_S": "1228a11158a02e53e377ad3bb3cade5b83f1daba",
+    "S_gov_failure": 38679005438,
+    "H": "018a07c880473a896d40c0d97a59250212f7dad8",
+    "H_gov_failure": 38679115636,
+    "reason": "Old M2 checker bound64 vs source distance65; explicitly scoped M0 checker mirror needed from exact blocked H, M2 has not executed it",
+    "result": "NOT_ACCEPTED"
+  },
+  "M0_governance_remediation": {
+    "first_source": "184c18e40e0a4698d8a42ffe959fcba3aea21050",
+    "first_gov": 38679995100,
+    "first_g2_failure": 38679995056,
+    "second_source": "bf0acea95edae46668c18aac55e528b6f34bd23a",
+    "second_gov": 38680087526,
+    "second_g2_failure": 38680087495,
+    "third_source": "e9a4455dd4c20253a4e740e76bf7339fa4a6cc25",
+    "third_gov_failure": 38680354732,
+    "third_g2_failure": 38680354726,
+    "final_source": "c4afa47a16bb728dd283e817fe397739828e289e",
+    "governance": 38680505799,
+    "g2_full_ancestry": 38680505847,
+    "result": "SUCCESS",
+    "actual_M3_ancestry_commits": 91,
+    "worker_commits": 64,
+    "main_ancestors": 27
+  },
+  "new_assignments": {
+    "source": "c5a0cbf933dd2911523ec4ac5c9869879d802533",
+    "gov": 38680716691,
+    "g2": 38680716673,
+    "conclusion": "SUCCESS",
+    "tasks": [
+      "M1 R1-M1-READY-GENERATION-RELEASE-008",
+      "M3 R1-M3-FEC-STEADY-COST-RELEASE-014",
+      "M4 R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008"
+    ],
+    "M2_keeps_task": "R2-M2-REVERSE-GRANT-OWNER-BENCH-006",
+    "registry_rev": 2,
+    "epoch": 1,
+    "worker_sessions_launched": "NOT_ASSERTED"
+  },
+  "not_run": [
+    "real Go V4 authenticated Rust owner install",
+    "production positive FecOrigin",
+    "actual raw AF_PACKET RX/TX",
+    "P1 P2 P3 500Mbps product",
+    "Windows/ARM native",
+    "physical"
+  ],
+  "next_action": "M0 independently wire genuine Go V4 protected session to Rust owner generation/Prepare/Detach/Commit, integrate M1 ready owner and scoped M4 raw metadata. Worker M2 must first copy exact approved checker then new S/H Governance; no waiver."
+}
