@@ -80,5 +80,8 @@
     "production": "NOT_RUN",
     "physical": "NOT_RUN",
     "product_p99": "NOT_RUN"
-  }
+  },
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_note": "PASS means source-attested scoped P0 component validation measurements were present in verified native artifact; not isolated CPU/production rate qualification."
 }

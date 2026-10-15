@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "source_sha": "0979314cacf8931a90840ad312dd50e9e2777d04",
-  "result": "PASS_SCOPED_NATIVE_ONLY",
+  "result": "PASS",
   "artifact_verified": true,
   "source_attested": true,
   "scope": "M1 generation-fenced ready handoff tests and source-attested debug unit-test-only owner scope-validation P0. No authenticated/protocol/driver/production performance claims.",
