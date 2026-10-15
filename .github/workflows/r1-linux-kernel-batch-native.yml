@@ -44,6 +44,7 @@ jobs:
           sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
           parts=['crates/wbd-platform/src/lib.rs','crates/wbd-platform/src/r1.rs',
                  'crates/wbd-platform/src/linux_batch.rs',
+                 'crates/wbd-platform/src/rx_ipv4_tcp.rs',
                  'crates/wbd-platform/src/ipv4_tcp.rs',
                  'crates/wbd-engine/src/runtime/mod.rs',
                  'crates/wbd-engine/src/memory/mod.rs',
@@ -77,7 +78,7 @@ jobs:
         with:
           name: r1-linux-batch-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-linux-batch-build/
-      - name: Verify exact compiled binary sources and execute 21 platform plus two M0 integration tests
+      - name: Verify exact compiled binary sources and execute 31 platform plus three M0 integration tests
         shell: bash
         run: |
           set -euo pipefail
@@ -116,10 +117,11 @@ jobs:
              'r1_linux_sendmmsg_real_kernel_cap32_not_33rd',
              'r1_linux_sendmmsg_real_kernel_unix_backpressure_eagain_notsent']
           must_main=['r1_m0_linux_batch_real_kernel_full_tcp_m1_frozen_aead_replay',
-             'r1_m0_linux_batch_cap32_stop_and_unattempted_suffix_udp']
+             'r1_m0_linux_batch_cap32_stop_and_unattempted_suffix_udp',
+             'r1_m0_ipv4_tcp_parser_checksum_forgery_cannot_bypass_aead_or_hol']
           ok=(int(os.environ['PLATFORM_EXIT'])==0
               and int(os.environ['INTEGRATION_EXIT'])==0
-              and np==21 and ni==2
+              and np==31 and ni==3
               and all(t+' ... ok' in p for t in must_platform)
               and all(t+' ... ok' in i for t in must_main))
           result={'source_sha':m['source_sha'],'run_id':m['run_id'],

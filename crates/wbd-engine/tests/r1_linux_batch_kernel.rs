@@ -12,6 +12,7 @@ use wbd_engine::memory::Arena;
 use wbd_engine::runtime::{TxOwner,TxKind,QueueLimits};
 use wbd_platform::ipv4_tcp::{build,Ipv4Tuple,Presentation,PacketPersona};
 use wbd_platform::linux_batch::submit_connected_udp;
+use wbd_platform::rx_ipv4_tcp::{parse_data_packet,TrustedRx,RxError};
 use wbd_platform::r1::{BorrowFence,BatchResult,StopResult};
 use wbd_platform::{TxBatchOutcome,TxDisposition,TxError};
 use wbd_types::{LaneKey,TunnelKey,MonoNs,RecordPn,SeqOffset};
@@ -110,7 +111,12 @@ fn r1_m0_linux_batch_real_kernel_full_tcp_m1_frozen_aead_replay(){
   let len=rx_sock.recv(&mut packet).unwrap();
   assert_eq!(&packet[..len],expected.bytes());
   verify(&packet[..len],&originals[i],ready[i].record.metadata());
-  let mut cipher=packet[40..len].to_vec();
+  let untrusted=parse_data_packet(&packet[..len],TrustedRx{tuple:tuple(),persona:PacketPersona::Legacy,mtu:576,authenticated_options:None}).unwrap();
+  assert_eq!(untrusted.seq32,ready[i].record.metadata().seq.0 as u32);
+  assert_eq!(untrusted.extend_seq_against(ready[i].record.metadata().seq.0),Ok(ready[i].record.metadata().seq.0));
+  assert_eq!(untrusted.ciphertext,&originals[i]);
+  // The outer parser has NOT authenticated anything. AEAD/PN opens later.
+  let mut cipher=untrusted.ciphertext.to_vec();
   let opened=rx.open_unique_in_place(&mut cipher).unwrap();
   assert_eq!(opened.pn,i as u64);
   assert_eq!(opened.payload,business[i]);
@@ -149,6 +155,42 @@ fn r1_m0_linux_batch_cap32_stop_and_unattempted_suffix_udp(){
  assert_eq!(fence.outstanding(),0);
  assert_eq!(owner.stop(),0);
  drop(batch);drop(packets);drop(ready);
+ assert_eq!(arena.drain_returns(),3);
+ assert_eq!(arena.stop().loaned,0);
+}
+
+#[test]
+fn r1_m0_ipv4_tcp_parser_checksum_forgery_cannot_bypass_aead_or_hol(){
+ let(mut arena,mut owner,ready,_,packets)=make();
+ let policy=TrustedRx{tuple:tuple(),persona:PacketPersona::Legacy,mtu:576,authenticated_options:None};
+ let mut forged=packets[0].wire.to_vec();
+ forged[40]^=0x80;
+ assert_eq!(parse_data_packet(&forged,policy),Err(RxError::TcpChecksum));
+ // Attacker can recompute an ordinary TCP checksum; that does not give AEAD.
+ forged[36]=0;forged[37]=0;
+ let tcp=&forged[20..];let mut pseudo=Vec::from(&forged[12..20]);
+ pseudo.extend_from_slice(&[0,6]);
+ pseudo.extend_from_slice(&(tcp.len() as u16).to_be_bytes());
+ pseudo.extend_from_slice(tcp);
+ let check=checksum(&pseudo);
+ forged[36..38].copy_from_slice(&check.to_be_bytes());
+ let untrusted=parse_data_packet(&forged,policy).unwrap();
+ let mut rx=ReplayProtectedLaneRx::new(keys(),536,ReplayWindowConfig{
+  pn_per_second:1000,cache_horizon_ms:100,fec_horizon_ms:0,rtt_ms:0,metadata_budget_bytes:80
+ }).unwrap();
+ let mut bad=untrusted.ciphertext.to_vec();
+ assert!(matches!(rx.open_unique_in_place(&mut bad),
+     Err(UniqueOpenError::InvalidRecord(_))));
+ assert_eq!(rx.max_seen(),None);
+ // An unrelated malformed packet must not suppress this first real business.
+ let good=parse_data_packet(packets[0].bytes(),policy).unwrap();
+ let mut sealed=good.ciphertext.to_vec();
+ let opened=rx.open_unique_in_place(&mut sealed).unwrap();
+ assert_eq!(opened.pn,0);
+ assert_eq!(opened.payload,b"\x00first\xff");
+ assert_eq!(rx.stats().delivered,1);
+ assert_eq!(owner.stop(),0);
+ drop(packets);drop(ready);
  assert_eq!(arena.drain_returns(),3);
  assert_eq!(arena.stop().loaned,0);
 }

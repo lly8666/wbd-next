@@ -10,6 +10,8 @@
 pub mod r1;
 /// Scoped IPv4/TCP-like steady DATA bytes builder, not a raw OS driver.
 pub mod ipv4_tcp;
+/// Bounded, strict one-packet incoming IPv4/TCP DATA parser, untrusted until AEAD.
+pub mod rx_ipv4_tcp;
 
 // ABI island: the other platform modules still deny unsafe Rust code.
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
