@@ -21,6 +21,10 @@ pub mod linux_batch;
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_rx_batch;
+/// Inactive AF_PACKET capability/FD preflight, no raw packet activation.
+#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_packet_preflight;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
