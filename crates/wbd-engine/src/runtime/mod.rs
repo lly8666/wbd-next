@@ -15,6 +15,7 @@ pub mod rx_batch;
 pub mod generation;
 #[cfg(test)] mod generation_release;
 #[cfg(test)] mod loan_stop;
+pub mod early_rx;
 use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
@@ -297,6 +298,10 @@ impl RxOwner {
         self.ready.clear()
     }
     pub fn queued(&self) -> usize { self.ready.len() }
+    pub(crate) fn capacity_remaining(&self)->(usize,usize) {
+        (self.ready.limit.slots-self.ready.len(),
+         self.ready.limit.bytes-self.ready.used_bytes())
+    }
 }
 
 #[cfg(test)]
