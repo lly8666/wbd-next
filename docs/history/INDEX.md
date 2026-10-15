@@ -12,6 +12,6 @@ PLAN-002逐模块细化及51项检查见`docs/devlog/M0/PLAN-002-complete.md`、
 
 R0 来源/ABI/兼容向量建立后激活 M1 runtime、M2 recovery、M3 codec、M4 platform。四模块经历若干独立 native 验证并由 M0 集成；真实 Go protected TLS rollback/commit 已有组件证据。准确来源与未测范围集中见 `docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json`。
 
-仍 OPEN：真实 Go→Rust authenticated owner / B01–B04；M3 CPU 计时窗口修复；产品、500Mbps、packet p99、物理机资格。旧 M3 Release 24 行中 22 行计时不一致为 INVALID，不能被功能绿灯覆盖。既有失败保留。
+当时 OPEN：真实 Go→Rust authenticated owner / B01–B04；M3 CPU 计时窗口修复；产品、500Mbps、packet p99、物理机资格。随后 M3 精确 SOURCE 的新时钟验证已由 M0 留证于 `docs/evidence/M0/R1-M0-M3-015-0ecb-exact-release-049.json`；旧 M3 Release 24 行中 22 行计时不一致仍为 INVALID，不能覆盖原失败或外推产品 CPU/p99。其余资格按最新 cursor/evidence 判断，历史 OPEN 不能单独充当当前待办。
 
 治理 v2：用户授权减少机械性返工，改主线增量审计、共享功能构建与必跑用例清单；不改产品协议或验收硬门。决策及迁移见 `docs/devlog/M0/GOV-002-incremental-ci.md`。当前任务取角色分支 cursor，不重复初始 R0/G2 初始化。

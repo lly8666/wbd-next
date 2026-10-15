@@ -8,7 +8,7 @@
 
 Go 保留真实 TLS/uTLS 建连与借站行为、认证/租约、生命周期策略、配置/UI、路由/DNS/WFP/Wintun 管理和自动 FEC 决策。Rust 负责逐包路径；通过低频 C ABI 接收不可变配置快照、lane admission、rotation/idle 命令，按需合并输出状态与计数。不逐包 cgo，不用 localhost TCP/UDP 转发来连接 Go 和 Rust。低频桥接成本单独量化。
 
-Rust 从物理收发入口拥有唯一读取权。初始建连阶段，它将有界的 handshake 数据批次送给原 Go bootstrap 适配器；bootstrap 完成后，通过 `admit_lane` 原子切换该 lane 的处理状态。Go 交回真实 seq/ack、MSS、TCP options、TLS 派生材料、generation 和尚未消费的字节边界；Rust 确认切换之前不解释稳态数据，确认之后 Go 不再读该 lane。这样避免中途双 reader 或“停读再换 fd”的空窗。这里只改原建连接口适配，不重写借站/TLS 算法。
+Rust 从物理收发入口拥有唯一读取权。初始建连阶段，它将有界的 handshake 数据批次送给原 Go bootstrap 适配器；切换按 [01-CONTROL-BRIDGE](modules/01-CONTROL-BRIDGE.md) 的 Prepare→受保护回复→DetachTransition→CommitAdmission→双 owner 确认→Active 顺序。Go 交回真实 seq/ack、MSS、TCP options、TLS 派生材料、generation 和尚未消费的精确字节边界；prepared 路由有界收容 early 数据，Detach 成功及双向安装完成之前不交付业务。不能先激活再 Detach，也不能为移交停止唯一 reader。这里只改原建连接口适配，不重写借站/TLS 算法。
 
 系统设备/过滤规则仍由 Go 创建和清理；Rust 持有明确生命周期的 I/O lease。停止顺序为：停止接收新任务→有界 drain/cancel→归还全部 driver buffer→`quiesced` 回执→Go 关闭句柄/撤销系统配置。超时退出须留下 owned 状态供原恢复流程处理，不能假称清理成功。panic 不穿越 FFI；Windows DLL 用同目录绝对路径加载。接口使用 `abi_version + struct_size`、整数/字节数组/opaque handle；禁止保留 Go heap 指针或向外暴露 Rust Vec/String。
 

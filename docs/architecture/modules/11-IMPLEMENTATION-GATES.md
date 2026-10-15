@@ -14,6 +14,17 @@
 
 每个角色只按正式registry路径开发。公共接口变更M0统一；有明确反例时允许改本文，但须写旧设计错在哪里、影响哪些测试，不能靠多种fallback让行为失去唯一解释。
 
+## 当前 M0 的真实路径交付顺序
+
+这是既有任务 `R0-M0-V4-PROTECTED-OWNER-COMMIT-023` 的施工细化，不重置阶段、不重新分配 worker、不把下列事项预标完成。先核远端 evidence；已有精确证据满足的步骤直接复用，不重做实验。
+
+1. **真实认证接入**：沿 01 唯一切换顺序，把已有 Go V4 可信调用点接到实际 Rust scoped owner 的 AEAD/PN 处理。沿用现有类型、arena、driver lease 与私有认证来源；拒绝外部自拼 cold bundle。测试必须穿过将来生产实际调用的函数；可替换时钟/设备边界以稳定复现，不另写一条更简单的 TEST-ONLY activation、crypto 或 delivery 链。保留当前生产 capability 关闭状态，不能为让测试通过提前广告尚未实现能力。
+2. **Normal/off 首到与关闭**：两端真实握手后，真实业务经 owner、record、实际平台 I/O 到业务出口，至少观察双向合法 payload、乱序先到即时交付、重复零重复交付、损坏不交付，以及 Stop/重新建连/旧 generation 迟到。把 B01–B04 接在同一条路径：Detach 前零交付、半安装不激活、真实 driver loan 未归还时 STOP_INCOMPLETE、归还后释放、旧 lane 退休不挡新 lane。保留已有功能，不用 FEC、repair 或额外排队掩盖裸路径缺陷。
+3. **Linux Actions 真实 I/O 锚点**：在独立 namespace/有界 owned 资源中接真实 TUN/raw 收发；无法使用真实驱动时写 UNSUPPORTED/NOT_RUN，unprivileged UDP、mock、native 编译均不能替代此项。先覆盖小包、当前有效 MTU 内最大包和超 MTU 兼容处置，禁止靠改 MTU/包型/业务率让坏样本变绿。功能断言尽量秒级，timer 反例用 fake clock，不机械地每项跑 120s。
+4. **第一份普通性能基线**：前述必要正确性锚点通过后才测 Normal 单 lane/FEC off、诊断默认 off、双向混合真实业务。从既有 10Mbps/方向锚点开始，记录实际注入、首到/missing、RTT/每流空洞、CPU-s/业务字节/包率、分配/复制计数与各层 drop/queue age；不先要求 500Mbps 或固定“省 25%”。与旧版比较时一个 Action 一个配置/场景/seed，同一个 job 顺序 AB/BA，复用精确编译产物。host 容量不足停止更重负载，产品单 owner 饱和须区分并留 profile。
+
+每步源码、用例入口、实际路径、剩余缺口落到既有 `r0/qualification-manifest.json` 与 devlog/evidence；不要新增另一套验收数据库。未实现能力只留 NOT_RUN，不无限补同义反例。Normal/off 可解释后再按 R2/R3/R4 接恢复、FEC、Game；现有成熟模块和有效组件证据保留。完成本次原子任务后按 S→H 交接，下一动作只写一个。
+
 ## 模块级必测向量
 
 | ID | 关键反例 | 证明什么 |
