@@ -47,3 +47,11 @@ Worker second refresh commit: `0a120eec1d503c5e4b79ad69800c40e74dc244cc`, single
 New refresh Governance [38690927360](https://github.com/lly8666/wbd-next/actions/runs/38690927360) attempt1 **FAIL**; job116276401427, artifact11952285023 digest sha256:552b700b3d87bb6c83afeffbf8b0ac88c7b7484c6ac34e2c0da169107fc23f8d. The precise error is `ROLE_SCOPE_FAILED: control or source moved mid-audit`: main HEAD changed during slow full-history scope check. This is a **distinct runtime coordination race**, not previous false historical checker-blob check, and cannot turn into source-Governance PASS by assertion. Earlier SOURCE/evidence/H Governance failures 38689135617,38689484046,38689716410 remain historical FAIL, NOT rewritten. Evidence S and cursor-only H must obtain independent Governance statuses.
 
 Main M0 owns stability coordination if repeated main-moving failures persist. Product: protected Go V4 / live AEAD receipt authority / actual driver / p99 / 500Mbps / native WinArm / physical NOT_RUN. No additional M2 change beyond owner-owned evidence and cursor.
+
+## Governance recovery accepted on same evidence SOURCE
+
+Immutable evidence S `472575415a95996a3fb72430d61017e0ce8139ce`, Governance [38691428603](https://github.com/lly8666/wbd-next/actions/runs/38691428603):
+- **Attempt1 FAIL** (job116277976150, artifact11952945178 sha256:2776625ed52b0d322aed5c2e06401ecf9dfe98631281e4e2e60e4fabfc23f8d), `control or source moved mid-audit`.
+- **Attempt2 SUCCESS** (job116279100540, result `ROLE_SCOPE_PASS`, `scope_commits_checked=40`, `main_integration_commits_exempt=37`, artifact11952531271 digest sha256:72aa488cba02f394f6b43d988a4be94d03a0429e806e238cfcc2cfa8eccb4259).
+- Original Rust CODE SOURCE `ba7b45138cd416dcd3ce315c7111c9429829afdd` remains worker-native [38689135611](https://github.com/lly8666/wbd-next/actions/runs/38689135611) 51/51 PASS, compiled once, no source drift.
+- M0 historical approved blob pin and exact one-time second checker mirror `0a120eec1d503c5e4b79ad69800c40e74dc244cc` now have independently passing full-history role scope evidence. Earlier SOURCE/evidence/H Governance failures are retained as immutable FAILs. This resolves only the worker checker **governance** problem; live authenticity, product throughput, physical, GoV4/ABI and driver integration all NOT_RUN.

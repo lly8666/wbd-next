@@ -1,6 +1,6 @@
 # M2 → M0 · historical G2 checker blob must be source-pinned
 
-**Status:** OPEN / BLOCKED; no Actions dispatch request
+**Status:** RESOLVED — exact M0 root pin + full-history evidence Governance PASS; no Actions dispatch request
 **Role:** M2 `work/m2-r2-recovery`, reservation_revision2 assignment_epoch1
 **Task:** `R2-M2-BOUNDED-TIMER-BURST-007`
 **CODE SOURCE:** `ba7b45138cd416dcd3ce315c7111c9429829afdd`, native worker Actions https://github.com/lly8666/wbd-next/actions/runs/38689135611 **51/51 PASS** (compiled once; 44 old + 7 new), G2/bootstrap and R0 static SUCCESS.
@@ -20,3 +20,7 @@ After M0 explicitly authorizes and implements, M2 rechecks specific new check ru
 The M0-owned root reviewer has now pinned the original M2 mirror to immutable main source `e9a4455dd4c20253a4e740e76bf7339fa4a6cc25` / blob `26983e630ab2fbf28466dac457923904aaa6be60` and allowed a *second*, exact-parent-only script mirror directly after worker H `4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c`. M2 applied `0a120eec1d503c5e4b79ad69800c40e74dc244cc`, sole path `tools/worker_scope_ci.py`, blob `86c213e122c5c0a7b636105f3be4d1fb2ecc7899`, byte-identical with then-current main. Old dynamic historical check is **remedied**.
 
 The refreshed checker run [38690927360](https://github.com/lly8666/wbd-next/actions/runs/38690927360) **FAIL** due `control or source moved mid-audit`, not historic blob pin. Status: **M0 code/pin remediation APPLIED; end-to-end Governance verification PENDING**, depending on main having a stable audit interval. If later own evidence/H checks PASS, this request may close; if identical main races continue, M0 must coordinate a quiet audit window. Preserve all original FAILs; do not weaken full path audit or force worker branch.
+
+## Closure
+
+Main M0 corrected the first checker mirror to immutable approved source `e9a4455dd4c20253a4e740e76bf7339fa4a6cc25` / blob `26983e630ab2fbf28466dac457923904aaa6be60`. M2 applied only M0-approved second checker mirror `0a120eec1d503c5e4b79ad69800c40e74dc244cc` (parent `4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c`, only path `tools/worker_scope_ci.py`, Git blob `86c213e122c5c0a7b636105f3be4d1fb2ecc7899`). Under the original evidence SOURCE `472575415a95996a3fb72430d61017e0ce8139ce`, [Governance38691428603](https://github.com/lly8666/wbd-next/actions/runs/38691428603) **attempt2 SUCCESS** `ROLE_SCOPE_PASS`, 40 role-commits inspected; attempt1 failure due concurrent main movement remains historical FAIL. This resolves the request; no need for an M0 additional worker root permission. Subsequent evidence S and cursor-only H require their own Governance SUCCESS.

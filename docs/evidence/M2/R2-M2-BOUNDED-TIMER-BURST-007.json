@@ -7,8 +7,8 @@
   "assignment_epoch": 1,
   "code_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
   "source_sha": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
-  "progress": "verifying",
-  "result": "NATIVE_51_51_PASS_AND_M0_CHECKER_PIN_REMEDIED__HISTORICAL_SOURCE_FAIL_RECORDED__GOVERNANCE_RECHECK_REQUIRED",
+  "progress": "partial",
+  "result": "NATIVE_R2_51_OF_51_PASS__M0_IMMUTABLE_TOOL_FIX__EVIDENCE_GOVERNANCE_ATTEMPT2_PASS",
   "previous": {
     "H": "901abe61d3c45dc6c6a34467fac3b6e384ab4295",
     "cursor_sequence": 13,
@@ -97,7 +97,7 @@
   "physical": "NOT_RUN",
   "product": "NOT_RUN",
   "go_v4": "DISABLED",
-  "next_action": "M0 retroactive immutable checker pin remedy applied via exact root sync; first refresh Governance38690927360 historical FAIL because main moved mid-audit. Run unavoidable evidence/H governance on new immutable S/H; if main race persists M0 coordinate stable control snapshot/window, no generalized root changes or repeated unchanged-run retry. No production claim.",
+  "next_action": "M0 historic checker blob-pin issue resolved: original evidence S472575 Governance38691428603 attempt2 SUCCESS with 40 scope commits, attempt1 main-movement failure retained. Close request and checkpoint updated evidence S, then cursor-only H Governance. No additional M2 assignment; M0 integrates actual authenticated Go V4 and driver independently. Product NOT_RUN.",
   "historic_m0_checker_remediation": {
     "main_control_observed": "d902842a31fd6b032a5f1bab515b93c21f28b0aa",
     "historical_approved_source": "e9a4455dd4c20253a4e740e76bf7339fa4a6cc25",
@@ -125,6 +125,27 @@
       "artifact_id": 11952285023,
       "digest": "sha256:552b700b3d87bb6c83afeffbf8b0ac88c7b7484c6ac34e2c0da169107fc23f8d",
       "interpretation": "New exact-pinned historical check no longer failed on old blob mismatch, but changing live main prevented auditable PASS"
-    }
+    },
+    "evidence_governance": {
+      "run_id": 38691428603,
+      "attempt1": {
+        "conclusion": "failure",
+        "job_id": 116277976150,
+        "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+        "artifact_id": 11952945178,
+        "digest": "sha256:2776625ed52b0d322aed5c2e06401ecf9dfe98631281e4e2e60e4fabfc23f8d"
+      },
+      "attempt2": {
+        "conclusion": "success",
+        "job_id": 116279100540,
+        "scope_result": "ROLE_SCOPE_PASS",
+        "scope_commits_checked": 40,
+        "main_integration_commits_exempt": 37,
+        "artifact_id": 11952531271,
+        "digest": "sha256:72aa488cba02f394f6b43d988a4be94d03a0429e806e238cfcc2cfa8eccb4259"
+      },
+      "note": "Same workflow/run and immutable evidence SOURCE 472575..., new run_attempt 2; original attempt1 failure remains, not rewritten."
+    },
+    "evidence_source_SHA": "472575415a95996a3fb72430d61017e0ce8139ce"
   }
 }
