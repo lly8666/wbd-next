@@ -4,7 +4,7 @@
   "task_id": "R1-M4-RAW-RECEIVE-CONTRACT-007",
   "branch": "work/m4-r1-platform",
   "source_sha": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
-  "result": "PASS_SCOPED_NATIVE_ONLY",
+  "result": "PASS",
   "artifact_verified": true,
   "scope": "Linux x86_64 GNU pure AF_PACKET sockaddr_ll RX metadata classifier + test-only bounded nonblocking recvmmsg on inactive protocol-zero raw preflight FD, conditional on effective CAP_NET_RAW. No live packet capture or production driver.",
   "assignment": {
@@ -120,6 +120,13 @@
       "run_id": 38678579999,
       "result": "FAIL_HISTORIC_EXACT7_COUNT",
       "actual": "67/67 actual Rust tests passed; legacy parser expects 7"
+    },
+    {
+      "source_sha": "dc4b9541d8768fef737135cdb402d99f59094588",
+      "workflow": "governance",
+      "run_id": 38678944235,
+      "result": "FAIL_STRUCTURE",
+      "cause": "Cursor H seq10 marked verified but evidence.result was PASS_SCOPED_NATIVE_ONLY rather than validator-required literal PASS. Role scope attestation PASS, structure BLOCKED. Corrected only evidence schema label to PASS while preserving exact scoped test boundaries; new S/H required."
     }
   ],
   "not_run": [
@@ -129,5 +136,5 @@
     "Native Windows/ARM runtime, product, performance, physical P1-P3"
   ],
   "production_go_v4": "DISABLED",
-  "integration": "SCOPED_METADATA_AND_INERT_TEST_RX_READY_FOR_M0_REVIEW; product/raw-live NOT_QUALIFIED"
+  "integration": "SCOPED_METADATA_AND_INERT_TEST_RX_READY_FOR_M0_REVIEW_AFTER_CORRECTED_EVIDENCE_S_AND_CURSOR_H; raw-live/product NOT_QUALIFIED"
 }
