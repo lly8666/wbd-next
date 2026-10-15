@@ -4,19 +4,19 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 9,
-  "checkpoint_sha": "c8506836ca7395a3ef75a12d890b85313ea5468f",
+  "sequence": 10,
+  "checkpoint_sha": "baae8e310995dfedb825922b478b88e7f54357a0",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-GENERATION-READY-OWNER-BENCH-007",
-  "current_task": "R1-M1-GENERATION-READY-OWNER-BENCH-007 current-scope TX/RX batch dispatch fence and source-attested debug component P0 COMPLETE; M0 integration & true isolated performance gate pending",
-  "why_now": "M0 main registry rev2 epoch1 assigned R1-M1-GENERATION-READY-OWNER-BENCH-007, unchanged M1 branch and allowed paths. Prior M1 cursor seq7 H 32ddf6c53e9d894d6d0add49699bc0e985e02d9d Governance38675249682 SUCCESS and only prior H beyond checkpoint.",
-  "done_when": "Retain own prior63 scoped native r1_ cases. Add 0/1/32/33 two-lane old+new generation, stop concurrently, stale token and no reordered first fresh tests. Native source-exact compiled-once executable, dedicated warmup/repeat CPU/latency provenance artifact where valid, no claimed 500Mbps or AF_PACKET; own evidence S/cursor H Governance.",
-  "next_action": "M0 review source 0979314, real worker Actions38678588923 PASS 71/71 and M1 scope+P0 evidence at docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-*.json; include initial H Governance38678910324 FAIL schema and corrected evidence S c8506836. Coordinate stale R0 ABI branch harness and isolated CPU/full ready drain production gate; M1 await next formal scoped task.",
+  "task_id": "R1-M1-READY-GENERATION-RELEASE-008",
+  "current_task": "R1-M1-READY-GENERATION-RELEASE-008 actual owner TX/RX Release ready batch + generation stale-negative native and >=1s P0 component probe COMPLETE; awaiting M0 integration",
+  "why_now": "M0 main assigned fifth-wave R1-M1-READY-GENERATION-RELEASE-008 on same active M1 branch, rev2 epoch1, unchanged allowed paths; prior cursor seq9 H6ad61c34596815d8688664af018e33669da39c59 Governance38679184618 SUCCESS.",
+  "done_when": "Preserve previous71/71 scoped r1 native cases; own release native compiled-once binary, repeated>=1s owner lifetime actual ready dispatch vs stale negative with CPU-s/quantiles and no fake 500Mbps claim, owner scope+stop cases with no payload copies; own role evidence S, cursor-only H Governance success. No root CI/ABI edits.",
+  "next_action": "M0 consume scoped exact M1 SOURCE fc023fb, worker native38682808748 75/75 and Release compiled-once SHA553a7cc6 P0 results in owned evidence; never extrapolate product bandwidth. M0 synchronize old worker branch root R0 ABI selector (38682808744 FAIL; Rust 77 passed, 1 ignored, rc0). Real trusted Go V4 session origin, kernel driver, isolated P1+ product and physical remain separately blocked. M1 await next formally assigned atom.",
   "unverified": false,
-  "last_tested_source": "0979314cacf8931a90840ad312dd50e9e2777d04",
+  "last_tested_source": "fc023fba5bc7c51d07868a3d64d5356596130f75",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-actions.json",
-    "docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-p0.json"
+    "docs/evidence/M1/R1-M1-READY-GENERATION-RELEASE-008-actions.json",
+    "docs/evidence/M1/R1-M1-READY-GENERATION-RELEASE-008-release-p0.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -27,5 +27,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M1 generation scope ready handoff exact source 0979314, worker-native38678588923 compiled once 71/71 PASS (prior 63 +8). SHA-verified result11947336741 and component P0: three legs x10k warmups,40k pairs, accepted 32-handle inspect p50 401ns/p99 401-411ns on debug hosted runner only, CPU ticks not isolated; product/release/real full-drain NOT_RUN. Same-source Governance38678588850/G2/r0audit/cross ABI SUCCESS, root R0 native ABI38678588872 FAIL from stale M0-owned test marker (Rust 74/74 rc0). Evidence S a55674f, initial cursor H 37ddfed Governance38678910324 FAIL structure because M1 evidence `result` schema noncanonical/missing. Corrected only evidence fields to PASS + artifact_verified true, exact native/source/measurements unchanged in evidence S c8506836; this cursor-only new H follows. Old/new scope batch validation enforced, stale ABA, 0/1/32/33, stop/returns/no clone tested. No live Go V4 auth/AF_PACKET/production 500Mbps/p99/WinArm/physical."
+  "partial_summary": "M1 RELEASE-008 scoped native 75/75 r1_ (prior71+4) at exact SOURCE fc023fba5bc7c51d07868a3d64d5356596130f75, worker Actions38682808748 compiled-once debug binary + nested separately compiled-once Rust Release native benchmark executable SHA553a7cc6, release child1/1 PASS. Verified downloaded ZIP artifact11947969849 and result.json/test.log hashes; three 512-warmup+>=1.10second legs, ~105k real ready 32TX+32RX owner batches per leg, per-batch release TX p50 521ns/p99 541ns, RX p50 2084ns/p99 2204-2214ns; stale negative p99 31ns. CPU process 1.10s each leg includes buffer setup/freeze/offer/return, not isolated. No record encryption, Go authenticated origin, driver, product 500Mbps/p99. Same CODE Governance38682808769, G2 38682808783, R0 audit38682808803, cross ABI38682808790 SUCCESS; R0 native ABI38682808744 FAIL due known M0-owned branch stale '3 passed' script despite Rust 77 passed +1 ignored rc0. Evidence S baae8e310995dfedb825922b478b88e7f54357a0, this H only cursor. No Windows/ARM/physical/P1-P3 qualified."
 }
