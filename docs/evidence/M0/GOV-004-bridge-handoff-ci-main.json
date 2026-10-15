@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-GOV-004-PR5-BRIDGE-HANDOFF-CI",
+  "source_sha": "e2c2657edd74a45d87f5074a65d1b715b6705a65",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "GOVERNANCE_ARCHITECTURE_CI_ONLY",
+  "product_qualification": "NOT_RUN",
+  "why_now": "Original architecture/maintenance agent exhausted context after candidate Actions PASS before PR merge, exact merged-source evidence and H-only trigger verification. User asked M0 to recover from remote.",
+  "pr": {
+    "number": 5,
+    "url": "https://github.com/lly8666/wbd-next/pull/5",
+    "state": "merged",
+    "head_source_sha": "318fba67e155e901b49d55122e1d84bc80cabdf8",
+    "merge_sha": "e2c2657edd74a45d87f5074a65d1b715b6705a65",
+    "base_before_merge": "33c0794b0ed5cbcd3927dccfc2b7c176238d7d32",
+    "commit_count": 1,
+    "changed_files": 20,
+    "changes": "docs architecture 01/HOT_PATH/11 sequence, R0 M0 task real path gates, project/registry prose unchanged authorities, Governance light push receipt vs full maintenance tests",
+    "product_crates_changed": false,
+    "worker_branches_changed": false
+  },
+  "continuity": {
+    "m0_cursor_sequence_before": 68,
+    "checkpoint_sha": "c5836c8603f02457253023b8b0595557ad7a5f97",
+    "checkpoint_to_merged_head_commits": [
+      "33c0794b0ed5cbcd3927dccfc2b7c176238d7d32",
+      "318fba67e155e901b49d55122e1d84bc80cabdf8",
+      "e2c2657edd74a45d87f5074a65d1b715b6705a65"
+    ],
+    "delta_commits": 3,
+    "worker_ref_heads": {
+      "M1": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+      "M2": "c74a4fd71712411b1fb5b326d95d746116a04844",
+      "M3": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+      "M4": "e19772fe65d8cfb347da3c7b182c25180ba91d37"
+    },
+    "registry_revision": 2,
+    "assignment_epoch_M0": 1,
+    "task_assignment_M0": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
+  },
+  "architecture": {
+    "handoff_order": [
+      "PrepareTransition",
+      "protected Go reply",
+      "DetachTransition",
+      "CommitAdmission",
+      "both RX/TX owner installed",
+      "Active/first business delivery"
+    ],
+    "rules": [
+      "early records are bounded and never delivered before both-owner Active",
+      "TX final protected-reply sequence boundary must be stable",
+      "any half-install/Commit failure fail-closed; detached bytes never fed back to bootstrap",
+      "Stop/Quiesced only after all real borrowed driver leases returned",
+      "normal FEC off business first arrival + lifecycle before true Linux I/O and baseline performance"
+    ],
+    "new_product_tests": "NOT_RUN",
+    "production_feature_bits": "0"
+  },
+  "candidate_actions": {
+    "source_sha": "318fba67e155e901b49d55122e1d84bc80cabdf8",
+    "maintenance": {
+      "run_id": 38742200019,
+      "job_id": 116446482716,
+      "attempt": 1,
+      "result": "success",
+      "unittest_passed": 169,
+      "artifact_id": 11975009448,
+      "artifact_zip_digest": "sha256:6d8b159380e7f5b5ec83f58e82c7a710998402701e6f4ed054ac82117aad469c",
+      "coverage": [
+        "169 Python tests",
+        "YAML check",
+        "repository validation",
+        "R0 ledger",
+        "cost model",
+        "design models"
+      ]
+    }
+  },
+  "merged_source_actions": {
+    "source_sha": "e2c2657edd74a45d87f5074a65d1b715b6705a65",
+    "governance": {
+      "run_id": 38743199809,
+      "job_id": 116449945428,
+      "attempt": 1,
+      "result": "success",
+      "scenario": "governance-push-checks",
+      "scope": "governance_identity_and_structure",
+      "mandatory_steps": [
+        "role success",
+        "identity success",
+        "structure success"
+      ],
+      "selftests": "NOT_RUN",
+      "design_models": "NOT_RUN",
+      "artifact_id": 11976239464,
+      "artifact_digest": "sha256:0ef4e7194325e98fd353205cff5230b21c6af49106f463cc8a1538a87de2248e"
+    },
+    "maintenance": {
+      "run_id": 38743199711,
+      "job_id": 116449944214,
+      "attempt": 1,
+      "result": "success",
+      "unittest_passed": 169,
+      "artifact_id": 11976483518,
+      "artifact_digest": "sha256:51a745efa98dd2e7599677350022627ca4710696523a904479ba7e871d4fa1a3"
+    },
+    "g2_native": {
+      "run_id": 38743199565,
+      "build_job_id": 116449944463,
+      "consume_job_id": 116450278674,
+      "result": "success",
+      "build_artifact_id": 11976740797,
+      "build_digest": "sha256:5e2ad6e24e9b740b663f8b5db3ac58f362d2307473915df9006684754376ad20",
+      "result_artifact_id": 11976970735,
+      "result_digest": "sha256:a72d15153392670ab65dea0bc6848107409af9259348d7db36053d1c4957614f"
+    },
+    "conditional_scope_skip": {
+      "run_id": 38743244903,
+      "result": "skipped",
+      "reason": "Central scope workflow_run excludes main Governance; central main push source regression was already verified at PR4."
+    }
+  },
+  "next_action": "M0 cursor-only H must leave changed paths equal only .governance/workstreams/M0/cursor.json; GitHub Actions should trigger Governance push identity/structure (selftests NOT_RUN), not governance-maintenance or any native/Go full suite. Verify exact H SHA and record result without pretending full tool selftest. Then M0 resume real Go V4 trusted provenance into Rust ScopedOwner AEAD/PN, Normal/off genuine delivery and B01-B04; features0 until actual E2E."
+}
