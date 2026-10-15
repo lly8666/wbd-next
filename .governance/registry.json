@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-RX-READY-BATCH-005: Extend M1 owned RxOwner with caller-preallocated bounded <=32 ready-drain of uniquely-owned RX buffers and per-lane fair ingress; never authenticate or claim business delivery. Preserve first-arrival, unrelated-lane independence, stop/return and max slots/bytes/age.",
-      "done_when": "Exact own-source compiled-once native r1_ tests for empty/1/32/33, caller capacity0/full, no hot-path copy/allocation, two lanes with head obstruction, expiry/stop/loan return races. Preserve 39 previous tests; source S, native Actions, evidence S, cursor-only H and Governance; no production raw socket or Rust ABI changes."
+      "goal": "R1-M1-STOP-LOAN-GENERATION-006: Within existing M1 runtime and owned tests, prove one owner-scoped generation transition safely drains preallocated <=32 TX and RX ready batches, old-generation callbacks cannot resubmit already-frozen ciphertext, first fresh on a new scope not blocked by late loan returns, and stop/borrow fences give exact last-loan ownership. No syscall, external dependency or source of authentication.",
+      "done_when": "Own SOURCE compiled-once native r1_ tests of 0/1/32/33, two lane generations, mixed RX/TX loan returns, ABA/stale owner token, stop during ready and fake-clock expiry, no heap during hot drains and complete prior51/51 tests; own evidence S and cursor-only H Governance."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004: Strengthen pure M2 multi-tunnel batch grant completion against late ACK, stale generation, old epoch NotSent, client departure, repeat uncertain callback and mixed accepted-prefix repair; ensure no peer-delivery inference from kernel accepted outcomes and no fresh HOL. Only pure wbd-recovery types; no actual syscall.",
-      "done_when": "Exact own-source native r2_ deterministic MonoNs adversarial tests for 2 TunnelKeys and both directions, 0/1/32/33 mixed outcomes, >epoch late response, expired/departed grant, duplicate completion, bounded batch storage and unchanged process cap; preserve 28 earlier tests, own S/evidence/H Governance. Do not invent retransmission success."
+      "goal": "R2-M2-RECEIPT-REVERSE-SCOPE-005: Add pure fail-closed receipt-route admission contract requiring caller-supplied trusted reverse direction, TunnelKey/generation/epoch/PN scope before AuthenticatedReceipt or process-global batch grant settlement; stale/forward/cross-lane input never refunds an old repair or advances ACK. No cryptographic admission constructor, driver syscall or peer delivery inference.",
+      "done_when": "Own source compiled-once native r2_ deterministic MonoNs tests covering two tunnels both directions, stale epoch/rotation, ACK before grant, NotSent original epoch, Uncertain conservative debit, duplicate out-of-order receipt and 32/33 batch, retaining previous33/33 tests, own evidence S/H Governance."
     },
     {
       "id": "M3",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-AUTH-FEC-SCOPE-GATE-011: Add pure, fail-closed typed authenticated FEC scope admission tying already-verified record lane/direction/trusted epoch/generation and PN replay result to FecBlockIdOwner/FecRxOwner; reject absent origin, halfspace, stale retired IDs and unauthenticated field speculation. No Go exporter or ABI work.",
-      "done_when": "Exact own native r1_ fake-MonoNs tests: validated provenance permits first systematic immediately, wrong lane/tunnel/epoch/generation, replay before FEC, delayed parity and retired expiry rejected; old-Go 56B wire oracle preserved; keep prior 75 native cases and S/evidence/H Governance; Go V4 live binding remains NOT_RUN."
+      "goal": "R1-M3-FEC-MULTISCOPE-012: Strengthen existing FecOrigin test-only typed post-AEAD gate with two concurrently isolated trusted scopes under fake time: per-tunnel and direction replay/BlockID floors and Heavy/Compact expiry cannot contaminate peers, even after rekey and old parity. NO production origin constructor; no Go handshake/ABI/root edits.",
+      "done_when": "Own SOURCE compiled-once native r1_ tests for two tunnels both directions, 32-bit BlockID wrap, misrouted true AEAD ciphertext, replay and exhausted caps, PNs independent, deterministic timers and 56B oracle, retaining previous85/85, evidence S/cursor-only H Governance; live Go V4 provenance remains NOT_RUN."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-LINUX-RX-BATCH-005: Implement an explicitly unprivileged Linux x86_64 GNU bounded nonblocking recvmmsg batch fixture with caller supplied <=32 buffers, MSG_DONTWAIT, truncated datagram metadata fail closed and atomic stop borrowing. Reuse strict IPv4/TCP RX parser only when complete bytes are available; no AF_PACKET raw reader, Npcap, recv driver activation.",
-      "done_when": "Compiled-once own-source native platform r1_ tests execute real Linux UDP loopback recvmmsg with 0/1/32/33, EAGAIN, truncated/corrupt input, immutable lifetime and stop race; classifier-only EINTR/ambiguous noted separately. Keep previous 31 tests and own S/evidence/H Governance; no root Cargo/dependency edits."
+      "goal": "R1-M4-AF_PACKET-PREFLIGHT-006: Implement narrowly cfg-gated Linux AF_PACKET capability and FD ownership preflight within wbd-platform, retaining unprivileged UDP sendmmsg/recvmmsg fixtures unchanged. Validate interface index, protocol/packet_type, MTU and owned borrowing lifetimes; on missing CAP_NET_RAW return typed EPERM with no fake fallback, no live raw activation, no new Cargo dependency/root ABI.",
+      "done_when": "Own SOURCE native tests and unprivileged Linux capability-negative cases with exact errno and rollback/close; classifier and lifecycle tests for bad iface/truncation/stop/generation, preserve42/42 previous native tests, evidence S/H Governance. Do not claim AF_PACKET data exchange or live TCP unless an exact privileged fixture is separately authorized and executed."
     }
   ]
 }
