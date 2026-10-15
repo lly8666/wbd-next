@@ -7,14 +7,16 @@
 
 use crate::cold_v4::{ColdV4Error, ExpectedRustOwner, UntrustedColdV4};
 use crate::memory::UniqueBuffer;
-use crate::runtime::{QueueLimits, RxOwner, RxPacket, TxOwner};
+use crate::runtime::{QueueLimits, RxOwner, RxPacket, TxOwner,TxDispatch};
 use crate::runtime::early_rx::{EarlyAccepted, EarlyError, EarlyLimits, EarlyRetirement, EarlyRxOwner};
 use crate::runtime::generation::{LoanBatch, ScopedOwner, ScopeToken};
 use std::ops::Range;
-use wbd_types::MonoNs;
+use wbd_types::{MonoNs,RecordPn,SeqOffset};
+use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_codec::record_crypto::{LaneTxCrypto, RecordSuite};
 use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
-use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER};
+use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER,LINK_MAGIC};
+use wbd_codec::path_budget::FrameBudget;
 use wbd_codec::link_reassembly::{
     LinkDelivery,LinkDirection,ReassemblyScope,ReassemblyTable,
 };
@@ -36,7 +38,7 @@ pub(crate) enum ProtectedCryptoError {
 /// The scoped owner still owns dispatch, generation, driver leases and Stop.
 /// This is the reusable AEAD/PN half of that owner; no payload is delivered.
 pub(crate) struct ProtectedScopedCrypto {
-    _tx: LaneTxCrypto,
+    tx: LaneTxCrypto,
     rx: ReplayProtectedLaneRx,
     active: bool,
     generation: u32,
@@ -79,7 +81,7 @@ impl ProtectedScopedCrypto {
             rx_keys, usize::from(rx_limit), suite, replay,
         ).map_err(ProtectedCryptoError::Rx)?;
         Ok(Self {
-            _tx:tx, rx, active:false, generation:expected.owner_generation,
+            tx, rx, active:false, generation:expected.owner_generation,
             go_lane:expected.go_lane_id, epoch:identity.logical_epoch,
             tx_boundary:None,
         })
@@ -121,6 +123,8 @@ pub(crate) struct ProtectedScopedOwner {
     go_lane: u8,
     epoch: [u8;16],
     rx_wire_limit:usize,
+    tx_wire_limit:usize,
+    next_tx_seq:Option<u32>,
     server:bool,
 }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -242,7 +246,10 @@ impl ProtectedScopedOwner {
             rx_tx,token,crypto,state:OwnerPhase::Prepared,
             generation:expected.owner_generation,go_lane:expected.go_lane_id,
             epoch:expected.logical_epoch,rx_wire_limit:wire,
-            server:expected.server,
+            tx_wire_limit:usize::from(if expected.server {
+                cold.identity().client_limit
+            }else{cold.identity().server_limit}),
+            next_tx_seq:None,server:expected.server,
         })
     }
     /// The same M1 owner stages before the protected reply/Detach; no
@@ -270,9 +277,81 @@ impl ProtectedScopedOwner {
         self.crypto.commit_after_detach(
             self.generation,self.go_lane,self.epoch,exact_tx_boundary,
         )?;
+        self.next_tx_seq=Some(exact_tx_boundary);
         self.state=OwnerPhase::Active;
         Ok(())
     }
+
+    /// The actual normal-build S2C/C2S TX: one application Normal/off
+    /// packet, already placed by the caller in the SAME M1 UniqueBuffer at
+    /// [14 .. 14+payload_len]. Only an explicitly supplied effective M4
+    /// FrameBudget can grant the wire size; never infer MSS from cold bytes.
+    ///
+    /// A LINK packet needing magic escape/fragmentation is rejected here,
+    /// never emitted as ambiguous raw ordinary bytes. It will use the same
+    /// M3 fragmenter in a subsequent bounded TX path.
+    /// AEAD/PN and TCP sequence are consumed BEFORE queue publication.
+    pub(crate) fn seal_normal_off_one(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || !self.crypto.active || self.crypto.tx_boundary.is_none(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        if budget.fec_overhead!=0 || budget.game_overhead!=0
+            || budget.record_wire_mtu>self.tx_wire_limit
+            || budget.link_frame_mtu>budget.record_payload_mtu
+            || payload_len==0 || payload_len>budget.single_business_payload_mtu {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let used=payload_len.checked_add(FIXED_WIRE_OVERHEAD)
+            .ok_or(ProtectedCryptoError::Tx)?;
+        if used>budget.record_wire_mtu || buffer.writable().len()<used {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let business=&buffer.writable()[14..14+payload_len];
+        if business.starts_with(LINK_MAGIC){return Err(ProtectedCryptoError::Tx)}
+        let seq=self.next_tx_seq.ok_or(ProtectedCryptoError::Inactive)?;
+        let next=seq.checked_add(
+            u32::try_from(used).map_err(|_|ProtectedCryptoError::Tx)?
+        ).ok_or(ProtectedCryptoError::Tx)?;
+        let (pn,sealed_len)=self.crypto.tx.seal_in_place(
+            AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0,
+        ).map_err(|_|ProtectedCryptoError::Tx)?;
+        // No sequence reuse even if freezing/queue admission fails.
+        self.next_tx_seq=Some(next);
+        let frozen=buffer.freeze(0..sealed_len,FrozenMetadata {
+            lane:self.token.lane(),seq:SeqOffset(u64::from(seq)),
+            pn:RecordPn(pn),carrier_snapshot,
+        }).map_err(|_|ProtectedCryptoError::Tx)?;
+        self.rx_tx.offer_tx_fresh(&self.token,frozen,now)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        Ok((pn,seq,sealed_len))
+    }
+
+    /// The actual M1 generation-fenced FrozenRecord ready batch. It keeps
+    /// cipher bytes immutable until its TX loan is recycled or dropped, and
+    /// MUST be submitted to M4 only while this current owner is Active.
+    pub(crate) fn drain_tx(&mut self,now:MonoNs,
+        storage:Vec<TxDispatch>,
+    )->Result<LoanBatch<TxDispatch>,(ProtectedCryptoError,Vec<TxDispatch>)>{
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        self.rx_tx.drain_tx(&self.token,now,storage)
+            .map_err(|(_,s)|(ProtectedCryptoError::Owner,s))
+    }
+    pub(crate) fn checked_tx_ready<'a>(
+        &self,batch:&'a LoanBatch<TxDispatch>,
+    )->Result<&'a [TxDispatch],ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        self.rx_tx.checked_tx_ready(&self.token,batch)
+            .map_err(|_|ProtectedCryptoError::Owner)
+    }
+
     /// Accept an existing owned ingress slab ONLY after Go's trusted Detach
     /// and commit. The exact sequence hint enforces the bootstrap/record
     /// boundary; record PN+payload remain untrusted until AEAD validates.
@@ -372,6 +451,7 @@ impl ProtectedScopedOwner {
     pub(crate) fn stop(&mut self)->Result<EarlyRetirement,EarlyError>{
         self.state=OwnerPhase::Retired;
         self.crypto.retire();
+        self.next_tx_seq=None;
         self.rx_tx.stop(&self.token)
     }
 }

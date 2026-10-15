@@ -16,6 +16,8 @@ use crate::runtime::early_rx::EarlyAccepted;
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
+use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
+use wbd_types::buffer_contract::FrozenRecordHandle;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
 
@@ -288,6 +290,63 @@ pub unsafe extern "C" fn wbd_m0_test_probe_open_unique(
     }
 }
 
+// Feature-gated observation of the real normal-build S2C TX. The incoming
+// Go packet is copied into ONE actual M1 UniqueBuffer, then sealed with the
+// authenticated V4 S2C key and offered through the SAME owner TxOwner.
+// This is never a production cold installer or M4 socket sink.
+fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
+    out:&mut [u8],
+)->Result<(usize,u64,u32),i32>{
+    let Ok(mut state)=registry().lock() else{return Err(BAD_STAGE)};
+    let Some(p)=state.slots.get_mut(&handle) else{return Err(UNKNOWN)};
+    if p.phase!=PH_COMMITTED || packet.is_empty(){return Err(BAD_STAGE)}
+    let budget=FrameBudget::derive(FrameBudgetInput{
+        connection_mtu:usize::from(connection_mtu),
+        local_packet_mtu:0,ipv4_header_len:20,tcp_header_len:20,
+        peer_mss:Some(peer_mss),
+        record_wire_limit:usize::from(p.cold_identity.client_limit),
+        fec:FecReservation::FixedOff,game:false,
+    }).map_err(|_|INVALID)?;
+    if packet.len()>budget.single_business_payload_mtu
+        || budget.record_wire_mtu>out.len()
+        || packet.len()+FIXED_WIRE_OVERHEAD>2048{return Err(INVALID)}
+    let mut unique=p.arena.allocate().map_err(|_|FULL)?;
+    unique.writable()[14..14+packet.len()].copy_from_slice(packet);
+    let (pn,seq,used)=p.owner.seal_normal_off_one(
+        unique,packet.len(),budget,12,MonoNs(0),
+    ).map_err(|_|INVALID)?;
+    let batch=p.owner.drain_tx(MonoNs(0),Vec::with_capacity(2))
+        .map_err(|_|BAD_STAGE)?;
+    let checked=p.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
+    if checked.len()!=1 || checked[0].record.metadata().pn.0!=pn
+        || checked[0].record.metadata().seq.0!=u64::from(seq)
+        || checked[0].record.bytes().len()!=used {return Err(BAD_STAGE)}
+    out[..used].copy_from_slice(checked[0].record.bytes());
+    drop(batch); // Returned only AFTER original generation TX loan releases
+    p.arena.drain_returns();
+    Ok((used,pn,seq))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_seal_normal(
+    handle:u64,packet:*const u8,len:usize,connection_mtu:u16,peer_mss:u16,
+    out:*mut u8,out_cap:usize,out_len:*mut u32,pn:*mut u64,seq:*mut u32,
+)->i32{
+    if packet.is_null()||len==0||len>2048||out.is_null()||out_len.is_null()
+        ||pn.is_null()||seq.is_null()||out_cap<31||out_cap>2048 {
+        return INVALID
+    }
+    let in_bytes=unsafe{std::slice::from_raw_parts(packet,len)};
+    let out_bytes=unsafe{std::slice::from_raw_parts_mut(out,out_cap)};
+    match probe_seal_tx(handle,in_bytes,connection_mtu,peer_mss,out_bytes){
+        Ok((n,number,start))=>{
+            unsafe{out_len.write(n as u32);pn.write(number);seq.write(start)};
+            OK
+        }
+        Err(code)=>code,
+    }
+}
+
 // All these C symbols are compiled ONLY under m0_v4_probe Linux feature.
 // They intentionally do not authenticate caller bytes; production links do
 // not contain them and capability reporting always remains features=0.
@@ -398,6 +457,10 @@ mod tests {
         // The actual RX/TX ScopedOwner+AEAD object must never expose its
         // RX queue or plaintext before BOTH directions commit.
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
+        // Same internal owner TX cannot seal through uncommitted probe even
+        // with a format-valid candidate and explicit synthetic path budget.
+        assert_eq!(probe_seal_tx(first,b"pre-commit",1200,536,&mut [0u8;2048]).err(),
+            Some(BAD_STAGE));
         let mut precommit_record=vec![0u8;31];
         assert_eq!(probe_open_unique(first,&mut precommit_record).err(),Some(BAD_STAGE));
         // A self-consistent cold grammar with an impossible wire limit

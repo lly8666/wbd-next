@@ -8,6 +8,7 @@ package realityfront
 extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t, uint64_t *);
 extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
+extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -30,6 +31,7 @@ var errV4NativeProbe=errors.New("V4 test-only native probe refused")
 var errV4NativeLinkPending=errors.New("authenticated LINK fragment is incomplete")
 type v4NativeRustProbe struct {
     handle uint64
+    txBoundary uint32
     prepared,committed bool
     testAssoc *faketcp.ServerAssociation // Go test-only hook, NOT a C pointer
     injectEarly [][]byte // tests exclusively, raw UNAUTHENTICATED wire
@@ -96,7 +98,7 @@ func (p *v4NativeRustPending) commit(early []faketcp.TransitionPacket, exactTXBo
     code:=C.wbd_m0_test_probe_commit(C.uint64_t(p.handle),
         C.uint32_t(len(early)),C.uint32_t(total),C.uint32_t(exactTXBoundary))
     if code!=0{return fmt.Errorf("%w: commit=%d",errV4NativeProbe,int(code))}
-    p.committed=true;p.owner.committed=true;return nil
+    p.committed=true;p.owner.committed=true;p.owner.txBoundary=exactTXBoundary;return nil
 }
 func (p *v4NativeRustPending) abort(){
     if p.committed||p.aborted{return}
@@ -169,4 +171,27 @@ func (b *v4NativeRustProbe) openAuthenticated(wire []byte)(uint64,uint32,uint64,
     if code==6{return 0,0,0,errV4NativeLinkPending}
     if code!=0{return 0,0,0,fmt.Errorf("%w: scoped Normal/off application candidate open=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint32(kind),uint64(digest),nil
+}
+
+// Test-only observation of the SAME normal-build Rust owner TX direction.
+// The M4 path/peer MSS are EXPLICIT TEST INPUTS, not discovered live values;
+// this does not send to real raw/TUN or publish an ABI capability.
+func (b *v4NativeRustProbe) sealNativeNormal(payload []byte,outerMTU,peerMSS uint16)(
+    []byte,uint64,uint32,error,
+){
+    if !b.committed||b.handle==0||len(payload)==0{return nil,0,0,errV4NativeProbe}
+    wire:=make([]byte,2048)
+    var size C.uint32_t
+    var pn C.uint64_t
+    var seq C.uint32_t
+    code:=C.wbd_m0_test_probe_seal_normal(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&payload[0])),
+        C.size_t(len(payload)),C.uint16_t(outerMTU),C.uint16_t(peerMSS),
+        (*C.uchar)(unsafe.Pointer(&wire[0])),C.size_t(len(wire)),
+        &size,&pn,&seq,
+    )
+    runtime.KeepAlive(payload)
+    if code!=0{return nil,0,0,fmt.Errorf("%w: normal scoped TX=%d",errV4NativeProbe,int(code))}
+    if size==0||int(size)>len(wire){return nil,0,0,errV4NativeProbe}
+    return wire[:int(size)],uint64(pn),uint32(seq),nil
 }

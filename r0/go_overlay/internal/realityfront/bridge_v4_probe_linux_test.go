@@ -251,3 +251,81 @@ func TestR0V4NativeRustProtectedNormalOffLinkFirstPacket(t *testing.T){
         })
     }
 }
+
+
+// Bidirectional V4 test source: the S2C half is sealed by NORMAL-BUILD Rust
+// LaneTxCrypto, published through M1's actual ScopedOwner TxOwner fresh queue
+// as immutable FrozenRecord and read inside a generation-fenced ready batch;
+// the existing Go TLS-derived Opener independently authenticates its bytes.
+// The C2S half still traverses the same Rust ScopedOwner RX and M3 reassembly.
+func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
+    for _,suite:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("cipher-%d",suite),func(t *testing.T){
+            bridge:=&v4NativeRustProbe{}
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("before-detach"),1200,536);e==nil{
+                t.Fatal("TX admitted without Go's protected reply and Detach")
+            }
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,suite)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("protected TLS owner failed: %v %v",ce,se)
+            }
+            serverCold,e:=server.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            clientCold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            if serverCold.DirectionKeys()!=clientCold.DirectionKeys(){
+                t.Fatal("V4 Go TLS exporter direction mismatch")
+            }
+            cLimit,sLimit:=serverCold.RecordLimits()
+            recv,e:=tlsrecord.NewOpenerForCipher(
+                clientCold.DirectionKeys().S2C,int(cLimit),suite)
+            if e!=nil{t.Fatal(e)}
+            goSend,e:=tlsrecord.NewSealerForCipher(
+                clientCold.DirectionKeys().C2S,int(sLimit),suite)
+            if e!=nil{t.Fatal(e)}
+            // These are SYNTHETIC path input values for test only; the
+            // production M4 PathBudget/actual MSS still remain NOT_RUN.
+            first:=[]byte{0x00,0x51,0xff,0x00,0x61}
+            wire,pn,seq,e:=bridge.sealNativeNormal(first,1200,536)
+            if e!=nil||pn!=0||seq!=bridge.txBoundary{
+                t.Fatalf("Rust first TX PN/boundary wrong: pn=%d seq=%d want=%d err=%v",
+                    pn,seq,bridge.txBoundary,e)
+            }
+            opened,e:=recv.OpenRecord(wire)
+            if e!=nil||opened.PN!=pn||opened.Kind!=tlsrecord.KindLINK||
+                !bytes.Equal(opened.Payload,first){
+                t.Fatalf("Go client failed to authenticate Rust S2C first packet: %+v err=%v",opened,e)
+            }
+            // Explicit budget guard rejects a too-small carrier and any
+            // raw ordinary payload that requires LINK magic escaping.
+            if _,_,_,e:=bridge.sealNativeNormal(bytes.Repeat([]byte{1},128),1200,64);e==nil{
+                t.Fatal("Rust TX violated effective MSS path budget")
+            }
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("WBDLFRG1needs-escape"),1200,536);e==nil{
+                t.Fatal("Rust TX published unescaped magic-prefixed LINK")
+            }
+            second:=[]byte("server-normal-fec-off-second")
+            wire2,pn2,seq2,e:=bridge.sealNativeNormal(second,1200,536)
+            if e!=nil||pn2!=pn+1||seq2!=seq+uint32(len(wire)){
+                t.Fatalf("Rust TX sequence/PN reused: %v pn=%d seq=%d",e,pn2,seq2)
+            }
+            opened2,e:=recv.OpenRecord(wire2)
+            if e!=nil||opened2.PN!=pn2||!bytes.Equal(opened2.Payload,second){
+                t.Fatalf("Go client Rust S2C second packet mismatch: %+v err=%v",opened2,e)
+            }
+            // Go C2S to the very same Rust owner RX path, not an
+            // independent decryptor or test-only delivery queue.
+            c2s:=[]byte("client-normal-fec-off-first")
+            cwire,_,e:=goSend.Seal(c2s);if e!=nil{t.Fatal(e)}
+            gotpn,kind,digest,e:=bridge.openAuthenticated(cwire)
+            want:=fnv.New64a();_,_=want.Write(c2s)
+            if e!=nil||gotpn!=0||kind!=0||digest!=want.Sum64(){
+                t.Fatalf("Go C2S into Rust owner first packet failed: %v pn=%d",e,gotpn)
+            }
+            if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("after-stop"),1200,536);e==nil{
+                t.Fatal("retired scoped owner allowed S2C TX")
+            }
+            if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
+        })
+    }
+}
