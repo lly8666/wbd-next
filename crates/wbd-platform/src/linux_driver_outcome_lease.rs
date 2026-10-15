@@ -423,9 +423,9 @@ mod tests{
         assert_eq!(receipt.entry_for(&o,0).unwrap(),
             Some(RxEntry::Truncated{wire_len:96,capacity:7}));
         assert_eq!(receipt.entry_for(&o,1).unwrap(),Some(RxEntry::Complete{len:8}));
-        assert_eq!(parse_complete(receipt.outcome().entries[0],&tiny,trusted()),
+        assert_eq!(parse_complete(receipt.outcome().entries[0],slots[0],trusted()),
             Err(ParseGateError::Truncated));
-        assert_eq!(&whole[..8],b"complete");
+        assert_eq!(&slots[1][..8],b"complete");
         drop(receipt);
         let empty=o.receive(202,&mut slots).unwrap();
         assert_eq!(empty.status,RxStatus::WouldBlock);
