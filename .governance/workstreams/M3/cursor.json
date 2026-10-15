@@ -4,27 +4,28 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 16,
-  "checkpoint_sha": "55a1248c3d37eb5f9f01826e43cf6e061f16747a",
+  "sequence": 17,
+  "checkpoint_sha": "76684d285d02599bb3551f745c918d038711a471",
   "progress": "partial",
-  "task_id": "R1-M3-POSTAUTH-FEC-P0-COST-013",
-  "current_task": "M0-assigned test-only post-auth FEC P0 component cost atom completed: real ChaCha20-Poly1305+8B HP and unique PN across two tunnels x both directions, bounded BlockID/Heavy/Compact pressure and absent-origin deny; 96/96 native r1 tests and 18 >1s CPU/bytes/percentile measurements. No production FEC origin added.",
-  "why_now": "Main registry rev2 epoch1 goal013 requested reproducible component costs after genuine AEAD/unique PN, not product throughput. Current results are debug cargo-test owner-per-64 fresh-context measurements, strictly component only.",
-  "done_when": "SOURCE 0573798b compiled-once 96/96 worker-native run38678836564 attempt1 PASS (two new+94 prior), exact 18 P0 rows three modes x two sizes x three repeats (>1.125s each) per-thread CPU-s/byte and batch percentile logs. Seven same SOURCE Actions SUCCESS incl Governance38678836554 attempt1; evidence-only S55a1248c Governance38679104152 attempt1 SUCCESS with ROLE_SCOPE_PASS. Cursor-only H seq16 own Governance must be checked separately.",
-  "next_action": "Await next formal M0 assignment. No production FecOrigin constructor, trusted V4 Go exporter, root Cargo/lock/shared ABI/CI modifications. M0 separately owns live authenticated provenance and Normal/off integration; P0 debug owner-construction-included results cannot establish steady-state/release or 500Mbps product performance.",
+  "task_id": "R1-M3-FEC-STEADY-COST-RELEASE-014",
+  "current_task": "Release steady-cost atom014 PARTIAL/BLOCKED: M3-owned harness authored and 98/98 r1_ DEBUG native passed (two new plus previous96), real ChaCha AEAD+unique PN tests across 2 tunnels × both directions. Actual source-exact Release CPU cost and fresh-vs-steady ratio NOT_RUN because M0-owned CI needed; Governance blocked by main-owned worker_scope_ci.py mismatch.",
+  "why_now": "Formal main registry rev2 epoch1 goal014 requires release-mode >=1s warmup+3 repetitions/192B+896B separating persistent RX owner FEC state from previously measured Debug fresh-owner overhead. M3 cannot alter root CI or main-owned governance checker.",
+  "done_when": "PARTIAL: exact SOURCE88a12027 native compiled-once DEBUG run38682956912 attempt1 98/98 PASS, 5 other same-source regressions PASS; Governance38682956995 FAIL main vs M3 checker mismatch. Evidence-only S76684d28 Governance38683212797 FAIL identical checker mismatch. RELEASE ACTIONS NOT_RUN; >=1s warmup+3 runs release CPU/p99 and same-job fresh/steady ratio are still REQUIRED before DONE. M0 owns checker sync and exact release worker workflow; cursor-only H seq17 own Gov expected blocked until M0 repair.",
+  "next_action": "Await M0 action on docs/devlog/M3/M0-REQUEST-FEC-STEADY-RELEASE-014.md: approved sync of tools/worker_scope_ci.py main blob26983e63 vs M3 blob1d27c4ec; M0-owned exact SOURCE Rust release compiled-once test workflow. After real release Actions and repaired Governance, M3 must update evidence source/run ratios and cursor-only H with successful audit. Do not touch root/CI/ABI/Go nor infer 500Mbps throughput.",
   "unverified": true,
-  "last_tested_source": "0573798b27fa6fd6327ed1b997ee8cd50b0da526",
+  "last_tested_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json"
+    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/07-FEC.md",
-    "docs/devlog/M3/R1-M3-FEC-MULTISCOPE-012.md",
-    "docs/evidence/M3/R1-M3-FEC-MULTISCOPE-012.json",
     "docs/devlog/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.md",
-    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json"
+    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json",
+    "docs/devlog/M3/M0-REQUEST-FEC-STEADY-RELEASE-014.md",
+    "docs/devlog/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.md",
+    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json"
   ],
-  "partial_summary": "Restored previous M3 seq15 H78003a198fd46ac8fa497f0255fe67e2c26b1d95 with Governance38675514034 attempt2 PASS, and new main rev2 epoch1 assignment 013. Initial scoped test S f7ad0013 worker run38678774484 failed Rust E0282 unused Vec. Corrected SOURCE0573798b27fa6fd6327ed1b997ee8cd50b0da526 fixed with true new AEAD PN16 BlockID1 retired counterexample. Native 96/96 r1_ PASS compiled-once run38678836564 on Ubuntu24.04 Rust1.85.1 debug, binary sha256 4c37b79c29a3dba72dc2c73b2aa5fc9559c8994252f602f9b2de218ca56f3b48; seven same-source Actions SUCCESS. Six scenario pairs (192/896B, AEAD-only, bound-origin AEAD+FEC, absent-origin deny), each repeated 3x for 18 1.125s wall and Linux thread CPU-s observations, 150ms warmup, batch average p50/p95/p99, byte counts, mixed order. Debug P0 includes new owner construction every 64 records and tests, NOT product steady-state. No synthetic cipher or production FecOrigin. Evidence-only S55a1248c3d37eb5f9f01826e43cf6e061f16747a Governance38679104152 completed SUCCESS with ROLE_SCOPE_PASS 63 scope commits; continuity read-only probe exited1 before cursor H and is not claimed CLEAN. Now H seq16 checkpoint evidence S, own H Governance pending. Live V4 trusted origin, production FEC-on, release/perf/product/WinARM/physical NOT_RUN. M3 awaits M0 formal assignment."
+  "partial_summary": "Prior M3 seq16 H f198eb0c Gov38679326550 PASS. New main goal014 release steady P0. M3 test-only source44336b1 introduced 2x2 scope steady/FEC AEAD benchmark and M0 release request; first Debug build run38682890926 FAILED Rust E0502 borrow, fixed SOURCE88a12027c61386be2709e1e8b01eb8f3c547ae81. Real native compiled-once DEBUG test run38682956912 PASS 98/98 (prior96+two new), binary d071813c51c8f653b2474590f4e403b943b41adb0d5320467a26cf2701986d20, log516d03c3b8f94ed56f7f4fd5f3062de8007a0a7bf124bcb3adf0405174eec59b; 5 compatible same-source workflows PASS. Governance38682956995 FAIL ROLE_SCOPE_FAILED main-owned checker mismatch, main tools/worker_scope_ci.py blob26983e630ab2fbf28466dac457923904aaa6be60 != worker1d27c4ec8d02035fc53d4e657f2cd7427373f8df. Evidence S76684d285d02599bb3551f745c918d038711a471 Gov38683212797 FAIL same checker mismatch. Steady bench authored under cfg(test) with persistent per-direction rx/tx, PN unique across warmup and repeats, per-thread CPU/active wall and batch-average p50/p99, but release branch Actions job NOT AVAILABLE and RELEASE NOT_RUN. M0 request is own devlog, NOT formal Actions intent; no M3 root/CI edits. Next action M0 checker sync + source-locked release Actions, then M3 source-exact evidence and successful cursor-only H; product/FEC V4 trusted positive origin/500Mbps NOT_QUALIFIED."
 }
