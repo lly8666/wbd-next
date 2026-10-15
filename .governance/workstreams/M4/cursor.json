@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 12,
-  "checkpoint_sha": "b67e282e5531c624ac1efa53d6245b89e13b6197",
+  "sequence": 13,
+  "checkpoint_sha": "44cd75208cc2a28d7f62d582bac75e8dab924cdd",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008",
-  "current_task": "M4 test-only explicit opt-in isolated 'lo' AF_PACKET SOCK_RAW nonblocking bounded owned TX/RX lifecycle; CAP_NET_RAW gated and BPF self-only filter staged; positive raw traffic NOT_RUN on unprivileged runner.",
-  "why_now": "Formal main registry M4 R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008 assignment rev2 epoch1 active, after clean M4 -007 cursor-only H.",
-  "done_when": "Preserve previous60/60 scoped R1 tests; run exact native capability-negative and conditional positive controlled loopback raw packet checks when runner privilege allows, otherwise report positive RAW_RX_NOT_RUN rather than fake PASS. Include setup/teardown/STOP/truncation under loopback and source-attested own build/consume evidence S, cursor H Governance. No Go V4, cross-role, ABI or root dependencies.",
-  "next_action": "M0 may source-review test-only isolated loopback AF_PACKET BPF/raw lifecycle. Actual positive raw packet reception remains RAW_RX_NOT_RUN because native runner lacked CAP_NET_RAW; a separately authorized privileged fixture is needed before calling raw RX tested. Never bind physical interfaces or activate production Go V4. M4 wait for NEW main formal task and do not self-extend.",
+  "task_id": "R1-M4-DRIVER-OUTCOME-LEASE-009",
+  "current_task": "M4 Linux x86_64 GNU bounded generation-tagged real unprivileged UDP submit+receive outcome/explicit deferred loan STOP guard now source-qualified; no AF_PACKET privileged raw qualification.",
+  "why_now": "New authorized main wave R1-M4-DRIVER-OUTCOME-LEASE-009 active M4 branch and owned paths, registry revision2 epoch1.",
+  "done_when": "Preserve previous64/64 native; add minimal non-duplicated source-attested unprivileged real-kernel UDP 0/1/32/33 and delayed stop/completion tests with exact outcome vs uncertain semantics, bounded<=32 preallocated handles, no new hot copies; retain EPERM negative and explicitly mark privileged RAW_RX_NOT_RUN unless observed. Own source-exact compiled-once native evidence S, cursor-only H Governance SUCCESS. Avoid generic or production raw driver while V4 auth still disconnected.",
+  "next_action": "M0 reviews exact SOURCE scoped actual UDP outcome+lease fixture for source-locked Rust owner integration. Privileged AF_PACKET raw packet exchange remains RAW_RX_NOT_RUN due no CAP_NET_RAW, production Go V4 disabled; M4 waits for next NEW formal main task and makes no unrelated changes.",
   "unverified": false,
-  "last_tested_source": "7fdad158f07b9b130b7d05160d63714d1b40d33c",
+  "last_tested_source": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008.json"
+    "docs/evidence/M4/R1-M4-DRIVER-OUTCOME-LEASE-009.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008 scoped code+unprivileged native evidence completed: code SOURCE7fdad158f07b9b130b7d05160d63714d1b40d33c cfg(test)-ONLY opt-in AF_PACKET SOCK_RAW loopback 'lo' ifindex/MTU gated, protocol0 owned FDs, kernel classic BPF exact own tuple+process cookie attached BEFORE lo-only RX bind, nonblocking <=32 recvmmsg stack buffers, source exact test-only self-frame TX, sockaddr/gen/truncation/STOP and RAII. Actual native run38683027173/1 compiled-once 64/64 PASS (4 new+60 previous) ZIP/manifest/binary/result/log SHA independently verified; actual stdout explicitly RAW_RX_NOT_RUN (runner lacks CAP_NET_RAW), so NO positive raw packet send/receive or truncation on privileged FD is qualified. Preserved native compile failure first SOURCEd89975d4 run38682980950 E0502 test fixture; final SOURCE old branch r0-fake38683027118 FAIL old 7-inventory despite 71/71 actual Rust assertions PASS. Final CODE same-source Governance38683027067, G2, static, crossABI SUCCESS; evidence S b67e282e5531c624ac1efa53d6245b89e13b6197 Governance38683252280 SUCCESS. No real raw RX product, Go V4 exporter, native Windows/ARM, perf/physical; Go V4 production DISABLED."
+  "partial_summary": "M4 R1-M4-DRIVER-OUTCOME-LEASE-009 scoped DONE_WHEN: CODE SOURCE39f7671b07c3aa5f54266f42e83bc226a67c5763 new linux_driver_outcome_lease.rs + lib registration, combined real unprivileged native kernel UDP sendmmsg/recvmmsg with original FrozenRecordHandle, <=32 preallocated buffers, 0/1/32/33 accepted kernel prefix/uncertain/suffix, invalid slots/truncation/wouldblock and separate deterministic EINTR mapping, stop idempotent; deferred GenerationLoan retains actual frozen Arc until old owner completes, new owner refuses to drop old loan while sending fresh concurrently. Native Actions38688814472/1 compiled-once 71/71 PASS (7 new+64 previous), actual build/result ZIP, manifest, binary, JSON and test.log SHA256 verified direct. Same CODE SOURCE Governance38688814469, G2 38688814487, static38688814402, crossABI38688814565 all SUCCESS; historic old R0 worker branch r0-fake38688814517 FAIL exact-7 inventory (M0 root) despite Rust assertions passing, preserved. Evidence S44cd75208cc2a28d7f62d582bac75e8dab924cdd Governance38689043632 SUCCESS. Prior AF_PACKET positive RAW_RX_NOT_RUN due CAP_NET_RAW absent, typed negative EPERM fixture still PASS; no real async kernel UDP loan, auth/PN/Go V4 owner, native Win/ARM, product/performance/physical; production Go V4 DISABLED."
 }
