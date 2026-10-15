@@ -538,6 +538,8 @@ struct ReuseCostResult {
     p50_batch_avg_ns:u64,
     p99_batch_avg_ns:u64,
     samples:usize,
+    raw_windows:Vec<(u128,Option<u64>,&'static str)>,
+    raw_batch_samples:Vec<u64>,
 }
 #[cfg(target_os = "linux")]
 fn measure_reuse_leg(
@@ -557,6 +559,7 @@ fn measure_reuse_leg(
     let mut windows=0u64;
     let mut count=0u64;
     let mut samples=Vec::with_capacity(2048);
+    let mut raw_windows=Vec::new();
     while active_ns<target.as_nanos() || count==0{
         let staged=match leg{
             ReuseCostLeg::SteadyAead=>Some(
@@ -588,6 +591,7 @@ fn measure_reuse_leg(
         }
         let (elapsed,cpu,kind)=clock.end();
         active_ns+=elapsed;
+        raw_windows.push((elapsed,cpu,kind));
         windows+=1;
         if backend=="CPU_INCONCLUSIVE" {backend=kind;}
         if cpu.is_none() || kind!=backend {cpu_valid=false;}
@@ -606,6 +610,7 @@ fn measure_reuse_leg(
         backend:if cpu_valid{backend}else{"CPU_INCONCLUSIVE"},
         clock_windows:windows,records:count,p50_batch_avg_ns:p50,
         p99_batch_avg_ns:p99,samples:samples.len(),
+        raw_windows,raw_batch_samples:samples,
     }
 }
 #[cfg(target_os = "linux")]
@@ -672,8 +677,11 @@ fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
         // Four >=1s active warmups per size; not included in measurements.
         for mode in [ReuseCostLeg::FreshAead, ReuseCostLeg::SteadyAead,
                      ReuseCostLeg::FreshFec, ReuseCostLeg::SteadyFec] {
-            let _ = measure_reuse_leg(mode, &fixed, shard_len,
+            let w = measure_reuse_leg(mode, &fixed, shard_len,
                 &mut aead, &mut fec, &mut scratch, warmup);
+            assert!(w.active_wall_ns>=warmup.as_nanos());
+            println!("M3_CLOCK_WARMUP profile=RELEASE mode={} shard_len={} active_wall_ns={} windows={} clock_backend={} cpu_valid={}",
+                mode.name(),shard_len,w.active_wall_ns,w.clock_windows,w.backend,w.cpu_ns.is_some());
         }
         for (round, modes) in [
             [ReuseCostLeg::FreshAead,ReuseCostLeg::SteadyAead,
@@ -713,6 +721,15 @@ fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
                     clock_status,m.backend,m.clock_windows,m.active_wall_ns,
                     m.cpu_ns.unwrap_or(0),cpu_s.is_some()
                 );
+                // Full paired CPU/Wall observations, emitted AFTER timing;
+                // consumer may independently check every boundary.
+                for (index,(wall,cpu,kind)) in m.raw_windows.iter().enumerate(){
+                    println!("M3_CLOCK_WINDOW profile=RELEASE mode={} shard_len={} repeat={} index={} wall_ns={} cpu_ns={} clock_backend={} cpu_valid={}",
+                        mode.name(),shard_len,round,index,wall,cpu.unwrap_or(0),kind,cpu.is_some());
+                }
+                println!("M3_BATCH_SAMPLE profile=RELEASE mode={} shard_len={} repeat={} batch_avg_ns_per_record={}",
+                    mode.name(),shard_len,round,
+                    m.raw_batch_samples.iter().map(u64::to_string).collect::<Vec<_>>().join(","));
             }
         }
     }
