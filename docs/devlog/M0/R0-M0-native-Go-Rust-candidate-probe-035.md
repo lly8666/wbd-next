@@ -1,0 +1,5 @@
+# M0 Linux real-Go-TLS to scoped Rust owner test-only cgo adapter
+
+Build tag `linux && cgo && wbd_v4_native_probe`, enabled only in a source-exact native CI. Adapter implements the package-private `v4OwnerBridge`: only after actual verified Go V4 TLS credentials/real exporter and true FakeTCP Prepare boundary, it passes a guarded fixed copy of Go cold bytes to Rust CDylib (test feature only). Rust accepts bytes only as an inert candidate and allocates fresh M1 ScopedOwner generation, then Go actual protected reply/Detach calls native metadata Commit. Rust Stop+Release checks stale generation; two real TLS rounds and forged zero snapshot denial covered.
+
+Unlike a real product bridge, test-only extern C symbols do NOT authenticate their raw input, deliver early packet payloads or construct crypto/FEC origin; production ABI features0. This component must NEVER be loaded as a product module. Next native integration CI compiles both source-locked binaries and exercises real in-process path. M0 still must implement true trusted owner admission/early payload/held driver Stop B01–B04 before product enable.
