@@ -381,3 +381,8 @@ mod fec_retire_pressure_tests;
 #[cfg(test)]
 #[path="fec_auth_gate_tests.rs"]
 mod fec_auth_gate_tests;
+
+// M3-012 independently authenticated four-scope FEC tests, test-only provenance.
+#[cfg(test)]
+#[path="fec_multiscope_tests.rs"]
+mod fec_multiscope_tests;
