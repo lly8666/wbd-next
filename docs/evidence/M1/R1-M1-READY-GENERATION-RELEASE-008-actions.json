@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-READY-GENERATION-RELEASE-008",
+  "branch": "work/m1-r1-runtime",
+  "source_sha": "fc023fba5bc7c51d07868a3d64d5356596130f75",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M1 owner-only scoped Release benchmark plus native Rust tests, no product/real-network qualification",
+  "native": {
+    "run_id": 38682808748,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38682808748",
+    "build_job": 116250909201,
+    "consume_job": 116251008373,
+    "compiled_once": true,
+    "passed": 75,
+    "failed": 0,
+    "previous_r1": 71,
+    "new_r1": 4,
+    "other_r0_filtered": 3,
+    "result_artifact_id": 11947969849,
+    "build_artifact_id": 11949091374,
+    "result_zip_sha256": "c59fe8b67676135dd911f5afe0c4ed7569e3b4557171b39caa73c39da9538397",
+    "result_json_sha256": "4b60fa9704042bf3b48da4a7288c9c959e65872f868a95a7771b345997a9bee5",
+    "test_log_sha256": "a50c6a6106f846f9d051404329da4caca9c77ec2d069bd78a48c54bbdade77c3",
+    "debug_binary_sha256": "2aec66e4fcf7364a21673cf3d7e4ee10f036a6ddcc400571bb20a72d9f8b2206",
+    "artifact_review": "Downloaded ZIP, inspected SHA256 result.json/test.log, 75 unique passing test names, verified exact source/run and all 3 structured release observations."
+  },
+  "release": {
+    "source_sha": "fc023fba5bc7c51d07868a3d64d5356596130f75",
+    "compiled_once": true,
+    "exe_count": 1,
+    "executions": 1,
+    "bench_result": "1 passed; 0 failed",
+    "exe_sha256": "553a7cc6f754e1d44e724fee746dd83c058e7d32da47a0eff1f77def1ccf9825",
+    "build_command": "cargo test --release --locked --offline -p wbd-engine --lib --no-run",
+    "leg_count": 3,
+    "min_wall_s": 1.100003,
+    "each_warmup_rounds": 512,
+    "sampled_per_leg": 40000,
+    "p0_evidence": "docs/evidence/M1/R1-M1-READY-GENERATION-RELEASE-008-release-p0.json",
+    "limits": "Hosted release Rust component actual TX/RX 32-handle ready dispatch; process CPU includes arena setup; not isolated production throughput"
+  },
+  "new_test_cases": [
+    "r1_owner_release_ready_0_1_32_33_tx_rx_two_lanes",
+    "r1_owner_release_fresh_first_stale_stop_aba_no_resubmission",
+    "r1_owner_release_old_batch_held_stop_new_scope_stale_after_32",
+    "r1_owner_release_compiled_once_hosted_cpu_latency_provenance"
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38682808769,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38682808783,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38682808803,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38682808790,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38682808744,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_ci_blocker": {
+    "owner": "M0",
+    "run_id": 38682808744,
+    "status": "FAIL",
+    "reason": "Old shared R0 harness requires '3 passed' unfiltered; actual Rust binary rc0 with 77 passed and 1 ignored; workflow still FAIL",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+  },
+  "qualification": {
+    "first_fresh_and_stale_negative": "PASS_SCOPED_NATIVE",
+    "old_generation_loan_stop_aba": "PASS_SCOPED_NATIVE",
+    "actual_bounded_owner_batch": "PASS_SCOPED_RELEASE_COMPONENT",
+    "product": "NOT_RUN",
+    "Go_authenticated_origin": "NOT_RUN",
+    "driver": "NOT_RUN",
+    "AF_PACKET": "NOT_RUN",
+    "500Mbps": "NOT_RUN",
+    "end_to_end_p99": "NOT_RUN",
+    "isolated_CPU": "NOT_RUN",
+    "Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "Go_V4": "DISABLED"
+  }
+}
