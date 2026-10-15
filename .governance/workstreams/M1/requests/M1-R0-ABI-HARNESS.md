@@ -19,3 +19,7 @@ Exact SOURCE `20809638ba86eed25aee463a7bbba9a002761799`, [R0 native ABI385986021
 
 ## R1-M1-READY-BATCH-004 (2026-10-15)
 Native `worker-native-tests.yml` [38667033577](https://github.com/lly8666/wbd-next/actions/runs/38667033577) exact M1 SOURCE `3460d4f4630da3bfb1d9a0cfc522158adc14645b` succeeded 39/39 `r1_` tests (new 10 batch). The distinct R0 native ABI [38667033555](https://github.com/lly8666/wbd-next/actions/runs/38667033555) consumer **FAIL**: compiled Rust binary test run returned rc0 and `42 passed`, but old worker-branch shared harness checks for literal substring `"3 passed"` in unfiltered output. Fixed main variant is M0-owned. Request M0 coordinate merge/rebase/update of shared harness or CI scope, not write from M1. This is neither an M1 Rust unit test failure nor a successful R0 ABI workflow.
+
+## R1-M1-RX-READY-BATCH-005 repeated worker branch stale harness
+
+Exact worker SOURCE `e0a9f64d5c17d8085c52f09a083b9689535f00d1` compiled native worker [38669368706](https://github.com/lly8666/wbd-next/actions/runs/38669368706) 51/51 PASS. The same-source R0 native ABI workflow [38669368889](https://github.com/lly8666/wbd-next/actions/runs/38669368889) **FAILED** because the legacy branch-local unfiltered root harness demands literal `"3 passed"`, while Rust ABI test binary returned rc0 and 54/54 PASS. Main already contains a corrected R0-prefixed selector; please M0 coordinate shared harness synchronization/merge. This failed workflow is explicitly NOT_PASS and does not authorize M1 root edits.

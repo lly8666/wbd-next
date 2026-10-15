@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-RX-READY-BATCH-005",
+  "branch": "work/m1-r1-runtime",
+  "source_sha": "e0a9f64d5c17d8085c52f09a083b9689535f00d1",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification_scope": "M1_RX_OWNER_LOCAL_SCOPED_NATIVE_UNIT_ONLY_NOT_AUTHENTICATED_RX",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38669368706,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38669368706",
+    "runner": "ubuntu-24.04",
+    "toolchain": "rustc 1.85.1",
+    "build_job": 116208582248,
+    "consume_job": 116208660510,
+    "compiled_once": true,
+    "passed": 51,
+    "failed": 0,
+    "previous_r1": 39,
+    "new_rx_r1": 12,
+    "filtered_r0_tests": 3,
+    "build_artifact_id": 11942454110,
+    "result_artifact_id": 11943239281,
+    "result_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38669368706/artifacts/11943239281",
+    "result_json_sha256": "25dbebe42ef559c7eee1be9ff84fff698429d35473084902710e81720143fc1b",
+    "test_log_sha256": "11d2b1bf9746eab4d627f8eeb94a7c97660e66bc531e0ebd0fe856616d774a9b",
+    "binary_sha256": "28f1fb119390d4a4379cfb35db37a7dc7b71ca1e0eae1393c097f6ece5bebe92",
+    "direct_artifact_review": "Downloaded the result ZIP, opened result.json and test.log, SHA256 verified both exact bytes, validated source_sha, run_id, 51 named passing tests, 12 named new runtime::rx_batch tests and binary digest.",
+    "new_tests": [
+      "r1_rx_batch_empty_and_zero_capacity_do_not_allocate",
+      "r1_rx_batch_one_first_arrival_preserves_unique_buffer_pointer",
+      "r1_rx_batch_exact_32_no_grow_or_extra_wakeup",
+      "r1_rx_batch_33_split_32_and_one_without_tail_drop",
+      "r1_rx_batch_full_prefilled_output_never_overwrites_or_grows",
+      "r1_rx_batch_two_lanes_alternate_without_reordering_each_lane",
+      "r1_rx_batch_obstructed_head_lane_allows_unrelated_lane",
+      "r1_rx_batch_bound_slots_bytes_and_invalid_range_return_owned_buffer",
+      "r1_rx_batch_expiry_in_middle_does_not_deliver_stale_or_block_other_lane",
+      "r1_rx_batch_stop_cancels_queued_but_dispatched_loan_remains",
+      "r1_rx_batch_full_return_backlog_and_last_loan_from_other_thread",
+      "r1_rx_batch_unscoped_legacy_offer_keeps_fifo_and_never_claims_auth"
+    ]
+  },
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38669368814,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38669368849,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38669368823,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38669368723,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38669368889,
+      "conclusion": "FAIL"
+    }
+  ],
+  "root_shared_blocker": {
+    "run_id": 38669368889,
+    "status": "FAIL",
+    "observation": "Rust test binary returned rc 0; 54 passed, 0 failed; worker branch shared root tools/r0_abi_bundle.py still matches unfiltered stdout substring '3 passed'; consume job failed. This workflow is NOT PASS.",
+    "owned_by": "M0",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
+    "branch_local_remains_unfixed": true
+  },
+  "local_proof": {
+    "batch_limit": 32,
+    "slot_and_byte_and_age_bounded": true,
+    "caller_preallocated_no_hotpath_allocation": true,
+    "first_arrival_and_legacy_fifo": true,
+    "untrusted_lane_hint_only": true,
+    "two_lane_fairness": true,
+    "blocked_head_does_not_block_other_lane": true,
+    "no_payload_copy": true,
+    "stop_and_last_loan_return": true,
+    "note": "Bounded O(queue_slots) owner-local expiry/selection scan; not an optimized production dataplane"
+  },
+  "not_run": {
+    "real_authenticated_crypto": "NOT_RUN",
+    "business_delivery": "NOT_RUN",
+    "raw_network": "NOT_RUN",
+    "rtrb_spsc_loom_eventfd": "NOT_RUN",
+    "Windows_native": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_Go_V4": "DISABLED",
+    "engine_feature_flags": 0
+  }
+}
