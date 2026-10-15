@@ -10,17 +10,32 @@
 pub mod r1;
 /// Scoped IPv4/TCP-like steady DATA bytes builder, not a raw OS driver.
 pub mod ipv4_tcp;
-/// Bounded, strict one-packet incoming IPv4/TCP DATA parser, untrusted until AEAD.
+/// Strict, allocation-free inbound IPv4/TCP DATA bytes parser (no AEAD authentication).
 pub mod rx_ipv4_tcp;
 
 // ABI island: the other platform modules still deny unsafe Rust code.
 #[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_batch;
-/// Bounded synchronous Linux recvmmsg RX; UDP kernel fixture, never AF_PACKET.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+/// Audited unprivileged Linux x86_64 GNU nonblocking recvmmsg UDP fixture.
+#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_rx_batch;
+/// Inactive AF_PACKET capability/FD preflight, no raw packet activation.
+#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_packet_preflight;
+/// Strict pure AF_PACKET sockaddr_ll RX metadata gate and inert test-only RX.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_raw_rx_contract;
+/// Isolated lo-only AF_PACKET raw TX/RX fixture; never built in production.
+#[cfg(all(test,target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+mod linux_loopback_raw;
+/// Real unprivileged UDP fixture outcome + generation-tagged explicit driver lease.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+pub mod linux_driver_outcome_lease;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
