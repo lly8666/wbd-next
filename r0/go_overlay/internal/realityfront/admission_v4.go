@@ -385,8 +385,10 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,err
     }
-    committed:=false
-    defer func(){finish(committed)}()
+    // Every unsuccessful pre-detach path MUST roll back the reserved epoch.
+    // finish is idempotent; the authenticated successful branch explicitly
+    // commits only after protected reply and DetachTransition both succeed.
+    defer finish(false)
     var nonce [16]byte
     if _,err:=io.ReadFull(source,nonce[:]);err!=nil{return nil,err}
     lease:=""
@@ -423,7 +425,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     early,err:=assoc.DetachTransition()
     if err!=nil{assoc.AbortTransition();return nil,err}
-    committed=true
+    finish(true) // CommitAdmission of the *Go* epoch; NOT Rust owner activation.
     success=true
     return &V4ServerSession{
         ServerAdmissionSession:&ServerAdmissionSession{

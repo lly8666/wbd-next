@@ -86,6 +86,10 @@ def consume(args):
     (out / "tests.log").write_text(run.stdout)
     passed = len(re.findall(r"^--- PASS: TestR0V4", run.stdout, re.M))
     failed = len(re.findall(r"^--- FAIL: TestR0V4", run.stdout, re.M))
+    # Count the ten frozen historic tests PLUS the genuine failed-nonce
+    # protected-handshake rollback, never any test-style name substring.
+    required = "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback"
+    rollback_pass = bool(re.search(r"^--- PASS: "+required+r"(?: \\([^)]*\\))?$",run.stdout,re.M))
     result = {
         "schema_version": 1,
         "source_sha": args.source,
@@ -97,7 +101,7 @@ def consume(args):
         "tests_passed": passed,
         "tests_failed": failed,
         "exit_code": run.returncode,
-        "result": "PASS" if run.returncode == 0 and passed == 10 and failed == 0 else "FAIL",
+        "result": "PASS" if run.returncode == 0 and passed == 11 and failed == 0 and rollback_pass else "FAIL",
         "scope": manifest["scope"],
         "v4_production_dispatch_wired": False,
         "v4_rust_capabilities_advertised": False,

@@ -8,6 +8,7 @@ import (
     "context"
     "crypto/tls"
     "errors"
+    "io"
     "testing"
     "time"
 )
@@ -346,4 +347,76 @@ func TestR0V4ColdBundleEphemeralInterop(t *testing.T){
         if writeErr!=nil||closeErr!=nil {t.Fatalf("write fixture: %v close:%v",writeErr,closeErr)}
     }
     if err:=store.ReleaseLane("interop",tunnel,1,s.Epoch);err!=nil{t.Fatal(err)}
+}
+
+
+// Only the server epoch reservation gets entropy; nonce creation fails after
+// credentials and protected request but BEFORE protected final reply/detach.
+type v4EpochOnlyReader struct { calls int }
+func (r *v4EpochOnlyReader) Read(dst []byte) (int,error) {
+    r.calls++
+    if r.calls!=1 || len(dst)!=16 { return 0,io.ErrUnexpectedEOF }
+    for i:=range dst {dst[i]=byte(i+1)}
+    return len(dst),nil
+}
+
+// B01: real TLS credentials and protected V4 request alone CANNOT commit
+// an epoch. Admission is acknowledged only after reply+detach. No Rust owner
+// is installed or advertised by this Go-only transaction proof.
+func TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback(t *testing.T) {
+    store,err:=NewV4EpochStore(1)
+    if err!=nil {t.Fatal(err)}
+    tunnel:=[]byte("1234567890abcdef")
+    cert:=makeServerCert(t)
+    routeKey:=[]byte("0123456789abcdef0123456789abcdef")
+    assoc,peer:=newAssociationPeer(t)
+    defer assoc.Close()
+    defer peer.Close()
+    ch:=make(chan error,1)
+    random:=&v4EpochOnlyReader{}
+    go func() {
+        _,se:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+            TLS:ServerConfig{ServerName:"target.test",RouteKey:routeKey,
+                TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
+            ExpectedUsername:"rollback",ExpectedPassword:"secret",
+            ServerLimit:1400,Random:random,
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store})
+        ch<-se
+    }()
+    _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,Timeout:3*time.Second},
+        Username:"rollback",Password:"secret",TunnelID:bytes.Clone(tunnel),
+        ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
+    },V4ClientOptions{DataPlaneReady:true})
+    var se error
+    select {
+    case se= <-ch:
+    case <-time.After(5*time.Second): t.Fatal("server did not roll back after nonce failure")
+    }
+    if !errors.Is(se,io.ErrUnexpectedEOF) || ce==nil || random.calls!=2 {
+        t.Fatalf("nonce failure accepted or wrong stage: client=%v server=%v reads=%d",
+            ce,se,random.calls)
+    }
+    store.mu.Lock()
+    left:=len(store.entries)
+    store.mu.Unlock()
+    if left!=0 {t.Fatalf("pre-detach uncommitted epoch leaked: %d",left)}
+    // The same authenticated principal/tunnel can now attempt a fresh real
+    // TLS handshake. A rejected provisional epoch MUST NOT poison admission.
+    c,s,ce,se:=v4Pair(t,store,"rollback",tunnel,1,
+        v4TestPolicy(1,CipherChaCha),[16]byte{})
+    if ce!=nil || se!=nil {t.Fatalf("retry after rollback failed: %v %v",ce,se)}
+    snap,err:=s.ColdSnapshot()
+    if err!=nil {t.Fatal(err)}
+    clientSnap,err:=c.ColdSnapshot()
+    if err!=nil || snap.Epoch()!=clientSnap.Epoch() ||
+        snap.DirectionKeys()!=clientSnap.DirectionKeys() {
+        t.Fatal("actual protected reply+detach did not commit same frozen cold scope")
+    }
+    store.mu.Lock()
+    entry:=store.entries[v4Identity("rollback",tunnel)]
+    valid:=entry!=nil && entry.active && entry.pending==0 && entry.lanes==(1<<1)
+    store.mu.Unlock()
+    if !valid {t.Fatal("commit not active after protected reply and detach")}
+    if err:=store.ReleaseLane("rollback",tunnel,1,s.Epoch);err!=nil {t.Fatal(err)}
 }
