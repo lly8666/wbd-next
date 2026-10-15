@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 6,
-  "checkpoint_sha": "1f5cbecdc33759c1f6b8cac253b3b9c7159cad68",
+  "sequence": 7,
+  "checkpoint_sha": "6b6a57e26bff1f26b2d433d7dfed0d464266a2c4",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-RX-READY-BATCH-005",
-  "current_task": "R1-M1-RX-READY-BATCH-005 bounded fair ready-only RX batch owner proof COMPLETE, awaiting M0 integration",
-  "why_now": "M0 main registry rev2 epoch1 assigned R1-M1-RX-READY-BATCH-005 on M1 existing active worker branch/allowed paths; previous seq5 H 4ca7d283 passed Governance38667280279.",
-  "done_when": "Exact own-source compiled-once native r1_ tests for empty/1/32/33, caller capacity0/full, no hot-path copy/allocation, two lanes with head obstruction, expiry/stop/loan return races. Preserve 39 previous tests; source S, native Actions, evidence S, cursor-only H and Governance; no production raw socket or Rust ABI changes.",
-  "next_action": "M0 review M1 RX source S e0a9f64, native compiled-once Actions38669368706 (51/51) and evidence; integrate only after trusted lane routing/auth boundary. M0 coordinate worker-branch stale shared R0 native ABI harness (38669368889 FAIL; actual Rust 54/54 rc0). M1 wait for next explicitly assigned atom.",
+  "task_id": "R1-M1-STOP-LOAN-GENERATION-006",
+  "current_task": "R1-M1-STOP-LOAN-GENERATION-006 owner-scoped TX/RX generation/stop loan proof COMPLETE (scoped native), M0 integration and shared root CI coordination pending",
+  "why_now": "Main registry rev2 epoch1 assigned M1 R1-M1-STOP-LOAN-GENERATION-006 in third-wave decision. Previous seq6 H fa518d65 Governance38669632237 SUCCESS; same active M1 branch/ownership.",
+  "done_when": "Own SOURCE compiled-once native r1_ tests of 0/1/32/33, two lane generations, mixed RX/TX loan returns, ABA/stale owner token, stop during ready and fake-clock expiry, no heap during hot drains and complete prior51/51 tests; own evidence S and cursor-only H Governance.",
+  "next_action": "M0 review M1 exact SOURCE d60a693, compiled-once native38674812277 63/63 and evidence docs/evidence/M1/R1-M1-STOP-LOAN-GENERATION-006-actions.json; determine trusted lane-generation provenance and compose M0 in its scope. M0 sync old root ABI harness on worker branch (run38674812438 FAIL, Rust 66/66 rc0). Code-S Governance38674812385 attempt1/2 both main-moving FAIL; H own Governance must be observed. M1 wait for next explicit scoped atom.",
   "unverified": false,
-  "last_tested_source": "e0a9f64d5c17d8085c52f09a083b9689535f00d1",
+  "last_tested_source": "d60a69312cc9878e3b09a1598280c89dfd4da6d8",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-RX-READY-BATCH-005-actions.json"
+    "docs/evidence/M1/R1-M1-STOP-LOAN-GENERATION-006-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M1-RX-READY-BATCH-005 scoped done_when met at exact code SOURCE e0a9f64: own worker native Actions38669368706 SUCCESS 51/51 r1_ (39 historic+12 new RX), compiled once and binary hashed; result artifact11943239281 inspected (result.json and test.log SHA256). Bounded 32 caller-preallocated RX UniqueBuffer batch, preauth lane scheduling hints with per-lane fair progress and unrelated blocked-lane independence, FIFO legacy compatibility, age/byte/slot, stop, full return backlog, other-thread final drop tested. Same-source Governance38669368814, G2 38669368849, audit38669368823, cross-ABI38669368723 SUCCESS; R0 native ABI38669368889 FAIL due old shared branch-local '3 passed' test marker (actual Rust 54/54 rc0), recorded M0 request. S e0a9f64 evidence S 1f5cbec; this H cursor-only. No crypto/auth/business delivery, real packet reader, production rtrb/loom/eventfd, Windows, product/performance/physical. Go V4 disabled, engine features0. Scoped native PASS only, not all CI."
+  "partial_summary": "M1 R1-M1-STOP-LOAN-GENERATION-006 local scope PASS at exact CODE d60a693: native Actions38674812277 compiled once and consumed SHA256-pinned binary, 63/63 r1_ (51 previous + 12 scope). Downloaded artifact11945891464, SHA256 verified result.json/test.log and observed all named cases. New runtime::generation opt-in ScopedOwner checks Arc-identical owner token and strictly increasing serial plus full lane generations for TX frozen metadata. Rotating cancels unsent TX/RX while old LoanBatch still owns TX immutable/RX unique handles until Drop/recycle; borrowed counters track batch handles, Arena loaned tracks last frozen clones. 0/1/32/33, two generations, ABA, fake clock expiry, stop, return backlog, fresh new scope while old loans pending proved in M1 native. Initial SOURCE eaa0d48 worker build38674720074 FAIL on test compile, corrected. Same-source G2 38674812533, R0 audit38674812389, cross ABI38674812361 SUCCESS; Governance SOURCE38674812385 attempts1/2 FAIL main moved mid-audit, no path violation observed; root native ABI38674812438 FAIL stale shared test count marker though Rust actual66/66 rc0. Evidence S 6b6a57e; H cursor-only follows and requires its own Governance PASS. Trusted origin/real driver/Go V4/Windows/rtrb/loom/performance/product/physical NOT_RUN; ABI features0."
 }
