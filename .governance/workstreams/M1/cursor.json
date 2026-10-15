@@ -4,18 +4,19 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 7,
-  "checkpoint_sha": "6b6a57e26bff1f26b2d433d7dfed0d464266a2c4",
+  "sequence": 8,
+  "checkpoint_sha": "a55674fae65f7e5511dd1fb3427c36aae5e05b58",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-STOP-LOAN-GENERATION-006",
-  "current_task": "R1-M1-STOP-LOAN-GENERATION-006 owner-scoped TX/RX generation/stop loan proof COMPLETE (scoped native), M0 integration and shared root CI coordination pending",
-  "why_now": "Main registry rev2 epoch1 assigned M1 R1-M1-STOP-LOAN-GENERATION-006 in third-wave decision. Previous seq6 H fa518d65 Governance38669632237 SUCCESS; same active M1 branch/ownership.",
-  "done_when": "Own SOURCE compiled-once native r1_ tests of 0/1/32/33, two lane generations, mixed RX/TX loan returns, ABA/stale owner token, stop during ready and fake-clock expiry, no heap during hot drains and complete prior51/51 tests; own evidence S and cursor-only H Governance.",
-  "next_action": "M0 review M1 exact SOURCE d60a693, compiled-once native38674812277 63/63 and evidence docs/evidence/M1/R1-M1-STOP-LOAN-GENERATION-006-actions.json; determine trusted lane-generation provenance and compose M0 in its scope. M0 sync old root ABI harness on worker branch (run38674812438 FAIL, Rust 66/66 rc0). Code-S Governance38674812385 attempt1/2 both main-moving FAIL; H own Governance must be observed. M1 wait for next explicit scoped atom.",
+  "task_id": "R1-M1-GENERATION-READY-OWNER-BENCH-007",
+  "current_task": "R1-M1-GENERATION-READY-OWNER-BENCH-007 current-scope TX/RX batch dispatch fence and source-attested debug component P0 COMPLETE; M0 integration & true isolated performance gate pending",
+  "why_now": "M0 main registry rev2 epoch1 assigned R1-M1-GENERATION-READY-OWNER-BENCH-007, unchanged M1 branch and allowed paths. Prior M1 cursor seq7 H 32ddf6c53e9d894d6d0add49699bc0e985e02d9d Governance38675249682 SUCCESS and only prior H beyond checkpoint.",
+  "done_when": "Retain own prior63 scoped native r1_ cases. Add 0/1/32/33 two-lane old+new generation, stop concurrently, stale token and no reordered first fresh tests. Native source-exact compiled-once executable, dedicated warmup/repeat CPU/latency provenance artifact where valid, no claimed 500Mbps or AF_PACKET; own evidence S/cursor H Governance.",
+  "next_action": "M0 review M1 exact tested SOURCE 0979314, worker native Actions38678588923 71/71 with 63 prior, new 8 scope/p0, and two M1 evidence JSON files; integrate only with trusted session generation and actual owner interface on main. M0 coordinate branch-old shared R0 native ABI selector (38678588872 FAIL, actual Rust binary 74/74 rc0). Isolated release-profile full ready drain CPU/latency and product/AF_PACKET remain separate M0 tests. M1 waits for next formal scoped task.",
   "unverified": false,
-  "last_tested_source": "d60a69312cc9878e3b09a1598280c89dfd4da6d8",
+  "last_tested_source": "0979314cacf8931a90840ad312dd50e9e2777d04",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-STOP-LOAN-GENERATION-006-actions.json"
+    "docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-actions.json",
+    "docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-p0.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +27,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M1 R1-M1-STOP-LOAN-GENERATION-006 local scope PASS at exact CODE d60a693: native Actions38674812277 compiled once and consumed SHA256-pinned binary, 63/63 r1_ (51 previous + 12 scope). Downloaded artifact11945891464, SHA256 verified result.json/test.log and observed all named cases. New runtime::generation opt-in ScopedOwner checks Arc-identical owner token and strictly increasing serial plus full lane generations for TX frozen metadata. Rotating cancels unsent TX/RX while old LoanBatch still owns TX immutable/RX unique handles until Drop/recycle; borrowed counters track batch handles, Arena loaned tracks last frozen clones. 0/1/32/33, two generations, ABA, fake clock expiry, stop, return backlog, fresh new scope while old loans pending proved in M1 native. Initial SOURCE eaa0d48 worker build38674720074 FAIL on test compile, corrected. Same-source G2 38674812533, R0 audit38674812389, cross ABI38674812361 SUCCESS; Governance SOURCE38674812385 attempts1/2 FAIL main moved mid-audit, no path violation observed; root native ABI38674812438 FAIL stale shared test count marker though Rust actual66/66 rc0. Evidence S 6b6a57e; H cursor-only follows and requires its own Governance PASS. Trusted origin/real driver/Go V4/Windows/rtrb/loom/performance/product/physical NOT_RUN; ABI features0."
+  "partial_summary": "R1-M1-GENERATION-READY-OWNER-BENCH-007 scoped done_when complete at exact CODE 0979314: compiled-once worker native38678588923 71/71 r1_ native (63 prior +8 new, including warmup/repeat P0 scope-validation). Downloaded artifact11947336741; result.json SHA256 0ce1f40a95f872cd62d76e0bd0ff32eb1a44eb2c4f64d8d7b041344ebb91259e, test.log SHA256 fc9d299125b66996f0559046d724606bf5b00c0deb11badf1c2bec8fe73a8b20, binary d5ef59d3aeb4ac3133a4ca5af1e7689516b5f32c700e06e078fe0ca4a45ecbc8. LoanBatch stamped with Arc ScopeToken and checked_tx_ready / checked_rx_ready require current token + matching batch generation; TX also verifies record lane. Old/new 0/1/32/33, concurrent old drop+stop, fresh priority, ABA and age proven; no copies per packet. P0 3 legs x 10k warmups /40k samples accepted 32-handle inspect median p50 401ns, p99 401–411ns, stale p99 31ns; Linux process CPU ticks unisolated, debug test binary only, no real batch-drain/throughput/product qualification. Same-source Governance38678588850, G2 38678588901, static audit38678588895, cross ABI38678588817 SUCCESS; R0 native ABI38678588872 FAIL due old M0-owned shared harness '3 passed' marker (Rust actual74/74 rc0). Evidence S a55674f, H cursor-only follows; no Go V4 authenticated origin, real AF_PACKET/driver, release-profile P0, native WinARM, product/p99/physical, rtrb/loom/eventfd, feature0."
 }
