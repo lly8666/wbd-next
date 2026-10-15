@@ -99,7 +99,9 @@ def audit_worker_history(api,role,source,control_sha):
             item=api.get(f"commits/{sha}?per_page=1")
             parents=item.get("parents",[])
             g.need(len(parents)==1,"M3 tool sync must have one parent")
-            if parents[0].get("sha")==M3_G2_SECOND_REFRESH_PARENT:
+            if parents[0].get("sha")==M3_G2_THIRD_REFRESH_PARENT:
+                sync=review_m3_g2_third_single_file_refresh(api,role,sha,control_sha)
+            elif parents[0].get("sha")==M3_G2_SECOND_REFRESH_PARENT:
                 sync=review_m3_g2_second_single_file_refresh(api,role,sha,control_sha)
             else:
                 sync=review_m3_g2_single_file_refresh(api,role,sha,control_sha)
@@ -173,6 +175,13 @@ M2_G2_SECOND_REFRESH_PARENT = "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c"
 # source, too, before any further main tool change invalidates its history.
 M0_M3_SECOND_TOOL_SOURCE = "940498ccb2f3834e4287813bb250ebfb97f507fb"
 M0_M3_SECOND_TOOL_BLOB = "817934b16c6e088069ad9b4c265c93daacda7759"
+# EXACT worker 015 SOURCE has 100 G2 activation commits, already read-only
+# audited by main G2 Actions38711866188. The M0-authorized third mirror is
+# ONLY a single checker file immediately atop this observed worker HEAD.
+# A separate main-owned immutable-source decision pins the specific blob,
+# avoiding the old "compare a historic mirror against current main" bug.
+M3_G2_THIRD_REFRESH_PARENT = "79535dd5f57af0b5ec85ea812456ae0a31a3a4d2"
+M3_G2_THIRD_DECISION = ".governance/exceptions/M3-G2-015-checker.json"
 
 def review_m2_g2_single_file_refresh(api,role,sha,control_sha):
     """Approve just one exact-parent byte-identical M0 checker sync on M2."""
@@ -286,6 +295,44 @@ def review_m3_g2_second_single_file_refresh(api,role,sha,control_sha):
             "sync_paths":[M3_G2_REFRESH_PATH]}
 
 
+def review_m3_g2_third_single_file_refresh(api,role,sha,control_sha):
+    """Third strictly one-shot M3-only checker mirror with M0 immutable blob.
+
+    The approval lives in a main-controlled JSON decision, published only
+    AFTER the reviewed checker SOURCE and blob are frozen. Worker may neither
+    alter the approval nor rebase/merge to obtain this exception.
+    """
+    g.need(role["id"]=="M3","third M3 checker mirror belongs to M3 only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M3_G2_REFRESH_PATH],
+           "M3-015 checker sync must edit exactly one root file in one-parent commit")
+    item=api.get(f"commits/{sha}?per_page=1")
+    parents=item.get("parents",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==M3_G2_THIRD_REFRESH_PARENT,
+           "M3-015 checker sync requires direct parent 79535dd5")
+    d=api.file(M3_G2_THIRD_DECISION,control_sha)
+    g.need(isinstance(d,dict) and d.get("schema_version")==1 and
+           d.get("role_id")=="M3" and d.get("parent_sha")==M3_G2_THIRD_REFRESH_PARENT and
+           d.get("path")==M3_G2_REFRESH_PATH and d.get("status")=="APPROVED_ONCE",
+           "M3-015 mirror missing exact current M0 authorization")
+    approved=d.get("m0_reviewed_source_sha")
+    blob=d.get("approved_git_blob_sha")
+    g.need(isinstance(approved,str) and bool(g.SHA.fullmatch(approved)) and
+           isinstance(blob,str) and bool(g.SHA.fullmatch(blob)),
+           "M3-015 checker authorization SHA/blob invalid")
+    ancestry=api.get(f"compare/{approved}...{control_sha}?per_page=1")
+    g.need(ancestry.get("status") in {"ahead","identical"},
+           "M3-015 checker source not in authoritative main history")
+    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={approved}")
+    actual=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==blob and actual.get("sha")==blob,
+           "M3-015 mirror must exactly match immutable approved main Git blob")
+    return {"approved_m3_g2_tool_refresh_v3":True,
+            "first_parent":M3_G2_THIRD_REFRESH_PARENT,
+            "sync_paths":[M3_G2_REFRESH_PATH]}
+
+
 M0_CRYPTO_LOCK_SOURCE = "1ae49bd644a4624db331c80d2dce6a8d181189e0"
 # One reviewed M2 restoration to the source that contains the M0-authenticated
 # Rust ingress AND the fixed historical G2 selector. Not generic permission.
@@ -319,6 +366,14 @@ def verify_worker_commits(role, commits):
                    item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
                    item.get("paths")==[M3_G2_REFRESH_PATH],
                    "second one-time M3 checker mirror violated M0 pin")
+            checked += 1
+            continue
+        if item.get("approved_m3_g2_tool_refresh_v3") is True:
+            g.need(role["id"]=="M3" and item.get("parents")==1 and
+                   item.get("first_parent")==M3_G2_THIRD_REFRESH_PARENT and
+                   item.get("sync_paths")==[M3_G2_REFRESH_PATH] and
+                   item.get("paths")==[M3_G2_REFRESH_PATH],
+                   "third M3 exact checker mirror violated reviewed M0 pin")
             checked += 1
             continue
         if item.get("approved_m2_g2_tool_refresh") is True:

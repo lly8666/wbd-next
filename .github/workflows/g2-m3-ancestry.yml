@@ -7,6 +7,7 @@ on:
       - ".github/workflows/g2-m3-ancestry.yml"
       - "tools/worker_scope_ci.py"
       - "tests/test_g2_ancestry_capacity.py"
+      - "tests/test_g2_m3_third_refresh.py"
       - "tests/test_g2_m3_tool_refresh.py"
       - "tests/test_g2_m2_tool_refresh.py"
 permissions:
@@ -27,6 +28,7 @@ jobs:
       - name: Adversarial complete ancestry regression
         run: |
           python -m unittest discover -s tests -p 'test_g2_ancestry_capacity.py' -v
+          python -m unittest discover -s tests -p 'test_g2_m3_third_refresh.py' -v
           python -m unittest discover -s tests -p 'test_g2_m3_tool_refresh.py' -v
           python -m unittest discover -s tests -p 'test_g2_m2_tool_refresh.py' -v
       - name: Authenticate every immutable worker commit and path against main
