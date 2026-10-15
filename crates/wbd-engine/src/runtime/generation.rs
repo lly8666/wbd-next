@@ -318,7 +318,7 @@ mod tests {
         let result=y.offer_fresh(&stale,packet(&mut a,3,1),MonoNs(0));
         assert!(matches!(result,Err((ScopedOfferError::Scope(ScopeError::Stale),_))));
         drop(result);
-        assert_eq!(y.drain_tx(&stale,MonoNs(0),Vec::with_capacity(4)).err().unwrap_or_else(|_|panic!("unexpected batch rejection")).0,
+        assert_eq!(y.drain_tx(&stale,MonoNs(0),Vec::with_capacity(4)).err().unwrap().0,
             ScopeError::Stale);
         assert_eq!(a.report().loaned,0);
     }
@@ -330,7 +330,7 @@ mod tests {
         let old_tx=s.drain_tx(&old,MonoNs(0),Vec::with_capacity(1)).unwrap_or_else(|_|panic!("unexpected batch rejection"));
         let old_rx=s.drain_rx(&old,MonoNs(0),Vec::with_capacity(1)).unwrap_or_else(|_|panic!("unexpected batch rejection"));
         let (tx,rx)=new_pair();
-        let retired=s.rotate(&old,lane(2),tx,rx).unwrap();
+        let retired=s.rotate(&old,lane(2),tx,rx).unwrap_or_else(|_|panic!("rotation failure"));
         assert_eq!(retired.borrowed(),Borrowed{tx_batches:1,rx_batches:1});
         let next=s.token();
         s.offer_fresh(&next,packet(&mut a,8,2),MonoNs(1)).unwrap();
@@ -357,7 +357,7 @@ mod tests {
         assert_eq!(a.report().loaned,2);
         assert_eq!(retired.borrowed(),Borrowed{tx_batches:1,rx_batches:1});
         assert_eq!(s.stop(&t).err(),Some(ScopeError::Stopped));
-        assert_eq!(s.drain_tx(&t,MonoNs(0),Vec::with_capacity(2)).err().unwrap_or_else(|_|panic!("unexpected batch rejection")).0,
+        assert_eq!(s.drain_tx(&t,MonoNs(0),Vec::with_capacity(2)).err().unwrap().0,
             ScopeError::Stopped);
         drop(rx);drop(tx);
         assert!(retired.batch_handles_released());
