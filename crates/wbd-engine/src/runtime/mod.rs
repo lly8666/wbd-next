@@ -14,7 +14,9 @@ pub mod batch;
 pub mod rx_batch;
 pub mod generation;
 use parity::ParityReady;
-pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
+// The qualified owner APIs remain unreachable from the production ABI or
+// untrusted Go V4 cold bytes until M0 implements authenticated transition.
+pub const OWNER_RUNTIME_READY: bool = false;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OfferError { Full, ByteBudget, InvalidWindow, Stopping }
