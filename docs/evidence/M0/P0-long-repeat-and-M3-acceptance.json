@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "P0-M0-REPEATED-NATIVE-PERF-017",
+  "branch": "main",
+  "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+  "result": "MEASURED_P0_REPEATABILITY_NO_PRODUCT_QUALIFICATION",
+  "artifact_verified": true,
+  "predecessor": {
+    "head": "3f43bc086dbf89f790825a92a1a14c1f30a08f45",
+    "m0_cursor_sequence": 52,
+    "checkpoint_sha": "625994d0caa712f9a6f4cfb3e38b1c440aa9ac6a",
+    "prior_H_governance": 38677342941
+  },
+  "new_work": {
+    "changed": [
+      "crates/wbd-engine/tests/p0_native_components.rs",
+      ".github/workflows/p0-native-component-perf.yml"
+    ],
+    "repeat_count": 3,
+    "warmup_per_repeat": {
+      "aead_records": 8192,
+      "linux_udp_batches": 256
+    },
+    "measured_per_repeat": {
+      "aead_records": 2000000,
+      "linux_udp_batches": 20000
+    },
+    "scope": "native unprivileged Linux x86_64 Rust release; each repeat >=1s; two cases interleaved A/B purely for drift not old/new A/B"
+  },
+  "same_source_actions": [
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38677728259,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38677728251,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38677728266,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-linux-kernel-batch-native",
+      "run_id": 38677728295,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38677728338,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38677728282,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38677728274,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38677728248,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38677728280,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38677728278,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    },
+    {
+      "workflow": "p0-native-component-perf",
+      "run_id": 38677728260,
+      "source_sha": "407cc99aab2a86b792479e92b0b8e1ebed808c61",
+      "conclusion": "SUCCESS",
+      "qualification": "SCOPED_ONLY"
+    }
+  ],
+  "P0_run": {
+    "run_id": 38677728260,
+    "build_job": 116235041199,
+    "measure_job": 116235286645,
+    "conclusion": "SUCCESS",
+    "compiled_once": true,
+    "independent_source_binary_hash_check": true,
+    "linux_runner": "GitHub hosted Ubuntu x86_64 AMD EPYC 7763 Linux 6.17 Azure",
+    "build_artifact": {
+      "id": 11947655063,
+      "digest": "sha256:0f6931bc14fdfe0eb6e816c9f81490fd4e173c327455e6fb1723556dfc00c41e"
+    },
+    "result_artifact": {
+      "id": 11947710065,
+      "digest": "sha256:63cdd6440b60d86cbf22b8bca17073e19c6008ab3dd0e4ec0cb88ed404b0f0b"
+    }
+  },
+  "P0_cases": [
+    {
+      "case": "real ChaCha20-Poly1305 1000 business bytes seal+HP+AEAD open+unique PN replay",
+      "ops_each_repeat": 2000000,
+      "bytes_each_repeat": 2000000000,
+      "elapsed_ns": [
+        3334810225,
+        3340345333,
+        3323876737
+      ],
+      "bytes_per_second": [
+        599734277.233,
+        598740489.566,
+        601707030.149
+      ],
+      "median_bytes_per_second": 599734277.233,
+      "cv_bytes_per_second": 0.0020545769580894413,
+      "p99_ns": [
+        1924,
+        1683,
+        1673
+      ],
+      "median_p99_ns": 1683,
+      "child_cpu_total_s": [
+        3.353563,
+        3.359304,
+        3.342654
+      ],
+      "child_rusage_maxrss_kib_cumulative": [
+        18672,
+        18672,
+        18728
+      ],
+      "per_record_p99_not_business_end_to_end": true
+    },
+    {
+      "case": "actual Linux UDP sendmmsg+recvmmsg loopback of 32x256 bytes per batch",
+      "ops_each_repeat": 640000,
+      "bytes_each_repeat": 163840000,
+      "elapsed_ns": [
+        2946526904,
+        2947317546,
+        2934982061
+      ],
+      "bytes_per_second": [
+        55604447.316,
+        55589530.969,
+        55823169.135
+      ],
+      "median_bytes_per_second": 55604447.316,
+      "cv_bytes_per_second": 0.0019182945498123964,
+      "p99_ns": [
+        168977,
+        168937,
+        166002
+      ],
+      "median_p99_ns": 168937,
+      "child_cpu_total_s": [
+        2.986098,
+        2.987133,
+        2.974697
+      ],
+      "child_rusage_maxrss_kib_cumulative": [
+        18672,
+        18672,
+        18728
+      ],
+      "batch_p99_not_business_end_to_end": true
+    }
+  ],
+  "M3_accepted": {
+    "role": "M3",
+    "task_id": "R1-M3-FEC-MULTISCOPE-012",
+    "branch": "work/m3-r1-codec",
+    "code_source": "4787d94617afe72c511f3f2299d1b060c2930c6c",
+    "scope": "test-only synthetic FecOrigin, real AEAD/PN four trusted test scopes, no production codec algorithm change",
+    "native_tests": "94/94",
+    "native_run": 38674583861,
+    "native_binary_sha256": "8f1a5392c71eb266f94a9c3c4f63e1eccf7313a8963129fe6892d1e02f252234",
+    "code_source_actions": "7/7 eventually success",
+    "historic_failed_governance": "run38674583957 attempts1/2 failed due moving main; attempt3 succeeded",
+    "evidence_S": "5387a4f7a3d0daa14ebc68495f894626623bd3d7",
+    "evidence_S_governance": 38675260385,
+    "H": "78003a198fd46ac8fa497f0255fe67e2c26b1d95",
+    "H_governance": 38675514034,
+    "changed": [
+      "crates/wbd-codec/src/fec_multiscope_tests.rs",
+      "crates/wbd-codec/src/link_fec_wire.rs",
+      "role-owned evidence/devlog/cursor"
+    ]
+  },
+  "assignment": {
+    "source_sha": "7d67b6062f8ef48673cbb6df6ead392419befe0b",
+    "role": "M3",
+    "task_id": "R1-M3-POSTAUTH-FEC-P0-COST-013",
+    "decision": "docs/decisions/M0-M3-postauth-fec-p0-cost-2026-10-15.md",
+    "governance": 38677811616,
+    "g2_native": 38677811629,
+    "result": "SUCCESS",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "allowed_paths_unchanged": true,
+    "roles_left_unchanged": [
+      "M1 R1-M1-GENERATION-READY-OWNER-BENCH-007",
+      "M2 R2-M2-REVERSE-GRANT-OWNER-BENCH-006",
+      "M4 R1-M4-RAW-RECEIVE-CONTRACT-007"
+    ],
+    "worker_new_code": "NOT_CLAIMED"
+  },
+  "limits": [
+    "All P0 results are three repeated same-host exploratory measurements; no independent platform CPU quota calibration, no product RX/TX, no external injector.",
+    "p99 record AEAD and p99 UDP batch have unlike denominators.",
+    "Rust parsed Go V4 cold bundle is untrusted; no production owner install/Go V4 enable, positive FecOrigin, actual AF_PACKET, native Windows/ARM.",
+    "Source-exact cross-ABI success means compile/inspect only.",
+    "500Mbps capacity, old/new same-job product A/B, actual end-to-end business latency and physical NOT_RUN."
+  ],
+  "next_action": "M0 continue separate trusted Go V4 ColdSnapshot->Rust authenticated owner generation/PrepareTransition/DetachTransition/CommitAdmission authority; integrate accepted M3 multiscope nine tests or M1/M2/M4 worker code with source-exact CI; P1 data plane remains blocked. M3 independently owns scoped new cost atom."
+}
