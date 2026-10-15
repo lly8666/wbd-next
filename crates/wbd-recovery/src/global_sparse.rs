@@ -771,6 +771,8 @@ mod tests {
         ];
         for d in dirs {
             b.register(d,wide_cfg(),MonoNs(0)).unwrap();
+        }
+        for d in dirs {
             b.on_fresh_accepted(d,1_000_000,MonoNs(1)).unwrap();
         }
         let leases=[
