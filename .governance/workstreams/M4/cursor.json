@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 13,
-  "checkpoint_sha": "44cd75208cc2a28d7f62d582bac75e8dab924cdd",
+  "sequence": 14,
+  "checkpoint_sha": "43bfc3ed485dbbf4a6ac4f45c124e856feaf7b96",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-DRIVER-OUTCOME-LEASE-009",
-  "current_task": "M4 Linux x86_64 GNU bounded generation-tagged real unprivileged UDP submit+receive outcome/explicit deferred loan STOP guard now source-qualified; no AF_PACKET privileged raw qualification.",
-  "why_now": "New authorized main wave R1-M4-DRIVER-OUTCOME-LEASE-009 active M4 branch and owned paths, registry revision2 epoch1.",
-  "done_when": "Preserve previous64/64 native; add minimal non-duplicated source-attested unprivileged real-kernel UDP 0/1/32/33 and delayed stop/completion tests with exact outcome vs uncertain semantics, bounded<=32 preallocated handles, no new hot copies; retain EPERM negative and explicitly mark privileged RAW_RX_NOT_RUN unless observed. Own source-exact compiled-once native evidence S, cursor-only H Governance SUCCESS. Avoid generic or production raw driver while V4 auth still disconnected.",
-  "next_action": "M0 reviews exact SOURCE scoped actual UDP outcome+lease fixture for source-locked Rust owner integration. Privileged AF_PACKET raw packet exchange remains RAW_RX_NOT_RUN due no CAP_NET_RAW, production Go V4 disabled; M4 waits for next NEW formal main task and makes no unrelated changes.",
+  "task_id": "R1-M4-UDP-RX-BURST-STOP-010",
+  "current_task": "Linux x86_64 GNU real unprivileged UDP recvmmsg 33-overflow 24-burst, truncation/late/STOP and origin-bound scoped RX receipt completed; no privileged AF_PACKET positive RX.",
+  "why_now": "M0 formally assigned new wave R1-M4-UDP-RX-BURST-STOP-010 via main active registry revision2 epoch1 and existing owned branch/path.",
+  "done_when": "Keep previous71/71 scoped native, actual unprivileged UDP exact 0/1/32/33 plus repeated burst/starvation test, stop/late accepted/uncertain callback and buffer pointer no copied payload where observable; Native compiled-once Actions SOURCE/pass + worker evidence S/cursor-only H Governance. Explicit CAP_NET_RAW AF_PACKET positive RAW_RX_NOT_RUN unless truly observed, no OS privileges, physical/product/WindowsARM/500Mbps claims.",
+  "next_action": "M0 to review exact source code and 75-case native unprivileged UDP ingress/STOP/rotation owner metadata proof. Actual authenticated Go ColdSnapshot -> Rust owner/PN, privileged raw AF_PACKET and product readiness remain NOT_RUN/production Go V4 DISABLED. M4 waits for the next new formal main task; no unrelated writes.",
   "unverified": false,
-  "last_tested_source": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
+  "last_tested_source": "0a53ea23ec064489155a008e02839a59a9b15cf0",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-DRIVER-OUTCOME-LEASE-009.json"
+    "docs/evidence/M4/R1-M4-UDP-RX-BURST-STOP-010.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M4 R1-M4-DRIVER-OUTCOME-LEASE-009 scoped DONE_WHEN: CODE SOURCE39f7671b07c3aa5f54266f42e83bc226a67c5763 new linux_driver_outcome_lease.rs + lib registration, combined real unprivileged native kernel UDP sendmmsg/recvmmsg with original FrozenRecordHandle, <=32 preallocated buffers, 0/1/32/33 accepted kernel prefix/uncertain/suffix, invalid slots/truncation/wouldblock and separate deterministic EINTR mapping, stop idempotent; deferred GenerationLoan retains actual frozen Arc until old owner completes, new owner refuses to drop old loan while sending fresh concurrently. Native Actions38688814472/1 compiled-once 71/71 PASS (7 new+64 previous), actual build/result ZIP, manifest, binary, JSON and test.log SHA256 verified direct. Same CODE SOURCE Governance38688814469, G2 38688814487, static38688814402, crossABI38688814565 all SUCCESS; historic old R0 worker branch r0-fake38688814517 FAIL exact-7 inventory (M0 root) despite Rust assertions passing, preserved. Evidence S44cd75208cc2a28d7f62d582bac75e8dab924cdd Governance38689043632 SUCCESS. Prior AF_PACKET positive RAW_RX_NOT_RUN due CAP_NET_RAW absent, typed negative EPERM fixture still PASS; no real async kernel UDP loan, auth/PN/Go V4 owner, native Win/ARM, product/performance/physical; production Go V4 DISABLED."
+  "partial_summary": "R1-M4-UDP-RX-BURST-STOP-010 scoped done_when: prior cursor seq13 H44534bac; first discovered task010 code SOURCE04cd9150778c3628345991ceee3c13d162383977 worker native Actions38705021784 FAIL_COMPILE Rust E0502 tests borrowing old tiny/whole while slots live; G2 38705021846 FAIL, preserved. Recovered by exact test-only reference fix to slots[0]/slots[1], CODE SOURCE0a53ea23ec064489155a008e02839a59a9b15cf0. Native Actions38706481672/1 compiled-once Linux x86_64 GNU 75/75 R1 PASS (4 new+71 old), direct downloaded ZIP build11958627455 SHA c8289b0324a8e6668db96d5e74554304327145d5cb6866a356e4a98d7e49cbd2 and result11958477633 SHA b33a52b9f5731988cd423fcb822b3f98de9b8c864a4a02925eb376ac0ba5d57c, manifest/binary/log/JSON SHA confirmed source-exact. 24x33 actual localhost UDP bursts bounded <=32 recvmmsg then overflow, no buffer copy/pointer change, no-starvation, native truncation/late/EAGAIN, STOP/generation reference-bound scoped receipt cannot enter new owner, equal numeric generation different contexts fail closed; no Go auth or PN. Same-source G2/static/crossABI/codeGovernance SUCCESS. Old R0 branch workflow38706482025 FAIL historical exact-7 inventory despite actual Rust 82/82 tests PASS; preserve. Evidence S43bfc3ed485dbbf4a6ac4f45c124e856feaf7b96 Governance38707025577 SUCCESS. CAP_NET_RAW absent RAW_RX_NOT_RUN, no positive AF_PACKET; Win/ARM native, Go protected trusted owner, product/physical/perf remain NOT_RUN; Go V4 production DISABLED."
 }
