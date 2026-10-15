@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-DRIVER-OUTCOME-LEASE-009",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Scoped Linux x86_64 GNU real unprivileged UDP sendmmsg+recvmmsg ready-outcome and generation-held delayed lease. Not a real raw AF_PACKET or Go V4 delivery system.",
+  "authorization": {
+    "main_decision": "docs/decisions/M0-next-wave-owner-repair-driver-2026-10-15.md",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "role_active": true,
+    "allowed_paths_unchanged": true,
+    "prior_cursor_sequence": 12,
+    "prior_cursor_H": "1f70712b2d9fdba6b9f95afd14db444f89080322"
+  },
+  "code_paths": [
+    "crates/wbd-platform/src/linux_driver_outcome_lease.rs",
+    "crates/wbd-platform/src/lib.rs"
+  ],
+  "implementation": {
+    "adapter": "ScopedUdpOwner composes existing native sendmmsg submit_connected_udp, native recvmmsg receive_ready_udp and Arc<BorrowFence>; validates nonzero generation, connected sender, borrowed sockets and strictly caller-owned buffers.",
+    "outcomes": "Returns BatchResult for exactly classified accepted kernel-copied prefix, None/Some uncertain index and not-attempted suffix. 33rd frame untouched and submitted separately; no retry of uncertain by default. Accepted is not a peer ACK. RX outcome distinguishes complete vs truncated/unused and status AtCap/WouldBlock; parsers cannot accept truncated records.",
+    "memory": "No new hot-path syscall, per-batch heap frame copy, lock, per-frame Arc clone or record reseal. The separate GenerationLoan owns one frozen record in preexisting KernelLoan for delayed driver completion; generation mismatch returns same loan to caller, without dropping memory. STOP idempotent, pending until old token actually completed. Existing copied UDP send does not invent asynchronous kernel retention.",
+    "hot_path": "Owned sender/receiver socket and Arc<BorrowFence> created cold. Send/receive use original single direct native syscall in existing M4 modules with <=32 fixed stack syscall descriptors. Ready socket frames are passed as read-only borrowed handles, RX buffers are caller preallocated.",
+    "negative_and_limitations": "EINTR is only validated in existing deterministic pure classifiers, not kernel-injected in this test. UnixDatagram real kernel backpressure EAGAIN checked by existing prior tests. Native AF_PACKET CAP_NET_RAW negative EPERM child remains PASS; positive raw RX is RAW_RX_NOT_RUN on runner."
+  },
+  "native": {
+    "workflow": "worker-native-tests.yml",
+    "run_id": 38688814472,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "source_sha": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
+    "target": "x86_64-unknown-linux-gnu",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "build_job": 116269741305,
+    "consumer_job": 116269818270,
+    "compiled_once": true,
+    "test_count": 71,
+    "passed": 71,
+    "failed": 0,
+    "previous_tests": 64,
+    "new_tests": 7,
+    "legacy_r0_filtered": 7,
+    "new_test_names": [
+      "r1_driver_lease_actual_udp_0_1_32_33_prefix_suffix_and_rx",
+      "r1_driver_lease_actual_udp_partial_prefix_oversized_and_unsent_suffix",
+      "r1_driver_lease_actual_udp_rx_truncation_no_parse_and_nonhol",
+      "r1_driver_lease_actual_udp_wouldblock_invalid_slot_no_consume_stop",
+      "r1_driver_lease_delayed_generation_rejected_late_no_free_after_stop",
+      "r1_driver_lease_waiter_delayed_completion_two_generation_isolation",
+      "r1_driver_lease_eintr_uncertain_wouldblock_replay_policy_pure"
+    ],
+    "build_artifact": {
+      "id": 11951175747,
+      "zip_sha256": "7f23c03908430abacc0e8b3c9c2f7430ccbd4038fd24e599aee3b14f93302432",
+      "manifest_sha256": "9605dd9f6399804c15983faa9741263a4aac74a8044a9330fba827c64a3fafab",
+      "binary_sha256": "c9c87adbcf88c263a640dded7405277cce453ddd044ed6292ba46c339cf9040a",
+      "binary_size": 11010160
+    },
+    "result_artifact": {
+      "id": 11950089998,
+      "zip_sha256": "d297ec200e79dd7d12a3985cadffb01ccb42bfb7b0ac4f674a18dacfab4755e7",
+      "result_json_sha256": "49894f8deaf4cdea392129cb3e367c5757244687c0092b4471f38d80f96bd095",
+      "test_log_sha256": "da65c2142f11e3ae37af372de415cd34c1557c0c23501ab22598570a7631b87e"
+    },
+    "audit": "Both original exact-run ZIPs downloaded directly and independently SHA256 verified, including contained manifest, compiled-once test executable, result.json and test.log. Same source SHA, run, attempt, binary SHA, 71 case list, actual 71 ok 0 failed 7 old R0 filtered. stderr RAW_RX_NOT_RUN due CAP_NET_RAW absence."
+  },
+  "same_source_workflows": [
+    {
+      "workflow": "worker-native",
+      "run_id": 38688814472,
+      "status": "SUCCESS"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38688814469,
+      "status": "SUCCESS"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38688814487,
+      "status": "SUCCESS"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38688814402,
+      "status": "SUCCESS"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38688814565,
+      "status": "SUCCESS"
+    },
+    {
+      "workflow": "r0-fake-platform",
+      "run_id": 38688814517,
+      "status": "FAIL",
+      "cause": "Historical worker branch root R0 exact seven tests filter; actual Rust legacy+R1 test assertions passed but old root workflow inventory rejects larger test count."
+    }
+  ],
+  "historical_failures": [
+    {
+      "source_sha": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
+      "workflow": "r0-fake-platform",
+      "run_id": 38688814517,
+      "status": "FAIL",
+      "cause": "Legacy R0 exact-seven inventory fails despite actual Rust assertions. M0 owns root harness; do not call all-green."
+    }
+  ],
+  "not_run": [
+    "Positive AF_PACKET raw loopback receive/TX because runner lacks CAP_NET_RAW; stderr RAW_RX_NOT_RUN",
+    "Physical/ambient interface sniffing or NIC data plane",
+    "Real owner generation authenticated by Go protected cold snapshot, AEAD/PN and business data delivery",
+    "Native Windows/ARM, production V4, P1-P3 product/performance/physical acceptance"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SOURCE_SCOPED_DRIVER_OUTCOME_REVIEW_ONLY"
+}
