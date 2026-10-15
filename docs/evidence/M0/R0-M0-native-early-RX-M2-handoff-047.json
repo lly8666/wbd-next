@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "0845f6c5caf0cbc7d979592bf8cd77f642a7bef4",
+  "result": "PARTIAL_TEST_ONLY_GENUINE_GO_TLS_FAKETCP_EARLY_RX_BYTES_TO_RUST_OWNED_SLAB_PASS_AND_M2_ACTIONS_FOUND",
+  "progress": "partial",
+  "unverified": true,
+  "go_rust": {
+    "source_sha": "0845f6c5caf0cbc7d979592bf8cd77f642a7bef4",
+    "go_legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "ci": 38727051687,
+    "run_attempt": 1,
+    "result": "SUCCESS",
+    "build_job": 116395397490,
+    "consume_job": 116395851070,
+    "build_artifact": {
+      "id": 11968638572,
+      "digest": "sha256:cb1799881d0ba27e1672a9a47f8f5bffcb084fe35d458f7ee231a50ea1f85099"
+    },
+    "result_artifact": {
+      "id": 11968623740,
+      "digest": "sha256:c9c127dfa66c8d2945a74948246122ba2b232dcf5c91749b13d688dcb70716ae"
+    },
+    "real_go_native_test": "1/1 PASS, real TLS authenticated Go control, exact FakeTCP Prepare, test inject raw 2 segments, protected reply, real Detach→private Rust copied bytes→Commit, separately hash/len/count compared; second generation zero early; Stop/release; reject malformed cold snapshot and repeat drain",
+    "rust_native_test": "1/1 PASS, prepare early boundary, before-boundary negative, 2 real Rust slab stage and false count reject, committed RX hash, duplicate drain forbidden, Stop release and stale generation",
+    "real_early_go_rx_bytes": "TEST_ONLY_HANDOFF_FROM_ACTUAL_GO_FAKETCP_DETACH_VALIDATED (raw synthetic packets, pre-AEAD)",
+    "max_early_records": 32,
+    "max_owned_slab_bytes": 2048,
+    "window_guard": "relative TCP seq bounded; no Go pointer retained",
+    "ordinary_cdylib_negative_test": "PASS nm -D no test-only probe C symbols",
+    "auth_provenance": "GO credentials and protected reply positive only at Go private callsite; Rust raw C data always untrusted candidate",
+    "native_toolchains": "Rust1.85.1 Go1.23.12",
+    "public_production_abi_features": 0,
+    "rejected_intermediate": {
+      "source": "cdaf4100a298062147bef53b65ccd7925921fb50",
+      "run": 38726254627,
+      "reason": "M0 incorrectly inspected LoanBatch.recycled Vec after M1 correct clear; Go/Rust tests failed with BAD_STAGE3; source 0845 fixes by cfg(test-only feature) readonly owned slab while batch loan held; failure artifact11967708588 kept"
+    },
+    "main_native_regressions": [
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run": 38727051636,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-wake-stop-native",
+        "run": 38727051621,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-linux-kernel-batch-native",
+        "run": 38727051618,
+        "status": "success"
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run": 38727051619,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-fec-on-native",
+        "run": 38727051706,
+        "status": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run": 38727051627,
+        "status": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run": 38727051630,
+        "status": "success"
+      },
+      {
+        "workflow": "governance",
+        "run": 38727051750,
+        "status": "success"
+      }
+    ]
+  },
+  "m2": {
+    "role": "M2",
+    "worker_head": "5bfacc7814183fc631a827725ee432c1c42b029d",
+    "mirror_parent": "35c45f2918600b3087d50493da61e112af07bcd1",
+    "changed_path_only": "tools/worker_scope_ci.py",
+    "frozen_m0_main_source": "4dfd0a18d42e2ebddc38241d378da4a30137e33e",
+    "git_blob": "69bebb966c60623c3b0a96c6915bf75540eb406b",
+    "governance_run": 38721567164,
+    "job": 116377123525,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "final_receipt": "OBSERVED_RESULT:PASS",
+    "artifact": {
+      "id": 11965512099,
+      "name": "governance-38721567164-1",
+      "digest": "sha256:9f278441bae0b345ebaff5f1d022be7bdbbe37bb2b4a138d2d20f81d67089e4e"
+    },
+    "previous_native_code": "7875137949f61fead1374d2933798c61814adb92",
+    "previous_native_run": 38706944249,
+    "previous_native": "55/55 PASS",
+    "current_state": "WAITING M2 own evidence S/H after exact known run; M0 did NOT edit M2 worker branch",
+    "handoff": "docs/devlog/M0/R0-M0-M2-Governance-5bfacc-run-handoff-043.md"
+  },
+  "remaining": {
+    "real_Rust_positive_auth_admission": "NOT_RUN",
+    "Rust_AEAD_decrypt_and_positive_FecOrigin": "NOT_RUN",
+    "product_received_business_bytes": "NOT_RUN",
+    "Go_to_Rust_M4_actual_kernel_held_loan_Stop_B01_B04": "NOT_RUN",
+    "production_ABI": "features=0",
+    "positive_raw_AF_PACKET": "NOT_RUN",
+    "physical_or_500Mbps": "NOT_QUALIFIED",
+    "native_Windows_ARM": "NOT_RUN",
+    "M2_final_H": "NOT_VERIFIED",
+    "M3_final_H": "NOT_VERIFIED"
+  },
+  "next_action": "M0 bind real verified Go V4 owner admission authority to Rust typed owner generation and encrypted record AEAD/PN, integrate owned preDetach RX with M4 driver loan and test B01-B04 including negative forgery/restart. M2 use exact Governance38721567164/job116377123525 artifact11965512099 to submit OWN worker evidence S and cursor-only H; no M0 worker edits. M3 own checker/long-window SOURCE S/H pending."
+}

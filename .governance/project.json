@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 task023 real protected Go V4 TLS→Rust test-only ScopedOwner in-process candidate probe CODE b23cf780, Action38708333395 build+consume SUCCESS and non-feature Rust CDylib nm export negative PASS, Governance38708333353 SUCCESS. Go exact protected Prepare→reply→Detach→Rust inert probe commit→Go epoch committed, but genuine production Rust auth grant, early payload delivery, stop-held-driver lease and product/500Mbps still NOT_RUN; public ABI features0. M1 early boundary010/M2 RACK indexed witness008/M3 CPU timing015/M4 UDP RX STOP010 formal tasks remain on their worker branches. docs/devlog/M0/R0-M0-native-Go-Rust-owner-evidence-037.md.",
+  "next_decision": "M0 task023 CODΕ 0845f6c5caf0cbc7d979592bf8cd77f642a7bef4 real Go protected TLS→FakeTCP actual 2 raw early records via private Rust EarlyRxOwner own slab and checksum TEST-ONLY Action38727051687 SUCCESS Go1/1 Rust1/1 and production no-feature probe exports absent; M0 full native ABI/kernel/Governance38727051750 all SUCCESS. Evidence docs/evidence/M0/R0-M0-native-early-RX-M2-handoff-047.json. M2 5bfacc checker-only Gov38721567164 PASS/job116377123525/artifact11965512099, M2 own evidence S/H remains pending. M3 own checker/CPU SOURCE S/H pending. Genuine Go authenticated Rust crypto owner and M4 held driver Stop B01-B04 not implemented, production ABI features0/500Mbps/physical NOT_RUN.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
