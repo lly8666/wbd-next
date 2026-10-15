@@ -21,6 +21,23 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_scoped_observation": {
+    "code_source_sha": "35db3d01bc1bd22deb355676c9558909626f9203",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-protected-owner-crypto.json",
+    "workflow": ".github/workflows/m0-v4-native-owner-probe.yml",
+    "native_run_id": 38757554801,
+    "native_go_cases": [
+      "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+      "TestR0V4NativeRustProtectedAEADReplayAllCiphers"
+    ],
+    "core": "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "limits": "Normal-build scoped AEAD/PN exercised only through private Go TLS test probe; no production install or business/driver delivery",
+    "product_qualification": "NOT_RUN",
+    "real_linux_driver_loan_stop": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
+  },
   "evidence_gates": [
     {
       "gate": "R0-TYPES",

@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "trusted-go-v4-to-normal-build-rust-aead-pn-scoped-preflight",
+  "source_sha": "35db3d01bc1bd22deb355676c9558909626f9203",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "GitHub artifact SHA256 digest read via Actions API; consume jobs compared exact SOURCE/run/attempt/input and precompiled binary SHA256 against build manifest. ZIPs not independently rehashed locally.",
+  "effective_owner_limits": {
+    "replay_pn_per_second": 1000,
+    "cache_horizon_ms": 3000,
+    "fec_horizon_ms": 0,
+    "rtt_ms": 500,
+    "metadata_budget_bytes": 8192,
+    "early_slots": 32,
+    "early_bytes": "server_limit*32"
+  },
+  "code": {
+    "rust_core": "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "rust_cold": "crates/wbd-engine/src/cold_v4.rs",
+    "scoped_probe": "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "trusted_go": "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "go_native_adapter": "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "actual_tests": "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+    "workflow": ".github/workflows/m0-v4-native-owner-probe.yml",
+    "order": "actual Go credential-checked request → PrepareTransition/frozen snapshot → Rust typed preflight with both actual direction crypto states → protected reply → DetachTransition → exact Go SenderNext → Rust scoped commit → Go epoch finish(true); no product route publication",
+    "production_abi_features": 0,
+    "security_limit": "The test-only C probe symbols are absent from normal cdylib. Rust cold parser itself is UNTRUSTED; the private real Go credential-checked callsite is trusted in-process provenance, NOT an independently cryptographic native attestation. No arbitrary public cold-install command."
+  },
+  "runs": {
+    "native": {
+      "run_id": 38757554801,
+      "attempt": 1,
+      "build_job": 116499887646,
+      "consume_job": 116500446586,
+      "build_artifact": {
+        "id": 11983329019,
+        "digest": "sha256:ebaf025533a165c4cb909e9b942f388bc60f10d43a324b6c1d80162a20e93033"
+      },
+      "result_artifact": {
+        "id": 11983643717,
+        "digest": "sha256:71ee2b220dee2427b4fef242973bf477def2829b200745970187bcf08ba1d005"
+      },
+      "result": "SUCCESS"
+    },
+    "go_tls": {
+      "run_id": 38757554763,
+      "attempt": 1,
+      "build_job": 116499887549,
+      "consume_job": 116500230194,
+      "build_artifact": {
+        "id": 11983414439,
+        "digest": "sha256:32b349bf3a469c4403bec24c39c7732f757364e486e167df1ece1b38806f3e23"
+      },
+      "result_artifact": {
+        "id": 11983753606,
+        "digest": "sha256:72f4b7ddfa224cf178ef78b56bf94d682cebfadf78cd99612c8c6af7ddb24e2c"
+      },
+      "top_level_passed": 12,
+      "result": "SUCCESS"
+    },
+    "cold": {
+      "run_id": 38757554795,
+      "attempt": 1,
+      "build_job": 116499887815,
+      "consume_job": 116500603284,
+      "build_artifact": {
+        "id": 11984396458,
+        "digest": "sha256:8482ab865386420b231344507ee2bef1d4ccc62539b4b3f4e27f0289e8d24e9f"
+      },
+      "result_artifact": {
+        "id": 11983793709,
+        "digest": "sha256:ecdaca5031b3a3e84ed6d753bf732593c20e1b2d9f3667ae6921ca5ded7d197c"
+      },
+      "go_tests": 1,
+      "rust_tests": 4,
+      "result": "SUCCESS"
+    },
+    "governance": {
+      "run_id": 38757554918,
+      "job": 116499888880,
+      "artifact": {
+        "id": 11984925008,
+        "digest": "sha256:b169ab3700f0cab217cfd2ca7c336421da37a0d74f2f9db5b813d907f09416d7"
+      },
+      "result": "SUCCESS",
+      "tool_drills": "NOT_RUN",
+      "design_models": "NOT_RUN"
+    }
+  },
+  "native_cases": {
+    "go_top_level": [
+      "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+      "TestR0V4NativeRustProtectedAEADReplayAllCiphers"
+    ],
+    "go_cipher_subcases": [
+      "ChaCha20-Poly1305",
+      "AES-128-GCM",
+      "AES-256-GCM"
+    ],
+    "observed": [
+      "Go actual protected TLS frozen keys → Rust same compiled crypto function",
+      "RX C2S versus TX S2C key-direction separation",
+      "PN 2,0,1 accepted without waiting for gaps",
+      "verified duplicate PN rejected",
+      "AEAD damage rejected",
+      "wrong-direction ciphertext rejected",
+      "Stop/release rejects old generation",
+      "fakeTCP bounded early staged after Go Prepare and no drain before commit",
+      "Rust-owned slab held through Stop prevents release, new generation can continue"
+    ],
+    "rust_native_test": "r0_m0_native_probe_local_fresh_generation_and_bounded_phases",
+    "qualified": "NORMAL_BUILD_CRYPTO_FUNCTION_WITH_PRIVATE_GO_TEST_PROBE_ONLY",
+    "test_only_c_symbols_production_leak": "REJECTED_BY_ACTIONS_NM_SCAN"
+  },
+  "historic_and_intermediate_failures": [
+    {
+      "source_sha": "adb34a47ce489dc20462faf7437fde68120eba5e",
+      "run_id": 38757167261,
+      "result": "FAIL",
+      "reason": "Malformed m0 native probe YAML from Go test filter edit; full maintenance validation rejected, not counted PASS"
+    },
+    {
+      "source_sha": "adb34a47ce489dc20462faf7437fde68120eba5e",
+      "run_id": 38757164850,
+      "result": "FAIL",
+      "reason": "Invalid workflow YAML prevented native job scheduling"
+    },
+    {
+      "source_sha": "adb34a47ce489dc20462faf7437fde68120eba5e",
+      "run_id": 38757167108,
+      "result": "FAIL",
+      "reason": "Go mock commit interface still had old signature"
+    },
+    {
+      "source_sha": "f8aeb193f888ed12ed8580c6a8e87609e7676b98",
+      "run_id": 38757397431,
+      "result": "FAIL",
+      "reason": "Go mock signature not yet updated"
+    }
+  ],
+  "separate_tool_maintenance": {
+    "source_sha": "f8aeb193f888ed12ed8580c6a8e87609e7676b98",
+    "run_id": 38757397271,
+    "job_id": 116499333531,
+    "artifact_id": 11983918127,
+    "digest": "sha256:2b63a5238cbc3cc110b9037d39153ff08716a8f1b5a51a24aa414bbc4bd92b7e",
+    "python_tests": "169/169 PASS",
+    "scope": "workflow syntax/governance/tool regression; not same exact SHA as final code source"
+  },
+  "other_reused_code_results": {
+    "source_sha": "adb34a47ce489dc20462faf7437fde68120eba5e",
+    "native_functional_run": 38757167304,
+    "native_abi_run": 38757167263,
+    "cross_abi_run": 38757167209,
+    "g2_native_run": 38757167348,
+    "result": "SUCCESS",
+    "scope": "earlier code SOURCE before CI and Go test fixture only follow-up changes; not represented as exact final-source reruns"
+  },
+  "not_run": [
+    "production Go C ABI cold installation and independent Rust authenticated authority",
+    "actual RX/TX scoped owner installation and positive Active business routing",
+    "first bidirectional Normal/FEC-off packet through platform and application",
+    "real early-data AEAD/PN owner RX delivery after Go Detach",
+    "real M4 Linux kernel driver held loan Stop B01–B04",
+    "unprivileged UDP does not substitute for raw/TUN real kernel path",
+    "physical devices",
+    "500Mbps or CPU/performance comparisons"
+  ],
+  "product_qualification": "NOT_RUN",
+  "real_end_to_end": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "throughput_500mbps": "NOT_RUN",
+  "next_action": "Connect this normal-build crypto+PN state to the real ScopedOwner RX/TX dispatch after the private Go Detach+Commit transaction, with bounded authenticated early delivery and fail-closed two-owner install; then verify genuine Normal/FEC-off first application delivery and held M4 kernel loan Stop before enabling features."
+}
