@@ -3,13 +3,16 @@
 #![forbid(unsafe_code)]
 use std::collections::VecDeque;
 use std::ops::Range;
-use wbd_types::MonoNs;
+use wbd_types::{MonoNs, LaneKey};
 use wbd_types::buffer_contract::{checked_wire_range, FrozenRecordHandle, UniqueSealable};
 use crate::memory::{FrozenRecord, UniqueBuffer};
 
 /// M1 R1 thread wake/stop proof; NOT a qualified SPSC or OS eventfd.
 pub mod wake;
 pub mod parity;
+pub mod batch;
+pub mod rx_batch;
+pub mod generation;
 use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
@@ -241,28 +244,51 @@ impl RxPacket {
     }
 }
 /// RX owns input slabs until the receiver consumes/drops them.
-pub struct RxOwner {
-    ready: Bounded<RxPacket>,
-    stopping: bool,
-}
+/// Per-item lane data is only an untrusted ingress scheduling hint.
+ /// It MUST NOT be used for authenticated identity or business delivery.
+ struct QueuedRx {
+     packet: RxPacket,
+     lane_hint: Option<LaneKey>,
+ }
+ pub struct RxOwner {
+     ready: Bounded<QueuedRx>,
+     last_lane: Option<Option<LaneKey>>,
+     stopping: bool,
+ }
 impl RxOwner {
     pub fn new(limits: QueueLimits) -> Option<Self> {
-        Some(Self {ready: Bounded::new(limits)?, stopping: false})
+        Some(Self {ready: Bounded::new(limits)?, last_lane: None, stopping: false})
     }
-    pub fn offer(&mut self, mut buffer: UniqueBuffer, wire: Range<usize>, at: MonoNs)
+    /// Legacy unscoped ingress stays FIFO. No implied authentication.
+    pub fn offer(&mut self, buffer: UniqueBuffer, wire: Range<usize>, at: MonoNs)
         -> Result<(), (OfferError, UniqueBuffer)>
     {
+        self.offer_hint(buffer, wire, None, at)
+    }
+    /// A routing hint from an untrusted receive source. Authentication,
+    /// replay and tunnel identity are validated later by their owners.
+    pub fn offer_lane(
+        &mut self, buffer: UniqueBuffer, wire: Range<usize>,
+        lane: LaneKey, at: MonoNs,
+    ) -> Result<(), (OfferError, UniqueBuffer)> {
+        self.offer_hint(buffer, wire, Some(lane), at)
+    }
+    fn offer_hint(
+        &mut self, mut buffer: UniqueBuffer, wire: Range<usize>,
+        lane_hint: Option<LaneKey>, at: MonoNs,
+    ) -> Result<(), (OfferError, UniqueBuffer)> {
         if self.stopping { return Err((OfferError::Stopping, buffer)); }
         let valid = match checked_wire_range(buffer.writable().len(), wire) {
             Ok(valid) => valid,
             Err(_) => return Err((OfferError::InvalidWindow, buffer)),
         };
         let bytes = valid.len();
-        self.ready.offer(RxPacket {buffer, wire: valid}, bytes, at)
-            .map_err(|(error, packet)| (error, packet.buffer))
+        self.ready.offer(QueuedRx {
+            packet: RxPacket {buffer, wire: valid}, lane_hint,
+        }, bytes, at).map_err(|(error, item)| (error, item.packet.buffer))
     }
     pub fn take_ready(&mut self, now: MonoNs) -> Option<RxPacket> {
-        if self.stopping { None } else { self.ready.take(now) }
+        self.take_ready_where(now, |_| true)
     }
     pub fn stop(&mut self) -> usize {
         self.stopping = true;

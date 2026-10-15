@@ -42,6 +42,9 @@ jobs:
           parts=['crates/wbd-engine/src/runtime/wake.rs',
                  'crates/wbd-engine/src/runtime/mod.rs',
                  'crates/wbd-engine/src/runtime/parity.rs',
+                 'crates/wbd-engine/src/runtime/batch.rs',
+                 'crates/wbd-engine/src/runtime/rx_batch.rs',
+                 'crates/wbd-engine/src/runtime/generation.rs',
                  'crates/wbd-engine/src/memory/mod.rs',
                  'crates/wbd-engine/src/lib.rs','Cargo.lock']
           m={'source_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
@@ -70,7 +73,7 @@ jobs:
         with:
           name: r1-wake-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-wake-build
-      - name: Verify binary+source and run all 29 real R1 owner tests
+      - name: Verify binary+source and run all 71 bounded R1 owner tests
         shell: bash
         run: |
           set -euo pipefail
@@ -110,13 +113,21 @@ jobs:
                     'r1_parity_first_fresh_before_32ms_fec_due_and_no_early_wake',
                     'r1_parity_only_absolute_fake_deadline_wakes_parked_owner',
                     'r1_parity_bounded_repair_parity_fairness_under_continuous_fresh',
-                    'r1_parity_stop_full_three_classes_and_frozen_return_race']
-          ok=(int(os.environ['TEST_EXIT'])==0 and count==29 and len(names)==29
+                    'r1_parity_stop_full_three_classes_and_frozen_return_race',
+                    'r1_ready_owner_zero_and_one_honor_current_scope_no_copies',
+                    'r1_ready_owner_thirty_two_old_and_new_never_mix_on_dispatch',
+                    'r1_ready_owner_thirty_three_split_retire_old_reject_all_tails',
+                    'r1_ready_owner_old_stale_offer_after_new_fresh_preserves_first_order',
+                    'r1_ready_owner_concurrent_old_drop_and_stop_keeps_fences_exact',
+                    'r1_ready_owner_restarted_aba_token_and_old_batch_rejected',
+                    'r1_ready_owner_stop_and_fake_age_expiry_have_no_ready_resurrection',
+                    'r1_ready_owner_p0_component_warmup_repeat_provenance']
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==71 and len(names)==71
               and len(set(names))==29 and all(x in names for x in expected))
           record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
                   'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
-                  'scope':'M1_PARITY_BOUNDED_WAKE_STOP_FAIRNESS_R01_R02_M01_NATIVE',
+                  'scope':'M1_R1_READY_GENERATION_PARITY_WAKE_STOP_TWO_LANE_NATIVE_NOT_ABI',
                   'not_qualified':'RTRB_SPSC;LOOM;EVENTFD;REAL_RAW_DRIVER;GO_V4;PRODUCT;PERFORMANCE;PHYSICAL'}
           pathlib.Path('r1-wake-result/result.json').write_text(json.dumps(record,indent=2)+'\n')
           print(json.dumps(record,indent=2))
