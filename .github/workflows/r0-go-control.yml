@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-go-control-v4-gate"
 
 on:
   push:
+    branches: [main]
     paths:
       - "r0/go_overlay/internal/runtimeentry/r0_admission_mode.go"
       - "r0/go_overlay/internal/runtimeentry/r0_admission_mode_test.go"

@@ -1,4 +1,4 @@
-# 开发治理协议 v1
+# 开发治理协议 v2
 
 ## 1. 三种状态不能混为一谈
 
@@ -64,7 +64,7 @@ checkpoint_sha 与 last_tested_source 独立：前者表示交接覆盖到哪里
 
 run-name 供人路由，manifest 和 GitHub API 才用于核验。正常分支 CI 使用 event + SHA + run_id 的身份；手动请求将 request_id 放入 run-name。禁止只凭“最近绿色”认领结果。
 
-正式测量不因普通 push 自动取消；concurrency 分组包含 workflow/role/request，不能全仓共用取消组。当前只启用 governance workflow，未配置任何产品性能夹具。
+正式测量不因普通 push 自动取消；concurrency 分组包含 workflow/role/request，不能全仓共用取消组。当前 workflow 包含治理、native 组件回归和专项性能；范围以本次实际产物为准。
 
 只读审计无法保证外部副作用 exactly-once。intent + 唯一编号 + 先查后发是可恢复的去重机制，出现竞争或查询不完整时停止重复触发。
 
@@ -102,3 +102,20 @@ worker ready_for_integration 前：接口行为、正确性证据、适用配置
 - `python -m unittest discover -s tests -v`：中断、反例和身份契约演练，仅在 Actions 运行。
 
 GitHub API 不可读、权限不足、结果分页超限都明确报出，不回退到猜测旧缓存。
+
+## 10. v2 增量审计与共享工具（覆盖 v1 G2 固定起点审计）
+
+- 主线 `.governance/scope-checkpoints.json` 是 M0 已验收范围检查点，不是 worker 可自行移动的交接 cursor。首次基线来自已留痕的四个 worker H / Governance 证据。
+- `Central worker scope audit` 从主线快照运行 `tools/scope_audit.py`，只读 GitHub 元数据，绝不执行 worker 代码。worker 每次 Governance 完成会触发中央审计；不需要复制新工具或改工作分支。每份结果含 SOURCE、checker/control SHA、权限快照与 run 身份。
+- 每轮只审检查点后的完整提交；路径改后又撤回仍检查。64 是单轮增量预算，不是分支终身提交上限。达到约 20–30 个新增提交或模块集成完成，M0 读取最新中央 PASS artifact / GitHub conclusion 后将该角色检查点推进到实际验过的 SOURCE，同时附 evidence_ref。只改检查点不授予产品资格，不能根据 worker 自报 PASS 推进。
+- 权限仅采用 main 的 branch/state/epoch/revision/paths/语义；目标文字变化不会废除旧证据。审计开始固定快照，结束重新核权限和 SOURCE 祖先。分支继续前进允许返回 is_current_head=false，不能拿旧 SOURCE 当新 HEAD PASS。权限变化/历史被移除仍拒绝。
+- 旧 G2 检查器和反例保留用于解释历史，不再增加特定父 SHA 的同步例外。旧分支 Governance 若仅因旧 scope 上限/工具同步失败，中央精确 SOURCE PASS 可替代该范围检查；未执行的结构/恢复测试不得因此冒充通过，worker native 资格仍独立。
+- 新 worker merge、权限变更仍由 M0 审核，不把普通主线同步泛化成任意写根文件权限。任何新 epoch 必须重新建立范围检查点。
+
+## 11. 控制信息减重
+
+registry 只保留稳定职责、权限与任务入口；cursor 保留本角色当前任务、停止条件、下一步及证据链接。详细 run/hash 放 evidence 一处维护，不在 project/registry/cursor 多次抄写。现有 S→H 不变；一个原子任务尽量一次汇总日志+证据 S、一次 cursor H，不为重复复述结论制造多个文档提交。
+
+M0 集中处理共享接口、依赖和真实路径集成。普通模块内测试新增无需申请精确计数修改；必跑用例与特殊 ignore 清单变更仍须解释。达到 done_when 即收口，不因治理升级顺便扩大功能范围。
+
+每轮集成明确一个真实路径目标；当前优先真实 Go 认证会话到 Rust owner，保留 B01–B04、无 HOL、所有权/generation/MTU 等硬门。整理历史时把已完成、仍 OPEN、被替代结论分清；不删除原始失败。

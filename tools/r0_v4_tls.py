@@ -12,11 +12,16 @@ import shutil
 import subprocess
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from tools.native_results import go_results
+
 OLD = "a7a82db31fe736ffedee330795a3234d358f1984"
 INPUTS = (
     "r0/source-lock.json",
     "r0/go_overlay/internal/realityfront/admission_v4.go",
     "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+    "tools/native_results.py",
+    ".governance/native-suites.json",
 )
 BIN = "r0-v4-tls.test"
 
@@ -86,10 +91,8 @@ def consume(args):
     (out / "tests.log").write_text(run.stdout)
     passed = len(re.findall(r"^--- PASS: TestR0V4", run.stdout, re.M))
     failed = len(re.findall(r"^--- FAIL: TestR0V4", run.stdout, re.M))
-    # Count the ten frozen historic tests PLUS the genuine failed-nonce
-    # protected-handshake rollback, never any test-style name substring.
-    required = "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback"
-    rollback_pass = bool(re.search(r"^--- PASS: "+required+r"(?: \([^)]*\))?$",run.stdout,re.M))
+    required = json.loads(Path('.governance/native-suites.json').read_text())["go_tls_required"]
+    observed = go_results(run.stdout, run.returncode, required)
     result = {
         "schema_version": 1,
         "source_sha": args.source,
@@ -101,8 +104,8 @@ def consume(args):
         "tests_passed": passed,
         "tests_failed": failed,
         "exit_code": run.returncode,
-        "result": "PASS" if run.returncode == 0 and passed == 12 and failed == 0 and rollback_pass and
-                      "TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort" in run.stdout else "FAIL",
+        "result": observed["result"],
+        "missing_required": observed["missing_required"],
         "scope": manifest["scope"],
         "v4_production_dispatch_wired": False,
         "v4_rust_capabilities_advertised": False,

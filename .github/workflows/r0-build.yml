@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-build"
 
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"

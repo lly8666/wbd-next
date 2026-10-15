@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-fake-platform"
 
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"

@@ -383,6 +383,11 @@ def audit_remote(api, role_id):
                                  max_total=policy["max_total_delta_paths"], previous_sequence=previous_sequence)
     pending = []
     for path in cursor["open_requests"]:
+        if path.endswith(".md"):
+            item = api.get(f"contents/{urllib.parse.quote(path, safe='/')}?ref={head}")
+            need(item.get("type") == "file", "missing coordination request")
+            pending.append({"request_ref": path, "kind": "coordination", "action": "READ_COORDINATION_REQUEST"})
+            continue
         request = api.file(path, head)
         validate_request(request)
         workflow = urllib.parse.quote(PurePosixPath(request["workflow"]).name, safe="")
@@ -390,9 +395,15 @@ def audit_remote(api, role_id):
         runs = discover_request_runs(request, query.get("workflow_runs", []), complete=query.get("total_count", 0) <= 100)
         pending.append({"request_id": request["request_id"], "runs": [r["id"] for r in runs],
                         "action": "READ_EXISTING_RUN" if runs else "VERIFY_NOT_DISPATCHED"})
-    if pending and result["state"] == "CLEAN":
+    if any(p.get("kind") != "coordination" for p in pending) and result["state"] == "CLEAN":
         result = {"state": "RECOVERY_REQUIRED", "reason": "open external intents require reconciliation"}
-    need(api.head("main") == control and api.head(role["branch"]) == head, "remote ref moved during audit; refresh")
+    from tools.scope_audit import authority, owner
+    final_control = api.head("main")
+    final_registry = api.file(".governance/registry.json", final_control)
+    need(authority(registry, role) == authority(final_registry, owner(final_registry, role["branch"])),
+         "writer authority changed during continuity audit; refresh")
+    if api.head(role["branch"]) != head:
+        result = {"state": "RECOVERY_REQUIRED", "reason": "branch advanced; inspect new delta before continuing"}
     result.update({"role": role_id, "control_sha": control, "worker_sha": head,
                    "checkpoint_sha": checkpoint, "open_requests": pending,
                    "qualification": "NOT_EVALUATED_BY_CONTINUITY_AUDIT"})

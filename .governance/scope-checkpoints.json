@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "roles": {
+    "M1": {
+      "source_sha": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+      "authority": {
+        "reservation_revision": 2,
+        "id": "M1",
+        "state": "active",
+        "branch": "work/m1-r1-runtime",
+        "assignment_epoch": 1,
+        "global_writer": false,
+        "allowed_paths": [
+          "crates/wbd-engine/src/runtime/",
+          "crates/wbd-engine/src/memory/",
+          "crates/wbd-engine/tests/",
+          "docs/devlog/M1/",
+          "docs/evidence/M1/",
+          ".governance/workstreams/M1/cursor.json",
+          ".governance/workstreams/M1/requests/"
+        ],
+        "owned_semantics": [
+          "runtime_owner",
+          "buffer_arena",
+          "normal_off_scheduler"
+        ],
+        "cursor": ".governance/workstreams/M1/cursor.json"
+      },
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38712396892,
+      "run_attempt": 2
+    },
+    "M2": {
+      "source_sha": "c74a4fd71712411b1fb5b326d95d746116a04844",
+      "authority": {
+        "reservation_revision": 2,
+        "id": "M2",
+        "state": "active",
+        "branch": "work/m2-r2-recovery",
+        "assignment_epoch": 1,
+        "global_writer": false,
+        "allowed_paths": [
+          "crates/wbd-recovery/",
+          "docs/devlog/M2/",
+          "docs/evidence/M2/",
+          ".governance/workstreams/M2/cursor.json",
+          ".governance/workstreams/M2/requests/"
+        ],
+        "owned_semantics": [
+          "receipt_state",
+          "shadow_repair",
+          "recovery_budget"
+        ],
+        "cursor": ".governance/workstreams/M2/cursor.json"
+      },
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38735393188,
+      "run_attempt": 1
+    },
+    "M3": {
+      "source_sha": "0ecb459c9686254625a045ea19b85ae0e8d43080",
+      "authority": {
+        "reservation_revision": 2,
+        "id": "M3",
+        "state": "active",
+        "branch": "work/m3-r1-codec",
+        "assignment_epoch": 1,
+        "global_writer": false,
+        "allowed_paths": [
+          "crates/wbd-codec/",
+          "docs/devlog/M3/",
+          "docs/evidence/M3/",
+          ".governance/workstreams/M3/cursor.json",
+          ".governance/workstreams/M3/requests/"
+        ],
+        "owned_semantics": [
+          "record_crypto",
+          "link_mtu_budget",
+          "fec_codec"
+        ],
+        "cursor": ".governance/workstreams/M3/cursor.json"
+      },
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38733840776,
+      "run_attempt": 1
+    },
+    "M4": {
+      "source_sha": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
+      "authority": {
+        "reservation_revision": 2,
+        "id": "M4",
+        "state": "active",
+        "branch": "work/m4-r1-platform",
+        "assignment_epoch": 1,
+        "global_writer": false,
+        "allowed_paths": [
+          "crates/wbd-platform/",
+          "r1/go-bridge/",
+          "docs/devlog/M4/",
+          "docs/evidence/M4/",
+          ".governance/workstreams/M4/cursor.json",
+          ".governance/workstreams/M4/requests/"
+        ],
+        "owned_semantics": [
+          "platform_driver",
+          "go_bridge_adapter",
+          "lifecycle_integration"
+        ],
+        "cursor": ".governance/workstreams/M4/cursor.json"
+      },
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38707294012,
+      "run_attempt": 1
+    }
+  }
+}

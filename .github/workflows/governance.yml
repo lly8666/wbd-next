@@ -3,6 +3,7 @@ run-name: "${{ inputs.role_id || github.ref_name }}|${{ inputs.request_id || git
 
 on:
   push:
+    branches: [main, "work/**"]
   workflow_dispatch:
     inputs:
       role_id:
@@ -45,7 +46,13 @@ jobs:
       - name: Attest live main role for actual branch and audit each worker commit path
         id: role
         shell: bash
-        run: python tools/worker_scope_ci.py
+        run: |
+          if [ "$GITHUB_REF_NAME" = main ]; then
+            python tools/scope_audit.py --branch main --source "$GITHUB_SHA" --output out/role-identity.json
+            echo "WBD_ROLE_ID=M0" >> "$GITHUB_ENV"
+          else
+            python tools/worker_scope_ci.py
+          fi
       - name: Verify checkout and request identity
         id: identity
         shell: bash

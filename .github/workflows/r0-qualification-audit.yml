@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-static-qualification-audit"
 
 on:
   push:
+    branches: [main]
     paths:
       - "r0/source-lock.json"
       - "r0/qualification-manifest.json"

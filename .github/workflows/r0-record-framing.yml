@@ -2,6 +2,7 @@ name: R0 actual pinned Go record oracle and Rust opaque framing
 run-name: "M0|${{ github.sha }}|r0-record-wire-framing"
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"

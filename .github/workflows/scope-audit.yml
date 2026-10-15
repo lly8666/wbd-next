@@ -1,0 +1,57 @@
+name: Central worker scope audit
+run-name: "scope|${{ github.event.workflow_run.head_branch || github.ref_name }}|${{ github.event.workflow_run.head_sha || github.sha }}"
+on:
+  workflow_run:
+    workflows: [Governance]
+    types: [completed]
+  push:
+    branches: [main, governance/incremental-ci-20261015]
+    paths:
+      - "tools/scope_audit.py"
+      - "tests/test_scope_audit.py"
+      - ".governance/scope-checkpoints.json"
+      - ".github/workflows/scope-audit.yml"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    if: github.event_name == 'push' || (github.event.workflow_run.head_repository.full_name == github.repository && startsWith(github.event.workflow_run.head_branch, 'work/'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout only the main-owned checker snapshot, never worker code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Audit exact event SOURCE or seed all current worker checkpoints
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, subprocess
+          from tools import governance as g
+          api=g.GitHub(os.environ['GITHUB_REPOSITORY'])
+          event=json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+          control=os.environ['GITHUB_SHA']
+          if 'workflow_run' in event:
+              targets=[(event['workflow_run']['head_branch'],event['workflow_run']['head_sha'])]
+          else:
+              registry=api.file('.governance/registry.json',control)
+              targets=[(r['branch'],api.head(r['branch'])) for r in g.validate_registry(registry)
+                       if r['state']=='active' and not r['global_writer']]
+          failed=False
+          for index,(branch,source) in enumerate(targets):
+              rc=subprocess.run(['python','tools/scope_audit.py','--branch',branch,'--source',source,
+                                 '--control',control,'--output',f'out/scope-{index}.json']).returncode
+              failed=failed or rc!=0
+          raise SystemExit(1 if failed else 0)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: central-scope-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn

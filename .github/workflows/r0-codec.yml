@@ -2,6 +2,7 @@ name: R0 WBC4 WBG4 Rust wire codec golden
 run-name: "M0|${{ github.sha }}|r0-wire-codec"
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
