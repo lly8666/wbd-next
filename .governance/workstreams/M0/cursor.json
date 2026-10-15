@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 72,
-  "checkpoint_sha": "ad1ebb7fe0a089efce425013cc8019f10f20ad45",
+  "sequence": 73,
+  "checkpoint_sha": "c4e561999b5b89d2cd866d122a050c9f8210ae43",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0 assigned 023 dual-owner composition subatom CLOSED; formal product task remains PARTIAL. CODE S 0f1351bf now composes M1 real EarlyRxOwner/ScopedOwner with two direction Rust AEAD/PN as one normal-build ProtectedScopedOwner. Existing private Go V4 trusted callsite stays Prepare→protected reply→Detach→Commit(exact SenderNext). Test-tagged C probe delegates to the same normal-build owner, no alternate activation. Exact CODE Actions native Go→Rust 38761554851 build+consume SUCCESS (Go 2 top-level/3 cipher subtests, Rust scoped 1), native-functional38761554967 all groups SUCCESS, native ABI38761554960, cross ABI38761554842, G2 native38761554939, Governance38761554893, static38761554892 SUCCESS. Evidence S ad1ebb7f Governance38762210625 and R0 static38762210833 SUCCESS. Production Go ABI features0 and positive physical/product qualification NOT_RUN.",
-  "why_now": "User requested continue after H71. Recovered exact remote main and registry rev2 epoch1; no open PR/unended actions. One bounded normal-build product composition atom moved real ScopedOwner, EarlyRxOwner, and authenticated Rust record+PN into one privately assembled control lifetime rather than parallel test-only owner state. Existing private Go TLS callsite and tagged native tests exercise it. Strict Actions source/run/job/binary hashes and mandatory scopes verified. S evidence and H separated.",
-  "done_when": "THIS ATOM MET: Both RX/TX queue owners and C2S/S2C crypto preconstructed before preparation publish; no pre-Commit RX dispatch or AEAD; invalid one-sided setup rejects without half install; actual owner Detach then exact TX-boundary Commit; duplicate Commit/replay/wrong direction/corruption/Stop retained-loan negatives pass exact-source Actions. Formal M0 023 NOT_MET: actual authenticated early RX through owner to real business exit, Normal/off bidirectional first arrival, M4 real kernel loan Stop B01–B04, physical and 500Mbps NOT_RUN. Governance push only is identity/structure; full tools need maintenance exact SOURCE.",
-  "next_action": "Integrate authenticated early+subsequent RX delivery through THIS normal-build ProtectedScopedOwner and its actual ScopedOwner-owned RX ready batches, binding real Go Detach records and M4 reader lease; prove both-direction Normal/FEC-off business first arrival, bounded early/Stop B01–B04, stale generation and no half activation using exact-source Actions. Do not create a parallel test-only delivery path or enable features.",
+  "current_task": "M0 023 scoped authenticated LINK callback atom CLOSED, overall product task PARTIAL. CODE S 6e310f28 normal-build ProtectedScopedOwner now passes Go V4 TLS-derived records through actual M1 ScopedOwner RX LoanBatch, in-place M3 ReplayProtectedLaneRx AEAD/PN, and LINK-only synchronous consumer callback. Previous feature-tag native direct crypto opener removed; test still feature-gated but calls same production-compiled actual owner path. Go 2 top-level protected cases/3 cipher subcases, Rust probe 1/1 PASS native build/consume 38766796843, exact SOURCE binary/inputs/run validated. Same-source native-functional38766796692, R0 native ABI38766796846, cross ABI38766796709, G2 native38766796744, Governance38766796878, static38766796694 all SUCCESS. Evidence S c4e56199 Governance38767405003 and R0 static38767405092 SUCCESS. Actual LINK reassembly/application exit, real platform/driver kernel Stop, product/physical/performance remain NOT_RUN. Production features=0.",
+  "why_now": "User asked to continue and estimate until functional testing. Verified CLEAN H72, main registry rev2 M0 epoch1 and no pending Actions/open PR. Closed one true normal-build RX owner route gap: existing Go V4 protected AEAD record now traverses actual M1 scoped RX buffer/loan and unique PN check before LINK-only callback; invalid/replay/Health has zero LINK acceptance. All builds/tests performed only by GitHub Actions, source-locked and hashes checked; evidence S and final H separated. Functional startup gates documented honestly; no speculative hour estimate.",
+  "done_when": "THIS ATOM MET: Source-exact protected Go TLS native test now exercises ScopedOwner ready RX batch instead of standalone crypto opener; real M3 AEAD/PN on Rust-owned slab, bounded ready queue and generation fence; callback only sees authenticated unique LINK; duplicate/replay/corrupt/opposite direction/Health/Stop/early-not-detached negative protections; 3 cipher cases. Formal 023 still NOT_MET: LINK framing/reassembly to actual app exit, real bidirectional TX and Normal/FEC-off application first delivery, M4 kernel TUN/raw I/O and driver loan B01–B04. R0 static tool and governance passed; no production capability advertisement. Physical/500Mbps NOT_RUN.",
+  "next_action": "Route ProtectedScopedOwner::drain_authenticated LINK-only callback into existing M3 link_fec_wire::inspect_link / link_reassembly::ReassemblyTable and M1's real Normal/off application RX sink, with lane/epoch bound identity and bounded MTU/reassembly, demonstrating first complete application payload. Then complete bidirectional TX/Go protected session and real M4 Linux TUN/raw held-driver Stop B01-B04 before user-facing E2E feature testing.",
   "unverified": true,
-  "last_tested_source": "0f1351bfc5b2ec4f32d1a38667d61c0cf50584c2",
+  "last_tested_source": "6e310f28617c2dc238beaa9e9d586be38df1eb93",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-scoped-owner-dual-install.json"
+    "docs/evidence/M0/M0-023-scoped-authenticated-rx.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-scoped-owner-dual-install.md",
-    "docs/evidence/M0/M0-023-protected-owner-crypto.json",
+    "docs/devlog/M0/M0-023-scoped-authenticated-rx.md",
+    "docs/evidence/M0/M0-023-scoped-owner-dual-install.json",
     "r0/qualification-manifest.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "Source-exact Go protected V4 → real Rust scoped RX/TX owner dual-install preflight and AEAD/PN lifecycle passed; CODE 0f1351bf, S evidence ad1ebb7f, Governance & R0 audit success, H72 cursor-only. Business exit and M4 kernel driver held Stop NOT_RUN, production ABI features0, product/physical/performance NOT_RUN."
+  "partial_summary": "CODE 6e310f28 Go protected TLS→real Rust ScopedOwner RX LoanBatch→in-place AEAD/PN→authenticated LINK callback PASS exact native Actions38766796843 (Go 2 top-level, 3 suite subtests; Rust1/1), same SOURCE native-functional/ABI/cross/G2/governance/static PASS; evidence S c4e56199 governance/static PASS; H73 cursor-only. Remaining three functional gates: LINK/application sink; full bidirectional Normal/off session TX and first business delivery; real Linux TUN/raw driver borrowed Stop B01-B04. Production features0; product, physical, 500Mbps NOT_RUN."
 }
