@@ -29,6 +29,10 @@ pub mod linux_packet_preflight;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_raw_rx_contract;
+/// Isolated lo-only AF_PACKET raw TX/RX fixture; never built in production.
+#[cfg(all(test,target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+mod linux_loopback_raw;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};
