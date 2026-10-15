@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 47,
-  "checkpoint_sha": "a2e411e03b03e3aa642b955370c7db689e3a0d6a",
+  "sequence": 48,
+  "checkpoint_sha": "540bdcb8cd2a50f2d639800febbd7d9f8c5a390d",
   "progress": "partial",
-  "task_id": "R1-M0-M3-FEC-RETIRE-MAIN-010",
-  "current_task": "M0 exact worker M3 FEC RX heavy deadline fix imported code S4aed5d5c, worker source e8d62776 with late callback Compact anchored at original Heavy deadline and 8 adversarial r1_ tests. Initial S4aed5d5c 11/12 Actions SUCCESS, old r1-record-auth-replay38669864304 FAILURE due count67 expected vs Rust actual75/75; repaired CI source260335486d4e3bfd4d50215f5840027e09fe94c9 with exact 3/3 triggered Actions SUCCESS: r1-record-auth-replay38670039101 75/75, r1-fec-retire-native38670039058 75/75, Governance38670039087. Compiled-once binaries and artifact SHA recorded docs/evidence/M0/R1-M3-fec-retire-main-integration.json. Evidence S a2e411e03b03e3aa642b955370c7db689e3a0d6a Governance38670307901 SUCCESS. This H only M0 cursor. Product not qualified.",
-  "why_now": "M0 seq46 H f5be4d8 Governance38669100481 SUCCESS and next_action named M3 proven FEC retire timer source integration. Native counterexample showed main old late callback overextended Compact hold, absolute deadlines and retired floor must remain bounded.",
-  "done_when": "Imported only M3 FecRxOwner original absolute timeout fix + eight adversarial tests, no Go or worker branch edits. Original first code S4aed5d5c native75/75 PASS but old count67 workflow FAIL retained. Final CODE SOURCE260335486d4e3bfd4d50215f5840027e09fe94c9 3/3 same-source Actions success including two 75/75 compiled-once Rust native suite, binary SHA67978ef920985498fa77bf7bf54e842fdbeccc70a7be528155d069f85a0ab513. Evidence S a2e411e0 Governance38670307901 SUCCESS. H cursor-only seq47; product/GoV4/raw/WinARM/500Mbps/physical NOT_RUN.",
-  "next_action": "M0 next independently scoped atom R1-M0-M4-LINUX-RX-BATCH-MAIN-011: audit M4 recvmmsg worker SOURCE2a4bc0e856f84042da292a4fae93d2a32d2d10db and native evidence H; import Linux GNU x64 UDP recvmmsg bounded batch into main and integrate M4 strict incoming parser -> M3 AEAD/PN replay on actual kernel UDP receive, test truncation/noHOL/stop. Maintain source exact CI; Linux UDP is not AF_PACKET raw TCP. Independently later integrate M1 RX/TX ready batch and M2 epoch receipt batch and bind real legacy Go V4 authenticated exporter, no product switch.",
+  "task_id": "R1-M0-M4-LINUX-RX-BATCH-MAIN-011",
+  "current_task": "M0 accepted 4 latest worker tasks by exact source and worker H Governance: M1 RX batch SOURCEe0a9f64d51 51/51 run38669368706 Hfa518d65 Gov38669632237, M2 epoch/receipt race SOURCE06fe27ae51 33/33 run38669519161 H43c0e985 Gov38669865546, M3 post-AEAD FEC typed gate SOURCE42382c60ee 85/85 run38669822925 Hf56a6720 Gov38670975617, M4 Linux actual recvmmsg SOURCE2a4bc0e856 42/42 run38669449668 H7bbd60d1 Gov38669770858. Historical wrong-count, fake-clock, governance-race failure runs retained. M0 code SOURCEf5dcb230804531c7dd558d3ef624f99faeca25d6 imported Linux x64 GNU recvmmsg and main sender->kernel recv->IPv4 TCP strict parse->M3 AEAD/PN true source replay, malformed/truncated no HOL. Exact 12/12 native Actions SUCCESS including IPv4 42/42 run38671465556 and full Linux 42/42 platform plus 5/5 engine run38671465682. Evidence S540bdcb8cd2a50f2d639800febbd7d9f8c5a390d Governance38671761575 SUCCESS. This commit H only cursor; product NOT_RUN.",
+  "why_now": "Previous M0 seq47 H2e3912ff Governance38670384584 success named M4 recvmmsg main integration next; M4 SOURCE2a4bc0e exact 42/42 genuine Linux RX syscall, newly completed other workers independently accepted so user asked验收几个任务. Only M0 owned changes applied to main.",
+  "done_when": "Accepted 4 workers each owned CODE SOURCE, compiled-once native tests51/51,33/33,85/85,42/42, evidence S and own cursor-only H Governance success (see M0 evidence). M0 full source f5dcb230 12/12 same source Actions SUCCESS with 42/42 platform +5/5 composed real Linux sendmmsg recvmmsg UDP. Exact source artifact SHA + manifest recorded evidence S540bdcb8 Governance38671761575 SUCCESS. H seq48 cursor-only. No live Go V4, raw AF_PACKET, native WinARM execution, perf500Mbps/p99/product/physical claims.",
+  "next_action": "M0 next separately scoped atom: formally assign next independent worker tasks (existing registry reservation_revision2 assignment_epoch1 active, no ownership expansion), then integrate M3 SOURCE42382c60 post-AEAD PN authenticated FEC gate (TEST-only origin) or M1 RX ready owner and M2 typed receipt race with source-exact native proof. High product-critical path unchanged: genuine legacy Go V4 authenticated cold session origin epoch/lane/direction/generation+keys into Rust and true AF_PACKET raw reader/writer. No fake production activation.",
   "unverified": true,
-  "last_tested_source": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+  "last_tested_source": "f5dcb230804531c7dd558d3ef624f99faeca25d6",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M3-fec-retire-main-integration.json"
+    "docs/evidence/M0/R1-M4-linux-rx-batch-main-integration.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-M3-fec-retire-main-integration.md",
+    "docs/devlog/M0/R1-M4-linux-rx-batch-main-integration.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/07-FEC.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 seq46 → FEC absolute Heavy->Compact 3s+10s late timer retirement fix from M3 worker SOURCEe8d62776 and 8 adversarial tests, first CODE4aed5d5c 11/12 Actions success with historic old auth codec gate expected67 vs actual75/75 FAILURE38669864304. Fixed workflow and coupled tests final CODE26033548, final source 3/3 Actions SUCCESS including r1 native 75/75 in BOTH old auth run38670039101 and new retire run38670039058, binary/artifact SHA verified, Governance38670039087 SUCCESS. Evidence S a2e411e0 Gov38670307901 SUCCESS; this H seq47 cursor-only. Current product DESIGN_READY but implementation R0_FOUNDATION_IN_PROGRESS, product/raw/GoV4/perf/physical NOT_RUN. Next M0 accept/import M4 Linux actual recvmmsg fixture on one new code source, don't overlap worker."
+  "partial_summary": "M0 seq47 -> accepted four qualified worker H: M1 RX 51/51, M2 epoch receipt33/33, M3 AEAD FEC gate85/85, M4 recvmmsg42/42, own Governance all success; historic root count/control movement/fake clock failures preserved. M0 code SOURCEf5dcb230 main Linux x64 GNU native unprivileged UDP sendmmsg+recvmmsg kernel -> strict full IPv4 TCP -> AEAD/PN replay + forged checksum/MSG_TRUNC no HOL: 42/42 platform,5/5 engine, all12/12 same SOURCE Actions SUCCESS, Win/ARM only cross compiled. Evidence S540bdcb8 Gov38671761575 SUCCESS, H seq48 cursor only. Product GoV4 authenticated exporter/raw AF_PACKET/500Mbps/p99/physical NOT_RUN. Next M0 formally assign next worker atoms and separately integrate M3 authenticated FEC test-only gate."
 }
