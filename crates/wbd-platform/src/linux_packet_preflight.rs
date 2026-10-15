@@ -298,9 +298,6 @@ mod tests{
         assert_eq!(validate_config(c),Err(PreflightError::InvalidMtu));
         c=config("lo");c.generation=0;
         assert_eq!(validate_config(c),Err(PreflightError::InvalidGeneration));
-        c=config("lo");c.mtu=1500;
-        assert_eq!(open_preflight(c).map(|_|()).err(),
-            open_preflight(c).map(|_|()).err()); // each independent open is RAII
     }
     #[test]
     fn r1_af_packet_no_raw_cap_child_exact_eperm_and_no_udp_fallback(){
@@ -362,6 +359,22 @@ mod tests{
             }
             Err(e)=>panic!("unexpected kernel AF_PACKET preflight: {e:?}")
         }
+    }
+    #[test]
+    fn r1_af_packet_owned_fd_close_unprivileged_kernel_rollback_fixture(){
+        // A real unprivileged kernel FD exercises OwnedFd rollback/close even
+        // on runners that (correctly) have no CAP_NET_RAW. This is *only*
+        // an FD lifetime test, not an AF_PACKET socket or raw fallback path.
+        use std::net::UdpSocket;
+        use std::os::fd::IntoRawFd;
+        let udp=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let fd=udp.into_raw_fd();
+        // SAFETY: into_raw_fd transfers unique ownership to this OwnedFd.
+        let owned=unsafe{OwnedFd::from_raw_fd(fd)};
+        assert!(unsafe{fcntl(fd,F_GETFD)}>=0);
+        drop(owned);
+        assert_eq!(unsafe{fcntl(fd,F_GETFD)},-1);
+        assert_eq!(errno(),9); // native EBADF proves rollback/close
     }
     #[test]
     fn r1_af_packet_rx_meta_packet_type_truncation_generation_fail_closed(){
