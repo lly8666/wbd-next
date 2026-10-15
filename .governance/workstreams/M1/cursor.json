@@ -4,19 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 10,
-  "checkpoint_sha": "baae8e310995dfedb825922b478b88e7f54357a0",
+  "sequence": 11,
+  "checkpoint_sha": "da48b585a7bbce48f5de7fbbc8b4c27bfff82c12",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-READY-GENERATION-RELEASE-008",
-  "current_task": "R1-M1-READY-GENERATION-RELEASE-008 actual owner TX/RX Release ready batch + generation stale-negative native and >=1s P0 component probe COMPLETE; awaiting M0 integration",
-  "why_now": "M0 main assigned fifth-wave R1-M1-READY-GENERATION-RELEASE-008 on same active M1 branch, rev2 epoch1, unchanged allowed paths; prior cursor seq9 H6ad61c34596815d8688664af018e33669da39c59 Governance38679184618 SUCCESS.",
-  "done_when": "Preserve previous71/71 scoped r1 native cases; own release native compiled-once binary, repeated>=1s owner lifetime actual ready dispatch vs stale negative with CPU-s/quantiles and no fake 500Mbps claim, owner scope+stop cases with no payload copies; own role evidence S, cursor-only H Governance success. No root CI/ABI edits.",
-  "next_action": "M0 consume scoped exact M1 SOURCE fc023fb, worker native38682808748 75/75 and Release compiled-once SHA553a7cc6 P0 results in owned evidence; never extrapolate product bandwidth. M0 synchronize old worker branch root R0 ABI selector (38682808744 FAIL; Rust 77 passed, 1 ignored, rc0). Real trusted Go V4 session origin, kernel driver, isolated P1+ product and physical remain separately blocked. M1 await next formally assigned atom.",
+  "task_id": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009",
+  "current_task": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009 owner-local idempotent Stop, delayed external FrozenRecord hold, two generation 33-batch/return backlog proof COMPLETE; M0 integration pending",
+  "why_now": "Main registry rev2 epoch1 assigned new M1 OWNER-LOAN-STOP-INTEGRATION-009 within unchanged active branch/allowed paths; previous cursor seq10 H 08bacd9f16a5ee8c6d95082f43dee4a2fb456291 Governance38683183557 SUCCESS.",
+  "done_when": "Preserve previous 75/75 scoped r1 native; add smallest necessary owner-local counterexamples for held frozen handles, late borrow/drop, idempotent Stop, generation ABA and bounded return backlog under two generations, plus explicit noncopy baseline where observable. Source-exact native worker compiled-once SUCCESS, evidence S/cursor-only H own Governance SUCCESS, no new root CI/shared API and no fake real Go V4/500Mbps. If existing code already proves an invariant, cite passing tests instead of duplicating a feature.",
+  "next_action": "M0 review M1 exact source 39e6dfc, native worker Actions38688812162 80/80 including 75 previous +5 new; evidence docs/evidence/M1/R1-M1-OWNER-LOAN-STOP-INTEGRATION-009-actions.json. ScopedOwner Stop repeat is now idempotent with same canceled count and old loan ledger. Preserve distinction between RetiredScope batch leases and Arena full frozen-clone loans. Real driver completion, trusted Go V4 generation admission, product 500Mbps all NOT_RUN. M0 coordinate old shared worker branch R0 ABI selector failing38688812106 despite Rust82 passed+1 ignored rc0; M1 wait for next formally assigned atom.",
   "unverified": false,
-  "last_tested_source": "fc023fba5bc7c51d07868a3d64d5356596130f75",
+  "last_tested_source": "39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-READY-GENERATION-RELEASE-008-actions.json",
-    "docs/evidence/M1/R1-M1-READY-GENERATION-RELEASE-008-release-p0.json"
+    "docs/evidence/M1/R1-M1-OWNER-LOAN-STOP-INTEGRATION-009-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -27,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M1 RELEASE-008 scoped native 75/75 r1_ (prior71+4) at exact SOURCE fc023fba5bc7c51d07868a3d64d5356596130f75, worker Actions38682808748 compiled-once debug binary + nested separately compiled-once Rust Release native benchmark executable SHA553a7cc6, release child1/1 PASS. Verified downloaded ZIP artifact11947969849 and result.json/test.log hashes; three 512-warmup+>=1.10second legs, ~105k real ready 32TX+32RX owner batches per leg, per-batch release TX p50 521ns/p99 541ns, RX p50 2084ns/p99 2204-2214ns; stale negative p99 31ns. CPU process 1.10s each leg includes buffer setup/freeze/offer/return, not isolated. No record encryption, Go authenticated origin, driver, product 500Mbps/p99. Same CODE Governance38682808769, G2 38682808783, R0 audit38682808803, cross ABI38682808790 SUCCESS; R0 native ABI38682808744 FAIL due known M0-owned branch stale '3 passed' script despite Rust 77 passed +1 ignored rc0. Evidence S baae8e310995dfedb825922b478b88e7f54357a0, this H only cursor. No Windows/ARM/physical/P1-P3 qualified."
+  "partial_summary": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009 scoped owner local COMPLETE: CODE S39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed; exact compiled-once GitHub native worker38688812162 SUCCESS 80/80 r1_ Rust tests (75 preceding +5 new), downloaded result ZIP11951250903 independently SHA256 verified ZIP, result.json, test.log, inspected test names and release repeat records. Stop repeat retains first cancel count and identical batch ledger, no double release; 33 old TX and RX 32+1 retained across new scope, old frozen clone pointer proves no payload copy, late other-thread release, ABA, fresh-first and old token reject; 96 old/new loans saturate channel capacity1 and bound fallback backlog, all returned. Batch fence not equivalent to Arena loan quiescence while standalone FrozenRecord clones live. Existing Release benchmark still source-run PASS with 3>=1.1s hosted component legs, no product perf claim. CODE S Governance38688812067, G2 38688812155, qualification audit38688812043, cross ABI38688812032 SUCCESS. R0 native ABI38688812106 FAIL due M0-owned branch shared stale literal '3 passed' script although Rust rc0 82 passed +1 ignored. Evidence S da48b585a7bbce48f5de7fbbc8b4c27bfff82c12, H cursor-only follows. Not real Go V4 authenticated admission, driver/kernel lease, AF_PACKET, product throughput/physical/native Windows ARM."
 }
