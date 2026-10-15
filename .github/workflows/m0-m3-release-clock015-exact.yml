@@ -1,5 +1,5 @@
 name: M0 source-pinned M3-015 CPU same-window Release validation
-run-name: "M0|${{ github.sha }}|M3-SOURCE-79535dd5-clock015-release"
+run-name: "M0|${{ github.sha }}|M3-SOURCE-0ecb459c-clock015-release"
 on:
   push:
     branches: [main]
@@ -11,7 +11,7 @@ concurrency:
   group: m0-m3-release-steady-${{ github.sha }}
   cancel-in-progress: false
 env:
-  M3_SOURCE: 79535dd5f57af0b5ec85ea812456ae0a31a3a4d2
+  M3_SOURCE: 0ecb459c9686254625a045ea19b85ae0e8d43080
   M3_TEST: link_fec_wire::fec_p0_cost_tests::r1_steady_release_same_source_fresh_vs_reused_owner_cost
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: lly8666/wbd-next
-          ref: 79535dd5f57af0b5ec85ea812456ae0a31a3a4d2
+          ref: 0ecb459c9686254625a045ea19b85ae0e8d43080
           path: m3
           persist-credentials: false
       - name: Compile ONCE exact worker code in Release with pinned toolchain
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: lly8666/wbd-next
-          ref: 79535dd5f57af0b5ec85ea812456ae0a31a3a4d2
+          ref: 0ecb459c9686254625a045ea19b85ae0e8d43080
           path: m3
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -175,7 +175,7 @@ jobs:
               n=int(r["records"])
               total_wall=int(r["same_window_wall_ns"])
               total_cpu=int(r["same_window_cpu_ns"])
-              assert wc>0 and n==wc*128*64, (k,"missing real records")
+              assert wc>0 and n==wc*3072*64, (k,"missing real records")
               assert total_wall>=1125000000 and float(r["active_wall_s"])>=1.125
               assert int(r["sample_count"])==len(bysample[k])
               assert int(r["p50_batch_avg_ns_per_record"])<=int(r["p99_batch_avg_ns_per_record"])
