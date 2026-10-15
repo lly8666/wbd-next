@@ -73,7 +73,7 @@ jobs:
         with:
           name: r1-wake-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-wake-build
-      - name: Verify binary+source and run all 71 bounded R1 owner tests
+      - name: Verify binary+source and run all 79 bounded R1 owner tests
         shell: bash
         run: |
           set -euo pipefail
@@ -121,9 +121,17 @@ jobs:
                     'r1_ready_owner_concurrent_old_drop_and_stop_keeps_fences_exact',
                     'r1_ready_owner_restarted_aba_token_and_old_batch_rejected',
                     'r1_ready_owner_stop_and_fake_age_expiry_have_no_ready_resurrection',
-                    'r1_ready_owner_p0_component_warmup_repeat_provenance']
-          ok=(int(os.environ['TEST_EXIT'])==0 and count==71 and len(names)==71
-              and len(set(names))==71 and all(x in names for x in expected))
+                    'r1_ready_owner_p0_component_warmup_repeat_provenance',
+                    'r1_owner_loan_stop_idempotent_cancels_only_undispatched_33_tail',
+                    'r1_owner_loan_stop_held_frozen_arc_last_clone_after_batch_fence',
+                    'r1_owner_loan_stop_old_generation_33_plus_new_first_fresh',
+                    'r1_owner_loan_stop_bounded_full_return_backlog_two_generations',
+                    'r1_owner_loan_stop_restart_aba_stale_token_cannot_reenter',
+                    'r1_owner_release_fresh_first_stale_stop_aba_no_resubmission',
+                    'r1_owner_release_ready_0_1_32_33_tx_rx_two_lanes',
+                    'r1_owner_release_old_batch_held_stop_new_scope_stale_after_32']
+          ok=(int(os.environ['TEST_EXIT'])==0 and count==79 and len(names)==79
+              and len(set(names))==79 and all(x in names for x in expected))
           record={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['binary_sha256'],'log_sha256':hashlib.sha256(l.encode()).hexdigest(),
                   'native_tests':count,'named_wake_tests':9,'result':'PASS' if ok else 'FAIL',
