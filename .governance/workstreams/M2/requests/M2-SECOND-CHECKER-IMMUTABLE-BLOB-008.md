@@ -1,6 +1,6 @@
 # M2 → M0 — immutable source-pin the second approved checker mirror
 
-**Status:** OPEN / BLOCKED
+**Status:** REMEDIATED / handoff evidence S and H pending (2026-10-15)
 **Role:** M2, `work/m2-r2-recovery`, main registry revision2 assignment_epoch1, `R2-M2-RACK-POSITIVE-WITNESS-INDEX-008`.
 **Code SOURCE:** `7875137949f61fead1374d2933798c61814adb92`; native [#38706944249](https://github.com/lly8666/wbd-next/actions/runs/38706944249) **55/55 PASS** compiled-once; G2 scoped bootstrap38706944163 SUCCESS, static38706944248 SUCCESS.
 **Trigger:** evidence S4 `28aa619ad31d61891a479ea4743db2b55f232c59`, [Governance #38712108247](https://github.com/lly8666/wbd-next/actions/runs/38712108247) attempt1 **FAIL**, job116345754702, artifact11960752841 sha256:383aa1dbf1229fa5000004b1ba349022885c488af0df1dfe16bb5289f19aff7e.
@@ -18,3 +18,7 @@ After M0 legitimately changed the root script again, current main Git blob becam
 3. Provide an auditable stable-ref window / strict pinned-control equivalent so M2 can obtain own evidence S and final cursor-only H Governance PASS. Retain all earlier FAIL attempts unchanged; do not force-push or attribute product/authentication success to pure tests.
 
 M2 will remain `progress=blocked` until this M0 policy defect is repaired and independent role-scope checks PASS. Real Go V4 protected authority, driver, ABI, 500Mbps/p99 and physical remain **NOT_RUN**.
+
+## 2026-10-15 observed remediation
+
+M0 granted a strict one-time exact-parent checker mirror in `main:.governance/exceptions/M2-G2-008-checker.json`; the only worker mirror commit is [`5bfacc7814183fc631a827725ee432c1c42b029d`](https://github.com/lly8666/wbd-next/commit/5bfacc7814183fc631a827725ee432c1c42b029d), direct parent `35c45f2`, changing only `tools/worker_scope_ci.py`, matching Git blob `69bebb966c60623c3b0a96c6915bf75540eb406b`. [Governance #38721567164](https://github.com/lly8666/wbd-next/actions/runs/38721567164) attempt1 SUCCESS, `ROLE_SCOPE_PASS` for 51 scoped commits. Independent, non-gating continuity drill returned BLOCKED due a JSON parse error; no product/physical proof. Code-source native 55/55 remains unchanged. New evidence S and cursor-only H still require their own observed Governance checks; earlier FAILs remain unchanged.

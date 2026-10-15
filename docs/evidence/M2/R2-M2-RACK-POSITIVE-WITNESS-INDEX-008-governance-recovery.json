@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "record_kind": "RECOVERED_OBSERVED_ACTIONS",
+  "result": "PURE_R2_NATIVE_55_55_PASS__M0_APPROVED_CHECKER_SYNC_GOV_ROLE_SCOPE_PASS__EVIDENCE_S_H_PENDING",
+  "code_source_sha": "7875137949f61fead1374d2933798c61814adb92",
+  "checker_sync_S": "5bfacc7814183fc631a827725ee432c1c42b029d",
+  "checker_sync_parent": "35c45f2918600b3087d50493da61e112af07bcd1",
+  "scope": {
+    "owner": "crates/wbd-recovery only for R2 code",
+    "M0_exception": "one-time exact-parent single-file tools/worker_scope_ci.py mirror only",
+    "M0_decision": ".governance/exceptions/M2-G2-008-checker.json",
+    "approved_main_source": "4dfd0a18d42e2ebddc38241d378da4a30137e33e",
+    "approved_git_blob_sha": "69bebb966c60623c3b0a96c6915bf75540eb406b"
+  },
+  "native": {
+    "run_id": 38706944249,
+    "attempt": 1,
+    "conclusion": "success",
+    "tests_pass": 55,
+    "tests_fail": 0,
+    "compiled_once": true,
+    "build_job_id": 116328582158,
+    "consume_job_id": 116328696531
+  },
+  "scope_attestation": {
+    "workflow": ".github/workflows/governance.yml",
+    "run_id": 38721567164,
+    "attempt": 1,
+    "source_sha": "5bfacc7814183fc631a827725ee432c1c42b029d",
+    "job_id": 116377123525,
+    "conclusion": "success",
+    "result": "ROLE_SCOPE_PASS",
+    "scope_commits_checked": 51,
+    "main_integration_commits_exempt": 37,
+    "governance_unit_tests": "60/60 PASS",
+    "artifact_id": 11965512099,
+    "artifact_digest": "sha256:9f278441bae0b345ebaff5f1d022be7bdbbe37bb2b4a138d2d20f81d67089e4e",
+    "manifest_file_count": 8,
+    "manifest_sha256_validated": true,
+    "expires_at": "2026-11-14T10:39:13Z",
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/38721567164"
+  },
+  "non_gating_observation": {
+    "continuity_step": "BLOCKED",
+    "reason": "Expecting value: line 1 column 1 (char 0)",
+    "github_workflow_job_conclusion": "success",
+    "handoff_semantics": "Not determined by role scope alone; needs receipt S and cursor-only H."
+  },
+  "preceding_failed_governance_runs": [
+    38706944070,
+    38707876126,
+    38708744888,
+    38711507683,
+    38712108247,
+    38712773554,
+    38713187654
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "real_authenticated_adapter": "NOT_RUN",
+  "new_packet_encryption_or_socket_changes": false,
+  "next_action": "Verify this recovery evidence S via its own GitHub Governance, then push a separate cursor-only H and verify H Governance. Do not claim product/physical readiness."
+}
