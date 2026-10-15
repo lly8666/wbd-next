@@ -6,6 +6,7 @@ pub mod receipt;
 pub mod budget;
 pub mod global_sparse;
 pub use global_sparse::{
+    BatchCompletionCounts, BatchSuffixEvidence, ValidatedRepairBatchOutcome,
     GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError, GlobalRepairSnapshot,
     GlobalReservationId, GrantId, GrantLease,
 };
@@ -14,6 +15,7 @@ pub use budget::{
     ReservationId, WireDirection,
 };
 pub use receipt::{
+    ReceiptOpenFacts, ReceiptRouteScope, ScopedAuthenticatedReceipt,
     AuthenticatedReceipt, PollResult, ReceiptConfig, ReceiptPage, ReceiptState,
     Release, ReleaseReason, RepairCandidate, RepairSendResult,
 };

@@ -1,7 +1,7 @@
 //! Pure R2 authenticated-receipt / shadow state. No clock reads, socket,
 //! payload mutation, new PN allocation, or encryption. M0 owns the actual
 //! M3 opened-record -> AuthenticatedReceipt trust-boundary adapter.
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use wbd_types::buffer_contract::{BufferOrigin, FrozenRecordHandle};
 use wbd_types::{DataError, LaneKey, LimitedResource, MonoNs, RecordPn};
 
@@ -34,6 +34,8 @@ pub struct AuthenticatedReceipt {
     pages: Vec<ReceiptPage>,
 }
 impl AuthenticatedReceipt {
+    /// Lane is provided only after the M0-verified authenticated open.
+    pub fn verified_lane(&self) -> LaneKey { self.lane }
     pub fn after_authenticated_open(
         verified_lane: LaneKey,
         largest_data_pn: RecordPn,
@@ -63,6 +65,99 @@ impl AuthenticatedReceipt {
         }
         Ok(Self { lane: verified_lane, largest: largest_data_pn, report_seq, pages })
     }
+}
+
+
+/// Session policy pinned by M0 independently from the inbound receipt.
+/// Pure data comparison only: NOT an authenticated session constructor.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct ReceiptRouteScope {
+    outbound_lane:LaneKey,
+    reverse_lane:LaneKey,
+    outbound_direction:crate::budget::WireDirection,
+    tunnel_epoch:[u8;16],
+    first_data_pn:RecordPn,
+    last_data_pn:RecordPn,
+    first_control_pn:RecordPn,
+    last_control_pn:RecordPn,
+}
+impl ReceiptRouteScope {
+    pub fn checked(
+        outbound_lane:LaneKey,reverse_lane:LaneKey,
+        outbound_direction:crate::budget::WireDirection,
+        tunnel_epoch:[u8;16],
+        data_pns:(RecordPn,RecordPn),control_pns:(RecordPn,RecordPn)
+    )->Result<Self,DataError> {
+        if outbound_lane.tunnel!=reverse_lane.tunnel ||
+            tunnel_epoch==[0u8;16] || data_pns.0>data_pns.1 ||
+            control_pns.0>control_pns.1 {
+            return Err(DataError::Malformed);
+        }
+        Ok(Self {outbound_lane,reverse_lane,outbound_direction,tunnel_epoch,
+            first_data_pn:data_pns.0,last_data_pn:data_pns.1,
+            first_control_pn:control_pns.0,last_control_pn:control_pns.1})
+    }
+    pub fn outbound_lane(&self)->LaneKey {self.outbound_lane}
+    pub fn outbound_direction(&self)->crate::budget::WireDirection {self.outbound_direction}
+    pub fn contains_data_pn(&self,pn:RecordPn)->bool {
+        pn>=self.first_data_pn && pn<=self.last_data_pn
+    }
+    fn reverse_direction(&self)->crate::budget::WireDirection {
+        use crate::budget::WireDirection::{ClientToServer,ServerToClient};
+        match self.outbound_direction {ClientToServer=>ServerToClient,ServerToClient=>ClientToServer}
+    }
+    fn matches_open(&self,opened:ReceiptOpenFacts)->bool {
+        opened.verified_reverse_lane==self.reverse_lane &&
+        opened.verified_reverse_direction==self.reverse_direction() &&
+        opened.verified_tunnel_epoch==self.tunnel_epoch &&
+        opened.control_record_pn>=self.first_control_pn &&
+        opened.control_record_pn<=self.last_control_pn
+    }
+}
+/// Caller-supplied observations from M0 after AEAD, PN replay and trusted
+/// session lookup; plain public values cannot themselves establish trust.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct ReceiptOpenFacts {
+    pub verified_reverse_lane:LaneKey,
+    pub verified_reverse_direction:crate::budget::WireDirection,
+    pub verified_tunnel_epoch:[u8;16],
+    pub control_record_pn:RecordPn,
+}
+/// Parsed authenticated receipt bound to the independent pinned route.
+/// This type checks scope but performs NO cryptographic verification.
+pub struct ScopedAuthenticatedReceipt {
+    route:ReceiptRouteScope,
+    receipt:AuthenticatedReceipt,
+}
+impl ScopedAuthenticatedReceipt {
+    pub fn checked_after_open(
+        pinned:ReceiptRouteScope,opened:ReceiptOpenFacts,
+        largest_data_pn:RecordPn,report_seq:u32,pages:Vec<ReceiptPage>
+    )->Result<Self,DataError> {
+        if !pinned.matches_open(opened) || !pinned.contains_data_pn(largest_data_pn) {
+            return Err(DataError::Stale);
+        }
+        // Positive bitmap bits outside the independent session PN scope
+        // cannot retire a shadow even when largest_data_pn is valid.
+        for page in &pages {
+            for (byte_index,byte) in page.bitmap.iter().enumerate() {
+                for bit in 0..8 {
+                    if (*byte & (1u8<<bit))!=0 {
+                        let pn=page.base_pn.0.checked_add((byte_index*8+bit) as u64)
+                            .ok_or(DataError::Malformed)?;
+                        if !pinned.contains_data_pn(RecordPn(pn)) {
+                            return Err(DataError::Stale);
+                        }
+                    }
+                }
+            }
+        }
+        let receipt=AuthenticatedReceipt::after_authenticated_open(
+            pinned.outbound_lane,largest_data_pn,report_seq,pages)?;
+        Ok(Self {route:pinned,receipt})
+    }
+    pub fn route(&self)->ReceiptRouteScope {self.route}
+    pub fn receipt(&self)->&AuthenticatedReceipt {&self.receipt}
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -120,6 +215,7 @@ struct Entry<H: FrozenRecordHandle> {
     missing_reported: bool,
     rearm_at: MonoNs,
     queued: Option<Queued>,
+    indexed_wake: Option<u64>,
 }
 #[derive(Clone, Copy)]
 struct Witness {
@@ -130,6 +226,11 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     lane: LaneKey,
     config: ReceiptConfig,
     entries: BTreeMap<RecordPn, Entry<H>>,
+    // One exact index node per shadow; no lazy tombstone pile after ACK/stop.
+    expiry_index: BTreeSet<(u64, RecordPn)>,
+    wake_index: BTreeSet<(u64, RecordPn)>,
+    #[cfg(test)]
+    last_timer_index_pops: usize,
     last_report_seq: Option<u32>,
     witnesses: Vec<Witness>, // latest three distinct, verified data sends
     rack_ack_ns: Option<u64>,
@@ -139,12 +240,18 @@ fn serial_newer(seq: u32, prev: u32) -> bool {
     d != 0 && d < (1 << 31)
 }
 impl<H: FrozenRecordHandle> ReceiptState<H> {
+    /// Owner identity including tunnel and lane generation.
+    pub fn lane(&self) -> LaneKey { self.lane }
     pub fn new(lane: LaneKey, config: ReceiptConfig) -> Result<Self, DataError> {
         if config.max_shadow_entries == 0 || config.pto_ns == 0 {
             return Err(DataError::Malformed);
         }
         Ok(Self {
-            lane, config, entries: BTreeMap::new(), last_report_seq: None,
+            lane, config, entries: BTreeMap::new(),
+            expiry_index: BTreeSet::new(), wake_index: BTreeSet::new(),
+            #[cfg(test)]
+            last_timer_index_pops: 0,
+            last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,
         })
     }
@@ -163,8 +270,41 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
             retry_epoch: 0, missing_reported: false, rearm_at: at, queued: None,
+            indexed_wake: None,
         });
+        self.expiry_index.insert((hard_expiry.0, meta.pn));
+        self.refresh_wake(meta.pn);
         Ok(())
+    }
+
+
+    /// Index only the next owned wake event; hard expiry is independent.
+    /// This key is always removed on ACK, expiry or a state transition.
+    fn wake_at(&self, e: &Entry<H>) -> Option<u64> {
+        if let Some(q) = &e.queued { Some(q.until.0) }
+        else if e.repair_attempts < 2 && e.retry_epoch < u32::MAX {
+            Some(self.due_at(e).0)
+        } else { None }
+    }
+    fn refresh_wake(&mut self, pn: RecordPn) {
+        let old = self.entries.get(&pn).expect("indexed entry").indexed_wake;
+        if let Some(at) = old { assert!(self.wake_index.remove(&(at, pn))); }
+        let next = self.wake_at(self.entries.get(&pn).expect("indexed entry"));
+        self.entries.get_mut(&pn).expect("indexed entry").indexed_wake=next;
+        if let Some(at) = next { assert!(self.wake_index.insert((at, pn))); }
+    }
+    fn remove_indexes(&mut self, pn: RecordPn, entry: &Entry<H>, expiry_popped: bool) {
+        if !expiry_popped { assert!(self.expiry_index.remove(&(entry.hard_expiry.0,pn))); }
+        if let Some(at)=entry.indexed_wake {
+            assert!(self.wake_index.remove(&(at,pn)));
+        }
+    }
+    /// Genuine new RTT witnesses can advance a RACK timer. Reindex only at
+    /// this authenticated receipt event, not on every timer/fresh callback.
+    /// Full rebuild remains bounded by configured max_shadow_entries.
+    fn refresh_rack_wakes(&mut self) {
+        let keys:Vec<_>=self.entries.keys().copied().collect();
+        for pn in keys {self.refresh_wake(pn);}
     }
 
     /// Positive bitmap bits may release once even from an old report.
@@ -177,35 +317,45 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         let fresh = self.last_report_seq.is_none_or(|v| serial_newer(receipt.report_seq, v));
         if fresh { self.last_report_seq = Some(receipt.report_seq); }
         let mut releases = Vec::new();
+        let mut dirty = Vec::new();
+        let mut rack_changed = false;
         for page in &receipt.pages {
             let base = page.base_pn.0;
             if base > receipt.largest.0 { continue; }
-            let end = (base + 255).min(receipt.largest.0);
+            let end = base.saturating_add(255).min(receipt.largest.0);
             for pn in base..=end {
-                let key = RecordPn(pn);
+                let key=RecordPn(pn);
                 if page.received(pn) {
-                    if let Some(entry) = self.entries.remove(&key) {
-                        let within_lifetime = now < entry.hard_expiry;
-                        if fresh && within_lifetime && entry.repair_attempts == 0 {
-                            self.rack_ack_ns = Some(now.elapsed_since(entry.last_sent).max(1));
-                            self.observe_witness(Witness { pn: key, sent_at: entry.last_sent });
+                    if let Some(entry)=self.entries.remove(&key) {
+                        self.remove_indexes(key,&entry,false);
+                        let within_lifetime=now<entry.hard_expiry;
+                        if fresh && within_lifetime && entry.repair_attempts==0 {
+                            self.rack_ack_ns=Some(now.elapsed_since(entry.last_sent).max(1));
+                            self.observe_witness(Witness {pn:key,sent_at:entry.last_sent});
+                            rack_changed=true;
                         }
                         releases.push(Release {
-                            pn: key,
-                            reason: if within_lifetime {
+                            pn:key,
+                            reason:if within_lifetime {
                                 ReleaseReason::ReceivedByPeer
-                            } else {
-                                ReleaseReason::HardExpired
-                            },
-                            frozen: entry.frozen,
+                            } else {ReleaseReason::HardExpired},
+                            frozen:entry.frozen
                         });
                     }
                 } else if fresh {
-                    if let Some(entry) = self.entries.get_mut(&key) {
-                        if now < entry.hard_expiry { entry.missing_reported = true; }
+                    if let Some(e)=self.entries.get_mut(&key) {
+                        if now<e.hard_expiry && !e.missing_reported {
+                            e.missing_reported=true;
+                            dirty.push(key);
+                        }
                     }
                 }
             }
+        }
+        if rack_changed {
+            self.refresh_rack_wakes();
+        } else {
+            for key in dirty {self.refresh_wake(key);}
         }
         Ok(releases)
     }
@@ -234,37 +384,56 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// Called with an injected monotonic clock. At most 32 candidates per
     /// poll, each queued once. Next poll can handle remaining due records.
     pub fn on_timer(&mut self, now: MonoNs) -> PollResult<H> {
-        let expired: Vec<_> = self.entries.iter()
-            .filter(|(_, e)| now >= e.hard_expiry).map(|(pn, _)| *pn).collect();
-        let releases = expired.into_iter().map(|pn| {
-            let e = self.entries.remove(&pn).expect("entry collected above");
-            Release { pn, reason: ReleaseReason::HardExpired, frozen: e.frozen }
-        }).collect();
-        // A queued candidate which misses its short dispatch window is dead.
-        // It cannot stay queued indefinitely or be sent after its TTL.
-        for e in self.entries.values_mut() {
-            if e.queued.as_ref().is_some_and(|q| now >= q.until) {
-                e.queued = None;
-                e.rearm_at = MonoNs(now.0.saturating_add(self.config.pto_ns));
-            }
-        }
-        let due: Vec<_> = self.entries.iter()
-            .filter(|(_, e)| e.queued.is_none() && e.repair_attempts < 2
-                && e.retry_epoch < u32::MAX && now >= self.due_at(e))
-            .take(MAX_POLL_CANDIDATES)
-            .map(|(pn, _)| *pn).collect();
-        let mut candidates = Vec::with_capacity(due.len());
-        for pn in due {
-            let e = self.entries.get_mut(&pn).expect("due entry present");
-            e.retry_epoch += 1;
-            let until = MonoNs(e.hard_expiry.0.min(now.0.saturating_add(QUEUE_LIFETIME_NS)));
-            e.queued = Some(Queued { epoch: e.retry_epoch, until });
-            candidates.push(RepairCandidate {
-                pn, origin: e.frozen.origin(), retry_epoch: e.retry_epoch,
-                dispatch_by: until, frozen: e.frozen.clone(),
+        let mut releases=Vec::new();
+        let mut candidates=Vec::with_capacity(MAX_POLL_CANDIDATES);
+        #[cfg(test)]
+        { self.last_timer_index_pops=0; }
+        // Expiry is independent of candidate throttling: a monotonic jump
+        // releases every expired shadow once, with work proportional only
+        // to the expired entries, never a scan of still-live shadows.
+        while let Some(&(expiry,pn))=self.expiry_index.first() {
+            if expiry>now.0 {break;}
+            self.expiry_index.pop_first();
+            let entry=self.entries.remove(&pn).expect("expiry index synchronized");
+            self.remove_indexes(pn,&entry,true);
+            #[cfg(test)]
+            { self.last_timer_index_pops+=1; }
+            releases.push(Release {
+                pn,reason:ReleaseReason::HardExpired,frozen:entry.frozen
             });
         }
-        PollResult { releases, candidates, next_deadline: self.next_deadline() }
+        // Timeouts and new candidate dispatches share the SAME per-tick
+        // cap: 10k previously queued deadlines cannot monopolize one tick.
+        let mut wake_events=0usize;
+        while candidates.len()<MAX_POLL_CANDIDATES
+            && wake_events<MAX_POLL_CANDIDATES
+        {
+            let Some(&(wake,pn))=self.wake_index.first() else {break;};
+            wake_events+=1;
+            if wake>now.0 {break;}
+            self.wake_index.pop_first();
+            #[cfg(test)]
+            { self.last_timer_index_pops+=1; }
+            let entry=self.entries.get_mut(&pn).expect("wake index synchronized");
+            assert_eq!(entry.indexed_wake,Some(wake));
+            entry.indexed_wake=None;
+            if entry.queued.as_ref().is_some_and(|q| now>=q.until) {
+                entry.queued=None;
+                entry.rearm_at=MonoNs(now.0.saturating_add(self.config.pto_ns));
+            } else {
+                assert!(entry.queued.is_none() && entry.repair_attempts<2);
+                entry.retry_epoch+=1;
+                let until=MonoNs(entry.hard_expiry.0.min(
+                    now.0.saturating_add(QUEUE_LIFETIME_NS)));
+                entry.queued=Some(Queued {epoch:entry.retry_epoch,until});
+                candidates.push(RepairCandidate {
+                    pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
+                    dispatch_by:until,frozen:entry.frozen.clone()
+                });
+            }
+            self.refresh_wake(pn);
+        }
+        PollResult {releases,candidates,next_deadline:self.next_deadline()}
     }
 
     /// Prevent ACK-vs-dispatch races. Engine must call this immediately before
@@ -299,18 +468,18 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 e.rearm_at = MonoNs(now.0.saturating_add(self.config.pto_ns));
             }
         }
+        self.refresh_wake(candidate.pn);
         Ok(())
     }
 
     pub fn next_deadline(&self) -> Option<MonoNs> {
-        self.entries.values().map(|e| {
-            let due = match &e.queued {
-                Some(q) => q.until,
-                None if e.repair_attempts < 2 && e.retry_epoch < u32::MAX => self.due_at(e),
-                None => e.hard_expiry,
-            };
-            MonoNs(due.0.min(e.hard_expiry.0))
-        }).min()
+        let hard=self.expiry_index.first().map(|&(at,_)|at);
+        let wake=self.wake_index.first().map(|&(at,_)|at);
+        hard.into_iter().chain(wake).min().map(MonoNs)
+    }
+    #[cfg(test)]
+    pub(crate) fn last_timer_index_pops(&self)->usize {
+        self.last_timer_index_pops
     }
     pub fn outstanding(&self) -> usize { self.entries.len() }
 }
@@ -500,4 +669,173 @@ mod tests {
         assert!(s.on_timer(MonoNs(10)).candidates.is_empty());
         assert_eq!(s.on_timer(MonoNs(100)).releases.len(), 40);
     }
+
+    #[test]
+    fn r2_burst_indexed_0_1_32_33_deadlines_without_table_rescan() {
+        let mut empty=state(1,10);
+        assert_eq!(empty.next_deadline(),None);
+        assert!(empty.on_timer(MonoNs(10)).candidates.is_empty());
+        assert_eq!(empty.last_timer_index_pops(),0);
+        add(&mut empty,1,0,100);
+        assert_eq!(empty.next_deadline(),Some(MonoNs(10)));
+        assert_eq!(empty.on_timer(MonoNs(9)).candidates.len(),0);
+        assert_eq!(empty.last_timer_index_pops(),0);
+        let c=empty.on_timer(MonoNs(10)).candidates;
+        assert_eq!(c.len(),1);
+        assert_eq!(empty.last_timer_index_pops(),1);
+        assert!(empty.preflight(&c[0],MonoNs(10)));
+        assert!(empty.on_timer(MonoNs(10)).candidates.is_empty());
+        assert_eq!(empty.last_timer_index_pops(),0);
+        let mut full=state(33,10);
+        for pn in 0..33 {add(&mut full,pn,0,100);}
+        assert_eq!(full.on_timer(MonoNs(10)).candidates.len(),32);
+        assert_eq!(full.last_timer_index_pops(),32);
+        assert_eq!(full.on_timer(MonoNs(10)).candidates.len(),1);
+        assert_eq!(full.last_timer_index_pops(),1);
+        assert!(full.on_timer(MonoNs(10)).candidates.is_empty());
+        assert_eq!(full.last_timer_index_pops(),0);
+        assert_eq!(full.expiry_index.len(),33);
+        assert_eq!(full.wake_index.len(),33);
+    }
+
+    #[test]
+    fn r2_burst_10000_due_drained_32_per_poll_counted_index_only() {
+        const N:u64=10_000;
+        let mut s=state(N as usize,10);
+        for pn in 0..N {add(&mut s,pn,0,100_000_000);}
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.wake_index.len(),N as usize);
+        assert_eq!(s.next_deadline(),Some(MonoNs(10)));
+        let mut observed=vec![false;N as usize];
+        let mut accepted=0usize;
+        let mut polls=0usize;
+        while accepted<N as usize {
+            let poll=s.on_timer(MonoNs(10));
+            polls+=1;
+            assert!(poll.releases.is_empty());
+            assert!(!poll.candidates.is_empty());
+            assert!(poll.candidates.len()<=32);
+            assert!(s.last_timer_index_pops()<=32,
+                "no full table scan per fake clock owner tick");
+            for c in &poll.candidates {
+                let at=c.pn().0 as usize;
+                assert!(!observed[at],"candidate duplicated within one epoch");
+                observed[at]=true;
+                assert!(s.preflight(c,MonoNs(10)));
+            }
+            accepted+=poll.candidates.len();
+            assert!(polls<400);
+        }
+        assert_eq!(polls,313); // 312*32 + 16, no 10k-per-tick rescans
+        assert_eq!(accepted,N as usize);
+        assert!(observed.into_iter().all(|yes|yes));
+        assert!(s.on_timer(MonoNs(10)).candidates.is_empty());
+        assert_eq!(s.last_timer_index_pops(),0);
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.wake_index.len(),N as usize);
+    }
+
+    #[test]
+    fn r2_burst_10000_hard_expiry_after_clock_jump_no_retained_tombstones() {
+        const N:u64=10_000;
+        let mut s=state(N as usize,50);
+        for pn in 0..N {add(&mut s,pn,0,1_000);}
+        assert_eq!(s.next_deadline(),Some(MonoNs(50)));
+        let expire=s.on_timer(MonoNs(1_000));
+        assert!(expire.candidates.is_empty());
+        assert_eq!(expire.releases.len(),N as usize);
+        assert_eq!(s.last_timer_index_pops(),N as usize);
+        assert!(expire.releases.iter().all(|r|r.reason==ReleaseReason::HardExpired));
+        assert_eq!(s.outstanding(),0);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert_eq!(s.next_deadline(),None);
+        assert!(s.on_timer(MonoNs(1_001)).releases.is_empty());
+        assert_eq!(s.last_timer_index_pops(),0);
+        assert_eq!(s.on_receipt(&receipt(1,N-1,vec![page(0,&[3])]),MonoNs(1_002))
+            .unwrap().len(),0);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+    }
+
+    #[test]
+    fn r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry() {
+        let mut s=state(35,10);
+        for pn in 0..35 {add(&mut s,pn,0,100_000_000);}
+        let mut first=s.on_timer(MonoNs(10)).candidates;
+        assert_eq!(first.len(),32);
+        let old=first.remove(0);
+        assert!(s.on_receipt(&receipt(1,0,vec![page(0,&[0])]),MonoNs(11))
+            .unwrap().iter().any(|r|r.pn==RecordPn(0)));
+        assert!(!s.preflight(&old,MonoNs(12)));
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,MonoNs(12)),
+            Err(DataError::Stale));
+        let second=s.on_timer(MonoNs(20)).candidates;
+        assert_eq!(second.len(),3);
+        assert_eq!(s.last_timer_index_pops(),3);
+        assert!(s.on_timer(MonoNs(21)).candidates.is_empty());
+        assert_eq!(s.last_timer_index_pops(),0);
+        // Existing 31 remaining queued candidates time out at 20m+10.
+        // The three queued at t=20 have a different, later dispatch window.
+        let expired_queues=s.on_timer(MonoNs(20_000_011));
+        assert!(expired_queues.candidates.is_empty());
+        assert_eq!(s.wake_index.len(),s.outstanding());
+        assert_eq!(s.expiry_index.len(),s.outstanding());
+        assert_eq!(s.outstanding(),34);
+        assert_eq!(s.last_timer_index_pops(),31);
+        let later=s.on_timer(MonoNs(20_000_021)).candidates;
+        assert_eq!(later.len(),29); // 3 newer queued time out, 29 earlier due
+        assert_eq!(s.last_timer_index_pops(),32);
+        assert_eq!(s.outstanding(),34);
+    }
+
+    #[test]
+    fn r2_burst_10000_queued_timeouts_are_also_index_budgeted() {
+        const N:u64=10_000;
+        let mut s=state(N as usize,10);
+        for pn in 0..N {add(&mut s,pn,0,100_000_000);}
+        for _ in 0..313 {s.on_timer(MonoNs(10));}
+        let mut popped=0usize;
+        let mut ticks=0usize;
+        while popped<N as usize {
+            let r=s.on_timer(MonoNs(20_000_011));
+            assert!(r.candidates.is_empty());
+            assert!(r.releases.is_empty());
+            let n=s.last_timer_index_pops();
+            assert!(n>0 && n<=32);
+            popped+=n;
+            ticks+=1;
+        }
+        assert_eq!(ticks,313);
+        assert_eq!(s.wake_index.len(),N as usize);
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.outstanding(),N as usize);
+        assert_eq!(s.on_timer(MonoNs(20_000_011)).candidates.len(),0);
+        assert_eq!(s.last_timer_index_pops(),0);
+        // Dead queued tokens cannot be resurrected: only new epoch candidates
+        // become dispatchable after the explicitly bounded rearm timer.
+        assert_eq!(s.on_timer(MonoNs(20_000_021)).candidates.len(),32);
+    }
+
+    #[test]
+    fn r2_burst_stale_generation_and_fresh_shadow_independent() {
+        let mut old=state(33,10);
+        for pn in 0..33 {add(&mut old,pn,0,100_000);}
+        let stale=old.on_timer(MonoNs(10)).candidates.remove(0);
+        assert_eq!(old.outstanding(),33);
+        let another_lane=LaneKey{generation:lane().generation+1,..lane()};
+        let mut new=ReceiptState::new(another_lane,ReceiptConfig {
+            max_shadow_entries:33,pto_ns:10,reorder_window_ns:5
+        }).unwrap();
+        let mut fresh=frozen(100);
+        fresh.metadata.lane=another_lane;
+        new.on_sent(fresh,MonoNs(11),MonoNs(100_000)).unwrap();
+        assert_eq!(new.on_send_result(&stale,RepairSendResult::NotSent,MonoNs(12)),
+            Err(DataError::Stale));
+        assert_eq!(new.on_timer(MonoNs(20)).candidates.len(),0);
+        assert_eq!(new.on_timer(MonoNs(21)).candidates.len(),1);
+        assert_eq!(new.last_timer_index_pops(),1);
+        assert_eq!(new.outstanding(),1);
+    }
+
 }
