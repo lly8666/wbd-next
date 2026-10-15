@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 formal worker wave: M1 009 scoped owner driver-loan STOP safety, M2 007 10k burst recovery scheduler bound, M4 009 actual unprivileged driver outcome/lease; registry rev2 epoch1 and branch/path permissions unchanged, M3 014 continues independently. Previous scoped M1 75/75 H Gov38683183557, M2 44/44 H Gov38684127224, M4 64/64 H Gov38683395043 SUCCESS; M0 integration source review pending. M3 Release retry run38685587150 SUCCESS 24/24 on old CODE88a12027 but 22/24 invalid CPU/active-wall window => CPU optimization NOT_QUALIFIED, M3 must repair. Main M0 next real protected Go V4 frozen admission through Rust owner Prepare/Detach/Commit B01–B04; production ABI/physical/500Mbps still OFF. Decision docs/decisions/M0-next-wave-owner-repair-driver-2026-10-15.md.",
+  "next_decision": "M0 next wave (registry rev2 epoch1 unchanged) after M2 51/51 final H014d636e Gov38692656343 PASS and imports M2 a8e5a77, M1 002b388, M4 2a1c578, M3 a387d1bb. M1 next bounded early RX boundary010, M2 next RACK witness per-positive O(N) removal008, M3 next CPU probe timing window015, M4 next real UDP RX burst STOP010. M0 actual authenticated Go protected ColdSnapshot → fresh Rust owner prepare/reply/detach/commit B01-B04 task023; Go explicit post-detach epoch commit TLS11/11 dd9c4 Gov; Rust owner/ABI still NOT_RUN, product/physical/500Mbps/real RAW OFF. docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

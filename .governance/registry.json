@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "交付可接续架构/科学指标/迁移方案及治理验证，再协调正式产品分工",
-      "done_when": "当前任务满足cursor退出条件，精确证据和下一阶段边界齐全"
+      "goal": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023: Main-only bridge that accepts an actual Go V4 authenticated protected ColdSnapshot exclusively through the trusted session/handshake callsite and installs one fresh Rust ScopedOwner generation with exact PrepareTransition/protected reply/DetachTransition/CommitAdmission transaction ordering, bounded early RX and TX seq ownership, fail-close on invalid/stale/overlap and Stop-held lease. A self-consistent 248B cold bundle is never authentication. Default production ABI remains features0 until actual E2E test and safety signoff.",
+      "done_when": "Go protected real TLS all-cipher/rollback and Rust cold grammar native both source exact PASS; new Go→Rust positive in-process trust path must be traced with versioned authenticated provenance, fresh independent Rust generation, no public arbitrary cold install, B01–B04 real/negative cases, clear early queue max+STOP/restart, Go native+Rust engine and C ABI source-exact Actions. May report partial while owner route/physical/raw OFF. No 500Mbps or product FEC positive until observed."
     },
     {
       "id": "M1",
@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009: Under existing owner runtime/memory paths only, harden ScopedOwner/RetiredScope/FrozenRecord buffer lifetime during actual ready-batch loan, delayed return, Stop and rotation, including 0/1/32/33 borrowed TX/RX and two independent generations. Prove that Stop blocks fresh offers but never frees an outstanding driver-held handle, old callback never enters new owner and new ready fresh is not held behind retiring old loan. No crypto, Go admission, public ABI, driver socket or claimed authenticated origin.",
-      "done_when": "Preserve previous 75/75 scoped r1 native; add smallest necessary owner-local counterexamples for held frozen handles, late borrow/drop, idempotent Stop, generation ABA and bounded return backlog under two generations, plus explicit noncopy baseline where observable. Source-exact native worker compiled-once SUCCESS, evidence S/cursor-only H own Governance SUCCESS, no new root CI/shared API and no fake real Go V4/500Mbps. If existing code already proves an invariant, cite passing tests instead of duplicating a feature."
+      "goal": "R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010: owner-only runtime/memory staged bounded post-bootstrap RX early queue, explicit externally supplied exact Prepare RX boundary plus length/overlap disposition, 0/1/32/33 early ingress with two generations, retained frozen/unique buffer lease across Stop and late driver return. Reject any segment crossing boundary as overlap; fresh RX is not HOL-blocked by retiring scope. No Go auth assertion, no Rust main/ABI/shared CI or driver implementation.",
+      "done_when": "Keep 80/80 prior R1 native; independently exercise pre-boundary/after-boundary/exact crossing, 0/1/32/33-cap and full early queue, Stop before/after Detach, stale ABA token, no old→new delivery or borrowed slab free; source-exact compiled-once native and worker evidence S then cursor-only H Governance PASS. The external boundary is a caller fact, NOT minted from raw Go bytes, production readiness FALSE."
     },
     {
       "id": "M2",
@@ -68,8 +68,8 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "R2-M2-BOUNDED-TIMER-BURST-007: In wbd-recovery pure owner state only, establish whether receipt/repair shadow hard-expiry and grant deadlines can process a 10k-due candidate burst after monotonic clock jump without full-table scans per callback, counterfeit receipt, fresh HOL or unbounded retained state. Bound candidate output to 32 per poll and preserve hard expiry, old epoch debt, sparse absolute quota and no same-evidence second retry. No socket, Go auth, engine hooks or production P0 throughput claim.",
-      "done_when": "Preserve previous 44/44 R2 native; add source-exact fake monotonic 0/1/32/33 and 10k burst/expiry tests with counted inspections or clear operation bounds, plus stale generation/late completion and new fresh budget independent tests. Fix only a demonstrated R2-owned scheduling issue, avoid new generic scheduler if existing index suffices; one compiled-once native result and own evidence S/cursor-only H Governance SUCCESS. Record CPU/alloc if truly instrumented, not estimate; no synthetic-auth-as-live admission."
+      "goal": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008: measure/fix the remaining admitted witness-induced O(live_shadow log N) wake-index rebuild inside ReceiptState::on_receipt; under 10k live shadow and repeated authenticated positive receipts, preserve correct PTO/RACK deadlines with bounded or amortized per-event work and no full-table cost per ACK under continuous traffic. Keep hard expiry exact, 32 wake/candidate poll, old epoch/replay/uncertain debit and new fresh independent. Scope pure crates/wbd-recovery only.",
+      "done_when": "Keep existing51/51 R2 native; add deterministic fake-mono 10k live+1/32/33 genuine witnesses, eager ACK remove, expiry and timer after forward jumps, counted actual index operations per receipt/timer and regression that prevents old O(N) rebuild on each positive ACK without losing deadlines. Show explicit bound or record measurable remaining blocker; source-exact native, evidence S and H-only own Governance. No new unauthenticated receipt authority, Go/Rust engine or invented CPU/alloc/product claims."
     },
     {
       "id": "M3",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-FEC-STEADY-COST-RELEASE-014: Under owned codec test paths, separate steady pre-existing real AEAD+unique PN postauth FEC BlockID/Heavy/Compact cost from the previously measured Debug fresh-owner-construction overhead; run source-locked release native >=1s warmup+3 repetitions for 192/896B, independent lane/tunnel directional synthetic test-only provenance, no production positive FecOrigin.",
-      "done_when": "Keep previous96/96 r1 native cases and repeat 2×2 scope adversarial cases, prove no cross-scope replay/expiry; release-mode own compiled-once benchmark evidence with clear steady-vs-construction ratio and CPU/p99 semantics, no production V4/ISA-L/500Mbps extrapolation; own S then cursor-only H Governance."
+      "goal": "R1-M3-CPU-PROBE-SAME-WINDOW-015: fix test-only fec_p0_cost_tests.rs measurement boundary where /proc/thread-self/stat CPU probes per64 batch lie outside active_wall_s; avoid 100Hz quantization and instrument thread CPU and wall from corresponding observable time windows. Require physically consistent CPU_s <= active_wall_s plus bounded tolerance on one thread before quoting fresh/steady ratio. Preserve real AEAD+unique PN, actual FEC and 2 tunnels×2 directions, 192/896B, 3 active Release reps per leg, preseal outside active scope; no product FecOrigin.",
+      "done_when": "Keep previous98/98 Debug; add synthetic test of clock/probe boundaries and negative invalid clock accounting; corrected M3 SOURCE needs new true compiled-once Rust1.85.1 Release same-job 24/24 data rows across >=1.05s warmup+3x>=1.125s/leg and one VM, publish CPU and wall window and raw sample/clock; M0 supplies exact-source workflow after M3 CODE is frozen. Reject CPU_s > wall_s*1.02, duplicate PN/fake FEC, unsupported per-packet p99/500Mbps conclusions. Evidence S/cursor-only H own Governance; if no precise clock available, mark CPU_INCONCLUSIVE, do not claim gain."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-DRIVER-OUTCOME-LEASE-009: Under existing wbd-platform/r1+Linux owned paths only, connect bounded frozen-ready caller-owned buffers to unprivileged actual kernel UDP send/receive outcome and explicit BorrowFence STOP lifecycle. Prove 0/1/32/33 accepted-prefix/uncertain/suffix mapping, truncated and WouldBlock/EINTR retry boundaries, idempotent STOP, generation-tagged late completion, and no free while kernel/driver still holds a lease. Keep AF_PACKET isolated loopback capability-gated NOT_RUN if unprivileged; no ambient/physical sniffing, no Go V4, engine dependency or root ABI edits.",
-      "done_when": "Preserve previous64/64 native; add minimal non-duplicated source-attested unprivileged real-kernel UDP 0/1/32/33 and delayed stop/completion tests with exact outcome vs uncertain semantics, bounded<=32 preallocated handles, no new hot copies; retain EPERM negative and explicitly mark privileged RAW_RX_NOT_RUN unless observed. Own source-exact compiled-once native evidence S, cursor-only H Governance SUCCESS. Avoid generic or production raw driver while V4 auth still disconnected."
+      "goal": "R1-M4-UDP-RX-BURST-STOP-010: stress genuine unprivileged Linux native recvmmsg UDP ingress with strictly caller-owned preallocated <=32 buffers and a 33rd packet overflow, EAGAIN/truncation/late arrival, generation-fenced lease and STOP/rotate while old packet still borrowed. Verify no frame parser/driver callback mints authenticated Go V4 lane or consumes PN and no old-generation RX leaks into new fresh dispatch; 2 independent contexts. Confine to crates/wbd-platform/r1-go-bridge owned paths.",
+      "done_when": "Keep previous71/71 scoped native, actual unprivileged UDP exact 0/1/32/33 plus repeated burst/starvation test, stop/late accepted/uncertain callback and buffer pointer no copied payload where observable; Native compiled-once Actions SOURCE/pass + worker evidence S/cursor-only H Governance. Explicit CAP_NET_RAW AF_PACKET positive RAW_RX_NOT_RUN unless truly observed, no OS privileges, physical/product/WindowsARM/500Mbps claims."
     }
   ]
 }
