@@ -2,6 +2,7 @@ name: R0 pinned Go LINK FEC wire and Rust MTU codec
 run-name: "M0|${{ github.sha }}|r0-link-fec-mtu"
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"

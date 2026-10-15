@@ -1,6 +1,6 @@
 # Actions 契约
 
-当前唯一可执行流程是 `.github/workflows/governance.yml`，scope 为治理与理论计算检查。没有产品构建或性能夹具，任何产品 PASS 都属于错误声明。产品夹具实施方案见 `architecture/TEST_PLAN.md`。
+当前已有治理、组件构建/功能回归和专项性能夹具。能力按当前 workflow、精确源码证据和 `r0/qualification-manifest.json` 判断；任何组件 PASS 均不自动升级为产品 PASS。产品测试方案见 `docs/architecture/TEST_PLAN.md`。
 
 ## 请求
 
@@ -37,3 +37,9 @@ manifest 包含实际 SOURCE、workflow ref、run ID/attempt、平台与产物�
 ## 阈值修改
 
 实现和验收允许带不得暗中同时改。需要修正模型或夹具时记录旧结论、新证据和受影响资格，之后使用新请求与精确 helper SHA 验证。文档更正不触发无关性能重跑。
+
+## 2026-10-15 功能 CI 合并
+
+`native-regression.yml` 接替九个重复的 R1/R2 native workflow：按依赖选组，一次 Release 构建，八个功能组复用有 SOURCE/平台/工具链/选项/依赖/二进制 hash 的产物。组与历史 workflow 映射及必跑 ID 在 `.governance/native-suites.json`。消费者只认可同 run/attempt 的构建，不取 latest；缺用例、非零退出、意外 ignore、残缺日志必须失败。新增用例不因总数变化失败。关键 ID 删改需要独立说明。此矩阵仅为功能测试，不是性能实验。
+
+旧新性能仍一场景、同 job/VM 顺序 AB/BA。不要以八组功能 CI 作为性能矩阵的先例。跨目标平台不共用二进制，跨源码不继承 PASS。旧结果保留原 workflow/run 身份。

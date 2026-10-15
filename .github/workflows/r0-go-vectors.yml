@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-go-vectors"
 
 on:
   push:
+    branches: [main]
     paths:
       - "r0/legacy_v3_v4_probe_test.go"
       - "r0/source-lock.json"

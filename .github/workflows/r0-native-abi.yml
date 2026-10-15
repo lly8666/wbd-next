@@ -3,6 +3,7 @@ run-name: "M0|${{ github.sha }}|r0-native-abi"
 
 on:
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"

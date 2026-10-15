@@ -1,0 +1,73 @@
+name: Native functional regression
+run-name: "M0|${{ github.sha }}|native-functional"
+on:
+  push:
+    branches: [main, governance/incremental-ci-20261015]
+    paths:
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "tools/native_*.py"
+      - ".governance/native-suites.json"
+      - ".github/workflows/native-regression.yml"
+permissions:
+  contents: read
+concurrency:
+  group: native-functional-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      groups: ${{ steps.plan.outputs.groups }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - id: plan
+        run: python tools/native_regression.py plan
+  build:
+    needs: plan
+    if: needs.plan.outputs.groups != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - run: rustup toolchain install 1.85.1 --profile minimal
+      - name: Compile selected packages once; retain exact binaries and source manifest
+        env:
+          GROUPS_JSON: ${{ needs.plan.outputs.groups }}
+        run: python tools/native_regression.py pack --groups "$GROUPS_JSON"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-build/
+          retention-days: 30
+          if-no-files-found: error
+  verify:
+    needs: [plan, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.plan.outputs.groups) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: native-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-build/
+      - name: Execute required functional cases; no performance qualification
+        env:
+          GROUP_NAME: ${{ matrix.group }}
+        run: python tools/native_regression.py consume --group "$GROUP_NAME"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-${{ matrix.group }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-results/
+          retention-days: 30
+          if-no-files-found: warn

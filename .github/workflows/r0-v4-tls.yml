@@ -3,11 +3,14 @@ run-name: "M0|${{ github.sha }}|r0-v4-real-tls"
 
 on:
   push:
+    branches: [main, governance/incremental-ci-20261015]
     paths:
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
       - "r0/source-lock.json"
       - "tools/r0_v4_tls.py"
+      - "tools/native_results.py"
+      - ".governance/native-suites.json"
       - ".github/workflows/r0-v4-tls.yml"
 
 permissions:
