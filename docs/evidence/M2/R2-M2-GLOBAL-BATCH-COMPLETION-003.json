@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-GLOBAL-BATCH-COMPLETION-003",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "e77e0ded7cc2c73c94bd4ab16a2e3cb5625f24f6",
+  "result": "PASS_R2_PURE_BATCH_NATIVE_ONLY_GOVERNANCE_RACE_NOT_PASS",
+  "scope": "Pure owner-local global repair quota allocator maps validated-shape ordered batch submissions <=32 over pre-reserved independently tracked TunnelKey/direction reservations; valid driver Accepted prefix, <=1 Uncertain slot and only proof-tagged NotAttempted suffix; unproven suffix conservatively held; duplicate/stale rejects before refunds.",
+  "code_paths": [
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/lib.rs"
+  ],
+  "preflight": {
+    "previous_head": "2ebd475956d65ab1ae05a46cff223c9970755e34",
+    "cursor_sequence": 7,
+    "checkpoint": "9a25ae179e8bfd050f25c289930d81af5b96b896",
+    "governance_run": 38602789109,
+    "governance_result": "success",
+    "main_role_assignment": "R2-M2-GLOBAL-BATCH-COMPLETION-003"
+  },
+  "first_source_failure": {
+    "source_sha": "5e1c9ab5b99f7ad407c117904d3bdc5f19c1c547",
+    "run_id": 38667220770,
+    "attempt": 1,
+    "conclusion": "failure",
+    "native_test_pass": 26,
+    "native_test_fail": 2,
+    "cause": "Fixture stepped fake monotonic clock from 1ns backwards to 0ns when registering the next direction, correctly returned ClockReversed",
+    "first_source_governance": {
+      "run_id": 38667220707,
+      "conclusion": "success"
+    }
+  },
+  "tests": {
+    "worker_native": {
+      "run_id": 38667347598,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116202206453,
+      "consume_job": 116202279015,
+      "runner": "ubuntu-24.04 x86_64 Rust 1.85.1",
+      "compilation": "ONCE_THEN_REUSE_BINARY",
+      "test_filter": "r2_",
+      "tests_passed": 28,
+      "tests_failed": 0,
+      "previous_r2_passed": 22,
+      "new_batch_passed": 6,
+      "binary_sha256": "d0e78fe9a3f925831e02c493a7b6c2b48486d6186f0bec29505c4a6fec2b930d",
+      "log_sha256": "9bbc1962fe79604b9d4ed20f4049cda3283b8c8f6c1eafa9d1d9c7f5c8ef6289",
+      "build_artifact": {
+        "id": 11942331461,
+        "digest": "sha256:057469e717814cc6af0e4413cf0064b2f4420e2592a7b1f3e0cb2c6b26664b51"
+      },
+      "result_artifact": {
+        "id": 11943310557,
+        "digest": "sha256:e4b2ba350ffb49443ec6808431a79ee5edee10792226495cda44c8c937e04648"
+      }
+    },
+    "historic_g2": {
+      "run_id": 38667347511,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_artifact_id": 11942516434,
+      "result_artifact_id": 11943250787,
+      "digest": "sha256:fb8ead9b305b324562f70e350fc6ca19727f2be02f04691af0cc2d2ec7c2ab19"
+    },
+    "r0_static": {
+      "run_id": 38667347492,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 11943290496,
+      "digest": "sha256:b3d2f497d1529428eaff979947cdcecd3e1773af0ca991a14b49fdeb19bf4169"
+    },
+    "source_governance": {
+      "run_id": 38667347494,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116202205850,
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "artifact_id": 11942241562,
+      "digest": "sha256:2b19d94e01554484012de2f7518ae13a177ac7dceaab01608e8ff5592a9d1ebb"
+    }
+  },
+  "tests_added": [
+    "r2_batch_zero_one_all_accepted_and_no_peer_receipt",
+    "r2_batch_32_mixed_client_directions_prefix_uncertain_proven_suffix",
+    "r2_batch_0_1_32_33_shape_and_duplicates_fail_closed",
+    "r2_batch_unproven_suffix_never_falsely_notsent_refunds",
+    "r2_batch_epoch_cutover_old_notsent_refund_and_grant_expiry",
+    "r2_batch_retired_client_fails_closed_and_no_cross_tunnel_refund"
+  ],
+  "not_verified": [
+    "M0/M4 actual validated driver non-attempt proof and ordered slot provenance",
+    "real sendmmsg/AF_PACKET/Windows I/O",
+    "race with async completion and client shutdown in engine",
+    "CPU/performance/physical/product",
+    "Go V4 live admission"
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "go_v4": "DISABLED",
+  "recovery_engine_ready": false,
+  "next_action": "Confirm separate evidence S Governance and cursor-only H; stop this M2 atom. M0 composes actual M4 driver proof adapter."
+}
