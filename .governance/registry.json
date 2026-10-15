@@ -18,8 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "集成与治理：按当前角色分支 cursor 推进；本轮分配详见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md。",
-      "done_when": "当前任务满足 cursor 完成条件，精确源码证据、未测范围与交接齐全；跨模块接口由 M0 集成。"
+      "goal": "集成与治理；当前分配 R0-M0-V4-PROTECTED-OWNER-COMMIT-023。细节见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md；若工作分支 cursor 仍是上轮任务，先接续本分配，不重复旧 done_when。",
+      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
+      "assigned_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
     },
     {
       "id": "M1",
@@ -44,8 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "运行时与内存：按当前角色分支 cursor 推进；本轮分配详见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md。",
-      "done_when": "当前任务满足 cursor 完成条件，精确源码证据、未测范围与交接齐全；跨模块接口由 M0 集成。"
+      "goal": "运行时与内存；当前分配 R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010。细节见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md；若工作分支 cursor 仍是上轮任务，先接续本分配，不重复旧 done_when。",
+      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
+      "assigned_task": "R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010"
     },
     {
       "id": "M2",
@@ -68,8 +70,9 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "恢复与反馈：按当前角色分支 cursor 推进；本轮分配详见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md。",
-      "done_when": "当前任务满足 cursor 完成条件，精确源码证据、未测范围与交接齐全；跨模块接口由 M0 集成。"
+      "goal": "恢复与反馈；当前分配 R2-M2-RACK-POSITIVE-WITNESS-INDEX-008。细节见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md；若工作分支 cursor 仍是上轮任务，先接续本分配，不重复旧 done_when。",
+      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
+      "assigned_task": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008"
     },
     {
       "id": "M3",
@@ -92,8 +95,9 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "编码与数据保护：按当前角色分支 cursor 推进；本轮分配详见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md。",
-      "done_when": "当前任务满足 cursor 完成条件，精确源码证据、未测范围与交接齐全；跨模块接口由 M0 集成。"
+      "goal": "编码与数据保护；当前分配 R1-M3-CPU-PROBE-SAME-WINDOW-015。细节见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md；若工作分支 cursor 仍是上轮任务，先接续本分配，不重复旧 done_when。",
+      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
+      "assigned_task": "R1-M3-CPU-PROBE-SAME-WINDOW-015"
     },
     {
       "id": "M4",
@@ -117,8 +121,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "平台与产品接入：按当前角色分支 cursor 推进；本轮分配详见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md。",
-      "done_when": "当前任务满足 cursor 完成条件，精确源码证据、未测范围与交接齐全；跨模块接口由 M0 集成。"
+      "goal": "平台与产品接入；当前分配 R1-M4-UDP-RX-BURST-STOP-010。细节见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md；若工作分支 cursor 仍是上轮任务，先接续本分配，不重复旧 done_when。",
+      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
+      "assigned_task": "R1-M4-UDP-RX-BURST-STOP-010"
     }
   ]
 }

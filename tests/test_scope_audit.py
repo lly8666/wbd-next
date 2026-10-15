@@ -83,3 +83,16 @@ class IncrementalScope(unittest.TestCase):
         for response in ({"status": "ahead", "total_commits": 2, "commits": [{"sha": B}] * 2},
                          {"status": "ahead", "total_commits": -1, "commits": []}):
             with self.assertRaises(g.ContractError): s.complete_delta(response, 64)
+
+    def test_coordination_markdown_is_not_dispatch_json(self):
+        class Notes:
+            def get(self, endpoint):
+                self.assert_endpoint = endpoint
+                return {"type": "file"}
+            def file(self, *args):
+                raise AssertionError("Markdown must not be parsed as a JSON dispatch intent")
+        notes = Notes()
+        s.check_role_metadata(notes, {"id": "M1"}, B,
+                              {"evidence_refs": [], "context_refs": [],
+                               "open_requests": [".governance/workstreams/M1/requests/dependency.md"]})
+        self.assertIn("dependency.md", notes.assert_endpoint)

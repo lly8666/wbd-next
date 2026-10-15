@@ -32,3 +32,5 @@
 方案入口为`docs/architecture/README.md`；可直接施工的接口/状态/反例在`docs/architecture/modules/README.md`。先读00公共契约，再按角色只读当前模块和直接依赖。角色是否激活以远端 registry 为准；不要重复启动已经完成的初始化，也不要自行占用模块。不要一次加载全部施工说明和历史。读取当前 project 和角色 cursor 判断已实现/已测范围；模型、治理、组件 PASS 均不等于产品 PASS。
 
 治理 v2：共享范围审计使用主线 `Central worker scope audit` 的精确 SOURCE 收据，不复制检查器到 worker。详见 `docs/GOVERNANCE.md`；历史 Governance 红灯须区分旧审计边界失败与真正测试失败，不能一概覆盖。
+
+当前分配以 main registry 的 `assigned_task` 为准；工作分支 cursor 可能仍记录上一轮。两者不同时读取 registry 指向的本轮决策，保留旧结果后开始已授权的新任务，勿因旧 cursor 的“等待分配”停住。

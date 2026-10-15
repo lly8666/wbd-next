@@ -60,6 +60,11 @@ def check_role_metadata(api, role, source, cursor):
         item = api.get(f"contents/{quote(ref, safe='/')}?ref={source}")
         g.need(item.get("type") == "file", "missing cursor context reference")
     for ref in cursor["open_requests"]:
+        if ref.endswith(".md"):
+            # Existing G2 coordination notes are not Actions dispatch intents.
+            item = api.get(f"contents/{quote(ref, safe='/')}?ref={source}")
+            g.need(item.get("type") == "file", "missing coordination request")
+            continue
         request = api.file(ref, source)
         g.validate_request(request)
         g.need(request["role_id"] == role["id"] and request["assignment_epoch"] == role["assignment_epoch"],
