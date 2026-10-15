@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RECEIPT-REVERSE-SCOPE-005",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6f19c7d6e6d14c755e3eb657845a8d47718c8f71",
+  "result": "PASS_PURE_SCOPED_R2_38_OF_38_NATIVE__CODE_GOVERNANCE_FAILED_MAIN_MOVED",
+  "scope": "Session-pinned reverse receipt route and bounded per-slot process-global repair batch grant settlement: strict TunnelKey/generation, outbound and reverse direction/lane, nonzero 16B logical tunnel_epoch, control record PN and positive DATA bitmap PN intervals; stale, forward, cross-lane, old-epoch and misrouted batch rejects with no false refund or ACK.",
+  "code_paths": [
+    "crates/wbd-recovery/src/receipt.rs",
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/lib.rs"
+  ],
+  "previous_handoff": {
+    "head_sha": "43c0e985a265c701e51354d7d05a0bb885d1457f",
+    "cursor_sequence": 9,
+    "checkpoint_sha": "5c652c22ce2c4953226d6370e3886cac07202f74",
+    "h_governance_run_id": 38669865546,
+    "h_governance": "success",
+    "status": "CLEAN"
+  },
+  "tests": {
+    "worker_native": {
+      "run_id": 38674780276,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 116225786735,
+      "consume_job_id": 116225881366,
+      "compiled_once": true,
+      "filter": "r2_",
+      "passed": 38,
+      "failed": 0,
+      "prior_passed": 33,
+      "new_passed": 5,
+      "binary_sha256": "47e7831f5f410e529d668ba2f6166b50d60a835017e89cdae8918c18939bad23",
+      "log_sha256": "c3c8131f548e23e6f4f8ad70a884486830d606d686f96332f8193beb561321e9",
+      "build_artifact": {
+        "id": 11945666570,
+        "digest": "sha256:8f4042e266362aafd1275c869c75e055d3b0c1835006bc1999bcaa000a9eeede"
+      },
+      "result_artifact": {
+        "id": 11945404412,
+        "digest": "sha256:a6102979d2353cfc8777069164c101a43cafa222902c6041f096c470c29c88ab"
+      }
+    },
+    "g2_scoped_bootstrap": {
+      "run_id": 38674780139,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 116225786152,
+      "consume_job_id": 116225930164,
+      "result_artifact_id": 11945706527,
+      "digest": "sha256:8071ac48482c369ae24535a6fe9f04fdf1c4acc4bc0006bae4e3245be795bc59"
+    },
+    "r0_static": {
+      "run_id": 38674780180,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 116225786126,
+      "artifact_id": 11944719856,
+      "digest": "sha256:93d8ced18204e1bc2ad57cf812619118360a7593765925735c3403bd43930590"
+    },
+    "source_governance": {
+      "run_id": 38674780251,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116225786513,
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "artifact_id": 11945389517,
+      "digest": "sha256:bedb8099860778610d114f12d80c8dc2232d05f3cbcf51fc302c400a1f01c60f"
+    }
+  },
+  "new_tests": [
+    "r2_scope_forward_stale_epoch_rotation_and_pn_fail_before_receipt",
+    "r2_scope_ack_before_grant_and_old_report_never_forged",
+    "r2_scope_four_clients_directions_mixed_batch_rejects_cross_scope",
+    "r2_scope_epoch_rollover_departure_old_notsent_and_uncertain_debit",
+    "r2_scope_32_33_bounded_registration_and_old_callback_fail_closed"
+  ],
+  "trust_note": "Plain ReceiptOpenFacts values and ReceiptRouteScope::checked are NOT cryptographic evidence or an authenticated session constructor. M0 alone obtains lane/direction/epoch/PN facts from trusted Go cold-session export, actual M3 AEAD/PN replay and session lookup and must use new strict APIs rather than old unscoped entrypoints. No kernel accepted result implies peer delivery; definite NotSent requires independently proven driver non-attempt.",
+  "not_verified": [
+    "Go V4 authenticated cold-session to Rust actual trusted exporter",
+    "real M3 cryptographic open and PN replay of the incoming receipt carrier",
+    "M0 engine wiring to scoped APIs and actual M4 syscall result provenance",
+    "native Win/ARM, product, sustained 500Mbps/p99/CPU/RSS and physical"
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "go_v4": "DISABLED",
+  "recovery_engine_ready": false,
+  "next_action": "Governance on evidence S and cursor-only H; stop M2 scoped atom. M0 owns actual trust exporter, crypto, sender and integration qualification."
+}
