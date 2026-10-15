@@ -264,7 +264,8 @@ fn frame(cookie:u32)->[u8;WIRE]{
     ip[6..8].copy_from_slice(&0x4000u16.to_be_bytes());
     ip[8]=64;ip[9]=6;ip[12..16].copy_from_slice(&IP);
     ip[16..20].copy_from_slice(&IP);
-    ip[10..12].copy_from_slice(&checksum(ip).to_be_bytes());
+    let header_checksum=checksum(ip);
+    ip[10..12].copy_from_slice(&header_checksum.to_be_bytes());
     tcp[0..2].copy_from_slice(&SRC_PORT.to_be_bytes());
     tcp[2..4].copy_from_slice(&DST_PORT.to_be_bytes());
     tcp[4..8].copy_from_slice(&0x10203040u32.to_be_bytes());
