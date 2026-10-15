@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-RELEASE-G2-REVIEW-021",
+  "main_source_last": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+  "result": "M0_SHARED_G2_QUALIFIED__M3_DEBUG_98_PASS__RELEASE_CPU_UNQUALIFIED__M3_H_GOVERNANCE_BLOCKED",
+  "why_now": "User prioritised M3 acceptance. M3 own CODE 88a12027 Debug 98/98 successful but Release NOT_RUN, own governance failures at CODE/S/H. M0 exact source-pinned release runner and second bounded checker mirror needed. Real first Release run exposed both runner time cap and incorrect CPU measurement scope.",
+  "authority": {
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "m0_prior_sequence": 56,
+    "m0_prior_H": "bbcf12ce93de6ee2ad10812df31be4942c885bcc",
+    "prior_H_governance_run": 38683476593,
+    "main_branch": "main",
+    "M3_branch": "work/m3-r1-codec",
+    "M3_current_head": "5eafc5065c5ee1b0d6d67610a458e970e08f3d75"
+  },
+  "m3_owner": {
+    "task": "R1-M3-FEC-STEADY-COST-RELEASE-014",
+    "worker_code_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+    "worker_native_debug_run": 38682956912,
+    "worker_debug_passed": 98,
+    "worker_debug_failed": 0,
+    "worker_governance_code_run": 38682956995,
+    "worker_governance_evidence_run": 38683212797,
+    "worker_governance_H_run": 38683352534,
+    "worker_governance_last_conclusion": "failure",
+    "worker_H_sequence": 17,
+    "worker_H": "5eafc5065c5ee1b0d6d67610a458e970e08f3d75",
+    "worker_code_accepted_for_release": false
+  },
+  "m0_changes": [
+    {
+      "code": "6558aef014c4692ec5d3bbc713bd968adff4c6cf",
+      "scope": "pinned M3 source Release compiled-once 24-row same-job/VM test workflow"
+    },
+    {
+      "code": "0a53c44153f6f1dc4574d2988ea959130f12e13a",
+      "scope": "exact M3 second checker sync and max98 full ancestry, ten adversarial negatives"
+    },
+    {
+      "code": "93a3110cc6dd979dacc75afd9fbbee941d18f043",
+      "scope": "CI-only 14→22 minute diagnostic retry, same M3 source and measurement input"
+    },
+    {
+      "code": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+      "scope": "observed CPU scope defect, exact M3 worker correction slot max99 full ancestry, no widened root permission"
+    }
+  ],
+  "governance_runs": [
+    {
+      "source": "6558aef014c4692ec5d3bbc713bd968adff4c6cf",
+      "workflow": "governance",
+      "run_id": 38684106429,
+      "result": "success"
+    },
+    {
+      "source": "0a53c44153f6f1dc4574d2988ea959130f12e13a",
+      "workflow": "governance",
+      "run_id": 38684596431,
+      "result": "success"
+    },
+    {
+      "source": "0a53c44153f6f1dc4574d2988ea959130f12e13a",
+      "workflow": "g2-m3-ancestry",
+      "run_id": 38684596447,
+      "result": "success",
+      "activation_commits": 95,
+      "scope_commits_checked": 68,
+      "main_integration_commits_exempt": 27,
+      "artifact_id": 11949815305,
+      "digest": "sha256:78ae4c1f423e4f5573094b88667b5107feffbc1c958966341c8439bfc33bae5d"
+    },
+    {
+      "source": "93a3110cc6dd979dacc75afd9fbbee941d18f043",
+      "workflow": "governance",
+      "run_id": 38685587204,
+      "result": "success"
+    },
+    {
+      "source": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+      "workflow": "governance",
+      "run_id": 38685996632,
+      "result": "success",
+      "artifact_id": 11950770338,
+      "digest": "sha256:d191801dc737fac92bc0cdd58d75ab22b31c3b8c974adfd36b45f8b1722cd510"
+    },
+    {
+      "source": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+      "workflow": "g2-m3-ancestry",
+      "run_id": 38685996539,
+      "result": "success",
+      "activation_commits": 95,
+      "artifact_id": 11949906783,
+      "digest": "sha256:2919222c9131af5c6cff3aaa48031b4c208c5d1c266ec1a950879d7ae26a405d"
+    }
+  ],
+  "release_first": {
+    "source_m0": "6558aef014c4692ec5d3bbc713bd968adff4c6cf",
+    "source_m3": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+    "run_id": 38684106420,
+    "attempt": 1,
+    "conclusion": "cancelled",
+    "build_job": "success",
+    "measure_job": "cancelled_due_to_14_min_limit",
+    "profile": "release",
+    "rust_version": "1.85.1",
+    "binary_sha256": "1d04c7c733e68ca768aa9dd329add5ec393285441c44272ec97f4e7070d584c8",
+    "build_artifact_id": 11949252039,
+    "build_digest": "sha256:d007fd7594fb5121e772211725886e4da033142fa565292bbd7dda8d1fbc1d3f",
+    "result_artifact_id": 11949589223,
+    "result_digest": "sha256:9bb315a4013c5a6c1f0e870dd10e47cde1e333c4629f43814ca1b1d5d58685cc",
+    "raw_partial_test_log_sha256": "3f4ff8db9e1304a1bb162d05eff97de8b29a7c45b0b574ac466978370511f4f0",
+    "release_rows_observed": 21,
+    "release_rows_required": 24,
+    "full_test_success": false
+  },
+  "measurement_defect": {
+    "file": "crates/wbd-codec/src/fec_p0_cost_tests.rs",
+    "function": "measure_reuse_leg",
+    "observation": "20 of 21 rows have thread_cpu_s > active_wall_s * 1.02, with 192B steady_aead CPU/wall up to about1.71",
+    "cause": "thread_cpu_ticks reads/parses procfs before Instant::now and after elapsed each 64-record batch; CPU delta includes probe CPU outside active wall; different batch counts give bias by leg speed",
+    "invalid_metrics": [
+      "per-thread CPU seconds for active wall window",
+      "cpu_us_per_record",
+      "fresh_over_steady_cpu_ratio"
+    ],
+    "limited_usable": "batch-average active wall p50/p99 only scoped P0, not packet latency; no complete 24-row result"
+  },
+  "release_second": {
+    "m0_source": "93a3110cc6dd979dacc75afd9fbbee941d18f043",
+    "m3_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+    "run_id": 38685587150,
+    "attempt": 1,
+    "status": "in_progress",
+    "conclusion": null,
+    "build_artifact_id": 11949324855,
+    "build_digest": "sha256:257d0b03a52db09fdee811ed1cd0e28819b3a79e372a434df0b3182def1da1fc",
+    "goal": "complete same-source 24 rows without mixing with first failure; even SUCCESS would not qualify per-batch CPU due known metric defect"
+  },
+  "m3_future_sync": {
+    "approved_exact_parent": "5eafc5065c5ee1b0d6d67610a458e970e08f3d75",
+    "sole_path": "tools/worker_scope_ci.py",
+    "required_main_blob": "817934b16c6e088069ad9b4c265c93daacda7759",
+    "max_ancestry_commits": 99,
+    "current": 95,
+    "authorized_sequence": [
+      "only one exact tool mirror",
+      "one M3-owned CPU probe fix code S",
+      "one M3 evidence S",
+      "one M3 cursor-only H"
+    ],
+    "full_history_required": true,
+    "no_generic_root_permission": true
+  },
+  "m2_independent": {
+    "head": "901abe61d3c45dc6c6a34467fac3b6e384ab4295",
+    "cursor_sequence": 13,
+    "native_code": "25642589f0feb12b44304fd21842c507a9314d35",
+    "native_r2_tests": 44,
+    "governance_refresh_run": 38683609942,
+    "governance_evidence_run": 38683931339,
+    "governance_H_run": 38684127224,
+    "worker_governance_accepted": true,
+    "main_integration": false
+  },
+  "not_qualified": [
+    "M3 release per-thread CPU cost/fresh steady ratio",
+    "M3 own final H governance",
+    "production FEC V4 origin",
+    "real protected Go→Rust generation admission",
+    "AF_PACKET real live",
+    "ISA-L",
+    "Windows/ARM native",
+    "P1–P3 500Mbps",
+    "physical"
+  ],
+  "next_action": "On next M0 recovery, resolve exact already-dispatched Release run38685587150 before reruns; M3 role must follow exact approved second root checker mirror and make one corrected CPU sampling code commit, then native release measurement under a new M0 source-locked workflow and own evidence S/H Governance. Independent M0 next production-critical path remains authentic Go V4→Rust generation owner B01–B04, OFF until verified."
+}
