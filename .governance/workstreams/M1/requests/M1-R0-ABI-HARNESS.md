@@ -32,3 +32,7 @@ At exact M1 SOURCE `0979314cacf8931a90840ad312dd50e9e2777d04` the native worker 
 
 ## R1-M1-READY-GENERATION-RELEASE-008 shared root harness recurrence
 SOURCE `fc023fba5bc7c51d07868a3d64d5356596130f75` native [38682808748](https://github.com/lly8666/wbd-next/actions/runs/38682808748) **75/75 PASS**, including source-locked release TX/RX benchmark. Root ABI [38682808744](https://github.com/lly8666/wbd-next/actions/runs/38682808744) consumer **FAIL** because old worker-branch shared script matches unfiltered literal `"3 passed"`; its Rust unit binary in fact returned rc0 with **77 passed, 1 ignored**. M0 to synchronize root selector; M1 cannot edit shared tools/workflows. Keep root R0 workflow FAIL.
+
+## Task R1-M1-OWNER-LOAN-STOP-INTEGRATION-009
+
+Exact source `39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed` worker-native [38688812162](https://github.com/lly8666/wbd-next/actions/runs/38688812162) 80/80 r1_ PASS, plus 3 unrelated R0 tests filtered. Root R0 native ABI [38688812106](https://github.com/lly8666/wbd-next/actions/runs/38688812106) **FAIL** although Rust binary rc0 **82 passed, 1 ignored**, due to old worker branch `tools/r0_abi_bundle.py` matching `"3 passed"` in unfiltered test output. Request remains M0-owned; no M1 root tool/workflow edit.

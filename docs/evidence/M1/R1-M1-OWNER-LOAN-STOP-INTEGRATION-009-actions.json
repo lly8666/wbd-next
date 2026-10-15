@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M1 own runtime/memory owner-scoped Stop, ready loan and Arena delayed returns; source-attested native unit tests only. No real driver, auth origin, performance product or full CI claim.",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38688812162,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38688812162",
+    "build_job": 116269734244,
+    "consume_job": 116269826323,
+    "runner": "Ubuntu 24.04 Linux x86_64",
+    "toolchain": "rustc 1.85.1",
+    "build_compiled_once": true,
+    "passed": 80,
+    "failed": 0,
+    "previous_r1": 75,
+    "new_loan_stop_r1": 5,
+    "filtered_r0_tests": 3,
+    "result_artifact_id": 11951250903,
+    "build_artifact_id": 11951385151,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38688812162/artifacts/11951250903",
+    "result_zip_sha256": "f99ee64357e8db5b63412818e02da161807661ca1b023584595905e0964de6a1",
+    "result_json_sha256": "8d1b09babdd252928f99f8d2a497958a295bc58643cc9b3a3e3426156aca37cb",
+    "test_log_sha256": "99aa8a1b73212d4be8aa08111d2d0c3ae420520b6413b6c612ea7a71fe3293d3",
+    "debug_test_binary_sha256": "561dfe6a03999280f7a64181a56a790a699ba8a71b695dde3f283e33604ba928",
+    "direct_artifact_review": "Downloaded actual GitHub result ZIP to container and independently verified ZIP+result.json+test.log SHA256, exact SOURCE, run identity, unique 80 names and all five runtime::loan_stop::r1_owner_loan_stop_ cases; verified structured nested release observation rows."
+  },
+  "new_tests": [
+    "r1_owner_loan_stop_idempotent_cancels_only_undispatched_33_tail",
+    "r1_owner_loan_stop_held_frozen_arc_last_clone_after_batch_fence",
+    "r1_owner_loan_stop_old_generation_33_plus_new_first_fresh",
+    "r1_owner_loan_stop_bounded_full_return_backlog_two_generations",
+    "r1_owner_loan_stop_restart_aba_stale_token_cannot_reenter"
+  ],
+  "scoped_source_proof": {
+    "idempotent_stop": "ScopedOwner::stop now preserves initial cancellation count and same outstanding loan ledger on repeated identical token; it still rejects fresh offers, dispatch inspection and stale other generation tokens. Counter reset on rotation.",
+    "delegated_lifetime": "LoanBatch counts only TX/RX batch leases; FrozenRecord external Arc clone survives Stop, batch drop and arena stopping until clone final drop posts return. Distinguish batch fence from full arena loan count.",
+    "two_generation_33": "Old 33 TX + 33 RX split 32+1, retains immutable clone and full old loan returns; old callbacks rejected; new fresh ahead of repair while old loans remain; checked old ready batches rejected in current generation.",
+    "bounded_return_queue": "Arena 96 simultaneous old/new unique frozen or RX loans, return channel capacity one, remaining 95 bounded fallback returns across two thread drops; all 96 exactly reclaimed after stop.",
+    "aba_and_nocopy": "Numeric-identical restarted owner token rejected due Arc identity, new ready fresh proceeds, immutable payload bytes.as_ptr identical between FrozenRecord clone and original, not payload re-encryption/copy."
+  },
+  "nested_existing_release_regression": {
+    "status": "PASS_SCOPED_COMPONENT",
+    "release_binary_sha256": "5ff2a77c6854bb14792a4ff786a61b8c883869932c00fae68a9d6a0a812cde6f",
+    "hosted_runner": "GitHub Actions 1000093567",
+    "compiled_once": true,
+    "leg_count": 3,
+    "min_each_wall_s": 1.100001,
+    "tx_ready_p99_ns_each": [
+      280,
+      291,
+      281
+    ],
+    "rx_ready_p99_ns_each": [
+      1382,
+      1442,
+      1432
+    ],
+    "cpu_s_each": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "limitation": "Inherited R1-M1-READY-GENERATION-RELEASE-008 test still runs release source-exact; CPU includes arena setup and is unisolated, not evidence of product throughput."
+  },
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38688812067,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38688812155,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38688812043,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38688812032,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38688812106,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_root_blocker": {
+    "owner": "M0",
+    "status": "FAIL",
+    "run_id": 38688812106,
+    "reason": "Branch-local old M0-owned unfiltered R0 harness rejects real Rust ABI rc0 and 82 passed, 1 release benchmark ignored, due historical literal '3 passed' selector; workflow remains FAIL.",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+  },
+  "not_run": {
+    "trusted_Go_V4_origin": "NOT_RUN",
+    "real_driver_lease": "NOT_RUN",
+    "kernel_completion": "NOT_RUN",
+    "real_AF_PACKET": "NOT_RUN",
+    "production_500Mbps": "NOT_RUN",
+    "end_to_end_latency": "NOT_RUN",
+    "isolated_CPU": "NOT_RUN",
+    "native_Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "Go_V4": "DISABLED",
+    "engine_abi_features": 0
+  }
+}
