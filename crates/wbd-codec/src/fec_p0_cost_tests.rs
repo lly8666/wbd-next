@@ -220,17 +220,25 @@ fn r1_p0_postauth_multiscope_adversarial_bounded_retirement_isolation() {
     assert_eq!(ga.fec_stats().compact, 0);
     assert_eq!(gb.fec_stats().heavy, 1);
     assert_eq!(gb.stats().delivered_systematic, 1);
-    // A brand-new valid PN for an old already-retired FEC block must fail
-    // the BlockID floor without reviving heavy capacity or contaminating B.
+    // A fresh authenticated PN=16 carrying retired BlockID=1 must be
+    // rejected AFTER actual AEAD and replay, not merely as an old PN replay.
     let mut sender = LaneTxCrypto::new_for_suite(keys(a.seed), MAX_WIRE_LEN, SUITE).unwrap();
-    let mut stale = Vec::new();
-    for _ in 0..=RECORDS_PER_SCOPE {
-        let frame = &a.sealed[0][14..a.sealed[0].len()-16]; // ciphertext is NOT a FEC frame
-        black_box(frame);
+    let mut old_block = FecTxOwner::new(1, 10_000).unwrap();
+    let old_frame = old_block.submit(&vec![a.seed; 192], 0, 4, 1500, false)
+        .unwrap().systematic.remove(0);
+    for _ in 0..RECORDS_PER_SCOPE {
+        let mut burn = vec![0; FIXED_WIRE_OVERHEAD + old_frame.len()];
+        burn[14..14 + old_frame.len()].copy_from_slice(&old_frame);
+        sender.seal_in_place(0, &mut burn, old_frame.len(), 0).unwrap();
     }
-    // The existing replay case above is the only resubmitted PN; never
-    // pretend to mint an authenticated stale wire from ciphertext.
-    black_box(&mut sender);
+    let mut late = vec![0; FIXED_WIRE_OVERHEAD + old_frame.len()];
+    late[14..14 + old_frame.len()].copy_from_slice(&old_frame);
+    sender.seal_in_place(0, &mut late, old_frame.len(), 0).unwrap();
+    assert_eq!(
+        ga.accept_record_on_lane(&mut late, LANE, a.tunnel, 14_001),
+        Err(AdmissionError::BlockId(IdError::Retired))
+    );
+    assert_eq!(gb.stats().delivered_systematic, 1);
 }
 #[cfg(target_os = "linux")]
 fn thread_cpu_ticks() -> u64 {
