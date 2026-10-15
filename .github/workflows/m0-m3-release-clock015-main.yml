@@ -175,7 +175,7 @@ jobs:
               n=int(r["records"])
               total_wall=int(r["same_window_wall_ns"])
               total_cpu=int(r["same_window_cpu_ns"])
-              assert wc>0 and n==wc*128*64, (k,"missing real records")
+              assert wc>0 and n==wc*3072*64, (k,"missing real records")
               assert total_wall>=1125000000 and float(r["active_wall_s"])>=1.125
               assert int(r["sample_count"])==len(bysample[k])
               assert int(r["p50_batch_avg_ns_per_record"])<=int(r["p99_batch_avg_ns_per_record"])

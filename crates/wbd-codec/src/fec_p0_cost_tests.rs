@@ -558,7 +558,9 @@ fn measure_reuse_leg(
     // substantially smaller than the strict 2% consistency margin. All
     // fresh ciphertext is still prepared OUTSIDE the paired active interval.
     // Native trace MUST continue to reject any CPU>wall*1.02 window.
-    const BATCHES_PER_WINDOW:usize=3072;
+    // Preserve fast Debug correctness; Release still uses long scheduler
+    // accounting windows to avoid the observed 3ms CPU/wall misalignment.
+    let batches_per_window:usize=if cfg!(debug_assertions){128}else{3072};
     let mut active_ns=0u128;
     let mut cpu_total=0u128;
     let mut cpu_valid=true;
@@ -570,15 +572,15 @@ fn measure_reuse_leg(
     while active_ns<target.as_nanos() || count==0{
         let staged=match leg{
             ReuseCostLeg::SteadyAead=>Some(
-                (0..BATCHES_PER_WINDOW).map(|_|prepare_reused(aead,shard_len))
+                (0..batches_per_window).map(|_|prepare_reused(aead,shard_len))
                     .collect::<Vec<_>>()),
             ReuseCostLeg::SteadyFec=>Some(
-                (0..BATCHES_PER_WINDOW).map(|_|prepare_reused(fec,shard_len))
+                (0..batches_per_window).map(|_|prepare_reused(fec,shard_len))
                     .collect::<Vec<_>>()),
             _=>None,
         };
         let clock=PairedClock::begin();
-        for i in 0..BATCHES_PER_WINDOW{
+        for i in 0..batches_per_window{
             let started=Instant::now();
             match leg{
                 ReuseCostLeg::FreshAead=>batch(Mode::AeadOnly,source,scratch),
