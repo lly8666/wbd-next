@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-POST-AUTH-FEC-MAIN-013",
+  "branch": "main",
+  "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+  "result": "PASS",
+  "artifact_verified": true,
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "assignment": {
+    "source_sha": "e6edc9a2095942164de9c928a617d356b4c5efae",
+    "decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave3.md",
+    "governance_run": 38672746829,
+    "g2_run": 38672746821,
+    "roles": [
+      "M1 R1-M1-STOP-LOAN-GENERATION-006",
+      "M2 R2-M2-RECEIPT-REVERSE-SCOPE-005",
+      "M3 R1-M3-FEC-MULTISCOPE-012",
+      "M4 R1-M4-AF_PACKET-PREFLIGHT-006"
+    ],
+    "worker_sessions_not_started_by_assignment": true
+  },
+  "worker_origin": {
+    "code_source": "42382c60ee51689d49c480411af3df2acc9e9a7d",
+    "native_run": 38669822925,
+    "native_tests": "85/85",
+    "cursor_H": "f56a6720887bac7471a1e29b24b55b8d25bfb73d",
+    "H_governance": 38670975617
+  },
+  "same_source_actions": [
+    {
+      "name": "governance",
+      "run_id": 38673082373,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-static-qualification-audit",
+      "run_id": 38673082711,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-ipv4-tcp-native",
+      "run_id": 38673082117,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-linux-kernel-batch-native",
+      "run_id": 38673082376,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "g2-scoped-bootstrap-native",
+      "run_id": 38673082244,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-wake-stop-native",
+      "run_id": 38673082458,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-fec-retire-native",
+      "run_id": 38673082408,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-normal-off-replay",
+      "run_id": 38673082282,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r2-auth-receipt",
+      "run_id": 38673082172,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-record-auth-replay",
+      "run_id": 38673082193,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-record-wire-framing",
+      "run_id": 38673082181,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-link-fec-mtu",
+      "run_id": 38673082221,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-wire-codec",
+      "run_id": 38673082385,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-fec-on-native",
+      "run_id": 38673082321,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-native-abi",
+      "run_id": 38673082125,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-cross-abi",
+      "run_id": 38673082179,
+      "source_sha": "f2ce2d7602a38d6cb494560f8a095cb6270a99f3",
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "native": {
+    "auth": {
+      "run_id": 38673082193,
+      "tests": "85/85",
+      "binary_sha256": "ae471fe0f6fd0115840b3a25214f239c5d3c0c96785b784b8bd6d48bfeedbc90",
+      "result_digest": "sha256:c658553746c99053cd40772898b9d09fbbd2a87e24a29d1524ea38be0d41a7f6"
+    },
+    "retire": {
+      "run_id": 38673082408,
+      "tests": "85/85",
+      "binary_sha256": "ae471fe0f6fd0115840b3a25214f239c5d3c0c96785b784b8bd6d48bfeedbc90",
+      "result_digest": "sha256:8cad4265fe460d175351a0b6810669855aec42f0ecb45898b5c60d24c1dbfb43"
+    },
+    "kernel": {
+      "run_id": 38673082376,
+      "platform": "42/42",
+      "main": "6/6",
+      "integration_binary_sha256": "12908c96f72c6f2eb45fcf335640bfe55066b4ebbc650b5b6169d18df7d31857",
+      "result_digest": "sha256:6fb6212d59c56cca0a280c99cad596c42b4215760a4c57f0d299bda1634d80dc"
+    }
+  },
+  "verified": "M3 real post-AEAD PN FEC typed scope gate imported with positive origin only inside cfg(test). Main Linux UDP kernel sendmmsg/recvmmsg full TCP record with absent external origin denies before AEAD/PN and FEC mutation; separate verified replay decoder still authenticates original PN0.",
+  "unverified": [
+    "Production Go V4 origin exporter",
+    "Raw AF_PACKET",
+    "native Windows ARM runtime",
+    "performance and physical",
+    "product"
+  ],
+  "next_action": "M0 independent main work on verified cold Go V4 origin boundary or import completed M1/M2 owner work under exact source; no product activation."
+}
