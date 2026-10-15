@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 R1-M0-M1-READY-MAIN-019 scoped owner import complete: accepted worker M1 SOURCE0979314 71/71, final main CODE 42dc35d1b2dd926431a39f162c67e7a11f5c2478 all ten same-SOURCE Actions SUCCESS, R1 owner 71/71 run38681801437 with build/consume SHA256, native ABI38681801261 SUCCESS, cross build inspect38681801479 only, historical first CODE090b14 CI uniqueness old29 failure38681640963 preserved. Evidence docs/evidence/M0/R1-M1-generation-ready-main-019.json. OWNER_RUNTIME_READY=false. M2 G2 NOT_ACCEPTED; worker wave5 unchanged. NEXT M0 authentic pinned protected GoV4 ColdSnapshot→Rust owner Prepare/Detach/Commit gate; no product/500Mbps/raw/live/physical/WinARM native qualification.",
+  "next_decision": "M0 R0-M0-GO-V4-PROTECTED-COLD-FREEZE-020 final CODE 81703542068158414654a05aa82df0a2718052e1, actual pinned protected Go ColdSnapshot immutability fixed; four same CODE SOURCE Actions: Go10/10 run38683175022, Go control38683175032, real Go ephemeral/Rust native4/4 38683175062, Governance38683175016 all SUCCESS. New evidence docs/evidence/M0/R0-Go-V4-protected-cold-freeze-020.json; product real trusted Go→Rust owner/Prepare/Detach/Commit, raw live, 500Mbps and physical NOT_RUN. M2 own G2 remains NOT_ACCEPTED branch H018a07c8; previously approved exact one-time mirror needs M2 action. NEXT M0 actual protected Go cold witness through Rust owner generation and B01–B04 transition, production ABI still OFF.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

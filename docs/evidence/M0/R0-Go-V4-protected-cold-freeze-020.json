@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-GO-V4-PROTECTED-COLD-FREEZE-020",
+  "branch": "main",
+  "result": "PASS_SCOPED_PROTECTED_GO_COLD_IMMUTABILITY",
+  "source_sha": "81703542068158414654a05aa82df0a2718052e1",
+  "artifact_verified": true,
+  "authority": {
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "previous_M0_cursor_sequence": 55,
+    "previous_H": "088b8860051bbf2de2c3c7e5afd03198620e182f",
+    "previous_H_governance_run": 38682166946
+  },
+  "why_now": "Post-auth V4ClientSession/V4ServerSession ColdSnapshot re-created an apparently authenticated snapshot from mutable exported Negotiated/TLS fields; legitimate-looking post-auth edits could change cipher/limits/key material without another TLS exchange.",
+  "change_scope": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+  ],
+  "behavior": "Private verifiedCold frozen from actual protected Go TLS final negotiated result; server only exposes it after successful DetachTransition; ColdSnapshot refuses any drift from frozen identity/cipher/limits/nonce/epoch/direction keys or TLS Keys, even if syntactically valid; self-claimed coldAuthenticated alone cannot mint frozen witness.",
+  "same_source_runs": [
+    {
+      "workflow": "governance",
+      "run_id": 38683175016,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 11949445150,
+      "digest": "sha256:15979e71079cbff89a169c150a4a012cb6e221150e2c5490a8bd48c82b7657f5"
+    },
+    {
+      "workflow": "r0-v4-real-tls",
+      "run_id": 38683175022,
+      "attempt": 1,
+      "conclusion": "success",
+      "go_v4_tests": 10,
+      "build_artifact_id": 11949615024,
+      "build_digest": "sha256:e0b79dae23abd1694aae1cff1731cb7abfe8a6ddf4e230c222f50068b40a996e",
+      "result_artifact_id": 11949670071,
+      "result_digest": "sha256:ee5996ba9fa5bfac880b8c6d28a407ffd10912f4d3db0d411546821a40ad6b64"
+    },
+    {
+      "workflow": "r0-go-control-v4-gate",
+      "run_id": 38683175032,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_artifact_id": 11949565168,
+      "build_digest": "sha256:d6577a9fe9e14ba84542d422812b31e3d6be76ac0232f0e1e11f5d043ed617f2",
+      "result_artifact_id": 11949130565,
+      "result_digest": "sha256:4dcd0a92bb3bc33dac95b94583bedf54a34347b810b2ed2e6eebcba82aab67bd"
+    },
+    {
+      "workflow": "r0-v4-cold-native",
+      "run_id": 38683175062,
+      "attempt": 1,
+      "conclusion": "success",
+      "old_pinned_Go": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "go_protected_fixture_tests": 1,
+      "rust_real_native_parser_tests": 4,
+      "go_log_sha256": "36a553a1ea316a4c23e6b968ab72e6f65abdd424b9ecbf368c981a1383a65363",
+      "rust_log_sha256": "a4730bc79e30874a018ce144bf9599d43ad4ef2741fd67834a3257e3945ea0eb",
+      "build_artifact_id": 11949062613,
+      "build_digest": "sha256:58f1e4b579b2aa5192019a8178687d302a650b10af8c5570c8866b9889c1a63c",
+      "result_artifact_id": 11949315521,
+      "result_digest": "sha256:f4e42f94e1bd9794e872e1a8ee47a989b1229458a9504abcb8d77d1622e99ed6",
+      "ephemeral_secret_file_0600_deleted": true,
+      "raw_key_material_in_artifact": false
+    }
+  ],
+  "adversarial_cases": [
+    "fake coldAuthenticated true without frozen witness rejected",
+    "post-handshake valid client_limit/server_limit edits rejected",
+    "cipher changes to supported alternative rejected",
+    "incarnation changed rejected",
+    "direction material edited rejected",
+    "TLS Keys separately edited rejected",
+    "principal changed rejected",
+    "server positive-looking limit/key edits rejected",
+    "original immutable source still recoverable on restoring mutable fields"
+  ],
+  "done_when": "Only proven Go protected-auth snapshot freezing behavior and same-SOURCE scope regression, no Rust live owner activation or actual data-plane output; 4/4 source-exact Actions successful.",
+  "remaining_blocker": {
+    "role": "M2",
+    "head": "018a07c880473a896d40c0d97a59250212f7dad8",
+    "governance": "FAIL",
+    "worker_44_native": 38678654629,
+    "exact_checker_escape": "docs/decisions/M0-M2-exact-G2-checker-refresh-2026-10-15.md",
+    "accepted": false
+  },
+  "not_run": [
+    "Go authenticated snapshot entrusted to Rust owner through synchronous C ABI",
+    "actual Prepare/Detach/CommitAdmission RX/TX transition across Go/Rust",
+    "production V4 feature advertisement",
+    "real positive FecOrigin",
+    "P1–P3 and 500Mbps product",
+    "raw live",
+    "physical",
+    "Windows/ARM native"
+  ],
+  "next_action": "M0 implement scoped Go protected ColdSnapshot producer to Rust fresh owner generation and exact PrepareTransition/DetachTransition/CommitAdmission event/lease boundary B01–B04, using only actual authenticated Go provenance; do not enable production feature until end-to-end native qualification."
+}
