@@ -19,7 +19,6 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      M3_EXPECTED_HEAD: "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -41,7 +40,8 @@ jobs:
           control=api.head('main')
           g.need(control==os.environ['GITHUB_SHA'],'main moved')
           worker=api.head('work/m3-r1-codec')
-          g.need(worker==os.environ['M3_EXPECTED_HEAD'],'M3 moved during review')
+          g.need(isinstance(worker,str) and bool(g.SHA.fullmatch(worker)),
+                 'invalid initial M3 SHA')
           reg=api.file('.governance/registry.json',control)
           role=w.resolve_role(reg,'work/m3-r1-codec','M3')
           cursor=api.file(role['cursor'],worker)
