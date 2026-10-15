@@ -7,7 +7,7 @@
   "assignment_epoch": 1,
   "source_sha": "7875137949f61fead1374d2933798c61814adb92",
   "code_source": "7875137949f61fead1374d2933798c61814adb92",
-  "result": "PURE_R2_NATIVE_55_55_PASS__SOURCE_GOVERNANCE_TRANSIENT_FAILURES_PRESERVED",
+  "result": "NATIVE_R2_55_55_PASS__GOVERNANCE_BLOCKED_MOVING_MAIN_AND_TRANSIENT_API",
   "prev_handoff": {
     "H": "014d636eaf0319ca3c0a456901b383d94b7214f1",
     "checkpoint": "f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c",
@@ -119,5 +119,34 @@
     "Real driver/kernel, engine ABI and physical NOT_RUN",
     "No WinARM native, CPU/RSS product, 500Mbps or p99 evidence"
   ],
-  "next_action": "Verify immutable evidence SOURCE Governance and cursor-only H Governance independently. If moving main or GitHub API prevents passing role scope, retain historical failure and request M0 stable window; no repeated fake source qualification or product claim."
+  "next_action": "M0 coordinate a stable main/ref control interval for full ~80+ commit bounded per-commit role/path Governance (or approve formally source-pinned snapshot model with equivalent checks). Do not launch duplicate unchanged retries without new stable window. Keep 55/55 native qualification and all exact failed runs; M2 cursor progress blocked until own evidence S and H can pass Governance. GoV4/real raw/500Mbps/physical NOT_RUN.",
+  "governance_blocker": {
+    "reason": "Repeated GitHub main branch movement during full audit; first source attempt also remote API disconnect. M2 cannot change root scope attest policy or force main quiescence.",
+    "source_governance_run_id": 38706944070,
+    "evidence_governance": {
+      "run_id": 38707876126,
+      "attempts": [
+        {
+          "attempt": 1,
+          "conclusion": "failure",
+          "job_id": 116331695778,
+          "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+          "artifact_id": 11959421578,
+          "digest": "sha256:71e4db0ff09a3d5158aaac645909450bf1748638686b930f2492b749b6fe5dd4"
+        },
+        {
+          "attempt": 2,
+          "conclusion": "failure",
+          "job_id": 116332701705,
+          "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+          "artifact_id": 11959327120,
+          "digest": "sha256:211bb1169605cb5a603bb296dbf952eca74582c7d23ec837cb63ef6e23bdbd67"
+        }
+      ],
+      "retry_attempt2_done": true,
+      "change_to_code_after_tests": false
+    },
+    "request_ref": ".governance/workstreams/M2/requests/M2-STABLE-GOVERNANCE-WINDOW-008.md",
+    "no_generic_tool_permission": true
+  }
 }

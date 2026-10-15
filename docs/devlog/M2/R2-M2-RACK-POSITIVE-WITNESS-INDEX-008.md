@@ -44,3 +44,18 @@ Only `crates/wbd-recovery/src/receipt.rs` and this M2 devlog for code SOURCE; ev
 Deterministic `r2_rack_10k_positive_witness_1_32_33_no_full_reindex` holds 10,000 missing original shadow entries and introduces 33 fresh positive witness records in independent bitmap pages. It checks actual BTreeSet mutation counter `last_receipt_index_ops() <= 4` for each **single positive witness** (two owned keys for ACK) rather than O(10,000) index rekeys. A 32-positive bitmap test bounds actual operations to `<=130`, then a 33rd positive moves the dynamic RACK wake later without stale early timer fire. Timer candidate extraction remains exactly <=32 per tick, and after 10,030 genuine hard expiries all three owned index sets are empty. NotSent rearm stays at PTO and an old candidate cannot complete again. A receipt can legitimately scan at most eight reported 256-PN pages, but never iterates unrelated 10k entries for witness change.
 
 Operations count only actual insert/delete ordered-set actions, **not** CPU cycles, heap allocation count, packet cost, driver time, p99 or product throughput. `CPU=NOT_INSTRUMENTED`, `ALLOCATION_COUNT=NOT_INSTRUMENTED`, `AUTHENTICATED_GO_V4=NOT_RUN`, `PRODUCT=NOT_RUN`, `PHYSICAL=NOT_RUN`. The BTreeSet RACK key cost itself is at most one node per eligible shadow, but this does not mean no heap allocation. Positive receipts used synthetic `after_authenticated_open` facts and are NOT real AEAD admission.
+
+## End-of-turn governance blockage: main changes mid full-history audit
+
+The exact native 55/55, G2 scoped bootstrap and R0 static results above remain genuine SOURCE-qualified PASS. Formal owner-scope Governance has NOT passed on task008 despite correct M2-only paths and full bounded worker ancestry. Keep every run attempt exact:
+
+| Immutable SOURCE | Workflow | Attempt | Result | Job / precise issue |
+|---|---|---|---|---|
+| `7875137949f61fead1374d2933798c61814adb92` CODE | [#38706944070](https://github.com/lly8666/wbd-next/actions/runs/38706944070) | 1 | FAIL | 116328581427: `http.client.RemoteDisconnected` in GitHub REST ancestry scan |
+| Same CODE | same run | 2 | FAIL | 116329759294: `ROLE_SCOPE_FAILED: control or source moved mid-audit` |
+| `a46dee2cce988357df9d5157ccd0184d3dac7fd1` initial evidence S | [#38707876126](https://github.com/lly8666/wbd-next/actions/runs/38707876126) | 1 | FAIL | 116331695778: control/main moved mid-audit |
+| Same evidence S | same run | 2 | FAIL | 116332701705: control/main moved mid-audit |
+
+Evidence Governance attempt1 artifact11959421578 digest sha256:71e4db0ff09a3d5158aaac645909450bf1748638686b930f2492b749b6fe5dd4; attempt2 artifact11959327120 digest sha256:211bb1169605cb5a603bb296dbf952eca74582c7d23ec837cb63ef6e23bdbd67. Code Gov artifacts and reasons were documented above. At a subsequent verification both main and worker checker file had the same Git blob `86c213e122c5c0a7b636105f3be4d1fb2ecc7899`, so this is not an old root hash-pin conflict. Old G2 activation max99 is not exhausted (~80 source commits after the fixed base).
+
+**M0-coordination request** `.governance/workstreams/M2/requests/M2-STABLE-GOVERNANCE-WINDOW-008.md`: issue a stable main-control interval sufficiently long for the complete <=99 GitHub per-commit ancestry audit, or a safe M0-approved immutable-control variant retaining strict role/ref/path identity. M2 must not force root changes, discard failed runs, claim Governance PASS, silently rerun endlessly, change previously tested SOURCE or claim a product result. Task008 is **native-verified but governance BLOCKED** until an independent evidence S and cursor-only H audit pass. Next no task claimed.
