@@ -12,6 +12,7 @@ pub mod wake;
 pub mod parity;
 pub mod batch;
 pub mod rx_batch;
+pub mod generation;
 use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
