@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-AF_PACKET-PREFLIGHT-006",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "34736c19eb4138938f8bc6a78a697e34bac2a641",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Linux x86_64 GNU AF_PACKET capability and inactive FD preflight only; no bind/send/recv/driver activation",
+  "assignment": {
+    "main_decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave3.md",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "active": true,
+    "allowed_paths_unchanged": true
+  },
+  "code_files": [
+    "crates/wbd-platform/src/linux_packet_preflight.rs",
+    "crates/wbd-platform/src/lib.rs"
+  ],
+  "capability_policy": {
+    "kernel_interface_lookup": "Actual libc if_nametoindex; validated <=15B device name, nonzero index, exact input snapshot, /sys/class/net/<iface>/mtu requested 68..65535 <= actual device MTU",
+    "protocol": "ETH_P_IP=0x0800 required; PACKET_HOST=0 only in preflight and strict metadata classifier (OUTGOING/other packet types refused), nonzero generation",
+    "capabilities": "Linux capget syscall SYS_CAPGET=125 using Linux capability v3 header/data, effective CAP_NET_RAW bit13 checked before open. Missing bit yields typed PermissionDenied{errno:1}; socket EPERM mapped identically. No UDP fallback.",
+    "negative_actual": "Test child process removes only its own effective CAP_NET_RAW with Linux capset syscall126, then asserts exact typed EPERM and independently calls real socket(AF_PACKET,SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC,0) expecting actual errno EPERM=1. Parent runner capabilities unchanged.",
+    "raw_fd": "Optional protocol=0 AF_PACKET socket (per Linux packet(7) receives no packets) is CLOEXEC/NONBLOCK, held by Rust OwnedFd and dropped exactly once; no bind, send, recv or packet traffic. Positive socket open path conditional on CI capability; no claim that privileged raw FD acquisition occurred.",
+    "unprivileged_rollback": "Independent native loopback UDP socket used solely in test as transferred kernel-owned FD to prove OwnedFd Drop closes and post-drop fcntl yields EBADF=9 even when CAP_NET_RAW absent; never a substitute/fallback raw transport.",
+    "borrow_stop": "PacketPreflightFd borrows own OwnedFd under lifetime + BorrowFence.try_enter_ready atomics, generation mismatch fail closed, stop waits for last synchronous loan; cannot create post-stop borrow",
+    "rx_metadata": "Pure classifier validates ifindex, protocol, packet_type, generation, nontruncated full L3 payload length <=MTU; never declares payload authenticated. No VLAN, full raw device receive or kernel sockaddr_ll parsing."
+  },
+  "ffi_audit": {
+    "target": "cfg(all(target_os=linux,target_arch=x86_64,target_env=gnu)) only",
+    "source": "man7.org packet(7), capget(2); glibc syscall wrapper (capget and capset have no glibc wrappers). No new root dependencies.",
+    "unsafe": "Only cfg module #[allow(unsafe_code)] under existing crate-level deny; libc socket/if_nametoindex/fcntl, syscall capget/capset (capset used ONLY in isolated native test child), OwnedFd::from_raw_fd single ownership.",
+    "cap_abi": "Linux v3 CapHeader sizeof8 and CapData sizeof12, effective/permitted/inheritable offsets checked actual x86_64 Linux",
+    "no_assumption": "No CAP_NET_RAW privilege assumed in GitHub Actions. Positive raw fd open and close test handles typed EPERM as permissible denied host capability, and must not be cited as a positive socket-open proof."
+  },
+  "native": {
+    "workflow": "worker-native-tests.yml",
+    "run_id": 38674827100,
+    "attempt": 1,
+    "source_sha": "34736c19eb4138938f8bc6a78a697e34bac2a641",
+    "status": "SUCCESS",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "compiled_once": true,
+    "build_job": 116225940299,
+    "consumer_job": 116226020126,
+    "test_count": 52,
+    "passed": 52,
+    "failed": 0,
+    "new_tests": 10,
+    "previous_tests": 42,
+    "new_test_names": [
+      "r1_af_packet_borrow_stop_generation_close_raii",
+      "r1_af_packet_cap_syscall_native_abi_no_privilege_escalation",
+      "r1_af_packet_invalid_iface_and_index_fail_before_socket",
+      "r1_af_packet_kernel_interface_index_and_mtu_prevalidate",
+      "r1_af_packet_native_socket_protocol_zero_fd_owned_and_closed",
+      "r1_af_packet_owned_fd_close_unprivileged_kernel_rollback_fixture",
+      "r1_af_packet_protocol_packet_type_mtu_generation_gate",
+      "r1_af_packet_rx_meta_packet_type_truncation_generation_fail_closed",
+      "r1_af_packet_stop_registration_race_atomic_and_bounded",
+      "r1_af_packet_no_raw_cap_child_exact_eperm_and_no_udp_fallback"
+    ],
+    "build_artifact": {
+      "id": 11945551791,
+      "zip_sha256": "aaa8fa2b63867d9be865f7b6eea7656fe96ba05db389685bb9681de7692b4db6",
+      "manifest_sha256": "d129e9195e39ec68ec9d01e44e6c2a7486728c317212e06a67837ac76e61e1aa",
+      "binary_sha256": "86f3c6e176320f8e25e45b703dc797b16821cc3d70dccf1b32037ee707b8ff28",
+      "binary_bytes": 10161280
+    },
+    "result_artifact": {
+      "id": 11944794787,
+      "zip_sha256": "6a4f99a36396407c1b7a619bd80658714cb87e2f15c8b039a5683d3b71d5d26e",
+      "result_json_sha256": "b05a3e7413fe5ca994b872a6f44407eb0020b598712191e671f576e08ecff980",
+      "test_log_sha256": "1fffd63f905e0639b426b6cdface73a2377af3180b104b2e9fd2dea095026a78"
+    },
+    "direct_artifact_review": "Both ZIP artifacts downloaded and SHA-256 verified by independent container; manifest records exact binary SHA/source/compiled-once native x86_64 target; result.json shows 52 test names; test.log actual 52 passed, 0 failed, 7 legacy r0 filtered.",
+    "qualification": "Actual kernel if_nametoindex/sysfs+capset child+permission-negative socket and unprivileged FD close, static packet metadata/generation/loan model. NOT real AF_PACKET traffic exchange or privileged network driver."
+  },
+  "historical_runs": [
+    {
+      "source_sha": "918ae4bfb7c8258e9de07debe65e4914c4facffe",
+      "native_run_id": 38674654049,
+      "worker_result": "PASS 51/51",
+      "context": "First code source, 9 new tests and 42 existing; later added a mandatory unconditional unprivileged OwnedFd close test."
+    },
+    {
+      "source_sha": "918ae4bfb7c8258e9de07debe65e4914c4facffe",
+      "governance_run_id": 38674654068,
+      "governance_result": "SUCCESS"
+    },
+    {
+      "source_sha": "34736c19eb4138938f8bc6a78a697e34bac2a641",
+      "workflow": "governance",
+      "run_id": 38674826949,
+      "result": "FAIL",
+      "cause": "ROLE_SCOPE_FAILED: control or source moved mid-audit due concurrent main M0 movement, not a Rust native test failure; no permission expansion or role writer overlap claimed"
+    },
+    {
+      "source_sha": "34736c19eb4138938f8bc6a78a697e34bac2a641",
+      "workflow": "r0-fake-platform",
+      "run_id": 38674826978,
+      "result": "FAIL",
+      "actual": "59/59 actual Rust assertions passed (7 old R0 plus 52 R1), legacy worker branch R0 harness requires exactly 7; M0-only main fixed root filter on separate SOURCE."
+    }
+  ],
+  "same_source_workflow_status": [
+    {
+      "workflow": "worker-native",
+      "run_id": 38674827100,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38674826941,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38674826846,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38674826884,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38674826949,
+      "result": "FAIL_CONTROL_MOVED"
+    },
+    {
+      "workflow": "r0-fake-platform",
+      "run_id": 38674826978,
+      "result": "FAIL_HISTORIC_TEST_INVENTORY"
+    }
+  ],
+  "not_run": [
+    "AF_PACKET bind, recvmsg/recvmmsg/sendmmsg on a real raw FD",
+    "Any actual Ethernet/VLAN/packet capture, interface activation or NIC traffic",
+    "Native Win/Arm/musl",
+    "Go V4 live cold exporter to authenticated Rust session",
+    "Product bandwidth/p99/CPU/physical/lifecycle deployments"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "SCOPED_PREFLIGHT_READY_FOR_M0_REVIEW_ONLY; PENDING_OWN_EVIDENCE_AND_CURSOR_GOVERNANCE"
+}
