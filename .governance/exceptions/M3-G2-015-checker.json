@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "status": "APPROVED_ONCE",
+  "path": "tools/worker_scope_ci.py",
+  "parent_sha": "79535dd5f57af0b5ec85ea812456ae0a31a3a4d2",
+  "m0_reviewed_source_sha": "39e9c54e27fec424e6331aab56a11376052d554b",
+  "approved_git_blob_sha": "d4cb63acc39b20ac75f459f815d74e577740f343",
+  "reason": "M3 native SOURCE79535 has 100 valid G2 activation commits; M0 fixed hard 99 cap via complete fail-closed pagination; read-only full history Audit38712424601 SUCCESS. One exact-parent checker-only worker-owned mirror is necessary because checkout runs old checker.",
+  "scope": "ONLY one direct child single-parent checker blob, no general tools or shared CI/ABI permissions",
+  "m0_audit_run": 38712424601,
+  "main_governance": 38712424549,
+  "worker_debug_native_run": 38707350215,
+  "source_release_measurement": "M3 015 Release pending exact source action; historic task014 CPU ratio invalid"
+}
