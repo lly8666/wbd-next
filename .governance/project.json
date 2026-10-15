@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "优先打通真实 Go 认证会话 → Rust owner 的事务边界；M1–M4 当前任务见登记分支 cursor。保留组件通过与产品/物理机 NOT_RUN 的区别。治理 v2 操作见 docs/GOVERNANCE.md。",
+  "next_decision": "当前产品推进以 main M0 cursor 为准：真实 Go V4 到 Rust production owner 的 AEAD/PN 与 M4 kernel held lease 集成；已有 TEST-ONLY probe 不等于生产资格。治理 v2 不回退任何已合入模块。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

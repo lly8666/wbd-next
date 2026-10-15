@@ -2,7 +2,7 @@
   "schema_version": 1,
   "roles": {
     "M1": {
-      "source_sha": "5399ca365a07e44843f5156716331b8415542c2a",
+      "source_sha": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
       "authority": {
         "reservation_revision": 2,
         "id": "M1",
@@ -26,12 +26,12 @@
         ],
         "cursor": ".governance/workstreams/M1/cursor.json"
       },
-      "evidence_ref": "docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json",
-      "reviewed_governance_run": 38689191231,
-      "run_attempt": 1
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38712396892,
+      "run_attempt": 2
     },
     "M2": {
-      "source_sha": "014d636eaf0319ca3c0a456901b383d94b7214f1",
+      "source_sha": "c74a4fd71712411b1fb5b326d95d746116a04844",
       "authority": {
         "reservation_revision": 2,
         "id": "M2",
@@ -53,12 +53,12 @@
         ],
         "cursor": ".governance/workstreams/M2/cursor.json"
       },
-      "evidence_ref": "docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json",
-      "reviewed_governance_run": 38692656343,
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38735393188,
       "run_attempt": 1
     },
     "M3": {
-      "source_sha": "e411dccaf0c8f2a332ae1ce1f22457f5604b894c",
+      "source_sha": "0ecb459c9686254625a045ea19b85ae0e8d43080",
       "authority": {
         "reservation_revision": 2,
         "id": "M3",
@@ -80,12 +80,12 @@
         ],
         "cursor": ".governance/workstreams/M3/cursor.json"
       },
-      "evidence_ref": "docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json",
-      "reviewed_governance_run": 38688674718,
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38733840776,
       "run_attempt": 1
     },
     "M4": {
-      "source_sha": "44534bac2bcad48779cd7321295b013e004f9942",
+      "source_sha": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
       "authority": {
         "reservation_revision": 2,
         "id": "M4",
@@ -108,8 +108,8 @@
         ],
         "cursor": ".governance/workstreams/M4/cursor.json"
       },
-      "evidence_ref": "docs/evidence/M0/R0-M0-V4-owner-wave-integration-033.json",
-      "reviewed_governance_run": 38689255498,
+      "evidence_ref": "docs/evidence/M0/GOV-002-checkpoints.json",
+      "reviewed_governance_run": 38707294012,
       "run_attempt": 1
     }
   }

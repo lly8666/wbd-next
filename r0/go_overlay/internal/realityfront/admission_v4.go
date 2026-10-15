@@ -63,9 +63,21 @@ type V4ClientOptions struct {
     DataPlaneReady bool
     Epoch [16]byte // zero only for the first lane of a new logical tunnel
 }
+// The backend is deliberately package-private: a caller cannot provide an
+// arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
+// Future native Go bridge files in this package may implement it. With no
+// backend the legacy fail-closed, cold-only behavior is unchanged.
+type v4PreparedOwner interface {
+    commit(early []faketcp.TransitionPacket) error
+    abort()
+}
+type v4OwnerBridge interface {
+    prepare(verified V4ColdSessionSnapshot, rxBoundary uint32) (v4PreparedOwner, error)
+}
 type V4ServerOptions struct {
     DataPlaneReady bool
     Epochs *V4EpochStore // shared by all lanes of the same server instance
+    ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
 
 type V4ClientSession struct {
@@ -417,6 +429,17 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{return nil,err}
     boundary,err:=assoc.PrepareTransition(int(cfg.ServerLimit))
     if err!=nil{return nil,err}
+    // The private native owner may reserve a fresh Rust generation only after
+    // a real credential-checked protected request and the exact Go boundary.
+    // It MUST NOT activate or deliver early data until Detach completes.
+    var prepared v4PreparedOwner
+    if opt.ownerBridge!=nil {
+        prepared,err=opt.ownerBridge.prepare(frozen,boundary)
+        if err!=nil {assoc.AbortTransition();return nil,err}
+        if prepared==nil {assoc.AbortTransition();return nil,ErrAdmissionParams}
+        // abort is idempotent and must not destroy an already committed owner.
+        defer prepared.abort()
+    }
     reply,err:=v4ReplyWire(result,ext)
     if err!=nil{assoc.AbortTransition();return nil,err}
     if err:=writeFull(tlsConn,reply);err!=nil{
@@ -425,7 +448,15 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     early,err:=assoc.DetachTransition()
     if err!=nil{assoc.AbortTransition();return nil,err}
-    finish(true) // CommitAdmission of the *Go* epoch; NOT Rust owner activation.
+    if prepared!=nil {
+        // A native failure AFTER protected reply is fatal: never publish Go
+        // epoch, keep owner inactive and abort this candidate, not a peer lane.
+        if err:=prepared.commit(early);err!=nil{
+            prepared.abort()
+            return nil,err
+        }
+    }
+    finish(true) // Go epoch commits only after Rust prepared owner success.
     success=true
     return &V4ServerSession{
         ServerAdmissionSession:&ServerAdmissionSession{

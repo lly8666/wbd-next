@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "4dfd0a18d42e2ebddc38241d378da4a30137e33e",
+  "progress": "partial",
+  "unverified": true,
+  "result": "M3_RELEASE_CLOCK_VALID_M1_M4_MAIN_NATIVE_PASS_M2_HISTORY_G2_FIXED__PRODUCT_AUTH_OWNER_NOT_RUN",
+  "m3": {
+    "worker_source": "79535dd5f57af0b5ec85ea812456ae0a31a3a4d2",
+    "debug_run": 38707350215,
+    "debug_pass": "99/99",
+    "main_release_source": "06d80eb247b1dc88cf006faa3b8843ec4b6459c6",
+    "release_run": 38714087982,
+    "release_result": "SUCCESS 24/24 same-window Release rows 8 warmup real native1/1",
+    "clock_status": "SCOPED_VALID_SAME_WINDOW",
+    "cpu_backend": "schedstat_ns",
+    "raw_window_limit": "cpu_ns <= wall_ns * 1.02 per window",
+    "artifact_result_id": 11962493425,
+    "result_digest": "sha256:e44bdcf4e0248005fb7edeb443d80f1adcaf47e8930d6b0f63147c3e900ea59b",
+    "ratios_fresh_over_steady": {
+      "fec_192": 3.4024925496988656,
+      "fec_896": 2.733353159885562,
+      "aead_192": 1.0366205853261292,
+      "aead_896": 0.913779051830704
+    },
+    "scope": "synthetic component-only not product",
+    "worker_h_governance": "PENDING",
+    "main_g2_100_history_run": 38718990820,
+    "third_mirror": {
+      "direct_parent": "79535dd5f57af0b5ec85ea812456ae0a31a3a4d2",
+      "frozen_main_source": "39e9c54e27fec424e6331aab56a11376052d554b",
+      "git_blob": "d4cb63acc39b20ac75f459f815d74e577740f343"
+    },
+    "history": "old Release38685587150 CPU invalid22/24; short schedstat38713050270 first window failed; long run38713772580 verifier mismatch"
+  },
+  "m1": {
+    "source": "2ce58427f84a777bce6242f6803a5c82413b5fe2",
+    "worker_native": 38711805820,
+    "worker_h": "35fdcf07b44bba2ffde249ac085902385b16eb3c",
+    "h_governance": 38712396892,
+    "main_import": "bf2b696a4d1aaeef3fe510cb2f8b14d12106b2b4",
+    "main_native": 38719646184,
+    "native": "87 passed, 1 scoped ignored"
+  },
+  "m4": {
+    "source": "0a53ea23ec064489155a008e02839a59a9b15cf0",
+    "worker_native": 38706481672,
+    "worker_h": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
+    "h_governance": 38707294012,
+    "main_import": "bf2b696a4d1aaeef3fe510cb2f8b14d12106b2b4",
+    "main_ipv4_tcp": 38719646168,
+    "main_linux_kernel": 38719646176,
+    "result": "75 native platform PASS + 6 main kernel integration PASS"
+  },
+  "m2": {
+    "worker_h": "35c45f2918600b3087d50493da61e112af07bcd1",
+    "worker_code": "7875137949f61fead1374d2933798c61814adb92",
+    "worker_native": "55/55",
+    "current_progress": "blocked until M2 copies approved immutable checker and own S/H",
+    "historical_bugfix": "4170f6dff4872e12a69e8819412d9673c9e44415",
+    "immutable_second_source": "d902842a31fd6b032a5f1bab515b93c21f28b0aa",
+    "immutable_second_blob": "86c213e122c5c0a7b636105f3be4d1fb2ecc7899",
+    "full_remote_m0_audits": [
+      38718990819,
+      38720312665
+    ],
+    "third_frozen_source": "4dfd0a18d42e2ebddc38241d378da4a30137e33e",
+    "third_blob": "69bebb966c60623c3b0a96c6915bf75540eb406b"
+  },
+  "m0": {
+    "test_only_go_tls_rust_probe_run": 38708333395,
+    "real_product_authenticated_rust_owner": "NOT_RUN",
+    "actual_early_payload_from_go_to_rust": "NOT_RUN",
+    "production_abi_features": 0,
+    "raw_af_packet": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_QUALIFIED"
+  },
+  "next_action": "M3 own exact checker only then adopt main 3072-batch test rescue and do new exact-source Debug/Release and own S/H; M2 own exact checker-only mirror S/H. M0 own real Go V4 authenticated EarlyRxOwner and Stop/lease B01-B04 with native negative checks before prod ABI."
+}

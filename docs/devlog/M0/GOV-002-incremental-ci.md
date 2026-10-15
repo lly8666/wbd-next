@@ -13,3 +13,5 @@
 首轮 SOURCE `1b4be2e84c08e2bcdf36d12b6ae08857fc373df9`：治理回归 38700748281、四角色中央审计 38700748390、Go TLS 38700748219 全成功。native 38700748266 四个集成组成功、四个库组判 FAIL，但二进制退出均为 0：`--nocapture` 将成功用例的诊断输出插入 libtest 名称与 `ok` 之间，严格解析器因此误报缺用例。修复为普通功能验证采用 libtest 默认捕获成功输出；不删除必跑 ID、不放宽匹配、不改产品代码。旧 FAIL 保留。当前证据不是运行时性能结论。
 
 第二轮中央审计 38701120518 发现 M1 的 open_requests 包含既有 G2 Markdown 协调请求；不能把它当 JSON Actions intent。修复仅区分协调文档与 dispatch JSON，二者都核存在性，JSON 继续核角色/epoch/格式；协调文档不冒充已 dispatch。另保留 registry 的简短 assigned_task 字段，避免详细任务归档后旧 worker cursor 覆盖最新分配。
+
+集成刷新：主线在维护期间前进至 `3f1b458de2c66cbfa5567c147909c9b2b22d06f5`。完整保留新增 Go/Rust TEST-ONLY probe、M1 early RX、M4 burst、M3 clock 及其证据；不回退任何产品文件。合并替换的旧工作流新增必跑 ID 一并纳入：codec98、platform75、engine87、recovery51、四个集成组3/3/11/6；Go普通TLS12。四个新检查点分别下载当前 Governance 精确 attempt artifact 核 role-identity/receipt/hash/conclusion，记录 `GOV-002-checkpoints.json`；未将 M3 CODE 源码称作已完成 H。

@@ -103,7 +103,13 @@
          })
      }
      pub fn token(&self)->ScopeToken {self.tag.clone()}
-     fn check(&self,token:&ScopeToken)->Result<(),ScopeError> {
+     pub(crate) fn check_token_identity(&self,token:&ScopeToken)->Result<(),ScopeError> {
+         if Arc::ptr_eq(&self.tag.0,&token.0) {Ok(())} else {Err(ScopeError::Stale)}
+     }
+     pub(crate) fn rx_capacity_remaining(&self)->(usize,usize) {
+         self.rx.capacity_remaining()
+     }
+     pub(crate) fn check(&self,token:&ScopeToken)->Result<(),ScopeError> {
          if !Arc::ptr_eq(&self.tag.0,&token.0) {return Err(ScopeError::Stale);}
          if self.stopped {return Err(ScopeError::Stopped);}
          Ok(())

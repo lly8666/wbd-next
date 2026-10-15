@@ -1,0 +1,164 @@
+name: M0 protected Go V4 native Rust owner test probe
+run-name: "M0|${{ github.sha }}|m0-v4-native-probe"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-v4-native-owner-probe.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/wbd-engine/Cargo.toml"
+      - "crates/wbd-engine/src/lib.rs"
+      - "crates/wbd-engine/src/cold_v4.rs"
+      - "crates/wbd-engine/src/v4_probe_bridge.rs"
+      - "crates/wbd-engine/src/runtime/early_rx.rs"
+      - "crates/wbd-engine/src/runtime/generation.rs"
+      - "crates/wbd-engine/src/memory/mod.rs"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go"
+permissions: {contents: read}
+concurrency:
+  group: m0-v4-owner-probe-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile pinned Go real TLS and feature-restricted Rust CDylib once
+        shell: bash
+        env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          # The ordinary production build must NOT export the probe C ABI.
+          cargo build --release --locked -p wbd-engine
+          test -s target/release/libwbd_engine.so
+          if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_test_probe_'; then
+            echo 'CRITICAL: test-only Go/Rust owner C symbols leaked into normal ABI' >&2
+            exit 1
+          fi
+          cargo build --release --locked -p wbd-engine --features m0_v4_probe
+          cargo test --release --locked -p wbd-engine --features m0_v4_probe --lib --no-run
+          test -s target/release/libwbd_engine.so
+          mkdir native-probe-build
+          cp target/release/libwbd_engine.so native-probe-build/libwbd_engine.so
+          rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
+          test -n "$rust_test"
+          cp "$rust_test" native-probe-build/owner-rust.test
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_native_probe -c -o "$GITHUB_WORKSPACE/native-probe-build/owner-go.test" ./internal/realityfront)
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          paths=["Cargo.toml","Cargo.lock","crates/wbd-engine/Cargo.toml",
+            "crates/wbd-engine/src/lib.rs","crates/wbd-engine/src/cold_v4.rs",
+            "crates/wbd-engine/src/v4_probe_bridge.rs",
+            "crates/wbd-engine/src/runtime/early_rx.rs",
+            "crates/wbd-engine/src/runtime/generation.rs",
+            "crates/wbd-engine/src/memory/mod.rs",
+            "r0/go_overlay/internal/realityfront/admission_v4.go",
+            "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+            ".github/workflows/m0-v4-native-owner-probe.yml"]
+          binary=["libwbd_engine.so","owner-rust.test","owner-go.test"]
+          m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+             "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "old_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "rust":"1.85.1","go":"1.23.12","feature":"m0_v4_probe",
+             "inputs_sha256":{p:sha(p) for p in paths},
+             "binary_sha256":{p:sha("native-probe-build/"+p) for p in binary},
+             "production_abi":"FEATURES_ZERO"}
+          pathlib.Path("native-probe-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-v4-native-probe-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-probe-build/
+          retention-days: 30
+          if-no-files-found: error
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-v4-native-probe-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-probe-build
+      - name: Verify native binary hashes; real protected Go TLS calls Rust owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open("native-probe-build/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["old_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["feature"]=="m0_v4_probe" and m["production_abi"]=="FEATURES_ZERO"
+          for p,h in m["inputs_sha256"].items():assert sha(p)==h,p
+          for p,h in m["binary_sha256"].items():assert sha("native-probe-build/"+p)==h,p
+          PY
+          chmod +x native-probe-build/*.test
+          export LD_LIBRARY_PATH="$PWD/native-probe-build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          mkdir native-probe-result
+          set +e
+          ./native-probe-build/owner-go.test -test.v -test.run '^TestR0V4NativeRustProbeActualProtectedFreshOwner$' >native-probe-result/go.log 2>&1
+          G=$?
+          ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
+          R=$?
+          set -e
+          cat native-probe-result/go.log native-probe-result/rust.log
+          GO_EXIT="$G" RUST_EXIT="$R" python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,sys
+          go=pathlib.Path("native-probe-result/go.log").read_text()
+          rust=pathlib.Path("native-probe-result/rust.log").read_text()
+          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M))
+          m=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
+          good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust
+          data=json.load(open("native-probe-build/manifest.json"))
+          sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+          result={"source_sha":data["source_sha"],"run_id":data["run_id"],
+            "attempt":data["attempt"],"result":"PASS" if good_go and good_rust else "FAIL",
+            "actual_go_TLS_to_test_only_Rust_candidate":good_go,"Rust_generation_and_phase":good_rust,
+            "go_log_sha256":sha(go),"rust_log_sha256":sha(rust),
+            "binary_sha256":data["binary_sha256"],
+            "actual_early_payload_transfer":"TEST_ONLY_GO_FAKETCP_DETACH_BYTES_COPIED_AND_HASH_VERIFIED_IN_RUST" if good_go else "NOT_VERIFIED",
+            "positive_Rust_auth_authority":"NOT_RUN",
+            "driver_loan_stop":"NOT_RUN","production_ABI_features":0,
+            "product":"NOT_RUN","physical":"NOT_RUN"}
+          pathlib.Path("native-probe-result/result.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          if not(good_go and good_rust):sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-v4-native-probe-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-probe-result/
+          retention-days: 30
+          if-no-files-found: warn

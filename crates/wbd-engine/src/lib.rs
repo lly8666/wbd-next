@@ -12,6 +12,8 @@ pub mod memory;
 pub mod recovery_ingress;
 /// M0-only V4 copied byte candidate grammar; never an authenticated installer.
 pub mod cold_v4;
+#[cfg(all(feature = "m0_v4_probe", target_os = "linux"))]
+mod v4_probe_bridge;
 
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;

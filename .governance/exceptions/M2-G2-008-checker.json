@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "status": "APPROVED_ONCE",
+  "parent_sha": "35c45f2918600b3087d50493da61e112af07bcd1",
+  "path": "tools/worker_scope_ci.py",
+  "m0_reviewed_source_sha": "4dfd0a18d42e2ebddc38241d378da4a30137e33e",
+  "approved_git_blob_sha": "69bebb966c60623c3b0a96c6915bf75540eb406b",
+  "scope": "one direct M2 child, sole checker file, no root tool scope expansion",
+  "read_only_m0_history_audit": 38720312665,
+  "m0_governance": 38720312671,
+  "product": "NOT_RUN"
+}

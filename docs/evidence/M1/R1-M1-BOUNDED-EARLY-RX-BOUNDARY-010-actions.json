@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "2ce58427f84a777bce6242f6803a5c82413b5fe2",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Owner-only bounded early RX stage, caller-supplied absolute boundary, Stop/Detach/rotation lifetime. Synthetic unit tests only; not authenticated Go origin or production.",
+  "native": {
+    "run_id": 38711805820,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38711805820",
+    "build_job": 116344731548,
+    "consume_job": 116344857509,
+    "compiled_once": true,
+    "passed": 88,
+    "failed": 0,
+    "prior_r1": 80,
+    "new_r1": 8,
+    "filtered_r0": 3,
+    "result_artifact_id": 11960827099,
+    "build_artifact_id": 11960373299,
+    "artifact_sha256": "6fab813e646f6f64a72c01d87b9cbd0673ddf4a32b02d7dc734077f66a0a6902",
+    "result_json_sha256": "0566285640fe5b0ce15d240943e32652db39207fe16a1f8fdf1bbcac6c5b750d",
+    "test_log_sha256": "00d7c5809d375ca13ac4f14f5d73893aedc53d34be7f62b7efb7ae04bfa381b8",
+    "binary_sha256": "a42b9eff09154e4154722ab51d004c1683c8eb59af41bdb6021869515b83956c",
+    "artifact_review": "Downloaded actual result ZIP; verified SHA256 of zip, result.json, test.log; exact source/run, 88 unique r1_ passed, eight new early_rx cases."
+  },
+  "proof": [
+    "Before boundary end<=boundary returned with same UniqueBuffer; segment crossing boundary entirely refused; checked wire range and absolute-offset overflow.",
+    "Staging preallocated max32 slots and byte budget, 33rd and overbudget returned caller-owned, no early ready delivery before Detach.",
+    "Owner-exclusive full Detach preflight before moving packets to existing RxOwner, no partial ready exposure.",
+    "Stop before and after Detach preserves borrowed frozen clone and RX loan until last owner drop; Stop idempotent.",
+    "Old generation ready loans never flow into current owner; fresh RX on new scope not held behind old; stale ABA token rejected."
+  ],
+  "new_tests": [
+    "r1_early_rx_prepare_caller_only_before_exact_after_overlap_overflow",
+    "r1_early_rx_zero_then_one_after_detach_immediate_no_hol",
+    "r1_early_rx_32_cap_33rd_full_still_owned_not_free_until_drop",
+    "r1_early_rx_byte_cap_and_owner_prealloc_mismatch_fail_closed",
+    "r1_early_rx_stop_pre_detach_twice_held_frozen_late_return",
+    "r1_early_rx_old_32_held_rotate_fresh_new_scope_not_hol",
+    "r1_early_rx_stop_after_detach_does_not_free_loan_and_aba_stale",
+    "r1_early_rx_rotation_discards_undelivered_tail_no_old_new_mix"
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38711805879,
+      "conclusion": "failure",
+      "reason": "ROLE_SCOPE_FAILED control or source moved mid-audit"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38711806068,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38711805977,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38711805811,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38711805900,
+      "conclusion": "failure"
+    }
+  ],
+  "root_blocker": "M0-owned stale worker branch root R0 ABI harness demands literal 3 passed; 38711805900 failed although Rust actual 90 passed, 1 ignored, rc0.",
+  "inherited_release": {
+    "binary_sha256": "8178f3e825ca16e9edce5120cdbcee6a197c23cdcb0f8503c5bf3e24e7a09ff1",
+    "legs": 3,
+    "qualification": "SCOPED_OWNER_ONLY_NOT_EARLY_RX_PRODUCT_PERFORMANCE"
+  },
+  "not_run": {
+    "trusted_Go_V4": "NOT_RUN",
+    "real_driver": "NOT_RUN",
+    "AF_PACKET": "NOT_RUN",
+    "500Mbps": "NOT_RUN",
+    "end_to_end_p99": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "native_WinARM": "NOT_RUN",
+    "product": "NOT_RUN"
+  }
+}

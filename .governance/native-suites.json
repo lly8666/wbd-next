@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline_source": "22d3af78892d1e5bbc1056a42b66850804f08e8d",
+  "baseline_source": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
   "suites": {
     "codec": {
       "package": "wbd-codec",
@@ -35,6 +35,7 @@
         "r1_budget_go_six_mtu_oracle_and_exact_overheads",
         "r1_budget_go_tun_floor_and_auto_record_cap",
         "r1_budget_normal_off_minus_equal_plus_one_no_new_link_header",
+        "r1_cpu_probe_same_window_valid_and_invalid_accounting",
         "r1_crypto_aes_14_go_stdlib_vectors_byte_exact_and_authenticated",
         "r1_crypto_aes_auth_tamper_wrong_suite_and_direction_fail_closed",
         "r1_crypto_aes_boundary_hp_tag_overlap_reordering_and_max_wire",
@@ -193,7 +194,11 @@
         "r1_rx_ipv4_tcp_round_trip_real_tx_bytes_even_odd_and_immutable",
         "r1_rx_ipv4_tcp_seq32_wrap_nearest_and_halfspace_fail_closed",
         "r1_rx_ipv4_tcp_unrelated_bad_packet_cannot_block_next_valid",
-        "r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums"
+        "r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums",
+        "r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation",
+        "r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted",
+        "r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts",
+        "r1_udp_rx_stopped_old_borrowed_receipt_cannot_dispatch_to_rotated_owner"
       ],
       "allowed_ignored": [],
       "scope": "IPV4_TCP_LINUX_SENDMMSG_RECVMMSG_UDP_DRIVER_LEASE_NOT_RAW",
@@ -290,6 +295,14 @@
         "r1_batch_thirty_three_requires_second_call_and_never_drops_tail",
         "r1_batch_thirty_two_exact_cap_from_preallocated_output",
         "r1_buffer_contract_freeze_shares_allocation_and_metadata",
+        "r1_early_rx_32_cap_33rd_full_still_owned_not_free_until_drop",
+        "r1_early_rx_byte_cap_and_owner_prealloc_mismatch_fail_closed",
+        "r1_early_rx_old_32_held_rotate_fresh_new_scope_not_hol",
+        "r1_early_rx_prepare_caller_only_before_exact_after_overlap_overflow",
+        "r1_early_rx_rotation_discards_undelivered_tail_no_old_new_mix",
+        "r1_early_rx_stop_after_detach_does_not_free_loan_and_aba_stale",
+        "r1_early_rx_stop_pre_detach_twice_held_frozen_late_return",
+        "r1_early_rx_zero_then_one_after_detach_immediate_no_hol",
         "r1_owner_loan_stop_bounded_full_return_backlog_two_generations",
         "r1_owner_loan_stop_held_frozen_arc_last_clone_after_batch_fence",
         "r1_owner_loan_stop_idempotent_cancels_only_undispatched_33_tail",
@@ -487,6 +500,7 @@
     "TestR0V4ColdSnapshotTunnelRotationDoesNotReuseEpochOrKeys",
     "TestR0V4ColdBundleFormatAndDefaultDenied",
     "TestR0V4ColdBundleEphemeralInterop",
-    "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback"
+    "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback",
+    "TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort"
   ]
 }

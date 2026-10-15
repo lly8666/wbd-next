@@ -15,10 +15,9 @@ pub mod rx_batch;
 pub mod generation;
 #[cfg(test)] mod generation_release;
 #[cfg(test)] mod loan_stop;
+pub mod early_rx;
 use parity::ParityReady;
-// The qualified owner APIs remain unreachable from the production ABI or
-// untrusted Go V4 cold bytes until M0 implements authenticated transition.
-pub const OWNER_RUNTIME_READY: bool = false;
+pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OfferError { Full, ByteBudget, InvalidWindow, Stopping }
@@ -299,6 +298,10 @@ impl RxOwner {
         self.ready.clear()
     }
     pub fn queued(&self) -> usize { self.ready.len() }
+    pub(crate) fn capacity_remaining(&self)->(usize,usize) {
+        (self.ready.limit.slots-self.ready.len(),
+         self.ready.limit.bytes-self.ready.used_bytes())
+    }
 }
 
 #[cfg(test)]

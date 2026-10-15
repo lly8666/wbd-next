@@ -452,68 +452,176 @@ impl ReuseCostLeg {
         }
     }
 }
+// M3-015: same-window high-resolution Linux thread CPU clock, no unsafe FFI.
+// schedstat field 1 is nanoseconds; when schedstats are disabled, sched
+// se.sum_exec_runtime supplies decimal milliseconds at microsecond precision.
+#[cfg(target_os = "linux")]
+fn thread_runtime_ns() -> Option<(&'static str,u64)> {
+    if let Ok(raw) = std::fs::read_to_string("/proc/thread-self/schedstat") {
+        if let Some(ns) = raw.split_whitespace().next()
+            .and_then(|v| v.parse::<u64>().ok()) {
+            if ns>0 {return Some(("schedstat_ns",ns));}
+        }
+    }
+    let raw=std::fs::read_to_string("/proc/thread-self/sched").ok()?;
+    let t=raw.lines().find(|line|line.trim_start()
+        .starts_with("se.sum_exec_runtime"))?.split_once(':')?.1.trim();
+    let (whole,fraction)=t.split_once('.')?;
+    if fraction.len()!=6 || !fraction.bytes().all(|ch|ch.is_ascii_digit()){
+        return None;
+    }
+    let ns=whole.parse::<u64>().ok()?.checked_mul(1_000_000)?
+        .checked_add(fraction.parse::<u64>().ok()?)?;
+    (ns>0).then_some(("sched_runtime_us",ns))
+}
+#[cfg(target_os = "linux")]
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+enum ClockError { ZeroWall, BackwardCpu, CpuOverWall }
+#[cfg(target_os = "linux")]
+fn validate_cpu_wall(wall:u128,start:Option<u64>,end:Option<u64>)
+    ->Result<Option<u64>,ClockError>{
+    if wall==0 {return Err(ClockError::ZeroWall);}
+    let (Some(start),Some(end))=(start,end) else{return Ok(None)};
+    if end<start {return Err(ClockError::BackwardCpu);}
+    let cpu=end-start;
+    if u128::from(cpu)*100>wall*102 {return Err(ClockError::CpuOverWall);}
+    Ok(Some(cpu))
+}
+#[cfg(target_os = "linux")]
+struct PairedClock {wall:Instant,cpu_start:Option<(&'static str,u64)>}
+#[cfg(target_os = "linux")]
+impl PairedClock {
+    fn begin()->Self {
+        // Wall begins BEFORE the first CPU probe, not after it.
+        let wall=Instant::now();
+        let cpu_start=thread_runtime_ns();
+        Self{wall,cpu_start}
+    }
+    fn end(self)->(u128,Option<u64>,&'static str){
+        // Wall ends AFTER the second CPU probe, not before it.
+        let cpu_end=thread_runtime_ns();
+        let wall=self.wall.elapsed().as_nanos();
+        let backend=match (self.cpu_start,cpu_end) {
+            (Some((a,_)),Some((b,_))) if a==b=>a,
+            _=>"CPU_INCONCLUSIVE",
+        };
+        if backend=="CPU_INCONCLUSIVE" {return (wall,None,backend);}
+        let cpu=validate_cpu_wall(wall,self.cpu_start.map(|(_,v)|v),
+            cpu_end.map(|(_,v)|v)).unwrap_or_else(|e|
+                panic!("M3_CLOCK_INVALID {e:?} wall_ns={wall} start={:?} end={cpu_end:?}",
+                    self.cpu_start));
+        (wall,cpu,backend)
+    }
+}
+#[cfg(target_os = "linux")]
+#[test]
+fn r1_cpu_probe_same_window_valid_and_invalid_accounting() {
+    assert_eq!(validate_cpu_wall(1000,Some(100),Some(1019)),Ok(Some(919)));
+    assert_eq!(validate_cpu_wall(1000,Some(100),Some(1120)),Ok(Some(1020)));
+    assert_eq!(validate_cpu_wall(1000,Some(100),Some(1121)),Err(ClockError::CpuOverWall));
+    assert_eq!(validate_cpu_wall(1000,Some(100),Some(99)),Err(ClockError::BackwardCpu));
+    assert_eq!(validate_cpu_wall(0,Some(100),Some(101)),Err(ClockError::ZeroWall));
+    assert_eq!(validate_cpu_wall(1000,None,Some(100)),Ok(None));
+    assert_eq!(validate_cpu_wall(1000,Some(100),None),Ok(None));
+    let clock=PairedClock::begin();
+    black_box((0..1024u32).fold(0u32,u32::wrapping_add));
+    let (wall,cpu,backend)=clock.end();
+    assert!(wall>0 && (cpu.is_some() || backend=="CPU_INCONCLUSIVE"));
+}
 #[cfg(target_os = "linux")]
 struct ReuseCostResult {
-    active_wall_ns: u128,
-    cpu_ticks: u64,
-    records: u64,
-    p50_batch_avg_ns: u64,
-    p99_batch_avg_ns: u64,
-    samples: usize,
+    active_wall_ns:u128,
+    cpu_ns:Option<u128>,
+    backend:&'static str,
+    clock_windows:u64,
+    records:u64,
+    p50_batch_avg_ns:u64,
+    p99_batch_avg_ns:u64,
+    samples:usize,
+    raw_windows:Vec<(u128,Option<u64>,&'static str)>,
+    raw_batch_samples:Vec<u64>,
 }
 #[cfg(target_os = "linux")]
 fn measure_reuse_leg(
-    leg: ReuseCostLeg,
-    source: &Corpus,
-    shard_len: usize,
-    aead: &mut [ReusedScope],
-    fec: &mut [ReusedScope],
-    scratch: &mut Vec<u8>,
-    target: Duration,
-) -> ReuseCostResult {
-    let mut active_ns = 0u128;
-    let mut ticks = 0u64;
-    let mut count = 0u64;
-    let mut sample = Vec::with_capacity(2048);
-    while active_ns < target.as_nanos() || count == 0 {
-        let staged = match leg {
-            ReuseCostLeg::SteadyAead => Some(prepare_reused(aead, shard_len)),
-            ReuseCostLeg::SteadyFec => Some(prepare_reused(fec, shard_len)),
-            _ => None,
+    leg: ReuseCostLeg, source:&Corpus, shard_len:usize,
+    aead:&mut [ReusedScope], fec:&mut [ReusedScope],
+    scratch:&mut Vec<u8>, target:Duration,
+)->ReuseCostResult{
+    // Batch 128 consecutive groups of 64 per clock window, so we do NOT
+    // charge high-resolution CPU probes once for every 64 records.
+    // Produce all unique-PN AEAD ciphertext before starting that window;
+    // a persistent RX context consumes each ciphertext exactly once.
+    // Kernel schedstat runtime may be lazily charged by ~0.5ms when the
+    // reporting thread is running. M3-015 first Release showed 3.999795ms
+    // CPU for a 3.374368ms wall window. Keep exactly paired probe boundaries
+    // but lengthen each observed window to O(80ms) to make this granularity
+    // substantially smaller than the strict 2% consistency margin. All
+    // fresh ciphertext is still prepared OUTSIDE the paired active interval.
+    // Native trace MUST continue to reject any CPU>wall*1.02 window.
+    // Preserve fast Debug correctness; Release still uses long scheduler
+    // accounting windows to avoid the observed 3ms CPU/wall misalignment.
+    let batches_per_window:usize=if cfg!(debug_assertions){128}else{3072};
+    let mut active_ns=0u128;
+    let mut cpu_total=0u128;
+    let mut cpu_valid=true;
+    let mut backend="CPU_INCONCLUSIVE";
+    let mut windows=0u64;
+    let mut count=0u64;
+    let mut samples=Vec::with_capacity(2048);
+    let mut raw_windows=Vec::new();
+    while active_ns<target.as_nanos() || count==0{
+        let staged=match leg{
+            ReuseCostLeg::SteadyAead=>Some(
+                (0..batches_per_window).map(|_|prepare_reused(aead,shard_len))
+                    .collect::<Vec<_>>()),
+            ReuseCostLeg::SteadyFec=>Some(
+                (0..batches_per_window).map(|_|prepare_reused(fec,shard_len))
+                    .collect::<Vec<_>>()),
+            _=>None,
         };
-        // For both steady legs the fresh real AEAD+HP Seal is outside timing.
-        // For both fresh legs old M3-013 presealed records are reused in newly
-        // constructed RX scopes with their 64 unique PNs. Never deliver replay
-        // within any persistent receiver scope.
-        let before_cpu = thread_cpu_ticks();
-        let started = Instant::now();
-        match leg {
-            ReuseCostLeg::FreshAead => batch(Mode::AeadOnly, source, scratch),
-            ReuseCostLeg::FreshFec => batch(Mode::AuthFec, source, scratch),
-            ReuseCostLeg::SteadyAead => consume_reused(aead, staged.as_ref().unwrap(), scratch),
-            ReuseCostLeg::SteadyFec => consume_reused(fec, staged.as_ref().unwrap(), scratch),
+        let clock=PairedClock::begin();
+        for i in 0..batches_per_window{
+            let started=Instant::now();
+            match leg{
+                ReuseCostLeg::FreshAead=>batch(Mode::AeadOnly,source,scratch),
+                ReuseCostLeg::FreshFec=>batch(Mode::AuthFec,source,scratch),
+                ReuseCostLeg::SteadyAead=>
+                    consume_reused(aead,&staged.as_ref().unwrap()[i],scratch),
+                ReuseCostLeg::SteadyFec=>
+                    consume_reused(fec,&staged.as_ref().unwrap()[i],scratch),
+            }
+            let per_record=(started.elapsed().as_nanos()/RECORDS_PER_BATCH as u128) as u64;
+            if samples.len()<samples.capacity(){
+                samples.push(per_record);
+            }else{
+                samples[(count/RECORDS_PER_BATCH as u64) as usize%2048]=per_record;
+            }
+            count+=RECORDS_PER_BATCH as u64;
         }
-        let elapsed = started.elapsed().as_nanos();
-        let after_cpu = thread_cpu_ticks();
-        active_ns += elapsed;
-        ticks += after_cpu.saturating_sub(before_cpu);
-        if sample.len() < sample.capacity() {
-            sample.push((elapsed / RECORDS_PER_BATCH as u128) as u64);
-        } else {
-            sample[(count / RECORDS_PER_BATCH as u64) as usize % 2048] =
-                (elapsed / RECORDS_PER_BATCH as u128) as u64;
-        }
-        count += RECORDS_PER_BATCH as u64;
+        let (elapsed,cpu,kind)=clock.end();
+        active_ns+=elapsed;
+        raw_windows.push((elapsed,cpu,kind));
+        windows+=1;
+        if backend=="CPU_INCONCLUSIVE" {backend=kind;}
+        if cpu.is_none() || kind!=backend {cpu_valid=false;}
+        if let Some(cpu)=cpu {cpu_total+=u128::from(cpu);}
     }
     check_reused(aead);
     check_reused(fec);
-    let p50 = percentile(&mut sample.clone(), 50);
-    let p99 = percentile(&mut sample.clone(), 99);
-    ReuseCostResult { active_wall_ns: active_ns, cpu_ticks: ticks,
-        records: count, p50_batch_avg_ns: p50, p99_batch_avg_ns: p99,
-        samples: sample.len() }
+    let p50=percentile(&mut samples.clone(),50);
+    let p99=percentile(&mut samples.clone(),99);
+    if cpu_valid {
+        assert!(cpu_total*100<=active_ns*102,
+            "M3_CLOCK_INVALID sum_cpu_ns={cpu_total} sum_wall_ns={active_ns}");
+    }
+    ReuseCostResult{
+        active_wall_ns:active_ns,cpu_ns:cpu_valid.then_some(cpu_total),
+        backend:if cpu_valid{backend}else{"CPU_INCONCLUSIVE"},
+        clock_windows:windows,records:count,p50_batch_avg_ns:p50,
+        p99_batch_avg_ns:p99,samples:samples.len(),
+        raw_windows,raw_batch_samples:samples,
+    }
 }
-
 #[cfg(target_os = "linux")]
 #[test]
 fn r1_steady_four_scope_auth_replay_pressure_and_independent_expiry() {
@@ -555,7 +663,7 @@ fn r1_steady_four_scope_auth_replay_pressure_and_independent_expiry() {
 }
 #[cfg(target_os = "linux")]
 #[test]
-#[cfg_attr(not(debug_assertions), ignore = "dedicated source-locked M3 Release job only; never run from general r1_ suites")]
+#[cfg_attr(not(debug_assertions), ignore = "M3-015 long Release only in source-pinned M0 clock workflow")]
 fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
     let release = !cfg!(debug_assertions);
     // Debug worker workflow verifies the exact harness and 98/98 correctness.
@@ -576,12 +684,14 @@ fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
         }
         let warmup = Duration::from_millis(1_050);
         let measure = Duration::from_millis(1_125);
-        let hz = cpu_hz();
         // Four >=1s active warmups per size; not included in measurements.
         for mode in [ReuseCostLeg::FreshAead, ReuseCostLeg::SteadyAead,
                      ReuseCostLeg::FreshFec, ReuseCostLeg::SteadyFec] {
-            let _ = measure_reuse_leg(mode, &fixed, shard_len,
+            let w = measure_reuse_leg(mode, &fixed, shard_len,
                 &mut aead, &mut fec, &mut scratch, warmup);
+            assert!(w.active_wall_ns>=warmup.as_nanos());
+            println!("M3_CLOCK_WARMUP profile=RELEASE mode={} shard_len={} active_wall_ns={} windows={} clock_backend={} cpu_valid={}",
+                mode.name(),shard_len,w.active_wall_ns,w.clock_windows,w.backend,w.cpu_ns.is_some());
         }
         for (round, modes) in [
             [ReuseCostLeg::FreshAead,ReuseCostLeg::SteadyAead,
@@ -595,27 +705,41 @@ fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
                 let m = measure_reuse_leg(mode, &fixed, shard_len,
                     &mut aead, &mut fec, &mut scratch, measure);
                 assert!(m.active_wall_ns >= 1_000_000_000);
-                assert!(m.cpu_ticks > 0 && m.records > 0);
-                assert!(m.p50_batch_avg_ns <= m.p99_batch_avg_ns);
-                let cpu_s = m.cpu_ticks as f64 / hz;
+                assert!(m.records>0 && m.clock_windows>0);
+                assert!(m.p50_batch_avg_ns<=m.p99_batch_avg_ns);
+                let cpu_s=m.cpu_ns.map(|ns|ns as f64/1e9);
+                let clock_status=if cpu_s.is_some(){"OK"}else{"CPU_INCONCLUSIVE"};
                 println!(
                     "M3_STEADY_RELEASE profile=RELEASE source=ACTION_SHA_REQUIRED \
                      origin=cfg_test_only backend=real_chacha_aead_hp8 \
                      mode={} shard_len={} tunnels=2 directions=2 \
                      scope_count=4 records_per_batch=64 repeat={} \
-                     warmup_active_s=1.05 active_wall_s={:.6} thread_cpu_s={:.6} \
-                     cpu_us_per_record={:.6} records={} wire_bytes={} \
+                     warmup_active_s=1.05 active_wall_s={:.9} thread_cpu_s={:.9} \
+                     cpu_us_per_record={:.9} records={} wire_bytes={} \
                      p50_batch_avg_ns_per_record={} p99_batch_avg_ns_per_record={} \
                      sample_count={} includes_new_rx_owner={} \
-                     preseal_excluded=true transport=NOT_RUN \
+                     clock_status={} clock_backend={} clock_windows={} \
+                     same_window_wall_ns={} same_window_cpu_ns={} \
+                     cpu_ratio_valid={} preseal_excluded=true transport=NOT_RUN \
                      steady_product_p99=NOT_QUALIFIED throughput=NOT_QUALIFIED",
                     mode.name(), shard_len, round,
-                    m.active_wall_ns as f64 / 1e9, cpu_s,
-                    cpu_s * 1e6 / m.records as f64, m.records,
-                    m.records * (shard_len+56+FIXED_WIRE_OVERHEAD) as u64,
-                    m.p50_batch_avg_ns, m.p99_batch_avg_ns, m.samples,
-                    matches!(mode,ReuseCostLeg::FreshAead | ReuseCostLeg::FreshFec)
+                    m.active_wall_ns as f64/1e9,cpu_s.unwrap_or(0.0),
+                    cpu_s.map(|s|s*1e6/m.records as f64).unwrap_or(0.0),
+                    m.records,m.records*(shard_len+56+FIXED_WIRE_OVERHEAD) as u64,
+                    m.p50_batch_avg_ns,m.p99_batch_avg_ns,m.samples,
+                    matches!(mode,ReuseCostLeg::FreshAead|ReuseCostLeg::FreshFec),
+                    clock_status,m.backend,m.clock_windows,m.active_wall_ns,
+                    m.cpu_ns.unwrap_or(0),cpu_s.is_some()
                 );
+                // Full paired CPU/Wall observations, emitted AFTER timing;
+                // consumer may independently check every boundary.
+                for (index,(wall,cpu,kind)) in m.raw_windows.iter().enumerate(){
+                    println!("M3_CLOCK_WINDOW profile=RELEASE mode={} shard_len={} repeat={} index={} wall_ns={} cpu_ns={} clock_backend={} cpu_valid={}",
+                        mode.name(),shard_len,round,index,wall,cpu.unwrap_or(0),kind,cpu.is_some());
+                }
+                println!("M3_BATCH_SAMPLE profile=RELEASE mode={} shard_len={} repeat={} batch_avg_ns_per_record={}",
+                    mode.name(),shard_len,round,
+                    m.raw_batch_samples.iter().map(u64::to_string).collect::<Vec<_>>().join(","));
             }
         }
     }
