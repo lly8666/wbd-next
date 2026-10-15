@@ -280,6 +280,8 @@ def verify_worker_commits(role, commits):
                    item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
                    item.get("paths")==[M2_G2_REFRESH_PATH],
                    "M2 exact checker refresh violated M0 policy pin")
+            checked += 1
+            continue
         if item.get("approved_m2_g2_tool_refresh_v2") is True:
             g.need(role["id"]=="M2" and item.get("parents")==1 and
                    item.get("first_parent")==M2_G2_SECOND_REFRESH_PARENT and
