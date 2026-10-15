@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv")
+import ("errors";"testing";"hash/fnv";"fmt";"github.com/lly8666/wobuzhidao/internal/tlsrecord")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -84,5 +84,67 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
     b:=&v4NativeRustProbe{}
     if _,e:=b.prepare(V4ColdSessionSnapshot{},0);e==nil{
         t.Fatal("forged empty snapshot minted Rust owner candidate")
+    }
+}
+
+ 
+// Actual credential-checked Go V4 all-cipher sessions install the SAME
+// normal-build Rust crypto state that eventual RX ingress must use.
+// This does not claim a business receiver/production capability or kernel I/O.
+func TestR0V4NativeRustProtectedAEADReplayAllCiphers(t *testing.T){
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("cipher-%d",cipher),func(t *testing.T){
+            store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+            bridge:=&v4NativeRustProbe{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("protected Go session not committed: %v %v",ce,se)
+            }
+            clientCold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            cold,e:=server.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            if cold.DirectionKeys()!=clientCold.DirectionKeys()||cold.Cipher()!=cipher{
+                t.Fatal("Rust crypto source was not protected negotiated direction")
+            }
+            cLimit,sLimit:=cold.RecordLimits()
+            send,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(sLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            samples:=[][]byte{[]byte("pn0"),[]byte("pn1"),[]byte("pn2")}
+            var wires [3][]byte
+            for i,payload:=range samples{
+                raw,pn,e:=send.Seal(payload)
+                if e!=nil||pn!=uint64(i){t.Fatalf("Go PN seal %d: %d %v",i,pn,e)}
+                wires[i]=raw
+            }
+            for _,idx:=range []int{2,0,1}{
+                pn,kind,digest,e:=bridge.openAuthenticated(wires[idx])
+                h:=fnv.New64a();_,_=h.Write(samples[idx])
+                if e!=nil||pn!=uint64(idx)||kind!=0||digest!=h.Sum64(){
+                    t.Fatalf("real Rust unique out-of-order open %d: pn=%d kind=%d hash=%x err=%v",
+                        idx,pn,kind,digest,e)
+                }
+            }
+            if _,_,_,e:=bridge.openAuthenticated(wires[0]);e==nil{
+                t.Fatal("verified old PN replay delivered twice")
+            }
+            corrupt:=append([]byte(nil),wires[1]...)
+            corrupt[len(corrupt)-1]^=0x80
+            if _,_,_,e:=bridge.openAuthenticated(corrupt);e==nil{
+                t.Fatal("corrupted AEAD record was accepted")
+            }
+            opposite,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().S2C,int(cLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            wrong,_,e:=opposite.Seal([]byte("wrong-direction"))
+            if e!=nil{t.Fatal(e)}
+            if _,_,_,e:=bridge.openAuthenticated(wrong);e==nil{
+                t.Fatal("TX-direction keys accepted by Rust RX")
+            }
+            if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,e:=bridge.openAuthenticated(wires[2]);e==nil{
+                t.Fatal("Stop allowed old generation to open another record")
+            }
+            if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{
+                t.Fatal(e)
+            }
+        })
     }
 }

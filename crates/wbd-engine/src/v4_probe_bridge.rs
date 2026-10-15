@@ -14,6 +14,7 @@ use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
 use crate::runtime::early_rx::{EarlyRxOwner,EarlyLimits,EarlyAccepted};
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
+use crate::v4_owner_crypto::ProtectedScopedCrypto;
 use crate::runtime::{QueueLimits, RxOwner, TxOwner, RxPacket};
 use crate::runtime::generation::{ScopeToken, ScopedOwner, LoanBatch};
 
@@ -41,6 +42,7 @@ struct Probe {
     drained:bool,
     held_rx:Option<LoanBatch<RxPacket>>,
     cold_identity: ColdIdentity,
+    protected_crypto: ProtectedScopedCrypto,
 }
 
 struct Probes {
@@ -75,6 +77,10 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
         server:true,
     };
     data.preflight_untrusted_owner(&expected).map_err(|_| INVALID)?;
+    // Crypto setup is production-compiled and common to the future owner.
+    // This test-only FFI cannot become a production source of trust.
+    let protected_crypto=ProtectedScopedCrypto::prepare_from_protected_go(&data,&expected)
+        .map_err(|_| INVALID)?;
     // Separate locally minted opaque token; Go's wire epoch/lane is NOT a
     // Rust owner generation and cannot select an existing owner.
     let handle = (u64::from(generation) << 32) | 0x5642;
@@ -100,6 +106,7 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     state.slots.insert(handle, Probe {
         owner,token,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
+        protected_crypto,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -190,7 +197,7 @@ fn probe_drain(handle:u64)->Result<(u32,u32,u64),i32> {
     Ok((count,len,digest))
 }
 
-fn probe_commit(handle:u64,early_count:u32,early_bytes:u32) -> i32 {
+fn probe_commit(handle:u64,early_count:u32,early_bytes:u32,tx_boundary:u32) -> i32 {
     let Ok(mut state)=registry().lock() else {return BAD_STAGE};
     let Some(probe)=state.slots.get_mut(&handle) else {return UNKNOWN};
     if probe.phase!=PH_PREPARED {return BAD_STAGE}
@@ -206,6 +213,10 @@ fn probe_commit(handle:u64,early_count:u32,early_bytes:u32) -> i32 {
     // private Go caller. Rust now moves all already-copied early bytes from
     // its staged, bounded owner into its inert RX, atomically.
     if probe.owner.detach(&probe.token).is_err(){return BAD_STAGE}
+    if probe.protected_crypto.commit_after_detach(
+        probe.token.serial(),probe.cold_identity.go_lane_id,
+        probe.cold_identity.logical_epoch,tx_boundary,
+    ).is_err(){return BAD_STAGE}
     probe.phase=PH_COMMITTED;
     OK
 }
@@ -241,6 +252,34 @@ fn probe_release(handle:u64)->i32 {
         Some(_)=>{state.slots.remove(&handle);OK},
     }
 }
+// Inert observation of the production-compiled authenticated AEAD/PN gate.
+// Only after Commit; never emits business or promotes the test-only C ABI.
+fn probe_open_unique(handle:u64,wire:&mut [u8])->Result<(u64,u8,u64),i32>{
+    let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
+    let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
+    if p.phase!=PH_COMMITTED {return Err(BAD_STAGE)}
+    p.protected_crypto.open_unique_after_active(
+        p.token.serial(),p.cold_identity.logical_epoch,wire,
+    ).map_err(|_| INVALID)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_open_unique(
+    handle:u64,wire:*mut u8,len:usize,pn:*mut u64,kind:*mut u32,digest:*mut u64,
+)->i32{
+    if wire.is_null()||pn.is_null()||kind.is_null()||digest.is_null()||
+        len<29||len>2048{return INVALID}
+    // Borrowed solely within the C call. Go does not publish decrypted bytes.
+    let bytes=unsafe{std::slice::from_raw_parts_mut(wire,len)};
+    match probe_open_unique(handle,bytes){
+        Ok((number,k,hash))=>{
+            unsafe{pn.write(number);kind.write(u32::from(k));digest.write(hash)};
+            OK
+        }
+        Err(e)=>e,
+    }
+}
+
 // All these C symbols are compiled ONLY under m0_v4_probe Linux feature.
 // They intentionally do not authenticate caller bytes; production links do
 // not contain them and capability reporting always remains features=0.
@@ -304,8 +343,8 @@ pub extern "C" fn wbd_m0_test_probe_return_held_rx(handle:u64)->i32{
     probe_return_held_rx(handle)
 }
 #[no_mangle]
-pub extern "C" fn wbd_m0_test_probe_commit(handle:u64,n:u32,bytes:u32)->i32{
-    probe_commit(handle,n,bytes)
+pub extern "C" fn wbd_m0_test_probe_commit(handle:u64,n:u32,bytes:u32,tx_boundary:u32)->i32{
+    probe_commit(handle,n,bytes,tx_boundary)
 }
 #[no_mangle]
 pub extern "C" fn wbd_m0_test_probe_abort(handle:u64)->i32{
@@ -348,11 +387,11 @@ mod tests {
     fn r0_m0_native_probe_local_fresh_generation_and_bounded_phases(){
         let a=candidate();
         let first=probe_prepare(&a,0).unwrap();
-        assert_eq!(probe_commit(first,65,65),INVALID);
-        assert_eq!(probe_commit(first,1,1401*64),INVALID);
+        assert_eq!(probe_commit(first,65,65,777),INVALID);
+        assert_eq!(probe_commit(first,1,1401*64,777),INVALID);
         assert_eq!(probe_stop(first),BAD_STAGE);
-        assert_eq!(probe_commit(first,0,0),OK);
-        assert_eq!(probe_commit(first,0,0),BAD_STAGE);
+        assert_eq!(probe_commit(first,0,0,777),OK);
+        assert_eq!(probe_commit(first,0,0,777),BAD_STAGE);
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);
         assert_eq!(probe_release(first),OK);
@@ -361,8 +400,8 @@ mod tests {
         assert_eq!(probe_stage(second,99,&[1]),INVALID);
         assert_eq!(probe_stage(second,100,&[11,22,33]),OK);
         assert_eq!(probe_stage(second,103,&[44,55]),OK);
-        assert_eq!(probe_commit(second,1,5),INVALID); // metadata can't lie
-        assert_eq!(probe_commit(second,2,5),OK);
+        assert_eq!(probe_commit(second,1,5,777),INVALID); // metadata can't lie
+        assert_eq!(probe_commit(second,2,5,777),OK);
         let (n,bytes,digest)=probe_drain(second).unwrap();
         let expected=[11u8,22,33,44,55].iter().fold(0xcbf29ce484222325u64,
             |v,b|(v^u64::from(*b)).wrapping_mul(0x100000001b3));
@@ -373,7 +412,7 @@ mod tests {
         let third=probe_prepare(&a,100).unwrap();
         assert_ne!(third,second);
         assert_eq!(probe_abort(third),OK);
-        assert_eq!(probe_commit(second,0,0),UNKNOWN);
+        assert_eq!(probe_commit(second,0,0,777),UNKNOWN);
         let mut corrupt=a;corrupt[0]=0;
         assert_eq!(probe_prepare(&corrupt,0).err(),Some(INVALID));
         let mut forged_client=a;forged_client[8]=0;
@@ -382,13 +421,13 @@ mod tests {
         // quiescence must be INCOMPLETE while a new generation can progress.
         let fourth=probe_prepare(&a,200).unwrap();
         assert_eq!(probe_stage(fourth,200,&[5,6]),OK);
-        assert_eq!(probe_commit(fourth,1,2),OK);
+        assert_eq!(probe_commit(fourth,1,2,777),OK);
         assert_eq!(probe_hold_rx(fourth).unwrap().0,1);
         assert_eq!(probe_stop(fourth),STOP_INCOMPLETE);
         assert_eq!(probe_release(fourth),BAD_STAGE);
         let fifth=probe_prepare(&a,300).unwrap();
         assert_ne!(fourth,fifth);
-        assert_eq!(probe_commit(fifth,0,0),OK);
+        assert_eq!(probe_commit(fifth,0,0,777),OK);
         assert_eq!(probe_stop(fifth),OK);
         assert_eq!(probe_release(fifth),OK);
         assert_eq!(probe_drain(fourth).err(),Some(BAD_STAGE));

@@ -5,6 +5,7 @@
 #![forbid(unsafe_code)]
 
 use wbd_types::{LaneKey, TunnelKey};
+use wbd_codec::record_crypto::DirectionKeys;
 
 pub const COLD_V4_LEN: usize = 248;
 const MAGIC: &[u8; 4] = b"WBCO";
@@ -108,6 +109,18 @@ impl UntrustedColdV4 {
         // Local generations have no corresponding Go wire field; they MUST
         // be validated and allocated by the future Rust owner/engine.
         Ok(())
+    }
+    /// Only available to the internal private Go-session owner composition.
+    /// Format-valid untrusted bytes MUST NOT authorize calling an installer.
+    pub(crate) fn internal_direction_keys(&self) -> (DirectionKeys,DirectionKeys) {
+        let direction=|start:usize| {
+            let mut aead_key=[0;32];
+            aead_key.copy_from_slice(&self.bytes[start..start+32]);
+            let mut iv=[0;12];iv.copy_from_slice(&self.bytes[start+32..start+44]);
+            let mut hp_key=[0;32];hp_key.copy_from_slice(&self.bytes[start+44..start+76]);
+            DirectionKeys{aead_key,iv,hp_key}
+        };
+        (direction(PREFIX),direction(PREFIX+KEYS_LEN))
     }
     /// No FecOrigin, live owner install, ABI call or key getter is exposed.
     pub fn direction_materials_distinct(&self) -> bool {

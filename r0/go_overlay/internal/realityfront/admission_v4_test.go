@@ -452,6 +452,10 @@ func (p *v4RecordingPending) abort() {
 }
 func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
     *V4ClientSession,*V4ServerSession,error,error) {
+    return v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha)
+}
+func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochStore,cipher uint8)(
+    *V4ClientSession,*V4ServerSession,error,error) {
     t.Helper()
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
@@ -476,7 +480,7 @@ func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
     c,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
         TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
         Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
-        ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
+        ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,cipher),
     },V4ClientOptions{DataPlaneReady:true})
     select {
     case r:= <-ch:return c,r.s,ce,r.err

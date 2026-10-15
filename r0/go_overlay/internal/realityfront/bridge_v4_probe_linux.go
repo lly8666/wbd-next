@@ -6,7 +6,8 @@ package realityfront
 #include <stdint.h>
 #include <stddef.h>
 extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t, uint64_t *);
-extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t);
+extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
+extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -77,7 +78,7 @@ type v4NativeRustPending struct {
     owner *v4NativeRustProbe
     committed,aborted bool
 }
-func (p *v4NativeRustPending) commit(early []faketcp.TransitionPacket)error{
+func (p *v4NativeRustPending) commit(early []faketcp.TransitionPacket, exactTXBoundary uint32)error{
     if p.committed||p.aborted{return errV4NativeProbe}
     if len(early)>faketcp.MaxTransitionRecords{return errV4NativeProbe}
     total:=0
@@ -92,7 +93,7 @@ func (p *v4NativeRustPending) commit(early []faketcp.TransitionPacket)error{
             errV4NativeProbe,packet.Seq,int(code))}
     }
     code:=C.wbd_m0_test_probe_commit(C.uint64_t(p.handle),
-        C.uint32_t(len(early)),C.uint32_t(total))
+        C.uint32_t(len(early)),C.uint32_t(total),C.uint32_t(exactTXBoundary))
     if code!=0{return fmt.Errorf("%w: commit=%d",errV4NativeProbe,int(code))}
     p.committed=true;p.owner.committed=true;return nil
 }
@@ -148,4 +149,21 @@ func (b *v4NativeRustProbe) stopAndRelease()error{
         return fmt.Errorf("%w: release=%d",errV4NativeProbe,int(c))
     }
     return nil
+}
+
+// Native observation only: invokes the exact normal-build scoped crypto
+// AEAD/PN gate AFTER verified Go's private Detach+Commit. Does not deliver
+// business, publish capability or retain Go memory.
+func (b *v4NativeRustProbe) openAuthenticated(wire []byte)(uint64,uint32,uint64,error){
+    if !b.committed||b.handle==0||len(wire)==0{return 0,0,0,errV4NativeProbe}
+    copied:=append([]byte(nil),wire...)
+    var pn C.uint64_t
+    var kind C.uint32_t
+    var digest C.uint64_t
+    code:=C.wbd_m0_test_probe_open_unique(C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&copied[0])),C.size_t(len(copied)),
+        &pn,&kind,&digest)
+    runtime.KeepAlive(copied)
+    if code!=0{return 0,0,0,fmt.Errorf("%w: AEAD/PN open=%d",errV4NativeProbe,int(code))}
+    return uint64(pn),uint32(kind),uint64(digest),nil
 }

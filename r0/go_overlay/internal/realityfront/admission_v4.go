@@ -68,7 +68,7 @@ type V4ClientOptions struct {
 // Future native Go bridge files in this package may implement it. With no
 // backend the legacy fail-closed, cold-only behavior is unchanged.
 type v4PreparedOwner interface {
-    commit(early []faketcp.TransitionPacket) error
+    commit(early []faketcp.TransitionPacket, exactTXBoundary uint32) error
     abort()
 }
 type v4OwnerBridge interface {
@@ -451,7 +451,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if prepared!=nil {
         // A native failure AFTER protected reply is fatal: never publish Go
         // epoch, keep owner inactive and abort this candidate, not a peer lane.
-        if err:=prepared.commit(early);err!=nil{
+        if err:=prepared.commit(early,assoc.SenderNext());err!=nil{
             prepared.abort()
             return nil,err
         }
