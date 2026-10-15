@@ -4,26 +4,24 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 12,
-  "checkpoint_sha": "1cceabc31b213d53c9060a37743fb5909dfe2d27",
-  "progress": "blocked",
+  "sequence": 13,
+  "checkpoint_sha": "89291d54d4ef7d53d49091a2e50ea00cb380b19d",
+  "progress": "partial",
   "task_id": "R2-M2-REVERSE-GRANT-OWNER-BENCH-006",
-  "current_task": "M2 owner-bench-006 code qualified 44/44 native on immutable CODE SOURCE 25642589; M0-approved exact single-file checker refresh bde5728 fixes 64-commit limit but refresh Governance38683108958 and evidence Governance38683382300 both FAIL due main moving mid-audit. Scope governance still blocked pending stable main window.",
-  "why_now": "M0 newly authorized exact M2-only tools/worker_scope_ci.py single-path refresh: parent H018a07c, byte-identical main Git blob26983e6 and control anchor af8a8b4; worker matched and applied bde5728. This fixes old 65>64 structural bound, preserves full per-commit path audit up to96. Moving main twice prevented a final PASS.",
-  "done_when": "Source-exact compiled-once native r2_ 44/44 including six owner-scoped grant and AB/BA/AB synthetic CPU/RSS component tests; original code unchanged. Formal Governance cannot yet pass with moving main. Evidence S1cceabc, one-time refresh bde5728, H seq12 only cursor. Await M0 stable main audit interval before renewed governance; product still NOT_RUN.",
-  "next_action": "M0 coordinate a stable main/ref interval long enough for ~70-commit full Governance audit or approve a separate rigorous pinned-control workflow. Do NOT repeat identical moved-main attempts, relax role checks, touch root files again, or mark M2 accepted without a PASS. M2 remains paused/blocked pending M0.",
+  "current_task": "Completed scoped M2 reverse repair grant owner and bounded 2-tunnel P0 synthetic cost contract: code SOURCE25642589 native compiled once 44/44 PASS, G2 bootstrap/static PASS. M0 exact one-time root checker refresh bde5728; H Governance38683609942 SUCCESS and closed recovery evidence S89291d Governance38683931339 SUCCESS. No full product claims.",
+  "why_now": "Prior seq12 H7fe75bc was blocked pending reliable full-history G2 audit. Its Governance38683609942 is now ROLE_SCOPE_PASS with 33 scoped commits after M0-approved byte-identical checker update. Evidence S89291d closed M0 structural bound request and Governance38683931339 SUCCESS.",
+  "done_when": "All 38 previous plus 6 new scoped native R2 tests PASS (44/44) exact compiled-once run38678654629; two independent reverse route scopes, fake time, 0/1/32/33, old epoch and uncertain debit, no false ACK; source-locked AB/BA/AB synthetic owner scenario wall/process CPU ticks and VmRSS/VmData observed. Allocation counter NOT_INSTRUMENTED, product performance NOT_RUN. Approved checker refresh and final evidence/H Governance tracked.",
+  "next_action": "No next M2 task claimed. M0 alone owns real Go V4 protected source/session attestation, Rust owner/driver integration, privileged AF_PACKET, native WinARM, P1–P3 and product physical. Wait for next formally assigned main registry M2 task.",
   "unverified": true,
   "last_tested_source": "25642589f0feb12b44304fd21842c507a9314d35",
   "evidence_refs": [
     "docs/evidence/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M2/requests/M2-G2-ANCESTRY-BOUND-006.md"
-  ],
+  "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.md",
     "docs/evidence/M2/R2-M2-RECEIPT-REVERSE-SCOPE-005.json"
   ],
-  "partial_summary": "Previous seq11 H018a07c, evidence S1228a111, root 64-commit ancestry exhausted and native SOURCE25642589 already 44/44 PASS. M0 main authorized exact one-time non-general checker path refresh M2 H018a07c→ bde5728, only tools/worker_scope_ci.py, Git blob26983e6 same live main; main anchor af8a8b, new max96 and complete per-commit audit. Refresh Governance38683108958 attempt1 FAIL control or source moved mid-audit; new evidence S1cceabc includes details and request update; evidence Gov38683382300 also FAIL same mid-audit main moving. This is a new dynamic blockage, not old bound. Cursor-only H seq12 checkpoint S1cceabc, no new code. M0 must coordinate stable main-control interval; no product Go V4/raw AF_PACKET/live WinArm/500Mbps/p99/physical qualification."
+  "partial_summary": "M2 unchanged rev2 epoch1 wave4 reverse-grant-owner-bench006 code SOURCE25642589 native38678654629 44/44 PASS compiled-once, 3 repeated AB/BA/AB synthetic component cost legs wall/process ticks/RSS/VmData, heap allocation counter NOT_INSTRUMENTED. G2 source38678654565/R0 static38678654572 PASS. Original Governance38678654568 FAIL hard G2_BASE<=64; M0 approved exact one-time checker blob mirroring from H018a07c to bde5728, bounded <=96 and fully auditing each commit. Refresh Gov38683108958 and evidence Gov38683382300 FAIL because main moved; H7fe75bc Gov38683609942 SUCCESS ROLE_SCOPE_PASS 33 scoped role commits. Evidence S89291d Governance38683931339 SUCCESS closes M0 request. Final cursor-only H seq13 checkpoint S89291d; no new M2 work, GoV4 trusted origin, real AF_PACKET, product/physical/500Mbps/p99 NOT_RUN."
 }
