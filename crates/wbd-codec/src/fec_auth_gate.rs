@@ -80,7 +80,7 @@ impl AuthFecScopeGate{
         if lane_id==0||tunnel_id==0||id_config.epoch==0||
             id_config.epoch!=fec_config.epoch||
             id_config.direction!=fec_config.direction||
-            id_config.retired_floor.saturating_add(1)<fec_config.first_id_ext||
+            id_config.retired_floor>=fec_config.first_id_ext||
             fec_config.first_id_ext==0{
             return Err(GateConfigError::MismatchedOwners);
         }
