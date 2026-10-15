@@ -87,6 +87,8 @@ M3_APPROVED_PRE_SYNC_HEAD = "4776cc2bc17a78fc67e0898a11b439632037219a"
 # touching exactly one file, whose Git blob is byte-identical to live M0 main.
 M3_G2_REFRESH_PARENT = "56907bdb4630d0a5a6a29c2d9cd029c89086566e"
 M0_G2_REFRESH_ANCHOR = "c00356739359db90a864f0894d8cdd965b2df132"
+M0_M3_HISTORICAL_TOOL_SOURCE = "404d37028a4c0d9949c379647dd1299609822cc7"
+M0_M3_HISTORICAL_TOOL_BLOB = "1d27c4ec8d02035fc53d4e657f2cd7427373f8df"
 M3_G2_REFRESH_PATH = "tools/worker_scope_ci.py"
 
 # Exact one-time M2 root checker refresh after the old worker 64-commit
@@ -135,9 +137,15 @@ def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
     anchor=api.get(f"compare/{M0_G2_REFRESH_ANCHOR}...{control_sha}?per_page=1")
     g.need(anchor.get("status") in {"ahead","identical"},
            "M0 full history G2 approval not on current main")
-    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={control_sha}")
+    # M3 mirrored the main checker from the historical approved snapshot.
+    # New M0-owned tools cannot retroactively invalidate that one-time sync.
+    history=api.get(f"compare/{M0_M3_HISTORICAL_TOOL_SOURCE}...{control_sha}?per_page=1")
+    g.need(history.get("status") in {"ahead","identical"},
+           "M3 checker approval source not in immutable main history")
+    reviewed=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={M0_M3_HISTORICAL_TOOL_SOURCE}")
     actual=api.get(f"contents/{M3_G2_REFRESH_PATH}?ref={sha}")
     g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==M0_M3_HISTORICAL_TOOL_BLOB and
            reviewed.get("sha")==actual.get("sha") and
            isinstance(reviewed.get("sha"),str) and reviewed["sha"]!= "",
            "M3 checker refresh is not byte-identical to main-owned checker")
