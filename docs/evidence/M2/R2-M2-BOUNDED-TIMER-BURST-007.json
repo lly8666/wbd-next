@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "branch": "work/m2-r2-recovery",
+  "task_id": "R2-M2-BOUNDED-TIMER-BURST-007",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "code_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
+  "source_sha": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
+  "progress": "blocked",
+  "result": "NATIVE_51_51_PASS__SOURCE_GOVERNANCE_FAIL_RETROACTIVE_LIVE_CHECKER_BLOB_POLICY",
+  "previous": {
+    "H": "901abe61d3c45dc6c6a34467fac3b6e384ab4295",
+    "cursor_sequence": 13,
+    "checkpoint_sha": "89291d54d4ef7d53d49091a2e50ea00cb380b19d",
+    "H_Governance": 38684127224,
+    "H_Governance_result": "success",
+    "handoff": "CLEAN"
+  },
+  "scope": "ReceiptState expiry+wake BTreeSet index, 32 per-poll wake events/candidates, 10000 due/10000 queued-timeout/10000 hard-expire, exact no lazy tombstones, clock jump and RACK reindex only on witness, process grant deadline/fresh 32/33 native fixture.",
+  "code_paths": [
+    "crates/wbd-recovery/src/receipt.rs",
+    "crates/wbd-recovery/src/global_sparse.rs"
+  ],
+  "new_tests": [
+    "r2_burst_indexed_0_1_32_33_deadlines_without_table_rescan",
+    "r2_burst_10000_due_drained_32_per_poll_counted_index_only",
+    "r2_burst_10000_hard_expiry_after_clock_jump_no_retained_tombstones",
+    "r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry",
+    "r2_burst_10000_queued_timeouts_are_also_index_budgeted",
+    "r2_burst_stale_generation_and_fresh_shadow_independent",
+    "r2_burst_grants_32_33_timeout_reclaims_unused_no_fresh_hol"
+  ],
+  "tests": {
+    "worker_native": {
+      "run_id": 38689135611,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 116270746933,
+      "consume_job_id": 116270833903,
+      "compiled_once": true,
+      "filter": "r2_",
+      "tests_passed": 51,
+      "tests_failed": 0,
+      "previous_tests": 44,
+      "new_tests": 7,
+      "binary_sha256": "d87a717b7b18e82c60cda4fdff85da6bbf3c9bdfed35eda827ea7c93329dc92c",
+      "log_sha256": "9975e7302c6daf969fb1f98946c44e3a3a17f0507d4f5633e3d96544f95ed311",
+      "build_artifact": {
+        "id": 11951636213,
+        "digest": "sha256:f7bb4374b0c8f57e299a60d420d5bddc449012bf939447491eed8933b5c03823"
+      },
+      "result_artifact": {
+        "id": 11951211328,
+        "digest": "sha256:164c63c29e52e06f013d4cc3ae81ff1510eb09521500146b97915d5adb815e12"
+      }
+    },
+    "g2_scoped_bootstrap": {
+      "run_id": 38689135649,
+      "conclusion": "success",
+      "build_job_id": 116270747323,
+      "consume_job_id": 116270929115,
+      "result_artifact_id": 11951166398,
+      "digest": "sha256:14b2b3eaed6f29f4c451d5d9584662c25afcb8216b1cb321b357103cd3314ba9"
+    },
+    "r0_static": {
+      "run_id": 38689135604,
+      "conclusion": "success",
+      "job_id": 116270747169,
+      "artifact_id": 11951451124,
+      "digest": "sha256:443d598b7a2397a2c306834d60fe27da35db101e9518926de27023273407a614"
+    },
+    "source_governance": {
+      "run_id": 38689135617,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116270746921,
+      "artifact_id": 11951726342,
+      "digest": "sha256:19d0be54f94279567d25068143bbe1363760252476a5b69010ee2865d7f7a9f6",
+      "reason": "ROLE_SCOPE_FAILED: M2 checker refresh must copy byte-identical live M0 tool",
+      "cause": "M2 one-time previously approved immutable checker blob26983e6 differs from newly updated M0 main checker blob817934b; live-equality predicate retroactively invalidates historic explicit sync."
+    }
+  },
+  "limits": {
+    "max_wake_events_per_poll": 32,
+    "max_candidates_per_poll": 32,
+    "hard_expiry_releases": "unbounded by 32 but bounded by configured max_shadow_entries and actual expired output",
+    "rack_rebuild": "on genuine positive authenticated witness event only; O(live shadow) reindex",
+    "clock": "synthetic injected monotonic nanoseconds",
+    "inspections": "actual index nodes popped, not CPU cycles",
+    "allocation_count": "NOT_INSTRUMENTED",
+    "cpu": "NOT_INSTRUMENTED",
+    "product_perf": "NOT_RUN"
+  },
+  "request_ref": ".governance/workstreams/M2/requests/M2-CHECKER-HISTORIC-PIN-007.md",
+  "unverified": true,
+  "physical": "NOT_RUN",
+  "product": "NOT_RUN",
+  "go_v4": "DISABLED",
+  "next_action": "M0 root checker immutable historic source pin and explicit worker migration; no re-run of unchanged failed Governance; M2 retains failed history and cursor progress blocked. No product claims."
+}

@@ -1,0 +1,16 @@
+# M2 → M0 · historical G2 checker blob must be source-pinned
+
+**Status:** OPEN / BLOCKED; no Actions dispatch request
+**Role:** M2 `work/m2-r2-recovery`, reservation_revision2 assignment_epoch1
+**Task:** `R2-M2-BOUNDED-TIMER-BURST-007`
+**CODE SOURCE:** `ba7b45138cd416dcd3ce315c7111c9429829afdd`, native worker Actions https://github.com/lly8666/wbd-next/actions/runs/38689135611 **51/51 PASS** (compiled once; 44 old + 7 new), G2/bootstrap and R0 static SUCCESS.
+
+## Governance failure
+
+New CODE SOURCE Governance https://github.com/lly8666/wbd-next/actions/runs/38689135617 attempt1 **FAIL**, job116270746921: `ROLE_SCOPE_FAILED: M2 checker refresh must copy byte-identical live M0 tool`. The previous M2 **M0-approved** one-time checker mirror `bde572873c27b1c535e77ee53507fb979bc5f326` copied Git blob `26983e630ab2fbf28466dac457923904aaa6be60` byte-identically from M0 main at that time. Under newer main HEAD `75b4e34760addaa810ae7836a04f91368ee01021`, M0's root checker Git blob is now `817934b16c6e088069ad9b4c265c93daacda7759`; the live-equality check in `review_m2_g2_single_file_refresh` rejects that previously valid immutable historical commit. This predicate cannot be satisfied if main ever evolves. It is NOT source Rust, R2 semantics, native build, unauthorised M2 paths, or old 64/96 bounded-history issue.
+
+## Required M0-controlled resolution
+
+Modify M0 root `tools/worker_scope_ci.py` on main to check that unique M2 refresh is byte-identical to the **exact immutable main-approved source/blobs** at authorization time, not the *changing live main* script. Keep exact first parent `018a07c880473a896d40c0d97a59250212f7dad8`, one-path-only exception, M0 control-anchor ancestry, complete <=96 commit history, every touched path and caller identity checks. Ensure the corrected selector reaches M2 via a separately documented, explicitly authorized single-path sync if necessary, or formally migrate branch/epoch. Alternative: documented compatible current-main pinned immutable blob review that does not retroactively void the earlier approval. M2 has no permission to edit root CI or self-approve checker refresh.
+
+After M0 explicitly authorizes and implements, M2 rechecks specific new check run(s) rather than dispatching repeated identical failures. Then evidence S + cursor-only H Governance can become PASS. Meanwhile keep `progress=blocked`, previous code SOURCE 51/51 exact native qualified but task governance incomplete, project/product/physical NOT_RUN.
