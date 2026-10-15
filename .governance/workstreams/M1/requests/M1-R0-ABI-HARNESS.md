@@ -36,3 +36,6 @@ SOURCE `fc023fba5bc7c51d07868a3d64d5356596130f75` native [38682808748](https://g
 ## Task R1-M1-OWNER-LOAN-STOP-INTEGRATION-009
 
 Exact source `39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed` worker-native [38688812162](https://github.com/lly8666/wbd-next/actions/runs/38688812162) 80/80 r1_ PASS, plus 3 unrelated R0 tests filtered. Root R0 native ABI [38688812106](https://github.com/lly8666/wbd-next/actions/runs/38688812106) **FAIL** although Rust binary rc0 **82 passed, 1 ignored**, due to old worker branch `tools/r0_abi_bundle.py` matching `"3 passed"` in unfiltered test output. Request remains M0-owned; no M1 root tool/workflow edit.
+
+## New task R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010 (worker source exact)
+Native worker [38711805820](https://github.com/lly8666/wbd-next/actions/runs/38711805820) 88/88 scoped r1_ PASS from CODE `2ce58427f84a777bce6242f6803a5c82413b5fe2`. Shared old M0-owned root R0 native ABI [38711805900](https://github.com/lly8666/wbd-next/actions/runs/38711805900) consumer still FAIL on stale literal `"3 passed"` filtered marker while actual Rust unit executable returned rc0 **90 passed, 1 ignored**. The issue remains M0-owned, not modified by M1.
