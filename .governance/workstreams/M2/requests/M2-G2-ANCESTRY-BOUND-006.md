@@ -19,3 +19,9 @@ M2 code native https://github.com/lly8666/wbd-next/actions/runs/38678654629 **44
 Review and implement an **explicitly bounded** audited continuation strategy (e.g. authorized new reviewed base and full per-commit path checks with bounded pagination), including how the new trusted root checker reaches the currently frozen worker checkout. Alternatively issue a formally registered new worker branch/epoch with safe ancestry/cursor migration. Do not force-push/rewrite history, import unreviewed root files into M2-owned paths, or simply waive per-commit source audits.
 
 After M0 action, M2 can resume the normal evidence S → cursor-only H Governance. No repetition of the unchanged failed Governance attempt; product qualification is still NOT_RUN.
+
+## 2026-10-15 progress: M0 remedy implemented, audit result still pending
+
+M0 approved a one-time exact-parent, one-path, byte-identical checker refresh with 96-commit bounded full history audit. M2 implemented refresh commit `bde572873c27b1c535e77ee53507fb979bc5f326` directly atop H `018a07c880473a896d40c0d97a59250212f7dad8` and exact main checker blob `26983e630ab2fbf28466dac457923904aaa6be60`. The old structural 64-commit failure is **remedied** without a generic worker root-write permission.
+
+Refresh Governance [38683108958](https://github.com/lly8666/wbd-next/actions/runs/38683108958) **FAIL**, different error `ROLE_SCOPE_FAILED: control or source moved mid-audit`. Mark request as **M0 remedy applied / end-to-end clearance pending a stable-control Governance success**. If subsequent evidence/H Governance fails for the same control race, M0 should coordinate a quiescent audit interval; never disable full commit/path verification.

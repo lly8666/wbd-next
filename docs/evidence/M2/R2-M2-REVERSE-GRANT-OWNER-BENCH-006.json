@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "source_sha": "25642589f0feb12b44304fd21842c507a9314d35",
-  "result": "NATIVE_SCOPED_R2_44_OF_44_PASS__GOVERNANCE_BLOCKED_G2_BASE_65_OVER_64",
+  "result": "NATIVE_R2_44_44_SUCCESS_G2_BOUND_FIXED_ONCE__GOVERNANCE_RECHECK_REQUIRED",
   "previous_handoff": {
     "cursor_H": "eb2b0ffa3720db1cffb2e1ae86f619ecc7275073",
     "checkpoint": "c4e69939903cbce3c204cf475750625a2d3bfe11",
@@ -155,5 +155,32 @@
     "No actual heap allocation counter or actual wire performance",
     "Product, physical, native Windows ARM and 500Mbps/P99 NOT_RUN"
   ],
-  "next_action": "M0 must authorize corrected bounded Governance worker ancestry or new branch/epoch, preserving exact 44/44 native and historical Governance FAIL; do not mark M2 task ready for integration."
+  "next_action": "G2 limit structurally resolved via exact M0-approved tool refresh. Requalify new evidence source Governance with immutable source and main stable audit; preserve refresh Governance FAIL caused by parallel main control movement. No new code tests required: original Rust SOURCE unchanged and compiled-once 44/44 native preserved; only if latest independent Governance passes may cursor H mark recovery CLEAN. Product NOT_RUN.",
+  "recovery": {
+    "type": "M0-approved exact one-time worker checker refresh, not generic write-scope",
+    "main_control_anchor": "af8a8b40853845b6e876224d579bfb567df48e6c",
+    "approved_worker_first_parent": "018a07c880473a896d40c0d97a59250212f7dad8",
+    "refresh_commit": "bde572873c27b1c535e77ee53507fb979bc5f326",
+    "only_path": "tools/worker_scope_ci.py",
+    "mirrored_main_git_blob": "26983e630ab2fbf28466dac457923904aaa6be60",
+    "historic_worker_blob": "2e19d8aa1dd5eca1f27390b56b66776d08df36db",
+    "G2_ancestry_max_commits": 96,
+    "full_path_and_commit_audit_preserved": true,
+    "prior_expected_limit_failure": {
+      "code_governance_run": 38678654568,
+      "evidence_governance_run": 38679005438,
+      "previous_H_governance_run": 38679115636,
+      "all_conclusion": "failure",
+      "reason": "incomplete or diverged bounded G2 activation ancestry"
+    },
+    "refresh_governance": {
+      "run_id": 38683108958,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116251837128,
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "artifact_id": 11949395232,
+      "digest": "sha256:aea02e32da2a7b68fc761c882fa054a2b9a52e82a35d791f5f90139f2296f2a6"
+    }
+  }
 }

@@ -50,3 +50,13 @@ Host tick granularity and shared process memory, plus sub-second leg durations, 
 
 ## M0-controlled governance unblock request
 See `.governance/workstreams/M2/requests/M2-G2-ANCESTRY-BOUND-006.md`. Request: M0 design a fresh bounded and auditable worker role-scope ancestry approach for >64 accumulated M2 commits (including safe workflow propagation to the worker branch), or formally reassign a new worker branch/epoch. Do not force rewrite, silently increase unbounded limits, or exempt path auditing. Until corrected, M2 records `progress=blocked`; exact source 44/44 test result is valid but Governance is FAIL.
+
+## Recovery update · M0 exact one-time checker exception
+
+At live main control `088b8860051bbf2de2c3c7e5afd03198620e182f` and subsequent main ancestry, M0 amended its own trusted `tools/worker_scope_ci.py` with `G2_ACTIVATION_MAX_COMMITS=96` and an **exact M2-only one-time exception**: parent `018a07c880473a896d40c0d97a59250212f7dad8`, sole changed path `tools/worker_scope_ci.py`, blob byte-identical to live main Git blob `26983e630ab2fbf28466dac457923904aaa6be60`, control anchor `af8a8b40853845b6e876224d579bfb567df48e6c` on main. M2 independently verified current ref, role revision2/epoch1, anchor ancestor status, exact parent and hash. M2 made the one-time single-parent Git commit `bde572873c27b1c535e77ee53507fb979bc5f326`; compare to previous H only the authorized checker path. This is not general authorization to change root scripts.
+
+The native compiled-once `44/44` code result remains SOURCE `25642589f0feb12b44304fd21842c507a9314d35`. Checker refresh doesn't modify code or data paths and does **not** qualify a new native binary.
+
+Refresh SOURCE Governance [38683108958](https://github.com/lly8666/wbd-next/actions/runs/38683108958) attempt1 **FAIL**, job116251837128, evidence artifact11949395232 sha256:aea02e32da2a7b68fc761c882fa054a2b9a52e82a35d791f5f90139f2296f2a6. Exact error: `ROLE_SCOPE_FAILED: control or source moved mid-audit`; no longer the old `<=64` gate. Concurrent M0 main moved while bounded per-commit checker was running. Historic failure preserved. Additional evidence-S Governance is required; no source-native or product claims made from a moving-main audit.
+
+M2 original request for the bounded G2 checker has an **M0-authored remedy implemented**; formal Governance verification is still outstanding due to a distinct control-movement race. M0 needs to coordinate a stable main audit interval if repeated runs fail this dynamic check, not waive identity/path validation.
