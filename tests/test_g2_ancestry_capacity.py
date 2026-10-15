@@ -29,7 +29,7 @@ class Mock:
         prefix=f"compare/{B}...{self.head}?per_page={SIZE}&page="
         if not query.startswith(prefix):
             raise AssertionError(query)
-        page=int(query.split("page=",1)[1])
+        page=int(query.rsplit("&page=",1)[1])
         if page==self.missing_page:
             return {"status":self.status,"total_commits":self.n,"commits":[]}
         sl=self.commits[(page-1)*SIZE:page*SIZE]
