@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 55,
-  "checkpoint_sha": "1fefd2731c1ea8f86f16d43a6c96f5afdc7647c1",
+  "sequence": 56,
+  "checkpoint_sha": "e785dceb0d7237cd5f81fbda89c8d4c5fec10df2",
   "progress": "partial",
-  "task_id": "R1-M0-M1-READY-MAIN-019",
-  "current_task": "Completed M0 source-exact qualified M1 ready-owner main integration: CODE 090b146c4d81a108964f66dfa3bb08c5d4577b4c imported scoped 0/1/32/33 two-lane TX/RX generation/ABA/STOP, initial CI run38681640963 FAIL stale 29 unique check despite real Rust71/71; fix CODE4ec9af7a120b791aef024496f1c827c78c0af570 and final CODE42dc35d1b2dd926431a39f162c67e7a11f5c2478 10/10 same SOURCE Actions SUCCESS, R1 real 71/71 run38681801437 built once artifact hashed; cross ABI build inspected only. S evidence 1fefd2731c1ea8f86f16d43a6c96f5afdc7647c1 Governance38682107725 SUCCESS. OWNER_RUNTIME_READY=false, GoV4 authenticated production transition remains NOT_RUN.",
-  "why_now": "M0 seq54 exact cursor checkpoint 1f648bc3 followed only by cursor H99e786a332f Governance38681096523 PASS and no open requests; clean transition. Prior M1 accepted worker CODE0979314 71/71 /S/H Governance, main runtime missing ready-generation methods. M0 cursor explicitly authorized importing M1 source to main.",
-  "done_when": "M1's pre-qualified ready generation batch implementation imported under M0 and production feature gate remains false. On final exact CODE SOURCE42dc35d1 all 10 affected main Actions attempt1 SUCCESS (R1 owner 71/71, normal/off, FEC-on, kernel batch, receipt, Go/C ABI, cross compile inspect, governance, G2, static audit); artifacts/log/hash recorded, historical CI FAIL retained, no mixed-SOURCE qualification. Evidence S1fefd2731 Gov38682107725 PASS. Product GoV4/actual raw/WinARM native/P1–P3/500Mbps/physical NOT_RUN; M2 unaccepted.",
-  "next_action": "M0 implement real source-pinned protected Go V4 ColdSnapshot→Rust generation owner PrepareTransition/DetachTransition/CommitAdmission gate with B01–B04 fail-closed races, source-exact Actions; leave production ABI disabled until authenticated origin actually proven.",
+  "task_id": "R0-M0-GO-V4-PROTECTED-COLD-FREEZE-020",
+  "current_task": "Scoped Go V4 protected TLS cold-session witness freeze completed on exact CODE SOURCE81703542068158414654a05aa82df0a2718052e1: immutable verifiedCold minted during protected Go client/server admission (server only after successful reply+Detach), getter checks frozen identity/role/limits/cipher/epoch/nonce/keys and independent TLS material. Post-auth valid-looking mutation and self-claimed auth marker fail closed. Four same-source Actions SUCCESS: Go TLS 10/10 run38683175022, Go control run38683175032, real pinned Go TLS ephemeral→Rust parser4/4 run38683175062, governance38683175016; artefacts/hashes in docs/evidence/M0/R0-Go-V4-protected-cold-freeze-020.json. Evidence S e785dceb0d7237cd5f81fbda89c8d4c5fec10df2 Governance38683424906 and static audit38683425074 SUCCESS.",
+  "why_now": "M0 seq55 last H 088b8860051bbf2de2c3c7e5afd03198620e182f cursor-only and Governance38682166946 SUCCESS, main registry rev2 epoch1 unchanged. M2 independently remains BLOCKED at worker H018a07c8, approved main checker repair not executed by M2. M0 next authorized trusted Go V4→Rust owner path revealed post-auth mutable-view provenance risk; narrow first to freeze actual protected source before ABI promotion.",
+  "done_when": "Real Go protected V4 client/server frozen snapshot can no longer be silently reconstructed from grammatically valid mutable public admission and TLS fields; added negatives to existing strict native suite; final source 81703542 all four Actions same-SOURCE build/consume verified PASS, including pinned actual Go TLS1 + Rust parser4/4. S evidence e785dceb Gov38683424906/static38683425074 PASS. Go→Rust trusted owner install/real boundary/P1-P3/500Mbps/raw/physical/WindowsARM native still NOT_RUN. No M2 governance waiver.",
+  "next_action": "M0 independently wire frozen Go-protected ColdSnapshot into fresh Rust scoped owner generation via reviewed in-process cold ABI, with exact PrepareTransition/DetachTransition/CommitAdmission sequence and B01–B04 race/STOP/lease native tests; never treat 248B caller-supplied grammar as trusted admission, never enable production feature before proof.",
   "unverified": true,
-  "last_tested_source": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+  "last_tested_source": "81703542068158414654a05aa82df0a2718052e1",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M1-generation-ready-main-019.json"
+    "docs/evidence/M0/R0-Go-V4-protected-cold-freeze-020.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-M1-generation-ready-main-019.md",
+    "docs/devlog/M0/R0-Go-V4-protected-cold-freeze-020.md",
     "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md"
+    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 seq54→55 CLEAN: one prior H99e786 only, Governance success. Scoped M1 imported CODE090b; first CI unique-case 29 stale FAIL38681640963 native71/71, CI fixed 4ec9; final CODE42dc 10/10 SAME SOURCE SUCCESS, native71/71 run38681801437 release one binary/hash/consume. Evidence S1fefd273 Gov38682107725 PASS, cursor-only H; production flag off. M2 Governance blocked, M1/M3/M4 new tasks independent, no GoV4 owner/raw/WinARM native/product/physical claim."
+  "partial_summary": "M0 seq55→56 CLEAN, M2 still blocker own branch H018a07c8 no new S/H. CODE81703542 freezes Go V4 actual protected cold witness against legal-looking post-auth mutation and fake auth boolean; 4/4 same-source Actions PASS Go V4 TLS10/10 run38683175022, Go-control38683175032, Go fixture and Rust native4/4 38683175062, Governance38683175016. Evidence S e785dceb Gov38683424906 static38683425074 PASS, H cursor-only. Rust trusted owner/Prepare/Detach/Commit, live raw/500Mbps/physical/WinARM native NOT_RUN."
 }
