@@ -50,11 +50,15 @@
  /// TX ciphertext remains immutable; RX remains pre-auth owned ingress.
  pub struct LoanBatch<T> {
      contents:Vec<T>,
+     owner:ScopeToken,
      ledger:Option<Arc<Ledger>>,
      kind:Kind,
  }
  impl<T> LoanBatch<T> {
-     pub fn as_slice(&self)->&[T] {&self.contents}
+     /// Internal test inspection only. Application dispatch MUST pass the
+     /// owner and batch through checked_tx_ready/checked_rx_ready first.
+     /// Never expose an unaudited raw batch slice across owner boundaries.
+     pub(crate) fn as_slice(&self)->&[T] {&self.contents}
      pub fn len(&self)->usize {self.contents.len()}
      pub fn is_empty(&self)->bool {self.contents.is_empty()}
      /// Clear handles and return the original caller-preallocated Vec.
@@ -101,6 +105,34 @@
          if self.stopped {return Err(ScopeError::Stopped);}
          Ok(())
      }
+     /// Fail closed on a retained old-generation ready batch. Checking the
+     /// token alone would not catch an old batch submitted under a NEW token.
+     /// Validation borrows only existing handles, with no copy/allocation.
+     fn check_batch<T>(&self,token:&ScopeToken,batch:&LoanBatch<T>)
+         ->Result<(),ScopeError> {
+         self.check(token)?;
+         if !Arc::ptr_eq(&self.tag.0,&batch.owner.0) {
+             return Err(ScopeError::Stale);
+         }
+         Ok(())
+     }
+     /// Sole cross-owner TX dispatch view: old ready loans remain owned,
+     /// but never become sendable in a restarted/current scope.
+     pub fn checked_tx_ready<'a>(&self,token:&ScopeToken,batch:&'a LoanBatch<TxDispatch>)
+         ->Result<&'a [TxDispatch],ScopeError> {
+         self.check_batch(token,batch)?;
+         if batch.contents.iter().any(|entry| self.tx_meta(&entry.record).is_err()) {
+             return Err(ScopeError::LaneMismatch);
+         }
+         Ok(&batch.contents)
+     }
+     /// RX routing hints remain pre-auth; this view only fences generation.
+     /// It does NOT validate source identity or authenticate business bytes.
+     pub fn checked_rx_ready<'a>(&self,token:&ScopeToken,batch:&'a LoanBatch<RxPacket>)
+         ->Result<&'a [RxPacket],ScopeError> {
+         self.check_batch(token,batch)?;
+         Ok(&batch.contents)
+     }
      fn tx_meta(&self,record:&FrozenRecord)->Result<(),ScopeError> {
          if record.metadata().lane!=self.tag.0.lane {
              Err(ScopeError::LaneMismatch)
@@ -132,7 +164,7 @@
          let ledger=if storage.is_empty(){None}else{
              self.ledger.tx.fetch_add(1,SeqCst);Some(Arc::clone(&self.ledger))
          };
-         Ok(LoanBatch{contents:storage,ledger,kind:Kind::Tx})
+         Ok(LoanBatch{contents:storage,owner:self.tag.clone(),ledger,kind:Kind::Tx})
      }
      pub fn drain_rx(&mut self,token:&ScopeToken,now:MonoNs,mut storage:Vec<RxPacket>)
          ->Result<LoanBatch<RxPacket>,(ScopeError,Vec<RxPacket>)> {
@@ -142,7 +174,7 @@
          let ledger=if storage.is_empty(){None}else{
              self.ledger.rx.fetch_add(1,SeqCst);Some(Arc::clone(&self.ledger))
          };
-         Ok(LoanBatch{contents:storage,ledger,kind:Kind::Rx})
+         Ok(LoanBatch{contents:storage,owner:self.tag.clone(),ledger,kind:Kind::Rx})
      }
      fn retire(&mut self)->RetiredScope {
          let canceled=self.tx.stop()+self.rx.stop();
@@ -422,6 +454,268 @@ mod tests {
         assert_eq!(valid.as_slice()[0].record.bytes(),&[7]);
         drop(valid);
         s.stop(&t).unwrap();
+        assert_eq!(a.report().loaned,0);
+    }
+}
+
+#[cfg(test)]
+mod ready_owner_tests {
+    use super::*;
+    use crate::memory::Arena;
+    use super::super::{QueueLimits,TxKind};
+    use wbd_types::{TunnelKey,RecordPn,SeqOffset};
+    use wbd_types::buffer_contract::{UniqueSealable,FrozenMetadata};
+    fn lane(g:u32)->LaneKey {
+        LaneKey{tunnel:TunnelKey{slot:93,generation:g},slot:7,generation:g}
+    }
+    fn q()->QueueLimits {
+        QueueLimits{slots:64,bytes:64,max_age_ns:1_000_000}
+    }
+    fn pair()->(TxOwner,RxOwner) {
+        (TxOwner::new(q(),q()).unwrap(),RxOwner::new(q()).unwrap())
+    }
+    fn owner()->ScopedOwner {
+        let (tx,rx)=pair();
+        ScopedOwner::new(55,1,lane(1),tx,rx).unwrap()
+    }
+    fn arena()->Arena {Arena::new(76,128,256,1,100_000).unwrap()}
+    fn frozen(a:&mut Arena,value:u8,g:u32)->FrozenRecord {
+        let mut b=a.allocate().unwrap();b.writable()[0]=value;
+        b.freeze(0..1,FrozenMetadata{
+            lane:lane(g),pn:RecordPn(value as u64),
+            seq:SeqOffset(value as u64),carrier_snapshot:1
+        }).unwrap()
+    }
+    fn incoming(a:&mut Arena,value:u8)->UniqueBuffer {
+        let mut b=a.allocate().unwrap();b.writable()[0]=value;b
+    }
+    fn ready<T>(res:Result<LoanBatch<T>,(ScopeError,Vec<T>)>)->LoanBatch<T> {
+        res.unwrap_or_else(|_|panic!("ready owner batch should dispatch"))
+    }
+    #[test]
+    fn r1_ready_owner_zero_and_one_honor_current_scope_no_copies() {
+        let mut a=arena();let mut s=owner();let t=s.token();
+        let tx=ready(s.drain_tx(&t,MonoNs(0),Vec::with_capacity(32)));
+        let rx=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(32)));
+        assert_eq!(s.checked_tx_ready(&t,&tx).unwrap().len(),0);
+        assert_eq!(s.checked_rx_ready(&t,&rx).unwrap().len(),0);
+        let txstore=tx.recycle();let rxstore=rx.recycle();
+        let b=frozen(&mut a,4,1);let ptr=b.bytes().as_ptr();
+        s.offer_fresh(&t,b,MonoNs(1)).unwrap();
+        s.offer_rx(&t,incoming(&mut a,5),0..1,MonoNs(1)).unwrap();
+        let tx=ready(s.drain_tx(&t,MonoNs(1),txstore));
+        let rx=ready(s.drain_rx(&t,MonoNs(1),rxstore));
+        let send=s.checked_tx_ready(&t,&tx).unwrap();
+        assert_eq!(send.len(),1);
+        assert_eq!(send[0].record.bytes().as_ptr(),ptr);
+        assert_eq!(send[0].kind,TxKind::Fresh);
+        assert_eq!(s.checked_rx_ready(&t,&rx).unwrap().len(),1);
+        drop(tx);drop(rx);assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_thirty_two_old_and_new_never_mix_on_dispatch() {
+        let mut a=arena();let mut s=owner();let t=s.token();
+        for i in 0..32 {
+            s.offer_fresh(&t,frozen(&mut a,i,1),MonoNs(0)).unwrap();
+            s.offer_rx(&t,incoming(&mut a,i),0..1,MonoNs(0)).unwrap();
+        }
+        let tx=ready(s.drain_tx(&t,MonoNs(0),Vec::with_capacity(32)));
+        let rx=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(32)));
+        assert_eq!(s.checked_tx_ready(&t,&tx).unwrap().len(),32);
+        assert_eq!(s.checked_rx_ready(&t,&rx).unwrap().len(),32);
+        let (next_tx,next_rx)=pair();
+        let retired=s.rotate(&t,lane(2),next_tx,next_rx)
+            .unwrap_or_else(|_|panic!("rotation should succeed"));
+        let now=s.token();
+        assert_eq!(s.checked_tx_ready(&now,&tx).err(),Some(ScopeError::Stale));
+        assert_eq!(s.checked_rx_ready(&now,&rx).err(),Some(ScopeError::Stale));
+        assert_eq!(s.checked_tx_ready(&t,&tx).err(),Some(ScopeError::Stale));
+        s.offer_fresh(&now,frozen(&mut a,40,2),MonoNs(1)).unwrap();
+        s.offer_rx(&now,incoming(&mut a,41),0..1,MonoNs(1)).unwrap();
+        let new_tx=ready(s.drain_tx(&now,MonoNs(1),Vec::with_capacity(32)));
+        let new_rx=ready(s.drain_rx(&now,MonoNs(1),Vec::with_capacity(32)));
+        assert_eq!(s.checked_tx_ready(&now,&new_tx).unwrap()[0].record.bytes(),&[40]);
+        assert_eq!(s.checked_rx_ready(&now,&new_rx).unwrap().len(),1);
+        assert_eq!(s.checked_tx_ready(&now,&tx).err(),Some(ScopeError::Stale));
+        assert!(!retired.batch_handles_released());
+        drop(tx);drop(rx);assert!(retired.batch_handles_released());
+        drop(new_tx);drop(new_rx);assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_thirty_three_split_retire_old_reject_all_tails() {
+        let mut a=arena();let mut s=owner();let old=s.token();
+        for i in 0..33u8 {
+            s.offer_fresh(&old,frozen(&mut a,i,1),MonoNs(0)).unwrap();
+            s.offer_rx(&old,incoming(&mut a,i),0..1,MonoNs(0)).unwrap();
+        }
+        let a1=ready(s.drain_tx(&old,MonoNs(0),Vec::with_capacity(32)));
+        let b1=ready(s.drain_rx(&old,MonoNs(0),Vec::with_capacity(32)));
+        let a2=ready(s.drain_tx(&old,MonoNs(0),Vec::with_capacity(32)));
+        let b2=ready(s.drain_rx(&old,MonoNs(0),Vec::with_capacity(32)));
+        assert_eq!((a1.len(),a2.len(),b1.len(),b2.len()),(32,1,32,1));
+        let (tx,rx)=pair();
+        let retired=s.rotate(&old,lane(2),tx,rx)
+            .unwrap_or_else(|_|panic!("valid rotation"));
+        let new=s.token();
+        for old_batch in [&a1,&a2] {
+            assert_eq!(s.checked_tx_ready(&new,old_batch).err(),Some(ScopeError::Stale));
+        }
+        for old_batch in [&b1,&b2] {
+            assert_eq!(s.checked_rx_ready(&new,old_batch).err(),Some(ScopeError::Stale));
+        }
+        let new_tx=ready(s.drain_tx(&new,MonoNs(0),Vec::with_capacity(32)));
+        assert!(s.checked_tx_ready(&new,&new_tx).unwrap().is_empty());
+        assert_eq!(retired.borrowed(),Borrowed{tx_batches:2,rx_batches:2});
+        drop(a1);drop(a2);drop(b1);drop(b2);drop(new_tx);
+        assert!(retired.batch_handles_released());
+        assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_old_stale_offer_after_new_fresh_preserves_first_order() {
+        let mut a=arena();let mut s=owner();let old=s.token();
+        s.offer_fresh(&old,frozen(&mut a,88,1),MonoNs(0)).unwrap();
+        let (tx,rx)=pair();
+        assert_eq!(s.rotate(&old,lane(2),tx,rx)
+            .unwrap_or_else(|_|panic!("rotation")).canceled,1);
+        let current=s.token();
+        let stale=s.offer_fresh(&old,frozen(&mut a,89,1),MonoNs(1));
+        assert!(matches!(stale,Err((ScopedOfferError::Scope(ScopeError::Stale),_))));
+        drop(stale);
+        let wrong=s.offer_repair(&current,frozen(&mut a,90,1),MonoNs(1));
+        assert!(matches!(wrong,Err((ScopedOfferError::Scope(ScopeError::LaneMismatch),_))));
+        drop(wrong);
+        s.offer_fresh(&current,frozen(&mut a,91,2),MonoNs(1)).unwrap();
+        s.offer_repair(&current,frozen(&mut a,92,2),MonoNs(1)).unwrap();
+        let live=ready(s.drain_tx(&current,MonoNs(1),Vec::with_capacity(2)));
+        let got=s.checked_tx_ready(&current,&live).unwrap();
+        assert_eq!(got[0].kind,TxKind::Fresh);
+        assert_eq!(got[0].record.bytes(),&[91]);
+        assert_eq!(got[1].kind,TxKind::Repair);
+        drop(live);
+        assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_concurrent_old_drop_and_stop_keeps_fences_exact() {
+        let mut a=arena();let mut s=owner();let old=s.token();
+        s.offer_fresh(&old,frozen(&mut a,6,1),MonoNs(0)).unwrap();
+        s.offer_rx(&old,incoming(&mut a,7),0..1,MonoNs(0)).unwrap();
+        let tx=ready(s.drain_tx(&old,MonoNs(0),Vec::with_capacity(1)));
+        let rx=ready(s.drain_rx(&old,MonoNs(0),Vec::with_capacity(1)));
+        let (next_tx,next_rx)=pair();
+        let retired=s.rotate(&old,lane(2),next_tx,next_rx)
+            .unwrap_or_else(|_|panic!("rotation"));
+        let current=s.token();
+        s.offer_fresh(&current,frozen(&mut a,8,2),MonoNs(1)).unwrap();
+        let live=ready(s.drain_tx(&current,MonoNs(1),Vec::with_capacity(1)));
+        assert_eq!(s.checked_tx_ready(&current,&live).unwrap()[0].record.bytes(),&[8]);
+        let join=std::thread::spawn(move||{drop(rx);drop(tx);});
+        let closing=s.stop(&current).unwrap();
+        assert_eq!(closing.borrowed(),Borrowed{tx_batches:1,rx_batches:0});
+        assert_eq!(s.checked_tx_ready(&current,&live).err(),Some(ScopeError::Stopped));
+        drop(live);
+        join.join().unwrap();
+        assert!(retired.batch_handles_released());
+        assert!(closing.batch_handles_released());
+        assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_restarted_aba_token_and_old_batch_rejected() {
+        let mut a=arena();let mut first=owner();let old=first.token();
+        first.offer_fresh(&old,frozen(&mut a,4,1),MonoNs(0)).unwrap();
+        let batch=ready(first.drain_tx(&old,MonoNs(0),Vec::with_capacity(1)));
+        let retired=first.stop(&old).unwrap();drop(first);
+        let mut restarted=owner();let current=restarted.token();
+        assert_eq!(old.serial(),current.serial());
+        assert_eq!(old.owner_id(),current.owner_id());
+        assert_eq!(restarted.checked_tx_ready(&current,&batch).err(),Some(ScopeError::Stale));
+        assert_eq!(restarted.checked_tx_ready(&old,&batch).err(),Some(ScopeError::Stale));
+        restarted.offer_fresh(&current,frozen(&mut a,5,1),MonoNs(0)).unwrap();
+        let fresh=ready(restarted.drain_tx(&current,MonoNs(0),Vec::with_capacity(1)));
+        assert_eq!(restarted.checked_tx_ready(&current,&fresh).unwrap()[0].record.bytes(),&[5]);
+        drop(batch);drop(fresh);
+        assert!(retired.batch_handles_released());
+        assert_eq!(a.report().loaned,0);
+    }
+    #[test]
+    fn r1_ready_owner_stop_and_fake_age_expiry_have_no_ready_resurrection() {
+        let mut a=arena();let mut s=owner();let old=s.token();
+        s.offer_fresh(&old,frozen(&mut a,1,1),MonoNs(0)).unwrap();
+        s.offer_rx(&old,incoming(&mut a,2),0..1,MonoNs(0)).unwrap();
+        let tx=ready(s.drain_tx(&old,MonoNs(1_000_001),Vec::with_capacity(1)));
+        let rx=ready(s.drain_rx(&old,MonoNs(1_000_001),Vec::with_capacity(1)));
+        assert!(s.checked_tx_ready(&old,&tx).unwrap().is_empty());
+        assert!(s.checked_rx_ready(&old,&rx).unwrap().is_empty());
+        let retired=s.stop(&old).unwrap();
+        assert!(retired.batch_handles_released());
+        let (tx,rx)=pair();
+        assert!(matches!(s.rotate(&old,lane(2),tx,rx),Err((ScopeError::Stopped,_,_))));
+        assert_eq!(a.report().loaned,0);
+    }
+    fn cpu_ticks()->Option<u64> {
+        let s=std::fs::read_to_string("/proc/self/stat").ok()?;
+        let after=s.rsplit_once(')')?.1;
+        let fields:Vec<&str>=after.split_whitespace().collect();
+        Some(fields.get(11)?.parse::<u64>().ok()?+
+             fields.get(12)?.parse::<u64>().ok()?)
+    }
+    /// P0 component observation, NOT production, throughput or isolated CPU:
+    /// stdout is captured in source+binary-hashed GitHub native test.log.
+    #[test]
+    fn r1_ready_owner_p0_component_warmup_repeat_provenance() {
+        use std::time::Instant;
+        let mut a=arena();let mut s=owner();let old=s.token();
+        for i in 0..32u8 {
+            s.offer_fresh(&old,frozen(&mut a,i,1),MonoNs(0)).unwrap();
+        }
+        let retained=ready(s.drain_tx(&old,MonoNs(0),Vec::with_capacity(32)));
+        let (nt,nr)=pair();
+        let old_fence=s.rotate(&old,lane(2),nt,nr)
+            .unwrap_or_else(|_|panic!("rotation"));
+        let current=s.token();
+        for i in 0..32u8 {
+            s.offer_fresh(&current,frozen(&mut a,i,2),MonoNs(0)).unwrap();
+        }
+        let live=ready(s.drain_tx(&current,MonoNs(0),Vec::with_capacity(32)));
+        assert_eq!(s.checked_tx_ready(&current,&live).unwrap().len(),32);
+        assert_eq!(s.checked_tx_ready(&current,&retained).err(),Some(ScopeError::Stale));
+        let source=std::env::var("GITHUB_SHA").unwrap_or_else(|_|"local-unattested".into());
+        let run=std::env::var("GITHUB_RUN_ID").unwrap_or_else(|_|"local".into());
+        let runner=std::env::var("RUNNER_NAME").unwrap_or_else(|_|"local".into())
+            .replace('"',"_");
+        const WARMUP:usize=10_000;
+        const SAMPLES:usize=40_000;
+        for leg in 0..3u8 {
+            for _ in 0..WARMUP {
+                std::hint::black_box(s.checked_tx_ready(&current,&live).unwrap().len());
+                assert_eq!(s.checked_tx_ready(&current,&retained).err(),Some(ScopeError::Stale));
+            }
+            let mut accepted=vec![0u64;SAMPLES];
+            let mut rejected=vec![0u64;SAMPLES];
+            let cpu_before=cpu_ticks();
+            let whole=Instant::now();
+            for i in 0..SAMPLES {
+                let start=Instant::now();
+                std::hint::black_box(s.checked_tx_ready(&current,&live).unwrap().len());
+                accepted[i]=start.elapsed().as_nanos() as u64;
+                let start=Instant::now();
+                std::hint::black_box(s.checked_tx_ready(&current,&retained).err());
+                rejected[i]=start.elapsed().as_nanos() as u64;
+            }
+            let total_ns=whole.elapsed().as_nanos();
+            let ticks=match (cpu_before,cpu_ticks()) {
+                (Some(x),Some(y))=>y.saturating_sub(x).to_string(),_=>"null".into()
+            };
+            accepted.sort_unstable();rejected.sort_unstable();
+            let idx=(SAMPLES*99/100).min(SAMPLES-1);
+            println!("M1_OWNER_P0_MEASURE {{\"schema\":1,\"source_sha\":\"{}\",\"run_id\":\"{}\",\"runner\":\"{}\",\"leg\":{},\"warmup_iters\":{},\"samples\":{},\"handles_per_batch\":32,\"accepted_p50_ns\":{},\"accepted_p99_ns\":{},\"stale_p50_ns\":{},\"stale_p99_ns\":{},\"paired_wall_ns\":{},\"process_cpu_ticks_unisolated\":{},\"cpu_isolated\":false,\"benchmark_type\":\"debug_test_binary_scope_validation_only\"}}",
+                source,run,runner,leg,WARMUP,SAMPLES,
+                accepted[SAMPLES/2],accepted[idx],rejected[SAMPLES/2],rejected[idx],
+                total_ns,ticks);
+            assert!(accepted[idx]>=accepted[SAMPLES/2]);
+            assert!(rejected[idx]>=rejected[SAMPLES/2]);
+        }
+        drop(retained);drop(live);
+        assert!(old_fence.batch_handles_released());
         assert_eq!(a.report().loaned,0);
     }
 }
