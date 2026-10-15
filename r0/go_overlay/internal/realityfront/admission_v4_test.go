@@ -441,7 +441,7 @@ func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32) (v4
     return &v4RecordingPending{b:b},nil
 }
 type v4RecordingPending struct {b *v4RecordingOwner; committed bool}
-func (p *v4RecordingPending) commit(early []faketcp.TransitionPacket) error {
+func (p *v4RecordingPending) commit(early []faketcp.TransitionPacket, exactTXBoundary uint32) error {
     if p.committed {return ErrAdmissionParams}
     if p.b.failCommit {return ErrAdmissionUnsupported}
     p.b.committed++;p.committed=true
