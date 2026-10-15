@@ -246,7 +246,7 @@ def review_m2_g2_second_single_file_refresh(api,role,sha,control_sha):
             "first_parent":M2_G2_SECOND_REFRESH_PARENT,
             "sync_paths":[M2_G2_REFRESH_PATH]}
 
-def review_m3_g2_third_single_file_refresh(api,role,sha,control_sha):
+def review_m2_g2_third_single_file_refresh(api,role,sha,control_sha):
     """Third strictly one-shot M2-only checker mirror with M0 immutable blob.
 
     The approval lives in a main-controlled JSON decision, published only
@@ -256,30 +256,30 @@ def review_m3_g2_third_single_file_refresh(api,role,sha,control_sha):
     g.need(role["id"]=="M2","third M2 checker mirror belongs to M2 only")
     detail=g.commit_delta(api,sha,256)
     g.need(detail["parents"]==1 and detail["paths"]==[M2_G2_REFRESH_PATH],
-           "M2-015 checker sync must edit exactly one root file in one-parent commit")
+           "M2-008 checker sync must edit exactly one root file in one-parent commit")
     item=api.get(f"commits/{sha}?per_page=1")
     parents=item.get("parents",[])
     g.need(len(parents)==1 and parents[0].get("sha")==M2_G2_THIRD_REFRESH_PARENT,
-           "M2-015 checker sync requires direct parent 79535dd5")
+           "M2-008 checker sync requires direct exact M2 parent 35c45f2")
     d=api.file(M2_G2_THIRD_DECISION,control_sha)
     g.need(isinstance(d,dict) and d.get("schema_version")==1 and
            d.get("role_id")=="M2" and d.get("parent_sha")==M2_G2_THIRD_REFRESH_PARENT and
            d.get("path")==M2_G2_REFRESH_PATH and d.get("status")=="APPROVED_ONCE",
-           "M2-015 mirror missing exact current M0 authorization")
+           "M2-008 mirror missing exact current M0 authorization")
     approved=d.get("m0_reviewed_source_sha")
     blob=d.get("approved_git_blob_sha")
     g.need(isinstance(approved,str) and bool(g.SHA.fullmatch(approved)) and
            isinstance(blob,str) and bool(g.SHA.fullmatch(blob)),
-           "M2-015 checker authorization SHA/blob invalid")
+           "M2-008 checker authorization SHA/blob invalid")
     ancestry=api.get(f"compare/{approved}...{control_sha}?per_page=1")
     g.need(ancestry.get("status") in {"ahead","identical"},
-           "M2-015 checker source not in authoritative main history")
+           "M2-008 checker source not in authoritative main history")
     reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={approved}")
     actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
     g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
            reviewed.get("sha")==blob and actual.get("sha")==blob,
-           "M2-015 mirror must exactly match immutable approved main Git blob")
-    return {"approved_m3_g2_tool_refresh_v3":True,
+           "M2-008 mirror must exactly match immutable approved main Git blob")
+    return {"approved_m2_g2_tool_refresh_v3":True,
             "first_parent":M2_G2_THIRD_REFRESH_PARENT,
             "sync_paths":[M2_G2_REFRESH_PATH]}
 
