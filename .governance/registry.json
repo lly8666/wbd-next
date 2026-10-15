@@ -44,8 +44,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "R1-M1-GENERATION-READY-OWNER-BENCH-007: Under existing runtime owned paths, extend generation-scoped Tx/Rx loan-batch ready composition to reject outdated mixed old/new ready dispatches without hot-path copy/allocation, and add source-attested owned runtime component P0 measurement (strictly not product throughput). No Go authenticated provenance/driver calls.",
-      "done_when": "Retain own prior63 scoped native r1_ cases. Add 0/1/32/33 two-lane old+new generation, stop concurrently, stale token and no reordered first fresh tests. Native source-exact compiled-once executable, dedicated warmup/repeat CPU/latency provenance artifact where valid, no claimed 500Mbps or AF_PACKET; own evidence S/cursor H Governance."
+      "goal": "R1-M1-READY-GENERATION-RELEASE-008: Release-mode SOURCE-attested bounded TX/RX ready-owner generation bench with fresh-first and stop/ABA rejection under <=32 original preallocated handles; compose two lanes, 0/1/32/33 ready-state cases, no record encryption, no fake Go V4 authenticated admission, no driver syscall.",
+      "done_when": "Preserve previous71/71 scoped r1 native cases; own release native compiled-once binary, repeated>=1s owner lifetime actual ready dispatch vs stale negative with CPU-s/quantiles and no fake 500Mbps claim, owner scope+stop cases with no payload copies; own role evidence S, cursor-only H Governance success. No root CI/ABI edits."
     },
     {
       "id": "M2",
@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-POSTAUTH-FEC-P0-COST-013: Within M3-owned codec R1 paths, profile the bounded incremental cost of authenticated-input FEC admission and BlockID/Heavy/Compact bookkeeping after real AEAD+unique PN, comparing scoped test-only origin enabled vs absent-origin fail-closed. Use fixed-size reproducible records, explicit multi-tunnel/direction/key scope, no production FecOrigin constructor or Go exporter. Label any P0 result as component cost and never infer 500Mbps product throughput.",
-      "done_when": "Retain prior94/94 r1_ native multiscope test cases; add bounded real AEAD/FEC adversarial correctness and repeated (>1s where runner permits) warmup+CPU-s, byte-cost and sample percentile experiments under existing M3-owned tests/tools. Own source-exact compiled-once native tests+artifact evidence and cursor-only H Governance, explicitly record runner, source, results and noise. No root CI/Cargo/go/ABI or production origin; no software feature flag."
+      "goal": "R1-M3-FEC-STEADY-COST-RELEASE-014: Under owned codec test paths, separate steady pre-existing real AEAD+unique PN postauth FEC BlockID/Heavy/Compact cost from the previously measured Debug fresh-owner-construction overhead; run source-locked release native >=1s warmup+3 repetitions for 192/896B, independent lane/tunnel directional synthetic test-only provenance, no production positive FecOrigin.",
+      "done_when": "Keep previous96/96 r1 native cases and repeat 2×2 scope adversarial cases, prove no cross-scope replay/expiry; release-mode own compiled-once benchmark evidence with clear steady-vs-construction ratio and CPU/p99 semantics, no production V4/ISA-L/500Mbps extrapolation; own S then cursor-only H Governance."
     },
     {
       "id": "M4",
@@ -117,8 +117,8 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "R1-M4-RAW-RECEIVE-CONTRACT-007: Narrow Linux x64 GNU AF_PACKET RX metadata and ownership contract on CAP_NET_RAW gated test-only loopback/raw FD preflight, with bounded nonblocking receive, explicit ifindex/proto/packet_type/MTU/truncation/generation/stop checks and fail-closed EPERM without UDP fallback. Do NOT attach to untrusted physical interfaces, capture ambient traffic, or enable production V4/raw dispatch; no root ABI dependencies.",
-      "done_when": "Retain own52 previous R1 native tests; unprivileged no-cap negative exact EPERM, pure validated sockaddr_ll/classifier tests, and any actual raw loopback receive only when runner CAP_NET_RAW is genuinely present (report as SKIP/NOT_RUN otherwise), no invented native packet success; compiled-once own SOURCE tests and evidence S/H Governance, mark product/raw-live not qualified."
+      "goal": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008: Within M4 platform-owned Linux x64 GNU module/tests only, stage opt-in, CAP_NET_RAW conditional *isolated loopback-only* raw IPv4/TCP reader/write lifecycle with nonblocking bounded preallocated RX, ifindex/protocol/MTU/sockaddr classification and strict owner generation+STOP; do not attach to physical/ambient interfaces or enable production V4. Always retain EPERM capability-negative case.",
+      "done_when": "Preserve previous60/60 scoped R1 tests; run exact native capability-negative and conditional positive controlled loopback raw packet checks when runner privilege allows, otherwise report positive RAW_RX_NOT_RUN rather than fake PASS. Include setup/teardown/STOP/truncation under loopback and source-attested own build/consume evidence S, cursor H Governance. No Go V4, cross-role, ABI or root dependencies."
     }
   ]
 }
