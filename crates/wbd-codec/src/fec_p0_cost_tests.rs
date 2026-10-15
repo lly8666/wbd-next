@@ -555,6 +555,7 @@ fn r1_steady_four_scope_auth_replay_pressure_and_independent_expiry() {
 }
 #[cfg(target_os = "linux")]
 #[test]
+#[cfg_attr(not(debug_assertions), ignore = "dedicated source-locked M3 Release job only; never run from general r1_ suites")]
 fn r1_steady_release_same_source_fresh_vs_reused_owner_cost() {
     let release = !cfg!(debug_assertions);
     // Debug worker workflow verifies the exact harness and 98/98 correctness.

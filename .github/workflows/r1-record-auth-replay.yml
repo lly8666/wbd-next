@@ -77,7 +77,7 @@ jobs:
         with:
           name: r1-auth-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: r1-auth-codec-build
-      - name: Verify source and precompiled binary then execute 94 true R1 tests
+      - name: Verify source and precompiled binary then execute 95 true R1 tests and ignore only the dedicated M3 Release cost
         shell: bash
         run: |
           set -euo pipefail
@@ -105,7 +105,12 @@ jobs:
           s=pathlib.Path('r1-auth-codec-result/tests.log').read_text()
           match=re.search(r'test result: ok\. (\d+) passed; 0 failed',s)
           passed=int(match.group(1)) if match else 0
-          ok=int(os.environ['TEST_EXIT'])==0 and passed==94
+          ignored_match=re.search(r'test result: ok\. \d+ passed; 0 failed; (\d+) ignored;',s)
+          ignored=int(ignored_match.group(1)) if ignored_match else -1
+          required='r1_steady_four_scope_auth_replay_pressure_and_independent_expiry'
+          dedicated='r1_steady_release_same_source_fresh_vs_reused_owner_cost'
+          ok=(int(os.environ['TEST_EXIT'])==0 and passed==95 and ignored==1
+              and required+' ... ok' in s and dedicated+' ... ignored' in s)
           report={'source_sha':m['source_sha'],'run_id':m['run_id'],'attempt':m['attempt'],
                   'binary_sha256':m['test_binary_sha256'],'cargo_lock_sha256':m['cargo_lock_sha256'],
                   'log_sha256':hashlib.sha256(s.encode()).hexdigest(),
