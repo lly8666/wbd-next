@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 task023 CODΕ 0845f6c5caf0cbc7d979592bf8cd77f642a7bef4 real Go protected TLS→FakeTCP actual 2 raw early records via private Rust EarlyRxOwner own slab and checksum TEST-ONLY Action38727051687 SUCCESS Go1/1 Rust1/1 and production no-feature probe exports absent; M0 full native ABI/kernel/Governance38727051750 all SUCCESS. Evidence docs/evidence/M0/R0-M0-native-early-RX-M2-handoff-047.json. M2 5bfacc checker-only Gov38721567164 PASS/job116377123525/artifact11965512099, M2 own evidence S/H remains pending. M3 own checker/CPU SOURCE S/H pending. Genuine Go authenticated Rust crypto owner and M4 held driver Stop B01-B04 not implemented, production ABI features0/500Mbps/physical NOT_RUN.",
+  "next_decision": "M0 current CODE 8721ffd29781ce559a4a4945c52db0919ba4f895 exact native Go/Rust probe Action38730197098 (build116405800096, consume116406430894, Go1/1 Rust1/1 PASS, artifacts11969694026/11969519150) held Rust early-RX LoanBatch Stop_INCOMPLETE while fresh real Go protected TLS makes independent new Rust generation; return old loan then Stop success. Same CODE Governance38730197153, ABI38730197194, cross38730197145, kernel38730197204 all SUCCESS. Evidence docs/evidence/M0/R0-M0-held-early-rx-stop-048.json. This is B04 Rust-owner TEST-ONLY subgate only: M4 actual kernel driver held RX loan, trusted positive Rust AEAD/PN/FEC origin, production features0, E2E/500Mbps/physical NOT_RUN. M2/M3 own worker S/H not confirmed; next true Go-auth Rust owner and M4 kernel Stop.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

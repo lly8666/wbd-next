@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atomic_scope": "B04_RUST_OWNED_EARLY_RX_LOAN_STOP_INCOMPLETE_SUBGATE_TEST_ONLY",
+  "source_sha": "8721ffd29781ce559a4a4945c52db0919ba4f895",
+  "result": "PARTIAL_TEST_ONLY_HELD_RUST_EARLY_RX_STOP_SUBGATE_PASS",
+  "progress": "partial",
+  "unverified": true,
+  "why_now": "After seq63 clean one H from checkpoint, real protected Go TLS->Rust early slab probe previously always dropped LoanBatch before Stop; held loan and stale/new generation behavior remained unproved.",
+  "code_commit": "8721ffd29781ce559a4a4945c52db0919ba4f895",
+  "source_files": [
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go"
+  ],
+  "tested": {
+    "owner_probe": {
+      "run_id": 38730197098,
+      "attempt": 1,
+      "status": "success",
+      "source_sha": "8721ffd29781ce559a4a4945c52db0919ba4f895",
+      "build_job": 116405800096,
+      "consume_job": 116406430894,
+      "build_artifact": {
+        "id": 11969694026,
+        "digest": "sha256:4f826568fcbe39c170c72af42a7bbbb5a4446b9635fc5aafa3e61006af2de471"
+      },
+      "result_artifact": {
+        "id": 11969519150,
+        "digest": "sha256:2545dffb87a4d1571ff23b302ccf6cd3fb855dc604a297eead166f39c37d657d"
+      },
+      "pinned_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "go": "1.23.12",
+      "rust": "1.85.1",
+      "actual_go_native": "TestR0V4NativeRustProbeActualProtectedFreshOwner 1/1 PASS, protected Go admission/FakeTCP 2 early records copied to Rust; keep old LoanBatch held after Commit, Stop=INCOMPLETE, release forbidden; fresh separately authenticated Go TLS makes new Rust scoped generation while old is borrowed; old returned once, Stop finishes and releases.",
+      "actual_rust_native": "r0_m0_native_probe_local_fresh_generation_and_bounded_phases 1/1 PASS, staged owned bytes with Stop incomplete/second fresh generation/no old release, double loan return rejected; 95 tests filtered, not claimed passed.",
+      "production_symbol_negative": "normal Rust cdylib no wbd_m0_test_probe_* C exports, build job success",
+      "workflow_result_json_driver_loan_stop": "NOT_RUN (M4 actual driver loan; owner held slab is narrower)"
+    },
+    "same_source_regression_runs": [
+      {
+        "workflow": "governance",
+        "run_id": 38730197153,
+        "status": "success",
+        "job": 116405800336,
+        "artifact_id": 11969538801,
+        "artifact_digest": "sha256:64ed58f9556e3b546f0f2e8140759c0b1155aa1cd05fbcfeb0e23fcc65ec8e8f"
+      },
+      {
+        "workflow": "r0-static-qualification-audit",
+        "run_id": 38730197109,
+        "status": "success"
+      },
+      {
+        "workflow": "g2-scoped-bootstrap-native",
+        "run_id": 38730197129,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-wake-stop-native",
+        "run_id": 38730197110,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-linux-kernel-batch-native",
+        "run_id": 38730197204,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-normal-off-replay",
+        "run_id": 38730197176,
+        "status": "success"
+      },
+      {
+        "workflow": "r1-fec-on-native",
+        "run_id": 38730197218,
+        "status": "success"
+      },
+      {
+        "workflow": "r2-auth-receipt",
+        "run_id": 38730197165,
+        "status": "success"
+      },
+      {
+        "workflow": "r0-native-abi",
+        "run_id": 38730197194,
+        "status": "success",
+        "artifact_id": 11968964282,
+        "artifact_digest": "sha256:881e03171867e9fde7cb418694f07162ed4c55b67fa3d5f2fd2faa0ca109b9a7"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "run_id": 38730197145,
+        "status": "success",
+        "targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-gnu"
+        ],
+        "note": "cross build/ABI inspection, not native Windows ARM test"
+      }
+    ]
+  },
+  "not_proven": [
+    "Production positive authenticated Go V4 Rust crypto/PN owner, no arbitrary 248B activation",
+    "M4 actual kernel RX loan under Stop B01-B04",
+    "real Rust record AEAD decrypt, FEC origin, business packet delivery",
+    "production ABI features>0",
+    "privileged raw AF_PACKET, physical network, 500Mbps, CPU or product p99",
+    "M2/M3 worker final S/H independently"
+  ],
+  "next_action": "M0 implement true trusted Go V4 positive Rust owner/AEAD+PN on its scoped generation, then join actual M4 held kernel reader loan Stop B01-B04 (including forged 248B and rollback negative). Keep ABI features0 and do not alter worker branches until source-exact accepted."
+}
