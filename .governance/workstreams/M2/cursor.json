@@ -4,26 +4,24 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 14,
-  "checkpoint_sha": "deff79215b6214aeafb28ede45d1aa28d118459b",
-  "progress": "blocked",
+  "sequence": 15,
+  "checkpoint_sha": "f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c",
+  "progress": "partial",
   "task_id": "R2-M2-BOUNDED-TIMER-BURST-007",
-  "current_task": "R2 bounded 10k owner timer index algorithm implemented; exact CODE SOURCE ba7b451 compiled-once native 51/51 PASS (44 old+7 new), G2/bootstrap and R0 static SUCCESS; Governance FAIL: M0-owned historical checker refresh compared to newly changed live main blob. Source/evidence check cannot certify role scope until M0 fixes its immutable historical exception.",
-  "why_now": "M0 main next wave formally assigned burst007 on active M2 rev2 epoch1 after previous cursor seq13 H901abe61 Governance38684127224 SUCCESS. Existing on_timer repeated four full-map sweeps for each 32-of-10000 burst; index fix and counted tests now native51/51. Current main root checker evolved so historic M2 one-time tool mirror blob26983e6 no longer equals live main blob817934b.",
-  "done_when": "Preserve 44 prior and add 7 deterministic r2_ tests incl 10k due 313 polls at<=32 nodes/event, 10k queue timeouts 313 polls, 10k hard expiry release, stale gen, ACK/expiry and 32/33 grants/fresh independence; one compiled-once native run38689135611 51/51 SUCCESS, historic G2/static SUCCESS. Evidence Sdeff792, SOURCE Governance38689135617 FAIL and evidence Governance38689484046 FAIL same M0 dynamic checker-pinning issue, not Rust. Requires M0 approved root correction then own evidence/H Governance.",
-  "next_action": "M0 must fix historical M2 checker review to compare immutable M0-approved blob/source, not current main mutable checker, or explicitly authorize new safe sync/branch migration while retaining complete bounded per-commit role/path checks. See open request. M2 waits; no force push, new root edit, duplicate same failed Actions, or product claim.",
+  "current_task": "M2 10k shadow hard-expiry and timer wake index atom complete in pure R2: exact code SOURCE ba7b451 compiled-once worker-native38689135611 51/51 PASS (44 retained+7), G2/static SUCCESS. M0 explicitly authorized one-file corrected root-checker refresh 0a120ee with full bounded commit/path audit; evidence S472575 Governance38691428603 attempt2 SUCCESS, final evidence S f1fe570 Governance38692203139 SUCCESS. No real authenticated session/product claim.",
+  "why_now": "M2 seq14 H4b0e137 had blocked code SOURCE ba7b451 51/51 native but old M0 checker compared historically approved Git blob against changed live main. M0 corrected immutable historical blob predicate, authorized exact parent M2 second refresh 0a120ee. Refresh Gov38690927360 FAIL moving-main; evidence Gov38691428603 attempt1 moving-main FAIL, attempt2 ROLE_SCOPE_PASS 40 worker scoped commits; final evidence S f1fe570 Gov38692203139 SUCCESS. Both old failures retained.",
+  "done_when": "Pure R2 receipt shadow index removes full-table scan per poll, <=32 wake events/candidates each poll for 10k due and queued timeout (313 iterations), 10k hard expiry releases once, no tombstones, 0/1/32/33 and ACK/generation/fresh grant checks; exact native r2_ 51/51 with original 44 preserved SOURCE ba7b451 run38689135611; G2 38689135649/static38689135604 SUCCESS, no CPU/heap count instrumentation. M0 root one-time sync verified and evidence S/H Governance.",
+  "next_action": "No new M2 task claimed. M0 alone owns real trusted Go V4 cold session, AEAD opened reverse receipt facts, AF_PACKET live driver, rust engine ABI integration, P1-P3/native WinARM/500Mbps/p99/physical qualification. Wait for next formal M2 main registry assignment.",
   "unverified": true,
   "last_tested_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
   "evidence_refs": [
     "docs/evidence/M2/R2-M2-BOUNDED-TIMER-BURST-007.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M2/requests/M2-CHECKER-HISTORIC-PIN-007.md"
-  ],
+  "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-BOUNDED-TIMER-BURST-007.md",
     "docs/evidence/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.json"
   ],
-  "partial_summary": "M2 seq13 H901abe61 clean Gov38684127224; M0 formal burst007 rev2 epoch1. R2 old on_timer repeatedly scanned all 10k entries per each 32 candidate poll; CODE SOURCE ba7b451 adds BTreeSet hard expiry and wake indexes with eager deletion and <=32 wake operations per poll, authenticated RACK witness can separately cause indexed O(live) rebuild; 7 new tests, compiled-once native38689135611 51/51 PASS (44 old), G2 bootstrap38689135649 and R0 static38689135604 SUCCESS. SOURCE Governance38689135617 FAIL and evidence Gov38689484046 FAIL: M0 live checker Git blob817934 differs from historic M0-approved worker one-time refresh blob26983e6; old selector incorrectly demands current live equality, retroactively invalidating prior consent. Evidence Sdeff792 and M0 request. Cursor-only H seq14 checkpoint evidence S, progress blocked, not product qualified. Actual Go V4, driver, real P0, 500Mbps/p99/physical NOT_RUN."
+  "partial_summary": "M2 task007 in same registry rev2 epoch1, previous seq14 H4b0e137 blocked historical M0 checker live-blob predicate. CODE SOURCEba7b451 index based R2 hard-expiry/wake, 7 new deterministic native tests total 51/51 worker-native38689135611 compiled once, G2/static green, performance/alloc not instrumented. Original CODE/evidence/H Governance 38689135617/38689484046/38689716410 FAIL old checker historical blob mismatch preserved. M0 immutable source-pinned original blob26983e, authorized exact second one-file tool mirror commit0a120ee blob86c213; refresh Gov38690927360 FAIL main moving, evidence S472575 Gov38691428603 attempt1 FAIL moving-main, attempt2 SUCCESS ROLE_SCOPE_PASS 40 scope commits; evidence final S f1fe570 Gov38692203139 SUCCESS. Current H seq15 cursor-only checkpoint final S, status partial/unverified true because M0 live session & driver, end-to-end/product/physical NOT_RUN. No open requests; await new task."
 }
