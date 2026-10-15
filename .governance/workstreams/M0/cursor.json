@@ -4,25 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 56,
-  "checkpoint_sha": "e785dceb0d7237cd5f81fbda89c8d4c5fec10df2",
+  "sequence": 57,
+  "checkpoint_sha": "9411647a812089915623f1120e52c1c66a7307ab",
   "progress": "partial",
-  "task_id": "R0-M0-GO-V4-PROTECTED-COLD-FREEZE-020",
-  "current_task": "Scoped Go V4 protected TLS cold-session witness freeze completed on exact CODE SOURCE81703542068158414654a05aa82df0a2718052e1: immutable verifiedCold minted during protected Go client/server admission (server only after successful reply+Detach), getter checks frozen identity/role/limits/cipher/epoch/nonce/keys and independent TLS material. Post-auth valid-looking mutation and self-claimed auth marker fail closed. Four same-source Actions SUCCESS: Go TLS 10/10 run38683175022, Go control run38683175032, real pinned Go TLS ephemeral→Rust parser4/4 run38683175062, governance38683175016; artefacts/hashes in docs/evidence/M0/R0-Go-V4-protected-cold-freeze-020.json. Evidence S e785dceb0d7237cd5f81fbda89c8d4c5fec10df2 Governance38683424906 and static audit38683425074 SUCCESS.",
-  "why_now": "M0 seq55 last H 088b8860051bbf2de2c3c7e5afd03198620e182f cursor-only and Governance38682166946 SUCCESS, main registry rev2 epoch1 unchanged. M2 independently remains BLOCKED at worker H018a07c8, approved main checker repair not executed by M2. M0 next authorized trusted Go V4→Rust owner path revealed post-auth mutable-view provenance risk; narrow first to freeze actual protected source before ABI promotion.",
-  "done_when": "Real Go protected V4 client/server frozen snapshot can no longer be silently reconstructed from grammatically valid mutable public admission and TLS fields; added negatives to existing strict native suite; final source 81703542 all four Actions same-SOURCE build/consume verified PASS, including pinned actual Go TLS1 + Rust parser4/4. S evidence e785dceb Gov38683424906/static38683425074 PASS. Go→Rust trusted owner install/real boundary/P1-P3/500Mbps/raw/physical/WindowsARM native still NOT_RUN. No M2 governance waiver.",
-  "next_action": "M0 independently wire frozen Go-protected ColdSnapshot into fresh Rust scoped owner generation via reviewed in-process cold ABI, with exact PrepareTransition/DetachTransition/CommitAdmission sequence and B01–B04 race/STOP/lease native tests; never treat 248B caller-supplied grammar as trusted admission, never enable production feature before proof.",
+  "task_id": "R1-M0-M3-RELEASE-G2-REVIEW-021",
+  "current_task": "M0 scoped M3-014 acceptance triage: worker source88a12027 Debug native98/98 but worker Governance CODE/S/H failed; exact main G2 second tool mirror parent M3 H5eaf validated main CODE940498cc, full 99/100 complete unique ancestry cap; authoritative read-only M3 audit 95 commits SUCCESS run38685996539 and same-source main Governance38685996632 SUCCESS. Main CI Release compiled once Rust1.85.1 on pinned worker source, run38684106420 measure cancelled14min with 21/24 rows, 20/21 CPU_s>active_wall×1.02 due per-64-record procfs probes outside active timer. Old CPU/fresh:steady ratio unqualified. Evidence-backed CI 22m retry run38685587150 status in_progress conclusion null, exact already-requested result pending reconciliation. Evidence S9411647a Governance38686407284 SUCCESS. M2 independently worker H901abe61 Governance38684127224 SUCCESS with 44/44 scoped native, not yet main integrated.",
+  "why_now": "M0 prior H bbcf12ce seq56 Governance38683476593 PASS; user explicitly prioritised M3. Inspect M3 014 current H5eaf seq17 and owned release request; found root tool drift, 95-commit bound and no real Release; new Actions discovered cancellation and empirically impossible CPU/wall bounds. M0 main shared only, no worker ref edits or fake product claims.",
+  "done_when": "M0 delivers single pinned Release build+same-VM runner and preserves actual cancelled 21/24 diagnostic artifact, no false CPU qualification; second evidence-based time-budget run38685587150 exact pending. New root checker full 99/100 commit audit enforces exact M3 parent5eaf single-file tool mirror, one corrected test source, S, H; main Governance38685996632 and read-only G2 95/95 run38685996539 SUCCESS. Evidence S9411647a Gov38686407284 PASS. M3 own worker H remains Governance FAIL and CPU cost/real V4 owner/actual raw/WinARM/500Mbps/physical NOT_QUALIFIED. M2 G2 now independently resolved, 44 native-qualified.",
+  "next_action": "First reconcile already dispatched M3 Release retry Actions38685587150 exactly (never rerun same test blindly); independently notify M3 worker to mirror one exact main checker blob817934b on sole file and direct parent5eaf then make one corrected CPU sampling test commit plus evidence S/cursor H within 99 ancestry, with future corrected SOURCE release Actions. Main GoV4→Rust trusted owner B01-B04 still queued OFF.",
   "unverified": true,
-  "last_tested_source": "81703542068158414654a05aa82df0a2718052e1",
+  "last_tested_source": "940498ccb2f3834e4287813bb250ebfb97f507fb",
   "evidence_refs": [
-    "docs/evidence/M0/R0-Go-V4-protected-cold-freeze-020.json"
+    "docs/evidence/M0/R1-M3-release-governance-021.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M0/requests/M3-RELEASE-RUN-38685587150.md"
+  ],
   "context_refs": [
-    "docs/devlog/M0/R0-Go-V4-protected-cold-freeze-020.md",
-    "docs/architecture/modules/00-CONTRACTS.md",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
+    "docs/devlog/M0/R1-M3-release-governance-021.md",
+    "docs/devlog/M0/R1-M3-release-cost-measurement-audit-021.md",
+    "docs/decisions/M0-M3-second-exact-G2-checker-refresh-2026-10-15.md",
+    "docs/architecture/modules/05-RECORD-CRYPTO.md",
+    "docs/architecture/modules/07-FEC.md"
   ],
-  "partial_summary": "M0 seq55→56 CLEAN, M2 still blocker own branch H018a07c8 no new S/H. CODE81703542 freezes Go V4 actual protected cold witness against legal-looking post-auth mutation and fake auth boolean; 4/4 same-source Actions PASS Go V4 TLS10/10 run38683175022, Go-control38683175032, Go fixture and Rust native4/4 38683175062, Governance38683175016. Evidence S e785dceb Gov38683424906 static38683425074 PASS, H cursor-only. Rust trusted owner/Prepare/Detach/Commit, live raw/500Mbps/physical/WinARM native NOT_RUN."
+  "partial_summary": "M0 seq56→57: M3 worker CODE88a Debug98/98, own Gov blocked; exact M0 main G299 cap CODE940498+Gov38685996632/remote95 commit scope38685996539 PASS; one-use M3 tool copy parent5eaf, blob817934b, then fix CPU probe, S/H. M3 Release run38684106420 Rust Release compiled but measure CANCELLED 14m 21/24 rows, 20/21 cpu_s>active wall due per-batch procfs outside wall, CPU ratio invalid; retry38685587150 in_progress, open M0 action. Evidence S9411647a Gov38686407284 SUCCESS, H cursor only. M2 worker now Gov SUCCESS/H901abe/44native, main not integrated; no physical/product/500Mbps/GoV4 owner claims."
 }
