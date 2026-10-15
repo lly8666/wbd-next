@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 44,
-  "checkpoint_sha": "8fc03bc8ad7594c967d332759d0335fde2d891f0",
+  "sequence": 45,
+  "checkpoint_sha": "f20e110e4c8b1475d9f15d339ce1be749bb4226a",
   "progress": "partial",
-  "task_id": "R1-M0-PARALLEL-WORKER-ASSIGN-007",
-  "current_task": "User-requested four new worker atomic tasks formally registered on main revision2 epoch1, assignment SOURCE7d291133e38f87da32ab56f5f99c0f1a54c4d5af Governance38635343395 and G2 scoped bootstrap38635343384 both SUCCESS. M1 R1-M1-READY-BATCH-004; M2 R2-M2-GLOBAL-BATCH-COMPLETION-003; M3 R1-M3-FEC-RETIRE-PRESSURE-010; M4 R1-M4-IPV4-TCP-RX-PARSE-004. Previous work all closed at own H, no role branches modified. Evidence S8fc03bc8ad7594c967d332759d0335fde2d891f0 Governance38635578197 SUCCESS. New worker code/tests NOT_RUN; no new writer or assignment_epoch bump.",
-  "why_now": "M0 M2 global sparse SOURCE58ff8d00 integration11/11 9/9 Actions, pure22/22 at separate source01bd8693, evidence Sba5749bb Governance38635004118 SUCCESS, M0 H a911e945 Governance38635139983 SUCCESS. All four workers previously scoped completed, latest HEAD unchanged and no outstanding Actions; user explicitly asked whether new parallel tasks should be assigned. Assigned independent next atoms in existing scopes.",
-  "done_when": "Exact assignment code SOURCE7d291133e38f87da32ab56f5f99c0f1a54c4d5af records 4 distinct role goals/done_when on main with rev2 epoch1 unchanged. Governance38635343395 SUCCESS and G2 scoped bootstrap38635343384 SUCCESS same SOURCE; evidence S8fc03bc8ad7594c967d332759d0335fde2d891f0 Governance38635578197 SUCCESS. M0 H cursor-only seq44. New worker implementation/Actions strictly NOT_RUN until each role commits own S/evidence/H. Product, real raw, live V4, perf/physical still NOT_RUN.",
-  "next_action": "M0 next independently authorized integration atom R1-M0-M4-KERNEL-BATCH-MAIN-008: audit M4 already completed Linux sendmmsg SOURCE6e72152f616e9bc836e3b66cd8742915abf6b5b3 / H47eb4107 and exact kernel loopback Actions38598122174, import into main with M1 immutable ready-only batch under main-owned integration tests, run same SOURCE native kernel syscall fixture; no raw AF_PACKET product/native Windows claim. Four new worker tasks remain assigned independently and no need to redistribute until their individual completion.",
+  "task_id": "R1-M0-M4-KERNEL-BATCH-MAIN-008",
+  "current_task": "M0 recovered old CODE SOURCE17bb909aad62f4bd3d7b68f427feb9e88e429e01 verified native Linux sendmmsg with full IPv4/TCP, M1 frozen and M3 AEAD: platform21/21, main kernel integration2/2 Actions38667409653; IPv4/TCP21/21 Actions38667409612; Governance38667409709 SUCCESS. Recovered evidence S f20e110e4c8b1475d9f15d339ce1be749bb4226a Governance38668360180 SUCCESS, no code changed. All 4 worker next atoms now completed own S/evidence/H, M0 has reviewed per-commit paths and H Governance. H cursor only seq45.",
+  "why_now": "Last response M0 new CODE source verified but evidence push was refused and cursor stayed seq44, so main was RECOVERY_REQUIRED. User requested recovery and acceptance of completed parallel workers. Actual files created from immutable prior Actions; recovered note explicit.",
+  "done_when": "Prior kernel Linux x64 GNU UDP sendmmsg actual code source17bb909a Actions38667409653 platform21/21 plus engine2/2, r1-ipv4-tcp-native38667409612 platform21/21, Governance38667409709 SUCCESS; recovered fact evidence/docs S f20e110e and Governance38668360180 SUCCESS; H cursor-only. Product/AF_PACKET/GoV4/physical/performance still NOT_RUN.",
+  "next_action": "M0 next separate atom: formally assign M1-M4 next isolated tasks on main rev2 epoch1 only after branch H/run audit, then integrate M4 strict one-packet IPv4/TCP RX native parser and M3 FEC-retire pressure fixes into exact main SOURCE with post-auth gate. M0 must study legacy Go V4 authenticated handshake+generation bindings; product/physical NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "7d291133e38f87da32ab56f5f99c0f1a54c4d5af",
+  "last_tested_source": "17bb909aad62f4bd3d7b68f427feb9e88e429e01",
   "evidence_refs": [
-    "docs/evidence/M0/R1-parallel-worker-assignments-2026-10-15.json"
+    "docs/evidence/M0/R1-M4-kernel-batch-main-integration.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-parallel-worker-assignments-2026-10-15.md",
-    "docs/decisions/M0-parallel-worker-atoms-2026-10-15.md",
+    "docs/devlog/M0/R1-M4-kernel-batch-main-integration.md",
     "docs/architecture/modules/00-CONTRACTS.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 seq43 H a911e945 Gov38635139983 SUCCESS for M2 global sparse in-process main integration; all worker branches unchanged and idle. Formal next four role assignments SOURCE7d291133: M1 ready-batch-004, M2 global-batch-completion-003, M3 FEC-retire-pressure-010, M4 IPv4-TCP-RX-parse-004; registry rev2 epoch1 and per-role prefixes unchanged. Exact assignment Governance38635343395 and G2 bootstrap38635343384 SUCCESS, evidence S8fc03bc8 Gov38635578197 SUCCESS. H seq44; no worker code started or product qualified. M0 next import qualified M4 existing sendmmsg kernel fixture on separate main source, with same source Actions; GoV4/raw/nativeWinARM/perf/physical NOT_RUN."
+  "partial_summary": "M0 legacy H seq44 recovery required: after main code17bb909a Linux kernel UDP batch compiled-once+consumer21/21 native platform and2/2 full TCP AEAD and separate21/21 IPv4 TCP, old r1-ipv4 native count12 vs21 FAIL was fixed. Main recovered evidence S f20e110e Governance38668360180 SUCCESS, this H seq45 only. M1 new ready batch39/39 H4ca7d283 governance success; M2 pure batch28/28 H7043ad195 governance success; M3 FEC retire75/75 H6fe26165 gov success; M4 strict RX31/31 H48d8e270 gov success, all owned paths. Next role assignments + main authenticated native RX integration. Go V4 session, raw AF_PACKET, native Win ARM, 500Mbps and product NOT_RUN."
 }
