@@ -14,9 +14,9 @@
 use std::collections::BTreeMap;
 use crate::budget::{BudgetDirection, BudgetError, RepairBudget, RepairBudgetConfig,
                     ReservationId, WireDirection};
-use crate::receipt::{RepairCandidate, RepairSendResult};
+use crate::receipt::{AuthenticatedReceipt, ReceiptState, Release, RepairCandidate, RepairSendResult};
 use wbd_types::buffer_contract::FrozenRecordHandle;
-use wbd_types::{MonoNs, TunnelKey};
+use wbd_types::{DataError, MonoNs, TunnelKey};
 
 const SECOND_NS: u64 = 1_000_000_000;
 
@@ -48,6 +48,9 @@ pub enum GlobalRepairError {
     ExhaustedId,
     InvalidBatch,
     DuplicateBatchId,
+    StaleCandidate,
+    WrongReceiptLane,
+    Receipt(DataError),
     Local(BudgetError),
 }
 impl From<BudgetError> for GlobalRepairError {
@@ -355,6 +358,40 @@ impl GlobalRepairAllocator {
             epoch: self.current.index, bytes: wire_bytes, until,
         });
         Ok(GlobalReservationId(next))
+    }
+
+    /// Guard late ACK versus queued candidate before a repair reservation.
+    /// M0 must re-check the receipt immediately before the actual syscall.
+    pub fn reserve_if_still_missing<H: FrozenRecordHandle>(
+        &mut self, lease: GrantLease, shadow: &ReceiptState<H>,
+        candidate: &RepairCandidate<H>, wire_bytes: u64, now: MonoNs,
+    ) -> Result<GlobalReservationId, GlobalRepairError> {
+        if shadow.lane() != candidate.frozen().metadata().lane
+            || shadow.lane().tunnel != lease.direction.tunnel
+            || !shadow.preflight(candidate, now)
+        {
+            return Err(GlobalRepairError::StaleCandidate);
+        }
+        self.reserve(lease, candidate, wire_bytes, now)
+    }
+
+    /// A typed authenticated receipt can retire a shadow but MUST NOT
+    /// refund a repair reservation: the driver might have transmitted it.
+    /// M0 owns the post-AEAD trust boundary and external direction binding.
+    pub fn observe_authenticated_receipt<H: FrozenRecordHandle>(
+        &mut self, direction: BudgetDirection, shadow: &mut ReceiptState<H>,
+        receipt: &AuthenticatedReceipt, now: MonoNs,
+    ) -> Result<Vec<Release<H>>, GlobalRepairError> {
+        if shadow.lane().tunnel != direction.tunnel
+            || receipt.verified_lane() != shadow.lane()
+        {
+            return Err(GlobalRepairError::WrongReceiptLane);
+        }
+        if !self.accounts.contains_key(&DirectionId::new(direction)) {
+            return Err(GlobalRepairError::NotRegistered);
+        }
+        self.advance(now)?;
+        shadow.on_receipt(receipt, now).map_err(GlobalRepairError::Receipt)
     }
 
     /// A completion is consumed exactly once, never coerced into proof of peer
@@ -946,6 +983,181 @@ mod tests {
         b.complete_batch(&[ic],single,MonoNs(4)).unwrap();
         assert_eq!(b.snapshot().charged_repairs,1400);
         assert_eq!(b.snapshot().held_unused_grants,1400);
+    }
+
+
+    fn race_shadow(d: BudgetDirection, pn: u64, at: u64)
+        -> (ReceiptState<FakeFrozen>, RepairCandidate<FakeFrozen>)
+    {
+        let lane=LaneKey {tunnel:d.tunnel,slot:1,generation:1};
+        let f=FakeFrozen {
+            data:Arc::from([19u8,20,21,22].as_slice()),
+            metadata:FrozenMetadata {lane,pn:RecordPn(pn),
+                seq:SeqOffset(pn),carrier_snapshot:88},
+            origin:BufferOrigin {owner_arena:d.tunnel.slot,
+                key:BufferKey {slot:pn as u32,generation:5}},
+        };
+        let mut state=ReceiptState::new(lane,ReceiptConfig {
+            max_shadow_entries:4,pto_ns:1,reorder_window_ns:1
+        }).unwrap();
+        state.on_sent(f,MonoNs(at-1),
+            MonoNs(at.saturating_add(300_000_000))).unwrap();
+        let candidate=state.on_timer(MonoNs(at)).candidates.remove(0);
+        (state,candidate)
+    }
+    fn race_receipt(d: BudgetDirection, pn: u64, seq: u32)
+        -> AuthenticatedReceipt
+    {
+        let base=(pn/256)*256;
+        let mut bits=[0u8;32];
+        let off=pn-base;
+        bits[(off/8) as usize] |= 1 << (off%8);
+        AuthenticatedReceipt::after_authenticated_open(
+            LaneKey {tunnel:d.tunnel,slot:1,generation:1},RecordPn(pn),
+            seq,vec![crate::receipt::ReceiptPage{
+                base_pn:RecordPn(base),bitmap:bits
+            }]
+        ).unwrap()
+    }
+
+    #[test]
+    fn r2_race_late_ack_before_reserve_rejects_stale_without_refund() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(2800,2);
+        add(&mut x,a,0);add(&mut x,b,0);
+        let ga=x.grant(a,1400,100_000,MonoNs(1)).unwrap();
+        let (mut shadow,c)=race_shadow(a,7,1);
+        let peer=race_receipt(a,7,1);
+        let releases=x.observe_authenticated_receipt(a,&mut shadow,&peer,MonoNs(2)).unwrap();
+        assert_eq!(releases.len(),1);
+        assert_eq!(releases[0].reason,crate::receipt::ReleaseReason::ReceivedByPeer);
+        assert!(!shadow.preflight(&c,MonoNs(2)));
+        let before=x.snapshot();
+        assert_eq!(x.reserve_if_still_missing(ga,&shadow,&c,1400,MonoNs(2)),
+            Err(GlobalRepairError::StaleCandidate));
+        assert_eq!(x.snapshot(),before);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(x.snapshot().held_unused_grants,1400);
+        x.on_fresh_accepted(b,20_000,MonoNs(3)).unwrap();
+        assert_eq!(x.local_snapshot(b).unwrap().fresh_confirmed_bytes,20_000);
+    }
+
+    #[test]
+    fn r2_race_ack_during_batch_is_not_kernel_or_peer_delivery() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(2800,2);
+        add(&mut x,a,0);add(&mut x,b,0);
+        let ga=x.grant(a,1400,100_000,MonoNs(1)).unwrap();
+        let gb=x.grant(b,1400,100_000,MonoNs(1)).unwrap();
+        let (mut sa,ca)=race_shadow(a,10,1);
+        let (mut sb,cb)=race_shadow(b,20,1);
+        let ia=x.reserve_if_still_missing(ga,&sa,&ca,1400,MonoNs(1)).unwrap();
+        let ib=x.reserve_if_still_missing(gb,&sb,&cb,1400,MonoNs(1)).unwrap();
+        // Real positive authenticated ACK wins shadow before callback;
+        // pending kernel send still might have been submitted.
+        assert_eq!(x.observe_authenticated_receipt(a,&mut sa,&race_receipt(a,10,1),
+            MonoNs(2)).unwrap().len(),1);
+        assert_eq!(x.snapshot().charged_repairs,2800);
+        let mixed=ValidatedRepairBatchOutcome::checked(
+            2,1,Some(1),BatchSuffixEvidence::Unproven).unwrap();
+        assert_eq!(x.complete_batch(&[ia,ib],mixed,MonoNs(3)).unwrap(),
+            BatchCompletionCounts {accepted:1,uncertain:1,
+                definitely_not_sent:0,held_unproven:0});
+        assert_eq!(x.snapshot().charged_repairs,2800);
+        assert_eq!(sb.outstanding(),1); // kernel Accepted never acts as an ACK
+        assert_eq!(x.complete_batch(&[ia,ib],mixed,MonoNs(4)),
+            Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.observe_authenticated_receipt(b,&mut sb,&race_receipt(b,20,1),
+            MonoNs(5)).unwrap().len(),1);
+        assert_eq!(x.snapshot().charged_repairs,2800);
+    }
+
+    #[test]
+    fn r2_race_departed_tunnel_generation_cannot_resurrect_or_refund() {
+        let old=dir(1,WireDirection::ClientToServer);
+        let mut x=global(4200,2);
+        add(&mut x,old,0);
+        let lease=x.grant(old,1400,100_000,MonoNs(1)).unwrap();
+        let (mut old_shadow,old_c)=race_shadow(old,1,1);
+        let id=x.reserve_if_still_missing(lease,&old_shadow,&old_c,
+            1400,MonoNs(1)).unwrap();
+        assert_eq!(x.retire_tunnel(old.tunnel,MonoNs(2)).unwrap(),1);
+        let new=BudgetDirection {tunnel:TunnelKey {slot:1,generation:3},
+            direction:WireDirection::ClientToServer};
+        x.register(new,cfg(),MonoNs(3)).unwrap();
+        let before=x.snapshot();
+        assert!(matches!(x.observe_authenticated_receipt(new,&mut old_shadow,
+            &race_receipt(old,1,1),MonoNs(3)),
+            Err(GlobalRepairError::WrongReceiptLane)));
+        assert_eq!(x.complete_batch(&[id],
+            ValidatedRepairBatchOutcome::checked(1,0,None,
+                BatchSuffixEvidence::ProvenNotAttempted).unwrap(),MonoNs(3)),
+            Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.snapshot(),before);
+        assert_eq!(x.snapshot().overdue_uncertain_bytes,1400);
+        assert_eq!(x.snapshot().charged_repairs,1400);
+        let gnew=x.grant(new,2800,100_000,MonoNs(4)).unwrap();
+        assert_eq!(gnew.bytes(),2800);
+        assert_eq!(x.snapshot().charged_repairs+x.snapshot().held_unused_grants,4200);
+    }
+
+    #[test]
+    fn r2_race_old_epoch_mixed_callback_never_funds_new_grant() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(1,WireDirection::ServerToClient);
+        let c=dir(2,WireDirection::ClientToServer);
+        let mut x=global(4200,3);
+        for d in [a,b,c] {x.register(d,wide_cfg(),MonoNs(999_999_980)).unwrap();}
+        let mut ids=Vec::new();
+        for (i,d) in [a,b,c].iter().copied().enumerate() {
+            let l=x.grant(d,1400,10_000,MonoNs(999_999_981)).unwrap();
+            let (s,ca)=race_shadow(d,i as u64+1,999_999_982);
+            ids.push(x.reserve_if_still_missing(l,&s,&ca,1400,
+                MonoNs(999_999_982)).unwrap());
+        }
+        let outcome=ValidatedRepairBatchOutcome::checked(
+            3,1,Some(1),BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        assert_eq!(x.complete_batch(&ids,outcome,MonoNs(1_000_000_001)).unwrap(),
+            BatchCompletionCounts {accepted:1,uncertain:1,
+                definitely_not_sent:1,held_unproven:0});
+        assert_eq!(x.snapshot().previous_epoch_charged,2800);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(x.snapshot().held_unused_grants,0);
+        assert_eq!(x.complete_batch(&ids,outcome,MonoNs(1_000_000_002)),
+            Err(GlobalRepairError::StaleGrant));
+        x.on_fresh_accepted(a,100,MonoNs(1_000_000_003)).unwrap();
+        assert_eq!(x.local_snapshot(a).unwrap().fresh_confirmed_bytes,100);
+        let next=x.grant(c,4200,100_000,MonoNs(1_000_000_004)).unwrap();
+        assert_eq!(next.bytes(),4200);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(x.snapshot().held_unused_grants,4200);
+    }
+
+    #[test]
+    fn r2_race_32_33_bounded_callback_after_timeout_is_all_stale() {
+        let (mut x,ids,_,_)=wide_candidates();
+        let one=ValidatedRepairBatchOutcome::all_accepted(1).unwrap();
+        let prefix=ValidatedRepairBatchOutcome::checked(
+            32,16,Some(16),BatchSuffixEvidence::Unproven).unwrap();
+        let mut repeated=ids.clone();
+        repeated[31]=repeated[0];
+        let before=x.snapshot();
+        assert_eq!(x.complete_batch(&repeated,prefix,MonoNs(465_000_001)),
+            Err(GlobalRepairError::DuplicateBatchId));
+        assert_eq!(x.snapshot(),before);
+        assert_eq!(ValidatedRepairBatchOutcome::all_accepted(33),
+            Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(x.complete_batch(&ids[..1],one,MonoNs(901_000_000)),
+            Err(GlobalRepairError::StaleGrant));
+        // First reservations have actually timed out; a subsequent whole
+        // batch cannot partly refund the later IDs when one is stale.
+        let snap=x.snapshot();
+        assert_eq!(x.complete_batch(&ids,prefix,MonoNs(901_000_000)),
+            Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.snapshot(),snap);
+        assert!(x.snapshot().overdue_uncertain_bytes>=1400);
     }
 
 }

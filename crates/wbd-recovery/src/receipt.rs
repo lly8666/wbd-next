@@ -34,6 +34,8 @@ pub struct AuthenticatedReceipt {
     pages: Vec<ReceiptPage>,
 }
 impl AuthenticatedReceipt {
+    /// Lane is provided only after the M0-verified authenticated open.
+    pub fn verified_lane(&self) -> LaneKey { self.lane }
     pub fn after_authenticated_open(
         verified_lane: LaneKey,
         largest_data_pn: RecordPn,
@@ -139,6 +141,8 @@ fn serial_newer(seq: u32, prev: u32) -> bool {
     d != 0 && d < (1 << 31)
 }
 impl<H: FrozenRecordHandle> ReceiptState<H> {
+    /// Owner identity including tunnel and lane generation.
+    pub fn lane(&self) -> LaneKey { self.lane }
     pub fn new(lane: LaneKey, config: ReceiptConfig) -> Result<Self, DataError> {
         if config.max_shadow_entries == 0 || config.pto_ns == 0 {
             return Err(DataError::Malformed);

@@ -1,0 +1,13 @@
+# R2-M2-BATCH-EPOCH-RECEIPT-RACE-004 · adversarial pure recovery races
+
+Authorization: main registry active M2 revision2 epoch1 work/m2-r2-recovery, M0 wave2 decision docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave2.md on main **only**. Prior M2 checkpoint a4a8e560 -> cursor H7043ad19 only one cursor path; H Governance38667689189 SUCCESS, handoff CLEAN. No M2 open requests found. Work constrained to crates/wbd-recovery and this role's docs/evidence/cursor.
+
+Code additions:
+- `ReceiptState::lane()` and `AuthenticatedReceipt::verified_lane()` expose owned LaneKey (TunnelKey slot+generation and lane slot+generation); neither authenticates untrusted wire. Valid authenticated-open is an M0 responsibility.
+- `GlobalRepairAllocator::reserve_if_still_missing()` checks candidate's frozen lane against the shadow owner, TunnelKey against grant and uses `ReceiptState::preflight` before granting R budget. ACK arriving before reservation rejects stale repair candidate and leaves global cap unchanged. M0 MUST still preflight immediately before the real driver submit due to subsequent races.
+- `observe_authenticated_receipt()` enforces registered TunnelKey+direction, exact shadow/receipt lane generation, delegates only to authenticated `ReceiptState::on_receipt` for peer delivery, and NEVER refunds an outstanding reservation or translates driver Accepted to peer receipt. Receipt trusted by M0 only after actual M3 AEAD+PN validation; no unauthenticated public wire admitted by this module.
+- Existing strict `complete_batch` accepted-prefix, single ambiguous slot, proven-not-attempted refund/unknown-held rule unchanged; existing reservations completed only once. No new sockets, encryption, manifests, engine or platform implementation and no mutex.
+
+Five new deterministic fake MonoNs `r2_race_*` tests: ACK before reserve, ACK between reserve and callback (driver Accepted vs actual peer received), departed+new-generation stale receipt/callback, old epoch 3-way accepted/uncertain/NotSent never refunds current epoch, bounded 32/33 cross-tunnel callbacks and delayed timeout stale fail-closed. Previous 28 `r2_` tests retained and requalified on exact new SOURCE through worker-native compiled-once Actions. No user-facing config/CLI/GUI changes because all APIs are Rust-internal recovery bookkeeping helpers.
+
+No certification of real driver callbacks, Go V4 authenticated epoch exporter, live carrier, AF_PACKET, Windows/ARM, performance, physical or product. M0 must integrate post-open receipt trust, real per-syscall accepted prefix provenance and runtime preflight/submit transaction, then test.
