@@ -1,0 +1,12 @@
+# M0 request — M3-014 source-locked Release worker benchmark
+
+**Requester:** M3, registry revision 2, assignment epoch 1, branch \`work/m3-r1-codec\`.
+**Task:** \`R1-M3-FEC-STEADY-COST-RELEASE-014\`.
+
+M3 is authorized to write codec and its own evidence only. The pre-existing \`.github/workflows/worker-native-tests.yml\` on worker branches compiles **Debug** (\`cargo test --locked -p wbd-codec --no-run\`); \`p0-native-component-perf.yml\` compiles a different **wbd-engine** test and triggers only on \`main\`. Neither provides an actual **release** execution for the M3 unit-test benchmark. GitHub connector grants no Actions dispatch capability. Do **not** treat the Debug worker action as a release benchmark.
+
+**Requested M0 integration-only action:** Provide a one-shot Actions job/workflow scoped to the exact verified M3 codec SOURCE once M3's \`r1_steady_release_same_source_fresh_vs_reused_owner_cost\` Debug harness passes. In the **same SOURCE**, compile once with \`cargo test --release --locked -p wbd-codec --no-run\`, preserve binary SHA256, then in one native Ubuntu 24.04 x86_64 Rust1.85.1 consumer job execute \`--exact link_fec_wire::fec_p0_cost_tests::r1_steady_release_same_source_fresh_vs_reused_owner_cost --nocapture\` on the unchanged binary. Preserve \`M3_STEADY_RELEASE profile=RELEASE\` rows, CPU/environment metadata, job/build IDs, artifacts, runner and source SHA. The test uses an >=1.05s **active** warmup and three >=1.125s active measures for each of fresh/reused × AEAD/FEC × 192/896B (24 source-tied rows); fresh/reused A/B/B/A order on one job/VM. No need to touch shared ABI or Go. M0 owns CI changes/dispatch and any main sync; do not replace test-only FecOrigin with a production constructor.
+
+The source test deliberately constructs fresh authentic ciphertext (unique PN per persistent lane) outside the steady measurement slices, while the old 013 fresh-owner path includes receiver creation per 64 records. Per-thread CPU ticks are read before/after each batch (100Hz clock granularity: a source of measurement noise); report both active wall and measured CPU. Percentiles are of **batch-average** wall ns per record, not packet latency. This is a **component P0**, not live V4 origin, network, ISA-L, 500Mbps, or product throughput.
+
+**Status at initial M3 request:** release Actions NOT_RUN; no release numbers can be claimed until M0 executes and supplies real result+artifact at exact SOURCE.
