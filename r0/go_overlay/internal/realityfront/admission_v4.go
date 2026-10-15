@@ -504,3 +504,46 @@ func (s V4ColdSessionSnapshot) LaneID()uint8{return s.laneID}
 func (s V4ColdSessionSnapshot) Cipher()uint8{return s.cipher}
 func (s V4ColdSessionSnapshot) RecordLimits()(uint16,uint16){return s.clientLimit,s.serverLimit}
 func (s V4ColdSessionSnapshot) DirectionKeys()tlsrecord.KeyPair{return s.keys}
+
+
+// V4ColdBundleLen is the exact in-process, VERSIONED, cold-only boundary.
+// The output carries raw AEAD keys. It must never be logged, sent on the
+// network, persisted by a production process, or exposed as an attestation.
+// A *parsed* Rust bundle is UNTRUSTED until a separate authenticated Go
+// control capability and owner generation/boundary installation are checked.
+const V4ColdBundleLen = 248
+
+func (s V4ColdSessionSnapshot) MarshalColdBundle() ([V4ColdBundleLen]byte,error) {
+    var b [V4ColdBundleLen]byte
+    if s.principal=="" || s.epoch==[16]byte{} || s.incarnation==[16]byte{} ||
+       s.tunnelID==[16]byte{} || !validAdmissionLaneID(s.laneID) ||
+       s.cipher<CipherChaCha || s.cipher>CipherAES256 ||
+       !validRecordLimit(s.clientLimit) || !validRecordLimit(s.serverLimit) ||
+       s.keys.C2S==(tlsrecord.Keys{}) || s.keys.S2C==(tlsrecord.Keys{}) ||
+       s.keys.C2S==s.keys.S2C {
+        return b,ErrAdmissionParams
+    }
+    copy(b[:4],[]byte("WBCO"))
+    binary.BigEndian.PutUint16(b[4:6],1)
+    binary.BigEndian.PutUint16(b[6:8],V4ColdBundleLen)
+    if s.server {b[8]=1}
+    b[9]=s.laneID
+    b[10]=s.cipher
+    // b[11] and future reserved bits MUST remain zero.
+    copy(b[12:28],s.tunnelID[:])
+    copy(b[28:44],s.epoch[:])
+    copy(b[44:60],s.incarnation[:])
+    binary.BigEndian.PutUint16(b[60:62],s.clientLimit)
+    binary.BigEndian.PutUint16(b[62:64],s.serverLimit)
+    domain:=append([]byte("WBD-V4-COLD-PRINCIPAL\x00"),[]byte(s.principal)...)
+    hash:=sha256.Sum256(domain)
+    copy(b[64:96],hash[:])
+    appendDir:=func(offset int,key tlsrecord.Keys) {
+        copy(b[offset:offset+32],key.AEADKey[:])
+        copy(b[offset+32:offset+44],key.IV[:])
+        copy(b[offset+44:offset+76],key.HPKey[:])
+    }
+    appendDir(96,s.keys.C2S)
+    appendDir(172,s.keys.S2C)
+    return b,nil
+}

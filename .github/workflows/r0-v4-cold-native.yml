@@ -1,0 +1,144 @@
+name: M0 pinned Go V4 cold snapshot to Rust untrusted parser
+run-name: "M0|${{ github.sha }}|r0-v4-cold-native"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-v4-cold-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/wbd-engine/src/lib.rs"
+      - "crates/wbd-engine/src/cold_v4.rs"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+permissions:
+  contents: read
+concurrency:
+  group: r0-v4-cold-native-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build once pinned Go TLS and Rust cold parser native tests
+        shell: bash
+        env: {GOTOOLCHAIN: local}
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          test "$(go version | awk '{print $3}')" = "go1.23.12"
+          cp r0/go_overlay/internal/realityfront/admission_v4.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/admission_v4_test.go legacy/internal/realityfront/
+          (cd legacy && go test -c -o "$GITHUB_WORKSPACE/cold_go.test" ./internal/realityfront)
+          cargo test --release --locked -p wbd-engine --lib --no-run
+          engine="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n1)"
+          test -n "$engine"
+          mkdir cold-build
+          cp "$engine" cold-build/cold_rust.test
+          cp cold_go.test cold-build/cold_go.test
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          inputs=["Cargo.lock","Cargo.toml","rust-toolchain.toml",
+                  "crates/wbd-engine/src/cold_v4.rs","crates/wbd-engine/src/lib.rs",
+                  "r0/go_overlay/internal/realityfront/admission_v4.go",
+                  "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+                  ".github/workflows/r0-v4-cold-native.yml"]
+          m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+             "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "old_source_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "rust":"1.85.1","go":"1.23.12",
+             "binary_sha256":{p:sha("cold-build/"+p) for p in ["cold_rust.test","cold_go.test"]},
+             "inputs_sha256":{p:sha(p) for p in inputs}}
+          pathlib.Path("cold-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cold-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cold-build/
+          retention-days: 30
+          if-no-files-found: error
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: cold-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cold-build/
+      - name: Ephemeral real TLS Go keys through native Rust parser, no persisted secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open("cold-build/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["old_source_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for p,d in m["inputs_sha256"].items(): assert sha(p)==d,p
+          for p,d in m["binary_sha256"].items(): assert sha("cold-build/"+p)==d,p
+          PY
+          chmod +x cold-build/*.test
+          fixture="$RUNNER_TEMP/v4-cold-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.bin"
+          test ! -e "$fixture"
+          trap 'rm -f "$fixture"' EXIT
+          export WBD_COLD_FIXTURE="$fixture"
+          mkdir cold-result
+          ./cold-build/cold_go.test -test.v -test.run '^TestR0V4ColdBundleEphemeralInterop$' >cold-result/go.log 2>&1
+          grep -q '^--- PASS: TestR0V4ColdBundleEphemeralInterop' cold-result/go.log
+          test "$(stat -c '%a' "$fixture")" = "600"
+          test "$(stat -c '%s' "$fixture")" = "248"
+          ./cold-build/cold_rust.test r0_cold_ --nocapture >cold-result/rust.log 2>&1
+          cat cold-result/go.log cold-result/rust.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          rust=pathlib.Path("cold-result/rust.log").read_text()
+          go=pathlib.Path("cold-result/go.log").read_text()
+          x=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
+          assert x and int(x.group(1))==4
+          assert "r0_cold_v4_real_tls_ephemeral_go_fixture ... ok" in rust
+          assert "--- PASS: TestR0V4ColdBundleEphemeralInterop" in go
+          m=json.load(open("cold-build/manifest.json"))
+          result={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+                  "old_go":m["old_source_sha"],"go_real_tls_tests":1,"rust_parser_tests":4,
+                  "go_log_sha256":sha("cold-result/go.log"),
+                  "rust_log_sha256":sha("cold-result/rust.log"),
+                  "binary_sha256":m["binary_sha256"],"result":"PASS",
+                  "live_rust_install":"NOT_IMPLEMENTED",
+                  "positive_fec_origin":"NOT_IMPLEMENTED",
+                  "keys_secret_fixture":"NOT_IN_ARTIFACTS",
+                  "c_abi":"NOT_RUN","product":"NOT_RUN","physical":"NOT_RUN"}
+          pathlib.Path("cold-result/result.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+          rm -f "$fixture"
+          unset WBD_COLD_FIXTURE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: cold-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cold-result/
+          retention-days: 30
+          if-no-files-found: warn

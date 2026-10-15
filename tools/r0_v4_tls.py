@@ -97,7 +97,7 @@ def consume(args):
         "tests_passed": passed,
         "tests_failed": failed,
         "exit_code": run.returncode,
-        "result": "PASS" if run.returncode == 0 and passed == 8 and failed == 0 else "FAIL",
+        "result": "PASS" if run.returncode == 0 and passed == 10 and failed == 0 else "FAIL",
         "scope": manifest["scope"],
         "v4_production_dispatch_wired": False,
         "v4_rust_capabilities_advertised": False,

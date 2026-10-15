@@ -19,6 +19,7 @@ FILES = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml",
     "crates/wbd-types/src/lib.rs",
     "crates/wbd-engine/Cargo.toml", "crates/wbd-engine/src/lib.rs",
+    "crates/wbd-engine/src/cold_v4.rs",
     "r0/abi/include/wbd_abi.h", "r0/abi/tests/smoke.c",
     "r0/abi/old_go_probe/bridge.go", "r0/abi/old_go_probe/bridge_test.go",
     "r0/source-lock.json", "tools/r0_abi_bundle.py",

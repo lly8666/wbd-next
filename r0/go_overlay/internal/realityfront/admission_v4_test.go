@@ -2,6 +2,9 @@ package realityfront
 
 import (
     "bytes"
+    "crypto/sha256"
+    "encoding/binary"
+    "os"
     "context"
     "crypto/tls"
     "errors"
@@ -245,4 +248,67 @@ func TestR0V4ColdSnapshotTunnelRotationDoesNotReuseEpochOrKeys(t *testing.T){
     if first.Epoch()==restarted.Epoch()||first.Incarnation()==restarted.Incarnation()||
        first.DirectionKeys()==restarted.DirectionKeys(){t.Fatal("reused new logical scope")}
     if err:=store.ReleaseLane("user",tunnel,1,s3.Epoch);err!=nil{t.Fatal(err)}
+}
+
+
+func TestR0V4ColdBundleFormatAndDefaultDenied(t *testing.T){
+    if _,err:=(V4ColdSessionSnapshot{}).MarshalColdBundle();!errors.Is(err,ErrAdmissionParams) {
+        t.Fatal("zero snapshot serialized as authority")
+    }
+    store,_:=NewV4EpochStore(2)
+    tunnel:=[]byte("0123456789abcdef")
+    c,s,ce,se:=v4Pair(t,store,"principal",tunnel,1,v4TestPolicy(1,CipherChaCha),[16]byte{})
+    if ce!=nil||se!=nil {t.Fatalf("TLS: %v %v",ce,se)}
+    snapshot,_:=c.ColdSnapshot()
+    wire,err:=snapshot.MarshalColdBundle()
+    if err!=nil {t.Fatal(err)}
+    if string(wire[:4])!="WBCO" ||
+       binary.BigEndian.Uint16(wire[4:6])!=1 ||
+       binary.BigEndian.Uint16(wire[6:8])!=248 ||
+       wire[8]!=0 || wire[9]!=1 || wire[10]!=CipherChaCha || wire[11]!=0 ||
+       !bytes.Equal(wire[12:28],tunnel) ||
+       !bytes.Equal(wire[28:44],c.Epoch[:]) ||
+       !bytes.Equal(wire[44:60],c.Negotiated.IncarnationNonce[:]) ||
+       binary.BigEndian.Uint16(wire[60:62])!=1400 ||
+       binary.BigEndian.Uint16(wire[62:64])!=1400 {
+        t.Fatal("bad precise Go cold v1 schema")
+    }
+    hash:=sha256.Sum256([]byte("WBD-V4-COLD-PRINCIPAL\x00principal"))
+    if !bytes.Equal(wire[64:96],hash[:]) {t.Fatal("principal hash mismatch")}
+    key:=snapshot.DirectionKeys()
+    if !bytes.Equal(wire[96:128],key.C2S.AEADKey[:]) ||
+       !bytes.Equal(wire[128:140],key.C2S.IV[:]) ||
+       !bytes.Equal(wire[140:172],key.C2S.HPKey[:]) ||
+       !bytes.Equal(wire[172:204],key.S2C.AEADKey[:]) ||
+       !bytes.Equal(wire[204:216],key.S2C.IV[:]) ||
+       !bytes.Equal(wire[216:248],key.S2C.HPKey[:]) {
+        t.Fatal("wrong direction key segment")
+    }
+    ss,_:=s.ColdSnapshot()
+    serverWire,err:=ss.MarshalColdBundle()
+    if err!=nil||serverWire[8]!=1 ||
+       !bytes.Equal(serverWire[12:],wire[12:]) {
+        t.Fatal("client/server bundle is not the same protected negotiation")
+    }
+    if err:=store.ReleaseLane("principal",tunnel,1,s.Epoch);err!=nil {t.Fatal(err)}
+}
+func TestR0V4ColdBundleEphemeralInterop(t *testing.T){
+    store,_:=NewV4EpochStore(1)
+    tunnel:=[]byte("0123456789abcdef")
+    c,s,ce,se:=v4Pair(t,store,"interop",tunnel,1,v4TestPolicy(1,CipherChaCha),[16]byte{})
+    if ce!=nil||se!=nil {t.Fatalf("actual TLS failed: %v %v",ce,se)}
+    snapshot,e:=c.ColdSnapshot()
+    if e!=nil{t.Fatal(e)}
+    bundle,e:=snapshot.MarshalColdBundle()
+    if e!=nil{t.Fatal(e)}
+    if path:=os.Getenv("WBD_COLD_FIXTURE");path!="" {
+        // The keys are real session secrets, never stdout or uploaded
+        // as an Actions artifact. Create-only ephemeral file, mode 0600.
+        f,err:=os.OpenFile(path,os.O_WRONLY|os.O_CREATE|os.O_EXCL,0600)
+        if err!=nil{t.Fatal(err)}
+        _,writeErr:=f.Write(bundle[:])
+        closeErr:=f.Close()
+        if writeErr!=nil||closeErr!=nil {t.Fatalf("write fixture: %v close:%v",writeErr,closeErr)}
+    }
+    if err:=store.ReleaseLane("interop",tunnel,1,s.Epoch);err!=nil{t.Fatal(err)}
 }
