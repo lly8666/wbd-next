@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 8,
-  "checkpoint_sha": "c272f0e0412657b633da22f5b2003adc7345a39f",
+  "sequence": 9,
+  "checkpoint_sha": "6144a2d39e72af04a4f6c398bd3879bc26e7a28e",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-LINUX-RX-BATCH-005",
-  "current_task": "Native Linux x86_64 GNU bounded nonblocking recvmmsg UDP batch receive with strict truncation parser gate and atomic stop fence completed.",
-  "why_now": "M0 main active M4 formal assignment R1-M4-LINUX-RX-BATCH-005 in docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave2.md; rev2 epoch1 and M4 owned paths unchanged.",
-  "done_when": "Compiled-once own-source native platform r1_ tests execute real Linux UDP loopback recvmmsg with 0/1/32/33, EAGAIN, truncated/corrupt input, immutable lifetime and stop race; classifier-only EINTR/ambiguous noted separately. Keep previous 31 tests and own S/evidence/H Governance; no root Cargo/dependency edits.",
-  "next_action": "M0 may review/import independently proven Linux x86_64 GNU recvmmsg fixture into a source-exact main receive path, with true OS AF_PACKET RX and authenticated Go V4 cold exporter still separate tasks; keep Go V4 DISABLED. M4 wait for fresh new main task; no shared Cargo/ABI/workflows edits, Windows/raw/perf/product false claims.",
+  "task_id": "R1-M4-AF_PACKET-PREFLIGHT-006",
+  "current_task": "M4 Linux x86_64 GNU AF_PACKET capability and inactive protocol-zero FD preflight, exact EPERM, owned RAII close and bounded stop/generation metadata guard completed.",
+  "why_now": "M0 third-wave formal main registry R1-M4-AF_PACKET-PREFLIGHT-006 assignment, revision2 epoch1 active M4 owned branch and path; independent before live raw carrier activation.",
+  "done_when": "Own SOURCE native tests and unprivileged Linux capability-negative cases with exact errno and rollback/close; classifier and lifecycle tests for bad iface/truncation/stop/generation, preserve42/42 previous native tests, evidence S/H Governance. Do not claim AF_PACKET data exchange or live TCP unless an exact privileged fixture is separately authorized and executed.",
+  "next_action": "M0 to review native-proven capability check and *inactive* protocol0 raw FD preflight, plus source-exact test/evidence; independently authorize privileged real AF_PACKET bind/recvmmsg/sendmmsg integration with actual kernel RX/TX and Go V4 trusted cold exporter later. No new M4 task unless main formally reassigns; production Go V4 disabled, no raw traffic/product performance claim.",
   "unverified": false,
-  "last_tested_source": "2a4bc0e856f84042da292a4fae93d2a32d2d10db",
+  "last_tested_source": "34736c19eb4138938f8bc6a78a697e34bac2a641",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-LINUX-RX-BATCH-005.json"
+    "docs/evidence/M4/R1-M4-AF_PACKET-PREFLIGHT-006.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-LINUX-RX-BATCH-005 scoped DONE_WHEN met: native Linux x86_64 GNU recvmmsg(MSG_DONTWAIT|MSG_TRUNC) using caller-provided <=32 fixed stack iovecs, strict Complete/Truncated cap and parser gate, stop uses atomic ready borrow CAS; actual unprivileged UDP loopback 0/1/partial/32+33/EAGAIN/truncated 200B and following full golden packet, malformed packet does not HOL. CODE SOURCE 2a4bc0e856f84042da292a4fae93d2a32d2d10db compiled once in worker native Actions38669449668/1 PASS 42/42 (11 new +31 old), ZIP+manifest+native binary+result/log hashes directly inspected. Initial source64922c7 compile FAIL run38669395372 retained. Same SOURCE quality/G2/cross ABI/Governance SUCCESS. Historical M4 branch r0-fake-platform38669449646 FAIL old unfiltered R0 count despite 49/49 Rust asserts PASS; main M0 fixed harness separate SOURCE. EVIDENCE S c272f0e0412657b633da22f5b2003adc7345a39f Governance38669670353 SUCCESS, artifact_verified=true. No actual AF_PACKET raw reader, native Win/ARM, full Go V4 session identity, product/perf/physical; Go production V4 DISABLED."
+  "partial_summary": "R1-M4-AF_PACKET-PREFLIGHT-006 scoped DONE_WHEN: Linux x86_64 GNU AF_PACKET inactive-protocol0 capability/FD preflight, exact native CAP_NET_RAW/EPERM child test, native actual if_nametoindex & /sys mtu, protocol/packet type/gen/truncation classifier, stop CAS and RAII OwnedFd close even on no-cap runners; NO bind/send/recv, no UDP fallback. CODE SOURCE34736c19eb4138938f8bc6a78a697e34bac2a641 worker Actions38674827100/1 native 52/52 PASS (10 new+42 prior), downloaded verified ZIP/manifest/binary/log sha256 and same-source G2/static/crossABI PASS. Earlier source918ae4bfb7c8258e9de07debe65e4914c4facffe 51/51 native, Governance38674654068 SUCCESS, superseded only to add unconditional close case. Final code SOURCE Governance38674826949 FAIL control/source moved mid audit (M0 concurrent main), preserved; later evidence S6144a2d39e72af04a4f6c398bd3879bc26e7a28e Governance38675076585 SUCCESS. Old branch R0 workflow38674826978 FAIL unfiltered old inventory despite 59/59 actual Rust assertions PASS (not all green). AF_PACKET positive privileged open not necessarily performed; actual raw RX/TX/bind, VLAN/BPF, Go V4 cold authenticated integration, native Win/ARM, product/perf/physical NOT_RUN; Go V4 production DISABLED."
 }
