@@ -63,7 +63,7 @@ class ThirdM2OneShot(unittest.TestCase):
             w.review_m2_g2_third_single_file_refresh(API(parents=2),ROLE,SHA,MAIN)
     def test_forged_role_forbidden(self):
         with self.assertRaises(g.ContractError):
-            w.review_m2_g2_third_single_file_refresh(API(),{**ROLE,"id":"M2"},SHA,MAIN)
+            w.review_m2_g2_third_single_file_refresh(API(),{**ROLE,"id":"M1"},SHA,MAIN)
     def test_forged_scope_edge_rejected(self):
         with self.assertRaises(g.ContractError):
             w.verify_worker_commits(ROLE,[edge({"paths":["tools/worker_scope_ci.py","Cargo.lock"]})])
