@@ -10,6 +10,7 @@ use crate::memory::{FrozenRecord, UniqueBuffer};
 /// M1 R1 thread wake/stop proof; NOT a qualified SPSC or OS eventfd.
 pub mod wake;
 pub mod parity;
+pub mod batch;
 use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 
