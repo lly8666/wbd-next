@@ -34,7 +34,7 @@ class Mock:
             return {"status":self.status,"total_commits":self.n,"commits":[]}
         sl=self.commits[(page-1)*SIZE:page*SIZE]
         return {"status":self.status,
-                "total_commits":self.changed_total if page==2 else self.n,
+                "total_commits":self.changed_total if page==2 and self.changed_total is not None else self.n,
                 "commits":self.pages.get(page,sl),
                 "behind_by":0,"ahead_by":self.n}
 
