@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "source_sha": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
-  "result": "PARTIAL_DEBUG_CORRECTNESS_PASS_RELEASE_ACTIONS_NOT_RUN_GOVERNANCE_BLOCKED",
+  "result": "PASS_SCOPED_M3_RELEASE_COMPONENT_P0_WITH_CAVEATS_NOT_PRODUCT",
   "paths": [
     "crates/wbd-codec/src/fec_p0_cost_tests.rs",
     "docs/devlog/M3/M0-REQUEST-FEC-STEADY-RELEASE-014.md"
@@ -127,11 +127,81 @@
     "correction_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81"
   },
   "release": {
-    "status": "NOT_RUN",
-    "reason": "Existing worker-native workflow builds Debug only; existing P0 release workflow is main-only wbd-engine test, not M3 worker codec release fixture. No GitHub Actions dispatch tool available to M3, root workflow M0-owned.",
-    "measured_release_rows": 0,
-    "reusable_owner_steady_vs_fresh_release_ratio": "NOT_RUN",
-    "source_qualified_release_p99": "NOT_RUN"
+    "status": "MEASURED_NATIVE_RELEASE_NOT_PRODUCT",
+    "runner": "GitHub Actions Ubuntu 24.04 x64",
+    "rust": "1.85.1",
+    "profile": "release",
+    "compiled_once": true,
+    "m0_workflow_source": "93a3110cc6dd979dacc75afd9fbbee941d18f043",
+    "m3_worker_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+    "run_id": 38685587150,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job": 116259552465,
+    "measure_job": 116259796355,
+    "real_rust_tests_passed": 1,
+    "release_rows_passed": 24,
+    "repetitions_per_case": 3,
+    "sizes": [
+      192,
+      896
+    ],
+    "modes": [
+      "fresh_aead",
+      "steady_aead",
+      "fresh_fec",
+      "steady_fec"
+    ],
+    "warmup_active_seconds": 1.05,
+    "minimum_measured_active_seconds": 1.125,
+    "binary_sha256": "1d04c7c733e68ca768aa9dd329add5ec393285441c44272ec97f4e7070d584c8",
+    "log_sha256": "dfec7f72c884a9e746f0d251aa50d0c6c57ce78b17d2766149b1af05ba08154b",
+    "result_artifact_id": 11950996858,
+    "result_artifact_sha256": "936bde2de4ce63fc0239f05f70ff7379c98167ba6dfd6c74eedef0a7c285ae3b",
+    "build_artifact_id": 11949324855,
+    "build_artifact_sha256": "257d0b03a52db09fdee811ed1cd0e28819b3a79e372a434df0b3182def1da1fc",
+    "medians_cpu_us_per_record": {
+      "shard192": {
+        "fresh_aead": 0.612059,
+        "steady_aead": 0.575445,
+        "fresh_fec": 3.517181,
+        "steady_fec": 1.285555
+      },
+      "shard896": {
+        "fresh_aead": 0.834702,
+        "steady_aead": 0.877395,
+        "fresh_fec": 3.693126,
+        "steady_fec": 1.543039
+      }
+    },
+    "fresh_over_steady_fec_cpu_ratio": {
+      "shard192": 2.735924172828078,
+      "shard896": 2.393410665576178
+    },
+    "median_batch_average_p99_ns_per_record": {
+      "shard192": {
+        "fresh_fec": 3643,
+        "steady_fec": 1147
+      },
+      "shard896": {
+        "fresh_fec": 3905,
+        "steady_fec": 1430
+      }
+    },
+    "full_24_original_rows": "source-pinned GitHub Actions measure job 116259796355 test.log and result.json artifact ID 11950996858",
+    "earlier_run": {
+      "id": 38684106420,
+      "result": "cancelled",
+      "partial_rows": 21,
+      "excluded": true
+    },
+    "limitations": [
+      "CPU tick reads before and after each 64-record batch include proc read overhead; CPU intervals are not identical to active wall intervals, sometimes thread CPU sums exceed active wall totals.",
+      "100Hz CPU ticks quantize sub-ms batch measurements and materially affect CPU comparisons.",
+      "Fresh owner benchmark includes one RX construction per 64 records, steady owner persists. AEAD Seal and FEC framing are outside measured steady batch.",
+      "Batch-average p99 is not per-record or business packet p99.",
+      "Source uses test-only FecOrigin; not trusted live V4 session, NIC/ISA-L/product E2E/500Mbps."
+    ]
   },
   "unsupported": {
     "genuine_go_v4_authenticated_positive_origin": "NOT_RUN",
@@ -142,5 +212,15 @@
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_QUALIFIED"
   },
-  "next_action": "M0 must reconcile owned tools/worker_scope_ci.py checker mismatch and arrange source-locked release codec worker job; after real release artifact, M3 can compute same-run fresh/steady ratios and only then satisfy release evidence and H success. Do not claim atom014 DONE until then."
+  "next_action": "Evidence S Governance then cursor-only H Governance, await next formal M0 task; no production qualification.",
+  "m0_authorized_checker_mirror": {
+    "single_parent": "5eafc5065c5ee1b0d6d67610a458e970e08f3d75",
+    "one_file_only": "tools/worker_scope_ci.py",
+    "commit": "a15ea2732086d8c9b0564a4406ea30bd4afe0237",
+    "main_blob": "817934b16c6e088069ad9b4c265c93daacda7759",
+    "governance_run": 38687744091,
+    "attempt": 1,
+    "result": "ROLE_SCOPE_PASS",
+    "commits_checked": 69
+  }
 }
