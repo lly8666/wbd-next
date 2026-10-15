@@ -8,6 +8,7 @@ on:
       - "tools/worker_scope_ci.py"
       - "tests/test_g2_m2_tool_refresh.py"
       - "tests/test_g2_m2_second_refresh.py"
+      - "tests/test_g2_m2_third_refresh.py"
 permissions:
   contents: read
 concurrency:
@@ -26,6 +27,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_g2_m2_tool_refresh.py' -v
           python -m unittest discover -s tests -p 'test_g2_m2_second_refresh.py' -v
+          python -m unittest discover -s tests -p 'test_g2_m2_third_refresh.py' -v
           python -m unittest discover -s tests -p 'test_g2_ancestry_capacity.py' -v
       - name: Review immutable M2 worker head, paths and pinned native CODE
         shell: bash

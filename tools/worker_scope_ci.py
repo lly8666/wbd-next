@@ -110,7 +110,9 @@ def audit_worker_history(api,role,source,control_sha):
             item=api.get(f"commits/{sha}?per_page=1")
             parents=item.get("parents",[])
             g.need(len(parents)==1,"M2 tool sync must have one parent")
-            if parents[0].get("sha")==M2_G2_SECOND_REFRESH_PARENT:
+            if parents[0].get("sha")==M2_G2_THIRD_REFRESH_PARENT:
+                sync=review_m2_g2_third_single_file_refresh(api,role,sha,control_sha)
+            elif parents[0].get("sha")==M2_G2_SECOND_REFRESH_PARENT:
                 sync=review_m2_g2_second_single_file_refresh(api,role,sha,control_sha)
             else:
                 sync=review_m2_g2_single_file_refresh(api,role,sha,control_sha)
@@ -175,6 +177,8 @@ M2_G2_SECOND_REFRESH_PARENT = "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c"
 # compare historical worker commit against today's changing main checker.
 M0_M2_SECOND_TOOL_SOURCE = "d902842a31fd6b032a5f1bab515b93c21f28b0aa"
 M0_M2_SECOND_TOOL_BLOB = "86c213e122c5c0a7b636105f3be4d1fb2ecc7899"
+M2_G2_THIRD_REFRESH_PARENT = "35c45f2918600b3087d50493da61e112af07bcd1"
+M2_G2_THIRD_DECISION = ".governance/exceptions/M2-G2-008-checker.json"
 # M3 second checker mirror is already complete. Freeze its original approved
 # source, too, before any further main tool change invalidates its history.
 M0_M3_SECOND_TOOL_SOURCE = "940498ccb2f3834e4287813bb250ebfb97f507fb"
@@ -241,6 +245,44 @@ def review_m2_g2_second_single_file_refresh(api,role,sha,control_sha):
     return {"approved_m2_g2_tool_refresh_v2":True,
             "first_parent":M2_G2_SECOND_REFRESH_PARENT,
             "sync_paths":[M2_G2_REFRESH_PATH]}
+
+def review_m3_g2_third_single_file_refresh(api,role,sha,control_sha):
+    """Third strictly one-shot M2-only checker mirror with M0 immutable blob.
+
+    The approval lives in a main-controlled JSON decision, published only
+    AFTER the reviewed checker SOURCE and blob are frozen. Worker may neither
+    alter the approval nor rebase/merge to obtain this exception.
+    """
+    g.need(role["id"]=="M2","third M2 checker mirror belongs to M2 only")
+    detail=g.commit_delta(api,sha,256)
+    g.need(detail["parents"]==1 and detail["paths"]==[M2_G2_REFRESH_PATH],
+           "M2-015 checker sync must edit exactly one root file in one-parent commit")
+    item=api.get(f"commits/{sha}?per_page=1")
+    parents=item.get("parents",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==M2_G2_THIRD_REFRESH_PARENT,
+           "M2-015 checker sync requires direct parent 79535dd5")
+    d=api.file(M2_G2_THIRD_DECISION,control_sha)
+    g.need(isinstance(d,dict) and d.get("schema_version")==1 and
+           d.get("role_id")=="M2" and d.get("parent_sha")==M2_G2_THIRD_REFRESH_PARENT and
+           d.get("path")==M2_G2_REFRESH_PATH and d.get("status")=="APPROVED_ONCE",
+           "M2-015 mirror missing exact current M0 authorization")
+    approved=d.get("m0_reviewed_source_sha")
+    blob=d.get("approved_git_blob_sha")
+    g.need(isinstance(approved,str) and bool(g.SHA.fullmatch(approved)) and
+           isinstance(blob,str) and bool(g.SHA.fullmatch(blob)),
+           "M2-015 checker authorization SHA/blob invalid")
+    ancestry=api.get(f"compare/{approved}...{control_sha}?per_page=1")
+    g.need(ancestry.get("status") in {"ahead","identical"},
+           "M2-015 checker source not in authoritative main history")
+    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={approved}")
+    actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
+    g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
+           reviewed.get("sha")==blob and actual.get("sha")==blob,
+           "M2-015 mirror must exactly match immutable approved main Git blob")
+    return {"approved_m3_g2_tool_refresh_v3":True,
+            "first_parent":M2_G2_THIRD_REFRESH_PARENT,
+            "sync_paths":[M2_G2_REFRESH_PATH]}
+
 
 def review_m3_g2_single_file_refresh(api,role,sha,control_sha):
     """One reviewed M0-owned script mirror, anchored to one M3 first parent."""
@@ -388,6 +430,14 @@ def verify_worker_commits(role, commits):
                    item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
                    item.get("paths")==[M2_G2_REFRESH_PATH],
                    "M2 exact checker refresh violated M0 policy pin")
+            checked += 1
+            continue
+        if item.get("approved_m2_g2_tool_refresh_v3") is True:
+            g.need(role["id"]=="M2" and item.get("parents")==1 and
+                   item.get("first_parent")==M2_G2_THIRD_REFRESH_PARENT and
+                   item.get("sync_paths")==[M2_G2_REFRESH_PATH] and
+                   item.get("paths")==[M2_G2_REFRESH_PATH],
+                   "third M2 checker mirror violates M0 exact-parent Git blob pin")
             checked += 1
             continue
         if item.get("approved_m2_g2_tool_refresh_v2") is True:
