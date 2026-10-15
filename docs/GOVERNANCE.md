@@ -116,6 +116,14 @@ GitHub API 不可读、权限不足、结果分页超限都明确报出，不回
 
 registry 只保留稳定职责、权限与任务入口；cursor 保留本角色当前任务、停止条件、下一步及证据链接。详细 run/hash 放 evidence 一处维护，不在 project/registry/cursor 多次抄写。现有 S→H 不变；一个原子任务尽量一次汇总日志+证据 S、一次 cursor H，不为重复复述结论制造多个文档提交。
 
+写作归属固定：project.next_decision 只写阶段目标/当前入口；registry.assigned_task 是分配依据，goal/done_when 只说明职责和任务入口；cursor.current_task 写当前工作，why_now 写实际缺口，done_when 写本次停止条件，next_action 写一个动作，partial_summary 只补未完成/未验边界。证据中已存在的 run/完整 SHA/统计数字不要抄到多个 prose 字段，正式 checkpoint_sha/last_tested_source 字段仍保留。建议 cursor 约 2–3KiB，8KiB 仍为既有硬上限，不因建议值新增误报门。证据换源码时更新 evidence_refs，历史不同 SOURCE 放 context_refs，不混成同源 PASS。
+
 M0 集中处理共享接口、依赖和真实路径集成。普通模块内测试新增无需申请精确计数修改；必跑用例与特殊 ignore 清单变更仍须解释。达到 done_when 即收口，不因治理升级顺便扩大功能范围。
 
 每轮集成明确一个真实路径目标；当前优先真实 Go 认证会话到 Rust owner，保留 B01–B04、无 HOL、所有权/generation/MTU 等硬门。整理历史时把已完成、仍 OPEN、被替代结论分清；不删除原始失败。
+
+## 12. 日常检查与工具自测分层
+
+普通 push 的 Governance 每次仍核角色/来源、权限范围、请求身份、仓库结构、证据引用；连续性交接另报。其 receipt scope 为 `governance_identity_and_structure`，drills/model 明确 NOT_RUN，不冒充全工具测试或产品资格。worker 的历史 scope 检查器兼容与中央精确 SOURCE 审计仍按第 10 节处理，不静默绕过失败。
+
+完整工具回归、工作流语法和模型计算由 `governance-maintenance.yml` 在 tools/tests/workflow/policy/必跑清单/检查点或共同规则变化时运行。仅 project、registry、cursor、请求或证据数据变化不重复启动完整自测，但普通 Governance 的数据验证仍执行。显式手动 `governance-selftest` 保持完整 drills/model，缺失或失败不能生成 PASS。遇规则改动必须验 maintenance 的同源结论，不能只拿轻检查绿灯合入；无关功能/性能测试不为治理文字重跑。

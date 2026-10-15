@@ -410,6 +410,22 @@ def audit_remote(api, role_id):
     return result
 
 
+def summarize_checks(event, outcomes):
+    """Do not turn a deliberately unrun self-test into an implicit PASS."""
+    need(event in {"push", "workflow_dispatch"}, "unsupported governance event")
+    expected = dict.fromkeys(("role", "identity", "structure"), "success")
+    expected.update(dict.fromkeys(("drills", "model"),
+                                  "success" if event == "workflow_dispatch" else "skipped"))
+    need(set(outcomes) == set(expected), "incomplete governance step observations")
+    need(all(v in {"success", "failure", "skipped", "cancelled"} for v in outcomes.values()),
+         "unknown governance step outcome")
+    return {"event": event, "outcomes": outcomes,
+            "result": "PASS" if outcomes == expected else "FAIL",
+            "scope": "governance_selftest" if event == "workflow_dispatch" else "governance_identity_and_structure",
+            "selftests": "NOT_RUN" if event == "push" else outcomes["drills"],
+            "design_models": "NOT_RUN" if event == "push" else outcomes["model"]}
+
+
 def make_receipt(result, output):
     need(result in {"PASS", "FAIL"}, "invalid observed checks result")
     source = os.environ.get("GITHUB_SHA", "")
@@ -420,15 +436,20 @@ def make_receipt(result, output):
     need(bool(IDENT.fullmatch(request_id)) and bool(IDENT.fullmatch(role)), "invalid request identity")
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    config = {"scenario": "governance-selftest", "product": False}
+    checks = json.loads((output / "checks.json").read_text(encoding="utf-8"))
+    need(checks == summarize_checks(os.environ.get("GITHUB_EVENT_NAME"), checks["outcomes"]),
+         "inconsistent governance step summary")
+    need(result == checks["result"], "receipt result disagrees with observed steps")
+    scenario = "governance-selftest" if checks["event"] == "workflow_dispatch" else "governance-push-checks"
+    config = {"scenario": scenario, "product": False}
     receipt = {"schema_version": 1, "role_id": role, "request_id": request_id,
-               "kind": "governance", "scope": "governance", "scenario": config["scenario"], "seed": 0,
+               "kind": "governance", "scope": checks["scope"], "scenario": config["scenario"], "seed": 0,
                "source_sha": source, "harness_sha": source,
                "config_sha256": hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest(),
                "run_id": run_id, "run_attempt": int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")),
                "workflow_ref": os.environ.get("GITHUB_WORKFLOW_REF"), "job": os.environ.get("GITHUB_JOB"),
                "request_ref": os.environ.get("WBD_REQUEST_REF") or None,
-               "result": result, "artifact_verified": False,
+               "result": result, "artifact_verified": False, "checks": checks,
                "note": "Step observation only: verify final GitHub conclusion and downloaded manifest before promotion.",
                "environment": {"os": os.environ.get("RUNNER_OS"), "arch": os.environ.get("RUNNER_ARCH"),
                                "python": sys.version.split()[0]},

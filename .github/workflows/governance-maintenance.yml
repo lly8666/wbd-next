@@ -2,16 +2,21 @@ name: Governance maintenance regression
 run-name: "governance-maintenance|${{ github.sha }}"
 on:
   push:
-    branches: [main, governance/incremental-ci-20261015]
+    branches: [main, governance/bridge-handoff-ci-20261015]
     paths:
       - "tools/**"
       - "tests/**"
       - ".github/workflows/**"
-      - ".governance/**"
+      - ".governance/policy.json"
+      - ".governance/native-suites.json"
+      - ".governance/scope-checkpoints.json"
       - "AGENTS.md"
       - "START_HERE.md"
+      - "PROJECT_CHARTER.md"
       - "docs/GOVERNANCE.md"
       - "docs/ACTIONS_CONTRACT.md"
+      - "docs/prompts/**"
+      - "docs/architecture/model-inputs.json"
 permissions:
   contents: read
 jobs:
@@ -31,6 +36,8 @@ jobs:
           python -m unittest discover -s tests -v 2>&1 | tee out/governance-tests.log
           python tools/governance.py validate > out/structure.json
           python tools/r0_qualification_audit.py > out/r0-ledger.log
+          python tools/cost_model.py > out/cost-model.json
+          python tools/design_models.py > out/design-model.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

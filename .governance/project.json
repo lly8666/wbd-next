@@ -3,7 +3,7 @@
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
   "phase": "R0_FOUNDATION_IN_PROGRESS",
-  "governance_evidence": "docs/evidence/M0/GOV-001-manual.json",
+  "governance_evidence": "docs/evidence/M0/GOV-003-PR4-main-integration.json",
   "product_design": "DESIGN_READY",
   "product_implementation": "R0_FOUNDATION_IN_PROGRESS",
   "architecture_ref": "docs/architecture/README.md",
@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 PR#4 governance integration complete on merged main SOURCE 0c7b90c4c64a1a8a6e2d7583498b959a5a758f5d: 17 automatically triggered workflows, 16 SUCCESS / 1 expected main workflow_run scope skip, 0 failures; native-functional38739018109 Rust1.85.1 compiled-once 8 groups 334/334 required and 2 explicit benchmark ignore; Go real TLS38739018043 12/12, maintenance38739018122 163/163, central worker scope38739018145 four exact worker HEAD/checkpoints PASS; Governance38739018217, ABI38739018192 and cross38739018071 SUCCESS. Evidence docs/evidence/M0/GOV-003-PR4-main-integration.json. Not product benchmark, physical or real AEAD Go→Rust positive. Registered M0 023 next trusted Go V4 admission to Rust AEAD/PN owner plus actual M4 held kernel loan Stop B01-B04, features0.",
+  "next_decision": "按 main registry 与 M0 cursor 接续真实 Go V4 → Rust owner → Normal/off 首次业务交付；施工顺序见 docs/architecture/modules/01-CONTROL-BRIDGE.md 和 11-IMPLEMENTATION-GATES.md。资格仅以精确 evidence 为准。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

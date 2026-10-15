@@ -7,6 +7,8 @@ Date 2026-10-15. Main source baseline dd9c4b1f66e40a4823c4153779931802409a3178. 
 - M0 Go protected V4 transaction was hardened: protected final write+Detach before explicit Go epoch finish(true), abort defer finish(false); actual protected TLS+rollback 11/11 source dd9c4b1f66e40a4823c4153779931802409a3178 run38695761347 SUCCESS. Still NO protected-Go-to-Rust installed owner/production ABI.
 
 ## Formal assigned tasks
+施工顺序更正：M0 按 `docs/architecture/modules/01-CONTROL-BRIDGE.md` 的 Prepare→受保护回复→DetachTransition→CommitAdmission→双 owner 确认→Active 执行，废止早期“Active 后 Detach”描述；实际接入和 Normal/off 首到的分步交付见 `11-IMPLEMENTATION-GATES.md`。任务 ID、权限和 worker 分配不变，下面历史基线不代表最新进度。
+
 ### M0
 R0-M0-V4-PROTECTED-OWNER-COMMIT-023: Main-only bridge that accepts an actual Go V4 authenticated protected ColdSnapshot exclusively through the trusted session/handshake callsite and installs one fresh Rust ScopedOwner generation with exact PrepareTransition/protected reply/DetachTransition/CommitAdmission transaction ordering, bounded early RX and TX seq ownership, fail-close on invalid/stale/overlap and Stop-held lease. A self-consistent 248B cold bundle is never authentication. Default production ABI remains features0 until actual E2E test and safety signoff.
 

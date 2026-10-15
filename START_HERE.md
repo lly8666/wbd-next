@@ -34,3 +34,5 @@
 治理 v2：共享范围审计使用主线 `Central worker scope audit` 的精确 SOURCE 收据，不复制检查器到 worker。详见 `docs/GOVERNANCE.md`；历史 Governance 红灯须区分旧审计边界失败与真正测试失败，不能一概覆盖。
 
 当前分配以 main registry 的 `assigned_task` 为准；工作分支 cursor 可能仍记录上一轮。两者不同时读取 registry 指向的本轮决策，保留旧结果后开始已授权的新任务，勿因旧 cursor 的“等待分配”停住。
+
+写入时保持同样分工：project 写阶段/入口，registry 写分配，cursor 写当前事实和一个下一动作，详细 run/hash 写 evidence。接手不抄整段历史到每个字段；原失败和未跑项用引用保留。普通 push 的 Governance 是身份/结构检查，完整工具自测看 maintenance 或手动 selftest 的精确范围。

@@ -28,6 +28,8 @@ Governance 手动验证 input `declared_source` 必须等于实际 checkout SHA�
 
 每轮输出小的 receipt.json + manifest.json + 检查日志，失败也尽量上传。receipt.result 只是步骤观察，仍须核 GitHub 最终 conclusion；CANCELLED 或硬终止可能没有产物。
 
+普通 push Governance 使用 `scenario=governance-push-checks` / `scope=governance_identity_and_structure`，每次执行角色/来源/权限/结构校验，完整工具 drills/model 标 NOT_RUN；receipt 内 checks 明列各步骤观察。手动请求仍使用 `governance-selftest`，必须实际完成完整 drills/model。相关工具/规则变更的自动全回归归 maintenance，不因进度 H 再跑一遍。轻检查通过不能替代规则改动的 maintenance 通过。
+
 manifest 包含实际 SOURCE、workflow ref、run ID/attempt、平台与产物各文件 hash。**hash 证明一致性，不证明业务正确性。** artifact 过期时保留摘要和可用性状态，不声称凭 hash 能复验。
 
 ## 能力限制
