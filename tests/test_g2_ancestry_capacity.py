@@ -12,8 +12,11 @@ class BoundedG2(unittest.TestCase):
     def test_exact_old_limit(self):self.assertEqual(len(w.complete_g2_ancestry(example(64))),64)
     def test_actual_new_67(self):self.assertEqual(len(w.complete_g2_ancestry(example(67))),67)
     def test_max_96(self):self.assertEqual(len(w.complete_g2_ancestry(example(96))),96)
-    def test_too_many_97(self):
-        with self.assertRaises(g.ContractError):w.complete_g2_ancestry(example(97))
+    def test_max_98(self):self.assertEqual(len(w.complete_g2_ancestry(example(98))),98)
+    def test_too_many_99(self):
+        with self.assertRaises(g.ContractError):w.complete_g2_ancestry(example(99))
+    def test_full_98_not_97(self):
+        with self.assertRaises(g.ContractError):w.complete_g2_ancestry(example(98,97))
     def test_page_truncation(self):
         with self.assertRaises(g.ContractError):w.complete_g2_ancestry(example(67,64))
     def test_diverged(self):

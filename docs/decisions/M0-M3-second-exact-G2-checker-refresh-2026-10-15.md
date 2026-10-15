@@ -1,0 +1,12 @@
+# M0 one-time M3-014 second exact checker mirror · 2026-10-15
+
+Current main reviewed `tools/worker_scope_ci.py` with full ancestry cap 96, while blocked M3 worker HEAD `5eafc5065c5ee1b0d6d67610a458e970e08f3d75` still runs the old historical checker. M3 CODE `88a12027c61386be2709e1e8b01eb8f3c547ae81` Debug native 98/98 succeeded but Governance 38682956995, evidence S Governance38683212797, H Governance38683352534 failed independently due old checkout checking live main blob. This **does not approve the worker code** or waive any Actions.
+
+A full exact compare of G2_BASE `83bd720368b9be68b3c4c94d7462d20cf4d796db` to that exact M3 H counts **95 complete per-commit entries**. One checker mirror would be 96; M3 evidence-only S 97; cursor-only H 98. M0 raises bounded maximum **96→98**, strictly less than GitHub 100 per-page; full unique SHA list required, all parent/path deltas still individually reviewed. Invalid 99 or truncated 98→97 fails. This is not 100+ blind pagination.
+
+## Exact one-use review
+M3 may perform only a **single-parent** commit directly on parent `5eafc5065c5ee1b0d6d67610a458e970e08f3d75`, with exactly one changed file `tools/worker_scope_ci.py`, and the final Git blob must be **byte identical to live M0 main control tool** at the worker's Governance run. No merge, force push, another root path, other worker writer or extra source file. Existing original M3 historical mirror remains validated against its pinned historical source. M0 still audits entire source ancestry and main authority; the new exception covers only the exact v2 mirror. Tests in `tests/test_g2_m3_second_refresh.py` cover parent, role, content, ancestry, extra root paths and false exemption.
+
+If M3 HEAD changes prior to mirror, this exact authorization is no longer valid and M0 must review. M3 must independently copy that exact verified main tool into its work branch and observe worker Governance success, then update honest SOURCE-attested Release evidence and emit cursor-only H. M0 will **not** write M3's branch. Future M3 tasks need new bounded branch/epoch strategy after 98, rather than silently raising the limit further.
+
+Reference M0 source-pinned Release workflow `.github/workflows/m0-m3-release-steady-exact.yml` for candidate CODE `88a12027`; its scoped release measurement and artifact evidence remain separate from worker branch Governance and any Go V4 / production / 500Mbps qualification.
