@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-GO-V4-COLD-SNAPSHOT-MAIN-014",
+  "branch": "main",
+  "source_sha": "e68aff9e4c84e86e7708cb364be401065de1127f",
+  "scope": "PINNED_ORIGINAL_GO_TLS_V4_PROTECTED_AUTHENTICATED_COLD_SESSION_SNAPSHOT_COPY_ONLY",
+  "result": "PASS",
+  "artifact_verified": true,
+  "preflight": {
+    "prior_H": "64c34997a25507626d23bd362529ca219074f0ce",
+    "cursor_sequence": 49,
+    "checkpoint": "7a3d782807c38f0ba2bb5d16ccb1ba3a892ef56b",
+    "H_governance_run": 38673568891,
+    "worker_branches_unchanged": true,
+    "registry_revision": 2,
+    "epoch": 1
+  },
+  "pinned_original": {
+    "repo": "lly8666/wobuzhidao",
+    "source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go_toolchain": "1.23.12",
+    "fixture_source": "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "production_runtime_gate": "r0/go_overlay/internal/runtimeentry/r0_admission_mode.go",
+    "runtime_v4_status": "UNSUPPORTED_FAIL_CLOSED"
+  },
+  "changed": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+    "tools/r0_v4_tls.py"
+  ],
+  "actual_behavior": [
+    "only a successful protected client V4 reply+real TLS key derivation or successful server authenticated credential check+protected reply+DetachTransition sets an inaccessible coldAuthenticated provenance marker",
+    "caller cannot mint positive V4ColdSessionSnapshot with its private fields or default/constructed V4 session; nil/fake/out-of-band input rejected",
+    "snapshot duplicates identity/tunnel16/epoch16/incarnation16/lane1..4/cipher/client-server record limits/C2S and S2C fixed-key values, getter values do not alias Go mutable session storage",
+    "three real protected TLS cipher vectors, first lane epoch random, second lane same epoch distinct incarnation+keys, released new logical tunnel receives new epoch/keys",
+    "Go runtimeentry and client/server CLI remain explicitly fail-closed for requested V4; DataPlaneReady boolean is not proof of Rust capabilities and does not activate V4"
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "r0-v4-real-tls",
+      "run_id": 38674639200,
+      "source_sha": "e68aff9e4c84e86e7708cb364be401065de1127f",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "native_go_tests": "8/8",
+      "new_tests": [
+        "TestR0V4ColdSnapshotActualAuthenticatedTLSAllCiphers",
+        "TestR0V4ColdSnapshotNilForgedAndMutatedSessionDenied",
+        "TestR0V4ColdSnapshotTunnelRotationDoesNotReuseEpochOrKeys"
+      ],
+      "build_job": 116225332356,
+      "consumer_job": 116225511588,
+      "compiled_once": true,
+      "source_sha_attested": true,
+      "test_binary_sha256": "cc943b85072be84c9d22793c1644d8aa0fd3b08a63744fc2722836439e4b9747",
+      "test_log_sha256": "529c7de5d5eef0fcff89e03e24d67401508c566b38246e6b3702e403c771e0f7",
+      "build_artifact": {
+        "id": 11945516488,
+        "digest": "sha256:7b68efaf676e1997c9bae969a0d5791d2a725e44f20bd7197a4a204aef18c305"
+      },
+      "result_artifact": {
+        "id": 11945139199,
+        "digest": "sha256:908d31da6cfd6e743d573795966ce20b4850612ef0314d3fc257535be6b415e5"
+      }
+    },
+    {
+      "workflow": "r0-go-control-v4-gate",
+      "run_id": 38674639147,
+      "source_sha": "e68aff9e4c84e86e7708cb364be401065de1127f",
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "build_job": 116225332051,
+      "consumer_job": 116225505972,
+      "build_artifact": {
+        "id": 11945144321,
+        "digest": "sha256:49c864fca59b81527e43cb930ffe36af62ca641f120d8e4a9d6c54936874e61c"
+      },
+      "result_artifact": {
+        "id": 11945816322,
+        "digest": "sha256:10a718b72278d791f5a131944f5f695bf3a6f75d44a50ee9db67fc951a2336f0"
+      },
+      "test_log_sha256": "53db7ca07339130f8fe9843aa718ce16b9ccd27fb45702a47a67d26cf76016f5",
+      "legacy_runtime_V4": "DISABLED",
+      "rust_v4_engine": "NOT_IMPLEMENTED",
+      "c_abi": "NOT_RUN"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38674639141,
+      "source_sha": "e68aff9e4c84e86e7708cb364be401065de1127f",
+      "attempt": 1,
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "unqualified": [
+    "Go Rust cold command byte schema",
+    "Rust compiled verified origin constructor",
+    "Go server RX/TX exact bootstrap handoff sequence and ownership/late retirement",
+    "Rust LaneKey generation allocation and one-way translation",
+    "driver AF_PACKET and product data-plane",
+    "cross platform native ABI and throughput/performance",
+    "product/physical tests"
+  ],
+  "next_action": "M0 one independent atom define and test versioned cold-only bundle from Go V4 private snapshot to Rust engine with explicit caller-authenticated source and exact server Prepare/Detach boundaries, no call to V4 runtime activation until true capability and both ownership confirmations; avoid guessing source field layouts."
+}
