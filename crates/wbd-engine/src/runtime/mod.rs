@@ -14,6 +14,7 @@ pub mod batch;
 pub mod rx_batch;
 pub mod generation;
 #[cfg(test)] mod generation_release;
+#[cfg(test)] mod loan_stop;
 use parity::ParityReady;
 pub const OWNER_RUNTIME_READY: bool = false; // Not yet wired into M0 ABI.
 

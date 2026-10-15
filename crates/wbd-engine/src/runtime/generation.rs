@@ -88,6 +88,8 @@
      rx:RxOwner,
      ledger:Arc<Ledger>,
      stopped:bool,
+     /// First Stop/retirement cancellation count, stable on repeat Stop.
+     stop_canceled:usize,
  }
  impl ScopedOwner {
      pub fn new(owner_id:u64,serial:u32,lane:LaneKey,tx:TxOwner,rx:RxOwner)->Option<Self>{
@@ -97,6 +99,7 @@
          Some(Self{
              tag:ScopeToken(Arc::new(Tag{owner_id,serial,lane})),
              tx,rx,ledger:Arc::new(Ledger::new()),stopped:false,
+             stop_canceled:0,
          })
      }
      pub fn token(&self)->ScopeToken {self.tag.clone()}
@@ -179,11 +182,22 @@
      fn retire(&mut self)->RetiredScope {
          let canceled=self.tx.stop()+self.rx.stop();
          self.stopped=true;
+         self.stop_canceled=canceled;
          RetiredScope{owner_id:self.tag.0.owner_id,serial:self.tag.0.serial,
              canceled,ledger:Arc::clone(&self.ledger)}
      }
+     /// Idempotent Stop for exactly the current generation. Repeated Stop
+     /// preserves the original cancel count and old loan ledger; it never
+     /// drains, returns or duplicates still-borrowed TX/RX handles.
+     /// Tokens of retired generations remain stale even if numeric IDs match.
      pub fn stop(&mut self,token:&ScopeToken)->Result<RetiredScope,ScopeError>{
-         self.check(token)?;
+         if !Arc::ptr_eq(&self.tag.0,&token.0) { return Err(ScopeError::Stale); }
+         if self.stopped {
+             return Ok(RetiredScope{
+                 owner_id:self.tag.0.owner_id,serial:self.tag.0.serial,
+                 canceled:self.stop_canceled,ledger:Arc::clone(&self.ledger),
+             });
+         }
          Ok(self.retire())
      }
      /// Strictly next owner serial. Preallocate replacement owner queues on
@@ -206,6 +220,7 @@
          self.rx=next_rx;
          self.ledger=Arc::new(Ledger::new());
          self.stopped=false;
+         self.stop_canceled=0;
          Ok(old)
      }
  }
@@ -388,7 +403,7 @@ mod tests {
         assert_eq!(retired.canceled,8);
         assert_eq!(a.report().loaned,2);
         assert_eq!(retired.borrowed(),Borrowed{tx_batches:1,rx_batches:1});
-        assert_eq!(s.stop(&t).err(),Some(ScopeError::Stopped));
+        assert_eq!(s.stop(&t).unwrap().canceled,retired.canceled);
         assert_eq!(s.drain_tx(&t,MonoNs(0),Vec::with_capacity(2)).err().unwrap().0,
             ScopeError::Stopped);
         drop(rx);drop(tx);
