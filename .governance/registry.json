@@ -92,8 +92,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "R1-M3-FEC-MULTISCOPE-012: Strengthen existing FecOrigin test-only typed post-AEAD gate with two concurrently isolated trusted scopes under fake time: per-tunnel and direction replay/BlockID floors and Heavy/Compact expiry cannot contaminate peers, even after rekey and old parity. NO production origin constructor; no Go handshake/ABI/root edits.",
-      "done_when": "Own SOURCE compiled-once native r1_ tests for two tunnels both directions, 32-bit BlockID wrap, misrouted true AEAD ciphertext, replay and exhausted caps, PNs independent, deterministic timers and 56B oracle, retaining previous85/85, evidence S/cursor-only H Governance; live Go V4 provenance remains NOT_RUN."
+      "goal": "R1-M3-POSTAUTH-FEC-P0-COST-013: Within M3-owned codec R1 paths, profile the bounded incremental cost of authenticated-input FEC admission and BlockID/Heavy/Compact bookkeeping after real AEAD+unique PN, comparing scoped test-only origin enabled vs absent-origin fail-closed. Use fixed-size reproducible records, explicit multi-tunnel/direction/key scope, no production FecOrigin constructor or Go exporter. Label any P0 result as component cost and never infer 500Mbps product throughput.",
+      "done_when": "Retain prior94/94 r1_ native multiscope test cases; add bounded real AEAD/FEC adversarial correctness and repeated (>1s where runner permits) warmup+CPU-s, byte-cost and sample percentile experiments under existing M3-owned tests/tools. Own source-exact compiled-once native tests+artifact evidence and cursor-only H Governance, explicitly record runner, source, results and noise. No root CI/Cargo/go/ABI or production origin; no software feature flag."
     },
     {
       "id": "M4",
