@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "record_kind": "RECOVERED_OBSERVED_ACTIONS",
-  "result": "PURE_R2_NATIVE_55_55_PASS__M0_APPROVED_CHECKER_SYNC_GOV_ROLE_SCOPE_PASS__EVIDENCE_S_H_PENDING",
+  "result": "PURE_R2_NATIVE_55_55_PASS__RECOVERED_CHECKER_S_GOV_PASS__EVIDENCE_SOURCE_FIELD_CORRECTED__NEW_S_AND_H_PENDING",
   "code_source_sha": "7875137949f61fead1374d2933798c61814adb92",
   "checker_sync_S": "5bfacc7814183fc631a827725ee432c1c42b029d",
   "checker_sync_parent": "35c45f2918600b3087d50493da61e112af07bcd1",
@@ -65,5 +65,26 @@
   "physical": "NOT_RUN",
   "real_authenticated_adapter": "NOT_RUN",
   "new_packet_encryption_or_socket_changes": false,
-  "next_action": "Verify this recovery evidence S via its own GitHub Governance, then push a separate cursor-only H and verify H Governance. Do not claim product/physical readiness."
+  "next_action": "Verify independent Governance for this exact corrected evidence SOURCE, then new cursor-only H; preserve two failed H attempts and product NOT_RUN.",
+  "source_sha": "7875137949f61fead1374d2933798c61814adb92",
+  "handoff_corrections": [
+    {
+      "H": "96690198416dc612c5b957637029976464a247f3",
+      "run_id": 38734245868,
+      "conclusion": "failure",
+      "reason": "ROLE_SCOPE_FAILED: unverified work cannot be ready for integration",
+      "artifact_id": 11971900220,
+      "digest": "sha256:3541934fcfd5f733afa5c12abc457a2e1ddffaa2f12caeb55ae6401af21cf122"
+    },
+    {
+      "H": "5d09dda856704abf7ef244731c6d4884f77cf06a",
+      "run_id": 38734405285,
+      "conclusion": "failure",
+      "role_scope": "ROLE_SCOPE_PASS",
+      "scope_commits_checked": 54,
+      "reason": "structure BLOCKED: evidence is for a different SOURCE (missing source_sha field in supplemental receipt)",
+      "artifact_id": 11971579458,
+      "digest": "sha256:5e1c938caef513b88686bc57a6820e180e3f56e92482fd806a0edcf88db469d5"
+    }
+  ]
 }
