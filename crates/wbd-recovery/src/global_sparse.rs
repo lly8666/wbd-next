@@ -46,6 +46,8 @@ pub enum GlobalRepairError {
     PendingCapacity,
     ClockReversed,
     ExhaustedId,
+    InvalidBatch,
+    DuplicateBatchId,
     Local(BudgetError),
 }
 impl From<BudgetError> for GlobalRepairError {
@@ -436,6 +438,106 @@ impl GlobalRepairAllocator {
     }
 }
 
+
+// === R2-M2-GLOBAL-BATCH-COMPLETION-003 ===
+/// Trusted M0 platform adapter is responsible for verifying the driver's
+/// statement; ProvenNotAttempted requires POSITIVE evidence a suffix was NOT
+/// submitted. Ambiguous syscall remainder must use Unproven and remain charged.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BatchSuffixEvidence {
+    Unproven,
+    ProvenNotAttempted,
+}
+
+/// Validated SHAPE of the outcome for independently reserved repair slots.
+/// Prefix [0, accepted_prefix) had driver submission success; optional single
+/// ambiguous slot MUST be at accepted_prefix. Suffix is either positively
+/// known not submitted or conservatively retained. Driver Accepted is NOT
+/// authenticated receipt or peer delivery.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ValidatedRepairBatchOutcome {
+    total: usize,
+    accepted_prefix: usize,
+    uncertain_at: Option<usize>,
+    suffix_evidence: BatchSuffixEvidence,
+}
+impl ValidatedRepairBatchOutcome {
+    pub fn checked(
+        total: usize,
+        accepted_prefix: usize,
+        uncertain_at: Option<usize>,
+        suffix_evidence: BatchSuffixEvidence,
+    ) -> Result<Self, GlobalRepairError> {
+        if total > 32 || accepted_prefix > total
+            || uncertain_at.is_some_and(|at| at != accepted_prefix || at >= total)
+        {
+            return Err(GlobalRepairError::InvalidBatch);
+        }
+        Ok(Self { total, accepted_prefix, uncertain_at, suffix_evidence })
+    }
+    pub fn all_accepted(total: usize) -> Result<Self, GlobalRepairError> {
+        Self::checked(total, total, None, BatchSuffixEvidence::Unproven)
+    }
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct BatchCompletionCounts {
+    pub accepted: usize,
+    pub uncertain: usize,
+    pub definitely_not_sent: usize,
+    /// No reliable non-send proof; still pending and charged, timeout bounded.
+    pub held_unproven: usize,
+}
+impl GlobalRepairAllocator {
+    /// Apply 0..=32 unique independently reserved repair IDs in original
+    /// driver frame order, after FULL validation, without any allocation,
+    /// global mutex, PN mutation, or fresh queue handling.
+    /// M0 must derive ProvenNotAttempted from a verified platform observation,
+    /// never infer it solely from a short/ambiguous syscall return.
+    pub fn complete_batch(
+        &mut self,
+        ordered: &[GlobalReservationId],
+        outcome: ValidatedRepairBatchOutcome,
+        now: MonoNs,
+    ) -> Result<BatchCompletionCounts, GlobalRepairError> {
+        if ordered.len() > 32 || ordered.len() != outcome.total {
+            return Err(GlobalRepairError::InvalidBatch);
+        }
+        for (i, id) in ordered.iter().enumerate() {
+            if ordered[..i].contains(id) {
+                return Err(GlobalRepairError::DuplicateBatchId);
+            }
+            if !self.pending.contains_key(id) {
+                return Err(GlobalRepairError::StaleGrant);
+            }
+        }
+        self.advance(now)?;
+        // No acceptance after an original IO timeout/retire: late completions
+        // are stale and the associated unknown send remains conservatively
+        // charged against the process cap.
+        if ordered.iter().any(|id| !self.pending.contains_key(id)) {
+            return Err(GlobalRepairError::StaleGrant);
+        }
+        let mut counts=BatchCompletionCounts {
+            accepted:0, uncertain:0, definitely_not_sent:0, held_unproven:0
+        };
+        for (i, id) in ordered.iter().enumerate() {
+            if i < outcome.accepted_prefix {
+                self.complete(*id,RepairSendResult::Accepted,now)?;
+                counts.accepted+=1;
+            } else if outcome.uncertain_at == Some(i) {
+                self.complete(*id,RepairSendResult::Uncertain,now)?;
+                counts.uncertain+=1;
+            } else if outcome.suffix_evidence == BatchSuffixEvidence::ProvenNotAttempted {
+                self.complete(*id,RepairSendResult::NotSent,now)?;
+                counts.definitely_not_sent+=1;
+            } else {
+                counts.held_unproven+=1;
+            }
+        }
+        Ok(counts)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -640,4 +742,208 @@ mod tests {
         assert_eq!(x.on_timer(MonoNs(20_000_002)),
             Err(GlobalRepairError::ClockReversed));
     }
+
+    // Batch fixture: large enough to hold 32 independently reserved items
+    // without masking the 8-MTU pacer or 1s epoch accounting.
+    fn wide_batch() -> GlobalRepairAllocator {
+        GlobalRepairAllocator::new(GlobalRepairConfig {
+            max_bytes_per_epoch:70_000, max_directions:3,
+            max_grant_bytes:70_000, max_grant_lifetime_ns:500_000_000,
+            max_pending:64, max_pending_bytes:100_000,
+        }, MonoNs(0)).unwrap()
+    }
+    fn wide_cfg() -> RepairBudgetConfig {
+        RepairBudgetConfig {
+            outer_mtu:1400, max_repair_bytes_per_epoch:100_000,
+            max_pending_reservations:64, max_pending_bytes:100_000,
+            io_timeout_ns:900_000_000,
+        }
+    }
+    fn wide_candidates() -> (
+        GlobalRepairAllocator, Vec<GlobalReservationId>,
+        [BudgetDirection;3], [GrantLease;3]
+    ) {
+        let mut b=wide_batch();
+        let dirs=[
+            dir(1,WireDirection::ClientToServer),
+            dir(1,WireDirection::ServerToClient),
+            dir(2,WireDirection::ClientToServer),
+        ];
+        for d in dirs {
+            b.register(d,wide_cfg(),MonoNs(0)).unwrap();
+            b.on_fresh_accepted(d,1_000_000,MonoNs(1)).unwrap();
+        }
+        let leases=[
+            b.grant(dirs[0],15_400,500_000_000,MonoNs(1)).unwrap(),
+            b.grant(dirs[1],15_400,500_000_000,MonoNs(1)).unwrap(),
+            b.grant(dirs[2],14_000,500_000_000,MonoNs(1)).unwrap(),
+        ];
+        let mut ids=Vec::new();
+        for i in 0..32 {
+            let n=i%3;
+            let at=1+i as u64 * 15_000_000;
+            let c=candidate(dirs[n],i as u64 + 1,at);
+            ids.push(b.reserve(leases[n],&c,1400,MonoNs(at)).unwrap());
+        }
+        (b,ids,dirs,leases)
+    }
+
+    #[test]
+    fn r2_batch_zero_one_all_accepted_and_no_peer_receipt() {
+        let mut b=global(2800,1);
+        let d=dir(1,WireDirection::ClientToServer);
+        add(&mut b,d,0);
+        let empty=ValidatedRepairBatchOutcome::all_accepted(0).unwrap();
+        assert_eq!(b.complete_batch(&[],empty,MonoNs(0)).unwrap(),
+            BatchCompletionCounts {
+                accepted:0,uncertain:0,definitely_not_sent:0,held_unproven:0,
+            });
+        let lease=b.grant(d,1400,100_000,MonoNs(1)).unwrap();
+        let frozen=candidate(d,7,1);
+        let pn=frozen.pn();
+        let wire=frozen.frozen().bytes().to_vec();
+        let id=b.reserve(lease,&frozen,1400,MonoNs(1)).unwrap();
+        let one=ValidatedRepairBatchOutcome::all_accepted(1).unwrap();
+        assert_eq!(b.complete_batch(&[id],one,MonoNs(2)).unwrap().accepted,1);
+        assert_eq!(b.snapshot().charged_repairs,1400);
+        // Driver acceptance is not receipt: the same frozen cipher/PN survives.
+        assert_eq!(frozen.pn(),pn);
+        assert_eq!(frozen.frozen().bytes(),wire.as_slice());
+        assert_eq!(b.complete_batch(&[id],one,MonoNs(3)),
+            Err(GlobalRepairError::StaleGrant));
+    }
+
+    #[test]
+    fn r2_batch_32_mixed_client_directions_prefix_uncertain_proven_suffix() {
+        let (mut b,ids,dirs,_leases)=wide_candidates();
+        assert_eq!(ids.len(),32);
+        let evidence=ValidatedRepairBatchOutcome::checked(
+            32,13,Some(13),BatchSuffixEvidence::ProvenNotAttempted
+        ).unwrap();
+        let r=b.complete_batch(&ids,evidence,MonoNs(465_000_002)).unwrap();
+        assert_eq!(r,BatchCompletionCounts {
+            accepted:13,uncertain:1,definitely_not_sent:18,held_unproven:0
+        });
+        assert_eq!(b.snapshot().pending,0);
+        assert_eq!(b.snapshot().charged_repairs,14*1400);
+        assert_eq!(b.snapshot().held_unused_grants,25_200); // replaced below
+        assert_eq!(b.complete_batch(&ids,evidence,MonoNs(465_000_003)),
+            Err(GlobalRepairError::StaleGrant));
+        // A full process repair quota does not HOL-gate new data submission.
+        b.on_fresh_accepted(dirs[2],12345,MonoNs(465_000_003)).unwrap();
+        assert_eq!(b.local_snapshot(dirs[2]).unwrap().fresh_confirmed_bytes,1_012_345);
+    }
+
+    #[test]
+    fn r2_batch_0_1_32_33_shape_and_duplicates_fail_closed() {
+        assert_eq!(ValidatedRepairBatchOutcome::checked(
+            33,0,None,BatchSuffixEvidence::Unproven
+        ),Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(ValidatedRepairBatchOutcome::checked(
+            1,0,Some(1),BatchSuffixEvidence::ProvenNotAttempted
+        ),Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(ValidatedRepairBatchOutcome::checked(
+            2,1,Some(0),BatchSuffixEvidence::Unproven
+        ),Err(GlobalRepairError::InvalidBatch));
+        let (mut b,ids,_,_)=wide_candidates();
+        let before=b.snapshot();
+        let all=ValidatedRepairBatchOutcome::all_accepted(32).unwrap();
+        assert_eq!(b.complete_batch(&ids[..31],all,MonoNs(465_000_002)),
+            Err(GlobalRepairError::InvalidBatch));
+        let mut duplicated=ids.clone();
+        duplicated[31]=duplicated[0];
+        assert_eq!(b.complete_batch(&duplicated,all,MonoNs(465_000_002)),
+            Err(GlobalRepairError::DuplicateBatchId));
+        duplicated.push(ids[0]);
+        assert_eq!(b.complete_batch(&duplicated,all,MonoNs(465_000_002)),
+            Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(b.snapshot(),before);
+        let done=b.complete_batch(&ids,all,MonoNs(465_000_002)).unwrap();
+        assert_eq!(done.accepted,32);
+        assert_eq!(b.snapshot().charged_repairs,44_800);
+    }
+
+    #[test]
+    fn r2_batch_unproven_suffix_never_falsely_notsent_refunds() {
+        let mut b=global(4200,1);
+        let d=dir(1,WireDirection::ClientToServer);
+        add(&mut b,d,0);
+        let lease=b.grant(d,4200,100_000_000,MonoNs(1)).unwrap();
+        let mut ids=Vec::new();
+        for pn in 1..=3 {
+            ids.push(b.reserve(lease,&candidate(d,pn,1),1400,MonoNs(1)).unwrap());
+        }
+        let evidence=ValidatedRepairBatchOutcome::checked(
+            3,1,Some(1),BatchSuffixEvidence::Unproven
+        ).unwrap();
+        let mapped=b.complete_batch(&ids,evidence,MonoNs(2)).unwrap();
+        assert_eq!(mapped,BatchCompletionCounts {
+            accepted:1,uncertain:1,definitely_not_sent:0,held_unproven:1
+        });
+        assert_eq!(b.snapshot().charged_repairs,4200);
+        assert_eq!(b.snapshot().pending,1);
+        assert_eq!(b.snapshot().held_unused_grants,0);
+        b.on_timer(MonoNs(20_000_001)).unwrap();
+        assert_eq!(b.snapshot().pending,0);
+        assert_eq!(b.snapshot().overdue_uncertain_bytes,1400);
+        assert_eq!(b.complete_batch(&[ids[2]],
+            ValidatedRepairBatchOutcome::all_accepted(1).unwrap(),
+            MonoNs(20_000_002)),Err(GlobalRepairError::StaleGrant));
+    }
+
+    #[test]
+    fn r2_batch_epoch_cutover_old_notsent_refund_and_grant_expiry() {
+        let mut b=global(4200,2);
+        let a=dir(1,WireDirection::ClientToServer);
+        let c=dir(2,WireDirection::ServerToClient);
+        b.register(a,wide_cfg(),MonoNs(999_999_980)).unwrap();
+        b.register(c,wide_cfg(),MonoNs(999_999_980)).unwrap();
+        let la=b.grant(a,1400,50_000,MonoNs(999_999_982)).unwrap();
+        let lc=b.grant(c,1400,50_000,MonoNs(999_999_983)).unwrap();
+        let ia=b.reserve(la,&candidate(a,1,999_999_984),1400,MonoNs(999_999_984)).unwrap();
+        let ic=b.reserve(lc,&candidate(c,2,999_999_985),1400,MonoNs(999_999_985)).unwrap();
+        let proof=ValidatedRepairBatchOutcome::checked(
+            2,1,None,BatchSuffixEvidence::ProvenNotAttempted
+        ).unwrap();
+        let counts=b.complete_batch(&[ia,ic],proof,MonoNs(1_000_000_001)).unwrap();
+        assert_eq!(counts.accepted,1);
+        assert_eq!(counts.definitely_not_sent,1);
+        assert_eq!(b.snapshot().epoch,1);
+        assert_eq!(b.snapshot().previous_epoch_charged,1400);
+        assert_eq!(b.snapshot().charged_repairs,0);
+        assert_eq!(b.snapshot().held_unused_grants,0);
+        assert_eq!(b.revoke(lc,MonoNs(1_000_000_002)),
+            Err(GlobalRepairError::StaleGrant));
+        b.on_fresh_accepted(c,234,MonoNs(1_000_000_003)).unwrap();
+        assert_eq!(b.local_snapshot(c).unwrap().fresh_confirmed_bytes,234);
+    }
+
+    #[test]
+    fn r2_batch_retired_client_fails_closed_and_no_cross_tunnel_refund() {
+        let mut b=global(4200,2);
+        let a=dir(1,WireDirection::ClientToServer);
+        let c=dir(2,WireDirection::ServerToClient);
+        add(&mut b,a,0);add(&mut b,c,0);
+        let la=b.grant(a,1400,100_000,MonoNs(1)).unwrap();
+        let lc=b.grant(c,1400,100_000,MonoNs(1)).unwrap();
+        let ia=b.reserve(la,&candidate(a,1,1),1400,MonoNs(1)).unwrap();
+        let ic=b.reserve(lc,&candidate(c,2,1),1400,MonoNs(1)).unwrap();
+        b.retire_tunnel(a.tunnel,MonoNs(2)).unwrap();
+        let before=b.snapshot();
+        let result=ValidatedRepairBatchOutcome::checked(
+            2,0,None,BatchSuffixEvidence::ProvenNotAttempted
+        ).unwrap();
+        assert_eq!(b.complete_batch(&[ia,ic],result,MonoNs(3)),
+            Err(GlobalRepairError::StaleGrant));
+        assert_eq!(b.snapshot(),before);
+        assert_eq!(b.snapshot().overdue_uncertain_bytes,1400);
+        // A known-not-attempted completion for surviving client is allowed.
+        let single=ValidatedRepairBatchOutcome::checked(
+            1,0,None,BatchSuffixEvidence::ProvenNotAttempted
+        ).unwrap();
+        b.complete_batch(&[ic],single,MonoNs(4)).unwrap();
+        assert_eq!(b.snapshot().charged_repairs,1400);
+        assert_eq!(b.snapshot().held_unused_grants,1400);
+    }
+
 }

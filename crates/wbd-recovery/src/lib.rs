@@ -6,6 +6,7 @@ pub mod receipt;
 pub mod budget;
 pub mod global_sparse;
 pub use global_sparse::{
+    BatchCompletionCounts, BatchSuffixEvidence, ValidatedRepairBatchOutcome,
     GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError, GlobalRepairSnapshot,
     GlobalReservationId, GrantId, GrantLease,
 };
