@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-UDP-RX-BURST-STOP-010",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "0a53ea23ec064489155a008e02839a59a9b15cf0",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Linux x86_64 GNU unprivileged loopback UDP kernel recvmmsg bounded burst/STOP/rotation ownership test fixture; no actual AF_PACKET positive or protected Go V4 origin/PN.",
+  "authority": {
+    "main_decision": "docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "active": true,
+    "branch_unchanged": true,
+    "prior_task": "R1-M4-DRIVER-OUTCOME-LEASE-009",
+    "prior_cursor_sequence": 13,
+    "allowed_paths_unchanged": true
+  },
+  "code_paths": [
+    "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
+  ],
+  "implementation": {
+    "receive_scope": "ScopedUdpOwner::receive_tagged returns ScopedRxReceipt<'owner> with borrowed exact original owner reference, fixed-size RxBatchOutcome; entry_for confirms pointer identity + live same-owner generation/STOP. Numeric equal generation across two independent contexts is insufficient; stale old/STOP returns typed StaleGeneration/Stopping.",
+    "safety": "No new recvmmsg syscall; uses existing <=32 caller-owned stack descriptors, zero hot frame copying or resealing; negative/no-data or truncation never authorizes parser or PN. A synchronous UDP syscall does not retain a kernel async buffer loan after return. Separate GenerationLoan from prior -009 retains actual FrozenRecordHandle across stop until explicitly completed by old owner; new owner cannot complete old token.",
+    "native_burst": "24 successive rounds each 33 actual unprivileged UDP loopback datagrams: first kernel recvmmsg processes exactly32, untouched 33rd buffer and packet delivered on next call; then EAGAIN, original RX buffer pointer addresses preserved. Bound <=32 per request, no fake 33-frame copy.",
+    "native_truncation": "Actual 96-byte packet into 7-byte caller buffer is reported Truncated; following 8-byte complete packet remains available; empty receive yields WouldBlock; independently arriving 'late' datagram arrives only after new kernel send and is received.",
+    "rotate_stop": "Two independent UDP owner contexts/unique real kernel loopback sockets; old receipt valid before STOP but cannot dispatch after stop or to new owner, even matching numeric generation. Old frozen Arc and PN remain intact across STOP; old generation late arrival rejected; new context receives new payload without HOL.",
+    "security_nonclaims": "Receipt is untrusted copied UDP metadata, not Go ColdSnapshot authentication, AEAD, PN replay, or business lane admission; no raw AF_PACKET bind/traffic/physical interface, production Go V4 disabled.",
+    "configuration": "Internal Rust test/fixture, not an activated runtime product feature; no CLI/GUI/config addition."
+  },
+  "native": {
+    "workflow": "worker-native-tests.yml",
+    "run_id": 38706481672,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "source_sha": "0a53ea23ec064489155a008e02839a59a9b15cf0",
+    "compiled_once": true,
+    "build_job": 116327043262,
+    "consumer_job": 116327160295,
+    "toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "tests_passed": 75,
+    "tests_failed": 0,
+    "previous_r1_tests": 71,
+    "new_tests": 4,
+    "legacy_r0_filtered": 7,
+    "new_test_names": [
+      "r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation",
+      "r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted",
+      "r1_udp_rx_stopped_old_borrowed_receipt_cannot_dispatch_to_rotated_owner",
+      "r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts"
+    ],
+    "build_artifact": {
+      "id": 11958627455,
+      "zip_sha256": "c8289b0324a8e6668db96d5e74554304327145d5cb6866a356e4a98d7e49cbd2",
+      "manifest_sha256": "bd54979f25d7798201ae2f9d6ddc5544c53786567584a61eef45b8e5449d0804",
+      "binary_sha256": "cac9cab043b1289ecb1096093cbaeeaf4423fd1e45c0b9fac2eeeef20d8a827f",
+      "binary_bytes": 11158048
+    },
+    "result_artifact": {
+      "id": 11958477633,
+      "zip_sha256": "b33a52b9f5731988cd423fcb822b3f98de9b8c864a4a02925eb376ac0ba5d57c",
+      "result_json_sha256": "294e213852fcb6bbe92e8d60721b13e68e6cd723af82748b6a058ed37c845947",
+      "test_log_sha256": "ce63d8e270a2a735a0d9f3ff7f019a2a10bacd6d0d42fc6e4ab0170c3d1e47c1"
+    },
+    "audit": "Downloaded actual GitHub run's build and consumer ZIPs, independently SHA256 verified each archive and contained manifest, native executable, result.json and test.log; manifest/result contain exact source SHA, run ID, attempt and binary SHA. Native test.log 75 passed, 0 failed, 7 old R0 filtered; stdout/stderr includes RAW_RX_NOT_RUN lack CAP_NET_RAW."
+  },
+  "same_source_workflows": [
+    {
+      "id": 38706481672,
+      "name": "worker-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38706481740,
+      "name": "g2-scoped-bootstrap-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38706482340,
+      "name": "r0-static-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38706481698,
+      "name": "r0-cross-abi",
+      "result": "SUCCESS",
+      "scope": "build/ABI only; NOT native Windows/ARM"
+    },
+    {
+      "id": 38706481909,
+      "name": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38706482025,
+      "name": "r0-fake-platform",
+      "result": "FAIL",
+      "cause": "Old root R0 exact-7 test inventory rejects unfiltered R0+R1; actual 82/82 Rust assertions passed, M0 owns harness."
+    }
+  ],
+  "historical_failures": [
+    {
+      "source_sha": "04cd9150778c3628345991ceee3c13d162383977",
+      "workflow": "worker-native",
+      "run_id": 38705021784,
+      "status": "FAIL_COMPILE",
+      "reason": "Rust E0502 two new test assertions borrowed tiny/whole immutably while mutable slices stayed live for next receive; repaired by reusing already borrowed slots directly in final SOURCE."
+    },
+    {
+      "source_sha": "04cd9150778c3628345991ceee3c13d162383977",
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38705021846,
+      "status": "FAIL_COMPILE",
+      "reason": "same first-source E0502; not claimed successful"
+    },
+    {
+      "source_sha": "0a53ea23ec064489155a008e02839a59a9b15cf0",
+      "workflow": "r0-fake-platform",
+      "run_id": 38706482025,
+      "status": "FAIL_LEGACY_R0_COUNT",
+      "actual": "82/82 Rust assertions PASS; historical R0 exact 7 filter remains separate M0-owned."
+    }
+  ],
+  "raw_rx_positive": "RAW_RX_NOT_RUN",
+  "not_run": [
+    "Privileged AF_PACKET raw positive RX/TX, loopback raw packet bytes (runner lacks CAP_NET_RAW)",
+    "Go protected ColdSnapshot source-to-Rust authenticated owner and actual PN/AEAD business dispatch",
+    "Physical network/ambient capture or NIC",
+    "Native Windows/ARM, product P1-P3/500Mbps/p99/physical"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SCOPED_UNPRIVILEGED_UDP_BURST_STOP_REVIEW_ONLY"
+}
