@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-AUTH-FEC-SCOPE-GATE-011",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "42382c60ee51689d49c480411af3df2acc9e9a7d",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_NATIVE_RECORD_AUTH_PLUS_REPLAY_BEFORE_FEC_GATE_TEST_ORIGIN_ONLY",
+  "implementation": {
+    "gate": "crates/wbd-codec/src/fec_auth_gate.rs",
+    "tests": "crates/wbd-codec/src/fec_auth_gate_tests.rs",
+    "fec": "crates/wbd-codec/src/fec_rx.rs",
+    "export": "crates/wbd-codec/src/lib.rs",
+    "mount": "crates/wbd-codec/src/link_fec_wire.rs",
+    "path_limit": "M3-owned codec and M3 documents only",
+    "origin": "FecOrigin has private fields with NO PUBLIC production constructor. Positive constructor is cfg(test) only; product origin and old Go V4 exporter NOT_IMPLEMENTED.",
+    "typed_scope": "One gate owns REAL ReplayProtectedLaneRx, FecBlockIdOwner, FecRxOwner and immutable route lane+tunnel, epoch/direction/trusted generation; mismatched config fails before any record.",
+    "order": [
+      "sealed origin must exist",
+      "authenticated external route lane+tunnel must match",
+      "REAL suite-specific AEAD record open + kind validation + bounded PN replay",
+      "old Go 56B FEC wire strict validation",
+      "trusted generation-based u32→u64 BlockID reconstruction",
+      "FecRxOwner first systematic and only missing-source GF256 recovery"
+    ],
+    "no_origin": "Err AbsentOrigin before AEAD and PN mutation; no production path can create positive FecOrigin in this atom.",
+    "no_unverified_PN": "Duplicate/tampered/retired real record rejected before any BlockID or FEC state change.",
+    "declined": "NonLINK health kind, malformed WF, half-space ambiguous, wrong tunnel/lane, wrong epoch/direction/generation and stale BlockID fail closed; not business delivery.",
+    "timers": "caller-supplied fake monotonic time; expiry propagates conservative retired floor in both owners",
+    "constructor_floor_fix": "Initial FEC receiver first_id_ext need only be greater than initial BlockId retired floor; legitimate independently bounded floors need not be adjacent."
+  },
+  "native_tests": {
+    "total_r1": 85,
+    "passed": 85,
+    "failed": 0,
+    "prior": 75,
+    "new": 10,
+    "filtered_out": 26,
+    "exact_new_tests": [
+      "r1_authgate_absent_origin_refuses_even_valid_record_without_consuming_pn",
+      "r1_authgate_real_chacha_aes128_aes256_first_systematic_and_missing_only",
+      "r1_authgate_wrong_route_lane_fails_before_pn_decryption_replay_or_fec",
+      "r1_authgate_record_tamper_rejects_before_blockid_even_on_valid_fec_geometry",
+      "r1_authgate_duplicate_pn_rejected_before_fec_even_for_malformed_wire",
+      "r1_authgate_origin_constructor_rejects_untrusted_cross_binding",
+      "r1_authgate_half_space_ambiguous_rejected_after_real_replay_before_fec_state",
+      "r1_authgate_expired_block_delayed_parity_refused_no_renewal_or_reopen",
+      "r1_authgate_pinned_old_go_56b_wire_oracle_and_health_kind_refusal",
+      "r1_authgate_old_generation_refused_with_explicit_origin_even_at_wrap"
+    ],
+    "run_id": 38669822925,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "os": "GitHub native Ubuntu Linux x86_64 Rust1.85.1 compiled once",
+    "build_job": 116210062016,
+    "consume_job": 116210294102,
+    "binary_sha256": "829d8e33429e9c9083dc72a516980afd3568115fafa971396ba7ff2fcda9e89f",
+    "log_sha256": "2a6beb9763d606ab4ebe2d02a73315920b825df70e5cf7ac7b2c393e3f5e8bd5",
+    "build_artifact": {
+      "id": 11942054910,
+      "digest": "sha256:c7bba6820a766b6c20071d616687678340ae5ccf6610b448464cab2f5a8a8199",
+      "expires_at": "2026-11-14T02:13:57Z"
+    },
+    "consume_artifact": {
+      "id": 11942409784,
+      "digest": "sha256:12ecacb7b6a3f89116fd7d4fb9c9b810689e6483b7b3046f5601a6ccf96212a4",
+      "expires_at": "2026-11-14T02:14:08Z"
+    }
+  },
+  "actions": {
+    "github_native_code_source": "42382c60ee51689d49c480411af3df2acc9e9a7d",
+    "workflow_count": 7,
+    "passed": 7,
+    "other_runs": [
+      {
+        "workflow": "r0-qualification-audit.yml",
+        "run_id": 38669822867,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "g2-bootstrap.yml",
+        "run_id": 38669822841,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-codec.yml",
+        "run_id": 38669822877,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-record-framing.yml",
+        "run_id": 38669822857,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-link-fec-wire.yml",
+        "run_id": 38669822819,
+        "conclusion": "success"
+      }
+    ],
+    "governance": {
+      "run_id": 38669822950,
+      "attempt": 5,
+      "conclusion": "success",
+      "failed_attempts": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "diagnostic": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "explanation": "M0 main moved during lengthy per-commit worker scope audit. Exact M3 worker SOURCE unchanged all 5 attempts. No permission/logic/test relaxation; fifth run completed PASS after main stable."
+    }
+  },
+  "failure_history": [
+    {
+      "source": "f6b2c8f644c6b1820a7e58d03e2f83c2c971f8fa",
+      "run_id": 38669612969,
+      "result": "TEST_BUILD_FAIL",
+      "cause": "Two test-only calls repeated tunnel-id argument in new constructor."
+    },
+    {
+      "source": "b09d17aed0b48ad5daf11c4aa9a2fbf14fb6be00",
+      "run_id": 38669698900,
+      "result": "83/85_PASS_2_FAIL",
+      "cause": "Gate construction wrongly rejected legitimate nonadjacent initial retired floors near Go fixed oracle ID and 32-bit wrap."
+    },
+    {
+      "source": "42382c60ee51689d49c480411af3df2acc9e9a7d",
+      "run_id": 38669822925,
+      "result": "85/85_PASS",
+      "fix": "Strict security predicate rejects FEC start <= known retired floor; not arbitrary nonadjacent safe initial anchors."
+    }
+  ],
+  "bounded_qualifiers": {
+    "positive_origin": "ONLY cfg(test) test_only constructible; not available to actual M0 production V4 source",
+    "product_GO_V4_handshake_exporter": "NOT_IMPLEMENTED_AND_NOT_RUN",
+    "FEC_on_live_product": "NOT_RUN",
+    "real_M0_authentic_tunnel_lane_dispatch": "NOT_INTEGRATED",
+    "native_Windows_ARM": "NOT_RUN",
+    "performance_ISA_L": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "old_Go_decoder_native_this_atom": "NOT_RUN; pinned 56B fixture and historical R0 Go compatibility workflows only",
+    "root_Cargo_lock_shared_ABI_CI": "UNCHANGED",
+    "status": "partial_unverified_for_product"
+  },
+  "next": "Evidence S with own Governance, separate cursor-only H sequence14 with own Governance; then idle unless M0 reassigns. M0 must separately author and prove Go V4 actual authenticated session-origin binding; until then gate unbound refuses production input."
+}
