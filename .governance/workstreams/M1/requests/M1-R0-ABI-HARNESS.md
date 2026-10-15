@@ -16,3 +16,6 @@ On M1 parity initial SOURCE `cfaf19e705d1b7295ccb3bee95baa799ce1052b3`, native A
 
 ## Final parity-source repeat of same old worker-only harness failure
 Exact SOURCE `20809638ba86eed25aee463a7bbba9a002761799`, [R0 native ABI38598602157](https://github.com/lly8666/wbd-next/actions/runs/38598602157) consumer FAIL with Rust `rc0, 32 passed, 0 failed` on unfiltered binary and branch-old `"3 passed"` string marker. Worker native [38598602128](https://github.com/lly8666/wbd-next/actions/runs/38598602128) independently 29/29 PASS. Request remains M0-owned; no M1 shared test/harness write.
+
+## R1-M1-READY-BATCH-004 (2026-10-15)
+Native `worker-native-tests.yml` [38667033577](https://github.com/lly8666/wbd-next/actions/runs/38667033577) exact M1 SOURCE `3460d4f4630da3bfb1d9a0cfc522158adc14645b` succeeded 39/39 `r1_` tests (new 10 batch). The distinct R0 native ABI [38667033555](https://github.com/lly8666/wbd-next/actions/runs/38667033555) consumer **FAIL**: compiled Rust binary test run returned rc0 and `42 passed`, but old worker-branch shared harness checks for literal substring `"3 passed"` in unfiltered output. Fixed main variant is M0-owned. Request M0 coordinate merge/rebase/update of shared harness or CI scope, not write from M1. This is neither an M1 Rust unit test failure nor a successful R0 ABI workflow.

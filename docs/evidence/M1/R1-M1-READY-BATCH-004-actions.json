@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-READY-BATCH-004",
+  "branch": "work/m1-r1-runtime",
+  "source_sha": "3460d4f4630da3bfb1d9a0cfc522158adc14645b",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualified_scope": "M1_OWNER_LOCAL_NATIVE_READY_ONLY_BATCH_TESTS_ONLY",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38667033577,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38667033577",
+    "build_job": 116201230008,
+    "consume_job": 116201306460,
+    "runner": "ubuntu-24.04 x86_64",
+    "toolchain": "Rust 1.85.1",
+    "compiled_once": true,
+    "reused_binary_hash_verified": true,
+    "passed": 39,
+    "failed": 0,
+    "previous_r1": 29,
+    "new_batch_r1": 10,
+    "other_abi_tests_filtered": 3,
+    "build_artifact_id": 11940924374,
+    "result_artifact_id": 11943125094,
+    "result_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38667033577/artifacts/11943125094",
+    "result_zip_sha256": "71b9fbf2614a96f6b2c7c59d902a720400ac193f4bbb26c1b2d3ccf93106b702",
+    "result_json_sha256": "5ed9d37a6e6be7e70baeda0a55531b6848ec929ae8eff4c31a4097529d381db0",
+    "test_log_sha256": "149cbe9cbea335637bb6e0b8f8086cce9383d11777fa1e44bbc6fcb362176f6c",
+    "binary_sha256": "0f4ebad1f746db3bd272e5db7c55e6e32ede66a1832929330a3efa32ec0f74b5",
+    "direct_artifact_review": "Downloaded GitHub result ZIP, parsed result.json and test.log, verified exact source_sha, run_id, 39 test_names (including new 10 runtime::batch:: tests), all file and log digests, and exact binary hash.",
+    "new_tests": [
+      "r1_batch_empty_zero_capacity_never_allocates_or_blocks",
+      "r1_batch_first_systematic_precedes_already_due_parity",
+      "r1_batch_one_fresh_is_immediate_and_moves_exact_frozen_allocation",
+      "r1_batch_full_independent_repair_parity_cannot_hol_fresh",
+      "r1_batch_prefilled_output_obeys_spare_slots_without_realloc",
+      "r1_batch_secondary_fairness_continues_over_multiple_batches",
+      "r1_batch_stopped_queue_and_full_return_backlog_zero_loan",
+      "r1_batch_stop_keeps_dispatched_last_loan_until_external_release",
+      "r1_batch_thirty_three_requires_second_call_and_never_drops_tail",
+      "r1_batch_thirty_two_exact_cap_from_preallocated_output"
+    ]
+  },
+  "other_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38667033464,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38667033481,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38667033614,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38667033661,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38667033555,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_ci_blocker": {
+    "source_sha": "3460d4f4630da3bfb1d9a0cfc522158adc14645b",
+    "run_id": 38667033555,
+    "conclusion": "FAIL",
+    "cause": "Worker branch old root ABI harness tests unfiltered Rust binary and requires string '3 passed'; binary returned rc0 and '42 passed; 0 failed'; consumer workflow fails.",
+    "owner": "M0",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
+    "scope": "R0_NATIVE_ABI_WORKFLOW_IS_NOT_PASS"
+  },
+  "proof": {
+    "ready_batch_max": 32,
+    "empty_1_32_33": true,
+    "caller_preallocated_storage": true,
+    "immutable_payload_move_no_clone": true,
+    "fresh_first_due_and_undue_parity": true,
+    "independent_repair_parity_budget": true,
+    "bounded_secondary_fairness_across_calls": true,
+    "stop_and_last_frozen_loan_return": true,
+    "absolute_MonoNs_deadlines_preserved": true
+  },
+  "not_qualified": {
+    "real_kernel_sendmmsg": "NOT_RUN",
+    "network": "NOT_RUN",
+    "FEC_pipeline_integration": "NOT_RUN",
+    "rtrb_loom_eventfd": "NOT_RUN",
+    "Windows_native": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "Go_V4": "DISABLED",
+    "engine_features": 0
+  }
+}
