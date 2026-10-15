@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M1-READY-MAIN-019",
+  "branch": "main",
+  "result": "PASS_SCOPED_NATIVE_OWNER_NOT_PRODUCT",
+  "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+  "artifact_verified": true,
+  "main_previous_head": "99e786a332f969793d072599b133e12ac8e62640",
+  "authority": {
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "m0_cursor_prior_sequence": 54,
+    "role_active": true
+  },
+  "worker": {
+    "role": "M1",
+    "qualified_code_source": "0979314cacf8931a90840ad312dd50e9e2777d04",
+    "prior_native_run": 38678588923,
+    "prior_native_cases": "71/71",
+    "prior_H": "6ad61c34596815d8688664af018e33669da39c59"
+  },
+  "main_code_commits": [
+    "090b146c4d81a108964f66dfa3bb08c5d4577b4c",
+    "4ec9af7a120b791aef024496f1c827c78c0af570",
+    "42dc35d1b2dd926431a39f162c67e7a11f5c2478"
+  ],
+  "source_deltas": [
+    "Imported M1 runtime/mod.rs, batch.rs, rx_batch.rs worker source and generation.rs logic; only normalized Debug-specific benchmark_type literal to build-mode-neutral test_binary_scope_validation_only.",
+    "Kept OWNER_RUNTIME_READY=false with explicit no trusted Go V4 admission marker.",
+    "Extended precompiled R1 native build/consume strict 71 unique case count and source+binary hash inputs."
+  ],
+  "historical_ci_failure": {
+    "code_source": "090b146c4d81a108964f66dfa3bb08c5d4577b4c",
+    "run_id": 38681640963,
+    "conclusion": "failure",
+    "rust_native": "71 passed 0 failed",
+    "cause": "CI identity assertion len(set(names)) was stale 29 after updated 71 total; no native test failure",
+    "corrected_check_run": 38681752581,
+    "corrected_source": "4ec9af7a120b791aef024496f1c827c78c0af570",
+    "corrected_result": "success"
+  },
+  "source_exact_actions": [
+    {
+      "workflow": "r0-static-qualification-audit",
+      "run_id": 38681801501,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "governance",
+      "run_id": 38681801329,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r1-normal-off-replay",
+      "run_id": 38681801330,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38681801478,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r2-auth-receipt",
+      "run_id": 38681801307,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r1-linux-kernel-batch-native",
+      "run_id": 38681801263,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r0-native-abi",
+      "run_id": 38681801261,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r1-wake-stop-native",
+      "run_id": 38681801437,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r1-fec-on-native",
+      "run_id": 38681801464,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "run_id": 38681801479,
+      "attempt": 1,
+      "event": "push",
+      "source_sha": "42dc35d1b2dd926431a39f162c67e7a11f5c2478",
+      "conclusion": "success"
+    }
+  ],
+  "owner_native": {
+    "run_id": 38681801437,
+    "attempt": 1,
+    "build_job": "build",
+    "consume_job": "consume",
+    "profile": "Rust release x86_64-unknown-linux-gnu hosted Actions",
+    "compile_once": true,
+    "passed": 71,
+    "failed": 0,
+    "filtered_out": 7,
+    "scope": "R1 bounded fresh-first TX/RX generation scope, zero/one/32/33, two-lane hints, no HOL, stop/ABA/stale, borrowed leases, wake/parity and arena",
+    "binary_sha256": "6a9b7dcba42160e801a2a4dfb51936c966c0427fea62d90d1f79f4b4c9adc89a",
+    "log_sha256": "21e63157f821fe2135cf843698f1e0e7c4978d95d2e4fe8a78b008b085735dc3",
+    "test_only_p0": {
+      "legs": 3,
+      "warmup_each": 10000,
+      "pairs_each": 40000,
+      "owner_handles_per_batch": 32,
+      "hosted_cpu_isolation": false,
+      "result": "NOT_QUALIFIED_FOR_PRODUCT_PERFORMANCE",
+      "p99_ns_per_validation": [
+        100,
+        71,
+        61
+      ],
+      "not_real_dispatch_or_syscall": true
+    }
+  },
+  "artifact_digests": {
+    "r1-wake-build": {
+      "id": 11949085530,
+      "sha256": "601a3e366f4f07db03d3d4f87bb1ce4e154b85a57157ee48d85693036f96f249"
+    },
+    "r1-wake-result": {
+      "id": 11948312761,
+      "sha256": "f9c77b691951a764702eca90f86c1ef0ae2ffa57eee4615f9bf4d3cb7d6d22d2"
+    },
+    "r0-abi-build": {
+      "id": 11948237627,
+      "sha256": "2c6fd17b47c170a2c0f711a7adb63c2325e573d8a2279f2091cabcca2ee63c14"
+    },
+    "r0-abi-result": {
+      "id": 11948477590,
+      "sha256": "69704391dc7d9e27427a546137f7d7ff31b5e4cfdfa1f81985bc0f7b1c992b90"
+    },
+    "r1-linux-batch-result": {
+      "id": 11948945918,
+      "sha256": "d422754c7f7b0b3a8f5899fa3d1be3adbd72b596ce81229ea639377621b50146"
+    },
+    "r1-fec-result": {
+      "id": 11947874552,
+      "sha256": "485b70dd507a9f7c3ef763632673247fe6283602c22b364f8e354e729bdc2b4d"
+    }
+  },
+  "cross_abi": {
+    "run_id": 38681801479,
+    "targets": [
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-gnu"
+    ],
+    "result": "CROSS_BUILD_AND_INSPECTION_SUCCESS_NO_NATIVE_EXECUTION"
+  },
+  "remains_blocked": {
+    "role": "M2",
+    "code_source": "25642589f0feb12b44304fd21842c507a9314d35",
+    "native_44": 38678654629,
+    "governance_fail": 38679115636,
+    "acceptance": "NOT_ACCEPTED"
+  },
+  "not_run": [
+    "authenticated protected GoV4 admission installing Rust owner",
+    "actual AF_PACKET positive raw traffic",
+    "real production V4 FecOrigin",
+    "P1-P3 true product 500Mbps/first-business latency",
+    "Windows/ARM native execution",
+    "physical deployment"
+  ],
+  "next_action": "M0 implement source-pinned authentic protected Go V4 ColdSnapshot to Rust scoped owner generation PrepareTransition/DetachTransition/CommitAdmission gate with fail-closed B01–B04, C01–C04 ABI and actual Actions native regression; keep feature off until real end-to-end proof."
+}
