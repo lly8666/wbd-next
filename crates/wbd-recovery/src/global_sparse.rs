@@ -381,6 +381,26 @@ impl GlobalRepairAllocator {
         self.reserve(lease, candidate, wire_bytes, now)
     }
 
+    /// Strictly scoped variant of the legacy last-chance preflight. A
+    /// caller-supplied scope must equal the owner's previously pinned M0
+    /// session binding before any reservation or process cap debit. This
+    /// function does NOT cryptographically authenticate the caller-supplied
+    /// route and never claims that a kernel Accepted means peer delivery.
+    pub fn reserve_scoped_if_still_missing<H: FrozenRecordHandle>(
+        &mut self, lease: GrantLease, pinned: ReceiptRouteScope,
+        shadow: &ReceiptState<H>, candidate: &RepairCandidate<H>,
+        wire_bytes: u64, now: MonoNs,
+    ) -> Result<GlobalReservationId, GlobalRepairError> {
+        let dir=DirectionId::new(lease.direction);
+        if self.accounts.get(&dir).and_then(|a| a.receipt_route)!=Some(pinned)
+            || pinned.outbound_lane()!=shadow.lane()
+            || pinned.outbound_direction()!=lease.direction.direction
+            || !pinned.contains_data_pn(candidate.pn()) {
+            return Err(GlobalRepairError::WrongReceiptScope);
+        }
+        self.reserve_if_still_missing(lease,shadow,candidate,wire_bytes,now)
+    }
+
     /// A typed authenticated receipt can retire a shadow but MUST NOT
     /// refund a repair reservation: the driver might have transmitted it.
     /// M0 owns the post-AEAD trust boundary and external direction binding.
@@ -1438,6 +1458,263 @@ mod tests {
             MonoNs(465_000_002)).unwrap().accepted,32);
         assert_eq!(x.snapshot().charged_repairs,44_800);
         let _=leases;
+    }
+
+
+    /// Source-local fixture: exactly two independent logical TunnelKeys, one
+    /// client->server and one server->client. 32 immutable repair candidates
+    /// use the same process-wide 44_800B cap; fake clock injection only.
+    fn r2_owner_fixture() -> (GlobalRepairAllocator,
+        Vec<(GlobalReservationId,ReceiptRouteScope)>,[BudgetDirection;2]) {
+        let dirs=[dir(1,WireDirection::ClientToServer),
+                  dir(2,WireDirection::ServerToClient)];
+        let mut x=GlobalRepairAllocator::new(GlobalRepairConfig{
+            max_bytes_per_epoch:44_800,max_directions:2,max_grant_bytes:22_400,
+            max_grant_lifetime_ns:500_000_000,
+            max_pending:32,max_pending_bytes:44_800,
+        },MonoNs(0)).unwrap();
+        let scopes=dirs.map(|d|route(d,7,1,64));
+        for d in dirs {x.register(d,wide_cfg(),MonoNs(0)).unwrap();}
+        for (d,r) in dirs.into_iter().zip(scopes) {
+            x.bind_receipt_route(d,r,MonoNs(0)).unwrap();
+        }
+        for d in dirs {x.on_fresh_accepted(d,1_000_000,MonoNs(1)).unwrap();}
+        let leases=dirs.map(|d|x.grant(d,22_400,500_000_000,MonoNs(1)).unwrap());
+        let mut slots=Vec::with_capacity(32);
+        for i in 0..32 {
+            let which=i%2;
+            let now=MonoNs(1+(i as u64)*15_000_000);
+            let (shadow,c)=race_shadow(dirs[which],i as u64+1,now.0);
+            let id=x.reserve_scoped_if_still_missing(
+                leases[which],scopes[which],&shadow,&c,1400,now).unwrap();
+            slots.push((id,scopes[which]));
+        }
+        assert_eq!(slots.len(),32);
+        assert_eq!(slots.capacity(),32);
+        assert_eq!(x.snapshot().pending,32);
+        assert_eq!(x.snapshot().pending_bytes,44_800);
+        assert_eq!(x.snapshot().charged_repairs,44_800);
+        assert_eq!(x.snapshot().held_unused_grants,0);
+        (x,slots,dirs)
+    }
+
+    #[test]
+    fn r2_owner_zero_one_typed_scope_and_repeat_completion() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let scope=route(a,7,1,64);
+        let mut x=global(1400,1);
+        add(&mut x,a,0);
+        assert_eq!(x.complete_scoped_batch(&[],
+            ValidatedRepairBatchOutcome::all_accepted(0).unwrap(),MonoNs(0))
+            .unwrap().accepted,0);
+        let g=x.grant(a,1400,100_000,MonoNs(1)).unwrap();
+        let (shadow,c)=race_shadow(a,9,1);
+        let before=x.snapshot();
+        assert_eq!(x.reserve_scoped_if_still_missing(g,scope,&shadow,&c,
+            1400,MonoNs(1)),Err(GlobalRepairError::WrongReceiptScope));
+        assert_eq!(x.snapshot(),before);
+        // Cannot retrofit a proof to an already granted owner.
+        assert_eq!(x.bind_receipt_route(a,scope,MonoNs(1)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        x.revoke(g,MonoNs(2)).unwrap();
+        x.bind_receipt_route(a,scope,MonoNs(2)).unwrap();
+        let g2=x.grant(a,1400,100_000,MonoNs(2)).unwrap();
+        let (shadow2,c2)=race_shadow(a,9,2);
+        let id=x.reserve_scoped_if_still_missing(g2,scope,&shadow2,&c2,
+            1400,MonoNs(2)).unwrap();
+        let all=ValidatedRepairBatchOutcome::all_accepted(1).unwrap();
+        assert_eq!(x.complete_scoped_batch(&[(id,scope)],all,MonoNs(3))
+            .unwrap().accepted,1);
+        assert_eq!(x.snapshot().charged_repairs,1400);
+        assert_eq!(x.complete_scoped_batch(&[(id,scope)],all,MonoNs(4)),
+            Err(GlobalRepairError::StaleGrant));
+    }
+
+    #[test]
+    fn r2_owner_two_scopes_32_mixed_stale_and_33_no_false_refund() {
+        let (mut x,slots,dirs)=r2_owner_fixture();
+        let outcome=ValidatedRepairBatchOutcome::checked(
+            32,12,Some(12),BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        let before=x.snapshot();
+        let mut wrong=slots.clone();
+        wrong[17].1=route(dirs[1],8,1,64);
+        assert_eq!(x.complete_scoped_batch(&wrong,outcome,MonoNs(465_000_002)),
+            Err(GlobalRepairError::WrongReceiptScope));
+        assert_eq!(x.snapshot(),before);
+        let mut oversized=slots.clone();
+        oversized.push(slots[0]);
+        assert_eq!(x.complete_scoped_batch(&oversized,outcome,MonoNs(465_000_002)),
+            Err(GlobalRepairError::InvalidBatch));
+        assert_eq!(ValidatedRepairBatchOutcome::all_accepted(33),
+            Err(GlobalRepairError::InvalidBatch));
+        let done=x.complete_scoped_batch(&slots,outcome,MonoNs(465_000_002)).unwrap();
+        assert_eq!(done,BatchCompletionCounts {
+            accepted:12,uncertain:1,definitely_not_sent:19,held_unproven:0});
+        assert_eq!(x.snapshot().charged_repairs,13*1400);
+        assert_eq!(x.snapshot().held_unused_grants,19*1400);
+        assert_eq!(x.snapshot().pending,0);
+        x.on_fresh_accepted(dirs[1],10_000,MonoNs(465_000_003)).unwrap();
+        assert_eq!(x.local_snapshot(dirs[1]).unwrap().fresh_confirmed_bytes,1_010_000);
+        assert_eq!(x.complete_scoped_batch(&slots,outcome,MonoNs(465_000_004)),
+            Err(GlobalRepairError::StaleGrant));
+    }
+
+    #[test]
+    fn r2_owner_ack_before_grant_wrong_reverse_epoch_is_not_delivery() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(2800,2);add(&mut x,a,0);add(&mut x,b,0);
+        let sa=route(a,7,1,64);let sb=route(b,8,1,64);
+        x.bind_receipt_route(a,sa,MonoNs(0)).unwrap();
+        x.bind_receipt_route(b,sb,MonoNs(0)).unwrap();
+        let (mut shadow,c)=race_shadow(a,11,1);
+        let before=x.snapshot();
+        // A plausible user-supplied route/epoch is not proof of post-AEAD
+        // admission; a mismatched pinned route is denied before ACK mutation.
+        let false_scoped=scoped_receipt(sb,opened(b,8,11),11,1).unwrap();
+        assert!(matches!(x.observe_scoped_receipt(a,&mut shadow,&false_scoped,
+            MonoNs(1)),Err(GlobalRepairError::WrongReceiptScope)));
+        assert_eq!(shadow.outstanding(),1);
+        assert_eq!(x.snapshot(),before);
+        let truth=scoped_receipt(sa,opened(a,7,11),11,1).unwrap();
+        assert_eq!(x.observe_scoped_receipt(a,&mut shadow,&truth,MonoNs(2))
+            .unwrap().len(),1);
+        let g=x.grant(a,1400,100_000,MonoNs(3)).unwrap();
+        assert_eq!(x.reserve_scoped_if_still_missing(g,sa,&shadow,&c,
+            1400,MonoNs(3)),Err(GlobalRepairError::StaleCandidate));
+        assert_eq!(x.snapshot().charged_repairs,0);
+        x.on_fresh_accepted(b,300,MonoNs(4)).unwrap();
+        assert_eq!(x.local_snapshot(b).unwrap().fresh_confirmed_bytes,300);
+    }
+
+    #[test]
+    fn r2_owner_expired_grants_stale_epoch_unknown_suffix_keeps_debt() {
+        let (mut x,slots,dirs)=r2_owner_fixture();
+        // The first candidates' IO timeout has elapsed; no late callback can
+        // retroactively provide definite NotSent credit, even if the client
+        // claims to have observed a valid send-prefix layout.
+        let proven=ValidatedRepairBatchOutcome::checked(
+            32,0,None,BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        assert_eq!(x.complete_scoped_batch(&slots,proven,MonoNs(901_000_000)),
+            Err(GlobalRepairError::StaleGrant));
+        let past=x.snapshot();
+        assert!(past.overdue_uncertain_bytes>=1400);
+        assert_eq!(past.held_unused_grants,0);
+        assert_eq!(past.charged_repairs,44_800);
+        assert!(x.grant(dirs[0],1400,100_000,MonoNs(901_000_001))
+            .is_err()); // no new quota in same epoch
+        x.on_timer(MonoNs(1_000_000_001)).unwrap();
+        assert_eq!(x.snapshot().epoch,1);
+        assert!(x.snapshot().overdue_uncertain_bytes>=1400);
+        assert_eq!(x.complete_scoped_batch(&slots[..1],
+            ValidatedRepairBatchOutcome::all_accepted(1).unwrap(),
+            MonoNs(1_000_000_002)),Err(GlobalRepairError::StaleGrant));
+    }
+
+    #[test]
+    fn r2_owner_epoch_cutover_uncertain_and_notsent_preserve_original_debt() {
+        let a=dir(1,WireDirection::ClientToServer);
+        let b=dir(2,WireDirection::ServerToClient);
+        let mut x=global(4200,2);
+        for d in [a,b] {x.register(d,wide_cfg(),MonoNs(999_999_980)).unwrap();}
+        let sa=route(a,7,1,64);let sb=route(b,9,1,64);
+        x.bind_receipt_route(a,sa,MonoNs(999_999_980)).unwrap();
+        x.bind_receipt_route(b,sb,MonoNs(999_999_980)).unwrap();
+        let ga=x.grant(a,1400,1000,MonoNs(999_999_981)).unwrap();
+        let gb=x.grant(b,1400,1000,MonoNs(999_999_981)).unwrap();
+        let (sha,ca)=race_shadow(a,10,999_999_982);
+        let (shb,cb)=race_shadow(b,20,999_999_982);
+        let ia=x.reserve_scoped_if_still_missing(ga,sa,&sha,&ca,
+            1400,MonoNs(999_999_982)).unwrap();
+        let ib=x.reserve_scoped_if_still_missing(gb,sb,&shb,&cb,
+            1400,MonoNs(999_999_982)).unwrap();
+        let result=ValidatedRepairBatchOutcome::checked(
+            2,0,Some(0),BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+        assert_eq!(x.complete_scoped_batch(&[(ia,sa),(ib,sb)],result,
+            MonoNs(1_000_000_001)).unwrap(),
+            BatchCompletionCounts{accepted:0,uncertain:1,
+                definitely_not_sent:1,held_unproven:0});
+        assert_eq!(x.snapshot().previous_epoch_charged,1400);
+        assert_eq!(x.snapshot().charged_repairs,0);
+        assert_eq!(x.snapshot().held_unused_grants,0);
+        let next=x.grant(b,4200,100_000,MonoNs(1_000_000_002)).unwrap();
+        assert_eq!(next.bytes(),4200);
+        assert_eq!(x.complete_scoped_batch(&[(ib,sb)],
+            ValidatedRepairBatchOutcome::checked(1,0,None,
+                BatchSuffixEvidence::ProvenNotAttempted).unwrap(),
+            MonoNs(1_000_000_003)),Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.snapshot().held_unused_grants,4200);
+    }
+
+    /// No unsafe global allocator instrumentation is allowed in the pure
+    /// recovery crate. This is actual process CPU *tick* and RSS/VmData
+    /// observation via Linux procfs (NOT heap allocation counts or product
+    /// p99). An omitted procfs value is reported as unavailable.
+    fn r2_p0_proc_cpu_ticks()->Option<u64> {
+        let stat=std::fs::read_to_string("/proc/self/stat").ok()?;
+        let tail=stat.rsplit_once(") ")?.1;
+        let fields:Vec<_>=tail.split_whitespace().collect();
+        let user: u64=fields.get(11)?.parse().ok()?;
+        let sys: u64=fields.get(12)?.parse().ok()?;
+        user.checked_add(sys)
+    }
+    fn r2_p0_proc_kib(key:&str)->Option<u64> {
+        let status=std::fs::read_to_string("/proc/self/status").ok()?;
+        status.lines().find_map(|line|{
+            let (k,v)=line.split_once(':')?;
+            if k!=key {return None;}
+            v.split_whitespace().next()?.parse::<u64>().ok()
+        })
+    }
+    /// Synthetic owner fixture + bounded batch settlement, no wire traffic.
+    /// The same 32-slot fixture is built for legacy and strict scoped arms.
+    fn r2_owner_p0_leg(strict:bool,iterations:usize)->(u128,Option<u64>,Option<u64>,Option<u64>,u64) {
+        let cpu_before=r2_p0_proc_cpu_ticks();
+        let rss_before=r2_p0_proc_kib("VmRSS");
+        let vm_before=r2_p0_proc_kib("VmData");
+        let start=std::time::Instant::now();
+        let mut accepted=0u64;
+        for _ in 0..iterations {
+            let (mut x,slots,_)=r2_owner_fixture();
+            let outcome=ValidatedRepairBatchOutcome::all_accepted(32).unwrap();
+            let r=if strict {
+                x.complete_scoped_batch(&slots,outcome,MonoNs(465_000_002)).unwrap()
+            } else {
+                let ids:[GlobalReservationId;32]=std::array::from_fn(|i|slots[i].0);
+                x.complete_batch(&ids,outcome,MonoNs(465_000_002)).unwrap()
+            };
+            accepted+=r.accepted as u64;
+            assert_eq!(x.snapshot().pending,0);
+            assert_eq!(x.snapshot().charged_repairs,44_800);
+            std::hint::black_box(x.snapshot().charged_repairs);
+        }
+        let nanos=start.elapsed().as_nanos();
+        let cpu_delta=cpu_before.zip(r2_p0_proc_cpu_ticks())
+            .map(|(a,b)|b.saturating_sub(a));
+        let rss_delta=rss_before.zip(r2_p0_proc_kib("VmRSS"))
+            .map(|(a,b)|b.saturating_sub(a));
+        let vm_delta=vm_before.zip(r2_p0_proc_kib("VmData"))
+            .map(|(a,b)|b.saturating_sub(a));
+        (nanos,cpu_delta,rss_delta,vm_delta,accepted)
+    }
+    #[test]
+    fn r2_owner_component_p0_source_locked_repeated_ab_ba_cpu_rss() {
+        const LOOPS:usize=128;
+        for (pair,order) in ["AB","BA","AB"].iter().enumerate() {
+            for strict in if *order=="AB" {[false,true]} else {[true,false]} {
+                let (wall,proc_cpu_ticks,rss_grow_kib,vm_grow_kib,accepted)=
+                    r2_owner_p0_leg(strict,LOOPS);
+                assert_eq!(accepted,LOOPS as u64 * 32);
+                assert!(wall>0);
+                // The two orderings share the exact same test binary; this
+                // records—not thresholds—host-dependent component cost.
+                eprintln!(
+                    "R2_OWNER_COMPONENT_P0 pair={} order={} arm={} iterations={} slots_per_cycle=32 accepted={} wall_ns={} process_cpu_ticks={:?} rss_growth_kib={:?} vm_data_growth_kib={:?} dynamic_allocation_count=NOT_INSTRUMENTED bounded_pending_slots=32 bounded_pending_bytes=44800 actual_wire_bytes=0 driver_calls=0 authenticated_go_v4=NOT_RUN",
+                    pair+1,order,if strict {"scoped"} else {"legacy"},
+                    LOOPS,accepted,wall,proc_cpu_ticks,rss_grow_kib,vm_grow_kib,
+                );
+            }
+        }
     }
 
 }
