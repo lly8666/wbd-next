@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-RAW-RECEIVE-CONTRACT-007",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
+  "result": "PASS_SCOPED_NATIVE_ONLY",
+  "artifact_verified": true,
+  "scope": "Linux x86_64 GNU pure AF_PACKET sockaddr_ll RX metadata classifier + test-only bounded nonblocking recvmmsg on inactive protocol-zero raw preflight FD, conditional on effective CAP_NET_RAW. No live packet capture or production driver.",
+  "assignment": {
+    "main_sha": "af8a8b40853845b6e876224d579bfb567df48e6c",
+    "main_decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave4.md",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "active": true,
+    "allowed_paths_unchanged": true
+  },
+  "code_files": [
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-platform/src/linux_packet_preflight.rs",
+    "crates/wbd-platform/src/linux_raw_rx_contract.rs"
+  ],
+  "native": {
+    "workflow": "worker-native-tests.yml",
+    "run_id": 38678579974,
+    "attempt": 1,
+    "source_sha": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
+    "status": "SUCCESS",
+    "build_job": 116237697120,
+    "consumer_job": 116237769215,
+    "compiled_once": true,
+    "target": "x86_64-unknown-linux-gnu",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "test_count": 60,
+    "passed": 60,
+    "failed": 0,
+    "previous_tests": 52,
+    "new_tests": 8,
+    "legacy_r0_filtered": 7,
+    "build_artifact": {
+      "id": 11946881596,
+      "zip_sha256": "90356aeb64a744f7f7fc59b33a8db6ee26a411247c53347f733dc63619cd17eb",
+      "manifest_sha256": "b3902da9892d20d2d47ba193ce401b8626a6dcc2d71c6621af9fdc805ecb6474",
+      "binary_sha256": "8c16ac3ed7b1c52941b2a813dc139c212c2f2a994f5a120f014cc68159e65317",
+      "binary_bytes": 10421976
+    },
+    "result_artifact": {
+      "id": 11947866227,
+      "zip_sha256": "690bc602713af799ef42687c4a9a283aca96e74cdd77072e69f3e4395d32a1dd",
+      "result_json_sha256": "14df653b3a17b7436835e01f938f9e0e8a708119db1c927db5dac0490abba96a",
+      "test_log_sha256": "9baaf526663f97b47a7d6636fe014c64f1f7443f1ea06f5ab2f98497091671e4"
+    },
+    "direct_artifact_review": "Both actual GitHub ZIP archives downloaded independently and SHA256 verified; build manifest and compiled test binary hash match consumer result.json; test.log verifies 60 passed, 0 failed, 7 filtered. No test executable rebuild in consumer."
+  },
+  "test_scope": {
+    "pure_classifier": "Native sockaddr_ll 20B and mmsghdr 64B ABI, family/ifindex/ETH_P_IP/PACKET_HOST/MTU/captured length/original length/MSG_TRUNC/MSG_CTRUNC/owner generation and strict IPv4/TCP checksum; parser returns unauthenticated data, never AEAD/PN endorsement.",
+    "borrow_stop": "Atomic BorrowFence generation/stop/last loan; 32-of-33 preallocated buffer cap and no post-stop mutation.",
+    "kernel_negative": "Existing isolated child drops its own effective CAP_NET_RAW then asserts real AF_PACKET socket syscall EPERM=1 and typed PermissionDenied with no UDP transport fallback.",
+    "kernel_conditional": "Test-only real recvmmsg called solely on protocol=0 inactive AF_PACKET FD if effective CAP_NET_RAW permits open; otherwise test returns after explicit typed EPERM. Positive raw FD open, actual packet reception, or CAP_NET_RAW availability is NOT established by 60/60.",
+    "physical_safety": "No bind, interface attach, outgoing traffic, promiscuity, ambient capture, packet logging, Go V4 dispatch, or live raw RX."
+  },
+  "same_source_workflows": [
+    {
+      "name": "worker-native",
+      "id": 38678579974,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "governance",
+      "id": 38678579944,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "g2-scoped-bootstrap-native",
+      "id": 38678579942,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "r0-static-qualification-audit",
+      "id": 38678579924,
+      "status": "SUCCESS"
+    },
+    {
+      "name": "r0-cross-abi",
+      "id": 38678580036,
+      "status": "SUCCESS",
+      "qualification": "compile-only; not native Windows/ARM"
+    },
+    {
+      "name": "r0-fake-platform",
+      "id": 38678579999,
+      "status": "FAIL",
+      "cause": "Historical exact-7 R0 harness rejects 67/67 actual passing Rust assertions (7 old R0 +60 new R1); M0-owned root harness not modified by M4."
+    }
+  ],
+  "historical_failures": [
+    {
+      "source_sha": "66a333dae7cfa96964314682fd3028809a0fda79",
+      "workflow": "worker-native",
+      "run_id": 38678512743,
+      "result": "FAIL_COMPILE",
+      "cause": "New test fixture Rust E0277 (&[u8;64] vs array) and E0308 (array of &mut [u8]); fixed in final source."
+    },
+    {
+      "source_sha": "66a333dae7cfa96964314682fd3028809a0fda79",
+      "workflow": "g2-scoped-bootstrap-native",
+      "run_id": 38678512712,
+      "result": "FAIL",
+      "cause": "Same initial test fixture compile errors; not rerun as this source was superseded."
+    },
+    {
+      "source_sha": "66a333dae7cfa96964314682fd3028809a0fda79",
+      "workflow": "governance",
+      "run_id": 38678512801,
+      "result": "SUCCESS"
+    },
+    {
+      "source_sha": "ae0b63b011512805f28f0cebff957cc662b0fb3c",
+      "workflow": "r0-fake-platform",
+      "run_id": 38678579999,
+      "result": "FAIL_HISTORIC_EXACT7_COUNT",
+      "actual": "67/67 actual Rust tests passed; legacy parser expects 7"
+    }
+  ],
+  "not_run": [
+    "Any successful privileged raw FD receive of a real packet or live AF_PACKET bind/send/recv data exchange",
+    "Actual raw L2 Ethernet/VLAN decoding, physical interface capture or peer traffic",
+    "Go V4 trusted ColdSnapshot and production activation",
+    "Native Windows/ARM runtime, product, performance, physical P1-P3"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "SCOPED_METADATA_AND_INERT_TEST_RX_READY_FOR_M0_REVIEW; product/raw-live NOT_QUALIFIED"
+}

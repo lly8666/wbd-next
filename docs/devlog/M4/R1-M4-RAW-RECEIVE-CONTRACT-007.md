@@ -1,0 +1,19 @@
+# R1-M4-RAW-RECEIVE-CONTRACT-007 · Linux AF_PACKET strict RX contract (no live traffic)
+
+## Authorization and source
+Main `af8a8b40853845b6e876224d579bfb567df48e6c` registry rev2 epoch1 active M4, branch `work/m4-r1-platform`, wave4 decision `docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave4.md`. Previous cursor seq9 H `1034e2823ab88488b3dcdcf479680f03d970d4a2`. Exact two code commits: initial `66a333dae7cfa96964314682fd3028809a0fda79` (compile errors), final `ae0b63b011512805f28f0cebff957cc662b0fb3c` (fixture type correction). Per-commit paths exclusively `crates/wbd-platform/`, no main/root/CI/Cargo/ABI/Go V4 writes.
+
+## Scope and safety
+`linux_raw_rx_contract.rs` provides strict pure Linux x86_64 GNU `sockaddr_ll` and captured/full L3 metadata validation (family, interface index, IPv4 ETH_P_IP, PACKET_HOST, MTU, MSG_TRUNC/CTRUNC, generation, exact length); only then hands a borrowed complete L3 slice to the existing strict IPv4/TCP parser. This parser produces **unauthenticated ciphertext**, never AEAD/PN or delivery. Test-only `recvmmsg` is bounded to 32 preallocated buffers, nonblocking, fenced against stop and stale generation, and only uses an **inactive protocol-zero** AF_PACKET FD if the runner actually has CAP_NET_RAW. No bind, no physical interface, no ambient capture, no live packet claim. If absent, preflight returns typed EPERM; existing isolated capset child proves real kernel AF_PACKET socket EPERM=1 with no UDP fallback. Kernel receive of a real raw packet is NOT_RUN / no positive proof; protocol zero is inert.
+
+## Exact native Actions and direct artifact verification
+Final CODE SOURCE `ae0b63b011512805f28f0cebff957cc662b0fb3c` Actions worker-native `38678579974/1` **SUCCESS 60/60** (8 new +52 previous), compiled once with Rust 1.85.1 Linux x86_64 GNU build job116237697120, consumer116237769215. Downloaded actual GitHub ZIPs and independently recomputed SHA256:
+- Build artifact11946881596 ZIP `90356aeb64a744f7f7fc59b33a8db6ee26a411247c53347f733dc63619cd17eb`, manifest `b3902da9892d20d2d47ba193ce401b8626a6dcc2d71c6621af9fdc805ecb6474`, executable `8c16ac3ed7b1c52941b2a813dc139c212c2f2a994f5a120f014cc68159e65317` (10,421,976B).
+- Result artifact11947866227 ZIP `690bc602713af799ef42687c4a9a283aca96e74cdd77072e69f3e4395d32a1dd`, result.json `14df653b3a17b7436835e01f938f9e0e8a708119db1c927db5dac0490abba96a`, test.log `9baaf526663f97b47a7d6636fe014c64f1f7443f1ea06f5ab2f98497091671e4`. Manifest SOURCE/binary SHA match result and actual bytes; 60 passed, 0 failed, 7 old R0 filtered.
+- Same-source Governance38678579944, G2 38678579942, static38678579924, crossABI38678580036 **SUCCESS**. CrossABI compile only, no native Windows/ARM test.
+
+## Historical failures retained
+Initial SOURCE `66a333da` worker-native38678512743 and G2 38678512712 **FAIL** due Rust test fixture E0277/E0308 (array reference types), repaired without changing scope in final SOURCE. Its Governance38678512801 **SUCCESS**. Final SOURCE old worker-branch `r0-fake-platform` run38678579999 **FAIL**: real Rust 67/67 assertions passed but historical R0 harness expects exactly 7 tests, an M0-owned root harness; **not all workflows green**. Prior task -006 historical Governance and R0 failures remain in its separate evidence.
+
+## Integration boundary and next action
+Only pure sockaddr contract + optional inert FD receive preflight are qualified. No positive privileged raw packet reception, AF_PACKET live data plane, trusted Go V4 ColdSnapshot/owner, real Windows/ARM, product, P1-P3, performance or physical validation. Production Go V4 remains **DISABLED**. M0 reviews this scoped module and independently authorizes future real raw/Go integration; M4 must await a **new main formal task** after cursor-only H. Rollback removes `linux_raw_rx_contract` module registration and new file and test-only preflight borrow accessor.
