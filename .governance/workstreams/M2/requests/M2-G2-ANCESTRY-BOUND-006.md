@@ -1,6 +1,6 @@
 # M2 → M0 · governance ancestry bound exhausted
 
-**Status:** OPEN / BLOCKED (not an Actions dispatch request)
+**Status:** RESOLVED — M0-authorized bounded checker refresh; H Governance PASS (not an Actions dispatch request)
 
 **Owner:** M0 control branch `main`
 **Reporter:** M2 `work/m2-r2-recovery`
@@ -25,3 +25,7 @@ After M0 action, M2 can resume the normal evidence S → cursor-only H Governanc
 M0 approved a one-time exact-parent, one-path, byte-identical checker refresh with 96-commit bounded full history audit. M2 implemented refresh commit `bde572873c27b1c535e77ee53507fb979bc5f326` directly atop H `018a07c880473a896d40c0d97a59250212f7dad8` and exact main checker blob `26983e630ab2fbf28466dac457923904aaa6be60`. The old structural 64-commit failure is **remedied** without a generic worker root-write permission.
 
 Refresh Governance [38683108958](https://github.com/lly8666/wbd-next/actions/runs/38683108958) **FAIL**, different error `ROLE_SCOPE_FAILED: control or source moved mid-audit`. Mark request as **M0 remedy applied / end-to-end clearance pending a stable-control Governance success**. If subsequent evidence/H Governance fails for the same control race, M0 should coordinate a quiescent audit interval; never disable full commit/path verification.
+
+## Closure evidence
+
+GitHub M2 refresh commit `bde572873c27b1c535e77ee53507fb979bc5f326` is exactly one root script blob authorized by M0. Final H `7fe75bc85cb17750368840bd79c771e812114cba` passed [Governance38683609942](https://github.com/lly8666/wbd-next/actions/runs/38683609942), with `ROLE_SCOPE_PASS` and 33 scope commits checked. The two immediate control-movement Governance failures 38683108958 and 38683382300 are retained as historical FAIL. The structural bound issue is **RESOLVED**; there is no open M0 work request for this particular 64-commit gate. Product integration and real cryptographic trust remain separate M0 responsibilities.

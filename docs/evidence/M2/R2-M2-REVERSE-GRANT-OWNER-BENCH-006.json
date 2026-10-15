@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "source_sha": "25642589f0feb12b44304fd21842c507a9314d35",
-  "result": "NATIVE_R2_44_44_SUCCESS_G2_BOUND_FIXED_ONCE__GOVERNANCE_RECHECK_REQUIRED",
+  "result": "SCOPED_R2_NATIVE_44_44_PASS__M0_APPROVED_CHECKER_REFRESH_AND_H_GOVERNANCE_SUCCESS",
   "previous_handoff": {
     "cursor_H": "eb2b0ffa3720db1cffb2e1ae86f619ecc7275073",
     "checkpoint": "c4e69939903cbce3c204cf475750625a2d3bfe11",
@@ -155,7 +155,7 @@
     "No actual heap allocation counter or actual wire performance",
     "Product, physical, native Windows ARM and 500Mbps/P99 NOT_RUN"
   ],
-  "next_action": "G2 limit structurally resolved via exact M0-approved tool refresh. Requalify new evidence source Governance with immutable source and main stable audit; preserve refresh Governance FAIL caused by parallel main control movement. No new code tests required: original Rust SOURCE unchanged and compiled-once 44/44 native preserved; only if latest independent Governance passes may cursor H mark recovery CLEAN. Product NOT_RUN.",
+  "next_action": "G2 ancestry structural blockade resolved and worker H sequence12 Governance38683609942 SUCCESS. Close scoped M2 recovery request; produce new evidence S then cursor-only H to record completion. Future product auth/key exporter, integration/native raw/WinArm and 500Mbps/p99/physical remain M0-owned NOT_RUN; no new task claimed.",
   "recovery": {
     "type": "M0-approved exact one-time worker checker refresh, not generic write-scope",
     "main_control_anchor": "af8a8b40853845b6e876224d579bfb567df48e6c",
@@ -181,6 +181,19 @@
       "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
       "artifact_id": 11949395232,
       "digest": "sha256:aea02e32da2a7b68fc761c882fa054a2b9a52e82a35d791f5f90139f2296f2a6"
-    }
+    },
+    "handoff_success": {
+      "cursor_H": "7fe75bc85cb17750368840bd79c771e812114cba",
+      "run_id": 38683609942,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 116253381092,
+      "scope_result": "ROLE_SCOPE_PASS",
+      "scope_commits_checked": 33,
+      "artifact_id": 11948933563,
+      "artifact_digest": "sha256:7d589c3cc2d0a902577ac77f226d5e8c00daedb85934186ef8cd3a09c29701da",
+      "note": "Exact M0-allowed one-file checker refresh on 018a07c, full bounded audit, same worker root tool as main, no product claim."
+    },
+    "refresh_governance_failure_retained": true
   }
 }
