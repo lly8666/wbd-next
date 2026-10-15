@@ -545,10 +545,11 @@ fn r1_steady_four_scope_auth_replay_pressure_and_independent_expiry() {
     // The other two independent direction contexts are still untouched and
     // each can accept a real fresh PN0 and BlockID1.
     for index in [1usize, 3] {
+        let tunnel = lanes[index].tunnel;
         let ReusedRx::Fec(g) = &mut lanes[index].rx else { panic!("not a gate") };
         scratch.clear();
         scratch.extend_from_slice(&staged[index][0]);
-        assert_eq!(g.accept_record_on_lane(&mut scratch, LANE, lanes[index].tunnel, 2)
+        assert_eq!(g.accept_record_on_lane(&mut scratch, LANE, tunnel, 2)
             .unwrap().systematic.len(), 1);
     }
 }
