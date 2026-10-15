@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 66,
-  "checkpoint_sha": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
+  "sequence": 67,
+  "checkpoint_sha": "16ca80e2477075a847c697e8ca455f92452542a8",
   "progress": "partial",
-  "task_id": "R1-M0-M3-015-EXACT-SOURCE-RELEASE",
-  "current_task": "M0 M3-015 exact SOURCE Release integration; checkpoint seq65→main3f1b458d: previous H seq65 c570ea3f Gov38731001048 PASS and cursor clean. Worker CODE0ecb459c current frozen head from 5 commits after M3 cursor checkpoint, M3 Governance38733840776 PASS and native Debug38733840785 99/99 PASS. Main CODE3f1b458d updates M0-only m0-m3-release-clock015-exact.yml old79535 to exact M3 CODE0ecb, both checkouts, Release raw-clock count 3072*64, no relaxed CPU bound; doc M0 devlog 049. Same-source main Governance38734823238 PASS. Exact Release Action38734823257 attempt1 build job116421354527 SUCCESS artifact11972220985; measure job116421742715 IN_PROGRESS at checkpoint, result NOT_YET_VERIFIED. No extra dispatch. M3 branch untouched and M3 own S/H pending.",
-  "why_now": "User relayed M3 worker 015 source0ecb459c request, and remote verified G2 Governance and Debug source exact success. Prior Release with main different CODE cannot qualify M3; old exact M3 release79535 failed short 3.374ms CPU>wall. M0 owns source pinned workflow/combined acceptance; repinned and corrected record-count assertion for 3072 Release batches without weakening <=1.02 physical clock invariant.",
-  "done_when": "This atomic M0 workflow task ends when exact M3 CODE0ecb459c compiled-once Rust1.85.1 Release Action38734823257 measure completes and M0 records actual build/measure jobs, binary/artifact hashes, 24/24 rows or explicit FAIL/CPU_INCONCLUSIVE including exact raw per-window CPU/wall and A/B/A sequential single job; evidence S and cursor-only H Governance. No product or packet-p99 claim. If failed do not rerun unchanged source; route evidence to M3. This seq66 H records the ongoing real run, not qualification.",
-  "next_action": "READ EXISTING Action38734823257 attempt1 measure job116421742715 and artifact (no redispatch); decide raw 24/24, >=1.05s warmup/1.125s measured, every paired window CPU<=wall*1.02 or CPU_INCONCLUSIVE, hashes/runner and source exact. Then factual M0 evidence S + separate cursor-only H, hand M3 exact run for own S/H. Afterwards M0 resumes Go-auth Rust owner/M4 kernel B01-B04.",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "current_task": "M0 scoped M3-015 source-locked Release task DONE (not product): worker frozen CODE0ecb459c9686254625a045ea19b85ae0e8d43080 Governance38733840776 PASS, Debug38733840785 Rust99/99 PASS. Main M0 workflow CODE3f1b458de2c66cbfa5567c147909c9b2b22d06f5, Action38734823257 attempt1 build116421354527/measure116421742715 SUCCESS, Rust release1/1, 24/24 data rows, 8 warmups, 179 per-window paired CPU/wall valid, Linux schedstat_ns all <=1.02 worst 1.010165; artifacts build11972220985 result11973392890 exact digests/binary in evidence049. Same-job forward/reverse/forward across four modes and two sizes; FEC component fresh/steady3.046x/2.547x, AEAD896 0.945x slower steady, no blanket speedup. Main original S3f1 Gov38734823238 PASS; resume H seq66 0db49cc Gov38735977070 PASS; evidence S16ca80e Governance38737384684 PASS. This M0 task now closed; M3 worker owns its evidence S and H separately. M0 main registered owner goal023 remains partial for actual positive protected Rust auth+AEAD/PN and M4 real kernel held STOP B01-B04. Production ABI features0 and physical/500Mbps/product NOT_RUN.",
+  "why_now": "User forwarded M3 report and explicitly asked M0 continuation. Verified remote M3 0ecb HEAD and source-exact Debug99/99/Governance; an earlier main Release green had different SOURCE and old M3 frozen79535 Release failed CPU>wall. Fixed M0 workflow exact source and 3072*64 physical window count, ran true Actions same-source build+measure and checked raw 24 rows/179 paired CPU windows, preserved adverse AEAD896 and limitations. Now publish final H after successful evidence S.",
+  "done_when": "M0 atomic M3-015 workflow task MET: worker CODE0ecb459c Governance38733840776 PASS and Debug38733840785 99/99; M0 SOURCE3f1b458d Action38734823257 attempt1 build116421354527+measure116421742715 SUCCESS with 24/24 Release rows, 8 warmups>=1.05s, 24 legs>=1.125s, 179 CPU/wall matched schedstat windows, 0 invalid/INCONCLUSIVE <=1.02; build artifact11972220985 sha256:e70c121938422a9b040f98eba5f5b78e307153ac552fd541440dfcd0cfa12636; result11973392890 sha256:6addb6dbbcb3c7ee7bc74b8b85ed02022851d773684bbee7f52ea51e246e5473; S16ca80e Gov38737384684 PASS. M3 own S/H still pending. M0 023 owner production done_when NOT_MET, features0, kernel-driver/physical/500Mbps NOT_RUN. H seq67 cursor-only.",
+  "next_action": "M0 next independently implement authentic Go V4 protected callsite provenance into Rust positive ScopedOwner with versioned AEAD key+PN mapping, strictly reject arbitrary self-consistent 248B cold grammar; integrate real M4 Linux held RX driver Stop B01–B04 and tests on exact Actions SOURCE, keep ABI features0 until E2E qualification. M3 worker separately publish OWN 015 evidence S/cursor-only H referencing Action38734823257 and exact M3 SOURCE0ecb459c; no M0 worker branch writes.",
   "unverified": true,
-  "last_tested_source": "8721ffd29781ce559a4a4945c52db0919ba4f895",
+  "last_tested_source": "3f1b458de2c66cbfa5567c147909c9b2b22d06f5",
   "evidence_refs": [
-    "docs/evidence/M0/R0-M0-held-early-rx-stop-048.json"
+    "docs/evidence/M0/R1-M0-M3-015-0ecb-exact-release-049.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/evidence/M0/R0-M0-held-early-rx-stop-048.json",
     "docs/devlog/M0/R0-M0-early-held-loan-stop-subgate-048.md"
   ],
-  "partial_summary": "M0 seq66 main workflow SOURCE3f1b458d M3 worker CODE0ecb459c pinned Release 3072×64 clock windows and strict CPU<=1.02; Gov38734823238 PASS; Release38734823257 build116421354527 SUCCESS artifact11972220985, measure116421742715 currently in_progress. M3 CODE own native Debug99/99 run38733840785 and Gov38733840776 PASS; historical source79535 Release FAIL, old main successful source is NOT M3. Not yet Release qualified, production all NOT_RUN. Next single action inspect same run; worker S/H its own."
+  "partial_summary": "M0 seq67 M3 exact SOURCE0ecb459c Rust1.85.1 Debug99/99/Gov PASS and M0 locked Release SOURCE3f1b458d Action38734823257 build+measure SUCCESS 24/24 rows, 8 warmups, 179 valid CPU wall windows, worst1.010165<=1.02, no CPU_INCONCLUSIVE; evidence S16ca80e Gov38737384684 PASS. Main H66 pending run Gov38735977070 PASS. Component FEC ratios1923.0459/8962.5470 but AEAD896 steady worse ratio0.94494, not product/per packet p99/500Mbps. M3 own S/H pending, M0 active owner023 next positive Go V4 Rust AEAD/PN and M4 driver Stop B01-B04. Production ABI features0."
 }
