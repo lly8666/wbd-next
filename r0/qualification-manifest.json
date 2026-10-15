@@ -557,5 +557,26 @@
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN",
     "production_abi_features": 0
+  },
+  "m0_023_scoped_normal_off_reassembly": {
+    "code_source_sha": "e5a1c2378a9539d21c56a7c385122d1eda90ea18",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-scoped-normal-off-reassembly.json",
+    "function": "ProtectedScopedOwner::drain_normal_off with owner-bound NormalOffReceive and existing M3 ReassemblyTable",
+    "source": "credential-checked real Go V4 session through private feature-only in-process test probe",
+    "tested": "Go protected C2S LINK wire; native Rust ScopedOwner-owned RX slab/LoanBatch, AEAD/PN, M3 LINK fragment reassembly, complete payload callback",
+    "negative": "first-fragment gap does not block independent fresh packet; fragments out-of-order; retired LINK ID and replay no duplicate; malformed framing not delivered; three cipher suites; earlier staged early and Stop probes",
+    "path_mtu": "TEST_ONLY_DERIVED_FROM_GO_SERVER_RECORD_LIMIT_MINUS_31; real M4 effective MTU/MSS NOT_RUN",
+    "full_epoch_scope": "Owner-local full 16-byte epoch compared before reassembly; M3's u64 tag is never used as identity outside original owner",
+    "first_normal_application_candidate": "PASS_IN_PROCESS_CALLBACK_ONLY",
+    "actual_application_sink": "NOT_RUN",
+    "real_bidirectional_go_v4_tx": "NOT_RUN",
+    "actual_linux_tun_raw_driver_loan_stop": "NOT_RUN",
+    "production_authenticated_c_abi": "NOT_IMPLEMENTED",
+    "production_abi_features": 0,
+    "product_qualification": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }

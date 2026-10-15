@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "normal_build_protected_go_v4_scoped_owner_m3_link_complete_reassembly",
+  "source_sha": "e5a1c2378a9539d21c56a7c385122d1eda90ea18",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "Actions consume job checked SOURCE SHA, run ID, attempt, all declared input SHA256 including M3 LINK implementation and precompiled library/Go/Rust binaries; GitHub artifact SHA256 digest read from API. Artifact ZIP bytes not independently downloaded or rehashed.",
+  "changed_paths": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "implementation": {
+    "normal_compiled": "NormalOffReceive bound to original ProtectedScopedOwner generation, lane and complete 16-byte epoch, with one owner-local M3 ReassemblyTable. Exact original protected Go TLS owner hook and M1 owned RX batch are retained.",
+    "order": "Go credential check, Prepare RX boundary and full C2S/S2C crypto+M1 queues, protected reply, Go DetachTransition, Commit(exact SenderNext), Active, owner RX batch and AEAD/PN, inspect_link, bounded ReassemblyTable, complete payload callback.",
+    "scope": "U64 tunnel_epoch used only inside owner-local table, NEVER as 16B epoch authenticator; constructor compares complete epoch against original owner and new generation creates distinct table. Packet ID extension uses half-range with reject ambiguous stale IDs; not formally wrap-qualified.",
+    "effective_limits": {
+      "probe_link_frame_mtu": "server negotiated record_wire_limit minus 31B",
+      "producer_credit": "test-only encrypted C2S Go record input",
+      "mode": "FixedOff",
+      "early_slots": 32,
+      "ready_slots": 64,
+      "reassembly_max_assemblies": 16,
+      "assembly_ttl_ms": 5000,
+      "retired_id_ttl_ms": 10000
+    },
+    "negative_and_positive": [
+      "Go verified protected session under ChaCha20/AES128/AES256 into Rust normal owner",
+      "pending tail fragment yields NO complete packet callback",
+      "unrelated new full Normal packet delivered while old packet missing first fragment",
+      "head arrives later; original logical datagram reassembled exactly once",
+      "fresh PN carrying already retired LINK packet id is dropped",
+      "tampered authenticated LINK header flags rejected before reassembly",
+      "duplicate PN does not publish another logical packet",
+      "existing pre-Detach zero RX and generation Stop/held batch tests remain PASS",
+      "M4 effective path MTU/MSS and application sink not tested"
+    ],
+    "test_caution": "Feature-only C probe only observes FNV digest of complete callback to avoid logging packet plaintext; not a production cold installer, M4 driver, user application, or alternate delivery pipeline. Old self-consistent 248B cold is not credential attestation."
+  },
+  "exact_source_runs": {
+    "native_owner": {
+      "run_id": 38771279652,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "build_job_id": 116547432056,
+      "consume_job_id": 116548070069,
+      "build_artifact_id": 11991811674,
+      "build_sha256": "sha256:9067b58bfa707c5ff88f3a56e259b6713691c20bd3e1e9bf3ecb5d4c11673880",
+      "result_artifact_id": 11990709319,
+      "result_sha256": "sha256:234de5e7dfaaafd4b17d81cb8ff2f2b69ddb4e5e6e88fee05afd4a94b1b2f40d",
+      "go_tests": [
+        "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+        "TestR0V4NativeRustProtectedAEADReplayAllCiphers",
+        "TestR0V4NativeRustProtectedNormalOffLinkFirstPacket"
+      ],
+      "go_three_cipher_subcases": "ALL_PASS",
+      "rust_test": "r0_m0_native_probe_local_fresh_generation_and_bounded_phases 1/1 PASS"
+    },
+    "native_functional": {
+      "run_id": 38771279793,
+      "result": "SUCCESS",
+      "plan_job": 116547431134,
+      "build_job": 116547479835,
+      "consume_jobs": [
+        116547943706,
+        116547943752,
+        116547944023,
+        116547944025,
+        116547944066
+      ],
+      "build_artifact_id": 11991422338,
+      "digest": "sha256:971428d7f8d7969dbfe11b6fb707f3229302173aad910e92408862b28937f3a2"
+    },
+    "native_abi": {
+      "run_id": 38771279564,
+      "result": "SUCCESS",
+      "build_job": 116547433281,
+      "consume_job": 116548047022,
+      "result_artifact_id": 11991846574,
+      "digest": "sha256:69c5ca3be6974882030fe4cecaf0a486e64ebd995b3525c1bdeb34e57683e402"
+    },
+    "cross_abi": {
+      "run_id": 38771279634,
+      "result": "SUCCESS",
+      "build_jobs": [
+        116547430732,
+        116547431029
+      ],
+      "consume_jobs": [
+        116548050341,
+        116548050431
+      ],
+      "native_windows_arm": "NOT_RUN"
+    },
+    "g2": {
+      "run_id": 38771279600,
+      "result": "SUCCESS",
+      "build_job": 116547447518,
+      "consume_job": 116547764307
+    },
+    "governance": {
+      "run_id": 38771279718,
+      "result": "SUCCESS",
+      "job": 116547431535,
+      "artifact_id": 11991367402,
+      "digest": "sha256:91e3a5c616c53ebeb625f9cec2daa57a3e41373c789000efb38e316a10f8df2c",
+      "selftests": "NOT_RUN",
+      "models": "NOT_RUN"
+    },
+    "maintenance": {
+      "run_id": 38771279605,
+      "result": "SUCCESS",
+      "job": 116547430798,
+      "artifact_id": 11991651675,
+      "digest": "sha256:e168f5891f1b27b5f3880503c410282e59e1da188917818d168a115f240a06cf",
+      "tests": "169/169 PASS"
+    },
+    "r0_static": {
+      "run_id": 38771279636,
+      "result": "SUCCESS",
+      "job": 116547432234,
+      "artifact_id": 11991346964,
+      "digest": "sha256:5b0a65b725c8756e21dd2505b0dc85afa81363fd76450f85ca530c499065c9d4"
+    }
+  },
+  "product_gates": {
+    "authenticated_link_reassembly_complete_packet_callback": "PASS_IN_PROCESS_COMPONENT",
+    "actual_receiver_app_sink": "NOT_RUN",
+    "real_bidirectional_tx_protected_normal_fec_off": "NOT_RUN",
+    "actual_m4_linux_namespace_tun_raw_and_b01_b04_driver_loan": "NOT_RUN",
+    "production_authentication_command": "NOT_IMPLEMENTED",
+    "production_features": 0,
+    "physical": "NOT_RUN",
+    "throughput": "NOT_RUN"
+  },
+  "next_action": "Connect this exact normal-build authenticated/reassembled candidate callback to the real M1/Go Normal/FEC-off business receiver and TX path, with effective M4 FrameBudget (MTU/MSS), full epoch+generation and stop lease verified on both ends, then run actual namespace Linux TUN/raw I/O and B01–B04. Do not turn test digest into a user-facing delivery claim."
+}
