@@ -324,7 +324,7 @@ mod tests{
                 let mut b=[a.as_mut_slice()];
                 let out=receive_inactive(&s,42,&mut b);
                 assert_eq!(out,InertStatus::WouldBlock);
-                assert_eq!(&a,[0xa5;64]); // no packet bytes were written
+                assert_eq!(a,[0xa5;64]); // no packet bytes were written
                 assert_eq!(s.outstanding(),0);
             }
             Err(PreflightError::PermissionDenied{errno:EPERM})=>{
@@ -345,11 +345,9 @@ mod tests{
             Err(e)=>panic!("{e:?}")
         };
         let mut storage=[[0x8bu8;64];33];
-        let mut refs:Vec<&mut [u8]>=storage.iter_mut().map(|x|x.as_mut_slice()).collect();
-        let mut first: [&mut [u8];33]=std::array::from_fn(|_|&mut []);
-        // Avoid creating aliasing &mut [] to backing bytes: copy references
-        // into our stack only for this single call, never access refs meanwhile.
-        for (i,x) in refs.iter_mut().enumerate(){first[i]=&mut **x;}
+        // Independent stack references to every backing buffer; no heap
+        // allocation in the 33-slot ready-side fixture.
+        let mut first:[&mut [u8];33]=storage.each_mut().map(|x|x.as_mut_slice());
         assert_eq!(receive_inactive(&s,42,&mut first),InertStatus::WouldBlock);
         assert_eq!(s.outstanding(),0);
         assert!(storage.iter().flatten().all(|&b|b==0x8b));
