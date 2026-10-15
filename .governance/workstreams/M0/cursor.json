@@ -4,28 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 58,
-  "checkpoint_sha": "aa7e781dbdb386157c4040441bc9aece57bf895d",
+  "sequence": 59,
+  "checkpoint_sha": "a7022375bc054503a2504c286794a91273f4d7d6",
   "progress": "partial",
-  "task_id": "R1-M0-M3-RELEASE-G2-REVIEW-021",
-  "current_task": "M0 scoped M3-014 acceptance triage: worker source88a12027 Debug native98/98 but worker Governance CODE/S/H failed; exact main G2 second tool mirror parent M3 H5eaf validated main CODE940498cc, full 99/100 complete unique ancestry cap; authoritative read-only M3 audit 95 commits SUCCESS run38685996539 and same-source main Governance38685996632 SUCCESS. Main CI Release compiled once Rust1.85.1 on pinned worker source, run38684106420 measure cancelled14min with 21/24 rows, 20/21 CPU_s>active_wall×1.02 due per-64-record procfs probes outside active timer. Old CPU/fresh:steady ratio unqualified. Evidence-backed CI 22m retry run38685587150 status in_progress conclusion null, exact already-requested result pending reconciliation. Evidence S9411647a Governance38686407284 SUCCESS. M2 independently worker H901abe61 Governance38684127224 SUCCESS with 44/44 scoped native, not yet main integrated. Corrective evidence S aa7e781dbdb386157c4040441bc9aece57bf895d Governance38686585334 SUCCESS after H5ac5cc Governance38686485637 failed schema (missing evidence.source_sha).",
-  "why_now": "M0 prior H bbcf12ce seq56 Governance38683476593 PASS; user explicitly prioritised M3. Inspect M3 014 current H5eaf seq17 and owned release request; found root tool drift, 95-commit bound and no real Release; new Actions discovered cancellation and empirically impossible CPU/wall bounds. M0 main shared only, no worker ref edits or fake product claims. First cursor-only H5ac5cc9d Governance38686485637 FAIL due missing required evidence.source_sha; corrective evidence S aa7e781d added exact code SOURCE940498 without changing results/claims; Governance38686585334 SUCCESS.",
-  "done_when": "M0 delivers single pinned Release build+same-VM runner and preserves actual cancelled 21/24 diagnostic artifact, no false CPU qualification; second evidence-based time-budget run38685587150 exact pending. New root checker full 99/100 commit audit enforces exact M3 parent5eaf single-file tool mirror, one corrected test source, S, H; main Governance38685996632 and read-only G2 95/95 run38685996539 SUCCESS. Evidence S9411647a Gov38686407284 PASS. M3 own worker H remains Governance FAIL and CPU cost/real V4 owner/actual raw/WinARM/500Mbps/physical NOT_QUALIFIED. M2 G2 now independently resolved, 44 native-qualified. Preserve first H5ac5cc Gov38686485637 FAIL and corrective S aa7e781d Gov38686585334 PASS; current H sequence58 cursor-only and Governance must succeed. M3 retry38685587150 at checkpoint status in_progress (conclusion null).",
-  "next_action": "First reconcile already dispatched M3 Release retry Actions38685587150 exactly (never rerun same test blindly); independently notify M3 worker to mirror one exact main checker blob817934b on sole file and direct parent5eaf then make one corrected CPU sampling test commit plus evidence S/cursor H within 99 ancestry, with future corrected SOURCE release Actions. Main GoV4→Rust trusted owner B01-B04 still queued OFF.",
+  "task_id": "R0-M0-WORKER-NEXT-WAVE-022",
+  "current_task": "M0 next-wave formal main task assignment COMPLETE: M1 R1-M1-OWNER-LOAN-STOP-INTEGRATION-009, M2 R2-M2-BOUNDED-TIMER-BURST-007, M4 R1-M4-DRIVER-OUTCOME-LEASE-009 assigned on their existing active branches and role-owned paths, registry rev2 epoch1 unchanged, M3 goal/branch unmodified. Assignment CODE19f6f7b85068a79e5ec033b6c24538d937beb506 same-source Governance38687993976 SUCCESS, 5-crate G2 bootstrap native38687994043 build/consume SUCCESS. Evidence S a7022375bc054503a2504c286794a91273f4d7d6 Governance38688186169/static38688186159 SUCCESS. Closed earlier pending M3 Release ACTION38685587150 SUCCESS 24/24 but 22/24 per-batch CPU_s exceeds active_wall_s by>2% due mismatched procfs timing; CPU cost/relative benefit NOT_QUALIFIED. Previous scoped M1 75/75 H Gov38683183557, M2 44/44 H Gov38684127224, M4 64/64 H Gov38683395043; worker new task source results NOT_RUN.",
+  "why_now": "Previous M0 seq58 H b7f7bd5574cdc8864372d6c7351e1d6a9bdeecc4 Governance38686642270 SUCCESS. User instructed to continue M3 separately and check if other waiting roles should receive tasks. M1/M4 marked ready_for_integration, M2 previously finished its atom and waited for formal registry goal; relevant Rust owner loan STOP, R2 timer storm and actual unprivileged driver outcome prerequisites remain unqualified. Assign narrow next tasks without artificially reopening completed worker work, expanding role permissions or claiming product.",
+  "done_when": "Source 19f6f7b8 assigned three scoped integration-relevant tasks, no M3 intervention; Governance38687993976 and build/consume38687994043 SUCCESS. Evidence S a7022375bc054503a2504c286794a91273f4d7d6 Governance38688186169 + static38688186159 SUCCESS; M3 diagnostic Release 38685587150 finalized 24/24 but invalid CPU clock, request closed. Worker future tasks await their own source tests/S/H and M0 previous candidate integration; actual Go V4 frozen verifiedCold→Rust authentic owner/Prepare/Detach/Commit B01–B04, raw/physical/500Mbps/P1-P3 NOT_RUN.",
+  "next_action": "M0 independently implement a true protected Go V4 ColdSnapshot-to-Rust new owner generation transition with M0-held authenticated provenance (no public 248B grammar-to-auth promotion), exact PrepareTransition/protected reply/DetachTransition/CommitAdmission ordering and B01–B04 stop/lease race tests. In parallel review M1/M2/M4 prior integration candidates; follow worker owned next tasks only after their own native S/H, and leave M3 benchmark repair and G2 sync to M3. Keep production C ABI flags OFF until genuine trace.",
   "unverified": true,
-  "last_tested_source": "940498ccb2f3834e4287813bb250ebfb97f507fb",
+  "last_tested_source": "19f6f7b85068a79e5ec033b6c24538d937beb506",
   "evidence_refs": [
-    "docs/evidence/M0/R1-M3-release-governance-021.json"
+    "docs/evidence/M0/R0-M0-next-wave-roles-022.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M0/requests/M3-RELEASE-RUN-38685587150.md"
-  ],
+  "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/R1-M3-release-governance-021.md",
-    "docs/devlog/M0/R1-M3-release-cost-measurement-audit-021.md",
-    "docs/decisions/M0-M3-second-exact-G2-checker-refresh-2026-10-15.md",
-    "docs/architecture/modules/05-RECORD-CRYPTO.md",
-    "docs/architecture/modules/07-FEC.md"
+    "docs/devlog/M0/R0-M0-next-wave-roles-022.md",
+    "docs/decisions/M0-next-wave-owner-repair-driver-2026-10-15.md",
+    "docs/architecture/modules/00-CONTRACTS.md",
+    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md"
   ],
-  "partial_summary": "M0 seq56→57: M3 worker CODE88a Debug98/98, own Gov blocked; exact M0 main G299 cap CODE940498+Gov38685996632/remote95 commit scope38685996539 PASS; one-use M3 tool copy parent5eaf, blob817934b, then fix CPU probe, S/H. M3 Release run38684106420 Rust Release compiled but measure CANCELLED 14m 21/24 rows, 20/21 cpu_s>active wall due per-batch procfs outside wall, CPU ratio invalid; retry38685587150 in_progress, open M0 action. Evidence S9411647a Gov38686407284 SUCCESS, H cursor only. M2 worker now Gov SUCCESS/H901abe/44native, main not integrated; no physical/product/500Mbps/GoV4 owner claims. First H5ac5cc Gov38686485637 FAILED evidence.source_sha missing; corrective evidence S aa7e781d Gov38686585334 SUCCESS, new cursor-only H seq58 must pass; retry38685587150 at H status in_progress."
+  "partial_summary": "M0 seq58→59 next wave: M1 owner loan STOP009, M2 bounded 10k timer burst007, M4 real UDP send outcome lease009 formally registered on unchanged branches/epoch1/rev2, M3 untouched; code19f6f7b8 Governance38687993976 + native G2 38687994043 SUCCESS. M3 prior Release retry38685587150 24/24 SUCCESS but 22/24 impossible CPU_s>active wall due /proc per-batch probe outside timer, M3 must fix before CPU ratios. Evidence S a7022375bc Gov38688186169/static38688186159 SUCCESS, H cursor-only. Main product Go-protected ColdSnapshot→fresh Rust owner B01-B04 remains next critical task, no feature enabled."
 }
