@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "P0-M0-NATIVE-COMPONENT-PERF-016",
+  "branch": "main",
+  "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+  "result": "MEASURED_P0_AND_NATIVE_REGRESSION_SUCCESS",
+  "artifact_verified": true,
+  "qualification": "EXPLORATORY_COMPONENT_MEASUREMENT_NOT_PRODUCT",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "prior_m0_H": "bb4885e04ff8c757bae4d8c240392c429797349a",
+  "prior_sequence": 51,
+  "worker_accepted": [
+    {
+      "role": "M1",
+      "task": "R1-M1-STOP-LOAN-GENERATION-006",
+      "code_source": "d60a69312cc9878e3b09a1598280c89dfd4da6d8",
+      "tests": "63/63",
+      "native_run": 38674812277,
+      "evidence_S": "6b6a57e26bff1f26b2d433d7dfed0d464266a2c4",
+      "evidence_governance": 38675181709,
+      "H": "32ddf6c53e9d894d6d0add49699bc0e985e02d9d",
+      "H_governance": 38675249682,
+      "scope": "generation-scoped TX/RX caller-preallocated owner loans, stop/ABA and last-loan drain; no real trusted lane/auth source",
+      "historical": [
+        "initial code eaa0d482 first Rust compilation failed run38674720074",
+        "CODE Governance38674812385 attempt1/2 FAIL main moved",
+        "old root ABI38674812438 FAIL on unfiltered exact 3 case gate despite Rust66/66 PASS"
+      ]
+    },
+    {
+      "role": "M2",
+      "task": "R2-M2-RECEIPT-REVERSE-SCOPE-005",
+      "code_source": "6f19c7d6e6d14c755e3eb657845a8d47718c8f71",
+      "tests": "38/38",
+      "native_run": 38674780276,
+      "evidence_S": "c4e69939903cbce3c204cf475750625a2d3bfe11",
+      "evidence_governance": 38675017005,
+      "H": "eb2b0ffa3720db1cffb2e1ae86f619ecc7275073",
+      "H_governance": 38675209267,
+      "scope": "typed trusted-caller reverse receipt route, epoch/PN, global sparse grant accounting; not cryptographic authentication or peer delivery",
+      "historical": [
+        "CODE Governance38674780251 FAIL due main/control moving; evidence and H independent Governance PASS"
+      ]
+    },
+    {
+      "role": "M4",
+      "task": "R1-M4-AF_PACKET-PREFLIGHT-006",
+      "code_source": "34736c19eb4138938f8bc6a78a697e34bac2a641",
+      "tests": "52/52",
+      "native_run": 38674827100,
+      "evidence_S": "6144a2d39e72af04a4f6c398bd3879bc26e7a28e",
+      "evidence_governance": 38675076585,
+      "H": "1034e2823ab88488b3dcdcf479680f03d970d4a2",
+      "H_governance": 38675200151,
+      "scope": "Linux x64 GNU real CAP_NET_RAW/if_nametoindex/sysfs/OwnedFd EPERM fail closed, unprivileged FD close tests; protocol=0 optional inactive raw socket, no bind/send/recv proof",
+      "historical": [
+        "CODE Governance38674826949 FAIL control moved",
+        "old root fake platform38674826978 FAIL exact7 gate despite 59/59 Rust PASS"
+      ]
+    }
+  ],
+  "worker_excluded": {
+    "role": "M3",
+    "status": "NOT_AUDITED_OR_ACCEPTED_PER_USER_REQUEST",
+    "assignment_remains": "R1-M3-FEC-MULTISCOPE-012"
+  },
+  "changes": [
+    "crates/wbd-engine/tests/p0_native_components.rs",
+    ".github/workflows/p0-native-component-perf.yml"
+  ],
+  "same_source_actions": [
+    {
+      "name": "p0-native-component-perf",
+      "run_id": 38676814337,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "governance",
+      "run_id": 38676814218,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-static-qualification-audit",
+      "run_id": 38676814223,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-native-abi",
+      "run_id": 38676814330,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-cross-abi",
+      "run_id": 38676814277,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-wake-stop-native",
+      "run_id": 38676814252,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-linux-kernel-batch-native",
+      "run_id": 38676814247,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-normal-off-replay",
+      "run_id": 38676814294,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-fec-on-native",
+      "run_id": 38676814283,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r2-auth-receipt",
+      "run_id": 38676814291,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "g2-scoped-bootstrap-native",
+      "run_id": 38676814269,
+      "source_sha": "57e12d28f91ca7f3c716645305150871f5e3eff3",
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "native": {
+    "run_id": 38676814337,
+    "build_job": 116232191030,
+    "measure_job": 116232407478,
+    "runner": "ubuntu-24.04 hosted Linux x86_64 AMD EPYC 7763 64-Core Processor kernel6.17.0-1022-azure",
+    "build_once": true,
+    "separate_consumer_binary_SHA_verified": true,
+    "build_artifact": {
+      "id": 11946278435,
+      "digest": "sha256:66302df2d2a15f1e549fa925997be456efd4827527ca998a89e2ecc48979ca8c"
+    },
+    "result_artifact": {
+      "id": 11946303487,
+      "digest": "sha256:35c783107a67aa382fc9072b38754ff606742867c1db16fd9ac2e127b3a06165"
+    }
+  },
+  "micro_measurements": [
+    {
+      "case": "ChaCha20-Poly1305 real seal + HP + AEAD open + unique PN replay, 1000-byte business",
+      "samples": 25000,
+      "warmup": 1024,
+      "business_bytes": 25000000,
+      "elapsed_ns": 41762310,
+      "bytes_per_s": 598625890.187,
+      "sample_p50_ns": 1603,
+      "p95_ns": 1613,
+      "p99_ns": 1673,
+      "cpu_user_s": 0.044073,
+      "cpu_sys_s": 0.001001,
+      "cpu_total_s": 0.045074,
+      "cpu_s_per_GiB_business": 1.9359135589990402,
+      "maxrss_kib_observed": 16500,
+      "log_sha256": "3b58c61a87ae163151be502a559bc695df62a369fc7ddbd982296c68df91fb01"
+    },
+    {
+      "case": "actual Linux UDP sendmmsg and recvmmsg 32 x 256-byte data, loopback socket",
+      "samples": 1500,
+      "warmup": 64,
+      "datagrams": 48000,
+      "business_bytes": 12288000,
+      "elapsed_ns": 233958167,
+      "bytes_per_s": 52522210.092,
+      "sample_p50_ns": 146434,
+      "p95_ns": 219831,
+      "p99_ns": 254647,
+      "cpu_user_s": 0.004005,
+      "cpu_sys_s": 0.241265,
+      "cpu_total_s": 0.24527,
+      "cpu_s_per_GiB_business": 21.432019626666666,
+      "maxrss_kib_observed": 16636,
+      "log_sha256": "0696d8914494109bbee1bf2e07316ea2b3c0ae420b50a931ce321e81e9144745"
+    }
+  ],
+  "measurement_caveat": "A single short hosted CI run with sub-second timed intervals; p99 is per AEAD record or per entire 32-frame UDP batch, not end-to-end business latency. Throughput is scoped input business bytes, not actual V4 wire throughput. Runner background contention, warmup and CPU quota are not controlled to product qualification standard.",
+  "next_benchmark": "Extend dwell >1s, repeat independent runners or same-host controlled legs with warmup and host calibration, verify variance, then optimize based on multiple observations. No old/new paired A/B yet.",
+  "product_readiness": "P0_NATIVE_EXPLORATORY_MEASURED; P1_FULL_PRODUCT_BLOCKED_BY_REAL_GO_V4_TRUSTED_OWNER_INSTALL_AND_AF_PACKET; P2_PAIRED_AB_NOT_RUN; P3_500MBPS_NOT_RUN",
+  "unverified": [
+    "PRODUCT",
+    "500MBPS",
+    "AF_PACKET_RAW_TRAFFIC",
+    "GO_V4_AUTHENTICATED_OWNER_ACTIVATION",
+    "NATIVE_WINDOWS_ARM",
+    "PHYSICAL",
+    "P99_BUSINESS_E2E"
+  ],
+  "next_action": "M0 next code atom longer P0 repeats, M1/M2/M4 scoped integration or true Go V4 trusted cold owner; do not infer product capacities from UDP fixture throughput. Third wave M3 not accepted."
+}
