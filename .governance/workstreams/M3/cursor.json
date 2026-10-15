@@ -4,29 +4,27 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 15,
-  "checkpoint_sha": "5387a4f7a3d0daa14ebc68495f894626623bd3d7",
+  "sequence": 16,
+  "checkpoint_sha": "55a1248c3d37eb5f9f01826e43cf6e061f16747a",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-MULTISCOPE-012",
-  "current_task": "M0-assigned 2-tunnel × bidirectional authenticated-input FEC multiscope test isolation complete. Nine added real AEAD+PN replay/fake-monotone-timer tests prove no cross-scope replay, BlockID retired floor or Heavy/Compact pollution after misroutes, peer pressure, wrap or rekey. No production FEC codec implementation change required.",
-  "why_now": "M0 third-wave formal role goal012 asked independently isolated simultaneously live tunnel/direction scopes with real AEAD and generation-aware block IDs. Only test-side synthetic FecOrigin is available, never a genuine Go V4 authenticated session provenance.",
-  "done_when": "Test-only CODE SOURCE 4787d946 94/94 r1_ native PASS (9 new+85 prior) on compiled-once Linux x64 Rust 1.85.1. All seven same-SOURCE workflow Actions PASS; Governance38674583957 attempt3 PASS after attempts1-2 main drift. Evidence-only S 5387a4f7 Governance38675260385 attempt1 PASS; cursor-only H seq15 own Governance must be checked separately.",
-  "next_action": "Await next formal M0 task; no unassigned codec changes. M0 must separately prove and integrate true live V4 authenticated lane/tunnel/epoch/direction/generation source, not cfg(test) FecOrigin. Until then production FEC-on remains default denied. No shared ABI, root Go exporter, Cargo, CI or governance modifications.",
+  "task_id": "R1-M3-POSTAUTH-FEC-P0-COST-013",
+  "current_task": "M0-assigned test-only post-auth FEC P0 component cost atom completed: real ChaCha20-Poly1305+8B HP and unique PN across two tunnels x both directions, bounded BlockID/Heavy/Compact pressure and absent-origin deny; 96/96 native r1 tests and 18 >1s CPU/bytes/percentile measurements. No production FEC origin added.",
+  "why_now": "Main registry rev2 epoch1 goal013 requested reproducible component costs after genuine AEAD/unique PN, not product throughput. Current results are debug cargo-test owner-per-64 fresh-context measurements, strictly component only.",
+  "done_when": "SOURCE 0573798b compiled-once 96/96 worker-native run38678836564 attempt1 PASS (two new+94 prior), exact 18 P0 rows three modes x two sizes x three repeats (>1.125s each) per-thread CPU-s/byte and batch percentile logs. Seven same SOURCE Actions SUCCESS incl Governance38678836554 attempt1; evidence-only S55a1248c Governance38679104152 attempt1 SUCCESS with ROLE_SCOPE_PASS. Cursor-only H seq16 own Governance must be checked separately.",
+  "next_action": "Await next formal M0 assignment. No production FecOrigin constructor, trusted V4 Go exporter, root Cargo/lock/shared ABI/CI modifications. M0 separately owns live authenticated provenance and Normal/off integration; P0 debug owner-construction-included results cannot establish steady-state/release or 500Mbps product performance.",
   "unverified": true,
-  "last_tested_source": "4787d94617afe72c511f3f2299d1b060c2930c6c",
+  "last_tested_source": "0573798b27fa6fd6327ed1b997ee8cd50b0da526",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-MULTISCOPE-012.json"
+    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/05-RECORD-CRYPTO.md",
     "docs/architecture/modules/07-FEC.md",
-    "docs/devlog/M3/R1-M3-REPLAY-003.md",
-    "docs/devlog/M3/R1-M3-FEC-BLOCKID-SCOPE-009.md",
-    "docs/devlog/M3/R1-M3-FEC-RETIRE-PRESSURE-010.md",
-    "docs/devlog/M3/R1-M3-AUTH-FEC-SCOPE-GATE-011.md",
     "docs/devlog/M3/R1-M3-FEC-MULTISCOPE-012.md",
-    "docs/evidence/M3/R1-M3-FEC-MULTISCOPE-012.json"
+    "docs/evidence/M3/R1-M3-FEC-MULTISCOPE-012.json",
+    "docs/devlog/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.md",
+    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json"
   ],
-  "partial_summary": "Previous M3 seq14 H f56a6720 Gov38670975617 PASS; M0 main registry rev2 epoch1 assigned R1-M3-FEC-MULTISCOPE-012. TEST-ONLY source4787d94617afe72c511f3f2299d1b060c2930c6c changes only codec R1 test file fec_multiscope_tests.rs and LINK-subtree test mount, no production algorithms. Nine added cfg(test) synthetic FecOrigin contexts exercise two tunnels × both directions each PN0/BlockID1, misrouted real AEAD, wrong direction keys, one-tunnel 3s+10s expiration and later parity while peer lives, tiny Heavy+Compact cap1 floor pressure no resurrection, rekey new epoch and generation1 accepting fresh PN0 while old ciphertext fails, 0xffffffff->wire1 with explicit trusted generation, pinned old Go 56B fixture, missing origin default deny. Rust compiled-once native run38674583861 94/94 PASS (9 new+85 prior) Linux x64, binary sha256 8f1a5392c71eb266f94a9c3c4f63e1eccf7313a8963129fe6892d1e02f252234. Seven same SOURCE Actions SUCCESS; Governance38674583957 attempts1-2 FAIL `control or source moved mid-audit` due concurrent main, attempt3 SUCCESS no changes. Evidence S5387a4f7a3d0daa14ebc68495f894626623bd3d7 Gov38675260385 attempt1 SUCCESS. H seq15 checkpoint S cursor-only pending own H Governance. Production actual V4 origin/session export, FEC-on product, WinARM/ISA-L/perf/physical NOT_RUN; M3 role partial and no root/ABI/CI/Go edits. Await new assignment."
+  "partial_summary": "Restored previous M3 seq15 H78003a198fd46ac8fa497f0255fe67e2c26b1d95 with Governance38675514034 attempt2 PASS, and new main rev2 epoch1 assignment 013. Initial scoped test S f7ad0013 worker run38678774484 failed Rust E0282 unused Vec. Corrected SOURCE0573798b27fa6fd6327ed1b997ee8cd50b0da526 fixed with true new AEAD PN16 BlockID1 retired counterexample. Native 96/96 r1_ PASS compiled-once run38678836564 on Ubuntu24.04 Rust1.85.1 debug, binary sha256 4c37b79c29a3dba72dc2c73b2aa5fc9559c8994252f602f9b2de218ca56f3b48; seven same-source Actions SUCCESS. Six scenario pairs (192/896B, AEAD-only, bound-origin AEAD+FEC, absent-origin deny), each repeated 3x for 18 1.125s wall and Linux thread CPU-s observations, 150ms warmup, batch average p50/p95/p99, byte counts, mixed order. Debug P0 includes new owner construction every 64 records and tests, NOT product steady-state. No synthetic cipher or production FecOrigin. Evidence-only S55a1248c3d37eb5f9f01826e43cf6e061f16747a Governance38679104152 completed SUCCESS with ROLE_SCOPE_PASS 63 scope commits; continuity read-only probe exited1 before cursor H and is not claimed CLEAN. Now H seq16 checkpoint evidence S, own H Governance pending. Live V4 trusted origin, production FEC-on, release/perf/product/WinARM/physical NOT_RUN. M3 awaits M0 formal assignment."
 }
