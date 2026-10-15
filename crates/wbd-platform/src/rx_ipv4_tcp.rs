@@ -347,7 +347,12 @@ mod tests {
             if off==38 {bad[38]=1;}
             assert_eq!(parse_data_packet(&bad,trusted(None,1500)),Err(expected), "off {off}");
         }
-        let mut empty=original[..40].to_vec();empty[2..4].copy_from_slice(&40u16.to_be_bytes());
+        let mut empty=original[..40].to_vec();
+        empty[2..4].copy_from_slice(&40u16.to_be_bytes());
+        // Keep the IP checksum valid, so EmptyData is the actual failure gate.
+        empty[10..12].fill(0);
+        let ck = independent_sum(&empty[..20]);
+        empty[10..12].copy_from_slice(&ck.to_be_bytes());
         assert_eq!(parse_data_packet(&empty,trusted(None,1500)),Err(RxError::EmptyData));
     }
     #[test]
