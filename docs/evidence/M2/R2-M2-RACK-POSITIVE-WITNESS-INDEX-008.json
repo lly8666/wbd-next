@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "branch": "work/m2-r2-recovery",
+  "task_id": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "7875137949f61fead1374d2933798c61814adb92",
+  "code_source": "7875137949f61fead1374d2933798c61814adb92",
+  "result": "PURE_R2_NATIVE_55_55_PASS__SOURCE_GOVERNANCE_TRANSIENT_FAILURES_PRESERVED",
+  "prev_handoff": {
+    "H": "014d636eaf0319ca3c0a456901b383d94b7214f1",
+    "checkpoint": "f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c",
+    "cursor_seq": 15,
+    "governance_run": 38692656343,
+    "conclusion": "success",
+    "handoff": "CLEAN"
+  },
+  "source_paths": [
+    "crates/wbd-recovery/src/receipt.rs",
+    "docs/devlog/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.md"
+  ],
+  "native": {
+    "run_id": 38706944249,
+    "attempt": 1,
+    "conclusion": "success",
+    "compiled_once": true,
+    "r2_tests_passed": 55,
+    "r2_tests_failed": 0,
+    "previous_tests": 51,
+    "new_tests": 4,
+    "build_job_id": 116328582158,
+    "consume_job_id": 116328696531,
+    "binary_sha256": "cc09b9fa6780ed287fda81eb0f3e9cddc4faf250ddb30754ab8224afd9e81a4e",
+    "log_sha256": "16b0bec9d7b81959275404efa2face4e4171308b86127c1b4354a0790c9d3ef8",
+    "build_artifact": {
+      "id": 11958503523,
+      "digest": "sha256:869bea2fe476e033cd484ec10052451619d3b2e692aa37826e3295e630e1e35d"
+    },
+    "result_artifact": {
+      "id": 11958737965,
+      "digest": "sha256:9ea7bf6a505934204ea3262dfa7ea042036bc304947c20c8a03247816daa13e7"
+    }
+  },
+  "g2_bootstrap": {
+    "run_id": 38706944163,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 116328582057,
+    "consume_job_id": 116328800959,
+    "build_artifact": {
+      "id": 11959120361,
+      "digest": "sha256:62c488e9e7d11bdc4121f9839ac330c8c479d8c8249b0665140c077a71e3c705"
+    },
+    "result_artifact": {
+      "id": 11959351233,
+      "digest": "sha256:a7392ffb60e98e663ec520e6394ac551cf3c5867e589262c5a45b7bb3dfb0153"
+    }
+  },
+  "static_audit": {
+    "run_id": 38706944248,
+    "attempt": 1,
+    "conclusion": "success",
+    "job_id": 116328582610,
+    "artifact": {
+      "id": 11958563368,
+      "digest": "sha256:c86955a98b73d069566ff879deae7f9921a15354d2670b50adee785fc2b954cb"
+    }
+  },
+  "source_governance": {
+    "run_id": 38706944070,
+    "attempts": [
+      {
+        "attempt": 1,
+        "conclusion": "failure",
+        "job_id": 116328581427,
+        "reason": "http.client.RemoteDisconnected (GitHub API remote closed mid-audit)",
+        "artifact_id": 11958508867,
+        "digest": "sha256:0235ac98c4744304da30e938e9987ffc3b9180ee4508f87efe73878de2bc1e86"
+      },
+      {
+        "attempt": 2,
+        "conclusion": "failure",
+        "job_id": 116329759294,
+        "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+        "artifact_id": 11959485337,
+        "digest": "sha256:209862c075e22ece802eda6db1ddc68fa475a5ec231d3ed8afe1cd580a5666e9"
+      }
+    ],
+    "preserve_failures": true
+  },
+  "bounded_index": {
+    "algorithm": "Dynamic RACK oldest eligible send-time prefix, independent static PTO/queue wake index and hard expiry index; no full rebuild for positive witness",
+    "receipt_report_max_pages": 8,
+    "report_pn_bits_per_page": 256,
+    "latest_witness_count": 3,
+    "shadow_example": 10000,
+    "max_candidates_per_timer": 32,
+    "max_wake_events_per_timer": 32,
+    "single_positive_receipt_index_operations_tested_max": 4,
+    "thirty_two_positive_receipt_index_operations_tested_max": 130,
+    "thirty_third_witness_stale_rack_deadline_rejected": true,
+    "hard_expiry_clock_jump_releases": 10030,
+    "no_lazy_tombstones": true,
+    "notsent_rearm_safety": true,
+    "new_tests": [
+      "r2_rack_10k_positive_witness_1_32_33_no_full_reindex",
+      "r2_rack_10k_positive_32_then_33_eager_ack_not_replayed",
+      "r2_rack_10k_witness_clock_jump_hard_expiry_no_stale_nodes",
+      "r2_rack_notsent_rearm_does_not_promote_old_bitmap_early"
+    ],
+    "cpu": "NOT_INSTRUMENTED",
+    "allocation_count": "NOT_INSTRUMENTED",
+    "product_throughput": "NOT_RUN"
+  },
+  "nonclaims": [
+    "M0-owned Go V4 actual AEAD provenance NOT_RUN",
+    "R2 synthetic authenticated-open constructor is NOT crypto",
+    "Real driver/kernel, engine ABI and physical NOT_RUN",
+    "No WinARM native, CPU/RSS product, 500Mbps or p99 evidence"
+  ],
+  "next_action": "Verify immutable evidence SOURCE Governance and cursor-only H Governance independently. If moving main or GitHub API prevents passing role scope, retain historical failure and request M0 stable window; no repeated fake source qualification or product claim."
+}
