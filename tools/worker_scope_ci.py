@@ -171,6 +171,10 @@ M0_M2_HISTORICAL_TOOL_BLOB = "26983e630ab2fbf28466dac457923904aaa6be60"
 # One new permitted worker-only checker transition off the exact blocked
 # M2 evidence S. It does NOT grant general tools/, merges, or root CI.
 M2_G2_SECOND_REFRESH_PARENT = "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c"
+# Third-party witness M2 copied THIS immutable main snapshot exactly; never
+# compare historical worker commit against today's changing main checker.
+M0_M2_SECOND_TOOL_SOURCE = "d902842a31fd6b032a5f1bab515b93c21f28b0aa"
+M0_M2_SECOND_TOOL_BLOB = "86c213e122c5c0a7b636105f3be4d1fb2ecc7899"
 # M3 second checker mirror is already complete. Freeze its original approved
 # source, too, before any further main tool change invalidates its history.
 M0_M3_SECOND_TOOL_SOURCE = "940498ccb2f3834e4287813bb250ebfb97f507fb"
@@ -223,15 +227,17 @@ def review_m2_g2_second_single_file_refresh(api,role,sha,control_sha):
     g.need(len(parents)==1 and
            parents[0].get("sha")==M2_G2_SECOND_REFRESH_PARENT,
            "second M2 checker mirror must directly follow blocked evidence S")
-    for anchor_sha in (M0_M2_REFRESH_CONTROL_ANCHOR,M0_M2_HISTORICAL_TOOL_SOURCE):
+    for anchor_sha in (M0_M2_REFRESH_CONTROL_ANCHOR,M0_M2_HISTORICAL_TOOL_SOURCE,
+                       M0_M2_SECOND_TOOL_SOURCE):
         anchor=api.get(f"compare/{anchor_sha}...{control_sha}?per_page=1")
         g.need(anchor.get("status") in {"ahead","identical"},
                "second M2 checker mirror missing immutable reviewed main ancestry")
-    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={control_sha}")
+    reviewed=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={M0_M2_SECOND_TOOL_SOURCE}")
     actual=api.get(f"contents/{M2_G2_REFRESH_PATH}?ref={sha}")
     g.need(reviewed.get("type")=="file" and actual.get("type")=="file" and
-           bool(reviewed.get("sha")) and reviewed.get("sha")==actual.get("sha"),
-           "second M2 checker mirror must copy byte-identical current main tool")
+           reviewed.get("sha")==M0_M2_SECOND_TOOL_BLOB and
+           reviewed.get("sha")==actual.get("sha"),
+           "second M2 checker mirror must match historical approved main Git blob")
     return {"approved_m2_g2_tool_refresh_v2":True,
             "first_parent":M2_G2_SECOND_REFRESH_PARENT,
             "sync_paths":[M2_G2_REFRESH_PATH]}
