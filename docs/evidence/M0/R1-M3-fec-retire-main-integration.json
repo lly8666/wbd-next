@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-M3-FEC-RETIRE-MAIN-010",
+  "branch": "main",
+  "source_sha": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+  "result": "PASS",
+  "artifact_verified": true,
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "scope": "SCOPED_RUST_LINUX_X64_FEC_RX_ABSOLUTE_HEAVY_DEADLINE_RETIRE_WITH_AUTHENTICATED_INPUT_FAKE_MONONS_TEST_ONLY",
+  "main_parent": "f5be4d8da46d5d10ccd8617752287d57d2d68e16",
+  "worker_origin": {
+    "role_id": "M3",
+    "branch": "work/m3-r1-codec",
+    "source_sha": "e8d62776ebf3258c038155f4637bd1524d6282b7",
+    "native_run": 38667240535,
+    "original_native_tests": "75/75 PASS",
+    "source_governance": 38667240599,
+    "source_governance_success_attempt": 2,
+    "evidence_S": "b4ed727b38cbf5166c812ba63af68080d0099951",
+    "cursor_H": "6fe261652afe0760f618dde02b279cb0bc57215d",
+    "H_governance": 38667890659
+  },
+  "imported_worker_exact_paths": [
+    "crates/wbd-codec/src/fec_rx.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs",
+    "crates/wbd-codec/src/fec_retire_pressure_tests.rs"
+  ],
+  "independent_main_workflow": ".github/workflows/r1-fec-retire-native.yml",
+  "code_history": [
+    {
+      "sha": "4aed5d5cc22393cbe5ec06e55b24f3f18d8bbeea",
+      "kind": "worker M3 exact FecRxOwner source import + 8 tests + compiled-once native 75/75 workflow",
+      "actions_count": 12,
+      "success_count": 11,
+      "failed": {
+        "workflow": "r1-record-auth-replay",
+        "run_id": 38669864304,
+        "reason": "Rust actual 75/75 PASS, old existing r1_ native CI gate expected only67, conclusion FAILURE"
+      },
+      "scoped_native_success": {
+        "run_id": 38669864229,
+        "native_tests": "75/75",
+        "source_sha": "4aed5d5cc22393cbe5ec06e55b24f3f18d8bbeea"
+      },
+      "other_same_source_successes": [
+        "r0-record-wire-framing",
+        "governance",
+        "r0-static-qualification-audit",
+        "r0-wire-codec",
+        "g2-scoped-bootstrap-native",
+        "r0-link-fec-mtu",
+        "r2-auth-receipt",
+        "r1-normal-off-replay",
+        "r1-linux-kernel-batch-native",
+        "r1-fec-on-native"
+      ]
+    },
+    {
+      "sha": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+      "kind": "fix old main r1-record-auth-replay exactly75 and source-hash new test, couple new FEC pressure workflow to the same SOURCE for dual check"
+    }
+  ],
+  "final_source_exact_actions": [
+    {
+      "workflow": "governance",
+      "run_id": 38670039087,
+      "source_sha": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "workflow": "r1-record-auth-replay",
+      "run_id": 38670039101,
+      "source_sha": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+      "conclusion": "SUCCESS",
+      "native_r1_tests": "75/75",
+      "build_job": 116210760657,
+      "consume_job": 116210962367,
+      "binary_sha256": "67978ef920985498fa77bf7bf54e842fdbeccc70a7be528155d069f85a0ab513",
+      "log_sha256": "296cd9643e9fb7455c7b920e1a92c4600d8b3710ef60436a7ba80d06e53ddabd",
+      "build_artifact": {
+        "id": 11944370662,
+        "digest": "sha256:f0683df16f4dc71edfc4a44096b4349efed958e1cdb9a0c77f406dd12eb493be"
+      },
+      "result_artifact": {
+        "id": 11943805870,
+        "digest": "sha256:4cea891a7cf6b1fc14a740a9e326a5d0db42ba2f2855acd08999c3da3c1e2fa1"
+      }
+    },
+    {
+      "workflow": "r1-fec-retire-native",
+      "run_id": 38670039058,
+      "source_sha": "260335486d4e3bfd4d50215f5840027e09fe94c9",
+      "conclusion": "SUCCESS",
+      "native_r1_tests": "75/75",
+      "new_cases": 8,
+      "build_job": 116210760569,
+      "consume_job": 116211044614,
+      "binary_sha256": "67978ef920985498fa77bf7bf54e842fdbeccc70a7be528155d069f85a0ab513",
+      "log_sha256": "19f16f3f6d01c3f1be27e525b15094e284cec95d3cda2987cb99f7b99d9e597f",
+      "build_artifact": {
+        "id": 11943840818,
+        "digest": "sha256:8db040bdf09ca426bd57d3ec7aaee55041007c771a8d58689c3abfb8d90f2198"
+      },
+      "result_artifact": {
+        "id": 11944265290,
+        "digest": "sha256:3d7e206a7b651b626113bb67e1a77891cc3a6f02fad0489d40e19ae63a8f5e5c"
+      }
+    }
+  ],
+  "verified_behavior": [
+    "FecRxOwner Heavy 3s and Compact 10s absolute deadlines preserve original Heavy expiry even when callback arrives much later",
+    "compact transition triggered by actual all-present/pressure remains at owner current time, not backdated incorrectly",
+    "one overdue expiry sweeps both Heavy and Compact and retires scope, no late systematic/parity resurrection",
+    "R=4/8/12 parity profiles, out-of-order repaired missing-only, corrupted final metadata tombstone, limited heavy/compact memory, wrong epoch/direction/generation, wrap and 56B old-Go fixture",
+    "original 67 native r1_ cases retained, new 8 adversarial cases pass"
+  ],
+  "not_claimed": [
+    "TRUSTED_GO_V4_SESSION_GENERATION",
+    "PRODUCTION_LIVE_FEC_INPUT",
+    "RAW_AF_PACKET",
+    "NATIVE_WINDOWS_ARM_EXECUTION",
+    "ISA_L_PERFORMANCE",
+    "500MBPS_LATENCY_CPU",
+    "PRODUCT",
+    "PHYSICAL"
+  ],
+  "next_action": "M0 review/import M1 ready batch SOURCE3460d4f or current M4 real Linux RX batch SOURCE2a4bc0e while worker branches independently progress; separately establish correct authenticated Go V4 cold exporter epoch/direction/generation; product NOT_RUN."
+}
