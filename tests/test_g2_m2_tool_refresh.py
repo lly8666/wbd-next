@@ -7,7 +7,7 @@ P=w.M2_G2_REFRESH_PATH
 PRE=w.M2_G2_REFRESH_PARENT
 SHA="d"*40
 MAIN="c"*40
-BLOB="b"*40
+BLOB=w.M0_M2_HISTORICAL_TOOL_BLOB
 role={"id":"M2","allowed_paths":["crates/wbd-recovery/","docs/devlog/M2/","docs/evidence/M2/",
       ".governance/workstreams/M2/cursor.json",".governance/workstreams/M2/requests/"]}
 
@@ -23,7 +23,7 @@ class API:
         if path.startswith("compare/"):
             return {"status":self.anchor}
         if path.startswith("contents/"):
-            return {"type":"file","sha":self.mainblob if f"ref={MAIN}" in path else self.blob}
+            return {"type":"file","sha":self.mainblob if f"ref={w.M0_M2_HISTORICAL_TOOL_SOURCE}" in path else self.blob}
         raise AssertionError(path)
 
 def edge(extra=None):
@@ -49,9 +49,12 @@ class OneTimeM2CheckerRefresh(unittest.TestCase):
     def test_reject_diverged_m0_control(self):
         with self.assertRaises(g.ContractError):
             w.review_m2_g2_single_file_refresh(API(anchor="diverged"),role,SHA,MAIN)
-    def test_reject_fake_main_blob(self):
+    def test_reject_fake_historic_main_blob(self):
         with self.assertRaises(g.ContractError):
             w.review_m2_g2_single_file_refresh(API(mainblob="a"*40),role,SHA,MAIN)
+    def test_historic_approval_survives_current_main_tool_upgrade(self):
+        self.assertTrue(w.review_m2_g2_single_file_refresh(
+            API(),role,SHA,MAIN)["approved_m2_g2_tool_refresh"])
     def test_reject_modified_worker_tool(self):
         with self.assertRaises(g.ContractError):
             w.review_m2_g2_single_file_refresh(API(blob="f"*40),role,SHA,MAIN)

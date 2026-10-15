@@ -7,7 +7,7 @@ P=w.M3_G2_REFRESH_PATH
 PRE=w.M3_G2_SECOND_REFRESH_PARENT
 SHA="d"*40
 MAIN="c"*40
-BLOB="e"*40
+BLOB=w.M0_M3_SECOND_TOOL_BLOB
 ROLE={"id":"M3","allowed_paths":["crates/wbd-codec/","docs/devlog/M3/",
      "docs/evidence/M3/",".governance/workstreams/M3/cursor.json"]}
 
@@ -22,7 +22,7 @@ class Api:
         if url.startswith("compare/"):
             return {"status":self.anchor}
         if url.startswith("contents/"):
-            return {"type":"file","sha":self.mainblob if "ref="+MAIN in url else self.blob}
+            return {"type":"file","sha":self.mainblob if "ref="+w.M0_M3_SECOND_TOOL_SOURCE in url else self.blob}
         raise AssertionError(url)
 
 def edge(extra=None):
@@ -32,7 +32,7 @@ def edge(extra=None):
     return dict(d,**(extra or {}))
 
 class SecondM3OneShot(unittest.TestCase):
-    def test_exact_parent_path_live_blob(self):
+    def test_exact_parent_path_historic_blob(self):
         result=w.review_m3_g2_second_single_file_refresh(Api(),ROLE,SHA,MAIN)
         self.assertTrue(result["approved_m3_g2_tool_refresh_v2"])
         self.assertEqual(w.verify_worker_commits(ROLE,[edge()]),1)
@@ -42,7 +42,7 @@ class SecondM3OneShot(unittest.TestCase):
     def test_extra_root_file(self):
         with self.assertRaises(g.ContractError):
             w.review_m3_g2_second_single_file_refresh(Api(paths=[P,"Cargo.lock"]),ROLE,SHA,MAIN)
-    def test_wrong_live_main_blob(self):
+    def test_wrong_historic_main_blob(self):
         with self.assertRaises(g.ContractError):
             w.review_m3_g2_second_single_file_refresh(Api(mainblob="f"*40),ROLE,SHA,MAIN)
     def test_anchor_lost(self):
