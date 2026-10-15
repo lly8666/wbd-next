@@ -248,7 +248,7 @@ mod tests{
         let out=receive_ready_udp(&rx,&mut slots,&fence);
         assert_eq!((out.attempted,out.received,out.status),(1,0,RxStatus::WouldBlock));
         assert_eq!(out.entry(0),Some(RxEntry::Unused));
-        assert_eq!(&b,[0x99;32]);
+        assert_eq!(b,[0x99;32]);
         assert_eq!(fence.outstanding(),0);
     }
     #[test]
@@ -390,7 +390,7 @@ mod tests{
         let out=receive_ready_udp(&rx,&mut slots,&fence);
         assert_eq!(out.status,RxStatus::Stopping);
         assert_eq!(out.received,0);
-        assert_eq!(&b,[0xaa;16]);
+        assert_eq!(b,[0xaa;16]);
         drop(lease);
         assert_eq!(fence.wait_drained_until(Instant::now()),StopResult::Drained);
     }
