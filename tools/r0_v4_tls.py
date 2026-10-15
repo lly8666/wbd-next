@@ -89,7 +89,7 @@ def consume(args):
     # Count the ten frozen historic tests PLUS the genuine failed-nonce
     # protected-handshake rollback, never any test-style name substring.
     required = "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback"
-    rollback_pass = bool(re.search(r"^--- PASS: "+required+r"(?: \\([^)]*\\))?$",run.stdout,re.M))
+    rollback_pass = bool(re.search(r"^--- PASS: "+required+r"(?: \([^)]*\))?$",run.stdout,re.M))
     result = {
         "schema_version": 1,
         "source_sha": args.source,
