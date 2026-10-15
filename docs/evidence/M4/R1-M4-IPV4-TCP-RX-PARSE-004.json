@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-IPV4-TCP-RX-PARSE-004",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "dd5a7dc7370d31a15afcbb4b71c53202ae89df90",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "BOUNDED_IPV4_TCP_SINGLE_FULL_DATA_PACKET_RX_BYTES_ONLY; NOT AUTHENTICATED RECORD OR NETWORK DRIVER",
+  "assignment": {
+    "main_decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15.md",
+    "source": "7d291133",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "branch": "work/m4-r1-platform",
+    "paths_unchanged": true
+  },
+  "source_paths": [
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs",
+    "crates/wbd-platform/src/lib.rs (owned module registration)"
+  ],
+  "contract": {
+    "supported": "One caller-delimited whole IPv4 packet, IPv4 20B no options, TCP DATA with 20B header or exact session-negotiated timestamp options, one nonempty ciphertext payload; seq32 nearest to caller-supplied trusted seq64.",
+    "strict_checks": [
+      "trusted unicast IPv4 tuple and nonzero ports",
+      "TCP/IPv4 actual src-dst tuple equals trusted cold state",
+      "IPv4 0x45 version-IHL, TOS zero, DF-only no fragment MF/offset, protocol6",
+      "exact total_length == actual byte length, max65535 and actual MTU",
+      "expected persona TTL=64 legacy/128 Windows11",
+      "independent one’s-complement IPv4 and TCP+pseudoheader full checksum (odd/even)",
+      "TCP data-offset 20..60, reserved bits zero, DATA flags ACK|PSH, urgent ptr zero",
+      "options only exact authenticated snapshot (NOP/EOL/explicit timestamp allowed)",
+      "no empty TCP body or silent trailing/coalesced packet bytes"
+    ],
+    "seq": "extend_seq32(anchor:u64,wire32:u32) computes signed modular nearest with strictly under 2^31, returns HalfSpaceAmbiguous exactly at 2^31 or OutsideU64 at bounds; never mutates trusted anchor.",
+    "output": "UnauthenticatedData<'a> borrows ciphertext slice (no copy or heap); checksum success is never AEAD or PN replay verification; M3/M0 owns authentication and actual delivery.",
+    "no_stream": "No TCP byte stream reconstruction, IP defragmentation, concatenated packet parse, OS RX syscall or packet synthesis."
+  },
+  "old_go_reference": {
+    "repo": "lly8666/wobuzhidao",
+    "source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "path": "internal/faketcp/packet.go",
+    "blob_sha": "6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b",
+    "golden_packet_hex": "4500002e0015400040064e31c0000228c6336428a7f801bb00000064000000c850180400cc2900007265636f7264",
+    "caveat": "old Go oracle source was pinned and its byte facts modeled; original Go test suite was NOT_EXECUTED in M4 Actions"
+  },
+  "native": {
+    "run_id": 38667179420,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "status": "SUCCESS",
+    "source_sha": "dd5a7dc7370d31a15afcbb4b71c53202ae89df90",
+    "target": "x86_64-unknown-linux-gnu",
+    "rustc": "1.85.1",
+    "build_job": 116201685913,
+    "consume_job": 116201797655,
+    "compiled_once": true,
+    "tests_passed": 31,
+    "tests_failed": 0,
+    "new_tests": 10,
+    "old_r1_tests": 21,
+    "build_artifact": {
+      "id": 11943285254,
+      "zip_sha256": "a6ae87ddf6cee3d1f27e0cc3d390162cd4d681150d320140af75b3385d9bb5e9",
+      "manifest_sha256": "77aa3e05ae3a512cdf02db1eaa7bc0148415fb3e39bf9d125d25c8fab1791e02",
+      "binary_sha256": "e45bf0f41080caecb7b804eff29c8f4c5b24e7210e8dbd9070950a0d6453804f"
+    },
+    "result_artifact": {
+      "id": 11942810516,
+      "zip_sha256": "e0c5dc81a50763c6ee6ae08d9f78a021c4107e8b92104996f46086d14f32aef3",
+      "result_json_sha256": "eb5bd13da4069a28683c1ce91f98c77e6bee0f9c6873c2dc9424e300f973cdb0",
+      "log_sha256": "aaff1d797532cff195755bb479bedfc8df25eba8c0623d8becb4cd18fcc10866"
+    },
+    "direct_review": "Downloaded both GitHub Actions artifact ZIP files, independent SHA256 verification of ZIP+binary+manifest+result.json+test.log; exact source and all 31 test names/ok confirmed.",
+    "new_test_names": [
+      "r1_rx_ipv4_tcp_round_trip_real_tx_bytes_even_odd_and_immutable",
+      "r1_rx_ipv4_tcp_pinned_old_go_packet_golden",
+      "r1_rx_ipv4_tcp_mtu_exact_minus_one_and_overlong",
+      "r1_rx_ipv4_tcp_fail_closed_version_ihl_fragment_length_and_trailing",
+      "r1_rx_ipv4_tcp_data_offset_flags_truncation_and_zero_payload",
+      "r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums",
+      "r1_rx_ipv4_tcp_options_require_exact_authenticated_snapshot",
+      "r1_rx_ipv4_tcp_seq32_wrap_nearest_and_halfspace_fail_closed",
+      "r1_rx_ipv4_tcp_unrelated_bad_packet_cannot_block_next_valid",
+      "r1_rx_ipv4_tcp_never_confuses_checksum_with_aead_authentication"
+    ]
+  },
+  "retained_failures": [
+    {
+      "source": "312cd2fb255bbdd5c649b5552f840c0b9df29d46",
+      "worker_run": 38667039568,
+      "result": "FAIL 29/31",
+      "actual": "two incorrect regression expectations: IP length high byte unchanged, TCP data offset 24 classifies as unsupported implicit options"
+    },
+    {
+      "source": "927a821a1b980a00fb47ff65e1f0f025d0215678",
+      "worker_run": 38667111409,
+      "result": "FAIL 30/31",
+      "actual": "test truncated packet did not refresh IP checksum, correctly rejected IpChecksum before EmptyData"
+    },
+    {
+      "source": "dd5a7dc7370d31a15afcbb4b71c53202ae89df90",
+      "run_id": 38667179416,
+      "workflow": "r0-fake-platform",
+      "result": "FAIL_HISTORIC_UNFILTERED_TEST_COUNT",
+      "assertions": "38/38 PASS: 7 r0 plus 31 r1, but old M4 branch R0 harness still expects exactly 7 tests",
+      "m0_shared_fix": {
+        "source": "40a8a53c8382d24b5f66fdf8e72d42d71a0ecc36",
+        "main_run": 38538899575,
+        "result": "7/7 PASS ON DIFFERENT SOURCE"
+      },
+      "claim": "NOT_FULLY_ALL_WORKFLOWS_GREEN_ON_WORKER_SOURCE"
+    }
+  ],
+  "same_source_regression_runs": [
+    {
+      "id": 38667179454,
+      "workflow": "g2-scoped-bootstrap-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38667179421,
+      "workflow": "r0-static-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38667179437,
+      "workflow": "r0-cross-abi",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38667179479,
+      "workflow": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38667179416,
+      "workflow": "r0-fake-platform",
+      "result": "FAIL_HISTORIC_FILTER"
+    }
+  ],
+  "not_run": [
+    "Actual AF_PACKET/recvmmsg native raw RX",
+    "Native Windows/ARM",
+    "Kernel VLAN/capture-direction/filter driver handling",
+    "Arbitrary TCP stream, segmentation/coalescing or IP fragmentation reassembly",
+    "M3 actual AEAD/PN replay and business delivery on this module in one main SOURCE",
+    "Production Go V4 admission and live product",
+    "End-to-end performance/physical"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SCOPED_PACKET_BYTE_PARSER_INTEGRATION_ONLY"
+}
