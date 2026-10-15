@@ -1110,9 +1110,13 @@ mod tests {
         let c=dir(2,WireDirection::ClientToServer);
         let mut x=global(4200,3);
         for d in [a,b,c] {x.register(d,wide_cfg(),MonoNs(999_999_980)).unwrap();}
+        let leases=[
+            x.grant(a,1400,10_000,MonoNs(999_999_981)).unwrap(),
+            x.grant(b,1400,10_000,MonoNs(999_999_981)).unwrap(),
+            x.grant(c,1400,10_000,MonoNs(999_999_981)).unwrap(),
+        ];
         let mut ids=Vec::new();
-        for (i,d) in [a,b,c].iter().copied().enumerate() {
-            let l=x.grant(d,1400,10_000,MonoNs(999_999_981)).unwrap();
+        for (i,(d,l)) in [a,b,c].into_iter().zip(leases).enumerate() {
             let (s,ca)=race_shadow(d,i as u64+1,999_999_982);
             ids.push(x.reserve_if_still_missing(l,&s,&ca,1400,
                 MonoNs(999_999_982)).unwrap());
