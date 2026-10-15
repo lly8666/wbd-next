@@ -495,7 +495,12 @@ func TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort(t *testing.T){
                 if se==nil||b.committed!=0||n!=0 {
                     t.Fatalf("failed bridge published epoch: server=%v n=%d owner=%+v",se,n,b)
                 }
-                if b.aborted==0 {t.Fatal("pre-commit reservation not aborted")}
+                if fail=="prepare" && b.aborted!=0 {
+                    t.Fatal("prepare rejection never minted an owner to abort")
+                }
+                if fail=="commit" && b.aborted!=1 {
+                    t.Fatal("failed commit must abort the already prepared owner once")
+                }
                 return
             }
             if ce!=nil||se!=nil || c==nil||s==nil ||
