@@ -7,7 +7,7 @@
   "assignment_epoch": 1,
   "source_sha": "7875137949f61fead1374d2933798c61814adb92",
   "code_source": "7875137949f61fead1374d2933798c61814adb92",
-  "result": "R2_NATIVE_55_55_PASS__CLEAN_CURSOR_ONLY_H_GOVERNANCE_PASS__FINAL_EVIDENCE_S3_PENDING_GOVERNANCE",
+  "result": "PURE_R2_NATIVE_55_55_PASS__H_GOV_SUCCESS__EVIDENCE_GOV_BLOCKED_MAIN_MOVEMENT",
   "prev_handoff": {
     "H": "014d636eaf0319ca3c0a456901b383d94b7214f1",
     "checkpoint": "f1fe570ed8b70a2b1e6e7b2da027d1215b4b655c",
@@ -119,7 +119,7 @@
     "Real driver/kernel, engine ABI and physical NOT_RUN",
     "No WinARM native, CPU/RSS product, 500Mbps or p99 evidence"
   ],
-  "next_action": "New immutable evidence S3 must pass its OWN live-ref scope Governance while it is HEAD; then cursor-only H (seq17, clear M0 request) must separately pass. No previous failed run is silently recast as PASS. Native code remains original exact SOURCE7875137 55/55, no product auth/perf claims.",
+  "next_action": "M0 coordinate stable main-control audit window or approved equally strict pinned-control policy, preserving all source/HEAD/role/path validations. M2 native55/55+G2/static PASS; H Governance38709247413 SUCCESS but evidence S3 Gov38711507683 FAIL, so task remains BLOCKED. Product/auth/physical NOT_RUN.",
   "governance_blocker": {
     "reason": "Repeated GitHub main branch movement during full audit; first source attempt also remote API disconnect. M2 cannot change root scope attest policy or force main quiescence.",
     "source_governance_run_id": 38706944070,
@@ -159,7 +159,20 @@
       "digest": "sha256:6fd465ae21bb47e3027ea44f5ffe7abc33b6dbdde13db139dc637727c8e421c5",
       "interpretation": "The legitimate cursor-only H already advanced the live branch HEAD, so an old S2 cannot be revalidated as branch HEAD; do not retry that historical run. Correct next step is a new evidence S3 from the validated H."
     },
-    "resolution": "Full scope H succeeded; no M0 root checker change or broad scope grant needed. New evidence S3 will be emitted from H and independently verified before final cursor-only H; retain all historical failed run attempts."
+    "resolution": "UNRESOLVED. H0c8f3bb ROLE_SCOPE_PASS, but fresh S3 while live HEAD failed due main movement, independently of stale-ref mistake. M0 stable window/rigorous pinned-control alternative still needed.",
+    "recovery_attempts": [
+      {
+        "source_sha": "9f4c3574caf49afdbfb38a5dbd9fdba7c8d13a85",
+        "kind": "new_head_evidence_S3",
+        "governance_run_id": 38711507683,
+        "attempt": 1,
+        "conclusion": "failure",
+        "job_id": 116343744144,
+        "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+        "artifact_id": 11960592215,
+        "digest": "sha256:57fe0d746d5f7ba9d936252c41e66a38ffe346f4c214a494aa5b56c3334c29d3"
+      }
+    ]
   },
   "current_handoff_attestation": {
     "H": "0c8f3bb68adcaf417aae737e1cdf981d936ab145",

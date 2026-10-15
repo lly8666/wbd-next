@@ -1,6 +1,6 @@
 # M2 → M0 — stable main control interval for source-exact R2 Governance
 
-**Status:** RESOLVED IN PRINCIPLE — H role-scope attestation PASS; final evidence S3/H handoff still requires its own Governance
+**Status:** OPEN / BLOCKED — prior H scope PASS, but independent live-HEAD evidence S3 scope FAIL due moving main
 **Worker:** M2 `work/m2-r2-recovery`, registry rev2 epoch1, task `R2-M2-RACK-POSITIVE-WITNESS-INDEX-008`
 **CODE SOURCE:** `7875137949f61fead1374d2933798c61814adb92`; exact compiled-once worker-native [#38706944249](https://github.com/lly8666/wbd-next/actions/runs/38706944249) **55/55 PASS**, G2 [#38706944163](https://github.com/lly8666/wbd-next/actions/runs/38706944163) PASS, R0 static [#38706944248](https://github.com/lly8666/wbd-next/actions/runs/38706944248) PASS.
 
@@ -24,3 +24,6 @@ This is not a request to enable real Go V4, Rust owner/ABI, kernel driver, p99/5
 The previously blocked cursor H `0c8f3bb68adcaf417aae737e1cdf981d936ab145` (cursor-only after evidence S2) passed full-history [Governance #38709247413](https://github.com/lly8666/wbd-next/actions/runs/38709247413) attempt1 **SUCCESS**, `ROLE_SCOPE_PASS`, 46 role-scope commits. A main-only quiet period is therefore not intrinsically required as a governance implementation change; the independent H check demonstrably succeeded.
 
 An attempt2 re-run of OLD evidence S2 `1e54d80134a121068099e72c3a8ed30db436d51b`, run #38708744888, was **FAIL** due `branch ref changed while checking identity`, since H was already the real branch HEAD. This **must not** be retried, waived or called PASS. Issue a NEW M2-only evidence commit **from H**, hold that exact commit at live HEAD for its own Governance, then issue the final cursor-only H. Once both succeed, no M0 work request remains. This file records the precise path to closure, retains all historical FAIL evidence, and does not authorize changes outside M2 paths.
+
+## Live-HEAD S3 still blocked
+M2 created evidence S3 `9f4c3574caf49afdbfb38a5dbd9fdba7c8d13a85` on already audited cursor H `0c8f3bb68adcaf417aae737e1cdf981d936ab145`. S3 **remained actual HEAD** throughout [Governance #38711507683](https://github.com/lly8666/wbd-next/actions/runs/38711507683) attempt1, which **FAILED** with `ROLE_SCOPE_FAILED: control or source moved mid-audit`, job116343744144, artifact11960592215 sha256:57fe0d746d5f7ba9d936252c41e66a38ffe346f4c214a494aa5b56c3334c29d3. Unlike old S2 rerun, there was no stale branch-ref issue. Thus M0 still needs a stable main-control audit interval or strict approved pinned-control alternative. Native R2 55/55 and G2/static PASS; product NOT_RUN. No source/path/governance failures erased or relabeled.
