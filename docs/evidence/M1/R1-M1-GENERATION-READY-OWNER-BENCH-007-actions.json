@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-GENERATION-READY-OWNER-BENCH-007",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "0979314cacf8931a90840ad312dd50e9e2777d04",
+  "result": "PASS_SCOPED_NATIVE_ONLY",
+  "artifact_verified": true,
+  "source_attested": true,
+  "scope": "M1 generation-fenced ready handoff tests and source-attested debug unit-test-only owner scope-validation P0. No authenticated/protocol/driver/production performance claims.",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38678588923,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38678588923",
+    "build_job": 116237725315,
+    "consume_job": 116237808337,
+    "compiled_once": true,
+    "runner": "ubuntu-24.04",
+    "toolchain": "rustc 1.85.1",
+    "tests_passed": 71,
+    "tests_failed": 0,
+    "previous_r1": 63,
+    "new_ready_owner_r1": 8,
+    "unrelated_r0_tests_filtered": 3,
+    "result_artifact_id": 11947336741,
+    "build_artifact_id": 11947146221,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38678588923/artifacts/11947336741",
+    "result_json_sha256": "0ce1f40a95f872cd62d76e0bd0ff32eb1a44eb2c4f64d8d7b041344ebb91259e",
+    "test_log_sha256": "fc9d299125b66996f0559046d724606bf5b00c0deb11badf1c2bec8fe73a8b20",
+    "binary_sha256": "d5ef59d3aeb4ac3133a4ca5af1e7689516b5f32c700e06e078fe0ca4a45ecbc8",
+    "verification": "Downloaded GitHub result artifact ZIP to container; inspected result.json and test.log, computed SHA256, verified exact source_sha/run/attempt, all 71 named r1_ tests and P0 structured measurements."
+  },
+  "new_tests": [
+    "r1_ready_owner_zero_and_one_honor_current_scope_no_copies",
+    "r1_ready_owner_thirty_two_old_and_new_never_mix_on_dispatch",
+    "r1_ready_owner_thirty_three_split_retire_old_reject_all_tails",
+    "r1_ready_owner_old_stale_offer_after_new_fresh_preserves_first_order",
+    "r1_ready_owner_concurrent_old_drop_and_stop_keeps_fences_exact",
+    "r1_ready_owner_restarted_aba_token_and_old_batch_rejected",
+    "r1_ready_owner_stop_and_fake_age_expiry_have_no_ready_resurrection",
+    "r1_ready_owner_p0_component_warmup_repeat_provenance"
+  ],
+  "same_source_actions": [
+    {
+      "run_id": 38678588850,
+      "workflow": "Governance",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38678588901,
+      "workflow": "G2 bootstrap",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38678588895,
+      "workflow": "R0 qualification audit",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38678588817,
+      "workflow": "R0 cross ABI",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38678588872,
+      "workflow": "R0 native ABI",
+      "conclusion": "failure"
+    }
+  ],
+  "root_shared_blocker": {
+    "run_id": 38678588872,
+    "status": "FAIL",
+    "cause": "Old M1 branch root tools/r0_abi_bundle.py matches literal '3 passed' against unfiltered Rust unit test output; actual binary returned rc0 with 74 passed. Does not qualify R0 native workflow.",
+    "owner": "M0",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+  },
+  "p0_evidence_ref": "docs/evidence/M1/R1-M1-GENERATION-READY-OWNER-BENCH-007-p0.json",
+  "p0_qualification": "Only debug Rust test-binary scoped validation costs, 3 warmup/repeat legs, unisolated process CPU tick readings. This P0 is NOT a dedicated isolated CPU runner, throughput, 32-frame full ready drain or product performance qualification.",
+  "proof": {
+    "old_new_dispatch": "LoanBatch stamped with scope token; checked_tx_ready and checked_rx_ready both require batch and provided token to match current owner; old-generation batch cannot masquerade as current via fresh token.",
+    "rx_pre_auth": "RX batch scheduling hint not treated as authentication.",
+    "no_hot_copy_or_batch_heap": "Borrowed views of <=32 existing frozen TX/unique RX handles, Arc token cloned only per batch header, no payload copies, no allocation in checked dispatch path.",
+    "fresh_first": "New generation first fresh dispatches before repair even while old loans remain.",
+    "stop_and_returns": "Concurrent old drop and stop, ABA stale token, fake MonoNs age, 0/1/32/33 edge cases proved; existing 63 tests retained."
+  },
+  "not_run": {
+    "production_data_plane": "NOT_RUN",
+    "trusted_go_v4_cold_session_source": "NOT_RUN",
+    "real_AF_PACKET_or_driver": "NOT_RUN",
+    "actual_500Mbps": "NOT_RUN",
+    "end_to_end_p99": "NOT_RUN",
+    "isolated_CPU_utilization": "NOT_RUN",
+    "release_benchmark": "NOT_RUN",
+    "Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "rtrb_loom_eventfd": "NOT_RUN",
+    "product": "NOT_RUN",
+    "go_v4": "DISABLED",
+    "engine_abi_features": 0
+  }
+}

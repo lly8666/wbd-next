@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "task_id": "R1-M1-GENERATION-READY-OWNER-BENCH-007",
+  "role_id": "M1",
+  "branch": "work/m1-r1-runtime",
+  "source_sha": "0979314cacf8931a90840ad312dd50e9e2777d04",
+  "runner": "GitHub Actions 1000093301",
+  "github_run_id": 38678588923,
+  "run_attempt": 1,
+  "runner_os": "ubuntu-24.04",
+  "rust_toolchain": "rustc 1.85.1",
+  "executable_profile": "Rust test binary debug",
+  "benchmark_name": "r1_ready_owner_p0_component_warmup_repeat_provenance",
+  "benchmark_type": "debug_test_binary_scope_validation_only",
+  "per_leg_warmup_iters": 10000,
+  "per_leg_measurement_pairs": 40000,
+  "handles_per_live_tx_batch": 32,
+  "loop": "read-only ScopedOwner checked_tx_ready on existing current 32-handle LoanBatch followed by rejection of old 32-handle LoanBatch; no buffer, socket, crypto, protocol send or fresh queue drain in timed region",
+  "data_origin": {
+    "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/38678588923",
+    "artifact_id": 11947336741,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38678588923/artifacts/11947336741",
+    "result_json_sha256": "0ce1f40a95f872cd62d76e0bd0ff32eb1a44eb2c4f64d8d7b041344ebb91259e",
+    "test_log_sha256": "fc9d299125b66996f0559046d724606bf5b00c0deb11badf1c2bec8fe73a8b20",
+    "binary_sha256": "d5ef59d3aeb4ac3133a4ca5af1e7689516b5f32c700e06e078fe0ca4a45ecbc8",
+    "source_exact_compiled_once": true,
+    "artifact_inspected_in_container": true
+  },
+  "samples": [
+    {
+      "leg": 0,
+      "warmup_iters": 10000,
+      "samples": 40000,
+      "accepted_p50_ns": 401,
+      "accepted_p99_ns": 411,
+      "stale_p50_ns": 30,
+      "stale_p99_ns": 31,
+      "paired_wall_ns": 19560997,
+      "process_cpu_ticks_unisolated": 2
+    },
+    {
+      "leg": 1,
+      "warmup_iters": 10000,
+      "samples": 40000,
+      "accepted_p50_ns": 401,
+      "accepted_p99_ns": 411,
+      "stale_p50_ns": 30,
+      "stale_p99_ns": 31,
+      "paired_wall_ns": 19473137,
+      "process_cpu_ticks_unisolated": 2
+    },
+    {
+      "leg": 2,
+      "warmup_iters": 10000,
+      "samples": 40000,
+      "accepted_p50_ns": 401,
+      "accepted_p99_ns": 401,
+      "stale_p50_ns": 21,
+      "stale_p99_ns": 31,
+      "paired_wall_ns": 19201862,
+      "process_cpu_ticks_unisolated": 2
+    }
+  ],
+  "medians": {
+    "accepted_p50_ns": 401,
+    "accepted_p99_ns": 411,
+    "stale_p50_ns": 30,
+    "stale_p99_ns": 31,
+    "paired_wall_ns": 19473137
+  },
+  "CPU_note": "Only process-wide /proc/self/stat ticks, no hz calibrated, not isolated, tests can run in parallel: NOT a valid CPU utilization or cycles/packet figure.",
+  "boundaries": {
+    "throughput_500Mbps": "NOT_RUN",
+    "actual_TX_RX_ready_drain_profile": "NOT_RUN",
+    "real_AF_PACKET": "NOT_RUN",
+    "actual_driver": "NOT_RUN",
+    "Go_authenticated_cold_session_source": "NOT_RUN",
+    "release_benchmark": "NOT_RUN",
+    "native_Windows_ARM": "NOT_RUN",
+    "production": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product_p99": "NOT_RUN"
+  }
+}

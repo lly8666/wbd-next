@@ -26,3 +26,6 @@ Exact worker SOURCE `e0a9f64d5c17d8085c52f09a083b9689535f00d1` compiled native w
 
 ## Latest M1 006 observed root CI mismatch
 At exact source d60a69312cc9878e3b09a1598280c89dfd4da6d8, worker-native run 38674812277 passed 63 tests, whereas old shared R0 ABI workflow 38674812438 failed after its Rust binary passed 66 tests. M0 remains owner of the shared ABI test selector and worker branch synchronization. Governance code-source run 38674812385 separately failed twice because main moved during audit.
+
+## R1-M1-GENERATION-READY-OWNER-BENCH-007
+At exact M1 SOURCE `0979314cacf8931a90840ad312dd50e9e2777d04` the native worker [38678588923](https://github.com/lly8666/wbd-next/actions/runs/38678588923) was **71/71 PASS**, but shared old branch-local R0 native ABI [38678588872](https://github.com/lly8666/wbd-next/actions/runs/38678588872) consumer **FAIL**, despite Rust binary rc0 **74/74 passed**. The stale "3 passed" unfiltered-output root selector requires M0 shared harness synchronization; M1 has no permission to change it. Scope owner component-P0 samples are source-attested in M1 evidence, but an isolated dedicated CPU runner and full ready-drain release benchmark require M0 CI ownership.
