@@ -4,24 +4,24 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 7,
-  "checkpoint_sha": "9a25ae179e8bfd050f25c289930d81af5b96b896",
+  "sequence": 8,
+  "checkpoint_sha": "a4a8e5605e09f333c357c3556b7c7be06533a2ae",
   "progress": "partial",
-  "task_id": "R2-M2-GLOBAL-SPARSE-002",
-  "current_task": "M2 R2-M2-GLOBAL-SPARSE-002 scoped allocator already complete at CODE fb916f24, 22/22 native38598294561 SUCCESS; evidence S8297df98 Governance38598682806 SUCCESS. M0 recovered cursor main-only ref structure failure after H1384b306 Governance38598929953 attempt3 ROLE_SCOPE_PASS but missing branch file. Recovery log S9a25ae17; replacement H seq7 only. Product/driver/perf NOT_RUN.",
-  "why_now": "M0 explicit user request to handle M2 issue; Governance38598929953 attempts1/2 failed concurrent main control movement; rerun attempt3 showed actual missing context_ref to main-only assignment decision absent on M2 branch, while code and owner assignment unchanged.",
-  "done_when": "M2 native source fb916f2467d40b6cc0612d1182525a553d8e6872 remains 22/22 scoped PASS Actions38598294561. M0 recovered log S9a25ae179e8bfd050f25c289930d81af5b96b896; local branch-invalid context_ref excluded only, current main registry still authoritative rev2 epoch1; replacement cursor-only H sequence7 Governance required; no new production or test qualification.",
-  "next_action": "M0 review M2 exact native22/22/evidence and recovery H result, later integrate actor global quotas and actual driver accounting on a dedicated main SOURCE. M2 itself waits for new explicit scoped assignment; do not claim live V4, 500Mbps, or product PASS.",
+  "task_id": "R2-M2-GLOBAL-BATCH-COMPLETION-003",
+  "current_task": "Pure R2 process-global repair batch result settlement implemented; 28/28 compiled-once native tests passed, production result provenance/engine integration remains M0-owned",
+  "why_now": "M0 newly assigned R2-M2-GLOBAL-BATCH-COMPLETION-003 on active rev2 epoch1 main registry; existing process budget needed strict accepted-prefix, one uncertain slot, evidence-bound suffix refund.",
+  "done_when": "Native Actions compiled once, 22 old + 6 new r2_ batch fake-clock tests pass on exact code SOURCE; evidence S and cursor-only H, validated 0/1/32/33 mapping, multiple directions and epochs, stale result/no fake refund; no platform/root Cargo edits.",
+  "next_action": "No additional M2 task claimed. M0 owns M4 platform proof adapter, proper ordered batch submission and verified NotAttempted suffix, engine integration and cross-crate/production regression. Wait for new main assignment.",
   "unverified": true,
-  "last_tested_source": "fb916f2467d40b6cc0612d1182525a553d8e6872",
+  "last_tested_source": "e77e0ded7cc2c73c94bd4ab16a2e3cb5625f24f6",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-GLOBAL-SPARSE-002.json"
+    "docs/evidence/M2/R2-M2-GLOBAL-BATCH-COMPLETION-003.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/evidence/M2/R2-M2-BUDGET-001.json",
-    "docs/devlog/M2/R2-M2-GLOBAL-SPARSE-002.md"
+    "docs/devlog/M2/R2-M2-GLOBAL-BATCH-COMPLETION-003.md",
+    "docs/evidence/M2/R2-M2-GLOBAL-SPARSE-002.json"
   ],
-  "partial_summary": "Recovery by M0, not M2 development: original H1384b306 Governance38598929953 attempt1/2 FAIL main control moved, same H rerun attempt3 ROLE_SCOPE_PASS then structure FAIL from missing docs/decisions/M0-parallel-worker-atoms-2026-10-14.md on M2 branch. Actual artifact11915160297 captured reason. This decision remains on main and is authoritative in registry, but not a valid M2 branch-local cursor reference. Removed just absent hot ref, retained existing 3 local refs; recovered log S9a25ae17. M2 code SOURCE fb916f24 native22/22 unchanged; last_tested_source preserved; no product/performance verification. H sequence7 required."
+  "partial_summary": "M0 main registry rev2 M2 epoch1 formally assigned batch task; prior H2ebd475 seq7 Governance38602789109 SUCCESS. First batch code S5e1c9ab native38667220770 FAILED 26/28: fake-clock fixture registered one direction at0 after prior fresh at1; corrected fixture only in S e77e0de, native38667347598 compiled once 28/28 r2_ PASS (22 old,6 new), G2 38667347511 SUCCESS, R0 static38667347492 SUCCESS. Exact e77e0de Governance38667347494 FAILED main/source moved mid-audit (not code failure). Evidence S a4a8e56 carries both historical failures and exact actual artifacts. H checkpoint evidence S, last_tested_source corrected code S. Batch semantics max32 IDs, validated shape, accepted prefix driver-only, optional 1 uncertain at prefix, only proof-tagged not-attempted suffix refund, unproven held; no fresh HOL, kernel/Go/live product/perf/physical NOT_RUN; Go V4 DISABLED. Stop after one atomic task."
 }
