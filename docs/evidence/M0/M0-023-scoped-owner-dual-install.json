@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "normal-build-actual-scoped-owner-with-protected-crypto-two-owner-lifecycle",
+  "source_sha": "0f1351bfc5b2ec4f32d1a38667d61c0cf50584c2",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "The exact Actions build/consume jobs hash-checked SOURCE, run, attempt, all declared inputs and precompiled binary SHA256 in the same run; GitHub API artifact digests independently queried as metadata, ZIP bytes not separately re-hashed.",
+  "git": {
+    "code_changes": [
+      "crates/wbd-engine/src/v4_owner_crypto.rs",
+      "crates/wbd-engine/src/v4_probe_bridge.rs"
+    ],
+    "worker_refs_changed": false,
+    "go_handshake_code_changed": false
+  },
+  "implementation": {
+    "normal_build": "ProtectedScopedOwner now owns M1's true EarlyRxOwner wrapping ScopedOwner's TxOwner+RxOwner and the normal-build Rust ProtectedScopedCrypto on one candidate/generation",
+    "callsite": "Existing Go EstablishServerV4 private ownerBridge.prepare(frozen,rxBoundary) followed by final protected reply, DetachTransition, commit(early,assoc.SenderNext())",
+    "transaction": "Prepare constructs both RX/TX queues + C2S/S2C AEAD and bounded replay + fresh generation; after Go Detach Rust flushes bounded early RX atomically then enables Active; on failure no Active publish",
+    "owner_stop": "deactivates AEAD/PN and stops both owned queues, preserves borrowed old generation LoanBatch until return; idempotent",
+    "anti_forgery": "The 248B input is UNTRUSTED; test FFI is feature-gated and must never count as independent Go credential authority or a public installer. Ordinary ABI symbols continue to lack cold installation and features remain zero.",
+    "test_reuse": "Feature-restricted FFI now delegates to production-compiled ProtectedScopedOwner. No second owner activation or business delivery helper was created."
+  },
+  "exact_source_actions": [
+    {
+      "kind": "go_native_scoped_owner",
+      "run_id": 38761554851,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "build_job_id": 116513846502,
+      "consume_job_id": 116514705450,
+      "artifacts": [
+        {
+          "id": 11986271446,
+          "type": "build",
+          "digest": "sha256:8fd1118bb12a7fd71fb1af3413e78a37df2fd42b18f3e1f8aef3135ce6c4a252"
+        },
+        {
+          "id": 11986121643,
+          "type": "result",
+          "digest": "sha256:912568371c2ee6299a54ddeaacb43b987999a73b19cd869740a8e99c20c65232"
+        }
+      ],
+      "go_tests": [
+        "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+        "TestR0V4NativeRustProtectedAEADReplayAllCiphers"
+      ],
+      "go_ciphers": [
+        "ChaCha20-Poly1305",
+        "AES-128-GCM",
+        "AES-256-GCM"
+      ],
+      "rust_tests": "r0_m0_native_probe_local_fresh_generation_and_bounded_phases 1/1",
+      "negative_cases": [
+        "precommit RX drain refused",
+        "precommit AEAD open refused",
+        "invalid RX or TX wire limit preflight refused, no half install",
+        "bounded early and boundary validation",
+        "duplicate commit refused",
+        "old generation Stop while RX slab borrowed STOP_INCOMPLETE then quiesced after return",
+        "late generation/after Stop refused",
+        "AES/ChaCha real AEAD PN 2,0,1 accepted without hole waiting; repeat, corruption, reverse-direction rejected"
+      ]
+    },
+    {
+      "kind": "native_functional",
+      "run_id": 38761554967,
+      "result": "SUCCESS",
+      "jobs": [
+        116513846075,
+        116513900195,
+        116514386030,
+        116514386238,
+        116514386255,
+        116514386322,
+        116514386466
+      ],
+      "build_artifact": {
+        "id": 11984929587,
+        "digest": "sha256:b9bbbcfa3b62b641d3f8d7a14f8fd200b05d8c04a15eaf96d7982efb70137146"
+      },
+      "note": "Five functional verification groups all PASS; compiled binary reused; unrelated component tests do not qualify product"
+    },
+    {
+      "kind": "native_abi",
+      "run_id": 38761554960,
+      "result": "SUCCESS",
+      "jobs": [
+        116513847880,
+        116514380782
+      ],
+      "artifacts": [
+        {
+          "id": 11986186465,
+          "digest": "sha256:4f343c0620d82f4be19883692a1ee0eba8ddbadf02d7b9f22ead035bc581889b"
+        },
+        {
+          "id": 11986315832,
+          "digest": "sha256:b28dd599277b031b50701c0503b1ddea0754f290f58291b1ca35cced6b82c052"
+        }
+      ]
+    },
+    {
+      "kind": "cross_abi",
+      "run_id": 38761554842,
+      "result": "SUCCESS",
+      "jobs": [
+        116513845669,
+        116513846376,
+        116514497478,
+        116514497738
+      ],
+      "target_native_execution": "NOT_RUN"
+    },
+    {
+      "kind": "g2_bootstrap_native",
+      "run_id": 38761554939,
+      "result": "SUCCESS",
+      "jobs": [
+        116513845850,
+        116514142122
+      ]
+    },
+    {
+      "kind": "r0_static_audit",
+      "run_id": 38761554892,
+      "job_id": 116513847497,
+      "result": "SUCCESS",
+      "artifact_id": 11985762850,
+      "artifact_digest": "sha256:310f294cb4b1e72adc50170d5b1f3271b0b24ccc5d300103b32b2c939bace3ac"
+    },
+    {
+      "kind": "governance_push",
+      "run_id": 38761554893,
+      "job_id": 116513846328,
+      "result": "SUCCESS",
+      "artifact_id": 11986355956,
+      "artifact_digest": "sha256:3dbc67b4e36dc29a571a6d82c58251f085a3c356768f9fbf9ad916e07ce2f641",
+      "selftests": "NOT_RUN",
+      "design_models": "NOT_RUN",
+      "optional_best_effort_continuity": "OBSERVABILITY_WARNING_ModuleNotFoundError_tools"
+    }
+  ],
+  "not_qualified": {
+    "production_cold_install": "NOT_IMPLEMENTED",
+    "end_to_end_authenticated_business": "NOT_RUN",
+    "normal_fec_off_bidirectional_first_arrival": "NOT_RUN",
+    "production_driver_held_loan_B01_B04": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN",
+    "production_features": 0,
+    "windows_arm_target_native_execution": "NOT_RUN",
+    "note": "Test-tagged FFI can accept self-consistent 248 bytes but is not a production authority. Functional tests only prove same native composition exercised by real protected Go test callsite; no production route or business callback. Stronger proof requires actual production ingress."
+  },
+  "next_action": "Route real Go V4 protected Detach early and subsequent RX through this production-compiled ProtectedScopedOwner's existing actual ScopedOwner queues into real AEAD/PN authenticated business delivery, without a test-only chain. Prove Normal/FEC-off first arrival and real M4 Linux driver-held Stop B01-B04 on exact-source Actions; capability remains 0."
+}

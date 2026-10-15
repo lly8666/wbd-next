@@ -521,5 +521,24 @@
     "activation_decision_ref": "docs/decisions/M0-G2-worker-activation.md"
   },
   "test_manifest_claim": "Case coverage is conservative: no B/R/M/I/C/L/F/A/G/P ID is fully PASS solely from R0 probes. Statuses name exact tested subsets only. Original-Go real record witness plus Rust opaque structural framing is recorded as R0-RECORD-FRAMING; it does not upgrade full C01–C04. L01 is PARTIAL_R0_WIRE_ONLY, NOT complete L01, based on actual old-Go LINK/FEC header tests and Rust structural parsing.",
-  "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run."
+  "test_manifest_qualification": "STATIC_AUDIT_ONLY. Real data-plane tests are separate and have not run.",
+  "m0_023_scoped_owner_install": {
+    "code_source_sha": "0f1351bfc5b2ec4f32d1a38667d61c0cf50584c2",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-scoped-owner-dual-install.json",
+    "core": "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "actual_owner": "M1 ScopedOwner + EarlyRxOwner with TX and RX installed as one private normal-build object",
+    "actual_caller": "Go EstablishServerV4 private credential-checked V4 owner hook, exercised via feature-gated probe only",
+    "exact_rx_boundary": "Go PrepareTransition",
+    "exact_tx_boundary": "Go SenderNext after protected reply and DetachTransition",
+    "phase": "Prepared->Active only after both queue and crypto preflight and Detach",
+    "owner_stop": "idempotent original generation batch-loan fence",
+    "limitations": "No public C production installer; Go positive proof currently only via private native test probe; no real business delivery or kernel driver lease",
+    "product_qualification": "NOT_RUN",
+    "first_business_normal_fec_off": "NOT_RUN",
+    "true_linux_driver_loan_B01_B04": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN",
+    "production_abi_features": 0
+  }
 }
