@@ -540,5 +540,22 @@
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN",
     "production_abi_features": 0
+  },
+  "m0_023_scoped_authenticated_rx": {
+    "code_source_sha": "6e310f28617c2dc238beaa9e9d586be38df1eb93",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-scoped-authenticated-rx.json",
+    "method": "ProtectedScopedOwner::drain_authenticated",
+    "actor": "Actual M1 ScopedOwner/EarlyRxOwner RX loan batch and actual Rust ReplayProtectedLaneRx",
+    "tested_wire": "Real Go V4 TLS-derived client C2S sealed records through feature-only C probe, copied to Rust owner-owned slab, then owner drain and AEAD/PN",
+    "guard": "LINK callback invoked only after valid AEAD and unique packet number; HEALTH/control, replay, corrupt and wrong-direction records never become LINK",
+    "first_business_delivery": "NOT_RUN",
+    "link_reassembly": "NOT_RUN",
+    "normal_off_bidirectional": "NOT_RUN",
+    "real_linux_tun_raw_and_driver_loan_B01_B04": "NOT_RUN",
+    "positive_rust_production_auth_authority": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN",
+    "production_abi_features": 0
   }
 }

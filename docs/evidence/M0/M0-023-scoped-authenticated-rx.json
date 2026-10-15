@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "go-verified-native-records-real-scoped-rx-batch-aead-pn-link-ready",
+  "source_sha": "6e310f28617c2dc238beaa9e9d586be38df1eb93",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "GitHub Actions build job compiled exact SOURCE once; consume job compared GITHUB_SHA/run_id/run_attempt, all input SHA256 and three exact binary SHA256 to build manifest, then executed those binaries. Artifact archive digests independently read from GitHub API, ZIPs not locally hashed.",
+  "files": [
+    "crates/wbd-engine/src/runtime/generation.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go"
+  ],
+  "implementation": {
+    "normal_build": "ProtectedScopedOwner::offer_after_active and drain_authenticated use M1 EarlyRxOwner/ScopedOwner real generation-fenced RX queues; LoanBatch::as_mut_slice only crate-local while ledger is alive. No alternate crypto/delivery implementation is created.",
+    "source_trust": "Go credential-checked private EstablishServerV4 obtains frozen keys, exact Prepare boundary and post-reply SenderNext. Test feature adapter copies external Go-encrypted wire into Rust owner slab. Cold 248-byte grammar itself is NOT authentication, and positive production C authority is NOT implemented.",
+    "drain": "One owned RxPacket is decrypted in-place with actual ReplayProtectedLaneRx.open_unique_in_place; only kind=LINK and PN unique call the supplied synchronous LINK-consumer callback; kind=HEALTH/control counted separately, replay/invalid/corruption dropped; pre-Detach/Commit and after Stop are fenced. Caller-preallocated Vec returned after owning batch is recycled, without second payload copy.",
+    "scope": "Authenticated LINK bytes delivered to a callback, NOT the application. LINK fragment inspection/reassembly, TCP carriage reassembly, real platform I/O, TX business, and physical exit are NOT_RUN.",
+    "limits": {
+      "early_slots": 32,
+      "early_bytes": "server_limit*32",
+      "ready_slots": 64,
+      "ready_bytes": "server_limit*64",
+      "replay_pn_per_second": 1000,
+      "cache_horizon_ms": 3000,
+      "metadata_budget_bytes": 8192
+    }
+  },
+  "tests": {
+    "go_actual_tls": [
+      "TestR0V4NativeRustProbeActualProtectedFreshOwner",
+      "TestR0V4NativeRustProtectedAEADReplayAllCiphers"
+    ],
+    "three_cipher_ids": [
+      1,
+      2,
+      3
+    ],
+    "checks": [
+      "Go C2S actual encrypted wire enters M1 Rust owned slab and ready batch after verified protected session and Commit",
+      "RX AEAD/PN accepts out-of-order PN 2,0,1",
+      "duplicate PN cannot reenter LINK callback",
+      "tamper and wrong-direction TX key cannot call LINK callback",
+      "authenticated Health control kind cannot call LINK callback",
+      "before Commit and after Stop/old generation cannot call LINK callback",
+      "Go FakeTCP queued early bytes before Detach remain no business delivery (previous native observation only)",
+      "held RX LoanBatch Stop remains incomplete until original generation loan returned"
+    ],
+    "rust_test": "r0_m0_native_probe_local_fresh_generation_and_bounded_phases 1/1",
+    "normal_ffi_features": 0
+  },
+  "actions": [
+    {
+      "run_id": 38766796843,
+      "attempt": 1,
+      "result": "PASS",
+      "build_job_id": 116532001115,
+      "consume_job_id": 116532986189,
+      "artifact_build": {
+        "id": 11989796864,
+        "digest": "sha256:bfb911469a78270f81fc6f05cfbbc78e2489ef31acaedb013006e5f6fdd99d94"
+      },
+      "artifact_result": {
+        "id": 11990026860,
+        "digest": "sha256:4939b27b8416341e915b913a68ed6cff052bf5df16ff408b4e90791f6a7b59b5"
+      }
+    },
+    {
+      "run_id": 38766796692,
+      "scope": "native-functional five verified groups",
+      "result": "SUCCESS",
+      "build_job_id": 116532055701,
+      "verify_job_ids": [
+        116532488418,
+        116532488439,
+        116532488496,
+        116532488642,
+        116532488649
+      ],
+      "artifact_build_id": 11990316426,
+      "artifact_build_digest": "sha256:a96640954563fe11978e0f137e1ffc7cef11d0c16de65555d675b98e9fa2e82d"
+    },
+    {
+      "run_id": 38766796846,
+      "scope": "native ABI",
+      "result": "SUCCESS",
+      "jobs": [
+        116532001219,
+        116532710762
+      ],
+      "artifact_result_id": 11989216706,
+      "digest": "sha256:8bebf5b59cca09e6132917784ef6bbef26b1b59ff226b58946a49f5d4ea4242f"
+    },
+    {
+      "run_id": 38766796709,
+      "scope": "Windows GNU + Linux ARM cross ABI builds and static consume only",
+      "result": "SUCCESS",
+      "job_ids": [
+        116532000265,
+        116532000707,
+        116532787526,
+        116532787651
+      ],
+      "target_native_execution": "NOT_RUN"
+    },
+    {
+      "run_id": 38766796744,
+      "scope": "G2 native bootstrap",
+      "result": "SUCCESS",
+      "build_job": 116532000828,
+      "consume_job": 116532338463
+    },
+    {
+      "run_id": 38766796878,
+      "scope": "lightweight push Governance",
+      "result": "SUCCESS",
+      "job_id": 116532001803,
+      "selftests": "NOT_RUN",
+      "design_models": "NOT_RUN",
+      "artifact_id": 11990111482,
+      "digest": "sha256:19c871498a5d70f6d62555a05bdce1d957a717dd945c1b59eb82dd76447854ae"
+    },
+    {
+      "run_id": 38766796694,
+      "scope": "R0 static qualification audit",
+      "result": "SUCCESS",
+      "job_id": 116532000692,
+      "artifact_id": 11989416520,
+      "digest": "sha256:ca560b122067db31595a65998f539ee5a40cc02ca62c35fdb2a0f25f5a9a4cab"
+    }
+  ],
+  "functional_start_gate": {
+    "can_start_now": "COMPONENT_AND_AUTHENTICATED_LINK_CALLBACK_INTEGRATION_TESTS_ONLY",
+    "first_real_application_delivery": "NOT_RUN",
+    "remaining": [
+      "Link framing/reassembly plus actual application's Normal/FEC-off RX sink and one complete typed business packet",
+      "Bidirectional real TX/receiver path using protected Go session identity and proper session stop/restart isolation",
+      "Linux owned namespace real TUN/raw driver ingress/output and actual held kernel driver loan Stop B01–B04"
+    ],
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "estimate": "Three remaining functional integration gates; not an engineer-hours/commit-count prediction."
+  },
+  "next_action": "Join authenticated LINK callback to existing M3 LinkView/ReassemblyTable + M1 product receive dispatcher on real protected Go session, prove one Normal/FEC-off application payload first arrival without test-only delivery shortcut; then production driver I/O and held-loan Stop. Do not enable features before true E2E."
+}
