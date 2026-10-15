@@ -4,24 +4,26 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 13,
-  "checkpoint_sha": "89291d54d4ef7d53d49091a2e50ea00cb380b19d",
-  "progress": "partial",
-  "task_id": "R2-M2-REVERSE-GRANT-OWNER-BENCH-006",
-  "current_task": "Completed scoped M2 reverse repair grant owner and bounded 2-tunnel P0 synthetic cost contract: code SOURCE25642589 native compiled once 44/44 PASS, G2 bootstrap/static PASS. M0 exact one-time root checker refresh bde5728; H Governance38683609942 SUCCESS and closed recovery evidence S89291d Governance38683931339 SUCCESS. No full product claims.",
-  "why_now": "Prior seq12 H7fe75bc was blocked pending reliable full-history G2 audit. Its Governance38683609942 is now ROLE_SCOPE_PASS with 33 scoped commits after M0-approved byte-identical checker update. Evidence S89291d closed M0 structural bound request and Governance38683931339 SUCCESS.",
-  "done_when": "All 38 previous plus 6 new scoped native R2 tests PASS (44/44) exact compiled-once run38678654629; two independent reverse route scopes, fake time, 0/1/32/33, old epoch and uncertain debit, no false ACK; source-locked AB/BA/AB synthetic owner scenario wall/process CPU ticks and VmRSS/VmData observed. Allocation counter NOT_INSTRUMENTED, product performance NOT_RUN. Approved checker refresh and final evidence/H Governance tracked.",
-  "next_action": "No next M2 task claimed. M0 alone owns real Go V4 protected source/session attestation, Rust owner/driver integration, privileged AF_PACKET, native WinARM, P1–P3 and product physical. Wait for next formally assigned main registry M2 task.",
+  "sequence": 14,
+  "checkpoint_sha": "deff79215b6214aeafb28ede45d1aa28d118459b",
+  "progress": "blocked",
+  "task_id": "R2-M2-BOUNDED-TIMER-BURST-007",
+  "current_task": "R2 bounded 10k owner timer index algorithm implemented; exact CODE SOURCE ba7b451 compiled-once native 51/51 PASS (44 old+7 new), G2/bootstrap and R0 static SUCCESS; Governance FAIL: M0-owned historical checker refresh compared to newly changed live main blob. Source/evidence check cannot certify role scope until M0 fixes its immutable historical exception.",
+  "why_now": "M0 main next wave formally assigned burst007 on active M2 rev2 epoch1 after previous cursor seq13 H901abe61 Governance38684127224 SUCCESS. Existing on_timer repeated four full-map sweeps for each 32-of-10000 burst; index fix and counted tests now native51/51. Current main root checker evolved so historic M2 one-time tool mirror blob26983e6 no longer equals live main blob817934b.",
+  "done_when": "Preserve 44 prior and add 7 deterministic r2_ tests incl 10k due 313 polls at<=32 nodes/event, 10k queue timeouts 313 polls, 10k hard expiry release, stale gen, ACK/expiry and 32/33 grants/fresh independence; one compiled-once native run38689135611 51/51 SUCCESS, historic G2/static SUCCESS. Evidence Sdeff792, SOURCE Governance38689135617 FAIL and evidence Governance38689484046 FAIL same M0 dynamic checker-pinning issue, not Rust. Requires M0 approved root correction then own evidence/H Governance.",
+  "next_action": "M0 must fix historical M2 checker review to compare immutable M0-approved blob/source, not current main mutable checker, or explicitly authorize new safe sync/branch migration while retaining complete bounded per-commit role/path checks. See open request. M2 waits; no force push, new root edit, duplicate same failed Actions, or product claim.",
   "unverified": true,
-  "last_tested_source": "25642589f0feb12b44304fd21842c507a9314d35",
+  "last_tested_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.json"
+    "docs/evidence/M2/R2-M2-BOUNDED-TIMER-BURST-007.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M2/requests/M2-CHECKER-HISTORIC-PIN-007.md"
+  ],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/devlog/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.md",
-    "docs/evidence/M2/R2-M2-RECEIPT-REVERSE-SCOPE-005.json"
+    "docs/devlog/M2/R2-M2-BOUNDED-TIMER-BURST-007.md",
+    "docs/evidence/M2/R2-M2-REVERSE-GRANT-OWNER-BENCH-006.json"
   ],
-  "partial_summary": "M2 unchanged rev2 epoch1 wave4 reverse-grant-owner-bench006 code SOURCE25642589 native38678654629 44/44 PASS compiled-once, 3 repeated AB/BA/AB synthetic component cost legs wall/process ticks/RSS/VmData, heap allocation counter NOT_INSTRUMENTED. G2 source38678654565/R0 static38678654572 PASS. Original Governance38678654568 FAIL hard G2_BASE<=64; M0 approved exact one-time checker blob mirroring from H018a07c to bde5728, bounded <=96 and fully auditing each commit. Refresh Gov38683108958 and evidence Gov38683382300 FAIL because main moved; H7fe75bc Gov38683609942 SUCCESS ROLE_SCOPE_PASS 33 scoped role commits. Evidence S89291d Governance38683931339 SUCCESS closes M0 request. Final cursor-only H seq13 checkpoint S89291d; no new M2 work, GoV4 trusted origin, real AF_PACKET, product/physical/500Mbps/p99 NOT_RUN."
+  "partial_summary": "M2 seq13 H901abe61 clean Gov38684127224; M0 formal burst007 rev2 epoch1. R2 old on_timer repeatedly scanned all 10k entries per each 32 candidate poll; CODE SOURCE ba7b451 adds BTreeSet hard expiry and wake indexes with eager deletion and <=32 wake operations per poll, authenticated RACK witness can separately cause indexed O(live) rebuild; 7 new tests, compiled-once native38689135611 51/51 PASS (44 old), G2 bootstrap38689135649 and R0 static38689135604 SUCCESS. SOURCE Governance38689135617 FAIL and evidence Gov38689484046 FAIL: M0 live checker Git blob817934 differs from historic M0-approved worker one-time refresh blob26983e6; old selector incorrectly demands current live equality, retroactively invalidating prior consent. Evidence Sdeff792 and M0 request. Cursor-only H seq14 checkpoint evidence S, progress blocked, not product qualified. Actual Go V4, driver, real P0, 500Mbps/p99/physical NOT_RUN."
 }
