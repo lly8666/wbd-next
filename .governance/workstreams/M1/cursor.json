@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 4,
-  "checkpoint_sha": "206d60192f21116220fb5709d9469c7f86623363",
+  "sequence": 5,
+  "checkpoint_sha": "ec3b264d16a56db9ff8157ba6654cdda5aa09cbc",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-FEC-PARITY-READY-003",
-  "current_task": "R1-M1-FEC-PARITY-READY-003 scoped parity-ready TX deadline/stop proof COMPLETE, M0 composition and shared harness sync pending",
-  "why_now": "M0 main registry rev2 epoch1 assigned R1-M1-FEC-PARITY-READY-003 in docs/decisions/M0-parallel-worker-atoms-2026-10-14.md; M1 branch unchanged and prior H verified.",
-  "done_when": "Exact worker native compiled-once Rust r1_ tests cover first fresh before 32ms parity, parity-only wake at an absolute fake MonoNs deadline, repair/parity/fresh queue full+stop+return races, bounded parity service/fairness and no wrong early wake. Keep existing M1 tests passing, own S/evidence/H and Governance; real rtrb/loom/eventfd remains separate M0 dependency pin.",
-  "next_action": "M0 consume exact M1 source 20809638 and native Actions38598602128 evidence; integrate only with M3 authenticated FEC parity and M4 driver on main. M0 coordinate shared R0 ABI harness synchronization (branch old selector run38598602157 FAIL); M1 await next explicit scoped atom.",
+  "task_id": "R1-M1-READY-BATCH-004",
+  "current_task": "R1-M1-READY-BATCH-004 owner-local ready-only TX batch (<=32) COMPLETE; M0 integration and root shared R0 ABI harness issue remain",
+  "why_now": "M0 main registry goal/done_when assigns R1-M1-READY-BATCH-004 on unchanged active rev2 epoch1 M1 branch; decision docs/decisions/M0-parallel-worker-atoms-2026-10-15.md is main-only.",
+  "done_when": "Exact own SOURCE compiled-once native r1_ tests: empty/1/32/33 packet batch capacity, full independent repair/parity vs fresh, first systematic ahead of due/undue parity, bounded secondary progress under persistent fresh, stop and last frozen loan/return. Keep all preceding M1 tests and own evidence S/H/Governance; no production SPSC/loom/eventfd claim.",
+  "next_action": "M0 review exact M1 code SOURCE 3460d4f and compiled-once worker native run38667033577 (39/39) before main integration with M4 batch kernel. M0 coordinate old worker-branch R0 ABI harness selector (38667033555 FAIL; Rust 42/42 rc0). M1 wait for next assigned scoped atom.",
   "unverified": false,
-  "last_tested_source": "20809638ba86eed25aee463a7bbba9a002761799",
+  "last_tested_source": "3460d4f4630da3bfb1d9a0cfc522158adc14645b",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-FEC-PARITY-READY-003-actions.json"
+    "docs/evidence/M1/R1-M1-READY-BATCH-004-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M1-FEC-PARITY-READY-003 scoped done_when met at exact source 20809638: worker native Actions38598602128 SUCCESS compiled once, 29/29 r1_ (19 prior+10 parity), actual result artifact11910593258 and binary/log hashes inspected. Independent slot/byte/age bounded parity, absolute fake MonoNs deadline, FEC/off no parity allocation, fresh first before 32ms, repair/parity finite fairness, O(1) hot ready peek, stop/return backlog. Governance38598602253, G2 38598602233, R0 audit38598602378, cross-ABI38598602272 SUCCESS; R0 native ABI38598602157 FAIL on stale worker branch shared tools/r0_abi_bundle.py '3 passed' marker (actual Rust 32/32 rc0), M0 request open. Code S cfaf19e then optimized S 20809638, evidence S 206d6019, cursor-only H follows. No M3 FEC encoding integration, rtrb/loom/eventfd/driver/Windows/perf/product/physical, V4 disabled, feature0. Not an all-CI PASS or product qualification."
+  "partial_summary": "R1-M1-READY-BATCH-004 local done_when met at exact SOURCE 3460d4f: compiled-once worker native Actions38667033577 SUCCESS, 39/39 r1_ including 10 new batch cases and 29 unchanged old. Downloaded result ZIP11943125094, parsed result.json and test.log with SHA256 hashes. TX appends at most min(32, already free caller Vec slots) immutable FrozenRecord handles without payload copies or batch heap allocation; preserves fresh-first, bounded repair/parity fair service, absolute MonoNs wake, stop and last-loan returns. Exact-source Governance38667033464, G2-bootstrap38667033614, R0 static audit38667033481, cross-ABI38667033661 SUCCESS; R0 native ABI38667033555 FAIL due to worker-branch old root marker expecting '3 passed' on unfiltered Rust binary; actual Rust 42/42 rc0. M0 request remains open; do not mark all-CI/product PASS. Code S3460d4f evidence Sec3b264 H cursor-only follows. No real rtrb/loom/eventfd/kernel driver/Windows/production/performance/physical; Go V4 disabled, ABI flags0."
 }
