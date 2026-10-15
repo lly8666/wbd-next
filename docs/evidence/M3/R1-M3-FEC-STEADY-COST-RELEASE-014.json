@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-FEC-STEADY-COST-RELEASE-014",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+  "result": "PARTIAL_DEBUG_CORRECTNESS_PASS_RELEASE_ACTIONS_NOT_RUN_GOVERNANCE_BLOCKED",
+  "paths": [
+    "crates/wbd-codec/src/fec_p0_cost_tests.rs",
+    "docs/devlog/M3/M0-REQUEST-FEC-STEADY-RELEASE-014.md"
+  ],
+  "source_ownership": "M3-owned test-only code and own M0 coordination note; no new production FecOrigin or Go exporter; no root Cargo/lock/shared ABI/CI edits",
+  "requested": {
+    "new_test_cases": [
+      "r1_steady_four_scope_auth_replay_pressure_and_independent_expiry",
+      "r1_steady_release_same_source_fresh_vs_reused_owner_cost"
+    ],
+    "steady": "Per-scope LaneTxCrypto and RX persistent across batches, warmups, and three measurement repetitions, no fake ciphertext or PN reuse; preseal outside active timing",
+    "compared_fresh": "Prior M3-013 test helper constructs fresh RX per 64 authentic presealed records in the same source, with 192/896B FEC shards",
+    "real_crypto": "ChaCha20-Poly1305 real aws-lc-rs, raw8B HP, record PN unique per persistent scope",
+    "scope": "Two tunnels x both directions, separate direction keys, bounded 4 Heavy/4 Compact, absent production V4",
+    "release_target": "On source-exact Rust1.85.1 ubuntu24.04 x64, compile once cargo test --release --locked -p wbd-codec --no-run then run same-binary named test in one job. >=1.05s active warmup and three >=1.125s active measurements each of fresh/steady x AEAD/FEC x 192/896 (24 result rows).",
+    "metrics": "Per-thread CPU ticks, active measured wall, wire bytes, batch-average p50/p99 ns/record; no individual packet p99 and no bandwidth inference."
+  },
+  "native_debug_actions": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38682956912,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 116251362572,
+    "consume_job_id": 116251509213,
+    "rust_toolchain": "1.85.1",
+    "target": "x86_64-unknown-linux-gnu",
+    "compile": "cargo test --locked -p wbd-codec --no-run",
+    "profile": "debug",
+    "compiled_once": true,
+    "prior": 96,
+    "new": 2,
+    "passed": 98,
+    "failed": 0,
+    "filtered_out": 26,
+    "binary_sha256": "d071813c51c8f653b2474590f4e403b943b41adb0d5320467a26cf2701986d20",
+    "log_sha256": "516d03c3b8f94ed56f7f4fd5f3062de8007a0a7bf124bcb3adf0405174eec59b",
+    "build_artifact": {
+      "id": 11948787585,
+      "digest": "sha256:08363539211868d5451d3c4b51e086174393b6a8679c444fe45d076337981c6e"
+    },
+    "result_artifact": {
+      "id": 11948712608,
+      "digest": "sha256:5ac4d84449950e0386bebbd88d402174b829ae5a439f1a6b156265750389b2e8"
+    },
+    "print_marker": "M3_STEADY_RELEASE profile=DEBUG state=NOT_RUN",
+    "release_values_measured": false
+  },
+  "same_source_actions": [
+    {
+      "run_id": 38682956919,
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38682956847,
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38682956978,
+      "workflow": ".github/workflows/r0-link-fec-wire.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38682956912,
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38682956995,
+      "workflow": ".github/workflows/governance.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38682956873,
+      "workflow": ".github/workflows/r0-codec.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38682957006,
+      "workflow": ".github/workflows/r0-record-framing.yml",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "governance_block": {
+    "run_id": 38682956995,
+    "job_id": 116251362754,
+    "attempt": 1,
+    "conclusion": "failure",
+    "exact_error": "ROLE_SCOPE_FAILED: M3 checker refresh is not byte-identical to main-owned checker",
+    "exact_comparison": {
+      "path": "tools/worker_scope_ci.py",
+      "main_blob_sha": "26983e630ab2fbf28466dac457923904aaa6be60",
+      "worker_blob_sha": "1d27c4ec8d02035fc53d4e657f2cd7427373f8df"
+    },
+    "role_owned_fix": false,
+    "m0_request": "Main-owned checker must be reviewed/synced into worker branch following M0 governance rules, not modified by M3. Only M0 should trigger or implement source-locked release Actions."
+  },
+  "historical_failed_build": {
+    "source_sha": "44336b1f1dd0af0fd4074933619c3425f48e9381",
+    "run_id": 38682890926,
+    "job_id": 116251163852,
+    "error": "Rust E0502 mutable/immutable overlapping borrow in added isolation test",
+    "correction_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81"
+  },
+  "release": {
+    "status": "NOT_RUN",
+    "reason": "Existing worker-native workflow builds Debug only; existing P0 release workflow is main-only wbd-engine test, not M3 worker codec release fixture. No GitHub Actions dispatch tool available to M3, root workflow M0-owned.",
+    "measured_release_rows": 0,
+    "reusable_owner_steady_vs_fresh_release_ratio": "NOT_RUN",
+    "source_qualified_release_p99": "NOT_RUN"
+  },
+  "unsupported": {
+    "genuine_go_v4_authenticated_positive_origin": "NOT_RUN",
+    "production_fec_on": "DISABLED",
+    "production_normal_off_product_e2e": "NOT_RUN",
+    "native_windows_arm": "NOT_RUN",
+    "isa_l": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_QUALIFIED"
+  },
+  "next_action": "M0 must reconcile owned tools/worker_scope_ci.py checker mismatch and arrange source-locked release codec worker job; after real release artifact, M3 can compute same-run fresh/steady ratios and only then satisfy release evidence and H success. Do not claim atom014 DONE until then."
+}

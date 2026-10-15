@@ -10,3 +10,8 @@ M3 is authorized to write codec and its own evidence only. The pre-existing \`.g
 The source test deliberately constructs fresh authentic ciphertext (unique PN per persistent lane) outside the steady measurement slices, while the old 013 fresh-owner path includes receiver creation per 64 records. Per-thread CPU ticks are read before/after each batch (100Hz clock granularity: a source of measurement noise); report both active wall and measured CPU. Percentiles are of **batch-average** wall ns per record, not packet latency. This is a **component P0**, not live V4 origin, network, ISA-L, 500Mbps, or product throughput.
 
 **Status at initial M3 request:** release Actions NOT_RUN; no release numbers can be claimed until M0 executes and supplies real result+artifact at exact SOURCE.
+
+
+## Additional required M0 governance repair (observed Actions)
+
+Candidate SOURCE `88a12027c61386be2709e1e8b01eb8f3c547ae81` passes **98/98 Debug** on native worker run `38682956912` but its independent Governance run `38682956995` failed exact error `ROLE_SCOPE_FAILED: M3 checker refresh is not byte-identical to main-owned checker`. `tools/worker_scope_ci.py` main blob is `26983e630ab2fbf28466dac457923904aaa6be60`, M3 branch blob is `1d27c4ec8d02035fc53d4e657f2cd7427373f8df`. This tool is outside M3 allowed_paths: M0 must review and reconcile this shared checker before accepting worker Governance as PASS, using its own approved sync procedure. Do not ask M3 to edit/overwrite/force-push root governance files. Release test remains NOT_RUN, not an accepted component performance result.
