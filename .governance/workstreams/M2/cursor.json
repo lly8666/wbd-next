@@ -4,26 +4,25 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 17,
-  "checkpoint_sha": "ad215b13c01d6b06ab51cfcfd402c0bcbdd73cfc",
-  "progress": "blocked",
+  "sequence": 18,
+  "checkpoint_sha": "4ecb8f47a7d3adc5a26e1387e6cdcb1684459400",
+  "progress": "ready_for_integration",
   "task_id": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
-  "current_task": "Pure R2 dynamic RACK witness prefix-index CODE source7875137 native 55/55 compiled-once PASS, G2/bootstrap/static PASS. Previous blocked H0c8f3bb Gov38709247413 SUCCESS (46 role commits). Fresh S3 9f4c357 Gov38711507683 FAIL moving main; S4 28aa619 Gov38712108247 FAIL deterministic second M2 checker historical-live-blob predicate; evidence S5 ad215b1 Gov38712773554 FAIL same predicate. M0 root policy fix required; source R2 unaffected.",
-  "why_now": "Resumed interrupted seq16 H0c8f3bb and learned its Governance38709247413 SUCCESS, but re-running stale evidence S2 1e54d80 Gov38708744888 attempt2 FAIL branch ref changed, so constructed new live-HEAD evidence S3 9f4c357. S3 Gov FAIL moving main. S4 Gov revealed root-owned second checker review compares historically approved blob86c213 on M2 sync0a120ee against newly evolved main blobcf46d8; S5 reproduced same. M2 cannot patch M0 script or grant self a third checker mirror.",
-  "done_when": "Retain original 51 R2 and four new native RACK prefix tests 55/55 SUCCESS worker-native38706944249 exact source7875137, G2 38706944163 and R0 static38706944248 SUCCESS, per-positive <=4 counted BTreeSet index operations with 10k shadow, 32+33, NotSent/replay/expiry behavior. No CPU or heap instrumentation. Full Governance on new evidence S/H currently BLOCKED by retroactive second mirror check; require M0 root policy remedy.",
-  "next_action": "M0 must fix tools/worker_scope_ci.py reviewer for SECOND exact M2 checker sync 0a120ee, compare with immutable authorized main source d902842a/blob86c213 not changing current main cf46d8; preserve pinned parent4b0e137, single file only, bounded complete <=99 per-commit audit. Issue formally approved worker root mirror or branch migration if needed, then requalify new exact-HEAD evidence and cursor-only H. Do not force-push/retry identical FAIL. Remain M2 standby blocked; Go V4, raw driver, real CPU/p99/500Mbps/physical NOT_RUN.",
+  "current_task": "Scoped R2 positive witness prefix-index atom complete: pure wbd-recovery code SOURCE7875137949f61fead1374d2933798c61814adb92 55/55 native PASS; M0 authorized third immutable checker mirror 5bfacc7814183fc631a827725ee432c1c42b029d Governance38721567164 ROLE_SCOPE_PASS 51; recovered evidence S4ecb8f47 Governance38733820654 ROLE_SCOPE_PASS 52 with 60/60 governance drills. Real engine/auth/performance/physical NOT_RUN.",
+  "why_now": "Recovery after interrupted M2 seq17 H35c45f and approved strict one-path checker update: audited HEAD 5bfacc7; independently verified source-exact Governance run/artifact, then recorded new evidence S4ecb8f47. Old fail runs preserved; independent non-gating continuity audit JSON parse error explicitly retained, not handoff proof.",
+  "done_when": "Pure R2 native 55/55 compiled-once PASS unchanged code source7875137, M0-authorized checker sync exact parent35c45f path+blob SHA matches main snapshot4dfd0a18. Governance checker S5bfacc7 run38721567164 PASS 51 scoped; recovered evidence S4ecb8f4 run38733820654 PASS 52 scoped/60 governance drills. Recovery artifacts verified by sha256. H cursor-only; product/CPU/alloc/GoV4/physical NOT_RUN.",
+  "next_action": "No additional M2 task claimed. M0 owns actual Go V4 authenticated feedback adapter, M1 frozen-handle proof, engine/platform integration, shared budgets and product/performance/physical validation; await next formally assigned M2 task. The read-only continuity drill JSON parse remains non-gating BLOCKED and must not be mistaken for product qualification.",
   "unverified": true,
   "last_tested_source": "7875137949f61fead1374d2933798c61814adb92",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.json"
+    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.json",
+    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008-governance-recovery.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M2/requests/M2-SECOND-CHECKER-IMMUTABLE-BLOB-008.md"
-  ],
+  "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.md",
     "docs/evidence/M2/R2-M2-BOUNDED-TIMER-BURST-007.json"
   ],
-  "partial_summary": "Previous seq16 H0c8f3bb checkpoint S2 1e54d80, Gov38709247413 SUCCESS ROLE_SCOPE_PASS 46 scope commits despite previous Gov failures. M2 task008 CODE SOURCE7875137949f61fead1374d2933798c61814adb92 removes per-positive O(10k) RACK rebuild with dynamic earliest-prefix BTreeSet, tests worker-native38706944249 55/55 PASS (51 old+4), G2 38706944163/static38706944248 PASS; product auth/perf NOT_RUN. Old source Gov38706944070 attempts1/2 FAIL API disconnect/moving main; initial evidence Gov38707876126 attempts1/2 FAIL moving main; S2 Gov38708744888 attempt1 FAIL moving main, later attempt2 FAIL stale branch HEAD. New S3 9f4c357 Gov38711507683 FAIL moving main. S4 28aa619 Gov38712108247 FAIL 'second M2 checker mirror must copy byte-identical current main tool', job116345754702 artifact11960752841 sha256:383aa1dbf1229fa5000004b1ba349022885c488af0df1dfe16bb5289f19aff7e. M2 second exact approved one-file sync0a120ee from M0 source d902842a has Git blob86c213; current main root tool blobcf46d8; live-blob equality retroactively invalidates approval, deterministic even without branch movement. New request M2-SECOND-CHECKER-IMMUTABLE-BLOB-008 asks M0 historical frozen pin. Evidence S5 ad215b13 Governance38712773554 FAIL same reason job116348008390 artifact11961188317 sha256:c45e57a15836f0368b0e9ebe53121226c3e8e2ca31e7958e9d1ce5935c525e2a. Cursor-only H seq17 checkpoint S5, progress blocked, open request only new M0 policy fix. No role bypass; wait for M0."
+  "partial_summary": "Recovered 008 after M2 cursor seq17 blocked: original code SOURCE7875137949f61fead1374d2933798c61814adb92 worker-native38706944249 55/55 PASS (51 retained +4); G2/bootstrap38706944163 +static38706944248 PASS. M0 main one-shot exception M2-G2-008-checker permits a direct single-file mirror from parent35c45f2; worker commit5bfacc7 copied approved main blob69bebb9 exactly, its Governance38721567164 job116377123525 PASS ROLE_SCOPE_PASS 51 commits, artifact11965512099 digest9f2784... verified. Recovery evidence S4ecb8f47 logs prior failures unchanged and closes superseded M0 request; Governance38733820654 job116417939192 PASS ROLE_SCOPE_PASS 52 commits and 60 governance drills, artifact11970714480 digestbe1f29... verified. Both governance runs' non-gating continuity audit returned BLOCKED JSON parse error (not product scope). Cursor H seq18 checkpoint S, ready_for_integration (not integrated); GoV4/auth/CPU/driver/500Mbps/physical NOT_RUN. No new task claimed."
 }
