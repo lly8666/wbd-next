@@ -315,7 +315,7 @@ mod tests {
             (6,0x60,RxError::FragmentedOrUnexpectedFlags),
             (7,0x01,RxError::FragmentedOrUnexpectedFlags),
             (9,0x11,RxError::WrongProtocol),
-            (2,0x00,RxError::TotalLengthMismatch),
+            (2,0x01,RxError::TotalLengthMismatch),
         ] {
             let mut bad=original.clone();bad[offset]=newval;
             assert_eq!(parse_data_packet(&bad,trusted(None,1500)),Err(expected), "offset {offset}");
@@ -334,7 +334,7 @@ mod tests {
         let original=wire(b"record",100,None);
         for (off,value,expected) in [
             (32,0x40,RxError::InvalidTcpHeader),
-            (32,0x60,RxError::InvalidTcpHeader),
+            (32,0x60,RxError::UnsupportedOptions),
             (32,0xf0,RxError::InvalidTcpHeader),
             (32,0x51,RxError::InvalidTcpHeader),
             (33,0x12,RxError::InvalidDataFlags),
