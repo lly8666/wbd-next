@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "7fdad158f07b9b130b7d05160d63714d1b40d33c",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Test-only opt-in Linux x86_64 GNU AF_PACKET SOCK_RAW loopback-only bounded lifecycle and BPF-based no-ambient-capture contract; actual positive raw packet RX/TX RAW_RX_NOT_RUN due missing CAP_NET_RAW on native runner.",
+  "authority": {
+    "main_registry_revision": 2,
+    "assignment_epoch": 1,
+    "active_role": true,
+    "allowed_paths_unchanged": true,
+    "prior_h": "bd413690f7b62c2161b8ef704251e211684fdc69",
+    "prior_cursor_sequence": 11,
+    "goal": "R1-M4-AF_PACKET-ISOLATED-LOOPBACK-008"
+  },
+  "code_paths": [
+    "crates/wbd-platform/src/linux_loopback_raw.rs",
+    "crates/wbd-platform/src/lib.rs"
+  ],
+  "implementation": {
+    "target": "#[cfg(all(test,target_os=linux,target_arch=x86_64,target_env=gnu))] only: module absent in non-test release binary; no public OS backend or Go V4 activation",
+    "opt_in": "Loopback::open(explicit_opt_in:bool,cookie:u32) returns NotOptedIn before opening any FD if false; otherwise validates ONLY interface 'lo', actual if_nametoindex, MTU<=1500 and owner generation 8 before capability and socket creation",
+    "capability": "Linux actual effective CAP_NET_RAW check first; absent or raw socket EPERM returns Denied(1). Prior M4 -006 isolated child capset test proves kernel EPERM on AF_PACKET raw, retained in 60 prior native tests. No UDP fallback.",
+    "socket": "Two OwnedFd AF_PACKET SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC sockets created with protocol ZERO inactive; selective classic BPF magic cookie+IPv4 src/dst127.0.0.1 and TCP src/dst49321/49322 installed before bind. Only RX is subsequently bound IPv4 to verified ifindex('lo'); TX sendto sockaddr_ll same lo. Never physical, promiscuous, ambient capture or other interface. Early errors close owned descriptors.",
+    "kernel_rx": "Test-only recvmmsg(MSG_DONTWAIT|MSG_TRUNC) at most32 independent stack borrowed slots, sockaddr_ll and 14B L2 explicit offset, strict native ifindex/proto/PACKET_HOST/generation/MTU/truncation classification; no arbitrary dynamic L2/VLAN parsing. Exact generated full L2+IPv4/TCP test frame checked; even valid bytes remain UNAUTHENTICATED.",
+    "buffers": "BorrowFence CAS protects synchronous socket send and receive; begin_stop fences later calls; stopping with outstanding borrow returns Pending until last guard drops; 33rd caller buffer never submitted.",
+    "native_positive_qualification": "ACTUAL RAW_RX_NOT_RUN: GitHub Actions runner lacks effective CAP_NET_RAW and new conditional raw loopback native RX/TX positive test returns before opening/binding/sendto/recvmmsg. No positive packet received or transmission was observed. This is an explicitly unexecuted conditional branch, not PASS.",
+    "config_cli_gui": "Not applicable: module compiled under cfg(test) only, no runtime setting, external control or production release path."
+  },
+  "native": {
+    "run_id": 38683027173,
+    "run_attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "status": "SUCCESS",
+    "source_sha": "7fdad158f07b9b130b7d05160d63714d1b40d33c",
+    "target": "x86_64-unknown-linux-gnu",
+    "rust": "1.85.1",
+    "compiled_once": true,
+    "build_job": 116251584605,
+    "consumer_job": 116251662631,
+    "tests_passed": 64,
+    "tests_failed": 0,
+    "new_tests": 4,
+    "prior_tests": 60,
+    "build_artifact": {
+      "id": 11949155256,
+      "zip_sha256": "ceb8eda206d716f86b0f87b8309d8230429aa5580df4e4ea5a11e1f8bf676800",
+      "manifest_sha256": "47d204c63d562643da630d9ef6f9ce0dfc37a7c220d3bb740412128b5018bd15",
+      "binary_sha256": "9451602d7e8e040465a4a1ea4a3b094dca32ceff03251a36a543e99a1159c7df",
+      "binary_bytes": 10586848
+    },
+    "result_artifact": {
+      "id": 11949175155,
+      "zip_sha256": "a84cd042c6253a5d3fb1404ac9e38e3a3bca620bcc6ec0567c23ee6a5d749f33",
+      "result_json_sha256": "b2db59e7b42d7f613fa56d8d0cc8f594851a1f888baaa0abc52ab3067f144dd4",
+      "test_log_sha256": "54294889ffbd6010508b1b08fe2bb487c1bb2bc544c644208a8d374762478985"
+    },
+    "artifact_audit": "Downloaded both exact GitHub ZIP files; independently recomputed ZIP, manifest, native executable, result JSON and test.log SHA256; manifest/source/run/attempt/binary match; actual native output: test result 64 passed 0 failed 7 filtered; explicit stderr RAW_RX_NOT_RUN lack CAP_NET_RAW in two tests, no RAW_LOOPBACK_PASS.",
+    "new_test_names": [
+      "r1_packet_loopback_optin_deny_without_side_effects",
+      "r1_packet_loopback_raw_capability_negative_or_real",
+      "r1_packet_loopback_ipv4_tcp_full_frame_checksum_native_fixture",
+      "r1_packet_loopback_cap_gated_controlled_raw_rx_tx_truncation_stop"
+    ]
+  },
+  "same_source_workflows": [
+    {
+      "id": 38683027173,
+      "workflow": "worker-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38683026988,
+      "workflow": "g2-scoped-bootstrap-native",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38683027147,
+      "workflow": "r0-static-qualification-audit",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38683027174,
+      "workflow": "r0-cross-abi",
+      "result": "SUCCESS",
+      "scope": "compile/ABI; not native Win/ARM"
+    },
+    {
+      "id": 38683027067,
+      "workflow": "governance",
+      "result": "SUCCESS"
+    },
+    {
+      "id": 38683027118,
+      "workflow": "r0-fake-platform",
+      "result": "FAIL",
+      "cause": "Historical branch root R0 exact-seven test inventory rejects 71 Rust assertions (7 old R0+64 R1), despite actual 71/71 Rust assertions PASS; M0 shared root workflow fix on different SOURCE."
+    }
+  ],
+  "historical_failures": [
+    {
+      "source_sha": "d89975d4494264db801b689b8eca8b359267c4cd",
+      "workflow": "worker-native",
+      "run_id": 38682980950,
+      "result": "FAIL_COMPILE",
+      "cause": "New test-only checksum assignment simultaneously mutably and immutably borrows IPv4 header, Rust E0502; replaced with two-step header_checksum local in final SOURCE."
+    },
+    {
+      "source_sha": "7fdad158f07b9b130b7d05160d63714d1b40d33c",
+      "workflow": "r0-fake-platform",
+      "run_id": 38683027118,
+      "result": "FAIL_OLD_R0_HARNESS_COUNT",
+      "actual": "71/71 Rust assertions passed; no all-workflow success"
+    }
+  ],
+  "not_run": [
+    "Positive AF_PACKET raw socket open/bind, packet TX/RX on Linux lo: RAW_RX_NOT_RUN due CAP_NET_RAW absence",
+    "Any raw RX traffic capture, live TCP/IPv4 data plane/AEAD record delivery",
+    "Physical interface, NIC promiscuity, ambient capture, VLAN or BPF perf",
+    "Linux privileged raw positive fixture, Windows/ARM native, 500Mbps/p99/CPU/RSS/physical product evaluation",
+    "Real protected Go V4 ColdSnapshot->Rust authenticated owner generation transition"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SOURCE_SCOPED_CODE_REVIEW; NO POSITIVE RAW_RX_NATIVE_QUALIFICATION"
+}
