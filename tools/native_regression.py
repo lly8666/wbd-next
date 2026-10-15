@@ -122,7 +122,9 @@ def consume(group):
     binary.chmod(binary.stat().st_mode | 0o100)
     out = Path("native-results") / group
     out.mkdir(parents=True, exist_ok=True)
-    command = [str(binary.resolve()), "--nocapture", "--test-threads=1"]
+    # libtest captures successful-test stdout. With --nocapture, a diagnostic
+    # print can split "test NAME ... ok" and corrupt an otherwise valid ledger.
+    command = [str(binary.resolve()), "--test-threads=1"]
     if spec["filter"]:
         command.append(spec["filter"])
     try:

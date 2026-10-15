@@ -392,7 +392,13 @@ def audit_remote(api, role_id):
                         "action": "READ_EXISTING_RUN" if runs else "VERIFY_NOT_DISPATCHED"})
     if pending and result["state"] == "CLEAN":
         result = {"state": "RECOVERY_REQUIRED", "reason": "open external intents require reconciliation"}
-    need(api.head("main") == control and api.head(role["branch"]) == head, "remote ref moved during audit; refresh")
+    from tools.scope_audit import authority, owner
+    final_control = api.head("main")
+    final_registry = api.file(".governance/registry.json", final_control)
+    need(authority(registry, role) == authority(final_registry, owner(final_registry, role["branch"])),
+         "writer authority changed during continuity audit; refresh")
+    if api.head(role["branch"]) != head:
+        result = {"state": "RECOVERY_REQUIRED", "reason": "branch advanced; inspect new delta before continuing"}
     result.update({"role": role_id, "control_sha": control, "worker_sha": head,
                    "checkpoint_sha": checkpoint, "open_requests": pending,
                    "qualification": "NOT_EVALUATED_BY_CONTINUITY_AUDIT"})

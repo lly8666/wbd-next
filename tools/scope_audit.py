@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import sys
+from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools import governance as g
@@ -46,6 +47,25 @@ def complete_delta(compare, maximum):
     return ids
 
 
+def check_role_metadata(api, role, source, cursor):
+    """Validate worker data using main code, never load executable worker tools."""
+    for ref in cursor["evidence_refs"]:
+        evidence = api.file(ref, source)
+        g.need(evidence.get("schema_version") == 1 and
+               evidence.get("source_sha") == cursor["last_tested_source"], "cursor evidence SOURCE mismatch")
+        if not cursor["unverified"]:
+            g.need(evidence.get("result") == "PASS" and evidence.get("artifact_verified") is True,
+                   "verified cursor lacks reviewed PASS evidence")
+    for ref in cursor["context_refs"]:
+        item = api.get(f"contents/{quote(ref, safe='/')}?ref={source}")
+        g.need(item.get("type") == "file", "missing cursor context reference")
+    for ref in cursor["open_requests"]:
+        request = api.file(ref, source)
+        g.validate_request(request)
+        g.need(request["role_id"] == role["id"] and request["assignment_epoch"] == role["assignment_epoch"],
+               "open intent belongs to another role/epoch")
+
+
 def audit(api, branch, source, control):
     registry = api.file(".governance/registry.json", control)
     role = owner(registry, branch)
@@ -56,6 +76,7 @@ def audit(api, branch, source, control):
     g.need(ancestor(api, source, api.head(branch)), "SOURCE is not on assigned branch")
     cursor = api.file(role["cursor"], source)
     g.validate_cursor(cursor, role, registry["reservation_revision"])
+    check_role_metadata(api, role, source, cursor)
     checked, inherited, base = [], [], source
     if not role["global_writer"]:
         checkpoints = api.file(".governance/scope-checkpoints.json", control)
@@ -93,6 +114,7 @@ def audit(api, branch, source, control):
             "checkpoint_sha": base, "delta_commits": checked,
             "main_inherited_commits": inherited, "is_current_head": source == final_head,
             "final_branch_head": final_head, "cursor_sequence": cursor["sequence"],
+            "role_metadata": "PASS_CURRENT_TOOL_READS_WORKER_DATA_ONLY",
             "handoff": "NOT_EVALUATED", "product": "NOT_RUN", "performance": "NOT_RUN",
             "run_id": os.environ.get("GITHUB_RUN_ID"),
             "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
