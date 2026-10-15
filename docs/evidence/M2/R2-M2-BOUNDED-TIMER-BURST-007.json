@@ -7,8 +7,8 @@
   "assignment_epoch": 1,
   "code_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
   "source_sha": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
-  "progress": "blocked",
-  "result": "NATIVE_51_51_PASS__SOURCE_GOVERNANCE_FAIL_RETROACTIVE_LIVE_CHECKER_BLOB_POLICY",
+  "progress": "verifying",
+  "result": "NATIVE_51_51_PASS_AND_M0_CHECKER_PIN_REMEDIED__HISTORICAL_SOURCE_FAIL_RECORDED__GOVERNANCE_RECHECK_REQUIRED",
   "previous": {
     "H": "901abe61d3c45dc6c6a34467fac3b6e384ab4295",
     "cursor_sequence": 13,
@@ -97,5 +97,34 @@
   "physical": "NOT_RUN",
   "product": "NOT_RUN",
   "go_v4": "DISABLED",
-  "next_action": "M0 root checker immutable historic source pin and explicit worker migration; no re-run of unchanged failed Governance; M2 retains failed history and cursor progress blocked. No product claims."
+  "next_action": "M0 retroactive immutable checker pin remedy applied via exact root sync; first refresh Governance38690927360 historical FAIL because main moved mid-audit. Run unavoidable evidence/H governance on new immutable S/H; if main race persists M0 coordinate stable control snapshot/window, no generalized root changes or repeated unchanged-run retry. No production claim.",
+  "historic_m0_checker_remediation": {
+    "main_control_observed": "d902842a31fd6b032a5f1bab515b93c21f28b0aa",
+    "historical_approved_source": "e9a4455dd4c20253a4e740e76bf7339fa4a6cc25",
+    "historical_approved_blob": "26983e630ab2fbf28466dac457923904aaa6be60",
+    "exact_one_time_second_refresh_parent": "4b0e13742cb03d0ba7f5936c8b4c29526e1ae47c",
+    "second_refresh_commit": "0a120eec1d503c5e4b79ad69800c40e74dc244cc",
+    "only_changed_path": "tools/worker_scope_ci.py",
+    "mirrored_main_tool_git_blob": "86c213e122c5c0a7b636105f3be4d1fb2ecc7899",
+    "main_control_anchor": "af8a8b40853845b6e876224d579bfb567df48e6c",
+    "scope_check": "Previously approved first refresh uses pinned historical M0 Git blob/source; v2 requires exact first parent, sole path and byte-identical live main tool, does not grant tools/ generally",
+    "g2_activation_max_commits": 99,
+    "total_from_g2_base_at_refresh": 76,
+    "no_unsafe_rewrite": true,
+    "original_role_scope_failures_preserved": [
+      38689135617,
+      38689484046,
+      38689716410
+    ],
+    "refresh_governance": {
+      "run_id": 38690927360,
+      "attempt": 1,
+      "conclusion": "failure",
+      "job_id": 116276401427,
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "artifact_id": 11952285023,
+      "digest": "sha256:552b700b3d87bb6c83afeffbf8b0ac88c7b7484c6ac34e2c0da169107fc23f8d",
+      "interpretation": "New exact-pinned historical check no longer failed on old blob mismatch, but changing live main prevented auditable PASS"
+    }
+  }
 }
