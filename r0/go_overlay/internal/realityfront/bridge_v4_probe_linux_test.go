@@ -138,6 +138,13 @@ func TestR0V4NativeRustProtectedAEADReplayAllCiphers(t *testing.T){
             if _,_,_,e:=bridge.openAuthenticated(wrong);e==nil{
                 t.Fatal("TX-direction keys accepted by Rust RX")
             }
+            // The same real RX queue can authenticate control-kind records,
+            // but MUST NOT send them to the LINK/business callback.
+            health,_,e:=send.SealHealth([]byte("health-not-business"))
+            if e!=nil{t.Fatal(e)}
+            if _,_,_,e:=bridge.openAuthenticated(health);e==nil{
+                t.Fatal("authenticated Health escaped via LINK delivery callback")
+            }
             if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
             if _,_,_,e:=bridge.openAuthenticated(wires[2]);e==nil{
                 t.Fatal("Stop allowed old generation to open another record")

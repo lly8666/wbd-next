@@ -228,13 +228,33 @@ fn probe_release(handle:u64)->i32 {
         Some(_)=>{state.slots.remove(&handle);OK},
     }
 }
-// Inert observation of the production-compiled authenticated AEAD/PN gate.
-// Only after Commit; never emits business or promotes the test-only C ABI.
-fn probe_open_unique(handle:u64,wire:&mut [u8])->Result<(u64,u8,u64),i32>{
+// Only after real ScopedOwner admission; copies Go's encrypted test wire into
+// one Rust owner slab and invokes the normal-build authenticated RX batch path.
+// The observation is a digest, not a business delivery or product capability.
+fn probe_open_unique(handle:u64,wire:&[u8])->Result<(u64,u8,u64),i32>{
     let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
     if p.phase!=PH_COMMITTED {return Err(BAD_STAGE)}
-    p.owner.open_unique_after_active(wire).map_err(|_| INVALID)
+    if wire.is_empty()||wire.len()>usize::from(p.cold_identity.server_limit){
+        return Err(INVALID)
+    }
+    // Ingest through EXACTLY the same normal-build ScopedOwner RX queue
+    // as the eventual driver reader. This test feature only supplies the
+    // Go-produced encrypted wire; it has no independent AEAD/delivery path.
+    let mut buffer=p.arena.allocate().map_err(|_|FULL)?;
+    buffer.writable()[..wire.len()].copy_from_slice(wire);
+    p.owner.offer_after_active(buffer,0..wire.len(),
+        u64::from(p.rx_boundary),MonoNs(0)).map_err(|_|INVALID)?;
+    let mut observation=None;
+    let (recycled,report)=p.owner.drain_authenticated(
+        MonoNs(0),Vec::with_capacity(32),|pn,payload|{
+            let digest=payload.iter().fold(0xcbf29ce484222325u64,
+                |hash,byte|(hash^u64::from(*byte)).wrapping_mul(0x100000001b3));
+            observation=Some((pn,0,digest));
+        }).map_err(|_|BAD_STAGE)?;
+    drop(recycled);
+    if report.link_ready==1 && report.control_ready==0
+        && report.rejected==0 {observation.ok_or(INVALID)}else{Err(INVALID)}
 }
 
 #[no_mangle]
@@ -244,7 +264,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_open_unique(
     if wire.is_null()||pn.is_null()||kind.is_null()||digest.is_null()||
         len<29||len>2048{return INVALID}
     // Borrowed solely within the C call. Go does not publish decrypted bytes.
-    let bytes=unsafe{std::slice::from_raw_parts_mut(wire,len)};
+    let bytes=unsafe{std::slice::from_raw_parts(wire,len)};
     match probe_open_unique(handle,bytes){
         Ok((number,k,hash))=>{
             unsafe{pn.write(number);kind.write(u32::from(k));digest.write(hash)};

@@ -13,8 +13,9 @@ use crate::runtime::generation::{LoanBatch, ScopedOwner, ScopeToken};
 use std::ops::Range;
 use wbd_types::MonoNs;
 use wbd_codec::record_crypto::{LaneTxCrypto, RecordSuite};
+use wbd_codec::record_frame::AUTHENTICATED_LINK_KIND;
 use wbd_codec::record_replay::{
-    ReplayConfigError, ReplayProtectedLaneRx, ReplayWindowConfig, UniqueOpenError,
+    ReplayConfigError, ReplayProtectedLaneRx, ReplayWindowConfig,
 };
 
 #[derive(Debug)]
@@ -24,7 +25,6 @@ pub(crate) enum ProtectedCryptoError {
     Tx,
     Rx(ReplayConfigError),
     Inactive,
-    Replay(UniqueOpenError),
     Owner,
     Early(EarlyError),
 }
@@ -102,18 +102,6 @@ impl ProtectedScopedCrypto {
         self.tx_boundary = None;
     }
 
-    pub(crate) fn open_unique_after_active(&mut self,generation:u32,
-        epoch:[u8;16],wire:&mut [u8],
-    ) -> Result<(u64,u8,u64),ProtectedCryptoError> {
-        if !self.active || self.tx_boundary.is_none()
-            || generation!=self.generation || epoch!=self.epoch {
-            return Err(ProtectedCryptoError::Inactive)
-        }
-        let opened=self.rx.open_unique_in_place(wire).map_err(ProtectedCryptoError::Replay)?;
-        let digest=opened.payload.iter().fold(0xcbf29ce484222325u64,
-            |v,byte|(v^u64::from(*byte)).wrapping_mul(0x100000001b3));
-        Ok((opened.pn,opened.kind,digest))
-    }
 }
 
 /// M0 composition of the ACTUAL M1 RX/TX scoped owner with the authenticated
@@ -131,6 +119,16 @@ pub(crate) struct ProtectedScopedOwner {
 }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 enum OwnerPhase { Prepared, Active, Retired }
+
+/// Counts verified records admitted to downstream LINK parsing, not
+/// application first delivery. Invalid/replayed wires are never passed to
+/// the caller; HEALTH remains a separate authenticated control kind.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub(crate) struct AuthenticatedRxReport {
+    pub(crate) link_ready:u32,
+    pub(crate) control_ready:u32,
+    pub(crate) rejected:u32,
+}
 
 impl ProtectedScopedOwner {
     pub(crate) fn prepare_from_protected_go(
@@ -190,19 +188,62 @@ impl ProtectedScopedOwner {
         self.state=OwnerPhase::Active;
         Ok(())
     }
+    /// Accept an existing owned ingress slab ONLY after Go's trusted Detach
+    /// and commit. The exact sequence hint enforces the bootstrap/record
+    /// boundary; record PN+payload remain untrusted until AEAD validates.
+    pub(crate) fn offer_after_active(&mut self,buffer:UniqueBuffer,
+        wire:Range<usize>,absolute_seq:u64,now:MonoNs,
+    )->Result<(),(EarlyError,UniqueBuffer)>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached() {
+            return Err((EarlyError::NotPrepared,buffer))
+        }
+        self.rx_tx.offer(&self.token,buffer,wire,absolute_seq,now)
+            .map(|accepted| {
+                // The only allowed post-Detach result is Ready.
+                debug_assert_eq!(accepted,EarlyAccepted::Ready);
+            })
+    }
+
+    /// The production-compiled RX path uses the REAL M1 owner queue and
+    /// generation-fenced borrowed batch. Decrypt IN PLACE inside that owned
+    /// slab; publish LINK data only after both AEAD and unique PN admission.
+    /// The caller owns onward LINK parsing/reassembly and application
+    /// delivery. No untrusted bytes, HEALTH or replay reach this callback.
+    ///
+    /// Supply a caller-preallocated Vec: the batch returns the same storage
+    /// after its original generation ledger has been released, with no
+    /// second copy or per-packet allocation.
+    pub(crate) fn drain_authenticated<F>(&mut self,now:MonoNs,
+        storage:Vec<RxPacket>,mut accept_link:F,
+    )->Result<(Vec<RxPacket>,AuthenticatedRxReport),(ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,&[u8]){
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut borrowed=self.rx_tx.drain_rx(&self.token,now,storage)
+            .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
+        let mut report=AuthenticatedRxReport::default();
+        for packet in borrowed.as_mut_slice(){
+            match self.crypto.rx.open_unique_in_place(packet.wire_mut()){
+                Ok(record) if record.kind==AUTHENTICATED_LINK_KIND=>{
+                    // The payload reference is tied to this mutable owner
+                    // batch and cannot outlive this synchronous callback.
+                    accept_link(record.pn,record.payload);
+                    report.link_ready+=1;
+                }
+                Ok(_)=>report.control_ready+=1,
+                Err(_)=>report.rejected+=1,
+            }
+        }
+        Ok((borrowed.recycle(),report))
+    }
+
     pub(crate) fn drain_rx(&mut self,now:MonoNs,storage:Vec<RxPacket>)
         ->Result<LoanBatch<RxPacket>,(EarlyError,Vec<RxPacket>)>{
         if self.state!=OwnerPhase::Active {
             return Err((EarlyError::NotPrepared,storage));
         }
         self.rx_tx.drain_rx(&self.token,now,storage)
-    }
-    pub(crate) fn open_unique_after_active(&mut self,wire:&mut[u8])
-        ->Result<(u64,u8,u64),ProtectedCryptoError>{
-        if self.state!=OwnerPhase::Active {
-            return Err(ProtectedCryptoError::Inactive);
-        }
-        self.crypto.open_unique_after_active(self.generation,self.epoch,wire)
     }
     /// Stops BOTH actual owner queues and AEAD/PN admission. Retained loan
     /// batches still own their original generation; repeat Stop is safe.
