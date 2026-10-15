@@ -16,7 +16,7 @@ from tools import governance as g
 
 G2_BASE = "83bd720368b9be68b3c4c94d7462d20cf4d796db"
 
-G2_ACTIVATION_MAX_COMMITS = 98  # per_page=100; full 98 must be visible, 99 rejected
+G2_ACTIVATION_MAX_COMMITS = 99  # per_page=100; full 99 must be visible, 100 rejected
 
 def complete_g2_ancestry(compare):
     """Validate a COMPLETE non-diverged bounded immutable GitHub commit page."""
