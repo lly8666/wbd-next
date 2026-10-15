@@ -10,7 +10,7 @@
 //! A late completion can only be acknowledged by its ORIGINAL generation.
 //! This scoped adapter never claims authenticated receipt or peer ACK.
 use crate::linux_batch::submit_connected_udp;
-use crate::linux_rx_batch::{receive_ready_udp, RxBatchOutcome};
+use crate::linux_rx_batch::{receive_ready_udp, RxBatchOutcome, RxEntry};
 use crate::r1::{BatchResult, BorrowError, BorrowFence, KernelLoan, StopResult};
 use crate::TxError;
 use std::io;
@@ -85,6 +85,17 @@ impl ScopedUdpOwner {
         self.check(caller)?;
         Ok(receive_ready_udp(&self.receiver,buffers,&self.fence))
     }
+
+    /// The receipt is tied to the exact live owner, not merely a reusable
+    /// numeric generation. It is a scope check for caller-owned UDP bytes,
+    /// NEVER an authentication/PN/admission token. It borrows the old owner
+    /// across rotation so an address-reuse ABA cannot pass pointer identity.
+    pub fn receive_tagged<'a>(&'a self,caller:u32,buffers:&mut [&mut [u8]])
+        ->Result<ScopedRxReceipt<'a>,LeaseGateError>
+    {
+        let outcome=self.receive(caller,buffers)?;
+        Ok(ScopedRxReceipt{origin:self,outcome})
+    }
     /// Explicit deferred backend token (not used for synchronous UDP copy).
     /// On acquisition failure return the **original** record, not a clone.
     pub fn register_delayed<H:FrozenRecordHandle>(
@@ -107,6 +118,30 @@ impl ScopedUdpOwner {
         if loan.generation!=self.generation{return Err(loan)}
         drop(loan);
         Ok(())
+    }
+}
+
+
+/// A synchronous, unauthenticated UDP RX result bound to one live owner.
+/// The caller still owns and must retain the original RX buffers while
+/// inspecting them. This does not authenticate a lane, consume PN, or grant
+/// permission to pass ciphertext into a trusted Go V4 admission path.
+pub struct ScopedRxReceipt<'a>{
+    origin:&'a ScopedUdpOwner,
+    outcome:RxBatchOutcome,
+}
+impl ScopedRxReceipt<'_>{
+    pub fn outcome(&self)->RxBatchOutcome{self.outcome}
+    /// A retired/stopped receipt is never dispatchable, even if a new owner
+    /// uses the same numeric generation. No payload is copied by this gate.
+    pub fn entry_for(&self,owner:&ScopedUdpOwner,index:usize)
+        ->Result<Option<RxEntry>,LeaseGateError>
+    {
+        if !std::ptr::eq(self.origin,owner){
+            return Err(LeaseGateError::StaleGeneration);
+        }
+        owner.check(owner.generation)?;
+        Ok(self.outcome.entry(index))
     }
 }
 
@@ -330,4 +365,140 @@ mod tests{
         assert_eq!(o.register_delayed(0,frozen(b"denied",2)).err().map(|e|e.0),
             Some(LeaseGateError::StaleGeneration));
     }
+
+    #[test]
+    fn r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation(){
+        let o=pair(101);
+        // Each 33rd packet is actually queued by the kernel, unlike a
+        // 33rd sendmmsg suffix. One recvmmsg may touch only the first 32
+        // preallocated slots; a second syscall must service the overflow.
+        for round in 0..24usize {
+            let frames:Vec<_>=(0..33usize).map(|i|
+                frozen(&[round as u8,i as u8,0x5a],(round*33+i) as u64)
+            ).collect();
+            let first=o.submit(101,&frames[..32]).unwrap();
+            assert_eq!(first.accepted_prefix(),32);
+            assert_eq!(first.uncertain_index(),None);
+            assert_eq!(o.submit(101,&frames[32..]).unwrap().accepted_prefix(),1);
+            let mut storage=[[0xa5u8;8];33];
+            let ptrs:[*mut u8;33]=std::array::from_fn(|i|storage[i].as_mut_ptr());
+            let mut views:[&mut [u8];33]=storage.each_mut().map(|b|b.as_mut_slice());
+            let receipt=o.receive_tagged(101,&mut views).unwrap();
+            let result=receipt.outcome();
+            assert_eq!(result.requested,33);
+            assert_eq!(result.attempted,32);
+            assert_eq!(result.received,32);
+            assert_eq!(result.status,RxStatus::AtCap);
+            for i in 0..32{
+                assert_eq!(receipt.entry_for(&o,i).unwrap(),Some(RxEntry::Complete{len:3}));
+                assert_eq!(&views[i][..3],&[round as u8,i as u8,0x5a]);
+                assert_eq!(views[i].as_mut_ptr(),ptrs[i]);
+            }
+            assert_eq!(receipt.entry_for(&o,32).unwrap(),None);
+            assert_eq!(views[32],[0xa5;8]);
+            assert_eq!(views[32].as_mut_ptr(),ptrs[32]);
+            drop(receipt);
+            let overflow=o.receive_tagged(101,&mut views[32..]).unwrap();
+            assert_eq!(overflow.outcome().received,1);
+            assert_eq!(overflow.entry_for(&o,0).unwrap(),Some(RxEntry::Complete{len:3}));
+            assert_eq!(&views[32][..3],&[round as u8,32,0x5a]);
+            drop(overflow);
+            let no_more=o.receive(101,&mut views[..1]).unwrap();
+            assert_eq!(no_more.status,RxStatus::WouldBlock);
+            assert_eq!(o.outstanding(),0);
+        }
+    }
+
+    #[test]
+    fn r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted(){
+        let o=pair(202);
+        let oversized=[0x45u8;96];
+        assert_eq!(o.sender.send(&oversized).unwrap(),96);
+        assert_eq!(o.sender.send(b"complete").unwrap(),8);
+        let mut tiny=[0xa5u8;7];
+        let mut whole=[0xa5u8;32];
+        let mut slots=[tiny.as_mut_slice(),whole.as_mut_slice()];
+        let receipt=o.receive_tagged(202,&mut slots).unwrap();
+        assert_eq!(receipt.outcome().received,2);
+        assert_eq!(receipt.entry_for(&o,0).unwrap(),
+            Some(RxEntry::Truncated{wire_len:96,capacity:7}));
+        assert_eq!(receipt.entry_for(&o,1).unwrap(),Some(RxEntry::Complete{len:8}));
+        assert_eq!(parse_complete(receipt.outcome().entries[0],&tiny,trusted()),
+            Err(ParseGateError::Truncated));
+        assert_eq!(&whole[..8],b"complete");
+        drop(receipt);
+        let empty=o.receive(202,&mut slots).unwrap();
+        assert_eq!(empty.status,RxStatus::WouldBlock);
+        assert_eq!(empty.received,0);
+        assert_eq!(o.sender.send(b"late").unwrap(),4);
+        let late=o.receive_tagged(202,&mut slots[..1]).unwrap();
+        assert_eq!(late.entry_for(&o,0).unwrap(),Some(RxEntry::Complete{len:4}));
+        assert_eq!(&tiny[..4],b"late");
+    }
+
+    #[test]
+    fn r1_udp_rx_stopped_old_borrowed_receipt_cannot_dispatch_to_rotated_owner(){
+        let old=pair(303);
+        let fresh=pair(304);
+        let record=frozen(b"frozen-while-old-rx-retained",51);
+        let original_pn=record.meta.pn;
+        let weak:Weak<[u8]>=Arc::downgrade(&record.wire);
+        let old_loan=old.register_delayed(303,record).ok().unwrap();
+        assert_eq!(old.outstanding(),1);
+        assert_eq!(old.sender.send(b"old-rx").unwrap(),6);
+        let mut old_storage=[0xa5u8;32];
+        let mut old_slots=[old_storage.as_mut_slice()];
+        let old_receipt=old.receive_tagged(303,&mut old_slots).unwrap();
+        assert_eq!(old_receipt.entry_for(&old,0).unwrap(),Some(RxEntry::Complete{len:6}));
+        assert_eq!(&old_storage[..6],b"old-rx");
+        old.begin_stop();
+        old.begin_stop();
+        assert_eq!(old.wait_drained_until(Instant::now()),StopResult::Pending{outstanding:1});
+        assert_eq!(old_receipt.entry_for(&old,0),Err(LeaseGateError::Stopping));
+        assert_eq!(old_receipt.entry_for(&fresh,0),Err(LeaseGateError::StaleGeneration));
+        assert_eq!(old_loan.token.read().metadata.pn,original_pn);
+        assert!(weak.upgrade().is_some());
+        // A late UDP arrival on the retired socket is NOT an authorized RX.
+        assert_eq!(old.sender.send(b"late-old").unwrap(),8);
+        let mut denied=[0x77u8;32];
+        let mut denied_slots=[denied.as_mut_slice()];
+        assert_eq!(old.receive(303,&mut denied_slots).err(),Some(LeaseGateError::Stopping));
+        assert_eq!(denied,[0x77;32]);
+        let mut fresh_storage=[0xa5u8;32];
+        let mut fresh_slots=[fresh_storage.as_mut_slice()];
+        assert_eq!(fresh.receive(304,&mut fresh_slots).unwrap().status,RxStatus::WouldBlock);
+        assert_eq!(fresh.sender.send(b"fresh-rx").unwrap(),8);
+        let new_receipt=fresh.receive_tagged(304,&mut fresh_slots).unwrap();
+        assert_eq!(new_receipt.entry_for(&fresh,0).unwrap(),Some(RxEntry::Complete{len:8}));
+        assert_eq!(&fresh_storage[..8],b"fresh-rx");
+        assert_eq!(new_receipt.entry_for(&old,0),Err(LeaseGateError::StaleGeneration));
+        let returned=fresh.complete_delayed(old_loan).err().expect("old token must survive");
+        assert_eq!(old.outstanding(),1);
+        assert!(weak.upgrade().is_some());
+        old.complete_delayed(returned).ok().unwrap();
+        assert!(weak.upgrade().is_none());
+        assert_eq!(old.wait_drained_until(Instant::now()),StopResult::Drained);
+        assert_eq!(fresh.outstanding(),0);
+    }
+
+    #[test]
+    fn r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts(){
+        let a=pair(505);
+        let b=pair(505);
+        assert_eq!(a.sender.send(b"from-a").unwrap(),6);
+        assert_eq!(b.sender.send(b"from-b").unwrap(),6);
+        let mut ab=[0u8;16];let mut bb=[0u8;16];
+        let mut av=[ab.as_mut_slice()];let mut bv=[bb.as_mut_slice()];
+        let ar=a.receive_tagged(505,&mut av).unwrap();
+        let br=b.receive_tagged(505,&mut bv).unwrap();
+        assert_eq!(ar.entry_for(&b,0),Err(LeaseGateError::StaleGeneration));
+        assert_eq!(br.entry_for(&a,0),Err(LeaseGateError::StaleGeneration));
+        assert_eq!(ar.entry_for(&a,0).unwrap(),Some(RxEntry::Complete{len:6}));
+        assert_eq!(br.entry_for(&b,0).unwrap(),Some(RxEntry::Complete{len:6}));
+        assert_eq!(&ab[..6],b"from-a");
+        assert_eq!(&bb[..6],b"from-b");
+        // RX is metadata for unauthenticated bytes only; there is no Go
+        // admission, PN allocator, or authenticated lane in this API.
+    }
+
 }
