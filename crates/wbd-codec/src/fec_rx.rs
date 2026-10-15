@@ -115,19 +115,27 @@ impl FecRxOwner{
    self.retire(oldest);
   }
  }
- fn compact_heavy(&mut self,id:u64){
+ fn compact_heavy_at(&mut self,id:u64,compact_started_ms:u64){
   if let Some(h)=self.heavy.remove(&id){
    self.bytes-=h.bytes;
    self.stats.compactions+=1;
-   self.compact_insert(id,Compact::from_heavy(h,self.clock));
+   self.compact_insert(id,Compact::from_heavy(h,compact_started_ms));
   }
+ }
+ fn compact_heavy(&mut self,id:u64){
+  // Actual completion/pressure transitions begin Compact at owner clock.
+  self.compact_heavy_at(id,self.clock);
  }
  pub fn expire(&mut self,now:u64){
   self.clock=self.clock.max(now);
-  let old=self.heavy.iter().filter_map(|(&id,h)|
-   (self.clock>=h.started.saturating_add(HEAVY_TTL_MS)).then_some(id))
-   .collect::<Vec<_>>();
-  for id in old{self.compact_heavy(id);}
+  // A delayed timer callback must preserve the first-source absolute
+  // Heavy deadline, not start an extra ten seconds from callback time.
+  // Thus one late expire() call can retire Heavy and Compact together.
+  let old=self.heavy.iter().filter_map(|(&id,h)|{
+   let deadline=h.started.saturating_add(HEAVY_TTL_MS);
+   (self.clock>=deadline).then_some((id,deadline))
+  }).collect::<Vec<_>>();
+  for (id,deadline) in old{self.compact_heavy_at(id,deadline);}
   let expired=self.compact.iter().filter_map(|(&id,c)|
    (self.clock>=c.started.saturating_add(COMPACT_TTL_MS)).then_some(id))
    .collect::<Vec<_>>();

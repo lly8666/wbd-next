@@ -367,7 +367,12 @@ mod fec_tx_tests;
 #[path="fec_rx_tests.rs"]
 mod fec_rx_tests;
 
-// R1 bounded post-auth BlockID reconstruction tests excluded from frozen R0.
+// M3 authenticated-input BlockID wrap/retire proofs excluded from frozen R0.
 #[cfg(test)]
 #[path="fec_block_id_tests.rs"]
 mod fec_block_id_tests;
+
+// M3 bounded retirement-pressure regression, beneath frozen R0 LINK selector.
+#[cfg(test)]
+#[path="fec_retire_pressure_tests.rs"]
+mod fec_retire_pressure_tests;
