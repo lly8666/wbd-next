@@ -4,24 +4,24 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 8,
-  "checkpoint_sha": "a4a8e5605e09f333c357c3556b7c7be06533a2ae",
+  "sequence": 9,
+  "checkpoint_sha": "5c652c22ce2c4953226d6370e3886cac07202f74",
   "progress": "partial",
-  "task_id": "R2-M2-GLOBAL-BATCH-COMPLETION-003",
-  "current_task": "Pure R2 process-global repair batch result settlement implemented; 28/28 compiled-once native tests passed, production result provenance/engine integration remains M0-owned",
-  "why_now": "M0 newly assigned R2-M2-GLOBAL-BATCH-COMPLETION-003 on active rev2 epoch1 main registry; existing process budget needed strict accepted-prefix, one uncertain slot, evidence-bound suffix refund.",
-  "done_when": "Native Actions compiled once, 22 old + 6 new r2_ batch fake-clock tests pass on exact code SOURCE; evidence S and cursor-only H, validated 0/1/32/33 mapping, multiple directions and epochs, stale result/no fake refund; no platform/root Cargo edits.",
-  "next_action": "No additional M2 task claimed. M0 owns M4 platform proof adapter, proper ordered batch submission and verified NotAttempted suffix, engine integration and cross-crate/production regression. Wait for new main assignment.",
+  "task_id": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004",
+  "current_task": "R2-M2-BATCH-EPOCH-RECEIPT-RACE-004 completed at pure typed API/native test scope: 33/33 compiled-once Rust r2_ on corrected code SOURCE; real driver/post-AEAD integration M0-owned.",
+  "why_now": "M0 wave2 formal main registry assignment requested extra multi-tunnel ACK/batch/epoch/gen race guards; previous M2 cursor seq8 H7043ad1 Governance38667689189 clean.",
+  "done_when": "Native exact code 33/33 r2_ (28 previous + 5 new) with fake monotonic time, 2 tunnels two directions, 0/1/32/33 bounds, late ACK and generation, old epoch NotSent and mixed outcomes; evidence S/H and Governance. No platform/socket/root changes.",
+  "next_action": "No next M2 task claimed. M0 must integrate verified M3 post-open lane/direction provenance, driver-before-submit re-preflight and real M4 syscall result into receipt/budget owner. Wait for next authorized main registry task.",
   "unverified": true,
-  "last_tested_source": "e77e0ded7cc2c73c94bd4ab16a2e3cb5625f24f6",
+  "last_tested_source": "06fe27ae516cdef6b144c736a2166a5f6d4b209f",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-GLOBAL-BATCH-COMPLETION-003.json"
+    "docs/evidence/M2/R2-M2-BATCH-EPOCH-RECEIPT-RACE-004.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/devlog/M2/R2-M2-GLOBAL-BATCH-COMPLETION-003.md",
-    "docs/evidence/M2/R2-M2-GLOBAL-SPARSE-002.json"
+    "docs/devlog/M2/R2-M2-BATCH-EPOCH-RECEIPT-RACE-004.md",
+    "docs/evidence/M2/R2-M2-GLOBAL-BATCH-COMPLETION-003.json"
   ],
-  "partial_summary": "M0 main registry rev2 M2 epoch1 formally assigned batch task; prior H2ebd475 seq7 Governance38602789109 SUCCESS. First batch code S5e1c9ab native38667220770 FAILED 26/28: fake-clock fixture registered one direction at0 after prior fresh at1; corrected fixture only in S e77e0de, native38667347598 compiled once 28/28 r2_ PASS (22 old,6 new), G2 38667347511 SUCCESS, R0 static38667347492 SUCCESS. Exact e77e0de Governance38667347494 FAILED main/source moved mid-audit (not code failure). Evidence S a4a8e56 carries both historical failures and exact actual artifacts. H checkpoint evidence S, last_tested_source corrected code S. Batch semantics max32 IDs, validated shape, accepted prefix driver-only, optional 1 uncertain at prefix, only proof-tagged not-attempted suffix refund, unproven held; no fresh HOL, kernel/Go/live product/perf/physical NOT_RUN; Go V4 DISABLED. Stop after one atomic task."
+  "partial_summary": "M0 main rev2 epoch1 formally assigned race004, M2 previous seq8 H7043ad1 Gov38667689189 SUCCESS. New receipt lane() and verified_lane() + owner reserve_if_still_missing preflight prevents late positive ACK candidate reserve, observe_authenticated_receipt checks exact TunnelKey generation and delegates peer delivery ONLY to ReceiptState, no budget refund. Original code S15b696f native38669397068 32/33 FAIL one fixture ClockReversed; fixed fake time S06fe27a, compiled-once worker-native38669519161 33/33 PASS (28 prior+5 new), historical G2 38669519263, R0 static38669519110, S Governance38669519113 all SUCCESS. Evidence S5c652c2 Gov38669730307 SUCCESS. H seq9 only cursor, checkpoint evidence S and last_tested_source code S. Actual M3 AEAD binding/real M4 driver, Go V4, perf, physical, product NOT_RUN."
 }
