@@ -1717,4 +1717,43 @@ mod tests {
         }
     }
 
+
+    #[test]
+    fn r2_burst_grants_32_33_timeout_reclaims_unused_no_fresh_hol() {
+        let mut x=GlobalRepairAllocator::new(GlobalRepairConfig {
+            max_bytes_per_epoch:44_800,max_directions:33,
+            max_grant_bytes:1400,max_grant_lifetime_ns:100_000,
+            max_pending:32,max_pending_bytes:44_800,
+        },MonoNs(0)).unwrap();
+        let mut directions=Vec::new();
+        for i in 0..33 {
+            let d=BudgetDirection {
+                tunnel:TunnelKey{slot:i,generation:3},
+                direction:WireDirection::ClientToServer,
+            };
+            x.register(d,wide_cfg(),MonoNs(0)).unwrap();
+            directions.push(d);
+        }
+        let mut leases=Vec::new();
+        for i in 0..32 {
+            leases.push(x.grant(directions[i],1400,100_000,MonoNs(1)).unwrap());
+        }
+        assert_eq!(x.snapshot().held_unused_grants,44_800);
+        assert_eq!(x.grant(directions[32],1400,100_000,MonoNs(1)),
+            Err(GlobalRepairError::GlobalCap));
+        // Confirmed FIRST sends cannot be held behind a full repair quota.
+        x.on_fresh_accepted(directions[32],10_000,MonoNs(2)).unwrap();
+        assert_eq!(x.local_snapshot(directions[32]).unwrap().fresh_confirmed_bytes,10_000);
+        x.on_timer(MonoNs(100_001)).unwrap();
+        let snap=x.snapshot();
+        assert_eq!(snap.held_unused_grants,0);
+        assert_eq!(snap.charged_repairs,0);
+        assert_eq!(snap.pending,0);
+        assert_eq!(x.revoke(leases[0],MonoNs(100_002)),
+            Err(GlobalRepairError::StaleGrant));
+        assert_eq!(x.grant(directions[32],1400,100_000,MonoNs(100_003))
+            .unwrap().bytes(),1400);
+        assert_eq!(x.snapshot().held_unused_grants,1400);
+    }
+
 }

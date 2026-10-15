@@ -1,0 +1,28 @@
+# R2-M2-BOUNDED-TIMER-BURST-007 · indexed owner deadline polling
+
+## Formal authority and handoff
+At 2026-10-15 main formally assigned M2 task `R2-M2-BOUNDED-TIMER-BURST-007` on active role revision2/epoch1, fixed branch `work/m2-r2-recovery`, owned paths only `crates/wbd-recovery/`, M2 devlog/evidence/cursor/requests. Main decision `docs/decisions/M0-next-wave-owner-repair-driver-2026-10-15.md` is main-only, not in worker cursor context_refs. Previous H `901abe61d3c45dc6c6a34467fac3b6e384ab4295` is exactly one cursor-only commit since evidence checkpoint `89291d54d4ef7d53d49091a2e50ea00cb380b19d`; H Governance38684127224 SUCCESS; seq13 no open requests. CLEAN.
+
+## Demonstrated scheduling issue and minimal owned fix
+Before this atom `ReceiptState::on_timer()` iterated the whole `entries: BTreeMap<RecordPn,Entry>` **three times per poll** (hard expiration, queued timeout, due candidate), then `next_deadline()` scanned it a fourth time. With 10,000 simultaneously due entries and at most 32 candidates per poll, 313 polls repeated unnecessary 10,000-record scans. The correctness semantics were generally right, but work per callback was unbounded by the number of actually due records.
+
+Use the already-present owner-local BTreeMap of PN and two ordered `BTreeSet<(MonoNs,RecordPn)>` indexes: hard expiry and the next wake (queued TTL or PTO/RACK/rearm). Every owned entry has one expiry node and at most one wake node; all positive authenticated receipt ACKs, hard expirations and local state transitions eagerly remove/replace index nodes, with **no retained lazy tombstones**, and `next_deadline` uses only two index heads. Hard expiry is always processed before new repair candidates regardless of per-poll candidate limits. The scheduler processes at most **32 wake events** (dispatch or queued timeout) and outputs at most **32 repair candidates** per timer poll. A 10k burst therefore requires 313 polls, each bounded by actual index operations rather than full-shadow scans. A monotonic jump past hard expiry releases every actually expired record exactly once, O(k expired log N) with releases bounded by configured `max_shadow_entries`, not O(N) scan of still-live entries. Do not claim hard-expiry releases themselves are capped at32: the old API must release all expired owners without artificially retaining expired ciphertext.
+
+One correctness caveat: when genuine authenticated positive receipt witnesses change RACK deadlines, the existing semantics can advance the PTO of older entries. The owner reindexes all live wakes **on that genuine receipt event only** (O(N log N), bounded by `max_shadow_entries`), not per timer or per fresh packet. Ordinary missing report updates touch at most eight 256-PN pages and schedule only affected entries. There is no generic scheduler, background thread, socket, new dependency, second Seal or new wire ACK authority.
+
+## New deterministic native tests
+- `r2_burst_indexed_0_1_32_33_deadlines_without_table_rescan`: exact 0/1/32+1 behavior, inspection counter for actual popped index nodes, no extra poll scan.
+- `r2_burst_10000_due_drained_32_per_poll_counted_index_only`: 10,000 live candidates, 313 deterministic same-time polls, inspection cap <=32 each, never duplicate a frozen candidate in the epoch.
+- `r2_burst_10000_hard_expiry_after_clock_jump_no_retained_tombstones`: 10k actual releases, no leaked shadow/index, late bitmap cannot reanimate entries.
+- `r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry`: queued TTL, ACK-before-dispatch, stale original candidate, two expiry schedules, no duplicate queue.
+- `r2_burst_10000_queued_timeouts_are_also_index_budgeted`: 10k queued expirations drained 32 per poll; no full table scan, bounded rearm.
+- `r2_burst_stale_generation_and_fresh_shadow_independent`: old generation candidate fails new owner; fresh owner still progresses.
+- `r2_burst_grants_32_33_timeout_reclaims_unused_no_fresh_hol` in process global budget: 32 grants occupy 44,800B cap, 33rd denied, fresh accepted unaffected, unused grant expiry unlocks cap and late revoke remains stale.
+
+Preserve the **44** previous native `r2_` tests; seven new means target **51/51** on source-exact compiled-once native workflow. Counted inspections are explicit test-only **index nodes popped**, NOT CPU cycles, allocations or real-world latency. BTreeSet allocates bounded nodes; heap allocation counts and CPU time **NOT_INSTRUMENTED**; do not invent any product P0 throughput claim. Process-global grant advance retains its own bounded `max_directions` / `max_pending` accounting; this atom specifically eliminates the proven 10k *shadow* repeated timer scan. Real driver budget admission remains M0 integration owned.
+
+## Scope and nonclaims
+Pure `crates/wbd-recovery` Rust state, fake MonoNs and synthetic test receipts only. Previously pinned `ReceiptRouteScope` remains a caller-supplied post-auth expectation, NOT a new cryptographic trusted-origin constructor. Original-epoch NotSent, uncertain conservative debit, max sparse repair quota, receipt serial order and no same-evidence second retry must remain. Go V4 protected cold session exporter, actual AEAD+PN authenticating receipt facts, raw AF_PACKET, kernel driver callback, engine C ABI, native Win/ARM, 500Mbps/p99/CPU/RSS product and physical remain **NOT_RUN**. M0 owns integrations. No main-only paths, root dependency, CI or cross-role modifications.
+
+## Actions/immutable evidence
+Code SOURCE native results and exact binary/result artifact hashes will be appended after source-specific workflow completes. Preserve failures exactly; evidence S and cursor-only H require separate Governance. No additional M2 assignment is implied after this task.
