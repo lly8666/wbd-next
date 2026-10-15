@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-RX-STRICT-AUTH-MAIN-009",
+  "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+  "branch": "main",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M4 one-full IPv4/TCP packet strict RX before M3 real AEAD+PN replay; M1 frozen record -> M4 real Linux kernel sendmmsg via unprivileged UDP -> strict parse -> AEAD business, in-process fixture only",
+  "accepted_previous_worker_atoms": [
+    {
+      "role": "M1",
+      "code": "3460d4f4630da3bfb1d9a0cfc522158adc14645b",
+      "native_run": 38667033577,
+      "passed": "39/39",
+      "H": "4ca7d283c758390a4618a24d32b4e25e49dc17d1",
+      "H_governance": 38667280279,
+      "remaining_historical_failure": "R0 worker ABI run38667033555 count-marker gate fail; Rust42/42 actual success, root main different source"
+    },
+    {
+      "role": "M2",
+      "code": "e77e0ded7cc2c73c94bd4ab16a2e3cb5625f24f6",
+      "native_run": 38667347598,
+      "passed": "28/28",
+      "H": "7043ad1958b46898c16d848090dcb47d4e71a3a4",
+      "H_governance": 38667689189,
+      "remaining_historical_failure": "first SOURCE5e1c9ab fixture26/28 and CODE Governance38667347494 control moved; recovered final H PASS"
+    },
+    {
+      "role": "M3",
+      "code": "e8d62776ebf3258c038155f4637bd1524d6282b7",
+      "native_run": 38667240535,
+      "passed": "75/75",
+      "H": "6fe261652afe0760f618dde02b279cb0bc57215d",
+      "H_governance": 38667890659,
+      "counterexample": "real late FecRx Heavy timer catch-up must respect original Heavy deadline, not time of callback"
+    },
+    {
+      "role": "M4",
+      "code": "dd5a7dc7370d31a15afcbb4b71c53202ae89df90",
+      "native_run": 38667179420,
+      "passed": "31/31",
+      "H": "48d8e270f0829a78e54c91007703bd1c3a5574f9",
+      "H_governance": 38667553300,
+      "remaining_historical_failure": "old worker root platform gate38667179416 hardcoded old count7 despite 38/38 assertions"
+    }
+  ],
+  "scope_audit": "Every worker commit reviewed individually: only owned code, own evidence/log/cursor and M1 request; each final H diff cursor-only and Governance PASS; no new worker product qualification.",
+  "new_task_assignments": {
+    "registry_source": "06601c0dd140702c8840ed25f3cbd55d82a61706",
+    "decision_source": "1d58c039887bebc033ada096dad553dcc42fb64b",
+    "decision": "docs/decisions/M0-parallel-worker-atoms-2026-10-15-wave2.md",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "ownership_unchanged": true,
+    "tasks": [
+      "M1:R1-M1-RX-READY-BATCH-005",
+      "M2:R2-M2-BATCH-EPOCH-RECEIPT-RACE-004",
+      "M3:R1-M3-AUTH-FEC-SCOPE-GATE-011",
+      "M4:R1-M4-LINUX-RX-BATCH-005"
+    ],
+    "worker_next_code": "NOT_RUN_AT_ASSIGNMENT"
+  },
+  "previous_recovery": {
+    "prior_code_source": "17bb909aad62f4bd3d7b68f427feb9e88e429e01",
+    "fact_S": "f20e110e4c8b1475d9f15d339ce1be749bb4226a",
+    "H": "16347c64ea8b096cc8cfb4f91ebd5c4510fbb913",
+    "S_governance": 38668360180,
+    "H_governance": 38668430534,
+    "previous_unpublished_commit": "not pushed; replaced with actual recovered file API commits"
+  },
+  "code_changes": [
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs",
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-engine/tests/r1_linux_batch_kernel.rs",
+    ".github/workflows/r1-ipv4-tcp-native.yml",
+    ".github/workflows/r1-linux-kernel-batch-native.yml"
+  ],
+  "same_source_actions": [
+    {
+      "name": "r1-ipv4-tcp-native",
+      "run_id": 38668693087,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-linux-kernel-batch-native",
+      "run_id": 38668693097,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-fake-platform",
+      "run_id": 38668692970,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-static-qualification-audit",
+      "run_id": 38668692936,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "governance",
+      "run_id": 38668692985,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-fec-on-native",
+      "run_id": 38668692922,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r2-auth-receipt",
+      "run_id": 38668692811,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-normal-off-replay",
+      "run_id": 38668692974,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "g2-scoped-bootstrap-native",
+      "run_id": 38668692736,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r1-wake-stop-native",
+      "run_id": 38668692963,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-native-abi",
+      "run_id": 38668692785,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-cross-abi",
+      "run_id": 38668692957,
+      "source_sha": "d80bc75073b07be965e9f78ef5c029b06fe91c73",
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "native_main": {
+    "platform_run": 38668693087,
+    "platform_tests": "31/31",
+    "platform_binary_sha256": "47d44466b182c8980ca3c8f9571380c920a5f259bccb0bdbae72a584b2591675",
+    "platform_log_sha256": "d9d41177c5e2d3524bbd613c2cec62879f2139665212894d95b256f111f81f54",
+    "platform_build_artifact": {
+      "id": 11942388238,
+      "digest": "sha256:a22034b92f3f74cff2fcac7b8a08a6e6d7a83b3b237a9d7ea4ca3bbce09014a2"
+    },
+    "platform_result_artifact": {
+      "id": 11942778242,
+      "digest": "sha256:ef2a5035ee682256a583900162202d897a0109a1279cd9245d9ee2c68c583dc4"
+    },
+    "linux_run": 38668693097,
+    "linux_platform_tests": "31/31",
+    "engine_kernel_integration_tests": "3/3",
+    "linux_platform_binary_sha256": "47d44466b182c8980ca3c8f9571380c920a5f259bccb0bdbae72a584b2591675",
+    "engine_binary_sha256": "ebcebe941f29fe5d7cb9d22c660fef7c64645c02b531dc84606a2882390c525c",
+    "linux_platform_log_sha256": "47743fd293f8b80191eb633c2cf4e3e9373f247f69bd749fa44a724bc7e878e0",
+    "linux_engine_log_sha256": "448dea1c6149247b020b4792281d6694fc2d3dbcc67ee56d23d0539af4ab0943",
+    "linux_build_artifact": {
+      "id": 11942878281,
+      "digest": "sha256:77a5ad3627f1b621c00448d47085e5a6db94aee7778ac2c88c1c175469a65975"
+    },
+    "linux_result_artifact": {
+      "id": 11942353231,
+      "digest": "sha256:486d63e16d803878c9c77886a8a7cfe3c01fb2f9b56d6386705f11311dbe734b"
+    }
+  },
+  "assertions": [
+    "all packet input borrowed as UNAUTHENTICATED after exact tuple, DF, options, IP/TCP checksum, MTU/length validation",
+    "RX seq32 candidate extended only against caller-supplied trusted stable anchor; no anchor update before AEAD",
+    "real M3 AEAD authentication + replay before business first-delivery",
+    "corrupt TCP checksum rejected, recomputed valid TCP checksum cannot rescue invalid AEAD and cannot shift replay floor",
+    "subsequent valid fresh source delivered despite prior bad packet; no fresh HOL",
+    "actual Linux x86_64 GNU UDP sendmmsg syscall not raw AF_PACKET"
+  ],
+  "nonclaims": [
+    "PRODUCT",
+    "LIVE_GO_V4_TRUSTED_GENERATION",
+    "AF_PACKET_RAW_RX_TX",
+    "NATIVE_WINDOWS_ARM_EXECUTION",
+    "ZERO_COPY_OUTER_PACKET",
+    "500MBPS_P99_CPU",
+    "PHYSICAL"
+  ],
+  "next_action": "M0 review/import counterexample-driven M3 FEC RX Heavy-to-Compact absolute deadline fix and M1 actual ready batch and M2 batch ledger, each separate exact SOURCE; then explicitly bind trusted Go V4 cold authenticated identity to Rust; do not enable product."
+}
