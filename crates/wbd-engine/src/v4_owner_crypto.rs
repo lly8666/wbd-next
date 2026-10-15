@@ -13,7 +13,11 @@ use crate::runtime::generation::{LoanBatch, ScopedOwner, ScopeToken};
 use std::ops::Range;
 use wbd_types::MonoNs;
 use wbd_codec::record_crypto::{LaneTxCrypto, RecordSuite};
-use wbd_codec::record_frame::AUTHENTICATED_LINK_KIND;
+use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
+use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER};
+use wbd_codec::link_reassembly::{
+    LinkDelivery,LinkDirection,ReassemblyScope,ReassemblyTable,
+};
 use wbd_codec::record_replay::{
     ReplayConfigError, ReplayProtectedLaneRx, ReplayWindowConfig,
 };
@@ -116,6 +120,8 @@ pub(crate) struct ProtectedScopedOwner {
     generation: u32,
     go_lane: u8,
     epoch: [u8;16],
+    rx_wire_limit:usize,
+    server:bool,
 }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 enum OwnerPhase { Prepared, Active, Retired }
@@ -128,6 +134,84 @@ pub(crate) struct AuthenticatedRxReport {
     pub(crate) link_ready:u32,
     pub(crate) control_ready:u32,
     pub(crate) rejected:u32,
+}
+
+/// One *owner-bound* Normal/FEC-off LINK reassembly context. This is not a
+/// second crypto or activation path; it can only receive data from the actual
+/// ScopedOwner's authenticated RX batch. A new owner/generation creates a
+/// new table, so retired packet IDs cannot cross sessions.
+pub(crate) struct NormalOffReceive {
+    table:ReassemblyTable,
+    frame_mtu:usize,
+    owner_id:u64,
+    generation:u32,
+    lane:u8,
+    epoch:[u8;16],
+    epoch_tag:u64,
+    direction:LinkDirection,
+    max_extended_id:Option<u64>,
+}
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub(crate) struct NormalOffReport {
+    pub(crate) authenticated:AuthenticatedRxReport,
+    pub(crate) completed:u32,
+    pub(crate) pending:u32,
+    pub(crate) discarded:u32,
+    pub(crate) malformed:u32,
+}
+impl NormalOffReceive {
+    /// frame_mtu MUST be the effective negotiated M4/Go path budget once a
+    /// live carrier is installed, NOT merely a requested record limit.
+    /// Explicit configuration is required: do not quietly assume local MTU.
+    pub(crate) fn new_for_owner(owner:&ProtectedScopedOwner,
+        effective_link_frame_mtu:usize,minimum_link_frame_mtu:usize,
+    )->Result<Self,ProtectedCryptoError>{
+        if effective_link_frame_mtu<=LINK_HEADER
+            || effective_link_frame_mtu>
+                owner.rx_wire_limit.saturating_sub(FIXED_WIRE_OVERHEAD) {
+            return Err(ProtectedCryptoError::Owner)
+        }
+        let table=ReassemblyTable::new(effective_link_frame_mtu,
+            minimum_link_frame_mtu,LinkMode::FixedOff)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        let mut first=[0u8;8];first.copy_from_slice(&owner.epoch[..8]);
+        Ok(Self{
+            table,frame_mtu:effective_link_frame_mtu,
+            owner_id:owner.token.owner_id(),generation:owner.generation,
+            lane:owner.go_lane,epoch:owner.epoch,
+            epoch_tag:u64::from_be_bytes(first),
+            direction:if owner.server {LinkDirection::ClientToServer}
+                else {LinkDirection::ServerToClient},
+            max_extended_id:None,
+        })
+    }
+    fn accepts(&self,owner:&ProtectedScopedOwner)->bool{
+        self.owner_id==owner.token.owner_id()
+            && self.generation==owner.generation
+            && self.lane==owner.go_lane && self.epoch==owner.epoch
+    }
+    /// Extend the authenticated LINK32 identifier near wrap using a
+    /// half-range window; far-old ambiguous IDs are rejected, not guessed.
+    /// No packet_id is read before record AEAD/PN validation.
+    fn extend_packet_id(&mut self,raw:u32)->Option<u64>{
+        if raw==0{return None}
+        let mut value=u64::from(raw);
+        if let Some(max)=self.max_extended_id{
+            const FULL:u64=1u64<<32;
+            const HALF:u64=1u64<<31;
+            value=(max & !(FULL-1))|value;
+            if value<max && max-value>HALF {
+                value=value.checked_add(FULL)?;
+            }else if value>max && value-max>HALF {
+                value=value.checked_sub(FULL)?;
+            }
+            if value<max && max-value>HALF{return None}
+            self.max_extended_id=Some(max.max(value));
+        }else{
+            self.max_extended_id=Some(value);
+        }
+        Some(value)
+    }
 }
 
 impl ProtectedScopedOwner {
@@ -157,7 +241,8 @@ impl ProtectedScopedOwner {
         Ok(Self {
             rx_tx,token,crypto,state:OwnerPhase::Prepared,
             generation:expected.owner_generation,go_lane:expected.go_lane_id,
-            epoch:expected.logical_epoch,
+            epoch:expected.logical_epoch,rx_wire_limit:wire,
+            server:expected.server,
         })
     }
     /// The same M1 owner stages before the protected reply/Detach; no
@@ -236,6 +321,43 @@ impl ProtectedScopedOwner {
             }
         }
         Ok((borrowed.recycle(),report))
+    }
+
+    /// Single normal-build ingress: owner LoanBatch -> AEAD & PN unique ->
+    /// M3 LINK wire inspection / bounded reassembly -> complete packet sink.
+    /// Incomplete, conflicting, stale and malformed fragments never call
+    /// the sink; one new ordinary packet does not wait for any old hole.
+    pub(crate) fn drain_normal_off<F>(&mut self,receiver:&mut NormalOffReceive,
+        now:MonoNs,storage:Vec<RxPacket>,mut accept_packet:F,
+    )->Result<(Vec<RxPacket>,NormalOffReport),(ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,&[u8]){
+        if self.state!=OwnerPhase::Active || !receiver.accepts(self){
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let ms=now.0/1_000_000;
+        let mut out=NormalOffReport::default();
+        let (returned,authenticated)=self.drain_authenticated(
+            now,storage,|pn,link|{
+                let id=match inspect_link(link,receiver.frame_mtu,LinkMode::FixedOff){
+                    Ok(LinkView::Ordinary(_))=>Some(0),
+                    Ok(LinkView::Fragment(f))=>receiver.extend_packet_id(f.packet_id),
+                    Err(_)=>{out.malformed+=1;return}
+                };
+                let Some(id)=id else {out.malformed+=1;return};
+                let scope=ReassemblyScope{
+                    tunnel_epoch:receiver.epoch_tag,
+                    direction:receiver.direction,packet_id_ext:id,
+                };
+                match receiver.table.push_after_record_auth(link,scope,ms){
+                    Ok(LinkDelivery::Ordinary(bytes))=>{accept_packet(pn,bytes);out.completed+=1;},
+                    Ok(LinkDelivery::Reassembled(bytes))=>{accept_packet(pn,&bytes);out.completed+=1;},
+                    Ok(LinkDelivery::Pending)=>out.pending+=1,
+                    Ok(LinkDelivery::Discarded)=>out.discarded+=1,
+                    Err(_)=>out.malformed+=1,
+                }
+            })?;
+        out.authenticated=authenticated;
+        Ok((returned,out))
     }
 
     pub(crate) fn drain_rx(&mut self,now:MonoNs,storage:Vec<RxPacket>)

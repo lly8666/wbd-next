@@ -14,7 +14,8 @@ use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
 use crate::runtime::early_rx::EarlyAccepted;
 use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
-use crate::v4_owner_crypto::ProtectedScopedOwner;
+use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
+use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
 
@@ -24,6 +25,7 @@ const UNKNOWN: i32 = 2;
 const BAD_STAGE: i32 = 3;
 const FULL: i32 = 4;
 const STOP_INCOMPLETE: i32 = 5;
+const LINK_PENDING: i32 = 6;
 const MAX_PROBES: usize = 16;
 const MAX_EARLY: u32 = 64;
 const PH_PREPARED: u32 = 1;
@@ -33,6 +35,7 @@ const PH_STOPPING: u32 = 4;
 
 struct Probe {
     owner: ProtectedScopedOwner,
+    normal:NormalOffReceive,
     arena: Arena,
     phase: u32,
     rx_boundary: u32,
@@ -81,11 +84,18 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     let owner=ProtectedScopedOwner::prepare_from_protected_go(
         &data,&expected,handle,boundary,
     ).map_err(|_| INVALID)?;
+    // Probe supplies the maximum safe LINK budget from the authenticated
+    // record limit, NOT a production path MTU/MSS. Real M4 must pass its
+    // effective FrameBudget, and product qualification remains NOT_RUN.
+    let link_mtu=usize::from(identity.server_limit)
+        .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
+    let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
+        .map_err(|_|INVALID)?;
     // Only the test harness uses this bounded arena to copy incoming FakeTCP
     // bytes; the future production adapter will supply existing owner slabs.
     let Ok(arena)=Arena::new(generation,32,2048,32,1_000_000) else {return Err(INVALID)};
     state.slots.insert(handle, Probe {
-        owner,arena,phase:PH_PREPARED,rx_boundary:boundary,
+        owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
@@ -230,7 +240,8 @@ fn probe_release(handle:u64)->i32 {
 }
 // Only after real ScopedOwner admission; copies Go's encrypted test wire into
 // one Rust owner slab and invokes the normal-build authenticated RX batch path.
-// The observation is a digest, not a business delivery or product capability.
+// The observation is a digest of the *complete reconstructed application
+// candidate*; neither a platform I/O nor product capability.
 fn probe_open_unique(handle:u64,wire:&[u8])->Result<(u64,u8,u64),i32>{
     let Ok(mut state)=registry().lock() else {return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else {return Err(UNKNOWN)};
@@ -246,15 +257,18 @@ fn probe_open_unique(handle:u64,wire:&[u8])->Result<(u64,u8,u64),i32>{
     p.owner.offer_after_active(buffer,0..wire.len(),
         u64::from(p.rx_boundary),MonoNs(0)).map_err(|_|INVALID)?;
     let mut observation=None;
-    let (recycled,report)=p.owner.drain_authenticated(
-        MonoNs(0),Vec::with_capacity(32),|pn,payload|{
+    let (recycled,report)=p.owner.drain_normal_off(
+        &mut p.normal,MonoNs(0),Vec::with_capacity(32),|pn,payload|{
             let digest=payload.iter().fold(0xcbf29ce484222325u64,
                 |hash,byte|(hash^u64::from(*byte)).wrapping_mul(0x100000001b3));
             observation=Some((pn,0,digest));
         }).map_err(|_|BAD_STAGE)?;
     drop(recycled);
-    if report.link_ready==1 && report.control_ready==0
-        && report.rejected==0 {observation.ok_or(INVALID)}else{Err(INVALID)}
+    if report.completed==1 && report.authenticated.link_ready==1 {
+        observation.ok_or(INVALID)
+    }else if report.pending==1 && report.authenticated.link_ready==1{
+        Err(LINK_PENDING)
+    }else{Err(INVALID)}
 }
 
 #[no_mangle]

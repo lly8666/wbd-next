@@ -27,6 +27,7 @@ import (
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
 var errV4NativeProbe=errors.New("V4 test-only native probe refused")
+var errV4NativeLinkPending=errors.New("authenticated LINK fragment is incomplete")
 type v4NativeRustProbe struct {
     handle uint64
     prepared,committed bool
@@ -152,8 +153,9 @@ func (b *v4NativeRustProbe) stopAndRelease()error{
 }
 
 // Native observation only: invokes the exact normal-build scoped crypto
-// AEAD/PN gate AFTER verified Go's private Detach+Commit. Does not deliver
-// business, publish capability or retain Go memory.
+// AEAD/PN, LINK inspection/reassembly and first *complete* application
+// candidate after verified Go's private Detach+Commit. This is observation,
+// not a real platform product sink, nor a production capability.
 func (b *v4NativeRustProbe) openAuthenticated(wire []byte)(uint64,uint32,uint64,error){
     if !b.committed||b.handle==0||len(wire)==0{return 0,0,0,errV4NativeProbe}
     copied:=append([]byte(nil),wire...)
@@ -164,6 +166,7 @@ func (b *v4NativeRustProbe) openAuthenticated(wire []byte)(uint64,uint32,uint64,
         (*C.uchar)(unsafe.Pointer(&copied[0])),C.size_t(len(copied)),
         &pn,&kind,&digest)
     runtime.KeepAlive(copied)
-    if code!=0{return 0,0,0,fmt.Errorf("%w: AEAD/PN open=%d",errV4NativeProbe,int(code))}
+    if code==6{return 0,0,0,errV4NativeLinkPending}
+    if code!=0{return 0,0,0,fmt.Errorf("%w: scoped Normal/off application candidate open=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint32(kind),uint64(digest),nil
 }

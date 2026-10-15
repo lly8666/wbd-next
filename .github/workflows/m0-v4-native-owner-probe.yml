@@ -13,6 +13,8 @@ on:
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-codec/src/record_crypto.rs"
       - "crates/wbd-codec/src/record_replay.rs"
+      - "crates/wbd-codec/src/link_fec_wire.rs"
+      - "crates/wbd-codec/src/link_reassembly.rs"
       - "crates/wbd-engine/src/v4_probe_bridge.rs"
       - "crates/wbd-engine/src/runtime/early_rx.rs"
       - "crates/wbd-engine/src/runtime/generation.rs"
@@ -77,6 +79,8 @@ jobs:
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "crates/wbd-codec/src/record_crypto.rs",
             "crates/wbd-codec/src/record_replay.rs",
+            "crates/wbd-codec/src/link_fec_wire.rs",
+            "crates/wbd-codec/src/link_reassembly.rs",
             "crates/wbd-engine/src/v4_probe_bridge.rs",
             "crates/wbd-engine/src/runtime/early_rx.rs",
             "crates/wbd-engine/src/runtime/generation.rs",
@@ -133,7 +137,7 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/native-probe-build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           mkdir native-probe-result
           set +e
-          ./native-probe-build/owner-go.test -test.v -test.run '^TestR0V4NativeRust(ProbeActualProtectedFreshOwner|ProtectedAEADReplayAllCiphers)$' >native-probe-result/go.log 2>&1
+          ./native-probe-build/owner-go.test -test.v -test.run '^TestR0V4NativeRust(ProbeActualProtectedFreshOwner|ProtectedAEADReplayAllCiphers|ProtectedNormalOffLinkFirstPacket)$' >native-probe-result/go.log 2>&1
           G=$?
           ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
           R=$?
@@ -143,7 +147,7 @@ jobs:
           import hashlib,json,os,pathlib,re,sys
           go=pathlib.Path("native-probe-result/go.log").read_text()
           rust=pathlib.Path("native-probe-result/rust.log").read_text()
-          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M))
+          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M))
           m=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
           good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust
           data=json.load(open("native-probe-build/manifest.json"))
@@ -156,6 +160,7 @@ jobs:
             "actual_early_payload_transfer":"TEST_ONLY_GO_FAKETCP_DETACH_BYTES_COPIED_AND_HASH_VERIFIED_IN_RUST" if good_go else "NOT_VERIFIED",
             "positive_Rust_auth_authority":"NOT_RUN",
             "real_Go_TLS_to_normal_build_Rust_AEAD_PN":good_go,
+            "normal_build_scoped_RX_M3_LINK_reassembly_callback":good_go,
             "driver_loan_stop":"NOT_RUN","production_ABI_features":0,
             "product":"NOT_RUN","physical":"NOT_RUN"}
           pathlib.Path("native-probe-result/result.json").write_text(json.dumps(result,indent=2)+"\n")

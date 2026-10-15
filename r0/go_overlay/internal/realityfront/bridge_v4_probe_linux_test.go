@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"github.com/lly8666/wobuzhidao/internal/tlsrecord")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -148,6 +148,102 @@ func TestR0V4NativeRustProtectedAEADReplayAllCiphers(t *testing.T){
             if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
             if _,_,_,e:=bridge.openAuthenticated(wires[2]);e==nil{
                 t.Fatal("Stop allowed old generation to open another record")
+            }
+            if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{
+                t.Fatal(e)
+            }
+        })
+    }
+}
+
+
+// Produces the pinned legacy LINK20 wire layout for a Go-side *test input*.
+// This only creates encrypted stimulus; there is no separate Go receiver,
+// alternate crypto, owner activation or application delivery implementation.
+func v4TestLegacyLinkFrames(payload []byte,mtu int,id uint32)[][]byte{
+    if mtu<=20||len(payload)<=mtu||len(payload)>65535||id==0 {panic("bad LINK test case")}
+    chunk:=mtu-20
+    count:=(len(payload)+chunk-1)/chunk
+    frames:=make([][]byte,0,count)
+    for i,pos:=0,0;pos<len(payload);i,pos=i+1,pos+chunk{
+        end:=pos+chunk
+        if end>len(payload){end=len(payload)}
+        frame:=make([]byte,20+end-pos)
+        copy(frame[:8],[]byte("WBDLFRG1"))
+        frame[8]=1
+        binary.BigEndian.PutUint16(frame[10:12],uint16(i))
+        binary.BigEndian.PutUint16(frame[12:14],uint16(count))
+        binary.BigEndian.PutUint16(frame[14:16],uint16(len(payload)))
+        binary.BigEndian.PutUint32(frame[16:20],id)
+        copy(frame[20:],payload[pos:end])
+        frames=append(frames,frame)
+    }
+    return frames
+}
+
+// All three real Go TLS suite keys pass the SAME normal-build Rust
+// ScopedOwner loan -> AEAD/PN -> M3 LINK parser/reassembly -> complete packet
+// callback. This is not yet a TUN/raw driver or a product application sink.
+func TestR0V4NativeRustProtectedNormalOffLinkFirstPacket(t *testing.T){
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("cipher-%d",cipher),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            bridge:=&v4NativeRustProbe{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("protected TLS/owner not installed %v %v",ce,se)
+            }
+            cold,e:=server.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            _,limit:=cold.RecordLimits()
+            effectiveLinkCeiling:=int(limit)-31
+            if effectiveLinkCeiling<=20{t.Fatal("invalid negotiated test wire ceiling")}
+            seal,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(limit),cipher)
+            if e!=nil{t.Fatal(e)}
+            // First fragment missing: independently complete packet must
+            // arrive immediately, without HOL or FEC/repair waiting.
+            whole:=bytes.Repeat([]byte{0x5a},effectiveLinkCeiling+1)
+            frames:=v4TestLegacyLinkFrames(whole,effectiveLinkCeiling,1)
+            if len(frames)!=2{t.Fatal("wrong legacy LINK fragment count")}
+            tail,tailPN,e:=seal.Seal(frames[1]);if e!=nil||tailPN!=0{t.Fatalf("seal tail %d %v",tailPN,e)}
+            if _,_,_,e=bridge.openAuthenticated(tail);!errors.Is(e,errV4NativeLinkPending){
+                t.Fatalf("incomplete authenticated fragment escaped into business: %v",e)
+            }
+            fresh:=[]byte("new-normal-off-first-arrival")
+            freshWire,freshPN,e:=seal.Seal(fresh)
+            if e!=nil||freshPN!=1{t.Fatalf("seal fresh %d %v",freshPN,e)}
+            gotPN,kind,gotHash,e:=bridge.openAuthenticated(freshWire)
+            expected:=fnv.New64a();_,_=expected.Write(fresh)
+            if e!=nil||gotPN!=freshPN||kind!=0||gotHash!=expected.Sum64(){
+                t.Fatalf("independent NORMAL first packet blocked: pn=%d digest=%x want=%x err=%v",
+                    gotPN,gotHash,expected.Sum64(),e)
+            }
+            head,headPN,e:=seal.Seal(frames[0])
+            if e!=nil||headPN!=2{t.Fatalf("seal head %d %v",headPN,e)}
+            gotPN,kind,gotHash,e=bridge.openAuthenticated(head)
+            expected=fnv.New64a();_,_=expected.Write(whole)
+            if e!=nil||gotPN!=headPN||kind!=0||gotHash!=expected.Sum64(){
+                t.Fatalf("complete LINK reassembly not delivered once: pn=%d digest=%x want=%x err=%v",
+                    gotPN,gotHash,expected.Sum64(),e)
+            }
+            // A new authenticated PN carrying the same retired LINK packet
+            // ID must not cause a second application delivery.
+            replayWire,_,e:=seal.Seal(frames[0]);if e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.openAuthenticated(replayWire);e==nil{
+                t.Fatal("retired completed LINK packet delivered again")
+            }
+            // AEAD-valid but malformed LINK framing also cannot escape.
+            invalid:=append([]byte(nil),frames[0]...)
+            invalid[9]=1
+            invalidWire,_,e:=seal.Seal(invalid);if e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.openAuthenticated(invalidWire);e==nil{
+                t.Fatal("malformed authenticated LINK packet delivered")
+            }
+            if _,_,_,e=bridge.openAuthenticated(head);e==nil{
+                t.Fatal("duplicate PN delivered after finished packet")
+            }
+            if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.openAuthenticated(freshWire);e==nil{
+                t.Fatal("retired owner delivered old business after Stop")
             }
             if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{
                 t.Fatal(e)
