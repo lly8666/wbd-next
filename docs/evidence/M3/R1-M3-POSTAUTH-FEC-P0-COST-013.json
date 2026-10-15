@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-POSTAUTH-FEC-P0-COST-013",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "0573798b27fa6fd6327ed1b997ee8cd50b0da526",
+  "result": "PASS_SCOPED_P0_COMPONENT_DEBUG_ONLY_NOT_PRODUCT",
+  "scope": [
+    "crates/wbd-codec/src/fec_p0_cost_tests.rs",
+    "crates/wbd-codec/src/link_fec_wire.rs"
+  ],
+  "source_protocol": "TEST_ONLY; real aws-lc-rs ChaCha20Poly1305 AEAD, real 8B HP, unique PN inside each measured owner, four distinct directional keys, cfg(test) synthetic FecOrigin only",
+  "native": {
+    "workflow": ".github/workflows/worker-native-tests.yml",
+    "run_id": 38678836564,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 116238492055,
+    "consume_job_id": 116238654921,
+    "toolchain": "Rust 1.85.1",
+    "target": "ubuntu-24.04 Linux X64",
+    "profile": "cargo test DEBUG (not release)",
+    "compiled_once": true,
+    "tests_passed": 96,
+    "tests_failed": 0,
+    "prior_passed": 94,
+    "new_passed": 2,
+    "binary_sha256": "4c37b79c29a3dba72dc2c73b2aa5fc9559c8994252f602f9b2de218ca56f3b48",
+    "test_log_sha256": "77fc23ea02245a830b1ff85bcb3f7ad1b033515030f2d6fee03028de3ecfe77b",
+    "build_artifact": {
+      "id": 11947242439,
+      "digest": "sha256:7b5c2ee8b9754bd355494eeb92848c2f009306bbd19c28ee15c261c2c0b4a66a"
+    },
+    "result_artifact": {
+      "id": 11946692248,
+      "digest": "sha256:43070b21436ed11e8c810c319d39c52b24d3fdf8d5686685fa810f59b6ed4328"
+    }
+  },
+  "same_source_actions": [
+    {
+      "id": 38678836459,
+      "workflow": ".github/workflows/r0-link-fec-wire.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836564,
+      "workflow": ".github/workflows/worker-native-tests.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836710,
+      "workflow": ".github/workflows/g2-bootstrap.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836533,
+      "workflow": ".github/workflows/r0-qualification-audit.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836485,
+      "workflow": ".github/workflows/r0-codec.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836556,
+      "workflow": ".github/workflows/r0-record-framing.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    {
+      "id": 38678836554,
+      "workflow": ".github/workflows/governance.yml",
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  ],
+  "experiment": {
+    "labels": [
+      "aead_unique_pn (actual open and replay only)",
+      "postauth_fec (actual open and replay plus WF56 BlockID FEC Heavy/Compact)",
+      "absent_origin_deny_before_aead (intentionally skips AEAD; NOT comparable authenticated workload)"
+    ],
+    "payloads": [
+      192,
+      896
+    ],
+    "plaintext_FEC_header_bytes": 56,
+    "record_fixed_overhead_bytes": 31,
+    "encrypted_wire_bytes_per_record": {
+      "shard192": 279,
+      "shard896": 983
+    },
+    "corpus": "4 directions from 2 tunnels, 16 independently authenticated BlockIDs and PN0..15 per scope, 64 records per batch, unique keys per scope, presealed outside timing",
+    "replay": "New receiver per batch, unique PN only within each new receiver, no old ciphertext replay counted as success",
+    "bounded": "Max4 Heavy/4 Compact per scope, 4096 bytes of Heavy per scope, explicit 14s fake expiry and retired floor",
+    "measurement": "Linux per-thread /proc/thread-self/stat CPU user+sys ticks / getconf CLK_TCK, monotonic wall, 150ms warmup + 1125ms measured per mode/size/repeat, 3 repeats each, reverse order middle repeat; bounded last1024 batch-mean ns/record samples",
+    "sample_percentile_semantics": "batch-average WALL ns per record percentiles; NOT individual packet latency nor p99 product",
+    "measurement_log_marker": "M3_P0_COST",
+    "record_count_is_work_units_not_network_packets": true,
+    "includes_receiver_construction_per_64_records": true,
+    "limitation": "These numbers incorporate fresh owner/context construction and debug instrumentation; differences are not isolated steady-state FEC op cost. No throughput extrapolation or release-mode CPU claim.",
+    "measured": [
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.125681,
+        "thread_cpu_s": 1.13,
+        "records": 37248,
+        "wire_bytes": 10392192,
+        "fec_frame_bytes": 9237504,
+        "ns_per_record_batch_p50": 30073,
+        "ns_per_record_batch_p95": 30767,
+        "ns_per_record_batch_p99": 32029,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.132076,
+        "thread_cpu_s": 1.13,
+        "records": 8960,
+        "wire_bytes": 2499840,
+        "fec_frame_bytes": 2222080,
+        "ns_per_record_batch_p50": 125219,
+        "ns_per_record_batch_p95": 133044,
+        "ns_per_record_batch_p99": 142047,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.126737,
+        "thread_cpu_s": 1.12,
+        "records": 13952,
+        "wire_bytes": 3892608,
+        "fec_frame_bytes": 3460096,
+        "ns_per_record_batch_p50": 80503,
+        "ns_per_record_batch_p95": 81969,
+        "ns_per_record_batch_p99": 82838,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.129586,
+        "thread_cpu_s": 1.13,
+        "records": 13824,
+        "wire_bytes": 3856896,
+        "fec_frame_bytes": 3428352,
+        "ns_per_record_batch_p50": 80558,
+        "ns_per_record_batch_p95": 82355,
+        "ns_per_record_batch_p99": 103949,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.125984,
+        "thread_cpu_s": 1.12,
+        "records": 8960,
+        "wire_bytes": 2499840,
+        "fec_frame_bytes": 2222080,
+        "ns_per_record_batch_p50": 124535,
+        "ns_per_record_batch_p95": 134107,
+        "ns_per_record_batch_p99": 135058,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.125874,
+        "thread_cpu_s": 1.13,
+        "records": 37440,
+        "wire_bytes": 10445760,
+        "fec_frame_bytes": 9285120,
+        "ns_per_record_batch_p50": 29967,
+        "ns_per_record_batch_p95": 30377,
+        "ns_per_record_batch_p99": 31338,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.125933,
+        "thread_cpu_s": 1.13,
+        "records": 37504,
+        "wire_bytes": 10463616,
+        "fec_frame_bytes": 9300992,
+        "ns_per_record_batch_p50": 29946,
+        "ns_per_record_batch_p95": 30336,
+        "ns_per_record_batch_p99": 31028,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.128753,
+        "thread_cpu_s": 1.13,
+        "records": 9024,
+        "wire_bytes": 2517696,
+        "fec_frame_bytes": 2237952,
+        "ns_per_record_batch_p50": 124674,
+        "ns_per_record_batch_p95": 126109,
+        "ns_per_record_batch_p99": 130130,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 192,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.127119,
+        "thread_cpu_s": 1.13,
+        "records": 13952,
+        "wire_bytes": 3892608,
+        "fec_frame_bytes": 3460096,
+        "ns_per_record_batch_p50": 80547,
+        "ns_per_record_batch_p95": 81656,
+        "ns_per_record_batch_p99": 82941,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.126039,
+        "thread_cpu_s": 1.13,
+        "records": 37056,
+        "wire_bytes": 36426048,
+        "fec_frame_bytes": 35277312,
+        "ns_per_record_batch_p50": 30306,
+        "ns_per_record_batch_p95": 30896,
+        "ns_per_record_batch_p99": 31596,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.126727,
+        "thread_cpu_s": 1.13,
+        "records": 8960,
+        "wire_bytes": 8807680,
+        "fec_frame_bytes": 8529920,
+        "ns_per_record_batch_p50": 124922,
+        "ns_per_record_batch_p95": 126715,
+        "ns_per_record_batch_p99": 128537,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 0,
+        "wall_s": 1.125279,
+        "thread_cpu_s": 1.13,
+        "records": 13952,
+        "wire_bytes": 13714816,
+        "fec_frame_bytes": 13282304,
+        "ns_per_record_batch_p50": 80535,
+        "ns_per_record_batch_p95": 81366,
+        "ns_per_record_batch_p99": 81746,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.12794,
+        "thread_cpu_s": 1.12,
+        "records": 13568,
+        "wire_bytes": 13337344,
+        "fec_frame_bytes": 12916736,
+        "ns_per_record_batch_p50": 80931,
+        "ns_per_record_batch_p95": 92728,
+        "ns_per_record_batch_p99": 120317,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.127791,
+        "thread_cpu_s": 1.12,
+        "records": 9024,
+        "wire_bytes": 8870592,
+        "fec_frame_bytes": 8590848,
+        "ns_per_record_batch_p50": 124814,
+        "ns_per_record_batch_p95": 126056,
+        "ns_per_record_batch_p99": 127655,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 1,
+        "wall_s": 1.126911,
+        "thread_cpu_s": 1.13,
+        "records": 37184,
+        "wire_bytes": 36551872,
+        "fec_frame_bytes": 35399168,
+        "ns_per_record_batch_p50": 30244,
+        "ns_per_record_batch_p95": 30646,
+        "ns_per_record_batch_p99": 31036,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "aead_unique_pn",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.126567,
+        "thread_cpu_s": 1.13,
+        "records": 37120,
+        "wire_bytes": 36488960,
+        "fec_frame_bytes": 35338240,
+        "ns_per_record_batch_p50": 30265,
+        "ns_per_record_batch_p95": 30800,
+        "ns_per_record_batch_p99": 31342,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "postauth_fec",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.130171,
+        "thread_cpu_s": 1.13,
+        "records": 8960,
+        "wire_bytes": 8807680,
+        "fec_frame_bytes": 8529920,
+        "ns_per_record_batch_p50": 124890,
+        "ns_per_record_batch_p95": 126988,
+        "ns_per_record_batch_p99": 135345,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      },
+      {
+        "omponent_only": "true",
+        "origin": "test_only",
+        "suite": "chacha20poly1305",
+        "mode": "absent_origin_deny_before_aead",
+        "shard_len": 896,
+        "scopes": 4,
+        "records_per_batch": 64,
+        "repeat": 2,
+        "wall_s": 1.127771,
+        "thread_cpu_s": 1.13,
+        "records": 13952,
+        "wire_bytes": 13714816,
+        "fec_frame_bytes": 13282304,
+        "ns_per_record_batch_p50": 80534,
+        "ns_per_record_batch_p95": 81676,
+        "ns_per_record_batch_p99": 85609,
+        "cold_start_excluded": "false",
+        "transport": "NOT_RUN",
+        "throughput": "NOT_QUALIFIED"
+      }
+    ],
+    "summaries": [
+      {
+        "shard_len": 192,
+        "mode": "aead_unique_pn",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          30.34,
+          30.18,
+          30.13
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          30073,
+          29967,
+          29946
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          32029,
+          31338,
+          31028
+        ]
+      },
+      {
+        "shard_len": 192,
+        "mode": "postauth_fec",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          126.12,
+          125,
+          125.22
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          125219,
+          124535,
+          124674
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          142047,
+          135058,
+          130130
+        ]
+      },
+      {
+        "shard_len": 192,
+        "mode": "absent_origin_deny_before_aead",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          80.28,
+          81.74,
+          80.99
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          80503,
+          80558,
+          80547
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          82838,
+          103949,
+          82941
+        ]
+      },
+      {
+        "shard_len": 896,
+        "mode": "aead_unique_pn",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          30.49,
+          30.39,
+          30.44
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          30306,
+          30244,
+          30265
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          31596,
+          31036,
+          31342
+        ]
+      },
+      {
+        "shard_len": 896,
+        "mode": "postauth_fec",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          126.12,
+          124.11,
+          126.12
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          124922,
+          124814,
+          124890
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          128537,
+          127655,
+          135345
+        ]
+      },
+      {
+        "shard_len": 896,
+        "mode": "absent_origin_deny_before_aead",
+        "measured_repeats": 3,
+        "thread_cpu_us_per_record_approx": [
+          80.99,
+          82.55,
+          80.99
+        ],
+        "batch_elapsed_p50_ns_per_record": [
+          80535,
+          80931,
+          80534
+        ],
+        "batch_elapsed_p99_ns_per_record": [
+          81746,
+          120317,
+          85609
+        ]
+      }
+    ]
+  },
+  "adversarial": "Fresh independent AEAD ciphertext wrong-tunnel route fails before PN; wrong-key route fails authentication; valid independent peer PN0 delivers; duplicate rejects; 16 authenticated BlockIDs pressure max4 state, expire one scope not peer; fresh PN16 old BlockID1 is Retired after real AEAD.",
+  "failure_history": [
+    {
+      "source_sha": "f7ad0013e904fe9fd0fceedd569d6d41dcc85cf3",
+      "worker_run_id": 38678774484,
+      "conclusion": "failure",
+      "cause": "Rust E0282 untyped unused test Vec",
+      "correction_source": "0573798b27fa6fd6327ed1b997ee8cd50b0da526"
+    }
+  ],
+  "qualification": {
+    "component_p0": "RAN_DEBUG_SINGLE_HOST_NO_PRODUCTION_ORIGIN",
+    "release_mode": "NOT_RUN",
+    "optimised_single_packet_hot_path": "NOT_RUN",
+    "production_FEC_on": "DISABLED_NO_REAL_V4_FEC_ORIGIN",
+    "product_normal_off_integration": "NOT_RUN",
+    "windows_arm_native": "NOT_RUN",
+    "same_vm_old_vs_new_product_comparison": "NOT_RUN",
+    "capacity_or_500Mbps": "NOT_QUALIFIED",
+    "physical": "NOT_RUN",
+    "root_Cargo_lock_ABI_CI_changed": false
+  },
+  "next_action": "M0 may use bounded P0 component ratios only as debug diagnostic and commission release-mode steady owner lifetime / genuine V4 provenance separately; no product throughput claim. M3 awaits subsequent formal assignment."
+}
