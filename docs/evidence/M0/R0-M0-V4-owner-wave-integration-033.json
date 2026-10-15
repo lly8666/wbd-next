@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "2f8b2c900a0bd086b21a32448fb6462c8432824b",
+  "progress": "partial",
+  "unverified": true,
+  "result": "M2_FIRST_ALL_M1_M2_M3_M4_SOURCES_IN_MAIN__NATIVE_SCOPE_GREEN__GO_TLS_TRANSACTION_11_11__REAL_GO_RUST_OWNER_NOT_RUN",
+  "registry": {
+    "revision": 2,
+    "assignment_epoch": 1,
+    "next_wave_code": "e88a6a432ea67fcf38a9f089f34ea6d0cda69f90",
+    "governance_run": 38696146850,
+    "bootstrap_run": 38696146961,
+    "branch_permissions_unchanged": true,
+    "worker_branches_untouched": true
+  },
+  "workers": [
+    {
+      "role": "M2",
+      "task": "R2-M2-BOUNDED-TIMER-BURST-007",
+      "native_source": "ba7b45138cd416dcd3ce315c7111c9429829afdd",
+      "native": "51/51",
+      "run": 38689135611,
+      "H": "014d636eaf0319ca3c0a456901b383d94b7214f1",
+      "H_governance": 38692656343,
+      "readonly_g2_run": 38690653354,
+      "main_import": "a8e5a77afa4ee660de634aceca23025ce146fd8c",
+      "main_native": 38691506375
+    },
+    {
+      "role": "M1",
+      "task": "R1-M1-OWNER-LOAN-STOP-INTEGRATION-009",
+      "native_source": "39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed",
+      "native": "80/80",
+      "run": 38688812162,
+      "H": "5399ca365a07e44843f5156716331b8415542c2a",
+      "H_governance": 38689191231,
+      "main_import": "002b388da763f9de185b9f7ad3f5040e278e36db",
+      "main_native": 38691375348
+    },
+    {
+      "role": "M4",
+      "task": "R1-M4-DRIVER-OUTCOME-LEASE-009",
+      "native_source": "39f7671b07c3aa5f54266f42e83bc226a67c5763",
+      "native": "71/71",
+      "run": 38688814472,
+      "H": "44534bac2bcad48779cd7321295b013e004f9942",
+      "H_governance": 38689255498,
+      "main_import": "2a1c5785b95d0b89963c62b133ee0f0099174f91",
+      "main_native": 38691637699
+    },
+    {
+      "role": "M3",
+      "task": "R1-M3-FEC-STEADY-COST-RELEASE-014",
+      "native_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+      "debug": "98/98",
+      "run": 38682956912,
+      "H": "e411dccaf0c8f2a332ae1ce1f22457f5604b894c",
+      "H_governance": 38688674718,
+      "main_import": "a387d1bb801cdd99429b2836c03a0204b2f14b04",
+      "main_native": 38695199065
+    }
+  ],
+  "m3_release": {
+    "run": 38685587150,
+    "actual_rows": 24,
+    "failed_cpu_wall_consistency": 22,
+    "invalid_ratio": true,
+    "reason": "100Hz procfs thread ticks read outside 64-record active wall interval",
+    "main_default_release_ignore_code": "616fa8b0128db7acdaf4bc531e2e66cabc22de23",
+    "next_worker_task": "R1-M3-CPU-PROBE-SAME-WINDOW-015",
+    "production_perf": "NOT_QUALIFIED"
+  },
+  "go_v4": {
+    "code": "09a7bd3102fefc84521239226ec44371977d26d0",
+    "selector_fix": "dd9c4b1f66e40a4823c4153779931802409a3178",
+    "actual_protected_tls_run": 38695761347,
+    "actual_tests_passed": 11,
+    "uncommitted_nonce_failure_rollback": true,
+    "commit_order": "PrepareTransition, protected reply, DetachTransition, Go epoch finish(true)",
+    "rust_authenticated_install": "NOT_RUN"
+  },
+  "final_same_source_actions": [
+    {
+      "run": 38696580529,
+      "source_sha": "2f8b2c900a0bd086b21a32448fb6462c8432824b",
+      "result": "success",
+      "r1_native_passed": 97,
+      "ignored_dedicated_release_cost": 1,
+      "build_id": 11954335773,
+      "result_id": 11954810621,
+      "result_digest": "sha256:4284ae36ca8d19d4f72e6c35b4d05209e66aaf11ef8427f7c489d4452dc0c710"
+    },
+    {
+      "run": 38696580521,
+      "source_sha": "2f8b2c900a0bd086b21a32448fb6462c8432824b",
+      "result": "success",
+      "r1_native_passed": 97,
+      "ignored_dedicated_release_cost": 1,
+      "build_id": 11954435585,
+      "result_id": 11954595532,
+      "result_digest": "sha256:1348bb080d374f2bf7b60f78781c45cbc626ede13d8e027ac56812919cc106ee"
+    },
+    {
+      "run": 38696580565,
+      "source_sha": "2f8b2c900a0bd086b21a32448fb6462c8432824b",
+      "result": "success",
+      "artifact_id": 11954690603
+    }
+  ],
+  "next_assignments": [
+    "M1 R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010",
+    "M2 R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
+    "M3 R1-M3-CPU-PROBE-SAME-WINDOW-015",
+    "M4 R1-M4-UDP-RX-BURST-STOP-010"
+  ],
+  "unsupported": [
+    "actual private trusted Go V4 session to Rust fresh generation owner",
+    "true B01-B04 Go/Rust transition Stop held lease",
+    "positive AF_PACKET raw without CAP_NET_RAW",
+    "native WinARM",
+    "P1-P3 business/product",
+    "500Mbps",
+    "packet-p99",
+    "physical"
+  ],
+  "next_action": "M0 implement actual Go protected ColdSnapshot handoff to fresh Rust owner; exact Prepare/reply/Detach/CommitAdmission, early owned buffers B01-B04, Stop-held lease and private in-process authority. Keep ABI features=0 until genuine positive native E2E; M3 repaired CPU clock needs dedicated Release rerun."
+}
