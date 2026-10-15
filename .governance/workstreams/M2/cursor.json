@@ -4,14 +4,14 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 19,
-  "checkpoint_sha": "4ecb8f47a7d3adc5a26e1387e6cdcb1684459400",
+  "sequence": 20,
+  "checkpoint_sha": "5c291d85554c7badc1e35e95114740d9d2b147d5",
   "progress": "partial",
   "task_id": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
-  "current_task": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008 scoped code complete, source7875137 native55/55 PASS. M0-approved checker mirror5bfacc7 Governance38721567164 PASS, recovered evidence S4ecb8f4 Governance38733820654 PASS. H9669019 Governance38734245868 FAIL cursor metadata contradictory ready_for_integration+unverified; this correcting cursor-only H keeps partial/unverified as real engine/auth/product NOT_RUN.",
-  "why_now": "The independent cursor-only H on 96690198416dc612c5b957637029976464a247f3 failed Governance 38734245868 job116419375526 with exact 'ROLE_SCOPE_FAILED: unverified work cannot be ready for integration'. Source code/evidence unaffected. Correct meta to partial while retaining unverified=true, preserve FAIL.",
-  "done_when": "Pure R2 native 55/55 compiled-once PASS unchanged code source7875137, M0-authorized checker sync exact parent35c45f path+blob SHA matches main snapshot4dfd0a18. Governance checker S5bfacc7 run38721567164 PASS 51 scoped; recovered evidence S4ecb8f4 run38733820654 PASS 52 scoped/60 governance drills. Recovery artifacts verified by sha256. H cursor-only; product/CPU/alloc/GoV4/physical NOT_RUN.",
-  "next_action": "No additional M2 task claimed. M0 owns Go V4 authenticated feedback binding, M1 frozen-handle production proof, engine/platform integration and product/physical/performance. Await next formal M2 assignment; preserve all historical Governance FAILs including H9669019 and non-gating continuity JSON parse BLOCKED.",
+  "current_task": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008 scoped pure state atom complete, code source7875137949f61fead1374d2933798c61814adb92 55/55 native PASS; M0 one-shot checker sync5bfacc7 Governance38721567164 PASS, evidence recovery S4ecb8f4 Governance38733820654 PASS; corrected source-pinned evidence S5c291d8 Governance38734942015 SUCCESS. Product integration NOT_RUN.",
+  "why_now": "After recovered code/CI checker source, first cursor H9669019 Governance38734245868 FAIL inconsistent ready_for_integration/unverified; second H5d09dda Governance38734405285 ROLE_SCOPE_PASS but structure FAIL supplemental evidence missing source_sha. Corrected evidence S5c291d8 now Governance38734942015 success; this cursor-only H seq20 checkpoints corrected evidence S without altering source or erasing FAILs.",
+  "done_when": "Keep 55/55 exact-source R2 native success worker-native38706944249; M0-approved immutable checker mirror5bfacc7 scope PASS 38721567164; recovered evidence S4ecb8f4 Governance38733820654 PASS; corrected evidence S5c291d8 Governance38734942015 PASS. H is cursor-only and separately audited. No real engine, authentication adapter, CPU, latency, driver or physical product qualification.",
+  "next_action": "No new M2 task claimed. Pure recovery implementation handed off as partial/unverified component; M0 owns real authenticated Go V4/engine/platform integration, M1/M3 ownership/cipher handle boundaries and end-to-end product tests. Retain H1/H2 governance FAIL and read-only continuity JSON parsing observation; await formal M2 next assignment.",
   "unverified": true,
   "last_tested_source": "7875137949f61fead1374d2933798c61814adb92",
   "evidence_refs": [
@@ -24,5 +24,5 @@
     "docs/devlog/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.md",
     "docs/evidence/M2/R2-M2-BOUNDED-TIMER-BURST-007.json"
   ],
-  "partial_summary": "Original scoped R2 CODE source7875137949f61fead1374d2933798c61814adb92 55/55 worker-native38706944249 PASS plus G2/static. M0 authorized third checker mirror 5bfacc7 from precise H35c45f, exact single tool blob69bebb9; own Governance38721567164 SUCCESS ROLE_SCOPE_PASS 51. Recovery evidence S4ecb8f47 own Governance38733820654 SUCCESS ROLE_SCOPE_PASS 52/60 drills and artifact11970714480 digestbe1f29. First H96690198 carried invalid progress ready_for_integration with unverified=true; its Governance38734245868 FAIL job116419375526, archived artifact11971900220 digest3541934; no code changed. This corrective cursor-only H sets partial/unverified true to accurately describe a pure R2 component not yet integrated. Earlier failed runs retained, non-gating continuity JSON parse BLOCKED, GoV4/real-auth/driver/CPU/500Mbps/physical NOT_RUN, no further task claimed."
+  "partial_summary": "M2 RACK positive witness index 008 source7875137 native55/55 compiled-once worker-native38706944249 PASS, G2/static PASS. M0 immutable one-off approved checker mirror commit5bfacc7 exactly parent35c45f2, sole file blob69bebb9; Governance38721567164 ROLE_SCOPE_PASS 51. Evidence S4ecb8f4 Governance38733820654 ROLE_SCOPE_PASS 52. Failed H9669019 Governance38734245868 metadata ready+unverified conflict; failed H5d09dda Governance38734405285 ROLE_SCOPE_PASS 54 but structure BLOCKED supplemental evidence missing source_sha. Corrected evidence S5c291d8 adds source_sha7875137 and archives both H FAIL; Governance38734942015 SUCCESS job116421757711 artifact11971707440 sha256:ed134a6b88d4de567f3a237ba4285c275e7559425881f08a33d372f02c80bb14. H seq20 cursor-only checkpoint S2, progress partial/unverified true, product GoV4/auth/kernel/CPU/alloc/500Mbps/physical NOT_RUN; no new M2 task."
 }
