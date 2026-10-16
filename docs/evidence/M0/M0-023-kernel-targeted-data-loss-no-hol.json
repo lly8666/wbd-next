@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "code_source_sha": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
+  "source_sha": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
+  "result": "PARTIAL_EXACT_KERNEL_ENCRYPTED_DATA_LOSS_NO_HOL_PASS",
+  "why_now": "New GOV-005 and docs/architecture/TEST_PLAN.md §0 explicitly stop prior per-packet/parameter stepping. Existing source-locked Go TLS→non-_test opt-in Rust original owner→M4 raw/TUN evidence proves real bilateral function, but 1% qdisc dropped an unknown possibly irrelevant packet. This one capability batch targets exactly a *known encrypted DATA packet* and proves later true independent first arrival; afterwards advance directly to sustained owner loop, not more smoke scaling.",
+  "mainline_refresh": {
+    "prior_cursor_sequence": 96,
+    "checkpoint_sha": "ba2fafab3d3127740e451ae3c5bd72601b3d07f6",
+    "inspected_commits": [
+      "cb33e9acfb2f3e591847a336827eae4862668301",
+      "096be007fc04f5a3d19e2d4debf8c2899526447b",
+      "60c729f37ca0549dde49e9cb4b8c29e58eeecc31",
+      "4faf27659117fb362752caa91a9c5165674d60d8"
+    ],
+    "prior_new_main_head": "4faf27659117fb362752caa91a9c5165674d60d8",
+    "recovery": "CLEAN: prior H96 cursor only, GOV-005 governance text + receipt + PR6 merge; exact new rules and TEST_PLAN §0 loaded; no queued/in-progress Actions or PRs."
+  },
+  "implemented": {
+    "real_path": "Same existing original pinned FakeTCP Go TLS authenticated protected callsite -> developer-gated NON-_test Go private embedded Rust normal M1/M3 owner -> same generation M4 Linux raw socket -> actual /dev/net/tun -> independent Linux Go UDP app",
+    "kernel_rule": "Within owned Actions Linux netns install tc clsact lo egress u32 filter matching source IP10.0.0.2/32, destination IP10.0.1.1/32, TCP protocol 6 and one test-tagged IPv4 ID (different per cipher). One encrypted original C2S PN0 record is sent with correctly recomputed IPv4 checksum and unchanged ciphertext; tc u32 action drop. Distinct original sealed PN1 C2S DATA is sent at actual correct next TCP sequence. Original Rust owner's single RX receives PN1 and delivers it despite missing PN0. Independent TUN UDP app compares exact original PN1 payload and checks no second app datagram during bounded 40ms. Kernel tc -s filter dropped count is exactly one for each cipher.",
+    "ciphers": [
+      1,
+      2,
+      3
+    ],
+    "targeted_original_encrypted_data_pn": 0,
+    "verified_later_pn": 1,
+    "kernel_drop_per_cipher": 1,
+    "fake_restoration": false,
+    "repair": "NOT_RUN"
+  },
+  "exact_actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38903483740,
+    "attempt": 1,
+    "head_sha": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
+    "conclusion": "success",
+    "build_job": 116981194341,
+    "consume_job": 116981768452,
+    "build_artifact": {
+      "id": 12046978570,
+      "digest": "sha256:7288373be1f34a831b0355c03fbecdc31fb2459994b4c7716effb72656668afd"
+    },
+    "result_artifact": {
+      "id": 12047172903,
+      "digest": "sha256:980e82843f0a19873d156c89d7d96d78003b369cbfa25963cc72e98232a1bf9f"
+    },
+    "test_name": "TestR0V4EmbeddedKernelSpecificDataLossNoHOL",
+    "cases": [
+      {
+        "cipher": 1,
+        "kernel_selected_encrypted_pn0_drops": 1,
+        "next_independent_app_payload": "MATCH",
+        "later_original_pn": 1,
+        "missing_original_tcp_record_wire_bytes": 115,
+        "result": "PASS"
+      },
+      {
+        "cipher": 2,
+        "kernel_selected_encrypted_pn0_drops": 1,
+        "next_independent_app_payload": "MATCH",
+        "later_original_pn": 1,
+        "missing_original_tcp_record_wire_bytes": 115,
+        "result": "PASS"
+      },
+      {
+        "cipher": 3,
+        "kernel_selected_encrypted_pn0_drops": 1,
+        "next_independent_app_payload": "MATCH",
+        "later_original_pn": 1,
+        "missing_original_tcp_record_wire_bytes": 115,
+        "result": "PASS"
+      }
+    ],
+    "exact_scope": "Original Go protected handoff, original Rust AEAD/Normal/off, real Linux kernel tc classifier + M4 raw RX + actual TUN application; all cipher suites. Existing compiled-once same-source real kernel/MTU/netem and short 12-packet function regressions also remain success. No FEC, repair, sustained runtime benchmark or production adapter."
+  },
+  "same_source_ancillary": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38903483616,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "identity/structure only"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38903483767,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "governance tool selftest"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38903516708,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN"
+    }
+  ],
+  "evidence_note": "The test log 'later_payload_bytes=0' prints a reused variable AFTER the 40ms negative read overwrote successful PN1 receive length with 0. The test previously asserted the independent first PN1 UDP read had peer src and payload equality to exactly 56 bytes before that second negative read; logged 0 is NOT the verified payload length and MUST NOT be used as such. Source/test assertions and per-cipher positive anchors determine PASS.",
+  "remaining": [
+    "Next required capability under updated TEST_PLAN §0: continuous independently driven sender, receiver and original Rust owner data loop. Existing short tests make Go invoke RX/TX one packet at a time and cannot demonstrate sustained product performance.",
+    "Normal/off dev baseline 10Mbps/direction, warmup10s+measure60s, mixed 64/256/1200/effective MTU size, injected/delivered/missing/CPU-s/PSI/RSS/PPS/wire/drop/queue age/actual RTT not measured.",
+    "Genuine async M4 driver held-completion B04 and full B01/B02, external received SYN, Windows/ARM runtime, physical/500Mbps still NOT_RUN. Preserve default production ABI features0.",
+    "One selected packet is dropped at actual kernel classifier; this verifies no-HOL with missing TCP-like bytes only, not cipher repair/recovery or robustness against 1/5% loss.",
+    "GitHub artifact ZIP SHA digests are API metadata receipts, not independent downloaded rehashes."
+  ],
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "physical": "NOT_RUN",
+  "next_action": "Implement independent continuous actual Rust owner RX and TX workers, separately scheduled from the Go app/injector, reusing original M1/M3/M4 callbacks and same private Go TLS admission; solve current one-registry-lock/synchronous raw 750ms contention before measuring. Then run one 10Mbps-per-direction Normal/off FEC-off developer performance Action with 10s warmup 60s measurement, actual packet/byte/CPU/queue/RTT receipts and host-capacity stop. Do NOT use Go test per-packet helper as the steady driver or expand trivial smoke sizes."
+}

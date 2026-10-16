@@ -21,6 +21,20 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_targeted_no_hol_GOV005": {
+    "code_source_sha": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
+    "result": "PARTIAL_EXACT_KERNEL_ENCRYPTED_DATA_LOSS_NO_HOL_PASS",
+    "evidence": "docs/evidence/M0/M0-023-kernel-targeted-data-loss-no-hol.json",
+    "exact_native_run_id": 38903483740,
+    "go_real_tls_original_rust_M4_kernel_targeted_c2s_data_drop_pn0": "PASS_3_CIPHERS",
+    "kernel_classifier_dropped_each_suite": 1,
+    "next_distinct_authenticated_c2s_pn1_first_arrival": "PASS_3_CIPHERS_NO_HOL",
+    "repair_retransmission": "NOT_RUN",
+    "independent_continuous_owner_loop": "NOT_RUN",
+    "normal_off_development_10mbps_per_direction": "NOT_RUN",
+    "production_abi_features": 0,
+    "product": "NOT_RUN"
+  },
   "m0_023_12packet_kernel_loss1": {
     "code_source_sha": "f15e2319483ee33fc411731cac2df57e14c17807",
     "result": "PARTIAL_12_PACKET_BILATERAL_AND_ACTUAL_KERNEL_LOSS1_OBSERVATION_PASS",
