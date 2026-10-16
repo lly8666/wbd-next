@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "genuine_linux_ipv4_tcp_raw_carrier_from_original_scoped_v4_frozen_record",
+  "source_sha": "88485856da177b5b8e5a290f00eea2633cdd942c",
+  "result": "PARTIAL_TRUE_RAW_IPV4_TCP_S2C_FIRST_PASS",
+  "code_changes": [
+    "Normal Rust M4 ScopedRawIpv4Tx owns Linux AF_INET/SOCK_RAW/IPPROTO_RAW, checks SO_BINDTODEVICE ifindex and observed MTU, uses IP_HDRINCL and BorrowFence for generation and Stop.",
+    "Normal Rust ProtectedScopedOwner::submit_scoped_raw_tx drains SAME M1 FrozenRecord TX loan into original R1 ipv4_tcp::build and actual kernel sendto, without new crypto, PN or alternate queue.",
+    "Within true Linux netns, Go app -> true kernel TUN -> original Rust M1 slab -> protected S2C AEAD PN1 -> normal Linux raw IPv4/TCP packet -> independent Go kernel SOCK_RAW/IPPROTO_TCP peer -> TLS opener verifies original application payload.",
+    "Three cipher suites each passed real raw IPv4/TCP packet size138B, inner application39B, exact seq/PN1, alongside existing bilateral TUN/UDP real-kernel tests."
+  ],
+  "verification": {
+    "native_run": 38851225211,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "build_job": 116812631547,
+    "consume_job": 116813032608,
+    "go_tests": "9/9 top-level PASS",
+    "rust_test": "1/1 PASS",
+    "raw_cipher_suites": "3/3 PASS",
+    "build_artifact": {
+      "id": 12025151666,
+      "digest": "sha256:a0c95a88fa421bf9b419681e1c962fcade164b6d7a2423051047018eabe81388"
+    },
+    "result_artifact": {
+      "id": 12025022841,
+      "digest": "sha256:744c10b75fdc4da5c30388b7dea55aeb163e1296b0ca6880f8149d6f1d19ac5b"
+    },
+    "source_run_attempt_binary_input_hashes": "verified by source-exact build-once/consume Actions; ZIP metadata digest from GitHub API, ZIP not independently downloaded"
+  },
+  "other_exact_source_runs": {
+    "native_functional": 38851225281,
+    "native_abi": 38851225081,
+    "cross_abi_build_only": 38851225137,
+    "g2": 38851225156,
+    "platform": 38851225169,
+    "governance": 38851225240,
+    "static": 38851225098,
+    "maintenance_169_of_169": 38851225159,
+    "component_perf_not_product": 38851225135
+  },
+  "not_run": [
+    "Normal production positive Go TLS authorized native control; untrusted 248B cold not authority, feature mask 0",
+    "Actual Linux AF_PACKET/raw C2S peer receive into original Rust M1 and authentic app delivery on full bilateral real raw carrier",
+    "Production trusted FakeTCP session tuple binding; fixture uses loopback tuple ports49321/49322",
+    "Actual delayed M4 driver-held Stop B01-B04, reconnect, epoch switch, fragmented TX",
+    "Full netns veth tc netem normal/150/300ms 1/5pct loss/reorder/reconnect, product/physical/500Mbps/CPU-p99"
+  ],
+  "next_action": "Complete original raw AF_PACKET C2S receive directly into protected Rust M1/TUN, then production authenticated Go native control and driver-held Stop. Run source-locked netns tc netem product matrix only after full bilateral raw product path."
+}

@@ -743,5 +743,19 @@
     "product_e2e": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_real_raw_faketcp_s2c": {
+    "code_source_sha": "88485856da177b5b8e5a290f00eea2633cdd942c",
+    "result": "PARTIAL_TRUE_RAW_IPV4_TCP_S2C_FIRST_PASS",
+    "evidence": "docs/evidence/M0/M0-023-real-raw-faketcp-s2c.json",
+    "real_path": "Go V4 protected TLS -> real TUN app ingress -> Rust M1 scoped AEAD/PN FrozenRecord -> normal M4 IPv4/TCP build + Linux IPPROTO_RAW sendto -> independent Go raw TCP socket and S2C TLS opener",
+    "tests": "3 cipher suites PASS, 39B app payload, 138B raw IPv4/TCP, PN1 and exact TCP seq",
+    "native_run": 38851225211,
+    "production_features": 0,
+    "real_raw_c2s_receive": "NOT_RUN",
+    "product_go_native_control": "NOT_IMPLEMENTED",
+    "driver_held_stop_B01_B04": "NOT_RUN",
+    "netem_matrix": "NOT_RUN",
+    "product_e2e": "NOT_RUN"
   }
 }
