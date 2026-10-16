@@ -1,0 +1,11 @@
+# M0-023: non-_test embedded Go V4 control bridge
+
+**PARTIAL_EMBEDDED_PRIVATE_CONTROL_ACTIONS_PASS**, CODE SOURCE `57d7dc7c7bfb8338606f42daa7c27538644ca1bc`, NOT production product acceptance. [Exact evidence](../evidence/M0/M0-023-embedded-private-control.json).
+
+Why now: the established WBGH-v1 normal Rust owner Prepare was exercised only through feature-gated TEST-ONLY FFI. A separate *non-`_test`* package-private Go V4 native control adapter now runs from the real credential-checked `EstablishServerV4` source and uses the original Rust M1/M3 owner generation, with bounded Detach early staging, exact post-protected SenderNext Commit, Stop and release. It is compiled only under explicit developer feature `m0_v4_embedded_go`/`wbd_v4_embedded_go`; default Rust production `features=0` and old runtime V4 refusal remain unchanged. Source trust is the Go private verified callsite, **not** self-attested cold248 or WBGH bytes. This feature-enabled shared library must not ship as public credential authority.
+
+Native Actions [38874157179](https://github.com/lly8666/wbd-next/actions/runs/38874157179) attempt1 compiled original Go real TLS and feature-enabled normal Rust dylib once, consumed hash-checked binaries in same run. New actual Go→embedded Rust Prepare/Commit/Stop and original Rust negative tests passed for all 3 cipher suites; existing TEST-ONLY true isolated Linux netns raw↔TUN app three-suite evidence also still passes **in a separate test path**. No evidence that the new embedded control owns those kernel sockets yet. Normal CLI/product remains blocked, B01–B04 actual held M4 driver lease and product veth/netem NOT_RUN. Governance & maintenance on exact source PASS, central main scope audit SKIPPED.
+
+Historical CI failures *not overwritten*: run38873564803 malformed YAML zero jobs after script interpolation, run38873826422 native build success but shell quote EOF during consume; final source fixed the runner and produced positive verified native receipts. Earlier 9035e3c4 run38873501721 compiled but did not execute the new positive control case. Details and artifact hashes live only in evidence.
+
+**One next action:** attach original M4 raw/TUN driver lease to this same non-test embedded Rust generation and enforce actual B01–B04 held Stop / late return / reconnect in Actions; do not turn on V4 capability prematurely.

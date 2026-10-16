@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
+  "code_source_sha": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
+  "atom": "non_test_private_Go_V4_embedded_Rust_Prepare_Detach_Commit_Stop_Release",
+  "result": "PARTIAL_EMBEDDED_PRIVATE_CONTROL_ACTIONS_PASS",
+  "why_now": "Previous positive verified Go source reached ordinary Rust protected Prepare only via TEST-ONLY cgo adapter. Explicit developer-gated non-_test package-private Go adapter now executes Prepare, bounded Detach early stage, exact SenderNext Commit, and Stop/release with original Rust M1/M3 generation; product remains disabled pending real M4 driver held lease gates.",
+  "paths": [
+    "crates/wbd-engine/Cargo.toml",
+    "crates/wbd-engine/src/lib.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "implementation": "Explicit m0_v4_embedded_go Cargo feature and wbd_v4_embedded_go Go build tag. Non-_test package-private Go v4EmbeddedNativeBridge uses the actual credential-checked EstablishServerV4 private ownerBridge path; passes frozen 248-byte snapshot with WBGH-v1 actual FakeTCP tuple/MSS/RX-boundary only after verified credentials, stages Detach early bytes with bounded seq/size, commits actual post-reply SenderNext and stops/releases. Rust feature-specific FFI calls ordinary ProtectedScopedOwner (original M1 RX/TX, M3 AEAD/PN) and keeps independent monotonic generation and bounded 16 sessions/32 early. Not standalone public installer; developer-enabled dylib exports embedded symbols, so it MUST NOT be distributed as qualified production ABI or treated as cryptographic proof of Go credentials.",
+  "exact_source_verification": [
+    {
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38874157179,
+      "attempt": 1,
+      "conclusion": "success",
+      "head_sha": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
+      "build_job": 116885054389,
+      "consume_job": 116885655216,
+      "build_artifact": {
+        "id": 12033744903,
+        "digest": "sha256:a99c6fca08f257441e2f933a5dfc5d52e971d26bb6ad8844e34ca8bd0119a904"
+      },
+      "result_artifact": {
+        "id": 12034767037,
+        "digest": "sha256:478ce271d60da98f6f0bfd92c1ae28d1e367643be47d91ddad3c5a1bb21b2809"
+      },
+      "scope": "Actual protected Go TLS private callsite→non-_test embedded Go adapter→ordinary Rust ProtectedScopedOwner Prepare/Commit/Stop/Release all ciphers 1/2/3; Rust private ABI malformed/unknown test PASS; previous TEST-ONLY normal raw/TUN true Linux namespace C2S/S2C 3 ciphers PASS separately in same run; not product end-to-end"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38874157198,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116885054119,
+      "artifact": {
+        "id": 12033903814,
+        "digest": "sha256:39aaebb26aa5f1935b9c1445af4656c6145e58303f336a2b6fbb144df5e82cd2"
+      },
+      "scope": "maintenance tool selftests only"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38874157246,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116885054257,
+      "artifact": {
+        "id": 12034227540,
+        "digest": "sha256:32b3c776a880be607d43061759c07d528873f9ad2a15e914234a10707a93d4be"
+      },
+      "scope": "identity/structure only, drills/model NOT_RUN"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38874194576,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN (main push scope audit was skipped)"
+    }
+  ],
+  "fail_recovery": [
+    {
+      "source_sha": "0f52a657af6863eade9b6012fcc3065893543902",
+      "run_id": 38873564803,
+      "conclusion": "failure",
+      "cause": "CI YAML malformed: template string replacement interpreted shell $' and duplicated workflow tail; zero jobs; not source test failure"
+    },
+    {
+      "source_sha": "73f98cc5818d58f286bd679ffbda69228451d4ce",
+      "run_id": 38873826422,
+      "conclusion": "failure",
+      "cause": "YAML repaired, build PASS, consume shell unexpected EOF: missing closing quoted Go test filter and Rust test command accidentally concatenated; no positive test executed"
+    },
+    {
+      "source_sha": "9035e3c4e5974299cefa35a89e02538b4926614d",
+      "run_id": 38873501721,
+      "conclusion": "success",
+      "scope": "intermediate compile and legacy tests only; new embedded positive test NOT_RUN at this source, not used as product eligibility"
+    }
+  ],
+  "comparison_limit": "Other SOURCEs' native ABI, cross-build, G2 and real Go TLS results remain historical and are not combined into a new exact-SOURCE product qualification. No local tests.",
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "unsupported_or_not_run": [
+    "Feature-enabled embedded C functions are not hardened, production-certified authentication-capable public ABI; the real runtimeentry still rejects V4 and product capabilities remain off",
+    "Pinned Go FakeTCP SYN association in Actions test, not externally received production SYN; new embedded control test has no actual M4 raw/TUN driver lease or app sink",
+    "Actual M4 held driver loans B01-B04, late returns, old/new generation reconnect, Detach-before-delivery and partial-install failure on same real driver path NOT_RUN",
+    "Normal/off end-to-end product data, veth tc netem 0/150/300ms/1/5% loss-reorder, MTU±1, old/new same-job AB/BA, CPU-s/perf p99, physical/500Mbps NOT_RUN"
+  ],
+  "next_action": "Bind actual M4 Linux raw/TUN driver lease ownership and Stop-held/late return B01–B04 to THIS non-test embedded Go→ordinary Rust owner generation and run exact-source Actions before enabling V4 product or attempting baseline performance."
+}
