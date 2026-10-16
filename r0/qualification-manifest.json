@@ -21,6 +21,15 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_live_flow_capture": {
+    "code_source_sha": "a9b9dd5d523e56145404e675adf43ba9066a4e39",
+    "result": "PARTIAL_GO_PROTECTED_TUPLE_CAPTURE_PASS",
+    "evidence": "docs/evidence/M0/M0-023-Go-protected-flow-capture.json",
+    "go_protected_entrypoint": "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "test_anchor": "TestR0V4AssociationFlowScopeComesFromOriginalFakeTCP",
+    "rust_production_authorization_and_live_tuple_binding": "NOT_RUN",
+    "product_qualification": "NOT_RUN"
+  },
   "m0_023_scoped_observation": {
     "code_source_sha": "35db3d01bc1bd22deb355676c9558909626f9203",
     "result": "PARTIAL_COMPONENT_PASS",

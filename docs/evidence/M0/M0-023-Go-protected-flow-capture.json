@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "Go V4 credential-verified FakeTCP association flow copy at protected owner Prepare, checked again after Detach before Commit",
+  "source_sha": "a9b9dd5d523e56145404e675adf43ba9066a4e39",
+  "result": "PARTIAL_GO_PROTECTED_TUPLE_CAPTURE_PASS",
+  "summary": "Package-private v4PeerTransport carries exact original faketcp.ServerFlow IPv4/port tuple alongside observed SYN MSS. EstablishServerV4 gets this from its real assoc only after verified TLS credentials and before owner.prepare; equality rechecked post-protected reply and Detach and before owner.commit. No extra RTT, no Rust authority inferred from caller-provided cold bundle.",
+  "changed_paths": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+  ],
+  "test_anchor": "TestR0V4AssociationFlowScopeComesFromOriginalFakeTCP",
+  "verification": [
+    {
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38863991746,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "build_job": 116852493110,
+      "consume_job": 116853010681,
+      "build_artifact": {
+        "id": 12029563866,
+        "digest": "sha256:44d380cad2b9acd082d22aa2d4e12df408bbb3d732f7d314fc77f58cf82d317f"
+      },
+      "result_artifact": {
+        "id": 12030641260,
+        "digest": "sha256:d2ee9cfbcbcbc052f750b3e01a75a9a40a2b2d3d71bc006f3a7e00a20151c180"
+      },
+      "scope": "actual Go TLS to TEST-ONLY private Rust candidate, same ordinary Rust owner AEAD/PN, isolated Linux raw/TUN kernel 3 ciphers; not production installer"
+    },
+    {
+      "workflow": "r0-v4-cold-native.yml",
+      "run_id": 38863991800,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "build_job": 116852493344,
+      "consume_job": 116852972714,
+      "build_artifact": {
+        "id": 12029763563,
+        "digest": "sha256:1f05a2cf0f0003c0504a1b576be34f1195f25c053fcf85068cf00a289f8debbd"
+      },
+      "result_artifact": {
+        "id": 12030815058,
+        "digest": "sha256:45c1204f50fee560f7ff38f216acf80a95f2aadb510ef05eb48d967a334a6b8a"
+      },
+      "scope": "pinned protected Go TLS test 1/1 and Rust cold grammar 4/4, no positive production install"
+    },
+    {
+      "workflow": "r0-v4-tls.yml",
+      "run_id": 38863991913,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "build_job": 116852493423,
+      "consume_job": 116852671730,
+      "build_artifact": {
+        "id": 12029598684,
+        "digest": "sha256:1676853868053ee6145fd4cae86d272e2c3294bbf087eaafdb71c09e57a4bbe3"
+      },
+      "result_artifact": {
+        "id": 12029979668,
+        "digest": "sha256:63f50001d65aa02942b327f13b919b48859838deeb08aa7c181086109676f357"
+      },
+      "scope": "13/13 protected Go TLS/admission tests, including new exact FakeTCP association flow capture and protected rollback; no Rust ABI"
+    },
+    {
+      "workflow": "r0-go-control.yml",
+      "run_id": 38863995564,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "build_job": 116852504292,
+      "consume_job": 116852726377,
+      "build_artifact": {
+        "id": 12030531412,
+        "digest": "sha256:fd908f4478e0cc04d1bdd762dbd64ecd4b5d59d173654a16fdd45040742f4847"
+      },
+      "result_artifact": {
+        "id": 12030383667,
+        "digest": "sha256:61e4933028cec90ae7fa9724d887f7b0f85b258ba9e6da1283bf67220f0e3764"
+      },
+      "scope": "6/6 compiled Go control test groups and 6 CLI negative gates; V4 production still disabled"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38863991787,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "job": 116852493329,
+      "artifact": {
+        "id": 12030022920,
+        "digest": "sha256:44349bf25dcb59bc23af0505f9eefb7f5c70c1ea8ce6d8950e7b52b51b3cda2b"
+      },
+      "scope": "identity/structure only; drills/model NOT_RUN"
+    }
+  ],
+  "source_integrity": "Source SHA confirmed as GitHub run.head_sha and workflow receipt; build-once/consume jobs from same run. Artifact digests are GitHub API metadata, not independently downloaded/rehashed.",
+  "limits": [
+    "Transport flow is observed from actual Go FakeTCP association at trusted protected callsite; Rust native owner does NOT yet bind this flow to a production versioned authenticated admission command. No claim that copying tuple authenticates a peer or cannot be forged as standalone bytes.",
+    "Existing separate test-tag raw/TUN bidirectional loopback uses fixture TCP tuple; real production FakeTCP tuple/seq binding remains NOT_RUN.",
+    "Stop-held real M4 driver lease B01-B04, old/new generation reconnect, veth tc netem 0/150/300ms and 1/5% loss/reorder, fragmentation/retransmission all NOT_RUN.",
+    "Production ABI features=0; ordinary runtime V4 disabled; physical and product throughput/CPU/p99/500Mbps NOT_RUN.",
+    "This scope does not overwrite prior TEST-ONLY evidence or other historical failed/NOT_RUN SOURCEs."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Secure real Go credential-checked V4 private owner activation into ordinary Rust scoped owner with frozen original FakeTCP flow and exact RX/TX seq boundaries; retain production feature=0 until B01-B04 and product gates are verified."
+}
