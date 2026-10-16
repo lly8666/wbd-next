@@ -97,6 +97,14 @@ set +e
 sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
+# The owned netns test runs as root; never let a successful measurement
+# become an unauditable GitHub artifact due to the 0600 root-only receipt.
+# Change ownership of ONLY the exact declared perf JSON after child exit;
+# no private credentials or large traffic body are present in the receipt.
+if [[ "$PERF" == 1 && -f "$ROOT/native-probe-result/normal-off-dev-10mbps.json" ]]; then
+  sudo -n chown -- "$(id -u):$(id -g)" "$ROOT/native-probe-result/normal-off-dev-10mbps.json"
+  chmod 0644 "$ROOT/native-probe-result/normal-off-dev-10mbps.json"
+fi
 if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
 fi
