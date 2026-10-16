@@ -22,6 +22,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
 */
 import "C"
 import (
@@ -162,4 +163,12 @@ func (b *v4EmbeddedNativeBridge) rustOwnerLoopStats()(v4EmbeddedLoopStats,error)
     rc:=C.wbd_m0_embedded_go_loop_stats(C.uint64_t(b.handle),&rx,&tx,&re,&te)
     if rc!=0{return v4EmbeddedLoopStats{},fmt.Errorf("%w: Rust loop stats=%d",errV4Embedded,int(rc))}
     return v4EmbeddedLoopStats{uint64(rx),uint64(tx),uint64(re),uint64(te)},nil
+}
+
+func (b *v4EmbeddedNativeBridge) rustOwnerWorkerCPU()(uint64,uint64,error){
+    if !b.committed||b.handle==0{return 0,0,errV4Embedded}
+    var rx,tx C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_thread_cpu(C.uint64_t(b.handle),&rx,&tx)
+    if rc!=0{return 0,0,fmt.Errorf("%w: kernel worker thread CPU=%d",errV4Embedded,int(rc))}
+    return uint64(rx),uint64(tx),nil
 }
