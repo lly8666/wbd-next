@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+  "code_source_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+  "atom": "one_bounded_preliminary_actual_Linux_tc_netem_10ms_original_verified_Go_Rust_M4_owner_bilateral_kernel",
+  "result": "EXPLORATORY_PASS_NOT_PRODUCT_QUALIFICATION",
+  "why_now": "User requested fastest Actions preliminary test; previous exact source already passed original private Go→Rust M4 real raw/TUN bidirectional, PN replay/corrupt negatives and generation isolation, but had not exercised real kernel qdisc network delay. B04 genuine asynchronous borrowed completion is not present in synchronous kernel-copy raw/TUN backend; do not fabricate a loan or claim that B04 passed. Reuse current normal-build original Rust owner and compiled Go executable.",
+  "implementation": [
+    "Same existing m0-v4-native-owner-probe.yml builds pinned Go real TLS/cgo and Rust feature-gated native owner library and test binary exactly once, hashes all SOURCE inputs and consumes same-run compiled artifacts.",
+    "After existing isolated Linux netns real raw/TUN baseline PASS, reruns the SAME embedded real M4 raw/TUN suite in a fresh owned netns with privileged kernel tc qdisc replace dev lo root netem delay 10ms limit 256; explicitly zero configured loss; suite1/2/3 each validates kernel C2S 31-byte UDP business, S2C 39-byte independent Go raw peer AEAD/PN+seq, and repeated PN/corrupted AEAD cannot redeliver.",
+    "Native runner checks real tc qdisc netem queue counters after test and returns UNSUPPORTED (77) rather than claiming PASS if backend lacks tc or counts remain zero; all namespace resources are removed on exit. Only exploratory case one scenario; no changed seeds or packet/MTU assumptions.",
+    "Source-locked result artifact writes explicit EXPLORATORY_PASS/UNSUPPORTED/FAIL, log SHA, source, attempt, B04/product/physical NOT_RUN and measured RTT/throughput NOT_MEASURED."
+  ],
+  "exact_source_actions": [
+    {
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38879621342,
+      "attempt": 1,
+      "head_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+      "conclusion": "success",
+      "build_job": 116902941076,
+      "consume_job": 116903517168,
+      "build_artifact": {
+        "id": 12036957328,
+        "digest": "sha256:5043e2e4aeec8c0bc24624524b7ec73b545769b6f216ac4a123714b3adc967b5"
+      },
+      "result_artifact": {
+        "id": 12036429090,
+        "digest": "sha256:894b93c2c9fa806baed1816d0b3ef43250c42a1873d07edb78e7f28581a0e95b"
+      },
+      "baseline": "PASS prior true same-source Linux raw C2S/S2C and independent user-space Go TLS/UDP application; original owner dev-gated feature, not product",
+      "preliminary_netem": "EXPLORATORY_PASS exactly one configured 10ms delay, zero configured loss on Linux lo; kernel qdisc netem observed Sent 2400 bytes 24 pkt dropped0; embedded suite1/2/3 C2S S2C and AEAD integrity reject PASS",
+      "measured_rtt": "NOT_MEASURED",
+      "measured_throughput": "NOT_MEASURED",
+      "qualifying_product_network": "NOT_RUN"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38879621201,
+      "attempt": 1,
+      "head_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+      "conclusion": "success",
+      "scope": "governance selftest only"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38879621190,
+      "attempt": 1,
+      "head_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+      "conclusion": "success",
+      "scope": "identity/structure only; drills/model NOT_RUN"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38879654218,
+      "attempt": 1,
+      "head_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    }
+  ],
+  "scientific_boundaries": [
+    "tc qdisc configuration says delay 10ms, but no application RTT or tail latency was measured; kernel qdisc packet counters 24/2400 show actual traversal, NOT 10ms measured end-to-end effect.",
+    "0% configured loss is a no-loss functional smoke, not netem loss/reorder test. No 150/300ms high-RTT, 1/5% loss, burst/fragment/MTU boundaries, or 10Mbps/dir traffic measurement.",
+    "TEST-ONLY original pinned Go FakeTCP SYN remains test-generated, real TLS credential verification and actual kernel traffic executed. Production normal ABI features0, V4 runtime still closed.",
+    "Real M4 raw/TUN borrow lifetimes are synchronous. Outstanding genuinely asynchronous kernel/driver-held loan, StopIncomplete/late-completion B04, B01-B02 full overlap and old-new same tunnel migration remain NOT_RUN.",
+    "Ordinary product/client packaging, host real external SYN, physical, Windows/ARM target runtime, normal CPU-s/p99/copies and 500Mbps all NOT_RUN.",
+    "Artifact ZIP digests are GitHub Actions API metadata receipts; hashes of source/binaries and log are created by existing Actions manifest/results, not separately downloaded/rehashed by M0."
+  ],
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "physical": "NOT_RUN",
+  "next_action": "Proceed with true asynchronous M4 driver-held B04 only if original backend supports completion ownership; otherwise retain UNSUPPORTED/NOT_RUN and implement a correctly observable production Linux async driver boundary before enabling product. Then expand existing source-locked Actions to one realistic veth/netem 150ms scenario/MTU boundaries and bounded loss; measure actual RTT and stop heavier load at host capacity."
+}

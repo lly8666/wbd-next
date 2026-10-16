@@ -21,6 +21,21 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_preliminary_kernel_netem_10ms": {
+    "code_source_sha": "443734232dd4c341e0922757a3f06a452c453fda",
+    "result": "EXPLORATORY_PASS_NOT_PRODUCT_QUALIFICATION",
+    "evidence": "docs/evidence/M0/M0-023-preliminary-kernel-netem-10ms.json",
+    "native_run_id": 38879621342,
+    "configured_tc_delay_ms": 10,
+    "configured_loss_percent": 0,
+    "observed_kernel_qdisc_packets": 24,
+    "observed_kernel_qdisc_bytes": 2400,
+    "normal_rust_embedded_bilateral_three_ciphers": "PASS_EXPLORATORY",
+    "measured_rtt": "NOT_MEASURED",
+    "held_async_driver_b04": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_abi_features": 0
+  },
   "m0_023_embedded_bilateral_integrity": {
     "code_source_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
     "result": "PARTIAL_EMBEDDED_BILATERAL_GENERATION_REPLAY_PASS",
