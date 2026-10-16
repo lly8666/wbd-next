@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -334,6 +334,55 @@ func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
                 t.Fatal("retired scoped owner allowed S2C TX")
             }
             if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
+        })
+    }
+}
+
+func TestR0V4NativeRustLinuxKernelBudget(t *testing.T){
+    iface,err:=net.InterfaceByName("lo")
+    if err!=nil||iface==nil||iface.Index<=0||iface.MTU<576 {
+        t.Fatalf("local Linux kernel interface: %v",err)
+    }
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+            store,_:=NewV4EpochStore(1)
+            bridge:=&v4NativeRustProbe{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("V4 protected session: %v %v",ce,se)
+            }
+            cold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            limit,_:=cold.RecordLimits()
+            opener,e:=tlsrecord.NewOpenerForCipher(cold.DirectionKeys().S2C,int(limit),cipher)
+            if e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.sealNativeNormalObservedLinux([]byte("wrong"),0);e==nil{
+                t.Fatal("missing kernel interface scope")
+            }
+            if _,_,_,e=bridge.sealNativeNormalObservedLinux([]byte("wrong"),uint32(iface.Index+1));e==nil{
+                t.Fatal("wrong kernel interface scope")
+            }
+            payload:=[]byte("real-local-kernel-interface-budget")
+            wire,pn,seq,e:=bridge.sealNativeNormalObservedLinux(payload,uint32(iface.Index))
+            if e!=nil||pn!=0||seq!=bridge.txBoundary{t.Fatalf("first TX: %v %d %d",e,pn,seq)}
+            got,e:=opener.OpenRecord(wire)
+            if e!=nil||got.PN!=pn||got.Kind!=tlsrecord.KindLINK||!bytes.Equal(got.Payload,payload){
+                t.Fatalf("Go V4 verification: %+v %v",got,e)
+            }
+            if _,_,_,e=bridge.sealNativeNormalObservedLinux(bytes.Repeat([]byte{1},1340),uint32(iface.Index));e==nil{
+                t.Fatal("SYN peer MSS ignored")
+            }
+            second:=[]byte("next-pn-and-seq")
+            wire2,pn2,seq2,e:=bridge.sealNativeNormalObservedLinux(second,uint32(iface.Index))
+            if e!=nil||pn2!=1||seq2!=seq+uint32(len(wire)){
+                t.Fatalf("second TX: %v %d %d",e,pn2,seq2)
+            }
+            got,e=opener.OpenRecord(wire2)
+            if e!=nil||!bytes.Equal(got.Payload,second){t.Fatalf("second Go decode: %v",e)}
+            if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.sealNativeNormalObservedLinux([]byte("stale"),uint32(iface.Index));e==nil{
+                t.Fatal("old owner still TX after Stop")
+            }
+            if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })
     }
 }

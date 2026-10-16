@@ -305,7 +305,12 @@ pub unsafe extern "C" fn wbd_m0_test_probe_open_unique(
 // Go packet is copied into ONE actual M1 UniqueBuffer, then sealed with the
 // authenticated V4 S2C key and offered through the SAME owner TxOwner.
 // This is never a production cold installer or M4 socket sink.
-fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
+enum ProbeTxBudget {
+    Caller {connection_mtu:u16,peer_mss:u16},
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    KernelLoopback {expected_ifindex:u32},
+}
+fn probe_seal_tx_with_source(handle:u64,packet:&[u8],source:ProbeTxBudget,
     out:&mut [u8],
 )->Result<(usize,u64,u32),i32>{
     let Ok(mut state)=registry().lock() else{return Err(BAD_STAGE)};
@@ -313,21 +318,36 @@ fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
     if p.phase!=PH_COMMITTED || packet.is_empty(){return Err(BAD_STAGE)}
     // The actual normal-build ProtectedScopedOwner must enforce the bound
     // MSS. Do not let the feature-gated probe become the sole authority.
-    let budget=FrameBudget::derive(FrameBudgetInput{
-        connection_mtu:usize::from(connection_mtu),
-        local_packet_mtu:0,ipv4_header_len:20,tcp_header_len:20,
-        peer_mss:if p.peer_mss_advertised {Some(peer_mss)} else {None},
-        record_wire_limit:usize::from(p.cold_identity.client_limit),
-        fec:FecReservation::FixedOff,game:false,
-    }).map_err(|_|INVALID)?;
+    let (budget,observed_kernel)=match source {
+        ProbeTxBudget::Caller{connection_mtu,peer_mss}=>{
+            let value=FrameBudget::derive(FrameBudgetInput{
+                connection_mtu:usize::from(connection_mtu),
+                local_packet_mtu:0,ipv4_header_len:20,tcp_header_len:20,
+                peer_mss:if p.peer_mss_advertised {Some(peer_mss)} else {None},
+                record_wire_limit:usize::from(p.cold_identity.client_limit),
+                fec:FecReservation::FixedOff,game:false,
+            }).map_err(|_|INVALID)?;
+            (value,None)
+        }
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        ProbeTxBudget::KernelLoopback{expected_ifindex}=>{
+            let v=p.owner.observe_linux_normal_off_budget("lo",expected_ifindex)
+                .map_err(|_|INVALID)?;
+            (v.frame,Some(v))
+        }
+    };
     if packet.len()>budget.single_business_payload_mtu
         || budget.record_wire_mtu>out.len()
         || packet.len()+FIXED_WIRE_OVERHEAD>2048{return Err(INVALID)}
     let mut unique=p.arena.allocate().map_err(|_|FULL)?;
     unique.writable()[14..14+packet.len()].copy_from_slice(packet);
-    let (pn,seq,used)=p.owner.seal_normal_off_one(
-        unique,packet.len(),budget,12,MonoNs(0),
-    ).map_err(|_|INVALID)?;
+    let (pn,seq,used)=if let Some(ref scope)=observed_kernel {
+        p.owner.seal_normal_off_with_linux_budget(
+            unique,packet.len(),scope,12,MonoNs(0),
+        )
+    }else{
+        p.owner.seal_normal_off_one(unique,packet.len(),budget,12,MonoNs(0))
+    }.map_err(|_|INVALID)?;
     let batch=p.owner.drain_tx(MonoNs(0),Vec::with_capacity(2))
         .map_err(|_|BAD_STAGE)?;
     let checked=p.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
@@ -338,6 +358,13 @@ fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
     drop(batch); // Returned only AFTER original generation TX loan releases
     p.arena.drain_returns();
     Ok((used,pn,seq))
+}
+
+fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
+    out:&mut [u8],
+)->Result<(usize,u64,u32),i32>{
+    probe_seal_tx_with_source(handle,packet,
+        ProbeTxBudget::Caller{connection_mtu,peer_mss},out)
 }
 
 #[no_mangle]
@@ -354,6 +381,31 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_normal(
     match probe_seal_tx(handle,in_bytes,connection_mtu,peer_mss,out_bytes){
         Ok((n,number,start))=>{
             unsafe{out_len.write(n as u32);pn.write(number);seq.write(start)};
+            OK
+        }
+        Err(code)=>code,
+    }
+}
+
+// C test observer: Linux kernel /sys/class/net/lo/mtu + verified ifindex
+// supply the frame budget, while the ordinary Rust owner enforces original
+// Go protected SYN MSS and its generation-scoped TxOwner. No actual raw I/O.
+#[no_mangle]
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_observed(
+    handle:u64,packet:*const u8,len:usize,ifindex:u32,
+    out:*mut u8,out_cap:usize,out_len:*mut u32,pn:*mut u64,seq:*mut u32,
+)->i32{
+    if packet.is_null()||len==0||len>2048||out.is_null()||out_len.is_null()
+        ||pn.is_null()||seq.is_null()||out_cap<31||out_cap>2048 {
+        return INVALID
+    }
+    let raw=unsafe{std::slice::from_raw_parts(packet,len)};
+    let output=unsafe{std::slice::from_raw_parts_mut(out,out_cap)};
+    match probe_seal_tx_with_source(handle,raw,
+        ProbeTxBudget::KernelLoopback{expected_ifindex:ifindex},output){
+        Ok((used,num,start))=>{
+            unsafe{out_len.write(used as u32);pn.write(num);seq.write(start)};
             OK
         }
         Err(code)=>code,
@@ -496,6 +548,9 @@ mod tests {
         // argument check: a later path observer cannot widen the SYN cap.
         assert_eq!(probe_seal_tx(first,b"forged-mss",1200,2000,&mut [0u8;2048]).err(),
             Some(INVALID));
+        assert_eq!(probe_seal_tx_with_source(first,b"wrong-index",
+            ProbeTxBudget::KernelLoopback{expected_ifindex:0},
+            &mut [0u8;2048]).err(),Some(INVALID));
         assert_eq!(probe_commit(first,0,0,777),BAD_STAGE);
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);

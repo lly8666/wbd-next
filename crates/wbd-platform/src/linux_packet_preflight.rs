@@ -153,6 +153,31 @@ fn actual_mtu(name:&str)->Result<u32,PreflightError>{
         .map_err(|e|PreflightError::KernelSocket{errno:e.raw_os_error().unwrap_or(5)})?;
     value.trim().parse::<u32>().map_err(|_|PreflightError::InvalidMtu)
 }
+/// Kernel-observed *local* interface MTU for the SAME validated ifindex.
+/// No AF_PACKET permission, socket, driver, route, peer/path-MTU discovery or
+/// V4 authority is implied. A later link change must invalidate the caller's
+/// cached scoped snapshot; readers must not synthesize this from config alone.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct InterfaceMtuObservation {
+    pub ifindex:u32,
+    pub kernel_mtu:u32,
+}
+pub fn observe_interface_mtu(ifname:&str,expected_ifindex:u32)
+    ->Result<InterfaceMtuObservation,PreflightError>{
+    if expected_ifindex==0{return Err(PreflightError::InvalidInterfaceIndex)}
+    let before=kernel_ifindex(ifname)?;
+    if before!=expected_ifindex{return Err(PreflightError::WrongInterfaceIndex{
+        expected:expected_ifindex,actual:before,
+    })}
+    let mtu=actual_mtu(ifname)?;
+    if mtu<MIN_IPV4_MTU{return Err(PreflightError::InvalidMtu)}
+    let after=kernel_ifindex(ifname)?;
+    if after!=before{return Err(PreflightError::WrongInterfaceIndex{
+        expected:before,actual:after,
+    })}
+    Ok(InterfaceMtuObservation{ifindex:before,kernel_mtu:mtu})
+}
+
 /// Cold validation happens *before* privilege check or socket allocation.
 /// The allowed proto is IPv4 only; capture type HOST (not outgoing/loopback
 /// packet_type). This avoids accepting arbitrary link-layer traffic.
@@ -282,6 +307,22 @@ mod tests{
         assert_eq!(interface_index("name with space"),Err(PreflightError::InvalidInterfaceName));
         assert_eq!(interface_index(""),Err(PreflightError::InvalidInterfaceName));
         assert_eq!(interface_index("0".repeat(16).as_str()),Err(PreflightError::InvalidInterfaceName));
+    }
+    #[test]
+    fn r1_interface_observed_kernel_mtu_ifindex_scope_unprivileged(){
+        let idx=interface_index("lo").unwrap();
+        let observed=observe_interface_mtu("lo",idx).unwrap();
+        assert_eq!(observed.ifindex,idx);
+        assert!(observed.kernel_mtu>=1500);
+        assert_eq!(observed.kernel_mtu,actual_mtu("lo").unwrap());
+        assert_eq!(observe_interface_mtu("lo",0),
+            Err(PreflightError::InvalidInterfaceIndex));
+        assert!(matches!(observe_interface_mtu("lo",idx+1),
+            Err(PreflightError::WrongInterfaceIndex{..})));
+        assert_eq!(observe_interface_mtu("../lo",idx),
+            Err(PreflightError::InvalidInterfaceName));
+        assert!(matches!(observe_interface_mtu("wbd_notreal0",idx),
+            Err(PreflightError::MissingInterface{..})));
     }
     #[test]
     fn r1_af_packet_invalid_iface_and_index_fail_before_socket(){

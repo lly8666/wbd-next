@@ -9,6 +9,7 @@ extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t
 extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
+extern int32_t wbd_m0_test_probe_seal_linux_observed(uint64_t, const unsigned char *, size_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -203,4 +204,33 @@ func (b *v4NativeRustProbe) sealNativeNormal(payload []byte,outerMTU,peerMSS uin
     if code!=0{return nil,0,0,fmt.Errorf("%w: normal scoped TX=%d",errV4NativeProbe,int(code))}
     if size==0||int(size)>len(wire){return nil,0,0,errV4NativeProbe}
     return wire[:int(size)],uint64(pn),uint32(seq),nil
+}
+
+// TEST-ONLY C observer. The Rust normal-build ProtectedScopedOwner asks M4's
+// kernel-backed interface index/MTU source and combines it with the original
+// protected SYN peer MSS. No caller-supplied MTU or MSS, no AF_PACKET socket,
+// and no production ABI or application output are created by this method.
+func (b *v4NativeRustProbe) sealNativeNormalObservedLinux(
+    payload []byte,expectedIfindex uint32,
+)([]byte,uint64,uint32,error){
+    if !b.committed||b.handle==0||len(payload)==0 {
+        return nil,0,0,errV4NativeProbe
+    }
+    out:=make([]byte,2048)
+    var used C.uint32_t
+    var pn C.uint64_t
+    var seq C.uint32_t
+    code:=C.wbd_m0_test_probe_seal_linux_observed(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&payload[0])),C.size_t(len(payload)),
+        C.uint32_t(expectedIfindex),(*C.uchar)(unsafe.Pointer(&out[0])),
+        C.size_t(len(out)),&used,&pn,&seq,
+    )
+    runtime.KeepAlive(payload)
+    if code!=0 {
+        return nil,0,0,fmt.Errorf("%w: kernel observed scoped TX=%d",
+            errV4NativeProbe,int(code))
+    }
+    if used==0||int(used)>len(out){return nil,0,0,errV4NativeProbe}
+    return out[:int(used)],uint64(pn),uint32(seq),nil
 }

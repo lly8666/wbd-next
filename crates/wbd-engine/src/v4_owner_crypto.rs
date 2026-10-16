@@ -17,6 +17,10 @@ use wbd_codec::record_crypto::{LaneTxCrypto, RecordSuite};
 use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER,LINK_MAGIC};
 use wbd_codec::path_budget::FrameBudget;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_packet_preflight::observe_interface_mtu;
 use wbd_codec::link_reassembly::{
     LinkDelivery,LinkDirection,ReassemblyScope,ReassemblyTable,
 };
@@ -220,6 +224,19 @@ impl NormalOffReceive {
     }
 }
 
+/// Immutable owner-bound *kernel interface MTU*, not path PMTU, socket
+/// capability, driver lease or peer authentication. Private fields prevent
+/// a later caller from minting its own unrestricted FrameBudget.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+pub(crate) struct ScopedLinuxBudget {
+    pub(crate) frame:FrameBudget,
+    owner_id:u64,
+    generation:u32,
+    epoch:[u8;16],
+    pub(crate) observed_ifindex:u32,
+    pub(crate) observed_interface_mtu:u32,
+}
+
 impl ProtectedScopedOwner {
     pub(crate) fn prepare_from_protected_go(
         cold:&UntrustedColdV4, expected:&ExpectedRustOwner,
@@ -290,6 +307,54 @@ impl ProtectedScopedOwner {
         self.next_tx_seq=Some(exact_tx_boundary);
         self.state=OwnerPhase::Active;
         Ok(())
+    }
+
+    /// Observe the actual Linux kernel's LOCAL interface MTU and bind the
+    /// M3 frame budget to this owner's full epoch and generation. Uses the
+    /// one protected-session SYN peer MSS already stored at Prepare; there
+    /// is no caller MSS parameter and no operator-controlled cold authority.
+    /// The caller must still independently verify OS routing / real peer
+    /// path PMTU and own a driver lease before any product activation.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn observe_linux_normal_off_budget(
+        &self,ifname:&str,expected_ifindex:u32,
+    )->Result<ScopedLinuxBudget,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let kernel=observe_interface_mtu(ifname,expected_ifindex)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        let observed=usize::try_from(kernel.kernel_mtu)
+            .map_err(|_|ProtectedCryptoError::Tx)?;
+        let connection_mtu=observed.min(MAX_CONNECTION_MTU);
+        let frame=FrameBudget::derive(FrameBudgetInput{
+            connection_mtu,local_packet_mtu:observed,
+            ipv4_header_len:20,tcp_header_len:20,
+            peer_mss:if self.peer_mss_advertised{Some(self.peer_mss)}else{None},
+            record_wire_limit:self.tx_wire_limit,
+            fec:FecReservation::FixedOff,game:false,
+        }).map_err(|_|ProtectedCryptoError::Tx)?;
+        Ok(ScopedLinuxBudget{
+            frame,owner_id:self.token.owner_id(),
+            generation:self.generation,epoch:self.epoch,
+            observed_ifindex:kernel.ifindex,
+            observed_interface_mtu:kernel.kernel_mtu,
+        })
+    }
+    /// No caller-invented budget can be substituted for this kernel-observed
+    /// and original-owner-scoped constraint. This still does NOT submit any
+    /// packet to a kernel device; M4 driver-held Stop remains unqualified.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn seal_normal_off_with_linux_budget(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        scoped:&ScopedLinuxBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || self.generation!=scoped.generation
+            || self.epoch!=scoped.epoch
+            || self.token.owner_id()!=scoped.owner_id {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        self.seal_normal_off_one(buffer,payload_len,scoped.frame,carrier_snapshot,now)
     }
 
     /// The actual normal-build S2C/C2S TX: one application Normal/off
