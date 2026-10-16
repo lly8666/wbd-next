@@ -635,6 +635,42 @@ func TestR0V4NativeRustGoAdmissionRetainedHeapIndicative(t *testing.T){
     runtime.KeepAlive(samples)
 }
 
+// Independent test oracle for exact R1 FakeTCP IPv4/TCP DATA envelope.
+// This builds NO cipher; record ciphertext comes ONLY from real Go V4 TLS.
+func v4RawCheckSum(b []byte)uint16{
+    var sum uint32
+    for i:=0;i+1<len(b);i+=2{sum+=uint32(binary.BigEndian.Uint16(b[i:i+2]))}
+    if len(b)&1!=0 {sum+=uint32(b[len(b)-1])<<8}
+    for sum>>16!=0{sum=(sum&0xffff)+(sum>>16)}
+    return ^uint16(sum)
+}
+func v4RawC2STestPacket(wire []byte,seq uint32)[]byte{
+    buf:=make([]byte,40+len(wire))
+    buf[0]=0x45
+    binary.BigEndian.PutUint16(buf[2:4],uint16(len(buf)))
+    binary.BigEndian.PutUint16(buf[4:6],0x3141)
+    binary.BigEndian.PutUint16(buf[6:8],0x4000)
+    buf[8]=64;buf[9]=6
+    copy(buf[12:16],[]byte{127,0,0,1})
+    copy(buf[16:20],[]byte{127,0,0,1})
+    binary.BigEndian.PutUint16(buf[10:12],v4RawCheckSum(buf[:20]))
+    tcp:=buf[20:]
+    binary.BigEndian.PutUint16(tcp[0:2],49322)
+    binary.BigEndian.PutUint16(tcp[2:4],49321)
+    binary.BigEndian.PutUint32(tcp[4:8],seq)
+    binary.BigEndian.PutUint32(tcp[8:12],1)
+    tcp[12]=0x50;tcp[13]=0x18
+    binary.BigEndian.PutUint16(tcp[14:16],4096)
+    copy(tcp[20:],wire)
+    pseudo:=make([]byte,12+len(tcp))
+    copy(pseudo[0:4],buf[12:16]);copy(pseudo[4:8],buf[16:20])
+    pseudo[9]=6
+    binary.BigEndian.PutUint16(pseudo[10:12],uint16(len(tcp)))
+    copy(pseudo[12:],tcp)
+    binary.BigEndian.PutUint16(tcp[16:18],v4RawCheckSum(pseudo))
+    return buf
+}
+
 // Real Linux namespace TUN app-egress first packet. Run ONLY by the
 // privileged owned namespace runner; ordinary CI runs skip this test.
 // No mock destination: Go application socket must receive a packet injected
@@ -668,7 +704,12 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed {
                 t.Fatalf("Go real protected V4 TLS: %v %v",ce,se)
             }
-            port,e:=bridge.bindKernelRx();if e!=nil{t.Fatal(e)}
+            loopInterface,e:=net.InterfaceByName("lo")
+            if e!=nil||loopInterface.Index<1{t.Fatalf("actual raw loopback ifindex: %v",e)}
+            if e=bridge.bindRawRx(uint32(loopInterface.Index));e!=nil{t.Fatal(e)}
+            if e=bridge.bindRawRx(uint32(loopInterface.Index));e==nil{
+                t.Fatal("duplicate raw receive scope permitted")
+            }
             if e=bridge.attachKernelTun(f.Fd(),name);e!=nil{t.Fatal(e)}
             app,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dstIP,Port:0})
             if e!=nil{t.Fatalf("actual Linux application UDP bind: %v",e)}
@@ -677,9 +718,11 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             clientLimit,limit:=c.RecordLimits()
             sealer,e:=tlsrecord.NewSealerForCipher(c.DirectionKeys().C2S,int(limit),cipher)
             if e!=nil{t.Fatal(e)}
-            udp,e:=net.DialUDP("udp4",nil,&net.UDPAddr{IP:loIP,Port:int(port)})
-            if e!=nil{t.Fatal(e)}
-            defer udp.Close()
+            rawSender,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+            if e!=nil{t.Fatalf("Linux raw IPPROTO_RAW C2S socket: %v",e)}
+            defer syscall.Close(rawSender)
+            if e=syscall.SetsockoptInt(rawSender,syscall.IPPROTO_IP,
+                syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
             payload:=[]byte("verified-IPV4-app-TUN-business-first")
             packet:=make([]byte,20+8+len(payload))
             packet[0]=0x45;packet[8]=64;packet[9]=17
@@ -698,8 +741,12 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             copy(packet[28:],payload)
             wire,pn,e:=sealer.Seal(packet)
             if e!=nil||pn!=0{t.Fatalf("protected C2S record: %v pn=%d",e,pn)}
-            if n,e:=udp.Write(wire);e!=nil||n!=len(wire){t.Fatalf("Go real C2S UDP: %v",e)}
-            delivered,failed,e:=bridge.receiveKernelToTun()
+            rawC2S:=v4RawC2STestPacket(wire,bridge.rxBoundary)
+            if e=syscall.Sendto(rawSender,rawC2S,0,
+                &syscall.SockaddrInet4{Addr:[4]byte{127,0,0,1}});e!=nil{
+                t.Fatalf("real Go C2S Linux raw IPv4/TCP: %v",e)
+            }
+            delivered,failed,e:=bridge.receiveRawToTun()
             if e!=nil||delivered!=1||failed!=0{
                 t.Fatalf("normal Rust AEAD/M3 -> kernel TUN write: e=%v delivered=%d failed=%d",e,delivered,failed)
             }
@@ -710,6 +757,7 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
                 t.Fatalf("NO REAL TUN application kernel UDP first: err=%v peer=%v n=%d",e,peer,n)
             }
             t.Logf("TUN_APP_FIRST_PACKET_PASS suite=%d received=%d via=/dev/net/tun, IP kernel socket",cipher,n)
+            t.Logf("RAW_C2S_TO_REAL_TUN_APP_PASS suite=%d raw_wire=%d business=%d",cipher,len(rawC2S),len(payload))
             // REVERSE actual app leg: the kernel emits this UDP datagram
             // into the SAME real TUN FD; normal Rust M4 read() fills an
             // ORIGINAL M1 slab; the original owner seals S2C and M4 uses
@@ -812,6 +860,9 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
             if _,_,e=bridge.receiveKernelToTun();e==nil{
                 t.Fatal("retired normal Rust scoped TUN owner allowed delivery")
+            }
+            if _,_,e=bridge.receiveRawToTun();e==nil{
+                t.Fatal("retired owner permitted raw C2S receive/TUN delivery")
             }
             if _,_,_,_,e=bridge.tunToKernelUDP(uint32(nif.Index),uint16(peerSocket.LocalAddr().(*net.UDPAddr).Port));e==nil{
                 t.Fatal("retired Rust scoped owner permitted reverse TUN->AEAD TX")

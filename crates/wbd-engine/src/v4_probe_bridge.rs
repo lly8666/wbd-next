@@ -27,7 +27,7 @@ use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::ScopedTunSink;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_raw_carrier::ScopedRawIpv4Tx;
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -63,6 +63,7 @@ struct Probe {
     peer_mss:u16,
     peer_mss_advertised:bool,
     kernel_rx:Option<ScopedUdpOwner>,
+    raw_rx:Option<ScopedRawIpv4Rx>,
     tun_sink:Option<ScopedTunSink>,
 }
 
@@ -125,7 +126,7 @@ fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
     state.slots.insert(handle, Probe {
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        peer_mss,peer_mss_advertised,kernel_rx:None,tun_sink:None,
+        peer_mss,peer_mss_advertised,kernel_rx:None,raw_rx:None,tun_sink:None,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -252,6 +253,7 @@ fn probe_stop(handle:u64)->i32 {
     if p.phase==PH_STOPPED {return OK}
     if p.phase!=PH_COMMITTED && p.phase!=PH_STOPPING {return BAD_STAGE}
     if let Some(ref driver)=p.kernel_rx {driver.begin_stop()}
+    if let Some(ref driver)=p.raw_rx {driver.begin_stop()}
     if let Some(ref tun)=p.tun_sink {tun.begin_stop()}
     let Ok(retired)=p.owner.stop() else {return BAD_STAGE};
     if !retired.ready.batch_handles_released(){
@@ -772,6 +774,59 @@ pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_raw(
                 out_packet_len.write(full);out_app_len.write(app)};
             OK
         }
+        Err(e)=>e
+    }
+}
+
+/// Real kernel IPv4/TCP raw receiver is opened AFTER original protected
+/// Go credential-checked V4 Detach, BEFORE Go submits first raw record.
+/// Exact tuple is a constrained isolated-loopback test fixture, NOT a
+/// production credential or live FakeTCP tuple authorization.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_bind_raw_rx(handle:u64,ifindex:u32)->Result<(),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED || p.raw_rx.is_some(){return Err(BAD_STAGE)}
+    p.raw_rx=Some(ScopedRawIpv4Rx::open("lo",ifindex,(handle>>32) as u32)
+        .map_err(|_|INVALID)?);
+    Ok(())
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_raw_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let driver=p.raw_rx.as_ref().ok_or(BAD_STAGE)?;
+    let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let src=[127,0,0,1];
+    let dst=[127,0,0,1];
+    let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
+        src_port:49322,dst_port:49321};
+    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    p.owner.receive_scoped_raw_into_owner(driver,slab,
+        tuple,PacketPersona::Legacy,u64::from(p.rx_boundary),MonoNs(0))
+        .map_err(|_|INVALID)?;
+    let (storage,report,delivered,failed)=p.owner.drain_normal_off_to_tun(
+        &mut p.normal,tun,MonoNs(0),Vec::with_capacity(32))
+        .map_err(|_|BAD_STAGE)?;
+    drop(storage);p.arena.drain_returns();
+    if report.completed!=1 || report.authenticated.link_ready!=1 ||
+        delivered!=1 || failed!=0 {return Err(INVALID)}
+    Ok((delivered,failed))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_bind_raw_rx(
+    handle:u64,ifindex:u32
+)->i32{match probe_bind_raw_rx(handle,ifindex){Ok(())=>OK,Err(e)=>e}}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_receive_raw_to_tun(
+    handle:u64,out_delivered:*mut u32,out_failed:*mut u32
+)->i32{
+    if out_delivered.is_null()||out_failed.is_null(){return INVALID}
+    match probe_raw_rx_to_tun(handle){
+        Ok((d,f))=>{unsafe{out_delivered.write(d);out_failed.write(f)};OK}
         Err(e)=>e
     }
 }

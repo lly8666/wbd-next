@@ -10,10 +10,11 @@ use std::io;
 use std::net::Ipv4Addr;
 use std::os::fd::{FromRawFd,AsRawFd,OwnedFd};
 use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
-use std::time::Instant;
+use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
-use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation};
+use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
+use crate::rx_ipv4_tcp::{parse_data_packet,TrustedRx,RxError};
 use wbd_types::buffer_contract::FrozenRecordHandle;
 
 const AF_INET:c_int=2;
@@ -21,6 +22,10 @@ const SOCK_RAW:c_int=3;
 const SOCK_NONBLOCK:c_int=0x800;
 const SOCK_CLOEXEC:c_int=0x80000;
 const IPPROTO_RAW:c_int=255;
+const IPPROTO_TCP:c_int=6;
+const POLLIN:i16=1;
+#[repr(C)]
+struct PollFd{fd:c_int,events:i16,revents:i16}
 const IPPROTO_IP:c_int=0;
 const IP_HDRINCL:c_int=3;
 const SOL_SOCKET:c_int=1;
@@ -33,6 +38,9 @@ struct SockAddrIn {
 unsafe extern "C" {
     fn socket(domain:c_int,typ:c_int,proto:c_int)->c_int;
     fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const c_void,len:u32)->c_int;
+    fn poll(fds:*mut PollFd,nfds:usize,timeout:c_int)->c_int;
+    fn recvfrom(fd:c_int,bytes:*mut c_void,len:usize,flags:c_int,
+        src:*mut c_void,addr_len:*mut u32)->isize;
     fn sendto(fd:c_int,bytes:*const c_void,len:usize,flags:c_int,
         dst:*const c_void,dst_len:u32)->isize;
 }
@@ -143,6 +151,115 @@ impl ScopedRawIpv4Tx {
         if n<0{return Err(RawTxError::Kernel(errno()))}
         if n as usize!=packet.len(){return Err(RawTxError::ShortSend)}
         Ok(n as usize)
+    }
+}
+
+/// Real kernel IPv4/TCP receive, strict owner-scoped tuple & checked
+/// TCP checksum BEFORE the original Rust M1 AEAD/PN admission. Kernel
+/// writes L3 directly into caller's M1 UniqueBuffer, then payload is
+/// compacted within the SAME slab (no ciphertext heap-copy or new owner).
+/// This driver never authenticates, publishes LINK, or grants V4 authority.
+pub struct ScopedRawIpv4Rx {
+    fd:OwnedFd,
+    ifindex:u32,
+    ifname:String,
+    generation:u32,
+    mtu:usize,
+    stopped:AtomicBool,
+    borrow:BorrowFence,
+    serialize:Mutex<()>,
+}
+impl ScopedRawIpv4Rx {
+    pub fn open(ifname:&str,expected_ifindex:u32,generation:u32)
+        ->Result<Self,RawTxError>{
+        if generation==0 || ifname.is_empty()||ifname.len()>15 ||
+            !ifname.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'_'||b==b'-'){
+            return Err(RawTxError::InvalidInterface)
+        }
+        let ifindex=interface_index(ifname).map_err(|_|RawTxError::InvalidInterface)?;
+        if ifindex==0 || ifindex!=expected_ifindex {
+            return Err(RawTxError::InvalidInterface)
+        }
+        let observed=observe_interface_mtu(ifname,ifindex)
+            .map_err(|_|RawTxError::InvalidInterface)?;
+        // SAFETY: owned nonblocking IPPROTO_TCP socket, never promiscuous,
+        // bound to exact validated interface before any kernel receive.
+        let fd=unsafe{socket(AF_INET,SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC,IPPROTO_TCP)};
+        if fd<0{return Err(RawTxError::Kernel(errno()))}
+        let fd=unsafe{OwnedFd::from_raw_fd(fd)};
+        let name=CString::new(ifname).map_err(|_|RawTxError::InvalidInterface)?;
+        let rc=unsafe{setsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
+            name.as_ptr().cast(),name.as_bytes_with_nul().len() as u32)};
+        if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        Ok(Self{fd,ifindex,ifname:ifname.to_owned(),generation,
+            mtu:observed.kernel_mtu as usize,stopped:AtomicBool::new(false),
+            borrow:BorrowFence::default(),serialize:Mutex::new(())})
+    }
+    pub fn generation(&self)->u32{self.generation}
+    pub fn is_stopping(&self)->bool{self.stopped.load(Ordering::Acquire)}
+    pub fn begin_stop(&self){
+        self.stopped.store(true,Ordering::Release);
+        self.borrow.begin_stop();
+    }
+    pub fn outstanding(&self)->usize{self.borrow.outstanding()}
+    pub fn stop_until(&self,deadline:Instant)->StopResult{
+        self.begin_stop();self.borrow.wait_drained_until(deadline)
+    }
+    pub fn recv_one_into(&self,generation:u32,buffer:&mut [u8],
+        tuple:Ipv4Tuple<'_>,persona:PacketPersona)
+        ->Result<(usize,u32),RawTxError>{
+        if generation!=self.generation{return Err(RawTxError::InvalidScope)}
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        if buffer.len()<64{return Err(RawTxError::InvalidPacket)}
+        let _loan=self.borrow.try_enter_ready().map_err(|e|match e{
+            BorrowError::Stopping=>RawTxError::Stopped,
+            BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
+        })?;
+        let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
+        let mtu=observe_interface_mtu(&self.ifname,self.ifindex)
+            .map_err(|_|RawTxError::InvalidInterface)?;
+        if mtu.kernel_mtu as usize!=self.mtu{return Err(RawTxError::BoundedMtu)}
+        let deadline=Instant::now()+Duration::from_millis(750);
+        // Bounded irrelevant Linux RST/ACK traffic can share this interface.
+        // Only the *exact* configured tuple and full checksummed DATA is
+        // exposed as untrusted ciphertext to the original engine owner.
+        for _ in 0..32{
+            let time=deadline.saturating_duration_since(Instant::now());
+            if time.is_zero(){return Err(RawTxError::Kernel(110))}
+            let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
+            let rc=unsafe{poll(&mut pfd,1,time.as_millis().max(1).min(750) as c_int)};
+            if rc<0{return Err(RawTxError::Kernel(errno()))}
+            if rc==0{return Err(RawTxError::Kernel(110))}
+            if pfd.revents&POLLIN==0{return Err(RawTxError::InvalidPacket)}
+            // SAFETY: original caller M1 slab stays exclusively borrowed
+            // while synchronous recvfrom copies packet bytes.
+            let n=unsafe{recvfrom(self.fd.as_raw_fd(),buffer.as_mut_ptr().cast(),
+                buffer.len().min(self.mtu),MSG_DONTWAIT,
+                std::ptr::null_mut(),std::ptr::null_mut())};
+            if n<0{
+                let e=errno();if e==11||e==4{continue}
+                return Err(RawTxError::Kernel(e))
+            }
+            let n=n as usize;
+            if n<40 {continue}
+            let parsed=match parse_data_packet(&buffer[..n],TrustedRx{
+                tuple,persona,mtu:self.mtu,authenticated_options:None,
+            }){
+                Ok(p)=>p,
+                Err(RxError::WrongTuple|RxError::WrongProtocol|
+                    RxError::InvalidDataFlags|RxError::EmptyData|
+                    RxError::WrongPersona|RxError::FragmentedOrUnexpectedFlags|
+                    RxError::WrongVersionOrIhl) => continue,
+                Err(_)=>return Err(RawTxError::InvalidPacket),
+            };
+            let start=n-parsed.ciphertext.len();
+            let len=parsed.ciphertext.len();
+            let seq=parsed.seq32;
+            if len==0 {return Err(RawTxError::InvalidPacket)}
+            buffer.copy_within(start..n,0);
+            return Ok((len,seq))
+        }
+        Err(RawTxError::Kernel(110))
     }
 }
 

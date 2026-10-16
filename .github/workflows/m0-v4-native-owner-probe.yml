@@ -208,10 +208,12 @@ jobs:
             grep -q 'TUN_APP_FIRST_PACKET_PASS: isolated netns' native-probe-result/tun-netns.log
             grep -q 'TUN_APP_BIDIRECTIONAL_PASS: real Go application' native-probe-result/tun-netns.log
             grep -q 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel' native-probe-result/tun-netns.log
+            grep -q 'REAL_RAW_BIDIRECTIONAL_TUN_PASS: Go raw IPv4/TCP' native-probe-result/tun-netns.log
             for suite in 1 2 3; do
               grep -q "TUN_APP_FIRST_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "TUN_APP_REVERSE_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "TUN_TO_REAL_RAW_FAKETCP_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "RAW_C2S_TO_REAL_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
             done
             grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
             STATE=PASS
@@ -224,7 +226,7 @@ jobs:
           source=json.load(open("native-probe-build/manifest.json"))
           result={"source_sha":source["source_sha"],"run_id":source["run_id"],
               "attempt":source["attempt"],"result":os.environ["TUN_STATE"],
-              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_BIDIRECTIONAL_PLUS_S2C_IPV4_TCP_RAW_TO_GO_AUTHENTICATED_PEER",
+              "scope":"TRUE_LINUX_NETNS_RAW_IPV4_TCP_C2S_AND_S2C_TUN_APP_BIDIRECTIONAL_ORIGINAL_RUST_OWNER",
               "tun_log_sha256":hashlib.sha256(log).hexdigest(),
               "production_abi_features":0,"product_e2e":"NOT_RUN",
               "netem_matrix":"NOT_RUN","raw_carrier":"NOT_RUN"}

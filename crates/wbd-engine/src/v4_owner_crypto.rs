@@ -22,9 +22,9 @@ use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunError};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_raw_carrier::ScopedRawIpv4Tx;
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation};
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation,PacketPersona};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::BatchResult;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -592,6 +592,37 @@ impl ProtectedScopedOwner {
             .map_err(|_|ProtectedCryptoError::Owner)?;
         drop(batch);
         Ok(sent)
+    }
+
+    /// Real raw IPv4/TCP RX directly into ORIGINAL M1 mutable slab, strict
+    /// trusted FakeTCP tuple + TCP checksums + seq32 extension, followed
+    /// by SAME scoped owner AEAD/PN replay and M3 LINK/TUN path.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn receive_scoped_raw_into_owner(
+        &mut self,driver:&ScopedRawIpv4Rx,mut slab:UniqueBuffer,
+        tuple:Ipv4Tuple<'_>,persona:PacketPersona,
+        trusted_rx_anchor:u64,now:MonoNs,
+    )->Result<usize,(ProtectedCryptoError,UniqueBuffer)>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping(){
+            return Err((ProtectedCryptoError::Inactive,slab))
+        }
+        let (len,seq)=match driver.recv_one_into(
+            self.generation,slab.writable(),tuple,persona){
+            Ok(v)=>v,
+            Err(_)=>return Err((ProtectedCryptoError::Owner,slab))
+        };
+        if len<FIXED_WIRE_OVERHEAD {
+            return Err((ProtectedCryptoError::Tx,slab))
+        }
+        let absolute=match wbd_platform::rx_ipv4_tcp::extend_seq32(
+            trusted_rx_anchor,seq){
+            Ok(v)=>v,
+            Err(_)=>return Err((ProtectedCryptoError::Owner,slab))
+        };
+        self.offer_after_active(slab,0..len,absolute,now)
+            .map_err(|(_,slab)|(ProtectedCryptoError::Owner,slab))?;
+        Ok(len)
     }
 
     /// One genuine kernel recvmmsg directly INTO the ORIGINAL M1-owned

@@ -18,6 +18,8 @@ extern int32_t wbd_m0_test_probe_attach_tun(uint64_t,int32_t,const unsigned char
 extern int32_t wbd_m0_test_probe_receive_kernel_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_tun_to_kernel_udp(uint64_t,uint32_t,uint16_t,uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_tun_to_kernel_raw(uint64_t,uint32_t,uint64_t *,uint32_t *,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_test_probe_bind_raw_rx(uint64_t,uint32_t);
+extern int32_t wbd_m0_test_probe_receive_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -41,6 +43,7 @@ var errV4NativeLinkPending=errors.New("authenticated LINK fragment is incomplete
 type v4NativeRustProbe struct {
     handle uint64
     txBoundary uint32
+    rxBoundary uint32
     peerMSS uint16
     peerAdvertised bool
     prepared,committed bool
@@ -84,6 +87,7 @@ func (b *v4NativeRustProbe) prepare(s V4ColdSessionSnapshot,boundary uint32,peer
     runtime.KeepAlive(raw)
     if code!=0||handle==0{return nil,fmt.Errorf("%w: prepare=%d",errV4NativeProbe,int(code))}
     b.handle=uint64(handle);b.prepared=true
+    b.rxBoundary=boundary
     b.peerMSS=peer.mss;b.peerAdvertised=peer.advertised
     if err:=b.injectAfterPrepare(boundary);err!=nil{
         _=C.wbd_m0_test_probe_abort(handle)
@@ -364,4 +368,20 @@ func (b *v4NativeRustProbe) tunToKernelRaw(ifindex uint32)(
     )
     if code!=0{return 0,0,0,0,fmt.Errorf("%w: actual Linux IPv4/TCP raw carrier=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint32(seq),uint32(ipSize),uint32(appSize),nil
+}
+
+// Test-tag only. Receiver is opened after authentic Go protected V4 Detach,
+// before Go sends a real TCP raw ciphertext packet on the same Linux netns.
+func (b *v4NativeRustProbe) bindRawRx(ifindex uint32)error{
+    if !b.committed||b.handle==0||ifindex==0{return errV4NativeProbe}
+    code:=C.wbd_m0_test_probe_bind_raw_rx(C.uint64_t(b.handle),C.uint32_t(ifindex))
+    if code!=0{return fmt.Errorf("%w: real raw RX binding=%d",errV4NativeProbe,int(code))}
+    return nil
+}
+func (b *v4NativeRustProbe) receiveRawToTun()(uint32,uint32,error){
+    if !b.committed||b.handle==0{return 0,0,errV4NativeProbe}
+    var d,f C.uint32_t
+    code:=C.wbd_m0_test_probe_receive_raw_to_tun(C.uint64_t(b.handle),&d,&f)
+    if code!=0{return 0,0,fmt.Errorf("%w: original Rust raw RX->AEAD/TUN=%d",errV4NativeProbe,int(code))}
+    return uint32(d),uint32(f),nil
 }
