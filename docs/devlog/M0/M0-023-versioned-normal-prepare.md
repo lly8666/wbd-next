@@ -11,3 +11,7 @@ Exact SOURCE native verified both Go and Rust owner/preparation tests, new norma
 Still **not product**: no non-test Rust C ABI session installer, production Go V4 runtime gate remains fail closed, features=0; held M4 driver stop B01–B04, actual external SYN, reconnect, veth netem, product Normal/off performance and physical/500Mbps NOT_RUN.
 
 **One next action:** implement the non-test Go-verified private native control adapter to the same ordinary Rust Prepare/Commit transaction with real provenance and bounded Stop; do not advertise V4 until real B01–B04 and product gates pass.
+
+## Governance recovery after H88
+
+H88 SOURCE `b7ab36c3331a67d5bb9ab25af294599df9769d00` Governance [38871078627](https://github.com/lly8666/wbd-next/actions/runs/38871078627) **FAIL** solely on main `Central worker scope audit` metadata: cursor evidence expected `source_sha`, whereas this evidence carried the synonymous `code_source_sha` only. No Go/Rust/kernel test failed. Recovery S adds the required exact same CODE source field and preserves both the H88 failure and prior native PASS. Ordinary push Governance never means full tool selftest or product.

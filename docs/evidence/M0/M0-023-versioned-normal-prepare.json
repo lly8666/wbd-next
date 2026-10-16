@@ -77,5 +77,13 @@
   "production_abi_features": 0,
   "product_qualification": "NOT_RUN",
   "real_external_product_network": "NOT_RUN",
-  "next_action": "Add the real non-test private Go native control adapter that calls this same versioned normal-build Rust Prepare/Commit under the credential-checked EstablishServerV4 path, with trusted session provenance, exact TX boundary, bounded early records and fail-closed default; then validate B01-B04 driver-held Stop before advertising capabilities."
+  "next_action": "Add the real non-test private Go native control adapter that calls this same versioned normal-build Rust Prepare/Commit under the credential-checked EstablishServerV4 path, with trusted session provenance, exact TX boundary, bounded early records and fail-closed default; then validate B01-B04 driver-held Stop before advertising capabilities.",
+  "source_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+  "governance_recovery": {
+    "failed_run_id": 38871078627,
+    "failed_source_sha": "b7ab36c3331a67d5bb9ab25af294599df9769d00",
+    "result": "FAIL_SCOPE_METADATA_ONLY",
+    "reason": "M0 H88 cursor referenced evidence that used code_source_sha but omitted mandatory source_sha; main Central worker scope audit rejected exact evidence source, not Go/Rust tests",
+    "correction": "Preserve exact code_source_sha and add source_sha matching cursor.last_tested_source; keep historical red run as FAIL, no checker copies or weakened requirements"
+  }
 }
