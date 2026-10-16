@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 96,
-  "checkpoint_sha": "ba2fafab3d3127740e451ae3c5bd72601b3d07f6",
+  "sequence": 97,
+  "checkpoint_sha": "8e97e8f449e7e239dd01b79348899cb046a0cb04",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "023 one batched bounded multi-scenario atom CLOSED: exact CODE f15e2319483ee33fc411731cac2df57e14c17807 protected credential-verified Go TLS private NON-_test developer-gated adapter → original Rust M1/M3 ScopedOwner AEAD/PN + real M4 Linux raw/TUN. Same Actions38893526677 attempt1 compiled once build116948460901 and consumed116948984854 SUCCESS. New baseline 3 suites each C2S12/12 and S2C12/12, 72/72 original independent application packets verified with actual PN/TCP seq and bytes, per-suite elapsed_ns approx2.21-2.49million short loops, NOT product throughput. Additional actual root-lo tc netem configured loss1% real qdisc Sent15588 bytes 143 pkt dropped1, but all business 72/72; dropped packet identity UNKNOWN, loss repair NOT_RUN. Existing baseline, 10ms qdisc48p/12648B, 150ms qdisc47p/12594B, 1369 IP MTU and 1370 Go refusal/1401 malformed kernel refusal, replay/corrupt, Stop regression PASS on SAME native SOURCE. Evidence S ba2fafab3d3127740e451ae3c5bd72601b3d07f6 static audit38893992526/Gov38893992618 SUCCESS. Production ABI features0; formal 023 partial.",
-  "why_now": "User explicitly asked to batch multiple test types in a single compilation. Added small bounded real app bilateral traffic with true active normal-build owner and independent peer verification, plus single 1%-loss qdisc/packet-count exploratory observation with missing/loss accounting, rather than creating new cryptography/test-only sidepath or extrapolating recovery from a configured percentage.",
-  "done_when": "ATOM MET exact SOURCE f15e2319483ee33fc411731cac2df57e14c17807 native run38893526677 build+consume PASS. Original 3 cipher 12x2 packet baseline strict PASS, 1% qdisc observed one kernel dropped packet but encrypted business loss identity UNKNOWN; report OBSERVATION_RECORDED not repair PASS. Same CODE ordinary governance38893526526, maintenance38893526547 PASS; central scope38893556428 SKIPPED not PASS. Evidence S ba2fafab3d3127740e451ae3c5bd72601b3d07f6 static38893992526/Gov38893992618 PASS. Formal 023 still NOT_MET: explicit targeted encrypted DATA loss and no-HOL, real external SYN, default product V4 ABI, held async M4 B04/late return, B01/B02, actual measured RTT/10Mbps/p99 CPU, 5%/veth/reorder, physical/500Mbps NOT_RUN. Do not merge different SOURCE product greens.",
-  "next_action": "Use actual kernel tc classification/drop targeting precisely ONE known C2S FakeTCP encrypted DATA packet on THIS same verified Go→original Rust owner; then send a later distinct authenticated Normal/off packet and check independent Linux TUN app first arrival without cross-packet HOL, with precise dropped/received PN and kernel counters. This must show true business packet loss rather than qdisc control packet; do NOT assert repair or turn on production features.",
+  "current_task": "GOV-005新版 M0 提示词和 TEST_PLAN §0 已从远端 main 逐提交审计 GOV-005 PR6 合并后应用。本轮完成一个完整功能批次：真实 Go V4 TLS 私有认证 → 原始非测试 Rust owner/M3 → 实际 Linux M4 raw/TUN 上，以原可信 FakeTCP 四元组及独特 IPv4 ID 的内核 tc clsact/u32 明确丢弃加密 DATA PN0；后续密文 PN1 跨确切 TCP-like seq 缺口直接进入独立 TUN 应用，三 cipher 每组 kernel drop=1，业务字节核对 PASS，且旧 PN0 无应用再交付。代码 SOURCE c359ddd50d7e05bd130dd48e9de0f15c18c48d66 原生 Actions38903483740 PASS；证据 S 8e97e8f449e7e239dd01b79348899cb046a0cb04 静态审计38904029880/Governance38904029935 PASS。原12包与随机1%证据只保留既有边界。正式023 PARTIAL，生产 features0。",
+  "why_now": "新版 GOV-005 禁止逐包/逐配置小台阶；补齐旧随机 netem drop 身份不明造成的必要 no-HOL 缺包证据，下一阶段不再放大 smoke，直接做持续 Rust owner 循环。",
+  "done_when": "本功能批次已满足：同一原始 Go认证 Rust owner、三 cipher 真 Linux 加密 DATA 精确丢包、内核 tc drop=1、后继不同 PN1 第一业务交付、真实 TUN 应用完整性，原生 build/consume 及所用功能回归同 SOURCE PASS。尚未满足023正式 Exit：真实外部 SYN、持有异步 driver B04、B01/B02 全路径与正式产品能力。短 Go 单包驱动不能冒充独立持续 owner 或 10Mbps 性能。详见证据 S；普通 Governance 不作产品 PASS。",
+  "next_action": "实现原始受认证 Go V4→Rust M1/M3/M4 的独立持续 RX/TX owner 运行循环，发送器/接收器与原引擎互不逐包同步驱动；消除现有单一 registry Mutex 持有内核 RX 等待导致的潜在跨向 HOL 并保留停止/代际安全。随后用同一受限原始真实 Linux raw/TUN 路径，Normal 单 lane/FEC off/诊断关，独立业务双向各10Mbps、预定64/256/1200/有效MTU混合，10s热身+60s测量，以独立业务计时、实际收发/缺包、CPU-s、RSS、socket/drop、队列年龄、PPS、RTT与宿主容量证据交付开发基线；不因开发基线开放生产 features0。",
   "unverified": true,
-  "last_tested_source": "f15e2319483ee33fc411731cac2df57e14c17807",
+  "last_tested_source": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-12packet-bilateral-kernel-loss1-batch.json"
+    "docs/evidence/M0/M0-023-kernel-targeted-data-loss-no-hol.json"
   ],
-  "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-12packet-bilateral-kernel-loss1-batch.md",
-    "docs/evidence/M0/M0-023-same-artifact-real-MTU-and-netem-batch.json",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
+    "docs/devlog/M0/M0-023-kernel-targeted-data-loss-no-hol.md",
+    "docs/architecture/TEST_PLAN.md",
+    "docs/prompts/M0.md",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Exact SOURCE native Actions real original protected Go credential-checked Rust owner 12 packets each dir each 3 suites baseline72/72 PASS; actual 1% Linux qdisc dropped one among 143 packets but actual business72/72; packet identity unknown, do not claim recovery. Existing 10/150ms and MTU/integrity regressed PASS. 023 PARTIAL, production features0; targeted authenticated DATA loss/no HOL/B04/external SYN/performance NOT_RUN."
+  "open_requests": [],
+  "partial_summary": "CLEAN后按新版提示词已完成实际内核针对加密DATA PN0定向丢弃、正常PN1无需等待缺口的三cipher功能批次并完成S/H证据。尚无独立持续Rust owner运行循环或10Mbps基线；不扩展逐包烟雾测试；正式023 partial/features0。"
 }
