@@ -420,6 +420,42 @@ jobs:
           print(json.dumps(p,indent=2))
           PY
           test "$STATE" != FAIL
+      - name: Exact encrypted DATA kernel drop -> fresh next PN no-HOL (functional)
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          WBD_M0_TARGETED_DROP=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/targeted-data-loss-no-hol.log 2>&1
+          RC=$?
+          set -e
+          cat native-probe-result/targeted-data-loss-no-hol.log
+          if [[ "$RC" == 77 ]]; then
+            STATE=UNSUPPORTED
+          elif [[ "$RC" == 0 ]]; then
+            grep -q 'TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS' native-probe-result/targeted-data-loss-no-hol.log
+            for suite in 1 2 3; do
+              grep -q "EMBEDDED_REAL_TARGETED_ENCRYPTED_DATA_LOSS_NO_HOL_PASS suite=$suite targeted_c2s_pn=0 kernel_drop=1 next_c2s_pn=1" native-probe-result/targeted-data-loss-no-hol.log
+            done
+            STATE=PASS
+          else
+            STATE=FAIL
+          fi
+          STATE="$STATE" python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          m=json.load(open("native-probe-build/manifest.json"))
+          l=pathlib.Path("native-probe-result/targeted-data-loss-no-hol.log").read_bytes()
+          x={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+            "result":os.environ["STATE"],"ciphers":[1,2,3],
+            "kernel_drop":"EXACT_ORIGINAL_GO_TLS_ENCRYPTED_DATA_PN0_IPv4_ID_MATCH",
+            "next_authenticated_PN":"1_DELIVERED_WITH_SEQ_HOLE" if os.environ["STATE"]=="PASS" else "NOT_VERIFIED",
+            "kernel_classifier_each_suite_dropped_packets":1 if os.environ["STATE"]=="PASS" else None,
+            "loss_repair":"NOT_RUN","real_business_first_arrival_no_HOL":"PASS" if os.environ["STATE"]=="PASS" else "NOT_RUN",
+            "steady_owner_loop":"NOT_RUN","production_abi_features":0,"product":"NOT_RUN",
+            "log_sha256":hashlib.sha256(l).hexdigest()}
+          pathlib.Path("native-probe-result/targeted-data-loss-no-hol.json").write_text(json.dumps(x,indent=2)+"\n")
+          print(json.dumps(x,indent=2))
+          PY
+          test "$STATE" != FAIL
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

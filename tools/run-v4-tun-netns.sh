@@ -39,6 +39,8 @@ sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 # Default invocation remains byte-for-byte baseline behavior.
 PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
 STEADY="${WBD_M0_STEADY_BURST:-}"
+TARGETED="${WBD_M0_TARGETED_DROP:-}"
+if [[ -n "$TARGETED" && "$TARGETED" != 1 ]]; then echo 'TARGETED_DROP_INVALID' >&2; exit 2; fi
 LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 if [[ -n "$LOSS" ]]; then
   if [[ "$LOSS" != 1 || "$STEADY" != 1 || -n "$PRELIM_MS" ]]; then
@@ -70,12 +72,23 @@ fi
 TEST_FILTER='^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
 if [[ -n "$PRELIM_MS" ]]; then TEST_FILTER='^TestR0V4EmbeddedRealM4RawToTun$'; fi
 if [[ "$STEADY" == 1 ]]; then TEST_FILTER='^TestR0V4EmbeddedSteadyBurst$'; fi
+if [[ "$TARGETED" == 1 ]]; then
+  if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" ]]; then
+    echo 'TARGETED_DROP_INVALID independent functional namespace only' >&2; exit 2
+  fi
+  [[ "$(command -v tc || true)" ]] || { echo 'TARGETED_DROP_UNSUPPORTED tc absent'; exit 77; }
+  TEST_FILTER='^TestR0V4EmbeddedKernelSpecificDataLossNoHOL$'
+fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
+fi
+if [[ "$TARGETED" == 1 ]]; then
+  echo 'TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS original Go TLS PN0 lost in exact kernel u32 egress classifier; PN1 delivered by original Rust Normal/off to independent real TUN application.'
+  exit 0
 fi
 if [[ "$LOSS" == 1 ]]; then
   QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"

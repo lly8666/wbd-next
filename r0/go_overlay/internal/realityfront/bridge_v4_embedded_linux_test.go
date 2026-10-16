@@ -8,6 +8,8 @@ import (
     "net"
     "os"
     "os/exec"
+    "regexp"
+    "strconv"
     "syscall"
     "testing"
     "time"
@@ -575,5 +577,148 @@ func TestR0V4EmbeddedSteadyBurst(t *testing.T) {
                 map[bool]string{true:"LOSS_OBSERVATION",false:"PASS"}[lossy],
                 cipher,cSent,cDelivered,cMiss,cBytes,sSent,sDelivered,sMiss,sBytes,elapsed.Nanoseconds())
         })
+    }
+}
+
+
+
+// A targeted *genuine encrypted DATA* loss, not random netem/control traffic.
+// A kernel u32 classifier on the owned namespace's lo egress drops exactly
+// the first (PN0) IPPROTO_TCP record of the REAL credential-verified Go
+// session. Original Rust M1/M3 Normal/off must deliver distinct PN1 without
+// awaiting missing TCP-like seq. Not a retransmission/repair qualification.
+func TestR0V4EmbeddedKernelSpecificDataLossNoHOL(t *testing.T) {
+    if os.Getenv("WBD_REAL_TUN")!="1" || os.Getenv("WBD_M0_TARGETED_DROP")!="1" {
+        t.Skip("private owned Linux namespace only")
+    }
+    const tunName="wbdhol0"
+    fd,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if err!=nil{t.Fatal(err)}
+    defer fd.Close()
+    var req [40]byte
+    copy(req[:16],[]byte(tunName))
+    binary.LittleEndian.PutUint16(req[16:18],0x1001)
+    _,_,eno:=syscall.Syscall(syscall.SYS_IOCTL,fd.Fd(),0x400454ca,
+        uintptr(unsafe.Pointer(&req[0])))
+    if eno!=0{t.Fatalf("real TUN ioctl: %v",eno)}
+    for _,args:=range [][]string{
+        {"addr","add","10.241.22.1/24","dev",tunName},
+        {"link","set","dev",tunName,"up"},
+    }{
+        if out,e:=exec.Command("ip",args...).CombinedOutput();e!=nil{
+            t.Fatalf("TUN configure %v: %v %s",args,e,out)
+        }
+    }
+    runTC:=func(args ...string) string {
+        t.Helper()
+        out,e:=exec.Command("tc",args...).CombinedOutput()
+        if e!=nil{t.Fatalf("real kernel tc %v: %v %s",args,e,out)}
+        return string(out)
+    }
+    runTC("qdisc","add","dev","lo","clsact")
+    t.Cleanup(func(){_ =exec.Command("tc","qdisc","del","dev","lo","clsact").Run()})
+    lo,err:=net.InterfaceByName("lo")
+    if err!=nil||lo.Index<1{t.Fatal(err)}
+    dst:=net.IPv4(10,241,22,1);src:=net.IPv4(10,241,22,2)
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            bridge:=&v4EmbeddedNativeBridge{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("real original protected Go TLS admission: %v %v",ce,se)
+            }
+            t.Cleanup(func(){
+                if e:=bridge.stopRelease();e!=nil{t.Errorf("original M4 owner stop: %v",e)}
+                if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{
+                    t.Errorf("original Go epoch release: %v",e)
+                }
+            })
+            if e:=bridge.attachRawRx(uint32(lo.Index));e!=nil{t.Fatal(e)}
+            if e:=bridge.attachKernelTun(fd.Fd(),tunName);e!=nil{t.Fatal(e)}
+            app,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dst,Port:0})
+            if e!=nil{t.Fatal(e)}
+            defer app.Close()
+            raw,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+            if e!=nil{t.Fatal(e)}
+            defer syscall.Close(raw)
+            if e:=syscall.SetsockoptInt(raw,syscall.IPPROTO_IP,syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
+            cold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            _,limit:=cold.RecordLimits()
+            sealer,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(limit),cipher)
+            if e!=nil{t.Fatal(e)}
+            // IP identification is not credential authority; only selects a
+            // full TCP/IP DATA packet for this kernel loss experiment.
+            ipid:=uint16(0xb170)+uint16(cipher)
+            pref:="77"
+            runTC("filter","add","dev","lo","egress","protocol","ip",
+                "pref",pref,"u32",
+                "match","ip","src","10.0.0.2/32",
+                "match","ip","dst","10.0.1.1/32",
+                "match","ip","protocol","6","0xff",
+                "match","u16",fmt.Sprintf("0x%04x",ipid),"0xffff","at","4",
+                "action","drop")
+            makeIP:=func(v byte)[]byte{
+                payload:=bytes.Repeat([]byte{v},56)
+                ip:=make([]byte,28+len(payload))
+                ip[0]=0x45;ip[8]=64;ip[9]=17
+                binary.BigEndian.PutUint16(ip[2:4],uint16(len(ip)))
+                copy(ip[12:16],src.To4());copy(ip[16:20],dst.To4())
+                binary.BigEndian.PutUint16(ip[10:12],v4RawCheckSum(ip[:20]))
+                binary.BigEndian.PutUint16(ip[20:22],40001)
+                binary.BigEndian.PutUint16(ip[22:24],uint16(app.LocalAddr().(*net.UDPAddr).Port))
+                binary.BigEndian.PutUint16(ip[24:26],uint16(8+len(payload)))
+                copy(ip[28:],payload)
+                return ip
+            }
+            missing:=makeIP(0x71)
+            later:=makeIP(0x72)
+            first,pn0,e:=sealer.Seal(missing)
+            if e!=nil||pn0!=0{t.Fatalf("original TLS missing PN0: %v pn=%d",e,pn0)}
+            second,pn1,e:=sealer.Seal(later)
+            if e!=nil||pn1!=1{t.Fatalf("original TLS later PN1: %v pn=%d",e,pn1)}
+            // Preserve correct outer TCP/IP checksums while altering only
+            // a public header routing selector; original full ciphertext
+            // is unchanged and still authenticated at Rust, if it arrives.
+            gone:=v4RawC2STestPacket(first,bridge.rxBoundary,bridge.originalFlow)
+            binary.BigEndian.PutUint16(gone[4:6],ipid)
+            binary.BigEndian.PutUint16(gone[10:12],0)
+            binary.BigEndian.PutUint16(gone[10:12],v4RawCheckSum(gone[:20]))
+            if e:=syscall.Sendto(raw,gone,0,&syscall.SockaddrInet4{
+                Addr:bridge.originalFlow.ServerIP});e!=nil{t.Fatal(e)}
+            nextSeq:=bridge.rxBoundary+uint32(len(first))
+            next:=v4RawC2STestPacket(second,nextSeq,bridge.originalFlow)
+            if e:=syscall.Sendto(raw,next,0,&syscall.SockaddrInet4{
+                Addr:bridge.originalFlow.ServerIP});e!=nil{t.Fatal(e)}
+            // The ONLY receive call sees PN1 if the old missing TCP-like
+            // sequence is not blocking the original Rust steady owner.
+            delivered,failed,e:=bridge.receiveRawToTun()
+            if e!=nil||delivered!=1||failed!=0{
+                t.Fatalf("original Rust M4 Normal/off HOL when PN0 absent, later PN1 not delivered: delivered=%d failed=%d err=%v",delivered,failed,e)
+            }
+            if e:=app.SetReadDeadline(time.Now().Add(time.Second));e!=nil{t.Fatal(e)}
+            got:=make([]byte,256)
+            n,peer,err:=app.ReadFromUDP(got)
+            if err!=nil||peer==nil||!peer.IP.Equal(src)||!bytes.Equal(got[:n],later[28:]){
+                t.Fatalf("independent kernel TUN app first arrival not PN1 err=%v peer=%v n=%d",err,peer,n)
+            }
+            if e:=app.SetReadDeadline(time.Now().Add(40*time.Millisecond));e!=nil{t.Fatal(e)}
+            n,_,err=app.ReadFromUDP(got)
+            ne,ok:=err.(net.Error)
+            if n!=0||!ok||!ne.Timeout(){
+                t.Fatalf("missing PN0 appeared at independent application n=%d err=%v",n,err)
+            }
+            actual:=runTC("-s","filter","show","dev","lo","egress","pref",pref)
+            rx:=regexp.MustCompile(`dropped ([0-9]+)`).FindStringSubmatch(actual)
+            if len(rx)!=2{t.Fatalf("kernel exact encrypted DATA classifier lacks drop counter: %s",actual)}
+            drops,_:=strconv.Atoi(rx[1])
+            if drops!=1{
+                t.Fatalf("expected one real kernel IPv4/TCP encrypted DATA drop got=%d tc=%s",drops,actual)
+            }
+            t.Logf("EMBEDDED_REAL_TARGETED_ENCRYPTED_DATA_LOSS_NO_HOL_PASS suite=%d targeted_c2s_pn=0 kernel_drop=1 next_c2s_pn=1 later_payload_bytes=%d old_seq_hole_bytes=%d",
+                cipher,n,len(first))
+        })
+        // Rules are removed after a suite, before the next admission.
+        runTC("filter","del","dev","lo","egress","pref","77")
     }
 }
