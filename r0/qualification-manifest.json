@@ -21,6 +21,20 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_embedded_steady_150ms": {
+    "code_source_sha": "49a538917d209543c4f56c594481b37b1be1575e",
+    "result": "PARTIAL_EMBEDDED_STEADY_SECOND_PACKET_AND_150MS_NETEM_EXPLORATORY_PASS",
+    "evidence": "docs/evidence/M0/M0-023-embedded-two-packet-150ms-netem.json",
+    "exact_native_run_id": 38882731136,
+    "same_owner_C2S_S2C_second_packet": "PASS_3_CIPHERS_PN1_SEQ_CONTINUOUS",
+    "tc_netem_10ms_qdisc_packets": 36,
+    "tc_netem_150ms_qdisc_packets": 35,
+    "measured_rtt": "NOT_MEASURED",
+    "normal_10Mbps_p99_CPU": "NOT_RUN",
+    "true_async_driver_B04": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "production_features": 0
+  },
   "m0_023_preliminary_kernel_netem_10ms": {
     "code_source_sha": "443734232dd4c341e0922757a3f06a452c453fda",
     "result": "EXPLORATORY_PASS_NOT_PRODUCT_QUALIFICATION",

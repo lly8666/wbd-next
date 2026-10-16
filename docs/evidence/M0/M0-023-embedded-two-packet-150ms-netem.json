@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "49a538917d209543c4f56c594481b37b1be1575e",
+  "code_source_sha": "49a538917d209543c4f56c594481b37b1be1575e",
+  "result": "PARTIAL_EMBEDDED_STEADY_SECOND_PACKET_AND_150MS_NETEM_EXPLORATORY_PASS",
+  "rationale": "User asked to accelerate and avoid disproportionate focus on B04, which cannot be demonstrated by currently synchronous kernel-copy raw/TUN borrow. Reused production-intended (developer-feature-gated) original Rust ScopedOwner actual protected Go session and M4 raw/TUN; added a same-generation second business packet each way, rather than only repeated first packet or artificial timer/control semantics. Then added one bounded higher-delay netem run with identical prebuilt native artifacts.",
+  "source_steps": [
+    {
+      "source_sha": "b72f684c3a9af964e709d5a52ba312a942211fb6",
+      "scope": "Go test for genuine second C2S and S2C real kernel payload on existing same original M1/M3 owner. C2S original TLS sealer PN1, raw TCP seq=original boundary+first record length, original Rust decrypt/NormalOff TUN independent UDP app exact 31B; S2C original Rust sealer PN1, TCP seq=previous+first wire record length, independent Go TLS opener exact 34B. Existing replay/corrupt PN negatives, stop/generation checks retained.",
+      "run_id": 38882255929,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116911533367,
+      "consume_job": 116911964763,
+      "artifacts": [
+        {
+          "kind": "build",
+          "id": 12037383846,
+          "digest": "sha256:dcb21bd4f7d19607acb3f0884e4bd9143770c26034eb6acd287ff8c14432a287"
+        },
+        {
+          "kind": "result",
+          "id": 12037319183,
+          "digest": "sha256:d91dcebbcf3209e6ee520c0e92f61db231a5230fa1c96c9af59e19ca1a286703"
+        }
+      ]
+    },
+    {
+      "source_sha": "49a538917d209543c4f56c594481b37b1be1575e",
+      "scope": "Reused same test source and prebuilt native binaries, added separate named isolated lo Linux tc netem delay 150ms limit256 zero configured loss; check real qdisc counter and original embedded same-generation C2S/S2C second-packet all three ciphers. Existing base namespace and 10ms scenario still run in same consumer.",
+      "run_id": 38882731136,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116913073832,
+      "consume_job": 116913601355,
+      "artifacts": [
+        {
+          "kind": "build",
+          "id": 12037284831,
+          "digest": "sha256:903ee061a7cb42c72516a0096001e7de9701379f205bbd52fa02cae5c1b6860f"
+        },
+        {
+          "kind": "result",
+          "id": 12038282769,
+          "digest": "sha256:49bb53a5f48cf725a1e25a41d00c831e4befafdeb693776f63fc0b065c63629f"
+        }
+      ]
+    }
+  ],
+  "final_source_native_run": {
+    "id": 38882731136,
+    "attempt": 1,
+    "head_sha": "49a538917d209543c4f56c594481b37b1be1575e",
+    "conclusion": "success",
+    "build_job": 116913073832,
+    "consumer_job": 116913601355,
+    "baseline": {
+      "result": "PASS",
+      "true_kernel_C2S_second": {
+        "suites": [
+          1,
+          2,
+          3
+        ],
+        "business_bytes_each": 31,
+        "pn_each": 1
+      },
+      "true_kernel_S2C_second": {
+        "suites": [
+          1,
+          2,
+          3
+        ],
+        "business_bytes_each": 34,
+        "pn_each": 1
+      },
+      "seq": "original FakeTCP association seq strictly advanced from first real wire length"
+    },
+    "netem_10": {
+      "result": "EXPLORATORY_PASS",
+      "configured_delay_ms": 10,
+      "configured_loss_percent": 0,
+      "observed_qdisc_sent_packets": 36,
+      "observed_qdisc_sent_bytes": 3597,
+      "embedded_bilateral_second_packet_3ciphers": "PASS"
+    },
+    "netem_150": {
+      "result": "EXPLORATORY_PASS",
+      "configured_delay_ms": 150,
+      "configured_loss_percent": 0,
+      "observed_qdisc_sent_packets": 35,
+      "observed_qdisc_sent_bytes": 3543,
+      "embedded_bilateral_second_packet_3ciphers": "PASS"
+    },
+    "notes": "10/150 are Linux tc configured delays, NOT measured end-to-end RTT. qdisc positive kernel packet counters show traversal, not p99/throughput. 150 scenario's earlier 40ms duplicate-drop observation is not treated as meaningful delay-robust replay guarantee; only genuine accepted first/second bilateral packets are claimed."
+  },
+  "other_same_source": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38882731269,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "identity, structure; drills/model NOT_RUN"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38882730925,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "governance tool check, not product"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38882765936,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN"
+    }
+  ],
+  "distinct_source_disclaimer": "Earlier native ABI/cross/Go regressions and earlier code SOURCE b72f native tests do not constitute a single final-source product qualification. Native final SOURCE certifies only the declared owned namespace/feature-enabled path; production ABI features0.",
+  "remaining": [
+    "Development build tag and Rust feature m0_v4_embedded_go only; ordinary production ABI features0 and runtimeentry V4 continues fail closed.",
+    "Original FakeTCP SYN association generated by pinned Go helper, not from a real external network client. Go credential-checked TLS and Linux kernel raw/TUN I/O themselves execute in Actions.",
+    "Only 2 actual packets per direction and first two PN, no continuous 10Mbps, measured RTT, measured throughput, p99, CPU-s, MTU±1, fragmentation or QoS correctness qualification.",
+    "150ms is configured delay on Linux loopback qdisc, not tested end-to-end RTT/real veth path. No 1/5% loss, 300ms, reordering or repair.",
+    "Raw/TUN BorrowFence scopes actual synchronous kernel syscall copies; genuine held asynchronous M4 driver loan B04 STOP_INCOMPLETE/late return NOT_RUN/UNSUPPORTED with current API, full B01/B02 same-tunnel races and product lifecycle not qualified.",
+    "No physical machine, Windows/ARM target execution, public V4 distribution, or 500Mbps product benchmark; artifact ZIP digest metadata from GitHub API, not independently rehashed."
+  ],
+  "capabilities": {
+    "production_V4_ABI_features": 0,
+    "product_qualification": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "B04_driver_held": "NOT_RUN"
+  },
+  "next_action": "Advance same original verified embedded Go/Rust M4 real kernel path to packet-size/MTU gate: one near-effective carrier budget IPv4 business payload and one oversized/fail-closed attempt with exact actual budget, no seed/MTU cheating; add actual netem 1% loss/300ms only as separate bounded functional scenario once packet/driver semantics are observable. Keep real async B04 as NOT_RUN until a genuine completion-capable driver is available."
+}

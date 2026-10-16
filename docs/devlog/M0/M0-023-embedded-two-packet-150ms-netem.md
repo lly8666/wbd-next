@@ -1,0 +1,13 @@
+# M0-023 — real embedded Rust owner continues past first packet; 150ms netem functional smoke
+
+**PARTIAL / EXPLORATORY_PASS**, CODE SOURCE `49a538917d209543c4f56c594481b37b1be1575e`. Exact artifact hashes and qualification limits [JSON](../evidence/M0/M0-023-embedded-two-packet-150ms-netem.json).
+
+This turn deliberately skipped an unrepresentative B04 loop: original raw/TUN kernel drivers use synchronous borrow scopes; inventing an asynchronous lease token cannot qualify late I/O. The actual user priority was faster product-path progress.
+
+**Code S1** `b72f684c` [Actions #38882255929](https://github.com/lly8666/wbd-next/actions/runs/38882255929) PASS: the real protected Go TLS session, developer-gated non-`_test` native Go adapter and SAME actual original Rust M1/M3 scoped owner now prove **two successive business packets in each direction** over real M4 Linux raw TCP/TUN, not just first delivery. All three ciphers: second C2S PN1, seq next exactly + first record wire length, 31B independently received application; second S2C PN1, seq next exactly + first S2C ciphertext record length, 34B independently Go TLS opened. No second generation or second AEAD engine; existing duplicate/corrupt and Stop checks retained.
+
+**Code S2 FINAL** `49a538917d209543c4f56c594481b37b1be1575e` [Actions #38882731136](https://github.com/lly8666/wbd-next/actions/runs/38882731136) attempt1 PASS. Compiled same pinned Go/Rust pair once, consumed hashes in the same run and executed baseline plus 10ms and 150ms single-case, zero-configured-loss isolated Linux `tc netem` queues. Baseline and both netem cases passed 3/3 cipher bilateral *second* packet. Kernel actual qdisc counters: 10ms → 36 packets/3597 bytes; 150ms → 35 packets/3543 bytes, both dropped0. **These are configured delays, NOT measured RTT**; only initial functionality was tested, no speed/p99 or loss qualification. Final SOURCE ordinary Governance and maintenance PASS, source main scope SKIPPED; different-SOURCE greens not combined.
+
+Default production V4 `features=0`, original SYN test-generated, product lifecycle and external SYN not qualified. True held async M4 B04 NOT_RUN and cannot be inferred from synchronous syscall fences. No 10Mbps/dir benchmark, no near-MTU, no 1/5% netem loss, 300ms, physical, Windows/ARM runtime, 500Mbps, product PASS.
+
+**One next action:** same actual owner M4 kernel near-effective MTU packet and oversize fail-closed test before claiming any product steady throughput baseline; keep real async B04 blocked pending actual completion support.
