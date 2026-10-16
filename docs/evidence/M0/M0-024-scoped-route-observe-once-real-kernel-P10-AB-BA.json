@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "4b8d7a01ff09b76bd75c452cbb9a35eeb4cb81f4",
+  "code_source_sha": "c203f0783ee6925c5373591de3b99aeb3a73c24a",
+  "performance_workflow_source_sha": "db86490f3f6119204361301a0bf1c9701cfb33f1",
+  "result": "PARTIAL_ORIGINAL_ROUTE_QUERY_DUPLICATE_REMOVAL_AND_REAL_MTU_DROP_PASS_P10_AB_BA_STRONG_DEVELOPMENT_CPU_SIGNAL",
+  "title": "R1-M0-024 original protected Go TLS to Rust M1/M3/M4 route-observation once + same-VM A/B B/A",
+  "rationale": "Task024 route/MTU hotpath cost. Existing source c203 original Rust autonomous M4 S2C calls observe_ipv4_route_mtu twice for one payload. Replace with original ProtectedScopedOwner sealed owner API which performs one fresh trusted route observation in same call and consumes original M1 slab/unique AEAD PN; unchanged raw driver still checks real kernel interface MTU and IPv4 DF. Historical 024 scoped reuse/10Hz clock evidence is preserved.",
+  "exact_changes": [
+    {
+      "source": "c203f0783ee6925c5373591de3b99aeb3a73c24a",
+      "paths": [
+        "crates/wbd-engine/src/v4_owner_crypto.rs",
+        "crates/wbd-engine/src/v4_embedded_go.rs"
+      ],
+      "scope": "new seal_normal_off_with_fresh_route_budget performs original owner active/Detached and validated kernel bound route+peer MSS budget once and original seal_normal_off_one in one call. Background Rust TUN TX no longer calls independent route observer followed by owner stale-route reobserve. Original external cached stale snapshot seal_normal_off_with_linux_budget retains live revalidation and fail-closed behavior. Original M4 ScopedRawIpv4Tx send_one still checks observed interface MTU per submission, uses IPv4 DF and kernel sendto; these are NOT yet optimized."
+    },
+    {
+      "source": "db86490f3f6119204361301a0bf1c9701cfb33f1",
+      "paths": [
+        ".github/workflows/m0-rust-hotpath-p10-ab.yml",
+        ".github/workflows/m0-rust-hotpath-p10-ba.yml"
+      ],
+      "scope": "freeze A baseline333c1b3f, B source content git blob SHA3e0e4eec + fb00e4cb (exact code source c203), identical Go original TLS workload and runner. Two measurement actions, each its own two-leg ONE VM/job. Both directions same injected UDP app 10Mbps 64/256/1200 equal mix, fixed warmup10s measurement60s drain3s, no impairment."
+    },
+    {
+      "source": "4b8d7a01ff09b76bd75c452cbb9a35eeb4cb81f4",
+      "paths": [
+        "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+        ".github/workflows/m0-v4-native-owner-probe.yml"
+      ],
+      "scope": "Original Rust background test explicitly changes actual owned Linux namespace lo interface MTU 65536→1500 after original owner is Active and completed kernel traffic; new small S2C payload must be rejected by original M4 driver, TX successful count stays8, TX error rises, restore namespace MTU in cleanup. It does NOT claim automatic revalidation/recovery after MTU increase."
+    }
+  ],
+  "pinned_comparison": {
+    "baseline_A_engine": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+    "optimized_B_engine_code": "c203f0783ee6925c5373591de3b99aeb3a73c24a",
+    "optimized_B_ci_source": "db86490f3f6119204361301a0bf1c9701cfb33f1",
+    "B_engine_git_blob_shas": {
+      "v4_owner_crypto": "3e0e4eec2d7b7180030be09aa78d5590a3901db3",
+      "v4_embedded_go": "fb00e4cb488ef67faa432156d14e278a032e9fd8"
+    },
+    "workload": "Normal 1 lane, FEC off, original pinned protected Go TLS, same single Rust M1/M3/M4 real Linux raw/TUN, UDP app payload64/256/1200 equal count each direction logical10Mbps, 10s warmup+60s measure, 3s drain; no changed seed/queue/time to rescue failure",
+    "measured_CPU_scope": "combined Go fixture, Go independent injector/receiver and original Rust owner all in one process; Rust thread CPU clocks not compared because A/B sample frequency differs; this is same-path development A/B, not full product CPU qualification",
+    "A_to_B": {
+      "run_id": 38939973447,
+      "attempt": 1,
+      "conclusion": "success",
+      "source_sha": "db86490f3f6119204361301a0bf1c9701cfb33f1",
+      "build_job": 117104852266,
+      "measure_job": 117105763898,
+      "build_artifact": {
+        "id": 12062368737,
+        "digest": "sha256:2a890e96cc0268fc0d33b17fca6730fedeff5508f5f6e24193dba803487183f3"
+      },
+      "result_artifact": {
+        "id": 12063470931,
+        "digest": "sha256:29e3a238684057a5330d96ba718a8819ce5dbd7fe1d9e32a7d382391424ff345"
+      },
+      "A": {
+        "cpu_s": 52.266468,
+        "cpu_s_per_GiB_delivered": 374.1419021675378,
+        "c2s_udp_app_mbps": 9.999978666666667,
+        "s2c_udp_app_mbps": 9.999810133333334,
+        "missing": 0,
+        "invalid": 0,
+        "c2s_same_host_oneway_age_p99_us": 1345,
+        "s2c_same_host_oneway_age_p99_us": 1025
+      },
+      "B": {
+        "cpu_s": 42.514055,
+        "cpu_s_per_GiB_delivered": 304.32554452014864,
+        "c2s_udp_app_mbps": 9.999978666666667,
+        "s2c_udp_app_mbps": 10.0001472,
+        "missing": 0,
+        "invalid": 0,
+        "c2s_same_host_oneway_age_p99_us": 971,
+        "s2c_same_host_oneway_age_p99_us": 813
+      },
+      "B_minus_A_delivered_normalized_CPU_percent": -18.660395225158698
+    },
+    "B_to_A": {
+      "run_id": 38939973524,
+      "attempt": 1,
+      "conclusion": "success",
+      "source_sha": "db86490f3f6119204361301a0bf1c9701cfb33f1",
+      "build_job": 117104852745,
+      "measure_job": 117105686162,
+      "build_artifact": {
+        "id": 12062169428,
+        "digest": "sha256:f2be35d3d34db341ec2f8d3ecd3c99fffa3a153e512afeaf368d823a41b37367"
+      },
+      "result_artifact": {
+        "id": 12063336201,
+        "digest": "sha256:cd6d7ee141f54ec2d5637371e94f9273f11970ad5383b1a2678d0c06aaa47331"
+      },
+      "A": {
+        "cpu_s": 51.795522,
+        "cpu_s_per_GiB_delivered": 370.7614890311977,
+        "c2s_udp_app_mbps": 10.0001472,
+        "s2c_udp_app_mbps": 10.000138666666667,
+        "missing": 0,
+        "invalid": 0,
+        "c2s_same_host_oneway_age_p99_us": 1358,
+        "s2c_same_host_oneway_age_p99_us": 943
+      },
+      "B": {
+        "cpu_s": 42.13247,
+        "cpu_s_per_GiB_delivered": 301.5953245128096,
+        "c2s_udp_app_mbps": 10.000021333333333,
+        "s2c_udp_app_mbps": 10.000021333333333,
+        "missing": 0,
+        "invalid": 0,
+        "c2s_same_host_oneway_age_p99_us": 965,
+        "s2c_same_host_oneway_age_p99_us": 801
+      },
+      "B_minus_A_delivered_normalized_CPU_percent": -18.65516418631281
+    }
+  },
+  "validation": {
+    "native_code_source": {
+      "source_sha": "c203f0783ee6925c5373591de3b99aeb3a73c24a",
+      "run_id": 38939215267,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117102321452,
+      "consume_job": 117103003602,
+      "artifacts": [
+        {
+          "id": 12062207557,
+          "digest": "sha256:572a933b09c37ea61cf99afb3225bd3970bf7721695c6ae91675b7a11c7d91ab"
+        },
+        {
+          "id": 12062731647,
+          "digest": "sha256:e9fa185cb33bb7974262b233d13250f6b2fd70970f0f7f3406a3119188ab0bb1"
+        }
+      ]
+    },
+    "same_code_source_other_workflows": [
+      {
+        "workflow": "r0-native-abi",
+        "id": 38939215331,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-cross-abi",
+        "id": 38939215332,
+        "conclusion": "success",
+        "note": "Cross BUILD only"
+      },
+      {
+        "workflow": "native-regression",
+        "id": 38939215343,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance",
+        "id": 38939215315,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-qualification-audit",
+        "id": 38939215512,
+        "conclusion": "success"
+      }
+    ],
+    "live_MTU_source": {
+      "source_sha": "4b8d7a01ff09b76bd75c452cbb9a35eeb4cb81f4",
+      "run_id": 38940735518,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117107402165,
+      "consume_job": 117108046387,
+      "test_name": "TestR0V4EmbeddedIndependentRustOwnerLoop",
+      "before_mtu": 65536,
+      "after_mtu": 1500,
+      "baseline_kernel_app_c2s": 8,
+      "baseline_kernel_raw_s2c": 8,
+      "baseline_worker_rx_errors": 0,
+      "baseline_worker_tx_errors": 0,
+      "subsequent_real_tun_app_payload_bytes": 52,
+      "original_M4_scoped_raw_TX_correctly_rejected_changed_MTU": true,
+      "post_MTU_TX_success_stays_8": true,
+      "post_MTU_worker_error_count_increased": true,
+      "auto_route_refresh": false,
+      "artifacts": [
+        {
+          "id": 12062394661,
+          "digest": "sha256:22021917545762d2c546b2676918136f59e380c0b55212e0fbb6352a7cbf9502"
+        },
+        {
+          "id": 12063166817,
+          "digest": "sha256:6c0470a814d07d142461255c35e2359d4fb6326f6a0fe94335415f384e1832dc"
+        }
+      ]
+    },
+    "same_native_source_governance": [
+      {
+        "workflow": "governance",
+        "id": 38940735423,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "governance-maintenance",
+        "id": 38940735458,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "scope-audit",
+        "id": 38940779928,
+        "conclusion": "skipped",
+        "note": "NOT_RUN"
+      }
+    ]
+  },
+  "meaning": "The owner-coupled route-once change has a strong reproducible >=18% delivered-normalized combined process CPU reduction on THIS bounded original Rust development data path, with no observed app integrity/p99 regression. Unlike previous storage-only <2% results, this is a meaningful measured same-VM AB/BA signal. It does not qualify the full product or maximum throughput, nor claim attribution of 18% to one syscall measured in D10; syscall counts are source-derived until diagnostic.",
+  "limits": [
+    "Task024 is PARTIAL: every normal S2C packet still does one real kernel route lookup, original M4 raw send_one and raw recv_one_into still query interface MTU per packet; no netlink event-driven revision budget or recovery after MTU change.",
+    "All data still enters a global Rust registry mutex while AEAD and M4 raw sending, so true per-direction ownership/batch-ready<=32 and SPARSE/D10 C50 remain NOT_RUN.",
+    "Interface shrink regression proves the original M4 guard refuses a 52B S2C send on changed active loopback device. It does not prove outbound path PMTU events auto-revalidate or that a new snapshot is installed and delivery recovers.",
+    "Combined-process CPU includes Go fixture/injector/receiver. Not a full external SYN and fully native Rust client/server veth product cost measurement; same-host one-way application packet age p99 is not network RTT.",
+    "B01-B04 original production held async M4 driver, re-handshake external SYN, oversize automatic LINK fragmentation, production ABI feature gating and 500Mbps physical qualification remain NOT_RUN. Production V4 features0.",
+    "GitHub artifact ZIP digests are provider metadata receipts, binary SHA verified by native build/consumer. Scoped external cached-snapshot API retains same before-PN kernel recheck."
+  ],
+  "production_abi_features": 0,
+  "original_023_product_qualification": "NOT_RUN",
+  "task_024_progress": "PARTIAL",
+  "next_action": "Finish task024 batch A and B: implement device-scoped netlink route/link+EMSGSIZE invalidation and owner/generation/revision snapshot with safe 1s bounded refresh, no per-data kernel route socket or driver sysfs; test actual Linux MTU lower/recover and replacement scope fail closed; then split active Rust directional ownership away from global registry work mutex, ready-only<=32 reuse and Stop delayed M4 loan checks. Run D10 syscall profile and SPARSE-AB; repeat SAME code baseline AB/BA only after substantive semantics change; C50 conditional on capacity, preserve no product capability."
+}
