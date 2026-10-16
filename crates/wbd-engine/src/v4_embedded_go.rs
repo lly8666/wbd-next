@@ -35,6 +35,10 @@ use wbd_platform::r1::StopResult;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::rx_ipv4_tcp::extend_seq32;
 use crate::runtime::early_rx::EarlyAccepted;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use crate::runtime::RxPacket;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::time::Duration;
 const OK:i32=0;
 const INVALID:i32=1;
 const UNKNOWN:i32=2;
@@ -423,7 +427,8 @@ fn loop_now()->MonoNs{
 // TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
 // Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool)->Result<u32,i32>{
+fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
+    rx_storage:&mut Vec<RxPacket>)->Result<u32,i32>{
     let (mut slab,flow,boundary,generation)={
         let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
         let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -445,10 +450,20 @@ fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool)->Result
     e.owner.offer_after_active(slab,0..len,absolute,loop_now())
         .map_err(|_|INVALID)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
-    let (loan,report,delivered,failed)=e.owner.drain_normal_off_to_tun(
-        &mut e.normal,tun,loop_now(),Vec::with_capacity(32))
-        .map_err(|_|BAD_STAGE)?;
-    drop(loan);
+    // This storage is owner-local to the RX worker and reuses its original
+    // capacity on *every* ready packet. The batch contains original M1 loan
+    // handles only until the drain returns; never retain them across Stop.
+    let storage=std::mem::take(rx_storage);
+    let (mut returned,report,delivered,failed)=match e.owner.drain_normal_off_to_tun(
+        &mut e.normal,tun,loop_now(),storage){
+        Ok(done)=>done,
+        Err((_,returned))=>{
+            *rx_storage=returned;
+            return Err(BAD_STAGE);
+        }
+    };
+    returned.clear();
+    *rx_storage=returned;
     e.arena.drain_returns();
     if report.completed!=1||failed!=0||delivered!=1{return Err(INVALID)}
     Ok(delivered)
@@ -525,25 +540,39 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
+            let mut last_cpu_sample=Instant::now();
+            let mut rx_storage=Vec::<RxPacket>::with_capacity(32);
             while !stop_rx.load(Ordering::Acquire){
-                stats_rx.rx_thread_cpu_ns.store(
-                    owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                // Do not invoke CLOCK_THREAD_CPUTIME_ID once per packet.
+                // Publish an approximate worker-only CPU clock at <=10 Hz;
+                // end-of-thread also publishes the final CPU time.
+                if last_cpu_sample.elapsed()>=Duration::from_millis(100){
+                    stats_rx.rx_thread_cpu_ns.store(
+                        owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                    last_cpu_sample=Instant::now();
+                }
                 if !loop_readiness(raw_fd,&stop_rx){continue}
                 if stop_rx.load(Ordering::Acquire){break}
-                match background_raw_once(handle,&raw,&stop_rx){
+                match background_raw_once(handle,&raw,&stop_rx,&mut rx_storage){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }
+            stats_rx.rx_thread_cpu_ns.store(
+                owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
         })
     else{return INVALID};
     let stop_tx=Arc::clone(&shutdown);
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
+            let mut last_cpu_sample=Instant::now();
             while !stop_tx.load(Ordering::Acquire){
-                stats.tx_thread_cpu_ns.store(
-                    owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                if last_cpu_sample.elapsed()>=Duration::from_millis(100){
+                    stats.tx_thread_cpu_ns.store(
+                        owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                    last_cpu_sample=Instant::now();
+                }
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
                 match background_tun_once(handle,&tun,&stop_tx,ifindex){
@@ -551,6 +580,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }
+            stats.tx_thread_cpu_ns.store(
+                owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
         })
     else{
         shutdown.store(true,Ordering::Release);
