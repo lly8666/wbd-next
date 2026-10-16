@@ -19,6 +19,7 @@ on:
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
       - "crates/wbd-platform/src/linux_packet_preflight.rs"
       - "crates/wbd-platform/src/lib.rs"
       - "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
@@ -79,7 +80,7 @@ jobs:
           rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
           test -n "$rust_test"
           cp "$rust_test" native-probe-build/owner-rust.test
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -113,6 +114,7 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
             ".github/workflows/m0-v4-native-owner-probe.yml",
             "tools/run-v4-kernel-loopback.sh",
             "tools/run-v4-tun-netns.sh"]
@@ -483,6 +485,44 @@ jobs:
             "product_qualification":"NOT_RUN","production_features":0,
             "log_sha256":hashlib.sha256(l).hexdigest()}
           pathlib.Path("native-probe-result/original-rust-background-loop.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          PY
+      - name: ONE fixed Normal-off 10Mbps each direction developer diagnostic (10s+60s)
+        shell: bash
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          set +e
+          WBD_M0_PERF_BASELINE=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/normal-off-dev-10mbps.log 2>&1
+          RC=$?
+          set -e
+          tail -n 32 native-probe-result/normal-off-dev-10mbps.log
+          if ((RC!=0)); then
+            echo "M0_PERF_DIAGNOSTIC_FAILED rc=$RC; leave the authentic failed log and any partial receipt" >&2
+            exit "$RC"
+          fi
+          grep -q 'ORIGINAL_RUST_NORMAL_OFF_BILATERAL_DEVELOPMENT_MEASUREMENT_RECORDED' native-probe-result/normal-off-dev-10mbps.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          m=json.load(open("native-probe-build/manifest.json"))
+          p=pathlib.Path("native-probe-result/normal-off-dev-10mbps.json")
+          result=json.loads(p.read_text())
+          assert result["warmup_seconds"]==10 and result["measure_seconds"]==60
+          assert result["mix_packet_ipv4_lengths_bytes"]==[64,256,1200,1369]
+          assert result["desired_rate_mbps_each_direction_ipv4_inner_business"]==10
+          assert result["backend"]=="real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun"
+          assert result["production_features"]==0 and result["product_qualification"]=="NOT_RUN"
+          assert result["result"] in ("MEASUREMENT_RECORDED_NOT_PRODUCT_PASS","INVALID_INJECTOR","DATAPLANE_BOTTLENECK_OBSERVED")
+          result["source_sha"]=m["source_sha"]
+          result["run_id"]=m["run_id"]
+          result["attempt"]=m["attempt"]
+          result["log_sha256"]=hashlib.sha256(pathlib.Path("native-probe-result/normal-off-dev-10mbps.log").read_bytes()).hexdigest()
+          p.write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps({"source_sha":result["source_sha"],"run_id":result["run_id"],
+            "result":result["result"],"c2s_offered_mbps":result["c2s"]["offered_ipv4_mbps"],
+            "c2s_delivered_mbps":result["c2s"]["delivered_ipv4_mbps"],
+            "s2c_offered_mbps":result["s2c"]["offered_ipv4_mbps"],
+            "s2c_delivered_mbps":result["s2c"]["delivered_ipv4_mbps"],
+            "not_product_pass":True},indent=2))
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

@@ -16,7 +16,6 @@ import (
     "os"
     "os/exec"
     "sort"
-    "strconv"
     "strings"
     "sync"
     "sync/atomic"
@@ -101,6 +100,19 @@ func m0PerfRead(path string)string{
     if len(v)>420{v=v[:420]}
     return v
 }
+func m0PerfReadRSS()string{
+    v,err:=os.ReadFile("/proc/self/status")
+    if err!=nil{return "UNAVAILABLE"}
+    rows:=strings.Split(string(v),"\n")
+    var vals []string
+    for _,line:=range rows{
+        if strings.HasPrefix(line,"VmRSS:")||strings.HasPrefix(line,"VmHWM:")||
+            strings.HasPrefix(line,"Threads:"){
+            vals=append(vals,strings.TrimSpace(line))
+        }
+    }
+    return strings.Join(vals,"; ")
+}
 func m0PerfDevCounters()map[string]string{
     p:="/sys/class/net/lo/statistics/"
     return map[string]string{
@@ -113,7 +125,7 @@ func m0PerfDevCounters()map[string]string{
         "cpu_psi":m0PerfRead("/proc/pressure/cpu"),
         "memory_current":m0PerfRead("/sys/fs/cgroup/memory.current"),
         "memory_peak":m0PerfRead("/sys/fs/cgroup/memory.peak"),
-        "rss_status":m0PerfRead("/proc/self/status"),
+        "rss_status":m0PerfReadRSS(),
     }
 }
 
@@ -404,5 +416,4 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     if status=="INVALID_MEASUREMENT"{t.Error("baseline data invalid; see exact JSON")}
     // Legitimate capacity/injector insufficiency is a recorded NOT_QUALIFIED
     // developer diagnostic, never an automatic product PASS.
-    _=strconv.IntSize
 }

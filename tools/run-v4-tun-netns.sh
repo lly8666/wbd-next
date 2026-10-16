@@ -40,6 +40,7 @@ sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
 STEADY="${WBD_M0_STEADY_BURST:-}"
 BACKGROUND="${WBD_M0_BACKGROUND_LOOP:-}"
+PERF="${WBD_M0_PERF_BASELINE:-}"
 TARGETED="${WBD_M0_TARGETED_DROP:-}"
 if [[ -n "$TARGETED" && "$TARGETED" != 1 ]]; then echo 'TARGETED_DROP_INVALID' >&2; exit 2; fi
 LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
@@ -73,6 +74,12 @@ fi
 TEST_FILTER='^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
 if [[ -n "$PRELIM_MS" ]]; then TEST_FILTER='^TestR0V4EmbeddedRealM4RawToTun$'; fi
 if [[ "$STEADY" == 1 ]]; then TEST_FILTER='^TestR0V4EmbeddedSteadyBurst$'; fi
+if [[ "$PERF" == 1 ]]; then
+  if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$BACKGROUND" ]]; then
+    echo 'PERF_INVALID multiple scenarios cannot share one perf runner' >&2; exit 2
+  fi
+  TEST_FILTER='^TestR0V4EmbeddedNormalOff10MbpsDevelopment$'
+fi
 if [[ "$BACKGROUND" == 1 ]]; then
   if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" ]]; then
     echo 'BACKGROUND_LOOP_INVALID requires isolated owner functional case' >&2; exit 2
@@ -87,11 +94,18 @@ if [[ "$TARGETED" == 1 ]]; then
   TEST_FILTER='^TestR0V4EmbeddedKernelSpecificDataLossNoHOL$'
 fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
+fi
+if [[ "$PERF" == 1 ]]; then
+  [[ -s "$ROOT/native-probe-result/normal-off-dev-10mbps.json" ]] || {
+    echo 'PERF_MEASUREMENT_INVALID missing actual Go kernel receipt' >&2; exit 1;
+  }
+  echo 'ORIGINAL_RUST_NORMAL_OFF_BILATERAL_DEVELOPMENT_MEASUREMENT_RECORDED 10s warmup 60s measurement fixed mix; this is NOT product qualification.'
+  exit 0
 fi
 if [[ "$BACKGROUND" == 1 ]]; then
   echo 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS real independent Linux raw+TUN workers, not a sustained performance benchmark.'
