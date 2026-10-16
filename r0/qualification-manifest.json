@@ -757,5 +757,20 @@
     "driver_held_stop_B01_B04": "NOT_RUN",
     "netem_matrix": "NOT_RUN",
     "product_e2e": "NOT_RUN"
+  },
+  "m0_023_true_kernel_raw_faketcp_bilateral": {
+    "code_source_sha": "00fd3aa30a48cb9f6f98242fbfabbedcd770c6bd",
+    "result": "PARTIAL_TRUE_RAW_IPV4_TCP_BIDIRECTIONAL_TUN_PASS",
+    "evidence": "docs/evidence/M0/M0-023-true-raw-bidirectional-tun.json",
+    "real_raw_c2s": "Go V4 TLS C2S -> Go raw IPv4/TCP packet -> real Linux SOCK_RAW IPPROTO_TCP -> normal Rust M4 scoped raw RX directly original M1 slab -> strict R1 TCP tuple/checksums -> original Rust AEAD PN0 M3 LINK -> real kernel TUN -> independent UDP app received 36B; three cipher suites",
+    "real_raw_s2c": "real UDP app -> real TUN -> original Rust M1 slab AEAD PN1 -> R1 IPv4/TCP packet->actual Linux SOCK_RAW -> independent Go SOCK_RAW + TLS opener confirms 39B app, three ciphers",
+    "native_run": 38856972449,
+    "production_features": 0,
+    "production_positive_go_native_authority": "NOT_IMPLEMENTED",
+    "production_trusted_FakeTCP_tuple": "NOT_WIRED",
+    "driver_held_stop_B01_B04": "NOT_RUN",
+    "netem_product_matrix": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "original_protected_Rust_scoped_owner_real_Linux_raw_IPv4_TCP_bidirectional_TUN_application_first_packet",
+  "source_sha": "00fd3aa30a48cb9f6f98242fbfabbedcd770c6bd",
+  "result": "PARTIAL_TRUE_RAW_IPV4_TCP_BIDIRECTIONAL_TUN_PASS",
+  "implementation": [
+    "Normal-build ScopedRawIpv4Rx opens Linux AF_INET/SOCK_RAW/IPPROTO_TCP bound to validated kernel lo ifindex via SO_BINDTODEVICE; BorrowFence and generation gate every bounded poll/recvfrom. Untrusted full L3 packet lands DIRECTLY in original Rust M1 UniqueBuffer; strict pre-existing rx_ipv4_tcp::parse_data_packet validates exact tuple, persona, DF, TCP flags/options, IP+TCP checksum. Ciphertext is compacted IN PLACE and owner seq32 extended against trusted Go transition anchor before same original Rust M1 AEAD/PN and M3 LINK app completion.",
+    "Go test sends first C2S ciphertext via REAL Linux IPPROTO_RAW socket and test-independent checksum oracle FakeTCP frame (135B); expected 36B business payload arrives through normal Rust owner TUN kernel write at an independent Go UDP application socket. The existing UDP fixture remains only in the other source-locked tests, not the privileged true raw C2S first packet.",
+    "The same existing privileged namespace test also retains true TUN reverse app -> normal Rust S2C AEAD original M1 FrozenRecord -> normal M4 raw IPv4/TCP -> independent Go SOCK_RAW IPPROTO_TCP TLS S2C opener, 138B raw envelope, 39B business packet. All 3 cipher suites verify both directions and Stop refuses later ingress.",
+    "No new cipher implementation, TLS receipt installer, fake kernel delivery, alternate Rust owner, raw socket fallback or untrusted cold248 authority is introduced."
+  ],
+  "verification": {
+    "native_run": 38856972449,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "build_job": 116830525328,
+    "consume_job": 116830878726,
+    "native_go": "9/9 top-level PASS",
+    "native_rust": "1/1 PASS",
+    "privileged_linux_netns_raw": "3/3 suites raw C2S 135B IPv4 TCP->original Rust/TUN app36B, raw S2C 138B->Go TLS open app39B",
+    "build_artifact": {
+      "id": 12026534481,
+      "digest": "sha256:41212f8a50ae9aa61bc1860d3ef6295d050e5832e7a79daf6002fe3ae0936e49"
+    },
+    "result_artifact": {
+      "id": 12026734175,
+      "digest": "sha256:e5788a988d9088b91f9cd41240bdd75ba61c0308b9655b2d78050d11b9a0de9e"
+    },
+    "source_integrity": "Build once / consume checked exact SOURCE SHA/run/attempt, pinned Go, covered inputs and executable/library SHA256; GitHub artifact ZIP digests are API metadata, not independently downloaded/rehashed."
+  },
+  "other_exact_source_runs": [
+    {
+      "run": 38856972515,
+      "scope": "governance maintenance 169/169",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972508,
+      "scope": "Governance",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972472,
+      "scope": "R0 static",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972479,
+      "scope": "platform",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972590,
+      "scope": "G2",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972516,
+      "scope": "Native Functional",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972460,
+      "scope": "native ABI",
+      "result": "SUCCESS"
+    },
+    {
+      "run": 38856972567,
+      "scope": "cross ABI target build/inspection only",
+      "result": "SUCCESS",
+      "native_windows_arm": "NOT_RUN"
+    },
+    {
+      "run": 38856972471,
+      "scope": "component perf not product throughput",
+      "result": "SUCCESS"
+    }
+  ],
+  "limitations": [
+    "Actual kernel raw both directions at isolated Linux lo with a FIXTURE TCP tuple, not the authenticated live protected Go FakeTCP tuple; RX is AF_INET SOCK_RAW IPPROTO_TCP, not an AF_PACKET L2 production driver",
+    "Bridge activation still test feature tagged and initiated by real protected Go V4 callsite, NO positive production versioned authorized native command; self-consistent 248B cold is not a proof of TLS credentials; ordinary production ABI features=0",
+    "Only short Normal FEC-off single packet with fixed path; real delayed driver-held Stop B01–B04, rekey, continuity, reconnection/old generation, truncated/fragmented business, loss and retransmission are NOT_RUN",
+    "True veth netns tc netem 0/150/300ms RTT, 1%/5% loss, reordering, disconnect/reconnect product E2E and physical/500Mbps CPU/p99 NOT_RUN"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Prioritize one positive production Go V4 credential-checked session to ordinary Rust owner command with unforgeable provenance using protected Go private callback (do not trust caller-provided cold248 or readiness); bind actual FakeTCP tuple/seq and real retained M4 raw driver Stop B01–B04 + old-generation reconnect; then real veth tc netem product matrix with same source-locked binary."
+}
