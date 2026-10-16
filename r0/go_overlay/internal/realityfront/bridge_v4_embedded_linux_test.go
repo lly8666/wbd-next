@@ -107,6 +107,35 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                 t.Fatalf("NO embedded owner real TUN application packet: err=%v peer=%v n=%d",e,peer,n)
             }
             t.Logf("EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=%d bytes=%d",cipher,n)
+            // Original ciphertext at PN=0 was already delivered. Re-inject
+            // EXACT SAME immutable bytes through the real raw socket: the
+            // Rust M1/M3 PN replay gate must reject, never release a second
+            // business datagram. Next flip one cipher byte but rebuild real
+            // IPv4/TCP checksums so it passes platform preflight; AEAD must
+            // reject that independently. Neither path is FEC/repair.
+            corrupt:=append([]byte(nil),wire...)
+            corrupt[len(corrupt)/2]^=0x80
+            rejected:=[][]byte{wire,corrupt}
+            for index,badRecord:=range rejected{
+                rawBad:=v4RawC2STestPacket(badRecord,bridge.rxBoundary,bridge.originalFlow)
+                if err:=syscall.Sendto(rawfd,rawBad,0,
+                    &syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});err!=nil{
+                    t.Fatalf("raw negative send type=%d: %v",index,err)
+                }
+                got,failed,err:=bridge.receiveRawToTun()
+                if err==nil || got!=0{
+                    t.Fatalf("replayed/tampered ciphertext passed original M3 owner type=%d delivered=%d failed=%d err=%v",index,got,failed,err)
+                }
+                if err:=app.SetReadDeadline(time.Now().Add(40*time.Millisecond));err!=nil{t.Fatal(err)}
+                tmp:=make([]byte,256)
+                count,_,err:=app.ReadFromUDP(tmp)
+                if err==nil || count!=0{
+                    t.Fatalf("original Linux app received duplicate/corrupt payload type=%d n=%d err=%v",index,count,err)
+                }
+                ne,ok:=err.(net.Error)
+                if !ok||!ne.Timeout(){t.Fatalf("negative app read non-timeout type=%d err=%v",index,err)}
+            }
+            t.Logf("EMBEDDED_REAL_RX_REPLAY_CORRUPT_NO_DELIVERY_PASS suite=%d",cipher)
             // TRUE independent S2C: application sends via real kernel TUN,
             // existing non-test embedded Rust M1/M3 seals original S2C PN,
             // actual M4 raw TX sends IPv4/TCP; independent Go raw socket
