@@ -107,6 +107,35 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                 t.Fatalf("NO embedded owner real TUN application packet: err=%v peer=%v n=%d",e,peer,n)
             }
             t.Logf("EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=%d bytes=%d",cipher,n)
+            // A second genuine app packet uses the SAME verified Go session,
+            // original Rust M1/M3 owner and kernel M4 raw/TUN devices.
+            // Distinct PN=1 and the next exact TCP sequence must succeed:
+            // a one-packet fixture must never pass as a steady-state path.
+            packet2:=append([]byte(nil),packet...)
+            payload2:=bytes.Repeat([]byte{0x5a},len(payload))
+            copy(packet2[28:],payload2)
+            binary.BigEndian.PutUint16(packet2[4:6],uint16(49+cipher))
+            binary.BigEndian.PutUint16(packet2[10:12],0)
+            binary.BigEndian.PutUint16(packet2[10:12],v4RawCheckSum(packet2[:20]))
+            wire2,pnNext,e:=sealer.Seal(packet2)
+            if e!=nil||pnNext!=1{t.Fatalf("second original TLS C2S PN want1 got=%d err=%v",pnNext,e)}
+            seqNext:=bridge.rxBoundary+uint32(len(wire))
+            rawNext:=v4RawC2STestPacket(wire2,seqNext,bridge.originalFlow)
+            if e=syscall.Sendto(rawfd,rawNext,0,&syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});e!=nil{
+                t.Fatalf("second real kernel raw C2S send: %v",e)
+            }
+            delivered,failed,e=bridge.receiveRawToTun()
+            if e!=nil||delivered!=1||failed!=0{
+                t.Fatalf("second same-generation C2S owner failed: delivered=%d failed=%d err=%v",delivered,failed,e)
+            }
+            if e=app.SetReadDeadline(time.Now().Add(2*time.Second));e!=nil{t.Fatal(e)}
+            got2:=make([]byte,256)
+            n2,peer2,e:=app.ReadFromUDP(got2)
+            if e!=nil||peer2==nil||!peer2.IP.Equal(senderIP)||!bytes.Equal(got2[:n2],payload2){
+                t.Fatalf("second kernel TUN app delivery not continuous: err=%v peer=%v n=%d",e,peer2,n2)
+            }
+            t.Logf("EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=%d bytes=%d pn=%d seq=%d",
+                cipher,n2,pnNext,seqNext)
             // Original ciphertext at PN=0 was already delivered. Re-inject
             // EXACT SAME immutable bytes through the real raw socket: the
             // Rust M1/M3 PN replay gate must reject, never release a second
@@ -195,6 +224,54 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
             }
             t.Logf("EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=%d bytes=%d pn=%d seq=%d",
                 cipher,len(reverse),pn2,seq2)
+            // Same real TUN-backed Go application, same M1 slab/AEAD owner
+            // and retained M4 raw TX: PN must advance rather than starting
+            // another owner or replaying the first S2C TCP sequence.
+            reverse2:=[]byte("embedded-second-TUN-to-raw-Go-peer")
+            if wrote,err:=app.WriteToUDP(reverse2,&net.UDPAddr{IP:senderIP,Port:42001});
+                err!=nil||wrote!=len(reverse2){
+                t.Fatalf("second Go app TUN ingress n=%d err=%v",wrote,err)
+            }
+            pn3,seq3,packetLen3,appLen3,err:=bridge.tunToKernelRaw(uint32(ifi.Index))
+            if err!=nil||pn3!=1||seq3!=seq2+uint32(len(cipherRecord)){
+                t.Fatalf("second embedded S2C PN/seq wrong pn=%d seq=%d prev=%d record=%d err=%v",
+                    pn3,seq3,seq2,len(cipherRecord),err)
+            }
+            var record2 []byte
+            for attempt:=0;attempt<16;attempt++{
+                buf:=make([]byte,2048)
+                count,_,recvErr:=syscall.Recvfrom(rawPeer,buf,0)
+                if recvErr!=nil{t.Fatalf("second Linux raw peer receive: %v",recvErr)}
+                if count<40||buf[0]>>4!=4||buf[9]!=6{continue}
+                ihl:=int(buf[0]&0xf)*4
+                if ihl<20||ihl+20>count{continue}
+                if !bytes.Equal(buf[12:16],bridge.originalFlow.ServerIP[:])||
+                   !bytes.Equal(buf[16:20],bridge.originalFlow.ClientIP[:])||
+                   binary.BigEndian.Uint16(buf[ihl:ihl+2])!=bridge.originalFlow.ServerPort||
+                   binary.BigEndian.Uint16(buf[ihl+2:ihl+4])!=bridge.originalFlow.ClientPort||
+                   binary.BigEndian.Uint32(buf[ihl+4:ihl+8])!=seq3{continue}
+                tcpLen:=int(buf[ihl+12]>>4)*4
+                if tcpLen<20||ihl+tcpLen>count||uint32(count)!=packetLen3{
+                    t.Fatalf("invalid second kernel raw packet n=%d want=%d",count,packetLen3)
+                }
+                record2=append([]byte(nil),buf[ihl+tcpLen:count]...)
+                break
+            }
+            if len(record2)==0{t.Fatal("second original M4 raw S2C missing")}
+            opened2,err:=opener.OpenRecord(record2)
+            if err!=nil||opened2.PN!=pn3||opened2.Kind!=tlsrecord.KindLINK{
+                t.Fatalf("second independent Go TLS AEAD/PN invalid err=%v opened=%+v",err,opened2)
+            }
+            inner2:=opened2.Payload
+            if len(inner2)!=int(appLen3)||len(inner2)<28+len(reverse2)||
+                inner2[0]!=0x45||inner2[9]!=17||
+                !net.IP(inner2[12:16]).Equal(dstIP)||
+                !net.IP(inner2[16:20]).Equal(senderIP)||
+                !bytes.Equal(inner2[28:],reverse2){
+                t.Fatalf("second S2C app payload mismatch got=%x want=%x",inner2,reverse2)
+            }
+            t.Logf("EMBEDDED_REAL_S2C_SECOND_PACKET_PASS suite=%d bytes=%d pn=%d seq=%d",
+                cipher,len(reverse2),pn3,seq3)
             if e=bridge.stopRelease();e!=nil{t.Fatal(e)}
             if _,_,_,_,e=bridge.tunToKernelRaw(uint32(ifi.Index));e==nil{
                 t.Fatal("retired real M4 raw TX owner remained usable")

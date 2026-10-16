@@ -235,6 +235,8 @@ jobs:
               grep -q "RAW_C2S_TO_REAL_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "EMBEDDED_REAL_S2C_SECOND_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_RX_REPLAY_CORRUPT_NO_DELIVERY_PASS suite=$suite" native-probe-result/tun-netns.log
             done
             grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
