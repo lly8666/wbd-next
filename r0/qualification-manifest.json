@@ -21,6 +21,22 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_12packet_kernel_loss1": {
+    "code_source_sha": "f15e2319483ee33fc411731cac2df57e14c17807",
+    "result": "PARTIAL_12_PACKET_BILATERAL_AND_ACTUAL_KERNEL_LOSS1_OBSERVATION_PASS",
+    "evidence": "docs/evidence/M0/M0-023-12packet-bilateral-kernel-loss1-batch.json",
+    "exact_native_run_id": 38893526677,
+    "baseline_original_owner_real_app_bilateral": "PASS_3_CIPHERS_12_EACH_DIRECTION_72_OF_72",
+    "configured_tc_loss_percent": 1,
+    "actual_kernel_qdisc_dropped_packets": 1,
+    "actual_kernel_packet_drop_identity": "UNKNOWN_NOT_ATTRIBUTABLE_TO_BUSINESS",
+    "observed_loss_scenario_real_business_delivered": "72_OF_72",
+    "loss_recovery_qualification": "NOT_RUN",
+    "measured_throughput_rtt_p99": "NOT_RUN",
+    "actual_async_M4_driver_B04": "NOT_RUN",
+    "production_abi_features": 0,
+    "product": "NOT_RUN"
+  },
   "m0_023_real_MTU_batch": {
     "code_source_sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
     "result": "PARTIAL_REAL_KERNEL_MTU_BOUNDARY_AND_BILATERAL_NETEM_BATCH_PASS",

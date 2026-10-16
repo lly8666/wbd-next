@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "code_source_sha": "f15e2319483ee33fc411731cac2df57e14c17807",
+  "source_sha": "f15e2319483ee33fc411731cac2df57e14c17807",
+  "result": "PARTIAL_12_PACKET_BILATERAL_AND_ACTUAL_KERNEL_LOSS1_OBSERVATION_PASS",
+  "rationale": "User requested simultaneous test types and compile-once efficiency. One new bounded 12-packet-per-direction-per-cipher end-to-end Linux M4 raw/TUN test traverses actual private credential-checked Go V4 TLS, developer feature gated NON-_test Go adapter, original ordinary Rust M1/M3 scoped owner and M4 Linux raw/TUN kernel I/O. Executed baseline strict delivery and separately configured real 1% tc netem loss observation, reusing one source-locked Go/Rust binary pair. No fake driver, new crypto, repair or unlimited timeout.",
+  "changed_paths": [
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+    "tools/run-v4-tun-netns.sh",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "exact_actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38893526677,
+    "attempt": 1,
+    "head_sha": "f15e2319483ee33fc411731cac2df57e14c17807",
+    "conclusion": "success",
+    "build_job": 116948460901,
+    "consume_job": 116948984854,
+    "build_artifact": {
+      "id": 12042817413,
+      "digest": "sha256:a23c2e20da2b3bcb3a2ffd847bbf152c521713e52d0bb049873e2e471abc13bf"
+    },
+    "result_artifact": {
+      "id": 12043021594,
+      "digest": "sha256:0c5134cef3174c35a8de8c7166b938f15966942745e6dfc8ec93cf41d73f47c9"
+    },
+    "same_run": "single compiled-once Go TLS native test binary and developer-feature original Rust owner library reused across all original kernel, MTU, baseline, 10/150ms and new multi-packet baseline/1%-loss observation.",
+    "native_baseline": {
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "original_owner_sessions": 3,
+      "packets_sent_each_direction_each_cipher": 12,
+      "packets_delivered_each_direction_each_cipher": 12,
+      "packets_delivered_total": 72,
+      "packets_sent_total": 72,
+      "all_expected_business_exact": true,
+      "per_cipher": [
+        {
+          "cipher": 1,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2295704
+        },
+        {
+          "cipher": 2,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2494941
+        },
+        {
+          "cipher": 3,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2350877
+        }
+      ],
+      "result": "PASS"
+    },
+    "actual_netem_loss1": {
+      "configured_loss_percent": 1,
+      "tc_qdisc": "root netem dev lo in isolated owned Linux namespace; limit 256",
+      "observed_kernel_qdisc_sent_packets": 143,
+      "observed_kernel_qdisc_sent_bytes": 15588,
+      "observed_kernel_dropped_packets": 1,
+      "drop_observed": true,
+      "per_cipher": [
+        {
+          "cipher": 1,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_missing_or_rejected": 0,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_missing_or_rejected": 0,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2335924
+        },
+        {
+          "cipher": 2,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_missing_or_rejected": 0,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_missing_or_rejected": 0,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2299771
+        },
+        {
+          "cipher": 3,
+          "c2s_sent": 12,
+          "c2s_delivered": 12,
+          "c2s_missing_or_rejected": 0,
+          "c2s_bytes_sent": 594,
+          "s2c_sent": 12,
+          "s2c_delivered": 12,
+          "s2c_missing_or_rejected": 0,
+          "s2c_bytes_sent": 612,
+          "elapsed_ns": 2210167
+        }
+      ],
+      "state": "OBSERVATION_RECORDED",
+      "NOT_proven": "Which packet the qdisc dropped is UNKNOWN. Cannot attribute 1 dropped kernel packet to an encrypted application payload, cannot say a missing encrypted record was repaired or that loss resilience passed."
+    },
+    "prior_existing_same_source": {
+      "real_original_owner_kernel_bilateral_PN0_PN1_and_exact_business": "PASS_3_CIPHERS",
+      "ordinary_1369B_IP_max_and_1370B_local_refusal_and_malformed_1401B_raw_record": "PASS_3_CIPHERS",
+      "replay_corrupt_no_redelivery": "PASS_3_CIPHERS_BOUNDED",
+      "netem_10ms": {
+        "result": "EXPLORATORY_PASS",
+        "configured_ms": 10,
+        "qdisc_packets": 48,
+        "qdisc_bytes": 12648
+      },
+      "netem_150ms": {
+        "result": "EXPLORATORY_PASS",
+        "configured_ms": 150,
+        "qdisc_packets": 47,
+        "qdisc_bytes": 12594
+      },
+      "original_owner_generation_stop": "PASS_BOUNDED",
+      "measured_rtt": "NOT_MEASURED"
+    }
+  },
+  "same_source_checks": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38893526526,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "identity/structure only; drills/model NOT_RUN"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38893526547,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "governance tool selftest only"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38893556428,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    }
+  ],
+  "limits": [
+    "No QoS throughput/p99/CPU, kernel accounting attributed per message, network RTT or packet-repair claim; elapsed_ns in log is one small bounded test loop, not product steady throughput.",
+    "1% netem root qdisc applied to lo and dropped one among ALL packets including control/RST/ACK. All 72 inspected business datagrams were received on this run, so actual product-data loss was NOT demonstrably observed. No causal repair evidence, no non-HOL loss test.",
+    "Synthetic pinned Go FakeTCP SYN association fixture, but genuine protected Go TLS credentials and real kernel raw/TUN traffic; developer opt-in feature only and default ABI feature0.",
+    "Each cipher 12 packets per direction, only 3 ciphers and one loss scenario/host. No 5% loss, veth, 300ms, reorder, async held driver B04, B01/B02 full overlap, external SYN, physical/500Mbps.",
+    "GitHub Actions ZIP digests are API metadata receipts rather than downloaded/rehashed ZIPs; native build/consume verifies its own binary source hashes.",
+    "All execution is GitHub Actions; no local test."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "In one exact-source Actions owned Linux namespace use an actual kernel tc classifier to drop a known single encrypted original FakeTCP C2S DATA packet (not ambiguous qdisc control packet); send a later independent authenticated packet and observe real M1/M3 Normal/off no-HOL first arrival and explicit lost/delivered counters. Limit to bounded low-rate scenario; do not fabricate recovery or flip production features."
+}
