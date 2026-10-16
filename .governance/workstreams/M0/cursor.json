@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 95,
-  "checkpoint_sha": "4c7dbac4746c2d73138b9abe199c21a90cc2bfbd",
+  "sequence": 96,
+  "checkpoint_sha": "ba2fafab3d3127740e451ae3c5bd72601b3d07f6",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "023 batch multi-case atom CLOSED: same original protected Go V4 dev-gated private normal Rust M1/M3/M4 Linux raw/TUN owner 3 cipher suites now prove EXACT ordinary unfragmented IP 1369B (UDP payload 1341B, C2S PN2), 1370B Go TLS seal ErrPayloadTooLarge, malformed 1401B real kernel raw encrypted wire accepted0 and TUN app no extra packet. Same compiled-once native CODE f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274 run38889088064 attempt1 build116933929017 consume116934342294 SUCCESS. Baseline plus tc configured 10ms 48pkt/12648B and 150ms 47pkt/12594B 3 cipher bilateral PN0/PN1 and integrity PASS. Evidence S 4c7dbac4746c2d73138b9abe199c21a90cc2bfbd static38889501128/Gov38889501135 PASS. Original false expectation CODE21623d31 native38888677396 FAIL from subtracting fragmented LINK20 on ordinary; corrected test only, not runtime. Formal 023 PARTIAL; features0.",
-  "why_now": "User asked several tests in one exact Actions build. Author same private Go-credential-scoped Rust owner real Linux kernel boundary tests, reuse native three-network-scenario job and true M4 driver. Correct an observed initial false-negative by reading canonical M3 ordinary LINK semantics; never tune original 1400B record limit, kernel MTU, protocol or seed.",
-  "done_when": "ATOM MET final exact CODE f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274 native run38889088064 SUCCESS: 3 suites each baseline/10/150ms real Linux kernel ordinary 1369B IP admitted, 1370B Go TLS local oversize reject, malformed 1401B raw input refused before kernel TUN app, original bilateral PN0/1 and replay/corrupt still PASS. Same CODE Governance38889087956 SUCCESS, central scope38889118038 SKIPPED/NOT_RUN. Evidence S 4c7dbac4746c2d73138b9abe199c21a90cc2bfbd static38889501128/Gov38889501135 SUCCESS. Historic false negative source21623d31 run38888677396 FAIL retained and explained. FORMAL 023 NOT_MET: external live client SYN, non-dev production V4 ABI, genuine asynchronously held M4 B04 driver loan/late completion, B01/B02 overlap, sustained 10Mbps, measured RTT/CPU/p99, 1/5% real loss/reordering/veth, S2C MTU matrix, physical and 500Mbps NOT_RUN. No different SOURCE results merged to product qualifier.",
-  "next_action": "Use one compiled-once exact Actions SOURCE on the SAME original credential-checked embedded Rust M1/M3/M4 real Linux raw/TUN path to run bounded low-rate MULTI-packet bilateral app payload with actual elapsed time, accepted/lost/delivered bytes/packets and one controlled 1% tc loss scenario with observed loss receipts (not a blanket all-packets-PASS). Keep true async M4 B04 and default production ABI features0 NOT_RUN until genuine driver support.",
+  "current_task": "023 one batched bounded multi-scenario atom CLOSED: exact CODE f15e2319483ee33fc411731cac2df57e14c17807 protected credential-verified Go TLS private NON-_test developer-gated adapter → original Rust M1/M3 ScopedOwner AEAD/PN + real M4 Linux raw/TUN. Same Actions38893526677 attempt1 compiled once build116948460901 and consumed116948984854 SUCCESS. New baseline 3 suites each C2S12/12 and S2C12/12, 72/72 original independent application packets verified with actual PN/TCP seq and bytes, per-suite elapsed_ns approx2.21-2.49million short loops, NOT product throughput. Additional actual root-lo tc netem configured loss1% real qdisc Sent15588 bytes 143 pkt dropped1, but all business 72/72; dropped packet identity UNKNOWN, loss repair NOT_RUN. Existing baseline, 10ms qdisc48p/12648B, 150ms qdisc47p/12594B, 1369 IP MTU and 1370 Go refusal/1401 malformed kernel refusal, replay/corrupt, Stop regression PASS on SAME native SOURCE. Evidence S ba2fafab3d3127740e451ae3c5bd72601b3d07f6 static audit38893992526/Gov38893992618 SUCCESS. Production ABI features0; formal 023 partial.",
+  "why_now": "User explicitly asked to batch multiple test types in a single compilation. Added small bounded real app bilateral traffic with true active normal-build owner and independent peer verification, plus single 1%-loss qdisc/packet-count exploratory observation with missing/loss accounting, rather than creating new cryptography/test-only sidepath or extrapolating recovery from a configured percentage.",
+  "done_when": "ATOM MET exact SOURCE f15e2319483ee33fc411731cac2df57e14c17807 native run38893526677 build+consume PASS. Original 3 cipher 12x2 packet baseline strict PASS, 1% qdisc observed one kernel dropped packet but encrypted business loss identity UNKNOWN; report OBSERVATION_RECORDED not repair PASS. Same CODE ordinary governance38893526526, maintenance38893526547 PASS; central scope38893556428 SKIPPED not PASS. Evidence S ba2fafab3d3127740e451ae3c5bd72601b3d07f6 static38893992526/Gov38893992618 PASS. Formal 023 still NOT_MET: explicit targeted encrypted DATA loss and no-HOL, real external SYN, default product V4 ABI, held async M4 B04/late return, B01/B02, actual measured RTT/10Mbps/p99 CPU, 5%/veth/reorder, physical/500Mbps NOT_RUN. Do not merge different SOURCE product greens.",
+  "next_action": "Use actual kernel tc classification/drop targeting precisely ONE known C2S FakeTCP encrypted DATA packet on THIS same verified Go→original Rust owner; then send a later distinct authenticated Normal/off packet and check independent Linux TUN app first arrival without cross-packet HOL, with precise dropped/received PN and kernel counters. This must show true business packet loss rather than qdisc control packet; do NOT assert repair or turn on production features.",
   "unverified": true,
-  "last_tested_source": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+  "last_tested_source": "f15e2319483ee33fc411731cac2df57e14c17807",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-same-artifact-real-MTU-and-netem-batch.json"
+    "docs/evidence/M0/M0-023-12packet-bilateral-kernel-loss1-batch.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-same-artifact-real-MTU-and-netem-batch.md",
-    "docs/evidence/M0/M0-023-embedded-two-packet-150ms-netem.json",
+    "docs/devlog/M0/M0-023-12packet-bilateral-kernel-loss1-batch.md",
+    "docs/evidence/M0/M0-023-same-artifact-real-MTU-and-netem-batch.json",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Same dev-only non-_test Go verified original Rust owner real Linux M4 raw/TUN: exact ordinary max IP1369B PN2 delivered, oversize IP1370B Go sealer refused, overlong invalid ciphertext1401B kernel raw refused/no app; 3 ciphers baseline+tc 10ms/150ms functional PASS, qdisc positive. Corrected false-negative original source 21623d FAIL retained. Production features0; no real async M4 B04, live external SYN, measured RTT/perf/physical."
+  "partial_summary": "Exact SOURCE native Actions real original protected Go credential-checked Rust owner 12 packets each dir each 3 suites baseline72/72 PASS; actual 1% Linux qdisc dropped one among 143 packets but actual business72/72; packet identity unknown, do not claim recovery. Existing 10/150ms and MTU/integrity regressed PASS. 023 PARTIAL, production features0; targeted authenticated DATA loss/no HOL/B04/external SYN/performance NOT_RUN."
 }
