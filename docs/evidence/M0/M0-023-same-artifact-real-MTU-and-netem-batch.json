@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+  "code_source_sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+  "result": "PARTIAL_REAL_KERNEL_MTU_BOUNDARY_AND_BILATERAL_NETEM_BATCH_PASS",
+  "rationale": "User requested multiple tests at once efficiently. Reused exact compiled-once original protected Go TLS, developer-gated NON-_test embedded Rust ScopedOwner M1/M3/M4 and actual Linux raw/TUN backend. Exercised three cipher suites across one baseline, configured 10ms and configured 150ms kernel qdisc functional scenario. No production capability advertising.",
+  "source_history": [
+    {
+      "sha": "21623d314ce1b434e19eaf4cf6eeb24e2b7bd348",
+      "run_id": 38888677396,
+      "result": "FAIL",
+      "reason": "New negative test incorrectly subtracted a LINK fragment header from ordinary unfragmented payload; expected 1356B ordinary packet rejection, but ordinary packets do not include LINK20 and 1356B was valid. Actual kernel delivered it. Test mistaken, not runtime authorization bypass. Exact failed run retained; never reported as passing."
+    },
+    {
+      "sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+      "run_id": 38889088064,
+      "attempt": 1,
+      "result": "PASS",
+      "fix": "Source-checked ordinary LINK overhead: record framing=31, LINK20 ONLY for fragments; exact legal unfragmented payload IP 1400-31=1369. Go TLS sealer rejects 1370 IP before send. Separately inject valid-length TCP packet with 1401B MALFORMED ciphertext record (valid 1400B record plus appended byte): original M4/Linux raw ingress and original Rust M1/M3 reject, independent TUN application sees no redelivery in bounded 40ms. No Rust runtime/budget changes."
+    }
+  ],
+  "verification": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38889088064,
+    "attempt": 1,
+    "head_sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+    "conclusion": "success",
+    "build_job": 116933929017,
+    "consume_job": 116934342294,
+    "build_artifact": {
+      "id": 12040948461,
+      "digest": "sha256:97fb3ef8363ec510353c6da5360460001b5312fba4239fbf1c6d03bf89dd68b1"
+    },
+    "result_artifact": {
+      "id": 12041161528,
+      "digest": "sha256:5315eda33e479ffc29ab5b60908d119671df174553a0115f9f308b1276197ce4"
+    },
+    "same_artifact": "Exactly one locked/pinned Go real TLS and original normal-built Rust developer-tagged library/test binary build, same-run manifest SHA checks and same-run consumer across three network cases.",
+    "real_kernel_baseline": {
+      "normal_off_c2s_exact_boundary": {
+        "suites": [
+          1,
+          2,
+          3
+        ],
+        "original_go_server_record_limit_bytes": 1400,
+        "ordinary_ip_business_bytes": 1369,
+        "independent_tun_app_udp_bytes": 1341,
+        "real_go_ae_ad_pn": 2,
+        "result": "PASS"
+      },
+      "oversize_local_go_sealer": {
+        "suites": [
+          1,
+          2,
+          3
+        ],
+        "ip_bytes": 1370,
+        "error": "tlsrecord.ErrPayloadTooLarge",
+        "record_never_emitted": true,
+        "result": "PASS"
+      },
+      "oversize_real_kernel_raw_to_rust": {
+        "suites": [
+          1,
+          2,
+          3
+        ],
+        "malformed_record_wire_bytes": 1401,
+        "valid_inner_original_record_claim_bytes": 1400,
+        "outer_ipv4_tcp_checksum_recomputed": true,
+        "original_rust_owner_accepted": 0,
+        "independent_udp_app_redelivery": "NONE_IN_40MS_WINDOW",
+        "result": "PASS"
+      },
+      "existing": {
+        "two_successive_kernel_c2s_and_s2c_packet_numbers": [
+          0,
+          1
+        ],
+        "same_gen_seq_progression": "PASS",
+        "three_ciphers": "PASS",
+        "original_go_TLS_authenticated_credential": "PASS",
+        "replay_corrupt_AEAD_no_second_delivery": "PASS",
+        "owner_Stop_old_new_generation": "PASS"
+      }
+    },
+    "real_kernel_netem_10ms": {
+      "configured_delay_ms": 10,
+      "configured_loss_percent": 0,
+      "tc_kernel_qdisc_sent_packets": 48,
+      "tc_kernel_qdisc_sent_bytes": 12648,
+      "tc_kernel_dropped_packets": 0,
+      "three_cipher_valid_boundary_and_oversize_reject": "PASS",
+      "three_cipher_bilateral_second_packet": "PASS",
+      "result": "EXPLORATORY_PASS"
+    },
+    "real_kernel_netem_150ms": {
+      "configured_delay_ms": 150,
+      "configured_loss_percent": 0,
+      "tc_kernel_qdisc_sent_packets": 47,
+      "tc_kernel_qdisc_sent_bytes": 12594,
+      "tc_kernel_dropped_packets": 0,
+      "three_cipher_valid_boundary_and_oversize_reject": "PASS",
+      "three_cipher_bilateral_second_packet": "PASS",
+      "result": "EXPLORATORY_PASS"
+    },
+    "measured_rtt": "NOT_MEASURED",
+    "measured_throughput": "NOT_MEASURED",
+    "p99": "NOT_MEASURED"
+  },
+  "same_source_governance": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38889087956,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "identity/structure ONLY, tool drills/model NOT_RUN"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38889118038,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    }
+  ],
+  "scientific_limits": [
+    "Correct ordinary LINK max is record_wire_limit - record_fixed=1369B; LINK_HEADER20 is charged only to fragments, not ordinary payload. The malformed 1401B raw record is NOT valid AEAD and is not called an authenticated beyond-budget packet; local Go sealer refuses such a record. The safety boundary tested is exact accepted max and rejection of non-emittable or malformed overlong wire.",
+    "No permanent product ABI enablement. This is opt-in developer m0_v4_embedded_go feature plus Go build tag, original pinned FakeTCP SYN test generated; real credential verification and kernel I/O performed inside isolated GitHub Actions namespace; default features=0.",
+    "Three two-packet per-direction test suites, no sustained 10Mbps throughput or actual RTT benchmark. 10/150ms are configured tc netem delays, not measured RTT; qdisc counters demonstrate real kernel traffic only.",
+    "The 40ms app negative-read timeout is a finite non-delivery observation per packet, not a full weak-network or sustained adversarial result.",
+    "1/5% actual tc loss, reorder, 300ms, veth, full protocol fragmentation/magic/MTU±1 on S2C, true externally held async M4 driver loan B04 and B01-B02 genuine install overlap NOT_RUN.",
+    "No physical machine, 500Mbps, measured throughput/CPU-s/p99 or real Windows/ARM native execution. GitHub API artifact digests are metadata receipts and were not rehashed after download."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Build one bounded low-rate multi-packet actual Go TLS→same Rust owner→real raw/TUN bidirectional test with actual elapsed time, accepted/lost/app-delivered counters and one controlled 1% netem loss case (no fake PASS for missing packets), reusing one compiled-once exact Actions SOURCE; then decide which M4 ownership capability is genuinely needed for B04. Keep ABI features0 until full products gates."
+}

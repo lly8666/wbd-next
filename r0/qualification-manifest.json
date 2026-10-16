@@ -21,6 +21,23 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_real_MTU_batch": {
+    "code_source_sha": "f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274",
+    "result": "PARTIAL_REAL_KERNEL_MTU_BOUNDARY_AND_BILATERAL_NETEM_BATCH_PASS",
+    "evidence": "docs/evidence/M0/M0-023-same-artifact-real-MTU-and-netem-batch.json",
+    "exact_native_run_id": 38889088064,
+    "original_go_sealed_ordinary_ip_max_bytes": 1369,
+    "real_tun_independent_app_payload_bytes": 1341,
+    "oversize_ip_go_sealer": "REJECT_1370_BYTES",
+    "malformed_overlong_real_raw_record": "FAIL_CLOSED_1401_BYTES",
+    "three_ciphers_three_network_scenarios": "PASS_BASELINE_EXPLORATORY_NETEM_10MS_150MS",
+    "historical_bad_test_source": "21623d314ce1b434e19eaf4cf6eeb24e2b7bd348",
+    "measured_rtt": "NOT_MEASURED",
+    "measured_throughput": "NOT_MEASURED",
+    "held_async_driver_B04": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_features": 0
+  },
   "m0_023_embedded_steady_150ms": {
     "code_source_sha": "49a538917d209543c4f56c594481b37b1be1575e",
     "result": "PARTIAL_EMBEDDED_STEADY_SECOND_PACKET_AND_150MS_NETEM_EXPLORATORY_PASS",

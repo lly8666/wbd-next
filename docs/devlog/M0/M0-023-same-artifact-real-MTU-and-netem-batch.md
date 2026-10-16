@@ -1,0 +1,13 @@
+# M0-023 — batch true Linux M4 kernel MTU boundary and 10/150ms functional smoke
+
+Final SOURCE `f11bf6d0de3a3386fc1fe8dcca6fa41a6b734274` **PARTIAL_REAL_KERNEL_MTU_BOUNDARY_AND_BILATERAL_NETEM_BATCH_PASS**. Exact [Actions #38889088064](https://github.com/lly8666/wbd-next/actions/runs/38889088064) attempt1 build job116933929017 consume116934342294 SUCCESS, hashes and detailed test matrix in [evidence](../evidence/M0/M0-023-same-artifact-real-MTU-and-netem-batch.json).
+
+User requested batch efficiency, so same build runs baseline/10/150ms netem across 3 original Rust M1/M3/M4 ciphers. Final source proves actual Go-protected admission → non-`_test` private adapter → original Rust AEAD/PN owner → real kernel raw IPv4/TCP ingress / TUN app output. An unfragmented legal 1369B IPv4 business frame reaches independent UDP app as 1341B payload with PN=2. 1370B ordinary packet cannot be sealed by original Go TLS sealer (ErrPayloadTooLarge). A *malformed, not authenticated* 1401B ciphertext record, sent through Linux raw with valid TCP checksum, fails closed in original Rust owner and does not reach independent app during 40ms bounded observation. Same owner continues normal C2S/S2C PN0/1, replay and corrupted AEAD rejection and Stop checks.
+
+**Important historical FAIL:** SRC `21623d31` native run38888677396 FAILED. Its test incorrectly subtracted 14B LINK overhead from an *ordinary* packet and demanded rejection of valid 1356B app business. Actual `link_fec_wire::inspect_link` charges LINK_HEADER=20 **only to fragmented LINK records**, not ordinary. Fixed the TEST assumption in final CODE, no runtime/budget or negotiated limit was changed. Historic failure is retained, not overwritten.
+
+Extra actual kernel `tc -s qdisc` receipts in final same-run: configured 10ms zero-loss → **48 packets/12648B, dropped0**; configured 150ms zero-loss → **47 packets/12594B, dropped0**. Both scenarios pass the same 3-suite MTU-boundary, overlength refusal and earlier bilateral second packet assertions. Configured delay is NOT measured RTT; no 1% loss or performance measurement. All network namespaced resources are owned, removed on exit. Cross-source old ABI/regression PASS not combined.
+
+Formal M0-023 still **PARTIAL**, default production ABI `features=0`, public V4 install disabled. External actual client SYN, true driver async-held B04, full B01–B02 overlap, sustained Normal/off 10Mbps, measured RTT, CPU/p99, veth loss/reorder, S2C near MTU, physical/500Mbps NOT_RUN.
+
+**One next action:** bounded low-rate continuous multi-packet both directions on SAME actual protected original owner, with actual delivery counters/time and one 1% loss scenario whose observed losses are reported, never assumed away.
