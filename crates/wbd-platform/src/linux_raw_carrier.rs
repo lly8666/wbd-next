@@ -196,6 +196,8 @@ impl ScopedRawIpv4Rx {
             borrow:BorrowFence::default(),serialize:Mutex::new(())})
     }
     pub fn generation(&self)->u32{self.generation}
+    /// Readiness-only descriptor. Original Rust owner joins its workers before dropping the driver.
+    pub fn readiness_fd(&self)->i32{self.fd.as_raw_fd()}
     pub fn is_stopping(&self)->bool{self.stopped.load(Ordering::Acquire)}
     pub fn begin_stop(&self){
         self.stopped.store(true,Ordering::Release);

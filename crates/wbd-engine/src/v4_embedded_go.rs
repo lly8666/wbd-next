@@ -6,7 +6,11 @@
 //! Default production ABI features stay zero; M4 driver-held stop NOT_RUN.
 #![allow(clippy::missing_safety_doc)]
 use std::collections::BTreeMap;
-use std::sync::{Mutex,OnceLock};
+use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU64,Ordering}};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::thread::{self,JoinHandle};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::ffi::c_int;
 use wbd_types::MonoNs;
 use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
@@ -43,6 +47,10 @@ const PH_STOPPED:u32=3;
 const PH_STOPPING:u32=4;
 struct Entry{
     owner:ProtectedScopedOwner,normal:NormalOffReceive,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    workers:Option<LoopWorkers>,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    counters:Arc<LoopCounts>,
     arena:Arena,phase:u32,
     rx_boundary:u32,wire_limit:u16,staged_count:u32,staged_bytes:u32,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -81,6 +89,10 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         flow:handoff.flow,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        workers:None,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        counters:Arc::new(LoopCounts::default()),
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         raw_rx:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -128,6 +140,26 @@ fn abort(handle:u64)->i32{
     let _=e.owner.stop();OK
 }
 fn stop(handle:u64)->i32{
+    // Leave registry unlocked while joining. Driver handles and owner slabs
+    // cannot be released while either Rust worker still references them.
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    {
+        let workers={
+            let Ok(mut reg)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=reg.entries.get_mut(&handle)else{return UNKNOWN};
+            if e.phase!=PH_ACTIVE && e.phase!=PH_STOPPING && e.phase!=PH_STOPPED{
+                return BAD_STAGE
+            }
+            let w=e.workers.take();
+            if let Some(ref w)=w{w.shutdown.store(true,Ordering::Release)}
+            w
+        };
+        if let Some(w)=workers{
+            let rx=w.rx.join();
+            let tx=w.tx.join();
+            if rx.is_err()||tx.is_err(){return STOP_INCOMPLETE}
+        }
+    }
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
     if e.phase==PH_STOPPED{return OK}
@@ -334,6 +366,109 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
         }
         Err(e)=>e,
     }
+}
+
+
+// Development-only perpetual owner processing, never a parallel crypto
+// implementation. Two independent Rust kernel-readiness threads; Go app
+// sender and receiver do not call per-packet RX/TX helpers. The READY poll
+// is outside the shared registry lock. Subsequent owner admission, AEAD/PN,
+// Normal/off and kernel driver send use the exact existing Rust functions.
+// Spurious irrelevant raw TCP traffic can still occupy recv_one_into for up
+// to 750ms under the registry lock: this first functional worker is NOT yet
+// an independently qualified 10Mbps dual-direction data plane.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[repr(C)]
+struct PollFd {fd:c_int,events:i16,revents:i16}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[derive(Default)]
+struct LoopCounts {rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+struct LoopWorkers{
+    shutdown:Arc<AtomicBool>,
+    rx:JoinHandle<()>,
+    tx:JoinHandle<()>,
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn loop_readiness(fd:i32,stop:&AtomicBool)->bool{
+    if stop.load(Ordering::Acquire){return false}
+    let mut p=PollFd{fd,events:1,revents:0};
+    // bounded responsiveness for Stop; no timed waiting under registry.
+    let got=unsafe{poll(&mut p,1,10)};
+    got>0 && p.revents&1!=0
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn start_loop(handle:u64,ifindex:u32)->i32{
+    let Ok(mut reg)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=reg.entries.get_mut(&handle)else{return UNKNOWN};
+    if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
+    let (Some(raw),Some(tun))=(e.raw_rx.as_ref(),e.tun_sink.as_ref())
+    else{return BAD_STAGE};
+    let raw_fd=raw.readiness_fd();
+    let tun_fd=tun.readiness_fd();
+    if e.raw_tx.is_none(){
+        let Ok(tx)=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
+        else{return INVALID};
+        e.raw_tx=Some(tx);
+    }
+    let shutdown=Arc::new(AtomicBool::new(false));
+    let stats=Arc::clone(&e.counters);
+    let stop_rx=Arc::clone(&shutdown);
+    let stats_rx=Arc::clone(&stats);
+    let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
+        .spawn(move||{
+            while !stop_rx.load(Ordering::Acquire){
+                if !loop_readiness(raw_fd,&stop_rx){continue}
+                if stop_rx.load(Ordering::Acquire){break}
+                match raw_to_tun(handle){
+                    Ok((n,_))=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                    Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+            }
+        })
+    else{return INVALID};
+    let stop_tx=Arc::clone(&shutdown);
+    let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
+        .spawn(move||{
+            while !stop_tx.load(Ordering::Acquire){
+                if !loop_readiness(tun_fd,&stop_tx){continue}
+                if stop_tx.load(Ordering::Acquire){break}
+                match tun_to_raw(handle,ifindex){
+                    Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
+                    Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+            }
+        })
+    else{
+        shutdown.store(true,Ordering::Release);
+        drop(reg);
+        let _=rx.join();
+        return INVALID
+    };
+    e.workers=Some(LoopWorkers{shutdown,rx,tx});
+    OK
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_loop_start(handle:u64,ifindex:u32)->i32{
+    start_loop(handle,ifindex)
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
+    h:u64,rx:*mut u64,tx:*mut u64,rx_err:*mut u64,tx_err:*mut u64)->i32{
+    if rx.is_null()||tx.is_null()||rx_err.is_null()||tx_err.is_null(){return INVALID}
+    let Ok(reg)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    unsafe{
+        rx.write(e.counters.rx.load(Ordering::Relaxed));
+        tx.write(e.counters.tx.load(Ordering::Relaxed));
+        rx_err.write(e.counters.rx_error.load(Ordering::Relaxed));
+        tx_err.write(e.counters.tx_error.load(Ordering::Relaxed));
+    }
+    OK
 }
 
 #[cfg(test)]

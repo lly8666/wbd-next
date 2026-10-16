@@ -20,6 +20,8 @@ extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned cha
 extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 */
 import "C"
 import (
@@ -143,4 +145,21 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
         C.uint64_t(b.handle),C.uint32_t(ifindex),&pn,&seq,&full,&app)
     if rc!=0{return 0,0,0,0,fmt.Errorf("%w: real TUN to raw=%d",errV4Embedded,int(rc))}
     return uint64(pn),uint32(seq),uint32(full),uint32(app),nil
+}
+
+// Development-only original Rust owner continuous worker controls. No Go
+// per-packet RX/TX invocation while the loop owns both drivers.
+func (b *v4EmbeddedNativeBridge) startRustOwnerLoop(ifindex uint32)error{
+    if !b.committed||b.handle==0{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_loop_start(C.uint64_t(b.handle),C.uint32_t(ifindex))
+    if rc!=0{return fmt.Errorf("%w: Rust original owner loop=%d",errV4Embedded,int(rc))}
+    return nil
+}
+type v4EmbeddedLoopStats struct{RxOK,TxOK,RxErr,TxErr uint64}
+func (b *v4EmbeddedNativeBridge) rustOwnerLoopStats()(v4EmbeddedLoopStats,error){
+    if !b.committed||b.handle==0{return v4EmbeddedLoopStats{},errV4Embedded}
+    var rx,tx,re,te C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_stats(C.uint64_t(b.handle),&rx,&tx,&re,&te)
+    if rc!=0{return v4EmbeddedLoopStats{},fmt.Errorf("%w: Rust loop stats=%d",errV4Embedded,int(rc))}
+    return v4EmbeddedLoopStats{uint64(rx),uint64(tx),uint64(re),uint64(te)},nil
 }

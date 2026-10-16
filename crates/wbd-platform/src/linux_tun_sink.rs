@@ -68,6 +68,8 @@ impl ScopedTunSink {
     }
     pub fn name(&self)->&str{&self.name}
     pub fn generation(&self)->u32{self.generation}
+    /// Poll-only while the owning generation is alive.
+    pub fn readiness_fd(&self)->i32{self.fd.as_raw_fd()}
     pub fn begin_stop(&self){
         self.started.store(false,Ordering::Release);
         self.fence.begin_stop();
