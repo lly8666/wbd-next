@@ -658,5 +658,23 @@
     "product": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_actual_m4_kernel_udp_tx": {
+    "code_source_sha": "128bc6603c54272b0a60b0029465ed6da6e855d4",
+    "result": "PARTIAL_KERNEL_IO_PASS",
+    "evidence": "docs/evidence/M0/M0-023-actual-m4-kernel-udp-tx.json",
+    "business_hop": "Real protected Go TLS → Rust ScopedOwner Active/M1 frozen AEAD/PN → normal Rust M4 ScopedUdpOwner actual Linux sendmmsg → Go separate UDP socket kernel receive → Go independently authenticated S2C opener",
+    "three_ciphers": "PASS",
+    "first_and_second": "PASS",
+    "kernel_receiver": "REAL_LOOPBACK_UDP",
+    "production_tcp_raw_tun": "NOT_RUN",
+    "actual_application_delivery": "NOT_RUN",
+    "driver_held_loan_stop_B01_B04": "NOT_RUN",
+    "positive_production_authenticated_control": "NOT_IMPLEMENTED",
+    "native_windows_arm_execution": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance_500mbps": "NOT_RUN",
+    "production_abi_features": 0
   }
 }

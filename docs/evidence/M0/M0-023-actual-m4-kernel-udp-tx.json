@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "one-real-Linux-kernel-M4-scoped-UDP-S2C-TX-to-Go-TLS-opener",
+  "source_sha": "128bc6603c54272b0a60b0029465ed6da6e855d4",
+  "result": "PARTIAL_KERNEL_IO_PASS",
+  "implementation": [
+    "Go real credential-checked V4 TLS prepares the same normal-build Rust ScopedOwner after private Detach and exact SenderNext; original C2S/S2C cipher/direction/generation remains unchanged",
+    "Normal-build Rust ProtectedScopedOwner::submit_scoped_udp_tx checks Active, driver generation and stopping; drains one bounded M1 generation-fenced FrozenRecord TX batch, clones at most 32 Arc immutable handles (not ciphertext bytes) and calls the EXISTING M4 ScopedUdpOwner::submit and Linux sendmmsg under BorrowFence. Reports BatchResult accepted/uncertain/not-attempted without blind retry",
+    "Feature-only Go test observer constructs real Linux connected UDP socket pointed to separate Go net.ListenUDP receiver. Already normal-build Linux route budget and original peer MSS apply. It never fabricates an in-memory ciphertext result or implements a second cipher/owner",
+    "Go independently receives actual kernel UDP ciphertext twice and authenticates TLS-derived S2C AEAD payload, PN0/1 and exact Go protected reply SenderNext/TCP sealed-byte sequence in each of three cipher suites"
+  ],
+  "tests": {
+    "source_exact_run": 38840290787,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "build_job": 116778580666,
+    "consume_job": 116778946302,
+    "go_top_level": "7/7 PASS",
+    "new_go_test": "TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",
+    "cipher_suites": [
+      "ChaCha20-Poly1305",
+      "AES-128-GCM",
+      "AES-256-GCM"
+    ],
+    "rust_owner_unit": "1/1 PASS",
+    "negative": [
+      "pre-Detach cannot submit",
+      "wrong actual Linux loopback ifindex rejects before PN",
+      "absent kernel destination port rejects",
+      "second kernel record has next PN and full-wire TCP seq",
+      "Stop rejects further submission"
+    ],
+    "artifact_build": {
+      "id": 12021415619,
+      "digest": "sha256:d929c7f6f82d52c40a5d45d692501f10e82d6f887c8150af4b47efc11d55d4e7"
+    },
+    "artifact_result": {
+      "id": 12020489447,
+      "digest": "sha256:cd36811060031f99e48b3f560b362e3dd190c86fe9472b0c9f04d5b62140bbb9"
+    }
+  },
+  "other_exact_source_actions": [
+    {
+      "run": 38840290701,
+      "scope": "native-functional engine/normal/kernel/receipt/fec",
+      "result": "SUCCESS",
+      "build_job": 116778603077,
+      "verify_jobs": [
+        116778842645,
+        116778842648,
+        116778842666,
+        116778842682,
+        116778842693
+      ]
+    },
+    {
+      "run": 38840290697,
+      "scope": "native ABI",
+      "result": "SUCCESS",
+      "jobs": [
+        116778579878,
+        116778894519
+      ]
+    },
+    {
+      "run": 38840290705,
+      "scope": "cross-ABI build/inspect ONLY, no native Windows ARM execution",
+      "result": "SUCCESS",
+      "jobs": [
+        116778579383,
+        116778579669,
+        116778911504,
+        116778914770
+      ]
+    },
+    {
+      "run": 38840290736,
+      "scope": "G2",
+      "result": "SUCCESS",
+      "jobs": [
+        116778579856,
+        116778774767
+      ]
+    },
+    {
+      "run": 38840290717,
+      "scope": "Governance",
+      "result": "SUCCESS",
+      "job": 116778579632
+    },
+    {
+      "run": 38840290739,
+      "scope": "R0 static audit",
+      "result": "SUCCESS",
+      "job": 116778579779
+    },
+    {
+      "run": 38840290712,
+      "scope": "governance maintenance",
+      "result": "SUCCESS",
+      "job": 116778579622
+    }
+  ],
+  "input_integrity": "Native build-once/consume verified exact SHA/run/attempt/all covered source inputs and compiled binary SHA256. GitHub artifact ZIP digests read from API metadata, not independently downloaded/rehashed.",
+  "limits": [
+    "Actual Linux UDP LOOPBACK kernel copy and independent receiver only; not raw TCP, AF_PACKET, TUN, real application socket or route/peer network",
+    "Feature-only Rust C probe still supplies private real Go TLS callsite; no ordinary production versioned trusted installer, bare self-consistent cold248B remains untrusted",
+    "Kernel synchronous sendmmsg copy-complete != authenticated peer receipt; no loss/retry or real networking device held driver lease was qualified",
+    "Full duplex actual kernel C2S→Rust RX still NOT_RUN; previous in-process C2S RX positive does not fill this gap",
+    "No production feature switch, driver Stop B01–B04, physical delivery, 500Mbps, CPU/p99"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Next shortest vertical slice: genuine Go C2S UDP kernel send to prebound normal-build M4 receiver writing DIRECTLY into original M1 UniqueBuffer, then same scoped Rust RX AEAD/PN and M3 Normal/off app-candidate callback; pair kernel TX/RX and held real M4 generation lease Stop. Separately design production credential-checked Go control without arbitrary cold install, then replace UDP with actual TUN/raw runtime and qualify."
+}
