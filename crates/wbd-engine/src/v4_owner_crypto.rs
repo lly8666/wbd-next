@@ -431,6 +431,36 @@ impl ProtectedScopedOwner {
         self.seal_normal_off_one(buffer,payload_len,scoped.frame,carrier_snapshot,now)
     }
 
+    /// Real kernel route observation and Normal/off sealing as one owner
+    /// operation. Unlike seal_normal_off_with_linux_budget (which correctly
+    /// rejects a cached/stale external snapshot), no kernel-observed budget
+    /// escapes this call or can be saved/reused by its caller. Observe and
+    /// validate ifindex/interface/route PMTU against the original SYN MSS
+    /// before spending PN. The M4 raw driver still independently rechecks
+    /// local interface MTU immediately before its DF sendto, and the Linux
+    /// kernel rejects an oversize changed path instead of fragmenting it.
+    ///
+    /// This removes exactly ONE duplicated per-DATA kernel ROUTE query in
+    /// the autonomous S2C Rust owner, NOT the remaining per-packet route
+    /// observation. Event-scoped revision caching is still task024 OPEN.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn seal_normal_off_with_fresh_route_budget(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        ifname:&str,expected_ifindex:u32,destination:Ipv4Addr,
+        carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        let fresh=self.observe_linux_normal_off_route_budget(
+            ifname,expected_ifindex,destination
+        )?;
+        if payload_len>fresh.frame.single_business_payload_mtu {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        // The snapshot is owner-created in this exact call; cannot race a
+        // second observer/caller or be reused on another generation.
+        self.seal_normal_off_one(
+            buffer,payload_len,fresh.frame,carrier_snapshot,now
+        )
+    }
     /// Actual OS TUN app packet -> original M1 slab (no intermediate copy)
     /// -> original protected Rust owner Normal/off LINK -> S2C AEAD/PN and
     /// scoped FrozenRecord TX queue. Only packet sizes fitting the current

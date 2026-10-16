@@ -492,11 +492,12 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
     let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let flow=e.flow;
-    let scoped=e.owner.observe_linux_normal_off_route_budget(
-        "lo",ifindex,Ipv4Addr::from(flow.client_ip)).map_err(|_|INVALID)?;
-    if n>scoped.frame.single_business_payload_mtu{return Err(INVALID)}
-    e.owner.seal_normal_off_with_linux_budget(slab,n,&scoped,15,loop_now())
-        .map_err(|_|INVALID)?;
+    // Observe the authentic scoped kernel route only ONCE per S2C DATA.
+    // Do not touch the stale-snapshot API used by fail-closed MTU tests.
+    // Original M4 raw send below still checks real interface MTU and DF.
+    e.owner.seal_normal_off_with_fresh_route_budget(
+        slab,n,"lo",ifindex,Ipv4Addr::from(flow.client_ip),15,loop_now()
+    ).map_err(|_|INVALID)?;
     let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
     let tuple=Ipv4Tuple{
         src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
