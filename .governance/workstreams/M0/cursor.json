@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 89,
-  "checkpoint_sha": "c4c1291b3d4da7361784ba39d42e9a59cda5fbde",
+  "sequence": 90,
+  "checkpoint_sha": "a0521ba858f80183a6825321d756330b659a23bc",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0-023 atom closed: real credential-checked production Go private callback now constructs WBGH-v1 32-byte versioned frozen original FakeTCP tuple/MSS/actual RX PrepareTransition boundary; test cgo FFI passes command into new ORDINARY-build Rust v4_protected_handoff parser and original M1/M3 protected ScopedOwner Prepared constructor (not a separate test owner). At final CODE SOURCE 5aada1d5ada91fb13949a0bd6fbec2a7fb396576 native Actions38870573492 PASS, real isolated Linux raw/TUN 3 ciphers bi-directional, Rust module negative tests 1/1 and legacy owner 1/1. Evidence S 608fb7d2c4306801d65be8fe82ade5ab9c34c5a2. Formal 023 still PARTIAL: no non-test positive native installer/Active or V4 production ABI. Governance H88 run38871078627 FAIL on missing evidence.source_sha; recovered in S c4c1291b3d4da7361784ba39d42e9a59cda5fbde by exact cursor source match, Governance38871214264 SUCCESS. No product-status promotion.",
-  "why_now": "User requested fastest product Actions path, but previous Go-to-Rust preparation was assembled inside TEST-ONLY FFI; moving versioned frozen command and actual prepared owner creation into normal compiled production code reuses existing AEAD and owner while avoiding fake product enablement.",
-  "done_when": "THIS ATOM MET at final CODE SOURCE 5aada1d5ada91fb13949a0bd6fbec2a7fb396576: existing Go protected handshake/Prepare→reply→Detach→Commit remains unique; WBGH-v1 versioned normal Rust constructor ran via exact same Go trusted callback, rejects wrong version/size/reserved/zero ports/invalid MSS; original AEAD/PN raw/TUN 3-suite Actions38870573492 SUCCESS; same SOURCE governance-maintenance38870573514 and Governance38870573590 SUCCESS, scope-audit38870602569 SKIPPED not PASS. Evidence S 608fb7d2c4306801d65be8fe82ade5ab9c34c5a2 static38870959063/Governance38870959066 SUCCESS. Historic SOURCE 9f248938 run38870306754 FAILED due scientifically invalid negative test; corrected in subsequent source5f76ad11. Formal 023 NOT_MET because no positive non-test Go native adapter/ordinary C ABI authenticated install, real driver-held Stop B01-B04 and product network qualification. H88 role-only Governance failure38871078627 retained; recovered evidence S c4c1291b3d4da7361784ba39d42e9a59cda5fbde Governance38871214264 SUCCESS. No other test errors inferred.",
-  "next_action": "Wire one non-test private Go V4 credential-checked native control adapter to the existing WBGH-v1 normal Rust Prepared/Commit owner path, binding exact post-reply TX SenderNext, bounded early/Stop and fail closed on cold248 alone; then run B01–B04 on that SAME real driver path before any product capability enablement.",
+  "current_task": "023 one atom CLOSED: non-_test, private Go credential-checked EstablishServerV4 ownerBridge now runs feature-gated embedded Rust normal ProtectedScopedOwner Prepare→protected reply→Detach bounded early→exact SenderNext Commit→Stop/release on all 3 ciphers. CODE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc native run38874157179 build+consume PASS. Source-exact evidence S a0521ba858f80183a6825321d756330b659a23bc static audit38874653521 and Governance38874653683 PASS. Default product features0; this dev-enabled dylib is NOT public auth ABI or product-enabled.",
+  "why_now": "Previous protected Go normal Rust owner Prepare had a positive path only through TEST-ONLY C probe. Add smallest non-_test embedded private Go lifecycle adapter using existing versioned WBGH and original owner, not new AEAD/PN or delivery, for direct Actions exercise without bypassing readiness gates.",
+  "done_when": "ATOM MET on exact CODE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc: real protected Go TLS all 3 cipher private embedded native Prepare/Commit/Stop positives and null/unknown Rust negatives, normal Rust owner construction and existing test-tag raw/TUN three-suite kernel path independently PASS in native Actions38874157179 attempt1. Same CODE Governance38874157246, maintenance38874157198 SUCCESS; central scope push38874194576 SKIPPED not PASS. Evidence S a0521ba858f80183a6825321d756330b659a23bc static38874653521/Gov38874653683 SUCCESS. Historical workflow FAIL 38873564803 (YAML zero jobs) and 38873826422 (shell quote EOF after build) preserved in evidence. Formal 023 NOT MET: non-test embedded adapter still explicitly DEV feature-gated; real M4 driver-held B01–B04, external SYN, product network/Normal/off and performance NOT_RUN. Production ABI features0.",
+  "next_action": "Attach real M4 Linux raw/TUN driver lease to the SAME non-test embedded Rust owner generation, exercise held-loan STOP_INCOMPLETE, late return/release and old/new generation restart B01–B04 in exact-source Actions before advertising any product V4 capability.",
   "unverified": true,
-  "last_tested_source": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+  "last_tested_source": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-versioned-normal-prepare.json"
+    "docs/evidence/M0/M0-023-embedded-private-control.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-versioned-normal-prepare.md",
-    "docs/evidence/M0/M0-023-protected-association-original-flow-raw.json",
+    "docs/devlog/M0/M0-023-embedded-private-control.md",
+    "docs/evidence/M0/M0-023-versioned-normal-prepare.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Normal-built Rust prepared owner/parser + real protected Go WBGH-v1 source exact native PASS, 3-suite real isolated raw/TUN test-only PASS. Production v4 non-test native command/ABI+Active NOT_RUN; driver held loan B01-B04, external SYN, veth netem, physical and product performance NOT_RUN. ABI features0. H88 Governance red was missing mandatory evidence.source_sha; recovered with exact code SOURCE field and verified main Governance PASS."
+  "partial_summary": "Live verified Go V4 non-test developer-gated adapter to normal Rust M1/M3 original owner Prepared/Committed/Stopped PASS all 3 ciphers SOURCE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc; old test-tag raw/TUN still PASS separately. Product/real M4 held driver ownership, external SYN, actual netem, 500Mbps/physical NOT_RUN; capability0."
 }
