@@ -815,6 +815,11 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
                 binary.BigEndian.Uint16(bytesIn[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
             h:=int(bytesIn[ihl+12]>>4)*4
             if h<20||ihl+h>n{continue}
+            // A real kernel raw TCP listener sees its own / the host's
+            // ACK/RST control packets. Those are NOT original M4 encrypted
+            // DATA and must never be passed to the independent Go AEAD
+            // opener as records; no retune of Rust owner or crypto.
+            if bytesIn[ihl+13]&0x08==0 || n-ihl-h<=31{continue}
             opened,e:=open.OpenRecord(bytesIn[ihl+h:n])
             if e!=nil||opened.Kind!=tlsrecord.KindLINK||len(opened.Payload)<28{
                 return fmt.Errorf("original Rust background S2C AEAD invalid: %v",e)
