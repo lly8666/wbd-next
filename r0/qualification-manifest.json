@@ -606,5 +606,24 @@
     "product_qualification": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_v4_syn_peer_mss_bound": {
+    "code_source_sha": "993d7cd5f3c536a16371c06303ece71663eddb58",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-protected-syn-mss-binding.json",
+    "trusted_source": "Go EstablishServerV4 credential-checked private ownerBridge receives MSS metadata read from actual faketcp.ServerAssociation.PeerTCPProfile",
+    "peer_authentication": "NO; SYN MSS is untrusted transport cap, not an authentication attestation",
+    "rust_normal_build": "ProtectedScopedOwner::prepare_from_protected_go binds peer_mss and advertised-on-SYN bit; seal_normal_off_one rejects future FrameBudget peer MSS or advertised-bit mismatch",
+    "suite_tests": "Go actual TLS four top-level tests / all 3 cipher suite subcases; Rust native owner 1/1",
+    "input_observed": "pinned legacy Go real association SYN advertises MSS 1360",
+    "negative": "caller-supplied mismatched MSS64 rejected in Go, forged MSS2000 directly rejected by normal-build Rust owner; payload1340+31 exceeds original SYN MSS even if outer MTU is1500",
+    "provenance_limit": "Feature-gated FFI remains untrusted; no positive production native cold installer, no public external 248B authority",
+    "actual_m4_path_mtu": "NOT_RUN",
+    "actual_tun_raw_application": "NOT_RUN",
+    "driver_held_loan_stop_B01_B04": "NOT_RUN",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN",
+    "production_abi_features": 0
   }
 }

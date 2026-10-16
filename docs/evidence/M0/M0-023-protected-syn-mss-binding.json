@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "observed-syn-peer-mss-bound-to-protected-go-v4-rust-owner",
+  "source_sha": "993d7cd5f3c536a16371c06303ece71663eddb58",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "artifact_verification": "Native Actions consume job compares exact GITHUB_SHA/run_id/attempt/source inputs and prebuilt binary SHA256 from manifest. GitHub artifact ZIP digests read independently as API metadata, but ZIP bytes not separately downloaded/rehashed.",
+  "changed_paths": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs"
+  ],
+  "implementation": {
+    "go": "After credentials+policy verification and exact PrepareTransition, EstablishServerV4 reads real ServerAssociation.PeerTCPProfile() on same association and passes private v4PeerTransport{mss,advertised} into private ownerBridge.prepare. No public setter and no operator-readiness flag can mint authenticated cold source.",
+    "rust": "ProtectedScopedOwner owns original SYN peer MSS and advertised bit captured during Prepare (validated min64; unadvertised only default536); seal_normal_off_one rejects any caller FrameBudget with mismatched peer_mss or peer_mss_advertised before PN consumption and freeze. A second guard at Go test adapter refuses claimed mismatch.",
+    "peer_info": "SYN/MSS is untrusted network metadata and only a conservative upper send bound; it is NOT protected by TLS, and independently does not authorize Rust owner install. The profile is bound to the credential-checked session's association, not to arbitrary 248B cold bundle.",
+    "protocol": "No change to Prepare -> protected reply -> Detach -> Commit exact SenderNext -> RX/TX Active. Dual-direction C2S/S2C keys and old-generation Stop already established.",
+    "test_injection": "The feature-only C probe passes fixed association MSS to normal-build Rust owner. Rust native scoped test supplies forged later MSS2000 against prepared1360 and verifies rejection by actual normal-build owner, rather than relying only on Go argument checks. Real Go TLS test verifies observed MSS1360+advertised from pinned fakeTCP SYN; forged later MSS64 and 1340B payload+31B record against original1360 cap rejected.",
+    "effective_m4_mtu": "NOT_OBSERVED; existing test outer MTU1200/1500 values are synthetic and are NOT actual M4 path measurements.",
+    "abi": "Ordinary Rust C ABI still reports features0 and does not export feature-gated test probe cold installer."
+  },
+  "actions": [
+    {
+      "scope": "native M0 Go TLS+Rust owner",
+      "run_id": 38830964619,
+      "result": "SUCCESS",
+      "attempt": 1,
+      "build_job": 116749392914,
+      "consume_job": 116749831058,
+      "build_artifact": {
+        "id": 12016364422,
+        "digest": "sha256:01eb8d048c6f6c0617f99b4d6f04246fa7287cd1ba56723ef6870e8d923ba092"
+      },
+      "result_artifact": {
+        "id": 12017038312,
+        "digest": "sha256:ee0ef0cd89eb66335ae924a5c6ac3ba75437ba541a9d815141253e4990b09f7b"
+      },
+      "go_top_level": 4,
+      "rust_native": 1,
+      "all_three_ciphers": "PASS"
+    },
+    {
+      "scope": "Go V4 control fail-closed",
+      "run_id": 38830964533,
+      "result": "SUCCESS",
+      "build_job": 116749393035,
+      "consume_job": 116749584880,
+      "build_artifact_id": 12016683730,
+      "result_artifact_id": 12017316180
+    },
+    {
+      "scope": "real Go protected V4 TLS+rollback",
+      "run_id": 38830964650,
+      "result": "SUCCESS",
+      "build_job": 116749393413,
+      "consume_job": 116749602572,
+      "build_artifact_id": 12017192738,
+      "result_artifact_id": 12017252487
+    },
+    {
+      "scope": "cold parser",
+      "run_id": 38830964618,
+      "result": "SUCCESS",
+      "build_job": 116749393022,
+      "consume_job": 116749804150,
+      "build_artifact_id": 12017296456,
+      "result_artifact_id": 12016414471
+    },
+    {
+      "scope": "native functional all groups",
+      "run_id": 38830964548,
+      "result": "SUCCESS",
+      "plan_job": 116749393006,
+      "build_job": 116749433244,
+      "verify_jobs": [
+        116749642134,
+        116749642146,
+        116749642147,
+        116749642284,
+        116749642340
+      ],
+      "build_artifact_id": 12017172854
+    },
+    {
+      "scope": "native ABI",
+      "run_id": 38830964565,
+      "result": "SUCCESS",
+      "build_job": 116749393040,
+      "consume_job": 116749787187,
+      "build_artifact_id": 12017227785,
+      "result_artifact_id": 12016613946
+    },
+    {
+      "scope": "cross ABI build/inspection only",
+      "run_id": 38830964528,
+      "result": "SUCCESS",
+      "build_jobs": [
+        116749392967,
+        116749393143
+      ],
+      "consume_jobs": [
+        116749817699,
+        116749817751
+      ],
+      "target_execution": "NOT_RUN"
+    },
+    {
+      "scope": "G2 bootstrap",
+      "run_id": 38830964582,
+      "result": "SUCCESS",
+      "build_job": 116749393339,
+      "consume_job": 116749571615
+    },
+    {
+      "scope": "push Governance",
+      "run_id": 38830964543,
+      "result": "SUCCESS",
+      "job_id": 116749393493,
+      "artifact": {
+        "id": 12016239354,
+        "digest": "sha256:405bf6424f5a18db254a71a05a9b0a9aaf76185c302d46effb5bd016d44894b6"
+      },
+      "tool_maintenance": "NOT_RUN"
+    },
+    {
+      "scope": "R0 qualification static audit",
+      "run_id": 38830964546,
+      "result": "SUCCESS",
+      "job_id": 116749393129,
+      "artifact": {
+        "id": 12017052994,
+        "digest": "sha256:909cdf3e4f6261807fac928fe3090f5f675b9e23d9e210bc78f02077aba79c2d"
+      }
+    }
+  ],
+  "not_run": [
+    "Production authenticated Go→Rust cold command and native runtimeentry",
+    "Actual M4 platform-derived effective MTU/MSS and path budget",
+    "Actual normal/off bidirectional application TUN/raw/AF_PACKET I/O",
+    "Linux kernel driver held loan Stop B01–B04 and real restart",
+    "LINK fragmented TX/magic escape",
+    "Physical/E2E and 500Mbps/CPU performance"
+  ],
+  "next_action": "Implement real credential-checked Go→Rust V4 production control command (no arbitrary 248B cold auth), with actual M4 driver path snapshot and M1 owner RX/TX lifetime; only then route Normal/off first real Linux application packet and held driver lease Stop. Never enable features until true E2E."
+}
