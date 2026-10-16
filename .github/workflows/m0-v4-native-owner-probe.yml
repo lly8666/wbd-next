@@ -460,8 +460,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           WBD_M0_BACKGROUND_LOOP=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/original-rust-background-loop.log 2>&1
+          RC=$?
+          set -e
           cat native-probe-result/original-rust-background-loop.log
+          if [[ "$RC" != 0 ]]; then
+            echo "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FAIL exit=$RC" >&2
+            exit "$RC"
+          fi
           grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
           grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
           python3 - <<'PY'
