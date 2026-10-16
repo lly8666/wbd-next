@@ -881,4 +881,47 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
         stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
+
+    // Real netns route/MTU contraction while the SAME original Rust
+    // generation remains Active. A just-observed route frame budget never
+    // overrides the original M4 raw driver MTU lease: the driver must
+    // reject even an otherwise small, correctly authenticated S2C record,
+    // instead of silently submitting it through a stale interface scope.
+    mtuRaw,err:=os.ReadFile("/sys/class/net/lo/mtu")
+    if err!=nil{t.Fatal(err)}
+    oldMTU,err:=strconv.Atoi(string(bytes.TrimSpace(mtuRaw)))
+    if err!=nil||oldMTU<=1500{t.Fatalf("unexpected real loopback MTU=%d: %v",oldMTU,err)}
+    t.Cleanup(func(){
+        if out,e:=exec.Command("ip","link","set","dev","lo","mtu",
+            strconv.Itoa(oldMTU)).CombinedOutput();e!=nil{
+            t.Errorf("restore owned namespace kernel lo MTU: %v %s",e,out)
+        }
+    })
+    if out,e:=exec.Command("ip","link","set","dev","lo","mtu","1500").CombinedOutput();e!=nil{
+        t.Fatalf("live original M4 lo MTU shrink: %v %s",e,out)
+    }
+    reduced,err:=os.ReadFile("/sys/class/net/lo/mtu")
+    if err!=nil||string(bytes.TrimSpace(reduced))!="1500"{
+        t.Fatalf("real kernel MTU did not shrink to 1500: %q %v",reduced,err)
+    }
+    shrinkData:=bytes.Repeat([]byte{0x6c},52)
+    if n,e:=app.WriteToUDP(shrinkData,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(shrinkData){t.Fatalf("changed MTU kernel injector n=%d err=%v",n,e)}
+    deadline=time.Now().Add(2*time.Second)
+    failedByDriver:=false
+    for time.Now().Before(deadline){
+        latest,e:=b.rustOwnerLoopStats()
+        if e!=nil{t.Fatalf("owner state after kernel link MTU shrink: %v",e)}
+        if latest.TxErr>stats.TxErr{
+            if latest.TxOK!=packets{t.Fatalf("STALE_MTU_TX_LEAK success after driver failed: %+v",latest)}
+            failedByDriver=true
+            break
+        }
+        time.Sleep(10*time.Millisecond)
+    }
+    if !failedByDriver{
+        t.Fatalf("original M4 raw driver did not fail closed after real MTU shrink 65536→1500")
+    }
+    t.Logf("EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=%d new_mtu=1500 s2c_tx_ok=%d driver_reject_increased=true",
+        oldMTU,stats.TxOK)
 }

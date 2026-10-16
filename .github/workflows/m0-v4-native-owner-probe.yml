@@ -473,6 +473,7 @@ jobs:
           fi
           grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
           grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true' native-probe-result/original-rust-background-loop.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           m=json.load(open("native-probe-build/manifest.json"))
