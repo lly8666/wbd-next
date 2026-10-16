@@ -4,7 +4,7 @@
 
 ## 1. 事实、目标与范围
 
-审计基线 `333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5`，原对比 Actions [38920819286](https://github.com/lly8666/wbd-next/actions/runs/38920819286)，证据 [原配对结果](../evidence/M0/M0-023-old-go-vs-rust-same-vm-paired-normal10.json)。旧 Go 两端进程 54.26 CPU-s；新 Go/Rust/发生器混合进程 52.10 CPU-s，其中内核态 43.12s，Rust 两个 worker 38.15s 是其子集。这些人口/拓扑不同，不能宣称 Rust 省 4% 或 30%。双方只投喂 10Mbps，也没有证明最大吞吐相等。
+审计基线 `333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5`，原对比 Actions [38920819286](https://github.com/lly8666/wbd-next/actions/runs/38920819286)，证据 [原配对结果](../evidence/M0/M0-023-old-go-vs-rust-same-vm-paired-normal10.json)。旧 Go 两端进程 54.26 CPU-s；新 Go/Rust/发生器混合进程 52.10 CPU-s，其中内核态 43.12s，Rust 两个 worker 38.15s 是其子集。这些统计范围/拓扑不同，不能宣称 Rust 省 4% 或 30%。双方只投喂 10Mbps，也没有证明最大吞吐相等。
 
 对应实际热路径存在以下可核查问题，不是已测出的各项 CPU 占比：
 
