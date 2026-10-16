@@ -692,5 +692,20 @@
     "product": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_one_command_v4_kernel_loopback": {
+    "source_sha": "2c6b0e862d35ef69b5c2ae4c9495ad8e2d6b2379",
+    "result": "RUNNABLE_COMPONENT_SMOKE_PASS",
+    "runner": "tools/run-v4-kernel-loopback.sh",
+    "source_exact_actions": 38844244177,
+    "artifact": "docs/evidence/M0/M0-023-runnable-kernel-loopback.json",
+    "scope": "Linux x86_64 pinned Go protected V4 TLS, normal Rust owner, Linux UDP sendmmsg/recvmmsg, independently authenticated first packets in both directions, all three cipher suites",
+    "production_v4": "DISABLED",
+    "production_abi_features": 0,
+    "real_TUN_raw_app": "NOT_RUN",
+    "secure_production_go_native_control": "NOT_IMPLEMENTED",
+    "held_driver_stop_B01_B04": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }

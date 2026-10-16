@@ -1,0 +1,11 @@
+# M0-023: runnable V4 protected bilateral Linux kernel I/O
+
+**CODE SOURCE:** `2c6b0e862d35ef69b5c2ae4c9495ad8e2d6b2379` — one executable *integration* atom, formal product still PARTIAL.
+
+Run on Linux x86_64 with Go 1.23.12, Rust 1.85.1, git, CGO compiler: `./tools/run-v4-kernel-loopback.sh`. To use locally pinned old Go git history, add `--legacy /path/to/wobuzhidao`; to run full source-locked Go suite and memory metric, add `--all`. By design it never changes the original Go checkout: `git archive` into a temp source, overlay four versioned source files, build ordinary Rust ABI with explicit no-test-symbol-leak check, build feature-only Rust adapter and a Go native integration executable.
+
+GitHub Actions source exact [38844244177](https://github.com/lly8666/wbd-next/actions/runs/38844244177): build once job116791023779, consume job116791417550 both SUCCESS; CI invokes **this same script** with `--prebuilt native-probe-build --all`. Nine Go tests and 3 ciphers' genuine Linux M4 sendmmsg→Go UDP receive and Go UDP→M4 recvmmsg→original Rust M1 UniqueBuffer/AEAD+M3 LINK pass; Rust owner1/1. Normal ABI features0; source/run/attempt/all inputs including script/native binaries SHA256 checked. Build artifact12022502026 GitHub digest `sha256:3bbd8dfdffd09c1ce823d7c09e752effb5f433435007254dbf25b21815e5a994`, result12023025079 `sha256:1fa5143a78016fb8488594cc492139ad04642a93e77751f42a95775c7225d66a`. Governance38844244179 and maintenance38844244161 169/169 PASS.
+
+A second memory sample reports 12 actual Go client+server session pairs' GC-retained `HeapAlloc` +137,288B (11,440B/pair), `HeapInuse` +516,096B (43,008B/pair). This is NOT per-side RSS, native Rust+kernel heap or handshake peak. CI ran prebuilt mode; local build-from-source path needs local host verification.
+
+**Not production-ready**: Go trusted native install authority/positive control unimplemented, ordinary Rust ABI features0, raw/TUN application carrier, genuine delayed driver-held Stop B01–B04, physical/throughput NOT_RUN. The feature-gated native test glue cannot be advertised as an independent cold authentication API. Next change must cross one of those actual product boundaries, not add more preflight probes.

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "single-command-Linux-kernel-V4-bidirectional-runnable-integration",
+  "source_sha": "2c6b0e862d35ef69b5c2ae4c9495ad8e2d6b2379",
+  "result": "RUNNABLE_COMPONENT_SMOKE_PASS",
+  "new_runner": "tools/run-v4-kernel-loopback.sh",
+  "commands": [
+    "./tools/run-v4-kernel-loopback.sh",
+    "./tools/run-v4-kernel-loopback.sh --all",
+    "./tools/run-v4-kernel-loopback.sh --legacy /path/to/wobuzhidao"
+  ],
+  "changed_paths": [
+    "tools/run-v4-kernel-loopback.sh",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "behavior": [
+    "Runnable native Linux x86_64 executable test harness: resolve pinned Go upstream a7a82db31fe736ffedee330795a3234d358f1984, isolate source with git archive, overlay the trusted private Go V4 TLS integration files, build ordinary Rust ABI and reject any exported test C symbols, then build feature-restricted native library and link actual Go test executable once",
+    "Same user-facing runner supports --prebuilt for CI exact-source build/consume without recompiling and --all for all nine Go tests plus indicative heap metrics. Script checks BOTH actual Linux M4 kernel TX and RX tests PASS in all three suites before printing PASS, exits nonzero on failure",
+    "Linux sendmmsg from original Rust M1 frozen TX to independent Go UDP recv/TLS S2C Opener; Go real C2S TLS Sealer to Linux recvmmsg directly original Rust M1 slab and ScopedOwner AEAD+PN/M3 complete normal-off callback",
+    "Credential/Detach/Commit/private native C observer test-only; NORMAL production ABI stays features=0; this does not start final application or TUN/raw and is not a positive production installer"
+  ],
+  "verification": {
+    "source_exact_run": 38844244177,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "build_job": 116791023779,
+    "consume_job": 116791417550,
+    "native_go_tests": "9/9 top-level PASS; kernel UDP RX+TX each three real TLS cipher suites PASS",
+    "rust_unit": "1/1 PASS",
+    "build_artifact": {
+      "id": 12022502026,
+      "digest": "sha256:3bbd8dfdffd09c1ce823d7c09e752effb5f433435007254dbf25b21815e5a994"
+    },
+    "result_artifact": {
+      "id": 12023025079,
+      "digest": "sha256:1fa5143a78016fb8488594cc492139ad04642a93e77751f42a95775c7225d66a"
+    },
+    "source_run_attempt_input_binary_sha": "Exact GitHub Actions Build once and Consume checked SHA/run/attempt, declared input hashes (including runner script), and Go/Rust prebuilt binaries",
+    "normal_abi_leak_check": "PASS: no m0_v4_probe symbols exported by normal production build",
+    "note": "CI exercised --prebuilt --all execution path. Local from-source command uses same script build path but was not separately executed on a user's machine. GitHub ZIP artifact digest from API metadata, not independently downloaded/rehashed."
+  },
+  "other_exact_source_actions": [
+    {
+      "run": 38844244179,
+      "scope": "Governance",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38844244161,
+      "scope": "governance maintenance",
+      "status": "SUCCESS",
+      "tests": "169/169 PASS"
+    }
+  ],
+  "go_heap_optional_diagnostic": {
+    "source_run": 38844244177,
+    "go_version": "go1.23.12",
+    "real_client_server_pairs": 12,
+    "heap_alloc_delta_bytes": 137288,
+    "heap_alloc_per_pair_bytes": 11440,
+    "heap_inuse_delta_bytes": 516096,
+    "heap_inuse_per_pair_bytes": 43008,
+    "limitation": "One GC-retained Go managed heap sample of BOTH client+server in same process, excludes native Rust, OS kernel sockets, runtime/handshake peak and process RSS. Not per-side total resident cost."
+  },
+  "product_not_run": [
+    "real production Go TLS authorized native control / verifiable origin",
+    "real Linux TUN/raw/AF_PACKET app ingress/egress",
+    "genuine delayed M4 driver-held B01-B04 Stop",
+    "physical E2E and 500Mbps/CPU/p99",
+    "native Windows/ARM execution"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Integrate a genuinely authenticated production Go-V4 native owner control authority, then rewire this already runnable kernel-path sender/receiver to Linux raw/TUN user application and qualify Stop B01–B04. No further MSS/MTU probe-only changes."
+}
