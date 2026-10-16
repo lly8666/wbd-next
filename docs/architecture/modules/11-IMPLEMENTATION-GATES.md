@@ -18,6 +18,8 @@
 
 ## 当前 M0 的真实路径交付顺序
 
+2026-10-16 用户优先级覆盖：先完成 [R1-M0-HOTPATH-COST-024](../../decisions/M0-hotpath-cost-first-2026-10-16.md) 的真实热路径修复及同Actions A/B，之后才分配后续开发测试。以下023是原正式资格依赖，保留未验项；不能照旧cursor直接跳到超MTU新功能，也不能为本轮优化提前开放capability。
+
 这是既有任务 `R0-M0-V4-PROTECTED-OWNER-COMMIT-023` 的施工细化，不重置阶段、不重新分配 worker、不把下列事项预标完成。先核远端 evidence；已有精确证据满足的步骤直接复用，不重做实验。
 
 1. **真实认证接入**：沿 01 唯一切换顺序，把已有 Go V4 可信调用点接到实际 Rust scoped owner 的 AEAD/PN 处理。沿用现有类型、arena、driver lease 与私有认证来源；拒绝外部自拼 cold bundle。测试必须穿过将来生产实际调用的函数；可替换时钟/设备边界以稳定复现，不另写一条更简单的 TEST-ONLY activation、crypto 或 delivery 链。保留当前生产 capability 关闭状态，不能为让测试通过提前广告尚未实现能力。

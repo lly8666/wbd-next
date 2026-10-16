@@ -38,3 +38,5 @@
 写入时保持同样分工：project 写阶段/入口，registry 写分配，cursor 写当前事实和一个下一动作，详细 run/hash 写 evidence。接手不抄整段历史到每个字段；原失败和未跑项用引用保留。普通 push 的 Governance 是身份/结构检查，完整工具自测看 maintenance 或手动 selftest 的精确范围。
 
 接手后按完整能力推进，不把 cursor 的“一个下一动作”解释成只能做一个断言。测试粒度和开发性能基线入口以 `docs/architecture/TEST_PLAN.md` 第 0 节为准；历史 cursor 中逐包扩展或逐延迟扩展的计划须按此收口，已有证据和未通过硬门保留。
+
+2026-10-16 M0优先级调整见 `docs/decisions/M0-hotpath-cost-first-2026-10-16.md`：先完成热路径修复及同Actions对比，再分配后续任务。接手时以当前registry为准，不能照旧cursor跳过新分配；历史资格不因此变更。

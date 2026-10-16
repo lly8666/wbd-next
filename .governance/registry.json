@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "集成与治理；执行 assigned_task。任务定义见 docs/decisions/M0-V4-bridge-next-wave-2026-10-15.md，最新执行事实读登记分支 cursor。",
-      "done_when": "以 assigned_task 对应决策中的完成条件为准；cursor 记录执行进度和精确证据，跨模块接口由 M0 集成。",
-      "assigned_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
+      "goal": "先完成 docs/decisions/M0-hotpath-cost-first-2026-10-16.md 的热路径成本修复及同Actions Rust/Rust配对；其间仅协调本任务必要依赖，不分配无关下一波。原023和超MTU分片缺口保留。",
+      "done_when": "按热路径补充方案第7节收口：实际路径优化、必要正确性回归、同VM配对与诚实结论齐全；完成后再分配后续开发测试，原023产品资格不自动通过。",
+      "assigned_task": "R1-M0-HOTPATH-COST-024"
     },
     {
       "id": "M1",
