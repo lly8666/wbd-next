@@ -16,6 +16,9 @@ on:
       - "crates/wbd-engine/src/cold_v4.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/v4_protected_handoff.rs"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
       - "crates/wbd-platform/src/linux_packet_preflight.rs"
       - "crates/wbd-platform/src/lib.rs"
       - "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
@@ -68,19 +71,19 @@ jobs:
             echo 'CRITICAL: test-only Go/Rust owner C symbols leaked into normal ABI' >&2
             exit 1
           fi
-          cargo build --release --locked -p wbd-engine --features m0_v4_probe
-          cargo test --release --locked -p wbd-engine --features m0_v4_probe --lib --no-run
+          cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
+          cargo test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go --lib --no-run
           test -s target/release/libwbd_engine.so
           mkdir native-probe-build
           cp target/release/libwbd_engine.so native-probe-build/libwbd_engine.so
           rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
           test -n "$rust_test"
           cp "$rust_test" native-probe-build/owner-rust.test
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          (cd legacy && go test -tags wbd_v4_native_probe -c -o "$GITHUB_WORKSPACE/native-probe-build/owner-go.test" ./internal/realityfront)
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/native-probe-build/owner-go.test" ./internal/realityfront)
           python3 - <<'PY'
           import hashlib,json,os,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
@@ -88,6 +91,7 @@ jobs:
             "crates/wbd-engine/src/lib.rs","crates/wbd-engine/src/cold_v4.rs",
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "crates/wbd-engine/src/v4_protected_handoff.rs",
+            "crates/wbd-engine/src/v4_embedded_go.rs",
             "crates/wbd-platform/src/linux_packet_preflight.rs",
             "crates/wbd-platform/src/lib.rs",
             "crates/wbd-platform/src/linux_tun_sink.rs",
@@ -107,6 +111,8 @@ jobs:
             "r0/go_overlay/internal/realityfront/admission_v4_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
             ".github/workflows/m0-v4-native-owner-probe.yml",
             "tools/run-v4-kernel-loopback.sh",
             "tools/run-v4-tun-netns.sh"]
@@ -114,7 +120,7 @@ jobs:
           m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
              "old_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
-             "rust":"1.85.1","go":"1.23.12","feature":"m0_v4_probe",
+             "rust":"1.85.1","go":"1.23.12","feature":"m0_v4_probe,m0_v4_embedded_go",
              "inputs_sha256":{p:sha(p) for p in paths},
              "binary_sha256":{p:sha("native-probe-build/"+p) for p in binary},
              "production_abi":"FEATURES_ZERO"}
@@ -149,7 +155,7 @@ jobs:
           assert m["source_sha"]==os.environ["GITHUB_SHA"]
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
           assert m["old_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
-          assert m["feature"]=="m0_v4_probe" and m["production_abi"]=="FEATURES_ZERO"
+          assert m["feature"]=="m0_v4_probe,m0_v4_embedded_go" and m["production_abi"]=="FEATURES_ZERO"
           for p,h in m["inputs_sha256"].items():assert sha(p)==h,p
           for p,h in m["binary_sha256"].items():assert sha("native-probe-build/"+p)==h,p
           PY
