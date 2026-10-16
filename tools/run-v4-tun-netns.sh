@@ -39,17 +39,17 @@ sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 # Default invocation remains byte-for-byte baseline behavior.
 PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
 if [[ -n "$PRELIM_MS" ]]; then
-  if [[ "$PRELIM_MS" != 10 ]]; then
-    echo 'PRELIM_NETEM_INVALID only bounded 10ms delay is authorized in this smoke' >&2
+  if [[ "$PRELIM_MS" != 10 && "$PRELIM_MS" != 150 ]]; then
+    echo 'PRELIM_NETEM_INVALID only bounded 10ms/150ms smoke is authorized' >&2
     exit 2
   fi
   if ! command -v tc >/dev/null; then
     echo 'PRELIM_NETEM_UNSUPPORTED tc unavailable'; exit 77
   fi
-  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem delay 10ms limit 256; then
+  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem delay "${PRELIM_MS}ms" limit 256; then
     echo 'PRELIM_NETEM_UNSUPPORTED kernel refused netem qdisc'; exit 77
   fi
-  echo 'PRELIM_NETEM_QDISC_ATTACHED delay_ms=10 qdisc=netem dev=lo max_packets=256'
+  echo "PRELIM_NETEM_QDISC_ATTACHED delay_ms=$PRELIM_MS qdisc=netem dev=lo max_packets=256"
   sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
 fi
 TEST_FILTER='^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
@@ -68,7 +68,7 @@ if [[ -n "$PRELIM_MS" ]]; then
     echo 'PRELIM_NETEM_NOT_OBSERVED kernel qdisc processed no measurable packets; delay NOT_VERIFIED'
     exit 77
   fi
-  echo 'PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=10 qdisc_packets_positive=true embedded_bilateral_3_ciphers=true'
+  echo "PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=$PRELIM_MS qdisc_packets_positive=true embedded_bilateral_3_ciphers=true"
   echo 'PRELIM_NETEM_LIMITS configured delay is NOT measured RTT; no load/throughput/p99/B04/product qualification.'
   exit 0
 fi

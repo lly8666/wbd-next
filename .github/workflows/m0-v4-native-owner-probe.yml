@@ -305,6 +305,49 @@ jobs:
           print(json.dumps(receipt,indent=2))
           PY
           test "$STATE" != FAIL
+      - name: Exploratory 150ms configured Linux kernel netem same-owner smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Exactly one higher-delay functional scenario; same prebuilt
+          # SOURCE binaries and original M1/M3/M4 kernel owner.
+          # A failure here is a real FAIL, not reclassified as NO_CAPACITY.
+          set +e
+          WBD_M0_PRELIM_NETEM_DELAY_MS=150 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/prelim-netem-150ms.log 2>&1
+          RC=$?
+          set -e
+          cat native-probe-result/prelim-netem-150ms.log
+          if [[ "$RC" == 77 ]]; then
+            STATE=UNSUPPORTED
+          elif [[ "$RC" == 0 ]]; then
+            grep -q 'PRELIM_NETEM_QDISC_ATTACHED delay_ms=150' native-probe-result/prelim-netem-150ms.log
+            grep -q 'PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=150 qdisc_packets_positive=true' native-probe-result/prelim-netem-150ms.log
+            for suite in 1 2 3; do
+              grep -q "EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+              grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+              grep -q "EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+              grep -q "EMBEDDED_REAL_S2C_SECOND_PACKET_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+            done
+            STATE=EXPLORATORY_PASS
+          else
+            STATE=FAIL
+          fi
+          PRELIM_STATE="$STATE" python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          manifest=json.load(open("native-probe-build/manifest.json"))
+          log=pathlib.Path("native-probe-result/prelim-netem-150ms.log").read_bytes()
+          result={"source_sha":manifest["source_sha"],"run_id":manifest["run_id"],
+            "attempt":manifest["attempt"],"result":os.environ["PRELIM_STATE"],
+            "scenario":"LINUX_LOOPBACK_TC_NETEM_CONFIGURED_DELAY_150MS_ZERO_CONFIGURED_LOSS",
+            "kernel_qdisc_counter_required":True,
+            "two_real_packets_each_direction":"VERIFIED" if os.environ["PRELIM_STATE"]=="EXPLORATORY_PASS" else "NOT_VERIFIED",
+            "log_sha256":hashlib.sha256(log).hexdigest(),
+            "rtt_measured":"NOT_MEASURED","throughput":"NOT_MEASURED",
+            "async_B04":"NOT_RUN","product_qualification":"NOT_RUN","production_features":0}
+          pathlib.Path("native-probe-result/prelim-netem-150ms.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+          test "$STATE" != FAIL
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
