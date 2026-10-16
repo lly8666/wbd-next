@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "code_source_sha": "69f392c58067ec8f8ca53ed95c660510e6831595",
+  "result": "PARTIAL_ORIGINAL_RUST_OWNER_CONTINUOUS_BACKGROUND_LOOP_FUNCTIONAL_PASS",
+  "why_now": "GOV-005 and TEST_PLAN §0 require independent continuously running Rust owner, no more Go per-packet RX/TX helper pretending steady throughput. H97 exact encrypted DATA PN0 loss/PN1 true no-HOL already done. New task is original Rust normal owner real M4 kernel RX/TX worker and preparation for 10Mbps/direction, not another single packet qualification.",
+  "code_coverage": [
+    {
+      "sha": "359a1055faff07240fbd74c45850beb0a7aeef71",
+      "scope": "non-_test m0_v4_embedded_go Rust owner starts two generation-fenced raw RX and TUN TX worker threads; bounded 10ms readiness polls, Rust original AEAD/PN/Normal/off and M4 driver still used; stop shuts/join workers before original scoped drivers and M1 owner retire",
+      "native_run": 38906517312,
+      "result": "PASS_EXISING_REGRESSION_BUT_NEW_LOOP_TEST_NOT_YET_ADDED"
+    },
+    {
+      "sha": "c369621a00d437633050622d16f77026d4b54c75",
+      "scope": "added original protected Go TLS fixture which only injects/receives independently without Go per-packet bridge calls, opened first S2C with raw RX idle and tested same generation bilateral worker counters",
+      "native_run": 38906827243,
+      "result": "FAIL new fixture incorrectly passed Linux raw TCP control frames to independent TLS opener; downloaded artifact12047743573 and inspected original-rust-background-loop.log; failure tlsrecord invalid record length"
+    },
+    {
+      "sha": "ddf0101cacac989e14fdaec9201d86c45e6b3abe",
+      "scope": "CI diagnostic fix exposes original Go test log on test runner failure (no runtime semantics)",
+      "native_run": 38907243656,
+      "result": "FAIL reproduced same Go fixture raw TCP control misclassification, logs surfaced"
+    },
+    {
+      "sha": "3a7819d0d94b5b5155edb652bb0c7df4c6031b00",
+      "scope": "Go independent raw peer correctly excludes Linux-generated ACK/RST non-DATA from original AEAD record; same original crypto unchanged",
+      "native_run": 38907435379,
+      "result": "PASS background two Rust threads, 8 app packets each direction with Go no per-packet helper, Stop/Release and existing regressions"
+    },
+    {
+      "sha": "69f392c58067ec8f8ca53ed95c660510e6831595",
+      "scope": "Separate real raw kernel receive and real TUN application receive OUTSIDE global Rust registry Mutex, using original scoped M4 drivers and M1 UniqueBuffer with generation-fenced reentry; only original M1/M3 owner handles AEAD/PN/Normal/off, route budget and raw TX under lock; Stop joins workers BEFORE retirement/release",
+      "native_run": 38907951546,
+      "result": "PASS"
+    }
+  ],
+  "final_source_actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38907951546,
+    "attempt": 1,
+    "head_sha": "69f392c58067ec8f8ca53ed95c660510e6831595",
+    "conclusion": "success",
+    "build_job": 116996212076,
+    "consume_job": 116996847641,
+    "build_artifact": {
+      "id": 12049560171,
+      "digest": "sha256:3e9ad2b1993ee6af5d7040477562113ead8fbc529ed4113d2a29636be9558d61"
+    },
+    "result_artifact": {
+      "id": 12049460623,
+      "digest": "sha256:6a690982f746d4ac7d067a52dcd14812e839bc7fcf665b67235de71139e63a34"
+    },
+    "functional_test": "TestR0V4EmbeddedIndependentRustOwnerLoop",
+    "test_elapsed_seconds_rounded": 0.77,
+    "raw_to_tun_C2S_packets": 8,
+    "tun_to_raw_S2C_packets": 8,
+    "Go_drives_Rx_Tx_each_packet": false,
+    "independent_Rust_os_worker_threads": 2,
+    "rx_worker_error_count": 0,
+    "tx_worker_error_count": 0,
+    "original_Go_TLS_verified": true,
+    "original_Rust_AEAD_and_PN": true,
+    "real_Linux_M4_raw_and_tun": true,
+    "held_async_driver_B04": "NOT_RUN",
+    "return_path": "Original Rust M1 slab, ScopedRawIpv4Rx recv, offer_after_active/drain_normal_off_to_tun, original ScopedTunSink read then seal_normal_off_with_linux_budget/submit_scoped_raw_tx; no substitute AEAD/callback or fake app sink",
+    "stop": "Rust join RX and TX worker before real M4 begin_stop/stop_until and M1 owner retire",
+    "perf_10Mbps_per_direction": "NOT_RUN",
+    "note": "Only short correctness burst to exercise background scheduling; per-source 60s warmup/measure separate performance Action required."
+  },
+  "same_source_other_actions": [
+    {
+      "workflow": "r0-native-abi.yml",
+      "id": 38907951328,
+      "conclusion": "success",
+      "scope": "ABI build/regressions, not product"
+    },
+    {
+      "workflow": "r0-cross-abi.yml",
+      "id": 38907951519,
+      "conclusion": "success",
+      "scope": "cross compile not native performance"
+    },
+    {
+      "workflow": "native-regression.yml",
+      "id": 38907951453,
+      "conclusion": "success",
+      "scope": "native component regressions"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "id": 38907951509,
+      "conclusion": "success",
+      "scope": "bootstrap"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "id": 38907951370,
+      "conclusion": "success",
+      "scope": "static qualification audit"
+    },
+    {
+      "workflow": "governance.yml",
+      "id": 38907951378,
+      "conclusion": "success",
+      "scope": "identity/structure"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "id": 38907989729,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN"
+    }
+  ],
+  "boundaries": [
+    "Default production ABI still returns features0; original Go V4 incoming SYN in Actions is fixture-generated after credential-checked TLS, never independently received from external real client. Feature/tag m0_v4_embedded_go/wbd_v4_embedded_go is opt-in developer only.",
+    "Two Rust workers are continuous per active original owner and Go does not invoke per packet helper. Only eight packets each direction are asserted in initial functionality; this is NOT a 10Mbps or long-running load qualification.",
+    "Kernel waits are now outside shared registry Mutex. Original owner AEAD/PN processing, route observation and TX are still serialized inside this registry Mutex; optimization/fairness and safety under true high load remain unmeasured.",
+    "Genuine asynchronously-held M4 B04, live external SYN, B01-B02 full overlap, host physical and 500Mbps NOT_RUN. No production capability enabled.",
+    "No 10s warmup+60s 64/256/1200/effective MTU mix benchmark, independent injector CPU-s, actual RTT and p99, RSS, socket/kernel drops, queue age or host capacity measured; work remains for bounded development baseline.",
+    "GitHub artifact SHA digests are GitHub API metadata, native build/consumer binary SOURCE/hash checking. Failure run artifacts/logs preserved, not rewritten as green."
+  ],
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "physical": "NOT_RUN",
+  "next_action": "Run ONE exact-source Normal/off FEC-off 10Mbps each direction single-lane Linux development baseline using this original protected Go→Rust M4 continuous loop and genuinely independent app injector/receiver (not Go per-packet bridge helper), 10s warmup+60s measurement, predeclared 64/256/1200/effective MTU packet ratio. Instrument separate injector and engine CPU-s, actual offered/delivered/first arrival/drop/RTT/RSS/queue age/host quota. Gate capacity and report UNSUPPORTED/INCONCLUSIVE instead of false product PASS. Preserve production features0 and unused B04 NOT_RUN."
+}

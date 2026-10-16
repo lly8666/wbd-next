@@ -21,6 +21,22 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_original_rust_background_workers": {
+    "code_source_sha": "69f392c58067ec8f8ca53ed95c660510e6831595",
+    "result": "PARTIAL_ORIGINAL_RUST_OWNER_CONTINUOUS_BACKGROUND_LOOP_FUNCTIONAL_PASS",
+    "evidence": "docs/evidence/M0/M0-023-original-rust-background-owner-loop.json",
+    "native_run_id": 38907951546,
+    "rust_background_workers": "REAL_RAW_RX_AND_REAL_TUN_TX_TWO_THREADS",
+    "kernel_blocking_reads_outside_shared_registry_mutex": "IMPLEMENTED_AND_FUNCTIONALLY_TESTED",
+    "Go_per_packet_receive_send_bridge_callbacks": false,
+    "functional_packets": "C2S_8_OF_8_S2C_8_OF_8_ONE_VERIFIED_CIPHER",
+    "worker_rx_errors": 0,
+    "worker_tx_errors": 0,
+    "steady_10mbps_per_direction_10s_warmup_60s_measure": "NOT_RUN",
+    "actual_M4_driver_held_B04": "NOT_RUN",
+    "production_abi_features": 0,
+    "product": "NOT_RUN"
+  },
   "m0_023_targeted_no_hol_GOV005": {
     "code_source_sha": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
     "result": "PARTIAL_EXACT_KERNEL_ENCRYPTED_DATA_LOSS_NO_HOL_PASS",
