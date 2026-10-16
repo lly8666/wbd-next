@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "d786fcb224e901ce06c3d6a8c5d668c2da02b28a",
+  "code_source_sha": "d786fcb224e901ce06c3d6a8c5d668c2da02b28a",
+  "atom": "embedded_private_Go_V4_original_Rust_owner_REAL_M4_raw_C2S_TUN_application_first",
+  "result": "PARTIAL_EMBEDDED_REAL_RAW_TUN_C2S_PASS",
+  "why": "Previous non-_test developer-gated embedded Go V4 bridge successfully constructed and committed the real Rust scoped owner but did NOT own M4 Linux raw/TUN I/O. Integrate existing M4 driver objects, not a second TEST-ONLY crypto or business delivery path, and prove actual application first packet on exact same owner and verified protected callsite.",
+  "paths": [
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+    "tools/run-v4-tun-netns.sh",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "verified_chain": "Original pinned Go protected TLS credential check and original FakeTCP SYN association -> Go package-private versioned WBGH-v1 developer-gated native adapter -> actual normal Rust M1 ScopedOwner + M3 AEAD/PN -> M4 ScopedRawIpv4Rx over actual Linux lo raw IPv4/TCP -> original owner authenticated Normal/off LINK path -> M4 ScopedTunSink with kernel /dev/net/tun IFF_TUN|NO_PI -> independently bound Linux UDP application socket receiving exact business bytes. Raw driver and TUN are held on same generation's embedded owner; begin_stop()/stop_until() run before last release. No extra RTT or competing queue.",
+  "exact_source_verification": [
+    {
+      "kind": "real_Go_embedded_native_and_Linux_raw_TUN",
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38875955636,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116890942371,
+      "consume_job": 116891436410,
+      "build_artifact": {
+        "id": 12035536327,
+        "digest": "sha256:da9541b579827c92294e663e30252a93b65867ba97c9864a6967143d739e6d39"
+      },
+      "result_artifact": {
+        "id": 12036110086,
+        "digest": "sha256:f776a8d4ab1783dd88ef0bde9ae3111049623947551f0f8381133e5254e0950a"
+      },
+      "anchor": "TestR0V4EmbeddedRealM4RawToTun suite1/2/3 PASS, each independent UDP application 31B; previous TEST-ONLY bidirectional suite1/2/3 PASS separately; existing embedded Go Prepare/Commit/Stop suites PASS; source manifest hashes checked within same-run compiled-once binary consumption"
+    },
+    {
+      "kind": "native_ABI",
+      "run_id": 38875955537,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116890941747,
+      "consume_job": 116891403257,
+      "result_artifact": {
+        "id": 12035252321,
+        "digest": "sha256:5be97d5a9dde1acfe58ba0009a821cba7a3cfceac71f93052b079da3b85c5c17"
+      },
+      "scope": "ordinary C ABI features0; no positive product V4 installer"
+    },
+    {
+      "kind": "cross_ABI_builds",
+      "run_id": 38875955573,
+      "attempt": 1,
+      "conclusion": "success",
+      "target_execution": "NOT_RUN",
+      "windows_jobs": [
+        116890942067,
+        116891419297
+      ],
+      "linux_arm_jobs": [
+        116890942505,
+        116891419136
+      ],
+      "scope": "cross-build and link inspections only; dev V4 feature not runtime-tested on target"
+    },
+    {
+      "kind": "native_regression",
+      "run_id": 38875955609,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        116890942699,
+        116890990899,
+        116891375102,
+        116891375156,
+        116891375172,
+        116891375310,
+        116891376572
+      ],
+      "scope": "component/regression suite, distinct qualification from E2E product"
+    },
+    {
+      "kind": "static_qualification",
+      "run_id": 38875955522,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116890941775,
+      "artifact": {
+        "id": 12035022801,
+        "digest": "sha256:c0c92c90d440a4d4494ceb53afd09c93ffaea0a90587fffe7807daefa42389df"
+      },
+      "scope": "static consistency, product NOT_RUN"
+    },
+    {
+      "kind": "governance_maintenance",
+      "run_id": 38875955571,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116890941757,
+      "artifact": {
+        "id": 12034369961,
+        "digest": "sha256:81442368b7eecee2bf6026dec526b8903f33c6cb7733299481decb52f60ca3c5"
+      },
+      "scope": "tool regression, not product"
+    },
+    {
+      "kind": "governance_push",
+      "run_id": 38875955518,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116890941708,
+      "artifact": {
+        "id": 12034669568,
+        "digest": "sha256:1f69cc78cf2f68b09b3a258ee12351c1779cfd30fb59cc99c57e514fbb0f13cc"
+      },
+      "scope": "identity and structure; drills/model NOT_RUN"
+    },
+    {
+      "kind": "central_scope_push",
+      "run_id": 38875987125,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    },
+    {
+      "kind": "g2_bootstrap",
+      "run_id": 38875955563,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "existing version/interface regression, not product"
+    }
+  ],
+  "result_details": {
+    "cipher_suites": [
+      1,
+      2,
+      3
+    ],
+    "application_first_payload_bytes_each": 31,
+    "embedded_normal_off_C2S": "PASS",
+    "embedded_normal_off_S2C": "NOT_RUN",
+    "independent_test_feature_bilateral": "PASS_BUT_SEPARATE_PATH",
+    "driver_objects_bound_to_same_generation": "PASS",
+    "driver_held_async_loan_B04": "NOT_RUN",
+    "product_end_to_end": "NOT_RUN"
+  },
+  "important_limits": [
+    "The original FakeTCP SYN tuple is generated in the pinned Go test helper, not from an actual external client session; Go TLS credential checks are real inside isolated test.",
+    "Real C2S kernel raw/TUN on the new embedded owner PASS. The older test-feature S2C path remains separate evidence, not a passing S2C claim on the embedded owner.",
+    "The M4 raw/TUN drivers currently use synchronous BorrowFence/ready syscall scope. The owner does call begin_stop() and stop_until(Instant::now()) and prevents release on pending, but no real held asynchronous driver loan was present in this test: B04 STOP_INCOMPLETE/late return NOT_RUN. B01-B03 interference and reboot/reconnect also NOT_RUN.",
+    "The build remains explicit developer feature m0_v4_embedded_go + Go tag; distributed product V4 adapter/feature is disabled with ABI features0. No production installation claim or public cold248 authentication.",
+    "veth tc netem 0/150/300ms RTT; 1/5% loss/reorder, MTU boundaries, fragmentation, reverse S2C on this owner, normal perf CPU/p99/500Mbps, physical, Windows/ARM target execution all NOT_RUN.",
+    "GitHub Actions artifact ZIP digests are API receipt metadata, not independently downloaded/rehashed. No tests were run outside Actions."
+  ],
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "physical": "NOT_RUN",
+  "next_action": "Complete reverse S2C on THIS same embedded original Rust owner using actual kernel TUN read → existing M1/M3 AEAD/PN → M4 ScopedRawIpv4Tx → independently received Go raw peer, followed by B01–B04 held M4 driver Stop/late return and old/new generation before product enablement."
+}

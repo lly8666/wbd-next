@@ -21,6 +21,17 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_embedded_real_M4_C2S": {
+    "code_source_sha": "d786fcb224e901ce06c3d6a8c5d668c2da02b28a",
+    "result": "PARTIAL_EMBEDDED_REAL_RAW_TUN_C2S_PASS",
+    "evidence": "docs/evidence/M0/M0-023-embedded-real-M4-raw-TUN-C2S.json",
+    "exact_native_run_id": 38875955636,
+    "embedded_original_owner_real_raw_TUN_C2S": "PASS_ALL_THREE_CIPHERS_31B_INDEPENDENT_APP",
+    "embedded_original_owner_real_raw_TUN_S2C": "NOT_RUN",
+    "driver_held_M4_B04": "NOT_RUN",
+    "production_abi_features": 0,
+    "product": "NOT_RUN"
+  },
   "m0_023_embedded_private_control": {
     "code_source_sha": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
     "result": "PARTIAL_EMBEDDED_PRIVATE_CONTROL_ACTIONS_PASS",
