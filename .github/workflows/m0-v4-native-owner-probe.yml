@@ -86,6 +86,7 @@ jobs:
           paths=["Cargo.toml","Cargo.lock","crates/wbd-engine/Cargo.toml",
             "crates/wbd-engine/src/lib.rs","crates/wbd-engine/src/cold_v4.rs",
             "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_protected_handoff.rs",
             "crates/wbd-platform/src/linux_packet_preflight.rs",
             "crates/wbd-platform/src/lib.rs",
             "crates/wbd-platform/src/linux_tun_sink.rs",
@@ -159,6 +160,9 @@ jobs:
           G=$?
           ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
           R=$?
+          ./native-probe-build/owner-rust.test m0_normal_build_v4_go_private_handoff_version_and_scope --nocapture >>native-probe-result/rust.log 2>&1
+          R2=$?
+          if [[ "$R2" != 0 ]]; then R=$R2; fi
           set -e
           cat native-probe-result/go.log native-probe-result/rust.log
           GO_EXIT="$G" RUST_EXIT="$R" python3 - <<'PY'
@@ -167,7 +171,7 @@ jobs:
           rust=pathlib.Path("native-probe-result/rust.log").read_text()
           good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelBudget",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelRoutePmtu",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustGoAdmissionRetainedHeapIndicative",go,re.M))
           m=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
-          good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust
+          good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust and "m0_normal_build_v4_go_private_handoff_version_and_scope ... ok" in rust
           data=json.load(open("native-probe-build/manifest.json"))
           sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
           result={"source_sha":data["source_sha"],"run_id":data["run_id"],

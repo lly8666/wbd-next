@@ -5,7 +5,7 @@ package realityfront
 /*
 #include <stdint.h>
 #include <stddef.h>
-extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t, uint16_t, uint8_t, const unsigned char *, size_t, uint64_t *);
+extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, const unsigned char *, size_t, uint64_t *);
 extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
@@ -31,7 +31,6 @@ extern int32_t wbd_m0_test_probe_state(uint64_t, uint32_t *);
 */
 import "C"
 import (
-    "encoding/binary"
     "errors"
     "fmt"
     "runtime"
@@ -80,22 +79,17 @@ func (b *v4NativeRustProbe) prepare(s V4ColdSessionSnapshot,boundary uint32,peer
     // private backend slot. This FFI alone NEVER authenticates raw C bytes.
     raw,err:=s.MarshalColdBundle()
     if err!=nil{return nil,err}
+    // The same versioned command builder is production Go code. A native
+    // buffer cannot authenticate anything; this callsite follows verified
+    // credentials, private trusted snapshot, and actual PrepareTransition.
+    command,err:=v4PrivateHandoffV1(boundary,peer)
+    if err!=nil{return nil,err}
     var handle C.uint64_t
-    advertised:=C.uint8_t(0)
-    if peer.advertised{advertised=1}
-    // Pass a fixed big-endian copy of the ORIGINAL FakeTCP SYN association,
-    // never a user-supplied cold248 transport claim or subsequent raw packet.
-    var flowWire [12]byte
-    copy(flowWire[:4],peer.flow.ClientIP[:])
-    copy(flowWire[4:8],peer.flow.ServerIP[:])
-    binary.BigEndian.PutUint16(flowWire[8:10],peer.flow.ClientPort)
-    binary.BigEndian.PutUint16(flowWire[10:12],peer.flow.ServerPort)
     code:=C.wbd_m0_test_probe_prepare((*C.uchar)(unsafe.Pointer(&raw[0])),
-        C.size_t(len(raw)),C.uint32_t(boundary),
-        C.uint16_t(peer.mss),advertised,
-        (*C.uchar)(unsafe.Pointer(&flowWire[0])),C.size_t(len(flowWire)),&handle)
+        C.size_t(len(raw)),
+        (*C.uchar)(unsafe.Pointer(&command[0])),C.size_t(len(command)),&handle)
     runtime.KeepAlive(raw)
-    runtime.KeepAlive(flowWire)
+    runtime.KeepAlive(command)
     if code!=0||handle==0{return nil,fmt.Errorf("%w: prepare=%d",errV4NativeProbe,int(code))}
     b.handle=uint64(handle);b.prepared=true
     b.rxBoundary=boundary

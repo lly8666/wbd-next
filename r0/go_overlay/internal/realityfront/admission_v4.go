@@ -93,6 +93,32 @@ func v4PeerTransportFromAssociation(a *faketcp.ServerAssociation)(v4PeerTranspor
     }
     return v4PeerTransport{mss:profile.MSS,advertised:profile.AdvertisedMSS,flow:flow},nil
 }
+// This VERSIONED transport-control command is built in production Go only
+// from the real credential-checked private EstablishServerV4 callsite.
+// It is not a credential and is never a standalone Rust activation token.
+// Layout (BE): magic4/version2/size2/clientIP4/serverIP4/ports4/RXseq4/
+// SYN-MSS2/advertised1/reserved5. All bytes are copied synchronously.
+const v4PrivateHandoffLen=32
+func v4PrivateHandoffV1(rxBoundary uint32, peer v4PeerTransport)([v4PrivateHandoffLen]byte,error){
+    var out [v4PrivateHandoffLen]byte
+    flow:=peer.flow
+    if peer.mss<64 || (!peer.advertised && peer.mss!=536) ||
+        flow.ClientPort==0 || flow.ServerPort==0 ||
+        flow.ClientIP==([4]byte{}) || flow.ServerIP==([4]byte{}) {
+        return out,ErrAdmissionParams
+    }
+    copy(out[:4],[]byte("WBGH"))
+    binary.BigEndian.PutUint16(out[4:6],1)
+    binary.BigEndian.PutUint16(out[6:8],v4PrivateHandoffLen)
+    copy(out[8:12],flow.ClientIP[:])
+    copy(out[12:16],flow.ServerIP[:])
+    binary.BigEndian.PutUint16(out[16:18],flow.ClientPort)
+    binary.BigEndian.PutUint16(out[18:20],flow.ServerPort)
+    binary.BigEndian.PutUint32(out[20:24],rxBoundary)
+    binary.BigEndian.PutUint16(out[24:26],peer.mss)
+    if peer.advertised {out[26]=1}
+    return out,nil
+}
 type v4OwnerBridge interface {
     prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
 }

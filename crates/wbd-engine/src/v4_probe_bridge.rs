@@ -9,11 +9,12 @@
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
-use wbd_types::{LaneKey, TunnelKey, MonoNs};
+use wbd_types::MonoNs;
 use wbd_types::buffer_contract::UniqueSealable;
 use crate::memory::Arena;
 use crate::runtime::early_rx::EarlyAccepted;
-use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_LEN};
+use crate::cold_v4::{ColdIdentity, UntrustedColdV4, COLD_V4_LEN};
+use crate::v4_protected_handoff::{GoFlow,PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
@@ -49,28 +50,6 @@ const PH_COMMITTED: u32 = 2;
 const PH_STOPPED: u32 = 3;
 const PH_STOPPING: u32 = 4;
 
-// Transport scope is strictly a per-generation copy from the private Go
-// protected session callback. Raw tuple checks are NOT TLS authentication.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct GoFlow {
-    client_ip:[u8;4],
-    server_ip:[u8;4],
-    client_port:u16,
-    server_port:u16,
-}
-fn parse_go_flow(raw:&[u8])->Result<GoFlow,i32>{
-    if raw.len()!=12{return Err(INVALID)}
-    let mut client_ip=[0u8;4];client_ip.copy_from_slice(&raw[..4]);
-    let mut server_ip=[0u8;4];server_ip.copy_from_slice(&raw[4..8]);
-    let client_port=u16::from_be_bytes([raw[8],raw[9]]);
-    let server_port=u16::from_be_bytes([raw[10],raw[11]]);
-    let unicast=|ip:[u8;4]| ip[0]!=0 && ip[0]<224 &&
-        ip!=[0,0,0,0] && ip!=[255,255,255,255];
-    if !unicast(client_ip)||!unicast(server_ip)||
-        client_port==0||server_port==0{return Err(INVALID)}
-    Ok(GoFlow{client_ip,server_ip,client_port,server_port})
-}
-
 struct Probe {
     owner: ProtectedScopedOwner,
     normal:NormalOffReceive,
@@ -103,57 +82,36 @@ fn registry() -> &'static Mutex<Probes> {
     }))
 }
 
-fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
-    peer_mss_advertised:bool, flow_wire:&[u8],
-) -> Result<u64, i32> {
-    // This remains test-only. The private Go V4 authenticated callsite
-    // supplies the MSS observed from the original association SYN; a caller
-    // cannot enlarge it later by choosing a different Tx FrameBudget.
-    if peer_mss<64 || (!peer_mss_advertised && peer_mss!=536){
-        return Err(INVALID)
-    }
-    let data = UntrustedColdV4::parse(raw).map_err(|_| INVALID)?;
-    let go_flow=parse_go_flow(flow_wire)?;
-    let identity = data.identity();
-    if !identity.server { return Err(INVALID); }
-    let mut state = registry().lock().map_err(|_| BAD_STAGE)?;
-    if state.slots.len() >= MAX_PROBES { return Err(FULL); }
-    let generation = state.next_generation;
-    state.next_generation = generation.checked_add(1).ok_or(FULL)?;
-    let lane = LaneKey {
-        tunnel: TunnelKey {slot: 1, generation},
-        slot: u32::from(identity.go_lane_id),
-        generation,
-    };
-    let expected = ExpectedRustOwner {
-        lane, owner_generation:generation, logical_epoch:identity.logical_epoch,
-        tunnel_id:identity.tunnel_id, go_lane_id:identity.go_lane_id,
-        server:true,
-    };
-    // The real production-compiled composition now installs BOTH
-    // ScopedOwner queues and two AEAD directions as ONE prepared owner.
-    // This FFI is test-tagged only, never independent authentication.
-    let handle = (u64::from(generation) << 32) | 0x5642;
-    let owner=ProtectedScopedOwner::prepare_from_protected_go(
-        &data,&expected,handle,boundary,peer_mss,peer_mss_advertised,
-    ).map_err(|_| INVALID)?;
-    // Probe supplies the maximum safe LINK budget from the authenticated
-    // record limit, NOT a production path MTU/MSS. Real M4 must pass its
-    // effective FrameBudget, and product qualification remains NOT_RUN.
+fn probe_prepare(raw:&[u8],command:&[u8])->Result<u64,i32>{
+    // This adapter is TEST ONLY. The *ordinary-build* versioned Prepare
+    // validator and real ScopedOwner+AEAD/PN constructor are the same code
+    // future product trusted-Go adapter MUST invoke. No C bytes prove TLS.
+    let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
+    let data=UntrustedColdV4::parse(raw).map_err(|_|INVALID)?;
+    let identity=data.identity();
+    if !identity.server{return Err(INVALID)}
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    if state.slots.len()>=MAX_PROBES{return Err(FULL)}
+    let generation=state.next_generation;
+    state.next_generation=generation.checked_add(1).ok_or(FULL)?;
+    let handle=(u64::from(generation)<<32)|0x5642;
+    let owner=handoff.prepare_scoped_owner(&data,generation,handle)
+        .map_err(|_|INVALID)?;
+    // This test uses the maximal safely bounded LINK frame; product must
+    // use its actually observed M4 effective FrameBudget before activation.
     let link_mtu=usize::from(identity.server_limit)
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
-    // Only the test harness uses this bounded arena to copy incoming FakeTCP
-    // bytes; the future production adapter will supply existing owner slabs.
-    let Ok(arena)=Arena::new(generation,32,2048,32,1_000_000) else {return Err(INVALID)};
-    state.slots.insert(handle, Probe {
-        owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
-        staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        peer_mss,peer_mss_advertised,go_flow,kernel_rx:None,raw_rx:None,tun_sink:None,
+    let arena=Arena::new(generation,32,2048,32,1_000_000)
+        .map_err(|_|INVALID)?;
+    state.slots.insert(handle,Probe{
+        owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        staged_count:0,staged_bytes:0,drained:false,held_rx:None,
+        cold_identity:identity,peer_mss:handoff.peer_mss,
+        peer_mss_advertised:handoff.peer_mss_advertised,
+        go_flow:handoff.flow,kernel_rx:None,raw_rx:None,tun_sink:None,
     });
-    // No caller byte pointer is retained, and no production AEAD opener,
-    // receiver route, positive FecOrigin or ABI feature was activated.
     Ok(handle)
 }
 // This stages the ACTUAL Go-owned DetachTransition packet bytes, but remains
@@ -860,16 +818,17 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_raw_to_tun(
 // not contain them and capability reporting always remains features=0.
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_prepare(
-    bytes:*const u8,len:usize,boundary:u32,peer_mss:u16,
-    peer_mss_advertised:u8,flow:*const u8,flow_len:usize,out:*mut u64
+    bytes:*const u8,len:usize,command:*const u8,command_len:usize,
+    out:*mut u64
 )->i32 {
-    if bytes.is_null()||flow.is_null()||out.is_null()||
-        len!=COLD_V4_LEN||flow_len!=12||peer_mss_advertised>1 {return INVALID}
-    // SAFETY: input is borrowed strictly for this synchronous call, C Go
-    // wrapper supplies a valid length/pointer and holds the backing array.
+    if bytes.is_null()||command.is_null()||out.is_null()||
+        len!=COLD_V4_LEN||command_len!=HANDOFF_V1_LEN{return INVALID}
+    // Both pointers borrowed for THIS synchronous C call and copied/parsed.
+    // A standalone caller can provide self-consistent bytes but is never an
+    // authenticated producer; the test FFI is absent from ordinary ABI.
     let data=unsafe{std::slice::from_raw_parts(bytes,len)};
-    let flow_bytes=unsafe{std::slice::from_raw_parts(flow,flow_len)};
-    match probe_prepare(data,boundary,peer_mss,peer_mss_advertised==1,flow_bytes) {
+    let command=unsafe{std::slice::from_raw_parts(command,command_len)};
+    match probe_prepare(data,command) {
         Ok(handle)=>{
             // SAFETY: out was validated and the C caller owns a u64 slot.
             unsafe{out.write(handle)};
@@ -962,19 +921,34 @@ mod tests {
         b
     }
     fn valid_flow()->[u8;12]{[10,0,0,2,10,0,1,1,0xa0,0x29,0x01,0xbb]}
+    fn private_cmd(boundary:u32,mss:u16,advertised:bool,flow:&[u8])->[u8;HANDOFF_V1_LEN]{
+        let mut cmd=[0u8;HANDOFF_V1_LEN];
+        cmd[..4].copy_from_slice(b"WBGH");
+        cmd[4..6].copy_from_slice(&1u16.to_be_bytes());
+        cmd[6..8].copy_from_slice(&(HANDOFF_V1_LEN as u16).to_be_bytes());
+        if flow.len()==12{cmd[8..20].copy_from_slice(flow)}
+        cmd[20..24].copy_from_slice(&boundary.to_be_bytes());
+        cmd[24..26].copy_from_slice(&mss.to_be_bytes());
+        cmd[26]=u8::from(advertised);
+        cmd
+    }
+    fn probe_test_prepare(raw:&[u8],boundary:u32,mss:u16,advertised:bool,flow:&[u8])
+        ->Result<u64,i32>{
+        probe_prepare(raw,&private_cmd(boundary,mss,advertised,flow))
+    }
     #[test]
     fn r0_m0_native_probe_local_fresh_generation_and_bounded_phases(){
         let a=candidate();
-        let first=probe_prepare(&a,0,1360,true,&valid_flow()).unwrap();
+        let first=probe_test_prepare(&a,0,1360,true,&valid_flow()).unwrap();
         // The actual RX/TX ScopedOwner+AEAD object must never expose its
         // RX queue or plaintext before BOTH directions commit.
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
-        assert_eq!(probe_prepare(&a,0,63,true,&valid_flow()).err(),Some(INVALID));
-        assert_eq!(probe_prepare(&a,0,1360,true,&[0u8;12]).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&a,0,63,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&a,0,1360,true,&[0u8;12]).err(),Some(INVALID));
         let malformed=[10,0,0,2,10,0,1,1,0,0,1,187];
-        assert_eq!(probe_prepare(&a,0,1360,true,&malformed).err(),Some(INVALID));
-        assert_eq!(parse_go_flow(&valid_flow()).unwrap().client_port,41001);
-        assert_eq!(probe_prepare(&a,0,1360,false,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&a,0,1360,true,&malformed).err(),Some(INVALID));
+        assert_eq!(PrivateGoV4Handoff::decode(&private_cmd(0,1360,true,&valid_flow())).unwrap().flow.client_port,41001);
+        assert_eq!(probe_test_prepare(&a,0,1360,false,&valid_flow()).err(),Some(INVALID));
         // Same internal owner TX cannot seal through uncommitted probe even
         // with a format-valid candidate and explicit synthetic path budget.
         assert_eq!(probe_seal_tx(first,b"pre-commit",1200,1360,&mut [0u8;2048]).err(),
@@ -985,10 +959,10 @@ mod tests {
         // cannot half-install RX when TX construction fails, nor vice versa.
         let mut too_small_rx=a;
         too_small_rx[62..64].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_rx,0,1360,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&too_small_rx,0,1360,true,&valid_flow()).err(),Some(INVALID));
         let mut too_small_tx=a;
         too_small_tx[60..62].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_tx,0,1360,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&too_small_tx,0,1360,true,&valid_flow()).err(),Some(INVALID));
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
         assert_eq!(probe_commit(first,65,65,777),INVALID);
         assert_eq!(probe_commit(first,1,1401*64,777),INVALID);
@@ -1005,7 +979,7 @@ mod tests {
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);
         assert_eq!(probe_release(first),OK);
-        let second=probe_prepare(&a,100,1360,true,&valid_flow()).unwrap();
+        let second=probe_test_prepare(&a,100,1360,true,&valid_flow()).unwrap();
         assert_ne!(first,second);
         assert_eq!(probe_stage(second,99,&[1]),INVALID);
         assert_eq!(probe_stage(second,100,&[11,22,33]),OK);
@@ -1019,23 +993,23 @@ mod tests {
         assert_eq!(probe_drain(second).err(),Some(BAD_STAGE));
         assert_eq!(probe_stop(second),OK);
         assert_eq!(probe_release(second),OK);
-        let third=probe_prepare(&a,100,1360,true,&valid_flow()).unwrap();
+        let third=probe_test_prepare(&a,100,1360,true,&valid_flow()).unwrap();
         assert_ne!(third,second);
         assert_eq!(probe_abort(third),OK);
         assert_eq!(probe_commit(second,0,0,777),UNKNOWN);
         let mut corrupt=a;corrupt[0]=0;
-        assert_eq!(probe_prepare(&corrupt,0,1360,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&corrupt,0,1360,true,&valid_flow()).err(),Some(INVALID));
         let mut forged_client=a;forged_client[8]=0;
-        assert_eq!(probe_prepare(&forged_client,0,1360,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_test_prepare(&forged_client,0,1360,true,&valid_flow()).err(),Some(INVALID));
         // A real Rust-owned early slab remains borrowed across Stop. Old
         // quiescence must be INCOMPLETE while a new generation can progress.
-        let fourth=probe_prepare(&a,200,1360,true,&valid_flow()).unwrap();
+        let fourth=probe_test_prepare(&a,200,1360,true,&valid_flow()).unwrap();
         assert_eq!(probe_stage(fourth,200,&[5,6]),OK);
         assert_eq!(probe_commit(fourth,1,2,777),OK);
         assert_eq!(probe_hold_rx(fourth).unwrap().0,1);
         assert_eq!(probe_stop(fourth),STOP_INCOMPLETE);
         assert_eq!(probe_release(fourth),BAD_STAGE);
-        let fifth=probe_prepare(&a,300,1360,true,&valid_flow()).unwrap();
+        let fifth=probe_test_prepare(&a,300,1360,true,&valid_flow()).unwrap();
         assert_ne!(fourth,fifth);
         assert_eq!(probe_commit(fifth,0,0,777),OK);
         assert_eq!(probe_stop(fifth),OK);
