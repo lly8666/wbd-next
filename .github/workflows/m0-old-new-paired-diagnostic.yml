@@ -91,6 +91,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p paired-result/old paired-result/new native-probe-result
+          # actions/download-artifact ZIP does not preserve original executable mode.
+          # Restore modes for exact SHA-verified prebuilt binaries, never recompile here.
+          chmod 0755 paired-build/wbd-client paired-build/wbd-server paired-build/owner-go.test
           cp paired-build/build-manifest.json paired-result/build-manifest.json
           cp paired-build/wbd-client paired-build/wbd-server paired-result/old/
           python3 - <<'PY'
