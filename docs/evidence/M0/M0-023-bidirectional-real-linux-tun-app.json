@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "genuine_Linux_netns_TUN_bidirectional_application_to_original_scoped_Rust_AEAD_M4_kernel",
+  "source_sha": "02f59acfab7284f4340c24869fa39fa849b9cf9a",
+  "result": "PARTIAL_REAL_LINUX_TUN_BIDIRECTIONAL_APPLICATION_PASS",
+  "implementation": [
+    "Normal-build Linux M4 ScopedTunSink now read_ipv4_into on real TUN FD with same original owner's generation/Stop BorrowFence, using an original M1 arena UniqueBuffer mutable region directly. A single deadline of 750ms and at most eight reads bound startup: unsupported kernel-emitted IPv6 control packets are ignored, malformed IPv4 fails closed. This is IPv4-only Normal/off, not a new IPv6 dataplane.",
+    "Normal-build ProtectedScopedOwner::seal_tun_ipv4_normal_off uses exactly same TX owner and Go-protected V4 credential-derived S2C AEAD/PN, exact SYN MSS and kernel route budget, LINK ordinary/frame guard and M1 ScopedOwner FrozenRecord. Existing M4 ScopedUdpOwner submits the exact record through real Linux sendmmsg with generation-fenced BorrowFence. Missing fragmentation remains a product gap.",
+    "Previously passed C2S: actual Go private protected V4 TLS C2S record -> Linux M4 recvmmsg directly original Rust M1 slab -> same scoped AEAD unique PN / M3 Normal/off LINK -> normal-build kernel TUN write -> true Go UDP application socket reading the 36B payload.",
+    "New reverse: true Go UDP application send to a remote IPv4 address routed via the same real TUN -> same FD copied into normal Rust M1 mutable slab via kernel poll/read -> same original scoped Rust AEAD PN0 frozen S2C -> actual Linux kernel UDP sendmmsg -> independent Go socket receives ciphertext and independently authenticates original Go TLS-derived S2C keys; verified exact IPv4 src/dst and UDP payload 45B.",
+    "All three cipher suites (ChaCha20-Poly1305, AES-128-GCM, AES-256-GCM) verified both directions in the SAME isolated Linux network namespace, source-locked prebuilt integration executable, after-Stop rejection.",
+    "Only test-tagged FFI observer invokes the normal-compiled owner and TUN/UDP backend from private true Go V4 TLS callsite; production V4 native control/ABIv1 features remain OFF. TUN sink is compiled normal and cannot assert authenticated source by itself."
+  ],
+  "failure_history": [
+    {
+      "source_sha": "792004ad1dde42f57eb50b727c26fb8df9c3abc5",
+      "run": 38848662774,
+      "status": "FAILED",
+      "why": "TUN first reverse syscall returned generic invalid error for cipher1. Cipher2+3 reverse positive. Earlier failure not counted as pass."
+    },
+    {
+      "source_sha": "5d6a157165560ce43a0db44e02c088ea2ee199ac",
+      "run": 38848979766,
+      "status": "FAILED",
+      "why": "Typed error exposed Tun(InvalidPacket) on startup first reverse L3 read; likely an unrelated kernel-emitted IPv6 L3 control packet. Do not claim exact observed first byte; raw packet not captured."
+    },
+    {
+      "source_sha": "02f59acfab7284f4340c24869fa39fa849b9cf9a",
+      "run": 38849314647,
+      "status": "PASS",
+      "why": "Normal-bound ipv4_only TUN driver boundedly skips IPv6 L3 frames and accepts next authentic IPv4 app packet. Exact-source three suites full success."
+    }
+  ],
+  "verified_actions": {
+    "native_run": 38849314647,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "build_job": 116806769824,
+    "consume_job": 116807102393,
+    "native_go_top_level": "9/9 PASS",
+    "native_rust": "1/1 PASS",
+    "positive_tun_case": "TestR0V4NativeRustTunKernelAppFirst PASS; suite1, suite2, suite3 all PASS, each includes C2S 36B and S2C 45B from a separate kernel socket",
+    "source_integrity": "build-once/consume verifies SOURCE SHA, run, attempt, pinned Go, source inputs and compiled Rust/Go binary SHA256; exact same source-locked compiled artifact reused in isolated privileged Linux netns.",
+    "build_artifact": {
+      "id": 12024338600,
+      "digest": "sha256:7faa77f03b3e2be06780816448a6e41b3b5ded8a8668d9f99cc8c0a3b0e81b"
+    },
+    "result_artifact": {
+      "id": 12024413210,
+      "digest": "sha256:58ccff81ac8e5864c52d321fce22ce8315929143a34ff7726dee1ad9cd8e636e"
+    },
+    "artifact_note": "ZIP hashes from GitHub API metadata, ZIP bytes not independently downloaded/rehashed."
+  },
+  "other_exact_source_actions": [
+    {
+      "run": 38849314531,
+      "scope": "R0 static audit",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38849314726,
+      "scope": "Governance",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38849314534,
+      "scope": "Native platform/fake",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38849314654,
+      "scope": "G2 bootstrap",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38849314618,
+      "scope": "Native functional",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38849314636,
+      "scope": "Windows GNU / AArch64 cross compilation + static inspection ONLY",
+      "status": "SUCCESS",
+      "target_native": "NOT_RUN"
+    },
+    {
+      "run": 38849314624,
+      "scope": "M3 component perf workflow, NOT product perf",
+      "status": "CHECK_SEPARATELY"
+    }
+  ],
+  "strict_limits": [
+    "Actual TUN in isolated namespace and actual kernel UDP hop for the underlying encrypted carrier; NOT a production Linux AF_PACKET/raw FakeTCP carrier, real remote peer over physical NIC, or generic launched end-user client/server.",
+    "Production protected Go V4 positive trustworthy native control ABI not implemented. No arbitrary self-consistent 248B cold may independently install owner. Ordinary feature mask is zero.",
+    "Fragmented TX beyond one Normal/off frame, FEC-on/Game, lifecycle Stop B01-B04 with delayed driver-held loans, rekey/reconnect and packet loss policy NOT_RUN.",
+    "Source-locked netns veth+tc netem normal/150ms/300ms and 1/5% packet loss/reorder/reconnect product matrix NOT_RUN. Physical/500Mbps/p99 product NOT_RUN."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Prioritize (1) non-forgeable production Go TLS private callback -> ordinary Rust owner authorization and activation with Stop B01-B04, (2) same real TUN bidirectional app on actual Linux raw/AF_PACKET FakeTCP under reliable scoped driver lifetime, (3) one source-locked veth netns tc netem 0/150/300ms, 1/5% loss, reorder and reconnect matrix. No additional MSS or probe-only branches."
+}

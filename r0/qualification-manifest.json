@@ -725,5 +725,23 @@
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN",
     "product": "NOT_RUN"
+  },
+  "m0_023_bidirectional_true_kernel_tun_application": {
+    "code_source_sha": "02f59acfab7284f4340c24869fa39fa849b9cf9a",
+    "result": "PARTIAL_REAL_LINUX_TUN_BIDIRECTIONAL_APPLICATION_PASS",
+    "evidence": "docs/evidence/M0/M0-023-bidirectional-real-linux-tun-app.json",
+    "true_go_tls": "V4 private credential checked Go TLS, three cipher suites",
+    "normal_rust_owner": "SAME actual M1 ScopedOwner RX/TX, AEAD unique PN, M3 LINK",
+    "true_linux_app_rx": "Go->kernel UDP M4 recvmmsg->original M1 slab->Rust AEAD/M3->true TUN->Go app receives 36B each suite",
+    "true_linux_app_tx": "Go UDP application->kernel true TUN read directly original M1 slab->Rust S2C AEAD/PN Fresh FrozenRecord->M4 Linux sendmmsg->Go TLS client opener receives 45B each suite",
+    "source_exact_native_actions": 38849314647,
+    "production_abi_features": 0,
+    "production_authenticated_Go_native_control": "NOT_RUN",
+    "real_raw_FakeTCP_carrier": "NOT_RUN",
+    "true_driver_held_Stop_B01_B04": "NOT_RUN",
+    "netem_product_0_150_300ms_1_5pct_loss_reorder_reconnect": "NOT_RUN",
+    "product_e2e": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }
