@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 99,
-  "checkpoint_sha": "30acf388d340308b99fb7ad773bd2e5153afc2f7",
+  "sequence": 100,
+  "checkpoint_sha": "399083d7ae718c4025380cec2b18e5201ac584ef",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "GOV-005 M0-023 当前能力批次：原 Go credential-verified protected V4→非测试 Rust 原 M1/M3 scoped owner 的两个独立后台常驻 Linux M4 raw RX/TUN TX 线程已实现，并将真实 raw/TUN 阻塞读取置于全局 registry Mutex 锁外，返回再用同代原 AEAD/PN/Normal/off/M4 TX。Stop先停止并join线程后释放驱动/arena/generation。确切 CODE SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 native Actions38907951546 attempt1 build116996212076 consume116996847641 PASS，背景 C2S8/8、S2C8/8、worker错误0/0；同源 ABI/cross/native/governance PASS。证据 S874ef7a5；H98 d07483e Governance38908825628 FAIL仅因为 evidence 缺少 source_sha; 证据字段 S30acf388d340308b99fb7ad773bd2e5153afc2f7 修复，Governance38909066933 SUCCESS。Formal 023 PARTIAL, production features0。",
-  "why_now": "GOV-005 §0要求在短包证明后交付真正独立Rust持续owner循环而非增长短Go串行smoke；已通过新测试。H98 Governance红灯为记录schema缺字段，已按精确源修复并保留红灯证据，不重跑产品Actions。",
-  "done_when": "当前能力原生功能测试按精确 SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 PASS：Go认证 private桥；原Rust M1/M3双后台OS线程自主处理Linux raw/TUN，原M4驱动借用，Go发送与应用接收不逐包调用原桥，锁外内核等待，Stop再释放。证据source_sha已修复且Governance38909066933 PASS； H98 Governance38908825628 FAIL保留。尚无10s+60s 10Mbps/direction和独立引擎/注入器CPU核算；真实B04持有异步driver、外部SYN、正式产品/物理仍NOT_RUN，不能把本次功能PASS报为性能或产品资格。",
-  "next_action": "为现有已验Go TLS→原Rust M1/M3/M4后台持续raw/TUN路径完成一项限定开发性能基线：独立业务发送/接收及独立CPU计量或明确不支持，同一Actions测量job固定 Normal/off 单lane/FECoff/诊断关的64/256/1200/有效MTU预定混合、双向各10Mbps，10s热身+60s计量，实际offered/delivered/missing、wire/PPS、原Rust vs injector CPU-s、RSS、kernel/socket drops、queue age、独立探针RTT/尾延迟及host容量回执。若注入/host欠载或同进程CPU不可归因报INCONCLUSIVE/UNSUPPORTED，不改seed、队列或产品features0。",
+  "current_task": "GOV-005 §0 本轮一项完整开发性能能力已测：原 pin Go FakeTCP 可信私有 TLS→原 Rust M1/M3/M4 真 Linux raw/TUN双常驻 owner，Go业务注入/接收独立goroutine，单cipher ChaCha、Normal 1 lane、FEC off。真实 owner 观察 S2C route/MSS 内层IPv4 MTU1329（C2S record1400→1369），固定1:1:1:1包长64/256/1200/1329，10s热身60s测量双向独立目标10Mbps。最终 CODE 137a80e543bda12237e8bf25fb048ca3668c5774 原生 Actions38913607702 attempt1 build117015338033 consume117016001107 SUCCESS：C2S和S2C各105298/105298真实业务包，每方向逻辑IPv4字节74998532，交付9.999804Mbps，missing/duplicate/invalid各0；原Rust RX CPU4.315673s TX13.282391s，总Go+Rust进程user3.461462s/sys19.936526s，Linux lo dropped0。证据 S399083d7ae718c4025380cec2b18e5201ac584ef 静态38914525179/Gov38914525306 SUCCESS。之前首轮38912126745收据root0600导致workflow FAIL；次轮38912768583发现S2C第四档1369>真实上限1329致25,960包被原Rust正确拒绝，不是已证明CPU瓶颈；所有失败/误分类保留。仅loopback限定开发基线达标；正式023 partial, production ABI features0。",
+  "why_now": "新版TEST_PLAN §0不许把短Go单包调度冒充稳态；H99已有Rust独立后台线程及内核读锁外功能通过。本轮用真正60s持续双向业务实测，纠正原夹具误用C2S大小预算到S2C；不调整原MTU/MSS、seed、速率或队列刷绿。",
+  "done_when": "本轮有限开发能力：固定可解释单host netns/real raw/TUN Normal/off、严格原Go信任边界及Rust owner、10s+60s、真实有效双向内层MTU固定1:1:1:1混合，实测每向9.999804Mbps、105298/105298完整业务、Rust per-thread CPU、process RSS与Linux lo drops，原生Actions及同SRC ABI/cross/native/Gov SUCCESS、证据SOURCE精确。未达到正式023：两端veth/独立injector进程CPU、真正RTT p99/socket drop/queue age、真实外部SYN、异步M4 driver held B04及B01/B02完整生命周期、物理500Mbps/发行资格NOT_RUN。普通Go/Rust同进程CPU不可重复加总。",
+  "next_action": "把同一受保护Go TLS→原Rust两常驻owner真实Linux raw/TUN开发基线扩到有边界的两端veth或独立namespace拓扑和独立注入器进程CPU归因/RTT探针；一个预声明单cipher Normal/off FECoff固定有效MTU mix、10s热身60s测量的Actions一个测量job。记录真实收发/缺包、原Rust与独立injector CPU、网络socket drop、队列年龄、RTT p99和host cgroup容量；若不支持明确UNSUPPORTED，不另造 crypto/driver，不替换原v4信任边界；production features0不变。",
   "unverified": true,
-  "last_tested_source": "69f392c58067ec8f8ca53ed95c660510e6831595",
+  "last_tested_source": "137a80e543bda12237e8bf25fb048ca3668c5774",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-original-rust-background-owner-loop.json"
+    "docs/evidence/M0/M0-023-normal-off-10mbps-bidirectional-developer-baseline.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-023-original-rust-background-owner-loop.md",
+    "docs/devlog/M0/M0-023-normal-off-10mbps-bidirectional-developer-baseline.md",
     "docs/architecture/TEST_PLAN.md",
+    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "已在GitHub Actions验证真正独立Rust raw RX/TUN TX后台循环，锁外内核阻塞读取，同代原rust AEAD/PN、Stop/Release保留，Go无逐包helper，8/8双向；修复证据source_sha和H98 Gov红灯事实。10Mbps/10s+60s开发性能尚NOT_RUN；产品features0/023partial/B04未验收。"
+  "partial_summary": "首次原Rust/Go真内核Normal/off持续10+60s固定负载单机loopback开发基线：实际双向各约10Mbps、0缺包，原Rust线程CPU真实计量；第四档由真实S2C有效MTU1329冻结。原先S2C错误1369大包被原owner正确拒绝且失败留证。正式M0-023仍PARTIAL、production features0；veth两端/独立进程RTT及B04未验收。"
 }
