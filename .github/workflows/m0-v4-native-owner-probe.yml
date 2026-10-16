@@ -227,12 +227,14 @@ jobs:
             grep -q 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel' native-probe-result/tun-netns.log
             grep -q 'REAL_RAW_BIDIRECTIONAL_TUN_PASS: Go raw IPv4/TCP' native-probe-result/tun-netns.log
             grep -q 'EMBEDDED_REAL_RAW_TO_TUN_APP_PASS: private Go authenticated' native-probe-result/tun-netns.log
+            grep -q 'EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS: same non-test Go embedded Rust owner' native-probe-result/tun-netns.log
             for suite in 1 2 3; do
               grep -q "TUN_APP_FIRST_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "TUN_APP_REVERSE_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "TUN_TO_REAL_RAW_FAKETCP_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "RAW_C2S_TO_REAL_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/tun-netns.log
             done
             grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
             grep -q '^--- PASS: TestR0V4EmbeddedRealM4RawToTun' native-probe-result/tun-netns.log

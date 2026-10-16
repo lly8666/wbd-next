@@ -107,7 +107,69 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                 t.Fatalf("NO embedded owner real TUN application packet: err=%v peer=%v n=%d",e,peer,n)
             }
             t.Logf("EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=%d bytes=%d",cipher,n)
+            // TRUE independent S2C: application sends via real kernel TUN,
+            // existing non-test embedded Rust M1/M3 seals original S2C PN,
+            // actual M4 raw TX sends IPv4/TCP; independent Go raw socket
+            // verifies exact tuple, TCP seq and original Go TLS S2C keys.
+            rawPeer,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
+            if e!=nil{t.Fatalf("M4_RAW_PEER_UNSUPPORTED: %v",e)}
+            defer syscall.Close(rawPeer)
+            if e=syscall.Bind(rawPeer,&syscall.SockaddrInet4{Addr:bridge.originalFlow.ClientIP});e!=nil{
+                t.Fatalf("kernel raw client bind: %v",e)
+            }
+            timeval:=syscall.NsecToTimeval((500*time.Millisecond).Nanoseconds())
+            if e=syscall.SetsockoptTimeval(rawPeer,syscall.SOL_SOCKET,
+                syscall.SO_RCVTIMEO,&timeval);e!=nil{t.Fatal(e)}
+            reverse:=[]byte("embedded-TUN-kernel-to-real-raw-Go-peer")
+            if wrote,e:=app.WriteToUDP(reverse,&net.UDPAddr{IP:senderIP,Port:42001});
+                e!=nil||wrote!=len(reverse){t.Fatalf("kernel app reverse write n=%d err=%v",wrote,e)}
+            pn2,seq2,packetLen,appLen,e:=bridge.tunToKernelRaw(uint32(ifi.Index))
+            if e!=nil||pn2!=0||seq2!=bridge.txBoundary{
+                t.Fatalf("original embedded Rust S2C PN/seq: pn=%d seq=%d boundary=%d err=%v",
+                    pn2,seq2,bridge.txBoundary,e)
+            }
+            var cipherRecord []byte
+            for attempt:=0;attempt<16;attempt++{
+                buf:=make([]byte,2048)
+                count,_,err:=syscall.Recvfrom(rawPeer,buf,0)
+                if err!=nil{t.Fatalf("real Linux Go raw peer receive: %v",err)}
+                if count<40||buf[0]>>4!=4||buf[9]!=6{continue}
+                ihl:=int(buf[0]&0xf)*4
+                if ihl<20||ihl+20>count{continue}
+                if !bytes.Equal(buf[12:16],bridge.originalFlow.ServerIP[:])||
+                   !bytes.Equal(buf[16:20],bridge.originalFlow.ClientIP[:])||
+                   binary.BigEndian.Uint16(buf[ihl:ihl+2])!=bridge.originalFlow.ServerPort||
+                   binary.BigEndian.Uint16(buf[ihl+2:ihl+4])!=bridge.originalFlow.ClientPort||
+                   binary.BigEndian.Uint32(buf[ihl+4:ihl+8])!=seq2{continue}
+                tcpLen:=int(buf[ihl+12]>>4)*4
+                if tcpLen<20||ihl+tcpLen>count||uint32(count)!=packetLen{
+                    t.Fatalf("invalid exact kernel raw TCP header packet=%d wanted=%d",count,packetLen)
+                }
+                cipherRecord=append([]byte(nil),buf[ihl+tcpLen:count]...)
+                break
+            }
+            if len(cipherRecord)==0{t.Fatal("embedded original Rust M4 S2C raw not observed")}
+            clientLimit,_:=c.RecordLimits()
+            opener,e:=tlsrecord.NewOpenerForCipher(c.DirectionKeys().S2C,int(clientLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            opened,e:=opener.OpenRecord(cipherRecord)
+            if e!=nil||opened.PN!=pn2||opened.Kind!=tlsrecord.KindLINK{
+                t.Fatalf("verified original Go S2C AEAD/PN failed: %v %+v",e,opened)
+            }
+            inner:=opened.Payload
+            if len(inner)!=int(appLen)||len(inner)<28+len(reverse)||
+               inner[0]!=0x45||inner[9]!=17||
+               !net.IP(inner[12:16]).Equal(dstIP)||
+               !net.IP(inner[16:20]).Equal(senderIP)||
+               !bytes.Equal(inner[28:],reverse){
+                t.Fatalf("real S2C authenticated application mismatch got=%x appLen=%d",inner,appLen)
+            }
+            t.Logf("EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=%d bytes=%d pn=%d seq=%d",
+                cipher,len(reverse),pn2,seq2)
             if e=bridge.stopRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,_,e=bridge.tunToKernelRaw(uint32(ifi.Index));e==nil{
+                t.Fatal("retired real M4 raw TX owner remained usable")
+            }
             if _,e=bridge.state();e==nil{t.Fatal("stale released old Rust owner still visible")}
             if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })

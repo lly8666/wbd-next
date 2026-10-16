@@ -18,6 +18,8 @@ extern int32_t wbd_m0_embedded_go_state(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_attach_raw_rx(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
+    uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 */
 import "C"
 import (
@@ -33,6 +35,7 @@ type v4EmbeddedNativeBridge struct {
     committed bool
     originalFlow faketcp.ServerFlow
     rxBoundary uint32
+    txBoundary uint32
 }
 func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
@@ -74,6 +77,7 @@ func (p *v4EmbeddedPending) commit(early []faketcp.TransitionPacket,tx uint32)er
         C.uint32_t(len(early)),C.uint32_t(total),C.uint32_t(tx))
     if rc!=0{return fmt.Errorf("%w: commit=%d",errV4Embedded,int(rc))}
     p.done=true;p.b.committed=true
+    p.b.txBoundary=tx
     return nil
 }
 func (p *v4EmbeddedPending) abort(){
@@ -121,4 +125,14 @@ func (b *v4EmbeddedNativeBridge) receiveRawToTun()(uint32,uint32,error){
     rc:=C.wbd_m0_embedded_go_raw_to_tun(C.uint64_t(b.handle),&delivered,&failed)
     if rc!=0{return 0,0,fmt.Errorf("%w: M4 raw to TUN=%d",errV4Embedded,int(rc))}
     return uint32(delivered),uint32(failed),nil
+}
+
+func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,uint32,uint32,error){
+    if !b.committed||b.handle==0{return 0,0,0,0,errV4Embedded}
+    var pn C.uint64_t
+    var seq,full,app C.uint32_t
+    rc:=C.wbd_m0_embedded_go_tun_to_raw(
+        C.uint64_t(b.handle),C.uint32_t(ifindex),&pn,&seq,&full,&app)
+    if rc!=0{return 0,0,0,0,fmt.Errorf("%w: real TUN to raw=%d",errV4Embedded,int(rc))}
+    return uint64(pn),uint32(seq),uint32(full),uint32(app),nil
 }

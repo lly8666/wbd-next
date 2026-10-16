@@ -15,15 +15,17 @@ use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_raw_carrier::ScopedRawIpv4Rx;
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::ScopedTunSink;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona};
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::os::fd::BorrowedFd;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::time::Instant;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::net::Ipv4Addr;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::StopResult;
 use crate::runtime::early_rx::EarlyAccepted;
@@ -47,6 +49,8 @@ struct Entry{
     flow:crate::v4_protected_handoff::GoFlow,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     raw_rx:Option<ScopedRawIpv4Rx>,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    raw_tx:Option<ScopedRawIpv4Tx>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tun_sink:Option<ScopedTunSink>,
 }
@@ -79,6 +83,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         flow:handoff.flow,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         raw_rx:None,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        raw_tx:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tun_sink:None,
     });
@@ -132,6 +138,7 @@ fn stop(handle:u64)->i32{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     {
         if let Some(ref raw)=e.raw_rx {raw.begin_stop()}
+        if let Some(ref raw)=e.raw_tx {raw.begin_stop()}
         if let Some(ref tun)=e.tun_sink {tun.begin_stop()}
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
@@ -139,6 +146,9 @@ fn stop(handle:u64)->i32{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     {
         if let Some(ref raw)=e.raw_rx{
+            drained &= raw.stop_until(Instant::now())==StopResult::Drained;
+        }
+        if let Some(ref raw)=e.raw_tx{
             drained &= raw.stop_until(Instant::now())==StopResult::Drained;
         }
         if let Some(ref tun)=e.tun_sink{
@@ -265,6 +275,63 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_raw_to_tun(
     if out_ok.is_null()||out_failed.is_null(){return INVALID}
     match raw_to_tun(h){
         Ok((ok,failed))=>{unsafe{out_ok.write(ok);out_failed.write(failed)};OK}
+        Err(e)=>e,
+    }
+}
+
+
+/// Reverse app path using SAME protected generation, non-_test normal Rust
+/// LINK AEAD/PN, and real Linux M4 ScopedTunSink/ScopedRawIpv4Tx objects.
+/// One trusted Go session tuple and original Tx boundary; never resynthesize
+/// keys/seq/PN in the FFI or in Go. Driver is retained through Stop.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+    let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let flow=e.flow;
+    if e.raw_tx.is_none(){
+        let driver=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
+            .map_err(|_|INVALID)?;
+        e.raw_tx=Some(driver);
+    }
+    let route=e.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::from(flow.client_ip)
+    ).map_err(|_|INVALID)?;
+    let slab=e.arena.allocate().map_err(|_|FULL)?;
+    let (pn,seq,_wire_len,app_len)=e.owner.seal_tun_ipv4_normal_off(
+        tun,slab,&route,15,MonoNs(0)
+    ).map_err(|_|INVALID)?;
+    let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    };
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    let full=e.owner.submit_scoped_raw_tx(raw,tuple,presentation,MonoNs(0))
+        .map_err(|_|BAD_STAGE)?;
+    e.arena.drain_returns();
+    Ok((pn,seq,u32::try_from(full).map_err(|_|INVALID)?,
+        u32::try_from(app_len).map_err(|_|INVALID)?))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
+    handle:u64,ifindex:u32,pn:*mut u64,seq:*mut u32,
+    packet_len:*mut u32,app_len:*mut u32,
+)->i32{
+    if pn.is_null()||seq.is_null()||packet_len.is_null()||
+        app_len.is_null(){return INVALID}
+    match tun_to_raw(handle,ifindex){
+        Ok((p,s,wire,app))=>{
+            unsafe{pn.write(p);seq.write(s);
+                packet_len.write(wire);app_len.write(app)};
+            OK
+        }
         Err(e)=>e,
     }
 }

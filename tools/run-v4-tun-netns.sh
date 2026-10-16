@@ -46,4 +46,5 @@ echo 'TUN_APP_BIDIRECTIONAL_PASS: real Go application -> kernel TUN -> Rust scop
 echo 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel IPv4/TCP raw socket -> Go TLS authenticated peer.'
 echo 'REAL_RAW_BIDIRECTIONAL_TUN_PASS: Go raw IPv4/TCP -> Rust M1 AEAD -> real TUN app, plus real raw S2C Go peer.'
 echo 'EMBEDDED_REAL_RAW_TO_TUN_APP_PASS: private Go authenticated non-_test adapter -> original Rust owner -> real M4 raw/TUN kernel; single C2S direction only.'
-echo 'Original pinned Go SYN remains test generated; driver held async loan, reverse embedded raw, veth netem and product enablement NOT_RUN.'
+echo 'EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS: same non-test Go embedded Rust owner M4 kernel TUN -> M1/M3 S2C -> real raw TCP to independent Go TLS peer.'
+echo 'Original pinned Go SYN remains test generated; driver held async loan, B01-B04, veth netem and product enablement NOT_RUN.'
