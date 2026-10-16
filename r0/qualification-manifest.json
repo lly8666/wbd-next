@@ -21,6 +21,17 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_real_go_flow_raw": {
+    "code_source_sha": "c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3",
+    "result": "PARTIAL_TRUE_KERNEL_RAW_ASSOCIATION_TUPLE_PASS",
+    "evidence": "docs/evidence/M0/M0-023-protected-association-original-flow-raw.json",
+    "native_source_exact_run_id": 38866760913,
+    "native_source_exact_attempt": 1,
+    "go_fake_tcp_association": "PINNED_GO_SYN_FIXTURE_COPY_FROM_PROTECTED_CALLBACK",
+    "original_rust_owner_raw_c2s_s2c": "ACTION_LINUX_PRIVILEGED_TEST_ONLY_PASS",
+    "production_rust_positive_installer": "NOT_IMPLEMENTED",
+    "product_qualification": "NOT_RUN"
+  },
   "m0_023_live_flow_capture": {
     "code_source_sha": "a9b9dd5d523e56145404e675adf43ba9066a4e39",
     "result": "PARTIAL_GO_PROTECTED_TUPLE_CAPTURE_PASS",

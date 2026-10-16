@@ -1,0 +1,11 @@
+# M0-023: original Go association tuple into existing Rust raw/TUN Actions path
+
+Code SOURCE `c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3`, **PARTIAL_TRUE_KERNEL_RAW_ASSOCIATION_TUPLE_PASS**, not production qualification. Exact run/job/artifact metadata: [evidence](../evidence/M0/M0-023-protected-association-original-flow-raw.json).
+
+Why this atom: the previous native Linux raw/TUN loopback path used a hard-coded unrelated TCP tuple while protected Go Prepare already had the original FakeTCP SYN association. Instead of writing another TEST-ONLY chain, extended the *existing* Go private test bridge FFI to carry that 12-byte copied tuple and stored it with the original Rust scoped owner generation. Original normal M1 buffer, M3 AEAD/PN, M4 raw TX/RX and TUN kernel code remain unchanged. Rust raw C2S exact tuple and S2C inverse now come from that Go callback. Bad/missing flow fails on Rust before Prepare. No new RTT, no self-attested cold source.
+
+Actions isolated owned namespace sets two local /32 addresses corresponding to pinned Go `newAssociationPeer` synthetic SYN (10.0.0.2:41001 to 10.0.1.1:443) rather than inventing former 127.0.0.1:49322/49321. Same true kernel C2S and S2C first app packet flows PASS all three ciphers, including independent Go application socket. This proves a protected Go association source propagated to the existing Rust test owner, **not** an actual external SYN or production command. SOURCE-exact native, native ABI, cross-build, G2, native regression, static, Governance, and maintenance Actions all concluded success. Cross-build does not execute Windows/ARM. No local tests.
+
+Formal M0-023 remains **partial**. Ordinary production Rust credential binding/positive install is still absent, `features=0`; B01–B04 real driver held loan, old-generation reconnect, veth tc netem product matrix, normal performance and physical/500Mbps remain NOT_RUN. Previous exact evidence retained: [Go flow capture](../evidence/M0/M0-023-Go-protected-flow-capture.json), [original raw loopback](../evidence/M0/M0-023-true-raw-bidirectional-tun.json).
+
+**One next action:** integrate a versioned *production* Go-verified private-session authority to ordinary Rust owner Prepare/Detach/Commit with actual tuple and boundaries, no arbitrary cold248 authentication or early feature advertising.

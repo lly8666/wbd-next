@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3",
+  "atom": "original_Go_protected_FakeTCP_association_flow_to_existing_Rust_scoped_raw_owner",
+  "result": "PARTIAL_TRUE_KERNEL_RAW_ASSOCIATION_TUPLE_PASS",
+  "why_now": "Previous exact SOURCE real privileged C2S/S2C raw/TUN smoke had genuine kernel I/O but synthetic 127.0.0.1:49322->49321 tuple; genuine protected Go V4 callback had already frozen actual original Go FakeTCP association after credential check. Reuse original owner and same native test, remove raw tuple fixture mismatch without creating alternate activation or crypto helper.",
+  "observed_implementation": [
+    "Unmodified credential-checked EstablishServerV4 private ownerBridge.prepare supplies copied Go ServerAssociation Flow and SYN MSS. This source additionally encodes client/server IPv4 and ports into a 12-byte big-endian test-feature FFI parameter (never serialized as TLS authority).",
+    "Existing test-feature Rust ProtectedScopedOwner parses/validates/binds that one immutable per-generation GoFlow and uses its C2S tuple for normal ScopedRawIpv4Rx and reverse S2C for normal ScopedRawIpv4Tx, replacing hard-coded 127.0.0.1 fixture ports; original M1 unique slab/AEAD/PN M3 LINK and M4 raw/TUN kernel path unchanged.",
+    "Privileged Actions runner adds precisely two isolated loopback /32 addresses 10.0.0.2 and 10.0.1.1, as supplied by pinned original faketcp.newAssociationPeer SYN test helper; Go real-TLS independent peer and Rust raw path must use exact 41001->443 and reverse tuple, all 3 ciphers, not forged new raw fixture ports.",
+    "TEST-ONLY C ABI still feature-gated, caller-supplied cold248 alone is never credential proof, ordinary production ABI features=0."
+  ],
+  "test_signals": {
+    "native_linux": "Real isolated Linux namespace kernel raw C2S/TUN app and reverse TUN/raw S2C for suites 1/2/3, raw C2S 135B and app36B, raw S2C 138B and app39B, all reported PASS on existing normal-build Rust owner; Go protected TLS is actual but original SYN association is from pinned test fixture.",
+    "native_negative": "Rust m0 probe rejects invalid/zero port flow and checks original flow port=41001; original generation/stop/early flow tests retained.",
+    "not_production": "No ordinary production Go/Rust trust capability or owner install, no unprivileged physical association veth, production raw carrier NOT_RUN, no product throughput benchmark."
+  },
+  "verification": [
+    {
+      "kind": "native_protected_owner_and_real_linux_kernel",
+      "run_id": 38866760913,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116861269241,
+      "consume_job": 116861666780,
+      "build_artifact": {
+        "id": 12031736647,
+        "digest": "sha256:9ae5198cf589d952e022f51471121f825fadad09eeae84f012e7b13c925fef28"
+      },
+      "result_artifact": {
+        "id": 12031367328,
+        "digest": "sha256:4fdd93a18e9a8e1aeb018e62ce77fe6be6af27dd60a361010c30031c001e732d"
+      },
+      "tun_log_sha256": "00c6e5635a2d50ac34f1ee4c005b7c8a02b040663223d00110bc3111d4eb5cbe",
+      "scope": "feature-tagged actual Go TLS -> real Rust owner, 3/3 suites true isolated namespace Linux L3 raw/TUN app first packets; production raw carrier NOT_RUN"
+    },
+    {
+      "kind": "native_ABI",
+      "run_id": 38866761033,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116861269852,
+      "consume_job": 116861667396,
+      "build_artifact": {
+        "id": 12031776545,
+        "digest": "sha256:003564fff883745fbd61d5fab7200f9bf0c015212a1d03c284cf83068a11df33"
+      },
+      "result_artifact": {
+        "id": 12031970508,
+        "digest": "sha256:762cfb53d89361903b5ae931defc4747026062adc2a01237df789e485b34ca3d"
+      },
+      "scope": "C/Go/Rust native ABI sentinel, features0"
+    },
+    {
+      "kind": "cross_ABI",
+      "run_id": 38866760990,
+      "attempt": 1,
+      "conclusion": "success",
+      "target_execution": "NOT_RUN",
+      "build_jobs": [
+        116861269526,
+        116861270043
+      ],
+      "consume_jobs": [
+        116861762608,
+        116861762630
+      ],
+      "artifacts": [
+        {
+          "id": 12032075063,
+          "digest": "sha256:52644aa7133dbdd89325c8c78b59193476e265c52b338fe8758f0a462e9fa1be"
+        },
+        {
+          "id": 12031861272,
+          "digest": "sha256:e3e7e0a06922999de6ffbcc41513879a104beb6eb9f17d2cdc2c3dc984f68362"
+        },
+        {
+          "id": 12031751629,
+          "digest": "sha256:16ec7a273e2a73db0b4de9e92640c8d6cfb2a85d45ac6dfb8cb03364274e4373"
+        },
+        {
+          "id": 12030934738,
+          "digest": "sha256:50729d76cb682047b747cdcebc65f78b16bc8efcf2c402484caaffa7f20d8cd0"
+        }
+      ]
+    },
+    {
+      "kind": "native_regression",
+      "run_id": 38866760923,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        116861269343,
+        116861309916,
+        116861673580,
+        116861673597,
+        116861673681,
+        116861673696,
+        116861673806
+      ],
+      "build_artifact": {
+        "id": 12031034413,
+        "digest": "sha256:102231384acbd9b728185091ceecaac5d109230c3d3a74e9b31305e58074b6d5"
+      }
+    },
+    {
+      "kind": "g2",
+      "run_id": 38866760937,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 116861269567,
+      "consume_job": 116861578152,
+      "result_artifact": {
+        "id": 12031037748,
+        "digest": "sha256:4643238d5a70d0eb419dcd69e6ae17083683daaa8e90a63c44f6fc45b916cf66"
+      }
+    },
+    {
+      "kind": "governance_maintenance",
+      "run_id": 38866760931,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116861268905,
+      "artifact": {
+        "id": 12031098951,
+        "digest": "sha256:25f3574fd43aa5c89da2449d9b299c215952d44091b67fbbea4ac4881bb67a60"
+      },
+      "scope": "tool selftest, not product"
+    },
+    {
+      "kind": "static_qualification",
+      "run_id": 38866760910,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116861269527,
+      "artifact": {
+        "id": 12031910470,
+        "digest": "sha256:55586f585fa14bd8d7c424fb9df128401c4ae428f3a495f37573dad7b8757b6d"
+      },
+      "scope": "static rules and manifest, not product"
+    },
+    {
+      "kind": "governance_push",
+      "run_id": 38866761026,
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 116861269777,
+      "artifact": {
+        "id": 12031453132,
+        "digest": "sha256:9696ec26ac94b0d5f5eaa6118b07a6fa5dc376189aa82ca5bd21ad4d186800f1"
+      },
+      "scope": "identity/structure; drills/model NOT_RUN"
+    }
+  ],
+  "source_integrity": "Every referenced run on exact GitHub SOURCE; build once and consume same-run artifacts. Digests are GitHub API-provided artifact ZIP metadata, not independently downloaded/rehashed.",
+  "limitations": [
+    "Original Go FakeTCP test association SYN is generated by pinned legacy Go test helper, not yet a live externally received SYN. Linux raw/TUN I/O itself is real within owned isolated kernel namespace.",
+    "This test-feature bridge remains exported test-only C symbols, not ordinary production Rust authenticated installer, and public cold248 is never proof of Go credential verification.",
+    "Real held M4 driver borrow B01-B04 at Stop, old generation live TCP reconnect, veth netem RTT 150/300ms loss1/5% reorder, fragmentation/repair, ordinary product Normal/off business benchmark NOT_RUN.",
+    "No production V4 capability advertisement, physical, Windows/ARM native target execution, product p99/CPU-s or 500Mbps qualification."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Implement production-only trusted Go V4 session authority in ordinary Rust scoped owner admission with versioned command and actual FakeTCP tuple/seq; fail closed on untrusted cold bundle and premature activation; keep production features0 until Stop/generation and product actions pass."
+}
