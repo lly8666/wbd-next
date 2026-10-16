@@ -93,27 +93,42 @@ impl ScopedTunSink {
             BorrowError::TooManyLoans=>TunError::TooLarge,
         })?;
         let _serialized=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
-        let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
-        // SAFETY: the kernel sees one correctly laid-out, live pollfd.
-        let ready=unsafe{poll(&mut pfd,1,750)};
-        if ready<0 {
-            return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))
+        let deadline=Instant::now()+std::time::Duration::from_millis(750);
+        // TUN is L3: Linux can emit IPv6 DAD/neighbor traffic immediately
+        // after a new IFF_TUN is brought up. This owner negotiates ONLY
+        // IPv4 Normal/off; NEVER AEAD-seal unsupported IPv6 as IPv4 business.
+        // A bounded 8-receive filter avoids a startup false-first packet,
+        // with a single total 750ms deadline and no second data buffer.
+        for _ in 0..8 {
+            let remaining=deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero(){return Err(TunError::TimedOut)}
+            let timeout=remaining.as_millis().max(1).min(750) as i32;
+            let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
+            // SAFETY: the kernel sees one correctly laid-out live pollfd.
+            let ready=unsafe{poll(&mut pfd,1,timeout)};
+            if ready<0 {
+                return Err(TunError::Kernel(
+                    io::Error::last_os_error().raw_os_error().unwrap_or(5)))
+            }
+            if ready==0{return Err(TunError::TimedOut)}
+            if pfd.revents&POLLIN==0{return Err(TunError::InvalidFd)}
+            // SAFETY: owned fd and live original M1 writable buffer.
+            let n=unsafe{read(self.fd.as_raw_fd(),out.as_mut_ptr().cast(),out.len())};
+            if n<0 {
+                return Err(TunError::Kernel(
+                    io::Error::last_os_error().raw_os_error().unwrap_or(5)))
+            }
+            let n=n as usize;
+            if n>=40 && out[0]>>4==6 {continue} // unsupported IPv6 control
+            if n<20 || n>65535 || out[0]>>4!=4 || out[0]&0x0f<5 {
+                return Err(TunError::InvalidPacket)
+            }
+            let header_len=usize::from(out[0]&0x0f)*4;
+            let total=usize::from(u16::from_be_bytes([out[2],out[3]]));
+            if total!=n || header_len>n {return Err(TunError::InvalidPacket)}
+            return Ok(n)
         }
-        if ready==0{return Err(TunError::TimedOut)}
-        if pfd.revents&POLLIN==0{return Err(TunError::InvalidFd)}
-        // SAFETY: owned fd, live mutable out buffer for synchronous read.
-        let n=unsafe{read(self.fd.as_raw_fd(),out.as_mut_ptr().cast(),out.len())};
-        if n<0 {
-            return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))
-        }
-        let n=n as usize;
-        if n<20 || n>65535 || out[0]>>4!=4 || out[0]&0x0f<5 {
-            return Err(TunError::InvalidPacket)
-        }
-        let header_len=usize::from(out[0]&0x0f)*4;
-        let total=usize::from(u16::from_be_bytes([out[2],out[3]]));
-        if total!=n || header_len>n {return Err(TunError::InvalidPacket)}
-        Ok(n)
+        Err(TunError::TimedOut)
     }
 
     /// Writes only a complete authenticated IPv4 L3 packet; any rejected
