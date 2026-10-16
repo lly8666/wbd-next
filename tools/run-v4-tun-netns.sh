@@ -34,12 +34,43 @@ sudo -n ip -n "$NS" link set lo up || {
 # endpoints isolated kernel-local /32 addresses; no host routing is changed.
 sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
 sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
+# Single explicitly chosen functional-exploration scenario. Do not infer
+# RTT from configured delay; require observable kernel qdisc packet counters.
+# Default invocation remains byte-for-byte baseline behavior.
+PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
+if [[ -n "$PRELIM_MS" ]]; then
+  if [[ "$PRELIM_MS" != 10 ]]; then
+    echo 'PRELIM_NETEM_INVALID only bounded 10ms delay is authorized in this smoke' >&2
+    exit 2
+  fi
+  if ! command -v tc >/dev/null; then
+    echo 'PRELIM_NETEM_UNSUPPORTED tc unavailable'; exit 77
+  fi
+  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem delay 10ms limit 256; then
+    echo 'PRELIM_NETEM_UNSUPPORTED kernel refused netem qdisc'; exit 77
+  fi
+  echo 'PRELIM_NETEM_QDISC_ATTACHED delay_ms=10 qdisc=netem dev=lo max_packets=256'
+  sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
+fi
+TEST_FILTER='^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
+if [[ -n "$PRELIM_MS" ]]; then TEST_FILTER='^TestR0V4EmbeddedRealM4RawToTun$'; fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run '^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
+fi
+if [[ -n "$PRELIM_MS" ]]; then
+  QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"
+  echo "$QDISC"
+  if [[ "$QDISC" != *"qdisc netem "* ]] || ! grep -Eq 'Sent [1-9][0-9]* bytes [1-9][0-9]* pkt' <<<"$QDISC"; then
+    echo 'PRELIM_NETEM_NOT_OBSERVED kernel qdisc processed no measurable packets; delay NOT_VERIFIED'
+    exit 77
+  fi
+  echo 'PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=10 qdisc_packets_positive=true embedded_bilateral_3_ciphers=true'
+  echo 'PRELIM_NETEM_LIMITS configured delay is NOT measured RTT; no load/throughput/p99/B04/product qualification.'
+  exit 0
 fi
 echo 'TUN_APP_FIRST_PACKET_PASS: isolated netns actual kernel TUN -> UDP application socket.'
 echo 'TUN_APP_BIDIRECTIONAL_PASS: real Go application -> kernel TUN -> Rust scoped AEAD -> M4 UDP -> Go TLS peer.'
