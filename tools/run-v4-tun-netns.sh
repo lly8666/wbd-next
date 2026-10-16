@@ -29,6 +29,11 @@ trap 'sudo -n ip netns del "$NS" || true' EXIT
 sudo -n ip -n "$NS" link set lo up || {
   echo 'TUN_NETNS_UNSUPPORTED no loopback setup permission'; exit 77;
 }
+# Original pinned Go faketcp.newAssociationPeer SYN is 10.0.0.2:41001 →
+# 10.0.1.1:443, not the former 127.0.0.1 fixed port fixture. Give both
+# endpoints isolated kernel-local /32 addresses; no host routing is changed.
+sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
+sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 set +e
 sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run '^TestR0V4NativeRustTunKernelAppFirst$'
 RC=$?
@@ -40,4 +45,4 @@ echo 'TUN_APP_FIRST_PACKET_PASS: isolated netns actual kernel TUN -> UDP applica
 echo 'TUN_APP_BIDIRECTIONAL_PASS: real Go application -> kernel TUN -> Rust scoped AEAD -> M4 UDP -> Go TLS peer.'
 echo 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel IPv4/TCP raw socket -> Go TLS authenticated peer.'
 echo 'REAL_RAW_BIDIRECTIONAL_TUN_PASS: Go raw IPv4/TCP -> Rust M1 AEAD -> real TUN app, plus real raw S2C Go peer.'
-echo 'Still NOT production native installer, raw FakeTCP carrier or tc netem qualification.'
+echo 'Original protected Go FakeTCP association IPv4/ports now pinned into existing Rust raw owner; not a production native installer or veth/netem qualification.'

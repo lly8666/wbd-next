@@ -644,19 +644,19 @@ func v4RawCheckSum(b []byte)uint16{
     for sum>>16!=0{sum=(sum&0xffff)+(sum>>16)}
     return ^uint16(sum)
 }
-func v4RawC2STestPacket(wire []byte,seq uint32)[]byte{
+func v4RawC2STestPacket(wire []byte,seq uint32,flow faketcp.ServerFlow)[]byte{
     buf:=make([]byte,40+len(wire))
     buf[0]=0x45
     binary.BigEndian.PutUint16(buf[2:4],uint16(len(buf)))
     binary.BigEndian.PutUint16(buf[4:6],0x3141)
     binary.BigEndian.PutUint16(buf[6:8],0x4000)
     buf[8]=64;buf[9]=6
-    copy(buf[12:16],[]byte{127,0,0,1})
-    copy(buf[16:20],[]byte{127,0,0,1})
+    copy(buf[12:16],flow.ClientIP[:])
+    copy(buf[16:20],flow.ServerIP[:])
     binary.BigEndian.PutUint16(buf[10:12],v4RawCheckSum(buf[:20]))
     tcp:=buf[20:]
-    binary.BigEndian.PutUint16(tcp[0:2],49322)
-    binary.BigEndian.PutUint16(tcp[2:4],49321)
+    binary.BigEndian.PutUint16(tcp[0:2],flow.ClientPort)
+    binary.BigEndian.PutUint16(tcp[2:4],flow.ServerPort)
     binary.BigEndian.PutUint32(tcp[4:8],seq)
     binary.BigEndian.PutUint32(tcp[8:12],1)
     tcp[12]=0x50;tcp[13]=0x18
@@ -704,6 +704,13 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed {
                 t.Fatalf("Go real protected V4 TLS: %v %v",ce,se)
             }
+            originalFlow:=bridge.observedFlow
+            if originalFlow!=bridge.testAssoc.Flow() ||
+                originalFlow.ClientIP!=([4]byte{10,0,0,2}) ||
+                originalFlow.ServerIP!=([4]byte{10,0,1,1}) ||
+                originalFlow.ClientPort!=41001 || originalFlow.ServerPort!=443 {
+                t.Fatalf("Rust bridge failed to freeze original protected FakeTCP SYN tuple: %+v",originalFlow)
+            }
             loopInterface,e:=net.InterfaceByName("lo")
             if e!=nil||loopInterface.Index<1{t.Fatalf("actual raw loopback ifindex: %v",e)}
             if e=bridge.bindRawRx(uint32(loopInterface.Index));e!=nil{t.Fatal(e)}
@@ -741,9 +748,9 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             copy(packet[28:],payload)
             wire,pn,e:=sealer.Seal(packet)
             if e!=nil||pn!=0{t.Fatalf("protected C2S record: %v pn=%d",e,pn)}
-            rawC2S:=v4RawC2STestPacket(wire,bridge.rxBoundary)
+            rawC2S:=v4RawC2STestPacket(wire,bridge.rxBoundary,originalFlow)
             if e=syscall.Sendto(rawSender,rawC2S,0,
-                &syscall.SockaddrInet4{Addr:[4]byte{127,0,0,1}});e!=nil{
+                &syscall.SockaddrInet4{Addr:originalFlow.ServerIP});e!=nil{
                 t.Fatalf("real Go C2S Linux raw IPv4/TCP: %v",e)
             }
             delivered,failed,e:=bridge.receiveRawToTun()
@@ -809,7 +816,7 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             if e!=nil{t.Fatalf("RAW_CARRIER_UNAVAILABLE cap_net_raw: %v",e)}
             defer syscall.Close(rawfd)
             if e=syscall.Bind(rawfd,&syscall.SockaddrInet4{
-                Addr:[4]byte{127,0,0,1},
+                Addr:originalFlow.ClientIP,
             });e!=nil{t.Fatalf("raw loopback bind: %v",e)}
             timeval:=syscall.NsecToTimeval((500*time.Millisecond).Nanoseconds())
             if e=syscall.SetsockoptTimeval(rawfd,syscall.SOL_SOCKET,
@@ -828,11 +835,12 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
                 count,_,err:=syscall.Recvfrom(rawfd,buf,0)
                 if err!=nil{t.Fatalf("kernel raw TCP receive: %v",err)}
                 if count<40||buf[0]!=0x45||buf[9]!=6{continue}
-                if !net.IP(buf[12:16]).Equal(loIP)||!net.IP(buf[16:20]).Equal(loIP){
+                if !bytes.Equal(buf[12:16],originalFlow.ServerIP[:])||
+                    !bytes.Equal(buf[16:20],originalFlow.ClientIP[:]){
                     continue
                 }
-                if binary.BigEndian.Uint16(buf[20:22])!=49321||
-                    binary.BigEndian.Uint16(buf[22:24])!=49322{continue}
+                if binary.BigEndian.Uint16(buf[20:22])!=originalFlow.ServerPort||
+                    binary.BigEndian.Uint16(buf[22:24])!=originalFlow.ClientPort{continue}
                 if int(binary.BigEndian.Uint16(buf[2:4]))!=count{continue}
                 if binary.BigEndian.Uint32(buf[24:28])!=rawSeq{continue}
                 ihl:=int(buf[0]&0xf)*4

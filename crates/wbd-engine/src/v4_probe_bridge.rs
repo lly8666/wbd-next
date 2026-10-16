@@ -49,6 +49,28 @@ const PH_COMMITTED: u32 = 2;
 const PH_STOPPED: u32 = 3;
 const PH_STOPPING: u32 = 4;
 
+// Transport scope is strictly a per-generation copy from the private Go
+// protected session callback. Raw tuple checks are NOT TLS authentication.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct GoFlow {
+    client_ip:[u8;4],
+    server_ip:[u8;4],
+    client_port:u16,
+    server_port:u16,
+}
+fn parse_go_flow(raw:&[u8])->Result<GoFlow,i32>{
+    if raw.len()!=12{return Err(INVALID)}
+    let mut client_ip=[0u8;4];client_ip.copy_from_slice(&raw[..4]);
+    let mut server_ip=[0u8;4];server_ip.copy_from_slice(&raw[4..8]);
+    let client_port=u16::from_be_bytes([raw[8],raw[9]]);
+    let server_port=u16::from_be_bytes([raw[10],raw[11]]);
+    let unicast=|ip:[u8;4]| ip[0]!=0 && ip[0]<224 &&
+        ip!=[0,0,0,0] && ip!=[255,255,255,255];
+    if !unicast(client_ip)||!unicast(server_ip)||
+        client_port==0||server_port==0{return Err(INVALID)}
+    Ok(GoFlow{client_ip,server_ip,client_port,server_port})
+}
+
 struct Probe {
     owner: ProtectedScopedOwner,
     normal:NormalOffReceive,
@@ -62,6 +84,7 @@ struct Probe {
     cold_identity: ColdIdentity,
     peer_mss:u16,
     peer_mss_advertised:bool,
+    go_flow:GoFlow,
     kernel_rx:Option<ScopedUdpOwner>,
     raw_rx:Option<ScopedRawIpv4Rx>,
     tun_sink:Option<ScopedTunSink>,
@@ -81,7 +104,7 @@ fn registry() -> &'static Mutex<Probes> {
 }
 
 fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
-    peer_mss_advertised:bool,
+    peer_mss_advertised:bool, flow_wire:&[u8],
 ) -> Result<u64, i32> {
     // This remains test-only. The private Go V4 authenticated callsite
     // supplies the MSS observed from the original association SYN; a caller
@@ -90,6 +113,7 @@ fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
         return Err(INVALID)
     }
     let data = UntrustedColdV4::parse(raw).map_err(|_| INVALID)?;
+    let go_flow=parse_go_flow(flow_wire)?;
     let identity = data.identity();
     if !identity.server { return Err(INVALID); }
     let mut state = registry().lock().map_err(|_| BAD_STAGE)?;
@@ -126,7 +150,7 @@ fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
     state.slots.insert(handle, Probe {
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        peer_mss,peer_mss_advertised,kernel_rx:None,raw_rx:None,tun_sink:None,
+        peer_mss,peer_mss_advertised,go_flow,kernel_rx:None,raw_rx:None,tun_sink:None,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -739,8 +763,9 @@ fn probe_tun_to_kernel_raw(handle:u64,ifindex:u32)
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
     if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
     let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let flow=p.go_flow;
     let budget=p.owner.observe_linux_normal_off_route_budget(
-        "lo",ifindex,Ipv4Addr::LOCALHOST
+        "lo",ifindex,Ipv4Addr::from(flow.client_ip)
     ).map_err(|_|INVALID)?;
     let slab=p.arena.allocate().map_err(|_|FULL)?;
     let (pn,seq,record_len,app_len)=p.owner.seal_tun_ipv4_normal_off(
@@ -748,10 +773,9 @@ fn probe_tun_to_kernel_raw(handle:u64,ifindex:u32)
     ).map_err(|_|INVALID)?;
     let carrier=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
         .map_err(|_|INVALID)?;
-    let src=[127,0,0,1];
-    let dst=[127,0,0,1];
-    let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
-        src_port:49321,dst_port:49322};
+    // S2C exact reverse of original credential-checked Go association.
+    let tuple=Ipv4Tuple{src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port};
     let presentation=Presentation{ack32:1,advertised_window:4096,
         ip_id:43,persona:PacketPersona::Legacy};
     let full=p.owner.submit_scoped_raw_tx(&carrier,tuple,presentation,MonoNs(0))
@@ -798,10 +822,10 @@ fn probe_raw_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
     if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
     let driver=p.raw_rx.as_ref().ok_or(BAD_STAGE)?;
     let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
-    let src=[127,0,0,1];
-    let dst=[127,0,0,1];
-    let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
-        src_port:49322,dst_port:49321};
+    // C2S must match original protected Go SYN association exactly.
+    let flow=p.go_flow;
+    let tuple=Ipv4Tuple{src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+        src_port:flow.client_port,dst_port:flow.server_port};
     let slab=p.arena.allocate().map_err(|_|FULL)?;
     p.owner.receive_scoped_raw_into_owner(driver,slab,
         tuple,PacketPersona::Legacy,u64::from(p.rx_boundary),MonoNs(0))
@@ -837,13 +861,15 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_raw_to_tun(
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_prepare(
     bytes:*const u8,len:usize,boundary:u32,peer_mss:u16,
-    peer_mss_advertised:u8,out:*mut u64
+    peer_mss_advertised:u8,flow:*const u8,flow_len:usize,out:*mut u64
 )->i32 {
-    if bytes.is_null()||out.is_null()||len!=COLD_V4_LEN || peer_mss_advertised>1 {return INVALID}
+    if bytes.is_null()||flow.is_null()||out.is_null()||
+        len!=COLD_V4_LEN||flow_len!=12||peer_mss_advertised>1 {return INVALID}
     // SAFETY: input is borrowed strictly for this synchronous call, C Go
     // wrapper supplies a valid length/pointer and holds the backing array.
     let data=unsafe{std::slice::from_raw_parts(bytes,len)};
-    match probe_prepare(data,boundary,peer_mss,peer_mss_advertised==1) {
+    let flow_bytes=unsafe{std::slice::from_raw_parts(flow,flow_len)};
+    match probe_prepare(data,boundary,peer_mss,peer_mss_advertised==1,flow_bytes) {
         Ok(handle)=>{
             // SAFETY: out was validated and the C caller owns a u64 slot.
             unsafe{out.write(handle)};
@@ -935,15 +961,20 @@ mod tests {
         b[64..96].fill(4);b[96..172].fill(5);b[172..].fill(6);
         b
     }
+    fn valid_flow()->[u8;12]{[10,0,0,2,10,0,1,1,0xa0,0x29,0x01,0xbb]}
     #[test]
     fn r0_m0_native_probe_local_fresh_generation_and_bounded_phases(){
         let a=candidate();
-        let first=probe_prepare(&a,0,1360,true).unwrap();
+        let first=probe_prepare(&a,0,1360,true,&valid_flow()).unwrap();
         // The actual RX/TX ScopedOwner+AEAD object must never expose its
         // RX queue or plaintext before BOTH directions commit.
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
-        assert_eq!(probe_prepare(&a,0,63,true).err(),Some(INVALID));
-        assert_eq!(probe_prepare(&a,0,1360,false).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&a,0,63,true,&valid_flow()).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&a,0,1360,true,&[0u8;12]).err(),Some(INVALID));
+        let malformed=[10,0,0,2,10,0,1,1,0,0,1,187];
+        assert_eq!(probe_prepare(&a,0,1360,true,&malformed).err(),Some(INVALID));
+        assert_eq!(parse_go_flow(&valid_flow()).unwrap().client_port,41001);
+        assert_eq!(probe_prepare(&a,0,1360,false,&valid_flow()).err(),Some(INVALID));
         // Same internal owner TX cannot seal through uncommitted probe even
         // with a format-valid candidate and explicit synthetic path budget.
         assert_eq!(probe_seal_tx(first,b"pre-commit",1200,1360,&mut [0u8;2048]).err(),
@@ -954,10 +985,10 @@ mod tests {
         // cannot half-install RX when TX construction fails, nor vice versa.
         let mut too_small_rx=a;
         too_small_rx[62..64].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_rx,0,1360,true).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&too_small_rx,0,1360,true,&valid_flow()).err(),Some(INVALID));
         let mut too_small_tx=a;
         too_small_tx[60..62].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_tx,0,1360,true).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&too_small_tx,0,1360,true,&valid_flow()).err(),Some(INVALID));
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
         assert_eq!(probe_commit(first,65,65,777),INVALID);
         assert_eq!(probe_commit(first,1,1401*64,777),INVALID);
@@ -974,7 +1005,7 @@ mod tests {
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);
         assert_eq!(probe_release(first),OK);
-        let second=probe_prepare(&a,100,1360,true).unwrap();
+        let second=probe_prepare(&a,100,1360,true,&valid_flow()).unwrap();
         assert_ne!(first,second);
         assert_eq!(probe_stage(second,99,&[1]),INVALID);
         assert_eq!(probe_stage(second,100,&[11,22,33]),OK);
@@ -988,23 +1019,23 @@ mod tests {
         assert_eq!(probe_drain(second).err(),Some(BAD_STAGE));
         assert_eq!(probe_stop(second),OK);
         assert_eq!(probe_release(second),OK);
-        let third=probe_prepare(&a,100,1360,true).unwrap();
+        let third=probe_prepare(&a,100,1360,true,&valid_flow()).unwrap();
         assert_ne!(third,second);
         assert_eq!(probe_abort(third),OK);
         assert_eq!(probe_commit(second,0,0,777),UNKNOWN);
         let mut corrupt=a;corrupt[0]=0;
-        assert_eq!(probe_prepare(&corrupt,0,1360,true).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&corrupt,0,1360,true,&valid_flow()).err(),Some(INVALID));
         let mut forged_client=a;forged_client[8]=0;
-        assert_eq!(probe_prepare(&forged_client,0,1360,true).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&forged_client,0,1360,true,&valid_flow()).err(),Some(INVALID));
         // A real Rust-owned early slab remains borrowed across Stop. Old
         // quiescence must be INCOMPLETE while a new generation can progress.
-        let fourth=probe_prepare(&a,200,1360,true).unwrap();
+        let fourth=probe_prepare(&a,200,1360,true,&valid_flow()).unwrap();
         assert_eq!(probe_stage(fourth,200,&[5,6]),OK);
         assert_eq!(probe_commit(fourth,1,2,777),OK);
         assert_eq!(probe_hold_rx(fourth).unwrap().0,1);
         assert_eq!(probe_stop(fourth),STOP_INCOMPLETE);
         assert_eq!(probe_release(fourth),BAD_STAGE);
-        let fifth=probe_prepare(&a,300,1360,true).unwrap();
+        let fifth=probe_prepare(&a,300,1360,true,&valid_flow()).unwrap();
         assert_ne!(fourth,fifth);
         assert_eq!(probe_commit(fifth,0,0,777),OK);
         assert_eq!(probe_stop(fifth),OK);
