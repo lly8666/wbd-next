@@ -1,0 +1,13 @@
+# M0-023: first true Linux netns TUN application C2S packet
+
+CODE SOURCE: `f0ff14de81d02f31b747934b99592f8524e75b3e`. Component real TUN kernel app C2S first-pass, NOT production E2E.
+
+The previous output path was a digest callback. This atom implemented NORMAL BUILD Linux `ScopedTunSink` adopting a Go-created and kernel-verified IFF_TUN+IFF_NO_PI FD. `ProtectedScopedOwner::drain_normal_off_to_tun` now takes authenticated/unique-PN M3 complete IPv4 business packet directly to a synchronous TUN kernel write with owner generation and Stop fence. No test-only crypto or alternate RX owner.
+
+The source-matched Go test in an actual owned Linux network namespace opens `/dev/net/tun`, configures 10.240.20.1/24, performs real protected Go V4 TLS, sends C2S sealed records over kernel UDP into original M4 recvmmsg/M1 slab, Rust opens AEAD+M3 LINK then writes a genuine IPv4 UDP packet into TUN, and a separate local UDP application socket receives 36 original bytes from 10.240.20.2. All ChaCha/AES128/AES256 cases were positive.
+
+Initial CODE source `5f8208bbc976eb25261c2003ee515844171e54b0` had a FAILED platform compilation because this newly introduced audited syscall island was not given its required `#[allow(unsafe_code)]` module boundary under `#![deny(unsafe_code)]`. It was corrected in `f0ff14de81d02f31b747934b99592f8524e75b3e`; never count the initial red as success.
+
+Exact source [M0 native run38846675458](https://github.com/lly8666/wbd-next/actions/runs/38846675458) build116798669325 / consume116799049063 SUCCESS. Go nine existing top-level tests, Rust owner1/1 and separately privileged real TUN test three suites PASS. The generated `tun-result.json` explicitly says PASS, `product_e2e=NOT_RUN`, `raw_carrier=NOT_RUN`, `netem_matrix=NOT_RUN`, `production_abi_features=0`. Build artifact12023034708 GitHub API ZIP digest sha256:5b93a2dd463e5eace9f54e184285636fda227d9ba6d42c0caf683983f2c0770d; result artifact12023183616 digest sha256:1ddd724b7975d3ecec6bc77613191d93ae7e470d0b0b08e6fcbf57f5c8fbec6e. Native-functional38846675521, platform38846675500, G238846675604, cross-build38846675397, Governance38846675486, static38846675525 SUCCESS; performance component run38846675384 does not qualify product throughput.
+
+**Remaining critical path**: production Go protected authenticated-to-Rust control ABI still disabled and cold248B never authenticates; actual application->TUN read, Rust TX to real AF_PACKET/raw FakeTCP peer is missing; true delayed driver-held B01-B04, reconnect/old generation and Linux netns `tc netem` matrix not run. Only complete product Normal/FEC-off app E2E warrants moving to RTT150/300, loss1/5%, reordering/reconnect; do not use UDP loopback or fake TUN as substitute. Product features0, physical/500Mbps NOT_RUN.

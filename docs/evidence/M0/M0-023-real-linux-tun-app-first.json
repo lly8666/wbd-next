@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "genuine-linux-tun-namespaced-kernel-app-C2S-first-delivery",
+  "source_sha": "f0ff14de81d02f31b747934b99592f8524e75b3e",
+  "result": "PARTIAL_TUN_KERNEL_C2S_APPLICATION_FIRST_PASS",
+  "first_failure": {
+    "source_sha": "5f8208bbc976eb25261c2003ee515844171e54b0",
+    "run_id": 38846530699,
+    "reason": "Rust deny(unsafe_code) rejected new audited TUN ioctl/write syscall island; corrected at f0ff14de. Earlier run is FAILED and must not be counted as a PASS."
+  },
+  "implementation": [
+    "Normal-compiled M4 linux_tun_sink::ScopedTunSink attaches exactly one caller-owned FD preconfigured by Go, validates TUNGETIFF name and IFF_TUN|IFF_NO_PI flags, synchronously kernel-writes a single complete IPv4 datagram under BorrowFence generation/Stop fence. No OS routing GUI or CAP_NET_ADMIN changes in product Rust.",
+    "Normal-compiled ProtectedScopedOwner::drain_normal_off_to_tun gates current Active generation and TUN Stop, reuses same original M1 RX loan + Rust AEAD unique PN + M3 LINK normal fixed-off reassembly; only complete authenticated IPv4 application packet enters TUN FD. Records unsuccessful kernel copies distinctly; does not recycle PN.",
+    "Feature-only Go test wrapper passes a duplicate TUN FD to same normal-compiled M4 sink. Actual pinned protected Go V4 handshake, three cipher suites, original Rust owner, original normal-build M4 UDP recvmmsg are reused; no new auth/decryptor/app delivery chain.",
+    "Go fixture runs within owned Linux ip netns under sudo; creates actual /dev/net/tun interface, configures 10.240.20.1/24, listens on a true local UDP application socket and submits a valid IPv4/UDP datagram via encrypted Go C2S/kernel UDP. The app socket independently confirms bytes originated from 10.240.20.2 and exact 36B payload.",
+    "Runner tools/run-v4-tun-netns.sh uses isolated namespace with trap cleanup and provides explicit status UNSUPPORTED exit77 on missing kernel permissions; workflow emits separate source/run/tun log hash receipt and retains existing prebuilt artifacts."
+  ],
+  "verification": {
+    "code_run": 38846675458,
+    "status": "SUCCESS",
+    "build_job": 116798669325,
+    "consume_job": 116799049063,
+    "attempt": 1,
+    "local_udp_integration": "Nine previously source-locked Go top-level tests PASS; Rust native1/1; V4 bidirectional kernel loopback checks PASS",
+    "privileged_actual_tun": "TestR0V4NativeRustTunKernelAppFirst PASS under real Linux netns; cipher suites 1/2/3 PASS; each test genuine kernel UDP application received 36B",
+    "tun_receipt": "tun-result.json result=PASS, production_abi_features=0, netem_matrix=NOT_RUN, raw_carrier=NOT_RUN, product_e2e=NOT_RUN",
+    "build_artifact": {
+      "id": 12023034708,
+      "digest": "sha256:5b93a2dd463e5eace9f54e184285636fda227d9ba6d42c0caf683983f2c0770d"
+    },
+    "result_artifact": {
+      "id": 12023183616,
+      "digest": "sha256:1ddd724b7975d3ecec6bc77613191d93ae7e470d0b0b08e6fcbf57f5c8fbec6e"
+    },
+    "exact_binary_and_source": "M0 native build once and consume checks expected SHA/run/attempt and binary/source input hashes. Artifact ZIP SHA is GitHub API metadata; ZIP bytes not separately rehashed."
+  },
+  "other_source_actions": [
+    {
+      "run": 38846675500,
+      "scope": "real Linux platform and contract fake",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38846675521,
+      "scope": "native functional",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38846675604,
+      "scope": "G2 native",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38846675397,
+      "scope": "cross-target ABI compile/inspection only",
+      "status": "SUCCESS",
+      "target_native": "NOT_RUN"
+    },
+    {
+      "run": 38846675486,
+      "scope": "Governance",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38846675525,
+      "scope": "R0 static qualification audit",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38846675384,
+      "scope": "path-triggered component performance",
+      "status": "SUCCESS",
+      "product_performance": "NOT_RUN"
+    }
+  ],
+  "gaps": [
+    "Positive production Go TLS session -> ordinary Rust C/native authenticated control/Activation is still disabled, raw self-consistent 248B cold is not trusted",
+    "Go application TUN read -> Rust owner sealed S2C -> actual raw/FakeTCP carrier and peer still not wired; TUN positive is ONLY decrypted C2S application egress",
+    "Actual AF_PACKET/raw FakeTCP carrier rather than UDP test fixture not positive-tested",
+    "Full B01–B04 delayed live M4 driver loans Stop/rotate, partial sends/reconnect not qualified",
+    "No actual tc netem normal/150/300ms RTT/1/5% loss/reordering/connection renewal matrix on production E2E; pending until both-direction app and native control",
+    "Physical and 500Mbps/CPU-s product qualification NOT_RUN"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "With real TUN C2S app sink proven, implement same owner TUN application INGRESS -> Rust M3 LINK encapsulation + AEAD/PN S2C -> M4 real carrier (raw/FakeTCP), and actual trusted positive production Go C ABI control, then held driver Stop/reconnect. After Normal/off bidirectional real first app delivery, add source-locked Linux netns veth plus tc netem baseline 150/300ms, 1/5% IID loss, reorder and reconnect with calibrated assertions."
+}

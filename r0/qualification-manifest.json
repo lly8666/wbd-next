@@ -707,5 +707,23 @@
     "held_driver_stop_B01_B04": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_real_linux_tun_first_app_delivery": {
+    "code_source_sha": "f0ff14de81d02f31b747934b99592f8524e75b3e",
+    "result": "PARTIAL_TUN_KERNEL_C2S_APPLICATION_FIRST_PASS",
+    "evidence": "docs/evidence/M0/M0-023-real-linux-tun-app-first.json",
+    "linux_namespace": "ONE ISOLATED ip netns, real /dev/net/tun IFF_TUN + IFF_NO_PI",
+    "path": "real private Go V4 credential-checked TLS C2S -> actual kernel UDP recvmmsg into original Rust M1 slab -> scoped Rust AEAD unique PN -> bounded M3 Normal/off LINK -> normal-build Linux ScopedTunSink write actual IPv4 packet -> kernel app UDP socket",
+    "three_cipher_suites": "ALL PASS; 36-byte app payload each",
+    "native_run": 38846675458,
+    "full_production_abi_features": 0,
+    "production_go_native_authenticated_install": "NOT_RUN",
+    "tun_reverse_application_to_sealed_carrier": "NOT_RUN",
+    "raw_faketcp_carrier_io": "NOT_RUN",
+    "driver_held_loan_stop_B01_B04": "NOT_RUN",
+    "tc_netem_normal_150_300ms_1_5pct_loss_reorder_reconnect": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN",
+    "product": "NOT_RUN"
   }
 }
