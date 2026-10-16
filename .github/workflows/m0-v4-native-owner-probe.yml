@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/m0-v4-native-owner-probe.yml"
+      - "tools/run-v4-kernel-loopback.sh"
       - "Cargo.toml"
       - "Cargo.lock"
       - "crates/wbd-engine/Cargo.toml"
@@ -99,7 +100,8 @@ jobs:
             "r0/go_overlay/internal/realityfront/admission_v4_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
-            ".github/workflows/m0-v4-native-owner-probe.yml"]
+            ".github/workflows/m0-v4-native-owner-probe.yml",
+            "tools/run-v4-kernel-loopback.sh"]
           binary=["libwbd_engine.so","owner-rust.test","owner-go.test"]
           m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
@@ -147,7 +149,7 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/native-probe-build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           mkdir native-probe-result
           set +e
-          ./native-probe-build/owner-go.test -test.v -test.run '^TestR0V4NativeRust(ProbeActualProtectedFreshOwner|ProtectedAEADReplayAllCiphers|ProtectedNormalOffLinkFirstPacket|ProtectedNormalOffBidirectionalScopedFirst|LinuxKernelBudget|LinuxKernelRoutePmtu|M4KernelUdpScopedTxFirstPacket|M4KernelUdpC2SIntoOriginalOwner|GoAdmissionRetainedHeapIndicative)$' >native-probe-result/go.log 2>&1
+          bash tools/run-v4-kernel-loopback.sh --prebuilt native-probe-build --all >native-probe-result/go.log 2>&1
           G=$?
           ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
           R=$?
