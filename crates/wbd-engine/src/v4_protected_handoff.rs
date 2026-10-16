@@ -105,10 +105,21 @@ mod tests {
         assert_eq!(p.flow.server_port,443);
         assert_eq!(p.rx_boundary,u32::MAX);
         assert!(PrivateGoV4Handoff::decode(&a[..31]).is_err());
-        for index in [0usize,4,6,8,12,16,18,24,26,27]{
+        // Mutate only fields whose zero value REALLY violates grammar.
+        // Changing a valid, nonzero port/MTU or an exact RX boundary is not
+        // automatically invalid; reject semantics, not arbitrary bytes.
+        for index in [0usize,5,7,8,12,26]{
             let mut wrong=a;wrong[index]=0;
             assert!(PrivateGoV4Handoff::decode(&wrong).is_err(),"byte={index}");
         }
+        let mut wrong=a;wrong[16..18].fill(0); // zero source port
+        assert!(PrivateGoV4Handoff::decode(&wrong).is_err());
+        let mut wrong=a;wrong[18..20].fill(0); // zero destination port
+        assert!(PrivateGoV4Handoff::decode(&wrong).is_err());
+        let mut wrong=a;wrong[24..26].fill(0); // zero original SYN MSS
+        assert!(PrivateGoV4Handoff::decode(&wrong).is_err());
+        let mut wrong=a;wrong[27]=1; // reserved extension
+        assert!(PrivateGoV4Handoff::decode(&wrong).is_err());
         let mut wrong=a;wrong[26]=2;
         assert!(PrivateGoV4Handoff::decode(&wrong).is_err());
         let mut wrong=a;wrong[26]=0;
