@@ -2,7 +2,9 @@
 
 本说明是施工约束，不是已经通过的测试清单。R0完成前不要让四个模块各写自己的Buffer/Clock/LaneKey/ABI。
 
-## 原子任务顺序
+## 能力交付顺序
+
+以下是能力与依赖顺序，不是要求每个包、断言或参数值单独提交/跑 Action/交接。实现可小步提交，相关功能验证批量完成；任务粒度、开发基线与正式资格的区分以 `../TEST_PLAN.md` 第 0 节为准。
 
 1. **R0/M0+M4**：锁旧SOURCE/依赖/toolchain，00的类型/编码/golden、C ABI、fake clock、platform假驱动，构建产物manifest和消费job；原Go TLS保护的V4能力协商适配。依赖选择已定，不重新办库性能比赛。
 2. **R1/M1+M3+M4**：先Normal/off一包贯通，再ready batch、双owner、内存池、三cipher；所有权/关闭先过，之后测旧新同job。这一步不加FEC/repair掩盖裸路径问题。
@@ -21,7 +23,7 @@
 1. **真实认证接入**：沿 01 唯一切换顺序，把已有 Go V4 可信调用点接到实际 Rust scoped owner 的 AEAD/PN 处理。沿用现有类型、arena、driver lease 与私有认证来源；拒绝外部自拼 cold bundle。测试必须穿过将来生产实际调用的函数；可替换时钟/设备边界以稳定复现，不另写一条更简单的 TEST-ONLY activation、crypto 或 delivery 链。保留当前生产 capability 关闭状态，不能为让测试通过提前广告尚未实现能力。
 2. **Normal/off 首到与关闭**：两端真实握手后，真实业务经 owner、record、实际平台 I/O 到业务出口，至少观察双向合法 payload、乱序先到即时交付、重复零重复交付、损坏不交付，以及 Stop/重新建连/旧 generation 迟到。把 B01–B04 接在同一条路径：Detach 前零交付、半安装不激活、真实 driver loan 未归还时 STOP_INCOMPLETE、归还后释放、旧 lane 退休不挡新 lane。保留已有功能，不用 FEC、repair 或额外排队掩盖裸路径缺陷。
 3. **Linux Actions 真实 I/O 锚点**：在独立 namespace/有界 owned 资源中接真实 TUN/raw 收发；无法使用真实驱动时写 UNSUPPORTED/NOT_RUN，unprivileged UDP、mock、native 编译均不能替代此项。先覆盖小包、当前有效 MTU 内最大包和超 MTU 兼容处置，禁止靠改 MTU/包型/业务率让坏样本变绿。功能断言尽量秒级，timer 反例用 fake clock，不机械地每项跑 120s。
-4. **第一份普通性能基线**：前述必要正确性锚点通过后才测 Normal 单 lane/FEC off、诊断默认 off、双向混合真实业务。从既有 10Mbps/方向锚点开始，记录实际注入、首到/missing、RTT/每流空洞、CPU-s/业务字节/包率、分配/复制计数与各层 drop/queue age；不先要求 500Mbps 或固定“省 25%”。与旧版比较时一个 Action 一个配置/场景/seed，同一个 job 顺序 AB/BA，复用精确编译产物。host 容量不足停止更重负载，产品单 owner 饱和须区分并留 profile。
+4. **第一份开发性能基线**：对所测路径先保证必要正确性和安全关闭；无需等待全部外部建连、未使用的 driver 分支、FEC/Game或正式产品资格完成。依 `../TEST_PLAN.md` 第 0 节完成持续 owner 循环和独立业务收发，再测 Normal 单 lane/FEC off、诊断默认 off、双向各 10Mbps 大小包混合。逐包手动驱动的 smoke 不能扩大包数充当吞吐测试。记录实际注入、首到/missing、RTT/每流空洞、CPU-s/业务字节/包率与各层 drop/queue age；缺口继续 NOT_RUN，生产 capability 不提前开放。正式资格仍需前述全部适用锚点。旧新对比同 job 顺序 AB/BA；宿主容量不足停止更重负载，产品瓶颈留 profile，不先要求 500Mbps 或固定“省 25%”。
 
 每步源码、用例入口、实际路径、剩余缺口落到既有 `r0/qualification-manifest.json` 与 devlog/evidence；不要新增另一套验收数据库。未实现能力只留 NOT_RUN，不无限补同义反例。Normal/off 可解释后再按 R2/R3/R4 接恢复、FEC、Game；现有成熟模块和有效组件证据保留。完成本次原子任务后按 S→H 交接，下一动作只写一个。
 

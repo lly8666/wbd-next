@@ -1,0 +1,9 @@
+# GOV-005：按完整能力交付，及时取得持续业务基线
+
+用户授权修正过细测试和接手规则。基线为 main `cb33e9a`；依据原功能源码 `f15e2319483ee33fc411731cac2df57e14c17807`、Actions 38893526677 及 `M0-023-12packet-bilateral-kernel-loss1-batch` 既有日志/证据。原12包循环逐包驱动与等待，72业务包的小样本及未知身份的 netem drop 不能证明持续吞吐或业务恢复。原日志未冒称这些资格，本次保留其有限结论。
+
+修改 AGENTS、START_HERE、治理协议、M0 固定提示词、project、当前任务决策和实施顺序，统一指向 TEST_PLAN 第0节。原子任务按完整可验收能力定义，功能便宜断言批量；指定 DATA 丢失/后包首到收口后，下一交付是持续 owner 循环与独立收发的 Normal/off 基线。区分开发测量与正式产品资格，保留全部适用硬门、SOURCE/产物身份、一性能 Action 一场景、同机顺序 A/B、容量停止和失败留痕。
+
+本次仅编辑计划/治理文字，不修改产品、测试程序、阈值、worker 权限或任务 ID。另一 M0 正在推进源码，本次使用隔离治理分支/PR，不覆盖其 cursor、请求、进度或已有证据。集成者接续时按既有恢复规则把本次规则修订纳入下一次 H，不把本修订当产品 PASS，也无需为文字修改重跑业务性能。
+
+验证：本地只审 diff/引用与并发范围。规则 SOURCE `096be007fc04f5a3d19e2d4debf8c2899526447b` 的 [Actions 38898950758](https://github.com/lly8666/wbd-next/actions/runs/38898950758) attempt1 / job116966158057 SUCCESS；工作流语法、169项治理回归、structure、R0账本与模型检查成功。下载复核 artifact12045630649，ZIP SHA-256 `8990ee741837d8a4956028a10fbee88df9d84373cb4317ebb4854ec3ca877c38`；结构报告仍明确 product/physical NOT_RUN。此后仅追加本验收记录，不宣称文档 HEAD 获得产品资格。
