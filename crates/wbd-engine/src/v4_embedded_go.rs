@@ -38,6 +38,8 @@ use crate::runtime::early_rx::EarlyAccepted;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use crate::runtime::RxPacket;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use crate::runtime::TxDispatch;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::time::Duration;
 const OK:i32=0;
 const INVALID:i32=1;
@@ -473,7 +475,7 @@ fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
 // original frozen M1 record through genuine scoped M4 raw TX.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(handle:u64,tun:&ScopedTunSink,
-    stop:&AtomicBool,ifindex:u32)->Result<(),i32>{
+    stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>)->Result<(),i32>{
     let (mut slab,generation)={
         let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
         let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -504,8 +506,9 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
         ack32:1,advertised_window:4096,ip_id:43,
         persona:PacketPersona::Legacy,
     };
-    e.owner.submit_scoped_raw_tx(raw,tuple,presentation,loop_now())
-        .map_err(|_|BAD_STAGE)?;
+    e.owner.submit_scoped_raw_tx_reusing(
+        raw,tuple,presentation,loop_now(),tx_storage
+    ).map_err(|_|BAD_STAGE)?;
     e.arena.drain_returns();
     Ok(())
 }
@@ -567,6 +570,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
+            let mut tx_storage=Vec::<TxDispatch>::with_capacity(1);
             while !stop_tx.load(Ordering::Acquire){
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
@@ -575,7 +579,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 }
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
-                match background_tun_once(handle,&tun,&stop_tx,ifindex){
+                match background_tun_once(
+                    handle,&tun,&stop_tx,ifindex,&mut tx_storage
+                ){
                     Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }

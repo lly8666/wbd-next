@@ -582,16 +582,50 @@ impl ProtectedScopedOwner {
             || driver.generation()!=self.generation || driver.is_stopping(){
             return Err(ProtectedCryptoError::Inactive)
         }
-        let batch=self.drain_tx(now,Vec::with_capacity(1))
-            .map_err(|_|ProtectedCryptoError::Owner)?;
-        let ready=self.checked_tx_ready(&batch)?;
-        if ready.len()!=1 || ready[0].kind!=crate::runtime::TxKind::Fresh {
+        // Compatibility caller remains legal, but the continuous Rust
+        // TX worker supplies/recycles ONE original M1 ready storage vector.
+        let mut storage=Vec::with_capacity(1);
+        self.submit_scoped_raw_tx_reusing(
+            driver,tuple,presentation,now,&mut storage
+        )
+    }
+
+    /// Same actual original M1 ScopedOwner TX loan and M4 raw sender;
+    /// worker owns `storage` across packets. `LoanBatch::recycle` first
+    /// releases immutable frozen handles AND its generation-held lease,
+    /// then returns the original Vec capacity to the same TX worker.
+    /// Failed dispatch never leaks or silently retries ciphertext.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn submit_scoped_raw_tx_reusing(
+        &mut self,driver:&ScopedRawIpv4Tx,
+        tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
+        storage:&mut Vec<TxDispatch>,
+    )->Result<usize,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        if !storage.is_empty() || storage.capacity()==0 {
             return Err(ProtectedCryptoError::Tx)
         }
-        let sent=driver.send_one(self.generation,&ready[0].record,tuple,presentation)
-            .map_err(|_|ProtectedCryptoError::Owner)?;
-        drop(batch);
-        Ok(sent)
+        let available=std::mem::take(storage);
+        let batch=match self.drain_tx(now,available){
+            Ok(batch)=>batch,
+            Err((_,returned))=>{
+                *storage=returned;
+                return Err(ProtectedCryptoError::Owner)
+            }
+        };
+        let outcome=(||{
+            let ready=self.checked_tx_ready(&batch)?;
+            if ready.len()!=1 || ready[0].kind!=crate::runtime::TxKind::Fresh {
+                return Err(ProtectedCryptoError::Tx)
+            }
+            driver.send_one(self.generation,&ready[0].record,tuple,presentation)
+                .map_err(|_|ProtectedCryptoError::Owner)
+        })();
+        *storage=batch.recycle();
+        outcome
     }
 
     /// Real raw IPv4/TCP RX directly into ORIGINAL M1 mutable slab, strict
