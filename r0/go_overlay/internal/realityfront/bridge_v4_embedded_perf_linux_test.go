@@ -32,7 +32,7 @@ const (
     m0PerfC2SMagic uint32 = 0x43325331
     m0PerfS2CMagic uint32 = 0x53324331
 )
-var m0PerfIPv4Sizes = [...]int{64,256,1200,1369}
+var m0PerfIPv4Sizes = []int{64,256,1200,1369}
 
 type m0PerfDir struct {
     sentPackets atomic.Uint64
@@ -60,7 +60,7 @@ func m0PerfVerify(p []byte,magic uint32,expectedSize int,stats *m0PerfDir){
         stats.invalid.Add(1);return
     }
     id:=binary.BigEndian.Uint64(p[4:12])
-    if expectedSize!=m0PerfIPv4Sizes[id%4]||len(p)!=expectedSize-28{
+    if expectedSize!=m0PerfIPv4Sizes[id%uint64(len(m0PerfIPv4Sizes))]||len(p)!=expectedSize-28{
         stats.invalid.Add(1);return
     }
     for i:=21;i<len(p);i++{
@@ -135,6 +135,15 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     }
     // Always the SAME predefined scenario, no variable seed / packet mix
     // or dynamic MTU change to rescue a failing throughput gate.
+    // Paired-only workload, old Go emits UDP payload 64/256/1200B;
+    // new actual IPv4 inner packet is payload+28B. Equal 10Mbps app
+    // offered rates, identical 1:1:1 mix. Default standalone unchanged.
+    paired:=os.Getenv("WBD_M0_PAIRED_OLD_NEW")=="1"
+    rateBits:=m0Perf10TargetBits
+    if paired {
+        m0PerfIPv4Sizes=[]int{92,284,1228}
+        rateBits=m0Perf10TargetBits*(92+284+1228)/(64+256+1200)
+    }
     const name="wbdperf0"
     const warmup=10*time.Second
     const measure=60*time.Second
@@ -205,7 +214,8 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     if effectiveMax<=1200{
         t.Fatalf("observed genuine normal/off inner MTU %d cannot fit declared 1200 size class",effectiveMax)
     }
-    m0PerfIPv4Sizes[3]=effectiveMax
+    if !paired {m0PerfIPv4Sizes[3]=effectiveMax}
+    if paired&&effectiveMax<1228{t.Fatalf("paired real MTU %d cannot fit shared UDP1200",effectiveMax)}
     t.Logf("M0_DEV_EFFECTIVE_INNER_MTU observed_rust_s2c_ipv4=%d c2s_record_ip_max=%d mixed_fourth_ipv4=%d",
         observedS2C,int(serverLimit)-31,effectiveMax)
     c2sSealer,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(serverLimit),CipherChaCha)
@@ -235,11 +245,11 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         for time.Now().Before(end){
             now:=time.Now()
             credits+=float64(now.Sub(next).Nanoseconds())*
-                float64(m0Perf10TargetBits)/8/1e9
+                float64(rateBits)/8/1e9
             next=now
             // Bounded 20ms local pacing credit; no unbounded catch-up queue.
             if credits>25000{credits=25000}
-            size:=m0PerfIPv4Sizes[sequence%4]
+            size:=m0PerfIPv4Sizes[sequence%uint64(len(m0PerfIPv4Sizes))]
             if credits<float64(size){time.Sleep(500*time.Microsecond);continue}
             credits-=float64(size)
             inner:=make([]byte,size-28)
@@ -382,8 +392,9 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     deliveredC:=mbps(inbound.receivedIPBytes.Load())
     deliveredS:=mbps(outbound.receivedIPBytes.Load())
     status:="MEASUREMENT_RECORDED_NOT_PRODUCT_PASS"
-    if offeredC<9.5||offeredS<9.5 {status="INVALID_INJECTOR"}
-    if offeredC>=9.5&&offeredS>=9.5&&(deliveredC<9.5||deliveredS<9.5){
+    lowerBound:=9.5*float64(rateBits)/float64(m0Perf10TargetBits)
+    if offeredC<lowerBound||offeredS<lowerBound {status="INVALID_INJECTOR"}
+    if offeredC>=lowerBound&&offeredS>=lowerBound&&(deliveredC<lowerBound||deliveredS<lowerBound){
         status="OBSERVED_DELIVERY_SHORTFALL_CAUSE_UNDETERMINED"
     }
     if len(failures)>0||inbound.invalid.Load()>0||outbound.invalid.Load()>0{
@@ -396,11 +407,13 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "cipher":"chacha20_poly1305_original_go_tls", "diagnostic_logging":false,
         "backend":"real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun",
         "production_features":0,"product_qualification":"NOT_RUN",
-        "desired_rate_mbps_each_direction_ipv4_inner_business":10,
-        "mix_packet_ipv4_lengths_bytes":[]int{64,256,1200,effectiveMax},
+        "desired_rate_mbps_each_direction_ipv4_inner_business":float64(rateBits)/1e6,
+        "paired_legacy_app_payload_mbps":map[bool]any{true:10.0,false:"NOT_APPLICABLE"}[paired],
+        "experiment_profile":map[bool]string{true:"PAIRED_OLD_GO_VS_NEW_RUST_SAME_VM_DIAGNOSTIC",false:"NORMAL_OFF_SINGLE_SOURCE_10MBPS_DEVELOPMENT"}[paired],
+        "mix_packet_ipv4_lengths_bytes":m0PerfIPv4Sizes,
         "original_rust_observed_s2c_effective_ipv4_mtu_bytes":observedS2C,
         "original_go_c2s_record_wire_limit_bytes":serverLimit,
-        "packet_mix_by_count":"1:1:1:1_FIXED_BEFORE_RUN",
+        "packet_mix_by_count":map[bool]string{true:"1:1:1_UDP_APPLICATION_PAYLOAD_64_256_1200",false:"1:1:1:1_IPV4_64_256_1200_EFFECTIVE_MAX"}[paired],
         "warmup_seconds":10,"measure_seconds":60,
         "receiver_drain_seconds":3,"timing":"wall_monotonic_scheduled_window",
         "c2s":samples(inbound),"s2c":samples(outbound),
