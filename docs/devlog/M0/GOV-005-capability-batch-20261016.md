@@ -6,4 +6,4 @@
 
 本次仅编辑计划/治理文字，不修改产品、测试程序、阈值、worker 权限或任务 ID。另一 M0 正在推进源码，本次使用隔离治理分支/PR，不覆盖其 cursor、请求、进度或已有证据。集成者接续时按既有恢复规则把本次规则修订纳入下一次 H，不把本修订当产品 PASS，也无需为文字修改重跑业务性能。
 
-验证：本地只审 diff/引用与并发范围；执行验证使用既有 Actions 治理完整回归。实际 run/SOURCE/结论在验后追加，未完成前为 NOT_RUN。
+验证：本地只审 diff/引用与并发范围。规则 SOURCE `096be007fc04f5a3d19e2d4debf8c2899526447b` 的 [Actions 38898950758](https://github.com/lly8666/wbd-next/actions/runs/38898950758) attempt1 / job116966158057 SUCCESS；工作流语法、169项治理回归、structure、R0账本与模型检查成功。下载复核 artifact12045630649，ZIP SHA-256 `8990ee741837d8a4956028a10fbee88df9d84373cb4317ebb4854ec3ca877c38`；结构报告仍明确 product/physical NOT_RUN。此后仅追加本验收记录，不宣称文档 HEAD 获得产品资格。
