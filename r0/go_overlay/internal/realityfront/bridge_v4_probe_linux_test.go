@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net";"time")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -446,6 +446,78 @@ func TestR0V4NativeRustLinuxKernelRoutePmtu(t *testing.T){
                 t.Fatal("retired owner accepted routed TX")
             }
             if err=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
+}
+
+// First actual kernel hop of this system's V4 Normal/off ciphertext:
+// normal-build Rust AEAD/PN -> original ScopedOwner M1 FrozenRecord ->
+// normal-build M4 bounded sendmmsg -> Linux UDP loopback -> Go kernel
+// ReadFromUDP -> REAL Go TLS-derived S2C Opener. No fake in-memory wire
+// transfer is allowed in the positive branch. UDP is not product TUN/raw.
+func TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket(t *testing.T){
+    iface,e:=net.InterfaceByName("lo")
+    if e!=nil||iface==nil||iface.Index<1{t.Fatalf("Linux loopback: %v",e)}
+    loopback:=net.IPv4(127,0,0,1)
+    for _,suite:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("cipher-%d",suite),func(t *testing.T){
+            sock,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:loopback,Port:0})
+            if e!=nil{t.Fatal(e)}
+            defer sock.Close()
+            port:=sock.LocalAddr().(*net.UDPAddr).Port
+            bridge:=&v4NativeRustProbe{}
+            if _,_,_,e=bridge.sendKernelUDP([]byte("before-detach"),uint32(iface.Index),uint16(port));e==nil{
+                t.Fatal("M4 accepted V4 before original Go protected admission")
+            }
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,suite)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
+                t.Fatalf("real Go TLS: %v %v",ce,se)
+            }
+            clientCold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            cLimit,_:=clientCold.RecordLimits()
+            opener,e:=tlsrecord.NewOpenerForCipher(
+                clientCold.DirectionKeys().S2C,int(cLimit),suite,
+            )
+            if e!=nil{t.Fatal(e)}
+            // Wrong kernel ifindex and invalid receiver must not spend PN.
+            if _,_,_,e=bridge.sendKernelUDP([]byte("wrong-index"),uint32(iface.Index+1),uint16(port));e==nil{
+                t.Fatal("kernel-bound scope bypassed on wrong ifindex")
+            }
+            if _,_,_,e=bridge.sendKernelUDP([]byte("no-port"),uint32(iface.Index),0);e==nil{
+                t.Fatal("driver accepted absent kernel recipient")
+            }
+            payload:=[]byte("first-real-kernel-normal-off-S2C-business-candidate")
+            pn,seq,n,e:=bridge.sendKernelUDP(payload,uint32(iface.Index),uint16(port))
+            if e!=nil||pn!=0||seq!=bridge.txBoundary||n<=uint32(len(payload)){
+                t.Fatalf("real M4 first submit: %v pn=%d seq=%d size=%d",e,pn,seq,n)
+            }
+            if e=sock.SetReadDeadline(time.Now().Add(2*time.Second));e!=nil{t.Fatal(e)}
+            buf:=make([]byte,2048)
+            gotSize,peer,e:=sock.ReadFromUDP(buf)
+            if e!=nil||gotSize!=int(n)||peer==nil||!peer.IP.Equal(loopback){
+                t.Fatalf("no real kernel UDP record: %v got=%d want=%d sender=%v",e,gotSize,n,peer)
+            }
+            opened,e:=opener.OpenRecord(buf[:gotSize])
+            if e!=nil||opened.PN!=pn||opened.Kind!=tlsrecord.KindLINK||
+                !bytes.Equal(opened.Payload,payload){
+                t.Fatalf("real UDP ciphertext not Go-TLS-authentic: %+v %v",opened,e)
+            }
+            // Second separate sendmmsg must be a fresh PN and TCP seq.
+            payload2:=[]byte("second-distinct-real-kernel-record")
+            pn2,seq2,n2,e:=bridge.sendKernelUDP(payload2,uint32(iface.Index),uint16(port))
+            if e!=nil||pn2!=pn+1||seq2!=seq+n {t.Fatalf("second scoped M4: %v pn=%d seq=%d",e,pn2,seq2)}
+            gotSize,_,e=sock.ReadFromUDP(buf)
+            if e!=nil||gotSize!=int(n2){t.Fatalf("second kernel read: %v",e)}
+            opened2,e:=opener.OpenRecord(buf[:gotSize])
+            if e!=nil||opened2.PN!=pn2||!bytes.Equal(opened2.Payload,payload2){
+                t.Fatalf("second independent TLS auth: %+v %v",opened2,e)
+            }
+            if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,_,e=bridge.sendKernelUDP([]byte("stale"),uint32(iface.Index),uint16(port));e==nil{
+                t.Fatal("M4 emitted ciphertext after Stop")
+            }
+            if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })
     }
 }

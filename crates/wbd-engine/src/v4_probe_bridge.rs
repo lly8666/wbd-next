@@ -20,6 +20,10 @@ use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::net::Ipv4Addr;
 use wbd_types::buffer_contract::FrozenRecordHandle;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::net::{UdpSocket,SocketAddrV4};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
 
@@ -445,6 +449,67 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_route(
     match probe_seal_tx_with_source(handle,bytes,source,output){
         Ok((used,number,start))=>{
             unsafe{out_len.write(used as u32);pn.write(number);seq.write(start)};
+            OK
+        }
+        Err(e)=>e,
+    }
+}
+
+/// TEST-ONLY orchestrator for a genuine M4 Linux sendmmsg kernel trip.
+/// NO independent crypto or alternate TX queue is implemented here. The
+/// normal-build owner seals one record into an M1 slab and submits that
+/// SAME scoped frozen TX batch through normal-build M4 ScopedUdpOwner.
+/// Go supplies the loopback UDP receiver's port and independently verifies
+/// the ciphertext arriving through the kernel. This is NOT raw/TUN app IO.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_udp_tx(handle:u64,payload:&[u8],ifindex:u32,receive_port:u16)
+    ->Result<(u64,u32,u32),i32>{
+    if payload.is_empty() || payload.len()>1400 || receive_port==0{
+        return Err(INVALID)
+    }
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let route=p.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::LOCALHOST
+    ).map_err(|_|INVALID)?;
+    if payload.len()>route.frame.single_business_payload_mtu{
+        return Err(INVALID)
+    }
+    let mut slab=p.arena.allocate().map_err(|_|FULL)?;
+    slab.writable()[14..14+payload.len()].copy_from_slice(payload);
+    let (pn,seq,wire_len)=p.owner.seal_normal_off_with_linux_budget(
+        slab,payload.len(),&route,15,MonoNs(0)
+    ).map_err(|_|INVALID)?;
+    // Both are genuine owned kernel sockets, not a Rust plaintext channel.
+    let sender=UdpSocket::bind((Ipv4Addr::LOCALHOST,0)).map_err(|_|INVALID)?;
+    sender.connect(SocketAddrV4::new(Ipv4Addr::LOCALHOST,receive_port))
+        .map_err(|_|INVALID)?;
+    let receiver=UdpSocket::bind((Ipv4Addr::LOCALHOST,0)).map_err(|_|INVALID)?;
+    let driver=ScopedUdpOwner::new((handle>>32) as u32,sender,receiver)
+        .map_err(|_|INVALID)?;
+    let result=p.owner.submit_scoped_udp_tx(&driver,MonoNs(0))
+        .map_err(|_|BAD_STAGE)?;
+    if result.len()!=1||result.accepted_prefix()!=1
+        ||result.uncertain_index().is_some()||result.error().is_some(){
+        return Err(BAD_STAGE)
+    }
+    p.arena.drain_returns();
+    Ok((pn,seq,u32::try_from(wire_len).map_err(|_|INVALID)?))
+}
+
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_send_kernel_udp(
+    handle:u64,payload:*const u8,len:usize,ifindex:u32,receive_port:u16,
+    out_pn:*mut u64,out_seq:*mut u32,out_wire_len:*mut u32,
+)->i32{
+    if payload.is_null()||len==0||len>1400||out_pn.is_null()
+        ||out_seq.is_null()||out_wire_len.is_null(){return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(payload,len)};
+    match probe_udp_tx(handle,bytes,ifindex,receive_port) {
+        Ok((pn,seq,wire_len))=>{
+            unsafe{out_pn.write(pn);out_seq.write(seq);out_wire_len.write(wire_len)};
             OK
         }
         Err(e)=>e,

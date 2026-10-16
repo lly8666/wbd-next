@@ -11,6 +11,7 @@ extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, 
 extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_seal_linux_observed(uint64_t, const unsigned char *, size_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_seal_linux_route(uint64_t, const unsigned char *, size_t, uint32_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
+extern int32_t wbd_m0_test_probe_send_kernel_udp(uint64_t, const unsigned char *, size_t, uint32_t, uint16_t, uint64_t *, uint32_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -256,4 +257,27 @@ func (b *v4NativeRustProbe) sealNativeNormalKernelRoute(
     if code!=0{return nil,0,0,fmt.Errorf("%w: scoped kernel IPv4 route=%d",errV4NativeProbe,int(code))}
     if used==0||int(used)>len(output){return nil,0,0,errV4NativeProbe}
     return output[:int(used)],uint64(pn),uint32(seq),nil
+}
+
+// Genuine M4 Linux kernel sendmmsg of the SAME ordinary Rust owner FrozenRecord.
+// Go receives on its own UDP socket and opens the original TLS-derived AEAD.
+// This test-only wrapper never substitutes a local copy for kernel delivery,
+// never treats UDP copy-complete as peer receipt, and is NOT TUN/raw.
+func (b *v4NativeRustProbe) sendKernelUDP(payload []byte,ifindex uint32,remotePort uint16)(
+    uint64,uint32,uint32,error,
+){
+    if !b.committed||b.handle==0||len(payload)==0||remotePort==0{
+        return 0,0,0,errV4NativeProbe
+    }
+    var pn C.uint64_t
+    var seq C.uint32_t
+    var wireSize C.uint32_t
+    code:=C.wbd_m0_test_probe_send_kernel_udp(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&payload[0])),
+        C.size_t(len(payload)),C.uint32_t(ifindex),C.uint16_t(remotePort),
+        &pn,&seq,&wireSize,
+    )
+    runtime.KeepAlive(payload)
+    if code!=0{return 0,0,0,fmt.Errorf("%w: real kernel M4 UDP scoped TX=%d",errV4NativeProbe,int(code))}
+    return uint64(pn),uint32(seq),uint32(wireSize),nil
 }

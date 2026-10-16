@@ -18,6 +18,10 @@ use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER,LINK_MAGIC};
 use wbd_codec::path_budget::FrameBudget;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::r1::BatchResult;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_packet_preflight::{
@@ -491,6 +495,42 @@ impl ProtectedScopedOwner {
         }
         self.rx_tx.checked_tx_ready(&self.token,batch)
             .map_err(|_|ProtectedCryptoError::Owner)
+    }
+
+    /// Actual M4 Linux synchronous sendmmsg of the current protected V4
+    /// owner's M1 immutable FrozenRecord TX loans. One syscall is bounded
+    /// to 32 entries; payloads are NOT copied/resealed. The cloned Arc handles
+    /// hold original M1 slabs through the kernel read. Never auto-replay an
+    /// uncertain record: caller MUST inspect BatchResult dispositions.
+    ///
+    /// This is the existing M4 unprivileged UDP kernel backend; not a raw
+    /// TCP/TUN adapter or proof of product business delivery. The whole
+    /// driver lifetime, correct peer tuple and subsequent auth ingress
+    /// remain work for the real runtime.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn submit_scoped_udp_tx(&mut self,
+        driver:&ScopedUdpOwner,now:MonoNs,
+    )->Result<BatchResult,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping() {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let batch=self.drain_tx(now,Vec::with_capacity(32))
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        let checked=self.checked_tx_ready(&batch)?;
+        if checked.is_empty() || checked.len()>32 ||
+            checked.iter().any(|x|x.kind!=crate::runtime::TxKind::Fresh){
+            return Err(ProtectedCryptoError::Tx)
+        }
+        // Clone only the Arc-backed immutable HANDLE, never the ciphertext.
+        // This Vec is bounded to <=32 and only exists until syscall returns;
+        // original loan batch stays in scope across M4's BorrowFence guard.
+        let records=checked.iter().map(|x|x.record.clone())
+            .collect::<Vec<_>>();
+        let outcome=driver.submit(self.generation,&records)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        drop(batch);
+        Ok(outcome)
     }
 
     /// Accept an existing owned ingress slab ONLY after Go's trusted Detach
