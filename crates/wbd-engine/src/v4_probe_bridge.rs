@@ -24,6 +24,10 @@ use wbd_types::buffer_contract::FrozenRecordHandle;
 use std::net::{UdpSocket,SocketAddrV4};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_tun_sink::ScopedTunSink;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::os::fd::BorrowedFd;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
 
@@ -55,6 +59,7 @@ struct Probe {
     peer_mss:u16,
     peer_mss_advertised:bool,
     kernel_rx:Option<ScopedUdpOwner>,
+    tun_sink:Option<ScopedTunSink>,
 }
 
 struct Probes {
@@ -116,7 +121,7 @@ fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
     state.slots.insert(handle, Probe {
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        peer_mss,peer_mss_advertised,kernel_rx:None,
+        peer_mss,peer_mss_advertised,kernel_rx:None,tun_sink:None,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -243,6 +248,7 @@ fn probe_stop(handle:u64)->i32 {
     if p.phase==PH_STOPPED {return OK}
     if p.phase!=PH_COMMITTED && p.phase!=PH_STOPPING {return BAD_STAGE}
     if let Some(ref driver)=p.kernel_rx {driver.begin_stop()}
+    if let Some(ref tun)=p.tun_sink {tun.begin_stop()}
     let Ok(retired)=p.owner.stop() else {return BAD_STAGE};
     if !retired.ready.batch_handles_released(){
         p.phase=PH_STOPPING;
@@ -582,6 +588,70 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_rx(
             unsafe{out_pn.write(pn);out_digest.write(digest)};OK
         }
         Err(err)=>err,
+    }
+}
+
+// Positive real app egress observer: M4 kernel UDP RX into original Rust
+// owner -> AEAD/PN + M3 complete Normal/off -> same normal-compiled TUN
+// sink, writing an entire IPv4 packet into kernel's IFF_TUN/NO_PI FD.
+// The Go fixture must already configure/own the namespace and TUN. The
+// FFI is TEST ONLY; arbitrary C byte bundles remain untrusted.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_attach_tun(handle:u64,fd:i32,ifname:&str)->Result<(),i32>{
+    if fd<3 {return Err(INVALID)}
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED || p.tun_sink.is_some(){return Err(BAD_STAGE)}
+    // SAFETY: borrowed fd is live for this synchronous C call, and
+    // try_clone_to_owned duplicates the kernel handle before returning.
+    let dup=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        .map_err(|_|INVALID)?;
+    let tun=ScopedTunSink::from_owned_fd(dup,(handle>>32) as u32,ifname)
+        .map_err(|_|INVALID)?;
+    p.tun_sink=Some(tun);
+    Ok(())
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_kernel_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let driver=p.kernel_rx.as_ref().ok_or(BAD_STAGE)?;
+    let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    p.owner.receive_scoped_udp_into_owner(driver,slab,
+        u64::from(p.rx_boundary),MonoNs(0)).map_err(|_|INVALID)?;
+    let (storage,report,delivered,failed)=p.owner.drain_normal_off_to_tun(
+        &mut p.normal,tun,MonoNs(0),Vec::with_capacity(32)
+    ).map_err(|_|BAD_STAGE)?;
+    drop(storage);
+    p.arena.drain_returns();
+    if report.completed!=1 || delivered!=1 || failed!=0 {
+        return Err(INVALID)
+    }
+    Ok((delivered,failed))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_attach_tun(
+    handle:u64,fd:i32,name:*const u8,len:usize,
+)->i32 {
+    if name.is_null()||len==0||len>15{return INVALID}
+    let name=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(name)=std::str::from_utf8(name) else{return INVALID};
+    match probe_attach_tun(handle,fd,name){Ok(())=>OK,Err(e)=>e}
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_to_tun(
+    handle:u64,out_delivered:*mut u32,out_failed:*mut u32,
+)->i32{
+    if out_delivered.is_null()||out_failed.is_null(){return INVALID}
+    match probe_kernel_rx_to_tun(handle){
+        Ok((delivered,failed))=>{
+            unsafe{out_delivered.write(delivered);out_failed.write(failed)};OK
+        }
+        Err(e)=>e
     }
 }
 

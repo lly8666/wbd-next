@@ -36,6 +36,10 @@ mod linux_loopback_raw;
 /// Real unprivileged UDP fixture outcome + generation-tagged explicit driver lease.
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 pub mod linux_driver_outcome_lease;
+/// Production-compiled Linux preconfigured kernel TUN L3 application sink.
+/// Only a real authenticated engine owner may call it with a business packet.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+pub mod linux_tun_sink;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};

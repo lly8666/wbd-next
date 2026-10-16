@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net";"time";"runtime")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net";"time";"runtime";"os";"os/exec";"syscall";"unsafe")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -633,4 +633,88 @@ func TestR0V4NativeRustGoAdmissionRetainedHeapIndicative(t *testing.T){
         if e:=a.store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,a.server.Epoch);e!=nil{t.Fatal(e)}
     }
     runtime.KeepAlive(samples)
+}
+
+// Real Linux namespace TUN app-egress first packet. Run ONLY by the
+// privileged owned namespace runner; ordinary CI runs skip this test.
+// No mock destination: Go application socket must receive a packet injected
+// into the actual /dev/net/tun FD by normal-build Rust after AEAD/M3.
+func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
+    if os.Getenv("WBD_REAL_TUN")!="1"{t.Skip("TUN real namespace capability test is opt-in")}
+    const name="wbdtunn0"
+    f,e:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if e!=nil{t.Fatalf("TUN_UNSUPPORTED open /dev/net/tun: %v",e)}
+    defer f.Close()
+    var ifreq [40]byte // native Linux x86_64 ifreq
+    copy(ifreq[:16],[]byte(name))
+    binary.LittleEndian.PutUint16(ifreq[16:18],0x1001) // IFF_TUN|IFF_NO_PI
+    _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,f.Fd(),0x400454ca,
+        uintptr(unsafe.Pointer(&ifreq[0]))) // TUNSETIFF
+    if errno!=0{t.Fatalf("TUN_UNSUPPORTED ioctl TUNSETIFF: %v",errno)}
+    if out,e:=exec.Command("ip","addr","add","10.240.20.1/24","dev",name).CombinedOutput();e!=nil{
+        t.Fatalf("TUN configure address: %v %s",e,out)
+    }
+    if out,e:=exec.Command("ip","link","set","dev",name,"up").CombinedOutput();e!=nil{
+        t.Fatalf("TUN configure up: %v %s",e,out)
+    }
+    dstIP:=net.IPv4(10,240,20,1)
+    senderIP:=net.IPv4(10,240,20,2)
+    loIP:=net.IPv4(127,0,0,1)
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            bridge:=&v4NativeRustProbe{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed {
+                t.Fatalf("Go real protected V4 TLS: %v %v",ce,se)
+            }
+            port,e:=bridge.bindKernelRx();if e!=nil{t.Fatal(e)}
+            if e=bridge.attachKernelTun(f.Fd(),name);e!=nil{t.Fatal(e)}
+            app,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dstIP,Port:0})
+            if e!=nil{t.Fatalf("actual Linux application UDP bind: %v",e)}
+            defer app.Close()
+            c,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            _,limit:=c.RecordLimits()
+            sealer,e:=tlsrecord.NewSealerForCipher(c.DirectionKeys().C2S,int(limit),cipher)
+            if e!=nil{t.Fatal(e)}
+            udp,e:=net.DialUDP("udp4",nil,&net.UDPAddr{IP:loIP,Port:int(port)})
+            if e!=nil{t.Fatal(e)}
+            defer udp.Close()
+            payload:=[]byte("verified-IPV4-app-TUN-business-first")
+            packet:=make([]byte,20+8+len(payload))
+            packet[0]=0x45;packet[8]=64;packet[9]=17
+            binary.BigEndian.PutUint16(packet[2:4],uint16(len(packet)))
+            binary.BigEndian.PutUint16(packet[4:6],uint16(17+cipher))
+            copy(packet[12:16],senderIP.To4())
+            copy(packet[16:20],dstIP.To4())
+            var sum uint32
+            for i:=0;i<20;i+=2{sum+=uint32(binary.BigEndian.Uint16(packet[i:i+2]))}
+            for sum>>16!=0{sum=(sum&0xffff)+(sum>>16)}
+            binary.BigEndian.PutUint16(packet[10:12],^uint16(sum))
+            binary.BigEndian.PutUint16(packet[20:22],40001)
+            binary.BigEndian.PutUint16(packet[22:24],uint16(app.LocalAddr().(*net.UDPAddr).Port))
+            binary.BigEndian.PutUint16(packet[24:26],uint16(8+len(payload)))
+            // UDP checksum==0 is legal in IPv4, no fake packet contents.
+            copy(packet[28:],payload)
+            wire,pn,e:=sealer.Seal(packet)
+            if e!=nil||pn!=0{t.Fatalf("protected C2S record: %v pn=%d",e,pn)}
+            if n,e:=udp.Write(wire);e!=nil||n!=len(wire){t.Fatalf("Go real C2S UDP: %v",e)}
+            delivered,failed,e:=bridge.receiveKernelToTun()
+            if e!=nil||delivered!=1||failed!=0{
+                t.Fatalf("normal Rust AEAD/M3 -> kernel TUN write: e=%v delivered=%d failed=%d",e,delivered,failed)
+            }
+            if e=app.SetReadDeadline(time.Now().Add(2*time.Second));e!=nil{t.Fatal(e)}
+            got:=make([]byte,256)
+            n,peer,e:=app.ReadFromUDP(got)
+            if e!=nil||peer==nil||!peer.IP.Equal(senderIP)||!bytes.Equal(got[:n],payload){
+                t.Fatalf("NO REAL TUN application kernel UDP first: err=%v peer=%v n=%d",e,peer,n)
+            }
+            t.Logf("TUN_APP_FIRST_PACKET_PASS suite=%d received=%d via=/dev/net/tun, IP kernel socket",cipher,n)
+            if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            if _,_,e=bridge.receiveKernelToTun();e==nil{
+                t.Fatal("retired normal Rust scoped TUN owner allowed delivery")
+            }
+            if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
+        })
+    }
 }

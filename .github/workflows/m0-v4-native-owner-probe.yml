@@ -6,6 +6,8 @@ on:
     paths:
       - ".github/workflows/m0-v4-native-owner-probe.yml"
       - "tools/run-v4-kernel-loopback.sh"
+      - "tools/run-v4-tun-netns.sh"
+      - "crates/wbd-platform/src/linux_tun_sink.rs"
       - "Cargo.toml"
       - "Cargo.lock"
       - "crates/wbd-engine/Cargo.toml"
@@ -85,6 +87,7 @@ jobs:
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "crates/wbd-platform/src/linux_packet_preflight.rs",
             "crates/wbd-platform/src/lib.rs",
+            "crates/wbd-platform/src/linux_tun_sink.rs",
             "crates/wbd-platform/src/linux_driver_outcome_lease.rs",
             "crates/wbd-platform/src/linux_rx_batch.rs",
             "crates/wbd-platform/src/linux_batch.rs",
@@ -101,7 +104,8 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
             ".github/workflows/m0-v4-native-owner-probe.yml",
-            "tools/run-v4-kernel-loopback.sh"]
+            "tools/run-v4-kernel-loopback.sh",
+            "tools/run-v4-tun-netns.sh"]
           binary=["libwbd_engine.so","owner-rust.test","owner-go.test"]
           m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
@@ -185,6 +189,41 @@ jobs:
           print(json.dumps(result,indent=2))
           if not(good_go and good_rust):sys.exit(1)
           PY
+      - name: Real Linux TUN L3 app ingress in owned netns (capability-gated)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-probe-result
+          set +e
+          bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/tun-netns.log 2>&1
+          RC=$?
+          set -e
+          cat native-probe-result/tun-netns.log
+          if [[ "$RC" == 77 ]]; then
+            STATE=UNSUPPORTED
+            echo 'True kernel TUN/namespace not supported on this Actions runner; no PASS claim.'
+          elif [[ "$RC" == 0 ]]; then
+            grep -q 'TUN_APP_FIRST_PACKET_PASS: isolated netns' native-probe-result/tun-netns.log
+            grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
+            STATE=PASS
+          else
+            STATE=FAIL
+          fi
+          TUN_STATE="$STATE" python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          log=pathlib.Path("native-probe-result/tun-netns.log").read_bytes()
+          source=json.load(open("native-probe-build/manifest.json"))
+          result={"source_sha":source["source_sha"],"run_id":source["run_id"],
+              "attempt":source["attempt"],"result":os.environ["TUN_STATE"],
+              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_APP_EGRESS",
+              "tun_log_sha256":hashlib.sha256(log).hexdigest(),
+              "production_abi_features":0,"product_e2e":"NOT_RUN",
+              "netem_matrix":"NOT_RUN","raw_carrier":"NOT_RUN"}
+          pathlib.Path("native-probe-result/tun-result.json").write_text(
+              json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+          test "$STATE" != FAIL
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

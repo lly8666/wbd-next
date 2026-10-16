@@ -14,6 +14,8 @@ extern int32_t wbd_m0_test_probe_seal_linux_route(uint64_t, const unsigned char 
 extern int32_t wbd_m0_test_probe_send_kernel_udp(uint64_t, const unsigned char *, size_t, uint32_t, uint16_t, uint64_t *, uint32_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_bind_kernel_rx(uint64_t,uint16_t *);
 extern int32_t wbd_m0_test_probe_receive_kernel_rx(uint64_t,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_test_probe_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_test_probe_receive_kernel_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -303,4 +305,29 @@ func (b *v4NativeRustProbe) receiveKernelRx()(uint64,uint64,error){
     )
     if code!=0{return 0,0,fmt.Errorf("%w: kernel RX in owner=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint64(digest),nil
+}
+
+// Test-only glue. The ordinary Rust ScopedTunSink owns a dup of this
+// already-configured Linux TUN FD and publishes only AEAD-verified M3
+// complete IPV4 packets. No test-only unverified business delivery.
+func (b *v4NativeRustProbe) attachKernelTun(fd uintptr,ifname string)error{
+    if !b.committed||b.handle==0||len(ifname)==0||len(ifname)>15{return errV4NativeProbe}
+    raw:=[]byte(ifname)
+    code:=C.wbd_m0_test_probe_attach_tun(
+        C.uint64_t(b.handle),C.int32_t(fd),
+        (*C.uchar)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)),
+    )
+    runtime.KeepAlive(raw)
+    if code!=0{return fmt.Errorf("%w: attach real TUN=%d",errV4NativeProbe,int(code))}
+    return nil
+}
+func (b *v4NativeRustProbe) receiveKernelToTun()(uint32,uint32,error){
+    if !b.committed||b.handle==0{return 0,0,errV4NativeProbe}
+    var delivered C.uint32_t
+    var rejected C.uint32_t
+    code:=C.wbd_m0_test_probe_receive_kernel_to_tun(
+        C.uint64_t(b.handle),&delivered,&rejected,
+    )
+    if code!=0{return 0,0,fmt.Errorf("%w: real TUN app delivery=%d",errV4NativeProbe,int(code))}
+    return uint32(delivered),uint32(rejected),nil
 }

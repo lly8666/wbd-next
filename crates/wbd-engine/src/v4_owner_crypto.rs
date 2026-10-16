@@ -20,6 +20,8 @@ use wbd_codec::path_budget::FrameBudget;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_tun_sink::ScopedTunSink;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::BatchResult;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
@@ -655,6 +657,36 @@ impl ProtectedScopedOwner {
             })?;
         out.authenticated=authenticated;
         Ok((returned,out))
+    }
+
+    /// Real Linux kernel TUN application sink: ONLY the complete authenticated
+    /// M3 Normal/off LINK business packet enters the attached OS TUN FD.
+    /// No unauthenticated record, replay, malformed or pending fragment
+    /// can reach the write. A syscall error is a LOST application delivery,
+    /// not permission to reuse the consumed AEAD packet number.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn drain_normal_off_to_tun(
+        &mut self,receiver:&mut NormalOffReceive,tun:&ScopedTunSink,
+        now:MonoNs,storage:Vec<RxPacket>,
+    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32),
+        (ProtectedCryptoError,Vec<RxPacket>)>{
+        if self.state!=OwnerPhase::Active || tun.generation()!=self.generation
+            || tun.is_stopping(){
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let generation=self.generation;
+        let mut delivered=0u32;
+        let mut failed=0u32;
+        let (returned,report)=self.drain_normal_off(
+            receiver,now,storage,|_pn,payload|{
+                if tun.write_authenticated_ipv4(generation,payload).is_ok(){
+                    delivered+=1;
+                }else{
+                    failed+=1;
+                }
+            }
+        )?;
+        Ok((returned,report,delivered,failed))
     }
 
     pub(crate) fn drain_rx(&mut self,now:MonoNs,storage:Vec<RxPacket>)
