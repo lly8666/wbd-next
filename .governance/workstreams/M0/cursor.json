@@ -4,27 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 97,
-  "checkpoint_sha": "8e97e8f449e7e239dd01b79348899cb046a0cb04",
+  "sequence": 98,
+  "checkpoint_sha": "874ef7a5f3232e5f6c0f3f2fd1983c1f936732d2",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "GOV-005新版 M0 提示词和 TEST_PLAN §0 已从远端 main 逐提交审计 GOV-005 PR6 合并后应用。本轮完成一个完整功能批次：真实 Go V4 TLS 私有认证 → 原始非测试 Rust owner/M3 → 实际 Linux M4 raw/TUN 上，以原可信 FakeTCP 四元组及独特 IPv4 ID 的内核 tc clsact/u32 明确丢弃加密 DATA PN0；后续密文 PN1 跨确切 TCP-like seq 缺口直接进入独立 TUN 应用，三 cipher 每组 kernel drop=1，业务字节核对 PASS，且旧 PN0 无应用再交付。代码 SOURCE c359ddd50d7e05bd130dd48e9de0f15c18c48d66 原生 Actions38903483740 PASS；证据 S 8e97e8f449e7e239dd01b79348899cb046a0cb04 静态审计38904029880/Governance38904029935 PASS。原12包与随机1%证据只保留既有边界。正式023 PARTIAL，生产 features0。",
-  "why_now": "新版 GOV-005 禁止逐包/逐配置小台阶；补齐旧随机 netem drop 身份不明造成的必要 no-HOL 缺包证据，下一阶段不再放大 smoke，直接做持续 Rust owner 循环。",
-  "done_when": "本功能批次已满足：同一原始 Go认证 Rust owner、三 cipher 真 Linux 加密 DATA 精确丢包、内核 tc drop=1、后继不同 PN1 第一业务交付、真实 TUN 应用完整性，原生 build/consume 及所用功能回归同 SOURCE PASS。尚未满足023正式 Exit：真实外部 SYN、持有异步 driver B04、B01/B02 全路径与正式产品能力。短 Go 单包驱动不能冒充独立持续 owner 或 10Mbps 性能。详见证据 S；普通 Governance 不作产品 PASS。",
-  "next_action": "实现原始受认证 Go V4→Rust M1/M3/M4 的独立持续 RX/TX owner 运行循环，发送器/接收器与原引擎互不逐包同步驱动；消除现有单一 registry Mutex 持有内核 RX 等待导致的潜在跨向 HOL 并保留停止/代际安全。随后用同一受限原始真实 Linux raw/TUN 路径，Normal 单 lane/FEC off/诊断关，独立业务双向各10Mbps、预定64/256/1200/有效MTU混合，10s热身+60s测量，以独立业务计时、实际收发/缺包、CPU-s、RSS、socket/drop、队列年龄、PPS、RTT与宿主容量证据交付开发基线；不因开发基线开放生产 features0。",
+  "current_task": "GOV-005 §0: H97 后已完成一项完整能力——原 Go TLS 认证 V4 私有调用→原非测试 Rust M1/M3 owner→真实 Linux M4 raw/TUN 的独立常驻 RX/TX 双线程。Go 不逐包调用 bridge；现在内核 raw/TUN 阻塞读取发生于 registry Mutex 锁外，原 owner 内作 AEAD/PN、Normal/off、发送，Stop 在回收线程后才停真实驱动并释放 generation。最终 CODE SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 原生 Actions38907951546 attempt1 build116996212076 consume116996847641 PASS：后台 C2S8/8 S2C8/8、错误0/0，同源 ABI/cross/native/静态/Gov PASS。证据 S 874ef7a5f3232e5f6c0f3f2fd1983c1f936732d2 静态38908589807/Gov38908589654 PASS。此前夹具误将 Linux ACK/RST 交给 TLS 解码器的失败38906827243、38907243656已保留，修好 Go 独立接收筛选后 Actions 全通过。正式023 partial/features0。",
+  "why_now": "新版主线规则要求不再重复小包 smoke，直接实现 Rust 持续 owner 循环，且消除原全局 Mutex 对内核 RX/TUN 最多750ms的方向间阻塞。复用原始认证、M1 slab、M3 AEAD/PN、M4 同代 driver/Stop，不造测试-only加密或产品 capability。",
+  "done_when": "当前持续 owner 基础能力的正确性/安全关闭功能已验收：两条 Rust OS worker、真实内核读锁外、同一原 Rust owner 和受保护 Go 凭证、Go独立应用发送/接收、无 per-packet bridge helper、源码精确 Actions PASS。不是10Mbps性能资格；本批未测试持续70秒、混合MTU、独立进程注入CPU/engine CPU、RTT p99、RSS、内核drops、队列年龄或宿主容量。B01–B04 全量/真实异步 driver、外部 SYN、500Mbps、正式产品均未验收，不能降低硬门。",
+  "next_action": "使用已验收的 Rust 双工作线程持续路径，在 ONE 配置/seed/一个测量 job 的 Actions 中搭建真实独立 Linux raw/TUN 业务注入与接收，Normal 单 lane/FEC off/诊断关，预声明64/256/1200/当前有效内层MTU比例，双向各10Mbps，热身10秒+测量60秒；分离引擎/注入器CPU-s与RSS，测实际注入交付/缺包、wire PPS、socket/kernel drops、队列年龄与独立探针RTT p99及host cgroup/PSI。若同进程CPU无法分离或容量不足，明确INCONCLUSIVE/HOST_CAPACITY_LIMITED，不冒充正式基线或产品PASS，默认 features0 不变。",
   "unverified": true,
-  "last_tested_source": "c359ddd50d7e05bd130dd48e9de0f15c18c48d66",
+  "last_tested_source": "69f392c58067ec8f8ca53ed95c660510e6831595",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-kernel-targeted-data-loss-no-hol.json"
+    "docs/evidence/M0/M0-023-original-rust-background-owner-loop.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-023-kernel-targeted-data-loss-no-hol.md",
+    "docs/devlog/M0/M0-023-original-rust-background-owner-loop.md",
     "docs/architecture/TEST_PLAN.md",
-    "docs/prompts/M0.md",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "CLEAN后按新版提示词已完成实际内核针对加密DATA PN0定向丢弃、正常PN1无需等待缺口的三cipher功能批次并完成S/H证据。尚无独立持续Rust owner运行循环或10Mbps基线；不扩展逐包烟雾测试；正式023 partial/features0。"
+  "partial_summary": "原生Go可信TLS→原Rust owner双后台线程，M4 kernel raw/TUN 阻塞读离开全局锁，功能8/8双向、错误0、stop/release/source-locked Actions PASS。10Mbps/10s+60s性能基线还未测试；023仍PARTIAL、features0，外部SYN/B04等未验证。"
 }
