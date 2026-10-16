@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -82,7 +82,7 @@ func TestR0V4NativeRustProbeActualProtectedFreshOwner(t *testing.T){
         t.Fatal("old generation visible after final lease return")
     }
     b:=&v4NativeRustProbe{}
-    if _,e:=b.prepare(V4ColdSessionSnapshot{},0);e==nil{
+    if _,e:=b.prepare(V4ColdSessionSnapshot{},0,v4PeerTransport{});e==nil{
         t.Fatal("forged empty snapshot minted Rust owner candidate")
     }
 }
@@ -262,13 +262,16 @@ func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
     for _,suite:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
         t.Run(fmt.Sprintf("cipher-%d",suite),func(t *testing.T){
             bridge:=&v4NativeRustProbe{}
-            if _,_,_,e:=bridge.sealNativeNormal([]byte("before-detach"),1200,536);e==nil{
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("before-detach"),1200,faketcp.DefaultMSS);e==nil{
                 t.Fatal("TX admitted without Go's protected reply and Detach")
             }
             store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
             client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,suite)
             if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed{
                 t.Fatalf("protected TLS owner failed: %v %v",ce,se)
+            }
+            if bridge.peerMSS!=faketcp.DefaultMSS||!bridge.peerAdvertised{
+                t.Fatalf("SYN profile was not bound to real Go V4 association: mss=%d advertised=%v",bridge.peerMSS,bridge.peerAdvertised)
             }
             serverCold,e:=server.ColdSnapshot();if e!=nil{t.Fatal(e)}
             clientCold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
@@ -285,7 +288,7 @@ func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
             // These are SYNTHETIC path input values for test only; the
             // production M4 PathBudget/actual MSS still remain NOT_RUN.
             first:=[]byte{0x00,0x51,0xff,0x00,0x61}
-            wire,pn,seq,e:=bridge.sealNativeNormal(first,1200,536)
+            wire,pn,seq,e:=bridge.sealNativeNormal(first,1200,faketcp.DefaultMSS)
             if e!=nil||pn!=0||seq!=bridge.txBoundary{
                 t.Fatalf("Rust first TX PN/boundary wrong: pn=%d seq=%d want=%d err=%v",
                     pn,seq,bridge.txBoundary,e)
@@ -298,13 +301,18 @@ func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
             // Explicit budget guard rejects a too-small carrier and any
             // raw ordinary payload that requires LINK magic escaping.
             if _,_,_,e:=bridge.sealNativeNormal(bytes.Repeat([]byte{1},128),1200,64);e==nil{
-                t.Fatal("Rust TX violated effective MSS path budget")
+                t.Fatal("caller attempted to replace observed SYN MSS")
             }
-            if _,_,_,e:=bridge.sealNativeNormal([]byte("WBDLFRG1needs-escape"),1200,536);e==nil{
+            // MTU1500 would allow 1460 TCP payload, but the REAL observed
+            // SYN MSS1360 prevents a 1340B ordinary payload + 31B record.
+            if _,_,_,e:=bridge.sealNativeNormal(bytes.Repeat([]byte{1},1340),1500,faketcp.DefaultMSS);e==nil{
+                t.Fatal("Rust TX ignored original SYN's peer MSS bound")
+            }
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("WBDLFRG1needs-escape"),1200,faketcp.DefaultMSS);e==nil{
                 t.Fatal("Rust TX published unescaped magic-prefixed LINK")
             }
             second:=[]byte("server-normal-fec-off-second")
-            wire2,pn2,seq2,e:=bridge.sealNativeNormal(second,1200,536)
+            wire2,pn2,seq2,e:=bridge.sealNativeNormal(second,1200,faketcp.DefaultMSS)
             if e!=nil||pn2!=pn+1||seq2!=seq+uint32(len(wire)){
                 t.Fatalf("Rust TX sequence/PN reused: %v pn=%d seq=%d",e,pn2,seq2)
             }
@@ -322,7 +330,7 @@ func TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst(t *testing.T){
                 t.Fatalf("Go C2S into Rust owner first packet failed: %v pn=%d",e,gotpn)
             }
             if e:=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
-            if _,_,_,e:=bridge.sealNativeNormal([]byte("after-stop"),1200,536);e==nil{
+            if _,_,_,e:=bridge.sealNativeNormal([]byte("after-stop"),1200,faketcp.DefaultMSS);e==nil{
                 t.Fatal("retired scoped owner allowed S2C TX")
             }
             if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}

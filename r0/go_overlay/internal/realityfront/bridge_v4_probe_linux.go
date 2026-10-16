@@ -5,7 +5,7 @@ package realityfront
 /*
 #include <stdint.h>
 #include <stddef.h>
-extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t, uint64_t *);
+extern int32_t wbd_m0_test_probe_prepare(const unsigned char *, size_t, uint32_t, uint16_t, uint8_t, uint64_t *);
 extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
@@ -32,6 +32,8 @@ var errV4NativeLinkPending=errors.New("authenticated LINK fragment is incomplete
 type v4NativeRustProbe struct {
     handle uint64
     txBoundary uint32
+    peerMSS uint16
+    peerAdvertised bool
     prepared,committed bool
     testAssoc *faketcp.ServerAssociation // Go test-only hook, NOT a C pointer
     injectEarly [][]byte // tests exclusively, raw UNAUTHENTICATED wire
@@ -58,17 +60,22 @@ func (b *v4NativeRustProbe) injectAfterPrepare(boundary uint32)error {
     }
     return nil
 }
-func (b *v4NativeRustProbe) prepare(s V4ColdSessionSnapshot,boundary uint32)(v4PreparedOwner,error){
+func (b *v4NativeRustProbe) prepare(s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport)(v4PreparedOwner,error){
+    if peer.mss<64{return nil,errV4NativeProbe}
     // Only genuine credential-verified EstablishServerV4 can invoke this
     // private backend slot. This FFI alone NEVER authenticates raw C bytes.
     raw,err:=s.MarshalColdBundle()
     if err!=nil{return nil,err}
     var handle C.uint64_t
+    advertised:=C.uint8_t(0)
+    if peer.advertised{advertised=1}
     code:=C.wbd_m0_test_probe_prepare((*C.uchar)(unsafe.Pointer(&raw[0])),
-        C.size_t(len(raw)),C.uint32_t(boundary),&handle)
+        C.size_t(len(raw)),C.uint32_t(boundary),
+        C.uint16_t(peer.mss),advertised,&handle)
     runtime.KeepAlive(raw)
     if code!=0||handle==0{return nil,fmt.Errorf("%w: prepare=%d",errV4NativeProbe,int(code))}
     b.handle=uint64(handle);b.prepared=true
+    b.peerMSS=peer.mss;b.peerAdvertised=peer.advertised
     if err:=b.injectAfterPrepare(boundary);err!=nil{
         _=C.wbd_m0_test_probe_abort(handle)
         b.handle=0;b.prepared=false
@@ -179,7 +186,9 @@ func (b *v4NativeRustProbe) openAuthenticated(wire []byte)(uint64,uint32,uint64,
 func (b *v4NativeRustProbe) sealNativeNormal(payload []byte,outerMTU,peerMSS uint16)(
     []byte,uint64,uint32,error,
 ){
-    if !b.committed||b.handle==0||len(payload)==0{return nil,0,0,errV4NativeProbe}
+    if !b.committed||b.handle==0||len(payload)==0||peerMSS!=b.peerMSS{
+        return nil,0,0,errV4NativeProbe
+    }
     wire:=make([]byte,2048)
     var size C.uint32_t
     var pn C.uint64_t

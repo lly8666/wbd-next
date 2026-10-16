@@ -124,6 +124,8 @@ pub(crate) struct ProtectedScopedOwner {
     epoch: [u8;16],
     rx_wire_limit:usize,
     tx_wire_limit:usize,
+    peer_mss:u16,
+    peer_mss_advertised:bool,
     next_tx_seq:Option<u32>,
     server:bool,
 }
@@ -222,7 +224,14 @@ impl ProtectedScopedOwner {
     pub(crate) fn prepare_from_protected_go(
         cold:&UntrustedColdV4, expected:&ExpectedRustOwner,
         owner_id:u64, exact_rx_boundary:u32,
+        peer_mss:u16,peer_mss_advertised:bool,
     )->Result<Self,ProtectedCryptoError>{
+        // A peer's original SYN MSS is an untrusted cap, not TLS identity,
+        // and MUST be bound once at the same private protected Go Prepare.
+        // A later driver/CLI-provided FrameBudget must not enlarge it.
+        if peer_mss<64 || (!peer_mss_advertised && peer_mss!=536){
+            return Err(ProtectedCryptoError::Owner)
+        }
         // Construct all resources locally; NONE is published on half failure.
         let crypto=ProtectedScopedCrypto::prepare_from_protected_go(cold,expected)?;
         let wire=usize::from(cold.identity().server_limit);
@@ -249,6 +258,7 @@ impl ProtectedScopedOwner {
             tx_wire_limit:usize::from(if expected.server {
                 cold.identity().client_limit
             }else{cold.identity().server_limit}),
+            peer_mss,peer_mss_advertised,
             next_tx_seq:None,server:expected.server,
         })
     }
@@ -298,6 +308,10 @@ impl ProtectedScopedOwner {
         if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
             || !self.crypto.active || self.crypto.tx_boundary.is_none(){
             return Err(ProtectedCryptoError::Inactive)
+        }
+        if budget.peer_mss != usize::from(self.peer_mss)
+            || budget.peer_mss_advertised != self.peer_mss_advertised {
+            return Err(ProtectedCryptoError::Tx)
         }
         if budget.fec_overhead!=0 || budget.game_overhead!=0
             || budget.record_wire_mtu>self.tx_wire_limit

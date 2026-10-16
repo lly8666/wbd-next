@@ -46,6 +46,8 @@ struct Probe {
     drained:bool,
     held_rx:Option<LoanBatch<RxPacket>>,
     cold_identity: ColdIdentity,
+    peer_mss:u16,
+    peer_mss_advertised:bool,
 }
 
 struct Probes {
@@ -61,7 +63,15 @@ fn registry() -> &'static Mutex<Probes> {
     }))
 }
 
-fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
+fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
+    peer_mss_advertised:bool,
+) -> Result<u64, i32> {
+    // This remains test-only. The private Go V4 authenticated callsite
+    // supplies the MSS observed from the original association SYN; a caller
+    // cannot enlarge it later by choosing a different Tx FrameBudget.
+    if peer_mss<64 || (!peer_mss_advertised && peer_mss!=536){
+        return Err(INVALID)
+    }
     let data = UntrustedColdV4::parse(raw).map_err(|_| INVALID)?;
     let identity = data.identity();
     if !identity.server { return Err(INVALID); }
@@ -84,7 +94,7 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     // This FFI is test-tagged only, never independent authentication.
     let handle = (u64::from(generation) << 32) | 0x5642;
     let owner=ProtectedScopedOwner::prepare_from_protected_go(
-        &data,&expected,handle,boundary,
+        &data,&expected,handle,boundary,peer_mss,peer_mss_advertised,
     ).map_err(|_| INVALID)?;
     // Probe supplies the maximum safe LINK budget from the authenticated
     // record limit, NOT a production path MTU/MSS. Real M4 must pass its
@@ -99,6 +109,7 @@ fn probe_prepare(raw: &[u8], boundary: u32) -> Result<u64, i32> {
     state.slots.insert(handle, Probe {
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
+        peer_mss,peer_mss_advertised,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -300,10 +311,12 @@ fn probe_seal_tx(handle:u64,packet:&[u8],connection_mtu:u16,peer_mss:u16,
     let Ok(mut state)=registry().lock() else{return Err(BAD_STAGE)};
     let Some(p)=state.slots.get_mut(&handle) else{return Err(UNKNOWN)};
     if p.phase!=PH_COMMITTED || packet.is_empty(){return Err(BAD_STAGE)}
+    // The actual normal-build ProtectedScopedOwner must enforce the bound
+    // MSS. Do not let the feature-gated probe become the sole authority.
     let budget=FrameBudget::derive(FrameBudgetInput{
         connection_mtu:usize::from(connection_mtu),
         local_packet_mtu:0,ipv4_header_len:20,tcp_header_len:20,
-        peer_mss:Some(peer_mss),
+        peer_mss:if p.peer_mss_advertised {Some(peer_mss)} else {None},
         record_wire_limit:usize::from(p.cold_identity.client_limit),
         fec:FecReservation::FixedOff,game:false,
     }).map_err(|_|INVALID)?;
@@ -352,13 +365,14 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_normal(
 // not contain them and capability reporting always remains features=0.
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_prepare(
-    bytes:*const u8,len:usize,boundary:u32,out:*mut u64
+    bytes:*const u8,len:usize,boundary:u32,peer_mss:u16,
+    peer_mss_advertised:u8,out:*mut u64
 )->i32 {
-    if bytes.is_null()||out.is_null()||len!=COLD_V4_LEN {return INVALID}
+    if bytes.is_null()||out.is_null()||len!=COLD_V4_LEN || peer_mss_advertised>1 {return INVALID}
     // SAFETY: input is borrowed strictly for this synchronous call, C Go
     // wrapper supplies a valid length/pointer and holds the backing array.
     let data=unsafe{std::slice::from_raw_parts(bytes,len)};
-    match probe_prepare(data,boundary) {
+    match probe_prepare(data,boundary,peer_mss,peer_mss_advertised==1) {
         Ok(handle)=>{
             // SAFETY: out was validated and the C caller owns a u64 slot.
             unsafe{out.write(handle)};
@@ -453,13 +467,15 @@ mod tests {
     #[test]
     fn r0_m0_native_probe_local_fresh_generation_and_bounded_phases(){
         let a=candidate();
-        let first=probe_prepare(&a,0).unwrap();
+        let first=probe_prepare(&a,0,1360,true).unwrap();
         // The actual RX/TX ScopedOwner+AEAD object must never expose its
         // RX queue or plaintext before BOTH directions commit.
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
+        assert_eq!(probe_prepare(&a,0,63,true).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&a,0,1360,false).err(),Some(INVALID));
         // Same internal owner TX cannot seal through uncommitted probe even
         // with a format-valid candidate and explicit synthetic path budget.
-        assert_eq!(probe_seal_tx(first,b"pre-commit",1200,536,&mut [0u8;2048]).err(),
+        assert_eq!(probe_seal_tx(first,b"pre-commit",1200,1360,&mut [0u8;2048]).err(),
             Some(BAD_STAGE));
         let mut precommit_record=vec![0u8;31];
         assert_eq!(probe_open_unique(first,&mut precommit_record).err(),Some(BAD_STAGE));
@@ -467,20 +483,24 @@ mod tests {
         // cannot half-install RX when TX construction fails, nor vice versa.
         let mut too_small_rx=a;
         too_small_rx[62..64].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_rx,0).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&too_small_rx,0,1360,true).err(),Some(INVALID));
         let mut too_small_tx=a;
         too_small_tx[60..62].copy_from_slice(&1u16.to_be_bytes());
-        assert_eq!(probe_prepare(&too_small_tx,0).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&too_small_tx,0,1360,true).err(),Some(INVALID));
         assert_eq!(probe_drain(first).err(),Some(BAD_STAGE));
         assert_eq!(probe_commit(first,65,65,777),INVALID);
         assert_eq!(probe_commit(first,1,1401*64,777),INVALID);
         assert_eq!(probe_stop(first),BAD_STAGE);
         assert_eq!(probe_commit(first,0,0,777),OK);
+        // Directly exercise the NORMAL-BUILD owner guard, not a Go-only
+        // argument check: a later path observer cannot widen the SYN cap.
+        assert_eq!(probe_seal_tx(first,b"forged-mss",1200,2000,&mut [0u8;2048]).err(),
+            Some(INVALID));
         assert_eq!(probe_commit(first,0,0,777),BAD_STAGE);
         assert_eq!(probe_abort(first),OK);
         assert_eq!(probe_stop(first),OK);
         assert_eq!(probe_release(first),OK);
-        let second=probe_prepare(&a,100).unwrap();
+        let second=probe_prepare(&a,100,1360,true).unwrap();
         assert_ne!(first,second);
         assert_eq!(probe_stage(second,99,&[1]),INVALID);
         assert_eq!(probe_stage(second,100,&[11,22,33]),OK);
@@ -494,23 +514,23 @@ mod tests {
         assert_eq!(probe_drain(second).err(),Some(BAD_STAGE));
         assert_eq!(probe_stop(second),OK);
         assert_eq!(probe_release(second),OK);
-        let third=probe_prepare(&a,100).unwrap();
+        let third=probe_prepare(&a,100,1360,true).unwrap();
         assert_ne!(third,second);
         assert_eq!(probe_abort(third),OK);
         assert_eq!(probe_commit(second,0,0,777),UNKNOWN);
         let mut corrupt=a;corrupt[0]=0;
-        assert_eq!(probe_prepare(&corrupt,0).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&corrupt,0,1360,true).err(),Some(INVALID));
         let mut forged_client=a;forged_client[8]=0;
-        assert_eq!(probe_prepare(&forged_client,0).err(),Some(INVALID));
+        assert_eq!(probe_prepare(&forged_client,0,1360,true).err(),Some(INVALID));
         // A real Rust-owned early slab remains borrowed across Stop. Old
         // quiescence must be INCOMPLETE while a new generation can progress.
-        let fourth=probe_prepare(&a,200).unwrap();
+        let fourth=probe_prepare(&a,200,1360,true).unwrap();
         assert_eq!(probe_stage(fourth,200,&[5,6]),OK);
         assert_eq!(probe_commit(fourth,1,2,777),OK);
         assert_eq!(probe_hold_rx(fourth).unwrap().0,1);
         assert_eq!(probe_stop(fourth),STOP_INCOMPLETE);
         assert_eq!(probe_release(fourth),BAD_STAGE);
-        let fifth=probe_prepare(&a,300).unwrap();
+        let fifth=probe_prepare(&a,300,1360,true).unwrap();
         assert_ne!(fourth,fifth);
         assert_eq!(probe_commit(fifth,0,0,777),OK);
         assert_eq!(probe_stop(fifth),OK);

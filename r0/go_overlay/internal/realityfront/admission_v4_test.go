@@ -432,10 +432,11 @@ type v4RecordingOwner struct {
     identity [16]byte
     failPrepare,failCommit bool
 }
-func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32) (v4PreparedOwner,error) {
+func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner,error) {
     b.prepared++
     b.boundary=boundary
     b.identity=s.TunnelID()
+    if observedPeer.mss!=faketcp.DefaultMSS || !observedPeer.advertised {return nil,ErrAdmissionParams}
     if b.failPrepare {return nil,ErrAdmissionUnsupported}
     if _,err:=s.MarshalColdBundle();err!=nil {return nil,err}
     return &v4RecordingPending{b:b},nil

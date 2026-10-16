@@ -71,8 +71,22 @@ type v4PreparedOwner interface {
     commit(early []faketcp.TransitionPacket, exactTXBoundary uint32) error
     abort()
 }
+// Peer MSS is read from the actual FakeTCP SYN association AFTER credential
+// verification. It is untrusted *transport input*, not another TLS identity,
+// but can only constrain outgoing record size. It must not be supplied by a
+// later driver caller, CLI override, or invented native cold bundle.
+type v4PeerTransport struct {
+    mss uint16
+    advertised bool
+}
+func v4PeerTransportFromAssociation(a *faketcp.ServerAssociation)(v4PeerTransport,error){
+    if a==nil{return v4PeerTransport{},ErrAdmissionParams}
+    profile:=a.PeerTCPProfile()
+    if profile.MSS<64{return v4PeerTransport{},ErrAdmissionParams}
+    return v4PeerTransport{mss:profile.MSS,advertised:profile.AdvertisedMSS},nil
+}
 type v4OwnerBridge interface {
-    prepare(verified V4ColdSessionSnapshot, rxBoundary uint32) (v4PreparedOwner, error)
+    prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
 }
 type V4ServerOptions struct {
     DataPlaneReady bool
@@ -429,12 +443,17 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{return nil,err}
     boundary,err:=assoc.PrepareTransition(int(cfg.ServerLimit))
     if err!=nil{return nil,err}
+    // The original SYN's MSS is a *limit*, captured on the same protected
+    // session's actual association. It is not authentication and never
+    // authorizes a native owner without the credential-checked cold source.
+    observedPeer,err:=v4PeerTransportFromAssociation(assoc)
+    if err!=nil{assoc.AbortTransition();return nil,err}
     // The private native owner may reserve a fresh Rust generation only after
     // a real credential-checked protected request and the exact Go boundary.
     // It MUST NOT activate or deliver early data until Detach completes.
     var prepared v4PreparedOwner
     if opt.ownerBridge!=nil {
-        prepared,err=opt.ownerBridge.prepare(frozen,boundary)
+        prepared,err=opt.ownerBridge.prepare(frozen,boundary,observedPeer)
         if err!=nil {assoc.AbortTransition();return nil,err}
         if prepared==nil {assoc.AbortTransition();return nil,ErrAdmissionParams}
         // abort is idempotent and must not destroy an already committed owner.
