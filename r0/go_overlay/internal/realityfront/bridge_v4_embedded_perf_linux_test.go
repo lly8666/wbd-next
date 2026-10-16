@@ -190,9 +190,24 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     cold,e:=client.ColdSnapshot()
     if e!=nil{t.Fatal(e)}
     clientLimit,serverLimit:=cold.RecordLimits()
-    if int(serverLimit)!=1400||m0PerfIPv4Sizes[3]!=int(serverLimit)-31{
-        t.Fatalf("fixed 1369 IP max must match original negotiated budget: %d",serverLimit)
+    if int(serverLimit)!=1400{
+        t.Fatalf("original C2S negotiated record wire limit must be 1400 got=%d",serverLimit)
     }
+    // Do NOT assume the C2S record limit (1400-31=1369) is also the
+    // S2C effective M4 carrier route/advertised peer MSS budget.
+    // Query the same original ACTIVE Rust scoped owner and actual Linux
+    // route: the selected last size class is the intersection of BOTH
+    // legal directional budgets, fixed once for this exact measurement.
+    observedS2C,err:=b.observedRealRustTxIPv4MTU(uint32(lo.Index))
+    if err!=nil{t.Fatal(err)}
+    effectiveMax:=int(observedS2C)
+    if effectiveMax>int(serverLimit)-31{effectiveMax=int(serverLimit)-31}
+    if effectiveMax<=1200{
+        t.Fatalf("observed genuine normal/off inner MTU %d cannot fit declared 1200 size class",effectiveMax)
+    }
+    m0PerfIPv4Sizes[3]=effectiveMax
+    t.Logf("M0_DEV_EFFECTIVE_INNER_MTU observed_rust_s2c_ipv4=%d c2s_record_ip_max=%d mixed_fourth_ipv4=%d",
+        observedS2C,int(serverLimit)-31,effectiveMax)
     c2sSealer,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(serverLimit),CipherChaCha)
     if e!=nil{t.Fatal(e)}
     s2cOpener,e:=tlsrecord.NewOpenerForCipher(cold.DirectionKeys().S2C,int(clientLimit),CipherChaCha)
@@ -369,7 +384,7 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     status:="MEASUREMENT_RECORDED_NOT_PRODUCT_PASS"
     if offeredC<9.5||offeredS<9.5 {status="INVALID_INJECTOR"}
     if offeredC>=9.5&&offeredS>=9.5&&(deliveredC<9.5||deliveredS<9.5){
-        status="DATAPLANE_BOTTLENECK_OBSERVED"
+        status="OBSERVED_DELIVERY_SHORTFALL_CAUSE_UNDETERMINED"
     }
     if len(failures)>0||inbound.invalid.Load()>0||outbound.invalid.Load()>0{
         status="INVALID_MEASUREMENT"
@@ -382,7 +397,9 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "backend":"real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun",
         "production_features":0,"product_qualification":"NOT_RUN",
         "desired_rate_mbps_each_direction_ipv4_inner_business":10,
-        "mix_packet_ipv4_lengths_bytes":[]int{64,256,1200,1369},
+        "mix_packet_ipv4_lengths_bytes":[]int{64,256,1200,effectiveMax},
+        "original_rust_observed_s2c_effective_ipv4_mtu_bytes":observedS2C,
+        "original_go_c2s_record_wire_limit_bytes":serverLimit,
         "packet_mix_by_count":"1:1:1:1_FIXED_BEFORE_RUN",
         "warmup_seconds":10,"measure_seconds":60,
         "receiver_drain_seconds":3,"timing":"wall_monotonic_scheduled_window",

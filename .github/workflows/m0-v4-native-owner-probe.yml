@@ -507,11 +507,13 @@ jobs:
           p=pathlib.Path("native-probe-result/normal-off-dev-10mbps.json")
           result=json.loads(p.read_text())
           assert result["warmup_seconds"]==10 and result["measure_seconds"]==60
-          assert result["mix_packet_ipv4_lengths_bytes"]==[64,256,1200,1369]
+          sizes=result["mix_packet_ipv4_lengths_bytes"]
+          assert sizes[:3]==[64,256,1200] and 1200<sizes[3]<=1369
+          assert sizes[3]==min(1369,result["original_rust_observed_s2c_effective_ipv4_mtu_bytes"])
           assert result["desired_rate_mbps_each_direction_ipv4_inner_business"]==10
           assert result["backend"]=="real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun"
           assert result["production_features"]==0 and result["product_qualification"]=="NOT_RUN"
-          assert result["result"] in ("MEASUREMENT_RECORDED_NOT_PRODUCT_PASS","INVALID_INJECTOR","DATAPLANE_BOTTLENECK_OBSERVED")
+          assert result["result"] in ("MEASUREMENT_RECORDED_NOT_PRODUCT_PASS","INVALID_INJECTOR","OBSERVED_DELIVERY_SHORTFALL_CAUSE_UNDETERMINED")
           result["source_sha"]=m["source_sha"]
           result["run_id"]=m["run_id"]
           result["attempt"]=m["attempt"]

@@ -598,6 +598,29 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
     }
     OK
 }
+
+// Query the real M1/M3 original Rust owner Route/PeerMSS budget after the
+// credential-verified private Go control Commit and exact M4 interface bind.
+// This value is NOT a cold-self-attested cap or a way to mutate the budget.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
+    h:u64,ifindex:u32,out:*mut u32)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(reg)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    if e.phase!=PH_ACTIVE||e.tun_sink.is_none()||e.raw_rx.is_none(){
+        return BAD_STAGE
+    }
+    let route=e.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::from(e.flow.client_ip));
+    let Ok(route)=route else{return INVALID};
+    let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
+    else{return INVALID};
+    if limit<28{return INVALID}
+    unsafe{out.write(limit)};
+    OK
+}
 #[cfg(test)]
 mod tests{
     use super::*;
