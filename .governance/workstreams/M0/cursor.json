@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 92,
-  "checkpoint_sha": "8be4384e87cb3f3f4fde3362d6b728e7a65af6ae",
+  "sequence": 93,
+  "checkpoint_sha": "574f201dac42f060fd7a7ba410bc4aa62998510a",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0-023 THREE atoms CLOSED in this turn: original protected Go TLS → non-_test dev-gated embedded Rust M1/M3 owner → real M4 Linux raw RX/TUN C2S AND TUN→raw TX S2C → independent Go TLS peer verified 3 ciphers; real original TCP tuple, postreply seq, PN0 and payload. Genuine two-session old/new generation Stop isolation and idempotent terminal Stop, plus duplicate PN replay and AEAD-corrupt ciphertext checksum-valid raw ingress do not redeliver to kernel TUN app (bounded 40ms observation). FINAL CODE SOURCE f0141c7b591b3237679a34b9e6c33201f552ddc2 native run38877965021 build/consume SUCCESS. Evidence S 8be4384e87cb3f3f4fde3362d6b728e7a65af6ae audit38878422426 and Gov38878422419 SUCCESS. Formal 023 PARTIAL; production features0.",
-  "why_now": "User authorized several tasks in one turn; H91 next action was SAME embedded owner real S2C. Continued with original owner/generation negative and real raw integrity rejection, not duplicate test-only crypto/helper. Source-exact Actions each stage.",
-  "done_when": "THREE ATOMS MET: CODE db028ae3 native38877247105 success real embedded bilateral 3 ciphers; CODE39f2c891 native38877655682 success two credential-checked sessions generation4/5 old release fresh active repeat Stop; FINAL CODE f0141c7b591b3237679a34b9e6c33201f552ddc2 native38877965021 success includes all prior tests and genuine kernel raw replay/corrupt 3 suites zero app redelivery bounded 40ms. Same FINAL source ordinary Governance38877964967 and maintenance38877964947 success, main scope38878008019 SKIPPED/NOT_RUN. Evidence S 8be4384e87cb3f3f4fde3362d6b728e7a65af6ae static38878422426 Governance38878422419 success. Formal 023 NOT_MET: real M4 held async completion B04 STOP_INCOMPLETE/late return, same-tunnel B01/B02 race/rotation, actual external SYN, veth/netem and normal product performance/physical NOT_RUN. Earlier CODE db028 native ABI/cross/G2/regression greens are DIFFERENT SOURCE and NOT combined with FINAL product qualification. Production ABI features0.",
-  "next_action": "Observe a genuine outstanding asynchronous M4 driver loan on the SAME embedded Go→Rust owner: Stop before driver completion MUST be STOP_INCOMPLETE/no Release; actual completion/cancel returns old loan, repeat Stop reaches quiescence and Release; verify new generation continues. If actual raw/TUN backend only supports synchronous kernel-copy, mark B04 UNSUPPORTED/NOT_RUN rather than creating a test-only held token or enabling production V4.",
+  "current_task": "023 preliminary Actions network atom CLOSED: existing verified Go V4 private dev-gated non-_test Rust M1/M3/M4 owner native real Linux raw↔TUN baseline and additional bounded owned-netns tc netem configured 10ms/no-loss scenario PASS on exact CODE 443734232dd4c341e0922757a3f06a452c453fda native run38879621342 build116902941076 consume116903517168. Observed Linux netem qdisc Sent2400 bytes 24 packets, dropped0; 3/3 cipher C2S/S2C business and replay/corrupt rejection PASS. EXPLORATORY only, 10ms CONFIGURED not measured RTT; no throughput/p99. Evidence S 574f201dac42f060fd7a7ba410bc4aa62998510a static38880067233/Gov38880067157 PASS. Formal 023 partial/ABI features0.",
+  "why_now": "User asked to accelerate and run initial Actions network test. Prior ordinary-build embedded owner bilateral C2S/S2C 3 cipher kernel smoke was verified but no actual tc queue traffic. Reused same compiled pair and true M4 sockets; no duplicate bridge/crypto or oversized performance scenario. B04 real async loan unavailable in existing synchronous raw/TUN drivers and remains NOT_RUN.",
+  "done_when": "THIS ATOM MET: exact SOURCE 443734232dd4c341e0922757a3f06a452c453fda native38879621342 success, same-run hash-checked build/consume, original real Linux netns baseline PASS; second 10ms configured delay zero-loss netem qdisc processed 24 packets 2400 bytes, original embedded 3-cipher bilateral/AEAD integrity PASS, exploratory result; same SOURCE maintenance38879621201 and ordinary Governance38879621190 SUCCESS, scope38879654218 SKIPPED NOT_RUN. Evidence S 574f201dac42f060fd7a7ba410bc4aa62998510a static38880067233 and Gov38880067157 SUCCESS. Production product qualification NOT_MET: real asynchronously held driver B04, live external SYN, normal product V4 ABI, same-tunnel B01/B02, veth 150/300ms, measured RTT/throughput/p99, physical, 500Mbps NOT_RUN. No different SOURCE greens combined.",
+  "next_action": "Prove actual asynchronously held M4 driver completion on THIS verified Go→original Rust owner (Stop before real completion must give STOP_INCOMPLETE, no release; late return then Stop/release; fresh generation survives). Current synchronous Linux raw/TUN backend cannot yield a genuine delayed kernel loan: mark B04 UNSUPPORTED/NOT_RUN until an actual asynchronous driver contract exists, never forge a held token or enable product capability.",
   "unverified": true,
-  "last_tested_source": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+  "last_tested_source": "443734232dd4c341e0922757a3f06a452c453fda",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-embedded-bidirectional-generation-replay-actions.json"
+    "docs/evidence/M0/M0-023-preliminary-kernel-netem-10ms.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-embedded-bidirectional-generation-replay-actions.md",
-    "docs/evidence/M0/M0-023-embedded-real-M4-raw-TUN-C2S.json",
+    "docs/devlog/M0/M0-023-preliminary-kernel-netem-10ms.md",
+    "docs/evidence/M0/M0-023-embedded-bidirectional-generation-replay-actions.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Same dev-gated embedded original Rust owner actual Linux M4 kernel raw RX/TUN C2S and kernel TUN/raw TX S2C PASS 3 ciphers; separate real Go 2-generation Stop and real raw PN replay/corrupt no duplicate app observed 40ms per case PASS final source f0141c7b591b3237679a34b9e6c33201f552ddc2. True async-held M4 B04, external SYN, same-tunnel full B01/B02, veth/netem, product performance/physical NOT_RUN. ABI features0."
+  "partial_summary": "EXPLORATORY 10ms configured tc netem actual kernel qdisc positive 24 packets/2400B plus same non-_test Go-verified embedded Rust owner 3/3 cipher bilateral Linux raw/TUN true app smoke PASS. NOT actual measured RTT; production V4 features0. Genuine async driver-held B04, external SYN, same-tunnel full B01/B02, higher RTT/loss, throughput/p99, product performance/physical NOT_RUN."
 }
