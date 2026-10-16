@@ -17,6 +17,10 @@ t=rep(t,"delay 300ms","delay 0ms",2)
 t=rep(t,"--duration 120 --drain 10","--duration 70 --drain 3",2)
 t=rep(t,'"one_way_delay_ms": 300, "duration_s": 120, "stages_s": [30, 60, 30]',
       '"one_way_delay_ms": 0, "duration_s": 70, "stages_s": [10, 60, 0]')
+# Unlike previous diagnostic sources, disable legacy per-second product JSONL
+# telemetry to match the new default diagnostics-off path. Only harness argv.
+t=rep(t,'--diagnostic-jsonl "$ART/server-diag.jsonl" --diagnostic-interval 1s','')
+t=rep(t,'--diagnostic-jsonl "$ART/client-diag.jsonl" --diagnostic-interval 1s','')
 # No tcpdump/capture overhead or large pcap bytes in either measurement leg.
 lines=t.splitlines(keepends=True)
 capture=[x for x in lines if 'tcpdump -n -U' in x]
