@@ -130,7 +130,7 @@ jobs:
           d={"source_sha":m["source_B"],"run_id":os.environ["GITHUB_RUN_ID"],
              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"job":os.environ["GITHUB_JOB"],
              "runner":platform.node()+":"+platform.release(),
-             "order":["A","B"],"scenario":"P10_AB","start_monotonic_ns":time.monotonic_ns(),
+             "order":["A","B"],"scenario":"P10_AB","application_payload_profile":"64_256_1200_UDP_BYTES_EQUAL_COUNT_10MBPS","start_monotonic_ns":time.monotonic_ns(),
              "warmup_seconds":10,"measure_seconds":60,
              "topology":"same one owned namespace raw/TUN per leg",
              "production_features":0}
@@ -141,7 +141,7 @@ jobs:
             BEGIN="$(python3 -c 'import time;print(time.monotonic_ns())')"
             rm -f native-probe-result/normal-off-dev-10mbps.json
             set +e
-            WBD_M0_PERF_BASELINE=1 bash tools/run-v4-tun-netns.sh "hotpath-build/$leg" >"hotpath-result/$leg.log" 2>&1
+            WBD_M0_PERF_BASELINE=1 WBD_M0_PAIRED_OLD_NEW=1 bash tools/run-v4-tun-netns.sh "hotpath-build/$leg" >"hotpath-result/$leg.log" 2>&1
             RC=$?
             set -e
             END="$(python3 -c 'import time;print(time.monotonic_ns())')"
@@ -179,6 +179,7 @@ jobs:
              "non_overlapping":meta["A"]["end_monotonic_ns"]<=meta["B"]["start_monotonic_ns"],
              "flags":manifests["flags"],"common_harness":manifests["common_harness_sha256"],
              "topology":"identical original Go fixture, original Rust owner kernel raw/TUN",
+             "rate_basis":"UDP application payload per direction at 10Mbps (inner IPv4 rate is higher)",
              "clock_sampling":"A per-poll Rust THREAD clock vs B approx10Hz, thread_CPU_breakdown_NOT_COMPARABLE",
              "product_qualification":"NOT_RUN","production_features":0}
           for leg in ("A","B"):
@@ -195,6 +196,7 @@ jobs:
               "result":x["result"],"measured_seconds":x["measure_seconds"],
               "warmup_seconds":x["warmup_seconds"],
               "mix":x["mix_packet_ipv4_lengths_bytes"],
+              "declared_app_payload_sizes":[64,256,1200],
               "process_cpu_seconds":cpu,
               "cpu_s_per_GiB_delivered":cpu/(delivered/(1024**3)) if delivered else None,
               "delivered_udp_payload_bytes":delivered,
@@ -212,9 +214,10 @@ jobs:
              B.get("result")=="MEASUREMENT_RECORDED_NOT_PRODUCT_PASS",
              A.get("c2s_missing")==0,A.get("s2c_missing")==0,
              B.get("c2s_missing")==0,B.get("s2c_missing")==0,
-             A.get("c2s_udp_mbps",0)>=9.5,A.get("s2c_udp_mbps",0)>=9.5,
-             B.get("c2s_udp_mbps",0)>=9.5,B.get("s2c_udp_mbps",0)>=9.5,
-             A.get("invalid")==0,B.get("invalid")==0])
+             A.get("c2s_udp_mbps",0)>=9.8,A.get("s2c_udp_mbps",0)>=9.8,
+             B.get("c2s_udp_mbps",0)>=9.8,B.get("s2c_udp_mbps",0)>=9.8,
+             A.get("invalid")==0,B.get("invalid")==0,
+             A.get("mix")==[92,284,1228],B.get("mix")==[92,284,1228]])
           summary["result"]="VALID_P10_AB_ONLY_NEEDS_BA" if valid else "INCONCLUSIVE_OR_FAILED"
           if valid:summary["B_vs_A_normalized_cpu_change_percent"]=100*(B["cpu_s_per_GiB_delivered"]/A["cpu_s_per_GiB_delivered"]-1)
           summary["causal_product_speedup"]="NOT_QUALIFIED"
