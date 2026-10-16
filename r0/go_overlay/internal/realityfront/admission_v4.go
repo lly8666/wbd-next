@@ -78,12 +78,20 @@ type v4PreparedOwner interface {
 type v4PeerTransport struct {
     mss uint16
     advertised bool
+    // Captured from THIS FakeTCP association, not CLI, cold248, or a
+    // later unauthenticated driver packet. It is transport routing evidence,
+    // NOT an independently authenticated TLS principal.
+    flow faketcp.ServerFlow
 }
 func v4PeerTransportFromAssociation(a *faketcp.ServerAssociation)(v4PeerTransport,error){
     if a==nil{return v4PeerTransport{},ErrAdmissionParams}
     profile:=a.PeerTCPProfile()
-    if profile.MSS<64{return v4PeerTransport{},ErrAdmissionParams}
-    return v4PeerTransport{mss:profile.MSS,advertised:profile.AdvertisedMSS},nil
+    flow:=a.Flow() // copy immutable IPv4 tuple while the protected call owns a
+    if profile.MSS<64 || flow.ClientPort==0 || flow.ServerPort==0 ||
+       flow.ClientIP==([4]byte{}) || flow.ServerIP==([4]byte{}) {
+        return v4PeerTransport{},ErrAdmissionParams
+    }
+    return v4PeerTransport{mss:profile.MSS,advertised:profile.AdvertisedMSS,flow:flow},nil
 }
 type v4OwnerBridge interface {
     prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
@@ -467,6 +475,13 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     early,err:=assoc.DetachTransition()
     if err!=nil{assoc.AbortTransition();return nil,err}
+    // The exact flow at protected Prepare cannot change between routing
+    // handoff and CommitAdmission. A changed association invalidates this
+    // candidate; never silently attach another peer's TCP sequence space.
+    if assoc.Flow()!=observedPeer.flow {
+        assoc.AbortTransition()
+        return nil,ErrAdmissionParams
+    }
     if prepared!=nil {
         // A native failure AFTER protected reply is fatal: never publish Go
         // epoch, keep owner inactive and abort this candidate, not a peer lane.

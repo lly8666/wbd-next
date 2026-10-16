@@ -436,7 +436,11 @@ func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32, obs
     b.prepared++
     b.boundary=boundary
     b.identity=s.TunnelID()
-    if observedPeer.mss!=faketcp.DefaultMSS || !observedPeer.advertised {return nil,ErrAdmissionParams}
+    if observedPeer.mss!=faketcp.DefaultMSS || !observedPeer.advertised ||
+       observedPeer.flow.ClientPort==0 || observedPeer.flow.ServerPort==0 ||
+       observedPeer.flow.ClientIP==([4]byte{}) || observedPeer.flow.ServerIP==([4]byte{}) {
+        return nil,ErrAdmissionParams
+    }
     if b.failPrepare {return nil,ErrAdmissionUnsupported}
     if _,err:=s.MarshalColdBundle();err!=nil {return nil,err}
     return &v4RecordingPending{b:b},nil
@@ -451,6 +455,24 @@ func (p *v4RecordingPending) commit(early []faketcp.TransitionPacket, exactTXBou
 func (p *v4RecordingPending) abort() {
     if !p.committed {p.b.aborted++;p.committed=true}
 }
+
+func TestR0V4AssociationFlowScopeComesFromOriginalFakeTCP(t *testing.T) {
+    if _,err:=v4PeerTransportFromAssociation(nil);err==nil {
+        t.Fatal("nil association supplied a supposed trusted flow")
+    }
+    assoc,peer:=newAssociationPeer(t)
+    defer assoc.Close()
+    defer peer.Close()
+    observed,err:=v4PeerTransportFromAssociation(assoc)
+    if err!=nil || observed.flow!=assoc.Flow() ||
+       observed.flow.ClientPort==0 || observed.flow.ServerPort==0 ||
+       observed.flow.ClientIP==([4]byte{}) || observed.flow.ServerIP==([4]byte{}) {
+        t.Fatalf("owner bridge must receive original Go association tuple: %+v %v",observed,err)
+    }
+    // A correctly formatted copied cold bundle does NOT mint this flow;
+    // only the private protected EstablishServerV4 call site passes it on.
+}
+
 func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
     *V4ClientSession,*V4ServerSession,error,error) {
     return v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha)
