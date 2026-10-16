@@ -386,12 +386,31 @@ struct PollFd {fd:c_int,events:i16,revents:i16}
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[derive(Default)]
-struct LoopCounts {rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64}
+struct LoopCounts {
+    rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
+    rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
+}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 struct LoopWorkers{
     shutdown:Arc<AtomicBool>,
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[repr(C)]
+struct ClockTimespec {seconds:i64,nanoseconds:i64}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+unsafe extern "C" {
+    fn clock_gettime(clock_id:c_int,raw:*mut ClockTimespec)->c_int;
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn owner_thread_cpu_ns()->u64{
+    let mut sample=ClockTimespec{seconds:0,nanoseconds:0};
+    // Linux CLOCK_THREAD_CPUTIME_ID=3, measures ONLY this original Rust
+    // worker's CPU, excluding Go injector/receiver goroutines and sleeps.
+    if unsafe{clock_gettime(3,&mut sample)}!=0{return 0}
+    u64::try_from(sample.seconds).unwrap_or(0).saturating_mul(1_000_000_000)
+        .saturating_add(u64::try_from(sample.nanoseconds).unwrap_or(0))
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn loop_now()->MonoNs{
@@ -505,7 +524,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stats_rx=Arc::clone(&stats);
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
+            let cpu_origin=owner_thread_cpu_ns();
             while !stop_rx.load(Ordering::Acquire){
+                stats_rx.rx_thread_cpu_ns.store(
+                    owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                 if !loop_readiness(raw_fd,&stop_rx){continue}
                 if stop_rx.load(Ordering::Acquire){break}
                 match background_raw_once(handle,&raw,&stop_rx){
@@ -518,7 +540,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stop_tx=Arc::clone(&shutdown);
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
+            let cpu_origin=owner_thread_cpu_ns();
             while !stop_tx.load(Ordering::Acquire){
+                stats.tx_thread_cpu_ns.store(
+                    owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
                 match background_tun_once(handle,&tun,&stop_tx,ifindex){
@@ -557,6 +582,22 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
     OK
 }
 
+// Developer-mode per-worker *actual Linux thread CPU time* for 10s+60s
+// receipt. Combined process CPU includes Go sender/reader; independent
+// exact user-vs-kernel attribution within that residual is NOT available.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
+    h:u64,rx_ns:*mut u64,tx_ns:*mut u64)->i32{
+    if rx_ns.is_null()||tx_ns.is_null(){return INVALID}
+    let Ok(reg)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    unsafe{
+        rx_ns.write(e.counters.rx_thread_cpu_ns.load(Ordering::Relaxed));
+        tx_ns.write(e.counters.tx_thread_cpu_ns.load(Ordering::Relaxed));
+    }
+    OK
+}
 #[cfg(test)]
 mod tests{
     use super::*;
