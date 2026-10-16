@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "137a80e543bda12237e8bf25fb048ca3668c5774",
+  "code_source_sha": "137a80e543bda12237e8bf25fb048ca3668c5774",
+  "result": "PARTIAL_LIMITED_LINUX_LOOPBACK_NORMAL_OFF_10MBPS_EACH_DIRECTION_MEASURED_TARGET_MET",
+  "why_now": "GOV-005 TEST_PLAN §0 requested the first genuine sustained private credential-checked Go→original Rust M1/M3→M4 raw/TUN Normal/off baseline, independent application injectors and receivers, fixed size mix, 10s warmup+60s measure. H99 original Rust RX/TX worker background loop and blocking kernel reads outside global owner mutex had already passed. No additional per-packet smoke is claimed.",
+  "exact_normal_off_developer_measurement": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38913607702,
+    "attempt": 1,
+    "head_sha": "137a80e543bda12237e8bf25fb048ca3668c5774",
+    "conclusion": "success",
+    "build_job": 117015338033,
+    "consume_job": 117016001107,
+    "build_artifact": {
+      "id": 12051227850,
+      "digest": "sha256:0aba1c38b6e8788a6560b7dff0d893db81bffc057744fd99362a86d979026343"
+    },
+    "result_artifact": {
+      "id": 12051936954,
+      "digest": "sha256:e06a5110abd072633562af0f3fad3f5fcc8a907e75fb8e368c7b881297bbb987"
+    },
+    "receipt": "native-probe-result/normal-off-dev-10mbps.json",
+    "log": "native-probe-result/normal-off-dev-10mbps.log",
+    "artifact_provenance": "Native build manifest asserts CODE SOURCE, pin a7a82db31fe736ffedee330795a3234d358f1984 old Go control, Rust1.85.1 Go1.23.12, full relevant source and 3 binary SHA256. GitHub API artifact digests copied exactly. Entire result artifact ZIP downloaded and its JSON inspected; no binary execution locally.",
+    "backend": "REAL_KERNEL_LINUX_X86_64_PRIVILEGED_OWNED_NETNS_LOOPBACK_IPV4_TCP_RAW_AND_DEV_NET_TUN",
+    "control": "Original pinned Go faketcp SYN fixture plus genuine credential-checked protected TLS/Detach/Commit into developer-feature opt-in non-_test Rust normal M1/M3 ScopedOwner and real M4 scoped drivers",
+    "original_steady_owner_threads": 2,
+    "go_per_packet_Rust_bridge_calls": false,
+    "normal_lanes": 1,
+    "fec": "OFF",
+    "cipher": "CHACHA20_POLY1305_ONE_CIPHER",
+    "diagnostic_default": "OFF",
+    "desired_mbps_each_direction_inner_ipv4_business": 10,
+    "warmup_seconds": 10,
+    "measure_seconds": 60,
+    "fixed_mix_count_ratio": "1:1:1:1",
+    "originally_planned_size_classes": [
+      "64",
+      "256",
+      "1200",
+      "actual_effective_inner_ipv4_MTU"
+    ],
+    "effective_ip_class_bytes": [
+      64,
+      256,
+      1200,
+      1329
+    ],
+    "observed_real_rust_s2c_tx_inner_ipv4_budget_bytes": 1329,
+    "original_go_c2s_server_record_wire_limit_bytes": 1400,
+    "original_go_c2s_plain_unfragmented_max_ipv4_bytes": 1369,
+    "legal_bilateral_max_ipv4_bytes": 1329,
+    "source_of_effective_budget": "new private dev-feature FFI reads real Active protected Rust scoped owner.observe_linux_normal_off_route_budget with real Linux ifindex, route destination and original Go FakeTCP peer MSS; does NOT mutate MTU, keys, session or data-plane budget",
+    "measurement": {
+      "C2S": {
+        "offered_packets": 105298,
+        "delivered_packets": 105298,
+        "missing": 0,
+        "duplicate": 0,
+        "invalid": 0,
+        "send_errors": 0,
+        "offered_inner_ipv4_bytes": 74998532,
+        "delivered_inner_ipv4_bytes": 74998532,
+        "udp_payload_bytes": 72050188,
+        "offered_mbps": 9.999804266666667,
+        "delivered_mbps": 9.999804266666667,
+        "sampled_oneway_samehost_app_delivery_age_p50_us": 404,
+        "p99_us": 614,
+        "latency_samples": 6581
+      },
+      "S2C": {
+        "offered_packets": 105298,
+        "delivered_packets": 105298,
+        "missing": 0,
+        "duplicate": 0,
+        "invalid": 0,
+        "send_errors": 0,
+        "offered_inner_ipv4_bytes": 74998532,
+        "delivered_inner_ipv4_bytes": 74998532,
+        "udp_payload_bytes": 72050188,
+        "offered_mbps": 9.999804266666667,
+        "delivered_mbps": 9.999804266666667,
+        "sampled_oneway_samehost_app_delivery_age_p50_us": 269,
+        "p99_us": 516,
+        "latency_samples": 6581
+      }
+    },
+    "cpu_and_host": {
+      "linux_actual_rust_RX_worker_thread_cpu_seconds": 4.315673186,
+      "linux_actual_rust_TX_worker_thread_cpu_seconds": 13.282390898,
+      "combined_Go_and_Rust_process_user_cpu_seconds": 3.461462,
+      "combined_Go_and_Rust_process_system_cpu_seconds": 19.936526,
+      "process_CPU_attribution": "Original 2 Rust worker CLOCK_THREAD_CPUTIME_ID samples valid; Go injector, Go readers, other Rust/Go threads/kernel time remain combined; cannot claim isolated independent Go injector process CPU.",
+      "proc_status_start": "VmHWM 19848 KiB; VmRSS 19640 KiB; Threads 11",
+      "proc_status_end": "VmHWM 35104 KiB; VmRSS 28852 KiB; Threads 11",
+      "loopback_kernel_rx_packets_before": 70340,
+      "loopback_kernel_rx_packets_after": 491532,
+      "loopback_kernel_tx_packets_before": 70340,
+      "loopback_kernel_tx_packets_after": 491532,
+      "loopback_kernel_rx_dropped_before": 0,
+      "loopback_kernel_rx_dropped_after": 0,
+      "loopback_kernel_tx_dropped_before": 0,
+      "loopback_kernel_tx_dropped_after": 0,
+      "psi_cpu_some_avg60_before": 0.58,
+      "psi_cpu_some_avg60_after": 0.87,
+      "psi_cpu_full_avg60_before": 0,
+      "psi_cpu_full_avg60_after": 0,
+      "cgroup_CPU_quota": "UNAVAILABLE_IN_OWNED_NETNS",
+      "cgroup_CPU_stat": "UNAVAILABLE_IN_OWNED_NETNS",
+      "original_rust_owner_workers_total_functional_counters_including_warmup": {
+        "RxOK": 122883,
+        "TxOK": 122883,
+        "RxErr": 1,
+        "TxErr": 0
+      },
+      "source_level_counter_scope": "Rust total counters include warmup and tail; 105298 per-direction counts and bytes are ONLY 60-second marker-selected measurement window."
+    },
+    "qualification": "LIMITED_SINGLE_HOST_DEVELOPER_TARGET_OBSERVED_NOT_FORMAL_PRODUCT_PASS"
+  },
+  "failed_or_intermediate_exact_runs": [
+    {
+      "code_source_sha": "2a87088203d480bc15853c06b02bf5b2b99c6dd2",
+      "run_id": 38912126745,
+      "result": "FAIL",
+      "explanation": "Full 10+60s actual first measurement observed C2S offered/delivered10.000Mbps and S2C offered10.000/delivered5.261Mbps. Root-owned mode0600 JSON artifact unreadable to runner; upload failed. Do not call this product PASS."
+    },
+    {
+      "code_source_sha": "4c9f20796463754147cdeccf3519d763cf6b7c49",
+      "run_id": 38912768583,
+      "result": "SUCCESS_AS_MEASUREMENT_BUT_INVALID_BILATERAL_PACKET_MIX",
+      "explanation": "One explicit exact-source receipt recovered and downloaded. Initial max size hardcoded 1369 from C2S record cap was invalid for S2C real route/peerMSS; 25,960 of 103,841 S2C 60s offered packets (~25% largest class) absent, and original Rust TX errors30295 including warmup (exactly approx every 4th). C2S103841/103841. This is legitimate fail-closed invalid business IP size, not demonstrated CPU/queue bottleneck. Prior classifier DATAPLANE_BOTTLENECK_OBSERVED was over-specific; corrected on final SOURCE. Kernel lo dropped0. Does not qualify throughput."
+    },
+    {
+      "code_source_sha": "137a80e543bda12237e8bf25fb048ca3668c5774",
+      "run_id": 38913607702,
+      "result": "SUCCESS_EXACT_EFFECTIVE_BUDGET_AND_BILATERAL_MEASUREMENT",
+      "explanation": "Read trusted original Rust owner real kernel-observed S2C inner IPv4 limit1329; use min(C2S1369,S2C1329) as fourth fixed class and prove both independent directions each delivered105298/105298 in60s, 9.999804Mbps; all native regressions successful."
+    }
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38913607531,
+      "conclusion": "success",
+      "scope": "identity/structure only"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38913607507,
+      "conclusion": "success",
+      "scope": "governance tooling only"
+    },
+    {
+      "workflow": "r0-native-abi.yml",
+      "run_id": 38913607492,
+      "conclusion": "success",
+      "scope": "build/ABI regression"
+    },
+    {
+      "workflow": "r0-cross-abi.yml",
+      "run_id": 38913607486,
+      "conclusion": "success",
+      "scope": "cross build, not platform-native perf"
+    },
+    {
+      "workflow": "native-regression.yml",
+      "run_id": 38913607467,
+      "conclusion": "success",
+      "scope": "native component regression"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "run_id": 38913607565,
+      "conclusion": "success",
+      "scope": "bootstrap"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "run_id": 38913607685,
+      "conclusion": "success",
+      "scope": "static qualifier only"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38913646899,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN"
+    }
+  ],
+  "limits": [
+    "Demonstrates actual 10Mbps each direction and no missing packets during 60s with one verified cipher, Normal/off, mixed valid IPv4 sizes, but ONLY same-host loopback namespace. No independent veth/2-endpoint machine performance result; host CPU quota/cgroup unavailable.",
+    "The effective MTU query is needed because original C2S record 1400/inner1369 differs from real S2C route/MSS inner1329. No MTU or MSS was changed to turn red green; test fixture corrected its inaccurate assumed legal size.",
+    "Original Go and Rust share a single process. Rust worker CPU-s is genuine clock-per-thread; isolated injector process CPU-s still NOT_RUN. Combined user/system CPU must not be added again to worker CPU (double counting).",
+    "Same-host one-way application age p50/p99 comes from independent Go sender/receiver timestamps but is NOT independent RTT. Real RTT p99, queue age, socket-level drop, wire direction-specific length counters, veth/physical host capacity and p99 product SLO NOT_RUN/NOT_INSTRUMENTED. Kernel lo counters include noise/control, not directional authenticated packets.",
+    "No actual externally received client SYN: pinned fixture SYN; production ABI capability features0; developer-only feature/tag. No true outstanding asynchronous driver-held B04 Stop / B01/B02 full product overlap or full lifecycle/multi-client/physical/500Mbps benchmark.",
+    "Underlying GitHub ZIP digest is API metadata; one original result ZIP downloaded and its JSON inspected via tooling; evidence excludes credentials, keys, payload dumps or large PCAP."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "formal_task_023_progress": "PARTIAL",
+  "next_action": "For one fixed same-real-owner developer capability use owned Linux veth two endpoints / independent generator and receiver process CPU accounting, while keeping original protected Go TLS admission and Rust Normal/off one cipher with 10s warmup/60s 10Mbps each direction; capture process-separated CPU and queue/socket drops plus independent RTT probe without replacing original M4/crypto. If veth or independent CPU attribution unavailable report UNSUPPORTED/INCONCLUSIVE; retain existing loopback target receipt and product ABI features0, do not repeat same-host smoke."
+}
