@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "normal_scoped_v4_kernel_ipv4_route_pmtu_preseal_recheck",
+  "source_sha": "2fd041352a0fd4fe63aba965b3ddff47d7ff8553",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "artifact_verified": true,
+  "implementation": [
+    "Normal Linux M4 read-only kernel route via SO_BINDTODEVICE on specified interface, UDP connect with no send, getsockopt(IP_MTU); validated target IPv4 and ifindex, interface MTU queried twice",
+    "Normal Rust ProtectedScopedOwner::observe_linux_normal_off_route_budget combines live kernel route MTU, local interface MTU, original protected Go V4 SYN MSS and record limit with M3 Normal/FEC-off budget",
+    "ScopedLinuxBudget bound original owner id, generation, full 16B epoch, ifindex, target IPv4 and kernel MTU. A second route lookup before seal detects cache/ifindex/MTU change and refuses old budget before PN consumption.",
+    "Same existing M1 scoped TX FrozenRecord and Rust AEAD/PN, independently opened by Go V4 client from real credential-checked session. Feature-only C observer; production ABI features0."
+  ],
+  "negative": [
+    "zero/wrong ifindex, unspecified/broadcast target, name traversal refused",
+    "remote over-original-SYN-MSS budget rejected on real kernel lo route",
+    "precommit and after Stop TX refused, next PN/TCP exact sequence not consumed on invalid route",
+    "all 3 cipher suites retain RX/TX/replay/Normal-off LINK reassembly negatives"
+  ],
+  "exact_source_actions": [
+    {
+      "run": 38838714430,
+      "kind": "M0 native Go protected V4 real Rust owner",
+      "result": "SUCCESS",
+      "attempt": 1,
+      "build_job": 116773573867,
+      "consume_job": 116773919359,
+      "go_top_level": "6/6 PASS",
+      "rust_test": "1/1 PASS",
+      "cipher_suites": "3/3 PASS",
+      "build_artifact": {
+        "id": 12020352082,
+        "digest": "sha256:06a384b91bdd13812c86893025ea097ee41cd9fea9e13c3c1af331c6378fbc2b"
+      },
+      "result_artifact": {
+        "id": 12020257335,
+        "digest": "sha256:0d6f3ea15f9f74cbaf15fa14e2058c7962d6260f5c5dea8eec421a7f3bc8db21"
+      }
+    },
+    {
+      "run": 38838714332,
+      "kind": "native functional",
+      "result": "SUCCESS",
+      "build_job": 116773597614,
+      "platform_job": 116773901145,
+      "platform_tests": "77/77 PASS",
+      "test": "r1_real_kernel_route_pmtu_bound_to_lo_and_ifindex_no_send PASS"
+    },
+    {
+      "run": 38838714356,
+      "kind": "native ABI",
+      "result": "SUCCESS",
+      "jobs": [
+        116773573597,
+        116773965079
+      ]
+    },
+    {
+      "run": 38838714300,
+      "kind": "Windows/ARM cross compilation/inspection only",
+      "result": "SUCCESS",
+      "jobs": [
+        116773573301,
+        116773573609,
+        116773929681,
+        116773929722
+      ],
+      "target_execution": "NOT_RUN"
+    },
+    {
+      "run": 38838714243,
+      "kind": "G2 bootstrap",
+      "result": "SUCCESS",
+      "jobs": [
+        116773573172,
+        116773738541
+      ]
+    },
+    {
+      "run": 38838714157,
+      "kind": "fake platform",
+      "result": "SUCCESS",
+      "jobs": [
+        116773572891,
+        116773661233
+      ]
+    },
+    {
+      "run": 38838714307,
+      "kind": "push Governance",
+      "result": "SUCCESS",
+      "job": 116773573326
+    },
+    {
+      "run": 38838714234,
+      "kind": "R0 static qualification audit",
+      "result": "SUCCESS",
+      "job": 116773573107
+    },
+    {
+      "run": 38838714447,
+      "kind": "full governance maintenance",
+      "result": "SUCCESS",
+      "job": 116773573746,
+      "tests": "169/169 PASS"
+    },
+    {
+      "run": 38838714361,
+      "kind": "path-triggered component performance workflow",
+      "result": "SUCCESS",
+      "jobs": [
+        116773573502,
+        116773810052
+      ],
+      "product_performance_claim": "NONE"
+    }
+  ],
+  "integrity": "Native build-once/consume Actions verified exact source SHA, run ID, attempt, source inputs and binaries SHA256. Artifact ZIP digests obtained as metadata from GitHub API, not separately downloaded and verified.",
+  "nonqualification": [
+    "IPv4 kernel cached route PMTU is not proof that remote PMTUD packets were successfully exchanged",
+    "Loopback route test only, not physical WAN PMTU or actual production connection carrier",
+    "NO production trusted authenticated Go-to-Rust control command or independent Rust TLS attestation",
+    "NO raw/TUN application packet or M4 real driver-held kernel loan Stop B01-B04",
+    "NO production V4 activation, fragmented TX, physical E2E, Windows/ARM target execution, 500Mbps/CPU/p99 product metrics"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Build a real versioned authenticated production Go→Rust control with independently verifiable provenance; no public arbitrary 248B cold installer. Bind same ScopedOwner to M4 route+actual raw/TUN driver lease and true app first packet/Stop B01-B04, then source-exact product Actions before enabling features."
+}

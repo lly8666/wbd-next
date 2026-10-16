@@ -641,5 +641,22 @@
     "product": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_023_scoped_ipv4_route_pmtu": {
+    "code_source_sha": "2fd041352a0fd4fe63aba965b3ddff47d7ff8553",
+    "result": "PARTIAL_COMPONENT_PASS",
+    "evidence": "docs/evidence/M0/M0-023-scoped-ipv4-route-pmtu.json",
+    "normal_compiled": "M4 Linux SO_BINDTODEVICE + connect UDP no send + getsockopt(IP_MTU); M0 ProtectedScopedOwner ScopedLinuxBudget with pre-seal recheck",
+    "constraint": "kernel cache PMTU on specified local IPv4 route combined with original protected Go SYN peer MSS and owner epoch/generation",
+    "native_go_tests": "6/6 top-level; 3 cipher suites; Rust 1/1",
+    "native_platform": "77/77",
+    "actual_remote_pmtud": "NOT_RUN",
+    "physical_data_delivery": "NOT_RUN",
+    "production_authenticated_native_command": "NOT_IMPLEMENTED",
+    "actual_raw_tun_driver_loan_stop_B01_B04": "NOT_RUN",
+    "production_abi_features": 0,
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }
