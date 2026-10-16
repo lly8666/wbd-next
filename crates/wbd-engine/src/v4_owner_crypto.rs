@@ -20,7 +20,7 @@ use wbd_codec::path_budget::FrameBudget;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_tun_sink::ScopedTunSink;
+use wbd_platform::linux_tun_sink::{ScopedTunSink,TunError};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::BatchResult;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -46,6 +46,8 @@ pub(crate) enum ProtectedCryptoError {
     Rx(ReplayConfigError),
     Inactive,
     Owner,
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    Tun(TunError),
     Early(EarlyError),
 }
 
@@ -443,7 +445,7 @@ impl ProtectedScopedOwner {
             .ok_or(ProtectedCryptoError::Tx)?;
         if space<20{return Err(ProtectedCryptoError::Tx)}
         let read=tun.read_ipv4_into(self.generation,&mut slab.writable()[14..])
-            .map_err(|_|ProtectedCryptoError::Owner)?;
+            .map_err(ProtectedCryptoError::Tun)?;
         if read>scoped.frame.single_business_payload_mtu{
             return Err(ProtectedCryptoError::Tx)
         }

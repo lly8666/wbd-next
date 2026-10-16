@@ -671,11 +671,20 @@ fn probe_tun_to_kernel_udp(handle:u64,ifindex:u32,port:u16)
     let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let route=p.owner.observe_linux_normal_off_route_budget(
         "lo",ifindex,Ipv4Addr::LOCALHOST
-    ).map_err(|_|INVALID)?;
-    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    ).map_err(|err|{
+        eprintln!("TUN_REVERSE_STAGE route_budget err={err:?}");
+        INVALID
+    })?;
+    let slab=p.arena.allocate().map_err(|err|{
+        eprintln!("TUN_REVERSE_STAGE original_M1_slab err={err:?}");
+        FULL
+    })?;
     let (pn,seq,wire_len,packet_len)=p.owner.seal_tun_ipv4_normal_off(
         tun,slab,&route,15,MonoNs(0)
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{
+        eprintln!("TUN_REVERSE_STAGE read_into_M1_or_AEAD err={err:?}");
+        INVALID
+    })?;
     let sender=UdpSocket::bind((Ipv4Addr::LOCALHOST,0))
         .map_err(|_|INVALID)?;
     sender.connect(SocketAddrV4::new(Ipv4Addr::LOCALHOST,port))
