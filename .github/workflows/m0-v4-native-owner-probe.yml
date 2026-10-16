@@ -236,6 +236,8 @@ jobs:
               grep -q "EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "EMBEDDED_REAL_MTU_EXACT_BOUNDARY_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_S2C_SECOND_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "EMBEDDED_REAL_RX_REPLAY_CORRUPT_NO_DELIVERY_PASS suite=$suite" native-probe-result/tun-netns.log
             done
@@ -282,6 +284,8 @@ jobs:
             for suite in 1 2 3; do
               grep -q "EMBEDDED_REAL_RAW_TO_TUN_APP_PASS suite=$suite" native-probe-result/prelim-netem-10ms.log
               grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/prelim-netem-10ms.log
+              grep -q "EMBEDDED_REAL_MTU_EXACT_BOUNDARY_PASS suite=$suite" native-probe-result/prelim-netem-10ms.log
+              grep -q "EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=$suite" native-probe-result/prelim-netem-10ms.log
               grep -q "EMBEDDED_REAL_RX_REPLAY_CORRUPT_NO_DELIVERY_PASS suite=$suite" native-probe-result/prelim-netem-10ms.log
             done
             STATE=EXPLORATORY_PASS
@@ -327,6 +331,8 @@ jobs:
               grep -q "EMBEDDED_REAL_TUN_TO_RAW_GO_PEER_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
               grep -q "EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
               grep -q "EMBEDDED_REAL_S2C_SECOND_PACKET_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+              grep -q "EMBEDDED_REAL_MTU_EXACT_BOUNDARY_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
+              grep -q "EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=$suite" native-probe-result/prelim-netem-150ms.log
             done
             STATE=EXPLORATORY_PASS
           else

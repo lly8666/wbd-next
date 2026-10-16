@@ -136,6 +136,92 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
             }
             t.Logf("EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=%d bytes=%d pn=%d seq=%d",
                 cipher,n2,pnNext,seqNext)
+            // Same Go credential-checked protected session; no new crypto or
+            // owner. Original Rust normal-off RX constructed with negotiated
+            // record wire limit, existing 31B record + 14B LINK overhead.
+            // Test EXACT receive-side single-frame boundary and +1 at M4
+            // real kernel raw/TUN, not a private decode-only test. Do not
+            // alter the original negotiated limit, TUN MTU or sender seed.
+            const recordFixed=31
+            const linkHeader=14
+            const ipUDPHeaders=28
+            if limit!=1400{t.Fatalf("actual protected Go server wire limit unexpectedly %d",limit)}
+            maxIP:=int(limit)-recordFixed-linkHeader
+            if maxIP<=ipUDPHeaders||maxIP>=1500{
+                t.Fatalf("unsafe actual effective IPv4 business limit %d",maxIP)
+            }
+            makeUDPIP:=func(ipLen int, fill byte)[]byte{
+                ipPacket:=make([]byte,ipLen)
+                ipPacket[0]=0x45;ipPacket[8]=64;ipPacket[9]=17
+                binary.BigEndian.PutUint16(ipPacket[2:4],uint16(ipLen))
+                binary.BigEndian.PutUint16(ipPacket[4:6],uint16(99+cipher))
+                copy(ipPacket[12:16],senderIP.To4())
+                copy(ipPacket[16:20],dstIP.To4())
+                binary.BigEndian.PutUint16(ipPacket[10:12],v4RawCheckSum(ipPacket[:20]))
+                binary.BigEndian.PutUint16(ipPacket[20:22],40001)
+                binary.BigEndian.PutUint16(ipPacket[22:24],
+                    uint16(app.LocalAddr().(*net.UDPAddr).Port))
+                binary.BigEndian.PutUint16(ipPacket[24:26],uint16(ipLen-20))
+                for i:=28;i<len(ipPacket);i++{ipPacket[i]=fill}
+                return ipPacket
+            }
+            lastSeq:=seqNext+uint32(len(wire2))
+            atLimit:=makeUDPIP(maxIP,0x6b)
+            atWire,atPN,err:=sealer.Seal(atLimit)
+            if err!=nil||atPN!=2||len(atWire)>int(limit){
+                t.Fatalf("cannot seal actual near-limit record pn=%d wire=%d err=%v",atPN,len(atWire),err)
+            }
+            if err:=syscall.Sendto(rawfd,
+                v4RawC2STestPacket(atWire,lastSeq,bridge.originalFlow),0,
+                &syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});err!=nil{
+                t.Fatalf("real raw effective boundary packet: %v",err)
+            }
+            maxDelivered,maxFailed,maxErr:=bridge.receiveRawToTun()
+            if maxErr!=nil||maxDelivered!=1||maxFailed!=0{
+                t.Fatalf("original Rust normal-off exact max=%d rejected delivered=%d failed=%d err=%v",
+                    maxIP,maxDelivered,maxFailed,maxErr)
+            }
+            if err:=app.SetReadDeadline(time.Now().Add(2*time.Second));err!=nil{t.Fatal(err)}
+            largeRecv:=make([]byte,maxIP)
+            size,from,err:=app.ReadFromUDP(largeRecv)
+            if err!=nil||from==nil||!from.IP.Equal(senderIP)||
+                size!=maxIP-ipUDPHeaders||
+                !bytes.Equal(largeRecv[:size],atLimit[ipUDPHeaders:]){
+                t.Fatalf("real TUN max-frame app mismatch n=%d expected=%d peer=%v err=%v",
+                    size,maxIP-ipUDPHeaders,from,err)
+            }
+            t.Logf("EMBEDDED_REAL_MTU_EXACT_BOUNDARY_PASS suite=%d ip_bytes=%d payload=%d pn=%d",
+                cipher,maxIP,size,atPN)
+            // One byte exceeds the *same* negotiated Normal/off LINK
+            // single-frame budget, while TLS wire remains itself valid.
+            // The Rust normal owner MUST refuse delivery; a green raw send
+            // alone is not sufficient. Observe the independent app socket.
+            overIP:=makeUDPIP(maxIP+1,0x4c)
+            overWire,overPN,err:=sealer.Seal(overIP)
+            if err!=nil||overPN!=3||len(overWire)>int(limit){
+                t.Fatalf("oversize fixture must be legal TLS but too-large LINK pn=%d bytes=%d err=%v",
+                    overPN,len(overWire),err)
+            }
+            if err:=syscall.Sendto(rawfd,
+                v4RawC2STestPacket(overWire,lastSeq+uint32(len(atWire)),
+                    bridge.originalFlow),0,
+                &syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});err!=nil{
+                t.Fatalf("real raw oversized IPv4 send: %v",err)
+            }
+            overDelivered,_,overErr:=bridge.receiveRawToTun()
+            if overErr==nil||overDelivered!=0{
+                t.Fatalf("oversized authenticated LINK reached TUN or was reported success: delivered=%d err=%v",
+                    overDelivered,overErr)
+            }
+            if err:=app.SetReadDeadline(time.Now().Add(40*time.Millisecond));err!=nil{t.Fatal(err)}
+            shouldBeEmpty:=make([]byte,maxIP+1)
+            nOver,_,appErr:=app.ReadFromUDP(shouldBeEmpty)
+            ne,timeout:=appErr.(net.Error)
+            if nOver!=0||!timeout||!ne.Timeout(){
+                t.Fatalf("over-MTU business leaked to independent kernel app n=%d err=%v",nOver,appErr)
+            }
+            t.Logf("EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=%d ip_bytes=%d pn=%d",
+                cipher,maxIP+1,overPN)
             // Original ciphertext at PN=0 was already delivered. Re-inject
             // EXACT SAME immutable bytes through the real raw socket: the
             // Rust M1/M3 PN replay gate must reject, never release a second
