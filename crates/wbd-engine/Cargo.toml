@@ -12,6 +12,9 @@ crate-type = ["rlib", "cdylib"]
 # NEVER enable on production builds: exposed raw C methods are only native
 # test probes, not independent Go TLS credential or production FecOrigin proofs.
 m0_v4_probe = []
+# Explicit developer-only opt-in non-test Go embedded Rust control adapter.
+# Default production cdylib and public ABI remain disabled.
+m0_v4_embedded_go = []
 
 [dependencies]
 # M0-owned composition-only edges. Lower-layer workers must not depend on engine.

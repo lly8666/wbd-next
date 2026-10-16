@@ -17,6 +17,8 @@ mod v4_owner_crypto;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;
+#[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
+mod v4_embedded_go;
 #[cfg(all(feature = "m0_v4_probe", target_os = "linux"))]
 mod v4_probe_bridge;
 
