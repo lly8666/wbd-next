@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 98,
-  "checkpoint_sha": "874ef7a5f3232e5f6c0f3f2fd1983c1f936732d2",
+  "sequence": 99,
+  "checkpoint_sha": "30acf388d340308b99fb7ad773bd2e5153afc2f7",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "GOV-005 §0: H97 后已完成一项完整能力——原 Go TLS 认证 V4 私有调用→原非测试 Rust M1/M3 owner→真实 Linux M4 raw/TUN 的独立常驻 RX/TX 双线程。Go 不逐包调用 bridge；现在内核 raw/TUN 阻塞读取发生于 registry Mutex 锁外，原 owner 内作 AEAD/PN、Normal/off、发送，Stop 在回收线程后才停真实驱动并释放 generation。最终 CODE SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 原生 Actions38907951546 attempt1 build116996212076 consume116996847641 PASS：后台 C2S8/8 S2C8/8、错误0/0，同源 ABI/cross/native/静态/Gov PASS。证据 S 874ef7a5f3232e5f6c0f3f2fd1983c1f936732d2 静态38908589807/Gov38908589654 PASS。此前夹具误将 Linux ACK/RST 交给 TLS 解码器的失败38906827243、38907243656已保留，修好 Go 独立接收筛选后 Actions 全通过。正式023 partial/features0。",
-  "why_now": "新版主线规则要求不再重复小包 smoke，直接实现 Rust 持续 owner 循环，且消除原全局 Mutex 对内核 RX/TUN 最多750ms的方向间阻塞。复用原始认证、M1 slab、M3 AEAD/PN、M4 同代 driver/Stop，不造测试-only加密或产品 capability。",
-  "done_when": "当前持续 owner 基础能力的正确性/安全关闭功能已验收：两条 Rust OS worker、真实内核读锁外、同一原 Rust owner 和受保护 Go 凭证、Go独立应用发送/接收、无 per-packet bridge helper、源码精确 Actions PASS。不是10Mbps性能资格；本批未测试持续70秒、混合MTU、独立进程注入CPU/engine CPU、RTT p99、RSS、内核drops、队列年龄或宿主容量。B01–B04 全量/真实异步 driver、外部 SYN、500Mbps、正式产品均未验收，不能降低硬门。",
-  "next_action": "使用已验收的 Rust 双工作线程持续路径，在 ONE 配置/seed/一个测量 job 的 Actions 中搭建真实独立 Linux raw/TUN 业务注入与接收，Normal 单 lane/FEC off/诊断关，预声明64/256/1200/当前有效内层MTU比例，双向各10Mbps，热身10秒+测量60秒；分离引擎/注入器CPU-s与RSS，测实际注入交付/缺包、wire PPS、socket/kernel drops、队列年龄与独立探针RTT p99及host cgroup/PSI。若同进程CPU无法分离或容量不足，明确INCONCLUSIVE/HOST_CAPACITY_LIMITED，不冒充正式基线或产品PASS，默认 features0 不变。",
+  "current_task": "GOV-005 M0-023 当前能力批次：原 Go credential-verified protected V4→非测试 Rust 原 M1/M3 scoped owner 的两个独立后台常驻 Linux M4 raw RX/TUN TX 线程已实现，并将真实 raw/TUN 阻塞读取置于全局 registry Mutex 锁外，返回再用同代原 AEAD/PN/Normal/off/M4 TX。Stop先停止并join线程后释放驱动/arena/generation。确切 CODE SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 native Actions38907951546 attempt1 build116996212076 consume116996847641 PASS，背景 C2S8/8、S2C8/8、worker错误0/0；同源 ABI/cross/native/governance PASS。证据 S874ef7a5；H98 d07483e Governance38908825628 FAIL仅因为 evidence 缺少 source_sha; 证据字段 S30acf388d340308b99fb7ad773bd2e5153afc2f7 修复，Governance38909066933 SUCCESS。Formal 023 PARTIAL, production features0。",
+  "why_now": "GOV-005 §0要求在短包证明后交付真正独立Rust持续owner循环而非增长短Go串行smoke；已通过新测试。H98 Governance红灯为记录schema缺字段，已按精确源修复并保留红灯证据，不重跑产品Actions。",
+  "done_when": "当前能力原生功能测试按精确 SOURCE 69f392c58067ec8f8ca53ed95c660510e6831595 PASS：Go认证 private桥；原Rust M1/M3双后台OS线程自主处理Linux raw/TUN，原M4驱动借用，Go发送与应用接收不逐包调用原桥，锁外内核等待，Stop再释放。证据source_sha已修复且Governance38909066933 PASS； H98 Governance38908825628 FAIL保留。尚无10s+60s 10Mbps/direction和独立引擎/注入器CPU核算；真实B04持有异步driver、外部SYN、正式产品/物理仍NOT_RUN，不能把本次功能PASS报为性能或产品资格。",
+  "next_action": "为现有已验Go TLS→原Rust M1/M3/M4后台持续raw/TUN路径完成一项限定开发性能基线：独立业务发送/接收及独立CPU计量或明确不支持，同一Actions测量job固定 Normal/off 单lane/FECoff/诊断关的64/256/1200/有效MTU预定混合、双向各10Mbps，10s热身+60s计量，实际offered/delivered/missing、wire/PPS、原Rust vs injector CPU-s、RSS、kernel/socket drops、queue age、独立探针RTT/尾延迟及host容量回执。若注入/host欠载或同进程CPU不可归因报INCONCLUSIVE/UNSUPPORTED，不改seed、队列或产品features0。",
   "unverified": true,
   "last_tested_source": "69f392c58067ec8f8ca53ed95c660510e6831595",
   "evidence_refs": [
@@ -20,9 +20,8 @@
   "context_refs": [
     "docs/devlog/M0/M0-023-original-rust-background-owner-loop.md",
     "docs/architecture/TEST_PLAN.md",
-    "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "原生Go可信TLS→原Rust owner双后台线程，M4 kernel raw/TUN 阻塞读离开全局锁，功能8/8双向、错误0、stop/release/source-locked Actions PASS。10Mbps/10s+60s性能基线还未测试；023仍PARTIAL、features0，外部SYN/B04等未验证。"
+  "partial_summary": "已在GitHub Actions验证真正独立Rust raw RX/TUN TX后台循环，锁外内核阻塞读取，同代原rust AEAD/PN、Stop/Release保留，Go无逐包helper，8/8双向；修复证据source_sha和H98 Gov红灯事实。10Mbps/10s+60s开发性能尚NOT_RUN；产品features0/023partial/B04未验收。"
 }
