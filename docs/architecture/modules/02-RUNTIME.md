@@ -16,6 +16,8 @@ TX拥有seq/PN、encoder、shadow、repair budget、发送队列；RX拥有AEAD 
 
 同owner多个tunnel采用按**实际wire字节**的deficit round robin，起始quantum=4×outerMTU、deficit最多8quantum；只维护非空tunnel链。每tunnel的fresh/repair使用10:1字节权重，control每轮小独立预算且受总输出限制。单lane慢/不可写不占住列表头，跳到下一个ready lane。无每包排序或遍历所有idle tunnel。
 
+这里fresh指**首次发送的systematic、parity与Game副本**，不是实现枚举中仅名为`Fresh`的源包；repair才是同密文再次发送。parity可以独立排队，但其首发属于fresh总服务份额，内部按07/09的实际r/k和wire字节及时服务。不能把20:20的parity塞入10:1的低权重重传队列；“连续十个源包后才轮到一个repair或parity”的组件公平性证明，不等于已满足持续FEC产出。10:1调度权重也不替代08的实际提交字节限额；大小包混合时按包数分配会失真。
+
 首版不做优先级插件框架，不做每packet async task；deadline已到的稀疏包在下一轮立即处理，绝不等batch攒满。32包/100µs是公平调度初值；同包率微调须说明每轮服务延迟与syscall成本的变化。
 
 ## 不漏唤醒协议

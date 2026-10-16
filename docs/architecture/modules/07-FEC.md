@@ -18,6 +18,8 @@ TX每逻辑方向只有一套encoder，Normal一套、Game也是一套。固定2
 
 长度从短到长时，只对每个active source `[original_len,L)`提供确定零字节；未使用的20−k列完全不读。短block也不得把池的旧数据当零。partial table按原G的前k列生成，tables缓存按(k,configured_r)有界。
 
+首次parity不是08所限10%的外层重传。持续20:20时，同长满block的parity payload产出约等于source payload，不能只保证“偶尔给一次parity机会”；实际wire份额还须按最大shard长、partial k和头部计账。R3接入真实调度时核parity产出/实际首发/pressure及最老待发年龄，健康容量下不得持续积压。源包立即发送、32ms关闭上界与parity不饥饿须同时成立；过载则明确退化，不扩大队列掩盖。
+
 ## SIMD调用
 
 wrapper唯一不安全边界：验证input/output长度、不可别名、pointer数组大小、k/r、scratch有效期；`ec_init_tables(k,r_sent,coeff,tables)`后`ec_encode_data(L,k,r_sent,...)`。len<64统一走简洁scalar参考，len≥64使用经目标测试的runtime dispatch；不要把各低级函数32/64要求混为一谈。SIMD tail按官方函数能力/已测wrapper处理，不把padding传到wire。
@@ -47,6 +49,8 @@ wrapper唯一不安全边界：验证input/output长度、不可别名、pointer
 初始3s绝对恢复horizon从first_seen计，收到重复包不续命。完成全部active originals或压力/到期即释放大payload，compact仅保留BlockID、profile、final lengths和delivered bitmap。迟到未交付systematic在compact有效期内仍首次交付；late parity不会重建heavy。已交付源永不因为pressure复活而重交。
 
 heavy以字节预算为主，不固定64代/640块。compact初值10s保留并按实际block速率动态容量，受总内存限制；无法保留时推进明确retired floor，过旧ID拒绝，不当新block。wire32用最近可信extended ID解释，超过半空间不猜。profile切换保留原最多6个draining TX encoder的限制；满时先有界flush最旧，不阻塞新source等待peer。
+
+退役只释放该block的引用；已经交下游、正在解码或被driver借用的buffer须按03独立存活，不能compact时把已首到输出的内存归池重用。切档只影响新TX block，RX按认证后的block metadata解释旧r/k，不拿当前发送档改写旧block；auto当前off仍接受合法旧FEC drain，fixed/off仍按协商模式分派。lane record、FEC源索引、LINK packet与Game logical ID分别去重，不能一层bitmap替代全部层级。
 
 ## 测试与指标
 

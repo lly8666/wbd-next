@@ -10,6 +10,8 @@
 
 跨owner lease引用机制只封装在一个小模块，必要unsafe逐项说明地址稳定/唯一可变借用/归还条件并用Miri/loom测；不能把unsafe分散到codec。owner内部Game/FEC引用为普通计数和generation key，不每个副本new Arc。buffer从分配到释放必须能画出唯一责任链。
 
+return的“单生产者”按**可能执行最后一次Drop的线程**计算，不能因都归一个lane就当SPSC。多个completion/consumer可归还时，使用固定生产者对的独立SPSC并合并消费，或沿用经验证的有界MPSC；不要只为符合库选型强换队列或新增unsafe。return backlog和未完成driver loan都计入总预算；Stop后仍有借用必须保留归还通路，不关消费者再等待生产者退出。池payload复用不代表零分配，Arc控制块、Vec扩容及重组输出仍须计数。
+
 ## 各路径复制预算
 
 | 路径 | 允许的必要复制 | 禁止的复制 |

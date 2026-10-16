@@ -34,9 +34,9 @@ BufferKey只在所属arena/owner上下文有效。跨owner消息的队列端点�
 - M3 seal：先分配PN（失败也烧号），持有`&mut [u8]`独占写窗口，就地AEAD/HP，成功后消费该唯一buffer调用`freeze(written_range,metadata)`；失败不能发布未认证密文，不能为封装分配第二份packet object。
 - M2 recovery：只持有/复制`FrozenRecordHandle`的**handle**并引用既有PN/seq及同一密文，不重新Seal、不重新生成PN；若实际M1实现的clone复制payload，则不满足性能门。
 - M4 driver：对冻结handle调用`driver_read`取得与handle寿命绑定的只读片段；若OS异步借用需再登记驱动lease，在真实completion/cancel后才归还owner。驱动不可取得密文可写访问。
-- M0负责接口签名、模块连接和端到端回归，不自造第二个arena、第二份加密记录；目前仅有类型与mock测试，`R1 Normal/FEC off`真正首包和重复buffer复制数都还**NOT_RUN**。
+- M0负责接口签名、模块连接和端到端回归，不自造第二个arena、第二份加密记录。本节最初只定义R0类型/mock范围；当前首包、持续业务和复制成本的完成范围读取精确SOURCE的evidence，不能用这段历史接口说明宣称仍未开工或已经全面通过。
 
-具体slab/backlog、共享引用计数优化和有界关闭是M1/M4实现的实测要求。旧`wbd-platform::BorrowFence::wait_drained()`无限等待、按批Vec分类和锁/Arc都是**R0 fake correctness harness**，不是生产性能路径；生产停止必须提供单调deadline、超时仍有借用时不free的显式未清理状态（可以上报/隔离/留待完成），禁止超时强制释放仍被driver持有的缓冲区。Normal/off首包测试优先于新FEC/repair开发与任何性能百分比宣称。
+具体slab/backlog、共享引用计数优化和有界关闭是M1/M4实现的实测要求。旧`wbd-platform::BorrowFence::wait_drained()`无限等待、按批Vec分类和锁/Arc都是**R0 fake correctness harness**，不是生产性能路径；生产停止必须提供单调deadline、超时仍有借用时不free的显式未清理状态（可以上报/隔离/留待完成），禁止超时强制释放仍被driver持有的缓冲区。尚未贯通时先完成Normal/off首包；已有同路径证据直接复用，不为后续集成重走逐包小台阶。
 
 ## V4 admission：最小一次性升级
 

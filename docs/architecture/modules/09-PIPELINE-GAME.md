@@ -28,6 +28,10 @@ RX必须把同逻辑tunnel的全部lane路由到同一个RX owner；它串行维
 
 Game计划lane数是配置；rotation临时多一条必须遵守原max_active资源门和新总预算，不把无限重试新lane留下来。每个逻辑block的wire ID/profile不因某lane关闭重置。Normal rotation重叠期间同样不让新lane等待A未完成repair。
 
+**Normal重叠不等于Game复制。** Normal无16B逻辑envelope，两个lane的PN去重不能识别同一业务跨lane副本；没有既有稳定业务ID契约时，每个Normal新包选择一条合格lane首发，A继续有界drain，B可承接后续包。不能把同一业务分别seal到A/B后声称一定零重复，也不能把A的冻结repair改绑B的密钥/seq。Game则用共同epoch/逻辑ID去重，lane换代不重置共同ID或重做公共FEC。
+
+qualified须有原策略要求的有效证据，但高损不要求一次探测就成功；重试有界，B失败保留可用A，不把“等待全部旧ACK”加成新切换门。独立lane损失概率相乘仅用于独立模型；同一出口/宿主/线路故障往往相关，4条lane不能按4条独立物理线路承诺恢复率。
+
 ## 测试
 
 一lane人工sleep/写EAGAIN不拖其他lane；四份到达顺序24种；source和recovered同时可交付；不同lane互补缺片；同epoch同block重复metadata、错epoch拒绝；2/4lane部分/全部黑洞；旧A有shadow但B已工作；新MSS变小；低档/off Game（若旧产品支持）行为明确。
