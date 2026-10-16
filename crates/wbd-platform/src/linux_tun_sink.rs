@@ -14,14 +14,20 @@ const TUNGETIFF:usize=0x800454d2;
 const IFF_TUN:i16=0x0001;
 const IFF_NO_PI:i16=0x1000;
 const MAX_NAME:usize=15;
+const POLLIN:i16=1;
+#[repr(C)]
+struct PollFd {fd:i32,events:i16,revents:i16}
+
 unsafe extern "C" {
     fn ioctl(fd:i32,request:usize,...) -> i32;
     fn write(fd:i32,ptr:*const std::ffi::c_void,len:usize)->isize;
+    fn read(fd:i32,ptr:*mut std::ffi::c_void,len:usize)->isize;
+    fn poll(fds:*mut PollFd,nfds:usize,timeout:i32)->i32;
 }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub enum TunError {
     InvalidScope,Stopped,InvalidFd,InvalidName,WrongMode,
-    InvalidPacket,TooLarge,Kernel(i32),ShortWrite,
+    InvalidPacket,TooLarge,Kernel(i32),ShortWrite,TimedOut,
 }
 pub struct ScopedTunSink {
     fd:OwnedFd,
@@ -71,6 +77,45 @@ impl ScopedTunSink {
     }
     pub fn outstanding(&self)->usize{self.fence.outstanding()}
     pub fn is_stopping(&self)->bool{self.fence.is_stopping()}
+    /// One real kernel TUN application ingress, direct into caller's ORIGINAL
+    /// M1 UniqueBuffer writable region. No second data buffer/copy and no
+    /// alternate TX path. This is UNTRUSTED plaintext input from the OS
+    /// device; it must go through the current protected Rust owner and AEAD.
+    /// A bounded readiness poll prevents a missing app datagram from hanging
+    /// the OS integration runner. It never retries uncertain kernel reads.
+    pub fn read_ipv4_into(&self,generation:u32,out:&mut [u8])
+        ->Result<usize,TunError>{
+        if generation!=self.generation{return Err(TunError::InvalidScope)}
+        if !self.started.load(Ordering::Acquire){return Err(TunError::Stopped)}
+        if out.len()<20{return Err(TunError::TooLarge)}
+        let _guard=self.fence.try_enter_ready().map_err(|e|match e{
+            BorrowError::Stopping=>TunError::Stopped,
+            BorrowError::TooManyLoans=>TunError::TooLarge,
+        })?;
+        let _serialized=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
+        let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
+        // SAFETY: the kernel sees one correctly laid-out, live pollfd.
+        let ready=unsafe{poll(&mut pfd,1,750)};
+        if ready<0 {
+            return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))
+        }
+        if ready==0{return Err(TunError::TimedOut)}
+        if pfd.revents&POLLIN==0{return Err(TunError::InvalidFd)}
+        // SAFETY: owned fd, live mutable out buffer for synchronous read.
+        let n=unsafe{read(self.fd.as_raw_fd(),out.as_mut_ptr().cast(),out.len())};
+        if n<0 {
+            return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))
+        }
+        let n=n as usize;
+        if n<20 || n>65535 || out[0]>>4!=4 || out[0]&0x0f<5 {
+            return Err(TunError::InvalidPacket)
+        }
+        let header_len=usize::from(out[0]&0x0f)*4;
+        let total=usize::from(u16::from_be_bytes([out[2],out[3]]));
+        if total!=n || header_len>n {return Err(TunError::InvalidPacket)}
+        Ok(n)
+    }
+
     /// Writes only a complete authenticated IPv4 L3 packet; any rejected
     /// header or short/failed kernel write is counted as non-delivery.
     /// This method cannot be used to authenticate its packet argument.

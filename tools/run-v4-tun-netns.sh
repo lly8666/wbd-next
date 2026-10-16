@@ -37,4 +37,5 @@ if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
 fi
 echo 'TUN_APP_FIRST_PACKET_PASS: isolated netns actual kernel TUN -> UDP application socket.'
+echo 'TUN_APP_BIDIRECTIONAL_PASS: real Go application -> kernel TUN -> Rust scoped AEAD -> M4 UDP -> Go TLS peer.'
 echo 'Still NOT production native installer, raw FakeTCP carrier or tc netem qualification.'

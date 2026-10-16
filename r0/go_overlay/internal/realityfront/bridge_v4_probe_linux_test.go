@@ -674,7 +674,7 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
             if e!=nil{t.Fatalf("actual Linux application UDP bind: %v",e)}
             defer app.Close()
             c,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
-            _,limit:=c.RecordLimits()
+            clientLimit,limit:=c.RecordLimits()
             sealer,e:=tlsrecord.NewSealerForCipher(c.DirectionKeys().C2S,int(limit),cipher)
             if e!=nil{t.Fatal(e)}
             udp,e:=net.DialUDP("udp4",nil,&net.UDPAddr{IP:loIP,Port:int(port)})
@@ -710,9 +710,53 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
                 t.Fatalf("NO REAL TUN application kernel UDP first: err=%v peer=%v n=%d",e,peer,n)
             }
             t.Logf("TUN_APP_FIRST_PACKET_PASS suite=%d received=%d via=/dev/net/tun, IP kernel socket",cipher,n)
+            // REVERSE actual app leg: the kernel emits this UDP datagram
+            // into the SAME real TUN FD; normal Rust M4 read() fills an
+            // ORIGINAL M1 slab; the original owner seals S2C and M4 uses
+            // real sendmmsg into an independent Go kernel UDP socket.
+            peerSocket,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:loIP,Port:0})
+            if e!=nil{t.Fatal(e)}
+            defer peerSocket.Close()
+            remote:=&net.UDPAddr{IP:senderIP,Port:42001}
+            reverse:=[]byte("reverse-real-app-TUN-to-Rust-AEAD-and-Go-peer")
+            if written,e:=app.WriteToUDP(reverse,remote);e!=nil||written!=len(reverse){
+                t.Fatalf("Linux UDP app could not originate TUN packet: n=%d err=%v",written,e)
+            }
+            nif,e:=net.InterfaceByName("lo")
+            if e!=nil||nif.Index<1{t.Fatal(e)}
+            pn2,seq2,wireLen,appLen,e:=bridge.tunToKernelUDP(
+                uint32(nif.Index),uint16(peerSocket.LocalAddr().(*net.UDPAddr).Port))
+            if e!=nil||pn2!=0||seq2!=bridge.txBoundary{
+                t.Fatalf("Rust TUN source to M4 sendmmsg: %v pn=%d seq=%d",e,pn2,seq2)
+            }
+            if e=peerSocket.SetReadDeadline(time.Now().Add(2*time.Second));e!=nil{t.Fatal(e)}
+            sealed:=make([]byte,2048)
+            wireN,peerAddr,e:=peerSocket.ReadFromUDP(sealed)
+            if e!=nil||peerAddr==nil||!peerAddr.IP.Equal(loIP)||wireN!=int(wireLen){
+                t.Fatalf("Linux Go peer did not receive actual M4 record: %v n=%d wire=%d",e,wireN,wireLen)
+            }
+            opener,e:=tlsrecord.NewOpenerForCipher(
+                c.DirectionKeys().S2C,int(clientLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            opened,e:=opener.OpenRecord(sealed[:wireN])
+            if e!=nil||opened.Kind!=tlsrecord.KindLINK||opened.PN!=pn2{
+                t.Fatalf("Go TLS peer rejected real TUN app S2C: %+v %v",opened,e)
+            }
+            ip:=opened.Payload
+            if len(ip)!=int(appLen)||len(ip)<28+len(reverse) ||
+                ip[0]!=0x45||ip[9]!=17||
+                !net.IP(ip[12:16]).Equal(dstIP)||
+                !net.IP(ip[16:20]).Equal(senderIP)||
+                !bytes.Equal(ip[28:],reverse){
+                t.Fatalf("real TUN kernel app packet lost: got=%x appLen=%d",ip,appLen)
+            }
+            t.Logf("TUN_APP_REVERSE_PACKET_PASS suite=%d received=%d via=kernel TUN read + original Rust AEAD + M4 sendmmsg",cipher,len(reverse))
             if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
             if _,_,e=bridge.receiveKernelToTun();e==nil{
                 t.Fatal("retired normal Rust scoped TUN owner allowed delivery")
+            }
+            if _,_,_,_,e=bridge.tunToKernelUDP(uint32(nif.Index),uint16(peerSocket.LocalAddr().(*net.UDPAddr).Port));e==nil{
+                t.Fatal("retired Rust scoped owner permitted reverse TUN->AEAD TX")
             }
             if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })

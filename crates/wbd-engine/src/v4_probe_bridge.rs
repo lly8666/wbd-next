@@ -655,6 +655,64 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_to_tun(
     }
 }
 
+/// Genuine reverse application leg: OS kernel emits an IPv4 datagram on
+/// real IFF_TUN, SAME ordinary ScopedTunSink reads DIRECTLY into an M1
+/// original UniqueBuffer, SAME protected Rust ScopedOwner seals S2C PN,
+/// M4's original sendmmsg sends it to Go's independent kernel UDP socket.
+/// A test-only FFI invokes this. No Go-provided business bytes are copied
+/// directly to Rust, no alternate encryption path or fake TUN.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_tun_to_kernel_udp(handle:u64,ifindex:u32,port:u16)
+    ->Result<(u64,u32,u32,u32),i32>{
+    if port==0 {return Err(INVALID)}
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let route=p.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::LOCALHOST
+    ).map_err(|_|INVALID)?;
+    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    let (pn,seq,wire_len,packet_len)=p.owner.seal_tun_ipv4_normal_off(
+        tun,slab,&route,15,MonoNs(0)
+    ).map_err(|_|INVALID)?;
+    let sender=UdpSocket::bind((Ipv4Addr::LOCALHOST,0))
+        .map_err(|_|INVALID)?;
+    sender.connect(SocketAddrV4::new(Ipv4Addr::LOCALHOST,port))
+        .map_err(|_|INVALID)?;
+    let receiver=UdpSocket::bind((Ipv4Addr::LOCALHOST,0))
+        .map_err(|_|INVALID)?;
+    let driver=ScopedUdpOwner::new((handle>>32) as u32,sender,receiver)
+        .map_err(|_|INVALID)?;
+    let outcome=p.owner.submit_scoped_udp_tx(&driver,MonoNs(0))
+        .map_err(|_|BAD_STAGE)?;
+    if outcome.len()!=1 || outcome.accepted_prefix()!=1
+        || outcome.uncertain_index().is_some()||outcome.error().is_some(){
+        return Err(BAD_STAGE)
+    }
+    p.arena.drain_returns();
+    Ok((pn,seq,u32::try_from(wire_len).map_err(|_|INVALID)?,
+        u32::try_from(packet_len).map_err(|_|INVALID)?))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_udp(
+    handle:u64,ifindex:u32,receive_port:u16,
+    out_pn:*mut u64,out_seq:*mut u32,out_wire_len:*mut u32,
+    out_app_len:*mut u32,
+)->i32 {
+    if out_pn.is_null()||out_seq.is_null()||out_wire_len.is_null()
+        ||out_app_len.is_null(){return INVALID}
+    match probe_tun_to_kernel_udp(handle,ifindex,receive_port){
+        Ok((pn,seq,wire,app))=>{
+            unsafe{out_pn.write(pn);out_seq.write(seq);
+                out_wire_len.write(wire);out_app_len.write(app)};
+            OK
+        }
+        Err(e)=>e,
+    }
+}
+
 // All these C symbols are compiled ONLY under m0_v4_probe Linux feature.
 // They intentionally do not authenticate caller bytes; production links do
 // not contain them and capability reporting always remains features=0.

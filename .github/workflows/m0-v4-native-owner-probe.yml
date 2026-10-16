@@ -204,6 +204,11 @@ jobs:
             echo 'True kernel TUN/namespace not supported on this Actions runner; no PASS claim.'
           elif [[ "$RC" == 0 ]]; then
             grep -q 'TUN_APP_FIRST_PACKET_PASS: isolated netns' native-probe-result/tun-netns.log
+            grep -q 'TUN_APP_BIDIRECTIONAL_PASS: real Go application' native-probe-result/tun-netns.log
+            for suite in 1 2 3; do
+              grep -q "TUN_APP_FIRST_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "TUN_APP_REVERSE_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
+            done
             grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
             STATE=PASS
           else
@@ -215,7 +220,7 @@ jobs:
           source=json.load(open("native-probe-build/manifest.json"))
           result={"source_sha":source["source_sha"],"run_id":source["run_id"],
               "attempt":source["attempt"],"result":os.environ["TUN_STATE"],
-              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_APP_EGRESS",
+              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_BIDIRECTIONAL_APPLICATION_TO_SCOPED_RUST_M4_UDP",
               "tun_log_sha256":hashlib.sha256(log).hexdigest(),
               "production_abi_features":0,"product_e2e":"NOT_RUN",
               "netem_matrix":"NOT_RUN","raw_carrier":"NOT_RUN"}

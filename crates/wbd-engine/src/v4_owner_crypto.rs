@@ -425,6 +425,34 @@ impl ProtectedScopedOwner {
         self.seal_normal_off_one(buffer,payload_len,scoped.frame,carrier_snapshot,now)
     }
 
+    /// Actual OS TUN app packet -> original M1 slab (no intermediate copy)
+    /// -> original protected Rust owner Normal/off LINK -> S2C AEAD/PN and
+    /// scoped FrozenRecord TX queue. Only packet sizes fitting the current
+    /// underlying carrier are supported; oversized packets fail closed and
+    /// require M3 fragmentation before production qualification.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn seal_tun_ipv4_normal_off(
+        &mut self,tun:&ScopedTunSink,mut slab:UniqueBuffer,
+        scoped:&ScopedLinuxBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || tun.generation()!=self.generation
+            || tun.is_stopping(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let space=slab.writable().len().checked_sub(14)
+            .ok_or(ProtectedCryptoError::Tx)?;
+        if space<20{return Err(ProtectedCryptoError::Tx)}
+        let read=tun.read_ipv4_into(self.generation,&mut slab.writable()[14..])
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        if read>scoped.frame.single_business_payload_mtu{
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let (pn,seq,used)=self.seal_normal_off_with_linux_budget(
+            slab,read,scoped,carrier_snapshot,now
+        )?;
+        Ok((pn,seq,used,read))
+    }
+
     /// The actual normal-build S2C/C2S TX: one application Normal/off
     /// packet, already placed by the caller in the SAME M1 UniqueBuffer at
     /// [14 .. 14+payload_len]. Only an explicitly supplied effective M4
