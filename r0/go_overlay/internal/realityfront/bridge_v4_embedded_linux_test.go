@@ -175,3 +175,47 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
         })
     }
 }
+
+
+// B03 bounded old/new generation isolation using two independently
+// credential-checked Go protected TLS transactions and the SAME non-_test
+// embedded Rust registry (no test-only owner). Retiring the old generation
+// must not stop/consume the new session. This does not simulate M4 async loan.
+func TestR0V4EmbeddedTwoGenerationStopIsolation(t *testing.T){
+    oldStore,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+    newStore,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+    old:=&v4EmbeddedNativeBridge{}
+    oldClient,oldServer,ce,se:=v4PairWithPrivateBridgeCipher(t,old,oldStore,CipherChaCha)
+    if ce!=nil||se!=nil||oldClient==nil||oldServer==nil||!old.committed{
+        t.Fatalf("old verified protected Go Rust admission: %v %v",ce,se)
+    }
+    oldHandle:=old.handle
+    fresh:=&v4EmbeddedNativeBridge{}
+    newClient,newServer,ce,se:=v4PairWithPrivateBridgeCipher(t,fresh,newStore,CipherChaCha)
+    if ce!=nil||se!=nil||newClient==nil||newServer==nil||!fresh.committed{
+        t.Fatalf("new verified protected Go Rust admission: %v %v",ce,se)
+    }
+    if oldHandle==0||fresh.handle==0||oldHandle==fresh.handle||
+       oldHandle>>32>=fresh.handle>>32{
+        t.Fatalf("generations not fresh and monotonic old=%d new=%d",oldHandle,fresh.handle)
+    }
+    if got,err:=v4EmbeddedNativeState(oldHandle);err!=nil||got!=2{
+        t.Fatalf("old must be Active until its own Stop got=%d err=%v",got,err)
+    }
+    if err:=old.stopRelease();err!=nil{t.Fatal(err)}
+    if err:=old.stopRelease();err!=nil{
+        t.Fatalf("repeat Stop after quiesced release must be idempotent: %v",err)
+    }
+    if phase,err:=v4EmbeddedNativeState(oldHandle);err==nil{
+        t.Fatalf("retired numeric old owner resurrected phase=%d",phase)
+    }
+    if got,err:=fresh.state();err!=nil||got!=2{
+        t.Fatalf("old retirement stopped the fresh generation: phase=%d err=%v",got,err)
+    }
+    newHandle:=fresh.handle
+    if err:=fresh.stopRelease();err!=nil{t.Fatal(err)}
+    if err:=fresh.stopRelease();err!=nil{t.Fatal(err)}
+    if err:=oldStore.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,oldServer.Epoch);err!=nil{t.Fatal(err)}
+    if err:=newStore.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,newServer.Epoch);err!=nil{t.Fatal(err)}
+    t.Logf("EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS old=%d new=%d",oldHandle>>32,newHandle>>32)
+}

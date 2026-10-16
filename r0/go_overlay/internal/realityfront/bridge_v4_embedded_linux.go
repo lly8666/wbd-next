@@ -33,6 +33,7 @@ var errV4Embedded=errors.New("embedded V4 Rust control refused")
 type v4EmbeddedNativeBridge struct {
     handle uint64
     committed bool
+    stopped bool // terminal release receipt; not a Rust owner token
     originalFlow faketcp.ServerFlow
     rxBoundary uint32
     txBoundary uint32
@@ -41,6 +42,7 @@ func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
 )(v4PreparedOwner,error){
     if b.handle!=0{return nil,errV4Embedded}
+    b.stopped=false
     cold,err:=s.MarshalColdBundle()
     if err!=nil{return nil,err}
     cmd,err:=v4PrivateHandoffV1(boundary,peer)
@@ -86,20 +88,26 @@ func (p *v4EmbeddedPending) abort(){
     _=C.wbd_m0_embedded_go_abort(C.uint64_t(p.b.handle))
     p.b.handle=0
 }
-func (b *v4EmbeddedNativeBridge) state()(uint32,error){
-    if b.handle==0{return 0,errV4Embedded}
+// An old numeric generation may be inspected after retirement solely to
+// assert Rust's actual registry no longer exposes it to a new generation.
+func v4EmbeddedNativeState(handle uint64)(uint32,error){
+    if handle==0{return 0,errV4Embedded}
     var phase C.uint32_t
-    rc:=C.wbd_m0_embedded_go_state(C.uint64_t(b.handle),&phase)
+    rc:=C.wbd_m0_embedded_go_state(C.uint64_t(handle),&phase)
     if rc!=0{return 0,fmt.Errorf("%w: state=%d",errV4Embedded,int(rc))}
     return uint32(phase),nil
 }
+func (b *v4EmbeddedNativeBridge) state()(uint32,error){
+    return v4EmbeddedNativeState(b.handle)
+}
 func (b *v4EmbeddedNativeBridge) stopRelease()error{
+    if b.stopped && b.handle==0 && !b.committed{return nil} // repeated Stop
     if b.handle==0||!b.committed{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_stop(C.uint64_t(b.handle))
     if rc!=0{return fmt.Errorf("%w: STOP_INCOMPLETE_OR_FAILED=%d",errV4Embedded,int(rc))}
     rc=C.wbd_m0_embedded_go_release(C.uint64_t(b.handle))
     if rc!=0{return fmt.Errorf("%w: release=%d",errV4Embedded,int(rc))}
-    b.handle=0;b.committed=false;return nil
+    b.handle=0;b.committed=false;b.stopped=true;return nil
 }
 
 

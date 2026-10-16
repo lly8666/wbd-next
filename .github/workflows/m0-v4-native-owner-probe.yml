@@ -165,7 +165,7 @@ jobs:
           set +e
           bash tools/run-v4-kernel-loopback.sh --prebuilt native-probe-build --all >native-probe-result/go.log 2>&1
           G=$?
-          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4EmbeddedNativeProtectedControlAllCiphers$' >>native-probe-result/go.log 2>&1
+          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|TwoGenerationStopIsolation)$' >>native-probe-result/go.log 2>&1
           GE=$?
           if [[ "$GE" != 0 ]]; then G=$GE; fi
           ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
@@ -182,7 +182,7 @@ jobs:
           import hashlib,json,os,pathlib,re,sys
           go=pathlib.Path("native-probe-result/go.log").read_text()
           rust=pathlib.Path("native-probe-result/rust.log").read_text()
-          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4EmbeddedNativeProtectedControlAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelBudget",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelRoutePmtu",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustGoAdmissionRetainedHeapIndicative",go,re.M))
+          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4EmbeddedTwoGenerationStopIsolation",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4EmbeddedNativeProtectedControlAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelBudget",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelRoutePmtu",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustGoAdmissionRetainedHeapIndicative",go,re.M))
           m=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
           good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust and "m0_normal_build_v4_go_private_handoff_version_and_scope ... ok" in rust and "m0_embedded_go_private_control_rejects_unknown_and_null ... ok" in rust
           data=json.load(open("native-probe-build/manifest.json"))
