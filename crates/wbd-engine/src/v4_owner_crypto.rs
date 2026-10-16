@@ -533,6 +533,43 @@ impl ProtectedScopedOwner {
         Ok(outcome)
     }
 
+    /// One genuine kernel recvmmsg directly INTO the ORIGINAL M1-owned
+    /// mutable ingress slab, with M4 BorrowFence guarding the syscall.
+    /// The bytes are UNAUTHENTICATED here; only the SAME normal owner
+    /// RX AEAD/PN + M3 LINK drain may publish a complete business candidate.
+    /// No temporary Go->Rust payload copy and no alternate RX queue.
+    /// On no complete datagram the original UniqueBuffer is returned.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn receive_scoped_udp_into_owner(
+        &mut self,driver:&ScopedUdpOwner,mut slab:UniqueBuffer,
+        absolute_seq:u64,now:MonoNs,
+    )->Result<usize,(ProtectedCryptoError,UniqueBuffer)>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping(){
+            return Err((ProtectedCryptoError::Inactive,slab))
+        }
+        use wbd_platform::linux_rx_batch::{RxEntry,RxStatus};
+        // Recvmmsg's entire 1-slot iovec is a mutable borrow of M1 slab,
+        // not of a new temporary or an arbitrary ciphertext slice.
+        let outcome={
+            let mut slots=[slab.writable()];
+            driver.receive(self.generation,&mut slots)
+        };
+        let received=match outcome{
+            Ok(report) if report.received==1 &&
+                report.status==RxStatus::Ready =>
+                match report.entry(0) {
+                    Some(RxEntry::Complete{len}) if len>=FIXED_WIRE_OVERHEAD
+                        && len<=slab.writable().len()=>len,
+                    _=>return Err((ProtectedCryptoError::Tx,slab)),
+                },
+            _=>return Err((ProtectedCryptoError::Owner,slab)),
+        };
+        self.offer_after_active(slab,0..received,absolute_seq,now)
+            .map_err(|(_,returned)|(ProtectedCryptoError::Owner,returned))?;
+        Ok(received)
+    }
+
     /// Accept an existing owned ingress slab ONLY after Go's trusted Detach
     /// and commit. The exact sequence hint enforces the bootstrap/record
     /// boundary; record PN+payload remain untrusted until AEAD validates.

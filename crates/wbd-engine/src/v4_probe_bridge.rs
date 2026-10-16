@@ -54,6 +54,7 @@ struct Probe {
     cold_identity: ColdIdentity,
     peer_mss:u16,
     peer_mss_advertised:bool,
+    kernel_rx:Option<ScopedUdpOwner>,
 }
 
 struct Probes {
@@ -115,7 +116,7 @@ fn probe_prepare(raw: &[u8], boundary: u32, peer_mss:u16,
     state.slots.insert(handle, Probe {
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:boundary,
         staged_count:0,staged_bytes:0,drained:false,held_rx:None,cold_identity:identity,
-        peer_mss,peer_mss_advertised,
+        peer_mss,peer_mss_advertised,kernel_rx:None,
     });
     // No caller byte pointer is retained, and no production AEAD opener,
     // receiver route, positive FecOrigin or ABI feature was activated.
@@ -241,6 +242,7 @@ fn probe_stop(handle:u64)->i32 {
     let Some(p)=state.slots.get_mut(&handle) else {return UNKNOWN};
     if p.phase==PH_STOPPED {return OK}
     if p.phase!=PH_COMMITTED && p.phase!=PH_STOPPING {return BAD_STAGE}
+    if let Some(ref driver)=p.kernel_rx {driver.begin_stop()}
     let Ok(retired)=p.owner.stop() else {return BAD_STAGE};
     if !retired.ready.batch_handles_released(){
         p.phase=PH_STOPPING;
@@ -513,6 +515,73 @@ pub unsafe extern "C" fn wbd_m0_test_probe_send_kernel_udp(
             OK
         }
         Err(e)=>e,
+    }
+}
+
+/// Bind a REAL Linux UDP receiver once after authenticated Go Detach and
+/// owner Commit. The caller sees only a local port, no OS handle or Rust
+/// slab. The receiver stays with the ORIGINAL owner until Stop/release.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_bind_kernel_rx(handle:u64)->Result<u16,i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED || p.kernel_rx.is_some(){return Err(BAD_STAGE)}
+    let receiver=UdpSocket::bind((Ipv4Addr::LOCALHOST,0)).map_err(|_|INVALID)?;
+    let port=receiver.local_addr().map_err(|_|INVALID)?.port();
+    let sender=UdpSocket::bind((Ipv4Addr::LOCALHOST,0)).map_err(|_|INVALID)?;
+    sender.connect(SocketAddrV4::new(Ipv4Addr::LOCALHOST,port))
+        .map_err(|_|INVALID)?;
+    p.kernel_rx=Some(ScopedUdpOwner::new((handle>>32) as u32,
+        sender,receiver).map_err(|_|INVALID)?);
+    Ok(port)
+}
+/// M4 recvmmsg directly writes into existing M1 arena UniqueBuffer, then
+/// the SAME ScopedOwner owns the borrowed encrypted RX batch, authenticates
+/// PN/AEAD, inspects/reassembles M3 LINK and emits a complete-packet digest.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_kernel_rx_once(handle:u64)->Result<(u64,u64),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let driver=p.kernel_rx.as_ref().ok_or(BAD_STAGE)?;
+    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    p.owner.receive_scoped_udp_into_owner(driver,slab,
+        u64::from(p.rx_boundary),MonoNs(0)).map_err(|_|INVALID)?;
+    let mut completed=None;
+    let (storage,report)=p.owner.drain_normal_off(&mut p.normal,
+        MonoNs(0),Vec::with_capacity(32),|pn,payload|{
+            let digest=payload.iter().fold(0xcbf29ce484222325u64,
+                |hash,byte|(hash^u64::from(*byte)).wrapping_mul(0x100000001b3));
+            completed=Some((pn,digest));
+        }).map_err(|_|BAD_STAGE)?;
+    drop(storage);
+    p.arena.drain_returns();
+    if report.completed==1 && report.authenticated.link_ready==1{
+        completed.ok_or(INVALID)
+    }else{Err(INVALID)}
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_bind_kernel_rx(
+    handle:u64,out_port:*mut u16
+)->i32{
+    if out_port.is_null(){return INVALID}
+    match probe_bind_kernel_rx(handle){
+        Ok(port)=>{unsafe{out_port.write(port)};OK}
+        Err(err)=>err,
+    }
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_rx(
+    handle:u64,out_pn:*mut u64,out_digest:*mut u64
+)->i32{
+    if out_pn.is_null()||out_digest.is_null(){return INVALID}
+    match probe_kernel_rx_once(handle){
+        Ok((pn,digest))=>{
+            unsafe{out_pn.write(pn);out_digest.write(digest)};OK
+        }
+        Err(err)=>err,
     }
 }
 

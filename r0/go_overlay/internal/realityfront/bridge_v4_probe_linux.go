@@ -12,6 +12,8 @@ extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, si
 extern int32_t wbd_m0_test_probe_seal_linux_observed(uint64_t, const unsigned char *, size_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_seal_linux_route(uint64_t, const unsigned char *, size_t, uint32_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_send_kernel_udp(uint64_t, const unsigned char *, size_t, uint32_t, uint16_t, uint64_t *, uint32_t *, uint32_t *);
+extern int32_t wbd_m0_test_probe_bind_kernel_rx(uint64_t,uint16_t *);
+extern int32_t wbd_m0_test_probe_receive_kernel_rx(uint64_t,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -280,4 +282,25 @@ func (b *v4NativeRustProbe) sendKernelUDP(payload []byte,ifindex uint32,remotePo
     runtime.KeepAlive(payload)
     if code!=0{return 0,0,0,fmt.Errorf("%w: real kernel M4 UDP scoped TX=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint32(seq),uint32(wireSize),nil
+}
+
+// Test-tagged glue only. The native Rust M4 receiver remains allocated by
+// original ScopedOwner generation; the test's Go UDP sender supplies the
+// encrypted C2S record via an ACTUAL Linux kernel UDP datagram.
+func (b *v4NativeRustProbe) bindKernelRx()(uint16,error){
+    if !b.committed||b.handle==0{return 0,errV4NativeProbe}
+    var port C.uint16_t
+    code:=C.wbd_m0_test_probe_bind_kernel_rx(C.uint64_t(b.handle),&port)
+    if code!=0||port==0{return 0,fmt.Errorf("%w: kernel RX binding code=%d",errV4NativeProbe,int(code))}
+    return uint16(port),nil
+}
+func (b *v4NativeRustProbe) receiveKernelRx()(uint64,uint64,error){
+    if !b.committed||b.handle==0{return 0,0,errV4NativeProbe}
+    var pn C.uint64_t
+    var digest C.uint64_t
+    code:=C.wbd_m0_test_probe_receive_kernel_rx(
+        C.uint64_t(b.handle),&pn,&digest,
+    )
+    if code!=0{return 0,0,fmt.Errorf("%w: kernel RX in owner=%d",errV4NativeProbe,int(code))}
+    return uint64(pn),uint64(digest),nil
 }

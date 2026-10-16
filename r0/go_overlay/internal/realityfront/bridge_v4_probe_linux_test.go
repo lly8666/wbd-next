@@ -1,7 +1,7 @@
 //go:build linux && cgo && wbd_v4_native_probe
 
 package realityfront
-import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net";"time")
+import ("errors";"testing";"hash/fnv";"fmt";"bytes";"encoding/binary";"github.com/lly8666/wobuzhidao/internal/tlsrecord";"github.com/lly8666/wobuzhidao/internal/faketcp";"net";"time";"runtime")
 
 // Actual Go protected TLS reaches Rust's independent fresh ScopedOwner using
 // the package-private Prepare/Detach/Commit hook; production still disabled.
@@ -520,4 +520,117 @@ func TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket(t *testing.T){
             if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })
     }
+}
+
+// Actual Linux C2S RX vertical slice: Go's TLS-derived V4 C2S record is
+// transmitted through the kernel UDP stack, M4 recvmmsg writes DIRECTLY
+// into an ORIGINAL M1 UniqueBuffer, original ScopedOwner performs AEAD/PN
+// + M3 LINK and calls the complete normal business candidate callback.
+// This fixture remains UDP, not production AF_PACKET/TUN or app delivery.
+func TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner(t *testing.T){
+    loopback:=net.IPv4(127,0,0,1)
+    for _,suite:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("cipher-%d",suite),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            bridge:=&v4NativeRustProbe{}
+            if _,e=bridge.bindKernelRx();e==nil{
+                t.Fatal("kernel M4 RX bound before Go protected session")
+            }
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,suite)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed {
+                t.Fatalf("protected Go V4 admission: %v %v",ce,se)
+            }
+            port,e:=bridge.bindKernelRx();if e!=nil{t.Fatal(e)}
+            if _,e=bridge.bindKernelRx();e==nil{t.Fatal("second kernel RX binding")}
+            cold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            _,maxServer:=cold.RecordLimits()
+            sealer,e:=tlsrecord.NewSealerForCipher(
+                cold.DirectionKeys().C2S,int(maxServer),suite)
+            if e!=nil{t.Fatal(e)}
+            sender,e:=net.DialUDP("udp4",nil,&net.UDPAddr{IP:loopback,Port:int(port)})
+            if e!=nil{t.Fatal(e)}
+            defer sender.Close()
+            // No delivery if kernel has not yet received a packet.
+            if _,_,e=bridge.receiveKernelRx();e==nil{
+                t.Fatal("empty kernel recvmmsg granted a business callback")
+            }
+            payload:=[]byte("first-authenticated-C2S-normal-off-via-real-Linux-kernel-RX")
+            wire,pn,e:=sealer.Seal(payload)
+            if e!=nil||pn!=0{t.Fatalf("Go C2S record: %v PN=%d",e,pn)}
+            if n,e:=sender.Write(wire);e!=nil||n!=len(wire){
+                t.Fatalf("Go kernel UDP send: n=%d e=%v",n,e)
+            }
+            gotPN,digest,e:=bridge.receiveKernelRx()
+            want:=fnv.New64a();_,_=want.Write(payload)
+            if e!=nil||gotPN!=pn||digest!=want.Sum64(){
+                t.Fatalf("kernel recvmmsg M1 ScopedOwner AEAD/M3 callback: e=%v pn=%d digest=%x expected=%x",e,gotPN,digest,want.Sum64())
+            }
+            // Genuine kernel replay: another datagram, same valid ciphertext
+            // and same PN; no second business candidate is permitted.
+            if n,e:=sender.Write(wire);e!=nil||n!=len(wire){t.Fatalf("replay UDP: %v",e)}
+            if _,_,e=bridge.receiveKernelRx();e==nil{
+                t.Fatal("kernel-received authenticated PN replay redelivered")
+            }
+            tampered:=append([]byte(nil),wire...)
+            tampered[len(tampered)-1]^=0x10
+            if n,e:=sender.Write(tampered);e!=nil||n!=len(tampered){t.Fatalf("corrupt UDP: %v",e)}
+            if _,_,e=bridge.receiveKernelRx();e==nil{
+                t.Fatal("tampered kernel-received AEAD record published")
+            }
+            if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+            nextWire,_,e:=sealer.Seal([]byte("old-owner-after-stop"))
+            if e!=nil{t.Fatal(e)}
+            // Old UDP destination is now closed; an OS send may or may not
+            // report ICMP, but MUST never re-enable the retired Rust owner.
+            _,_=sender.Write(nextWire)
+            if _,_,e=bridge.receiveKernelRx();e==nil{
+                t.Fatal("retired scoped M4 receiver delivered after Stop")
+            }
+            if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
+        })
+    }
+}
+
+// Diagnostic-only representative GO HEAP RETAINED metric, NOT process RSS,
+// native Rust buffers, physical memory nor a hard per-lane steady-state
+// guarantee. Measures authentic Go client+server TLS+FakeTCP pair references
+// remaining after Go GC, over 12 real V4 admission pairs at rest. Separately
+// retiring Rust owners avoids claiming retained native allocator as Go heap.
+func TestR0V4NativeRustGoAdmissionRetainedHeapIndicative(t *testing.T){
+    const count=12
+    runtime.GC()
+    var before runtime.MemStats
+    runtime.ReadMemStats(&before)
+    type sample struct{
+        client *V4ClientSession
+        server *V4ServerSession
+        bridge *v4NativeRustProbe
+        store *V4EpochStore
+    }
+    samples:=make([]sample,0,count)
+    for i:=0;i<count;i++{
+        store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+        bridge:=&v4NativeRustProbe{}
+        c,s,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,CipherChaCha)
+        if ce!=nil||se!=nil||c==nil||s==nil||!bridge.committed{
+            t.Fatalf("real Go admission sample %d: %v %v",i,ce,se)
+        }
+        samples=append(samples,sample{c,s,bridge,store})
+    }
+    runtime.GC()
+    var after runtime.MemStats
+    runtime.ReadMemStats(&after)
+    // Keep both session objects and their TLS pointers rooted through GC.
+    runtime.KeepAlive(samples)
+    delta:=int64(after.HeapAlloc)-int64(before.HeapAlloc)
+    t.Logf("GO_V4_RETAINED_HEAP indicative_client_plus_server_pair_count=%d delta_bytes=%d per_pair_bytes=%d heap_inuse_delta_bytes=%d go_version=%s",
+        count,delta,delta/count,int64(after.HeapInuse)-int64(before.HeapInuse),runtime.Version())
+    if delta<=0 {
+        t.Fatal("Go V4 GC-after heap sample unexpectedly nonpositive")
+    }
+    for _,a:=range samples{
+        if e:=a.bridge.stopAndRelease();e!=nil{t.Fatal(e)}
+        if e:=a.store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,a.server.Epoch);e!=nil{t.Fatal(e)}
+    }
+    runtime.KeepAlive(samples)
 }
