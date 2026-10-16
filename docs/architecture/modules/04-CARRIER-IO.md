@@ -6,6 +6,8 @@
 
 外层维护`tx_seq64/rx_seen_intervals`与表示用cumulative/SACK。记录TCP seq32到seq64时，选距可信当前参考最近且距离<2^31的候选；非法跨度不更新参考。收到大幅跳跃不能一次清空所有去重/恢复状态。seq回绕只影响wire编码，不重置record PN/逻辑ID。
 
+**R1/R2接线易错点：内部64位，wire才取低32位。** 不得把活跃TX累计量留在`u32.checked_add`，也不能永远相对初始握手边界扩展RX seq。RX使用随合法、已验证record前进的可信高水位，允许旧片跨回绕乱序，不由未认证头单独推进；恰好半空间的歧义跨度拒绝。500Mbps若指外层TCP payload字节率，走完2^32字节仅`2^32×8/500e6≈68.7s`，半空间约34.4s，随机初始序号下首次回绕可能更早；FEC/Game会提高外层速率。它是独立长跑边界，**不是旧80s中断的已证根因**。用接近回绕的初始seq及跨半空间参考更新的定向向量快速复现，再验真实owner接线，不必为了这个边界跑数小时或强上500Mbps。
+
 RX的外观累计ACK可沿用原弱网适度放弃缺口策略，但只存在presentation状态；08的真实receipt是另一套状态，不准互相赋值。advertised window沿用原稳态65535及协商scale语义，不能误拿bootstrap256KiB或shadow占用缩成零窗。外观窗口不足以覆盖线路BDP时报告TCP-like退化，不门控真实新业务。
 
 一个新record对应一个完整TCP payload单元；可处理一个payload内多个完整records，但不拼可靠有序TCP byte stream。缺尾record直接丢该残段，别卡住下一完整payload。中间设备把record任意重切成多个TCP segment不是首版支持承诺，必须显式检测/报告；在正常MTU内按一record一segment和关闭不合适的coalescing路径避免自身制造该情况。

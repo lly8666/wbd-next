@@ -18,7 +18,7 @@
 
 ## 当前 M0 的真实路径交付顺序
 
-2026-10-16 用户优先级覆盖：先完成 [R1-M0-HOTPATH-COST-024](../../decisions/M0-hotpath-cost-first-2026-10-16.md) 的真实热路径修复及同Actions A/B，之后才分配后续开发测试。以下023是原正式资格依赖，保留未验项；不能照旧cursor直接跳到超MTU新功能，也不能为本轮优化提前开放capability。
+2026-10-16的 [R1-M0-HOTPATH-COST-024](../../decisions/M0-hotpath-cost-first-2026-10-16.md) 曾要求先修真实热路径并做同Actions A/B，再继续后续分配；接手按最新授权、registry和交付事实判断，不把这条历史顺序当作永久重开优化的指令。以下023是原正式资格依赖，保留未验项；优化收口不会自动开放capability，也不抹去后续超MTU等集成缺口。
 
 这是既有任务 `R0-M0-V4-PROTECTED-OWNER-COMMIT-023` 的施工细化，不重置阶段、不重新分配 worker、不把下列事项预标完成。先核远端 evidence；已有精确证据满足的步骤直接复用，不重做实验。
 
@@ -28,6 +28,8 @@
 4. **第一份开发性能基线**：对所测路径先保证必要正确性和安全关闭；无需等待全部外部建连、未使用的 driver 分支、FEC/Game或正式产品资格完成。依 `../TEST_PLAN.md` 第 0 节完成持续 owner 循环和独立业务收发，再测 Normal 单 lane/FEC off、诊断默认 off、双向各 10Mbps 大小包混合。逐包手动驱动的 smoke 不能扩大包数充当吞吐测试。记录实际注入、首到/missing、RTT/每流空洞、CPU-s/业务字节/包率与各层 drop/queue age；缺口继续 NOT_RUN，生产 capability 不提前开放。正式资格仍需前述全部适用锚点。旧新对比同 job 顺序 AB/BA；宿主容量不足停止更重负载，产品瓶颈留 profile，不先要求 500Mbps 或固定“省 25%”。
 
 每步源码、用例入口、实际路径、剩余缺口落到既有 `r0/qualification-manifest.json` 与 devlog/evidence；不要新增另一套验收数据库。未实现能力只留 NOT_RUN，不无限补同义反例。Normal/off 可解释后再按 R2/R3/R4 接恢复、FEC、Game；现有成熟模块和有效组件证据保留。完成本次原子任务后按 S→H 交接，下一动作只写一个。
+
+开发入口与交付入口的边界须在对应阶段收口：private/test feature可用于观察原真实热路径，不自动证明标准release入口、外部TLS建连或目标平台已经接通。R1正式资格补齐实际所用路径，R6核普通发布配置的Go加载Rust库、协商/配置/停止及配套包；不得到交付才发现只有测试feature能工作，也不得拿这些后续门重开已经完成的开发性能任务。新增集成反例按TEST_PLAN第4节并入既有ID，不增加逐断言任务树。
 
 ## 模块级必测向量
 

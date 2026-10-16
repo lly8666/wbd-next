@@ -14,6 +14,8 @@ Rust计数器记u64单调timestamp，Go读取后按原双向idle策略决定宽�
 
 休眠保留业务入口监听，Rust遇第一真实payload立即发WakeDemand并保存有界首包队列；同一休眠epoch只发一个未完成WakeDemand，不每包建连接。Go建lane成功后排队包仍在有效期限才交付；失败/队列满/过期有原因计数。idle关闭不必卡在毫秒精度，首包触发重建不得等待下一2s GUI刷新。
 
+“一个未完成”是合并并发请求，不是整次休眠只许尝试一次：建连失败/取消/超时须完成或清除对应in-flight标记，并按原有界退避允许后续真实业务重试；旧epoch的完成事件不能清除新请求。持续发送但对端不响应属于liveness/黑洞恢复，不是payload idle；不能用同一个时间戳混判，也不能让control流量把休眠永久续住。
+
 ## Auto FEC接口
 
 Rust每方向提供实际source/parity/repair/received/recovered/late/host_drop/partial(k,r)/first_delivery样本和quality freshness；Go沿用旧成熟判断/滞回，发`SetTxFec(profile,decision_revision)`。TX仅在新block生效，旧block按旧r关闭/有界drain。fixed/off不构造auto控制器；Game不自动调档；Normal aggressive规则沿用旧配置定义。
@@ -23,6 +25,8 @@ receipts说明外层record是否到达，不等于线路原始loss（重传会�
 ## 配置安装
 
 每个命令带revision，返回accepted/applied/rejected及effective值。可在block边界生效的项明确报告pending until block；cipher/认证/网站/地址等需新lane的项通过旧rotation/重连机制，不原地修改密钥。UI必须显示连接状态与清理未完成原因，不把busy吞掉留下永远转圈。
+
+迟到旧revision的applied回执只作历史事实，不能覆盖UI当前选择或把另一client/方向的配置标为生效。Go程序与Rust库按兼容ABI/能力和配套manifest一起打包；不能用“各自都编译成功”替代实际加载/生效。DNS、借站/服务器地址及direct出口沿原旁路与资源归属规则，防止控制连接再次被TUN接管形成循环；这不授权重写原OS网络管理。
 
 `--tls-startup-padding`仍有限、仅原触发条件，off/固定/自动都按旧配置决定，不因Rust record重写漏掉。DNS主备、LAN/中国IP规则、默认IPv6空路由及原安装策略留Go；新引擎分类用已发布不可变路由快照，不每包问GUI/查系统注册表。
 

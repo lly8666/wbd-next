@@ -42,6 +42,8 @@ RTT采样只取可辨识未重传record，排除重传歧义；bootstrap无样�
 
 总方案的每1s `R+L <= max(F/10,32768)`保留，所有lane同逻辑方向合并。整数记字节，控制流量不挣F，FEC和Game首发算F并另列放大率。epoch切换不累计旧免费额度，8MTU burst pacer限制边界突发；绝不把10%与32KiB相加。稀疏不限百分比，不是不限次数/任意客户端各领无限总额。
 
+统计口径不能偷换：F包括systematic/parity/各lane副本的实际首发wire字节；同一份parity再发才算R。10%以F为分母，持续大流量时重传占F+R约不超过9.09%（另有既定稀疏绝对额度），不是业务payload的10%。新包调度与shadow可用性独立；本地evict/expiry只产生Abandoned，不能置真实receipt位、要求对端等补齐或借展示ACK释放未收数据。RX也不因缺这个record阻挡其他独立record；剩余业务损失交内层处理。
+
 reserve在提交前扣，明确未发送退还，uncertain保留占用，completion重复不能二次记账。quota转epoch时保留在途reservation原epoch账，不能把晚completion记到新epoch赚双份。1s账本用当前+前一在途epoch，超过有界I/O deadline的uncertain标异常并保守计总额。
 
 FEC on时不假设恢复成功，仍按真实record receipt修复；第一版不额外设计逻辑DeliveryACK跨lane取消所有副本，以免又加一套协议。parity/systematic候选优先源包，额度不足时先放弃parity repair；记录这项差异，不把理论模型当全档同概率。
