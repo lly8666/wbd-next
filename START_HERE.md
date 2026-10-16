@@ -36,3 +36,5 @@
 当前分配以 main registry 的 `assigned_task` 为准；工作分支 cursor 可能仍记录上一轮。两者不同时读取 registry 指向的本轮决策，保留旧结果后开始已授权的新任务，勿因旧 cursor 的“等待分配”停住。
 
 写入时保持同样分工：project 写阶段/入口，registry 写分配，cursor 写当前事实和一个下一动作，详细 run/hash 写 evidence。接手不抄整段历史到每个字段；原失败和未跑项用引用保留。普通 push 的 Governance 是身份/结构检查，完整工具自测看 maintenance 或手动 selftest 的精确范围。
+
+接手后按完整能力推进，不把 cursor 的“一个下一动作”解释成只能做一个断言。测试粒度和开发性能基线入口以 `docs/architecture/TEST_PLAN.md` 第 0 节为准；历史 cursor 中逐包扩展或逐延迟扩展的计划须按此收口，已有证据和未通过硬门保留。
