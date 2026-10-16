@@ -21,6 +21,20 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_old_go_vs_rust_same_vm_paired": {
+    "code_source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+    "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "result": "PAIRED_DIAGNOSTIC_ONLY_NOT_CAUSAL",
+    "evidence": "docs/evidence/M0/M0-023-old-go-vs-rust-same-vm-paired-normal10.json",
+    "actions_run_id": 38920819286,
+    "one_measurement_job_same_runner_old_then_new": true,
+    "normal_off_fec_off_udp_app_10mbps_each_direction": "BOTH_MEASURED_DELIVERED_ZERO_MISSING",
+    "old_client_server_product_cpu_seconds": 54.26,
+    "new_combined_go_rust_injector_cpu_seconds": 52.099258,
+    "cpu_percent_improvement": "NOT_QUALIFIED_DIFFERENT_TOPOLOGY_AND_CPU_ACCOUNTING",
+    "production_abi_features": 0,
+    "product_qualification": "NOT_RUN"
+  },
   "m0_023_normal_off_10mbps_developer_baseline": {
     "code_source_sha": "137a80e543bda12237e8bf25fb048ca3668c5774",
     "result": "PARTIAL_LIMITED_LINUX_LOOPBACK_NORMAL_OFF_10MBPS_EACH_DIRECTION_MEASURED_TARGET_MET",

@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+  "code_source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+  "result": "PAIRED_DIAGNOSTIC_ONLY_NOT_CAUSAL",
+  "product_qualification": "NOT_RUN",
+  "production_abi_features": 0,
+  "why_now": "User requested rough OLD full Go vs NEW Rust restructuring cost on one GitHub Actions runner, sequential old-then-new, no demand for strict topology-parity.",
+  "run": {
+    "id": 38920819286,
+    "attempt": 1,
+    "conclusion": "success",
+    "head_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+    "build_job": 117039966879,
+    "measure_job": 117040548256,
+    "artifact_build": {
+      "id": 12053249980,
+      "digest": "sha256:0b1e552ebd72bff33160684d8425db60209de2b547987ac12f36f8aaa1267890"
+    },
+    "artifact_result": {
+      "id": 12054542021,
+      "digest": "sha256:a9d444ee746774880cb017b3207f4bdb9aa86d6348ff93460d82491397b2c444"
+    }
+  },
+  "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "new_source": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+  "mode": "one GitHub Actions workflow_run, one measure job on same runner, ordered OLD Go then NEW Rust; runtime receipt verified same identity, non-overlap, exact binary and input manifest hashes",
+  "scenario": {
+    "normal_lanes": 1,
+    "fec": "off",
+    "cipher": "ChaCha20-Poly1305",
+    "loss_pct": 0,
+    "netem_delay_ms": 0,
+    "warmup_s": 10,
+    "measure_s": 60,
+    "drain_s": 3,
+    "app_udp_payload_sizes_equal_count": [
+      64,
+      256,
+      1200
+    ],
+    "target_app_mbps_each_direction": 10,
+    "seed": 631,
+    "packet_counts_not_exactly_equal_due_scheduler": "old 148026 per direction, new C2S 148029 S2C 148028"
+  },
+  "old_go": {
+    "topology": "five namespaces, real veth raw IPv4/TCP TPROXY genuine external Go TLS and TUN, two original product processes, old product binaries unmodified",
+    "c2s": {
+      "offered_mbps": 9.999978666666667,
+      "delivered_mbps": 9.999978666666667,
+      "sent": 148026,
+      "delivered": 148026,
+      "missing": 0
+    },
+    "s2c": {
+      "offered_mbps": 9.999978666666667,
+      "delivered_mbps": 9.999978666666667,
+      "sent": 148026,
+      "delivered": 148026,
+      "missing": 0
+    },
+    "client_process_cpu_s": {
+      "user": 9.63,
+      "system": 17.67,
+      "total": 27.3
+    },
+    "server_process_cpu_s": {
+      "user": 10.64,
+      "system": 16.32,
+      "total": 26.96
+    },
+    "product_client_plus_server_cpu_s": 54.26,
+    "product_process_peak_sampled_rss_bytes_sum": 53964800,
+    "generator_process_cpu_s": {
+      "biz": 15.730341496,
+      "target": 15.334519102
+    },
+    "note": "Old Go product CPU excludes both separate Python traffic generators, system kernel CPU related to veth/namespaces may not be wholly charged to product."
+  },
+  "new_rust": {
+    "topology": "one namespace loopback real Linux raw IPv4/TCP + kernel TUN, original protected Go TLS developer fixture, Rust scoped owner original M1/M3/M4 autonomous worker, same process Go app injectors/receivers",
+    "c2s": {
+      "udp_app_offered_bytes": 75001360,
+      "udp_app_delivered_bytes": 75001360,
+      "delivered_udp_app_mbps": 10.0001813333333,
+      "delivered_ipv4_mbps": 10.552822933333333,
+      "packets": 148029,
+      "missing": 0,
+      "duplicates": 0,
+      "invalid": 0
+    },
+    "s2c": {
+      "udp_app_offered_bytes": 75000160,
+      "udp_app_delivered_bytes": 75000160,
+      "delivered_udp_app_mbps": 10.0000213333333,
+      "delivered_ipv4_mbps": 10.5526592,
+      "packets": 148028,
+      "missing": 0,
+      "duplicates": 0,
+      "invalid": 0
+    },
+    "rust_original_rx_worker_thread_cpu_s": 10.510634106,
+    "rust_original_tx_worker_thread_cpu_s": 27.637564276,
+    "rust_worker_sum_cpu_s": 38.148198382,
+    "combined_go_rust_injector_receiver_process_cpu_s": {
+      "user": 8.97727,
+      "system": 43.121988,
+      "total": 52.099258
+    },
+    "process_rss_measured_after_kb": 33332,
+    "process_peak_while_running_kb": 35120,
+    "worker_rx_error_cumulative_including_warmup": 1,
+    "worker_tx_error_cumulative_including_warmup": 0,
+    "note": "Worker CPU subpart of combined process CPU. Do NOT add 38.15 to 52.10. New same-process Go app injectors and receivers included, unlike old product-only totals."
+  },
+  "rough_observed_difference": {
+    "old_go_product_process_CPU_s": 54.26,
+    "new_combined_go_rust_injectors_CPU_s": 52.099258,
+    "arithmetic_only_cpu_percent_lower_new": 3.982200516033909,
+    "rust_workers_only_vs_old_product_arithmetic_percent_lower": 29.69369999631405,
+    "interpretation": "Arithmetic of unlike accounting scopes only. Not a measured product speedup: topology, warmup, overhead attribution, caller/receiver isolation and stack functionality differ.",
+    "memory": "Old client+server sampled RSS ~53.96 MB (two product processes) vs new process VmHWM ~35.12 MB including harness; descriptively different process scope, no product memory optimization ratio qualified."
+  },
+  "failed_actions_preserved": [
+    {
+      "source_sha": "ba5ab1c5a0eaac80f8bd7f407022d6c8dbd3cc8f",
+      "run_id": 38917618679,
+      "conclusion": "failure",
+      "reason": "GitHub artifact download lost executable bit, both old Go product and new test refused with Permission denied; no meaningful measured results"
+    },
+    {
+      "source_sha": "2733eef6eea679ac72a7ce79c07c7af8a205ab4c",
+      "run_id": 38918376461,
+      "conclusion": "success",
+      "reason": "Restored executable permissions for source-locked old/new binaries"
+    },
+    {
+      "source_sha": "d1e45e069969cde1b6c20ac8b6a01bd6c75c15f1",
+      "run_id": 38919516121,
+      "conclusion": "success",
+      "reason": "Paired-only env defaults fail-close and keep standalone regression"
+    },
+    {
+      "source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+      "run_id": 38920819286,
+      "conclusion": "success",
+      "reason": "Disable old product periodic test diagnostics with no code/binary product change; same-runner paired result valid for rough cost only"
+    }
+  ],
+  "boundaries": [
+    "Not topology-matched: OLD full Go client/server production product across five netns/veth/TPROXY; NEW Go-authenticated Rust developer-only loopback TUN/raw path; cannot causally attribute cost savings to Rust rewrite.",
+    "Legacy 54.26 CPU-s excludes two independent generator processes; new 52.10 CPU-s includes original Go fixture and two Go packet injectors/receivers and Rust data engine. Rust workers 38.15 is SUBSET of 52.10.",
+    "Both delivered approx 10Mbps per direction and zero business missing at same UDP payload sizes over 60s. NEW IPv4 10.553Mbps additionally counts 28B IPv4/UDP per packet; do NOT compare that to OLD UDP payload 10Mbps.",
+    "Old sampled peak RSS sum ~54MB across client/server, new process peak ~35MB includes Go test fixture; not equivalent memory footprint.",
+    "Default Rust production capabilities features0. Real incoming external SYN and B01-B04 full live held async Stop not passed on NEW side; R5 full veth, long weaknet, MTU fragmentation, 500Mbps and physical remain NOT_RUN.",
+    "GitHub run success means the comparative harness executed and logged two legs, NOT a product quality or causal CPU improvement signoff."
+  ],
+  "next_action": "Integrate bounded original Rust Normal/off multi-record LINK fragmentation at effective per-direction MTU and deliver reassembled packet via existing M3 authenticated ReassemblyTable/TUN; keep fast path unchanged, test MTU ±1/oversize/fragment-loss/Stop. Coordinate with M1/M3/M4 delegated branch changes, and follow up with matched veth and separate CPU attribution only when newly supported product path exists."
+}
