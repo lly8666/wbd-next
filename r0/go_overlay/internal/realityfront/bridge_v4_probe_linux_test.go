@@ -751,12 +751,73 @@ func TestR0V4NativeRustTunKernelAppFirst(t *testing.T){
                 t.Fatalf("real TUN kernel app packet lost: got=%x appLen=%d",ip,appLen)
             }
             t.Logf("TUN_APP_REVERSE_PACKET_PASS suite=%d received=%d via=kernel TUN read + original Rust AEAD + M4 sendmmsg",cipher,len(reverse))
+            // THIRD genuine kernel leg: this time the same original Rust
+            // owner wraps a fresh TUN app IPv4 packet in the R1 FakeTCP
+            // IPv4/TCP envelope, sends via a REAL CAP_NET_RAW Linux socket,
+            // and the independent Go peer reads the KERNEL raw TCP packet,
+            // checks its tuple and exact Go V4 reply TCP seq, then opens
+            // the same TLS-derived S2C AEAD stream at the NEXT PN.
+            rawfd,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
+            if e!=nil{t.Fatalf("RAW_CARRIER_UNAVAILABLE cap_net_raw: %v",e)}
+            defer syscall.Close(rawfd)
+            if e=syscall.Bind(rawfd,&syscall.SockaddrInet4{
+                Addr:[4]byte{127,0,0,1},
+            });e!=nil{t.Fatalf("raw loopback bind: %v",e)}
+            timeval:=syscall.NsecToTimeval((500*time.Millisecond).Nanoseconds())
+            if e=syscall.SetsockoptTimeval(rawfd,syscall.SOL_SOCKET,
+                syscall.SO_RCVTIMEO,&timeval);e!=nil{t.Fatal(e)}
+            rawPayload:=[]byte("app-through-real-raw-IPv4-TCP-after-TUN")
+            if written,e:=app.WriteToUDP(rawPayload,remote);e!=nil||written!=len(rawPayload){
+                t.Fatalf("kernel TUN app raw send: %v n=%d",e,written)
+            }
+            pn3,rawSeq,rawPacketLen,rawAppLen,e:=bridge.tunToKernelRaw(uint32(nif.Index))
+            if e!=nil||pn3!=pn2+1||rawSeq!=seq2+uint32(wireLen) {
+                t.Fatalf("original Rust raw FakeTCP TX: err=%v pn=%d seq=%d",e,pn3,rawSeq)
+            }
+            var rawData []byte
+            for attempt:=0;attempt<16;attempt++{
+                buf:=make([]byte,2048)
+                count,_,err:=syscall.Recvfrom(rawfd,buf,0)
+                if err!=nil{t.Fatalf("kernel raw TCP receive: %v",err)}
+                if count<40||buf[0]!=0x45||buf[9]!=6{continue}
+                if !net.IP(buf[12:16]).Equal(loIP)||!net.IP(buf[16:20]).Equal(loIP){
+                    continue
+                }
+                if binary.BigEndian.Uint16(buf[20:22])!=49321||
+                    binary.BigEndian.Uint16(buf[22:24])!=49322{continue}
+                if int(binary.BigEndian.Uint16(buf[2:4]))!=count{continue}
+                if binary.BigEndian.Uint32(buf[24:28])!=rawSeq{continue}
+                ihl:=int(buf[0]&0xf)*4
+                tcpLen:=int(buf[ihl+12]>>4)*4
+                if ihl+tcpLen>count||tcpLen<20{continue}
+                if buf[ihl+13]!=0x18{continue}
+                rawData=append([]byte(nil),buf[ihl+tcpLen:count]...)
+                if uint32(count)!=rawPacketLen {
+                    t.Fatalf("kernel raw packet size got %d want %d",count,rawPacketLen)
+                }
+                break
+            }
+            if len(rawData)==0{t.Fatal("real kernel raw TCP envelope not observed")}
+            openedRaw,e:=opener.OpenRecord(rawData)
+            if e!=nil||openedRaw.PN!=pn3||openedRaw.Kind!=tlsrecord.KindLINK{
+                t.Fatalf("real RAW TCP peer TLS S2C decrypt: record=%+v err=%v",openedRaw,e)
+            }
+            if int(rawAppLen)!=len(openedRaw.Payload)||
+                !bytes.Equal(openedRaw.Payload[28:],rawPayload)||
+                !net.IP(openedRaw.Payload[12:16]).Equal(dstIP)||
+                !net.IP(openedRaw.Payload[16:20]).Equal(senderIP){
+                t.Fatalf("raw TCP/FakeTCP kernel record business mismatch")
+            }
+            t.Logf("TUN_TO_REAL_RAW_FAKETCP_PASS suite=%d business=%d PN=%d full_kernel_tcp_packet=%d",cipher,len(rawPayload),pn3,rawPacketLen)
             if e=bridge.stopAndRelease();e!=nil{t.Fatal(e)}
             if _,_,e=bridge.receiveKernelToTun();e==nil{
                 t.Fatal("retired normal Rust scoped TUN owner allowed delivery")
             }
             if _,_,_,_,e=bridge.tunToKernelUDP(uint32(nif.Index),uint16(peerSocket.LocalAddr().(*net.UDPAddr).Port));e==nil{
                 t.Fatal("retired Rust scoped owner permitted reverse TUN->AEAD TX")
+            }
+            if _,_,_,_,e=bridge.tunToKernelRaw(uint32(nif.Index));e==nil{
+                t.Fatal("retired owner permitted real Linux raw FakeTCP TX")
             }
             if e=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{t.Fatal(e)}
         })

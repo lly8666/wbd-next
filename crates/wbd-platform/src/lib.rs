@@ -41,6 +41,9 @@ pub mod linux_driver_outcome_lease;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[allow(unsafe_code)]
 pub mod linux_tun_sink;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)]
+pub mod linux_raw_carrier;
 
 use std::sync::{Arc, Condvar, Mutex};
 use wbd_types::{LaneKey, MonoNs, RecordPn, SeqOffset};

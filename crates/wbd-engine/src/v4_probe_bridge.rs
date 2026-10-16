@@ -27,6 +27,10 @@ use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::ScopedTunSink;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_raw_carrier::ScopedRawIpv4Tx;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::os::fd::BorrowedFd;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
@@ -719,6 +723,56 @@ pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_udp(
             OK
         }
         Err(e)=>e,
+    }
+}
+
+/// Actual Linux AF_INET/SOCK_RAW IPv4/TCP carrier packet containing SAME
+/// normal-build Rust AEAD FrozenRecord from actual kernel TUN app ingress.
+/// This constrained fixture uses lo and one local exact tuple. It remains
+/// a test-only orchestration call, not a native credential installer.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn probe_tun_to_kernel_raw(handle:u64,ifindex:u32)
+    ->Result<(u64,u32,u32,u32),i32>{
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
+    if p.phase!=PH_COMMITTED{return Err(BAD_STAGE)}
+    let tun=p.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let budget=p.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::LOCALHOST
+    ).map_err(|_|INVALID)?;
+    let slab=p.arena.allocate().map_err(|_|FULL)?;
+    let (pn,seq,record_len,app_len)=p.owner.seal_tun_ipv4_normal_off(
+        tun,slab,&budget,15,MonoNs(0)
+    ).map_err(|_|INVALID)?;
+    let carrier=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
+        .map_err(|_|INVALID)?;
+    let src=[127,0,0,1];
+    let dst=[127,0,0,1];
+    let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
+        src_port:49321,dst_port:49322};
+    let presentation=Presentation{ack32:1,advertised_window:4096,
+        ip_id:43,persona:PacketPersona::Legacy};
+    let full=p.owner.submit_scoped_raw_tx(&carrier,tuple,presentation,MonoNs(0))
+        .map_err(|_|BAD_STAGE)?;
+    p.arena.drain_returns();
+    Ok((pn,seq,u32::try_from(full).map_err(|_|INVALID)?,
+        u32::try_from(app_len).map_err(|_|INVALID)?))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_raw(
+    handle:u64,ifindex:u32,out_pn:*mut u64,out_seq:*mut u32,
+    out_packet_len:*mut u32,out_app_len:*mut u32,
+)->i32 {
+    if out_pn.is_null()||out_seq.is_null()||out_packet_len.is_null()
+        ||out_app_len.is_null(){return INVALID}
+    match probe_tun_to_kernel_raw(handle,ifindex){
+        Ok((pn,seq,full,app))=>{
+            unsafe{out_pn.write(pn);out_seq.write(seq);
+                out_packet_len.write(full);out_app_len.write(app)};
+            OK
+        }
+        Err(e)=>e
     }
 }
 

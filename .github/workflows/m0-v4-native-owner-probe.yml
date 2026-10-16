@@ -8,6 +8,7 @@ on:
       - "tools/run-v4-kernel-loopback.sh"
       - "tools/run-v4-tun-netns.sh"
       - "crates/wbd-platform/src/linux_tun_sink.rs"
+      - "crates/wbd-platform/src/linux_raw_carrier.rs"
       - "Cargo.toml"
       - "Cargo.lock"
       - "crates/wbd-engine/Cargo.toml"
@@ -88,6 +89,7 @@ jobs:
             "crates/wbd-platform/src/linux_packet_preflight.rs",
             "crates/wbd-platform/src/lib.rs",
             "crates/wbd-platform/src/linux_tun_sink.rs",
+            "crates/wbd-platform/src/linux_raw_carrier.rs",
             "crates/wbd-platform/src/linux_driver_outcome_lease.rs",
             "crates/wbd-platform/src/linux_rx_batch.rs",
             "crates/wbd-platform/src/linux_batch.rs",
@@ -205,9 +207,11 @@ jobs:
           elif [[ "$RC" == 0 ]]; then
             grep -q 'TUN_APP_FIRST_PACKET_PASS: isolated netns' native-probe-result/tun-netns.log
             grep -q 'TUN_APP_BIDIRECTIONAL_PASS: real Go application' native-probe-result/tun-netns.log
+            grep -q 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel' native-probe-result/tun-netns.log
             for suite in 1 2 3; do
               grep -q "TUN_APP_FIRST_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
               grep -q "TUN_APP_REVERSE_PACKET_PASS suite=$suite" native-probe-result/tun-netns.log
+              grep -q "TUN_TO_REAL_RAW_FAKETCP_PASS suite=$suite" native-probe-result/tun-netns.log
             done
             grep -q '^--- PASS: TestR0V4NativeRustTunKernelAppFirst' native-probe-result/tun-netns.log
             STATE=PASS
@@ -220,7 +224,7 @@ jobs:
           source=json.load(open("native-probe-build/manifest.json"))
           result={"source_sha":source["source_sha"],"run_id":source["run_id"],
               "attempt":source["attempt"],"result":os.environ["TUN_STATE"],
-              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_BIDIRECTIONAL_APPLICATION_TO_SCOPED_RUST_M4_UDP",
+              "scope":"TRUE_KERNEL_LINUX_NETNS_TUN_L3_BIDIRECTIONAL_PLUS_S2C_IPV4_TCP_RAW_TO_GO_AUTHENTICATED_PEER",
               "tun_log_sha256":hashlib.sha256(log).hexdigest(),
               "production_abi_features":0,"product_e2e":"NOT_RUN",
               "netem_matrix":"NOT_RUN","raw_carrier":"NOT_RUN"}

@@ -17,6 +17,7 @@ extern int32_t wbd_m0_test_probe_receive_kernel_rx(uint64_t,uint64_t *,uint64_t 
 extern int32_t wbd_m0_test_probe_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_test_probe_receive_kernel_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_tun_to_kernel_udp(uint64_t,uint32_t,uint16_t,uint64_t *,uint32_t *,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_test_probe_tun_to_kernel_raw(uint64_t,uint32_t,uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -347,4 +348,20 @@ func (b *v4NativeRustProbe) tunToKernelUDP(ifindex uint32,port uint16)(
     )
     if code!=0{return 0,0,0,0,fmt.Errorf("%w: real TUN kernel app->Rust S2C->M4 sendmmsg code=%d",errV4NativeProbe,int(code))}
     return uint64(pn),uint32(seq),uint32(wireSize),uint32(appSize),nil
+}
+
+// Test observer only; normal Rust M4 sends an actual raw IPv4/TCP FakeTCP
+// envelope containing the original protected AEAD S2C frozen record.
+func (b *v4NativeRustProbe) tunToKernelRaw(ifindex uint32)(
+    uint64,uint32,uint32,uint32,error,
+){
+    if !b.committed||b.handle==0{return 0,0,0,0,errV4NativeProbe}
+    var pn C.uint64_t
+    var seq,ipSize,appSize C.uint32_t
+    code:=C.wbd_m0_test_probe_tun_to_kernel_raw(
+        C.uint64_t(b.handle),C.uint32_t(ifindex),
+        &pn,&seq,&ipSize,&appSize,
+    )
+    if code!=0{return 0,0,0,0,fmt.Errorf("%w: actual Linux IPv4/TCP raw carrier=%d",errV4NativeProbe,int(code))}
+    return uint64(pn),uint32(seq),uint32(ipSize),uint32(appSize),nil
 }

@@ -22,6 +22,10 @@ use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunError};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::linux_raw_carrier::ScopedRawIpv4Tx;
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation};
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::BatchResult;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
@@ -563,6 +567,31 @@ impl ProtectedScopedOwner {
             .map_err(|_|ProtectedCryptoError::Owner)?;
         drop(batch);
         Ok(outcome)
+    }
+
+    /// Actual AF_INET/IPPROTO_RAW kernel IPv4/TCP delivery of SAME M1
+    /// FrozenRecord after the protected V4 Detach/Commit. The TCP seq
+    /// comes from original AEAD wire metadata; no caller-made TCP seq.
+    /// Kernel acceptance is NOT peer receipt; no blind PN retransmission.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn submit_scoped_raw_tx(
+        &mut self,driver:&ScopedRawIpv4Tx,
+        tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
+    )->Result<usize,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let batch=self.drain_tx(now,Vec::with_capacity(1))
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        let ready=self.checked_tx_ready(&batch)?;
+        if ready.len()!=1 || ready[0].kind!=crate::runtime::TxKind::Fresh {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let sent=driver.send_one(self.generation,&ready[0].record,tuple,presentation)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        drop(batch);
+        Ok(sent)
     }
 
     /// One genuine kernel recvmmsg directly INTO the ORIGINAL M1-owned
