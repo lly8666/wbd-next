@@ -125,5 +125,12 @@
   "product_qualification": "NOT_RUN",
   "production_abi_features": 0,
   "physical": "NOT_RUN",
-  "next_action": "Run ONE exact-source Normal/off FEC-off 10Mbps each direction single-lane Linux development baseline using this original protected Go→Rust M4 continuous loop and genuinely independent app injector/receiver (not Go per-packet bridge helper), 10s warmup+60s measurement, predeclared 64/256/1200/effective MTU packet ratio. Instrument separate injector and engine CPU-s, actual offered/delivered/first arrival/drop/RTT/RSS/queue age/host quota. Gate capacity and report UNSUPPORTED/INCONCLUSIVE instead of false product PASS. Preserve production features0 and unused B04 NOT_RUN."
+  "next_action": "Run ONE exact-source Normal/off FEC-off 10Mbps each direction single-lane Linux development baseline using this original protected Go→Rust M4 continuous loop and genuinely independent app injector/receiver (not Go per-packet bridge helper), 10s warmup+60s measurement, predeclared 64/256/1200/effective MTU packet ratio. Instrument separate injector and engine CPU-s, actual offered/delivered/first arrival/drop/RTT/RSS/queue age/host quota. Gate capacity and report UNSUPPORTED/INCONCLUSIVE instead of false product PASS. Preserve production features0 and unused B04 NOT_RUN.",
+  "source_sha": "69f392c58067ec8f8ca53ed95c660510e6831595",
+  "governance_receipt_correction": {
+    "failed_cursor_sha": "d07483ebe391aaf07c1d5706e98df00acab20cab",
+    "failed_governance_run_id": 38908825628,
+    "reason": "Required source_sha field absent in evidence JSON, though code_source_sha pointed to exact validated native source. Factual record correction only; no new code build or product qualification.",
+    "code_source_unchanged": true
+  }
 }
