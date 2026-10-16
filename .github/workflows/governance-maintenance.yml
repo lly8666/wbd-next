@@ -16,6 +16,8 @@ on:
       - "docs/GOVERNANCE.md"
       - "docs/ACTIONS_CONTRACT.md"
       - "docs/prompts/**"
+      - "docs/decisions/**"
+      - "docs/devlog/M0/PLAN-*.md"
       - "docs/architecture/model-inputs.json"
 permissions:
   contents: read
