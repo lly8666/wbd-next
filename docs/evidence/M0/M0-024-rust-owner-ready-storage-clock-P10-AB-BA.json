@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+  "code_source_sha": "115b5d90867d6bdba237c0ec512c098f0c6bed48",
+  "baseline_source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+  "result": "PARTIAL_STORAGE_REUSE_CPU_CLOCK_STRUCTURAL_PASS_P10_AB_BA_CPU_BENEFIT_INCONCLUSIVE",
+  "why_now": "Governance PR7 changed M0 authorized task from old 023 to hotpath cost 024. This source-locked partial capability removes two explicit per-packet allocation/cpu sampling costs in the original protected Go TLS -> Rust M1/M3/M4 autonomous owner real Linux raw/TUN path, then tests identical Rust before/after workloads in BOTH same-VM P10 orders.",
+  "exact_code_changes": [
+    {
+      "sha": "fc8022ea87563fa28c753002d0d73f107e24a330",
+      "path": "crates/wbd-engine/src/v4_embedded_go.rs",
+      "semantics": "Original raw RX worker preallocates Vec<RxPacket> capacity32 once, reuses returned M1 batch storage after authenticated actual kernel TUN delivery. CLOCK_THREAD_CPUTIME_ID sampled at <=10Hz and final Stop, not once per received/sent packet. No changes to normal owner PN/AEAD/generation."
+    },
+    {
+      "sha": "115b5d90867d6bdba237c0ec512c098f0c6bed48",
+      "paths": [
+        "crates/wbd-engine/src/v4_owner_crypto.rs",
+        "crates/wbd-engine/src/v4_embedded_go.rs"
+      ],
+      "semantics": "Original Rust ScopedOwner TX dispatch has reuse form: borrows original caller preallocated Vec<TxDispatch> capacity1, LoanBatch::recycle() releases generation loan handles and returns original capacity even after driver error; original old signature preserved, M4 actual raw send still strict original PN/seq/tcp tuple. No new sender or wire/MTU relaxation."
+    }
+  ],
+  "exact_functional_actions": [
+    {
+      "source_sha": "fc8022ea87563fa28c753002d0d73f107e24a330",
+      "run_id": 38932845235,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_build": {
+        "id": 12058824085,
+        "digest": "sha256:3ee2558947d31327a925c6bb6c089f9ab4e1ce72ce4e91297cddfec94962f028"
+      },
+      "artifact_result": {
+        "id": 12060047395,
+        "digest": "sha256:3391212fc77666c535c52f48dcda1d610891e34c62936bc184d9aa253cefb47d"
+      }
+    },
+    {
+      "source_sha": "115b5d90867d6bdba237c0ec512c098f0c6bed48",
+      "run_id": 38933305336,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_build": {
+        "id": 12059553145,
+        "digest": "sha256:499f26ae86c6ce52ef806a49dddb2500dadd5ecfb2c9aab420ddfadd6bbb9a18"
+      },
+      "artifact_result": {
+        "id": 12059453505,
+        "digest": "sha256:ab0da03bfb49f85aea747293f31c53a184333cf33d4bf010ebf61726355d2bdb"
+      },
+      "scope": "Actual credential-verified Go TLS original Rust owner M1/M3 AEAD/PN true Linux raw/TUN, three cipher suites, MTU exact boundary, replay/corruption, targeted encrypted DATA PN0 dropped/PN1 no HOL, two background Rust worker Stop, original ABI regression; other same-source native/cross/governance jobs separately scoped."
+    }
+  ],
+  "performance_contract": {
+    "order": "Independent GitHub Actions runs, each exactly ONE measurement job/VM with source-locked A and B sequential non-overlap; same Go TLS fixture binary source and runner script verified SHA identical between A and B. No cross-run absolute CPU subtraction.",
+    "A": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
+    "b_source": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+    "b_engine_code_source": "115b5d90867d6bdba237c0ec512c098f0c6bed48",
+    "workload": "Normal 1 lane/FEC off/ChaCha, zero artificial loss/delay, original Go protected TLS -> original Rust owner M1/M3 -> real Linux kernel raw IPv4/TCP and /dev/net/tun; UDP app payload exactly 64/256/1200 bytes 1:1:1 count, logical application offered 10Mbps each direction; 10s warmup,60s measurement,3s drain. Runtime status MEASUREMENT_RECORDED_NOT_PRODUCT_PASS. production ABI features0.",
+    "flags": "Rust 1.85.1 cargo --release --locked m0_v4_probe,m0_v4_embedded_go; Go 1.23.12 original source pinned; same Cargo.lock, Go overlay, dev runner script.",
+    "measured_cpu_scope": "Entire Go fixture+Go injector/receiver+Rust engine shared process user+system; CPU-s/GiB DELIVERED measured. Rust thread CPU changed sampling cadence between A and B: NOT directly comparable. No product full veth/runtime guarantee.",
+    "criterion": "10Mbps UDP app actual within 2% and both directions zero missing/invalid/duplicate, no material p99 regression. CPU benefit meaningful only >=approx10% in both orders; lower gain/noise INCONCLUSIVE."
+  },
+  "P10_AB": {
+    "run_id": 38934828468,
+    "attempt": 1,
+    "head_sha": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+    "result": "VALID_P10_AB_ONLY_NEEDS_BA",
+    "jobs": {
+      "build": 117087572467,
+      "measure": 117088511948
+    },
+    "build_artifact": {
+      "id": 12060372358,
+      "digest": "sha256:4861e7b3317fd62c9f172ae111d3b530f597cae042e374279345b282b043bd1d"
+    },
+    "result_artifact": {
+      "id": 12061285674,
+      "digest": "sha256:ad7dcd6b2e38ea71dab6b3fdfb7b18895798d870aac4d3a8f6439b9ffdc3bf49"
+    },
+    "A": {
+      "cpu_s": 52.228727,
+      "cpu_s_per_gib": 373.8622873749835,
+      "udp_app_mbps_c2s": 10.0001472,
+      "udp_app_mbps_s2c": 10.0001472,
+      "missing": 0,
+      "invalid": 0,
+      "p99_same_host_age_us_c2s": 1471,
+      "p99_same_host_age_us_s2c": 994
+    },
+    "B": {
+      "cpu_s": 51.688193,
+      "cpu_s_per_gib": 369.997116217993,
+      "udp_app_mbps_c2s": 9.999936,
+      "udp_app_mbps_s2c": 10.000138666666667,
+      "missing": 0,
+      "invalid": 0,
+      "p99_same_host_age_us_c2s": 1473,
+      "p99_same_host_age_us_s2c": 949
+    },
+    "B_vs_A_normalized_cpu_change_percent": -1.0338489030624731
+  },
+  "P10_BA": {
+    "run_id": 38934828450,
+    "attempt": 1,
+    "head_sha": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+    "result": "VALID_P10_BA_ONLY_NEEDS_PAIR_REVIEW",
+    "jobs": {
+      "build": 117087572682,
+      "measure": 117088495514
+    },
+    "build_artifact": {
+      "id": 12061235544,
+      "digest": "sha256:6e72cdb690a8a4d09c2798161d3e819f7efefacdd19391b07ce538ef8bf7bd81"
+    },
+    "result_artifact": {
+      "id": 12060837037,
+      "digest": "sha256:0539a6680ddf3980764f66f1aaffc60a5e4da76f742e9375a7671f676e3eaeb1"
+    },
+    "A": {
+      "cpu_s": 53.273671,
+      "cpu_s_per_gib": 381.348604681796,
+      "udp_app_mbps_c2s": 9.999978666666667,
+      "udp_app_mbps_s2c": 9.999978666666667,
+      "missing": 0,
+      "invalid": 0,
+      "p99_same_host_age_us_c2s": 1550,
+      "p99_same_host_age_us_s2c": 959
+    },
+    "B": {
+      "cpu_s": 52.860497,
+      "cpu_s_per_gib": 378.38492950448773,
+      "udp_app_mbps_c2s": 10.000138666666667,
+      "udp_app_mbps_s2c": 10.000138666666667,
+      "missing": 0,
+      "invalid": 0,
+      "p99_same_host_age_us_c2s": 1632,
+      "p99_same_host_age_us_s2c": 972
+    },
+    "B_vs_A_normalized_cpu_change_percent": -0.7771564235251938
+  },
+  "historical_non_qualifying_runs": [
+    {
+      "run_id": 38933814028,
+      "result": "RUN_SUCCESS_BUT_NOT_PLANNED_UDP_APP_PROFILE",
+      "reason": "Initial A/B used default 10Mbps inner IPv4 size mix rather than mandated 10Mbps UDP app payload. UDP goodput ~9.607Mbps; CPU B/A ~-1.13% exploratory only."
+    },
+    {
+      "run_id": 38934433902,
+      "result": "RUN_SUCCESS_BUT_NOT_PLANNED_UDP_APP_PROFILE",
+      "reason": "Initial B/A on default IPv4 instead of UDP app, observed ~9.607Mbps and B/A CPU sign inverted +2.91%; earlier relative conclusion cannot be called formal P10."
+    },
+    {
+      "source_sha": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+      "run_id": 38934828468,
+      "result": "SOURCE_EXACT_SUCCESS_CORRECTED_PROFILE"
+    },
+    {
+      "source_sha": "3cc41904f3a13cd2bdaa62e9ff3d4162e9f7a77a",
+      "run_id": 38934828450,
+      "result": "SOURCE_EXACT_SUCCESS_CORRECTED_PROFILE"
+    }
+  ],
+  "interpretation": {
+    "structural_change": "CONFIRMED_IN_REAL_CODE_AND_FUNCTIONALLY_TESTED",
+    "delivered_10mbps_each_direction_and_exact_payload": "PASS_BOTH_ORDERS",
+    "cpu": "INCONCLUSIVE_SMALL_AB_BA_POSITIVE_LESS_THAN_2_PERCENT_NOT_PROVEN_BENEFIT",
+    "p99": "No observed B latency change exceeding max(0.2ms,A*15%) in this paired sample; same-host one-way app age, not network RTT.",
+    "product": "NOT_QUALIFIED",
+    "throughput_capacity_beyond_P10": "NOT_RUN"
+  },
+  "remaining": [
+    "Task024 not done: true data-plane route/MTU scoped revision caching with netlink/invalidations (ifindex/link/route/EMSGSIZE), original owner data work removed from global registry mutex, bounded ready-only M4 batch and TX storage/queue high watermark, true D10 syscall observation, SPARSE-AB, full MTU change/Stop borrowed live driver cases, conditional C50.",
+    "Clock sampling schedule differs between A/B. Only combined-process CPU comparator is appropriate, not Rust-thread components. Same Go fixture process includes generator, not independent product benchmark.",
+    "Original production V4 features0. Old023 product qualification B01-B04, externally received SYN, full veth/physical/500Mbps, oversize LINK fragmentation are NOT_RUN. Do not invert permissions or preempt existing worker branches.",
+    "CPU reduction around 0.8-1.0% is below predeclared meaningful initial investigation band ~10%; keep as INCONCLUSIVE and prioritize real route/MTU query overhead instead of repeated seed grinding."
+  ],
+  "next_action": "Within task024, implement the original Rust scoped-budget route/MTU revision snapshot with an owned Linux link/route event invalidation or safe fail-closed bounded refresh, no per-packet kernel query/MTU file. Verify actual Linux MTU lower/recover, interface replacement, PMS failure, Stop/generation, wrong scope fail-closed in exact Actions; then restructure registry owner direction ownership without alternate crypto and ready-only bounded batch reuse. Run D10 when ready and repeat P10 A/B BA only after source meaningfully changes. Task and production features stay partial/0."
+}
