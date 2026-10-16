@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "existing_verified_Go_V4_private_callsite_builds_versioned_handoff_to_normal_build_Rust_scoped_owner_Prepare",
+  "code_source_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+  "result": "PARTIAL_VERSIONED_NORMAL_BUILD_PREPARE_PASS",
+  "why": "Go's credential-verified protected V4 Prepare/Detach callback already carries cold frozen snapshot, original SYN tuple, MSS and actual RX boundary, but TEST-ONLY FFI previously assembled the Rust owner preparation. Move preparation into normal Rust code, use versioned Go command and exact SOURCE Actions; do not advertise capability.",
+  "implementation": [
+    "Production Go admission_v4.go now provides private 32-byte WBGH v1 command builder: version, size, exact original FakeTCP client/server IPv4/ports, original PrepareTransition RX boundary, SYN MSS, advertised bit, zero reserved bytes.",
+    "Normal Rust wbd-engine module v4_protected_handoff.rs parses exact versioned command, rejects malformed/missing/zero-port/invalid MSS, constructs fresh generation using original ProtectedScopedOwner::prepare_from_protected_go with existing M1 RX/TX queues and M3 AEAD/PN, and leaves it Prepared.",
+    "Existing cgo TEST-ONLY bridge now transports the Go-owned WBGH v1 command to this ordinary Rust module; normal production build does not export test FFI, production ABI features remains 0. Rust client does not authenticate cold bytes; producer authority is the private Go credential-checked callsite, not command self-consistency.",
+    "No second crypto, fresh test delivery route, new FEC origin, new user/public cold installer, or premature Active. Original protected reply -> Detach -> commit order unchanged."
+  ],
+  "exact_source_actions": [
+    {
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38870573492,
+      "attempt": 1,
+      "head_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+      "conclusion": "success",
+      "build_job": 116873428830,
+      "consume_job": 116873940446,
+      "build_artifact": {
+        "id": 12032777428,
+        "digest": "sha256:ad3fbea4bfdb17f59e00e509819958ca44225bac72351ce369ebfe66d7335eec"
+      },
+      "result_artifact": {
+        "id": 12033511481,
+        "digest": "sha256:403ae9efdf1caab3c21c9e1b440c5c49f43ad8cc6dea59476a68539a4f2cf468"
+      },
+      "verified": "Existing pinned real protected Go TLS private callback and normal Rust owner; rust native owner phases and new exact 32-byte parser 1+1 tests; independent Linux netns real raw/TUN app bidirectional all 3 ciphers; no product V4 install"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38870573514,
+      "attempt": 1,
+      "head_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+      "conclusion": "success",
+      "artifact": {
+        "id": 12033511162,
+        "digest": "sha256:1a7cfb3043cd3117e7cc52bae3c71a63d4dfb20130b01054eb0c50972d58ae9d"
+      },
+      "scope": "tool selftests only"
+    },
+    {
+      "workflow": "governance.yml",
+      "run_id": 38870573590,
+      "attempt": 1,
+      "head_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+      "conclusion": "success",
+      "scope": "identity and structure, drills/model NOT_RUN"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38870602569,
+      "attempt": 1,
+      "head_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    }
+  ],
+  "superseded_failed_source": {
+    "sha": "9f248938b34b3f39e917e2ae255f2dcd8339a157",
+    "run_id": 38870306754,
+    "conclusion": "failure",
+    "exact_cause": "Rust negative test changed an already-zero version high byte (byte=4) and wrongly expected rejection; real old source recorded FAIL, fixed test semantics before final source; this is not a claim that failed SOURCE passed."
+  },
+  "separate_source_evidence": "5f76ad118fdcdda72f7f4451eed06afa83824568 ran Go V4 TLS/control, native ABI, cross ABI builds, G2 and native regressions SUCCESS. These have a DIFFERENT SOURCE and are NOT aggregated with final SOURCE to mint qualification.",
+  "source_integrity": "Native workflow compiles once and consumes checked same-run executable/library hashes and source manifest; artifact ZIP digests are GitHub API metadata, not independently downloaded/rehashed.",
+  "not_run": [
+    "Positive production main Go/Rust V4 control adapter and ordinary ABI authenticated install; test-tag FFI still only positive entry path",
+    "Actual live external SYN vs existing pinned Go test-generated SYN",
+    "Product V4 normal business operation, real held M4 driver B01-B04 Stop/late borrowed lease/generation reconnect, veth tc netem loss/latency/reorder",
+    "Full same-source native ABI/cross-target Go+C/Rust executable qualification, Windows/ARM native execution, physical, 500Mbps, product throughput/CPU/p99"
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "real_external_product_network": "NOT_RUN",
+  "next_action": "Add the real non-test private Go native control adapter that calls this same versioned normal-build Rust Prepare/Commit under the credential-checked EstablishServerV4 path, with trusted session provenance, exact TX boundary, bounded early records and fail-closed default; then validate B01-B04 driver-held Stop before advertising capabilities."
+}

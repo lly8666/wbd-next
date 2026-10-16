@@ -21,6 +21,17 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_versioned_normal_prepare": {
+    "code_source_sha": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
+    "result": "PARTIAL_VERSIONED_NORMAL_BUILD_PREPARE_PASS",
+    "evidence": "docs/evidence/M0/M0-023-versioned-normal-prepare.json",
+    "versioned_go_command": "WBGH_V1_FIXED32_PRIVATE_CALLBACK",
+    "normal_rust_prepared_owner": "PASS_IN_NATIVE_ACTIONS",
+    "exact_native_run_id": 38870573492,
+    "product_native_authorized_command": "NOT_RUN",
+    "production_capabilities": 0,
+    "product": "NOT_RUN"
+  },
   "m0_023_real_go_flow_raw": {
     "code_source_sha": "c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3",
     "result": "PARTIAL_TRUE_KERNEL_RAW_ASSOCIATION_TUPLE_PASS",
