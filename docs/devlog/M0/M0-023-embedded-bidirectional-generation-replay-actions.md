@@ -1,0 +1,15 @@
+# M0-023 — embedded non-test Go/Rust real bilateral kernel + generation + integrity
+
+**PARTIAL_EMBEDDED_BILATERAL_GENERATION_REPLAY_PASS**. Final exact CODE SOURCE `f0141c7b591b3237679a34b9e6c33201f552ddc2`; evidence [JSON](../evidence/M0/M0-023-embedded-bidirectional-generation-replay-actions.json). Formal 023 **PARTIAL** and production ABI `features=0`.
+
+Why: H91 confirmed that the embedded verified Go V4 callback reached actual M4 raw/TUN C2S first delivery, but the new owner had no actual M4 raw S2C nor same-connection generation/negative integrity tests. User requested multiple already-authorized atoms. Closed three separate code-S stages and exact-source native Actions instead of building new probe/delivery/crypto loops:
+
+1. `db028ae3` Actions [38877247105](https://github.com/lly8666/wbd-next/actions/runs/38877247105): original embedded Rust owner now **retains real ScopedRawIpv4Tx**, seals real kernel TUN app ingress via M1/M3 and sends S2C on Linux IPv4/TCP raw socket to independent Go raw peer. Validated exact original four-tuple, Go post-reply TX seq, AEAD and PN0, app 39B for suite 1/2/3. Original C2S raw→kernel TUN app 31B also PASS. Both raw drivers plus TUN receive begin_stop/stop_until before release.
+2. `39f2c891` Actions [38877655682](https://github.com/lly8666/wbd-next/actions/runs/38877655682): two independently verified protected Go TLS private sessions use distinct original Rust generations 4 and 5; old quiesced/removed owner never appears again, fresh generation remains ACTIVE while old stops. Repeated fully released Stop is idempotent. Actual bilateral tests still PASS.
+3. FINAL SOURCE `f0141c7b591b3237679a34b9e6c33201f552ddc2` Actions [38877965021](https://github.com/lly8666/wbd-next/actions/runs/38877965021): same code plus genuine Linux raw duplicate PN0 ciphertext, and separately corrupted ciphertext with recomputed valid outer TCP checksum; M3 crypto/PN rejects, independent kernel application shows zero second delivery during bounded 40ms window on each case, each cipher. Subsequent genuine S2C remains PASS. Builds once / hash-checked consume, no local tests.
+
+Only exact FINAL SOURCE native, Governance and governance-maintenance PASS. Historical ABI/cross-build/regression greens on earlier `db028ae3` remain separate and are **not added into product qualification**; scope audit skipped. No new worker role or duplicate protocol owner.
+
+Still **NOT_RUN**: actual outstanding *asynchronous* M4 held driver loan B04, StopIncomplete + late return, same-tunnel driver reconnect/rotation B01/B02 complete, external live SYN, veth/netem RTT/loss/reorder, product Normal/off performance, physical/500Mbps. M4 raw/TUN current syscall borrow completes synchronously; cannot label a fabricated held token 'real delayed driver'. No capability enablement.
+
+**One next action:** attach genuine delayed M4 driver completion/loan on THIS embedded original owner, enforce STOP_INCOMPLETE until actual completion, then return and release. If backend cannot provide real delayed completion, mark B04 UNSUPPORTED/NOT_RUN and proceed only within authorized product safety bounds.

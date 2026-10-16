@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+  "code_source_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+  "result": "PARTIAL_EMBEDDED_BILATERAL_GENERATION_REPLAY_PASS",
+  "why_now": "User explicitly authorized multiple atom steps in this turn; H91 identified embedded owner S2C as next required product-path gap. Finish real reverse M4 path, then source-distinct generation isolation and negative cipher-integrity tests, rather than introducing another test-only owner/delivery/helper.",
+  "atomic_steps": [
+    {
+      "source_sha": "db028ae38ef0976719107f621051e5d711394969",
+      "result": "PASS",
+      "scope": "non-_test verified protected Go private adapter and same ordinary Rust ScopedOwner now hold real M4 ScopedRawIpv4Tx as well as raw RX/TUN; actual Linux kernel TUN ingress→M1/M3 sealed S2C→M4 raw IPv4/TCP→independent Go kernel raw/TLS peer 3 ciphers, PN0, exact seq and actual app bytes; old C2S still passes",
+      "run_id": 38877247105,
+      "build_job": 116895146163,
+      "consume_job": 116895687169
+    },
+    {
+      "source_sha": "39f2c891d374a6a42062b0ddcfc86f503834e6be",
+      "result": "PASS",
+      "scope": "two independent credential-checked Go V4 private TLS sessions in one Rust registry: generation old4/new5, old stop/release no resurrection, fresh stays ACTIVE, repeat terminal Stop idempotent, existing true bilateral data still passes",
+      "run_id": 38877655682,
+      "build_job": 116896482333,
+      "consume_job": 116896908835
+    },
+    {
+      "source_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+      "result": "PASS",
+      "scope": "exact final SOURCE retains same two previous tests and adds real Linux raw C2S duplicate PN0 ciphertext and byte-corrupted ciphertext with correctly rebuilt outer IPv4/TCP checksum; original AEAD/PN reject, no TUN app redelivery in finite 40ms observation after each negative; 3 ciphers and subsequent S2C real raw stay PASS",
+      "run_id": 38877965021,
+      "build_job": 116897499485,
+      "consume_job": 116898066837
+    }
+  ],
+  "final_source_native_actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38877965021,
+    "attempt": 1,
+    "head_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+    "conclusion": "success",
+    "build_job": 116897499485,
+    "consume_job": 116898066837,
+    "build_artifact": {
+      "id": 12035629740,
+      "digest": "sha256:70aaebc894fc21f194842a7768e71d7434b5059e97d287d4e57202166e1def8c"
+    },
+    "result_artifact": {
+      "id": 12035749237,
+      "digest": "sha256:f11bac5f71f17ac38478984bc78a11edb7cc85bfcb7fd484bbcc898c63220d0d"
+    },
+    "exact_scope": "One Actions SOURCE, release build once, reuse hash-checked Go+Rust native artifacts in same-run consumer; 3 ciphers true Linux isolated owned namespace raw C2S and S2C, independent kernel app and raw peer, original Go TLS AEAD, embedded old/new generation closure and per-suite replay/corrupt no app redelivery. No product/physical or held async B04."
+  },
+  "earlier_source_artifacts": [
+    {
+      "source_sha": "db028ae38ef0976719107f621051e5d711394969",
+      "run_id": 38877247105,
+      "attempt": 1,
+      "build_id": 12035603434,
+      "build_digest": "sha256:99d1e8edf21785d4c7ed310f9dcb7c2b014c70c98c2442d62b24d9be681e9315",
+      "result_id": 12035917080,
+      "result_digest": "sha256:9e3fe3e29a7da2fefb13821b2ca73a0df10826a78c06e1781926ac9b619ed0c8"
+    },
+    {
+      "source_sha": "39f2c891d374a6a42062b0ddcfc86f503834e6be",
+      "run_id": 38877655682,
+      "attempt": 1,
+      "build_id": 12036465464,
+      "build_digest": "sha256:2a2f999acff8544ae33eb50982571fd460df6040a2b5d9299c7f0448e75304df",
+      "result_id": 12035419862,
+      "result_digest": "sha256:c05bc3236b52b11120f247cc00b109e0e83dd67f3cc3f3856ecc1f94515be852"
+    }
+  ],
+  "same_source_ancillary": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38877964967,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "ordinary identity/structure, NOT tool drills or product"
+    },
+    {
+      "workflow": "governance-maintenance.yml",
+      "run_id": 38877964947,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "governance selftest, not product"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38878008019,
+      "attempt": 1,
+      "conclusion": "skipped",
+      "scope": "NOT_RUN, not PASS"
+    }
+  ],
+  "historical_other_source_tests": "On earlier CODE SOURCE db028ae38 source-only r0 native ABI38877247151, cross ABI builds38877247093, G2 bootstrap38877247397, native regression38877247119, static audit38877247320 were success. These are NOT merged into final f0141c7b's qualification. Cross-target execution remained NOT_RUN.",
+  "precise_observations": {
+    "c2s": "3 ciphers each exact 31-byte independently received UDP business first",
+    "s2c": "3 ciphers each exact 39-byte S2C original Go TLS-opened app payload on real kernel IPv4/TCP reverse route, PN=0 and actual session tx_boundary",
+    "replay_negative": "3 ciphers duplicate original ciphertext PN0 submitted via real raw packet; no second app delivery in each 40ms deadline window",
+    "corrupted_negative": "3 ciphers one byte flipped inside ciphertext; recomputed valid outer IPv4/TCP checksums; AEAD rejects; no app delivery in each 40ms deadline window",
+    "old_new_stop": "two distinct verified private Go sessions and monotonic embedded Rust generations 4 and 5 in source 39f2c891 and retained in final source; old retirement not blocking new, old numeric handle UNKNOWN, repeat postrelease Stop idempotent",
+    "b01_b03": "PARTIAL narrowly: verified ordering tests retained; generation isolation/repeat stop positive; no actual mid-Prepare reply-loss/driver-stop overlap matrix",
+    "b04": "NOT_RUN: real M4 raw/TUN syscalls use synchronous kernel-copy BorrowFence; no actual outstanding ASYNC driver loan at Stop was exercised",
+    "source_trust": "Go TLS check real; original FakeTCP SYN generated from pinned Go fixture, not an actual external client"
+  },
+  "limits": [
+    "This is the opt-in developer m0_v4_embedded_go build, not production ABI or runtime's V4 capability. Default production features0; no standalone authentication minted by copied WBGH/cold248 data.",
+    "Raw C2S and raw S2C are real kernel Linux sockets and TUN in an Actions owned namespace; external live SYN, platform-specific native Windows/ARM runtime, physical and product measurements NOT_RUN.",
+    "Old/new generation trial used independently credential-checked Go sessions and shared Rust registry; not verified old/new same-tunnel migration under actual M4 held completion.",
+    "Negative no redelivery is observed only for two packets (one replay, one corrupt) per cipher and a bounded 40ms application read deadline each. This is not probabilistic network or long-run no-HOL qualification.",
+    "True driver-held asynchronous B04, late returns/stop incomplete, veth tc netem 0/150/300ms and loss 1/5%, reordering, full MTU boundary, normal performance and 500Mbps NOT_RUN.",
+    "Do not combine different SOURCE greens as product PASS; final SOURCE has only native, governance, maintenance. Artifact ZIP digests from GitHub API receipt, not independently rehashed."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Use existing M4 owner/driver lease to prove actual held asynchronous completion B04 on this same embedded Go→Rust original generation (STOP_INCOMPLETE before completion, no release, late return then STOP/Release) and mid-install B01/B02 failure; otherwise explicitly record UNSUPPORTED rather than fabricating delayed raw/TUN IO. Then veth netem product matrix, default capability remains closed."
+}

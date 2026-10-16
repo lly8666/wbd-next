@@ -21,6 +21,18 @@
   ],
   "capabilities": "R0_ABI_SENTINEL_FEATURES_ZERO",
   "production_go_v4": "DISABLED_FAIL_CLOSED",
+  "m0_023_embedded_bilateral_integrity": {
+    "code_source_sha": "f0141c7b591b3237679a34b9e6c33201f552ddc2",
+    "result": "PARTIAL_EMBEDDED_BILATERAL_GENERATION_REPLAY_PASS",
+    "evidence": "docs/evidence/M0/M0-023-embedded-bidirectional-generation-replay-actions.json",
+    "exact_native_run_id": 38877965021,
+    "original_owner_M4_kernel_C2S_S2C": "PASS_THREE_CIPHERS",
+    "actual_Rust_old_new_generation_stop": "PASS_TWO_VERIFIED_SESSIONS",
+    "raw_PN_replay_and_corrupt_AEAD_no_second_TUN_delivery": "PASS_BOUNDED_40MS_PER_CASE",
+    "actual_async_held_M4_B04": "NOT_RUN",
+    "product_qualification": "NOT_RUN",
+    "production_abi_features": 0
+  },
   "m0_023_embedded_real_M4_C2S": {
     "code_source_sha": "d786fcb224e901ce06c3d6a8c5d668c2da02b28a",
     "result": "PARTIAL_EMBEDDED_REAL_RAW_TUN_C2S_PASS",
