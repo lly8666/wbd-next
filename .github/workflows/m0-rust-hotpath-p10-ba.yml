@@ -1,4 +1,4 @@
-name: M0 Rust hotpath 024 P10-B-A same runner original owner
+name: M0 Rust hotpath 024 P10-B-A scoped route observe-once
 run-name: "R1-M0-024|P10-BA|${{ github.sha }}"
 on:
   push:
@@ -35,6 +35,10 @@ jobs:
         env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
         run: |
           set -euo pipefail
+          # Tested M0-024 B engine exact original Rust sources c203f078.
+          # Freeze content, not a floating branch or unrelated later commit.
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 3e0e4eec2d7b7180030be09aa78d5590a3901db3
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = fb00e4cb488ef67faa432156d14e278a032e9fd8
           test "$(git -C rust-A rev-parse HEAD)" = 333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           cmp rust-A/Cargo.lock Cargo.lock
