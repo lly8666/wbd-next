@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 93,
-  "checkpoint_sha": "574f201dac42f060fd7a7ba410bc4aa62998510a",
+  "sequence": 94,
+  "checkpoint_sha": "6fb7a93ddecc40047fe868eba9cb1b6ca9e28e29",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "023 preliminary Actions network atom CLOSED: existing verified Go V4 private dev-gated non-_test Rust M1/M3/M4 owner native real Linux raw↔TUN baseline and additional bounded owned-netns tc netem configured 10ms/no-loss scenario PASS on exact CODE 443734232dd4c341e0922757a3f06a452c453fda native run38879621342 build116902941076 consume116903517168. Observed Linux netem qdisc Sent2400 bytes 24 packets, dropped0; 3/3 cipher C2S/S2C business and replay/corrupt rejection PASS. EXPLORATORY only, 10ms CONFIGURED not measured RTT; no throughput/p99. Evidence S 574f201dac42f060fd7a7ba410bc4aa62998510a static38880067233/Gov38880067157 PASS. Formal 023 partial/ABI features0.",
-  "why_now": "User asked to accelerate and run initial Actions network test. Prior ordinary-build embedded owner bilateral C2S/S2C 3 cipher kernel smoke was verified but no actual tc queue traffic. Reused same compiled pair and true M4 sockets; no duplicate bridge/crypto or oversized performance scenario. B04 real async loan unavailable in existing synchronous raw/TUN drivers and remains NOT_RUN.",
-  "done_when": "THIS ATOM MET: exact SOURCE 443734232dd4c341e0922757a3f06a452c453fda native38879621342 success, same-run hash-checked build/consume, original real Linux netns baseline PASS; second 10ms configured delay zero-loss netem qdisc processed 24 packets 2400 bytes, original embedded 3-cipher bilateral/AEAD integrity PASS, exploratory result; same SOURCE maintenance38879621201 and ordinary Governance38879621190 SUCCESS, scope38879654218 SKIPPED NOT_RUN. Evidence S 574f201dac42f060fd7a7ba410bc4aa62998510a static38880067233 and Gov38880067157 SUCCESS. Production product qualification NOT_MET: real asynchronously held driver B04, live external SYN, normal product V4 ABI, same-tunnel B01/B02, veth 150/300ms, measured RTT/throughput/p99, physical, 500Mbps NOT_RUN. No different SOURCE greens combined.",
-  "next_action": "Prove actual asynchronously held M4 driver completion on THIS verified Go→original Rust owner (Stop before real completion must give STOP_INCOMPLETE, no release; late return then Stop/release; fresh generation survives). Current synchronous Linux raw/TUN backend cannot yield a genuine delayed kernel loan: mark B04 UNSUPPORTED/NOT_RUN until an actual asynchronous driver contract exists, never forge a held token or enable product capability.",
+  "current_task": "023 two practical original-owner atoms CLOSED: same protected Go credential-checked private dev-gated V4→normal Rust M1/M3/M4 true Linux raw/TUN now delivers two successive independent app packets each direction; second packet PN1 and true original TCP seq progression, 3/3 cipher suite. CODE S1 b72f684c native38882255929 PASS. FINAL CODE 49a538917d209543c4f56c594481b37b1be1575e native38882731136 PASS same-run prebuilt binary, baseline and 10ms and 150ms kernel tc netem exploratory functional; 10ms qdisc36 packets/3597B and 150ms qdisc35 packets/3543B. Configured delay NOT measured RTT. Evidence S 6fb7a93ddecc40047fe868eba9cb1b6ca9e28e29 static38883172984/Gov38883172970 PASS. Formal 023 PARTIAL, product features0.",
+  "why_now": "User explicitly prioritized fast product-path Actions over unrepresentative B04 async loan rabbit hole. Genuinely continuous second packet is missing from prior first-packet smoke, then single bounded higher-delay kernel qdisc scenario uses same code/owner and Actions compiled-once artifacts.",
+  "done_when": "ATOM MET: exact SOURCE b72f684c native38882255929 build116911533367 consume116911964763 SUCCESS and CODE 49a538917d209543c4f56c594481b37b1be1575e native38882731136 build116913073832 consume116913601355 SUCCESS. SAME final code real Linux baseline 3 cipher bilateral first+second packet with PN0/1 and seq, 10ms &150ms configured no-loss tc netem functional PASS and positive kernel qdisc bytes/packets. SAME final CODE maintenance38882730925/Gov38882731269 SUCCESS, main scope38882765936 SKIPPED. Evidence S 6fb7a93ddecc40047fe868eba9cb1b6ca9e28e29 static38883172984/Gov38883172970 SUCCESS. FORMAL 023 NOT MET: actual external received SYN, default product V4 ABI/features0, real asynchronously held driver loan B04, full B01/B02, genuine measured RTT/p99, sustained 10Mbps, MTU±1, 1/5% loss, physical/500Mbps, Windows/ARM runtime NOT_RUN. Different-source greens not promoted.",
+  "next_action": "Use the SAME original embedded authenticated Go→Rust M4 real kernel path in Actions to test near-observed effective carrier-MTU IPv4 business payload and one oversize packet with explicit fail-closed result; reuse native artifact once, do not tune MTU/seed or claim product PASS. Real B04 async driver-held completion remains NOT_RUN until original M4 backend gains genuine async ownership.",
   "unverified": true,
-  "last_tested_source": "443734232dd4c341e0922757a3f06a452c453fda",
+  "last_tested_source": "49a538917d209543c4f56c594481b37b1be1575e",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-preliminary-kernel-netem-10ms.json"
+    "docs/evidence/M0/M0-023-embedded-two-packet-150ms-netem.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-preliminary-kernel-netem-10ms.md",
+    "docs/devlog/M0/M0-023-embedded-two-packet-150ms-netem.md",
     "docs/evidence/M0/M0-023-embedded-bidirectional-generation-replay-actions.json",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
+    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "EXPLORATORY 10ms configured tc netem actual kernel qdisc positive 24 packets/2400B plus same non-_test Go-verified embedded Rust owner 3/3 cipher bilateral Linux raw/TUN true app smoke PASS. NOT actual measured RTT; production V4 features0. Genuine async driver-held B04, external SYN, same-tunnel full B01/B02, higher RTT/loss, throughput/p99, product performance/physical NOT_RUN."
+  "partial_summary": "Preliminary true Linux Actions normal-off original protected Go developer-gated Rust owner two sequential business packets each way PN1 and TCP seq continuous PASS 3 ciphers; 10/150ms tc configured delay exploratory qdisc counters positive. No measured RTT/throughput. 023 partial/production features0; B04 genuine async completion unsupported/not-run, external SYN, near-MTU, loss, perf and physical NOT_RUN."
 }
