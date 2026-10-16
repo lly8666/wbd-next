@@ -94,7 +94,7 @@ if [[ "$TARGETED" == 1 ]]; then
   TEST_FILTER='^TestR0V4EmbeddedKernelSpecificDataLossNoHOL$'
 fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_PAIRED_OLD_NEW="$WBD_M0_PAIRED_OLD_NEW" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 # The owned netns test runs as root; never let a successful measurement
