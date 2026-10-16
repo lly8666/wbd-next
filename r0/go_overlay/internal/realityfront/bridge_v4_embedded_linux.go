@@ -15,6 +15,9 @@ extern int32_t wbd_m0_embedded_go_abort(uint64_t);
 extern int32_t wbd_m0_embedded_go_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_release(uint64_t);
 extern int32_t wbd_m0_embedded_go_state(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_attach_raw_rx(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 */
 import "C"
 import (
@@ -28,6 +31,8 @@ var errV4Embedded=errors.New("embedded V4 Rust control refused")
 type v4EmbeddedNativeBridge struct {
     handle uint64
     committed bool
+    originalFlow faketcp.ServerFlow
+    rxBoundary uint32
 }
 func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
@@ -44,6 +49,8 @@ func (b *v4EmbeddedNativeBridge) prepare(
     runtime.KeepAlive(cold);runtime.KeepAlive(cmd)
     if rc!=0||h==0{return nil,fmt.Errorf("%w: prepare=%d",errV4Embedded,int(rc))}
     b.handle=uint64(h)
+    b.originalFlow=peer.flow
+    b.rxBoundary=boundary
     return &v4EmbeddedPending{b:b},nil
 }
 type v4EmbeddedPending struct{
@@ -89,4 +96,29 @@ func (b *v4EmbeddedNativeBridge) stopRelease()error{
     rc=C.wbd_m0_embedded_go_release(C.uint64_t(b.handle))
     if rc!=0{return fmt.Errorf("%w: release=%d",errV4Embedded,int(rc))}
     b.handle=0;b.committed=false;return nil
+}
+
+
+func (b *v4EmbeddedNativeBridge) attachRawRx(ifindex uint32)error{
+    if !b.committed||b.handle==0{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_attach_raw_rx(C.uint64_t(b.handle),C.uint32_t(ifindex))
+    if rc!=0{return fmt.Errorf("%w: bind real raw=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
+    if !b.committed||b.handle==0||len(name)==0||len(name)>15{return errV4Embedded}
+    raw:=[]byte(name)
+    rc:=C.wbd_m0_embedded_go_attach_tun(C.uint64_t(b.handle),C.int32_t(fd),
+        (*C.uchar)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)))
+    runtime.KeepAlive(raw)
+    if rc!=0{return fmt.Errorf("%w: bind real TUN=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) receiveRawToTun()(uint32,uint32,error){
+    if !b.committed||b.handle==0{return 0,0,errV4Embedded}
+    var delivered C.uint32_t
+    var failed C.uint32_t
+    rc:=C.wbd_m0_embedded_go_raw_to_tun(C.uint64_t(b.handle),&delivered,&failed)
+    if rc!=0{return 0,0,fmt.Errorf("%w: M4 raw to TUN=%d",errV4Embedded,int(rc))}
+    return uint32(delivered),uint32(failed),nil
 }

@@ -35,7 +35,7 @@ sudo -n ip -n "$NS" link set lo up || {
 sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
 sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run '^TestR0V4NativeRustTunKernelAppFirst$'
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run '^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
 RC=$?
 set -e
 if ((RC!=0)); then
@@ -45,4 +45,5 @@ echo 'TUN_APP_FIRST_PACKET_PASS: isolated netns actual kernel TUN -> UDP applica
 echo 'TUN_APP_BIDIRECTIONAL_PASS: real Go application -> kernel TUN -> Rust scoped AEAD -> M4 UDP -> Go TLS peer.'
 echo 'TUN_TO_REAL_RAW_FAKETCP_PASS: real kernel IPv4/TCP raw socket -> Go TLS authenticated peer.'
 echo 'REAL_RAW_BIDIRECTIONAL_TUN_PASS: Go raw IPv4/TCP -> Rust M1 AEAD -> real TUN app, plus real raw S2C Go peer.'
-echo 'Original protected Go FakeTCP association IPv4/ports now pinned into existing Rust raw owner; not a production native installer or veth/netem qualification.'
+echo 'EMBEDDED_REAL_RAW_TO_TUN_APP_PASS: private Go authenticated non-_test adapter -> original Rust owner -> real M4 raw/TUN kernel; single C2S direction only.'
+echo 'Original pinned Go SYN remains test generated; driver held async loan, reverse embedded raw, veth netem and product enablement NOT_RUN.'
