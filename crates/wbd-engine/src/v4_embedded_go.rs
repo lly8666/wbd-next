@@ -32,6 +32,8 @@ use std::time::Instant;
 use std::net::Ipv4Addr;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::r1::StopResult;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_platform::rx_ipv4_tcp::extend_seq32;
 use crate::runtime::early_rx::EarlyAccepted;
 const OK:i32=0;
 const INVALID:i32=1;
@@ -56,11 +58,11 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     flow:crate::v4_protected_handoff::GoFlow,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-    raw_rx:Option<ScopedRawIpv4Rx>,
+    raw_rx:Option<Arc<ScopedRawIpv4Rx>>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     raw_tx:Option<ScopedRawIpv4Tx>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-    tun_sink:Option<ScopedTunSink>,
+    tun_sink:Option<Arc<ScopedTunSink>>,
 }
 struct Registry{generation:u32,entries:BTreeMap<u64,Entry>}
 fn registry()->&'static Mutex<Registry>{
@@ -243,7 +245,7 @@ fn attach_raw(handle:u64,ifindex:u32)->i32{
     if e.phase!=PH_ACTIVE||e.raw_rx.is_some(){return BAD_STAGE}
     let Ok(driver)=ScopedRawIpv4Rx::open("lo",ifindex,(handle>>32) as u32)
     else{return INVALID};
-    e.raw_rx=Some(driver);OK
+    e.raw_rx=Some(Arc::new(driver));OK
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
@@ -256,7 +258,7 @@ fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     else{return INVALID};
     let Ok(tun)=ScopedTunSink::from_owned_fd(dup,(handle>>32) as u32,name)
     else{return INVALID};
-    e.tun_sink=Some(tun);OK
+    e.tun_sink=Some(Arc::new(tun));OK
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
@@ -392,6 +394,88 @@ struct LoopWorkers{
     tx:JoinHandle<()>,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn loop_now()->MonoNs{
+    static START:OnceLock<Instant>=OnceLock::new();
+    MonoNs(START.get_or_init(Instant::now).elapsed().as_nanos().min(u64::MAX as u128) as u64)
+}
+// Do not hold global registry lock while M4 RX preflight ignores unrelated
+// RST/ACK or polls for up to 750ms. M4 receives directly into the already
+// allocated ORIGINAL M1 UniqueBuffer and validates exact trusted tuple and
+// TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
+// Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool)->Result<u32,i32>{
+    let (mut slab,flow,boundary,generation)={
+        let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+        let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+        if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+        let slab=e.arena.allocate().map_err(|_|FULL)?;
+        (slab,e.flow,e.rx_boundary,(handle>>32) as u32)
+    };
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+        src_port:flow.client_port,dst_port:flow.server_port,
+    };
+    let (len,seq)=raw.recv_one_into(generation,slab.writable(),
+        tuple,PacketPersona::Legacy).map_err(|_|INVALID)?;
+    if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    let absolute=extend_seq32(u64::from(boundary),seq).map_err(|_|INVALID)?;
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    e.owner.offer_after_active(slab,0..len,absolute,loop_now())
+        .map_err(|_|INVALID)?;
+    let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+    let (loan,report,delivered,failed)=e.owner.drain_normal_off_to_tun(
+        &mut e.normal,tun,loop_now(),Vec::with_capacity(32))
+        .map_err(|_|BAD_STAGE)?;
+    drop(loan);
+    e.arena.drain_returns();
+    if report.completed!=1||failed!=0||delivered!=1{return Err(INVALID)}
+    Ok(delivered)
+}
+// Independently wait for the REAL TUN application RX OUTSIDE registry lock.
+// Only original owner grants route-bound budget, seals AEAD/PN and submits
+// original frozen M1 record through genuine scoped M4 raw TX.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn background_tun_once(handle:u64,tun:&ScopedTunSink,
+    stop:&AtomicBool,ifindex:u32)->Result<(),i32>{
+    let (mut slab,generation)={
+        let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+        let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+        if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+        let slab=e.arena.allocate().map_err(|_|FULL)?;
+        (slab,(handle>>32) as u32)
+    };
+    let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
+    if space<20{return Err(INVALID)}
+    let n=tun.read_ipv4_into(generation,&mut slab.writable()[14..])
+        .map_err(|_|INVALID)?;
+    if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
+    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    let flow=e.flow;
+    let scoped=e.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::from(flow.client_ip)).map_err(|_|INVALID)?;
+    if n>scoped.frame.single_business_payload_mtu{return Err(INVALID)}
+    e.owner.seal_normal_off_with_linux_budget(slab,n,&scoped,15,loop_now())
+        .map_err(|_|INVALID)?;
+    let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    };
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    e.owner.submit_scoped_raw_tx(raw,tuple,presentation,loop_now())
+        .map_err(|_|BAD_STAGE)?;
+    e.arena.drain_returns();
+    Ok(())
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn loop_readiness(fd:i32,stop:&AtomicBool)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -406,6 +490,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
     let (Some(raw),Some(tun))=(e.raw_rx.as_ref(),e.tun_sink.as_ref())
     else{return BAD_STAGE};
+    let raw=Arc::clone(raw);
+    let tun=Arc::clone(tun);
     let raw_fd=raw.readiness_fd();
     let tun_fd=tun.readiness_fd();
     if e.raw_tx.is_none(){
@@ -422,8 +508,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             while !stop_rx.load(Ordering::Acquire){
                 if !loop_readiness(raw_fd,&stop_rx){continue}
                 if stop_rx.load(Ordering::Acquire){break}
-                match raw_to_tun(handle){
-                    Ok((n,_))=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                match background_raw_once(handle,&raw,&stop_rx){
+                    Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }
@@ -435,7 +521,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             while !stop_tx.load(Ordering::Acquire){
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
-                match tun_to_raw(handle,ifindex){
+                match background_tun_once(handle,&tun,&stop_tx,ifindex){
                     Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }
