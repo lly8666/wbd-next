@@ -4,27 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 87,
-  "checkpoint_sha": "f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b",
+  "sequence": 88,
+  "checkpoint_sha": "608fb7d2c4306801d65be8fe82ade5ab9c34c5a2",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0-023 one true Linux kernel raw/TUN normal-off subatom CLOSED: existing TEST-ONLY private Go V4 protected callback supplies its original FakeTCP association IPv4/ports as fixed 12-byte copied transport scope to original Rust ScopedOwner; same normal M4 raw RX and TX require that scope rather than loopback fixture ports. Isolated namespace native real kernel both directions/3 ciphers PASS at code c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3; evidence S f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b. Formal production 023 still PARTIAL and ABI features0.",
-  "why_now": "User requested shortest Actions product path. Previous protected Go tuple capture still stopped at Go; Rust raw kernel path hardcoded unrelated fixture ports, preventing meaningful association-to-owner test. Bound exact Go protected association to existing Rust normal crypto/raw/TUN path without new helper chain or feature enablement.",
-  "done_when": "ATOM MET: protected Go private callback freezes SYN-derived real association tuple, Rust FFI rejects malformed/zero port before scoped generation preparation, scoped raw C2S and S2C use exact tuple; existing privileged Linux namespace test passes real raw/TUN 3/3 ciphers with same owner, no new test-only delivery chain. Code SOURCE c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3 native38866760913, native ABI38866761033, cross ABI38866760990 (target execution NOT_RUN), native regression38866760923, G238866760937, static38866760910, Gov38866761026, maintenance38866760931 all SUCCESS. Evidence S f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b static38867195278/Gov38867195345 SUCCESS. FORMAL 023 NOT_MET: true production Go credential authority→versioned ordinary Rust scoped owner, real external network SYN rather than pinned Go synthetic association, driver-held B01-B04/restart and veth product scenarios remain.",
-  "next_action": "Implement positive production-only versioned Rust scoped-owner admission from the actual credential-checked Go V4 private session with the frozen original FakeTCP tuple and exact RX/TX sequence boundaries; reject arbitrary cold248 authority and keep features0 until B01-B04 and product Actions pass.",
+  "current_task": "M0-023 atom closed: real credential-checked production Go private callback now constructs WBGH-v1 32-byte versioned frozen original FakeTCP tuple/MSS/actual RX PrepareTransition boundary; test cgo FFI passes command into new ORDINARY-build Rust v4_protected_handoff parser and original M1/M3 protected ScopedOwner Prepared constructor (not a separate test owner). At final CODE SOURCE 5aada1d5ada91fb13949a0bd6fbec2a7fb396576 native Actions38870573492 PASS, real isolated Linux raw/TUN 3 ciphers bi-directional, Rust module negative tests 1/1 and legacy owner 1/1. Evidence S 608fb7d2c4306801d65be8fe82ade5ab9c34c5a2. Formal 023 still PARTIAL: no non-test positive native installer/Active or V4 production ABI.",
+  "why_now": "User requested fastest product Actions path, but previous Go-to-Rust preparation was assembled inside TEST-ONLY FFI; moving versioned frozen command and actual prepared owner creation into normal compiled production code reuses existing AEAD and owner while avoiding fake product enablement.",
+  "done_when": "THIS ATOM MET at final CODE SOURCE 5aada1d5ada91fb13949a0bd6fbec2a7fb396576: existing Go protected handshake/Prepare→reply→Detach→Commit remains unique; WBGH-v1 versioned normal Rust constructor ran via exact same Go trusted callback, rejects wrong version/size/reserved/zero ports/invalid MSS; original AEAD/PN raw/TUN 3-suite Actions38870573492 SUCCESS; same SOURCE governance-maintenance38870573514 and Governance38870573590 SUCCESS, scope-audit38870602569 SKIPPED not PASS. Evidence S 608fb7d2c4306801d65be8fe82ade5ab9c34c5a2 static38870959063/Governance38870959066 SUCCESS. Historic SOURCE 9f248938 run38870306754 FAILED due scientifically invalid negative test; corrected in subsequent source5f76ad11. Formal 023 NOT_MET because no positive non-test Go native adapter/ordinary C ABI authenticated install, real driver-held Stop B01-B04 and product network qualification.",
+  "next_action": "Wire one non-test private Go V4 credential-checked native control adapter to the existing WBGH-v1 normal Rust Prepared/Commit owner path, binding exact post-reply TX SenderNext, bounded early/Stop and fail closed on cold248 alone; then run B01–B04 on that SAME real driver path before any product capability enablement.",
   "unverified": true,
-  "last_tested_source": "c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3",
+  "last_tested_source": "5aada1d5ada91fb13949a0bd6fbec2a7fb396576",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-protected-association-original-flow-raw.json"
+    "docs/evidence/M0/M0-023-versioned-normal-prepare.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-protected-association-original-flow-raw.md",
-    "docs/evidence/M0/M0-023-Go-protected-flow-capture.json",
-    "docs/evidence/M0/M0-023-true-raw-bidirectional-tun.json",
+    "docs/devlog/M0/M0-023-versioned-normal-prepare.md",
+    "docs/evidence/M0/M0-023-protected-association-original-flow-raw.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Existing owner+kernel Linux raw/TUN passes with original Go test association tuple, real protected TLS, 3 cipher suites; pinned FakeTCP SYN fixture NOT a live external SYN. Native/code source exact Actions successful; production ABI features0, trusted ordinary Rust authorization, driver-held Stop/reconnect, veth tc netem, physical/performance NOT_RUN."
+  "partial_summary": "Normal-built Rust prepared owner/parser + real protected Go WBGH-v1 source exact native PASS, 3-suite real isolated raw/TUN test-only PASS. Production v4 non-test native command/ABI+Active NOT_RUN; driver held loan B01-B04, external SYN, veth netem, physical and product performance NOT_RUN. ABI features0."
 }
