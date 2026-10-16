@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 86,
-  "checkpoint_sha": "5cb85494428d025402195f6f73d5e9b07775bb4c",
+  "sequence": 87,
+  "checkpoint_sha": "f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0-023 Go V4 credential-verified private owner handoff now freezes original FakeTCP association IPv4/port flow alongside SYN MSS and rejects flow drift between protected Prepare and post-reply Detach/Commit. Atom S code a9b9dd5d523e56145404e675adf43ba9066a4e39; evidence S 5cb85494428d025402195f6f73d5e9b07775bb4c. This establishes actual Go control-source transport provenance, NOT the still-missing production Rust owner install or live flow-bound driver. Formal 023 PARTIAL; production ABI features0.",
-  "why_now": "Previous full Linux raw/TUN bilateral first-packet native test uses a fixture TCP tuple; M0's real protected Go V4 owner handoff did not carry its actual FakeTCP flow. Add one bounded Go callsite source check instead of another duplicate TEST-ONLY helper or synthetic product PASS.",
-  "done_when": "THIS ATOM MET: exact original Go FakeTCP flow copied only at credential-verified V4 Prepare, rechecked after protected reply/Detach before Commit; nil/invalid association rejected; new original-association test and existing protected rollback/Native positive TEST-ONLY chain pass on exact CODE SOURCE. Actions native 38863991746, cold 38863991800, real TLS 38863991913, control 38863995564, governance 38863991787 SUCCESS; evidence S static38864542016/Governance38864541945 SUCCESS. FORMAL 023 NOT_MET until real production authenticated versioned Go→Rust scoped owner binding live FakeTCP tuple and exact boundaries, held M4 B01–B04 Stop/reconnect, and product netem/normal qualifications.",
-  "next_action": "Wire the real credential-checked Go V4 private session, this frozen FakeTCP flow, and exact RX/TX sequence boundaries into the ordinary versioned Rust scoped-owner Prepare/Detach/Commit admission without allowing cold248 self-attestation or enabling production capabilities before B01–B04 qualification.",
+  "current_task": "M0-023 one true Linux kernel raw/TUN normal-off subatom CLOSED: existing TEST-ONLY private Go V4 protected callback supplies its original FakeTCP association IPv4/ports as fixed 12-byte copied transport scope to original Rust ScopedOwner; same normal M4 raw RX and TX require that scope rather than loopback fixture ports. Isolated namespace native real kernel both directions/3 ciphers PASS at code c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3; evidence S f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b. Formal production 023 still PARTIAL and ABI features0.",
+  "why_now": "User requested shortest Actions product path. Previous protected Go tuple capture still stopped at Go; Rust raw kernel path hardcoded unrelated fixture ports, preventing meaningful association-to-owner test. Bound exact Go protected association to existing Rust normal crypto/raw/TUN path without new helper chain or feature enablement.",
+  "done_when": "ATOM MET: protected Go private callback freezes SYN-derived real association tuple, Rust FFI rejects malformed/zero port before scoped generation preparation, scoped raw C2S and S2C use exact tuple; existing privileged Linux namespace test passes real raw/TUN 3/3 ciphers with same owner, no new test-only delivery chain. Code SOURCE c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3 native38866760913, native ABI38866761033, cross ABI38866760990 (target execution NOT_RUN), native regression38866760923, G238866760937, static38866760910, Gov38866761026, maintenance38866760931 all SUCCESS. Evidence S f2276e3243ab0cdd04f3b6cf6f8e98ab0eaeef1b static38867195278/Gov38867195345 SUCCESS. FORMAL 023 NOT_MET: true production Go credential authority→versioned ordinary Rust scoped owner, real external network SYN rather than pinned Go synthetic association, driver-held B01-B04/restart and veth product scenarios remain.",
+  "next_action": "Implement positive production-only versioned Rust scoped-owner admission from the actual credential-checked Go V4 private session with the frozen original FakeTCP tuple and exact RX/TX sequence boundaries; reject arbitrary cold248 authority and keep features0 until B01-B04 and product Actions pass.",
   "unverified": true,
-  "last_tested_source": "a9b9dd5d523e56145404e675adf43ba9066a4e39",
+  "last_tested_source": "c8dce38e22984fb5f1c6d78fe2fd5007a9d812c3",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-Go-protected-flow-capture.json"
+    "docs/evidence/M0/M0-023-protected-association-original-flow-raw.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-Go-protected-flow-capture.md",
+    "docs/devlog/M0/M0-023-protected-association-original-flow-raw.md",
+    "docs/evidence/M0/M0-023-Go-protected-flow-capture.json",
     "docs/evidence/M0/M0-023-true-raw-bidirectional-tun.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Go real protected flow capture PASS on CODE a9b9dd5d523e56145404e675adf43ba9066a4e39; five scoped same-SOURCE Actions and evidence-S static/Governance PASS. Original raw/TUN loopback test-only evidence retained. Rust production credential authority + actual tuple/seq install, held driver STOP B01–B04, veth tc netem, physical/performance NOT_RUN; ABI features0."
+  "partial_summary": "Existing owner+kernel Linux raw/TUN passes with original Go test association tuple, real protected TLS, 3 cipher suites; pinned FakeTCP SYN fixture NOT a live external SYN. Native/code source exact Actions successful; production ABI features0, trusted ordinary Rust authorization, driver-held Stop/reconnect, veth tc netem, physical/performance NOT_RUN."
 }
