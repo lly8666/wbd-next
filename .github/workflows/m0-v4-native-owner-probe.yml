@@ -456,6 +456,27 @@ jobs:
           print(json.dumps(x,indent=2))
           PY
           test "$STATE" != FAIL
+      - name: Independent Rust original owner raw/TUN background workers functional (NOT throughput)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_M0_BACKGROUND_LOOP=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/original-rust-background-loop.log 2>&1
+          cat native-probe-result/original-rust-background-loop.log
+          grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("native-probe-build/manifest.json"))
+          l=pathlib.Path("native-probe-result/original-rust-background-loop.log").read_bytes()
+          receipt={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+            "scope":"ORIGINAL_GO_AUTHENTICATED_NORMAL_RUST_M4_BACKGROUND_RAW_RX_TUN_TX",
+            "result":"FUNCTIONAL_PASS","go_drives_each_rx_tx":False,
+            "real_tun_raw_direction_each_packets":8,
+            "actual_measurement_10mbps":"NOT_RUN","rx_lock_bounded":False,
+            "product_qualification":"NOT_RUN","production_features":0,
+            "log_sha256":hashlib.sha256(l).hexdigest()}
+          pathlib.Path("native-probe-result/original-rust-background-loop.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

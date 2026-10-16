@@ -722,3 +722,158 @@ func TestR0V4EmbeddedKernelSpecificDataLossNoHOL(t *testing.T) {
         runTC("filter","del","dev","lo","egress","pref","77")
     }
 }
+
+
+
+// Functional gate for *autonomous* Rust owner processing: the Go test
+// injects both directions without calling a per-packet bridge RX/TX helper.
+// Rust threads poll real kernel raw and TUN devices and use the existing
+// single M1/M3 AEAD/PN owner. This does NOT measure steady throughput.
+func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
+    if os.Getenv("WBD_REAL_TUN")!="1"||os.Getenv("WBD_M0_BACKGROUND_LOOP")!="1"{
+        t.Skip("owned kernel namespace and developer feature only")
+    }
+    const tunName="wbdauto0"
+    const packets=8 // correctness burst, NOT performance claim
+    dev,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if err!=nil{t.Fatal(err)}
+    defer dev.Close()
+    var req [40]byte
+    copy(req[:16],[]byte(tunName))
+    binary.LittleEndian.PutUint16(req[16:18],0x1001)
+    _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,dev.Fd(),0x400454ca,
+        uintptr(unsafe.Pointer(&req[0])))
+    if errno!=0{t.Fatalf("original TUN ioctl: %v",errno)}
+    for _,args:=range [][]string{
+        {"addr","add","10.241.23.1/24","dev",tunName},
+        {"link","set","dev",tunName,"up"},
+    }{
+        if out,e:=exec.Command("ip",args...).CombinedOutput();e!=nil{
+            t.Fatalf("TUN configure %v: %v %s",args,e,out)
+        }
+    }
+    lo,err:=net.InterfaceByName("lo")
+    if err!=nil{t.Fatal(err)}
+    serverIP:=net.IPv4(10,241,23,1)
+    remoteIP:=net.IPv4(10,241,23,2)
+    app,err:=net.ListenUDP("udp4",&net.UDPAddr{IP:serverIP,Port:0})
+    if err!=nil{t.Fatal(err)}
+    defer app.Close()
+    store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+    b:=&v4EmbeddedNativeBridge{}
+    client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha)
+    if ce!=nil||se!=nil||client==nil||server==nil||!b.committed{
+        t.Fatalf("original real Go authenticated TLS must commit: %v %v",ce,se)
+    }
+    t.Cleanup(func(){
+        if e:=b.stopRelease();e!=nil{t.Errorf("Rust workers Stop/Release: %v",e)}
+        if e:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);e!=nil{
+            t.Errorf("original Go lane release: %v",e)
+        }
+    })
+    if e:=b.attachRawRx(uint32(lo.Index));e!=nil{t.Fatal(e)}
+    if e:=b.attachKernelTun(dev.Fd(),tunName);e!=nil{t.Fatal(e)}
+    raw,err:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+    if err!=nil{t.Fatal(err)}
+    defer syscall.Close(raw)
+    if err:=syscall.SetsockoptInt(raw,syscall.IPPROTO_IP,syscall.IP_HDRINCL,1);err!=nil{t.Fatal(err)}
+    peer,err:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
+    if err!=nil{t.Fatal(err)}
+    defer syscall.Close(peer)
+    if err:=syscall.Bind(peer,&syscall.SockaddrInet4{Addr:b.originalFlow.ClientIP});err!=nil{t.Fatal(err)}
+    timeout:=syscall.NsecToTimeval((200*time.Millisecond).Nanoseconds())
+    if err:=syscall.SetsockoptTimeval(peer,syscall.SOL_SOCKET,syscall.SO_RCVTIMEO,&timeout);err!=nil{t.Fatal(err)}
+    cold,err:=client.ColdSnapshot();if err!=nil{t.Fatal(err)}
+    cLim,sLim:=cold.RecordLimits()
+    seal,err:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(sLim),CipherChaCha)
+    if err!=nil{t.Fatal(err)}
+    open,err:=tlsrecord.NewOpenerForCipher(cold.DirectionKeys().S2C,int(cLim),CipherChaCha)
+    if err!=nil{t.Fatal(err)}
+    if err:=b.startRustOwnerLoop(uint32(lo.Index));err!=nil{t.Fatal(err)}
+    if err:=b.startRustOwnerLoop(uint32(lo.Index));err==nil{
+        t.Fatal("second independent Rust loop start must reject double driver ownership")
+    }
+    // When raw RX has zero incoming DATA, S2C still makes independent
+    // progress. This would hang if we ran blocking raw RX under the global
+    // registry mutex without readiness multiplexing.
+    first:=bytes.Repeat([]byte{0x61},52)
+    if n,e:=app.WriteToUDP(first,&net.UDPAddr{IP:remoteIP,Port:42001});e!=nil||n!=len(first){
+        t.Fatalf("Go real TUN ingress initial n=%d err=%v",n,e)
+    }
+    observed:=make(map[uint64]bool)
+    recvOne:=func(deadline time.Time) error{
+        for time.Now().Before(deadline){
+            bytesIn:=make([]byte,2048)
+            n,_,e:=syscall.Recvfrom(peer,bytesIn,0)
+            if e!=nil{continue}
+            if n<40||bytesIn[0]>>4!=4||bytesIn[9]!=6{continue}
+            ihl:=int(bytesIn[0]&0xf)*4
+            if ihl<20||ihl+20>n{continue}
+            if !bytes.Equal(bytesIn[12:16],b.originalFlow.ServerIP[:])||
+                !bytes.Equal(bytesIn[16:20],b.originalFlow.ClientIP[:])||
+                binary.BigEndian.Uint16(bytesIn[ihl:ihl+2])!=b.originalFlow.ServerPort||
+                binary.BigEndian.Uint16(bytesIn[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+            h:=int(bytesIn[ihl+12]>>4)*4
+            if h<20||ihl+h>n{continue}
+            opened,e:=open.OpenRecord(bytesIn[ihl+h:n])
+            if e!=nil||opened.Kind!=tlsrecord.KindLINK||len(opened.Payload)<28{
+                return fmt.Errorf("original Rust background S2C AEAD invalid: %v",e)
+            }
+            want:=bytes.Repeat([]byte{0x61+byte(opened.PN)},52)
+            if opened.PN>=packets||!bytes.Equal(opened.Payload[28:],want){
+                return fmt.Errorf("S2C PN/payload invalid pn=%d",opened.PN)
+            }
+            if observed[opened.PN]{return fmt.Errorf("duplicate Rust S2C PN=%d",opened.PN)}
+            observed[opened.PN]=true
+            return nil
+        }
+        return fmt.Errorf("independent Go raw peer deadline")
+    }
+    if err:=recvOne(time.Now().Add(2*time.Second));err!=nil{t.Fatal(err)}
+    if !observed[0]{t.Fatal("S2C no-HOL initial packet missing PN0")}
+    // All later input is sent without waiting for earlier responses. No Go
+    // callback to receiveRawToTun or tunToKernelRaw; Rust performs both.
+    seq:=b.rxBoundary
+    for i:=0;i<packets;i++{
+        payload:=bytes.Repeat([]byte{0x31+byte(i)},48)
+        ip:=make([]byte,28+len(payload))
+        ip[0]=0x45;ip[8]=64;ip[9]=17
+        binary.BigEndian.PutUint16(ip[2:4],uint16(len(ip)))
+        copy(ip[12:16],remoteIP.To4())
+        copy(ip[16:20],serverIP.To4())
+        binary.BigEndian.PutUint16(ip[10:12],v4RawCheckSum(ip[:20]))
+        binary.BigEndian.PutUint16(ip[20:22],40001)
+        binary.BigEndian.PutUint16(ip[22:24],uint16(app.LocalAddr().(*net.UDPAddr).Port))
+        binary.BigEndian.PutUint16(ip[24:26],uint16(len(ip)-20))
+        copy(ip[28:],payload)
+        record,pn,e:=seal.Seal(ip)
+        if e!=nil||pn!=uint64(i){t.Fatalf("C2S source PN=%d err=%v",pn,e)}
+        if e:=syscall.Sendto(raw,v4RawC2STestPacket(record,seq,b.originalFlow),0,
+            &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{t.Fatal(e)}
+        seq+=uint32(len(record))
+        if i>0 {
+            down:=bytes.Repeat([]byte{0x61+byte(i)},52)
+            if n,e:=app.WriteToUDP(down,&net.UDPAddr{IP:remoteIP,Port:42001});
+                e!=nil||n!=len(down){t.Fatalf("S2C app injector n=%d err=%v",n,e)}
+        }
+    }
+    for i:=0;i<packets;i++{
+        if e:=app.SetReadDeadline(time.Now().Add(3*time.Second));e!=nil{t.Fatal(e)}
+        buf:=make([]byte,256)
+        n,from,e:=app.ReadFromUDP(buf)
+        expected:=bytes.Repeat([]byte{0x31+byte(i)},48)
+        if e!=nil||from==nil||!from.IP.Equal(remoteIP)||!bytes.Equal(buf[:n],expected){
+            t.Fatalf("original Rust background C2S kernel TUN app i=%d n=%d err=%v",i,n,e)
+        }
+    }
+    deadline:=time.Now().Add(3*time.Second)
+    for len(observed)<packets{
+        if e:=recvOne(deadline);e!=nil{t.Fatal(e)}
+    }
+    stats,e:=b.rustOwnerLoopStats()
+    if e!=nil||stats.RxOK!=packets||stats.TxOK!=packets{
+        t.Fatalf("original Rust live owner did not process both independent device streams: %+v %v",stats,e)
+    }
+    t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
+        stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
+}
