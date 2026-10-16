@@ -20,7 +20,11 @@ use wbd_codec::path_budget::FrameBudget;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_packet_preflight::observe_interface_mtu;
+use wbd_platform::linux_packet_preflight::{
+    observe_interface_mtu,observe_ipv4_route_mtu,
+};
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+use std::net::Ipv4Addr;
 use wbd_codec::link_reassembly::{
     LinkDelivery,LinkDirection,ReassemblyScope,ReassemblyTable,
 };
@@ -235,6 +239,9 @@ pub(crate) struct ScopedLinuxBudget {
     epoch:[u8;16],
     pub(crate) observed_ifindex:u32,
     pub(crate) observed_interface_mtu:u32,
+    pub(crate) observed_route_mtu:Option<u32>,
+    ifname:String,
+    route_destination:Option<Ipv4Addr>,
 }
 
 impl ProtectedScopedOwner {
@@ -339,6 +346,42 @@ impl ProtectedScopedOwner {
             generation:self.generation,epoch:self.epoch,
             observed_ifindex:kernel.ifindex,
             observed_interface_mtu:kernel.kernel_mtu,
+            observed_route_mtu:None,ifname:ifname.to_owned(),
+            route_destination:None,
+        })
+    }
+    /// Kernel IPv4 connected UDP route lookup with SO_BINDTODEVICE, then
+    /// IP_MTU. No datagram is sent. This is a local kernel route PMTU
+    /// snapshot and never evidence of a received business packet. Real
+    /// M4 carrier lease / peer end-to-end PMTUD are still required.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn observe_linux_normal_off_route_budget(
+        &self,ifname:&str,expected_ifindex:u32,destination:Ipv4Addr,
+    )->Result<ScopedLinuxBudget,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let route=observe_ipv4_route_mtu(ifname,expected_ifindex,destination)
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        let route_mtu=usize::try_from(route.route_mtu)
+            .map_err(|_|ProtectedCryptoError::Tx)?;
+        let frame=FrameBudget::derive(FrameBudgetInput{
+            connection_mtu:route_mtu.min(MAX_CONNECTION_MTU),
+            local_packet_mtu:usize::try_from(route.interface_mtu)
+                .map_err(|_|ProtectedCryptoError::Tx)?,
+            ipv4_header_len:20,tcp_header_len:20,
+            peer_mss:if self.peer_mss_advertised{Some(self.peer_mss)}else{None},
+            record_wire_limit:self.tx_wire_limit,
+            fec:FecReservation::FixedOff,game:false,
+        }).map_err(|_|ProtectedCryptoError::Tx)?;
+        Ok(ScopedLinuxBudget{
+            frame,owner_id:self.token.owner_id(),
+            generation:self.generation,epoch:self.epoch,
+            observed_ifindex:route.ifindex,
+            observed_interface_mtu:route.interface_mtu,
+            observed_route_mtu:Some(route.route_mtu),
+            ifname:ifname.to_owned(),
+            route_destination:Some(destination),
         })
     }
     /// No caller-invented budget can be substituted for this kernel-observed
@@ -353,6 +396,25 @@ impl ProtectedScopedOwner {
             || self.epoch!=scoped.epoch
             || self.token.owner_id()!=scoped.owner_id {
             return Err(ProtectedCryptoError::Inactive)
+        }
+        // A stale route snapshot (ifindex, interface MTU, route PMTU) never
+        // authorizes sealing with an old budget. Recheck BEFORE consuming PN.
+        // Route changes or an interface replacement fail closed; caller must
+        // reconstruct the carrier snapshot and its M4 driver lease.
+        if let Some(destination)=scoped.route_destination {
+            let fresh=observe_ipv4_route_mtu(&scoped.ifname,
+                scoped.observed_ifindex,destination)
+                .map_err(|_|ProtectedCryptoError::Tx)?;
+            if scoped.observed_route_mtu!=Some(fresh.route_mtu)
+                || scoped.observed_interface_mtu!=fresh.interface_mtu {
+                return Err(ProtectedCryptoError::Tx)
+            }
+        }else{
+            let fresh=observe_interface_mtu(&scoped.ifname,scoped.observed_ifindex)
+                .map_err(|_|ProtectedCryptoError::Tx)?;
+            if fresh.kernel_mtu!=scoped.observed_interface_mtu {
+                return Err(ProtectedCryptoError::Tx)
+            }
         }
         self.seal_normal_off_one(buffer,payload_len,scoped.frame,carrier_snapshot,now)
     }

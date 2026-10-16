@@ -10,6 +10,7 @@ extern int32_t wbd_m0_test_probe_commit(uint64_t, uint32_t, uint32_t, uint32_t);
 extern int32_t wbd_m0_test_probe_open_unique(uint64_t, unsigned char *, size_t, uint64_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_seal_normal(uint64_t, const unsigned char *, size_t, uint16_t, uint16_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_seal_linux_observed(uint64_t, const unsigned char *, size_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
+extern int32_t wbd_m0_test_probe_seal_linux_route(uint64_t, const unsigned char *, size_t, uint32_t, uint32_t, unsigned char *, size_t, uint32_t *, uint64_t *, uint32_t *);
 extern int32_t wbd_m0_test_probe_stage(uint64_t, uint32_t, const unsigned char *, size_t);
 extern int32_t wbd_m0_test_probe_drain(uint64_t, uint32_t *, uint32_t *, uint64_t *);
 extern int32_t wbd_m0_test_probe_hold_rx(uint64_t, uint32_t *, uint32_t *, uint64_t *);
@@ -233,4 +234,26 @@ func (b *v4NativeRustProbe) sealNativeNormalObservedLinux(
     }
     if used==0||int(used)>len(out){return nil,0,0,errV4NativeProbe}
     return out[:int(used)],uint64(pn),uint32(seq),nil
+}
+
+func (b *v4NativeRustProbe) sealNativeNormalKernelRoute(
+    payload []byte,expectedIfindex uint32,destination [4]byte,
+)([]byte,uint64,uint32,error){
+    if !b.committed||b.handle==0||len(payload)==0 {return nil,0,0,errV4NativeProbe}
+    output:=make([]byte,2048)
+    var used C.uint32_t
+    var pn C.uint64_t
+    var seq C.uint32_t
+    destinationBE:=uint32(destination[0])<<24|uint32(destination[1])<<16|
+        uint32(destination[2])<<8|uint32(destination[3])
+    code:=C.wbd_m0_test_probe_seal_linux_route(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&payload[0])),
+        C.size_t(len(payload)),C.uint32_t(expectedIfindex),
+        C.uint32_t(destinationBE),(*C.uchar)(unsafe.Pointer(&output[0])),
+        C.size_t(len(output)),&used,&pn,&seq,
+    )
+    runtime.KeepAlive(payload)
+    if code!=0{return nil,0,0,fmt.Errorf("%w: scoped kernel IPv4 route=%d",errV4NativeProbe,int(code))}
+    if used==0||int(used)>len(output){return nil,0,0,errV4NativeProbe}
+    return output[:int(used)],uint64(pn),uint32(seq),nil
 }

@@ -17,6 +17,8 @@ use crate::cold_v4::{ColdIdentity, ExpectedRustOwner, UntrustedColdV4, COLD_V4_L
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use std::net::Ipv4Addr;
 use wbd_types::buffer_contract::FrozenRecordHandle;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
@@ -309,6 +311,8 @@ enum ProbeTxBudget {
     Caller {connection_mtu:u16,peer_mss:u16},
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     KernelLoopback {expected_ifindex:u32},
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    KernelRoute{expected_ifindex:u32,destination:Ipv4Addr},
 }
 fn probe_seal_tx_with_source(handle:u64,packet:&[u8],source:ProbeTxBudget,
     out:&mut [u8],
@@ -333,6 +337,13 @@ fn probe_seal_tx_with_source(handle:u64,packet:&[u8],source:ProbeTxBudget,
         ProbeTxBudget::KernelLoopback{expected_ifindex}=>{
             let v=p.owner.observe_linux_normal_off_budget("lo",expected_ifindex)
                 .map_err(|_|INVALID)?;
+            (v.frame,Some(v))
+        }
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        ProbeTxBudget::KernelRoute{expected_ifindex,destination}=>{
+            let v=p.owner.observe_linux_normal_off_route_budget(
+                "lo",expected_ifindex,destination
+            ).map_err(|_|INVALID)?;
             (v.frame,Some(v))
         }
     };
@@ -409,6 +420,34 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_observed(
             OK
         }
         Err(code)=>code,
+    }
+}
+
+// Test-tagged only: the destination is a candidate route lookup address,
+// not a trusted Go session address or a production socket/driver lease.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_route(
+    handle:u64,packet:*const u8,len:usize,ifindex:u32,
+    destination_be:u32,
+    out:*mut u8,out_cap:usize,out_len:*mut u32,pn:*mut u64,seq:*mut u32,
+)->i32{
+    if packet.is_null()||len==0||len>2048||out.is_null()||out_len.is_null()
+        ||pn.is_null()||seq.is_null()||out_cap<31||out_cap>2048 {
+        return INVALID
+    }
+    let source=ProbeTxBudget::KernelRoute{
+        expected_ifindex:ifindex,
+        destination:Ipv4Addr::from(destination_be.to_be_bytes()),
+    };
+    let bytes=unsafe{std::slice::from_raw_parts(packet,len)};
+    let output=unsafe{std::slice::from_raw_parts_mut(out,out_cap)};
+    match probe_seal_tx_with_source(handle,bytes,source,output){
+        Ok((used,number,start))=>{
+            unsafe{out_len.write(used as u32);pn.write(number);seq.write(start)};
+            OK
+        }
+        Err(e)=>e,
     }
 }
 

@@ -386,3 +386,66 @@ func TestR0V4NativeRustLinuxKernelBudget(t *testing.T){
         })
     }
 }
+
+func TestR0V4NativeRustLinuxKernelRoutePmtu(t *testing.T){
+    lo,err:=net.InterfaceByName("lo")
+    if err!=nil||lo==nil||lo.Index<=0||lo.MTU<576{
+        t.Fatalf("Linux lo not available: %v",err)
+    }
+    loopback:=[4]byte{127,0,0,1}
+    for _,suite:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("suite-%d",suite),func(t *testing.T){
+            bridge:=&v4NativeRustProbe{}
+            if _,_,_,err:=bridge.sealNativeNormalKernelRoute([]byte("early"),uint32(lo.Index),loopback);err==nil{
+                t.Fatal("uncommitted route observation emitted TX")
+            }
+            store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,bridge,store,suite)
+            if ce!=nil||se!=nil||client==nil||server==nil||!bridge.committed {
+                t.Fatalf("real V4 TLS: %v %v",ce,se)
+            }
+            cold,err:=client.ColdSnapshot();if err!=nil{t.Fatal(err)}
+            limit,_:=cold.RecordLimits()
+            opener,err:=tlsrecord.NewOpenerForCipher(cold.DirectionKeys().S2C,int(limit),suite)
+            if err!=nil{t.Fatal(err)}
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute([]byte("bad"),0,loopback);err==nil{
+                t.Fatal("missing scope accepted route")
+            }
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute([]byte("bad"),uint32(lo.Index+1),loopback);err==nil{
+                t.Fatal("incorrect route ifindex accepted")
+            }
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute([]byte("bad"),uint32(lo.Index),[4]byte{});err==nil{
+                t.Fatal("unspecified route destination accepted")
+            }
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute([]byte("bad"),uint32(lo.Index),[4]byte{255,255,255,255});err==nil{
+                t.Fatal("broadcast route destination accepted")
+            }
+            payload:=[]byte("v4-rust-real-kernel-routed-normal-off")
+            wire,pn,seq,err:=bridge.sealNativeNormalKernelRoute(payload,uint32(lo.Index),loopback)
+            if err!=nil||pn!=0||seq!=bridge.txBoundary {
+                t.Fatalf("first scoped route TX: %v pn=%d seq=%d",err,pn,seq)
+            }
+            got,err:=opener.OpenRecord(wire)
+            if err!=nil||got.PN!=pn||got.Kind!=tlsrecord.KindLINK||!bytes.Equal(got.Payload,payload){
+                t.Fatalf("actual Go V4 S2C route packet failed: %v",err)
+            }
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute(bytes.Repeat([]byte{9},1340),uint32(lo.Index),loopback);err==nil{
+                t.Fatal("route MTU widened original SYN MSS")
+            }
+            follow:=[]byte("next-route-scoped-packet")
+            wire2,pn2,seq2,err:=bridge.sealNativeNormalKernelRoute(follow,uint32(lo.Index),loopback)
+            if err!=nil||pn2!=1||seq2!=seq+uint32(len(wire)){
+                t.Fatalf("route TX PN or exact TCP seq reused: %v %d %d",err,pn2,seq2)
+            }
+            got,err=opener.OpenRecord(wire2)
+            if err!=nil||got.PN!=pn2||!bytes.Equal(got.Payload,follow){
+                t.Fatalf("actual Go V4 route second packet: %v",err)
+            }
+            if err=bridge.stopAndRelease();err!=nil{t.Fatal(err)}
+            if _,_,_,err=bridge.sealNativeNormalKernelRoute([]byte("after-stop"),uint32(lo.Index),loopback);err==nil{
+                t.Fatal("retired owner accepted routed TX")
+            }
+            if err=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,server.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
+}
