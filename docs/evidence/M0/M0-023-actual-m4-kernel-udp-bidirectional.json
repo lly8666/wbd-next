@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "real_go_v4_c2s_kernel_udp_M4_recvmmsg_direct_M1_unique_ScopedOwner_M3_complete_callback",
+  "source_sha": "b14965909bc5773cd1b7d8d787ea9b9108c6186c",
+  "result": "PARTIAL_BIDIRECTIONAL_KERNEL_IO_PASS",
+  "changed_paths": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "implementation": [
+    "Normal-build ProtectedScopedOwner::receive_scoped_udp_into_owner calls original normal-build M4 ScopedUdpOwner::receive on caller-owned ORIGINAL M1 UniqueBuffer writable slice. The M4 kernel recvmmsg writes directly into the arena slab, under M4 BorrowFence, no temporary plaintext/ciphertext array.",
+    "The completed untrusted datagram enters SAME post-Detach/Active original Rust owner RX queue; drain_normal_off opens AEAD/PN in-place and uses existing M3 LINK inspect/reassembly. Only full authenticated candidate calls synchronous digest observer.",
+    "Test-only Rust C adapter binds one real IPv4 loopback UDP receiver per original Rust owner AFTER true private Go V4 TLS Detach and Commit. Go sends a real C2S TLS record via kernel UDP. No second crypto or business pipeline, no public 248B cold installer.",
+    "Kernel replayed same ciphertext and PN and independent AEAD corruption remain rejected; pre-Commit binding, duplicate receiver bind, empty kernel RX, post-Stop and old-generation source refused.",
+    "Prior code source Linux kernel M4 sendmmsg S2C to Go independent TLS opener remains in the same Actions test suite."
+  ],
+  "go_retained_heap": {
+    "measurement": "One indicative CI sample in same compiled Go1.23.12 test process, 12 real TLS/FakeTCP V4 client+server session pairs retained across runtime.GC; baseline and after reported by runtime.ReadMemStats; client+server TLS pointers rooted through runtime.KeepAlive.",
+    "pair_count": 12,
+    "heap_alloc_delta_bytes": 141240,
+    "heap_alloc_per_pair_bytes": 11770,
+    "heap_inuse_delta_bytes": 532480,
+    "heap_inuse_per_pair_bytes_rounded": 44373,
+    "heap_alloc_per_pair_kib_rounded": 11.49,
+    "heap_inuse_per_pair_kib_rounded": 43.33,
+    "limitations": [
+      "Go client+server PAIR together, not standalone server or client; one sample only",
+      "Go HeapAlloc only Go-managed live heap; HeapInuse Go heap span page occupancy/fragmentation; neither is process RSS",
+      "Rust slabs, kernel UDP socket buffers, Go runtime global baseline and transient handshake peak excluded",
+      "Bootstrap max buffered 256KiB is an upper limit, not eager per-connection allocation",
+      "No guarantee across 1000s of lanes, repeated reconnects, loss/rate/queue backlog, platform Windows/ARM, production steady-state"
+    ]
+  },
+  "exact_source_actions": {
+    "native": {
+      "run_id": 38842393146,
+      "status": "SUCCESS",
+      "attempt": 1,
+      "build_job": 116785222034,
+      "consume_job": 116785613173,
+      "go_top_level": "9/9 PASS",
+      "rust_owner": "1/1 PASS",
+      "cipher_suites": 3,
+      "build_artifact": {
+        "id": 12020799836,
+        "digest": "sha256:d28f7535a379e5ae2d55c989eba45e2001127466e3498e85b8da7aa84842bd3c"
+      },
+      "result_artifact": {
+        "id": 12021534449,
+        "digest": "sha256:abdab426f6efbc3d9b66bf3b67f42e1deb471313ddc4beff9f976b51f906fe80"
+      }
+    },
+    "native_functional": {
+      "run_id": 38842393071,
+      "status": "SUCCESS",
+      "jobs": [
+        116785221773,
+        116785252677,
+        116785495943,
+        116785496017,
+        116785496066,
+        116785496089,
+        116785496098
+      ]
+    },
+    "native_abi": {
+      "run_id": 38842393115,
+      "status": "SUCCESS",
+      "jobs": [
+        116785221830,
+        116785539615
+      ]
+    },
+    "cross_abi": {
+      "run_id": 38842393044,
+      "status": "SUCCESS",
+      "jobs": [
+        116785221638,
+        116785221874,
+        116785571971,
+        116785572064
+      ],
+      "native_target_execution": "NOT_RUN"
+    },
+    "g2": {
+      "run_id": 38842393068,
+      "status": "SUCCESS",
+      "jobs": [
+        116785221540,
+        116785388159
+      ]
+    },
+    "governance": {
+      "run_id": 38842393106,
+      "status": "SUCCESS",
+      "job": 116785221916
+    },
+    "r0_static": {
+      "run_id": 38842393063,
+      "status": "SUCCESS",
+      "job": 116785221608
+    },
+    "maintenance": {
+      "run_id": 38842393067,
+      "status": "SUCCESS",
+      "job": 116785221445,
+      "tests": "169/169 PASS"
+    }
+  },
+  "integrity": "Native build-once/consume independently checked SOURCE SHA, run, attempt, all declared source inputs (including M4 Linux sendmmsg and recvmmsg) and compiled binary SHA256. Artifact ZIP SHA256 metadata read using GitHub API, ZIP itself not independently downloaded/rehashed.",
+  "nonqualification": [
+    "This is real Linux UDP LOOPBACK kernel I/O in both directions, not production FakeTCP raw carrier, AF_PACKET, TUN, native Windows target I/O, remote physical link or application delivery",
+    "Feature-tagged private test C adapter still stages owner from original Go authenticated callsite; ordinary ABI features0 and no positive production installed control command. Arbitrary cold248 bytes cannot independently authenticate.",
+    "NO M4 delayed driver-held original frozen/unique loan Stop B01–B04 and no production send-loss uncertainty policy. No 500Mbps/CPU/p99 claims.",
+    "No direct separately retained server-only Go RSS memory measurement: do not claim Go heap per pair equals per server conn or all-in process RSS."
+  ],
+  "production_abi_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Use same normal-build owner and existing M4 BorrowFence for actual delayed driver-held KernelLoan across Stop B01-B04 and old-generation replacement, then implement secure production Go authenticated command without arbitrary cold installer and real Linux raw/TUN application first delivery. Avoid repeated peripheral probes."
+}

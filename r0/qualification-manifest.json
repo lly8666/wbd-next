@@ -676,5 +676,21 @@
     "physical": "NOT_RUN",
     "performance_500mbps": "NOT_RUN",
     "production_abi_features": 0
+  },
+  "m0_023_m4_kernel_udp_bidirectional_and_go_heap": {
+    "code_source_sha": "b14965909bc5773cd1b7d8d787ea9b9108c6186c",
+    "result": "PARTIAL_BIDIRECTIONAL_KERNEL_IO_PASS",
+    "evidence": "docs/evidence/M0/M0-023-actual-m4-kernel-udp-bidirectional.json",
+    "tx": "real protected Go TLS → Rust M1 scoped FrozenRecord TX → normal-build M4 Linux sendmmsg → Go UDP socket and TLS opener",
+    "rx": "real Go C2S TLS sealer → kernel UDP → normal-build M4 recvmmsg directly to ORIGINAL M1 UniqueBuffer → same scoped Rust AEAD/PN M3 LINK complete candidate callback",
+    "cipher_suites": "3/3 PASS",
+    "heap_diagnostic": "Go V4 12 real retained client+server session pairs after GC: HeapAlloc increase 141240 B, 11770 B/pair; HeapInuse increase 532480 B, 44373 B/pair; Go1.23.12. NOT application RSS, not single-sided steady state",
+    "kernel_raw_tun_application": "NOT_RUN",
+    "production_authenticated_control": "NOT_IMPLEMENTED",
+    "driver_held_loan_B01_B04": "NOT_RUN",
+    "features": 0,
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "throughput_500mbps": "NOT_RUN"
   }
 }
