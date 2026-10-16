@@ -4,6 +4,8 @@
 
 默认每个endpoint一个TX owner、一个RX owner；服务器多client共享这对线程。只有证明单owner饱和而宿主有余量，才增加成按TunnelKey稳定hash的多对owner，不能每lane开一对。Linux fd用非阻塞poll；Windows若capture库不能可靠非阻塞，增加每设备一个RX reader，只负责有界复制和投递，不能在reader中FEC解码。
 
+落实检查：[M0热路径补充方案](../../decisions/M0-hotpath-cost-first-2026-10-16.md) 第4节。多个线程若仍持同一registry/owner mutex执行逐包工作，不算方向所有权拆分；registry只做安装/查询/关闭协调。实际循环复用batch存储，普通计量不能每轮调用线程CPU时钟。已就绪批量自然可为1，不等待凑数。
+
 TX拥有seq/PN、encoder、shadow、repair budget、发送队列；RX拥有AEAD opener、received bitmap、decoder/reassembler、业务出口。两个方向的状态绝不由一把Lane mutex串行。跨方向只发receipt/载荷活动/外观ACK快照，队列单向有界。
 
 跨线程SPSC采用 **rtrb**，不自写unsafe无锁环。预分配固定容量，push满返回原事件；不得覆盖consumer正在读的值。批量接口仅处理已有事件。控制入口串行，避免把SPSC硬当MPSC。`Arc`只用于创建队列和共享不可变资源，不能每层每包额外clone。

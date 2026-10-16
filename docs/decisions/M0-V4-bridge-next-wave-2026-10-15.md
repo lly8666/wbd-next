@@ -7,6 +7,8 @@ Date 2026-10-15. Main source baseline dd9c4b1f66e40a4823c4153779931802409a3178. 
 - M0 Go protected V4 transaction was hardened: protected final write+Detach before explicit Go epoch finish(true), abort defer finish(false); actual protected TLS+rollback 11/11 source dd9c4b1f66e40a4823c4153779931802409a3178 run38695761347 SUCCESS. Still NO protected-Go-to-Rust installed owner/production ABI.
 
 ## Formal assigned tasks
+2026-10-16 后续优先级：M0 registry已分配 `R1-M0-HOTPATH-COST-024`，见 [热路径成本修复方案](M0-hotpath-cost-first-2026-10-16.md)。先完成该项开发与同Actions验收，再继续后续任务分配；本页原023未验Exit继续保留。其他worker原任务可收尾，不要求回滚或重复开发。
+
 2026-10-16 执行粒度更正：`docs/architecture/TEST_PLAN.md` 第 0 节是当前功能批次/持续业务/开发性能基线的统一入口。任务 ID、权限和下述正式 Exit 不变；Exit 不意味着每个参数逐项交接，也不阻止已可安全运行路径先取得明确限定的开发基线。完整资格与默认 capability 仍依真实证据开放。
 
 施工顺序更正：M0 按 `docs/architecture/modules/01-CONTROL-BRIDGE.md` 的 Prepare→受保护回复→DetachTransition→CommitAdmission→双 owner 确认→Active 执行，废止早期“Active 后 Detach”描述；实际接入和 Normal/off 首到的分步交付见 `11-IMPLEMENTATION-GATES.md`。任务 ID、权限和 worker 分配不变，下面历史基线不代表最新进度。

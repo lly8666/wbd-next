@@ -12,6 +12,8 @@ RX的外观累计ACK可沿用原弱网适度放弃缺口策略，但只存在pre
 
 ## 发送事务
 
+MTU/route预算在可信安装和变化/错误路径观测，owner持带generation/revision的有效快照，逐包只作内存内长度/身份校验。不得每个包重复读取sysfs/查询ifindex或创建UDP socket探测路由；失效刷新、EMSGSIZE/DF保护、旧密文与接口变化处置按 [M0热路径补充方案](../../decisions/M0-hotpath-cost-first-2026-10-16.md) 第3节。缓存不是取消MTU门，真实平台变化仍需验证。
+
 固定密文重传保持record bytes、PN、TCP起始seq和payload length。每次发送重新构造外层header的当前ACK/window/IPID（已有timestamp策略才更新timestamp），重新校验checksum。缓存密文checksum部分和pseudo-header不变量可以减少扫描，但奇偶长度拼接必须与全量参考一致。
 
 `TxBatchOutcome`必须区分：明确成功prefix、明确未发送suffix、单个不确定项。首次提交成功才计F/first_sent并安装正常repair状态；不确定发送保留同密文和seq，计独立unknown_tx，预留预算按已占用处理，不能当新包再seal。后续若收到真实receipt可消除不确定。完全失败可短期保留同cipher再送，仍不重复记一次fresh成功。
