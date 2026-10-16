@@ -38,6 +38,21 @@ sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 # RTT from configured delay; require observable kernel qdisc packet counters.
 # Default invocation remains byte-for-byte baseline behavior.
 PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
+STEADY="${WBD_M0_STEADY_BURST:-}"
+LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
+if [[ -n "$LOSS" ]]; then
+  if [[ "$LOSS" != 1 || "$STEADY" != 1 || -n "$PRELIM_MS" ]]; then
+    echo 'STEADY_LOSS_INVALID only 1% in isolated steady burst' >&2; exit 2
+  fi
+  if ! command -v tc >/dev/null; then
+    echo 'STEADY_LOSS_UNSUPPORTED tc unavailable'; exit 77
+  fi
+  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem loss 1% limit 256; then
+    echo 'STEADY_LOSS_UNSUPPORTED kernel qdisc refused'; exit 77
+  fi
+  echo 'STEADY_LOSS_QDISC_ATTACHED loss_percent=1 dev=lo bounded_packets=256'
+  sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
+fi
 if [[ -n "$PRELIM_MS" ]]; then
   if [[ "$PRELIM_MS" != 10 && "$PRELIM_MS" != 150 ]]; then
     echo 'PRELIM_NETEM_INVALID only bounded 10ms/150ms smoke is authorized' >&2
@@ -54,12 +69,29 @@ if [[ -n "$PRELIM_MS" ]]; then
 fi
 TEST_FILTER='^TestR0V4(NativeRustTunKernelAppFirst|EmbeddedRealM4RawToTun)$'
 if [[ -n "$PRELIM_MS" ]]; then TEST_FILTER='^TestR0V4EmbeddedRealM4RawToTun$'; fi
+if [[ "$STEADY" == 1 ]]; then TEST_FILTER='^TestR0V4EmbeddedSteadyBurst$'; fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
+fi
+if [[ "$LOSS" == 1 ]]; then
+  QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"
+  echo "$QDISC"
+  if [[ "$QDISC" != *"qdisc netem "* ]] || ! grep -Eq 'Sent [1-9][0-9]* bytes [1-9][0-9]* pkt' <<<"$QDISC"; then
+    echo 'STEADY_LOSS_NOT_OBSERVED no actual qdisc processed packets'; exit 77
+  fi
+  DROPPED="$(sed -nE 's/.*\(dropped ([0-9]+),.*/\1/p' <<<"$QDISC" | head -1)"
+  [[ "$DROPPED" =~ ^[0-9]+$ ]] || { echo 'STEADY_LOSS_NOT_OBSERVED drop counter missing'; exit 77; }
+  echo "STEADY_LOSS_CASE_RECORDED configured_loss_percent=1 kernel_dropped_packets=$DROPPED observed_drop=$([[ "$DROPPED" -gt 0 ]] && echo yes || echo no)"
+  echo 'STEADY_LOSS_LIMITS finite 12p/direction/cipher; no FEC, repair, throughput or product success claim.'
+  exit 0
+fi
+if [[ "$STEADY" == 1 ]]; then
+  echo 'STEADY_BURST_BASELINE_PASS same original owner 12 packets/direction/suite with exact app byte and PN/TCP seq.'
+  exit 0
 fi
 if [[ -n "$PRELIM_MS" ]]; then
   QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"

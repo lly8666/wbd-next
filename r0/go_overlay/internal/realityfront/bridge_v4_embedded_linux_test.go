@@ -419,3 +419,161 @@ func TestR0V4EmbeddedTwoGenerationStopIsolation(t *testing.T){
     if err:=newStore.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,newServer.Epoch);err!=nil{t.Fatal(err)}
     t.Logf("EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS old=%d new=%d",oldHandle>>32,newHandle>>32)
 }
+
+
+
+// Exactly one PRIVATE protected Go TLS session and one ordinary Rust M1/M3
+// generation per suite, with both real Linux M4 raw and TUN drivers. Bounded
+// 12-packet bidirectional observation; NOT a bandwidth/p99 benchmark. The
+// optional loss case reports missing packets without assuming recovery.
+func TestR0V4EmbeddedSteadyBurst(t *testing.T) {
+    if os.Getenv("WBD_REAL_TUN")!="1"||os.Getenv("WBD_M0_STEADY_BURST")!="1" {
+        t.Skip("owned privileged netns only")
+    }
+    lossy:=os.Getenv("WBD_M0_STEADY_LOSS_PERCENT")=="1"
+    const packets=12
+    const tunName="wbdmbur0"
+    f,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if err!=nil{t.Fatal(err)}
+    defer f.Close()
+    var req [40]byte
+    copy(req[:16],[]byte(tunName))
+    binary.LittleEndian.PutUint16(req[16:18],0x1001)
+    _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,f.Fd(),0x400454ca,
+        uintptr(unsafe.Pointer(&req[0])))
+    if errno!=0{t.Fatalf("real TUN create: %v",errno)}
+    for _,args:=range [][]string{{"addr","add","10.241.21.1/24","dev",tunName},
+        {"link","set","dev",tunName,"up"}} {
+        if out,e:=exec.Command("ip",args...).CombinedOutput();e!=nil{
+            t.Fatalf("real TUN config %v: %v %s",args,e,out)
+        }
+    }
+    dst:=net.IPv4(10,241,21,1);src:=net.IPv4(10,241,21,2)
+    lo,err:=net.InterfaceByName("lo")
+    if err!=nil||lo.Index<1{t.Fatalf("real lo: %v",err)}
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256} {
+        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            b:=&v4EmbeddedNativeBridge{}
+            client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,cipher)
+            if ce!=nil||se!=nil||client==nil||server==nil||!b.committed{
+                t.Fatalf("original private Go TLS protected session invalid: %v %v",ce,se)
+            }
+            t.Cleanup(func(){
+                if err:=b.stopRelease();err!=nil{t.Errorf("real owner stop: %v",err)}
+                if err:=store.ReleaseLane("protected-owner",
+                   []byte("0123456789abcdef"),1,server.Epoch);err!=nil{
+                    t.Errorf("original Go lane release: %v",err)
+                }
+            })
+            if e:=b.attachRawRx(uint32(lo.Index));e!=nil{t.Fatal(e)}
+            if e:=b.attachKernelTun(f.Fd(),tunName);e!=nil{t.Fatal(e)}
+            app,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dst,Port:0})
+            if e!=nil{t.Fatal(e)}
+            defer app.Close()
+            raw,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+            if e!=nil{t.Fatal(e)}
+            defer syscall.Close(raw)
+            if e:=syscall.SetsockoptInt(raw,syscall.IPPROTO_IP,syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
+            peer,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
+            if e!=nil{t.Fatal(e)}
+            defer syscall.Close(peer)
+            if e:=syscall.Bind(peer,&syscall.SockaddrInet4{Addr:b.originalFlow.ClientIP});e!=nil{t.Fatal(e)}
+            tm:=syscall.NsecToTimeval((150*time.Millisecond).Nanoseconds())
+            if e:=syscall.SetsockoptTimeval(peer,syscall.SOL_SOCKET,syscall.SO_RCVTIMEO,&tm);e!=nil{t.Fatal(e)}
+            cold,e:=client.ColdSnapshot();if e!=nil{t.Fatal(e)}
+            clientLimit,serverLimit:=cold.RecordLimits()
+            seal,e:=tlsrecord.NewSealerForCipher(cold.DirectionKeys().C2S,int(serverLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            open,e:=tlsrecord.NewOpenerForCipher(cold.DirectionKeys().S2C,int(clientLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            cseq:=b.rxBoundary;sseq:=b.txBoundary
+            cSent,cDelivered,sSent,sDelivered:=0,0,0,0
+            cBytes,sBytes:=0,0
+            cMiss,sMiss:=0,0
+            start:=time.Now()
+            for i:=0;i<packets;i++{
+                cp:=bytes.Repeat([]byte{byte(0x30+i)},48+i%4)
+                ip:=make([]byte,28+len(cp))
+                ip[0]=0x45;ip[8]=64;ip[9]=17
+                binary.BigEndian.PutUint16(ip[2:4],uint16(len(ip)))
+                binary.BigEndian.PutUint16(ip[4:6],uint16(210+i))
+                copy(ip[12:16],src.To4());copy(ip[16:20],dst.To4())
+                binary.BigEndian.PutUint16(ip[10:12],v4RawCheckSum(ip[:20]))
+                binary.BigEndian.PutUint16(ip[20:22],40001)
+                binary.BigEndian.PutUint16(ip[22:24],uint16(app.LocalAddr().(*net.UDPAddr).Port))
+                binary.BigEndian.PutUint16(ip[24:26],uint16(8+len(cp)))
+                copy(ip[28:],cp)
+                encrypted,pn,err:=seal.Seal(ip)
+                if err!=nil||pn!=uint64(i){t.Fatalf("C2S real Go TLS PN=%d want=%d err=%v",pn,i,err)}
+                if err:=syscall.Sendto(raw,v4RawC2STestPacket(encrypted,cseq,b.originalFlow),0,
+                    &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});err!=nil{t.Fatal(err)}
+                cSent++;cBytes+=len(cp)
+                cseq+=uint32(len(encrypted))
+                delivered,failed,rxErr:=b.receiveRawToTun()
+                if rxErr==nil && delivered==1 && failed==0 {
+                    if e:=app.SetReadDeadline(time.Now().Add(200*time.Millisecond));e!=nil{t.Fatal(e)}
+                    buff:=make([]byte,256)
+                    n,from,readErr:=app.ReadFromUDP(buff)
+                    if readErr==nil&&from!=nil&&from.IP.Equal(src)&&bytes.Equal(buff[:n],cp){
+                        cDelivered++
+                    }else if !lossy {
+                        t.Fatalf("C2S kernel app missing/wrong at i=%d err=%v n=%d peer=%v",i,readErr,n,from)
+                    }else{cMiss++}
+                }else if !lossy{
+                    t.Fatalf("C2S original Rust raw/TUN i=%d delivered=%d failed=%d err=%v",
+                        i,delivered,failed,rxErr)
+                }else{cMiss++}
+                reverse:=bytes.Repeat([]byte{byte(0x61+i)},50+i%3)
+                nWrite,wErr:=app.WriteToUDP(reverse,&net.UDPAddr{IP:src,Port:42001})
+                if wErr!=nil||nWrite!=len(reverse){t.Fatalf("real kernel reverse app send n=%d err=%v",nWrite,wErr)}
+                sSent++;sBytes+=len(reverse)
+                rpn,rseq,full,appLen,txErr:=b.tunToKernelRaw(uint32(lo.Index))
+                if txErr!=nil||rpn!=uint64(i)||rseq!=sseq||appLen!=uint32(28+len(reverse)){
+                    t.Fatalf("original Rust S2C PN/seq i=%d pn=%d seq=%d want=%d app=%d err=%v",
+                        i,rpn,rseq,sseq,appLen,txErr)
+                }
+                if full<40{t.Fatalf("kernel raw full packet too short %d",full)}
+                sseq+=full-40
+                var data []byte
+                for attempt:=0;attempt<8;attempt++{
+                    rawBuf:=make([]byte,2048)
+                    n,_,e:=syscall.Recvfrom(peer,rawBuf,0)
+                    if e!=nil {
+                        if !lossy{t.Fatalf("independent Go raw peer i=%d: %v",i,e)}
+                        break
+                    }
+                    if n<40||rawBuf[0]>>4!=4||rawBuf[9]!=6{continue}
+                    ihl:=int(rawBuf[0]&0xf)*4
+                    if ihl<20||ihl+20>n{continue}
+                    if !bytes.Equal(rawBuf[12:16],b.originalFlow.ServerIP[:])||
+                       !bytes.Equal(rawBuf[16:20],b.originalFlow.ClientIP[:])||
+                       binary.BigEndian.Uint16(rawBuf[ihl:ihl+2])!=b.originalFlow.ServerPort||
+                       binary.BigEndian.Uint16(rawBuf[ihl+2:ihl+4])!=b.originalFlow.ClientPort||
+                       binary.BigEndian.Uint32(rawBuf[ihl+4:ihl+8])!=rseq{continue}
+                    h:=int(rawBuf[ihl+12]>>4)*4
+                    if h<20||ihl+h>n||uint32(n)!=full{t.Fatalf("invalid real raw TCP header n=%d full=%d",n,full)}
+                    data=append([]byte(nil),rawBuf[ihl+h:n]...);break
+                }
+                if len(data)==0 {
+                    if !lossy{t.Fatalf("S2C kernel raw not received i=%d",i)}
+                    sMiss++;continue
+                }
+                decoded,e:=open.OpenRecord(data)
+                if e!=nil||decoded.PN!=rpn||decoded.Kind!=tlsrecord.KindLINK||
+                   len(decoded.Payload)!=int(appLen)||
+                   !bytes.Equal(decoded.Payload[28:],reverse){
+                    t.Fatalf("S2C independent Go TLS auth/PN/payload i=%d err=%v got=%+v",i,e,decoded)
+                }
+                sDelivered++
+            }
+            elapsed:=time.Since(start)
+            if !lossy&&(cDelivered!=packets||sDelivered!=packets||cMiss!=0||sMiss!=0){
+                t.Fatalf("no-loss real Linux burst delivery incomplete C2S=%d S2C=%d",cDelivered,sDelivered)
+            }
+            t.Logf("EMBEDDED_STEADY_BURST_%s suite=%d c2s_sent=%d c2s_delivered=%d c2s_missing_or_rejected=%d c2s_bytes_sent=%d s2c_sent=%d s2c_delivered=%d s2c_missing_or_rejected=%d s2c_bytes_sent=%d elapsed_ns=%d",
+                map[bool]string{true:"LOSS_OBSERVATION",false:"PASS"}[lossy],
+                cipher,cSent,cDelivered,cMiss,cBytes,sSent,sDelivered,sMiss,sBytes,elapsed.Nanoseconds())
+        })
+    }
+}

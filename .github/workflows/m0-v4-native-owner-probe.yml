@@ -354,6 +354,72 @@ jobs:
           print(json.dumps(result,indent=2))
           PY
           test "$STATE" != FAIL
+      - name: Real original embedded owner 12-packet bilateral steady baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_M0_STEADY_BURST=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/steady-burst-baseline.log 2>&1
+          cat native-probe-result/steady-burst-baseline.log
+          grep -q 'STEADY_BURST_BASELINE_PASS' native-probe-result/steady-burst-baseline.log
+          for suite in 1 2 3; do
+            grep -E "EMBEDDED_STEADY_BURST_PASS suite=$suite c2s_sent=12 c2s_delivered=12 c2s_missing_or_rejected=0 .* s2c_sent=12 s2c_delivered=12 s2c_missing_or_rejected=0" native-probe-result/steady-burst-baseline.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("native-probe-build/manifest.json"))
+          log=pathlib.Path("native-probe-result/steady-burst-baseline.log").read_bytes()
+          p={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+             "result":"PASS","scope":"ONE_PRIVATE_GO_TLS_ORIGINAL_RUST_OWNER_M4_KERNEL_RAW_TUN",
+             "ciphers":[1,2,3],"packets_each_direction_each_cipher":12,
+             "c2s_expected_delivered_per_suite":12,"s2c_expected_delivered_per_suite":12,
+             "elapsed":"PER_SUITE_OBSERVED_IN_LOG","throughput_qualification":"NOT_RUN",
+             "log_sha256":hashlib.sha256(log).hexdigest(),"production_features":0}
+          pathlib.Path("native-probe-result/steady-burst-baseline.json").write_text(json.dumps(p,indent=2)+"\n")
+          PY
+      - name: Real 1 percent tc loss finite bilateral observation (not resilience PASS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          WBD_M0_STEADY_BURST=1 WBD_M0_STEADY_LOSS_PERCENT=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/steady-burst-loss1.log 2>&1
+          RC=$?
+          set -e
+          cat native-probe-result/steady-burst-loss1.log
+          if [[ "$RC" == 77 ]]; then
+            STATE=UNSUPPORTED
+          elif [[ "$RC" == 0 ]]; then
+            grep -q 'STEADY_LOSS_QDISC_ATTACHED loss_percent=1' native-probe-result/steady-burst-loss1.log
+            grep -q 'STEADY_LOSS_CASE_RECORDED configured_loss_percent=1' native-probe-result/steady-burst-loss1.log
+            for suite in 1 2 3; do
+              grep -q "EMBEDDED_STEADY_BURST_LOSS_OBSERVATION suite=$suite" native-probe-result/steady-burst-loss1.log
+            done
+            STATE=OBSERVATION_RECORDED
+          else
+            STATE=FAIL
+          fi
+          STATE="$STATE" python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          m=json.load(open("native-probe-build/manifest.json"))
+          log=pathlib.Path("native-probe-result/steady-burst-loss1.log").read_bytes()
+          s=log.decode(errors="replace")
+          pattern=r"EMBEDDED_STEADY_BURST_LOSS_OBSERVATION suite=(\d+) c2s_sent=(\d+) c2s_delivered=(\d+) c2s_missing_or_rejected=(\d+) c2s_bytes_sent=(\d+) s2c_sent=(\d+) s2c_delivered=(\d+) s2c_missing_or_rejected=(\d+) s2c_bytes_sent=(\d+) elapsed_ns=(\d+)"
+          rows=[dict(zip(["suite","c2s_sent","c2s_delivered","c2s_missing_or_rejected",
+               "c2s_bytes_sent","s2c_sent","s2c_delivered","s2c_missing_or_rejected",
+               "s2c_bytes_sent","elapsed_ns"],map(int,match)))
+               for match in re.findall(pattern,s)]
+          drops=re.search(r"STEADY_LOSS_CASE_RECORDED configured_loss_percent=1 kernel_dropped_packets=(\d+)",s)
+          n=int(drops.group(1)) if drops else None
+          p={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+            "result":os.environ["STATE"],"configured_loss_percent":1,
+            "actual_kernel_drop_count":n,"drop_observed":(n>0) if n is not None else None,
+            "per_cipher_original_owner_measurements":rows,
+            "interpreting_missing":"MISSING_OR_REJECTED_NOT_ATTRIBUTABLE_PER_PACKET_TO_NETEM",
+            "loss_recovery_qualified":False,"latency_p99":"NOT_MEASURED",
+            "product":"NOT_RUN","log_sha256":hashlib.sha256(log).hexdigest()}
+          pathlib.Path("native-probe-result/steady-burst-loss1.json").write_text(json.dumps(p,indent=2)+"\n")
+          print(json.dumps(p,indent=2))
+          PY
+          test "$STATE" != FAIL
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
