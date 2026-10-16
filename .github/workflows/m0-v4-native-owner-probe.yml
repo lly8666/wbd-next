@@ -165,7 +165,10 @@ jobs:
           set +e
           bash tools/run-v4-kernel-loopback.sh --prebuilt native-probe-build --all >native-probe-result/go.log 2>&1
           G=$?
-          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4EmbeddedNativeProtectedControlAllCiphers --nocapture >native-probe-result/rust.log 2>&1
+          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4EmbeddedNativeProtectedControlAllCiphers$' >>native-probe-result/go.log 2>&1
+          GE=$?
+          if [[ "$GE" != 0 ]]; then G=$GE; fi
+          ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
           R=$?
           ./native-probe-build/owner-rust.test m0_normal_build_v4_go_private_handoff_version_and_scope --nocapture >>native-probe-result/rust.log 2>&1
           R2=$?
