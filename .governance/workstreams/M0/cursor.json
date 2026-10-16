@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 100,
-  "checkpoint_sha": "399083d7ae718c4025380cec2b18e5201ac584ef",
+  "sequence": 101,
+  "checkpoint_sha": "33ba4dd454e5327af465d1c8afcf5e5057b5bee6",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "GOV-005 §0 本轮一项完整开发性能能力已测：原 pin Go FakeTCP 可信私有 TLS→原 Rust M1/M3/M4 真 Linux raw/TUN双常驻 owner，Go业务注入/接收独立goroutine，单cipher ChaCha、Normal 1 lane、FEC off。真实 owner 观察 S2C route/MSS 内层IPv4 MTU1329（C2S record1400→1369），固定1:1:1:1包长64/256/1200/1329，10s热身60s测量双向独立目标10Mbps。最终 CODE 137a80e543bda12237e8bf25fb048ca3668c5774 原生 Actions38913607702 attempt1 build117015338033 consume117016001107 SUCCESS：C2S和S2C各105298/105298真实业务包，每方向逻辑IPv4字节74998532，交付9.999804Mbps，missing/duplicate/invalid各0；原Rust RX CPU4.315673s TX13.282391s，总Go+Rust进程user3.461462s/sys19.936526s，Linux lo dropped0。证据 S399083d7ae718c4025380cec2b18e5201ac584ef 静态38914525179/Gov38914525306 SUCCESS。之前首轮38912126745收据root0600导致workflow FAIL；次轮38912768583发现S2C第四档1369>真实上限1329致25,960包被原Rust正确拒绝，不是已证明CPU瓶颈；所有失败/误分类保留。仅loopback限定开发基线达标；正式023 partial, production ABI features0。",
-  "why_now": "新版TEST_PLAN §0不许把短Go单包调度冒充稳态；H99已有Rust独立后台线程及内核读锁外功能通过。本轮用真正60s持续双向业务实测，纠正原夹具误用C2S大小预算到S2C；不调整原MTU/MSS、seed、速率或队列刷绿。",
-  "done_when": "本轮有限开发能力：固定可解释单host netns/real raw/TUN Normal/off、严格原Go信任边界及Rust owner、10s+60s、真实有效双向内层MTU固定1:1:1:1混合，实测每向9.999804Mbps、105298/105298完整业务、Rust per-thread CPU、process RSS与Linux lo drops，原生Actions及同SRC ABI/cross/native/Gov SUCCESS、证据SOURCE精确。未达到正式023：两端veth/独立injector进程CPU、真正RTT p99/socket drop/queue age、真实外部SYN、异步M4 driver held B04及B01/B02完整生命周期、物理500Mbps/发行资格NOT_RUN。普通Go/Rust同进程CPU不可重复加总。",
-  "next_action": "把同一受保护Go TLS→原Rust两常驻owner真实Linux raw/TUN开发基线扩到有边界的两端veth或独立namespace拓扑和独立注入器进程CPU归因/RTT探针；一个预声明单cipher Normal/off FECoff固定有效MTU mix、10s热身60s测量的Actions一个测量job。记录真实收发/缺包、原Rust与独立injector CPU、网络socket drop、队列年龄、RTT p99和host cgroup容量；若不支持明确UNSUPPORTED，不另造 crypto/driver，不替换原v4信任边界；production features0不变。",
-  "unverified": true,
-  "last_tested_source": "137a80e543bda12237e8bf25fb048ca3668c5774",
+  "current_task": "已从H100 CLEAN执行用户要求的旧Go与Rust新引擎同一Actions/同一runner旧→新连续粗略AB。精确NEW CODE SOURCE 333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5，OLD pin a7a82db31fe736ffedee330795a3234d358f1984，Actions38920819286 attempt1 build117039966879 measure117040548256 SUCCESS，运行身份与顺序及两产物SHA校验。固定Normal单lane FECoff 双向UDP app 10Mbps，payload64/256/1200等比例、10s热身+60s计量：老Go完整产品5netns/veth/TPROXY两个客户端/服务端进程每方向9.999979Mbps零缺包，CPU client27.30+server26.96=54.26 CPU-s（单独注入器另约31.06 CPU-s）；新Go TLS fixture+原Rust M1/M3/M4 loopback raw/TUN每方向约10Mbps零缺包，整Go+Rust+同进程inject/receive CPU52.099258 CPU-s，原Rust RX10.510634+TX27.637564=38.148198 CPU-s（子集，不可与52.10叠加）。名义54.26→52.10下降约4%，不同产品路径和CPU归因，不构成经证实优化；新默认生产features0。首轮Actions38917618679两边artifact无执行位FAIL被保留，后续修复成功。详见证据 S33ba4dd454e5327af465d1c8afcf5e5057b5bee6，静态审计38922832436/Governance38922832231 SUCCESS。",
+  "why_now": "用户只要求系统开销大概趋势、不需要严格对照。仍遵守TEST_PLAN同一个Actions测量job/VM顺序旧Go→新Rust，保持两端UDP应用净荷+负载+FECoff+时间相同，诚实保留veth五命名空间旧正式产品对比新版loopback开发路径、外部SYN不同、注入器计量边界不等价。",
+  "done_when": "此次粗略对照的可验收能力完成：两个真正产品/开发路径SOURCE固定一次编译、构建manifest哈希、同VM不重叠旧新一job按顺序、零业务缺包、双方60s 10Mbps UDP应用吞吐和CPU进程及Rust线程、峰值RSS回执、历史失败保留、证据与资格清单标为PAIRED_DIAGNOSTIC_ONLY_NOT_CAUSAL。正式M0-023继续PARTIAL，B01–B04真实driver held及外部SYN/生产capability、R5长弱网/500Mbps/物理NOT_RUN。",
+  "next_action": "按R1 Normal/off完整能力集成老Go的LINK超MTU自动分片到当前原Rust真实受保护V4 TX路径：用现有M3 wire fragment_compat及有界M3 ReassemblyTable，真实M1 slab/逐fragment独立AEAD/PN与M4真实raw/TUN，不建立另一路test-only TX。先校验单向有效MSS/PMTU、MTU±1、64KB上限、非DF/DF/TCP真实分段、乱片/缺片/超时/冲突、代际Stop/重连和后续小包no-HOL。同步核查已ready_for_integration M1早收包和M4 UDP RX/STOP来源并按登记权限集成；M2/M3继续各自active分支。R5再跑MTU/混合与容量、R6旧控制/整包/长测；production features0直到真实B01–B04及产品资格。",
+  "unverified": false,
+  "last_tested_source": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-normal-off-10mbps-bidirectional-developer-baseline.json"
+    "docs/evidence/M0/M0-023-old-go-vs-rust-same-vm-paired-normal10.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-023-normal-off-10mbps-bidirectional-developer-baseline.md",
+    "docs/devlog/M0/M0-023-old-go-vs-rust-same-vm-paired-normal10.md",
     "docs/architecture/TEST_PLAN.md",
+    "docs/architecture/MIGRATION.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "首次原Rust/Go真内核Normal/off持续10+60s固定负载单机loopback开发基线：实际双向各约10Mbps、0缺包，原Rust线程CPU真实计量；第四档由真实S2C有效MTU1329冻结。原先S2C错误1369大包被原owner正确拒绝且失败留证。正式M0-023仍PARTIAL、production features0；veth两端/独立进程RTT及B04未验收。"
+  "partial_summary": "同机同Actions旧Go产品→新Rust开发owner配对诊断SUCCESS：双向UDP应用各约10Mbps，均零缺包；旧产品两个Go进程CPU合计54.26s，新Go+Rust+注入/接收合计52.10s且Rust线程38.15s为子集。不同拓扑与计量口径，不可得出省4%的因果资格。新Rust产品自动超MTU分片TX尚未集成，R1应实现，R5完整矩阵/R6收尾。M1/M4 ready integration，M2/M3 active；任务023 partial，features0。"
 }
