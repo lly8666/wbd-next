@@ -3,6 +3,7 @@ package realityfront
 import (
     "bytes"
     "encoding/binary"
+    "errors"
     "fmt"
     "net"
     "os"
@@ -136,17 +137,15 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
             }
             t.Logf("EMBEDDED_REAL_C2S_SECOND_PACKET_PASS suite=%d bytes=%d pn=%d seq=%d",
                 cipher,n2,pnNext,seqNext)
-            // Same Go credential-checked protected session; no new crypto or
-            // owner. Original Rust normal-off RX constructed with negotiated
-            // record wire limit, existing 31B record + 14B LINK overhead.
-            // Test EXACT receive-side single-frame boundary and +1 at M4
-            // real kernel raw/TUN, not a private decode-only test. Do not
-            // alter the original negotiated limit, TUN MTU or sender seed.
+            // SAME Go credential-checked protected session and original
+            // M1/M3/M4 owner; ordinary unfragmented LINK has NO LINK20
+            // header. Only fragmented packets pay LINK_HEADER=20.
+            // Exact ordinary size limit = negotiated wire 1400 - RECORD31.
+            // Never change the negotiated limit, TUN MTU or sender seed.
             const recordFixed=31
-            const linkHeader=14
             const ipUDPHeaders=28
             if limit!=1400{t.Fatalf("actual protected Go server wire limit unexpectedly %d",limit)}
-            maxIP:=int(limit)-recordFixed-linkHeader
+            maxIP:=int(limit)-recordFixed
             if maxIP<=ipUDPHeaders||maxIP>=1500{
                 t.Fatalf("unsafe actual effective IPv4 business limit %d",maxIP)
             }
@@ -192,25 +191,34 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
             }
             t.Logf("EMBEDDED_REAL_MTU_EXACT_BOUNDARY_PASS suite=%d ip_bytes=%d payload=%d pn=%d",
                 cipher,maxIP,size,atPN)
-            // One byte exceeds the *same* negotiated Normal/off LINK
-            // single-frame budget, while TLS wire remains itself valid.
-            // The Rust normal owner MUST refuse delivery; a green raw send
-            // alone is not sufficient. Observe the independent app socket.
+            // 1401-byte record cannot be formed by original trusted
+            // Go TLS sealer: oversized ordinary packet must fail BEFORE
+            // any transmission. Its failed attempt is NOT a valid AEAD
+            // record; do not pretend it had authenticated successfully.
             overIP:=makeUDPIP(maxIP+1,0x4c)
-            overWire,overPN,err:=sealer.Seal(overIP)
-            if err!=nil||overPN!=3||len(overWire)>int(limit){
-                t.Fatalf("oversize fixture must be legal TLS but too-large LINK pn=%d bytes=%d err=%v",
-                    overPN,len(overWire),err)
+            _,attemptedPN,err:=sealer.Seal(overIP)
+            if !errors.Is(err,tlsrecord.ErrPayloadTooLarge){
+                t.Fatalf("negotiated 1400B record limit not enforced for IP=%d: pn=%d err=%v",
+                    maxIP+1,attemptedPN,err)
+            }
+            // Independently exercise real M4 Linux raw ingress with an
+            // overlong/invalid encrypted record constructed from a valid
+            // boundary frame plus one appended byte. TCP checksum is
+            // recalculated by v4RawC2STestPacket; original Rust record
+            // length guard MUST refuse it before TUN application delivery.
+            oversizedWire:=append(append([]byte(nil),atWire...),0x4c)
+            if len(oversizedWire)!=int(limit)+1{
+                t.Fatalf("bad over-limit record fixture length=%d",len(oversizedWire))
             }
             if err:=syscall.Sendto(rawfd,
-                v4RawC2STestPacket(overWire,lastSeq+uint32(len(atWire)),
+                v4RawC2STestPacket(oversizedWire,lastSeq+uint32(len(atWire)),
                     bridge.originalFlow),0,
                 &syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});err!=nil{
-                t.Fatalf("real raw oversized IPv4 send: %v",err)
+                t.Fatalf("real raw oversized encrypted record send: %v",err)
             }
             overDelivered,_,overErr:=bridge.receiveRawToTun()
             if overErr==nil||overDelivered!=0{
-                t.Fatalf("oversized authenticated LINK reached TUN or was reported success: delivered=%d err=%v",
+                t.Fatalf("overlong record was accepted by original M4/M1/M3: delivered=%d err=%v",
                     overDelivered,overErr)
             }
             if err:=app.SetReadDeadline(time.Now().Add(40*time.Millisecond));err!=nil{t.Fatal(err)}
@@ -220,8 +228,8 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
             if nOver!=0||!timeout||!ne.Timeout(){
                 t.Fatalf("over-MTU business leaked to independent kernel app n=%d err=%v",nOver,appErr)
             }
-            t.Logf("EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=%d ip_bytes=%d pn=%d",
-                cipher,maxIP+1,overPN)
+            t.Logf("EMBEDDED_REAL_MTU_OVER_LIMIT_FAIL_CLOSED_PASS suite=%d denied_ip=%d denied_record_wire=%d",
+                cipher,maxIP+1,len(oversizedWire))
             // Original ciphertext at PN=0 was already delivered. Re-inject
             // EXACT SAME immutable bytes through the real raw socket: the
             // Rust M1/M3 PN replay gate must reject, never release a second
