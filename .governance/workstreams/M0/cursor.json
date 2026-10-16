@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 90,
-  "checkpoint_sha": "a0521ba858f80183a6825321d756330b659a23bc",
+  "sequence": 91,
+  "checkpoint_sha": "5d4baec9f70c894b7acf6c5ed03e6373d3f9d258",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "023 one atom CLOSED: non-_test, private Go credential-checked EstablishServerV4 ownerBridge now runs feature-gated embedded Rust normal ProtectedScopedOwner Prepare→protected reply→Detach bounded early→exact SenderNext Commit→Stop/release on all 3 ciphers. CODE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc native run38874157179 build+consume PASS. Source-exact evidence S a0521ba858f80183a6825321d756330b659a23bc static audit38874653521 and Governance38874653683 PASS. Default product features0; this dev-enabled dylib is NOT public auth ABI or product-enabled.",
-  "why_now": "Previous protected Go normal Rust owner Prepare had a positive path only through TEST-ONLY C probe. Add smallest non-_test embedded private Go lifecycle adapter using existing versioned WBGH and original owner, not new AEAD/PN or delivery, for direct Actions exercise without bypassing readiness gates.",
-  "done_when": "ATOM MET on exact CODE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc: real protected Go TLS all 3 cipher private embedded native Prepare/Commit/Stop positives and null/unknown Rust negatives, normal Rust owner construction and existing test-tag raw/TUN three-suite kernel path independently PASS in native Actions38874157179 attempt1. Same CODE Governance38874157246, maintenance38874157198 SUCCESS; central scope push38874194576 SKIPPED not PASS. Evidence S a0521ba858f80183a6825321d756330b659a23bc static38874653521/Gov38874653683 SUCCESS. Historical workflow FAIL 38873564803 (YAML zero jobs) and 38873826422 (shell quote EOF after build) preserved in evidence. Formal 023 NOT MET: non-test embedded adapter still explicitly DEV feature-gated; real M4 driver-held B01–B04, external SYN, product network/Normal/off and performance NOT_RUN. Production ABI features0.",
-  "next_action": "Attach real M4 Linux raw/TUN driver lease to the SAME non-test embedded Rust owner generation, exercise held-loan STOP_INCOMPLETE, late return/release and old/new generation restart B01–B04 in exact-source Actions before advertising any product V4 capability.",
+  "current_task": "023 atom DONE: non-_test developer-gated private Go V4 verified TLS bridge now owns same real Rust ScopedOwner generation with actual M4 ScopedRawIpv4Rx and ScopedTunSink; real Linux raw TCP C2S original FakeTCP tuple -> M1 slab -> M3 AEAD/PN Normal/off -> kernel TUN -> independent app UDP exact 31B PASS all 3 ciphers, source d786fcb224e901ce06c3d6a8c5d668c2da02b28a Actions38875955636 build+consume PASS. Stop begins and checks both real M4 driver fences plus M1 owner before release. Evidence S 5d4baec9f70c894b7acf6c5ed03e6373d3f9d258 static38876401500/Gov38876401518 SUCCESS. Formal 023 PARTIAL; feature0.",
+  "why_now": "Earlier same trusted Go embedded Rust owner only performed protected Prepare/Commit/Stop; actual kernel raw/TUN C2S business first reached application only through separate TEST-ONLY probe. Replace that gap with original owner + real M4 driver objects, not another activation/AEAD/delivery chain.",
+  "done_when": "ATOM MET: exact code SOURCE d786fcb224e901ce06c3d6a8c5d668c2da02b28a native38875955636 attempt1 SUCCESS: embedded original Rust owner real Linux kernel C2S raw/TUN app suite1/2/3 31B first payload, old TEST-ONLY bilateral as separate scope, actual attached M4 stop/release; native ABI38875955537, cross build38875955573 (target execution NOT_RUN), regression38875955609, G238875955563, static38875955522, Gov38875955518, maintenance38875955571 all SUCCESS on same code source. Central scope38875987125 SKIPPED NOT_RUN. Evidence S 5d4baec9f70c894b7acf6c5ed03e6373d3f9d258 static38876401500/Gov38876401518 SUCCESS. FORMAL 023 NOT_MET: new embedded owner S2C, real outstanding driver-held asynchronous B04 late return, B01-B03 failure/rotation, live external SYN, veth netem and product install/perf NOT_RUN. Default production ABI features0.",
+  "next_action": "Extend THIS same non-_test Go-verified embedded Rust owner to read actual kernel TUN app ingress, use original M1/M3 AEAD/PN and M4 ScopedRawIpv4Tx to deliver encrypted S2C TCP/IP to independent Go kernel raw peer; run 3 suites and strict seq/PN/bytes in exact-source Linux Actions, then real outstanding M4 held-loan B01-B04 before any V4 product enablement.",
   "unverified": true,
-  "last_tested_source": "57d7dc7c7bfb8338606f42daa7c27538644ca1bc",
+  "last_tested_source": "d786fcb224e901ce06c3d6a8c5d668c2da02b28a",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-embedded-private-control.json"
+    "docs/evidence/M0/M0-023-embedded-real-M4-raw-TUN-C2S.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/devlog/M0/M0-023-embedded-private-control.md",
-    "docs/evidence/M0/M0-023-versioned-normal-prepare.json",
+    "docs/devlog/M0/M0-023-embedded-real-M4-raw-TUN-C2S.md",
+    "docs/evidence/M0/M0-023-embedded-private-control.json",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/architecture/modules/11-IMPLEMENTATION-GATES.md",
     "r0/qualification-manifest.json"
   ],
-  "partial_summary": "Live verified Go V4 non-test developer-gated adapter to normal Rust M1/M3 original owner Prepared/Committed/Stopped PASS all 3 ciphers SOURCE 57d7dc7c7bfb8338606f42daa7c27538644ca1bc; old test-tag raw/TUN still PASS separately. Product/real M4 held driver ownership, external SYN, actual netem, 500Mbps/physical NOT_RUN; capability0."
+  "partial_summary": "Same real protected Go V4 non-test embedded Rust owner C2S actual M4 Linux raw/TUN/UDP app first PASS three suites and exact 31B, original SYN pinned test-generated not external; real M4 drivers begin_stop/fence drain, no held async loan. Embedded S2C/B04/reconnect/netem/product performance NOT_RUN; production features0."
 }
