@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "atom": "normal-build kernel local interface MTU ScopedOwner V4 TX",
+  "source_sha": "d77570ec70ef779659d5e48c67785b4db1adf776",
+  "result": "PARTIAL_COMPONENT_PASS",
+  "implementation": [
+    "M4 Linux x86_64 GNU kernel if_nametoindex plus /sys/class/net/<validated ifname>/mtu with expected index checked twice",
+    "Normal Rust ProtectedScopedOwner binds local kernel MTU to original owner ID, generation and full epoch, and original Go V4 protected SYN peer MSS",
+    "M3 Normal/FEC-off FrameBudget derives bounded TX using existing M1 FrozenRecord and real Rust AEAD/PN, independently verified by Go client in 3 cipher suites",
+    "Feature-tagged native observer only; ordinary production ABI remains features0"
+  ],
+  "negative": [
+    "bad/zero interface index refuses before PN",
+    "actual lo MTU cannot widen peer MSS1360",
+    "original owner Stop rejects TX",
+    "source-locked native RX/TX/replay/fragment tests remain green"
+  ],
+  "source_actions": [
+    {
+      "run": 38835966447,
+      "jobs": [
+        116765049814,
+        116765433588
+      ],
+      "status": "SUCCESS",
+      "go_top_level": "5/5",
+      "rust": "1/1",
+      "build_artifact": 12019387044,
+      "build_digest": "sha256:ee18bb32fa26d86b0cd53dd3099a76ea46e67513caabe9788ce0ab5b2806fa1c",
+      "result_artifact": 12019187356,
+      "result_digest": "sha256:c56d7d57167475f8f0eb872e17cbbd8758fed8d70346eb798d6b17699d7d1578"
+    },
+    {
+      "run": 38835966387,
+      "platform_job": 116765286616,
+      "platform_tests": "76/76",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966503,
+      "scope": "fake platform",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966487,
+      "scope": "native ABI",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966480,
+      "scope": "cross ABI build/inspect only",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966498,
+      "scope": "G2",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966415,
+      "scope": "Governance",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966409,
+      "scope": "R0 static",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966509,
+      "scope": "maintenance",
+      "tests": "169/169",
+      "status": "SUCCESS"
+    },
+    {
+      "run": 38835966665,
+      "scope": "automatically triggered component performance",
+      "status": "SUCCESS",
+      "product_performance_claim": "NONE"
+    }
+  ],
+  "integrity": "Source/run/attempt/input/binary SHA256 verified by build-once consume job. Artifact ZIP SHA256 read as GitHub API metadata, archives not independently rehashed.",
+  "unrun": [
+    "true route PMTU and PMTUD",
+    "production trusted Go V4 control/native install; arbitrary 248B cold cannot authenticate",
+    "real TUN/raw/AF_PACKET user business ingress/egress",
+    "actual Linux M4 driver-held loan Stop B01-B04 and rearm",
+    "fragment TX",
+    "physical, 500Mbps, CPU/p99 and product E2E"
+  ],
+  "production_abi_features": 0,
+  "product": "NOT_RUN",
+  "next_action": "Secure production Go TLS authenticated private callsite to ordinary Rust owner without public arbitrary cold installer, then M4 owned route snapshot/TUN/raw driver loan and real first application with B01–B04."
+}
