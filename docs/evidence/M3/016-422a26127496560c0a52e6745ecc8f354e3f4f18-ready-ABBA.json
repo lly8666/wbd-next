@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "progress": "ready_for_integration",
+  "result": "SCOPED_M3_016_READY_GO_SCALAR_REAL_ISAL_NATIVE_AND_SAME_VM_AB_BA_PASS",
+  "artifact_verified": true,
+  "unverified": false,
+  "provenance": {
+    "frozen_code_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "authority": "main registry reservation_revision2 assignment_epoch1 M3 active task016",
+    "source_bound_predecessors": [
+      "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-release-AB.json",
+      "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
+      "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-handoff-recovery-H28.json",
+      "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
+    ],
+    "rule": "Create new SOURCE-named evidence in S; old cursor-referenced handoff-recovery evidence is not modified; cursor-only H advances refs"
+  },
+  "implementation": {
+    "code_freeze": true,
+    "new_code_after_verified_test": false,
+    "scalar_baseline": "GF(256) polynomial0x11d, original Go-normalized 40x20 Vandermonde generator; old scalar API, old Go parity vectors and e×e/direct recovery retained",
+    "native": "M0-reviewed safe FFI Tables::new/encode, caller original Go coefficient rows, real ec_encode_data, explicit Scalar/PreferNative/RequireNative selection, scalar short <64 and typed RequireNative refusal",
+    "fec_owner": "opt-in FecTxOwner::new_cooperative_with_backend, existing 4-GF-row parity polls source-first, bounded memory/rows; no private thread or wire/PN redefinition",
+    "record_link": "Existing C01-C04 three-cipher/PN/AEAD and L01-L04 LINK freeze MTU, bounded reassembly, prefix escape, original Go wire and fragment equality remain unchanged; prior exact-source scoped debug regression reused",
+    "default_production": "scalar and native-isal feature off by default; no public user config/CLI/GUI/help or catalog addition in M3 codec; M0 owns future product switch",
+    "rollback": "choose unchanged scalar constructor/Scalar backend or compile without native-isal, no new on-wire format or ABI"
+  },
+  "correctness": {
+    "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "default_worker": {
+      "run_id": 39014567195,
+      "result": "SUCCESS",
+      "passed": 113,
+      "failed": 0,
+      "ignored": 1
+    },
+    "real_isal_native": {
+      "run_id": 39016665239,
+      "result": "SUCCESS",
+      "tests_passed": 3,
+      "failed": 0,
+      "exact_native_call": "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS and M3_ACTUAL_ISAL_GO_MATRIX_NATIVE_ENCODE_AND_RECOVERY"
+    },
+    "native_AB": {
+      "run_id": 39044413886,
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "conclusion": "SUCCESS",
+      "reused_same_binary": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+      "test_passed": 3
+    },
+    "native_BA": {
+      "run_id": 39045641512,
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "conclusion": "SUCCESS",
+      "reused_same_binary": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+      "test_passed": 3
+    },
+    "oracle_scope": "k1..20 x six profile 4/8/10/12/16/20; short,unaligned,MTU; byte exact Go-normalized parity 56B final wire, e×e erasure including e=k, partial source variable lengths, real cooperative 20:20 4 rows per polling quantum; test verifies NativeIsaL after actual call",
+    "unchanged": "Original 110 scalar/record/LINK cases and terminal block-ID parity-loss regression preserved within 113 passing test suite"
+  },
+  "performance": {
+    "type": "CODEC_COMPONENT_ONLY_NOT_PRODUCT",
+    "configuration": "20 original data, 20 parity, 1200 bytes per source, selected 4 erased source recovery; deterministic bytes ((i*37+j*19+23)%251), Rust1.85.1 Release, Linux x86_64 static ISA-L v2.31.1 upstream c387163fcbca62701d646149564c550c78a4f985",
+    "measurement": "within each action one consume job VM, sequential order A/B or B/A, identical source/data/profile/test binary; compiled earlier in build job then artifact-hash verified and reused; per-leg 200ms warmup excluded, five >=250ms valid thread CPU/wall windows, zero invalid; no cross-VM CPU-s direct comparison",
+    "AB": {
+      "run_id": 39044413886,
+      "attempt": 1,
+      "harness_sha": "d361f7563c770b30f6e684dcadededf4961f1d53",
+      "order": "AB",
+      "build_job_id": 117430181619,
+      "measurement_job_id": 117430429607,
+      "result": "CPU_PAIRED_VALID",
+      "artifact_build": {
+        "id": 12104334783,
+        "digest": "sha256:e136fd1199e6d9f8b36041e69859a56f4a3329ff2d2a579866bccca5aae5353f"
+      },
+      "artifact_result": {
+        "id": 12104799833,
+        "digest": "sha256:7f798ddd9aece30f472413d3e38c3bc41f5dae3fa45494d6ed0c14f40528db63"
+      },
+      "runner": {
+        "cpu": "AMD EPYC 9V74",
+        "arch": "x86_64",
+        "reported_cpus": 4,
+        "isa_available": [
+          "SSE2",
+          "SSSE3",
+          "AVX2",
+          "AVX512F"
+        ],
+        "actual_isal_dispatched_instruction": "NOT_PROVEN"
+      },
+      "scalar": {
+        "cpu_ns": 1250960560,
+        "wall_ns": 1250815670,
+        "blocks": 2712,
+        "per_block_cpu_us": 461.269,
+        "p99_sampled_codec_operation_wall_ns": 507789,
+        "valid_windows": 5,
+        "invalid_windows": 0
+      },
+      "native": {
+        "cpu_ns": 1250219004,
+        "wall_ns": 1250276697,
+        "blocks": 123331,
+        "per_block_cpu_us": 10.137,
+        "p99_sampled_codec_operation_wall_ns": 13242,
+        "valid_windows": 5,
+        "invalid_windows": 0
+      },
+      "scalar_divided_by_native_per_block_cpu_ratio": 45.503
+    },
+    "BA": {
+      "run_id": 39045641512,
+      "attempt": 1,
+      "harness_sha": "a4ca2fe5b94f6a7b50c33bf06699ef2161abbc39",
+      "order": "BA",
+      "build_job_id": 117433692612,
+      "measurement_job_id": 117433962275,
+      "result": "CPU_PAIRED_VALID",
+      "artifact_build": {
+        "id": 12106030459,
+        "digest": "sha256:6d02e135376a51038f5a64d8d869223ae00c2d4d47918060fcab0fff8028f3b0"
+      },
+      "artifact_result": {
+        "id": 12105646691,
+        "digest": "sha256:f32aca15cdcecbef17613f3c62c6c4ffd2108081e8e5a511b0ac3ce66f6e8850"
+      },
+      "downloaded_zip_sha256": "f32aca15cdcecbef17613f3c62c6c4ffd2108081e8e5a511b0ac3ce66f6e8850",
+      "manifest": {
+        "main_source": "a4ca2fe5b94f6a7b50c33bf06699ef2161abbc39",
+        "worker_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+        "upstream_isal": "c387163fcbca62701d646149564c550c78a4f985",
+        "rust": "1.85.1",
+        "binary_sha256": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+        "cargo_lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8",
+        "native_call_sha256": "8c17612a7f5f500bf10d3545e64a9005bc4a876afbe908cbc6d6590c69bbc1c2"
+      },
+      "raw_log_sha256": "bf11bf9c69d9dc6fa24450b104b00b8c6890cd862cb9602e87877855c2435487",
+      "host_isa_log_sha256": "9b9e9d3c6cd9ee8da4d4dfe53c0fd51fd4f4ce5264b80ad41871f7e4d543b22e",
+      "runner": {
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "arch": "x86_64",
+        "reported_cpus": 4,
+        "isa_available": [
+          "SSE2",
+          "SSSE3",
+          "AVX2"
+        ],
+        "avx512f_available": false,
+        "host_cpu_quota": "UNKNOWN (host-cpu-quota.log contains unknown)",
+        "actual_isal_dispatched_instruction": "NOT_PROVEN"
+      },
+      "native": {
+        "cpu_ns": 1249879759,
+        "wall_ns": 1250257806,
+        "blocks": 52631,
+        "per_block_cpu_us": 23.748,
+        "p99_sampled_codec_operation_wall_ns": 34846,
+        "valid_windows": 5,
+        "invalid_windows": 0,
+        "logical_systematic": 1052620,
+        "logical_parity": 1052620,
+        "logical_recovered": 210524
+      },
+      "scalar": {
+        "cpu_ns": 1251864477,
+        "wall_ns": 1251524658,
+        "blocks": 1996,
+        "per_block_cpu_us": 627.187,
+        "p99_sampled_codec_operation_wall_ns": 704415,
+        "valid_windows": 5,
+        "invalid_windows": 0,
+        "logical_systematic": 39920,
+        "logical_parity": 39920,
+        "logical_recovered": 7984
+      },
+      "scalar_divided_by_native_per_block_cpu_ratio": 26.41,
+      "artifact_file_checks": "ZIP digest matches GitHub result artifact; paired-BA.log and host-isa.log sha256 match paired-BA.json; manifest pins correct main/worker/upstream/binary/toolchain"
+    },
+    "interpretation": "Both AB (45.5x) and independent BA (26.4x) show positive same-host native speed advantage at this one fixed component workload. Hosts are different (AB EPYC9V74 vs BA EPYC7763), do not compare their absolute CPU or infer a hardware-independent gain. CPU status valid but selected ISA-L assembly/CPU microarchitecture routine not instrumented. <=2048 sampled codec operation latency events per leg, not packet p99. Systematic/parity/recovery are logical delivered-to-codec counts, not NIC transmission success.",
+    "prior_failure_retained": {
+      "run_id": 39044344082,
+      "reason": "AB M0 receipt parser whitespace failed after codec test executed; subsequent run corrected parser; historical failure retained"
+    }
+  },
+  "governance": {
+    "prior_central_H28": {
+      "source_sha": "979952f2004c09716613033cb265f4a97faef8c4",
+      "run_id": 39045261026,
+      "conclusion": "SUCCESS",
+      "result": "ROLE_SCOPE_PASS"
+    },
+    "recovered_H29": "447af86732ea4ab88d21bed9c363f9fd40766107",
+    "previous_worker_moving_source_failures": [
+      39045039329,
+      39045091463
+    ],
+    "integration_requires_M0_exact_source_scope_recheck": true
+  },
+  "integration_boundary": {
+    "packet_RTT_p99": "NOT_RUN",
+    "real_NIC_delivered_goodput": "NOT_RUN",
+    "Go_V4_authenticated_FEC_on": "NOT_RUN",
+    "external_engine_M1_owner_M4_kernel_parity_fairness": "NOT_RUN",
+    "real_MTU_driver_notifications": "NOT_RUN",
+    "Windows_native": "UNSUPPORTED",
+    "Linux_ARM64_native": "UNSUPPORTED",
+    "physical": "NOT_RUN",
+    "production_feature": "DEFAULT_OFF",
+    "who": "M0 owns real Go TLS/Rust engine/driver/ABI/CI combined integration; M3 fixes codec only if integration finds a specific bug",
+    "status": "READY_FOR_INTEGRATION_WITH_EXPLICIT_EXTERNAL_UNVERIFIED_SCOPE_NOT_PRODUCT_PASS"
+  },
+  "completion": "M3 scoped workpack016 done_when met (frozen code+Go scalar/native byte differential+AB/BA same-VM component cost and complete source evidence). No new encoder architecture or further native microbench."
+}
