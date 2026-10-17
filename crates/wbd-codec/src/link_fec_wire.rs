@@ -87,6 +87,88 @@ pub fn fragment_compat(
     Ok(result)
 }
 
+/// Only one LINK frame is created per call. The packet's original frame MTU,
+/// shard stride, mode and ID are immutable across calls; the owner supplies an
+/// already-budgeted CURRENT frame capacity before publishing each frame.
+///
+/// A frame returned from issue_next has been handed to the caller: the caller
+/// MUST freeze/seal it only once and retry exactly that wire+PN after uncertain
+/// syscall outcomes. An MTU reduction can abandon the remaining plan but may
+/// never regenerate already issued fragments at a different stride or reuse
+/// the same live packet ID. No network access or clock inside the codec.
+#[derive(Debug)]
+pub struct LinkPacketPlan<'a> {
+    source:&'a [u8],
+    packet_id:u32,
+    planned_frame_mtu:usize,
+    chunk:usize,
+    count:usize,
+    emitted:usize,
+    fragmented:bool,
+    abandoned:Option<(usize,usize)>,
+}
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub enum LinkPlanError {
+    /// This plan is terminal; a replacement MUST reserve a distinct live ID.
+    MtuShrank { emitted:usize, required:usize, available:usize },
+}
+impl<'a> LinkPacketPlan<'a> {
+    /// Constructor is allocation-free and binds a single immutable MTU
+    /// snapshot for the entire authenticated logical LINK packet.
+    pub fn new(source:&'a [u8],frame_mtu:usize,mode:LinkMode,packet_id:u32)
+        ->Result<Self,WireError>{
+        let chunk=validate_mtu(frame_mtu)?;
+        if source.is_empty()||source.len()>MAX_LOGICAL_DATAGRAM {
+            return Err(WireError::PacketTooLarge);
+        }
+        let fragmented=source.len()>frame_mtu||need_escape(source,mode);
+        if fragmented && packet_id==0 {return Err(WireError::InvalidFragment);}
+        let count=if fragmented {source.len().div_ceil(chunk)}else{1};
+        if count>u16::MAX as usize {return Err(WireError::PacketTooLarge);}
+        Ok(Self{source,packet_id,planned_frame_mtu:frame_mtu,
+            chunk,count,emitted:0,fragmented,abandoned:None})
+    }
+    pub fn issued(&self)->usize{self.emitted}
+    pub fn total_frames(&self)->usize{self.count}
+    pub fn is_abandoned(&self)->bool{self.abandoned.is_some()}
+    pub fn original_frame_mtu(&self)->usize{self.planned_frame_mtu}
+
+    /// The owner may call this at most once per freshly published fragment.
+    /// On reduced capacity the plan becomes terminal and never issues the
+    /// remainder of this packet, avoiding mixed-stride reconstruction.
+    pub fn issue_next(&mut self,current_frame_mtu:usize)
+        ->Result<Option<Vec<u8>>,LinkPlanError>{
+        if let Some((required,available))=self.abandoned{
+            return Err(LinkPlanError::MtuShrank{
+                emitted:self.emitted,required,available});
+        }
+        if self.emitted==self.count{return Ok(None);}
+        let part=if self.fragmented{
+            let start=self.emitted*self.chunk;
+            &self.source[start..self.source.len().min(start+self.chunk)]
+        }else{self.source};
+        let required=part.len()+if self.fragmented{LINK_HEADER}else{0};
+        if required>current_frame_mtu{
+            self.abandoned=Some((required,current_frame_mtu));
+            return Err(LinkPlanError::MtuShrank{
+                emitted:self.emitted,required,available:current_frame_mtu});
+        }
+        let wire=if self.fragmented{
+            let mut wire=Vec::with_capacity(required);
+            wire.extend_from_slice(LINK_MAGIC);
+            wire.extend_from_slice(&[1,0]);
+            wire.extend_from_slice(&(self.emitted as u16).to_be_bytes());
+            wire.extend_from_slice(&(self.count as u16).to_be_bytes());
+            wire.extend_from_slice(&(self.source.len() as u16).to_be_bytes());
+            wire.extend_from_slice(&self.packet_id.to_be_bytes());
+            wire.extend_from_slice(part);
+            wire
+        }else{part.to_vec()};
+        self.emitted+=1;
+        Ok(Some(wire))
+    }
+}
+
 /// Only called **after record authentication**. It does not reassemble,
 /// allocate reassembly slots, infer live packet generation or deliver business.
 pub fn inspect_link(

@@ -194,3 +194,54 @@ fn r1_link_sixteen_near_full_packets_completion_accounts_both_live_copies(){
         Ok(LinkDelivery::Ordinary(b"still-deliver")));
     assert!(rx.state().retired_packet_ids<=MAX_RETIRED);
 }
+
+// PACK-006 L02: immutable per-logical-packet frame budget and bounded one
+// fragment per owner turn. Do not mix old/new chunk stride under one ID.
+#[test]
+fn r1_link_issued_plan_go_wire_equivalence_and_mtu_mid_packet_abandon(){
+    use crate::link_fec_wire::{LinkPacketPlan,LinkPlanError};
+    for mtu in [64usize,1400] {
+        for mode in [LinkMode::FixedOff,LinkMode::AdaptiveOff] {
+            for body in [b"simple".to_vec(),b"WBDLFRG1!".to_vec(),b"WF!".to_vec(),
+                         vec![0x4a;mtu],vec![0x5a;mtu+1],vec![0x7a;65_535]]{
+                let expected=fragment_compat(&body,mtu,mode,71).unwrap();
+                let mut plan=LinkPacketPlan::new(&body,mtu,mode,71).unwrap();
+                assert_eq!(plan.total_frames(),expected.len());
+                let mut out=Vec::new();
+                while let Some(frame)=plan.issue_next(mtu).unwrap(){out.push(frame);}
+                assert_eq!(out,expected);
+                assert_eq!(plan.issue_next(mtu).unwrap(),None);
+                assert_eq!(plan.issued(),plan.total_frames());
+            }
+        }
+    }
+    let data=(0..3000).map(|i|((i*11+3)%251) as u8).collect::<Vec<_>>();
+    let mut old=LinkPacketPlan::new(&data,1400,LinkMode::FixedOff,100).unwrap();
+    let first=old.issue_next(1400).unwrap().unwrap();
+    assert_eq!(first.len(),1400);
+    assert_eq!(old.issued(),1);
+    assert_eq!(old.issue_next(1000),
+        Err(LinkPlanError::MtuShrank{emitted:1,required:1400,available:1000}));
+    assert_eq!(old.issue_next(1400),
+        Err(LinkPlanError::MtuShrank{emitted:1,required:1400,available:1000}));
+    assert!(old.is_abandoned());
+    // Never combine packet_id100 prefix at stride1380 with a suffix based on
+    // stride980. A NEW packet ID101 produces an independent valid reassembly.
+    let mut rx=ReassemblyTable::new(1400,1000,LinkMode::FixedOff).unwrap();
+    assert_eq!(rx.push_after_record_auth(&first,id(100),10),Ok(LinkDelivery::Pending));
+    let mut replacement=LinkPacketPlan::new(&data,1000,LinkMode::FixedOff,101).unwrap();
+    let mut received=LinkDelivery::Pending;
+    while let Some(frame)=replacement.issue_next(1000).unwrap(){
+        received=rx.push_after_record_auth(&frame,id(101),11).unwrap();
+    }
+    assert_eq!(received,LinkDelivery::Reassembled(data));
+    assert_eq!(rx.state().assemblies,1);
+    assert_eq!(rx.push_after_record_auth(b"next ordinary packet",id(0),12),
+        Ok(LinkDelivery::Ordinary(b"next ordinary packet")));
+    // MTU shrink before first issue must not produce ANY fragment with wrong
+    // stride or consume a different packet's data.
+    let mut fresh=LinkPacketPlan::new(b"WBDLFRG1",1400,LinkMode::FixedOff,102).unwrap();
+    assert_eq!(fresh.issue_next(25),
+        Err(LinkPlanError::MtuShrank{emitted:0,required:28,available:25}));
+    assert_eq!(fresh.issued(),0);
+}
