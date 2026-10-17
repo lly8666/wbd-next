@@ -4,16 +4,16 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 24,
-  "checkpoint_sha": "c900f7a412f2b71fc63eaff1986185322dd72026",
+  "sequence": 25,
+  "checkpoint_sha": "2da432049711639de3e722651860214dbdfb63c3",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 partial: native Rust1.85.1 Debug 109/109 PASS, 1 deliberately ignored optional Release CPU probe, CODE e2a0a60f; positive 3 FEC size class FIFO and 32/33/34ms deadlines, budget-first parity GF preflight. Source exact CODE Governance39003330841 SUCCESS and main central scope39003440040 SUCCESS. S governance39003535990 FAIL because control or source moved mid-audit. No Release clock or ISA-L native/backend/product claim.",
-  "why_now": "Main PACK-006 once-assigned workpack016: continue own LINK/record/FEC functionality without asserting source-locked old015 product qualification. Recovery of S/H old Governance control-moved and later GitHub 403 is explicitly recorded in evidence.",
-  "done_when": "Source-bound C01–C04/L01–L04/F01–F06, native ISA-L vs pinned Go scalar and applicable host target, resource/fresh send fairness interfaces, proper configuration/integration exclusions; H and evidence only after accurate source checks.",
-  "next_action": "M0 source-pin Release --ignored probe per docs/devlog/M3/M0-REQUEST-PACK016-COOP-RELEASE-CPU.md, maintain full raw paired CPU/wall and binary hash; M0 ISA-L minimal native build interface and production driver/Go V4 bridge remain prerequisites. Re-run governance when stable; do not mark task finished.",
+  "current_task": "PACK016 partial: terminal BlockID parity preservation CODE 015c0f42 native Rust1.85.1 110/110 PASS, 1 ignored Release CPU probe; SOURCE code Governance39006533803 SUCCESS, main central exact CODE scope39006743890 ROLE_SCOPE_PASS. New docs S later than code; full ISA-L/Release/real owner driver NOT_RUN.",
+  "why_now": "Handoff CLEAN through recovered cursor-only predecessor; resolved authorized FEC silent parity-loss boundary; preserve scope and earlier failed moving-source audits without treating codec proof as production.",
+  "done_when": "Full assigned PACK016 C01-C04/L01-L04/F01-F06 including Go vectors, real ISA-L same-byte native + applicable perf and bounded source-first driver service; shared build/ABI and product integration remain M0 prerequisites.",
+  "next_action": "Continue PACK016 M3-only FEC verification/fixes against frozen old-Go matrix; consume M0-reviewed ISA-L safe-link/Actions Release test interface when available and record actual results, then deliver full workpack without premature integration/PASS.",
   "unverified": true,
-  "last_tested_source": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+  "last_tested_source": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
@@ -24,5 +24,5 @@
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-SCOPE-AUDIT-403.md"
   ],
-  "partial_summary": "CODE e2a0a60f native39003330821 success 109 pass 0 failed 1 ignored, binary 04582757b8a12f2d081ff18789400dd7a1ebca28e57d3591ad8c7bd77b7817f5; test log 984d26b25889593a54dd9da3b7e02fc95df64ba63d15eed1229e915bba581598. CODE Governance39003330841 PASS; CODE central scope39003440040 PASS. Evidence S c900f7a4, S Governance39003535990 FAIL control/source moved mid-audit; H only cursor. Ignored Linux Release paired thread CPU/wall >=250ms windows ×18 legs not executed; no 100us FEC CPU, ISA-L, engine/game FEC-on, packet p99 or 500Mbps qualified."
+  "partial_summary": "At exact CODE native39006533785 build-once 110 PASS/0 FAIL/1 ignored, terminal ID regression ran. Intermediate S Governance39006519032 failed control/source moved; exact CODE Governance39006533803 SUCCESS; central exact CODE scope39006743890 PASS is_current_head=false due following docs S. Final evidence S2da4320 covered, latest docs-only governance not code qualification. Native ISA-L, Release cooperative CPU, Go V4 producer, real driver FEC-on/parity fairness, packet p99/500Mbps NOT_RUN."
 }
