@@ -687,11 +687,13 @@ impl ProtectedScopedOwner {
         outcome
     }
 
-    /// Actual M4 typed raw ready sender on the same original protected
-    /// owner M1 LoanBatch. This is a bounded ready-only sequence of raw
-    /// sendto syscalls (NOT one raw sendmmsg); worker currently publishes one
-    /// FrozenRecord at a time. No new ciphertext copy/PN/seq or fallback.
-    /// Returns the kernel-copied prefix and explicit uncertain classification;
+    /// Consume frozen M4-013 Linux sendmmsg scatter path from the SAME original
+    /// protected Go-authenticated Rust M1 LoanBatch. This invokes one real
+    /// sendmmsg syscall over header iovec + borrowed immutable ciphertext.
+    /// The current worker publishes ONE packet per ready turn (not yet a 32
+    /// packet aggregated syscall); never wait to fill the batch. No second
+    /// AEAD/PN or copied ciphertext. Kernel copy is NOT peer delivery.
+    /// Returns the copied prefix and explicit uncertain classification;
     /// ALWAYS recycle original M1 generation-held loan on every outcome.
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     pub(crate) fn submit_scoped_raw_tx_report_reusing(
@@ -721,9 +723,9 @@ impl ProtectedScopedOwner {
             }
             // Slice of original immutable Arc-backed frozen handle, not an
             // extra Arc clone or temporary ciphertext/driver buffer.
-            Ok(driver.send_ready_batch(
+            Ok(driver.send_kernel_multimsg(
                 self.generation,std::slice::from_ref(&ready[0].record),
-                tuple,presentation,
+                tuple,std::slice::from_ref(&presentation),
             ))
         })();
         *storage=batch.recycle();
