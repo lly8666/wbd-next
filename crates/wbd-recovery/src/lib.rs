@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 pub use wbd_types::{LaneKey, MonoNs, RecordPn};
 pub mod receipt;
+pub mod rx_feedback;
 pub mod budget;
 pub mod global_sparse;
 pub use global_sparse::{
@@ -14,6 +15,7 @@ pub use budget::{
     BudgetDirection, BudgetError, BudgetSnapshot, RepairBudget, RepairBudgetConfig,
     ReservationId, WireDirection,
 };
+pub use rx_feedback::{FeedbackDraft,FeedbackError,FeedbackReceive,FeedbackSendResult,RxFeedbackConfig,RxFeedbackState};
 pub use receipt::{
     ReceiptOpenFacts, ReceiptRouteScope, ScopedAuthenticatedReceipt,
     AuthenticatedReceipt, PollResult, ReceiptConfig, ReceiptPage, ReceiptState,
