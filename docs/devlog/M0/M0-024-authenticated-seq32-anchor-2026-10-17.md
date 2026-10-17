@@ -5,3 +5,9 @@
 - **精确验证**：新增同一生产辅助函数的seq32回绕、半空间固定boundary误扩展、认证成功/失败、重复和溢出向量。原`m0-v4-native-owner-probe.yml`、`native-regression.yml`及真实Go/Rust/Linux raw/TUN功能Actions应由此源码push触发；尚未观察run/manifest的部分为PENDING/NOT_RUN，不能以单元向量代产品PASS。相关§4 I01–I04；长业务/真实高带宽跨回绕仍NOT_RUN，500Mbps/80秒症状不作归因。
 - **边界**：不改worker M1/M2/M3/M4源、生产features、Go ABI或外部机器；原配对P10的CPU正负反转INCONCLUSIVE、D10 ptrace失败和原023/超MTU开放。
 - **next_action**：核对本次代码SOURCE Actions和artifact后，继续024方向-owned TX/RX真实接线/Stop-fence与ready聚合，不把修复扩展为未经证实的性能收益。
+
+## 已返回的精确 Actions（同轮后续收据）
+
+- 最终测试SOURCE `9249115c809933eae7ddebdd9334bbe16095bf64`、engine CODE `21a809c212ce2175b26f86468c0bc718adb7f44f`；原 Go/Rust/Linux native [run 39023910341](https://github.com/lly8666/wbd-next/actions/runs/39023910341) build 117371014730/consume 117371263021均success。新Rust测试 `r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance` 在编译好的feature-gated原engine binary实际执行 ...ok，同job原真实Go TLS/3 AEAD/PN/raw/TUN、MTU fail-close、netlink、针对性PN0丢失PN1独立交付、开发态10s+60s双向10.0002Mbps均通过。build ZIP sha256 `1163f00f76ab0402eca6267e43fe5b95a1ba2a3f7cb2f93fa789e72d974ad304`，result ZIP sha256 `148216ba130db689d99bfe8962553cc64d542b201059882ecc011ea92e8d1f78`，详见独立SOURCE证据 `docs/evidence/M0/M0-024-authenticated-seq32-anchor-9249115c809933eae7ddebdd9334bbe16095bf64.json`。
+- 证据边界：内置helper模拟快速跨界，本轮**没有**实测kernel连续写越2GiB；本次10Mbps是UNPAIRED DEV，不与旧AB/BA CPU组装收益。完整024、CPU改善、Game/FEC-on、原023、产品/物理均未通过；原D10 full ptrace FAIL保留。
+- worker接入复核：M3在分配后并行更新cursor H27，代码016冻结`422a2612`，M0 native ISA-L真实Go矩阵3项run39016665239有效，Release配对CPU仍NOT_RUN；M3/M4旧Governance failure分别是moving control/incomplete ancestry审计边界，不重命名为功能失败或凭普通 main PASS 覆盖。

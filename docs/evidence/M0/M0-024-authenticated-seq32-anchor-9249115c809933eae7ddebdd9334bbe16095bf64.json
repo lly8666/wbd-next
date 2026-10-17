@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "9249115c809933eae7ddebdd9334bbe16095bf64",
+  "code_source_sha": "21a809c212ce2175b26f86468c0bc718adb7f44f",
+  "authentic_engine_blob": "e9c68425e9d597a4bdd13ada8cabb3545dc88cf6",
+  "result": "PASS_SCOPED_NATIVE_AUTHENTICATED_SEQ32_ANCHOR_PLUS_ORIGINAL_GO_RUST_RAW_TUN_PARTIAL_TASK",
+  "unverified": true,
+  "production_features": 0,
+  "why_now": "Original Go->Rust Linux normal/off raw/TUN background RX used immutable Go bootstrap rx_boundary as u64 seq32 reference for every DATA; after moving beyond half-space, later authenticated segments could be misinterpreted/rejected. No claim that historical 80s interruption was caused by this.",
+  "changes": [
+    "M0-only engine entry rx_seq_anchor:u64 initialized from trusted Go receiver boundary; moving anchor is session scoped, not global.",
+    "Original M4 trusted tuple/checksum/seq only yields candidate; only M1/M3 original AEAD/unique PN AuthenticatedRxReport.link_ready==1 advances max(current, wire seq end) with checked arithmetic; unsigned raw, replay, control, unapproved LINK do not advance.",
+    "Original phase/Stop/driver/TLS authority, raw receive one packet at readiness and TUN remain unchanged; existing native runner now consumes new explicit source-checked test, only authorized workflow edited."
+  ],
+  "exact_native": {
+    "run_id": 39023910341,
+    "run_attempt": 1,
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "source_sha": "9249115c809933eae7ddebdd9334bbe16095bf64",
+    "conclusion": "success",
+    "build_job_id": 117371014730,
+    "consume_job_id": 117371263021,
+    "artifacts": [
+      {
+        "id": 12097880995,
+        "name": "m0-v4-native-probe-build-39023910341-1",
+        "digest": "sha256:1163f00f76ab0402eca6267e43fe5b95a1ba2a3f7cb2f93fa789e72d974ad304"
+      },
+      {
+        "id": 12096839608,
+        "name": "m0-v4-native-probe-result-39023910341-1",
+        "digest": "sha256:148216ba130db689d99bfe8962553cc64d542b201059882ecc011ea92e8d1f78"
+      }
+    ],
+    "observed": [
+      "r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance ... ok exact original Rust engine test and checked by consumer, not Python-only proof",
+      "Go TLS authentic protected Go bridge and original Rust AEAD+PN => real Linux raw/TUN all 3 cipher suites",
+      "kernel MTU exact boundary/over limit fail-closed, real netlink revision, STOP/generation, target encrypted PN0 drop PN1 later delivery",
+      "10ms and 150ms native netem constrained functional smoke success; does not establish latency qualification",
+      "existing 10s warmup +60s dev Normal/off 10.0002Mbps offered/delivered each direction, worker RX CPU2.7124s/TX CPU2.4226s; unpaired/dev diagnostic only"
+    ],
+    "test_boundary": "unit candidate-to-high-water auth condition and simulated rapid seq32 wrap, ORIGINAL RAW/TUN real Go TLS flow for ordinary payload and 3 cipher; no genuine >2GiB continuous TCP seq32 wrap through live kernel network, no C50/physical/product."
+  },
+  "supporting_distinct_source_actions": {
+    "source_sha": "21a809c212ce2175b26f86468c0bc718adb7f44f",
+    "native_regression": {
+      "run": 39023784694,
+      "conclusion": "success",
+      "default_feature": "normal native regression; not same source as workflow-only 924..."
+    },
+    "r0_native_abi": {
+      "run": 39023784674,
+      "conclusion": "success"
+    },
+    "r0_cross_abi": {
+      "run": 39023784693,
+      "conclusion": "success"
+    },
+    "g2": {
+      "run": 39023784627,
+      "conclusion": "success"
+    },
+    "static_qualification": {
+      "run": 39023784654,
+      "conclusion": "success"
+    },
+    "governance": {
+      "run": 39023784663,
+      "conclusion": "success",
+      "scope": "identity_structure_only"
+    }
+  },
+  "source_governance": {
+    "source_sha": "9249115c809933eae7ddebdd9334bbe16095bf64",
+    "governance": {
+      "run": 39023910325,
+      "conclusion": "success",
+      "scope": "identity_structure_only"
+    },
+    "maintenance": {
+      "run": 39023910366,
+      "conclusion": "success",
+      "scope": "tool_selftest"
+    },
+    "central_scope_audit": "SKIPPED for main push, not a PASS",
+    "worker_governance": "Old M3/H Governance39014918190 ROLE_SCOPE_FAILED moving-control; old M4/H39012535883 incomplete/diverged bounded G2 activation ancestry. Neither is a native functional verdict; exact-source Central worker scope audits govern v2."
+  },
+  "comparison_and_limits": {
+    "old_Rust_A": "42744982e28d03dbe6cbcbd0daa395a5ceda5d80",
+    "old_Rust_B": "8d41c6ff8b047d78332f2a8ab8951e49a8b2ec12",
+    "paired_AB": {
+      "run": 39020675956,
+      "legacy_candidate_cpu_vs_baseline_percent": 0.9521292449816698
+    },
+    "paired_BA": {
+      "run": 39020694554,
+      "legacy_candidate_cpu_vs_baseline_percent": -2.2587803154482278
+    },
+    "cpu_benefit": "HISTORICAL_INCONCLUSIVE_SIGN_REVERSES; new moving-anchor source HAS_NO_VALID_AB_BA cost benefit claim",
+    "existing_D10_full_ptrace": "FAIL 39014446221; no measured capacity to justify heavier scenario",
+    "actual_same_session_direction_split": "NOT_DONE single Mutex<Entry> still serializes TX+RX mutable owner",
+    "actual_32_ready_single_kernel_syscall": "NOT_RUN real original runtime ready loop does one packet per syscall",
+    "original_R0_023": "OPEN_UNVERIFIED",
+    "oversize_end_to_end_auto_fragment": "NOT_RUN",
+    "M3_FEC_on_M2_recovery_Game": "NOT_INTEGRATED",
+    "windows_linux_arm_physical_500mbps": "NOT_RUN",
+    "product": "NOT_RUN"
+  },
+  "next_action": "Continue R1-M0-HOTPATH-COST-024 by composing already delivered M1 directional SPSC with original authenticated owner, isolating actual TX/RX mutable state and Stop/epoch fences before measuring CPU; no fresh worker assignment required."
+}
