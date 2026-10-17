@@ -72,6 +72,8 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    raw_tx_lease_mtu:u32,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     workers:Option<LoopWorkers>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     joining:bool,
@@ -132,6 +134,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         tx_route:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        raw_tx_lease_mtu:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         workers:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -396,6 +400,9 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     if e.raw_tx.is_none(){
         let driver=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
             .map_err(|_|INVALID)?;
+        let observed=wbd_platform::linux_packet_preflight::observe_interface_mtu(
+            "lo",ifindex).map_err(|_|INVALID)?;
+        e.raw_tx_lease_mtu=observed.kernel_mtu;
         e.raw_tx=Some(Arc::new(driver));
     }
     let route=e.owner.observe_linux_normal_off_route_budget(
@@ -611,15 +618,15 @@ fn classify_tx_turn(report:Option<&wbd_platform::linux_batch::KernelSendReport>,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn raw_driver_reopen_on_route_change(
-    previously_seen:Option<u64>,observed:u64,previous_refresh_count:u64
+    has_cache:bool,previous_refresh_count:u64,observed_mtu:u32,lease_mtu:u32
 )->bool{
-    match previously_seen{
-        Some(old)=>old!=observed,
-        // None at first call is normal initialization. Later None is the
-        // path/MTU error invalidation: M4's private driver budget is not
-        // implicitly repaired when the M0 scoped snapshot reappears.
-        None=>previous_refresh_count!=0,
-    }
+    // A genuine 65536->1500 MTU shrink MUST continue to reject this
+    // authenticated generation, even if the smaller packet would fit.
+    // Only after M4 has actually failed and M0 invalidated its route cache,
+    // and the trusted kernel observation has recovered to the original
+    // lease capacity, may this owner install a fresh same-generation FD.
+    !has_cache && previous_refresh_count!=0 && lease_mtu!=0
+        && observed_mtu>=lease_mtu
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
@@ -714,14 +721,15 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // link/route revision change or prior invalidation; never on
             // ordinary 1s refresh or DATA. Exact one background TX worker
             // owns this handle, so no other TX batch can be in flight.
-            let must_reopen=raw_driver_reopen_on_route_change(
-                e.tx_route.as_ref().map(|c|c.route_event_revision),
-                event.revision,e.tx_route_revision
-            );
+            let has_cache=e.tx_route.is_some();
             e.tx_route=None;
             let snapshot=e.owner.observe_linux_normal_off_route_budget(
                 "lo",ifindex,destination
             ).map_err(|_|INVALID)?;
+            let must_reopen=raw_driver_reopen_on_route_change(
+                has_cache,e.tx_route_revision,snapshot.observed_interface_mtu,
+                e.raw_tx_lease_mtu
+            );
             if must_reopen{
                 let fresh=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
                     .map_err(|_|INVALID)?;
@@ -735,6 +743,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                     return Err(BAD_STAGE)
                 }
                 e.raw_tx=Some(Arc::new(fresh));
+                e.raw_tx_lease_mtu=snapshot.observed_interface_mtu;
             }
             e.tx_route_revision=e.tx_route_revision.checked_add(1).ok_or(FULL)?;
             e.tx_route=Some(WorkerRouteBudget{
@@ -885,8 +894,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.raw_tx.is_none(){
         let Ok(tx)=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
         else{return INVALID};
+        let Ok(observed)=wbd_platform::linux_packet_preflight::observe_interface_mtu(
+            "lo",ifindex) else{return INVALID};
+        e.raw_tx_lease_mtu=observed.kernel_mtu;
         e.raw_tx=Some(Arc::new(tx));
     }
+    if e.raw_tx_lease_mtu==0{return BAD_STAGE}
     // Build the independent RX arena and move the exact protected opener
     // only after both original raw/TUN devices have been installed. Never
     // allocate a second crypto instance or credential authority.
@@ -1179,11 +1192,12 @@ mod tests{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
     fn m0_route_refresh_rearms_real_m4_only_after_change_or_invalidation(){
-        assert!(!raw_driver_reopen_on_route_change(None,1,0));
-        assert!(!raw_driver_reopen_on_route_change(Some(1),1,3));
-        assert!(!raw_driver_reopen_on_route_change(Some(5),5,99));
-        assert!(raw_driver_reopen_on_route_change(Some(1),2,1));
-        assert!(raw_driver_reopen_on_route_change(None,5,2));
+        assert!(!raw_driver_reopen_on_route_change(false,0,65536,65536));
+        assert!(!raw_driver_reopen_on_route_change(true,3,65536,65536));
+        assert!(!raw_driver_reopen_on_route_change(false,3,1500,65536));
+        assert!(raw_driver_reopen_on_route_change(false,3,65536,65536));
+        assert!(raw_driver_reopen_on_route_change(false,3,65536,1500));
+        assert!(!raw_driver_reopen_on_route_change(false,3,65536,0));
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
