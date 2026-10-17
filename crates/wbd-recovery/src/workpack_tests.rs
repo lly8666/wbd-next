@@ -302,13 +302,13 @@ fn ingress_010_owner(
         outer_mtu:1400,max_repair_bytes_per_epoch:100_000,
         max_pending_reservations:8,max_pending_bytes:4096,
         io_timeout_ns:10_000_000,
-    },MonoNs(0)).unwrap();
+    },MonoNs(30_000_000)).unwrap();
     let reverse=LaneKey{slot:tx_lane.slot+1,..tx_lane};
     let scope=ReceiptRouteScope::checked(
         tx_lane,reverse,direction,[3;16],
         (RecordPn(0),RecordPn(999)),(RecordPn(1000),RecordPn(1099))
     ).unwrap();
-    broker.bind_receipt_route(d,scope,MonoNs(0)).unwrap();
+    broker.bind_receipt_route(d,scope,MonoNs(30_000_000)).unwrap();
     let mut sh=ReceiptState::new(tx_lane,ReceiptConfig{
         max_shadow_entries:2,pto_ns:30_000_000,
         reorder_window_ns:2_000_000,
