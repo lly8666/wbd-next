@@ -491,7 +491,7 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
 
 // Do not hold global registry lock while M4 RX preflight ignores unrelated
 // RST/ACK or polls for up to 750ms. M4 receives directly into the already
-// allocated ORIGINAL M1 UniqueBuffer and validates exact trusted tuple and
+// allocated ORIGINAL M1 UniqueBuffer via recvmmsg and checks trusted tuple and
 // TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
 // Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -507,8 +507,23 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
         src_port:flow.client_port,dst_port:flow.server_port,
     };
-    let (len,seq)=raw.recv_one_into(generation,slab.writable(),
-        tuple,PacketPersona::Legacy).map_err(|_|INVALID)?;
+    // Consume frozen M4-013 real recvmmsg into the SAME original M1
+    // unique mutable slab. One immediately ready packet, never wait for
+    // a 32-slot fill; M4 verifies kernel size/tuple/checksum but does
+    // NOT authenticate. The sole original owner below still performs
+    // AEAD/PN/replay/LINK admission, and Stop owns the slab lifetime.
+    let batch={
+        let mut unique_slots=[slab.writable()];
+        raw.receive_kernel_multimsg(
+            generation,&mut unique_slots,tuple,PacketPersona::Legacy,
+        ).map_err(|_|INVALID)?
+    };
+    let (len,seq)=match (batch.observed,batch.entry(0)){
+        (1,Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
+            cipher_len,seq32
+        }))=>(cipher_len,seq32),
+        _=>return Err(INVALID),
+    };
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let absolute=extend_seq32(u64::from(boundary),seq).map_err(|_|INVALID)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
