@@ -477,8 +477,9 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     if out==""{t.Fatal("missing owned exact performance receipt path")}
     if e:=os.WriteFile(out,append(encoded,'\n'),0600);e!=nil{t.Fatal(e)}
     t.Logf("M0_DEV_NORMAL_OFF_RECEIPT sparse=%t result=%s C2S_offered=%.4f C2S_delivered=%.4f S2C_offered=%.4f S2C_delivered=%.4f worker_rx_cpu_s=%.4f worker_tx_cpu_s=%.4f window=%s+%s",
-        sparse,status,offeredC,deliveredC,offeredS,deliveredS,warmup,measure,
-        float64(ownerRxAfter-ownerRxBefore)/1e9,float64(ownerTxAfter-ownerTxBefore)/1e9)
+        sparse,status,offeredC,deliveredC,offeredS,deliveredS,
+        float64(ownerRxAfter-ownerRxBefore)/1e9,float64(ownerTxAfter-ownerTxBefore)/1e9,
+        warmup,measure)
     // Workflow does not convert measurement receipt success to 10Mbps PASS.
     // INVALID cases stay explicit. No artificially unbounded retries.
     if len(failures)>0{t.Errorf("real baseline failed integrity/io: %v",failures)}
