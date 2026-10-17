@@ -8,6 +8,8 @@ on:
     branches: [main, governance/incremental-ci-20261015]
     paths:
       - "tools/scope_audit.py"
+      - "tools/governance.py"
+      - "tests/test_governance.py"
       - "tests/test_scope_audit.py"
       - ".governance/scope-checkpoints.json"
       - ".github/workflows/scope-audit.yml"
