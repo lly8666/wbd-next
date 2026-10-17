@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "d361f7563c770b30f6e684dcadededf4961f1d53",
+  "result": "M3_CODEC_ONLY_NATIVE_AND_SAME_VM_RELEASE_AB_PASS_NO_PRODUCT_QUALIFICATION",
+  "artifact_verified": true,
+  "unverified": true,
+  "worker_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "baseline_normal_fec_off_source": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
+  "mode": "single fixed 20:20,1200B source+four original recovery rows, scalar A then pinned ISA-L B, same precompiled Rust1.85.1 Release codec test binary within one consume job/VM, no competing concurrent test",
+  "upstream_isal": "c387163fcbca62701d646149564c550c78a4f985",
+  "workflow": ".github/workflows/m0-m3-isal-native.yml",
+  "pass_run": {
+    "id": 39044413886,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 117430181619,
+    "consume_job_id": 117430429607,
+    "build_artifact": {
+      "id": 12104334783,
+      "digest": "sha256:e136fd1199e6d9f8b36041e69859a56f4a3329ff2d2a579866bccca5aae5353f"
+    },
+    "result_artifact": {
+      "id": 12104799833,
+      "digest": "sha256:7f798ddd9aece30f472413d3e38c3bc41f5dae3fa45494d6ed0c14f40528db63"
+    },
+    "binary_sha256": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+    "native_go_gf_20x20_cases": 3,
+    "native_case_failures": 0,
+    "scalar": {
+      "leg": 0,
+      "blocks": 2712,
+      "systematic": 54240,
+      "parity": 54240,
+      "recovered": 10848,
+      "wall_ns": 1250815670,
+      "cpu_ns": 1250960560,
+      "p99_codec_operation_wall_ns": 507789,
+      "windows_ok": 5,
+      "windows_bad": 0,
+      "cpu_status": "SAME_WINDOW_CPU"
+    },
+    "native_isal": {
+      "leg": 1,
+      "blocks": 123331,
+      "systematic": 2466620,
+      "parity": 2466620,
+      "recovered": 493324,
+      "wall_ns": 1250276697,
+      "cpu_ns": 1250219004,
+      "p99_codec_operation_wall_ns": 13242,
+      "windows_ok": 5,
+      "windows_bad": 0,
+      "cpu_status": "SAME_WINDOW_CPU"
+    },
+    "comparison": "~45.5x per-CPU-second codec block throughput in THIS one scenario; not application throughput, no network/latency/specific SIMD disassembly claim"
+  },
+  "initial_failed_harness": {
+    "run_id": 39044344082,
+    "conclusion": "failure",
+    "reason": "Original Rust binary emitted fully valid AB 10 CPU windows; the M0 consume receipt Python regexp used overescaped r'\\\\s' and failed to parse leg=; first run marked workflow FAIL as required. No crypto/coding test failure; raw stdout preserved. Parser fixed in d361 workflow, second Action independently succeeded."
+  },
+  "limits": [
+    "M3 worker cursor still PARTIAL until owner reviews and hands SOURCE-qualified component",
+    "Go TLS/FEC-on real engine, M4 device, Game/repair/Stop combined NOT_RUN",
+    "Normal/FEC off fixed baseline unchanged",
+    "D10 original run39032995995 FAIL/INCONCLUSIVE untouched",
+    "No 50/100/500Mbps, physical, Win/ARM native qualification"
+  ],
+  "next_action": "Review frozen CODE422a for main M3 integration only after its worker delivery, reusing identical main files and running affected real Go authenticated v4/Stop/LINK/MTU gates; M1 Game013/M2 recovery010 continue independently."
+}
