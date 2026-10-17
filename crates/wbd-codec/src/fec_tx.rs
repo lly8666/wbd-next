@@ -3,7 +3,7 @@
 //! background tasks, SIMD claim, or guarantee of driver-send success.
 #![forbid(unsafe_code)]
 use std::collections::VecDeque;
-use crate::fec_math::{FecMathError,ReedSolomon20};
+use crate::fec_math::{FecMathError,ReedSolomon20,FecBackendChoice,FecBackendUsed};
 use crate::link_fec_wire::{FEC_DATA_SHARDS,FEC_HEADER,FEC_PARITY_PROFILES};
 
 pub const FLUSH_MS:u64=32;
@@ -64,17 +64,23 @@ impl FecParityJob{
     /// On error, progress is unchanged and no partially issued rows escape.
     pub fn take_next_rows(&mut self,codec:&ReedSolomon20)
         ->Result<Vec<Vec<u8>>,TxError>{
+        Ok(self.take_next_rows_selected(codec,FecBackendChoice::Scalar)?.0)
+    }
+    /// Opt-in native GF rows: an error does not consume this job or publish
+    /// incomplete parity; the Used value is based on an actual backend call.
+    pub fn take_next_rows_selected(&mut self,codec:&ReedSolomon20,
+        choice:FecBackendChoice)->Result<(Vec<Vec<u8>>,FecBackendUsed),TxError>{
         let count=self.pending_rows().min(MAX_PARITY_FIRST_SEND_ROWS_PER_TURN);
-        if count==0{return Ok(Vec::new());}
+        if count==0{return Ok((Vec::new(),FecBackendUsed::Scalar));}
         let inputs=self.parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
-        let wires=codec.final_parity_wires_range(self.block_id,&inputs,
-            self.profile,self.wire_limit,self.next_row,count)?;
+        let (wires,used)=codec.final_parity_wires_range_selected(self.block_id,&inputs,
+            self.profile,self.wire_limit,self.next_row,count,choice)?;
         self.next_row+=wires.len();
         if self.is_done(){
             self.parts.clear();
             self.held_bytes=0;
         }
-        Ok(wires)
+        Ok((wires,used))
     }
 }
 
@@ -94,6 +100,7 @@ pub struct FecTxOwner {
     profile:Option<u8>,wire_limit:Option<usize>,
     budget:usize,held:usize,clock_ms:u64,stats:TxStats,
     cooperative:bool,pending_jobs:VecDeque<FecParityJob>,pending_bytes:usize,
+    backend:FecBackendChoice,last_backend:Option<FecBackendUsed>,
 }
 impl FecTxOwner {
     pub fn new(first_id:u64,budget:usize)->Result<Self,TxError>{
@@ -103,7 +110,8 @@ impl FecTxOwner {
         Ok(Self{codec:ReedSolomon20::new()?,next_id:first_id,
             groups:std::array::from_fn(|_|None),profile:None,wire_limit:None,
             budget,held:0,clock_ms:0,stats:TxStats::default(),
-            cooperative:false,pending_jobs:VecDeque::new(),pending_bytes:0})
+            cooperative:false,pending_jobs:VecDeque::new(),pending_bytes:0,
+            backend:FecBackendChoice::Scalar,last_backend:None})
     }
     /// Opt-in owner mode. Closed blocks become bounded owned parity jobs;
     /// existing new()/submit()/flush behaviour remains synchronous.
@@ -113,6 +121,15 @@ impl FecTxOwner {
         owner.cooperative=true;
         Ok(owner)
     }
+    /// Explicit opt-in backend for the existing bounded cooperative owner.
+    /// Default new()/new_cooperative() remain scalar and wire-compatible.
+    pub fn new_cooperative_with_backend(first_id:u64,budget:usize,
+        backend:FecBackendChoice)->Result<Self,TxError>{
+        let mut owner=Self::new_cooperative(first_id,budget)?;
+        owner.backend=backend;
+        Ok(owner)
+    }
+    pub fn last_parity_backend(&self)->Option<FecBackendUsed>{self.last_backend}
     /// Run one real-GF cooperative parity quantum (at most four rows).
     /// Returned wires belong to the fresh-FEC send lane, NOT repair/RTX.
     /// Their downstream ownership and send-queue memory are external.
@@ -120,8 +137,9 @@ impl FecTxOwner {
         if !self.cooperative{return Err(TxError::InvalidBudget);}
         let Some(front)=self.pending_jobs.front_mut()else{return Ok(TxBatch::default());};
         let held=front.retained_bytes();
-        let parity=front.take_next_rows(&self.codec)?;
+        let (parity,used)=front.take_next_rows_selected(&self.codec,self.backend)?;
         let done=front.is_done();
+        self.last_backend=Some(used);
         self.stats.parity_shards+=parity.len() as u64;
         if done{
             self.pending_bytes-=held;
