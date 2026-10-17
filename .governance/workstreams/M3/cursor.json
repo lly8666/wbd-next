@@ -4,16 +4,16 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 22,
-  "checkpoint_sha": "3db0f1b499d796da2d428fbda1d0bb0fadb60463",
+  "sequence": 23,
+  "checkpoint_sha": "de887c225fcbd1fdba64e34c5c8333fe746c72f0",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 partial: added standalone owned FecParityJob to compute at most four genuine Go-matrix GF parity rows/turn, not precompute/drain; all k/r source and wire equivalence, invalid boundaries and exhaustion pass 106/106 native at SOURCE605f7de1. Not integrated in FecTxOwner, M0/engine, ISA-L or runtime FEC-on. Prior MTU and parity tests remain passed.",
+  "current_task": "PACK016 partial: opt-in FecTxOwner cooperative close stages true GF parity jobs (not 20-row precompute), poll computes <=4 rows; old sync mode unchanged; 108/108 native PASS on CODE5dcbc2f7. Open/pending source bytes and 64 metadata jobs bounded, queue full returns Backpressure without source admission or ID reuse. Production FEC-on/ISA-L/runtime CPU fairness NOT_RUN.",
   "why_now": "Main PACK-006 once-assigned workpack016: continue own LINK/record/FEC functionality without asserting source-locked old015 product qualification. Recovery of S/H old Governance control-moved and later GitHub 403 is explicitly recorded in evidence.",
   "done_when": "Source-bound C01–C04/L01–L04/F01–F06, native ISA-L vs pinned Go scalar and applicable host target, resource/fresh send fairness interfaces, proper configuration/integration exclusions; H and evidence only after accurate source checks.",
-  "next_action": "M3 integrate cooperative parity job into FecTxOwner with exact resource/backpressure and sched opportunities; M0 owns ISA-L native build/dependency and GitHub REST403 remedy, requests in docs/devlog/M3/. Re-run exact-source central and own Governance after repair; do not claim system/product qualification.",
+  "next_action": "Complete M3 scoped P0 native parity row service CPU measurement and pressure/eviction fail-closed scenarios; M0 shared ISA-L binding/native CI and exact-source governance API403 remedy, M1/M0 scheduling integration. Legacy synced origin must be kept unchanged until reviewed.",
   "unverified": true,
-  "last_tested_source": "605f7de1507781f42d0bd6a002d9ee2d063b2764",
+  "last_tested_source": "5dcbc2f7172380fe124508ea31b9911243496587",
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
@@ -23,5 +23,5 @@
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-SCOPE-AUDIT-403.md"
   ],
-  "partial_summary": "Native SOURCE605f7de1 Rust1.85.1 worker38999954180 attempt1 106/106 PASS (binary75fc75fe... loga2a75341...); new FecParityJob real <=4 GF rows/call byte-identical to full Go-generator scalar batch for k1..20 six r L1/63/64/65/257/512/1200 and fail closed; standalone API only. Evidence S3db0f1b4. Legacy scope run38999954233 FAIL GitHub HTTP403 on compare, central38999964044 FAIL GitHub403 on docs content; not a functional failure and not clean audit. M0 shared audit repair requested. No ISA-L native, dispatch fairness, true V4 FEC-on/Game, 500Mbps or packet p99 qualified."
+  "partial_summary": "CODE 5dcbc2f7 native39002583659 108/108 Rust1.85.1 PASS, binary SHA ccd2978f..., log c887f827..., 2 new owner-integration cases: 3*20 full real 20:20 by length256/512/1200, source immediate+GF4 rows/poll byte exact vs sync, closed source ownership memory through final row, 64-job cap and retry-safe Backpressure. S de887c22. Main central scope prior code1127215d run39002658689 PASS; exact code and S/H audit pending, past GitHub403 remains. ISA-L/native target, actual parity network fairness/time, M0 V4 FEC-on+Game, 500Mbps and packet p99 NOT_RUN."
 }
