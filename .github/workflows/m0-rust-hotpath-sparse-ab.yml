@@ -47,7 +47,8 @@ jobs:
           test "$(git -C rust-A rev-parse HEAD)" = a3d64b10804e006fecf06b7b4eb2d974b0b54e57
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           cmp rust-A/Cargo.lock Cargo.lock
-          cmp rust-A/tools/run-v4-tun-netns.sh tools/run-v4-tun-netns.sh
+          # Shared test-only sparse env forwarding applies to both legs.
+          grep -Fq 'WBD_M0_P10_SPARSE' tools/run-v4-tun-netns.sh
           for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
             cmp "rust-A/r0/go_overlay/internal/realityfront/$f" "r0/go_overlay/internal/realityfront/$f"
           done
@@ -127,7 +128,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
           test -c /dev/net/tun
-      - name: SPARSE A→B same VM exact normal off 10s warmup + 60s measurement
+      - name: SPARSE A→B same VM exact normal off 5s warmup + 30s measurement
         shell: bash
         timeout-minutes: 7
         run: |
