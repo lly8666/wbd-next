@@ -122,6 +122,58 @@ jobs:
           done
           cp m3-native-build/manifest.json m3-native-result/manifest.json
           echo "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=$WORKER_SOURCE"
+      - name: Release scalar versus real ISA-L same-VM 20:20/1200B AB (one scenario)
+        shell: bash
+        env:
+          WBD_FEC_ORDER: AB
+        run: |
+          set -euo pipefail
+          # Same already-compiled and SHA-verified CODE422a binary as above.
+          # CPU window failures are recorded as INCONCLUSIVE, never a gain.
+          lscpu | sed -n '1,25p' > m3-native-result/host-isa.log
+          cat /sys/fs/cgroup/cpu.max > m3-native-result/host-cpu-quota.log || true
+          m3-native-build/isal-codec.test r1_fec_native_release_same_vm_scalar_isal_paired_cpu \
+            --ignored --test-threads=1 --nocapture | tee m3-native-result/paired-AB.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib,re,os
+          p=pathlib.Path("m3-native-result/paired-AB.log")
+          lines=p.read_text().splitlines()
+          raw=[s for s in lines if "M3_FEC_CPU_RAW order=AB " in s]
+          rows=[s for s in lines if "M3_FEC_CPU_RESULT order=AB " in s]
+          assert len(rows)==2 and len(raw)>=10, (len(rows),len(raw))
+          assert "test result: ok." in p.read_text()
+          results=[]
+          for index,mode in enumerate(("scalar","native-isal")):
+              s=rows[index]
+              def field(k):
+                  m=re.search(r"(?:^|\\s)"+re.escape(k)+r"=([^ ]+)",s)
+                  assert m,(k,s)
+                  return m.group(1)
+              assert field("leg")==str(index) and field("mode")==mode
+              blocks=int(field("blocks"))
+              assert blocks>0 and int(field("systematic"))==20*blocks
+              assert int(field("parity"))==20*blocks and int(field("recovered"))==4*blocks
+              assert int(field("wall_ns"))>=1_125_000_000
+              status=field("cpu_qualified")
+              assert status in ("SAME_WINDOW_CPU","CPU_INCONCLUSIVE")
+              assert int(field("windows_ok"))+int(field("windows_bad"))>=5
+              assert field("NIC_DELIVERY")=="NOT_RUN" and field("PACKET_P99")=="NOT_RUN"
+              results.append({"leg":index,"mode":mode,"blocks":blocks,
+                  "cpu_status":status,"cpu_ns":int(field("cpu_ns")),
+                  "wall_ns":int(field("wall_ns")),"p99_codec_operation_wall_ns":int(field("p99_CODEC_OPERATION_WALL_ns")),
+                  "windows_ok":int(field("windows_ok")),"windows_bad":int(field("windows_bad"))})
+          m=json.load(open("m3-native-build/manifest.json"))
+          q={"scenario":"M3_CODE422a_20_20_1200B_AB_one_same_VM_consume_job",
+             "main_source":m["main_source"],"worker_source":m["worker_source"],
+             "build_run_id":m["run_id"],"attempt":m["attempt"],
+             "binary_sha256":m["binary_sha256"],"order":"AB",
+             "result":"CPU_PAIRED_VALID" if all(x["cpu_status"]=="SAME_WINDOW_CPU" for x in results) else "CPU_INCONCLUSIVE",
+             "legs":results,"raw_log_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+             "host_isa_sha256":hashlib.sha256(pathlib.Path("m3-native-result/host-isa.log").read_bytes()).hexdigest(),
+             "boundary":"codec-only; no packet delivery/RTT, no SIMD exact instruction proof, no product"}
+          pathlib.Path("m3-native-result/paired-AB.json").write_text(json.dumps(q,indent=2)+"\\n")
+          print("M3_FEC_RELEASE_AB_EXECUTED",q["result"],q["worker_source"],q["binary_sha256"])
+          PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

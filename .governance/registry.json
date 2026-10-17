@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "继续 docs/decisions/M0-hotpath-cost-first-2026-10-16.md 的当前调优；按 docs/GOVERNANCE.md 第3节一次分配其他模块完整工作包，包内自治、阶段集中集成，不逐步派单或争写。原023和超MTU分片缺口保留。",
-      "done_when": "按热路径补充方案第7节收口：实际路径优化、必要正确性回归、同VM配对与诚实结论齐全；其他模块包可并行，按需组合验收，原023产品资格不自动通过。",
-      "assigned_task": "R1-M0-HOTPATH-COST-024"
+      "goal": "024已完成的独立Normal/FEC off开发基线固定为fca4456313e59c0a67f4d8b98959a62d2af71b12，不重调D10/CPU。恢复原R0-023真实Go认证V4→Rust owner接线与Stop、超MTU/LINK组合安全门；模块按已分配PACK并行，M0仅集中集成。",
+      "done_when": "原023真实Go/Rust/raw/TUN最小接入及Stop/MTU±1/超限/必要LINK分片的准确功能反例、限定同机性能与SOURCE证据齐全；缺失产品硬门标OPEN，不以模块PASS提升产品资格。",
+      "assigned_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
     },
     {
       "id": "M1",
