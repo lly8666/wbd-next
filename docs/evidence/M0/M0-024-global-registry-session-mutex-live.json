@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "98f9b3e909415f25d4fd2220b01e73f488f4d2bb",
+  "code_source_sha": "98f9b3e909415f25d4fd2220b01e73f488f4d2bb",
+  "result": "PARTIAL_GLOBAL_REGISTRY_OFF_DATA_PATH_NATIVE_REALPATH_FUNCTIONAL_PASS",
+  "unverified": true,
+  "scope": "Actual original Go TLS credential protected V4 admission -> Rust M1/M3 scoped owner -> original Linux M4 raw IPv4/TCP and TUN in a kernel namespace. Not a fabricated replacement crypto/driver path.",
+  "change": {
+    "files": [
+      "crates/wbd-engine/src/v4_embedded_go.rs"
+    ],
+    "global_before": "BTreeMap<handle,Entry> under process-global Mutex; both background DATA workers acquired global registry for M1 slab and for Rust protected AEAD/PN, M3 LINK reassembly, kernel driver send.",
+    "after": "BTreeMap<handle,Arc<Mutex<Entry>>>; registry mutex only clones the session Arc on setup, control, stats, Stop and Release. Original background RX/TX workers capture Arc once at loop start and use only a session-local mutex for the two per-DATA critical sections.",
+    "owner_semantics": "One original ProtectedScopedOwner, original generation/epoch/PN/AEAD/TUN exactly unchanged. Both directions of a single session still serialize on its own Entry mutex, pending deeper TX/RX split. Different sessions do not share a DATA mutex after setup; simultaneous multi-client performance not separately measured.",
+    "tx_rx_bounded": "Original ready-only <=32 and approximately 100us slice, clock sample each 8 packets retained; buffer reuse in original M1 owner retained, no syscall batching claim.",
+    "lifecycle": "Entry generation now captured as immutable generation field for RX/TX worker. Stop atomically enters PH_STOPPING before waiting; joining boolean blocks concurrent Stop from freeing M1/M4 buffers while first Stop joins. Join failure fails closed with STOP_INCOMPLETE, PH_STOPPING and joining=true. Abort transitions terminal phase before unlink; Release requires PH_STOPPED and Arc identity check.",
+    "excluded": "No edits to active M1-M4 worker-owned files; M4 raw/TUN per DATA sysfs, typed EMSGSIZE and bulk syscall still open.",
+    "user_parameters": "NO_NEW_CLI_GUI_SETTINGS_OR_WIRE_CHANGE"
+  },
+  "code_commits": [
+    {
+      "source": "dc146ab5372838bb29dcc5f38e4ff281c1e4bc46",
+      "native_probe_run": 38998284253,
+      "build_job": 117295578723,
+      "result": "FAIL_COMPILE",
+      "cause": "Rust compiler E0425 worker stale handle, E0502 borrow errors after MutexGuard rewrite, preserved"
+    },
+    {
+      "source": "390ae9bc1bbde3e712848c070e730a6b2f2f6d70",
+      "native_probe_run": 38998419132,
+      "build_job": 117295984635,
+      "result": "FAIL_COMPILE",
+      "cause": "E0502 disjoint owner/route/driver borrowing from MutexGuard in background RX/TX, preserved"
+    },
+    {
+      "source": "98f9b3e909415f25d4fd2220b01e73f488f4d2bb",
+      "native_probe_run": 38998528557,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "cause": "Borrow concrete &mut Entry projections and per-entry immutable generation after worker session lookup"
+    }
+  ],
+  "native": {
+    "source_sha": "98f9b3e909415f25d4fd2220b01e73f488f4d2bb",
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38998528557,
+    "attempt": 1,
+    "build_job_id": 117296310697,
+    "consume_job_id": 117296597220,
+    "conclusion": "success",
+    "build_artifact": {
+      "id": 12088401085,
+      "digest": "sha256:14a6666f5c9422fed113536ad9d3efab42fb40de54aacbc908f329c4178f3c1d"
+    },
+    "result_artifact": {
+      "id": 12088545519,
+      "digest": "sha256:d1a66d25d0337596de9c36c1e197e4ecbeff577d91ef2f4c9bbc524a9f4be4db"
+    },
+    "exact_witnesses": [
+      "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok",
+      "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS, verified old Go TLS PN0 lost, PN1 delivered via original Rust Normal/off to real TUN",
+      "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=1 revision_after=2 refresh_before=1 refresh_after=2",
+      "EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true",
+      "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS",
+      "Normal/off bidirectional developer 10s+60s no missing, exactly 10Mbps offered/delivered each direction"
+    ],
+    "development_measurement": {
+      "period": "10s warmup plus 60s",
+      "application_payload_offered_c2s_mbps": 10,
+      "application_payload_delivered_c2s_mbps": 10,
+      "application_payload_offered_s2c_mbps": 10,
+      "application_payload_delivered_s2c_mbps": 10,
+      "worker_rx_cpu_s": 7.5906,
+      "worker_tx_cpu_s": 7.3565,
+      "performance_conclusion": "UNPAIRED_DEVELOPMENT_MEASUREMENT_NO_CPU_DELTA_CLAIM",
+      "p99_comparator": "NOT_RUN_SAME_VM_AB_BA",
+      "capacity": "NOT_MEASURED"
+    }
+  },
+  "same_source_actions": [
+    {
+      "workflow": "governance.yml",
+      "run_id": 38998528556,
+      "conclusion": "success",
+      "scope": "governance identity/structure"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "run_id": 38998528591,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "native-regression.yml",
+      "run_id": 38998528569,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r0-native-abi.yml",
+      "run_id": 38998528548,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "r0-cross-abi.yml",
+      "run_id": 38998528547,
+      "conclusion": "success",
+      "scope": "cross-compile ABI, not native runtime"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "run_id": 38998528577,
+      "conclusion": "success",
+      "scope": "static qualification ledger, not qualification PASS"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "run_id": 38998546961,
+      "conclusion": "success",
+      "scope": "worker M1 event; not M0 product test"
+    }
+  ],
+  "foreign_audit": {
+    "workflow": "scope-audit.yml",
+    "run_id": 38998734415,
+    "source": "work/m2-r2-recovery@4338fa170d99c2cf6fd06e1882b761c419adcf5c",
+    "conclusion": "failure",
+    "cause": "cursor evidence SOURCE mismatch",
+    "ownership": "M2 worker; do not overwrite its cursor, not M0 native regression"
+  },
+  "remaining": [
+    "Within one live original protected session RX/TX still contend on its per-session Entry mutex: true directional ownership split pending, not falsely marked as done.",
+    "M4 worker owns native raw/TUN typed EMSGSIZE and MTU sysfs removal plus batch backend; no independent M0 edits to platform.",
+    "Same-job same-VM P10 Rust baseline A→new B and separate B→A NOT_RUN on this code source. No isolated CPU improvement supported.",
+    "D10 and SPARSE separate scenario actions, conditional C50 not yet performed.",
+    "MTU/interface/route replace storm/Stop live-loan cross-boundary and full over-MTU LINK integration still open.",
+    "Original 023 B01-B04 and qualified product, Windows native, 500Mbps, physical NOT_RUN; default production features=0."
+  ],
+  "qualification": {
+    "task_024": "PARTIAL",
+    "original_task_023": "UNVERIFIED",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_features": 0
+  }
+}
