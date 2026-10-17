@@ -1,0 +1,115 @@
+name: M0 M3 real pinned ISA-L codec oracle
+run-name: "M0|M3-016|ISA-L|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-m3-isal-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/wbd-codec/Cargo.toml"
+      - "native/isal-safe/**"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 36
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 422a26127496560c0a52e6745ecc8f354e3f4f18
+          path: worker-m3
+          persist-credentials: false
+      - name: Compile actual pinned native ISA-L and frozen M3 Go-matrix codec
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C worker-m3 rev-parse HEAD)" = 422a26127496560c0a52e6745ecc8f354e3f4f18
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-v2.31.1"
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cp Cargo.toml Cargo.lock worker-m3/
+          cp crates/wbd-engine/Cargo.toml worker-m3/crates/wbd-engine/Cargo.toml
+          cp crates/wbd-codec/Cargo.toml worker-m3/crates/wbd-codec/Cargo.toml
+          mkdir -p worker-m3/native
+          cp -a native/isal-safe worker-m3/native/isal-safe
+          cargo +1.85.1 test --manifest-path worker-m3/native/isal-safe/Cargo.toml --features native -- --nocapture | tee isal-native.log
+          grep -Fq REAL_ISAL_V2311_EC_ENCODE_DATA_PASS isal-native.log
+          (cd worker-m3 && cargo +1.85.1 test --release --locked -p wbd-codec --lib --features native-isal r1_fec_selected_backend_ --no-run)
+          mkdir -p m3-native-build
+          binary="$(find worker-m3/target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
+          test -n "$binary"
+          cp "$binary" m3-native-build/isal-codec.test
+          cp isal-native.log m3-native-build/native-call.log
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":"422a26127496560c0a52e6745ecc8f354e3f4f18","upstream_isal":"c387163fcbca62701d646149564c550c78a4f985",
+            "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "binary_sha256":sha("m3-native-build/isal-codec.test"),"native_call_sha256":sha("m3-native-build/native-call.log"),
+            "cargo_lock_sha256":sha("Cargo.lock"),"native_target":"x86_64-unknown-linux-gnu","rust":"1.85.1",
+            "features":"native-isal opt-in, default production off","qualification":"M3 codec Go GF matrices only, not product"}
+          pathlib.Path("m3-native-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m3-isal-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-native-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m3-isal-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-native-build
+      - name: Verify frozen M3 binary, real C backend and native Go-matrix parity/recovery tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib
+          m=json.load(open("m3-native-build/manifest.json"))
+          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]=="422a26127496560c0a52e6745ecc8f354e3f4f18"
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert sha("Cargo.lock")==m["cargo_lock_sha256"]
+          assert sha("m3-native-build/isal-codec.test")==m["binary_sha256"]
+          assert sha("m3-native-build/native-call.log")==m["native_call_sha256"]
+          assert "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS" in pathlib.Path("m3-native-build/native-call.log").read_text()
+          PY
+          chmod +x m3-native-build/isal-codec.test
+          mkdir -p m3-native-result
+          m3-native-build/isal-codec.test r1_fec_selected_backend_ --test-threads=1 --nocapture | tee m3-native-result/tests.log
+          grep -Eq 'test result: ok\..*0 failed' m3-native-result/tests.log
+          for name in \
+            r1_fec_selected_backend_go_matrix_all_profiles_short_unaligned_mtu \
+            r1_fec_selected_backend_missing_only_direct_inverse_recovery \
+            r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native; do
+            grep -Fq "$name ... ok" m3-native-result/tests.log
+          done
+          cp m3-native-build/manifest.json m3-native-result/manifest.json
+          echo "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=422a26127496560c0a52e6745ecc8f354e3f4f18"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m3-isal-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m3-native-result/
+          if-no-files-found: warn
+          retention-days: 30
