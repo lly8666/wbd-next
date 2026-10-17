@@ -64,7 +64,8 @@ jobs:
               assert pkg[name]['version']==version
               assert pkg[name]['source']=='registry+https://github.com/rust-lang/crates.io-index'
               assert len(pkg[name]['checksum'])==64
-          assert set(pkg['wbd-codec']['dependencies'])=={'wbd-types','aws-lc-rs','chacha20','aes'}
+          assert set(pkg['wbd-codec']['dependencies'])=={'wbd-types','aws-lc-rs','chacha20','aes','wbd-isal-safe'}
+          assert pkg['wbd-isal-safe']['version']=='0.1.0' and not pkg['wbd-isal-safe'].get('source')
           print('actual resolved 3 direct crypto crate pins confirmed')
           PY
           mkdir -p crates/wbd-codec/tests
