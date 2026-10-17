@@ -6,14 +6,15 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "progress": "partial",
-  "source_sha": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
+  "source_sha": "605f7de1507781f42d0bd6a002d9ee2d063b2764",
   "source_commits": [
     "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
     "3d256ae96e252dec8aa1ff6bb7eaad37499a5c11",
     "5f8fccbc3d9e75d72d6ef12a30fcf6971ff51da1",
     "8587cff3bf478b97af93c3e251d222f659ff50b9",
     "efe878bde0d4db1be85333fde664598439610592",
-    "93d80cb09b4e477d5c096c89ba46da086d3b039f"
+    "93d80cb09b4e477d5c096c89ba46da086d3b039f",
+    "605f7de1507781f42d0bd6a002d9ee2d063b2764"
   ],
   "summary": [
     "LINK reassembly completion bounded double-buffer peak of old parts plus contiguous output; evict other older incomplete assemblies before allocation",
@@ -21,32 +22,33 @@
     "Existing record crypto three-suite Go V3 golden, FEC scalar Go matrix/recovery and FEC lifecycle tests retained without claiming any new native SIMD or product assembly",
     "Authorized LINK MTU transitions preserve old max frame and in-flight old stride while independently accepting new frames and rejecting invalid MTU atomically",
     "FEC TX exposes up-to-four parity ready-first-send frames per scheduler turn, not retransmission; sustained 20:20 produces all systematic/parity with accurate wire accounting in three size classes",
-    "FEC decoder deterministic high-erasure recovery for k1..20 × six parity profiles, variable lengths, e1/2/4/min(k,r), two loss patterns; still scalar no native ISA-L"
+    "FEC decoder deterministic high-erasure recovery for k1..20 × six parity profiles, variable lengths, e1/2/4/min(k,r), two loss patterns; still scalar no native ISA-L",
+    "New cooperative FEC parity job keeps one owned closed block and genuinely computes <=4 rows per call; output source and Go-matrix wire matches full batch for all k/r and multiple shard lengths. Not yet wired into FecTxOwner or dispatch."
   ],
   "native_debug": {
     "final": {
-      "source_sha": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
-      "run_id": 38999161286,
+      "source_sha": "605f7de1507781f42d0bd6a002d9ee2d063b2764",
+      "run_id": 38999954180,
       "run_attempt": 1,
       "conclusion": "SUCCESS",
       "rust": "1.85.1",
-      "tests_passed": 104,
+      "tests_passed": 106,
       "tests_failed": 0,
-      "binary_sha256": "76edf08c2e71e4590d98cea9f7bff1dc52ed526857560477fbcff0db4dfc5e34",
-      "log_sha256": "96b176112237525df1ee029b469be1438cb427ac680e63199f7797cf42a2f871",
+      "binary_sha256": "75fc75fed2e129a7631bbbbdc10f84af4ab73c2268c62aae13b77e587d5d7721",
+      "log_sha256": "a2a75341b3749978dc324d4978841ac439b62b63c886ffb313d4c0b8642bac8f",
       "artifacts": [
         {
-          "id": 12088511604,
-          "digest": "sha256:9d1b44683d74cb100c1f610706a28e9a000891099105c679aac4d2a0c1dc5180",
-          "type": "build"
+          "id": 12088403671,
+          "type": "result",
+          "digest": "sha256:1fa6e403c284924ec378c7299c4e68511b703e555627d99c08dde47dd596cdc4"
         },
         {
-          "id": 12088471925,
-          "digest": "sha256:a69e8e05a41cb3681184cc36290ab20ace78e9af3000e8274d2aeb20d7c82d34",
-          "type": "result"
+          "id": 12088008799,
+          "type": "build",
+          "digest": "sha256:e17e69b4001fb329d5fee29ec57c3d9e3016caa87d9c13184633033dfc05f6c1"
         }
       ],
-      "qualification": "SCOPED_CODEC_DEBUG_FUNCTIONAL_ONLY"
+      "qualification": "SCOPED_CODEC_DEBUG_FUNCTIONAL_ONLY; real network, ISA-L runtime, multi-owner fairness, per-packet p99, throughput NOT_RUN"
     },
     "earlier_peak": {
       "source_sha": "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
@@ -99,6 +101,30 @@
             "type": "result"
           }
         ]
+      },
+      {
+        "source_sha": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
+        "run_id": 38999161286,
+        "run_attempt": 1,
+        "conclusion": "SUCCESS",
+        "rust": "1.85.1",
+        "tests_passed": 104,
+        "tests_failed": 0,
+        "binary_sha256": "76edf08c2e71e4590d98cea9f7bff1dc52ed526857560477fbcff0db4dfc5e34",
+        "log_sha256": "96b176112237525df1ee029b469be1438cb427ac680e63199f7797cf42a2f871",
+        "artifacts": [
+          {
+            "id": 12088511604,
+            "digest": "sha256:9d1b44683d74cb100c1f610706a28e9a000891099105c679aac4d2a0c1dc5180",
+            "type": "build"
+          },
+          {
+            "id": 12088471925,
+            "digest": "sha256:a69e8e05a41cb3681184cc36290ab20ace78e9af3000e8274d2aeb20d7c82d34",
+            "type": "result"
+          }
+        ],
+        "qualification": "SCOPED_CODEC_DEBUG_FUNCTIONAL_ONLY"
       }
     ]
   },
@@ -144,6 +170,15 @@
       "source_sha": "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
       "conclusion": "SUCCESS",
       "final_source_status": "NOT_YET_CONFIRMED"
+    },
+    "latest": {
+      "worker_run_id": 38999954233,
+      "result": "FAIL",
+      "reason": "GitHub API HTTP 403 reading compare/83bd7203...605f7de1; no code/path violation established",
+      "central_scope_run_id": 38999964044,
+      "central_scope_result": "FAIL",
+      "central_scope_reason": "GitHub API HTTP 403 reading M3 native ISA-L request content; exact source scope not verified",
+      "m0_action_needed": "Move shared scope audit to checkout/local git ancestry with pinned main registry/allowed paths or fix GitHub API read 403; M3 cannot modify shared checks."
     }
   },
   "completed_scenarios": [
@@ -151,7 +186,8 @@
     "L02: exact compatibility vs fragment_compat for ordinary/magic/WF/64/1400/65535; bounded per-fragment issue; 1400→1000 terminal abandon after first released fragment; new-ID reassembly; ordinary continues",
     "L02: authorized MTU 1400→1000→1500 receiver transition retains prior in-flight packet bytes/stride and concurrent new smaller ID delivery; rejects invalid MTU without corrupting state",
     "F01/F05: sustained full 20:20 256/512/1200B actual configured parity, immediate systematic, 60 parity in at-most-4 ready chunks; actual service-time and queue fairness NOT_RUN",
-    "F03/F04: full k1..20 × r4/8/10/12/16/20 with mixed lengths and e up to min(k,r), leading/tail erasure, reverse parity order and byte-exact recovery vs scalar Go-matrix implementation"
+    "F03/F04: full k1..20 × r4/8/10/12/16/20 with mixed lengths and e up to min(k,r), leading/tail erasure, reverse parity order and byte-exact recovery vs scalar Go-matrix implementation",
+    "F05 cooperative new genuine GF row job k1..20×r4/8/10/12/16/20×L1/63/64/65/257/512 with k20 L1200 byte-for-byte vs single-batch parity; constant <=4 computed rows/call, fail-closed invalid block/profile/capacity/range and no repeat."
   ],
   "inherited_015": {
     "task_id": "R1-M3-CPU-PROBE-SAME-WINDOW-015",
@@ -206,10 +242,10 @@
     "caveat": "old 014 unmatched 100Hz probe ratios invalid; exact 015 component Release ratio not source qualification for new 016 code, not per packet p99, network, product FEC, ISA-L or 500Mbps"
   },
   "pending": {
-    "ISA_L_native": "NOT_RUN: crate-root forbid(unsafe_code) and no ISA-L native binding/dependency/linker in workspace; M0 owns shared Cargo.lock/root build/CI, M3 request docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md. Scalar Go compatible algorithm, even broad missing set, is NOT proof of actual ISA-L native.",
+    "ISA_L_native": "UNVERIFIED: No native ISA-L binding/locked dependency/native runner in codec workspace. Need M0-owned shared linking interface and CI; full k/r scalar equivalence does not prove ISA-L.",
     "link_integration": "NOT_RUN: LinkPacketPlan is a codec API; integration into real M1/M0 engine/driver cannot be claimed from standalone tests.",
-    "full_package": "PARTIAL: FEC per-4 parity ready-output API and 20:20 component parity source count now covered, but scheduler kernel send fairness/queue age/CPU-row budget NOT_RUN. Real Go V4 exporter/positive provenance/FEC-on/Game and ISA-L remain external; profile switching/MTU actual wiring and required target native tests NOT_RUN.",
+    "full_package": "PARTIAL: independent cooperative FecParityJob computes <=4 GF rows/call but is NOT wired into FecTxOwner, receiver pipeline or M0/M1 scheduler; service time <100us and parity queue boundedness NOT_MEASURED. Product Go V4 / FEC-on / Game unverified.",
     "performance": "Old exact worker source0ecb 015 same-clock Release 24/24 applies ONLY to that source. No new paired A/B or any product throughput for PACK016 code. Missing ISA-L backend performance."
   },
-  "next_action": "Continue independent codec PACK016 FEC pressure, final-source handling, and native ISA-L after M0 minimal binding/CI; M0 may request central v2 scope audit exact 93d80... due legacy GitHub REST 403. Record own S/H partial, not ready_for_integration."
+  "next_action": "M0 handle scoped-governance GitHub403 and ISA-L shared native ABI/link; M3 integrate cooperative FecParityJob into bounded TX scheduling through explicit owner API with measured service-time/queue resource pressure and Go V4 provenance exclusions."
 }
