@@ -27,3 +27,24 @@ cargo test --locked -p wbd-codec --release --features native-isal --lib r1_fec_n
 Prefer `cargo test --no-run` compile once per profile, record test executable sha256, then execute directly from artifact without recompiling in the measurement job. One performance Action = 20:20 1200B, fixed deterministic source, one seed, one measurement job/VM; A/B order declared `WBD_FEC_ORDER=AB` and optional separate later B/A run. Preserve >=250ms CPU/wall raw windows, per-leg output counts (20 systematic/20 real parity/4 recovered per block), true native `FecBackendUsed::NativeIsaL` witnesses, p99 **codec operation wall** only. Record `lscpu`/CPUID and native symbols/disassembly or actual dispatch witness separately: mere AVX2 host flag or native C invocation is **not** proof of a specific SIMD instruction path. No driver/NIC data-packet delivery or application packet p99 is measured here; those remain NOT_RUN until M0 real owner integration. Observe capacity, stop escalation on CPU or runner constraints. For cross-build Linux ARM/Windows, native unsupported under current `build.rs` (do not fake portable acceleration). Do not silently broaden M3 commit rights to Cargo/lock/workflows.
 
 This is a missing **test entrypoint**, not permission to change shared CI. M3 can continue independent codec work; component native qualification waits only for this one M0-shared Actions implementation, not step-by-step integration approvals. All prior 016 and 015 results remain source-scoped.
+
+## 2026-10-17 · Native source-qualified PASS — only one existing Actions performance step remains
+
+**Resolved**: M0 already supplied the safe ISA-L API, pinned dependency, throwaway worker/Main Cargo overlay AND exact worker-source native execution. Formal [M0 native run39016665239](https://github.com/lly8666/wbd-next/actions/runs/39016665239), harness SOURCE `5f1fbb387308da67962efbec95ad194782b6e10e`, M3 CODE SOURCE `422a26127496560c0a52e6745ecc8f354e3f4f18`, Linux x86_64/Rust1.85.1/upstream ISA-L v2.31.1: static `ec_encode_data` executed, 3/3 Go/scalar/native parity/wire/e×e and cooperative owner differential tests PASS, 0 fail, artifact IDs 12094996653/12094524936 with digests in the new M3 SOURCE-specific evidence. Earlier nested-workspace and stdout-parser red runs remain historical failed workflow checks, not ISA-L parity failures. The earlier paragraphs requesting *native execution itself* are **satisfied**, do NOT add a second native wrapper or full regression matrix.
+
+**Only unresolved M0-owned CI entry**: existing `.github/workflows/m0-m3-isal-native.yml` build stage already compiles **one Release test executable** from the exact M3 source with `--release --features native-isal --lib ... --no-run`; the consume stage already validates its source/manifests/sha256 and runs all 3 focused native correctness tests. In that *same existing consume job on its same VM*, add one step following successful checks (no new crate/lock/native source edit, no second compilation):
+
+```bash
+set -euo pipefail
+lscpu | sed -n '1,25p' | tee m3-native-result/host-isa.log
+WBD_FEC_ORDER=AB m3-native-build/isal-codec.test \
+  r1_fec_native_release_same_vm_scalar_isal_paired_cpu \
+  --ignored --test-threads=1 --nocapture \
+  | tee m3-native-result/paired-AB.log
+grep -F 'M3_FEC_CPU_RESULT order=AB leg=0 mode=scalar' m3-native-result/paired-AB.log
+grep -F 'M3_FEC_CPU_RESULT order=AB leg=1 mode=native-isal' m3-native-result/paired-AB.log
+```
+
+The existing precompiled test executes equal k20/R20/1200B sources, five real 4-row parity quanta, 4 exact erasure recovery outputs on each leg, same generator/Go profile; warmup excluded, >=250ms raw thread CPU+wall windows, per-op codec wall p99, same seed. Preserve raw `M3_FEC_CPU_RAW` and `M3_FEC_CPU_RESULT`, binary SHA/host ISA, and capacity indicators. Treat `CPU_INCONCLUSIVE` as inconclusive, not PASS/speedup; observe actual `NativeIsaL` status from existing tests. `AVX2=true` is a CPU capability, **not** disassembly proof of which SIMD variant executed. A later reverse B/A is optional if interpreting small gains/noise, as a separate comparable Action—not a new test matrix.
+
+This modification is strictly in **M0-owned shared workflow**. M3 has neither permission to edit it nor a GitHub connector action to issue `workflow_dispatch`; no new worker code is needed for this existing diagnostic. Until Action executes, M3 remains `partial` rather than fabricating CPU/real delivery/p99. This request is one bounded interface unblock, not a new coding architecture or requirement for multiple approvals.

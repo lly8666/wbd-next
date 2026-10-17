@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "result": "SCOPED_NATIVE_ISAL_GO_MATRIX_CORRECTNESS_PASS_PERFORMANCE_PENDING",
+  "progress": "partial",
+  "artifact_verified": true,
+  "unverified": true,
+  "previous_source_matched_evidence": "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18.json",
+  "immutable_source_named_evidence": true,
+  "code_frozen": {
+    "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "safe_api": "wbd_isal_safe::Tables::new(k,r,Go_coefficients)/encode",
+    "default": "scalar",
+    "opt_in": "native-isal",
+    "gf": "GF(256) irreducible polynomial 0x11d, systematic G=V×inverse(V[0..20])",
+    "wire": "Go-compatible rows20..39; 56B FEC header; sparse/unequal active rows zero-padded; existing scalar and PN/record/LINK unchanged"
+  },
+  "shared_harness": {
+    "main_source_sha": "5f1fbb387308da67962efbec95ad194782b6e10e",
+    "workflow": ".github/workflows/m0-m3-isal-native.yml",
+    "version": "Intel ISA-L v2.31.1",
+    "upstream_commit": "c387163fcbca62701d646149564c550c78a4f985",
+    "abi": "M0-reviewed static libisal.a, Rust1.85.1 x86_64-unknown-linux-gnu opt-in feature",
+    "checkout": "exact worker CODE + main pinned root Cargo/lock/native safe crate throwaway overlay, no worker shared writes"
+  },
+  "native_correctness": {
+    "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "run_id": 39016665239,
+    "attempt": 1,
+    "workflow": "M0 M3 real pinned ISA-L codec oracle",
+    "conclusion": "SUCCESS",
+    "build_job_id": 117350069871,
+    "consume_job_id": 117350276979,
+    "build_artifact": {
+      "id": 12094996653,
+      "digest": "sha256:630989ca2efa147fe1df1363cc8ca705ed70a406d268e305179e9dca23dae28e"
+    },
+    "result_artifact": {
+      "id": 12094524936,
+      "digest": "sha256:b57fb08409852b1d0177d7e4e8446e292e21910d6884be6a9425240e40c258d9"
+    },
+    "library_witness": "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS; 2 passed 0 failed",
+    "target_witness": "M3_ACTUAL_ISAL_GO_MATRIX_NATIVE_ENCODE_AND_RECOVERY; M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "tests": {
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 138,
+      "cases": [
+        "r1_fec_selected_backend_go_matrix_all_profiles_short_unaligned_mtu",
+        "r1_fec_selected_backend_missing_only_direct_inverse_recovery",
+        "r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native"
+      ]
+    },
+    "coverage": "k1..20 × six parity profiles; short/unaligned/MTU Go wire byte equivalence, e×e missing-only inversion (including maximal erasure), 20:20 four-row cooperative owner parity vs scalar; real FFI call, not only --no-run",
+    "runner_cpu_observed": "x86_64 AVX2=true SSE2=true (CPU features available, ISA-L exact SIMD dispatch variant not instrumented)",
+    "qualification": "REAL_NATIVE_SAFE_ISAL_INVOCATION_AND_BYTE_EQUIVALENCE; not a measured CPU speedup or production network delivery"
+  },
+  "default_and_legacy": {
+    "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "worker_run": 39014567195,
+    "passed": 113,
+    "failed": 0,
+    "ignored": 1,
+    "binary_sha256": "4f1c9591801ae19532e496a6670227a4c9d419ad7182a108a1d340f56754bb8a",
+    "result_artifact_digest": "sha256:19439145aa2daf3e4901758652d955b0323cf8f06ec6e0ff72acfcc9870fb870",
+    "old_go_oracles": "unchanged preexisting scalar GF/Go literal parity/wire tests under original CODE"
+  },
+  "governance": {
+    "code_central_scope": {
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "run_id": 39014774023,
+      "result": "ROLE_SCOPE_PASS",
+      "is_current_head": false
+    },
+    "previous_H26_scope": {
+      "handoff_sha": "d5a26ad2bb194af9d83b22d894f6a0e7723870dc",
+      "run_id": 39015032457,
+      "result": "ROLE_SCOPE_PASS"
+    },
+    "failed_moving_control": {
+      "worker_governance_run": 39014567204,
+      "result": "FAIL; control or source moved mid-audit",
+      "unchanged": true
+    },
+    "source_evidence_predicate": "prior M3 cursor refs its untouched 016-422a.json until H; this NEW native-pass file has same frozen CODE source; H will switch ref atomically"
+  },
+  "cost": {
+    "precompiled_release_paired_test": "r1_fec_native_release_same_vm_scalar_isal_paired_cpu",
+    "current_shared_workflow_runs_only": "r1_fec_selected_backend_ --test-threads=1 --nocapture",
+    "cpu_pair_same_vm": "NOT_RUN",
+    "latency_codec_operation_p99": "NOT_RUN",
+    "measured_native_vs_scalar_cpu_delta": "NOT_RUN",
+    "runtime_target_isa_dispatch": "NOT_RUN (runner CPU flags observed, exact selected ISA instruction sequence unknown)",
+    "performance_decision": "INCONCLUSIVE / NO ACCELERATION_GAIN_CLAIM",
+    "stop_conditions": "If CPU windows invalid or capacity below declared offered load, record CPU_INCONCLUSIVE/CAPACITY_LIMITED, no inflated workload",
+    "request": "Append one M0-owned consume step that runs existing precompiled Release test binary in same job/VM sequential AB for fixed 20:20 1200B and captures raw CPU/wall/logical output counts; no extra benchmark dimensions, old-Go oracle not rerun unnecessarily",
+    "network_delivered_goodput": "NOT_RUN M3 isolated",
+    "packet_rtt_p99": "NOT_RUN production"
+  },
+  "integration": {
+    "M3_owned_code_change_remaining": "NONE known after native correctness PASS",
+    "shared_workflow_change": "M0-owned minimal CPU Action step PENDING",
+    "original_go_v4_authenticated_fec_on": "M0 integration NOT_RUN",
+    "real_owner_driver_parity_fairness": "M0/M1/M4 combination NOT_RUN",
+    "actual_mtu_notification_game_delivery": "M0 combination NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "native_linux_arm64": "UNSUPPORTED",
+    "windows_native": "UNSUPPORTED",
+    "production_native_feature_enabled": false
+  },
+  "completion": "016 PARTIAL: coding and scalar/Go/native correctness frozen; same-job paired Release CPU still required by assigned_task before ready_for_integration. No expansion of architecture."
+}
