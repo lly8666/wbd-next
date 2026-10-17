@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 112,
-  "checkpoint_sha": "c376bc65950ce6815a51137a3e9d8d0ed8290618",
+  "sequence": 113,
+  "checkpoint_sha": "432561f9016fd71558581a68e0c50a4bccdc3f26",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "R1-M0-HOTPATH-COST-024本次真实执行：审查四工位与main Actions，非M0进程卡死；M4-012 H16 ready，原SOURCE e4e61d native91/91/H Gov/中央审计PASS，其他M1已授权012（worker旧H不能再次分配）、M2-009/M3-016 partial。一次main S a3d64b为真正空闲M4登记下一完整包013 true Linux leased kernel multimsg/Stop与error；原样集成冻结M4-012三platform文件并真Go TLS→Rust原AEAD/PN→Linux raw/TUN native39003563141 PASS。M0自己engine S60abdc原始DATA loop每次Arena归还drain至多64，控制/Stop仍无限全drain；新增128借用积压64+64及33边界真实UniqueBuffer测试，workflow S b8d53e要求同源test通过，Go/Rust native39003659829 build+consume成功，双向各10Mbps开发测量、MTU/netlink和丢PN无HOL保留。",
-  "why_now": "用户反馈进程卡住，需先核实任务与空闲工位，再继续真实024成本工作，不能把过去成功的治理/ABI误说成M1新wake修完；控制权main单写，M4已交付012而M1仍授权012。原arena热路径无限归还会持有同session互斥锁过久，M1已有合规bounded(64)复用方法。",
-  "done_when": "本轮：仅M4一新完整包013分配、M1/M2/M3不改；冻结M4-012原样集成main并实际GoTLS/Linux raw/TUN原路native成功；M0原引擎四处DATA归还限制64/turn，真实128/33 slab返回边界和Stop全drain native精确SOURCE b8d53e测试通过，源锁10s+60s 10Mbps双向开发应用流量成功。仍非P10成本或产品PASS，same-session RX/TX锁未拆、M1新wake011回退、M4 013 kernel multimsg未交付；M3中央scope39003738130 cursor evidence SOURCE mismatch FAIL保留，归M3本身。",
-  "next_action": "继续024：待M1-012提供实际deterministic lost wake/Stop和方向owner接口后安全消除同session MUTEX串行，M4新013完成在冻结SOURCE真实多消息borrow接口后串行接入原GoTLS Rust AEAD/PN owner；M3 ISA-L最小root链接仍待G2。必需做0/1/32/33、Stop/generation/route/MTU和稀疏低率与突发D10/SPARSE独立原核场景，Rust固定两SOURCE同机同JOB A→B及另一JOB B→A P10、组件成本;p99和C50有容量不足明确结论。M1、M4 active path不争写，M2/M3保持009/016，M3 scope失败由M3修正角色证据；旧023和产品物理资格未验且prod0。",
+  "current_task": "R1-M0-HOTPATH-COST-024：用户要求修复并继续。M3最近中央scope红灯39003738130已由M3自修正H d9ed1ad3，后续治理39003788619、scope39003896454 PASS，旧FAIL保留。M0修旧P10 AB/BA SOURCE lock：以已集成M4-012但未限制DATA归还的Aa3d64b固定基线，对比B b8d53e64 return/turn，在S51bc18df两独立source-lock原始GoTLS→Rust→raw/TUN同VM依次A→B、B→A，通过Actions39005769143/39005769170，CPU变化B比A -0.14256% / +0.63785%符号相反，INCONCLUSIVE无已证CPU节省。增加真正SPARSE 20pps每方向的Go test-only wave 64/256B，5s+30s及netns显式环境透传，第一Go vet S12b91e错误、第一SPARSE39006517559误跑10Mbps失败均保留；最终e5d824ef SPARSE A→B Actions39007156374同VM编译/测量SUCCESS：两腿每方向600包、零丢失/invalid、p99 A328/279us B415/395us，真实低率CPU不作百分比收益。证据S432561f。",
+  "why_now": "既有P10 workflow锁在旧不相干源码，无法满足024公平同VM Rust/Rust P10 AB+BA；之前只有不同Actions native CPU且无法做相减。真实低速SPARSE缺少独立场景，必须在Go原测量器加测试开关并经特权netns传入真正Go子进程。M3 scope错误已工位自修，不可M0越权动其cursor。",
+  "done_when": "本轮P10-AB/BA同源AB源锁精确：各job单VM两个预编译产物按各自顺序执行、10s+60s四腿交付约10Mbps且missing/invalid0，CPU A/B +0.64%/-0.14%不一致记INCONCLUSIVE，非产品速度提升。真实SPARSE env在actual Go子进程内生效20pps x30s，每腿两方向600包/每方向0.0256Mbps UDP app、零缺失invalid，p99未超过max(200us,15%)调查带，Actions39007156374 SUCCESS。误Go vet和误将P10冒充SPARSE的旧run保留FAIL。M3 scope由自身复核PASS。024仍PARTIAL，D10诊断/方向锁拆分/真实kernel批I/O未验，产品/物理023未验及prod0。",
+  "next_action": "继续024独立D10-AB诊断ON（原真实Go TLS→Rust AEAD/PN→Linux raw/TUN，限制10-20s，计数只诊断不污染P10并准确记录strace/构件能力UNAVAILABLE），然后按M1-012未来安全方向owner/wake稳定交付拆同session Mutex<Entry>，接收M4-013真实sendmmsg/recvmmsg冻结接口后原路集成，M3-016 ISA-L/真实FEC/LINK narrow root依赖。按任务检验Stop/租借/MTU/0/1/32/33/p99，C50仅有真实共同容量条件时进行。严禁跨runner CPU比较或简单平均正反比率造收益；M1/M2/M3/M4都在各自已分完整包内，无空闲可再派；旧023产品与物理尚NOT_RUN，默认prod features0。",
   "unverified": true,
-  "last_tested_source": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+  "last_tested_source": "e5d824efc9be0f91bfd3fa93ac94412d79a14d99",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-M4-012-integration-data-return-budget64.json"
+    "docs/evidence/M0/M0-024-P10-SPARSE-real-low-rate-after-netns-fix.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-M4-012-integration-data-return-budget64.md",
+    "docs/devlog/M0/M0-024-P10-SPARSE-real-low-rate-after-netns-fix.md",
+    "docs/evidence/M0/M0-024-P10-sameVM-AB-BA-return-budget64.json",
+    "docs/evidence/M0/M0-024-M4-012-integration-data-return-budget64.json",
     "docs/decisions/M0-followup-module-workpackages-013-2026-10-17.md",
-    "docs/evidence/M0/M0-024-shared-audit-403-abi-M1-integration.json",
-    "docs/evidence/M0/M0-024-worker-review-and-M4-integration.json",
-    "docs/decisions/M0-followup-module-workpackages-2026-10-17.md",
-    "docs/evidence/M0/M0-024-global-registry-session-mutex-live.json",
+    "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H112 PARTIAL：M4-012 SOURCEe4e61d native91/91 PASS、M4-013唯一新增完整包，M2-009/M3-016继续、M1已有012但旧worker H未更新。main冻结platform+真GoTLS raw/TUN native39003563141 PASS。M0源b8d53e实际DATA64return/turn 128/33边界39003659829 Rust+Go Linux native SUCCESS、MTU fail-close、PN无HOL、双向10Mbps开发；并无同VM P10 AB/BA或CPU收益。M3 live SOURCE c900f7 scope39003738130 FAIL cursor evidence source mismatch；M1新版wake旧超时未修、main保持安全rollback。产品/物理/旧023未验，features0。"
+  "partial_summary": "H113仍PARTIAL。M3工位已自修evidence SOURCE scope错：39003896454 central PASS/39003788619 Gov PASS，旧39003738130 FAIL保留。P10 source51bc18df Rust A a3d64b vs B DATA return64，同VMAB39005769143和BA39005769170均SUCCESS，全交付0失效，CPU节省不可证 -0.1426%/+0.6379%。SPARSE真实20pps source e5d824ef,39007156374 A-B SUCCESS，两腿每方向600包/30s 64/256B，p99 A328/279 B415/395us，0缺失invalid。误投env39006517559旧FAIL、vet39006267933历史FAIL，修好了后续不改历史。未D10/未owner拆锁/未M4真批，产品物理023仍UNVERIFIED，prod0。"
 }
