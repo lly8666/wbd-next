@@ -4,25 +4,26 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 24,
-  "checkpoint_sha": "c16000a16bd866d6a8c1c3c8b7880163229918ff",
+  "sequence": 25,
+  "checkpoint_sha": "3e2ba0130d8b092d22c825bfeb220d31858bd80a",
   "progress": "ready_for_integration",
-  "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
-  "current_task": "PACK-009 scoped pure R2 receipt/feedback/shadow/RACK/PTO/two-attempt repair/budget native capability READY FOR M0 integration. Exact code SOURCE6124ce1012e69a2003bdffdc179a774e21096bc3 worker-native39006207281 67/67 PASS; G2 bootstrap39006207288 and static39006207299 SUCCESS; full evidence S c16000a Governance39006386712 ROLE_SCOPE_PASS 68 commits, 60 governance drills PASS. No GoV4/engine/platform/physical product result.",
-  "why_now": "Main registry rev2 epoch1 assigned full PACK-009. Original code source269fd8f 63/63, repaired PTO tail source660c4d3 64/64, generation/uncertain source4fd4cce 66/66 and its Gov39005928458 PASS, final 100k fake-clock source6124ce1 67/67. Code Gov39006207262 FAIL control/source moved while M0 main advanced, independently later evidence S c16000a Gov39006386712 SUCCESS ROLE_SCOPE_PASS 68 per-commit, artifact hashes verified. Historical failures preserved; no need to copy M0 checker.",
-  "done_when": "Scoped PACK-006 M2 A01-A06/R01-R04 receipt pages/holes/old reports/ACK feedback double-loss, max two immutable frozen repairs, negative report/PTO/RACK witnesses, per-lane one unreported PTO each interval, 32 true RACK, 0/1/32/33 queues, 10k/100k indexed fake-clock pressure, stale/expiry/generation, global 10% and sparse absolute cap plus unknown send debit and fresh independence. Source6124ce1 67/67 compiled-once native success; exact S c16000a Governance39006386712 SUCCESS; integration with M0 real AEAD/GoV4/M1 arena/M4 raw-TUN and physical/500Mbps/p99 NOT_RUN.",
-  "next_action": "M0 stage-integrate exact scoped recovery SOURCE6124ce1 with authenticated Go V4/M3 opened receipt, M1 real FrozenRecord, and M4 driver under existing security/budget capability gates; M2 only fixes source-exact integration regressions under assigned PACK-009, no new features claimed. Retain old compare-403 monitor request for shared M0 root cause even though current scoped attestation passes.",
+  "task_id": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010",
+  "current_task": "PACK-010 scoped pure R2 typed ingress delivered: authenticated-open receipt scope -> existing shadow; original FrozenRecordHandle driver_read + scoped last-chance budget reservation; 0..32 driver prefix/one Uncertain/Unproven vs proven NotSent mapping to quota and shadow status. Exact SOURCE 654a3c12941a799d1b65b20606f5ddd3e7778aa3 worker-native 70/70 PASS.",
+  "why_now": "M0 main registry explicitly assigned 010 after 009. Original 009 SOURCE6124ce1 67/67 kept; no new engine or algorithm. First 010 SOURCE4e24f66 native FAIL69/70 from fixture ClockReversed; corrected test fixture in SOURCE654a3c1; code central scope39045719817 PASS and evidence S 3e2ba0130d8b092d22c825bfeb220d31858bd80a central scope39046193167 PASS. Old worker Governance39045616461 main moved; no functional failure.",
+  "done_when": "PACK-010 typed post-authenticated receipt, frozen repair submission, validated kernel success prefix/Uncertain/unproven, no false peer ACK/refund, 2-attempt same ciphertext, fresh independence, 8-page/32-slot bounded budgets/sparse/global tested native70/70 compiled-once on exact SOURCE with G2/static SUCCESS and main central role-scope PASS. Frozen API, failure behavior, rollback and NOT_RUN product scope documented in evidence. Done for pure module only.",
+  "next_action": "M0 stage-integrate exact SOURCE654a3c1 with authenticated Go V4/M3 opened control and M1 frozen arena/M4 verified driver prefix in real owner; M2 handles only concrete regression under 010, no unassigned work.",
   "unverified": false,
-  "last_tested_source": "6124ce1012e69a2003bdffdc179a774e21096bc3",
+  "last_tested_source": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-WORKPACK-009-generation-budget-and-100k.json"
+    "docs/evidence/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.json"
   ],
   "open_requests": [
     ".governance/workstreams/M2/requests/M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403.md"
   ],
   "context_refs": [
-    "docs/architecture/modules/08-RECOVERY.md",
-    "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
+    "docs/devlog/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.md",
+    "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md",
+    "docs/architecture/modules/08-RECOVERY.md"
   ],
-  "partial_summary": "PACK-009 pure scoped R2 component completion: controlled RxFeedback and original FrozenRecordHandle tests source269fd8f 63/63 PASS; source660c4d3 one tail/PTO with 32 genuine witness RACK plus queued index 64/64 PASS, Governance39000122062 FAIL HTTP403; source4fd4cce cross-generation conservative unknown debt and 2-real-attempt 66/66 PASS, independent Gov39005928458 ROLE_SCOPE_PASS 66; final source6124ce1 adds 100k fake-clock timer expiry/queued token and fresh after cleanup, worker-native39006207281 67/67 PASS compiled once, G2 39006207288 and static39006207299 SUCCESS. Code Gov39006207262 FAIL main moved; final evidence S c16000a Governance39006386712 SUCCESS ROLE_SCOPE_PASS 68, selftest60/60, artifact12090853844 sha256:51f1a4bc3bd248fe9f7ef22a67d934bd318f682430c23f3b1a48ceadff8ddf7e, hash checked. Historical 403/current code scope FAIL not erased. H seq24 cursor-only checkpoint evidence S, ready_for_integration/unverified false applies ONLY to audited scoped module. M0 real Go/TLS/AEAD/M1 arena/engine/M4 driver, physical and 500Mbps NOT_RUN. M0 systemic API monitor request remains open."
+  "partial_summary": "Component PASS only: source654a3c1 worker-native39045616456 70/70, G2 39045616446, static39045616475, central scope39045719817; evidence S3e2ba01 Gov39046076255 SUCCESS, central39046193167 PASS. Code worker Governance39045616461 FAIL main source moved, first native39045483735 FAIL fixture ClockReversed, historical retained. Old 009 H c345061 unchanged; 010 H seq25 cursor-only. Real GoV4 AEAD/replay/PN proof, M1 real arena, M3 codec, M4 raw/TUN driver, engine owner, CPU/p99/500Mbps/physical all NOT_RUN; RECOVERY_ENGINE_READY=false."
 }
