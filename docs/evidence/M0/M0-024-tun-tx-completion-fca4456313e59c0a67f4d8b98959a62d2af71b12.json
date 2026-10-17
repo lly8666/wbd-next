@@ -143,7 +143,24 @@
         "digest": "sha256:39133ad633cd3daadc60a8636f7d42be485fea1057893377795dc279a2cd59b6"
       }
     },
-    "interpretation": "Both P10 paired CPU decreases are small and do not independently establish stable significant benefit; sparse delivery/age useful but not product latency SLA. All paired legs full delivered, zero bad/missing. Main purpose low-latency correctness and honest prefix cleanup."
+    "interpretation": "Both P10 paired CPU decreases are small and do not independently establish stable significant benefit; sparse delivery/age useful but not product latency SLA. All paired legs full delivered, zero bad/missing. Main purpose low-latency correctness and honest prefix cleanup.",
+    "raw_zip_recheck": {
+      "scope": "Downloaded exact GitHub artifact ZIP (sha256 digest IDs above), inspected each A.json/B.json original per-direction receipts, not summary alone",
+      "all_scenarios": [
+        "P10_AB",
+        "P10_BA",
+        "SPARSE_AB"
+      ],
+      "each_leg_each_direction": {
+        "missing_or_not_delivered": 0,
+        "duplicate_received": 0,
+        "invalid_received": 0,
+        "injector_send_errors": 0
+      },
+      "p10_real_ipv4_rates_mbps": "10.5526 each direction including 28B IP/UDP header; user payload 10Mbps",
+      "sparse_real_ipv4_rates_mbps": "0.03008 each direction; 20pps",
+      "qualification": "developer only"
+    }
   },
   "historical_preserved": {
     "D10": {
@@ -158,5 +175,20 @@
     "physical/Windows native/product": "NOT_RUN"
   },
   "rollback": "Revert code commit 9c76636a (engine and Go regression test) while keeping source-pinned receipt and baseline; restores known blocked-750ms/overbroad-completion behavior, not recommended. Workflow-only commits may be reverted separately.",
-  "next_action": "M0 stop 024 micro-optimization here; resume bounded main integration of frozen M1/M4 and original R0-023/oversize/Stop gates as independently authorized, without relabeling D10 or production capability."
+  "next_action": "M0 stop 024 micro-optimization here; resume bounded main integration of frozen M1/M4 and original R0-023/oversize/Stop gates as independently authorized, without relabeling D10 or production capability.",
+  "stage_handoff_review": {
+    "main_at_review": "161a61ed3a48901866ff38d87b5f0053026af73b",
+    "M1_frozen_source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+    "M4_frozen_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "finding": "All frozen M1 runtime/memory and M4 platform module files except main-added M0-only helpers/integration and differing driver outcome/lease tests are already present on main; code import of identical files is redundant. No main module integration commit or full product gate claimed from source audit.",
+    "nonidentical_M1": [
+      "crates/wbd-engine/src/memory/mod.rs",
+      "crates/wbd-engine/src/runtime/early_rx.rs",
+      "crates/wbd-engine/src/runtime/generation.rs"
+    ],
+    "nonidentical_M4": [
+      "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
+    ],
+    "next_scope": "Dedicated R0-023, over-MTU, Stop original call path integrated review and bounded native gate, not 024 CPU tuning"
+  }
 }

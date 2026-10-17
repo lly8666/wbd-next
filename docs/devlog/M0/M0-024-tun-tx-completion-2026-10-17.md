@@ -10,3 +10,7 @@ SOURCE A `80b47c853499da292295671f2b1a49407c0367a5`; B CODE `9c76636a482de91381b
 - 补丁边界：结构修补和定向功能/成本复验完成，CPU 利好但低幅收益不确证；D10 `39032995995` 仍 FAIL/INCONCLUSIVE，不再重跑，C50/物理/全产品及原 R0-023、超 MTU、组合 M1–M4 都不因本补丁升级。无新增 CLI/GUI、wire 或产品 feature。回退仅撤销 B CODE 并保留本精确证据；会恢复历史阻塞/记账缺陷，不推荐。
 
 下一动作：按原计划独立启动 M0 冻结 M1/M4 接线、R0-023/超 MTU/Stop 的阶段集成，不再打磨 024 CPU 小差异。
+
+补充原始 artifact 审核：三个性能 Actions 各 A.json/B.json 的 C2S/S2C `missing_or_not_delivered`、`duplicate_received`、`invalid_received` 与 `injector_send_errors` 全部为 0；P10 用户 UDP 净荷约10Mbps/方向，IPv4内层实际约10.5526Mbps。来源为原 GitHub artifact ZIP，不是按 summary 推测。
+
+恢复模块集成的只读来源核验：main `161a61ed3a48901866ff38d87b5f0053026af73b` 与 M1 冻结 SOURCE `a39ff711`、M4 冻结 SOURCE `b7bcde7` 相比，绝大多数已冻结 module 文件与 main 的 blob 完全一致；差异集中于 main 为原 Go owner 新增的 M1 接线 helpers，以及 M4 driver outcome/loan 的单测变体。**不重复导入已有代码，不宣称 R0-023/超MTU/Stop 组合已经通过**。下一个独立工作包应首先围绕原真实 Go→Rust owner 超 MTU 与 Stop 硬门确定最小缺口。
