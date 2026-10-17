@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 122,
+  "sequence": 123,
   "checkpoint_sha": "a6b0a79f3e6367ad028b4ce857cf04d89e286139",
   "progress": "ready_for_integration",
   "task_id": "R1-M0-HOTPATH-COST-024",
   "current_task": "024 original Go TLS→Rust→raw/TUN cost batch complete in developer scope: TX ready-only sendmmsg and route snapshots/seq64, RX independent moved original authenticated replay+LINK state/M1 slabs and recvmmsg. Exact native CODE9032476 PASS; final P10 AB/BA SOURCE48c6 PASS on equal delivery, sparse PASS. D10 traced A shortfall INCONCLUSIVE not a performance PASS; 023 and product unchanged.",
-  "why_now": "Recovered unacknowledged nine commits after H121, confirmed all prior Actions complete, rebuilt interrupted unpushed RX split under original owner; finalized one immutable source-homogeneous evidence and bounded diagnostic stop rather than re-testing small CPU deltas.",
+  "why_now": "H122 exact ordinary Governance39033641316 flagged metadata contradiction (ready_for_integration with unverified=true), not a native or paired regression. Fix scope: 024 developer functional+AB/BA is verified for this workpack; product qualification remains NOT_RUN, D10 trace baseline shortfall FAIL preserved in exact evidence.",
   "done_when": "024 structural original-path optimizations implemented + real Go TLS/raw/TUN native functional run39032599398 PASS, same-VM P10 AB/BA run39032851848/39032851741 PASS, sparse run39032851781 PASS, honest D10 run39032995995 FAIL baseline tracer-on shortfall; C50 deferred due diagnostic capacity and user-requested future pressure. Done for developer optimization scope, NOT full product/source qualification.",
   "next_action": "M0 at stage boundary: update main registry to assign one bounded original R0-023 + frozen M1/M4 integration workpack (including oversize/Stop remaining gates), audit exact worker code and combine native Go→Rust path; do not reopen 024 solely to chase minor CPU differences.",
-  "unverified": true,
+  "unverified": false,
   "last_tested_source": "dfe54df144450f22f5144fd3b43335635e01eb90",
   "evidence_refs": [
     "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json"
@@ -27,5 +27,5 @@
     "docs/decisions/M0-game-recovery-parallel-workpacks-2026-10-17.md"
   ],
   "open_requests": [],
-  "partial_summary": "H122 024 structurally completed at CODE9032476 / evidence SOURCEdfe54df. P10 current native original Go TLS dual 10Mbps Rust A vs B same VM AB -14.50%, BA -10.94% CPU/actual GiB, zero missing/invalid, sparse20pps equal full delivery. RX mutable replay/PN and LINK moved into its own worker, NO Entry/TX mutex in steady RX; Stop joined before device teardown. D10 traced A shortfall 14569 C2S, B zero -> FAIL/INCONCLUSIVE diagnostic, not product or trace CPU proof; no repeated rerun. C50 future, true >2GiB live seq32, original R0-023 B01–B04, oversize/M2/M3/Game, standard release features0/physical/product NOT_RUN. No new config/GUI/CLI parameter. M1 rtrb SPSC not added as redundant hop on direct kernel RX single producer."
+  "partial_summary": "H123 024 developer-scope verification complete at CODE9032476 / evidence SOURCEdfe54df. P10 current native original Go TLS dual 10Mbps Rust A vs B same VM AB -14.50%, BA -10.94% CPU/actual GiB, zero missing/invalid, sparse20pps equal full delivery. RX mutable replay/PN and LINK moved into its own worker, NO Entry/TX mutex in steady RX; Stop joined before device teardown. D10 traced A shortfall 14569 C2S, B zero -> FAIL/INCONCLUSIVE diagnostic, not product or trace CPU proof; no repeated rerun. C50 future, true >2GiB live seq32, original R0-023 B01–B04, oversize/M2/M3/Game, standard release features0/physical/product NOT_RUN. No new config/GUI/CLI parameter. H122 Governance39033641316 metadata-only FAIL (ready with unverified=true), corrected H123 by separating developer task verified from product NOT_RUN; no changed source/test result. M1 rtrb SPSC not added as redundant hop on direct kernel RX single producer."
 }
