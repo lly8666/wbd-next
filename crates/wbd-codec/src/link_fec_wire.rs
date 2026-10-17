@@ -473,3 +473,8 @@ mod fec_multiscope_tests;
 #[cfg(test)]
 #[path="fec_p0_cost_tests.rs"]
 mod fec_p0_cost_tests;
+
+// M3 explicit scalar/native ISA-L differential oracle and real owner opt-in.
+#[cfg(test)]
+#[path="fec_native_tests.rs"]
+mod fec_native_tests;
