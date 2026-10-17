@@ -421,6 +421,7 @@ struct LoopWorkers{
     shutdown:Arc<AtomicBool>,
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
+    route_events:Arc<wbd_platform::linux_route_events::RouteEvents>,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[repr(C)]
@@ -629,6 +630,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         })
     else{return INVALID};
     let stop_tx=Arc::clone(&shutdown);
+    let tx_events=Arc::clone(&events);
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
@@ -643,7 +645,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
                 match background_tun_once(
-                    handle,&tun,&stop_tx,ifindex,&mut tx_storage,&events
+                    handle,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
                 ){
                     Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
@@ -658,7 +660,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let _=rx.join();
         return INVALID
     };
-    e.workers=Some(LoopWorkers{shutdown,rx,tx});
+    e.workers=Some(LoopWorkers{shutdown,rx,tx,route_events:events});
     OK
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -678,6 +680,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
         tx.write(e.counters.tx.load(Ordering::Relaxed));
         rx_err.write(e.counters.rx_error.load(Ordering::Relaxed));
         tx_err.write(e.counters.tx_error.load(Ordering::Relaxed));
+    }
+    OK
+}
+
+// Developer-only device netlink witness; event revision is NOT MTU authority.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
+    h:u64,out_revision:*mut u64,out_healthy:*mut u32)->i32{
+    if out_revision.is_null()||out_healthy.is_null(){return INVALID}
+    let Ok(reg)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    let Some(w)=e.workers.as_ref()else{return BAD_STAGE};
+    let snapshot=w.route_events.snapshot();
+    unsafe{
+        out_revision.write(snapshot.revision);
+        out_healthy.write(u32::from(snapshot.healthy));
     }
     OK
 }

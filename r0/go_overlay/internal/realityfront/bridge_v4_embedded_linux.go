@@ -24,6 +24,7 @@ extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_route_refresh(uint64_t,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_route_events(uint64_t,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_observed_tx_ipv4_mtu(uint64_t,uint32_t,uint32_t *);
 */
 import "C"
@@ -190,4 +191,14 @@ func (b *v4EmbeddedNativeBridge) rustOwnerRouteRefreshCount()(uint64,error){
     rc:=C.wbd_m0_embedded_go_loop_route_refresh(C.uint64_t(b.handle),&out)
     if rc!=0{return 0,fmt.Errorf("%w: original Rust route refresh count=%d",errV4Embedded,int(rc))}
     return uint64(out),nil
+}
+
+// Event witness is a diagnostic-only query; never authorizes a new route.
+func (b *v4EmbeddedNativeBridge) rustOwnerRouteEventState()(uint64,bool,error){
+    if !b.committed||b.handle==0{return 0,false,errV4Embedded}
+    var revision C.uint64_t
+    var healthy C.uint32_t
+    rc:=C.wbd_m0_embedded_go_loop_route_events(C.uint64_t(b.handle),&revision,&healthy)
+    if rc!=0{return 0,false,fmt.Errorf("%w: route event observer=%d",errV4Embedded,int(rc))}
+    return uint64(revision),healthy==1,nil
 }

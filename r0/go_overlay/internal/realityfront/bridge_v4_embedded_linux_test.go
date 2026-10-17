@@ -882,6 +882,12 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
         stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
 
+    eventBefore,eventHealthy,err:=b.rustOwnerRouteEventState()
+    if err!=nil||!eventHealthy{
+        t.Fatalf("real netlink link observer not active: rev=%d healthy=%t err=%v",eventBefore,eventHealthy,err)
+    }
+    refreshBefore,err:=b.rustOwnerRouteRefreshCount()
+    if err!=nil{t.Fatal(err)}
     // Real netns route/MTU contraction while the SAME original Rust
     // generation remains Active. A just-observed route frame budget never
     // overrides the original M4 raw driver MTU lease: the driver must
@@ -904,6 +910,19 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     if err!=nil||string(bytes.TrimSpace(reduced))!="1500"{
         t.Fatalf("real kernel MTU did not shrink to 1500: %q %v",reduced,err)
     }
+    // RTM_NEWLINK must invalidate BEFORE the 1s polling fallback: this is
+    // a real kernel observer, not an event stub or a cached route assertion.
+    eventDeadline:=time.Now().Add(750*time.Millisecond)
+    eventAfter:=eventBefore
+    for time.Now().Before(eventDeadline){
+        current,healthy,e:=b.rustOwnerRouteEventState()
+        if e!=nil||!healthy{t.Fatalf("netlink observer unavailable: %d %t %v",current,healthy,e)}
+        if current>eventBefore{eventAfter=current;break}
+        time.Sleep(10*time.Millisecond)
+    }
+    if eventAfter<=eventBefore{t.Fatalf("kernel link MTU change did not fire netlink event: initial=%d",eventBefore)}
+    // Allow bounded coalescing without sleeping per packet.
+    time.Sleep(110*time.Millisecond)
     shrinkData:=bytes.Repeat([]byte{0x6c},52)
     if n,e:=app.WriteToUDP(shrinkData,&net.UDPAddr{IP:remoteIP,Port:42001});
         e!=nil||n!=len(shrinkData){t.Fatalf("changed MTU kernel injector n=%d err=%v",n,e)}
@@ -922,6 +941,11 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     if !failedByDriver{
         t.Fatalf("original M4 raw driver did not fail closed after real MTU shrink 65536→1500")
     }
+    refreshAfter,err:=b.rustOwnerRouteRefreshCount()
+    if err!=nil||refreshAfter<=refreshBefore{
+        t.Fatalf("netlink event did not refresh original Rust owner budget: before=%d after=%d err=%v",refreshBefore,refreshAfter,err)
+    }
+    t.Logf("EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=%d revision_after=%d refresh_before=%d refresh_after=%d",eventBefore,eventAfter,refreshBefore,refreshAfter)
     t.Logf("EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=%d new_mtu=1500 s2c_tx_ok=%d driver_reject_increased=true",
         oldMTU,stats.TxOK)
 }

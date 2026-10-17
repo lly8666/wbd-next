@@ -22,6 +22,7 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
       - "crates/wbd-platform/src/linux_packet_preflight.rs"
       - "crates/wbd-platform/src/lib.rs"
+      - "crates/wbd-platform/src/linux_route_events.rs"
       - "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
       - "crates/wbd-platform/src/linux_rx_batch.rs"
       - "crates/wbd-platform/src/linux_batch.rs"
@@ -95,6 +96,7 @@ jobs:
             "crates/wbd-engine/src/v4_embedded_go.rs",
             "crates/wbd-platform/src/linux_packet_preflight.rs",
             "crates/wbd-platform/src/lib.rs",
+            "crates/wbd-platform/src/linux_route_events.rs",
             "crates/wbd-platform/src/linux_tun_sink.rs",
             "crates/wbd-platform/src/linux_raw_carrier.rs",
             "crates/wbd-platform/src/linux_driver_outcome_lease.rs",
@@ -474,6 +476,7 @@ jobs:
           grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
           grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
           grep -q 'EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=' native-probe-result/original-rust-background-loop.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           m=json.load(open("native-probe-build/manifest.json"))
