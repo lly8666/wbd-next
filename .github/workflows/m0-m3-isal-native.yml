@@ -29,6 +29,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git -C worker-m3 rev-parse HEAD)" = 422a26127496560c0a52e6745ecc8f354e3f4f18
+          # Frozen worker nested under main is otherwise misdetected by Cargo
+          # as the parent workspace; isolate its own unchanged five-crate root.
+          mv worker-m3 "$RUNNER_TEMP/frozen-m3"
+          export WORKER_DIR="$RUNNER_TEMP/frozen-m3"
           rustup toolchain install 1.85.1 --profile minimal
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool
@@ -39,16 +43,16 @@ jobs:
           (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
           test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
           nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
-          cp Cargo.toml Cargo.lock worker-m3/
-          cp crates/wbd-engine/Cargo.toml worker-m3/crates/wbd-engine/Cargo.toml
-          cp crates/wbd-codec/Cargo.toml worker-m3/crates/wbd-codec/Cargo.toml
-          mkdir -p worker-m3/native
-          cp -a native/isal-safe worker-m3/native/isal-safe
-          cargo +1.85.1 test --manifest-path worker-m3/native/isal-safe/Cargo.toml --features native -- --nocapture | tee isal-native.log
+          cp Cargo.toml Cargo.lock "$WORKER_DIR/"
+          cp crates/wbd-engine/Cargo.toml "$WORKER_DIR/crates/wbd-engine/Cargo.toml"
+          cp crates/wbd-codec/Cargo.toml "$WORKER_DIR/crates/wbd-codec/Cargo.toml"
+          mkdir -p "$WORKER_DIR/native"
+          cp -a native/isal-safe "$WORKER_DIR/native/isal-safe"
+          cargo +1.85.1 test --manifest-path "$WORKER_DIR/native/isal-safe/Cargo.toml" --features native -- --nocapture | tee isal-native.log
           grep -Fq REAL_ISAL_V2311_EC_ENCODE_DATA_PASS isal-native.log
-          (cd worker-m3 && cargo +1.85.1 test --release --locked -p wbd-codec --lib --features native-isal r1_fec_selected_backend_ --no-run)
+          (cd "$WORKER_DIR" && cargo +1.85.1 test --release --locked -p wbd-codec --lib --features native-isal r1_fec_selected_backend_ --no-run)
           mkdir -p m3-native-build
-          binary="$(find worker-m3/target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
+          binary="$(find "$WORKER_DIR/target/release/deps" -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
           test -n "$binary"
           cp "$binary" m3-native-build/isal-codec.test
           cp isal-native.log m3-native-build/native-call.log
