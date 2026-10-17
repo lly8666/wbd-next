@@ -11,3 +11,5 @@ license = "MIT"
 aws-lc-rs = { version = "=1.18.1", default-features = false, features = ["non-fips", "alloc"] }
 chacha20 = { version = "=0.9.1" }
 aes = { version = "=0.8.4" }
+# M1-012 SPSC: bounded producer/consumer only; chunk API NOT approved.
+rtrb = { version = "=0.3.2" }

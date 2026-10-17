@@ -22,3 +22,4 @@ wbd-types = { path = "../wbd-types" }
 wbd-codec = { path = "../wbd-codec" }
 wbd-platform = { path = "../wbd-platform" }
 wbd-recovery = { path = "../wbd-recovery" }
+rtrb = { workspace = true }
