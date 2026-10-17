@@ -610,6 +610,18 @@ fn classify_tx_turn(report:Option<&wbd_platform::linux_batch::KernelSendReport>,
     }
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn raw_driver_reopen_on_route_change(
+    previously_seen:Option<u64>,observed:u64,previous_refresh_count:u64
+)->bool{
+    match previously_seen{
+        Some(old)=>old!=observed,
+        // None at first call is normal initialization. Later None is the
+        // path/MTU error invalidation: M4's private driver budget is not
+        // implicitly repaired when the M0 scoped snapshot reappears.
+        None=>previous_refresh_count!=0,
+    }
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
@@ -695,10 +707,35 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             || cache.route_event_revision!=event.revision
         );
         if refresh{
+            // M0 owner snapshot refresh alone cannot resurrect M4's
+            // deliberately invalidated ScopedRouteBudget, or change the
+            // device MTU bound frozen when its raw FD was opened. Reopen the
+            // SAME trusted M4 driver, generation and ifindex ONLY on actual
+            // link/route revision change or prior invalidation; never on
+            // ordinary 1s refresh or DATA. Exact one background TX worker
+            // owns this handle, so no other TX batch can be in flight.
+            let must_reopen=raw_driver_reopen_on_route_change(
+                e.tx_route.as_ref().map(|c|c.route_event_revision),
+                event.revision,e.tx_route_revision
+            );
             e.tx_route=None;
             let snapshot=e.owner.observe_linux_normal_off_route_budget(
                 "lo",ifindex,destination
             ).map_err(|_|INVALID)?;
+            if must_reopen{
+                let fresh=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
+                    .map_err(|_|INVALID)?;
+                let old=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
+                // One unique active TX loop: no asynchronous kernel data
+                // loan may remain when the old FD is retired. Failure keeps
+                // the owner fail-closed, never drops a live borrowed slab.
+                if old.outstanding()!=0{return Err(BAD_STAGE)}
+                old.begin_stop();
+                if old.stop_until(Instant::now())!=StopResult::Drained{
+                    return Err(BAD_STAGE)
+                }
+                e.raw_tx=Some(Arc::new(fresh));
+            }
             e.tx_route_revision=e.tx_route_revision.checked_add(1).ok_or(FULL)?;
             e.tx_route=Some(WorkerRouteBudget{
                 scoped:snapshot,observed_at:Instant::now(),ifindex,destination,
@@ -1138,6 +1175,15 @@ mod tests{
         // Control / Stop still uses the full drain and retirement fence.
         let stopped=arena.stop();
         assert_eq!(stopped.loaned,0);
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_route_refresh_rearms_real_m4_only_after_change_or_invalidation(){
+        assert!(!raw_driver_reopen_on_route_change(None,1,0));
+        assert!(!raw_driver_reopen_on_route_change(Some(1),1,3));
+        assert!(!raw_driver_reopen_on_route_change(Some(5),5,99));
+        assert!(raw_driver_reopen_on_route_change(Some(1),2,1));
+        assert!(raw_driver_reopen_on_route_change(None,5,2));
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
