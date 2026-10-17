@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "source_sha": "e9be1e716070256bbd4b351dd85452d8f2553266",
+  "code_source_sha": "e9be1e716070256bbd4b351dd85452d8f2553266",
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "result": "PARTIAL_READY_ONLY_BURST_NATIVE_REALPATH_PASS",
+  "unverified": true,
+  "reason": "2026-10-17 main registry full-module work packages were assigned once; M0 concurrently continues 024. Existing original Go-authenticated Rust owner loop serviced only one packet per readiness. This increment adds bounded ready-only <=32/approx100us slices on that same real code path, no batch fill waits or shadow crypto implementation.",
+  "work_package": {
+    "decision": "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
+    "source_sha": "103b8de8e5f1be6752cdfcf4753ee755e15fe804",
+    "roles": [
+      "M1",
+      "M2",
+      "M3",
+      "M4"
+    ],
+    "branch_and_epoch_unchanged": true,
+    "registry_assignment_authoritative": true,
+    "worker_history_not_overwritten": true,
+    "governance_run": 38997120936,
+    "maintenance_run": 38997121012,
+    "g2_run": 38997120995
+  },
+  "implementation": {
+    "preliminary_source_sha": "981588925b31f25ea47ff16417d58fff36c4d1d8",
+    "final_source_sha": "e9be1e716070256bbd4b351dd85452d8f2553266",
+    "paths": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      ".github/workflows/m0-v4-native-owner-probe.yml"
+    ],
+    "changes": [
+      "Actual original Linux raw RX and TUN TX background workers process up to 32 immediately ready packets after a single initial blocking readiness poll.",
+      "Nonblocking readiness check between subsequent packets; do not wait to collect batches. No new driver abstraction, thread, crypto path or wire change.",
+      "Approximate work slice time budget sampled every 8 serviced packets to avoid an additional per-packet clock read; bounded packet count and Stop checks still apply.",
+      "Preexisting M1 scoped Arena buffer and original M3 AEAD/PN, true M4 TUN/raw and netlink revision/MTU fail-close remain unchanged.",
+      "Native owner-Rust actual unit 0/1/32/33, error and Stop test now required by real Go/Rust artifact consumer, not only compiled."
+    ],
+    "exclusive_ownership": "M0 modifies only engine composition and shared native harness; M4 full work package owns platform raw, MTU sysfs/EMSGSIZE and batch syscall implementation; no concurrent M4 file writes.",
+    "user_configuration": "NO_NEW_CLI_GUI_CATALOG_PARAMETERS"
+  },
+  "exact_actions": {
+    "real_owner_probe": {
+      "run_id": 38997414468,
+      "attempt": 1,
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "code_sha": "e9be1e716070256bbd4b351dd85452d8f2553266",
+      "build_job_id": 117292897393,
+      "consume_job_id": 117293193043,
+      "conclusion": "success",
+      "build_artifact": {
+        "id": 12087298832,
+        "digest": "sha256:da3bec399f522fb31c3e2db474a5cd037e2dce808ab0a3b3ccb302d49dae2746"
+      },
+      "result_artifact": {
+        "id": 12087887442,
+        "digest": "sha256:fb401dea7ae44442d26b4c530691e09fe3c9a57c6c337f4838cefa33a2210deb"
+      },
+      "unit": "v4_embedded_go::tests::ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok",
+      "scope": "Original Go TLS protected admitted V4 session → real Rust M1/M3 owner → Linux M4 raw/TUN with true netlink and MTU fail-closed; isolated kernel namespace and prebuilt Go/Rust consume."
+    },
+    "development_normal_off": {
+      "source": "e9be1e716070256bbd4b351dd85452d8f2553266",
+      "readiness": "normal",
+      "cipher": "ChaCha20-Poly1305",
+      "warmup_s": 10,
+      "measure_s": 60,
+      "offered_c2s_ipv4_mbps": 9.99999,
+      "delivered_c2s_ipv4_mbps": 9.99999,
+      "offered_s2c_ipv4_mbps": 9.99999,
+      "delivered_s2c_ipv4_mbps": 9.99999,
+      "worker_rx_cpu_seconds": 7.3935,
+      "worker_tx_cpu_seconds": 7.1506,
+      "comparison": "UNPAIRED_DEV_MEASUREMENT_NO_AB_OR_BA",
+      "p99_vs_other_source": "NOT_COMPARABLE_WITHOUT_SAME_VM_PAIR",
+      "max_throughput": "NOT_MEASURED"
+    },
+    "netlink": {
+      "witness": "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS",
+      "revision_before": 1,
+      "revision_after": 2,
+      "route_observe_before": 1,
+      "route_observe_after": 2,
+      "real_link_mtu_before": 65536,
+      "real_link_mtu_after": 1500,
+      "safety": "REAL_M4_RAW_FAIL_CLOSED"
+    },
+    "additional_native": {
+      "native_regression": {
+        "run": 38997414541,
+        "conclusion": "success"
+      },
+      "r0_native_abi": {
+        "run": 38997414472,
+        "conclusion": "success"
+      },
+      "r0_cross_abi": {
+        "run": 38997414490,
+        "conclusion": "success"
+      },
+      "g2_scoped_bootstrap": {
+        "run": 38997414599,
+        "conclusion": "success"
+      },
+      "static_qualification": {
+        "run": 38997414470,
+        "conclusion": "success"
+      },
+      "governance": {
+        "run": 38997414550,
+        "conclusion": "success",
+        "scope": "governance_identity_and_structure"
+      },
+      "governance_maintenance": {
+        "run": 38997414505,
+        "conclusion": "success",
+        "scope": "tool_selftests"
+      },
+      "central_scope_audit": {
+        "run": 38997487436,
+        "conclusion": "success",
+        "scope": "worker scope audit only"
+      }
+    },
+    "preceding_source": {
+      "source": "981588925b31f25ea47ff16417d58fff36c4d1d8",
+      "run": 38997271021,
+      "conclusion": "success",
+      "note": "Initial ready drain with a time check every packet; newer e9be1e7 amortizes clock; absolute CPU-s from different runner is not a performance ratio."
+    }
+  },
+  "not_run": [
+    "Actual per-syscall raw sendmmsg/recvmmsg owner integration",
+    "platform per-DATA sysfs removal and typed EMSGSIZE",
+    "actual TX/RX distinct mutable owner and global registry lock elimination",
+    "same-VM P10 Rust A/B and separate B/A source-locked comparisons",
+    "SPARSE AB and D10 separate action cases",
+    "conditional C50 capacity anchor",
+    "Windows true route notification native",
+    "023 remaining B01-B04 and oversized full-product fragmentation",
+    "500Mbps, production capability, physical E2E"
+  ],
+  "warnings": [
+    "Normal push Governance PASS means identity/structure only; maintenance separately executed.",
+    "Existing historic old-Go/new-mixed 4% is not a proven Rust benefit; the previous -18.66% Rust pair pertains to prior optimization source only.",
+    "10Mbps dev run is not CPU performance qualification without equal-topology same-job Rust/Rust A/B and B/A.",
+    "Engine raw/TUN still uses a global registry lock per packet and platform sysfs checks. Task024 §7 NOT_MET."
+  ],
+  "qualification": {
+    "r0_023": "UNVERIFIED",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_features": 0,
+    "task_024": "PARTIAL"
+  }
+}
