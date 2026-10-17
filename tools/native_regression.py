@@ -124,7 +124,14 @@ def consume(group):
     out.mkdir(parents=True, exist_ok=True)
     # libtest captures successful-test stdout. With --nocapture, a diagnostic
     # print can split "test NAME ... ok" and corrupt an otherwise valid ledger.
-    command = [str(binary.resolve()), "--test-threads=1"]
+    # PACK016 CODE422a default functional tests passed 113 + 1 ignored on
+    # the worker's regular multi-threaded libtest. The central codec matrix
+    # additionally runs multiple expensive diagnostic probes and exceeded
+    # its 240s wall cap when artificially serialized; it produced no failed
+    # test assertion (run39047975666, code124). This is functional regression,
+    # NOT a same-VM CPU performance trial. Keep CPU/p99 qualification separate.
+    # Other groups keep their original serialized order.
+    command = [str(binary.resolve()), "--test-threads=" + ("4" if group == "codec" else "1")]
     if spec["filter"]:
         command.append(spec["filter"])
     try:
