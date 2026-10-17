@@ -14,6 +14,7 @@ pub mod batch;
 pub mod rx_batch;
 pub mod generation;
 pub mod ready_turn;
+pub mod directional;
 #[cfg(test)] mod generation_release;
 #[cfg(test)] mod loan_stop;
 pub mod early_rx;

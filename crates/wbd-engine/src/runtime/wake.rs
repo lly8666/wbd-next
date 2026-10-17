@@ -221,11 +221,34 @@
      /// Explicit nonblocking stop: drop queued handles, then query arena.
      /// Never report quiesced while an in-flight producer or loan remains.
      /// This avoids claiming that kernel/driver borrows have been released.
-     fn cancel_queued(&mut self) {
-         while let Ok(item) = self.ready.try_recv() { drop(item); }
-         if let Some(repair) = self.repair.as_ref() {
-             while let Ok(item) = repair.try_recv() { drop(item); }
+     fn cancel_queued(&mut self) -> usize {
+         let mut canceled=0;
+         while let Ok(item) = self.ready.try_recv() {
+             drop(item);canceled+=1;
          }
+         if let Some(repair) = self.repair.as_ref() {
+             while let Ok(item) = repair.try_recv() {
+                 drop(item);canceled+=1;
+             }
+         }
+         canceled
+     }
+     /// The consumer's nonblocking owner-thread ingress probe.
+     /// No caller may share the receiver concurrently across TX/RX owners.
+     pub fn try_take(&mut self) -> Option<WakeEvent<T>> {
+         assert!(self.gate.bind_current(), "one owner consumer thread");
+         self.inspect(&||MonoNs(0),None,&mut ||false)
+     }
+     /// Cancel only not-yet-delivered queued handles. Inflight publishers
+     /// may complete after this first pass; call again until inflight=0.
+     /// This NEVER attests external driver loans have been released.
+     pub fn stop_cancel_queued(&mut self)->(usize,usize){
+         assert!(self.gate.bind_current(),"one owner consumer thread");
+         self.gate.request_stop();
+         let mut canceled=self.cancel_queued();
+         let inflight=self.gate.inflight.load(SeqCst);
+         if inflight==0 {canceled+=self.cancel_queued();}
+         (canceled,inflight)
      }
      pub fn stop_step(&mut self, arena: &mut Arena) -> StopProgress {
          assert!(self.gate.bind_current(), "owner consumer cannot migrate threads");
@@ -305,9 +328,16 @@
          let (release_tx,release_rx)=mpsc::sync_channel(0);
          let (result_tx,result_rx)=mpsc::sync_channel(1);
          let join=thread::spawn(move|| {
+             // This hook runs on EVERY park attempt, including legitimate
+             // spurious wakeups. A rendezvous only on the first attempt
+             // prevents the test harness itself from hanging on attempt 2.
+             let mut first_park=true;
              let ev=consumer.wait_inner(||MonoNs(0),None,||false,||{},||{},||{
-                 ready_tx.send(()).unwrap();
-                 release_rx.recv().unwrap();
+                 if first_park {
+                     first_park=false;
+                     ready_tx.send(()).unwrap();
+                     release_rx.recv().unwrap();
+                 }
              });
              let value=matches!(ev,WakeEvent::Ready(Class::Fresh,1));
              result_tx.send(value).unwrap();
@@ -318,10 +348,12 @@
          gate.fail_next_signal.store(true,SeqCst);
          sender.try_push(1).unwrap();
          assert!(gate.armed.load(SeqCst));
-         release_tx.send(()).unwrap();
-         // First notification was intentionally lost. Second publication
-         // must wake even though the queue is ALREADY nonempty.
+         // The consumer is held inside its first before-park hook. Force
+         // the retry publication BEFORE letting it park, independent of
+         // OS scheduling/spurious wakeups. unpark's token must survive.
+         // First notification was lost, second wakes nonempty queue.
          sender.try_push(2).unwrap();
+         release_tx.send(()).unwrap();
          let received=result_rx.recv_timeout(Duration::from_secs(2));
          if received.is_err(){sender.stop();}
          assert_eq!(received.unwrap(),true);
