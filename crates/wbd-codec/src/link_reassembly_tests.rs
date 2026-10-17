@@ -162,3 +162,35 @@ fn r1_link_max_65535_datagram_1400_1500_and_framebudget_plusone(){
     assert_eq!(r.push_after_record_auth(&frames[1],id(7),1),Ok(LinkDelivery::Pending));
     assert_eq!(r.push_after_record_auth(&frames[0],id(7),2),Ok(LinkDelivery::Reassembled(p)));
 }
+
+#[test]
+fn r1_link_sixteen_near_full_packets_completion_accounts_both_live_copies(){
+    // Each of sixteen 65_535-byte business packets has 47 full 1380B
+    // fragments and one tail. Buffer all but the tails simultaneously:
+    // on the 16th completion the old parts + new 65_535B output would
+    // exceed MAX_BUFFERED_BYTES unless the table retires an older assembly.
+    let body=(0..65_535).map(|i|(i%251) as u8).collect::<Vec<_>>();
+    let mut rx=receiver(1400,LinkMode::FixedOff);
+    let mut last=Vec::new();
+    for packet_id in 1..=16u32 {
+        let parts=fragment_compat(&body,1400,LinkMode::FixedOff,packet_id).unwrap();
+        assert_eq!(parts.len(),48);
+        for frame in &parts[..parts.len()-1] {
+            assert_eq!(rx.push_after_record_auth(frame,id(u64::from(packet_id)),10),
+                Ok(LinkDelivery::Pending));
+        }
+        last.push(parts.last().unwrap().clone());
+    }
+    assert_eq!(rx.state().assemblies,16);
+    assert!(rx.state().buffered_bytes>MAX_BUFFERED_BYTES-65_535);
+    // Completing newest packet must not allocate a double-buffer peak above
+    // the bound: oldest ID is retired; target gets a correct owned output.
+    assert_eq!(rx.push_after_record_auth(&last[15],id(16),11),
+        Ok(LinkDelivery::Reassembled(body)));
+    assert!(rx.state().buffered_bytes<=MAX_BUFFERED_BYTES-65_535);
+    assert_eq!(rx.state().assemblies,14);
+    assert_eq!(rx.push_after_record_auth(&last[0],id(1),12),Ok(LinkDelivery::Discarded));
+    assert_eq!(rx.push_after_record_auth(b"still-deliver",id(0),12),
+        Ok(LinkDelivery::Ordinary(b"still-deliver")));
+    assert!(rx.state().retired_packet_ids<=MAX_RETIRED);
+}

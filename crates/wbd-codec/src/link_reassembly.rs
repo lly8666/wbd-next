@@ -96,6 +96,15 @@ impl ReassemblyTable{
             .map(|(k,_)|*k)?;
         self.drop_retire(k,now);Some(k)
     }
+    /// Return room for a separate completed output while keeping the target
+    /// packet's owned parts alive. These two copies coexist until the caller
+    /// has completed the contiguous business buffer.
+    fn evict_oldest_except(&mut self,exempt:ReassemblyScope,now:u64)->Option<ReassemblyScope>{
+        let k=self.assemblies.iter().filter(|(key,_)|**key!=exempt)
+            .min_by_key(|(key,a)|(a.created_at_ms,**key))
+            .map(|(key,_)|*key)?;
+        self.drop_retire(k,now);Some(k)
+    }
     /// Only after record authentication. Ordinary packet is a borrowed,
     /// zero-copy fast path: no state lookup or timer scan or added LINK20.
     pub fn push_after_record_auth<'a>(&mut self,wire:&'a [u8],scope:ReassemblyScope,now_ms:u64)
@@ -183,8 +192,23 @@ impl ReassemblyTable{
         if a.bytes!=total{
             self.drop_retire(k,now);return Err(ReassemblyError::InvalidLayout);
         }
+        // The old parts and contiguous output are simultaneously live here.
+        // A completed packet must not bypass the ~1MiB RX payload budget by
+        // allocating a second copy on top of sixteen near-complete assemblies.
+        // Evict only OTHER incomplete packets: never silently discard a ready
+        // packet when capacity can be recovered without touching its data.
+        while self.state().buffered_bytes.checked_add(total)
+            .is_none_or(|peak|peak>MAX_BUFFERED_BYTES) {
+            if self.evict_oldest_except(k,now).is_none(){
+                self.drop_retire(k,now);
+                return Err(ReassemblyError::NoCapacity);
+            }
+        }
         let mut out=Vec::new();
-        out.try_reserve_exact(total).map_err(|_|ReassemblyError::NoCapacity)?;
+        if out.try_reserve_exact(total).is_err(){
+            self.drop_retire(k,now);
+            return Err(ReassemblyError::NoCapacity);
+        }
         {
             let a=self.assemblies.get(&k).expect("completed");
             for i in 0..f.count{
