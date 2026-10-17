@@ -1,5 +1,5 @@
-name: M0 024 TUN bounded read and TX partial completion P10 B-A
-run-name: "R1-M0-024|P10-BA|${{ github.sha }}"
+name: M0 R0-023 staged M1/M2/M3 Normal-off vs fixed fca4456 P10 B-A
+run-name: "R0-M0-023|P10-BA|${{ github.sha }}"
 on:
   push:
     branches: [main]
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: 80b47c853499da292295671f2b1a49407c0367a5
+          ref: fca4456313e59c0a67f4d8b98959a62d2af71b12
           path: rust-A
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -35,16 +35,16 @@ jobs:
         env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
         run: |
           set -euo pipefail
-          # M0-024 minimal TUN nonblocking+TX completion repair: A is exact prepatch H124; B pinned code blob.
+          # R0-023 bounded staged integration: A=fca4456 original tested Normal/off; B=latest staged M1/Game,M2/ingress,M3 codec and M0 MTU lease repair.
           # Freeze content, not a floating branch or unrelated later commit.
           test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = e49e7f08d218c5b77a1df05ebcc6a172ce493d44
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 58d9b95b206f02b27aba0067bab77d988772ff4a
-          # Exact A: original independent directional RX/TX, raw kernel batch, route cache before this patch.
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 6b7af405da4b2566fd9fc2cef237d68dbc7b56ef
+          # Exact A: source-frozen known Normal/off with real TX/RX worker and M4 raw/TUN.
           # A/B retain seq64, direction split, real batch and cached route; Go
           # workload fixture, Cargo.lock, route/TUN and scripts are identical.
-          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 86e4979fa5dae06100e5684016f13381df05936d
+          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 58d9b95b206f02b27aba0067bab77d988772ff4a
           test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = e49e7f08d218c5b77a1df05ebcc6a172ce493d44
-          test "$(git -C rust-A rev-parse HEAD)" = 80b47c853499da292295671f2b1a49407c0367a5
+          test "$(git -C rust-A rev-parse HEAD)" = fca4456313e59c0a67f4d8b98959a62d2af71b12
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           cmp rust-A/Cargo.lock Cargo.lock
           cmp rust-A/tools/run-v4-tun-netns.sh tools/run-v4-tun-netns.sh
@@ -75,8 +75,8 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"]
           manifest={
             "source_sha":os.environ["GITHUB_SHA"],
-            "source_A":"80b47c853499da292295671f2b1a49407c0367a5",
-            "source_B":os.environ["GITHUB_SHA"],"source_B_code":"9c76636a482de91381b6cc9601f0bdc6852e732a",
+            "source_A":"fca4456313e59c0a67f4d8b98959a62d2af71b12",
+            "source_B":os.environ["GITHUB_SHA"],"source_B_code":"ede83b98edba1fee6f73bc99454040cc95392d4d",
             "legacy_Go":"a7a82db31fe736ffedee330795a3234d358f1984",
             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "rust":"1.85.1","go":"1.23.12",
@@ -117,7 +117,7 @@ jobs:
           m=json.load(open("hotpath-build/manifest.json"))
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           assert m["source_B"]==os.environ["GITHUB_SHA"]
-          assert m["source_A"]=="80b47c853499da292295671f2b1a49407c0367a5"
+          assert m["source_A"]=="fca4456313e59c0a67f4d8b98959a62d2af71b12"
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
           for p,h in m["common_harness_sha256"].items():assert sha(p)==h,p
           for leg in ("A","B"):
