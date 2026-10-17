@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "aae512d1953975476ab78081f5801436c6573fda",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M4 Linux x86_64 GNU PACK-006 platform-only scoped carrier/driver batch contracts and unprivileged native regressions. Positive raw/TUN privileged device paths UNSUPPORTED/NOT_RUN; no M0 Go/engine integration or product.",
+  "authority": {
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "role_state": "active",
+    "assigned_task": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011",
+    "goal": "完整包：按 PACK-006 / module 04+MTU直接依赖，负责平台raw/TUN MTU事件和EMSGSIZE、ready批I/O与Stop/ABI边界；M0独占engine桥接。",
+    "allowed_paths": [
+      "crates/wbd-platform/",
+      "r1/go-bridge/",
+      "docs/devlog/M4/",
+      "docs/evidence/M4/",
+      ".governance/workstreams/M4/cursor.json",
+      ".governance/workstreams/M4/requests/"
+    ],
+    "previous_H": "e19772fe65d8cfb347da3c7b182c25180ba91d37",
+    "prior_cursor_sequence": 14,
+    "main_pinned_import_sha": "e9be1e716070256bbd4b351dd85452d8f2553266"
+  },
+  "files": [
+    "crates/wbd-platform/src/linux_batch.rs",
+    "crates/wbd-platform/src/linux_packet_preflight.rs",
+    "crates/wbd-platform/src/linux_route_events.rs",
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "crates/wbd-platform/src/linux_tun_sink.rs",
+    "crates/wbd-platform/src/linux_mtu_scope.rs",
+    "crates/wbd-platform/src/lib.rs",
+    "docs/devlog/M4/R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011.md"
+  ],
+  "implementation": {
+    "I01_I04": "Native connected unprivileged UDP sendmmsg detailed typed KernelSendReport beside unchanged TxBatchOutcome: kernel EMSGSIZE/ENODEV/ENETDOWN/network route invalidation; EAGAIN backpressure; EINTR uncertainty; Linux positive partial errno unavailable; bad lengths ambiguity; actual 0/1/32/33 bounded accepted-prefix/one-uncertain/not-attempted suffix. Raw send_ready_batch is <=32 consecutive synchronous sendto calls, **not one kernel sendmmsg nor performance batching**, with borrowed frozen handles and typed strict semantics.",
+    "B01_B04": "Original BorrowFence/STOP and RAII owned Linux raw/TUN FDs, generation checks, no post-stop borrow, pending until driver loan actually releases. Raw receiver poll(timeout=0)+recvfrom(MSG_DONTWAIT|MSG_TRUNC) <=32 preallocated unique borrowed buffers, complete length/checksum/tuple/personal flags strict, untrusted ciphertext only. TUN IFF_TUN|IFF_NO_PI accepts exclusively owned FD, enforces O_NONBLOCK after ioctl, bounded <=32 poll0/read and write in separate methods; rejects unsupported IPv6/invalid L3, short write ambiguous; no real privileged device positive.",
+    "L01_MTU": "Imported single original M0 NETLINK_ROUTE watcher (no duplicate listener) and kernel interface/IPv4 route PMTU observers pinned at main e9be source. New owner-local ScopedRouteBudget caches generation/ifindex/link/PMTU and watcher revision, fail closed on unknown/unhealthy watcher, changed ifindex/MTU, 100ms event debounce, <=1s TTL re-observation, route destination change and known kernel EMSGSIZE/device/route/short send. No per-DATA sysfs or new UDP PMTU probe under stable revision. A changed route is never claimed authenticated; kernel IP_HDRINCL DF still final enforcement. Malformed IPv4 slice lengths rejected BEFORE address indexing.",
+    "security": "Neither native UDP nor raw/TUN bytes carry Go V4 authenticated admission provenance, PN consumption or business delivery; production Go V4 remains DISABLED. No physical-interface capture, OS privileges, root Cargo/CI, ABI, engine or another role modified.",
+    "configuration": "Rust internal platform driver; no product config/GUI/CLI exposed or activated. Go remains OS lifetime manager and M0 retains exact engine owner integration."
+  },
+  "native": {
+    "run_id": 38998105581,
+    "attempt": 1,
+    "workflow": "worker-native-tests.yml",
+    "status": "SUCCESS",
+    "source_sha": "aae512d1953975476ab78081f5801436c6573fda",
+    "target": "x86_64-unknown-linux-gnu",
+    "rust_toolchain": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "compiled_once": true,
+    "build_job": 117295024082,
+    "consumer_job": 117295091536,
+    "r1_tests_passed": 88,
+    "r1_tests_failed": 0,
+    "previous_r1_tests": 75,
+    "scoped_new_or_pinned_baseline_cases": 13,
+    "historical_r0_filtered": 8,
+    "build_artifact": {
+      "id": 12087883272,
+      "zip_sha256": "e747bfc521db0290de0a75b1013b1809e24668d583486a2682920fe3831f2b94",
+      "manifest_sha256": "a5f75b716c99e4478c99dc4f6038ce53bb4ca1ebc669a7ff52ee5f5678a74cbe",
+      "binary_sha256": "ac44f60112c5405444ce61fec2ee02b054a66fe032b0ccb8861f117109963a33",
+      "binary_bytes": 11679504
+    },
+    "result_artifact": {
+      "id": 12087577813,
+      "zip_sha256": "6241693c70bd9c738082b207745377f422c3a781697ad09eb104844ac7cad9f5",
+      "result_json_sha256": "d6f8c46a25ef3767371c6fda5fcf16fec43ec656673f2c2f5f279206b77e730d",
+      "test_log_sha256": "5f891d5ceb0ab38020bbad9bf1f4fc580f0aa61c74a0a182088dbe1793e1bbcb"
+    },
+    "artifact_audit": "Actual exact GitHub ZIP artifacts downloaded and SHA256 independently recomputed for both ZIPs, manifest, one compiled worker-m4.test, result.json and test.log. Identical source/run/attempt/binary check; output 88/88 Rust R1 passed, 8 historical R0 filtered, two RAW_RX_NOT_RUN stderr. No hidden raw packet reception.",
+    "new_or_imported_test_names": [
+      "r1_linux_sendmmsg_real_kernel_typed_emsgsize_and_partial_unknown",
+      "r1_linux_sendmmsg_typed_device_route_and_backpressure_are_distinct",
+      "r1_m4_pack_cache_revision_storm_ttl_route_switch_and_poison",
+      "r1_m4_pack_actual_linux_interface_preflight_no_socket_or_raw",
+      "r1_m4_pack_raw_0_1_32_33_prefix_uncertain_suffix_and_kernel_error_gate",
+      "r1_m4_pack_raw_nonprivileged_no_interface_capture",
+      "r1_m4_pack_raw_malformed_ipv4_tuple_fails_before_mtu_or_fd",
+      "r1_m4_pack_tun_0_1_32_33_bounded_no_implicit_auth",
+      "r1_m4_pack_tun_wrong_fd_does_not_gain_privileged_device"
+    ]
+  },
+  "same_source_workflows": [
+    {
+      "workflow": "worker-native",
+      "id": 38998105581,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap-native",
+      "id": 38998105704,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "r0-static-qualification-audit",
+      "id": 38998105553,
+      "result": "SUCCESS"
+    },
+    {
+      "workflow": "r0-cross-abi",
+      "id": 38998105728,
+      "result": "SUCCESS",
+      "qualification": "ABI/compile only, not native Windows/ARM"
+    },
+    {
+      "workflow": "governance",
+      "id": 38998105746,
+      "result": "SOURCE_AUDIT_IN_PROGRESS_AT_EVIDENCE_CREATION"
+    },
+    {
+      "workflow": "r0-fake-platform",
+      "id": 38998105615,
+      "result": "FAIL",
+      "reason": "Historical worker branch R0 fake harness 8-count inventory rejects 96 actual Rust assertions even though 96/96 Rust assertions PASS; does not imply all workflows green"
+    }
+  ],
+  "historical_failures": [
+    {
+      "source": "222a8ea08a846b2ceeccb2a49c518e03275abd1c",
+      "run_id": 38997732509,
+      "result": "FAIL_COMPILE",
+      "reason": "ScopedRawIpv4Rx struct missed budget field with constructor and method, Rust E0560/E0609; fixed in 8ae9574e101747a39d006e46cd4cda2961c6170d."
+    },
+    {
+      "source": "aae512d1953975476ab78081f5801436c6573fda",
+      "run_id": 38998105615,
+      "result": "FAIL_R0_OLD_HARNESS",
+      "actual": "96/96 full Rust assertions PASS; old R0 fake harness inventory incompatible on worker branch, M0 owns root workflow."
+    }
+  ],
+  "not_run": [
+    "Positive privileged Linux raw IPv4/TCP carrier send/receive and AF_PACKET packet RX/TX (CAP_NET_RAW absent): UNSUPPORTED, RAW_RX_NOT_RUN",
+    "Positive real TUN IFF_TUN|IFF_NO_PI native with CAP_NET_ADMIN: UNSUPPORTED/NOT_RUN",
+    "Physical link replace, actual privileged netlink route MTU down/up or interface replace: NOT_RUN; only unprivileged ifindex/route observe + pure revision classification",
+    "Raw/TUN physical throughput, 500Mbps, p99, P1-P3 product qualification, Windows/ARM native",
+    "M0 authenticated Go ColdSnapshot -> Rust owner C ABI/PN/AEAD business flow and normal device process teardown"
+  ],
+  "production_go_v4": "DISABLED",
+  "rollback": "Remove linux_mtu_scope.rs and three M0-baseline platform source files/modules if unintegrated; restore prior linux_batch.rs and platform lib registrations. No root changes to undo.",
+  "integration": "READY_FOR_M0_EXACT_SOURCE_PLATFORM_DRIVER_REVIEW_ONLY; raw/TUN real positive remain UNSUPPORTED"
+}
