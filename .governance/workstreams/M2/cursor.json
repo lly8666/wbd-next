@@ -4,12 +4,12 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 21,
+  "sequence": 22,
   "checkpoint_sha": "70e76bc0f0693a0b2bffd95f90e23976ce7df091",
   "progress": "partial",
   "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
-  "current_task": "PACK-009 first RX feedback and controlled frozen-handle batch shipped. CODE269fd8f worker-native38998072121 63/63 PASS, G2 38998072124 and static38998072111 PASS, source Governance38998072117 PASS. Evidence S70e76bc own Governance38998363415 FAIL due live main/source moving mid audit, not rust/code failure. Full tail PTO fairness still in progress.",
-  "why_now": "main registry assigned PACK-009, previous M2 Hc74a4fd independent Governance38735393188 PASS. Source 67b9ed1 adds bounded RX dirty/repeat; source269fd8f adds two controlled Arc FrozenRecordHandle/driver_read and budget/PT0 tests; exact compiled-once R2 native63/63 passed. Evidence S70e76bc records artifact hashes and remaining one-tail-per-timer contradiction. Its own Governance38998363415 failed ROLE_SCOPE_FAILED control or source moved mid-audit; preserve status, do not rerun identical failing audit.",
+  "current_task": "PACK-009 R2 RX feedback & controlled frozen handle code SOURCE269fd8f 63/63 worker-native PASS, G2/static/source Governance PASS. Evidence S70e own Gov FAILED moving control; first H4338 Gov scope PASS but structure FAIL missing main-only context_ref. Corrected cursor H seq22 partial/unverified; tail PTO per-lane cap still open.",
+  "why_now": "PACK-009 native source269fd8f PASS 63/63; evidence S70e76bc Governance38998363415 FAIL main moved mid-audit; H4338fa17 Governance38998606694 scope ROLE_SCOPE_PASS 60 but structure FAIL missing cursor context ref docs/decisions/M0-full-module-workpackages-2026-10-17.md, which exists on main not on worker. Cursor-only fix drops that cross-branch context path, retains task authority via main registry. Prior failures preserved.",
   "done_when": "Continue assigned full PACK-009: scoped recovery feedback/2-attempt repair/sparse budget/expiry/load/native frozen handle and A01-A06,R01-R04 fake-mono tests; correct unreported PTO 32-candidates-per-lane tail storm without preventing 32 real RACK eligible candidates or freshness, then exact-source Actions evidence S/H. New 8 tests plus 55 old succeeded CODE269fd8f. Go V4/engine/driver/physical NOT_RUN.",
   "next_action": "Within PACK-009, resolve module08 per-lane PTO tail single-probe bound versus existing 32 unreported wake tests, preserve indexed RACK bounded wake/expiry and fresh fairness; then verify with exact-source Actions and record evidence. M0 owns actual Go V4 authenticated adapter/M1 arena/platform integration.",
   "unverified": true,
@@ -21,9 +21,8 @@
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
   ],
-  "partial_summary": "Remote recovery CLEAN 008 Hc74a4fd governance38735393188 PASS, registry rev2 epoch1 newly assigned M2 PACK-009. CODE S67b9ed1 adds bounded RX feedback and 6 tests; CODE S269fd8f adds two controlled Arc FrozenRecordHandle driver_read + receipt/PTO/budget scenarios. Exact worker-native38998072121 compiled-once 63/63 success binarysha ed96430e, G2 38998072124 SUCCESS, static38998072111 SUCCESS, source Governance38998072117 ROLE_SCOPE_PASS 58. Evidence S70e76bc stores source-locked hashes, notes real M0 authenticated GoV4/driver not run and sender tail issue; its Governance38998363415 FAIL deterministic outcome 'control or source moved mid-audit' (artifact12087834166), not code failure. H seq21 checkpoint S70e76bc progress partial/unverified; do not claim full PACK or product. Next act fix 32 unreported-tail eligibility vs module08 <=1 tail timer while retaining RACK bound. No root shared edits."
+  "partial_summary": "Remote recovery CLEAN 008 Hc74a4fd governance38735393188 PASS, registry rev2 epoch1 newly assigned M2 PACK-009. CODE S67b9ed1 adds bounded RX feedback and 6 tests; CODE S269fd8f adds two controlled Arc FrozenRecordHandle driver_read + receipt/PTO/budget scenarios. Exact worker-native38998072121 compiled-once 63/63 success binarysha ed96430e, G2 38998072124 SUCCESS, static38998072111 SUCCESS, source Governance38998072117 ROLE_SCOPE_PASS 58. Evidence S70e76bc stores source-locked hashes, notes real M0 authenticated GoV4/driver not run and sender tail issue; its Governance38998363415 FAIL deterministic outcome 'control or source moved mid-audit' (artifact12087834166), not code failure. H seq21 checkpoint S70e76bc progress partial/unverified; do not claim full PACK or product. Next act fix 32 unreported-tail eligibility vs module08 <=1 tail timer while retaining RACK bound. No root shared edits. H4338fa17 Governance38998606694 FAIL after ROLE_SCOPE_PASS 60 commits, structure reason 'missing cursor reference: docs/decisions/M0-full-module-workpackages-2026-10-17.md'. Cursor context refs must point to files present on worker; main registry alone authorizes current task. H seq22 fixes only ref list. No code/source changes."
 }
