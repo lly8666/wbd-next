@@ -73,6 +73,8 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     workers:Option<LoopWorkers>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    joining:bool,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     counters:Arc<LoopCounts>,
     arena:Arena,phase:u32,
     rx_boundary:u32,wire_limit:u16,staged_count:u32,staged_bytes:u32,
@@ -85,10 +87,16 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tun_sink:Option<Arc<ScopedTunSink>>,
 }
-struct Registry{generation:u32,entries:BTreeMap<u64,Entry>}
+// Global registry performs identity lookup only. Every active session has
+// its own mutex; TX/RX *within* one session are not yet direction-split.
+struct Registry{generation:u32,entries:BTreeMap<u64,Arc<Mutex<Entry>>>}
 fn registry()->&'static Mutex<Registry>{
     static R:OnceLock<Mutex<Registry>>=OnceLock::new();
     R.get_or_init(||Mutex::new(Registry{generation:1,entries:BTreeMap::new()}))
+}
+fn session(handle:u64)->Result<Arc<Mutex<Entry>>,i32>{
+    let r=registry().lock().map_err(|_|BAD_STAGE)?;
+    r.entries.get(&handle).cloned().ok_or(UNKNOWN)
 }
 fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
     let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
@@ -107,7 +115,7 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         .map_err(|_|INVALID)?;
     let arena=Arena::new(generation,32,2048,32,1_000_000)
         .map_err(|_|FULL)?;
-    r.entries.insert(handle,Entry{
+    r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -119,6 +127,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         workers:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        joining:false,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         counters:Arc::new(LoopCounts::default()),
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         raw_rx:None,
@@ -126,12 +136,12 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         raw_tx:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tun_sink:None,
-    });
+    })));
     Ok(handle)
 }
 fn stage(handle:u64,seq:u32,payload:&[u8])->i32{
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_PREPARED{return BAD_STAGE}
     let len=payload.len();
     let max=u32::from(e.wire_limit)*64;
@@ -147,8 +157,8 @@ fn stage(handle:u64,seq:u32,payload:&[u8])->i32{
     }
 }
 fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_PREPARED{return BAD_STAGE}
     if count!=e.staged_count||bytes!=e.staged_bytes||count>MAX_EARLY
        ||bytes>u32::from(e.wire_limit)*MAX_EARLY{return INVALID}
@@ -159,36 +169,52 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     OK
 }
 fn abort(handle:u64)->i32{
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase==PH_ACTIVE{return OK} // Go defer after commit
     if e.phase!=PH_PREPARED{return BAD_STAGE}
-    let Some(mut e)=r.entries.remove(&handle)else{return UNKNOWN};
-    let _=e.owner.stop();OK
+    // Terminal before unlink, including for racing cloned references.
+    let _=e.owner.stop();
+    e.phase=PH_STOPPED;
+    drop(e);
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    if r.entries.get(&handle).is_some_and(|x|Arc::ptr_eq(x,&cell)){
+        r.entries.remove(&handle);
+    }
+    OK
 }
 fn stop(handle:u64)->i32{
     // Leave registry unlocked while joining. Driver handles and owner slabs
     // cannot be released while either Rust worker still references them.
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     {
+        let Ok(cell)=session(handle)else{return UNKNOWN};
         let workers={
-            let Ok(mut reg)=registry().lock()else{return BAD_STAGE};
-            let Some(e)=reg.entries.get_mut(&handle)else{return UNKNOWN};
-            if e.phase!=PH_ACTIVE && e.phase!=PH_STOPPING && e.phase!=PH_STOPPED{
-                return BAD_STAGE
-            }
+            let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+            if e.phase==PH_STOPPED{return OK}
+            if e.phase!=PH_ACTIVE && e.phase!=PH_STOPPING{return BAD_STAGE}
+            if e.joining{return STOP_INCOMPLETE}
             let w=e.workers.take();
-            if let Some(ref w)=w{w.shutdown.store(true,Ordering::Release)}
+            if let Some(ref w)=w{
+                w.shutdown.store(true,Ordering::Release);
+                e.joining=true;
+            }
+            e.phase=PH_STOPPING;
             w
         };
         if let Some(w)=workers{
             let rx=w.rx.join();
             let tx=w.tx.join();
-            if rx.is_err()||tx.is_err(){return STOP_INCOMPLETE}
+            if rx.is_err()||tx.is_err(){
+                // A failed join cannot authorize driver/slab retirement.
+                return STOP_INCOMPLETE
+            }
+            let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+            e.joining=false;
         }
     }
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase==PH_STOPPED{return OK}
     if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
     // Stop the REAL M4 raw driver and TUN sink before quiescing original
@@ -220,10 +246,15 @@ fn stop(handle:u64)->i32{
     e.phase=PH_STOPPED;OK
 }
 fn release(handle:u64)->i32{
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_STOPPED{return BAD_STAGE}
-    r.entries.remove(&handle);OK
+    drop(e);
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    if r.entries.get(&handle).is_some_and(|x|Arc::ptr_eq(x,&cell)){
+        r.entries.remove(&handle);
+    }
+    OK
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_prepare(
@@ -256,8 +287,8 @@ pub extern "C" fn wbd_m0_embedded_go_release(h:u64)->i32{release(h)}
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
     if out.is_null(){return INVALID}
-    let Ok(r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     unsafe{out.write(e.phase)};OK
 }
 
@@ -265,8 +296,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn attach_raw(handle:u64,ifindex:u32)->i32{
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.raw_rx.is_some(){return BAD_STAGE}
     let Ok(driver)=ScopedRawIpv4Rx::open("lo",ifindex,(handle>>32) as u32)
     else{return INVALID};
@@ -275,8 +306,8 @@ fn attach_raw(handle:u64,ifindex:u32)->i32{
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.tun_sink.is_some(){return BAD_STAGE}
     // Borrow only for dup(): Rust owns its duplicate, Go owns original FD.
     let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
@@ -287,8 +318,8 @@ fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
-    let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
-    let e=r.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
     if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
     let raw=e.raw_rx.as_ref().ok_or(BAD_STAGE)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
@@ -345,8 +376,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_raw_to_tun(
 /// keys/seq/PN in the FFI or in Go. Driver is retained through Stop.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
-    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
-    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
     if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let flow=e.flow;
@@ -401,9 +432,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 // sender and receiver do not call per-packet RX/TX helpers. The READY poll
 // is outside the shared registry lock. Subsequent owner admission, AEAD/PN,
 // Normal/off and kernel driver send use the exact existing Rust functions.
-// Spurious irrelevant raw TCP traffic can still occupy recv_one_into for up
-// to 750ms under the registry lock: this first functional worker is NOT yet
-// an independently qualified 10Mbps dual-direction data plane.
+// Spurious irrelevant raw TCP traffic is filtered outside both mutexes;
+// within a session the owner TX/RX mutable lock remains to be split.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[repr(C)]
 struct PollFd {fd:c_int,events:i16,revents:i16}
@@ -450,11 +480,10 @@ fn loop_now()->MonoNs{
 // TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
 // Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
+fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     rx_storage:&mut Vec<RxPacket>)->Result<u32,i32>{
     let (mut slab,flow,boundary,generation)={
-        let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
-        let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+        let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
         (slab,e.flow,e.rx_boundary,(handle>>32) as u32)
@@ -467,8 +496,7 @@ fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
         tuple,PacketPersona::Legacy).map_err(|_|INVALID)?;
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let absolute=extend_seq32(u64::from(boundary),seq).map_err(|_|INVALID)?;
-    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
-    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     e.owner.offer_after_active(slab,0..len,absolute,loop_now())
         .map_err(|_|INVALID)?;
@@ -495,12 +523,11 @@ fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
 // Only original owner grants route-bound budget, seals AEAD/PN and submits
 // original frozen M1 record through genuine scoped M4 raw TX.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn background_tun_once(handle:u64,tun:&ScopedTunSink,
+fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
     events:&wbd_platform::linux_route_events::RouteEvents)->Result<(),i32>{
     let (mut slab,generation)={
-        let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
-        let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+        let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
         (slab,(handle>>32) as u32)
@@ -510,8 +537,7 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
     let n=tun.read_ipv4_into(generation,&mut slab.writable()[14..])
         .map_err(|_|INVALID)?;
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
-    let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let flow=e.flow;
     // A single active generation owns a route snapshot. The normal DATA
@@ -613,8 +639,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // One shared Linux link/route listener for all live owner sessions.
     // This is only an invalidation signal; M4 still checks every raw send.
     let events=wbd_platform::linux_route_events::subscribe();
-    let Ok(mut reg)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=reg.entries.get_mut(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
     let (Some(raw),Some(tun))=(e.raw_rx.as_ref(),e.tun_sink.as_ref())
     else{return BAD_STAGE};
@@ -631,6 +657,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stats=Arc::clone(&e.counters);
     let stop_rx=Arc::clone(&shutdown);
     let stats_rx=Arc::clone(&stats);
+    let rx_cell=Arc::clone(&cell);
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
@@ -649,7 +676,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 let slice_start=Instant::now();
                 ready_only_slice(&stop_rx,
                     ||loop_readiness(raw_fd,&stop_rx,0),
-                    ||match background_raw_once(handle,&raw,&stop_rx,&mut rx_storage){
+                    ||match background_raw_once(&rx_cell,&raw,&stop_rx,&mut rx_storage){
                         Ok(n)=>{
                             stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);
                             true
@@ -668,6 +695,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     else{return INVALID};
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
+    let tx_cell=Arc::clone(&cell);
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
@@ -684,7 +712,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 ready_only_slice(&stop_tx,
                     ||loop_readiness(tun_fd,&stop_tx,0),
                     ||match background_tun_once(
-                        handle,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
+                        &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
                     ){
                         Ok(_)=>{
                             stats.tx.fetch_add(1,Ordering::Relaxed);
@@ -703,7 +731,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         })
     else{
         shutdown.store(true,Ordering::Release);
-        drop(reg);
+        drop(e);
         let _=rx.join();
         return INVALID
     };
@@ -720,8 +748,8 @@ pub extern "C" fn wbd_m0_embedded_go_loop_start(handle:u64,ifindex:u32)->i32{
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
     h:u64,rx:*mut u64,tx:*mut u64,rx_err:*mut u64,tx_err:*mut u64)->i32{
     if rx.is_null()||tx.is_null()||rx_err.is_null()||tx_err.is_null(){return INVALID}
-    let Ok(reg)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     unsafe{
         rx.write(e.counters.rx.load(Ordering::Relaxed));
         tx.write(e.counters.tx.load(Ordering::Relaxed));
@@ -737,8 +765,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
     h:u64,out_revision:*mut u64,out_healthy:*mut u32)->i32{
     if out_revision.is_null()||out_healthy.is_null(){return INVALID}
-    let Ok(reg)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     let Some(w)=e.workers.as_ref()else{return BAD_STAGE};
     let snapshot=w.route_events.snapshot();
     unsafe{
@@ -756,8 +784,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_refresh(
     handle:u64,out:*mut u64)->i32{
     if out.is_null(){return INVALID}
-    let Ok(state)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=state.entries.get(&handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     unsafe{out.write(e.counters.route_refresh.load(Ordering::Relaxed))}
     OK
 }
@@ -766,8 +794,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_refresh(
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
     h:u64,rx_ns:*mut u64,tx_ns:*mut u64)->i32{
     if rx_ns.is_null()||tx_ns.is_null(){return INVALID}
-    let Ok(reg)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     unsafe{
         rx_ns.write(e.counters.rx_thread_cpu_ns.load(Ordering::Relaxed));
         tx_ns.write(e.counters.tx_thread_cpu_ns.load(Ordering::Relaxed));
@@ -783,8 +811,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
 pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     h:u64,ifindex:u32,out:*mut u32)->i32{
     if out.is_null(){return INVALID}
-    let Ok(reg)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.tun_sink.is_none()||e.raw_rx.is_none(){
         return BAD_STAGE
     }
