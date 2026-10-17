@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6124ce1012e69a2003bdffdc179a774e21096bc3",
+  "result": "PASS",
+  "artifact_verified": true,
+  "result_scope": "PURE_R2_NATIVE_67_OF_67__GENERATION_UNCERTAIN_DEBT__100K_FAKE_MONOTONIC_TIMER_ONLY",
+  "source_commits": [
+    "4fd4cceed550db09dce089562beb10b44af409b5",
+    "6124ce1012e69a2003bdffdc179a774e21096bc3"
+  ],
+  "native": {
+    "run_id": 39006207281,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 117319104577,
+    "consume_job_id": 117319146059,
+    "tests_passed": 67,
+    "tests_failed": 0,
+    "compiled_once": true,
+    "binary_sha256": "975abb91c5c3c17949b39ed012b989eb4e141b051089931038b356f3529ff801",
+    "log_sha256": "8fabb0dd8bcc6a3084da9142e8aa04a00fbbf8f37b0a319cb7c5776356022815",
+    "artifact_id": 12090499734,
+    "artifact_digest": "sha256:997fc3e17701f512cc6e89322564ab85ce3934aed748f2fcdcdd5c71f5a26023",
+    "zip_sha256_verified": true,
+    "expires_at": "2026-11-16T05:25:54Z"
+  },
+  "g2": {
+    "run_id": 39006207288,
+    "attempt": 1,
+    "conclusion": "success",
+    "scope": "BOOTSTRAP_ONLY",
+    "artifact_id": 12091271152,
+    "artifact_digest": "sha256:fd5536dc10bb9051d4b0b5e2ca9b85514393eed53260d6605e70bda825eb3a6b",
+    "zip_sha256_verified": true
+  },
+  "static": {
+    "run_id": 39006207299,
+    "attempt": 1,
+    "conclusion": "success",
+    "scope": "HISTORIC_LOCK_ONLY",
+    "artifact_id": 12091351328,
+    "artifact_digest": "sha256:8e830773d8cff3d7a262997b8a9e1ddaa6cd3dbd47a230395bc4cf7ea2de43b2",
+    "zip_sha256_verified": true
+  },
+  "scope_attestation": {
+    "source_governance_run_id": 39006207262,
+    "attempt": 1,
+    "conclusion": "failure",
+    "job_id": 117319104587,
+    "observed_error": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+    "artifact_id": 12090599504,
+    "artifact_digest": "sha256:da633545a6c00e31e802a604f3e1648321ad5e0dd0acdf1ea6311214dd9252f3",
+    "worker_head_unchanged": true,
+    "main_before": "60ea1c5f11598cbfd24505b47c8b09b62f935d5d",
+    "main_after": "b1bb0bea8442bbf8dd3f910aaf214d91507192f7",
+    "checked_source_scope_pass": false
+  },
+  "preceding_exact_source": {
+    "source_sha": "4fd4cceed550db09dce089562beb10b44af409b5",
+    "native_run": 39005928557,
+    "native_tests_passed": 66,
+    "governance_run": 39005928458,
+    "governance_result": "success",
+    "role_scope": "ROLE_SCOPE_PASS",
+    "scope_commits_checked": 66,
+    "main_integration_commits_exempt": 37,
+    "governance_artifact_id": 12090599114,
+    "governance_digest": "sha256:c57c8d1519391395042fd1a5960eaa529761b5914fec0a7af976577b1fdf9d7c",
+    "transferrable_to_latest_source": false
+  },
+  "coverage": [
+    "One unreported tail PTO probe per lane/time period while 3 authenticated post-data witnesses still permit 32 RACK candidates",
+    "32/33 and 10k indexed timer/queued expiry without retained tombstones",
+    "New 100000 shadow fake-clock hard-expiry jump with queued old candidate and late positive Receipt: old token stale, all indexes emptied, fresh shadow admitted",
+    "Same TunnelKey slot but new generation shares a fixed process-wide cap, tentative unproven suffix remains charged through timeout, late NotSent cannot refund",
+    "Fresh records accepted independently of fully held repair cap; conservative uncertain debt persists across accounting epochs",
+    "One Uncertain and one Accepted real repair consumes two attempts; NotSent is no attempt; stale negative reports cannot trigger same-epoch double repair",
+    "Controlled FrozenRecordHandle backed by Arc<[u8]> preserves identical PN, seq and cipher bytes on every simulated driver_read"
+  ],
+  "qualified_claims": "Source-exact pure R2 state test scope only; not live packet throughput or actual network timer load.",
+  "not_run": [
+    "M0 actual Go V4 TLS credential-open proof",
+    "M1 real arena/return owner implementation",
+    "M3 opened record/codec/engine pipeline integration",
+    "M4 physical raw/TUN and OS driver",
+    "native platform/WinARM/500Mbps/latency/p99"
+  ],
+  "real_auth": "NOT_RUN",
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Obtain independent current-SOURCE central scope audit when M0 main-control stable; continue only truly missing PACK-009 pure component issues, do not retry unchanged API failures blindly, final cursor-only H on accepted evidence."
+}
