@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 12,
-  "checkpoint_sha": "c821f57413d112f57a083dee67ff824afde36407",
+  "sequence": 13,
+  "checkpoint_sha": "f1059d254e16956a430915a638c19a41697e6036",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010",
-  "current_task": "R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010 owner-local bounded pre-Detach RX staging with exact external boundary and generation/stop lifetime proof COMPLETE; M0 authenticated bridge integration pending.",
-  "why_now": "M0 main registry rev2 epoch1 assigned bounded early RX boundary atom010 on unchanged active M1 branch/allowed paths. Previous cursor seq11 H5399ca365a07e44843f5156716331b8415542c2a only cursor, Governance38689191231 SUCCESS.",
-  "done_when": "Keep 80/80 prior R1 native; independently exercise pre-boundary/after-boundary/exact crossing, 0/1/32/33-cap and full early queue, Stop before/after Detach, stale ABA token, no old→new delivery or borrowed slab free; source-exact compiled-once native and worker evidence S then cursor-only H Governance PASS. The external boundary is a caller fact, NOT minted from raw Go bytes, production readiness FALSE.",
-  "next_action": "M0 review M1 exact CODE SOURCE 2ce5842 worker native38711805820 88/88, evidence docs/evidence/M1/R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010-actions.json and owner-local early_rx interface. External boundary is a caller fact, never authenticated provenance; M0 sole owner of trusted Go V4 protected Prepare/Detach/Commit and engine/driver integration. Root worker R0 ABI38711805900 FAIL from shared old 3 passed selector though Rust actual90 passed 1 ignored rc0; M0 to coordinate. M1 await next explicit scoped assignment.",
+  "task_id": "R1-M1-OWNER-MEMORY-READY-WORKPACK-011",
+  "current_task": "PACK-006 M1 owner/memory/ready scoped module output ready for M0 integration; 98 native R1 tests source exact; product/system qualification NOT_RUN.",
+  "why_now": "Main PACK-006 decision2026-10-17, assigned_task011 on active M1 branch rev2 epoch1; prior seq12 cursor-only H35fdcf0 Governance38712396892 attempt2 SUCCESS.",
+  "done_when": "PACK-006 M1：R01-R04、M01-M04、B01-B04、G01相关组件功能/资源限制在精确SOURCE Actions验收；输出稳定所有权接口、回退和NOT_RUN组合边界。",
+  "next_action": "M0 source-review exact M1 worker CODE89a3acb (98/98 native38998296147), integrate ReadyTurn, parity byte-share, bounded returns and wake retry against real Go V4 owner and platform driver under M0-owned bridge; retain standalone fallback, root ABI marker issue and SPSC/OS wake/timer/driver NOT_RUN gates in open M1 requests. No independent new M1 feature without next assignment.",
   "unverified": false,
-  "last_tested_source": "2ce58427f84a777bce6242f6803a5c82413b5fe2",
+  "last_tested_source": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010-actions.json"
+    "docs/evidence/M1/R1-M1-OWNER-MEMORY-READY-WORKPACK-011-final-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M1 BOUNDED-EARLY-RX-BOUNDARY-010 native owner local proof at exact CODE S2ce58427f84a777bce6242f6803a5c82413b5fe2: Actions38711805820 compiled-once 88/88 r1_ (prior80+8), GitHub artifact11960827099 downloaded and ZIP/result.json/test.log SHA256 independently verified; 8 distinct new tests for Before/exact/Overlap, 0/1/32/33, cap+byte rejection preserves caller UniqueBuffer, pre-Detach no dispatch, Stop before/after Detach with late FrozenRecord/RxPacket handles, two generation rotation without old-to-new leakage, stale token/ABA and new fresh no HOL. Stage VecDeque <=32 and RX inner capacity preflight, externally supplied exact boundary not crypto/auth; every failed ingress returns original UniqueBuffer to caller. Existing inherited Release component P0 ran three 1.10s legs, not product. Same CODE G2 38711806068, R0 audit38711805977, R0 cross ABI38711805811 SUCCESS; CODE Governance38711805879 FAIL main moved mid-audit; root R0 native ABI38711805900 FAIL shared stale literal 3 passed despite Rust90 passed,1 ignored,rc0. Evidence S c821f57413d112f57a083dee67ff824afde36407, cursor-only H follows and requires own final Governance. Real Go V4 trust, driver, main Rust ABI/product/AF_PACKET/native WindowsARM/500Mbps/physical NOT_RUN."
+  "partial_summary": "Scoped output PASS only: 98 r1_ named tests (previous88 plus10 workpack) exact SOURCE89a3acb Actions38998296147, downloaded artifact12088226966 hash verified; 0/1/32/33 owner ready preallocated, ~100us cooperative RX/TX alternation, wake first-failure retry, 96 multithread returns budget64+32, Stop old immutable last loan/slot generation, parity first-send vs repair with ratio20:20/4:20 and unequal wire bytes 4:1/1:5. Earlier workpack source0ec99ed 96/96 historical. CODE Governance/G2/audit/cross ABI SUCCESS. Shared root R0 ABI38998296139 FAIL historical '3 passed' selector despite Rust100passed+1ignored rc0. No real rtrb/OS eventfd/loom, 3-tier 100k timer wheel, Go authenticated admission, kernel loan, multiclient DRR, product 500Mbps, E2E or physical PASS. Rollback original bounded TxOwner/RxOwner drains; feature0."
 }
