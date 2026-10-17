@@ -4,16 +4,16 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 21,
-  "checkpoint_sha": "d2cfd60162a4a6120e8045d7ce5cef95ab364f13",
+  "sequence": 22,
+  "checkpoint_sha": "3db0f1b499d796da2d428fbda1d0bb0fadb60463",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 active partial. New LINK authorized receiver MTU transition keeps old in-flight frame/stride and supports concurrent new packet. FEC TX ready parity chunks <=4 fresh-send rows; sustained 20:20 component systematic+parity counts. Scalar old-Go GF missing-only recover k1..20×all6 r, variable length, high e. Exact worker native Debug 104/104 PASS at SOURCE93d80c; no ISA-L/native real Go V4/engine integration.",
+  "current_task": "PACK016 partial: added standalone owned FecParityJob to compute at most four genuine Go-matrix GF parity rows/turn, not precompute/drain; all k/r source and wire equivalence, invalid boundaries and exhaustion pass 106/106 native at SOURCE605f7de1. Not integrated in FecTxOwner, M0/engine, ISA-L or runtime FEC-on. Prior MTU and parity tests remain passed.",
   "why_now": "Main PACK-006 once-assigned workpack016: continue own LINK/record/FEC functionality without asserting source-locked old015 product qualification. Recovery of S/H old Governance control-moved and later GitHub 403 is explicitly recorded in evidence.",
   "done_when": "Source-bound C01–C04/L01–L04/F01–F06, native ISA-L vs pinned Go scalar and applicable host target, resource/fresh send fairness interfaces, proper configuration/integration exclusions; H and evidence only after accurate source checks.",
-  "next_action": "Continue PACK016 independent FEC/codec owned work; M0 shared ISA-L safe binding/link/native workflow needed before genuine ISA-L validation; obtain main-owned central v2 scope audit of exact worker SOURCE after legacy checker REST403. External Go V4/engine integration stays NOT_RUN, never claim product qualification.",
+  "next_action": "M3 integrate cooperative parity job into FecTxOwner with exact resource/backpressure and sched opportunities; M0 owns ISA-L native build/dependency and GitHub REST403 remedy, requests in docs/devlog/M3/. Re-run exact-source central and own Governance after repair; do not claim system/product qualification.",
   "unverified": true,
-  "last_tested_source": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
+  "last_tested_source": "605f7de1507781f42d0bd6a002d9ee2d063b2764",
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
@@ -21,7 +21,7 @@
   "context_refs": [
     "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
-    "docs/devlog/M3/M0-REQUEST-CPU-PROBE-SAME-WINDOW-015.md"
+    "docs/devlog/M3/M0-REQUEST-PACK016-SCOPE-AUDIT-403.md"
   ],
-  "partial_summary": "New CODE 8587cff3 M3 native38998927569 102/102 PASS; efe878bd native38999036805 103/103 PASS; latest93d80cb0 native38999161286 104/104 PASS, bin76edf08c SHA256, log96b17611 SHA256, old Go scalar matrix all k/r e up to min(k,r). Evidence S d2cfd601. Historical015 exact Release run38734823257 24/24 validated CPU cost only for source0ecb; not new code. Old Governance S/H 38998060898/38998156987 failed control/source moved; newer source Gov38999036867/38999161387 GitHub HTTP403, NOT a codec functional fail. Central scope last confirmed evidence-S 5aa8e662 via38998245589; final exact H scope reads returned HTTP403, exact93d80 pending. ISA-L native, true Go/V4 origin, driver queues and product 500Mbps NOT_RUN."
+  "partial_summary": "Native SOURCE605f7de1 Rust1.85.1 worker38999954180 attempt1 106/106 PASS (binary75fc75fe... loga2a75341...); new FecParityJob real <=4 GF rows/call byte-identical to full Go-generator scalar batch for k1..20 six r L1/63/64/65/257/512/1200 and fail closed; standalone API only. Evidence S3db0f1b4. Legacy scope run38999954233 FAIL GitHub HTTP403 on compare, central38999964044 FAIL GitHub403 on docs content; not a functional failure and not clean audit. M0 shared audit repair requested. No ISA-L native, dispatch fairness, true V4 FEC-on/Game, 500Mbps or packet p99 qualified."
 }
