@@ -21,6 +21,7 @@ mod pinned_rtrb_overlay_proof {
     const M0_SHARED: &str = "789aa27d039fa64183d4b06d2f0acd4868bfc544";
     #[test]
     fn r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci() {
+        if cfg!(feature="m1_rtrb"){return;} // real test suite runs directly
         if std::env::var("GITHUB_ACTIONS").as_deref()!=Ok("true"){
             return; // local/offline only compatibility; no rtrb qualification
         }
@@ -77,8 +78,8 @@ printf 'M1_RTRB_PINNED_NATIVE_PASS source=%s main=%s version=0.3.2 mode=safe_pop
             output.status,stdout,stderr);
         assert!(stdout.contains("M1_RTRB_PINNED_NATIVE_PASS"),
             "missing true-rtrb success receipt: {}",stdout);
-        assert!(stdout.contains("5 passed; 0 failed"),
-            "five actually compiled and executed rtrb integration cases not seen: {}",stdout);
+        assert!(stdout.contains("6 passed; 0 failed"),
+            "six actually compiled and executed rtrb integration cases not seen: {}",stdout);
         // The outer worker-native reporter only understands ONE Rust
         // test-run summary and parses "test ... ok" globally. The nested
         // cargo binary has its OWN five tests: explicitly check their
@@ -90,12 +91,13 @@ printf 'M1_RTRB_PINNED_NATIVE_PASS source=%s main=%s version=0.3.2 mode=safe_pop
             "r1_rtrb_direction_b04_stop_late_lease_epoch_aba",
             "r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx",
             "r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject",
+            "r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans",
         ]{
             assert!(stdout.contains(&format!("{} ... ok",case)),
                 "missing exact executed rtrb test {}: {}",case,stdout);
             println!("M1_RTRB_CASE_PASS {}",case);
         }
-        println!("M1_RTRB_PINNED_NATIVE_PASS version=0.3.2 cases=5");
+        println!("M1_RTRB_PINNED_NATIVE_PASS version=0.3.2 cases=6");
         println!("M1_RTRB_OVERLAY_ATTESTED main={} exact-worker-source={}",
             M0_SHARED,std::env::var("GITHUB_SHA").unwrap_or_default());
     }

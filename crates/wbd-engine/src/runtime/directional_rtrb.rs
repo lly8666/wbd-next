@@ -317,4 +317,40 @@
          drop(old);drop(out);
          assert_eq!(a.report().loaned,0);
      }
+     #[test]
+     fn r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans(){
+         use std::sync::{Arc,Barrier};
+         let mut a=arena();
+         let (producer,mut consumer)=split_rx(17,1,lane(1),16).unwrap();
+         let token=producer.token();
+         let pending=(0..33u8).map(|v|rx(&mut a,v)).collect::<Vec<_>>();
+         let gate=Arc::new(Barrier::new(2));
+         let worker_gate=Arc::clone(&gate);
+         let worker=std::thread::spawn(move||{
+             worker_gate.wait();
+             let mut accepted=0;
+             let mut returned=0;
+             for item in pending {
+                 match producer.try_publish(&token,item){
+                     Ok(())=>accepted+=1,
+                     Err((reason,item))=>{
+                         assert!(matches!(reason,
+                             DirectionError::Stopped|DirectionError::Full));
+                         drop(item);returned+=1;
+                     }
+                 }
+             }
+             (accepted,returned)
+         });
+         gate.wait();
+         let (_,inflight)=consumer.stop();
+         assert!(inflight<=1,"single producer inflight bounded");
+         let (accepted,returned)=worker.join().unwrap();
+         assert_eq!(accepted+returned,33);
+         let (canceled,inflight)=consumer.stop();
+         assert_eq!(inflight,0);
+         assert_eq!(canceled,accepted);
+         assert_eq!(a.report().loaned,0);
+     }
+
  }
