@@ -71,6 +71,15 @@
          }
      }
  }
+ // M0 feature-only native proof needs a READ-ONLY slice of the actual slab
+ // held by Rust's RX LoanBatch. It is not exported in production and cannot
+ // mutate or surrender packet ownership.
+ #[cfg(feature = "m0_v4_probe")]
+ impl UniqueBuffer {
+     pub(crate) fn m0_inert_probe_bytes(&self) -> &[u8] {
+         self.slab.as_deref().expect("live Rust-owned unique early slab")
+     }
+ }
  impl UniqueSealable for UniqueBuffer {
      type Frozen = FrozenRecord;
      fn origin(&self) -> BufferOrigin { self.origin }
