@@ -1,0 +1,42 @@
+name: M0 optional pinned ISA-L backend native proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/wbd-codec/Cargo.toml"
+      - "native/isal-safe/**"
+      - ".github/workflows/m0-native-isal-safe.yml"
+permissions: {contents: read}
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact upstream Intel ISA-L v2.31.1 static
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nasm autoconf automake libtool
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = "c387163fcbca62701d646149564c550c78a4f985"
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-v2.31.1"
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -f "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >> "$GITHUB_ENV"
+      - name: Test real C native backend and feature-gated Rust codec
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture | tee isal-native.log
+          grep -q REAL_ISAL_V2311_EC_ENCODE_DATA_PASS isal-native.log
+          cargo test --locked -p wbd-codec --features native-isal --no-run
+          echo "M0_ISAL_BACKEND_REAL_NATIVE_CALL_PASS upstream=c387163fcbca62701d646149564c550c78a4f985 source=$GITHUB_SHA"
