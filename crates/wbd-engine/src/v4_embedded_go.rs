@@ -513,69 +513,91 @@ fn authenticated_rx_anchor(anchor:u64,absolute_seq:u64,wire_len:usize,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
-    rx_storage:&mut Vec<RxPacket>)->Result<u32,i32>{
-    let (mut slab,flow,anchor,generation)={
+    rx_storage:&mut Vec<RxPacket>,
+    rx_pending:&mut Vec<crate::memory::UniqueBuffer>)->Result<u32,i32>{
+    rx_pending.clear();
+    let (flow,generation)={
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-        let slab=e.arena.allocate().map_err(|_|FULL)?;
-        (slab,e.flow,e.rx_seq_anchor,e.generation)
+        // Allocate stable owned M1 slabs once for a truly ready-only
+        // recvmmsg. Do not hold Entry during the potentially blocking kernel
+        // syscall, and never borrow a temporary M4 input array afterwards.
+        for _ in 0..32{
+            match e.arena.allocate(){
+                Ok(slab)=>rx_pending.push(slab),
+                Err(_)=>break,
+            }
+        }
+        (e.flow,e.generation)
     };
+    if rx_pending.is_empty(){return Err(FULL)}
     let tuple=Ipv4Tuple{
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
         src_port:flow.client_port,dst_port:flow.server_port,
     };
-    // Consume frozen M4-013 real recvmmsg into the SAME original M1
-    // unique mutable slab. One immediately ready packet, never wait for
-    // a 32-slot fill; M4 verifies kernel size/tuple/checksum but does
-    // NOT authenticate. The sole original owner below still performs
-    // AEAD/PN/replay/LINK admission, and Stop owns the slab lifetime.
-    let batch={
-        let mut unique_slots=[slab.writable()];
-        raw.receive_kernel_multimsg(
-            generation,&mut unique_slots,tuple,PacketPersona::Legacy,
-        ).map_err(|_|INVALID)?
-    };
-    let (len,seq)=match (batch.observed,batch.entry(0)){
-        (1,Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
-            cipher_len,seq32
-        }))=>(cipher_len,seq32),
-        _=>return Err(INVALID),
-    };
+    // Stack-only iov references to the SAME original mutable Arena slabs;
+    // each slot is uniquely borrowed until the synchronous call returns.
+    let mut slots:[&mut [u8];32]=std::array::from_fn(|_|&mut [][..]);
+    for (dst,slab) in slots.iter_mut().zip(rx_pending.iter_mut()){
+        *dst=slab.writable();
+    }
+    let batch=raw.receive_kernel_multimsg(
+        generation,&mut slots[..rx_pending.len()],tuple,PacketPersona::Legacy
+    ).map_err(|_|INVALID)?;
+    drop(slots);
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    let absolute=extend_seq32(anchor,seq).map_err(|_|INVALID)?;
+    if batch.observed==0{return Err(INVALID)}
+    // AEAD/PN and M3 LINK are still the original owner. Process received
+    // slots independently: one invalid/replay packet cannot block later
+    // completed messages in the same kernel batch.
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
-    // Project a concrete &mut Entry, allowing independent owner/normal,
-    // route snapshot and platform driver borrows under one session fence.
     let e:&mut Entry=&mut guard;
-    if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    e.owner.offer_after_active(slab,0..len,absolute,loop_now())
-        .map_err(|_|INVALID)?;
-    let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
-    // This storage is owner-local to the RX worker and reuses its original
-    // capacity on *every* ready packet. The batch contains original M1 loan
-    // handles only until the drain returns; never retain them across Stop.
-    let storage=std::mem::take(rx_storage);
-    let (mut returned,report,delivered,failed)=match e.owner.drain_normal_off_to_tun(
-        &mut e.normal,tun,loop_now(),storage){
-        Ok(done)=>done,
-        Err((_,returned))=>{
-            *rx_storage=returned;
-            return Err(BAD_STAGE);
+    if e.phase!=PH_ACTIVE||e.generation!=generation ||
+        stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    let mut delivered_total=0u32;
+    for (i,slab) in rx_pending.drain(..).enumerate(){
+        if i>=batch.observed {drop(slab);continue}
+        let (len,seq)=match batch.entry(i){
+            Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
+                cipher_len,seq32
+            })=>(cipher_len,seq32),
+            _=>{drop(slab);continue},
+        };
+        if stop.load(Ordering::Acquire){break}
+        let absolute=match extend_seq32(e.rx_seq_anchor,seq){
+            Ok(n)=>n,Err(_)=>{drop(slab);continue}
+        };
+        if e.owner.offer_after_active(slab,0..len,absolute,loop_now()).is_err(){
+            continue
         }
-    };
-    returned.clear();
-    *rx_storage=returned;
-    // Only post-open AEAD/PN accepted data may move the trusted seq64
-    // reference. Rejected, replayed, old and unauthenticated packets cannot
-    // influence even the temporary high-water mark. One raw datagram is
-    // offered per call; no later ACK or a new packet must await old holes.
-    let Some(next_anchor)=authenticated_rx_anchor(
-        e.rx_seq_anchor,absolute,len,report.authenticated.link_ready
-    ) else {return Err(INVALID)};
-    e.rx_seq_anchor=next_anchor;
+        let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+        let available=std::mem::take(rx_storage);
+        let (mut returned,report,delivered,failed)=match
+            e.owner.drain_normal_off_to_tun(
+                &mut e.normal,tun,loop_now(),available
+            ){
+            Ok(result)=>result,
+            Err((_,returned))=>{
+                *rx_storage=returned;
+                continue
+            }
+        };
+        returned.clear();
+        *rx_storage=returned;
+        // TCP appearance is not trusted until AEAD+PN admits this genuine
+        // record. Duplicate, malformed, control or spoofed seq cannot
+        // poison the trusted moving reference, even inside one recvmmsg.
+        let Some(next_anchor)=authenticated_rx_anchor(
+            e.rx_seq_anchor,absolute,len,report.authenticated.link_ready
+        ) else{continue};
+        e.rx_seq_anchor=next_anchor;
+        if failed==0 {
+            delivered_total=delivered_total.saturating_add(delivered);
+        }
+    }
     drain_data_turn_returns(&mut e.arena);
-    if report.completed!=1||failed!=0||delivered!=1{return Err(INVALID)}
-    Ok(delivered)
+    if delivered_total==0{return Err(INVALID)}
+    Ok(delivered_total)
 }
 // Independently wait for the REAL TUN application RX OUTSIDE registry lock.
 // Only original owner grants route-bound budget, seals AEAD/PN and submits
@@ -816,6 +838,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
             let mut rx_storage=Vec::<RxPacket>::with_capacity(32);
+            let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
             while !stop_rx.load(Ordering::Acquire){
                 // Do not invoke CLOCK_THREAD_CPUTIME_ID once per packet.
                 // Publish an approximate worker-only CPU clock at <=10 Hz;
@@ -827,20 +850,15 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 }
                 if !loop_readiness(raw_fd,&stop_rx,10){continue}
                 let slice_start=Instant::now();
-                ready_only_slice(&stop_rx,
-                    ||loop_readiness(raw_fd,&stop_rx,0),
-                    ||match background_raw_once(&rx_cell,&raw,&stop_rx,&mut rx_storage){
-                        Ok(n)=>{
-                            stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);
-                            true
-                        }
-                        Err(_)=>{
-                            stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);
-                            false
-                        }
-                    },
-                    ||slice_start.elapsed()<Duration::from_micros(100),
-                );
+                match background_raw_once(
+                    &rx_cell,&raw,&stop_rx,&mut rx_storage,&mut rx_pending
+                ){
+                    Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                    Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+                // A single recvmmsg is already bounded to 32 ready slots.
+                // Never chain 32 x 32 calls under a single fairness turn.
+                let _=slice_start;
             }
             stats_rx.rx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
@@ -865,24 +883,15 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 }
                 if !loop_readiness(tun_fd,&stop_tx,10){continue}
                 let slice_start=Instant::now();
-                ready_only_slice(&stop_tx,
-                    ||loop_readiness(tun_fd,&stop_tx,0),
-                    ||match background_tun_once(
-                        &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
-                        &mut tx_pending,&mut tx_records,&mut tx_presentations,
-                        &tx_events
-                    ){
-                        Ok(n)=>{
-                            stats.tx.fetch_add(u64::from(n),Ordering::Relaxed);
-                            true
-                        }
-                        Err(_)=>{
-                            stats.tx_error.fetch_add(1,Ordering::Relaxed);
-                            false
-                        }
-                    },
-                    ||slice_start.elapsed()<Duration::from_micros(100),
-                );
+                match background_tun_once(
+                    &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
+                    &mut tx_pending,&mut tx_records,&mut tx_presentations,
+                    &tx_events
+                ){
+                    Ok(n)=>{stats.tx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                    Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+                let _=slice_start;
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
