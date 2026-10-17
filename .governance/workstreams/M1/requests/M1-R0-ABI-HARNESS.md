@@ -43,3 +43,6 @@ Native worker [38711805820](https://github.com/lly8666/wbd-next/actions/runs/387
 ## M1 R1-M1-OWNER-MEMORY-READY-WORKPACK-011
 
 Exact M1 source `0ec99ed0bd5706c9df54649c0b20e1b157ffd363` worker native [38997851983](https://github.com/lly8666/wbd-next/actions/runs/38997851983) **96/96 scoped PASS**. Old root ABI [38997852003](https://github.com/lly8666/wbd-next/actions/runs/38997852003) FAIL despite real Rust rc0 98 passed, 1 ignored: worker branch M0-owned stale hard-coded `"3 passed"` match against unfiltered unit suite. M1 cannot edit shared `tools/r0_abi_bundle.py` or root CI; M0 synchronization/request remains OPEN. This does not downgrade the separately source-locked worker native 96/96.
+
+## PACK-011: R1-M1-OWNER-MEMORY-READY-WORKPACK-011
+Exact final M1 CODE `89a3acb23616a46ecc65fc2dcd0b75182b6b482a` [worker native38998296147](https://github.com/lly8666/wbd-next/actions/runs/38998296147) **98/98 scoped PASS**, including unequal wire-byte parity service. Root shared R0 native ABI [38998296139](https://github.com/lly8666/wbd-next/actions/runs/38998296139) consume FAIL; real Rust unit binary returned rc0 **100 passed, 1 ignored**, old worker branch M0-owned harness still matches literal `"3 passed"` in unfiltered suite. M0 to coordinate root synchronization; M1 has no shared tool edit permission. Do not mark root ABI green.

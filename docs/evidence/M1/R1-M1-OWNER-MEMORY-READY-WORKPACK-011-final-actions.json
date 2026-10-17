@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-OWNER-MEMORY-READY-WORKPACK-011",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "PACK-006 M1 independent Rust runtime/memory scoped workpack: 98/98 native, bounded ready-turn and returns, wake retry, parity-first weighted actual wire byte fairness. Excludes actual authenticated Go/Rust driver, rtrb, OS Waker, 100k wheel/product.",
+  "native": {
+    "run_id": 38998296147,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/38998296147",
+    "build_job": 117295616068,
+    "consume_job": 117295663344,
+    "compiled_once": true,
+    "tests_passed": 98,
+    "tests_failed": 0,
+    "previous_native_r1": 88,
+    "workpack_cases_added": 10,
+    "other_r0_tests_filtered": 3,
+    "result_artifact_id": 12088226966,
+    "build_artifact_id": 12088445374,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/38998296147/artifacts/12088226966",
+    "zip_sha256": "cbe677c9e0f576f469810d95b2c3cff49729f5b9b206f59dd5c827a613b2dc3f",
+    "result_json_sha256": "74030da0cb417e758df23177b350ca73db3d79f3e8a8d7cb6bd956f9c5ee89d0",
+    "test_log_sha256": "5c5b7678f452d8b8846b15ed2a137c3833758f84d2f84c27b80e985ca4a972c8",
+    "debug_executable_sha256": "38cc5825856ddd34986fbef8cb05d5cdfbb8cc3636d8dcff26d96c5b7a3fd568",
+    "artifact_review": "Actual zipped GitHub Actions artifact downloaded to container; independently sha256 verified ZIP, result.json, test.log. JSON exact source/run/attempt and 98 unique r1 test names; test log contains 10 new r1_workpack tests all ok."
+  },
+  "new_workpack_tests": [
+    "r1_workpack_ready_r01_b01_zero_one_32_33_immediate_prealloc",
+    "r1_workpack_ready_r02_budget_yield_alternates_no_rx_hol",
+    "r1_workpack_ready_g01_blocked_lane_skipped_without_loss_of_other_lane",
+    "r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish",
+    "r1_workpack_memory_m01_m04_bounded_return_budget_96_multi_producers",
+    "r1_workpack_memory_m02_b04_last_clone_stop_and_generation_never_reused",
+    "r1_workpack_parity_r03_f01_20_20_continuous_ready_first_send",
+    "r1_workpack_parity_r03_ratio_4_20_and_repair_separate",
+    "r1_workpack_parity_f01_mixed_lengths_actual_wire_bytes_not_item_counts",
+    "r1_workpack_parity_f01_larger_parity_requires_five_source_bytes"
+  ],
+  "coverage": {
+    "R01_R04": "R01 armed retry and old fake-clock parity deadline already covered, R02 ready<=32 fake100us alternation, R03 parity due first-send, R04 actual 100k wheel not implemented in standalone owner.",
+    "M01_M04": "M01 pool exhaustion previous, M02 last clone STOP/generation re-use, M04 96 concurrent returns budget64+32/one-slot channel, M03 two-gen shadow ring belongs separately owned M2 and is not implemented here.",
+    "B01_B04": "Prior early RX Prepare external boundary/Detach/Stop/ABA and frozen/unique lifetime tests retained; real protected Go/Rust admitted transition and driver leases NOT_RUN.",
+    "G01": "Existing untrusted RX lane eligibility skip under head blockage, no product Game duplicate/AEAD proof.",
+    "parity": "with_parity_share(k,r) schedules already admitted ParityReady records under actual wire-byte weighted bounded deficit, distinct from repair. Tests 20:20 and4:20 equal records plus 4B vs1B and1B vs5B cases.",
+    "no_hot_copy": "No ciphertext clone in ready turn/drain, caller preallocated Vec pointer retained. FrozenRecord shares original Arc payload; ReturnPath preallocated.",
+    "component_rollback": "M0 may retain original TxOwner/RxOwner drain_ready_batch, existing bounded WakeGate, and Arena full-control drain if new ReadyTurn/parity_share/return budget not yet integrated. Production readiness stays false."
+  },
+  "inherited_release": {
+    "code_sha": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
+    "executable_sha256": "5c794892f84ac5310c3a5eaeec3f33e4d3e4ea32cc70e1e9c63bed9ee99ce718",
+    "runs": 1,
+    "legs": 3,
+    "each_measured_wall_s_min": 1.100001,
+    "hosted_runner": "GitHub Actions 1000095553",
+    "tx_ready_32_p50_ns": 471,
+    "tx_ready_32_p99_ns": 491,
+    "rx_ready_32_p50_ns": 1663,
+    "rx_ready_32_p99_ns_range": [
+      1703,
+      1722
+    ],
+    "stale_reject_p99_ns": 31,
+    "qualification": "Existing Rust Release debug-wrapper component probe only, not new workpack end-to-end metric; CPU per leg unisolated and includes slab prepare/freeze/return. Not comparable cross runner."
+  },
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 38998296172,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 38998296145,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 38998296165,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 38998296142,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 38998296139,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_blocker": {
+    "owner": "M0",
+    "workflow": "R0 native ABI",
+    "run_id": 38998296139,
+    "cause": "Old worker-branch M0-owned script checks unfiltered literal '3 passed' and returns FAIL although actual Rust unit executable rc0, 100 passed +1 ignored. M1 cannot edit root.",
+    "request": ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+  },
+  "remaining_integration": {
+    "owner": "M0 shared deps/true path",
+    "rtrb_SPSC_and_loom": "NOT_RUN, see M1-R1-SPSC-DEPS.md",
+    "native_OS_eventfd_Win_events": "NOT_RUN",
+    "three_tier_timer_wheel_100k": "NOT_RUN",
+    "product_wire_byte_DRR_multi_lane": "NOT_RUN",
+    "protected_Go_V4_authenticated_admission": "NOT_RUN",
+    "true_driver_loan_kernel_stop": "NOT_RUN",
+    "native_Linux_TUN_raw": "NOT_RUN",
+    "end_to_end_normal_game_crypto_fec": "NOT_RUN",
+    "Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "full_500Mbps_CPU_p99": "NOT_RUN",
+    "product": "NOT_RUN",
+    "engine_features": 0
+  }
+}

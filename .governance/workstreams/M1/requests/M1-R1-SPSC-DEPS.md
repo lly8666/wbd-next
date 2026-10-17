@@ -7,3 +7,6 @@
 3. M0 后续组合 `lib.rs` 消费 M1 的 owned buffer 与 M3 真 seal/wire、M4 driver outcome；当前不请求改变 frozen trait/公共 ABI。
 
 在 M0 审定前，M1 仅履行本轮局部证明，不扩大路径、不修改共享构建。
+
+## PACK-011 staged owner output (source-locked)
+SOURCE `89a3acb23616a46ecc65fc2dcd0b75182b6b482a` proves owner-local preallocated 0/1/32/33, cooperative 100us turn alternation, bounded 64+32 return of 96 multithread producers, retry wake after injected first failure, and parity bytes including unequal wire record sizes; native38998296147 **98/98 PASS**. This is **not** integration of `rtrb` bounded SPSC, platform eventfd/mio/Windows auto-reset wake, loom model, actual 3x64 owner wheel 100k jump or M0 engine real I/O lease. These need root Cargo/workflow/dependency decisions and actual M0 owner adapter; M1 cannot edit those shared paths. Existing `ReadyTurn::run`, `Arena::drain_returns_bounded(64)`, `WakeGate` and `TxOwner::with_parity_share` provide scoped integration signatures; old `drain_ready_batch` and full `Arena::drain_returns` remain available rollback. Do not enable product/ABI features on this request.
