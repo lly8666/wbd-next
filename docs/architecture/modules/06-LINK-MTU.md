@@ -1,5 +1,7 @@
 # 06 LINK、MTU与大包慢路径
 
+> FEC v2工作包采用[新预算](../FEC_V2_BALANCED.md#6-新wire一次协商无旧格式嗅探)：FEC最大额外14B替代下述V1的56B，新类型不再为WF前缀escape。其余LINK分片/大包行为本轮保留；以下旧56B/WF文字只适用V1参考实现。不得为V2保留双生产wire或在多个模块重复扣开销。
+
 ## 正常路径
 
 `FrameBudget`唯一计算位置在codec/path_budget：outer MTU、实际IP/TCP header、peer MSS、record max、31B record开销、是否保留56B FEC、Game16B封装。Normal auto即使当前off也按最大FEC20预算保留固定TUN/MSS包络，避免升档后突然超MTU；fixed/off才能使用更大off预算。不能在多个模块各减一次同样开销。

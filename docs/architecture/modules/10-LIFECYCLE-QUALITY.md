@@ -2,7 +2,7 @@
 
 ## 原功能复用的精确边界
 
-Go继续决定认证/地址租约、lane建立/rotation/idle、auto FEC升降、server policy、DNS与分流、GUI状态；Rust只执行逐包行为和提供客观事件。不得在Rust另写一套auto controller与Go同时改档。旧N2效率/GE尾延迟OPEN保持，旧N4/GUI/打包收尾从精确SHA导入。
+Go继续决定认证/地址租约、lane建立/rotation/idle、auto FEC升降、server policy、DNS与分流、GUI状态；Rust只执行逐包行为和提供客观事件。不得在Rust另写一套auto controller与Go同时改档。2026-10-18新工作包的档位、初始化/升降/有效样本规则以[FEC v2第7节](../FEC_V2_BALANCED.md)为准，覆盖下文“旧判断/滞回/配置定义照搬”，保留唯一控制点和本页生命周期要求。旧N2效率/GE尾延迟OPEN保持，旧N4/GUI/打包收尾从精确SHA导入。
 
 复用原 `docs/PARAMETERS.json` 为唯一配置语义来源，R0形成迁移列：旧key/default、解析位置、新effective位置、CLI/GUI/help、适用模式、测试ID。不另造第二本手写参数目录；尚未移入的项列DEFERRED及原因。外层加密、FEC mode、自动普通/激进、上下行独立、服务器每client策略不得被统一成进程全局值。
 

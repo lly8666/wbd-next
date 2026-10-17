@@ -1,5 +1,7 @@
 # 07 FEC编码、缺源解码与生命周期
 
+> **2026-10-18覆盖说明**：以下是已实现/已测V1的参考规格，不能再据此新开旧兼容任务。新工作包采用[FEC_V2_BALANCED](../FEC_V2_BALANCED.md)和[专项测试](../FEC_V2_TEST_PLAN.md)：k≤16、新Cauchy/10B源头/12B修复头、比例档、短期限与Go自动策略；旧矩阵/20源/56B/32ms/Go字节相等均不约束V2。ISA-L、缺e只解e、首到/有界/所有权经验保留。M0按[工作包](../../decisions/M0-fec-v2-workpacks-2026-10-18.md)统一分配，冻结016及历史证据不重写。
+
 ## 确定算法
 
 GF(256)多项式0x11d；旧generator为Vandermonde行x=r+1，经前20行矩阵逆归一成systematic：`G = V × inverse(V[0..20])`，G尺寸40×20。**不能直接用ISA-L默认RS/Cauchy生成器替换**。R0从旧Go生成固定G/golden，Rust标量复算逐字节一致；其后ISA-L只做给定系数的矩阵乘。

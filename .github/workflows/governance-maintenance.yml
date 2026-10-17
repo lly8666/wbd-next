@@ -2,7 +2,7 @@ name: Governance maintenance regression
 run-name: "governance-maintenance|${{ github.sha }}"
 on:
   push:
-    branches: [main, governance/bridge-handoff-ci-20261015]
+    branches: [main, governance/bridge-handoff-ci-20261015, plan/fec-v2-balanced-20261018]
     paths:
       - "tools/**"
       - "tests/**"
@@ -40,6 +40,7 @@ jobs:
           python tools/r0_qualification_audit.py > out/r0-ledger.log
           python tools/cost_model.py > out/cost-model.json
           python tools/design_models.py > out/design-model.json
+          python tools/fec_v2_model.py > out/fec-v2-model.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

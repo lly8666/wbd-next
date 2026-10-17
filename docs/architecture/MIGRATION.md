@@ -1,5 +1,7 @@
 # 迁移顺序与旧功能继承
 
+2026-10-18用户明确**不需要新Rust与旧Go数据面互通**。[FEC v2](FEC_V2_BALANCED.md)覆盖下表旧GF矩阵、20源/六档/32ms/56B及auto旧策略必须照搬的约束；它们作为V1历史参考保留。旧控制/建连复用、用户功能可见迁移、产品硬门和未关闭问题不变。R3执行新专项而非重新刷全套Go字节相等；具体开工由[M0工作包](../decisions/M0-fec-v2-workpacks-2026-10-18.md)登记。
+
 ## 原版依据与继承规则
 
 研究锚点：`lly8666/wobuzhidao` 的 `next/adaptive-fec-aes-tun-20261010`，SOURCE **a7a82db31fe736ffedee330795a3234d358f1984**。这是 2026-10-14 读取时的源码，不是已通过全部产品/物理门的发布版。构建基线前再次固定具体提交，不能拿移动分支名填 evidence。旧 MODULE_MAP 部分“未实现”字样已落后于源码；优先实际实现和有范围的 STATUS 证据。
@@ -11,15 +13,15 @@
 | lifecycle、rotation、idle/keepalive、黑洞恢复策略 | 沿用策略 | Go 发命令，Rust 执行/计数/到期；A→A+B→B、真实 payload activity 不能被控制流量伪造 |
 | `runtimeowner/recovery.go`、外层 steady | 重构 | 旧20%预算/128KiB burst/100ms defer 不直接继承；按 RECOVERY 新10%+稀疏例外设计 |
 | `datapath/game_owner.go`、`gamelane` | 重构 | 去掉准备完全部 lanes 才发的串行屏障；共享 LINK/FEC、独立密码/seq；新 envelope 有版本门 |
-| `fec/fastcodec.go`、`fused_encoder.go` | 算法语义保留、后端重做 | 自定义 GF256 matrix、原版参考向量，ISA-L fused；不是盲换另一种 RS wire |
-| `fec/size_class_encoder.go` | 保留优秀策略 | 20:20 的256/512/MTU分类、低档避免小 partial 放大、first-source32ms flush、active k |
+| `fec/fastcodec.go`、`fused_encoder.go` | 复用SIMD/缺源恢复经验，新算法/wire | FEC v2短块Cauchy、独立数学golden与跨后端等价；旧Go向量只验V1，不约束新格式 |
+| `fec/size_class_encoder.go` | 有界分类/首包期限经验保留 | v2采用256/512/MTU三class、k≤16及Normal/Game短期限；partial上取整代价明确，不锁死32ms |
 | `fec/block.go`、`linkdata/fec_path.go` | 生命周期重做/语义保留 | immediate systematic、3s恢复 horizon、有界 compact；auto 切档旧状态有界 drain（原最多6个） |
 | `tlsrecord/record.go` | Rust/成熟库 | 31B 基础成本、独立 record、HP/AEAD 向量、修复密文不变 |
 | `linkdata/datagram_fragment.go` | Rust 移植并简化到期索引 | 原20B头、无分片快路、超 MTU 兼容、坏片/超时/dup门不丢；原扫描本就有界，不虚报巨额节省 |
 | `pathmtu/budget.go` | 公式/配置继承 | outerMTU/options/MSS/FEC/Game一处预算；压力资格重新测，不宣布旧MTU已全面通过 |
 | TUN/raw/Npcap 的逐包 I/O | Rust | 复用设备/过滤思路，准备好即批处理；所有权/close完成回执优先 |
 | `platformflow`、direct-TCP/gVisor | 首轮沿用 Go | 批量接口，单独成本账；避免本轮重写TCP栈 |
-| 自动FEC controller、接收质量报告 | 决策沿用 | Rust提供实际收发/恢复计数；每方向独立，固定/off不误启自动；保留尚未合格场景 |
+| 自动FEC controller、接收质量报告 | Go唯一控制点，按FEC v2重设决策 | Rust提供实际k/收发/恢复和有效性；两方向独立、fixed/off不误启自动；未知/容量不盲升档，保留历史未合格场景 |
 | Windows GUI、配置/CLI/参数目录 | 沿用/补新引擎项 | 每个功能有适用配置、帮助、真实生效回执；中文portable、不临时释放系统文件 |
 | `--tls-startup-padding`、质量显示/报告、keepalive配置 | 沿用用户可见语义 | 有限启动填充仍仅适用原条件，不变成稳态大padding；2s显示快照不强迫固定周期wire包，控制包不刷新payload idle |
 | WFP/Wintun/Npcap安装、DNS/分流/IPv6、崩溃恢复 | 沿用正在收尾方案 | 不在 Rust 重写注册表/驱动管理；由原仓库完成后精确移植 |
@@ -47,7 +49,7 @@ R0从原 `docs/PARAMETERS.json` 导入当时有效配置为单一迁移账本，
 | **R0 接口与基线** | 固定 legacy source/toolchain/deps；最小 C ABI/handle/clock/wire golden；编译一次的产物约定；参数迁移清单 | 三目标能构建旧控制+空数据接口；Go↔C ABI布局/错误/停止回执；旧夹具短lossless能校准。没有空壳性能宣称 |
 | **R1 Normal/off 纵向切片** | 一条 lane 从真实 TUN/raw 到交付；独立 AEAD；slab/ready批处理；无重传也能全路径工作 | lossless 混合大小/单向双向/稀疏、MTU边界、payload校验；旧新同 job配对CPU/p99，无HOL定向。不先加FEC掩盖I/O问题 |
 | **R2 有界恢复** | ACK/receipt分离、2次修复、预算/稀疏例外、cache/timewheel | 1/5% IID、reorder、反馈损失、稀疏尾包；10/30%预算失效可控；seq/PN wrap及迟到/evict正确 |
-| **R3 FEC** | ISA-L/标量/旧Go互验证、partial/分类/32ms、heavy/compact；auto接口 | k1..20所有档与短长/不对齐向量；x64/ARM/Windows；FEC off不走编码；20:4/20:20真实路径和原版配对 |
+| **R3 FEC** | FEC v2 ISA-L/标量/新规范互验证、partial/短期限/有界生命周期；fixed/auto接口 | 新专项功能/三目标/同机组件及真实交付成本，off短路径保护；旧冻结源码只作精确范围对照，不为V2制造旧生产互通栈 |
 | **R4 Game共享链** | 2/4lane共享编码/恢复、独立AEAD、无慢lane前置屏障 | 独立/相关loss、慢lane/失效lane、rotation重叠、首到去重；3Mbps/方向锚点；CPU改善与f模型对应 |
 | **R5 全配置与容量** | Auto普通/激进、AES三套、路径MTU、DNS/分流等组合；高效覆盖矩阵 | TEST_PLAN覆盖账本、容量阶梯及停止记录；所有配置实际生效；仅对证据有争议的性能增补反向配对 |
 | **R6 组合交付前** | 导入旧N4/N5/N6收尾、打包、长测、80s专项、固定SOURCE | Actions真实可用能力全部完成；native-only明确列NOT_RUN，产物hash。用户另行安排物理；不能仅靠Rust重构宣称历史中断已解决 |
