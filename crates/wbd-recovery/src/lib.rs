@@ -36,3 +36,6 @@ mod tests {
         assert_eq!(RecordPn(u64::MAX).0, u64::MAX);
     }
 }
+
+#[cfg(test)]
+mod workpack_tests;

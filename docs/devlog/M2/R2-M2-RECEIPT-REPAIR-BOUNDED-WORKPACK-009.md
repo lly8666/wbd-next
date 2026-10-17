@@ -10,3 +10,7 @@ New owner-local pure RxFeedbackState accepts only caller-declared authenticated 
 Rust unit tests r2_rx_feedback_* cover 10ms, 2ms gap, max8 pages & 33-page backlog, dirty/new-bit race, duplicate after two feedback losses, NotSent, retirement, seq rollover. No codec, Go, engine, platform, socket, shared Cargo edit. Scope is component-only; real authenticated V4 and M1 frozen-handle M0 integration NOT_RUN. Other PACK-006 boundaries (A01-A06/R01-R04, frozen handles, uncertain debt, repair fairness) need independent end-to-end harness verification before final handoff.
 
 This code S is not yet qualified. Worker-native CI and central scope audit must be read using exact new SOURCE, then remaining workpack tests added rather than promoting a partial pass to product PASS.
+
+## Controlled-driver cross-component follow-up
+
+The next functional batch uses a FrozenRecordHandle backed by a single Arc<[u8]> and reads exactly the same immutable bytes through wbd-types driver_read while a simulated reverse control channel loses both initial and repeated receipt. Injected MonoNs drives a PTO tail, one Uncertain repair debit, one RX duplicate-triggered reassertion and a late positive receipt that releases the same frozen handle exactly once. A second test verifies pinned lane/epoch/control range before scope release and deliberately leaves a shadow in an unreported PN page. This remains a *synthetic* authenticated-open fixture, never a real Go/M3 ciphertext proof or product load test. No socket or engine imports. Tests use existing worker-native compile-once consumer.
