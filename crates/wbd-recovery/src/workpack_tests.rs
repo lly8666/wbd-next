@@ -281,3 +281,217 @@ fn r2_pack_009_two_actual_repairs_old_report_and_generation_never_reseal() {
     assert_eq!(expired.releases[0].reason,ReleaseReason::HardExpired);
     assert_eq!(tx.outstanding(),0);
 }
+
+
+// PACK-010: strictly typed bridge into the existing pure R2 state. These
+// controlled fixtures are NOT live Go authentication or actual kernel claims.
+fn ingress_010_broker(max_directions:usize,cap:u64)->crate::GlobalRepairAllocator {
+    crate::GlobalRepairAllocator::new(crate::GlobalRepairConfig {
+        max_bytes_per_epoch:cap,max_directions,max_grant_bytes:cap,
+        max_grant_lifetime_ns:100_000_000,max_pending:32,
+        max_pending_bytes:4096,
+    },MonoNs(0)).unwrap()
+}
+fn ingress_010_owner(
+    broker:&mut crate::GlobalRepairAllocator,
+    tx_lane:LaneKey,direction:WireDirection,pn:u64
+)->(ReceiptState<ControlledFrozen>,ReceiptRouteScope,crate::GrantLease,
+   crate::RepairCandidate<ControlledFrozen>) {
+    let d=BudgetDirection{tunnel:tx_lane.tunnel,direction};
+    broker.register(d,RepairBudgetConfig {
+        outer_mtu:1400,max_repair_bytes_per_epoch:100_000,
+        max_pending_reservations:8,max_pending_bytes:4096,
+        io_timeout_ns:10_000_000,
+    },MonoNs(0)).unwrap();
+    let reverse=LaneKey{slot:tx_lane.slot+1,..tx_lane};
+    let scope=ReceiptRouteScope::checked(
+        tx_lane,reverse,direction,[3;16],
+        (RecordPn(0),RecordPn(999)),(RecordPn(1000),RecordPn(1099))
+    ).unwrap();
+    broker.bind_receipt_route(d,scope,MonoNs(0)).unwrap();
+    let mut sh=ReceiptState::new(tx_lane,ReceiptConfig{
+        max_shadow_entries:2,pto_ns:30_000_000,
+        reorder_window_ns:2_000_000,
+    }).unwrap();
+    let mut f=make_frozen(pn);
+    f.metadata.lane=tx_lane;
+    sh.on_sent(f,MonoNs(0),MonoNs(120_000_000)).unwrap();
+    let c=sh.on_timer(MonoNs(30_000_000)).candidates.remove(0);
+    let g=broker.grant(d,128,80_000_000,MonoNs(30_000_000)).unwrap();
+    (sh,scope,g,c)
+}
+fn ingress_010_open(tx_lane:LaneKey)->ReceiptOpenFacts {
+    ReceiptOpenFacts{
+        verified_reverse_lane:LaneKey{slot:tx_lane.slot+1,..tx_lane},
+        verified_reverse_direction:WireDirection::ServerToClient,
+        verified_tunnel_epoch:[3;16],control_record_pn:RecordPn(1000),
+    }
+}
+#[test]
+fn r2_pack_010_authenticated_scope_and_late_positive_never_refunds_unknown() {
+    use crate::{
+        admit_opened_receipt,reserve_frozen_submission,complete_driver_prefix,
+        DriverPrefixObservation,BatchSuffixEvidence,GlobalRepairError,ReleaseReason,
+    };
+    let mut broker=ingress_010_broker(1,128);
+    let direction=BudgetDirection{tunnel:lane().tunnel,
+        direction:WireDirection::ClientToServer};
+    let (mut shadow,scope,lease,c)=ingress_010_owner(
+        &mut broker,lane(),WireDirection::ClientToServer,42);
+    let original_wire=c.frozen().ciphertext.clone();
+    let borrowed=reserve_frozen_submission(
+        &mut broker,lease,scope,&shadow,&c,128,MonoNs(30_000_000)).unwrap();
+    assert!(Arc::ptr_eq(&original_wire,&c.frozen().ciphertext));
+    assert_eq!(borrowed.driver.wire,&original_wire[..]);
+    assert_eq!(borrowed.driver.metadata.pn,RecordPn(42));
+    assert_eq!(borrowed.driver.metadata.seq,SeqOffset(0xffff_ffff-2));
+    let id=borrowed.reservation_id;
+    let prefix=DriverPrefixObservation::checked(1,0,Some(0),
+        BatchSuffixEvidence::Unproven).unwrap();
+    let settled=complete_driver_prefix(
+        &mut broker,&[(id,scope)],prefix,MonoNs(30_000_000)).unwrap();
+    assert_eq!(settled.counts.uncertain,1);
+    shadow.on_send_result(&c,settled.shadow_result(0).unwrap(),
+        MonoNs(30_000_000)).unwrap();
+    assert_eq!(broker.snapshot().charged_repairs,128);
+    let mut bitmap=[0u8;32];
+    bitmap[5]|=1<<2; // PN 42 is a positive report; not an exterior ACK
+    let page=crate::ReceiptPage{base_pn:RecordPn(0),bitmap};
+    let good=ingress_010_open(lane());
+    let cases=[
+        ReceiptOpenFacts{verified_tunnel_epoch:[9;16],..good},
+        ReceiptOpenFacts{control_record_pn:RecordPn(1100),..good},
+        ReceiptOpenFacts{verified_reverse_lane:lane(),..good},
+        ReceiptOpenFacts{verified_reverse_direction:WireDirection::ClientToServer,..good},
+    ];
+    for wrong in cases {
+        let prior=broker.snapshot();
+        assert!(admit_opened_receipt(
+            &mut broker,direction,&mut shadow,scope,wrong,
+            RecordPn(42),3,vec![page.clone()],MonoNs(31_000_000)).is_err());
+        assert_eq!(broker.snapshot(),prior);
+        assert_eq!(shadow.outstanding(),1);
+    }
+    let bad=crate::ReceiptPage{base_pn:RecordPn(256),bitmap:[1;32]};
+    assert!(admit_opened_receipt(
+        &mut broker,direction,&mut shadow,scope,good,
+        RecordPn(42),3,vec![bad],MonoNs(31_000_000)).is_err());
+    let received=admit_opened_receipt(
+        &mut broker,direction,&mut shadow,scope,good,
+        RecordPn(42),3,vec![page],MonoNs(31_000_000)).unwrap();
+    assert_eq!(received.len(),1);
+    assert_eq!(received[0].reason,ReleaseReason::ReceivedByPeer);
+    assert!(Arc::ptr_eq(&received[0].frozen.ciphertext,&original_wire));
+    assert_eq!(broker.snapshot().charged_repairs,128);
+    assert_eq!(broker.complete(id,RepairSendResult::NotSent,
+        MonoNs(31_000_001)),Err(GlobalRepairError::StaleGrant));
+    assert!(!shadow.preflight(&c,MonoNs(31_000_001)));
+}
+#[test]
+fn r2_pack_010_kernel_prefix_one_uncertain_unknown_suffix_and_fresh_independent() {
+    use crate::{
+        reserve_frozen_submission,complete_driver_prefix,DriverPrefixObservation,
+        BatchSuffixEvidence,BatchCompletionCounts,GlobalRepairError,
+    };
+    let lanes=[
+        lane(),
+        LaneKey{tunnel:TunnelKey{slot:7,generation:12},..lane()},
+        LaneKey{tunnel:TunnelKey{slot:8,generation:1},..lane()},
+    ];
+    let mut broker=ingress_010_broker(3,384);
+    let mut owners=Vec::new();
+    let mut slots=Vec::new();
+    for (i,tx_lane) in lanes.into_iter().enumerate() {
+        let (shadow,scope,lease,c)=ingress_010_owner(
+            &mut broker,tx_lane,WireDirection::ClientToServer,42+i as u64);
+        let borrowed=reserve_frozen_submission(
+            &mut broker,lease,scope,&shadow,&c,128,MonoNs(30_000_000)).unwrap();
+        assert_eq!(borrowed.driver.metadata.lane,tx_lane);
+        assert_eq!(borrowed.driver.wire,c.frozen().bytes());
+        slots.push((borrowed.reservation_id,scope));
+        owners.push((shadow,c));
+    }
+    assert_eq!(broker.snapshot().charged_repairs,384);
+    let obs=DriverPrefixObservation::checked(3,1,Some(1),
+        BatchSuffixEvidence::Unproven).unwrap();
+    let mut wrong=slots.clone();
+    wrong[2].1=slots[0].1;
+    let before=broker.snapshot();
+    assert_eq!(complete_driver_prefix(&mut broker,&wrong,obs,
+        MonoNs(30_000_001)).err(),Some(GlobalRepairError::WrongReceiptScope));
+    assert_eq!(broker.snapshot(),before); // full validation before any refund
+    let settlement=complete_driver_prefix(&mut broker,&slots,obs,
+        MonoNs(30_000_001)).unwrap();
+    assert_eq!(settlement.counts,BatchCompletionCounts{
+        accepted:1,uncertain:1,definitely_not_sent:0,held_unproven:1
+    });
+    assert_eq!(settlement.len(),3);
+    assert_eq!(settlement.shadow_result(0),Some(RepairSendResult::Accepted));
+    assert_eq!(settlement.shadow_result(1),Some(RepairSendResult::Uncertain));
+    assert_eq!(settlement.shadow_result(2),Some(RepairSendResult::Uncertain));
+    assert_eq!(settlement.shadow_result(3),None);
+    for (i,(sh,c)) in owners.iter_mut().enumerate() {
+        sh.on_send_result(c,settlement.shadow_result(i).unwrap(),
+            MonoNs(30_000_001)).unwrap();
+        assert!(sh.on_timer(MonoNs(30_000_002)).candidates.is_empty());
+    }
+    assert_eq!(broker.snapshot().charged_repairs,384);
+    assert_eq!(broker.snapshot().pending,1);
+    let new_direction=BudgetDirection{tunnel:lanes[1].tunnel,
+        direction:WireDirection::ClientToServer};
+    broker.on_fresh_accepted(new_direction,1400,MonoNs(30_000_002)).unwrap();
+    assert_eq!(broker.local_snapshot(new_direction).unwrap().fresh_confirmed_bytes,1400);
+    broker.on_timer(MonoNs(40_000_002)).unwrap();
+    assert_eq!(broker.snapshot().overdue_uncertain_bytes,128);
+    assert_eq!(broker.snapshot().charged_repairs,384);
+    assert_eq!(broker.complete(slots[2].0,RepairSendResult::NotSent,
+        MonoNs(40_000_003)),Err(GlobalRepairError::StaleGrant));
+    broker.on_timer(MonoNs(1_000_000_001)).unwrap();
+    assert_eq!(broker.snapshot().overdue_uncertain_bytes,128);
+    assert_eq!(broker.grant(new_direction,257,10_000,
+        MonoNs(1_000_000_002)),Err(GlobalRepairError::GlobalCap));
+}
+#[test]
+fn r2_pack_010_zero_one_32_33_shape_and_proven_notsent_rearm() {
+    use crate::{
+        DriverPrefixObservation,BatchSuffixEvidence,complete_driver_prefix,
+        reserve_frozen_submission,GlobalRepairError,
+    };
+    let mut broker=ingress_010_broker(1,256);
+    let empty=DriverPrefixObservation::checked(0,0,None,
+        BatchSuffixEvidence::Unproven).unwrap();
+    assert!(complete_driver_prefix(&mut broker,&[],empty,MonoNs(0))
+        .unwrap().is_empty());
+    assert!(DriverPrefixObservation::checked(32,32,None,
+        BatchSuffixEvidence::Unproven).is_ok());
+    assert_eq!(DriverPrefixObservation::checked(33,0,None,
+        BatchSuffixEvidence::Unproven),Err(GlobalRepairError::InvalidBatch));
+    assert_eq!(DriverPrefixObservation::checked(1,0,Some(1),
+        BatchSuffixEvidence::Unproven),Err(GlobalRepairError::InvalidBatch));
+    let (mut shadow,scope,lease,c)=ingress_010_owner(
+        &mut broker,lane(),WireDirection::ClientToServer,60);
+    let id=reserve_frozen_submission(
+        &mut broker,lease,scope,&shadow,&c,128,MonoNs(30_000_000))
+        .unwrap().reservation_id;
+    let known=DriverPrefixObservation::checked(1,0,None,
+        BatchSuffixEvidence::ProvenNotAttempted).unwrap();
+    let res=complete_driver_prefix(&mut broker,&[(id,scope)],known,
+        MonoNs(30_000_000)).unwrap();
+    assert_eq!(res.counts.definitely_not_sent,1);
+    assert_eq!(res.shadow_result(0),Some(RepairSendResult::NotSent));
+    shadow.on_send_result(&c,res.shadow_result(0).unwrap(),
+        MonoNs(30_000_000)).unwrap();
+    assert_eq!(broker.snapshot().charged_repairs,0);
+    assert_eq!(broker.snapshot().held_unused_grants,128);
+    assert!(!shadow.preflight(&c,MonoNs(30_000_000)));
+    assert!(shadow.on_timer(MonoNs(59_999_999)).candidates.is_empty());
+    let rearmed=shadow.on_timer(MonoNs(60_000_000)).candidates.remove(0);
+    assert!(Arc::ptr_eq(&rearmed.frozen().ciphertext,&c.frozen().ciphertext));
+    assert_eq!(rearmed.frozen().metadata().pn,c.frozen().metadata().pn);
+    assert_eq!(broker.complete(id,RepairSendResult::NotSent,
+        MonoNs(60_000_000)),Err(GlobalRepairError::StaleGrant));
+    let z=DriverPrefixObservation::checked(1,1,None,
+        BatchSuffixEvidence::Unproven).unwrap();
+    assert_eq!(complete_driver_prefix(&mut broker,&[],z,
+        MonoNs(60_000_000)).err(),Some(GlobalRepairError::InvalidBatch));
+}

@@ -6,6 +6,11 @@ pub mod receipt;
 pub mod rx_feedback;
 pub mod budget;
 pub mod global_sparse;
+pub mod ingress;
+pub use ingress::{
+    admit_opened_receipt, reserve_frozen_submission, complete_driver_prefix,
+    DriverPrefixObservation, FrozenRepairSubmission, IngressBatchSettlement,
+};
 pub use global_sparse::{
     BatchCompletionCounts, BatchSuffixEvidence, ValidatedRepairBatchOutcome,
     GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError, GlobalRepairSnapshot,
