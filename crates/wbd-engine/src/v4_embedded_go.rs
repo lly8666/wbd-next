@@ -66,7 +66,7 @@ struct WorkerRouteBudget {
 }
 struct Entry{
     generation:u32,
-    owner:ProtectedScopedOwner,normal:NormalOffReceive,
+    owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -92,8 +92,9 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tun_sink:Option<Arc<ScopedTunSink>>,
 }
-// Global registry performs identity lookup only. Every active session has
-// its own mutex; TX/RX *within* one session are not yet direction-split.
+// Global registry only handles lifetime lookup. Once the original
+// authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
+// LINK and M1 arena are MOVED to RX; this Entry guards TX/control only.
 struct Registry{generation:u32,entries:BTreeMap<u64,Arc<Mutex<Entry>>>}
 fn registry()->&'static Mutex<Registry>{
     static R:OnceLock<Mutex<Registry>>=OnceLock::new();
@@ -121,7 +122,7 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
     let arena=Arena::new(generation,128,2048,128,1_000_000)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
-        generation,owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        generation,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -329,7 +330,7 @@ fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     let e:&mut Entry=&mut guard;
-    if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+    if e.phase!=PH_ACTIVE||e.workers.is_some(){return Err(BAD_STAGE)}
     let raw=e.raw_rx.as_ref().ok_or(BAD_STAGE)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let f=e.flow;
@@ -342,8 +343,9 @@ fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
         raw,slab,tuple,PacketPersona::Legacy,
         u64::from(e.rx_boundary),MonoNs(0),
     ).map_err(|_|INVALID)?;
+    let normal=e.normal.as_mut().ok_or(BAD_STAGE)?;
     let (returned,report,delivered,failed)=e.owner.drain_normal_off_to_tun(
-        &mut e.normal,tun,MonoNs(0),Vec::with_capacity(32),
+        normal,tun,MonoNs(0),Vec::with_capacity(32),
     ).map_err(|_|BAD_STAGE)?;
     drop(returned);
     e.arena.drain_returns();
@@ -388,7 +390,7 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     let e:&mut Entry=&mut guard;
-    if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+    if e.phase!=PH_ACTIVE||e.workers.is_some(){return Err(BAD_STAGE)}
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let flow=e.flow;
     if e.raw_tx.is_none(){
@@ -442,8 +444,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 // sender and receiver do not call per-packet RX/TX helpers. The READY poll
 // is outside the shared registry lock. Subsequent owner admission, AEAD/PN,
 // Normal/off and kernel driver send use the exact existing Rust functions.
-// Spurious irrelevant raw TCP traffic is filtered outside both mutexes;
-// within a session the owner TX/RX mutable lock remains to be split.
+// Unrelated raw TCP is discarded by M4; RX's actual mutable opener/PN,
+// reassembly and arena belong to RX alone after Go Detach, not Entry.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[repr(C)]
 struct PollFd {fd:c_int,events:i16,revents:i16}
@@ -512,33 +514,27 @@ fn authenticated_rx_anchor(anchor:u64,absolute_seq:u64,wire_len:usize,
     Some(anchor.max(end))
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
-    rx_storage:&mut Vec<RxPacket>,
-    rx_pending:&mut Vec<crate::memory::UniqueBuffer>)->Result<u32,i32>{
-    // Keep unused slab slots across kernel readiness turns. Sparse traffic
-    // should not allocate/drop 31 extra original M1 loans for each packet.
-    // The joined worker releases these retained slots before Arena Stop.
-    let (flow,generation)={
-        let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
-        if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-        // Allocate stable owned M1 slabs once for a truly ready-only
-        // recvmmsg. Do not hold Entry during the potentially blocking kernel
-        // syscall, and never borrow a temporary M4 input array afterwards.
-        while rx_pending.len()<32{
-            match e.arena.allocate(){
-                Ok(slab)=>rx_pending.push(slab),
-                Err(_)=>break,
-            }
+fn background_raw_once(
+    owner:&mut crate::v4_owner_crypto::ProtectedBackgroundRx,
+    arena:&mut Arena,anchor:&mut u64,
+    flow:crate::v4_protected_handoff::GoFlow,generation:u32,
+    raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
+    rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
+)->Result<u32,i32>{
+    // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
+    // table are now owned by RX, not re-initialized or cloned. RX never
+    // locks Entry / TX during normal packets, ready or Stop detection.
+    while rx_pending.len()<32{
+        match arena.allocate(){
+            Ok(slab)=>rx_pending.push(slab),
+            Err(_)=>break,
         }
-        (e.flow,e.generation)
-    };
+    }
     if rx_pending.is_empty(){return Err(FULL)}
     let tuple=Ipv4Tuple{
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
         src_port:flow.client_port,dst_port:flow.server_port,
     };
-    // Stack-only iov references to the SAME original mutable Arena slabs;
-    // each slot is uniquely borrowed until the synchronous call returns.
     let slot_count=rx_pending.len();
     let mut slots:[&mut [u8];32]=std::array::from_fn(|_|&mut [][..]);
     for (dst,slab) in slots.iter_mut().zip(rx_pending.iter_mut()){
@@ -550,16 +546,9 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     drop(slots);
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     if batch.observed==0{return Err(INVALID)}
-    // AEAD/PN and M3 LINK are still the original owner. Process received
-    // slots independently: one invalid/replay packet cannot block later
-    // completed messages in the same kernel batch.
-    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
-    let e:&mut Entry=&mut guard;
-    if e.phase!=PH_ACTIVE||e.generation!=generation ||
-        stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let mut delivered_total=0u32;
-    // Kernel did not touch the remaining preposted slots; retain their
-    // exact original ownership instead of returning and reallocating them.
+    // Unused preposted original M1 slabs persist in this RX worker; used
+    // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
         let (len,seq)=match batch.entry(i){
             Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
@@ -568,38 +557,20 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
             _=>{drop(slab);continue},
         };
         if stop.load(Ordering::Acquire){break}
-        let absolute=match extend_seq32(e.rx_seq_anchor,seq){
+        let absolute=match extend_seq32(*anchor,seq){
             Ok(n)=>n,Err(_)=>{drop(slab);continue}
         };
-        if e.owner.offer_after_active(slab,0..len,absolute,loop_now()).is_err(){
-            continue
-        }
-        let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
-        let available=std::mem::take(rx_storage);
-        let (mut returned,report,delivered,failed)=match
-            e.owner.drain_normal_off_to_tun(
-                &mut e.normal,tun,loop_now(),available
-            ){
-            Ok(result)=>result,
-            Err((_,returned))=>{
-                *rx_storage=returned;
-                continue
-            }
-        };
-        returned.clear();
-        *rx_storage=returned;
-        // TCP appearance is not trusted until AEAD+PN admits this genuine
-        // record. Duplicate, malformed, control or spoofed seq cannot
-        // poison the trusted moving reference, even inside one recvmmsg.
-        let Some(next_anchor)=authenticated_rx_anchor(
-            e.rx_seq_anchor,absolute,len,report.authenticated.link_ready
-        ) else{continue};
-        e.rx_seq_anchor=next_anchor;
-        if failed==0 {
-            delivered_total=delivered_total.saturating_add(delivered);
+        // Exactly one actual M3 opener and unique replay PN bitmap.
+        let receipt=owner.consume_original(slab,len,tun,loop_now());
+        let Some(next)=authenticated_rx_anchor(
+            *anchor,absolute,len,receipt.authenticated_link
+        )else{continue};
+        *anchor=next;
+        if receipt.failed==0{
+            delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
     }
-    drain_data_turn_returns(&mut e.arena);
+    arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     if delivered_total==0{return Err(INVALID)}
     Ok(delivered_total)
 }
@@ -832,42 +803,74 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         else{return INVALID};
         e.raw_tx=Some(Arc::new(tx));
     }
+    // Build the independent RX arena and move the exact protected opener
+    // only after both original raw/TUN devices have been installed. Never
+    // allocate a second crypto instance or credential authority.
+    let rx_arena_id=e.generation ^ 0x8000_0000;
+    if rx_arena_id==0{return FULL}
+    let Ok(mut rx_arena)=Arena::new(rx_arena_id,64,2048,64,1_000_000)
+    else{return FULL};
+    // Preserve pre-Detach early RX bytes. Original M1 32-slot queue is
+    // flushed through the SAME opener and LINK table before the move.
+    if e.staged_count>0{
+        let e:&mut Entry=&mut e;
+        let normal=match e.normal.as_mut(){Some(n)=>n,None=>return BAD_STAGE};
+        let returned=match e.owner.drain_normal_off_to_tun(
+            normal,&tun,loop_now(),Vec::with_capacity(32)){
+            Ok((returned,_,_,_))=>returned,
+            Err((_,returned))=>{drop(returned);return BAD_STAGE}
+        };
+        drop(returned);
+        drain_data_turn_returns(&mut e.arena);
+    }
+    let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
+    let mut original_rx=match e.owner.detach_background_rx(normal){
+        Ok(rx)=>rx,
+        Err((_,normal))=>{e.normal=Some(normal);return BAD_STAGE},
+    };
+    let mut rx_anchor=e.rx_seq_anchor;
+    let rx_flow=e.flow;
+    let generation=e.generation;
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
     let stop_rx=Arc::clone(&shutdown);
     let stats_rx=Arc::clone(&stats);
-    let rx_cell=Arc::clone(&cell);
+    let raw_for_rx=Arc::clone(&raw);
+    let tun_for_rx=Arc::clone(&tun);
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
-            let mut rx_storage=Vec::<RxPacket>::with_capacity(32);
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
             while !stop_rx.load(Ordering::Acquire){
-                // Do not invoke CLOCK_THREAD_CPUTIME_ID once per packet.
-                // Publish an approximate worker-only CPU clock at <=10 Hz;
-                // end-of-thread also publishes the final CPU time.
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats_rx.rx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
                 if !loop_readiness(raw_fd,&stop_rx,10){continue}
-                let slice_start=Instant::now();
                 match background_raw_once(
-                    &rx_cell,&raw,&stop_rx,&mut rx_storage,&mut rx_pending
+                    &mut original_rx,&mut rx_arena,&mut rx_anchor,
+                    rx_flow,generation,&raw_for_rx,&tun_for_rx,
+                    &stop_rx,&mut rx_pending
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
-                // A single recvmmsg is already bounded to 32 ready slots.
-                // Never chain 32 x 32 calls under a single fairness turn.
-                let _=slice_start;
             }
+            // No outstanding kernel borrow after the synchronous call,
+            // and STOP joins this thread before retiring original drivers.
+            rx_pending.clear();
+            rx_arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
             stats_rx.rx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
         })
-    else{return INVALID};
+    else{
+        // The original RX state was consumed by the attempted spawn; fail
+        // closed and require normal Stop rather than resurrecting keys.
+        e.phase=PH_STOPPING;
+        return INVALID
+    };
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
@@ -902,6 +905,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         })
     else{
         shutdown.store(true,Ordering::Release);
+        // No worker may still deliver after a failed second spawn.
+        e.phase=PH_STOPPING;
         drop(e);
         let _=rx.join();
         return INVALID

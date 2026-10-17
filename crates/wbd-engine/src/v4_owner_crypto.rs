@@ -59,7 +59,7 @@ pub(crate) enum ProtectedCryptoError {
 /// This is the reusable AEAD/PN half of that owner; no payload is delivered.
 pub(crate) struct ProtectedScopedCrypto {
     tx: LaneTxCrypto,
-    rx: ReplayProtectedLaneRx,
+    rx: Option<ReplayProtectedLaneRx>,
     active: bool,
     generation: u32,
     go_lane: u8,
@@ -101,7 +101,7 @@ impl ProtectedScopedCrypto {
             rx_keys, usize::from(rx_limit), suite, replay,
         ).map_err(ProtectedCryptoError::Rx)?;
         Ok(Self {
-            tx, rx, active:false, generation:expected.owner_generation,
+            tx, rx:Some(rx), active:false, generation:expected.owner_generation,
             go_lane:expected.go_lane_id, epoch:identity.logical_epoch,
             tx_boundary:None,
         })
@@ -121,6 +121,13 @@ impl ProtectedScopedCrypto {
         Ok(())
     }
 
+    // Once the original protected Go Detach has committed, move rather
+    // than clone the single actual AEAD+PN replay state to the RX owner.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fn detach_rx_for_original_worker(&mut self)->Option<ReplayProtectedLaneRx>{
+        if !self.active{return None}
+        self.rx.take()
+    }
     /// Same real AEAD/PN function to be called by the eventual RX owner.
     /// Never a standalone business delivery or test-specific decryptor.
     fn retire(&mut self) {
@@ -240,6 +247,75 @@ impl NormalOffReceive {
     }
 }
 
+
+impl NormalOffReceive {
+    // Shared actual M3 LINK parser/reassembly, called ONLY after original
+    // record AEAD+unique PN accepts the packet. The original bootstrap
+    // drain and independent background RX use the identical implementation.
+    fn accept_authenticated_link<F>(&mut self,pn:u64,link:&[u8],ms:u64,
+        accept_packet:&mut F,out:&mut NormalOffReport)
+    where F:FnMut(u64,&[u8]){
+        let id=match inspect_link(link,self.frame_mtu,LinkMode::FixedOff){
+            Ok(LinkView::Ordinary(_))=>Some(0),
+            Ok(LinkView::Fragment(f))=>self.extend_packet_id(f.packet_id),
+            Err(_)=>{out.malformed+=1;return}
+        };
+        let Some(id)=id else {out.malformed+=1;return};
+        let scope=ReassemblyScope{
+            tunnel_epoch:self.epoch_tag,
+            direction:self.direction,packet_id_ext:id,
+        };
+        match self.table.push_after_record_auth(link,scope,ms){
+            Ok(LinkDelivery::Ordinary(bytes))=>{accept_packet(pn,bytes);out.completed+=1},
+            Ok(LinkDelivery::Reassembled(bytes))=>{accept_packet(pn,&bytes);out.completed+=1},
+            Ok(LinkDelivery::Pending)=>out.pending+=1,
+            Ok(LinkDelivery::Discarded)=>out.discarded+=1,
+            Err(_)=>out.malformed+=1,
+        }
+    }
+}
+
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+pub(crate) struct ProtectedBackgroundRx{
+    rx:ReplayProtectedLaneRx,
+    normal:NormalOffReceive,
+    generation:u32,
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[derive(Clone,Copy,Debug,Default)]
+pub(crate) struct BackgroundRxReceipt{
+    pub(crate) authenticated_link:u32,
+    pub(crate) delivered:u32,
+    pub(crate) failed:u32,
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+impl ProtectedBackgroundRx{
+    // The ONE moved original replay bitmap and original M3 LINK table.
+    // Input is M4 checked-tuple but still UNAUTHENTICATED raw ciphertext.
+    // The generation-scoped TUN driver and stop fence remain mandatory.
+    pub(crate) fn consume_original(&mut self,mut slab:UniqueBuffer,
+        len:usize,tun:&ScopedTunSink,now:MonoNs)->BackgroundRxReceipt{
+        let mut receipt=BackgroundRxReceipt::default();
+        if tun.generation()!=self.generation||tun.is_stopping()
+            ||len==0||len>slab.writable().len(){return receipt}
+        let opened=match self.rx.open_unique_in_place(&mut slab.writable()[..len]){
+            Ok(opened)=>opened,
+            Err(_)=>return receipt,
+        };
+        if opened.kind!=AUTHENTICATED_LINK_KIND{return receipt}
+        receipt.authenticated_link=1;
+        let mut link_report=NormalOffReport::default();
+        self.normal.accept_authenticated_link(
+            opened.pn,opened.payload,now.0/1_000_000,
+            &mut |_pn,business|{
+                if tun.write_authenticated_ipv4(self.generation,business).is_ok(){
+                    receipt.delivered+=1;
+                }else{receipt.failed+=1}
+            },&mut link_report);
+        receipt
+    }
+}
+
 /// Immutable owner-bound *kernel interface MTU*, not path PMTU, socket
 /// capability, driver lease or peer authentication. Private fields prevent
 /// a later caller from minting its own unrestricted FrameBudget.
@@ -257,6 +333,21 @@ pub(crate) struct ScopedLinuxBudget {
 }
 
 impl ProtectedScopedOwner {
+    /// Transfer the SAME protected Go-authenticated RX replay opener,
+    /// original Normal-off table and generation to one RX worker exactly
+    /// once; the original TX queue/sealer remain with the control Entry.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn detach_background_rx(&mut self,normal:NormalOffReceive)
+      ->Result<ProtectedBackgroundRx,(ProtectedCryptoError,NormalOffReceive)>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached()
+            ||!normal.accepts(self){
+            return Err((ProtectedCryptoError::Inactive,normal))
+        }
+        let Some(rx)=self.crypto.detach_rx_for_original_worker() else{
+            return Err((ProtectedCryptoError::Inactive,normal))
+        };
+        Ok(ProtectedBackgroundRx{rx,normal,generation:self.generation})
+    }
     pub(crate) fn prepare_from_protected_go(
         cold:&UntrustedColdV4, expected:&ExpectedRustOwner,
         owner_id:u64, exact_rx_boundary:u32,
@@ -840,7 +931,11 @@ impl ProtectedScopedOwner {
             .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
         let mut report=AuthenticatedRxReport::default();
         for packet in borrowed.as_mut_slice(){
-            match self.crypto.rx.open_unique_in_place(packet.wire_mut()){
+            let Some(rx)=self.crypto.rx.as_mut() else{
+                report.rejected+=1;
+                continue
+            };
+            match rx.open_unique_in_place(packet.wire_mut()){
                 Ok(record) if record.kind==AUTHENTICATED_LINK_KIND=>{
                     // The payload reference is tied to this mutable owner
                     // batch and cannot outlive this synchronous callback.
@@ -869,23 +964,9 @@ impl ProtectedScopedOwner {
         let mut out=NormalOffReport::default();
         let (returned,authenticated)=self.drain_authenticated(
             now,storage,|pn,link|{
-                let id=match inspect_link(link,receiver.frame_mtu,LinkMode::FixedOff){
-                    Ok(LinkView::Ordinary(_))=>Some(0),
-                    Ok(LinkView::Fragment(f))=>receiver.extend_packet_id(f.packet_id),
-                    Err(_)=>{out.malformed+=1;return}
-                };
-                let Some(id)=id else {out.malformed+=1;return};
-                let scope=ReassemblyScope{
-                    tunnel_epoch:receiver.epoch_tag,
-                    direction:receiver.direction,packet_id_ext:id,
-                };
-                match receiver.table.push_after_record_auth(link,scope,ms){
-                    Ok(LinkDelivery::Ordinary(bytes))=>{accept_packet(pn,bytes);out.completed+=1;},
-                    Ok(LinkDelivery::Reassembled(bytes))=>{accept_packet(pn,&bytes);out.completed+=1;},
-                    Ok(LinkDelivery::Pending)=>out.pending+=1,
-                    Ok(LinkDelivery::Discarded)=>out.discarded+=1,
-                    Err(_)=>out.malformed+=1,
-                }
+                receiver.accept_authenticated_link(
+                    pn,link,ms,&mut accept_packet,&mut out);
+
             })?;
         out.authenticated=authenticated;
         Ok((returned,out))
