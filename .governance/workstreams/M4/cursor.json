@@ -4,26 +4,24 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 17,
-  "checkpoint_sha": "7766b24e4db7809193932dc627d43e2b4a4b153f",
-  "progress": "blocked",
+  "sequence": 18,
+  "checkpoint_sha": "cbda0f9dc519842c968390f7b71188f98db99220",
+  "progress": "ready_for_integration",
   "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
-  "current_task": "PACK-013: native Linux raw scatter sendmmsg / borrowed recvmmsg platform API code source exact 94/94 PASS, but task Governance deterministically BLOCKED by worker G2 <=64 commits vs actual66+.",
-  "why_now": "Formal main M4 task R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013 registry rev2 epoch1 active branch work/m4-r1-platform after prior -012 seq16 ready.",
+  "current_task": "PACK-013 scoped Linux platform native multi-message I/O package frozen; M4 ready for M0 stage integration.",
+  "why_now": "main GOVERNANCE §10 v2 exact SOURCE central ROLE_SCOPE_PASS superseded historic frozen worker cumulative 64 cap. Separate compiled-once native Linux R1 94/94 PASS; original CODE unchanged.",
   "done_when": "PACK-013 M4: 保持冻结012 PMTU/设备失效/Stop安全；0/1/32/33/满额/空额、Linux真实无特权内核支持的多帧批、部分完成及未知尾项、错码EAGAIN/EINTR/EMSGSIZE/ENODEV/short write、generation/Stop/late-loan和稀疏立即服务反例；精确SOURCE编译一次native Actions+产物审计。确不能使用的raw/TUN privileged及真实单syscall批路径标UNSUPPORTED/NOT_RUN而不伪称性能，最终提供M0安全且冻结的调用签名/回退。",
-  "next_action": "M0 exclusively review .governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md and authorize exact checker refresh/exception in root tools (worker old check 64, current frozen source 66 activation commits). M4 must NOT change tools/root or claim ready. After M0 repairs and records tested scope, rerun same CODE SOURCE b7bcde7dde64633532cae99460eb00855a2e119a Governance and S/H audit; if pass mark ready_for_integration in later cursor-only H. CAP_NET_RAW raw positive and real TUN/physical/Go protected owner remain NOT_RUN, product Go V4 DISABLED.",
-  "unverified": true,
+  "next_action": "M0 pin exact M4 platform CODE SOURCE b7bcde7dde64633532cae99460eb00855a2e119a and review frozen Rust internal signatures/Stop-loan/MTU and copied-prefix/uncertain semantics in docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json. Integrate authenticated Go ColdSnapshot to Rust AEAD/PN owner under M0 scope, with real privileged raw/TUN, physical device and product/performance tests separately required; none are claimed here. M4 holds this workpack complete and adds no integration-wait features.",
+  "unverified": false,
   "last_tested_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
   "evidence_refs": [
     "docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md"
-  ],
+  "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-G2-worker-activation.md",
-    "docs/decisions/M0-R0-parallel-worker-readiness.md",
+    "docs/GOVERNANCE.md",
+    "docs/devlog/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "PACK-013 source code b7bcde7dde64633532cae99460eb00855a2e119a Linux x86_64 GNU Rust1.85.1 Actions39006105820 attempt1 compiled-once native 94/94 R1 PASS (3 new+91 previous, 8 R0 filtered). Real Linux UDP two-iovec sendmmsg 0/1/32/33 and 1-prefix partial errno unavailable tested, scatter header exact original checksum even odd/options seq32 with no frozen record copy; raw scoped tx send_kernel_multimsg and rx receive_kernel_multimsg uses original rx recvmmsg into M1 caller buffers with STOP loan and PMTU; raw/TUN real positive RAW_RX_NOT_RUN/UNSUPPORTED. Native build artifact12090303586 ZIP SHA0ac0e03f5190af85a34fe9fea05950d7de7068474af1157d0dbd931499b14d3e, binary SHA4eef7e8e3432047ca26c25ebdebfe8af12603334f1761e7bb085401c9adcb77e, result artifact12090863118 ZIP SHAbc5b941a36b8051bb17e3b25074e7302b5ad10af025bf77d2e93f3893ed71a17, log/JSON/manifest SHA independently verified. Same source G2/static/crossABI SUCCESS; root old R0 workflow39006105808 FAIL historical 8-count despite actual Rust102/102 PASS. Earlier SOURCE53e95b run39005911030 FAIL_COMPILE E0284/E0502 fixed; f2fae379 run39006017293 FAIL one overlong test fixture 93/94 fixed. Governance39006105815 attempts1&2 FAIL: frozen M4 tools/worker_scope_ci.py limits G2 activation to64 while actual exact compare frozen source has 66 commits. This is NOT transient and M4 lacks tools/** authority. Requested M0 root G2 exception/sync in scoped Markdown file; current evidence result INCONCLUSIVE due governance, though native 94 PASS. No other code changes authorized pending M0; production Go V4 DISABLED and raw privileged, TUN, WindowsARM, physical and product/perf remain NOT_RUN."
+  "partial_summary": "Only Linux GNU M4 platform component 94/94 native and exact CODE/old full HEAD/new S central scope PASS; old v1 checker failures retained as superseded range checks. Current H needs its own central current-HEAD audit. Actual privileged raw/TUN, Go authenticated product, physical link, 500Mbps/p99, Windows/ARM native remain NOT_RUN; production Go V4 DISABLED."
 }
