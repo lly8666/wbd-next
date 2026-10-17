@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+  "code_source_sha": "eec44721c149fd8df62b220ad7abdd1febb0584f",
+  "result": "PARTIAL_SHARED_GOVERNANCE_403_RECOVERY_MAIN_ABI_SUCCESS_M1_011_SCOPED_INTEGRATION_WITH_WAKE_ROLLBACK",
+  "unverified": true,
+  "user_escalation": {
+    "M2": "Central worker scope audits and main governance checks experienced repeated HTTP 403 API reads; M0 owns shared checker and workflows.",
+    "M1": "Old worker branch R0 native ABI consumer FAIL because stale shared '3 passed' substring script; preserve historical FAIL, do not count it as worker native ABI success."
+  },
+  "governance": {
+    "historical_failed_runs": [
+      {
+        "run_id": 39000464063,
+        "source": "work/m2-r2-recovery@e4626cbcae8fd7bc3c0776738a4c54d32cb1f24f",
+        "conclusion": "failure",
+        "error": "HTTP403 reading M2 current evidence json"
+      },
+      {
+        "run_id": 39000422905,
+        "conclusion": "failure",
+        "error": "HTTP403 registry"
+      },
+      {
+        "run_id": 39000314595,
+        "conclusion": "failure",
+        "error": "HTTP403 M2 cursor"
+      },
+      {
+        "run_id": 39000095651,
+        "conclusion": "failure",
+        "error": "HTTP403 main ref"
+      }
+    ],
+    "initial_shared_fix": {
+      "source_sha": "ee574a0effa085396441169dbdf0fe43876af9e5",
+      "paths": [
+        "tools/governance.py",
+        "tests/test_governance.py"
+      ],
+      "semantics": "Only diagnosed GitHub API rate or transient 502/503/504 responses get at most two retries with bounded backoff and Retry-After; 403 permission denial remains immediate hard FAIL, no unauthenticated fallback, no authority/identity bypass. Diagnostics reveal status/category/remaining/attempts without token/request query/body."
+    },
+    "historical_correction": {
+      "source_sha": "ee574a0effa085396441169dbdf0fe43876af9e5",
+      "run_id": 39001630626,
+      "result": "failure",
+      "cause": "New mock test code had erroneous double backslash Python continuation, maintenance syntax failure; fixed next source."
+    },
+    "corrected_source": "4ab7445c49a440f6ca3f70021d539bf659a11392",
+    "corrected_actions": [
+      {
+        "source_sha": "4ab7445c49a440f6ca3f70021d539bf659a11392",
+        "workflow": "governance-maintenance.yml",
+        "run_id": 39001695343,
+        "conclusion": "success",
+        "scope": "Tests both diagnosed rate-limit retry and fail-closed permission 403"
+      },
+      {
+        "source_sha": "4ab7445c49a440f6ca3f70021d539bf659a11392",
+        "workflow": "governance.yml",
+        "run_id": 39001695336,
+        "conclusion": "success",
+        "scope": "Live main identity plus structure"
+      },
+      {
+        "source_sha": "608f026b2dfa1089e0d2022101d2a0f8b0375ef4",
+        "workflow": "scope-audit.yml",
+        "run_id": 39001803833,
+        "conclusion": "success",
+        "scope": "Central exact SOURCE audit all four live worker branches, ROLE_SCOPE_PASS each; not product or module native test",
+        "artifact": {
+          "id": 12089158691,
+          "digest": "sha256:e13823daffe55abe26b786ac3fd0f2cc7a1fda8b53875fce511bc8c35b72cfb5"
+        }
+      },
+      {
+        "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+        "workflow": "scope-audit.yml",
+        "run_id": 39002274798,
+        "conclusion": "success",
+        "scope": "Independent latest central worker scope check"
+      },
+      {
+        "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+        "workflow": "governance.yml",
+        "run_id": 39002130805,
+        "conclusion": "success",
+        "scope": "Main structure and role"
+      },
+      {
+        "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+        "workflow": "governance-maintenance.yml",
+        "run_id": 39002130916,
+        "conclusion": "success",
+        "scope": "Shared script/workflow full maintenance"
+      }
+    ],
+    "root_cause_certainty": "HTTP403 from many unrelated API endpoints in simultaneous Actions, consistent with transient GitHub API policy/capacity but raw error response body was not retained in old historical receipts; do NOT assert proven primary/secondary limit or permanent permission failure. Later exact-source audits and governance passed with fail-closed checker."
+  },
+  "abi": {
+    "original_old_branch": {
+      "role": "M1",
+      "code_source_sha": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
+      "native_worker_run": 38998296147,
+      "worker_native_result": "98/98 R1 PASS",
+      "r0_native_abi_run": 38998296139,
+      "old_r0_conclusion": "failure",
+      "observed": "Rust binary 100 passed+1 ignored, but worker-old tools/r0_abi_bundle.py hard-coded literal '3 passed' in an unfiltered suite; old run is not PASS."
+    },
+    "root_script": "tools/r0_abi_bundle.py main already filtered exact 3 distinct r0_abi_ Rust tests; never loosen test by substring or change prod feature",
+    "frozen_m1_import": {
+      "source_sha": "2b890a26f18fcc8ca85a477bc94c1f573c41c078",
+      "m1_source_sha": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
+      "files": [
+        "crates/wbd-engine/src/memory/mod.rs",
+        "crates/wbd-engine/src/runtime/batch.rs",
+        "crates/wbd-engine/src/runtime/early_rx.rs",
+        "crates/wbd-engine/src/runtime/generation.rs",
+        "crates/wbd-engine/src/runtime/mod.rs",
+        "crates/wbd-engine/src/runtime/parity.rs",
+        "crates/wbd-engine/src/runtime/ready_turn.rs",
+        "crates/wbd-engine/src/runtime/wake.rs"
+      ],
+      "result": "initial FAIL_COMPILE, not ABI script false count",
+      "g2_run": 39001750301
+    },
+    "compatibility_fixes": [
+      {
+        "source_sha": "857db704eab625d07ae2a815ffc10c68b738eb58",
+        "scope": "Restored M0 protected Go-facing private EarlyRxOwner offer_tx_fresh/drain_tx/checked_tx_ready and LoanBatch::as_mut_slice without second owner; G2 and main R0 native ABI PASS."
+      },
+      {
+        "source_sha": "36cc8c7b78b637025fc001bb61b135cd95c13406",
+        "scope": "Restored original M0 test-feature-only read-only m0_inert_probe_bytes on UniqueBuffer, not production ABI."
+      },
+      {
+        "source_sha": "eec44721c149fd8df62b220ad7abdd1febb0584f",
+        "scope": "After TWO main exact-source native-regression failures (39001888111,39001984463) of M1-011 r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish at 2s Timeout, rolled back ONLY runtime/wake.rs to pre-import main original blob b647b7939aaa57ef7e4dc340bcfc5d648c02713e; M1 012 owns deterministic wake/STOP race repair; no unverified PASS."
+      },
+      {
+        "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+        "scope": "Updated M0 native workflow path filters to include runtime/** and memory/**, to force original Go authenticated real raw/TUN regression for future owner integration patches."
+      }
+    ],
+    "main_native_abi": {
+      "source_sha": "eec44721c149fd8df62b220ad7abdd1febb0584f",
+      "workflow": "r0-native-abi.yml",
+      "run_id": 39002108338,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117307035182,
+      "consume_job": 117307263887,
+      "build_artifact": {
+        "id": 12090030578,
+        "digest": "sha256:cd128f762149576c6ae4461d19dde115a1f1fdd75c1f2a09f8444fa05da59a32"
+      },
+      "result_artifact": {
+        "id": 12089851310,
+        "digest": "sha256:47b49e270c553fa735f346edd01902defd27cce3b76999206a7d75c373404d7d"
+      },
+      "witness": [
+        "Rust 'test result: ok. 3 passed; 0 failed; 102 filtered out' exact r0_abi_ group",
+        "R0_NATIVE_C_ABI_PASS version=1 features=0",
+        "Go TestR0AbiNativeWidthsVersionNoFeatures,RejectOldSizeAndUnsupportedV4Feature,GoToRustOpaqueLifeAndNoAlias,GoToRustCapacityNoClaimOfRealEngine PASS"
+      ],
+      "qualification": "Main integrated Rust/C/Go ABI sentinel only. Historical worker branch FAIL remains."
+    },
+    "same_source_eec_regressions": [
+      {
+        "workflow": "native-regression.yml",
+        "run_id": 39002108347,
+        "conclusion": "success",
+        "scope": "compiled-once R1 engine, FEC, recovery, normal, platform jobs",
+        "build_artifact": {
+          "id": 12088938634,
+          "digest": "sha256:3cff819d409b263efa304a7f69c98624e7970fd3a6fbca58de23fcf046a42c5b"
+        },
+        "engine_result_artifact": {
+          "id": 12089980720,
+          "digest": "sha256:a3f2027c2c0bc0c55de3c15e8bbb7351e7da3e8c9b117e7394aca72e0ce388e2"
+        }
+      },
+      {
+        "workflow": "g2-bootstrap.yml",
+        "run_id": 39002108319,
+        "conclusion": "success"
+      },
+      {
+        "workflow": "r0-cross-abi.yml",
+        "run_id": 39002108263,
+        "conclusion": "success",
+        "scope": "cross-compile ABI not native Windows/ARM functional"
+      },
+      {
+        "workflow": "governance.yml",
+        "run_id": 39002108332,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "actual_go_rust": {
+    "source_sha": "6b16713189b36f4dd1da0267d83843c862065f09",
+    "base_code_sha": "eec44721c149fd8df62b220ad7abdd1febb0584f",
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 39002130928,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job": 117307103885,
+    "consume_job": 117307398372,
+    "build_artifact": {
+      "id": 12089701871,
+      "digest": "sha256:d1f73299411572b2c437e276d69bc19034a3268f6af812ac541f0fd7178ad4a9"
+    },
+    "result_artifact": {
+      "id": 12089791779,
+      "digest": "sha256:9eec0e6d9b919b3ce12d82d8bdac8c5b1c6e56476242147dbf6e65738dd06010"
+    },
+    "witnesses": [
+      "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok",
+      "m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate ... ok",
+      "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS original Go TLS protected PN0 dropped, PN1 delivered real kernel TUN",
+      "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS",
+      "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=1 revision_after=2 refresh_before=1 refresh_after=2",
+      "EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true",
+      "M0_DEV_NORMAL_OFF_10MBPS_RECEIPT offered and delivered 10.000 Mbps each direction 10s+60s"
+    ],
+    "developer_rx_worker_cpu_seconds": 3.3646,
+    "developer_tx_worker_cpu_seconds": 3.3096,
+    "cpu_interpretation": "One runner only. No exact same-VM A/B and independent B/A. NOT a proven CPU saving or product benchmark.",
+    "production_features": 0,
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "followup": {
+    "M1": "Current full workpack R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012 already assigned. On worker branch reproduce/fix lost wake after injected failed notify as part of owner interface and Stop work, with deterministic concurrency, not just raising 2s timeout. No M0 concurrent writes to active worker source. Main freeze for wake remains historical stable rollback until component and real path prove replacement.",
+    "M2": "Current full workpack R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009 unchanged. New main central source audit 39001803833 all worker scope PASS, 403 older run still FAIL. If 403 recurs, shared checker diagnostic identifies confirmed rate/permission without skipping contract.",
+    "M0": "Continue 024 as previously planned after this shared blocker: actual same-session TX/RX protected owner split with M1 frozen API, controlled M4 driver Stop/PMTU, M3 ISA-L shared dependency, real counterexamples then D10 SPARSE and source-locked same-VM Rust P10 A/B and independent B/A, conditional C50. Preserve original 023 unverified and production features0."
+  }
+}
