@@ -75,7 +75,7 @@ class LiveGitHubReadFailureDrills(unittest.TestCase):
             403, "forbidden", {"X-RateLimit-Remaining": "4999"},
             io.BytesIO(b'{"message":"Resource not accessible by integration"}'))
         with mock.patch("tools.governance.urllib.request.urlopen",
-                        side_effect=error) as open_url, \\
+                        side_effect=error) as open_url, \
              mock.patch("tools.governance.time.sleep") as sleep:
             with self.assertRaisesRegex(g.ContractError, "permission_denied"):
                 g.GitHub("example/repo").head("main")
