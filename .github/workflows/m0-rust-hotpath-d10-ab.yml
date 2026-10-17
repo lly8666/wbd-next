@@ -35,12 +35,12 @@ jobs:
         env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
         run: |
           set -euo pipefail
-          # M0-024 B code snapshot b8d53e79; main workflow-only change preserves locked Rust blobs.
+          # Final 024 B is the original credential-verified Go Rust RX/PN ownership split; fixed A is prebatch.
           # Freeze content, not a floating branch or unrelated later commit.
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 07c6fc30c20ddc90e2843b269aba86e185a8db96
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = e49e7f08d218c5b77a1df05ebcc6a172ce493d44
           test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 86e4979fa5dae06100e5684016f13381df05936d
           # Fixed baseline A: M4-012 source before DATA return cap64.
-          # Only v4_embedded_go.rs (and its test) differs in B, and Go
+          # Only original Rust owner code differs; the Go
           # workload fixture, Cargo.lock, route/TUN and scripts are identical.
           test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = e9c68425e9d597a4bdd13ada8cabb3545dc88cf6
           test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 07c6fc30c20ddc90e2843b269aba86e185a8db96
@@ -55,7 +55,7 @@ jobs:
           cmp rust-A/Cargo.lock Cargo.lock
           # Shared test-only sparse env forwarding applies to both legs.
           grep -Fq 'WBD_M0_D10_DIAG' tools/run-v4-tun-netns.sh
-          for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
+          for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go; do
             cmp "rust-A/r0/go_overlay/internal/realityfront/$f" "r0/go_overlay/internal/realityfront/$f"
           done
           rustup toolchain install 1.85.1 --profile minimal
@@ -69,6 +69,7 @@ jobs:
             for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
               cp "$SRC/r0/go_overlay/internal/realityfront/$f" "legacy/internal/realityfront/$f"
             done
+            cp "$GITHUB_WORKSPACE/r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go" "legacy/internal/realityfront/bridge_v4_embedded_linux_test.go"
             cp "$GITHUB_WORKSPACE/r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go" "legacy/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
             export CGO_LDFLAGS="-L$SRC/target/release -lwbd_engine"
             (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/hotpath-build/$leg/owner-go.test" ./internal/realityfront)
@@ -77,7 +78,8 @@ jobs:
           import hashlib,json,os,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           paths=["r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
-            "tools/run-v4-tun-netns.sh","Cargo.lock"]
+            "tools/run-v4-tun-netns.sh","Cargo.lock",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"]
           manifest={
             "source_sha":os.environ["GITHUB_SHA"],
             "source_A":"9249115c809933eae7ddebdd9334bbe16095bf64",
