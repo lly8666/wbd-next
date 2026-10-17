@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 15,
-  "checkpoint_sha": "b28c1740a075ed77e3e3249adc3aa7c2c76d298e",
+  "sequence": 16,
+  "checkpoint_sha": "47fab8e1c830e55fdbe90ee06f06a22d5333178c",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011",
-  "current_task": "PACK-006 complete scoped Linux x86_64 GNU M4 platform carrier driver/batch package (native unprivileged+pure proof only; raw/TUN privileged positive UNSUPPORTED).",
-  "why_now": "main registry rev2 epoch1 active M4 assigned_task R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011 under existing branch/path; predecessor 010 seq14 clean.",
-  "done_when": "PACK-006 M4：I01-I04、B01-B04相关driver、L01/设备变更反例在精确SOURCE Actions验收；提交固定平台接口/回退，raw未支持明确UNSUPPORTED而非假PASS。",
-  "next_action": "M0 may pin and source-review this M4 platform package for original authenticated Go->Rust owner/engine integration and real device tests. Raw IPv4/AF_PACKET positives require separately authorized CAP_NET_RAW runner; configured TUN positive requires actual IFF_TUN FD/CAP_NET_ADMIN; both UNSUPPORTED/NOT_RUN in current GitHub native evidence. No claimed 500Mbps or product performance. Production Go V4 DISABLED. M4 waits for a NEW formal main task or scoped M0 integration feedback; do not extend work without authorization.",
+  "task_id": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
+  "current_task": "M4-012 source-scoped platform route/PMTU error origin, watcher revision races, STOP old-loan exact native Linux unprivileged proof finished; privileged raw/TUN/physical tests NOT_RUN.",
+  "why_now": "main registry rev2 epoch1 active M4 formal assigned_task R1-M4-RAW-TUN-STOP-PMTU-RACE-012, prior seq15 -011 ready; scoped platform only.",
+  "done_when": "M4-012：错误来源与状态、route storm/ifindex/MTU down-up、Stop与晚loan、0/1/32/33边界及可用Linux实际内核反例精确SOURCE Actions验证；原privileged unsupported明确保留，输出M0接线稳定接口与回退说明。",
+  "next_action": "M0 source-pin and integrate stable platform API: RawTxError RouteStale/RouteUnavailable versus Kernel(90) versus PacketExceedsBudget/NoCapacity; TunReadyWrites uncertain EINTR/short; atomic STOP/BorrowFence and revisioned PMTU. No authenticated Go/engine or ABI edits by M4; actual CAP_NET_RAW raw/TUN privileged/physical route churn still UNSUPPORTED/NOT_RUN, production Go V4 DISABLED. Await NEW formal M4 main task or concrete M0 integration bug; do not extend absent authorization.",
   "unverified": false,
-  "last_tested_source": "aae512d1953975476ab78081f5801436c6573fda",
+  "last_tested_source": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011.json"
+    "docs/evidence/M4/R1-M4-RAW-TUN-STOP-PMTU-RACE-012.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M4 full PACK-006 workpack 011 scoped platform-only SOURCE aae512d1953975476ab78081f5801436c6573fda: changed M4 linux_batch.rs detailed typed genuine unprivileged sendmmsg EMSGSIZE/route/device/partial errno mapping; pinned exact M0 main e9be1e716070256bbd4b351dd85452d8f2553266 Linux raw/TUN/route/preflight baseline into M4; added scoped linux_mtu_scope.rs revisioned singleton NETLINK_ROUTE link/PMTU cache with <=1s refresh, 100ms event debounce, fail-closed interface change and kernel EMSGSIZE/no perDATA sysfs; added bounded <=32 raw ready-only sequential sendto and poll0 recv(MSG_TRUNC) into caller borrowed slots, TUN O_NONBLOCK real FD after ioctl, <=32 poll0/read/write and typed STOP/prefix/no auth; malformed tuple fails before any indexing. Actual native compiled once GitHub Actions38998105581/1 Linux GNU 88/88 R1 PASS (13 new/pinned baseline vs previous75), ZIP build12087883272 SHA e747bfc521db0290de0a75b1013b1809e24668d583486a2682920fe3831f2b94, result12087577813 SHA 6241693c70bd9c738082b207745377f422c3a781697ad09eb104844ac7cad9f5, manifest/binary/result/test.log SHA checked independently. Same SOURCE G2/static/crossABI/code Governance SUCCESS; historic worker-branch old R0 fake workflow38998105615 FAIL exact eight-count despite 96/96 real Rust assertions PASS. History cache SRC222a8ea0 native38997732509 FAIL compile E0560/E0609 missing RX budget field, fixed. Evidence S b28c1740a075ed77e3e3249adc3aa7c2c76d298e Governance38998286212 SUCCESS. CAP_NET_RAW missing RAW_RX_NOT_RUN; actual privileged raw/TUN positive, physical NIC route churn, native Win/ARM, product/p99/500Mbps, Go protected owner NOT_RUN, production Go V4 DISABLED."
+  "partial_summary": "M4 full assigned workpack -012 SOURCE e4e61d1588b0192ea7ca39638aa75e1a3162ac66: typed RawTxError RouteStale/RouteUnavailable vs actual Linux kernel EMSGSIZE Kernel(90)/device and pure PacketExceedsBudget/NoCapacity, retain prefix/uncertain/suffix, TUN short/EINTR uncertainty. ScopedRouteBudget second watcher rev snapshot before cached return, synthetic 160 route storms/debounce/TTL and unprivileged actual Linux ifindex invalid/MTU check. 8-round 33 actual kernel loopback UDP concurrent sender vs STOP with old frozen RecordPn/Arc held until old completion and new owner UDP independent; 0/1/32/33 regressions, seq32 wrap retained. Native compiled-once Actions39001742284/1 Linux x86_64 GNU Rust1.85.1 91/91 R1 PASS (3 new+88 prior), build ZIP12088829780 SHA a531b95863ef8f978c7900b82424aaaa8d4eb7716f3a158df237f288be7de164, result ZIP12088958008 SHA 2ab1f5f305d6202ea5486ed364b08a08a15cee6eb3d5089bf4009035236887a4 and manifest/binary/JSON/log exact source SHA independently checked. Same SOURCE G2/static/crossABI SUCCESS; code Governance39001742282 attempt1 FAIL main moved mid audit, retry attempt2 SUCCESS; historic root worker fake39001742290 FAIL old R0 inventory despite actual 99/99 Rust assertions PASS. Evidence S47fab8e1c830e55fdbe90ee06f06a22d5333178c Governance39002048135 attempt1 FAIL main moved, attempt2 SUCCESS. Actual raw AF_PACKET positive RAW_RX_NOT_RUN (CAP_NET_RAW absent), TUN privileged positive and physical link down-up NOT_RUN, WindowsARM native, product/p99/500Mbps and authenticated Go-Rust owner NOT_RUN; production Go V4 DISABLED."
 }
