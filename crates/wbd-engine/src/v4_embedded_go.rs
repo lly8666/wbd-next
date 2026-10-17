@@ -84,7 +84,7 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     raw_rx:Option<Arc<ScopedRawIpv4Rx>>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-    raw_tx:Option<ScopedRawIpv4Tx>,
+    raw_tx:Option<Arc<ScopedRawIpv4Tx>>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tun_sink:Option<Arc<ScopedTunSink>>,
 }
@@ -388,7 +388,7 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     if e.raw_tx.is_none(){
         let driver=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
             .map_err(|_|INVALID)?;
-        e.raw_tx=Some(driver);
+        e.raw_tx=Some(Arc::new(driver));
     }
     let route=e.owner.observe_linux_normal_off_route_budget(
         "lo",ifindex,Ipv4Addr::from(flow.client_ip)
@@ -570,9 +570,11 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let n=tun.read_ipv4_into(generation,&mut slab.writable()[14..])
         .map_err(|_|INVALID)?;
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+    // Prepare and authorize exactly ONE original M1 TX batch while the
+    // unique protected owner mutex is held. The immutable generation-held
+    // LoanBatch then outlives the lock across the synchronous kernel call.
+    let (batch,raw,flow,generation)={
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
-    // Project a concrete &mut Entry, allowing independent owner/normal,
-    // route snapshot and platform driver borrows under one session fence.
     let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let flow=e.flow;
@@ -614,31 +616,60 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     e.owner.seal_normal_off_with_worker_snapshot(
         slab,n,scoped,ifindex,destination,15,loop_now()
     ).map_err(|_|INVALID)?;
-    let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
-    let tuple=Ipv4Tuple{
-        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
-        src_port:flow.server_port,dst_port:flow.client_port,
-    };
-    let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
-        persona:PacketPersona::Legacy,
-    };
-    let outcome=e.owner.submit_scoped_raw_tx_report_reusing(
-        raw,tuple,presentation,loop_now(),tx_storage
-    );
-    match outcome {
-        Ok(report) if raw_one_packet_copied(&report)=>{},
-        Ok(report)=>{
-            // Includes typed EMSGSIZE, ENODEV/route changes, ambiguous short
-            // send and future partial-prefix outcomes. Conservative revoke
-            // on every unsuccessful send; no blind retry/reseal of consumed
-            // PN/seq or reuse of the old owner route authorization.
-            let _invalidating_signal=report.signal.invalidates_path();
+    let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    let available=std::mem::take(tx_storage);
+    let batch=match e.owner.drain_tx(loop_now(),available){
+        Ok(batch)=>batch,
+        Err((_,storage))=>{
+            *tx_storage=storage;
             e.tx_route=None;
             drain_data_turn_returns(&mut e.arena);
             return Err(BAD_STAGE)
         },
-        Err(_)=>{
+    };
+    if !matches!(e.owner.checked_tx_ready(&batch),Ok(ready)
+        if ready.len()==1 && ready[0].kind==crate::runtime::TxKind::Fresh){
+        *tx_storage=batch.recycle();
+        e.tx_route=None;
+        drain_data_turn_returns(&mut e.arena);
+        return Err(BAD_STAGE)
+    }
+    // Complete Prepare/Detach/Commit, exact PN/seq, path budget and generation
+    // validity BEFORE releasing the same-session mutable owner lock.
+    (batch,raw,flow,e.generation)
+    };
+    // Kernel I/O has its own M4 BorrowFence and sync raw-fd serialization.
+    // Stop first fences phase/shutdown under Entry, then joins this worker
+    // before owner, driver and arena destruction. This already-authorized
+    // batch keeps the original generation lease and ciphertext alive through
+    // the syscall. Do not park, re-seal or blindly retry an uncertain send.
+    let report=if stop.load(Ordering::Acquire){None}else{
+        let tuple=Ipv4Tuple{
+            src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+            src_port:flow.server_port,dst_port:flow.client_port,
+        };
+        let presentation=Presentation{
+            ack32:1,advertised_window:4096,ip_id:43,
+            persona:PacketPersona::Legacy,
+        };
+        let ready=batch.as_slice();
+        Some(raw.send_kernel_multimsg(
+            generation,std::slice::from_ref(&ready[0].record),
+            tuple,std::slice::from_ref(&presentation),
+        ))
+    };
+    // Recycle even after Stop, ENODEV, EMSGSIZE, backpressure or uncertainty.
+    // The original TX work vector is reused; no new plaintext/ciphertext copy.
+    *tx_storage=batch.recycle();
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    let e:&mut Entry=&mut guard;
+    if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){
+        drain_data_turn_returns(&mut e.arena);
+        return Err(BAD_STAGE)
+    }
+    match report{
+        Some(ref r) if raw_one_packet_copied(r)=>{},
+        _=>{
             e.tx_route=None;
             drain_data_turn_returns(&mut e.arena);
             return Err(BAD_STAGE)
@@ -710,7 +741,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.raw_tx.is_none(){
         let Ok(tx)=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
         else{return INVALID};
-        e.raw_tx=Some(tx);
+        e.raw_tx=Some(Arc::new(tx));
     }
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
