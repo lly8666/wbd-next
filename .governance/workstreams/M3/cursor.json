@@ -4,16 +4,16 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 19,
-  "checkpoint_sha": "5aa8e6624b12c29b839c7d9cd42604456b32dcca",
+  "sequence": 20,
+  "checkpoint_sha": "d2cfd60162a4a6120e8045d7ce5cef95ab364f13",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 workpack active. M3 LINK L02/L03 code adds reassembly peak old-parts+new-output cap and immutable per-packet MTU/stride, one frame per issue, reject mid-flight shrink and require new ID. Exact worker native r1 tests 101/101 PASS on SOURCE5f8fcc; separate inherited 015 M0 compiled-once Release on old SOURCE0ecb459c passed 24/24 corrected same-window CPU component rows. Not complete packet nor product.",
-  "why_now": "New authoritative main PACK-006 role task016 replaces task015. Preserve old cursor014 and recovered old015 Release; resolve real LINK memory and MTU packet fragmentation boundary before integration.",
-  "done_when": "Full C01-C04/L01-L04/F01-F06 and Go compatible 3cipher/PN, old-Go scalar/native ISA-L parity and missing-only recovery with target runtime evidence, parity scheduling and resource fairness, precise configuration/source coverage and exclusions. Actual M0 Go/engine native FEC-on remains external.",
-  "next_action": "Continue owned FEC/record/MTU remaining PACK016 tests and module code. Shared ISA-L/Cargo.lock/native CI binding is requested of M0; meanwhile independent scalar/Go-golden and peer MTU F01-F06 work may advance. When whole workpack satisfies module done_when, repeat S/H and hand off for M0 integration.",
+  "current_task": "PACK016 active partial. New LINK authorized receiver MTU transition keeps old in-flight frame/stride and supports concurrent new packet. FEC TX ready parity chunks <=4 fresh-send rows; sustained 20:20 component systematic+parity counts. Scalar old-Go GF missing-only recover k1..20×all6 r, variable length, high e. Exact worker native Debug 104/104 PASS at SOURCE93d80c; no ISA-L/native real Go V4/engine integration.",
+  "why_now": "Main PACK-006 once-assigned workpack016: continue own LINK/record/FEC functionality without asserting source-locked old015 product qualification. Recovery of S/H old Governance control-moved and later GitHub 403 is explicitly recorded in evidence.",
+  "done_when": "Source-bound C01–C04/L01–L04/F01–F06, native ISA-L vs pinned Go scalar and applicable host target, resource/fresh send fairness interfaces, proper configuration/integration exclusions; H and evidence only after accurate source checks.",
+  "next_action": "Continue PACK016 independent FEC/codec owned work; M0 shared ISA-L safe binding/link/native workflow needed before genuine ISA-L validation; obtain main-owned central v2 scope audit of exact worker SOURCE after legacy checker REST403. External Go V4/engine integration stays NOT_RUN, never claim product qualification.",
   "unverified": true,
-  "last_tested_source": "5f8fccbc3d9e75d72d6ef12a30fcf6971ff51da1",
+  "last_tested_source": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
@@ -21,9 +21,8 @@
   "context_refs": [
     "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
-    "docs/devlog/M3/M0-REQUEST-CPU-PROBE-SAME-WINDOW-015.md",
-    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json",
-    "docs/decisions/M0-full-module-workpackages-2026-10-17.md"
+    "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
+    "docs/devlog/M3/M0-REQUEST-CPU-PROBE-SAME-WINDOW-015.md"
   ],
-  "partial_summary": "CODE source5f8fcc Rust1.85.1 worker native38997823633 attempt1 101/101 PASS, binary b46596c697.., worker Governance38997823643 SUCCESS; L03 peak fix a9c935 prior 100/100 native38997570133 + governance38997570161 SUCCESS; retained exact old-Go wire & 16 near-cap datagrams. Historical 015 exact M3 source0ecb Release compiled-once M0 run38734823257 SUCCESS 24/24 correct same-window CPU, 192FEC fresh/steady 3.2015/1.0511us ratio3.0459x, 896 3.4432/1.3519us ratio2.5470x, not 016 SOURCE or product. Evidence S commit5aa8e662; S Governance38998060898 queued/in-progress at H authoring. ISA-L native dependency, full F01–F06, parity fairness, actual Go V4 FEC-on/Game, physical, 500Mbps and packet p99 NOT_RUN/NOT_QUALIFIED. Incomplete 016 workpack explicitly partial; no root/CI/Go/engine writes."
+  "partial_summary": "New CODE 8587cff3 M3 native38998927569 102/102 PASS; efe878bd native38999036805 103/103 PASS; latest93d80cb0 native38999161286 104/104 PASS, bin76edf08c SHA256, log96b17611 SHA256, old Go scalar matrix all k/r e up to min(k,r). Evidence S d2cfd601. Historical015 exact Release run38734823257 24/24 validated CPU cost only for source0ecb; not new code. Old Governance S/H 38998060898/38998156987 failed control/source moved; newer source Gov38999036867/38999161387 GitHub HTTP403, NOT a codec functional fail. Central scope last confirmed a9c935d4, exact93d80 pending. ISA-L native, true Go/V4 origin, driver queues and product 500Mbps NOT_RUN."
 }
