@@ -4,18 +4,18 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 14,
-  "checkpoint_sha": "43bfc3ed485dbbf4a6ac4f45c124e856feaf7b96",
+  "sequence": 15,
+  "checkpoint_sha": "b28c1740a075ed77e3e3249adc3aa7c2c76d298e",
   "progress": "ready_for_integration",
-  "task_id": "R1-M4-UDP-RX-BURST-STOP-010",
-  "current_task": "Linux x86_64 GNU real unprivileged UDP recvmmsg 33-overflow 24-burst, truncation/late/STOP and origin-bound scoped RX receipt completed; no privileged AF_PACKET positive RX.",
-  "why_now": "M0 formally assigned new wave R1-M4-UDP-RX-BURST-STOP-010 via main active registry revision2 epoch1 and existing owned branch/path.",
-  "done_when": "Keep previous71/71 scoped native, actual unprivileged UDP exact 0/1/32/33 plus repeated burst/starvation test, stop/late accepted/uncertain callback and buffer pointer no copied payload where observable; Native compiled-once Actions SOURCE/pass + worker evidence S/cursor-only H Governance. Explicit CAP_NET_RAW AF_PACKET positive RAW_RX_NOT_RUN unless truly observed, no OS privileges, physical/product/WindowsARM/500Mbps claims.",
-  "next_action": "M0 to review exact source code and 75-case native unprivileged UDP ingress/STOP/rotation owner metadata proof. Actual authenticated Go ColdSnapshot -> Rust owner/PN, privileged raw AF_PACKET and product readiness remain NOT_RUN/production Go V4 DISABLED. M4 waits for the next new formal main task; no unrelated writes.",
+  "task_id": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011",
+  "current_task": "PACK-006 complete scoped Linux x86_64 GNU M4 platform carrier driver/batch package (native unprivileged+pure proof only; raw/TUN privileged positive UNSUPPORTED).",
+  "why_now": "main registry rev2 epoch1 active M4 assigned_task R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011 under existing branch/path; predecessor 010 seq14 clean.",
+  "done_when": "PACK-006 M4：I01-I04、B01-B04相关driver、L01/设备变更反例在精确SOURCE Actions验收；提交固定平台接口/回退，raw未支持明确UNSUPPORTED而非假PASS。",
+  "next_action": "M0 may pin and source-review this M4 platform package for original authenticated Go->Rust owner/engine integration and real device tests. Raw IPv4/AF_PACKET positives require separately authorized CAP_NET_RAW runner; configured TUN positive requires actual IFF_TUN FD/CAP_NET_ADMIN; both UNSUPPORTED/NOT_RUN in current GitHub native evidence. No claimed 500Mbps or product performance. Production Go V4 DISABLED. M4 waits for a NEW formal main task or scoped M0 integration feedback; do not extend work without authorization.",
   "unverified": false,
-  "last_tested_source": "0a53ea23ec064489155a008e02839a59a9b15cf0",
+  "last_tested_source": "aae512d1953975476ab78081f5801436c6573fda",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-UDP-RX-BURST-STOP-010.json"
+    "docs/evidence/M4/R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011.json"
   ],
   "open_requests": [],
   "context_refs": [
@@ -23,5 +23,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "R1-M4-UDP-RX-BURST-STOP-010 scoped done_when: prior cursor seq13 H44534bac; first discovered task010 code SOURCE04cd9150778c3628345991ceee3c13d162383977 worker native Actions38705021784 FAIL_COMPILE Rust E0502 tests borrowing old tiny/whole while slots live; G2 38705021846 FAIL, preserved. Recovered by exact test-only reference fix to slots[0]/slots[1], CODE SOURCE0a53ea23ec064489155a008e02839a59a9b15cf0. Native Actions38706481672/1 compiled-once Linux x86_64 GNU 75/75 R1 PASS (4 new+71 old), direct downloaded ZIP build11958627455 SHA c8289b0324a8e6668db96d5e74554304327145d5cb6866a356e4a98d7e49cbd2 and result11958477633 SHA b33a52b9f5731988cd423fcb822b3f98de9b8c864a4a02925eb376ac0ba5d57c, manifest/binary/log/JSON SHA confirmed source-exact. 24x33 actual localhost UDP bursts bounded <=32 recvmmsg then overflow, no buffer copy/pointer change, no-starvation, native truncation/late/EAGAIN, STOP/generation reference-bound scoped receipt cannot enter new owner, equal numeric generation different contexts fail closed; no Go auth or PN. Same-source G2/static/crossABI/codeGovernance SUCCESS. Old R0 branch workflow38706482025 FAIL historical exact-7 inventory despite actual Rust 82/82 tests PASS; preserve. Evidence S43bfc3ed485dbbf4a6ac4f45c124e856feaf7b96 Governance38707025577 SUCCESS. CAP_NET_RAW absent RAW_RX_NOT_RUN, no positive AF_PACKET; Win/ARM native, Go protected trusted owner, product/physical/perf remain NOT_RUN; Go V4 production DISABLED."
+  "partial_summary": "M4 full PACK-006 workpack 011 scoped platform-only SOURCE aae512d1953975476ab78081f5801436c6573fda: changed M4 linux_batch.rs detailed typed genuine unprivileged sendmmsg EMSGSIZE/route/device/partial errno mapping; pinned exact M0 main e9be1e716070256bbd4b351dd85452d8f2553266 Linux raw/TUN/route/preflight baseline into M4; added scoped linux_mtu_scope.rs revisioned singleton NETLINK_ROUTE link/PMTU cache with <=1s refresh, 100ms event debounce, fail-closed interface change and kernel EMSGSIZE/no perDATA sysfs; added bounded <=32 raw ready-only sequential sendto and poll0 recv(MSG_TRUNC) into caller borrowed slots, TUN O_NONBLOCK real FD after ioctl, <=32 poll0/read/write and typed STOP/prefix/no auth; malformed tuple fails before any indexing. Actual native compiled once GitHub Actions38998105581/1 Linux GNU 88/88 R1 PASS (13 new/pinned baseline vs previous75), ZIP build12087883272 SHA e747bfc521db0290de0a75b1013b1809e24668d583486a2682920fe3831f2b94, result12087577813 SHA 6241693c70bd9c738082b207745377f422c3a781697ad09eb104844ac7cad9f5, manifest/binary/result/test.log SHA checked independently. Same SOURCE G2/static/crossABI/code Governance SUCCESS; historic worker-branch old R0 fake workflow38998105615 FAIL exact eight-count despite 96/96 real Rust assertions PASS. History cache SRC222a8ea0 native38997732509 FAIL compile E0560/E0609 missing RX budget field, fixed. Evidence S b28c1740a075ed77e3e3249adc3aa7c2c76d298e Governance38998286212 SUCCESS. CAP_NET_RAW missing RAW_RX_NOT_RUN; actual privileged raw/TUN positive, physical NIC route churn, native Win/ARM, product/p99/500Mbps, Go protected owner NOT_RUN, production Go V4 DISABLED."
 }
