@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 116,
-  "checkpoint_sha": "1fd41a4cb174776561989c211917fc560b62f46d",
+  "sequence": 117,
+  "checkpoint_sha": "a3099a43d9929a21022cb9718167c726a713dcd3",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024 public shared dependency unblock confirmed: main 045af34c rtrb0.3.2 in workspace/engine/lock with G2/native/ABI/originalGoRust native PASS; M1-012 now can implement actual SPSC in own runtime, loom dev-only later NOT_RUN. ISA-L native safe facade source21ef4326 upstream Intel v2.31.1 static Linux x86_64 actually called and PASS39011616037, M3-016 may implement only codec safe adaptation (full Go parity/ISA acceleration NOT_RUN). M4-013 branch HEADa48c53 current central exact scope39012544534 PASS, old local Governance FAIL retained, M4 owns own handoff. Shared CI crypto39011691639 PASS, older duplicate Go-vs-Rust perf manual only, checker max8 unchanged. Source-named evidence public S3712 and H115 governance39014080135 PASS, historic H114 context over8 FAIL39013976840 retained. M0 continued D10 sourceec775 original sameVM A-B 10Mbps 5s+15s strace full-child run39014446221 compiled+artifact PASS but measure FAIL due C2S 8.98/8.92Mbps, missing6012/6065, p99~119/130ms under trace; no CPU benefit, perf or product qualification. Original P10 untraced paired delivery PASS CPU INCONCLUSIVE, SPARSE20pps PASS.",
-  "why_now": "M0 public blocker was actually fixed during interrupted phase, needed immutable SOURCE evidence and H without overwrite; after H115 succeeded attempted required D10 independent Action which uncovered traced C2S capacity shortfall; must preserve failure rather than relax throughput or infer B regression.",
-  "done_when": "Public dependencies and authorities/CI fixed and evidenced; M1 rtrb0.3.2 Cargo locked & runner PASS, M3 native ISA-L v2.31.1 safe Linux only PASS, M4 latest central source scope PASS, old checker unchanged. S/H independent SOURCE evidence method succeeded H115 (10 context refs H114 failed, corrected <=8). D10 39014446221 failure explicitly retained, full strace traced C2S not valid performance. Remaining 024 work includes low-overhead truthful D10 independent, M1/M3/M4 frozen combo, owner TX/RX split and actual kernel batching. Prod features0 and R0-023/product/physical still UNVERIFIED/NOT_RUN.",
-  "next_action": "Continue 024 with lower-overhead route/file-specific syscall counters or carefully bounded tracing; require original Go TLS→Rust raw/TUN with true offered&delivered 10Mbps and zero loss, no loosening to hide earlier D10 under full trace. No new governance system and no per-step worker wait: M1-012 owns rtrb directional wake, M3-016 owns codec safe ISA-L adapt, M4-013 owns platform real kernel multimsg handoff, M2-009 ready scoped; M0 integrates frozen code at stage boundaries and repeats G2/native/ABI. Preserve P10 samejobVM AB/BA CPU INCONCLUSIVE and SPARSE PASS, physical/product/023 NOT_RUN.",
+  "current_task": "R1-M0-HOTPATH-COST-024 staged native integration: M1-012 former CODE f0e6d8 rtrb five selected real tests in exact-source Action39016665237 PASS (latest M1 frozen CODE a39ff711 owner six cases worker39015538871 scoped ready independently); M3 CODE422a native ISA-L v2.31.1 Go coefficients/missing inverse/cooperative native 3/3 source-locked Action39016665239 PASS, only Linux x86_64 feature-on test; M4-013 frozen platform CODEb7bcde7 exact four blobs imported S1bd7ea65, original protected TX singleton sendmmsg via 775f8a47, original RX singleton recvmmsg into M1 UniqueBuffer via22c2052e, never batches 32 nor adds crypto authority. Full original GoTLS→RustAEAD/PN→Linux raw/TUN SOURCEa56c927 Actions39016914069 PASS, with PN0 lost PN1 delivered, netlink revision, MTU fail-closed, 0/1/32/33 unit, 10s+60s 10Mbps bilateral functional native. Main formal CI M1/M3 manual exact 40hex worker_source (S5f1fbb), no micro-merge. M1 now formally handoff H15, CODEa39ff711, native39015538871 six rtrb and 104 scoped tests PASS, M0 to phase-integrate safe code without enabling prod. D10 full ptrace FAILED remains red; same-session mutable Entry lock remains, product/physical not verified.",
+  "why_now": "上次会话中断在独立 SOURCE 证据 S=a3099a43 已提交而 H116 未切引用；本轮恢复时先完成 H117 保留源匹配并核实 M1-012 工位最新冻结交付已ready，继续024模块接入。",
+  "done_when": "本阶段准确 source=a56c92734b99dcf8a0487a2994a8dc2509cb108a 与独立文件绑定，经 H117 只改cursor；M1正式rtrb五测试39016665237和M3真正ISA-L三测试39016665239成功，M4平台冻结导入并原GoTLS原Rust单条真实sendmmsg+recvmmsg Go核验39016914069 SUCCESS，非32包聚合，非多向owner拆锁，非CPU赢。剩余024 partial，M1新a39 CODE源码集成和loom/事件唤醒、M3剩余FEC-ON、D10低干扰与真实同VM公平ABBA，产品物理原023未验证，prod0。",
+  "next_action": "首先消费M1-012最新冻结 CODEa39ff711的directional/rtrb安全API，保持原runtime和Go控制唯一，默认m1_rtrb off；新增准确main Cargo feature锁依赖、跑G2/native/ABI并专门原Go内核场景。再考虑原Session同会话TX/RX独立mutable owner的安全能力（不作unsafe别名）；M4 ready-only singleton syscall已接但32合批未证明。M3-016仍在工位partial，测试可手动 exact worker_source；M2-009仅模块ready。保留D10红灯及P10 CPU INCONCLUSIVE，不跨Action比CPU。",
   "unverified": true,
-  "last_tested_source": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+  "last_tested_source": "a56c92734b99dcf8a0487a2994a8dc2509cb108a",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-D10-traced-capacity-ec775091edf8a0714416d1fd1d7b71be7ad33421.json"
+    "docs/evidence/M0/M0-024-M1-M3-formal-M4-multimsg-a56c92734b99dcf8a0487a2994a8dc2509cb108a.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-D10-traced-capacity-2026-10-17.md",
-    "docs/decisions/M0-024-unblock-M1-M3-M4-source-evidence-2026-10-17.md",
-    "docs/decisions/M0-024-M1-rtrb-locked-root-dependency-2026-10-17.md",
-    "docs/evidence/M0/M0-024-public-unblock-a0672ec078865bb41338ed924dee28151122d01d.json",
+    "docs/devlog/M0/M0-024-M1-M3-formal-M4-multimsg-2026-10-17.md",
+    "docs/evidence/M0/M0-024-D10-traced-capacity-ec775091edf8a0714416d1fd1d7b71be7ad33421.json",
     "docs/evidence/M0/M0-024-P10-sameVM-AB-BA-return-budget64.json",
     "docs/evidence/M0/M0-024-P10-SPARSE-real-low-rate-after-netns-fix.json",
+    "docs/decisions/M0-024-unblock-M1-M3-M4-source-evidence-2026-10-17.md",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H116 PARTIAL: shared unblock rtrb0.3.2 root and Linux x86_64 ISA-L safe 2.31.1 native DONE with exact Actions; M4 branch HEAD central role scope PASS, local old 64-commit Gov FAIL historical. Immutable SOURCE evidence S3712→H115 valid Gov39014080135; prior H114 len(context_refs)10 FAIL corrected existing max8. D10 test-only 5s+15s full strace original Go/Rust sourceec775 run39014446221 measure FAIL C2S A8.9759/B8.9210Mbps missing6012/6065, traced p99 119/130ms, no 10Mbps diag PASS; untraced P10 pass but CPU small contradictory, SPARSE pass. Public work unblocked; M1/M3 integration, new low-interference D10, full real product remain OPEN; flags0."
+  "partial_summary": "H117 PARTIAL: public CI M1 real rtrb0.3.2 5/5 & M3 pinned real ISA-L native3/3 Actions39016665237/39016665239 SUCCESS；M1 latest H15 frozen CODEa39ff711 already6 inner cases+104 outer PASS39015538871 scoped READY,未正式导入main。M4-013 frozen CODEb7bcde integrated raw TX real sendmmsg and RX real recvmmsg original GoTLS/RustAEAD/PN sourcea56c927 runner39016914069 10Mbps bilateral PASS; one message/syscall, not32 aggregation. D10 full strace39014446221 FAIL, CPU savings INCONCLUSIVE; product/physical 023 NOT_RUN; prod0."
 }
