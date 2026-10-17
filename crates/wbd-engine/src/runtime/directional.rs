@@ -57,6 +57,11 @@ grep -q 'version = "0.3.2"' "$dir/Cargo.lock"
 cd "$dir"
 export M1_RTRB_OVERLAY_CHILD=1
 export CARGO_TARGET_DIR="$dir/target"
+# The inherited release provenance test runs concurrently in the outer
+# Rust unit harness and may install the SAME Rustup version. Isolate
+# this overlay's Rustup store; no shared toolchain-install race.
+export RUSTUP_HOME="$dir/isolated-rustup"
+rustup toolchain install 1.85.1 --profile minimal
 timeout 75s cargo +1.85.1 test --locked -p wbd-engine --lib --features m1_rtrb r1_rtrb_direction_ -- --test-threads=1 --nocapture
 printf 'M1_RTRB_PINNED_NATIVE_PASS source=%s main=%s version=0.3.2 mode=safe_pop_push_only\n' "$SOURCE" "$MAIN"
 "#;
