@@ -500,7 +500,10 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
         tuple,PacketPersona::Legacy).map_err(|_|INVALID)?;
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let absolute=extend_seq32(u64::from(boundary),seq).map_err(|_|INVALID)?;
-    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    // Project a concrete &mut Entry, allowing independent owner/normal,
+    // route snapshot and platform driver borrows under one session fence.
+    let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     e.owner.offer_after_active(slab,0..len,absolute,loop_now())
         .map_err(|_|INVALID)?;
@@ -541,7 +544,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let n=tun.read_ipv4_into(generation,&mut slab.writable()[14..])
         .map_err(|_|INVALID)?;
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    // Project a concrete &mut Entry, allowing independent owner/normal,
+    // route snapshot and platform driver borrows under one session fence.
+    let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let flow=e.flow;
     // A single active generation owns a route snapshot. The normal DATA
