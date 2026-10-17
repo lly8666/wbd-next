@@ -13,6 +13,7 @@ use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
 use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
+use crate::linux_mtu_scope::ScopedRouteBudget;
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
 use crate::rx_ipv4_tcp::{parse_data_packet,TrustedRx,RxError};
 use wbd_types::buffer_contract::FrozenRecordHandle;
@@ -56,6 +57,7 @@ pub struct ScopedRawIpv4Tx {
     ifname:String,
     generation:u32,
     mtu:usize,
+    budget:ScopedRouteBudget,
     stopped:AtomicBool,
     borrow:BorrowFence,
     serialize:Mutex<()>,
@@ -91,9 +93,11 @@ impl ScopedRawIpv4Tx {
         let rc=unsafe{setsockopt(fd.as_raw_fd(),IPPROTO_IP,IP_HDRINCL,
             (&on as *const c_int).cast(),std::mem::size_of::<c_int>() as u32)};
         if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        let budget=ScopedRouteBudget::open(ifname,actual,generation,observed.kernel_mtu)
+            .map_err(|_|RawTxError::InvalidInterface)?;
         Ok(Self{
             fd,ifindex:actual,ifname:ifname.to_owned(),generation,
-            mtu:observed.kernel_mtu as usize,stopped:AtomicBool::new(false),
+            mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
             borrow:BorrowFence::default(),serialize:Mutex::new(())
         })
     }
@@ -121,17 +125,13 @@ impl ScopedRawIpv4Tx {
             BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
-        let fresh=observe_interface_mtu(
-            // Validated and fixed interface is retained below to prevent
-            // link MTU/ifindex changes from widening a scoped packet.
-            &self.ifname,self.ifindex
-        ).map_err(|_|RawTxError::InvalidInterface)?;
-        if fresh.kernel_mtu as usize != self.mtu {
-            return Err(RawTxError::BoundedMtu)
-        }
+        let dest_ip=Ipv4Addr::new(tuple.dst_ip[0],tuple.dst_ip[1],
+            tuple.dst_ip[2],tuple.dst_ip[3]);
+        let bounded=self.budget.send_budget(dest_ip)
+            .map_err(|_|RawTxError::BoundedMtu)?;
         let mut scratch=[0u8;2048];
         let packet=ipv4_tcp::build(tuple,presentation,record,None,
-            self.mtu.min(scratch.len()),&mut scratch)
+            bounded.min(scratch.len()),&mut scratch)
             .map_err(|_|RawTxError::InvalidPacket)?;
         if packet.len()<41 || packet[9]!=6 ||
             packet[12..16]!=tuple.src_ip[..] ||
@@ -148,8 +148,12 @@ impl ScopedRawIpv4Tx {
         let n=unsafe{sendto(self.fd.as_raw_fd(),packet.as_ptr().cast(),packet.len(),
             MSG_DONTWAIT,(&addr as *const SockAddrIn).cast(),
             std::mem::size_of::<SockAddrIn>() as u32)};
-        if n<0{return Err(RawTxError::Kernel(errno()))}
-        if n as usize!=packet.len(){return Err(RawTxError::ShortSend)}
+        if n<0 {
+            let e=errno();
+            if matches!(e,90|19|100|101|113){self.budget.invalidate()}
+            return Err(if e==90{RawTxError::BoundedMtu}else{RawTxError::Kernel(e)})
+        }
+        if n as usize!=packet.len(){self.budget.invalidate();return Err(RawTxError::ShortSend)}
         Ok(n as usize)
     }
 }
@@ -191,8 +195,10 @@ impl ScopedRawIpv4Rx {
         let rc=unsafe{setsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
             name.as_ptr().cast(),name.as_bytes_with_nul().len() as u32)};
         if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        let budget=ScopedRouteBudget::open(ifname,ifindex,generation,observed.kernel_mtu)
+            .map_err(|_|RawTxError::InvalidInterface)?;
         Ok(Self{fd,ifindex,ifname:ifname.to_owned(),generation,
-            mtu:observed.kernel_mtu as usize,stopped:AtomicBool::new(false),
+            mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
             borrow:BorrowFence::default(),serialize:Mutex::new(())})
     }
     pub fn generation(&self)->u32{self.generation}
@@ -218,9 +224,8 @@ impl ScopedRawIpv4Rx {
             BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
-        let mtu=observe_interface_mtu(&self.ifname,self.ifindex)
-            .map_err(|_|RawTxError::InvalidInterface)?;
-        if mtu.kernel_mtu as usize!=self.mtu{return Err(RawTxError::BoundedMtu)}
+        let mtu=self.budget.receive_budget()
+            .map_err(|_|RawTxError::BoundedMtu)?;
         let deadline=Instant::now()+Duration::from_millis(750);
         // Bounded irrelevant Linux RST/ACK traffic can share this interface.
         // Only the *exact* configured tuple and full checksummed DATA is
@@ -236,7 +241,7 @@ impl ScopedRawIpv4Rx {
             // SAFETY: original caller M1 slab stays exclusively borrowed
             // while synchronous recvfrom copies packet bytes.
             let n=unsafe{recvfrom(self.fd.as_raw_fd(),buffer.as_mut_ptr().cast(),
-                buffer.len().min(self.mtu),MSG_DONTWAIT,
+                buffer.len().min(mtu),MSG_DONTWAIT,
                 std::ptr::null_mut(),std::ptr::null_mut())};
             if n<0{
                 let e=errno();if e==11||e==4{continue}
