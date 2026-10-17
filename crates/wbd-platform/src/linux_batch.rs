@@ -567,7 +567,7 @@ mod tests {
                 assert!(rx.recv(&mut bytes).is_err());
             }
         }
-        let large=vec![0xb6;65500];
+        let large=vec![0xb6;65490]; // IPv4 length65530 valid, UDP payload65530 >65507
         let frames=[frame(b"prefix",1),frame(&large,2)];
         let mut headers=[[0u8;80];MAX_READY_TX];
         let mut lens=[0usize;MAX_READY_TX];
