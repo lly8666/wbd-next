@@ -197,6 +197,57 @@ pub fn build<'b, H: FrozenRecordHandle>(
     Ok(&scratch[..plan.required])
 }
 
+
+/// Build only the original IPv4+TCP header into the caller's preallocated
+/// scratch. The checksum reads frozen ciphertext without copying it; the
+/// Linux scatter sendmmsg backend lends TWO iovecs (header, original record)
+/// to the kernel synchronously. No new packet, record PN or payload buffer.
+pub fn build_scatter_header<H:FrozenRecordHandle>(
+    tuple:Ipv4Tuple<'_>,presentation:Presentation,record:&H,
+    authenticated_options:Option<&[u8]>,mtu:usize,header:&mut [u8]
+)->Result<usize,PacketError>{
+    check_tuple(tuple)?;
+    let frozen=driver_read(record);
+    let plan=measure(frozen.wire.len(),authenticated_options)?;
+    if plan.required>mtu{
+        return Err(PacketError::MtuExceeded{required:plan.required,mtu});
+    }
+    if header.len()<plan.overhead{
+        return Err(PacketError::ScratchTooSmall{
+            required:plan.overhead,available:header.len()
+        });
+    }
+    let options=authenticated_options.unwrap_or(&[]);
+    let bytes=&mut header[..plan.overhead];
+    bytes.fill(0);
+    let (ip,tcp)=bytes.split_at_mut(IPV4_HEADER_LEN);
+    ip[0]=0x45;
+    ip[2..4].copy_from_slice(&(plan.required as u16).to_be_bytes());
+    ip[4..6].copy_from_slice(&presentation.ip_id.to_be_bytes());
+    ip[6..8].copy_from_slice(&0x4000u16.to_be_bytes());
+    ip[8]=presentation.persona.ttl();
+    ip[9]=TCP_PROTOCOL;
+    ip[12..16].copy_from_slice(tuple.src_ip);
+    ip[16..20].copy_from_slice(tuple.dst_ip);
+    ip[10..12].copy_from_slice(&finish_checksum(sum_words(ip)).to_be_bytes());
+    tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
+    tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
+    tcp[4..8].copy_from_slice(&(record.metadata().seq.0 as u32).to_be_bytes());
+    tcp[8..12].copy_from_slice(&presentation.ack32.to_be_bytes());
+    tcp[12]=(((TCP_HEADER_LEN+options.len())/4) as u8)<<4;
+    tcp[13]=TCP_DATA_FLAGS;
+    tcp[14..16].copy_from_slice(&presentation.advertised_window.to_be_bytes());
+    tcp[TCP_HEADER_LEN..].copy_from_slice(options);
+    // Header is even length; split checksum terms are exact even for odd
+    // payload bytes. The checksum field was zero-filled above.
+    let sum=sum_words(tuple.src_ip)+sum_words(tuple.dst_ip)
+        +u64::from(TCP_PROTOCOL)
+        +(plan.required-IPV4_HEADER_LEN) as u64
+        +sum_words(tcp)+sum_words(frozen.wire);
+    tcp[16..18].copy_from_slice(&finish_checksum(sum).to_be_bytes());
+    Ok(plan.overhead)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -253,6 +304,33 @@ mod tests {
         assert_eq!(oracle_cksum(&pseudo), 0, "TCP pseudoheader checksum");
     }
 
+
+    #[test]
+    fn r1_m4_013_scatter_header_matches_full_packet_even_odd_opts_and_seq32(){
+        let tests=[b"record".as_slice(),b"record!".as_slice(),&[1,2,3][..]];
+        for (i,payload) in tests.iter().enumerate(){
+            let f=frame(payload,0x1_ffff_fffdu64+i as u64);
+            let opts=if i==2{Some(&[1u8,1,1,1][..])}else{None};
+            let mut header=[0xaau8;80];let mut full=[0x55u8;256];
+            let len=build_scatter_header(packet_tuple(),state(),&f,opts,1500,
+                &mut header).unwrap();
+            let actual=build(packet_tuple(),state(),&f,opts,1500,&mut full)
+                .unwrap();
+            assert_eq!(&header[..len],&actual[..len]);
+            assert_eq!(&actual[len..],f.bytes());
+            assert!(header[len..].iter().all(|x|*x==0xaa));
+            assert_eq!(f.metadata().pn,RecordPn(99));
+            check_packet(actual);
+        }
+        let f=frame(b"x",1);let mut small=[0xabu8;39];
+        assert!(matches!(build_scatter_header(packet_tuple(),state(),&f,
+            None,1500,&mut small),Err(PacketError::ScratchTooSmall{..})));
+        assert_eq!(small,[0xab;39]);
+        let mut header=[0x55u8;80];
+        assert!(matches!(build_scatter_header(packet_tuple(),state(),&f,
+            None,40,&mut header),Err(PacketError::MtuExceeded{..})));
+        assert_eq!(header,[0x55;80]);
+    }
     #[test]
     fn r1_ipv4_tcp_go_pinned_legacy_exact_golden_even_record() {
         // wobuzhidao packet.go: IPv4 v4/IHL5, DF, TTL64, TCP ACK|PSH,

@@ -1,0 +1,9 @@
+# R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013
+
+Formal main registry rev2, M4 active epoch1, branch `work/m4-r1-platform` task `R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013`. Prior fully closed cursor sequence16 H `32fc2a0556fdaf2f87c2abe922b5ffaed02715ec`. Owned platform paths only, root/engine/Go TLS/Cargo/shared ABI remain M0.
+
+## Intent / scope
+Implement genuinely one-kernel-syscall `sendmmsg` for raw IPv4/TCP if a real authorized raw FD can be opened, with <=32 two-iovec packets: one caller-provided bounded stack header, one *original* M1 immutable frozen ciphertext, no new payload copy, PN/Seq unchanged. Share the existing independently audited Linux x86_64 GNU ABI, use original `BorrowFence` and one owner lock. `recvmmsg` raw into independent caller-owned mutable slots uses the existing audited `linux_rx_batch::receive_fd`, not UDP fiction; strict tuple/data checksum, truncated rejection, no authenticated PN or Go authority. Unprivileged UDP can exercise same syscall ABI on actual native kernel without impersonating privileged raw capability. TUN IFF_TUN only offers read/write; don't invent multi-syscall speedups.
+
+## First source iteration (unverified until Actions)
+Added `ipv4_tcp::build_scatter_header`: original Go-style IP/TCP header only, checksum over two even-aligned borrowed slices including odd ciphertext length, exact equality with original fully-materialized reference and options/seq32 wrap tests. Added `linux_batch::submit_scatter_fd` crate-private two-iovec genuine `sendmmsg(MSG_DONTWAIT)` with 0/1/32/33 and real unprivileged UDP kernel partial with EMSGSIZE/positive errno lost. Marked original bounded `linux_rx_batch::receive_fd` crate-private for raw owned FD reuse; no duplicate FFI. Next add scope-bound raw TX/RX public APIs before final source qualification. Privileged raw/TUN positive, physical capture, Go protected owner, performance NOT_RUN.
