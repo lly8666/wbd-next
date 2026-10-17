@@ -139,14 +139,25 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     // new actual IPv4 inner packet is payload+28B. Equal 10Mbps app
     // offered rates, identical 1:1:1 mix. Default standalone unchanged.
     paired:=os.Getenv("WBD_M0_PAIRED_OLD_NEW")=="1"
+    // Explicit, nonproduction one-run sparse gate: 20 packets/s per
+    // direction with equal-count UDP application payloads 64/256 bytes.
+    // The 10Mbps P10 fixture remains byte-for-byte the default mode.
+    sparse:=os.Getenv("WBD_M0_P10_SPARSE")=="1"
+    if sparse&&!paired{t.Fatal("sparse requires paired normal-off fixture")}
     rateBits:=m0Perf10TargetBits
     if paired {
         m0PerfIPv4Sizes=[]int{92,284,1228}
         rateBits=m0Perf10TargetBits*(92+284+1228)/(64+256+1200)
     }
+    warmup:=10*time.Second
+    measure:=60*time.Second
+    if sparse {
+        m0PerfIPv4Sizes=[]int{92,284}
+        rateBits=20*(92+284)/2*8 // 20pps * 188 IPv4 bytes avg
+        warmup=5*time.Second
+        measure=30*time.Second
+    }
     const name="wbdperf0"
-    const warmup=10*time.Second
-    const measure=60*time.Second
     dev,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
     if err!=nil{t.Fatal(err)}
     defer dev.Close()
@@ -244,14 +255,26 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         var tcpSeq=b.rxBoundary
         for time.Now().Before(end){
             now:=time.Now()
-            credits+=float64(now.Sub(next).Nanoseconds())*
-                float64(rateBits)/8/1e9
-            next=now
-            // Bounded 20ms local pacing credit; no unbounded catch-up queue.
-            if credits>25000{credits=25000}
+            if sparse {
+                // Exact 50ms interval, including the initial singleton.
+                // Never wait for 32 records, a queue age or a full batch.
+                due:=start.Add(time.Duration(sequence)*50*time.Millisecond)
+                if now.Before(due){
+                    pause:=due.Sub(now)
+                    if pause>5*time.Millisecond{pause=5*time.Millisecond}
+                    time.Sleep(pause)
+                    continue
+                }
+            }else{
+                credits+=float64(now.Sub(next).Nanoseconds())*
+                    float64(rateBits)/8/1e9
+                next=now
+                // Bounded pacing credit in the original 10Mbps mode.
+                if credits>25000{credits=25000}
+            }
             size:=m0PerfIPv4Sizes[sequence%uint64(len(m0PerfIPv4Sizes))]
-            if credits<float64(size){time.Sleep(500*time.Microsecond);continue}
-            credits-=float64(size)
+            if !sparse&&credits<float64(size){time.Sleep(500*time.Microsecond);continue}
+            if !sparse{credits-=float64(size)}
             inner:=make([]byte,size-28)
             phase:=byte(0)
             if !now.Before(measuring){phase=1}
@@ -405,6 +428,14 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         status="INVALID_MEASUREMENT"
     }
     const processNotSeparate="Original Rust worker CPU clocks are independent Linux CLOCK_THREAD_CPUTIME_ID; total process CPU includes Go injector/receivers, runtime and original Rust; subtracting worker clocks yields non-worker residual, not isolated Go injector-process CPU. Full separated host/veth product baseline NOT_RUN."
+    profile:=map[bool]string{true:"PAIRED_OLD_GO_VS_NEW_RUST_SAME_VM_DIAGNOSTIC",false:"NORMAL_OFF_SINGLE_SOURCE_10MBPS_DEVELOPMENT"}[paired]
+    packetMix:=map[bool]string{true:"1:1:1_UDP_APPLICATION_PAYLOAD_64_256_1200",false:"1:1:1:1_IPV4_64_256_1200_EFFECTIVE_MAX"}[paired]
+    pairedAppMbps:=map[bool]any{true:10.0,false:"NOT_APPLICABLE"}[paired]
+    if sparse {
+        profile="SPARSE_20PPS_EACH_DIRECTION_ORIGINAL_PROTECTED_GO_RUST_RAW_TUN"
+        packetMix="1:1_UDP_APPLICATION_PAYLOAD_64_256"
+        pairedAppMbps=0.0256
+    }
     res:=map[string]any{
         "scope":"GOV005_FIRST_DEVELOPER_PERF_DIAGNOSTIC_SAME_GO_PROCESS_ORIGINAL_RUST_OWNER",
         "result":status,"normal_lane_count":1,"fec":"fixed_off",
@@ -412,13 +443,15 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "backend":"real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun",
         "production_features":0,"product_qualification":"NOT_RUN",
         "desired_rate_mbps_each_direction_ipv4_inner_business":float64(rateBits)/1e6,
-        "paired_legacy_app_payload_mbps":map[bool]any{true:10.0,false:"NOT_APPLICABLE"}[paired],
-        "experiment_profile":map[bool]string{true:"PAIRED_OLD_GO_VS_NEW_RUST_SAME_VM_DIAGNOSTIC",false:"NORMAL_OFF_SINGLE_SOURCE_10MBPS_DEVELOPMENT"}[paired],
+        "paired_legacy_app_payload_mbps":pairedAppMbps,
+        "experiment_profile":profile,
         "mix_packet_ipv4_lengths_bytes":m0PerfIPv4Sizes,
         "original_rust_observed_s2c_effective_ipv4_mtu_bytes":observedS2C,
         "original_go_c2s_record_wire_limit_bytes":serverLimit,
-        "packet_mix_by_count":map[bool]string{true:"1:1:1_UDP_APPLICATION_PAYLOAD_64_256_1200",false:"1:1:1:1_IPV4_64_256_1200_EFFECTIVE_MAX"}[paired],
-        "warmup_seconds":10,"measure_seconds":60,
+        "packet_mix_by_count":packetMix,
+        "explicit_sparse_fixture":sparse,
+        "sparse_packets_per_second_each_direction":map[bool]any{true:20,false:"NOT_APPLICABLE"}[sparse],
+        "warmup_seconds":int(warmup.Seconds()),"measure_seconds":int(measure.Seconds()),
         "receiver_drain_seconds":3,"timing":"wall_monotonic_scheduled_window",
         "c2s":samples(inbound),"s2c":samples(outbound),
         "original_rust_worker_rx_cpu_seconds":float64(ownerRxAfter-ownerRxBefore)/1e9,
@@ -443,8 +476,8 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     out:=os.Getenv("WBD_M0_PERF_RECEIPT")
     if out==""{t.Fatal("missing owned exact performance receipt path")}
     if e:=os.WriteFile(out,append(encoded,'\n'),0600);e!=nil{t.Fatal(e)}
-    t.Logf("M0_DEV_NORMAL_OFF_10MBPS_RECEIPT result=%s C2S_offered=%.3f C2S_delivered=%.3f S2C_offered=%.3f S2C_delivered=%.3f worker_rx_cpu_s=%.4f worker_tx_cpu_s=%.4f source_window=10s+60s",
-        status,offeredC,deliveredC,offeredS,deliveredS,
+    t.Logf("M0_DEV_NORMAL_OFF_RECEIPT sparse=%t result=%s C2S_offered=%.4f C2S_delivered=%.4f S2C_offered=%.4f S2C_delivered=%.4f worker_rx_cpu_s=%.4f worker_tx_cpu_s=%.4f window=%s+%s",
+        sparse,status,offeredC,deliveredC,offeredS,deliveredS,warmup,measure,
         float64(ownerRxAfter-ownerRxBefore)/1e9,float64(ownerTxAfter-ownerTxBefore)/1e9)
     // Workflow does not convert measurement receipt success to 10Mbps PASS.
     // INVALID cases stay explicit. No artificially unbounded retries.
