@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "a0672ec078865bb41338ed924dee28151122d01d",
+  "branch": "main",
+  "result": "PARTIAL_PUBLIC_UNBLOCK_VERIFIED",
+  "artifact_verified": true,
+  "unverified": true,
+  "kind": "immutable_SOURCE_specific_S_before_H",
+  "intake": {
+    "main_previous_H": "b911915106c2a003c3a8185bd6650fbfb024922c",
+    "main_head": "a0672ec078865bb41338ed924dee28151122d01d",
+    "M1_head": "0ecc743fafcd43194befdbc3fe1ec38f37b69cf5",
+    "M2_head": "c345061c992c505c92eb19181de96a531cc39d96",
+    "M3_head": "24ac670caa208751412a349ff8a6c3cc2f507de9",
+    "M4_head": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "task_authority": {
+      "M1": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+      "M2": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+      "M3": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+      "M4": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013"
+    }
+  },
+  "M1": {
+    "status": "SHARED_DEP_AVAILABLE_WORKER_STILL_PARTIAL",
+    "exact_root_dependency_source": "045af34c5c32cf01bd11092580db2bc879d8d651",
+    "root_pin": "rtrb =0.3.2",
+    "workspace_engine_lock": true,
+    "cargo_lock_blob": "c736f60f88b19ec05038997f3f8d6c9f5537cdd3",
+    "legacy_worker_native": {
+      "source": "3c2b079ab88676a5c9c62ffecb90e8ae2b735ac2",
+      "run": 39006176250,
+      "scope": "103/103 sync_channel compatibility only"
+    },
+    "root_Actions": [
+      {
+        "name": "g2-bootstrap",
+        "run_id": 39010993356,
+        "conclusion": "success"
+      },
+      {
+        "name": "native-regression",
+        "run_id": 39010993582,
+        "conclusion": "success"
+      },
+      {
+        "name": "r0-native-abi",
+        "run_id": 39010993255,
+        "conclusion": "success"
+      },
+      {
+        "name": "original-protected-Go-Rust-Linux",
+        "run_id": 39010993143,
+        "conclusion": "success"
+      }
+    ],
+    "acceptance": "M1 may use rtrb::RingBuffer::new(32) push/pop with single producer/consumer and original unique owned loans; on worker old-root checkout overlay main root Cargo manifests/lock for local test only, no worker unauthorized root commit. Do not use chunk APIs on 0.3.2.",
+    "loom": "loom 0.7.2 dev-only model lane future shared pin with fail-notify/Stop/generation cases; not installed and NOT_RUN; deterministic tests are not loom proof",
+    "ABI": "Old worker branch shared selector literal 3 passed FAIL preserved, main R0 exact r0_abi_ three Rust+C+Go passed."
+  },
+  "M3": {
+    "status": "BACKEND_AVAILABLE_WORKER_SCOPED_CODEC_INTEGRATION_STILL_PARTIAL",
+    "shared_sources": [
+      "2dee6315f3c92a7b913f215b18354a4fe0f88711",
+      "21ef432683db99d122875a1ce534be59ed0eaca9"
+    ],
+    "crate": "native/isal-safe independent excluded from five-crate workspace",
+    "feature": "wbd-codec/native-isal default disabled",
+    "safe_API": [
+      "wbd_isal_safe::Tables::new(k,r, old_go_coefficients)",
+      "Tables::encode(&self,&[&[u8]],&mut [&mut[u8]])"
+    ],
+    "FFI": "ec_init_tables + ec_encode_data only inside separate M0-owned unsafe island; matrix, slice lengths (64..65535), source/dest nonalias and k,r<=20 checked",
+    "upstream": {
+      "name": "Intel ISA-L",
+      "version": "v2.31.1",
+      "sha": "c387163fcbca62701d646149564c550c78a4f985",
+      "link": "static libisal.a",
+      "env": "WBD_ISAL_PREFIX",
+      "native_target": "x86_64-unknown-linux-gnu",
+      "rust": "1.85.1"
+    },
+    "Actions": {
+      "run_id": 39011616037,
+      "source": "21ef432683db99d122875a1ce534be59ed0eaca9",
+      "conclusion": "success",
+      "witness": "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS and opt-in codec build --no-run"
+    },
+    "delegation": "Only M3-owned codec/src and codec tests may call safe facade; not root native crate/CI/engine/Go; still must prove exact old-Go 20x20 coefficient oracle, short scalar fallback, parity profiles. No SIMD CPU benefit or product FEC-on claim.",
+    "unsupported": [
+      "Linux AArch64 native",
+      "Windows native",
+      "physical native",
+      "cross-platform SIMD",
+      "Go authenticated FEC-on"
+    ]
+  },
+  "M4": {
+    "status": "WORKER_013_SCOPED_READY_NOT_PRODUCTION",
+    "head": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
+    "exact_code_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "native_94_run": 39006105820,
+    "central": [
+      {
+        "run_id": 39012487999,
+        "source_audited": "4581a68fb46e73f513c5177b4bbf6be8f5332298",
+        "conclusion": "success"
+      },
+      {
+        "run_id": 39012544534,
+        "source_audited": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
+        "conclusion": "success",
+        "is_current_head": true
+      }
+    ],
+    "worker_local_governance_failure": 39012535883,
+    "classification": "historical worker-local old checker <=64 lifetime commits; main central exact-source scope PASS is authoritative role attestation. No checker-copy or exception. M4 worker owns further handoff notes, if necessary.",
+    "not_run": [
+      "privileged raw/TUN positive independent worker",
+      "Go authenticated whole owner",
+      "Windows/ARM native",
+      "physical link",
+      "500Mbps throughput/p99",
+      "product"
+    ]
+  },
+  "M2": {
+    "status": "WORKPACK009_READY_MODULE_ONLY",
+    "head": "c345061c992c505c92eb19181de96a531cc39d96",
+    "code_source": "6124ce1012e69a2003bdffdc179a774e21096bc3",
+    "native": "67/67 PASS run39006207281",
+    "old_API_403": "failed historical branch governance compare, earlier central source39005928458 66-commit SUCCESS; final module remains ready only, source exact scope separately required before integrate"
+  },
+  "CI": {
+    "authoritative": [
+      "main g2-bootstrap.yml, native-regression.yml",
+      "r0-native-abi.yml exact r0_abi_ Rust3+C+Go",
+      "r0-qualification-audit.yml pinned graph plus historic immutable digest",
+      "r1-crypto-deps.yml exact 3 crypto APIs with optional local ISA-L edge",
+      "m0-native-isal-safe.yml actual static native caller",
+      "governance.yml/governance-maintenance.yml fail closed and central scope-audit.yml for worker role"
+    ],
+    "proofs": [
+      {
+        "run_id": 39011691639,
+        "workflow": "r1-crypto-deps",
+        "conclusion": "success",
+        "source": "d05121e5b8ee3621c7349a635dda330b92eff278"
+      },
+      {
+        "run_id": 39012178464,
+        "workflow": "governance",
+        "conclusion": "success",
+        "source": "a0672ec078865bb41338ed924dee28151122d01d"
+      },
+      {
+        "run_id": 39012178326,
+        "workflow": "governance-maintenance",
+        "conclusion": "success",
+        "source": "a0672ec078865bb41338ed924dee28151122d01d"
+      }
+    ],
+    "legacy": "m0-old-new-paired-diagnostic.yml manual workflow_dispatch only; P10-AB, P10-BA, SPARSE-AB remain independent Actions and within-job same VM. Do not erase legacy failures or remove distinct function tests."
+  },
+  "evidence_S_H": {
+    "process": "S adds only new independent SOURCE-named file while old M0 cursor still refers old matched evidence; H changes only M0 cursor last_tested_source and evidence_refs to new file. Exact source-match check unchanged.",
+    "immutable_reference": "docs/evidence/M0/M0-024-public-unblock-a0672ec078865bb41338ed924dee28151122d01d.json",
+    "checker_unchanged": true
+  },
+  "remaining": {
+    "task": "R1-M0-HOTPATH-COST-024",
+    "progress": "partial",
+    "next": "D10-AB diagnostic ON independent original Go/Rust kernel, and frozen M1/M3/M4 source-stage integration after owner safe API; no M0 active worker file writing.",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "original_023": "UNVERIFIED",
+    "production_features": 0
+  }
+}
