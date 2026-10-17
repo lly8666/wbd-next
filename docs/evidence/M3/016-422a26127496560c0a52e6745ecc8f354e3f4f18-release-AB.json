@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "progress": "partial",
+  "result": "SCOPED_RELEASE_NATIVE_AB_CPU_PAIRED_VALID_BA_PENDING",
+  "artifact_verified": true,
+  "unverified": true,
+  "source_predecessor": "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
+  "kind": "new_source_named_immutable_evidence_not_overwrite_previous_cursor_reference",
+  "native_correctness_baseline": {
+    "main_harness_source_sha": "5f1fbb387308da67962efbec95ad194782b6e10e",
+    "run_id": 39016665239,
+    "conclusion": "SUCCESS",
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "witness": "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS and M3_ACTUAL_ISAL_GO_MATRIX_NATIVE_ENCODE_AND_RECOVERY; k1..20 six parity profiles, Go-normalized GF256 parity and e×e missing recovery",
+    "default_scalar_source_run": {
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "run_id": 39014567195,
+      "passed": 113,
+      "failed": 0,
+      "ignored": 1
+    },
+    "note": "Pre-existing exact CODE native correctness not rerun by M3; current M0 AB native workflow's three gate tests also pass"
+  },
+  "release_AB": {
+    "result": "CPU_PAIRED_VALID",
+    "order": "AB",
+    "scenario": "One M3 CODE422a fixed k20,R20,L1200B, deterministic source (i*37+j*19+23)%251, 20 originals + 20 parity from five true 4-row GF quanta and 4 directly recovered erasures per block; identical load and exact Go source/parity/recovered checks in each leg",
+    "warmup": "200ms or more per leg excluded; five >=250ms adjacent valid thread CPU/wall windows per leg",
+    "measurement_boundary": "one GitHub Actions consume job/VM, sequential scalar then ISA-L, not simultaneous or cross-job",
+    "main_harness_source_sha": "d361f7563c770b30f6e684dcadededf4961f1d53",
+    "worker_source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "upstream_isal": {
+      "name": "Intel ISA-L",
+      "version": "2.31.1",
+      "commit": "c387163fcbca62701d646149564c550c78a4f985",
+      "ffi": "M0 safe static libisal.a ec_init_tables/ec_encode_data",
+      "feature": "native-isal",
+      "target": "x86_64-unknown-linux-gnu"
+    },
+    "run_id": 39044413886,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "event": "push",
+    "build_job": {
+      "id": 117430181619,
+      "conclusion": "SUCCESS"
+    },
+    "measure_job": {
+      "id": 117430429607,
+      "name": "consume",
+      "conclusion": "SUCCESS"
+    },
+    "build_artifact": {
+      "id": 12104334783,
+      "digest": "sha256:e136fd1199e6d9f8b36041e69859a56f4a3329ff2d2a579866bccca5aae5353f"
+    },
+    "result_artifact": {
+      "id": 12104799833,
+      "digest": "sha256:7f798ddd9aece30f472413d3e38c3bc41f5dae3fa45494d6ed0c14f40528db63"
+    },
+    "manifest": {
+      "binary_sha256": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+      "native_call_log_sha256": "8c17612a7f5f500bf10d3545e64a9005bc4a876afbe908cbc6d6590c69bbc1c2",
+      "cargo_lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8"
+    },
+    "logs": {
+      "raw_log_sha256": "38eeb76c8a41f1d78eae58c133b4376be420d38fefbb46173a62e85b886a49f0",
+      "host_isa_log_sha256": "d0b3332e8c285ee987d1a6aff573b21bc00d50c0c58b636c13dc2cbb6778d175",
+      "result_json": "paired-AB.json",
+      "raw": "paired-AB.log",
+      "verified_from_downloaded_artifact": true
+    },
+    "runner_host": {
+      "os": "ubuntu-24.04",
+      "architecture": "x86_64",
+      "vendor": "AuthenticAMD",
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "reported_cpus": 4,
+      "hypervisor": "Microsoft full virtualization",
+      "features_supported": [
+        "sse2",
+        "ssse3",
+        "avx2",
+        "avx512f"
+      ],
+      "selected_isal_instruction_variant": "NOT_PROVEN; CPU flags alone insufficient",
+      "cpu_quota_log": "EMPTY; quota not qualified",
+      "memory_pressure": "NOT_REPORTED"
+    },
+    "backend_witness": "Feature-gated test asserts Scalar status for scalar and NativeIsaL after successful Tables::encode C call for each parity quantum and recovery; exact parity and recovered data equality assertions; 3/3 native differential source tests PASS",
+    "legs": [
+      {
+        "leg": 0,
+        "mode": "scalar",
+        "cpu_status": "SAME_WINDOW_CPU",
+        "cpu_ns": 1250960560,
+        "wall_ns": 1250815670,
+        "windows_ok": 5,
+        "windows_bad": 0,
+        "blocks": 2712,
+        "logical_systematic": 54240,
+        "logical_parity": 54240,
+        "logical_recovered": 10848,
+        "p99_sampled_codec_operation_wall_ns": 507789,
+        "cpu_us_per_complete_block": 461.268643
+      },
+      {
+        "leg": 1,
+        "mode": "native-isal",
+        "cpu_status": "SAME_WINDOW_CPU",
+        "cpu_ns": 1250219004,
+        "wall_ns": 1250276697,
+        "windows_ok": 5,
+        "windows_bad": 0,
+        "blocks": 123331,
+        "logical_systematic": 2466620,
+        "logical_parity": 2466620,
+        "logical_recovered": 493324,
+        "p99_sampled_codec_operation_wall_ns": 13242,
+        "cpu_us_per_complete_block": 10.137103
+      }
+    ],
+    "within_run_comparison": {
+      "cpu_cost_per_equal_complete_block_ratio_scalar_over_isal": 45.503,
+      "equal_time_block_completion_ratio_native_over_scalar": 45.496,
+      "sampled_codec_operation_p99_ratio_scalar_over_native": 38.347,
+      "statement": "AB source-matched Rust Release codec-component gain (same job/VM, fixed seed and load). Performance harness verifies parity and recovery on every iteration, uses up to 2048 latency samples per leg and includes harness overhead. Never equate block counts with real NIC delivery. Needs separately run B/A for order robustness."
+    },
+    "previous_run_failure": {
+      "main_source_sha": "e55fb70183c5f46f7073d14cb674c7da3de5e704",
+      "run_id": 39044344082,
+      "result": "FAIL",
+      "reason": "Python parse step AssertionError for leg field in otherwise 3/3 native PASS and successful CPU AB test; M0 fixed parser in d361f756, not a codec or FEC output failure",
+      "log_scope": "prior run retained as FAIL; not used for performance qualification"
+    },
+    "not_qualified": [
+      "Reverse BA independent Action NOT_RUN",
+      "ISA-L exact SIMD instruction sequence NOT_PROVEN",
+      "Go V4 authenticated FEC-on owner and real NIC parity fairness NOT_RUN",
+      "Packet p99/RTT NOT_RUN",
+      "500Mbps product goodput NOT_RUN",
+      "Windows/ARM native UNSUPPORTED"
+    ]
+  },
+  "reverse_BA": {
+    "status": "NOT_RUN",
+    "reason": "M0-owned existing m0-m3-isal-native.yml currently hardcodes WBD_FEC_ORDER=AB and AB-only parser, and GitHub connector exposes no workflow_dispatch action",
+    "minimally_needed": "M0 add optional order input choice AB/BA to existing workflow, preserve fixed CODE source, reviewed Cargo/lock/native upstream/toolchain/20:20/1200B input and one same-job sequential measure; run new BA Action, separate run_id/attempt/artifact hashes; compare within BA job and consider AB↔BA qualitative stability only (not cross-VM raw CPU)",
+    "existing_M3_test_support": "Code 422a test already supports WBD_FEC_ORDER=BA, native first and scalar second; no M3 code rewrite"
+  },
+  "governance": {
+    "role_scoped": true,
+    "old_current_cursor_source_evidence": "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
+    "previous_H27": "c79aa557705cd9fdf88e9ef1d1b386fcca1ced0d",
+    "new_file_and_old_immutable": true,
+    "current_source_is_exact_untouched_worker_code": "422a26127496560c0a52e6745ecc8f354e3f4f18"
+  },
+  "decision": "M3 codec source frozen, AB paired valid, BA reverse not yet executed; pending separate M0 Action before 016 completed/ready for integration. Product and 500Mbps qualification remain separate."
+}
