@@ -17,6 +17,8 @@ on:
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/v4_protected_handoff.rs"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/runtime/**"
+      - "crates/wbd-engine/src/memory/**"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
