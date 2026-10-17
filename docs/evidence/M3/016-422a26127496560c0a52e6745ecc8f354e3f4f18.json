@@ -83,8 +83,26 @@
   "governance": {
     "prev_cursor_evidence_untouched": "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json",
     "prev_cursor_last_tested_source": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
-    "central_scope_new_code": "PENDING_OR_OBSERVE_LATER",
-    "intermediate_legacy_governance": "Source or control moved mid-audit (historical failed runs remain, not native failure)"
+    "central_scope_new_code": {
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "run_id": 39014774023,
+      "run_attempt": 1,
+      "result": "ROLE_SCOPE_PASS",
+      "conclusion": "SUCCESS",
+      "control_sha": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+      "is_current_head": false,
+      "artifact_id": 12094616128,
+      "artifact_digest": "sha256:566772091e4946655792afaaac16d3100495a43c1ee10def1479ccaa0df24d8b",
+      "qualification": "SOURCE_EXACT_WORKER_PATH_SCOPE_ONLY; after new request/evidence branch HEAD moved; not native FEC functional qualification"
+    },
+    "intermediate_legacy_governance": "Source or control moved mid-audit (historical failed runs remain, not native failure)",
+    "legacy_current_source": {
+      "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "run_id": 39014567204,
+      "result": "FAIL",
+      "reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+      "note": "main central immutable CODE source audit later ROLE_SCOPE_PASS; legacy failure preserved not converted"
+    }
   },
   "blocking_dependency": "M0 one shared opt-in Action entrypoint: pinned main root/lock/native crate overlay over exact M3 CODE source then --features native-isal RUN (not merely --no-run), same-job compiled-once AB/BA and actual ISA probe; see docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
   "completion": "PACK016 PARTIAL, no user-facing production feature enable, real Go V4/engine/driver MTU/parity fairness/product goodput remain not qualified"
