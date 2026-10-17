@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 119,
-  "checkpoint_sha": "287c092ed39bb7e32c54c17136cff44e5674c5e6",
+  "sequence": 120,
+  "checkpoint_sha": "d139142a1e6e2002c84a64f0a3963d1be3a78238",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "M0-024 PARTIAL. Resumed authoritative main H118 42744982, worker M1-012 scoped complete CODEa39ff711 main opt-in rtrb 6 native SUCCESS39018675363, prior full original Go native39018528429 PASS. Continued M0 engine CODE8d41c6ff: original TX under Mutex<Entry> completes auth Go Route/AEAD PN and drain checked real M1 generation-held LoanBatch; keeps frozen ciphertext + borrow lease alive while true M4 sendmmsg syscall runs OUTSIDE session mutex; batch recycled and reacquire lock to update route error, Stop fences phase and joins threads first. Native original Go TLS→Rust protected AEAD/PN→Linux raw/TUN SOURCE8d41 runner39020336918 build+consume SUCCESS, kernel PN0 drop PN1 original TUN delivery, MTU65536→1500 fail-close, netlink1→2, 10s+60s bilateral10Mbps PASS. P10 fixed A H118 42744982 vs B engine git blob da8ae816, AB workflowSOURCEcd2dd78 runner39020675956 and BA SOURCEe26e5d runner39020694554 both build+same-job VM measure SUCCESS, 0 missing/invalid and 10Mbps each dir; candidate CPU effect AB +0.952%, BA -2.259%, reversal = INCONCLUSIVE, no win. Immutable SOURCE-specific evidence S287c092e Governance39021256484 SUCCESS. M1 latest H15 done scoped, M3-016 partial ISA-L native PASS, M4-013 singleton real sendmmsg/recvmmsg already active main, not true 32 multi; M2-009 ready scoped.",
-  "why_now": "User chat interrupted again; verified current main H118 and completed pending formal worker test Go native. Continue existing task with M0 original TX raw kernel critical-section reduction, source-specific controlled P10 AB/BA, no fake CPU benefit or new registry.",
-  "done_when": "Completed staged M0 TX kernel out-of-Entry-lock real original owner path at 8d41c6 and native39020336918 SUCCESS; paired fixed baseline 42744982 and source-locked same VM P10 AB39020675956 SUCCESS +0.95% normalized CPU, BA39020694554 SUCCESS -2.26%, original app bilateral10Mbps and no missing/invalid, sign reversal CPU INCONCLUSIVE. Immutable exact source evidence S287c092e, H119 cursor-only. M0-024 still partial: TX/RX crypto mutable owner remains same Mutex<Entry>, active M1 SPSC ingress not connected to original Go live session, no 32 actual ready records per syscall. Existing D10 full strace failure and original R0-023/product/physical NOT_RUN; prod flags 0.",
-  "next_action": "Continue 024 with actual direction-owned TX/RX producer/consumer integration of completed M1-012 interface under explicit feature gate and Stop/join/generation/cached route fences; do not claim full mutable owner split from this M0 TX syscall-outside-lock change. M4 raw kernel sendmmsg/recvmmsg per original ready packet verified but need 32-already-ready aggregation proof, M3 FEC-on remains not integrated, loom0.7.2 model still NOT_RUN; separate same-job VM comparable scenarios with fixed seed, avoid cross-run CPU comparisons. Preserve D10 full-ptrace historical FAIL (10Mbps shortfall), previous SPARSE20pps PASS. Product/physical/old023 NOT_RUN.",
+  "current_task": "024 PARTIAL: real original Go TLS→Rust AEAD/PN→Linux raw/TUN RX seq32 anchor advances only after authenticated LINK; CODE21a809c / exact native SOURCE9249115 SUCCESS with feature-gated wrap vector and original Go raw/TUN functional. Main registry M1 Game013/M2 recovery010 complete-package assignments now active, M3 FEC016 partial, M4 platform013 frozen ready. Prior paired P10 CPU benefit remains INCONCLUSIVE; no claim from new source.",
+  "why_now": "Resume authoritative main after H119; completed authorized parallel registry packages first and one bounded 024 original RX seq32 long-run correctness increment, preventing untrusted header/old fixed Go boundary from affecting trustworthy wrap extension.",
+  "done_when": "This atomic 024 realpath seq32 increment ends at CODE21a809c, shared native entry9249115, exact SOURCE run39023910341 build+consume SUCCESS and immutable evidence S d139142a. Full task024 NOT_MET: original same-session TX/RX protected mutable Mutex<Entry> remains, 32-ready single-syscall native original path and new SOURCE AB/BA not proven; D10 historical FAIL, R0-023, oversize, product/physical NOT_RUN.",
+  "next_action": "Continue 024 by composing frozen M1-012 directional SPSC into the original credential-verified Go→Rust owner, separating actual TX/RX mutable crypto/PN state with Stop/generation fences without editing active worker-owned files; run affected original-path native Actions before any cost comparison.",
   "unverified": true,
-  "last_tested_source": "e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963",
+  "last_tested_source": "9249115c809933eae7ddebdd9334bbe16095bf64",
   "evidence_refs": [
+    "docs/evidence/M0/M0-024-authenticated-seq32-anchor-9249115c809933eae7ddebdd9334bbe16095bf64.json",
     "docs/evidence/M0/M0-024-original-TX-unlocked-P10-paired-e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-original-TX-unlocked-P10-paired-2026-10-17.md",
-    "docs/evidence/M0/M0-024-M1-012-frozen-main-rtrb-f9fe2890bcefcb5ef101ec10a8f938349a058a14.json",
-    "docs/evidence/M0/M0-024-M1-M3-formal-M4-multimsg-a56c92734b99dcf8a0487a2994a8dc2509cb108a.json",
-    "docs/evidence/M0/M0-024-P10-SPARSE-real-low-rate-after-netns-fix.json",
-    "docs/evidence/M0/M0-024-D10-traced-capacity-ec775091edf8a0714416d1fd1d7b71be7ad33421.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
+    "docs/decisions/M0-game-recovery-parallel-workpacks-2026-10-17.md",
+    "docs/devlog/M0/M0-024-authenticated-seq32-anchor-2026-10-17.md",
+    "docs/architecture/TEST_PLAN.md",
+    "docs/evidence/M0/M0-024-D10-traced-capacity-ec775091edf8a0714416d1fd1d7b71be7ad33421.json",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H119 PARTIAL. M0 code8d41c6 original TX readied protected M1 LoanBatch sends M4 real sendmmsg OUTSIDE same session mutex, no ciphertext copy/reseal, Stop.join and ledger; original GoTLS/Rust raw/TUN39020336918 PASS 10Mbps plus PN0loss PN1deliver MTU/netlink. Same-VM P10 A(H118 42744982) vs B(engine8d41c6) AB39020675956 +0.952% B CPU, BA39020694554 -2.259% B CPU, both good delivery zero invalid/missing, CPU benefit INCONCLUSIVE. No mutable TX/RX complete split, no 32 in one syscall, D10 tracer failed still, M1 rtrb main feature six tests PASS, product/physical/023 UNVERIFIED prod0."
+  "partial_summary": "H120 PARTIAL. Atomic seq32 authenticated moving reference native PASS, original Go TLS/3cipher/real raw/TUN source9249115 scoped tests PASS; >2GiB true kernel wrap NOT_RUN. M1 Game013 and M2 receipt ingress010 dispatched once in main; M3 FEC016 remains partial, M4 013 ready. 024 live TX/RX shared owner mutex and 32 aggregated original raw syscalls NOT_DONE, historical P10 cost INCONCLUSIVE; no production/physical/023 clearance."
 }
