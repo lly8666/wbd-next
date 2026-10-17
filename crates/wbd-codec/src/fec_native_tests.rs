@@ -143,3 +143,111 @@ fn r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native(){
             std::is_x86_feature_detected!("sse2"));
     }
 }
+
+#[cfg(all(target_os="linux",feature="native-isal"))]
+fn r1_fec_cpu_ns()->Option<u64>{
+    let text=std::fs::read_to_string("/proc/thread-self/schedstat").ok()?;
+    text.split_whitespace().next()?.parse::<u64>().ok()
+}
+
+/// Single fixed 20:20/1200B source, identical generator, inputs and recovery
+/// for both legs. Order is declared through WBD_FEC_ORDER=AB or BA BEFORE job.
+/// This diagnoses codec-only CPU and local operation latency, NOT packet RTT,
+/// kernel delivery, QoS, FEC queue fairness or physical throughput.
+#[cfg(all(target_os="linux",feature="native-isal"))]
+#[test]
+#[ignore = "M0 pinned native ISA-L Linux Release compiled-once same-VM job only"]
+fn r1_fec_native_release_same_vm_scalar_isal_paired_cpu(){
+    use std::time::{Instant,Duration};
+    use std::hint::black_box;
+    assert!(!cfg!(debug_assertions),"Release only");
+    let order=std::env::var("WBD_FEC_ORDER").unwrap_or_else(|_|"AB".into());
+    assert!(order=="AB"||order=="BA");
+    let modes=if order=="AB"{
+        [FecBackendChoice::Scalar,FecBackendChoice::RequireNative]
+    }else{
+        [FecBackendChoice::RequireNative,FecBackendChoice::Scalar]
+    };
+    let rs=ReedSolomon20::new().unwrap();
+    let data=(0..20).map(|i|(0..1200)
+        .map(|j|((i*37+j*19+23)%251) as u8).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    let slices=data.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let expected=rs.encode_active(&slices,20).unwrap();
+    let m=final_meta(&data,1200,20);
+    let mut known=(0..20).map(|i|Some(data[i].as_slice())).collect::<Vec<_>>();
+    for i in 16..20{known[i]=None;}
+    let mode_name=|m:FecBackendChoice|if m==FecBackendChoice::Scalar{"scalar"}else{"native-isal"};
+    let once=|choice:FecBackendChoice|->u8{
+        // Five bounded four-row quanta, actual parity delivered to codec
+        // recovery e=4, no skipped parity to buy cheaper CPU.
+        let mut parity=Vec::new();
+        for first in [0,4,8,12,16]{
+            let (batch,used)=rs.encode_rows_active_selected(&slices,20,first,4,choice).unwrap();
+            assert_eq!(used,if choice==FecBackendChoice::Scalar{
+                FecBackendUsed::Scalar
+            }else{FecBackendUsed::NativeIsaL});
+            parity.extend(batch);
+        }
+        assert_eq!(parity,expected);
+        let selected=(0..4).map(|j|((20+j) as u8,parity[j].as_slice())).collect::<Vec<_>>();
+        let (recovered,backend)=rs.recover_missing_selected(&m,&known,&selected,choice).unwrap();
+        assert_eq!(backend,if choice==FecBackendChoice::Scalar{
+            FecBackendUsed::Scalar
+        }else{FecBackendUsed::NativeIsaL});
+        assert_eq!(recovered.len(),4);
+        for (idx,b) in recovered{assert_eq!(b,data[idx]);}
+        parity[0][0]
+    };
+    println!("M3_FEC_CPU_HOST order={} arch={} SSE2={} SSSE3={} AVX2={} AVX512F={} source=PINNED_ACTION_MANIFEST",
+        order,std::env::consts::ARCH,
+        std::is_x86_feature_detected!("sse2"),
+        std::is_x86_feature_detected!("ssse3"),
+        std::is_x86_feature_detected!("avx2"),
+        std::is_x86_feature_detected!("avx512f"));
+    for (leg,choice) in modes.into_iter().enumerate(){
+        // Warmup excluded from both measurements; execute identical genuine
+        // 20 original + 20 first-send parity + 4 recovered-source work.
+        let warm=Instant::now();
+        while warm.elapsed()<Duration::from_millis(200){black_box(once(choice));}
+        let mut windows_ok=0usize;
+        let mut windows_bad=0usize;
+        let mut wall_total=0u128;
+        let mut cpu_total=0u128;
+        let mut blocks=0usize;
+        let mut latency=Vec::<u64>::new();
+        while wall_total<Duration::from_millis(1125).as_nanos(){
+            let wall_start=Instant::now();
+            let cpu_start=r1_fec_cpu_ns();
+            let mut n=0usize;
+            while n<16||wall_start.elapsed()<Duration::from_millis(250){
+                let call=Instant::now();
+                black_box(once(choice));
+                if latency.len()<2048{
+                    latency.push(call.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+                }
+                n+=1;
+            }
+            let cpu_end=r1_fec_cpu_ns();
+            let wall_ns=wall_start.elapsed().as_nanos();
+            let cpu_ns=match (cpu_start,cpu_end){
+                (Some(b),Some(e)) if e>=b && u128::from(e-b)*100<=wall_ns*102=>Some(e-b),
+                _=>None
+            };
+            if let Some(v)=cpu_ns{cpu_total+=u128::from(v);windows_ok+=1;}
+            else{windows_bad+=1;}
+            println!("M3_FEC_CPU_RAW order={} leg={} mode={} wall_ns={} cpu_ns={} clock_status={} blocks={} systematic={} parity={} recovered={}",
+                order,leg,mode_name(choice),wall_ns,cpu_ns.unwrap_or(0),
+                if cpu_ns.is_some(){"OK"}else{"CPU_INCONCLUSIVE"},n,20*n,20*n,4*n);
+            wall_total+=wall_ns;blocks+=n;
+        }
+        latency.sort_unstable();
+        let p99=latency[(latency.len()-1)*99/100];
+        println!("M3_FEC_CPU_RESULT order={} leg={} mode={} cpu_qualified={} cpu_ns={} wall_ns={} blocks={} systematic={} parity={} recovered={} p99_CODEC_OPERATION_WALL_ns={} windows_ok={} windows_bad={} NIC_DELIVERY=NOT_RUN PACKET_P99=NOT_RUN SIMD_INSTRUCTION_PROOF=NOT_RUN PRODUCT=NOT_RUN",
+            order,leg,mode_name(choice),
+            if windows_bad==0&&windows_ok>0{"SAME_WINDOW_CPU"}else{"CPU_INCONCLUSIVE"},
+            if windows_bad==0{cpu_total}else{0},wall_total,blocks,
+            blocks*20,blocks*20,blocks*4,p99,windows_ok,windows_bad);
+        assert!(wall_total>=Duration::from_millis(1125).as_nanos()&&blocks>0);
+    }
+}
