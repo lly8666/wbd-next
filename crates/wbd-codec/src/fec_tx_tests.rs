@@ -270,3 +270,104 @@ fn r1_tx_incremental_job_invalid_input_terminal_and_minimal_budget(){
     assert_eq!(job.take_next_rows(&rs).unwrap().len(),1);
     assert!(job.is_done());assert_eq!(job.retained_bytes(),0);
 }
+
+#[test]
+fn r1_tx_owner_cooperative_20_20_sustained_real_rows_and_bounded_backpressure(){
+    use crate::fec_tx::{MAX_COOPERATIVE_PARITY_JOBS,MAX_PARITY_FIRST_SEND_ROWS_PER_TURN};
+    assert_eq!(MAX_COOPERATIVE_PARITY_JOBS,64);
+    for length in [256usize,512,1200]{
+        let wire=length+FEC_HEADER;
+        let budget=20*length; // exactly one full source block
+        let mut legacy=FecTxOwner::new(1,budget).unwrap();
+        let mut coop=FecTxOwner::new_cooperative(1,budget).unwrap();
+        let mut systematic=0usize;let mut parity_rows=0usize;
+        for block in 0..3usize {
+            let mut expected=Vec::new();
+            for i in 0..20usize{
+                let source=vec![1+(block*20+i) as u8;length];
+                let left=legacy.submit(&source,(block*20+i) as u64,20,wire,false).unwrap();
+                let right=coop.submit(&source,(block*20+i) as u64,20,wire,false).unwrap();
+                assert_eq!(right.systematic,left.systematic);
+                assert!(right.parity.is_empty()); // no synchronous parity
+                expected.extend(left.parity);
+                systematic+=right.systematic.len();
+            }
+            assert_eq!(expected.len(),20);
+            let before=coop.stats();
+            assert_eq!((before.pending_parity_jobs,before.pending_parity_rows,
+                before.pending_parity_source_bytes,before.retained_bytes),
+                (1,20,budget,budget));
+            let next_id=coop.next_block_id_ext();
+            assert_eq!(coop.submit(b"blocked",(block*20+19) as u64,20,wire,false),
+                Err(TxError::Backpressure));
+            assert_eq!(coop.next_block_id_ext(),next_id);
+            assert_eq!(coop.stats().source_shards,systematic as u64);
+            let mut out=Vec::new();
+            for quantum in 0..5 {
+                let batch=coop.poll_cooperative_parity().unwrap();
+                assert!(batch.systematic.is_empty());
+                assert_eq!(batch.parity.len(),MAX_PARITY_FIRST_SEND_ROWS_PER_TURN);
+                assert_eq!(h(&batch.parity[0]).shard_index,20+(quantum*4) as u8);
+                out.extend(batch.parity);
+                if quantum<4 {
+                    assert_eq!(coop.stats().pending_parity_source_bytes,budget);
+                }
+            }
+            assert_eq!(out,expected);
+            assert_eq!((coop.stats().pending_parity_jobs,
+                        coop.stats().pending_parity_rows,
+                        coop.stats().retained_bytes),(0,0,0));
+            assert!(coop.poll_cooperative_parity().unwrap().parity.is_empty());
+            parity_rows+=out.len();
+        }
+        assert_eq!(systematic,60);
+        assert_eq!(parity_rows,60);
+        assert_eq!(coop.stats().source_shards,60);
+        assert_eq!(coop.stats().parity_shards,60);
+        assert_eq!(coop.stats().full_blocks,3);
+        assert_eq!(coop.stats().backpressure_rejections,3);
+    }
+}
+#[test]
+fn r1_tx_owner_cooperative_queue_metadata_limit_and_time_reconfig(){
+    use crate::fec_tx::MAX_COOPERATIVE_PARITY_JOBS;
+    let mut tx=FecTxOwner::new_cooperative(1,100).unwrap();
+    // 64 tiny closed jobs consume just 64 payload bytes; metadata bound
+    // must still be enforced independently of the payload bound.
+    for n in 0..MAX_COOPERATIVE_PARITY_JOBS {
+        let batch=tx.submit(&[n as u8+1],n as u64,4,100,false).unwrap();
+        assert_eq!(batch.systematic.len(),1);
+        assert!(batch.parity.is_empty());
+        assert!(tx.flush_all(n as u64).unwrap().parity.is_empty());
+    }
+    let stats=tx.stats();
+    assert_eq!((stats.pending_parity_jobs,stats.pending_parity_rows,
+                stats.pending_parity_source_bytes,stats.retained_bytes),(64,64,64,64));
+    let source=tx.submit(b"new",65,4,100,false).unwrap();
+    assert_eq!(source.systematic.len(),1);
+    assert_eq!(tx.flush_all(65),Err(TxError::Backpressure)); // never drop block65
+    assert_eq!((tx.stats().pending_blocks,tx.stats().pending_parity_jobs),(1,64));
+    let first=tx.poll_cooperative_parity().unwrap();
+    assert_eq!((first.parity.len(),h(&first.parity[0]).block_id),(1,1));
+    assert!(tx.flush_all(66).unwrap().parity.is_empty());
+    assert_eq!(tx.stats().pending_parity_jobs,64);
+    let mut count=1;
+    while tx.stats().pending_parity_jobs>0{
+        let c=tx.poll_cooperative_parity().unwrap();
+        assert_eq!(c.parity.len(),1);
+        count+=1;
+    }
+    assert_eq!(count,65);
+    assert_eq!(tx.stats().retained_bytes,0);
+    let mut reconfig=FecTxOwner::new_cooperative(90,100).unwrap();
+    let a=reconfig.submit(b"abc",100,20,100,false).unwrap();
+    assert_eq!(h(&a.systematic[0]).block_id,90);
+    let b=reconfig.submit(b"new",101,8,100,false).unwrap();
+    assert_eq!(h(&b.systematic[0]).block_id,91);
+    assert!(b.parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,1);
+    assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,90);
+    assert!(reconfig.flush_due(132).unwrap().parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,2.min(1)); // old drained
+    assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,91);
+}

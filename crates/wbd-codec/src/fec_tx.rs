@@ -2,14 +2,17 @@
 //! Original Go 20:R wire and 32ms first-source deadline. No fake parity,
 //! background tasks, SIMD claim, or guarantee of driver-send success.
 #![forbid(unsafe_code)]
+use std::collections::VecDeque;
 use crate::fec_math::{FecMathError,ReedSolomon20};
 use crate::link_fec_wire::{FEC_DATA_SHARDS,FEC_HEADER,FEC_PARITY_PROFILES};
 
 pub const FLUSH_MS:u64=32;
 pub const MAX_CLASSES:usize=3;
 pub const MAX_RETAINED:usize=MAX_CLASSES*FEC_DATA_SHARDS*65535;
+/// Independent metadata ceiling even when closed blocks contain 1-byte shards.
+pub const MAX_COOPERATIVE_PARITY_JOBS:usize=64;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub enum TxError {InvalidBudget,InvalidSource,UnsupportedProfile,IdExhausted,Math(FecMathError)}
+pub enum TxError {InvalidBudget,InvalidSource,UnsupportedProfile,IdExhausted,Backpressure,Math(FecMathError)}
 impl From<FecMathError> for TxError {fn from(e:FecMathError)->Self{Self::Math(e)}}
 #[derive(Default,Debug,PartialEq,Eq)]
 pub struct TxBatch {pub systematic:Vec<Vec<u8>>,pub parity:Vec<Vec<u8>>}
@@ -80,7 +83,9 @@ pub struct TxStats {
     pub source_shards:u64,pub parity_shards:u64,pub full_blocks:u64,pub partial_blocks:u64,
     pub pressure_closes:u64,pub reconfig_closes:u64,
     pub pending_blocks:usize,pub pending_sources:usize,pub retained_bytes:usize,
-    pub class_count:usize,pub closed_by_k:[u64;21],pub closed_by_r:[u64;21],
+    pub class_count:usize,pub pending_parity_jobs:usize,pub pending_parity_rows:usize,
+    pub pending_parity_source_bytes:usize,pub backpressure_rejections:u64,
+    pub closed_by_k:[u64;21],pub closed_by_r:[u64;21],
     pub closed_by_class_k:[[u64;21];MAX_CLASSES],
 }
 struct Block {id:u64,first_ms:u64,profile:u8,wire_limit:usize,parts:Vec<Vec<u8>>,bytes:usize}
@@ -88,6 +93,7 @@ pub struct FecTxOwner {
     codec:ReedSolomon20,next_id:u64,groups:[Option<Block>;MAX_CLASSES],
     profile:Option<u8>,wire_limit:Option<usize>,
     budget:usize,held:usize,clock_ms:u64,stats:TxStats,
+    cooperative:bool,pending_jobs:VecDeque<FecParityJob>,pending_bytes:usize,
 }
 impl FecTxOwner {
     pub fn new(first_id:u64,budget:usize)->Result<Self,TxError>{
@@ -96,7 +102,32 @@ impl FecTxOwner {
         }
         Ok(Self{codec:ReedSolomon20::new()?,next_id:first_id,
             groups:std::array::from_fn(|_|None),profile:None,wire_limit:None,
-            budget,held:0,clock_ms:0,stats:TxStats::default()})
+            budget,held:0,clock_ms:0,stats:TxStats::default(),
+            cooperative:false,pending_jobs:VecDeque::new(),pending_bytes:0})
+    }
+    /// Opt-in owner mode. Closed blocks become bounded owned parity jobs;
+    /// existing new()/submit()/flush behaviour remains synchronous.
+    /// The caller must poll and dispatch parity before retrying Backpressure.
+    pub fn new_cooperative(first_id:u64,budget:usize)->Result<Self,TxError>{
+        let mut owner=Self::new(first_id,budget)?;
+        owner.cooperative=true;
+        Ok(owner)
+    }
+    /// Run one real-GF cooperative parity quantum (at most four rows).
+    /// Returned wires belong to the fresh-FEC send lane, NOT repair/RTX.
+    /// Their downstream ownership and send-queue memory are external.
+    pub fn poll_cooperative_parity(&mut self)->Result<TxBatch,TxError>{
+        if !self.cooperative{return Err(TxError::InvalidBudget);}
+        let Some(front)=self.pending_jobs.front_mut()else{return Ok(TxBatch::default());};
+        let held=front.retained_bytes();
+        let parity=front.take_next_rows(&self.codec)?;
+        let done=front.is_done();
+        self.stats.parity_shards+=parity.len() as u64;
+        if done{
+            self.pending_bytes-=held;
+            self.pending_jobs.pop_front();
+        }
+        Ok(TxBatch{systematic:Vec::new(),parity})
     }
     fn clock(&mut self,now:u64)->u64{self.clock_ms=self.clock_ms.max(now);self.clock_ms}
     pub fn next_block_id_ext(&self)->u64{self.next_id}
@@ -107,7 +138,10 @@ impl FecTxOwner {
         let mut s=self.stats;
         s.pending_blocks=self.groups.iter().flatten().count();
         s.pending_sources=self.groups.iter().flatten().map(|b|b.parts.len()).sum();
-        s.retained_bytes=self.held;
+        s.retained_bytes=self.held+self.pending_bytes;
+        s.pending_parity_jobs=self.pending_jobs.len();
+        s.pending_parity_rows=self.pending_jobs.iter().map(FecParityJob::pending_rows).sum();
+        s.pending_parity_source_bytes=self.pending_bytes;
         s.class_count=self.profile.zip(self.wire_limit)
             .map(|(p,w)|Self::classes(p,w)).unwrap_or(0);
         s
@@ -140,14 +174,30 @@ impl FecTxOwner {
     }
     fn close(&mut self,i:usize,batch:&mut TxBatch)->Result<(),TxError>{
         let Some(block)=self.groups[i].as_ref()else{return Ok(());};
-        let shards=block.parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
-        let parity=self.codec.final_parity_wires(
-            block.id as u32,&shards,block.profile,block.wire_limit)?;
-        let (k,r,bytes)=(block.parts.len(),parity.len(),block.bytes);
-        batch.parity.extend(parity);
-        self.groups[i]=None;
-        self.held-=bytes;
-        self.stats.parity_shards+=r as u64;
+        if self.cooperative && self.pending_jobs.len()>=MAX_COOPERATIVE_PARITY_JOBS{
+            return Err(TxError::Backpressure);
+        }
+        let (k,r,bytes);
+        if self.cooperative{
+            // Transfer the source Vecs without copying or doing GF encoding.
+            // An error cannot occur after this point: each admitted shard
+            // has already passed FEC profile/wire/source validation.
+            let block=self.groups[i].take().expect("present");
+            k=block.parts.len();r=k.min(usize::from(block.profile));bytes=block.bytes;
+            let job=FecParityJob::new(block.id as u32,block.parts,block.profile,block.wire_limit)
+                .expect("admitted FEC block meets cooperative job invariants");
+            self.held-=bytes;self.pending_bytes+=bytes;
+            self.pending_jobs.push_back(job);
+        }else{
+            let shards=block.parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
+            let parity=self.codec.final_parity_wires(
+                block.id as u32,&shards,block.profile,block.wire_limit)?;
+            (k,r,bytes)=(block.parts.len(),parity.len(),block.bytes);
+            batch.parity.extend(parity);
+            self.groups[i]=None;
+            self.held-=bytes;
+            self.stats.parity_shards+=r as u64;
+        }
         self.stats.closed_by_k[k]+=1;
         self.stats.closed_by_r[r]+=1;
         self.stats.closed_by_class_k[i][k]+=1;
@@ -183,6 +233,32 @@ impl FecTxOwner {
     pub fn submit(&mut self,source:&[u8],now_ms:u64,profile:u8,
         wire_limit:usize,large_fragment_hint:bool)->Result<TxBatch,TxError>{
         Self::preflight(source,profile,wire_limit,self.budget)?;
+        if self.cooperative {
+            // All unencoded closed blocks remain charged until their final
+            // parity row has been computed; never discard parity silently.
+            // On pressure, close one old open block (if possible) so the
+            // scheduler can poll a job. The rejected source was NOT admitted
+            // and must be retried by the caller after servicing parity.
+            if self.held.saturating_add(self.pending_bytes)
+                .saturating_add(source.len())>self.budget{
+                if let Some(i)=self.oldest(){
+                    self.close(i,&mut TxBatch::default())?;
+                    self.stats.pressure_closes+=1;
+                }
+                self.stats.backpressure_rejections+=1;
+                return Err(TxError::Backpressure);
+            }
+            // Do not accept the final 20th source if a full job queue would
+            // make its mandatory close return an error *after* accepting it.
+            let class=Self::class(profile,wire_limit,source.len(),large_fragment_hint);
+            if self.pending_jobs.len()>=MAX_COOPERATIVE_PARITY_JOBS
+                && self.groups[class].as_ref().is_some_and(|b|
+                    b.profile==profile&&b.wire_limit==wire_limit
+                    && b.parts.len()==FEC_DATA_SHARDS-1) {
+                self.stats.backpressure_rejections+=1;
+                return Err(TxError::Backpressure);
+            }
+        }
         let now=self.clock(now_ms);
         let mut out=self.flush_due(now)?;
         if self.profile!=Some(profile)||self.wire_limit!=Some(wire_limit){
@@ -193,7 +269,7 @@ impl FecTxOwner {
             self.profile=Some(profile);self.wire_limit=Some(wire_limit);
         }
         let class=Self::class(profile,wire_limit,source.len(),large_fragment_hint);
-        while self.held+source.len()>self.budget{
+        while self.held+self.pending_bytes+source.len()>self.budget{
             let i=self.oldest().ok_or(TxError::InvalidBudget)?;
             self.close(i,&mut out)?;self.stats.pressure_closes+=1;
         }
