@@ -99,6 +99,11 @@
          self.is_ready(now);
          self.pending.front().map(|item| item.ready_at)
      }
+     /// Caller already checked is_ready(now); read only the due front.
+     pub fn ready_wire_bytes(&self)->Option<usize>{
+         self.pending.front().map(|item|item.wire_bytes)
+     }
+     pub fn byte_budget(&self)->usize{self.limit.bytes}
      pub fn len(&self) -> usize { self.pending.len() }
      pub fn charged_bytes(&self) -> usize { self.charged_bytes }
      pub fn expired_count(&self) -> usize { self.expired }
@@ -225,11 +230,115 @@ mod tests {
         for i in 0..36u8 {
             owner.offer_fresh(rec(&mut arena,i),MonoNs(0)).unwrap();
         }
-        for _ in 0..10 { assert_eq!(owner.next_ready(MonoNs(0)).unwrap().kind,TxKind::Fresh); }
+        let first:Vec<TxKind>=(0..10)
+            .map(|_|owner.next_ready(MonoNs(0)).unwrap().kind).collect();
+        assert_eq!(first[0],TxKind::Fresh);
+        assert_eq!(first.iter().filter(|&&k|k==TxKind::Parity).count(),1);
+        assert_eq!(first.iter().filter(|&&k|k==TxKind::Fresh).count(),9);
         assert_eq!(owner.next_ready(MonoNs(0)).unwrap().kind,TxKind::Repair);
-        for _ in 0..10 { assert_eq!(owner.next_ready(MonoNs(0)).unwrap().kind,TxKind::Fresh); }
-        assert_eq!(owner.next_ready(MonoNs(0)).unwrap().kind,TxKind::Parity);
-        assert_eq!(owner.queued().0,16);
+        assert_eq!(owner.queued().0,27);
+    }
+    #[test]
+    fn r1_workpack_parity_r03_f01_20_20_continuous_ready_first_send() {
+        let mut arena=Arena::new(214,96,256,1,100_000).unwrap();
+        let mut owner=TxOwner::with_parity_share(
+            limit(64,64),limit(4,4),limit(64,64),20,20).unwrap();
+        for i in 0..20u8{
+            owner.offer_fresh(rec(&mut arena,i),MonoNs(0)).unwrap();
+            owner.offer_parity(rec(&mut arena,i+20),MonoNs(0),MonoNs(0)).unwrap();
+        }
+        let mut order=Vec::with_capacity(40);
+        for _ in 0..40 {
+            order.push(owner.next_ready(MonoNs(0)).unwrap().kind);
+        }
+        assert_eq!(order[0],TxKind::Fresh);
+        for pair in order.chunks(2){
+            assert_eq!(pair,&[TxKind::Fresh,TxKind::Parity]);
+        }
+        assert_eq!(owner.parity_state().0,0);
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn r1_workpack_parity_r03_ratio_4_20_and_repair_separate() {
+        let mut arena=Arena::new(215,96,256,1,100_000).unwrap();
+        let mut owner=TxOwner::with_parity_share(
+            limit(64,64),limit(8,8),limit(16,16),20,4).unwrap();
+        assert!(TxOwner::with_parity_share(
+            limit(64,64),limit(8,8),limit(16,16),20,21).is_none());
+        for i in 0..40u8{
+            owner.offer_fresh(rec(&mut arena,i),MonoNs(0)).unwrap();
+        }
+        for i in 0..8u8{
+            owner.offer_parity(rec(&mut arena,i+40),MonoNs(0),MonoNs(0)).unwrap();
+        }
+        owner.offer_repair(rec(&mut arena,90),MonoNs(0)).unwrap();
+        let mut counts=(0,0,0);
+        let mut parity_gap=0usize;
+        let mut widest=0usize;
+        let mut first=true;
+        for _ in 0..49{
+            let k=owner.next_ready(MonoNs(0)).unwrap().kind;
+            if first{assert_eq!(k,TxKind::Fresh);first=false;}
+            match k{
+                TxKind::Fresh=>{counts.0+=1;parity_gap+=1;}
+                TxKind::Parity=>{counts.1+=1;widest=widest.max(parity_gap);parity_gap=0;}
+                TxKind::Repair=>counts.2+=1,
+            }
+        }
+        assert_eq!(counts,(40,8,1));
+        assert!(widest<=6,"parity must receive first-send bandwidth");
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn r1_workpack_parity_f01_mixed_lengths_actual_wire_bytes_not_item_counts(){
+        use wbd_types::buffer_contract::FrozenRecordHandle;
+        let mut arena=Arena::new(216,96,256,1,100_000).unwrap();
+        let mut owner=TxOwner::with_parity_share(
+            limit(16,64),limit(4,4),limit(64,64),20,20).unwrap();
+        let mut actual_fresh_bytes=0;
+        let mut actual_parity_bytes=0;
+        for i in 0..8u8{
+            let mut unique=arena.allocate().unwrap();
+            unique.writable()[0..4].copy_from_slice(&[i;4]);
+            let source=unique.freeze(0..4,meta()).unwrap();
+            owner.offer_fresh(source,MonoNs(0)).unwrap();
+        }
+        for i in 0..32u8 {
+            owner.offer_parity(rec(&mut arena,i),MonoNs(0),MonoNs(0)).unwrap();
+        }
+        let mut seen=0;
+        while let Some(item)=owner.next_ready(MonoNs(0)){
+            if seen==0{assert_eq!(item.kind,TxKind::Fresh);}
+            match item.kind{
+                TxKind::Fresh=>actual_fresh_bytes+=item.record.bytes().len(),
+                TxKind::Parity=>actual_parity_bytes+=item.record.bytes().len(),
+                TxKind::Repair=>panic!("no repair submitted"),
+            }
+            seen+=1;
+        }
+        assert_eq!((actual_fresh_bytes,actual_parity_bytes),(32,32));
+        assert_eq!(seen,40);
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn r1_workpack_parity_f01_larger_parity_requires_five_source_bytes(){
+        let mut arena=Arena::new(217,96,256,1,100_000).unwrap();
+        let mut owner=TxOwner::with_parity_share(
+            limit(32,32),limit(4,4),limit(8,32),20,20).unwrap();
+        for i in 0..20u8 {
+            owner.offer_fresh(rec(&mut arena,i),MonoNs(0)).unwrap();
+        }
+        for i in 0..4u8{
+            let mut unique=arena.allocate().unwrap();
+            unique.writable()[0..5].copy_from_slice(&[i;5]);
+            owner.offer_parity(unique.freeze(0..5,meta()).unwrap(),
+                MonoNs(0),MonoNs(0)).unwrap();
+        }
+        let order:Vec<_>=(0..24).map(|_|owner.next_ready(MonoNs(0)).unwrap().kind).collect();
+        assert_eq!(order[0..6],
+            [TxKind::Fresh,TxKind::Fresh,TxKind::Fresh,TxKind::Fresh,TxKind::Fresh,TxKind::Parity]);
+        assert_eq!(order.iter().filter(|&&k|k==TxKind::Parity).count(),4);
+        assert_eq!(arena.report().loaned,0);
     }
     #[test]
     fn r1_parity_age_boundary_drops_expired_owned_record_and_zero_charge() {

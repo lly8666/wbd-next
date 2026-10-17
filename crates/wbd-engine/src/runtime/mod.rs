@@ -13,6 +13,7 @@ pub mod parity;
 pub mod batch;
 pub mod rx_batch;
 pub mod generation;
+pub mod ready_turn;
 #[cfg(test)] mod generation_release;
 #[cfg(test)] mod loan_stop;
 pub mod early_rx;
@@ -113,7 +114,11 @@ pub struct TxOwner {
     repair: Bounded<FrozenRecord>,
     parity: Option<ParityReady>,
     consecutive_fresh: u8,
-    next_secondary_parity: bool,
+    // Parity is FIRST transmission, NOT repair. Debt enforces a bounded
+    // configurable parity:systematic service share on already-ready bytes.
+    parity_debt:i64,
+    parity_weight:u8,
+    systematic_weight:u8,
     stopping: bool,
 }
 impl TxOwner {
@@ -121,7 +126,8 @@ impl TxOwner {
         Some(Self {
             fresh: Bounded::new(fresh)?, repair: Bounded::new(repair)?,
             parity: None, consecutive_fresh: 0,
-            next_secondary_parity: false, stopping: false,
+            parity_debt:0, parity_weight:0,systematic_weight:1,
+            stopping: false,
         })
     }
     /// Off/Normal uses new() and never allocates a parity queue.
@@ -131,7 +137,28 @@ impl TxOwner {
     ) -> Option<Self> {
         let mut owner = Self::new(fresh, repair)?;
         owner.parity = Some(ParityReady::new(parity)?);
+        owner.parity_weight=20;
+        owner.systematic_weight=20;
         Some(owner)
+    }
+    /// Configure admitted parity FIRST-send service ratio (r systematic k).
+    /// The codec owns parity creation and configuration; no parity is minted.
+    /// r/k is bounded here; repair remains a separate <=1 in 11 share.
+    pub fn with_parity_share(fresh:QueueLimits,repair:QueueLimits,
+        parity:QueueLimits,k:u8,r:u8)->Option<Self>{
+        if k==0||k>20||r==0||r>k{return None;}
+        let mut owner=Self::with_parity(fresh,repair,parity)?;
+        owner.parity_weight=r;
+        owner.systematic_weight=k;
+        Some(owner)
+    }
+    fn parity_debt_cap(&self)->i64 {
+        // Bound deficit by the declared caller-funded queue byte budgets:
+        // no deferred unbounded parity credit when parity is temporarily off.
+        let parity_bytes=self.parity.as_ref().map_or(1,|p|p.byte_budget());
+        let max_bytes=self.fresh.limit.bytes.max(parity_bytes);
+        i64::try_from(max_bytes).unwrap_or(i64::MAX/64)
+            .saturating_mul(i64::from(self.systematic_weight)).saturating_mul(2)
     }
     pub fn offer_parity(
         &mut self, record: FrozenRecord, now: MonoNs, eligible_at: MonoNs
@@ -173,32 +200,47 @@ impl TxOwner {
         let has_repair = !self.repair.is_empty(now);
         let has_parity = self.parity.as_mut().is_some_and(|p| p.is_ready(now));
         if !has_fresh && !has_repair && !has_parity { return None; }
-        // At most ten consecutive fresh records while a secondary class
-        // is eligible. Alternate repair/parity service opportunities so
-        // neither is starved; no 32ms parity gate may delay first fresh.
-        let use_fresh = has_fresh && (self.consecutive_fresh < 10
-            || (!has_repair && !has_parity));
-        let kind = if use_fresh { TxKind::Fresh }
-        else if has_repair && has_parity {
-            if self.next_secondary_parity { TxKind::Parity } else { TxKind::Repair }
-        } else if has_parity { TxKind::Parity }
-        else if has_repair { TxKind::Repair }
-        else { TxKind::Fresh };
-        let record = match kind {
-            TxKind::Fresh => {
-                self.consecutive_fresh = self.consecutive_fresh.saturating_add(1);
-                self.fresh.take(now).expect("fresh was ready")
+        // Both systematic and parity are FIRST sends. Under continuous
+        // readiness the parity debt issues roughly r/k parity after each
+        // systematic, independent of 10:1 REPAIR fairness. Never hold the
+        // first systematic behind parity. The debt saturates when a lane
+        // cannot send parity rather than accumulating an unbounded burst.
+        let first_ready=has_fresh||has_parity;
+        let repair_turn=has_repair && (!first_ready||self.consecutive_fresh>=10);
+        let kind=if repair_turn {TxKind::Repair}
+        else if has_fresh && has_parity {
+            let due_bytes=self.parity.as_ref()
+                .and_then(|queue|queue.ready_wire_bytes())
+                .unwrap_or(1);
+            let due_bytes=i64::try_from(due_bytes).unwrap_or(i64::MAX/64);
+            if self.parity_debt>=i64::from(self.systematic_weight)
+                .saturating_mul(due_bytes) {
+                TxKind::Parity
+            }else{TxKind::Fresh}
+        }else if has_fresh {TxKind::Fresh}
+        else{TxKind::Parity};
+        let cap=self.parity_debt_cap();
+        let record=match kind {
+            TxKind::Fresh=>{
+                self.consecutive_fresh=self.consecutive_fresh.saturating_add(1);
+                let record=self.fresh.take(now).expect("fresh is ready");
+                let bytes=i64::try_from(record.bytes().len()).unwrap_or(i64::MAX/64);
+                self.parity_debt=self.parity_debt.saturating_add(
+                    i64::from(self.parity_weight).saturating_mul(bytes)).min(cap);
+                record
             }
-            TxKind::Repair => {
-                self.consecutive_fresh = 0;
-                self.next_secondary_parity = true;
-                self.repair.take(now).expect("repair was ready")
+            TxKind::Repair=>{
+                self.consecutive_fresh=0;
+                self.repair.take(now).expect("repair is ready")
             }
-            TxKind::Parity => {
-                self.consecutive_fresh = 0;
-                self.next_secondary_parity = false;
-                self.parity.as_mut().and_then(|p| p.take_ready(now))
-                    .expect("parity deadline ready")
+            TxKind::Parity=>{
+                self.consecutive_fresh=self.consecutive_fresh.saturating_add(1);
+                let record=self.parity.as_mut().and_then(|p|p.take_ready(now))
+                    .expect("parity is due");
+                let bytes=i64::try_from(record.bytes().len()).unwrap_or(i64::MAX/64);
+                self.parity_debt=self.parity_debt.saturating_sub(
+                    i64::from(self.systematic_weight).saturating_mul(bytes)).max(-cap);
+                record
             }
         };
         Some(TxDispatch {kind, record})

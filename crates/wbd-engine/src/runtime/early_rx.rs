@@ -151,31 +151,6 @@ impl EarlyRxOwner {
         self.owner.drain_rx(token,now,storage)
             .map_err(|(e,storage)|(EarlyError::Scope(e),storage))
     }
-    /// Delegates to the SAME M1 ScopedOwner TX queue as the early RX wrapper.
-    /// This is integration composition, not a second owner. Both methods
-    /// refuse output until the actual protected Go Detach has happened.
-    pub(crate) fn offer_tx_fresh(&mut self,token:&ScopeToken,
-        record:crate::memory::FrozenRecord,now:MonoNs,
-    )->Result<(),(ScopedOfferError,crate::memory::FrozenRecord)>{
-        if !self.detached {
-            return Err((ScopedOfferError::Scope(ScopeError::Stopped),record))
-        }
-        self.owner.offer_fresh(token,record,now)
-    }
-    pub(crate) fn drain_tx(&mut self,token:&ScopeToken,
-        now:MonoNs,storage:Vec<super::TxDispatch>,
-    )->Result<LoanBatch<super::TxDispatch>,(ScopeError,Vec<super::TxDispatch>)>{
-        if !self.detached {
-            return Err((ScopeError::Stopped,storage))
-        }
-        self.owner.drain_tx(token,now,storage)
-    }
-    pub(crate) fn checked_tx_ready<'a>(&self,token:&ScopeToken,
-        batch:&'a LoanBatch<super::TxDispatch>,
-    )->Result<&'a [super::TxDispatch],ScopeError>{
-        if !self.detached {return Err(ScopeError::Stopped)}
-        self.owner.checked_tx_ready(token,batch)
-    }
     /// Stop is idempotent. Drop only staged items and owned queued RX.
     /// Dispatched batches remain borrowed by their original generation.
     pub fn stop(&mut self,token:&ScopeToken)->Result<EarlyRetirement,EarlyError>{

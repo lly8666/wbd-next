@@ -20,12 +20,14 @@
      stopping: AtomicBool,
      inflight: AtomicUsize,
      target: OnceLock<Thread>,
+     #[cfg(test)] fail_next_signal:AtomicBool,
  }
  impl WakeGate {
      fn new() -> Self {
          Self { armed: AtomicBool::new(false),
              stopping: AtomicBool::new(false),
-             inflight: AtomicUsize::new(0), target: OnceLock::new() }
+             inflight: AtomicUsize::new(0), target: OnceLock::new(),
+             #[cfg(test)] fail_next_signal:AtomicBool::new(false) }
      }
      /// Only the owner thread may bind/park. Early publications are not
      /// missed because the first queue inspection occurs after binding.
@@ -35,7 +37,19 @@
      }
      pub fn notify(&self) {
          if self.armed.swap(false, SeqCst) {
-             if let Some(t) = self.target.get() { t.unpark(); }
+             // A missing OS waiter (or failed platform wake in a future
+             // adapter) must leave armed set: the *next* publication retries
+             // signaling, not only the empty->nonempty transition.
+             if let Some(t) = self.target.get() {
+                 #[cfg(test)]
+                 if self.fail_next_signal.swap(false,SeqCst) {
+                     self.armed.store(true,SeqCst);
+                     return;
+                 }
+                 t.unpark();
+             }else{
+                 self.armed.store(true,SeqCst);
+             }
          }
      }
      /// Owner-local readiness/deadline probe. Share this exact armed +
@@ -283,6 +297,36 @@
              pn:RecordPn(7),seq:SeqOffset(9),carrier_snapshot:3}
      }
      fn arena(n: usize) -> Arena { Arena::new(71,n,256,1,100_000).unwrap() }
+     #[test]
+     fn r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish() {
+         let (sender,mut consumer)=single::<u8>(2).unwrap();
+         let gate=sender.gate();
+         let (ready_tx,ready_rx)=mpsc::sync_channel(0);
+         let (release_tx,release_rx)=mpsc::sync_channel(0);
+         let (result_tx,result_rx)=mpsc::sync_channel(1);
+         let join=thread::spawn(move|| {
+             let ev=consumer.wait_inner(||MonoNs(0),None,||false,||{},||{},||{
+                 ready_tx.send(()).unwrap();
+                 release_rx.recv().unwrap();
+             });
+             let value=matches!(ev,WakeEvent::Ready(Class::Fresh,1));
+             result_tx.send(value).unwrap();
+         });
+         // Explicit synchronization ensures the consumer armed itself and
+         // will park, while sender remains outside its producer queue lock.
+         ready_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+         gate.fail_next_signal.store(true,SeqCst);
+         sender.try_push(1).unwrap();
+         assert!(gate.armed.load(SeqCst));
+         release_tx.send(()).unwrap();
+         // First notification was intentionally lost. Second publication
+         // must wake even though the queue is ALREADY nonempty.
+         sender.try_push(2).unwrap();
+         let received=result_rx.recv_timeout(Duration::from_secs(2));
+         if received.is_err(){sender.stop();}
+         assert_eq!(received.unwrap(),true);
+         join.join().unwrap();
+     }
      #[test]
      fn r1_wake_idle_single_packet_push_before_arm_r01() {
          let (sender, mut owner) = single::<u8>(1).unwrap();

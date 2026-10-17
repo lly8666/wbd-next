@@ -193,19 +193,21 @@
          }
          let mut output = Vec::with_capacity(32);
          assert_eq!(tx.drain_ready_batch(MonoNs(0), &mut output), 32);
-         assert_eq!(output[0].kind, TxKind::Fresh);
-         assert_eq!(output[10].kind, TxKind::Repair);
-         assert_eq!(output[21].kind, TxKind::Parity);
-         assert_eq!(output.capacity(), 32);
-         // Caller releases the dispatched handles before the next turn.
+         assert_eq!(output[0].kind,TxKind::Fresh);
+         assert_eq!(output[1].kind,TxKind::Parity);
+         assert_eq!(output[10].kind,TxKind::Repair);
+         assert_eq!(output.capacity(),32);
+         let mut parity_count=output.iter().filter(|p|p.kind==TxKind::Parity).count();
+         let mut repair_count=output.iter().filter(|p|p.kind==TxKind::Repair).count();
+         // Caller releases already handed-off handles before next turn.
          output.clear();
-         assert_eq!(tx.drain_ready_batch(MonoNs(0), &mut output), 32);
-         let secondary = output.iter().filter(|p| p.kind != TxKind::Fresh)
-             .map(|p| p.kind).collect::<Vec<_>>();
-         assert!(secondary.contains(&TxKind::Repair));
-         assert!(secondary.contains(&TxKind::Parity));
-         assert_eq!(output.len(), 32);
-         assert_eq!(tx.queued().0 + tx.queued().1 + tx.parity_state().0, 6);
+         assert_eq!(tx.drain_ready_batch(MonoNs(0),&mut output),32);
+         parity_count+=output.iter().filter(|p|p.kind==TxKind::Parity).count();
+         repair_count+=output.iter().filter(|p|p.kind==TxKind::Repair).count();
+         assert_eq!(parity_count,3,"parity is a first-send share");
+         assert_eq!(repair_count,3,"repair has a separate service budget");
+         assert_eq!(output.len(),32);
+         assert_eq!(tx.queued().0+tx.queued().1+tx.parity_state().0,6);
          drop(output);
          assert_eq!(tx.stop(), 6);
          assert_eq!(arena.report().loaned, 0);
