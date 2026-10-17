@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 109,
-  "checkpoint_sha": "4b883d3e0d389d93926d561d588cd4caf3dfcbca",
+  "sequence": 110,
+  "checkpoint_sha": "2b862a701e06360622dafd48abcf783f003db916",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024实际原Go TLS受保护→Rust M1/M3 owner→raw/TUN并发成本部分：全局Registry改为仅generation/install/lookup映射，worker每会话一次持有Arc<Mutex<Entry>>，原DATA内不再争全局BTreeMap锁；生命周期Stop.joining防止同时Stop在join前释放，Abort终态再unlink。新S98f9b3e同源原native kernel双方向10Mbps与netlink缩MTU/PN丢包反例及ABI/G2成功，前两次dc146a/390ae9真实编译失败保留。尚未把同会话TX/RX owner可变状态拆成双方向锁。",
-  "why_now": "M0已有真正独立Linux RX/TX就绪worker，但任何AEAD/PN、LINK和raw/TUN发送仍共用进程级registry锁，使多个认证会话相互牵连。先只移走全局锁，保留同一ProtectedScopedOwner和Stop栅栏，不越M1/M4活动范围；待M1冻结方向接口和M4冻结平台接口再做深拆。",
-  "done_when": "本批次真实Go/Rust原路径编译、0/1/32/33、Linux route/link netlink、MTU shrink fail-close及双向约10Mbps开发路径在同SOURCE PASS，原ABI/G2/native/crossABI PASS；两次前置编译FAIL保留。整体024§7仍未完：同会话TX/RX独立所有权、M4类型化EMSGSIZE/去逐DATA sysfs、原raw批I/O和P10 AB/BA/SPARSE/D10都未做；开发CPU无因果收益证明。023仍unverified且默认prod features0。",
-  "next_action": "继续同一024：M0只在engine/真实Go接线范围，结合M1正在自主做的方向owner完整工作包，拆分同一认证会话TX/RX可变锁且保持Prepare→Detach→Commit、PN/seq、Stop.join和M1借用回收；阶段边界精确核M4平台工作包后接类型化EMSGSIZE、link/route设备事件与逐DATA sysfs安全移除、raw批I/O，合批运行必要真实内核功能/Stop反例；D10与SPARSE各一次场景Actions，随后同VM同job预编译Rust A/B顺序P10-AB及独立BA，容量不够即留痕停止。不得逐步改worker分配或私改其文件；旧023/超MTU/物理未验、prod features0。",
+  "current_task": "024持续：核其它工位后M1/M4原011整包ready，M2-009/M3-016仍partial；主线一次登M1方向SPSC012/M4 raw-TUN PMTU Stop竞态012，原权限/epoch/分支不变。精确M4旧011平台SOURCE aae512d原样集成到main S b4f425；随后M0真正Go TLS→Rust M1/M3→Linux raw/TUN owner S2eee6abc使用M4 typed KernelSendReport区分内核已复制单包与EMSGSIZE/backpressure/uncertain，原M1 FrozenRecord无重seal/PN复用。原native Actions38999730934 build+consume成功、新rust分支反例成功，开发双向各10Mbps；主线Governance HTTP403仍FAIL。",
+  "why_now": "M1/M4已经完成各自完整包可继续授权，M2/M3仍有有效包内进度；M4真实平台去逐DATA sysfs和typed错误为M0 024下游必需接口。阶段性把冻结旧M4来源集成后立即回到M0 engine真实加密 owner，不借未验证产品替代成本验收。",
+  "done_when": "本轮相应能力：PACK-007 main registry M1/M4一次正式任务更新、M2/M3不变；M4源码原样集成并在main真实Go/Rust Linux raw/TUN和MTU/PN功能Actions通过；新typed raw单元素发送/uncertain反例与持续双向10Mbps同源S2eee6abc通过。未实现同session TX/RX mutable owner拆分、SPSC root pin、M3 nativeISA-L shared G2、真正多条raw批次、D10/SPARSE、Rust同VM P10 AB/BA，整体024仍partial，CPU收益NOT_PROVEN。普通Governance HTTP403真实FAIL保留；旧023和产品物理NOT_RUN、production features0。",
+  "next_action": "继续024一个完整剩余交付包：M0沿原Go凭证受保护Rust owner，结合已验证M1-011及新012稳定方向接口实现同session TX/RX mutable owner解锁，固定root rtrb/loom依赖与M3受限ISA-L G2请求，避免M0/M4同时改平台活跃源码；与M4-012的PMTU/Stop/source确证安全接口阶段集中接线，必要Stop、ifindex/route、0/1/32/33、oversize/PN反例合批用GitHub Actions验证；随后各自一场景D10和SPARSE，最终同job/VM Rust A→B以及独立B→A P10预编译精确双SOURCE比较，若宿主容量不足停止C50；历史023/真实完整分片/物理仍unverified、prod0，404/403治理读失败须独立诊断，不冒充成功。",
   "unverified": true,
-  "last_tested_source": "98f9b3e909415f25d4fd2220b01e73f488f4d2bb",
+  "last_tested_source": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-global-registry-session-mutex-live.json"
+    "docs/evidence/M0/M0-024-worker-review-and-M4-integration.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-global-registry-session-mutex-live.md",
+    "docs/devlog/M0/M0-024-worker-review-and-M4-integration.md",
+    "docs/decisions/M0-followup-module-workpackages-2026-10-17.md",
     "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
+    "docs/evidence/M0/M0-024-global-registry-session-mutex-live.json",
     "docs/evidence/M0/M0-024-ready-only-burst-and-worker-packages.json",
-    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json",
-    "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "024 PARTIAL：全局registry进程级DATA互斥消除，原真实Go保护的Rust raw/TUN仍保留单session TX/RX串行锁。CODE S98f9b3e Actions38998528557 build+consume SUCCESS，10s+60s开发10Mbps双方向、MTU事件/stop及PN反例成功，CPU无同VM对比不能宣称节省；两次编译FAIL和独立M2 scope SOURCE mismatch FAIL原样记证据。worker完整包保持一次分配，024原B/A余项及023/产品/物理仍未验。"
+  "partial_summary": "M0 H110 PARTIAL：M1/M4 ready旧包各有98/88 native scoped来源，已各一次分配新完整包012；M2/M3继续009/016。M4旧011平台exact SOURCE首次main实原Go/Rust native成功，M0同源码S2eee6abc新typed raw单句柄(prefix/uncertain)和真实MTU fail-close/10Mbps双向通过。P10 AB/BA无同VM配对、same-session TXRX仍串锁、真正raw多packet syscall未合成；Governance GitHub HTTP403失败如实保留，product/physical未验、prod features0。"
 }
