@@ -22,6 +22,43 @@ use wbd_types::buffer_contract::{driver_read, FrozenRecordHandle};
 const MSG_DONTWAIT: c_int = 0x40;
 const EAGAIN: i32 = 11;
 const EINTR: i32 = 4;
+const EMSGSIZE: i32 = 90;
+const ENODEV: i32 = 19;
+const ENETDOWN: i32 = 100;
+const ENETUNREACH: i32 = 101;
+const EHOSTUNREACH: i32 = 113;
+
+/// A typed, allocation-free signal beside the existing exact prefix/uncertain
+/// outcome. Linux loses errno when sendmmsg returns a positive partial count;
+/// PartialErrnoUnavailable is NOT evidence that the suffix was accepted.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum KernelSendSignal {
+    None,
+    Backpressure,
+    Interrupted,
+    MtuExceeded,
+    DeviceUnavailable,
+    RouteUnavailable,
+    PartialErrnoUnavailable,
+    OtherErrno(i32),
+    AmbiguousCompletion,
+    PreflightRejected,
+    Stopping,
+}
+impl KernelSendSignal {
+    /// Owner must invalidate its route/MTU snapshot before another DATA send.
+    /// Backpressure and EINTR alone do not authorize a refreshed budget.
+    pub fn invalidates_path(self) -> bool {
+        matches!(self, Self::MtuExceeded | Self::DeviceUnavailable |
+            Self::RouteUnavailable | Self::PartialErrnoUnavailable |
+            Self::OtherErrno(_) | Self::AmbiguousCompletion)
+    }
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct KernelSendReport {
+    pub outcome: TxBatchOutcome,
+    pub signal: KernelSendSignal,
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -104,28 +141,47 @@ fn classify(sent: c_int, errno: Option<i32>, submitted: usize,
     accepted_prefix(n, submitted, total)
 }
 
-/// Production entry for *connected* native UDP fixture sockets. This is a
-/// general Linux datagram sendmmsg syscall, not a raw-TCP packet transport.
+/// Native connected UDP fixture, NOT a raw-TCP packet transport.
+/// The detailed report carries errno/partial invalidation without changing
+/// the legacy TxBatchOutcome-only caller's contract.
 /// Caller owns the frozen records and keeps socket/device lifetime through
 /// the call; the fence prevents concurrently completing stop.
 pub fn submit_connected_udp<H: FrozenRecordHandle>(
     socket: &UdpSocket, frozen: &[H], fence: &BorrowFence,
 ) -> TxBatchOutcome {
-    if socket.peer_addr().is_err() { return not_sent(TxError::IoFailed); }
-    submit_fd(socket.as_raw_fd(), frozen, fence)
+    submit_connected_udp_detailed(socket, frozen, fence).outcome
 }
 
+pub fn submit_connected_udp_detailed<H: FrozenRecordHandle>(
+    socket: &UdpSocket, frozen: &[H], fence: &BorrowFence,
+) -> KernelSendReport {
+    if socket.peer_addr().is_err() {
+        return KernelSendReport { outcome: not_sent(TxError::IoFailed),
+            signal: KernelSendSignal::PreflightRejected };
+    }
+    submit_fd_detailed(socket.as_raw_fd(), frozen, fence)
+}
+
+#[cfg(test)]
 fn submit_fd<H: FrozenRecordHandle>(fd: RawFd, frozen: &[H],
                                    fence: &BorrowFence) -> TxBatchOutcome {
+    submit_fd_detailed(fd, frozen, fence).outcome
+}
+
+fn submit_fd_detailed<H: FrozenRecordHandle>(fd: RawFd, frozen: &[H],
+                                            fence: &BorrowFence) -> KernelSendReport {
     // Register before inspecting the bytes; shutdown may race this CAS but
     // cannot finish with a live synchronous send.
     let _inflight = match fence.try_enter_ready() {
         Ok(token) => token,
-        Err(BorrowError::Stopping) => return not_sent(TxError::Stopping),
-        Err(BorrowError::TooManyLoans) => return not_sent(TxError::IoFailed),
+        Err(BorrowError::Stopping) => return KernelSendReport {
+            outcome: not_sent(TxError::Stopping), signal: KernelSendSignal::Stopping },
+        Err(BorrowError::TooManyLoans) => return KernelSendReport {
+            outcome: not_sent(TxError::IoFailed), signal: KernelSendSignal::PreflightRejected },
     };
     let limit = frozen.len().min(MAX_READY_TX);
-    if limit == 0 { return TxBatchOutcome::copied_all(0); }
+    if limit == 0 { return KernelSendReport {
+        outcome: TxBatchOutcome::copied_all(0), signal: KernelSendSignal::None }; }
     let mut iovecs = [CIovec::empty(); MAX_READY_TX];
     let mut messages = [CMmsghdr::empty(); MAX_READY_TX];
     let mut expected = [0usize; MAX_READY_TX];
@@ -134,7 +190,9 @@ fn submit_fd<H: FrozenRecordHandle>(fd: RawFd, frozen: &[H],
         if read.wire.is_empty() || read.wire.len() > u32::MAX as usize {
             // Fail entire batch before a syscall; do not send a partial set
             // and then mistakenly classify a malformed later frame as sent.
-            return not_sent(TxError::IoFailed);
+            return KernelSendReport {
+                outcome: not_sent(TxError::IoFailed),
+                signal: KernelSendSignal::PreflightRejected };
         }
         expected[i] = read.wire.len();
         // SAFETY: Linux sendmmsg only reads this iovec for a send operation.
@@ -155,7 +213,51 @@ fn submit_fd<H: FrozenRecordHandle>(fd: RawFd, frozen: &[H],
     let sent = unsafe { sendmmsg(fd, messages.as_mut_ptr(), limit as c_uint, MSG_DONTWAIT) };
     let errno = if sent < 0 { io::Error::last_os_error().raw_os_error() } else { None };
     let reported: [u32; MAX_READY_TX] = std::array::from_fn(|i| messages[i].msg_len);
-    classify(sent, errno, limit, frozen.len(), &reported, &expected)
+    classify_report(sent, errno, limit, frozen.len(), &reported, &expected)
+}
+
+/// Keep the legacy classifier unchanged for old historical tests. The new
+/// typed signal distinguishes a *known* zero-prefix EMSGSIZE/ENODEV from
+/// partial success, whose errno Linux has irretrievably discarded.
+fn classify_report(sent: c_int, errno: Option<i32>, submitted: usize,
+                   total: usize, reported_lens: &[u32], expected_lens: &[usize])
+    -> KernelSendReport
+{
+    let old = classify(sent, errno, submitted, total, reported_lens, expected_lens);
+    if submitted == 0 {
+        return KernelSendReport { outcome: old, signal: KernelSendSignal::None };
+    }
+    if sent < 0 {
+        let signal = match errno {
+            Some(EAGAIN) => KernelSendSignal::Backpressure,
+            Some(EINTR) => KernelSendSignal::Interrupted,
+            Some(EMSGSIZE) => KernelSendSignal::MtuExceeded,
+            Some(ENODEV) => KernelSendSignal::DeviceUnavailable,
+            Some(ENETDOWN | ENETUNREACH | EHOSTUNREACH) =>
+                KernelSendSignal::RouteUnavailable,
+            Some(e) => KernelSendSignal::OtherErrno(e),
+            None => KernelSendSignal::AmbiguousCompletion,
+        };
+        // A negative Linux sendmmsg return has no successful messages.
+        // Only a *known* route/device/MTU errno authorizes zero-prefix
+        // IoFailed; unknown/EINTR remain conservatively uncertain.
+        let outcome = if matches!(signal, KernelSendSignal::MtuExceeded |
+            KernelSendSignal::DeviceUnavailable | KernelSendSignal::RouteUnavailable) {
+            not_sent(TxError::IoFailed)
+        } else { old };
+        return KernelSendReport { outcome, signal };
+    }
+    let n = sent as usize;
+    let signal = if n == 0 || n > submitted ||
+        reported_lens.iter().zip(expected_lens.iter()).take(n)
+            .any(|(actual, expected)| *actual as usize != *expected) {
+        KernelSendSignal::AmbiguousCompletion
+    } else if n < submitted {
+        KernelSendSignal::PartialErrnoUnavailable
+    } else {
+        KernelSendSignal::None
+    };
+    KernelSendReport { outcome: old, signal }
 }
 
 #[cfg(test)]
@@ -319,6 +421,61 @@ mod tests {
         assert!(entries.load(Ordering::SeqCst)<=1);
         assert_eq!(fence.outstanding(),0);
         assert!(fence.try_enter_ready().is_err());
+    }
+    #[test]
+    fn r1_linux_sendmmsg_real_kernel_typed_emsgsize_and_partial_unknown() {
+        let (tx,rx)=udp_pair();
+        let oversized=vec![0x42u8;65508]; // real Linux IPv4 UDP max=65507
+        let fence=BorrowFence::default();
+        let failed=[frame(&oversized,1)];
+        let report=submit_connected_udp_detailed(&tx,&failed,&fence);
+        assert_eq!(report.signal,KernelSendSignal::MtuExceeded);
+        assert!(report.signal.invalidates_path());
+        assert_eq!(report.outcome,not_sent(TxError::IoFailed));
+        let mut received=[0u8;16];
+        assert!(rx.recv(&mut received).is_err());
+        let frames=[frame(b"ok",2),frame(&oversized,3)];
+        let partial=submit_connected_udp_detailed(&tx,&frames,&fence);
+        assert_eq!(partial.outcome.accepted_prefix,1);
+        assert_eq!(partial.outcome.uncertain_index,None);
+        assert_eq!(partial.signal,KernelSendSignal::PartialErrnoUnavailable);
+        assert!(partial.signal.invalidates_path());
+        assert_eq!(rx.recv(&mut received).unwrap(),2);
+        assert_eq!(&received[..2],b"ok");
+        assert!(rx.recv(&mut received).is_err());
+        assert_eq!(fence.outstanding(),0);
+    }
+    #[test]
+    fn r1_linux_sendmmsg_typed_device_route_and_backpressure_are_distinct() {
+        let lengths=[3usize,4];
+        let returned=[3u32,4];
+        for (errno,signal) in [
+            (EMSGSIZE,KernelSendSignal::MtuExceeded),
+            (ENODEV,KernelSendSignal::DeviceUnavailable),
+            (ENETDOWN,KernelSendSignal::RouteUnavailable),
+            (ENETUNREACH,KernelSendSignal::RouteUnavailable),
+            (EHOSTUNREACH,KernelSendSignal::RouteUnavailable),
+        ] {
+            let report=classify_report(-1,Some(errno),2,2,&returned,&lengths);
+            assert_eq!(report.outcome,not_sent(TxError::IoFailed));
+            assert_eq!(report.signal,signal);
+            assert!(signal.invalidates_path());
+        }
+        let blocked=classify_report(-1,Some(EAGAIN),2,2,&returned,&lengths);
+        assert_eq!(blocked.outcome,not_sent(TxError::WouldBlock));
+        assert_eq!(blocked.signal,KernelSendSignal::Backpressure);
+        assert!(!blocked.signal.invalidates_path());
+        let interrupted=classify_report(-1,Some(EINTR),2,2,&returned,&lengths);
+        assert_eq!(interrupted.outcome,uncertain(0));
+        assert_eq!(interrupted.signal,KernelSendSignal::Interrupted);
+        assert!(!interrupted.signal.invalidates_path());
+        let partial=classify_report(1,None,2,2,&returned,&lengths);
+        assert_eq!(partial.outcome,accepted_prefix(1,2,2));
+        assert_eq!(partial.signal,KernelSendSignal::PartialErrnoUnavailable);
+        assert!(partial.signal.invalidates_path());
+        let short=classify_report(2,None,2,2,&[3,1],&lengths);
+        assert_eq!(short.outcome,uncertain(1));
+        assert_eq!(short.signal,KernelSendSignal::AmbiguousCompletion);
     }
     #[test]
     fn r1_linux_sendmmsg_preflight_reject_invalid_without_writing() {

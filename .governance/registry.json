@@ -45,9 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "完整包：按 PACK-006 / modules 02+03，TX/RX owner、ready<=32、唤醒、内存/driver loan有界及必要反例，按既有接口M0集成。",
-      "done_when": "PACK-006 M1：R01-R04、M01-M04、B01-B04、G01相关组件功能/资源限制在精确SOURCE Actions验收；输出稳定所有权接口、回退和NOT_RUN组合边界。",
-      "assigned_task": "R1-M1-OWNER-MEMORY-READY-WORKPACK-011"
+      "goal": "完整包：在M1 runtime/memory权限内构建真实TX/RX方向owned可转移/有界SPSC与唤醒Stop接口；基于完成的011 ReadyTurn/return行为，供M0保护的Rust owner集成。",
+      "done_when": "M1-012：真实线程队列方向隔离、0/1/32/33、SPSC满返还、不丢唤醒/Stop借用/epoch回绕、稀疏和公平性反例精确SOURCE native Actions通过；对M0冻结编译接口和不能覆盖的Go/kernel/loom缺口交付。",
+      "assigned_task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012"
     },
     {
       "id": "M2",
@@ -121,9 +121,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "完整包：按 PACK-006 / module 04+MTU直接依赖，负责平台raw/TUN MTU事件和EMSGSIZE、ready批I/O与Stop/ABI边界；M0独占engine桥接。",
-      "done_when": "PACK-006 M4：I01-I04、B01-B04相关driver、L01/设备变更反例在精确SOURCE Actions验收；提交固定平台接口/回退，raw未支持明确UNSUPPORTED而非假PASS。",
-      "assigned_task": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011"
+      "goal": "完整包：在M4 platform/Go bridge原路径安全性范围，基于冻结011驱动，消除route/link切换、EMSGSIZE/partial/Stop并发下的缓存、借用与队列竞态，不重造TLS/owner。",
+      "done_when": "M4-012：错误来源与状态、route storm/ifindex/MTU down-up、Stop与晚loan、0/1/32/33边界及可用Linux实际内核反例精确SOURCE Actions验证；原privileged unsupported明确保留，输出M0接线稳定接口与回退说明。",
+      "assigned_task": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012"
     }
   ]
 }
