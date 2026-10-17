@@ -1,0 +1,9 @@
+# M3 workpack016: minimal native ISA-L shared dependency / native CI boundary
+
+Current main task: `R1-M3-RECORD-LINK-FEC-WORKPACK-016`, M3 path whitelist exclusively codec and role files. Existing `fec_math.rs` is correct scalar GF(256)/0x11d and pinned old-Go Vandermonde-normalized 20×20 matrix, including missing-only e×e inverse; previous tests cover Go generator and parity/golden. **There is no ISA-L binding, FFI or pinned native linkage in the current Cargo workspace.** The root workspace Cargo.toml and Cargo.lock, shared CI, Go/engine and public ABI are M0-owned.
+
+Please supply a single M0-reviewed minimal native ISA-L linking/binding interface and reproducible Actions build capability (Linux x86_64 baseline, explicit target CPU/ISA and compiler/link flags), including any required root Cargo/lock changes. Avoid granting M3 blanket shared-path edits. The safe M3 codec wrapper will receive the exact legacy 20×20 GF coefficients, use `ec_init_tables + ec_encode_data` (not default Cauchy matrix), avoid aliasing, handle L<64 scalar fallback, preserve 8B HP and parity count. The existing crate has forbid(unsafe_code); a reviewed narrow safe API is needed rather than allowing arbitrary unsafe calls. Keep native ISA-L vs scalar backend explicit and test-only unavailable => UNSUPPORTED/NOT_RUN, never silently claim acceleration.
+
+M3 will own codec integration and native byte-for-byte oracle suite for k=1..20 × parity r=4/8/10/12/16/20 × short/unaligned/MTU, e×e missing rows, tests of profile/rate/parity; native platform probe must run on the actual ISA and verify real backend selection. Any material CPU delta needs same-host paired A/B Action after build-once, not cross-run ratios. No production ABI feature enablement, no 500Mbps claim.
+
+Meanwhile M3 continues independent scalar/record/LINK/FEC work and this request is not permission to change root or shared CI.
