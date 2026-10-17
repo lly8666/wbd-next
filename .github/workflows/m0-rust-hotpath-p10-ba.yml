@@ -1,4 +1,4 @@
-name: M0 Rust hotpath 024 P10-B-A actual ready raw batch vs pre-batch
+name: M0 Rust hotpath 024 P10-B-A actual direction-split RX+ready batch vs pre-batch
 run-name: "R1-M0-024|P10-BA|${{ github.sha }}"
 on:
   push:
@@ -37,8 +37,8 @@ jobs:
           set -euo pipefail
           # M0-024 fixed pre-batch A and post-batch B; feature-gated original owner actual raw/TUN, never floating branch.
           # Freeze content, not a floating branch or unrelated later commit.
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 8fa71192c87aec54882558375e9d0c5ccd32f08a
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 72083eb6117011b802580e3aa69cdd426929c81b
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = e49e7f08d218c5b77a1df05ebcc6a172ce493d44
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 86e4979fa5dae06100e5684016f13381df05936d
           # Fixed baseline A: M4-012 source before DATA return cap64.
           # M0 original owner sequence-u64 and bounded raw batch differ in B; Go
           # workload fixture, Cargo.lock, route/TUN and scripts are identical.
