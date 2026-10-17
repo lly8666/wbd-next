@@ -19,6 +19,8 @@ pub enum FecMathError {
     TooManyMissing,
     SingularMatrix,
     NoCapacity,
+    NativeUnavailable,
+    NativeFailure,
 }
 
 struct Gf256 {
@@ -297,3 +299,8 @@ impl ReedSolomon20 {
         Ok(output)
     }
 }
+
+// Optional safe backend implementation; scalar public entrypoints unchanged.
+#[path="fec_native.rs"]
+mod native_backend;
+pub use native_backend::{FecBackendChoice,FecBackendUsed};
