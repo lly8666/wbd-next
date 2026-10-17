@@ -2,6 +2,8 @@
 
 这套说明用于直接实施，补齐上一版总方案留给实现者的选择；已实现/已测范围只读当前 cursor/evidence，不从施工说明推断产品已完成或尚未开工。优先级：用户要求/章程 → 本目录明确修订 → 总方案 → 原项目历史；不允许按旧聊天另选一套架构。
 
+2026-10-18用户授权的[FEC v2专项](../FEC_V2_BALANCED.md)及[测试](../FEC_V2_TEST_PLAN.md)优先覆盖本目录旧FEC格式、矩阵、固定20/32ms/六档与旧auto决策；实施仍由M0登记，不覆盖正在运行的worker任务事实。共同硬门、record密码、外层repair和LINK分片未被授权重写。[本轮工位提示词](../../decisions/M0-fec-v2-workpacks-2026-10-18.md)。
+
 | 编号 / 文件 | 唯一职责 | 执行角色 |
 |---|---|---|
 | [00-CONTRACTS](00-CONTRACTS.md) | crate依赖、类型、错误、跨模块顺序、版本 | M0 |
@@ -26,7 +28,7 @@
 1. 不为每条lane/每个block建线程；两方向分owner，平台阻塞reader有界例外。SPSC采用rtrb，唤醒协议必须二次检查，不能仅看empty边沿。
 2. `frozen wire`指TLS-like record及其TCP seq绑定；TCP ACK/IP头等发送外观可重新生成。当前旧版稳态data并没有TCP timestamp option，不能凭想象添加。
 3. 真实确认采用明确位图，未报告不等于丢失；删除“真实累计前缀必须一直前进”的依赖，避免control PN/失败预留PN形成永久洞。反馈只随待反馈数据活动产生。
-4. ISA-L仍用旧GF256矩阵，但解码只对e个缺源做e×e求逆，再构造直接输出矩阵。避免每次固定20×20求逆和重建parity。
+4. V1已测ISA-L旧GF256矩阵仅作参考；FEC v2改为规范短块Cauchy，继续只对e个缺源做e×e求逆和直接输出，避免全块求逆/重建parity。旧Go字节相等不再是V2门。
 5. 去重窗口按恢复寿命/PPS计算；超过窗口明确late，不退化成无界map或忘记历史后重复业务交付。
 6. 队列/计时器内存一起计入shadow：64B hot entry + 24B timer node + 索引/对齐余量，模型改用96B/slot预算；不是已测Rust布局。
 7. admission明确升级为V4并绑定新能力/逻辑epoch；复用原一次受TLS保护的请求/回复，不增加往返。不谎称Game新格式能无协商与旧端兼容。

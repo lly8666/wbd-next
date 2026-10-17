@@ -1,5 +1,7 @@
 # 00 公共类型、依赖和协议契约
 
+2026-10-18的[FEC v2](../FEC_V2_BALANCED.md)授权新增一次性能力/kind/自描述短块契约，M0登记时冻结精确值。本页原bit0/bit1及只识别LINK/Health是旧已实现基线；V2新增位需两端明确支持且绑定原认证/KDF，不能假称无需协商。新block_id为u64，其他TCP/旧LINK的wire32规则不变。不要求与旧Go数据面网络互通，C ABI/控制层接线仍须实际验证。
+
 ## 模块边界
 
 固定一个Cargo workspace：`wbd-types`（纯类型）、`wbd-codec`（record/LINK/FEC）、`wbd-recovery`（恢复纯状态机）、`wbd-platform`（设备/网络I/O）、`wbd-engine`（组合及cdylib）。后三者只依赖types与必要codec；platform不依赖engine，recovery不直接访问socket，codec不创建线程或读取系统时钟。engine是唯一组合者。测试fixture可引用所有模块，生产依赖不得倒置。

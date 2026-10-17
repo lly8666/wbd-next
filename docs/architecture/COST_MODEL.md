@@ -1,5 +1,7 @@
 # 成本、容量与验收允许带
 
+2026-10-18 FEC v2的新k/r、期限、头部和理论残余模型见[FEC_V2_BALANCED](FEC_V2_BALANCED.md)，可复现计算器为`tools/fec_v2_model.py`。本文旧20源/56B等示例仅作旧基线，不能作V2固定常量；通用BDP/CPU/线速计账原则保留。
+
 这里的数字是设计计算，**不是 Rust 产品实测结果**。输入与计算在 `model-inputs.json`、`tools/cost_model.py`；Actions 输出 `cost-model.json`。所有带宽先明确“应用 payload / 内层 IP / 外层 IP / Ethernet”，所有延迟明确 RTT 或单程。
 
 ## 1. 包率、窗口和内存
