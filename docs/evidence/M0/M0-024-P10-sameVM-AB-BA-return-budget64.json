@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "result": "VALID_P10_AB_BA_FUNCTIONAL_CPU_BENEFIT_INCONCLUSIVE",
+  "unverified": true,
+  "source_sha": "51bc18df7eae51c219210c9dca48262ce56db40b",
+  "source_A": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+  "source_B": "51bc18df7eae51c219210c9dca48262ce56db40b",
+  "source_B_tested_code_snapshot": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+  "engine_A_blob": "23f675d6426190a1a98ca3454cfa234e5359525a",
+  "engine_B_blob": "4ea790403b89190bd3a6eaf587aff836de0be173",
+  "protected_owner_blob_common": "3287bf49437023bce867314af43423234ce3a5f9",
+  "comparison": "A=exact frozen M4-012 integrated source, before capped M1 Arena return work per DATA; B=same M4 platform and original Go/Rust code but four hot DATA returns bounded to64 per turn, M0 native assert unit present. Source B test manifest uses workflow-only HEAD and exact locked B code blob. No changing Go payload generator, cipher, route budget, link, TUN, Raw I/O or shared dependency between legs.",
+  "inputs": {
+    "workflow_A_B": ".github/workflows/m0-rust-hotpath-p10-ab.yml",
+    "workflow_B_A": ".github/workflows/m0-rust-hotpath-p10-ba.yml",
+    "common_harness_sha256": {
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go": "46cee6c563463f714d980b49362991492ff2e77c06f5aec495df333f2f519599",
+      "tools/run-v4-tun-netns.sh": "d8f3a6a6c5a71fd7e67b8d7e0e37b11f5b2d8581e7e0e1ad0d489b7559ceb801",
+      "Cargo.lock": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36"
+    },
+    "target": "ubuntu-24.04 linux x86_64 GNU Rust1.85.1 Go1.23.12 release locked m0_v4_probe,m0_v4_embedded_go and cgo original Go app",
+    "warmup_seconds": 10,
+    "measurement_seconds": 60,
+    "application_udp_payload_bytes": [
+      64,
+      256,
+      1200
+    ],
+    "mix_inner_ipv4_packet_bytes": [
+      92,
+      284,
+      1228
+    ],
+    "offered_target_udp_payload_mbps_each_direction": 10,
+    "production_features": 0
+  },
+  "results": [
+    {
+      "order": "A_B",
+      "run_id": 39005769143,
+      "attempt": 1,
+      "source_sha": "51bc18df7eae51c219210c9dca48262ce56db40b",
+      "conclusion": "success",
+      "build_job": 117317818433,
+      "measure_job": 117318123192,
+      "artifact_build": {
+        "id": 12091107033,
+        "digest": "sha256:20af6e581f374d8430bf0095df6c2c50b9f5ad4db2787c9a1d004875c965fae1"
+      },
+      "artifact_result": {
+        "id": 12091221974,
+        "digest": "sha256:a28a63108cd4df4917f5a9bd6ace93d4f5301d17e8bd2d947a6ea84ecbddbee9"
+      },
+      "runner_job_same": true,
+      "non_overlapping": true,
+      "fixture_verified": true,
+      "source_locked": true,
+      "legA": {
+        "source": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+        "cpu_s": 21.18703,
+        "cpu_s_per_GiB": 151.6624741209846,
+        "delivered_udp_payload_bytes": 150000192,
+        "c2s_mbps": 10.0000128,
+        "s2c_mbps": 10.0000128,
+        "missing_c2s": 0,
+        "missing_s2c": 0,
+        "invalid": 0,
+        "p99_c2s_us": 161,
+        "p99_s2c_us": 169,
+        "receipt_sha256": "dca0b5fe99691ee72f2ab25e17f5f19d7e73145ff3d932981c7c7831b6c129dc"
+      },
+      "legB": {
+        "source": "51bc18df7eae51c219210c9dca48262ce56db40b",
+        "cpu_s": 21.156753,
+        "cpu_s_per_GiB": 151.4462601262714,
+        "delivered_udp_payload_bytes": 149999680,
+        "c2s_mbps": 9.999978666666667,
+        "s2c_mbps": 9.999978666666667,
+        "missing_c2s": 0,
+        "missing_s2c": 0,
+        "invalid": 0,
+        "p99_c2s_us": 161,
+        "p99_s2c_us": 169,
+        "receipt_sha256": "8df47d9d5b4eab492734a0874249dddce7bdf6f766eefc65a46fb09c4a8a4693"
+      },
+      "candidate_relative_normalized_cpu_percent": -0.14256261871392617
+    },
+    {
+      "order": "B_A",
+      "run_id": 39005769170,
+      "attempt": 1,
+      "source_sha": "51bc18df7eae51c219210c9dca48262ce56db40b",
+      "conclusion": "success",
+      "build_job": 117317818699,
+      "measure_job": 117318138053,
+      "artifact_build": {
+        "id": 12091320204,
+        "digest": "sha256:cd8b79d1ceded80e9ec6db8ddd5e12ec896b7a614d9a5b9f6462b1945c6bf67f"
+      },
+      "artifact_result": {
+        "id": 12090544321,
+        "digest": "sha256:44ed0ab26557e2f27c4e52ae69b79b16da357e0a340bb37a4d30a0eccb0788f7"
+      },
+      "runner_job_same": true,
+      "non_overlapping": true,
+      "fixture_verified": true,
+      "source_locked": true,
+      "legB": {
+        "source": "51bc18df7eae51c219210c9dca48262ce56db40b",
+        "cpu_s": 21.116227000000002,
+        "cpu_s_per_GiB": 151.15616309966828,
+        "delivered_udp_payload_bytes": 149999680,
+        "c2s_mbps": 9.999978666666667,
+        "s2c_mbps": 9.999978666666667,
+        "missing_c2s": 0,
+        "missing_s2c": 0,
+        "invalid": 0,
+        "p99_c2s_us": 171,
+        "p99_s2c_us": 172,
+        "receipt_sha256": "cc693c44606e2923f15dcce48cd13f82d15254a57a0f469947c2c843f17ff240"
+      },
+      "legA": {
+        "source": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+        "cpu_s": 21.250917,
+        "cpu_s_per_GiB": 152.12031373168668,
+        "delivered_udp_payload_bytes": 149999680,
+        "c2s_mbps": 9.999978666666667,
+        "s2c_mbps": 9.999978666666667,
+        "missing_c2s": 0,
+        "missing_s2c": 0,
+        "invalid": 0,
+        "p99_c2s_us": 173,
+        "p99_s2c_us": 184,
+        "receipt_sha256": "61045f5eb6dcc2712720d9b4fb5d768b64d13e5cc6d660bccc5a2df6950657c4"
+      },
+      "candidate_relative_normalized_cpu_percent": 0.6378506917926074
+    }
+  ],
+  "decision": {
+    "functional": "PASS_DEVELOPMENT_KERNEL_PROTECTED_ORIGINAL_PATH_P10_WITH_DELIVERY_HARD_GATES",
+    "cpu": "INCONCLUSIVE_ORDER_SIGN_REVERSED_AND_BOTH_ABSOLUTE_CHANGES_SUB_1_PERCENT",
+    "latency": "NO_OBSERVED_REPEATABLE_NEW_P99_REGRESSION; A/B on different virtual machines must not compare absolute p99 outside pairing; AB same/BA B lower.",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "same_session_lock": "NOT_SPLIT",
+    "M4_true_multimsg": "PENDING_013",
+    "M1_new_wake": "PENDING_012",
+    "production_features": 0
+  },
+  "remaining": [
+    "024 D10-AB diagnostic and SPARSE-AB low-rate scenario NOT_RUN; their tooling should use same original Go/Rust authenticated path, no fake isolated benchmark.",
+    "M1 012 directional SPSC/wake concurrency; M4 013 true bounded raw kernel multimsg; M3 016 native ISA-L and LINK/FEC integration; original 023 unverified.",
+    "Conditional C50 only after supported/no-capacity evidence; no 500Mbps claims or product PASS.",
+    "M3 historic scope fail39003738130 now subsequent H d9ed1ad3 Governance39003788619 + central39003896454 SUCCESS; old FAIL preserved."
+  ]
+}
