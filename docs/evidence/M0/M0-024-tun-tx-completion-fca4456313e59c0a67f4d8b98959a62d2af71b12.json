@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
+  "code_source_sha": "9c76636a482de91381b6cc9601f0bdc6852e732a",
+  "workflow_source_sha": "7b3abb35723b4a6615b10aa0098140dad7ea3eec",
+  "baseline_A": "80b47c853499da292295671f2b1a49407c0367a5",
+  "result": "PATCH_SCOPE_FUNCTIONAL_PASS_P10_AB_BA_SPARSE_PASS_CPU_BENEFIT_INCONCLUSIVE",
+  "artifact_verified": true,
+  "unverified": true,
+  "product_qualification": "NOT_RUN",
+  "production_features": 0,
+  "scope": "Developer original Go TLS authenticated protected Rust M1/M3 owner + real M4 Linux raw/TUN, Normal single lane, FEC off; not full product",
+  "prepatch": {
+    "tun": "Stable background_tun_once called linux_tun_sink.read_ipv4_into while M4 held shared serialized mutex over up to 750ms poll after filtering IPv6; M4 existing read_ready_batch is O_NONBLOCK, poll(0)",
+    "tx": "Ignored copied prefix on any non-full batch; reset worker tx_route even for EAGAIN/partial/uncertain. Under-counted completed packets and over-invalidated route."
+  },
+  "patch": {
+    "file": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "blob": "58d9b95b206f02b27aba0067bab77d988772ff4a",
+    "go_test_file": "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+    "go_test_blob": "908ed36754056ab4282bb85532377bebfa01f8c3",
+    "tun": "Reuses existing owned M4 read_ready_batch with single slot and poll(0), after outer ready wait. Reader holds original BorrowFence+shared serialized lock only during bounded instant read, never waits under writer lock. Filtered/rejected/EAGAIN handled idle without TX error. <=32 observed total including invalid per turn; no new kernel API or unsafe.",
+    "tx": "New small classify_tx_turn translates existing original M4 KernelSendReport accepted_prefix/uncertain_index/typed signal into copied/definitely_unsent/uncertain/backpressure/failure/cache invalidation. TX stats copied prefix even if tail fails; bounded unsent and uncertain frozen records released only after sync kernel completion; no retry/reseal/PN reuse. Only explicit RouteUnavailable/DeviceUnavailable/MtuExceeded clears M0 owner route cache; EAGAIN/unknown errno partial/Stop/preflight never does. M4 existing budget/Stop path remains independently fail-closed.",
+    "counters": "Worker-private atomics tx_dropped/tx_uncertain/tx_backpressure, existing tx copied and tx_error; no config or public wire/ABI change.",
+    "not_modified": [
+      "crates/wbd-platform/src/linux_tun_sink.rs",
+      "crates/wbd-platform/src/linux_raw_carrier.rs",
+      "M1 memory/queue",
+      "M3 AEAD/link",
+      "production features"
+    ]
+  },
+  "native": {
+    "run": 39041377796,
+    "source_sha": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
+    "conclusion": "success",
+    "attempt": 1,
+    "build_artifact": {
+      "id": 12104560701,
+      "digest": "sha256:0434344f76e08c3cfff45afdb6c98e9068d368bad166ac06e1036a8d38181f62"
+    },
+    "result_artifact": {
+      "id": 12104495382,
+      "digest": "sha256:d443cb1c2cb2cde51d293515197dd5c0e45cece8510fd9d5c63754d2a5866b67"
+    },
+    "observations": [
+      "Exact native Rust classifier tests: 0/1/32/33, full prefix, partial/unsent, EAGAIN/backpressure, uncertain, preflight oversize, route/device/MTU, Stop; assertions on copied+dropped+uncertain partition and no false cache clear",
+      "Real privileged Linux namespace IFF_TUN emits IPv6 control, followed by no local IPv4; independent C2S authenticated raw->TUN app delivery <400ms (Go test log). This probes previous 750ms writer contention, not a statistical latency distribution",
+      "Real original protected Go TLS + Rust AEAD/PN LINK raw/TUN 8/8 both directions, first arrival/no-HOL, real netlink MTU 65536->1500 fail closed, Stop/generation",
+      "Normal/off developer 10s+60s UDP app 10Mbps both directions full delivery",
+      "Linux kernel real EAGAIN via nonblocking ready no data; uncommon sendmmsg errno/uncertain are deterministic typed native tests, NOT claimed physically forced",
+      "r0-native-abi, r0-cross-abi, g2, engine native-functional source CODE9c success; native exact bundled workflow source fca success"
+    ]
+  },
+  "performance": {
+    "measurement_source_sha": "7b3abb35723b4a6615b10aa0098140dad7ea3eec",
+    "baseline_A": "80b47c853499da292295671f2b1a49407c0367a5",
+    "code_B": "9c76636a482de91381b6cc9601f0bdc6852e732a",
+    "identity": "Exact A/B rust code blobs, locked Cargo/Go toolchain 1.85.1/1.23.12 and common Go binary fixture; separate build artifact, same paired measurement job/VM each scenario; no cross-run absolute CPU subtraction",
+    "profile": "Normal1/FEC off/ChaCha, UDP app payload 64/256/1200 equal count each direction 10Mbps, 10s warm+60s measure+3s drain, SPARSE 20pps 64/256 5s+30s",
+    "P10_AB": {
+      "run": 39041159892,
+      "attempt": 1,
+      "conclusion": "success",
+      "A_cpu_s_per_gib": 80.3667190234569,
+      "B_cpu_s_per_gib": 78.96291561410096,
+      "B_vs_A_pct": -1.746747193880338,
+      "A_process_cpu_s": 11.227077,
+      "B_process_cpu_s": 11.031006,
+      "p99_c2s_us": {
+        "A": 91,
+        "B": 86
+      },
+      "p99_s2c_us": {
+        "A": 105,
+        "B": 100
+      },
+      "missing": 0,
+      "invalid": 0,
+      "artifact_build": {
+        "id": 12103659256,
+        "digest": "sha256:926076bfacaac3c6e5d16b3f67b09b7457b102831a397340dbd157d647ea15dc"
+      },
+      "artifact_result": {
+        "id": 12104191592,
+        "digest": "sha256:3d3cbcd99340212fa11fd1e6699c59173e6826d3751d4bd73be0ef89b2cbfa52"
+      }
+    },
+    "P10_BA": {
+      "run": 39041159913,
+      "attempt": 1,
+      "conclusion": "success",
+      "A_cpu_s_per_gib": 71.42001820327724,
+      "B_cpu_s_per_gib": 70.84605186593592,
+      "B_vs_A_pct": -0.803649105363824,
+      "A_process_cpu_s": 9.97724,
+      "B_process_cpu_s": 9.897058,
+      "p99_c2s_us": {
+        "A": 84,
+        "B": 86
+      },
+      "p99_s2c_us": {
+        "A": 94,
+        "B": 94
+      },
+      "missing": 0,
+      "invalid": 0,
+      "artifact_build": {
+        "id": 12104366367,
+        "digest": "sha256:11e1fd769587860454df4e4608093737b8fc4bbea180e198cabf6b78b826c7d3"
+      },
+      "artifact_result": {
+        "id": 12103744159,
+        "digest": "sha256:fa04e46ba2cad6c4d76e089c8996ad509d4b7be4367bb9df9ffad1b89e0d6c9b"
+      }
+    },
+    "SPARSE_AB": {
+      "run": 39041159871,
+      "attempt": 1,
+      "conclusion": "success",
+      "A_cpu_s_per_gib": 3914.6334016853334,
+      "B_cpu_s_per_gib": 3837.6092030293335,
+      "cpu_status": "NOT_QUALIFIED_LOW_SAMPLE",
+      "p99_c2s_us": {
+        "A": 334,
+        "B": 178
+      },
+      "p99_s2c_us": {
+        "A": 392,
+        "B": 215
+      },
+      "missing": 0,
+      "invalid": 0,
+      "artifact_build": {
+        "id": 12104261195,
+        "digest": "sha256:ac24a7f5f1c5ce5679c5d9285eea602e35b81dc0c4b89f84c622d25bb7f1866d"
+      },
+      "artifact_result": {
+        "id": 12103822417,
+        "digest": "sha256:39133ad633cd3daadc60a8636f7d42be485fea1057893377795dc279a2cd59b6"
+      }
+    },
+    "interpretation": "Both P10 paired CPU decreases are small and do not independently establish stable significant benefit; sparse delivery/age useful but not product latency SLA. All paired legs full delivered, zero bad/missing. Main purpose low-latency correctness and honest prefix cleanup."
+  },
+  "historical_preserved": {
+    "D10": {
+      "run": 39032995995,
+      "result": "FAIL_INCONCLUSIVE_OLD_A_TRACED_C2S_14569_MISSING",
+      "rerun": "NOT_RUN"
+    },
+    "C50/100/500Mbps": "NOT_RUN",
+    "R0-023 gates": "OPEN",
+    "oversize/reassembly": "OPEN",
+    "M1 Game/M2 recovery/M3 FEC-on product combined": "NOT_RUN",
+    "physical/Windows native/product": "NOT_RUN"
+  },
+  "rollback": "Revert code commit 9c76636a (engine and Go regression test) while keeping source-pinned receipt and baseline; restores known blocked-750ms/overbroad-completion behavior, not recommended. Workflow-only commits may be reverted separately.",
+  "next_action": "M0 stop 024 micro-optimization here; resume bounded main integration of frozen M1/M4 and original R0-023/oversize/Stop gates as independently authorized, without relabeling D10 or production capability."
+}
