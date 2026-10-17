@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
+  "code_source_sha": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
+  "result": "PARTIAL_M4_SCOPED_PLATFORM_IMPORTED_ORIGINAL_GO_RUST_TYPED_RAW_NATIVE_PASS_GOVERNANCE_REMOTE_READ_FAIL",
+  "unverified": true,
+  "user_instruction": "Inspect other workstations and outstanding M0 dependencies, assign full workpacks only to truly finished/idle roles, then continue existing 024.",
+  "workers": {
+    "authority": {
+      "control_branch": "main",
+      "registry_revision": 2,
+      "assignment_epoch": 1,
+      "registration_source": "b4f425fb151b5b5d6c7b1ab3513ee606c81c4695",
+      "decision": "docs/decisions/M0-followup-module-workpackages-2026-10-17.md"
+    },
+    "M1": {
+      "prior_task": "R1-M1-OWNER-MEMORY-READY-WORKPACK-011",
+      "handoff_head": "01cdc623d0722fc2c1f47c23a4c2024752ac4d94",
+      "exact_previous_code": "89a3acb23616a46ecc65fc2dcd0b75182b6b482a",
+      "native_run": 38998296147,
+      "tests": "98/98 component r1_",
+      "state_at_review": "ready_for_integration",
+      "assigned_task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+      "scope": "M1 runtime/memory, bounded SPSC and wake; M0 owns Cargo pin and true Go adapter",
+      "new_workpack_tests": "NOT_RUN",
+      "root_requests": [
+        ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+        ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md"
+      ]
+    },
+    "M2": {
+      "prior_head": "e48516d755ec0c205d23def7481b6122a6675990",
+      "task": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+      "progress": "partial",
+      "last_source": "269fd8f88ba6df97ebb8fe1f3e29cc58b1ca90c2",
+      "remaining": "PTO tail single probe per lane vs 32 eligible RACK bounded candidates; do not reassign",
+      "known_governance_failures": "Historical worker H structure cross-main context ref, corrected locally; worker owns new check"
+    },
+    "M3": {
+      "prior_head": "93d80cb09b4e477d5c096c89ba46da086d3b039f",
+      "task": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+      "progress": "partial",
+      "last_tested_source": "5f8fccbc3d9e75d72d6ef12a30fcf6971ff51da1",
+      "remaining": "Native ISA-L root dependency and Action requested of M0; new worker S after previous H must keep exact-source tests",
+      "request": "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md"
+    },
+    "M4": {
+      "prior_task": "R1-M4-CARRIER-DRIVER-BATCH-WORKPACK-011",
+      "handoff_head": "42a622f30317f32f105ce13f2b298f9f05f14615",
+      "exact_previous_code": "aae512d1953975476ab78081f5801436c6573fda",
+      "native_run": 38998105581,
+      "tests": "88/88 platform unprivileged r1_",
+      "state_at_review": "ready_for_integration",
+      "assigned_task": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
+      "scope": "M4 platform/Go-bridge original raw-TUN driver route/Stop/loan races",
+      "new_workpack_tests": "NOT_RUN"
+    }
+  },
+  "integration": {
+    "first_source": "b4f425fb151b5b5d6c7b1ab3513ee606c81c4695",
+    "platform_source": "aae512d1953975476ab78081f5801436c6573fda",
+    "exact_blob_paths": [
+      "crates/wbd-platform/src/linux_batch.rs",
+      "crates/wbd-platform/src/linux_raw_carrier.rs",
+      "crates/wbd-platform/src/linux_tun_sink.rs",
+      "crates/wbd-platform/src/linux_mtu_scope.rs",
+      "crates/wbd-platform/src/lib.rs"
+    ],
+    "already_identical": [
+      "crates/wbd-platform/src/linux_packet_preflight.rs",
+      "crates/wbd-platform/src/linux_route_events.rs"
+    ],
+    "original_go_native": {
+      "run_id": 38999483681,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_artifact": {
+        "id": 12088666490,
+        "digest": "sha256:435753127e370aa301ef84dc23a2254b39cdc66f74f01a13ab8ff1041479a981"
+      },
+      "result_artifact": {
+        "id": 12088995194,
+        "digest": "sha256:050cecbc8e36d64856b4bf69c1468449b0820bc9249bc8d506d9cfdd6cd543b5"
+      },
+      "limitations": "Shows integrated original Go protected Rust owner native functional path on this source. Not a P10 Rust AB/BA cost comparison."
+    },
+    "M0_owner_change": {
+      "first_code_source": "874d648bad1be935a2eb11476f787f5ab68430db",
+      "final_source": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
+      "paths": [
+        "crates/wbd-engine/src/v4_owner_crypto.rs",
+        "crates/wbd-engine/src/v4_embedded_go.rs",
+        ".github/workflows/m0-v4-native-owner-probe.yml"
+      ],
+      "semantics": "Original M1 FrozenRecord LoanBatch remains owner-held, M4 raw send_ready_batch receives a borrowed singleton immutable handle (no reseal, clone, new PN, or interim byte copy); typed KernelSendReport prefix/uncertain/error distinguishes definitely kernel-copied record from backpressure, EMSGSIZE, device unavailable and short-send. Original Go one-off compatibility send_one remains supported. Batch sequence currently has one owner-ready record at a time; raw ready path is sequential sendto (not one sendmmsg). Recycle loan storage even when send fails. Any unsuccessful native send revokes owner MTU snapshot conservatively; platform ScopedRouteBudget caches ≤1s and kernel DF retains final authority. No per-DATA sysfs in M4 stable link revision path. No new CLI/config/production feature."
+    },
+    "new_native": {
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38999730934,
+      "attempt": 1,
+      "code_sha": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
+      "conclusion": "success",
+      "build_job_id": 117299914111,
+      "consume_job_id": 117300213496,
+      "build_artifact": {
+        "id": 12088567420,
+        "digest": "sha256:527259229114ec4d0bd92fcefec117b5e37e401011c52d41ec16c038cd848472"
+      },
+      "result_artifact": {
+        "id": 12087919062,
+        "digest": "sha256:01ba2a0b82a2819e7836b2adceb76c7bf73308b62477c1d8fdb44ff6076eeca4"
+      },
+      "witnesses": [
+        "v4_embedded_go::tests::m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate ... ok",
+        "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok",
+        "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS exact encrypted PN0 lost, PN1 delivered original Rust Normal/off to real TUN",
+        "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS independent genuine Linux raw/TUN",
+        "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=1 revision_after=2 refresh_before=1 refresh_after=2",
+        "EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true",
+        "M0_DEV_NORMAL_OFF_10MBPS_RECEIPT bilateral offered/delivered 10.000Mbps, 10s warmup +60s measure"
+      ],
+      "dev_result": {
+        "offered_c2s_mbps": 10,
+        "delivered_c2s_mbps": 10,
+        "offered_s2c_mbps": 10,
+        "delivered_s2c_mbps": 10,
+        "rust_rx_worker_cpu_s": 3.4377,
+        "rust_tx_worker_cpu_s": 3.3654,
+        "scope": "UNPAIRED_DEVELOPMENT_CPU_ABSOLUTE_ONLY; not compared across runners. Exact same-VM source-locked A/B and independent B/A still NOT_RUN."
+      }
+    }
+  },
+  "verification": {
+    "scope_note": "Different SOURCE runs and workflow scopes not interchangeable.",
+    "first_source_b4": {
+      "g2": 38999483700,
+      "native_regression": 38999483736,
+      "r0_platform_fake": 38999483711,
+      "cross_abi": 38999483650,
+      "static_audit": 38999483685,
+      "governance_maintenance": 38999483660,
+      "scoped_results": "success",
+      "root_governance": {
+        "run": 38999483713,
+        "result": "failure",
+        "reason": "GitHub API HTTP403 reading git/ref/heads/main"
+      }
+    },
+    "final_source": {
+      "native": 38999730934,
+      "governance_maintenance": 38999730970,
+      "governance_maintenance_result": "success",
+      "governance": {
+        "run": 38999730947,
+        "result": "failure",
+        "reason": "GitHub API HTTP403 reading git/ref/heads/main; no main role identity/structure PASS, retain failure"
+      }
+    },
+    "worker_audit_failure": {
+      "run": 38999539066,
+      "branch": "work/m3-r1-codec",
+      "source": "1341d3a9072e7c3d658fbb0a29407ac144e52137",
+      "result": "failure",
+      "reason": "GitHub API HTTP403 reading worker docs/devlog; not scoped code test failure. Worker handles branch metadata."
+    },
+    "main_commit_graph": [
+      "9dd248d64d42dcb2e0273d169e075dfc2d77e7c2",
+      "b4f425fb151b5b5d6c7b1ab3513ee606c81c4695",
+      "874d648bad1be935a2eb11476f787f5ab68430db",
+      "2eee6abcff6b76dbae1154e68d30d2292dc58967"
+    ]
+  },
+  "remaining": {
+    "M0": [
+      "024 in-session TX/RX mutable owner direction lock split still open; M1 new 012 provides runtime/SPSC interfaces.",
+      "Native raw RX/TUN <=32 accumulated original owner batch still not proven for multi-record admitted one syscall; current owner one packet at a time.",
+      "Same VM P10 AB/BA, D10 and SPARSE distinct scenario proof, capacity conditional C50 NOT_RUN.",
+      "Route/ifindex replacement, kernel loan STOP and oversize fragmentation product scenarios require further actual integrated hard gates.",
+      "M0 shared Cargo/locked rtrb/loom and native ISA-L binding request for M1/M3 need a scoped reproducible Actions decision; no untested dependency was added.",
+      "Governance remote read 403 needs recovery/resolution, does not become PASS from native green."
+    ],
+    "worker_ownership": "M1/M4 next workpack changes remain in their allowed paths on own branches, M2/M3 retain existing tasks. M0 will not author platform while M4 active. No new epoch, path expansion or product rollout.",
+    "original_task_023": "UNVERIFIED",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_features": 0,
+    "task_024": "PARTIAL"
+  }
+}
