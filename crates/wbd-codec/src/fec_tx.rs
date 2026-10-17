@@ -163,6 +163,15 @@ impl FecTxOwner {
         }
         Ok(())
     }
+    // At the terminal u64 boundary even an otherwise legal wire ID cannot
+    // be reserved: reserve_id must be able to advance past it. Predict this
+    // BEFORE closing old blocks, since a later Err would discard the parity
+    // already collected in submit's local TxBatch.
+    fn can_reserve_id(&self)->bool{
+        let id=self.next_id;
+        id!=0 && id as u32!=0 && id.checked_add(1).is_some_and(|next|
+            next as u32!=0 || next.checked_add(1).is_some())
+    }
     fn reserve_id(&mut self)->Result<u64,TxError>{
         let id=self.next_id;
         if id==0||id as u32==0{return Err(TxError::IdExhausted);}
@@ -258,6 +267,22 @@ impl FecTxOwner {
                 self.stats.backpressure_rejections+=1;
                 return Err(TxError::Backpressure);
             }
+        }
+        // Reject terminal BlockID exhaustion before flush_due/reconfiguration
+        // can generate parity that would otherwise be lost with this Err.
+        // A still-open compatible block may accept more sources without a new
+        // ID. At the terminal boundary, fail closed on synchronous pressure:
+        // it might close that block before the next admission.
+        let now=self.clock_ms.max(now_ms);
+        let class=Self::class(profile,wire_limit,source.len(),large_fragment_hint);
+        let open_compatible=self.groups[class].as_ref().is_some_and(|b|
+            b.profile==profile && b.wire_limit==wire_limit &&
+            now<b.first_ms.saturating_add(FLUSH_MS));
+        let pressure_may_close=!self.cooperative &&
+            self.held.saturating_add(self.pending_bytes)
+                .saturating_add(source.len())>self.budget;
+        if !self.can_reserve_id() && (!open_compatible || pressure_may_close){
+            return Err(TxError::IdExhausted);
         }
         let now=self.clock(now_ms);
         let mut out=self.flush_due(now)?;
