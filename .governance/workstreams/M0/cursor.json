@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 124,
-  "checkpoint_sha": "a6b0a79f3e6367ad028b4ce857cf04d89e286139",
+  "sequence": 125,
+  "checkpoint_sha": "fc578cb148ef952bb8836497ff08844dccc9bfbf",
   "progress": "paused",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024 IMPLEMENTATION DONE; qualification PAUSED at D10 tracer capacity. Original authenticated RX/TX directional ownership, ready raw/TUN kernel batch, route cache, seq64, buffers and functional native PASS; P10 AB/BA and sparse PASS at exact development SOURCE. D10 old A traced C2S shortfall FAIL/INCONCLUSIVE. Do not claim fully verified product or manufacture reviewed PASS.",
-  "why_now": "H122 Governance39033641316 rejected ready_for_integration+unverified=true; H123 Governance39033749428 rejected verified state without result=PASS/artifact_verified=true. Precise D10 tracer A remains FAIL, so do not relabel evidence as PASS to force readiness. Keep truthful paused/unverified developer-qualification boundary; functional code+P10 proof unchanged.",
-  "done_when": "Structural 024 code optimized with true original Go/TLS→Rust→raw/TUN native PASS and equal-delivery same-VM P10 AB/BA plus sparse PASS. Final formal ready_for_integration NOT_CLAIMED because D10 tracer baseline shortfall, historical capacity, C50/actual high pressure NOT_RUN. Close current engineering work at bounded external diagnostic boundary; no more identical D10 runs without new evidence.",
-  "next_action": "M0 keep 024 paused for future trace-capable/high-pressure independent evidence; proceed only separately authorized existing main stage integration of frozen M1/M4 with original R0-023/oversize/Stop gates, preserving this D10 FAIL and not redoing 024 CPU tuning.",
+  "current_task": "024 scoped TUN nonblocking and TX batch-prefix completion PATCH DONE; native real TUN IPv6 cross-direction first delivery + typed partial/uncertain/EAGAIN tests PASS, paired P10 AB/BA and 20pps sparse PASS; CPU small advantage INCONCLUSIVE. Whole 024 product/trace qualification remains PAUSED at historical D10 FAIL.",
+  "why_now": "User explicitly bounded two post-direction-split defects. Freeze main A 80b47c before code, implement B 9c76636 on real owner engine only, source-lock workflow 7b3abb and final native functional fca445. No unresolved main Actions at handoff; no M4 worker driver file touched.",
+  "done_when": "This bounded patch done at reviewed real native and exact same-job P10 AB/BA and sparse. Keep pre-existing D10 fail, R0-023/oversize/physical/product/C50 qualification OPEN, unverified=true. No more 024 microoptimization for small CPU gain.",
+  "next_action": "M0 resume separately authorized main-stage integration of frozen M1/M4 (verify branch/source/active writer), preserving R0-023, oversize, Stop and security gates; update main task assignment for new bounded integration scope before unrelated code.",
   "unverified": true,
-  "last_tested_source": "dfe54df144450f22f5144fd3b43335635e01eb90",
+  "last_tested_source": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json"
+    "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/devlog/M0/M0-024-directional-closure-2026-10-17.md",
     "docs/architecture/TEST_PLAN.md",
@@ -27,5 +28,5 @@
     "docs/decisions/M0-game-recovery-parallel-workpacks-2026-10-17.md"
   ],
   "open_requests": [],
-  "partial_summary": "H124 truthful handoff: CODE9032476 original independent RX replay/PN+LINK/slab owner, no Entry/TX per-packet lock; original kernel 32-ready recvmmsg/sendmmsg, cached route, seq64 TX. Native SOURCE9032476 PASS; P10 AB -14.50%, BA -10.94%, sparse PASS on SOURCE48c6 (all no missing/invalid). Traced D10 SOURCBeim dfe54df A 14569 missing, B0 => diagnostic FAIL/INCONCLUSIVE. H122/H123 Governance failure were metadata contradictions, not test results: do not claim task verified until reviewed PASS evidence exists. Stop duplicate diagnostic; C50/product/physical/R0-023/oversize/combined M1-M4 remain OPEN. No new CLI/GUI options."
+  "partial_summary": "New SOURCE evidence independent: native39041377796 true IPv6 filtered-to-C2S first arrival <400ms, exact TX 0/1/32/33 partial/unknown typed test, kernel MTU/no-HOL PASS; P10 AB39041159892 −1.75%, BA39041159913 −0.80%, both 0 missing, sparse39041159871 0 missing. Positive small/no stable causal CPU claim. No D10 rerun or production qualification."
 }
