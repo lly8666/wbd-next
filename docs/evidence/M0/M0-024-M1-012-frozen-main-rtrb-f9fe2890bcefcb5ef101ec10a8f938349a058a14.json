@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "branch": "main",
+  "source_sha": "f9fe2890bcefcb5ef101ec10a8f938349a058a14",
+  "artifact_verified": true,
+  "result": "PARTIAL_MAIN_M1_012_SPSC_0_3_2_SIX_TESTS_PASS_PRODUCTION_OFF",
+  "unverified": true,
+  "production_features": 0,
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "registry_revision": 2,
+  "assignment_epoch": 1,
+  "main_role": "R1-M0-HOTPATH-COST-024",
+  "M1_accepted_component": {
+    "code_source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+    "worker_H": "9d4f68aab2bb1f57bfb96dd8a472bc7eec43f556",
+    "worker_task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+    "worker_status": "ready_for_integration",
+    "scoped_worker_native": {
+      "id": 39015538871,
+      "conclusion": "success",
+      "outer_count": "104 passed",
+      "actual_rtrb_0_3_2_6_pass": true,
+      "artifact": 12094184835
+    },
+    "worker_same_source_other": {
+      "governance": 39015538876,
+      "G2": 39015538873,
+      "qualification": 39015538894,
+      "cross_ABI": 39015538874,
+      "old_R0_ABI_FAIL": 39015538885
+    },
+    "central_scope_main": {
+      "id": 39017472652,
+      "conclusion": "success"
+    }
+  },
+  "M0_import": {
+    "source": "acd184a11a73926d71fcf3e727e24871f9bb3a67",
+    "paths_worker_blobs": [
+      {
+        "path": "crates/wbd-engine/src/runtime/directional.rs",
+        "git_blob": "bd25217b8fd30a71b5bbaf1bc1718f67f677da29"
+      },
+      {
+        "path": "crates/wbd-engine/src/runtime/directional_compat.rs",
+        "git_blob": "26f83b32a286265e4f9e65f13a7cf659317591a9"
+      },
+      {
+        "path": "crates/wbd-engine/src/runtime/directional_rtrb.rs",
+        "git_blob": "c2a4f4e524830c1d3ef822fde60f1ff853689cdc"
+      },
+      {
+        "path": "crates/wbd-engine/src/runtime/wake.rs",
+        "git_blob": "c23611d7e591c0a7b46ef4b78be308a2faa81847"
+      }
+    ],
+    "M0_owned_connector": [
+      "crates/wbd-engine/src/runtime/mod.rs adds pub mod directional",
+      "crates/wbd-engine/Cargo.toml adds m1_rtrb = [] feature behind default-off, same frozen rtrb=0.3.2 Cargo.lock"
+    ],
+    "default_compatibility": "sync_channel fallback when m1_rtrb feature not selected",
+    "not_overwritten": "Go TLS admission, AEAD/PN runtime owner composition and session code remain existing"
+  },
+  "staged_root_ci": {
+    "import_source": "acd184a11a73926d71fcf3e727e24871f9bb3a67",
+    "native_integration": {
+      "id": 39018528429,
+      "result": "success",
+      "build_artifact": {
+        "id": 12096011288,
+        "digest": "sha256:ceb910a228806b1336ad7d6e1f4d7dfadca53f19c7195860e1af80f9a691766d"
+      },
+      "result_artifact": {
+        "id": 12096175788,
+        "digest": "sha256:30cb6e76eec5bc61faeaf8bfae2c4ffd1e93726b762881bf1658b7dd91c42bd7"
+      },
+      "witness": [
+        "GoTLS PN0 kernel dropped, PN1 Rust TUN delivered",
+        "MTU65536 to1500 fail closed, netlink1 to2 refresh",
+        "10s warmup+60s normal-off developer bilateral offered/delivered 10Mbps"
+      ],
+      "qualified": "default production-feature OFF, same original Go Rust raw/TUN unaffected"
+    },
+    "G2": {
+      "id": 39018528372,
+      "result": "success"
+    },
+    "native_regression": {
+      "id": 39018528367,
+      "result": "success"
+    },
+    "R0_ABI": {
+      "id": 39018528378,
+      "result": "success"
+    },
+    "R0_cross_ABI": {
+      "id": 39018528532,
+      "result": "success"
+    },
+    "legacy_workflow": {
+      "id": 39018528389,
+      "result": "failure",
+      "cause": "shared formal M1 runner expected feature not already declared in main and old worker SOURCE; historical FAIL"
+    }
+  },
+  "final_feature_native": {
+    "source": "f9fe2890bcefcb5ef101ec10a8f938349a058a14",
+    "run": 39018675363,
+    "conclusion": "success",
+    "jobs": {
+      "worker_build": 117355906947,
+      "main_native": 117355907088,
+      "worker_consume": 117356028305
+    },
+    "build_artifact": {
+      "id": 12096096047,
+      "digest": "sha256:22acf0c4f61bf0efcdc3c7dea758bff1225bcea46accffe0f6506e82f3ee41f2"
+    },
+    "result_artifact": {
+      "id": 12095842567,
+      "digest": "sha256:8a15bb4484f331f0552470f256f8af05aa4ed7fc50e9545e14c11eb9b3fca1c8"
+    },
+    "actual_main": {
+      "pass": 6,
+      "fail": 0,
+      "mode": "--features m1_rtrb --locked compiled+ran real six tests",
+      "witness": "M0_MAIN_M1_FROZEN_RTRB_SIX_NATIVE_PASS"
+    },
+    "worker_frozen": {
+      "pass": 6,
+      "fail": 0,
+      "witness": "M0_M1_REAL_RTRB032_FIVE_SCOPED_NATIVE_PASS (legacy name despite six cases)",
+      "worker_source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2"
+    },
+    "cases": [
+      "r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill",
+      "r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss",
+      "r1_rtrb_direction_b04_stop_late_lease_epoch_aba",
+      "r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx",
+      "r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject",
+      "r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans"
+    ]
+  },
+  "main_governance": {
+    "id": 39018675385,
+    "conclusion": "success"
+  },
+  "maintenance": {
+    "id": 39018675362,
+    "conclusion": "success"
+  },
+  "M3_previous": {
+    "workflow": "m0-m3-isal-native.yml",
+    "latest_verified_run": 39016665239,
+    "status": "success",
+    "native_backend": "Linux x86_64 Intel ISA-L 2.31.1 verified; opt-in; no Go V4 FEC-on"
+  },
+  "M4_previous": {
+    "worker_frozen_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "integrated_original_worker_tx": "one-message per sendmmsg",
+    "integrated_original_worker_rx": "one-message per recvmmsg",
+    "last_original_kernel_run": 39016914069,
+    "conclusion": "success",
+    "no_32_aggregate_claim": true
+  },
+  "open_hard_requirements": [
+    "true protected same Go TLS session TX/RX mutable owner split into safe directional units; Arc<Mutex<Entry>> still serializes both authenticated paths",
+    "M1 data ingress not yet connected to main Go owner under feature on; no production activation",
+    "loom 0.7.2 dev-only exhaustive wake/Stop pending, not reported PASS",
+    "M4 32 original ready messages single syscall not demonstrated",
+    "fair P10 A/B B/A within same Actions/VM after changed engine SOURCE not tested",
+    "D10 full strace historic failure39014446221 remains FAIL",
+    "live Go FEC-on, physical and product/500Mbps NOT_RUN"
+  ],
+  "next": "Integrate same-session original mutable owner direction API without unsafe aliasing; preserve Prepare->Detach->Commit, original PN/seq, epoch/Stop, driver raw/TUN and loan lifecycle. Then independent fixed scenario same-job/VM performance AB and BA; no CPU inference across unrelated runs."
+}
