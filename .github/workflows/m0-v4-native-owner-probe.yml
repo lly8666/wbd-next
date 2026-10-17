@@ -9,6 +9,7 @@ on:
       - "tools/run-v4-tun-netns.sh"
       - "crates/wbd-platform/src/linux_tun_sink.rs"
       - "crates/wbd-platform/src/linux_raw_carrier.rs"
+      - "crates/wbd-platform/src/ipv4_tcp.rs"
       - "Cargo.toml"
       - "Cargo.lock"
       - "crates/wbd-engine/Cargo.toml"
