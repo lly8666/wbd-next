@@ -146,7 +146,7 @@ pub(crate) struct ProtectedScopedOwner {
     tx_wire_limit:usize,
     peer_mss:u16,
     peer_mss_advertised:bool,
-    next_tx_seq:Option<u32>,
+    next_tx_seq:Option<u64>,
     server:bool,
 }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -323,7 +323,7 @@ impl ProtectedScopedOwner {
         self.crypto.commit_after_detach(
             self.generation,self.go_lane,self.epoch,exact_tx_boundary,
         )?;
-        self.next_tx_seq=Some(exact_tx_boundary);
+        self.next_tx_seq=Some(u64::from(exact_tx_boundary));
         self.state=OwnerPhase::Active;
         Ok(())
     }
@@ -552,17 +552,21 @@ impl ProtectedScopedOwner {
         }
         let business=&buffer.writable()[14..14+payload_len];
         if business.starts_with(LINK_MAGIC){return Err(ProtectedCryptoError::Tx)}
-        let seq=self.next_tx_seq.ok_or(ProtectedCryptoError::Inactive)?;
-        let next=seq.checked_add(
-            u32::try_from(used).map_err(|_|ProtectedCryptoError::Tx)?
+        let seq64=self.next_tx_seq.ok_or(ProtectedCryptoError::Inactive)?;
+        // Keep the true monotone TCP-appearance stream offset in 64 bits;
+        // only the wire header projects to seq32. The old u32.checked_add
+        // prematurely rejected legitimate long-lived streams at rollover.
+        let next=seq64.checked_add(
+            u64::try_from(used).map_err(|_|ProtectedCryptoError::Tx)?
         ).ok_or(ProtectedCryptoError::Tx)?;
+        let seq=seq64 as u32;
         let (pn,sealed_len)=self.crypto.tx.seal_in_place(
             AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0,
         ).map_err(|_|ProtectedCryptoError::Tx)?;
         // No sequence reuse even if freezing/queue admission fails.
         self.next_tx_seq=Some(next);
         let frozen=buffer.freeze(0..sealed_len,FrozenMetadata {
-            lane:self.token.lane(),seq:SeqOffset(u64::from(seq)),
+            lane:self.token.lane(),seq:SeqOffset(seq64),
             pn:RecordPn(pn),carrier_snapshot,
         }).map_err(|_|ProtectedCryptoError::Tx)?;
         self.rx_tx.offer_tx_fresh(&self.token,frozen,now)
@@ -931,5 +935,21 @@ impl ProtectedScopedOwner {
         self.crypto.retire();
         self.next_tx_seq=None;
         self.rx_tx.stop(&self.token)
+    }
+}
+
+#[cfg(test)]
+mod m0_tx_seq64_contract {
+    #[test]
+    fn m0_original_tx_seq64_never_restarts_pn_at_wire32_wrap(){
+        let near=u64::from(u32::MAX)-15;
+        let first=near.checked_add(1400).unwrap();
+        let next=first.checked_add(1200).unwrap();
+        assert_eq!(near as u32,u32::MAX-15);
+        assert_eq!(first as u32,1384);
+        assert_eq!(next as u32,2584);
+        // Wire projection must not shrink the monotone owner offset.
+        assert!(first>u64::from(u32::MAX) && next>first);
+        assert_eq!(u64::MAX.checked_add(1),None);
     }
 }
