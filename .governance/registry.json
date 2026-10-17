@@ -45,9 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "完整包：在M1 runtime/memory权限内构建真实TX/RX方向owned可转移/有界SPSC与唤醒Stop接口；基于完成的011 ReadyTurn/return行为，供M0保护的Rust owner集成。",
-      "done_when": "M1-012：真实线程队列方向隔离、0/1/32/33、SPSC满返还、不丢唤醒/Stop借用/epoch回绕、稀疏和公平性反例精确SOURCE native Actions通过；对M0冻结编译接口和不能覆盖的Go/kernel/loom缺口交付。",
-      "assigned_task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012"
+      "goal": "已交付012方向SPSC；新完整包只在M1的runtime/memory/tests中交付Game共享logical TX/RX组件与Normal轮换保护（module09、02/03），M0负责V4身份、codec/engine真实接线。",
+      "done_when": "PACK-013 M1：G01–G04/R01–R04/M01–M04相关公共调度/句柄功能反例同SOURCE native Actions合批，含Normal不复制、Game共享ID及首到、慢lane/rotation、parity首发不占10% repair、Wake失败重试/Stop归还；冻结接口、资源上界和Go/native/产品NOT_RUN边界交付。",
+      "assigned_task": "R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013"
     },
     {
       "id": "M2",
@@ -70,9 +70,9 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "完整包：按 PACK-006 / module 08，真实确认语义、shadow/RACK/PTO、最多两次同密文修复、稀疏与总额边界；保留原008事实。",
-      "done_when": "PACK-006 M2：A01-A06和R01-R04相关fake-clock/handle/压力反例与预算在精确SOURCE Actions验收，输出组合所需接口，Go产品仍NOT_RUN。",
-      "assigned_task": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009"
+      "goal": "已交付009纯恢复组件；在wbd-recovery权限内补最小引擎接入契约：认证后receipt作用域、冻结repair句柄与kernel prefix/uncertain完成翻译、fresh独立/预算，供M0真实Go/Rust owner集中接线。",
+      "done_when": "PACK-010 M2：A01–A06/R01–R04现有含跨界与partial/unknown/同cipher最多2次/稀疏资源上限的typed ingress adapter反例，在精确SOURCE native Actions通过，冻结参数、失败行为与预算，保留009 PASS；Go认证入口、M3封包、M4 raw/TUN/物理与产品资格NOT_RUN并交M0。",
+      "assigned_task": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010"
     },
     {
       "id": "M3",
