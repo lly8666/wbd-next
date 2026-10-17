@@ -79,7 +79,23 @@ printf 'M1_RTRB_PINNED_NATIVE_PASS source=%s main=%s version=0.3.2 mode=safe_pop
             "missing true-rtrb success receipt: {}",stdout);
         assert!(stdout.contains("5 passed; 0 failed"),
             "five actually compiled and executed rtrb integration cases not seen: {}",stdout);
-        println!("{}",stdout);
+        // The outer worker-native reporter only understands ONE Rust
+        // test-run summary and parses "test ... ok" globally. The nested
+        // cargo binary has its OWN five tests: explicitly check their
+        // result in-memory, then emit distinct receipts (never a nested
+        // "test result:" or "test ... ok" line into the outer log).
+        for case in [
+            "r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill",
+            "r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss",
+            "r1_rtrb_direction_b04_stop_late_lease_epoch_aba",
+            "r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx",
+            "r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject",
+        ]{
+            assert!(stdout.contains(&format!("{} ... ok",case)),
+                "missing exact executed rtrb test {}: {}",case,stdout);
+            println!("M1_RTRB_CASE_PASS {}",case);
+        }
+        println!("M1_RTRB_PINNED_NATIVE_PASS version=0.3.2 cases=5");
         println!("M1_RTRB_OVERLAY_ATTESTED main={} exact-worker-source={}",
             M0_SHARED,std::env::var("GITHUB_SHA").unwrap_or_default());
     }
