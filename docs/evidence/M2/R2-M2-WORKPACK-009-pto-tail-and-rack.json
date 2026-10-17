@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "660c4d392b78c8242dcf04e1d2634797959718f3",
+  "result": "PASS",
+  "result_scope": "SCOPED_PURE_R2_PTO_TAIL_RACK_AND_QUEUE_INDEX_NATIVE_NOT_PRODUCT",
+  "artifact_verified": true,
+  "code_source": "660c4d392b78c8242dcf04e1d2634797959718f3",
+  "source_paths": [
+    "crates/wbd-recovery/src/receipt.rs",
+    "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
+  ],
+  "native": {
+    "run_id": 39000122056,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 117301084269,
+    "consume_job_id": 117301154886,
+    "tests_passed": 64,
+    "tests_failed": 0,
+    "compiled_once": true,
+    "binary_sha256": "a4b58de946ec59b0d04f8ddd925891fc0e3501b17ca8d3c42ae08d95df91862e",
+    "log_sha256": "af52d0e887d4a7a523f57bf8ecd6a009afa4fbe8fb39f6f8bbd4cdc891e784af",
+    "artifact_id": 12088374078,
+    "artifact_digest": "sha256:9a1574a5deb90782c85534a17562d0940d90a4f1ac4764c1b349d2792efb730c",
+    "zip_sha256_verified": true,
+    "expires_at": "2026-11-16T03:47:56Z"
+  },
+  "g2_bootstrap": {
+    "run_id": 39000122045,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12088463646,
+    "artifact_digest": "sha256:7eabcac70191646c9291f82fcb3ab742d8d193f0ed78a890f12819edc3d41f7f",
+    "zip_sha256_verified": true,
+    "scope": "BOOTSTRAP_ONLY"
+  },
+  "static_audit": {
+    "run_id": 39000122051,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12088553087,
+    "artifact_digest": "sha256:544661f10627bbeb575f7d23ebc927c3e64a8276d3ea0974fbf196a6b46310c4",
+    "zip_sha256_verified": true,
+    "scope": "HISTORIC_SOURCE_LOCK_ONLY"
+  },
+  "source_governance": {
+    "run_id": 39000122062,
+    "attempt": 1,
+    "conclusion": "failure",
+    "job_id": 117301084509,
+    "artifact_id": 12088003964,
+    "artifact_digest": "sha256:8b8e680f295e264f235aa312fa155957d15ce996e78572a9e652195ff99de701",
+    "reason": "ROLE_SCOPE_FAILED: GitHub read failed HTTP 403: compare/83bd720368b9be68b3c4c94d7462d20cf4d796db...660c4d392b78c8242dcf04e1d2634797959718f3",
+    "classification": "EXTERNAL_GITHUB_COMPARE_READ_FAILURE_NO_SOURCE_SCOPE_PASS"
+  },
+  "coverage": {
+    "pto": "Unreported PTO once per injected PTO interval per lane, not 32 at same deadline; fake-mono 33/10k backlog and no same-time repeat",
+    "rack": "Three verified later-data witnesses permit 32 genuinely due candidates even while tail PTO is throttled",
+    "queued": "Independent bounded queued-expiry index does not starve behind the unreported PTO head, expired queue token cannot later send",
+    "eviction": "Hard expiry releases all once, no queued-index tombstones, shadow remains bounded",
+    "scope": "FrozenRecordHandle clone references immutable original ciphertext/PN; no seal, PN allocator, socket or engine; existing 63/63 retained plus one new regression"
+  },
+  "known_limits": [
+    "Global receive AUTH producer and Go V4 lane proof belong to M0/M3; component test constructors are synthetic.",
+    "M1 real returnable FrozenRecord and M4 raw/TUN driver/engine scheduling NOT_RUN.",
+    "Formal product loss/PTO/MTU/latency/physical/500Mbps NOT_RUN.",
+    "Per-source Governance currently not success (external GitHub HTTP 403); independent role check on new evidence and H still pending."
+  ],
+  "product": "NOT_RUN",
+  "real_auth": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "next_action": "Continue PACK-009 on module-owned needed fake-clock/generation/uncertain/fairness counterexamples; obtain independent governance success when GitHub compare read is available; do not treat central failure as R2 product failure."
+}
