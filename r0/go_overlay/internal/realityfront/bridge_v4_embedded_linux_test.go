@@ -983,4 +983,73 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     t.Logf("EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=%d revision_after=%d refresh_before=%d refresh_after=%d",eventBefore,eventAfter,refreshBefore,refreshAfter)
     t.Logf("EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=%d new_mtu=1500 s2c_tx_ok=%d driver_reject_increased=true",
         oldMTU,stats.TxOK)
+
+    // Separate original real TUN ingress from the original outer raw MTU:
+    // a single 1728B inner IPv4 datagram is legal at TUN MTU2000, but
+    // must NOT escape as an unfragmented Normal/off record under the
+    // original Go/TLS/Rust owner negotiated LINK frame budget. This tests
+    // a real Linux packet, not a fabricated oversize seal buffer. The
+    // positive authenticated multi-fragment TX path remains explicitly OPEN.
+    if out,e:=exec.Command("ip","link","set","dev","lo","mtu",
+        strconv.Itoa(oldMTU)).CombinedOutput();e!=nil{
+        t.Fatalf("restore real raw lo MTU before overflow: %v %s",e,out)
+    }
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","2000").CombinedOutput();e!=nil{
+        t.Fatalf("enlarge owned real TUN ingress MTU: %v %s",e,out)
+    }
+    beforeOversize,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    oversizedApp:=bytes.Repeat([]byte{0x7a},1700) // 1728B one inner IPv4 packet
+    if n,e:=app.WriteToUDP(oversizedApp,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(oversizedApp){
+        t.Fatalf("real kernel above-LINK-budget TUN injector n=%d err=%v",n,e)
+    }
+    overflowDeadline:=time.Now().Add(2*time.Second)
+    observedOversize:=false
+    for time.Now().Before(overflowDeadline){
+        got,e:=b.rustOwnerLoopStats()
+        if e!=nil{t.Fatalf("owner stats after real TUN oversize: %v",e)}
+        if got.TxErr>beforeOversize.TxErr{
+            if got.TxOK!=beforeOversize.TxOK{
+                t.Fatalf("above budget TUN payload escaped original owner: before=%+v after=%+v",
+                    beforeOversize,got)
+            }
+            observedOversize=true
+            break
+        }
+        time.Sleep(10*time.Millisecond)
+    }
+    if !observedOversize{
+        t.Fatal("real TUN above negotiated single LINK record budget lacked fail-closed evidence")
+    }
+    // The next *small* live business packet must be admitted after the
+    // rejected oversized one, without retrying/resending its PN or waiting
+    // for a fragment implementation that has not yet been wired.
+    smallAfter:=bytes.Repeat([]byte{0x7b},52)
+    if n,e:=app.WriteToUDP(smallAfter,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(smallAfter){
+        t.Fatalf("small follower after oversize n=%d err=%v",n,e)
+    }
+    followerDeadline:=time.Now().Add(2*time.Second)
+    completed:=false
+    for time.Now().Before(followerDeadline){
+        got,e:=b.rustOwnerLoopStats()
+        if e!=nil{t.Fatalf("owner follower stats: %v",e)}
+        if got.TxOK==beforeOversize.TxOK+1{completed=true;break}
+        if got.TxOK>beforeOversize.TxOK+1{
+            t.Fatalf("unexpected duplicate/extra kernel sends %+v",got)
+        }
+        time.Sleep(10*time.Millisecond)
+    }
+    if !completed{t.Fatal("small following real above-budget TUN datagram suffered HOL")}
+    t.Logf("EMBEDDED_REAL_TUN_ABOVE_LINK_BUDGET_FAIL_CLOSED_NO_HOL_PASS oversized_inner_ipv4_bytes=1728 accepted_oversize=0 next_small_kernel_copied=1")
+    // Stop while both originally spawned RX/TX workers and both actual
+    // kernel drivers remain installed. Join and retire before any generation
+    // can reattach; the M4 late-LoanBatch deterministic contract is a
+    // separate existing component gate, not falsely claimed here.
+    if e:=b.stopRelease();e!=nil{t.Fatalf("real active workers Stop/Release: %v",e)}
+    if e:=b.startRustOwnerLoop(uint32(lo.Index));e==nil{
+        t.Fatal("retired original Go-authenticated Rust session restarted")
+    }
+    t.Log("EMBEDDED_REAL_ACTIVE_WORKERS_STOP_RELEASE_NO_RESTART_PASS")
 }
