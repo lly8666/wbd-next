@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0优先执行 docs/decisions/M0-hotpath-cost-first-2026-10-16.md：移出逐包MTU/路由观测、方向所有权、批量复用和同Actions Rust/Rust对比；收口后再分配后续开发测试。原023、超MTU分片和正式资格缺口保留，按TEST_PLAN第0节批次推进。",
+  "next_decision": "M0继续当前热路径调优；并行工作按 docs/GOVERNANCE.md 第3节完整工作包执行：一次分配、包内自主开发测试修复、阶段集中集成。具体任务读registry，原023/超MTU和正式资格缺口保留，不因并行而重开已完成优化。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

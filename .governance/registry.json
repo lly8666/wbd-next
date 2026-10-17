@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "先完成 docs/decisions/M0-hotpath-cost-first-2026-10-16.md 的热路径成本修复及同Actions Rust/Rust配对；其间仅协调本任务必要依赖，不分配无关下一波。原023和超MTU分片缺口保留。",
-      "done_when": "按热路径补充方案第7节收口：实际路径优化、必要正确性回归、同VM配对与诚实结论齐全；完成后再分配后续开发测试，原023产品资格不自动通过。",
+      "goal": "继续 docs/decisions/M0-hotpath-cost-first-2026-10-16.md 的当前调优；按 docs/GOVERNANCE.md 第3节一次分配其他模块完整工作包，包内自治、阶段集中集成，不逐步派单或争写。原023和超MTU分片缺口保留。",
+      "done_when": "按热路径补充方案第7节收口：实际路径优化、必要正确性回归、同VM配对与诚实结论齐全；其他模块包可并行，按需组合验收，原023产品资格不自动通过。",
       "assigned_task": "R1-M0-HOTPATH-COST-024"
     },
     {
