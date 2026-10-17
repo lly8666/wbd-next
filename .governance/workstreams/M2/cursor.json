@@ -4,25 +4,25 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 22,
-  "checkpoint_sha": "70e76bc0f0693a0b2bffd95f90e23976ce7df091",
+  "sequence": 23,
+  "checkpoint_sha": "85a0b30a2efdb80fdeb7efdf885bc37e17288991",
   "progress": "partial",
   "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
-  "current_task": "PACK-009 R2 RX feedback & controlled frozen handle code SOURCE269fd8f 63/63 worker-native PASS, G2/static/source Governance PASS. Evidence S70e own Gov FAILED moving control; first H4338 Gov scope PASS but structure FAIL missing main-only context_ref. Corrected cursor H seq22 partial/unverified; tail PTO per-lane cap still open.",
-  "why_now": "PACK-009 native source269fd8f PASS 63/63; evidence S70e76bc Governance38998363415 FAIL main moved mid-audit; H4338fa17 Governance38998606694 scope ROLE_SCOPE_PASS 60 but structure FAIL missing cursor context ref docs/decisions/M0-full-module-workpackages-2026-10-17.md, which exists on main not on worker. Cursor-only fix drops that cross-branch context path, retains task authority via main registry. Prior failures preserved.",
-  "done_when": "Continue assigned full PACK-009: scoped recovery feedback/2-attempt repair/sparse budget/expiry/load/native frozen handle and A01-A06,R01-R04 fake-mono tests; correct unreported PTO 32-candidates-per-lane tail storm without preventing 32 real RACK eligible candidates or freshness, then exact-source Actions evidence S/H. New 8 tests plus 55 old succeeded CODE269fd8f. Go V4/engine/driver/physical NOT_RUN.",
-  "next_action": "Within PACK-009, resolve module08 per-lane PTO tail single-probe bound versus existing 32 unreported wake tests, preserve indexed RACK bounded wake/expiry and fresh fairness; then verify with exact-source Actions and record evidence. M0 owns actual Go V4 authenticated adapter/M1 arena/platform integration.",
+  "current_task": "PACK-009 pure R2 PTO tail gate and queued-expiry index CODE SOURCE660c4d3: worker-native39000122056 64/64 PASS compiled once, G2 bootstrap39000122045 SUCCESS, static39000122051 SUCCESS. Governance CODE39000122062 and evidence39000303210 and request39000411222 FAILED recurring GitHub compare API HTTP403; remains unverified. GoV4/engine/platform NOT_RUN.",
+  "why_now": "Resumed seq22 H e48516d with source269fd8f 63/63 and failing Governance main movement. New module08 one-tail-per-PTO-interval bound implemented/tested, retains genuine RACK 32 and queue timeouts, fixes outdated 32-PTO tests. Source-exact R2 tests/G2/static green; independent worker scope audit blocked by GitHub compare HTTP403 at 83bd7203 anchor (~100 ahead), escalated M0 instead of bypass.",
+  "done_when": "Full assigned PACK-009 still open: A01–A06/R01–R04 contract and fake-clock/real controlled frozen handle/pressure/budget evidence, safe two-attempt repair and fresh independence; this atom source660c4d3 native64/64 and G2/static PASS only. Source Governance39000122062 FAIL HTTP403, evidence S692545ab Gov39000303210 FAIL same, request S85a0b30 Gov39000411222 FAIL same; all preserved. Need M0-owned central identity/scope attestation. No product GoV4/physical/500Mbps claims.",
+  "next_action": "Continue only authorized M2 PACK-009 resource/generation/uncertain-fairness fake-clock counterexamples while M0 resolves request M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403; do not retry unchanged HTTP403 or alter shared checker. Requalify exact HEAD evidence/H once independent bounded scope audit is available.",
   "unverified": true,
-  "last_tested_source": "269fd8f88ba6df97ebb8fe1f3e29cc58b1ca90c2",
+  "last_tested_source": "660c4d392b78c8242dcf04e1d2634797959718f3",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.json",
-    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008-governance-recovery.json",
-    "docs/evidence/M2/R2-M2-WORKPACK-009-receiver-feedback-and-handle.json"
+    "docs/evidence/M2/R2-M2-WORKPACK-009-pto-tail-and-rack.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M2/requests/M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403.md"
+  ],
   "context_refs": [
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
   ],
-  "partial_summary": "Remote recovery CLEAN 008 Hc74a4fd governance38735393188 PASS, registry rev2 epoch1 newly assigned M2 PACK-009. CODE S67b9ed1 adds bounded RX feedback and 6 tests; CODE S269fd8f adds two controlled Arc FrozenRecordHandle driver_read + receipt/PTO/budget scenarios. Exact worker-native38998072121 compiled-once 63/63 success binarysha ed96430e, G2 38998072124 SUCCESS, static38998072111 SUCCESS, source Governance38998072117 ROLE_SCOPE_PASS 58. Evidence S70e76bc stores source-locked hashes, notes real M0 authenticated GoV4/driver not run and sender tail issue; its Governance38998363415 FAIL deterministic outcome 'control or source moved mid-audit' (artifact12087834166), not code failure. H seq21 checkpoint S70e76bc progress partial/unverified; do not claim full PACK or product. Next act fix 32 unreported-tail eligibility vs module08 <=1 tail timer while retaining RACK bound. No root shared edits. H4338fa17 Governance38998606694 FAIL after ROLE_SCOPE_PASS 60 commits, structure reason 'missing cursor reference: docs/decisions/M0-full-module-workpackages-2026-10-17.md'. Cursor context refs must point to files present on worker; main registry alone authorizes current task. H seq22 fixes only ref list. No code/source changes."
+  "partial_summary": "M2 PACK-009 CODE source660c4d392b78c8242dcf04e1d2634797959718f3 repaired 32 unreported PTO probe storm with one per lane PTO interval, retained 32 verified RACK witnesses + separate queued timeout index; 64/64 native39000122056, G2 39000122045 and R0 static39000122051 SUCCESS, result artifact12088374078 digest9a1574a5 verified. Gov code39000122062 FAIL GitHub compare/83bd7203 HTTP403; evidence S692545ab Gov39000303210 FAIL same; root coordination request S85a0b30 Gov39000411222 FAIL same; connector read-only compare ahead100 succeeds but not authority. Old source269fd8f native63/63 persists historically. No shared files touched. H seq23 checkpoint M0 request S, progress partial/unverified true; Go TLS/V4 authentic session, M1 arena, engine/platform, performance and physical NOT_RUN, pack not complete. Previously observed evidence S70e and H e485 governance FAILs retained."
 }
