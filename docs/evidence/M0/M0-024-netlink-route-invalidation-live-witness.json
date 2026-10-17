@@ -152,6 +152,15 @@
       "run_id": 38995095176,
       "attempt": 1,
       "conclusion": "success"
+    },
+    "h106_governance_failed": {
+      "head_sha": "abadd566b1bc525e83fc345fbb0beefce1404b26",
+      "run_id": 38995409448,
+      "attempt": 1,
+      "conclusion": "failure",
+      "reason": "cursor.evidence_refs mistakenly included previous 5e4b03d source but last_tested_source=d2dccb3c; role checker requires each active evidence_ref to match exact last tested SOURCE.",
+      "disposition": "Correct cursor evidence_refs to current exact source; retain historical route cache evidence in context_refs; never overwrite red run.",
+      "scope": "identity_structural_governance_not_product_test"
     }
   },
   "remaining": [
