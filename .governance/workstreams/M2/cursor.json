@@ -4,18 +4,18 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 23,
-  "checkpoint_sha": "85a0b30a2efdb80fdeb7efdf885bc37e17288991",
-  "progress": "partial",
+  "sequence": 24,
+  "checkpoint_sha": "c16000a16bd866d6a8c1c3c8b7880163229918ff",
+  "progress": "ready_for_integration",
   "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
-  "current_task": "PACK-009 pure R2 PTO tail gate and queued-expiry index CODE SOURCE660c4d3: worker-native39000122056 64/64 PASS compiled once, G2 bootstrap39000122045 SUCCESS, static39000122051 SUCCESS. Governance CODE39000122062 and evidence39000303210 and request39000411222 FAILED recurring GitHub compare API HTTP403; remains unverified. GoV4/engine/platform NOT_RUN.",
-  "why_now": "Resumed seq22 H e48516d with source269fd8f 63/63 and failing Governance main movement. New module08 one-tail-per-PTO-interval bound implemented/tested, retains genuine RACK 32 and queue timeouts, fixes outdated 32-PTO tests. Source-exact R2 tests/G2/static green; independent worker scope audit blocked by GitHub compare HTTP403 at 83bd7203 anchor (~100 ahead), escalated M0 instead of bypass.",
-  "done_when": "Full assigned PACK-009 still open: A01–A06/R01–R04 contract and fake-clock/real controlled frozen handle/pressure/budget evidence, safe two-attempt repair and fresh independence; this atom source660c4d3 native64/64 and G2/static PASS only. Source Governance39000122062 FAIL HTTP403, evidence S692545ab Gov39000303210 FAIL same, request S85a0b30 Gov39000411222 FAIL same; all preserved. Need M0-owned central identity/scope attestation. No product GoV4/physical/500Mbps claims.",
-  "next_action": "Continue only authorized M2 PACK-009 resource/generation/uncertain-fairness fake-clock counterexamples while M0 resolves request M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403; do not retry unchanged HTTP403 or alter shared checker. Requalify exact HEAD evidence/H once independent bounded scope audit is available.",
-  "unverified": true,
-  "last_tested_source": "660c4d392b78c8242dcf04e1d2634797959718f3",
+  "current_task": "PACK-009 scoped pure R2 receipt/feedback/shadow/RACK/PTO/two-attempt repair/budget native capability READY FOR M0 integration. Exact code SOURCE6124ce1012e69a2003bdffdc179a774e21096bc3 worker-native39006207281 67/67 PASS; G2 bootstrap39006207288 and static39006207299 SUCCESS; full evidence S c16000a Governance39006386712 ROLE_SCOPE_PASS 68 commits, 60 governance drills PASS. No GoV4/engine/platform/physical product result.",
+  "why_now": "Main registry rev2 epoch1 assigned full PACK-009. Original code source269fd8f 63/63, repaired PTO tail source660c4d3 64/64, generation/uncertain source4fd4cce 66/66 and its Gov39005928458 PASS, final 100k fake-clock source6124ce1 67/67. Code Gov39006207262 FAIL control/source moved while M0 main advanced, independently later evidence S c16000a Gov39006386712 SUCCESS ROLE_SCOPE_PASS 68 per-commit, artifact hashes verified. Historical failures preserved; no need to copy M0 checker.",
+  "done_when": "Scoped PACK-006 M2 A01-A06/R01-R04 receipt pages/holes/old reports/ACK feedback double-loss, max two immutable frozen repairs, negative report/PTO/RACK witnesses, per-lane one unreported PTO each interval, 32 true RACK, 0/1/32/33 queues, 10k/100k indexed fake-clock pressure, stale/expiry/generation, global 10% and sparse absolute cap plus unknown send debit and fresh independence. Source6124ce1 67/67 compiled-once native success; exact S c16000a Governance39006386712 SUCCESS; integration with M0 real AEAD/GoV4/M1 arena/M4 raw-TUN and physical/500Mbps/p99 NOT_RUN.",
+  "next_action": "M0 stage-integrate exact scoped recovery SOURCE6124ce1 with authenticated Go V4/M3 opened receipt, M1 real FrozenRecord, and M4 driver under existing security/budget capability gates; M2 only fixes source-exact integration regressions under assigned PACK-009, no new features claimed. Retain old compare-403 monitor request for shared M0 root cause even though current scoped attestation passes.",
+  "unverified": false,
+  "last_tested_source": "6124ce1012e69a2003bdffdc179a774e21096bc3",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-WORKPACK-009-pto-tail-and-rack.json"
+    "docs/evidence/M2/R2-M2-WORKPACK-009-generation-budget-and-100k.json"
   ],
   "open_requests": [
     ".governance/workstreams/M2/requests/M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403.md"
@@ -24,5 +24,5 @@
     "docs/architecture/modules/08-RECOVERY.md",
     "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
   ],
-  "partial_summary": "M2 PACK-009 CODE source660c4d392b78c8242dcf04e1d2634797959718f3 repaired 32 unreported PTO probe storm with one per lane PTO interval, retained 32 verified RACK witnesses + separate queued timeout index; 64/64 native39000122056, G2 39000122045 and R0 static39000122051 SUCCESS, result artifact12088374078 digest9a1574a5 verified. Gov code39000122062 FAIL GitHub compare/83bd7203 HTTP403; evidence S692545ab Gov39000303210 FAIL same; root coordination request S85a0b30 Gov39000411222 FAIL same; connector read-only compare ahead100 succeeds but not authority. Old source269fd8f native63/63 persists historically. No shared files touched. H seq23 checkpoint M0 request S, progress partial/unverified true; Go TLS/V4 authentic session, M1 arena, engine/platform, performance and physical NOT_RUN, pack not complete. Previously observed evidence S70e and H e485 governance FAILs retained."
+  "partial_summary": "PACK-009 pure scoped R2 component completion: controlled RxFeedback and original FrozenRecordHandle tests source269fd8f 63/63 PASS; source660c4d3 one tail/PTO with 32 genuine witness RACK plus queued index 64/64 PASS, Governance39000122062 FAIL HTTP403; source4fd4cce cross-generation conservative unknown debt and 2-real-attempt 66/66 PASS, independent Gov39005928458 ROLE_SCOPE_PASS 66; final source6124ce1 adds 100k fake-clock timer expiry/queued token and fresh after cleanup, worker-native39006207281 67/67 PASS compiled once, G2 39006207288 and static39006207299 SUCCESS. Code Gov39006207262 FAIL main moved; final evidence S c16000a Governance39006386712 SUCCESS ROLE_SCOPE_PASS 68, selftest60/60, artifact12090853844 sha256:51f1a4bc3bd248fe9f7ef22a67d934bd318f682430c23f3b1a48ceadff8ddf7e, hash checked. Historical 403/current code scope FAIL not erased. H seq24 cursor-only checkpoint evidence S, ready_for_integration/unverified false applies ONLY to audited scoped module. M0 real Go/TLS/AEAD/M1 arena/engine/M4 driver, physical and 500Mbps NOT_RUN. M0 systemic API monitor request remains open."
 }
