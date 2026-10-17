@@ -1,0 +1,23 @@
+# M0 / 024 — M4 full pack 013 handoff, frozen 012 native integration and bounded M1 data return service
+
+## 2026-10-17 intake and genuine idle distinction
+
+Main H111 at `8f7bc59aea781ffd46636ae2c77d23027291aeda` was still HEAD, checkpoint-to-main contained only the prior cursor; no unfinished main Actions at intake. M4 branch H `32fc2a0556fdaf2f87c2abe922b5ffaed02715ec` cursor seq16 marked `ready_for_integration` with exact CODE `e4e61d1588b0192ea7ca39638aa75e1a3162ac66`: [native 39001742284](https://github.com/lly8666/wbd-next/actions/runs/39001742284) 91/91, [H Governance39002328706](https://github.com/lly8666/wbd-next/actions/runs/39002328706) and central scope39002403094 success. Worker privileged raw/TUN positive and physical IF replace NOT_RUN. M1's branch cursor is stale 011 ready, but registry **already** authorizes full 012 direction SPSC/wake; it is not an idle slot. M2 PTO/RACK009 and M3 LINK/FEC016 are partial, active, not reassigned.
+
+In sole M0 main control S `a3d64b10804e006fecf06b7b4eb2d974b0b54e57`, registry issued *only M4* one complete next workpack `R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013`: true kernel bounded ready batch, borrowed slots, Stop/lease, typed partial/uncertain and honest privileged NOT_RUN. Full task boundary in [PACK-008](../../decisions/M0-followup-module-workpackages-013-2026-10-17.md). Same branch, epoch1, rev2, allowed paths. No worker code edits on the M4 branch and no repeated per-step assignment.
+
+## M4 frozen 012 platform import
+
+Exactly three platform files from frozen M4 CODE e4e61d15 copied unchanged into main: `linux_raw_carrier.rs`, `linux_mtu_scope.rs`, `linux_tun_sink.rs`; `linux_batch.rs` and platform lib were byte-identical. This preserves distinct actual kernel EMSGSIZE, packet preflight oversize, no capacity, stale/unavailable route, short/EINTR uncertainty and revised PMTU Stop, without claiming true raw multi-syscall batching. That main SOURCE `a3d64b` [native GoTLS→original Rust M1/M3 raw/TUN 39003563141](https://github.com/lly8666/wbd-next/actions/runs/39003563141) SUCCESS, plus G2, native regression, R0 platform fake/cross ABI, Governance, maintenance SUCCESS. Original 023 remains unverified, prod features=0.
+
+## Continue M0 actual DATA cost 024
+
+Original Rust Go-authenticated Linux RX/TX workers still share an M1 arena and same-session `Mutex<Entry>`. Unbounded `Arena::drain_returns()` after **every** successful normal/off packet (and TX errors) could monopolize this lock on a queued return storm, even though arena allocate already bounded to 64. At M0 own engine S `60abdc61eb82a68688f9fd7be62dee710bab733d`, four per-DATA full drains were replaced by `drain_data_turn_returns` calling original M1 `Arena::drain_returns_bounded(64)`. Control single-message send/receive and Arena STOP/report/quiescence retain full drain, no leak or premature Stop claim.
+
+New exact original M1 UniqueBuffer/ReturnPath unit test `r1_m0_original_data_return_budget_yields_at_64_128_33` loads 128 borrowed slots, drops them into real channel32+overflow, asserts successive bounded turns64/64/0, then33/0 and fully quiescent Stop. This test was added to the required **M0 native Go/Rust** same-source gate in S `b8d53e794dcf641a965e785c7c0aad03ad45ae37`. [Native39003659829](https://github.com/lly8666/wbd-next/actions/runs/39003659829) build+consume SUCCESS, new Rust test ok, original real Linux GoTLS→Rust AEAD/PN→M4 raw/TUN negative PN0 + next PN1 delivered; route revision1→2, MTU65536→1500 fail closed; 10s+60s developer bilateral offered/delivered app 10.000Mbps. Developer RX/TX thread CPU 3.3650/3.2854s on that single runner only, **not a paired comparison nor speedup**. Exact hashes and artifacts in [M0 evidence](../../evidence/M0/M0-024-M4-012-integration-data-return-budget64.json).
+
+## Non-M0 audit red and remaining work
+
+A separate [central audit39003738130](https://github.com/lly8666/wbd-next/actions/runs/39003738130) of live **M3** source `c900f7a4` FAILED due to `cursor evidence SOURCE mismatch`. It is not this M0 code compile failure, but is still FAILED; M3 owns its role cursor/evidence correction, M0 cannot edit its active branch. The previous M2 audit 403 historical FAIL and M1-011 lost wake timeout FAIL also remain evidence, no wash.
+
+M0 same-session TX/RX mutable owner split is still open until safe M1-012 semantics, M4 new 013 authentic kernel multi-read/send next, D10/SPARSE and truly same VM fixed-binary Rust P10 A→B + independent B→A remain NOT_RUN. Real full 500Mbps, Windows/ARM positive/physical and original 023 protected product qualification remain NOT_RUN; production features zero.

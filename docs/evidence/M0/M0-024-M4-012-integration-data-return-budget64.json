@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+  "code_source_sha": "60abdc61eb82a68688f9fd7be62dee710bab733d",
+  "result": "PARTIAL_WORKER_M4_013_ASSIGNED_FROZEN_M4_012_INTEGRATED_AND_BOUND_DATA_RETURNS_NATIVE_PASS",
+  "artifact_verified": true,
+  "intake": {
+    "main_head": "8f7bc59aea781ffd46636ae2c77d23027291aeda",
+    "main_cursor_sequence": 111,
+    "prior_last_tested_source": "6b16713189b36f4dd1da0267d83843c862065f09",
+    "latest_source_at_intake": "8f7bc59aea781ffd46636ae2c77d23027291aeda",
+    "prior_checkpoint_compare": "only M0 cursor H111",
+    "headline": "Earlier shared governance API 403 mitigation and old M1 branch ABI selector fixed on main; new M1 failed-signal wake still unresolved, stable pre-011 wake rollback already proven. No M0 queued/in_progress Actions at intake; M3 live source actions and platform M4 H ready observed."
+  },
+  "worker_audit": {
+    "M1": {
+      "head": "01cdc623d0722fc2c1f47c23a4c2024752ac4d94",
+      "cursor_task": "R1-M1-OWNER-MEMORY-READY-WORKPACK-011",
+      "cursor_state": "ready_for_integration",
+      "registry_task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+      "decision": "NOT_IDLE because 012 is already assigned in main despite old worker H. Do not assign 013 or overwrite worker. M1 012 must prove deterministic failed-notify retry/Stop after two earlier main 2s timeouts (39001888111,39001984463)."
+    },
+    "M2": {
+      "head": "e4626cbcae8fd7bc3c0776738a4c54d32cb1f24f",
+      "task": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+      "progress": "partial",
+      "evidence": "64/64 PTO/RACK scoped run39000122056; scope HTTP403 older FAIL retained; not idle."
+    },
+    "M3": {
+      "head_at_intake": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+      "task": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+      "progress": "partial",
+      "recent_native_run": 39003330821,
+      "result": "success",
+      "open": "ISA-L controlled shared native binding and true Go owner combination NOT_RUN; active worker cannot be reassigned.",
+      "new_failure": {
+        "central_run": 39003738130,
+        "audited_worker_sha": "c900f7a412f2b71fc63eaff1986185322dd72026",
+        "result": "failure",
+        "detail": "SCOPE_AUDIT_FAILED: cursor evidence SOURCE mismatch; M3 owns branch cursor/evidence. Do not claim PASS or have M0 modify M3 paths."
+      }
+    },
+    "M4": {
+      "head": "32fc2a0556fdaf2f87c2abe922b5ffaed02715ec",
+      "cursor_sequence": 16,
+      "old_task": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
+      "state": "ready_for_integration",
+      "exact_code_source": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
+      "old_native": {
+        "run_id": 39001742284,
+        "attempt": 1,
+        "conclusion": "success",
+        "r1_tests_passed": 91,
+        "build_artifact": {
+          "id": 12088829780,
+          "digest": "sha256:a531b95863ef8f978c7900b82424aaaa8d4eb7716f3a158df237f288be7de164"
+        },
+        "result_artifact": {
+          "id": 12088958008,
+          "digest": "sha256:2ab1f5f305d6202ea5486ed364b08a08a15cee6eb3d5089bf4009035236887a4"
+        }
+      },
+      "old_H_Governance": {
+        "run_id": 39002328706,
+        "conclusion": "success"
+      },
+      "central_scope": {
+        "run_id": 39002403094,
+        "conclusion": "success"
+      },
+      "new_task": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
+      "new_task_source": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+      "new_plan": "docs/decisions/M0-followup-module-workpackages-013-2026-10-17.md",
+      "new_progress": "ASSIGNED_NOT_YET_QUALIFIED",
+      "same_branch_epoch_paths": true
+    }
+  },
+  "platform_integration": {
+    "source_sha": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+    "frozen_platform_code_sha": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
+    "exact_copied_blobs": [
+      {
+        "path": "crates/wbd-platform/src/linux_raw_carrier.rs",
+        "blob": "5e3d54453931ab6afda156100475312938ac1a96"
+      },
+      {
+        "path": "crates/wbd-platform/src/linux_mtu_scope.rs",
+        "blob": "7e692c1e071682996b1e453d3f7eb6b59394ada2"
+      },
+      {
+        "path": "crates/wbd-platform/src/linux_tun_sink.rs",
+        "blob": "3d28a2aac4aabafe337781e3b85aa947980de28e"
+      }
+    ],
+    "unchanged_blobs": [
+      "crates/wbd-platform/src/linux_batch.rs",
+      "crates/wbd-platform/src/lib.rs"
+    ],
+    "semantics": "M4 typed kernel errno EMSGSIZE actual vs PacketExceedsBudget/no_capacity preflight vs RouteStale/Unavailable; original per-owner PMTU watcher revision, fail-closed Stop/late loan, TUN write short/EINTR uncertainty. Existing raw send_ready_batch is sequential sendto, NOT one raw sendmmsg kernel batching.",
+    "same_source_Actions": {
+      "G2": {
+        "run_id": 39003563134,
+        "conclusion": "success"
+      },
+      "governance": {
+        "run_id": 39003563119,
+        "conclusion": "success"
+      },
+      "maintenance": {
+        "run_id": 39003563129,
+        "conclusion": "success"
+      },
+      "native_regression": {
+        "run_id": 39003563125,
+        "conclusion": "success"
+      },
+      "platform_fake": {
+        "run_id": 39003563126,
+        "conclusion": "success"
+      },
+      "cross_abi": {
+        "run_id": 39003563100,
+        "conclusion": "success"
+      },
+      "native_Go_Rust": {
+        "run_id": 39003563141,
+        "conclusion": "success",
+        "build_artifact": {
+          "id": 12089943361,
+          "digest": "sha256:c899973bce9905aa8aec0605f85037b2f60aa6f98fb3c239be7c6445eb71583d"
+        },
+        "result_artifact": {
+          "id": 12089789354,
+          "digest": "sha256:3411004b7b5a2d7a251d084182e5f72368bc52e15d0a4e452de24ef4d54ff289"
+        }
+      }
+    }
+  },
+  "M0_024_data_cost_change": {
+    "source_sha": "60abdc61eb82a68688f9fd7be62dee710bab733d",
+    "path": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "code": "One owner DATA work turn now calls original M1 Arena::drain_returns_bounded(64), not full drain, in background_raw_once post-auth and background_tun_once success/failure. Arena::allocate already drains at most 64. Full drain only remains in control one-shots and Arena.stop/report/quiesced. Per session Mutex<Entry> remains un-split TX/RX; no new SPSC or multi record I/O assumption.",
+    "test_name": "r1_m0_original_data_return_budget_yields_at_64_128_33",
+    "test_fixture": "128 actual original M1 UniqueBuffers returned to bounded sync_channel(32) and fallback; verify first turn64, second64, no loss, then33 returns, full quiescent STOP. Genuine previous 0/1/32/33 ready test retained.",
+    "workflow_gate_source_sha": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+    "workflow_path": ".github/workflows/m0-v4-native-owner-probe.yml",
+    "gate": "Exact new Rust test required in native original Go TLS build+consume result, not just test source present.",
+    "source60_Actions": {
+      "G2": {
+        "run_id": 39003630939,
+        "conclusion": "success"
+      },
+      "native_regression": {
+        "run_id": 39003630932,
+        "conclusion": "success"
+      },
+      "r0_native_abi": {
+        "run_id": 39003630954,
+        "conclusion": "success"
+      },
+      "cross_abi": {
+        "run_id": 39003630933,
+        "conclusion": "success"
+      },
+      "governance": {
+        "run_id": 39003630947,
+        "conclusion": "success"
+      },
+      "qual_audit": {
+        "run_id": 39003630934,
+        "conclusion": "success"
+      }
+    },
+    "final_source_native": {
+      "run_id": 39003659829,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117311596470,
+      "consume_job": 117311879999,
+      "build_artifact": {
+        "id": 12090480613,
+        "digest": "sha256:f9dbce00ccc218663cbd0ee39feecbb2121c94dc287f778b71496cca2bdf51b2"
+      },
+      "result_artifact": {
+        "id": 12089894192,
+        "digest": "sha256:b3dd9e95eac482cac3bec3b925a539ae8c663a5a9ec0b87c75b297af46e127fa"
+      },
+      "witnesses": [
+        "test v4_embedded_go::tests::r1_m0_original_data_return_budget_yields_at_64_128_33 ... ok",
+        "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok",
+        "m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate ... ok",
+        "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS kernel PN0 drop and PN1 original Rust Normal/off delivered real TUN",
+        "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS independent real Linux raw/TUN worker threads",
+        "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=1 revision_after=2 refresh_before=1 refresh_after=2",
+        "EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true",
+        "M0_DEV_NORMAL_OFF_10MBPS_RECEIPT offered/delivered 10.000Mbps each direction, 10s warmup+60s"
+      ]
+    },
+    "developer_cpu": {
+      "rx_worker_cpu_s": 3.365,
+      "tx_worker_cpu_s": 3.2854,
+      "qualification": "UNPAIRED runner-specific absolute CPU diagnostic, NOT source-to-source savings, no P10 comparison"
+    }
+  },
+  "latest_source_governance": {
+    "source_sha": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+    "governance": {
+      "run_id": 39003659763,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "run_id": 39003659770,
+      "conclusion": "success"
+    },
+    "independent_M3_scope_failed": {
+      "run_id": 39003738130,
+      "reason": "M3 cursor evidence SOURCE mismatch; worker owns correction"
+    }
+  },
+  "remaining": {
+    "M0": [
+      "024 still partial: same-session RX/TX mutable ProtectedScopedOwner and original M1 arena share one Mutex<Entry>; future M1-012 direction APIs required.",
+      "M4 013 actual raw recvmmsg/sendmmsg/owned slots native kernel multiple ready not yet implemented/integrated.",
+      "True D10 and SPARSE per-scenario native original path, same-job same-VM old/new P10 AB and independent BA remain NOT_RUN; no CPU win claim.",
+      "Need eventual M3 native ISA-L pinned root build and safe Go historical parity binding integration; no production FEC-on.",
+      "Authenticated Go/M0 original owner MTU/Stop/route physical changes and real product physical throughput NOT_RUN.",
+      "Historic M1 failed-signal wake 011 integration race remains unresolved; pre-011 stable main wake in use."
+    ],
+    "original_R0_M0_023": "OPEN_UNVERIFIED",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_features": 0,
+    "task_024": "PARTIAL"
+  }
+}
