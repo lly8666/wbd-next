@@ -296,7 +296,12 @@ impl ScopedTunSink{
             match self.write_authenticated_ipv4(generation,frame){
                 Ok(_)=>out.accepted_prefix+=1,
                 Err(e)=>{
-                    if e==TunError::ShortWrite {out.uncertain_index=Some(out.accepted_prefix)}
+                    // Kernel EINTR/unknown faults after a ready-only write
+                    // do not authorize reusing an already published packet.
+                    if e==TunError::ShortWrite ||
+                        matches!(e,TunError::Kernel(4|5)) {
+                        out.uncertain_index=Some(out.accepted_prefix)
+                    }
                     out.error=Some(e);
                     return out;
                 }
@@ -324,6 +329,20 @@ mod ready_tests {
         assert!(!ipv4_contract(&bad));
         assert!(!ipv4_contract(&[0x60u8;40]));
         assert!(!ipv4_contract(&[0x45u8;7]));
+    }
+
+    #[test]
+    fn r1_m4_012_tun_stop_and_preflight_outcome_without_real_privileged_fd(){
+        // The genuine TUN FD positive remains NOT_RUN. These contracts
+        // ensure failures do not fabricate a usable device or content.
+        assert!(!ipv4_contract(&[]));
+        let mut frame=[0u8;20];frame[0]=0x45;
+        frame[2..4].copy_from_slice(&20u16.to_be_bytes());
+        assert!(ipv4_contract(&frame));
+        frame[0]=0x44;
+        assert!(!ipv4_contract(&frame));
+        assert_eq!(TunReadyReads::new(0).observed,0);
+        assert_eq!(TunReadyReads::new(33).entry(32),None);
     }
     #[test]
     fn r1_m4_pack_tun_wrong_fd_does_not_gain_privileged_device(){

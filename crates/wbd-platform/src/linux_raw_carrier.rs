@@ -63,7 +63,7 @@ fn checked_destination(tuple:Ipv4Tuple<'_>)->Result<Ipv4Addr,RawTxError>{
 #[derive(Debug,Clone,Copy,Eq,PartialEq)]
 pub enum RawTxError {
     InvalidScope,Stopped,InvalidInterface,Kernel(i32),InvalidPacket,
-    BoundedMtu,RouteStale,RouteUnavailable,ShortSend,UnsupportedOptions,
+    BoundedMtu,PacketExceedsBudget,NoCapacity,RouteStale,RouteUnavailable,ShortSend,UnsupportedOptions,
 }
 pub struct ScopedRawIpv4Tx {
     fd:OwnedFd,
@@ -136,7 +136,7 @@ impl ScopedRawIpv4Tx {
         if self.is_stopping(){return Err(RawTxError::Stopped)}
         let _guard=self.borrow.try_enter_ready().map_err(|e|match e {
             BorrowError::Stopping=>RawTxError::Stopped,
-            BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
+            BorrowError::TooManyLoans=>RawTxError::NoCapacity,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
         let dest_ip=checked_destination(tuple)?;
@@ -149,7 +149,7 @@ impl ScopedRawIpv4Tx {
         let packet=ipv4_tcp::build(tuple,presentation,record,None,
             bounded.min(scratch.len()),&mut scratch)
             .map_err(|e|match e {
-                ipv4_tcp::PacketError::MtuExceeded{..}=>RawTxError::BoundedMtu,
+                ipv4_tcp::PacketError::MtuExceeded{..}=>RawTxError::PacketExceedsBudget,
                 _=>RawTxError::InvalidPacket,
             })?;
         if packet.len()<41 || packet[9]!=6 ||
@@ -170,7 +170,7 @@ impl ScopedRawIpv4Tx {
         if n<0 {
             let e=errno();
             if matches!(e,90|19|100|101|113){self.budget.invalidate()}
-            return Err(if e==90{RawTxError::BoundedMtu}else{RawTxError::Kernel(e)})
+            return Err(RawTxError::Kernel(e))
         }
         if n as usize!=packet.len(){self.budget.invalidate();return Err(RawTxError::ShortSend)}
         Ok(n as usize)
@@ -344,6 +344,8 @@ fn raw_batch_failure(n:usize,err:RawTxError)->KernelSendReport{
     let (uncertain,error,signal)=match err{
         RawTxError::Stopped=>(None,TxError::Stopping,KernelSendSignal::Stopping),
         RawTxError::BoundedMtu=>(None,TxError::IoFailed,KernelSendSignal::MtuExceeded),
+        RawTxError::PacketExceedsBudget|RawTxError::NoCapacity=>
+            (None,TxError::IoFailed,KernelSendSignal::PreflightRejected),
         RawTxError::InvalidInterface=>(None,TxError::IoFailed,KernelSendSignal::DeviceUnavailable),
         RawTxError::RouteUnavailable|RawTxError::RouteStale=>
             (None,TxError::IoFailed,KernelSendSignal::RouteUnavailable),
@@ -481,6 +483,8 @@ mod ready_batch_tests{
             (RawTxError::Kernel(90),KernelSendSignal::MtuExceeded,None,TxError::IoFailed),
             (RawTxError::Kernel(19),KernelSendSignal::DeviceUnavailable,None,TxError::IoFailed),
             (RawTxError::Kernel(101),KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
+            (RawTxError::PacketExceedsBudget,KernelSendSignal::PreflightRejected,None,TxError::IoFailed),
+            (RawTxError::NoCapacity,KernelSendSignal::PreflightRejected,None,TxError::IoFailed),
             (RawTxError::RouteUnavailable,KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
             (RawTxError::RouteStale,KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
             (RawTxError::ShortSend,KernelSendSignal::AmbiguousCompletion,Some(2),TxError::IoUncertain),

@@ -348,6 +348,65 @@ mod tests{
         t.join().unwrap();
         assert_eq!(new.outstanding(),0);
     }
+
+    #[test]
+    fn r1_m4_012_actual_linux_udp_ready_33_vs_stop_late_loan_two_owners(){
+        use std::sync::Barrier;
+        for _round in 0..8 {
+            let old=Arc::new(pair(600));
+            let fresh=pair(601);
+            let record=frozen(b"delayed-ciphertext",52);
+            let saved_pn=record.meta.pn;
+            let weak:Weak<[u8]>=Arc::downgrade(&record.wire);
+            let old_loan=old.register_delayed(600,record).ok().unwrap();
+            let frames:Vec<_>=(0..33).map(|n|frozen(&[n as u8,0xd4],n)).collect();
+            let original:Vec<_>=frames.iter().map(|f|Arc::as_ptr(&f.wire)).collect();
+            let barrier=Arc::new(Barrier::new(2));
+            let o=Arc::clone(&old);
+            let gate=Arc::clone(&barrier);
+            let writer=thread::spawn(move||{
+                gate.wait();
+                o.submit(600,&frames)
+                    .map(|r|(r.accepted_prefix(),r.uncertain_index(),r.error()))
+            });
+            barrier.wait();
+            old.begin_stop();
+            old.begin_stop();
+            assert_eq!(old.wait_drained_until(Instant::now()),
+                StopResult::Pending{outstanding:old.outstanding()});
+            let completion=writer.join().unwrap();
+            match completion{
+                Err(LeaseGateError::Stopping)=>{},
+                Ok((n,uncertain,e))=>{
+                    assert!(n<=32);
+                    assert_eq!(uncertain,None);
+                    if n==0 {assert_eq!(e,Some(TxError::Stopping))}
+                    if n==32 {assert_eq!(e,Some(TxError::WouldBlock))}
+                },
+                unexpected=>panic!("unexpected: {unexpected:?}"),
+            }
+            // The old delayed record survives both the STOP deadline and
+            // any concurrent copied syscall; its PN is NOT consumed.
+            assert!(weak.upgrade().is_some());
+            assert_eq!(old_loan.token.read().metadata.pn,saved_pn);
+            let mut denied=[0xabu8;16];let mut slots=[denied.as_mut_slice()];
+            assert_eq!(old.receive(600,&mut slots).err(),Some(LeaseGateError::Stopping));
+            assert_eq!(denied,[0xab;16]);
+            let new_frame=[frozen(b"new-generation",1)];
+            assert_eq!(fresh.submit(601,&new_frame).unwrap().accepted_prefix(),1);
+            let mut new_buf=[0u8;32];let mut new_slots=[new_buf.as_mut_slice()];
+            let got=fresh.receive(601,&mut new_slots).unwrap();
+            assert_eq!(got.entry(0),Some(RxEntry::Complete{len:14}));
+            assert_eq!(&new_buf[..14],b"new-generation");
+            assert_eq!(fresh.outstanding(),0);
+            let returned=fresh.complete_delayed(old_loan).err().unwrap();
+            assert!(weak.upgrade().is_some());
+            old.complete_delayed(returned).ok().unwrap();
+            assert!(weak.upgrade().is_none());
+            assert_eq!(old.wait_drained_until(Instant::now()),StopResult::Drained);
+            assert_eq!(original.len(),33); // originally frozen record identity
+        }
+    }
     #[test]
     fn r1_driver_lease_eintr_uncertain_wouldblock_replay_policy_pure(){
         // Native EINTR injection is not claimed; existing native sendmmsg
