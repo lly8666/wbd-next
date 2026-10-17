@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
+  "result": "PASS",
+  "artifact_verified": true,
+  "result_scope": "R2_NATIVE_TYPED_INGRESS_70_70_NOT_LIVE_PRODUCT",
+  "base_009": {
+    "source_sha": "6124ce1012e69a2003bdffdc179a774e21096bc3",
+    "native_run_id": 39006207281,
+    "passed": 67,
+    "handoff_sha": "c345061c992c505c92eb19181de96a531cc39d96",
+    "reused_not_promoted_to_product": true
+  },
+  "native": {
+    "run_id": 39045616456,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 117433619970,
+    "consume_job_id": 117433692807,
+    "tests_passed": 70,
+    "tests_failed": 0,
+    "compiled_once": true,
+    "binary_sha256": "f287347591c23bfcc8f231dea33c57df887503dd38ce416d013622d60c4da557",
+    "test_log_sha256": "f018f5640f6b5d9f215d4abba4876bb21938c24c6b56f22b59544b3548d38072",
+    "artifact_id": 12105318943,
+    "artifact_sha256": "51f66f174d1a257322af33035c58da43578e9d9308934e4db66349f1eec7f3c8",
+    "artifact_zip_verified": true
+  },
+  "g2": {
+    "run_id": 39045616446,
+    "conclusion": "success",
+    "scope": "BOOTSTRAP_ONLY",
+    "artifact_id": 12105811722,
+    "artifact_sha256": "603a56c12320a5e45e4141ce9d93346a815dfb8bcd8d5c66fb7260d16d48cf4e",
+    "artifact_zip_verified": true
+  },
+  "static": {
+    "run_id": 39045616475,
+    "conclusion": "success",
+    "scope": "HISTORIC_STATIC_R0_ONLY",
+    "artifact_id": 12106080607,
+    "artifact_sha256": "c8d54bb4f4540102bcd50fd92c0161529bd77a88845eae2d4198f013d429fff7",
+    "artifact_zip_verified": true
+  },
+  "central_scope": {
+    "run_id": 39045719817,
+    "attempt": 1,
+    "conclusion": "success",
+    "result": "ROLE_SCOPE_PASS",
+    "source_sha": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
+    "checker_control_sha": "a4ca2fe5b94f6a7b50c33bf06699ef2161abbc39",
+    "artifact_id": 12106240113,
+    "artifact_sha256": "decebd505a3084b5e8c3a9e24a985ef3bde875f46d2625661e1ae7dba38f3dfc",
+    "artifact_zip_verified": true
+  },
+  "old_worker_governance": {
+    "run_id": 39045616461,
+    "conclusion": "failure",
+    "observed": "ROLE_SCOPE_FAILED: control or source moved mid-audit",
+    "distinct_from_functional_failure": true
+  },
+  "first_source_failure": {
+    "source_sha": "4e24f665d123ee3855b632371a20214d11bd12e7",
+    "native_run_id": 39045483735,
+    "passed": 69,
+    "failed": 1,
+    "reason": "Controlled owner fixture passed MonoNs(0) to register after a shared owner reached MonoNs(30_000_000); correctly got ClockReversed",
+    "remedy": "Only fixture register and route bind timestamps corrected; no budget/runtime algorithm changed."
+  },
+  "ingress_contract": {
+    "code_path": "crates/wbd-recovery/src/ingress.rs",
+    "exports": [
+      "admit_opened_receipt",
+      "reserve_frozen_submission",
+      "DriverPrefixObservation::checked",
+      "complete_driver_prefix",
+      "IngressBatchSettlement::shadow_result"
+    ],
+    "post_auth": "M0 must first independently verify AEAD/open, replay/control PN, tunnel epoch, reverse direction and pinned lane; public ReceiptOpenFacts is a comparison input, not itself authentication proof.",
+    "frozen": "M2 reuses original immutable FrozenRecordHandle; no seal, new PN or ciphertext copy. Borrowed driver wire remains valid only while original frozen/driver lease is retained.",
+    "prefix": "0..32 unique reserved slots in driver order; accepted prefix + at most one uncertain at boundary; suffix ProvenNotAttempted only upon trusted positive platform evidence. Unknown suffix Unproven is held pending and shadow Uncertain; late completion cannot refund after retirement.",
+    "atomicity": "GlobalRepairAllocator validates complete scoped batch before any refund; shadow statuses applied by M0 exactly once after global settlement, ignore stale shadows retired by valid positive Receipt, never infer peer delivery from kernel Accepted.",
+    "resource_limits": "No new state machine, hot worker, socket or global mutex. Fixed [RepairSendResult;32] batch result; 8 receipt bitmap pages x256 PNs from inherited 009. One shared process quota owner; no data buffer clone.",
+    "budget": "Per 1s local max(F/10,32768) floor capped by configured absolute and process-global cap, sparse not additive/unlimited; 8 outer MTU pacing, accepted/uncertain count attempts max two, NotSent refunds original epoch only, no old bitmap double repair.",
+    "freshness": "Fresh sending is independent of shadow/repair budget; PTO tail once per period and 32 witnessed RACK remain unchanged."
+  },
+  "rollback": "M0 can disconnect only typed ingress integration, keep RECOVERY_ENGINE_READY=false / fresh path intact and retire old tunnel owner; never treat ambiguous driver submission as NotSent or reissue PN; preserve 009 frozen source/handoff.",
+  "not_run": [
+    "Actual Go V4/TLS/AEAD authenticated feedback producer/replay",
+    "M1 real FrozenRecord/arena lifetime and bounded return",
+    "M3 codec control TLV real bytes",
+    "M4 raw/TUN/sendmmsg real driver prefix evidence and async lease",
+    "M0 live owner call sequencing/platform tests",
+    "CPU/alloc/p99/500Mbps/physical and weak-network product qualification"
+  ],
+  "product": "NOT_RUN",
+  "real_auth": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "M0 stages exact source 654a3c1 into Go-authenticated Rust owner and verified driver; M2 fixes only concrete assigned 010 integration regression."
+}
