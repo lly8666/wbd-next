@@ -120,26 +120,38 @@ impl ReedSolomon20 {
         Ok(sources.iter().map(|s|s.len()).max().unwrap_or(0))
     }
 
-    /// Real parity, length L = max active source length. Unused columns k..19
-    /// are never read, even if the reusable producer's storage contains poison.
-    /// Output count=min(k, configured parity R), in Go wire row order 20.. .
-    pub fn encode_active(&self,sources:&[&[u8]],profile:u8)
-        ->Result<Vec<Vec<u8>>,FecMathError>{
+    /// Encode only requested absolute parity-row offsets [first,first+rows).
+    /// This is genuine GF256 work, NOT slicing an already-computed 20-row
+    /// buffer. An outer owner may return to its scheduler between <=4 rows.
+    /// No source may be aliased by an output. Inactive 20-k columns are not read.
+    pub fn encode_rows_active(&self,sources:&[&[u8]],profile:u8,
+        first:usize,rows:usize)->Result<Vec<Vec<u8>>,FecMathError>{
         let profile=Self::profile(profile)?;
         let len=self.validate_sources(sources)?;
         let sent=sources.len().min(profile);
-        let mut parity=vec![vec![0u8;len];sent];
+        if rows==0||first>=sent||rows>sent-first{
+            return Err(FecMathError::InvalidIndex);
+        }
+        let mut parity=vec![vec![0u8;len];rows];
         for (p,dst) in parity.iter_mut().enumerate(){
-            let row=&self.generator[FEC_DATA_SHARDS+p];
+            let row=&self.generator[FEC_DATA_SHARDS+first+p];
             for (i,src) in sources.iter().enumerate(){
                 let coef=row[i];
-                if coef==0{continue;}
+                if coef==0 {continue;}
                 for (j,b) in src.iter().enumerate(){
                     dst[j]^=self.gf.mul(coef,*b);
                 }
             }
         }
         Ok(parity)
+    }
+
+    /// Real parity, length L=max active source length. Go sends
+    /// min(k,configured_r) rows even for partial blocks.
+    pub fn encode_active(&self,sources:&[&[u8]],profile:u8)
+        ->Result<Vec<Vec<u8>>,FecMathError>{
+        let r=Self::profile(profile)?;
+        self.encode_rows_active(sources,profile,0,sources.len().min(r))
     }
 
     /// Reproduce pinned Go immediate systematic wire: provisional count=20,
@@ -165,12 +177,14 @@ impl ReedSolomon20 {
         Ok(wire)
     }
 
-    /// Final parity wire with final authoritative count/lengths and flags=0.
-    /// Header parity profile remains configured R even if k<R and r_sent=k.
-    pub fn final_parity_wires(
-        &self,block_id:u32,sources:&[&[u8]],profile:u8,wire_limit:usize
-    )->Result<Vec<Vec<u8>>,FecMathError>{
-        let parity=self.encode_active(sources,profile)?;
+    /// Produces final parity wire for just the selected rows, using genuine
+    /// scalar GF multiplication on the owned source slices. This is useful to
+    /// build a codec-level cooperative first-send job without ever materializing
+    /// all twenty rows in one call. All rows retain the CONFIGURED profile R.
+    pub fn final_parity_wires_range(&self,block_id:u32,sources:&[&[u8]],
+        profile:u8,wire_limit:usize,first:usize,rows:usize)
+        ->Result<Vec<Vec<u8>>,FecMathError>{
+        let parity=self.encode_rows_active(sources,profile,first,rows)?;
         let len=sources.iter().map(|s|s.len()).max().unwrap_or(0);
         if FEC_HEADER+len>wire_limit{return Err(FecMathError::InvalidLength);}
         let mut result=Vec::with_capacity(parity.len());
@@ -178,7 +192,7 @@ impl ReedSolomon20 {
             let mut frame=vec![0u8;FEC_HEADER+len];
             frame[..4].copy_from_slice(&[b'W',b'F',1,0]);
             frame[4..8].copy_from_slice(&block_id.to_be_bytes());
-            frame[8]=(FEC_DATA_SHARDS+p) as u8;
+            frame[8]=(FEC_DATA_SHARDS+first+p) as u8;
             frame[9]=FEC_DATA_SHARDS as u8;frame[10]=profile;
             frame[11]=sources.len() as u8;
             frame[12..14].copy_from_slice(&(len as u16).to_be_bytes());
@@ -190,6 +204,14 @@ impl ReedSolomon20 {
             result.push(frame);
         }
         Ok(result)
+    }
+
+    /// All Go parity rows in a single batch for legacy callers. Explicit
+    /// first-send jobs use the bounded per-row method above instead.
+    pub fn final_parity_wires(&self,block_id:u32,sources:&[&[u8]],
+        profile:u8,wire_limit:usize)->Result<Vec<Vec<u8>>,FecMathError>{
+        self.final_parity_wires_range(block_id,sources,profile,wire_limit,0,
+            sources.len().min(usize::from(profile)))
     }
 
     /// Return only missing active original packets using e x e inverse and

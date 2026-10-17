@@ -28,6 +28,53 @@ impl TxBatch{
     }
     pub fn parity_pending(&self)->usize{self.parity.len()}
 }
+/// An owned, self-contained closed-block parity job. Sources are moved into
+/// this job once (no extra 64KiB copy); a caller MUST keep its total pending
+/// jobs within its shared payload budget. One call computes <=4 REAL RS rows,
+/// not merely drains a previously encoded batch. Completion is monotone and
+/// exactly-once. The owner still must dispatch output as FRESH parity.
+pub struct FecParityJob{
+    block_id:u32,profile:u8,wire_limit:usize,
+    parts:Vec<Vec<u8>>,next_row:usize,rows:usize,held_bytes:usize,
+}
+impl FecParityJob{
+    pub fn new(block_id:u32,parts:Vec<Vec<u8>>,profile:u8,
+        wire_limit:usize)->Result<Self,TxError>{
+        if block_id==0{return Err(TxError::IdExhausted);}
+        if !FEC_PARITY_PROFILES.contains(&profile){return Err(TxError::UnsupportedProfile);}
+        if wire_limit<=FEC_HEADER||wire_limit>FEC_HEADER+65535{
+            return Err(TxError::InvalidBudget);
+        }
+        if parts.is_empty()||parts.len()>FEC_DATA_SHARDS||
+            parts.iter().any(|p|p.is_empty()||p.len()>wire_limit-FEC_HEADER){
+            return Err(TxError::InvalidSource);
+        }
+        let rows=parts.len().min(usize::from(profile));
+        let held_bytes=parts.iter().map(Vec::len).sum();
+        Ok(Self{block_id,profile,wire_limit,parts,next_row:0,rows,held_bytes})
+    }
+    pub fn pending_rows(&self)->usize{self.rows-self.next_row}
+    pub fn retained_bytes(&self)->usize{self.held_bytes}
+    pub fn is_done(&self)->bool{self.next_row==self.rows}
+    pub fn first_parity_index(&self)->u8{(FEC_DATA_SHARDS+self.next_row) as u8}
+    /// No timeout, block or thread creation; caller owns fairness.
+    /// On error, progress is unchanged and no partially issued rows escape.
+    pub fn take_next_rows(&mut self,codec:&ReedSolomon20)
+        ->Result<Vec<Vec<u8>>,TxError>{
+        let count=self.pending_rows().min(MAX_PARITY_FIRST_SEND_ROWS_PER_TURN);
+        if count==0{return Ok(Vec::new());}
+        let inputs=self.parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let wires=codec.final_parity_wires_range(self.block_id,&inputs,
+            self.profile,self.wire_limit,self.next_row,count)?;
+        self.next_row+=wires.len();
+        if self.is_done(){
+            self.parts.clear();
+            self.held_bytes=0;
+        }
+        Ok(wires)
+    }
+}
+
 #[derive(Clone,Copy,Default,Debug,Eq,PartialEq)]
 pub struct TxStats {
     pub source_shards:u64,pub parity_shards:u64,pub full_blocks:u64,pub partial_blocks:u64,

@@ -207,3 +207,66 @@ fn r1_tx_20_20_sustained_full_blocks_ready_first_parity_bounded_chunks(){
         assert!(tx.flush_due(3000).unwrap().parity.is_empty());
     }
 }
+
+#[test]
+fn r1_tx_incremental_real_gf_four_row_job_full_partial_wire_match(){
+    use crate::fec_tx::FecParityJob;
+    use crate::fec_math::ReedSolomon20;
+    let codec=ReedSolomon20::new().unwrap();
+    for k in 1..=20usize{
+        for r in [4u8,8,10,12,16,20]{
+            for length in [1usize,63,64,65,257,512,1200]{
+                if length==1200 && k!=20{continue;}
+                let mut parts=(0..k).map(|i|{
+                    let n=1+(i*17+3)%length;
+                    (0..n).map(|j|((i*19+j*7+3)%251) as u8).collect::<Vec<_>>()
+                }).collect::<Vec<_>>();
+                parts[k-1]=(0..length).map(|j|((k*19+j*7+3)%251) as u8).collect();
+                let refs=parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
+                let all=codec.final_parity_wires(0x01020304,&refs,r,length+FEC_HEADER).unwrap();
+                let expected_bytes=parts.iter().map(Vec::len).sum::<usize>();
+                let mut job=FecParityJob::new(0x01020304,parts,r,length+FEC_HEADER).unwrap();
+                assert_eq!(job.retained_bytes(),expected_bytes);
+                assert_eq!(job.pending_rows(),k.min(r as usize));
+                let mut emitted=Vec::new();
+                while !job.is_done(){
+                    let first=job.first_parity_index();
+                    let chunk=job.take_next_rows(&codec).unwrap();
+                    assert!(!chunk.is_empty()&&chunk.len()<=4);
+                    assert_eq!(h(&chunk[0]).shard_index,first);
+                    for (i,wire) in chunk.iter().enumerate(){
+                        let head=h(wire);
+                        assert_eq!(head.shard_index,first+i as u8);
+                        assert_eq!(head.parity_count,r); // configured, NOT min(k,r)
+                        assert_eq!(head.data_count,k as u8);
+                        assert_eq!(head.shard_size,length as u16);
+                    }
+                    emitted.extend(chunk);
+                }
+                assert_eq!(emitted,all,"k={k} r={r} L={length}");
+                assert_eq!(job.retained_bytes(),0);
+                assert_eq!(job.pending_rows(),0);
+                assert!(job.take_next_rows(&codec).unwrap().is_empty());
+            }
+        }
+    }
+}
+#[test]
+fn r1_tx_incremental_job_invalid_input_terminal_and_minimal_budget(){
+    use crate::fec_tx::FecParityJob;
+    use crate::fec_math::{ReedSolomon20,FecMathError};
+    assert!(matches!(FecParityJob::new(0,vec![b"x".to_vec()],4,57),Err(TxError::IdExhausted)));
+    assert!(matches!(FecParityJob::new(1,vec![b"x".to_vec()],5,57),Err(TxError::UnsupportedProfile)));
+    assert!(matches!(FecParityJob::new(1,vec![b"x".to_vec()],4,56),Err(TxError::InvalidBudget)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![]],4,100),Err(TxError::InvalidSource)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![7;45]],4,100),Err(TxError::InvalidSource)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![1];21],4,100),Err(TxError::InvalidSource)));
+    let rs=ReedSolomon20::new().unwrap();
+    let a=[1u8];let b=[2u8];
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,0,0),Err(FecMathError::InvalidIndex));
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,2,1),Err(FecMathError::InvalidIndex));
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,1,2),Err(FecMathError::InvalidIndex));
+    let mut job=FecParityJob::new(99,vec![b"X".to_vec()],20,57).unwrap();
+    assert_eq!(job.take_next_rows(&rs).unwrap().len(),1);
+    assert!(job.is_done());assert_eq!(job.retained_bytes(),0);
+}
