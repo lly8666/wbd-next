@@ -62,6 +62,28 @@ impl ReassemblyTable{
         Ok(Self{frame_mtu,min_frame_mtu,mode,
             assemblies:BTreeMap::new(),retired:BTreeMap::new(),last_now_ms:0})
     }
+    /// Owner-authorized MTU transition, not guessed from unauthenticated
+    /// traffic. Preserve existing packet assemblies and their immutable
+    /// per-packet stride across both MTU downshifts and upshifts.
+    ///
+    /// The RX envelope accepts the largest *previously authorized* frame
+    /// while old in-flight packets are draining; new frame production must
+    /// use the current TX FrameBudget, never this permissive RX highwater.
+    /// Keeping the smallest approved frame size retains a bounded declared
+    /// fragment-count test for packets created during any of these epochs.
+    pub fn update_authorized_frame_mtu(&mut self,current_frame_mtu:usize)
+        ->Result<(),ReassemblyError>{
+        if !(LINK_HEADER+1..=MAX_LOGICAL_DATAGRAM).contains(&current_frame_mtu){
+            return Err(ReassemblyError::InvalidBudget);
+        }
+        self.frame_mtu=self.frame_mtu.max(current_frame_mtu);
+        self.min_frame_mtu=self.min_frame_mtu.min(current_frame_mtu);
+        Ok(())
+    }
+    /// Receive-only bounds, not a transmitter budget.
+    pub fn accepted_frame_range(&self)->(usize,usize){
+        (self.min_frame_mtu,self.frame_mtu)
+    }
     pub fn state(&self)->ReassemblyState{
         let mut s=ReassemblyState{assemblies:self.assemblies.len(),
             retired_packet_ids:self.retired.len(),..ReassemblyState::default()};

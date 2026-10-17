@@ -249,3 +249,55 @@ fn r1_link_issued_plan_go_wire_equivalence_and_mtu_mid_packet_abandon(){
         Err(LinkPlanError::MtuShrank{emitted:0,required:28,available:25}));
     assert_eq!(fresh.issued(),0);
 }
+
+#[test]
+fn r1_link_authorized_mtu_change_drains_old_stride_and_accepts_new_id(){
+    // A large pre-change datagram may have fragments in flight when a
+    // genuine path event lowers MTU. Never recreate the table or interpret
+    // the old packet ID under the new stride.
+    let old=(0..3000).map(|i|(i%251) as u8).collect::<Vec<_>>();
+    let earlier=fragment_compat(&old,1400,LinkMode::FixedOff,91).unwrap();
+    let mut rx=receiver(1400,LinkMode::FixedOff);
+    assert_eq!(rx.push_after_record_auth(&earlier[0],id(91),100),Ok(LinkDelivery::Pending));
+    assert_eq!(rx.update_authorized_frame_mtu(1000),Ok(()));
+    assert_eq!(rx.accepted_frame_range(),(1000,1400));
+    let current=vec![0x71;2300];
+    let after=fragment_compat(&current,1000,LinkMode::FixedOff,92).unwrap();
+    let mut new_result=None;
+    for frame in &after {
+        match rx.push_after_record_auth(frame,id(92),101).unwrap(){
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(body)=>new_result=Some(body),
+            other=>panic!("unexpected after MTU down: {other:?}"),
+        }
+    }
+    assert_eq!(new_result,Some(current));
+    assert_eq!(rx.state().assemblies,1);
+    assert_eq!(rx.push_after_record_auth(b"small",id(0),102),
+        Ok(LinkDelivery::Ordinary(b"small")));
+    let mut old_result=None;
+    for frame in earlier.iter().skip(1).rev() {
+        match rx.push_after_record_auth(frame,id(91),103).unwrap(){
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(body)=>old_result=Some(body),
+            other=>panic!("unexpected old MTU drain: {other:?}"),
+        }
+    }
+    assert_eq!(old_result,Some(old));
+    assert_eq!(rx.state().assemblies,0);
+    assert_eq!(rx.push_after_record_auth(&earlier[0],id(91),104),Ok(LinkDelivery::Discarded));
+    // A later upshift still accepts old 1000B frames while the new
+    // permissible ceiling can independently receive 1500B fragments.
+    assert_eq!(rx.update_authorized_frame_mtu(1500),Ok(()));
+    assert_eq!(rx.accepted_frame_range(),(1000,1500));
+    let widened=fragment_compat(&vec![0x82;1800],1500,LinkMode::FixedOff,93).unwrap();
+    assert_eq!(widened.len(),2);
+    assert_eq!(rx.push_after_record_auth(&widened[1],id(93),105),Ok(LinkDelivery::Pending));
+    assert_eq!(rx.push_after_record_auth(&widened[0],id(93),106),
+        Ok(LinkDelivery::Reassembled(vec![0x82;1800])));
+    let before=(rx.accepted_frame_range(),rx.state());
+    for invalid in [0,20,65_536]{
+        assert_eq!(rx.update_authorized_frame_mtu(invalid),Err(ReassemblyError::InvalidBudget));
+        assert_eq!((rx.accepted_frame_range(),rx.state()),before);
+    }
+}
