@@ -1,13 +1,9 @@
 name: M0 old-new real-path same VM sequential comparison
+# Historical old Go-vs-Rust topology comparison. Not the authoritative
+# M0-024 Rust A/B CPU gate; manual replay only, never duplicate automatic
+# performance jobs when the shared sparse/D10 generator changes.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-old-new-paired-diagnostic.yml"
-      - "tools/m0-pair-legacy-harness.py"
-      - "tools/m0-pair-compare.py"
-      - "tools/run-v4-tun-netns.sh"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
+  workflow_dispatch:
 permissions: {contents: read}
 concurrency:
   group: m0-paired-${{ github.sha }}
