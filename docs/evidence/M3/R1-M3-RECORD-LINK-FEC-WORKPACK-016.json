@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "progress": "partial",
-  "source_sha": "5dcbc2f7172380fe124508ea31b9911243496587",
+  "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
   "source_commits": [
     "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
     "3d256ae96e252dec8aa1ff6bb7eaad37499a5c11",
@@ -16,7 +16,8 @@
     "93d80cb09b4e477d5c096c89ba46da086d3b039f",
     "605f7de1507781f42d0bd6a002d9ee2d063b2764",
     "1127215d2c40f1d9a356cc9f135c76037dc2a38b",
-    "5dcbc2f7172380fe124508ea31b9911243496587"
+    "5dcbc2f7172380fe124508ea31b9911243496587",
+    "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7"
   ],
   "summary": [
     "LINK reassembly completion bounded double-buffer peak of old parts plus contiguous output; evict other older incomplete assemblies before allocation",
@@ -26,32 +27,34 @@
     "FEC TX exposes up-to-four parity ready-first-send frames per scheduler turn, not retransmission; sustained 20:20 produces all systematic/parity with accurate wire accounting in three size classes",
     "FEC decoder deterministic high-erasure recovery for k1..20 × six parity profiles, variable lengths, e1/2/4/min(k,r), two loss patterns; still scalar no native ISA-L",
     "New cooperative FEC parity job keeps one owned closed block and genuinely computes <=4 rows per call; output source and Go-matrix wire matches full batch for all k/r and multiple shard lengths. Not yet wired into FecTxOwner or dispatch.",
-    "Opt-in FecTxOwner::new_cooperative uses FecParityJob at actual full/timeout/reconfig/pressure close; no synchronous parity encoding in that mode, shared source-byte budget and independently 64-job metadata cap; backpressure rejects new shards with no loss or new block ID."
+    "Opt-in FecTxOwner::new_cooperative uses FecParityJob at actual full/timeout/reconfig/pressure close; no synchronous parity encoding in that mode, shared source-byte budget and independently 64-job metadata cap; backpressure rejects new shards with no loss or new block ID.",
+    "Cooperative TX 3 size classes simultaneously keep separate 32/33/34ms absolute deadlines and drain parity FIFO with retained bytes accounted; RS parity rejects oversize output prior to encoding."
   ],
   "native_debug": {
     "final": {
-      "source_sha": "5dcbc2f7172380fe124508ea31b9911243496587",
-      "run_id": 39002583659,
+      "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+      "run_id": 39003330821,
       "run_attempt": 1,
       "conclusion": "SUCCESS",
       "rust": "1.85.1",
-      "tests_passed": 108,
+      "tests_passed": 109,
       "tests_failed": 0,
-      "binary_sha256": "ccd2978f51845eeeb8f13d32671f36e7aa29210e457bb14dddf38b03a75e0385",
-      "log_sha256": "c887f827f57054c35d95519d52a55c388fdc7e3d1847b751cae15e966f3d4668",
+      "tests_ignored": 1,
+      "binary_sha256": "04582757b8a12f2d081ff18789400dd7a1ebca28e57d3591ad8c7bd77b7817f5",
+      "log_sha256": "984d26b25889593a54dd9da3b7e02fc95df64ba63d15eed1229e915bba581598",
       "artifacts": [
         {
-          "id": 12089702678,
-          "type": "result",
-          "digest": "sha256:b3790f831027f20637ec60f5a9233aa9416ff941424849ca112496c6e7146f3e"
+          "id": 12089913160,
+          "type": "build",
+          "digest": "sha256:3f620f8318f1a705d0dacabb9228e4f659f704046eed35c90705bbb81f2a2b64"
         },
         {
-          "id": 12089528252,
-          "type": "build",
-          "digest": "sha256:5e362474c2a10440adfd05186c7fb3477ea4973200d7b7a676a86d6c18b76bc8"
+          "id": 12089652723,
+          "type": "result",
+          "digest": "sha256:3bb47361b2ac187980bc00c8e3f86d404cb0055f3aefeaccb402cded6a4024af"
         }
       ],
-      "qualification": "CODEC DEBUG native 108, not real Go exporter/session, native ISA-L, engine or driver, parity dispatch bandwidth/latency, product 500Mbps or p99"
+      "qualification": "SCOPED_DEBUG_FUNCTIONAL_ONLY; ignored Release CPU diagnostic NOT_RUN"
     },
     "earlier_peak": {
       "source_sha": "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
@@ -152,6 +155,30 @@
           }
         ],
         "qualification": "SCOPED_CODEC_DEBUG_FUNCTIONAL_ONLY; real network, ISA-L runtime, multi-owner fairness, per-packet p99, throughput NOT_RUN"
+      },
+      {
+        "source_sha": "5dcbc2f7172380fe124508ea31b9911243496587",
+        "run_id": 39002583659,
+        "run_attempt": 1,
+        "conclusion": "SUCCESS",
+        "rust": "1.85.1",
+        "tests_passed": 108,
+        "tests_failed": 0,
+        "binary_sha256": "ccd2978f51845eeeb8f13d32671f36e7aa29210e457bb14dddf38b03a75e0385",
+        "log_sha256": "c887f827f57054c35d95519d52a55c388fdc7e3d1847b751cae15e966f3d4668",
+        "artifacts": [
+          {
+            "id": 12089702678,
+            "type": "result",
+            "digest": "sha256:b3790f831027f20637ec60f5a9233aa9416ff941424849ca112496c6e7146f3e"
+          },
+          {
+            "id": 12089528252,
+            "type": "build",
+            "digest": "sha256:5e362474c2a10440adfd05186c7fb3477ea4973200d7b7a676a86d6c18b76bc8"
+          }
+        ],
+        "qualification": "CODEC DEBUG native 108, not real Go exporter/session, native ISA-L, engine or driver, parity dispatch bandwidth/latency, product 500Mbps or p99"
       }
     ]
   },
@@ -193,10 +220,10 @@
       }
     ],
     "central_scope_v2": {
-      "last_observed_run_id": 38997674443,
-      "source_sha": "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
-      "conclusion": "SUCCESS",
-      "final_source_status": "NOT_YET_CONFIRMED"
+      "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+      "run_id": 39003440040,
+      "result": "SUCCESS",
+      "qualification": "CODE_EXACT_SCOPE_ONLY"
     },
     "latest": {
       "worker_run_id": 38999954233,
@@ -218,6 +245,11 @@
       "source_sha": "5dcbc2f7172380fe124508ea31b9911243496587",
       "run_id": 39002583640,
       "result": "PENDING_OR_IN_PROGRESS"
+    },
+    "own_source": {
+      "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+      "run_id": 39003330841,
+      "result": "SUCCESS"
     }
   },
   "completed_scenarios": [
@@ -228,7 +260,9 @@
     "F03/F04: full k1..20 × r4/8/10/12/16/20 with mixed lengths and e up to min(k,r), leading/tail erasure, reverse parity order and byte-exact recovery vs scalar Go-matrix implementation",
     "F05 cooperative new genuine GF row job k1..20×r4/8/10/12/16/20×L1/63/64/65/257/512 with k20 L1200 byte-for-byte vs single-batch parity; constant <=4 computed rows/call, fail-closed invalid block/profile/capacity/range and no repeat.",
     "F05 owner-integrated cooperative k20/r20 at 256/512/1200, 3 blocks each, 60 original outputs/source and 60 original parity byte-equivalent to legacy full synchronous TX, at most 4 real GF rows/poll, cooperative budget held through final row, no redelivery",
-    "F05 source-admission backpressure atomic no packet ID burn; metadata queue capacity64 separate from payload budget; oldest source remains for retry; fake-monotone 32ms absolute flush and profile switch parity jobs preserve each original block ID."
+    "F05 source-admission backpressure atomic no packet ID burn; metadata queue capacity64 separate from payload budget; oldest source remains for retry; fake-monotone 32ms absolute flush and profile switch parity jobs preserve each original block ID.",
+    "F01/F05: 20:20 three size-class first-arrival deadlines 32/33/34ms, FIFO BlockID20/21/22 parity drain exactly once; source retained bytes before and after; noncooperative invalid poll rejection.",
+    "F05: source-locked Release same-host, same-window CPU diagnostic harness added but #[ignore] means it has NOT RUN; 3 sizes, 3 alternating AB repeats, >=1.05s warmup + >=1.125s active per mode, >=250ms paired CPU/wall windows with raw receipts and NO ratio for CPU_INCONCLUSIVE."
   ],
   "inherited_015": {
     "task_id": "R1-M3-CPU-PROBE-SAME-WINDOW-015",
@@ -283,10 +317,10 @@
     "caveat": "old 014 unmatched 100Hz probe ratios invalid; exact 015 component Release ratio not source qualification for new 016 code, not per packet p99, network, product FEC, ISA-L or 500Mbps"
   },
   "pending": {
-    "ISA_L_native": "NOT_RUN: no native ISA-L linked or hardware/backend selection test; safe M0-managed binding still requested.",
+    "ISA_L_native": "NOT_RUN: no M0-reviewed native ISA-L binding/runtime dispatch or CI toolchain in worker Cargo; scalar Go-matrix only.",
     "link_integration": "NOT_RUN: LinkPacketPlan is a codec API; integration into real M1/M0 engine/driver cannot be claimed from standalone tests.",
-    "full_package": "PARTIAL: real FecTxOwner opt-in cooperative 4-row encoding now native-proven but original new() is still synchronous and real M0/M1 scheduler, AEAD/PN/physical send, rtx split, true parity queue aging fairness and full V4+Game FEC-on are NOT_RUN. Pending parity source bytes and max64 queued metadata are owner bounded; downstream emitted parity wires are caller-owned and outside this codec budget.",
-    "performance": "Old exact worker source0ecb 015 same-clock Release 24/24 applies ONLY to that source. No new paired A/B or any product throughput for PACK016 code. Missing ISA-L backend performance."
+    "full_package": "PARTIAL: real opt-in FEC TX owner verified 109 ordinary Debug cases; Release clock diagnostic still ignored, external M0/M1 production FEC-on/Game/driver schedule, native ISA-L, true V4 exporter and app 500Mbps remain NOT_RUN.",
+    "performance": "NOT_RUN at current CODE: Release CPU probe committed but deliberately ignored in Debug; require M0 source-locked Rust1.85.1 Release compiled-once workflow, preserved 18 leg summaries+raw windows and binary hash. No 100us CPU per quantum, network parity fairness, packet p99 or 500Mbps claim."
   },
-  "next_action": "M3 add disciplined same-source CPU service-time measurement and backend native ISA-L upon M0 prerequisite; integrate actual scheduler via authorized M0/M1 work; obtain exact H source governance clean. No product throughput claims."
+  "next_action": "M0 run dedicated exact-SOURCE Release cooperative FEC CPU diagnostic (request doc), provide ISA-L safe native binding and production integration; M3 continue only own semantic FEC and source-locked evidence; audit S then cursor-only H."
 }
