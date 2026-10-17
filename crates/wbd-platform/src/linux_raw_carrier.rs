@@ -12,6 +12,8 @@ use std::os::fd::{FromRawFd,AsRawFd,OwnedFd};
 use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
 use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
+use crate::{TxBatchOutcome,TxError};
+use crate::linux_batch::{KernelSendReport,KernelSendSignal};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
 use crate::linux_mtu_scope::ScopedRouteBudget;
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
@@ -281,6 +283,195 @@ mod tests {
         assert!(matches!(ScopedRawIpv4Tx::open("lo",0,1),
             Err(RawTxError::InvalidInterface)));
         assert!(matches!(ScopedRawIpv4Tx::open("lo",1,0),
+            Err(RawTxError::InvalidInterface)));
+    }
+}
+
+// Ready-only scoped raw driver: at most 32 kernel send attempts/receive slots,
+// with no Vec, heap frame copies or new authenticated Rust/Go authority.
+const MAX_READY_RAW:usize=32;
+#[derive(Debug,Clone,Copy,Eq,PartialEq)]
+pub enum RawReadyStatus {
+    Empty, Ready, AtCap, WouldBlock, Interrupted,
+}
+#[derive(Debug,Clone,Copy,Eq,PartialEq)]
+pub enum RawReadyEntry{
+    Unused,
+    /// Caller still owns this original buffer. Parser output is not AEAD.
+    Unauthenticated {cipher_len:usize,seq32:u32},
+    Rejected,
+    Truncated {wire_len:usize,capacity:usize},
+}
+#[derive(Debug,Clone,Copy,Eq,PartialEq)]
+pub struct RawReadyBatch{
+    pub requested:usize,
+    pub attempted:usize,
+    pub observed:usize,
+    pub status:RawReadyStatus,
+    pub entries:[RawReadyEntry;MAX_READY_RAW],
+}
+impl RawReadyBatch{
+    fn new(requested:usize)->Self{
+        Self{requested,attempted:requested.min(MAX_READY_RAW),observed:0,
+            status:if requested==0{RawReadyStatus::Empty}else{RawReadyStatus::Ready},
+            entries:[RawReadyEntry::Unused;MAX_READY_RAW]}
+    }
+    pub fn entry(&self,i:usize)->Option<RawReadyEntry>{
+        if i<self.attempted{Some(self.entries[i])}else{None}
+    }
+}
+fn raw_batch_failure(n:usize,err:RawTxError)->KernelSendReport{
+    let (uncertain,error,signal)=match err{
+        RawTxError::Stopped=>(None,TxError::Stopping,KernelSendSignal::Stopping),
+        RawTxError::BoundedMtu=>(None,TxError::IoFailed,KernelSendSignal::MtuExceeded),
+        RawTxError::InvalidInterface=>(None,TxError::IoFailed,KernelSendSignal::DeviceUnavailable),
+        RawTxError::ShortSend=>(Some(n),TxError::IoUncertain,KernelSendSignal::AmbiguousCompletion),
+        RawTxError::Kernel(4)=>(Some(n),TxError::IoUncertain,KernelSendSignal::Interrupted),
+        RawTxError::Kernel(11)=>(None,TxError::WouldBlock,KernelSendSignal::Backpressure),
+        RawTxError::Kernel(90)=>(None,TxError::IoFailed,KernelSendSignal::MtuExceeded),
+        RawTxError::Kernel(19)=>(None,TxError::IoFailed,KernelSendSignal::DeviceUnavailable),
+        RawTxError::Kernel(100|101|113)=>(None,TxError::IoFailed,KernelSendSignal::RouteUnavailable),
+        RawTxError::Kernel(e)=>(Some(n),TxError::IoUncertain,KernelSendSignal::OtherErrno(e)),
+        _=>(None,TxError::IoFailed,KernelSendSignal::PreflightRejected),
+    };
+    KernelSendReport{outcome:TxBatchOutcome{
+        accepted_prefix:n,uncertain_index:uncertain,error:Some(error)},signal}
+}
+impl ScopedRawIpv4Tx{
+    /// A bounded ready-only *sequence* of synchronous sendto calls, **not**
+    /// hardware multishot sendmmsg. Reports the precise kernel-copied prefix,
+    /// one conservatively uncertain item when necessary and untouched tail.
+    /// No record is re-sealed or re-numbered; caller chooses retry policy.
+    pub fn send_ready_batch<H:FrozenRecordHandle>(
+        &self,generation:u32,frames:&[H],tuple:Ipv4Tuple<'_>,
+        presentation:Presentation,
+    )->KernelSendReport{
+        let limit=frames.len().min(MAX_READY_RAW);
+        if limit==0{return KernelSendReport{
+            outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None}}
+        for (i,record) in frames[..limit].iter().enumerate(){
+            if let Err(e)=self.send_one(generation,record,tuple,presentation){
+                return raw_batch_failure(i,e)
+            }
+        }
+        if limit==frames.len(){
+            KernelSendReport{outcome:TxBatchOutcome::copied_all(limit),
+                signal:KernelSendSignal::None}
+        }else{
+            KernelSendReport{outcome:TxBatchOutcome{
+                accepted_prefix:limit,uncertain_index:None,
+                error:Some(TxError::WouldBlock)},signal:KernelSendSignal::None}
+        }
+    }
+}
+impl ScopedRawIpv4Rx{
+    /// One strictly nonblocking drain (poll timeout 0, recv MSG_DONTWAIT |
+    /// MSG_TRUNC), at most 32 caller-supplied independent mutable packet
+    /// slots. Kernel copies L3 directly into original caller buffer; only
+    /// valid DATA ciphertext is compacted **in place** within that slice.
+    /// Unrelated packets, invalid checksums and truncation never promote a
+    /// trusted record. Does not read sysfs per received packet.
+    pub fn receive_ready_batch(&self,generation:u32,buffers:&mut [&mut [u8]],
+        tuple:Ipv4Tuple<'_>,persona:PacketPersona
+    )->Result<RawReadyBatch,RawTxError>{
+        if generation!=self.generation{return Err(RawTxError::InvalidScope)}
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        let mut outcome=RawReadyBatch::new(buffers.len());
+        if outcome.attempted==0{return Ok(outcome)}
+        if buffers[..outcome.attempted].iter().any(|b|b.len()<40){
+            return Err(RawTxError::InvalidPacket)
+        }
+        let _guard=self.borrow.try_enter_ready().map_err(|e|match e{
+            BorrowError::Stopping=>RawTxError::Stopped,
+            BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
+        })?;
+        let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
+        let mtu=self.budget.receive_budget().map_err(|_|RawTxError::BoundedMtu)?;
+        for i in 0..outcome.attempted{
+            let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
+            // SAFETY: one live pollfd, timeout zero, owned FD.
+            let ready=unsafe{poll(&mut pfd,1,0)};
+            if ready<0 {
+                let e=errno();
+                if e==4{outcome.status=RawReadyStatus::Interrupted;break}
+                return Err(RawTxError::Kernel(e))
+            }
+            if ready==0{
+                outcome.status=RawReadyStatus::WouldBlock;break
+            }
+            if pfd.revents&POLLIN==0{return Err(RawTxError::InvalidPacket)}
+            let slot=&mut buffers[i];
+            let cap=slot.len().min(mtu);
+            // SAFETY: original caller mutable byte slice stays borrowed,
+            // bounded copy and MSG_TRUNC original-wire length for rejection.
+            let n=unsafe{recvfrom(self.fd.as_raw_fd(),slot.as_mut_ptr().cast(),
+                cap,MSG_DONTWAIT|0x20,std::ptr::null_mut(),std::ptr::null_mut())};
+            if n<0{
+                let e=errno();
+                if e==11{outcome.status=RawReadyStatus::WouldBlock;break}
+                if e==4{outcome.status=RawReadyStatus::Interrupted;break}
+                return Err(RawTxError::Kernel(e))
+            }
+            let n=n as usize;
+            outcome.observed+=1;
+            if n>cap{
+                outcome.entries[i]=RawReadyEntry::Truncated{wire_len:n,capacity:cap};
+                continue
+            }
+            if n<40{outcome.entries[i]=RawReadyEntry::Rejected;continue}
+            let parsed=match parse_data_packet(&slot[..n],TrustedRx{
+                tuple,persona,mtu,authenticated_options:None}){
+                Ok(v)=>v,
+                Err(_)=>{outcome.entries[i]=RawReadyEntry::Rejected;continue}
+            };
+            let begin=n-parsed.ciphertext.len();
+            let size=parsed.ciphertext.len();
+            let seq=parsed.seq32;
+            slot.copy_within(begin..n,0);
+            outcome.entries[i]=RawReadyEntry::Unauthenticated{
+                cipher_len:size,seq32:seq};
+        }
+        if outcome.observed==MAX_READY_RAW && buffers.len()>MAX_READY_RAW{
+            outcome.status=RawReadyStatus::AtCap;
+        }
+        Ok(outcome)
+    }
+}
+
+#[cfg(test)]
+mod ready_batch_tests{
+    use super::*;
+    #[test]
+    fn r1_m4_pack_raw_0_1_32_33_prefix_uncertain_suffix_and_kernel_error_gate(){
+        let list=[
+            (RawTxError::Kernel(11),KernelSendSignal::Backpressure,None,TxError::WouldBlock),
+            (RawTxError::Kernel(4),KernelSendSignal::Interrupted,Some(2),TxError::IoUncertain),
+            (RawTxError::Kernel(90),KernelSendSignal::MtuExceeded,None,TxError::IoFailed),
+            (RawTxError::Kernel(19),KernelSendSignal::DeviceUnavailable,None,TxError::IoFailed),
+            (RawTxError::Kernel(101),KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
+            (RawTxError::ShortSend,KernelSendSignal::AmbiguousCompletion,Some(2),TxError::IoUncertain),
+            (RawTxError::Stopped,KernelSendSignal::Stopping,None,TxError::Stopping),
+        ];
+        for (err,signal,uncertain,error) in list{
+            let got=raw_batch_failure(2,err);
+            assert_eq!(got.outcome.accepted_prefix,2);
+            assert_eq!(got.outcome.uncertain_index,uncertain);
+            assert_eq!(got.outcome.error,Some(error));
+            assert_eq!(got.signal,signal);
+        }
+        assert_eq!(RawReadyBatch::new(0).status,RawReadyStatus::Empty);
+        assert_eq!(RawReadyBatch::new(1).attempted,1);
+        assert_eq!(RawReadyBatch::new(32).attempted,32);
+        assert_eq!(RawReadyBatch::new(33).attempted,32);
+        assert_eq!(RawReadyBatch::new(33).entry(32),None);
+    }
+    #[test]
+    fn r1_m4_pack_raw_nonprivileged_no_interface_capture(){
+        // Raw bearer requires explicit interface and CAP_NET_RAW; no
+        // physical-interface/ambient test captures or Go admission occur.
+        assert!(matches!(ScopedRawIpv4Rx::open("../eth0",1,1),
+            Err(RawTxError::InvalidInterface)));
+        assert!(matches!(ScopedRawIpv4Tx::open("lo",0,1),
             Err(RawTxError::InvalidInterface)));
     }
 }
