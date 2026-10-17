@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "request_id": "M4-013-G2-CHECKER-64-BOUND-20261017",
+  "requester_role": "M4",
+  "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
+  "state": "BLOCKED_NEEDS_M0_G2_REVIEW",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+  "at_main_sha": "b1bb0bea8442bbf8dd3f910aaf214d91507192f7",
+  "authority": {
+    "registry_revision": 2,
+    "assignment_epoch": 1,
+    "allowed_paths": [
+      "crates/wbd-platform/",
+      "r1/go-bridge/",
+      "docs/devlog/M4/",
+      "docs/evidence/M4/",
+      ".governance/workstreams/M4/cursor.json",
+      ".governance/workstreams/M4/requests/"
+    ]
+  },
+  "blocker": {
+    "type": "FROZEN_WORKER_G2_CHECKER_64_ACTIVATION_COMMIT_LIMIT",
+    "worker_checker_path": "tools/worker_scope_ci.py",
+    "worker_checker_commit_capacity": 64,
+    "actual_commits_since_G2_base": 66,
+    "anchor_sha": "83bd720368b9be68b3c4c94d7462d20cf4d796db",
+    "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "exact_worker_checker_expression": "0<=total<=64 and len(compare.get('commits',[]))==total",
+    "github_compare": "status ahead, total_commits66, ahead_by66, behind_by0, returned66; source last sha matches",
+    "newer_main_checker": "tools/worker_scope_ci.py on main permits 512 with paginated complete SHA ancestry but is OUTSIDE M4 worker allowed_paths",
+    "code_governance": {
+      "run_id": 39006105815,
+      "attempts": [
+        {
+          "attempt": 1,
+          "result": "FAIL",
+          "error": "ROLE_SCOPE_FAILED: incomplete or diverged bounded G2 activation ancestry"
+        },
+        {
+          "attempt": 2,
+          "result": "FAIL",
+          "error": "same exact frozen old worker checker limit; nontransient"
+        }
+      ]
+    }
+  },
+  "request_to_M0": "As sole owner of main/root tooling, approve and implement one narrowly scoped G2 activation ancestry checker refresh on the M4 branch, or declare an authorized M0-owned bounded validation path for already source-exact M4 -013; reconcile original branch checker with main reviewed paginated limit, and document exact-parent/exception audit for root tool path. Do NOT globally grant M4 tools/** edits. Leave frozen SOURCE intact and preserve every historical worker commit. Once M0 confirms scope-safe checker repair, M4 will run Governance against exact unchanged source/evidence and conclude cursor-only H if it passes.",
+  "native_unblocked": {
+    "run_id": 39006105820,
+    "attempt": 1,
+    "result": "SUCCESS",
+    "r1_tests": "94/94 PASS",
+    "verified_real_artifacts": true,
+    "build_sha256": "0ac0e03f5190af85a34fe9fea05950d7de7068474af1157d0dbd931499b14d3e",
+    "result_sha256": "bc5b941a36b8051bb17e3b25074e7302b5ad10af025bf77d2e93f3893ed71a17"
+  },
+  "mitigation": "Do not change/checkin root tools from M4, do not pretend governance succeeded, do not force push/rebase, do not enable production GoV4 or privileged raw/TUN."
+}
