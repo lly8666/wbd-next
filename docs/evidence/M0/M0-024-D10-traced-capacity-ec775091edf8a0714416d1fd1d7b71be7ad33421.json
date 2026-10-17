@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+  "result": "FAIL_D10_AB_UNDER_FULL_STRACE_THROUGHPUT_SHORTFALL",
+  "artifact_verified": true,
+  "unverified": true,
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "production_features": 0,
+  "shared_unblock_prior_source": "a0672ec078865bb41338ed924dee28151122d01d",
+  "shared_evidence": "docs/evidence/M0/M0-024-public-unblock-a0672ec078865bb41338ed924dee28151122d01d.json",
+  "shared_H115": "88cbcb341ab23db1eb8a798d6f08915ab4b93b49",
+  "shared_H115_governance": {
+    "run_id": 39014080135,
+    "result": "success"
+  },
+  "shared_H114_failed": {
+    "run_id": 39013976840,
+    "result": "failure",
+    "cause": "10 context_refs > existing max8; H115 cursor-only corrected, checker unchanged"
+  },
+  "D10": {
+    "intent": "isolated separate D10 diagnostic ON, fixed 10Mbps each UDP app direction, ChaCha/Normal/FECoff, original protected Go TLS -> Rust original M1/M3 AEAD/PN -> Linux raw/TUN with raw external injector; baseline A from fixed M4-012 source and B with 64 DATA-return cap",
+    "source_A": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+    "source_B": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+    "source_B_engine_original_blob": "4ea790403b89190bd3a6eaf587aff836de0be173",
+    "only_d10_test_changes": [
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
+      "tools/run-v4-tun-netns.sh",
+      ".github/workflows/m0-rust-hotpath-d10-ab.yml"
+    ],
+    "build_overlay": "Frozen A Rust engine source uses exact current shared Cargo manifests/lock and optional local safe ISA-L crate, same as B, no new codec/engine production feature enabled. Original Go generator applied identically to both.",
+    "tool": "strace -f -qq -c full-child summary, including startup/warmup/Go app sender/control + original Rust worker and drain, not solely 15s DATA, incurs ptrace overhead",
+    "duration": {
+      "warmup_s": 5,
+      "measure_s": 15,
+      "drain_s": 3
+    },
+    "waveform": "UDP app64/256/1200B mixed equal count, fixed scenario/seedless deterministic counter starting zero, offered 10Mbps each direction; not altered by evidence",
+    "run": {
+      "id": 39014446221,
+      "source": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+      "conclusion": "failure",
+      "build_job": 117343520886,
+      "build_conclusion": "success",
+      "measure_job": 117343814038,
+      "measure_conclusion": "failure",
+      "build_artifact": {
+        "id": 12094182988,
+        "digest": "sha256:ab25237ce2734befab8bb643d895b5b26e02a521e5e31f3dc66078bed8f2a14f"
+      },
+      "result_artifact": {
+        "id": 12093708177,
+        "digest": "sha256:7629b5a286318f06fa1c97b94644cb2cd43d9cdafb35cf55f6230a915db31ab1"
+      },
+      "both_original_tests_rc0": true,
+      "hard_summary": "INCONCLUSIVE_OR_FAILED",
+      "same_job": true,
+      "non_overlap": true
+    },
+    "A": {
+      "source": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+      "trace_sha256": "f01e5a3a9b9730d470736b754a06938841ddc3f4719a00d8f38a5d175da3bc5a",
+      "c2s_delivered_app_mbps": 8.975906133333334,
+      "s2c_delivered_app_mbps": 9.999573333333334,
+      "c2s_missing": 6012,
+      "s2c_missing": 0,
+      "invalid": 0,
+      "p99_c2s_us": 118859,
+      "p99_s2c_us": 1303,
+      "combined_process_cpu_s_under_tracer": 12.950438
+    },
+    "B": {
+      "source": "ec775091edf8a0714416d1fd1d7b71be7ad33421",
+      "trace_sha256": "1eddc651993b223625b69765cd9d1a87de4c494319095b31621b7a40e65902a2",
+      "c2s_delivered_app_mbps": 8.921002666666666,
+      "s2c_delivered_app_mbps": 9.999744,
+      "c2s_missing": 6065,
+      "s2c_missing": 0,
+      "invalid": 0,
+      "p99_c2s_us": 130264,
+      "p99_s2c_us": 1713,
+      "combined_process_cpu_s_under_tracer": 13.006692
+    },
+    "interpretation": "Hard delivery gate >9.8Mbps AND zero missed failed both legs: whole-child ptrace overhead plausibly contributed, NOT_PROVEN as sole cause. This is traced diagnostic capacity-limited, not functional/product benchmark PASS nor B regression/savings evidence. No averaging cross-VM, no reducing offered target to fake PASS. Trace summaries are archived, small artifact only, no raw packets."
+  },
+  "prior_good_standalone": {
+    "P10_AB": 39005769143,
+    "P10_BA": 39005769170,
+    "CPU_pair": "-0.1426%, +0.6379%, INCONCLUSIVE",
+    "sparse20pps": 39007156374,
+    "sparse": "PASS 600 packets per direction 30s, no missing/invalid"
+  },
+  "continuation": {
+    "status": "M0 024 partial",
+    "next": "Use low-overhead bounded instrumentation/targeted syscall counting in a new independent D10 run; must keep real 10Mbps correctness gates and accurately scope diagnostic counters. Await frozen M1-012 rtrb and M3 ISA-L codec and M4-013 raw kernel batch for stage integration; D10 full strace old FAIL retained. No new governance system/role assignments.",
+    "original_R0_023": "UNVERIFIED",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN"
+  }
+}
