@@ -20,22 +20,36 @@
      stopping: AtomicBool,
      inflight: AtomicUsize,
      target: OnceLock<Thread>,
+     #[cfg(test)] fail_next_signal:AtomicBool,
  }
  impl WakeGate {
-     fn new() -> Self {
+     pub(crate) fn new() -> Self {
          Self { armed: AtomicBool::new(false),
              stopping: AtomicBool::new(false),
-             inflight: AtomicUsize::new(0), target: OnceLock::new() }
+             inflight: AtomicUsize::new(0), target: OnceLock::new(),
+             #[cfg(test)] fail_next_signal:AtomicBool::new(false) }
      }
      /// Only the owner thread may bind/park. Early publications are not
      /// missed because the first queue inspection occurs after binding.
-     fn bind_current(&self) -> bool {
+     pub(crate) fn bind_current(&self) -> bool {
          let this = thread::current();
          self.target.get_or_init(|| this.clone()).id() == this.id()
      }
      pub fn notify(&self) {
          if self.armed.swap(false, SeqCst) {
-             if let Some(t) = self.target.get() { t.unpark(); }
+             // A missing OS waiter (or failed platform wake in a future
+             // adapter) must leave armed set: the *next* publication retries
+             // signaling, not only the empty->nonempty transition.
+             if let Some(t) = self.target.get() {
+                 #[cfg(test)]
+                 if self.fail_next_signal.swap(false,SeqCst) {
+                     self.armed.store(true,SeqCst);
+                     return;
+                 }
+                 t.unpark();
+             }else{
+                 self.armed.store(true,SeqCst);
+             }
          }
      }
      /// Owner-local readiness/deadline probe. Share this exact armed +
@@ -207,11 +221,34 @@
      /// Explicit nonblocking stop: drop queued handles, then query arena.
      /// Never report quiesced while an in-flight producer or loan remains.
      /// This avoids claiming that kernel/driver borrows have been released.
-     fn cancel_queued(&mut self) {
-         while let Ok(item) = self.ready.try_recv() { drop(item); }
-         if let Some(repair) = self.repair.as_ref() {
-             while let Ok(item) = repair.try_recv() { drop(item); }
+     fn cancel_queued(&mut self) -> usize {
+         let mut canceled=0;
+         while let Ok(item) = self.ready.try_recv() {
+             drop(item);canceled+=1;
          }
+         if let Some(repair) = self.repair.as_ref() {
+             while let Ok(item) = repair.try_recv() {
+                 drop(item);canceled+=1;
+             }
+         }
+         canceled
+     }
+     /// The consumer's nonblocking owner-thread ingress probe.
+     /// No caller may share the receiver concurrently across TX/RX owners.
+     pub fn try_take(&mut self) -> Option<WakeEvent<T>> {
+         assert!(self.gate.bind_current(), "one owner consumer thread");
+         self.inspect(&||MonoNs(0),None,&mut ||false)
+     }
+     /// Cancel only not-yet-delivered queued handles. Inflight publishers
+     /// may complete after this first pass; call again until inflight=0.
+     /// This NEVER attests external driver loans have been released.
+     pub fn stop_cancel_queued(&mut self)->(usize,usize){
+         assert!(self.gate.bind_current(),"one owner consumer thread");
+         self.gate.request_stop();
+         let mut canceled=self.cancel_queued();
+         let inflight=self.gate.inflight.load(SeqCst);
+         if inflight==0 {canceled+=self.cancel_queued();}
+         (canceled,inflight)
      }
      pub fn stop_step(&mut self, arena: &mut Arena) -> StopProgress {
          assert!(self.gate.bind_current(), "owner consumer cannot migrate threads");
@@ -283,6 +320,30 @@
              pn:RecordPn(7),seq:SeqOffset(9),carrier_snapshot:3}
      }
      fn arena(n: usize) -> Arena { Arena::new(71,n,256,1,100_000).unwrap() }
+     #[test]
+     fn r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish() {
+         let (sender,mut consumer)=single::<u8>(2).unwrap();
+         let gate=sender.gate();
+         // Bind the sole owner waiter on this thread without invoking
+         // thread::park. Publication/armed retry is a deterministic
+         // state-machine check; the other r1_wake_* tests exercise actual
+         // cross-thread park boundaries and cannot be substituted by this.
+         assert!(consumer.bind_current());
+         gate.armed.store(true,SeqCst);
+         gate.fail_next_signal.store(true,SeqCst);
+         sender.try_push(1).unwrap();
+         // First deliberate signal failure must not consume the armed
+         // handshake or make a permanently missed wake possible.
+         assert!(gate.armed.load(SeqCst));
+         sender.try_push(2).unwrap();
+         // Second notification must consume the retained arm even when
+         // producer queue was already nonempty before this publication.
+         assert!(!gate.armed.load(SeqCst));
+         assert!(matches!(consumer.wait(||MonoNs(0),None,||false),
+             WakeEvent::Ready(Class::Fresh,1)));
+         assert!(matches!(consumer.wait(||MonoNs(0),None,||false),
+             WakeEvent::Ready(Class::Fresh,2)));
+     }
      #[test]
      fn r1_wake_idle_single_packet_push_before_arm_r01() {
          let (sender, mut owner) = single::<u8>(1).unwrap();
