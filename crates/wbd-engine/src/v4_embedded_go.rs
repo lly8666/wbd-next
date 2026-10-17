@@ -65,6 +65,7 @@ struct WorkerRouteBudget {
     route_event_revision:u64,
 }
 struct Entry{
+    generation:u32,
     owner:ProtectedScopedOwner,normal:NormalOffReceive,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
@@ -116,7 +117,7 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
     let arena=Arena::new(generation,32,2048,32,1_000_000)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
-        owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        generation,owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         flow:handoff.flow,
@@ -151,7 +152,8 @@ fn stage(handle:u64,seq:u32,payload:&[u8])->i32{
        ||delta>=max||delta.saturating_add(len as u32)>max{return INVALID}
     let Ok(mut slab)=e.arena.allocate()else{return FULL};
     slab.writable()[..len].copy_from_slice(payload);
-    match e.owner.offer_early(slab,0..len,u64::from(e.rx_boundary)+u64::from(delta),MonoNs(0)){
+    let boundary=e.rx_boundary;
+    match e.owner.offer_early(slab,0..len,u64::from(boundary)+u64::from(delta),MonoNs(0)){
         Ok(EarlyAccepted::Staged)=>{e.staged_count+=1;e.staged_bytes+=len as u32;OK}
         _=>INVALID
     }
@@ -319,7 +321,8 @@ fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
     let cell=session(handle)?;
-    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
     let raw=e.raw_rx.as_ref().ok_or(BAD_STAGE)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
@@ -377,7 +380,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_raw_to_tun(
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     let cell=session(handle)?;
-    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let flow=e.flow;
@@ -486,7 +490,7 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
-        (slab,e.flow,e.rx_boundary,(handle>>32) as u32)
+        (slab,e.flow,e.rx_boundary,e.generation)
     };
     let tuple=Ipv4Tuple{
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
@@ -530,7 +534,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
-        (slab,(handle>>32) as u32)
+        (slab,e.generation)
     };
     let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
     if space<20{return Err(INVALID)}
