@@ -4,7 +4,7 @@
   "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
   "branch": "work/m4-r1-platform",
   "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
-  "result": "BLOCKED_GOVERNANCE",
+  "result": "INCONCLUSIVE",
   "artifact_verified": true,
   "scope": "Raw Linux true sendmmsg/recvmmsg entrypoints compile and source-attested unprivileged UDP kernel 94/94 native R1 PASS, but M4 branch frozen G2 checker old <=64 ancestry while actual 66; not ready_for_integration.",
   "authority": {
@@ -125,5 +125,8 @@
   "production_go_v4": "DISABLED",
   "blocked_by": ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md",
   "rollback": "Revert four M4 platform source paths to sequence16 H while preserving failure receipts. Do not change M0 root checker without authorized M0 scope.",
-  "blocker_request_format": "M0 escalation Markdown only, not a GitHub Actions dispatch/request schema JSON"
+  "blocker_request_format": "M0 escalation Markdown only, not a GitHub Actions dispatch/request schema JSON",
+  "status": "BLOCKED_GOVERNANCE",
+  "native_result": "PASS_SCOPED_94_OF_94",
+  "evidence_scope_note": "INCONCLUSIVE denotes complete task not Governance-qualified; native GitHub compiled-once tests independently PASS. No privileged device/product positive."
 }
