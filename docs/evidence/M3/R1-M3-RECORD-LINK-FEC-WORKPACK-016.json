@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "progress": "partial",
-  "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+  "source_sha": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
   "source_commits": [
     "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
     "3d256ae96e252dec8aa1ff6bb7eaad37499a5c11",
@@ -17,7 +17,9 @@
     "605f7de1507781f42d0bd6a002d9ee2d063b2764",
     "1127215d2c40f1d9a356cc9f135c76037dc2a38b",
     "5dcbc2f7172380fe124508ea31b9911243496587",
-    "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7"
+    "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+    "cebe1109fee8517a313bac79f83e9121fc6bd5ef",
+    "015c0f4203c97293c30eebd24d8b3a4681ce81d3"
   ],
   "summary": [
     "LINK reassembly completion bounded double-buffer peak of old parts plus contiguous output; evict other older incomplete assemblies before allocation",
@@ -28,33 +30,34 @@
     "FEC decoder deterministic high-erasure recovery for k1..20 × six parity profiles, variable lengths, e1/2/4/min(k,r), two loss patterns; still scalar no native ISA-L",
     "New cooperative FEC parity job keeps one owned closed block and genuinely computes <=4 rows per call; output source and Go-matrix wire matches full batch for all k/r and multiple shard lengths. Not yet wired into FecTxOwner or dispatch.",
     "Opt-in FecTxOwner::new_cooperative uses FecParityJob at actual full/timeout/reconfig/pressure close; no synchronous parity encoding in that mode, shared source-byte budget and independently 64-job metadata cap; backpressure rejects new shards with no loss or new block ID.",
-    "Cooperative TX 3 size classes simultaneously keep separate 32/33/34ms absolute deadlines and drain parity FIFO with retained bytes accounted; RS parity rejects oversize output prior to encoding."
+    "Cooperative TX 3 size classes simultaneously keep separate 32/33/34ms absolute deadlines and drain parity FIFO with retained bytes accounted; RS parity rejects oversize output prior to encoding.",
+    "FEC TX terminal u64 BlockID exhaustion preflight refuses new admission before flush_due/pressure can silently discard previously ready but unreturned synchronous parity; compatible existing block can still accept without new ID. Native synchronous/cooperative and pressure regression verifies exact old-Go scalar parity."
   ],
   "native_debug": {
     "final": {
-      "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
-      "run_id": 39003330821,
+      "source_sha": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
+      "run_id": 39006533785,
       "run_attempt": 1,
       "conclusion": "SUCCESS",
       "rust": "1.85.1",
-      "tests_passed": 109,
+      "tests_passed": 110,
       "tests_failed": 0,
       "tests_ignored": 1,
-      "binary_sha256": "04582757b8a12f2d081ff18789400dd7a1ebca28e57d3591ad8c7bd77b7817f5",
-      "log_sha256": "984d26b25889593a54dd9da3b7e02fc95df64ba63d15eed1229e915bba581598",
+      "binary_sha256": "0a0cf9b809f36d55d0d5577b4868d6894b9c680e6ecf5cbd400a925d72577b51",
+      "log_sha256": "23d8cb29632f144363bc24d2437e25ea267ce2c3ecaa2c329fff8feb04518328",
       "artifacts": [
         {
-          "id": 12089913160,
+          "id": 12090823906,
           "type": "build",
-          "digest": "sha256:3f620f8318f1a705d0dacabb9228e4f659f704046eed35c90705bbb81f2a2b64"
+          "digest": "sha256:84adcbc2eb974d230901197f1cbe6956eee33e87f8bfef69c8f5627ecdf5c321"
         },
         {
-          "id": 12089652723,
+          "id": 12091346990,
           "type": "result",
-          "digest": "sha256:3bb47361b2ac187980bc00c8e3f86d404cb0055f3aefeaccb402cded6a4024af"
+          "digest": "sha256:af0fa1d5ed47c22f7542750d31160c89fd0698f904b4906eed2e50342c1a10ff"
         }
       ],
-      "qualification": "SCOPED_DEBUG_FUNCTIONAL_ONLY; ignored Release CPU diagnostic NOT_RUN"
+      "qualification": "SCOPED_DEBUG_NATIVE_FUNCTIONAL_ONLY; Linux Release paired CPU probe deliberately ignored and ISA-L native NOT_RUN"
     },
     "earlier_peak": {
       "source_sha": "a9c935d48f758a4b7ffa557dc83dadf4de9bbd0a",
@@ -179,6 +182,31 @@
           }
         ],
         "qualification": "CODEC DEBUG native 108, not real Go exporter/session, native ISA-L, engine or driver, parity dispatch bandwidth/latency, product 500Mbps or p99"
+      },
+      {
+        "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+        "run_id": 39003330821,
+        "run_attempt": 1,
+        "conclusion": "SUCCESS",
+        "rust": "1.85.1",
+        "tests_passed": 109,
+        "tests_failed": 0,
+        "tests_ignored": 1,
+        "binary_sha256": "04582757b8a12f2d081ff18789400dd7a1ebca28e57d3591ad8c7bd77b7817f5",
+        "log_sha256": "984d26b25889593a54dd9da3b7e02fc95df64ba63d15eed1229e915bba581598",
+        "artifacts": [
+          {
+            "id": 12089913160,
+            "type": "build",
+            "digest": "sha256:3f620f8318f1a705d0dacabb9228e4f659f704046eed35c90705bbb81f2a2b64"
+          },
+          {
+            "id": 12089652723,
+            "type": "result",
+            "digest": "sha256:3bb47361b2ac187980bc00c8e3f86d404cb0055f3aefeaccb402cded6a4024af"
+          }
+        ],
+        "qualification": "SCOPED_DEBUG_FUNCTIONAL_ONLY; ignored Release CPU diagnostic NOT_RUN"
       }
     ]
   },
@@ -250,6 +278,20 @@
       "source_sha": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
       "run_id": 39003330841,
       "result": "SUCCESS"
+    },
+    "recovered_current": {
+      "worker_code_native_source": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
+      "worker_code_native_run": 39006533785,
+      "worker_code_native_conclusion": "SUCCESS",
+      "prior_intermediate_source": "cebe1109fee8517a313bac79f83e9121fc6bd5ef",
+      "prior_intermediate_governance_run": 39006519032,
+      "prior_intermediate_governance_result": "FAIL",
+      "prior_intermediate_reason": "ROLE_SCOPE_FAILED: control or source moved mid-audit; not native test failure",
+      "last_verified_main_owned_central_source": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
+      "last_verified_main_owned_central_run": 39003440040,
+      "new_source_governance_run": 39006533803,
+      "new_source_governance_result": "PENDING_AT_S_RECEIPT",
+      "new_exact_central_scope_result": "PENDING_AT_S_RECEIPT"
     }
   },
   "completed_scenarios": [
@@ -319,8 +361,8 @@
   "pending": {
     "ISA_L_native": "NOT_RUN: no M0-reviewed native ISA-L binding/runtime dispatch or CI toolchain in worker Cargo; scalar Go-matrix only.",
     "link_integration": "NOT_RUN: LinkPacketPlan is a codec API; integration into real M1/M0 engine/driver cannot be claimed from standalone tests.",
-    "full_package": "PARTIAL: real opt-in FEC TX owner verified 109 ordinary Debug cases; Release clock diagnostic still ignored, external M0/M1 production FEC-on/Game/driver schedule, native ISA-L, true V4 exporter and app 500Mbps remain NOT_RUN.",
-    "performance": "NOT_RUN at current CODE: Release CPU probe committed but deliberately ignored in Debug; require M0 source-locked Rust1.85.1 Release compiled-once workflow, preserved 18 leg summaries+raw windows and binary hash. No 100us CPU per quantum, network parity fairness, packet p99 or 500Mbps claim."
+    "full_package": "PARTIAL: FEC TX terminal BlockID admission preservation newly verified at exact CODE 015c0f42 native 110/110 PASS (1 ignored); Release CPU, native ISA-L, M0/M1 production FEC-on/Game/driver first-send fairness, real Go V4 exporter and 500Mbps remain NOT_RUN.",
+    "performance": "NOT_RUN for CODE 015c0f42: existing Linux Release paired CPU probe ignored by native Debug. Historical 015 source 0ecb459c scoped CPU evidence preserved separately. No ISA-L, 100us certified service time, packet p99 or product goodput."
   },
-  "next_action": "M0 run dedicated exact-SOURCE Release cooperative FEC CPU diagnostic (request doc), provide ISA-L safe native binding and production integration; M3 continue only own semantic FEC and source-locked evidence; audit S then cursor-only H."
+  "next_action": "Within assigned PACK016 continue independent M3 FEC semantic implementation and evidence; await real M0 shared native ISA-L safe linkage & source-pinned Release job and M0/M1 production integration; never infer product PASS. Recheck exact current run/scope after S and H."
 }
