@@ -33,3 +33,12 @@ New `TxBatch::take_ready_parity_chunk` returns at most four precomputed parity r
 ## F03/F04 all k×r higher erasure recovery and variable lengths
 
 Rust native test now exercises all k1..20 × all configured parity profiles × L1/65/257 (plus k20 L1200) with e1/2/4/full-min(k,r) and leading/trailing missing patterns, nonuniform original shard lengths and reversed deterministic parity selection. Uses immutable old-Go generator coefficients already asserted in earlier golden tests. This broadens beyond prior e<=4 sample but does not constitute native ISA-L verification or a real Go V4 session.
+
+## PACK016 L02 & F01/F03/F04/F05 checked through source 93d80cb09b4e477d5c096c89ba46da086d3b039f
+
+- Authorized RX MTU transitions, old packet already fragmented at1400 then current1000 and later1500 with new ID, ordinary packet no HOL and invalid update atomic: SOURCE8587cff3 [native38998927569](https://github.com/lly8666/wbd-next/actions/runs/38998927569) 102/102 PASS, binary sha256 fc106c45..., prior SOURCE5f8fcc 101/101.
+- FEC first-send parity chunk interface at most4 rows/turn, with three complete 20:20 blocks for each size256/512/1200B and exact systematic/parity counts: SOURCEefe878bd [native38999036805](https://github.com/lly8666/wbd-next/actions/runs/38999036805) 103/103 PASS. No claim of actual driver scheduling; encoding remains synchronous on block close.
+- FEC scalar Go-generator high-erasure all k/r with variable lengths and e up to min(k,r): SOURCE93d80cb09b4e477d5c096c89ba46da086d3b039f [native38999161286](https://github.com/lly8666/wbd-next/actions/runs/38999161286) **104/104 PASS**, binary sha256 76edf08c..., log sha256 96b17611.... No ISA-L native backend yet; no produced Go oracle replacement, existing immutable Go source vector checks remain separate.
+- Governance: old S/H 38998060898/38998156987 failed while control or worker moved; new 38999036867 GitHub REST403 reading old commit; 38999161387 GitHub REST403 reading main. This is a connector/API governance audit limitation, not native test failure. Under Governance v2 main-owned central scope last confirmed source a9c935 run38997674443 PASS; still need exact final central SOURCE scope PASS, do not claim CLEAN.
+
+Remaining workpack unqualified: ISA-L native binding and target dispatch, real Go V4 authenticated provenance, production FEC-on/Game, parity output queue fairness under sustained real traffic, actual MTU notification and service time, packet p99, 500Mbps. No shared source edits.
