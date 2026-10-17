@@ -9,6 +9,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -313,16 +314,49 @@ class GitHub:
         self.repository = repository
 
     def get(self, suffix):
+        """Fail-closed authenticated API read with bounded rate-limit recovery.
+
+        Never switch credentials, invent GitHub facts, skip an audit, or use
+        stale data after a read error. Retry only an explicitly diagnosed
+        GitHub rate/abuse limit or transient 502/503/504, not a permission 403.
+        """
         url = f"https://api.github.com/repos/{self.repository}/{suffix}"
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "wbd-next-governance"}
         token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
-                return json.load(response)
-        except urllib.error.HTTPError as exc:
-            raise ContractError(f"GitHub read failed HTTP {exc.code}: {suffix.split('?')[0]}") from None
+        endpoint = suffix.split("?")[0]
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
+                    return json.load(response)
+            except urllib.error.HTTPError as exc:
+                # Only expose bounded classification and numeric response
+                # headers. Do not log URL query, response payload or tokens.
+                body = exc.read(2048)
+                try:
+                    msg = str(json.loads(body).get("message", "")).lower()
+                except (ValueError, AttributeError, TypeError):
+                    msg = ""
+                remaining = exc.headers.get("X-RateLimit-Remaining", "?")
+                retry_after = exc.headers.get("Retry-After", "")
+                rate_limited = (exc.code in (403, 429) and (
+                    "rate limit" in msg or "abuse detection" in msg
+                    or remaining == "0" or retry_after.isdecimal()))
+                transient = exc.code in (502, 503, 504)
+                kind = ("github_rate_limited" if rate_limited else
+                        "transient_upstream" if transient else
+                        "permission_denied" if exc.code == 403 else "http_rejected")
+                if (rate_limited or transient) and attempt < 2:
+                    # Respect Retry-After when short; otherwise bounded
+                    # backoff. If GitHub remains unavailable, never PASS.
+                    seconds = min(60, max(1, int(retry_after))) if retry_after.isdecimal() else (5, 15)[attempt]
+                    time.sleep(seconds)
+                    continue
+                raise ContractError(
+                    f"GitHub read failed HTTP {exc.code} ({kind}; "
+                    f"remaining={remaining}; attempts={attempt + 1}): {endpoint}") from None
+        raise ContractError(f"GitHub read exhausted: {endpoint}")
 
     def file(self, path, ref):
         need(path_ok(path) and SHA.fullmatch(ref), "unsafe remote file/ref")

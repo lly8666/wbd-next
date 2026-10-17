@@ -42,6 +42,47 @@ def receipt_and_run():
     return receipt, run
 
 
+class LiveGitHubReadFailureDrills(unittest.TestCase):
+    """No external GitHub call. 403 permission must never become PASS."""
+
+    def test_rate_limit_403_retries_exact_authenticated_endpoint(self):
+        import io
+        import urllib.error
+        from unittest import mock
+        error = urllib.error.HTTPError(
+            "https://api.github.com/repos/example/repo/git/ref/heads/main",
+            403, "rate limited",
+            {"X-RateLimit-Remaining": "0", "Retry-After": "1"},
+            io.BytesIO(b'{"message":"API rate limit exceeded"}'))
+        success = io.BytesIO(b'{"object":{"sha":"' + b"a" * 40 + b'"}}')
+        with mock.patch("tools.governance.urllib.request.urlopen",
+                        side_effect=[error, success]) as open_url, \
+             mock.patch("tools.governance.time.sleep") as sleep:
+            value = g.GitHub("example/repo").head("main")
+        self.assertEqual(value, "a" * 40)
+        self.assertEqual(open_url.call_count, 2)
+        sleep.assert_called_once_with(1)
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.full_url,
+                         "https://api.github.com/repos/example/repo/git/ref/heads/main")
+
+    def test_permission_403_fails_without_retry_or_unauthenticated_fallback(self):
+        import io
+        import urllib.error
+        from unittest import mock
+        error = urllib.error.HTTPError(
+            "https://api.github.com/repos/example/repo/git/ref/heads/main",
+            403, "forbidden", {"X-RateLimit-Remaining": "4999"},
+            io.BytesIO(b'{"message":"Resource not accessible by integration"}'))
+        with mock.patch("tools.governance.urllib.request.urlopen",
+                        side_effect=error) as open_url, \\
+             mock.patch("tools.governance.time.sleep") as sleep:
+            with self.assertRaisesRegex(g.ContractError, "permission_denied"):
+                g.GitHub("example/repo").head("main")
+        open_url.assert_called_once()
+        sleep.assert_not_called()
+
+
 class ContinuityDrills(unittest.TestCase):
     def setUp(self):
         self.role = registry()["roles"][0]
