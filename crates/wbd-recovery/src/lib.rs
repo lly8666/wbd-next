@@ -3,6 +3,12 @@
 #![forbid(unsafe_code)]
 pub use wbd_types::{LaneKey, MonoNs, RecordPn};
 pub mod receipt;
+pub mod rx_feedback;
+pub mod ingress;
+pub use ingress::{
+    admit_opened_receipt, reserve_frozen_submission, complete_driver_prefix,
+    DriverPrefixObservation, FrozenRepairSubmission, IngressBatchSettlement,
+};
 pub mod budget;
 pub mod global_sparse;
 pub use global_sparse::{
@@ -14,6 +20,7 @@ pub use budget::{
     BudgetDirection, BudgetError, BudgetSnapshot, RepairBudget, RepairBudgetConfig,
     ReservationId, WireDirection,
 };
+pub use rx_feedback::{FeedbackDraft,FeedbackError,FeedbackReceive,FeedbackSendResult,RxFeedbackConfig,RxFeedbackState};
 pub use receipt::{
     ReceiptOpenFacts, ReceiptRouteScope, ScopedAuthenticatedReceipt,
     AuthenticatedReceipt, PollResult, ReceiptConfig, ReceiptPage, ReceiptState,
@@ -34,3 +41,6 @@ mod tests {
         assert_eq!(RecordPn(u64::MAX).0, u64::MAX);
     }
 }
+
+#[cfg(test)]
+mod workpack_tests;
