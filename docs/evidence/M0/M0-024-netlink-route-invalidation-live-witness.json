@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+  "code_source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "result": "PARTIAL_VALIDATION_IN_PROGRESS",
+  "verification_status": "PARTIAL",
+  "why_now": "Snapshot cache is present but route/link event invalidation was unmeasured; use real netlink notification without disabling M4 live sysfs or kernel DF fail-closed.",
+  "checkpoint_audit": {
+    "registered_branch": "main",
+    "reservation_revision": 2,
+    "assignment_epoch": 1,
+    "prior_cursor_sequence": 105,
+    "checkpoint_sha": "3ed6fc2de65e03cced5fa857e2e6480750b46cef",
+    "intake_head": "7395f95c0efebce6d8619e5dcc3d4770d3ea77b2",
+    "intervening_commits": [
+      {
+        "sha": "7395f95c0efebce6d8619e5dcc3d4770d3ea77b2",
+        "paths": [
+          ".governance/workstreams/M0/cursor.json"
+        ],
+        "kind": "H_cursor_only"
+      }
+    ],
+    "open_requests": [],
+    "handoff": "CLEAN_NOT_PRODUCT_PASS"
+  },
+  "code_commits": [
+    "aa543ae2dbf2f42998b8ca83eacd71bacf730e2c",
+    "a7aa22d64c261cc66ab1d9c7fab0f11c3082a33f",
+    "e00dda2bf26eaee4ee7c35cac88bab2da0421b65",
+    "d2dccb3c6afdc32394df5ab38bda503a03132eb4"
+  ],
+  "paths": [
+    "crates/wbd-platform/src/linux_route_events.rs",
+    "crates/wbd-platform/src/lib.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+    ".github/workflows/m0-v4-native-owner-probe.yml"
+  ],
+  "actions": {
+    "historical_failure": {
+      "source_sha": "aa543ae2dbf2f42998b8ca83eacd71bacf730e2c",
+      "run_id": 38994668920,
+      "attempt": 1,
+      "job_name": "build",
+      "conclusion": "failure",
+      "cause": "platform deny unsafe; missing narrow scoped FFI allow"
+    },
+    "ffi_fix_native": {
+      "source_sha": "a7aa22d64c261cc66ab1d9c7fab0f11c3082a33f",
+      "run_id": 38994710882,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "existing original native Go-auth Rust raw/TUN; no event-witness assertion"
+    },
+    "ffi_fix_g2": {
+      "source_sha": "a7aa22d64c261cc66ab1d9c7fab0f11c3082a33f",
+      "run_id": 38994710860,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "live_event_witness": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "workflow": "m0-v4-native-owner-probe.yml",
+      "run_id": 38995095150,
+      "attempt": 1,
+      "build_job_id": 117285801010,
+      "build_conclusion": "success",
+      "consume_job_id": 117286062397,
+      "consume_conclusion": "IN_PROGRESS_AT_RECEIPT_WRITING",
+      "test": "TestR0V4EmbeddedIndependentRustOwnerLoop",
+      "required_mark": "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS",
+      "actual_result": "NOT_YET_CONFIRMED"
+    },
+    "governance": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095151,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "identity_structure_only"
+    },
+    "maintenance": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095154,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "tool regression"
+    },
+    "g2": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095244,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "scoped bootstrap"
+    },
+    "qualification": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095166,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "static manifest only"
+    },
+    "native_regression": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095173,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "native_abi": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095147,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+      "run_id": 38995095176,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "remaining": [
+    "actual netlink event test pending",
+    "EMSGSIZE typed feedback and driver sysfs elimination only after safe real kernel regression",
+    "main registry hotpath lock elimination",
+    "ready-only <=32 batch and reused storage",
+    "functional counterexamples",
+    "P10 rust A/B same job, reverse B/A separate Action",
+    "SPARSE and D10 separate Action",
+    "C50 conditional capacity",
+    "R0-023 unresolved gates and over-MTU fragmentation after 024"
+  ],
+  "qualification": {
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "r0_023": "UNVERIFIED",
+    "production_abi_features": 0,
+    "comparative_cpu_latest_source": "NOT_RUN",
+    "netlink_delivery": "PENDING"
+  }
+}
