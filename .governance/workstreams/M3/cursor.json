@@ -4,28 +4,26 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 18,
-  "checkpoint_sha": "ee34c21865fa08f223f7d496264b990b71733e94",
+  "sequence": 19,
+  "checkpoint_sha": "5aa8e6624b12c29b839c7d9cd42604456b32dcca",
   "progress": "partial",
-  "task_id": "R1-M3-FEC-STEADY-COST-RELEASE-014",
-  "current_task": "Assigned atom014 M3-owned test harness and source-locked native Release component P0 complete: two added real AEAD+unique PN adversarial scope tests bring debug 98/98; same M3 source 88a12027 has M0-run compiled-once Release 24/24 measurements, 192B+896B, three repetitions, 1.05s active warmup and 1.125s active per mode, raw artifacts; exceptional M0-pinned checker mirror approved by Governance. No product qualification.",
-  "why_now": "Main M0 formal role goal014 requested actual Release steady-vs-fresh owner cost. Test-only synthetic FecOrigin and actual ChaCha20-Poly1305 HP8/PN. Main M0 provided exact-source release job and one strict checker mirror authority; previous main drift S governance re-ran PASS.",
-  "done_when": "DEBUG SOURCE88a12027 Rust1.85.1 worker-native38682956912 98/98 PASS. M0 main workflow source93a3110 release worker SOURCE88a12027 run38685587150 attempt1 PASS, 24/24 repeated samples; binary SHA256 1d04c7c733e68ca768aa9dd329add5ec393285441c44272ec97f4e7070d584c8; synthetic 2 tunnels x 2 directions. Main-auth one-file G2 checker sync a15ea273 Gov38687744091 attempt1 ROLE_SCOPE_PASS; evidence S ee34c218 Gov38688160530 attempt1 FAIL main/source drift, attempt2 ROLE_SCOPE_PASS 70 commits. Cursor-only H seq18 own Governance to be checked separately.",
-  "next_action": "Await next formal M0 task; no unassigned codec modification. M0 must separately prove real V4 positive provenance, production FEC-on, product E2E, native/physical/performance. Component ratios not 500Mbps or per-packet latency. CPU per-batch 100Hz sampling and proc instrumentation noise need mitigation if further optimization commissioned.",
+  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+  "current_task": "PACK016 workpack active. M3 LINK L02/L03 code adds reassembly peak old-parts+new-output cap and immutable per-packet MTU/stride, one frame per issue, reject mid-flight shrink and require new ID. Exact worker native r1 tests 101/101 PASS on SOURCE5f8fcc; separate inherited 015 M0 compiled-once Release on old SOURCE0ecb459c passed 24/24 corrected same-window CPU component rows. Not complete packet nor product.",
+  "why_now": "New authoritative main PACK-006 role task016 replaces task015. Preserve old cursor014 and recovered old015 Release; resolve real LINK memory and MTU packet fragmentation boundary before integration.",
+  "done_when": "Full C01-C04/L01-L04/F01-F06 and Go compatible 3cipher/PN, old-Go scalar/native ISA-L parity and missing-only recovery with target runtime evidence, parity scheduling and resource fairness, precise configuration/source coverage and exclusions. Actual M0 Go/engine native FEC-on remains external.",
+  "next_action": "Continue owned FEC/record/MTU remaining PACK016 tests and module code. Shared ISA-L/Cargo.lock/native CI binding is requested of M0; meanwhile independent scalar/Go-golden and peer MTU F01-F06 work may advance. When whole workpack satisfies module done_when, repeat S/H and hand off for M0 integration.",
   "unverified": true,
-  "last_tested_source": "88a12027c61386be2709e1e8b01eb8f3c547ae81",
+  "last_tested_source": "5f8fccbc3d9e75d72d6ef12a30fcf6971ff51da1",
   "evidence_refs": [
-    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json"
+    "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/architecture/modules/05-RECORD-CRYPTO.md",
-    "docs/architecture/modules/07-FEC.md",
-    "docs/devlog/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.md",
-    "docs/evidence/M3/R1-M3-POSTAUTH-FEC-P0-COST-013.json",
-    "docs/devlog/M3/M0-REQUEST-FEC-STEADY-RELEASE-014.md",
-    "docs/devlog/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.md",
-    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json"
+    "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
+    "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
+    "docs/devlog/M3/M0-REQUEST-CPU-PROBE-SAME-WINDOW-015.md",
+    "docs/evidence/M3/R1-M3-FEC-STEADY-COST-RELEASE-014.json",
+    "docs/decisions/M0-full-module-workpackages-2026-10-17.md"
   ],
-  "partial_summary": "M3 seq17 H5eafc506 Governance38683352534 failed exact M0 main checker mismatch, not codec. M0 main checker upgraded and exact single-file second exception parent5eafc506 approved. M3 commit a15ea273 copied live M0 tools/worker_scope_ci.py blob817934b16 exactly, only file; own Governance38687744091 PASS ROLE_SCOPE_PASS 69. Prior test-only Rust SOURCE88a12027 real 98/98 DEBUG worker-native38682956912 PASS, 2 fresh tests + old96, separate 2 tunnels x bidirectional authenticated PN/BlockID isolation. M0-source-pinned Release Actions38685587150 succeeded build+measure, M0 workflow source93a3110 checked out immutable worker source88a12027 and compiled once cargo test --release --locked -p wbd-codec --lib --no-run Rust1.85.1 x64, binary1d04c7c733e68ca768aa9dd329add5ec393285441c44272ec97f4e7070d584c8. 24/24 release rows: 3 repeats each × AEAD/FEC × fresh/steady × 192/896; warmup1.05s active and measure>=1.125s active. Median FEC CPU-us/record fresh/steady 192:3.517/1.286 ratio2.736x; 896:3.693/1.543 ratio2.393x. Earlier M0 run38684106420 cancelled after partial21 rows due time limit, excluded. CPU read every64 records from /proc thread stat has 100Hz quantization/instrumentation CPU outside summed active wall; ratios are noisy component-only, not product. p99 is batch-average not per packet. Evidence S ee34c21865fa08f223f7d496264b990b71733e94 records artifact11950996858/log dfec7f72, historical failures and explicit NOT_QUALIFIED; own Gov38688160530 attempt1 FAIL control or source moved mid audit, attempt2 PASS ROLE_SCOPE_PASS70. Now seq18 H own Gov pending. No production positive FecOrigin/Go exporter, root Cargo/lock/ABI/CI changes from M3; one explicitly approved checker copy only. Await new M0 role after H."
+  "partial_summary": "CODE source5f8fcc Rust1.85.1 worker native38997823633 attempt1 101/101 PASS, binary b46596c697.., worker Governance38997823643 SUCCESS; L03 peak fix a9c935 prior 100/100 native38997570133 + governance38997570161 SUCCESS; retained exact old-Go wire & 16 near-cap datagrams. Historical 015 exact M3 source0ecb Release compiled-once M0 run38734823257 SUCCESS 24/24 correct same-window CPU, 192FEC fresh/steady 3.2015/1.0511us ratio3.0459x, 896 3.4432/1.3519us ratio2.5470x, not 016 SOURCE or product. Evidence S commit5aa8e662; S Governance38998060898 queued/in-progress at H authoring. ISA-L native dependency, full F01–F06, parity fairness, actual Go V4 FEC-on/Game, physical, 500Mbps and packet p99 NOT_RUN/NOT_QUALIFIED. Incomplete 016 workpack explicitly partial; no root/CI/Go/engine writes."
 }
