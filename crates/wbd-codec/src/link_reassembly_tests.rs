@@ -230,11 +230,15 @@ fn r1_link_issued_plan_go_wire_equivalence_and_mtu_mid_packet_abandon(){
     let mut rx=ReassemblyTable::new(1400,1000,LinkMode::FixedOff).unwrap();
     assert_eq!(rx.push_after_record_auth(&first,id(100),10),Ok(LinkDelivery::Pending));
     let mut replacement=LinkPacketPlan::new(&data,1000,LinkMode::FixedOff,101).unwrap();
-    let mut received=LinkDelivery::Pending;
+    let mut completed=None;
     while let Some(frame)=replacement.issue_next(1000).unwrap(){
-        received=rx.push_after_record_auth(&frame,id(101),11).unwrap();
+        match rx.push_after_record_auth(&frame,id(101),11).unwrap() {
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(bytes)=>completed=Some(bytes),
+            other=>panic!("unexpected LINK delivery: {other:?}"),
+        }
     }
-    assert_eq!(received,LinkDelivery::Reassembled(data));
+    assert_eq!(completed,Some(data));
     assert_eq!(rx.state().assemblies,1);
     assert_eq!(rx.push_after_record_auth(b"next ordinary packet",id(0),12),
         Ok(LinkDelivery::Ordinary(b"next ordinary packet")));
