@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
+  "branch": "work/m4-r1-platform",
+  "source_sha": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Source-attested M4 Linux x86_64 GNU platform route-storm/PMTU cache, typed driver failure origin and STOP/late-owner-loan conservative safety, including genuine unprivileged kernel UDP and kernel ifindex negative; does NOT qualify privileged raw/TUN positive, physical route down-up or product.",
+  "authorization": {
+    "main_registry_revision": 2,
+    "assignment_epoch": 1,
+    "role": "active",
+    "assigned_task": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
+    "prior_H": "42a622f30317f32f105ce13f2b298f9f05f14615",
+    "prior_cursor_seq": 15,
+    "allowed_paths": [
+      "crates/wbd-platform/",
+      "r1/go-bridge/",
+      "docs/devlog/M4/",
+      "docs/evidence/M4/",
+      ".governance/workstreams/M4/cursor.json",
+      ".governance/workstreams/M4/requests/"
+    ]
+  },
+  "code_paths": [
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "crates/wbd-platform/src/linux_mtu_scope.rs",
+    "crates/wbd-platform/src/linux_tun_sink.rs",
+    "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
+  ],
+  "details": {
+    "error_provenance": "Raw budget Unavailable -> RouteUnavailable; revision ChangedOrInvalid/Deferred -> RouteStale. Stale/unknown route does NOT masquerade as kernel EMSGSIZE. Original actual Linux Kernel(90) remains distinct and poisons budget; pure packet exceeds cached MTU -> PacketExceedsBudget/PreflightRejected not errno; BorrowFence TooManyLoans -> NoCapacity not MTU. Device ENODEV/route ENETDOWN/ENETUNREACH/EHOSTUNREACH backpressure EAGAIN/typed EINTR/partial outcome remain distinct. Existing native connected UDP kernel negative EMSGSIZE and positive partial errno lost tests preserved.",
+    "cache_and_mtu": "Fixed sole original M0 NETLINK_ROUTE watcher from -011 and owner-private ScopedRouteBudget; fresh snapshot on fast cached-return after locking state ensures revision changed during mutex wait is not accepted. Pure 160 different revision storm/debounce 50/100ms, route destination changes, TTL, poison stickiness, actual kernel lo correct and wrong ifindex observations. No privileged interface down/up was run. Kernel raw DF/PMTU ultimately enforces size if actual open is later authorized.",
+    "stop_and_loans": "8 rounds of real Linux loopback UDP 33-frame simultaneous sender vs old-owner repeated STOP, with allowable exact 0 or 32 accepted-prefix and 33rd never attempted; stale old RX fails before any caller mutation. Separate delayed old FrozenRecordHandle remains alive with same RecordPn across pending Stop until old generation explicitly completes. Fresh independent UDP context receives without head-of-line delay; cross-generation completion returns unchanged old token. No ABI or Go-authenticated admission; no new raw FD, no device access.",
+    "tun": "TUN ready-only wrapper inherits exclusive O_NONBLOCK and <=32 copy into original caller buffers. Short write and EINTR/unknown Kernel(5) retained as uncertain_index, not accepted or safe to blindly replay; ordinary preflight errors are non-uncertain. No actual positive IFF_TUN device attached. 0/1/32/33 pure bound and malformed IPV4 validation preserved.",
+    "lifecycle": "BorrowFence try_enter_ready rejects post-STOP and keeps old loans resident; raw/TUN backend lifetime remains with original owner, no new network captures. Existing seq32 wrap fixture keeps sealed PN and payload bytes unchanged.",
+    "api_and_rollback": "M0 may integrate current scoped Rust APIs RawTxError including RouteStale/RouteUnavailable/PacketExceedsBudget/NoCapacity, KernelSendReport signal, ScopedRouteBudget, TunReadyWrites uncertain_index; no cross-role file touched. Rollback patch changes in four owned source paths, retains prior -011 fixed pinned baseline."
+  },
+  "native": {
+    "run_id": 39001742284,
+    "attempt": 1,
+    "status": "SUCCESS",
+    "source_sha": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
+    "workflow": "worker-native-tests.yml",
+    "compiled_once": true,
+    "platform": "Linux x86_64 GNU rustc 1.85.1 (4eb161250 2025-03-15)",
+    "build_job": 117305935587,
+    "consume_job": 117305987852,
+    "r1_passed": 91,
+    "r1_failed": 0,
+    "previous_r1_passed": 88,
+    "additional_r1": 3,
+    "old_r0_filtered": 8,
+    "new_tests": [
+      "r1_m4_012_route_storm_ifindex_mtu_down_up_and_fail_closed",
+      "r1_m4_012_tun_stop_and_preflight_outcome_without_real_privileged_fd",
+      "r1_m4_012_actual_linux_udp_ready_33_vs_stop_late_loan_two_owners"
+    ],
+    "build_artifact": {
+      "id": 12088829780,
+      "zip_sha256": "a531b95863ef8f978c7900b82424aaaa8d4eb7716f3a158df237f288be7de164",
+      "manifest_sha256": "a02abc00cef633dd2df5db135940e2ed7942ddeaf4183180f864719d776cad4e",
+      "binary_sha256": "d5bc3a69d9c6bfe67fd61e1eb01d90fa016523202f8480008524051dfb534743",
+      "binary_bytes": 11905424
+    },
+    "result_artifact": {
+      "id": 12088958008,
+      "zip_sha256": "2ab1f5f305d6202ea5486ed364b08a08a15cee6eb3d5089bf4009035236887a4",
+      "result_json_sha256": "c63179ff0f57a6f7544de6ab8c287e00891b61a2ef6fa68f2fd80cee9f74eca2",
+      "test_log_sha256": "a0d4181e6202e329b7e6bffea6270a822a5173ba4045b0dfb4eda6439564473f"
+    },
+    "audit": "Both actual GitHub ZIP archives directly downloaded; independent SHA256 rehashed archive contents manifest, compiled-once worker-m4.test, result.json and real test.log. manifest source/run/attempt/binary agrees, 91 passed 0 failed 8 historical R0 filtered. Native stderr RAW_RX_NOT_RUN; no positive AF_PACKET/privileged TUN."
+  },
+  "same_source_workflows": [
+    {
+      "name": "worker-native",
+      "run_id": 39001742284,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "g2-scoped-bootstrap-native",
+      "run_id": 39001742286,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-static-qualification-audit",
+      "run_id": 39001742281,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "r0-cross-abi",
+      "run_id": 39001742376,
+      "conclusion": "SUCCESS",
+      "note": "Cross-compile/ABI only, NOT native Windows/ARM"
+    },
+    {
+      "name": "governance",
+      "run_id": 39001742282,
+      "attempt": 1,
+      "conclusion": "FAIL",
+      "cause": "ROLE_SCOPE_FAILED: control or source moved mid-audit, concurrent main revision, not Rust test failure"
+    },
+    {
+      "name": "governance",
+      "run_id": 39001742282,
+      "attempt": 2,
+      "conclusion": "SUCCESS",
+      "cause": "Retry same exact code SHA once control stable"
+    },
+    {
+      "name": "r0-fake-platform",
+      "run_id": 39001742290,
+      "conclusion": "FAIL",
+      "cause": "Historical R0 root exact test inventory mismatch, actual 99/99 Rust assertions PASS; M0 owns root harness."
+    }
+  ],
+  "limitations": [
+    "Actual privileged AF_PACKET/raw IPv4 TCP positive RX/TX unsupported/RAW_RX_NOT_RUN because CAP_NET_RAW absent, no new raw or physical interface attach",
+    "Actual TUN FD IFF_TUN/IFF_NO_PI CAP_NET_ADMIN positive unobserved/NOT_RUN",
+    "True privileged Linux interface MTU down/up, link replacement and netlink route storm NOT_RUN; modeled revisions plus actual unprivileged kernel ifindex and UDP error only",
+    "Windows/ARM native, physical product/performance/p99/500Mbps, authenticated Go ColdSnapshot-to-Rust owner and PN/AEAD business dispatch NOT_RUN"
+  ],
+  "production_go_v4": "DISABLED",
+  "integration": "READY_FOR_M0_SOURCE_SCOPED_PLATFORM_STABLE_API_REVIEW_ONLY"
+}
