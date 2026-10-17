@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "branch": "work/m1-r1-runtime",
+  "task_id": "R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "e2050aec593bd692974510fd9d64ae1ff7bb7c00",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "OWNER_LOCAL_GAME_SHARED_TX_AND_RX_COMPONENT_READY_FOR_M0_INTEGRATION",
+  "scope": "G01-G04 Game/Normal scoped scheduling ownership and dedup, not M0 protected Go admission, M3 FEC/link/AEAD or M4 kernel/product.",
+  "native": {
+    "run_id": 39045913408,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39045913408",
+    "build_job": 117434475635,
+    "consume_job": 117434533622,
+    "compiled_once": true,
+    "baseline_r1": 104,
+    "added_game_tests": 13,
+    "total_passed": 117,
+    "total_failed": 0,
+    "unrelated_r0_filtered": 3,
+    "artifact_id": 12105399239,
+    "build_artifact_id": 12105702660,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/39045913408/artifacts/12105399239",
+    "zip_sha256": "faecf238d74dfdda77156ef9a7172fff2f7e9d7e2ee37883d4f31086a64b6bf5",
+    "result_json_sha256": "c6eb60f59114826257e1a2613bc64cbe6af7b1e0524d9a0f4f8b3ef67fa09b4d",
+    "test_log_sha256": "a2848682aae0c068e45e33f9a5467787ffa7c08c00867854e07b33b4e5baefe1",
+    "outer_binary_sha256": "d1c9ceb3787fa9d5f5f94c72b3a8df74b953a7a05bfef659711e9a3e4e42009b",
+    "verified": "Downloaded exact GitHub worker result ZIP into container, independently sha256 verified ZIP/result.json/test.log, 117 unique scoped named tests (104 old plus 13 new), exact source/attempt/run, 13 r1_game_r4_ names ok; 6 M1_RTRB_CASE_PASS receipts retained."
+  },
+  "new_tests": [
+    "r1_game_r4_g01_normal_two_lane_overlap_no_game_envelope_or_duplicate",
+    "r1_game_r4_g01_one_common_job_four_lane_copies_no_source_clone",
+    "r1_game_r4_g02_24_arrival_orders_first_valid_delivery_once",
+    "r1_game_r4_g02_cross_lane_complementary_four_shards_24_orders",
+    "r1_game_r4_g02_recovered_then_systematic_delivers_once_and_window_stale",
+    "r1_game_r4_g03_0_1_32_33_immediate_batch_and_pressure_bounded",
+    "r1_game_r4_g03_normal_rotation_mss_a_old_big_b_new_small",
+    "r1_game_r4_g03_one_lane_queue_full_three_other_lanes_immediate",
+    "r1_game_r4_g03_slow_lane_full_does_not_block_other_lanes",
+    "r1_game_r4_g04_block_budget_duplicates_and_stop_reclaim",
+    "r1_game_r4_g04_completed_shards_external_loan_survives_stop",
+    "r1_game_r4_g04_parity_first_send_independent_from_repair_and_arena",
+    "r1_game_r4_g04_stop_rotation_old_epoch_and_wrong_scope_fail_closed"
+  ],
+  "interface": {
+    "files": [
+      "crates/wbd-engine/src/runtime/game_shared.rs",
+      "crates/wbd-engine/src/runtime/game_shared_tests.rs",
+      "crates/wbd-engine/src/runtime/mod.rs"
+    ],
+    "old_stable_files_unchanged": [
+      "crates/wbd-engine/src/runtime/directional.rs",
+      "crates/wbd-engine/src/runtime/directional_rtrb.rs",
+      "crates/wbd-engine/src/runtime/directional_compat.rs",
+      "crates/wbd-engine/src/runtime/wake.rs"
+    ],
+    "tx": "ActiveLaneSnapshot::new(externally_authenticated GameScope,caller qualified LaneSpec vec sorted once); GameTx::new(snapshot,GameLimits); offer(original UniqueBuffer,window,Mode::Game or Normal,predicted_lane_wire_bytes,optional BlockIdExt,MonoNs); drain_ready(now,max<=32,callback SendView)->DispatchOutcome; rotate(externally qualified snapshot); stop idempotent.",
+    "tx_integrity": "ONE UniqueBuffer pre-seal common payload per logical job, indexed noncopy per-lane ready refs, no per-packet Arc/payload clone, single Game LogicalPacketId across old/new lane generations and separate independent per-lane sealing left to M3.",
+    "normal": "Never generates Game LogicalPacketId/envelope, exactly one lane per offered business frame, round-robin including newly qualified B, old A draining frames keep original MSS and owner.",
+    "rx": "GameRx::new(snapshot,RxLimits); offer_piece(shared-scope,authorized lane,BlockIdExt,LogicalPacketId,index,count,original UniqueBuffer,window) returns Pending or CompletedBlock with original pieces for M3; first_delivery(scope,lane,logical_id,already-authenticated-and-decoded UniqueBuffer) returns first only; Duplicate/Stale rejects and returns owned original.",
+    "no_hol": "One full/backpressured lane increments lane_copy_drop; other qualified lanes dispatch already-ready independent copies, no 4-lane barrier or waiting for all joins.",
+    "ownership": "GameTx Stop returns owner-held pending references and original slab; external callback-created loan remains owned outside. GameRx completed shard bundle remains owned outside after Stop until final drop, no false quiescence.",
+    "frozen_interfaces": "No new root dependency, no ABI/wire change, no stable 012 queue/wake API changed."
+  },
+  "resource_bounds": {
+    "tx_jobs_max": 8192,
+    "tx_active_plus_draining_lanes_max": 8,
+    "lane_queue_slots_max_each": 8192,
+    "tx_logical_payload_bytes": "explicit GameLimits.logical_bytes; counted ONE per logical input, arena slab/headroom budget external",
+    "tx_lane_bytes": "explicit GameLimits.lane_bytes per lane, predicted full wire charge; 2ms sizing is caller policy, max age enforced on drain",
+    "rx_delivered_window_max": 65536,
+    "rx_open_blocks_max": 8192,
+    "rx_open_owned_bytes": "explicit RxLimits.open_bytes; <=4 pieces per block",
+    "over_budget_behavior": "return original owned UniqueBuffer or drop a single lane's copy with counted lane_copy_drop, never build unbounded fresh retries",
+    "slab_total": "Arena capacity separately enforced; shared 512MiB integrated product quota NOT_MEASURED"
+  },
+  "history": [
+    {
+      "source": "9d028b6009243d00c680c0b521d673cec3c1e2d8",
+      "run": 39045297620,
+      "result": "PASS_OLD_R1_ONLY",
+      "note": "104 old tests passed, new r4_game tests not selected by worker r1_ filter; not 013 proof"
+    },
+    {
+      "source": "31d1ee9ade49688f24c8a6ace42974352a3372b4",
+      "run": 39045549618,
+      "result": "PASS_SUPERSEDED",
+      "note": "115/115 including 11 Game tests, superseded by 2 additional full-lane/loan tests"
+    },
+    {
+      "source": "e2050aec593bd692974510fd9d64ae1ff7bb7c00",
+      "run": 39045913408,
+      "result": "PASS",
+      "note": "117/117 including all 13 Game tests"
+    }
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 39045913340,
+      "conclusion": "failure",
+      "reason": "ROLE_SCOPE_FAILED control or source moved mid-audit; main changing concurrently"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 39045913344,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 39045913548,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 39045913382,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 39045913350,
+      "conclusion": "failure"
+    }
+  ],
+  "root_abi_limitation": "Historical M0-owned old worker root tools/r0_abi_bundle.py expects literal '3 passed' in unfiltered Rust output, despite actual rc0 119 passed 1 ignored; run39045913350 FAIL. No all-CI green.",
+  "performance": {
+    "functional_first": true,
+    "independently_proven_game_hotspot": false,
+    "optimization_applied": false,
+    "same_vm_same_action_game_ab": "NOT_RUN",
+    "reason": "No controlled component A/B or measured hotspot; avoid unsupported speedup/product comparisons. Existing inherited release owner microbenchmark is NOT Game throughput or comparable A/B."
+  },
+  "not_run": {
+    "trusted_GoV4_tunnel_epoch_admission": "NOT_RUN",
+    "M3_actual_LINK_fragment_FEC_encode_decode": "NOT_RUN",
+    "per_lane_AEAD_PN_key_seal_open": "NOT_RUN",
+    "M0_actual_owner_and_M4_kernel_driver": "NOT_RUN",
+    "OS_native_wake_and_loom": "NOT_RUN",
+    "full_multilane_product_Game_3Mbps_FEC_20_20": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "Windows_ARM": "NOT_RUN",
+    "end_to_end_p99": "NOT_RUN",
+    "product_500Mbps": "NOT_RUN",
+    "production_features": 0
+  }
+}
