@@ -8,6 +8,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "crates/wbd-engine/Cargo.toml"
+      - "crates/wbd-engine/src/runtime/**"
       - "crates/wbd-codec/Cargo.toml"
       - "native/isal-safe/**"
   workflow_dispatch:
@@ -18,6 +19,29 @@ on:
         type: string
 permissions: {contents: read}
 jobs:
+  main-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build and run main pinned rtrb0.3.2 six SPSC cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked --lib -p wbd-engine --features m1_rtrb r1_rtrb_direction_ -- --test-threads=1 --nocapture | tee main-rtrb.log
+          grep -Eq 'test result: ok\..*6 passed; 0 failed' main-rtrb.log
+          for name in \
+            r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill \
+            r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss \
+            r1_rtrb_direction_b04_stop_late_lease_epoch_aba \
+            r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx \
+            r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject \
+            r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans; do
+            grep -Fq "$name" main-rtrb.log
+          done
+          echo "M0_MAIN_M1_FROZEN_RTRB_SIX_NATIVE_PASS source=$GITHUB_SHA"
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -27,14 +51,14 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: ${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}
+          ref: ${{ inputs.worker_source || 'a39ff711fd1f1c505b60b19bfcc7604cdd861aa2' }}
           path: worker-m1
           persist-credentials: false
       - name: Build frozen worker M1 real rtrb with main pinned Cargo lock
         shell: bash
         run: |
           set -euo pipefail
-          export WORKER_SOURCE="${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}"
+          export WORKER_SOURCE="${{ inputs.worker_source || 'a39ff711fd1f1c505b60b19bfcc7604cdd861aa2' }}"
           [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || { echo INVALID_SOURCE >&2; exit 2; }
           test "$(git -C worker-m1 rev-parse HEAD)" = "$WORKER_SOURCE"
           rustup toolchain install 1.85.1 --profile minimal
@@ -47,8 +71,8 @@ jobs:
           import pathlib,tomllib
           p=pathlib.Path("worker-m1/crates/wbd-engine/Cargo.toml")
           s=p.read_text()
-          assert "[features]\n" in s and "m1_rtrb" not in s
-          p.write_text(s.replace("[features]\n","[features]\nm1_rtrb = []\n",1))
+          assert "[features]\n" in s and "m1_rtrb = []" in s
+          # Main owns feature selection; no duplicated injection
           root=tomllib.loads(pathlib.Path("Cargo.toml").read_text())
           assert root["workspace"]["dependencies"]["rtrb"]["version"]=="=0.3.2"
           pkgs=tomllib.loads(pathlib.Path("Cargo.lock").read_text())["package"]
@@ -90,7 +114,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          export WORKER_SOURCE="${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}"
+          export WORKER_SOURCE="${{ inputs.worker_source || 'a39ff711fd1f1c505b60b19bfcc7604cdd861aa2' }}"
           [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || exit 2
           python3 - <<'PY'
           import os,json,pathlib,hashlib
@@ -110,7 +134,8 @@ jobs:
             r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss \
             r1_rtrb_direction_b04_stop_late_lease_epoch_aba \
             r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx \
-            r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject; do
+            r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject \
+            r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans; do
             grep -Fq "$name ... ok" m1-native-result/tests.log
           done
           cp m1-native-build/manifest.json m1-native-result/manifest.json
