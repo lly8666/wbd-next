@@ -4,8 +4,8 @@
   "code_source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
   "role_id": "M0",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "result": "PARTIAL_VALIDATION_IN_PROGRESS",
-  "verification_status": "PARTIAL",
+  "result": "PARTIAL_LIVE_NETLINK_EVENT_AND_EXISTING_ORIGINAL_OWNER_FUNCTIONAL_PASS",
+  "verification_status": "PARTIAL_VALIDATED_EXACT_CODE_SOURCE",
   "why_now": "Snapshot cache is present but route/link event invalidation was unmeasured; use real netlink notification without disabling M4 live sysfs or kernel DF fail-closed.",
   "checkpoint_audit": {
     "registered_branch": "main",
@@ -70,10 +70,42 @@
       "build_job_id": 117285801010,
       "build_conclusion": "success",
       "consume_job_id": 117286062397,
-      "consume_conclusion": "IN_PROGRESS_AT_RECEIPT_WRITING",
+      "consume_conclusion": "success",
       "test": "TestR0V4EmbeddedIndependentRustOwnerLoop",
       "required_mark": "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS",
-      "actual_result": "NOT_YET_CONFIRMED"
+      "actual_result": "PASS_REAL_LINUX_NETLINK_LINK_EVENT_REFRESH_AND_FAIL_CLOSED",
+      "observed": {
+        "revision_before": 1,
+        "revision_after": 2,
+        "route_refresh_before": 1,
+        "route_refresh_after": 2,
+        "original_mtu_before": 65536,
+        "original_mtu_after": 1500,
+        "s2c_successful_packets_prior_to_shrink": 8,
+        "no_post_shrink_success": true
+      },
+      "build_artifact": {
+        "id": 12086503866,
+        "digest": "sha256:18ed8eb4ba0ed36770c57d2c9393ed2ace03ee67f8117083ef0f79fb3684f22c"
+      },
+      "result_artifact": {
+        "id": 12086269880,
+        "digest": "sha256:baea52615ab89961d2093bd9b3afbbe645341bc706a99c687d70f55bc2894041"
+      },
+      "development_10mbps": {
+        "warmup_seconds": 10,
+        "measure_seconds": 60,
+        "measured_direction_c2s_mbps": 10,
+        "measured_direction_s2c_mbps": 10,
+        "worker_rx_cpu_seconds": 4.2125,
+        "worker_tx_cpu_seconds": 3.9342,
+        "conclusion": "MEASUREMENT_RECORDED_NOT_PRODUCT_PASS_NOT_RUST_RUST_PAIRED"
+      },
+      "limitations": [
+        "NETLINK event cannot replace original M4 per-DATA link MTU check yet",
+        "One native hosted namespace and fixed dev workload, not production/physical qualification",
+        "Original route-cache scope, not final Rust/Rust comparative source"
+      ]
     },
     "governance": {
       "source_sha": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
@@ -123,7 +155,7 @@
     }
   },
   "remaining": [
-    "actual netlink event test pending",
+    "real netlink event test PASS on exact d2dccb3c source; independent interface-replace/route-storm/EMSGSIZE tests still NOT_RUN",
     "EMSGSIZE typed feedback and driver sysfs elimination only after safe real kernel regression",
     "main registry hotpath lock elimination",
     "ready-only <=32 batch and reused storage",
@@ -139,6 +171,6 @@
     "r0_023": "UNVERIFIED",
     "production_abi_features": 0,
     "comparative_cpu_latest_source": "NOT_RUN",
-    "netlink_delivery": "PENDING"
+    "netlink_delivery": "PASS_REAL_NETLINK_EVENT_AND_REOBSERVE_EXACT_D2DCCB3C_SOURCE"
   }
 }
