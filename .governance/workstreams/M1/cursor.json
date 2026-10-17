@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 15,
-  "checkpoint_sha": "baadb74630b99359a5262e0d79b57484196a36d3",
+  "sequence": 16,
+  "checkpoint_sha": "943480dc1ffd8104299677bad03cd72e85945925",
   "progress": "ready_for_integration",
-  "task_id": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
-  "current_task": "M1-012 directional owned real rtrb 0.3.2 safe push/pop scoped component COMPLETE and ready for M0 integration. Protected Go TLS credential entry, native eventfd/Windows wake, loom and kernel driver/product qualification remain NOT_RUN.",
-  "why_now": "M0 immutable rtrb pin 045af34c5c32cf01bd11092580db2bc879d8d651 and exact manifest source 789aa27d039fa64183d4b06d2f0acd4868bfc544 now resolve prior shared dependency; M1 CODE a39ff711 action39015538871 source-exact true 6/6 rtrb and outer104/104 scoped PASS. Prior H0ecc743 seq14 Governance39006469274 SUCCESS.",
-  "done_when": "M1-012：真实线程队列方向隔离、0/1/32/33、SPSC满返还、不丢唤醒/Stop借用/epoch回绕、稀疏和公平性反例精确SOURCE native Actions通过；对M0冻结编译接口和不能覆盖的Go/kernel/loom缺口交付。",
-  "next_action": "M0 one-stage source import of M1 CODE a39ff711fd1f1c505b60b19bfcc7604cdd861aa2 directional.rs/directional_rtrb.rs/directional_compat.rs/wake.rs, select feature m1_rtrb via M0-owned engine Cargo with reviewed =0.3.2 locked graph, compile/test resulting integrated main SOURCE, link protected Go owner+driver separately; old sync_channel fallback still available. Optional Loom dev-only locked pin and platform native OS notifications are separate NOT_RUN, not required to represent worker-scoped ready. No further self-assigned M1 work.",
+  "task_id": "R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013",
+  "current_task": "M1 PACK-013 Game shared logical TX/RX owner component COMPLETE, original Normal single-lane rotation intact; M0 protected Go/codec/driver integration remains separately NOT_RUN.",
+  "why_now": "Main registry rev2 M1 epoch1 formally assigned R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013, superseding older 012 cursor state. M0 PACK-009 decision freezes 012 directional interface. Previous seq15 H9d4f68a Governance39017421562 SUCCESS.",
+  "done_when": "PACK-013 M1：G01–G04/R01–R04/M01–M04相关公共调度/句柄功能反例同SOURCE native Actions合批，含Normal不复制、Game共享ID及首到、慢lane/rotation、parity首发不占10% repair、Wake失败重试/Stop归还；冻结接口、资源上界和Go/native/产品NOT_RUN边界交付。",
+  "next_action": "M0 import only exact M1 CODE e2050aec593bd692974510fd9d64ae1ff7bb7c00 in runtime/game_shared.rs + game_shared_tests.rs + runtime/mod.rs (no root/dir/wake changes); use ActiveLaneSnapshot, GameTx shared job/dispatch callback with independently verified per-lane M3 seal+M4 send, GameRx offer_piece to M3 and first_delivery only after authenticated+decoded completion; test protected Go V4 admission/epoch, LINK/FEC+AEAD/PN, kernel driver and product performance on integrated main SOURCE. No speculative Game speedup (same-VM A/B NOT_RUN), no feature0 flips; worker scoped 117/117 ready for integration.",
   "unverified": false,
-  "last_tested_source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+  "last_tested_source": "e2050aec593bd692974510fd9d64ae1ff7bb7c00",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012-rtrb-a39ff711fd1f1c505b60b19bfcc7604cdd861aa2.json"
+    "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M1-012 frozen scoped worker CODE=a39ff711fd1f1c505b60b19bfcc7604cdd861aa2. M0 root pinned rtrb=0.3.2 SHA045af34c..., exactly tested overlay main789aa27..., no M1 shared root changes. GitHub worker-native39015538871 PASS outer104/104 r1, plus six actual safe rtrb 0.3.2 compiled-and-run inner cases in temporary M0 manifest overlay, including 0/1/32/33, original UniqueBuffer Full return, separate TX/RX OS threads sparse wake, Stop late loan/ABA, old RX nonblocking new, concurrent publish/Stop cancel exactly all acceptances. Downloaded artifact12094184835 ZIP/result.json/test.log hashes verified; inherited Release component succeeded, not rtrb performance. Code same-SHA Governance39015538876, G2 39015538873, R0 audit39015538894, cross ABI39015538874 SUCCESS; legacy old branch R0 ABI39015538885 FAIL because M0-owned literal '3 passed' parser despite Rust106 passed1 ignored rc0. 0715b84 and167195e5 failed artifact/host toolchain procedures retained, f0e6d8 PASS 5 true cases superseded. S evidence baadb746... and cursor-only H seq15 follows. Real protected Go TLS admission, platform Linux eventfd/Windows event, loom enumerations, kernel driver loan, full product 500Mbps, E2E p99, native WinArm/physical NOT_RUN; sync_channel fallback remains for rollback."
+  "partial_summary": "PACK-013 CODE e2050aec593bd692974510fd9d64ae1ff7bb7c00, worker-native39045913408 compiled-once 117/117 R1 scoped PASS (104 previous +13 Game); real rtrb overlay 6/6 retained; downloaded artifact12105399239 SHA256 ZIP/result.json/test.log independently verified. GameTx one original owned preseal logical buffer slot indexed by <=8 per-lane bounded queues, no per-lane business copies; shared Game LogicalPacketId across rotation; Normal no extra envelope/id and one qualified lane per new payload. <=32 already-ready callbacks immediate, pressure on lane A does not block BCD, counted lane_copy_drop; 24 orders first-source/recovered and 24 complementary shards accepted by GameRx owning <=4 shards/block before M3 decode; RX first_delivery dedup window and return original duplicate buffer; old big MSS retained A, new small B fresh, Stop with external completed block retains loan until final drop, old epochs fail. Existing parity first-send wire-byte share, Wake failed retry and Stop/rtrb tests unchanged. CODE G2/audit/cross ABI SUCCESS, CODE Governance39045913340 FAIL transient main moved mid-audit, root historical R0 ABI39045913350 FAIL stale M0-owned '3 passed' parser despite Rust119passed1ignored rc0. Evidence S943480dc1ffd8104299677bad03cd72e85945925, cursor-only H seq16 requires Governance. No external authenticated Go TLS lane qualification, M3 actual FEC/AEAD, driver or product proof. No same-VM same-Action Game A/B performed since no verified hotspot/optimization."
 }
