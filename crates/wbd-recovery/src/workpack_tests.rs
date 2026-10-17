@@ -127,3 +127,157 @@ fn r2_pack_009_reported_scope_only_no_cumulative_hole_or_cross_lane_release() {
     // It may receive one PTO tail candidate; never held behind missing PN.
     assert_eq!(tx.on_timer(MonoNs(30_000_000)).candidates.len(),1);
 }
+
+
+/// Controlled same-slot/new-generation sessions share a PROCESS budget, not
+/// two independent sparse floors. An unproven partial-syscall suffix remains
+/// charged even if its shadow subsequently receives an authenticated positive
+/// receipt; neither that receipt nor a late completion can refund it.
+#[test]
+fn r2_pack_009_generation_uncertain_held_and_fresh_still_progress() {
+    use crate::{
+        GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError,
+        ValidatedRepairBatchOutcome, BatchSuffixEvidence, BatchCompletionCounts,
+        ReceiptPage,
+    };
+    let old_lane=lane();
+    let new_lane=LaneKey{
+        tunnel:TunnelKey{slot:old_lane.tunnel.slot,
+            generation:old_lane.tunnel.generation+1},
+        ..old_lane
+    };
+    let old_direction=BudgetDirection{
+        tunnel:old_lane.tunnel,direction:WireDirection::ClientToServer};
+    let new_direction=BudgetDirection{
+        tunnel:new_lane.tunnel,direction:WireDirection::ClientToServer};
+    let local=RepairBudgetConfig{
+        outer_mtu:1400,max_repair_bytes_per_epoch:100_000,
+        max_pending_reservations:4,max_pending_bytes:5600,
+        io_timeout_ns:10_000_000,
+    };
+    let mut global=GlobalRepairAllocator::new(GlobalRepairConfig{
+        max_bytes_per_epoch:256,max_directions:2,max_grant_bytes:256,
+        max_grant_lifetime_ns:200_000_000,
+        max_pending:2,max_pending_bytes:256,
+    },MonoNs(0)).unwrap();
+    for d in [old_direction,new_direction] {
+        global.register(d,local,MonoNs(0)).unwrap();
+        global.on_fresh_accepted(d,1400,MonoNs(0)).unwrap();
+    }
+    let mut old_shadow=sender(1);
+    old_shadow.on_sent(make_frozen(42),MonoNs(0),MonoNs(120_000_000))
+        .unwrap();
+    let mut changed=make_frozen(42);
+    changed.metadata.lane=new_lane;
+    changed.origin.key.generation+=1;
+    let mut new_shadow=ReceiptState::new(new_lane,ReceiptConfig{
+        max_shadow_entries:1,pto_ns:30_000_000,reorder_window_ns:2_000_000
+    }).unwrap();
+    new_shadow.on_sent(changed,MonoNs(0),MonoNs(120_000_000))
+        .unwrap();
+    let a=old_shadow.on_timer(MonoNs(30_000_000)).candidates.remove(0);
+    let b=new_shadow.on_timer(MonoNs(30_000_000)).candidates.remove(0);
+    let ga=global.grant(old_direction,128,80_000_000,MonoNs(30_000_000))
+        .unwrap();
+    let gb=global.grant(new_direction,128,80_000_000,MonoNs(30_000_000))
+        .unwrap();
+    let ia=global.reserve_if_still_missing(ga,&old_shadow,&a,128,
+        MonoNs(30_000_000)).unwrap();
+    let ib=global.reserve_if_still_missing(gb,&new_shadow,&b,128,
+        MonoNs(30_000_000)).unwrap();
+    assert_eq!(global.snapshot().charged_repairs,256);
+    assert_eq!(global.snapshot().pending,2);
+    assert_eq!(global.complete_batch(&[ia,ib],
+        ValidatedRepairBatchOutcome::checked(2,0,Some(0),
+            BatchSuffixEvidence::Unproven).unwrap(),
+        MonoNs(30_000_001)).unwrap(),BatchCompletionCounts{
+            accepted:0,uncertain:1,definitely_not_sent:0,held_unproven:1
+        });
+    old_shadow.on_send_result(&a,RepairSendResult::Uncertain,
+        MonoNs(30_000_001)).unwrap();
+
+    // An authenticated positive observation releases the new shadow, but
+    // cannot prove that its outstanding driver submission was NotSent.
+    let mut bitmap=[0u8;32];
+    bitmap[42/8] |= 1 << (42%8);
+    let positive=AuthenticatedReceipt::after_authenticated_open(
+        new_lane,RecordPn(42),1,vec![
+            ReceiptPage{base_pn:RecordPn(0),bitmap}
+        ]).unwrap();
+    let released=new_shadow.on_receipt(&positive,MonoNs(31_000_000))
+        .unwrap();
+    assert_eq!(released.len(),1);
+    assert!(!new_shadow.preflight(&b,MonoNs(31_000_000)));
+    assert_eq!(global.snapshot().charged_repairs,256);
+    global.on_timer(MonoNs(40_000_001)).unwrap();
+    assert_eq!(global.snapshot().overdue_uncertain_bytes,128);
+    assert_eq!(global.snapshot().pending,0);
+    assert_eq!(global.complete(ib,RepairSendResult::NotSent,
+        MonoNs(40_000_002)),Err(GlobalRepairError::StaleGrant));
+    assert_eq!(global.retire_tunnel(old_lane.tunnel,
+        MonoNs(40_000_003)).unwrap(),1);
+    // Repair cap is exhausted; an unrelated new generation's F is never
+    // waiting on old shadow, old quota, or missing control feedback.
+    global.on_fresh_accepted(new_direction,1400,MonoNs(40_000_004))
+        .unwrap();
+    assert_eq!(global.local_snapshot(new_direction).unwrap()
+        .fresh_confirmed_bytes,2800);
+    assert_eq!(global.snapshot().charged_repairs,256);
+    assert_eq!(global.snapshot().overdue_uncertain_bytes,128);
+    global.on_timer(MonoNs(1_000_000_001)).unwrap();
+    assert_eq!(global.grant(new_direction,129,100_000,
+        MonoNs(1_000_000_002)),Err(GlobalRepairError::GlobalCap));
+    assert!(global.grant(new_direction,128,100_000,
+        MonoNs(1_000_000_003)).is_ok());
+}
+
+/// Deterministic fake clock: an old gap report may not cause two immediate
+/// repairs; NotSent is NOT an attempt, Uncertain and Accepted each count one.
+/// All candidates retain the exact same immutable ciphertext and PN.
+#[test]
+fn r2_pack_009_two_actual_repairs_old_report_and_generation_never_reseal() {
+    use crate::ReceiptPage;
+    let orig=make_frozen(70);
+    let wire=orig.ciphertext.clone();
+    let mut tx=sender(1);
+    tx.on_sent(orig,MonoNs(0),MonoNs(220_000_000)).unwrap();
+    let first=tx.on_timer(MonoNs(30_000_000)).candidates.remove(0);
+    assert!(Arc::ptr_eq(&wire,&first.frozen().ciphertext));
+    tx.on_send_result(&first,RepairSendResult::Uncertain,
+        MonoNs(30_000_000)).unwrap();
+    assert_eq!(tx.on_send_result(&first,RepairSendResult::Accepted,
+        MonoNs(30_000_001)),Err(DataError::Stale));
+    let empty=ReceiptPage{base_pn:RecordPn(0),bitmap:[0;32]};
+    let stale_negative=AuthenticatedReceipt::after_authenticated_open(
+        lane(),RecordPn(70),1,vec![empty]).unwrap();
+    tx.on_receipt(&stale_negative,MonoNs(31_000_000)).unwrap();
+    assert!(tx.on_timer(MonoNs(31_000_000)).candidates.is_empty());
+    assert!(tx.on_timer(MonoNs(59_999_999)).candidates.is_empty());
+    let not_sent=tx.on_timer(MonoNs(60_000_000)).candidates.remove(0);
+    assert!(Arc::ptr_eq(&wire,&not_sent.frozen().ciphertext));
+    tx.on_send_result(&not_sent,RepairSendResult::NotSent,
+        MonoNs(60_000_000)).unwrap();
+    assert_eq!(tx.on_send_result(&not_sent,RepairSendResult::Accepted,
+        MonoNs(60_000_001)),Err(DataError::Stale));
+    assert!(tx.on_timer(MonoNs(89_999_999)).candidates.is_empty());
+    let second=tx.on_timer(MonoNs(90_000_000)).candidates.remove(0);
+    assert_ne!(second.retry_epoch(),not_sent.retry_epoch());
+    assert!(Arc::ptr_eq(&wire,&second.frozen().ciphertext));
+    assert_eq!(second.frozen().metadata().pn,RecordPn(70));
+    assert_eq!(second.frozen().metadata().seq,
+        SeqOffset(0xffff_ffff-2));
+    assert_eq!(driver_read(second.frozen()).wire,&wire[..]);
+    tx.on_send_result(&second,RepairSendResult::Accepted,
+        MonoNs(90_000_000)).unwrap();
+    let stale_again=AuthenticatedReceipt::after_authenticated_open(
+        lane(),RecordPn(70),2,vec![ReceiptPage{
+            base_pn:RecordPn(0),bitmap:[0;32]}]).unwrap();
+    tx.on_receipt(&stale_again,MonoNs(95_000_000)).unwrap();
+    assert!(tx.on_timer(MonoNs(120_000_000)).candidates.is_empty());
+    assert!(!tx.preflight(&first,MonoNs(120_000_000)));
+    assert!(!tx.preflight(&second,MonoNs(120_000_000)));
+    let expired=tx.on_timer(MonoNs(220_000_000));
+    assert_eq!(expired.releases.len(),1);
+    assert_eq!(expired.releases[0].reason,ReleaseReason::HardExpired);
+    assert_eq!(tx.outstanding(),0);
+}
