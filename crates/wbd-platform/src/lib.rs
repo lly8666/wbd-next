@@ -26,6 +26,7 @@ pub mod linux_rx_batch;
 #[allow(unsafe_code)]
 pub mod linux_packet_preflight;
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[allow(unsafe_code)] // Single audited NETLINK_ROUTE socket/poll/recv ABI island.
 pub mod linux_route_events;
 /// Strict pure AF_PACKET sockaddr_ll RX metadata gate and inert test-only RX.
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
