@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 110,
-  "checkpoint_sha": "2b862a701e06360622dafd48abcf783f003db916",
+  "sequence": 111,
+  "checkpoint_sha": "a85fe8ca0c12fc9ddd04a034f8cece176cb98494",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024持续：核其它工位后M1/M4原011整包ready，M2-009/M3-016仍partial；主线一次登M1方向SPSC012/M4 raw-TUN PMTU Stop竞态012，原权限/epoch/分支不变。精确M4旧011平台SOURCE aae512d原样集成到main S b4f425；随后M0真正Go TLS→Rust M1/M3→Linux raw/TUN owner S2eee6abc使用M4 typed KernelSendReport区分内核已复制单包与EMSGSIZE/backpressure/uncertain，原M1 FrozenRecord无重seal/PN复用。原native Actions38999730934 build+consume成功、新rust分支反例成功，开发双向各10Mbps；主线Governance HTTP403仍FAIL。",
-  "why_now": "M1/M4已经完成各自完整包可继续授权，M2/M3仍有有效包内进度；M4真实平台去逐DATA sysfs和typed错误为M0 024下游必需接口。阶段性把冻结旧M4来源集成后立即回到M0 engine真实加密 owner，不借未验证产品替代成本验收。",
-  "done_when": "本轮相应能力：PACK-007 main registry M1/M4一次正式任务更新、M2/M3不变；M4源码原样集成并在main真实Go/Rust Linux raw/TUN和MTU/PN功能Actions通过；新typed raw单元素发送/uncertain反例与持续双向10Mbps同源S2eee6abc通过。未实现同session TX/RX mutable owner拆分、SPSC root pin、M3 nativeISA-L shared G2、真正多条raw批次、D10/SPARSE、Rust同VM P10 AB/BA，整体024仍partial，CPU收益NOT_PROVEN。普通Governance HTTP403真实FAIL保留；旧023和产品物理NOT_RUN、production features0。",
-  "next_action": "继续024一个完整剩余交付包：M0沿原Go凭证受保护Rust owner，结合已验证M1-011及新012稳定方向接口实现同session TX/RX mutable owner解锁，固定root rtrb/loom依赖与M3受限ISA-L G2请求，避免M0/M4同时改平台活跃源码；与M4-012的PMTU/Stop/source确证安全接口阶段集中接线，必要Stop、ifindex/route、0/1/32/33、oversize/PN反例合批用GitHub Actions验证；随后各自一场景D10和SPARSE，最终同job/VM Rust A→B以及独立B→A P10预编译精确双SOURCE比较，若宿主容量不足停止C50；历史023/真实完整分片/物理仍unverified、prod0，404/403治理读失败须独立诊断，不冒充成功。",
+  "current_task": "R1-M0-HOTPATH-COST-024 持续：M2升级共享审计GitHub API 403已做权限403 fail-closed/明确rate限流有限retry、完整维护测试；主线最新Governance及中央四worker范围审计真实SUCCESS，旧403 FAIL保留。M1旧工位R0 ABI分支脚本未过滤导致FAIL保留，M0按旧M1-011冻结SOURCE导入runtime/memory并恢复原Go保护的EarlyRxOwner及LoanBatch接口，最新main R0 ABI Rust3/3+C+Go build consume PASS。M1-011 wake first failed notify新测试在主线2次2s Timeout，已单文件回退旧wake，归M1-012负责修；主线native regression PASS，真正GoTLS→Rust→Linux raw/TUN在S6b167131 SUCCESS/10Mbps双向开发。",
+  "why_now": "M2中控审计因随机端点GitHub API HTTP403中断且无法称验收，M1独立旧CI false selector不能凭组件PASS抹红；必须M0集中修共享root脚本和接口组合，保留每次SOURCE/FAIL、再回到024。",
+  "done_when": "本批真实共享故障收口：准确诊断且限流临时读有限重试/权限拒绝fail closed，治理维护/主线Governance/全工位中央范围审计精确SUCCESS；M1-011冻结模块主线兼容旧Go控制调用后R0 ABI Rust3/C/Go与G2/native-regression通过，wake新接口二次超时保留并仅回退到旧行为；运行真实GoTLS native内核32 ready/PN无HOL/MTU/netlink及约10Mbps双向PASS。整体024仍PARTIAL，M1-012 repair、同session TX/RX独立、native批I/O及D10/SPARSE/P10 same-VM AB/BA待办，产品/物理/旧023未验、prod features0。",
+  "next_action": "仍是R1-M0-024：按已分配完整包让M1-012在自己branch修new WakeGate notify失败后第二publish唤醒/STOP重现（主线暂rollback，勿M0争写），M0整合稳定方向owner,SPSC/rtrb loom共享lock与M3 ISA-L最小root native G2，使用M4-012安全驱动冻结接口完成同认证会话TX/RX mutex解耦与真实Linux raw/TUN 0/1/32/33、link/MTU/Stop/loan反例；D10、SPARSE各一独立Actions，再Rust源锁same job+VM P10 A→B和独立B→A，若容量不足记录CAPACITY_LIMITED。新审计403如再现必须记录分类/仍保持FAIL，不反复重派M2/M1。旧023/product/physical未验且prod0。",
   "unverified": true,
-  "last_tested_source": "2eee6abcff6b76dbae1154e68d30d2292dc58967",
+  "last_tested_source": "6b16713189b36f4dd1da0267d83843c862065f09",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-worker-review-and-M4-integration.json"
+    "docs/evidence/M0/M0-024-shared-audit-403-abi-M1-integration.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-worker-review-and-M4-integration.md",
+    "docs/devlog/M0/M0-024-shared-audit-403-abi-M1-integration.md",
     "docs/decisions/M0-followup-module-workpackages-2026-10-17.md",
+    "docs/evidence/M0/M0-024-worker-review-and-M4-integration.json",
     "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
     "docs/evidence/M0/M0-024-global-registry-session-mutex-live.json",
-    "docs/evidence/M0/M0-024-ready-only-burst-and-worker-packages.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "M0 H110 PARTIAL：M1/M4 ready旧包各有98/88 native scoped来源，已各一次分配新完整包012；M2/M3继续009/016。M4旧011平台exact SOURCE首次main实原Go/Rust native成功，M0同源码S2eee6abc新typed raw单句柄(prefix/uncertain)和真实MTU fail-close/10Mbps双向通过。P10 AB/BA无同VM配对、same-session TXRX仍串锁、真正raw多packet syscall未合成；Governance GitHub HTTP403失败如实保留，product/physical未验、prod features0。"
+  "partial_summary": "M2治理403共享脚本S4ab7445维护39001695343PASS，中央全worker39001803833PASS，最新main Gov39002130805PASS；旧403 FAIL不改。M1旧branch R0 ABI38998296139 FAIL保留；main融合11(不含新wake) S eec44721 R0-ABI39002108338 Rust3/3+C+Go SUCCESS/G2+native regression SUCCESS，新wake两次超时39001888111/39001984463归012修。CODE同源实际Go TLS/raw-TUN S6b167131 39002130928 native build+consume PASS，开发双向10Mbps；024/023及CPU sameVM/产品仍unverified。"
 }
