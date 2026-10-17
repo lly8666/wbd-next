@@ -13,6 +13,21 @@ pub enum TxError {InvalidBudget,InvalidSource,UnsupportedProfile,IdExhausted,Mat
 impl From<FecMathError> for TxError {fn from(e:FecMathError)->Self{Self::Math(e)}}
 #[derive(Default,Debug,PartialEq,Eq)]
 pub struct TxBatch {pub systematic:Vec<Vec<u8>>,pub parity:Vec<Vec<u8>>}
+/// Maximum first-send parity frames a scheduler may take from this batch
+/// without another fresh-systematic/driver servicing opportunity. This is
+/// only a ready-output API: encoding CPU time remains separate and UNMEASURED.
+pub const MAX_PARITY_FIRST_SEND_ROWS_PER_TURN:usize=4;
+impl TxBatch{
+    /// Drain one bounded unit of parity that has NOT been sent before.
+    /// Its caller must put these frames in the fresh-FEC lane, never charge
+    /// them to the outer repair 10% retransmission allowance. The caller
+    /// owns scheduling/bytes/queue-age; no timer/thread is started here.
+    pub fn take_ready_parity_chunk(&mut self)->Vec<Vec<u8>>{
+        let n=self.parity.len().min(MAX_PARITY_FIRST_SEND_ROWS_PER_TURN);
+        self.parity.drain(..n).collect()
+    }
+    pub fn parity_pending(&self)->usize{self.parity.len()}
+}
 #[derive(Clone,Copy,Default,Debug,Eq,PartialEq)]
 pub struct TxStats {
     pub source_shards:u64,pub parity_shards:u64,pub full_blocks:u64,pub partial_blocks:u64,

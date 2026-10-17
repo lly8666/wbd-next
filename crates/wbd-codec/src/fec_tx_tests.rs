@@ -140,3 +140,70 @@ fn r1_tx_extended_id_wrap_skip_reserved_zero_and_monotone_clock(){
     assert_eq!(FecTxOwner::new(0,20_000).err(),Some(TxError::InvalidBudget));
     assert_eq!(FecTxOwner::new(1,MAX_RETAINED+1).err(),Some(TxError::InvalidBudget));
 }
+
+#[test]
+fn r1_tx_20_20_sustained_full_blocks_ready_first_parity_bounded_chunks(){
+    use crate::fec_tx::MAX_PARITY_FIRST_SEND_ROWS_PER_TURN;
+    assert_eq!(MAX_PARITY_FIRST_SEND_ROWS_PER_TURN,4);
+    for length in [256usize,512,1200]{
+        let wire_limit=length+FEC_HEADER;
+        let mut tx=FecTxOwner::new(1,200_000).unwrap();
+        let mut already_sent_systematic=0usize;
+        let mut fresh_parity_ready=0usize;
+        let mut maximum_chunk=0usize;
+        let mut parity_wire_bytes=0usize;
+        // Healthy continuous 20:20: every submitted source immediately
+        // creates exactly one systematic, without waiting for full block
+        // or a 32ms sparse flush. No source is classified as repair.
+        for block in 0..3usize{
+            for i in 0..20usize{
+                let source=vec![(block*20+i) as u8+1;length];
+                let mut batch=tx.submit(&source,(block*20+i) as u64,
+                    20,wire_limit,false).unwrap();
+                assert_eq!(batch.systematic.len(),1);
+                assert_eq!(batch.systematic[0].len(),length+FEC_HEADER);
+                assert_eq!(h(&batch.systematic[0]).shard_index,i as u8);
+                assert_eq!(h(&batch.systematic[0]).block_id,block as u32+1);
+                already_sent_systematic+=batch.systematic.len();
+                if i<19{
+                    assert_eq!(batch.parity_pending(),0);
+                }else{
+                    assert_eq!(batch.parity_pending(),20);
+                    while batch.parity_pending()>0{
+                        // At most four parity rows per ready-scheduler turn,
+                        // not a purported outer repair retransmission.
+                        let chunk=batch.take_ready_parity_chunk();
+                        maximum_chunk=maximum_chunk.max(chunk.len());
+                        assert!(chunk.len()<=4);
+                        for (p,wire) in chunk.iter().enumerate(){
+                            let header=h(wire);
+                            assert_eq!(header.block_id,block as u32+1);
+                            assert_eq!(header.data_count,20);
+                            assert_eq!(header.parity_count,20);
+                            assert_eq!(header.shard_size,length as u16);
+                            assert!((20..40).contains(&header.shard_index));
+                            assert!(header.lengths[..20].iter().all(|&x|x==length as u16));
+                            assert_eq!(wire.len(),length+FEC_HEADER);
+                            assert!(p<4);
+                            parity_wire_bytes+=wire.len();
+                        }
+                        fresh_parity_ready+=chunk.len();
+                        // Between chunks an external scheduler can service
+                        // fresh ordinary packets; this fixture does not
+                        // claim actual dispatch timing or NIC send success.
+                    }
+                    assert!(batch.take_ready_parity_chunk().is_empty());
+                }
+            }
+        }
+        assert_eq!(already_sent_systematic,60);
+        assert_eq!(fresh_parity_ready,60);
+        assert_eq!(maximum_chunk,4);
+        assert_eq!(parity_wire_bytes,60*(length+FEC_HEADER));
+        assert_eq!(tx.stats().source_shards,60);
+        assert_eq!(tx.stats().parity_shards,60);
+        assert_eq!(tx.stats().full_blocks,3);
+        assert_eq!((tx.stats().pending_blocks,tx.stats().retained_bytes),(0,0));
+        assert!(tx.flush_due(3000).unwrap().parity.is_empty());
+    }
+}
