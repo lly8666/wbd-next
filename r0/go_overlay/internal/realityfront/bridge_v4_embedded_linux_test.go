@@ -997,6 +997,15 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","2000").CombinedOutput();e!=nil{
         t.Fatalf("enlarge owned real TUN ingress MTU: %v %s",e,out)
     }
+    // The existing netlink watcher coalesces RTM_NEWLINK at 100ms.
+    // Settle the TWO setup-only link edits before attributing any rejection
+    // to the actual business LINK frame limit. This is NOT a DATA-path wait.
+    time.Sleep(200*time.Millisecond)
+    revised,healthy,revErr:=b.rustOwnerRouteEventState()
+    if revErr!=nil||!healthy||revised<=eventAfter{
+        t.Fatalf("real netlink restore/mtu events unobserved: old=%d new=%d ok=%t err=%v",
+            eventAfter,revised,healthy,revErr)
+    }
     beforeOversize,err:=b.rustOwnerLoopStats()
     if err!=nil{t.Fatal(err)}
     oversizedApp:=bytes.Repeat([]byte{0x7a},1700) // 1728B one inner IPv4 packet
@@ -1041,7 +1050,13 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
         }
         time.Sleep(10*time.Millisecond)
     }
-    if !completed{t.Fatal("small following real above-budget TUN datagram suffered HOL")}
+    if !completed{
+        detail,_:=b.rustOwnerLoopStats()
+        rev,healthy,revErr:=b.rustOwnerRouteEventState()
+        refresh,_:=b.rustOwnerRouteRefreshCount()
+        t.Fatalf("small following real above-budget TUN datagram not kernel-copied: before=%+v after=%+v route_revision=%d healthy=%t revErr=%v refresh=%d",
+            beforeOversize,detail,rev,healthy,revErr,refresh)
+    }
     t.Logf("EMBEDDED_REAL_TUN_ABOVE_LINK_BUDGET_FAIL_CLOSED_NO_HOL_PASS oversized_inner_ipv4_bytes=1728 accepted_oversize=0 next_small_kernel_copied=1")
     // Stop while both originally spawned RX/TX workers and both actual
     // kernel drivers remain installed. Join and retire before any generation
