@@ -208,5 +208,50 @@
     "production_go_v4": "DISABLED"
   },
   "integration": "READY_FOR_M0_STAGE_INTEGRATION_SOURCE_REVIEW_ONLY",
-  "obsolete_evidence_claim": "Previous scope was INCONCLUSIVE only because the old worker v1 checker had a cumulative 64 limit. Central main section10 exact SOURCE scope PASS resolves that ONE reason; it does not convert untested device/product scenarios."
+  "obsolete_evidence_claim": "Previous scope was INCONCLUSIVE only because the old worker v1 checker had a cumulative 64 limit. Central main section10 exact SOURCE scope PASS resolves that ONE reason; it does not convert untested device/product scenarios.",
+  "post_h_recovery": {
+    "recovered_by": "M4 new-chat handoff 2026-10-17",
+    "prior_cursor_sequence": 18,
+    "prior_h_sha": "0f492ee4c9fca03c1d68a39ab9769ff3d4a24392",
+    "before_h_checkpoint_sha": "cbda0f9dc519842c968390f7b71188f98db99220",
+    "delta_verified": "Exactly one commit cbda0f9.. -> 0f492ee4..; only .governance/workstreams/M4/cursor.json, parent exact; no unrecorded product code",
+    "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "central_scope_on_evidence_s": {
+      "run_id": 39011572634,
+      "attempt": 1,
+      "source_sha": "cbda0f9dc519842c968390f7b71188f98db99220",
+      "result": "ROLE_SCOPE_PASS",
+      "artifact_id": 12093395698,
+      "zip_sha256": "d76d0de003a6b85294b4bcfc43df8744c29af84fffcebb1ac7aac999a3842a17"
+    },
+    "central_scope_on_h": {
+      "run_id": 39011763693,
+      "attempt": 1,
+      "source_sha": "0f492ee4c9fca03c1d68a39ab9769ff3d4a24392",
+      "result": "ROLE_SCOPE_PASS",
+      "is_current_head_when_audited": true,
+      "control_sha": "d05121e5b8ee3621c7349a635dda330b92eff278",
+      "artifact_id": 12093335704,
+      "zip_sha256": "cebe7a9e060029c1ec247e6573f34fa5732745215964bb9ff04cdda107edb299",
+      "scope_json_sha256": "def803c1f5afc89e7b4b9f6b86bc6613c936f2ed63b2e939ce8b1b5e8ad675cd",
+      "handoff": "NOT_EVALUATED",
+      "product": "NOT_RUN",
+      "performance": "NOT_RUN"
+    },
+    "old_worker_governance_on_h": {
+      "run_id": 39011750362,
+      "attempt": 1,
+      "source_sha": "0f492ee4c9fca03c1d68a39ab9769ff3d4a24392",
+      "conclusion": "FAIL",
+      "reason": "ROLE_SCOPE_FAILED: incomplete or diverged bounded G2 activation ancestry; frozen v1 checker cumulative 64 bound",
+      "artifact_id": 12092714551,
+      "zip_sha256": "f7842ba7d59bbcdf1a5c0422629996a42facb6d2a2166ec280a066758eb6eb38",
+      "manifest_sha256": "",
+      "subsequent_steps": "skipped",
+      "superseded_scope_only_by_central_v2": true
+    },
+    "qualification": "Scope-only verified; CODE native 94/94 at b7bcde7 remains previously attested and not retested; privileged raw/TUN, Windows/ARM native, Go authenticated product and performance NOT_RUN.",
+    "request_and_pr": "cursor.open_requests=[]; no open PR; historical checker escalation Markdown superseded; no new dispatch or intent.",
+    "followup": "M0 pin frozen code SHA and independently integrate; no expansion of M4 package. Any new post-recovery S/H actions require their own exact-source status review."
+  }
 }
