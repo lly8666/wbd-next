@@ -687,6 +687,49 @@ impl ProtectedScopedOwner {
         outcome
     }
 
+    /// Actual M4 typed raw ready sender on the same original protected
+    /// owner M1 LoanBatch. This is a bounded ready-only sequence of raw
+    /// sendto syscalls (NOT one raw sendmmsg); worker currently publishes one
+    /// FrozenRecord at a time. No new ciphertext copy/PN/seq or fallback.
+    /// Returns the kernel-copied prefix and explicit uncertain classification;
+    /// ALWAYS recycle original M1 generation-held loan on every outcome.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn submit_scoped_raw_tx_report_reusing(
+        &mut self,driver:&ScopedRawIpv4Tx,
+        tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
+        storage:&mut Vec<TxDispatch>,
+    )->Result<wbd_platform::linux_batch::KernelSendReport,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || driver.generation()!=self.generation || driver.is_stopping(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        if !storage.is_empty() || storage.capacity()==0 {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let available=std::mem::take(storage);
+        let batch=match self.drain_tx(now,available){
+            Ok(batch)=>batch,
+            Err((_,returned))=>{
+                *storage=returned;
+                return Err(ProtectedCryptoError::Owner)
+            }
+        };
+        let outcome=(||{
+            let ready=self.checked_tx_ready(&batch)?;
+            if ready.len()!=1 || ready[0].kind!=crate::runtime::TxKind::Fresh {
+                return Err(ProtectedCryptoError::Tx)
+            }
+            // Slice of original immutable Arc-backed frozen handle, not an
+            // extra Arc clone or temporary ciphertext/driver buffer.
+            Ok(driver.send_ready_batch(
+                self.generation,std::slice::from_ref(&ready[0].record),
+                tuple,presentation,
+            ))
+        })();
+        *storage=batch.recycle();
+        outcome
+    }
+
     /// Real raw IPv4/TCP RX directly into ORIGINAL M1 mutable slab, strict
     /// trusted FakeTCP tuple + TCP checksums + seq32 extension, followed
     /// by SAME scoped owner AEAD/PN replay and M3 LINK/TUN path.

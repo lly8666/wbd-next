@@ -597,14 +597,26 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         ack32:1,advertised_window:4096,ip_id:43,
         persona:PacketPersona::Legacy,
     };
-    if e.owner.submit_scoped_raw_tx_reusing(
+    let outcome=e.owner.submit_scoped_raw_tx_report_reusing(
         raw,tuple,presentation,loop_now(),tx_storage
-    ).is_err(){
-        // Link MTU shrink, EMSGSIZE, route removal or other raw failure
-        // never allows this revision to authorize a later packet.
-        e.tx_route=None;
-        e.arena.drain_returns();
-        return Err(BAD_STAGE)
+    );
+    match outcome {
+        Ok(report) if raw_one_packet_copied(&report)=>{},
+        Ok(report)=>{
+            // Includes typed EMSGSIZE, ENODEV/route changes, ambiguous short
+            // send and future partial-prefix outcomes. Conservative revoke
+            // on every unsuccessful send; no blind retry/reseal of consumed
+            // PN/seq or reuse of the old owner route authorization.
+            let _invalidating_signal=report.signal.invalidates_path();
+            e.tx_route=None;
+            e.arena.drain_returns();
+            return Err(BAD_STAGE)
+        },
+        Err(_)=>{
+            e.tx_route=None;
+            e.arena.drain_returns();
+            return Err(BAD_STAGE)
+        },
     }
     e.arena.drain_returns();
     Ok(())
@@ -618,6 +630,17 @@ fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     // Never sleep to fill a batch, and never wait under registry.
     let got=unsafe{poll(&mut p,1,timeout_ms)};
     got>0 && p.revents&1!=0
+}
+
+// Accept only a single definitely kernel-copied original FrozenRecord.
+// A partial, ambiguous, or backpressured M4 KernelSendReport is never a
+// success just because a syscall returned a positive prefix elsewhere.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn raw_one_packet_copied(report:&wbd_platform::linux_batch::KernelSendReport)->bool{
+    report.outcome.accepted_prefix==1
+        && report.outcome.error.is_none()
+        && report.outcome.uncertain_index.is_none()
+        && report.signal==wbd_platform::linux_batch::KernelSendSignal::None
 }
 
 // A single kernel readiness event can service multiple ALREADY ready packets.
@@ -870,6 +893,31 @@ mod tests{
         let n=ready_only_slice(&stop,||panic!("unexpected poll"),
             ||panic!("unexpected packet"),||true);
         assert_eq!(n,0);
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate(){
+        use wbd_platform::linux_batch::{KernelSendSignal,KernelSendReport};
+        use wbd_platform::{TxBatchOutcome,TxError};
+        let full=KernelSendReport{
+            outcome:TxBatchOutcome::copied_all(1),
+            signal:KernelSendSignal::None,
+        };
+        assert!(raw_one_packet_copied(&full));
+        for (outcome,signal) in [
+            (TxBatchOutcome{accepted_prefix:0,uncertain_index:None,
+                error:Some(TxError::WouldBlock)},KernelSendSignal::Backpressure),
+            (TxBatchOutcome{accepted_prefix:0,uncertain_index:None,
+                error:Some(TxError::IoFailed)},KernelSendSignal::MtuExceeded),
+            (TxBatchOutcome{accepted_prefix:0,uncertain_index:None,
+                error:Some(TxError::IoFailed)},KernelSendSignal::DeviceUnavailable),
+            (TxBatchOutcome{accepted_prefix:0,uncertain_index:Some(0),
+                error:Some(TxError::IoUncertain)},KernelSendSignal::AmbiguousCompletion),
+            (TxBatchOutcome{accepted_prefix:1,uncertain_index:None,
+                error:Some(TxError::WouldBlock)},KernelSendSignal::None),
+        ]{
+            assert!(!raw_one_packet_copied(&KernelSendReport{outcome,signal}));
+        }
     }
     #[test]
     fn m0_embedded_go_private_control_rejects_unknown_and_null(){
