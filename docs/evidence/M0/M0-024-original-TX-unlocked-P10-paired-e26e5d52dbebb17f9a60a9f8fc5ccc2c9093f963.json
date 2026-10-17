@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963",
+  "code_source_sha": "8d41c6ff8b047d78332f2a8ab8951e49a8b2ec12",
+  "scope": "Original authenticated Go TLS to protected Rust M1/M3 AEAD PN to M4 Linux raw/TUN normal off; feature default off",
+  "result": "PARTIAL_P10_VALID_PAIRED_FUNCTIONAL_CPU_BENEFIT_INCONCLUSIVE",
+  "artifact_verified": true,
+  "unverified": true,
+  "production_features": 0,
+  "change": {
+    "source": "8d41c6ff8b047d78332f2a8ab8951e49a8b2ec12",
+    "previous_source": "42744982e28d03dbe6cbcbd0daa395a5ceda5d80",
+    "compare_files": [
+      "crates/wbd-engine/src/v4_embedded_go.rs"
+    ],
+    "previous_engine_git_blob": "ff91b7293ff85ee51fed70cb28f90366bb83319a",
+    "candidate_engine_git_blob": "da8ae816982f27af6c6f70ede6d14277a021d183",
+    "same_crypto_owner_git_blob": "07c6fc30c20ddc90e2843b269aba86e185a8db96",
+    "same_Cargo_lock_git_blob": "c736f60f88b19ec05038997f3f8d6c9f5537cdd3",
+    "same_Go_perf_git_blob": "b6ef9c235f2889510faf6cd595379d44f1287f27",
+    "same_linux_runner_git_blob": "12084b255364ec663c1cd06c3a4c1cb243ef91ce",
+    "operation": "original tx record sealed with owner-held mutex and scoped route authorized before releasing lock; validated generation-held original LoanBatch is synchronously submitted using M4 send_kernel_multimsg outside Entry mutex; batch.recycle then re-locks to revoke route on any partial/uncertain/error. Stop phase and worker join prevent owner/driver retirement while batch live. raw_tx is Arc<ScopedRawIpv4Tx>. No second nonce, PN, ciphertext copy or blind retransmit.",
+    "risk": "Early STOP between prepare and send is fenced by shutdown/phase and worker join. Authenticated owner TX/RX mutable operations still share Mutex<Entry>; no claiming full M1 directional owner split."
+  },
+  "native": {
+    "run_id": 39020336918,
+    "source": "8d41c6ff8b047d78332f2a8ab8951e49a8b2ec12",
+    "conclusion": "success",
+    "jobs": {
+      "build": 117360707744,
+      "consume": 117360988850
+    },
+    "artifacts": [
+      {
+        "id": 12096566388,
+        "digest": "sha256:372791d06f9b02e00057064c7a9511870047a02b5e0414167c28b5e1578a180a"
+      },
+      {
+        "id": 12096422782,
+        "digest": "sha256:35abc6b637496a190739d4326e20f270fb5e2e3d8684e3afd067c88392e18153"
+      }
+    ],
+    "witness": [
+      "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS PN0 real kernel drop PN1 original owner TUN delivery",
+      "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS two raw/TUN workers",
+      "EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision1->2 refresh1->2",
+      "EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS oldMTU65536->1500 driver_reject_increased=true",
+      "10s warmup +60s bilateral offered/delivered near10Mbps each"
+    ],
+    "same_source_CI": {
+      "g2": 39020336867,
+      "native_regression": 39020336862,
+      "r0_abi": 39020336852,
+      "r0_qualification": 39020336951,
+      "governance": 39020336916
+    },
+    "qualification": "DEV_NORMAL_OFF_ONLY_NOT_PRODUCTION"
+  },
+  "P10": {
+    "design": "Separate AB and BA Actions, each builds both original Rust alternatives once with identical pinned Go fixtures and platform/Cargo scripts and executes sequential legs same measurement job/VM; 10s warmup+60s/leg; UDP 64/256/1200B equal count each direction near10Mbps; source A H118 frozen, B function git blob exact same on both Actions.",
+    "source_A": "42744982e28d03dbe6cbcbd0daa395a5ceda5d80",
+    "source_B_engine_blob": "da8ae816982f27af6c6f70ede6d14277a021d183",
+    "AB": {
+      "source": "cd2dd78bc60d729f0fe1b1ec540d6d0ae3900680",
+      "run": 39020675956,
+      "conclusion": "success",
+      "build_job": 117361680244,
+      "measure_job": 117361959843,
+      "build_artifact": {
+        "id": 12096204173,
+        "digest": "sha256:e3d85eae5c08638718c04511ffdf61ee83dc50df2a301d34a4c80d182b64cf86"
+      },
+      "result_artifact": {
+        "id": 12096791913,
+        "digest": "sha256:833ab7a7086f97ea40fc7a17368c17041111cf9b29382a8dd3364fc8ddc8165c"
+      },
+      "same_job": true,
+      "non_overlap": true,
+      "A": {
+        "cpu_s": 21.861808,
+        "cpu_s_per_GiB": 156.49378533791463,
+        "delivered_bytes": 149999168,
+        "app_mbps_each_direction": 9.999944533333334,
+        "p99_c2s_us": 173,
+        "p99_s2c_us": 173,
+        "missing": 0,
+        "invalid": 0,
+        "receipt_sha256": "2191a648fc061c79b444c72e6bf31d025e8ca5bd478b1b5e8e94e367c5a32036"
+      },
+      "B": {
+        "cpu_s": 22.070036,
+        "cpu_s_per_GiB": 157.98380843469576,
+        "delivered_bytes": 149999680,
+        "app_mbps_each_direction": 9.999978666666667,
+        "p99_c2s_us": 146,
+        "p99_s2c_us": 172,
+        "missing": 0,
+        "invalid": 0,
+        "receipt_sha256": "976bcae6e4dcb80dd0a09829246f4b4e2bf3c4c6953c5e9017a3289580ea2875"
+      },
+      "candidate_cpu_vs_baseline_percent": 0.9521292449816698
+    },
+    "BA": {
+      "source": "e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963",
+      "run": 39020694554,
+      "conclusion": "success",
+      "build_job": 117361738923,
+      "measure_job": 117362145682,
+      "build_artifact": {
+        "id": 12096403370,
+        "digest": "sha256:feadb47828239bd3709302e740cb7aa1572be536c66b38b92670e327871a1cdd"
+      },
+      "result_artifact": {
+        "id": 12096841536,
+        "digest": "sha256:9e3885188c3ff439241575bc88e60a5f526fa8ecb878b018b2bce6d999f01395"
+      },
+      "same_job": true,
+      "non_overlap": true,
+      "A": {
+        "cpu_s": 15.904468999999999,
+        "cpu_s_per_GiB": 113.8469478650038,
+        "delivered_bytes": 150002208,
+        "app_mbps_each_direction": 10.0001472,
+        "p99_c2s_us": 122,
+        "p99_s2c_us": 115,
+        "missing": 0,
+        "invalid": 0,
+        "receipt_sha256": "b2fc9aca2b13913bc97b25694369a2a720b2584da2175e40c8eacd7f147a3fcd"
+      },
+      "B": {
+        "cpu_s": 15.54496,
+        "cpu_s_per_GiB": 111.27539541689049,
+        "delivered_bytes": 149999680,
+        "app_mbps_each_direction": 9.999978666666667,
+        "p99_c2s_us": 100,
+        "p99_s2c_us": 124,
+        "missing": 0,
+        "invalid": 0,
+        "receipt_sha256": "a51fc7abaf875fc1569568a1e90ee05dc35197563edd28d5a04f184e7b0bea11"
+      },
+      "candidate_cpu_vs_baseline_percent": -2.2587803154482278
+    },
+    "interpretation": "VALID_P10_FUNCTIONAL_CPU_INCONCLUSIVE_SIGN_REVERSES (AB B +0.95% overhead; BA B -2.26% less); no repeatable CPU benefit, no combining absolute CPU across GitHub VM. p99 age on same VM observed; no product p99 conclusion, no 500Mbps extrapolation."
+  },
+  "workers": {
+    "M1": "012 CODE a39ff711 already main opt-in and six same-source native PASS; not yet original active direction ingress",
+    "M3": "016 still partial, safe native ISA-L 3 cases PASS",
+    "M4": "013 actual original Go sendmmsg/recvmmsg one packet each syscall; not 32 aggregated",
+    "M2": "009 scoped ready only"
+  },
+  "remaining": [
+    "Original M1 TX/RX mutable ScopedOwner still under one Mutex<Entry>: this change only takes raw TX syscall outside lock.",
+    "M4 32 original ready messages single syscall NOT_RUN; no true multiframe packet acceptance or cost proof.",
+    "Loom 0.7.2 bounded concurrent scheduler tests NOT_RUN.",
+    "D10 full ptrace initial 10Mbps run39014446221 FAIL 6012/6065 missing under tracer retained; selective tracer not qualified.",
+    "Paired CPU benefit INCONCLUSIVE; investigate cache/kernel noise before cost claim.",
+    "M3 FEC-on actual protected Go data path, M2 receipt recovery, physical/500Mbps/product and R0-023 NOT_RUN."
+  ],
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "original_023": "OPEN_UNVERIFIED"
+}
