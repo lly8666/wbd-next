@@ -602,7 +602,9 @@ fn ready_only_slice(
         if count!=0 && !next_ready(){break}
         let ok=service();
         count+=1;
-        if !ok || !within_budget(){break}
+        // Sample the monotonic work-slice budget every eight packets, not
+        // for every DATA. First-packet/low-rate arrival never waits to batch.
+        if !ok || (count%8==0 && !within_budget()){break}
     }
     count
 }
@@ -825,7 +827,7 @@ mod tests{
         },||true);
         assert_eq!((n,complete.get()),(3,3)); // error ends burst
         let n=ready_only_slice(&stop,||true,||true,||false);
-        assert_eq!(n,1); // budget yields after first packet
+        assert_eq!(n,8); // budget is checked once per eight packets
         stop.store(true,Ordering::Release);
         let n=ready_only_slice(&stop,||panic!("unexpected poll"),
             ||panic!("unexpected packet"),||true);
