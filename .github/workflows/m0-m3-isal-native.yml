@@ -10,6 +10,11 @@ on:
       - "crates/wbd-codec/Cargo.toml"
       - "native/isal-safe/**"
   workflow_dispatch:
+    inputs:
+      worker_source:
+        description: "Exact 40-character M3 code SOURCE SHA; role scope is separately audited"
+        required: false
+        type: string
 permissions: {contents: read}
 jobs:
   build:
@@ -21,14 +26,16 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: 422a26127496560c0a52e6745ecc8f354e3f4f18
+          ref: ${{ inputs.worker_source || '422a26127496560c0a52e6745ecc8f354e3f4f18' }}
           path: worker-m3
           persist-credentials: false
       - name: Compile actual pinned native ISA-L and frozen M3 Go-matrix codec
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C worker-m3 rev-parse HEAD)" = 422a26127496560c0a52e6745ecc8f354e3f4f18
+          export WORKER_SOURCE="${{ inputs.worker_source || '422a26127496560c0a52e6745ecc8f354e3f4f18' }}"
+          [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || { echo INVALID_SOURCE >&2; exit 2; }
+          test "$(git -C worker-m3 rev-parse HEAD)" = "$WORKER_SOURCE"
           # Frozen worker nested under main is otherwise misdetected by Cargo
           # as the parent workspace; isolate its own unchanged five-crate root.
           mv worker-m3 "$RUNNER_TEMP/frozen-m3"
@@ -59,7 +66,7 @@ jobs:
           python3 - <<'PY'
           import os,json,hashlib,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
-          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":"422a26127496560c0a52e6745ecc8f354e3f4f18","upstream_isal":"c387163fcbca62701d646149564c550c78a4f985",
+          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":os.environ["WORKER_SOURCE"],"upstream_isal":"c387163fcbca62701d646149564c550c78a4f985",
             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "binary_sha256":sha("m3-native-build/isal-codec.test"),"native_call_sha256":sha("m3-native-build/native-call.log"),
             "cargo_lock_sha256":sha("Cargo.lock"),"native_target":"x86_64-unknown-linux-gnu","rust":"1.85.1",
@@ -87,10 +94,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export WORKER_SOURCE="${{ inputs.worker_source || '422a26127496560c0a52e6745ecc8f354e3f4f18' }}"
+          [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || exit 2
           python3 - <<'PY'
           import os,json,hashlib,pathlib
           m=json.load(open("m3-native-build/manifest.json"))
-          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]=="422a26127496560c0a52e6745ecc8f354e3f4f18"
+          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]==os.environ["WORKER_SOURCE"]
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           assert sha("Cargo.lock")==m["cargo_lock_sha256"]
@@ -112,7 +121,7 @@ jobs:
             grep -Fq "$name" m3-native-result/tests.log
           done
           cp m3-native-build/manifest.json m3-native-result/manifest.json
-          echo "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=422a26127496560c0a52e6745ecc8f354e3f4f18"
+          echo "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=$WORKER_SOURCE"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

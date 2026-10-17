@@ -11,6 +11,11 @@ on:
       - "crates/wbd-codec/Cargo.toml"
       - "native/isal-safe/**"
   workflow_dispatch:
+    inputs:
+      worker_source:
+        description: "Exact 40-character M1 code SOURCE SHA; role scope is separately audited"
+        required: false
+        type: string
 permissions: {contents: read}
 jobs:
   build:
@@ -22,14 +27,16 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: f0e6d8dadb2f893d7516edfa04aabfc7515a218e
+          ref: ${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}
           path: worker-m1
           persist-credentials: false
       - name: Build frozen worker M1 real rtrb with main pinned Cargo lock
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C worker-m1 rev-parse HEAD)" = f0e6d8dadb2f893d7516edfa04aabfc7515a218e
+          export WORKER_SOURCE="${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}"
+          [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || { echo INVALID_SOURCE >&2; exit 2; }
+          test "$(git -C worker-m1 rev-parse HEAD)" = "$WORKER_SOURCE"
           rustup toolchain install 1.85.1 --profile minimal
           cp Cargo.toml Cargo.lock worker-m1/
           cp crates/wbd-engine/Cargo.toml worker-m1/crates/wbd-engine/Cargo.toml
@@ -55,7 +62,7 @@ jobs:
           python3 - <<'PY'
           import json,hashlib,pathlib,os
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
-          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":"f0e6d8dadb2f893d7516edfa04aabfc7515a218e",
+          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":os.environ["WORKER_SOURCE"],
             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "binary_sha256":sha("m1-native-build/rtrb.test"),"cargo_lock_sha256":sha("Cargo.lock"),
             "rust":"1.85.1","target":"linux-x86_64-gnu","rtrb":"0.3.2",
@@ -83,10 +90,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export WORKER_SOURCE="${{ inputs.worker_source || 'f0e6d8dadb2f893d7516edfa04aabfc7515a218e' }}"
+          [[ "$WORKER_SOURCE" =~ ^[a-f0-9]{40}$ ]] || exit 2
           python3 - <<'PY'
           import os,json,pathlib,hashlib
           m=json.load(open("m1-native-build/manifest.json"))
-          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]=="f0e6d8dadb2f893d7516edfa04aabfc7515a218e"
+          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]==os.environ["WORKER_SOURCE"]
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           assert sha("Cargo.lock")==m["cargo_lock_sha256"]
@@ -105,7 +114,7 @@ jobs:
             grep -Fq "$name ... ok" m1-native-result/tests.log
           done
           cp m1-native-build/manifest.json m1-native-result/manifest.json
-          echo "M0_M1_REAL_RTRB032_FIVE_SCOPED_NATIVE_PASS code=f0e6d8dadb2f893d7516edfa04aabfc7515a218e"
+          echo "M0_M1_REAL_RTRB032_FIVE_SCOPED_NATIVE_PASS code=$WORKER_SOURCE"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
