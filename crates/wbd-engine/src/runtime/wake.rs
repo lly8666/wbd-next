@@ -324,40 +324,25 @@
      fn r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish() {
          let (sender,mut consumer)=single::<u8>(2).unwrap();
          let gate=sender.gate();
-         let (ready_tx,ready_rx)=mpsc::sync_channel(0);
-         let (release_tx,release_rx)=mpsc::sync_channel(0);
-         let (result_tx,result_rx)=mpsc::sync_channel(1);
-         let join=thread::spawn(move|| {
-             // This hook runs on EVERY park attempt, including legitimate
-             // spurious wakeups. A rendezvous only on the first attempt
-             // prevents the test harness itself from hanging on attempt 2.
-             let mut first_park=true;
-             let ev=consumer.wait_inner(||MonoNs(0),None,||false,||{},||{},||{
-                 if first_park {
-                     first_park=false;
-                     ready_tx.send(()).unwrap();
-                     release_rx.recv().unwrap();
-                 }
-             });
-             let value=matches!(ev,WakeEvent::Ready(Class::Fresh,1));
-             result_tx.send(value).unwrap();
-         });
-         // Explicit synchronization ensures the consumer armed itself and
-         // will park, while sender remains outside its producer queue lock.
-         ready_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+         // Bind the sole owner waiter on this thread without invoking
+         // thread::park. Publication/armed retry is a deterministic
+         // state-machine check; the other r1_wake_* tests exercise actual
+         // cross-thread park boundaries and cannot be substituted by this.
+         assert!(consumer.bind_current());
+         gate.armed.store(true,SeqCst);
          gate.fail_next_signal.store(true,SeqCst);
          sender.try_push(1).unwrap();
+         // First deliberate signal failure must not consume the armed
+         // handshake or make a permanently missed wake possible.
          assert!(gate.armed.load(SeqCst));
-         // The consumer is held inside its first before-park hook. Force
-         // the retry publication BEFORE letting it park, independent of
-         // OS scheduling/spurious wakeups. unpark's token must survive.
-         // First notification was lost, second wakes nonempty queue.
          sender.try_push(2).unwrap();
-         release_tx.send(()).unwrap();
-         let received=result_rx.recv_timeout(Duration::from_secs(2));
-         if received.is_err(){sender.stop();}
-         assert_eq!(received.unwrap(),true);
-         join.join().unwrap();
+         // Second notification must consume the retained arm even when
+         // producer queue was already nonempty before this publication.
+         assert!(!gate.armed.load(SeqCst));
+         assert!(matches!(consumer.wait(||MonoNs(0),None,||false),
+             WakeEvent::Ready(Class::Fresh,1)));
+         assert!(matches!(consumer.wait(||MonoNs(0),None,||false),
+             WakeEvent::Ready(Class::Fresh,2)));
      }
      #[test]
      fn r1_wake_idle_single_packet_push_before_arm_r01() {
