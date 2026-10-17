@@ -1,0 +1,115 @@
+name: M0 M1 pinned rtrb direction native
+run-name: "M0|M1-012|rtrb|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-m1-rtrb-native.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/wbd-engine/Cargo.toml"
+      - "crates/wbd-codec/Cargo.toml"
+      - "native/isal-safe/**"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: f0e6d8dadb2f893d7516edfa04aabfc7515a218e
+          path: worker-m1
+          persist-credentials: false
+      - name: Build frozen worker M1 real rtrb with main pinned Cargo lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C worker-m1 rev-parse HEAD)" = f0e6d8dadb2f893d7516edfa04aabfc7515a218e
+          rustup toolchain install 1.85.1 --profile minimal
+          cp Cargo.toml Cargo.lock worker-m1/
+          cp crates/wbd-engine/Cargo.toml worker-m1/crates/wbd-engine/Cargo.toml
+          cp crates/wbd-codec/Cargo.toml worker-m1/crates/wbd-codec/Cargo.toml
+          mkdir -p worker-m1/native
+          cp -a native/isal-safe worker-m1/native/isal-safe
+          python3 - <<'PY'
+          import pathlib,tomllib
+          p=pathlib.Path("worker-m1/crates/wbd-engine/Cargo.toml")
+          s=p.read_text()
+          assert "[features]\n" in s and "m1_rtrb" not in s
+          p.write_text(s.replace("[features]\n","[features]\nm1_rtrb = []\n",1))
+          root=tomllib.loads(pathlib.Path("Cargo.toml").read_text())
+          assert root["workspace"]["dependencies"]["rtrb"]["version"]=="=0.3.2"
+          pkgs=tomllib.loads(pathlib.Path("Cargo.lock").read_text())["package"]
+          assert next(p for p in pkgs if p["name"]=="rtrb")["version"]=="0.3.2"
+          PY
+          (cd worker-m1 && cargo +1.85.1 test --locked --lib -p wbd-engine --features m1_rtrb r1_rtrb_direction_ --no-run)
+          mkdir -p m1-native-build
+          bin="$(find worker-m1/target/debug/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
+          test -n "$bin"
+          cp "$bin" m1-native-build/rtrb.test
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m={"main_source":os.environ["GITHUB_SHA"],"worker_source":"f0e6d8dadb2f893d7516edfa04aabfc7515a218e",
+            "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "binary_sha256":sha("m1-native-build/rtrb.test"),"cargo_lock_sha256":sha("Cargo.lock"),
+            "rust":"1.85.1","target":"linux-x86_64-gnu","rtrb":"0.3.2",
+            "qualification":"M1 scoped tests, not same-session Go owner integration"}
+          pathlib.Path("m1-native-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m1-pinned-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m1-native-build/
+          if-no-files-found: error
+          retention-days: 30
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m1-pinned-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m1-native-build/
+      - name: Verify frozen code build hash and five actual M1 rtrb SPSC cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib
+          m=json.load(open("m1-native-build/manifest.json"))
+          assert m["main_source"]==os.environ["GITHUB_SHA"] and m["worker_source"]=="f0e6d8dadb2f893d7516edfa04aabfc7515a218e"
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert sha("Cargo.lock")==m["cargo_lock_sha256"]
+          assert sha("m1-native-build/rtrb.test")==m["binary_sha256"]
+          PY
+          chmod +x m1-native-build/rtrb.test
+          mkdir -p m1-native-result
+          m1-native-build/rtrb.test r1_rtrb_direction_ --test-threads=1 --nocapture | tee m1-native-result/tests.log
+          grep -Eq 'test result: ok\..*0 failed' m1-native-result/tests.log
+          for name in \
+            r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill \
+            r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss \
+            r1_rtrb_direction_b04_stop_late_lease_epoch_aba \
+            r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx \
+            r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject; do
+            grep -Fq "$name ... ok" m1-native-result/tests.log
+          done
+          cp m1-native-build/manifest.json m1-native-result/manifest.json
+          echo "M0_M1_REAL_RTRB032_FIVE_SCOPED_NATIVE_PASS code=f0e6d8dadb2f893d7516edfa04aabfc7515a218e"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m1-pinned-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: m1-native-result/
+          if-no-files-found: warn
+          retention-days: 30
