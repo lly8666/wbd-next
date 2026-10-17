@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+  "branch": "work/m3-r1-codec",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "progress": "partial",
+  "result": "SCOPED_DEFAULT_CODEC_FUNCTIONAL_PASS_NATIVE_NOT_RUN",
+  "artifact_verified": true,
+  "unverified": true,
+  "kind": "immutable_SOURCE_specific_S_before_H",
+  "scope": {
+    "maintained": "Original Go-normalized 0x11d 40x20 systematic matrix, scalar encode/partial wire, missing-only e-by-e direct recovery, record PN/8B HP, LINK/MTU, cooperative four-row first-send",
+    "new_code": [
+      "crates/wbd-codec/src/fec_native.rs",
+      "crates/wbd-codec/src/fec_tx.rs",
+      "crates/wbd-codec/src/fec_native_tests.rs"
+    ],
+    "backend_modes": [
+      "Scalar original default",
+      "PreferNative only on explicit codec owner selection; feature-disabled and <64 scalar fallback",
+      "RequireNative fail-closed if native unavailable"
+    ],
+    "unsafe_island": "M0-owned native/isal-safe; M3 codec forbids unsafe",
+    "literal_go_oracles": "crates/wbd-codec/src/fec_math_tests.rs pinned Go rows 20/39, Go K2 and K20 parity fixtures; new differential compares source and parity wire byte-exact against these unchanged scalar semantics",
+    "new_tests": [
+      "r1_fec_selected_backend_go_matrix_all_profiles_short_unaligned_mtu",
+      "r1_fec_selected_backend_missing_only_direct_inverse_recovery",
+      "r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native"
+    ],
+    "native_target": "Linux x86_64 pinned ISA-L 2.31.1 upstream c387163fcbca62701d646149564c550c78a4f985",
+    "native_execution_qualification": "NOT_RUN at worker source; default old-root Cargo feature unavailable",
+    "stage": "Adapter integrated into opt-in real FecTxOwner parity job; not default production Game/Normal feature"
+  },
+  "native_debug": {
+    "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "run_id": 39014567195,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "rust": "1.85.1",
+    "tests_passed": 113,
+    "tests_failed": 0,
+    "tests_ignored": 1,
+    "binary_sha256": "4f1c9591801ae19532e496a6670227a4c9d419ad7182a108a1d340f56754bb8a",
+    "log_sha256": "4736cd4686d05fca4c40e70e6bafc4d5ffbc7aa0ea5f8f48fac5697d109b81a2",
+    "build_artifact": {
+      "id": 12093409179,
+      "digest": "sha256:5e02467f6118265e4e6e977ca78f1e154037cdf8cc044ae3ed1d65faa537054e"
+    },
+    "result_artifact": {
+      "id": 12094497455,
+      "digest": "sha256:19439145aa2daf3e4901758652d955b0323cf8f06ec6e0ff72acfcc9870fb870"
+    },
+    "qualification": "SCOPED_DEFAULT_FEATURE_DEBUG_ONLY; native-isal not present in original worker Cargo feature graph; perf native diagnostic cfg-excluded (not counted)"
+  },
+  "m0_shared_backend": {
+    "main_source": "21ef432683db99d122875a1ce534be59ed0eaca9",
+    "run_id": 39011616037,
+    "conclusion": "SUCCESS",
+    "witness": "real ec_encode_data XOR from pinned static ISA-L; optional codec feature compiled --no-run; NOT complete M3 Go/native k/r/e"
+  },
+  "cost": {
+    "scenario": "single configuration 20:20 L=1200B fixed data (seed 23), source/parity/recovered 20/20/4 per iteration",
+    "feature_test": "r1_fec_native_release_same_vm_scalar_isal_paired_cpu ignored Linux Release native-isal only",
+    "requested_order": "AB; BA optional separate Action",
+    "measuring_job": "NOT_RUN: M0 main shared workflow lacks worker SOURCE overlay/feature-run endpoint",
+    "cpu": "NOT_RUN on native same-host",
+    "wire_bytes": "NOT_RUN production",
+    "delivery": "NOT_RUN production",
+    "packet_p99": "NOT_RUN",
+    "codec_operation_latency": "NOT_RUN native",
+    "host_isa": "NOT_RUN worker native",
+    "acceleration_claim": "NONE",
+    "capacity": "NOT_TESTED",
+    "cross_platform": {
+      "linux_aarch64": "NATIVE_UNSUPPORTED",
+      "windows": "NATIVE_UNSUPPORTED",
+      "portable_scalar": "DEFAULT_SOURCE_REGRESSION_ONLY"
+    }
+  },
+  "governance": {
+    "prev_cursor_evidence_untouched": "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json",
+    "prev_cursor_last_tested_source": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
+    "central_scope_new_code": "PENDING_OR_OBSERVE_LATER",
+    "intermediate_legacy_governance": "Source or control moved mid-audit (historical failed runs remain, not native failure)"
+  },
+  "blocking_dependency": "M0 one shared opt-in Action entrypoint: pinned main root/lock/native crate overlay over exact M3 CODE source then --features native-isal RUN (not merely --no-run), same-job compiled-once AB/BA and actual ISA probe; see docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
+  "completion": "PACK016 PARTIAL, no user-facing production feature enable, real Go V4/engine/driver MTU/parity fairness/product goodput remain not qualified"
+}
