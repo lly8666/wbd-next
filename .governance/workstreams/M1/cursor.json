@@ -4,18 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 14,
-  "checkpoint_sha": "6d1c8de9d90ae01285764ec9ab05ec41992b1cdf",
-  "progress": "partial",
+  "sequence": 15,
+  "checkpoint_sha": "baadb74630b99359a5262e0d79b57484196a36d3",
+  "progress": "ready_for_integration",
   "task_id": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
-  "current_task": "PACK-007 M1-012 partial: bounded genuine split TX/RX thread consumer interface and deterministic armed wake retry 103/103 native PASS; true rtrb SPSC and OS wake/loom BLOCKED_SHARED_M0_DEP.",
-  "why_now": "Main PACK-007 assigned M1-012 on unchanged active rev2 epoch1 branch; previous H01cdc623d0722fc2c1f47c23a4c2024752ac4d94 seq13 Governance38998632436 SUCCESS; main old M1-011 wake import rolled back after two central native timeout failures.",
+  "current_task": "M1-012 directional owned real rtrb 0.3.2 safe push/pop scoped component COMPLETE and ready for M0 integration. Protected Go TLS credential entry, native eventfd/Windows wake, loom and kernel driver/product qualification remain NOT_RUN.",
+  "why_now": "M0 immutable rtrb pin 045af34c5c32cf01bd11092580db2bc879d8d651 and exact manifest source 789aa27d039fa64183d4b06d2f0acd4868bfc544 now resolve prior shared dependency; M1 CODE a39ff711 action39015538871 source-exact true 6/6 rtrb and outer104/104 scoped PASS. Prior H0ecc743 seq14 Governance39006469274 SUCCESS.",
   "done_when": "M1-012：真实线程队列方向隔离、0/1/32/33、SPSC满返还、不丢唤醒/Stop借用/epoch回绕、稀疏和公平性反例精确SOURCE native Actions通过；对M0冻结编译接口和不能覆盖的Go/kernel/loom缺口交付。",
-  "next_action": "M0 pin actual rtrb dependency and locked offline Cargo/workflow support in shared root plus optionally loom; M1 then replace bounded sync_channel compatibility under stable runtime::directional split_tx/split_rx signatures, test old/new stop, exactly 0/1/32/33, wake retry and cross-thread loan ownership on new source. Current 103/103 is only standalone std transport; M0 Go TLS/driver/OS event product integration NOT_RUN. No further nonblocked M1-012 implementation identified.",
+  "next_action": "M0 one-stage source import of M1 CODE a39ff711fd1f1c505b60b19bfcc7604cdd861aa2 directional.rs/directional_rtrb.rs/directional_compat.rs/wake.rs, select feature m1_rtrb via M0-owned engine Cargo with reviewed =0.3.2 locked graph, compile/test resulting integrated main SOURCE, link protected Go owner+driver separately; old sync_channel fallback still available. Optional Loom dev-only locked pin and platform native OS notifications are separate NOT_RUN, not required to represent worker-scoped ready. No further self-assigned M1 work.",
   "unverified": false,
-  "last_tested_source": "3c2b079ab88676a5c9c62ffecb90e8ae2b735ac2",
+  "last_tested_source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
   "evidence_refs": [
-    "docs/evidence/M1/R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012-partial-actions.json"
+    "docs/evidence/M1/R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012-rtrb-a39ff711fd1f1c505b60b19bfcc7604cdd861aa2.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -26,5 +26,5 @@
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "Scoped native SOURCE3c2b079 run39006176250 103/103 PASS (previous98+5 new), artifact12090908183 ZIP/result.json/test.log SHA independently verified. First SOURCE8bd5db9 native39006042556 FAIL 102+1 synthetic wake park timeout; repaired by deterministic failed-signal armed retry plus separate actual park interleaving tests. New M1 runtime/directional split_tx/split_rx transferable producer and separate consumer OS threads, <=32 preallocated drain, full queue returns original frozen/unique, stop retains late loans, generation Arc identity rejects stale/ABA. Implementation uses std::sync_channel fallback; main Cargo.lock lacks rtrb. M0 shared Cargo/rtrb/loom/OS event/actual Go and kernel pending. Source G2/Governance/qualification/cross SUCCESS; root R0 ABI old harness FAIL despite Rust 105 passed+1 ignored rc0. No product/physical/500Mbps claims."
+  "partial_summary": "M1-012 frozen scoped worker CODE=a39ff711fd1f1c505b60b19bfcc7604cdd861aa2. M0 root pinned rtrb=0.3.2 SHA045af34c..., exactly tested overlay main789aa27..., no M1 shared root changes. GitHub worker-native39015538871 PASS outer104/104 r1, plus six actual safe rtrb 0.3.2 compiled-and-run inner cases in temporary M0 manifest overlay, including 0/1/32/33, original UniqueBuffer Full return, separate TX/RX OS threads sparse wake, Stop late loan/ABA, old RX nonblocking new, concurrent publish/Stop cancel exactly all acceptances. Downloaded artifact12094184835 ZIP/result.json/test.log hashes verified; inherited Release component succeeded, not rtrb performance. Code same-SHA Governance39015538876, G2 39015538873, R0 audit39015538894, cross ABI39015538874 SUCCESS; legacy old branch R0 ABI39015538885 FAIL because M0-owned literal '3 passed' parser despite Rust106 passed1 ignored rc0. 0715b84 and167195e5 failed artifact/host toolchain procedures retained, f0e6d8 PASS 5 true cases superseded. S evidence baadb746... and cursor-only H seq15 follows. Real protected Go TLS admission, platform Linux eventfd/Windows event, loom enumerations, kernel driver loan, full product 500Mbps, E2E p99, native WinArm/physical NOT_RUN; sync_channel fallback remains for rollback."
 }
