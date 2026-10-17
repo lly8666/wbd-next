@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 105,
-  "checkpoint_sha": "3ed6fc2de65e03cced5fa857e2e6480750b46cef",
+  "sequence": 106,
+  "checkpoint_sha": "97cf5adf63635cb28e7a2a1e1a3e2b1530ecdc24",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "R1-M0-024 批次 A 下一项已落地：真实 Go TLS认证→原始 Rust ScopedOwner/M1/M3→真实 Linux M4 raw/TUN 自主双worker 的 S2C 原业主私有 route预算快照，generation/epoch/token、ifindex、destination、单调revision、最多1秒刷新，真实raw失败立即失效。原Rust PN/AEAD/Normal/off不变；M4每包接口MTU sysfs/DF/内核EMSGSIZE仍在，真实MTU缩小拒发回归保持。精确 CODE 5e4b03dfda87a7da81eaf6bdadd380b761abdcf1 native Actions38993391914 attempt1 build117280453105 consume117280742449 SUCCESS，10s热身/60s测量：路由观测恰60次，每方向105303/105303 UDP IPv4业务包、~10.00021Mbps、缺包无效重复0；C2S p99同机277µs S2C243µs，Rust RX4.240s TX3.934s，整体Go+Rust+注入器14.291 CPU-s。三cipher、PN no-HOL、动态65536→1500 fail closed、Stop等同源PASS，ABI/cross/static/Gov成功。证据 S 3ed6fc2de65e03cced5fa857e2e6480750b46cef r0资格38993770672/Gov38993770682 PASS。历史已报告AB/BA ~-18.66%属于上一个去重复route观察的 SOURCE，不能归因于本缓存。024仍PARTIAL，023 unverified=true、features0。",
-  "why_now": "用户要求迅速推进024而不是重复历史已通过的单次route观察。选择当前每数据包临时路由socket的实质热路径成本，在同一原始受保护owner内生成/持有预算，先保留M4逐包真实MTU检验，避免未做netlink前放宽超限。用真实60s业务以及refresh计数验证结构而不是仅看CPU不同VM绝对值。",
-  "done_when": "本次 route-cache子能力已证明同SRC编译/内核功能和动态MTU fail closed、业务10Mbps各方向零缺包、route观察60/105303包各方向，60s refresh不随包数线性增长；日志/证据/资格清单和Gov均已写入。整体024未完成：设备级route/link净事件订阅和有界coalesced刷新、EMSGSIZE类型反馈、M4逐包MTU sysfs清理、全局registry方向owner分拆、ready≤32批处理、D10、SPARSE、最终等口径Rust P10 AB/BA仍待。绝不把此SRC的14.29 CPU-s和其他Runner测得的旧SRC绝对值相减。",
-  "next_action": "在024批次A完成真正设备级 Linux route/link netlink失效监听（不每lane线程）、合并同scope刷新、<=1s兜底及单调revision，M4实际EMSGSIZE/MTU改变类型化反馈，使刷新在owner批次边界生效且旧密文不重封；加真实MTU下调/恢复、接口替换/route变化、Stop/rotation竞态反例。确认不产生DF外层分片或超限提交后，才去除M4每DATA sysfs；之后批次B方向状态从全局registry mutex移出、ready-only≤32有界批及储存复用，D10+SPARSE，最终同一VM Rust A/B和独立B/A remeasure。跨role M4改动须按registry协调，不能在M4工作分支外抢改其独占范围。保留023未验、features0。",
+  "current_task": "024 批次 A 新增共享 Linux route/link netlink 失效和 owner 私有预算 revision，同一原始受 Go V4 TLS 凭据授权的 Rust/M1/M3→真实 M4 raw/TUN 路径上通过隔离内核 lo MTU 降低事件→owner route 再观测→fail closed 功能反例。已有稳定60秒约10Mbps/方向开发路径继续有效；新增事件测试已在同 SOURCE 的 Actions 原 native harness 完成。普通 ABI features0；M4逐包 MTU sysfs/DF 仍保留；此 SOURCE 尚未做正式 Rust/Rust P10 AB/BA，不能归功于早期约-18.66%配对，也不能称023产品 PASS。",
+  "why_now": "原 route 快照减少稳态临时 route socket，但缺设备级 link/route 变化通知。为后续安全移出 M4 逐包观测，先建立有界 NETLINK_ROUTE 事件失效、合并和独立真实内核 witness；保留原逐包内核 MTU 拒发直至类型反馈/事件竞态反例齐全。",
+  "done_when": "当前设备 netlink 子能力的原Go认证→Rust→Linux raw/TUN 真实事件通知、owner预算刷新和缩 MTU 失败关闭同源PASS，结果存 evidence，第一版 scoped unsafe 编译FAIL保留且修复。完整任务024 done_when 尚未满足：M4实际EMSGSIZE类型反馈、route/interface replace/风暴/重连及安全去sysfs、TX/RX全局锁拆分、ready-only≤32批量与存储复用、功能批次、D10/SPARSE及最终Rust/Rust P10顺序AB与独立BA。普通push Governance身份/结构范围不同于维护自测或产品。",
+  "next_action": "继续本次已分配024的完整剩余能力：沿原Go认证→Rust owner→raw/TUN 完成批次A M4实际EMSGSIZE反馈、设备更替/route事件合并/Stop竞态内核反例并在可靠 fail-closed 后移除每DATA sysfs；批次B在生命周期保持源一致的前提下TX/RX方向own状态移出全局registry锁、ready-only≤32立即drain和批缓存复用；一次功能反例批量Actions、D10与SPARSE分场景，重测优化前Rust A与本SRC最终Rust B同VM单job顺序P10-AB及独立BA，C50仅在容量支持时运行。失败/容量不足就收口留痕，满足024 §7才改registry分配。保留原023/unverified/features0及后续超MTU分片缺口，勿抢H102。",
   "unverified": true,
-  "last_tested_source": "5e4b03dfda87a7da81eaf6bdadd380b761abdcf1",
+  "last_tested_source": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
   "evidence_refs": [
+    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json",
     "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.md",
+    "docs/devlog/M0/M0-024-netlink-route-invalidation-partial.md",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "024真实Go认证→原Rust实际M4 S2C route预算缓存已在SRC 5e4b03dfda87a7da81eaf6bdadd380b761abdcf1受限Linux开发路径测得60秒仅60路由刷新，105303包/方向全交付约10Mbps，M4每包MTU防护仍保留且动态缩水 fail closed；native/git Actions+Gov/证据PASS。全网事件监听/EMSGSIZE反馈/批量/去全局锁/SPARSE-D10/新源AB-BA仍未完，023继续unverified/features0。"
+  "partial_summary": "024 PARTIAL：新设备级 route/link watcher 与事件 coalescing 已真实 Linux 内核原路径证实 revision 和重新观测，M4缩MTU拒发保持；先前route-cache业务基线保留，不混不同 SOURCE 的CPU收益。全局锁/批I-O/MTU per-packet sysfs/EMSGSIZE及最终 Rust/Rust 对比仍未完；023与物理资格未验，production features0。"
 }
