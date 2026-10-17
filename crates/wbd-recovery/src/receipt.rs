@@ -1077,6 +1077,58 @@ mod tests {
         assert_eq!(s.outstanding(),40);
     }
 
+    /// A bounded owner may hold 100k immutable records. A large fake-clock
+    /// jump must evict only expired entries (not scan for eligible repairs),
+    /// clear all three wake/RACK/queued nodes, invalidate an old queued probe
+    /// and allow a new independent fresh shadow after the pressure release.
+    #[test]
+    fn r2_timer_100k_clock_jump_queued_and_positive_release_no_tombstones() {
+        const N:u64=100_000;
+        let mut s=state(N as usize,50);
+        for pn in 0..N {
+            add(&mut s,pn,0,1_000+(pn%2));
+        }
+        assert_eq!(s.outstanding(),N as usize);
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.wake_index.len(),N as usize);
+        assert!(s.queued_index.is_empty());
+        let old=s.on_timer(MonoNs(50)).candidates.remove(0);
+        assert_eq!(old.pn(),RecordPn(0));
+        assert_eq!(s.queued_index.len(),1);
+        assert!(s.preflight(&old,MonoNs(50)));
+        // Receipt of a different already-sent record removes exactly that
+        // shadow, not neighboring skipped or control PNs.
+        let confirmed=s.on_receipt(&receipt(1,N-1,vec![page(0,&[5])]),
+            MonoNs(60)).unwrap();
+        assert_eq!(confirmed.len(),1);
+        assert_eq!(confirmed[0].pn,RecordPn(5));
+        assert_eq!(confirmed[0].reason,ReleaseReason::ReceivedByPeer);
+        assert_eq!(s.outstanding(),N as usize-1);
+        let expired=s.on_timer(MonoNs(1_001));
+        assert_eq!(expired.releases.len(),N as usize-1);
+        assert!(expired.releases.iter().all(|r|
+            r.reason==ReleaseReason::HardExpired));
+        assert!(expired.candidates.is_empty());
+        assert_eq!(s.last_timer_index_pops(),N as usize-1);
+        assert_eq!(s.outstanding(),0);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert!(s.queued_index.is_empty());
+        assert!(s.rack_index.is_empty());
+        assert_eq!(s.next_deadline(),None);
+        assert!(!s.preflight(&old,MonoNs(1_001)));
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Uncertain,
+            MonoNs(1_001)),Err(DataError::Stale));
+        // The prior PTO gate and 100k expired owners cannot prevent fresh
+        // state admission after the cleanup (actual fresh transport belongs M0).
+        add(&mut s,N,1_002,2_000);
+        assert_eq!(s.outstanding(),1);
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_052)));
+        assert!(s.on_timer(MonoNs(1_051)).candidates.is_empty());
+        assert_eq!(s.on_timer(MonoNs(1_052)).candidates.len(),1);
+        assert_eq!(s.last_timer_index_pops(),1);
+    }
+
     #[test]
     fn r2_rack_notsent_rearm_does_not_promote_old_bitmap_early() {
         let mut s=state(4,100);
