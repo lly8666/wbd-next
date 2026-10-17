@@ -260,6 +260,58 @@ fn classify_report(sent: c_int, errno: Option<i32>, submitted: usize,
     KernelSendReport { outcome: old, signal }
 }
 
+
+/// Raw scatter backend only: the caller holds a single generation/Stop
+/// BorrowFence guard and lock before preparing the header and calling this.
+/// This function borrows the EXACT frozen ciphertext for iovec[1] and does
+/// one Linux sendmmsg syscall. Positive kernel result is NOT peer ACK.
+pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
+    fd:RawFd,destination:std::net::SocketAddrV4,
+    headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
+    records:&[H],
+)->KernelSendReport{
+    let submitted=records.len().min(MAX_READY_TX);
+    if submitted==0{return KernelSendReport{
+        outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None
+    }}
+    let mut iovecs=[[CIovec::empty();2];MAX_READY_TX];
+    let mut messages=[CMmsghdr::empty();MAX_READY_TX];
+    let mut expected=[0usize;MAX_READY_TX];
+    // socket address has native x86_64 GNU sockaddr_in C layout.
+    #[repr(C)]
+    struct SockAddrIn{family:u16,port_be:u16,ip_be:u32,zero:[u8;8]}
+    let target=SockAddrIn{family:2,port_be:destination.port().to_be(),
+        ip_be:u32::from_ne_bytes(destination.ip().octets()),zero:[0;8]};
+    for (i,r) in records[..submitted].iter().enumerate(){
+        let payload=driver_read(r);
+        let len=header_lens[i];
+        if !(40..=80).contains(&len) ||len%4!=0||
+            payload.wire.is_empty()||len+payload.wire.len()>65535{
+            return KernelSendReport{outcome:not_sent(TxError::IoFailed),
+                signal:KernelSendSignal::PreflightRejected}
+        }
+        expected[i]=len+payload.wire.len();
+        iovecs[i][0]=CIovec{iov_base:headers[i].as_ptr().cast_mut().cast(),
+            iov_len:len};
+        iovecs[i][1]=CIovec{iov_base:payload.wire.as_ptr().cast_mut().cast(),
+            iov_len:payload.wire.len()};
+        messages[i].msg_hdr.msg_name=(&target as *const SockAddrIn)
+            .cast_mut().cast();
+        messages[i].msg_hdr.msg_namelen=std::mem::size_of::<SockAddrIn>() as u32;
+        messages[i].msg_hdr.msg_iov=std::ptr::addr_of_mut!(iovecs[i][0]);
+        messages[i].msg_hdr.msg_iovlen=2;
+    }
+    // SAFETY: all headers live on caller stack for the entire synchronous
+    // call, frozen records stay immutably borrowed and alive, two repr(C)
+    // iovecs per packet, valid native sockaddr_in per message, vlen<=32,
+    // nonblocking kernel copy. No kernel references escape on return.
+    let sent=unsafe{sendmmsg(fd,messages.as_mut_ptr(),
+        submitted as c_uint,MSG_DONTWAIT)};
+    let errno=if sent<0{io::Error::last_os_error().raw_os_error()}else{None};
+    let reported:[u32;MAX_READY_TX]=std::array::from_fn(|i|messages[i].msg_len);
+    classify_report(sent,errno,submitted,records.len(),&reported,&expected)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -476,6 +528,58 @@ mod tests {
         let short=classify_report(2,None,2,2,&[3,1],&lengths);
         assert_eq!(short.outcome,uncertain(1));
         assert_eq!(short.signal,KernelSendSignal::AmbiguousCompletion);
+    }
+
+    #[test]
+    fn r1_m4_013_scatter_real_kernel_sendmmsg_udp_0_1_32_33_and_partial(){
+        use crate::ipv4_tcp::{build_scatter_header,Ipv4Tuple,Presentation,PacketPersona};
+        let (tx,rx)=udp_pair();
+        let tuple=Ipv4Tuple{src_ip:&[127,0,0,1],dst_ip:&[127,0,0,1],
+            src_port:1000,dst_port:2000};
+        let present=Presentation{ack32:11,ip_id:33,
+            advertised_window:65535,persona:PacketPersona::Legacy};
+        let mut bytes=[0u8;128];
+        let empty:Vec<Frozen>=Vec::new();
+        let blank=[[0u8;80];MAX_READY_TX];
+        let lengths=[0usize;MAX_READY_TX];
+        let addr=match rx.local_addr().unwrap(){
+            std::net::SocketAddr::V4(v)=>v,_=>unreachable!()};
+        assert_eq!(submit_scatter_fd(tx.as_raw_fd(),addr,&blank,&lengths,&empty)
+            .outcome,TxBatchOutcome::copied_all(0));
+        for total in [1usize,32,33]{
+            let frames:Vec<_>=(0..total).map(|i|frame(&[i as u8,0x9a],i as u64)).collect();
+            let mut headers=[[0u8;80];MAX_READY_TX];
+            let mut lens=[0usize;MAX_READY_TX];
+            for (i,f) in frames[..total.min(MAX_READY_TX)].iter().enumerate(){
+                lens[i]=build_scatter_header(tuple,present,f,None,1500,
+                    &mut headers[i]).unwrap();
+            }
+            let report=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames);
+            assert_eq!(report.outcome.accepted_prefix,total.min(MAX_READY_TX));
+            assert_eq!(report.outcome.uncertain_index,None);
+            for i in 0..total.min(MAX_READY_TX){
+                let n=rx.recv(&mut bytes).unwrap();
+                assert_eq!(n,42);
+                assert_eq!(bytes[40],i as u8);
+            }
+            if total==33 {
+                assert_eq!(report.outcome.error,Some(TxError::WouldBlock));
+                assert!(rx.recv(&mut bytes).is_err());
+            }
+        }
+        let large=vec![0xb6;65490]; // IPv4 length65530 valid, UDP payload65530 >65507
+        let frames=[frame(b"prefix",1),frame(&large,2)];
+        let mut headers=[[0u8;80];MAX_READY_TX];
+        let mut lens=[0usize;MAX_READY_TX];
+        for (i,f) in frames.iter().enumerate(){
+            lens[i]=build_scatter_header(tuple,present,f,None,65535,
+                &mut headers[i]).unwrap();
+        }
+        let short=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames);
+        assert_eq!(short.outcome.accepted_prefix,1);
+        assert_eq!(short.signal,KernelSendSignal::PartialErrnoUnavailable);
+        assert_eq!(rx.recv(&mut bytes).unwrap(),46);
+        assert!(rx.recv(&mut bytes).is_err());
     }
     #[test]
     fn r1_linux_sendmmsg_preflight_reject_invalid_without_writing() {

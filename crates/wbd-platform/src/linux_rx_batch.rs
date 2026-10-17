@@ -157,7 +157,7 @@ pub fn receive_ready_udp(
 )->RxBatchOutcome{
     receive_fd(socket.as_raw_fd(),buffers,fence)
 }
-fn receive_fd(fd:RawFd,buffers:&mut [&mut [u8]],fence:&BorrowFence)
+pub(crate) fn receive_fd(fd:RawFd,buffers:&mut [&mut [u8]],fence:&BorrowFence)
     ->RxBatchOutcome
 {
     let requested=buffers.len();
