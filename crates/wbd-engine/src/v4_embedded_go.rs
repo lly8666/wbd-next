@@ -79,6 +79,10 @@ struct Entry{
     counters:Arc<LoopCounts>,
     arena:Arena,phase:u32,
     rx_boundary:u32,wire_limit:u16,staged_count:u32,staged_bytes:u32,
+    // Extended only after this same-session AEAD+PN opener admits real data.
+    // The fixed Go bootstrap boundary cannot serve as the seq32 anchor forever.
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    rx_seq_anchor:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     flow:crate::v4_protected_handoff::GoFlow,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -118,6 +122,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         flow:handoff.flow,
@@ -495,13 +501,24 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
 // TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
 // Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+// Only a successfully authenticated (AEAD and unique PN) Normal/off LINK
+// admission may advance the seq32 reference. A raw TCP tuple/checksum/seq
+// is not proof: an attacker could otherwise jump the 64-bit high-water mark.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn authenticated_rx_anchor(anchor:u64,absolute_seq:u64,wire_len:usize,
+    admitted_link:u32)->Option<u64>{
+    if admitted_link!=1{return Some(anchor)}
+    let end=absolute_seq.checked_add(u64::try_from(wire_len).ok()?)?;
+    Some(anchor.max(end))
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     rx_storage:&mut Vec<RxPacket>)->Result<u32,i32>{
-    let (mut slab,flow,boundary,generation)={
+    let (mut slab,flow,anchor,generation)={
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
-        (slab,e.flow,e.rx_boundary,e.generation)
+        (slab,e.flow,e.rx_seq_anchor,e.generation)
     };
     let tuple=Ipv4Tuple{
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
@@ -525,7 +542,7 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
         _=>return Err(INVALID),
     };
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    let absolute=extend_seq32(u64::from(boundary),seq).map_err(|_|INVALID)?;
+    let absolute=extend_seq32(anchor,seq).map_err(|_|INVALID)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     // Project a concrete &mut Entry, allowing independent owner/normal,
     // route snapshot and platform driver borrows under one session fence.
@@ -548,6 +565,14 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     };
     returned.clear();
     *rx_storage=returned;
+    // Only post-open AEAD/PN accepted data may move the trusted seq64
+    // reference. Rejected, replayed, old and unauthenticated packets cannot
+    // influence even the temporary high-water mark. One raw datagram is
+    // offered per call; no later ACK or a new packet must await old holes.
+    let Some(next_anchor)=authenticated_rx_anchor(
+        e.rx_seq_anchor,absolute,len,report.authenticated.link_ready
+    ) else {return Err(INVALID)};
+    e.rx_seq_anchor=next_anchor;
     drain_data_turn_returns(&mut e.arena);
     if report.completed!=1||failed!=0||delivered!=1{return Err(INVALID)}
     Ok(delivered)
@@ -950,6 +975,34 @@ mod tests{
         let n=ready_only_slice(&stop,||panic!("unexpected poll"),
             ||panic!("unexpected packet"),||true);
         assert_eq!(n,0);
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance(){
+        // Same helper and wbd-platform::extend_seq32 used by background_raw_once:
+        // Go bootstrap is near wrap and each accepted original LINK frame
+        // advances the trusted reference without a real 2GiB allocation.
+        let initial=0xffff_ff00u64;
+        let first=extend_seq32(initial,0xffff_ff00).unwrap();
+        let crossed=authenticated_rx_anchor(initial,first,0x200,1).unwrap();
+        assert_eq!(crossed,0x1_0000_0100);
+        assert_eq!(extend_seq32(crossed,0x100),Ok(crossed));
+        let next=extend_seq32(crossed,0x100).unwrap();
+        let ahead=authenticated_rx_anchor(crossed,next,0x180,1).unwrap();
+        assert_eq!(ahead,0x1_0000_0280);
+        // These exact same apparent seq32 bits must remain high-generation
+        // candidates even after advancing >half-space beyond the old Go base.
+        let far=0x1_8000_1000u64;
+        assert!(far-initial>0x8000_0000);
+        assert_ne!(extend_seq32(initial,far as u32),Ok(far));
+        assert_eq!(extend_seq32(far,far as u32),Ok(far));
+        // Untrusted and replay packets cannot poison the owner anchor.
+        assert_eq!(authenticated_rx_anchor(ahead,far,512,0),Some(ahead));
+        assert_eq!(authenticated_rx_anchor(ahead,far,512,2),Some(ahead));
+        assert_eq!(authenticated_rx_anchor(ahead,ahead-128,64,1),Some(ahead));
+        assert_eq!(authenticated_rx_anchor(ahead,u64::MAX,2,1),None);
+        assert_eq!(extend_seq32(0,0x8000_0000),
+            Err(wbd_platform::rx_ipv4_tcp::SeqExtendError::HalfSpaceAmbiguous));
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
