@@ -169,6 +169,7 @@ pub struct ScopedRawIpv4Rx {
     ifname:String,
     generation:u32,
     mtu:usize,
+    budget:ScopedRouteBudget,
     stopped:AtomicBool,
     borrow:BorrowFence,
     serialize:Mutex<()>,
