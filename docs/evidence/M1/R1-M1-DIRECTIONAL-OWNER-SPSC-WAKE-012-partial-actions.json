@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "branch": "work/m1-r1-runtime",
+  "task_id": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "3c2b079ab88676a5c9c62ffecb90e8ae2b735ac2",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_BOUNDED_STD_COMPAT_DIRECTIONAL_ONLY",
+  "overall_workpack": "PARTIAL_DEPENDENCY_BLOCKED_REAL_RTRB",
+  "native": {
+    "run_id": 39006176250,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39006176250",
+    "build_job": 117319019502,
+    "consume_job": 117319072129,
+    "compiled_once": true,
+    "prior_tests": 98,
+    "new_direction_tests": 5,
+    "tests_passed": 103,
+    "tests_failed": 0,
+    "unrelated_r0_filtered": 3,
+    "result_artifact_id": 12090908183,
+    "build_artifact_id": 12090522938,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/39006176250/artifacts/12090908183",
+    "zip_sha256": "6af96e67b7742dffd9a3721d7d2d0571180d65809c73e7efa938918680279efa",
+    "result_json_sha256": "c375624aa4153e3e080736ec393f8d05040ad364fc7bfc993713475fdc55196e",
+    "test_log_sha256": "1b6ac5fc4686f65655377f19c92045adabc9e1005e5f9eb7948e4cce7601f589",
+    "binary_sha256": "2c877aa4886d07b77ca5c1bb836812fb214548cbbb5fcbc41c90b16d3af9fa19",
+    "verified": "Downloaded actual Actions ZIP and independently hashed ZIP/result.json/test.log; checked 103 unique r1 tests, 5 new r1_direction names, exact source/run/role, Rust native success."
+  },
+  "first_source_failure": {
+    "source_sha": "8bd5db942c01bdaa373c468475b1741e9bfc3299",
+    "run_id": 39006042556,
+    "conclusion": "failure",
+    "actual_result": "102 passed,1 failed",
+    "case": "r1_workpack_wake_r01_first_failed_notification_retried_on_next_publish",
+    "detail": "Hosted consumer recv_timeout 2sec. Test used OS rendezvous before_park hook plus synthetic failed signal, continued flaky timeout; not rewritten as PASS.",
+    "fix": "New source deterministically tests armed fail-rearm retry, while preexisting cross-thread park/recheck tests separately exercise thread::park; no timeouts raised or broken signals assumed passed."
+  },
+  "new_tests": [
+    "r1_direction_tx_r01_zero_one_32_33_ready_only_owned_prealloc",
+    "r1_direction_rx_r01_spsc_full_returns_unique_original",
+    "r1_direction_split_tx_rx_two_threads_without_shared_mutable_owner",
+    "r1_direction_b04_stop_old_loan_not_released_new_first_no_aba",
+    "r1_direction_g01_old_rx_lane_not_block_new_direction_ingress"
+  ],
+  "scoped_interface": {
+    "module": "crates/wbd-engine/src/runtime/directional.rs",
+    "constructors": "split_tx(owner_id,serial,LaneKey,capacity) / split_rx(...), each separate owned producer/consumer, no shared mutable TxOwner or RxOwner mutex.",
+    "pub_endpoints": "DirectionProducer<T>::try_publish(&DirectionToken,T), TxIngress publish_tx with metadata precheck; DirectionConsumer<T>::drain_ready(preallocated Vec) <=32, wait_input and stop() returns (canceled,inflight) only.",
+    "scope": "Arc identity cloned only on control path, no per-item Arc or payload clone; stale/Stop rejects and returns original handle; real driver must check_current before syscall.",
+    "queue": "bounded std::sync::mpsc::sync_channel from existing WakeGate, single non-Clone producer endpoint, NOT rtrb implementation, internally synchronized fallback",
+    "stop": "Stops publication, drains queued while externally dispatched TX FrozenRecord and RX UniqueBuffer survive until final Drop; no false kernel quiescence",
+    "fairness": "Previous ReadyTurn <=32 and cooperative 100us, parity wire-byte weighted first-send and stop loans retained 98 native regression tests",
+    "rollback": "M0 use old owner-local TxOwner/RxOwner and ReadyTurn, no feature toggles, no changes to Go/C ABI"
+  },
+  "inherited_release": {
+    "executable_sha256": "76ee63a3db8eb18a23a6027d3c42724edbe143e8e088710a17e018e936783b1c",
+    "legs": 3,
+    "each_wall_min_seconds": 1.100003,
+    "scope": "preexisting Release owner component only, not directional rtrb or full product performance"
+  },
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 39006176243,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 39006176267,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 39006176231,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 39006176334,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 39006176237,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_root_abi": {
+    "run_id": 39006176237,
+    "status": "FAIL",
+    "detail": "Old worker branch M0-owned tools/r0_abi_bundle.py demands '3 passed' unfiltered marker while actual native Rust ABI returns rc0 with 105 passed 1 ignored; M0 main script fixed but old branch not synchronized.",
+    "owner": "M0"
+  },
+  "blocking_dependency": {
+    "owner": "M0",
+    "files": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "crates/wbd-engine/Cargo.toml",
+      ".github/workflows/worker-native-tests.yml"
+    ],
+    "observed": "main Cargo.lock at observation has NO name = rtrb, no engine rtrb Cargo dependency; M1 forbidden from modifying shared files",
+    "request": ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
+    "required": "M0 pin rtrb in shared Cargo.lock/engine and offline runner, optionally loom dev-only. Then M1 replaces sync_channel transport with real rtrb producer/consumer without changing public owner types; source-locked native+interleave proof needed."
+  },
+  "not_run": {
+    "rtrb_bounded_SPSC": "BLOCKED_SHARED_DEP",
+    "loom_interleavings": "NOT_RUN",
+    "Linux_eventfd": "NOT_RUN",
+    "Windows_auto_reset_event": "NOT_RUN",
+    "actual_Go_authenticated_TX_RX": "NOT_RUN",
+    "kernel_driver_loan": "NOT_RUN",
+    "product_500Mbps": "NOT_RUN",
+    "E2E_p99": "NOT_RUN",
+    "native_Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_engine_features": 0
+  }
+}
