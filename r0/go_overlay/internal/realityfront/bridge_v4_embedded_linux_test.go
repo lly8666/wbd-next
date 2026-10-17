@@ -875,7 +875,15 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     for len(observed)<packets{
         if e:=recvOne(deadline);e!=nil{t.Fatal(e)}
     }
+    // sendmmsg may deliver bytes before the worker's batch counter is
+    // published. All original payloads were already checked above.
+    // Bounded convergence ONLY for async counters, never data delivery.
     stats,e:=b.rustOwnerLoopStats()
+    countDeadline:=time.Now().Add(500*time.Millisecond)
+    for e==nil&&(stats.RxOK<packets||stats.TxOK<packets)&&time.Now().Before(countDeadline){
+        time.Sleep(time.Millisecond)
+        stats,e=b.rustOwnerLoopStats()
+    }
     if e!=nil||stats.RxOK!=packets||stats.TxOK!=packets{
         t.Fatalf("original Rust live owner did not process both independent device streams: %+v %v",stats,e)
     }

@@ -49,7 +49,7 @@ jobs:
           cmp rust-A/Cargo.lock Cargo.lock
           # Shared test-only sparse env forwarding applies to both legs.
           grep -Fq 'WBD_M0_P10_SPARSE' tools/run-v4-tun-netns.sh
-          for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
+          for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go; do
             cmp "rust-A/r0/go_overlay/internal/realityfront/$f" "r0/go_overlay/internal/realityfront/$f"
           done
           rustup toolchain install 1.85.1 --profile minimal
@@ -63,6 +63,8 @@ jobs:
             for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
               cp "$SRC/r0/go_overlay/internal/realityfront/$f" "legacy/internal/realityfront/$f"
             done
+            # Apply identical, source-locked async stats-only test to BOTH legs.
+            cp "$GITHUB_WORKSPACE/r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go" "legacy/internal/realityfront/bridge_v4_embedded_linux_test.go"
             cp "$GITHUB_WORKSPACE/r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go" "legacy/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
             export CGO_LDFLAGS="-L$SRC/target/release -lwbd_engine"
             (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/hotpath-build/$leg/owner-go.test" ./internal/realityfront)
@@ -71,7 +73,8 @@ jobs:
           import hashlib,json,os,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           paths=["r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
-            "tools/run-v4-tun-netns.sh","Cargo.lock"]
+            "tools/run-v4-tun-netns.sh","Cargo.lock",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"]
           manifest={
             "source_sha":os.environ["GITHUB_SHA"],
             "source_A":"9249115c809933eae7ddebdd9334bbe16095bf64",
