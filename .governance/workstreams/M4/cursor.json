@@ -4,24 +4,26 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 16,
-  "checkpoint_sha": "47fab8e1c830e55fdbe90ee06f06a22d5333178c",
-  "progress": "ready_for_integration",
-  "task_id": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012",
-  "current_task": "M4-012 source-scoped platform route/PMTU error origin, watcher revision races, STOP old-loan exact native Linux unprivileged proof finished; privileged raw/TUN/physical tests NOT_RUN.",
-  "why_now": "main registry rev2 epoch1 active M4 formal assigned_task R1-M4-RAW-TUN-STOP-PMTU-RACE-012, prior seq15 -011 ready; scoped platform only.",
-  "done_when": "M4-012：错误来源与状态、route storm/ifindex/MTU down-up、Stop与晚loan、0/1/32/33边界及可用Linux实际内核反例精确SOURCE Actions验证；原privileged unsupported明确保留，输出M0接线稳定接口与回退说明。",
-  "next_action": "M0 source-pin and integrate stable platform API: RawTxError RouteStale/RouteUnavailable versus Kernel(90) versus PacketExceedsBudget/NoCapacity; TunReadyWrites uncertain EINTR/short; atomic STOP/BorrowFence and revisioned PMTU. No authenticated Go/engine or ABI edits by M4; actual CAP_NET_RAW raw/TUN privileged/physical route churn still UNSUPPORTED/NOT_RUN, production Go V4 DISABLED. Await NEW formal M4 main task or concrete M0 integration bug; do not extend absent authorization.",
-  "unverified": false,
-  "last_tested_source": "e4e61d1588b0192ea7ca39638aa75e1a3162ac66",
+  "sequence": 17,
+  "checkpoint_sha": "7766b24e4db7809193932dc627d43e2b4a4b153f",
+  "progress": "blocked",
+  "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
+  "current_task": "PACK-013: native Linux raw scatter sendmmsg / borrowed recvmmsg platform API code source exact 94/94 PASS, but task Governance deterministically BLOCKED by worker G2 <=64 commits vs actual66+.",
+  "why_now": "Formal main M4 task R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013 registry rev2 epoch1 active branch work/m4-r1-platform after prior -012 seq16 ready.",
+  "done_when": "PACK-013 M4: 保持冻结012 PMTU/设备失效/Stop安全；0/1/32/33/满额/空额、Linux真实无特权内核支持的多帧批、部分完成及未知尾项、错码EAGAIN/EINTR/EMSGSIZE/ENODEV/short write、generation/Stop/late-loan和稀疏立即服务反例；精确SOURCE编译一次native Actions+产物审计。确不能使用的raw/TUN privileged及真实单syscall批路径标UNSUPPORTED/NOT_RUN而不伪称性能，最终提供M0安全且冻结的调用签名/回退。",
+  "next_action": "M0 exclusively review .governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md and authorize exact checker refresh/exception in root tools (worker old check 64, current frozen source 66 activation commits). M4 must NOT change tools/root or claim ready. After M0 repairs and records tested scope, rerun same CODE SOURCE b7bcde7dde64633532cae99460eb00855a2e119a Governance and S/H audit; if pass mark ready_for_integration in later cursor-only H. CAP_NET_RAW raw positive and real TUN/physical/Go protected owner remain NOT_RUN, product Go V4 DISABLED.",
+  "unverified": true,
+  "last_tested_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-RAW-TUN-STOP-PMTU-RACE-012.json"
+    "docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md"
+  ],
   "context_refs": [
     "docs/decisions/M0-G2-worker-activation.md",
     "docs/decisions/M0-R0-parallel-worker-readiness.md",
     "docs/architecture/modules/00-CONTRACTS.md"
   ],
-  "partial_summary": "M4 full assigned workpack -012 SOURCE e4e61d1588b0192ea7ca39638aa75e1a3162ac66: typed RawTxError RouteStale/RouteUnavailable vs actual Linux kernel EMSGSIZE Kernel(90)/device and pure PacketExceedsBudget/NoCapacity, retain prefix/uncertain/suffix, TUN short/EINTR uncertainty. ScopedRouteBudget second watcher rev snapshot before cached return, synthetic 160 route storms/debounce/TTL and unprivileged actual Linux ifindex invalid/MTU check. 8-round 33 actual kernel loopback UDP concurrent sender vs STOP with old frozen RecordPn/Arc held until old completion and new owner UDP independent; 0/1/32/33 regressions, seq32 wrap retained. Native compiled-once Actions39001742284/1 Linux x86_64 GNU Rust1.85.1 91/91 R1 PASS (3 new+88 prior), build ZIP12088829780 SHA a531b95863ef8f978c7900b82424aaaa8d4eb7716f3a158df237f288be7de164, result ZIP12088958008 SHA 2ab1f5f305d6202ea5486ed364b08a08a15cee6eb3d5089bf4009035236887a4 and manifest/binary/JSON/log exact source SHA independently checked. Same SOURCE G2/static/crossABI SUCCESS; code Governance39001742282 attempt1 FAIL main moved mid audit, retry attempt2 SUCCESS; historic root worker fake39001742290 FAIL old R0 inventory despite actual 99/99 Rust assertions PASS. Evidence S47fab8e1c830e55fdbe90ee06f06a22d5333178c Governance39002048135 attempt1 FAIL main moved, attempt2 SUCCESS. Actual raw AF_PACKET positive RAW_RX_NOT_RUN (CAP_NET_RAW absent), TUN privileged positive and physical link down-up NOT_RUN, WindowsARM native, product/p99/500Mbps and authenticated Go-Rust owner NOT_RUN; production Go V4 DISABLED."
+  "partial_summary": "PACK-013 source code b7bcde7dde64633532cae99460eb00855a2e119a Linux x86_64 GNU Rust1.85.1 Actions39006105820 attempt1 compiled-once native 94/94 R1 PASS (3 new+91 previous, 8 R0 filtered). Real Linux UDP two-iovec sendmmsg 0/1/32/33 and 1-prefix partial errno unavailable tested, scatter header exact original checksum even odd/options seq32 with no frozen record copy; raw scoped tx send_kernel_multimsg and rx receive_kernel_multimsg uses original rx recvmmsg into M1 caller buffers with STOP loan and PMTU; raw/TUN real positive RAW_RX_NOT_RUN/UNSUPPORTED. Native build artifact12090303586 ZIP SHA0ac0e03f5190af85a34fe9fea05950d7de7068474af1157d0dbd931499b14d3e, binary SHA4eef7e8e3432047ca26c25ebdebfe8af12603334f1761e7bb085401c9adcb77e, result artifact12090863118 ZIP SHAbc5b941a36b8051bb17e3b25074e7302b5ad10af025bf77d2e93f3893ed71a17, log/JSON/manifest SHA independently verified. Same source G2/static/crossABI SUCCESS; root old R0 workflow39006105808 FAIL historical 8-count despite actual Rust102/102 PASS. Earlier SOURCE53e95b run39005911030 FAIL_COMPILE E0284/E0502 fixed; f2fae379 run39006017293 FAIL one overlong test fixture 93/94 fixed. Governance39006105815 attempts1&2 FAIL: frozen M4 tools/worker_scope_ci.py limits G2 activation to64 while actual exact compare frozen source has 66 commits. This is NOT transient and M4 lacks tools/** authority. Requested M0 root G2 exception/sync in scoped Markdown file; current evidence result INCONCLUSIVE due governance, though native 94 PASS. No other code changes authorized pending M0; production Go V4 DISABLED and raw privileged, TUN, WindowsARM, physical and product/perf remain NOT_RUN."
 }
