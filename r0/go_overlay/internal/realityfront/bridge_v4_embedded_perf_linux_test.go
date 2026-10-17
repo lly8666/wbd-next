@@ -143,6 +143,9 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     // direction with equal-count UDP application payloads 64/256 bytes.
     // The 10Mbps P10 fixture remains byte-for-byte the default mode.
     sparse:=os.Getenv("WBD_M0_P10_SPARSE")=="1"
+    diag:=os.Getenv("WBD_M0_D10_DIAG")=="1"
+    if sparse&&diag{t.Fatal("one fixed scenario per Action")}
+    if diag&&!paired{t.Fatal("diagnostic requires paired normal-off fixture")}
     if sparse&&!paired{t.Fatal("sparse requires paired normal-off fixture")}
     rateBits:=m0Perf10TargetBits
     if paired {
@@ -156,6 +159,10 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         rateBits=20*(92+284)/2*8 // 20pps * 188 IPv4 bytes avg
         warmup=5*time.Second
         measure=30*time.Second
+    }
+    if diag {
+        warmup=5*time.Second
+        measure=15*time.Second
     }
     const name="wbdperf0"
     dev,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
@@ -436,10 +443,11 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         packetMix="1:1_UDP_APPLICATION_PAYLOAD_64_256"
         pairedAppMbps=0.0256
     }
+    if diag{profile="D10_NORMAL_OFF_10MBPS_DIAGNOSTIC_ON_5S_PLUS_15S"}
     res:=map[string]any{
         "scope":"GOV005_FIRST_DEVELOPER_PERF_DIAGNOSTIC_SAME_GO_PROCESS_ORIGINAL_RUST_OWNER",
         "result":status,"normal_lane_count":1,"fec":"fixed_off",
-        "cipher":"chacha20_poly1305_original_go_tls", "diagnostic_logging":false,
+        "cipher":"chacha20_poly1305_original_go_tls", "diagnostic_logging":diag,
         "backend":"real_linux_network_namespace_loopback_raw_ipv4_tcp_and_tun",
         "production_features":0,"product_qualification":"NOT_RUN",
         "desired_rate_mbps_each_direction_ipv4_inner_business":float64(rateBits)/1e6,
@@ -450,6 +458,8 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "original_go_c2s_record_wire_limit_bytes":serverLimit,
         "packet_mix_by_count":packetMix,
         "explicit_sparse_fixture":sparse,
+        "explicit_d10_fixture":diag,
+        "syscall_summary_scope":map[bool]string{true:"strace -f -qq -c entire child lifetime including setup and Go injector, not just 15s measure",false:"NOT_RUN"}[diag],
         "sparse_packets_per_second_each_direction":map[bool]any{true:20,false:"NOT_APPLICABLE"}[sparse],
         "warmup_seconds":int(warmup.Seconds()),"measure_seconds":int(measure.Seconds()),
         "receiver_drain_seconds":3,"timing":"wall_monotonic_scheduled_window",
