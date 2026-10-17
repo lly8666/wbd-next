@@ -1,4 +1,4 @@
-name: M0 Rust hotpath 024 P10-B-A bounded DATA returns per owner turn64
+name: M0 Rust hotpath 024 P10-B-A actual ready raw batch vs pre-batch
 run-name: "R1-M0-024|P10-BA|${{ github.sha }}"
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: 42744982e28d03dbe6cbcbd0daa395a5ceda5d80
+          ref: 9249115c809933eae7ddebdd9334bbe16095bf64
           path: rust-A
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -35,16 +35,16 @@ jobs:
         env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
         run: |
           set -euo pipefail
-          # M0-024 B code snapshot b8d53e79; main workflow-only change preserves locked Rust blobs.
+          # M0-024 fixed pre-batch A and post-batch B; feature-gated original owner actual raw/TUN, never floating branch.
           # Freeze content, not a floating branch or unrelated later commit.
           test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 07c6fc30c20ddc90e2843b269aba86e185a8db96
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = da8ae816982f27af6c6f70ede6d14277a021d183
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 273ee61c5ff2c0dff5dc2fb272b8801294da9df1
           # Fixed baseline A: M4-012 source before DATA return cap64.
           # Only v4_embedded_go.rs (and its test) differs in B, and Go
           # workload fixture, Cargo.lock, route/TUN and scripts are identical.
-          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = ff91b7293ff85ee51fed70cb28f90366bb83319a
+          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = e9c68425e9d597a4bdd13ada8cabb3545dc88cf6
           test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 07c6fc30c20ddc90e2843b269aba86e185a8db96
-          test "$(git -C rust-A rev-parse HEAD)" = 42744982e28d03dbe6cbcbd0daa395a5ceda5d80
+          test "$(git -C rust-A rev-parse HEAD)" = 9249115c809933eae7ddebdd9334bbe16095bf64
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           cmp rust-A/Cargo.lock Cargo.lock
           cmp rust-A/tools/run-v4-tun-netns.sh tools/run-v4-tun-netns.sh
@@ -72,7 +72,7 @@ jobs:
             "tools/run-v4-tun-netns.sh","Cargo.lock"]
           manifest={
             "source_sha":os.environ["GITHUB_SHA"],
-            "source_A":"42744982e28d03dbe6cbcbd0daa395a5ceda5d80",
+            "source_A":"9249115c809933eae7ddebdd9334bbe16095bf64",
             "source_B":os.environ["GITHUB_SHA"],
             "legacy_Go":"a7a82db31fe736ffedee330795a3234d358f1984",
             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
@@ -114,7 +114,7 @@ jobs:
           m=json.load(open("hotpath-build/manifest.json"))
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           assert m["source_B"]==os.environ["GITHUB_SHA"]
-          assert m["source_A"]=="42744982e28d03dbe6cbcbd0daa395a5ceda5d80"
+          assert m["source_A"]=="9249115c809933eae7ddebdd9334bbe16095bf64"
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
           for p,h in m["common_harness_sha256"].items():assert sha(p)==h,p
           for leg in ("A","B"):
