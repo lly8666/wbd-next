@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+  "result": "SCOPED_MODULES_INTAKE_AND_ACTUAL_NORMAL_OFF_FUNCTIONAL_PASS_PRODUCT_OPEN_NATIVE_CODEC_CI_TIMEOUT_UNRESOLVED",
+  "unverified": true,
+  "artifact_verified": false,
+  "verification_note": "Source exact in GitHub ACTIONS, provider reported artifact digests archived. Worker module artifact ZIPs independently verified by their respective worker evidence, latest M0 Actions artifact ZIPs not all independently rehashed. This is NOT overall qualification.",
+  "baseline_normal_fec_off": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
+  "historical_D10": {
+    "run_id": 39032995995,
+    "status": "FAIL_INCONCLUSIVE_TRACED_OLD_A_CAPACITY",
+    "rerun": "NOT_RUN"
+  },
+  "main_integration_source": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+  "modules": {
+    "M1": {
+      "task": "R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013",
+      "frozen": "e2050aec593bd692974510fd9d64ae1ff7bb7c00",
+      "worker_action": 39045913408,
+      "worker_count": "117/117 PASS",
+      "scope": "CODE_ROLE_SCOPE_PASS central39045993017, H16 central39046644863 PASS",
+      "stage_commit": "7d0a1c7f4318f955cb7274e6922e9ed33b55ae67",
+      "files": [
+        "crates/wbd-engine/src/runtime/game_shared.rs",
+        "crates/wbd-engine/src/runtime/game_shared_tests.rs",
+        "crates/wbd-engine/src/runtime/mod.rs"
+      ],
+      "why": "Exact 2 frozen new modules, one declaration. Preserve main's improved memory/mod.rs, early_rx.rs and generation.rs and all directional/SPSC/Go ownership. Game not wired to live authenticated carrier.",
+      "native_main": {
+        "run": 39047827609,
+        "conclusion": "success"
+      }
+    },
+    "M2": {
+      "task": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010",
+      "frozen": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
+      "worker_action": 39045616456,
+      "worker_count": "70/70 PASS",
+      "scope": "CODE_ROLE_SCOPE_PASS central39045719817, H25 central39046404494 PASS",
+      "stage_commit": "006cab68345071a15c1154890cd55716bb7b4e39",
+      "files": [
+        "crates/wbd-recovery/src/ingress.rs",
+        "crates/wbd-recovery/src/rx_feedback.rs",
+        "crates/wbd-recovery/src/workpack_tests.rs",
+        "crates/wbd-recovery/src/lib.rs"
+      ],
+      "why": "Typed ingress and feedback modules only. Main receipt.rs has independently evolved indexed-timer R0 implementation; never overwrite it with stale worker 009. Main recovery/native functional tests on staged source PASS.",
+      "native_main": {
+        "run": 39047929179,
+        "conclusion": "success"
+      },
+      "recovery_engine_ready": false
+    },
+    "M3": {
+      "task": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+      "frozen": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+      "worker_default": 39014567195,
+      "worker_native_isal": 39016665239,
+      "worker_cpu_AB": 39044413886,
+      "worker_cpu_BA": 39045641512,
+      "worker_count": "113 PASS default / 3 native PASS / AB BA CPU valid",
+      "scope": "H29 central39046168317 PASS, final H30 central39046275022 FAIL: verified cursor lacks PASS evidence result field; this is a formal cursor evidence predicate failure, NOT a codec test failure. M0 intake accepts frozen code scoped only, does not endorse H30 formal source audit.",
+      "stage_commit": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+      "change_commit": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+      "files": "10 exact frozen M3 codec/src blobs, none of the unchanged dependency/root/Go files",
+      "native_main": {
+        "link_fec_mtu": 39047975619,
+        "wire_codec": 39047975760,
+        "record_wire": 39047975680,
+        "all": "success"
+      },
+      "default_backend": "scalar, native-isal optional default off"
+    },
+    "M4": {
+      "task": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
+      "frozen": "b7bcde7dde64633532cae99460eb00855a2e119a",
+      "worker_action": 39006105820,
+      "worker_count": "94/94 PASS",
+      "central_code_scope": 39006312629,
+      "status": "COMPONENT_ACCEPTED_ALREADY_IN_MAIN_NO_REIMPORT",
+      "why": "M4 frozen ipv4_tcp.rs/linux_batch.rs/linux_rx_batch.rs/linux_raw_carrier.rs blobs already identical main; only linux_driver_outcome_lease.rs worker has additional scoped test variant, original main owns stronger integration; no overwrite or conflicting worker edits."
+    }
+  },
+  "original_M0_actually_tested": {
+    "source": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+    "go_tls_rust_kernel_run": 39047975684,
+    "conclusion": "success",
+    "binary_artifact": {
+      "id": 12106243977,
+      "digest": "sha256:fa0bd2061f3801800dabe61a7f13e13907e1c9efb7e290e102c1c4c9196afeae"
+    },
+    "result_artifact": {
+      "id": 12106995599,
+      "digest": "sha256:794bd7527a57885c084d7aa8f90249e94e105ede8f524c91d318bd47ceff19c7"
+    },
+    "coverage": "Original Go cold TLS authenticated v4, active independent Rust RX/TX real Linux raw/TUN, 8/8 directions, IPv6 filter no 750ms lock wait, netlink path shrink 65536->1500 fail closed, restore raw driver lease only when MTU recovered, 1728B inner TUN packet above negotiated single-LINK budget explicitly rejected, immediate next 52B small kernel accepted, active Stop Release and retired owner cannot restart",
+    "no_automatic_fragment": "Oversize at original TX still FAIL-CLOSED; real LINK fragment issue/seal/reassembly original S2C Go peer NOT_RUN, cannot claim logical packet delivered"
+  },
+  "paired_normal_off": {
+    "harness_source": "91a29a3ac156c158a53cc3cbcae8ebfe38d9f086",
+    "baseline_A": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
+    "code_B": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+    "scope": "Same Go TLS fixture and toolchains/lock, separate Actions one P10 scenario each, A/B sequential same measure job/VM; 10s warmup+60s offered 10 Mbps each direction; both legs 0 missing, 0 invalid and full delivered; developer not product",
+    "AB": {
+      "run": 39048219356,
+      "conclusion": "success",
+      "cpu_s_gib_A": 104.53681964038798,
+      "cpu_s_gib_B": 109.32933442519729,
+      "B_change_pct": 4.584523234297544,
+      "p99_c2s_us": {
+        "A": 206,
+        "B": 305
+      },
+      "p99_s2c_us": {
+        "A": 280,
+        "B": 292
+      },
+      "build_artifact": {
+        "id": 12106003763,
+        "digest": "sha256:e8e09a3aede9e4a176b1383443102b9a051eccce1a7862040a36dcf3f61115b3"
+      },
+      "result_artifact": {
+        "id": 12106880794,
+        "digest": "sha256:bb3308fdb46f7483899bc9f0d45ccd5fe5b6f96405f2b74653f375d679f5634a"
+      }
+    },
+    "BA": {
+      "run": 39048219347,
+      "conclusion": "success",
+      "cpu_s_gib_A": 79.71353308823733,
+      "cpu_s_gib_B": 78.55330122139397,
+      "B_change_pct": -1.4555017471864717,
+      "p99_c2s_us": {
+        "A": 128,
+        "B": 140
+      },
+      "p99_s2c_us": {
+        "A": 142,
+        "B": 165
+      },
+      "build_artifact": {
+        "id": 12106825626,
+        "digest": "sha256:c4bba1b690aa383be3c9dcd0b3a589bc361a4fbb7a78ed1571e6d4eed39af233"
+      },
+      "result_artifact": {
+        "id": 12107155128,
+        "digest": "sha256:6e396fe3f1a8f5f442c97f7f5fff073f495ce92d862b542b426505cfdd72270d"
+      }
+    },
+    "interpretation": "CPU benefit inconsistent by order; inconclusive. Both p99 slightly/noticeably higher for B within own paired run; no product conclusion, targeted 20pps SPARSE independent first-arrival probe requested to check low-load risk, do not change 024 tuning."
+  },
+  "failures_and_pending": {
+    "first_M0_R0_023_real_oversize_hol": {
+      "run": 39044836209,
+      "result": "FAIL small-after-oversize had no kernel TX"
+    },
+    "route_coalesce_wait": {
+      "run": 39045124125,
+      "result": "FAIL despite netlink healthy/refresh, driver original scoped budget remained invalid"
+    },
+    "first_raw_rearm": {
+      "run": 39045487282,
+      "result": "FAIL: repaired raw FD prematurely after MTU shrink invalidated existing hard gate"
+    },
+    "fixed_code": {
+      "source": "970a54fc753ba136e9106e6783c067ab282f4444",
+      "run": 39045859337,
+      "result": "success"
+    },
+    "native_regression_codec": {
+      "run": 39047975666,
+      "source": "ede83b98edba1fee6f73bc99454040cc95392d4d",
+      "result": "FAIL_240S_SERIAL_TIMEOUT",
+      "note": "All other selected native functional groups PASS, codec reported 114 tests but none failed (process timed out)"
+    },
+    "native_regression_adjusted": {
+      "run": 39048697568,
+      "source": "d8a11d4940e1f6be194666bd2103a4ab99b391c1",
+      "status": "CHECK_LATEST_PENDING_WHEN_WRITTEN",
+      "reason": "Existing worker CODE passed functional in parallel; use test-threads=4 for codec functional only, CPU benchmark remains isolated."
+    },
+    "SPARSE_A_B": {
+      "run": 39049004790,
+      "workflow_source": "a207e987bed587ea7a99ce893df504165edc4d3a",
+      "status": "CHECK_LATEST_PENDING_WHEN_WRITTEN",
+      "reason": "Targeted sparse first-delivery p99, not a repeated P10/seed retry"
+    }
+  },
+  "open": [
+    "R0-023 real original authenticated LINK super-MTU fragment sealing & peer reassembly",
+    "Game multi-lane real Go admission + M3 FEC + M4 driver verified per lane",
+    "M2 actual control receipt AEAD/replay/PN to typed ingress, recovery transmit driver contract",
+    "M3 final H30 central audit invalid verified evidence result field",
+    "Full product R0-023/oversize/Stop matrix, physical platform, Windows/ARM native, source-locked FEC-on and Game scenario",
+    "M0 merged native-functional codec 240s serial timeout corrected Action outcome not yet settled",
+    "Performance causal/latency risk remains inconclusive pending sparse result"
+  ],
+  "next_action": "Review sparse and adjusted native codec result first; if regression persists diagnose source/path and record true FAIL. Then implement only bounded authenticated LINK fragment TX and typed repair ingress on original V4 owner, full Stop + borrow/MTU gating; FEC-on/Game scenario runs only when physically wired and frozen. Never rerun D10 or reopen 024 tuning."
+}

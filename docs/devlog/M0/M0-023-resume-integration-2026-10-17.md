@@ -16,3 +16,15 @@
 
 
 - 反向 [BA Action39045641512](https://github.com/lly8666/wbd-next/actions/runs/39045641512) SUCCESS，M0 workflow `a4ca2fe` 的 `measure_order=BA` 只跑这一场景：同一测量 job 的 ISA-L 先行（52631块/1.24988CPU秒、p99 codec 34846ns），scalar 后行（1996块/1.25186CPU秒、p99 codec 704415ns），10/10原始窗口有效。build/result IDs+SHA在原M3 evidence JSON 的 `reverse_BA`。两个 runner 的倍率不相加、不直接比较绝对CPU。前一条 AB receipt 保留。M3角色正式交付及Go V4 FEC-on仍未因此直接通过。
+
+## 2026-10-17 · M1/M2/M3/M4 精确组件验收与 R0-023 阶段实际接线
+
+- 原 Normal/FEC off 基线永远固定 `fca4456313e59c0a67f4d8b98959a62d2af71b12`，历史 D10 39032995995 FAIL/INCONCLUSIVE 原样保留；新 M0 CODE `ede83b98edba1fee6f73bc99454040cc95392d4d`。
+- M1 Game013 CODE `e2050aec` 已 117/117 + central scope PASS，main `7d0a1c7` 只导入 Game 两文件+mod 声明，不倒灌 worker 旧 memory/early_rx/generation；main native-functional 39047827609 PASS。
+- M2 恢复010 CODE `654a3c1` 70/70 + central scope PASS，main `006cab6` 只导入 typed ingress、rx_feedback、workpack_tests+lib 声明，保留 main 原优化过的 receipt.rs；main recovery/native 39047929179 PASS。
+- M3 CODE `422a261` 113 PASS/scalar、真实 native ISA-L 3 PASS、独立同机 AB39044413886/BA39045641512 PASS；`ede83b9` 只导入十个不同 codec/src blobs，原 record/wire/LINK functional 专项全 PASS，默认 native feature 仍 OFF。工位 H30 central39046275022 **FAIL verified cursor lacks reviewed PASS evidence**，之前 H29 central PASS；不能声称最终工位 H30 形式核验通过。
+- M4 PACK013 CODE `b7bcde7` 94/94、原始4个平台 hot-path blobs 与 main 完全相同，不重复导入；M4 平台仅历史 scoped 单测不同。
+- 原始 protected Go TLS→Rust V4→真实 raw/TUN 组合 native 39047975684 PASS：MTU 下降 fail-closed、恢复后 driver lease 按原 generation 安全重建、大1728B真实内层 IP 在现有单帧预算下拒绝、随后的小包继续 kernel copied、活跃双 worker Stop/Release+旧句柄拒绝重启。只证明 **安全拒绝** 而非 LINK 超 MTU 自动分片后交付；完整 R0-023/产品资格仍 OPEN。
+- A=`fca4456` vs B=`ede83b9` 严格同机配对 P10：AB39048219356 CPU-s/GiB 104.54→109.33 (+4.58%)，BA39048219347 79.71→78.55 (−1.46%)，A/B两方向0 missing/invalid；**CPU因顺序/宿主变化结论不定**。p99 B 各leg 稍高，不宣布无回退；20pps SPARSE AB39049004790 已用于下一次限定首到验证，未得结果前不编造。
+- Unified native functional `39047975666` codec 组240秒串行 timeout（其他子组PASS）；原 M3 worker suite 串行口径与 worker 多线程不一致。M0 `d8a11d` 仅把统一 codec 功能组测试设为4threads，保持性能独立跑，Action39048697568尚待实际归档；原红灯保留，不能按任何单独专项 PASS 伪造整个 workflow SUCCESS。
+- 证据 `docs/evidence/M0/M0-023-modules-intake-ede83b98edba1fee6f73bc99454040cc95392d4d.json` 保存来源、产物 GitHub 提供的 SHA256/运行ID、差异清单与未验范围。当前 Go Game / repair typed 只是组件导入、尚未完成实际认证接线，整体产品功能保持 OFF。下一步仅接 live V4 owner 的 LINK fragment TX / M2 ingress，按必要结果选取组合回归，不做024微调、容量加压或 D10 重跑。
