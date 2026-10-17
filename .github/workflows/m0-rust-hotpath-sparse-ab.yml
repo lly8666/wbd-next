@@ -190,7 +190,7 @@ jobs:
              "non_overlapping":meta["A"]["end_monotonic_ns"]<=meta["B"]["start_monotonic_ns"],
              "flags":manifests["flags"],"common_harness":manifests["common_harness_sha256"],
              "topology":"identical original Go fixture, original Rust owner kernel raw/TUN",
-             "rate_basis":"UDP application payload per direction at 10Mbps (inner IPv4 rate is higher)",
+             "rate_basis":"UDP application payload 64/256B equal count at 20 packets per second per direction",
              "clock_sampling":"same approx10Hz auxiliary Rust THREAD CPU sampling; primary comparison combined process CPU/GiB",
              "product_qualification":"NOT_RUN","production_features":0}
           for leg in ("A","B"):
@@ -208,7 +208,7 @@ jobs:
               "sparse":x["explicit_sparse_fixture"],
               "warmup_seconds":x["warmup_seconds"],
               "mix":x["mix_packet_ipv4_lengths_bytes"],
-              "declared_app_payload_sizes":[64,256,1200],
+              "declared_app_payload_sizes":[64,256],
               "process_cpu_seconds":cpu,
               "cpu_s_per_GiB_delivered":cpu/(delivered/(1024**3)) if delivered else None,
               "delivered_udp_payload_bytes":delivered,
