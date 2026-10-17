@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 125,
-  "checkpoint_sha": "fc578cb148ef952bb8836497ff08844dccc9bfbf",
+  "sequence": 126,
+  "checkpoint_sha": "f54b7e68e86fdda773456209514a8857ca94d991",
   "progress": "paused",
   "task_id": "R1-M0-HOTPATH-COST-024",
   "current_task": "024 scoped TUN nonblocking and TX batch-prefix completion PATCH DONE; native real TUN IPv6 cross-direction first delivery + typed partial/uncertain/EAGAIN tests PASS, paired P10 AB/BA and 20pps sparse PASS; CPU small advantage INCONCLUSIVE. Whole 024 product/trace qualification remains PAUSED at historical D10 FAIL.",
   "why_now": "User explicitly bounded two post-direction-split defects. Freeze main A 80b47c before code, implement B 9c76636 on real owner engine only, source-lock workflow 7b3abb and final native functional fca445. No unresolved main Actions at handoff; no M4 worker driver file touched.",
   "done_when": "This bounded patch done at reviewed real native and exact same-job P10 AB/BA and sparse. Keep pre-existing D10 fail, R0-023/oversize/physical/product/C50 qualification OPEN, unverified=true. No more 024 microoptimization for small CPU gain.",
-  "next_action": "M0 resume separately authorized main-stage integration of frozen M1/M4 (verify branch/source/active writer), preserving R0-023, oversize, Stop and security gates; update main task assignment for new bounded integration scope before unrelated code.",
+  "next_action": "M0 continue next independently authorized integration stage: scope original R0-023 protected Go→Rust real raw/TUN Stop/over-MTU gates, pin frozen M1/M4 sources, document exact uncovered seams before a minimal code integration. Do not touch active M4 branch or reopen 024 tuning.",
   "unverified": true,
   "last_tested_source": "fca4456313e59c0a67f4d8b98959a62d2af71b12",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/decisions/M0-game-recovery-parallel-workpacks-2026-10-17.md"
   ],
   "open_requests": [],
-  "partial_summary": "New SOURCE evidence independent: native39041377796 true IPv6 filtered-to-C2S first arrival <400ms, exact TX 0/1/32/33 partial/unknown typed test, kernel MTU/no-HOL PASS; P10 AB39041159892 −1.75%, BA39041159913 −0.80%, both 0 missing, sparse39041159871 0 missing. Positive small/no stable causal CPU claim. No D10 rerun or production qualification."
+  "partial_summary": "Patch concluded with original kernel/Go/TLS native39041377796 and paired P10 AB39041159892(-1.75%) BA39041159913(-0.80%) SPARSE39041159871 all PASS 0 missing/duplicate/invalid/injector errors verified from raw A/B JSON. CPU small benefit INCONCLUSIVE, old D10 still FAIL. M1/M4 frozen-source blob audit confirms module content mostly already in main; only additive original M0 helpers and driver-loan test variants differ; no duplicate import or R0-023 qualification."
 }
