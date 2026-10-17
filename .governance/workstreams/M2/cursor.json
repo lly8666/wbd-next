@@ -4,25 +4,26 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 20,
-  "checkpoint_sha": "5c291d85554c7badc1e35e95114740d9d2b147d5",
+  "sequence": 21,
+  "checkpoint_sha": "70e76bc0f0693a0b2bffd95f90e23976ce7df091",
   "progress": "partial",
-  "task_id": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008",
-  "current_task": "R2-M2-RACK-POSITIVE-WITNESS-INDEX-008 scoped pure state atom complete, code source7875137949f61fead1374d2933798c61814adb92 55/55 native PASS; M0 one-shot checker sync5bfacc7 Governance38721567164 PASS, evidence recovery S4ecb8f4 Governance38733820654 PASS; corrected source-pinned evidence S5c291d8 Governance38734942015 SUCCESS. Product integration NOT_RUN.",
-  "why_now": "After recovered code/CI checker source, first cursor H9669019 Governance38734245868 FAIL inconsistent ready_for_integration/unverified; second H5d09dda Governance38734405285 ROLE_SCOPE_PASS but structure FAIL supplemental evidence missing source_sha. Corrected evidence S5c291d8 now Governance38734942015 success; this cursor-only H seq20 checkpoints corrected evidence S without altering source or erasing FAILs.",
-  "done_when": "Keep 55/55 exact-source R2 native success worker-native38706944249; M0-approved immutable checker mirror5bfacc7 scope PASS 38721567164; recovered evidence S4ecb8f4 Governance38733820654 PASS; corrected evidence S5c291d8 Governance38734942015 PASS. H is cursor-only and separately audited. No real engine, authentication adapter, CPU, latency, driver or physical product qualification.",
-  "next_action": "No new M2 task claimed. Pure recovery implementation handed off as partial/unverified component; M0 owns real authenticated Go V4/engine/platform integration, M1/M3 ownership/cipher handle boundaries and end-to-end product tests. Retain H1/H2 governance FAIL and read-only continuity JSON parsing observation; await formal M2 next assignment.",
+  "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+  "current_task": "PACK-009 first RX feedback and controlled frozen-handle batch shipped. CODE269fd8f worker-native38998072121 63/63 PASS, G2 38998072124 and static38998072111 PASS, source Governance38998072117 PASS. Evidence S70e76bc own Governance38998363415 FAIL due live main/source moving mid audit, not rust/code failure. Full tail PTO fairness still in progress.",
+  "why_now": "main registry assigned PACK-009, previous M2 Hc74a4fd independent Governance38735393188 PASS. Source 67b9ed1 adds bounded RX dirty/repeat; source269fd8f adds two controlled Arc FrozenRecordHandle/driver_read and budget/PT0 tests; exact compiled-once R2 native63/63 passed. Evidence S70e76bc records artifact hashes and remaining one-tail-per-timer contradiction. Its own Governance38998363415 failed ROLE_SCOPE_FAILED control or source moved mid-audit; preserve status, do not rerun identical failing audit.",
+  "done_when": "Continue assigned full PACK-009: scoped recovery feedback/2-attempt repair/sparse budget/expiry/load/native frozen handle and A01-A06,R01-R04 fake-mono tests; correct unreported PTO 32-candidates-per-lane tail storm without preventing 32 real RACK eligible candidates or freshness, then exact-source Actions evidence S/H. New 8 tests plus 55 old succeeded CODE269fd8f. Go V4/engine/driver/physical NOT_RUN.",
+  "next_action": "Within PACK-009, resolve module08 per-lane PTO tail single-probe bound versus existing 32 unreported wake tests, preserve indexed RACK bounded wake/expiry and fresh fairness; then verify with exact-source Actions and record evidence. M0 owns actual Go V4 authenticated adapter/M1 arena/platform integration.",
   "unverified": true,
-  "last_tested_source": "7875137949f61fead1374d2933798c61814adb92",
+  "last_tested_source": "269fd8f88ba6df97ebb8fe1f3e29cc58b1ca90c2",
   "evidence_refs": [
     "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.json",
-    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008-governance-recovery.json"
+    "docs/evidence/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008-governance-recovery.json",
+    "docs/evidence/M2/R2-M2-WORKPACK-009-receiver-feedback-and-handle.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/devlog/M2/R2-M2-RACK-POSITIVE-WITNESS-INDEX-008.md",
-    "docs/evidence/M2/R2-M2-BOUNDED-TIMER-BURST-007.json"
+    "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md"
   ],
-  "partial_summary": "M2 RACK positive witness index 008 source7875137 native55/55 compiled-once worker-native38706944249 PASS, G2/static PASS. M0 immutable one-off approved checker mirror commit5bfacc7 exactly parent35c45f2, sole file blob69bebb9; Governance38721567164 ROLE_SCOPE_PASS 51. Evidence S4ecb8f4 Governance38733820654 ROLE_SCOPE_PASS 52. Failed H9669019 Governance38734245868 metadata ready+unverified conflict; failed H5d09dda Governance38734405285 ROLE_SCOPE_PASS 54 but structure BLOCKED supplemental evidence missing source_sha. Corrected evidence S5c291d8 adds source_sha7875137 and archives both H FAIL; Governance38734942015 SUCCESS job116421757711 artifact11971707440 sha256:ed134a6b88d4de567f3a237ba4285c275e7559425881f08a33d372f02c80bb14. H seq20 cursor-only checkpoint S2, progress partial/unverified true, product GoV4/auth/kernel/CPU/alloc/500Mbps/physical NOT_RUN; no new M2 task."
+  "partial_summary": "Remote recovery CLEAN 008 Hc74a4fd governance38735393188 PASS, registry rev2 epoch1 newly assigned M2 PACK-009. CODE S67b9ed1 adds bounded RX feedback and 6 tests; CODE S269fd8f adds two controlled Arc FrozenRecordHandle driver_read + receipt/PTO/budget scenarios. Exact worker-native38998072121 compiled-once 63/63 success binarysha ed96430e, G2 38998072124 SUCCESS, static38998072111 SUCCESS, source Governance38998072117 ROLE_SCOPE_PASS 58. Evidence S70e76bc stores source-locked hashes, notes real M0 authenticated GoV4/driver not run and sender tail issue; its Governance38998363415 FAIL deterministic outcome 'control or source moved mid-audit' (artifact12087834166), not code failure. H seq21 checkpoint S70e76bc progress partial/unverified; do not claim full PACK or product. Next act fix 32 unreported-tail eligibility vs module08 <=1 tail timer while retaining RACK bound. No root shared edits."
 }
