@@ -140,3 +140,403 @@ fn r1_tx_extended_id_wrap_skip_reserved_zero_and_monotone_clock(){
     assert_eq!(FecTxOwner::new(0,20_000).err(),Some(TxError::InvalidBudget));
     assert_eq!(FecTxOwner::new(1,MAX_RETAINED+1).err(),Some(TxError::InvalidBudget));
 }
+
+#[test]
+fn r1_tx_20_20_sustained_full_blocks_ready_first_parity_bounded_chunks(){
+    use crate::fec_tx::MAX_PARITY_FIRST_SEND_ROWS_PER_TURN;
+    assert_eq!(MAX_PARITY_FIRST_SEND_ROWS_PER_TURN,4);
+    for length in [256usize,512,1200]{
+        let wire_limit=length+FEC_HEADER;
+        let mut tx=FecTxOwner::new(1,200_000).unwrap();
+        let mut already_sent_systematic=0usize;
+        let mut fresh_parity_ready=0usize;
+        let mut maximum_chunk=0usize;
+        let mut parity_wire_bytes=0usize;
+        // Healthy continuous 20:20: every submitted source immediately
+        // creates exactly one systematic, without waiting for full block
+        // or a 32ms sparse flush. No source is classified as repair.
+        for block in 0..3usize{
+            for i in 0..20usize{
+                let source=vec![(block*20+i) as u8+1;length];
+                let mut batch=tx.submit(&source,(block*20+i) as u64,
+                    20,wire_limit,false).unwrap();
+                assert_eq!(batch.systematic.len(),1);
+                assert_eq!(batch.systematic[0].len(),length+FEC_HEADER);
+                assert_eq!(h(&batch.systematic[0]).shard_index,i as u8);
+                assert_eq!(h(&batch.systematic[0]).block_id,block as u32+1);
+                already_sent_systematic+=batch.systematic.len();
+                if i<19{
+                    assert_eq!(batch.parity_pending(),0);
+                }else{
+                    assert_eq!(batch.parity_pending(),20);
+                    while batch.parity_pending()>0{
+                        // At most four parity rows per ready-scheduler turn,
+                        // not a purported outer repair retransmission.
+                        let chunk=batch.take_ready_parity_chunk();
+                        maximum_chunk=maximum_chunk.max(chunk.len());
+                        assert!(chunk.len()<=4);
+                        for (p,wire) in chunk.iter().enumerate(){
+                            let header=h(wire);
+                            assert_eq!(header.block_id,block as u32+1);
+                            assert_eq!(header.data_count,20);
+                            assert_eq!(header.parity_count,20);
+                            assert_eq!(header.shard_size,length as u16);
+                            assert!((20..40).contains(&header.shard_index));
+                            assert!(header.lengths[..20].iter().all(|&x|x==length as u16));
+                            assert_eq!(wire.len(),length+FEC_HEADER);
+                            assert!(p<4);
+                            parity_wire_bytes+=wire.len();
+                        }
+                        fresh_parity_ready+=chunk.len();
+                        // Between chunks an external scheduler can service
+                        // fresh ordinary packets; this fixture does not
+                        // claim actual dispatch timing or NIC send success.
+                    }
+                    assert!(batch.take_ready_parity_chunk().is_empty());
+                }
+            }
+        }
+        assert_eq!(already_sent_systematic,60);
+        assert_eq!(fresh_parity_ready,60);
+        assert_eq!(maximum_chunk,4);
+        assert_eq!(parity_wire_bytes,60*(length+FEC_HEADER));
+        assert_eq!(tx.stats().source_shards,60);
+        assert_eq!(tx.stats().parity_shards,60);
+        assert_eq!(tx.stats().full_blocks,3);
+        assert_eq!((tx.stats().pending_blocks,tx.stats().retained_bytes),(0,0));
+        assert!(tx.flush_due(3000).unwrap().parity.is_empty());
+    }
+}
+
+#[test]
+fn r1_tx_incremental_real_gf_four_row_job_full_partial_wire_match(){
+    use crate::fec_tx::FecParityJob;
+    use crate::fec_math::ReedSolomon20;
+    let codec=ReedSolomon20::new().unwrap();
+    for k in 1..=20usize{
+        for r in [4u8,8,10,12,16,20]{
+            for length in [1usize,63,64,65,257,512,1200]{
+                if length==1200 && k!=20{continue;}
+                let mut parts=(0..k).map(|i|{
+                    let n=1+(i*17+3)%length;
+                    (0..n).map(|j|((i*19+j*7+3)%251) as u8).collect::<Vec<_>>()
+                }).collect::<Vec<_>>();
+                parts[k-1]=(0..length).map(|j|((k*19+j*7+3)%251) as u8).collect();
+                let refs=parts.iter().map(Vec::as_slice).collect::<Vec<_>>();
+                let all=codec.final_parity_wires(0x01020304,&refs,r,length+FEC_HEADER).unwrap();
+                let expected_bytes=parts.iter().map(Vec::len).sum::<usize>();
+                let mut job=FecParityJob::new(0x01020304,parts,r,length+FEC_HEADER).unwrap();
+                assert_eq!(job.retained_bytes(),expected_bytes);
+                assert_eq!(job.pending_rows(),k.min(r as usize));
+                let mut emitted=Vec::new();
+                while !job.is_done(){
+                    let first=job.first_parity_index();
+                    let chunk=job.take_next_rows(&codec).unwrap();
+                    assert!(!chunk.is_empty()&&chunk.len()<=4);
+                    assert_eq!(h(&chunk[0]).shard_index,first);
+                    for (i,wire) in chunk.iter().enumerate(){
+                        let head=h(wire);
+                        assert_eq!(head.shard_index,first+i as u8);
+                        assert_eq!(head.parity_count,r); // configured, NOT min(k,r)
+                        assert_eq!(head.data_count,k as u8);
+                        assert_eq!(head.shard_size,length as u16);
+                    }
+                    emitted.extend(chunk);
+                }
+                assert_eq!(emitted,all,"k={k} r={r} L={length}");
+                assert_eq!(job.retained_bytes(),0);
+                assert_eq!(job.pending_rows(),0);
+                assert!(job.take_next_rows(&codec).unwrap().is_empty());
+            }
+        }
+    }
+}
+#[test]
+fn r1_tx_incremental_job_invalid_input_terminal_and_minimal_budget(){
+    use crate::fec_tx::FecParityJob;
+    use crate::fec_math::{ReedSolomon20,FecMathError};
+    assert!(matches!(FecParityJob::new(0,vec![b"x".to_vec()],4,57),Err(TxError::IdExhausted)));
+    assert!(matches!(FecParityJob::new(1,vec![b"x".to_vec()],5,57),Err(TxError::UnsupportedProfile)));
+    assert!(matches!(FecParityJob::new(1,vec![b"x".to_vec()],4,56),Err(TxError::InvalidBudget)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![]],4,100),Err(TxError::InvalidSource)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![7;45]],4,100),Err(TxError::InvalidSource)));
+    assert!(matches!(FecParityJob::new(1,vec![vec![1];21],4,100),Err(TxError::InvalidSource)));
+    let rs=ReedSolomon20::new().unwrap();
+    let a=[1u8];let b=[2u8];
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,0,0),Err(FecMathError::InvalidIndex));
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,2,1),Err(FecMathError::InvalidIndex));
+    assert_eq!(rs.encode_rows_active(&[&a,&b],4,1,2),Err(FecMathError::InvalidIndex));
+    let mut job=FecParityJob::new(99,vec![b"X".to_vec()],20,57).unwrap();
+    assert_eq!(job.take_next_rows(&rs).unwrap().len(),1);
+    assert!(job.is_done());assert_eq!(job.retained_bytes(),0);
+}
+
+#[test]
+fn r1_tx_owner_cooperative_20_20_sustained_real_rows_and_bounded_backpressure(){
+    use crate::fec_tx::{MAX_COOPERATIVE_PARITY_JOBS,MAX_PARITY_FIRST_SEND_ROWS_PER_TURN};
+    assert_eq!(MAX_COOPERATIVE_PARITY_JOBS,64);
+    for length in [256usize,512,1200]{
+        let wire=length+FEC_HEADER;
+        let budget=20*length; // exactly one full source block
+        let mut legacy=FecTxOwner::new(1,budget).unwrap();
+        let mut coop=FecTxOwner::new_cooperative(1,budget).unwrap();
+        let mut systematic=0usize;let mut parity_rows=0usize;
+        for block in 0..3usize {
+            let mut expected=Vec::new();
+            for i in 0..20usize{
+                let source=vec![1+(block*20+i) as u8;length];
+                let left=legacy.submit(&source,(block*20+i) as u64,20,wire,false).unwrap();
+                let right=coop.submit(&source,(block*20+i) as u64,20,wire,false).unwrap();
+                assert_eq!(right.systematic,left.systematic);
+                assert!(right.parity.is_empty()); // no synchronous parity
+                expected.extend(left.parity);
+                systematic+=right.systematic.len();
+            }
+            assert_eq!(expected.len(),20);
+            let before=coop.stats();
+            assert_eq!((before.pending_parity_jobs,before.pending_parity_rows,
+                before.pending_parity_source_bytes,before.retained_bytes),
+                (1,20,budget,budget));
+            let next_id=coop.next_block_id_ext();
+            assert_eq!(coop.submit(b"blocked",(block*20+19) as u64,20,wire,false),
+                Err(TxError::Backpressure));
+            assert_eq!(coop.next_block_id_ext(),next_id);
+            assert_eq!(coop.stats().source_shards,systematic as u64);
+            let mut out=Vec::new();
+            for quantum in 0..5 {
+                let batch=coop.poll_cooperative_parity().unwrap();
+                assert!(batch.systematic.is_empty());
+                assert_eq!(batch.parity.len(),MAX_PARITY_FIRST_SEND_ROWS_PER_TURN);
+                assert_eq!(h(&batch.parity[0]).shard_index,20+(quantum*4) as u8);
+                out.extend(batch.parity);
+                if quantum<4 {
+                    assert_eq!(coop.stats().pending_parity_source_bytes,budget);
+                }
+            }
+            assert_eq!(out,expected);
+            assert_eq!((coop.stats().pending_parity_jobs,
+                        coop.stats().pending_parity_rows,
+                        coop.stats().retained_bytes),(0,0,0));
+            assert!(coop.poll_cooperative_parity().unwrap().parity.is_empty());
+            parity_rows+=out.len();
+        }
+        assert_eq!(systematic,60);
+        assert_eq!(parity_rows,60);
+        assert_eq!(coop.stats().source_shards,60);
+        assert_eq!(coop.stats().parity_shards,60);
+        assert_eq!(coop.stats().full_blocks,3);
+        assert_eq!(coop.stats().backpressure_rejections,3);
+    }
+}
+#[test]
+fn r1_tx_owner_cooperative_queue_metadata_limit_and_time_reconfig(){
+    use crate::fec_tx::MAX_COOPERATIVE_PARITY_JOBS;
+    let mut tx=FecTxOwner::new_cooperative(1,100).unwrap();
+    // 64 tiny closed jobs consume just 64 payload bytes; metadata bound
+    // must still be enforced independently of the payload bound.
+    for n in 0..MAX_COOPERATIVE_PARITY_JOBS {
+        let batch=tx.submit(&[n as u8+1],n as u64,4,100,false).unwrap();
+        assert_eq!(batch.systematic.len(),1);
+        assert!(batch.parity.is_empty());
+        assert!(tx.flush_all(n as u64).unwrap().parity.is_empty());
+    }
+    let stats=tx.stats();
+    assert_eq!((stats.pending_parity_jobs,stats.pending_parity_rows,
+                stats.pending_parity_source_bytes,stats.retained_bytes),(64,64,64,64));
+    let source=tx.submit(b"new",65,4,100,false).unwrap();
+    assert_eq!(source.systematic.len(),1);
+    assert_eq!(tx.flush_all(65),Err(TxError::Backpressure)); // never drop block65
+    assert_eq!((tx.stats().pending_blocks,tx.stats().pending_parity_jobs),(1,64));
+    let first=tx.poll_cooperative_parity().unwrap();
+    assert_eq!((first.parity.len(),h(&first.parity[0]).block_id),(1,1));
+    assert!(tx.flush_all(66).unwrap().parity.is_empty());
+    assert_eq!(tx.stats().pending_parity_jobs,64);
+    let mut count=1;
+    while tx.stats().pending_parity_jobs>0{
+        let c=tx.poll_cooperative_parity().unwrap();
+        assert_eq!(c.parity.len(),1);
+        count+=1;
+    }
+    assert_eq!(count,65);
+    assert_eq!(tx.stats().retained_bytes,0);
+    let mut reconfig=FecTxOwner::new_cooperative(90,100).unwrap();
+    let a=reconfig.submit(b"abc",100,20,100,false).unwrap();
+    assert_eq!(h(&a.systematic[0]).block_id,90);
+    let b=reconfig.submit(b"new",101,8,100,false).unwrap();
+    assert_eq!(h(&b.systematic[0]).block_id,91);
+    assert!(b.parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,1);
+    assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,90);
+    // New block began at 101ms, so its immutable deadline is 133ms.
+    assert!(reconfig.flush_due(132).unwrap().parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,0);
+    assert!(reconfig.flush_due(133).unwrap().parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,1);
+    assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,91);
+}
+
+#[test]
+fn r1_tx_three_classes_absolute_deadline_cooperative_fifo_and_empty(){
+    let mut tx=FecTxOwner::new_cooperative(20,10_000).unwrap();
+    let a=tx.submit(&[0x21;32],0,20,1256,false).unwrap();
+    let b=tx.submit(&[0x31;400],1,20,1256,false).unwrap();
+    let c=tx.submit(&[0x41;800],2,20,1256,false).unwrap();
+    assert_eq!([h(&a.systematic[0]).block_id,h(&b.systematic[0]).block_id,
+        h(&c.systematic[0]).block_id],[20,21,22]);
+    assert_eq!(tx.next_deadline_ms(),Some(32));
+    assert_eq!(tx.stats().retained_bytes,1232);
+    assert!(tx.flush_due(31).unwrap().parity.is_empty());
+    for (ms,jobs) in [(32,1),(33,2),(34,3)]{
+        assert!(tx.flush_due(ms).unwrap().parity.is_empty());
+        assert_eq!(tx.stats().pending_parity_jobs,jobs);
+    }
+    assert_eq!((tx.stats().pending_blocks,tx.stats().retained_bytes),(0,1232));
+    for id in 20..=22u32{
+        let part=tx.poll_cooperative_parity().unwrap();
+        assert_eq!(part.parity.len(),1);
+        assert_eq!(h(&part.parity[0]).block_id,id);
+        assert_eq!(h(&part.parity[0]).parity_count,20);
+    }
+    assert_eq!(tx.stats().retained_bytes,0);
+    assert!(tx.poll_cooperative_parity().unwrap().parity.is_empty());
+    assert_eq!(FecTxOwner::new(1,10_000).unwrap().poll_cooperative_parity(),
+        Err(TxError::InvalidBudget));
+}
+#[test]
+fn r1_tx_terminal_block_id_refusal_preserves_unsent_partial_parity(){
+    use crate::fec_math::ReedSolomon20;
+    let id=u64::MAX-1;
+    let math=ReedSolomon20::new().unwrap();
+    let expected=math.final_parity_wires(id as u32,&[&b"A"[..],&b"B"[..]],4,100).unwrap();
+    for cooperative in [false,true]{
+        let mut tx=if cooperative{FecTxOwner::new_cooperative(id,100).unwrap()}
+            else{FecTxOwner::new(id,100).unwrap()};
+        let a=tx.submit(b"A",1,4,100,false).unwrap();
+        let b=tx.submit(b"B",2,4,100,false).unwrap();
+        assert_eq!(h(&a.systematic[0]).block_id,id as u32);
+        assert_eq!(h(&b.systematic[0]).shard_index,1);
+        assert_eq!(tx.next_block_id_ext(),u64::MAX);
+        // 32ms deadline would close the old block before reserve_id fails.
+        // Such a failure must not discard the parity of A and B.
+        assert_eq!(tx.submit(b"C",40,4,100,false),Err(TxError::IdExhausted));
+        assert_eq!(tx.stats().source_shards,2);
+        assert_eq!(tx.stats().retained_bytes,2);
+        assert_eq!(tx.next_deadline_ms(),Some(33));
+        let due=tx.flush_due(40).unwrap();
+        let parity=if cooperative{
+            assert!(due.parity.is_empty());
+            tx.poll_cooperative_parity().unwrap().parity
+        }else{due.parity};
+        assert_eq!(parity,expected);
+        assert_eq!(tx.stats().retained_bytes,0);
+        assert_eq!(tx.submit(b"D",41,4,100,false),Err(TxError::IdExhausted));
+        assert_eq!(tx.stats().source_shards,2);
+    }
+    // At exhausted IDs, synchronous memory pressure is also refused BEFORE
+    // it can close and lose a still-live old block's returned parity.
+    let mut pressure=FecTxOwner::new(id,2).unwrap();
+    pressure.submit(b"A",0,4,100,false).unwrap();
+    assert_eq!(pressure.submit(b"BC",1,4,100,false),Err(TxError::IdExhausted));
+    assert_eq!(pressure.stats().retained_bytes,1);
+    assert_eq!(pressure.flush_all(1).unwrap().parity.len(),1);
+}
+
+#[cfg(target_os="linux")]
+fn r1_fec_thread_cpu_ns()->Option<(&'static str,u64)>{
+    if let Ok(raw)=std::fs::read_to_string("/proc/thread-self/schedstat"){
+        if let Some(ns)=raw.split_whitespace().next().and_then(|s|s.parse::<u64>().ok()){
+            if ns>0{return Some(("schedstat_ns",ns));}
+        }
+    }
+    let raw=std::fs::read_to_string("/proc/thread-self/sched").ok()?;
+    let s=raw.lines().find(|s|s.trim_start()
+        .starts_with("se.sum_exec_runtime"))?.split_once(':')?.1.trim();
+    let (w,f)=s.split_once('.')?;
+    if f.len()!=6 || !f.bytes().all(|v|v.is_ascii_digit()){return None;}
+    Some(("sched_runtime_us",w.parse::<u64>().ok()?.checked_mul(1_000_000)?
+        .checked_add(f.parse::<u64>().ok()?)?))
+}
+#[cfg(target_os="linux")]
+fn r1_fec_cost_block(tx:&mut FecTxOwner,shards:&[Vec<u8>],coop:bool,
+    wire:usize,samples:&mut Vec<u64>){
+    use std::time::Instant;
+    use std::hint::black_box;
+    let mut rows=0;
+    for shard in shards{
+        let batch=tx.submit(shard,0,20,wire,false).unwrap();
+        assert_eq!(batch.systematic.len(),1);
+        rows+=batch.parity.len();
+        black_box(batch);
+    }
+    if coop{
+        for _ in 0..5{
+            let now=Instant::now();
+            let p=tx.poll_cooperative_parity().unwrap();
+            let ns=now.elapsed().as_nanos();
+            assert_eq!(p.parity.len(),4);
+            if samples.len()<2048{
+                samples.push(ns.min(u128::from(u64::MAX)) as u64);
+            }
+            rows+=p.parity.len();
+            black_box(p);
+        }
+    }
+    assert_eq!(rows,20);
+    assert_eq!(tx.stats().retained_bytes,0);
+}
+#[cfg(target_os="linux")]
+#[test]
+#[ignore = "source-locked Rust1.85.1 Release build-once CPU probe only"]
+fn r1_tx_cooperative_release_cpu_wall_diagnostic(){
+    use std::time::{Instant,Duration};
+    assert!(!cfg!(debug_assertions),"Release-only");
+    for len in [256usize,512,1200]{
+        let shards=(0..20).map(|i|(0..len)
+            .map(|j|((i*17+j*3+7)%251) as u8).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        for (rep,order) in [[false,true],[true,false],[false,true]].into_iter().enumerate(){
+            for coop in order{
+                let mut tx=if coop{FecTxOwner::new_cooperative(1,20*len).unwrap()}
+                    else{FecTxOwner::new(1,20*len).unwrap()};
+                let warm=Instant::now();
+                while warm.elapsed()<Duration::from_millis(1050){
+                    r1_fec_cost_block(&mut tx,&shards,coop,len+FEC_HEADER,&mut Vec::new());
+                }
+                let mut windows_ok=0usize;let mut windows_bad=0usize;
+                let mut active_wall=0u128;let mut cpu_total=0u128;
+                let mut samples=Vec::<u64>::new();let mut blocks=0usize;
+                while active_wall<Duration::from_millis(1125).as_nanos(){
+                    let wall=Instant::now(); // before CPU begin
+                    let cpu_start=r1_fec_thread_cpu_ns();
+                    let mut n=0usize;
+                    while n<64||wall.elapsed()<Duration::from_millis(250){
+                        r1_fec_cost_block(&mut tx,&shards,coop,len+FEC_HEADER,&mut samples);
+                        n+=1;
+                    }
+                    let cpu_end=r1_fec_thread_cpu_ns(); // before wall end
+                    let wall_ns=wall.elapsed().as_nanos();
+                    let cpu_ns=match (cpu_start,cpu_end){
+                        (Some((a,s)),Some((b,e))) if a==b&&e>=s
+                            &&u128::from(e-s)*100<=wall_ns*102=>Some(e-s),
+                        _=>None
+                    };
+                    if let Some(c)=cpu_ns{cpu_total+=u128::from(c);windows_ok+=1;}
+                    else{windows_bad+=1;}
+                    active_wall+=wall_ns;blocks+=n;
+                    println!("M3_FEC_CPU_RAW mode={} L={} repeat={} wall_ns={} cpu_ns={} clock_status={} blocks={}",
+                        if coop{"cooperative"}else{"sync"},len,rep,wall_ns,
+                        cpu_ns.unwrap_or(0),if cpu_ns.is_some(){"OK"}else{"INCONCLUSIVE"},n);
+                }
+                samples.sort_unstable();
+                let p99_wall=samples.get(samples.len().saturating_sub(1)*99/100)
+                    .copied().unwrap_or(0);
+                println!("M3_FEC_CPU_RESULT source=SOURCE_LOCK_REQUIRED mode={} L={} repeat={} qualified={} cpu_ns={} wall_ns={} windows_ok={} windows_bad={} blocks={} parity_rows={} p99_four_row_WALL_ns={} cpu_service_100us=NOT_QUALIFIED product=NOT_QUALIFIED packet_p99=NOT_QUALIFIED",
+                    if coop{"cooperative"}else{"sync"},len,rep,
+                    if windows_bad==0&&windows_ok>0{"SAME_WINDOW_CPU"}else{"CPU_INCONCLUSIVE"},
+                    if windows_bad==0{cpu_total}else{0},active_wall,windows_ok,
+                    windows_bad,blocks,20*blocks,p99_wall);
+                assert!(active_wall>=Duration::from_millis(1125).as_nanos()&&blocks>0);
+            }
+        }
+    }
+}

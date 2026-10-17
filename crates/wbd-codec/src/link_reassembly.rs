@@ -62,6 +62,28 @@ impl ReassemblyTable{
         Ok(Self{frame_mtu,min_frame_mtu,mode,
             assemblies:BTreeMap::new(),retired:BTreeMap::new(),last_now_ms:0})
     }
+    /// Owner-authorized MTU transition, not guessed from unauthenticated
+    /// traffic. Preserve existing packet assemblies and their immutable
+    /// per-packet stride across both MTU downshifts and upshifts.
+    ///
+    /// The RX envelope accepts the largest *previously authorized* frame
+    /// while old in-flight packets are draining; new frame production must
+    /// use the current TX FrameBudget, never this permissive RX highwater.
+    /// Keeping the smallest approved frame size retains a bounded declared
+    /// fragment-count test for packets created during any of these epochs.
+    pub fn update_authorized_frame_mtu(&mut self,current_frame_mtu:usize)
+        ->Result<(),ReassemblyError>{
+        if !(LINK_HEADER+1..=MAX_LOGICAL_DATAGRAM).contains(&current_frame_mtu){
+            return Err(ReassemblyError::InvalidBudget);
+        }
+        self.frame_mtu=self.frame_mtu.max(current_frame_mtu);
+        self.min_frame_mtu=self.min_frame_mtu.min(current_frame_mtu);
+        Ok(())
+    }
+    /// Receive-only bounds, not a transmitter budget.
+    pub fn accepted_frame_range(&self)->(usize,usize){
+        (self.min_frame_mtu,self.frame_mtu)
+    }
     pub fn state(&self)->ReassemblyState{
         let mut s=ReassemblyState{assemblies:self.assemblies.len(),
             retired_packet_ids:self.retired.len(),..ReassemblyState::default()};
@@ -94,6 +116,15 @@ impl ReassemblyTable{
     fn evict_oldest(&mut self,now:u64)->Option<ReassemblyScope>{
         let k=self.assemblies.iter().min_by_key(|(k,a)|(a.created_at_ms,**k))
             .map(|(k,_)|*k)?;
+        self.drop_retire(k,now);Some(k)
+    }
+    /// Return room for a separate completed output while keeping the target
+    /// packet's owned parts alive. These two copies coexist until the caller
+    /// has completed the contiguous business buffer.
+    fn evict_oldest_except(&mut self,exempt:ReassemblyScope,now:u64)->Option<ReassemblyScope>{
+        let k=self.assemblies.iter().filter(|(key,_)|**key!=exempt)
+            .min_by_key(|(key,a)|(a.created_at_ms,**key))
+            .map(|(key,_)|*key)?;
         self.drop_retire(k,now);Some(k)
     }
     /// Only after record authentication. Ordinary packet is a borrowed,
@@ -183,8 +214,23 @@ impl ReassemblyTable{
         if a.bytes!=total{
             self.drop_retire(k,now);return Err(ReassemblyError::InvalidLayout);
         }
+        // The old parts and contiguous output are simultaneously live here.
+        // A completed packet must not bypass the ~1MiB RX payload budget by
+        // allocating a second copy on top of sixteen near-complete assemblies.
+        // Evict only OTHER incomplete packets: never silently discard a ready
+        // packet when capacity can be recovered without touching its data.
+        while self.state().buffered_bytes.checked_add(total)
+            .is_none_or(|peak|peak>MAX_BUFFERED_BYTES) {
+            if self.evict_oldest_except(k,now).is_none(){
+                self.drop_retire(k,now);
+                return Err(ReassemblyError::NoCapacity);
+            }
+        }
         let mut out=Vec::new();
-        out.try_reserve_exact(total).map_err(|_|ReassemblyError::NoCapacity)?;
+        if out.try_reserve_exact(total).is_err(){
+            self.drop_retire(k,now);
+            return Err(ReassemblyError::NoCapacity);
+        }
         {
             let a=self.assemblies.get(&k).expect("completed");
             for i in 0..f.count{

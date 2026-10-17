@@ -144,3 +144,53 @@ fn r1_fec_invalid_profile_lengths_missing_and_bad_parity_fail_closed() {
     let mut m=meta(1,3,4);m.lengths[0]=4;
     assert_eq!(rs.recover_missing(&m,&[None],&[(20,&p[0])]),Err(FecMathError::InvalidLength));
 }
+
+#[test]
+fn r1_fec_go_generator_all_k_r_mixed_lengths_large_erasures_deterministic(){
+    // A Go-pinned 20x20 systematic matrix must be MDS for all six
+    // configured parity profiles. Prior tests covered e<=4 broadly;
+    // here we stress e up to min(k,r), including full20:20 erasure,
+    // nonuniform source length/zero tail and two loss distributions.
+    let rs=ReedSolomon20::new().unwrap();
+    for k in 1..=20usize {
+        for r in [4u8,8,10,12,16,20] {
+            for max_len in [1usize,65,257,1200]{
+                if max_len==1200 && k!=20{continue;}
+                let mut originals=(0..k).map(|i|{
+                    let len=1+(i*37+11)%max_len;
+                    (0..len).map(|j|((i*13+j*7+5)%251) as u8).collect::<Vec<u8>>()
+                }).collect::<Vec<_>>();
+                originals[k-1]=(0..max_len)
+                    .map(|j|((k*13+j*7+5)%251) as u8).collect();
+                let refs=originals.iter().map(Vec::as_slice).collect::<Vec<_>>();
+                let parity=rs.encode_active(&refs,r).unwrap();
+                let parity_count=parity.len();
+                assert_eq!(parity_count,k.min(r as usize));
+                let mut final_meta=meta(k,max_len,r);
+                for i in 0..k {final_meta.lengths[i]=originals[i].len() as u16;}
+                let mut erasures=vec![1,2,4,parity_count];
+                erasures.sort_unstable();
+                erasures.dedup();
+                for e in erasures.into_iter().filter(|&e|e<=parity_count){
+                    for tail in [false,true]{
+                        let missing=(0..e).map(|n|if tail{k-e+n}else{n}).collect::<Vec<_>>();
+                        let known=(0..k).map(|i|{
+                            if missing.contains(&i){None}else{Some(originals[i].as_slice())}
+                        }).collect::<Vec<_>>();
+                        // Select parity rows in intentionally reverse order.
+                        // recover_missing() must canonically choose by wire
+                        // index and still recover precisely the missing e.
+                        let selected=parity.iter().enumerate().rev().take(e)
+                            .map(|(j,p)|((20+j) as u8,p.as_slice()))
+                            .collect::<Vec<_>>();
+                        let mut recovered=rs.recover_missing(&final_meta,&known,&selected).unwrap();
+                        recovered.sort_by_key(|(i,_)|*i);
+                        assert_eq!(recovered,missing.into_iter()
+                            .map(|i|(i,originals[i].clone())).collect::<Vec<_>>(),
+                            "k={k} r={r} max_len={max_len} e={e} tail={tail}");
+                    }
+                }
+            }
+        }
+    }
+}

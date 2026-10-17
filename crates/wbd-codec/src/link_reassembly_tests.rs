@@ -162,3 +162,142 @@ fn r1_link_max_65535_datagram_1400_1500_and_framebudget_plusone(){
     assert_eq!(r.push_after_record_auth(&frames[1],id(7),1),Ok(LinkDelivery::Pending));
     assert_eq!(r.push_after_record_auth(&frames[0],id(7),2),Ok(LinkDelivery::Reassembled(p)));
 }
+
+#[test]
+fn r1_link_sixteen_near_full_packets_completion_accounts_both_live_copies(){
+    // Each of sixteen 65_535-byte business packets has 47 full 1380B
+    // fragments and one tail. Buffer all but the tails simultaneously:
+    // on the 16th completion the old parts + new 65_535B output would
+    // exceed MAX_BUFFERED_BYTES unless the table retires an older assembly.
+    let body=(0..65_535).map(|i|(i%251) as u8).collect::<Vec<_>>();
+    let mut rx=receiver(1400,LinkMode::FixedOff);
+    let mut last=Vec::new();
+    for packet_id in 1..=16u32 {
+        let parts=fragment_compat(&body,1400,LinkMode::FixedOff,packet_id).unwrap();
+        assert_eq!(parts.len(),48);
+        for frame in &parts[..parts.len()-1] {
+            assert_eq!(rx.push_after_record_auth(frame,id(u64::from(packet_id)),10),
+                Ok(LinkDelivery::Pending));
+        }
+        last.push(parts.last().unwrap().clone());
+    }
+    assert_eq!(rx.state().assemblies,16);
+    assert!(rx.state().buffered_bytes>MAX_BUFFERED_BYTES-65_535);
+    // Completing newest packet must not allocate a double-buffer peak above
+    // the bound: oldest ID is retired; target gets a correct owned output.
+    assert_eq!(rx.push_after_record_auth(&last[15],id(16),11),
+        Ok(LinkDelivery::Reassembled(body)));
+    assert!(rx.state().buffered_bytes<=MAX_BUFFERED_BYTES-65_535);
+    assert_eq!(rx.state().assemblies,14);
+    assert_eq!(rx.push_after_record_auth(&last[0],id(1),12),Ok(LinkDelivery::Discarded));
+    assert_eq!(rx.push_after_record_auth(b"still-deliver",id(0),12),
+        Ok(LinkDelivery::Ordinary(b"still-deliver")));
+    assert!(rx.state().retired_packet_ids<=MAX_RETIRED);
+}
+
+// PACK-006 L02: immutable per-logical-packet frame budget and bounded one
+// fragment per owner turn. Do not mix old/new chunk stride under one ID.
+#[test]
+fn r1_link_issued_plan_go_wire_equivalence_and_mtu_mid_packet_abandon(){
+    use crate::link_fec_wire::{LinkPacketPlan,LinkPlanError};
+    for mtu in [64usize,1400] {
+        for mode in [LinkMode::FixedOff,LinkMode::AdaptiveOff] {
+            for body in [b"simple".to_vec(),b"WBDLFRG1!".to_vec(),b"WF!".to_vec(),
+                         vec![0x4a;mtu],vec![0x5a;mtu+1],vec![0x7a;65_535]]{
+                let expected=fragment_compat(&body,mtu,mode,71).unwrap();
+                let mut plan=LinkPacketPlan::new(&body,mtu,mode,71).unwrap();
+                assert_eq!(plan.total_frames(),expected.len());
+                let mut out=Vec::new();
+                while let Some(frame)=plan.issue_next(mtu).unwrap(){out.push(frame);}
+                assert_eq!(out,expected);
+                assert_eq!(plan.issue_next(mtu).unwrap(),None);
+                assert_eq!(plan.issued(),plan.total_frames());
+            }
+        }
+    }
+    let data=(0..3000).map(|i|((i*11+3)%251) as u8).collect::<Vec<_>>();
+    let mut old=LinkPacketPlan::new(&data,1400,LinkMode::FixedOff,100).unwrap();
+    let first=old.issue_next(1400).unwrap().unwrap();
+    assert_eq!(first.len(),1400);
+    assert_eq!(old.issued(),1);
+    assert_eq!(old.issue_next(1000),
+        Err(LinkPlanError::MtuShrank{emitted:1,required:1400,available:1000}));
+    assert_eq!(old.issue_next(1400),
+        Err(LinkPlanError::MtuShrank{emitted:1,required:1400,available:1000}));
+    assert!(old.is_abandoned());
+    // Never combine packet_id100 prefix at stride1380 with a suffix based on
+    // stride980. A NEW packet ID101 produces an independent valid reassembly.
+    let mut rx=ReassemblyTable::new(1400,1000,LinkMode::FixedOff).unwrap();
+    assert_eq!(rx.push_after_record_auth(&first,id(100),10),Ok(LinkDelivery::Pending));
+    let mut replacement=LinkPacketPlan::new(&data,1000,LinkMode::FixedOff,101).unwrap();
+    let mut completed=None;
+    while let Some(frame)=replacement.issue_next(1000).unwrap(){
+        match rx.push_after_record_auth(&frame,id(101),11).unwrap() {
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(bytes)=>completed=Some(bytes),
+            other=>panic!("unexpected LINK delivery: {other:?}"),
+        }
+    }
+    assert_eq!(completed,Some(data));
+    assert_eq!(rx.state().assemblies,1);
+    assert_eq!(rx.push_after_record_auth(b"next ordinary packet",id(0),12),
+        Ok(LinkDelivery::Ordinary(b"next ordinary packet")));
+    // MTU shrink before first issue must not produce ANY fragment with wrong
+    // stride or consume a different packet's data.
+    let mut fresh=LinkPacketPlan::new(b"WBDLFRG1",1400,LinkMode::FixedOff,102).unwrap();
+    assert_eq!(fresh.issue_next(25),
+        Err(LinkPlanError::MtuShrank{emitted:0,required:28,available:25}));
+    assert_eq!(fresh.issued(),0);
+}
+
+#[test]
+fn r1_link_authorized_mtu_change_drains_old_stride_and_accepts_new_id(){
+    // A large pre-change datagram may have fragments in flight when a
+    // genuine path event lowers MTU. Never recreate the table or interpret
+    // the old packet ID under the new stride.
+    let old=(0..3000).map(|i|(i%251) as u8).collect::<Vec<_>>();
+    let earlier=fragment_compat(&old,1400,LinkMode::FixedOff,91).unwrap();
+    let mut rx=receiver(1400,LinkMode::FixedOff);
+    assert_eq!(rx.push_after_record_auth(&earlier[0],id(91),100),Ok(LinkDelivery::Pending));
+    assert_eq!(rx.update_authorized_frame_mtu(1000),Ok(()));
+    assert_eq!(rx.accepted_frame_range(),(1000,1400));
+    let current=vec![0x71;2300];
+    let after=fragment_compat(&current,1000,LinkMode::FixedOff,92).unwrap();
+    let mut new_result=None;
+    for frame in &after {
+        match rx.push_after_record_auth(frame,id(92),101).unwrap(){
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(body)=>new_result=Some(body),
+            other=>panic!("unexpected after MTU down: {other:?}"),
+        }
+    }
+    assert_eq!(new_result,Some(current));
+    assert_eq!(rx.state().assemblies,1);
+    assert_eq!(rx.push_after_record_auth(b"small",id(0),102),
+        Ok(LinkDelivery::Ordinary(b"small")));
+    let mut old_result=None;
+    for frame in earlier.iter().skip(1).rev() {
+        match rx.push_after_record_auth(frame,id(91),103).unwrap(){
+            LinkDelivery::Pending=>{},
+            LinkDelivery::Reassembled(body)=>old_result=Some(body),
+            other=>panic!("unexpected old MTU drain: {other:?}"),
+        }
+    }
+    assert_eq!(old_result,Some(old));
+    assert_eq!(rx.state().assemblies,0);
+    assert_eq!(rx.push_after_record_auth(&earlier[0],id(91),104),Ok(LinkDelivery::Discarded));
+    // A later upshift still accepts old 1000B frames while the new
+    // permissible ceiling can independently receive 1500B fragments.
+    assert_eq!(rx.update_authorized_frame_mtu(1500),Ok(()));
+    assert_eq!(rx.accepted_frame_range(),(1000,1500));
+    let widened=fragment_compat(&vec![0x82;1800],1500,LinkMode::FixedOff,93).unwrap();
+    assert_eq!(widened.len(),2);
+    assert_eq!(rx.push_after_record_auth(&widened[1],id(93),105),Ok(LinkDelivery::Pending));
+    assert_eq!(rx.push_after_record_auth(&widened[0],id(93),106),
+        Ok(LinkDelivery::Reassembled(vec![0x82;1800])));
+    let before=(rx.accepted_frame_range(),rx.state());
+    for invalid in [0,20,65_536]{
+        assert_eq!(rx.update_authorized_frame_mtu(invalid),Err(ReassemblyError::InvalidBudget));
+        assert_eq!((rx.accepted_frame_range(),rx.state()),before);
+    }
+}
