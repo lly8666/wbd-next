@@ -4,8 +4,8 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 106,
-  "checkpoint_sha": "97cf5adf63635cb28e7a2a1e1a3e2b1530ecdc24",
+  "sequence": 107,
+  "checkpoint_sha": "5b2aef90061bcaa46ed849f66246086cc8a22678",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
   "current_task": "024 批次 A 新增共享 Linux route/link netlink 失效和 owner 私有预算 revision，同一原始受 Go V4 TLS 凭据授权的 Rust/M1/M3→真实 M4 raw/TUN 路径上通过隔离内核 lo MTU 降低事件→owner route 再观测→fail closed 功能反例。已有稳定60秒约10Mbps/方向开发路径继续有效；新增事件测试已在同 SOURCE 的 Actions 原 native harness 完成。普通 ABI features0；M4逐包 MTU sysfs/DF 仍保留；此 SOURCE 尚未做正式 Rust/Rust P10 AB/BA，不能归功于早期约-18.66%配对，也不能称023产品 PASS。",
@@ -15,15 +15,15 @@
   "unverified": true,
   "last_tested_source": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json",
-    "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json"
+    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-024-netlink-route-invalidation-partial.md",
+    "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "024 PARTIAL：新设备级 route/link watcher 与事件 coalescing 已真实 Linux 内核原路径证实 revision 和重新观测，M4缩MTU拒发保持；先前route-cache业务基线保留，不混不同 SOURCE 的CPU收益。全局锁/批I-O/MTU per-packet sysfs/EMSGSIZE及最终 Rust/Rust 对比仍未完；023与物理资格未验，production features0。"
+  "partial_summary": "024 PARTIAL：新设备级 route/link watcher 与事件 coalescing 已真实 Linux 内核原路径证实 revision 和重新观测，M4缩MTU拒发保持；先前route-cache业务基线保留，不混不同 SOURCE 的CPU收益。全局锁/批I-O/MTU per-packet sysfs/EMSGSIZE及最终 Rust/Rust 对比仍未完；023与物理资格未验，production features0。 H106 ordinary Governance因将旧SOURCE证据误列为当前evidence_refs发生真实FAIL；保留失败run，H107将旧证据改作context_ref，当前证据唯一对齐本SOURCE。不改变产品结论。"
 }
