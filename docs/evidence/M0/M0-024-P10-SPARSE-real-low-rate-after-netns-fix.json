@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "result": "VALID_P10_PAIR_INCONCLUSIVE_CPU_AND_VALID_SPARSE_ORIGINAL_GO_RUST_LOW_RATE",
+  "unverified": true,
+  "source_sha": "e5d824efc9be0f91bfd3fa93ac94412d79a14d99",
+  "code_source_sha": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+  "original_go_source_sha": "b1bb0bea8442bbf8dd3f910aaf214d91507192f7",
+  "M3_scope_repair": {
+    "old_failed_run": 39003738130,
+    "old_cause": "M3 cursor evidence SOURCE mismatch",
+    "corrected_by_worker_H": "d9ed1ad3c466b3b5ee2faf6b880a4ea25580913a",
+    "worker_governance": {
+      "run_id": 39003788619,
+      "conclusion": "success"
+    },
+    "central_scope": {
+      "run_id": 39003896454,
+      "conclusion": "success"
+    },
+    "M0_active_worker_files_changed": false
+  },
+  "P10": {
+    "source_sha": "51bc18df7eae51c219210c9dca48262ce56db40b",
+    "prior_evidence": "docs/evidence/M0/M0-024-P10-sameVM-AB-BA-return-budget64.json",
+    "source_A": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+    "source_B_code_snapshot": "b8d53e794dcf641a965e785c7c0aad03ad45ae37",
+    "AB": {
+      "run_id": 39005769143,
+      "conclusion": "success",
+      "percent_B_minus_A": -0.14256261871392617
+    },
+    "BA": {
+      "run_id": 39005769170,
+      "conclusion": "success",
+      "percent_B_minus_A": 0.6378506917926074
+    },
+    "interpretation": "Both within +/-1%, sign reversal; CPU_WIN_INCONCLUSIVE; original protected Go TLS -> Rust owner real Linux raw/TUN low 10Mbps successful delivery and no invalid/missing; not product."
+  },
+  "sparse": {
+    "waveform": "TWO ORIGINAL GO/RUST EXECUTIONS SAME JOB/SAME VM 20 packets/sec/direction, UDP application payload64/256B alternating (equal count), inner IPv4 packets92/284B; one first ready packet never waits for 32; source-sequential A then B; exact actual netns Go credential TLS, Rust original Normal/FECoff, AEAD/PN, Linux raw/TUN",
+    "code_changes": [
+      {
+        "source_sha": "12b91e8a336dcc6a12d7c77786a47a786812ee06",
+        "path": "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
+        "note": "test-only env WBD_M0_P10_SPARSE=1 selects 20pps and warmup5s+measure30s without touching default waveform; first version had incorrect logging argument order; two historical Go build Actions FAIL."
+      },
+      {
+        "source_sha": "b1bb0bea8442bbf8dd3f910aaf214d91507192f7",
+        "path": "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
+        "note": "correct Go logging types; native original Go/Rust default Actions39006289357 SUCCESS. No production feature change."
+      },
+      {
+        "source_sha": "5d372942f022d2d254bbfe27c6e4773fc10803ef",
+        "path": ".github/workflows/m0-rust-hotpath-sparse-ab.yml",
+        "note": "first sparse paired workflow build PASS, measure FAIL 39006517559 because outer environment WBD_M0_P10_SPARSE not forwarded through sudo ip netns exec; actual Go receipt sparse=false 10s+60s 10Mbps, fail-closed summary correctly INCONCLUSIVE_OR_FAILED."
+      },
+      {
+        "source_sha": "7c62a8fd41d9407ea66018dd0b80571db6bd9f5c",
+        "paths": [
+          "tools/run-v4-tun-netns.sh",
+          ".github/workflows/m0-rust-hotpath-sparse-ab.yml"
+        ],
+        "note": "forward test-only env via actual privileged netns exec, apply identical new Go generator and identical runner to A/B with source/fixed binary checks. Native39006871531 PASS true sparse, but static Python summary inaccurately said declared app payload [64,256,1200] and 10Mbps rate basis."
+      },
+      {
+        "source_sha": "e5d824efc9be0f91bfd3fa93ac94412d79a14d99",
+        "path": ".github/workflows/m0-rust-hotpath-sparse-ab.yml",
+        "note": "manifest metadata corrected to [64,256] and rate basis20pps; final exact-source run full SUCCESS, no cherry-picked CPU sample."
+      }
+    ],
+    "source_A": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+    "source_B": "e5d824efc9be0f91bfd3fa93ac94412d79a14d99",
+    "source_B_v4_engine_blob": "4ea790403b89190bd3a6eaf587aff836de0be173",
+    "final_run": {
+      "id": 39007156374,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117321848634,
+      "measure_job": 117322210070,
+      "build_artifact": {
+        "id": 12091353127,
+        "digest": "sha256:11232327e667a3e4bb200509814e9b71ea00112c9bf4de394de630d37c1d3eb1"
+      },
+      "result_artifact": {
+        "id": 12091457682,
+        "digest": "sha256:1592cd347acfe378a59bdb1cc4054a35464075e32d86e1c324111342385fb99a"
+      },
+      "same_job": true,
+      "nonoverlapping": true,
+      "source_locked": true,
+      "fixtures": {
+        "go_perf_sha256": "51f7b7ef8ab7036e870d1a1513b6c9e5f3d541bbf0a565073f4589f00f2e4fb7",
+        "netns_script_sha256": "41a8fb305c791f694971f72494e33d71deb26efb00d1608a5a0071501b782bf2",
+        "cargo_lock_sha256": "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36"
+      }
+    },
+    "A": {
+      "source": "a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+      "receipt_sha256": "63c33ffe4da8aa5ed46464f9a3f6eeaf192d17e99aa5235c075ac09b18b075d4",
+      "warmup_seconds": 5,
+      "measure_seconds": 30,
+      "sparse": true,
+      "bytes_delivered_bilateral": 192000,
+      "app_udp_mbps_each_direction": 0.0256,
+      "packets_per_direction": 600,
+      "missing_c2s": 0,
+      "missing_s2c": 0,
+      "invalid": 0,
+      "p99_c2s_us": 328,
+      "p99_s2c_us": 279,
+      "process_cpu_seconds": 0.966722
+    },
+    "B": {
+      "source": "e5d824efc9be0f91bfd3fa93ac94412d79a14d99",
+      "receipt_sha256": "80009291d01782b93e3afe6e0651bababfde8b1bd8960f32b47b251b3a907bd0",
+      "warmup_seconds": 5,
+      "measure_seconds": 30,
+      "sparse": true,
+      "bytes_delivered_bilateral": 192000,
+      "app_udp_mbps_each_direction": 0.0256,
+      "packets_per_direction": 600,
+      "missing_c2s": 0,
+      "missing_s2c": 0,
+      "invalid": 0,
+      "p99_c2s_us": 415,
+      "p99_s2c_us": 395,
+      "process_cpu_seconds": 0.975405
+    },
+    "latency_eval": "Both positive delivery p99 submillisecond; B paired increases C2S 87us and S2C116us, each smaller than max(200us,15% baseline age); no mandatory followup but single VM cannot prove global p99 SLA.",
+    "cpu_eval": "VERY_LOW_RATE_CPU_COMPARISON_NOT_QUALIFIED, small delivered bytes, no trustworthy relative CPU savings",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_features": 0
+  },
+  "remaining": {
+    "M0": "024 PARTIAL: D10-AB diagnostic ON separate Action NOT_RUN; same authenticated session TX/RX mutable owner still shared Mutex<Entry>, direction split pending M1-012; M4-013 real raw kernel sendmmsg/recvmmsg pending; M3-016 ISA-L/LINK shared native; true Linux physical and R0-023 remain OPEN_NOT_RUN.",
+    "workers": {
+      "M1": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012 active, newer injected wake fix pending",
+      "M2": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009 active partial",
+      "M3": "R1-M3-RECORD-LINK-FEC-WORKPACK-016 active partial, own H scope now corrected",
+      "M4": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013 already assigned, no second new task"
+    },
+    "prod_features": 0
+  }
+}
