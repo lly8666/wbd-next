@@ -402,6 +402,45 @@ fn r1_tx_three_classes_absolute_deadline_cooperative_fifo_and_empty(){
     assert_eq!(FecTxOwner::new(1,10_000).unwrap().poll_cooperative_parity(),
         Err(TxError::InvalidBudget));
 }
+#[test]
+fn r1_tx_terminal_block_id_refusal_preserves_unsent_partial_parity(){
+    use crate::fec_math::ReedSolomon20;
+    let id=u64::MAX-1;
+    let math=ReedSolomon20::new().unwrap();
+    let expected=math.final_parity_wires(id as u32,&[&b"A"[..],&b"B"[..]],4,100).unwrap();
+    for cooperative in [false,true]{
+        let mut tx=if cooperative{FecTxOwner::new_cooperative(id,100).unwrap()}
+            else{FecTxOwner::new(id,100).unwrap()};
+        let a=tx.submit(b"A",1,4,100,false).unwrap();
+        let b=tx.submit(b"B",2,4,100,false).unwrap();
+        assert_eq!(h(&a.systematic[0]).block_id,id as u32);
+        assert_eq!(h(&b.systematic[0]).shard_index,1);
+        assert_eq!(tx.next_block_id_ext(),u64::MAX);
+        // 32ms deadline would close the old block before reserve_id fails.
+        // Such a failure must not discard the parity of A and B.
+        assert_eq!(tx.submit(b"C",40,4,100,false),Err(TxError::IdExhausted));
+        assert_eq!(tx.stats().source_shards,2);
+        assert_eq!(tx.stats().retained_bytes,2);
+        assert_eq!(tx.next_deadline_ms(),Some(33));
+        let due=tx.flush_due(40).unwrap();
+        let parity=if cooperative{
+            assert!(due.parity.is_empty());
+            tx.poll_cooperative_parity().unwrap().parity
+        }else{due.parity};
+        assert_eq!(parity,expected);
+        assert_eq!(tx.stats().retained_bytes,0);
+        assert_eq!(tx.submit(b"D",41,4,100,false),Err(TxError::IdExhausted));
+        assert_eq!(tx.stats().source_shards,2);
+    }
+    // At exhausted IDs, synchronous memory pressure is also refused BEFORE
+    // it can close and lose a still-live old block's returned parity.
+    let mut pressure=FecTxOwner::new(id,2).unwrap();
+    pressure.submit(b"A",0,4,100,false).unwrap();
+    assert_eq!(pressure.submit(b"BC",1,4,100,false),Err(TxError::IdExhausted));
+    assert_eq!(pressure.stats().retained_bytes,1);
+    assert_eq!(pressure.flush_all(1).unwrap().parity.len(),1);
+}
+
 #[cfg(target_os="linux")]
 fn r1_fec_thread_cpu_ns()->Option<(&'static str,u64)>{
     if let Ok(raw)=std::fs::read_to_string("/proc/thread-self/schedstat"){
