@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "branch": "main",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "source_sha": "dfe54df144450f22f5144fd3b43335635e01eb90",
+  "code_source_sha": "9032476c7e7c5e305857a54872d278f63758f6b4",
+  "result": "STRUCTURAL_IMPLEMENTED_NATIVE_PASS_P10_AB_BA_PASS_D10_INCONCLUSIVE",
+  "unverified": true,
+  "production_features": 0,
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "recovered": {
+    "from_cursor_checkpoint": "181fb7db0bcfad09e7db7b88fa602a28934fef81",
+    "previous_head": "54e67a20a551091b982451b46ea2952259f5eb43",
+    "commits_after_checkpoint": 9,
+    "outstanding_actions_at_recovery": 0,
+    "interrupted_unpushed_rx_split": "NOT_COMMITTED; reconstructed from original source"
+  },
+  "code": {
+    "head": "9032476c7e7c5e305857a54872d278f63758f6b4",
+    "engine_crypto_blob": "e49e7f08d218c5b77a1df05ebcc6a172ce493d44",
+    "original_go_engine_blob": "86e4979fa5dae06100e5684016f13381df05936d",
+    "tx": "same original protected owner PN/seq64, M1 FrozenRecord, no per-packet route observation, 32-ready TUN drain to actual raw sendmmsg, preallocated vectors",
+    "rx": "original committed Go-protected AEAD+unique PN opener and M3 LINK table MOVED once to independent RX thread with bounded M1 Arena 64x2048 and ready-only M4 recvmmsg up to32, no Entry/TX mutex",
+    "stop": "shutdown both workers, join, then original M4 raw/TUN and M1 owner retirement",
+    "rtrb": "M1 directional SPSC component not added as redundant hop where original RX thread owns single kernel producer; not claimed installed on this path",
+    "config": "no new user-facing parameter"
+  },
+  "native": {
+    "source_sha": "9032476c7e7c5e305857a54872d278f63758f6b4",
+    "run_id": 39032599398,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_artifact_id": 12100614080,
+    "build_digest": "sha256:5f5f91dec8caf22ebc4850441d1dbba9067a74a10c0dfe20adf7868374bff35e",
+    "result_artifact_id": 12100579617,
+    "result_digest": "sha256:45e48d6d00873fcda25fb12dacf342d07806210b2cdfd748e80e63b11484e990",
+    "observations": [
+      "Original Go TLS->original Rust->real Linux raw/TUN bilateral 8/8 first delivery",
+      "targeted encrypted PN0 dropped while PN1 real app first delivery succeeds",
+      "real MTU 65536->1500 fail closed, netlink revision invalidation",
+      "normal/off dev 10s warmup+60s each direction ~10Mbps offered and delivered, not product"
+    ],
+    "native_functional_run": 39032599453,
+    "g2_run": 39032599414,
+    "r0_native_abi_run": 39032599442,
+    "r0_cross_abi_run": 39032599411,
+    "governance_run": 39032599437
+  },
+  "pairs": {
+    "source_sha": "48c6f6dcf39a267b89ced8bf3256b0a7a5af120a",
+    "old_A": "9249115c809933eae7ddebdd9334bbe16095bf64",
+    "new_B_code": "9032476c7e7c5e305857a54872d278f63758f6b4",
+    "scope": "same VM sequential A/B per single measurement job; same original Go test fixture, no product qualifier; 10Mbps each direction; 64/256/1200B; 10s+60s",
+    "AB": {
+      "run": 39032851848,
+      "conclusion": "success",
+      "cpu_seconds_per_GiB_A": 108.65281120831831,
+      "cpu_seconds_per_GiB_B": 92.89523107704008,
+      "relative_change_percent": -14.502689765722188,
+      "missing": 0,
+      "invalid": 0,
+      "p99_us": [
+        113,
+        155,
+        102,
+        115
+      ],
+      "result_digest": "sha256:b6177ad2bd8c44b3aa7c4b53eb163317063652475df996f521dac7efb721ef34"
+    },
+    "BA": {
+      "run": 39032851741,
+      "conclusion": "success",
+      "cpu_seconds_per_GiB_A": 111.01413376784673,
+      "cpu_seconds_per_GiB_B": 98.86493990400943,
+      "relative_change_percent": -10.94382620616916,
+      "missing": 0,
+      "invalid": 0,
+      "p99_us": [
+        103,
+        136,
+        108,
+        122
+      ],
+      "result_digest": "sha256:92e10f4360ba714b7291a8d397457c9efc954efedadaaae80bdf6821abc41846"
+    },
+    "SPARSE": {
+      "run": 39032851781,
+      "conclusion": "success",
+      "rate": "20pps each direction",
+      "missing": 0,
+      "invalid": 0,
+      "p99_us": [
+        360,
+        467,
+        376,
+        405
+      ],
+      "cpu": "NOT_QUALIFIED_LOW_SAMPLE",
+      "result_digest": "sha256:63c4dc0fd21a2e832e36b8757e6b902b90b218b7b78b6e36b69e6e50aaac005e"
+    }
+  },
+  "D10": {
+    "source_sha": "dfe54df144450f22f5144fd3b43335635e01eb90",
+    "first_run": 39032851796,
+    "first_fail": "workflow-only wrong B source guard, corrected",
+    "run": 39032995995,
+    "conclusion": "failure",
+    "classification": "DIAGNOSTIC_INCONCLUSIVE_OR_FAILED",
+    "trace_legs_exit": "both 0",
+    "A_trace": {
+      "offered_mbps": 10.5522,
+      "delivered_c2s_mbps": 8.0853,
+      "c2s_missing": 14569,
+      "p99_c2s_us": 146343
+    },
+    "B_trace": {
+      "offered_mbps": 10.5522,
+      "delivered_c2s_mbps": 10.5522,
+      "c2s_missing": 0
+    },
+    "result_digest": "sha256:82dd517d6bb2297a0987385d332a2f6c182f1372014400915124944a5f71420d",
+    "interpretation": "Tracer-on whole Go child plus startup exceeds reliable baseline A capacity in this run. Do not compare traced CPU or call D10 PASS; historical D10 fail preserved; no repeated same diagnostic without new evidence."
+  },
+  "not_qualified": [
+    "C50/high-pressure NOT_RUN due traced old baseline shortfall and user-directed future load",
+    "true live >2GiB TCP wire wrap NOT_RUN; directed authenticated wrap vector tested",
+    "R0-023 B01-B04 leftover OPEN",
+    "over-MTU M3 fragmentation NOT_INTEGRATED",
+    "M2 recovery, M3 FEC-on, M1 Game product combined NOT_RUN",
+    "default release features 0; physical, Windows native, 500Mbps and product NOT_RUN"
+  ],
+  "next_action": "Close bounded 024 structural tuning, retain D10 diagnostic limit; separate main M0 stage integration of frozen M1/M4, R0-023, over-MTU/M2/M3/Game per main registry."
+}
