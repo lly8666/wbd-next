@@ -59,6 +59,11 @@
      /// owner and batch through checked_tx_ready/checked_rx_ready first.
      /// Never expose an unaudited raw batch slice across owner boundaries.
      pub(crate) fn as_slice(&self)->&[T] {&self.contents}
+     /// Integration-only mutable access to RX owned buffers while this
+     /// generation's LoanBatch ledger remains live. Never expose a slice
+     /// outside the controlled owner/AEAD call; no early business bytes can
+     /// be viewed through this before the admission owner is Active.
+     pub(crate) fn as_mut_slice(&mut self)->&mut[T] {&mut self.contents}
      pub fn len(&self)->usize {self.contents.len()}
      pub fn is_empty(&self)->bool {self.contents.is_empty()}
      /// Clear handles and return the original caller-preallocated Vec.
