@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "024已完成的独立Normal/FEC off开发基线固定为fca4456313e59c0a67f4d8b98959a62d2af71b12，不重调D10/CPU。恢复原R0-023真实Go认证V4→Rust owner接线与Stop、超MTU/LINK组合安全门；模块按已分配PACK并行，M0仅集中集成。",
+      "goal": "Continue R0-023 real protected Go/Rust owner Stop/MTU/LINK, source-frozen FEC2 shared contract/integration; exact Normal/off fca4456313e59c0a67f4d8b98959a62d2af71b12 baseline, D10 FAIL retained. M1/M3/M4 autonomous FEC2 tasks; M2 remains standby, no 024 micro-tuning.",
       "done_when": "原023真实Go/Rust/raw/TUN最小接入及Stop/MTU±1/超限/必要LINK分片的准确功能反例、限定同机性能与SOURCE证据齐全；缺失产品硬门标OPEN，不以模块PASS提升产品资格。",
       "assigned_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
     },
@@ -45,9 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "已交付012方向SPSC；新完整包只在M1的runtime/memory/tests中交付Game共享logical TX/RX组件与Normal轮换保护（module09、02/03），M0负责V4身份、codec/engine真实接线。",
-      "done_when": "PACK-013 M1：G01–G04/R01–R04/M01–M04相关公共调度/句柄功能反例同SOURCE native Actions合批，含Normal不复制、Game共享ID及首到、慢lane/rotation、parity首发不占10% repair、Wake失败重试/Stop归还；冻结接口、资源上界和Go/native/产品NOT_RUN边界交付。",
-      "assigned_task": "R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013"
+      "goal": "FEC2 bounded 3class runtime and Game shared owner scheduling; reuse frozen Game013, source first-ready, class-rate short-block deadline, parity fair service, Stop/loan, never edit M0 owner or codec wire.",
+      "done_when": "F2-SCHED/MEM deterministic and native tests cover k1..16, 0/1/32/33, 30Mbps mixed partial, sparse first arrival, deadline/revision, Game one logical encoding, slow lane noHOL, parity expiry, bounded memory and loan Stop; source-locked artifact, cost/rollback and live Go NOT_RUN.",
+      "assigned_task": "R5-M1-FEC2-OWNER-SCHEDULING-014"
     },
     {
       "id": "M2",
@@ -95,9 +95,9 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "完整包：按 PACK-006 / modules 05+06+07，三cipher/PN、MTU/LINK分片重组、Go向量与ISA-L FEC、parity资源公平接口；保留旧测结果。",
-      "done_when": "PACK-006 M3：C01-C04、L01-L04、F01-F06、真实Go兼容向量及native ISA-L/性能变化必要对比完毕；源码/配置/未接入范围精确留痕。",
-      "assigned_task": "R1-M3-RECORD-LINK-FEC-WORKPACK-016"
+      "goal": "FEC2 new RS16 canonical Cauchy GF256, k1 repeat/first XOR, typed 10B source/12B repair record kinds, e-dimensional recovery, ISA-L and scalar; no requirement to reproduce legacy Go data wire.",
+      "done_when": "F2-MATH/WIRE native/scalar/actual ISA-L tests cover k1..16, seven profiles and r<=20, partial recovery and protected length, all malformed/dirty/MTU/scope/Stop, direct output and finite caches, source-hashed artifact, isolated one-scenario CPU; real Go/driver/physical NOT_RUN.",
+      "assigned_task": "R5-M3-FEC2-CODEC-NATIVE-017"
     },
     {
       "id": "M4",
@@ -112,18 +112,23 @@
         "docs/devlog/M4/",
         "docs/evidence/M4/",
         ".governance/workstreams/M4/cursor.json",
-        ".governance/workstreams/M4/requests/"
+        ".governance/workstreams/M4/requests/",
+        "native/isal-safe/build.rs",
+        "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go"
       ],
       "owned_semantics": [
         "platform_driver",
         "go_bridge_adapter",
-        "lifecycle_integration"
+        "lifecycle_integration",
+        "fec2_cold_policy_component",
+        "native_isal_target_build"
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "完整包：在M4原有platform/Go-bridge边界实现可证明有界的原始Linux raw/TUN borrowed-kernel-ready multi-frame I/O，重点actual recvmmsg/sendmmsg条件支持、单owner Stop/loan与partial/uncertain语义；不自行接Go TLS、M1/M3的加密PN/分片。",
-      "done_when": "PACK-013 M4: 保持冻结012 PMTU/设备失效/Stop安全；0/1/32/33/满额/空额、Linux真实无特权内核支持的多帧批、部分完成及未知尾项、错码EAGAIN/EINTR/EMSGSIZE/ENODEV/short write、generation/Stop/late-loan和稀疏立即服务反例；精确SOURCE编译一次native Actions+产物审计。确不能使用的raw/TUN privileged及真实单syscall批路径标UNSUPPORTED/NOT_RUN而不伪称性能，最终提供M0安全且冻结的调用签名/回退。",
-      "assigned_task": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013"
+      "goal": "Scoped existing Go overlay cold policy 7 FEC2 profiles, per-direction auto valid/unknown/censored/host, applied revision; ISA-L Linux ARM64/Windows target build packaging. M0 exclusively integrates real Go admission, existing CLI/GUI, root deps and shared CI.",
+      "done_when": "F2-CONTROL pure Go deterministic replay for 7 profiles, normal/aggressive, direction/client isolation, sparse/censored/loss/idle, revision; target-native build/loader cases or honest NOT_RUN, exact SOURCE evidence, handoff to M0 real Go UI/config; no product enabled.",
+      "assigned_task": "R5-M4-FEC2-COLD-POLICY-PLATFORMS-014"
     }
   ]
 }

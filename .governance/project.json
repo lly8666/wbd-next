@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0继续当前热路径调优；并行工作按 docs/GOVERNANCE.md 第3节完整工作包执行：一次分配、包内自主开发测试修复、阶段集中集成。具体任务读registry，原023/超MTU和正式资格缺口保留，不因并行而重开已完成优化。",
+  "next_decision": "PR#10 FEC2 design merged main 365cbbc, scoped contracts frozen PLAN-007. M0 R0-023 safety and real owner integration OPEN; M1/M3/M4 new parallel FEC2 packs assigned, M2 repair010 standby. V2 product/Windows/ARM native unqualified; D10 and p99 regression OPEN.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
