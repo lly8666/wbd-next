@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "branch": "main",
+  "source_sha": "a56c92734b99dcf8a0487a2994a8dc2509cb108a",
+  "result": "PARTIAL_M1_FORMAL_RTRB_M3_REAL_ISAL_M4_ORIGINAL_KERNEL_SEND_RECV_NATIVE_PASS",
+  "artifact_verified": true,
+  "unverified": true,
+  "progress": "partial",
+  "production_features": 0,
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "authority": {
+    "main_registry_revision": 2,
+    "assignment_epoch": 1,
+    "sole_global_writer": "M0",
+    "workers": {
+      "M1": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012 partial",
+      "M2": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009 scoped ready",
+      "M3": "R1-M3-RECORD-LINK-FEC-WORKPACK-016 partial",
+      "M4": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013 scoped ready"
+    },
+    "no_role_reassignments": true
+  },
+  "M1": {
+    "worker_source": "f0e6d8dadb2f893d7516edfa04aabfc7515a218e",
+    "task": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+    "formal_workflow": ".github/workflows/m0-m1-rtrb-native.yml",
+    "pinned_dependency": "rtrb=0.3.2 with main root/engine/Cargo.lock",
+    "feature": "m1_rtrb enabled in isolated native test workspace, default production disabled",
+    "tests": [
+      "r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill",
+      "r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss",
+      "r1_rtrb_direction_b04_stop_late_lease_epoch_aba",
+      "r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx",
+      "r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject"
+    ],
+    "first_run": {
+      "source": "4bbdf25bb66751e6b2ef17f90bbf79346ee8599f",
+      "id": 39015905349,
+      "conclusion": "success"
+    },
+    "final_run": {
+      "source": "5f1fbb387308da67962efbec95ad194782b6e10e",
+      "id": 39016665237,
+      "conclusion": "success",
+      "build_job": 117350069813,
+      "consume_job": 117350193008,
+      "build_artifact": {
+        "id": 12095316546,
+        "digest": "sha256:87a763b4348cb3b71316dc1fe54db7896526d103d3c946a1753ce25d72ee2be2"
+      },
+      "result_artifact": {
+        "id": 12095505472,
+        "digest": "sha256:eae327facd6ccb45293f4c54489941c9d5b15ff6845b6c8a9a674025568e5d4f"
+      },
+      "witness": "test result: ok. 5 passed; 0 failed; M0_M1_REAL_RTRB032_FIVE_SCOPED_NATIVE_PASS"
+    },
+    "manual_replay": "workflow_dispatch worker_source full 40hex, immutable worker checkout and binary+lock+run ID checksum, replay without editing shared workflow",
+    "not_proven": [
+      "true same-session original Go/Rust TX/RX mutable owner Mutex<Entry> removed",
+      "loom exhaustive model",
+      "platform eventfd/win-wake",
+      "production SPSC"
+    ]
+  },
+  "M3": {
+    "worker_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "task": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
+    "formal_workflow": ".github/workflows/m0-m3-isal-native.yml",
+    "upstream": "Intel ISA-L v2.31.1 c387163fcbca62701d646149564c550c78a4f985",
+    "link": "static libisal.a, native/isal-safe reviewed isolated FFI, linux-x86_64-gnu only",
+    "tested_feature": "native-isal opt-in, default disabled",
+    "cases": [
+      "r1_fec_selected_backend_go_matrix_all_profiles_short_unaligned_mtu",
+      "r1_fec_selected_backend_missing_only_direct_inverse_recovery",
+      "r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native"
+    ],
+    "historical_failed": [
+      {
+        "source": "e1d672cbbd99c7429b21648dd42feab8b9c4d072",
+        "run": 39015963533,
+        "reason": "worker checkout nested in main workspace; Cargo says safe crate belongs to wrong workspace"
+      },
+      {
+        "source": "483200d96f1e6503ce7960a4cd3ea14dbb1187b6",
+        "run": 39016191512,
+        "reason": "real native backend and all 3 tests passed but static per-line ok parser rejected interleaved native witness stdout"
+      }
+    ],
+    "corrected_pre_input": {
+      "source": "06564b00a14aab3b43086ec6084a37583e20a2d3",
+      "run": 39016400562,
+      "conclusion": "success"
+    },
+    "final_run": {
+      "source": "5f1fbb387308da67962efbec95ad194782b6e10e",
+      "id": 39016665239,
+      "conclusion": "success",
+      "build_job": 117350069871,
+      "consume_job": 117350276979,
+      "build_artifact": {
+        "id": 12094996653,
+        "digest": "sha256:630989ca2efa147fe1df1363cc8ca705ed70a406d268e305179e9dca23dae28e"
+      },
+      "result_artifact": {
+        "id": 12094524936,
+        "digest": "sha256:b57fb08409852b1d0177d7e4e8446e292e21910d6884be6a9425240e40c258d9"
+      },
+      "witness": [
+        "REAL_ISAL_V2311_EC_ENCODE_DATA_PASS",
+        "M3_ACTUAL_ISAL_GO_MATRIX_NATIVE_ENCODE_AND_RECOVERY",
+        "M3_NATIVE_HOST_ARCH=x86_64 AVX2=true SSE2=true",
+        "test result: ok. 3 passed; 0 failed",
+        "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS"
+      ]
+    },
+    "manual_replay": "workflow_dispatch worker_source full 40hex, same root pin, immutable source/hashes, no M0 micro-merge",
+    "not_proven": [
+      "Go real V4 authenticated session FEC on",
+      "Windows/Linux ARM positive",
+      "native SIMD measured speedup",
+      "product performance",
+      "ignored release CPU paired test"
+    ]
+  },
+  "M4": {
+    "worker_frozen_code": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "task": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
+    "worker_component_native": {
+      "id": 39006105820,
+      "claim": "94/94 Linux GNU component PASS, unprivileged Linux multi syscall proof"
+    },
+    "central_scope": {
+      "id": 39012544534,
+      "head": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
+      "conclusion": "success"
+    },
+    "import_commit": "1bd7ea65c6be32bfc8817f16cc59035d3b891c19",
+    "imported_exact_blobs": [
+      {
+        "path": "crates/wbd-platform/src/ipv4_tcp.rs",
+        "git_blob": "ad4d95bda0d0a889ffc2068ce6f0d87a436ac53d"
+      },
+      {
+        "path": "crates/wbd-platform/src/linux_batch.rs",
+        "git_blob": "8533d307d49eada1007bab435fdfa2c90ab39679"
+      },
+      {
+        "path": "crates/wbd-platform/src/linux_rx_batch.rs",
+        "git_blob": "a95ac95511a15c28c64faa75e058aae0ae857f1c"
+      },
+      {
+        "path": "crates/wbd-platform/src/linux_raw_carrier.rs",
+        "git_blob": "8f441e535ae8b3181cc9fe31f213115a91682783"
+      }
+    ],
+    "original_engine_tx_commit": "775f8a473639242b66b8bff3e0098263e0916bec",
+    "original_engine_rx_commit": "22c2052e3b6a841911ddf5fa16c1d029b9a7ea4a",
+    "native_ci_trigger_commit": "a56c92734b99dcf8a0487a2994a8dc2509cb108a",
+    "TX": "same original protected M1 FrozenRecord loan -> M4 send_kernel_multimsg singleton with header iovec + original immutable ciphertext iovec in one real Linux sendmmsg syscall; typed prefix and no ACK inference",
+    "RX": "original M1 UniqueBuffer mutable borrowed -> M4 receive_kernel_multimsg singleton recvmmsg then strict tuple/packet parser -> unchanged sole original Rust AEAD/PN/replay/LINK/TUN; no second authority",
+    "limitations": [
+      "one ready packet per syscall, not <=32 original Go records per single syscall",
+      "M4 standalone tests do not provide privileged device positive",
+      "same-session TX/RX mutex remains",
+      "no throughput or CPU gain inferred across separate runs"
+    ],
+    "stage_Actions": {
+      "source": "775f8a473639242b66b8bff3e0098263e0916bec",
+      "native": {
+        "id": 39016058636,
+        "conclusion": "success"
+      },
+      "g2": {
+        "id": 39016058708,
+        "conclusion": "success"
+      },
+      "regression": {
+        "id": 39016058668,
+        "conclusion": "success"
+      },
+      "R0_ABI": {
+        "id": 39016058698,
+        "conclusion": "success"
+      }
+    },
+    "original_TX_RX_native": {
+      "source": "22c2052e3b6a841911ddf5fa16c1d029b9a7ea4a",
+      "id": 39016741649,
+      "conclusion": "success",
+      "build_artifact": {
+        "id": 12095535171,
+        "digest": "sha256:933124d30cae5c0f526f1c3aed537f53476baff3f0d630882ee6bce358aeb368"
+      },
+      "result_artifact": {
+        "id": 12094732452,
+        "digest": "sha256:5205d61cc2c4292b9b20d065c97df2f8ec756bb45edf4620ad43757b16c9b201"
+      }
+    },
+    "final_source_native": {
+      "source": "a56c92734b99dcf8a0487a2994a8dc2509cb108a",
+      "id": 39016914069,
+      "conclusion": "success",
+      "build_job": 117350841393,
+      "consume_job": 117351100438,
+      "build_artifact": {
+        "id": 12095765015,
+        "digest": "sha256:fdabf90483ad59a0570ac81b11212af81b7ef00f8949eddccb449b034a70916a"
+      },
+      "result_artifact": {
+        "id": 12095322091,
+        "digest": "sha256:4bb9972a2a96bd19e9b7060e9a8d22b28226bc746b47e9b9cb44e32fd00ebeee"
+      },
+      "witnesses": [
+        "original Go TLS PN0 dropped by actual kernel and PN1 delivered TUN",
+        "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS",
+        "MTU65536->1500 fail-closed",
+        "netlink revision1->2",
+        "ready-only 0/1/32/33 and DATA return64 budget tests ok",
+        "normal off 10s warmup+60s bilateral app offered/delivered 10.0000Mbps"
+      ]
+    }
+  },
+  "CI": {
+    "formal_M1_M3_source_input_commit": "5f1fbb387308da67962efbec95ad194782b6e10e",
+    "original_native_workflow_trigger_source": "a56c92734b99dcf8a0487a2994a8dc2509cb108a",
+    "original_regression_covers_paths": [
+      "linux_raw_carrier.rs",
+      "linux_rx_batch.rs",
+      "linux_batch.rs",
+      "ipv4_tcp.rs",
+      "v4_owner_crypto.rs",
+      "v4_embedded_go.rs"
+    ],
+    "latest_main_governance": {
+      "id": 39016914120,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "id": 39016914094,
+      "conclusion": "success"
+    },
+    "keep_old_historical_FAILs": true
+  },
+  "remaining": {
+    "M0": "024 PARTIAL: same-session M1 directional mutable owner actually split and Stop/wake loom not yet integrated, M4 013 aggregation 32 original ready batch not yet; pair performance same job VM A/B and B/A next; D10 full strace run39014446221 remains FAIL from traced C2S missing 6012/6065.",
+    "M3": "safe native feature proved Linux x86_64 only, unintegrated live Go V4 FEC and no real Release ABI CPU proof",
+    "M2": "R2-009 ready only component; unchanged",
+    "product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "original_R0_023": "OPEN_UNVERIFIED",
+    "production_features": 0
+  }
+}
