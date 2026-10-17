@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 123,
+  "sequence": 124,
   "checkpoint_sha": "a6b0a79f3e6367ad028b4ce857cf04d89e286139",
-  "progress": "ready_for_integration",
+  "progress": "paused",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024 original Go TLS→Rust→raw/TUN cost batch complete in developer scope: TX ready-only sendmmsg and route snapshots/seq64, RX independent moved original authenticated replay+LINK state/M1 slabs and recvmmsg. Exact native CODE9032476 PASS; final P10 AB/BA SOURCE48c6 PASS on equal delivery, sparse PASS. D10 traced A shortfall INCONCLUSIVE not a performance PASS; 023 and product unchanged.",
-  "why_now": "H122 exact ordinary Governance39033641316 flagged metadata contradiction (ready_for_integration with unverified=true), not a native or paired regression. Fix scope: 024 developer functional+AB/BA is verified for this workpack; product qualification remains NOT_RUN, D10 trace baseline shortfall FAIL preserved in exact evidence.",
-  "done_when": "024 structural original-path optimizations implemented + real Go TLS/raw/TUN native functional run39032599398 PASS, same-VM P10 AB/BA run39032851848/39032851741 PASS, sparse run39032851781 PASS, honest D10 run39032995995 FAIL baseline tracer-on shortfall; C50 deferred due diagnostic capacity and user-requested future pressure. Done for developer optimization scope, NOT full product/source qualification.",
-  "next_action": "M0 at stage boundary: update main registry to assign one bounded original R0-023 + frozen M1/M4 integration workpack (including oversize/Stop remaining gates), audit exact worker code and combine native Go→Rust path; do not reopen 024 solely to chase minor CPU differences.",
-  "unverified": false,
+  "current_task": "024 IMPLEMENTATION DONE; qualification PAUSED at D10 tracer capacity. Original authenticated RX/TX directional ownership, ready raw/TUN kernel batch, route cache, seq64, buffers and functional native PASS; P10 AB/BA and sparse PASS at exact development SOURCE. D10 old A traced C2S shortfall FAIL/INCONCLUSIVE. Do not claim fully verified product or manufacture reviewed PASS.",
+  "why_now": "H122 Governance39033641316 rejected ready_for_integration+unverified=true; H123 Governance39033749428 rejected verified state without result=PASS/artifact_verified=true. Precise D10 tracer A remains FAIL, so do not relabel evidence as PASS to force readiness. Keep truthful paused/unverified developer-qualification boundary; functional code+P10 proof unchanged.",
+  "done_when": "Structural 024 code optimized with true original Go/TLS→Rust→raw/TUN native PASS and equal-delivery same-VM P10 AB/BA plus sparse PASS. Final formal ready_for_integration NOT_CLAIMED because D10 tracer baseline shortfall, historical capacity, C50/actual high pressure NOT_RUN. Close current engineering work at bounded external diagnostic boundary; no more identical D10 runs without new evidence.",
+  "next_action": "M0 keep 024 paused for future trace-capable/high-pressure independent evidence; proceed only separately authorized existing main stage integration of frozen M1/M4 with original R0-023/oversize/Stop gates, preserving this D10 FAIL and not redoing 024 CPU tuning.",
+  "unverified": true,
   "last_tested_source": "dfe54df144450f22f5144fd3b43335635e01eb90",
   "evidence_refs": [
     "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json"
@@ -27,5 +27,5 @@
     "docs/decisions/M0-game-recovery-parallel-workpacks-2026-10-17.md"
   ],
   "open_requests": [],
-  "partial_summary": "H123 024 developer-scope verification complete at CODE9032476 / evidence SOURCEdfe54df. P10 current native original Go TLS dual 10Mbps Rust A vs B same VM AB -14.50%, BA -10.94% CPU/actual GiB, zero missing/invalid, sparse20pps equal full delivery. RX mutable replay/PN and LINK moved into its own worker, NO Entry/TX mutex in steady RX; Stop joined before device teardown. D10 traced A shortfall 14569 C2S, B zero -> FAIL/INCONCLUSIVE diagnostic, not product or trace CPU proof; no repeated rerun. C50 future, true >2GiB live seq32, original R0-023 B01–B04, oversize/M2/M3/Game, standard release features0/physical/product NOT_RUN. No new config/GUI/CLI parameter. H122 Governance39033641316 metadata-only FAIL (ready with unverified=true), corrected H123 by separating developer task verified from product NOT_RUN; no changed source/test result. M1 rtrb SPSC not added as redundant hop on direct kernel RX single producer."
+  "partial_summary": "H124 truthful handoff: CODE9032476 original independent RX replay/PN+LINK/slab owner, no Entry/TX per-packet lock; original kernel 32-ready recvmmsg/sendmmsg, cached route, seq64 TX. Native SOURCE9032476 PASS; P10 AB -14.50%, BA -10.94%, sparse PASS on SOURCE48c6 (all no missing/invalid). Traced D10 SOURCBeim dfe54df A 14569 missing, B0 => diagnostic FAIL/INCONCLUSIVE. H122/H123 Governance failure were metadata contradictions, not test results: do not claim task verified until reviewed PASS evidence exists. Stop duplicate diagnostic; C50/product/physical/R0-023/oversize/combined M1-M4 remain OPEN. No new CLI/GUI options."
 }
