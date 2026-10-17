@@ -48,6 +48,18 @@ unsafe extern "C" {
         dst:*const c_void,dst_len:u32)->isize;
 }
 fn errno()->i32{io::Error::last_os_error().raw_os_error().unwrap_or(5)}
+/// A tuple has to be checked before indexing a Rust slice or consulting
+/// kernel link/route state. Malformed or unauthenticated tuples are not an
+/// interface/MTU event and must never cause a panic or packet transmission.
+fn checked_destination(tuple:Ipv4Tuple<'_>)->Result<Ipv4Addr,RawTxError>{
+    if tuple.src_ip.len()!=4||tuple.dst_ip.len()!=4||
+       tuple.src_port==0||tuple.dst_port==0 {
+        return Err(RawTxError::InvalidPacket)
+    }
+    Ok(Ipv4Addr::new(tuple.dst_ip[0],tuple.dst_ip[1],
+        tuple.dst_ip[2],tuple.dst_ip[3]))
+}
+
 #[derive(Debug,Clone,Copy,Eq,PartialEq)]
 pub enum RawTxError {
     InvalidScope,Stopped,InvalidInterface,Kernel(i32),InvalidPacket,
@@ -127,8 +139,7 @@ impl ScopedRawIpv4Tx {
             BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
-        let dest_ip=Ipv4Addr::new(tuple.dst_ip[0],tuple.dst_ip[1],
-            tuple.dst_ip[2],tuple.dst_ip[3]);
+        let dest_ip=checked_destination(tuple)?;
         let bounded=self.budget.send_budget(dest_ip)
             .map_err(|_|RawTxError::BoundedMtu)?;
         let mut scratch=[0u8;2048];
@@ -473,5 +484,24 @@ mod ready_batch_tests{
             Err(RawTxError::InvalidInterface)));
         assert!(matches!(ScopedRawIpv4Tx::open("lo",0,1),
             Err(RawTxError::InvalidInterface)));
+    }
+}
+
+#[cfg(test)]
+mod raw_tuple_tests{
+    use super::*;
+    #[test]
+    fn r1_m4_pack_raw_malformed_ipv4_tuple_fails_before_mtu_or_fd(){
+        let t=Ipv4Tuple{src_ip:&[127,0,0,1],dst_ip:&[127,0,0,1],
+            src_port:1,dst_port:2};
+        assert_eq!(checked_destination(t),Ok(Ipv4Addr::LOCALHOST));
+        for dst in [&[127u8,0,0][..],&[127,0,0,1,1][..],&[][..]]{
+            assert_eq!(checked_destination(Ipv4Tuple{dst_ip:dst,..t}),
+                Err(RawTxError::InvalidPacket));
+        }
+        assert_eq!(checked_destination(Ipv4Tuple{src_port:0,..t}),
+            Err(RawTxError::InvalidPacket));
+        assert_eq!(checked_destination(Ipv4Tuple{src_ip:&[127,0,0],..t}),
+            Err(RawTxError::InvalidPacket));
     }
 }
