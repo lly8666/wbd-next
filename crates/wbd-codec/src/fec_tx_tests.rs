@@ -367,7 +367,10 @@ fn r1_tx_owner_cooperative_queue_metadata_limit_and_time_reconfig(){
     assert!(b.parity.is_empty());
     assert_eq!(reconfig.stats().pending_parity_jobs,1);
     assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,90);
+    // New block began at 101ms, so its immutable deadline is 133ms.
     assert!(reconfig.flush_due(132).unwrap().parity.is_empty());
-    assert_eq!(reconfig.stats().pending_parity_jobs,2.min(1)); // old drained
+    assert_eq!(reconfig.stats().pending_parity_jobs,0);
+    assert!(reconfig.flush_due(133).unwrap().parity.is_empty());
+    assert_eq!(reconfig.stats().pending_parity_jobs,1);
     assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,91);
 }
