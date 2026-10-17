@@ -290,8 +290,25 @@
       "last_verified_main_owned_central_source": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
       "last_verified_main_owned_central_run": 39003440040,
       "new_source_governance_run": 39006533803,
-      "new_source_governance_result": "PENDING_AT_S_RECEIPT",
-      "new_exact_central_scope_result": "PENDING_AT_S_RECEIPT"
+      "new_source_governance_result": "SUCCESS (code SOURCE 015c0f42, run39006533803)",
+      "new_exact_central_scope_result": "ROLE_SCOPE_PASS exact CODE SOURCE 015c0f42, is_current_head=false (subsequent documentation S present)",
+      "central_scope": {
+        "source_sha": "015c0f4203c97293c30eebd24d8b3a4681ce81d3",
+        "run_id": 39006743890,
+        "run_attempt": 1,
+        "conclusion": "SUCCESS",
+        "audit_result": "ROLE_SCOPE_PASS",
+        "control_sha": "5d372942f022d2d254bbfe27c6e4773fc10803ef",
+        "is_current_head": false,
+        "artifact_id": 12091640106,
+        "artifact_digest": "sha256:be7a0f1bcabc8205dc0636dc0e6b1a7c3f853951000f8912ca0d86ae7b679a47",
+        "qualification": "EXACT_CODE_PATH_SCOPE_ONLY; subsequent docs S separate; not functionality/native ISA-L or product qualification"
+      },
+      "docs_S_governance": {
+        "source_sha": "3bcc530aefd4973aeeb6105354558e3f287904f8",
+        "run_id": 39006756112,
+        "qualification": "PENDING_AT_THIS_S_RECEIPT"
+      }
     }
   },
   "completed_scenarios": [
