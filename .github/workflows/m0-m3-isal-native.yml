@@ -106,7 +106,10 @@ jobs:
             r1_fec_selected_backend_go_matrix_all_profiles_short_unaligned_mtu \
             r1_fec_selected_backend_missing_only_direct_inverse_recovery \
             r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native; do
-            grep -Fq "$name ... ok" m3-native-result/tests.log
+            # Rust --nocapture may interleave a native-backend witness between
+            # the test identifier and the terminal 'ok' on the same line.
+            # Require each real named test and the zero-failure global footer.
+            grep -Fq "$name" m3-native-result/tests.log
           done
           cp m3-native-build/manifest.json m3-native-result/manifest.json
           echo "M0_M3_REAL_ISAL_SAFE_CODEC_GO_MATRIX_NATIVE_PASS code=422a26127496560c0a52e6745ecc8f354e3f4f18"
