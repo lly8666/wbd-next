@@ -12,6 +12,7 @@
 use crate::r1::{BorrowError, BorrowFence, ReadyBatchGuard, StopResult};
 use std::ffi::{c_char, c_int, c_long, c_uint, CString};
 use std::io;
+use std::net::{Ipv4Addr,UdpSocket};
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::path::Path;
 use std::time::Instant;
@@ -27,6 +28,12 @@ const ENODEV: i32 = 19;
 const F_GETFD: c_int = 1;
 const F_GETFL: c_int = 3;
 const FD_CLOEXEC: c_int = 1;
+// Linux socket(7) / ip(7): routed IPv4 PMTU on a connected, interface-
+// bound UDP socket, queried WITHOUT sending traffic or opening AF_PACKET.
+const SOL_SOCKET:c_int = 1;
+const SO_BINDTODEVICE:c_int = 25;
+const IPPROTO_IP:c_int = 0;
+const IP_MTU:c_int = 14;
 const SYS_CAPGET: c_long = 125;
 #[cfg(test)]
 const SYS_CAPSET: c_long = 126;
@@ -44,6 +51,10 @@ struct CapHeader {version: u32, pid: i32}
 struct CapData {effective:u32, permitted:u32, inheritable:u32}
 unsafe extern "C" {
     fn socket(domain:c_int,typ:c_int,proto:c_int)->c_int;
+    fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const core::ffi::c_void,
+        len:u32)->c_int;
+    fn getsockopt(fd:c_int,level:c_int,opt:c_int,value:*mut core::ffi::c_void,
+        len:*mut u32)->c_int;
     fn if_nametoindex(ifname:*const c_char)->c_uint;
     fn syscall(number:c_long,...)->c_long;
     #[cfg(test)]
@@ -60,6 +71,9 @@ pub enum PreflightError {
     InvalidProtocol,
     InvalidPacketType,
     InvalidMtu,
+    InvalidRouteDestination,
+    InvalidRouteMtu,
+    RouteExceedsInterface {route:u32, interface:u32},
     ExceedsDeviceMtu {requested:u32, available:u32},
     InvalidGeneration,
     CapabilityProbe {errno:i32},
@@ -153,6 +167,98 @@ fn actual_mtu(name:&str)->Result<u32,PreflightError>{
         .map_err(|e|PreflightError::KernelSocket{errno:e.raw_os_error().unwrap_or(5)})?;
     value.trim().parse::<u32>().map_err(|_|PreflightError::InvalidMtu)
 }
+/// Kernel-observed *local* interface MTU for the SAME validated ifindex.
+/// No AF_PACKET permission, socket, driver, route, peer/path-MTU discovery or
+/// V4 authority is implied. A later link change must invalidate the caller's
+/// cached scoped snapshot; readers must not synthesize this from config alone.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct InterfaceMtuObservation {
+    pub ifindex:u32,
+    pub kernel_mtu:u32,
+}
+pub fn observe_interface_mtu(ifname:&str,expected_ifindex:u32)
+    ->Result<InterfaceMtuObservation,PreflightError>{
+    if expected_ifindex==0{return Err(PreflightError::InvalidInterfaceIndex)}
+    let before=kernel_ifindex(ifname)?;
+    if before!=expected_ifindex{return Err(PreflightError::WrongInterfaceIndex{
+        expected:expected_ifindex,actual:before,
+    })}
+    let mtu=actual_mtu(ifname)?;
+    if mtu<MIN_IPV4_MTU{return Err(PreflightError::InvalidMtu)}
+    let after=kernel_ifindex(ifname)?;
+    if after!=before{return Err(PreflightError::WrongInterfaceIndex{
+        expected:before,actual:after,
+    })}
+    Ok(InterfaceMtuObservation{ifindex:before,kernel_mtu:mtu})
+}
+
+/// A live kernel IPv4 ROUTE MTU observation, not proof of a remote peer
+/// packet arriving. The selected interface is forced by SO_BINDTODEVICE,
+/// and the connected UDP socket is never used to send/receive data. The
+/// Linux IP_MTU getsockopt is the route's current cached PMTU, not a
+/// separately authenticated network measurement or a TCP carrier lease.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct RouteMtuObservation {
+    pub ifindex:u32,
+    pub interface_mtu:u32,
+    pub route_mtu:u32,
+    pub destination:Ipv4Addr,
+}
+pub fn observe_ipv4_route_mtu(ifname:&str,expected_ifindex:u32,
+    destination:Ipv4Addr,
+)->Result<RouteMtuObservation,PreflightError>{
+    // Only a concrete unicast destination is supported; never use this
+    // command as a generic route scanner / multicast or broadcast sender.
+    if destination.is_unspecified() || destination.is_multicast()
+        || destination == Ipv4Addr::BROADCAST {
+        return Err(PreflightError::InvalidRouteDestination)
+    }
+    let initial=observe_interface_mtu(ifname,expected_ifindex)?;
+    let socket=UdpSocket::bind((Ipv4Addr::UNSPECIFIED,0))
+        .map_err(|e|PreflightError::KernelSocket{
+            errno:e.raw_os_error().unwrap_or(5)})?;
+    let name=CString::new(ifname)
+        .map_err(|_|PreflightError::InvalidInterfaceName)?;
+    // SAFETY: valid owned socket; CString is live and NUL-terminated.
+    // Restrict route lookup to requested interface before connect().
+    let rc=unsafe{setsockopt(socket.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
+        name.as_ptr().cast(),u32::try_from(name.as_bytes_with_nul().len())
+            .map_err(|_|PreflightError::InvalidInterfaceName)?)};
+    if rc!=0 {
+        let e=errno();
+        return Err(if e==EPERM {PreflightError::PermissionDenied{errno:e}}
+            else{PreflightError::KernelSocket{errno:e}})
+    }
+    // UDP connect performs a kernel route lookup; NO packet is sent.
+    socket.connect((destination,9))
+        .map_err(|e|PreflightError::KernelSocket{
+            errno:e.raw_os_error().unwrap_or(5)})?;
+    let mut mtu:c_int=0;
+    let mut len:u32=std::mem::size_of::<c_int>() as u32;
+    // SAFETY: owned socket, live properly aligned c_int and length.
+    let rc=unsafe{getsockopt(socket.as_raw_fd(),IPPROTO_IP,IP_MTU,
+        (&mut mtu as *mut c_int).cast(),&mut len)};
+    if rc!=0 {
+        return Err(PreflightError::KernelSocket{errno:errno()})
+    }
+    if len!=std::mem::size_of::<c_int>() as u32 || mtu<MIN_IPV4_MTU as c_int{
+        return Err(PreflightError::InvalidRouteMtu)
+    }
+    let route=mtu as u32;
+    let fresh=observe_interface_mtu(ifname,expected_ifindex)?;
+    if fresh!=initial {
+        return Err(PreflightError::InvalidMtu)
+    }
+    if route>fresh.kernel_mtu {
+        return Err(PreflightError::RouteExceedsInterface{
+            route,interface:fresh.kernel_mtu
+        })
+    }
+    Ok(RouteMtuObservation{ifindex:fresh.ifindex,
+        interface_mtu:fresh.kernel_mtu,route_mtu:route,
+        destination})
+}
+
 /// Cold validation happens *before* privilege check or socket allocation.
 /// The allowed proto is IPv4 only; capture type HOST (not outgoing/loopback
 /// packet_type). This avoids accepting arbitrary link-layer traffic.
@@ -282,6 +388,42 @@ mod tests{
         assert_eq!(interface_index("name with space"),Err(PreflightError::InvalidInterfaceName));
         assert_eq!(interface_index(""),Err(PreflightError::InvalidInterfaceName));
         assert_eq!(interface_index("0".repeat(16).as_str()),Err(PreflightError::InvalidInterfaceName));
+    }
+    #[test]
+    fn r1_interface_observed_kernel_mtu_ifindex_scope_unprivileged(){
+        let idx=interface_index("lo").unwrap();
+        let observed=observe_interface_mtu("lo",idx).unwrap();
+        assert_eq!(observed.ifindex,idx);
+        assert!(observed.kernel_mtu>=1500);
+        assert_eq!(observed.kernel_mtu,actual_mtu("lo").unwrap());
+        assert_eq!(observe_interface_mtu("lo",0),
+            Err(PreflightError::InvalidInterfaceIndex));
+        assert!(matches!(observe_interface_mtu("lo",idx+1),
+            Err(PreflightError::WrongInterfaceIndex{..})));
+        assert_eq!(observe_interface_mtu("../lo",idx),
+            Err(PreflightError::InvalidInterfaceName));
+        assert!(matches!(observe_interface_mtu("wbd_notreal0",idx),
+            Err(PreflightError::MissingInterface{..})));
+    }
+    #[test]
+    fn r1_real_kernel_route_pmtu_bound_to_lo_and_ifindex_no_send(){
+        let idx=interface_index("lo").unwrap();
+        let destination=Ipv4Addr::LOCALHOST;
+        let s=observe_ipv4_route_mtu("lo",idx,destination).unwrap();
+        assert_eq!(s.ifindex,idx);
+        assert_eq!(s.destination,destination);
+        assert!(s.route_mtu>=576);
+        assert!(s.route_mtu<=s.interface_mtu);
+        assert!(matches!(observe_ipv4_route_mtu("lo",idx+1,destination),
+            Err(PreflightError::WrongInterfaceIndex{..})));
+        assert_eq!(observe_ipv4_route_mtu("lo",0,destination),
+            Err(PreflightError::InvalidInterfaceIndex));
+        assert_eq!(observe_ipv4_route_mtu("lo",idx,Ipv4Addr::UNSPECIFIED),
+            Err(PreflightError::InvalidRouteDestination));
+        assert_eq!(observe_ipv4_route_mtu("lo",idx,Ipv4Addr::BROADCAST),
+            Err(PreflightError::InvalidRouteDestination));
+        assert_eq!(observe_ipv4_route_mtu("../lo",idx,destination),
+            Err(PreflightError::InvalidInterfaceName));
     }
     #[test]
     fn r1_af_packet_invalid_iface_and_index_fail_before_socket(){
