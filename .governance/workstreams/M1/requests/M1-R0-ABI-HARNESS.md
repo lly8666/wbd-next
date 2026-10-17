@@ -39,3 +39,7 @@ Exact source `39e6dfc0e3d7dfec12af0c28849b36d8f82b23ed` worker-native [386888121
 
 ## New task R1-M1-BOUNDED-EARLY-RX-BOUNDARY-010 (worker source exact)
 Native worker [38711805820](https://github.com/lly8666/wbd-next/actions/runs/38711805820) 88/88 scoped r1_ PASS from CODE `2ce58427f84a777bce6242f6803a5c82413b5fe2`. Shared old M0-owned root R0 native ABI [38711805900](https://github.com/lly8666/wbd-next/actions/runs/38711805900) consumer still FAIL on stale literal `"3 passed"` filtered marker while actual Rust unit executable returned rc0 **90 passed, 1 ignored**. The issue remains M0-owned, not modified by M1.
+
+## M1 R1-M1-OWNER-MEMORY-READY-WORKPACK-011
+
+Exact M1 source `0ec99ed0bd5706c9df54649c0b20e1b157ffd363` worker native [38997851983](https://github.com/lly8666/wbd-next/actions/runs/38997851983) **96/96 scoped PASS**. Old root ABI [38997852003](https://github.com/lly8666/wbd-next/actions/runs/38997852003) FAIL despite real Rust rc0 98 passed, 1 ignored: worker branch M0-owned stale hard-coded `"3 passed"` match against unfiltered unit suite. M1 cannot edit shared `tools/r0_abi_bundle.py` or root CI; M0 synchronization/request remains OPEN. This does not downgrade the separately source-locked worker native 96/96.
