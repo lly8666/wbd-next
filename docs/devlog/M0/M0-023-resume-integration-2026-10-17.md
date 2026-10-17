@@ -14,3 +14,5 @@
 - 初次 [39044344082](https://github.com/lly8666/wbd-next/actions/runs/39044344082) Rust AB 测量原始完成，M0 自增 Python regex 转义错误导致结果解析FAIL，完整失败保留；修正后的 d361 Action 为独立实际 PASS。所有 build/result artifact IDs、hash和源码详见此独立 JSON。
 - 工位登记不变：M1主线任务 Game013，M2主线任务恢复010。M3码 `422a` 已冻结但worker cursor仍 PARTIAL；M0 不抢改M3分支，不在未交付前将其真实产品集成冒充通过。Normal/FEC off已测SOURCE `fca4456` 原样冻结，D10失败原样保留。
 
+
+- 反向 [BA Action39045641512](https://github.com/lly8666/wbd-next/actions/runs/39045641512) SUCCESS，M0 workflow `a4ca2fe` 的 `measure_order=BA` 只跑这一场景：同一测量 job 的 ISA-L 先行（52631块/1.24988CPU秒、p99 codec 34846ns），scalar 后行（1996块/1.25186CPU秒、p99 codec 704415ns），10/10原始窗口有效。build/result IDs+SHA在原M3 evidence JSON 的 `reverse_BA`。两个 runner 的倍率不相加、不直接比较绝对CPU。前一条 AB receipt 保留。M3角色正式交付及Go V4 FEC-on仍未因此直接通过。

@@ -68,5 +68,42 @@
     "D10 original run39032995995 FAIL/INCONCLUSIVE untouched",
     "No 50/100/500Mbps, physical, Win/ARM native qualification"
   ],
-  "next_action": "Review frozen CODE422a for main M3 integration only after its worker delivery, reusing identical main files and running affected real Go authenticated v4/Stop/LINK/MTU gates; M1 Game013/M2 recovery010 continue independently."
+  "next_action": "Review frozen CODE422a for main M3 integration only after its worker delivery, reusing identical main files and running affected real Go authenticated v4/Stop/LINK/MTU gates; M1 Game013/M2 recovery010 continue independently.",
+  "reverse_BA": {
+    "source_sha": "a4ca2fe5b94f6a7b50c33bf06699ef2161abbc39",
+    "worker_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "run_id": 39045641512,
+    "attempt": 1,
+    "conclusion": "success",
+    "scope": "single fixed 20:20/1200B CODE422a, native B first then scalar A, one paired consume job/VM",
+    "build_artifact": {
+      "id": 12106030459,
+      "digest": "sha256:6d02e135376a51038f5a64d8d869223ae00c2d4d47918060fcab0fff8028f3b0"
+    },
+    "result_artifact": {
+      "id": 12105646691,
+      "digest": "sha256:f32aca15cdcecbef17613f3c62c6c4ffd2108081e8e5a511b0ac3ce66f6e8850"
+    },
+    "binary_sha256": "1222cd2ac62679e5e833c5367b26d36945de9810262e1f0b04dd473856df62fc",
+    "native_isal_first": {
+      "cpu_ns": 1249879759,
+      "wall_ns": 1250257806,
+      "blocks": 52631,
+      "p99_codec_operation_wall_ns": 34846,
+      "windows_ok": 5,
+      "windows_bad": 0,
+      "cpu_status": "SAME_WINDOW_CPU"
+    },
+    "scalar_second": {
+      "cpu_ns": 1251864477,
+      "wall_ns": 1251524658,
+      "blocks": 1996,
+      "p99_codec_operation_wall_ns": 704415,
+      "windows_ok": 5,
+      "windows_bad": 0,
+      "cpu_status": "SAME_WINDOW_CPU"
+    },
+    "interpretation": "This independent BA measurement confirms same-direction large per-codec-work CPU benefit; magnitude across AB/BA differs substantially on distinct runners. No product or specific instruction path qualification."
+  },
+  "paired_interpretation": "AB and BA each match code source and same-job time-bound equal workload within its run, measured code-only processor CPU per complete block. Do NOT subtract absolute CPU seconds between independent Actions. Both large native benefit; not an application throughput, first-packet, Game/FEC-on or physical claim."
 }
