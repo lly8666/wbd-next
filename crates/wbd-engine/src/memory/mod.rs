@@ -147,6 +147,8 @@
      retired: usize,
      charged_bytes: usize,
      stopping: bool,
+     // Fair alternation between the bounded channel and saturated backlog.
+     channel_next: bool,
  }
  impl Arena {
      pub fn new(
@@ -185,6 +187,7 @@
                  wake: OnceLock::new(),
              }),
              loaned: 0, retired: 0, charged_bytes: charged, stopping: false,
+             channel_next: true,
          })
      }
      /// Attach exactly one owner consumer gate. Register before its first park;
@@ -194,7 +197,7 @@
      }
      pub fn allocate(&mut self) -> Result<UniqueBuffer, BufferContractError> {
          if self.stopping { return Err(BufferContractError::OwnerStopping); }
-         self.drain_returns();
+         self.drain_returns_bounded(64);
          let idx = self.free.pop().ok_or(BufferContractError::NoCapacity)?;
          let slot = &mut self.slots[idx];
          debug_assert!(!slot.loaned);
@@ -226,26 +229,36 @@
              // Generation exhausted: permanently retire, never alias old key.
          }
      }
-     /// Owner-only, nonblocking: drains both bounded queue and fallback.
-     /// Drop may publish concurrently; caller must recheck after observing stop.
-     pub fn drain_returns(&mut self) -> usize {
-         let mut returned = 0;
-         loop {
-             match self.incoming.try_recv() {
-                 Ok(item) => { self.install(item); returned += 1; }
-                 Err(TryRecvError::Empty | TryRecvError::Disconnected) => break,
-             }
-         }
-         // Pop one by one; do not hold backlog lock while touching owner slots.
-         loop {
-             let next = self.returns.backlog.lock()
-                 .unwrap_or_else(|e| e.into_inner()).pop_front();
-             match next {
-                 Some(item) => { self.install(item); returned += 1; }
-                 None => break,
-             }
+     /// Owner-local bounded return budget, typically at most 64 each turn.
+     /// Alternates channel/backlog so a sustained producer cannot indefinitely
+     /// starve the already-posted overflow; no lost returns or heap copies.
+     pub fn drain_returns_bounded(&mut self, max:usize)->usize {
+         let mut returned=0;
+         while returned<max {
+             let channel=self.channel_next;
+             let primary=if channel {
+                 self.incoming.try_recv().ok()
+             }else{
+                 self.returns.backlog.lock().unwrap_or_else(|e|e.into_inner()).pop_front()
+             };
+             let next=primary.or_else(||{
+                 if channel {
+                     self.returns.backlog.lock().unwrap_or_else(|e|e.into_inner()).pop_front()
+                 } else {
+                     self.incoming.try_recv().ok()
+                 }
+             });
+             let Some(item)=next else{break;};
+             self.channel_next=!channel;
+             self.install(item);
+             returned+=1;
          }
          returned
+     }
+     /// Explicit control-path drain with no per-turn work budget; report()
+     /// and stop diagnostics may need the complete snapshot.
+     pub fn drain_returns(&mut self)->usize{
+         self.drain_returns_bounded(usize::MAX)
      }
      pub fn stop(&mut self) -> ArenaReport {
          self.stopping = true;
@@ -352,3 +365,48 @@
      }
  }
  
+ #[cfg(test)]
+ mod workpack_tests {
+     use super::*;
+     use std::sync::Arc;
+     use wbd_types::{LaneKey,TunnelKey,RecordPn,SeqOffset};
+     fn metadata()->FrozenMetadata{
+         FrozenMetadata{lane:LaneKey{tunnel:TunnelKey{slot:900,generation:1},slot:1,generation:1},
+             pn:RecordPn(1),seq:SeqOffset(1),carrier_snapshot:1}
+     }
+     #[test]
+     fn r1_workpack_memory_m01_m04_bounded_return_budget_96_multi_producers() {
+         let mut a=Arena::new(201,96,256,1,100_000).unwrap();
+         let leases:(Vec<_>,Vec<_>)=(0..96).map(|_|a.allocate().unwrap())
+             .enumerate().partition(|(i,_)|i%2==0);
+         let a_odd=leases.0.into_iter().map(|(_,b)|b).collect::<Vec<_>>();
+         let b_even=leases.1.into_iter().map(|(_,b)|b).collect::<Vec<_>>();
+         let first=std::thread::spawn(move||drop(a_odd));
+         let second=std::thread::spawn(move||drop(b_even));
+         first.join().unwrap();second.join().unwrap();
+         assert_eq!(a.drain_returns_bounded(0),0);
+         assert_eq!(a.drain_returns_bounded(64),64);
+         assert_eq!(a.drain_returns_bounded(64),32);
+         assert_eq!(a.drain_returns_bounded(64),0);
+         assert_eq!(a.report().free,96);
+         assert_eq!(a.report().loaned,0);
+     }
+     #[test]
+     fn r1_workpack_memory_m02_b04_last_clone_stop_and_generation_never_reused() {
+         let mut a=Arena::new(202,2,256,1,100_000).unwrap();
+         let x=a.allocate().unwrap();
+         let origin=x.origin();
+         let f=x.freeze(0..1,metadata()).unwrap();
+         let clone=f.clone();
+         assert_eq!(f.bytes().as_ptr(),clone.bytes().as_ptr());
+         drop(f);
+         assert_eq!(a.stop().loaned,1);
+         assert!(matches!(a.allocate(),Err(BufferContractError::OwnerStopping)));
+         let th=std::thread::spawn(move||drop(clone));
+         th.join().unwrap();
+         assert_eq!(a.drain_returns_bounded(1),1);
+         assert_eq!(a.report().loaned,0);
+         assert!(a.quiesced());
+         assert_ne!(a.slots[origin.key.slot as usize].generation,origin.key.generation);
+     }
+ }
