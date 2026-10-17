@@ -118,7 +118,7 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
-    let arena=Arena::new(generation,32,2048,32,1_000_000)
+    let arena=Arena::new(generation,128,2048,128,1_000_000)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,owner,normal,arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
@@ -583,108 +583,144 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
-    events:&wbd_platform::linux_route_events::RouteEvents)->Result<(),i32>{
-    let (mut slab,generation)={
+    pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
+    ready_records:&mut Vec<crate::memory::FrozenRecord>,
+    presentations:&mut Vec<Presentation>,
+    events:&wbd_platform::linux_route_events::RouteEvents)->Result<u32,i32>{
+    // The caller has ALREADY polled the first TUN packet. Never wait for
+    // batch fill: one sparse packet is sealed/submitted immediately.
+    // The stack-owned vectors are reserved once per worker (not per DATA).
+    pending.clear();
+    ready_records.clear();
+    presentations.clear();
+    let started=Instant::now();
+    let generation={
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-        let slab=e.arena.allocate().map_err(|_|FULL)?;
-        (slab,e.generation)
+        e.generation
     };
-    let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
-    if space<20{return Err(INVALID)}
-    let n=tun.read_ipv4_into(generation,&mut slab.writable()[14..])
-        .map_err(|_|INVALID)?;
-    if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    // Prepare and authorize exactly ONE original M1 TX batch while the
-    // unique protected owner mutex is held. The immutable generation-held
-    // LoanBatch then outlives the lock across the synchronous kernel call.
-    let (batch,raw,flow,generation)={
-    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
-    let e:&mut Entry=&mut guard;
-    if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-    let flow=e.flow;
-    // A single active generation owns a route snapshot. The normal DATA
-    // path checks in-memory scope and original FrameBudget only; one route
-    // socket lifecycle per <=1s refresh, never one per DATA packet.
-    // M4 still verifies real link MTU and the Linux raw DF send; an M4
-    // rejection invalidates the snapshot before any next sealing attempt.
-    let destination=Ipv4Addr::from(flow.client_ip);
-    let event=events.snapshot();
-    if let Some(cache)=e.tx_route.as_ref(){
-        if wbd_platform::linux_route_events::classify(
-            cache.route_event_revision,event.revision,cache.observed_at.elapsed()
-        )==wbd_platform::linux_route_events::EventRefresh::Defer {
-            // No stale budget may seal while a route/link storm is coalescing.
+    let mut ingress_error=false;
+    loop {
+        if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+        let mut slab={
+            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+            match e.arena.allocate(){
+                Ok(s)=>s,Err(_)=>{
+                    // Preserve packets already read instead of dropping their
+                    // ownership and denying a full fresh batch.
+                    ingress_error=true;break
+                }
+            }
+        };
+        let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
+        if space<20{return Err(INVALID)}
+        match tun.read_ipv4_into(generation,&mut slab.writable()[14..]){
+            Ok(n)=>pending.push((slab,n)),
+            Err(_)=>{ingress_error=true;break},
+        }
+        if pending.len()>=32 || stop.load(Ordering::Acquire){break}
+        // Work budget sampled every eight packets, never by the kernel CPU
+        // clock on every DATA. The poll is nonblocking and is the sole gate
+        // for another TUN read; no fixed 32-entry latency penalty.
+        if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
+        if !loop_readiness(tun.readiness_fd(),stop,0){break}
+    }
+    if pending.is_empty(){return Err(if ingress_error{INVALID}else{BAD_STAGE})}
+    // Route validation and original M1/M3 AEAD/PN/queue admission occur
+    // under the current generation's owner. M4's real sendmmsg follows
+    // OUTSIDE Entry lock with an immutable original LoanBatch.
+    let (batch,raw,flow,generation,admitted,seal_failed)={
+        let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+        let e:&mut Entry=&mut guard;
+        if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
+        let flow=e.flow;
+        let destination=Ipv4Addr::from(flow.client_ip);
+        let event=events.snapshot();
+        if let Some(cache)=e.tx_route.as_ref(){
+            if wbd_platform::linux_route_events::classify(
+                cache.route_event_revision,event.revision,cache.observed_at.elapsed()
+            )==wbd_platform::linux_route_events::EventRefresh::Defer{
+                return Err(INVALID)
+            }
+        }
+        let refresh=e.tx_route.as_ref().is_none_or(|cache|
+            cache.observed_at.elapsed()>=Duration::from_secs(1)
+            || cache.ifindex!=ifindex || cache.destination!=destination
+            || cache.revision!=e.tx_route_revision
+            || cache.route_event_revision!=event.revision
+        );
+        if refresh{
+            e.tx_route=None;
+            let snapshot=e.owner.observe_linux_normal_off_route_budget(
+                "lo",ifindex,destination
+            ).map_err(|_|INVALID)?;
+            e.tx_route_revision=e.tx_route_revision.checked_add(1).ok_or(FULL)?;
+            e.tx_route=Some(WorkerRouteBudget{
+                scoped:snapshot,observed_at:Instant::now(),ifindex,destination,
+                revision:e.tx_route_revision,route_event_revision:event.revision,
+            });
+            e.counters.route_refresh.fetch_add(1,Ordering::Relaxed);
+        }
+        let mut accepted=0usize;
+        let mut failed=ingress_error;
+        for (slab,n) in pending.drain(..){
+            if stop.load(Ordering::Acquire){failed=true;break}
+            // A bad/oversize packet does NOT block later fresh packets. If
+            // a seal fails the original crypto owner decides if PN was burnt;
+            // never re-seal or blindly retry an uncertain ciphertext.
+            let result={
+                let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+                e.owner.seal_normal_off_with_worker_snapshot(
+                    slab,n,scoped,ifindex,destination,15,loop_now()
+                )
+            };
+            if result.is_ok(){accepted+=1}else{failed=true}
+        }
+        if accepted==0{
+            drain_data_turn_returns(&mut e.arena);
             return Err(INVALID)
         }
-    }
-    let refresh=e.tx_route.as_ref().is_none_or(|cache|
-        cache.observed_at.elapsed()>=Duration::from_secs(1)
-        || cache.ifindex!=ifindex || cache.destination!=destination
-        || cache.revision!=e.tx_route_revision
-        || cache.route_event_revision!=event.revision
-    );
-    if refresh {
-        e.tx_route=None; // no stale budget if kernel observation fails
-        let snapshot=e.owner.observe_linux_normal_off_route_budget(
-            "lo",ifindex,destination
-        ).map_err(|_|INVALID)?;
-        e.tx_route_revision=e.tx_route_revision.checked_add(1).ok_or(FULL)?;
-        e.tx_route=Some(WorkerRouteBudget{
-            scoped:snapshot,observed_at:Instant::now(),ifindex,destination,
-            revision:e.tx_route_revision,
-            route_event_revision:event.revision,
-        });
-        e.counters.route_refresh.fetch_add(1,Ordering::Relaxed);
-    }
-    let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
-    e.owner.seal_normal_off_with_worker_snapshot(
-        slab,n,scoped,ifindex,destination,15,loop_now()
-    ).map_err(|_|INVALID)?;
-    let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
-    let available=std::mem::take(tx_storage);
-    let batch=match e.owner.drain_tx(loop_now(),available){
-        Ok(batch)=>batch,
-        Err((_,storage))=>{
-            *tx_storage=storage;
+        let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+        let available=std::mem::take(tx_storage);
+        let batch=match e.owner.drain_tx(loop_now(),available){
+            Ok(batch)=>batch,
+            Err((_,storage))=>{
+                *tx_storage=storage;e.tx_route=None;
+                drain_data_turn_returns(&mut e.arena);
+                return Err(BAD_STAGE)
+            }
+        };
+        let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
+        if ready.is_empty() || ready.len()>32 || ready.iter().any(
+            |x|x.kind!=crate::runtime::TxKind::Fresh){
+            *tx_storage=batch.recycle();
             e.tx_route=None;
             drain_data_turn_returns(&mut e.arena);
-            return Err(BAD_STAGE)
-        },
+            return Err(INVALID)
+        }
+        // Clone only Arc handles into preallocated metadata, NEVER the
+        // plaintext/ciphertext. Both vectors are recycled next turn.
+        for x in ready{
+            ready_records.push(x.record.clone());
+            presentations.push(Presentation{
+                ack32:1,advertised_window:4096,ip_id:43,
+                persona:PacketPersona::Legacy,
+            });
+        }
+        (batch,raw,flow,e.generation,ready_records.len(),failed)
     };
-    if !matches!(e.owner.checked_tx_ready(&batch),Ok(ready)
-        if ready.len()==1 && ready[0].kind==crate::runtime::TxKind::Fresh){
-        *tx_storage=batch.recycle();
-        e.tx_route=None;
-        drain_data_turn_returns(&mut e.arena);
-        return Err(BAD_STAGE)
-    }
-    // Complete Prepare/Detach/Commit, exact PN/seq, path budget and generation
-    // validity BEFORE releasing the same-session mutable owner lock.
-    (batch,raw,flow,e.generation)
-    };
-    // Kernel I/O has its own M4 BorrowFence and sync raw-fd serialization.
-    // Stop first fences phase/shutdown under Entry, then joins this worker
-    // before owner, driver and arena destruction. This already-authorized
-    // batch keeps the original generation lease and ciphertext alive through
-    // the syscall. Do not park, re-seal or blindly retry an uncertain send.
     let report=if stop.load(Ordering::Acquire){None}else{
         let tuple=Ipv4Tuple{
             src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
             src_port:flow.server_port,dst_port:flow.client_port,
         };
-        let presentation=Presentation{
-            ack32:1,advertised_window:4096,ip_id:43,
-            persona:PacketPersona::Legacy,
-        };
-        let ready=batch.as_slice();
         Some(raw.send_kernel_multimsg(
-            generation,std::slice::from_ref(&ready[0].record),
-            tuple,std::slice::from_ref(&presentation),
+            generation,ready_records.as_slice(),tuple,presentations.as_slice()
         ))
     };
-    // Recycle even after Stop, ENODEV, EMSGSIZE, backpressure or uncertainty.
-    // The original TX work vector is reused; no new plaintext/ciphertext copy.
+    ready_records.clear();
+    presentations.clear();
     *tx_storage=batch.recycle();
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     let e:&mut Entry=&mut guard;
@@ -692,16 +728,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         drain_data_turn_returns(&mut e.arena);
         return Err(BAD_STAGE)
     }
-    match report{
-        Some(ref r) if raw_one_packet_copied(r)=>{},
-        _=>{
-            e.tx_route=None;
-            drain_data_turn_returns(&mut e.arena);
-            return Err(BAD_STAGE)
-        },
-    }
+    let sent=report.as_ref().map_or(0,|r|r.outcome.accepted_prefix);
+    let all=report.as_ref().is_some_and(|r|
+        raw_ready_prefix_copied(r,admitted));
+    if !all{e.tx_route=None}
     drain_data_turn_returns(&mut e.arena);
-    Ok(())
+    if !all||seal_failed{return Err(INVALID)}
+    u32::try_from(sent).map_err(|_|INVALID)
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
@@ -718,11 +751,16 @@ fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
 // A partial, ambiguous, or backpressured M4 KernelSendReport is never a
 // success just because a syscall returned a positive prefix elsewhere.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn raw_one_packet_copied(report:&wbd_platform::linux_batch::KernelSendReport)->bool{
-    report.outcome.accepted_prefix==1
+fn raw_ready_prefix_copied(report:&wbd_platform::linux_batch::KernelSendReport,
+    expected:usize)->bool{
+    report.outcome.accepted_prefix==expected
         && report.outcome.error.is_none()
         && report.outcome.uncertain_index.is_none()
         && report.signal==wbd_platform::linux_batch::KernelSendSignal::None
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn raw_one_packet_copied(report:&wbd_platform::linux_batch::KernelSendReport)->bool{
+    raw_ready_prefix_copied(report,1)
 }
 
 // A single kernel readiness event can service multiple ALREADY ready packets.
@@ -815,7 +853,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
-            let mut tx_storage=Vec::<TxDispatch>::with_capacity(1);
+            let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
+            let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
+            let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
+            let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             while !stop_tx.load(Ordering::Acquire){
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
@@ -827,10 +868,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 ready_only_slice(&stop_tx,
                     ||loop_readiness(tun_fd,&stop_tx,0),
                     ||match background_tun_once(
-                        &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
+                        &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
+                        &mut tx_pending,&mut tx_records,&mut tx_presentations,
+                        &tx_events
                     ){
-                        Ok(_)=>{
-                            stats.tx.fetch_add(1,Ordering::Relaxed);
+                        Ok(n)=>{
+                            stats.tx.fetch_add(u64::from(n),Ordering::Relaxed);
                             true
                         }
                         Err(_)=>{
