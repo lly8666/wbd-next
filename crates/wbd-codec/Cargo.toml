@@ -5,8 +5,12 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+native-isal = ["dep:wbd-isal-safe", "wbd-isal-safe/native"]
+
 [dependencies]
 wbd-types = { path = "../wbd-types" }
 aws-lc-rs = { workspace = true }
 chacha20 = { workspace = true }
 aes = { workspace = true }
+wbd-isal-safe = { path = "../../native/isal-safe", optional = true, default-features = false }

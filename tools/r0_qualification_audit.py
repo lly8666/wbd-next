@@ -83,7 +83,8 @@ def audit():
             "source-lock/manifest/workspace crates drift")
     package_names = {p["name"] for p in packages}
     require(members.issubset(package_names), "Cargo.lock lost an internal workspace crate")
-    externals = [p for p in packages if p["name"] not in members]
+    externals = [p for p in packages if p["name"] not in members and p["name"]!="wbd-isal-safe"]
+    require(any(p["name"]=="wbd-isal-safe" and p["version"]=="0.1.0" and not p.get("source") for p in packages), "missing safe native optional package")
     require(len(externals) >= 3, "R1 crypto lock omitted registry dependency closure")
     require(all(p.get("source") == "registry+https://github.com/rust-lang/crates.io-index"
                 and len(p.get("checksum", "")) == 64 for p in externals),
@@ -119,7 +120,7 @@ def audit():
         expected = (set() if crate=="wbd-types" else
                     {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"}
                     if crate=="wbd-engine" else
-                    {"wbd-types","aws-lc-rs","chacha20","aes"}
+                    {"wbd-types","aws-lc-rs","chacha20","aes","wbd-isal-safe"}
                     if crate=="wbd-codec" else {"wbd-types"})
         require(deps == expected,
                 f"crate {crate} dependency is not the locked one-way R1 graph")
@@ -130,14 +131,16 @@ def audit():
             else:
                 require(((crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"})
                          or (crate=="wbd-engine" and k=="rtrb"))
-                        and v=={"workspace":True},
+                        and v=={"workspace":True} or
+                        (crate=="wbd-codec" and k=="wbd-isal-safe" and
+                         v=={"path":"../../native/isal-safe","optional":True,"default-features":False}),
                         f"unapproved external dependency {crate}->{k}")
     lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
     require(lock_deps["wbd-engine"]==
             {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"},
             "Cargo.lock lost R1 engine assembly edges")
-    require(lock_deps["wbd-codec"]=={"wbd-types","aws-lc-rs","chacha20","aes"},
-            "Cargo.lock codec crypto direct dependencies drift")
+    require(lock_deps["wbd-codec"]=={"wbd-types","aws-lc-rs","chacha20","aes","wbd-isal-safe"},
+            "Cargo.lock codec crypto plus optional native backend dependencies drift")
     for crate in members - {"wbd-engine", "wbd-codec"}:
         require(lock_deps[crate]==(set() if crate=="wbd-types" else {"wbd-types"}),
                 f"Cargo.lock inverted dependency: {crate}")
