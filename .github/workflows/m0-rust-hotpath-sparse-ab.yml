@@ -38,7 +38,7 @@ jobs:
           # M0-024 fixed pre-batch A and post-batch B; feature-gated original owner actual raw/TUN, never floating branch.
           # Freeze content, not a floating branch or unrelated later commit.
           test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 07c6fc30c20ddc90e2843b269aba86e185a8db96
-          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 273ee61c5ff2c0dff5dc2fb272b8801294da9df1
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 72083eb6117011b802580e3aa69cdd426929c81b
           # Fixed baseline A: M4-012 source before DATA return cap64.
           # Only v4_embedded_go.rs (and its test) differs in B, and Go
           # workload fixture, Cargo.lock, route/TUN and scripts are identical.

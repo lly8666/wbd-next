@@ -515,14 +515,16 @@ fn authenticated_rx_anchor(anchor:u64,absolute_seq:u64,wire_len:usize,
 fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     rx_storage:&mut Vec<RxPacket>,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>)->Result<u32,i32>{
-    rx_pending.clear();
+    // Keep unused slab slots across kernel readiness turns. Sparse traffic
+    // should not allocate/drop 31 extra original M1 loans for each packet.
+    // The joined worker releases these retained slots before Arena Stop.
     let (flow,generation)={
         let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         // Allocate stable owned M1 slabs once for a truly ready-only
         // recvmmsg. Do not hold Entry during the potentially blocking kernel
         // syscall, and never borrow a temporary M4 input array afterwards.
-        for _ in 0..32{
+        while rx_pending.len()<32{
             match e.arena.allocate(){
                 Ok(slab)=>rx_pending.push(slab),
                 Err(_)=>break,
@@ -556,8 +558,9 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     if e.phase!=PH_ACTIVE||e.generation!=generation ||
         stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let mut delivered_total=0u32;
-    for (i,slab) in rx_pending.drain(..).enumerate(){
-        if i>=batch.observed {drop(slab);continue}
+    // Kernel did not touch the remaining preposted slots; retain their
+    // exact original ownership instead of returning and reallocating them.
+    for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
         let (len,seq)=match batch.entry(i){
             Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
                 cipher_len,seq32
