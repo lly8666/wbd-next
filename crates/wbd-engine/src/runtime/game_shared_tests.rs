@@ -298,3 +298,65 @@ fn r1_game_r4_g04_parity_first_send_independent_from_repair_and_arena(){
     tx.stop();
     assert_eq!(a.report().loaned,0);
 }
+
+
+#[test]
+fn r1_game_r4_g03_one_lane_queue_full_three_other_lanes_immediate(){
+    let mut a=arena(32);
+    let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1,2,3,4],256),
+        limits(1,32)).unwrap();
+    let first=tx.offer(input(&mut a,3),0..1,Mode::Game,1,None,MonoNs(0)).unwrap();
+    assert_eq!(first,Some(LogicalPacketId(0)));
+    // Owner has already served B,C,D while A is still backpressured.
+    let mut first_fast=Vec::new();
+    assert_eq!(tx.drain_ready(MonoNs(0),3,|v|{
+        first_fast.push(v.lane.slot);
+        DispatchOutcome::Accepted
+    }),3);
+    assert_eq!(first_fast,[2,3,4]);
+    assert_eq!(tx.lane_queued(lane(1,1,256).key),Some((1,1)));
+    // Second logical input has three available routes despite A being full.
+    let second=tx.offer(input(&mut a,4),0..1,Mode::Game,1,None,MonoNs(0)).unwrap();
+    assert_eq!(second,Some(LogicalPacketId(1)));
+    assert_eq!(tx.counters().lane_copy_drop,1);
+    assert_eq!(tx.in_use(),(2,2));
+    let mut seen=Vec::new();
+    while tx.drain_ready(MonoNs(0),1,|v|{
+        seen.push((v.lane.slot,v.logical_id,v.common_payload[0]));
+        DispatchOutcome::Accepted
+    })!=0{}
+    assert_eq!(seen.len(),4);
+    assert_eq!(seen.iter().filter(|v|v.1==second).count(),3);
+    assert_eq!(seen.iter().filter(|v|v.1==first).count(),1);
+    assert_eq!(tx.counters().lane_dispatch,7);
+    assert_eq!(tx.in_use(),(0,0));
+    assert_eq!(a.report().loaned,0);
+}
+#[test]
+fn r1_game_r4_g04_completed_shards_external_loan_survives_stop(){
+    let mut a=arena(12);
+    let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2],256),
+        RxLimits{delivered_window:8,open_blocks:2,open_bytes:8}).unwrap();
+    let at=scope(FlowDirection::Rx,1);
+    assert!(matches!(rx.offer_piece(at,lane(1,1,256).key,BlockIdExt(2),
+        LogicalPacketId(3),0,2,input(&mut a,4),0..1),
+        Ok(PieceProgress::Pending)));
+    let finished=rx.offer_piece(at,lane(1,2,256).key,BlockIdExt(2),
+        LogicalPacketId(3),1,2,input(&mut a,5),0..1).unwrap();
+    let block=match finished {
+        PieceProgress::Complete(b)=>b,
+        PieceProgress::Pending=>panic!("quorum was reached")
+    };
+    assert_eq!(rx.open_state(),(0,0));
+    assert_eq!(a.report().loaned,2);
+    assert_eq!(rx.stop(),0);
+    assert_eq!(a.report().loaned,2); // external M3 completion owns originals
+    let join=std::thread::spawn(move||drop(block));
+    join.join().unwrap();
+    assert_eq!(a.report().loaned,0);
+    let rejected=rx.offer_piece(at,lane(1,1,256).key,BlockIdExt(3),
+        LogicalPacketId(4),0,1,input(&mut a,6),0..1);
+    assert!(matches!(rejected,Err((GameError::Stopped,_))));
+    drop(rejected);
+    assert_eq!(a.report().loaned,0);
+}
