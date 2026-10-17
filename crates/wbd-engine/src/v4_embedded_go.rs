@@ -23,7 +23,7 @@ use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-use wbd_platform::linux_tun_sink::ScopedTunSink;
+use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry,TunError};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -455,6 +455,7 @@ unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
 #[derive(Default)]
 struct LoopCounts {
     rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
+    tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
 }
@@ -578,12 +579,43 @@ fn background_raw_once(
 // Only original owner grants route-bound budget, seals AEAD/PN and submits
 // original frozen M1 record through genuine scoped M4 raw TX.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[derive(Debug,Default,Clone,Copy,Eq,PartialEq)]
+struct TxTurnCompletion{
+    copied:u32,definitely_unsent:u32,uncertain:u32,
+    backpressure:bool,failed:bool,invalidate_route:bool,
+}
+// The only completion translation on the original authenticated TX path.
+// Exactly the kernel-copied prefix counts, the untouched suffix is dropped
+// by the existing bounded owner drain; an uncertain record is NEVER retried.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn classify_tx_turn(report:Option<&wbd_platform::linux_batch::KernelSendReport>,
+    ready:usize,seal_failed:bool)->TxTurnCompletion{
+    use wbd_platform::linux_batch::KernelSendSignal as S;
+    let sent=report.map_or(0,|r|r.outcome.accepted_prefix.min(ready));
+    let uncertain=usize::from(report.is_some_and(|r|
+        r.outcome.uncertain_index==Some(sent) && sent<ready));
+    let failed=seal_failed || report.is_none_or(|r|
+        r.outcome.error.is_some()||r.signal!=S::None||sent!=ready);
+    TxTurnCompletion{
+        copied:sent as u32,
+        definitely_unsent:ready.saturating_sub(sent+uncertain) as u32,
+        uncertain:uncertain as u32,
+        backpressure:report.is_some_and(|r|r.signal==S::Backpressure),
+        failed,
+        // Path/device/actual MTU exception only. Ordinary EAGAIN, partial
+        // errno-unavailable, or uncertain completion says nothing definite
+        // about route change; per-record preflight rejects never invalidate.
+        invalidate_route:report.is_some_and(|r|matches!(r.signal,
+            S::RouteUnavailable|S::DeviceUnavailable|S::MtuExceeded)),
+    }
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
-    events:&wbd_platform::linux_route_events::RouteEvents)->Result<u32,i32>{
+    events:&wbd_platform::linux_route_events::RouteEvents)->Result<TxTurnCompletion,i32>{
     // The caller has ALREADY polled the first TUN packet. Never wait for
     // batch fill: one sparse packet is sealed/submitted immediately.
     // The stack-owned vectors are reserved once per worker (not per DATA).
@@ -597,6 +629,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         e.generation
     };
     let mut ingress_error=false;
+    let mut observed=0usize;
     loop {
         if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
         let mut slab={
@@ -612,18 +645,32 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         };
         let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
         if space<20{return Err(INVALID)}
-        match tun.read_ipv4_into(generation,&mut slab.writable()[14..]){
-            Ok(n)=>pending.push((slab,n)),
+        // Reuse M4's existing poll(0)+O_NONBLOCK read. The single reader
+        // only borrows the shared TUN mutex for an immediately ready read:
+        // after filtering IPv6/invalid L3, no wait under the writer's lock.
+        let read={
+            let mut slots=[&mut slab.writable()[14..]];
+            tun.read_ready_batch(generation,&mut slots)
+        };
+        observed+=1;
+        match read {
+            Ok(batch)=>match batch.entry(0) {
+                Some(TunReadyEntry::UntrustedIpv4{len})=>pending.push((slab,len)),
+                Some(TunReadyEntry::Rejected)=>{drop(slab);},
+                _=>{break}, // EAGAIN, EINTR or readiness race: healthy idle
+            },
+            Err(TunError::Stopped)=>return Err(BAD_STAGE),
             Err(_)=>{ingress_error=true;break},
         }
-        if pending.len()>=32 || stop.load(Ordering::Acquire){break}
+        // Bound *all observed* frames, including malicious invalid floods.
+        if observed>=32 || stop.load(Ordering::Acquire){break}
         // Work budget sampled every eight packets, never by the kernel CPU
         // clock on every DATA. The poll is nonblocking and is the sole gate
         // for another TUN read; no fixed 32-entry latency penalty.
         if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
         if !loop_readiness(tun.readiness_fd(),stop,0){break}
     }
-    if pending.is_empty(){return Err(if ingress_error{INVALID}else{BAD_STAGE})}
+    if pending.is_empty(){return if ingress_error{Err(INVALID)}else{Ok(TxTurnCompletion::default())}}
     // Route validation and original M1/M3 AEAD/PN/queue admission occur
     // under the current generation's owner. M4's real sendmmsg follows
     // OUTSIDE Entry lock with an immutable original LoanBatch.
@@ -725,13 +772,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         drain_data_turn_returns(&mut e.arena);
         return Err(BAD_STAGE)
     }
-    let sent=report.as_ref().map_or(0,|r|r.outcome.accepted_prefix);
-    let all=report.as_ref().is_some_and(|r|
-        raw_ready_prefix_copied(r,admitted));
-    if !all{e.tx_route=None}
+    let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    if finish.invalidate_route{e.tx_route=None}
     drain_data_turn_returns(&mut e.arena);
-    if !all||seal_failed{return Err(INVALID)}
-    u32::try_from(sent).map_err(|_|INVALID)
+    // Even when the tail failed, the definite prefix remains copied and
+    // accounted. Dropped/uncertain immutable records are only released
+    // after synchronous M4 sendmmsg completes; never reseal/reuse PN.
+    Ok(finish)
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
@@ -895,7 +942,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &mut tx_pending,&mut tx_records,&mut tx_presentations,
                     &tx_events
                 ){
-                    Ok(n)=>{stats.tx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                    Ok(done)=>{
+                        stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
+                        stats.tx_dropped.fetch_add(u64::from(done.definitely_unsent),Ordering::Relaxed);
+                        stats.tx_uncertain.fetch_add(u64::from(done.uncertain),Ordering::Relaxed);
+                        if done.backpressure{stats.tx_backpressure.fetch_add(1,Ordering::Relaxed);}
+                        if done.failed{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    }
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }
                 let _=slice_start;
@@ -1085,6 +1138,44 @@ mod tests{
         // Control / Stop still uses the full drain and retirement fence.
         let stopped=arena.stop();
         assert_eq!(stopped.loaned,0);
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_tx_turn_completion_preserves_prefix_tail_and_typed_path(){
+        use wbd_platform::linux_batch::{KernelSendSignal as S,KernelSendReport};
+        use wbd_platform::{TxBatchOutcome,TxError};
+        let full=KernelSendReport{outcome:TxBatchOutcome::copied_all(32),signal:S::None};
+        assert_eq!(classify_tx_turn(Some(&full),32,false),
+            TxTurnCompletion{copied:32,..Default::default()});
+        assert_eq!(classify_tx_turn(Some(&KernelSendReport{outcome:TxBatchOutcome::copied_all(0),signal:S::None}),0,false),
+            TxTurnCompletion::default());
+        let examples=[
+            (1,0,None,S::Backpressure,0,1,0,true,false),
+            (32,5,None,S::PartialErrnoUnavailable,5,27,0,false,false),
+            (33,32,None,S::Backpressure,32,1,0,true,false),
+            (32,5,Some(5),S::AmbiguousCompletion,5,26,1,false,false),
+            (32,7,None,S::MtuExceeded,7,25,0,false,true),
+            (32,0,None,S::PreflightRejected,0,32,0,false,false),
+            (32,0,None,S::DeviceUnavailable,0,32,0,false,true),
+            (32,0,None,S::RouteUnavailable,0,32,0,false,true),
+            (32,0,None,S::Stopping,0,32,0,false,false),
+        ];
+        for (total,prefix,unknown,signal,copied,dropped,uncertain,backpressure,invalidate) in examples {
+            let report=KernelSendReport{
+                outcome:TxBatchOutcome{accepted_prefix:prefix,
+                    uncertain_index:unknown,error:Some(if unknown.is_some(){
+                        TxError::IoUncertain
+                    }else if backpressure{TxError::WouldBlock}else{TxError::IoFailed})},
+                signal
+            };
+            let done=classify_tx_turn(Some(&report),total,false);
+            assert_eq!((done.copied,done.definitely_unsent,done.uncertain,
+                done.backpressure,done.invalidate_route),
+                (copied,dropped,uncertain,backpressure,invalidate));
+            assert!(done.failed);
+            assert_eq!(done.copied+done.definitely_unsent+done.uncertain,total as u32);
+        }
+        assert!(classify_tx_turn(Some(&full),32,true).failed);
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]

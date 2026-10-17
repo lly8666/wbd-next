@@ -836,6 +836,21 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     if err:=recvOne(time.Now().Add(2*time.Second));err!=nil{t.Fatal(err)}
     if !observed[0]{t.Fatal("S2C no-HOL initial packet missing PN0")}
+    // Make the real Linux TUN enqueue unsupported IPv6 while its original
+    // IPv4 application source stays idle. The old read_ipv4_into held the
+    // same mutex as authenticated writes during its next 750ms poll.
+    v6addr:="fd00:241:23::1"
+    if out,e:=exec.Command("ip","-6","addr","add",v6addr+"/64","dev",tunName).CombinedOutput();e!=nil{
+        t.Fatalf("real TUN IPv6 test setup: %v %s",e,out)
+    }
+    t.Cleanup(func(){_ =exec.Command("ip","-6","addr","del",v6addr+"/64","dev",tunName).Run()})
+    v6,err:=net.DialUDP("udp6",nil,&net.UDPAddr{IP:net.ParseIP("fd00:241:23::2"),Port:42005})
+    if err!=nil{t.Fatalf("kernel IPv6 neighbor traffic injection: %v",err)}
+    if _,err=v6.Write([]byte("unsupported-ipv6-control"));err!=nil{
+        t.Fatalf("kernel IPv6 TUN write: %v",err)
+    }
+    _=v6.Close()
+    time.Sleep(75*time.Millisecond) // bounded chance for original TX to filter IPv6
     // All later input is sent without waiting for earlier responses. No Go
     // callback to receiveRawToTun or tunToKernelRaw; Rust performs both.
     seq:=b.rxBoundary
@@ -856,13 +871,25 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
         if e:=syscall.Sendto(raw,v4RawC2STestPacket(record,seq,b.originalFlow),0,
             &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{t.Fatal(e)}
         seq+=uint32(len(record))
+        if i==0 {
+            // No subsequent IPv4 TUN input yet: authenticated C2S delivery
+            // must not wait for the next IPv4 packet to unblock TX's reader.
+            if e:=app.SetReadDeadline(time.Now().Add(400*time.Millisecond));e!=nil{t.Fatal(e)}
+            got:=make([]byte,256)
+            n,from,e:=app.ReadFromUDP(got)
+            want:=bytes.Repeat([]byte{0x31},48)
+            if e!=nil||from==nil||!from.IP.Equal(remoteIP)||!bytes.Equal(got[:n],want){
+                t.Fatalf("REAL_TUN_IPV6_FILTER_BLOCKED_C2S_FIRST_DELIVERY n=%d err=%v",n,e)
+            }
+            t.Logf("REAL_TUN_IPV6_FILTER_C2S_UNBLOCKED_PASS delivery_before_400ms_without_new_ipv4")
+        }
         if i>0 {
             down:=bytes.Repeat([]byte{0x61+byte(i)},52)
             if n,e:=app.WriteToUDP(down,&net.UDPAddr{IP:remoteIP,Port:42001});
                 e!=nil||n!=len(down){t.Fatalf("S2C app injector n=%d err=%v",n,e)}
         }
     }
-    for i:=0;i<packets;i++{
+    for i:=1;i<packets;i++{
         if e:=app.SetReadDeadline(time.Now().Add(3*time.Second));e!=nil{t.Fatal(e)}
         buf:=make([]byte,256)
         n,from,e:=app.ReadFromUDP(buf)
