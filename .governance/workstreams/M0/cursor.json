@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 120,
-  "checkpoint_sha": "d139142a1e6e2002c84a64f0a3963d1be3a78238",
+  "sequence": 121,
+  "checkpoint_sha": "181fb7db0bcfad09e7db7b88fa602a28934fef81",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
   "current_task": "024 PARTIAL: real original Go TLS→Rust AEAD/PN→Linux raw/TUN RX seq32 anchor advances only after authenticated LINK; CODE21a809c / exact native SOURCE9249115 SUCCESS with feature-gated wrap vector and original Go raw/TUN functional. Main registry M1 Game013/M2 recovery010 complete-package assignments now active, M3 FEC016 partial, M4 platform013 frozen ready. Prior paired P10 CPU benefit remains INCONCLUSIVE; no claim from new source.",
-  "why_now": "Resume authoritative main after H119; completed authorized parallel registry packages first and one bounded 024 original RX seq32 long-run correctness increment, preventing untrusted header/old fixed Go boundary from affecting trustworthy wrap extension.",
+  "why_now": "H120 native and code evidence remain true, but ordinary Governance39024310202 found a real SOURCE-mixed cursor evidence_refs structural failure; fix metadata under main-only audit without changing P10 history or worker scope.",
   "done_when": "This atomic 024 realpath seq32 increment ends at CODE21a809c, shared native entry9249115, exact SOURCE run39023910341 build+consume SUCCESS and immutable evidence S d139142a. Full task024 NOT_MET: original same-session TX/RX protected mutable Mutex<Entry> remains, 32-ready single-syscall native original path and new SOURCE AB/BA not proven; D10 historical FAIL, R0-023, oversize, product/physical NOT_RUN.",
   "next_action": "Continue 024 by composing frozen M1-012 directional SPSC into the original credential-verified Go→Rust owner, separating actual TX/RX mutable crypto/PN state with Stop/generation fences without editing active worker-owned files; run affected original-path native Actions before any cost comparison.",
   "unverified": true,
   "last_tested_source": "9249115c809933eae7ddebdd9334bbe16095bf64",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-authenticated-seq32-anchor-9249115c809933eae7ddebdd9334bbe16095bf64.json",
-    "docs/evidence/M0/M0-024-original-TX-unlocked-P10-paired-e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963.json"
+    "docs/evidence/M0/M0-024-authenticated-seq32-anchor-9249115c809933eae7ddebdd9334bbe16095bf64.json"
   ],
   "context_refs": [
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
@@ -24,8 +23,9 @@
     "docs/devlog/M0/M0-024-authenticated-seq32-anchor-2026-10-17.md",
     "docs/architecture/TEST_PLAN.md",
     "docs/evidence/M0/M0-024-D10-traced-capacity-ec775091edf8a0714416d1fd1d7b71be7ad33421.json",
-    "r0/qualification-manifest.json"
+    "r0/qualification-manifest.json",
+    "docs/evidence/M0/M0-024-original-TX-unlocked-P10-paired-e26e5d52dbebb17f9a60a9f8fc5ccc2c9093f963.json"
   ],
   "open_requests": [],
-  "partial_summary": "H120 PARTIAL. Atomic seq32 authenticated moving reference native PASS, original Go TLS/3cipher/real raw/TUN source9249115 scoped tests PASS; >2GiB true kernel wrap NOT_RUN. M1 Game013 and M2 receipt ingress010 dispatched once in main; M3 FEC016 remains partial, M4 013 ready. 024 live TX/RX shared owner mutex and 32 aggregated original raw syscalls NOT_DONE, historical P10 cost INCONCLUSIVE; no production/physical/023 clearance."
+  "partial_summary": "H121 PARTIAL. SOURCE9249115 authentic Go→Rust original raw/TUN and authenticated seq32 wrap native functional PASS; true >2GiB wire rollover NOT_RUN. H120 Governance39024310202 FAILED for mixed evidence SOURCE, preserved in devlog; old P10 e26e5d now context-only, not falsified/renamed. M1 Game013/M2 recovery010 parallel assignments remain, M3 ISA-L correctness source-scoped complete but Release AB CPU still NOT_RUN, M4 013 frozen. 024 live TX/RX split/actual 32mmsg and CPU win not met; D10 historical FAIL, prod0/product/physical not qualified."
 }
