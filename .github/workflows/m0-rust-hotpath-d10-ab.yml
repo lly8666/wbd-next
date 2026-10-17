@@ -1,0 +1,261 @@
+name: M0 fixed D10 syscall diagnostic protected Go Rust A-B
+run-name: "R1-M0-024|D10-AB|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-rust-hotpath-d10-ab.yml"
+permissions: {contents: read}
+concurrency:
+  group: m0-hotpath-d10-ab-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: a3d64b10804e006fecf06b7b4eb2d974b0b54e57
+          path: rust-A
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build pinned A and tested current B with same Go workload, release flags and toolchains
+        shell: bash
+        env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+        run: |
+          set -euo pipefail
+          # M0-024 B code snapshot b8d53e79; main workflow-only change preserves locked Rust blobs.
+          # Freeze content, not a floating branch or unrelated later commit.
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 3287bf49437023bce867314af43423234ce3a5f9
+          test "$(git rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 4ea790403b89190bd3a6eaf587aff836de0be173
+          # Fixed baseline A: M4-012 source before DATA return cap64.
+          # Only v4_embedded_go.rs (and its test) differs in B, and Go
+          # workload fixture, Cargo.lock, route/TUN and scripts are identical.
+          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_embedded_go.rs)" = 23f675d6426190a1a98ca3454cfa234e5359525a
+          test "$(git -C rust-A rev-parse HEAD:crates/wbd-engine/src/v4_owner_crypto.rs)" = 3287bf49437023bce867314af43423234ce3a5f9
+          test "$(git -C rust-A rev-parse HEAD)" = a3d64b10804e006fecf06b7b4eb2d974b0b54e57
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          # Same pinned ROOT deps for both, original A engine implementation.
+          cp Cargo.toml Cargo.lock rust-A/
+          cp crates/wbd-codec/Cargo.toml rust-A/crates/wbd-codec/Cargo.toml
+          cp crates/wbd-engine/Cargo.toml rust-A/crates/wbd-engine/Cargo.toml
+          mkdir -p rust-A/native
+          cp -a native/isal-safe rust-A/native/isal-safe
+          cmp rust-A/Cargo.lock Cargo.lock
+          # Shared test-only sparse env forwarding applies to both legs.
+          grep -Fq 'WBD_M0_D10_DIAG' tools/run-v4-tun-netns.sh
+          for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go; do
+            cmp "rust-A/r0/go_overlay/internal/realityfront/$f" "r0/go_overlay/internal/realityfront/$f"
+          done
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = 'rustc 1.85.1 (4eb161250 2025-03-15)'
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          mkdir -p hotpath-build/A hotpath-build/B
+          for leg in A B; do
+            if [[ "$leg" = A ]]; then SRC="$GITHUB_WORKSPACE/rust-A"; else SRC="$GITHUB_WORKSPACE"; fi
+            (cd "$SRC" && cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go)
+            cp "$SRC/target/release/libwbd_engine.so" "hotpath-build/$leg/libwbd_engine.so"
+            for f in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+              cp "$SRC/r0/go_overlay/internal/realityfront/$f" "legacy/internal/realityfront/$f"
+            done
+            cp "$GITHUB_WORKSPACE/r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go" "legacy/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
+            export CGO_LDFLAGS="-L$SRC/target/release -lwbd_engine"
+            (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/hotpath-build/$leg/owner-go.test" ./internal/realityfront)
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          paths=["r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
+            "tools/run-v4-tun-netns.sh","Cargo.lock"]
+          manifest={
+            "source_sha":os.environ["GITHUB_SHA"],
+            "source_A":"a3d64b10804e006fecf06b7b4eb2d974b0b54e57",
+            "source_B":os.environ["GITHUB_SHA"],
+            "legacy_Go":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "rust":"1.85.1","go":"1.23.12",
+            "flags":"cargo release locked --features m0_v4_probe,m0_v4_embedded_go; Go tags wbd_v4_native_probe,wbd_v4_embedded_go",
+            "identical_go_harness_and_runner":True,
+            "common_harness_sha256":{p:sha(p) for p in paths},
+            "binary_sha256":{leg:{f:sha(f"hotpath-build/{leg}/{f}") for f in ["libwbd_engine.so","owner-go.test"]} for leg in ["A","B"]},
+            "production_features":0,"scope":"developer original protected Go TLS -> original Rust owner real Linux raw/TUN"
+          }
+          pathlib.Path("hotpath-build/manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+          print(json.dumps(manifest,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hotpath-d10-ab-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: hotpath-build/
+          retention-days: 30
+          if-no-files-found: error
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: hotpath-d10-ab-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: hotpath-build
+      - name: Verify immutable A/B artifacts and same Go app fixture before timing
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p hotpath-result native-probe-result
+          cp hotpath-build/manifest.json hotpath-result/build-manifest.json
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          m=json.load(open("hotpath-build/manifest.json"))
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert m["source_B"]==os.environ["GITHUB_SHA"]
+          assert m["source_A"]=="a3d64b10804e006fecf06b7b4eb2d974b0b54e57"
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          for p,h in m["common_harness_sha256"].items():assert sha(p)==h,p
+          for leg in ("A","B"):
+            for p,h in m["binary_sha256"][leg].items():
+              assert sha(f"hotpath-build/{leg}/{p}")==h,(leg,p)
+          print("RUST_A_B_EXACT_SOURCE_AND_COMMON_HARNESS_VERIFIED")
+          PY
+          chmod +x hotpath-build/A/owner-go.test hotpath-build/B/owner-go.test
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 strace
+          test -c /dev/net/tun
+      - name: D10 A→B same VM exact normal off 5s warmup + 30s measurement
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          # Both legs use same exact current Go harness/script, run strictly
+          # sequentially, each in its own owned Linux netns. No recompiles.
+          python3 - <<'PY'
+          import json,os,pathlib,platform,time
+          m=json.load(open("hotpath-build/manifest.json"))
+          d={"source_sha":m["source_B"],"run_id":os.environ["GITHUB_RUN_ID"],
+             "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"job":os.environ["GITHUB_JOB"],
+             "runner":platform.node()+":"+platform.release(),
+             "order":["A","B"],"scenario":"D10_AB","application_payload_profile":"64_256_1200_UDP_BYTES_EQUAL_COUNT_10MBPS","start_monotonic_ns":time.monotonic_ns(),
+             "warmup_seconds":5,"measure_seconds":15,
+             "topology":"same one owned namespace raw/TUN per leg",
+             "production_features":0}
+          pathlib.Path("hotpath-result/runtime.json").write_text(json.dumps(d,indent=2)+"\n")
+          PY
+          for leg in A B; do
+            echo "RUST_HOTPATH_D10_LEG_START=$leg"
+            BEGIN="$(python3 -c 'import time;print(time.monotonic_ns())')"
+            rm -f native-probe-result/normal-off-dev-10mbps.json native-probe-result/d10-syscalls.txt
+            set +e
+            WBD_M0_D10_DIAG=1 WBD_M0_PERF_BASELINE=1 WBD_M0_PAIRED_OLD_NEW=1 bash tools/run-v4-tun-netns.sh "hotpath-build/$leg" >"hotpath-result/$leg.log" 2>&1
+            RC=$?
+            set -e
+            END="$(python3 -c 'import time;print(time.monotonic_ns())')"
+            tail -n 10 "hotpath-result/$leg.log"
+            echo "RUST_HOTPATH_D10_LEG_END=$leg rc=$RC"
+            if [[ -f native-probe-result/normal-off-dev-10mbps.json ]]; then
+              cp native-probe-result/normal-off-dev-10mbps.json "hotpath-result/$leg.json"
+            fi
+            if [[ -s native-probe-result/d10-syscalls.txt ]]; then
+              cp native-probe-result/d10-syscalls.txt "hotpath-result/$leg-syscalls.txt"
+            fi
+            LEG="$leg" BEGIN="$BEGIN" END="$END" RC="$RC" python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path("hotpath-result/runtime.json")
+          d=json.loads(p.read_text())
+          d[os.environ["LEG"]]={"start_monotonic_ns":int(os.environ["BEGIN"]),
+             "end_monotonic_ns":int(os.environ["END"]),
+             "exit_code":int(os.environ["RC"]),"job":os.environ["GITHUB_JOB"]}
+          p.write_text(json.dumps(d,indent=2)+"\n")
+          PY
+            if sudo ip netns list | grep -q "^wbdm0_$GITHUB_RUN_ID"; then
+              echo "RUST_HOTPATH_D10_NAMESPACE_LEAK leg=$leg" >&2; exit 1
+            fi
+            if [[ "$RC" != 0 ]]; then
+              echo "RUST_HOTPATH_D10_INVALID_LEG=$leg rc=$RC" >&2
+            fi
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          r=pathlib.Path("hotpath-result")
+          meta=json.loads((r/"runtime.json").read_text())
+          manifests=json.loads((r/"build-manifest.json").read_text())
+          summary={"source_sha":os.environ["GITHUB_SHA"],
+             "source_A":manifests["source_A"],"source_B":manifests["source_B"],
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "job":os.environ["GITHUB_JOB"],"order":["A","B"],
+             "same_measurement_job":meta["A"]["job"]==meta["B"]["job"]==os.environ["GITHUB_JOB"],
+             "non_overlapping":meta["A"]["end_monotonic_ns"]<=meta["B"]["start_monotonic_ns"],
+             "flags":manifests["flags"],"common_harness":manifests["common_harness_sha256"],
+             "topology":"identical original Go fixture, original Rust owner kernel raw/TUN",
+             "rate_basis":"UDP payload 64/256/1200B equal count at 10Mbps each direction, trace full child",
+             "clock_sampling":"same approx10Hz auxiliary Rust THREAD CPU sampling; primary comparison combined process CPU/GiB",
+             "product_qualification":"NOT_RUN","production_features":0}
+          for leg in ("A","B"):
+            p=r/f"{leg}.json"
+            if not p.exists():
+              summary[leg]={"result":"NOT_MEASURED"};continue
+            x=json.loads(p.read_text())
+            mbps=lambda d:8*d["delivered_udp_payload_bytes"]/15e6
+            cpu=x["combined_process_user_cpu_seconds"]+x["combined_process_system_cpu_seconds"]
+            delivered=x["c2s"]["delivered_udp_payload_bytes"]+x["s2c"]["delivered_udp_payload_bytes"]
+            summary[leg]={
+              "raw_receipt_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+              "source":manifests["source_A" if leg=="A" else "source_B"],
+              "result":x["result"],"measured_seconds":x["measure_seconds"],
+              "d10":x["explicit_d10_fixture"],
+              "strace_sha256":hashlib.sha256((r/f"{leg}-syscalls.txt").read_bytes()).hexdigest() if (r/f"{leg}-syscalls.txt").exists() else None,
+              "warmup_seconds":x["warmup_seconds"],
+              "mix":x["mix_packet_ipv4_lengths_bytes"],
+              "declared_app_payload_sizes":[64,256,1200],
+              "process_cpu_seconds":cpu,
+              "cpu_s_per_GiB_delivered":cpu/(delivered/(1024**3)) if delivered else None,
+              "delivered_udp_payload_bytes":delivered,
+              "c2s_udp_mbps":mbps(x["c2s"]),"s2c_udp_mbps":mbps(x["s2c"]),
+              "c2s_missing":x["c2s"]["missing_or_not_delivered"],
+              "s2c_missing":x["s2c"]["missing_or_not_delivered"],
+              "invalid":x["c2s"]["invalid_received"]+x["s2c"]["invalid_received"],
+              "p99_oneway_age_c2s_us":x["c2s"]["sampled_oneway_same_host_app_delivery_age_p99_us"],
+              "p99_oneway_age_s2c_us":x["s2c"]["sampled_oneway_same_host_app_delivery_age_p99_us"],
+              "rust_rx_thread_cpu_auxiliary":x["original_rust_worker_rx_cpu_seconds"],
+              "rust_tx_thread_cpu_auxiliary":x["original_rust_worker_tx_cpu_seconds"]}
+          A=summary["A"];B=summary["B"]
+          valid=all([summary["same_measurement_job"],summary["non_overlapping"],
+             A.get("result")=="MEASUREMENT_RECORDED_NOT_PRODUCT_PASS",
+             B.get("result")=="MEASUREMENT_RECORDED_NOT_PRODUCT_PASS",
+             A.get("c2s_missing")==0,A.get("s2c_missing")==0,
+             B.get("c2s_missing")==0,B.get("s2c_missing")==0,
+             A.get("c2s_udp_mbps",0)>=9.8,A.get("s2c_udp_mbps",0)>=9.8,
+             B.get("c2s_udp_mbps",0)>=9.8,B.get("s2c_udp_mbps",0)>=9.8,
+             A.get("invalid")==0,B.get("invalid")==0,
+             A.get("mix")==[92,284,1228],B.get("mix")==[92,284,1228],
+             A.get("d10") is True,B.get("d10") is True,
+             A.get("measured_seconds")==15,B.get("measured_seconds")==15,
+             A.get("strace_sha256") is not None,B.get("strace_sha256") is not None,
+             all((r/f"{leg}-syscalls.txt").stat().st_size > 200 for leg in ("A","B"))])
+          summary["result"]="VALID_D10_AB_DIAGNOSTIC_ON_WHOLE_CHILD_SYSCALL_SUMMARY" if valid else "INCONCLUSIVE_OR_FAILED"
+          summary["syscall_attribution"]="strace -f -c covers entire Go child+Rust and startup/warmup/drain, not per-DATA exact counts"
+          summary["cpu_comparison"]="NOT_QUALIFIED_TRACER_OVERHEAD; diagnostic only"
+          summary["causal_product_speedup"]="NOT_QUALIFIED"
+          (r/"paired-summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print(json.dumps(summary,indent=2))
+          if not valid:raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hotpath-d10-ab-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: hotpath-result/
+          retention-days: 30
+          if-no-files-found: warn
