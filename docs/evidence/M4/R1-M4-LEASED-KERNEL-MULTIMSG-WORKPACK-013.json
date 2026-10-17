@@ -4,9 +4,9 @@
   "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
   "branch": "work/m4-r1-platform",
   "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
-  "result": "INCONCLUSIVE",
+  "result": "PASS",
   "artifact_verified": true,
-  "scope": "Raw Linux true sendmmsg/recvmmsg entrypoints compile and source-attested unprivileged UDP kernel 94/94 native R1 PASS, but M4 branch frozen G2 checker old <=64 ancestry while actual 66; not ready_for_integration.",
+  "scope": "Only fixed PACK-013 M4 platform native Linux x86_64 GNU and exact worker write-scope: native compiled-once 94/94 R1 PASS, separate central ROLE_SCOPE_PASS for code SOURCE and previous full worker HEAD. No privileged raw/TUN positive, Go-authenticated product, physical link, 500 Mbps/p99 or native Windows/ARM.",
   "authority": {
     "revision": 2,
     "epoch": 1,
@@ -123,10 +123,90 @@
     "Production Go V4 disabled"
   ],
   "production_go_v4": "DISABLED",
-  "blocked_by": ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md",
   "rollback": "Revert four M4 platform source paths to sequence16 H while preserving failure receipts. Do not change M0 root checker without authorized M0 scope.",
-  "blocker_request_format": "M0 escalation Markdown only, not a GitHub Actions dispatch/request schema JSON",
-  "status": "BLOCKED_GOVERNANCE",
-  "native_result": "PASS_SCOPED_94_OF_94",
-  "evidence_scope_note": "INCONCLUSIVE denotes complete task not Governance-qualified; native GitHub compiled-once tests independently PASS. No privileged device/product positive."
+  "blocker_request_format": "Historical Markdown M0 request superseded by governance section 10; no open G2 sync blocker",
+  "status": "READY_FOR_INTEGRATION_SCOPED_PLATFORM_ONLY",
+  "native_result": "PASS_SCOPED_WORKER_TESTS",
+  "evidence_scope_note": "INCONCLUSIVE denotes complete task not Governance-qualified; native GitHub compiled-once tests independently PASS. No privileged device/product positive.",
+  "component_native_attestation": {
+    "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "result": "PASS_SCOPED_WORKER_TESTS",
+    "run_id": 39006105820,
+    "attempt": 1,
+    "tests_passed": 94,
+    "tests_failed": 0,
+    "compiled_once": true,
+    "artifact_verified": true,
+    "build_zip_sha256": "0ac0e03f5190af85a34fe9fea05950d7de7068474af1157d0dbd931499b14d3e",
+    "result_zip_sha256": "bc5b941a36b8051bb17e3b25074e7302b5ad10af025bf77d2e93f3893ed71a17"
+  },
+  "central_scope_attestation": {
+    "result": "ROLE_SCOPE_PASS",
+    "verifies": "M4 per-commit scope/authorized paths only. Does not execute worker code, verify handoff, or grant product/performance qualification.",
+    "governance_source": "main/docs/GOVERNANCE.md section 10 v2 incremental scope replaces old v1 G2 ancestry bound",
+    "exact_source_code": {
+      "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+      "run_id": 39006312629,
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "artifact_id": 12090659267,
+      "zip_sha256": "49fde0bc1f8fc4add09f6d0ff45b5906bafe616ff931e01f57df62a09136864e",
+      "json_sha256": "8774d9d4b70cb03acaa4889cbf2946e302e4705c3d2e3a006481f70083f0978b",
+      "control_sha": "b1bb0bea8442bbf8dd3f910aaf214d91507192f7",
+      "is_current_head_when_audited": true
+    },
+    "prior_full_worker_head": {
+      "source_sha": "bec8a9dc00bbcfeadb341da95f056fa7faa6eeef",
+      "run_id": 39006679848,
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "artifact_id": 12091372201,
+      "zip_sha256": "6f2a1cf4d5a531930e9bf99ead7bb860b32d92e5300f161aeaf261a90cf0eb2a",
+      "json_sha256": "315bf773b74b46b37bfbedc8fbb64ba7db3eaaa1c8236e3abc344b1228751caf",
+      "control_sha": "5d372942f022d2d254bbfe27c6e4773fc10803ef",
+      "is_current_head_when_audited": true,
+      "handoff": "NOT_EVALUATED",
+      "product": "NOT_RUN",
+      "performance": "NOT_RUN"
+    },
+    "audit_file_source": "tools/scope_audit.py in central main snapshot, read-only GitHub history; not the old frozen worker tools/worker_scope_ci.py"
+  },
+  "historical_worker_checker": {
+    "status": "SUPERSEDED_BY_CENTRAL_SCOPE_PASS_ONLY",
+    "cause": "Frozen worker v1 64-commit ancestry cap vs cumulative 66+, code Governance run39006105815 attempts1+2 FAIL and cursor-only H run39006668841 FAIL; retained as historical failures. No sync/checker exception needed under main GOVERNANCE Section 10.",
+    "old_request_path": ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md",
+    "request_resolution": "SUPERSEDED; close request without tool changes",
+    "new_head_audit_requirement": "Subsequent evidence S / cursor-only H change worker HEAD; a prior PASS must not be represented as qualification of any new HEAD. Verify per-new-S/H exact central scope runs independently."
+  },
+  "handoff_contract": {
+    "code_source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+    "freeze": "No additional platform functionality or root/Go/engine integration in task013; M0 pins exact compiled SOURCE and consumes internal Rust only after separate Go authentication/owner gate.",
+    "signatures": [
+      "pub fn ipv4_tcp::build_scatter_header<H: FrozenRecordHandle>(tuple: Ipv4Tuple<'_>, presentation: Presentation, record: &H, authenticated_options: Option<&[u8]>, mtu: usize, header: &mut [u8]) -> Result<usize, PacketError>",
+      "pub fn ScopedRawIpv4Tx::send_kernel_multimsg<H: FrozenRecordHandle>(&self, generation: u32, records: &[H], tuple: Ipv4Tuple<'_>, presentations: &[Presentation]) -> KernelSendReport",
+      "pub fn ScopedRawIpv4Rx::receive_kernel_multimsg(&self, generation: u32, buffers: &mut [&mut [u8]], tuple: Ipv4Tuple<'_>, persona: PacketPersona) -> Result<RawReadyBatch, RawTxError>",
+      "pub fn ScopedTunSink::read_ready_batch(&self, generation: u32, slots: &mut [&mut [u8]]) -> Result<TunReadyReads,TunError>",
+      "pub fn ScopedTunSink::write_ready_batch(&self, generation: u32, frames: &[&[u8]]) -> TunReadyWrites"
+    ],
+    "internal_abi": "pub(crate) linux_batch::submit_scatter_fd uses a single Linux sendmmsg(MSG_DONTWAIT) with exactly two iovec per packet; pub(crate) linux_rx_batch::receive_fd uses one recvmmsg(MSG_DONTWAIT|MSG_TRUNC). Native ABI tested on x86_64 GNU only. No exported C ABI or Go-facing auth interface.",
+    "borrowed_lifecycle": "FrozenRecordHandle ciphertext stays original immutable borrowed iovec[1], header stack [80 bytes] in iovec[0]; one BorrowFence ready guard and raw owner mutex cover all header prep and synchronous syscall, so STOP cannot drain before return. RX uses caller-exclusive mutable slice slots, owner outer guard and inner recvmmsg guard, parser/optional same-slot compact before loan release. generation mismatch and STOP fail closed; delayed KernelLoan frozen Arc/RecordPn returned only to original owner after STOP Pending, never re-sealed or consumed as auth.",
+    "bounds": "MAX_READY_RAW/MAX_READY_RX/MAX_READY_TUN=32, 0/1/32/33 checked including queued 33rd and sparse immediately ready. All first min(32) frames prevalidated before sendmmsg; no 33rd access. TUN remains at most32 synchronous poll(0)+read/write, not native batch syscall.",
+    "completion": "Tx KernelSendReport.outcome has accepted_prefix count of positive copied kernel messages (not peer ACK), at most one uncertain_index for ambiguous in-flight item, and untouched unattempted suffix (including 33rd). Positive partial sendmmsg can lose errno => PartialErrnoUnavailable; never invent errno, auto retry, reseal or PN. RX RawReadyBatch records observed, per-slot Unauthenticated{cipher_len,seq32}/Truncated/Rejected/Unused; strict tuple+checksum never AEAD/auth.",
+    "error_rules": "Actual kernel EMSGSIZE errno90 => MtuExceeded and invalidate route PMTU cache; local PacketExceedsBudget => preflight not invented EMSGSIZE; EAGAIN=>backpressure; EINTR=>uncertain; ENODEV/ENETDOWN/ENETUNREACH/EHOSTUNREACH=>device/route invalidation; short/unknown errno=>AmbiguousCompletion; route stale/unavailable=>fail closed without send; TUN short write/EINTR/EIO=>uncertain_index, no synthetic ACK. No productive GoV4 enablement.",
+    "rollback": "Revert only task013 M4 source changes in crates/wbd-platform/src/{ipv4_tcp.rs,linux_batch.rs,linux_rx_batch.rs,linux_raw_carrier.rs} to preceding completed 012 H 32fc2a0556fdaf2f87c2abe922b5ffaed02715ec. No main/shared/root/ABI revert required; keep historical failures and evidence."
+  },
+  "qualification_boundaries": {
+    "central_scope": "PASS",
+    "component_linux_native": "PASS_SCOPED_94_OF_94",
+    "privileged_raw_ipv4_afpacket": "NOT_RUN",
+    "configured_tun_cap_net_admin": "NOT_RUN",
+    "M0_go_tls_authenticated_to_rust_owner": "NOT_RUN",
+    "windows_arm_native": "NOT_RUN",
+    "physical_interface_route_mtu_down_up": "NOT_RUN",
+    "throughput_500mbps_p99": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_go_v4": "DISABLED"
+  },
+  "integration": "READY_FOR_M0_STAGE_INTEGRATION_SOURCE_REVIEW_ONLY",
+  "obsolete_evidence_claim": "Previous scope was INCONCLUSIVE only because the old worker v1 checker had a cumulative 64 limit. Central main section10 exact SOURCE scope PASS resolves that ONE reason; it does not convert untested device/product scenarios."
 }

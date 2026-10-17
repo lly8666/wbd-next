@@ -1,3 +1,7 @@
+> **已被中央 v2 范围审计替代（SUPERSEDED，非未解决请求）。** 按最新 `main/docs/GOVERNANCE.md` §10，旧 worker G2 工具的累计64次上限不再阻止 PACK-013 交接。中央精确源码 [39006312629](https://github.com/lly8666/wbd-next/actions/runs/39006312629) 与先前完整 HEAD [39006679848](https://github.com/lly8666/wbd-next/actions/runs/39006679848) 均 `ROLE_SCOPE_PASS`，实际 ZIP 和 JSON SHA256 已独立核验。**不再要求 M0 复制检查器、批准工具例外或重跑旧失败。** 本文件后续内容仅为历史故障与当时请求记录；原有失败仍保留。此次修订属于 task013 交接证据 S，不能用旧 HEAD 的 PASS 代替此后新 HEAD 的独立中央范围检查。
+
+---
+
 # M4 → M0: frozen G2 checker bound stops task 013 (real blocker)
 
 **Status: BLOCKED_NEEDS_M0_G2_REVIEW.** Role M4 / `R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013`; registry revision2, epoch1, branch `work/m4-r1-platform`. Final code SOURCE `b7bcde7dde64633532cae99460eb00855a2e119a`. No root/Cargo/engine/ABI/main path modified by M4.
