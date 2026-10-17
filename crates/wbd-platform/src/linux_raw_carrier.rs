@@ -15,7 +15,7 @@ use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::{TxBatchOutcome,TxError};
 use crate::linux_batch::{KernelSendReport,KernelSendSignal};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
-use crate::linux_mtu_scope::ScopedRouteBudget;
+use crate::linux_mtu_scope::{ScopedRouteBudget,BudgetError};
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
 use crate::rx_ipv4_tcp::{parse_data_packet,TrustedRx,RxError};
 use wbd_types::buffer_contract::FrozenRecordHandle;
@@ -63,7 +63,7 @@ fn checked_destination(tuple:Ipv4Tuple<'_>)->Result<Ipv4Addr,RawTxError>{
 #[derive(Debug,Clone,Copy,Eq,PartialEq)]
 pub enum RawTxError {
     InvalidScope,Stopped,InvalidInterface,Kernel(i32),InvalidPacket,
-    BoundedMtu,ShortSend,UnsupportedOptions,
+    BoundedMtu,PacketExceedsBudget,NoCapacity,RouteStale,RouteUnavailable,ShortSend,UnsupportedOptions,
 }
 pub struct ScopedRawIpv4Tx {
     fd:OwnedFd,
@@ -136,16 +136,22 @@ impl ScopedRawIpv4Tx {
         if self.is_stopping(){return Err(RawTxError::Stopped)}
         let _guard=self.borrow.try_enter_ready().map_err(|e|match e {
             BorrowError::Stopping=>RawTxError::Stopped,
-            BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
+            BorrowError::TooManyLoans=>RawTxError::NoCapacity,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
         let dest_ip=checked_destination(tuple)?;
         let bounded=self.budget.send_budget(dest_ip)
-            .map_err(|_|RawTxError::BoundedMtu)?;
+            .map_err(|e|match e {
+                BudgetError::Unavailable=>RawTxError::RouteUnavailable,
+                BudgetError::ChangedOrInvalid|BudgetError::Deferred=>RawTxError::RouteStale,
+            })?;
         let mut scratch=[0u8;2048];
         let packet=ipv4_tcp::build(tuple,presentation,record,None,
             bounded.min(scratch.len()),&mut scratch)
-            .map_err(|_|RawTxError::InvalidPacket)?;
+            .map_err(|e|match e {
+                ipv4_tcp::PacketError::MtuExceeded{..}=>RawTxError::PacketExceedsBudget,
+                _=>RawTxError::InvalidPacket,
+            })?;
         if packet.len()<41 || packet[9]!=6 ||
             packet[12..16]!=tuple.src_ip[..] ||
             packet[16..20]!=tuple.dst_ip[..]{
@@ -164,7 +170,7 @@ impl ScopedRawIpv4Tx {
         if n<0 {
             let e=errno();
             if matches!(e,90|19|100|101|113){self.budget.invalidate()}
-            return Err(if e==90{RawTxError::BoundedMtu}else{RawTxError::Kernel(e)})
+            return Err(RawTxError::Kernel(e))
         }
         if n as usize!=packet.len(){self.budget.invalidate();return Err(RawTxError::ShortSend)}
         Ok(n as usize)
@@ -239,7 +245,10 @@ impl ScopedRawIpv4Rx {
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
         let mtu=self.budget.receive_budget()
-            .map_err(|_|RawTxError::BoundedMtu)?;
+            .map_err(|e|match e{
+                BudgetError::Unavailable=>RawTxError::RouteUnavailable,
+                BudgetError::ChangedOrInvalid|BudgetError::Deferred=>RawTxError::RouteStale,
+            })?;
         let deadline=Instant::now()+Duration::from_millis(750);
         // Bounded irrelevant Linux RST/ACK traffic can share this interface.
         // Only the *exact* configured tuple and full checksummed DATA is
@@ -335,7 +344,11 @@ fn raw_batch_failure(n:usize,err:RawTxError)->KernelSendReport{
     let (uncertain,error,signal)=match err{
         RawTxError::Stopped=>(None,TxError::Stopping,KernelSendSignal::Stopping),
         RawTxError::BoundedMtu=>(None,TxError::IoFailed,KernelSendSignal::MtuExceeded),
+        RawTxError::PacketExceedsBudget|RawTxError::NoCapacity=>
+            (None,TxError::IoFailed,KernelSendSignal::PreflightRejected),
         RawTxError::InvalidInterface=>(None,TxError::IoFailed,KernelSendSignal::DeviceUnavailable),
+        RawTxError::RouteUnavailable|RawTxError::RouteStale=>
+            (None,TxError::IoFailed,KernelSendSignal::RouteUnavailable),
         RawTxError::ShortSend=>(Some(n),TxError::IoUncertain,KernelSendSignal::AmbiguousCompletion),
         RawTxError::Kernel(4)=>(Some(n),TxError::IoUncertain,KernelSendSignal::Interrupted),
         RawTxError::Kernel(11)=>(None,TxError::WouldBlock,KernelSendSignal::Backpressure),
@@ -358,6 +371,13 @@ impl ScopedRawIpv4Tx{
         presentation:Presentation,
     )->KernelSendReport{
         let limit=frames.len().min(MAX_READY_RAW);
+        // Even empty callbacks cannot claim success on a retired owner.
+        if generation!=self.generation {
+            return raw_batch_failure(0,RawTxError::InvalidScope)
+        }
+        if self.is_stopping() {
+            return raw_batch_failure(0,RawTxError::Stopped)
+        }
         if limit==0{return KernelSendReport{
             outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None}}
         for (i,record) in frames[..limit].iter().enumerate(){
@@ -397,7 +417,10 @@ impl ScopedRawIpv4Rx{
             BorrowError::TooManyLoans=>RawTxError::BoundedMtu,
         })?;
         let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
-        let mtu=self.budget.receive_budget().map_err(|_|RawTxError::BoundedMtu)?;
+        let mtu=self.budget.receive_budget().map_err(|e|match e{
+            BudgetError::Unavailable=>RawTxError::RouteUnavailable,
+            BudgetError::ChangedOrInvalid|BudgetError::Deferred=>RawTxError::RouteStale,
+        })?;
         for i in 0..outcome.attempted{
             let mut pfd=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
             // SAFETY: one live pollfd, timeout zero, owned FD.
@@ -460,6 +483,10 @@ mod ready_batch_tests{
             (RawTxError::Kernel(90),KernelSendSignal::MtuExceeded,None,TxError::IoFailed),
             (RawTxError::Kernel(19),KernelSendSignal::DeviceUnavailable,None,TxError::IoFailed),
             (RawTxError::Kernel(101),KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
+            (RawTxError::PacketExceedsBudget,KernelSendSignal::PreflightRejected,None,TxError::IoFailed),
+            (RawTxError::NoCapacity,KernelSendSignal::PreflightRejected,None,TxError::IoFailed),
+            (RawTxError::RouteUnavailable,KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
+            (RawTxError::RouteStale,KernelSendSignal::RouteUnavailable,None,TxError::IoFailed),
             (RawTxError::ShortSend,KernelSendSignal::AmbiguousCompletion,Some(2),TxError::IoUncertain),
             (RawTxError::Stopped,KernelSendSignal::Stopping,None,TxError::Stopping),
         ];

@@ -121,9 +121,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "完整包：在M4 platform/Go bridge原路径安全性范围，基于冻结011驱动，消除route/link切换、EMSGSIZE/partial/Stop并发下的缓存、借用与队列竞态，不重造TLS/owner。",
-      "done_when": "M4-012：错误来源与状态、route storm/ifindex/MTU down-up、Stop与晚loan、0/1/32/33边界及可用Linux实际内核反例精确SOURCE Actions验证；原privileged unsupported明确保留，输出M0接线稳定接口与回退说明。",
-      "assigned_task": "R1-M4-RAW-TUN-STOP-PMTU-RACE-012"
+      "goal": "完整包：在M4原有platform/Go-bridge边界实现可证明有界的原始Linux raw/TUN borrowed-kernel-ready multi-frame I/O，重点actual recvmmsg/sendmmsg条件支持、单owner Stop/loan与partial/uncertain语义；不自行接Go TLS、M1/M3的加密PN/分片。",
+      "done_when": "PACK-013 M4: 保持冻结012 PMTU/设备失效/Stop安全；0/1/32/33/满额/空额、Linux真实无特权内核支持的多帧批、部分完成及未知尾项、错码EAGAIN/EINTR/EMSGSIZE/ENODEV/short write、generation/Stop/late-loan和稀疏立即服务反例；精确SOURCE编译一次native Actions+产物审计。确不能使用的raw/TUN privileged及真实单syscall批路径标UNSUPPORTED/NOT_RUN而不伪称性能，最终提供M0安全且冻结的调用签名/回退。",
+      "assigned_task": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013"
     }
   ]
 }
