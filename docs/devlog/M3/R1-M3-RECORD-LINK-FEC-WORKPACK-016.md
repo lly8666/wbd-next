@@ -29,3 +29,7 @@ Workpack016 still PARTIAL: low-impact codec L02/L03 fixes are native proven; rea
 ## F01/F05 — parity-first-send ready chunk interface (not repair)
 
 New `TxBatch::take_ready_parity_chunk` returns at most four precomputed parity rows (in the original Go row order) for an external fresh-send scheduler turn, not the retransmission/10% repair budget. PACK016 native scenario runs healthy continuous 20:20 at 256B/512B/1200B, three full blocks each: every one of 60 source arrivals produces immediate systematic, 60 real parity rows are exposed in bounded <=4-frame chunks, with exact block IDs, configured metadata and wire-byte counts, no delayed queue/slack. The method is explicitly ready-output-only: existing scalar encoding on 20th source is synchronous and needs separate measured max-continuous-CPU validation; this codec assertion **does not prove actual kernel send fairness/driver success/age**, which M0/M1 must integrate. Other FEC classes and native ISA-L remain in scope.
+
+## F03/F04 all k×r higher erasure recovery and variable lengths
+
+Rust native test now exercises all k1..20 × all configured parity profiles × L1/65/257 (plus k20 L1200) with e1/2/4/full-min(k,r) and leading/trailing missing patterns, nonuniform original shard lengths and reversed deterministic parity selection. Uses immutable old-Go generator coefficients already asserted in earlier golden tests. This broadens beyond prior e<=4 sample but does not constitute native ISA-L verification or a real Go V4 session.
