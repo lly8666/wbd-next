@@ -23,7 +23,7 @@
      #[cfg(test)] fail_next_signal:AtomicBool,
  }
  impl WakeGate {
-     fn new() -> Self {
+     pub(crate) fn new() -> Self {
          Self { armed: AtomicBool::new(false),
              stopping: AtomicBool::new(false),
              inflight: AtomicUsize::new(0), target: OnceLock::new(),
@@ -31,7 +31,7 @@
      }
      /// Only the owner thread may bind/park. Early publications are not
      /// missed because the first queue inspection occurs after binding.
-     fn bind_current(&self) -> bool {
+     pub(crate) fn bind_current(&self) -> bool {
          let this = thread::current();
          self.target.get_or_init(|| this.clone()).id() == this.id()
      }
