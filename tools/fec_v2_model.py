@@ -110,7 +110,8 @@ def verify_arithmetic() -> dict:
     assert close_deadline_ms(None, None) == 6
     assert close_deadline_ms(None, None, game=True) == 3
     assert close_deadline_ms(100, None) == 16
-    assert close_deadline_ms(100, None, game=True) == 8
+    assert close_deadline_ms(100, None, game=True) == 2  # 100pps * 8ms < 1
+    assert close_deadline_ms(200, None, game=True) == 8
     assert math.isclose(poisson_full_probability(16, 1000, .0225),
                         .9613982417336826, abs_tol=1e-12)
     return dict(result="ARITHMETIC_SELF_CHECK_PASS", product="NOT_RUN")

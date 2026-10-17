@@ -8,7 +8,7 @@
 - 固定SOURCE、harness、配置、工具链、native库、target和产物hash，Actions编译一次后消费。两端都运行相同scheme，不能让一端新头一端旧头后称新协议无效。
 - 两种比较分开：I，同k/r/长度/负载的内核/内存实现成本；II，真实partial/期限/选档下的整体交付、CPU、wire、p99。配置标签相同但实际parity少发、target未实现、fallback或源包未注入，都不能记性能改善。
 - baseline优先已冻结M3-016 `422a26127496560c0a52e6745ecc8f354e3f4f18`与已验Normal/off `fca4456313e59c0a67f4d8b98959a62d2af71b12`的**确切范围**；最新M0接线baseline由M0复核后固定。历史标量/ISA-L 26–45倍只是组件，不是旧Go整产品。
-- 先测真实新链路10Mbps/方向、Game逻辑3Mbps/方向；通过再用50→100→200→500Mbps容量阶梯。某一级容量受限后停止更重档，按真实PPS、每包成本和线速开销推算，标PROJECTED_NOT_TESTED。
+- 先测真实新链路10Mbps/方向、Game逻辑3Mbps/方向；通过再用30→50→100→200→500Mbps容量阶梯。某一级容量受限后停止更重档，按真实PPS、每包成本和线速开销推算，标PROJECTED_NOT_TESTED。
 
 ## 2. 功能批次（不拆成几十个首包任务）
 
