@@ -123,6 +123,7 @@
     "Production Go V4 disabled"
   ],
   "production_go_v4": "DISABLED",
-  "blocked_by": ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.json",
-  "rollback": "Revert four M4 platform source paths to sequence16 H while preserving failure receipts. Do not change M0 root checker without authorized M0 scope."
+  "blocked_by": ".governance/workstreams/M4/requests/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013-G2-64-LIMIT.md",
+  "rollback": "Revert four M4 platform source paths to sequence16 H while preserving failure receipts. Do not change M0 root checker without authorized M0 scope.",
+  "blocker_request_format": "M0 escalation Markdown only, not a GitHub Actions dispatch/request schema JSON"
 }
