@@ -17,6 +17,8 @@ use crate::memory::Arena;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use crate::v4_owner_crypto::ScopedLinuxBudget;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
@@ -53,8 +55,20 @@ const PH_PREPARED:u32=1;
 const PH_ACTIVE:u32=2;
 const PH_STOPPED:u32=3;
 const PH_STOPPING:u32=4;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+struct WorkerRouteBudget {
+    scoped:ScopedLinuxBudget,
+    observed_at:Instant,
+    ifindex:u32,
+    destination:Ipv4Addr,
+    revision:u64,
+}
 struct Entry{
     owner:ProtectedScopedOwner,normal:NormalOffReceive,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    tx_route:Option<WorkerRouteBudget>,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     workers:Option<LoopWorkers>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -97,6 +111,10 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         flow:handoff.flow,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        tx_route:None,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         workers:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -394,6 +412,7 @@ unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
 #[derive(Default)]
 struct LoopCounts {
     rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
+    route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -492,11 +511,32 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
     let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
     if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     let flow=e.flow;
-    // Observe the authentic scoped kernel route only ONCE per S2C DATA.
-    // Do not touch the stale-snapshot API used by fail-closed MTU tests.
-    // Original M4 raw send below still checks real interface MTU and DF.
-    e.owner.seal_normal_off_with_fresh_route_budget(
-        slab,n,"lo",ifindex,Ipv4Addr::from(flow.client_ip),15,loop_now()
+    // A single active generation owns a route snapshot. The normal DATA
+    // path checks in-memory scope and original FrameBudget only; one route
+    // socket lifecycle per <=1s refresh, never one per DATA packet.
+    // M4 still verifies real link MTU and the Linux raw DF send; an M4
+    // rejection invalidates the snapshot before any next sealing attempt.
+    let destination=Ipv4Addr::from(flow.client_ip);
+    let refresh=e.tx_route.as_ref().is_none_or(|cache|
+        cache.observed_at.elapsed()>=Duration::from_secs(1)
+        || cache.ifindex!=ifindex || cache.destination!=destination
+        || cache.revision!=e.tx_route_revision
+    );
+    if refresh {
+        e.tx_route=None; // no stale budget if kernel observation fails
+        let snapshot=e.owner.observe_linux_normal_off_route_budget(
+            "lo",ifindex,destination
+        ).map_err(|_|INVALID)?;
+        e.tx_route_revision=e.tx_route_revision.checked_add(1).ok_or(FULL)?;
+        e.tx_route=Some(WorkerRouteBudget{
+            scoped:snapshot,observed_at:Instant::now(),ifindex,destination,
+            revision:e.tx_route_revision,
+        });
+        e.counters.route_refresh.fetch_add(1,Ordering::Relaxed);
+    }
+    let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+    e.owner.seal_normal_off_with_worker_snapshot(
+        slab,n,scoped,ifindex,destination,15,loop_now()
     ).map_err(|_|INVALID)?;
     let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
     let tuple=Ipv4Tuple{
@@ -507,9 +547,15 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
         ack32:1,advertised_window:4096,ip_id:43,
         persona:PacketPersona::Legacy,
     };
-    e.owner.submit_scoped_raw_tx_reusing(
+    if e.owner.submit_scoped_raw_tx_reusing(
         raw,tuple,presentation,loop_now(),tx_storage
-    ).map_err(|_|BAD_STAGE)?;
+    ).is_err(){
+        // Link MTU shrink, EMSGSIZE, route removal or other raw failure
+        // never allows this revision to authorize a later packet.
+        e.tx_route=None;
+        e.arena.drain_returns();
+        return Err(BAD_STAGE)
+    }
     e.arena.drain_returns();
     Ok(())
 }
@@ -623,6 +669,16 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
 // Developer-mode per-worker *actual Linux thread CPU time* for 10s+60s
 // receipt. Combined process CPU includes Go sender/reader; independent
 // exact user-vs-kernel attribution within that residual is NOT available.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_refresh(
+    handle:u64,out:*mut u64)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(state)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=state.entries.get(&handle)else{return UNKNOWN};
+    unsafe{out.write(e.counters.route_refresh.load(Ordering::Relaxed))}
+    OK
+}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(

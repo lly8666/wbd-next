@@ -23,6 +23,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_route_refresh(uint64_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_observed_tx_ipv4_mtu(uint64_t,uint32_t,uint32_t *);
 */
 import "C"
@@ -181,4 +182,12 @@ func (b *v4EmbeddedNativeBridge) observedRealRustTxIPv4MTU(ifindex uint32)(uint3
         C.uint64_t(b.handle),C.uint32_t(ifindex),&limit)
     if rc!=0||limit<28{return 0,fmt.Errorf("%w: observed genuine kernel TX budget=%d",errV4Embedded,int(rc))}
     return uint32(limit),nil
+}
+
+func (b *v4EmbeddedNativeBridge) rustOwnerRouteRefreshCount()(uint64,error){
+    if !b.committed||b.handle==0{return 0,errV4Embedded}
+    var out C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_route_refresh(C.uint64_t(b.handle),&out)
+    if rc!=0{return 0,fmt.Errorf("%w: original Rust route refresh count=%d",errV4Embedded,int(rc))}
+    return uint64(out),nil
 }

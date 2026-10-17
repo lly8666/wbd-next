@@ -461,6 +461,35 @@ impl ProtectedScopedOwner {
             buffer,payload_len,fresh.frame,carrier_snapshot,now
         )
     }
+    /// Private, owner-created route snapshot maintained inside the same active
+    /// generation's Rust worker. Unlike the compatibility API above it does
+    /// not re-read kernel route on every DATA; the M4 raw sender still checks
+    /// the live local link MTU and kernel DF/EMSGSIZE on every real send.
+    /// Route/link netlink event invalidation is not wired yet: a bounded 1s
+    /// refresh and M4 send-error invalidation are conservative interim gates.
+    /// It is NOT a perpetual or caller-constructed MTU authorization.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn seal_normal_off_with_worker_snapshot(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        snapshot:&ScopedLinuxBudget,expected_ifindex:u32,
+        expected_destination:Ipv4Addr,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || self.generation!=snapshot.generation
+            || self.epoch!=snapshot.epoch
+            || self.token.owner_id()!=snapshot.owner_id
+            || snapshot.observed_ifindex!=expected_ifindex
+            || snapshot.route_destination!=Some(expected_destination)
+            || snapshot.observed_route_mtu.is_none(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        if payload_len>snapshot.frame.single_business_payload_mtu {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        self.seal_normal_off_one(
+            buffer,payload_len,snapshot.frame,carrier_snapshot,now
+        )
+    }
     /// Actual OS TUN app packet -> original M1 slab (no intermediate copy)
     /// -> original protected Rust owner Normal/off LINK -> S2C AEAD/PN and
     /// scoped FrozenRecord TX queue. Only packet sizes fitting the current

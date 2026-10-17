@@ -353,10 +353,14 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     cpuBeforeUser,cpuBeforeSys:=m0PerfRusage()
     ownerRxBefore,ownerTxBefore,err:=b.rustOwnerWorkerCPU()
     if err!=nil{t.Fatal(err)}
+    routeBefore,err:=b.rustOwnerRouteRefreshCount()
+    if err!=nil{t.Fatal(err)}
     kernelBefore:=m0PerfDevCounters()
     time.Sleep(time.Until(end))
     cpuAfterUser,cpuAfterSys:=m0PerfRusage()
     ownerRxAfter,ownerTxAfter,err:=b.rustOwnerWorkerCPU()
+    if err!=nil{t.Fatal(err)}
+    routeAfter,err:=b.rustOwnerRouteRefreshCount()
     if err!=nil{t.Fatal(err)}
     kernelAfter:=m0PerfDevCounters()
     wg.Wait()
@@ -419,6 +423,8 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "c2s":samples(inbound),"s2c":samples(outbound),
         "original_rust_worker_rx_cpu_seconds":float64(ownerRxAfter-ownerRxBefore)/1e9,
         "original_rust_worker_tx_cpu_seconds":float64(ownerTxAfter-ownerTxBefore)/1e9,
+        "original_rust_route_refreshes_during_measure":routeAfter-routeBefore,
+        "route_refresh_diagnostic":"owner cache misses only, no normal per-DATA syscall counter",
         "combined_process_user_cpu_seconds":float64(cpuAfterUser-cpuBeforeUser)/1e9,
         "combined_process_system_cpu_seconds":float64(cpuAfterSys-cpuBeforeSys)/1e9,
         "cpu_attribution_limitation":processNotSeparate,
@@ -444,6 +450,11 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     // INVALID cases stay explicit. No artificially unbounded retries.
     if len(failures)>0{t.Errorf("real baseline failed integrity/io: %v",failures)}
     if status=="INVALID_MEASUREMENT"{t.Error("baseline data invalid; see exact JSON")}
+    // 1s bounded fallback => ~60 refreshes in 60s under steady load, and
+    // certainly not one per packet. No assertion that route events are wired.
+    if routeAfter-routeBefore>140{
+        t.Errorf("Route cache missed per-packet hot path: refresh=%d",routeAfter-routeBefore)
+    }
     // Legitimate capacity/injector insufficiency is a recorded NOT_QUALIFIED
     // developer diagnostic, never an automatic product PASS.
 }
