@@ -79,9 +79,12 @@ pub fn subscribe()->Arc<RouteEvents>{
     match open_listener(){
         Ok(fd)=>{
             let weak=Arc::downgrade(&new);
+            // Publish initial health BEFORE starting the worker. Otherwise
+            // an immediate poll/recv failure could be overwritten as healthy.
+            new.healthy.store(true,Ordering::Release);
             if std::thread::Builder::new().name("wbd-route-link-watch".into())
-                .spawn(move||watch(fd,weak)).is_ok(){
-                new.healthy.store(true,Ordering::Release);
+                .spawn(move||watch(fd,weak)).is_err(){
+                new.failed();
             }
         }
         Err(_)=>{} // 1s owner fallback and live M4 check remain mandatory
