@@ -4,26 +4,26 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 27,
-  "checkpoint_sha": "ef153ce4c62bdc4cd17d2778a94063920beb8e72",
+  "sequence": 28,
+  "checkpoint_sha": "de164cde96d706d77743a4bb035c85dd4b024db7",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 codec frozen CODE422a: scalar Go matrix, RECORD/LINK, bounded cooperative FEC and selectable safe real ISA-L Go GF rows, e×e/direct recovery verified. Default worker #39014567195 113 PASS/0 FAIL/1 ignored; M0 native-feature exact CODE #39016665239 true C backend + Go differential 3 PASS/0 FAIL, manifest/artifacts verified. Shared paired Release CPU job not executed.",
-  "why_now": "Formal native source run after H26 resolves Go-vs-ISA-L correctness gap. Native proof and historical scalar evidence must be recorded under new immutable SOURCE-named evidence before H; retained old referenced evidence unmodified.",
-  "done_when": "Full assigned PACK016 C01-C04/L01-L04/F01-F06 with existing Go/scalar/native correctness, measured same-VM Release paired CPU where applicable, source-aware proof and truthful unintegrated M0 Go V4/driver limits; no new encoder architecture.",
-  "next_action": "M0-owned existing m0-m3-isal-native consume job must run precompiled CODE422a ignored Release AB CPU probe in same VM (request file); M3 then verify raw CPU/ISA/latency/delivery classification, write new SOURCE-specific receipt and H, hand frozen codec workpack to M0. Do not modify M0 shared workflow or engine.",
+  "current_task": "PACK016 frozen codec source CODE422a: real M0 ISA-L Go normalized GF byte correctness native39016665239 3/3 PASS, old scalar 113 PASS; Release paired same-VM AB 20:20 L1200 e4 39044413886 CPU_PAIRED_VALID, 5/5 windows per leg. AB scalar 2712 vs native 123331 complete source/parity/recover batches per ~1.25s CPU each; 45.50x CPU per equal component block; BA reversed independent Action NOT_RUN.",
+  "why_now": "M0 delivered actual pinned Release AB Action and artifacts. Source-matched immutable AB evidence records host ISA, raw CPU windows, actual NativeIsaL selection, fidelity and nonproduct limits; old H27 native-pass evidence left untouched.",
+  "done_when": "R1-M3-RECORD-LINK-FEC-WORKPACK-016 C01-C04/L01-L04/F01-F06 source frozen; scalar/Go/native exact correctness, same-VM AB+BA component CPU comparison with valid CPU/raw parity/recovery and truthful M0 production ingress limits. Stop once BA validated or classified, do not add encoder features.",
+  "next_action": "M0 add measure_order=BA choice to existing m0-m3-isal-native.yml and run separate workflow_dispatch with frozen worker_source CODE422a and same 20:20/1200B harness. M3 consume BA raw and artifact SHA, classify speedup/capacity, then independent evidence S and cursor-only final H; do not edit shared workflow or expand tests.",
   "unverified": true,
   "last_tested_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
   "evidence_refs": [
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json"
+    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-release-AB.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18.json",
-    "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json",
     "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
-    "docs/devlog/M3/M0-REQUEST-PACK016-COOP-RELEASE-CPU.md"
+    "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
-  "partial_summary": "016 CODE422a source-frozen; default debug 113/0/1 #39014567195 plus real pinned native ISA-L v2.31.1 Go matrix/e×e/owner 3/0 #39016665239 with build+consume artifact hashes. Code scope39014774023 PASS, prior H scope39015032457 PASS; older moving-control Governance FAIL preserved. Performance same-host same-input ABI CPU AB/BA NOT_RUN; host x86_64 AVX2/SSE2 available but exact vector dispatch unmeasured. M0-only workflow consumes compiled binary and needs one AB step. Go V4 authenticated FEC-on delivery, packet RTT p99, fairness, physical/500Mbps NOT_RUN; Windows/AArch64 native unsupported."
+  "partial_summary": "Same SOURCE CODE422a fixed scalar+real ISA-L: native Go k/r/e 3 PASS run39016665239, debug scalar 113 PASS run39014567195, CPU AB main harness d361f756 run39044413886 SUCCESS in one consume job. Per-block CPU scalar461.27us/native10.14us (~45.50x); p99 is first <=2048 codec operations only (507.8us vs 13.2us), not packet. AMD EPYC 9V74 x86_64 SSE2/SSSE3/AVX2/AVX512F CPU capability; selected ISA-L assembly instructions unmeasured. Earlier parser-only run39044344082 FAIL retained. M0 workflow BA input not present and dispatch tool unavailable; reverse Action NOT_RUN, product owner/driver FEC-on/goodput and RTT/500Mbps NOT_RUN; Windows/ARM ISA-L UNSUPPORTED."
 }
