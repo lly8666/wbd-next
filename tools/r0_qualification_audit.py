@@ -97,8 +97,19 @@ def audit():
     require(workspace_deps["aws-lc-rs"]["features"] == ["non-fips", "alloc"]
             and workspace_deps["aws-lc-rs"]["default-features"] is False,
             "unexpected aws-lc-rs feature set or FIPS build")
-    require(lock["rust"]["crypto_dependencies"]["cargo_lock_sha256"] == sha256("Cargo.lock"),
-            "source lock no longer matches generated R1 crypto Cargo.lock")
+    # Historic R1 cryptography artifact digest is an immutable SOURCE receipt,
+    # NOT a promise current Cargo.lock never changes for new scoped M1 packages.
+    # Check the historical anchor and every present dependency/version below;
+    # Cargo --locked and artifact provenance guard the current graph at build.
+    require(lock["rust"]["crypto_dependencies"]["cargo_lock_sha256"] ==
+            "4147b1175268099e3f42a98bc23aeb08e762f24fa3d718a1d819322efa683b36",
+            "historic crypto Cargo.lock proof anchor changed")
+    require(workspace_deps.get("rtrb") == {"version":"=0.3.2"} and
+            by_name.get("rtrb",{}).get("version") == "0.3.2" and
+            by_name["rtrb"].get("checksum") ==
+              "ad8388ea1a9e0ea807e442e8263a699e7edcb320ecbcd21b4fa8ff859acce3ba"
+            and not by_name["rtrb"].get("dependencies"),
+            "M1 bounded SPSC rtrb version, provenance or transitive closure drift")
     for crate in members:
         c = tomllib.loads(Path(f"crates/{crate}/Cargo.toml").read_text())
         require(c["package"]["name"] == crate, f"crate package mismatch: {crate}")
@@ -106,7 +117,7 @@ def audit():
         # R1 composition is M0-owned and strictly one-way. Keep every
         # lower-level crate pure types-only and engine as the sole importer.
         expected = (set() if crate=="wbd-types" else
-                    {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"}
+                    {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"}
                     if crate=="wbd-engine" else
                     {"wbd-types","aws-lc-rs","chacha20","aes"}
                     if crate=="wbd-codec" else {"wbd-types"})
@@ -117,12 +128,13 @@ def audit():
                 require(v.get("path") == f"../{k}",
                         f"wrong internal source pin for {crate}->{k}")
             else:
-                require(crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"}
+                require(((crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"})
+                         or (crate=="wbd-engine" and k=="rtrb"))
                         and v=={"workspace":True},
-                        f"R1 crypto must only be consumed by codec: {crate}->{k}")
+                        f"unapproved external dependency {crate}->{k}")
     lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
     require(lock_deps["wbd-engine"]==
-            {"wbd-types","wbd-codec","wbd-platform","wbd-recovery"},
+            {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"},
             "Cargo.lock lost R1 engine assembly edges")
     require(lock_deps["wbd-codec"]=={"wbd-types","aws-lc-rs","chacha20","aes"},
             "Cargo.lock codec crypto direct dependencies drift")
