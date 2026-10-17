@@ -47,7 +47,10 @@
     "baseline_A_source_sha": "333c1b3f7af6e9a717ba4a6b78bf6a378899f3d5",
     "result": "PARTIAL_STORAGE_REUSE_CPU_CLOCK_STRUCTURAL_PASS_P10_AB_BA_CPU_BENEFIT_INCONCLUSIVE",
     "evidence": "docs/evidence/M0/M0-024-rust-owner-ready-storage-clock-P10-AB-BA.json",
-    "native_functional_runs": [38932845235,38933305336],
+    "native_functional_runs": [
+      38932845235,
+      38933305336
+    ],
     "P10_AB_run_id": 38934828468,
     "P10_BA_run_id": 38934828450,
     "P10_10Mbps_UDP_app_each_direction_60s_zero_missing": "BOTH_ORDERS_PASS",
@@ -84,7 +87,12 @@
     "single_cipher": "CHACHA20_POLY1305",
     "fec": "OFF",
     "single_lane": true,
-    "effective_inner_ipv4_size_mix_by_packet": [64, 256, 1200, 1329],
+    "effective_inner_ipv4_size_mix_by_packet": [
+      64,
+      256,
+      1200,
+      1329
+    ],
     "original_rust_S2C_kernel_observed_inner_ipv4_MTU": 1329,
     "C2S_measured_inner_ipv4_mbps": 9.999804266666667,
     "S2C_measured_inner_ipv4_mbps": 9.999804266666667,
@@ -1006,5 +1014,21 @@
     "netem_product_matrix": "NOT_RUN",
     "physical": "NOT_RUN",
     "throughput_500mbps": "NOT_RUN"
+  },
+  "m0_024_owner_route_cache_60_refreshes": {
+    "code_source_sha": "5e4b03dfda87a7da81eaf6bdadd380b761abdcf1",
+    "result": "PARTIAL_HOTPATH_A_OWNER_SCOPE_ROUTE_CACHE_FUNCTIONAL_AND_STEADY_RATE_PASS",
+    "evidence": "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json",
+    "exact_native_run_id": 38993391914,
+    "steady_route_refreshes_60_seconds": 60,
+    "s2c_packets": 105303,
+    "c2s_packets": 105303,
+    "delivered_each_direction_mbps": 10.000209866666667,
+    "real_mtu_shrink_fail_closed": "PASS",
+    "route_change_netlink_invalidation": "NOT_RUN",
+    "M4_per_packet_sysfs_preflight": "RETAINED_FOR_SAFETY",
+    "same_run_AB_BA_for_this_change": "NOT_RUN",
+    "product": "NOT_RUN",
+    "production_features": 0
   }
 }

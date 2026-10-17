@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "source_sha": "5e4b03dfda87a7da81eaf6bdadd380b761abdcf1",
+  "code_source_sha": "5e4b03dfda87a7da81eaf6bdadd380b761abdcf1",
+  "role_id": "M0",
+  "task_id": "R1-M0-HOTPATH-COST-024",
+  "result": "PARTIAL_HOTPATH_A_OWNER_SCOPE_ROUTE_CACHE_FUNCTIONAL_AND_STEADY_RATE_PASS",
+  "why_now": "Continue 024 after current H104; previous source-locked P10 AB and BA both found -18.66% on eliminating double route query. This atom actually removes the remaining per-DATA route socket allocation in the SAME original Rust owner, without prematurely dropping M4's live MTU fail-closed check.",
+  "code_changes": [
+    "Original protected Go TLS authorized normal owner creates owner-private per-generation,ifindex,destination route snapshot via existing owner-verified Linux ScopedLinuxBudget.",
+    "Cache revision monotonic at refresh and a strict 1s maximum age fallback, fail-close on observation error, invalidate on raw M4 send error; only in-memory scoped budget size and original owner generation/token/epoch checks on regular S2C packets.",
+    "Original Rust owner retains the same M1 UniqueBuffer, original M3 AEAD/PN/link and frozen dispatch to genuine M4 raw TX, whose per-DATA sysfs link-MTU check and kernel DF/EMSGSIZE remain intact.",
+    "Go dev adapter exports read-only route refresh count; 60s real kernel perf test asserts route refresh <=140, not one per each data packet."
+  ],
+  "exact_actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 38993391914,
+    "attempt": 1,
+    "head_sha": "5e4b03dfda87a7da81eaf6bdadd380b761abdcf1",
+    "conclusion": "success",
+    "build_job": 117280453105,
+    "consume_job": 117280742449,
+    "artifacts": [
+      {
+        "kind": "build",
+        "id": 12085772366,
+        "digest": "sha256:4fc9efd59cb74e62a886ebbf697eec4a51a74d908eb21740be131c3424ccc676"
+      },
+      {
+        "kind": "result",
+        "id": 12085962021,
+        "digest": "sha256:1b6644a16d51c0c209e4b5cb99b372fa6e57ffeb1e660f5f2274bfcf1bc10e8f"
+      }
+    ],
+    "test": "TestR0V4EmbeddedNormalOff10MbpsDevelopment",
+    "warmup_seconds": 10,
+    "measured_seconds": 60,
+    "normal_lane_count": 1,
+    "fec": "off",
+    "cipher": "ChaCha20-Poly1305",
+    "app_packet_sizes_ipv4_bytes": [
+      64,
+      256,
+      1200,
+      1329
+    ],
+    "route_refresh_count": 60,
+    "route_optimization": "~1 kernel route observe per second rather than per DATA, independent event subscriber not yet implemented",
+    "c2s": {
+      "offered_ipv4_mbps": 10.000209866666667,
+      "delivered_ipv4_mbps": 10.000209866666667,
+      "packets_sent": 105303,
+      "packets_delivered": 105303,
+      "missing": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "sampled_same_host_delivery_age_p50_us": 130,
+      "sampled_same_host_delivery_age_p99_us": 277,
+      "age_samples": 6582
+    },
+    "s2c": {
+      "offered_ipv4_mbps": 10.000209866666667,
+      "delivered_ipv4_mbps": 10.000209866666667,
+      "packets_sent": 105303,
+      "packets_delivered": 105303,
+      "missing": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "sampled_same_host_delivery_age_p50_us": 81,
+      "sampled_same_host_delivery_age_p99_us": 243,
+      "age_samples": 6582
+    },
+    "original_rust_rx_worker_cpu_s": 4.240159565,
+    "original_rust_tx_worker_cpu_s": 3.934106306,
+    "combined_go_rust_process_user_cpu_s": 3.109246,
+    "combined_go_rust_process_sys_cpu_s": 11.181331,
+    "combined_process_cpu_s": 14.290577,
+    "other_same_source": "Original Go protected credentials, three cipher kernel raw-to-TUN, original bidirectional owner, exact link MTU 1369/overlong fail closed, targeted encrypted DATA PN0 lost PN1 no-HOL, background owner C2S8/8 S2C8/8, active real lo kernel MTU 65536→1500 original raw M4 refuses S2C and Stop passes, baseline/10ms/150ms real Linux netem smoke all succeeded."
+  },
+  "same_source_checks": [
+    {
+      "workflow": "governance.yml",
+      "id": 38993391884,
+      "status": "success",
+      "scope": "identity only"
+    },
+    {
+      "workflow": "r0-qualification-audit.yml",
+      "id": 38993391906,
+      "status": "success",
+      "scope": "static manifest"
+    },
+    {
+      "workflow": "r0-native-abi.yml",
+      "id": 38993391936,
+      "status": "success"
+    },
+    {
+      "workflow": "r0-cross-abi.yml",
+      "id": 38993391877,
+      "status": "success",
+      "scope": "compile only, not Windows/ARM runtime"
+    },
+    {
+      "workflow": "native-regression.yml",
+      "id": 38993391880,
+      "status": "success"
+    },
+    {
+      "workflow": "g2-bootstrap.yml",
+      "id": 38993391976,
+      "status": "success"
+    },
+    {
+      "workflow": "scope-audit.yml",
+      "id": 38993415058,
+      "status": "skipped/NOT_RUN"
+    }
+  ],
+  "boundaries": [
+    "One P10 performance run only: no strict same-run Rust/Rust AB/BA for this exact change, so do not compare this run's 14.29 CPU-s against previous SOURCE on different runners or claim causal improvement.",
+    "The earlier tested fixed SOURCE c203f078's 18.66% A/B and B/A was the duplicate route-query removal BEFORE this change, not an effect of this newest cache.",
+    "Owner route budget still samples every 1s under shared registry Mutex; Linux link/route netlink event invalidation, coalesced async refresh and driver EMSGSIZE feedback classification are NOT wired; therefore 024 batch A not complete. On raw failures snapshot is invalidated. M4 still synchronously verifies real interface MTU each packet and uses DF kernel send rejection.",
+    "1s cache age means route-only transient changes without link MTU change cannot be guaranteed observed before its fallback; therefore this is a developer opt-in partial optimization, not formal product-grade route consistency. Must add netlink fast invalidation or otherwise pause affected sending before production.",
+    "Original 023 unverified, external SYN, real B01-B04 asynchronous driver-held late completion, full veth/performance and physical/500Mbps NOT_RUN. Production ABI features0.",
+    "No public route management API added; existing stale-snapshot compatibility method still reobserves kernel and explicitly rejects stale constraints.",
+    "GitHub artifact SHA digests are API metadata and exact-source build/consume receipts."
+  ],
+  "production_features": 0,
+  "product_qualification": "NOT_RUN",
+  "next_action": "Complete batch A safely: install device-level netlink route/link event subscription with bounded coalesced worker refresh, generation+ifindex+route revision invalidation and M4 EMSGSIZE error feedback, plus actual Linux route/MTU down-up/recreate fail-closed tests. Remove per-DATA M4 sysfs preflight only after those event/error gates are proven. Then batch B registry-free direction owner and <=32 ready-only batch; SPARSE and D10 diagnostics with source-lock, and only afterward exact same-run Rust/Rust P10 AB/BA remeasure."
+}
