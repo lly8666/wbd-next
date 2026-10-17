@@ -574,12 +574,37 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
     Ok(())
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn loop_readiness(fd:i32,stop:&AtomicBool)->bool{
+fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
-    // bounded responsiveness for Stop; no timed waiting under registry.
-    let got=unsafe{poll(&mut p,1,10)};
+    // Block only to discover the first ready packet. Further work in the
+    // same bounded slice only drains immediately ready packets (timeout 0).
+    // Never sleep to fill a batch, and never wait under registry.
+    let got=unsafe{poll(&mut p,1,timeout_ms)};
     got>0 && p.revents&1!=0
+}
+
+// A single kernel readiness event can service multiple ALREADY ready packets.
+// Bounded by both 32 packets and roughly 100us of actual work, so Stop,
+// the opposite direction and later control work get regular opportunities.
+// The caller owns the packet buffer/driver; no extra packet Vector is built.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn ready_only_slice(
+    stop:&AtomicBool,
+    mut next_ready:impl FnMut()->bool,
+    mut service:impl FnMut()->bool,
+    mut within_budget:impl FnMut()->bool,
+)->usize{
+    let mut count=0;
+    while count<32 && !stop.load(Ordering::Acquire){
+        // The caller has already observed one ready packet; never wait
+        // again for a first packet or for a larger batch.
+        if count!=0 && !next_ready(){break}
+        let ok=service();
+        count+=1;
+        if !ok || !within_budget(){break}
+    }
+    count
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn start_loop(handle:u64,ifindex:u32)->i32{
@@ -618,12 +643,22 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                if !loop_readiness(raw_fd,&stop_rx){continue}
-                if stop_rx.load(Ordering::Acquire){break}
-                match background_raw_once(handle,&raw,&stop_rx,&mut rx_storage){
-                    Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
-                    Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
-                }
+                if !loop_readiness(raw_fd,&stop_rx,10){continue}
+                let slice_start=Instant::now();
+                ready_only_slice(&stop_rx,
+                    ||loop_readiness(raw_fd,&stop_rx,0),
+                    ||match background_raw_once(handle,&raw,&stop_rx,&mut rx_storage){
+                        Ok(n)=>{
+                            stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);
+                            true
+                        }
+                        Err(_)=>{
+                            stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);
+                            false
+                        }
+                    },
+                    ||slice_start.elapsed()<Duration::from_micros(100),
+                );
             }
             stats_rx.rx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
@@ -642,14 +677,24 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                if !loop_readiness(tun_fd,&stop_tx){continue}
-                if stop_tx.load(Ordering::Acquire){break}
-                match background_tun_once(
-                    handle,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
-                ){
-                    Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
-                    Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
-                }
+                if !loop_readiness(tun_fd,&stop_tx,10){continue}
+                let slice_start=Instant::now();
+                ready_only_slice(&stop_tx,
+                    ||loop_readiness(tun_fd,&stop_tx,0),
+                    ||match background_tun_once(
+                        handle,&tun,&stop_tx,ifindex,&mut tx_storage,&tx_events
+                    ){
+                        Ok(_)=>{
+                            stats.tx.fetch_add(1,Ordering::Relaxed);
+                            true
+                        }
+                        Err(_)=>{
+                            stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                            false
+                        }
+                    },
+                    ||slice_start.elapsed()<Duration::from_micros(100),
+                );
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
@@ -753,6 +798,39 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn ready_only_batch_0_1_32_33_and_failure_do_not_wait(){
+        use std::cell::Cell;
+        let stop=AtomicBool::new(false);
+        let count=Cell::new(0usize);
+        let polls=Cell::new(0usize);
+        // First packet never has to poll a second time. A solitary ready
+        // packet terminates immediately at the nonblocking next probe.
+        let n=ready_only_slice(&stop,||{polls.set(polls.get()+1);false},
+            ||{count.set(count.get()+1);true},||true);
+        assert_eq!((n,count.get(),polls.get()),(1,1,1));
+        for offered in [1usize,32,33] {
+            let complete=Cell::new(0usize);
+            let n=ready_only_slice(&stop,
+                ||complete.get()<offered,
+                ||{complete.set(complete.get()+1);true},
+                ||true);
+            assert_eq!(n,offered.min(32));
+            assert_eq!(complete.get(),offered.min(32));
+        }
+        let complete=Cell::new(0usize);
+        let n=ready_only_slice(&stop,||true,||{
+            complete.set(complete.get()+1);
+            complete.get()!=3
+        },||true);
+        assert_eq!((n,complete.get()),(3,3)); // error ends burst
+        let n=ready_only_slice(&stop,||true,||true,||false);
+        assert_eq!(n,1); // budget yields after first packet
+        stop.store(true,Ordering::Release);
+        let n=ready_only_slice(&stop,||panic!("unexpected poll"),
+            ||panic!("unexpected packet"),||true);
+        assert_eq!(n,0);
+    }
     #[test]
     fn m0_embedded_go_private_control_rejects_unknown_and_null(){
         assert_eq!(unsafe{wbd_m0_embedded_go_prepare(
