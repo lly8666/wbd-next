@@ -13,7 +13,8 @@ use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
 use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::{TxBatchOutcome,TxError};
-use crate::linux_batch::{KernelSendReport,KernelSendSignal};
+use crate::linux_batch::{self,KernelSendReport,KernelSendSignal};
+use crate::linux_rx_batch::{self,RxEntry,RxStatus};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
 use crate::linux_mtu_scope::{ScopedRouteBudget,BudgetError};
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
@@ -312,7 +313,7 @@ mod tests {
 const MAX_READY_RAW:usize=32;
 #[derive(Debug,Clone,Copy,Eq,PartialEq)]
 pub enum RawReadyStatus {
-    Empty, Ready, AtCap, WouldBlock, Interrupted,
+    Empty, Ready, AtCap, WouldBlock, Interrupted, IoUncertain,
 }
 #[derive(Debug,Clone,Copy,Eq,PartialEq)]
 pub enum RawReadyEntry{
@@ -530,5 +531,153 @@ mod raw_tuple_tests{
             Err(RawTxError::InvalidPacket));
         assert_eq!(checked_destination(Ipv4Tuple{src_ip:&[127,0,0],..t}),
             Err(RawTxError::InvalidPacket));
+    }
+}
+
+
+/// The original owner must hand a live, explicitly scoped raw FD to this
+/// driver after authenticated Go->Rust provenance installation. This uses
+/// ONE actual Linux sendmmsg syscall, not 32 sendto loops. No ciphertext
+/// copy: each message has header iovec + exactly the original frozen record
+/// slice. STOP holds the single batch guard across all header preparations
+/// and the synchronous kernel syscall. A positive return is NOT peer ACK.
+impl ScopedRawIpv4Tx {
+    pub fn send_kernel_multimsg<H:FrozenRecordHandle>(
+        &self,generation:u32,records:&[H],tuple:Ipv4Tuple<'_>,
+        presentations:&[Presentation],
+    )->KernelSendReport {
+        if generation!=self.generation {
+            return raw_batch_failure(0,RawTxError::InvalidScope)
+        }
+        if self.is_stopping() {
+            return raw_batch_failure(0,RawTxError::Stopped)
+        }
+        let limit=records.len().min(MAX_READY_RAW);
+        if presentations.len()<limit {
+            return raw_batch_failure(0,RawTxError::InvalidPacket)
+        }
+        let _loan=match self.borrow.try_enter_ready(){
+            Ok(g)=>g,
+            Err(BorrowError::Stopping)=>return raw_batch_failure(0,RawTxError::Stopped),
+            Err(BorrowError::TooManyLoans)=>return raw_batch_failure(0,RawTxError::NoCapacity)
+        };
+        let _lock=match self.serialize.lock(){
+            Ok(g)=>g,
+            Err(_)=>return raw_batch_failure(0,RawTxError::InvalidInterface)
+        };
+        if limit==0{
+            return KernelSendReport{outcome:TxBatchOutcome::copied_all(0),
+                signal:KernelSendSignal::None}
+        }
+        let dest=match checked_destination(tuple){
+            Ok(d)=>d,
+            Err(e)=>return raw_batch_failure(0,e)
+        };
+        let mtu=match self.budget.send_budget(dest){
+            Ok(m)=>m,
+            Err(BudgetError::Unavailable)=>
+                return raw_batch_failure(0,RawTxError::RouteUnavailable),
+            Err(_)=>return raw_batch_failure(0,RawTxError::RouteStale)
+        };
+        let mut headers=[[0u8;80];MAX_READY_RAW];
+        let mut sizes=[0usize;MAX_READY_RAW];
+        // Validate ALL submitted frames before first possible kernel send.
+        // The 33rd unsent record is not read, touched or resealed.
+        for i in 0..limit{
+            sizes[i]=match ipv4_tcp::build_scatter_header(
+                tuple,presentations[i],&records[i],None,mtu,&mut headers[i]){
+                Ok(n)=>n,
+                Err(ipv4_tcp::PacketError::MtuExceeded{..})=>
+                    return raw_batch_failure(0,RawTxError::PacketExceedsBudget),
+                Err(_)=>return raw_batch_failure(0,RawTxError::InvalidPacket)
+            };
+        }
+        let result=linux_batch::submit_scatter_fd(
+            self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
+            &headers,&sizes,records);
+        if result.signal.invalidates_path(){self.budget.invalidate()}
+        result
+    }
+}
+/// Kernel native raw recvmmsg into original owner-borrowed M1 packet slots.
+/// A completed raw packet is NEVER authenticated just by kernel acceptance:
+/// strict trusted tuple/checksum precedes engine AEAD/PN checks. The owner
+/// holds a BorrowFence across syscall AND parser, so STOP cannot free or
+/// rotate borrowed memory until both operations have exited.
+impl ScopedRawIpv4Rx {
+    pub fn receive_kernel_multimsg(&self,generation:u32,
+        buffers:&mut [&mut [u8]],tuple:Ipv4Tuple<'_>,persona:PacketPersona
+    )->Result<RawReadyBatch,RawTxError>{
+        if generation!=self.generation{return Err(RawTxError::InvalidScope)}
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        let mut out=RawReadyBatch::new(buffers.len());
+        if out.attempted==0{return Ok(out)}
+        if buffers[..out.attempted].iter().any(|b|b.len()<40){
+            return Err(RawTxError::InvalidPacket)
+        }
+        checked_destination(tuple)?;
+        let _loan=self.borrow.try_enter_ready().map_err(|e|match e {
+            BorrowError::Stopping=>RawTxError::Stopped,
+            BorrowError::TooManyLoans=>RawTxError::NoCapacity
+        })?;
+        let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
+        let mtu=self.budget.receive_budget().map_err(|e|match e{
+            BudgetError::Unavailable=>RawTxError::RouteUnavailable,
+            BudgetError::ChangedOrInvalid|BudgetError::Deferred=>RawTxError::RouteStale,
+        })?;
+        let native=linux_rx_batch::receive_fd(
+            self.fd.as_raw_fd(),buffers,&self.borrow);
+        out.observed=native.received;
+        out.status=match native.status{
+            RxStatus::Empty=>RawReadyStatus::Empty,
+            RxStatus::Ready=>RawReadyStatus::Ready,
+            RxStatus::AtCap=>RawReadyStatus::AtCap,
+            RxStatus::WouldBlock=>RawReadyStatus::WouldBlock,
+            RxStatus::Interrupted=>RawReadyStatus::Interrupted,
+            RxStatus::Stopping=>return Err(RawTxError::Stopped),
+            RxStatus::InvalidBuffers=>return Err(RawTxError::InvalidPacket),
+            RxStatus::IoUncertain=>RawReadyStatus::IoUncertain,
+        };
+        for i in 0..native.received{
+            out.entries[i]=match native.entry(i){
+                Some(RxEntry::Truncated{wire_len,capacity})=>
+                    RawReadyEntry::Truncated{wire_len,capacity},
+                Some(RxEntry::Complete{len})=>{
+                    let slot=&mut buffers[i];
+                    let parsed=if len<=mtu{
+                        parse_data_packet(&slot[..len],TrustedRx{
+                            tuple,persona,mtu,authenticated_options:None
+                        })
+                    }else{out.entries[i]=RawReadyEntry::Rejected;continue};
+                    match parsed{
+                        Ok(p)=>{
+                            let begin=len-p.ciphertext.len();
+                            let n=p.ciphertext.len();let seq32=p.seq32;
+                            slot.copy_within(begin..len,0);
+                            RawReadyEntry::Unauthenticated{cipher_len:n,seq32}
+                        },
+                        Err(_)=>RawReadyEntry::Rejected,
+                    }
+                }
+                _=>RawReadyEntry::Unused,
+            };
+        }
+        Ok(out)
+    }
+}
+#[cfg(test)]
+mod leased_multimsg_contract_tests{
+    use super::*;
+    #[test]
+    fn r1_m4_013_privilege_is_not_inferred_from_new_raw_signatures(){
+        assert!(matches!(ScopedRawIpv4Tx::open("lo",0,12),
+            Err(RawTxError::InvalidInterface)));
+        assert!(matches!(ScopedRawIpv4Rx::open("lo",0,12),
+            Err(RawTxError::InvalidInterface)));
+        // Entry indexes prove the 33rd buffer cannot be observed by the
+        // 32-slot syscall contract before a separate caller drain.
+        assert_eq!(RawReadyBatch::new(0).attempted,0);
+        assert_eq!(RawReadyBatch::new(33).attempted,32);
+        assert_eq!(RawReadyBatch::new(33).entry(32),None);
     }
 }

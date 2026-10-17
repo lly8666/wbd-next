@@ -308,7 +308,7 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     let sent=unsafe{sendmmsg(fd,messages.as_mut_ptr(),
         submitted as c_uint,MSG_DONTWAIT)};
     let errno=if sent<0{io::Error::last_os_error().raw_os_error()}else{None};
-    let reported=std::array::from_fn(|i|messages[i].msg_len);
+    let reported:[u32;MAX_READY_TX]=std::array::from_fn(|i|messages[i].msg_len);
     classify_report(sent,errno,submitted,records.len(),&reported,&expected)
 }
 
