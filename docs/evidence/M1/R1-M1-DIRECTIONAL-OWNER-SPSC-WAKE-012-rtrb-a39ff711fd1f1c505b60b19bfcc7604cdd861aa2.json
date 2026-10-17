@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "task_id": "R1-M1-DIRECTIONAL-OWNER-SPSC-WAKE-012",
+  "branch": "work/m1-r1-runtime",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "M1-owned true rtrb 0.3.2 safe push/pop component interface only. M0 protected Go/Rust owner, native OS wake and kernel driver and loom remain NOT_RUN.",
+  "qualification": "READY_FOR_M0_SCOPED_INTEGRATION_NOT_PRODUCT",
+  "main_dependency": {
+    "pinned_root_code": "045af34c5c32cf01bd11092580db2bc879d8d651",
+    "exact_overlay_main": "789aa27d039fa64183d4b06d2f0acd4868bfc544",
+    "rtrb_version": "=0.3.2",
+    "lock_checksum": "ad8388ea1a9e0ea807e442e8263a699e7edcb320ecbcd21b4fa8ff859acce3ba",
+    "m0_decision": "docs/decisions/M0-024-unblock-M1-M3-M4-source-evidence-2026-10-17.md",
+    "overlaid_root_files": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "crates/wbd-engine/Cargo.toml",
+      "crates/wbd-codec/Cargo.toml",
+      "native/isal-safe/"
+    ],
+    "test_only_feature": "m1_rtrb = [] injected into temporary engine manifest; no root/Cargo changes committed by M1",
+    "restriction": "rtrb safe RingBuffer::new, Producer::push and Consumer::pop only; no ReadChunk/WriteChunk or unsafe"
+  },
+  "native": {
+    "run_id": 39015538871,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39015538871",
+    "build_job": 117346790076,
+    "consume_job": 117346846892,
+    "outer_test_binary_compiled_once": true,
+    "outer_passed": 104,
+    "outer_failed": 0,
+    "outer_test_names_unique": 104,
+    "rtrb_real_overlay_cases_passed": 6,
+    "rtrb_real_overlay_cases_failed": 0,
+    "rtrb_marker": "M1_RTRB_OVERLAY_ATTESTED main=789aa27d039fa64183d4b06d2f0acd4868bfc544 exact-worker-source=a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+    "artifact_id": 12094184835,
+    "build_artifact_id": 12094741283,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/39015538871/artifacts/12094184835",
+    "zip_sha256": "653e14f767639ee4d5c1e2628fef85192f2bb826c73e8be8dc4e899a4c134c72",
+    "result_json_sha256": "b32b49238671f51f8510b0bbdb8f35d402afddf3065bf0adb3e2503e621fe319",
+    "test_log_sha256": "d407d318345d9637d5e0f34c3e81e047fd8c1e926825e8f3ff7a899f52f97c7e",
+    "outer_test_binary_sha256": "3277dc610472d1b63cf2210e2b4bd3b7f2b13e8294310aed828bbf280949d29c",
+    "child_test_binary_digest": "NOT_UPLOADED",
+    "verification": "Downloaded actual GitHub result artifact ZIP at active container path; independently verified ZIP, result.json, test.log SHA256, result exact SOURCE/run/attempt/role, 104 unique outer scoped test names, 6 distinct inner M1_RTRB_CASE_PASS receipts and one M0 overlay marker; inner case names and successful exit asserted in native wrapper."
+  },
+  "true_rtrb_cases": [
+    "r1_rtrb_direction_r01_zero_one_32_33_no_batch_fill",
+    "r1_rtrb_direction_r01_full_returns_original_unique_and_no_loss",
+    "r1_rtrb_direction_b04_stop_late_lease_epoch_aba",
+    "r1_rtrb_direction_r02_sparse_cross_thread_and_dual_rx_tx",
+    "r1_rtrb_direction_g01_old_held_rx_new_first_and_stale_reject",
+    "r1_rtrb_direction_r02_concurrent_publish_stop_returns_all_original_loans"
+  ],
+  "interface": {
+    "dispatcher": "crates/wbd-engine/src/runtime/directional.rs selects directional_rtrb.rs under opt-in m1_rtrb; directional_compat.rs preserves original bounded sync_channel behavior when feature off",
+    "types": "split_tx/split_rx(owner_id,serial,lane,capacity) -> DirectionProducer<TxIngress/RxIngress> and DirectionConsumer; original frozen/unique handles owned by caller",
+    "producer": "Not Clone and !Sync (RefCell<rtrb::Producer<T>>), only one producer thread; stale/Stop/Full returned unchanged original item; TX frozen metadata LaneKey validation",
+    "consumer": "Owned, independent TX/RX rtrb::Consumer<T> on separate OS threads; drain_ready preallocated Vec at most 32 already available, no batch-fill wait; wait_input uses existing wake SeqCst recheck plus std thread park/unpark",
+    "stop": "Stop cancels queued items, counts in-flight single producer, preserves externally handed-off loans. Numeric-identical restarted epoch rejected by Arc pointer identity; global epoch assignment M0-owned.",
+    "fairness": "Previously tested ReadyTurn <=32 per class and cooperative 100us side alternation retained. No direct product per-lane DRR or driver scheduling claim.",
+    "rollback": "Disable m1_rtrb feature and use intact existing sync_channel compatibility implementation; no production feature enabled by worker."
+  },
+  "history": [
+    {
+      "source": "0715b846d5818fbafb40ceb78dfb7ab3aa2aa3e2",
+      "run_id": 39014817016,
+      "result": "FAIL",
+      "reason": "Concurrent Rustup toolchain installation conflict between nested overlay probe and inherited Release test; 102 passed 2 failed"
+    },
+    {
+      "source": "167195e5cd54be87910029be63a94df9d704a3c6",
+      "run_id": 39015031727,
+      "result": "FAIL_WORKFLOW",
+      "reason": "Inner rtrb 5 pass and outer Rust104 pass, but nested log duplicated Rust test result syntax and failed outer parser"
+    },
+    {
+      "source": "f0e6d8dadb2f893d7516edfa04aabfc7515a218e",
+      "run_id": 39015210848,
+      "result": "PASS_SUPERSEDED",
+      "reason": "Inner actual rtrb 5 pass, outer 104 pass; superseded by extra concurrent Stop case"
+    },
+    {
+      "source": "a39ff711fd1f1c505b60b19bfcc7604cdd861aa2",
+      "run_id": 39015538871,
+      "result": "PASS",
+      "reason": "Inner actual rtrb 6 pass and outer104 pass exact SOURCE"
+    }
+  ],
+  "same_source_actions": [
+    {
+      "workflow": "Governance",
+      "run_id": 39015538876,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "G2 bootstrap",
+      "run_id": 39015538873,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 qualification audit",
+      "run_id": 39015538894,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 cross ABI",
+      "run_id": 39015538874,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "R0 native ABI",
+      "run_id": 39015538885,
+      "conclusion": "failure"
+    }
+  ],
+  "shared_r0_abi_limitation": "Old M0-owned branch-local R0 harness '3 passed' selector remains FAIL run39015538885 although unfiltered Rust returned rc0,106 passed,1 ignored; do not claim all CI success.",
+  "not_run": {
+    "loom": "NOT_RUN; M0 dev-only pinned dependency and separate model suite still required",
+    "linux_eventfd": "NOT_RUN",
+    "windows_auto_reset_wake": "NOT_RUN",
+    "real_protected_Go_V4_auth": "NOT_RUN",
+    "real_M0_owner_abi_compile_dispatch": "NOT_RUN",
+    "kernel_driver_lease_and_completion": "NOT_RUN",
+    "product_500Mbps": "NOT_RUN",
+    "end_to_end_p99": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "native_WinARM": "NOT_RUN",
+    "production_features": 0
+  }
+}
