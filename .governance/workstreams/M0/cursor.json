@@ -4,26 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 107,
-  "checkpoint_sha": "5b2aef90061bcaa46ed849f66246086cc8a22678",
+  "sequence": 108,
+  "checkpoint_sha": "6918f1c4ea2c39de7af0f89e607d7b3db6a56358",
   "progress": "partial",
   "task_id": "R1-M0-HOTPATH-COST-024",
-  "current_task": "024 批次 A 新增共享 Linux route/link netlink 失效和 owner 私有预算 revision，同一原始受 Go V4 TLS 凭据授权的 Rust/M1/M3→真实 M4 raw/TUN 路径上通过隔离内核 lo MTU 降低事件→owner route 再观测→fail closed 功能反例。已有稳定60秒约10Mbps/方向开发路径继续有效；新增事件测试已在同 SOURCE 的 Actions 原 native harness 完成。普通 ABI features0；M4逐包 MTU sysfs/DF 仍保留；此 SOURCE 尚未做正式 Rust/Rust P10 AB/BA，不能归功于早期约-18.66%配对，也不能称023产品 PASS。",
-  "why_now": "原 route 快照减少稳态临时 route socket，但缺设备级 link/route 变化通知。为后续安全移出 M4 逐包观测，先建立有界 NETLINK_ROUTE 事件失效、合并和独立真实内核 witness；保留原逐包内核 MTU 拒发直至类型反馈/事件竞态反例齐全。",
-  "done_when": "当前设备 netlink 子能力的原Go认证→Rust→Linux raw/TUN 真实事件通知、owner预算刷新和缩 MTU 失败关闭同源PASS，结果存 evidence，第一版 scoped unsafe 编译FAIL保留且修复。完整任务024 done_when 尚未满足：M4实际EMSGSIZE类型反馈、route/interface replace/风暴/重连及安全去sysfs、TX/RX全局锁拆分、ready-only≤32批量与存储复用、功能批次、D10/SPARSE及最终Rust/Rust P10顺序AB与独立BA。普通push Governance身份/结构范围不同于维护自测或产品。",
-  "next_action": "继续本次已分配024的完整剩余能力：沿原Go认证→Rust owner→raw/TUN 完成批次A M4实际EMSGSIZE反馈、设备更替/route事件合并/Stop竞态内核反例并在可靠 fail-closed 后移除每DATA sysfs；批次B在生命周期保持源一致的前提下TX/RX方向own状态移出全局registry锁、ready-only≤32立即drain和批缓存复用；一次功能反例批量Actions、D10与SPARSE分场景，重测优化前Rust A与本SRC最终Rust B同VM单job顺序P10-AB及独立BA，C50仅在容量支持时运行。失败/容量不足就收口留痕，满足024 §7才改registry分配。保留原023/unverified/features0及后续超MTU分片缺口，勿抢H102。",
+  "current_task": "024继续：已在main一次性登记M1–M4完整模块工作包，保留各工位旧cursor/epoch和独立测试责任；M0同时将真实Go TLS认证→Rust原owner→Linux raw/TUN的 RX/TX 工作循环改为一次ready、后续仅非阻塞drain、每片最多32包约100µs并每8包采样。新0/1/32/33+Stop/error Rust单元和原内核Go/Rust功能、MTU事件及双向10Mbps持续开发路径同SOURCE Actions PASS。原023/production features0不变。",
+  "why_now": "减少M0逐步派单造成的并行串行化，一次登记完整包让worker自治；M0集中处理原业务热路径逐包poll周边成本，复用M1 arena/已建Go认证与现有开发基线，不添加独立旁路、凑batch等待或额外配置。",
+  "done_when": "登记已在main registry和完整决策一次完成，源码/fixture对应native Actions确证ready-only≤32、真实双方向业务与原硬保护可工作；但024 §7整体仍未满足，M4逐包MTU sysfs/实际类型反馈、TX/RX全局registry所有权、真实批I/O、最终同VM Rust P10 AB/BA及SPARSE/D10等仍OPEN。CPU仅同SOURCE未配对开发测量，不认作收益；worker各包无产品资格继承。",
+  "next_action": "继续同一024完整剩余调优包：M0沿现有原Go→Rust受保护路径完成TX/RX方向可变owner从全局registry锁拆离及真正ready I/O/缓存复用；与独占M4平台路径按已冻结接口集成其EMSGSIZE/MTU事件安全去逐DATA sysfs和native batch，必要内核/Stop/rotation/0-1-32-33反例合批Actions，D10与SPARSE按场景分别跑，最后预编译两Rust源在同job先AB另job BA验P10；容量不足停更重负载、硬门失败留PARTIAL。阶段集成其他worker完成的完整包，不逐步派单，原023/超MTU/物理仍unverified且production features0。",
   "unverified": true,
-  "last_tested_source": "d2dccb3c6afdc32394df5ab38bda503a03132eb4",
+  "last_tested_source": "e9be1e716070256bbd4b351dd85452d8f2553266",
   "evidence_refs": [
-    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json"
+    "docs/evidence/M0/M0-024-ready-only-burst-and-worker-packages.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-024-netlink-route-invalidation-partial.md",
+    "docs/decisions/M0-full-module-workpackages-2026-10-17.md",
+    "docs/devlog/M0/M0-024-ready-only-burst-and-worker-packages.md",
+    "docs/evidence/M0/M0-024-netlink-route-invalidation-live-witness.json",
     "docs/evidence/M0/M0-024-owner-route-snapshot-60refresh-real-10mbps.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "024 PARTIAL：新设备级 route/link watcher 与事件 coalescing 已真实 Linux 内核原路径证实 revision 和重新观测，M4缩MTU拒发保持；先前route-cache业务基线保留，不混不同 SOURCE 的CPU收益。全局锁/批I-O/MTU per-packet sysfs/EMSGSIZE及最终 Rust/Rust 对比仍未完；023与物理资格未验，production features0。 H106 ordinary Governance因将旧SOURCE证据误列为当前evidence_refs发生真实FAIL；保留失败run，H107将旧证据改作context_ref，当前证据唯一对齐本SOURCE。不改变产品结论。"
+  "partial_summary": "完整包PACK-006一次性分配M1/2/3/4并本轮验过治理；M0当前e9be1e7真实性能路径ready-only处理≤32和功能原生验证PASS，开发10Mbps双向收发与新单元边界成功；无同VM配对收益测量。024继续PARTIAL，尚缺平台EMSGSIZE/逐DATA sysfs、TXRX全局锁、实际batch I/O、最终Rust AB/BA/SPARSE/D10。历史023资格、生产features0和物理NOT_RUN不变。"
 }
