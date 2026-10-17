@@ -1,0 +1,9 @@
+# R1-M4-RAW-TUN-STOP-PMTU-RACE-012 — platform error-source/route and STOP race workpack
+
+Authority: `main .governance/registry.json` revision2, M4 active assignment epoch1 and branch `work/m4-r1-platform`, assigned_task `R1-M4-RAW-TUN-STOP-PMTU-RACE-012`. Prior complete cursor sequence15, H `42a622f30317f32f105ce13f2b298f9f05f14615`. This is one full package, not a request for a new task after every test. M0 owns main/engine/Cargo/C ABI/Go authentication.
+
+## Plan, frozen input and scope
+Fixed source baseline M4 prior H. Driver path error provenance must distinguish *kernel* EMSGSIZE from no trusted PMTU/cache revision, TUN/route events from per-frame recoverable backpressure, and ambiguous short send. No raw positive in nonprivileged runner; never send/capture ambient or physical network traffic. Tests: route storm/ifindex/MTU down-up fail closed; real unprivileged Linux MTU/UDP errors, 0/1/32/33 cap, STOP/late loan lifecycle, no packet reseal/PN change. Source-exact Actions once code stabilizes then artifacts/S/H.
+
+## Batch 1: typed scope error provenance
+Raw `send_one` and `receive_ready_batch` now map `BudgetError::Unavailable` to `RawTxError::RouteUnavailable`, `ChangedOrInvalid/Deferred` to `RouteStale`, and actual IPv4 packet builder MTU overrun to `BoundedMtu` (instead of conflating route invalidity with EMSGSIZE or treating packet too big as malformed). Frozen bytes unchanged; `send_ready_batch` 0-length on stopped/stale owner fails closed. `linux_mtu_scope` takes a second watcher snapshot while holding owner cache mutex before reusing cached MTU, refusing revision changes that occur during lock acquisition. Deterministic storm, TTL, destination change, permanently-invalid snapshot, and actual unprivileged Linux ifindex/MTU check were added. Native test results **pending** until exact SHA Actions.
