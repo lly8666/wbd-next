@@ -146,7 +146,7 @@ jobs:
           for index,mode in enumerate(("scalar","native-isal")):
               s=rows[index]
               def field(k):
-                  m=re.search(r"(?:^|\\s)"+re.escape(k)+r"=([^ ]+)",s)
+                  m=re.search(r"(?:^|\s)"+re.escape(k)+r"=([^ ]+)",s)
                   assert m,(k,s)
                   return m.group(1)
               assert field("leg")==str(index) and field("mode")==mode
@@ -171,7 +171,7 @@ jobs:
              "legs":results,"raw_log_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
              "host_isa_sha256":hashlib.sha256(pathlib.Path("m3-native-result/host-isa.log").read_bytes()).hexdigest(),
              "boundary":"codec-only; no packet delivery/RTT, no SIMD exact instruction proof, no product"}
-          pathlib.Path("m3-native-result/paired-AB.json").write_text(json.dumps(q,indent=2)+"\\n")
+          pathlib.Path("m3-native-result/paired-AB.json").write_text(json.dumps(q,indent=2)+"\n")
           print("M3_FEC_RELEASE_AB_EXECUTED",q["result"],q["worker_source"],q["binary_sha256"])
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
