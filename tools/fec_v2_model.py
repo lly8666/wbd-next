@@ -57,6 +57,33 @@ def poisson_full_probability(k: int, rate_pps: float, deadline_s: float) -> floa
                                       for i in range(k-1))))
 
 
+def close_deadline_ms(rate_pps: float | None, rtt_ms: float | None,
+                      game: bool = False) -> float:
+    """Design arithmetic only; EWMA/timers belong to the production owner."""
+    cap = ((8. if game else 16.) if rtt_ms is None else
+           min(12. if game else 24.,
+               max(4. if game else 8., rtt_ms / (8 if game else 4))))
+    minimum = 2. if game else 4.
+    if rate_pps is None:
+        return 3. if game else 6.
+    if rate_pps < 0:
+        raise ValueError("negative source rate")
+    if rate_pps * cap / 1000 < 1:
+        return minimum
+    return min(cap, max(minimum, 1.5 * 15 / rate_pps * 1000))
+
+
+def deadline_example(mbps: float, rtt_ms: float = 150.) -> dict:
+    rate = mbps * 1e6 / 8 / 1200
+    normal = close_deadline_ms(rate, rtt_ms)
+    game = close_deadline_ms(rate, rtt_ms, game=True)
+    return dict(class_source_mbps=mbps, rtt_ms=rtt_ms,
+                mean_fill_ms=15 / rate * 1000,
+                normal_deadline_ms=normal, game_deadline_ms=game,
+                poisson_normal_full_probability=poisson_full_probability(16, rate, normal/1000),
+                poisson_game_full_probability=poisson_full_probability(16, rate, game/1000))
+
+
 def verify_arithmetic() -> dict:
     for k in (1, 2, 3, 4):
         for r in (0, 1, 2, 3):
@@ -72,12 +99,26 @@ def verify_arithmetic() -> dict:
     assert stationary(8, .05)["profile"] == "medium"
     assert stationary(1, .2)["attainable"] is False
     assert [parity(16, x) for x in PROFILES] == [2, 4, 6, 8, 12, 16, 20]
+    for mbps, normal, game in ((100, 4, 2.16), (50, 4.32, 4.32),
+                               (30, 7.2, 7.2), (15, 14.4, 12),
+                               (10, 21.6, 12), (6, 24, 12)):
+        case = deadline_example(mbps)
+        assert math.isclose(case["normal_deadline_ms"], normal, abs_tol=1e-12)
+        assert math.isclose(case["game_deadline_ms"], game, abs_tol=1e-12)
+    assert close_deadline_ms(0, 600) == 4
+    assert close_deadline_ms(20, 600, game=True) == 2
+    assert close_deadline_ms(None, None) == 6
+    assert close_deadline_ms(None, None, game=True) == 3
+    assert close_deadline_ms(100, None) == 16
+    assert close_deadline_ms(100, None, game=True) == 8
+    assert math.isclose(poisson_full_probability(16, 1000, .0225),
+                        .9613982417336826, abs_tol=1e-12)
     return dict(result="ARITHMETIC_SELF_CHECK_PASS", product="NOT_RUN")
 
 
 def main() -> None:
     print(json.dumps({
-        "schema_version": 1,
+        "schema_version": 2,
         "scope": "MODEL_ONLY_NOT_PRODUCT_OR_PERFORMANCE_PASS",
         "assumptions": ["systematic MDS erasure code", "IID equal source/parity loss",
                         "all available symbols in deadline", "no outer/app repair",
@@ -89,15 +130,24 @@ def main() -> None:
         "ideal_curves": [dict(k=k, loss_percent=p*100, **stationary(k, p))
                          for k in (1, 4, 8, 16)
                          for p in (.01, .03, .05, .10, .15, .20, .25, .30)],
-        "deadline_ms": [dict(rtt_ms=rtt, normal=min(8, max(2, rtt/8)),
-                             game=min(4, max(1, rtt/16)))
-                        for rtt in (10, 50, 150, 600)],
+        "deadline_cap_ms": [dict(rtt_ms=rtt, normal=min(24, max(8, rtt/4)),
+                                 game=min(12, max(4, rtt/8)))
+                            for rtt in (10, 50, 150, 600)],
+        "adaptive_deadline_1200B": [deadline_example(mbps, rtt)
+                                    for rtt in (50, 150, 600)
+                                    for mbps in (6, 10, 15, 30, 50, 100)],
         "fill_ms_1200B_k16": [dict(source_mbps=mbps,
                                   fill_ms=15/(mbps*1e6/8/1200)*1000)
-                              for mbps in (10, 50, 100, 200, 500)],
-        "poisson_1200B_same_class_only": [dict(source_mbps=mbps, deadline_ms=ms,
+                              for mbps in (6, 10, 15, 30, 50, 100, 200, 500)],
+        "rejected_old_deadline_examples": [dict(class_source_mbps=mbps, deadline_ms=ms,
             full_k16_probability=poisson_full_probability(16, mbps*1e6/8/1200, ms/1000))
-            for mbps in (50, 100) for ms in (4, 8)],
+            for mbps, ms in ((30, 4), (15, 8), (10, 8))],
+        "poisson_fill_margin_examples": [dict(mean_multiplier=multiple,
+            full_k16_probability=poisson_full_probability(16, 1000, .015*multiple))
+            for multiple in (1, 1.5)],
+        "equal_100_percent_parity_partial_loss": [dict(k=k, r=k,
+            loss_percent=p*100, residual_percent=residual(k, k, p)*100)
+            for p in (.2, .3) for k in (8, 16, 20)],
         "header_only_same_k16_r16": [dict(source_bytes=n,
              old_fec_bytes=32*(n+56), new_fec_bytes=16*(n+10)+16*(n+14))
              for n in (64, 1200)],

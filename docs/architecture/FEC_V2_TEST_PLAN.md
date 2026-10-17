@@ -34,7 +34,7 @@
 | N0 | Normal/off，双向10M，原混合大小，RTT50ms，loss0 | 防止新架构污染off路径；一个同机AB，有歧义才BA |
 | N1 | Normal固定mild/strong，双向10M，RTT50ms，IID5% | 低中档恢复、期限/字节/CPU；各配置一Action，不能同run跑两档 |
 | N2 | Normal固定strong，10M，RTT150ms，IID20%；RTT600ms另风险样本 | 高延迟与状态寿命，不要求所有包零loss |
-| N50/N100 | Normal固定strong，业务50/100Mbps每方向、混合大小包、RTT150ms；在50通过后才100，各自独立Action | 用户常用速率；验证按class的满组比例、partial、CPU/线速与deadline。另150或600ms已覆盖一次高RTT即可，不机械交叉重复 |
+| N30/N50/N100 | Normal固定strong，业务30/50/100Mbps每方向、混合大小包、RTT150ms；容量允许后才下一级，各自独立Action | 用户常用速率；验证按class的包率/预测期限/满组比例/partial与恢复CDF。150或600ms已覆盖一次高RTT即可，不机械交叉重复 |
 | S | 20pps/200pps 64B/小包预声明混合，背景大包流量独立；RTT10/50ms | 稀疏partial、第一包与恢复尾部；最高档也不强求理论不可达残余 |
 | G | Game2、Game4，固定strong，逻辑3M/方向，RTT50ms；独立5/20%损伤与一lane慢/失效 | 共享编码/首到、CPU/副本账本；先Game4代表风险，Game2补函数/必要成本 |
 | B | Normal或Game，预声明相关突发10/50/200ms，期间持续业务 | 检查损伤结束后新业务及时交付；不要求整组覆盖长黑洞 |
@@ -44,6 +44,8 @@
 混合包沿用已有夹具的固定分布并写manifest，不临时换成全1200B使数据更好看。负载包含有序TCP stream、独立TCP短请求、UDP序号流；不把TCP自身缺字节的HOL误判外层，也不只跑UDP echo证明完整业务。
 
 RLC/64源长块不在这轮候选池。达到必要正确性、跨平台和主场景资格就集成；没有新回归风险不补几百组microbench。
+
+30Mbps专项须包含大包class约一半/三分之一的功能回放（按明确包长分布换算实际PPS）；真实性能选一个代表混合分布即可，不要求每比例独立跑完整矩阵。检查低包率→30M突发→停流的包率估计/冻结deadline，无业务不维持250ms统计唤醒。对照初稿8/4ms用数学/确定性回放说明partial差异即可，不为已否决参数再新建一轮性能竞赛。生产参数以修正后按class速率+RTT公式为准。
 
 ## 4. 自动档曲线：理论允许带先声明
 

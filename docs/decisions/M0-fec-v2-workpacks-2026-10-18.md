@@ -39,7 +39,7 @@ M0登记时明确`native/isal-safe/build.rs`的单一写入者（建议M4负责�
 
 ## 5. M1 开工提示词（M0登记后，与M3/M4并行）
 
-你继续wbd-next的M1。先核main分配与worker cursor，保留已完成Game共享包。FEC2分配生效后，按FEC_V2_BALANCED第2/4/5/8节实现3class、最多16源、Normal 2–8ms/Game 1–4ms的绝对关闭期限、source即时服务、有界且不饥饿的parity/compact、实际k/r和容量快照。T按冻结RTT快照只影响新block；Game只编码一次、各lane独立加密，慢lane不拖首到。首发parity不占10%外层repair额度，但纳入真实容量账本；过期辅助作业释放、不扩队列。
+你继续wbd-next的M1。先核main分配与worker cursor，保留已完成Game共享包。FEC2分配生效后，按FEC_V2_BALANCED第2/4/5/8节实现3class、最多16源、按各class包率的1.5倍平均满组时间与RTT上限确定绝对期限（Normal最多24ms/Game最多12ms；孤立流快速关闭；满16立即关闭）。最初8/4ms硬上限已被用户30Mbps追问后的计算修正，不能照搬。保留source即时服务、有界且不饥饿的parity/compact、实际k/r和容量快照。T按冻结包率/RTT快照只影响新block；Game只编码一次、各lane独立加密，慢lane不拖首到。首发parity不占10%外层repair额度，但纳入真实容量账本；过期辅助作业释放、不扩队列，放宽成组期限不能同时放大发送队列寿命。
 
 只改已登记runtime/memory/tests，沿用现有owner/arena，别造第二套算法、auto controller或全局锁。先合批功能反例，成本测量一Action一场景，原包注入/首次交付/p99和missing一起报告；内存有界含未归还loan。包内自主完成测试修复S/H，整包才交M0，保留未接线和物理NOT_RUN。
 
