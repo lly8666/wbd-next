@@ -4,24 +4,25 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 23,
-  "checkpoint_sha": "de887c225fcbd1fdba64e34c5c8333fe746c72f0",
+  "sequence": 24,
+  "checkpoint_sha": "c900f7a412f2b71fc63eaff1986185322dd72026",
   "progress": "partial",
   "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 partial: opt-in FecTxOwner cooperative close stages true GF parity jobs (not 20-row precompute), poll computes <=4 rows; old sync mode unchanged; 108/108 native PASS on CODE5dcbc2f7. Open/pending source bytes and 64 metadata jobs bounded, queue full returns Backpressure without source admission or ID reuse. Production FEC-on/ISA-L/runtime CPU fairness NOT_RUN.",
+  "current_task": "PACK016 partial: native Rust1.85.1 Debug 109/109 PASS, 1 deliberately ignored optional Release CPU probe, CODE e2a0a60f; positive 3 FEC size class FIFO and 32/33/34ms deadlines, budget-first parity GF preflight. Source exact CODE Governance39003330841 SUCCESS and main central scope39003440040 SUCCESS. S governance39003535990 FAIL because control or source moved mid-audit. No Release clock or ISA-L native/backend/product claim.",
   "why_now": "Main PACK-006 once-assigned workpack016: continue own LINK/record/FEC functionality without asserting source-locked old015 product qualification. Recovery of S/H old Governance control-moved and later GitHub 403 is explicitly recorded in evidence.",
   "done_when": "Source-bound C01–C04/L01–L04/F01–F06, native ISA-L vs pinned Go scalar and applicable host target, resource/fresh send fairness interfaces, proper configuration/integration exclusions; H and evidence only after accurate source checks.",
-  "next_action": "Complete M3 scoped P0 native parity row service CPU measurement and pressure/eviction fail-closed scenarios; M0 shared ISA-L binding/native CI and exact-source governance API403 remedy, M1/M0 scheduling integration. Legacy synced origin must be kept unchanged until reviewed.",
+  "next_action": "M0 source-pin Release --ignored probe per docs/devlog/M3/M0-REQUEST-PACK016-COOP-RELEASE-CPU.md, maintain full raw paired CPU/wall and binary hash; M0 ISA-L minimal native build interface and production driver/Go V4 bridge remain prerequisites. Re-run governance when stable; do not mark task finished.",
   "unverified": true,
-  "last_tested_source": "5dcbc2f7172380fe124508ea31b9911243496587",
+  "last_tested_source": "e2a0a60fd512bedbcd136dd03e9be655ab2cf7c7",
   "evidence_refs": [
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
   "open_requests": [],
   "context_refs": [
     "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
+    "docs/devlog/M3/M0-REQUEST-PACK016-COOP-RELEASE-CPU.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
     "docs/devlog/M3/M0-REQUEST-PACK016-SCOPE-AUDIT-403.md"
   ],
-  "partial_summary": "CODE 5dcbc2f7 native39002583659 108/108 Rust1.85.1 PASS, binary SHA ccd2978f..., log c887f827..., 2 new owner-integration cases: 3*20 full real 20:20 by length256/512/1200, source immediate+GF4 rows/poll byte exact vs sync, closed source ownership memory through final row, 64-job cap and retry-safe Backpressure. S de887c22. Main central scope prior code1127215d run39002658689 PASS; exact code and S/H audit pending, past GitHub403 remains. ISA-L/native target, actual parity network fairness/time, M0 V4 FEC-on+Game, 500Mbps and packet p99 NOT_RUN."
+  "partial_summary": "CODE e2a0a60f native39003330821 success 109 pass 0 failed 1 ignored, binary 04582757b8a12f2d081ff18789400dd7a1ebca28e57d3591ad8c7bd77b7817f5; test log 984d26b25889593a54dd9da3b7e02fc95df64ba63d15eed1229e915bba581598. CODE Governance39003330841 PASS; CODE central scope39003440040 PASS. Evidence S c900f7a4, S Governance39003535990 FAIL control/source moved mid-audit; H only cursor. Ignored Linux Release paired thread CPU/wall >=250ms windows ×18 legs not executed; no 100us FEC CPU, ISA-L, engine/game FEC-on, packet p99 or 500Mbps qualified."
 }
