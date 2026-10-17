@@ -537,12 +537,13 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     };
     // Stack-only iov references to the SAME original mutable Arena slabs;
     // each slot is uniquely borrowed until the synchronous call returns.
+    let slot_count=rx_pending.len();
     let mut slots:[&mut [u8];32]=std::array::from_fn(|_|&mut [][..]);
     for (dst,slab) in slots.iter_mut().zip(rx_pending.iter_mut()){
         *dst=slab.writable();
     }
     let batch=raw.receive_kernel_multimsg(
-        generation,&mut slots[..rx_pending.len()],tuple,PacketPersona::Legacy
+        generation,&mut slots[..slot_count],tuple,PacketPersona::Legacy
     ).map_err(|_|INVALID)?;
     drop(slots);
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
