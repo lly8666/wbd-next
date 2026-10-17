@@ -478,6 +478,17 @@ fn loop_now()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     MonoNs(START.get_or_init(Instant::now).elapsed().as_nanos().min(u64::MAX as u128) as u64)
 }
+// Bounded M1 arena return servicing inside one authenticated DATA turn.
+// Only Stop/report/quiescence/control paths may drain every outstanding item;
+// an arbitrarily long backlog must not monopolize the per-session TX/RX lock.
+// Arena::allocate already drains at most 64 before making a new loan.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+const M0_DATA_RETURN_TURN_CAP:usize=64;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn drain_data_turn_returns(arena:&mut Arena)->usize{
+    arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP)
+}
+
 // Do not hold global registry lock while M4 RX preflight ignores unrelated
 // RST/ACK or polls for up to 750ms. M4 receives directly into the already
 // allocated ORIGINAL M1 UniqueBuffer and validates exact trusted tuple and
@@ -522,7 +533,7 @@ fn background_raw_once(cell:&Mutex<Entry>,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
     };
     returned.clear();
     *rx_storage=returned;
-    e.arena.drain_returns();
+    drain_data_turn_returns(&mut e.arena);
     if report.completed!=1||failed!=0||delivered!=1{return Err(INVALID)}
     Ok(delivered)
 }
@@ -609,16 +620,16 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // PN/seq or reuse of the old owner route authorization.
             let _invalidating_signal=report.signal.invalidates_path();
             e.tx_route=None;
-            e.arena.drain_returns();
+            drain_data_turn_returns(&mut e.arena);
             return Err(BAD_STAGE)
         },
         Err(_)=>{
             e.tx_route=None;
-            e.arena.drain_returns();
+            drain_data_turn_returns(&mut e.arena);
             return Err(BAD_STAGE)
         },
     }
-    e.arena.drain_returns();
+    drain_data_turn_returns(&mut e.arena);
     Ok(())
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -893,6 +904,27 @@ mod tests{
         let n=ready_only_slice(&stop,||panic!("unexpected poll"),
             ||panic!("unexpected packet"),||true);
         assert_eq!(n,0);
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn r1_m0_original_data_return_budget_yields_at_64_128_33(){
+        // Exactly the M1 owner slab and ReturnPath used in authenticated
+        // real Linux data, not a synthetic stand-in or another lock.
+        let mut arena=Arena::new(31,128,256,32,256_000).unwrap();
+        let loans=(0..128).map(|_|arena.allocate().unwrap()).collect::<Vec<_>>();
+        drop(loans); // mpsc(32) + bounded fallback; 128 real unique loans.
+        assert_eq!(drain_data_turn_returns(&mut arena),64);
+        assert_eq!(drain_data_turn_returns(&mut arena),64);
+        assert_eq!(drain_data_turn_returns(&mut arena),0);
+        assert_eq!(arena.report().loaned,0);
+        let loans=(0..33).map(|_|arena.allocate().unwrap()).collect::<Vec<_>>();
+        drop(loans);
+        assert_eq!(drain_data_turn_returns(&mut arena),33);
+        assert_eq!(drain_data_turn_returns(&mut arena),0);
+        assert_eq!(arena.report().loaned,0);
+        // Control / Stop still uses the full drain and retirement fence.
+        let stopped=arena.stop();
+        assert_eq!(stopped.loaned,0);
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
