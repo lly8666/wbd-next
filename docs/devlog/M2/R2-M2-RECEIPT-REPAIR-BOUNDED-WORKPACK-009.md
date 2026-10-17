@@ -14,3 +14,9 @@ This code S is not yet qualified. Worker-native CI and central scope audit must 
 ## Controlled-driver cross-component follow-up
 
 The next functional batch uses a FrozenRecordHandle backed by a single Arc<[u8]> and reads exactly the same immutable bytes through wbd-types driver_read while a simulated reverse control channel loses both initial and repeated receipt. Injected MonoNs drives a PTO tail, one Uncertain repair debit, one RX duplicate-triggered reassertion and a late positive receipt that releases the same frozen handle exactly once. A second test verifies pinned lane/epoch/control range before scope release and deliberately leaves a shadow in an unreported PN page. This remains a *synthetic* authenticated-open fixture, never a real Go/M3 ciphertext proof or product load test. No socket or engine imports. Tests use existing worker-native compile-once consumer.
+
+## 2026-10-17 compiled-once native and scope evidence
+
+CODE source 269fd8f88ba6df97ebb8fe1f3e29cc58b1ca90c2 worker-native #38998072121 SUCCESS 63/63 (55 retained+8 new), build+consume; G2 #38998072124 SUCCESS, static #38998072111 SUCCESS, Governance #38998072117 SUCCESS ROLE_SCOPE_PASS 58 commits. Native/G2/Governance result ZIP SHA256 compared with Actions digests. Details in docs/evidence/M2/R2-M2-WORKPACK-009-receiver-feedback-and-handle.json.
+
+Pending PACK-009: existing ReceiptState::on_timer may nominate 32 no-witness PTO tail candidates per lane poll despite module 08 one-tail-per-timer requirement; add a failure-reproducing fake-mono stress test and correct without compromising 32 RACK cap, expiry or fresh fairness. Real M0 authenticated Go V4/driver and M1 arena product integration NOT_RUN. Do not claim entire workpack PASS.

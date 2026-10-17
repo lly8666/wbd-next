@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "269fd8f88ba6df97ebb8fe1f3e29cc58b1ca90c2",
+  "result": "PASS",
+  "result_scope": "R2_NATIVE_63_63_ONLY_WORKPACK_PARTIAL",
+  "artifact_verified": true,
+  "native": {
+    "run_id": 38998072121,
+    "conclusion": "success",
+    "attempt": 1,
+    "build_job_id": 117294920262,
+    "consume_job_id": 117294978279,
+    "tests_passed": 63,
+    "tests_failed": 0,
+    "old_tests": 55,
+    "new_tests": 8,
+    "compiled_once": true,
+    "binary_sha256": "ed96430eecc6f8f725fb2566eea1e23797b90d58ce0004e1bf2ce904ac4f20ca",
+    "log_sha256": "588510620d49071c039c756293cea1c7374c0bee8c9c0d29bbc1d8b937794e56",
+    "artifact_id": 12088116930,
+    "artifact_digest": "sha256:4997b0d0629e7cc374220aac8bc1bafc09f22d24b4f1bb1967c76dc53dad808a",
+    "zip_sha256_verified": true
+  },
+  "g2": {
+    "run_id": 38998072124,
+    "conclusion": "success",
+    "artifact_id": 12088435071,
+    "artifact_digest": "sha256:37cf77e1abfea8cc44cd4ab29021096d023ef1117f8c0ee1e8dea2d9485c6134",
+    "zip_sha256_verified": true
+  },
+  "static": {
+    "run_id": 38998072111,
+    "conclusion": "success",
+    "artifact_id": 12087916732
+  },
+  "governance": {
+    "run_id": 38998072117,
+    "conclusion": "success",
+    "result": "ROLE_SCOPE_PASS",
+    "scope_commits_checked": 58,
+    "artifact_id": 12087873421,
+    "artifact_digest": "sha256:e995f6a7a3ac6e45d98580cf2332e5cf6f1dc9262152eddc0a7cf5a2952a2de4",
+    "zip_sha256_verified": true
+  },
+  "coverage": [
+    "dirty RX feedback pages and no ACK-of-ACK",
+    "gap 2ms/steady 10ms; at most eight pages",
+    "two lost feedbacks, duplicate reassert once, NotSent preserves dirty",
+    "32/33 page backlog and report_seq wrap",
+    "changed bitmap while report sending remains dirty",
+    "controlled Arc frozen handle / driver_read / same ciphertext PN seq",
+    "PTO tail and Uncertain charge exactly once, late positive releases once",
+    "cross-lane/epoch scope reject and unreported PN not cumulative"
+  ],
+  "known_gap": "Original ReceiptState::on_timer still queues up to 32 unreported PTO tail probes for a lane/tick; module 08 specifies <=1 tail probe per timer. Investigate and correct while preserving 32 RACK candidate index budget, timer timeout bounds and fresh independence.",
+  "product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "real_auth": "NOT_RUN",
+  "real_m1_frozen_arena": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "workpack": "PARTIAL",
+  "next_action": "Resolve per-lane unreported PTO tail probe cap and fresh fairness inside PACK-009; verify exact source Actions and preserve all prior run results."
+}
