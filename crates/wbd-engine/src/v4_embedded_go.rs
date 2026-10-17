@@ -62,6 +62,7 @@ struct WorkerRouteBudget {
     ifindex:u32,
     destination:Ipv4Addr,
     revision:u64,
+    route_event_revision:u64,
 }
 struct Entry{
     owner:ProtectedScopedOwner,normal:NormalOffReceive,
@@ -494,7 +495,8 @@ fn background_raw_once(handle:u64,raw:&ScopedRawIpv4Rx,stop:&AtomicBool,
 // original frozen M1 record through genuine scoped M4 raw TX.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(handle:u64,tun:&ScopedTunSink,
-    stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>)->Result<(),i32>{
+    stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
+    events:&wbd_platform::linux_route_events::RouteEvents)->Result<(),i32>{
     let (mut slab,generation)={
         let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
         let e=state.entries.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -517,10 +519,20 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
     // M4 still verifies real link MTU and the Linux raw DF send; an M4
     // rejection invalidates the snapshot before any next sealing attempt.
     let destination=Ipv4Addr::from(flow.client_ip);
+    let event=events.snapshot();
+    if let Some(cache)=e.tx_route.as_ref(){
+        if wbd_platform::linux_route_events::classify(
+            cache.route_event_revision,event.revision,cache.observed_at.elapsed()
+        )==wbd_platform::linux_route_events::EventRefresh::Defer {
+            // No stale budget may seal while a route/link storm is coalescing.
+            return Err(INVALID)
+        }
+    }
     let refresh=e.tx_route.as_ref().is_none_or(|cache|
         cache.observed_at.elapsed()>=Duration::from_secs(1)
         || cache.ifindex!=ifindex || cache.destination!=destination
         || cache.revision!=e.tx_route_revision
+        || cache.route_event_revision!=event.revision
     );
     if refresh {
         e.tx_route=None; // no stale budget if kernel observation fails
@@ -531,6 +543,7 @@ fn background_tun_once(handle:u64,tun:&ScopedTunSink,
         e.tx_route=Some(WorkerRouteBudget{
             scoped:snapshot,observed_at:Instant::now(),ifindex,destination,
             revision:e.tx_route_revision,
+            route_event_revision:event.revision,
         });
         e.counters.route_refresh.fetch_add(1,Ordering::Relaxed);
     }
@@ -569,6 +582,9 @@ fn loop_readiness(fd:i32,stop:&AtomicBool)->bool{
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn start_loop(handle:u64,ifindex:u32)->i32{
+    // One shared Linux link/route listener for all live owner sessions.
+    // This is only an invalidation signal; M4 still checks every raw send.
+    let events=wbd_platform::linux_route_events::subscribe();
     let Ok(mut reg)=registry().lock()else{return BAD_STAGE};
     let Some(e)=reg.entries.get_mut(&handle)else{return UNKNOWN};
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
@@ -627,7 +643,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if !loop_readiness(tun_fd,&stop_tx){continue}
                 if stop_tx.load(Ordering::Acquire){break}
                 match background_tun_once(
-                    handle,&tun,&stop_tx,ifindex,&mut tx_storage
+                    handle,&tun,&stop_tx,ifindex,&mut tx_storage,&events
                 ){
                     Ok(_)=>{stats.tx.fetch_add(1,Ordering::Relaxed);}
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
