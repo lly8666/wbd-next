@@ -184,9 +184,10 @@ impl ReedSolomon20 {
     pub fn final_parity_wires_range(&self,block_id:u32,sources:&[&[u8]],
         profile:u8,wire_limit:usize,first:usize,rows:usize)
         ->Result<Vec<Vec<u8>>,FecMathError>{
-        let parity=self.encode_rows_active(sources,profile,first,rows)?;
-        let len=sources.iter().map(|s|s.len()).max().unwrap_or(0);
+        // Reject over-budget frames BEFORE GF work and parity allocations.
+        let len=self.validate_sources(sources)?;
         if FEC_HEADER+len>wire_limit{return Err(FecMathError::InvalidLength);}
+        let parity=self.encode_rows_active(sources,profile,first,rows)?;
         let mut result=Vec::with_capacity(parity.len());
         for (p,body) in parity.into_iter().enumerate(){
             let mut frame=vec![0u8;FEC_HEADER+len];

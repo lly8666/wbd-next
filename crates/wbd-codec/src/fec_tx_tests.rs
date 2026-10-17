@@ -374,3 +374,130 @@ fn r1_tx_owner_cooperative_queue_metadata_limit_and_time_reconfig(){
     assert_eq!(reconfig.stats().pending_parity_jobs,1);
     assert_eq!(h(&reconfig.poll_cooperative_parity().unwrap().parity[0]).block_id,91);
 }
+
+#[test]
+fn r1_tx_three_classes_absolute_deadline_cooperative_fifo_and_empty(){
+    let mut tx=FecTxOwner::new_cooperative(20,10_000).unwrap();
+    let a=tx.submit(&[0x21;32],0,20,1256,false).unwrap();
+    let b=tx.submit(&[0x31;400],1,20,1256,false).unwrap();
+    let c=tx.submit(&[0x41;800],2,20,1256,false).unwrap();
+    assert_eq!([h(&a.systematic[0]).block_id,h(&b.systematic[0]).block_id,
+        h(&c.systematic[0]).block_id],[20,21,22]);
+    assert_eq!(tx.next_deadline_ms(),Some(32));
+    assert_eq!(tx.stats().retained_bytes,1232);
+    assert!(tx.flush_due(31).unwrap().parity.is_empty());
+    for (ms,jobs) in [(32,1),(33,2),(34,3)]{
+        assert!(tx.flush_due(ms).unwrap().parity.is_empty());
+        assert_eq!(tx.stats().pending_parity_jobs,jobs);
+    }
+    assert_eq!((tx.stats().pending_blocks,tx.stats().retained_bytes),(0,1232));
+    for id in 20..=22u32{
+        let part=tx.poll_cooperative_parity().unwrap();
+        assert_eq!(part.parity.len(),1);
+        assert_eq!(h(&part.parity[0]).block_id,id);
+        assert_eq!(h(&part.parity[0]).parity_count,20);
+    }
+    assert_eq!(tx.stats().retained_bytes,0);
+    assert!(tx.poll_cooperative_parity().unwrap().parity.is_empty());
+    assert_eq!(FecTxOwner::new(1,10_000).unwrap().poll_cooperative_parity(),
+        Err(TxError::InvalidBudget));
+}
+#[cfg(target_os="linux")]
+fn r1_fec_thread_cpu_ns()->Option<(&'static str,u64)>{
+    if let Ok(raw)=std::fs::read_to_string("/proc/thread-self/schedstat"){
+        if let Some(ns)=raw.split_whitespace().next().and_then(|s|s.parse::<u64>().ok()){
+            if ns>0{return Some(("schedstat_ns",ns));}
+        }
+    }
+    let raw=std::fs::read_to_string("/proc/thread-self/sched").ok()?;
+    let s=raw.lines().find(|s|s.trim_start()
+        .starts_with("se.sum_exec_runtime"))?.split_once(':')?.1.trim();
+    let (w,f)=s.split_once('.')?;
+    if f.len()!=6 || !f.bytes().all(|v|v.is_ascii_digit()){return None;}
+    Some(("sched_runtime_us",w.parse::<u64>().ok()?.checked_mul(1_000_000)?
+        .checked_add(f.parse::<u64>().ok()?)?))
+}
+#[cfg(target_os="linux")]
+fn r1_fec_cost_block(tx:&mut FecTxOwner,shards:&[Vec<u8>],coop:bool,
+    wire:usize,samples:&mut Vec<u64>){
+    use std::time::Instant;
+    use std::hint::black_box;
+    let mut rows=0;
+    for shard in shards{
+        let batch=tx.submit(shard,0,20,wire,false).unwrap();
+        assert_eq!(batch.systematic.len(),1);
+        rows+=batch.parity.len();
+        black_box(batch);
+    }
+    if coop{
+        for _ in 0..5{
+            let now=Instant::now();
+            let p=tx.poll_cooperative_parity().unwrap();
+            let ns=now.elapsed().as_nanos();
+            assert_eq!(p.parity.len(),4);
+            if samples.len()<2048{
+                samples.push(ns.min(u128::from(u64::MAX)) as u64);
+            }
+            rows+=p.parity.len();
+            black_box(p);
+        }
+    }
+    assert_eq!(rows,20);
+    assert_eq!(tx.stats().retained_bytes,0);
+}
+#[cfg(target_os="linux")]
+#[test]
+#[ignore = "source-locked Rust1.85.1 Release build-once CPU probe only"]
+fn r1_tx_cooperative_release_cpu_wall_diagnostic(){
+    use std::time::{Instant,Duration};
+    assert!(!cfg!(debug_assertions),"Release-only");
+    for len in [256usize,512,1200]{
+        let shards=(0..20).map(|i|(0..len)
+            .map(|j|((i*17+j*3+7)%251) as u8).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        for (rep,order) in [[false,true],[true,false],[false,true]].into_iter().enumerate(){
+            for coop in order{
+                let mut tx=if coop{FecTxOwner::new_cooperative(1,20*len).unwrap()}
+                    else{FecTxOwner::new(1,20*len).unwrap()};
+                let warm=Instant::now();
+                while warm.elapsed()<Duration::from_millis(1050){
+                    r1_fec_cost_block(&mut tx,&shards,coop,len+FEC_HEADER,&mut Vec::new());
+                }
+                let mut windows_ok=0usize;let mut windows_bad=0usize;
+                let mut active_wall=0u128;let mut cpu_total=0u128;
+                let mut samples=Vec::<u64>::new();let mut blocks=0usize;
+                while active_wall<Duration::from_millis(1125).as_nanos(){
+                    let wall=Instant::now(); // before CPU begin
+                    let cpu_start=r1_fec_thread_cpu_ns();
+                    let mut n=0usize;
+                    while n<64||wall.elapsed()<Duration::from_millis(250){
+                        r1_fec_cost_block(&mut tx,&shards,coop,len+FEC_HEADER,&mut samples);
+                        n+=1;
+                    }
+                    let cpu_end=r1_fec_thread_cpu_ns(); // before wall end
+                    let wall_ns=wall.elapsed().as_nanos();
+                    let cpu_ns=match (cpu_start,cpu_end){
+                        (Some((a,s)),Some((b,e))) if a==b&&e>=s
+                            &&u128::from(e-s)*100<=wall_ns*102=>Some(e-s),
+                        _=>None
+                    };
+                    if let Some(c)=cpu_ns{cpu_total+=u128::from(c);windows_ok+=1;}
+                    else{windows_bad+=1;}
+                    active_wall+=wall_ns;blocks+=n;
+                    println!("M3_FEC_CPU_RAW mode={} L={} repeat={} wall_ns={} cpu_ns={} clock_status={} blocks={}",
+                        if coop{"cooperative"}else{"sync"},len,rep,wall_ns,
+                        cpu_ns.unwrap_or(0),if cpu_ns.is_some(){"OK"}else{"INCONCLUSIVE"},n);
+                }
+                samples.sort_unstable();
+                let p99_wall=samples.get(samples.len().saturating_sub(1)*99/100)
+                    .copied().unwrap_or(0);
+                println!("M3_FEC_CPU_RESULT source=SOURCE_LOCK_REQUIRED mode={} L={} repeat={} qualified={} cpu_ns={} wall_ns={} windows_ok={} windows_bad={} blocks={} parity_rows={} p99_four_row_WALL_ns={} cpu_service_100us=NOT_QUALIFIED product=NOT_QUALIFIED packet_p99=NOT_QUALIFIED",
+                    if coop{"cooperative"}else{"sync"},len,rep,
+                    if windows_bad==0&&windows_ok>0{"SAME_WINDOW_CPU"}else{"CPU_INCONCLUSIVE"},
+                    if windows_bad==0{cpu_total}else{0},active_wall,windows_ok,
+                    windows_bad,blocks,20*blocks,p99_wall);
+                assert!(active_wall>=Duration::from_millis(1125).as_nanos()&&blocks>0);
+            }
+        }
+    }
+}
