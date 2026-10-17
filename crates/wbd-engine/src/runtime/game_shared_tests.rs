@@ -43,7 +43,7 @@ fn permutations(items:&mut [usize;4],at:usize,out:&mut Vec<[usize;4]>){
     }
 }
 #[test]
-fn r4_game_g01_one_common_job_four_lane_copies_no_source_clone(){
+fn r1_game_r4_g01_one_common_job_four_lane_copies_no_source_clone(){
     let mut a=arena(32);let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[4,1,3,2],256),
         limits(32,1024)).unwrap();
     let original=input(&mut a,51);
@@ -71,7 +71,7 @@ fn r4_game_g01_one_common_job_four_lane_copies_no_source_clone(){
     let _=source;
 }
 #[test]
-fn r4_game_g01_normal_two_lane_overlap_no_game_envelope_or_duplicate(){
+fn r1_game_r4_g01_normal_two_lane_overlap_no_game_envelope_or_duplicate(){
     let mut a=arena(24);let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1,2],128),
         limits(8,128)).unwrap();
     for i in 0..8u8 {
@@ -88,7 +88,7 @@ fn r4_game_g01_normal_two_lane_overlap_no_game_envelope_or_duplicate(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g02_24_arrival_orders_first_valid_delivery_once(){
+fn r1_game_r4_g02_24_arrival_orders_first_valid_delivery_once(){
     let mut a=arena(128);
     let mut perms=Vec::new();permutations(&mut [0,1,2,3],0,&mut perms);
     assert_eq!(perms.len(),24);
@@ -115,7 +115,7 @@ fn r4_game_g02_24_arrival_orders_first_valid_delivery_once(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g02_cross_lane_complementary_four_shards_24_orders(){
+fn r1_game_r4_g02_cross_lane_complementary_four_shards_24_orders(){
     let mut a=arena(128);let mut orders=Vec::new();
     permutations(&mut [0,1,2,3],0,&mut orders);
     for order in orders {
@@ -142,7 +142,7 @@ fn r4_game_g02_cross_lane_complementary_four_shards_24_orders(){
     }
 }
 #[test]
-fn r4_game_g02_recovered_then_systematic_delivers_once_and_window_stale(){
+fn r1_game_r4_g02_recovered_then_systematic_delivers_once_and_window_stale(){
     let mut a=arena(24);
     let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2],256),
         RxLimits{delivered_window:8,open_blocks:2,open_bytes:4}).unwrap();
@@ -161,7 +161,7 @@ fn r4_game_g02_recovered_then_systematic_delivers_once_and_window_stale(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g03_slow_lane_full_does_not_block_other_lanes(){
+fn r1_game_r4_g03_slow_lane_full_does_not_block_other_lanes(){
     let mut a=arena(60);let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1,2,3,4],256),
         limits(2,120)).unwrap();
     for i in 0..2u8{
@@ -186,7 +186,7 @@ fn r4_game_g03_slow_lane_full_does_not_block_other_lanes(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g03_0_1_32_33_immediate_batch_and_pressure_bounded(){
+fn r1_game_r4_g03_0_1_32_33_immediate_batch_and_pressure_bounded(){
     let mut a=arena(100);let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1],256),
         limits(64,128)).unwrap();
     assert_eq!(tx.drain_ready(MonoNs(0),32,|_|DispatchOutcome::Accepted),0);
@@ -208,7 +208,7 @@ fn r4_game_g03_0_1_32_33_immediate_batch_and_pressure_bounded(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g03_normal_rotation_mss_a_old_big_b_new_small(){
+fn r1_game_r4_g03_normal_rotation_mss_a_old_big_b_new_small(){
     let mut a=arena(20);
     let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1],200),
         limits(8,128)).unwrap();
@@ -228,7 +228,7 @@ fn r4_game_g03_normal_rotation_mss_a_old_big_b_new_small(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g04_stop_rotation_old_epoch_and_wrong_scope_fail_closed(){
+fn r1_game_r4_g04_stop_rotation_old_epoch_and_wrong_scope_fail_closed(){
     let mut a=arena(20);
     let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1,2],200),
         limits(8,128)).unwrap();
@@ -253,7 +253,7 @@ fn r4_game_g04_stop_rotation_old_epoch_and_wrong_scope_fail_closed(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g04_block_budget_duplicates_and_stop_reclaim(){
+fn r1_game_r4_g04_block_budget_duplicates_and_stop_reclaim(){
     let mut a=arena(20);
     let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2],100),
         RxLimits{delivered_window:4,open_blocks:1,open_bytes:2}).unwrap();
@@ -272,7 +272,7 @@ fn r4_game_g04_block_budget_duplicates_and_stop_reclaim(){
     assert_eq!(a.report().loaned,0);
 }
 #[test]
-fn r4_game_g04_parity_first_send_independent_from_repair_and_arena(){
+fn r1_game_r4_g04_parity_first_send_independent_from_repair_and_arena(){
     let mut a=arena(16);
     let lim=QueueLimits{slots:16,bytes:16,max_age_ns:1_000_000};
     let mut tx=TxOwner::with_parity_share(lim,lim,lim,4,4).unwrap();
