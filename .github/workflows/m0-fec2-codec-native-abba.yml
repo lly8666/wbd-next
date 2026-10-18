@@ -1,0 +1,215 @@
+name: M0 FEC2 CODE301 real ISA-L native F2 and one ABBA cost scenario
+run-name: "M0|FEC2-CODE301-NATIVE-ABBA|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-fec2-codec-native-abba.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-fec2-code301-${{ github.sha }}-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 3011431370f1757212df92800c1b56e87ba51d65
+          path: worker-m3
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - name: Verify input SOURCES; build real ISA-L and a TEMPORARY codec-only V2 fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C worker-m3 rev-parse HEAD)" = 3011431370f1757212df92800c1b56e87ba51d65
+          test "$(git -C worker-m4 rev-parse HEAD)" = 7cef7e849e293373d907a3b64007b4ce8946da78
+          test "$(uname -m)" = x86_64
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/fec2-code301-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          # Only this Actions workspace is patched. No V2 product capability,
+          # admission, C ABI, kind2/3, GUI or LINK wire is activated.
+          cp worker-m3/crates/wbd-codec/src/fec_v2.rs crates/wbd-codec/src/fec_v2.rs
+          cp worker-m3/crates/wbd-codec/src/fec_v2_tests.rs crates/wbd-codec/src/fec_v2_tests.rs
+          cp worker-m4/native/isal-safe/build.rs native/isal-safe/build.rs
+          grep -Fq 'pub mod fec_v2;' crates/wbd-codec/src/lib.rs || \
+            sed -i '/pub mod fec_math;/a pub mod fec_v2;' crates/wbd-codec/src/lib.rs
+          printf '\n#[cfg(test)]\n#[path = "fec_v2_tests.rs"]\nmod fec_v2_tests;\n' >> crates/wbd-codec/src/lib.rs
+          mkdir -p crates/wbd-codec/tests
+          cp r0/fec2_codec_abba_probe.rs crates/wbd-codec/tests/m0_fec2_codec_paired.rs
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --lib --no-run
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --test m0_fec2_codec_paired --no-run
+          mkdir -p fec2-codec-build
+          unit="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_codec-*' -perm -u+x | head -n 1)"
+          paired="$(find target/release/deps -maxdepth 1 -type f -name 'm0_fec2_codec_paired-*' -perm -u+x | head -n 1)"
+          test -n "$unit" && test -n "$paired"
+          cp "$unit" fec2-codec-build/fec2-unit.test
+          cp "$paired" fec2-codec-build/fec2-paired.test
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          inputs={
+            "worker_m3_fec_v2_rs":"worker-m3/crates/wbd-codec/src/fec_v2.rs",
+            "worker_m3_fec_v2_tests":"worker-m3/crates/wbd-codec/src/fec_v2_tests.rs",
+            "worker_m4_native_build":"worker-m4/native/isal-safe/build.rs",
+            "m0_paired_harness":"r0/fec2_codec_abba_probe.rs",
+            "m0_workflow":".github/workflows/m0-fec2-codec-native-abba.yml",
+            "cargo_lock":"Cargo.lock",
+            "cargo_manifest":"crates/wbd-codec/Cargo.toml"}
+          m={"schema_version":1,"result":"BUILT_NOT_TESTED",
+             "control_sha":os.environ["GITHUB_SHA"],
+             "worker_m3_sha":"3011431370f1757212df92800c1b56e87ba51d65",
+             "worker_m4_sha":"7cef7e849e293373d907a3b64007b4ce8946da78",
+             "upstream_isal_sha":"c387163fcbca62701d646149564c550c78a4f985",
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "target":"x86_64-unknown-linux-gnu","rust":"1.85.1",
+             "features":"native-isal (real upstream library, scalar backend in same binary)",
+             "input_sha256":{name:sha(p) for name,p in inputs.items()},
+             "unit_binary_sha256":sha("fec2-codec-build/fec2-unit.test"),
+             "paired_binary_sha256":sha("fec2-codec-build/fec2-paired.test"),
+             "archive_sha256":sha(os.environ["WBD_ISAL_PREFIX"]+"/lib/libisal.a"),
+             "scope":"F2-MATH/WIRE/native component and one C(k16,r16,1200B) ABBA, no Go V1-wire, no product"}
+          pathlib.Path("fec2-codec-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fec2-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-codec-build/
+          retention-days: 30
+          if-no-files-found: error
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 3011431370f1757212df92800c1b56e87ba51d65
+          path: worker-m3
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: fec2-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-codec-build
+      - name: Verify exact CODE301/native sources, same-run binaries and built library witness
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fec2-codec-result
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open("fec2-codec-build/manifest.json"))
+          assert m["control_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["worker_m3_sha"]=="3011431370f1757212df92800c1b56e87ba51d65"
+          assert m["worker_m4_sha"]=="7cef7e849e293373d907a3b64007b4ce8946da78"
+          assert m["upstream_isal_sha"]=="c387163fcbca62701d646149564c550c78a4f985"
+          inputs={
+            "worker_m3_fec_v2_rs":"worker-m3/crates/wbd-codec/src/fec_v2.rs",
+            "worker_m3_fec_v2_tests":"worker-m3/crates/wbd-codec/src/fec_v2_tests.rs",
+            "worker_m4_native_build":"worker-m4/native/isal-safe/build.rs",
+            "m0_paired_harness":"r0/fec2_codec_abba_probe.rs",
+            "m0_workflow":".github/workflows/m0-fec2-codec-native-abba.yml",
+            "cargo_lock":"Cargo.lock",
+            "cargo_manifest":"crates/wbd-codec/Cargo.toml"}
+          for name,p in inputs.items(): assert sha(p)==m["input_sha256"][name], name
+          assert sha("fec2-codec-build/fec2-unit.test")==m["unit_binary_sha256"]
+          assert sha("fec2-codec-build/fec2-paired.test")==m["paired_binary_sha256"]
+          pathlib.Path("fec2-codec-result/source-manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: Run F2 native Cauchy/missing-only/partial and malformed batch, not V1 matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x fec2-codec-build/*.test
+          fec2-codec-build/fec2-unit.test r1_f2_ --test-threads=4 --nocapture 2>&1 | tee fec2-codec-result/f2-native-tests.log
+          python3 - <<'PY'
+          import pathlib,re
+          s=pathlib.Path("fec2-codec-result/f2-native-tests.log").read_text()
+          names=set(re.findall(r"test (?:\S*::)?(r1_f2_\w+) \.\.\. ok",s))
+          required=["r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence",
+                    "r1_f2_prepared_native_cached_tables_real_ec_encode_data",
+                    "r1_f2_full_profiles_all_k_and_every_erasure_count",
+                    "r1_f2_mds_nonprefix_repair_pairs_and_variable_missing"]
+          assert all(n in names for n in required),(names,required)
+          assert re.search(r"test result: ok\. \d+ passed; 0 failed;",s),s[-500:]
+          print("F2_NATIVE_CODEC_SCOPED_PASS",len(names))
+          PY
+      - name: Exactly one codec C k16/r16 1200B ABBA paired same-VM measurement job
+        shell: bash
+        run: |
+          set -euo pipefail
+          lscpu > fec2-codec-result/host-lscpu.txt
+          (cat /sys/fs/cgroup/cpu.max || echo UNKNOWN) > fec2-codec-result/cpu-quota.txt
+          fec2-codec-build/fec2-paired.test m0_f2_codec_k16_r16_1200_abba --ignored --exact --nocapture --test-threads=1 2>&1 | tee fec2-codec-result/abba.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          log=pathlib.Path("fec2-codec-result/abba.log").read_text()
+          rows=re.findall(r"F2_ABBA_RESULT leg=(\d+) mode=(A|B) backend=(Scalar|NativeIsaL) blocks=(\d+) k=16 r=16 frame_bytes=1200 parity_symbols=(\d+) checksum=(\d+) wall_ns=(\d+) cpu_ticks=(UNKNOWN|\d+)",log)
+          assert len(rows)==4,rows
+          assert [r[1] for r in rows]==["A","B","B","A"]
+          assert [r[2] for r in rows]==["Scalar","NativeIsaL","NativeIsaL","Scalar"]
+          assert len({r[5] for r in rows})==1
+          assert all(int(r[3])==96 and int(r[4])==1536 and int(r[6])>0 for r in rows)
+          assert "F2_ABBA_SCENARIO_DONE" in log and re.search(r"test result: ok\. 1 passed; 0 failed;",log)
+          m=json.load(open("fec2-codec-result/source-manifest.json"))
+          for i,r in enumerate(rows): assert int(r[0])==i
+          results=[{"leg":int(r[0]),"mode":r[1],"backend":r[2],
+                    "blocks":int(r[3]),"parity_symbols":int(r[4]),
+                    "checksum":int(r[5]),"wall_ns":int(r[6]),
+                    "cpu_ticks":None if r[7]=="UNKNOWN" else int(r[7])} for r in rows]
+          qualified=all(x["cpu_ticks"] is not None and x["cpu_ticks"]>=100
+                        and x["wall_ns"]>=1_000_000_000 for x in results)
+          receipt={"result":"COMPONENT_FUNCTIONAL_PASS",
+                   "cost_qualification":"CPU_WINDOW_READY_FOR_REVIEW" if qualified else "CPU_INCONCLUSIVE_SHORT_WINDOW",
+                   "worker_M3":m["worker_m3_sha"],"worker_M4":m["worker_m4_sha"],
+                   "control":m["control_sha"],"isa_l":m["upstream_isal_sha"],
+                   "run_id":m["run_id"],"attempt":m["attempt"],
+                   "binary_sha256":m["paired_binary_sha256"],
+                   "scenario":"one codec C k16/r16 1200B, ABBA same VM/process",
+                   "leg_order":["scalar","native-isal","native-isal","scalar"],
+                   "legs":results,"abba_log_sha256":hashlib.sha256(log.encode()).hexdigest(),
+                   "f2_native_test_log_sha256":hashlib.sha256(pathlib.Path("fec2-codec-result/f2-native-tests.log").read_bytes()).hexdigest(),
+                   "host_lscpu_sha256":hashlib.sha256(pathlib.Path("fec2-codec-result/host-lscpu.txt").read_bytes()).hexdigest(),
+                   "scope_exclusions":["GoV1-compat","original Go admission","realGo/Rust raw/TUN","production kind2/3","GUI/applied policy","packet p99","physical"]}
+          pathlib.Path("fec2-codec-result/receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fec2-codec-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-codec-result/
+          retention-days: 30
+          if-no-files-found: warn
