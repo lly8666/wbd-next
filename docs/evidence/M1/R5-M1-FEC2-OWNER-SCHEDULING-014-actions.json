@@ -6,7 +6,7 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "source_sha": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
-  "result": "PASS_SCOPED_F2_SCHED_MEM_ONLY",
+  "result": "PASS",
   "artifact_verified": true,
   "qualification": "M1 FEC2 owner/component; Go/live/product NOT_RUN",
   "native": {
@@ -119,5 +119,15 @@
   },
   "cost": "No FEC2 paired performance scenario in M1-allowed workflow. The inherited release owner sample is NOT FEC2 A/B. No speedup or product claims. M0 follow-up required.",
   "rollback": "OFF path retained. To rollback owner component remove new fec2_owner module/test and its mod import, restore with_parity_share r<=k. Do NOT revert Game013 or change M3/M0 interfaces.",
-  "blocker": "M0 root checker update or main-scoped equivalent needed; M1 cannot write tools/, root workflow or ABI."
+  "blocker": "Pending central exact-H SOURCE PASS after M1 metadata repair; awaiting M0 codec/Go/live integration and scoped same-VM FEC2 A/B cost. Old branch checker sync is superseded under governance v2.",
+  "scope": "PASS denotes exactly the 130/130 M1 scoped F2-SCHED/MEM owner-native tests at source_sha only, not Go/M3/M4 integrated, cross-platform, live/product, or FEC2 paired cost qualification. All listed NOT_RUN remain NOT_RUN.",
+  "governance_v2": {
+    "control_before_source": "d499ac7643defb33ce238596a90aea857d44052a",
+    "policy": "Central worker scope audit from main-approved checkpoint (64 per delta, not lifetime); no M0 sync of inherited worker tools required.",
+    "central_run_id": 39083333199,
+    "central_attempt_1": "FAIL Github 403 rate_limited before checking metadata",
+    "central_attempt_2": "FAIL verified cursor lacks reviewed PASS evidence; corrected strict result marker and moved old Game013 evidence from current evidence_refs into historical context_refs in next H",
+    "central_current_source_receipt": "PENDING_RETRY_AFTER_S_TO_H",
+    "old_worker_governance": "HISTORICAL_FAIL_CHECKER_LEGACY_64_NOT_CURRENT_V2_AUTHORITY"
+  }
 }
