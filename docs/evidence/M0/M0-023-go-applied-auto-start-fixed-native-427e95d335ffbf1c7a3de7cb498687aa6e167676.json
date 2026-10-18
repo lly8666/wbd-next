@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "427e95d335ffbf1c7a3de7cb498687aa6e167676",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "result": "PASS_TEST_ONLY_REAL_ORIGINAL_GO_FECV2_POLICY_AUTO_START_HIGH5_AND_FIXED_MILD9_TLS_COMMIT_RUST_OWNER_APPLIED_READBACK_M1_M3_ORIGINAL_PARITY_REAL_KERNEL_THREE_CIPHERS",
+  "source_modifications": [
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go: transport-safe opt-in numeric Go policy intent fields on original authenticated V4 bridge; no extra public auth/token authority.",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go: FecV2Step original Go policy chooses auto startup High profile4 revision5 or fixed Mild profile1 revision9 before TLS preparation; only original TLS/Detach commit can pass intent to Rust owner; exact original Rust applied profile/revision queried via opt-in C ABI and FecV2Apply checks client/direction/revision and stale ACK.",
+    "crates/wbd-engine/src/v4_owner_crypto.rs: test-only original Rust protected owner may accept independently verified original Go chosen profile 0..6 and positive revision, preserving epoch/generation/Go lane/owner ID pin; applied readback only after verified TLS/Detach/active. Earlier Strong/1 hardcoded restriction removed in private test-only binder.",
+    "crates/wbd-engine/src/v4_embedded_go.rs: original M1 Fec2Owner scheduler and original M3 Rs16 parity profile now actually use cryptographically authorized Rust owner policy/profile/revision, with actual r check against profile redundancy. Still one-shot opt-in, NOT continuous product M1 runtime scheduling.",
+    "crates/wbd-engine/src/v4_probe_bridge.rs: replace outdated old fixed-revision2-denied assertion with valid zero-revision/unknown-profile negatives, keep wrong epoch/capability and duplicate bind negatives.",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go and .github/workflows/m0-fec2-real-tls-owner-grant.yml: source-locked 3 suites x 3 real rootnetns scenarios, auto High and fixed Mild applied readback with stale revision denied; include 8 original Go FecV2Control policy unit tests."
+  ],
+  "tests": [
+    "Original Go authenticated V4 TLS/Detach with feature bit2, 3 suites ChaCha20/AES128/AES256. For 3 per-cipher real-kernel scenarios: default Strong1 single same-PN repair, AUTO START selected High profile4 revision5 for two frozen reservations one true M4 sendto plus positive never-attempted second, FIXED selected Mild profile1 revision9 for one actual M4 native Linux sendmmsg two frozen. Independent Go raw captures same immutable PN/Seq/AEAD bytes, M3 actual RS16 e1 recovers 127B IPv4 UDP 99B delivered original TUN app; M2 typed reverse kind1 original Go C2S authenticated receipt retires only original shadow.",
+    "Go FecV2Step issued intent before original TLS owner, original verified Go TLS post-commit forwarded exact revision/profile, original Rust confirms applied, original Go FecV2Apply accepted only scope/revision matching; older ACK rejected. Mild k2 actual r=1 vs old Strong k2 r=2, original M1/M3 parity both use selected profile.",
+    "8 original Go FecV2Control policy tests run in original pinned Go realityfront package; no failures. Default Rust feature FEC2 permission remains OFF. Global M2 quota three concurrent original Go TLS sessions and prior 1122 native driver-shape conservative checks retained.",
+    "These are feature-gated opt-in test-only owner settings, NOT product CLI/GUI parameters, NOT continuous auto quality tick/reconfiguration; canonical kind1 and actual loss feedback still not wired."
+  ],
+  "actions": [
+    {
+      "sha": "427e95d335ffbf1c7a3de7cb498687aa6e167676",
+      "run_id": 39126405344,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 117672353713,
+      "artifact_id": 12136695258,
+      "artifact_sha256": "f5c7daa1bce2fc80680ff8b96853d51485e47a9a77a4cb1bbbac81e059a78bc5",
+      "independently_rehashed_sha256": "f5c7daa1bce2fc80680ff8b96853d51485e47a9a77a4cb1bbbac81e059a78bc5",
+      "receipt_source_matches": true,
+      "real_kernel_scenarios": 9,
+      "original_go_fec2_policy_tests": 8,
+      "original_ciphers": 3,
+      "real_kernel_policy_markers": 6,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39126405344"
+    },
+    {
+      "sha": "427e95d335ffbf1c7a3de7cb498687aa6e167676",
+      "run_id": 39126405317,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "source Governance"
+    },
+    {
+      "sha": "f56fbcc4191967c1c844fb9d0732384450b1c917",
+      "run_id": 39126139370,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 12135659827,
+      "artifact_sha256": "3e5e59cd4824473b09ef38d9413798e09b0a562d08211a0e0b37d746b442e3fe",
+      "scope": "earlier M0 Go FIXED High/Mild 3-cipher real kernel case before AUTO change"
+    },
+    {
+      "sha": "f56fbcc4191967c1c844fb9d0732384450b1c917",
+      "run_id": 39126139455,
+      "conclusion": "success",
+      "scope": "intermediate selected native-functional, not exact final source"
+    },
+    {
+      "sha": "f56fbcc4191967c1c844fb9d0732384450b1c917",
+      "run_id": 39126139379,
+      "conclusion": "success",
+      "scope": "intermediate selected cross ABI, not exact final source"
+    },
+    {
+      "sha": "f56fbcc4191967c1c844fb9d0732384450b1c917",
+      "run_id": 39126139376,
+      "conclusion": "success",
+      "scope": "intermediate Normal/off exploratory, not exact final source"
+    }
+  ],
+  "retained_failures": [
+    {
+      "sha": "40e096eb66b347a2e2ae201d6629dadf0158d75d",
+      "run_id": 39125868243,
+      "conclusion": "failure",
+      "reason": "Invalid workflow YAML from JS replace dollar substitution; 0 job workflow, corrected with literal rebuild."
+    },
+    {
+      "sha": "218e299ede79d679f1a66b0e88a7514b9175dcf8",
+      "run_id": 39125959053,
+      "conclusion": "failure",
+      "artifact_id": 12136302129,
+      "artifact_sha256": "330ac664469c0584e8ccb831342f36dbd10a0777d32381495779729ff4f92779",
+      "reason": "Old Rust negative fixture expected revision2 denied by formerly fixed Strong1-only binding, now legal; replaced obsolete test with true zero revision and profile7 illegal."
+    },
+    {
+      "reason": "Historic original Normal/off 150ms netem intermittent loss/fragment pending and selected codec240s/D10/p99 failures remain; later exploratory PASS not qualification."
+    }
+  ],
+  "still_open": [
+    "Production FEC2 OFF; original Go external fec.mode/profile/auto_policy/start_profile catalog/CLI/GUI and effective user-visible state not connected; only opt-in authenticated TLS startup profile and revision from original Go policy.",
+    "Auto continuously consumes per-direction quality/snapshot and changes live original M1 at NEW block boundaries with ack accepted/pending/applied/rejected NOT_WIRED; current auto mode startup profile effective only.",
+    "Canonical product authenticated kind1 receipt wire, peer-observed actual loss/automatic feedback, real 2..32 distinct FrozenRecord native partial/error Uncertain/NotSent Stop/MTU/loan/noHOL races not qualified.",
+    "Legal ~65KiB UDP cross-turn fragments/MTU±1, 150ms repeated reliability, full codec240s/D10/p99 same-VM ABBA, native ARM64+Windows full codec and physical two peers NOT_RUN."
+  ],
+  "next_action": "R0-023 continue original Go production single catalog/CLI/GUI and mature quality snapshot into SetTxFec new block apply/ack, continuous original M1 scheduling after TLS; true loss-driven canonical authenticated kind1 feedback and 2..32 driver Stop race; preserve FEC2 OFF, do not promote test-only startup success."
+}
