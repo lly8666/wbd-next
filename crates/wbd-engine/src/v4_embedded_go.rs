@@ -886,7 +886,8 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
     if e.phase!=PH_ACTIVE||!e.owner.is_fec2_probe_bound(){return BAD_STAGE}
     let Some(direction)=e.fec2_probe_budget_direction else{return BAD_STAGE};
     let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
-    let now=process.at_least(process.now_ns);
+    let prior=process.now_ns;
+    let now=process.at_least(prior);
     if process.broker.grant(direction,bytes,50_000_000,now).is_err(){
         return INVALID
     }
@@ -956,7 +957,8 @@ fn bind_fec2_from_private_go(
             tunnel:lane.tunnel,direction:WireDirection::ServerToClient
         };
         let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
-        let now=process.at_least(process.now_ns);
+        let prior=process.now_ns;
+    let now=process.at_least(prior);
         if process.broker.register(direction,RepairBudgetConfig{
             outer_mtu:1400,max_repair_bytes_per_epoch:65_536,
             max_pending_reservations:4,max_pending_bytes:5600,
@@ -1073,7 +1075,8 @@ fn stop(handle:u64)->i32{
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     if let Some(direction)=e.fec2_probe_budget_direction.take(){
         let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
-        let now=process.at_least(process.now_ns);
+        let prior=process.now_ns;
+    let now=process.at_least(prior);
         if process.broker.retire_tunnel(direction.tunnel,now).is_err(){
             return BAD_STAGE
         }
