@@ -226,6 +226,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 if policyErr!=nil||ok||stale.AppliedRevision!=effective.AppliedRevision{
                     t.Fatal("stale Go policy application receipt rewrote effective state")
                 }
+                policyState=effective // retain the ORIGINAL Go applied ACK before next 2s auto tick
                 t.Logf("M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=%d mode=%s policy=%s profile=%d revision=%d applied=1 stale_ack=deny",
                     cipher,mode,policyState.Mode,effective.AppliedProfile,effective.AppliedRevision)
             }
