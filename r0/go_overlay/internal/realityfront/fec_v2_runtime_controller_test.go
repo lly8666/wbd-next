@@ -34,6 +34,7 @@ func (f *f2RuntimeFake) Stage(epoch [16]byte,v FecV2Intent) error{
 }
 func (f *f2RuntimeFake) Readback(epoch [16]byte,client string,dir FecV2Direction)(FecV2Ack,error){
     if epoch!=f.epoch{return FecV2Ack{},ErrFecV2Scope}
+    if f.ack.Client==""{return FecV2Ack{},errors.New("no original applied receipt")}
     return f.ack,nil
 }
 
