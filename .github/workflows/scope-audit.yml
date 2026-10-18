@@ -4,31 +4,16 @@ on:
   workflow_run:
     workflows: [Governance]
     types: [completed]
-  push:
-    branches: [main, governance/incremental-ci-20261015]
-    paths:
-      - "tools/scope_audit.py"
-      - "tools/worker_scope_ci.py"
-      - "tools/governance.py"
-      - "tests/test_governance.py"
-      - "tests/test_scope_audit.py"
-      - ".governance/scope-checkpoints.json"
-      - ".github/workflows/scope-audit.yml"
 permissions:
   contents: read
   actions: read
 jobs:
   audit:
-    name: "audit (${{ matrix.role }})"
-    if: github.event_name == 'push' || (github.event.workflow_run.head_repository.full_name == github.repository && startsWith(github.event.workflow_run.head_branch, 'work/'))
+    name: "audit exact worker"
+    if: github.event.workflow_run.head_repository.full_name == github.repository && startsWith(github.event.workflow_run.head_branch, 'work/')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        role: [M1, M2, M3, M4]
     env:
-      AUDIT_ROLE: ${{ matrix.role }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout only the main-owned checker snapshot, never worker code
@@ -36,7 +21,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Audit exact event SOURCE or seed all current worker checkpoints
+      - name: Audit only the completed worker Governance exact SOURCE
         run: |
           python - <<'PY'
           import json, os, pathlib, subprocess
@@ -44,26 +29,24 @@ jobs:
           api=g.GitHub(os.environ['GITHUB_REPOSITORY'])
           event=json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
           control=os.environ['GITHUB_SHA']
+          branch=event['workflow_run']['head_branch']
+          source=event['workflow_run']['head_sha']
+          # Only one exact immutable SOURCE per completed worker Governance;
+          # main pushes run the cheap tool regression suite elsewhere. Never
+          # replay 4 x 512 historical API checks for every control commit.
           registry=api.file('.governance/registry.json',control)
-          role=next((r for r in g.validate_registry(registry)
-                     if r['id']==os.environ['AUDIT_ROLE']
-                     and r['state']=='active' and not r['global_writer']),None)
-          if role is None:
-              raise SystemExit('matrix role missing from active main registry')
-          branch=role['branch']
-          if 'workflow_run' in event and branch!=event['workflow_run']['head_branch']:
-              print('SCOPE_NOT_TARGETED role='+role['id'])
-              raise SystemExit(0)
-          source=(event['workflow_run']['head_sha'] if 'workflow_run' in event
-                  else api.head(branch))
+          roles=[r for r in g.validate_registry(registry)
+                 if r['branch']==branch and r['state']=='active'
+                 and not r['global_writer']]
+          if len(roles)!=1:raise SystemExit('event branch has no unique active worker')
           subprocess.run(['python','tools/scope_audit.py','--branch',branch,
                           '--source',source,'--control',control,
-                          '--output',f'out/scope-{role["id"]}.json'],check=True)
+                          '--output',f'out/scope-{roles[0]["id"]}.json'],check=True)
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: central-scope-${{ matrix.role }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: central-scope-${{ github.run_id }}-${{ github.run_attempt }}
           path: out/
           retention-days: 30
           if-no-files-found: warn
