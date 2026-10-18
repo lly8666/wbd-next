@@ -437,9 +437,10 @@ fn fec2_probe_real_kernel_raw_once(
     if job.block_id!=first.block_id||job.k!=2||job.r!=2{
         return Err(INVALID)
     }
+    let parity_block_id=job.block_id;
     let (repairs,_)=job.with_sources(|frames|{
         wbd_codec::fec_v2::Rs16::new().encode_owned(
-            job.block_id,frames,wbd_codec::fec_v2::Profile::Strong,
+            parity_block_id,frames,wbd_codec::fec_v2::Profile::Strong,
             0,1,budget.record_payload_mtu,
             wbd_codec::fec_v2::BackendChoice::Scalar
         )
