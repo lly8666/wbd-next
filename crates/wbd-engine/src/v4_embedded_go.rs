@@ -1073,13 +1073,17 @@ fn stop(handle:u64)->i32{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
     }
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
-    if let Some(direction)=e.fec2_probe_budget_direction.take(){
+    if let Some(direction)=e.fec2_probe_budget_direction{
         let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
         let prior=process.now_ns;
-    let now=process.at_least(prior);
-        if process.broker.retire_tunnel(direction.tunnel,now).is_err(){
+        let now=process.at_least(prior);
+        // Do not lose the registered identity if M2 retirement failed.
+        // A stopped generation must retire exactly its own direction;
+        // ambiguous/unknown retirement must fail closed, not invent credit.
+        if process.broker.retire_tunnel(direction.tunnel,now).ok()!=Some(1){
             return BAD_STAGE
         }
+        e.fec2_probe_budget_direction=None;
         e.fec2_receipt_sender.take();
     }
     e.phase=PH_STOPPED;OK
