@@ -555,12 +555,16 @@ impl Rs16 {
             }
         }
         let mut outputs=Vec::with_capacity(e);
-        for (&index,bytes) in missing.iter().zip(recovered) {
+        for (&index,mut bytes) in missing.iter().zip(recovered) {
             let n=u16::from_be_bytes([bytes[0],bytes[1]]) as usize;
             if n>symbol_len-2 || bytes[2+n..].iter().any(|&b|b!=0) {
                 return Err(Error::CorruptProtectedLength);
             }
-            outputs.push((index as u8,bytes[2..2+n].to_vec()));
+            // Return the SAME owned result allocation, shifting only the 2B
+            // protected prefix. Do not allocate/copy a second full frame.
+            bytes.copy_within(2..2+n,0);
+            bytes.truncate(n);
+            outputs.push((index as u8,bytes));
         }
         Ok((outputs,used))
     }
