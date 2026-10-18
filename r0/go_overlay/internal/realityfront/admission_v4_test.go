@@ -480,9 +480,10 @@ func v4PairWithPrivateBridge(t *testing.T,b v4OwnerBridge,store *V4EpochStore)(
     *V4ClientSession,*V4ServerSession,error,error) {
     return v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha)
 }
-func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochStore,cipher uint8)(
+func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochStore,cipher uint8,probeOnly ...bool)(
     *V4ClientSession,*V4ServerSession,error,error) {
     t.Helper()
+    f2:=len(probeOnly)==1 && probeOnly[0]
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
     assoc,peer:=newAssociationPeer(t)
@@ -500,14 +501,14 @@ func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochSt
             TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                 TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
             ExpectedUsername:"protected-owner",ExpectedPassword:"secret",ServerLimit:1400,
-        },V4ServerOptions{DataPlaneReady:true,Epochs:store,ownerBridge:b})
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,ownerBridge:b,fec2ProbeOnly:f2})
         ch<-result{s,e}
     }()
     c,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
         TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
         Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
         ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,cipher),
-    },V4ClientOptions{DataPlaneReady:true})
+    },V4ClientOptions{DataPlaneReady:true,fec2ProbeOnly:f2})
     select {
     case r:= <-ch:return c,r.s,ce,r.err
     case <-time.After(5*time.Second):t.Fatal("private bridge TLS blocked");return nil,nil,nil,nil
