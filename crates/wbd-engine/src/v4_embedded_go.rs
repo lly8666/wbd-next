@@ -128,6 +128,16 @@ impl Fec2ActualPeerRxProbe{
         result
     }
 }
+// M0 single original-session TEST-ONLY sender shadow. It holds the exact
+// M1 frozen ciphertext cloned only after synchronous M4 raw kernel copy.
+// Receipt admission relies on original M3 reverse AEAD/unique-PN opener.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+struct Fec2ProbeReceiptSender{
+    broker:wbd_recovery::GlobalRepairAllocator,
+    shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
+    direction:wbd_recovery::BudgetDirection,
+    route:wbd_recovery::ReceiptRouteScope,
+}
 struct Entry{
     generation:u32,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
@@ -135,6 +145,8 @@ struct Entry{
     protected_fec2_features:u16,
     #[cfg(feature="m0_fec2_owner_probe")]
     fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_receipt_sender:Option<Fec2ProbeReceiptSender>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -227,6 +239,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         protected_fec2_features:handoff.negotiated_features,
         #[cfg(feature="m0_fec2_owner_probe")]
         fec2_actual_peer_rx,
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_receipt_sender:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -333,7 +347,8 @@ fn fec2_probe_real_kernel_raw_once(
     let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE || e.workers.is_some()
         ||e.protected_fec2_features!=7
-        ||!e.owner.is_fec2_probe_bound(){
+        ||!e.owner.is_fec2_probe_bound()
+        ||e.fec2_receipt_sender.is_some(){
         return Err(BAD_STAGE)
     }
     if e.raw_tx.is_none(){
@@ -369,6 +384,7 @@ fn fec2_probe_real_kernel_raw_once(
     let mut storage=Vec::with_capacity(1);
     let mut out=[(0u64,0u32,0usize);2];
     let mut tickets:[Option<SourceTicket>;2]=[None,None];
+    let mut confirmed:Vec<(crate::memory::FrozenRecord,usize)>=Vec::with_capacity(2);
     for (i,frame) in [&a[..],&b[..]].into_iter().enumerate(){
         let mut source_slab=e.arena.allocate().map_err(|_|FULL)?;
         let end=14usize.checked_add(frame.len()).ok_or(INVALID)?;
@@ -403,10 +419,13 @@ fn fec2_probe_real_kernel_raw_once(
                     let sealed=e.owner.seal_fec2_probe_one(
                         slab,payload.len(),2,budget,15,loop_now()
                     ).map_err(|_|INVALID)?;
-                    let copied=e.owner.submit_scoped_raw_tx_reusing(
+                    let (copied,frozen)=e.owner.submit_scoped_raw_tx_shadow_probe_reusing(
                         &raw,tuple,presentation,loop_now(),&mut storage
                     ).map_err(|_|INVALID)?;
-                    if copied<=sealed.2{return Err(INVALID)}
+                    if copied<=sealed.2||frozen.metadata().pn.0!=sealed.0 {
+                        return Err(INVALID)
+                    }
+                    confirmed.push((frozen,copied));
                     Ok(sealed)
                 })();
                 match sent{
@@ -453,10 +472,11 @@ fn fec2_probe_real_kernel_raw_once(
     let sealed=e.owner.seal_fec2_probe_one(
         repair_slab,parity.len(),3,budget,15,loop_now()
     ).map_err(|_|INVALID)?;
-    let copied=e.owner.submit_scoped_raw_tx_reusing(
+    let (copied,frozen)=e.owner.submit_scoped_raw_tx_shadow_probe_reusing(
         &raw,tuple,presentation,loop_now(),&mut storage
     ).map_err(|_|INVALID)?;
-    if copied<=sealed.2{return Err(INVALID)}
+    if copied<=sealed.2||frozen.metadata().pn.0!=sealed.0{return Err(INVALID)}
+    confirmed.push((frozen,copied));
     out[1]=sealed;
     scheduler.finish_parity(job,1,true);
     let report=scheduler.report();
@@ -469,6 +489,46 @@ fn fec2_probe_real_kernel_raw_once(
     if scheduler.take_parity(MonoNs(8_000_002)).is_ok(){
         return Err(INVALID)
     }
+    if confirmed.len()!=2{return Err(INVALID)}
+    let (lane,epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
+    use wbd_recovery::{
+        BudgetDirection,WireDirection,ReceiptState,ReceiptConfig,
+        GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,ReceiptRouteScope,
+    };
+    let direction=BudgetDirection{
+        tunnel:lane.tunnel,direction:WireDirection::ServerToClient
+    };
+    let route=ReceiptRouteScope::checked(
+        lane,lane,WireDirection::ServerToClient,epoch,
+        (wbd_types::RecordPn(out[0].0),wbd_types::RecordPn(out[1].0)),
+        (wbd_types::RecordPn(0),wbd_types::RecordPn(10))
+    ).map_err(|_|INVALID)?;
+    let mut shadow=ReceiptState::new(lane,ReceiptConfig{
+        max_shadow_entries:4,pto_ns:30_000_000,reorder_window_ns:2_000_000
+    }).map_err(|_|INVALID)?;
+    let mut broker=GlobalRepairAllocator::new(GlobalRepairConfig{
+        max_bytes_per_epoch:65_536,max_directions:2,
+        max_grant_bytes:1400,max_grant_lifetime_ns:100_000_000,
+        max_pending:4,max_pending_bytes:5600
+    },MonoNs(0)).map_err(|_|INVALID)?;
+    broker.register(direction,RepairBudgetConfig{
+        outer_mtu:1400,max_repair_bytes_per_epoch:65_536,
+        max_pending_reservations:4,max_pending_bytes:5600,
+        io_timeout_ns:10_000_000
+    },MonoNs(0)).map_err(|_|INVALID)?;
+    broker.bind_receipt_route(direction,route,MonoNs(0)).map_err(|_|INVALID)?;
+    for (frozen,outer_bytes) in confirmed {
+        // Actual definite raw driver copy occurred first; no shadow for
+        // unsent source1 or merely queued/systematic peer acceptance.
+        shadow.on_sent(frozen,MonoNs(0),MonoNs(150_000_000))
+            .map_err(|_|INVALID)?;
+        broker.on_fresh_accepted(direction,outer_bytes as u64,MonoNs(0))
+            .map_err(|_|INVALID)?;
+    }
+    if shadow.outstanding()!=2{return Err(INVALID)}
+    e.fec2_receipt_sender=Some(Fec2ProbeReceiptSender{
+        broker,shadow,direction,route
+    });
     e.arena.drain_returns();
     Ok(out)
 }
@@ -541,6 +601,96 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     else{return INVALID};
     unsafe{pn.write(received_pn);kind.write(received_kind);
         recovered_len.write(actual_len as u32)}
+    OK
+}
+
+
+//// M0 test-scope actual reverse raw kernel C2S kind1, opened by the
+//// ORIGINAL scoped owner M3 AEAD+unique PN. No independent decryptor or
+//// cold metadata may authorize a receipt. 52B test wire grammar only;
+//// product kind1 receipt encoder/peer application remains NOT_RUN.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
+    use wbd_types::RecordPn;
+    use wbd_recovery::{ReceiptOpenFacts,ReceiptPage,admit_opened_receipt};
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE||e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
+    let raw=Arc::clone(e.raw_rx.as_ref().ok_or(BAD_STAGE)?);
+    if raw.generation()!=e.generation||raw.is_stopping(){return Err(BAD_STAGE)}
+    let f=e.flow;
+    let tuple=Ipv4Tuple{
+        src_ip:&f.client_ip,dst_ip:&f.server_ip,
+        src_port:f.client_port,dst_port:f.server_port
+    };
+    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+    let (len,seq)=raw.recv_one_into(
+        e.generation,slab.writable(),tuple,PacketPersona::Legacy
+    ).map_err(|_|INVALID)?;
+    if len<FIXED_WIRE_OVERHEAD||seq!=e.rx_boundary{return Err(INVALID)}
+    // Borrow the ORIGINAL M3 C2S replay and health opener in the one
+    // scoped ProtectedScopedOwner. Failed AEAD never reaches M2.
+    let opened=e.owner.open_reverse_health_probe(
+        &mut slab.writable()[..len]
+    ).map_err(|_|INVALID)?;
+    if opened.payload.len()!=52{return Err(INVALID)}
+    let p=opened.payload;
+    let report_seq=u32::from_be_bytes(p[..4].try_into().map_err(|_|INVALID)?);
+    let largest=RecordPn(u64::from_be_bytes(
+        p[4..12].try_into().map_err(|_|INVALID)?));
+    let base=RecordPn(u64::from_be_bytes(
+        p[12..20].try_into().map_err(|_|INVALID)?));
+    let mut bitmap=[0u8;32];
+    bitmap.copy_from_slice(&p[20..52]);
+    let peer=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
+    let verified=ReceiptOpenFacts{
+        verified_reverse_lane:peer.route.outbound_lane(),
+        verified_reverse_direction:wbd_recovery::WireDirection::ClientToServer,
+        verified_tunnel_epoch:e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?.1,
+        control_record_pn:RecordPn(opened.pn),
+    };
+    let released=admit_opened_receipt(
+        &mut peer.broker,peer.direction,&mut peer.shadow,peer.route,
+        verified,largest,report_seq,
+        vec![ReceiptPage{base_pn:base,bitmap}],MonoNs(12_000_000)
+    ).map_err(|_|INVALID)?;
+    let count=released.len() as u32;
+    let left=peer.shadow.outstanding() as u32;
+    // Original frozen loan releases here; kernel copied bytes are NOT an
+    // authenticated ACK, only the admitted reverse control retires it.
+    drop(released);
+    e.arena.drain_returns();
+    Ok((count,left))
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
+    handle:u64,released:*mut u32,outstanding:*mut u32
+)->i32{
+    if released.is_null()||outstanding.is_null(){return INVALID}
+    match fec2_probe_reverse_raw_one(handle){
+        Ok((done,left))=>{
+            unsafe{released.write(done);outstanding.write(left)};
+            OK
+        },
+        Err(err)=>err,
+    }
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
+    handle:u64,outstanding:*mut u32
+)->i32{
+    if outstanding.is_null(){return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||!e.owner.is_fec2_probe_bound(){
+        return BAD_STAGE
+    }
+    let Some(sender)=e.fec2_receipt_sender.as_ref()else{return BAD_STAGE};
+    unsafe{outstanding.write(sender.shadow.outstanding() as u32)}
     OK
 }
 
