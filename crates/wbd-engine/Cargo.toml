@@ -12,6 +12,8 @@ crate-type = ["rlib", "cdylib"]
 # NEVER enable on production builds: exposed raw C methods are only native
 # test probes, not independent Go TLS credential or production FecOrigin proofs.
 m0_v4_probe = []
+# Explicit test-only original-owner FEC2 AEAD/PN adapter. Product Go bit2 OFF.
+m0_fec2_owner_probe = ["wbd-codec/m0-fec2-record-probe"]
 # Explicit developer-only opt-in non-test Go embedded Rust control adapter.
 # Default production cdylib and public ABI remain disabled.
 m0_v4_embedded_go = []
