@@ -15,6 +15,7 @@ import (
     "time"
     "unsafe"
 
+    "github.com/lly8666/wobuzhidao/internal/linkdata"
     "github.com/lly8666/wobuzhidao/internal/tlsrecord"
 )
 func TestR0V4EmbeddedNativeProtectedControlAllCiphers(t *testing.T){
@@ -261,6 +262,60 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                 if !ok||!ne.Timeout(){t.Fatalf("negative app read non-timeout type=%d err=%v",index,err)}
             }
             t.Logf("EMBEDDED_REAL_RX_REPLAY_CORRUPT_NO_DELIVERY_PASS suite=%d",cipher)
+            // L01-L04: the pinned ORIGINAL Go linkdata.Fragmenter sends a
+            // real previously-over-budget logical IPv4/UDP datagram as two
+            // separately AEAD-protected C2S records. Rust M3 must hold the
+            // first authenticated fragment without delivering any TUN bytes,
+            // then reassemble exactly once into the real application socket.
+            // This is not test-only Rust crypto/reassembly or a Python vector.
+            originalGoFragments,err:=linkdata.NewFragmenter(maxIP)
+            if err!=nil{t.Fatal(err)}
+            pieces,err:=originalGoFragments.Fragment(overIP)
+            if err!=nil||len(pieces)!=2{
+                t.Fatalf("original Go over-budget LINK fragmenter pieces=%d err=%v",len(pieces),err)
+            }
+            fragmentSeq:=lastSeq+uint32(len(atWire))
+            for index,piece:=range pieces{
+                if len(piece)>maxIP||string(piece[:8])!="WBDLFRG1"{
+                    t.Fatalf("not actual bounded original Go LINK part %d len=%d",index,len(piece))
+                }
+                sealed,_,sealErr:=sealer.Seal(piece)
+                if sealErr!=nil||len(sealed)>int(limit){
+                    t.Fatalf("original Go fragmented AEAD part %d wire=%d err=%v",
+                        index,len(sealed),sealErr)
+                }
+                if err:=syscall.Sendto(rawfd,
+                    v4RawC2STestPacket(sealed,fragmentSeq,bridge.originalFlow),0,
+                    &syscall.SockaddrInet4{Addr:bridge.originalFlow.ServerIP});err!=nil{
+                    t.Fatalf("original Go valid fragment kernel raw send %d: %v",index,err)
+                }
+                fragmentSeq+=uint32(len(sealed))
+                got,failed,recvErr:=bridge.receiveRawToTun()
+                if recvErr!=nil||failed!=0||got!=uint32(index){
+                    t.Fatalf("real owner fragment delivery index=%d got=%d failed=%d err=%v",
+                        index,got,failed,recvErr)
+                }
+                if index==0{
+                    if err:=app.SetReadDeadline(time.Now().Add(35*time.Millisecond));err!=nil{t.Fatal(err)}
+                    tmp:=make([]byte,maxIP+2)
+                    n,_,readErr:=app.ReadFromUDP(tmp)
+                    netErr,ok:=readErr.(net.Error)
+                    if n!=0||!ok||!netErr.Timeout(){
+                        t.Fatalf("premature partial-fragment TUN delivery n=%d err=%v",n,readErr)
+                    }
+                }
+            }
+            if err:=app.SetReadDeadline(time.Now().Add(2*time.Second));err!=nil{t.Fatal(err)}
+            reunited:=make([]byte,maxIP+2)
+            nFrag,fromFrag,readErr:=app.ReadFromUDP(reunited)
+            if readErr!=nil||fromFrag==nil||!fromFrag.IP.Equal(senderIP)||
+                nFrag!=len(overIP)-ipUDPHeaders||
+                !bytes.Equal(reunited[:nFrag],overIP[ipUDPHeaders:]){
+                t.Fatalf("real Go fragment Rust reassembly kernel UDP mismatch size=%d expected=%d err=%v",
+                    nFrag,len(overIP)-ipUDPHeaders,readErr)
+            }
+            t.Logf("EMBEDDED_REAL_GO_FRAGMENT_RUST_TUN_REASSEMBLY_PASS suite=%d logical_ip=%d pieces=%d",
+                cipher,len(overIP),len(pieces))
             // TRUE independent S2C: application sends via real kernel TUN,
             // existing non-test embedded Rust M1/M3 seals original S2C PN,
             // actual M4 raw TX sends IPv4/TCP; independent Go raw socket
