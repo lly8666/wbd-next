@@ -12,7 +12,7 @@ use std::thread::{self,JoinHandle};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::ffi::c_int;
 use wbd_types::MonoNs;
-use wbd_types::buffer_contract::UniqueSealable;
+use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use crate::memory::Arena;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
