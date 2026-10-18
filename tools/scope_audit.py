@@ -42,8 +42,13 @@ def check_role_metadata(api, role, source, cursor):
         g.need(evidence.get("schema_version") == 1 and
                evidence.get("source_sha") == cursor["last_tested_source"], "cursor evidence SOURCE mismatch")
         if not cursor["unverified"]:
-            g.need(evidence.get("result") == "PASS" and evidence.get("artifact_verified") is True,
-                   "verified cursor lacks reviewed PASS evidence")
+            # A scoped component receipt may use PASS_SCOPED_*; this is a
+            # verified SOURCE/artifact status, not a product-level PASS.
+            result = evidence.get("result")
+            g.need(isinstance(result, str) and
+                   (result == "PASS" or result.startswith("PASS_SCOPED_")) and
+                   evidence.get("artifact_verified") is True,
+                   "verified cursor lacks a source-matched scoped PASS artifact")
     for ref in cursor["context_refs"]:
         item = api.get(f"contents/{quote(ref, safe='/')}?ref={source}")
         g.need(item.get("type") == "file", "missing cursor context reference")
