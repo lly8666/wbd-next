@@ -2,7 +2,7 @@
 
 **Role/authority:** main registry rev2, epoch1; active M4 `work/m4-r1-platform` task `R5-M4-FEC2-COLD-POLICY-PLATFORMS-014`. This is an M0-owned shared entrypoint request, **not** an Actions dispatch request or a claim of product support.
 
-**Code SOURCE proposed for initial test:** `42bbd0f3050be35474a3a5c91ee96c5ccb0d2504` (M4 branch). Only the newly permitted `r0/go_overlay/internal/realityfront/{fec_v2_policy.go,fec_v2_policy_test.go}` and `native/isal-safe/build.rs` have been changed; no M0-owned admission/TLS/CLI/GUI/shared workflow/root files were edited.
+**Code SOURCE proposed for initial test:** `7cef7e849e293373d907a3b64007b4ce8946da78` (M4 branch). Only the newly permitted `r0/go_overlay/internal/realityfront/{fec_v2_policy.go,fec_v2_policy_test.go}` and `native/isal-safe/build.rs` have been changed; no M0-owned admission/TLS/CLI/GUI/shared workflow/root files were edited.
 
 ## Minimal one-shot missing M0 entries
 
@@ -12,4 +12,4 @@
 
 **Stop rule:** A scoped Go replay and target build observation is the minimum unblock; do not grant M4 broader path ownership or ask M4 to fork real Go/GUI/CI. When this entry exists, M4 can inspect the precise Actions SOURCE/result and correct only its three files; M0 alone handles combination, real platform loader and published effective UI. Failure evidence and original R0 D10/codec timeout/latency OPEN remain unchanged.
 
-**Current observed blocker:** M4's GitHub app exposes read-status and existing-run inspection but no workflow dispatch action. New SOURCE `42bbd0f...` returned no combined status entries or PR workflow run via exposed API. This is **NOT_RUN**, not PASS nor automatically proof that no other runs exist.
+**Current observed blocker:** M4's GitHub app exposes read-status and existing-run inspection but no workflow dispatch action. New SOURCE `7cef7e8...` returned no combined status entries or PR workflow run via exposed API. This is **NOT_RUN**, not PASS nor automatically proof that no other runs exist.
