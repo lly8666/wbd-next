@@ -501,6 +501,10 @@
     "TestR0V4ColdBundleFormatAndDefaultDenied",
     "TestR0V4ColdBundleEphemeralInterop",
     "TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback",
-    "TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort"
+    "TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort",
+    "TestR0V4RealProtectedFec2Bit2FeatureAndKDFThreeCiphers",
+    "TestR0V4RealProtectedFec2NoDowngradeAndEpochRollback",
+    "TestR0V4Fec2ExtensionExactBitPatternRejectUnknown",
+    "TestR0V4Fec2RealExporterContextSeparatesBit2"
   ]
 }
