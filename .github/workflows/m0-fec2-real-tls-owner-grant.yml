@@ -410,14 +410,19 @@ jobs:
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           (cd legacy && go test -v -count=1 ./internal/linkdata ./internal/fec) >blocker-link/go-link-fec.log 2>&1
           rustup toolchain install 1.85.1 --profile minimal
-          cargo +1.85.1 test --release --locked -p wbd-codec --lib link_ -- --test-threads=2 >blocker-link/rust-link.log 2>&1
+          # The 952s scalar cost fixture was separately verified at
+          # SOURCE 3c88d39; don't bury fast LINK/MTU/noHOL functional
+          # qualification in an unrelated 19-minute CPU bench here.
+          cargo +1.85.1 test --release --locked -p wbd-codec --lib link_ -- --test-threads=2 --skip r1_steady_release_same_source_fresh_vs_reused_owner_cost >blocker-link/rust-link.log 2>&1
           python3 - <<'PY'
           import json,os,pathlib,hashlib
           root=pathlib.Path("blocker-link")
           h=lambda p:hashlib.sha256((root/p).read_bytes()).hexdigest()
-          x={"result":"PASS_SCOPED_LINK_FEC_UNIT_ONLY","source_sha":os.environ["GITHUB_SHA"],
+          x={"result":"PASS_SCOPED_LINK_FEC_FUNCTIONAL_EXCLUDING_952S_COST","source_sha":os.environ["GITHUB_SHA"],
             "original_go_link_fec_log_sha256":h("go-link-fec.log"),
-            "rust_link_log_sha256":h("rust-link.log"),"product_65KiB_multi_turn":"NOT_RUN",
+            "rust_link_log_sha256":h("rust-link.log"),
+            "separate_slow_cost_test":"EXCLUDED_FROM_FAST_SWEEP_ALREADY_PASSED_ON_PRIOR_SOURCE_3c88d39_RUN_39133837425",
+            "product_65KiB_multi_turn":"NOT_RUN",
             "MTU_pm1_real_network":"NOT_RUN","FEC2_product":"OFF"}
           (root/"result.json").write_text(json.dumps(x,indent=2)+"\n")
           PY
