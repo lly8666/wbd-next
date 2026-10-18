@@ -82,7 +82,7 @@ func (b *v4NativeRustProbe) prepare(s V4ColdSessionSnapshot,boundary uint32,peer
     // The same versioned command builder is production Go code. A native
     // buffer cannot authenticate anything; this callsite follows verified
     // credentials, private trusted snapshot, and actual PrepareTransition.
-    command,err:=v4PrivateHandoffV1(boundary,peer)
+    command,err:=v4PrivateHandoffFromVerifiedSession(boundary,peer,s)
     if err!=nil{return nil,err}
     var handle C.uint64_t
     code:=C.wbd_m0_test_probe_prepare((*C.uchar)(unsafe.Pointer(&raw[0])),
