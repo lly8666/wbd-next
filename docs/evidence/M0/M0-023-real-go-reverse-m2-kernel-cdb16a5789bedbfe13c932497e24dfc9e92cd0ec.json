@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "cdb16a5789bedbfe13c932497e24dfc9e92cd0ec",
+  "result": "PASS_SCOPED_TEST_ONLY_REAL_GO_TLS_C2S_RAW_REVERSE_KIND1_ORIGINAL_M3_AEAD_PN_M2_FROZEN_RECEIPT_3SUITES",
+  "progress": "partial",
+  "unverified": true,
+  "product_fec2": "OFF",
+  "source_changes": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+  ],
+  "verified_function_batch": [
+    "Actual protected original Go V4 TLS credentials, three suites, private test-only bit2/epoch grant after Detach/Commit, original Rust M1 Fec2Owner source-first and M3 RS16 source+parity kind2/3 on real Linux M4 raw, independent Go AF_INET kernel receive and original Rust M3 replay+AEAD e1 recovery to M4 TUN/real UDP 99B as in earlier SOURCE.",
+    "M0 now retains exact original M1 FrozenRecord Arc handle ONLY AFTER original M4 ScopedRawIpv4Tx::send_one definitely returns copied bytes; no cloned ciphertext content, second sealer, new PN, shadow for deliberately never-sent source1, driver Accepted is NOT peer acknowledgement; M2 ReceiptState retains two kernel-copied PN0/1 handles.",
+    "Actual original Go TLS client C2S DirectionKeys seals Health/kind1 PN0; real raw IPv4/TCP IP_HDRINCL socket sends original bound tuple and trusted RX boundary through Linux loopback, and original M4 ScopedRawIpv4Rx copies into original Arena; same original Rust ProtectedScopedOwner C2S M3 AEAD+PN replay open_unique_in_place gates 52-byte test receipt payload before M2 typed admit_opened_receipt.",
+    "M2 uses independently pinned original protected owner lane/generation/epoch, C2S reverse direction, original confirmed PN data scope, global registration and complete 32KiB+legal sparse floor configuration. Three ciphers each release exactly two existing FrozenRecord shadow entries after valid peer-control record; tampered AEAD does not retire; duplicate PN replay rejected, out-of-scope positive bitmap rejected, and stale Stop handle cannot query/receive. Confirmed sender wire bytes count as fresh, not repair.",
+    "M1 parity callback stays non-HOL and uses actual source-first and ParityJob, with missing second source simulated before send and e1 reconstructed; no claim of real physical source drop."
+  ],
+  "qualification": {
+    "real_original_go_tls": "PASS (scoped opt-in native+kernel only)",
+    "actual_linux_raw_reverse_control": "PASS (original Go TLS kind1 + original M4 RX + original Rust M3 AEAD unique PN)",
+    "m2_actual_frozen_shadow_retirement": "PASS (2 definite M4 copied FrozenRecords; three cipher suites)",
+    "wire_schema": "TEST_ONLY_52_BYTE_TYPED_CONTROL_FIXTURE; PRODUCT_WIRE_SCHEMA_NOT_WIRED",
+    "global_grant_reservation_and_actual_m4_driver_prefix": "NOT_RUN",
+    "uncertainty_or_partial_send_resend": "NOT_RUN",
+    "applied_cli_gui_auto_fixed_policy": "NOT_WIRED",
+    "realtime_product_scheduler": "NOT_RUN; one-shot deterministic probe",
+    "full_product_reverse_ingress_and_public_bit2": "OFF",
+    "arm64_windows_actual_native_complete_codec": "NOT_RUN",
+    "physical_two_endpoints": "NOT_RUN"
+  },
+  "actions": {
+    "focused": {
+      "run_id": 39117265346,
+      "attempt": 1,
+      "job_id": 117645472874,
+      "conclusion": "success",
+      "source_sha": "cdb16a5789bedbfe13c932497e24dfc9e92cd0ec",
+      "artifact_id": 12132763059,
+      "artifact_name": "m0-real-go-fec2-owner-grant-39117265346-1",
+      "artifact_github_sha256": "ccd81b9da363a86e0594c8e19ca343f2bfad96c19968bb3dc1d0afd95efa5ca7",
+      "downloaded_zip_sha256": "ccd81b9da363a86e0594c8e19ca343f2bfad96c19968bb3dc1d0afd95efa5ca7",
+      "receipt_source_match": true,
+      "three_suites_kernel_markers": true,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39117265346"
+    },
+    "selected_native_functional": {
+      "run_id": 39117265354,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected engine/normal/receipt/fec/kernel functional groups, NOT historical full codec240s or product"
+    },
+    "normal_off_kernel": {
+      "run_id": 39117265362,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 12133255283,
+      "artifact_name": "m0-v4-native-probe-result-39117265362-1",
+      "artifact_github_sha256": "9063bbbc3c17310cf56dca710e3272e541a43d15a25dbd0b9a190876534fca3c",
+      "downloaded_zip_sha256": "9063bbbc3c17310cf56dca710e3272e541a43d15a25dbd0b9a190876534fca3c",
+      "netem_150ms": "EXPLORATORY_PASS; one run not multi-run reliability"
+    },
+    "cross_abi": {
+      "run_id": 39117265381,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected aarch64 and Windows GNU build/consume only"
+    },
+    "scoped_bootstrap": {
+      "run_id": 39117265371,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "native_abi": {
+      "run_id": 39117265357,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "static_audit": {
+      "run_id": 39117265364,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "governance_code": {
+      "run_id": 39117265366,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "earlier_compilation_red_lights": [
+      {
+        "source_sha": "f008287e92aeea3df75103b29e289e677954105e",
+        "run_id": 39117202659,
+        "attempt": 1,
+        "conclusion": "failure",
+        "artifact_id": 12132349201,
+        "artifact_github_sha256": "430811ccb174c45f691e8873c912440809842d37f0ead5cf85379f17a6f525fe",
+        "cause": "Rust E0599 FrozenRecordHandle::metadata trait not imported in M0 v4_embedded_go; corrected SOURCE cdb16"
+      },
+      {
+        "source_sha": "7c6cee61b1a8000b6f6823bbfadfaaf89e95939d",
+        "run_id": 39117229932,
+        "attempt": 1,
+        "conclusion": "failure",
+        "cause": "same E0599 missing import before correction; retained"
+      }
+    ]
+  },
+  "retained_historical_failures": [
+    "H148 Governance39115867961 FAIL structure, corrected at H149 Governance39115945317 PASS",
+    "SOURCE395a711 Action39114076155 configured netem150ms third suite EINTR historical FAIL; current selected normal/off150ms PASS does not erase intermittent risk",
+    "Earlier native fixture incorrect M2 10KiB floor and source S62c0428 borrow E0502 failures preserved in prior evidence",
+    "Full codec240s timeout, D10/p99, legal 65KiB UDP across >32 turns, MTU±1/Stop/loan/driver prefix uncertainty, cross-native ISA-L/Windows loader, physical performance remain OPEN/NOT_RUN"
+  ],
+  "next_action": "M0 under R0-023 connect original M2 repair candidate/grant lease/reserve_frozen_submission and actual M4 prefix/uncertain settlement without replaying already-authenticated PN, enforce source-frozen same-PN seq and Stop/generation, then applied Go fixed/auto revision CLI/GUI and ~65KiB cross-turn MTU/noHOL. Product FEC2 OFF."
+}
