@@ -167,6 +167,9 @@ jobs:
           print("F2_NATIVE_CODEC_SCOPED_PASS",len(names))
           PY
       - name: Exactly one codec C k16/r16 1200B ABBA paired same-VM measurement job
+        # Collect independent paired evidence even when an upstream M3 unit test
+        # fails. Do NOT erase the unit failure or mark this workflow successful.
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
