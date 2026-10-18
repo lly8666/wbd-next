@@ -155,6 +155,14 @@ pub(crate) struct ProtectedScopedOwner {
     peer_mss_advertised:bool,
     next_tx_seq:Option<u64>,
     server:bool,
+    #[cfg(feature="m0_fec2_owner_probe")]
+    fec2_probe_scope:Option<Fec2ProbeScope>,
+}
+#[cfg(feature="m0_fec2_owner_probe")]
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+struct Fec2ProbeScope{
+    generation:u32,epoch:[u8;16],owner_id:u64,go_lane:u8,
+    profile:u8,revision:u64,
 }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 enum OwnerPhase { Prepared, Active, Retired }
@@ -387,8 +395,41 @@ impl ProtectedScopedOwner {
             }else{cold.identity().server_limit}),
             peer_mss,peer_mss_advertised,
             next_tx_seq:None,server:expected.server,
+            #[cfg(feature="m0_fec2_owner_probe")]
+            fec2_probe_scope:None,
         })
     }
+    /// TEST ONLY: private Go callback after credential TLS + original Detach
+    /// Commit. Untrusted v2 metadata/cold248 NEVER grants this authority.
+    /// Profile Strong / revision 1 are fixed probe settings, NOT actual GUI
+    /// or applied product policy.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn bind_fec2_probe_from_private_go(
+        &mut self,features:u16,epoch:[u8;16],profile:u8,revision:u64,
+    )->Result<(),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active||!self.crypto.active
+           ||!self.rx_tx.detached()||self.crypto.tx_boundary.is_none()
+           ||self.fec2_probe_scope.is_some()||features!=7||epoch!=self.epoch
+           ||self.generation!=self.crypto.generation
+           ||self.go_lane!=self.crypto.go_lane
+           ||profile!=5||revision!=1 {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        self.fec2_probe_scope=Some(Fec2ProbeScope{
+            generation:self.generation,epoch,owner_id:self.token.owner_id(),
+            go_lane:self.go_lane,profile,revision,
+        });
+        Ok(())
+    }
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn is_fec2_probe_bound_to(&self,epoch:[u8;16])->bool{
+        self.state==OwnerPhase::Active&&self.crypto.active
+        &&self.fec2_probe_scope.is_some_and(|s|
+            s.generation==self.generation&&s.epoch==epoch
+            &&s.owner_id==self.token.owner_id()
+            &&s.go_lane==self.go_lane&&s.profile==5&&s.revision==1)
+    }
+
     /// The same M1 owner stages before the protected reply/Detach; no
     /// application payload may be exposed while state is Prepared.
     pub(crate) fn offer_early(&mut self,buffer:UniqueBuffer,wire:Range<usize>,
@@ -676,6 +717,9 @@ impl ProtectedScopedOwner {
         &mut self,mut buffer:UniqueBuffer,payload_len:usize,kind:u8,
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if !self.is_fec2_probe_bound_to(self.epoch){
+            return Err(ProtectedCryptoError::Inactive)
+        }
         let end=14usize.checked_add(payload_len).ok_or(ProtectedCryptoError::Tx)?;
         let frame=buffer.writable().get(14..end).ok_or(ProtectedCryptoError::Tx)?;
         if budget.fec_overhead!=0 || budget.game_overhead!=0
@@ -1127,6 +1171,8 @@ impl ProtectedScopedOwner {
         self.state=OwnerPhase::Retired;
         self.crypto.retire();
         self.next_tx_seq=None;
+        #[cfg(feature="m0_fec2_owner_probe")]
+        {self.fec2_probe_scope=None;}
         self.rx_tx.stop(&self.token)
     }
 }
