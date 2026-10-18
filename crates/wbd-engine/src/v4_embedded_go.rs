@@ -644,6 +644,39 @@ fn raw_driver_reopen_on_route_change(
     !has_cache && previous_refresh_count!=0 && lease_mtu!=0
         && observed_mtu>=lease_mtu
 }
+// The original M1 arena holds ALL slabs for one LINK packet BEFORE the
+// first original owner AEAD/PN/Seq and TX admission. On any bad stride,
+// capacity shortage or invalid packet ID the local Vec drops every slab;
+// no partial packet is ever queued due to fragment materialization failure.
+// This remains a bounded 32-record SAME-turn staging step, NOT yet 64KiB
+// cross-turn scheduling or atomic kernel sendmmsg completion.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn stage_bounded_original_link(
+    arena:&mut Arena, source:&[u8],frame_mtu:usize,
+    packet_id:u32,available_records:usize
+)->Result<Vec<(crate::memory::UniqueBuffer,usize)>,i32>{
+    let mut plan=LinkPacketPlan::new(
+        source,frame_mtu,LinkMode::FixedOff,packet_id
+    ).map_err(|_|INVALID)?;
+    let count=plan.total_frames();
+    if count==0 || count>available_records || count>32{return Err(FULL)}
+    let mut staged=Vec::with_capacity(count);
+    for _ in 0..count{
+        let part=plan.issue_next(frame_mtu).map_err(|_|INVALID)?
+            .ok_or(INVALID)?;
+        // Acquire the full bounded loan set before consuming ANY PN. On
+        // allocation error earlier slabs simply return to this same arena.
+        let mut slot=arena.allocate().map_err(|_|FULL)?;
+        let end=14usize.checked_add(part.len()).ok_or(INVALID)?;
+        if end>slot.writable().len(){return Err(INVALID)}
+        slot.writable()[14..end].copy_from_slice(&part);
+        staged.push((slot,part.len()));
+    }
+    if plan.issue_next(frame_mtu).map_err(|_|INVALID)?.is_some(){
+        return Err(INVALID)
+    }
+    Ok(staged)
+}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
@@ -793,30 +826,21 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 failed=true;continue;
             }
             let source=&slab.writable()[14..14+n];
-            let Ok(mut plan)=LinkPacketPlan::new(
-                source,frame_mtu,LinkMode::FixedOff,id
-            ) else {failed=true;continue};
-            // The currently frozen original M1 owner queue has <=32 slots.
-            // An oversized job requiring more than this entire ready turn
-            // is NOT partly submitted: the bounded larger-datagram staging
-            // capability remains explicitly OPEN. The next small packet is
-            // still admitted, never waits for a failed large job.
-            if plan.total_frames()>32usize.saturating_sub(accepted){
-                failed=true;continue;
-            }
+            let staged=match stage_bounded_original_link(
+                &mut e.arena,source,frame_mtu,id,32usize.saturating_sub(accepted)
+            ){
+                Ok(all)=>all,
+                Err(_)=>{failed=true;continue}
+            };
+            // All pieces are now present in original generation-scoped M1
+            // slots. No short arena or malformed LINK part can publish a
+            // prefix before this point; reserve a never-reused logical ID.
             e.next_link_packet_id=id+1;
-            while let Ok(Some(part))=plan.issue_next(frame_mtu) {
+            for (fragment_slab,part_len) in staged{
                 if stop.load(Ordering::Acquire){failed=true;break}
-                let Ok(mut fragment_slab)=e.arena.allocate() else {
-                    failed=true;break
-                };
-                if part.len()>fragment_slab.writable().len().saturating_sub(14){
-                    failed=true;break
-                }
-                fragment_slab.writable()[14..14+part.len()].copy_from_slice(&part);
                 let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
                 let result=e.owner.seal_fragment_with_worker_snapshot(
-                    fragment_slab,part.len(),scoped,ifindex,destination,
+                    fragment_slab,part_len,scoped,ifindex,destination,
                     15,loop_now()
                 );
                 if result.is_ok(){accepted+=1}else{failed=true;break}
@@ -1222,6 +1246,60 @@ mod tests{
         assert_eq!(authenticated_rx_anchor(ahead,u64::MAX,2,1),None);
         assert_eq!(extend_seq32(0,0x8000_0000),
             Err(wbd_platform::rx_ipv4_tcp::SeqExtendError::HalfSpaceAmbiguous));
+    }
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_link_materialization_never_admits_half_packet_on_arena_failure(){
+        // Actual M1 unique loans + original M3 LINK20 planner. A synthetic
+        // 1500B logical input needs THREE fixed-600B framed slabs.
+        let original=(0..1500usize).map(|i|(i%251) as u8).collect::<Vec<_>>();
+        let mut small=Arena::new(141,2,2048,2,16_000).unwrap();
+        assert_eq!(stage_bounded_original_link(
+            &mut small,&original,600,41,32).err(),Some(FULL));
+        // Both preallocated loans were returned; zero actual owner seals or
+        // AEAD packet-number commits could have occurred.
+        small.drain_returns();
+        assert_eq!(small.report().loaned,0);
+        assert_eq!(stage_bounded_original_link(
+            &mut small,&original,600,41,2).err(),Some(FULL));
+        small.drain_returns();
+        assert_eq!(small.report().loaned,0);
+
+        let mut full=Arena::new(142,4,2048,4,32_000).unwrap();
+        let staged=stage_bounded_original_link(
+            &mut full,&original,600,41,3).unwrap();
+        assert_eq!(staged.len(),3);
+        assert_eq!(full.report().loaned,3);
+        let parts=staged.iter().map(|(slot,n)|slot.origin()).collect::<Vec<_>>();
+        assert_eq!(parts.len(),3);
+        let mut table=Vec::new();
+        for (mut slot,n) in staged{
+            let bytes=slot.writable()[14..14+n].to_vec();
+            assert!(matches!(
+                wbd_codec::link_fec_wire::inspect_link(
+                    &bytes,600,LinkMode::FixedOff
+                ),
+                Ok(wbd_codec::link_fec_wire::LinkView::Fragment(_))
+            ));
+            table.push(bytes);
+        }
+        assert_eq!(table.len(),3);
+        for (index,wire) in table.iter().enumerate(){
+            let wbd_codec::link_fec_wire::LinkView::Fragment(frag)=
+                wbd_codec::link_fec_wire::inspect_link(
+                    wire,600,LinkMode::FixedOff
+                ).unwrap() else{panic!("not a LINK fragment")};
+            assert_eq!(usize::from(frag.index),index);
+            assert_eq!(usize::from(frag.count),3);
+            assert_eq!(frag.packet_id,41);
+        }
+        full.drain_returns();
+        assert_eq!(full.report().loaned,0);
+        assert_eq!(stage_bounded_original_link(
+            &mut full,&original,600,0,3).err(),Some(INVALID));
+        assert_eq!(stage_bounded_original_link(
+            &mut full,&original,20,41,3).err(),Some(INVALID));
+        assert_eq!(full.report().loaned,0);
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
