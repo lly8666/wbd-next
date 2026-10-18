@@ -37,5 +37,8 @@
     "real_native_v2": "NOT_RUN",
     "product": "NOT_RUN"
   },
-  "recovered": true
+  "recovered": true,
+  "source_sha": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "provenance_scope": "intake recovery for stale last_tested_source CODE422a; audit H30 remains FAIL, no new FEC2 qualification",
+  "artifact_verified": false
 }
