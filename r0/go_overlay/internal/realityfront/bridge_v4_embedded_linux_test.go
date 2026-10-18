@@ -38,6 +38,33 @@ func TestR0V4EmbeddedNativeProtectedControlAllCiphers(t *testing.T){
 }
 
 
+// Real protected Go TLS (not a cold248 forgery) sets bit2 only in
+// package-private tests; the real embedded Rust owner accepts version2
+// metadata at Prepare/Commit but remains Normal/off. No FEC2 DATA enable.
+func TestR0V4EmbeddedNativeProtectedFec2Bit2Scope(t *testing.T){
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(string(rune('0'+cipher)),func(t *testing.T){
+            store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+            b:=&v4EmbeddedNativeBridge{}
+            c,server,ce,se:=v4PairWithPrivateBridgeCipher(
+                t,b,store,cipher,true)
+            if ce!=nil||se!=nil||c==nil||server==nil||!b.committed||b.handle==0{
+                t.Fatalf("protected bit2 Go→original Rust private V2 scope failed %v %v",ce,se)
+            }
+            expected:=v4RequiredFeatures|v4FeatureFEC2
+            if c.negotiatedFeatures!=expected || server.negotiatedFeatures!=expected ||
+               server.verifiedCold.features!=expected {
+                t.Fatal("original Go exporter-transcript feature mismatch")
+            }
+            phase,err:=b.state()
+            if err!=nil||phase!=2{t.Fatalf("original owner not active: %d %v",phase,err)}
+            if err:=b.stopRelease();err!=nil{t.Fatal(err)}
+            if err:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),
+                1,server.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
+}
+
 // Real kernel C2S product-path anchor through the NON-_test Go→Rust owner.
 // No separate test activation or decrypt/delivery oracle: actual M4 raw FD,
 // original M1 slab and M3 AEAD, M4 TUN FD and application UDP socket.
