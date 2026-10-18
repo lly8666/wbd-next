@@ -4,23 +4,22 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 141,
-  "checkpoint_sha": "2c4854144daa70de3a98e82ec13190a99cc31dfb",
+  "sequence": 142,
+  "checkpoint_sha": "077fdefee40062437ed3995ccee5f3a7a89d93d9",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 original Go TLS verified private bit2 0x0007 now post-Detach binds test-only FEC2 grant to same original Rust owner generation/epoch/ownerID/lane/Strong1 fixture, before bind Active still rejects source/repair and Stop revokes. SOURCE c534 exact Go/Rust native Actions39104136996 SUCCESS; default public FEC2 OFF.",
-  "why_now": "H140 passed real credential-checked Go TLS 0x0007 and original Rust WBGH/v2 metadata but not owner authorization. Added explicit post-Go-Detach/Commit test-only owner generation-epoch permission, no independent FEC2 owner/PN/replay, default build has no grant C symbol, original Go callback inert without separate test tag. Actions verified real Go pinned 3 ciphers and synthetic Rust M1 FrozenRecord native owner FEC2 source/repair; caught and corrected original Go overlay helper omission on earlier failed source.",
+  "current_task": "R0-023 M0 real protected Go TLS FEC2 bit2 test-grant now actually sends M3 source kind2 and repair kind3 through ORIGINAL Rust owner M1 FrozenRecord AEAD PN Seq into real M4 Linux raw TCP kernel; independent original Go raw peer captured both for all 3 suites. SOURCE f606 Actions39106157016 SUCCESS. Production FEC2 OFF. Old Normal/off 150ms fragmented ingress FAIL remains OPEN.",
+  "why_now": "User requested high-efficiency M0 main progress. Implemented the closest missing actual kernel data-plane step after H141 verified post-TLS owner scope, using only original M1/M3 owner cryptography/driver without new public ABI or product config. Added independent kernel raw peer captures and exact-source Actions; fixed two concrete netns script syntax regressions using artifact logs. Independent ZIP rehash confirms qualification; old 150ms Normal/off kernel fragment failure kept separate and unqualified.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Move actual applied Go fixed/auto FEC2 policy/revision under protected authenticated Go session (probe Strong/1 is NOT applied product policy), then connect original M1 source-first ParityJob, M3 source2/repair3 authenticated records and M4 real raw/TUN plus M2 authenticated ingress on same generation. Test actual loss/recovery/no-HOL/MTU/Stop/unknown driver and 65KiB LINK cross-turn in SOURCE-locked Actions; preserve codec240s/D10/p99 and target-native limits, FEC2 publicly OFF.",
+  "next_action": "Wire independent authenticated FEC2 client-side RX/replay (kind2/3) + M3 e1 recovery and actual M2 repair/receipt to real TUN application after exact Go TLS owner scope; make original M1 Fec2Owner source-first scheduler and real Go applied FEC2 revision feed same data plane. Isolate actual legacy Normal/off 150ms second-fragment pending root with one new hypothesis, do not retry seeds; 65KiB LINK cross-turn Stop MTU prefix uncertainty, codec240s D10 p99 ARM Windows OPEN. Public FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "c534e5892bbe4ef3d18355ac71723f6bcf6d41d5",
+  "last_tested_source": "f6069a955d06508814341a23e22db27713424454",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-real-go-fec2-owner-grant-c534e5892bbe4ef3d18355ac71723f6bcf6d41d5.json"
+    "docs/evidence/M0/M0-023-fec2-actual-m4-kernel-source-repair-f6069a955d06508814341a23e22db27713424454.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
-    "docs/evidence/M0/M0-023-protected-go-fec2-bit2-rust-v2-handoff-c6d1e2b8214cee3b78cae43c14ffb581864c578f.json",
-    "docs/evidence/M0/M0-023-original-owner-fec2-same-pn-c60e9d6e95aff49cc98eb039e7347659eaaa6213.json",
+    "docs/evidence/M0/M0-023-real-go-fec2-owner-grant-c534e5892bbe4ef3d18355ac71723f6bcf6d41d5.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +27,5 @@
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "Exact SOURCE c534e5892bbe4ef3d18355ac71723f6bcf6d41d5 native one-job Action39104136996 SUCCESS: pinned original Go credential TLS 3 real ciphers, default V4 features3 has no FEC2 scoped grant, private 7 after protected reply Detach and same original Rust Commit binds generation, epoch, original owner token/lane and fixed test-only Strong5/revision1; wrong/old epoch denied, Stop Release clears permission and old generation handle invalid. Rust native original M1 FrozenRecord source2/repair3 shared AEAD PN/Seq test passes with wrong feature/revision/epoch and duplicate-binding rejects; Rust default release ABI no FEC2 binding/status symbols. Initial Actions39104016657 FAIL because missing original Go raw native test helpers, fixed c534; initial 39103821683 missing off-hook in original Go overlay, fixed; earlier 39103933765 normal 150ms netem experimental FAIL still retained. GH artifact12127314845 digest3acb8f2c... reported; independent ZIP rehash NOT_DONE. No cryptographic independent Rust attestation of arbitrary same-process C caller; Go private callback trust only in explicit opt-in test build; actual CLI GUI applied policy, FEC2 real M4 raw/TUN/M2 receipt, Windows/ARM64, full product not run, product FEC2 OFF. R0-023 65k cross-turn, Stop MTU prefix unknown; codec240s/D10/p99 OPEN."
+  "partial_summary": "Exact SOURCE f6069a955d06508814341a23e22db27713424454: original Go TLS authenticated and private bit2 generation/epoch scope → original M3 RS16 Strong k2 source2 and repair3 deterministic fixture fully pre-materialized M1 Arena before PN→same Rust ProtectedScopedOwner AEAD/HP/PN/Seq FrozenRecord→genuine M4 AF_INET/IPPROTO_RAW kernel TCP S2C; independent Go SOCK_RAW TCP receives source and repair cipher frames with expected tuple, lengths, PN0 then PN1 and continuous Seq for ChaCha/AES128/AES256. Actions39106157016 attempt1 native SUCCESS; artifact12128403235 GitHub sha256 f75578329961529947d32281e3b5d02691a70f0a8e41efa6639889b847054250 independently downloaded and ZIP hash recomputed exact, kernel log SHA0db203...; default Rust lib no test FEC2 grant ABI, Go product feature OFF. Same SOURCE full original native probe39106157061 BUILD SUCCESS / consume overall FAIL: original Normal/off zero-delay real Go/Rust M4 raw/TUN all cipher PASS; configured netem10ms EXPLORATORY_PASS, configured150ms original LINK two-fragment in cipher3 2nd pending/NO complete app FAIL, cipher1/2 pass, old 150ms retained OPEN. Earlier 39105586754 FEC2 netns selector malformed quote FAIL, 39105856135 true FEC2 kernel PASS but old netns script duplicate tail FAIL, corrected f606. No full M1 source-first scheduler live, independent peer kind2/3 AEAD decode+M3 lost repair, M2 authenticated feedback or real FEC2 TUN app yet, actual Go CLI GUI applied revision NOT_WIRED, old codec240s/D10/p99 and 65KiB LINK cross-turn/Stop/MTU/prefix unknown OPEN. Scoped code/kernel PASS only, no product qualification."
 }
