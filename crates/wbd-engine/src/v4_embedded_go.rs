@@ -211,7 +211,7 @@ fn fec2_probe_real_kernel_raw_once(
     let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE || e.workers.is_some()
         ||e.protected_fec2_features!=7
-        ||!e.owner.is_fec2_probe_bound_to(e.owner.probe_epoch_for_test_only()){
+        ||!e.owner.is_fec2_probe_bound(){
         return Err(BAD_STAGE)
     }
     if e.raw_tx.is_none(){
