@@ -298,6 +298,18 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory blocker-windows -Force | Out-Null
+          # aws-lc-sys uses ASM even for scalar F2: real Windows native
+          # test cannot start until NASM is on PATH. Record this as a
+          # runner prerequisite, never a Rust algorithm regression.
+          choco install nasm -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'Windows NASM install failed' }
+          $nasmDir=$null
+          foreach ($candidate in @('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')) {
+            if (Test-Path (Join-Path $candidate 'nasm.exe')) { $nasmDir=$candidate; break }
+          }
+          if (-not $nasmDir) { throw 'Windows NASM executable unavailable' }
+          $env:PATH="$nasmDir;$env:PATH"
+          nasm -v
           rustup toolchain install 1.85.1 --profile minimal
           cargo +1.85.1 test --release --locked -p wbd-codec --lib r1_f2_ -- --test-threads=2 *> blocker-windows/fec2-codec.log
           if ($LASTEXITCODE -ne 0) { Get-Content blocker-windows/fec2-codec.log -Tail 45; throw 'Windows native F2 fail' }
