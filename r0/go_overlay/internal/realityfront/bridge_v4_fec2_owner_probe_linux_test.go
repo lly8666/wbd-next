@@ -3,6 +3,13 @@ package realityfront
 
 import (
     "testing"
+    "bytes"
+    "encoding/binary"
+    "fmt"
+    "net"
+    "os"
+    "syscall"
+    "time"
 )
 
 // Actual original Go recognized TLS + password + private V4 reply, then
@@ -51,6 +58,95 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             }
             if err:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),
                 1,s.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
+}
+
+// Explicit privileged network-namespace test. It receives actual M4
+// IPv4/TCP packets through an independent ORIGINAL Go raw socket after the
+// ORIGINAL Rust generation has encrypted FEC2 SOURCE and REPAIR with PN0/1.
+// It does NOT claim that a production client decoded/recovered those bytes.
+func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
+    if os.Getenv("WBD_REAL_TUN")!="1" ||
+       os.Getenv("WBD_M0_FEC2_KERNEL_TX")!="1" {
+        t.Skip("opt-in isolated privileged Linux network namespace only")
+    }
+    iface,err:=net.InterfaceByName("lo")
+    if err!=nil||iface.Index<=0{t.Fatalf("real lo: %v",err)}
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+            store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
+            b:=&v4EmbeddedNativeBridge{}
+            c,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,cipher,true)
+            if ce!=nil||se!=nil||c==nil||server==nil||!b.committed{
+                t.Fatalf("real TLS FEC2 bound original Rust owner: %v %v",ce,se)
+            }
+            defer func(){
+                if e:=b.stopRelease();e!=nil{t.Errorf("Stop: %v",e)}
+                if e:=store.ReleaseLane("protected-owner",
+                    []byte("0123456789abcdef"),1,server.Epoch);e!=nil{
+                    t.Errorf("release Go TLS epoch: %v",e)
+                }
+            }()
+            if !b.fec2ProbeScope(server.Epoch){
+                t.Fatal("source2/repair3 raw send attempted without Go TLS grant")
+            }
+            peer,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
+            if e!=nil{t.Fatal(e)}
+            defer syscall.Close(peer)
+            if e:=syscall.Bind(peer,&syscall.SockaddrInet4{
+                Addr:b.originalFlow.ClientIP});e!=nil{t.Fatal(e)}
+            timeval:=syscall.NsecToTimeval((800*time.Millisecond).Nanoseconds())
+            if e:=syscall.SetsockoptTimeval(peer,syscall.SOL_SOCKET,
+                syscall.SO_RCVTIMEO,&timeval);e!=nil{t.Fatal(e)}
+            pn,seq,wireLen,e:=b.fec2ProbeKernelRawTx(uint32(iface.Index))
+            if e!=nil||pn!=[2]uint64{0,1}||
+                seq[0]!=b.txBoundary || seq[1]!=seq[0]+wireLen[0] ||
+                wireLen[0]<42||wireLen[1]<43||wireLen[0]>1400||wireLen[1]>1400 {
+                t.Fatalf("original M1/M4 raw source/repair failed pn=%v seq=%v len=%v err=%v",
+                    pn,seq,wireLen,e)
+            }
+            seen:=[2]bool{}
+            for attempts:=0;attempts<48 && (!seen[0]||!seen[1]);attempts++{
+                buf:=make([]byte,2048)
+                n,_,rxErr:=syscall.Recvfrom(peer,buf,0)
+                if rxErr!=nil{t.Fatalf("independent raw kernel receive: %v",rxErr)}
+                if n<40||buf[0]>>4!=4||buf[9]!=6{continue}
+                ihl:=int(buf[0]&15)*4
+                if ihl<20||ihl+20>n{continue}
+                if !bytes.Equal(buf[12:16],b.originalFlow.ServerIP[:]) ||
+                   !bytes.Equal(buf[16:20],b.originalFlow.ClientIP[:])||
+                   binary.BigEndian.Uint16(buf[ihl:ihl+2])!=b.originalFlow.ServerPort||
+                   binary.BigEndian.Uint16(buf[ihl+2:ihl+4])!=b.originalFlow.ClientPort{
+                   continue
+                }
+                tcpLen:=int(buf[ihl+12]>>4)*4
+                if tcpLen<20||ihl+tcpLen>n{continue}
+                seq32:=binary.BigEndian.Uint32(buf[ihl+4:ihl+8])
+                for i:=range seen{
+                    if seq32==seq[i]{
+                        if seen[i]{t.Fatalf("duplicate raw sequence %d",seq32)}
+                        if n-ihl-tcpLen!=int(wireLen[i]) {
+                            t.Fatalf("actual M4 raw encrypted frame length=%d want=%d",
+                                n-ihl-tcpLen,wireLen[i])
+                        }
+                        // Authenticated cipher bytes came from the ORIGINAL
+                        // Rust scoped AEAD sender; no plaintext 10/12B FEC2
+                        // header may appear on this kernel raw wire.
+                        wire:=buf[ihl+tcpLen:n]
+                        if bytes.HasPrefix(wire,[]byte("WBDLFRG1"))||
+                           bytes.HasPrefix(wire,[]byte{0x46,0x32,0x53,0x00}){
+                            t.Fatal("FEC2 source leaked plaintext on raw wire")
+                        }
+                        seen[i]=true
+                    }
+                }
+            }
+            if !seen[0]||!seen[1]{
+                t.Fatalf("missing real kernel raw FEC2 ciphertext source/repair seen=%v",seen)
+            }
+            t.Logf("M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=%d source_pn=%d repair_pn=%d source_seq=%d repair_seq=%d",
+                cipher,pn[0],pn[1],seq[0],seq[1])
         })
     }
 }
