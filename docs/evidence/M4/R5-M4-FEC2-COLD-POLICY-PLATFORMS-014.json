@@ -5,8 +5,8 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "result": "NOT_RUN",
-  "progress": "PARTIAL",
+  "result": "PASS_SCOPED_COLD_GO_AND_ISAL_SAFE_WRAPPER_ONLY",
+  "progress": "ready_for_integration",
   "source_sha": "7cef7e849e293373d907a3b64007b4ce8946da78",
   "baseline_head": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
   "baseline_h_checkpoint": "4581a68fb46e73f513c5177b4bbf6be8f5332298",
@@ -25,7 +25,7 @@
   },
   "tests": {
     "GoReplay": {
-      "qualification": "NOT_RUN",
+      "qualification": "PASS_REAL_GO_CLONE_8_OF_8",
       "planned_test_command": "go test ./internal/realityfront -run '^TestF2Control' -count=1",
       "scope": "in original pinned Go clone with both overlay files, tested exact source and toolchain",
       "authored_cases": [
@@ -38,35 +38,106 @@
         "bounded burst and fresh sparse losses",
         "missing feedback/censored/whole-block unknown/host capacity/stale",
         "monotonic revision and applied ack"
-      ]
+      ],
+      "build_source": "9e157211ff556716f529ea2ee00c1ce9be9f1da5",
+      "run_id": 39084384517,
+      "attempt": 1,
+      "build_job_id": 117547791296,
+      "consume_job_id": 117547889012,
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "pinned_legacy_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "passed": 8,
+      "failed": 0,
+      "build_artifact": {
+        "id": 12120635238,
+        "zip_sha256": "e5013db31d1e4b986078902a84616ae98ce7ff097e886b1719c7a07814b4b3d5",
+        "manifest_sha256": "c311582b01d6689c5481fc7026ff1c418840e01bee39cb9503eb666f1f4e5789",
+        "binary_sha256": "a90c85cd50c8cc56c4b1304094d10b906a468b072feb29a587de8231c265ab7e"
+      },
+      "result_artifact": {
+        "id": 12119849227,
+        "zip_sha256": "e8a4839d957361afaf27d2000a4d5c6df060262a13509de0ff37fa201b1a0e9c",
+        "test_log_sha256": "fbcaf7e576c7ae69552df1d30f7d515c155d05c74be09c4e8db803a78005d760"
+      }
     },
     "LinuxX64ISA": {
-      "qualification": "NOT_RUN",
+      "qualification": "PASS_ACTUAL_NATIVE_SAFE_WRAPPER_2_OF_2",
       "scope": "new FEC2 build.rs native static link, F2-PLATFORM and codec cases",
       "prior_unrelated_task013_native": {
         "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
         "run_id": 39006105820,
         "passed": 94,
         "scope_only": "Old platform component PASS, never FEC2 SOURCE"
-      }
+      },
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "control_source": "c81127be4de445791cd0a3a8f6855d9c5b6427cb",
+      "upstream_source": "c387163fcbca62701d646149564c550c78a4f985",
+      "run_id": 39084579161,
+      "attempt": 1,
+      "artifact_id": 12120310860,
+      "zip_sha256": "2d52df06cbc31f574670f59be3a993177d01fcefbf9aedc348348f48fc1ee9d8",
+      "archive_sha256": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d",
+      "log_sha256": "12207d55f9077011eb6b05363a25b5b4f95688b5d4f3a87e70637bdc6626e68c",
+      "target": "x86_64-unknown-linux-gnu",
+      "machine": "x86_64",
+      "passed": 2,
+      "failed": 0,
+      "actual_library_ec_encode_data": true,
+      "codec_fec2_native_oracle": "NOT_RUN"
     },
     "LinuxARM64Cross": {
       "qualification": "NOT_RUN",
       "target": "aarch64-unknown-linux-gnu"
     },
     "LinuxARM64Native": {
-      "qualification": "NOT_RUN",
+      "qualification": "PASS_ACTUAL_NATIVE_SAFE_WRAPPER_2_OF_2",
       "target": "aarch64-unknown-linux-gnu",
-      "actual_neon_dispatch_not_proven": true
+      "actual_neon_dispatch_not_proven": true,
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "control_source": "c81127be4de445791cd0a3a8f6855d9c5b6427cb",
+      "upstream_source": "c387163fcbca62701d646149564c550c78a4f985",
+      "run_id": 39084579161,
+      "attempt": 1,
+      "artifact_id": 12119329369,
+      "zip_sha256": "bcd07fbe74cef7ac7f7bff9a96bb81d8a3b11b49617ff39545cdb82fb15e4324",
+      "archive_sha256": "885dff5d6c61d0f534d0cce71c741beb2b6cfcb241683b3d8a09019423b92809",
+      "log_sha256": "6d246b5eab24ab3a5d867b48def3acde2ab85922715c9c9d316209fdd705a303",
+      "machine": "aarch64",
+      "passed": 2,
+      "failed": 0,
+      "actual_library_ec_encode_data": true,
+      "codec_fec2_native_oracle": "NOT_RUN"
     },
     "WindowsX64Cross": {
       "qualification": "NOT_RUN",
       "target": "x86_64-pc-windows-msvc"
     },
     "WindowsX64Native": {
-      "qualification": "NOT_RUN",
+      "qualification": "PASS_ACTUAL_NATIVE_SAFE_WRAPPER_2_OF_2",
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "control_source": "4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f",
+      "upstream_source": "c387163fcbca62701d646149564c550c78a4f985",
+      "run_id": 39084759926,
+      "attempt": 1,
+      "job_id": 117548891652,
+      "artifact_id": 12120675261,
+      "zip_sha256": "2c28e68ea1a32456ffb453a16376f3182dd81d16bdee3bcf31f39f2eeeac28dc",
+      "archive_sha256": "b99c244c1b9fdd3b37c87d22f8e37b7c876e0c54774aed49dac1873b5bb123bc",
+      "log_sha256": "a84daf5d1cd29a896b77781233e7da0f9c60d83432852876c09768eca8acee79",
       "target": "x86_64-pc-windows-msvc",
-      "codec_and_load_not_proven": true
+      "passed": 2,
+      "failed": 0,
+      "actual_library_ec_encode_data": true,
+      "codec_fec2_native_oracle": "NOT_RUN",
+      "Go_Dll_ABI_loader": "NOT_RUN",
+      "previous_failure": {
+        "run_id": 39084579161,
+        "attempt": 1,
+        "job_id": 117548360017,
+        "reason": "upstream nmake NASM missing from PATH; Rust native test not reached",
+        "artifact_id": 12120585746,
+        "zip_sha256": "352f2cdd5bbf6fb6c9cde01536e8532e015c5ebeddf52c21cef82a4136bc5a0e"
+      }
     },
     "ScalarFallback": {
       "qualification": "NOT_RUN",
@@ -85,7 +156,43 @@
     "commit_status_source": "42bbd0f3050be35474a3a5c91ee96c5ccb0d2504",
     "combined_status_count": 0,
     "pr_filtered_workflow_run_count": 0,
-    "warning": "The available GitHub endpoint only sees PR-triggered runs and no workflow dispatch action is exposed; this is not a proof of absence of other runs. No new Action/source qualification is claimed."
+    "warning": "The available GitHub endpoint only sees PR-triggered runs and no workflow dispatch action is exposed; this is not a proof of absence of other runs. No new Action/source qualification is claimed.",
+    "downloads": "Downloaded 6 exact GitHub Actions ZIPs (Go build+result, Linux x64, Linux ARM64, Windows first-fail and fixed PASS); independently recomputed all ZIP SHA256 and matched GitHub API digests. Parsed result.json/native.log/tests.log; matched Go binary and Go/Linux/ARM/Windows internal log SHA256 to manifest/result fields. No claim about actual product/backend ISA dispatch or owner-loaded Go config.",
+    "platform_build_rs_sha256": "a4657757bcabbc4a41fe47897d01842b1f9b0666c89ff5ef56e655b8639be4f2",
+    "overlay_go_sha256": {
+      "fec_v2_policy_go": "4cf03ee2f4822999dec22123a79d2fca31a2b430f79039717b357d5bc3409d0e",
+      "fec_v2_policy_test_go": "c490bdb719d2b116ce3fec1cd0b4ef9a0f8c2feb5b04a2055cb8cede95bca30e"
+    },
+    "new_workflow_runs_checked": [
+      {
+        "run_id": 39084384517,
+        "attempt": 1,
+        "job_conclusions": [
+          "build:success",
+          "consume:success"
+        ],
+        "scope": "original_go_package_pure_controller"
+      },
+      {
+        "run_id": 39084579161,
+        "attempt": 1,
+        "job_conclusions": [
+          "linux_x64:success",
+          "linux_aarch64:success",
+          "windows:failure_missing_NASM"
+        ],
+        "scope": "safe_ISAL_wrapper"
+      },
+      {
+        "run_id": 39084759926,
+        "attempt": 1,
+        "job_conclusions": [
+          "windows:success",
+          "linux:skipped_no_new_target_work"
+        ],
+        "scope": "safe_ISAL_wrapper"
+      }
+    ]
   },
   "m0_shared_request": ".governance/workstreams/M4/requests/R5-M4-FEC2-014-M0-REAL-GO-PLATFORM-ACTIONS.md",
   "prior_failures_kept": [
@@ -95,11 +202,14 @@
     "old M4 worker v1 governance checker failures; central v2 scope only"
   ],
   "risk_and_nonqualification": [
-    "No real original Go clone Actions injection, compiled replay or exact run artifact",
-    "No Linux ARM64 or Windows native/cross build, target archive/linker/dispatch or actual loader result",
-    "No original parameters catalog/CLI/GUI/effective ack, protected Go-Rust integration or capability",
-    "No real driver, privileged raw/TUN, physical, DNS/IPv6/MTU/Stop composition or measured CPU/p99"
+    "F2-CONTROL 8/8 original realityfront-package replay only; no actual protected Go admission binding or SetTxFec applied evidence",
+    "F2-PLATFORM x64/ARM64/Windows safe-wrapper original C library native XOR/ec_encode_data only; no verified ARM NEON instruction-level dispatch, full FEC2 codec native oracle, actual Go/Rust Windows loader, cross-portable bundle, or scalar-feature-off test",
+    "No CLI/GUI/help/effective single catalog integration, FEC2 feature/kind production wire enabling, privileged raw/TUN, physical DNS/IPv6/MTU/Stop/p99/500Mbps qualification",
+    "No central current-H scope attestation seen; main M0 source-pinned test workflow and artifacts verified, not product or governance scope"
   ],
-  "next_action": "M0 supplies one existing real-Go-clone F2-CONTROL Actions entry and platform-target CI/loader provenance; M4 then verifies/fixes only its three precise paths and finalizes source-qualified S→H.",
-  "rollback": "Remove newly added two Go overlay files and revert native/isal-safe/build.rs to pre-task x86-only strict assertion without changing any M0-owned shared entry; keep earlier PASS/FAIL evidence."
+  "next_action": "M0 alone integrates existing Go parameters/CLI/GUI/help, authenticated per-client direction quality → SetTxFec revision and applied receipts, Go/Rust product/Windows loader; M4 scoped Go cold replay and ISA-L x64/ARM64/Windows native wrapper delivered and frozen at CODE 7cef7e8. No M4 product file extension authorized.",
+  "rollback": "Remove newly added two Go overlay files and revert native/isal-safe/build.rs to pre-task x86-only strict assertion without changing any M0-owned shared entry; keep earlier PASS/FAIL evidence.",
+  "artifact_verified": true,
+  "m0_shared_request_status": "PARTIALLY_FULFILLED: M0 exact real Go clone and x64/ARM64/Windows source-pinned native wrapper Actions verified; remaining M0-only real config/UI/applied effective and codec/loader/product NOT_RUN.",
+  "handoff": "READY_FOR_M0_STAGE_INTEGRATION_SCOPED"
 }
