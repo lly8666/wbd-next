@@ -201,11 +201,13 @@ fn r1_m0_fec2_three_suite_real_replay_shared_with_link_no_kind_bypass(){
         assert_eq!(normal.max_seen(),None);
         // FEC2 gated path shares ONE original replay window for all kinds.
         // Out-of-order and small independent ordinary remains permitted.
+        let mut later_opened_wire=later.clone();
         let r=admitted.open_unique_with_fec2_after_admission_in_place(
-            &mut later.clone()).unwrap();
+            &mut later_opened_wire).unwrap();
         assert_eq!((r.pn,r.kind,r.payload),(2,0,b"later ordinary".as_slice()));
+        let mut source_opened_wire=source.clone();
         let r=admitted.open_unique_with_fec2_after_admission_in_place(
-            &mut source.clone()).unwrap();
+            &mut source_opened_wire).unwrap();
         assert_eq!((r.pn,r.kind,r.payload),(1,2,f2.as_slice()));
         assert_eq!(admitted.max_seen(),Some(2));
         assert!(matches!(
