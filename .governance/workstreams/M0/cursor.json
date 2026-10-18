@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 127,
-  "checkpoint_sha": "a6345c96134632ce39947f99a1c6c5602ef08d8a",
+  "sequence": 128,
+  "checkpoint_sha": "aefa423e6d75f824c929c45958e196707cb63356",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
   "current_task": "R0-023 real protected Go→Rust raw/TUN Stop/MTU/LINK integration remains partial; FEC2 PR#10 plan merged, PLAN-007 contract frozen, M1/3/4 independent FEC2 packages formally assigned. 024 tuning STOPPED.",
-  "why_now": "PR#10 FEC2 model planning merged normally as 365cbbc (source5c4797c, maintenance39078298503 PASS). Frozen worker handoffs M1 Game013/M2 repair010/M3 codec016/M4 platform013 reviewed. New FEC2 contracts/prompts/registry in M0 S 85268417 and a6345c; actual multi-lane/FEC-on/product not yet wired.",
+  "why_now": "M3 H33 CODE301 partial and historical H30 nonPASS; latest M1 central scope HTTP403 rate limit (not worker old 64). M4 required M0-owned real Go clone build+consume and native target test entries are now SOURCE-pinned with actual Actions; this cursor does not promote their local PASS to product.",
   "done_when": "R0-023 actual authenticated LINK oversize fragment delivery and Stop/MTU safe integration verified with exact source Actions, p99 and codec-timeout risks assessed, module FEC2 workpacks staged only after scoped proofs. Remain unverified until complete; never promote design/model to product.",
-  "next_action": "M0 isolate the already-repeated unified codec functional 240s timeout to a concrete case and real p99 regression risk without full-suite reruns; continue bounded original Go V4 LINK/MTU/Stop integration, then source-pin first FEC2 module combination. M1/M3/M4 work independently under PLAN-007; M2 standby.",
+  "next_action": "M0 freeze M3 CODE301 real FEC2 ISA-L feature/source-lock shared build and one-scenario same-VM AB/BA functional/perf entries without V1 Go-wire carryover, then resume R0-023 true Go→Rust Stop/MTU/fragment and M4 actual policy applied/GUI integration. M4 can inspect provided Go/three-target wrapper Actions and own source artifacts immediately. Do not rerun old D10/024.",
   "unverified": true,
   "last_tested_source": "ede83b98edba1fee6f73bc99454040cc95392d4d",
   "evidence_refs": [
     "docs/evidence/M0/M0-023-modules-intake-ede83b98edba1fee6f73bc99454040cc95392d4d.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json",
+    "docs/evidence/M0/M0-FEC2-shared-workflows-4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
+    "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json",
     "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/devlog/M0/M0-024-directional-closure-2026-10-17.md",
     "docs/architecture/TEST_PLAN.md",
-    "r0/qualification-manifest.json",
-    "docs/evidence/M0/M0-024-authenticated-seq32-anchor-9249115c809933eae7ddebdd9334bbe16095bf64.json"
+    "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "New FEC2 design is MODEL_ONLY; M1 R5-014 owner / M3 R5-017 codec / M4 R5-014 Go cold/native assigned on existing workers. M2 010 ready standby. Real Go Normal/off CODE ede83b stage native PASS but unified codec native-functional 39047975666 &39048697568 each 240s FAIL, D10 historical FAIL, P10 AB +4.58% vs BA -1.46% CPU; SPARSE p99 B higher. Real FEC-on/Game and v2 product/physical NOT_RUN."
+  "partial_summary": "M4 CODE7cef real original Go clone cold policy 8/8 PASS run39084384517 (control9e157), actual ISA-L Linux x86_64+aarch64 safe-wrapper PASS in39084579161 (controlc811), Windows missing NASM original FAIL in same run; Windows-only corrected static library/native safe wrapper PASS run39084759926 (control4c1). All exact digest/run/attempt in M0 scoped receipt, ZIP rehash NOT_DONE. M3 CODE301 true ISA-L/ABBA and ARM NEON/Windows Go loader still NOT_RUN. M1 scope39083333199 GitHub403 remaining0 NOT_PASS; old worker64 separate. Historical D10 and p99/native codec timeout OPEN; FEC2 product off."
 }
