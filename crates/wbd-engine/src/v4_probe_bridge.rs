@@ -1091,6 +1091,23 @@ mod m0_fec2_owner_integration_tests{
                 assert_eq!(p.arena.report().loaned,0);
             }
             assert_eq!(probe_commit(id,0,0,777),OK);
+            // Synthetic fixture alone is never a FEC2 capability; even
+            // after owner Commit, kind2 remains DENIED before private binding.
+            {
+                let mut state=registry().lock().unwrap();
+                let p=state.slots.get_mut(&id).unwrap();
+                assert!(push(p,&source,2,budget).is_err());
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[0;16],5,1).is_err());
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[2;16],5,2).is_err());
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    3,[2;16],5,1).is_err());
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[2;16],5,1).is_ok());
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[2;16],5,1).is_err(),"double bind");
+            }
             let (repairs,backend)=Rs16::new().encode_owned(
                 91,&[&frame_a,&frame_b],Profile::Strong,0,1,
                 budget.record_payload_mtu,BackendChoice::Scalar).unwrap();
