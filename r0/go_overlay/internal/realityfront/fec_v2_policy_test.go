@@ -180,3 +180,37 @@ func TestF2ControlSparseEmergencyBurstAndIdleIsolation(t *testing.T) {
     // A pure Step does not own any payload activity/idle clock. No callbacks,
     // network probes, keepalives or hidden scheduling occur in off/fixed/auto.
 }
+
+func TestF2ControlActualKSourceWeightAndBurstBound(t *testing.T) {
+    var partial [16]uint64
+    partial[7]=100
+    partial[15]=100
+    got:=fecV2Mix(partial,FecV2Mild,0.05)
+    q8:=fecV2Residual(8,2,0.05)
+    q16:=fecV2Residual(16,4,0.05)
+    want:=(800*q8+1600*q16)/2400
+    if d:=got-want;d>1e-12||d< -1e-12 {t.Fatalf("not source-weighted %g != %g",got,want)}
+    var onlyK8 [16]uint64
+    onlyK8[7]=750
+    if profile,unreachable,_:=fecV2Base(onlyK8,0.05);profile!=FecV2Medium||unreachable {
+        t.Fatalf("k8 should need medium at IID5%%: %v %v",profile,unreachable)
+    }
+    cfg:=f2Config("burst",FecV2C2S,FecV2Auto,FecV2Conservative)
+    start:=FecV2Light
+    cfg.StartProfile=&start
+    state,_,e:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
+    if e!=nil {t.Fatal(e)}
+    for _,sec:=range []int{2,4,6} {
+        at:=time.Duration(sec)*time.Second
+        snap:=f2Snapshot("burst",FecV2C2S,at,0,0)
+        if sec<6 {snap.ConsecutiveMatureGaps=3}
+        next,intent,e:=FecV2Step(cfg,state,snap,at)
+        if e!=nil {t.Fatal(e)}
+        if sec==2 && intent.Send {t.Fatal("burst rose before 2 windows")}
+        if sec==4 && (!intent.Send||intent.Profile!=FecV2Mild) {
+            t.Fatalf("burst must add at most one: %+v",intent)
+        }
+        if sec==6 && intent.Send {t.Fatal("burst stacked another profile")}
+        state=next
+    }
+}
