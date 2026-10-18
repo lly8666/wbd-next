@@ -52,6 +52,8 @@ jobs:
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_fec2_probe_scope_status$'
           cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_owner_integration_tests -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_original_m4_m2_batch_0_32_unknown_prefix_never_refunds -- --test-threads=1 --nocapture >>owner-grant-result/rust.log 2>&1
+          grep -q "M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes=1122" owner-grant-result/rust.log
           for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
@@ -97,6 +99,7 @@ jobs:
           assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
           assert "r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure ... ok" in rust
           assert "r1_m0_m2_reverse_authenticated_kind1_frozen_shadow_three_suites ... ok" in rust
+          assert "M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes=1122" in rust
           kernel=(root/"real-kernel.log").read_text()
           assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
           for suite in [1,2,3]:
@@ -139,6 +142,7 @@ jobs:
             "actual_M2_process_global_budget":"TEST_ONLY_THREE_SIMULTANEOUS_ORIGINAL_GO_TLS_OWNERS_ONE_PROCESS_64K_CAP_TWO_32K_GRANTS_THIRD_DENIED_STOP_RECLAIMS_UNUSED; NOT_PRODUCT",
             "actual_M2_typed_two_slot_mixed_driver_prefix":"TEST_ONLY_M4_KERNEL_SLOT0_TRUE_SEND_ONE_AND_EXPLICIT_NEVER_SYSCALLED_SLOT1_PROVEN_NOT_ATTEMPTED_REFUND; NO_UNKNOWN_COMPLETION_OR_BATCH_SENDMMSG_QUALIFICATION",
             "actual_M4_true_kernel_sendmmsg_M2_scoped_two_FrozenRecord":"TEST_ONLY_SINGLE_ORIGINAL_LINUX_SENDMMSG_TWO_ORIGINAL_FROZEN_PN_SEQ_PRESERVED_ALL_THREE_CIPHERS; FULL_2_TO_32_UNKNOWN_COMPLETIONS_NOT_QUALIFIED",
+            "M0_M4_to_M2_native_batch_prefix_0_32":"TEST_ONLY_1122_VALID_TYPED_SLOTS_PLUS_STOP_ROUTE_EINTR_BACKPRESSURE_MTU_INVALID_PREFIX_FAIL_CLOSED_NO_FABRICATED_NOTSENT; KERNEL_PARTIAL_CONDITIONS_NOT_FORCE_INJECTED",
             "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
             "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
             "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
