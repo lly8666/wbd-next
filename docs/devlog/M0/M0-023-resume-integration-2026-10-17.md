@@ -40,3 +40,11 @@
 **本次收口边界**：开发功能源锁已证明 1370B C2S / 1728B S2C 经实际业务和原独立 Go peer 交付，不可把它升级为任意合法最大UDP。原 arena 每 slab 2048B、每 ready turn 最多32帧，对超过32帧和更大 65KiB TUN UDP仍明确 fail closed；中途已发部分片后MTU突变、uncertain/prefix和未知 PN/loan细节尚缺真实组合覆盖。Normal/off 开发诊断随既有workflow唯一10Mbps场景运行，但未经同job新旧AB/BA比较，不宣称收益。当前 R0-023 继续 **partial/unverified**。
 
 **一个下一动作**：沿本次真实 Go→Rust owner 的相同调用点补有界跨 turn 分片 staging/归还与中途 MTU/Stop/partial syscall 接线，验证大于32片合法UDP、L01–L04/B01–B04 实际借用与小包无 HOL；既有通过场景不重跑无关优化/旧D10。
+
+## 2026-10-18 / 023：先整包预备 original M1 LINK slabs 再封 PN（安全增量）
+
+发现前版原始 Rust background TUN 超MTU段逐片 `arena.allocate()→seal_fragment...`：原M1 slab资源如果在第k片耗尽，前k−1片可能已经消耗 PN 并入TX队列，留下必然等TTL的部分逻辑 packet。新 M0 源 `dd01c86b84a4f85875c3197cf995749f1c44e5bf` 增加 `stage_bounded_original_link`：先用原 M3 `LinkPacketPlan` 固定 frame_mtu/packet_id 并限制本轮 `<=32`，在一个原 M1 arena 内预备完整分片/loan；任一预备失败整个局部数组丢弃回同一 M1 return queue，**封装者此时一个 PN 都没消耗**。仅所有片都预备成功才开始原 M0 owner `seal_fragment_with_worker_snapshot` 严格路径。独立随机 small packet 仍走原Normal零额外LINK开销。这个安全边界不假装覆盖 *seal/queue中途失败后* 或内核sendmmsg前缀/未知完成的全packet原子性；更不等于支持所有 65KiB UDP。
+
+真实 M0 native Go→Rust `1689d67ab23ada9f4130a963ec7cc223e1f1cca4` source锁定 [run 39093072101](https://github.com/lly8666/wbd-next/actions/runs/39093072101) attempt1 build117573724785 SUCCESS/consume117573990178 SUCCESS；本轮新增 `m0_link_materialization_never_admits_half_packet_on_arena_failure` 原 Rust M1 arena 真slot + M3 LINK帧造/解析1/1 PASS，原Go三cipher真实丢已知encrypted PN0而PN1通过/noHOL、内核真实1728B TUN大包S2C分两片回原Go reassembly once、随后小包1、MTU65536→1500失败关闭/route恢复与Stop均 PASS。双向10Mbps Normal/off 10s热身60s开发诊断观测offered=delivered 10Mbps/方向，线程RX CPU2.0082s，TX CPU2.0175s；**不是正式产品性能资格**。结果/构建 GitHub artifact digest已读，未独立ZIP复哈希；SOURCE详细边界与其它工位阶段见 [receipt](../evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json)。同期 `dd01c86b` native-functional 全组 + r0-native-abi独立成功，正式精确 SOURCE 依 `1689d67a`。
+
+继续保留：合法大 UDP 受原 TX TUN 2048B slab 限制、跨轮次 >32 帧支持未实现；原 M1 `seal/queue` 部分接受、旧/新route MTU在已发半包、原M4 kernel prefix/uncertain/Stop借用组合尚需真实反例；FEC2 bit2/kind2/3仍OFF。M3 最新 H36 同意CODE8cc真 native及合格CPU，但本身中央scope由于main审批检查点后75次提交超过64上限失败，需要 M0 人工逐提交审核中继点、不改上限，ARM64/Windows完整新codec仍 NOT_RUN。M1/M2/M4既有 scoped 结果并不等产品。分工与剩余产品验收顺序另见 [7大门阶段快照](M0-023-next-stage-snapshot-2026-10-18.md)。
