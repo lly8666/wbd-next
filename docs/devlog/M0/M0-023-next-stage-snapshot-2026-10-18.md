@@ -31,3 +31,18 @@ M3 精确 HEAD `41ef0e29c9029949136fe54169f6628eca01fdfa` 由自身 [Governance3
 新主线中央 `tools/scope_audit.py` 移除了独立的64增量检查与第二套检查点范围判定，直接复用原 M0/G2 `tools/worker_scope_ci.py.audit_worker_history` 的冻结 `G2_BASE`、最多512提交、80条/页、完整 SHA/顺序/页数/每提交完整路径/受审历史合并。中央另外只核实时 main registry、cursor 结构与前后来源祖先，不用 M4 的 MAIN-only context_ref 或 PASS_SCOPED 组件文字另造角色拒绝。旧 `scope-checkpoints.json` 留历史，policy64仍属 standalone `governance.py audit` 有界交接诊断、不再约束中央 Scope。Actions 精确 [governance-maintenance39095981610](https://github.com/lly8666/wbd-next/actions/runs/39095981610) SOURCE `39ea51ea507b00dd88330af7a1c9ea4545ab42f5` SUCCESS（治理回归全部 Actions），中心历史扫描在同一 M3 SOURCE 的先前 `37d0...` 有确切 PASS。
 
 **配额教训**：过渡期多次主线 push 同时触发四条 G2 全历史扫描，短时间用尽 GitHub Actions API（403 remaining=0），部分后续 main Governance/central run 因环境配额 FAIL，非算法或真实scope越权。随后将 `scope-audit.yml` 改为**仅 worker Governance completed 的单一工位精确 SOURCE**运行中央重扫；主线治理工具 push 走既有 maintenance 自动自测，不再无意义地四重重复扫描。不能把 API rate-limited 的控制run改称 PASS，也不因此撤回以前的真实M3 scoped成功收据。下一步仍按原R0-023 的跨轮次大 UDP、MTU中途变化、原driver未知完成/Stop，之后 FEC2 真实 Go认证→Rust owner 集中接线并排缺少的跨平台完整 native 门。
+
+## 本轮快速主线集成：M3 + M4 + M1 实码进 main，M1→M3 首段直接组合
+
+不再从不同 worker 的实时HEAD临时拼产品证据：将 M3 CODE8cc `fec_v2.rs` / 原测试、M4 CODE7cef `fec_v2_policy.go` / 原测试、M1 CODE3f78 `runtime/fec2_owner.rs` / 原测试共六份文件逐一照原 SHA **Git blob完全相同**并入 main，分别注册到现有 codec/engine 模块，保留主线锁定的Cargo/native ISA-L依赖、老V1记录、原Go TLS/ABI/路由。原 Go 冷策略工作流由“复制M4 worker clone”改为“直接复制 main overlay 并在a7a82db原Go realityfront真实包编译测试”；另新增精确主线 codec 真ISA-L入口，无需再跑原40万块4腿微基准。所有 FEC2 能力、kind2/3、真实配置启用仍 **OFF**。
+
+再引入 M0 `crates/wbd-engine/src/fec2_staged.rs`，用真实M1 bounded Arena/3class ParityJob 的冻结源引用构建 M3 单个 `PreparedBlock`，每轮最多4条repair、实际策略轮廓不符则PN前拒绝，`r_sent` 仅由外部传输确定前缀确认后登记；真实源码负例一条源在cauchy中丢失后被M3 scalar e1 精确恢复。**这是内存内组件组合，暂不含原Go认证/KDF、AEAD/PN发射、M4 raw/TUN实际FEC传输、M2真实receipt。** 不写“双端FEC-on已成功”。
+
+精确功能证据：
+- 主线 [run39096791296](https://github.com/lly8666/wbd-next/actions/runs/39096791296) SOURCE f50c2d7 真官方 ISA-L V2 codec **11/11 PASS**，对源码主线native而非worker临时覆写；
+- [run39096875504](https://github.com/lly8666/wbd-next/actions/runs/39096875504) SOURCE bdfbd5 主线M4 Go冷策略，在真实钉定原Go包 **8/8 PASS**；
+- [run39097343657](https://github.com/lly8666/wbd-next/actions/runs/39097343657) 源 `1395d9c5477ae7097fef2aedaaa5630253266da0` native-functional engine **129 PASS、0 FAIL、1 ignored**，包含M1 12个FEC2调度反例及M0真Arena→Cauchy→e1恢复新反例；其他selected kernel/normal/receipt/fec组SUCCESS；
+- 同 SOURCE [run39097343616](https://github.com/lly8666/wbd-next/actions/runs/39097343616) 原真实Go TLS→Rust normal/off raw/TUN build+consume **SUCCESS**，原Normal/off双向10Mbps 10s+60s仍仅开发诊断；
+- 同 SOURCE R0原生ABI39097343599、G2 bootstrap39097343596、cross-ABI39097343554 SUCCESS。源138之前一次遗漏M1 tests致rust test编译失败，补入原M1文件而非绕过断言；CODEC旧240s红灯（run39096586112）仍保留且未误称全项目/旧codec资格。
+
+[M0 SOURCE1395完整证据](../../evidence/M0/M0-023-FEC2-main-3worker-staged-1395d9c5477ae7097fef2aedaaa5630253266da0.json)。下一批优先对接原Go单次受保护admission→Rust能力/kind2/3、M1首发parity到原M4真实发送和原M2 authenticated repair；原023 65KiB大UDP跨轮次/Stop/MTU/不确定内核完成仍未结，不以新增组件PASS冒充产品资格。ARM64/Windows完整FEC2、UI真实applied、Game、弱网与物理另验。用户要求提速，不再重复旧M3 ISA-L 400k基准。
