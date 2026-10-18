@@ -22,6 +22,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
     uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
+    uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
     uint64_t,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_hold(
@@ -198,4 +200,22 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeProcessQuotaHold(bytes uint64) error{
         C.uint64_t(b.handle),C.uint64_t(bytes))
     if rc!=0{return fmt.Errorf("%w: process quota claim rc=%d",errV4Embedded,int(rc))}
     return nil
+}
+
+// Test-only 2-slot M2 typed settlement with original M4 kernel copy for
+// slot0, positive never-syscalled slot1. This is NOT a native sendmmsg
+// uncertain completion classifier and never promotes product FEC2.
+func (b *v4EmbeddedNativeBridge) fec2ProbeRealFrozenPrefixTwo()(
+    uint64,uint32,uint32,uint64,uint64,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,0,0,0,0,errV4Embedded
+    }
+    var pn,accepted,notAttempted C.uint64_t
+    var seq,wire C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
+        C.uint64_t(b.handle),&pn,&seq,&wire,&accepted,&notAttempted)
+    if rc!=0{return 0,0,0,0,0,fmt.Errorf("%w: original mixed frozen prefix rc=%d",
+        errV4Embedded,int(rc))}
+    return uint64(pn),uint32(seq),uint32(wire),
+        uint64(accepted),uint64(notAttempted),nil
 }
