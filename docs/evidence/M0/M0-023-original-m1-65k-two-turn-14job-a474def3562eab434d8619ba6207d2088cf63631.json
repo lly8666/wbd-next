@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "a474def3562eab434d8619ba6207d2088cf63631",
+  "result": "PASS_SCOPED_NATIVE_ORIGINAL_M1_LINK_65K_32_PLUS_16_TWO_TURN_STAGE_AND_14_OF_14_SOURCE_LOCKED_JOBS_WITH_PERSISTENT_PRODUCT_TX_BLOCKER",
+  "progress": "partial",
+  "unverified": true,
+  "production_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "changes": [
+    "crates/wbd-engine/src/v4_embedded_go.rs: reuse single original M1 Arena and M3 LinkPacketPlan for safe bounded owner-turn staging via stage_next_original_link_turn, count=min(remaining,available,32); existing original production stage_bounded_original_link wrapper still enforces one turn <=32 and returns FULL for 48-fragment packet. No other M1-M4 owned code changed.",
+    "Native x64 opt-in integration test original Arena/LinkPacketPlan/M3 ReassemblyTable of 65535 byte logical message at LINK frame MTU1400: exactly 48 frames staged across two explicit turns 32+16, all source bytes reassembled, each intermediate fragment leaves unrelated small packet deliverable, exact slot loans returned after each turn. Independent packet with 12 staged fragments, then MTU shrink1400→1300, plan permanently abandoned, no slab leak, next small message stages and returns. This is a test of actual original primitives with synthetic ingress bytes, NOT actual 65535 byte TUN ingestion/AEAD/Go peer raw kernel transmission.",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml: require new named x64 original M1/M3 test and exact marker within same 14-job source-locked cross-platform/native/ISA-L/Normal-off/Go TLS release matrix."
+  ],
+  "exact_source_actions": {
+    "run_id": 39138526692,
+    "attempt": 1,
+    "conclusion": "success",
+    "jobs_passed": 14,
+    "jobs_total": 14,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39138526692",
+    "native_x64": {
+      "artifact_id": 12140776623,
+      "sha256": "702c072223efce7d5110fbf3a125cb2db1b0b8fda42b650c91ee984081dcf437",
+      "independently_rehashed": true,
+      "receipt_source_sha": "a474def3562eab434d8619ba6207d2088cf63631",
+      "added_test": "m0_link_original_m1_arena_two_turn_65k_32_plus_16_stop_mtu_nohol",
+      "test_passed": 1
+    },
+    "native_arm64": {
+      "artifact_id": 12141095537,
+      "artifact_provider_sha256": "a6f638e61db7d3718f10c177d3d518ba257fd55563b0a8d7a13bd490cf3b42ba",
+      "native_codec_recovery": true,
+      "not_full_original_go_tls_driver": true
+    },
+    "windows_msvc": {
+      "artifact_id": 12140533783,
+      "artifact_provider_sha256": "ac599b0c43e793a51fbbd252ee5c57e1e0000ddbf8976e92dc8c21b6e1aeef89",
+      "native_scalar_codec_m2": true,
+      "not_full_original_go_tls_driver": true
+    },
+    "real_original_Go_TLS_kernel": {
+      "artifact_id": 12140881165,
+      "sha256": "6807266ce5140f6f408d7184a7fc21c74366499343bf9e49598c095ac726f03f",
+      "independently_rehashed": true,
+      "receipt_source_sha": "a474def3562eab434d8619ba6207d2088cf63631",
+      "three_ciphers_nine_kernel_scenarios": true
+    },
+    "ISA_L_11_native_plus_ABBA": {
+      "artifact_id": 12139963933,
+      "sha256": "1bb510e46393d1928bb20d18e80f76410c70f7ff29595e2d36d6b494d62d1a06",
+      "independently_rehashed": true,
+      "receipt_source_sha": "a474def3562eab434d8619ba6207d2088cf63631",
+      "codec_blocks_per_leg": 400000,
+      "codec_recoveries_per_leg": 400000,
+      "legs": [
+        "Scalar",
+        "NativeIsaL",
+        "NativeIsaL",
+        "Scalar"
+      ],
+      "component_not_business_p99": true
+    },
+    "Go_link_FEC": {
+      "artifact_id": 12140414178,
+      "artifact_provider_sha256": "e451e5657fbe65f10253c5eacdf42f0a1754ed210c65ab9ff36960009243fe50",
+      "slow_952s_cost_excluded_fast_only": true
+    },
+    "go_control": {
+      "artifact_id": 12140756670,
+      "artifact_provider_sha256": "f183f2870677ad364607df8b67c0532255eea260e94532be50f11757139105c4"
+    },
+    "network_150ms_runs": [
+      {
+        "A": 12141065778,
+        "sha256": "61ba4efc71eceb3d53ff29a1608e2637b8fd8f8af73fec410d1862a72b8f4002"
+      },
+      {
+        "B": 12139734528,
+        "sha256": "cb52dca07fbb1c9a0cc6b150ad1297486fa847441284d19ae9d84263a0aa4f8d"
+      },
+      {
+        "C": 12140228183,
+        "sha256": "8590b56b3afd31fff87f03156e40f3c53ea1d0c1c4e16980eda411f444417d9e"
+      }
+    ],
+    "netem_10ms": {
+      "artifact_id": 12140478857,
+      "provider_sha256": "a17a2c177ccba580596031e610a39b7707f72c5b5849d37f4d89aef5bd3cac02"
+    },
+    "normal_off_10mbps": {
+      "artifact_id": 12139729741,
+      "provider_sha256": "b30d7fdcae3273e4e5e967bcdd37069b9e7743a001c61e53f70daa8e7d417b5c",
+      "scope": "10 second warm-up+60 second measurement same Ubuntu Runner developer probe"
+    },
+    "hard_gate_ledger": {
+      "artifact_id": 12140003692,
+      "sha256": "d69aec7a09e01381f475d900491c0eacb4cd5deb2d69edfac6332536d2a1df48",
+      "independently_rehashed": true,
+      "receipt_source_sha": "a474def3562eab434d8619ba6207d2088cf63631",
+      "all_product_gates_PASSED": false
+    },
+    "source_governance": {
+      "run_id": 39138526607,
+      "conclusion": "success"
+    }
+  },
+  "confirmed_next_blockers": [
+    "Original M0 128-slot default Arena::new(generation,128,2048,128,1000000) provides only a 2048-byte TUN input slab; background_tun_once passes slab.writable()[14..] to original TunReadyBatch, so jumbo 65535-byte single TUN ingress is NOT supported by this hot path. Code inspection only, no real 65KiB TUN admission attempted.",
+    "Actual original background_tun_once stages all fragment frames in ONE tx owner call via stage_bounded_original_link(...,32-accepted), and for 48 frames returns FULL before crypto/PN/driver. New helper proves two independent original arena turns can stage 32+16, but the TX thread has no persistent generation-bound payload/plan and calls background_tun_once only on TUN readability. Actual continuous 65KiB cross-turn Go TLS/M4 kernel completion still NOT_RUN/BLOCKED.",
+    "Real M4 32 distinct immutable frozen repairs, kernel partial/EINTR/EAGAIN/Uncertain/Stop race and MTU±1 dynamic under live network NOT_RUN.",
+    "Original Go product CLI/GUI single fec.mode/profile/autoPolicy/start config and continuous 2s per-direction control + trusted mature FirstSent denominator, canonical C2S kind1 feedback from actual peer-observed loss and continuous original M1 FEC2 scheduler NOT_WIRED.",
+    "Full 240s codec and D10/p99 same-VM/physical packet ABBA and Windows/ARM full original Go TLS driver loaders NOT_RUN; two physical peers not provisioned.",
+    "Historical original Normal/off 150ms intermittent FAIL retained despite 3/3 exploratory passes; never promote full FEC2 product or turn default feature on."
+  ],
+  "historical_evidence": [
+    {
+      "source": "ece8f9d5d0dc40ddcfeb3bffd54c15398a354c92",
+      "run_id": 39136860895,
+      "conclusion": "success",
+      "jobs": "14/14",
+      "scope": "prior 65KiB 48-turn original LINK codec versus owner MAX32 blocker"
+    },
+    {
+      "source": "6e8497bef6a92ccb8e0e26f1b654084d6d32ed1f",
+      "run_id": 39118278579,
+      "conclusion": "failure",
+      "scope": "original historical intermittent Normal/off150ms"
+    },
+    {
+      "source": "51686ae20d6709edf1a677af447cedb662d66f23",
+      "run_id": 39134052639,
+      "conclusion": "cancelled",
+      "scope": "full Rust LINK 952s CPU cost fixture exceeded broad CI cadence, fast functional vs separate slow source retained"
+    }
+  ],
+  "next_action": "Implement real M0 TX generation-bound persistent original LINK20 plan across multiple kernel M4 sendmmsg batches while preserving Stop/MTU/loan and small packet noHOL; support true 65535B TUN input (current slab2048) without changing small-packet hot path. Then actual original Go TLS packet reassembly of 48 fragments with exact PN/raw and stop/MTU tests. Independently wire mature production firstsent/missing and original per-client/dir Go auto timer/CLI GUI canonical M3 kind1, real M4 partial 2..32, physical/perf qualifications. Product OFF until passed."
+}
