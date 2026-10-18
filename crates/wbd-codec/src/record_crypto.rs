@@ -11,6 +11,9 @@ use chacha20::ChaCha20;
 use aes::{Aes128, Aes256};
 use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
 
+#[cfg(any(test, feature = "m0-fec2-record-probe"))]
+use crate::fec_v2::{AUTHENTICATED_FEC2_SOURCE_KIND,AUTHENTICATED_FEC2_REPAIR_KIND};
+
 use crate::record_frame::{
     AEAD_TAG_LEN, AUTHENTICATED_HEALTH_KIND, AUTHENTICATED_LINK_KIND,
     FIXED_WIRE_OVERHEAD, MAX_WIRE_LEN, OUTER_HEADER_LEN, OUTER_TYPE,
@@ -204,11 +207,37 @@ impl LaneTxCrypto {
     pub fn seal_in_place(
         &mut self, kind: u8, wire: &mut [u8], payload_len: usize, padding: usize,
     ) -> Result<(u64, usize), CryptoError> {
+        self.seal_allowed_in_place(kind,wire,payload_len,padding,false)
+    }
+
+    /// Private opt-in only. The caller must FIRST prove protected Go V4
+    /// capability, KDF, generation/epoch/direction and exact applied policy.
+    /// This does not grant that authority: the original normal entry above
+    /// always rejects kinds 2/3, and default production omits this API.
+    /// Sharing self preserves one genuine PN allocator across old and V2
+    /// record kinds. No second AEAD context or packet numbering path.
+    #[cfg(any(test, feature = "m0-fec2-record-probe"))]
+    pub fn seal_fec2_after_admission_in_place(
+        &mut self, kind: u8, wire: &mut [u8], payload_len: usize, padding: usize,
+    ) -> Result<(u64,usize),CryptoError> {
+        if kind != AUTHENTICATED_FEC2_SOURCE_KIND
+            && kind != AUTHENTICATED_FEC2_REPAIR_KIND {
+            // Preserve the original never-roll-back PN-on-bad-kind contract.
+            return self.seal_allowed_in_place(kind,wire,payload_len,padding,false)
+        }
+        self.seal_allowed_in_place(kind,wire,payload_len,padding,true)
+    }
+
+    fn seal_allowed_in_place(
+        &mut self, kind:u8, wire:&mut [u8], payload_len:usize,padding:usize,
+        allow_fec2:bool,
+    ) -> Result<(u64,usize),CryptoError> {
         if self.exhausted { return Err(CryptoError::PnExhausted); }
         let pn = self.next_pn;
         if pn == u64::MAX { self.exhausted = true; } else { self.next_pn += 1; }
 
-        if kind != AUTHENTICATED_LINK_KIND && kind != AUTHENTICATED_HEALTH_KIND {
+        if kind != AUTHENTICATED_LINK_KIND && kind != AUTHENTICATED_HEALTH_KIND
+            && !(allow_fec2 && matches!(kind,2|3)) {
             return Err(CryptoError::InvalidKind);
         }
         let used = FIXED_WIRE_OVERHEAD
@@ -280,6 +309,23 @@ impl LaneRxCrypto {
     /// success. Authentication failure taints wire memory; caller must discard.
     /// Framing length mismatch is terminal for the stream (no magic resync).
     pub fn open_in_place<'a>(&self, wire: &'a mut [u8]) -> Result<OpenedRecord<'a>, CryptoError> {
+        self.open_allowed_in_place(wire,false)
+    }
+
+    /// Opt-in ONLY after the independently protected Go V4 feature bit/KDF
+    /// has been bound to this lane. Returns the same authenticated borrow;
+    /// PN replay admission and inner FEC scope parsing remain caller duties.
+    /// Old opener remains default and rejects even VALID encrypted kind2/3.
+    #[cfg(any(test,feature = "m0-fec2-record-probe"))]
+    pub fn open_with_fec2_after_admission_in_place<'a>(
+        &self, wire:&'a mut [u8],
+    )->Result<OpenedRecord<'a>,CryptoError>{
+        self.open_allowed_in_place(wire,true)
+    }
+
+    fn open_allowed_in_place<'a>(
+        &self, wire:&'a mut [u8], allow_fec2:bool,
+    )->Result<OpenedRecord<'a>, CryptoError>{
         if wire.len() < FIXED_WIRE_OVERHEAD || wire.len() > self.max_wire {
             return Err(CryptoError::InvalidLength);
         }
