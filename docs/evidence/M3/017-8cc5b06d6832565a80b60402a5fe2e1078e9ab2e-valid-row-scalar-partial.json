@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+  "result": "PASS",
+  "qualification": "SCOPED_SCALAR_AND_LEGACY_REGRESSIONS_ONLY",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "artifact_zip_rehash_verified": false,
+  "change": {
+    "path": "crates/wbd-codec/src/fec_v2_tests.rs",
+    "type": "test-only",
+    "reason": "True-native F2 guard test at CODE301 requested 4 rows when k2 Maximum has r=ceil(2*5/4)=3.",
+    "fix": "For k2/3/8/16 use batch=min(Profile::Maximum.parity_count(k),MAX_BATCH_ROWS) and explicitly assert scalar and native both reject illegal count 4 for k2.",
+    "code_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "math_kernel_unmodified": true
+  },
+  "observed_actions": [
+    {
+      "run_id": 39088682284,
+      "attempt": 1,
+      "name": "worker-native",
+      "build_job": 117560541739,
+      "consume_job": 117560657149,
+      "conclusion": "success",
+      "count": {
+        "pass": 122,
+        "fail": 0,
+        "ignored": 1,
+        "filtered": 26
+      },
+      "feature": "default scalar only; native-isal feature absent on worker branch",
+      "binary_sha256": "9aff1051497133c108f7eae9a4eb2dd378a3776bdb8b4bd90abc45ec1cb6c70e",
+      "test_log_sha256": "58b06c11f7b42eecd7775a11eef6b7763a446f2ee839f5ae71a7ad259797fc56",
+      "build_artifact": {
+        "id": 12121702832,
+        "digest": "sha256:5609361ecb18c9772527d6ca67dd86b0653c7c0263a549b03067ce7e0f81d878"
+      },
+      "result_artifact": {
+        "id": 12121568740,
+        "digest": "sha256:74e946f4d02cb88ca3359bc8f57140f43831806b6c104b4fdfc15dd5d4a716cb"
+      }
+    },
+    {
+      "run_id": 39088682264,
+      "attempt": 1,
+      "name": "r0-wire-codec",
+      "build_job": 117560541658,
+      "consume_job": 117560707426,
+      "conclusion": "success",
+      "count": {
+        "pass": 13,
+        "fail": 0
+      },
+      "binary_sha256": "49337079c42db48f8ab415582b2a65a24ba185161d8495e907e50819bd03a06c",
+      "test_log_sha256": "720d27ce15cfefd3347237bee7e1171066f39c8e929a4a22132eb4c3c699e7ca",
+      "result_artifact": {
+        "id": 12121399458,
+        "digest": "sha256:cd42999da5333804719e25b6505ff7ad997ab77756988e4c14f32a8583c3c666"
+      }
+    },
+    {
+      "run_id": 39088682279,
+      "attempt": 1,
+      "name": "r0-record-wire-framing",
+      "build_job": 117560541524,
+      "consume_job": 117560769612,
+      "conclusion": "success",
+      "count": {
+        "pass": 6,
+        "fail": 0
+      },
+      "result_artifact": {
+        "id": 12121163947,
+        "digest": "sha256:93092340324c0a8b20f741b69f69c5ac98e684aff801094dc5eb3272b120470c"
+      }
+    },
+    {
+      "run_id": 39088682247,
+      "attempt": 1,
+      "name": "r0-link-fec-mtu",
+      "build_job": 117560541648,
+      "consume_job": 117560838315,
+      "conclusion": "success",
+      "count": {
+        "pass": 7,
+        "fail": 0
+      },
+      "result_artifact": {
+        "id": 12121424278,
+        "digest": "sha256:db4c354079445b11399af7fa6475c30fc4e416aa64b68b04c3e5bb663d596f7b"
+      }
+    },
+    {
+      "run_id": 39088682327,
+      "attempt": 1,
+      "name": "g2-scoped-bootstrap-native",
+      "conclusion": "success",
+      "scope": "bootstrap-only, no F2 native codec"
+    }
+  ],
+  "historical_native_failures": [
+    {
+      "run_id": 39086268414,
+      "worker_source": "3011431370f1757212df92800c1b56e87ba51d65",
+      "result": "FAIL",
+      "tests_pass": 10,
+      "tests_fail": 1,
+      "invalid_row": "k2 Maximum r3 / requested4"
+    },
+    {
+      "run_id": 39086460623,
+      "worker_source": "3011431370f1757212df92800c1b56e87ba51d65",
+      "result": "FAIL",
+      "tests_pass": 10,
+      "tests_fail": 1,
+      "paired": "1 PASS one k16/r16/1200B encode-only ABBA; CPU_INCONCLUSIVE_SHORT_WINDOW"
+    }
+  ],
+  "governance_status": "CODE8cc governance job39088682244 RUNNING at evidence creation; do not claim scope PASS. H33 previous scope PASS with audited artifact remains independent.",
+  "native_resumption": {
+    "request_doc": "docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md",
+    "handoff_source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "blocker": "M0 workflow hard-pins CODE301; must update source-locked Actions-only fixture before real NativeIsaL retest",
+    "f2_native": "NOT_RUN_AT_FIXED_CODE",
+    "paired_cpu": "INCONCLUSIVE_OLD_SHORT_WINDOW",
+    "e4_recovery_cost": "NOT_RUN",
+    "arm64_full_fec2_codec": "NOT_RUN",
+    "win64_full_fec2_codec": "NOT_RUN",
+    "product_fec_on": "OFF"
+  },
+  "legacy": {
+    "code016": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "h30_audit_39046275022": "FAIL_non_PASS_evidence_preserved",
+    "governance_403": "separate failures preserved"
+  },
+  "rollback": "No codec math/protocol change; keep FEC2 OFF and native fixed-source qualification open"
+}
