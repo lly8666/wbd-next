@@ -85,6 +85,8 @@ jobs:
             grep -q "M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite=$suite real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=mixed-prefix policy=auto profile=4 revision=5 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
+            grep -q "M0_GO_FEC2_AUTO_PENDING_BEFORE_NEW_BLOCK_PASS suite=$suite requested=6 applied=5 two_real_policy_windows=1" owner-grant-result/real-kernel.log
+            grep -q "M0_GO_FEC2_AUTO_TWO_WINDOWS_NEXT_M1_M4_BLOCK_APPLIED_PASS suite=$suite initial=high5 requested=maximum6 applied=maximum6 old_ack=deny" owner-grant-result/real-kernel.log
           done
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
@@ -116,6 +118,8 @@ jobs:
               assert f"M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite={suite} real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" in kernel
               assert f"M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=mixed-prefix policy=auto profile=4 revision=5 applied=1 stale_ack=deny" in kernel
               assert f"M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" in kernel
+              assert f"M0_GO_FEC2_AUTO_PENDING_BEFORE_NEW_BLOCK_PASS suite={suite} requested=6 applied=5 two_real_policy_windows=1" in kernel
+              assert f"M0_GO_FEC2_AUTO_TWO_WINDOWS_NEXT_M1_M4_BLOCK_APPLIED_PASS suite={suite} initial=high5 requested=maximum6 applied=maximum6 old_ack=deny" in kernel
           assert re.search(r"test result: ok\. 3 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
@@ -148,6 +152,7 @@ jobs:
             "actual_M4_true_kernel_sendmmsg_M2_scoped_two_FrozenRecord":"TEST_ONLY_SINGLE_ORIGINAL_LINUX_SENDMMSG_TWO_ORIGINAL_FROZEN_PN_SEQ_PRESERVED_ALL_THREE_CIPHERS; FULL_2_TO_32_UNKNOWN_COMPLETIONS_NOT_QUALIFIED",
             "M0_M4_to_M2_native_batch_prefix_0_32":"TEST_ONLY_1122_VALID_TYPED_SLOTS_PLUS_STOP_ROUTE_EINTR_BACKPRESSURE_MTU_INVALID_PREFIX_FAIL_CLOSED_NO_FABRICATED_NOTSENT; KERNEL_PARTIAL_CONDITIONS_NOT_FORCE_INJECTED",
             "M0_original_Go_policy_applied_M1_M3":"TEST_ONLY_GO_FECV2STEP_AUTO_START_HIGH_REV5_AND_FIXED_MILD_REV9_TLS_VERIFIED_RUST_POLICY_READBACK_FECV2APPLY_STALE_ACK_DENIED_REAL_KERNEL_3_CIPHERS; PRODUCT_GUI_CLI_AND_CONTINUOUS_AUTO_NOT_WIRED",
+            "M0_Go_auto_2s_pending_Rust_new_block_revision":"TEST_ONLY_ORIGINAL_GO_TWO_SYNTHETIC_MATURE_HIGH_LOSS_WINDOWS_PROPOSE_MAXIMUM_REV6_RUST_PENDING_WITHHOLDS_APPLIED_ACK_UNTIL_REAL_M1_NEW_BLOCK_M4_KERNEL_SOURCE_PARITY_COPIED; 3_CIPHERS; NOT_PRODUCT_TELEMETRY_OR_AUTOMATIC_RUNTIME_TIMER",
             "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
             "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
             "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
