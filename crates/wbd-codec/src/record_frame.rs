@@ -232,3 +232,8 @@ mod record_crypto_tests;
 #[cfg(test)]
 #[path = "record_replay_tests.rs"]
 mod record_replay_tests;
+
+// FEC2 isolated tests use this namespace to preserve R0 exact-count wire suite.
+#[cfg(test)]
+#[path = "fec_v2_tests.rs"]
+mod fec_v2_oracle_tests;
