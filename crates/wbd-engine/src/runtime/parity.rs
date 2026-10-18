@@ -428,4 +428,29 @@ mod tests {
         assert_eq!(queue.charged_bytes(),0);
         assert_eq!(arena.report().loaned,0);
     }
+    #[test]
+    fn r1_fec2_f2_sched_16_20_maximum_first_send_fair_not_outer_repair() {
+        let mut arena=Arena::new(313,72,256,1,100_000).unwrap();
+        let mut owner=TxOwner::with_parity_share(
+            limit(64,64),limit(8,8),limit(64,64),16,20).unwrap();
+        for i in 0..16u8 { owner.offer_fresh(rec(&mut arena,i),MonoNs(0)).unwrap(); }
+        for i in 0..20u8 { owner.offer_parity(rec(&mut arena,i+16),MonoNs(0),MonoNs(0)).unwrap(); }
+        owner.offer_repair(rec(&mut arena,99),MonoNs(0)).unwrap();
+        let first=owner.next_ready(MonoNs(0)).unwrap();
+        assert_eq!(first.kind,TxKind::Fresh);
+        drop(first);
+        let mut fresh=1;let mut parity=0;let mut repair=0;
+        for _ in 0..36 {
+            let dispatch=owner.next_ready(MonoNs(0)).expect("all ready entries dispatch");
+            match dispatch.kind {
+                TxKind::Fresh=>fresh+=1,
+                TxKind::Parity=>parity+=1,
+                TxKind::Repair=>repair+=1
+            }
+        }
+        assert_eq!((fresh,parity,repair),(16,20,1));
+        assert_eq!(owner.parity_state().0,0);
+        assert_eq!(arena.report().loaned,0);
+    }
+
 }
