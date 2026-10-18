@@ -4,21 +4,23 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 30,
-  "checkpoint_sha": "09a181d679d050fe7d07c473feaa54b1a411c4be",
-  "progress": "ready_for_integration",
-  "task_id": "R1-M3-RECORD-LINK-FEC-WORKPACK-016",
-  "current_task": "PACK016 M3 scoped DONE/ready_for_integration: CODE422a frozen; old Go+scalar 113 PASS, actual ISA-L native Go GF/e×e/owner3 PASS, fixed 20:20 L1200 Release source-pinned sameVM AB and independent BA CPU_PAIRED_VALID (5/5 valid windows each leg). AB within-VM scalar/native CPU/block 45.503x, BA 26.410x, always native lower. Components only, no real packet RTT/500Mbps/GoV4 FEC-on qualification.",
-  "why_now": "Interruption recovery complete; M0 independently provided exact BA input and Action39045641512 SUCCESS, same CODE422a binary SHA across AB/BA, real backend Go byte-differential and no codec failures. All M3 owned acceptance bounds and source-aware immutable evidence now present; stop new module implementation.",
-  "done_when": "M3 workpack016 C01-C04/L01-L04/F01-F06 native/old-Go/scalar correctness and suitable component CPU matched AB/BA verified; frozen code and public behavior/rollback/external owner unverified boundaries submitted for M0 source-pinned integration. No new FEC architecture.",
-  "next_action": "M0 stage integration to actual authenticated Go V4→Rust engine owner→M4 kernel FEC-on and real MTU/parity fairness; recheck frozen M3 CODE422a and scoped evidence at integration. M3 only fixes a concrete codec defect found by that integration; no extra worker tests, CI edits or new workpack.",
-  "unverified": false,
+  "sequence": 31,
+  "checkpoint_sha": "2938d3374a5e2d842eca3d9c3efd890be3851f6d",
+  "progress": "in_progress",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "current_task": "PACK017 main registry assigned FEC2 RS16 Cauchy XOR k1 repeat, 7 profiles and independent 10/12B typed wire, e×e missing-only, owned/borrowed direct-output, scalar/actual ISA-L and scoped Actions. Legacy 016 CODE422a remains frozen.",
+  "why_now": "Recovered H30 cursor-only difference; central run39046275022 failed: evidence result non-PASS, artifacts unavailable. New main authority overrides stale PACK016 cursor assignment without changing old evidence.",
+  "done_when": "F2-MATH/WIRE/MEM native/scalar and real ISA-L equivalence with source-locked artifact and scoped same-VM cost, bounded dirty tail/MTU/status and explicit rollback; Go/driver/physical NOT_RUN.",
+  "next_action": "Implement scoped FEC2 codec math+wire, compile/batched native Actions and self-fix; M0 must provide shared ISA-L dependency/test workflow target if genuinely blocking; preserve H30 audit failure.",
+  "unverified": true,
   "last_tested_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
   "evidence_refs": [
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json"
+    "docs/evidence/M3/017-intake-recovered-H30.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/evidence/M3/017-intake-recovered-H30.json",
+    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-release-AB.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-handoff-recovery-H28.json",
@@ -26,5 +28,5 @@
     "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
     "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
   ],
-  "partial_summary": "M3 scoped ready, product and real driver NOT_RUN. M3 CODE422a default native39014567195 113 PASS, true ISA-L parity native39016665239 3 PASS. Same sha256 Release binary1222cd2a across M0 AB39044413886 and independent BA39045641512 in each one measurement job after build: AB CPU/block scalar461.27us/native10.14us 45.503x, BA scalar627.19us/native23.75us 26.410x; windows 5/5 valid, real selected backend and exact decoded data. Different AMD EPYC runners (AB AVX512F present, BA AVX2 only) forbid absolute cross-VM comparisons; exact ISA-L dispatched SIMD routine unproven, sampled codec latency not packet p99. Existing scalar remains default (native feature off), rollback Scalar. GoV4 authenticated owner/driver FEC-on, real MTU delivery, packet p99, 500Mbps, physical remain M0 integration NOT_RUN. Historical moving-source audit failures retained; central exact H28 scope39045261026 PASS."
+  "partial_summary": "RECOVERED H30 audit FAIL, not PASS; recovery S2938d3, previous cursor HEAD093e6f7, exact checkpoint ahead one H only. V1 CODE422a and scoped 016 evidence preserved. FEC2 implementation/native/cost NOT_RUN; no product activation."
 }
