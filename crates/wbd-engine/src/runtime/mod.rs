@@ -149,7 +149,7 @@ impl TxOwner {
     /// r/k is bounded here; repair remains a separate <=1 in 11 share.
     pub fn with_parity_share(fresh:QueueLimits,repair:QueueLimits,
         parity:QueueLimits,k:u8,r:u8)->Option<Self>{
-        if k==0||k>20||r==0||r>k{return None;}
+        if k==0||k>20||r==0||r>20{return None;}
         let mut owner=Self::with_parity(fresh,repair,parity)?;
         owner.parity_weight=r;
         owner.systematic_weight=k;
