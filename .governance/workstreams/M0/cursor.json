@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 145,
-  "checkpoint_sha": "daa347ac2e874ef3ab7b3c430a59fa405a0e01c9",
+  "sequence": 146,
+  "checkpoint_sha": "a2a6ce086d4e90bed6679d6a4c9f6fa4f6cb78c7",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 high-efficiency batch original M1 Fec2Owner sourcefirst Normal/Game k2 sparse deadline ParityJob to original M3 Rs16 (3 suites, pressure/Stop) plus original Go TLS/M4 raw kernel/TUN/UDP with original M3 AEAD replay & original M2 RX FeedbackState timed NotSent/Accepted/Uncertain and negative no-premature-UDP/tamper/Stop (3 real ciphers). Exact SOURCE dd2 Actions39110293670 PASS, FEC2 product OFF.",
-  "why_now": "User explicitly requested more tests per iteration rather than many small gates. Combined M1 original scheduler->M3 parity native matrix plus protected real Go TLS->Rust original owner M4 kernel packet TUN/UDP and actual M2 feedback draft state plus noHOL/tamper/replay/Stop negatives. First whole run 652 source false red was Actions Rust test selector accepting a third passing unrelated test, fixed to exact target module with unchanged assertions; exact dd2 run successful.",
+  "current_task": "R0-023 still partial: existing exact SOURCE dd2 scoped M1 source-first+M3/real Go TLS→Rust M4 kernel raw/TUN/99B UDP+M2 RX feedback batch PASS. This H146 only consolidates onboarding and workstream handoff documentation; product FEC2 OFF and all older regressions OPEN.",
+  "why_now": "User explicitly asked to close interrupted task and streamline ALL role handoff documents for a completely new agent, with old archives preserved. Confirmed H145 already closes source dd2 Action39110293670 SUCCESS and main governance39110760761 SUCCESS. Replaced stale date-stamped root onboarding and M0-M4 prompts with stable role boundaries, created one as-of status index and six verbatim historical prompt copies; registry permissions, branch cursors, code and product qualification unchanged. S commit a2a6ce0 governance39112549292 and maintenance39112549258 SUCCESS.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Integrate original M1 live Fec2Owner source-first+ParityJob into SAME scoped actual Go→Rust owner M4 raw/TUN and original M2 authenticated reverse receipt kind1 → sender ReceiptRouteScope/GlobalRepairAllocator shadow/quota/driver prefix; current M2 RX is only draft, NOT sender receipt. Keep Go applied fixed/auto CLI/GUI revision, network two-endpoint, 150ms original Normal/off suite3 fragment pending, 65KiB original cross-turn MTU/Stop prefix uncertainty, codec240s/D10/p99 WindowsARM physical as OPEN. Default product FEC2 OFF.",
+  "next_action": "M0 resume original R0-023 integration: wire actual M1 live Fec2Owner scheduler into real Go TLS→Rust M4 kernel sender, then M2 authenticated reverse kind1 receipt and sender frozen PN shadow/quota/driver prefix; real Go applied CLI/GUI fixed/auto revision. Separate full Normal/off configured150ms suite3 second LINK pending FAIL, legal ~65KiB cross-turn/MTU/Stop/prefix uncertain, codec240s/D10/p99, full native targets/physical. No production FEC2 enable without hard gates. For any new agent start at START_HERE.md → docs/handoff/README.md → latest registry/role-branch cursor; historical long prompts in docs/history/handoff/2026-10-18-pre-slim/.",
   "unverified": true,
   "last_tested_source": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
   "evidence_refs": [
     "docs/evidence/M0/M0-023-batched-M1-M2-FEC2-real-kernel-dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7.json"
   ],
   "context_refs": [
+    "docs/handoff/README.md",
+    "docs/history/INDEX.md",
     "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
-    "docs/evidence/M0/M0-023-real-fec2-m3-m4-tun-udp-abfda4eee1ec17c6e5ccd9417bde4d15bc63015f.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
-    "docs/architecture/TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7 exact Action39110293670 job117624780613 SUCCESS; native Rust M0 original FEC2 module two cases 2 PASS/0 FAIL/0 ignored: original M1 Fec2Owner source-first synchronous Normal/Game k2 short deadline from original Arena, M3 RS16 ParityJob borrowed slab e1, pressure keeps first source without retaining parity, loan+quota+Stop; original Rust owner AEAD shared PN/Seq tests 3 ciphers. Original pinned Go authenticated V4 TLS feature-only FEC2 → real Linux M4 AF_INET raw ciphertext source2 PN0/repair3 PN1 → independent Go SOCK_RAW → actual M3 ReplayProtectedLaneRx AEAD/PN unique+RS16 restores 127B IPv4 → original M4 ScopedTunSink to actual Go UDP app exactly99B 3 suites. M2 actual RX FeedbackState is fed only after successful M3 AEAD and legal FEC2 parse, bitmap base0 bits03 largest PN1, NotSent 11ms, invalid send status denied, Accepted 13ms, Uncertain 15ms, repeat bounded; actual raw kernel no premature UDP before reconstruction, tampered/replayed cipher no delivery, Stop old owner denies peer RX/M2. This is test-only, not actual M1 live Go sender Fec2Owner scheduling nor authenticated reverse M2 kind1 sender receipt, product OFF. Artifact12130720199 GitHub sha256 75bb6b834797bd08473f452f942f98cd041e84258b4f0eddd945716c7eba54a7 downloaded independently ZIP rehashed exact; real-kernel log sha55931f854bb2f46b21393d9a7934286f111899bb2e91baab6c213015b4cc3725. Previous652 run full tests ALL PASS but workflow false FAIL because 3 matching tests vs expected2; dd2 exact module2 PASS. S governance39110293609 and maint39110293594 PASS. Old Normal/off 150ms configured netem suite3 secondLINK pending FAIL39106157061, oldcodec240s D10p99, R0 original65KiB cross-turn/StopMTU prefix uncertain, applied Go CLI/GUI and ARM Windows physical OPEN."
+  "partial_summary": "H146 DOCUMENTATION-ONLY, no new product code/test SOURCE: existing dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7 Action39110293670 2 scoped native Rust PASS + original Go real 3-cipher TLS/M1 M3 AEAD PN RS16/M4 Linux raw+TUN actual 99B UDP app/M2 authenticated RX draft timing/anti-replay-tamper/Stop PASS, exact artifact 12130720199 sha256 75bb6b834797bd08473f452f942f98cd041e84258b4f0eddd945716c7eba54a7; not formal M1 live kernel scheduler, not M2 reverse authenticated sender receipt, not applied Go config or product. Earlier 652 CI selector false FAIL (three passed vs expected two) was corrected in dd2, H145 already governed SUCCESS. User interruption request fulfilled via S a2a6ce086d4e90bed6679d6a4c9f6fa4f6cb78c7: root START_HERE and M0-M4 stable prompts simplified, as-of five-role snapshot docs/handoff/README.md, 6 original documents archived verbatim under docs/history/handoff/2026-10-18-pre-slim, docs/history/INDEX and project hot_read_set updated. S Governance39112549292 and maintenance39112549258 SUCCESS. No changes to worker branch cursors or main assignments. FEC2 OFF; Normal/off150ms, 65KiB Stop/MTU, codec240s D10 p99 native targets/physical OPEN."
 }
