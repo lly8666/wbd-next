@@ -99,7 +99,9 @@ if [[ "$FEC2_PROBE" == 1 ]]; then
   if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$PERF" || -n "$BACKGROUND" ]]; then
     echo 'FEC2_KERNEL_PROBE_INVALID must run as isolated root netns test' >&2; exit 2
   fi
-  TEST_FILTER='^TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS
+  TEST_FILTER='^TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS$'
+fi
+if [[ "$D10" == 1 && "$PERF" != 1 ]]; then
   echo 'D10_INVALID diagnostic only permitted on one perf scenario' >&2; exit 2
 fi
 TRACE_CMD=()
