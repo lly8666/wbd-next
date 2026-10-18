@@ -1,6 +1,6 @@
 //! Independent F2-MATH/WIRE negative and erasure oracles. V1 Go vectors
 //! stay in fec_math_tests; these never compare V2 to old Go bytes.
-use super::*;
+use crate::fec_v2::*;
 
 fn gf_ref_mul(mut a:u8,mut b:u8)->u8 {
     let mut out=0;
