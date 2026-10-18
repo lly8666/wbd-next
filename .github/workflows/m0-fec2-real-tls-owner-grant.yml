@@ -80,6 +80,7 @@ jobs:
             grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=$suite pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_M2_MIXED_TWO_FROZEN_DRIVER_PREFIX_PASS suite=$suite actual_kernel_first=1 proven_no_syscall_second=1 refunded_unused=1 later_auth_releases_two=1 same_pn_seq_cipher=1" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite=$suite real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" owner-grant-result/real-kernel.log
           done
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
@@ -107,6 +108,7 @@ jobs:
               assert f"M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite={suite} retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny" in kernel
               assert f"M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite={suite} pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" in kernel
               assert f"M0_REAL_GO_M2_MIXED_TWO_FROZEN_DRIVER_PREFIX_PASS suite={suite} actual_kernel_first=1 proven_no_syscall_second=1 refunded_unused=1 later_auth_releases_two=1 same_pn_seq_cipher=1" in kernel
+              assert f"M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite={suite} real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" in kernel
           assert re.search(r"test result: ok\. 3 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
@@ -136,6 +138,7 @@ jobs:
             "actual_M2_frozen_repair_driver_prefix":"TEST_ONLY_ORIGINAL_FROZEN_SAME_PN_SEQ_ACTUAL_KERNEL_GO_CAPTURE_GLOBAL_GRANT_PREFIX_ACCEPTED_THREE_SUITES; SYNTHETIC_AUTHENTICATED_MISSING_BITMAP_AND_PRODUCT_OFF",
             "actual_M2_process_global_budget":"TEST_ONLY_THREE_SIMULTANEOUS_ORIGINAL_GO_TLS_OWNERS_ONE_PROCESS_64K_CAP_TWO_32K_GRANTS_THIRD_DENIED_STOP_RECLAIMS_UNUSED; NOT_PRODUCT",
             "actual_M2_typed_two_slot_mixed_driver_prefix":"TEST_ONLY_M4_KERNEL_SLOT0_TRUE_SEND_ONE_AND_EXPLICIT_NEVER_SYSCALLED_SLOT1_PROVEN_NOT_ATTEMPTED_REFUND; NO_UNKNOWN_COMPLETION_OR_BATCH_SENDMMSG_QUALIFICATION",
+            "actual_M4_true_kernel_sendmmsg_M2_scoped_two_FrozenRecord":"TEST_ONLY_SINGLE_ORIGINAL_LINUX_SENDMMSG_TWO_ORIGINAL_FROZEN_PN_SEQ_PRESERVED_ALL_THREE_CIPHERS; FULL_2_TO_32_UNKNOWN_COMPLETIONS_NOT_QUALIFIED",
             "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
             "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
             "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
