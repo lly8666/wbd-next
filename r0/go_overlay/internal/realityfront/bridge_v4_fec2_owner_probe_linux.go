@@ -20,6 +20,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
     uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
     uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
+    uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *);
 */
 import "C"
 import (
@@ -147,4 +149,24 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeShadowOutstanding()(uint32,error){
     if rc!=0{return 0,fmt.Errorf("%w: frozen shadow status rc=%d",
         errV4Embedded,int(rc))}
     return uint32(outstanding),nil
+}
+
+ 
+// M0 opt-in only. Original M2 scoped PTO reserve + process grant -> SAME
+// original M1 frozen ciphertext through ORIGINAL M4 raw send_one; the
+// returned PN and seq are not allocated here and cannot be resealed by Go.
+func (b *v4EmbeddedNativeBridge) fec2ProbeRealFrozenRepair()(
+    uint64,uint32,uint32,uint64,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,0,0,0,errV4Embedded
+    }
+    var pn,charged C.uint64_t
+    var seq,wire C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
+        C.uint64_t(b.handle),&pn,&seq,&wire,&charged)
+    if rc!=0{
+        return 0,0,0,0,fmt.Errorf("%w: scoped same frozen repair rc=%d",
+            errV4Embedded,int(rc))
+    }
+    return uint64(pn),uint32(seq),uint32(wire),uint64(charged),nil
 }
