@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 18,
+  "sequence": 19,
   "checkpoint_sha": "e0454ae807754f85ff7118527ba9ebd37173cac5",
   "progress": "blocked",
   "task_id": "R5-M1-FEC2-OWNER-SCHEDULING-014",
   "current_task": "014 M1 three-class FEC2 owner scoped CODE 3f78a671… native 130/130 PASS; central v2 receipt metadata reconciled by S/H, awaiting exact-H central scope PASS and M0 integration/cost. No new code.",
-  "why_now": "Main registry rev2 epoch1 still assigns 014. Governance v2 supersedes old worker G2 lifetime cap: central checker checks 64 new commits since main-approved checkpoint. Attempt1 H central failed GitHub rate limit, attempt2 failed strict result/current SOURCE metadata. S corrected result=PASS scoped; this H retains only same-CODE evidence and moves previous Game013 evidence to historical context.",
+  "why_now": "Main rev2 epoch1 still assigns FEC2 014. Main central v2 requires current 014 receipt result PASS, exact tested source, and all cursor context_refs to exist on the WORKER SOURCE. H18 corrected result/old Game refs; central run39086205021 then identified four main-only design documents incorrectly listed as worker context_refs (HTTP404). This H19 removes nonexistent worker refs; those main authority documents remain named in devlog.",
   "done_when": "M1 scoped 3class/<=16 source-first-ready, per-class rate deadlines, partial/30Mbps fake clock, parity 16:20, fairness/expiry, bounded Stop/loans/stats fully tested at CODE 3f78a671 (130/130). Only central scope receipt metadata remains to verify; M0 owns wire/Go integration and isolated FEC2 old/new same-VM AB/BA cost, all NOT_RUN, no product claim.",
-  "next_action": "Check Central worker scope audit for exact current H SOURCE; if PASS, M0 may integrate fixed CODE 3f78a671 with M3 wire and Go owner then run isolated FEC2 paired cost and product qualification. Do not synchronize obsolete worker checker. M1 only resumes on actual M1-scope integration defect/new assignment.",
+  "next_action": "Verify central scope audit for exact H19 SOURCE. Once PASS, M0 can integrate M1 CODE 3f78a671 with M3 wire/Go, run old/new same-VM paired FEC2 cost and real product gates. No M1 scope code is pending; do not edit root checker, repeat native tests, or pull main design docs into this worker history.",
   "unverified": false,
   "last_tested_source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
   "evidence_refs": [
@@ -23,11 +23,7 @@
     ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md"
   ],
   "context_refs": [
-    "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
-    "docs/decisions/M0-fec-v2-workpacks-2026-10-18.md",
-    "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json"
   ],
-  "partial_summary": "H18: CODE 3f78a671ae228f21e34eb6679b2d0347fcd6c7a4 unchanged, native Actions39082738345 130/130 PASS, artifact verified. Central scope Actions39083333199 retry2 failed exact result PASS and Game013 cross-source evidence references (not code). S18 e0454ae8 corrected evidence result and superseded old M0 checker request; H18 current evidence only 014; old Game013 e2050aec historical context. Central current-H PASS PENDING; paired FEC2 AB/BA, integrated Go/TLS/M3/M4, real Mbps, p99, physical/product all NOT_RUN. Owner 014 is otherwise stopped pending M0."
+  "partial_summary": "H19 only cursor fix: code SOURCE 3f78a671ae228f21e34eb6679b2d0347fcd6c7a4 unchanged, native39082738345 130/130 PASS and artifact verified. S18 e0454ae8 updated scoped evidence result=PASS without widening qualification. H18 e2eb9ba1 central39086205021 failed 404 because main-only docs were in worker context_refs. H19 removes those four missing refs; retains historical Game013 evidence, keeps only 014 current PASS evidence, all three existing requests verified present. Central current-H PASS PENDING; actual M0/M3/Go/live and same-VM AB/BA cost NOT_RUN."
 }
