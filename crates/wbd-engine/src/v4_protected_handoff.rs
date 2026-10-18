@@ -28,13 +28,22 @@ pub(crate) struct PrivateGoV4Handoff {
     pub(crate) rx_boundary:u32,
     pub(crate) peer_mss:u16,
     pub(crate) peer_mss_advertised:bool,
+    // Exact Go protected transcript 0x0003 or private probe 0x0007.
+    // Parsed bytes are NEVER alone authority to enable FEC2 in Rust.
+    pub(crate) negotiated_features:u16,
 }
 impl PrivateGoV4Handoff {
     pub(crate) fn decode(wire:&[u8])->Result<Self,()> {
         if wire.len()!=HANDOFF_V1_LEN || &wire[..4]!=b"WBGH" ||
-            u16::from_be_bytes([wire[4],wire[5]])!=1 ||
             u16::from_be_bytes([wire[6],wire[7]])!=HANDOFF_V1_LEN as u16 ||
-            wire[26]>1 || wire[27..].iter().any(|b|*b!=0){return Err(())}
+            wire[26]>1 {return Err(())}
+        // V1 must retain all five trailing reserved zeros. V2 is only the
+        // exact Go post-TLS bit2 set, no acceptance of arbitrary authority.
+        let negotiated_features=match u16::from_be_bytes([wire[4],wire[5]]){
+            1 if wire[27..].iter().all(|b|*b==0)=>3u16,
+            2 if wire[27..29]==[0,7] && wire[29..].iter().all(|b|*b==0)=>7u16,
+            _=>return Err(()),
+        };
         let mut client_ip=[0;4];client_ip.copy_from_slice(&wire[8..12]);
         let mut server_ip=[0;4];server_ip.copy_from_slice(&wire[12..16]);
         let flow=GoFlow{
@@ -51,7 +60,7 @@ impl PrivateGoV4Handoff {
         if peer_mss<64||(!peer_mss_advertised&&peer_mss!=536){return Err(())}
         Ok(Self{flow,
             rx_boundary:u32::from_be_bytes([wire[20],wire[21],wire[22],wire[23]]),
-            peer_mss,peer_mss_advertised,
+            peer_mss,peer_mss_advertised,negotiated_features,
         })
     }
 
@@ -104,6 +113,7 @@ mod tests {
         assert_eq!(p.flow.client_port,41001);
         assert_eq!(p.flow.server_port,443);
         assert_eq!(p.rx_boundary,u32::MAX);
+        assert_eq!(p.negotiated_features,3);
         assert!(PrivateGoV4Handoff::decode(&a[..31]).is_err());
         // Mutate only fields whose zero value REALLY violates grammar.
         // Changing a valid, nonzero port/MTU or an exact RX boundary is not
@@ -127,5 +137,25 @@ mod tests {
         let mut fallback=a;fallback[24..26].copy_from_slice(&536u16.to_be_bytes());
         fallback[26]=0;
         assert!(PrivateGoV4Handoff::decode(&fallback).is_ok());
+    }
+    #[test]
+    fn m0_private_v4_real_go_fec2_bit2_handoff_is_metadata_not_permission(){
+        let mut a=valid();
+        a[4..6].copy_from_slice(&2u16.to_be_bytes());
+        a[27..29].copy_from_slice(&7u16.to_be_bytes());
+        let parsed=PrivateGoV4Handoff::decode(&a).unwrap();
+        assert_eq!(parsed.negotiated_features,7);
+        assert_eq!(parsed.flow.client_port,41001);
+        assert_eq!(parsed.rx_boundary,u32::MAX);
+        for index in [28usize,29,30,31]{
+            let mut bad=a;bad[index]^=1;
+            assert!(PrivateGoV4Handoff::decode(&bad).is_err(),"byte={index}");
+        }
+        let mut bad=a;bad[4..6].copy_from_slice(&1u16.to_be_bytes());
+        assert!(PrivateGoV4Handoff::decode(&bad).is_err(),"V1 reserved dirty");
+        let mut bad=a;bad[27..29].copy_from_slice(&3u16.to_be_bytes());
+        assert!(PrivateGoV4Handoff::decode(&bad).is_err(),"V2 no bit2");
+        let mut bad=a;bad[27..29].copy_from_slice(&15u16.to_be_bytes());
+        assert!(PrivateGoV4Handoff::decode(&bad).is_err(),"V2 unknown bits");
     }
 }
