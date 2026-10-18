@@ -666,10 +666,59 @@ impl ProtectedScopedOwner {
             buffer,payload_len,budget,carrier_snapshot,now,true)
     }
 
+    /// Test-build owner integration only; not a second Go permission or
+    /// credential path. An actual protected feature-bit2/KDF/epoch admission
+    /// has NOT been wired. In production this symbol is absent.
+    /// Crucially, once such admission exists the original owner issues the
+    /// same immutable M1 FrozenRecord / monotone PN and stream Seq as LINK.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn seal_fec2_probe_one(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,kind:u8,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        let end=14usize.checked_add(payload_len).ok_or(ProtectedCryptoError::Tx)?;
+        let frame=buffer.writable().get(14..end).ok_or(ProtectedCryptoError::Tx)?;
+        if budget.fec_overhead!=0 || budget.game_overhead!=0
+            || budget.record_payload_mtu<14
+            || payload_len>budget.record_payload_mtu{return Err(ProtectedCryptoError::Tx)}
+        match kind{
+            2=>{
+                let src=wbd_codec::fec_v2::parse_source(frame,budget.record_payload_mtu)
+                    .map_err(|_|ProtectedCryptoError::Tx)?;
+                if src.frame.is_empty()
+                    || src.frame.len()>budget.record_payload_mtu-14{
+                    return Err(ProtectedCryptoError::Tx)
+                }
+            },
+            3=>{
+                let rep=wbd_codec::fec_v2::parse_repair(frame,budget.record_payload_mtu)
+                    .map_err(|_|ProtectedCryptoError::Tx)?;
+                if rep.body.len()>budget.record_payload_mtu-14{
+                    return Err(ProtectedCryptoError::Tx)
+                }
+            },
+            _=>return Err(ProtectedCryptoError::Tx),
+        }
+        self.seal_scoped_authenticated_one(
+            buffer,payload_len,budget,carrier_snapshot,now,false,kind
+        )
+    }
+
     fn seal_normal_off_validated_link(
-        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
         allow_fragment:bool,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        self.seal_scoped_authenticated_one(
+            buffer,payload_len,budget,carrier_snapshot,now,
+            allow_fragment,AUTHENTICATED_LINK_KIND,
+        )
+    }
+
+    fn seal_scoped_authenticated_one(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+        allow_fragment:bool,kind:u8,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
             || !self.crypto.active || self.crypto.tx_boundary.is_none(){
@@ -682,7 +731,9 @@ impl ProtectedScopedOwner {
         if budget.fec_overhead!=0 || budget.game_overhead!=0
             || budget.record_wire_mtu>self.tx_wire_limit
             || budget.link_frame_mtu>budget.record_payload_mtu
-            || payload_len==0 || payload_len>budget.single_business_payload_mtu {
+            || payload_len==0 || payload_len>if kind==AUTHENTICATED_LINK_KIND {
+                budget.single_business_payload_mtu
+            }else{budget.record_payload_mtu} {
             return Err(ProtectedCryptoError::Tx)
         }
         let used=payload_len.checked_add(FIXED_WIRE_OVERHEAD)
@@ -691,7 +742,8 @@ impl ProtectedScopedOwner {
             return Err(ProtectedCryptoError::Tx)
         }
         let business=&buffer.writable()[14..14+payload_len];
-        if business.starts_with(LINK_MAGIC) && !allow_fragment{
+        if kind==AUTHENTICATED_LINK_KIND
+            && business.starts_with(LINK_MAGIC) && !allow_fragment{
             return Err(ProtectedCryptoError::Tx)
         }
         let seq64=self.next_tx_seq.ok_or(ProtectedCryptoError::Inactive)?;
@@ -702,9 +754,18 @@ impl ProtectedScopedOwner {
             u64::try_from(used).map_err(|_|ProtectedCryptoError::Tx)?
         ).ok_or(ProtectedCryptoError::Tx)?;
         let seq=seq64 as u32;
-        let (pn,sealed_len)=self.crypto.tx.seal_in_place(
-            AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0,
-        ).map_err(|_|ProtectedCryptoError::Tx)?;
+        let (pn,sealed_len)=if kind==AUTHENTICATED_LINK_KIND{
+            self.crypto.tx.seal_in_place(
+                AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0
+            )
+        }else{
+            #[cfg(feature="m0_fec2_owner_probe")]
+            {self.crypto.tx.seal_fec2_after_admission_in_place(
+                kind,buffer.writable(),payload_len,0
+            )}
+            #[cfg(not(feature="m0_fec2_owner_probe"))]
+            {return Err(ProtectedCryptoError::Tx)}
+        }.map_err(|_|ProtectedCryptoError::Tx)?;
         // No sequence reuse even if freezing/queue admission fails.
         self.next_tx_seq=Some(next);
         let frozen=buffer.freeze(0..sealed_len,FrozenMetadata {
