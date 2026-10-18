@@ -1,3 +1,6 @@
+# Exact same-source M0 V4 Linux CI is triggered by this workflow's
+# SHA, runs all real 65KiB kernel MTU/Stop hard gates in parallel with
+# historic impairment and metric lanes; scope receipts stay separate.
 name: M0 protected Go V4 native Rust owner test probe
 run-name: "M0|${{ github.sha }}|m0-v4-native-probe"
 on:

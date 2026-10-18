@@ -562,23 +562,43 @@ jobs:
           mkdir -p blocker-ledger
           python3 - <<'PY'
           import json,os,pathlib,hashlib
+          # One SOURCE is evaluated by independent native, Go and kernel
+          # workflows. This job is the NON-PROMOTIONAL product ledger:
+          # a PASS elsewhere must not be transcribed into a product PASS.
+          # Every remaining full-product requirement has an explicit state.
           gates={
-            "continuous_per_direction_original_Go_quality_ticker":"NOT_IMPLEMENTED_PRODUCT",
-            "real_first_sent_mature_loss_denominator":"NOT_WIRED",
-            "canonical_production_kind1_authenticated_receiver":"NOT_WIRED",
-            "product_fixed_auto_CLI_GUI_effective_revision":"NOT_WIRED",
-            "M4_32_distinct_frozen_partial_EINTR_Stop_loans":"NOT_QUALIFIED",
-            "legal_65KiB_MTU_pm1_cross_turn_noHOL":"ORIGINAL_LINK_CODEC_48_TURN_REASSEMBLY_PASS_BUT_ORIGINAL_M0_OWNER_32_SLOT_FENCE_BLOCKS_ACTUAL_65K_PRODUCTION",
-            "full_codec_240s_D10_p99_paired_ABBA":"NOT_RUN",
-            "native_Windows_FEC2_original_TLS_GUI_loader":"NOT_RUN",
-            "native_ARM64_FEC2_original_TLS_driver":"NOT_RUN",
-            "two_physical_endpoints":"BLOCKED_NO_RUNNER_OR_PEER",
-            "historical_150ms_intermit":"UNRESOLVED"
+            "real_65KiB_Go_TLS_Rust_M4_51_frame_and_midflight_MTU_Stop":
+                "CHECK_SEPARATE_SAME_SOURCE_M0_KERNEL_LOG_AND_ARTIFACT;NOT_PRODUCT",
+            "real_kernel_2_to_32_distinct_frozen_partial_EINTR_EAGAIN_uncertain_stop":
+                "NOT_RUN_ACTUAL_KERNEL_FAULT_MATRIX;TYPED_COMPONENT_ONLY",
+            "old_generation_new_generation_real_kernel_no_late_tail":
+                "NOT_RUN_FULL_TWO_GENERATION_NETWORK;ORIGINAL_STOP_IS_SCOPED",
+            "canonical_production_M2_reverse_kind1_authenticated_receiver":
+                "NOT_WIRED;TEST_ONLY_REVERSE_CONTROL_NOT_PRODUCT",
+            "original_M1_live_firstsent_scheduler_repair_feedback":
+                "NOT_WIRED_FULL_PRODUCT;COMPONENT_AND_PROBE_ONLY",
+            "Go_continuous_per_client_direction_2s_AUTO_quality_ticker":
+                "NOT_IMPLEMENTED_PRODUCT",
+            "Go_effective_fixed_auto_CLI_GUI_revision_and_acks":
+                "NOT_WIRED_PRODUCTION",
+            "M4_normal_FEC2_Windows_original_TLS_GUI_loader":
+                "NOT_RUN_FULL_PRODUCT_DRIVER;NATIVE_CODEC_ONLY",
+            "M4_normal_FEC2_ARM64_original_TLS_driver":
+                "NOT_RUN_FULL_PRODUCT_DRIVER;NATIVE_CODEC_ONLY",
+            "two_physical_endpoints":
+                "NOT_RUN_NO_CONNECTED_PHYSICAL_PEER_RUNNER",
+            "full_FEC2_business_240s_D10_p99_same_job_VM_ABBA":
+                "NOT_RUN;10S_60S_NORMAL_OFF_DIAGNOSTIC_NOT_ABBA",
+            "historical_150ms_intermit":
+                "OPEN_PRIOR_FAIL_RETAINED",
           }
           m=pathlib.Path("r0/qualification-manifest.json").read_bytes()
           result={"source_sha":os.environ["GITHUB_SHA"],
+            "run_id":os.environ["GITHUB_RUN_ID"],
+            "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "production_FEC2":"OFF","all_product_gates_PASSED":False,
             "integration_test_matrix_is_NOT_product_qualification":True,
+            "policy":"DO_NOT_ENABLE_UNTIL_ALL_REAL_PRODUCT_HARD_GATES_PASS",
             "hard_gates":gates,
             "qualification_manifest_sha256":hashlib.sha256(m).hexdigest()}
           pathlib.Path("blocker-ledger/gates.json").write_text(json.dumps(result,indent=2)+"\n")
