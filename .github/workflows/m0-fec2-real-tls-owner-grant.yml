@@ -1,0 +1,105 @@
+name: M0 real Go TLS scoped FEC2 owner grant probe
+run-name: "M0|TLS-FEC2-OWNER-SCOPE|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+      - "crates/wbd-engine/src/v4_owner_crypto.rs"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_probe_bridge.rs"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go"
+      - "crates/wbd-engine/Cargo.toml"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-real-fec2-scope-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Original Go actual TLS binds exact Rust owner lifetime; default Rust remains off
+        shell: bash
+        env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          rustup toolchain install 1.85.1 --profile minimal
+          mkdir -p owner-grant-result
+          cargo +1.85.1 build --release --locked -p wbd-engine --lib >owner-grant-result/default-build.log 2>&1
+          if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'; then
+            echo "private probe symbol leaked into default library"; exit 1
+          fi
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib >owner-grant-result/opt-in-build.log 2>&1
+          nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'
+          nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_fec2_probe_scope_status$'
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib r1_m0_original_owner_fec2_source_repair_same_pn_staged -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
+          for file in admission_v4.go admission_v4_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+            test ! -e "legacy/internal/realityfront/$file"
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/owner-grant.test" ./internal/realityfront)
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" ./owner-grant.test -test.v -test.count=1 -test.run '^TestR0V4(Fec2ActualGoTLSEpochOwnerGrantScoped|EmbeddedNativeProtectedControlAllCiphers|EmbeddedNativeProtectedFec2Bit2Scope)$' >owner-grant-result/go.log 2>&1
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path("owner-grant-result")
+          go=(root/"go.log").read_text()
+          rust=(root/"rust.log").read_text()
+          names=["TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped",
+                 "TestR0V4EmbeddedNativeProtectedControlAllCiphers",
+                 "TestR0V4EmbeddedNativeProtectedFec2Bit2Scope"]
+          assert all(re.search(r"^--- PASS: "+n+r" \(",go,re.M) for n in names)
+          assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
+          assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
+          assert re.search(r"test result: ok\. 1 passed; 0 failed;",rust)
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
+             "crates/wbd-engine/src/v4_probe_bridge.rs",
+             "r0/go_overlay/internal/realityfront/admission_v4.go",
+             "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+             "crates/wbd-engine/Cargo.toml","Cargo.lock"]
+          receipt={"result":"PASS_SCOPED_GO_TLS_TO_ORIGINAL_FEC2_OWNER_LIFETIME",
+            "source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+            "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "real_original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "real_protected_tls_ciphers":3,"original_owner_scoped_aeAD_and_pn_probe":True,
+            "wrong_epoch_and_stop_revoked":True,"default_build_fec2_permission":"OFF",
+            "feature_only_cffi":"m0_fec2_owner_probe",
+            "actual_applied_FEC2_policy":"NOT_WIRED",
+            "real_FEC2_kernel_raw_tun":"NOT_RUN","product_FEC2":"OFF",
+            "input_sha256":{p:sha(p) for p in inputs},
+            "test_log_sha256":{"rust":sha(root/"rust.log"),"go":sha(root/"go.log")},
+            "default_build_sha256":sha(root/"default-build.log"),
+            "opt_in_build_sha256":sha(root/"opt-in-build.log")}
+          (root/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-real-go-fec2-owner-grant-${{ github.run_id }}-${{ github.run_attempt }}
+          path: owner-grant-result/
+          retention-days: 30
+          if-no-files-found: warn
