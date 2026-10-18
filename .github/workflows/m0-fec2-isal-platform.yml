@@ -12,6 +12,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   linux-native:
+    # Linux x64/ARM64 actually passed at source c81127b; do not rerun unchanged
+    # two targets merely to fix the missing Windows NASM tool dependency.
+    # workflow_dispatch remains available for new Linux source/target evidence.
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -105,6 +109,20 @@ jobs:
           Copy-Item worker-m4/native/isal-safe/build.rs native/isal-safe/build.rs -Force
           New-Item -ItemType Directory -Force fec2-platform-result | Out-Null
           ('WIN_NATIVE_TARGET=x86_64-pc-windows-msvc' | Out-File fec2-platform-result/provenance.log)
+      - name: Install pinned-workflow NASM assembly prerequisite for Windows ISA-L
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'NASM install failed' }
+          $choices=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')
+          $dir=$null
+          foreach ($p in $choices) {
+            if (Test-Path (Join-Path $p 'nasm.exe')) { $dir=$p; break }
+          }
+          if (-not $dir) { throw 'NASM installed but binary not found' }
+          Add-Content -Path $env:GITHUB_PATH -Value $dir
+          & (Join-Path $dir 'nasm.exe') -v
       - name: Official ISA-L Win64 static archive build through MSVC nmake
         shell: cmd
         run: |
