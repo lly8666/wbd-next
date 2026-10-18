@@ -265,6 +265,8 @@ jobs:
           cargo +1.85.1 test --release --locked -p wbd-recovery --lib -- --test-threads=2 >blocker-native/m2-recovery.log 2>&1
           if [[ "$EXPECTED_ARCH" == x86_64 ]]; then
             cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_ -- --test-threads=1 >blocker-native/m0-integration.log 2>&1
+            cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_link_65k_original_owner_cross_turn_48_fragment_gate_and_no_hol -- --test-threads=1 --nocapture >blocker-native/m0-link-65k.log 2>&1
+            grep -q "M0_LINK_65K_CROSS_TURN_48_CODED_FRAGMENTS_NOHOL_PASS original_owner_32_slot_gate=BLOCKED_FAIL_CLOSED staged_partial=0 loan_leak=0 real_tls_kernel=NOT_RUN" blocker-native/m0-link-65k.log
           fi
           python3 - <<'PY'
           import hashlib,json,os,pathlib,platform,re
@@ -562,7 +564,7 @@ jobs:
             "canonical_production_kind1_authenticated_receiver":"NOT_WIRED",
             "product_fixed_auto_CLI_GUI_effective_revision":"NOT_WIRED",
             "M4_32_distinct_frozen_partial_EINTR_Stop_loans":"NOT_QUALIFIED",
-            "legal_65KiB_MTU_pm1_cross_turn_noHOL":"NOT_QUALIFIED",
+            "legal_65KiB_MTU_pm1_cross_turn_noHOL":"ORIGINAL_LINK_CODEC_48_TURN_REASSEMBLY_PASS_BUT_ORIGINAL_M0_OWNER_32_SLOT_FENCE_BLOCKS_ACTUAL_65K_PRODUCTION",
             "full_codec_240s_D10_p99_paired_ABBA":"NOT_RUN",
             "native_Windows_FEC2_original_TLS_GUI_loader":"NOT_RUN",
             "native_ARM64_FEC2_original_TLS_driver":"NOT_RUN",
