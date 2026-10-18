@@ -12,6 +12,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_applied_policy(
     uint64_t,uint8_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_stage_policy(
     uint64_t,const unsigned char *,size_t,uint8_t,uint64_t);
+extern int32_t wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
+    uint64_t,const unsigned char *,size_t,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
@@ -334,4 +336,54 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeStageAutoTick(
     if rc!=0{return state,intent,fmt.Errorf("%w: authenticated Go auto stage rc=%d",
         errV4Embedded,int(rc))}
     return next,intent,nil
+}
+
+// M0 test-only source of original M3 AEAD-first RX observability.
+// Only authenticated first DATA/repair/recovered counts exist here: no
+// defensible mature loss denominator, host drop or one-way RTT. Consequently
+// feed the ORIGINAL Go FecV2Step as UNKNOWN and never convert silence into
+// zero packet loss or an auto down/up decision.
+func (b *v4EmbeddedNativeBridge) fec2ProbeObservedQuality(
+    exactEpoch [16]byte,at time.Duration,
+)(FecV2Snapshot,uint64,uint64,error){
+    var empty FecV2Snapshot
+    if !b.committed||b.stopped||b.handle==0||at<0{
+        return empty,0,0,errV4Embedded
+    }
+    var source,repair,recovered C.uint64_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&exactEpoch[0])),C.size_t(16),
+        &source,&repair,&recovered)
+    runtime.KeepAlive(exactEpoch)
+    if rc!=0{
+        return empty,0,0,fmt.Errorf("%w: verified first-RX scope rc=%d",
+            errV4Embedded,int(rc))
+    }
+    sent:=uint64(source)
+    snapshot:=FecV2Snapshot{
+        Client:"protected-owner",Direction:FecV2S2C,
+        At:at,Validity:FecV2Unknown,
+        Fast:FecV2Window{FirstSent:sent,Observed:sent},
+        Slow:FecV2Window{FirstSent:sent,Observed:sent},
+    }
+    // The accepted repair and recovered source counters cannot be counted
+    // as first-submitted source samples or definite network-loss votes.
+    return snapshot,uint64(repair),uint64(recovered),nil
+}
+
+// M0-only fault-injection entry for exact epoch/revision lifecycle checks.
+// No public Go or product API; wrong epochs must be rejected by ORIGINAL
+// protected Rust owner even when a different Go session has a valid token.
+func (b *v4EmbeddedNativeBridge) fec2ProbeTryStageExact(
+    epoch [16]byte,profile uint8,revision uint64,
+)error{
+    if !b.committed||b.stopped||b.handle==0{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_fec2_probe_stage_policy(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&epoch[0])),C.size_t(16),
+        C.uint8_t(profile),C.uint64_t(revision))
+    runtime.KeepAlive(epoch)
+    if rc!=0{return fmt.Errorf("%w: scoped stage rejected rc=%d",errV4Embedded,int(rc))}
+    return nil
 }
