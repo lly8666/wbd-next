@@ -4,14 +4,14 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 36,
+  "sequence": 37,
   "checkpoint_sha": "9e06174c44acdad490b2d575207fc0242200f858",
   "progress": "partial",
   "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
-  "current_task": "017 CODE8cc V2 RS16 actual native ISA-L Linux x64 F2 11/11 PASS + sameVM 400k k16/r16 L1202/e4 ABBA valid CPU windows and independent artifact rehash; ARM64/Windows full codec and central scope remain open.",
-  "why_now": "M0 CODE8cc Actions39090941413 attempt1 build+consume PASS actual ISA-L F2 11/11 and fixed one k16/r16/1200B/e4 400k ABBA each leg, scalar/native/native/scalar, valid CPU windows >=1.13s and 113 ticks, matching encode/recovery checksum; component ratios encode57.34-57.74 and e4 recovery17.58 ONLY kernel. M3 downloaded rehashed ZIPs+10 members. H35 Governance39088913192 failed source/main moved, central scope39089044776 FAIL due main M3 checkpoint delta budget; require M0-reviewed intermediate receipt. No code changes beyond CODE8cc.",
+  "current_task": "R5-M3 FEC2 CODE8cc math/wire scoped native Linux x64 11/11 PASS and source-hashed same-VM k16/r16/1200/e4 CPU ABBA verified. H37 single stable-window cursor-only governance retry; no native/product status change.",
+  "why_now": "Stable-window explicit authorization: prior H36 Governance39092907280 failed ROLE_SCOPE_FAILED control or source moved mid-audit, not a codec failure. Latest main worker G2 historical audit supports up to512 commits but central scope_audit still reads policy max_delta_commits=64 and old main M3 checkpoint; keep separate. H37 freezes the exact H36 S checkpoint 9e06174 and CODE8cc qualified Linux x64 evidence; no more back-to-back S/H that could move worker HEAD mid-audit.",
   "done_when": "M3 017 math/wire/bounded memory, actual ISA-L Linux x64 and applicable ARM/Windows native equivalence, source-pinned single-scene AB/BA same VM cost plus S→H evidence; no FEC-on product inference.",
-  "next_action": "M0 review complete M3 worker delta and accept main-owned intermediate scope checkpoint (no limit change), then source-bound new central audit; M0/M4 source-pinned full FEC2 codec native ARM64 and Windows test entry/bridge status. M3 inspect new failures/fix only owned code. Do not repeat Linux x64 qualified ABBA or enable FEC2.",
+  "next_action": "Read exact H37 push Governance conclusion and central scope result. If ROLE_SCOPE_PASS, record it without converting pending central scope into PASS; central main policy/checkpoint remains M0-owned. M0/M4 full FEC2 codec native Linux aarch64/Win x64 remain NOT_RUN. FEC2 product OFF. Do not repeat 400k ABBA unless real source defect.",
   "unverified": true,
   "last_tested_source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md",
     "docs/evidence/M3/017-intake-recovered-H30.json"
   ],
-  "partial_summary": "H36 acknowledges CODE8cc native Linux x64 11/11 PASS, kernel 400k k16/r16/1200B/e4 ABBA CPU windows valid; M3 independent ZIP+all10 hashes verified. Default worker122/0/1, wire13, record6, link7 PASS. ARM64/Windows full M3 FEC2 native NOT_RUN (wrapper alone insufficient). M3 H35 Governance FAIL main/source moved; M0 central scope FAIL >delta budget needs M0 intermediate checkpoint review; historic H30 and CODE301 invalid-row red retained. Old016 frozen, production FEC2 OFF, partial/unverified."
+  "partial_summary": "H37 one cursor-only stable-window governance retry on unchanged M3 CODE8cc FEC2: M0 shared native x64 11/11 PASS, 400k e4 paired CPU valid and two artifacts independently rehashed, default 122/0/1, old R0 wire13/record6/link7 PASS. H36 ROLE_SCOPE_FAILED because control or source moved, test unaffected. Central scope uses main checkpoint 0ecb with 64 budget until demonstrably updated by M0. ARM64/Windows full FEC2 codec NOT_RUN, old016 frozen and FEC2 product OFF. H37 audit result not yet observed."
 }
