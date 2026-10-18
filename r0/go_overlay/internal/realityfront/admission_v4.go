@@ -123,6 +123,26 @@ func v4PrivateHandoffV1(rxBoundary uint32, peer v4PeerTransport)([v4PrivateHando
     if peer.advertised {out[26]=1}
     return out,nil
 }
+// The ONLY variant-2 command constructor consumes the SAME private snapshot
+// created after the credential-checked V4 protected request. It does not
+// serialize keys or assert that Rust FEC2 production has been activated.
+// V1/default remains byte-for-byte unchanged.
+func v4PrivateHandoffFromVerifiedSession(
+    boundary uint32,peer v4PeerTransport,s V4ColdSessionSnapshot,
+)([v4PrivateHandoffLen]byte,error){
+    var zero [v4PrivateHandoffLen]byte
+    if !s.server || s.principal=="" || s.epoch==[16]byte{} ||
+       !v4KnownFeatureSet(s.features) {
+        return zero,ErrAdmissionParams
+    }
+    command,err:=v4PrivateHandoffV1(boundary,peer)
+    if err!=nil{return zero,err}
+    if s.features==v4RequiredFeatures|v4FeatureFEC2 {
+        binary.BigEndian.PutUint16(command[4:6],2)
+        binary.BigEndian.PutUint16(command[27:29],s.features)
+    }
+    return command,nil
+}
 type v4OwnerBridge interface {
     prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
 }
