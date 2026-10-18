@@ -220,3 +220,22 @@ func TestF2ControlActualKSourceWeightAndBurstBound(t *testing.T) {
         state=next
     }
 }
+
+func TestF2ControlAggressiveStableOneProfileAboveNormal(t *testing.T) {
+    plain:=f2Config("customer",FecV2C2S,FecV2Auto,FecV2Conservative)
+    aggressive:=f2Config("customer",FecV2S2C,FecV2Auto,FecV2Aggressive)
+    a,_,e:=FecV2Step(plain,FecV2State{},FecV2Snapshot{},0)
+    if e!=nil {t.Fatal(e)}
+    b,_,e:=FecV2Step(aggressive,FecV2State{},FecV2Snapshot{},0)
+    if e!=nil {t.Fatal(e)}
+    for sec:=2;sec<=80;sec+=2 {
+        now:=time.Duration(sec)*time.Second
+        a,_,e=FecV2Step(plain,a,f2Snapshot("customer",FecV2C2S,now,0,0),now)
+        if e!=nil {t.Fatal(e)}
+        b,_,e=FecV2Step(aggressive,b,f2Snapshot("customer",FecV2S2C,now,0,0),now)
+        if e!=nil {t.Fatal(e)}
+    }
+    if a.Desired!=FecV2Light || b.Desired!=FecV2Mild {
+        t.Fatalf("steady targets normal=%s aggressive=%s (one level required)",a.Desired,b.Desired)
+    }
+}
