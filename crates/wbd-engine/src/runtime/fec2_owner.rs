@@ -313,11 +313,13 @@ impl Fec2Owner {
         // Admission pressure must be decided BEFORE publishing the source
         // index: an unretained index>=k would be invalid on the wire.
         if !self.can_retain(charge) {
-            self.close(class,now,false);
+            if self.open[idx].as_ref().is_some_and(|o|!o.sources.is_empty()) {
+                self.close(class,now,false);
+            } else if let Some(vacant)=self.open[idx].take() {
+                self.open_bytes-=vacant.charge;
+            }
             // Avoid a zero-source block. Give this valid systematic its own
             // unique singleton block ID, with r_sent=0 and capacity UNKNOWN.
-            let vacant = self.open[idx].take().unwrap();
-            self.open_bytes-=vacant.charge;
             let id=match self.new_id(){Ok(id)=>id,Err(e)=>return Err((e,buffer))};
             let ticket=SourceTicket{block_id:id,index:0,class,
                 revision:self.revision,deadline:now};
