@@ -1211,6 +1211,7 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     expectedJumboFrames:=0
     var jumboPacketID uint32
     sawFollower:=false
+    unexpectedSmall:=make([]string,0,8)
     jumboDeadline:=time.Now().Add(8*time.Second)
     for time.Now().Before(jumboDeadline) &&
         (expectedJumboFrames==0 || len(jumboFragments)<expectedJumboFrames ||
@@ -1260,9 +1261,18 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
             if len(rec.Payload)==28+len(jumboFollower) &&
                 bytes.Equal(rec.Payload[28:],jumboFollower){
                 sawFollower=true
+            }else if len(unexpectedSmall)<8{
+                head:=rec.Payload
+                if len(head)>36{head=head[:36]}
+                unexpectedSmall=append(unexpectedSmall,
+                    fmt.Sprintf("pn=%d len=%d head=%x",rec.PN,len(rec.Payload),head))
             }
         }
     }
+    debugStats,debugErr:=b.rustOwnerLoopStats()
+    t.Logf("M0_JUMBO_REAL_NEGATIVE_DIAG fragments=%d expected=%d reassembled=%d follower=%t raw_other=%v tx_before=%d tx_after=%d tx_error=%d stat_error=%v",
+        len(jumboFragments),expectedJumboFrames,len(reassembledJumbo),sawFollower,
+        unexpectedSmall,jumboBefore.TxOK,debugStats.TxOK,debugStats.TxErr,debugErr)
     if expectedJumboFrames<48 || len(jumboFragments)!=expectedJumboFrames ||
         len(reassembledJumbo)!=65535||
         !sawFollower || reassembledJumbo[0]!=0x45 ||
