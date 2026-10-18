@@ -79,8 +79,22 @@
     },
     "original_go_rust_native_probe": {
       "run_id": 39100892715,
+      "attempt": 1,
       "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
-      "status_at_evidence": "build success, consume in_progress; only Normal/off Go TLS raw/TUN, FEC2 not wired"
+      "conclusion": "success",
+      "build_job": 117596763233,
+      "consume_job": 117597028025,
+      "scope": "Existing original authenticated Go V4 TLS and Rust Normal/off raw/TUN, independent fragment/noHOL/MTU/Stop plus developer 10Mbps per direction; NOT real FEC2 wire",
+      "artifacts": [
+        {
+          "id": 12126626109,
+          "digest": "sha256:8044d51d394e16d630c7091f25f763f88e1f1eb56335f9ac662a5b3600b0ba4d"
+        },
+        {
+          "id": 12126835680,
+          "digest": "sha256:e375690a84962d725d8361fd6ae543e5ef354ae95fcd3216c0ffac65d754cd40"
+        }
+      ]
     }
   },
   "historical": {
