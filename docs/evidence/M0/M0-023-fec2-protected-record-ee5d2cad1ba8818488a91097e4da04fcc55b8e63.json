@@ -77,8 +77,16 @@
     "full_native_functional": {
       "run_id": 39098885670,
       "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
-      "conclusion": "IN_PROGRESS_AT_RECEIPT",
-      "checked_jobs": "build and engine/normal/fec/kernel/receipt SUCCESS; legacy codec group in progress under old 240s budget, do not infer pass"
+      "conclusion": "failure",
+      "scope": "Build/engine/normal/fec/kernel/receipt all SUCCESS; legacy codec group FAIL due old 240 second timeout and unexpected ignored diagnostic. This is not the two explicitly qualified new FEC2 AEAD/replay tests.",
+      "codec_job_id": 117591061533,
+      "codec_exit_code": 124,
+      "codec_unexpected_ignored": "link_fec_wire::fec_tx_tests::r1_tx_cooperative_release_cpu_wall_diagnostic",
+      "codec_artifact_id": 12125013999,
+      "codec_artifact_digest": "sha256:a4ac6a9d1740f0694ffa43012e1029e4c7784f2ae455205249555298d35af4d8",
+      "five_other_verify_jobs": "SUCCESS",
+      "root_cause": "Historical slow codec suite retained; no changed hypothesis or fresh source-dependent root cause established; do not escalate by repeated sampling.",
+      "product_qualification": "NOT_RUN"
     },
     "prior_failed_build": {
       "run_id": 39098807187,
@@ -101,5 +109,5 @@
     "original_R0_023_big_udp_cross_turn_Stop_MTU": "OPEN",
     "D10_p99_old_codec_timeout": "OPEN"
   },
-  "next_action": "Connect explicit record-kind feature behind actual protected Go feature-bit2/KDF and generation/epoch/direction policy in M0 original ProtectedScopedOwner; then use original M1 ParityJob and M3 Rs16 source/parity kind2/3 on real M4 raw/TUN with M2 real authenticated ingress. Do not enable default production until end-to-end through CLI/GUI target tests; in parallel R0-023 65KiB TUN cross-turn/MTU/Stop remains."
+  "next_action": "Bind only independently credential-verified original Go V4 bit2 KDF/epoch/direction to the same ProtectedScopedOwner TX PN/RX replay state, then source and repair kind2/3 through real M1/M3/M4/M2; separately isolate old codec 240s blocked CPU diagnostic before claiming native-functional full PASS; original 65KiB cross-turn Stop/MTU/unknown edge remains OPEN."
 }
