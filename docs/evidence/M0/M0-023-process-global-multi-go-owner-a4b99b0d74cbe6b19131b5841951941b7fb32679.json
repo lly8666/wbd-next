@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "a4b99b0d74cbe6b19131b5841951941b7fb32679",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "result": "PASS_SCOPED_TEST_ONLY_SINGLE_PROCESS_M2_GLOBAL_REPAIR_BUDGET_THREE_LIVE_ORIGINAL_GO_TLS_OWNERS_AND_REAL_KERNEL_SAME_PN_REPAIR_THREE_SUITES",
+  "source_changes": [
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+  ],
+  "positive_negative_test_batch": [
+    "Three distinct, simultaneous original Go credential-checked TLS V4 bit2 sessions (no synthetic cold248 authority) bind three independent M0 Rust owners to one process-static original M2 GlobalRepairAllocator under a short-lived Rust mutex. Registry direction keys remain original tunnel+generation and C2S reverse scope is independently AEAD/pinned.",
+    "Process hard 65,536 byte cap: original TLS owner1 obtains 32,768 byte time-limited unused global grant, owner2 obtains 32,768; verified third original TLS owner cannot obtain even 1 more byte while two grants are held; rejected duplicate grant on owner2, then owner1 Stop retires exactly its registered direction and revokes only its remaining unused grant. Owner3 subsequently receives 32,768 while owner2 unaffected. Old stopped handle denied.",
+    "Existing three-cipher test-only actual protected Go TLS sender, original M1 FrozenRecord/source-first/M3 RS16, real M4 raw/TUN+application UDP and independent original Go reverse kind1 authenticated M3 replay/PN → M2 scoped receipt remain PASS. Original FrozenRecord same PN1/Seq exact bytes independently seen on real M4 raw retransmission, process broker grant/reserve+one-slot Accepted completion and late M3 AEAD positive receipt retire original handle.",
+    "M0 Stop now fail-closed on original M2 retire_tunnel result not EXACTLY one direction, withholds local direction clearing until valid result. No global quota mutex held during the synchronous M4 raw kernel send; historical uncertain completions remain charged per original M2.",
+    "This is opt-in three-session same-process *component-integrated* functional proof only. It does not establish production FEC2 peer wire, canonical feedback, process wide cap across multiple OS processes, actual driver unknown-prefix/not-sent races or concurrent real repair traffic."
+  ],
+  "actions": {
+    "focused": {
+      "run_id": 39119900218,
+      "attempt": 1,
+      "job_id": 117653186459,
+      "conclusion": "success",
+      "artifact_id": 12134240771,
+      "artifact": "m0-real-go-fec2-owner-grant-39119900218-1",
+      "artifact_github_sha256": "5431d22fd9ebc5189f7dc90beac4f68e8801d9100083f96c31e7de5d66b8be9c",
+      "independent_rehashed_zip_sha256": "5431d22fd9ebc5189f7dc90beac4f68e8801d9100083f96c31e7de5d66b8be9c",
+      "source_receipt_sha": "a4b99b0d74cbe6b19131b5841951941b7fb32679",
+      "real_Go_three_live_owner_markers": 1,
+      "real_Go_kernel_same_frozen_three_cipher_markers": 3,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39119900218"
+    },
+    "native_functional": {
+      "run_id": 39119900251,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected groups, not entire historical codec240s"
+    },
+    "cross_abi": {
+      "run_id": 39119900194,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected Linux aarch64 and Windows gnu build/consume, not native end-target codec"
+    },
+    "native_abi": {
+      "run_id": 39119900195,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "scoped_bootstrap": {
+      "run_id": 39119900219,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "static_audit": {
+      "run_id": 39119900167,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "code_governance": {
+      "run_id": 39119900222,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "native_probe": {
+      "run_id": 39119900199,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 117653186455,
+      "consume_job_id": 117653482316,
+      "artifact_result_id": 12133313333,
+      "artifact_github_sha256": "a65784f1680b28662ac499037928487bfda1ee72eef77d21a5fc791f2edc34c1",
+      "independent_rehashed_zip_sha256": "a65784f1680b28662ac499037928487bfda1ee72eef77d21a5fc791f2edc34c1",
+      "normal_off_netem_150ms": "EXPLORATORY_PASS",
+      "steady_loss_1percent": "OBSERVATION_RECORDED",
+      "normal_off_dev_10mbps": "MEASUREMENT_RECORDED_NOT_PRODUCT_PASS"
+    }
+  },
+  "retained_failure_or_incomplete": [
+    "SOURCE3114bb4e7170fcfbc33c3874f32db641d0097575 focused Action39119538366 FAIL Rust mutable/immutable process clock borrow E0502; corrected in SOURCE db92ce8a6 and final a4b99b0.",
+    "SOURCE432f32002d5d231cf8d7e7662f5136e8b7defb6c Action39119642191 FAIL WORKFLOW CONFIG: shell selector contained '$' incorrectly expanded during M0 workflow edit; had zero jobs. Repaired before SOURCE ca20bead8, whose Actions39119698349 PASS; don't suppress parser failure.",
+    "SOURCE6e8497bef6a92ccb8e0e26f1b654084d6d32ed1f Action39118278579 Normal/off150ms FAIL original fragment/first-packet intermittent; final a4 single exploratory green is NOT proven stability.",
+    "Other H148 Governance, M2 fixture cap, old codec240s/D10/p99 flags remain historical/requalification OPEN."
+  ],
+  "still_not_run_or_wired": [
+    "Production FEC2 remains OFF; canonical product kind1 wire and actual independent peer feedback from true packet loss NOT_WIRED",
+    "Global process cap here opt-in M0 test build only; no sustained concurrent repair stress, no production fairness guarantee, no global broker across multiple OS processes",
+    "Actual M4 repair batch 2..32 with mixed Accepted/NotSent/Uncertain/Unproven + stale/Stop/epoch races NOT_RUN; only real one-slot Accepted and code-path simulated M2 budget proven",
+    "Real original Go applied per-direction fixed/auto revision CLI/GUI NOT_WIRED; original M1 continuous scheduler NOT_RUN",
+    "Legal ~65KiB UDP cross-turn, MTU±1 in flight, loan/noHOL/Stop, long 150ms intermittent reproduction and full 240s codec/D10/p99 ABBA NOT_RUN",
+    "Windows/ARM native full codec/loader, physical two-endpoint product qualification NOT_RUN"
+  ],
+  "next_action": "Continue R0-023 using original M2 typed reserve/complete and M4 real per-slot results: isolate true multi-slot 2..32 Accepted/ProvenNotAttempted/Unproven and stop/epoch stale; then real peer loss-produced kind1 canonical format + applied fixed/auto Go CLI/GUI, continuous scheduler and large UDP/Stop/physical hard gates. FEC2 OFF."
+}
