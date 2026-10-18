@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "1cf6b1b8184fe6d4880cee7ef8ef815249929859",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "H33 exact worker governance role/scope and repository structure only; NOT codec ISA-L/paired performance/product",
+  "action": {
+    "run_id": 39083459590,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "job_id": 117545030419,
+    "workflow": ".github/workflows/governance.yml",
+    "receipt_result": "PASS",
+    "role_identity_result": "ROLE_SCOPE_PASS",
+    "structure_result": "PASS",
+    "control_at_execution": "d499ac7643defb33ce238596a90aea857d44052a",
+    "source_sha": "1cf6b1b8184fe6d4880cee7ef8ef815249929859",
+    "cursor_sequence": 33,
+    "continuity_state": "CLEAN",
+    "continuity_reason": "only cursor acknowledgements after checkpoint; not a product PASS",
+    "checkpoint_sha": "f3c9062cc4f684195e5318ad010aed0845a1b61b",
+    "scope_commits_checked": 140,
+    "artifact": {
+      "id": 12119598730,
+      "digest": "sha256:7d53939737c461ce8911ef54c4f5db8dc7b12457763bf9b35302bb9ffa590564",
+      "byte_size": 6476,
+      "manifest_entries": 8,
+      "all_file_size_and_sha256_verified": true,
+      "manifest_sha_and_run_attempt_verified": true,
+      "original_receipt_artifact_verified_field": false,
+      "remark": "Original action receipt set artifact_verified false as expected before independent download. This independent M3 recovery rehashed ZIP and every member; no retroactive rewrite of Actions receipt."
+    }
+  },
+  "separate_failures": [
+    {
+      "run_id": 39046275022,
+      "conclusion": "failure",
+      "cause": "H30 evidence result non-PASS; HISTORICAL FAILURE RETAINED"
+    },
+    {
+      "run_id": 39082909578,
+      "conclusion": "failure",
+      "cause": "GitHub HTTP403 registry"
+    },
+    {
+      "run_id": 39083303000,
+      "conclusion": "failure",
+      "cause": "GitHub HTTP403 compare"
+    }
+  ],
+  "reused_codec_source": "3011431370f1757212df92800c1b56e87ba51d65",
+  "reused_codec_actions": {
+    "run_id": 39082909579,
+    "result": "PASS_SCOPED_WORKER_TESTS",
+    "passed": 122,
+    "failed": 0,
+    "ignored": 1,
+    "r0_wire_run_id": 39082909584,
+    "r0_wire_passed": 13,
+    "relationship": "unchanged earlier scalar evidence, NOT rerun as part of H33"
+  },
+  "m0_new_platform_fact": {
+    "source": "docs/evidence/M0/M0-FEC2-shared-workflows-4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f.json",
+    "coverage": "Linux x64, ARM64, Windows x64 native ISA-L safe wrapper actual ec_encode_data",
+    "codec_v2_native": "NOT_RUN",
+    "status": "Relevant M0-owned platform progress, NOT M3 codec test qualification"
+  },
+  "blockers": {
+    "M3_fec2_actual_isal": "NOT_RUN",
+    "M3_fec2_same_vm_ab_ba": "NOT_RUN",
+    "arm_neon_instruction_dispatch": "NOT_PROVEN",
+    "windows_go_loader": "NOT_RUN",
+    "product_fec_on": "NOT_RUN"
+  },
+  "rollback": "Keep FEC2 capability disabled; current product not qualified; never mutate V1 CODE422a or history",
+  "outcome": "Recovered missing H33 governance PASS evidence only. Workpack017 remains partial/unverified until M0-owned shared native FEC2 source-pinned test and paired cost."
+}
