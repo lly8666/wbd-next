@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "1cf2eadf1ee53e3f000a23da6ea87f5c882114eb",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "result": "PASS_SCOPED_SAME_SOURCE_ONE_BUILD_3_PARALLEL_ISOLATED_REAL_KERNEL_VERIFICATION_LANES",
+  "change_scope": [
+    "Only M0 shared .github/workflows/m0-v4-native-owner-probe.yml changed; existing functional tests and assertions intact.",
+    "Reuse one exact GitHub SOURCE build artifact on critical/impairment/metric runner lanes; sha256 verify input files and Go/Rust binaries, fail-fast false, per-lane artifact names, no cross-job performance comparison.",
+    "critical: original Go TLS / original Rust owner + original M1/M3 and original M4 actual Linux raw/TUN 65535B multi-turn 51 LINK frames + full peer reassembly/Stop/MTU-1 small follower/noHOL; independent 12 packet steady and targeted first-PN loss.",
+    "impairment: actual 10ms and 150ms Linux tc netem and 1percent observed kernel drops.",
+    "metric: Normal/off 10Mbps each direction developer-only 10s warmup + 60s measurement, not ABBA/p99/product."
+  ],
+  "actions": {
+    "workflow": "m0-v4-native-owner-probe.yml",
+    "run_id": 39145815041,
+    "attempt": 1,
+    "head_sha": "1cf2eadf1ee53e3f000a23da6ea87f5c882114eb",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39145815041",
+    "jobs": [
+      {
+        "job_id": 117729303384,
+        "name": "build",
+        "result": "PASS",
+        "artifact_id": 12143531635,
+        "artifact_provider_sha256": "e64652147737d9281e9afa77cc21b258055ac5e1e3cc408aad2fe54c2459bd96"
+      },
+      {
+        "job_id": 117729668056,
+        "name": "batch-critical",
+        "result": "PASS",
+        "artifact_id": 12143386390,
+        "artifact_provider_sha256": "f4be10a19e77a73d9934e5ebf7017b809a1f55279879776a91de6435a30d9795"
+      },
+      {
+        "job_id": 117729668033,
+        "name": "batch-impairment",
+        "result": "PASS",
+        "artifact_id": 12142544336,
+        "artifact_provider_sha256": "711a83f2f9bcf94242f88c57e7b69d956cdfae9d7a11e65b7239d39b1b85f8c7"
+      },
+      {
+        "job_id": 117729668095,
+        "name": "batch-metric",
+        "result": "PASS",
+        "artifact_id": 12143278016,
+        "artifact_provider_sha256": "660e68451f3738688432af07cc998bebc9f7db30c76cbfc0a17446566afa17b0"
+      }
+    ],
+    "source_governance": {
+      "run_id": 39145815091,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "maintenance": {
+      "run_id": 39145815074,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "observed_original_logs": [
+    "EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=51 fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+    "EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=5 after=6 copied=1 owner_tx_error_growth=0",
+    "EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true",
+    "PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=10 qdisc_packets_positive=true",
+    "PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=150 qdisc_packets_positive=true",
+    "STEADY_LOSS_CASE_RECORDED configured_loss_percent=1 kernel_dropped_packets=4 observed_drop=yes",
+    "STEADY_BURST_BASELINE_PASS",
+    "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS"
+  ],
+  "developer_metric": {
+    "result": "MEASUREMENT_RECORDED_NOT_PRODUCT_PASS",
+    "warmup_seconds": 10,
+    "measurement_seconds": 60,
+    "configured_mbps_each_direction": 10,
+    "observed_c2s_mbps_approx": 10,
+    "observed_s2c_mbps_approx": 10,
+    "paired_same_job_ABBA": false,
+    "product_performance": "NOT_RUN"
+  },
+  "historical_reds": [
+    {
+      "source_sha": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "run_id": 39142346744,
+      "attempt": 1,
+      "conclusion": "failure",
+      "description": "original 150ms suite-2 LINK late/pending failure; newer isolated PASS is not historical closure"
+    }
+  ],
+  "precise_exclusions": {
+    "original_go_cli_gui_applied_revision": "NOT_RUN",
+    "actual_M2_reverse_authenticated_kind1": "NOT_RUN",
+    "M1_live_original_FEC2_scheduler_and_2s_feedback": "NOT_RUN",
+    "M4_distinct_2_to_32_actual_partial_uncertain_stop": "NOT_RUN",
+    "jumbo_midflight_generation_stop_route_mtu_cross_batch_matrix": "NOT_RUN",
+    "full_ARM_Windows_original_drivers": "NOT_RUN",
+    "two_physical_peers": "NOT_RUN",
+    "full_business_240s_D10_p99_same_job_ABBA": "NOT_RUN",
+    "production": "NOT_RUN"
+  },
+  "efficiency": "One source-locked build + three concurrent isolation lanes; one test sweep, no blind 14-job repeat, no cross-VM performance claim"
+}
