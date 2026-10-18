@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "f088ca04541df962d483751a759959ac3caf0c39",
+  "progress": "partial",
+  "unverified": true,
+  "result": "PASS_SCOPED_FEC2_CODE8CC_REAL_NATIVE_F2_AND_QUALIFIED_SAME_VM_CPU_WINDOW",
+  "description": "M0 shared CI verification of independent M3 workpack 017; does not close original R0-023 or M3's own worker cursor/governance.",
+  "inputs": {
+    "control": "f088ca04541df962d483751a759959ac3caf0c39",
+    "m0_probe_source_commit": "b432315a55020aa9e6e638154fe44d944b2a523d",
+    "worker_m3": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "m3_branch_latest_when_checked": "343d40f3981b65710e30de14c12f69fd9a687f04",
+    "m3_worker_cursor_seq": 35,
+    "m3_worker_cursor_progress": "partial",
+    "worker_m4_build_source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+    "official_intel_isa_l": "c387163fcbca62701d646149564c550c78a4f985",
+    "rust_toolchain": "1.85.1",
+    "build": "cargo --release --locked -p wbd-codec --features native-isal",
+    "target": "x86_64-unknown-linux-gnu",
+    "temporary_actions_only_test_fixture": true,
+    "independent_repository_source_clones": true
+  },
+  "actions": {
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39090941413",
+    "run_id": 39090941413,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job": 117567366371,
+    "build_result": "success",
+    "consume_job": 117567553814,
+    "consume_result": "success",
+    "real_isa_l_ffi": "libisal.a actual ec_encode_data symbol",
+    "f2_native_tests": {
+      "passed": 11,
+      "failed": 0,
+      "backend": "RequireNative calls return NativeIsaL including k2 corrected legal row test"
+    },
+    "artifact_zip_rehashed_independently": false,
+    "artifacts": [
+      {
+        "type": "build",
+        "id": 12122563022,
+        "digest": "sha256:e5c0f213b5777ded91209ebfafc3b703f11551c469d824b129aff2e37478e269"
+      },
+      {
+        "type": "result",
+        "id": 12122374044,
+        "digest": "sha256:bdecfec2f6f08a9d97a7907b91e83ce2065b5fe7b1859877573c9a446594382d"
+      }
+    ],
+    "build_binary_hashes": {
+      "unit": "0ad0ea27b09f8c2ce754e3d02232d6fb7e829303226661d832223dc8f608452c",
+      "paired": "2f05e4adefb49428b196199465f7aae4548c89f8e15bce7371bc6b4a5762fd00",
+      "isal_static_archive": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d"
+    }
+  },
+  "cost": {
+    "qualification": "CPU_WINDOW_READY_FOR_REVIEW",
+    "scenario": "ONE deterministic k16 r16 1200B encoded sources, missing indexes [1,5,10,14], e4 recovery, same process and VM Release binary",
+    "leg_order": [
+      "Scalar",
+      "NativeIsaL",
+      "NativeIsaL",
+      "Scalar"
+    ],
+    "per_leg": {
+      "encode_blocks": 400000,
+      "parity_shards": 6400000,
+      "recovery_calls": 400000,
+      "missing_originals_per_recovery": 4
+    },
+    "linux_proc_self_stat_hz": 100,
+    "required_min_cpu_ticks_each_stage": 100,
+    "required_min_wall_ns_each_stage": 1000000000,
+    "minimum_observed_cpu_ticks_stage": 113,
+    "single_process": true,
+    "independent_new_isa_l_native_equivalence": true,
+    "legs": [
+      {
+        "leg": 0,
+        "mode": "A",
+        "backend": "Scalar",
+        "blocks": 400000,
+        "recoveries": 400000,
+        "e": 4,
+        "encode_checksum": 7014000000,
+        "recovery_checksum": 680000000,
+        "encode_wall_ns": 75127839461,
+        "encode_cpu_ticks": 7511,
+        "recovery_wall_ns": 19875647206,
+        "recovery_cpu_ticks": 1987,
+        "encode_cpu_ns_per_block": 187775,
+        "recovery_cpu_ns_per_block": 49675
+      },
+      {
+        "leg": 1,
+        "mode": "B",
+        "backend": "NativeIsaL",
+        "blocks": 400000,
+        "recoveries": 400000,
+        "e": 4,
+        "encode_checksum": 7014000000,
+        "recovery_checksum": 680000000,
+        "encode_wall_ns": 1302070057,
+        "encode_cpu_ticks": 131,
+        "recovery_wall_ns": 1134051049,
+        "recovery_cpu_ticks": 113,
+        "encode_cpu_ns_per_block": 3275,
+        "recovery_cpu_ns_per_block": 2825
+      },
+      {
+        "leg": 2,
+        "mode": "B",
+        "backend": "NativeIsaL",
+        "blocks": 400000,
+        "recoveries": 400000,
+        "e": 4,
+        "encode_checksum": 7014000000,
+        "recovery_checksum": 680000000,
+        "encode_wall_ns": 1299122089,
+        "encode_cpu_ticks": 130,
+        "recovery_wall_ns": 1133987525,
+        "recovery_cpu_ticks": 113,
+        "encode_cpu_ns_per_block": 3250,
+        "recovery_cpu_ns_per_block": 2825
+      },
+      {
+        "leg": 3,
+        "mode": "A",
+        "backend": "Scalar",
+        "blocks": 400000,
+        "recoveries": 400000,
+        "e": 4,
+        "encode_checksum": 7014000000,
+        "recovery_checksum": 680000000,
+        "encode_wall_ns": 75064014126,
+        "encode_cpu_ticks": 7506,
+        "recovery_wall_ns": 19870571246,
+        "recovery_cpu_ticks": 1987,
+        "encode_cpu_ns_per_block": 187650,
+        "recovery_cpu_ns_per_block": 49675
+      }
+    ],
+    "encode_adjacent_scalar_cpu_over_native": [
+      57.33588,
+      57.73846
+    ],
+    "e4_recovery_adjacent_scalar_cpu_over_native": [
+      17.58407,
+      17.58407
+    ],
+    "warmup": "M3 prepared native encode tables for all parity rows; four missing recovery validated and inverse cached before each measured leg",
+    "steady_paired_only": true,
+    "not_comparable_to_network_throughput": true,
+    "process_cpu_time_not_p99": true,
+    "cpu_quota_capture": "UNKNOWN from runner cpu.max",
+    "checksums_match_across_all_legs": true
+  },
+  "historical": {
+    "m0_old_worker_source": "3011431370f1757212df92800c1b56e87ba51d65",
+    "old_native_failure_runs": [
+      39086268414,
+      39086460623
+    ],
+    "old_invalid_row": "k2 Maximum r3 erroneously requested row count4, fixed only test at CODE8cc; old red preserved",
+    "old_abba": "96 blocks, 0..1 proc ticks, short 0.34..18ms/leg, CPU_INCONCLUSIVE not eligible as ratio",
+    "m3_scalar_worker_run": 39088682284,
+    "m3_scalar_worker_result": "122 passed 0 failed 1 ignored",
+    "m3_governance_cursor_latest": "H35 partial; governance39088913192 failed control/source moved mid-audit, not equated with complete workpack"
+  },
+  "scope_exclusions": [
+    "M1 real owner 3class scheduling",
+    "original Go authenticated FEC2 admission",
+    "kind2/3 production decode/packet",
+    "original Rust Go raw/TUN FEC2 on path",
+    "M4 Windows/ARM full FEC2 native mathematical equivalence",
+    "applied cold policy CLI GUI",
+    "C50 D10 240s timeout p99",
+    "physical 500Mbps",
+    "FEC2 product enablement"
+  ],
+  "product_fec2": "OFF",
+  "original_r0_023": "PARTIAL/UNVERIFIED",
+  "next_action": "Preserve M3 fixed-source PASS, notify worker to close its own cursor/governance after checking results; no new performance scenario or CODE301 rerun. Continue R0-023 live larger UDP bounded fragment/Stop/MTU/loan safety separately."
+}
