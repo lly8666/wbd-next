@@ -894,6 +894,26 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
     OK
 }
 
+// Shared M0 adapter: the original M4 KernelSendReport is the ONLY
+// source of definite copied prefix. Linux sendmmsg positive-short loses
+// errno, while EINTR/short-completion can be ambiguous. M0 conservatively
+// holds all not-positively-proven suffix reservation debt; only an
+// independently verified never-syscalled suffix may be NotSent.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn m0_fec2_observe_native_m4_repair_prefix(
+    report:&wbd_platform::linux_batch::KernelSendReport,total:usize,
+)->Result<wbd_recovery::DriverPrefixObservation,i32>{
+    use wbd_recovery::{DriverPrefixObservation,BatchSuffixEvidence};
+    // Fail closed before touching the broker if M4 provides an invalid
+    // prefix/uncertain marker, never truncate an out-of-range driver count.
+    if total>32||report.outcome.accepted_prefix>total{return Err(INVALID)}
+    let count=report.outcome.accepted_prefix;
+    let uncertain=report.outcome.uncertain_index;
+    DriverPrefixObservation::checked(
+        total,count,uncertain,BatchSuffixEvidence::Unproven
+    ).map_err(|_|INVALID)
+}
+
 // M0 opt-in integration of TWO original M1 FrozenRecord repair candidates
 // with the original M4 raw syscall and the original M2 scoped batch contract.
 // The first slot is REALLY submitted to Linux; the second is deliberately
@@ -988,12 +1008,7 @@ fn fec2_probe_real_frozen_repair_prefix_two(
     // Any positive-short/errno-unknown remainder is Unproven and keeps
     // M2 process debt; NEVER relabel it definitely NotSent.
     let observation=if let Some(report)=actual_report.as_ref(){
-        let count=report.outcome.accepted_prefix.min(2);
-        let uncertain=report.outcome.uncertain_index
-            .filter(|&at|at==count&&at<2);
-        DriverPrefixObservation::checked(
-            2,count,uncertain,BatchSuffixEvidence::Unproven
-        )
+        m0_fec2_observe_native_m4_repair_prefix(report,2)
     }else if first_result.as_ref().is_some_and(|r|r.is_ok()){
         DriverPrefixObservation::checked(
             2,1,None,BatchSuffixEvidence::ProvenNotAttempted
@@ -2386,6 +2401,91 @@ mod tests{
         }
         assert!(classify_tx_turn(Some(&full),32,true).failed);
     }
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_fec2_original_m4_m2_batch_0_32_unknown_prefix_never_refunds(){
+        use wbd_platform::linux_batch::{KernelSendReport,KernelSendSignal as S};
+        use wbd_platform::{TxBatchOutcome,TxError};
+        // Exhaust every legitimate size, accepted prefix, no-uncertain
+        // and unknown-at-first-nonaccepted variations. NotSent is NEVER
+        // derived merely from a native kernel return or elapsed timeout.
+        let mut checked=0usize;
+        for total in 0..=32{
+            for copied in 0..=total{
+                for unknown in [None,(copied<total).then_some(copied)]{
+                    let report=KernelSendReport{
+                        outcome:TxBatchOutcome{
+                            accepted_prefix:copied,uncertain_index:unknown,
+                            error:if copied==total&&unknown.is_none(){None}
+                                  else{Some(TxError::IoUncertain)},
+                        },
+                        signal:if unknown.is_some(){S::Interrupted}
+                               else if copied<total{S::PartialErrnoUnavailable}
+                               else{S::None},
+                    };
+                    let obs=m0_fec2_observe_native_m4_repair_prefix(
+                        &report,total
+                    ).expect("all 0..32 typed M4 prefix shapes legal");
+                    // The observer does not publish private M2 fields.
+                    // Its Debug output must carry explicitly Unproven,
+                    // never a fabricated ProvenNotAttempted refund.
+                    let desc=format!("{obs:?}");
+                    assert!(desc.contains("Unproven"));
+                    assert!(!desc.contains("ProvenNotAttempted"));
+                    checked+=1;
+                }
+            }
+            for copied in [total+1,33,usize::MAX]{
+                let report=KernelSendReport{
+                    outcome:TxBatchOutcome{accepted_prefix:copied,
+                        uncertain_index:None,error:Some(TxError::IoUncertain)},
+                    signal:S::AmbiguousCompletion,
+                };
+                assert!(m0_fec2_observe_native_m4_repair_prefix(
+                    &report,total
+                ).is_err(),"out-of-range must fail BEFORE global debit");
+            }
+        }
+        for (signal,err,unknown) in [
+            (S::Backpressure,TxError::WouldBlock,None),
+            (S::Interrupted,TxError::IoUncertain,Some(0)),
+            (S::AmbiguousCompletion,TxError::IoUncertain,Some(0)),
+            (S::PreflightRejected,TxError::IoFailed,None),
+            (S::Stopping,TxError::Stopping,None),
+            (S::MtuExceeded,TxError::IoFailed,None),
+            (S::DeviceUnavailable,TxError::IoFailed,None),
+            (S::RouteUnavailable,TxError::IoFailed,None),
+        ]{
+            let report=KernelSendReport{
+                outcome:TxBatchOutcome{
+                    accepted_prefix:0,uncertain_index:unknown,error:Some(err)
+                },signal,
+            };
+            let observed=m0_fec2_observe_native_m4_repair_prefix(
+                &report,32
+            ).expect("typed conservative no-refund classification");
+            let desc=format!("{observed:?}");
+            assert!(desc.contains("Unproven"));
+            assert!(!desc.contains("ProvenNotAttempted"));
+        }
+        let malformed=KernelSendReport{
+            outcome:TxBatchOutcome{
+                accepted_prefix:1,uncertain_index:Some(0),
+                error:Some(TxError::IoUncertain)
+            },signal:S::AmbiguousCompletion,
+        };
+        assert!(m0_fec2_observe_native_m4_repair_prefix(
+            &malformed,32
+        ).is_err());
+        assert!(m0_fec2_observe_native_m4_repair_prefix(
+            &KernelSendReport{
+                outcome:TxBatchOutcome::copied_all(33),signal:S::None
+            },33
+        ).is_err());
+        assert!(checked>=1000);
+        println!("M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes={checked}");
+    }
+
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
     fn m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate(){
