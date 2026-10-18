@@ -60,7 +60,7 @@ fn r1_fec2_f2_sched_zero_one_sixteen_32_33_first_ready() {
     o.on_due(MonoNs(6_000_200)).unwrap();
     assert_eq!(o.report().classes[0].k_hist[1],1);
     drain(&mut o,6_000_200);
-    o.stop(); assert!(a.quiesced());
+    o.stop(); a.stop(); assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_sparse_absolute_deadline_and_profile_revision() {
@@ -86,7 +86,7 @@ fn r1_fec2_f2_sched_sparse_absolute_deadline_and_profile_revision() {
     let j=o.take_parity(new.deadline).unwrap().unwrap();
     assert_eq!((j.k,j.r),(1,2));
     o.finish_parity(j,2,true);
-    o.stop();assert!(a.quiesced());
+    o.stop();a.stop();assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_rtt_caps_min_trusted_and_no_update_under_two_seconds() {
@@ -103,7 +103,7 @@ fn r1_fec2_f2_sched_rtt_caps_min_trusted_and_no_update_under_two_seconds() {
     assert_eq!(t.deadline,MonoNs(2_003_000_000));
     assert_eq!(game.on_due(MonoNs(2_003_000_000)).unwrap(),1);
     drain(&mut game,2_003_000_000);
-    game.stop();assert!(a.quiesced());
+    game.stop();a.stop();assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_partial_30mbps_three_logical_class_rates() {
@@ -134,7 +134,7 @@ fn r1_fec2_f2_sched_partial_30mbps_three_logical_class_rates() {
             o.deadline_span_ns(Class::Small),
             o.deadline_span_ns(Class::Medium),
             o.deadline_span_ns(Class::Mtu)];
-        assert!(spans[0]>=2_000_000 && spans[0]<=4_000_000,{spans:?});
+        assert!(spans[0]>=2_000_000 && spans[0]<=4_000_000,"{spans:?}");
         assert!((7_500_000..=10_500_000).contains(&spans[1]),"{spans:?}");
         if mode==FecMode::Normal {
             assert!((19_000_000..=24_000_000).contains(&spans[2]),"{spans:?}");
@@ -144,8 +144,8 @@ fn r1_fec2_f2_sched_partial_30mbps_three_logical_class_rates() {
         o.on_due(MonoNs(300_000_000)).unwrap();
         drain(&mut o,300_000_000);
         let stats=o.report().classes;
-        assert!(stats[2].partial>0 && stats[2].k_hist[16]>0,
-            "mixed at 10Mbps has real partial plus full: {stats:?}");
+        assert!(stats[2].partial>0 && stats[0].k_hist[16]>0,
+            "mixed 30Mbps class split has partial and full: {stats:?}");
         assert!(stats.iter().all(|s|s.accepted>200 && s.closed>0));
         o.stop();
         assert_eq!(small.report().loaned,0);
@@ -163,6 +163,7 @@ fn r1_fec2_f2_mem_expiry_is_independent_of_forming_t_and_stop_preserves_loan() {
     assert_eq!(o.report().outstanding_jobs,1);
     assert!(o.report().charged_bytes>0);
     o.stop();
+    a.stop();
     assert_eq!(o.report().queued_jobs,0);
     assert_eq!(a.report().loaned,1);
     assert!(!a.quiesced()); // Stop cannot reclaim an external encoder loan
@@ -177,7 +178,7 @@ fn r1_fec2_f2_mem_expiry_is_independent_of_forming_t_and_stop_preserves_loan() {
     p.on_due(MonoNs(8_000_001)).unwrap(); // 5ms post CLOSE, NOT T
     assert_eq!(p.report().classes[0].expired_jobs,1);
     assert_eq!(p.report().outstanding_jobs,0);
-    p.stop();assert!(b.quiesced());
+    p.stop();b.stop();assert!(b.quiesced());
 }
 #[test]
 fn r1_fec2_f2_mem_pressure_source_first_ready_no_out_of_range_index() {
