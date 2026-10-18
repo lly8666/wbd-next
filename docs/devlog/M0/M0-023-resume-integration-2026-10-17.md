@@ -28,3 +28,15 @@
 - A=`fca4456` vs B=`ede83b9` 严格同机配对 P10：AB39048219356 CPU-s/GiB 104.54→109.33 (+4.58%)，BA39048219347 79.71→78.55 (−1.46%)，A/B两方向0 missing/invalid；**CPU因顺序/宿主变化结论不定**。p99 B 各leg 稍高，不宣布无回退；20pps SPARSE AB39049004790 已用于下一次限定首到验证，未得结果前不编造。
 - Unified native functional `39047975666` codec 组240秒串行 timeout（其他子组PASS）；原 M3 worker suite 串行口径与 worker 多线程不一致。M0 `d8a11d` 仅把统一 codec 功能组测试设为4threads，保持性能独立跑，Action39048697568尚待实际归档；原红灯保留，不能按任何单独专项 PASS 伪造整个 workflow SUCCESS。
 - 证据 `docs/evidence/M0/M0-023-modules-intake-ede83b98edba1fee6f73bc99454040cc95392d4d.json` 保存来源、产物 GitHub 提供的 SHA256/运行ID、差异清单与未验范围。当前 Go Game / repair typed 只是组件导入、尚未完成实际认证接线，整体产品功能保持 OFF。下一步仅接 live V4 owner 的 LINK fragment TX / M2 ingress，按必要结果选取组合回归，不做024微调、容量加压或 D10 重跑。
+
+## 2026-10-18 · 真实原 Go LINK 分片经 Rust owner/raw/TUN 双向验证
+
+原 R0-023 此次只处理已存在 M3 LINK/MTU 源码与原 Go V4→Rust owner 的最后一段业务接线，不重启024、未启 FEC2 bit2/kind2/3。main S 按序为 `7f23a0b` (AEAD 后 LINK Pending 不向 TUN 误交付)、`77115c0` (原 Go linkdata 真分片→三 cipher AEAD→真实 Rust reassembly/TUN UDP app)、`e3c4682`/`62b12cf`（原 owner 单一 PN/seq/loan/route-scoped 验证分片 seal）、`a96dabb`（真实 background TUN 走有界 LinkPacketPlan，每帧 M1/AEAD/真实 M4 raw）、`821962b`（独立原 Go TLS opener+linkdata.Reassembler 验证 S2C 1728B 一次交付及小包无 HOL）。
+
+精确 SOURCE **`821962b7fc204facf5e1e5599a0b3fead3c3a58c`**，原 clone `a7a82db`，Linux x64 构建/消费 Actions **[39089250014](https://github.com/lly8666/wbd-next/actions/runs/39089250014)** attempt1 **SUCCESS**。真实 C2S 原 Go 1370B 内层 IP 在三 cipher 下均以两条原 Go LINK frame 通过原 raw/PN/AEAD，经 Rust 有界 M3 RX 合成一次并经真实 TUN 到应用，第一片不输出业务。真实 S2C 1700B UDP/1728B TUN 内层 IP 经原 Rust 2个独立 PN/冻结密文、raw IPv4/TCP，Go TLS opener + Go LINK 重组成相同 IPv4/UDP 字节；随后的52B小包仍被内核复制，Linux接口65536→1500中途缩 MTU 时原驱动保持 fail-closed、复原后才许可新 lease、Stop/Release 后不复活。原 Go端仍不是生产普通发布入口；完整产品、Windows/ARM、GUI、FEC-on仍 NOT_RUN。
+
+早期只改 TX 尚未改原反例的 Action `39089148178` 为 **FAIL**（旧测试仍期望1728B完全拒绝）；在 `821962b` 把同一真实路径断言改成 **必须确实2片并重组** 后独立完整跑 PASS，未跳过测试。原 C2S SOURCE `77115c0` Action `39088956872`亦 build+consume PASS。先前 D10 `39032995995`、统一 codec 240s timeout、P10/SPARSE p99 风险及 M3 FEC2 CODE301 k2非法row测试均保留原状；ZIP摘要来自 Actions API，未独立下载复哈希。唯一详细证据为 [821962b source 收据](../../evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json)。
+
+**本次收口边界**：开发功能源锁已证明 1370B C2S / 1728B S2C 经实际业务和原独立 Go peer 交付，不可把它升级为任意合法最大UDP。原 arena 每 slab 2048B、每 ready turn 最多32帧，对超过32帧和更大 65KiB TUN UDP仍明确 fail closed；中途已发部分片后MTU突变、uncertain/prefix和未知 PN/loan细节尚缺真实组合覆盖。Normal/off 开发诊断随既有workflow唯一10Mbps场景运行，但未经同job新旧AB/BA比较，不宣称收益。当前 R0-023 继续 **partial/unverified**。
+
+**一个下一动作**：沿本次真实 Go→Rust owner 的相同调用点补有界跨 turn 分片 staging/归还与中途 MTU/Stop/partial syscall 接线，验证大于32片合法UDP、L01–L04/B01–B04 实际借用与小包无 HOL；既有通过场景不重跑无关优化/旧D10。
