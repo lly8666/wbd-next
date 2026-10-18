@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+  "result": "PARTIAL_TRUE_AUTHENTICATED_LINK_FRAGMENT_BIDIRECTIONAL_REAL_RAW_TUN_FUNCTIONAL_PASS_PRODUCT_OPEN",
+  "unverified": true,
+  "artifact_zip_rehash_verified": false,
+  "why_now": "R0-023 lacked authenticated old-LINK super-MTU peer delivery despite M3 LINK fragment/reassembly module already integrated; preserve original TLS/AEAD owner, raw/TUN, Stop and MTU safety.",
+  "source_commits": [
+    {
+      "sha": "7f23a0b3e9068895340d82ee74edf3ef97ffc8ae",
+      "scope": "Real C2S raw-to-TUN accepts authenticated M3 LINK Pending (no early partial IP)"
+    },
+    {
+      "sha": "77115c00990f9c7e3894f7d8cf01e19780bb906b",
+      "scope": "Original Go linkdata.Fragmenter + three TLS cipher suites + real Rust TUN UDP app"
+    },
+    {
+      "sha": "e3c4682609ff5bec5c93e003927d8d6e22d18031",
+      "scope": "Strict M3-fragment validation before original M1 Rust owner AEAD/PN"
+    },
+    {
+      "sha": "62b12cfe30aea8a7f179a9e0397679a8f091fb0a",
+      "scope": "Fragment TX bound to owner-created route MTU, generation, epoch, original peer MSS"
+    },
+    {
+      "sha": "a96dabb5ca11675a3c890b1ca900b0e9f657c8a5",
+      "scope": "S2C original background Rust owner issues bounded M3 LINK packet plan into original M1 loans, M4 raw"
+    },
+    {
+      "sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+      "scope": "Positive independent Go TLS+linkdata reassembly of 1728B true Linux TUN S2C + small follower/Stop"
+    }
+  ],
+  "runs": [
+    {
+      "run_id": 39088956872,
+      "attempt": 1,
+      "head_sha": "77115c00990f9c7e3894f7d8cf01e19780bb906b",
+      "conclusion": "success",
+      "scope": "Earlier exact inbound original Go linkdata C2S fragment source through kernel raw Rust record and TUN; not source-matched outbound."
+    },
+    {
+      "run_id": 39089148178,
+      "attempt": 1,
+      "head_sha": "a96dabb5ca11675a3c890b1ca900b0e9f657c8a5",
+      "conclusion": "failure",
+      "scope": "Old background test asserted fail-close for 1728B, now invalid expectation after TX fragment code; preserve FAIL, no product promotion."
+    },
+    {
+      "run_id": 39089250014,
+      "attempt": 1,
+      "head_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+      "conclusion": "success",
+      "build_job": 117562234461,
+      "consume_job": 117562531554,
+      "build": "success",
+      "consume": "success",
+      "tests": {
+        "C2S_original_Go_to_Rust": "PASS original Go linkdata.NewFragmenter overIP 1370B split 2, real C2S TLS three cipher suites, real raw kernel, Rust authenticated PN/AEAD+M3 ReassemblyTable, pending first piece 0 business bytes, final /dev/net/tun UDP socket received exact 1342B payload",
+        "S2C_Rust_to_original_Go": "PASS true 1700B UDP app, one 1728B inner IPv4 packet TUN MTU 2000, M3 LinkPacketPlan 2 fragments, original M1 scoped Rust AEAD each own PN/FrozenRecord, M4 actual Linux raw IPv4/TCP, original Go TLS opener plus original Go linkdata.Reassembler restored full 1728B logical IP exactly once",
+        "MTU_and_followup": "PASS original M4 leased driver fail closed on live 65536 to1500 MTU shrink, route event recovery after restoration; then 1728B split2 followed by independent small original link data packet without HOL",
+        "Stop": "PASS real background Rust RX/TX threads joined and Stop/Release cannot reenter retired old original Go protected owner; asynchronous still-held external physical M4 driver NOT_RUN",
+        "existing_functional": "PASS original TUN/raw three-cipher exact mtu ordinary, damaged/replayed record reject, netem exploratory 10/150ms, scoped native owner/ABI functional",
+        "developer_normal_off_10mbps": "PASS workflow single existing 10s warmup/60s one Normal/off per-direction 10Mbps static developer diagnostic, not A/B, no claimed CPU or p99 gain"
+      },
+      "artifacts": [
+        {
+          "id": 12121644383,
+          "name": "m0-v4-native-probe-build-39089250014-1",
+          "github_digest": "sha256:6f574897cae8407c2139b7e9e40a011b3463afd90296853c426a842ba0f2a407"
+        },
+        {
+          "id": 12122335754,
+          "name": "m0-v4-native-probe-result-39089250014-1",
+          "github_digest": "sha256:bcbc41dc248a1f593ff33a33383ed050dfdc7d189f2bc5df2f38d6a7b3571a67"
+        }
+      ]
+    }
+  ],
+  "qualification": {
+    "native_target": "linux-x86_64-gnu",
+    "rust": "1.85.1",
+    "go_original": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "feature": "developer embedded Go only; ordinary production ABI features zero",
+    "LINK_protocol": "existing 20B old LINK fragment compatible wire only, not FEC2 V2 scheme",
+    "S2C_largest_verified_inner_ipv4_bytes": 1728,
+    "C2S_largest_verified_inner_ipv4_bytes": 1370,
+    "fragment_frames_bound_per_owner_ready_turn": 32,
+    "larger_udp_up_to_65507": "OPEN_INCOMPLETE_ARENA_2048_AND_ATOMIC_32_QUEUE_RESTRICTION",
+    "mid_fragment_path_change": "existing source snapshot+M4 per-send failure; true partial prefix and MTU mid-fragment loss scenario NOT_RUN",
+    "record_PN_reuse": "none; crypto from original scoped owner",
+    "real_peer_Go_authenticated_first_delivered": "PASS_SCOPED_DEV_FIXTURE",
+    "product_default_FEC2": "OFF",
+    "production_GUI_config": "NOT_RUN",
+    "Game_multiple_lanes": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "complete_product_qualification": "NOT_RUN",
+    "old_D10": "39032995995 historical FAIL/INCONCLUSIVE unchanged",
+    "old_codec_native_timeout": "39047975666 and 39048697568 historical 240s timeouts unchanged",
+    "old_p99": "Normal P10 AB+4.58%, BA-1.46% CPU and SPARSE B p99 168→196/341→394us regression signals retained OPEN",
+    "new_024_optimization": "NOT_REOPENED"
+  },
+  "next_action": "Continue original R0-023 bounded full-size UDP LINK streaming across owner turns (>32 fragments) without HOL or pointer lifetime leaks, exact mid-fragment MTU/Stop/PN+lease prefix/uncertain and L01-L04/B01-B04 live Actions; preserve default off and independent M1/M3/M4 workpack boundaries."
+}
