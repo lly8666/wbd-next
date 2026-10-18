@@ -196,6 +196,100 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
 // It is called only from the original Go package's credential-checked
 // private callback, after actual protected reply, Detach and Rust Commit.
 // It is NOT compiled into default production (no public feature enable).
+// Restricted, one-shot live M4 raw-kernel SEND probe for the same Go TLS
+// authorized generation. It does NOT establish a production FEC2 data
+// loop, receive repair, or deliver to a real TUN app.
+// First completely materialize M3 source/repair in two original M1 slabs;
+// use the SAME ProtectedScopedOwner / AEAD / PN / Seq / FrozenRecord,
+// SAME M4 ScopedRawIpv4Tx, and definite synchronous kernel send result.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_real_kernel_raw_once(
+    handle:u64,ifindex:u32
+)->Result<[(u64,u32,usize);2],i32>{
+    let cell=session(handle)?;
+    let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
+    let e:&mut Entry=&mut guard;
+    if e.phase!=PH_ACTIVE || e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound_to(e.owner.probe_epoch_for_test_only()){
+        return Err(BAD_STAGE)
+    }
+    if e.raw_tx.is_none(){
+        let raw=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
+            .map_err(|_|INVALID)?;
+        e.raw_tx=Some(Arc::new(raw));
+    }
+    let route=e.owner.observe_linux_normal_off_route_budget(
+        "lo",ifindex,Ipv4Addr::from(e.flow.client_ip)
+    ).map_err(|_|INVALID)?;
+    let budget=route.frame;
+    let a=(0..113).map(|n|(n%251) as u8).collect::<Vec<_>>();
+    let b=(0..127).map(|n|((n*7+5)%251) as u8).collect::<Vec<_>>();
+    let source=wbd_codec::fec_v2::source_owned(
+        9102,0,&a,budget.record_payload_mtu
+    ).map_err(|_|INVALID)?;
+    let (parity,_)=wbd_codec::fec_v2::Rs16::new().encode_owned(
+        9102,&[&a,&b],wbd_codec::fec_v2::Profile::Strong,0,1,
+        budget.record_payload_mtu,wbd_codec::fec_v2::BackendChoice::Scalar
+    ).map_err(|_|INVALID)?;
+    let messages=[(2u8,source),(3u8,parity.into_iter().next().ok_or(INVALID)?)];
+    // Full pre-materialization before consuming ANY original PN; bounded
+    // short probe, original Arena owns BOTH slabs.
+    let mut pending=Vec::with_capacity(2);
+    for (kind,payload) in messages{
+        let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+        let end=14usize.checked_add(payload.len()).ok_or(INVALID)?;
+        if end>slab.writable().len(){return Err(INVALID)}
+        slab.writable()[14..end].copy_from_slice(&payload);
+        pending.push((kind,slab,payload.len()));
+    }
+    let flow=e.flow;
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    };
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    let mut storage=Vec::with_capacity(1);
+    let mut out=[(0u64,0u32,0usize);2];
+    for (i,(kind,slab,len)) in pending.into_iter().enumerate(){
+        let result=e.owner.seal_fec2_probe_one(
+            slab,len,kind,budget,15,loop_now()
+        ).map_err(|_|INVALID)?;
+        let copied=e.owner.submit_scoped_raw_tx_reusing(
+            &raw,tuple,presentation,loop_now(),&mut storage
+        ).map_err(|_|INVALID)?;
+        if copied<=result.2{return Err(INVALID)} // actual raw IPv4+TCP
+        out[i]=result;
+    }
+    e.arena.drain_returns();
+    Ok(out)
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_raw_tx(
+    handle:u64,ifindex:u32,source_pn:*mut u64,repair_pn:*mut u64,
+    source_seq:*mut u32,repair_seq:*mut u32,
+    source_len:*mut u32,repair_len:*mut u32
+)->i32{
+    if source_pn.is_null()||repair_pn.is_null()||
+       source_seq.is_null()||repair_seq.is_null()||
+       source_len.is_null()||repair_len.is_null(){return INVALID}
+    let Ok(sent)=fec2_probe_real_kernel_raw_once(handle,ifindex)
+    else{return BAD_STAGE};
+    let Ok(slen)=u32::try_from(sent[0].2)else{return INVALID};
+    let Ok(rlen)=u32::try_from(sent[1].2)else{return INVALID};
+    unsafe{
+        source_pn.write(sent[0].0);repair_pn.write(sent[1].0);
+        source_seq.write(sent[0].1);repair_seq.write(sent[1].1);
+        source_len.write(slen);repair_len.write(rlen);
+    }
+    OK
+}
+
 #[cfg(feature="m0_fec2_owner_probe")]
 fn bind_fec2_from_private_go(
     handle:u64,epoch:[u8;16],features:u16,profile:u8,revision:u64
