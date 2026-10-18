@@ -2397,6 +2397,106 @@ mod tests{
     }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
+    fn m0_link_65k_original_owner_cross_turn_48_fragment_gate_and_no_hol(){
+        use wbd_codec::link_reassembly::{
+            ReassemblyTable,ReassemblyScope,LinkDirection,LinkDelivery
+        };
+        // Maximum allowed inner logical LINK datagram, not a spoofed
+        // shortened test record. Original M3 LINK20 uses 1400B budget.
+        let original=(0..65_535usize)
+            .map(|i|((i*19+7)%251) as u8).collect::<Vec<_>>();
+        let scope=|id|ReassemblyScope{
+            tunnel_epoch:81,direction:LinkDirection::ServerToClient,
+            packet_id_ext:id
+        };
+        let mut producer=LinkPacketPlan::new(
+            &original,1400,LinkMode::FixedOff,41
+        ).expect("legally bounded original LINK message");
+        assert_eq!(producer.total_frames(),48);
+        let mut m3=ReassemblyTable::new(1400,1400,LinkMode::FixedOff)
+            .expect("original bounded M3 reassembly table");
+        for turn in 0u64..48{
+            let wire=producer.issue_next(1400).unwrap()
+                .expect("exactly one issued LINK frame per owner turn");
+            assert!(wire.len()<=1400);
+            // Authentication is a REQUIRED call-site precondition. The
+            // isolated parser+reassembly here does not counterfeit M3
+            // AEAD or claim protected Go TLS original kernel delivery.
+            let observation=m3.push_after_record_auth(
+                &wire,scope(41),turn*10
+            ).unwrap();
+            if turn<47{
+                assert_eq!(observation,LinkDelivery::Pending);
+                assert_eq!(
+                    m3.push_after_record_auth(b"small-after-fragment",
+                        scope(0),turn*10+1).unwrap(),
+                    LinkDelivery::Ordinary(b"small-after-fragment"),
+                    "incomplete 65KiB packet must not HOL ordinary DATA"
+                );
+            }else{
+                assert_eq!(
+                    observation,LinkDelivery::Reassembled(original.clone())
+                );
+            }
+        }
+        assert!(producer.issue_next(1400).unwrap().is_none());
+        assert_eq!(m3.state().assemblies,0);
+
+        // Stop/timeout mid-stream: retiring an incomplete 65KiB frame
+        // scope must not replay a late tail or stop small complete data.
+        let mut abandoned=LinkPacketPlan::new(
+            &original,1400,LinkMode::FixedOff,42
+        ).unwrap();
+        for turn in 0u64..12{
+            let frame=abandoned.issue_next(1400).unwrap().unwrap();
+            assert_eq!(m3.push_after_record_auth(
+                &frame,scope(42),1000+turn*10
+            ),Ok(LinkDelivery::Pending));
+        }
+        assert_eq!(m3.state().assemblies,1);
+        m3.expire(6200);
+        assert_eq!(m3.state().assemblies,0);
+        assert_eq!(
+            m3.push_after_record_auth(
+                &abandoned.issue_next(1400).unwrap().unwrap(),
+                scope(42),6201
+            ),
+            Ok(LinkDelivery::Discarded)
+        );
+        assert_eq!(
+            m3.push_after_record_auth(b"independent",scope(0),6202),
+            Ok(LinkDelivery::Ordinary(b"independent"))
+        );
+
+        // Actual ORIGINAL M0 sending materializer is still capped by
+        // one 32-entry owner turn. 48 > 32 MUST fail before any slab
+        // acquisition, PN seal, M4 syscall or packet half-admission.
+        // This is a detected PRE-PRODUCT BLOCKER, not a full 65KiB PASS.
+        let mut owner=Arena::new(244,32,2048,32,96_000).unwrap();
+        assert_eq!(
+            stage_bounded_original_link(
+                &mut owner,&original,1400,43,32
+            ).err(),Some(FULL)
+        );
+        owner.drain_returns();
+        assert_eq!(owner.report().loaned,0);
+        let healthy=vec![0x4a;700];
+        let one=stage_bounded_original_link(
+            &mut owner,&healthy,1400,44,32
+        ).unwrap();
+        assert_eq!(one.len(),1);
+        drop(one);
+        owner.drain_returns();
+        assert_eq!(owner.report().loaned,0);
+        println!(
+            "M0_LINK_65K_CROSS_TURN_48_CODED_FRAGMENTS_NOHOL_PASS \
+             original_owner_32_slot_gate=BLOCKED_FAIL_CLOSED \
+             staged_partial=0 loan_leak=0 real_tls_kernel=NOT_RUN"
+        );
+    }
+
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
     fn m0_link_materialization_never_admits_half_packet_on_arena_failure(){
         // Actual M1 unique loans + original M3 LINK20 planner. A synthetic
         // 1500B logical input needs THREE fixed-600B framed slabs.
