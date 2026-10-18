@@ -557,7 +557,8 @@ fn fec2_probe_real_kernel_raw_once(
     // profile and the original M4 kernel positively copied its immutable
     // source+repair. Before this point Go requested != Rust applied.
     if let Some((p,r))=e.fec2_probe_pending_policy {
-        e.owner.apply_fec2_probe_new_block_policy(e.owner.epoch(),p,r)
+        let (_,exact_epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
+        e.owner.apply_fec2_probe_new_block_policy(exact_epoch,p,r)
             .map_err(|_|BAD_STAGE)?;
         e.fec2_probe_pending_policy=None;
     }
