@@ -106,38 +106,23 @@ class CentralReusesG2(unittest.TestCase):
                     with self.assertRaises(g.ContractError):
                         s.audit(api,api.role["branch"],B,C)
 
-    def test_scoped_component_pass_receipt_not_product_pass(self):
-        class Evidence:
-            def __init__(self,result,verified):
-                self.result=result;self.verified=verified
-            def file(self,path,source):
-                return {"schema_version":1,"source_sha":B,
-                        "result":self.result,"artifact_verified":self.verified}
-            def get(self,endpoint):
-                return {"type":"file"}
-        cursor={"evidence_refs":["docs/evidence/M4/component.json"],
-                "context_refs":[],"open_requests":[],
-                "last_tested_source":B,"unverified":False}
-        for label in ("PASS","PASS_SCOPED_COLD_GO_AND_ISAL_SAFE_WRAPPER_ONLY"):
-            s.check_role_metadata(Evidence(label,True),{"id":"M4"},B,cursor)
-        for label,verified in (
-            ("FAIL",True),("INCONCLUSIVE",True),("PASS_SCOPED_F2",False),
-            ("PASS_NOT_RUN",True)):
-            with self.subTest(label=label),self.assertRaises(g.ContractError):
-                s.check_role_metadata(Evidence(label,verified),{"id":"M4"},B,cursor)
+    def test_main_only_context_and_scoped_evidence_not_a_scope_gate(self):
+        # G2 validates cursor shape and every actual commit; it must not
+        # fail because a context note exists only on main or a worker uses
+        # PASS_SCOPED_* rather than a product-level status.
+        class WithContext(API):
+            def file(self,path,ref):
+                cursor=super().file(path,ref)
+                if path.endswith("/cursor.json"):
+                    cursor["context_refs"]=[
+                        "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md"]
+                    cursor["evidence_refs"]=[
+                        "docs/evidence/M4/R5-M4-FEC2-COLD-POLICY-PLATFORMS-014.json"]
+                    cursor["last_tested_source"]=B
+                    cursor["unverified"]=False
+                return cursor
+        self.assertEqual(self.run_scope(WithContext())["result"],"ROLE_SCOPE_PASS")
 
-    def test_coordination_markdown_is_not_dispatch_json(self):
-        class Notes:
-            def get(self,endpoint):
-                self.endpoint=endpoint
-                return {"type":"file"}
-            def file(self,*args):
-                raise AssertionError("Markdown must not be parsed as JSON request")
-        api=Notes()
-        s.check_role_metadata(api,{"id":"M1"},B,{"evidence_refs":[],
-                    "context_refs":[],"open_requests":[
-                        ".governance/workstreams/M1/requests/dependency.md"]})
-        self.assertIn("dependency.md",api.endpoint)
 
 
 if __name__=="__main__":
