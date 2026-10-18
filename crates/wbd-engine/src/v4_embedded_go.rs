@@ -66,11 +66,64 @@ struct WorkerRouteBudget {
     revision:u64,
     route_event_revision:u64,
 }
+// Test-only independent receiver for ACTUAL ciphertext observed from the
+// kernel raw peer. It reuses M3's actual authenticated replay owner and RS16,
+// never another sender/PN allocator. The Go test owns/compares the recovered
+// bytes; this is NOT product client ingress or an M2 receipt.
+#[cfg(feature="m0_fec2_owner_probe")]
+struct Fec2ActualPeerRxProbe{
+    opener:wbd_codec::record_replay::ReplayProtectedLaneRx,
+    codec:wbd_codec::fec_v2::Rs16,
+    block_id:Option<u64>,
+    source0:Option<Vec<u8>>,
+    finished:bool,
+}
+#[cfg(feature="m0_fec2_owner_probe")]
+impl Fec2ActualPeerRxProbe{
+    fn consume(&mut self,mut wire:Vec<u8>,budget:usize)
+        ->Result<(u64,u8,Vec<u8>),()>{
+        if self.finished{return Err(())}
+        let decoded=self.opener.open_unique_with_fec2_after_admission_in_place(
+            wire.as_mut_slice()
+        ).map_err(|_|())?;
+        if decoded.pn>1{return Err(())}
+        match (decoded.pn,decoded.kind){
+            (0,2)=>{
+                let src=wbd_codec::fec_v2::parse_source(decoded.payload,budget)
+                    .map_err(|_|())?;
+                if src.block_id!=9102||src.source_index!=0||
+                    self.block_id.is_some(){return Err(())}
+                self.block_id=Some(src.block_id);
+                self.source0=Some(src.frame.to_vec());
+                Ok((decoded.pn,2,Vec::new()))
+            }
+            (1,3)=>{
+                let repair=wbd_codec::fec_v2::parse_repair(decoded.payload,budget)
+                    .map_err(|_|())?;
+                if repair.block_id!=self.block_id.ok_or(())?||
+                   repair.actual_k!=2||repair.parity_row!=0{
+                    return Err(())
+                }
+                let first=self.source0.as_deref().ok_or(())?;
+                let (recovered,_)=self.codec.recover_missing(
+                    repair.block_id,&[Some(first),None],&[repair],budget,
+                    wbd_codec::fec_v2::BackendChoice::Scalar
+                ).map_err(|_|())?;
+                if recovered.len()!=1||recovered[0].0!=1{return Err(())}
+                self.finished=true;
+                Ok((decoded.pn,3,recovered.into_iter().next().ok_or(())?.1))
+            }
+            _=>Err(()),
+        }
+    }
+}
 struct Entry{
     generation:u32,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
     #[cfg(feature="m0_fec2_owner_probe")]
     protected_fec2_features:u16,
+    #[cfg(feature="m0_fec2_owner_probe")]
+    fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -122,6 +175,27 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
     let generation=r.generation;
     r.generation=generation.checked_add(1).ok_or(FULL)?;
     let handle=(u64::from(generation)<<32)|0x5742;
+    // Only in the opt-in trusted original Go TLS callback: create a
+    // separate CLIENT receive replay bitmap using the original authenticated
+    // Go server-to-client direction key. This is an independent PEER RX for
+    // an actual kernel packet, not a new Rust TX owner or product pathway.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    let fec2_actual_peer_rx=if handoff.negotiated_features==7{
+        let (_,s2c)=data.internal_direction_keys();
+        let suite=wbd_codec::record_crypto::RecordSuite::try_from(
+            data.identity().cipher).map_err(|_|INVALID)?;
+        let replay=wbd_codec::record_replay::ReplayWindowConfig{
+            pn_per_second:1000,cache_horizon_ms:3000,
+            fec_horizon_ms:1000,rtt_ms:500,metadata_budget_bytes:8192
+        };
+        let opener=wbd_codec::record_replay::ReplayProtectedLaneRx::new_for_suite(
+            s2c,usize::from(data.identity().client_limit),suite,replay
+        ).map_err(|_|INVALID)?;
+        Some(Fec2ActualPeerRxProbe{
+            opener,codec:wbd_codec::fec_v2::Rs16::new(),
+            block_id:None,source0:None,finished:false
+        })
+    }else{None};
     let owner=handoff.prepare_scoped_owner(&data,generation,handle)
         .map_err(|_|INVALID)?;
     let link_mtu=usize::from(data.identity().server_limit)
@@ -134,6 +208,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         generation,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         #[cfg(feature="m0_fec2_owner_probe")]
         protected_fec2_features:handoff.negotiated_features,
+        #[cfg(feature="m0_fec2_owner_probe")]
+        fec2_actual_peer_rx,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -287,6 +363,48 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_raw_tx(
         source_seq.write(sent[0].1);repair_seq.write(sent[1].1);
         source_len.write(slen);repair_len.write(rlen);
     }
+    OK
+}
+
+// Authenticate ciphertext captured by the INDEPENDENT original Go raw
+// kernel peer with the original Rust M3 AEAD+PN replay receiver and decode
+// exactly the missing original source1 using M3 RS16 (not a fixture result).
+// No FEC2 data is admitted before live owner grant or after Stop.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_peer_received_actual_cipher(
+    handle:u64,wire:&[u8],out:&mut [u8]
+)->Result<(u64,u8,usize),i32>{
+    if wire.is_empty()||wire.len()>2048||out.len()>2048{return Err(INVALID)}
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
+    let budget=usize::from(e.wire_limit).checked_sub(
+        wbd_codec::record_frame::FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
+    let receiver=e.fec2_actual_peer_rx.as_mut().ok_or(BAD_STAGE)?;
+    let (pn,kind,frame)=receiver.consume(wire.to_vec(),budget)
+        .map_err(|_|INVALID)?;
+    if frame.len()>out.len(){return Err(INVALID)}
+    out[..frame.len()].copy_from_slice(&frame);
+    Ok((pn,kind,frame.len()))
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
+    handle:u64,wire:*const u8,wire_len:usize,
+    output:*mut u8,output_len:usize,
+    pn:*mut u64,kind:*mut u8,recovered_len:*mut u32
+)->i32{
+    if wire.is_null()||output.is_null()||pn.is_null()||kind.is_null()
+        ||recovered_len.is_null()||wire_len==0||wire_len>2048
+        ||output_len==0||output_len>2048{return INVALID}
+    let input=unsafe{std::slice::from_raw_parts(wire,wire_len)};
+    let target=unsafe{std::slice::from_raw_parts_mut(output,output_len)};
+    let Ok((received_pn,received_kind,actual_len))=
+        fec2_peer_received_actual_cipher(handle,input,target)
+    else{return INVALID};
+    unsafe{pn.write(received_pn);kind.write(received_kind);
+        recovered_len.write(actual_len as u32)}
     OK
 }
 
