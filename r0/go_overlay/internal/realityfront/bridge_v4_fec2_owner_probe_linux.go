@@ -8,6 +8,8 @@ extern int32_t wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls(
     uint64_t,const unsigned char *,size_t,uint16_t,uint8_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_scope_status(
     uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_fec2_probe_applied_policy(
+    uint64_t,uint8_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
@@ -35,12 +37,16 @@ import "C"
 import (
     "fmt"
     "runtime"
+    "time"
     "unsafe"
 )
 
 // Only this EXTRA opt-in test build may call this private owner binding
 // after EstablishServerV4 has checked actual TLS credentials and Detach.
-// Profile 5 / revision 1 is a FIXED PROBE, not the real applied GUI policy.
+// The default remains Strong/revision1 in opt-in tests. A protected Go
+// policy intent can replace these exact values before TLS prepare; the
+// downstream original Rust owner proves what was actually applied. No
+// product GUI/CLI auto ticker or production feature flag is enabled.
 func v4Fec2ProbeAfterProtectedCommit(b *v4EmbeddedNativeBridge) error {
     if b.protectedFeatures==v4RequiredFeatures {
         return nil
@@ -49,10 +55,15 @@ func v4Fec2ProbeAfterProtectedCommit(b *v4EmbeddedNativeBridge) error {
         b.protectedEpoch==[16]byte{} || b.handle==0 {
         return errV4Embedded
     }
+    profile,revision:=uint8(5),uint64(1)
+    if b.fec2ProbePolicySet{
+        profile,revision=b.fec2ProbeProfile,b.fec2ProbeRevision
+    }
     rc:=C.wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls(
         C.uint64_t(b.handle),
         (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),
-        C.size_t(16),C.uint16_t(b.protectedFeatures),C.uint8_t(5),C.uint64_t(1))
+        C.size_t(16),C.uint16_t(b.protectedFeatures),
+        C.uint8_t(profile),C.uint64_t(revision))
     runtime.KeepAlive(b.protectedEpoch)
     if rc!=0{return fmt.Errorf("%w: private FEC2 owner grant %d",errV4Embedded,int(rc))}
     return nil
@@ -238,4 +249,54 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeRealKernelMultimsgTwo()(
         errV4Embedded,int(rc))}
     return uint64(pn),uint32(seq),uint32(wire),
         uint64(charged),uint64(secondOuter),nil
+}
+
+// Bind a real ORIGINAL Go FecV2Step decision to the future authenticated
+// owner; NO Rust access before credential-checked TLS and Detach.
+func (b *v4EmbeddedNativeBridge) fec2ProbeChoosePolicy(
+    c FecV2Config,
+)(FecV2State,error){
+    var zero FecV2State
+    if b.handle!=0||b.committed||b.fec2ProbePolicySet ||
+        c.Client!="protected-owner"||c.Direction!=FecV2S2C ||
+        c.Transport!=FecV2Normal ||c.Mode==FecV2Off {
+        return zero,errV4Embedded
+    }
+    state,intent,err:=FecV2Step(c,zero,FecV2Snapshot{},time.Second)
+    if err!=nil{return zero,err}
+    if !intent.Send||intent.Revision==0||!intent.Profile.Valid()||
+        state.DesiredOff||intent.Profile!=state.Desired||
+        intent.Revision!=state.RequestedRevision{
+        return zero,errV4Embedded
+    }
+    b.fec2ProbeProfile=uint8(intent.Profile)
+    b.fec2ProbeRevision=intent.Revision
+    b.fec2ProbePolicySet=true
+    return state,nil
+}
+// Original Rust readback is the only valid applied-ack provenance; Go's
+// FecV2Apply independently validates intended client/direction/revision.
+func (b *v4EmbeddedNativeBridge) fec2ProbeAppliedPolicy(
+    state FecV2State,
+)(FecV2State,error){
+    if !b.committed||b.stopped||b.handle==0||!b.fec2ProbePolicySet{
+        return state,errV4Embedded
+    }
+    var profile C.uint8_t
+    var revision C.uint64_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_applied_policy(
+        C.uint64_t(b.handle),&profile,&revision)
+    if rc!=0{return state,fmt.Errorf("%w: Rust applied policy rc=%d",
+        errV4Embedded,int(rc))}
+    if uint8(profile)!=b.fec2ProbeProfile||
+       uint64(revision)!=b.fec2ProbeRevision {
+        return state,errV4Embedded
+    }
+    applied,ok,err:=FecV2Apply(state,FecV2Ack{
+        Client:state.Client,Direction:state.Direction,
+        Revision:uint64(revision),Profile:FecV2Profile(profile),
+        Applied:true,
+    })
+    if err!=nil||!ok{return state,errV4Embedded}
+    return applied,nil
 }
