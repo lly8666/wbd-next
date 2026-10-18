@@ -66,6 +66,77 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
     }
 }
 
+// Three simultaneously alive ORIGINAL Go credential-checked TLS owners.
+// A single Rust process-global 64KiB repair cap must NOT be multiplied
+// by each valid connection. The two earlier grants stay live while the
+// third is denied; retiring one exact owner releases ONLY its UNUSED grant.
+func TestR0V4Fec2ActualGoTLSProcessSharedRepairQuota(t *testing.T){
+    type live struct{
+        b *v4EmbeddedNativeBridge
+        store *V4EpochStore
+        epoch [16]byte
+    }
+    var owners [3]live
+    for i:=range owners{
+        store,e:=NewV4EpochStore(1)
+        if e!=nil{t.Fatal(e)}
+        b:=&v4EmbeddedNativeBridge{}
+        _,server,ce,se:=v4PairWithPrivateBridgeCipher(
+            t,b,store,CipherChaCha,true)
+        if ce!=nil||se!=nil||server==nil||!b.committed||
+            !b.fec2ProbeScope(server.Epoch){
+            t.Fatalf("original Go protected TLS owner %d failed ce=%v se=%v",i,ce,se)
+        }
+        owners[i]=live{b:b,store:store,epoch:server.Epoch}
+    }
+    defer func(){
+        for i:=range owners {
+            o:=owners[i]
+            if o.b.handle!=0{
+                if e:=o.b.stopRelease();e!=nil{t.Errorf("owner %d stop %v",i,e)}
+            }
+            if e:=o.store.ReleaseLane("protected-owner",
+                []byte("0123456789abcdef"),1,o.epoch);e!=nil {
+                t.Errorf("owner %d epoch release: %v",i,e)
+            }
+        }
+    }()
+    count,held,cap,e:=owners[0].b.fec2ProbeProcessQuotaSnapshot()
+    if e!=nil||count!=3||held!=0||cap!=65_536 {
+        t.Fatalf("three separate verified owners not process registered count=%d held=%d cap=%d err=%v",count,held,cap,e)
+    }
+    if e=owners[0].b.fec2ProbeProcessQuotaHold(32_768);e!=nil{
+        t.Fatalf("first original owner grant: %v",e)
+    }
+    if e=owners[1].b.fec2ProbeProcessQuotaHold(32_768);e!=nil{
+        t.Fatalf("second original owner grant: %v",e)
+    }
+    count,held,cap,e=owners[2].b.fec2ProbeProcessQuotaSnapshot()
+    if e!=nil||count!=3||held!=cap||cap!=65_536 {
+        t.Fatalf("held grant cap multiplied count=%d held=%d cap=%d err=%v",count,held,cap,e)
+    }
+    if e=owners[2].b.fec2ProbeProcessQuotaHold(1);e==nil{
+        t.Fatal("third valid original Go TLS owner bypassed process cap")
+    }
+    if e=owners[0].b.stopRelease();e!=nil{
+        t.Fatalf("first exact original owner Stop must revoke unused grant: %v",e)
+    }
+    if e=owners[0].b.fec2ProbeProcessQuotaHold(1);e==nil{
+        t.Fatal("stopped original owner could mint process grants")
+    }
+    count,held,cap,e=owners[1].b.fec2ProbeProcessQuotaSnapshot()
+    if e!=nil||count!=2||held!=32_768||cap!=65_536{
+        t.Fatalf("Stop leaked grants/other owner count=%d held=%d cap=%d err=%v",count,held,cap,e)
+    }
+    if e=owners[2].b.fec2ProbeProcessQuotaHold(32_768);e!=nil{
+        t.Fatalf("after Stop unspent process capacity not released: %v",e)
+    }
+    if e=owners[1].b.fec2ProbeProcessQuotaHold(1);e==nil{
+        t.Fatal("second owner minted a duplicate grant while live")
+    }
+    t.Log("M0_ORIGINAL_GO_TLS_THREE_OWNER_PROCESS_GLOBAL_M2_CAP_PASS registered=3 two_32KiB=held third=denied stop_unused=reclaimed independent_owner=preserved")
+}
+
 // Explicit privileged network-namespace test. It receives actual M4
 // IPv4/TCP packets through an independent ORIGINAL Go raw socket after the
 // ORIGINAL Rust generation has encrypted FEC2 SOURCE and REPAIR with PN0/1.
