@@ -107,6 +107,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                     pn,seq,wireLen,e)
             }
             seen:=[2]bool{}
+            var captured [2][]byte
             for attempts:=0;attempts<48 && (!seen[0]||!seen[1]);attempts++{
                 buf:=make([]byte,2048)
                 n,_,rxErr:=syscall.Recvfrom(peer,buf,0)
@@ -138,6 +139,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                            bytes.HasPrefix(wire,[]byte{0x46,0x32,0x53,0x00}){
                             t.Fatal("FEC2 source leaked plaintext on raw wire")
                         }
+                        captured[i]=append([]byte(nil),wire...)
                         seen[i]=true
                     }
                 }
@@ -145,6 +147,37 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if !seen[0]||!seen[1]{
                 t.Fatalf("missing real kernel raw FEC2 ciphertext source/repair seen=%v",seen)
             }
+            // Independent kernel raw peer has captured the exact bytes (not
+            // a Rust producer-side slice). Submit actual ciphertext to the
+            // ORIGINAL M3 receiver with a different replay PN bitmap,
+            // initialized from the original Go verified S2C exporter.
+            gotPN,gotKind,recovered,recvErr:=b.fec2ProbeActualPeerConsume(captured[0])
+            if recvErr!=nil||gotPN!=0||gotKind!=2||len(recovered)!=0 {
+                t.Fatalf("authenticated raw SOURCE had unexpected delivery: pn=%d kind=%d n=%d err=%v",
+                    gotPN,gotKind,len(recovered),recvErr)
+            }
+            // Same valid cipher bytes are a REPLAY, never a second source.
+            if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(captured[0]);recvErr==nil{
+                t.Fatal("original M3 unique replay PN failed to reject duplicate source")
+            }
+            corrupted:=append([]byte(nil),captured[1]...)
+            corrupted[len(corrupted)/2]^=0x40
+            if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(corrupted);recvErr==nil{
+                t.Fatal("M3 AEAD admitted tampered independent kernel ciphertext")
+            }
+            gotPN,gotKind,recovered,recvErr=b.fec2ProbeActualPeerConsume(captured[1])
+            expectRecovered:=make([]byte,127)
+            for i:=range expectRecovered{expectRecovered[i]=byte((i*7+5)%251)}
+            if recvErr!=nil||gotPN!=1||gotKind!=3||
+               !bytes.Equal(recovered,expectRecovered){
+                t.Fatalf("M3 RS16 missing source1 actual kernel parity recovered wrong pn=%d kind=%d len=%d err=%v",
+                    gotPN,gotKind,len(recovered),recvErr)
+            }
+            if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(captured[1]);recvErr==nil{
+                t.Fatal("completed M3 parity replay generated another recovery")
+            }
+            t.Logf("M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=%d e=1 restored=%d source_pn=%d parity_pn=%d",
+                cipher,len(recovered),pn[0],pn[1])
             t.Logf("M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=%d source_pn=%d repair_pn=%d source_seq=%d repair_seq=%d",
                 cipher,pn[0],pn[1],seq[0],seq[1])
         })
