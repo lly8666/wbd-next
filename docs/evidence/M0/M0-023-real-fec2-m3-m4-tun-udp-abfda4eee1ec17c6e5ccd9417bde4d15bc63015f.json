@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "abfda4eee1ec17c6e5ccd9417bde4d15bc63015f",
+  "result": "PASS_SCOPED_REAL_GO_TLS_TO_M3_FEC2_RS16_M4_TUN_KERNEL_TO_INDEPENDENT_UDP_APP_3_CIPHERS",
+  "progress": "partial",
+  "unverified": true,
+  "integration": {
+    "modified_paths": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+      ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+    ],
+    "actual_pipeline": "Original Go credential-checked V4 TLS with private opt-in FEC2 bit2 feature7 and KDF, post-Detach protected original Rust owner generation/epoch scope. Original M3 RS16 Strong k2 encodes a valid 127B IPv4/UDP source1 into repair row0 while the original source1 is deliberately NOT transmitted; original M1 Arena/FrozenRecord and same owner AEAD/HP/PN0/PN1/Seq send authenticated source0 kind2 and repair0 kind3 through original M4 ScopedRawIpv4Tx to real Linux kernel raw TCP. Independent original Go SOCK_RAW client captures actual ciphertext; separate authenticating original Rust M3 ReplayProtectedLaneRx shares only verified Go S2C secret scope, checks AEAD/unique PN then RS16 recovers source1. Exactly the authenticated recovered packet is written via original M4 ScopedTunSink::write_authenticated_ipv4 with generation/Stop/complete IPv4 checks into a real IFF_TUN+IFF_NO_PI interface; independent original Go Linux UDP socket receives 99-byte payload from 10.241.20.2:42001 to 10.241.20.1:49231.",
+    "anti_replay_and_fail_closed": [
+      "Default Rust release has NO FEC2 probe grant C ABI symbol; default Go hook inert",
+      "No FEC2 ingress before real Go TLS positive feature7 private post-Detach owner scope",
+      "Duplicated authentic source0 PN0 rejected by actual per-peer ReplayProtectedLaneRx",
+      "Mutated independent raw-captured repair PN1 rejected by actual AEAD, valid PN1 then succeeds",
+      "Parity duplicate rejected after first recovery",
+      "Only recovered authenticated 127B IPv4, never Go-supplied plaintext, reaches TUN sink",
+      "Original owner generation, M4 TUN driver Stop fence, IPv4 total length checks enforced",
+      "Go UDP app checks exact 99-byte deterministic payload, sourceIP/port; all three suites pass"
+    ],
+    "test_qualification": "One true isolated Linux netns, root privileges, kernel TUN fd and raw TCP socket. FEC2 source1 is intentionally not sent (simulated erasure by omission), not tc-based packet loss; FEC2 receiver is an extra-feature same-process CLIENT perspective and is not shipped production client or independent real remote endpoint.",
+    "exclusions": [
+      "Actual M1 live Fec2Owner source-first/deadline/fair parity scheduling NOT_WIRED; only original Arena/FrozenRecord used",
+      "M2 authenticated receipt/repair budget ingress NOT_WIRED",
+      "Actual Go applied FEC2 fixed/auto profile, UI/config and policy revision NOT_WIRED: Strong/revision1 are fixed probe settings",
+      "Public Go and Rust production FEC2 OFF, extra feature/tag-only probe",
+      "True cross-machine network FEC2, physical, Windows and ARM64 NOT_RUN",
+      "Legacy R0-023 65KiB LINK cross-turn/MTU/Stop prefix uncertainty OPEN",
+      "Prior original Normal/off netem configured 150ms suite3 second fragment pending FAIL remains open from Actions39106157061",
+      "Old codec 240s and D10/p99 regressions OPEN"
+    ]
+  },
+  "actions": {
+    "run_id": 39108729075,
+    "attempt": 1,
+    "head_sha": "abfda4eee1ec17c6e5ccd9417bde4d15bc63015f",
+    "conclusion": "success",
+    "job_id": 117620073911,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39108729075",
+    "case": "TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS suite1/suite2/suite3",
+    "go_udp_app_receipt_each_suite": {
+      "received_ip_bytes": 127,
+      "udp_data_bytes": 99,
+      "origin_port": 42001,
+      "target_port": 49231,
+      "match": true
+    },
+    "ciphertext_kernel_replay_RS16": "PASS in all three suites; PN0 source2 and PN1 repair3; duplicate and tampered rejection retained",
+    "test_log_actual": [
+      "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=1 recovered_ip=127 udp_payload=99",
+      "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=2 recovered_ip=127 udp_payload=99",
+      "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=3 recovered_ip=127 udp_payload=99"
+    ],
+    "artifact": {
+      "id": 12129268479,
+      "name": "m0-real-go-fec2-owner-grant-39108729075-1",
+      "reported_github_sha256": "5cbbd1d80b651200b0ba1b8be1d4cb00b30ca685a8eec8265ff3a7a33e185656",
+      "independently_downloaded_sha256": "5cbbd1d80b651200b0ba1b8be1d4cb00b30ca685a8eec8265ff3a7a33e185656",
+      "real_kernel_log_sha256": "5fbd2c68ef87e7243e94e63d18fe724de423f17cf8e9c0eb3fc6f5b93ba25dda",
+      "receipt_sha256": "not_independently_recorded"
+    },
+    "default_release_probe_symbols": "ABSENT and default FEC2 OFF",
+    "actual_Go_TLS_suite_count": 3
+  },
+  "old_failures_preserved": [
+    "39106157061 original Normal/off 150ms configured netem suite3 LINK fragment-2 pending; no replay here",
+    "39098885670 legacy codec 240s timeout and ignored diagnostic",
+    "R0-023 legal max 65KiB cross-turn Stop/MTU uncertain and D10 performance regressions"
+  ],
+  "next_action": "Connect original M2 typed authenticated recovery/receipt with actual original M1 Fec2Owner parity lifecycle and real Go applied config/revision, test loss/receipt/no-HOL/Stop/MTU and cross-turn larger UDP in SOURCE-locked Actions. Do not enable production FEC2 or claim original legacy 150ms regression fixed."
+}
