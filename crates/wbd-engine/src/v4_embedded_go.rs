@@ -69,6 +69,8 @@ struct WorkerRouteBudget {
 struct Entry{
     generation:u32,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
+    #[cfg(feature="m0_fec2_owner_probe")]
+    protected_fec2_features:u16,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -130,6 +132,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        #[cfg(feature="m0_fec2_owner_probe")]
+        protected_fec2_features:handoff.negotiated_features,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -188,6 +192,50 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     e.phase=PH_ACTIVE;
     OK
 }
+// This probe binding is distinct from parsing untrusted WBGH/v2.
+// It is called only from the original Go package's credential-checked
+// private callback, after actual protected reply, Detach and Rust Commit.
+// It is NOT compiled into default production (no public feature enable).
+#[cfg(feature="m0_fec2_owner_probe")]
+fn bind_fec2_from_private_go(
+    handle:u64,epoch:[u8;16],features:u16,profile:u8,revision:u64
+)->i32{
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.protected_fec2_features!=7
+        ||features!=e.protected_fec2_features{return INVALID}
+    if e.owner.bind_fec2_probe_from_private_go(
+        features,epoch,profile,revision).is_err(){return INVALID}
+    OK
+}
+#[cfg(feature="m0_fec2_owner_probe")]
+fn scoped_fec2_probe_bound(handle:u64,epoch:[u8;16])->i32{
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase==PH_ACTIVE&&e.protected_fec2_features==7
+       &&e.owner.is_fec2_probe_bound_to(epoch){OK}else{INVALID}
+}
+#[cfg(feature="m0_fec2_owner_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls(
+    h:u64,epoch:*const u8,len:usize,features:u16,profile:u8,revision:u64
+)->i32{
+    if epoch.is_null()||len!=16{return INVALID}
+    let mut bytes=[0u8;16];
+    bytes.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
+    bind_fec2_from_private_go(h,bytes,features,profile,revision)
+}
+#[cfg(feature="m0_fec2_owner_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_scope_status(
+    h:u64,epoch:*const u8,len:usize
+)->i32{
+    if epoch.is_null()||len!=16{return INVALID}
+    let mut bytes=[0u8;16];
+    bytes.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
+    scoped_fec2_probe_bound(h,bytes)
+}
+
 fn abort(handle:u64)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
