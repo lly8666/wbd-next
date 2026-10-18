@@ -1452,11 +1452,75 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=%d after=%d copied=1 owner_tx_error_growth=%d",
         mtuEventBefore,afterEventRev,afterRouteFollower.TxErr-beforeRouteFollower.TxErr)
-    // Stop while both originally spawned RX/TX workers and both actual
-    // kernel drivers remain installed. Join and retire before any generation
-    // can reattach; the M4 late-LoanBatch deterministic contract is a
-    // separate existing component gate, not falsely claimed here.
-    if e:=b.stopRelease();e!=nil{t.Fatalf("real active workers Stop/Release: %v",e)}
+    // One more fresh full-size ORIGINAL kernel TUN packet, this time
+    // interrupted by REAL Stop/Release after the first 32 sendmmsg copies.
+    // The barrier is test-only and outside all owner/device locks. No
+    // synthetic packet numbers, driver completions or alternate sender.
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65535").CombinedOutput();e!=nil{
+        t.Fatalf("restore real TUN 65K ingress before midflight Stop: %v %s",e,out)
+    }
+    time.Sleep(200*time.Millisecond)
+    if _,_,e:=b.rustOwnerDebugJumboPause(true);e!=nil{
+        t.Fatalf("arm real 65K Stop barrier: %v",e)
+    }
+    beforeStop,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    if n,e:=app.WriteToUDP(jumboPayload,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(jumboPayload){
+        t.Fatalf("real kernel 65K Stop source n=%d err=%v",n,e)
+    }
+    stopPaused:=false
+    var stopLoans uint32
+    for lim:=time.Now().Add(3*time.Second);time.Now().Before(lim);{
+        var e error
+        stopPaused,stopLoans,e=b.rustOwnerDebugJumboPause(true)
+        if e!=nil{t.Fatalf("midflight Stop ownership status: %v",e)}
+        if stopPaused{break}
+        time.Sleep(time.Millisecond)
+    }
+    if !stopPaused||stopLoans!=0{
+        t.Fatalf("actual original M1 loan not quiescent before kernel Stop: paused=%t loans=%d",stopPaused,stopLoans)
+    }
+    duringStop,e:=b.rustOwnerLoopStats()
+    if e!=nil||duringStop.TxOK!=beforeStop.TxOK+32{
+        t.Fatalf("real first 32 kernel copies not completed before Stop: before=%+v during=%+v err=%v",beforeStop,duringStop,e)
+    }
+    // Stop must wake the paused worker, join both original Rust threads and
+    // retire the SAME native M4 raw/TUN drivers before returning to Go.
+    if e:=b.stopRelease();e!=nil{
+        t.Fatalf("actual midflight 65K original owner Stop/Release: %v",e)
+    }
+    stopParts:=0
+    var stopID uint32
+    stopDeadline:=time.Now().Add(650*time.Millisecond)
+    for time.Now().Before(stopDeadline){
+        pkt:=make([]byte,2048)
+        n,_,e:=syscall.Recvfrom(peer,pkt,0)
+        if e!=nil||n<40||pkt[0]>>4!=4||pkt[9]!=6{continue}
+        ihl:=int(pkt[0]&0xf)*4
+        if ihl<20||ihl+20>n||!bytes.Equal(pkt[12:16],b.originalFlow.ServerIP[:])||
+            !bytes.Equal(pkt[16:20],b.originalFlow.ClientIP[:]){continue}
+        if binary.BigEndian.Uint16(pkt[ihl:ihl+2])!=b.originalFlow.ServerPort||
+            binary.BigEndian.Uint16(pkt[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+        tcpLen:=int(pkt[ihl+12]>>4)*4
+        if tcpLen<20||ihl+tcpLen>n||pkt[ihl+13]&0x08==0||n-ihl-tcpLen<=31{continue}
+        rec,e:=open.OpenRecord(pkt[ihl+tcpLen:n])
+        if e!=nil||rec.Kind!=tlsrecord.KindLINK{
+            t.Fatalf("midflight Stop original Go AEAD/PN verification: %v",e)
+        }
+        if len(rec.Payload)<=20||string(rec.Payload[:8])!="WBDLFRG1"{
+            t.Fatalf("nonfragment sent after original jumbo Stop: pn=%d",rec.PN)
+        }
+        id:=binary.BigEndian.Uint32(rec.Payload[16:20])
+        if stopID==0{stopID=id}
+        if id!=stopID{t.Fatalf("old generation mixed LINK packet after Stop id=%d expected=%d",id,stopID)}
+        stopParts++
+        if stopParts>32{t.Fatalf("late old-ID tail after real Stop: parts=%d",stopParts)}
+    }
+    if stopID==0||stopParts!=32{
+        t.Fatalf("real Stop did not preserve exact first kernel prefix: ID=%d fragments=%d",stopID,stopParts)
+    }
+    t.Logf("EMBEDDED_REAL_JUMBO_MIDFLIGHT_STOP_NO_TAIL_PASS copied_prefix=32 old_id_parts=%d remaining_sent=0 loans=%d join=1 original_M4_kernel=1",stopParts,stopLoans)
     if e:=b.startRustOwnerLoop(uint32(lo.Index));e==nil{
         t.Fatal("retired original Go-authenticated Rust session restarted")
     }
