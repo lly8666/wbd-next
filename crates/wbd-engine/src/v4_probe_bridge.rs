@@ -1381,7 +1381,9 @@ mod m0_fec2_owner_integration_tests{
                 assert!(p.owner.bind_fec2_probe_from_private_go(
                     7,[0;16],5,1).is_err());
                 assert!(p.owner.bind_fec2_probe_from_private_go(
-                    7,[2;16],5,2).is_err());
+                    7,[2;16],5,0).is_err(),"zero revision rejected");
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[2;16],7,2).is_err(),"unknown profile rejected");
                 assert!(p.owner.bind_fec2_probe_from_private_go(
                     3,[2;16],5,1).is_err());
                 assert!(p.owner.bind_fec2_probe_from_private_go(
