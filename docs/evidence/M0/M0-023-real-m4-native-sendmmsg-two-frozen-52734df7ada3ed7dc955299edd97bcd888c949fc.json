@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "52734df7ada3ed7dc955299edd97bcd888c949fc",
+  "progress": "partial",
+  "unverified": true,
+  "product_fec2": "OFF",
+  "result": "PASS_TEST_ONLY_ACTUAL_ORIGINAL_M4_LINUX_SENDMMSG_ONE_SYSCALL_TWO_ORIGINAL_M1_FROZEN_RECORDS_M2_SCOPED_ACCEPTED_PREFIX_THREE_CIPHER_SUITES",
+  "source_paths": [
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+  ],
+  "verified": [
+    "H154 HEAD faf52bc14571c334320271a68440237f0021771d clean on remote main, registry rr2 M0 epoch1 task R0-023 and no pending Actions. All changes M0-owned paths; M1/M2/M3/M4 original worker paths unchanged.",
+    "Source-locked original Go private protected TLS all three suites (ChaCha20, AES-128, AES-256), three per-suite real rootnetns cases: same original one-slot M4 sendto frozen repair; two M2 scoped frozen reservations + first M4 sendto and explicit never-syscalled second ProvenNotAttempted refund; NEW two M2 scoped frozen reservations + ONE actual original M4 ScopedRawIpv4Tx::send_kernel_multimsg of two immutable Arc-backed original M1 FrozenRecord records with no new PN/AEAD/Seq. Source-first M1/M3 RS16 e1 and original TUN→Go UDP app 99B also PASS.",
+    "Independent original Go raw kernel peer captures both sent original FrozenRecord ciphertexts byte-exact PN0/PN1 and original TCP Seq per message. Original M4 sendmmsg reports exactly accepted_prefix=2 no uncertain or error; M2 complete_driver_prefix consumes original process-global two reservations, reports Accepted2, NotSent0, Uncertain0, Unproven0, charges BOTH and releases neither as peer ACK. Only later independent C2S original Go SealHealth kind1 raw real kernel→original M4 Rx→Rust M3 AEAD unique control PN→M2 typed receipt releases two frozen handles.",
+    "Negative cases include tampered original Go C2S raw AEAD, replay C2S control PN, bitmap outside independently pinned outbound data PN, repeated repair dispatch on same evidence, Stop removes stale session; test-only synthetic missing data receipt bitmap, not a peer automatically observing actual network drop.",
+    "For actual M4 report error/partial, M0 conservative adapter maps accepted_prefix and optional uncertain_index, preserving every other suffix as Unproven, never fabricating ProvenNotAttempted on EAGAIN/short/interrupted; this mapping is code-tested only on full positive native sendmmsg, NOT qualified on real partial/error kernel conditions.",
+    "The existing M0 process singleton original M2 GlobalRepairAllocator tested on three simultaneous independently TLS-authenticated Go owners with two 32KiB grants block third against hard 64KiB, Stop revokes unused only."
+  ],
+  "exact_source_actions": {
+    "focused": {
+      "run_id": 39123212483,
+      "attempt": 1,
+      "job_id": 117662900309,
+      "conclusion": "success",
+      "artifact_id": 12134707807,
+      "name": "m0-real-go-fec2-owner-grant-39123212483-1",
+      "sha256": "be0beff0c6e5bfa8cfb60620f044e14e8d1db659a784b88deca0976a19aa079d",
+      "independently_rehashed": true,
+      "receipt_source_sha": "52734df7ada3ed7dc955299edd97bcd888c949fc",
+      "original_go_tls_ciphers": 3,
+      "actual_kernel_subtests": 9,
+      "sendmmsg_2slot_suites": 3,
+      "original_m4_true_one_kernel_call": true,
+      "original_m2_accepted_two": true,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39123212483"
+    },
+    "governance": {
+      "run_id": 39123212418,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "run_id": 39123212442,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "preceding_code_source_context": {
+    "code_source": "656c1663dedd4e5a613f9bc5dcbb47f426d6caaa",
+    "note": "Rust M0 source code compiled and selected matrix verified earlier CODE SHA; final SOURCE 52734 additionally includes Go/kernel tests and workflow; do not claim exact SOURCE 52734 verified full matrix.",
+    "selected_native_functional": {
+      "run_id": 39123087963,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "run_id": 39123087916,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected aarch64 Linux and Windows GNU, NOT full original native codec"
+    },
+    "native_abi": {
+      "run_id": 39123087927,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "scoped_bootstrap": {
+      "run_id": 39123087935,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "static": {
+      "run_id": 39123087930,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "normal_off_kernel": {
+      "run_id": 39123087917,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "single selected Normal/off including configured150ms exploratory only, historical 150ms red retained"
+    },
+    "governance": {
+      "run_id": 39123087950,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "limits": [
+    "sendmmsg FULL-PREFIX success only under 2 slots and loopback three cipher suites; real 1/32 partial success, kernel EINTR/EAGAIN, ambiguous completion/unknown suffix, device MTU and Stop concurrent driver races NOT_RUN",
+    "Test-only 52B negative/positive kind1 Go fixture is not canonical deployed receipt product wire, original peer automatically measuring real packet loss and continuous sender schedule NOT_WIRED",
+    "Go original applied fixed/auto per-direction CLI/GUI revision not connected; process cap only feature-gated M0 actual three-Go-TLS session probe; production FEC2 OFF",
+    "Legal ~65KiB cross-turn UDP >32 frames, MTU±1/loan/noHOL/Stop, history 150ms intermittent FAIL and codec240s/D10/p99 same-job ABBA, complete native ARM64/Windows codec+loader and physical two endpoints NOT_RUN",
+    "Historical H152 Governance failure context_refs >8 corrected H153, original 150ms failures preserved, earlier source-locked evidence archived."
+  ],
+  "next_action": "Continue M0 R0-023 with true M4 sendmmsg 2..32 slot unknown-prefix/Uncertain/NotSent/Stop/epoch negative test matrix (do not infer NotSent from missing errno); then canonical authenticated peer feedback from real loss, original Go applied per-direction fixed/auto revision CLI/GUI and continuous M1 scheduling; large UDP/physical qualification. FEC2 OFF."
+}
