@@ -102,6 +102,10 @@ pub fn split_one(input: &[u8], max_wire: usize) -> Result<(OpaqueFrame<'_>, &[u8
 }
 
 #[cfg(test)]
+#[path = "fec_v2_tests.rs"]
+mod fec_v2_oracle_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     const OLD_GO_FIXTURE: &str = include_str!("../../../r0/fixtures/legacy-record-wire-v1.txt");
