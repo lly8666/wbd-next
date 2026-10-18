@@ -248,3 +248,50 @@ fn r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence() {
         for (index,payload) in a {assert_eq!(payload,f[index as usize]);}
     }
 }
+
+#[test]
+fn r1_f2_prepared_block_batch_dirty_reuse_and_exact_oracle() {
+    let rs=Rs16::new();
+    for k in [1usize,2,8,16] {
+        let f=frames(k);
+        let src=f.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let mut block=PreparedBlock::from_frames(&src,100).unwrap();
+        assert_eq!(block.k(),k);
+        let r=Profile::Maximum.parity_count(k).unwrap();
+        for start in (0..r).step_by(MAX_BATCH_ROWS) {
+            let count=(r-start).min(MAX_BATCH_ROWS);
+            let size=REPAIR_HEADER+block.symbol_len();
+            let mut owned=vec![vec![0x7b;size];count];
+            let got={
+                let mut slices=owned.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+                rs.encode_prepared_into(91,&mut block,Profile::Maximum,start,
+                    &mut slices,100,BackendChoice::Scalar).unwrap()
+            };
+            assert_eq!(got,BackendUsed::Scalar);
+            for (i,row) in owned.iter().enumerate() {
+                assert_eq!(parse_repair(row,100).unwrap().body,oracle_row(&src,start+i));
+            }
+        }
+        assert_eq!(block.cached_native_tables(),0);
+    }
+}
+#[cfg(feature="native-isal")]
+#[test]
+fn r1_f2_prepared_native_cached_tables_real_ec_encode_data() {
+    let rs=Rs16::new();
+    let f=(0..16).map(|i|vec![(i*17) as u8;128+i]).collect::<Vec<_>>();
+    let src=f.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let mut block=PreparedBlock::from_frames(&src,180).unwrap();
+    for _ in 0..3 {
+        let size=REPAIR_HEADER+block.symbol_len();
+        let mut out=vec![vec![0xee;size];4];
+        let mut borrowed=out.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+        let backend=rs.encode_prepared_into(812,&mut block,Profile::Maximum,0,
+            &mut borrowed,180,BackendChoice::RequireNative).unwrap();
+        assert_eq!(backend,BackendUsed::NativeIsaL);
+        for (i,w) in out.iter().enumerate() {
+            assert_eq!(parse_repair(w,180).unwrap().body,oracle_row(&src,i));
+        }
+    }
+    assert_eq!(block.cached_native_tables(),1);
+}
