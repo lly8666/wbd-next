@@ -1108,7 +1108,8 @@ mod m0_fec2_owner_integration_tests{
                 assert_eq!([a.0,b.0,c.0],[0,1,2]);
                 assert_eq!(b.1,a.1.wrapping_add(a.2 as u32));
                 assert_eq!(c.1,b.1.wrapping_add(b.2 as u32));
-                let batch=p.owner.drain_tx(MonoNs(0),Vec::new()).unwrap();
+                let batch=p.owner.drain_tx(MonoNs(0),Vec::new())
+                    .unwrap_or_else(|_|panic!("original M1 TX queue did not drain"));
                 let ready=p.owner.checked_tx_ready(&batch).unwrap();
                 assert_eq!(ready.len(),3);
                 let list=ready.iter().map(|v|
