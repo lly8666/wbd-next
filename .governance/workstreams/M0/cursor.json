@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 162,
-  "checkpoint_sha": "1600dfba7d30a0fb0e656213504bcef70742d88e",
+  "sequence": 163,
+  "checkpoint_sha": "ffdc6a9f76c79b1319781b76fbc23d2bed4b9239",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 H162 recovered seven post-H161 M0 code/CI commits, and final source b89378f5: original Go credential TLS -> original Rust owner/M1/M3 -> M4 actual Linux raw/TUN continuous background worker now admits 65535B TUN IPv4 and delivers 51 exact authenticated LINK pieces across >32 kernel frames, real peer byte reassembly and unrelated small follower noHOL. Live MTU-1 next follower succeeds. Source-locked single-build two-job native probe PASS, including 10ms/150ms/12packet/1percent observation and kernel target-drop; preceding 091d full 14/14 scoped native matrix PASS but 091d native 150ms probe FAIL retained. Product FEC2 OFF; still partial/unverified.",
-  "why_now": "H161 checkpoint 8d7212a missed seven later commits 103a..b893. Compared each commit/path, M0-only changes, prior 091d 14-job matrix and failed 150ms artifact. Historical 150ms probe in CI ran before the first actual live jumbo integration hard gate, masking new evidence when it failed; reorder-only source b893 pushes 65KiB/MTU/noHOL earlier without suppressing 150ms. Action39143973567 attempt1 complete PASS, exact build/result artifacts recorded in evidence S1600dfba; Governance and maintenance b893 PASS. One exploratory 150ms PASS does not erase prior FAIL.",
+  "current_task": "M0 R0-023 H163: one-build three-concurrent-lane real original Go TLS/Rust/M1/M3/M4 kernel, netem, isolated metric SOURCE 1cf2eadf1ee53e3f000a23da6ea87f5c882114eb Action39145815041 attempt1 four jobs all PASS. Actual 65535B TUN/51 LINK frames across >=2 M4 kernel batches and peer reassembly, live MTU-1 small follower/noHOL, 10ms/150ms netem, 1percent actual kernel drops observed and 10+60s 10Mbps each-direction developer measurement all tested in separate stable lanes with immutable same-build hashes; no repeated 14-job sweep, no cross-job ABBA claim. Historic 150ms FAIL retained; FEC2 product OFF.",
+  "why_now": "Recovered H162 CLEAN source b893; slow consume mixed functional, impairment, and 60s metric in one serial job. Changed ONLY shared workflow to source-verified one-build matrix [critical,impairment,metric], fail-fast=false, split receipts. Exact run39145815041 attempt1 success, all four job conclusions success, independent build+three lane result artifacts source-hashed in S ffdc6a9f76c79b1319781b76fbc23d2bed4b9239; source gov39145815091 and maintenance39145815074 PASS. Source code/data path unchanged; no worker files or product gates changed.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "R0-023 next complete hard-gate functional batch: actual Go TLS original owner live 65535B LINK transmit interruption under Stop/generation and kernel MTU shrink or route revision DURING 2+ batches, bounded loan no late same packet ID tail, independent small follower noHOL; M4 2..32 distinct frozen driver partial/EAGAIN/Uncertain/Stop translation and retry semantics. Keep old 150ms intermittent FAIL visible and narrow reproduction rather than blind rerun. After these, connect M2 real reverse authenticated kind1/FrozenRecord and original M1 firstsent scheduling/2s Go per-direction auto, applied CLI/GUI revision, then physical/240s same-VM ABBA and product hard gates. FEC2 OFF until all proven.",
+  "next_action": "R0-023 resume single complete real-network gap batch, not per-assertion CI runs: original Go TLS 65535B LINK in-flight interruption while >1 M4 batches (Stop/generation change and kernel MTU/route event ±1), loan zero and terminal same-ID tail, independent small first packet noHOL; type and source-lock M4 distinct 2..32 partial/EINTR/EAGAIN/Uncertain/Stop on actual original driver. Then M2 authenticated reverse C2S kind1/FrozenRecord, M1 firstsent and per-client/dir 2s AUTO budget, M4 Go fixed/auto CLI/GUI applied revision, full physical+Windows/ARM/D10 p99 same-job ABBA before any product activation. Use three parallel source-pinned test lanes, single build; do not repeat passed native 14-job baseline without code impact.",
   "unverified": true,
-  "last_tested_source": "b89378f50258966eaa785a397755f09d5bc63793",
+  "last_tested_source": "1cf2eadf1ee53e3f000a23da6ea87f5c882114eb",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-real-65535-cross-turn-batched-native-b89378f50258966eaa785a397755f09d5bc63793.json"
+    "docs/evidence/M0/M0-023-3-lane-single-build-real-go-tls-1cf2eadf1ee53e3f000a23da6ea87f5c882114eb.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/M0-023-real-65535-cross-turn-batched-native-b89378f50258966eaa785a397755f09d5bc63793.json",
     "docs/evidence/M0/M0-023-original-m1-65k-two-turn-14job-a474def3562eab434d8619ba6207d2088cf63631.json",
     "docs/evidence/M0/M0-023-14-job-preactivation-hard-gate-sweep-ece8f9d5d0dc40ddcfeb3bffd54c15398a354c92.json",
     "docs/evidence/M0/M0-023-parallel-auth-quality-stop-policy-d07a001ac4c35517a60708c1696d632d83a36e92.json",
     "docs/evidence/M0/M0-023-go-auto-pending-new-block-ac6f5b737b2631717030f2b95b78b0b15d9736ec.json",
-    "docs/evidence/M0/M0-023-m4-m2-1122-prefix-shapes-6258d317437f2e7a069feb3607d454f6932e7d3b.json",
     "docs/history/INDEX.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H162 partial/unverified FEC2 OFF. Exact source b89378f5 Action39143973567 attempt1 native build/consume PASS; real Go private credential TLS original Rust owner M1/M3 M4 Linux TUN 65535B with 51 authenticated LINK frames >32 across worker kernel batches to independent Go peer reassembled exact, noHOL follower, live MTU-1 follower PASS; 10ms/150ms exploratory PASS, target drop noHOL PASS, 12 packet/suite PASS, 1percent observation and 10+60s developer metric not product. Provider build artifact12142098289 sha22998bd...; result12143220063 sha012cf91...; Gov39143973564 and maintenance39143973494 PASS. Previous 091d 14/14 Action39142346680 PASS but native 39142346744 150ms FAIL remains historical red. Real in-flight Stop/generation/MTU across jumbo, M4 distinct 2..32 driver partial/uncertain, authenticated M2 reverse kind1, M1 live auto, Go config/CLI/GUI applied, physical two peers, full ARM/Windows drivers and 240s D10/p99 ABBA NOT_RUN; product NOT_RUN."
+  "partial_summary": "H163 partial/unverified product FEC2 OFF. New SOURCE 1cf2eadf exact workflow Action39145815041 attempt1 jobs build/critical/impairment/metric all PASS. Provider artifact IDs build12143531635 sha e6465214..., critical12143386390 sha f4be10a1..., impairment12142544336 sha711a83f2..., metric12143278016 sha660e6845...; full SHA256 in evidence S ffdc6a9. Actual kernel original Go TLS 65535B 51 authenticated LINK, MTU-1 noHOL, Stop existing, 3-cipher 10ms/150ms, 1percent netem dropped4, PN0 dropped PN1 delivered, developer Normal/off 10+60s C2S/S2C≈10Mbps—not ABBA or product p99. Main source governance39145815091 & maintenance39145815074 success. Historical 150ms intermittent FAIL still OPEN. Actual cross-turn mid-flight Stop/generation/MTU, native M4 2..32 partial/uncertain, M2 reverse authenticated kind1, M1 live FEC2, Go applied CLI/GUI/auto, physical/ARM/Windows/240s ABBA remain NOT_RUN."
 }
