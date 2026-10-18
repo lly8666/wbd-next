@@ -1,0 +1,140 @@
+name: M0 FEC2 pinned ISA-L target native build probes
+run-name: "M0|FEC2-ISA-PLATFORMS|M4-7cef7e8|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-fec2-isal-platform.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-fec2-isal-platforms-${{ github.sha }}-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  linux-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            machine: x86_64
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            machine: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - name: Build official ISA-L v2.31.1 for actual native host and call Rust safe wrapper
+        shell: bash
+        env:
+          EXPECTED_TARGET: ${{ matrix.target }}
+          EXPECTED_MACHINE: ${{ matrix.machine }}
+        run: |
+          set -euo pipefail
+          test "$(git -C worker-m4 rev-parse HEAD)" = 7cef7e849e293373d907a3b64007b4ce8946da78
+          test "$(uname -m)" = "$EXPECTED_MACHINE"
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool nasm make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/fec2-isal-$EXPECTED_MACHINE"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cp worker-m4/native/isal-safe/build.rs native/isal-safe/build.rs
+          mkdir -p fec2-platform-result
+          cargo +1.85.1 test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture 2>&1 | tee fec2-platform-result/native.log
+          grep -Fq REAL_ISAL_V2311_EC_ENCODE_DATA_PASS fec2-platform-result/native.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          t=os.environ["EXPECTED_TARGET"]
+          a={"result":"PASS","qualification":"actual-native-Linux-ISA-L-safe-wrapper-XOR-and-ec_encode_data",
+             "m4_source":"7cef7e849e293373d907a3b64007b4ce8946da78",
+             "m0_control":os.environ["GITHUB_SHA"],"upstream_source":"c387163fcbca62701d646149564c550c78a4f985",
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "target":t,"machine":platform.machine(),"native_feature":"native","rust":"1.85.1",
+             "m4_build_rs_sha256":sha("worker-m4/native/isal-safe/build.rs"),
+             "libarchive_sha256":sha(os.environ["WBD_ISAL_PREFIX"]+"/lib/libisal.a"),
+             "test_log_sha256":sha("fec2-platform-result/native.log"),
+             "codec_FEC2_native_oracle":"NOT_RUN","NEON_actual_instruction_dispatch":"NOT_PROVEN",
+             "product":"NOT_RUN"}
+          pathlib.Path("fec2-platform-result/result.json").write_text(json.dumps(a,indent=2)+"\n")
+          print(json.dumps(a,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fec2-platform-${{ matrix.machine }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-platform-result/
+          retention-days: 30
+          if-no-files-found: warn
+  windows-native:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - name: Verify Windows toolchain and original pinned source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git -C worker-m4 rev-parse HEAD).Trim() -ne '7cef7e849e293373d907a3b64007b4ce8946da78') {throw 'M4 source drift'}
+          rustup toolchain install 1.85.1 --profile minimal
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if ((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985') {throw 'ISA-L source drift'}
+          Copy-Item worker-m4/native/isal-safe/build.rs native/isal-safe/build.rs -Force
+          New-Item -ItemType Directory -Force fec2-platform-result | Out-Null
+          ('WIN_NATIVE_TARGET=x86_64-pc-windows-msvc' | Out-File fec2-platform-result/provenance.log)
+      - name: Official ISA-L Win64 static archive build through MSVC nmake
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd isa-l
+          nmake /f Makefile.nmake
+      - name: Execute Rust wrapper against real built Win64 static archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File
+          if ($files.Count -eq 0) { throw 'official Win64 isa-l_static.lib not found after nmake' }
+          $one=$files | Select-Object -First 1
+          $env:WBD_ISAL_PREFIX=$one.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          cargo +1.85.1 test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture *>&1 | Tee-Object fec2-platform-result/native.log
+          if ($LASTEXITCODE -ne 0) {throw 'Rust Win64 ISA-L native test failed'}
+          if (-not (Select-String -Quiet 'REAL_ISAL_V2311_EC_ENCODE_DATA_PASS' fec2-platform-result/native.log)) {throw 'actual native call witness absent'}
+          $m=@{result='PASS';scope='Windows native wrapper ISA-L actual C encode; FEC2 codec, Go bridge, driver NOT_RUN';
+            m4_source='7cef7e849e293373d907a3b64007b4ce8946da78';m0_control=$env:GITHUB_SHA;
+            upstream='c387163fcbca62701d646149564c550c78a4f985';target='x86_64-pc-windows-msvc';
+            run_id=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;
+            build_rs_sha256=(Get-FileHash worker-m4/native/isal-safe/build.rs -Algorithm SHA256).Hash.ToLower();
+            archive_sha256=(Get-FileHash $one.FullName -Algorithm SHA256).Hash.ToLower();
+            log_sha256=(Get-FileHash fec2-platform-result/native.log -Algorithm SHA256).Hash.ToLower()}
+          ($m | ConvertTo-Json -Depth 4) | Set-Content fec2-platform-result/result.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fec2-platform-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-platform-result/
+          retention-days: 30
+          if-no-files-found: warn
