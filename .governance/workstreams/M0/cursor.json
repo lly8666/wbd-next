@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 143,
-  "checkpoint_sha": "3132d0f984b865496978abacdda461bd7ab802ae",
+  "sequence": 144,
+  "checkpoint_sha": "a03695efd0adf70fe7995d80925807e139216db8",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 original Go TLS scoped FEC2 bit2 source2/repair3 encrypted through actual M4 Linux raw kernel now independently received by Go SOCK_RAW and authenticated/de-duplicated by original M3 Rust receive replay, missing source1 e1 mathematically reconstructed exactly 127B for 3 suites SOURCEc7 Actions39107436575 PASS. Product FEC2 OFF; not real TUN/M2 client.",
-  "why_now": "User asked continue after H142 real FEC2 kernel raw sent only. M0 reused prior real kernel ciphertext and original Go TLS S2C keys to establish feature-only separate CLIENT receive-side original M3 ReplayProtectedLaneRx, actual AEAD+PN unique admission, M3 RS16 missing-only recovery, independent original Go byte-for-byte app oracle; no alternate TX/PN ownership, default ABI unchanged.",
+  "current_task": "R0-023 M0 feature-only real protected Go TLS/FEC2 bit2 → original Rust owner M3 RS16 127B IPv4 e1 from real M4 raw TCP encrypted packet → original M4 Linux TUN sink → actual independent Go UDP app 99B correctly delivered for all 3 cipher suites. Exact SOURCEabfda4 Actions39108729075 SUCCESS, default FEC2 OFF.",
+  "why_now": "After H143 independently authenticated real M4 raw ciphertext and M3 RS16 recovery, original test-only recovery was just 127 arbitrary bytes. This M0 iteration made missing source1 a real checksum-valid IPv4/UDP frame and connected only authenticated M3 e1 result to existing generation/Stop-guarded original ScopedTunSink, verifying actual isolated Linux kernel UDP app delivery in three suites, with independently rehashed Actions ZIP.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Move protected original M3 FEC2 real client ingress and e1 recovery to genuine M4 TUN business app and M2 authenticated repair/receipt lifecycle, using actual M1 Fec2Owner source-first scheduling and original Go applied fixed/auto policy/revision before product switch. Independently root-case old 150ms Normal/off second LINK fragment pending suite3 failure; R0-023 legal 65KiB cross-turn Stop/MTU prefix uncertain, codec240s D10 p99 and Windows/ARM64 OPEN, no product FEC2 enable.",
+  "next_action": "Wire actual M1 Fec2Owner source-first/deadline/parity policy into successful original owner→raw/TUN path and M2 authenticated feedback/receipt bounded original repair; only after true original Go applied CLI/GUI fixed/auto profile/revision and two-endpoint scope proof could product be considered. Keep full Normal/off 150ms suite3 second LINK pending FAIL separate, R0-023 legal65KiB cross-turn MTU/Stop/prefix unknown, old codec240s D10/p99 ARM/Windows and physical OPEN; public FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "c7bd452423e932255fbe3916a2a12e6727a3cdb8",
+  "last_tested_source": "abfda4eee1ec17c6e5ccd9417bde4d15bc63015f",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-real-kernel-fec2-peer-m3-rs16-c7bd452423e932255fbe3916a2a12e6727a3cdb8.json"
+    "docs/evidence/M0/M0-023-real-fec2-m3-m4-tun-udp-abfda4eee1ec17c6e5ccd9417bde4d15bc63015f.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
-    "docs/evidence/M0/M0-023-fec2-actual-m4-kernel-source-repair-f6069a955d06508814341a23e22db27713424454.json",
+    "docs/evidence/M0/M0-023-real-kernel-fec2-peer-m3-rs16-c7bd452423e932255fbe3916a2a12e6727a3cdb8.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/architecture/TEST_PLAN.md",
@@ -27,5 +27,5 @@
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE c7bd452423e932255fbe3916a2a12e6727a3cdb8 Actions39107436575 attempt1 success, job117616234174: original protected Go TLS 3 real ChaCha/AES128/AES256; M0 Rust original owner M1 FrozenRecord sends M3 FEC2 source2 PN0 and parity3 PN1 genuine kernel M4 raw TCP to independent Go SOCK_RAW peer; Go captures actual cipher records and passes to extra-tagged independent CLIENT perspective original Rust M3 ReplayProtectedLaneRx generated from same protected Go TLS S2C keys and freshly initialized unique PN window; source0 authenticated (no app), exact replay and tampered PN1 rejected, source0+parity0 valid recover missing source1 e1 exactly127B and Go checks every byte, repeat parity rejected. Original M1 Fec2Owner complete scheduling not wired; this is deliberate not-sent source1 not actual tc loss; no M2 feedback/TUN app. Default Rust build FEC2 symbol absent, public FEC2 OFF. Artifact12128972528 GitHub sha256 db12af775113bc533980f73f281ab5c4f6d428d4eb435dee29f833d1acea54e3 independently downloaded and ZIP rehashed identical, kernel log f21c2e... . User old 150ms Normal/off raw/TUN regression under 39106157061 still FAIL, codec240s/D10/p99 and R0 65KiB cross-turn/Stop/MTU/prefix-unknown, ARM/Windows OPEN. No actual Go CLI/GUI applied revision or FEC2 product qualification."
+  "partial_summary": "SOURCE abfda4eee1ec17c6e5ccd9417bde4d15bc63015f Actions39108729075 attempt1 SUCCESS job117620073911: three actual original Go TLS credential suite ciphers -> FEC2 extra-tag generation epoch authority -> original Rust M1 Arena/FrozenRecords and original M3 AEAD HP PN0 source kind2 PN1 repair kind3 over M4 AF_INET raw TCP; independent Go kernel SOCK_RAW actual ciphertext captured and M3 unique ReplayProtectedLaneRx authenticates, tamper/duplicate denied. Original M3 RS16 e1 recovered deliberately not-sent 127B checksum-valid IPv4 UDP source1, exclusively after actual authentication Rust sends it via original M4 ScopedTunSink generation/Stop fence to real Linux TUN IFF_NO_PI. Independent Go application UDP listener 10.241.20.1:49231 receives exactly99 byte deterministic content from 10.241.20.2:42001, all ChaCha/AES128/AES256 pass. Default build has no probe FEC2 ABI, product OFF, Strong1 fixed test only; not original Go GUI applied revision, no M1 Fec2Owner full scheduler/M2 authenticated receipt or two independent clients, no injected loss. Artifact12129268479 GH sha256 5cbbd1d80b651200b0ba1b8be1d4cb00b30ca685a8eec8265ff3a7a33e185656 independently downloaded and ZIP rehashed same, real kernel log sha256 5fbd2c68ef87e7243e94e63d18fe724de423f17cf8e9c0eb3fc6f5b93ba25dda. Old Normal/off configured150ms suite3 second LINK fragment pending FAIL run39106157061 still open, historical codec240s D10/p99, R0-023 65KiB cross-turn/Stop/MTU/unknown and ARM Windows physical all OPEN."
 }
