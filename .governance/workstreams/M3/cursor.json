@@ -4,29 +4,27 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 31,
-  "checkpoint_sha": "2938d3374a5e2d842eca3d9c3efd890be3851f6d",
-  "progress": "in_progress",
+  "sequence": 32,
+  "checkpoint_sha": "33eff43ae7f742000124b81a5f887e16db41b626",
+  "progress": "partial",
   "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
-  "current_task": "PACK017 main registry assigned FEC2 RS16 Cauchy XOR k1 repeat, 7 profiles and independent 10/12B typed wire, e×e missing-only, owned/borrowed direct-output, scalar/actual ISA-L and scoped Actions. Legacy 016 CODE422a remains frozen.",
-  "why_now": "Recovered H30 cursor-only difference; central run39046275022 failed: evidence result non-PASS, artifacts unavailable. New main authority overrides stale PACK016 cursor assignment without changing old evidence.",
-  "done_when": "F2-MATH/WIRE/MEM native/scalar and real ISA-L equivalence with source-locked artifact and scoped same-VM cost, bounded dirty tail/MTU/status and explicit rollback; Go/driver/physical NOT_RUN.",
-  "next_action": "Implement scoped FEC2 codec math+wire, compile/batched native Actions and self-fix; M0 must provide shared ISA-L dependency/test workflow target if genuinely blocking; preserve H30 audit failure.",
+  "current_task": "FEC2 RS16 typed 10/12B wire, seven r profiles, prepared native/scalar API and missing-only e×e; scoped default-scalar worker+R0 source-locked PASS at CODE301; real ISA-L/cost still cross-owner blocked.",
+  "why_now": "Recovered H30 FAIL via S2938/H31; scoped CODE301 test binary artifact sha verified; fixed R0 count pollution and nonprefix matrix test; native-isal shared FFI exists on main only, not worker branch.",
+  "done_when": "M3 017 math/wire/bounded memory, actual ISA-L Linux x64 and applicable ARM/Windows native equivalence, source-pinned single-scene AB/BA same VM cost plus S→H evidence; no FEC-on product inference.",
+  "next_action": "Await M0-owned source-pinned shared safe ISA-L/workflow interface request in docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md; run true V2 native + same VM 16:16 L1202/e4 AB/BA, fix codec if needed, then source-bound S→H.",
   "unverified": true,
-  "last_tested_source": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+  "last_tested_source": "3011431370f1757212df92800c1b56e87ba51d65",
   "evidence_refs": [
-    "docs/evidence/M3/017-intake-recovered-H30.json"
+    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/devlog/M3/R5-M3-FEC2-CODEC-NATIVE-017.md",
+    "docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md",
     "docs/evidence/M3/017-intake-recovered-H30.json",
+    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json",
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-release-AB.json",
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json",
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-handoff-recovery-H28.json",
-    "docs/devlog/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.md",
-    "docs/devlog/M3/M0-REQUEST-PACK016-NATIVE-ISA-L.md",
-    "docs/evidence/M3/R1-M3-RECORD-LINK-FEC-WORKPACK-016.json"
+    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json"
   ],
-  "partial_summary": "RECOVERED H30 audit FAIL, not PASS; recovery S2938d3, previous cursor HEAD093e6f7, exact checkpoint ahead one H only. V1 CODE422a and scoped 016 evidence preserved. FEC2 implementation/native/cost NOT_RUN; no product activation."
+  "partial_summary": "CODE301 Actions run39082909579 122 PASS/0FAIL/1ignored, R0 wire39082909584 exact13 PASS, record/link PASS; source-lock binary2b37ae... verified. H30 central39046275022 FAIL remains; current governance39082909578 FAIL. V2 native feature not present in worker branch; real ISA-L/ARM/Windows sameVM ABBA and FEC-on NOT_RUN. M0 shared build interface separately requested; no old016 rewrite/product activation."
 }
