@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "66a53ebe7383647f077a9c6d115839300ecba6f9",
+  "progress": "partial",
+  "unverified": true,
+  "result": "PASS_SCOPED_LINUX_GO_RAW_NETEM_150MS_THREE_SUITES_2_PACKETS_EACH_DIRECTION",
+  "code_paths": [
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+  ],
+  "change": "Original Go AF_INET raw peer receiver in existing real TUN/netns end-to-end harness treats EINTR/EAGAIN as transient under 3s ABSOLUTE deadline, while still requiring two actual encrypted records each direction and unchanged exact PN/seq/TCP/cipher/application payload/TUN/MTU/replay checks; only M0 integration test harness altered. No production source or driver semantics changed.",
+  "original_previous_failure": {
+    "run_id": 39114076155,
+    "attempt": 1,
+    "source_sha": "395a711ff28dfda9b89b772fdf296fc0f4f9f449",
+    "conclusion": "failure",
+    "artifact_id": 12132100712,
+    "cause": "configured netem 150ms suite3 Go syscall.Recvfrom reports 'interrupted system call' after C2S and before S2C raw record, while first two suites PASS",
+    "note": "Do not erase original FAIL or presume reliability resolved on one later SUCCESS"
+  },
+  "intervening_without_fix": {
+    "run_id": 39115326099,
+    "source_sha": "f6aee3c8827d00954227247f333fc259d1b83964",
+    "attempt": 1,
+    "conclusion": "success",
+    "netem150": "EXPLORATORY_PASS three suites with ORIGINAL nonretry Go source",
+    "implication": "failure was intermittent; success alone cannot attribute improvement to retry"
+  },
+  "actions": {
+    "targeted": {
+      "run_id": 39115451897,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39115451897",
+      "jobs": [
+        "build PASS",
+        "consume PASS"
+      ],
+      "artifact_id": 12132325763,
+      "artifact_name": "m0-v4-native-probe-result-39115451897-1",
+      "artifact_github_sha256": "7163d4b3c3c7544c5bd42068391dffb82416e72e1d7abbaaa715b4934ed42091",
+      "downloaded_zip_independent_rehash_sha256": "7163d4b3c3c7544c5bd42068391dffb82416e72e1d7abbaaa715b4934ed42091",
+      "configured_netem150": "EXPLORATORY_PASS 3/3, qdisc sent59 packets zero configured drop, 2 real packets each direction, S2C Go raw actual PN0/1 and original Rust owner TUN verified",
+      "configured_netem10": "EXPLORATORY_PASS",
+      "normal_off_dev_10mbps": "DEV_ONLY, no paired ABBA, not product performance qualification"
+    },
+    "governance": {
+      "run_id": 39115451957,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "hard_gates_open": [
+    "NOT_RUN full 150ms long-duration reliability/real WAN RTT/loss or original 65KiB >32 turn/MTU/Stop/loan/prefix uncertain",
+    "NOT_RUN actual kind1 authenticated reverse wire peer sender/repair budget; see separate M2 exact source f6aee3 receipt",
+    "Historical codec240s/D10/p99 regression retained, no same job ABBA performed",
+    "Go applied fixed/auto CLI/GUI, native ARM64/Windows complete codec/loader and physical two peer product qualification NOT_RUN; FEC2 production OFF"
+  ],
+  "next_action": "M0 integrate original Go TLS-recognized real reverse kind1 feedback, same-frozen sender shadow and driver prefix/uncertain; then legal ~65KiB跨轮次/Stop/MTU/noHOL and source-locked qualification. Retain existing old failures and product OFF."
+}
