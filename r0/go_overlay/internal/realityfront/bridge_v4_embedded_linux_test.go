@@ -1039,23 +1039,19 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     t.Logf("EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=%d new_mtu=1500 s2c_tx_ok=%d driver_reject_increased=true",
         oldMTU,stats.TxOK)
 
-    // Separate original real TUN ingress from the original outer raw MTU:
-    // a single 1728B inner IPv4 datagram is legal at TUN MTU2000, but
-    // must NOT escape as an unfragmented Normal/off record under the
-    // original Go/TLS/Rust owner negotiated LINK frame budget. This tests
-    // a real Linux packet, not a fabricated oversize seal buffer. The
-    // positive authenticated multi-fragment TX path remains explicitly OPEN.
+    // Original real kernel TUN 1728B IP / 1700B UDP application payload:
+    // its 1400B negotiated record cannot carry the single LINK frame, but
+    // the *same* M1/M3 original Go-authenticated Rust TX must now fragment.
+    // Independent original Go raw peer opens each real AEAD/PN and uses
+    // original Go linkdata.Reassembler; no synthetic Rust bypass or mock.
     if out,e:=exec.Command("ip","link","set","dev","lo","mtu",
         strconv.Itoa(oldMTU)).CombinedOutput();e!=nil{
-        t.Fatalf("restore real raw lo MTU before overflow: %v %s",e,out)
+        t.Fatalf("restore real raw lo MTU before LINK fragments: %v %s",e,out)
     }
     if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","2000").CombinedOutput();e!=nil{
         t.Fatalf("enlarge owned real TUN ingress MTU: %v %s",e,out)
     }
-    // The existing netlink watcher coalesces RTM_NEWLINK at 100ms.
-    // Settle the TWO setup-only link edits before attributing any rejection
-    // to the actual business LINK frame limit. This is NOT a DATA-path wait.
-    time.Sleep(200*time.Millisecond)
+    time.Sleep(200*time.Millisecond) // setup-only RTM_NEWLINK coalescing
     revised,healthy,revErr:=b.rustOwnerRouteEventState()
     if revErr!=nil||!healthy||revised<=eventAfter{
         t.Fatalf("real netlink restore/mtu events unobserved: old=%d new=%d ok=%t err=%v",
@@ -1063,56 +1059,93 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     beforeOversize,err:=b.rustOwnerLoopStats()
     if err!=nil{t.Fatal(err)}
-    oversizedApp:=bytes.Repeat([]byte{0x7a},1700) // 1728B one inner IPv4 packet
+    oversizedApp:=bytes.Repeat([]byte{0x7a},1700)
     if n,e:=app.WriteToUDP(oversizedApp,&net.UDPAddr{IP:remoteIP,Port:42001});
         e!=nil||n!=len(oversizedApp){
         t.Fatalf("real kernel above-LINK-budget TUN injector n=%d err=%v",n,e)
     }
-    overflowDeadline:=time.Now().Add(2*time.Second)
-    observedOversize:=false
-    for time.Now().Before(overflowDeadline){
-        got,e:=b.rustOwnerLoopStats()
-        if e!=nil{t.Fatalf("owner stats after real TUN oversize: %v",e)}
-        if got.TxErr>beforeOversize.TxErr{
-            if got.TxOK!=beforeOversize.TxOK{
-                t.Fatalf("above budget TUN payload escaped original owner: before=%+v after=%+v",
-                    beforeOversize,got)
-            }
-            observedOversize=true
-            break
+    // This is the actual original Go LINK protocol, independently
+    // reassembled AFTER the original S2C TLS record opener. A plaintext
+    // test helper or matching Go wire arithmetic is not sufficient.
+    goLink,err:=linkdata.NewReassembler(int(cLim)-31)
+    if err!=nil{t.Fatal(err)}
+    fragmentPN:=make(map[uint64]bool)
+    var completeLarge []byte
+    fragmentDeadline:=time.Now().Add(2*time.Second)
+    for len(fragmentPN)<2&&time.Now().Before(fragmentDeadline){
+        pkt:=make([]byte,2048)
+        n,_,recvErr:=syscall.Recvfrom(peer,pkt,0)
+        if recvErr!=nil{continue}
+        if n<40||pkt[0]>>4!=4||pkt[9]!=6{continue}
+        ihl:=int(pkt[0]&0xf)*4
+        if ihl<20||ihl+20>n{continue}
+        if !bytes.Equal(pkt[12:16],b.originalFlow.ServerIP[:])||
+            !bytes.Equal(pkt[16:20],b.originalFlow.ClientIP[:])||
+            binary.BigEndian.Uint16(pkt[ihl:ihl+2])!=b.originalFlow.ServerPort||
+            binary.BigEndian.Uint16(pkt[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+        tcpLen:=int(pkt[ihl+12]>>4)*4
+        if tcpLen<20||ihl+tcpLen>n||pkt[ihl+13]&0x08==0||n-ihl-tcpLen<=31{continue}
+        rec,openErr:=open.OpenRecord(pkt[ihl+tcpLen:n])
+        if openErr!=nil||rec.Kind!=tlsrecord.KindLINK{
+            t.Fatalf("original Go cannot open REAL Rust fragment pn=%d err=%v",rec.PN,openErr)
         }
-        time.Sleep(10*time.Millisecond)
+        if fragmentPN[rec.PN]||rec.PN<packets{
+            t.Fatalf("S2C fragmented record PN repeated or rewound pn=%d",rec.PN)
+        }
+        fragmentPN[rec.PN]=true
+        if len(rec.Payload)<=20||string(rec.Payload[:8])!="WBDLFRG1"{
+            t.Fatalf("S2C real authenticated LINK fragment wire wrong pn=%d len=%d",
+                rec.PN,len(rec.Payload))
+        }
+        reunited,done,pushErr:=goLink.Push(rec.Payload,time.Now())
+        if pushErr!=nil{t.Fatalf("original Go LINK reassembler: %v",pushErr)}
+        if done{
+            if completeLarge!=nil{t.Fatal("duplicate fragmented business delivery")}
+            completeLarge=reunited
+        }
     }
-    if !observedOversize{
-        t.Fatal("real TUN above negotiated single LINK record budget lacked fail-closed evidence")
+    if len(fragmentPN)!=2||len(completeLarge)!=1728||
+        completeLarge[0]!=0x45||completeLarge[9]!=17||
+        !bytes.Equal(completeLarge[28:],oversizedApp){
+        t.Fatalf("real original S2C Go peer did not reassemble 1728B IPv4: pieces=%d ip=%d",
+            len(fragmentPN),len(completeLarge))
     }
-    // The next *small* live business packet must be admitted after the
-    // rejected oversized one, without retrying/resending its PN or waiting
-    // for a fragment implementation that has not yet been wired.
+    fragmentStats,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    for time.Now().Before(fragmentDeadline)&&fragmentStats.TxOK<beforeOversize.TxOK+2{
+        time.Sleep(time.Millisecond)
+        fragmentStats,err=b.rustOwnerLoopStats()
+        if err!=nil{t.Fatal(err)}
+    }
+    if fragmentStats.TxOK!=beforeOversize.TxOK+2{
+        t.Fatalf("S2C real M4 raw fragments not both counted: before=%+v after=%+v",
+            beforeOversize,fragmentStats)
+    }
+    t.Logf("EMBEDDED_REAL_TUN_OVER_LINK_FRAGMENT_GO_PEER_PASS bytes=1728 fragments=2 first_delivery_once=true")
+    // A small independent packet follows the large block, never waiting
+    // for an old LINK gap; ordinary bytes have no LINK20 header.
     smallAfter:=bytes.Repeat([]byte{0x7b},52)
     if n,e:=app.WriteToUDP(smallAfter,&net.UDPAddr{IP:remoteIP,Port:42001});
         e!=nil||n!=len(smallAfter){
-        t.Fatalf("small follower after oversize n=%d err=%v",n,e)
+        t.Fatalf("small follower after LINK fragments n=%d err=%v",n,e)
     }
     followerDeadline:=time.Now().Add(2*time.Second)
     completed:=false
     for time.Now().Before(followerDeadline){
         got,e:=b.rustOwnerLoopStats()
         if e!=nil{t.Fatalf("owner follower stats: %v",e)}
-        if got.TxOK==beforeOversize.TxOK+1{completed=true;break}
-        if got.TxOK>beforeOversize.TxOK+1{
-            t.Fatalf("unexpected duplicate/extra kernel sends %+v",got)
+        if got.TxOK==beforeOversize.TxOK+3{completed=true;break}
+        if got.TxOK>beforeOversize.TxOK+3{
+            t.Fatalf("unexpected duplicate kernel sends %+v",got)
         }
         time.Sleep(10*time.Millisecond)
     }
     if !completed{
         detail,_:=b.rustOwnerLoopStats()
-        rev,healthy,revErr:=b.rustOwnerRouteEventState()
-        refresh,_:=b.rustOwnerRouteRefreshCount()
-        t.Fatalf("small following real above-budget TUN datagram not kernel-copied: before=%+v after=%+v route_revision=%d healthy=%t revErr=%v refresh=%d",
-            beforeOversize,detail,rev,healthy,revErr,refresh)
+        t.Fatalf("small following real large LINK not kernel-copied: before=%+v after=%+v",
+            beforeOversize,detail)
     }
-    t.Logf("EMBEDDED_REAL_TUN_ABOVE_LINK_BUDGET_FAIL_CLOSED_NO_HOL_PASS oversized_inner_ipv4_bytes=1728 accepted_oversize=0 next_small_kernel_copied=1")
+    t.Logf("EMBEDDED_REAL_TUN_OVER_LINK_FRAGMENT_NO_HOL_PASS fragmented=2 small=1")
     // Stop while both originally spawned RX/TX workers and both actual
     // kernel drivers remain installed. Join and retire before any generation
     // can reattach; the M4 late-LoanBatch deterministic contract is a
