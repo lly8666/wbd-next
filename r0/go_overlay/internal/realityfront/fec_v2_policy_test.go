@@ -104,7 +104,9 @@ func TestF2ControlSampleValidityAndFrozenHost(t *testing.T) {
         t.Run(test.name,func(t *testing.T){
             v:=f2Snapshot("x",FecV2S2C,time.Second,100,300)
             test.alter(&v)
-            state,decision,e:=FecV2Step(cfg,s,v,8*time.Second)
+            now:=4*time.Second
+            if test.name=="stale" { now=8*time.Second }
+            state,decision,e:=FecV2Step(cfg,s,v,now)
             if e!=nil||decision.Validity!=test.want||decision.Send||state.Desired!=FecV2Strong {
                 t.Fatalf("%s -> %+v %v",test.name,decision,e)
             }
