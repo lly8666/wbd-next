@@ -1064,6 +1064,108 @@ mod m0_fec2_owner_integration_tests{
         r.map_err(|_|())
     }
 
+    // Batch M0/M1/M3 contract: real M1 Fec2Owner owns the original Arena
+    // source slabs, publishes BOTH systematic frames synchronously before
+    // parity work, closes deadline k2, and yields an M3 RS16 ParityJob.
+    // This is still a scheduler/codec seam; unlike the Go netns case below,
+    // it is not a product Go-applied policy or a real driver loss event.
+    #[test]
+    fn r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure(){
+        use crate::runtime::fec2_owner::{
+            Fec2Owner,FecMode,Profile as M1Profile,Limits
+        };
+        use wbd_types::ConfigRevision;
+        let frame_a=(0..113).map(|i|(i%251) as u8).collect::<Vec<_>>();
+        let frame_b=(0..127).map(|i|((i*7+5)%251) as u8).collect::<Vec<_>>();
+        for suite in [1u8,2,3]{
+            let id=probe_prepare(&cold(suite),&command()).unwrap();
+            assert_eq!(probe_commit(id,0,0,777),OK);
+            {
+                let mut guard=registry().lock().unwrap();
+                let p=guard.slots.get_mut(&id).unwrap();
+                for mode in [FecMode::Normal,FecMode::Game]{
+                    let mut scheduler=Fec2Owner::new(
+                        mode,M1Profile::Strong,ConfigRevision(1),
+                        Limits{pending_bytes:2*1024*1024,
+                            pending_jobs:64,max_frame:1400}
+                    ).unwrap();
+                    let mut tickets=Vec::new();
+                    for (index,frame) in [&frame_a,&frame_b].into_iter().enumerate(){
+                        let mut slab=p.arena.allocate().unwrap();
+                        slab.writable()[14..14+frame.len()].copy_from_slice(frame);
+                        let ready=scheduler.push_source(
+                            slab,14..14+frame.len(),MonoNs((index as u64)*1000),
+                            |source|{
+                                let t=source.ticket.unwrap();
+                                assert_eq!(t.index,index as u8);
+                                assert_eq!(source.frame,frame.as_slice());
+                                tickets.push(t);
+                                true
+                            }
+                        ).unwrap_or_else(|_|panic!("M1 original slab source denied"));
+                        assert!(ready.source_enqueued&&ready.fec_retained);
+                    }
+                    assert_eq!(tickets.len(),2);
+                    assert_eq!(tickets[0].block_id,tickets[1].block_id);
+                    assert_eq!(scheduler.on_due(MonoNs(8_000_000)),Ok(1));
+                    let mut job=scheduler.take_parity(MonoNs(8_000_001))
+                        .unwrap().unwrap();
+                    assert_eq!((job.k,job.r),(2,2));
+                    assert_eq!(job.block_id,tickets[0].block_id);
+                    let block=job.block_id;
+                    let (repairs,backend)=job.with_sources(|frames|{
+                        Rs16::new().encode_owned(
+                            block,frames,Profile::Strong,0,1,1360,
+                            BackendChoice::Scalar
+                        ).unwrap()
+                    });
+                    assert_eq!(backend,fec_v2::BackendUsed::Scalar);
+                    let rep=fec_v2::parse_repair(&repairs[0],1360).unwrap();
+                    assert_eq!((rep.block_id,rep.actual_k,rep.parity_row),
+                        (block,2,0));
+                    let (got,_)=Rs16::new().recover_missing(
+                        block,&[Some(frame_a.as_slice()),None],
+                        &[rep],1360,BackendChoice::Scalar
+                    ).unwrap();
+                    assert_eq!(got,vec![(1,frame_b.clone())]);
+                    scheduler.finish_parity(job,1,true);
+                    let report=scheduler.report();
+                    assert_eq!(report.outstanding_jobs,0);
+                    assert_eq!(report.queued_jobs,0);
+                    assert_eq!(report.charged_bytes,0);
+                    scheduler.stop();
+                    assert!(scheduler.on_due(MonoNs(8_000_002)).is_err());
+                    p.arena.drain_returns();
+                    assert_eq!(p.arena.report().loaned,0);
+                }
+                // Memory pressure may drop FEC retention/parity but must
+                // never block independently ready systematic business data.
+                let mut constrained=Fec2Owner::new(
+                    FecMode::Normal,M1Profile::Strong,ConfigRevision(1),
+                    Limits{pending_bytes:256,pending_jobs:1,max_frame:1400}
+                ).unwrap();
+                let mut slab=p.arena.allocate().unwrap();
+                slab.writable()[14..14+frame_a.len()].copy_from_slice(&frame_a);
+                let mut called=0u32;
+                let accepted=constrained.push_source(
+                    slab,14..14+frame_a.len(),MonoNs(0),
+                    |source|{
+                        assert_eq!(source.frame,frame_a.as_slice());
+                        called+=1;true
+                    }
+                ).unwrap_or_else(|_|panic!("M1 pressure blocked the fresh source"));
+                assert_eq!(called,1);
+                assert!(accepted.source_enqueued&&!accepted.fec_retained);
+                assert!(constrained.take_parity(MonoNs(8_000_000)).unwrap().is_none());
+                constrained.stop();
+                p.arena.drain_returns();
+                assert_eq!(p.arena.report().loaned,0);
+            }
+            assert_eq!(probe_stop(id),OK);
+            assert_eq!(probe_release(id),OK);
+        }
+    }
+
     #[test]
     fn r1_m0_original_owner_fec2_source_repair_same_pn_staged(){
         // This producer exercises the REAL Rust-owned prepared/committed
