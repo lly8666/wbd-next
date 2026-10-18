@@ -8,6 +8,7 @@ on:
     branches: [main, governance/incremental-ci-20261015]
     paths:
       - "tools/scope_audit.py"
+      - "tools/worker_scope_ci.py"
       - "tools/governance.py"
       - "tests/test_governance.py"
       - "tests/test_scope_audit.py"
@@ -18,10 +19,16 @@ permissions:
   actions: read
 jobs:
   audit:
+    name: "audit (${{ matrix.role }})"
     if: github.event_name == 'push' || (github.event.workflow_run.head_repository.full_name == github.repository && startsWith(github.event.workflow_run.head_branch, 'work/'))
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [M1, M2, M3, M4]
     env:
+      AUDIT_ROLE: ${{ matrix.role }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout only the main-owned checker snapshot, never worker code
@@ -37,23 +44,26 @@ jobs:
           api=g.GitHub(os.environ['GITHUB_REPOSITORY'])
           event=json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
           control=os.environ['GITHUB_SHA']
-          if 'workflow_run' in event:
-              targets=[(event['workflow_run']['head_branch'],event['workflow_run']['head_sha'])]
-          else:
-              registry=api.file('.governance/registry.json',control)
-              targets=[(r['branch'],api.head(r['branch'])) for r in g.validate_registry(registry)
-                       if r['state']=='active' and not r['global_writer']]
-          failed=False
-          for index,(branch,source) in enumerate(targets):
-              rc=subprocess.run(['python','tools/scope_audit.py','--branch',branch,'--source',source,
-                                 '--control',control,'--output',f'out/scope-{index}.json']).returncode
-              failed=failed or rc!=0
-          raise SystemExit(1 if failed else 0)
+          registry=api.file('.governance/registry.json',control)
+          role=next((r for r in g.validate_registry(registry)
+                     if r['id']==os.environ['AUDIT_ROLE']
+                     and r['state']=='active' and not r['global_writer']),None)
+          if role is None:
+              raise SystemExit('matrix role missing from active main registry')
+          branch=role['branch']
+          if 'workflow_run' in event and branch!=event['workflow_run']['head_branch']:
+              print('SCOPE_NOT_TARGETED role='+role['id'])
+              raise SystemExit(0)
+          source=(event['workflow_run']['head_sha'] if 'workflow_run' in event
+                  else api.head(branch))
+          subprocess.run(['python','tools/scope_audit.py','--branch',branch,
+                          '--source',source,'--control',control,
+                          '--output',f'out/scope-{role["id"]}.json'],check=True)
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: central-scope-${{ github.run_id }}-${{ github.run_attempt }}
+          name: central-scope-${{ matrix.role }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: out/
           retention-days: 30
           if-no-files-found: warn
