@@ -312,6 +312,9 @@ impl Fec2Owner {
         }
         let class=Class::of(valid.len());
         let idx=class.index();
+        // The first accepted source updates its own class-rate snapshot BEFORE
+        // choosing an absolute deadline for the new block.
+        self.rate[idx].accepted(now);
         if self.open[idx].as_ref().is_some_and(|b|now.0>=b.deadline.0) {
             self.close(class,now,false);
         }
@@ -349,7 +352,6 @@ impl Fec2Owner {
             st.partial+=1;
             st.k_hist[1]+=1;
             if !enqueued{st.source_not_ready+=1;}
-            self.rate[idx].accepted(now);
             return Ok(Accepted{ticket:Some(ticket),fec_retained:false,
                 source_enqueued:enqueued,closed_full:false});
         }
@@ -362,7 +364,6 @@ impl Fec2Owner {
             frame:&buffer.writable()[valid.clone()]});
         self.stats[idx].accepted+=1;
         if !enqueued { self.stats[idx].source_not_ready+=1; }
-        self.rate[idx].accepted(now);
         let open=self.open[idx].as_mut().unwrap();
         open.sources.push(Source{buffer,window:valid});
         open.charge+=charge;
