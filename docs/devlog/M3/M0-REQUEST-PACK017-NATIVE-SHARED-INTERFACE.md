@@ -23,3 +23,16 @@
 提供 source-locked workflow run/attempt、build+consume job id、校验过的 manifest/artifact digest、编译和所有 test 原始日志、实际 NativeIsaL 后端选择、AB/BA 分别观测的 CPU/ns/block 与汇总。M3 继续完成自己的 codec 修复与证据；M0 不必为了普通提交/H 或局部 PASS 先合并，可在完整017提交后做最终有源锁验证。正式公共构建入口未就绪时以 `BLOCKED_SHARED_NATIVE_INTERFACE` 留痕。
 
 历史 H30 审计 `39046275022` 为失败（`result` 非 PASS），此请求不更改旧证据、不声称其已过。
+
+## 2026-10-18 补充：M0 共享入口已提供，需源锁重测修正版（M3 独占缺陷已修）
+
+收到 M0 source-locked [CODE301 原生批次证据](https://github.com/lly8666/wbd-next/blob/main/docs/evidence/M0/M0-FEC2-CODE301-native-ABBA-0b21a2fee11a67c5ee977ddfabc252539085890d.json)：
+- run `39086268414` / `39086460623`，真实上游 ISA-L Linux x64 功能原测试 10/11 PASS，失败项为 `r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence`：测试将 `k=2` 的 Maximum profile `r=ceil(2*5/4)=3` 当成四行请求；合法 codec 按 `InvalidRow` 拒绝。两次原失败永久保留。
+- M3 **测试夹具**已在精确提交 `8cc5b06d6832565a80b60402a5fe2e1078e9ab2e` 修正：从 `Profile::Maximum.parity_count(k)` 算 `batch=min(r,MAX_BATCH_ROWS)`，并对 k2 原非法四行请求在 scalar 和 RequireNative 两分支加 `Err(InvalidRow)` 回归断言。**不是削弱 codec 验证或放宽 wire 约束。**
+- M0 工作流 `.github/workflows/m0-fec2-codec-native-abba.yml` 当前硬钉 worker `3011431370f1757212df92800c1b56e87ba51d65`，因此已知首次失败重跑不会消费新夹具；该 workflow、root `Cargo.lock` 和 safe-FFI/平台构建属于 M0，M3 未改。
+
+**现在向 M0 请求唯一最小共享动作**：将 Actions-only 临时构建的 worker checkout 和 input-assert/manifest 中 M3 SOURCE 一致改为 `8cc5b06d6832565a80b60402a5fe2e1078e9ab2e`（或 M3 后续正式 S 源锁 commit，如仅证据文档更新保持测试文件 SHA 不变），然后重新编译真实 `native-isal` 一次，先独立验证全部 `r1_f2_` 原生测试与真实 `BackendUsed::NativeIsaL`；必须保留所有旧 FAIL，只有新 run/attempt 的原生日志全 PASS 才可收口功能。
+
+原 `39086460623` 四腿 ABBA checksum 相等而 CPU 测量仅 **0.34–18.4ms 每腿**，`CPU_INCONCLUSIVE_SHORT_WINDOW`。M0 请在同一固定 k16/r16/1200B、同一消费 VM、同一 Release 二进制中使用**足够长、事先约定的有界测量窗**（如每腿 `>=1s`、真实进程 CPU tick 可靠，事前固定总工作量或预热标定；容量不足直接 INCONCLUSIVE），纳入缺 `e=4` recovery 且对齐每腿相同真实 workload，随后 AB 与 BA 保留全部原始数据；禁止把原短窗壁钟比宣传为吞吐收益。流程继续只读 FEC2 codec、无 Go V1 wire 承诺、不启 product FEC-on。AArch64/Windows 现阶段只有 safe-wrapper native，不等于该 M3 V2 codec 原生三目标通过。
+
+M3 本工位继续完成 scalar/治理 Actions 与 S→H 证据。M0 共享入口不需等 M3 任务整体完成才重新锁源执行；若公共 workflow 尚未更新，则明确 `M3_NATIVE_RETEST_PENDING_M0_SHARED_ACTION`。
