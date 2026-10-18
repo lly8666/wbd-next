@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "ece8f9d5d0dc40ddcfeb3bffd54c15398a354c92",
+  "result": "PASS_14_OF_14_SCOPED_PREACTIVATION_TEST_JOBS_WITH_PROVEN_65K_ORIGINAL_OWNER_BLOCKER",
+  "progress": "partial",
+  "unverified": true,
+  "production_fec2": "OFF",
+  "real_physical_product_qualification": "NOT_RUN",
+  "implementation": {
+    "source_commit": "ccecacb8d3958871f93fd064e7a24a0667135305",
+    "workflow_commit": "ece8f9d5d0dc40ddcfeb3bffd54c15398a354c92",
+    "changed_paths": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+    ],
+    "test": "m0_link_65k_original_owner_cross_turn_48_fragment_gate_and_no_hol",
+    "summary": "Real M0 original stage_bounded_original_link owner and M1 arena loan, exact original M3 LINK20 LinkPacketPlan/ReassemblyTable: 65535 bytes at frame MTU1400 =48 legitimate frames across 48 calls, after-record-auth reassembles exactly, each pending frame does not block ordinary independent data. Expired and retired incomplete 12-frame separate logical packet rejects late tail. Critically original M0 sending entry has count>32 source-full quota: returns FULL before any owner loans/PN/M4/syscall; assert loaned=0, no packet half-admission, then independent 700B small packet stages and returns its loan. Codec-level staged turns PASS but full original Go TLS->actual M4 65KiB UDP delivery is BLOCKED, not PASS.",
+    "native_test_marker": "M0_LINK_65K_CROSS_TURN_48_CODED_FRAGMENTS_NOHOL_PASS original_owner_32_slot_gate=BLOCKED_FAIL_CLOSED staged_partial=0 loan_leak=0 real_tls_kernel=NOT_RUN",
+    "artifact_id": 12139912905,
+    "artifact_sha256": "8a85d1339c1bfe11ce57bca8c185bef3b44d8035f775957cfca43b22844cfc44",
+    "independently_rehashed": true
+  },
+  "exact_source": {
+    "github_actions_run_id": 39136860895,
+    "attempt": 1,
+    "conclusion": "success",
+    "jobs_total": 14,
+    "jobs_passed": 14,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39136860895",
+    "go_tls_actual_linux_kernel": {
+      "result": "PASS_3_CIPHERS_9_SCOPED_LINUX_RAW_TUN_CASES",
+      "artifact_id": 12140341696,
+      "sha256": "728bf53b3bad8d751c6a34f24cf4260a2ab65f465d0a50a76c4185cf2beedb4e",
+      "independently_rehashed": true
+    },
+    "independent_go_policy": {
+      "result": "PASS_8_GO_FEC2_POLICY_TESTS",
+      "artifact_id": 12139982591,
+      "sha256": "eaa9f4fef6b7fb4a9ab65bd17d7ee674f7848c1166739b9da36e054f8f9b4d87"
+    },
+    "native_linux_x64": {
+      "result": "PASS_CODEC_RECOVERY_M0_SCOPED_65K_GATE",
+      "artifact_id": 12139912905,
+      "sha256": "8a85d1339c1bfe11ce57bca8c185bef3b44d8035f775957cfca43b22844cfc44",
+      "independently_rehashed": true
+    },
+    "native_linux_arm64": {
+      "result": "PASS_CODEC_AND_M2_SCALAR_NATIVE",
+      "artifact_id": 12140655089,
+      "sha256": "4af92c8fdaf244aa653d1117ab740381a7789d4689a23625cb8cb4409140b7ff",
+      "independently_rehashed": true
+    },
+    "native_windows_msvc": {
+      "result": "PASS_CODEC_AND_M2_SCALAR_NATIVE_NASM_DEP_INSTALLED",
+      "artifact_id": 12140027586,
+      "sha256": "2a6f12dde2fa850ff9606709318b39c7fa888ea2bcefe3b4780c0da6d023430e",
+      "independently_rehashed": true
+    },
+    "native_x64_official_isa_l": {
+      "result": "PASS_11_ORIGINAL_F2_ORACLES_AND_4_LEG_ABBA_COMPONENT",
+      "artifact_id": 12140401835,
+      "sha256": "04bc181495238a7ed1da8fa1adfe4fa6d4dd3302fc0336b64ec7cc336a49c205",
+      "independently_rehashed": true,
+      "abba": [
+        "Scalar",
+        "NativeIsaL",
+        "NativeIsaL",
+        "Scalar"
+      ],
+      "blocks_per_leg": 400000,
+      "recoveries_per_leg": 400000,
+      "k": 16,
+      "r": 16,
+      "e": 4,
+      "frame_bytes": 1200,
+      "qualifier": "codec-only paired CPU and functional, NOT whole-product packet p99"
+    },
+    "original_go_link_fec_and_rust_link": {
+      "result": "PASS_SCOPED_GO_LINK_FEC_AND_RUST_LINK_FUNCTIONAL_NO_952S_COST",
+      "artifact_id": 12139583613,
+      "sha256": "1ec8290b5b1b9e09101f194e6cf16a93fa0601b9b71493a143a15cf19fbf2f21",
+      "independently_rehashed": true,
+      "slow_cost_elsewhere": "Full suite incl 952s separate cost at 3c88d39 run 39133837425 PASS; not substituted for final-source standalone 240s/product p99"
+    },
+    "normal_off_native_binary_build": {
+      "result": "PASS",
+      "artifact_id": 12140416315,
+      "sha256": "d9c9f909bbfb0c77be2d6e81075ab5df3da03577d7ec187d83c45416dd17e6cc"
+    },
+    "normal_off_10mbps_development": {
+      "result": "PASS_MEASUREMENT_RECORDED_NOT_PRODUCT_PASS",
+      "artifact_id": 12140092617,
+      "sha256": "04e2dc39d24e0de4fcb705ed6b8d46d7f4a805eacd28c334272a5f96822b7559",
+      "independently_rehashed": true,
+      "window": "10s warmup+60s measurement",
+      "scope": "same Runner original Go/Rust kernel Normal/off, two directions; not physical FEC2 product"
+    },
+    "netem_10ms": {
+      "result": "EXPLORATORY_PASS",
+      "artifact_id": 12140152194,
+      "sha256": "135e805b603d392ef0e0f46233378239bd87ff8398c0d28ade52be865d7ff6cc"
+    },
+    "netem_150ms_A": {
+      "result": "EXPLORATORY_PASS",
+      "artifact_id": 12140216370,
+      "sha256": "82d5cd50a7773e6e8de020aa0054a00817f5b87de352596b5ea7ff16c54701f8",
+      "independently_rehashed": true
+    },
+    "netem_150ms_B": {
+      "result": "EXPLORATORY_PASS",
+      "artifact_id": 12140132371,
+      "sha256": "f5a1eb6384d70c8c58d423725983bbc867ce12deed93d243aae2a042660a39d6"
+    },
+    "netem_150ms_C": {
+      "result": "EXPLORATORY_PASS",
+      "artifact_id": 12140172331,
+      "sha256": "6f9f9326c207388f5dfc5196e940759392929d14089ea635152120604a537700"
+    },
+    "hard_gate_ledger": {
+      "result": "PASS_EXPLICIT_NOT_QUALIFIED_REPORT",
+      "artifact_id": 12139649974,
+      "sha256": "bffc7cd4e61614b9f68c7b37c4a329787fc519a349d441cf806b2a0d3d8e8b8a",
+      "independently_rehashed": true,
+      "all_product_gates_passed": false
+    },
+    "source_governance": {
+      "run_id": 39136860903,
+      "conclusion": "success"
+    },
+    "source_governance_maintenance": {
+      "run_id": 39136860897,
+      "conclusion": "success"
+    }
+  },
+  "retained_failed_or_cancelled_source_attempts": [
+    {
+      "source": "31edff11e9af6572d444ce6529f3ecb4f3637f3f",
+      "run_id": 39133635778,
+      "result": "FAIL",
+      "reasons": [
+        "Windows aws-lc-sys missing NASM",
+        "normal-off receipt output directory missing",
+        "link package long test cancelled in earlier sweep"
+      ],
+      "corrections": [
+        "NASM installed in Windows runner",
+        "create native-probe-result before netem normal perf",
+        "separate 952s LINK cost test from fast functional source-locked sweep"
+      ]
+    },
+    {
+      "source": "51686ae20d6709edf1a677af447cedb662d66f23",
+      "run_id": 39134052639,
+      "result": "CANCELLED",
+      "reason": "14-job sweep 13 passed, full Go/Rust LINK slow unit ~952s hit per-job time; final 707/ece8 source excludes slow cost only in fast job, preserves historical full cost separate evidence"
+    },
+    {
+      "source": "70768765afe6fbfeca6a39d4039a2ebca941b245",
+      "run_id": 39135638760,
+      "result": "PASS_14_14_BASELINE"
+    },
+    {
+      "source": "6e8497bef6a92ccb8e0e26f1b654084d6d32ed1f",
+      "run_id": 39118278579,
+      "result": "HISTORICAL_NORMAL_OFF_150MS_FAILURE",
+      "note": "Three green independent 150ms reruns are not a failure erasure or definitive reliability proof"
+    }
+  ],
+  "hard_gates_still_open": {
+    "actual_M0_source_65KiB_cross_turn": "BLOCKED_COUNT_48_GREATER_THAN_MAX_SINGLE_OWNER_TURN_32",
+    "trusted_mature_first_sent_vs_authenticated_receive": "NOT_WIRED_RECEIVER_ONLY_COUNTS_UNKNOWN_NO_DENOMINATOR",
+    "continuous_per_direction_auto_quality_timer": "NOT_IMPLEMENTED_PRODUCT",
+    "canonical_production_C2S_kind1_from_actual_peer_loss": "NOT_WIRED",
+    "original_Go_fec_mode_profile_auto_policy_start_catalog_CLI_GUI_effective_ack": "NOT_WIRED",
+    "original_M1_continuous_multi_block_FEC2": "NOT_WIRED",
+    "original_M4_32_distinct_frozen_kernel_partial_ambiguous_completion_Stop_loan": "NOT_QUALIFIED",
+    "full_real_MTU_pm1_65KiB_Stop_noHOL_kernel": "NOT_QUALIFIED",
+    "native_windows_isa_l_product_loader_and_original_Go_TLS": "NOT_RUN",
+    "native_arm64_native_isa_l_original_Go_TLS": "NOT_RUN",
+    "same_job_product_codec240s_D10_packet_p99_ABBA": "NOT_RUN",
+    "two_physical_endpoints": "BLOCKED_NO_RUNNER_OR_PEER",
+    "repeated_150ms_history": "UNRESOLVED_HISTORICAL_INTERMITTENT_FAILURE"
+  },
+  "next_action": "Fix ORIGINAL M0 TX 32-slot restriction by implementing generation/Stop/MTU/loan-safe persistent LINK plan across multiple M1 turns (48+ original frames) and same-Go-TLS original M4 raw receiver 65KiB end-to-end; then wire actual mature sender first-sent and original M3 peer missing to canonical original Go 2s control+kind1 applied config; kernel 2..32 distinct FrozenRecord sendmmsg partial/Uncertain real Stop, physical endpoints, native ARM/Win and product D10/p99. Keep FEC2 production OFF."
+}
