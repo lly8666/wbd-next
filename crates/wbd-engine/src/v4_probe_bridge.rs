@@ -1021,3 +1021,141 @@ mod tests {
         assert_eq!(probe_release(fourth),OK);
     }
 }
+
+#[cfg(all(test,feature="m0_fec2_owner_probe"))]
+mod m0_fec2_owner_integration_tests{
+    use super::*;
+    use wbd_codec::fec_v2::{self,BackendChoice,Profile,Rs16};
+    use wbd_codec::record_crypto::RecordSuite;
+    use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
+
+    fn cold(suite:u8)->[u8;COLD_V4_LEN]{
+        let mut a=[0u8;COLD_V4_LEN];
+        a[..4].copy_from_slice(b"WBCO");
+        a[4..6].copy_from_slice(&1u16.to_be_bytes());
+        a[6..8].copy_from_slice(&(COLD_V4_LEN as u16).to_be_bytes());
+        a[8]=1;a[9]=1;a[10]=suite;
+        a[12..28].fill(1);a[28..44].fill(2);a[44..60].fill(3);
+        a[60..62].copy_from_slice(&1400u16.to_be_bytes());
+        a[62..64].copy_from_slice(&1400u16.to_be_bytes());
+        a[64..96].fill(4);a[96..172].fill(5);a[172..].fill(6);
+        a
+    }
+    fn command()->[u8;HANDOFF_V1_LEN]{
+        let mut cmd=[0u8;HANDOFF_V1_LEN];
+        cmd[..4].copy_from_slice(b"WBGH");
+        cmd[4..6].copy_from_slice(&1u16.to_be_bytes());
+        cmd[6..8].copy_from_slice(&(HANDOFF_V1_LEN as u16).to_be_bytes());
+        cmd[8..20].copy_from_slice(&[10,0,0,2,10,0,1,1,0xa0,0x29,0x01,0xbb]);
+        cmd[24..26].copy_from_slice(&1360u16.to_be_bytes());cmd[26]=1;
+        cmd
+    }
+    fn push(p:&mut Probe, payload:&[u8],kind:u8,budget:FrameBudget)
+       ->Result<(u64,u32,usize),()>{
+        let mut slab=p.arena.allocate().map_err(|_|())?;
+        slab.writable()[14..14+payload.len()].copy_from_slice(payload);
+        let r=if kind==0{
+            p.owner.seal_normal_off_one(
+                slab,payload.len(),budget,12,MonoNs(0))
+        }else{
+            p.owner.seal_fec2_probe_one(
+                slab,payload.len(),kind,budget,12,MonoNs(0))
+        };
+        r.map_err(|_|())
+    }
+
+    #[test]
+    fn r1_m0_original_owner_fec2_source_repair_same_pn_staged(){
+        // This producer exercises the REAL Rust-owned prepared/committed
+        // original ScopedOwner; cold input here is SYNTHETIC test-only, not
+        // a claim of a production Go TLS bit2/KDF authorization.
+        let frame_a=(0..121).map(|i|(i%251) as u8).collect::<Vec<_>>();
+        let frame_b=(0..137).map(|i|((i*7+5)%251) as u8).collect::<Vec<_>>();
+        for suite_id in [1u8,2,3]{
+            let raw=cold(suite_id);
+            let id=probe_prepare(&raw,&command()).unwrap();
+            let budget=FrameBudget::derive(FrameBudgetInput{
+                connection_mtu:1500,local_packet_mtu:0,
+                ipv4_header_len:20,tcp_header_len:20,peer_mss:Some(1360),
+                record_wire_limit:1400,fec:FecReservation::FixedOff,game:false,
+            }).unwrap();
+            let source=fec_v2::source_owned(91,0,&frame_a,budget.record_payload_mtu)
+                .unwrap();
+            // Pre-commit cannot spend a single original PN or emit any
+            // FrozenRecord; valid plaintext bytes do not grant authority.
+            {
+                let mut state=registry().lock().unwrap();
+                let p=state.slots.get_mut(&id).unwrap();
+                assert!(push(p,&source,2,budget).is_err());
+                p.arena.drain_returns();
+                assert_eq!(p.arena.report().loaned,0);
+            }
+            assert_eq!(probe_commit(id,0,0,777),OK);
+            let (repairs,backend)=Rs16::new().encode_owned(
+                91,&[&frame_a,&frame_b],Profile::Strong,0,1,
+                budget.record_payload_mtu,BackendChoice::Scalar).unwrap();
+            assert_eq!(backend,fec_v2::BackendUsed::Scalar);
+            let opened_wires={
+                let mut state=registry().lock().unwrap();
+                let p=state.slots.get_mut(&id).unwrap();
+                let mut dirty=source.clone();dirty[9]=1;
+                assert!(push(p,&dirty,2,budget).is_err());
+                // The ORIGINAL normal sender and FEC2 consume one PN and
+                // one TCP-appearance Seq allocator, in dispatch order.
+                let a=push(p,b"ordinary independent",0,budget).unwrap();
+                let b=push(p,&source,2,budget).unwrap();
+                let c=push(p,&repairs[0],3,budget).unwrap();
+                assert_eq!([a.0,b.0,c.0],[0,1,2]);
+                assert_eq!(b.1,a.1.wrapping_add(a.2 as u32));
+                assert_eq!(c.1,b.1.wrapping_add(b.2 as u32));
+                let batch=p.owner.drain_tx(MonoNs(0),Vec::new()).unwrap();
+                let ready=p.owner.checked_tx_ready(&batch).unwrap();
+                assert_eq!(ready.len(),3);
+                let list=ready.iter().map(|v|
+                    (v.record.metadata().pn.0,v.record.bytes().to_vec())
+                ).collect::<Vec<_>>();
+                drop(batch);
+                p.arena.drain_returns();
+                assert_eq!(p.arena.report().loaned,0);
+                list
+            };
+            let parsed=UntrustedColdV4::parse(&raw).unwrap();
+            let (_c2s,s2c)=parsed.internal_direction_keys();
+            let suite=RecordSuite::try_from(suite_id).unwrap();
+            let mut replay=ReplayProtectedLaneRx::new_for_suite(
+                s2c,1400,suite,ReplayWindowConfig{
+                    pn_per_second:1000,cache_horizon_ms:3000,
+                    fec_horizon_ms:0,rtt_ms:500,metadata_budget_bytes:8192,
+                }).unwrap();
+            for (expected,(pn,mut wire)) in opened_wires.into_iter().enumerate(){
+                assert_eq!(pn,expected as u64);
+                let record=replay.open_unique_with_fec2_after_admission_in_place(
+                    &mut wire).unwrap();
+                assert_eq!(record.pn,pn);
+                assert_eq!(record.kind,expected as u8+if expected==0{0}else{1});
+                match record.kind{
+                    0=>assert_eq!(record.payload,b"ordinary independent"),
+                    2=>{
+                        let src=fec_v2::parse_source(
+                            record.payload,budget.record_payload_mtu).unwrap();
+                        assert_eq!((src.block_id,src.source_index),(91,0));
+                        assert_eq!(src.frame,frame_a);
+                    },
+                    3=>{
+                        let rep=fec_v2::parse_repair(
+                            record.payload,budget.record_payload_mtu).unwrap();
+                        let (got,_)=Rs16::new().recover_missing(
+                            91,&[None,Some(frame_b.as_slice())],&[rep],
+                            budget.record_payload_mtu,BackendChoice::Scalar
+                        ).unwrap();
+                        assert_eq!(got,vec![(0,frame_a.clone())]);
+                    },
+                    _=>panic!("unexpected authenticated kind"),
+                }
+            }
+            assert_eq!(replay.stats().delivered,3);
+            assert_eq!(probe_stop(id),OK);
+            assert_eq!(probe_release(id),OK);
+        }
+    }
+}
