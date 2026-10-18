@@ -24,6 +24,9 @@ func v4TestPolicy(lanes uint8, cipher uint8) AdmissionPolicy {
 }
 
 func v4Pair(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint8,policy AdmissionPolicy,epoch [16]byte)(*V4ClientSession,*V4ServerSession,error,error) {
+    return v4PairFeatureProbe(t,store,user,tunnel,lane,policy,epoch,false,false)
+}
+func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint8,policy AdmissionPolicy,epoch [16]byte,clientFec2,serverFec2 bool)(*V4ClientSession,*V4ServerSession,error,error) {
     t.Helper()
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
@@ -37,14 +40,14 @@ func v4Pair(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint
             TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                 TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
             ExpectedUsername:user,ExpectedPassword:"secret",ServerLimit:1400,
-        },V4ServerOptions{DataPlaneReady:true,Epochs:store})
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2})
         server<-answer{s,e}
     }()
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
         TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
         Username:user,Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,LaneID:lane,Policy:policy,
-    },V4ClientOptions{DataPlaneReady:true,Epoch:epoch})
+    },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2})
     select {
     case s:= <-server:
         return client,s.s,clientErr,s.err
@@ -543,5 +546,67 @@ func TestR0V4PrivateNativeBridgeRealProtectedOrderAndAbort(t *testing.T){
             if e!=nil||snap.TunnelID()!=b.identity {t.Fatal("after-commit cold owner lost provenance")}
             if err:=store.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,s.Epoch);err!=nil{t.Fatal(err)}
         })
+    }
+}
+
+func TestR0V4RealProtectedFec2Bit2FeatureAndKDFThreeCiphers(t *testing.T) {
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256} {
+        t.Run(string(rune('0'+cipher)),func(t *testing.T){
+            store,err:=NewV4EpochStore(4);if err!=nil{t.Fatal(err)}
+            tunnel:=[]byte("v4-fec2-probe-01")
+            client,server,ce,se:=v4PairFeatureProbe(
+                t,store,"fec2user",tunnel,1,v4TestPolicy(1,cipher),[16]byte{},true,true)
+            if ce!=nil||se!=nil{t.Fatalf("real TLS F2 client=%v server=%v",ce,se)}
+            want:=v4RequiredFeatures|v4FeatureFEC2
+            if client.negotiatedFeatures!=want||server.negotiatedFeatures!=want||
+               client.verifiedCold.features!=want||server.verifiedCold.features!=want||
+               client.Epoch==[16]byte{}||client.Epoch!=server.Epoch||
+               client.Negotiated.Keys!=server.Negotiated.Keys||
+               client.Negotiated.Keys.C2S==client.Negotiated.Keys.S2C {
+                t.Fatal("credential-checked protected bit2 exporter or frozen features mismatch")
+            }
+            cf,err:=client.ColdSnapshot()
+            if err!=nil||cf.features!=want {t.Fatalf("client frozen F2 snapshot: %v",err)}
+            sf,err:=server.ColdSnapshot()
+            if err!=nil||sf.features!=want {t.Fatalf("server frozen F2 snapshot: %v",err)}
+            // No bit2 authority is minted by the old cold248 grammar.
+            cold,err:=sf.MarshalColdBundle()
+            if err!=nil || cold[11]!=0 {t.Fatalf("cold248 leaked feature authority: %v",err)}
+            if err:=store.ReleaseLane("fec2user",tunnel,1,client.Epoch);err!=nil{t.Fatal(err)}
+        })
+    }
+}
+func TestR0V4RealProtectedFec2NoDowngradeAndEpochRollback(t *testing.T) {
+    for _,pair:=range [][2]bool{{true,false},{false,true}} {
+        store,err:=NewV4EpochStore(1);if err!=nil{t.Fatal(err)}
+        tunnel:=[]byte("v4-fec2-probe-02")
+        _,_,ce,se:=v4PairFeatureProbe(t,store,"user",tunnel,1,
+            v4TestPolicy(1,CipherChaCha),[16]byte{},pair[0],pair[1])
+        if ce==nil || !errors.Is(se,ErrAdmissionUnsupported) {
+            t.Fatalf("mismatched protected features admitted client=%v server=%v",ce,se)
+        }
+        c,server,ce,se:=v4PairFeatureProbe(t,store,"user",tunnel,1,
+            v4TestPolicy(1,CipherChaCha),[16]byte{},true,true)
+        if ce!=nil||se!=nil||c.Epoch!=server.Epoch{
+            t.Fatalf("mismatch left active epoch %v %v",ce,se)
+        }
+        if err:=store.ReleaseLane("user",tunnel,1,c.Epoch);err!=nil{t.Fatal(err)}
+    }
+}
+func TestR0V4Fec2ExtensionExactBitPatternRejectUnknown(t *testing.T){
+    var epoch [16]byte;epoch[0]=1
+    for _,features:=range []uint16{0,1,2,4,5,6,8,11,15,0x8007} {
+        if _,err:=v4Encode(V4Extension{Features:features,Epoch:epoch});
+           !errors.Is(err,ErrAdmissionUnsupported) {
+            t.Fatalf("unknown features %04x encoded: %v",features,err)
+        }
+    }
+    for _,features:=range []uint16{v4RequiredFeatures,v4RequiredFeatures|v4FeatureFEC2} {
+        wire,err:=v4Encode(V4Extension{Features:features,Epoch:epoch})
+        if err!=nil{t.Fatal(err)}
+        got,err:=v4Decode(wire[:])
+        if err!=nil||got.Features!=features||got.Epoch!=epoch{
+            t.Fatalf("exact feature %04x failed: %v",features,err)
+        }
     }
 }
