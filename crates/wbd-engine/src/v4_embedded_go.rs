@@ -80,6 +80,11 @@ struct Fec2ActualPeerRxProbe{
     // Original M2 bounded receive-side feedback, fed only after successful
     // original M3 AEAD/replay + legal FEC2 kind/body checks.
     feedback:wbd_recovery::RxFeedbackState,
+    // Only original M3 AEAD-unique first accepted DATA/repair counts.
+    // Not a mature loss denominator or fabricated network quality.
+    first_sources:u64,
+    first_repairs:u64,
+    recovered_sources:u64,
 }
 #[cfg(feature="m0_fec2_owner_probe")]
 impl Fec2ActualPeerRxProbe{
@@ -119,11 +124,21 @@ impl Fec2ActualPeerRxProbe{
             }
             _=>Err(()),
         };
-        if let Ok((pn,_,_))=&result {
+        if let Ok((pn,kind,recovered))=&result {
             use wbd_recovery::FeedbackReceive;
             if self.feedback.on_authenticated_data(
                 wbd_types::RecordPn(*pn),MonoNs(0)
             )!=FeedbackReceive::First {return Err(())}
+            match kind {
+                2=>self.first_sources=self.first_sources.saturating_add(1),
+                3=>{
+                    self.first_repairs=self.first_repairs.saturating_add(1);
+                    if !recovered.is_empty(){
+                        self.recovered_sources=self.recovered_sources.saturating_add(1);
+                    }
+                },
+                _=>return Err(())
+            }
         }
         result
     }
@@ -259,7 +274,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         ).map_err(|_|INVALID)?;
         Some(Fec2ActualPeerRxProbe{
             opener,codec:wbd_codec::fec_v2::Rs16::new(),
-            block_id:None,source0:None,finished:false,feedback
+            block_id:None,source0:None,finished:false,feedback,
+            first_sources:0,first_repairs:0,recovered_sources:0
         })
     }else{None};
     let owner=handoff.prepare_scoped_owner(&data,generation,handle)
@@ -1135,6 +1151,34 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
         },
         Err(v)=>v,
     }
+}
+
+// Receiver observability for the ORIGINAL Go policy starvation guard.
+// Counts ONLY M3 AEAD/unique-PN first admissions. Incomplete data/repair
+// are NOT inferred as mature packet loss (and must not trigger auto).
+// Feature-gated integration, not deployed telemetry.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
+    handle:u64,epoch:*const u8,len:usize,
+    source:*mut u64,repair:*mut u64,recovered:*mut u64
+)->i32{
+    if epoch.is_null()||len!=16||source.is_null()||repair.is_null()
+        ||recovered.is_null(){return INVALID}
+    let mut exact=[0u8;16];
+    exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound_to(exact){return BAD_STAGE}
+    let Some(rx)=e.fec2_actual_peer_rx.as_ref()else{return BAD_STAGE};
+    unsafe{
+        source.write(rx.first_sources);
+        repair.write(rx.first_repairs);
+        recovered.write(rx.recovered_sources);
+    }
+    OK
 }
 
 // Actual M2 RX feedback draft created ONLY from authenticated M3 data
