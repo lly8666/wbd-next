@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+  "result": "PASS_SCOPED_MAIN_FEC2_CODEC_OWNER_POLICY_STAGING_AND_M1_M3_PREPARED_COMPOSITION",
+  "progress": "partial",
+  "unverified": true,
+  "scope": "Integrate independently accepted M1 scheduler, M3 RS16 FEC2, M4 Go cold policy into main and prove one real M1 Arena/M3 parity/recovery flow; NO enabled FEC2 capability, kind2/3, Go TLS admission, original AEAD data path or production policy.",
+  "original_workers": {
+    "M3": {
+      "source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+      "files": {
+        "crates/wbd-codec/src/fec_v2.rs": "26881b892af8845120721d66108a4a03154be223",
+        "crates/wbd-codec/src/fec_v2_tests.rs": "46989fdd17b83768970f4f0d513a3b735b9cc970"
+      },
+      "main_registration": [
+        "crates/wbd-codec/src/lib.rs",
+        "crates/wbd-codec/src/record_frame.rs"
+      ],
+      "qualification": "Original worker/Linux x64 real ISA-L 11 PASS, 400k encode/e4 sameVM ABBA CPU qualified only component."
+    },
+    "M4": {
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "files": {
+        "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "733656ec92c2e2848c3913606c1f9f56cc8747b7",
+        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "7ad3bf27365b0f5f04a180b11a686888623f22cb"
+      },
+      "main_test_entry": ".github/workflows/m0-fec2-go-cold-policy.yml",
+      "no_worktree_clone": true
+    },
+    "M1": {
+      "source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+      "files": {
+        "crates/wbd-engine/src/runtime/fec2_owner.rs": "420c8a5cab749c2c877fa6420df38487ffdfaa77",
+        "crates/wbd-engine/src/runtime/fec2_owner_tests.rs": "b5c51fd7fea185b772db84ffea1c3f05147ac0cb"
+      },
+      "main_registration": "crates/wbd-engine/src/runtime/mod.rs",
+      "includes_source_first": "yes",
+      "no_production_enable": "yes"
+    }
+  },
+  "original_blob_verification": "All six source files' Git blob SHA confirmed identical in main to immutable worker CODE snapshots.",
+  "integration": {
+    "main_integration_code": "crates/wbd-engine/src/fec2_staged.rs",
+    "main_registration": "crates/wbd-engine/src/lib.rs",
+    "feature": "Fec2Owner.source-first real M1 generation arena slabs→ParityJob→single owned PreparedBlock→bounded at-most-4 repair rows per codec quantum→M3 RS16 parse and recover e1 exact original→caller alone confirms r_sent. Mismatch actual frozen profile and job.r is fail-closed BEFORE output.",
+    "test": "fec2_staged::tests::r1_m0_fec2_true_m1_arena_to_m3_cauchy_recover_only_missing_source",
+    "test_pass": true,
+    "scope_not_covered": "Does not original AEAD-seal fragments, transmit source/parity to kernel, authenticate Go FEC2 admission/KDF, receive real loss, or apply CLI/GUI revision; test counters are mock-confirmed after the codec result."
+  },
+  "actions": {
+    "main_native_fec2": {
+      "id": 39096791296,
+      "sha": "f50c2d7a2396fc15b603f32e35cfd79cd116deef",
+      "attempt": 1,
+      "conclusion": "success",
+      "job": 117584815745,
+      "actual_native": "Official pinned Intel ISA-L real NativeIsaL 11/11; direct original main crate source, not worker file fixture",
+      "artifact": {
+        "id": 12124926329,
+        "digest": "sha256:ca539d971d680cdd26f237aa68b798f36c29805339e64f398a91423d599086b7"
+      }
+    },
+    "main_original_go_policy": {
+      "id": 39096875504,
+      "sha": "bdfbd5620e96935976e510efc71525d19c29e139",
+      "attempt": 1,
+      "conclusion": "success",
+      "build": 117585057128,
+      "consume": 117585165545,
+      "tests": "8/8 pure cold policy in pinned ORIGINAL Go realityfront clone with MAIN-sourced overlay",
+      "artifacts": [
+        {
+          "id": 12124986232,
+          "digest": "sha256:f376d36df2ab353fa09258562c181e09d892139430eb79065545d6dc82f73b86"
+        },
+        {
+          "id": 12124558062,
+          "digest": "sha256:e0b20e22a88ee87bb4c60f2430c9ced5b7bd1c8d7533b80a9180bb20ce1e47ae"
+        }
+      ]
+    },
+    "main_native_functional": {
+      "id": 39097343657,
+      "sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+      "attempt": 1,
+      "conclusion": "success",
+      "build": 117586437626,
+      "engine": 117586603385,
+      "engine_result": "129 PASS 0 FAIL 1 ignored, includes all 12 M1 FEC2 and 1 M0 M1→M3 exact composition test",
+      "other_groups": "fec/normal/kernel/receipt all SUCCESS",
+      "artifacts": [
+        {
+          "id": 12124838674,
+          "digest": "sha256:ee22dac4cd1ab6a56bcafc9ceceb53e10984f5a8f4a17286cb83d63c85d63add"
+        },
+        {
+          "id": 12124843588,
+          "digest": "sha256:1bb63f5817d8b0ad1835adc9d41108f9f8582252ad1addb32e580f9127621ef0"
+        }
+      ]
+    },
+    "main_original_go_rust_native_probe": {
+      "id": 39097343616,
+      "sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+      "attempt": 1,
+      "conclusion": "success",
+      "build": 117586414303,
+      "consume": 117586685854,
+      "scope": "Existing original Go TLS and protected Rust normal/off background raw/TUN, MTU, stop, 1728B fragmentation exact source, 10s warmup+60s bilateral 10Mbps DEV_ONLY; FEC2 remains off",
+      "artifacts": [
+        {
+          "id": 12124244736,
+          "digest": "sha256:6c91d58a4b91eb114ade0dd1e643bb07cf98110e1533d6b73229c7fea525045f"
+        },
+        {
+          "id": 12125332224,
+          "digest": "sha256:595802a1be62ce635563c94cbdd71a3f1145cc0eed271fb9fb4d494a34a819c7"
+        }
+      ]
+    },
+    "main_r0_native_abi": {
+      "id": 39097343599,
+      "sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+      "conclusion": "success"
+    },
+    "main_g2_bootstrap": {
+      "id": 39097343596,
+      "sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+      "conclusion": "success"
+    },
+    "main_r0_cross_abi": {
+      "id": 39097343554,
+      "sha": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+      "conclusion": "success"
+    },
+    "github_api_artifacts_independently_rehashed": "NOT_DONE; GitHub API reported digests and build/consume manifests used."
+  },
+  "retained_failures": [
+    {
+      "run_id": 39096586112,
+      "sha": "29817f8626dbc3bc1838bc3f82afcd29c896217b",
+      "conclusion": "failure",
+      "cause": "native-functional codec group old 240-second timeout, one pre-existing ignored release diagnostic outside frozen allowed_ignored; new F2 scalar code/tests passed independently in scope. Other 5 grouped functional jobs SUCCESS."
+    },
+    {
+      "run_ids": [
+        39096938746,
+        39096938758,
+        39096938777
+      ],
+      "cause": "first M1 module integration lacked fec2_owner_tests.rs referenced by cfg(test) module. Fixed by exact source import commit0f23e03c; subsequent main source1395 native-functional/all selected native builds SUCCESS."
+    },
+    "Original D10/p99 and prior 240s FAIL remain OPEN."
+  ],
+  "remaining": {
+    "normal_off_large_udp_65k_cross_turn": "OPEN",
+    "stop_mtu_prefix_uncertain": "OPEN",
+    "real_original_go_authenticated_fec2_capability_KDF_and_kind2_3": "NOT_RUN",
+    "exact_AEAD_source_repair_tx_rx_kernel_delivery": "NOT_RUN",
+    "M2_authenticated_repair_receipt_frozen_driver_live_binding": "NOT_RUN",
+    "M4_original_go_actual_CLI_GUI_applied_revision": "NOT_RUN",
+    "FEC2_Game2_Game4_multiclient_auto_throughput_p99": "NOT_RUN",
+    "arm64_windows_full_fec2_native_loader": "NOT_RUN",
+    "product_FEC2": "OFF",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "M0 stage authenticated capability / kind2-3 Go→original Rust owner scoped wire TX/RX with source-first; use already imported exact M1 ParityJob and M3 PreparedBlock plus original M2 ingress, then real M4 raw/TUN reception and SOURCE-locked Actions. In parallel R0-023 complete 65KiB cross-turn LINK/Stop/MTU/prefix-uncertain; no more duplicate CODE8cc 400k microbench."
+}
