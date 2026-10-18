@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "role_id": "M0",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "708ecd311770c469fca7a155435cd10cab47db47",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "product_qualified": false,
+  "commit_changes": [
+    "Real M0 original-Go per authenticated client/direction/epoch ApplyOperatorConfig accepts increased Fixed/AUTO revision with exact scope; native Rust Stage must accept before Go advances requested state.",
+    "Applied profile and revision are never inferred from requested; only original Rust readback can confirm applied, including stale ACK denial.",
+    "Native feature-probe original Go TLS three ciphers: revision 2 Fixed High accepted and pending while original Rust applied stays Strong/revision 1; no premature acknowledgment.",
+    "Unwired native OFF transition refuses UI state rather than false applied OFF; ordinary V4 runtimeentry remains fail closed and product FEC2 disabled.",
+    "Tests include wrong epoch, foreign client, duplicate revision, backend rejection, unknown feedback, Stop late write."
+  ],
+  "action": {
+    "workflow": "m0-fec2-real-tls-owner-grant.yml",
+    "run_id": 39176419445,
+    "attempt": 1,
+    "source_sha": "708ecd311770c469fca7a155435cd10cab47db47",
+    "status_at_receipt": "in_progress",
+    "jobs_total": 14,
+    "jobs_passed_at_receipt": 13,
+    "jobs_pending_at_receipt": [
+      "m0-actual-isal"
+    ],
+    "jobs_failed_at_receipt": [],
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39176419445"
+  },
+  "exact_scoped_job_results": {
+    "go_control": "PASS_11_TESTS",
+    "native_go_tls_rust_revisions": "PASS_THREE_CIPHERS",
+    "linux_x86_64": "PASS",
+    "linux_aarch64": "PASS",
+    "windows_native_codec": "PASS",
+    "original_link_fec": "PASS",
+    "netem_10ms": "PASS",
+    "netem_150ms_3_independent": "PASS",
+    "normal_off_10mbps_dev": "PASS",
+    "original_ISA_L_400k_cost": "IN_PROGRESS_NO_CLAIM"
+  },
+  "artifact_witnesses": [
+    [
+      "12154566613",
+      "sha256:49cba1ea4ae2c7a3cea0d8adf35b3cdd62d4fc0ac369684d0303347d87377d27",
+      "original_go_tls_rust"
+    ],
+    [
+      "12154327238",
+      "sha256:b1ecd5d560a0f323f693733496840256f1ce0973c3decd2a451d85beb4726d72",
+      "go_control_11"
+    ],
+    [
+      "12154706884",
+      "sha256:52da0c0231a8c8e0b459dd3f1482d302079fe344002e575a5921c9b4b8752e9a",
+      "linux_x64"
+    ],
+    [
+      "12154112895",
+      "sha256:ad3da2b0dcf472d090e836d30469a97d448204e06d8edad848466cdd5032b585",
+      "linux_arm64"
+    ],
+    [
+      "12154167746",
+      "sha256:117ebdb1ec2748454d4c6fb7bd7b01a82e49b86a5b73bd1e79d0fb46585a7232",
+      "windows"
+    ],
+    [
+      "12153778781",
+      "sha256:5ce87bfe7f6e4543d8ed3f8d850e31150c294e2ef077abe528c9475e0ba130ea",
+      "product_gate_ledger"
+    ]
+  ],
+  "governance": {
+    "source_run": 39176419464,
+    "source_result": "PASS",
+    "maintenance_run": 39176419374,
+    "maintenance_result": "PASS"
+  },
+  "historical_failures_retained": [
+    "39155292919 GO fake ACK red",
+    "39142346744 old 150ms intermittent red"
+  ],
+  "unmet_product_gates": [
+    "Original old Go CLI/GUI concrete source lives outside wbd-next; only this scoped Go overlay and authenticated native probe changed, NOT full installed GUI integration",
+    "Normal V4 runtimeentry explicitly rejects unsupported product data-plane; cannot bypass without full M1/M2/M3/M4 production feature",
+    "Native Rust OFF hot switch, canonical M2 reverse kind1/M1 mature first-sent observation and FEC2 receiver lifecycle NOT_WIRED_PRODUCT",
+    "M4 actual 2..32 distinct frozen fault-injected native partial/Uncertain/Stop, physical two peers, Windows/ARM original full TLS drivers, 240s D10/p99 same VM ABBA NOT_RUN"
+  ]
+}
