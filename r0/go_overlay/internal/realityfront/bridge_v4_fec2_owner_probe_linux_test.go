@@ -54,6 +54,12 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             }
             oldHandle:=scoped.handle
             if err:=scoped.stopRelease();err!=nil{t.Fatal(err)}
+            if _,_,_,err:=scoped.fec2ProbeObservedQuality(s.Epoch,8*time.Second);err==nil{
+                t.Fatal("retired Go TLS generation leaked original M3 observation")
+            }
+            if err:=scoped.fec2ProbeTryStageExact(s.Epoch,6,100);err==nil{
+                t.Fatal("stopped original Rust owner accepted Go auto revision")
+            }
             if scoped.fec2ProbeScope(s.Epoch){
                 t.Fatal("stopped FEC2 scope remained active")
             }
@@ -286,6 +292,32 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             timeval:=syscall.NsecToTimeval((800*time.Millisecond).Nanoseconds())
             if e:=syscall.SetsockoptTimeval(peer,syscall.SOL_SOCKET,
                 syscall.SO_RCVTIMEO,&timeval);e!=nil{t.Fatal(e)}
+            // ORIGINAL M3 peer has received nothing yet: scoped source
+            // observability must never conjure a mature 0%-loss sample.
+            unobserved,preRep,preRecovered,obsErr:=
+                b.fec2ProbeObservedQuality(server.Epoch,0)
+            if obsErr!=nil||preRep!=0||preRecovered!=0||
+                unobserved.Fast.Observed!=0||
+                unobserved.Validity!=FecV2Unknown{
+                t.Fatalf("pre-RX original M3 fabricated mature quality: %+v %d %d %v",
+                    unobserved,preRep,preRecovered,obsErr)
+            }
+            wrongEpoch:=server.Epoch
+            wrongEpoch[0]^=0x40
+            if _,_,_,e:=b.fec2ProbeObservedQuality(wrongEpoch,time.Second);e==nil{
+                t.Fatal("foreign Go epoch read protected peer observability")
+            }
+            if e:=b.fec2ProbeTryStageExact(wrongEpoch,6,100);e==nil{
+                t.Fatal("foreign Go epoch staged a future FEC2 revision")
+            }
+            if e:=b.fec2ProbeTryStageExact(server.Epoch,7,100);e==nil{
+                t.Fatal("profile outside seven original Go grades accepted")
+            }
+            if mode=="mixed-prefix"{
+                if e:=b.fec2ProbeTryStageExact(server.Epoch,6,6);e==nil{
+                    t.Fatal("duplicate pending original Go AUTO revision6 accepted")
+                }
+            }
             pn,seq,wireLen,e:=b.fec2ProbeKernelRawTx(uint32(iface.Index))
             if e!=nil||pn!=[2]uint64{0,1}||
                 seq[0]!=b.txBoundary || seq[1]!=seq[0]+wireLen[0] ||
@@ -423,6 +455,39 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 t.Fatalf("real original M4 TUN recovery app UDP failed suite=%d n=%d source=%v err=%v",
                     cipher,n,peerAddr,appErr)
             }
+            // This quality signal comes from the original M3 AEAD+
+            // replay-valid FIRST source/repair and exact one recovered
+            // source, not from generated percentages or Go packet guesses.
+            // One observed source is INSUFFICIENT for a mature AUTO
+            // denominator, and parity/recovery are NOT source samples.
+            peerQuality,firstRepair,firstRecovered,obsErr:=
+                b.fec2ProbeObservedQuality(server.Epoch,6*time.Second)
+            if obsErr!=nil||firstRepair!=1||firstRecovered!=1||
+                peerQuality.Fast.FirstSent!=1||
+                peerQuality.Fast.Observed!=1||
+                peerQuality.Fast.Missing!=0||
+                peerQuality.Slow.FirstSent!=1||
+                peerQuality.Validity!=FecV2Unknown||
+                peerQuality.ActualK!=[16]uint64{}{
+                t.Fatalf("original M3 unique peer sample contaminated mature Go loss %+v repairs=%d recovered=%d err=%v",
+                    peerQuality,firstRepair,firstRecovered,obsErr)
+            }
+            if mode=="mixed-prefix"{
+                config:=FecV2Config{
+                    Client:"protected-owner",Direction:FecV2S2C,
+                    Transport:FecV2Normal,Mode:FecV2Auto,
+                    AutoPolicy:FecV2Conservative,ConfigRevision:5,
+                }
+                next,intent,stepErr:=b.fec2ProbeStageAutoTick(
+                    config,policyState,peerQuality,6*time.Second)
+                if stepErr!=nil||intent.Send||intent.Validity!=FecV2Unknown||
+                    next.AppliedRevision!=6||next.RequestedRevision!=6{
+                    t.Fatalf("sparse real AEAD observations falsely escalated or lowered Go AUTO %+v %+v %v",
+                        next,intent,stepErr)
+                }
+                policyState=next
+            }
+            t.Logf("M0_GO_FEC2_ACTUAL_M3_OBSERVATION_UNKNOWN_LOSS_STAYS_CENSORED_PASS suite=%d source_first=1 repair_first=1 recovered=1 fake_zero_loss=deny foreign_epoch=deny duplicate_revision=deny",cipher)
             // M2 original bounded RX feedback is fed ONLY successful
             // original M3 AEAD+PN and typed source/repair; no ACK of ACK
             // or untrusted Go-supplied receipt. One 256-PN page, bits0&1.
