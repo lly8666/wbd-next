@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 132,
-  "checkpoint_sha": "8cff436c3fce85a8d51abb2724ebceea12618416",
+  "sequence": 133,
+  "checkpoint_sha": "706f4b3d7d1f8fd6154e2550b4d73fb27dc4f4fa",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 real authenticated original Go V4→Rust LINK oversize partial staged: C2S 1370B two frames/three cipher suites and S2C 1728B two frames original Go peer once-delivered in real Linux raw/TUN. L01/MTU/Stop/scoped no-HOL PASS; >32-frame / >2048B TUN / mid-fragment partial-kernel safety remain OPEN. FEC2 product OFF; 024 STOPPED.",
-  "why_now": "Reused existing M3 LINK20/FrameBudget/ReassemblyTable and real owner rather than building an alternate Go or Rust path; linked original Go & Rust fragment transmit/receive and reused existing comprehensive native Actions. Earlier fail-close-only S2C assertion red at a96d; source821 changes same real test to positive peer reconstruction, exact Action success.",
+  "current_task": "R0-023 real original Go→Rust raw/TUN bounded LINK oversize and Stop/MTU/loan remains partial/unverified; M0 shared CODE8cc M3 FEC2 native 11/11 PASS and one fixed k16/r16/1200/e4 400k same-process ABBA each-stage >=1s CPU qualified component receipt. FEC2 product OFF, 024 STOPPED.",
+  "why_now": "M3 H35 fixed test-only invalid 4-row k2 Maximum native error; M0 provided authoritative shared source-locked ISA-L and enough same-VM process CPU cost window; old CODE301 and 96-block failures retained. CODE8cc math not changed, 017 worker own cursor remains partial pending worker governance.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Complete R0-023 bounded original Rust owner cross-turn LINK staging for legal larger UDP beyond 32 records/2048 slab without starving later small packets, then target L01-L04/B01-B04 mid-fragment route shrink, prefix/uncertain driver outcomes, Stop with loans, and actual Go peer receipt in SOURCE-locked Actions. Keep capability/FEC2 OFF, historical D10/p99 and worker tasks unchanged.",
+  "next_action": "Resume original R0-023 bounded raw/TUN LINK across-turn streaming larger UDP with MTU/Stop/prefix-uncertain/loans L01-L04/B01-B04. M3 017 CODE8cc native+e4 same-VM ABBA PASS receipt is shared; M3 owner independently closes its H/audit and remaining full 3-target codec gate. Do not enable FEC2, modify worker code, or rerun old D10/024.",
   "unverified": true,
-  "last_tested_source": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+  "last_tested_source": "f088ca04541df962d483751a759959ac3caf0c39",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json"
+    "docs/evidence/M0/M0-FEC2-CODE8CC-qualified-native-ABBA-f088ca04541df962d483751a759959ac3caf0c39.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-FEC2-CODE301-native-abba-2026-10-18.md",
@@ -28,5 +28,5 @@
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "Original Go linkdata 1370B C2S split2 through real raw/TUN Rust AEAD/PN/reassembly and Go UDP app across 3 ciphers PASS; reverse real Rust TUN1728B split2 -> M4 raw -> independently opened original Go TLS+LINK reassembly once PASS, 52B follower noHOL and MTU shrink fail-closed/Stop PASS. SOURCE821962b7, run39089250014 attempt1 build+consume SUCCESS with GitHub artifact digests only (ZIP rehash NOT_DONE). Previous code a96d workflow fail was stale fail-close-only test assertion, preserved. Max UDP, >32 frames, midfragment uncertain/prefix, full product/physical/GUI/FEC2 remain NOT_RUN; old D10/codec timeouts/p99 remain OPEN. Normal-off performance only single unpaired dev diagnostic, not gain."
+  "partial_summary": "M3 CODE8cc exact temporary native M0 Action39090941413 attempt1 build+consume success; true ISA-L 11/11 F2 PASS. Same process ONE fixed 400k blocks k16/r16 1200B +400k e4 recovery per ABBA leg scalar/native/native/scalar: all 8 stages process CPU>=1.13s, wall>=1.13s, identical parity/recovery checksums. CPU scalar/native encode AB57.33588 BA57.73846, recovery AB/BA17.58407, only codec kernel microbench, no product/p99 inference. Old CODE301 native10/11 FAIL and old 96-block CPU_INCONCLUSIVE retained. M3 branch H35 still partial and latest gov audit mid-control failure; not M0-owned. Original R0-023 SOURCE821962 real Go↔Rust 1370/1728 two-fragment PASS retained in manifest; large UDP>32 frames/driver partial/Stop/MTU product remain OPEN, FEC2 default OFF, historic D10/p99/240s OPEN."
 }
