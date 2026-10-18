@@ -902,16 +902,18 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 fn m0_fec2_observe_native_m4_repair_prefix(
     report:&wbd_platform::linux_batch::KernelSendReport,total:usize,
-)->Result<wbd_recovery::DriverPrefixObservation,i32>{
-    use wbd_recovery::{DriverPrefixObservation,BatchSuffixEvidence};
+)->Result<wbd_recovery::DriverPrefixObservation,wbd_recovery::GlobalRepairError>{
+    use wbd_recovery::{DriverPrefixObservation,BatchSuffixEvidence,GlobalRepairError};
     // Fail closed before touching the broker if M4 provides an invalid
     // prefix/uncertain marker, never truncate an out-of-range driver count.
-    if total>32||report.outcome.accepted_prefix>total{return Err(INVALID)}
+    if total>32||report.outcome.accepted_prefix>total{
+        return Err(GlobalRepairError::InvalidBatch)
+    }
     let count=report.outcome.accepted_prefix;
     let uncertain=report.outcome.uncertain_index;
     DriverPrefixObservation::checked(
         total,count,uncertain,BatchSuffixEvidence::Unproven
-    ).map_err(|_|INVALID)
+    )
 }
 
 // M0 opt-in integration of TWO original M1 FrozenRecord repair candidates
