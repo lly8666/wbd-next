@@ -619,8 +619,34 @@ impl ProtectedScopedOwner {
     /// M3 fragmenter in a subsequent bounded TX path.
     /// AEAD/PN and TCP sequence are consumed BEFORE queue publication.
     pub(crate) fn seal_normal_off_one(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        self.seal_normal_off_validated_link(
+            buffer,payload_len,budget,carrier_snapshot,now,false)
+    }
+
+    /// M0 authenticated Normal/off LINK slow path; the M3 fragmenter is
+    /// the only producer. Reject magic lookalikes BEFORE spending PN or
+    /// allocating a driver loan. Same normal-build M1 owner/AEAD/Seq path.
+    pub(crate) fn seal_normal_off_fragment_one(
         &mut self,mut buffer:UniqueBuffer,payload_len:usize,
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        let end=14usize.checked_add(payload_len).ok_or(ProtectedCryptoError::Tx)?;
+        let wire=buffer.writable().get(14..end).ok_or(ProtectedCryptoError::Tx)?;
+        if !matches!(inspect_link(wire,budget.link_frame_mtu,LinkMode::FixedOff),
+            Ok(LinkView::Fragment(_))) {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        self.seal_normal_off_validated_link(
+            buffer,payload_len,budget,carrier_snapshot,now,true)
+    }
+
+    fn seal_normal_off_validated_link(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+        allow_fragment:bool,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
             || !self.crypto.active || self.crypto.tx_boundary.is_none(){
@@ -642,7 +668,9 @@ impl ProtectedScopedOwner {
             return Err(ProtectedCryptoError::Tx)
         }
         let business=&buffer.writable()[14..14+payload_len];
-        if business.starts_with(LINK_MAGIC){return Err(ProtectedCryptoError::Tx)}
+        if business.starts_with(LINK_MAGIC) && !allow_fragment{
+            return Err(ProtectedCryptoError::Tx)
+        }
         let seq64=self.next_tx_seq.ok_or(ProtectedCryptoError::Inactive)?;
         // Keep the true monotone TCP-appearance stream offset in 64 bits;
         // only the wire header projects to seq32. The old u32.checked_add
