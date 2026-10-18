@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 133,
-  "checkpoint_sha": "706f4b3d7d1f8fd6154e2550b4d73fb27dc4f4fa",
+  "sequence": 134,
+  "checkpoint_sha": "56e721033862c8c7ce7039259764f50a3f41bd12",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 real original Go→Rust raw/TUN bounded LINK oversize and Stop/MTU/loan remains partial/unverified; M0 shared CODE8cc M3 FEC2 native 11/11 PASS and one fixed k16/r16/1200/e4 400k same-process ABBA each-stage >=1s CPU qualified component receipt. FEC2 product OFF, 024 STOPPED.",
-  "why_now": "M3 H35 fixed test-only invalid 4-row k2 Maximum native error; M0 provided authoritative shared source-locked ISA-L and enough same-VM process CPU cost window; old CODE301 and 96-block failures retained. CODE8cc math not changed, 017 worker own cursor remains partial pending worker governance.",
+  "current_task": "R0-023 original Go authenticated V4→Rust original M1/M3/M4 raw/TUN Normal/off LINK: now pre-materializes every <=32-fragment original M1 slab before AEAD/PN, source-pinned true native Go/Rust all targeted tests PASS, while full large UDP cross-turn/unknown kernel/Stop+MTU remain OPEN. FEC2 off.",
+  "why_now": "Original oversized S2C inner packet could stage/seal some LINK records then fail next M1 arena allocation, leaving partial logical packet. Reused original M3 LinkPacketPlan and original M1 slab staging in bounded same-turn M0 producer, with genuine negative capacity test and real Go/Rust Actions. Independent M3 H36 acknowledges CODE8cc native+CPU but still pending central checkpoint and ARM/Windows.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Resume original R0-023 bounded raw/TUN LINK across-turn streaming larger UDP with MTU/Stop/prefix-uncertain/loans L01-L04/B01-B04. M3 017 CODE8cc native+e4 same-VM ABBA PASS receipt is shared; M3 owner independently closes its H/audit and remaining full 3-target codec gate. Do not enable FEC2, modify worker code, or rerun old D10/024.",
+  "next_action": "R0-023 complete bounded 65KiB original TUN intake and >32 fragment cross-turn TX scheduling without normal small HOL, then B01-B04/L01-L04 actual midfragment route shrink, kernel copied-prefix/uncertain completion, Stop/loans and generation retirement in SOURCE-locked Actions. Separately M0 must review M3 historical 75 commits and approve intermediate scope checkpoint without raising 64 limit; never grant FEC2 product ON from codec microbenchmark.",
   "unverified": true,
-  "last_tested_source": "f088ca04541df962d483751a759959ac3caf0c39",
+  "last_tested_source": "1689d67ab23ada9f4130a963ec7cc223e1f1cca4",
   "evidence_refs": [
-    "docs/evidence/M0/M0-FEC2-CODE8CC-qualified-native-ABBA-f088ca04541df962d483751a759959ac3caf0c39.json"
+    "docs/evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-023-FEC2-CODE301-native-abba-2026-10-18.md",
-    "docs/evidence/M0/M0-FEC2-shared-workflows-4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f.json",
+    "docs/devlog/M0/M0-023-next-stage-snapshot-2026-10-18.md",
+    "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
+    "docs/evidence/M0/M0-FEC2-CODE8CC-qualified-native-ABBA-f088ca04541df962d483751a759959ac3caf0c39.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json",
-    "docs/evidence/M0/M0-024-directional-closure-dfe54df144450f22f5144fd3b43335635e01eb90.json",
     "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "M3 CODE8cc exact temporary native M0 Action39090941413 attempt1 build+consume success; true ISA-L 11/11 F2 PASS. Same process ONE fixed 400k blocks k16/r16 1200B +400k e4 recovery per ABBA leg scalar/native/native/scalar: all 8 stages process CPU>=1.13s, wall>=1.13s, identical parity/recovery checksums. CPU scalar/native encode AB57.33588 BA57.73846, recovery AB/BA17.58407, only codec kernel microbench, no product/p99 inference. Old CODE301 native10/11 FAIL and old 96-block CPU_INCONCLUSIVE retained. M3 branch H35 still partial and latest gov audit mid-control failure; not M0-owned. Original R0-023 SOURCE821962 real Go↔Rust 1370/1728 two-fragment PASS retained in manifest; large UDP>32 frames/driver partial/Stop/MTU product remain OPEN, FEC2 default OFF, historic D10/p99/240s OPEN."
+  "partial_summary": "SOURCE1689d67 original Rust M1 full <=32 LINK fragment preseal staging negative capacity test pass: all slab allocations/valid LinkPacketPlan before first AEAD PN, fail returns preseal slabs, no preseal partial publication. Native owner run39093072101 attempt1 build117573724785+consume117573990178 SUCCESS, original authenticated Go↔Rust real C2S loss/noHOL 3 ciphers and S2C 1728B 2 frames original Go peer once + later small, netlink/MTU/Stop PASS, bilateral Normal/off 10Mbps developer 10s+60s diagnostic recorded not product. Old CODE8cc M3 Linux x64 native F2 11/11 and same VM 400k encode/e4 ABBA valid component CPU; M3 H36 remains partial and central 75>64 scope checkpoint review pending; M1 130/130 component, M2 70/70 integration ready, M4 control8/8 and platform safe wrapper ready. Original TUN 2048B slab / >32 cross turn, midfragment route/kernel uncertain + full product/netem/p99/Windows/ARM FEC2 codec remain OPEN; FEC2 capability OFF, D10 original FAIL retained."
 }
