@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 140,
-  "checkpoint_sha": "0f88d4eeed81c8ada2aac6ecb876b17e442cb151",
+  "sequence": 141,
+  "checkpoint_sha": "2c4854144daa70de3a98e82ec13190a99cc31dfb",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 M0 real original Go TLS authenticated FEC2 bit2 private opt-in 0x0007 exact exchange+KDF three cipher SUCCESS, frozen credential-check session snapshot→WBGH v2→real Rust original owner Prepare/Commit/Stop SOURCEc6 Actions39102424680 PASS. Default public V4 feature0x0003 and FEC2 product OFF.",
-  "why_now": "Accelerated actual original Go TLS to Rust integration beyond synthetic kind2/3 record probe. Preserved default feature strictness; private TLS test only enables bit2, mismatch hard fail/no epoch leak; exporter KDF includes exact protected extension, frozen Go snapshot produces private versioned V2 handoff, normal Rust decoder exact v1/v2 metadata without treating bytes as FEC authority. Verified build/consume real Go three-cipher handoff against original Rust.",
+  "current_task": "R0-023 original Go TLS verified private bit2 0x0007 now post-Detach binds test-only FEC2 grant to same original Rust owner generation/epoch/ownerID/lane/Strong1 fixture, before bind Active still rejects source/repair and Stop revokes. SOURCE c534 exact Go/Rust native Actions39104136996 SUCCESS; default public FEC2 OFF.",
+  "why_now": "H140 passed real credential-checked Go TLS 0x0007 and original Rust WBGH/v2 metadata but not owner authorization. Added explicit post-Go-Detach/Commit test-only owner generation-epoch permission, no independent FEC2 owner/PN/replay, default build has no grant C symbol, original Go callback inert without separate test tag. Actions verified real Go pinned 3 ciphers and synthetic Rust M1 FrozenRecord native owner FEC2 source/repair; caught and corrected original Go overlay helper omission on earlier failed source.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "M0 create unforgeable same-process lifetime-scoped FEC2 authority from actual verified Go TLS/Detach/epoch/direction/policy into original ProtectedScopedOwner; avoid treating untrusted WBGH v2 or cold248 as permission. Then source-first M1+M3 RS16 real encrypted FEC2 kind2/3→M4 raw/TUN→M2 authenticated receipt/recovery, Stop/MTU/prefix-unknown negative and applied CLI/GUI. Keep FEC2 default OFF and R0-023 legal65KiB cross-turn / codec240s/D10/p99 OPEN.",
+  "next_action": "Move actual applied Go fixed/auto FEC2 policy/revision under protected authenticated Go session (probe Strong/1 is NOT applied product policy), then connect original M1 source-first ParityJob, M3 source2/repair3 authenticated records and M4 real raw/TUN plus M2 authenticated ingress on same generation. Test actual loss/recovery/no-HOL/MTU/Stop/unknown driver and 65KiB LINK cross-turn in SOURCE-locked Actions; preserve codec240s/D10/p99 and target-native limits, FEC2 publicly OFF.",
   "unverified": true,
-  "last_tested_source": "c6d1e2b8214cee3b78cae43c14ffb581864c578f",
+  "last_tested_source": "c534e5892bbe4ef3d18355ac71723f6bcf6d41d5",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-protected-go-fec2-bit2-rust-v2-handoff-c6d1e2b8214cee3b78cae43c14ffb581864c578f.json"
+    "docs/evidence/M0/M0-023-real-go-fec2-owner-grant-c534e5892bbe4ef3d18355ac71723f6bcf6d41d5.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
+    "docs/evidence/M0/M0-023-protected-go-fec2-bit2-rust-v2-handoff-c6d1e2b8214cee3b78cae43c14ffb581864c578f.json",
     "docs/evidence/M0/M0-023-original-owner-fec2-same-pn-c60e9d6e95aff49cc98eb039e7347659eaaa6213.json",
-    "docs/evidence/M0/M0-023-fec2-protected-record-ee5d2cad1ba8818488a91097e4da04fcc55b8e63.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +28,5 @@
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE c6d1e2b8214cee3b78cae43c14ffb581864c578f real original pinned Go credential TLS client/server handshake bit2=0x0004 (private only) for ChaCha/AES128/AES256, exact feature0x0007 match with no downgrade, wrong opts hard reject + epoch rollback, actual KDF protected transcript separation and frozen snapshot; default V4 0x0003 public and cold248 byte11=0. Snapshot private owner handoff keeps version1 default while version2 exactly BE 0x0007+reserved zero, Rust PrivateGoV4Handoff decoder rejects v1 dirty/v2 missing/unknown bits; does NOT grant FEC2 kind2/3. Go TLS run39102069847 build+consume SUCCESS 17 tests, all16 required, build/result artifacts GH; real Go TLS→original Rust embedded V2 Prepare/Commit/Stop run39102424680 build117601245951/consume117601531073 SUCCESS incl TestR0V4EmbeddedNativeProtectedFec2Bit2Scope three ciphers and Rust v2 failclosed test, old Normal/off raw/TUN tests PASS. Governance maintenance39102424631 success. Intermediate older 10ms netem cdc SOURCE run39102369455 FAIL and old native-functional 39102069872 codec 240s FAIL retained, user product FEC2 OFF. Unverified full actual FEC2 original Go→Rust kind2/3 raw/TUN/M2 receipt and CLI/GUI/WindowsARM; R0 65k cross-turn, Stop/MTU prefix-uncertain D10/p99 OPEN."
+  "partial_summary": "Exact SOURCE c534e5892bbe4ef3d18355ac71723f6bcf6d41d5 native one-job Action39104136996 SUCCESS: pinned original Go credential TLS 3 real ciphers, default V4 features3 has no FEC2 scoped grant, private 7 after protected reply Detach and same original Rust Commit binds generation, epoch, original owner token/lane and fixed test-only Strong5/revision1; wrong/old epoch denied, Stop Release clears permission and old generation handle invalid. Rust native original M1 FrozenRecord source2/repair3 shared AEAD PN/Seq test passes with wrong feature/revision/epoch and duplicate-binding rejects; Rust default release ABI no FEC2 binding/status symbols. Initial Actions39104016657 FAIL because missing original Go raw native test helpers, fixed c534; initial 39103821683 missing off-hook in original Go overlay, fixed; earlier 39103933765 normal 150ms netem experimental FAIL still retained. GH artifact12127314845 digest3acb8f2c... reported; independent ZIP rehash NOT_DONE. No cryptographic independent Rust attestation of arbitrary same-process C caller; Go private callback trust only in explicit opt-in test build; actual CLI GUI applied policy, FEC2 real M4 raw/TUN/M2 receipt, Windows/ARM64, full product not run, product FEC2 OFF. R0-023 65k cross-turn, Stop MTU prefix unknown; codec240s/D10/p99 OPEN."
 }
