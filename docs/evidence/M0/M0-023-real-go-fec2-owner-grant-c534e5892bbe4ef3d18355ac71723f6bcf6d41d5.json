@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "c534e5892bbe4ef3d18355ac71723f6bcf6d41d5",
+  "result": "PASS_SCOPED_REAL_GO_TLS_TO_RUST_FEC2_OWNER_EPOCH_LIFETIME_PROBE",
+  "progress": "partial",
+  "unverified": true,
+  "features": {
+    "public_default": "OFF",
+    "extra_test_tags": "wbd_v4_fec2_owner_probe and Rust m0_fec2_owner_probe",
+    "source": "Original Go credential-verified V4 0x0007 TLS extension, protected exporter/KDF, successful reply/Detach and original Rust Commit",
+    "scoped": "Rust extra-feature-only FEC2 probe permission bound to original owner generation, epoch, lane, owner ID and Strong profile5/revision1 test fixture; default invalid, wrong epoch/feature/profile/revision and duplicate rejected; Stop resets scope",
+    "normal": "Default Go hook inert; default Rust release has no grant/status C FFI symbols; normal/Off kind0 unaffected",
+    "record": "Synthetic Rust test validates actual same original PN/Seq/M1 frozen TX and FEC2 source/repair after test-only scoped grant; no real network FEC2 yet"
+  },
+  "actions": {
+    "qualified": {
+      "run": 39104136996,
+      "attempt": 1,
+      "source": "c534e5892bbe4ef3d18355ac71723f6bcf6d41d5",
+      "conclusion": "success",
+      "job": 117606289959,
+      "go_tests": [
+        "TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped",
+        "TestR0V4EmbeddedNativeProtectedControlAllCiphers",
+        "TestR0V4EmbeddedNativeProtectedFec2Bit2Scope"
+      ],
+      "rust_test": "r1_m0_original_owner_fec2_source_repair_same_pn_staged",
+      "cipher_suites": 3,
+      "artifact_id": 12127314845,
+      "artifact_name": "m0-real-go-fec2-owner-grant-39104136996-1",
+      "artifact_digest": "sha256:3acb8f2c00c574f6532c46fbdf9d1d50a4b0448a2989db47bbe29b206393f058",
+      "independent_artifact_zip_rehash": "NOT_DONE"
+    },
+    "historical_failures": [
+      {
+        "run": 39104016657,
+        "reason": "First isolated Go compile omitted native raw helpers and wbd_v4_native_probe tag; new c534 workflow includes both and succeeds"
+      },
+      {
+        "run": 39103821683,
+        "reason": "Original embedded Go test copy initially omitted new default off hook; later source updated"
+      },
+      {
+        "run": 39103933765,
+        "reason": "Earlier Normal/off native 150ms exploratory smoke FAIL, not proof of FEC2 failure"
+      }
+    ]
+  },
+  "limit": "Feature-only private process ABI is NOT independently cryptographically attested against malicious same-process code. Synthetic Strong/1 is NOT original Go actual applied CLI/GUI policy. Untrusted WBGH/v2 and cold248 never themselves grant access.",
+  "product": {
+    "FEC2": "OFF",
+    "real_kind2_3_raw_TUN": "NOT_RUN",
+    "M1_parity_full_live": "NOT_WIRED",
+    "M2_authenticated_repair": "NOT_WIRED",
+    "actual_Go_applied_policy_GUI": "NOT_RUN",
+    "arm64_windows": "NOT_RUN",
+    "full_end_to_end": "NOT_RUN",
+    "large_udp_65k_Stop_MTU": "OPEN",
+    "legacy_codec240s_D10_p99": "OPEN"
+  },
+  "next_action": "Take test-only bound lifetime and connect actual M1 FEC2 source-first/repair owner, original AEAD kind2/3 over M4 raw/TUN and authenticated M2 receipt with real Go applied policy and stop/MTU tests. Retain public FEC2 OFF until product qualification."
+}
