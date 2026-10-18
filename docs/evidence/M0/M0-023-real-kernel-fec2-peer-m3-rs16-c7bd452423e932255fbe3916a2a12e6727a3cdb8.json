@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "c7bd452423e932255fbe3916a2a12e6727a3cdb8",
+  "result": "PASS_SCOPED_GO_TLS_ORIGINAL_RUST_FEC2_ACTUAL_M4_KERNEL_CIPHERTEXT_TO_INDEPENDENT_M3_AUTHENTICATED_REPLAY_RS16_MISSING_SOURCE",
+  "progress": "partial",
+  "unverified": true,
+  "implementation": {
+    "paths": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+      ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+    ],
+    "scope": "EXTRA opt-in test-only original Go V4 credential TLS bit2=7 with M0 post-Detach generation/epoch grant. Original Rust ProtectedScopedOwner seals one M3 FEC2 source kind2 and one M3 RS16 Strong k2 repair kind3 using same original M1 Arena/FrozenRecord and PN0/1+TCP seq; M4 scoped raw IPv4/TCP actual Linux kernel socket. Independently original Go client raw TCP socket captures ciphertext bytes; those bytes go into a test-only independent Rust CLIENT receive-side original ReplayProtectedLaneRx constructed at private Go post-TLS owner prepare using verified S2C direction keys; one fresh per-session PN bitmap, actual M3 `open_unique_with_fec2_after_admission_in_place` auth/PN and `parse_source`,`parse_repair`, `Rs16::recover_missing` e1.",
+    "source_first": "Authenticated kind2 pn0 yields no recovered bytes and records actual source0; duplicate pn0 rejected by actual replay bitmap, tampered pn1 bytes rejected by AEAD before valid pn1; authenticated kind3 pn1 recovers original source1 exactly 127B, independently checked by Go test against formula `(i*7+5)%251` for 3 suites; second repair rejected. No data from sender-side fixtures passed to decoder other than keys+scope: recovered payload comes from actual encrypted raw packets captured by independent Go SOCK_RAW.",
+    "limits": "Receiver is an extra-feature-only same-process Rust peer probe seeded by Go verified cold keys; not deployed or independent networked product client, no M2 feedback, no real app TUN, no actual loss injector (missing source1 deliberately untransmitted), no live original M1 Fec2Owner source-first scheduler, not proof of product automatic applied config. Production Go public FEC2 and default Rust FEC2 C ABI remain OFF."
+  },
+  "actions": {
+    "run_id": 39107436575,
+    "attempt": 1,
+    "source_sha": "c7bd452423e932255fbe3916a2a12e6727a3cdb8",
+    "conclusion": "success",
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39107436575",
+    "job_id": 117616234174,
+    "artifact": {
+      "id": 12128972528,
+      "name": "m0-real-go-fec2-owner-grant-39107436575-1",
+      "github_sha256": "db12af775113bc533980f73f281ab5c4f6d428d4eb435dee29f833d1acea54e3",
+      "independently_downloaded_zip_sha256": "db12af775113bc533980f73f281ab5c4f6d428d4eb435dee29f833d1acea54e3",
+      "receipt_json_sha256": "UNRECORDED",
+      "real_kernel_log_sha256": "f21c2e22059d7acd7e2da6249f14c26108538fb844499f84a30333795d9b1fd4"
+    },
+    "tests": {
+      "feature_only_original_Rust_owner_source_repair": "PASS",
+      "default_Rust_release_no_extra_FEC2_symbols": "PASS",
+      "private_original_Go_TLS_all_three_ciphers": "PASS",
+      "independent_kernel_raw_2_ciphertext": "PASS",
+      "original_M3_client_AEAD_unique_PN": "PASS",
+      "duplicate_source0": "DENIED",
+      "tampered_repair1": "DENIED",
+      "real_repair1_missing_source1": "PASS_127_EXACT_BYTES_3_CIPHERS",
+      "replayed_repair1": "DENIED"
+    }
+  },
+  "open": {
+    "old_original_Normal_off_150ms_second_fragment": "FAIL_OPEN_FROM_H142_DO_NOT_OVERRIDE",
+    "R0_023_65KiB_cross_turn_Stop_MTU_prefix_unknown": "OPEN",
+    "M1_Fec2Owner_full_live_scheduler": "NOT_WIRED",
+    "M2_authenticated_repair_feedback": "NOT_WIRED",
+    "FEC2_full_original_TUN_business": "NOT_RUN",
+    "real_applied_go_cli_gui": "NOT_RUN",
+    "Windows_ARM64": "NOT_RUN",
+    "legacy_codec240s_D10_p99": "OPEN",
+    "physical": "NOT_RUN",
+    "product": "OFF"
+  },
+  "next_action": "Connect authenticated FEC2 e1 missing source into original M2 typed receipt and real TUN application sink after true Go applied profile/revision and authentic receive direction; validate loss/no-HOL/Stop/MTU under Source-locked Actions. Probe RX is not production client; keep FEC2 OFF, preserve 150ms Normal/off failure and historical codec/D10/p99/65KiB."
+}
