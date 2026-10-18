@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "395a711ff28dfda9b89b772fdf296fc0f4f9f449",
+  "source_prior_compile_fail": "62c0428e8c96d7a7cffd0bbee46601dd8c1c7a99",
+  "result": "PASS_SCOPED_TEST_ONLY_GO_TLS_M1_SOURCEFIRST_M3_RS16_ORIGINAL_RUST_OWNER_M4_KERNEL",
+  "progress": "partial",
+  "unverified": true,
+  "product_fec2": "OFF",
+  "admission": "EXTRA opt-in m0_fec2_owner_probe, private verified original Go TLS bit2 epoch and Rust owner generation; default release feature absent",
+  "changes": [
+    "crates/wbd-engine/src/v4_embedded_go.rs"
+  ],
+  "real_path": [
+    "Existing original Go three-suite protected TLS/Detach/Commit+private epoch grant",
+    "Inside actual Linux raw sender, original M1 Fec2Owner Normal Strong revision 1 forms k2 source-first from original M1 Arena IP slabs; source0 callback immediately seals/sends through original ProtectedScopedOwner AEAD/PN/FrozenRecord/Seq and M4 scoped raw; source1 callback records a deliberate un-enqueued source loss, NEVER calls it a successfully sent packet",
+    "Original M1 fixed deadline on_due closes k2; ParityJob.with_sources borrows original retained Arena plaintext into actual M3 RS16 Strong scalar row0; real owner sends repair kind3 on next original PN/Seq through M4 raw; driver-copy outcome checked; finish_parity charges r_sent=1 and checks no outstanding jobs/bytes, source_not_ready=1, Stop rejects further parity",
+    "Independent Go AF_INET raw peer captures encrypted source2 PN0 and repair3 PN1; original M3 unique replay+AEAD decrypts, rejects tamper/repeat, RS16 e1 recovers source1's genuine IPv4 127B and writes via original M4 ScopedTunSink; Linux UDP app independently receives 99B, three suites",
+    "Original M2 RX feedback drafts remain authenticated-data-only, page0 bitmap03 largest1 and NotSent/Accepted/Uncertain/retry guards in all three suites; reverse kind1 wire receipt and sender repair budget NOT_WIRED"
+  ],
+  "scope_limits": [
+    "M1 live-in-probe actual kernel-bound scheduler source-first/ParityJob PASS, but one-shot deterministic scheduling ticks, synthetic loss and fixed probe revision/profile; NOT a real continuous automatic live production scheduler or normal Go applied policy",
+    "No real authenticated reverse kind1 receipt TX/RX, sender shadow/PN frozen retransmit budget, M4 prefix/uncertain settlement, cross-turn ~65KiB UDP, MTU/Stop/loan full hard gates",
+    "No CLI/GUI auto/fixed applied revision, physical two peer, Windows/ARM64 actual native FEC2 codec or public production enable",
+    "Cross-ABI PASS is only configured selected build/consume, not Windows/ARM64 complete codec/native product or physical acceptance",
+    "Selected native-functional PASS has engine/receipt/fec/normal/kernel, NOT historical full codec 240s group"
+  ],
+  "actions": {
+    "targeted": {
+      "run_id": 39114076177,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 117636143696,
+      "artifact_id": 12131527951,
+      "artifact_name": "m0-real-go-fec2-owner-grant-39114076177-1",
+      "artifact_github_sha256": "aa50373a9d85d5a08033044470ef870bc884d6dfe0074a49b8faf895ff3c9149",
+      "downloaded_zip_independently_rehashed_sha256": "aa50373a9d85d5a08033044470ef870bc884d6dfe0074a49b8faf895ff3c9149",
+      "receipt_result": "PASS_SCOPED_GO_TLS_TO_ORIGINAL_FEC2_OWNER_LIFETIME",
+      "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "rust_native": "2 passed, 0 failed; original M1 scheduler staged seam and original owner PN/Seq scoped",
+      "go_kernel": "Real private TLS x three cipher + independent Go raw capture + original M3 AEAD/RS16 e1 M4 kernel TUN/99B UDP PASS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39114076177"
+    },
+    "selected_native_functional": {
+      "run_id": 39114076171,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        "plan",
+        "build",
+        "verify (engine)",
+        "verify (receipt)",
+        "verify (fec)",
+        "verify (normal)",
+        "verify (kernel)"
+      ],
+      "codec_240s_historical": "NOT_RUN",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39114076171"
+    },
+    "governance": {
+      "run_id": 39114076173,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39114076173"
+    },
+    "scoped_bootstrap": {
+      "run_id": 39114076187,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "r0_native_abi": {
+      "run_id": 39114076191,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "run_id": 39114076223,
+      "attempt": 1,
+      "conclusion": "success",
+      "qualification": "selected cross-build/consume only"
+    },
+    "static_qualification_audit": {
+      "run_id": 39114076162,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "normal_off_150ms": {
+      "run_id": 39114076155,
+      "attempt": 1,
+      "conclusion": "failure",
+      "failed_job_id": 117636451865,
+      "artifact_id": 12132100712,
+      "artifact_name": "m0-v4-native-probe-result-39114076155-1",
+      "artifact_github_sha256": "bd72bfcedeab1b38a96d2acfd0c64667d750b390e793aa0a2da8fdf5aeef6db5",
+      "downloaded_zip_independently_rehashed_sha256": "bd72bfcedeab1b38a96d2acfd0c64667d750b390e793aa0a2da8fdf5aeef6db5",
+      "receipt": "prelim-netem-150ms.json result=FAIL; suite3 TestR0V4EmbeddedRealM4RawToTun missing second S2C LINK/ TUN_APP_FIRST_PACKET_FAIL; 10ms selected normal suite PASS, 150ms suite1 and suite2 PASS; exact source run not product PASS",
+      "predecessor": "39106157061 preexisting suite3 150ms pending FAIL",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39114076155"
+    },
+    "first_compile_failure": {
+      "source_sha": "62c0428e8c96d7a7cffd0bbee46601dd8c1c7a99",
+      "run_id": 39114049974,
+      "attempt": 1,
+      "conclusion": "failure",
+      "artifact_id": 12131995737,
+      "artifact_github_sha256": "33051c0e142ce82fe76a7f0bc433fa71154972a8268768e88f09780af15311d7",
+      "downloaded_zip_independently_rehashed_sha256": "33051c0e142ce82fe76a7f0bc433fa71154972a8268768e88f09780af15311d7",
+      "cause": "Rust E0502: parity job block_id immutable capture inside mutable with_sources call; corrected in SOURCE395a711, precise new Action PASS, FAIL retained",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39114049974"
+    }
+  },
+  "historical_open": [
+    "Normal/off configured 150ms suite3 second LINK fragment FAIL remains, current run 39114076155 and prior 39106157061",
+    "Legal ~65KiB cross-turn UDP / MTU±1 and mid-flight route revision / Stop / generation / outstanding loan / driver prefix/uncertain / no-HOL integrated scenarios",
+    "M2 authenticated reverse kind1 receipt and frozen shadow/driver budget, Go applied fixed-auto config, proper two-peer FEC2",
+    "Historical full codec240s timeout, D10, sparse/p99 paired AB/BA qualification remain OPEN; no new performance claim",
+    "Complete native ARM64/Windows codec, Windows loader, physical and product qualification NOT_RUN"
+  ],
+  "next_action": "Proceed under latest M0 registry R0-023: real peer-authenticated reverse M2 kind1 receipt and sender frozen PN/repair+driver prefix; applied Go policy fixed/auto CLI/GUI; then original LINK 150ms, cross-turn MTU/Stop/loan regression. Never enable product FEC2 from test-only scoped pass."
+}
