@@ -85,7 +85,7 @@ jobs:
           rust_test="$(find target/release/deps -maxdepth 1 -type f -name 'wbd_engine-*' -perm -u+x | head -n 1)"
           test -n "$rust_test"
           cp "$rust_test" native-probe-build/owner-rust.test
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -119,6 +119,7 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
             ".github/workflows/m0-v4-native-owner-probe.yml",
