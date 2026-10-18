@@ -108,3 +108,13 @@ Actions：
 [SOURCE、zip成员SHA、历史失败和下一硬门精确回执](../../evidence/M0/M0-023-fec2-actual-m4-kernel-source-repair-f6069a955d06508814341a23e22db27713424454.json)。
 
 **后续优先**：原实包的真正下游Rx同一认证PN/范围和M3 e1缺失恢复→原M2反馈→独立TUN app，区别「实际TCP raw发送成功」和「真实FEC2修复应用收到」。产品Go实际applied fixed/auto revision、M1短块source-first完整调度、Windows/ARM64、R0-023 65KiB跨轮次/Stop/MTU、旧codec 240秒与D10/p99都继续OPEN。旧150ms source fragment失败先限一条可重复的新根因假设，不盲跑全部网况。
+
+## 2026-10-18 · 原Go内核raw实包→独立原M3认证PN→RS16 e1恢复（R0-023）
+
+本轮承接H142已经验证「真Go TLS→原Rust owner→M4原raw TCP内核source2/repair3→独立Go SOCK_RAW捕获」，只补**实际密文捕获后的认证/唯一PN/修复**，避免重写组件或重复测CPU。额外 `m0_fec2_owner_probe` Rust试验构建在同一已验证的原Go TLS→Rust Entry内准备一个**独立客户端接收视角的原M3 `ReplayProtectedLaneRx`**，密钥来自当次受保护Go exporter S2C、独立PN bitmap；仍必须由真实Go post-Detach的原owner generation/epoch probe scope授权才可使用。原Rust TX不变，仍一份原`ProtectedScopedOwner`和M1 `FrozenRecord`/M4 AF_INET raw；收包者只接收Go从*真实kernel*读到并经IPv4/TCP tuple、seq、长度核对过的密文，绝不引用sender原明文。该测试接收者不等于真实已部署客户端，不提供产品ABI或自动配置。
+
+Go端独立收包后把密文通过独立的额外试验C入口提交给Rust实际 M3 `open_unique_with_fec2_after_admission_in_place`；kind2 PN0仅存储source0且交付0B；**同密文重放**在独立Replay中被拒；**repair PN1密文篡改**在原AEAD阶段失败，不占用合法PN1；然后原合法 kind3 PN1 通过M3 `parse_repair`/ `Rs16::recover_missing` 完成 e=1 只恢复未发送的source1共127B，Go按原公式逐字节比对。再交同一个repair应被拒。三个实密码suite全部通过。这个e1测试是“故意只发source0、repair0，数学上缺source1”，**未使用Linux丢包注入或M2真实反馈**，正式M1 Fec2Owner源码/调度未接实包。
+
+精确源码 `c7bd452423e932255fbe3916a2a12e6727a3cdb8` [Actions39107436575](https://github.com/lly8666/wbd-next/actions/runs/39107436575) attempt1 job117616234174 **SUCCESS**；定向原Go TLS/三cipher、原Rust M1/M3 owner、实际独立Go root netns捕获、Replay anti-duplicate/tamper和RS16 e1整条门成功，默认Rust release仍无该FEC2探针ABI。Artifact12128972528 原GitHub和M0独立重新计算ZIP均为 `sha256:db12af775113bc533980f73f281ab5c4f6d428d4eb435dee29f833d1acea54e3`；实包日志SHA `f21c2e22059d7acd7e2da6249f14c26108538fb844499f84a30333795d9b1fd4`。严格SOURCE/边界详见[回执](../../evidence/M0/M0-023-real-kernel-fec2-peer-m3-rs16-c7bd452423e932255fbe3916a2a12e6727a3cdb8.json)。
+
+**下一个硬门：**原M2接真正认证成功的FEC2源/修复receipt→真实原TUN app交付；接上已交付M1 source-first短块调度和真实applied Go固定/自动配置/修订，而非只保留额外探针。另限一条独立假设定位旧Normal/off `39106157061` 150ms下suite3第二LINK片仍pending，不能用本轮正确恢复来消除原红灯。R0-023 65KiB跨轮次/MTU/Stop/PREFIX、旧codec240s/D10/p99及真实Windows/ARM64仍OPEN；public FEC2 OFF，产品资格NOT_RUN。
