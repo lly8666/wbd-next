@@ -21,6 +21,8 @@ use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use crate::v4_owner_crypto::ScopedLinuxBudget;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+use wbd_codec::link_fec_wire::{LinkPacketPlan,LinkMode};
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry,TunError};
@@ -73,6 +75,9 @@ struct Entry{
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     raw_tx_lease_mtu:u32,
+    // Generation/epoch-scoped, never wrap into an active fragment ID.
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    next_link_packet_id:u32,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     workers:Option<LoopWorkers>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -136,6 +141,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         raw_tx_lease_mtu:0,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        next_link_packet_id:1,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         workers:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -763,18 +770,57 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         let mut accepted=0usize;
         let mut failed=ingress_error;
-        for (slab,n) in pending.drain(..){
+        for (mut slab,n) in pending.drain(..){
             if stop.load(Ordering::Acquire){failed=true;break}
-            // A bad/oversize packet does NOT block later fresh packets. If
-            // a seal fails the original crypto owner decides if PN was burnt;
-            // never re-seal or blindly retry an uncertain ciphertext.
-            let result={
+            // The NORMAL small-packet path stays unchanged: no LINK20, no
+            // packet copy and no extra timer. One oversized real TUN IPv4
+            // packet is slow-path fragmented using M3's immutable single-
+            // snapshot plan, then EACH frame follows the original M1 owner,
+            // real AEAD/PN, scoped raw lease and kernel syscall. Never seal
+            // a naked over-budget ordinary frame.
+            let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
+                .scoped.frame.link_frame_mtu;
+            if n<=frame_mtu {
                 let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
-                e.owner.seal_normal_off_with_worker_snapshot(
+                let result=e.owner.seal_normal_off_with_worker_snapshot(
                     slab,n,scoped,ifindex,destination,15,loop_now()
-                )
-            };
-            if result.is_ok(){accepted+=1}else{failed=true}
+                );
+                if result.is_ok(){accepted+=1}else{failed=true}
+                continue;
+            }
+            let id=e.next_link_packet_id;
+            if id==0 || id==u32::MAX || n>65_535 {
+                failed=true;continue;
+            }
+            let source=&slab.writable()[14..14+n];
+            let Ok(mut plan)=LinkPacketPlan::new(
+                source,frame_mtu,LinkMode::FixedOff,id
+            ) else {failed=true;continue};
+            // The currently frozen original M1 owner queue has <=32 slots.
+            // An oversized job requiring more than this entire ready turn
+            // is NOT partly submitted: the bounded larger-datagram staging
+            // capability remains explicitly OPEN. The next small packet is
+            // still admitted, never waits for a failed large job.
+            if plan.total_frames()>32usize.saturating_sub(accepted){
+                failed=true;continue;
+            }
+            e.next_link_packet_id=id+1;
+            while let Ok(Some(part))=plan.issue_next(frame_mtu) {
+                if stop.load(Ordering::Acquire){failed=true;break}
+                let Ok(mut fragment_slab)=e.arena.allocate() else {
+                    failed=true;break
+                };
+                if part.len()>fragment_slab.writable().len().saturating_sub(14){
+                    failed=true;break
+                }
+                fragment_slab.writable()[14..14+part.len()].copy_from_slice(&part);
+                let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+                let result=e.owner.seal_fragment_with_worker_snapshot(
+                    fragment_slab,part.len(),scoped,ifindex,destination,
+                    15,loop_now()
+                );
+                if result.is_ok(){accepted+=1}else{failed=true;break}
+            }
         }
         if accepted==0{
             drain_data_turn_returns(&mut e.arena);
