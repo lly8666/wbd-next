@@ -87,6 +87,7 @@ jobs:
             grep -q "M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
             grep -q "M0_GO_FEC2_AUTO_PENDING_BEFORE_NEW_BLOCK_PASS suite=$suite requested=6 applied=5 two_real_policy_windows=1" owner-grant-result/real-kernel.log
             grep -q "M0_GO_FEC2_AUTO_TWO_WINDOWS_NEXT_M1_M4_BLOCK_APPLIED_PASS suite=$suite initial=high5 requested=maximum6 applied=maximum6 old_ack=deny" owner-grant-result/real-kernel.log
+            grep -q "M0_GO_FEC2_ACTUAL_M3_OBSERVATION_UNKNOWN_LOSS_STAYS_CENSORED_PASS suite=$suite source_first=1 repair_first=1 recovered=1 fake_zero_loss=deny foreign_epoch=deny duplicate_revision=deny" owner-grant-result/real-kernel.log
           done
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
@@ -120,6 +121,7 @@ jobs:
               assert f"M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" in kernel
               assert f"M0_GO_FEC2_AUTO_PENDING_BEFORE_NEW_BLOCK_PASS suite={suite} requested=6 applied=5 two_real_policy_windows=1" in kernel
               assert f"M0_GO_FEC2_AUTO_TWO_WINDOWS_NEXT_M1_M4_BLOCK_APPLIED_PASS suite={suite} initial=high5 requested=maximum6 applied=maximum6 old_ack=deny" in kernel
+              assert f"M0_GO_FEC2_ACTUAL_M3_OBSERVATION_UNKNOWN_LOSS_STAYS_CENSORED_PASS suite={suite} source_first=1 repair_first=1 recovered=1 fake_zero_loss=deny foreign_epoch=deny duplicate_revision=deny" in kernel
           assert re.search(r"test result: ok\. 3 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
@@ -127,6 +129,8 @@ jobs:
              "tools/run-v4-tun-netns.sh",
              "r0/go_overlay/internal/realityfront/admission_v4.go",
              "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+             "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+             "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
              "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
              "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go",
              "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
@@ -153,6 +157,7 @@ jobs:
             "M0_M4_to_M2_native_batch_prefix_0_32":"TEST_ONLY_1122_VALID_TYPED_SLOTS_PLUS_STOP_ROUTE_EINTR_BACKPRESSURE_MTU_INVALID_PREFIX_FAIL_CLOSED_NO_FABRICATED_NOTSENT; KERNEL_PARTIAL_CONDITIONS_NOT_FORCE_INJECTED",
             "M0_original_Go_policy_applied_M1_M3":"TEST_ONLY_GO_FECV2STEP_AUTO_START_HIGH_REV5_AND_FIXED_MILD_REV9_TLS_VERIFIED_RUST_POLICY_READBACK_FECV2APPLY_STALE_ACK_DENIED_REAL_KERNEL_3_CIPHERS; PRODUCT_GUI_CLI_AND_CONTINUOUS_AUTO_NOT_WIRED",
             "M0_Go_auto_2s_pending_Rust_new_block_revision":"TEST_ONLY_ORIGINAL_GO_TWO_SYNTHETIC_MATURE_HIGH_LOSS_WINDOWS_PROPOSE_MAXIMUM_REV6_RUST_PENDING_WITHHOLDS_APPLIED_ACK_UNTIL_REAL_M1_NEW_BLOCK_M4_KERNEL_SOURCE_PARITY_COPIED; 3_CIPHERS; NOT_PRODUCT_TELEMETRY_OR_AUTOMATIC_RUNTIME_TIMER",
+            "M0_original_M3_real_auth_RX_quality_policy":"TEST_ONLY_PROTECTED_EXACT_GO_TLS_EPOCH_M3_AEAD_UNIQUE_FIRST_SRC1_REPAIR1_RECOVERED1_SIGNAL_GO_AUTO_UNKNOWN_LACKS_MATURE_DENOMINATOR; 3_CIPHERS; STOP_WRONG_EPOCH_DUPLICATE_REVISION_DENIED; REAL_PRODUCT_MATURE_LOSS_COLLECTOR_NOT_WIRED",
             "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
             "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
             "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
@@ -169,5 +174,61 @@ jobs:
         with:
           name: m0-real-go-fec2-owner-grant-${{ github.run_id }}-${{ github.run_attempt }}
           path: owner-grant-result/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Runs IN PARALLEL with the privileged original Go/Rust raw/TUN test.
+  # Default original Go policy module alone cannot grant a Rust FEC2 owner.
+  go-control-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Independent original Go fixed/auto seven-grade controller
+        shell: bash
+        env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          mkdir -p go-control-result
+          for file in fec_v2_policy.go fec_v2_policy_test.go; do
+            test ! -e "legacy/internal/realityfront/$file"
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          (cd legacy && go test -v -count=1 ./internal/realityfront -run '^TestF2Control' >"$GITHUB_WORKSPACE/go-control-result/go-policy.log" 2>&1)
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path("go-control-result")
+          raw=(root/"go-policy.log").read_text()
+          passed=re.findall(r"^--- PASS: TestF2Control[^\s]*",raw,re.M)
+          assert len(passed)==8,(len(passed),passed)
+          assert not re.search(r"^--- FAIL:",raw,re.M)
+          assert re.search(r"^PASS$",raw,re.M)
+          digest=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          receipt={"result":"PASS_ORIGINAL_GO_INDEPENDENT_CONTROL_ONLY",
+            "source_sha":os.environ["GITHUB_SHA"],
+            "real_original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "actual_original_go_control_tests":8,
+            "input_sha256":{p:digest(p) for p in [
+              "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+              "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go"]},
+            "go_log_sha256":digest(root/"go-policy.log")}
+          (root/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-go-control-only-${{ github.run_id }}-${{ github.run_attempt }}
+          path: go-control-result/
           retention-days: 30
           if-no-files-found: warn
