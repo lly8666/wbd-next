@@ -411,12 +411,29 @@ fn fec2_probe_real_kernel_raw_once(
     let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
     let a=(0..113).map(|n|(n%251) as u8).collect::<Vec<_>>();
     let b=fec2_probe_expected_udp_ipv4();
-    // Test-only fixed Strong/revision1 policy, not the applied Go CLI/GUI
-    // policy. The ORIGINAL M1 owner forms this actual kernel-bound block.
-    // Clock ticks are deterministic in this opt-in one-shot probe; a
-    // production real-time timer/driver scheduler remains NOT_RUN.
+    // Source policy actually chosen by the ORIGINAL Go FecV2Step and
+    // bound after its authenticated TLS/Detach commit. No cold/peer
+    // unauthenticated value can supply this setting. This is still only
+    // the feature-gated one-shot probe, NOT a product continuous scheduler.
+    let (policy,revision)=e.owner.fec2_probe_applied_policy().ok_or(BAD_STAGE)?;
+    let m1_profile=match policy{
+        0=>M1Profile::Light,1=>M1Profile::Mild,
+        2=>M1Profile::Medium,3=>M1Profile::Balanced,
+        4=>M1Profile::High,5=>M1Profile::Strong,
+        6=>M1Profile::Maximum,_=>return Err(INVALID),
+    };
+    let m3_profile=match policy{
+        0=>wbd_codec::fec_v2::Profile::Light,
+        1=>wbd_codec::fec_v2::Profile::Mild,
+        2=>wbd_codec::fec_v2::Profile::Medium,
+        3=>wbd_codec::fec_v2::Profile::Balanced,
+        4=>wbd_codec::fec_v2::Profile::High,
+        5=>wbd_codec::fec_v2::Profile::Strong,
+        6=>wbd_codec::fec_v2::Profile::Maximum,
+        _=>return Err(INVALID)
+    };
     let mut scheduler=Fec2Owner::new(
-        FecMode::Normal,M1Profile::Strong,ConfigRevision(1),
+        FecMode::Normal,m1_profile,ConfigRevision(revision),
         Limits{pending_bytes:2*1024*1024,pending_jobs:64,
             max_frame:budget.record_payload_mtu.saturating_sub(14)},
     ).ok_or(INVALID)?;
@@ -437,7 +454,7 @@ fn fec2_probe_real_kernel_raw_once(
                     callback_error=Some(INVALID);return false
                 };
                 if ticket.index!=i as u8 ||
-                    ticket.revision!=ConfigRevision(1) ||
+                    ticket.revision!=ConfigRevision(revision) ||
                     first.frame!=frame{
                     callback_error=Some(INVALID);return false
                 }
@@ -492,13 +509,14 @@ fn fec2_probe_real_kernel_raw_once(
     }
     let mut job=scheduler.take_parity(MonoNs(8_000_001))
         .map_err(|_|INVALID)?.ok_or(INVALID)?;
-    if job.block_id!=first.block_id||job.k!=2||job.r!=2{
+    if job.block_id!=first.block_id||job.k!=2||
+        job.r!=m1_profile.redundancy(job.k){
         return Err(INVALID)
     }
     let parity_block_id=job.block_id;
     let (repairs,_)=job.with_sources(|frames|{
         wbd_codec::fec_v2::Rs16::new().encode_owned(
-            parity_block_id,frames,wbd_codec::fec_v2::Profile::Strong,
+            parity_block_id,frames,m3_profile,
             0,1,budget.record_payload_mtu,
             wbd_codec::fec_v2::BackendChoice::Scalar
         )
@@ -1196,6 +1214,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls(
     bytes.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
     bind_fec2_from_private_go(h,bytes,features,profile,revision)
 }
+// A configuration is "applied" only after original Rust accepted it
+// under the verified Go TLS/Detach owner. Go FecV2Apply must additionally
+// compare profile/revision/client/direction to its own requested intent.
+#[cfg(feature="m0_fec2_owner_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_applied_policy(
+    handle:u64,profile:*mut u8,revision:*mut u64
+)->i32{
+    if profile.is_null()||revision.is_null(){return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE{return BAD_STAGE}
+    let Some((p,r))=e.owner.fec2_probe_applied_policy()else{return BAD_STAGE};
+    unsafe{profile.write(p);revision.write(r)}
+    OK
+}
+
 #[cfg(feature="m0_fec2_owner_probe")]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_scope_status(
