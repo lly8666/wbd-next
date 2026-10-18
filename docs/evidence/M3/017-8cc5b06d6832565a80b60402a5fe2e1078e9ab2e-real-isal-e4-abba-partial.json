@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+  "result": "PASS",
+  "qualification": "SCOPED_LINUX_X64_REAL_ISAL_F2_AND_CODEC_ONLY_E4_ABBA_CPU",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "artifact_zip_rehash_verified": true,
+  "source_lock": {
+    "control_sha": "f088ca04541df962d483751a759959ac3caf0c39",
+    "worker_m3": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "worker_m4": "7cef7e849e293373d907a3b64007b4ce8946da78",
+    "isa_l": "c387163fcbca62701d646149564c550c78a4f985",
+    "target": "x86_64-unknown-linux-gnu",
+    "rust": "1.85.1",
+    "feature": "native-isal",
+    "lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8",
+    "isal_archive_sha256": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d"
+  },
+  "action": {
+    "run_id": 39090941413,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job": 117567366371,
+    "consume_job": 117567553814,
+    "build_and_consume": "success",
+    "native_tests": {
+      "pass": 11,
+      "fail": 0,
+      "filtered": 141,
+      "real_backend": "NativeIsaL",
+      "test_log_sha256": "37464ccf4e32802c0488ff84fc99a50542d2c14c192f2c8a54e7345c36120d37"
+    },
+    "paired": {
+      "result": "PASS_SCOPED_CPU_WINDOW_READY_FOR_REVIEW",
+      "leg_order": [
+        "Scalar",
+        "NativeIsaL",
+        "NativeIsaL",
+        "Scalar"
+      ],
+      "scenario": "one fixed k16/r16/1200B (L1202), e4 indices 1,5,10,14; 400000 encode blocks and 400000 e4 recoveries PER leg",
+      "parity_symbols_per_leg": 6400000,
+      "encode_checksum_all_legs": 7014000000,
+      "recovery_checksum_all_legs": 680000000,
+      "cpu_clock_hz": 100,
+      "min_stage_cpu_ticks": 113,
+      "min_stage_wall_ns": 1133987525,
+      "encode_scalar_over_native_cpu_AB": 57.33588,
+      "encode_scalar_over_native_cpu_BA": 57.73846,
+      "recovery_scalar_over_native_cpu_AB": 17.58407,
+      "recovery_scalar_over_native_cpu_BA": 17.58407,
+      "encode_cpu_ns_per_block": [
+        187775,
+        3275,
+        3250,
+        187650
+      ],
+      "recover_e4_cpu_ns_per_block": [
+        49675,
+        2825,
+        2825,
+        49675
+      ],
+      "abba_log_sha256": "6c3954549f1a631d73c0e891795944c593eb9088a095c96d10a1ca7868cddac8",
+      "host_cpu_quota": "UNKNOWN",
+      "scope_limit": "kernel-only process CPU ticks and wall; not whole network goodput, RTT, packet p99 or product"
+    }
+  },
+  "artifacts": [
+    {
+      "type": "build",
+      "id": 12122563022,
+      "zip_bytes": 1678665,
+      "zip_sha256": "e5c0f213b5777ded91209ebfafc3b703f11551c469d824b129aff2e37478e269",
+      "members_rehashed": 3,
+      "unit_binary_sha256": "0ad0ea27b09f8c2ce754e3d02232d6fb7e829303226661d832223dc8f608452c",
+      "paired_binary_sha256": "2f05e4adefb49428b196199465f7aae4548c89f8e15bce7371bc6b4a5762fd00",
+      "manifest_sha256": "fc20afbd6f5cd510a906d43c0623b06f09474d134b6bd3eaaceb5fcd78d496d7"
+    },
+    {
+      "type": "result",
+      "id": 12122374044,
+      "zip_bytes": 5052,
+      "zip_sha256": "bdecfec2f6f08a9d97a7907b91e83ce2065b5fe7b1859877573c9a446594382d",
+      "members_rehashed": 7,
+      "source_manifest_sha256": "fc20afbd6f5cd510a906d43c0623b06f09474d134b6bd3eaaceb5fcd78d496d7",
+      "receipt_sha256": "5da0550bc175fd2611c24a1501a2d99d7e895e3d46d241a80f35d15a4de0ee28"
+    }
+  ],
+  "independent_checks": "Both artifact ZIPs downloaded and SHA256 matched GitHub API digests. All 10 members independently hashed; binaries/manifest/logs verified against manifest and result receipt; native log shows 11/11; ABBA log contains four same-checksum legs.",
+  "earlier_regressions": {
+    "source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "worker": {
+      "run": 39088682284,
+      "pass": 122,
+      "fail": 0,
+      "ignored": 1,
+      "default_scalar_only": true
+    },
+    "wire": {
+      "run": 39088682264,
+      "pass": 13,
+      "fail": 0
+    },
+    "record": {
+      "run": 39088682279,
+      "pass": 6,
+      "fail": 0
+    },
+    "link": {
+      "run": 39088682247,
+      "pass": 7,
+      "fail": 0
+    }
+  },
+  "retained_failures": [
+    {
+      "run": 39046275022,
+      "cause": "H30 evidence non-PASS"
+    },
+    {
+      "runs": [
+        39086268414,
+        39086460623
+      ],
+      "cause": "old CODE301 test k2 max r3 incorrectly requested 4 rows; short 96-block cost INCONCLUSIVE"
+    },
+    {
+      "run": 39088913192,
+      "cause": "ROLE_SCOPE_FAILED: control or source moved mid-audit"
+    },
+    {
+      "run": 39089044776,
+      "cause": "SCOPE_AUDIT_FAILED: delta budget exceeded; M0 must accept intermediate scope receipt"
+    }
+  ],
+  "remaining": {
+    "full_linux_x64_M3_V2_native": "SCOPED_PASS",
+    "linux_arm64_M3_fec2_native": "NOT_RUN",
+    "windows_x64_M3_fec2_native": "NOT_RUN",
+    "safe_wrapper_other_targets": "SEPARATE_M0_PASS_NOT_FEC2_CODEC",
+    "arm_neon_instruction_proof": "NOT_PROVEN",
+    "windows_go_bridge": "NOT_RUN",
+    "go_fec2_admission_KDF": "NOT_RUN",
+    "packet_p99": "NOT_RUN",
+    "M3_central_scope": "OPEN_M0_INTERMEDIATE_SCOPE_RECEIPT",
+    "product_fec2": "OFF"
+  },
+  "rollback": "No shared/ABI/Go/workflow change or product enablement; old 016 frozen at 422a26127496560c0a52e6745ecc8f354e3f4f18."
+}
