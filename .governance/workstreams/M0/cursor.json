@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 147,
-  "checkpoint_sha": "1eede657a8d2afbc8723deab35e9bb98cdebebff",
+  "sequence": 148,
+  "checkpoint_sha": "abab5b1f895c541b59dcedd84606bfcbd865fa99",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 partial: original Go TLS granted test-only kernel sender NOW runs original M1 Fec2Owner Normal source-first/ParityJob→M3 RS16 row0→original Rust AEAD/PN/FrozenRecord→M4 raw/TUN→independent UDP 99B for three suites. M2 only authenticated-data RxFeedback draft; production still OFF.",
-  "why_now": "M0 resumed H146 at HEAD 4ad1af2, verified one cursor-only commit since checkpoint a2a6ce0 and Governance39112716668 PASS; no pending runs. Main source S62c0428 first compile E0502 FAIL39114049974, corrected source S395a711 native scoped kernel39114076177 PASS and selected native-functional39114076171 PASS, Governance39114076173 PASS; original Normal/off configured150ms suite3 remains real FAIL39114076155. Exact artifact SHA independently rehashed and receipts preserved in S1eede657.",
+  "current_task": "R0-023 partial: M2 native 3-suite original M1 FrozenRecord + M3 reverse kind1 AEAD+unique PN → M2 scoped receipt/shadow release PASS at SOURCE f6aee3c, NOT real reverse wire; original Go Linux raw 150ms configured netem 3-suite exact PN/LINK/TUN PASS at SOURCE 66a53ebe after bounded EINTR handling. Production FEC2 OFF.",
+  "why_now": "After H147 clean: M0 synthetic Rust reverse receipt integration S2c1405/d76 failed M2 fixture Local(InvalidConfig) max repair10KiB < original32KiB floor; fixed original config in f6aee3 SOURCE, targeted run39115326155 3/3 Rust + 3-cipher existing Go/TUN PASS, artifact12132605163 independently rehashed, selected native-functional39115326131 PASS. Historical prior netem 39114076155 FAIL EINTR; old raw reader f6aee3 run39115326099 already exploratory PASS (intermittent). Added bounded non-loss-claim EINTR/EAGAIN retry with strict absolute deadline to original Go raw test SOURCE66a53ebe; native-probe run39115451897 PASS netem150ms all3, artifact12132325763 rehashed, old FAIL retained. Exact evidence S67b244f and Sabab5b1 Governance39115730802/39115807447 PASS.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Continue assigned R0-023 without changing roles: integrate actual M2 typed authenticated reverse kind1 receipt after original M3 AEAD unique PN into sender frozen shadow/repair quota/driver prefix-uncertain path, then real Go applied fixed/auto CLI/GUI per-direction revision; cover generation/Stop/MTU±1/loan/large ~65KiB cross-turn/LINK configured150ms suite3 noHOL. Existing M1 kernel send is test-only deterministic one-shot, not continuous production scheduler. Historical codec240s/D10/p99, Windows/ARM64/physical gates remain OPEN/NOT_RUN; FEC2 product OFF.",
+  "next_action": "Continue R0-023 from real protected original Go V4: wire independent peer's reverse kind1 control on actual carrier through original Rust owner M3 unique AEAD/PN into M2 admit_opened_receipt; track actual original M1 FrozenRecord only after confirmed sender copy, same PN repair shadow, global quota, M4 prefix/uncertain/NotSent + Stop/epoch/generation refusal; implement applied Go fixed/auto CLI/GUI per direction revision. Then ~65KiB cross-turn LINK, MTU±1/in-flight Stop/loan/noHOL and longer 150ms reliability/codec240s/D10/p99/cross-native/physical. No production enable without hard gates; test-only reverse native fixture not product wire.",
   "unverified": true,
-  "last_tested_source": "395a711ff28dfda9b89b772fdf296fc0f4f9f449",
+  "last_tested_source": "66a53ebe7383647f077a9c6d115839300ecba6f9",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-M1-test-only-kernel-scheduler-395a711ff28dfda9b89b772fdf296fc0f4f9f449.json"
+    "docs/evidence/M0/M0-023-M2-authenticated-native-reverse-frozen-f6aee3c8827d00954227247f333fc259d1b83964.json",
+    "docs/evidence/M0/M0-023-raw-eintr-150ms-66a53ebe7383647f077a9c6d115839300ecba6f9.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/M0-023-M1-test-only-kernel-scheduler-395a711ff28dfda9b89b772fdf296fc0f4f9f449.json",
     "docs/evidence/M0/M0-023-batched-M1-M2-FEC2-real-kernel-dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7.json",
     "docs/handoff/README.md",
     "docs/history/INDEX.md",
-    "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H147 M0 023 scoped/test-only real M1 kernel sender integrated on exact SOURCE395a711, Action39114076177 attempt1 PASS 2 Rust native + original Go 3 cipher TLS/k2 source-first M3 RS16/e1 M4 raw/TUN 127B IPv4/99B app, M2 AEAD-unique RX draft only; artifact12131527951 independently SHA256 aa50373a9d85d5a08033044470ef870bc884d6dfe0074a49b8faf895ff3c9149. Selected native-functional39114076171 and crossABI39114076223 PASS bounded; first S62c0428 E0502 FAIL39114049974 artifact12131995737 retained; SAME SOURCE395a711 Normal/off150ms suite3 second LINK FAIL39114076155 artifact12132100712 retained. New evidence S1eede657, cursor-only H147. No M2 reverse receipt, applied CLI/GUI, actual continuous scheduler, ~65KiB cross-turn, MTU/Stop/loan/prefix, physical/native/old D10/p99 product qualification. OFF."
+  "partial_summary": "H148 023 partial product OFF. SOURCE f6aee3c run39115326155 attempt1 native Rust3/3 original FrozenRecord→M3 reverse kind1 AEAD PN→M2 scoped receipt 3 ciphers PASS, native test fixture not actual peer/control wire; artifact12132605163 zip SHA256 ec420e161de3c97f0aba6ba220fd331d1155987680a88ab62cb582dc4a74b307 verified. Same SOURCE Go 150ms39115326099 PASS one intermittent observation. SOURCE66a53ebe original Go raw EINTR bounded receive run39115451897 attempt1 PASS 150ms suites3/3/two packets each direction/TUN, artifact12132325763 zip SHA256 7163d4b3c3c7544c5bd42068391dffb82416e72e1d7abbaaa715b4934ed42091 verified. Earlier native fixture invalid cap 2c1405 Action39115180286 and d76e98 Action39115211313 FAIL retained; old netem SOURCE395a711 Action39114076155 FAIL retained, long-duration NOT_RUN. Full native codec, D10/p99, applied Go fixed/auto, real reverse ACK/shadow repair quota/driver prefix, legal 65KiB Stop/MTU and physical product qualification OPEN."
 }
