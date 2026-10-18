@@ -1188,6 +1188,11 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65535").CombinedOutput();e!=nil{
         t.Fatalf("actual jumbo TUN MTU setup: %v %s",e,out)
     }
+    // As in the preceding 1728B test, synchronize TEST SETUP netlink/route
+    // coalescing before measuring stable-link first arrival. Live MTU
+    // transition races are a separate fail-closed test, never a new frame
+    // stride under the same source packet ID.
+    time.Sleep(200*time.Millisecond)
     if e:=syscall.SetsockoptInt(peer,syscall.SOL_SOCKET,syscall.SO_RCVBUF,2*1024*1024);e!=nil{
         t.Fatalf("raw kernel peer receive queue setup: %v",e)
     }
