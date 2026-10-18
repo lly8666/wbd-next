@@ -1180,6 +1180,93 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
             beforeOversize,detail)
     }
     t.Logf("EMBEDDED_REAL_TUN_OVER_LINK_FRAGMENT_NO_HOL_PASS fragmented=2 small=1")
+    // The SAME already-running original Go TLS / Rust owner / M4 Linux
+    // raw kernel/TUN path must ingest a COMPLETE legal 65535-byte IPv4 UDP
+    // packet (not a synthetic 65K input or a short TUN read) and emit
+    // 48 individually authenticated LINK20 fragments across >=2 owner turns.
+    // The original Go peer alone decrypts, deduplicates and reassembles.
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65535").CombinedOutput();e!=nil{
+        t.Fatalf("actual jumbo TUN MTU setup: %v %s",e,out)
+    }
+    if e:=syscall.SetsockoptInt(peer,syscall.SOL_SOCKET,syscall.SO_RCVBUF,2*1024*1024);e!=nil{
+        t.Fatalf("raw kernel peer receive queue setup: %v",e)
+    }
+    jumboBefore,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    const jumboPayloadBytes=65507
+    jumboPayload:=bytes.Repeat([]byte{0x5d},jumboPayloadBytes)
+    if n,e:=app.WriteToUDP(jumboPayload,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(jumboPayload){
+        t.Fatalf("real kernel 65535B IPv4 jumbo TUN send n=%d err=%v",n,e)
+    }
+    // A logically independent small app datagram must be deliverable even
+    // if the 48-fragment jumbo packet is not yet reassembled at the peer.
+    jumboFollower:=bytes.Repeat([]byte{0x2d},31)
+    if n,e:=app.WriteToUDP(jumboFollower,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(jumboFollower){
+        t.Fatalf("real kernel jumbo small follower injection n=%d err=%v",n,e)
+    }
+    jumboFragments:=map[uint64]bool{}
+    var reassembledJumbo []byte
+    sawFollower:=false
+    jumboDeadline:=time.Now().Add(8*time.Second)
+    for time.Now().Before(jumboDeadline) &&
+        (len(jumboFragments)<48 || reassembledJumbo==nil || !sawFollower){
+        pkt:=make([]byte,2048)
+        n,_,recvErr:=syscall.Recvfrom(peer,pkt,0)
+        if recvErr!=nil{continue}
+        if n<40||pkt[0]>>4!=4||pkt[9]!=6{continue}
+        ihl:=int(pkt[0]&0xf)*4
+        if ihl<20||ihl+20>n{continue}
+        if !bytes.Equal(pkt[12:16],b.originalFlow.ServerIP[:])||
+            !bytes.Equal(pkt[16:20],b.originalFlow.ClientIP[:])||
+            binary.BigEndian.Uint16(pkt[ihl:ihl+2])!=b.originalFlow.ServerPort||
+            binary.BigEndian.Uint16(pkt[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+        tcpLen:=int(pkt[ihl+12]>>4)*4
+        if tcpLen<20||ihl+tcpLen>n||pkt[ihl+13]&0x08==0||n-ihl-tcpLen<=31{continue}
+        rec,openErr:=open.OpenRecord(pkt[ihl+tcpLen:n])
+        if openErr!=nil||rec.Kind!=tlsrecord.KindLINK{
+            t.Fatalf("Go peer cannot authenticate jumbo S2C PN=%d err=%v",rec.PN,openErr)
+        }
+        if len(rec.Payload)>20&&string(rec.Payload[:8])=="WBDLFRG1"{
+            if jumboFragments[rec.PN]{t.Fatalf("duplicate jumbo owner PN=%d",rec.PN)}
+            jumboFragments[rec.PN]=true
+            ready,done,pushErr:=goLink.Push(rec.Payload,time.Now())
+            if pushErr!=nil{t.Fatalf("original Go jumbo LINK reassembly: %v",pushErr)}
+            if done{
+                if reassembledJumbo!=nil{t.Fatal("duplicated jumbo reconstructed UDP")}
+                reassembledJumbo=ready
+            }
+        }else{
+            // The earlier unrelated 52B packet may still be in the raw
+            // peer queue. Only a new 31B follower proves no cross-block HOL.
+            if len(rec.Payload)==28+len(jumboFollower) &&
+                bytes.Equal(rec.Payload[28:],jumboFollower){
+                sawFollower=true
+            }
+        }
+    }
+    if len(jumboFragments)!=48||len(reassembledJumbo)!=65535||
+        !sawFollower || reassembledJumbo[0]!=0x45 ||
+        binary.BigEndian.Uint16(reassembledJumbo[2:4])!=65535 ||
+        reassembledJumbo[9]!=17 ||
+        !bytes.Equal(reassembledJumbo[28:],jumboPayload){
+        t.Fatalf("original real Go TLS Rust M4 65K jumbo failed parts=%d ip=%d follower=%t",
+            len(jumboFragments),len(reassembledJumbo),sawFollower)
+    }
+    jumboStats,err:=b.rustOwnerLoopStats()
+    jumboCountDeadline:=time.Now().Add(500*time.Millisecond)
+    for err==nil && jumboStats.TxOK<jumboBefore.TxOK+49&&
+        time.Now().Before(jumboCountDeadline){
+        time.Sleep(time.Millisecond)
+        jumboStats,err=b.rustOwnerLoopStats()
+    }
+    if err!=nil||jumboStats.TxOK!=jumboBefore.TxOK+49{
+        t.Fatalf("original owner 48 jumbo +1 independent kernel copies: before=%+v after=%+v err=%v",
+            jumboBefore,jumboStats,err)
+    }
+    t.Logf("EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_TWO_TURN_48_FRAGMENT_NOHOL_PASS ipv4=%d fragments=%d follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+        len(reassembledJumbo),len(jumboFragments))
     // Stop while both originally spawned RX/TX workers and both actual
     // kernel drivers remain installed. Join and retire before any generation
     // can reattach; the M4 late-LoanBatch deterministic contract is a
