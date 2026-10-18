@@ -4,8 +4,8 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 130,
-  "checkpoint_sha": "f27855bab4d1e6b1b5f5c63d5d894464524cfa01",
+  "sequence": 131,
+  "checkpoint_sha": "b56f98b42b6d9c1602ccd88ba3c6be2f00d6cdf9",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
   "current_task": "R0-023 real protected Go→Rust raw/TUN Stop/MTU/LINK oversize peer delivery remains partial. M0 provided exact FEC2 CODE301 native test/ABBA interface in temporary Actions-only fixture; worker owned k2 invalid-row test blocks full F2 PASS. 024 STOPPED, FEC2 product OFF.",
@@ -15,8 +15,7 @@
   "unverified": true,
   "last_tested_source": "0b21a2fee11a67c5ee977ddfabc252539085890d",
   "evidence_refs": [
-    "docs/evidence/M0/M0-FEC2-CODE301-native-ABBA-0b21a2fee11a67c5ee977ddfabc252539085890d.json",
-    "docs/evidence/M0/M0-023-modules-intake-ede83b98edba1fee6f73bc99454040cc95392d4d.json"
+    "docs/evidence/M0/M0-FEC2-CODE301-native-ABBA-0b21a2fee11a67c5ee977ddfabc252539085890d.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-FEC2-CODE301-native-abba-2026-10-18.md",
@@ -29,5 +28,5 @@
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "Pinned M3 CODE301 plus M4 build.rs and Intel ISA-L native on Linux x64. F2 original native 10 PASS / 1 FAIL k2 Maximum requests illegal 4 vs 3 parity; first and targeted second run both FAIL preserved. Single k16/r16 1200B same-process ABBA 1 PASS/checksums equal but sub-20ms legs give CPU_INCONCLUSIVE; no packet or product qualifier. Original Go V4 protected normal/off fail-closed and Stop scope retained, oversize LINK delivered NOT_RUN; D10/240s timeout/p99 OPEN. Product FEC2 OFF. H129 push Governance run39086745204 FAIL only due context_refs=9 >8; H130 removes redundant context entry, historical refs remain reachable through evidence/devlog. Await exact H130 Governance run."
+  "partial_summary": "Pinned M3 CODE301 plus M4 build.rs and Intel ISA-L native on Linux x64. F2 original native 10 PASS / 1 FAIL k2 Maximum requests illegal 4 vs 3 parity; first and targeted second run both FAIL preserved. Single k16/r16 1200B same-process ABBA 1 PASS/checksums equal but sub-20ms legs give CPU_INCONCLUSIVE; no packet or product qualifier. Original Go V4 protected normal/off fail-closed and Stop scope retained, oversize LINK delivered NOT_RUN; D10/240s timeout/p99 OPEN. Product FEC2 OFF. H129 push Governance run39086745204 FAIL only due context_refs=9 >8; H130 removes redundant context entry, historical refs remain reachable through evidence/devlog. H130 run39086911530 FAIL mixed evidence SOURCE (new 0b21 vs old ede83). H131 retains only same-source direct evidence; old historical SOURCE remains in devlog and referenced receipt. Await H131 exact Governance."
 }
