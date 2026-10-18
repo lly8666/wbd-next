@@ -95,7 +95,7 @@ impl Fec2ActualPeerRxProbe{
             (0,2)=>{
                 let src=wbd_codec::fec_v2::parse_source(decoded.payload,budget)
                     .map_err(|_|())?;
-                if src.block_id!=9102||src.source_index!=0||
+                if src.block_id==0||src.source_index!=0||
                     self.block_id.is_some(){return Err(())}
                 self.block_id=Some(src.block_id);
                 self.source0=Some(src.frame.to_vec());
@@ -324,6 +324,10 @@ fn fec2_probe_expected_udp_ipv4()->Vec<u8>{
 fn fec2_probe_real_kernel_raw_once(
     handle:u64,ifindex:u32
 )->Result<[(u64,u32,usize);2],i32>{
+    use crate::runtime::fec2_owner::{
+        Fec2Owner,FecMode,Profile as M1Profile,Limits,SourceTicket,
+    };
+    use wbd_types::ConfigRevision;
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     let e:&mut Entry=&mut guard;
@@ -341,26 +345,6 @@ fn fec2_probe_real_kernel_raw_once(
         "lo",ifindex,Ipv4Addr::from(e.flow.client_ip)
     ).map_err(|_|INVALID)?;
     let budget=route.frame;
-    let a=(0..113).map(|n|(n%251) as u8).collect::<Vec<_>>();
-    let b=fec2_probe_expected_udp_ipv4();
-    let source=wbd_codec::fec_v2::source_owned(
-        9102,0,&a,budget.record_payload_mtu
-    ).map_err(|_|INVALID)?;
-    let (parity,_)=wbd_codec::fec_v2::Rs16::new().encode_owned(
-        9102,&[&a,&b],wbd_codec::fec_v2::Profile::Strong,0,1,
-        budget.record_payload_mtu,wbd_codec::fec_v2::BackendChoice::Scalar
-    ).map_err(|_|INVALID)?;
-    let messages=[(2u8,source),(3u8,parity.into_iter().next().ok_or(INVALID)?)];
-    // Full pre-materialization before consuming ANY original PN; bounded
-    // short probe, original Arena owns BOTH slabs.
-    let mut pending=Vec::with_capacity(2);
-    for (kind,payload) in messages{
-        let mut slab=e.arena.allocate().map_err(|_|FULL)?;
-        let end=14usize.checked_add(payload.len()).ok_or(INVALID)?;
-        if end>slab.writable().len(){return Err(INVALID)}
-        slab.writable()[14..end].copy_from_slice(&payload);
-        pending.push((kind,slab,payload.len()));
-    }
     let flow=e.flow;
     let tuple=Ipv4Tuple{
         src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
@@ -371,17 +355,118 @@ fn fec2_probe_real_kernel_raw_once(
         persona:PacketPersona::Legacy,
     };
     let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    let a=(0..113).map(|n|(n%251) as u8).collect::<Vec<_>>();
+    let b=fec2_probe_expected_udp_ipv4();
+    // Test-only fixed Strong/revision1 policy, not the applied Go CLI/GUI
+    // policy. The ORIGINAL M1 owner forms this actual kernel-bound block.
+    // Clock ticks are deterministic in this opt-in one-shot probe; a
+    // production real-time timer/driver scheduler remains NOT_RUN.
+    let mut scheduler=Fec2Owner::new(
+        FecMode::Normal,M1Profile::Strong,ConfigRevision(1),
+        Limits{pending_bytes:2*1024*1024,pending_jobs:64,
+            max_frame:budget.record_payload_mtu.saturating_sub(14)},
+    ).ok_or(INVALID)?;
     let mut storage=Vec::with_capacity(1);
     let mut out=[(0u64,0u32,0usize);2];
-    for (i,(kind,slab,len)) in pending.into_iter().enumerate(){
-        let result=e.owner.seal_fec2_probe_one(
-            slab,len,kind,budget,15,loop_now()
+    let mut tickets:[Option<SourceTicket>;2]=[None,None];
+    for (i,frame) in [&a[..],&b[..]].into_iter().enumerate(){
+        let mut source_slab=e.arena.allocate().map_err(|_|FULL)?;
+        let end=14usize.checked_add(frame.len()).ok_or(INVALID)?;
+        if end>source_slab.writable().len(){return Err(INVALID)}
+        source_slab.writable()[14..end].copy_from_slice(frame);
+        let mut callback_error=None;
+        let accepted=scheduler.push_source(
+            source_slab,14..end,MonoNs((i as u64)*1_000),
+            |first|{
+                let Some(ticket)=first.ticket else{
+                    callback_error=Some(INVALID);return false
+                };
+                if ticket.index!=i as u8 ||
+                    ticket.revision!=ConfigRevision(1) ||
+                    first.frame!=frame{
+                    callback_error=Some(INVALID);return false
+                }
+                tickets[i]=Some(ticket);
+                // Inject ONE known lost source at the network boundary:
+                // source1 was accepted and retained by M1, but not sent.
+                // It MUST count as not-enqueued, never as a driver ACK.
+                if i==1{return false}
+                let sent=(||->Result<(u64,u32,usize),i32>{
+                    let payload=wbd_codec::fec_v2::source_owned(
+                        ticket.block_id,ticket.index,first.frame,
+                        budget.record_payload_mtu
+                    ).map_err(|_|INVALID)?;
+                    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+                    let last=14usize.checked_add(payload.len()).ok_or(INVALID)?;
+                    if last>slab.writable().len(){return Err(INVALID)}
+                    slab.writable()[14..last].copy_from_slice(&payload);
+                    let sealed=e.owner.seal_fec2_probe_one(
+                        slab,payload.len(),2,budget,15,loop_now()
+                    ).map_err(|_|INVALID)?;
+                    let copied=e.owner.submit_scoped_raw_tx_reusing(
+                        &raw,tuple,presentation,loop_now(),&mut storage
+                    ).map_err(|_|INVALID)?;
+                    if copied<=sealed.2{return Err(INVALID)}
+                    Ok(sealed)
+                })();
+                match sent{
+                    Ok(sealed)=>{out[0]=sealed;true},
+                    Err(err)=>{callback_error=Some(err);false},
+                }
+            },
         ).map_err(|_|INVALID)?;
-        let copied=e.owner.submit_scoped_raw_tx_reusing(
-            &raw,tuple,presentation,loop_now(),&mut storage
-        ).map_err(|_|INVALID)?;
-        if copied<=result.2{return Err(INVALID)} // actual raw IPv4+TCP
-        out[i]=result;
+        if let Some(err)=callback_error{return Err(err)}
+        if !accepted.fec_retained||accepted.ticket!=tickets[i]
+            ||accepted.source_enqueued!=(i==0){
+            return Err(INVALID)
+        }
+    }
+    let first=tickets[0].ok_or(INVALID)?;
+    let missing=tickets[1].ok_or(INVALID)?;
+    if first.block_id!=missing.block_id ||first.index!=0||missing.index!=1{
+        return Err(INVALID)
+    }
+    // M1 closes a sparse k2 block at its original absolute deadline.
+    // Parity borrows original Arena slabs via ParityJob, then M3 RS16
+    // materializes row0. Source0 has ALREADY gone through real raw TX.
+    if scheduler.on_due(MonoNs(8_000_000)).map_err(|_|INVALID)?!=1{
+        return Err(INVALID)
+    }
+    let mut job=scheduler.take_parity(MonoNs(8_000_001))
+        .map_err(|_|INVALID)?.ok_or(INVALID)?;
+    if job.block_id!=first.block_id||job.k!=2||job.r!=2{
+        return Err(INVALID)
+    }
+    let (repairs,_)=job.with_sources(|frames|{
+        wbd_codec::fec_v2::Rs16::new().encode_owned(
+            job.block_id,frames,wbd_codec::fec_v2::Profile::Strong,
+            0,1,budget.record_payload_mtu,
+            wbd_codec::fec_v2::BackendChoice::Scalar
+        )
+    }).map_err(|_|INVALID)?;
+    let parity=repairs.into_iter().next().ok_or(INVALID)?;
+    let mut repair_slab=e.arena.allocate().map_err(|_|FULL)?;
+    let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
+    if end>repair_slab.writable().len(){return Err(INVALID)}
+    repair_slab.writable()[14..end].copy_from_slice(&parity);
+    let sealed=e.owner.seal_fec2_probe_one(
+        repair_slab,parity.len(),3,budget,15,loop_now()
+    ).map_err(|_|INVALID)?;
+    let copied=e.owner.submit_scoped_raw_tx_reusing(
+        &raw,tuple,presentation,loop_now(),&mut storage
+    ).map_err(|_|INVALID)?;
+    if copied<=sealed.2{return Err(INVALID)}
+    out[1]=sealed;
+    scheduler.finish_parity(job,1,true);
+    let report=scheduler.report();
+    if report.outstanding_jobs!=0||report.queued_jobs!=0
+        ||report.charged_bytes!=0||report.classes[0].r_sent!=1
+        ||report.classes[0].source_not_ready!=1{
+        return Err(INVALID)
+    }
+    scheduler.stop();
+    if scheduler.take_parity(MonoNs(8_000_002)).is_ok(){
+        return Err(INVALID)
     }
     e.arena.drain_returns();
     Ok(out)
