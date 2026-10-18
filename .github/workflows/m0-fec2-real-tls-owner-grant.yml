@@ -51,7 +51,7 @@ jobs:
           cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib >owner-grant-result/opt-in-build.log 2>&1
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_fec2_probe_scope_status$'
-          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib r1_m0_original_ -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_owner_integration_tests -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
           for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
