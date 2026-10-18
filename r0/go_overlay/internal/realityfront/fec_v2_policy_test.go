@@ -174,6 +174,10 @@ func TestF2ControlSparseEmergencyBurstAndIdleIsolation(t *testing.T) {
     if e!=nil||out.Send {t.Fatal("sparse surged without 10s",out,e)}
     v.At=12*time.Second
     s,out,e=FecV2Step(cfg,s,v,12*time.Second)
+    if e!=nil||out.Send {t.Fatal("old sparse events replayed as fresh",out,e)}
+    v.At=14*time.Second
+    v.TrustedMissingOrLate=4 // two newly confirmed events since the prior rise
+    s,out,e=FecV2Step(cfg,s,v,14*time.Second)
     if e!=nil||!out.Send||s.Desired!=FecV2Medium {t.Fatal("sparse cooldown",out,e)}
     v.At=22*time.Second
     v.HostDrops=10
