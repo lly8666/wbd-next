@@ -309,7 +309,7 @@ fn r1_fec2_f2_sched_sparse_rate_minimum_not_long_maximum() {
     // At 1pps observed, lambda*C < 1, so new block expires at Tmin=4ms.
     let t=push(&mut o,&mut a,1,1_000_000_000).ticket.unwrap();
     assert_eq!(o.deadline_span_ns(Class::Small),4_000_000);
-    assert_eq!(t.deadline,MonoNs(1_000_004_000_000));
+    assert_eq!(t.deadline,MonoNs(1_004_000_000));
     o.on_due(t.deadline).unwrap();
     drain(&mut o,t.deadline.0);
     o.stop();a.stop();assert!(a.quiesced());
