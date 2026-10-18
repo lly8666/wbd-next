@@ -400,7 +400,8 @@ func (p fecV2OriginalRustBackend) Readback(
         Profile:FecV2Profile(profile),Applied:true},nil
 }
 func (p fecV2OriginalRustBackend) Stage(epoch [16]byte,v FecV2Intent)error{
-    if !p.valid(epoch,v.Client,v.Direction)||v.Mode!=FecV2Auto||
+    if !p.valid(epoch,v.Client,v.Direction)||
+        (v.Mode!=FecV2Auto && v.Mode!=FecV2Fixed)||
         v.Revision==0||!v.Profile.Valid(){return ErrFecV2Scope}
     ack,err:=p.Readback(epoch,v.Client,v.Direction)
     if err!=nil{return err}

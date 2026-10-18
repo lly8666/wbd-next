@@ -68,6 +68,35 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             }
             t.Logf("M0_ORIGINAL_GO_TLS_LIVE_AUTO_APPLIED_NO_IDLE_WRITES_PASS cipher=%d revision=%d",
                 cipher,effective.AppliedRevision)
+            // The protected Go settings boundary issues a FIXED high
+            // revision while the native Rust session is alive. Rust
+            // acknowledges REQUESTED only; no new FEC block has been
+            // copied, so applied must remain at the old Strong revision1.
+            fixed:=cfg
+            fixed.Mode=FecV2Fixed
+            fixed.Profile=FecV2High
+            fixed.ConfigRevision=2
+            pending,e:=auto.ApplyOperatorConfig(
+                scoped.protectedEpoch,fixed,4*time.Second)
+            if e!=nil||pending.Desired!=FecV2High||
+                pending.RequestedRevision!=2||
+                pending.AppliedRevision!=1{
+                t.Fatalf("actual Rust fixed config pending %+v %v",pending,e)
+            }
+            if e:=auto.Tick(5*time.Second);e!=nil{t.Fatal(e)}
+            pending,e=auto.Snapshot()
+            if e!=nil||pending.AppliedRevision!=1||
+                pending.RequestedRevision!=2{
+                t.Fatalf("original Rust pending applied prematurely %+v %v",pending,e)
+            }
+            off:=fixed
+            off.Mode=FecV2Off
+            off.ConfigRevision=3
+            if _,e:=auto.ApplyOperatorConfig(scoped.protectedEpoch,
+                off,6*time.Second);e!=errFecV2RuntimeOffUnwired{
+                t.Fatalf("unwired actual Rust OFF falsely ACKed %v",e)
+            }
+            t.Logf("M0_REAL_GO_TLS_FIXED_REV2_PENDING_RUST_APPLIED_REV1_PASS cipher=%d no_false_ack=1 off_unwired=deny",cipher)
             oldHandle:=scoped.handle
             if err:=scoped.stopRelease();err!=nil{t.Fatal(err)}
             if e:=auto.Tick(5*time.Second);e!=errFecV2RuntimeStopped{

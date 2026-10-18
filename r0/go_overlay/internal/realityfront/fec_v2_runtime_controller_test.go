@@ -13,6 +13,7 @@ type f2RuntimeFake struct {
     staged []FecV2Intent
     ack FecV2Ack
     observeError bool
+    stageError bool
     stageEntered chan struct{}
     stageRelease chan struct{}
 }
@@ -23,6 +24,7 @@ func (f *f2RuntimeFake) Observe(epoch [16]byte,client string,dir FecV2Direction,
 }
 func (f *f2RuntimeFake) Stage(epoch [16]byte,v FecV2Intent) error{
     if epoch!=f.epoch{return ErrFecV2Scope}
+    if f.stageError{return errors.New("original Rust declined stage")}
     if f.stageEntered!=nil{
         select{case f.stageEntered<-struct{}{}:default:}
         <-f.stageRelease
@@ -121,5 +123,77 @@ func TestF2ControlRuntimeStopJoinsBlockedOriginalStage(t *testing.T){
     }
     if err:=run.Start();!errors.Is(err,errFecV2RuntimeStopped){
         t.Fatal("stopped owner restarted")
+    }
+}
+
+
+// A GUI/CLI revision is not a string toggle. It must be scoped to the
+// authenticated client, direction AND epoch; the requested revision is
+// committed only when the real backend accepted the intent. Readback is a
+// separate operation; OFF cannot be advertised until Rust implements it.
+func TestF2ControlOperatorFixedAutoRevisionScopeAndFailClosedOff(t *testing.T){
+    var epoch [16]byte
+    epoch[0]=9
+    cfg:=f2Config("protected-owner",FecV2S2C,FecV2Auto,FecV2Conservative)
+    backend:=&f2RuntimeFake{epoch:epoch,observeError:true}
+    r,err:=newFecV2ControlRuntime(cfg,epoch,backend)
+    if err!=nil{t.Fatal(err)}
+    if e:=r.Tick(time.Second);e!=nil{t.Fatal(e)}
+    first,_:=r.Snapshot()
+    if first.RequestedRevision!=1||first.AppliedRevision!=0{t.Fatalf("first stage %+v",first)}
+    fixed:=cfg
+    fixed.Mode=FecV2Fixed
+    fixed.Profile=FecV2High
+    fixed.ConfigRevision=2
+    wrong:=epoch
+    wrong[0]=10
+    if _,e:=r.ApplyOperatorConfig(wrong,fixed,2*time.Second);!errors.Is(e,ErrFecV2Scope){
+        t.Fatalf("wrong TLS epoch changed policy: %v",e)
+    }
+    backend.stageError=true
+    if _,e:=r.ApplyOperatorConfig(epoch,fixed,2*time.Second);e==nil{
+        t.Fatal("backend refusal acknowledged as requested")
+    }
+    state,_:=r.Snapshot()
+    if state.RequestedRevision!=1||len(backend.staged)!=1{
+        t.Fatalf("failed native stage advanced Go revision %+v",state)
+    }
+    backend.stageError=false
+    state,err=r.ApplyOperatorConfig(epoch,fixed,3*time.Second)
+    if err!=nil||state.RequestedRevision!=2||state.Desired!=FecV2High||
+        state.AppliedRevision!=0||len(backend.staged)!=2{
+        t.Fatalf("fixed config did not stage without fabricated ACK %+v %v",state,err)
+    }
+    if _,e:=r.ApplyOperatorConfig(epoch,fixed,4*time.Second);!errors.Is(e,ErrFecV2Revision){
+        t.Fatalf("duplicate config revision accepted: %v",e)
+    }
+    foreign:=fixed
+    foreign.Client="another-user"
+    foreign.ConfigRevision=3
+    if _,e:=r.ApplyOperatorConfig(epoch,foreign,4*time.Second);!errors.Is(e,ErrFecV2Scope){
+        t.Fatalf("cross-client revision accepted: %v",e)
+    }
+    off:=fixed
+    off.Mode=FecV2Off
+    off.ConfigRevision=3
+    if _,e:=r.ApplyOperatorConfig(epoch,off,4*time.Second);!errors.Is(e,errFecV2RuntimeOffUnwired){
+        t.Fatalf("unwired OFF was treated applied: %v",e)
+    }
+    if e:=r.Tick(5*time.Second);e!=nil{t.Fatal(e)}
+    state,_=r.Snapshot()
+    if state.AppliedRevision!=0||state.RequestedRevision!=2{
+        t.Fatalf("no original Rust ACK rewrote Go UI %+v",state)
+    }
+    backend.ack=FecV2Ack{Client:cfg.Client,Direction:cfg.Direction,
+        Revision:2,Profile:FecV2High,Applied:true}
+    if e:=r.Tick(7*time.Second);e!=nil{t.Fatal(e)}
+    state,_=r.Snapshot()
+    if state.AppliedRevision!=2||state.AppliedProfile!=FecV2High||
+        len(backend.staged)!=2{
+        t.Fatalf("Rust applied fixed receipt was not reflected %+v",state)
+    }
+    r.Stop()
+    if _,e:=r.ApplyOperatorConfig(epoch,off,8*time.Second);!errors.Is(e,errFecV2RuntimeStopped){
+        t.Fatalf("Stop permitted late GUI config %v",e)
     }
 }

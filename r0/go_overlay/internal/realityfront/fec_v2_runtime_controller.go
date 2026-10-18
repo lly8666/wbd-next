@@ -12,6 +12,7 @@ import (
 )
 
 var errFecV2RuntimeStopped = errors.New("fec v2: original Go controller stopped")
+var errFecV2RuntimeOffUnwired = errors.New("fec v2: Rust OFF transition not yet wired; refusing fake applied receipt")
 const fecV2RuntimeCadence = 2*time.Second
 
 type fecV2RuntimeBackend interface {
@@ -44,7 +45,7 @@ func newFecV2ControlRuntime(
     cfg FecV2Config,epoch [16]byte,backend fecV2RuntimeBackend,
 )(*fecV2ControlRuntime,error){
     if err:=cfg.validate();err!=nil{return nil,err}
-    if cfg.Mode!=FecV2Auto||cfg.Transport!=FecV2Normal||
+    if (cfg.Mode!=FecV2Auto && cfg.Mode!=FecV2Fixed)||cfg.Transport!=FecV2Normal||
         epoch==[16]byte{}||backend==nil{return nil,ErrFecV2Scope}
     return &fecV2ControlRuntime{
         cfg:cfg,epoch:epoch,backend:backend,
@@ -87,6 +88,48 @@ func (r *fecV2ControlRuntime) Tick(now time.Duration) error {
     }
     r.state=next
     return nil
+}
+
+
+// ApplyOperatorConfig is the private package control handoff for a GUI/CLI
+// revision. The epoch comes from the verified Go TLS owner, not arbitrary
+// operator input. No product V4 admission or FEC2 permission is granted.
+// The original Rust owner must positively stage the revision before the Go
+// requested state changes; actual applied state changes only on readback.
+// OFF is fail-closed until a native OFF transition+ACK exists, rather than
+// pretending that stopping a timer disabled the real FEC2 sender.
+func (r *fecV2ControlRuntime) ApplyOperatorConfig(
+    epoch [16]byte,cfg FecV2Config,now time.Duration,
+)(FecV2State,error){
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    if r.stopped{return r.state,errFecV2RuntimeStopped}
+    if epoch!=r.epoch||cfg.Client!=r.cfg.Client||
+        cfg.Direction!=r.cfg.Direction||
+        cfg.Transport!=r.cfg.Transport{
+        return r.state,ErrFecV2Scope
+    }
+    if err:=cfg.validate();err!=nil{return r.state,err}
+    if cfg.Mode==FecV2Off{return r.state,errFecV2RuntimeOffUnwired}
+    if cfg.ConfigRevision<=r.cfg.ConfigRevision{
+        return r.state,ErrFecV2Revision
+    }
+    if now<0{return r.state,errFecV2Policy}
+    next,intent,err:=FecV2Step(
+        cfg,r.state,FecV2Snapshot{},now)
+    if err!=nil{return r.state,err}
+    if !intent.Send||intent.Revision==0||
+        intent.Client!=cfg.Client||intent.Direction!=cfg.Direction||
+        !intent.Profile.Valid(){
+        return r.state,errFecV2Policy
+    }
+    if err:=r.backend.Stage(r.epoch,intent);err!=nil{
+        // Reject and keep both config and requested revision unchanged.
+        return r.state,err
+    }
+    r.cfg=cfg
+    r.state=next
+    return next,nil
 }
 
 // Start schedules the real two-second cadence, not a per-packet callback.
