@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "e29054be3e420841ce87195515d15ffbdb6dc902",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "result": "PASS_TEST_ONLY_ACTUAL_GO_TLS_RAW_M2_SAME_ORIGINAL_FROZEN_PN_SEQ_KERNEL_REPAIR_WITH_SCOPED_GRANT_AND_PREFIX_ACCEPTED_THREE_SUITES",
+  "tested": [
+    "Original Go verified private TLS bit2/epoch/Detach original M1 Fec2Owner source-first, M3 RS16 e1, original M4 raw/TUN delivers recovered 127B IPv4 / 99B UDP for cipher suites 1,2,3.",
+    "Original Go C2S Health/kind1 ciphertext crosses actual IPPROTO_RAW kernel loopback into original M4 ScopedRawIpv4Rx and original Rust M3 unique AEAD/PN, then M2 scoped authenticated bitmap. An EXPLICIT test-only selective/missing PN1 bitmap first positively retires original source PN0 only; this is not an observed real network packet loss because earlier peer received the repair ciphertext.",
+    "M2 original ReceiptState PTO on PN1 at 31ms, original typed grant/reserve_frozen_submission with original M1 immutable FrozenRecord, original M4 scoped raw send_one returns kernel-copied prefix. Independent original Go raw socket captures PN1 same ciphertext EXACTLY equal to original captured ciphertext, identical original TCP Seq; no new AEAD, new PN or new FrozenRecord bytes.",
+    "M2 complete_driver_prefix validates one accepted slot, debits a GlobalRepairAllocator grant and repairs the same original shadow via on_send_result(Accepted). Subsequent original Go authenticated C2S control PN1 positive receipt at MONOTONIC 32ms retires that same shadow; duplicate control replay, tampered ciphertext, out-of-scope bitmap, second same-evidence attempt and Stop stale owner reject.",
+    "The opt-in probe currently allocates one GlobalRepairAllocator instance PER simulated owner/session; it does NOT prove a single process cap shared across real concurrent client sessions, real M4 batch prefix 2..32, true Uncertain or definitely NotSent. M2 completion success is not peer delivery."
+  ],
+  "actions": {
+    "exact_source_scoped_kernel": {
+      "run_id": 39118602595,
+      "attempt": 1,
+      "job_id": 117649391309,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39118602595",
+      "artifact_id": 12133367257,
+      "name": "m0-real-go-fec2-owner-grant-39118602595-1",
+      "sha256": "a9036315071e84a02687438fe43c570305996f8e3f228fb3e436375db2e842c5",
+      "independent_zip_sha256": "a9036315071e84a02687438fe43c570305996f8e3f228fb3e436375db2e842c5",
+      "go_kernel_test": "PASS_3_CIPHER_SUITES_SAME_PN_SEQ_BYTES_LATE_RECEIPT",
+      "rust_native": "PASS_3_TESTS",
+      "prod_default": "OFF"
+    },
+    "selected_native_functional": {
+      "run_id": 39118602612,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected normal,engine,receipt,fec,kernel; not full codec 240s"
+    },
+    "normal_off_kernel": {
+      "run_id": 39118602569,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 12133296797,
+      "artifact_sha256": "1d125946e6f4e553dc3030014519483be5ac035b311841a8d9c0061defd61593",
+      "independent_zip_sha256": "1d125946e6f4e553dc3030014519483be5ac035b311841a8d9c0061defd61593",
+      "configured_netem150": "EXPLORATORY_PASS_3_SUITE_ZERO_CONFIGURED_LOSS_NO_RTT_MEASUREMENT",
+      "dev10mbps": "DEV_ONLY_NOT_PRODUCT"
+    },
+    "cross_abi": {
+      "run_id": 39118602538,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected aarch64 Linux/windows gnu build and consume only, not complete native platform codec"
+    },
+    "native_abi": {
+      "run_id": 39118602539,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "scoped_bootstrap": {
+      "run_id": 39118602546,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "static_audit": {
+      "run_id": 39118602574,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "code_governance": {
+      "run_id": 39118602588,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "earlier_failed_source": [
+      {
+        "source_sha": "17fd64e8e9b7c39d601ad0325fe521cf4122645b",
+        "run_id": 39118385200,
+        "attempt": 1,
+        "conclusion": "failure",
+        "artifact_id": 12132814755,
+        "sha256": "14d2b55811d016259d3cc4e09664d0cfe47b65520e63c44a9c671c33c9ae6c73",
+        "cause": "M2 late authenticated positive rejected: probe receipt clock still 12ms after global repair grant advanced to 31ms"
+      },
+      {
+        "source_sha": "4382045a09365f7a5303ef1e79df1e80a58b5c0c",
+        "run_id": 39118411125,
+        "attempt": 1,
+        "conclusion": "failure",
+        "artifact_id": 12133251744,
+        "sha256": "b3c09ba22e05563d67ea3e2b8360b89a6ec7bbea63cc1df2db0a5fbec5c105c3",
+        "cause": "same monotonic clock reversal, fixed at SOURCE e290"
+      }
+    ],
+    "independent_netem_historical_failure": {
+      "source_sha": "6e8497bef6a92ccb8e0e26f1b654084d6d32ed1f",
+      "run_id": 39118278579,
+      "attempt": 1,
+      "conclusion": "failure",
+      "artifact_id": 12132934247,
+      "artifact_sha256": "bc29eaa86859921343b241531758ee10e787e3c40a6f29bd27dfcd50d8c8d387",
+      "detail": "150ms original Normal/off suite1 second fragment got pending, suite2 first packet failed, suite3 PASS; prior netem intermittent runs also red. Current e290 150ms exploratory PASS does not erase real regression."
+    }
+  },
+  "unqualified": [
+    "product FEC2 remains OFF, default build no private probe; continuous real-time M1 scheduler NOT_RUN",
+    "Real peer produced missing feedback from actual packet loss, canonical product kind1 wire and applied Go fixed/auto CLI/GUI per-direction revision NOT_WIRED",
+    "One process-global quota shared ACROSS live clients, M4 real batch prefix 0..32, Uncertain/Unproven/ProvenNotAttempted kernel-native completion, Stop race/generation/MTU/loans under load NOT_RUN",
+    "Legal ~65KiB UDP across >32 turns, genuine 150ms long duration intermittent reliability, full codec240s/D10/p99 ABBA, native ARM/Windows full ISA-L codec/loader, physical two-endpoint qualification NOT_RUN"
+  ],
+  "next_action": "Keep registry roles and FEC2 product OFF. R0-023 next independent capability: true multi-client process shared quota and real repair send driver prefix/uncertainty/not-attempted settlement, canonical feedback wire and real Go applied per-direction fixed/auto CLI/GUI; then legal ~65KiB across turns MTU/Stop/noHOL and physical/long-run hard gates. Do not infer product from synthetic loss bitmap."
+}
