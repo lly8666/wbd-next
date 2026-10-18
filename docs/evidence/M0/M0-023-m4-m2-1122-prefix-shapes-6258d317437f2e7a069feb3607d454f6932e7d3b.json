@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6258d317437f2e7a069feb3607d454f6932e7d3b",
+  "progress": "partial",
+  "unverified": true,
+  "production_FEC2": "OFF",
+  "result": "TEST_ONLY_PASS_1122_NATIVE_M4_TO_M2_PREFIX_SHAPES_AND_9_REAL_GO_TLS_KERNEL_CASES",
+  "tests": [
+    "0..32 slots: 1122 deterministic valid prefix/error/uncertain shapes at M0 original KernelSendReport->M2 DriverPrefixObservation: accepted count bounded; invalid 33/usize::MAX and malformed uncertain marker fail closed; EINTR/EAGAIN/Stop/MTU/path/device unknown suffix always Unproven, never fabricated ProvenNotAttempted.",
+    "Three suites x original Go authenticated TLS: single FrozenRecord M4 sendto, 2 M2 scoped originals with M4 copied slot0 and explicitly never-syscalled slot1, original M4 one actual Linux sendmmsg with both immutable FrozenRecord handles; 9 privileged Linux netns scenarios pass; independent Go raw peer confirms ciphertext/PN/TCP Seq, Rust M3 real AEAD/unique C2S control kind1 and typed M2 releases after authenticated bitmap, original TUN UDP app observed.",
+    "One Rust process-global M2 allocator across three simultaneous original Go TLS sessions; default production FEC2 remains OFF.",
+    "0..32 tests are deterministic report-shape injection, NOT 32 real sendmmsg distinct packet captures or actual syscalls with partial/EINTR/EAGAIN."
+  ],
+  "actions": [
+    {
+      "source": "6258d317437f2e7a069feb3607d454f6932e7d3b",
+      "run_id": 39124473114,
+      "attempt": 1,
+      "status": "success",
+      "scope": "focused original Go TLS/kernel and Rust 1122 shapes",
+      "artifact_id": 12135556255,
+      "artifact_sha256": "622da28f855e8be4fdb5f714a340ad92f64533608f3540e9b319f21e61fe9b2a",
+      "independent_zip_sha256": "622da28f855e8be4fdb5f714a340ad92f64533608f3540e9b319f21e61fe9b2a",
+      "receipt_source_matches": true,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39124473114"
+    },
+    {
+      "source": "6258d317437f2e7a069feb3607d454f6932e7d3b",
+      "run_id": 39124473122,
+      "attempt": 1,
+      "status": "success",
+      "scope": "source governance"
+    },
+    {
+      "source": "6bffbb9cd8a1d2505f9e1533832aeaace5d7217f",
+      "run_id": 39124414561,
+      "status": "success",
+      "scope": "selected native-functional (prior Rust-only SOURCE)"
+    },
+    {
+      "source": "6bffbb9cd8a1d2505f9e1533832aeaace5d7217f",
+      "run_id": 39124414576,
+      "status": "success",
+      "scope": "limited cross ABI (prior Rust-only SOURCE)"
+    },
+    {
+      "source": "6bffbb9cd8a1d2505f9e1533832aeaace5d7217f",
+      "run_id": 39124414573,
+      "status": "success",
+      "scope": "selected Normal/off exploratory and dev diagnostics (prior Rust-only SOURCE)"
+    },
+    {
+      "source": "84191e9622628a0e1ea66f9e6caad4ef8278cde8",
+      "run_id": 39124252405,
+      "attempt": 1,
+      "status": "failure",
+      "scope": "opt-in Rust E0308 adapter i32 vs M2 GlobalRepairError, corrected in 6bffbb9",
+      "artifact_id": 12135461139,
+      "sha256": "66c6314ad2b183c92944c4d9c74db415593c5d104a676a0fe46f365be134c038"
+    }
+  ],
+  "limits": [
+    "Actual native M4 sendmmsg 2..32 *distinct* shadows under real partial/errno-loss/Uncertain/NotSent/Stop/generation/loans/MTU stress still NOT_RUN; single two-packet all-success kernel case verified.",
+    "Canonical product kind1 wire + automatic authenticated feedback from true peer-observed loss still NOT_WIRED; 52B test-only Go AEAD fixture and injected missing bitmap.",
+    "Original Go applied fixed/auto per-client/per-direction revision CLI/GUI, continuous original M1 scheduler, legal ~65KiB cross-turn UDP, MTU±1/no HOL/Stop, real physical two endpoints NOT_RUN.",
+    "Full codec240s/D10/p99 same-job ABBA, repeated 150ms (historic intermittent FAIL retained), complete ARM64/Windows native codec/loader still OPEN."
+  ],
+  "next_action": "Under M0 R0-023, next consolidate original M4 real sendmmsg 2..32 DISTINCT authentic frozen source records and Stop/partial driver observations, then actual drop peer feedback and official product Go policy+CLI/GUI, maintain production FEC2 OFF."
+}
