@@ -1208,10 +1208,13 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     jumboFragments:=map[uint64]bool{}
     var reassembledJumbo []byte
+    expectedJumboFrames:=0
+    var jumboPacketID uint32
     sawFollower:=false
     jumboDeadline:=time.Now().Add(8*time.Second)
     for time.Now().Before(jumboDeadline) &&
-        (len(jumboFragments)<48 || reassembledJumbo==nil || !sawFollower){
+        (expectedJumboFrames==0 || len(jumboFragments)<expectedJumboFrames ||
+            reassembledJumbo==nil || !sawFollower){
         pkt:=make([]byte,2048)
         n,_,recvErr:=syscall.Recvfrom(peer,pkt,0)
         if recvErr!=nil{continue}
@@ -1229,6 +1232,20 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
             t.Fatalf("Go peer cannot authenticate jumbo S2C PN=%d err=%v",rec.PN,openErr)
         }
         if len(rec.Payload)>20&&string(rec.Payload[:8])=="WBDLFRG1"{
+            frameCount:=int(binary.BigEndian.Uint16(rec.Payload[12:14]))
+            total:=int(binary.BigEndian.Uint16(rec.Payload[14:16]))
+            packetID:=binary.BigEndian.Uint32(rec.Payload[16:20])
+            if frameCount<48 || frameCount>256 || total!=65535 || packetID==0 {
+                t.Fatalf("invalid original Go jumbo LINK frozen header frames=%d total=%d id=%d",
+                    frameCount,total,packetID)
+            }
+            if expectedJumboFrames==0{
+                expectedJumboFrames=frameCount
+                jumboPacketID=packetID
+            }else if frameCount!=expectedJumboFrames || packetID!=jumboPacketID{
+                t.Fatalf("mixed jumbo logical packet owner frame=%d expected=%d id=%d expectedID=%d",
+                    frameCount,expectedJumboFrames,packetID,jumboPacketID)
+            }
             if jumboFragments[rec.PN]{t.Fatalf("duplicate jumbo owner PN=%d",rec.PN)}
             jumboFragments[rec.PN]=true
             ready,done,pushErr:=goLink.Push(rec.Payload,time.Now())
@@ -1246,7 +1263,8 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
             }
         }
     }
-    if len(jumboFragments)!=48||len(reassembledJumbo)!=65535||
+    if expectedJumboFrames<48 || len(jumboFragments)!=expectedJumboFrames ||
+        len(reassembledJumbo)!=65535||
         !sawFollower || reassembledJumbo[0]!=0x45 ||
         binary.BigEndian.Uint16(reassembledJumbo[2:4])!=65535 ||
         reassembledJumbo[9]!=17 ||
@@ -1256,16 +1274,16 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     jumboStats,err:=b.rustOwnerLoopStats()
     jumboCountDeadline:=time.Now().Add(500*time.Millisecond)
-    for err==nil && jumboStats.TxOK<jumboBefore.TxOK+49&&
+    for err==nil && jumboStats.TxOK<jumboBefore.TxOK+uint64(expectedJumboFrames+1)&&
         time.Now().Before(jumboCountDeadline){
         time.Sleep(time.Millisecond)
         jumboStats,err=b.rustOwnerLoopStats()
     }
-    if err!=nil||jumboStats.TxOK!=jumboBefore.TxOK+49{
+    if err!=nil||jumboStats.TxOK!=jumboBefore.TxOK+uint64(expectedJumboFrames+1){
         t.Fatalf("original owner 48 jumbo +1 independent kernel copies: before=%+v after=%+v err=%v",
             jumboBefore,jumboStats,err)
     }
-    t.Logf("EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_TWO_TURN_48_FRAGMENT_NOHOL_PASS ipv4=%d fragments=%d follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+    t.Logf("EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=%d fragments=%d fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
         len(reassembledJumbo),len(jumboFragments))
     // Stop while both originally spawned RX/TX workers and both actual
     // kernel drivers remain installed. Join and retire before any generation
