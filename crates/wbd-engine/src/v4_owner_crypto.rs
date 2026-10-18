@@ -401,8 +401,9 @@ impl ProtectedScopedOwner {
     }
     /// TEST ONLY: private Go callback after credential TLS + original Detach
     /// Commit. Untrusted v2 metadata/cold248 NEVER grants this authority.
-    /// Profile Strong / revision 1 are fixed probe settings, NOT actual GUI
-    /// or applied product policy.
+    /// Test-only Go->Rust policy intent now carries the ORIGINAL Go
+    /// controller's selected profile and revision AFTER TLS/Detach;
+    /// production catalog/GUI and runtime reconfiguration stay OFF.
     #[cfg(feature="m0_fec2_owner_probe")]
     pub(crate) fn bind_fec2_probe_from_private_go(
         &mut self,features:u16,epoch:[u8;16],profile:u8,revision:u64,
@@ -412,7 +413,7 @@ impl ProtectedScopedOwner {
            ||self.fec2_probe_scope.is_some()||features!=7||epoch!=self.epoch
            ||self.generation!=self.crypto.generation
            ||self.go_lane!=self.crypto.go_lane
-           ||profile!=5||revision!=1 {
+           ||profile>6||revision==0 {
             return Err(ProtectedCryptoError::Inactive)
         }
         self.fec2_probe_scope=Some(Fec2ProbeScope{
@@ -427,7 +428,13 @@ impl ProtectedScopedOwner {
         &&self.fec2_probe_scope.is_some_and(|s|
             s.generation==self.generation&&s.epoch==epoch
             &&s.owner_id==self.token.owner_id()
-            &&s.go_lane==self.go_lane&&s.profile==5&&s.revision==1)
+            &&s.go_lane==self.go_lane&&s.profile<=6&&s.revision!=0)
+    }
+
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn fec2_probe_applied_policy(&self)->Option<(u8,u64)>{
+        if !self.is_fec2_probe_bound(){return None}
+        self.fec2_probe_scope.map(|scope|(scope.profile,scope.revision))
     }
 
     #[cfg(feature="m0_fec2_owner_probe")]
