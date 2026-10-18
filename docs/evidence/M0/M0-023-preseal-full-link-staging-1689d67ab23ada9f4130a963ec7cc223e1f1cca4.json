@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "1689d67ab23ada9f4130a963ec7cc223e1f1cca4",
+  "result": "PASS_SCOPE_ONLY_PRESEAL_STAGING_AND_EXISTING_NATIVE_OWNER",
+  "progress": "partial",
+  "unverified": true,
+  "change": {
+    "code_source": "dd01c86b84a4f85875c3197cf995749f1c44e5bf",
+    "workflow_source": "1689d67ab23ada9f4130a963ec7cc223e1f1cca4",
+    "code_path": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "test_path": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "workflow_path": ".github/workflows/m0-v4-native-owner-probe.yml",
+    "scope": "Unfragmented Normal/off sender path unchanged. Before any AEAD PN/seal/queue admission of a bounded LINK packet, stage all <=32 planned M3 LINK frames into original M1 generation-owned slabs, and fail-close whole staging if any intermediate arena allocation/MTU/length fails. No partial packet admitted due to *preseal materialization*. Does not provide all-or-none atomic M1 queue admission or kernel-copy completion.",
+    "test_name": "v4_embedded_go::tests::m0_link_materialization_never_admits_half_packet_on_arena_failure",
+    "test_observed": "PASS exact runner; actual M1 Arena count2 vs 3 required fragment slab return, count4 exact3 valid real LINK inspect, invalid packet ID and bad MTU fail closed. Negative case invokes no AEAD."
+  },
+  "actions": {
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39093072101",
+    "run_id": 39093072101,
+    "attempt": 1,
+    "head_sha": "1689d67ab23ada9f4130a963ec7cc223e1f1cca4",
+    "conclusion": "success",
+    "build_job": {
+      "id": 117573724785,
+      "conclusion": "success"
+    },
+    "consume_job": {
+      "id": 117573990178,
+      "conclusion": "success"
+    },
+    "build_artifact": {
+      "id": 12123298702,
+      "digest": "sha256:b099e10da2c1be1e0fa7c141831efe6ecf300d159f2cbde4acc4be9eb093e0de"
+    },
+    "result_artifact": {
+      "id": 12123144680,
+      "digest": "sha256:991be7d4853d012f6083ca0bcbb52439da5bbf6f60e05822304f3dbbf4a34e05"
+    },
+    "artifact_zip_independent_rehash": "NOT_DONE",
+    "binary_sha_validated_by_consume": true,
+    "feature_gated_original_owner": true,
+    "default_production_abi_unchanged": true,
+    "test_details": [
+      "New Rust staged LINK all-loans-or-zero native test 1/1",
+      "Original Go real three-cipher TLS admission and original M3/M4 raw/TUN smoke unchanged",
+      "Targeted original Go encrypted C2S PN0 drop then PN1 delivered with seq hole across all three ciphers",
+      "Original Rust two background owner workers C2S=8 S2C=8",
+      "Original real Rust TUN 1728B original Go peer reassembled two LINK fragments exact once",
+      "Fragmented 2 then independent small 1 no HOL",
+      "MTU 65536→1500 fail closed and Netlink route invalidation",
+      "Stop/release no restart",
+      "10s warmup plus60s Normal/off development diagnostic bilateral fixed mix: original Go logged offered/delivered C2S=10/10 Mbps S2C=10/10 Mbps worker RX CPU=2.0082s TX CPU=2.0175s. NOT product qualification"
+    ],
+    "related_scoped_actions": [
+      {
+        "run_id": 39092845794,
+        "source_sha": "dd01c86b84a4f85875c3197cf995749f1c44e5bf",
+        "result": "SUCCESS native-functional all grouped jobs including engine normal receipt kernel fec"
+      },
+      {
+        "run_id": 39092845760,
+        "source_sha": "dd01c86b84a4f85875c3197cf995749f1c44e5bf",
+        "result": "SUCCESS r0-native-abi build/consume"
+      }
+    ]
+  },
+  "worker_snapshot": {
+    "M1": {
+      "source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+      "state": "blocked pending central H19 audit",
+      "native": "130/130 PASS"
+    },
+    "M2": {
+      "source": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
+      "state": "ready_for_integration",
+      "native": "70/70 PASS"
+    },
+    "M3": {
+      "source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+      "last_cursor": "H36 partial as observed",
+      "native_linux_x64": "11/11 PASS, qualified single k16r16 e4 encode/recover ABBA CPU",
+      "scope_blocker": "main M3 scope checkpoint delta75 >64; requires reviewed intermediate checkpoint, no limit increase",
+      "arm_win_full_codec": "NOT_RUN"
+    },
+    "M4": {
+      "source": "7cef7e849e293373d907a3b64007b4ce8946da78",
+      "state": "ready_for_integration",
+      "go_policy": "8/8 PASS",
+      "wrapper_linux_arm_win": "2/2 each PASS; not full codec native"
+    }
+  },
+  "open_product_gates": [
+    "R0 legitimate inner UDP >2034B read into 2048B original M1 TUN loan remains NOT_SUPPORTED",
+    "R0 >32 original frames / cross turn schedule remains NOT_RUN",
+    "Atomic original M1 queue sealing failure after preseal materialization NOT_RUN",
+    "Mid-fragment genuine raw send kernel prefix/unknown outcome and MTU shrink NO_MIXED_STRIDE original path NOT_RUN",
+    "Full Go/Rust actual FEC2 admission/encode/decode, applied Go CLI GUI policy NOT_RUN, capability and kind2/3 still reserved, default OFF",
+    "M1/M2/M3/M4 full combined and original Go repair/Game correctness NOT_RUN",
+    "Linux ARM/Windows actual new V2 codec equivalence, loader/product, native/physical/500Mbps NOT_RUN",
+    "D10 original FAIL, 240s codec timeouts and sparse/p99 regression remain OPEN"
+  ],
+  "next_action": "M0 R0-023 bounded legal max UDP ingress from TUN, one logical packet cross-turn original M1 slabs with Stop+MTU snapshots, prefix/unknown outcome and small packet fairness, Actions-only source pinned. M3 central scope checkpoint separately requires reviewed intermediate evidence; do not change lifetime delta limit."
+}
