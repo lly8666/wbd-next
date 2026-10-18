@@ -4,14 +4,14 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 33,
-  "checkpoint_sha": "f3c9062cc4f684195e5318ad010aed0845a1b61b",
+  "sequence": 34,
+  "checkpoint_sha": "12b0499b9dc9399396140375038ce3f485328e45",
   "progress": "partial",
   "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
   "current_task": "FEC2 RS16 typed 10/12B wire, seven r profiles, prepared native/scalar API and missing-only e×e; scoped default-scalar worker+R0 source-locked PASS at CODE301; real ISA-L/cost still cross-owner blocked.",
-  "why_now": "017 CODE301 scoped scalar Actions 122 PASS/0FAIL/1ignored; R0 wire exact13 PASS, LINK/record PASS. H30 central39046275022 distinct non-PASS failure. Later governance run39082909578/39083303000 FAILED GitHub API HTTP403 remote registry/compare, not an attested scope result; append-only supplemental evidence now recorded.",
+  "why_now": "H33 exact-source governance39083459590 PASS (ROLE_SCOPE_PASS, structure PASS, continuity CLEAN), Action ZIP SHA and all 8 artifact manifest members independently rehashed in new source-specific S. Historical H30 non-PASS and HTTP403 failures unchanged. Main M0 now has native ISA-L safe wrapper on Linux x64/ARM64/Windows; M3 FEC2 codec native/cost remain NOT_RUN.",
   "done_when": "M3 017 math/wire/bounded memory, actual ISA-L Linux x64 and applicable ARM/Windows native equivalence, source-pinned single-scene AB/BA same VM cost plus S→H evidence; no FEC-on product inference.",
-  "next_action": "Await M0-owned source-pinned shared safe ISA-L/workflow interface request in docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md; run true V2 native + same VM 16:16 L1202/e4 AB/BA, fix codec if needed, then source-bound S→H.",
+  "next_action": "Await M0 source-pinned FEC2 codec ISA-L shared build/consumption and 16:16 L1202/e4 AB/BA same VM. M0 safe wrapper cross-platform results alone do not qualify M3 FEC2, Windows bridge or instruction dispatch. No redundant scalar/native wrapper reruns.",
   "unverified": true,
   "last_tested_source": "3011431370f1757212df92800c1b56e87ba51d65",
   "evidence_refs": [
@@ -19,6 +19,7 @@
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json",
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
     "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
     "docs/devlog/M3/R5-M3-FEC2-CODEC-NATIVE-017.md",
@@ -26,5 +27,5 @@
     "docs/evidence/M3/017-intake-recovered-H30.json",
     "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json"
   ],
-  "partial_summary": "H33 appends evidence for registry/compare GitHub HTTP403 governance failures (runs39082909578/39083303000), separate from H30 central non-PASS audit FAIL. CODE301 122 worker scalar PASS / R0 13 PASS verified; record/LINK PASS; V2 real ISA-L and paired sameVM CPU, ARM/Win native, product FEC-on NOT_RUN. M0 shared native interface blocked; no false PASS."
+  "partial_summary": "H34 handoff recovered H33 role scope PASS with downloaded artifact ZIP checksum + 8/8 manifest hashes, no product qualification; CODE301 122/0/1 worker scalar and R0 wire13 remains source locked. Prior H30 audit39046275022 FAIL and transient API403 failures preserved. M0 safe wrapper x64/ARM64/Windows native PASS but M3 FEC2 native and ABBA NOT_RUN; product FEC-on off. No codec changes since CODE301."
 }
