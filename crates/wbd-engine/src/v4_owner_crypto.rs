@@ -422,6 +422,24 @@ impl ProtectedScopedOwner {
         });
         Ok(())
     }
+    /// Opt-in M0-only new-FEC-block commit. Never accept a same/older
+    /// applied revision, stopped owner or caller lacking the exact epoch.
+    /// Actual new M1 parity work is prepared before calling this commit.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn apply_fec2_probe_new_block_policy(
+        &mut self,epoch:[u8;16],profile:u8,revision:u64
+    )->Result<(),ProtectedCryptoError>{
+        if !self.is_fec2_probe_bound_to(epoch)||profile>6||revision==0 {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let current=self.fec2_probe_scope.ok_or(ProtectedCryptoError::Inactive)?;
+        if revision<=current.revision{return Err(ProtectedCryptoError::Inactive)}
+        self.fec2_probe_scope=Some(Fec2ProbeScope{
+            profile,revision,..current
+        });
+        Ok(())
+    }
+
     #[cfg(feature="m0_fec2_owner_probe")]
     pub(crate) fn is_fec2_probe_bound_to(&self,epoch:[u8;16])->bool{
         self.state==OwnerPhase::Active&&self.crypto.active
