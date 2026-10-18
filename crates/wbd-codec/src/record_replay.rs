@@ -206,4 +206,23 @@ impl ReplayProtectedLaneRx {
         self.replay.observe_authenticated(record.pn)?;
         Ok(record)
     }
+
+    /// Pre-product M0 opt-in entry only: use the EXACT same lane replay
+    /// window as ordinary LINK/HEALTH. An AEAD-valid FEC2 source/repair
+    /// cannot bypass PN uniqueness just because its authenticated kind is
+    /// different. No test-only extra replay object or Go KDF is created.
+    #[cfg(any(test,feature = "m0-fec2-record-probe"))]
+    pub fn open_unique_with_fec2_after_admission_in_place<'a>(
+        &mut self,wire:&'a mut [u8]
+    )->Result<OpenedRecord<'a>,UniqueOpenError>{
+        let record=match self.crypto.open_with_fec2_after_admission_in_place(wire){
+            Ok(record)=>record,
+            Err(err)=>{
+                self.replay.stats.invalid_records=self.replay.stats.invalid_records.saturating_add(1);
+                return Err(UniqueOpenError::InvalidRecord(err));
+            }
+        };
+        self.replay.observe_authenticated(record.pn)?;
+        Ok(record)
+    }
 }
