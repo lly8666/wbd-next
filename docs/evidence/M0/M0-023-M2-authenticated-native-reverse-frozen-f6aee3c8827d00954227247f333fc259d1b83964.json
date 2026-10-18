@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "f6aee3c8827d00954227247f333fc259d1b83964",
+  "progress": "partial",
+  "unverified": true,
+  "result": "PASS_SCOPED_NATIVE_ORIGINAL_FROZEN_M3_REVERSE_KIND1_AEAD_PN_M2_AUTH_RECEIPT_3SUITES",
+  "tested": [
+    "Synthetic native protected fixture grants ONLY test-only owner probe. Original M1 Arena FrozenRecord handle is cloned from exact original M0 ProtectedScopedOwner/FrozenRecord TX after same AEAD/PN/Seq and held until reverse receipt; no ciphertext duplication, loan remains outstanding and returns after M2 release.",
+    "Three cipher suites: M3 original reverse direction LaneTxCrypto seals kind1; independent original ReplayProtectedLaneRx AEAD validates and unique PN filters; only authenticated parsed seq/largest/page passes the original M2 admit_opened_receipt with independently pinned session epoch/reverse lane/direction, releasing exactly two original frozen data records.",
+    "Negative batch: AEAD tamper fails before any shadow mutation, wrong epoch and wrong reverse lane reject, duplicate authenticated control PN replay fails, retired tunnel broker rejects late receipt; original loan bytes and M2 shadow count return to zero.",
+    "Original M1 source-first and M3 RS16 kernel TLS->raw/TUN/99B UDP historical scoped test remains PASS; the new reverse sender is a NATIVE CIPHER TEST FIXTURE, not a physical reverse peer or product kind1 wire schema."
+  ],
+  "tests": {
+    "rust_native": "3 passed; 0 failed; 0 ignored",
+    "go_privileged": "existing original Go TLS+M4 kernel suites 1/2/3 PASS",
+    "peer_reverse_raw": "NOT_RUN",
+    "sender_repair_budget_driver": "NOT_RUN",
+    "go_cli_gui_applied_revision": "NOT_RUN",
+    "product_fec2": "OFF"
+  },
+  "actions": {
+    "scoped": {
+      "run_id": 39115326155,
+      "attempt": 1,
+      "job_id": 117639849351,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39115326155",
+      "artifact_id": 12132605163,
+      "artifact_name": "m0-real-go-fec2-owner-grant-39115326155-1",
+      "github_sha256": "ec420e161de3c97f0aba6ba220fd331d1155987680a88ab62cb582dc4a74b307",
+      "independently_downloaded_rehash_sha256": "ec420e161de3c97f0aba6ba220fd331d1155987680a88ab62cb582dc4a74b307"
+    },
+    "selected_native_functional": {
+      "run_id": 39115326131,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "selected jobs only, no full 240s codec"
+    },
+    "original_go_raw_tun_netem": {
+      "run_id": 39115326099,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 12131804404,
+      "gith_sha256": "f8bb390e66698a35ed7d9910b894143bf470d6f156c2f7581f787eb72f5b4170",
+      "independent_zip_sha256": "f8bb390e66698a35ed7d9910b894143bf470d6f156c2f7581f787eb72f5b4170",
+      "netem_150ms": "EXPLORATORY_PASS 3/3 zero configured loss, qdisc stats nonzero, measured_rtt NOT_RUN, production NOT_RUN"
+    },
+    "original_owner_pn": {
+      "run_id": 39115326133,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "native_abi": {
+      "run_id": 39115326107,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "run_id": 39115326076,
+      "attempt": 1,
+      "conclusion": "success",
+      "qualification": "build/consume, not full original ISA-L native codec on all targets"
+    },
+    "governance": {
+      "run_id": 39115326070,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "prior_initial_fail": {
+      "source_sha": "2c1405ec95329fa0994db61fea06d41b586c1d01",
+      "run_id": 39115180286,
+      "attempt": 1,
+      "conclusion": "failure",
+      "artifact_id": 12131858947,
+      "artifact_github_sha256": "139ecb3b7467ccda8aa22d79a0c5536eb4bab120229ea80f031d86785b5d828d",
+      "cause": "M2 Local(InvalidConfig) because native test specified 10KiB max repairs, below existing 32768 sparse floor. Existing original M1/M3 two tests 2/2 PASS, new M2 failed; fixed f6 to 65536 with no component change."
+    },
+    "prior_workflow_selector": {
+      "source_sha": "d76e98a39a499dd026ce074fd5da1d76c4bb5a59",
+      "run_id": 39115211313,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "same pre-f6 Local(InvalidConfig); workflow corrected to exact 3/3 parser prior to config fix"
+    }
+  },
+  "regression_retained": [
+    "150ms Normal/off suite3 raw peer EINTR at SOURCE395a711 Action39114076155 FAIL, while f6 same old Go raw reader had EXPLORATORY_PASS 3/3; intermittent, historical red not erased; new bounded EINTR reader is separate later SOURCE66a53ebe and must have own result",
+    "original legal 65KiB UDP across >32 turns / MTU±1/in-flight Stop/loan/driver prefix uncertainty",
+    "real M2 received reverse authenticated kind1 and same PN wire→sender shadow/repair quota/driver prefix NOT_RUN",
+    "formal real Go fixed/auto applied CLI/GUI + continuous scheduling + physical two peers + old codec240s/D10/p99 + native ARM/Windows NOT_RUN/OPEN"
+  ],
+  "next_action": "M0 add actual private-Go granted reverse kind1 peer TX over real carrier and original owner M3 unique AEAD RX after verified epoch/generation, then connect M2 admit_opened_receipt/actual M1 frozen shadow/repair quota, driver prefix/uncertain. Native fixture result alone not product. Retain Normal/off 150ms red until source-frozen robust receiver recheck. FEC2 OFF."
+}
