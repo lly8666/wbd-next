@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "branch": "work/m1-r1-runtime",
+  "task_id": "R5-M1-FEC2-OWNER-SCHEDULING-014",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+  "result": "PASS_SCOPED_F2_SCHED_MEM_ONLY",
+  "artifact_verified": true,
+  "qualification": "M1 FEC2 owner/component; Go/live/product NOT_RUN",
+  "native": {
+    "run_id": 39082738345,
+    "attempt": 1,
+    "workflow": "worker-native",
+    "build_job": 117542902310,
+    "consume_job": 117542963040,
+    "conclusion": "success",
+    "compiled_once": true,
+    "passed": 130,
+    "failed": 0,
+    "filtered_r0": 3,
+    "prior_tests": 117,
+    "new_fec2_tests": 13,
+    "artifact_id": 12119139114,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39082738345",
+    "artifact_zip_sha256": "4ea2f8320f5881ac24144b10e9961c38f7efc2fc694f7e455d594a5bfd410048",
+    "result_json_sha256": "1d4653cb5be9fbe07a1d154bcdf577ad1ffc9955637832bea101347ed1fc238e",
+    "test_log_sha256": "faf5dfb66562dbebaa5f033305463ce5526a26368fbb634bef849bacc231c9a2",
+    "binary_sha256": "cf6c8053816d2ec93e95083bd8a73c0fecffdc4912b3d8c450d8f007b3694afe",
+    "independent_check": "Downloaded ZIP; verified ZIP/result.json/test.log sha256, exact SOURCE/run/attempt, 130 unique tests including 13 r1_fec2, 117 older."
+  },
+  "implemented": [
+    "three class [<=256,<=512,MTU] one open per class",
+    "up to16 sources and full immediate close",
+    "250ms EWMA alpha 1/4 of accepted logical source only",
+    "T clamp(1.5*15/lambda,Tmin,C), Normal <=24ms Game <=12ms and sparse Tmin",
+    "min trusted lane RTT snapshot and 2s refresh guard",
+    "source first ready callback no FEC wait; OFF no timer",
+    "2MiB default pending budget, up to8192 jobs; independent parity FIFO 10ms/5ms expiry",
+    "parity first-send fairness 16:20 on existing TxOwner, independent outer repair",
+    "per class k_hist 1..16, partial/full, r_planned, confirmed r_sent, pressure, unknown capacity",
+    "inflight external ParityJob and Stop/loan lifetime; stack-only multi-source borrow",
+    "revision fail closed, source-rate sample before deadline",
+    "reuse existing Game013 GameTx for shared logical job and slow lane bypass"
+  ],
+  "bounds": {
+    "pending_bytes_default": 2097152,
+    "max_sources": 16,
+    "open_classes": 3,
+    "max_pending_jobs": 8192,
+    "pending_ttl_normal_ms": 10,
+    "pending_ttl_game_ms": 5,
+    "rx_heavy16_mib_and_global128_mib": "M3/M0 INTEGRATION NOT_RUN"
+  },
+  "proof": {
+    "F2_SCHED": "0/1/16/32/33, 7 profiles 16:20, sparse fake clock, Normal/Game deadline, mix 30Mbps fake clock partial",
+    "F2_MEM": "pressure singleton, expiry, stop and external loan, no double source clone",
+    "game013_code": "e2050aec593bd692974510fd9d64ae1ff7bb7c00",
+    "game013_native_run": 39045913408,
+    "game013_status": "PASS retained not re-imported"
+  },
+  "history": [
+    {
+      "source": "65321d0a0b2f9850d33e81f0cb913426f7e174b5",
+      "run": 39082156269,
+      "result": "FAIL 122pass 4 fixture Arena.stop"
+    },
+    {
+      "source": "fd41311d3086f142293ad44a5b3af2db80a4e317",
+      "run": 39082619001,
+      "result": "FAIL 129pass 1 sparse rate-before-T bug"
+    },
+    {
+      "source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+      "run": 39082738345,
+      "result": "PASS 130/130"
+    }
+  ],
+  "same_source_actions": [
+    {
+      "run": 39082738390,
+      "kind": "g2-bootstrap",
+      "status": "success"
+    },
+    {
+      "run": 39082738383,
+      "kind": "r0-audit",
+      "status": "success"
+    },
+    {
+      "run": 39082738344,
+      "kind": "r0-cross-abi",
+      "status": "success"
+    },
+    {
+      "run": 39082738365,
+      "kind": "governance",
+      "status": "failure",
+      "reason": "M1 worker branch inherited scope checker cap64; G2 base->source has 75 ahead; main checker cap512 paginated, M0 tool sync required."
+    },
+    {
+      "run": 39082738373,
+      "kind": "r0-native-abi",
+      "status": "failure",
+      "reason": "Old root parser fails despite Rust rc0 132passed 1ignored"
+    }
+  ],
+  "not_run": {
+    "FEC2_old_new_same_VM_AB_BA": "NOT_RUN",
+    "FEC2_CPU_and_live_Mbps": "NOT_RUN",
+    "Go_TLS_and_product": "NOT_RUN",
+    "M3_FEC2_wire_and_real_encode_decode": "NOT_RUN",
+    "M4_kernel_driver": "NOT_RUN",
+    "RX_heavy_compact_16MiB": "NOT_RUN",
+    "Windows_ARM": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "p99_500Mbps": "NOT_RUN"
+  },
+  "cost": "No FEC2 paired performance scenario in M1-allowed workflow. The inherited release owner sample is NOT FEC2 A/B. No speedup or product claims. M0 follow-up required.",
+  "rollback": "OFF path retained. To rollback owner component remove new fec2_owner module/test and its mod import, restore with_parity_share r<=k. Do NOT revert Game013 or change M3/M0 interfaces.",
+  "blocker": "M0 root checker update or main-scoped equivalent needed; M1 cannot write tools/, root workflow or ABI."
+}
