@@ -45,6 +45,11 @@ type v4EmbeddedNativeBridge struct {
     txBoundary uint32
     protectedEpoch [16]byte
     protectedFeatures uint16
+    // M0-only opt-in settings. Actual production config/state still lives
+    // in the Go parameter owner and remains FEC2-OFF until product wiring.
+    fec2ProbePolicySet bool
+    fec2ProbeProfile uint8
+    fec2ProbeRevision uint64
 }
 func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
