@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R5-M4-FEC2-COLD-POLICY-PLATFORMS-014",
+  "branch": "work/m4-r1-platform",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "NOT_RUN",
+  "progress": "PARTIAL",
+  "source_sha": "7cef7e849e293373d907a3b64007b4ce8946da78",
+  "baseline_head": "a48c53f6230ca6bad1259faa24e4e00deec397e0",
+  "baseline_h_checkpoint": "4581a68fb46e73f513c5177b4bbf6be8f5332298",
+  "source_paths": [
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+    "native/isal-safe/build.rs"
+  ],
+  "implementation": {
+    "GoColdPolicy": "FecV2Step/FecV2Apply only; seven profiles, ceil(actual_k*rho), 2s/8s mature source counters with VALID/UNKNOWN/CENSORED/HOST_CAPACITY; two-window rise, slow one-step descent, scoped client/direction/revisions; Game auto rejected; no timers/idle writes",
+    "backendBuild": "FEATURE-native: Linux x86_64 GNU libisal.a, aarch64 GNU libisal.a, Windows x86_64 MSVC isa-l_static.lib; pinned prefix and cross-source/target provenance; unsupported target/native fails closed; feature-off native unavailable, codec scalar fallback requires M3",
+    "wire_or_published_enabled": false,
+    "GoRealCloneOverlayInjected": false,
+    "ProductionCapabilityEnabled": false,
+    "ConfigGUIApplied": false
+  },
+  "tests": {
+    "GoReplay": {
+      "qualification": "NOT_RUN",
+      "planned_test_command": "go test ./internal/realityfront -run '^TestF2Control' -count=1",
+      "scope": "in original pinned Go clone with both overlay files, tested exact source and toolchain",
+      "authored_cases": [
+        "fixed/off and seven profiles k1..16",
+        "Game auto reject",
+        "normal/aggressive startup and convergence",
+        "per-client/direction isolation",
+        "actual partial-k weighting",
+        "2 valid windows rise and 10s+4096 down",
+        "bounded burst and fresh sparse losses",
+        "missing feedback/censored/whole-block unknown/host capacity/stale",
+        "monotonic revision and applied ack"
+      ]
+    },
+    "LinuxX64ISA": {
+      "qualification": "NOT_RUN",
+      "scope": "new FEC2 build.rs native static link, F2-PLATFORM and codec cases",
+      "prior_unrelated_task013_native": {
+        "source_sha": "b7bcde7dde64633532cae99460eb00855a2e119a",
+        "run_id": 39006105820,
+        "passed": 94,
+        "scope_only": "Old platform component PASS, never FEC2 SOURCE"
+      }
+    },
+    "LinuxARM64Cross": {
+      "qualification": "NOT_RUN",
+      "target": "aarch64-unknown-linux-gnu"
+    },
+    "LinuxARM64Native": {
+      "qualification": "NOT_RUN",
+      "target": "aarch64-unknown-linux-gnu",
+      "actual_neon_dispatch_not_proven": true
+    },
+    "WindowsX64Cross": {
+      "qualification": "NOT_RUN",
+      "target": "x86_64-pc-windows-msvc"
+    },
+    "WindowsX64Native": {
+      "qualification": "NOT_RUN",
+      "target": "x86_64-pc-windows-msvc",
+      "codec_and_load_not_proven": true
+    },
+    "ScalarFallback": {
+      "qualification": "NOT_RUN",
+      "native_feature_disabled_code_path_only": true
+    },
+    "GoProtectedControlAndEffectiveUI": {
+      "qualification": "NOT_RUN",
+      "owner": "M0"
+    },
+    "PrivilegedDriverAndPhysical": {
+      "qualification": "NOT_RUN"
+    }
+  },
+  "observed_checks": {
+    "branch_checkpoint_audit": "checkpoint 4581a68 to baseline a48c53f ahead_by=1, only .governance/workstreams/M4/cursor.json, no unacknowledged product commit",
+    "commit_status_source": "42bbd0f3050be35474a3a5c91ee96c5ccb0d2504",
+    "combined_status_count": 0,
+    "pr_filtered_workflow_run_count": 0,
+    "warning": "The available GitHub endpoint only sees PR-triggered runs and no workflow dispatch action is exposed; this is not a proof of absence of other runs. No new Action/source qualification is claimed."
+  },
+  "m0_shared_request": ".governance/workstreams/M4/requests/R5-M4-FEC2-014-M0-REAL-GO-PLATFORM-ACTIONS.md",
+  "prior_failures_kept": [
+    "D10 run39032995995 FAIL",
+    "native codec timeout run39047975666 and run39048697568 FAIL",
+    "Normal P10 AB/BA divergent; sparse p99 regression OPEN",
+    "old M4 worker v1 governance checker failures; central v2 scope only"
+  ],
+  "risk_and_nonqualification": [
+    "No real original Go clone Actions injection, compiled replay or exact run artifact",
+    "No Linux ARM64 or Windows native/cross build, target archive/linker/dispatch or actual loader result",
+    "No original parameters catalog/CLI/GUI/effective ack, protected Go-Rust integration or capability",
+    "No real driver, privileged raw/TUN, physical, DNS/IPv6/MTU/Stop composition or measured CPU/p99"
+  ],
+  "next_action": "M0 supplies one existing real-Go-clone F2-CONTROL Actions entry and platform-target CI/loader provenance; M4 then verifies/fixes only its three precise paths and finalizes source-qualified S→H.",
+  "rollback": "Remove newly added two Go overlay files and revert native/isal-safe/build.rs to pre-task x86-only strict assertion without changing any M0-owned shared entry; keep earlier PASS/FAIL evidence."
+}
