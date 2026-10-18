@@ -133,10 +133,41 @@ impl Fec2ActualPeerRxProbe{
 // Receipt admission relies on original M3 reverse AEAD/unique-PN opener.
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 struct Fec2ProbeReceiptSender{
-    broker:wbd_recovery::GlobalRepairAllocator,
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
     route:wbd_recovery::ReceiptRouteScope,
+    start_ns:u64,
+    repair_submitted:bool,
+}
+// Exactly ONE opt-in M0 process owner budget shared by all original
+// verified Go TLS sessions (not a per-connection "global" copy).
+// Underlying M2 allocator is original M2 and owns all directions/debt.
+// A single mutex is ONLY the M0 integration adapter; never hold it while
+// a blocking raw kernel syscall is in progress.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+struct Fec2ProbeProcessQuota{
+    broker:wbd_recovery::GlobalRepairAllocator,
+    now_ns:u64,
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+impl Fec2ProbeProcessQuota{
+    fn at_least(&mut self,requested:u64)->MonoNs{
+        self.now_ns=self.now_ns.max(requested);
+        MonoNs(self.now_ns)
+    }
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
+    static QUOTA:OnceLock<Mutex<Fec2ProbeProcessQuota>>=OnceLock::new();
+    QUOTA.get_or_init(||{
+        use wbd_recovery::{GlobalRepairAllocator,GlobalRepairConfig};
+        let broker=GlobalRepairAllocator::new(GlobalRepairConfig{
+            max_bytes_per_epoch:65_536,max_directions:32,
+            max_grant_bytes:32_768,max_grant_lifetime_ns:100_000_000,
+            max_pending:32,max_pending_bytes:65_536,
+        },MonoNs(0)).expect("private bounded owner config");
+        Mutex::new(Fec2ProbeProcessQuota{broker,now_ns:0})
+    })
 }
 struct Entry{
     generation:u32,
@@ -147,6 +178,10 @@ struct Entry{
     fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fec2_receipt_sender:Option<Fec2ProbeReceiptSender>,
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_probe_budget_direction:Option<wbd_recovery::BudgetDirection>,
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_probe_budget_start_ns:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -241,6 +276,10 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         fec2_actual_peer_rx,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_receipt_sender:None,
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_probe_budget_direction:None,
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_probe_budget_start_ns:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -493,7 +532,7 @@ fn fec2_probe_real_kernel_raw_once(
     let (lane,epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
     use wbd_recovery::{
         BudgetDirection,WireDirection,ReceiptState,ReceiptConfig,
-        GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,ReceiptRouteScope,
+        ReceiptRouteScope,
     };
     let direction=BudgetDirection{
         tunnel:lane.tunnel,direction:WireDirection::ServerToClient
@@ -506,28 +545,23 @@ fn fec2_probe_real_kernel_raw_once(
     let mut shadow=ReceiptState::new(lane,ReceiptConfig{
         max_shadow_entries:4,pto_ns:30_000_000,reorder_window_ns:2_000_000
     }).map_err(|_|INVALID)?;
-    let mut broker=GlobalRepairAllocator::new(GlobalRepairConfig{
-        max_bytes_per_epoch:65_536,max_directions:2,
-        max_grant_bytes:1400,max_grant_lifetime_ns:100_000_000,
-        max_pending:4,max_pending_bytes:5600
-    },MonoNs(0)).map_err(|_|INVALID)?;
-    broker.register(direction,RepairBudgetConfig{
-        outer_mtu:1400,max_repair_bytes_per_epoch:65_536,
-        max_pending_reservations:4,max_pending_bytes:5600,
-        io_timeout_ns:10_000_000
-    },MonoNs(0)).map_err(|_|INVALID)?;
-    broker.bind_receipt_route(direction,route,MonoNs(0)).map_err(|_|INVALID)?;
+    if e.fec2_probe_budget_direction!=Some(direction){
+        return Err(BAD_STAGE)
+    }
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let start=process.at_least(e.fec2_probe_budget_start_ns);
+    process.broker.bind_receipt_route(direction,route,start)
+        .map_err(|_|INVALID)?;
     for (frozen,outer_bytes) in confirmed {
-        // Actual definite raw driver copy occurred first; no shadow for
-        // unsent source1 or merely queued/systematic peer acceptance.
-        shadow.on_sent(frozen,MonoNs(0),MonoNs(150_000_000))
+        // Exact M4 kernel copied handle, not a queued or merely tried send.
+        shadow.on_sent(frozen,start,MonoNs(start.0.saturating_add(150_000_000)))
             .map_err(|_|INVALID)?;
-        broker.on_fresh_accepted(direction,outer_bytes as u64,MonoNs(0))
+        process.broker.on_fresh_accepted(direction,outer_bytes as u64,start)
             .map_err(|_|INVALID)?;
     }
     if shadow.outstanding()!=2{return Err(INVALID)}
     e.fec2_receipt_sender=Some(Fec2ProbeReceiptSender{
-        broker,shadow,direction,route
+        shadow,direction,route,start_ns:start.0,repair_submitted:false
     });
     e.arena.drain_returns();
     Ok(out)
@@ -656,11 +690,13 @@ fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
     // ACTUAL M4 repair / M2 grant at 31ms at 32ms. Never call the global
     // process quota owner with a synthetic backwards time; production must
     // use one real monotonic owner clock rather than this one-shot probe.
-    let now=if peer.broker.snapshot().charged_repairs!=0{
-        MonoNs(32_000_000)
-    }else{MonoNs(12_000_000)};
+    let target=peer.start_ns.saturating_add(
+        if peer.repair_submitted{32_000_000}else{12_000_000}
+    );
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let now=process.at_least(target);
     let released=admit_opened_receipt(
-        &mut peer.broker,peer.direction,&mut peer.shadow,peer.route,
+        &mut process.broker,peer.direction,&mut peer.shadow,peer.route,
         verified,largest,report_seq,
         vec![ReceiptPage{base_pn:base,bitmap}],now
     ).map_err(|_|INVALID)?;
@@ -736,7 +772,8 @@ fn fec2_probe_real_frozen_repair_one(
     let sender=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
     // A positive peer receipt for SOURCE PN0 already retired that shadow.
     // The negative PN1 evidence can only form a candidate after its PTO.
-    let now=MonoNs(31_000_000);
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let now=process.at_least(sender.start_ns.saturating_add(31_000_000));
     let mut poll=sender.shadow.on_timer(now);
     if !poll.releases.is_empty()||poll.candidates.len()!=1 {
         return Err(INVALID)
@@ -749,20 +786,25 @@ fn fec2_probe_real_frozen_repair_one(
     let outer_bytes=candidate.frozen().bytes().len()
         .checked_add(40).ok_or(INVALID)? as u64;
     // Whole global grant is process-scoped, not a per-lane sparse mint.
-    let lease=sender.broker.grant(
+    let before=process.broker.snapshot().charged_repairs;
+    let lease=process.broker.grant(
         sender.direction,outer_bytes,20_000_000,now
     ).map_err(|_|INVALID)?;
     let submission=reserve_frozen_submission(
-        &mut sender.broker,lease,sender.route,&sender.shadow,
+        &mut process.broker,lease,sender.route,&sender.shadow,
         &candidate,outer_bytes,now
     ).map_err(|_|INVALID)?;
     if submission.driver.metadata!=original
         ||submission.driver.wire.as_ptr()!=candidate.frozen().bytes().as_ptr()
         ||!sender.shadow.preflight(&candidate,now){return Err(INVALID)}
     let ordered=[(submission.reservation_id,sender.route)];
+    drop(process);
+    // No process-wide quota lock over a blocking M4 kernel write.
     let driver_result=raw.send_one(
         generation,candidate.frozen(),tuple,presentation
     );
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let now=process.at_least(now.0);
     // No fabricated "proven-not-attempted" from a syscall failure.
     let observation=if driver_result.is_ok(){
         DriverPrefixObservation::checked(
@@ -774,7 +816,7 @@ fn fec2_probe_real_frozen_repair_one(
         )
     }.map_err(|_|INVALID)?;
     let settlement=complete_driver_prefix(
-        &mut sender.broker,&ordered,observation,now
+        &mut process.broker,&ordered,observation,now
     ).map_err(|_|INVALID)?;
     if settlement.len()!=1{return Err(INVALID)}
     let status=settlement.shadow_result(0).ok_or(INVALID)?;
@@ -784,9 +826,10 @@ fn fec2_probe_real_frozen_repair_one(
     if status!=RepairSendResult::Accepted || settlement.counts.accepted!=1
         ||settlement.counts.uncertain!=0 || settlement.counts.held_unproven!=0
         ||settlement.counts.definitely_not_sent!=0
-        ||sender.broker.snapshot().pending!=0
-        ||sender.broker.snapshot().charged_repairs!=outer_bytes
+        ||process.broker.snapshot().pending!=0
+        ||process.broker.snapshot().charged_repairs!=before+outer_bytes
         ||sender.shadow.outstanding()!=1 {return Err(INVALID)}
+    sender.repair_submitted=true;
     let copied=driver_result.map_err(|_|INVALID)?;
     if copied as u64!=outer_bytes{return Err(INVALID)}
     Ok((candidate.pn().0,original.seq.0 as u32,
@@ -805,6 +848,48 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     let Ok((p,s,w,c))=fec2_probe_real_frozen_repair_one(handle)
     else{return BAD_STAGE};
     unsafe{pn.write(p);seq.write(s);wire.write(w);charged.write(c)}
+    OK
+}
+
+// Test-only original-Go-verified live session process capacity probe.
+// No forged cold, global grant cannot be minted per connection.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_process_quota_snapshot(handle:u64)->Result<(u32,u64,u64),i32>{
+    let cell=session(handle)?;
+    let e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE||!e.owner.is_fec2_probe_bound()
+        ||e.fec2_probe_budget_direction.is_none(){return Err(BAD_STAGE)}
+    let process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let snapshot=process.broker.snapshot();
+    Ok((snapshot.registered_directions as u32,
+        snapshot.held_unused_grants,snapshot.hard_cap))
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
+    handle:u64,count:*mut u32,held:*mut u64,cap:*mut u64
+)->i32{
+    if count.is_null()||held.is_null()||cap.is_null(){return INVALID}
+    match fec2_probe_process_quota_snapshot(handle){
+        Ok((c,h,b))=>{unsafe{count.write(c);held.write(h);cap.write(b)};OK},
+        Err(v)=>v,
+    }
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
+    handle:u64,bytes:u64
+)->i32{
+    if bytes==0{return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||!e.owner.is_fec2_probe_bound(){return BAD_STAGE}
+    let Some(direction)=e.fec2_probe_budget_direction else{return BAD_STAGE};
+    let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
+    let now=process.at_least(process.now_ns);
+    if process.broker.grant(direction,bytes,50_000_000,now).is_err(){
+        return INVALID
+    }
     OK
 }
 
@@ -862,6 +947,24 @@ fn bind_fec2_from_private_go(
         ||features!=e.protected_fec2_features{return INVALID}
     if e.owner.bind_fec2_probe_from_private_go(
         features,epoch,profile,revision).is_err(){return INVALID}
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    {
+        use wbd_recovery::{BudgetDirection,WireDirection,RepairBudgetConfig};
+        if e.fec2_probe_budget_direction.is_some(){return INVALID}
+        let Some((lane,_))=e.owner.receipt_probe_identity()else{return INVALID};
+        let direction=BudgetDirection{
+            tunnel:lane.tunnel,direction:WireDirection::ServerToClient
+        };
+        let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
+        let now=process.at_least(process.now_ns);
+        if process.broker.register(direction,RepairBudgetConfig{
+            outer_mtu:1400,max_repair_bytes_per_epoch:65_536,
+            max_pending_reservations:4,max_pending_bytes:5600,
+            io_timeout_ns:10_000_000
+        },now).is_err(){return INVALID}
+        e.fec2_probe_budget_start_ns=now.0;
+        e.fec2_probe_budget_direction=Some(direction);
+    }
     OK
 }
 #[cfg(feature="m0_fec2_owner_probe")]
@@ -966,6 +1069,15 @@ fn stop(handle:u64)->i32{
     }
     if !drained{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
+    }
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    if let Some(direction)=e.fec2_probe_budget_direction.take(){
+        let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
+        let now=process.at_least(process.now_ns);
+        if process.broker.retire_tunnel(direction.tunnel,now).is_err(){
+            return BAD_STAGE
+        }
+        e.fec2_receipt_sender.take();
     }
     e.phase=PH_STOPPED;OK
 }
