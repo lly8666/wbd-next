@@ -430,6 +430,11 @@ impl ProtectedScopedOwner {
             &&s.go_lane==self.go_lane&&s.profile==5&&s.revision==1)
     }
 
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn is_fec2_probe_bound(&self)->bool{
+        self.is_fec2_probe_bound_to(self.epoch)
+    }
+
     /// The same M1 owner stages before the protected reply/Detach; no
     /// application payload may be exposed while state is Prepared.
     pub(crate) fn offer_early(&mut self,buffer:UniqueBuffer,wire:Range<usize>,
