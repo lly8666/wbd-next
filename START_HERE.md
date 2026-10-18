@@ -1,42 +1,22 @@
-# 新聊天接手
+# WBD Next｜新 agent 唯一启动入口
 
-固定入口：`lly8666/wbd-next`，控制分支 `main`。不要把旧 wobuzhidao 的当前任务或 Longcycle 的研究任务搬来。
+仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
 
-## 最小读取集
+## 最小热读取（不超过 8 文件）
 
-1. `AGENTS.md` 与 `PROJECT_CHARTER.md`。
-2. 远端 main 的 `.governance/project.json`、`.governance/registry.json`。
-3. 当前角色的固定提示词与登记分支上的 `.governance/workstreams/<role>/cursor.json`。
-4. cursor 所指的当前日志、请求或决策；只有需要时读 `docs/GOVERNANCE.md`。
+1. `AGENTS.md`、`PROJECT_CHARTER.md`。
+2. main 的 `.governance/project.json`、`.governance/registry.json`。
+3. **`docs/handoff/README.md`**：五工位概览、产品硬门与证据导航（这是带日期的索引，非实时权威）。
+4. main 的 `docs/prompts/<role>.md`：永不过期的角色责任与停止条件；**在 registry 指定的角色分支**读取 `.governance/workstreams/<role>/cursor.json`。
 
-控制分支决定权限，工作分支决定进度。角色未激活或没有任务时，不能凭提示词自行启动产品实现。
+## 开工/恢复（同一 agent 与全新 agent 完全一致）
 
-## 同一 agent 回来与全新 agent 完全同样处理
+先确认 role/active/branch/task_id、reservation_revision、assignment_epoch；核对 cursor.checkpoint_sha 是远端 HEAD 的祖先，**逐个提交**检查 changed paths。检查 cursor 中 open_requests 与已提交 Actions 的精确 run/attempt/artifact；失败、403、超时或未跑均不能隐去。判 `CLEAN`（事实交接完整，非产品 PASS）、`RECOVERY_REQUIRED`（先补事实）或 `BLOCKED`（身份/证据/权限冲突）。
 
-- 查询精确远端 ref，不把上次看到的 SHA 当现在的 HEAD。
-- 验证角色、branch、reservation_revision、assignment_epoch。
-- 从 cursor.checkpoint_sha 到远端 HEAD **逐提交**核对 changed paths，不能只看净 diff；修改后撤回仍然是发生过的工作。
-- 核对 cursor 的 test request：已有 run 先读结果，不重复 dispatch。
-- 输出短结论：当前任务、交接判定、测试范围、下一动作；无需复述整部历史。
+CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action 推进一项完整能力批次（可同时跑许多便宜功能断言）；M0 的共享集成不需要等所有工位齐活。必要时按角色只读 `docs/architecture/modules/README.md`、`docs/architecture/TEST_PLAN.md` 和冻结 FEC2 规范，勿一次加载历史文档。
 
-判定：
+写入：先 S（代码/收据/文档），精确 SOURCE Actions 验证，后 H（**只修改自己的 cursor**）；再次刷新远端确认。工作分支不得修改 main 的登记权限，不 force push，不擅自开展下一包。每个性能 Action 单一场景；AB/BA 必须同 job/VM。无新增信息的重复失败先缩小复现，不刷 seed。
 
-- `CLEAN`：事实已被 cursor 覆盖，允许继续；不表示产品通过。
-- `RECOVERY_REQUIRED`：有未确认的远端工作/测试结果；先补事实日志与 H。
-- `BLOCKED`：身份、分支、祖先关系、证据或权限冲突；先修该边界，独立任务仍可推进。
+**产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。
 
-只有 GitHub Connector 的聊天也可按同样字段手动核查 commits/compare/run/artifact。不能运行脚本不等于可以跳过核对。Actions 可执行 `python tools/governance.py audit --role M0`；该命令只读远端并报告，不自动改状态或触发测试。
-
-## 初次接手本仓库
-
-方案入口为`docs/architecture/README.md`；可直接施工的接口/状态/反例在`docs/architecture/modules/README.md`。先读00公共契约，再按角色只读当前模块和直接依赖。角色是否激活以远端 registry 为准；不要重复启动已经完成的初始化，也不要自行占用模块。不要一次加载全部施工说明和历史。读取当前 project 和角色 cursor 判断已实现/已测范围；模型、治理、组件 PASS 均不等于产品 PASS。
-
-治理 v2：共享范围审计使用主线 `Central worker scope audit` 的精确 SOURCE 收据，不复制检查器到 worker。详见 `docs/GOVERNANCE.md`；历史 Governance 红灯须区分旧审计边界失败与真正测试失败，不能一概覆盖。
-
-当前分配以 main registry 的 `assigned_task` 为准；工作分支 cursor 可能仍记录上一轮。两者不同时读取 registry 指向的本轮决策，保留旧结果后开始已授权的新任务，勿因旧 cursor 的“等待分配”停住。
-
-写入时保持同样分工：project 写阶段/入口，registry 写分配，cursor 写当前事实和一个下一动作，详细 run/hash 写 evidence。接手不抄整段历史到每个字段；原失败和未跑项用引用保留。普通 push 的 Governance 是身份/结构检查，完整工具自测看 maintenance 或手动 selftest 的精确范围。
-
-接手后按完整能力推进，不把 cursor 的“一个下一动作”解释成只能做一个断言。测试粒度和开发性能基线入口以 `docs/architecture/TEST_PLAN.md` 第 0 节为准；历史 cursor 中逐包扩展或逐延迟扩展的计划须按此收口，已有证据和未通过硬门保留。
-
-M0继续当前已授权热路径调优；2026-10-17用户允许其他模块并行，覆盖024结束后才派下一波的旧限制。按 `docs/GOVERNANCE.md` 第3节一次分配完整工作包，包内自主开发/测试/修复，M0阶段集中集成；普通S/H不构成等待集成的门。接手核registry与本包实际进度，历史资格不因此变更。
+说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。

@@ -15,3 +15,7 @@ R0 来源/ABI/兼容向量建立后激活 M1 runtime、M2 recovery、M3 codec、
 当时 OPEN：真实 Go→Rust authenticated owner / B01–B04；M3 CPU 计时窗口修复；产品、500Mbps、packet p99、物理机资格。随后 M3 精确 SOURCE 的新时钟验证已由 M0 留证于 `docs/evidence/M0/R1-M0-M3-015-0ecb-exact-release-049.json`；旧 M3 Release 24 行中 22 行计时不一致仍为 INVALID，不能覆盖原失败或外推产品 CPU/p99。其余资格按最新 cursor/evidence 判断，历史 OPEN 不能单独充当当前待办。
 
 治理 v2：用户授权减少机械性返工，改主线增量审计、共享功能构建与必跑用例清单；不改产品协议或验收硬门。决策及迁移见 `docs/devlog/M0/GOV-002-incremental-ci.md`。当前任务取角色分支 cursor，不重复初始 R0/G2 初始化。
+
+## 2026-10-18｜全角色交接瘦身（旧档完整保留）
+
+原 `START_HERE.md` 与 M0–M4 五份固定提示词在 `docs/history/handoff/2026-10-18-pre-slim/` 保留当时全文，用于定位旧 H/任务/Actions 语境；**不再作为当前接手指令**。现行入口 `START_HERE.md` → `docs/handoff/README.md` → 最新 main registry 与各角色分支 cursor → 永久 `docs/prompts/<role>.md`。历史 devlog、evidence、决策和 Action 原件原路径保留；「旧失败」不得因此被覆盖或改判。该简化只改变阅读与交接导航，不改变任何工位权限/任务、产品功能或 CODE 验收。
