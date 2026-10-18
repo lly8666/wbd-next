@@ -5,7 +5,7 @@
 //! Never distribute the feature-enabled shared library as a public installer.
 //! Default production ABI features stay zero; M4 driver-held stop NOT_RUN.
 #![allow(clippy::missing_safety_doc)]
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap,VecDeque};
 use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU64,Ordering}};
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 use std::thread::{self,JoinHandle};
@@ -1719,6 +1719,8 @@ fn background_raw_once(
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     if batch.observed==0{return Err(INVALID)}
     let mut delivered_total=0u32;
+    let mut pending_valid=false;
+    let mut invalid_seen=false;
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
@@ -1738,12 +1740,17 @@ fn background_raw_once(
             *anchor,absolute,len,receipt.authenticated_link
         )else{continue};
         *anchor=next;
+        pending_valid |=receipt.pending>0;
+        invalid_seen |=receipt.invalid>0 || receipt.failed>0;
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
-    if delivered_total==0{return Err(INVALID)}
+    // A unique authenticated LINK shard with no completed datagram is
+    // healthy progress, not a spurious RX error. A malformed/discarded shard
+    // must still register an error even if another pending shard was valid.
+    if invalid_seen || (delivered_total==0 && !pending_valid){return Err(INVALID)}
     Ok(delivered_total)
 }
 // Independently wait for the REAL TUN application RX OUTSIDE registry lock.
@@ -1792,6 +1799,58 @@ fn raw_driver_reopen_on_route_change(
     !has_cache && previous_refresh_count!=0 && lease_mtu!=0
         && observed_mtu>=lease_mtu
 }
+
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+const M0_TUN_IPV4_MAX:usize=65_535;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+const M0_SMALL_ARENA_PAYLOAD:usize=2048-14;
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+const M0_MAX_PENDING_JUMBO:usize=4;
+
+// The sole background TX worker owns this logical packet. No self-referential
+// borrowed plan crosses worker calls: rehydrate M3's immutable planner and
+// skip previously ISSUED indices without ever resealing or resending them.
+// Every failed/uncertain turn discards the remaining source and reserves
+// the old ID forever within this generation. Bound retained jumbo memory
+// to four complete IPv4 datagrams plus one currently active plan.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+struct PendingOriginalJumbo{
+    source:Vec<u8>,packet_id:u32,frame_mtu:usize,
+    issued:usize,total:usize,generation:u32,route_event_revision:u64,
+}
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+impl PendingOriginalJumbo{
+    fn new(source:Vec<u8>,packet_id:u32,frame_mtu:usize,
+        generation:u32,route_event_revision:u64)->Result<Self,i32>{
+        if source.len()<=M0_SMALL_ARENA_PAYLOAD
+            || source.len()>M0_TUN_IPV4_MAX{return Err(INVALID)}
+        let plan=LinkPacketPlan::new(&source,frame_mtu,LinkMode::FixedOff,packet_id)
+            .map_err(|_|INVALID)?;
+        let total=plan.total_frames();
+        if total<=1{return Err(INVALID)}
+        Ok(Self{source,packet_id,frame_mtu,issued:0,total,
+            generation,route_event_revision})
+    }
+    fn done(&self)->bool{self.issued==self.total}
+    fn stage_turn(&mut self,arena:&mut Arena,current_frame_mtu:usize,
+        available:usize)->Result<Vec<(crate::memory::UniqueBuffer,usize)>,i32>{
+        let mut plan=LinkPacketPlan::new(
+            &self.source,self.frame_mtu,LinkMode::FixedOff,self.packet_id
+        ).map_err(|_|INVALID)?;
+        for _ in 0..self.issued{
+            // Reconstituting the immutable cursor is not new network output.
+            // Past frames are thrown away, NEVER granted a PN or M4 loan.
+            plan.issue_next(self.frame_mtu).map_err(|_|INVALID)?
+                .ok_or(INVALID)?;
+        }
+        let parts=stage_next_original_link_turn(
+            arena,&mut plan,current_frame_mtu,available
+        )?;
+        self.issued=plan.issued();
+        Ok(parts)
+    }
+}
+
 // The original M1 arena holds ALL slabs for one LINK packet BEFORE the
 // first original owner AEAD/PN/Seq and TX admission. On any bad stride,
 // capacity shortage or invalid packet ID the local Vec drops every slab;
@@ -1850,7 +1909,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
-    events:&wbd_platform::linux_route_events::RouteEvents)->Result<TxTurnCompletion,i32>{
+    events:&wbd_platform::linux_route_events::RouteEvents,
+    jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
+    active_jumbo:&mut Option<PendingOriginalJumbo>)->Result<TxTurnCompletion,i32>{
     // The caller has ALREADY polled the first TUN packet. Never wait for
     // batch fill: one sparse packet is sealed/submitted immediately.
     // The stack-owned vectors are reserved once per worker (not per DATA).
@@ -1865,51 +1926,57 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     };
     let mut ingress_error=false;
     let mut observed=0usize;
+    if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
         if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
-        let mut slab={
-            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
-            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-            match e.arena.allocate(){
-                Ok(s)=>s,Err(_)=>{
-                    // Preserve packets already read instead of dropping their
-                    // ownership and denying a full fresh batch.
-                    ingress_error=true;break
-                }
-            }
-        };
-        let space=slab.writable().len().checked_sub(14).ok_or(INVALID)?;
-        if space<20{return Err(INVALID)}
-        // Reuse M4's existing poll(0)+O_NONBLOCK read. The single reader
-        // only borrows the shared TUN mutex for an immediately ready read:
-        // after filtering IPv6/invalid L3, no wait under the writer's lock.
+        // A full-size, reusable TUN scratch is necessary: Linux TUN read()
+        // truncates a packet irreversibly if called with the 2034B small slab.
+        // Only jumbo copies are retained; ordinary traffic moves into the
+        // original generation-scoped M1 arena immediately after kernel read.
+        if jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
         let read={
-            let mut slots=[&mut slab.writable()[14..]];
+            let mut slots=[&mut jumbo_read[..M0_TUN_IPV4_MAX]];
             tun.read_ready_batch(generation,&mut slots)
         };
         observed+=1;
         match read {
             Ok(batch)=>match batch.entry(0) {
-                Some(TunReadyEntry::UntrustedIpv4{len})=>pending.push((slab,len)),
-                Some(TunReadyEntry::Rejected)=>{drop(slab);},
-                _=>{break}, // EAGAIN, EINTR or readiness race: healthy idle
+                Some(TunReadyEntry::UntrustedIpv4{len})=>{
+                    if len>M0_SMALL_ARENA_PAYLOAD {
+                        jumbo_queue.push_back(jumbo_read[..len].to_vec());
+                    }else{
+                        let slab={
+                            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+                            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+                            e.arena.allocate()
+                        };
+                        match slab{
+                            Ok(mut slot)=>{
+                                slot.writable()[14..14+len]
+                                    .copy_from_slice(&jumbo_read[..len]);
+                                pending.push((slot,len));
+                            }
+                            Err(_)=>{ingress_error=true;break}
+                        }
+                    }
+                }
+                Some(TunReadyEntry::Rejected)=>{},
+                _=>break, // EAGAIN, EINTR or readiness race: healthy idle
             },
             Err(TunError::Stopped)=>return Err(BAD_STAGE),
             Err(_)=>{ingress_error=true;break},
         }
-        // Bound *all observed* frames, including malicious invalid floods.
         if observed>=32 || stop.load(Ordering::Acquire){break}
-        // Work budget sampled every eight packets, never by the kernel CPU
-        // clock on every DATA. The poll is nonblocking and is the sole gate
-        // for another TUN read; no fixed 32-entry latency penalty.
         if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
         if !loop_readiness(tun.readiness_fd(),stop,0){break}
     }
-    if pending.is_empty(){return if ingress_error{Err(INVALID)}else{Ok(TxTurnCompletion::default())}}
+    if pending.is_empty() && jumbo_queue.is_empty() && active_jumbo.is_none(){
+        return if ingress_error{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
+    }
     // Route validation and original M1/M3 AEAD/PN/queue admission occur
     // under the current generation's owner. M4's real sendmmsg follows
     // OUTSIDE Entry lock with an immutable original LoanBatch.
-    let (batch,raw,flow,generation,admitted,seal_failed)={
+    let (batch,raw,flow,generation,admitted,seal_failed,jumbo_staged)={
         let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
         let e:&mut Entry=&mut guard;
         if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
@@ -1970,6 +2037,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         let mut accepted=0usize;
         let mut failed=ingress_error;
+        let mut jumbo_staged=false;
         for (mut slab,n) in pending.drain(..){
             if stop.load(Ordering::Acquire){failed=true;break}
             // The NORMAL small-packet path stays unchanged: no LINK20, no
@@ -2013,9 +2081,63 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 if result.is_ok(){accepted+=1}else{failed=true;break}
             }
         }
+        // A jumbo is eligible for a new <=32-frame turn even without new
+        // TUN readiness. Preserve small packet priority within this turn,
+        // so an unrelated fresh datagram is not held behind 48+ pieces.
+        if active_jumbo.is_none(){
+            if let Some(source)=jumbo_queue.pop_front(){
+                let id=e.next_link_packet_id;
+                let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
+                    .scoped.frame.link_frame_mtu.min(M0_SMALL_ARENA_PAYLOAD);
+                if id==0 || id==u32::MAX{failed=true}
+                else{
+                    // Reserve exactly once, BEFORE first publish. Even a
+                    // later route/Stop/error never reuses this packet ID.
+                    e.next_link_packet_id=id+1;
+                    match PendingOriginalJumbo::new(
+                        source,id,frame_mtu,e.generation,event.revision
+                    ){
+                        Ok(plan)=>*active_jumbo=Some(plan),
+                        Err(_)=>failed=true,
+                    }
+                }
+            }
+        }
+        if accepted<32{
+            if let Some(plan)=active_jumbo.as_mut(){
+                // Route invalidation, generation change or MTU shrink is
+                // terminal for an already-issued logical LINK packet.
+                if plan.generation!=e.generation
+                    || plan.route_event_revision!=event.revision{
+                    failed=true;active_jumbo.take();
+                }else{
+                    let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
+                        .scoped.frame.link_frame_mtu.min(M0_SMALL_ARENA_PAYLOAD);
+                    match plan.stage_turn(
+                        &mut e.arena,frame_mtu,32usize.saturating_sub(accepted)
+                    ){
+                        Ok(staged)=>{
+                            jumbo_staged=!staged.is_empty();
+                            for (fragment_slab,part_len) in staged{
+                                if stop.load(Ordering::Acquire){
+                                    failed=true;break
+                                }
+                                let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+                                if e.owner.seal_fragment_with_worker_snapshot(
+                                    fragment_slab,part_len,scoped,ifindex,destination,
+                                    15,loop_now()
+                                ).is_ok(){accepted+=1}else{failed=true;break}
+                            }
+                            if failed{active_jumbo.take();}
+                        }
+                        Err(_)=>{failed=true;active_jumbo.take();}
+                    }
+                }
+            }
+        }
         if accepted==0{
             drain_data_turn_returns(&mut e.arena);
-            return Err(INVALID)
+            return if failed{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
         }
         let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
         let available=std::mem::take(tx_storage);
@@ -2023,6 +2145,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             Ok(batch)=>batch,
             Err((_,storage))=>{
                 *tx_storage=storage;e.tx_route=None;
+                if jumbo_staged{active_jumbo.take();}
                 drain_data_turn_returns(&mut e.arena);
                 return Err(BAD_STAGE)
             }
@@ -2032,6 +2155,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             |x|x.kind!=crate::runtime::TxKind::Fresh){
             *tx_storage=batch.recycle();
             e.tx_route=None;
+            if jumbo_staged{active_jumbo.take();}
             drain_data_turn_returns(&mut e.arena);
             return Err(INVALID)
         }
@@ -2044,7 +2168,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 persona:PacketPersona::Legacy,
             });
         }
-        (batch,raw,flow,e.generation,ready_records.len(),failed)
+        (batch,raw,flow,e.generation,ready_records.len(),failed,jumbo_staged)
     };
     let report=if stop.load(Ordering::Acquire){None}else{
         let tuple=Ipv4Tuple{
@@ -2066,6 +2190,16 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
     if finish.invalidate_route{e.tx_route=None}
+    // The kernel's scoped prefix is the only positive send proof. Never
+    // resume a mixed-stride/ambiguous/partially copied logical packet.
+    if jumbo_staged {
+        if finish.failed || finish.uncertain!=0 || finish.definitely_unsent!=0
+            || finish.invalidate_route || stop.load(Ordering::Acquire){
+            active_jumbo.take();
+        }else if active_jumbo.as_ref().is_some_and(|x|x.done()){
+            active_jumbo.take();
+        }
+    }
     drain_data_turn_returns(&mut e.arena);
     // Even when the tail failed, the definite prefix remains copied and
     // accounted. Dropped/uncertain immutable records are only released
@@ -2225,18 +2359,23 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
+            // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
+            let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
+            let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
+            let mut active_jumbo=None::<PendingOriginalJumbo>;
             while !stop_tx.load(Ordering::Acquire){
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                if !loop_readiness(tun_fd,&stop_tx,10){continue}
+                if active_jumbo.is_none() && jumbo_queue.is_empty()
+                    && !loop_readiness(tun_fd,&stop_tx,10){continue}
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
                     &mut tx_pending,&mut tx_records,&mut tx_presentations,
-                    &tx_events
+                    &tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo
                 ){
                     Ok(done)=>{
                         stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
@@ -2249,6 +2388,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 }
                 let _=slice_start;
             }
+            active_jumbo.take();
+            jumbo_queue.clear();
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
         })
@@ -2598,7 +2739,71 @@ mod tests{
         drop(loans);
         original_m1.drain_returns();
         assert_eq!(original_m1.report().loaned,0);
-        println!("M0_ORIGINAL_M1_65K_TWO_TURN_LOANS_32_PLUS_16_MTU_STOP_NOHOL_PASS production_tun_worker=BLOCKED_NO_PERSISTENT_PLAN real_kernel=NOT_RUN");
+        println!("M0_ORIGINAL_M1_65K_TWO_TURN_LOANS_32_PLUS_16_MTU_STOP_NOHOL_PASS production_tun_worker=WIRING_NOT_PROVEN_BY_THIS_TEST real_kernel=NOT_RUN");
+    }
+
+
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_background_owned_jumbo_persists_65k_generation_32_16_nohol_mtu_stop(){
+        use wbd_codec::link_reassembly::{
+            ReassemblyTable,ReassemblyScope,LinkDirection,LinkDelivery
+        };
+        let input=(0..65_535usize).map(|i|((i*17+9)%251) as u8)
+            .collect::<Vec<_>>();
+        let mut owner=Arena::new(715,32,2048,32,128_000).unwrap();
+        let mut pending=PendingOriginalJumbo::new(
+            input.clone(),715,1400,715,22
+        ).unwrap();
+        assert_eq!((pending.generation,pending.route_event_revision),(715,22));
+        assert_eq!(pending.total,48);
+        let mut table=ReassemblyTable::new(1400,1400,LinkMode::FixedOff).unwrap();
+        let scope=ReassemblyScope{
+            tunnel_epoch:715,direction:LinkDirection::ServerToClient,
+            packet_id_ext:715,
+        };
+        for (round,wanted) in [(0usize,32usize),(1,16)]{
+            let parts=pending.stage_turn(&mut owner,1400,32).unwrap();
+            assert_eq!(parts.len(),wanted);
+            for (i,(mut slot,len)) in parts.into_iter().enumerate(){
+                let received=table.push_after_record_auth(
+                    &slot.writable()[14..14+len],scope,(round*32+i) as u64
+                ).unwrap();
+                if round==1 && i==15{
+                    assert_eq!(received,LinkDelivery::Reassembled(input.clone()));
+                }else{
+                    assert_eq!(received,LinkDelivery::Pending);
+                    assert_eq!(
+                        table.push_after_record_auth(
+                            b"small-unrelated",ReassemblyScope{
+                                tunnel_epoch:715,
+                                direction:LinkDirection::ServerToClient,
+                                packet_id_ext:716
+                            },(round*32+i) as u64
+                        ),Ok(LinkDelivery::Ordinary(b"small-unrelated"))
+                    );
+                }
+            }
+            owner.drain_returns();
+            assert_eq!(owner.report().loaned,0);
+            assert_eq!(pending.issued,if round==0{32}else{48});
+        }
+        assert!(pending.done());
+        assert!(pending.stage_turn(&mut owner,1400,32).unwrap().is_empty());
+        let mut shrunk=PendingOriginalJumbo::new(input,716,1400,715,22).unwrap();
+        let prefix=shrunk.stage_turn(&mut owner,1400,12).unwrap();
+        assert_eq!(prefix.len(),12);
+        drop(prefix);
+        owner.drain_returns();
+        assert_eq!(owner.report().loaned,0);
+        assert_eq!(shrunk.stage_turn(&mut owner,1300,32).err(),Some(INVALID));
+        // A failed/uncertain kernel turn or Stop drops the generation-bound
+        // source, not an alternate-stride tail with the same packet ID.
+        let mut active=Some(shrunk);
+        active.take();
+        assert!(active.is_none());
+        assert_eq!(owner.report().loaned,0);
+        println!("M0_BACKGROUND_OWNED_JUMBO_65K_32_PLUS_16_MTU_STOP_NOHOL_NATIVE_PASS real_tun_tls_m4_kernel=NOT_RUN");
     }
 
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]

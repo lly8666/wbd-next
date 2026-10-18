@@ -294,6 +294,8 @@ pub(crate) struct ProtectedBackgroundRx{
 pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_link:u32,
     pub(crate) delivered:u32,
+    pub(crate) pending:u32,
+    pub(crate) invalid:u32,
     pub(crate) failed:u32,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -320,6 +322,8 @@ impl ProtectedBackgroundRx{
                     receipt.delivered+=1;
                 }else{receipt.failed+=1}
             },&mut link_report);
+        receipt.pending=link_report.pending;
+        receipt.invalid=link_report.malformed.saturating_add(link_report.discarded);
         receipt
     }
 }
