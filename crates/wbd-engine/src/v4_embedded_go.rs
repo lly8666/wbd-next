@@ -695,6 +695,112 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
     OK
 }
 
+// Test-only REAL M4 raw repair. An M2 PTO candidate borrows the identical
+// original FrozenRecord, debits the ONE global process broker through a
+// scoped grant, then the original M4 send_one submits exactly the SAME
+// authenticated PN/Seq/ciphertext. Its synchronous copied prefix is
+// translated using M2's typed driver settlement (never peer delivery).
+// Ambiguous send failure is always Unproven and stays charged.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_real_frozen_repair_one(
+    handle:u64
+)->Result<(u64,u32,u32,u64),i32>{
+    use wbd_recovery::{
+        reserve_frozen_submission,complete_driver_prefix,
+        DriverPrefixObservation,BatchSuffixEvidence,RepairSendResult,
+    };
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE||e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
+    let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    if raw.generation()!=e.generation || raw.is_stopping(){return Err(BAD_STAGE)}
+    let generation=e.generation;
+    let flow=e.flow;
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    };
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    let sender=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
+    // A positive peer receipt for SOURCE PN0 already retired that shadow.
+    // The negative PN1 evidence can only form a candidate after its PTO.
+    let now=MonoNs(31_000_000);
+    let mut poll=sender.shadow.on_timer(now);
+    if !poll.releases.is_empty()||poll.candidates.len()!=1 {
+        return Err(INVALID)
+    }
+    let candidate=poll.candidates.pop().ok_or(INVALID)?;
+    if candidate.pn().0!=1||!sender.shadow.preflight(&candidate,now){
+        return Err(INVALID)
+    }
+    let original=candidate.frozen().metadata();
+    let outer_bytes=candidate.frozen().bytes().len()
+        .checked_add(40).ok_or(INVALID)? as u64;
+    // Whole global grant is process-scoped, not a per-lane sparse mint.
+    let lease=sender.broker.grant(
+        sender.direction,outer_bytes,20_000_000,now
+    ).map_err(|_|INVALID)?;
+    let submission=reserve_frozen_submission(
+        &mut sender.broker,lease,sender.route,&sender.shadow,
+        &candidate,outer_bytes,now
+    ).map_err(|_|INVALID)?;
+    if submission.driver.metadata!=original
+        ||submission.driver.wire.as_ptr()!=candidate.frozen().bytes().as_ptr()
+        ||!sender.shadow.preflight(&candidate,now){return Err(INVALID)}
+    let ordered=[(submission.reservation_id,sender.route)];
+    let driver_result=raw.send_one(
+        generation,candidate.frozen(),tuple,presentation
+    );
+    // No fabricated "proven-not-attempted" from a syscall failure.
+    let observation=if driver_result.is_ok(){
+        DriverPrefixObservation::checked(
+            1,1,None,BatchSuffixEvidence::Unproven
+        )
+    }else{
+        DriverPrefixObservation::checked(
+            1,0,Some(0),BatchSuffixEvidence::Unproven
+        )
+    }.map_err(|_|INVALID)?;
+    let settlement=complete_driver_prefix(
+        &mut sender.broker,&ordered,observation,now
+    ).map_err(|_|INVALID)?;
+    if settlement.len()!=1{return Err(INVALID)}
+    let status=settlement.shadow_result(0).ok_or(INVALID)?;
+    sender.shadow.on_send_result(&candidate,status,now)
+        .map_err(|_|INVALID)?;
+    if driver_result.is_err(){return Err(INVALID)}
+    if status!=RepairSendResult::Accepted || settlement.counts.accepted!=1
+        ||settlement.counts.uncertain!=0 || settlement.counts.held_unproven!=0
+        ||settlement.counts.definitely_not_sent!=0
+        ||sender.broker.snapshot().pending!=0
+        ||sender.broker.snapshot().charged_repairs!=outer_bytes
+        ||sender.shadow.outstanding()!=1 {return Err(INVALID)}
+    let copied=driver_result.map_err(|_|INVALID)?;
+    if copied as u64!=outer_bytes{return Err(INVALID)}
+    Ok((candidate.pn().0,original.seq.0 as u32,
+        u32::try_from(candidate.frozen().bytes().len()).map_err(|_|INVALID)?,
+        outer_bytes))
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
+    handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
+    charged:*mut u64
+)->i32{
+    if pn.is_null()||seq.is_null()||wire.is_null()||charged.is_null(){
+        return INVALID
+    }
+    let Ok((p,s,w,c))=fec2_probe_real_frozen_repair_one(handle)
+    else{return BAD_STAGE};
+    unsafe{pn.write(p);seq.write(s);wire.write(w);charged.write(c)}
+    OK
+}
+
 // Actual M2 RX feedback draft created ONLY from authenticated M3 data
 // observed above. This stage is not a peer-authenticated receipt encoder,
 // not a control kind1 send, and not a quota release or kernel ACK.
