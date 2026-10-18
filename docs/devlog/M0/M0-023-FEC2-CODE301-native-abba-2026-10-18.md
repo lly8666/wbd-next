@@ -25,3 +25,5 @@ Normal/off 旧冻结源码、D10 红灯、原 240s codec timeout、P10 次序矛
 
 - H129 `95f9b57d8804d762bcc065e5b9728c8652a39060` 的普通 Governance run `39086745204` attempt1 **FAIL**：`tools/governance.py::validate_cursor` 对 `context_refs` 限制最多8条；H129为便利引用插入本日志但未移除旧参考，共9条，`SCOPE_AUDIT_FAILED: unbounded context_refs`。这是 M0 cursor-only 自身结构边界错误，非CODE301 codec或产品失败；不能作为 Governance PASS。完整selftest/model本次NOT_RUN。
 - 立即仅压缩 M0 cursor 的context_refs（旧024历史/失败仍通过已有evidence、其它历史入口可追溯），不改分配、产品状态、S构建或任何worker源；用新的H修正，不重跑M3失败组件。原 Governance 红灯保留历史，并以修复H的精确新run判断当前交接是否PASS。
+
+- H130 `1c53c2243fc72e792ac95226810229056a23d9e5` Governance run `39086911530` attempt1 **FAIL**：当前 cursor 的 `last_tested_source=0b21a2f...`，`evidence_refs` 同时含 `source_sha=0b21a2f...` 与旧 intake `ede83b9...`，触发 `SCOPE_AUDIT_FAILED: cursor evidence SOURCE mismatch`。修正只把 cursor 的直接 `evidence_refs` 限定为本轮同源CODE301证据。旧 intake 的独立 SOURCE / D10 / p99 / 原 normal-off 收据继续由原文件、上述本轮 evidence 与 devlog 指向，不删文件、不拼资格；新 H 仍 partial/unverified。
