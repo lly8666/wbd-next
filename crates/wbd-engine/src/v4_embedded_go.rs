@@ -1832,6 +1832,23 @@ impl PendingOriginalJumbo{
             generation,route_event_revision})
     }
     fn done(&self)->bool{self.issued==self.total}
+    // One authenticated generation and one original LINK stride own every
+    // frame of this packet. A route revision, including MTU +1, is terminal:
+    // never silently continue an old packet ID in a new route scope.
+    fn valid_for(&self,generation:u32,route_event_revision:u64,
+        frame_mtu:usize)->bool{
+        self.generation==generation
+            && self.route_event_revision==route_event_revision
+            && self.frame_mtu==frame_mtu
+    }
+    // The original M4 kernel copies at most a definite prefix. After any
+    // partial, ambiguous, Stop or route invalidation the remaining immutable
+    // LINK tail MUST NOT acquire fresh PN or be sent under the same packet ID.
+    fn retire_after_turn(&self,completion:TxTurnCompletion,stopping:bool)->bool{
+        stopping || self.done() || completion.failed
+            || completion.uncertain!=0 || completion.definitely_unsent!=0
+            || completion.invalidate_route
+    }
     fn stage_turn(&mut self,arena:&mut Arena,current_frame_mtu:usize,
         available:usize)->Result<Vec<(crate::memory::UniqueBuffer,usize)>,i32>{
         let mut plan=LinkPacketPlan::new(
@@ -2127,12 +2144,11 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             if let Some(plan)=active_jumbo.as_mut(){
                 // Route invalidation, generation change or MTU shrink is
                 // terminal for an already-issued logical LINK packet.
-                if plan.generation!=e.generation
-                    || plan.route_event_revision!=event.revision{
+                let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
+                    .scoped.frame.link_frame_mtu.min(M0_SMALL_ARENA_PAYLOAD);
+                if !plan.valid_for(e.generation,event.revision,frame_mtu){
                     failed=true;active_jumbo.take();
                 }else{
-                    let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
-                        .scoped.frame.link_frame_mtu.min(M0_SMALL_ARENA_PAYLOAD);
                     match plan.stage_turn(
                         &mut e.arena,frame_mtu,32usize.saturating_sub(accepted)
                     ){
@@ -2212,13 +2228,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     if finish.invalidate_route{e.tx_route=None}
     // The kernel's scoped prefix is the only positive send proof. Never
     // resume a mixed-stride/ambiguous/partially copied logical packet.
-    if jumbo_staged {
-        if finish.failed || finish.uncertain!=0 || finish.definitely_unsent!=0
-            || finish.invalidate_route || stop.load(Ordering::Acquire){
-            active_jumbo.take();
-        }else if active_jumbo.as_ref().is_some_and(|x|x.done()){
-            active_jumbo.take();
-        }
+    if jumbo_staged && active_jumbo.as_ref().is_some_and(
+        |x|x.retire_after_turn(finish,stop.load(Ordering::Acquire))
+    ){
+        active_jumbo.take();
     }
     drain_data_turn_returns(&mut e.arena);
     // Even when the tail failed, the definite prefix remains copied and
@@ -2826,6 +2839,86 @@ mod tests{
         println!("M0_BACKGROUND_OWNED_JUMBO_65K_32_PLUS_16_MTU_STOP_NOHOL_NATIVE_PASS real_tun_tls_m4_kernel=NOT_RUN");
     }
 
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_pending_jumbo_midflight_scope_stop_prefix_matrix(){
+        use wbd_platform::linux_batch::{KernelSendReport,KernelSendSignal as S};
+        use wbd_platform::{TxBatchOutcome,TxError};
+        let payload=(0..65_535usize).map(|i|(i%251) as u8)
+            .collect::<Vec<_>>();
+        let mut arena=Arena::new(811,32,2048,32,128_000).unwrap();
+        let mut tested=0usize;
+        // Each independent source has one real original M1 slab turn issued
+        // and then a typed original M4 completion outcome. This tests
+        // deterministic owner retirement, not a synthetic network PASS.
+        for prefix in 0..=32usize{
+            for uncertain in [false,true]{
+                if prefix==32 && uncertain{continue}
+                let mut plan=PendingOriginalJumbo::new(
+                    payload.clone(),811+tested as u32,1400,811,27
+                ).unwrap();
+                assert_eq!(plan.total,48);
+                assert!(plan.valid_for(811,27,1400));
+                // Changing either direction of frame MTU, generation or
+                // route revision MUST never resume the same packet ID.
+                assert!(!plan.valid_for(811,27,1399));
+                assert!(!plan.valid_for(811,27,1401));
+                assert!(!plan.valid_for(812,27,1400));
+                assert!(!plan.valid_for(811,28,1400));
+                let parts=plan.stage_turn(&mut arena,1400,32).unwrap();
+                assert_eq!((parts.len(),plan.issued),(32,32));
+                drop(parts);
+                arena.drain_returns();
+                assert_eq!(arena.report().loaned,0);
+                // The only all-copied leg can continue; all partial,
+                // uncertain, EAGAIN, and Stop legs permanently retire.
+                let report=KernelSendReport{
+                    outcome:TxBatchOutcome{
+                        accepted_prefix:prefix,
+                        uncertain_index:uncertain.then_some(prefix),
+                        error:if prefix==32{None}else if uncertain{
+                            Some(TxError::IoUncertain)
+                        }else{Some(TxError::WouldBlock)},
+                    },
+                    signal:if prefix==32{S::None}else if uncertain{
+                        S::AmbiguousCompletion
+                    }else{S::Backpressure},
+                };
+                let result=classify_tx_turn(Some(&report),32,false);
+                assert_eq!(result.copied,prefix as u32);
+                assert_eq!(result.uncertain,u32::from(uncertain));
+                assert_eq!(result.copied+result.uncertain+
+                    result.definitely_unsent,32);
+                assert_eq!(plan.retire_after_turn(result,false),prefix!=32);
+                assert!(plan.retire_after_turn(result,true));
+                // No same-ID late tail after Stop or any uncertain prefix.
+                let mut active=Some(plan);
+                if active.as_ref().unwrap().retire_after_turn(result,true){
+                    active.take();
+                }
+                assert!(active.is_none());
+                assert_eq!(arena.report().loaned,0);
+                tested+=1;
+            }
+        }
+        let mut accepted=PendingOriginalJumbo::new(
+            payload,999,1400,811,27
+        ).unwrap();
+        drop(accepted.stage_turn(&mut arena,1400,32).unwrap());
+        arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+        let full=classify_tx_turn(Some(&KernelSendReport{
+            outcome:TxBatchOutcome::copied_all(32),signal:S::None
+        }),32,false);
+        assert!(!accepted.retire_after_turn(full,false));
+        assert_eq!(accepted.stage_turn(&mut arena,1400,32).unwrap().len(),16);
+        arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+        assert!(accepted.done());
+        assert!(accepted.retire_after_turn(full,false));
+        assert_eq!(tested,65);
+        println!("M0_ORIGINAL_JUMBO_MIDFLIGHT_PREFIX_SCOPE_STOP_MATRIX_PASS tested=65 generation=1 mtu_plus_minus=1 route_revision=1 loans=0 real_kernel=NOT_RUN");
+    }
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     #[test]
     fn m0_link_materialization_never_admits_half_packet_on_arena_failure(){
