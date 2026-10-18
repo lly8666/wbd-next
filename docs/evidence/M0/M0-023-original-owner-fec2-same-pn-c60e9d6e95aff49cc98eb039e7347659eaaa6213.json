@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
+  "result": "PASS_SCOPED_TEST_ONLY_ORIGINAL_RUST_OWNER_M1_FEC2_AEAD_FROZEN_TX_3SUITE",
+  "progress": "partial",
+  "unverified": true,
+  "scope": {
+    "code": [
+      "crates/wbd-engine/Cargo.toml",
+      "crates/wbd-engine/src/v4_owner_crypto.rs",
+      "crates/wbd-engine/src/v4_probe_bridge.rs",
+      ".github/workflows/m0-fec2-original-owner-probe.yml"
+    ],
+    "owner": "ACTUAL ProtectedScopedOwner originally instantiated via PrivateGoV4Handoff/UntrustedColdV4 test path; no replacement owner, no alternate PN or TCP-like Seq",
+    "behavior": "Feature-only m0_fec2_owner_probe gates seal_fec2_probe_one and enables wbd-codec/m0-fec2-record-probe. Validates M3 parse_source/parse_repair and original M4 FrameBudget MSS/MTU/record wire limits BEFORE original owner dispatch; invokes SAME owner seal_scoped_authenticated_one as ordinary LINK. After AEAD/PN, one M1 generation-scoped frozen buffer is handed to ORIGINAL TX queue. Original kind0 and opt-in kinds2/3 have PN0/1/2 and continuous seq32 across three real cipher suites.",
+    "proofs": [
+      "Synthetic private protected source alone cannot seal before original owner Detach/Commit; no PN burned",
+      "Go-context-like synthetic owner post commit cold fixtures 3 real suites; applies frozen real peer MSS and original MaxRecordBudget",
+      "M3 malformed source flags fail closed before original owner PN",
+      "Normal kind0 immediately first, opt-in kind2 and kind3 serialized behind it; original M1 FrozenRecord TX ready batch preallocated 4 slots, 3 records issued",
+      "Same original M1 owner loan TX Seq and PN metadata equals authenticated real ChaCha/AES128/AES256 records",
+      "Original codec RS16 parity and missing source0 recovery after AEAD replay authenticated kind3",
+      "Zero original M1 arena loans after TX batch released, Stop/Release succeeds",
+      "Original Rust DEFAULT release lib compiles without m0_fec2_owner_probe feature and retains normal 0/1 kind only"
+    ],
+    "limitations": [
+      "No real Go protected bit2 capability or KDF integration: synthetic private V4 fixture does not authenticate credentials",
+      "Actual Go↔Rust raw/TUN path tests still only Normal/off without FEC2. No real Linux kernel FEC2 admission, socket or tun receipt",
+      "M1 Fec2Owner parity class accounting not yet connected to real owner TX, this test uses real original TX fresh for kind2/3",
+      "M2 authenticated FEC receipt/repair feedback not wired",
+      "No applied CLI/GUI profile/revision, no Windows/ARM64 FEC2 product build",
+      "The test-only Cargo feature does not expose an authenticated production C ABI"
+    ]
+  },
+  "actions": {
+    "original_owner_probe": {
+      "run_id": 39100892712,
+      "attempt": 1,
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
+      "conclusion": "success",
+      "job_id": 117596763481,
+      "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39100892712",
+      "artifact": {
+        "id": 12126114397,
+        "name": "m0-owner-fec2-39100892712-1",
+        "digest": "sha256:b19162c0f0d0e782983153551c4c18d7929b5adf8ad81bc1f3d21930036f5d1e",
+        "zip_independently_rehashed": false
+      },
+      "owner_native_release_target": "1 PASS,0 FAIL; all three actual RecordSuite",
+      "production_default_build": "SUCCESS, no opt-in m0_fec2_owner_probe"
+    },
+    "main_gov_before_h": {
+      "run_id": 39100892708,
+      "conclusion": "success",
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213"
+    },
+    "r0_cross_abi": {
+      "run_id": 39100892706,
+      "conclusion": "success",
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213"
+    },
+    "r0_native_abi": {
+      "run_id": 39100892718,
+      "conclusion": "success",
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213"
+    },
+    "g2_bootstrap": {
+      "run_id": 39100892806,
+      "conclusion": "success",
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213"
+    },
+    "native_functional": {
+      "run_id": 39100892732,
+      "conclusion": "success",
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
+      "job_scope": "engine/normal/fec/kernel/receipt, all SUCCESS. This changed-path matrix DID NOT RUN legacy codec grouped 240s job; old codec timeout historical FAIL remains."
+    },
+    "original_go_rust_native_probe": {
+      "run_id": 39100892715,
+      "source_sha": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
+      "status_at_evidence": "build success, consume in_progress; only Normal/off Go TLS raw/TUN, FEC2 not wired"
+    }
+  },
+  "historical": {
+    "first_fec2_original_owner_build": {
+      "run_id": 39100648669,
+      "sha": "5bf1fd17e0f9106b86b5bd2fc146f17e119113e4",
+      "fail": "new test unwrap E0277 TxDispatch lacks Debug; corrected without M1 change"
+    },
+    "second_original_owner_test": {
+      "run_id": 39100727877,
+      "sha": "3b5fb78ece273e2614f85df8cdf11bc711a59f9a",
+      "fail": "test used Vec::new capacity zero, original M1 zero-allocation drain legitimately emitted0; corrected to Vec::with_capacity(4)"
+    },
+    "old_codec_240s": "39098885670 full native-functional old codec job FAIL exit124 and unexpected ignored; not replaced by selective-scope success",
+    "D10_p99_legacy": "OPEN"
+  },
+  "product": {
+    "FEC2_DEFAULT": "OFF",
+    "bit2_kind2_3_real_authenticated": "NOT_RUN",
+    "original_driver_FEC2": "NOT_RUN",
+    "M2_FEC2_authenticated_ingress": "NOT_RUN",
+    "Go_CLI_GUI_applied": "NOT_RUN",
+    "ARM64_Windows_full_native": "NOT_RUN",
+    "actual_65k_TUN_cross_turn": "OPEN",
+    "D10_codec_p99": "OPEN"
+  },
+  "next_action": "Replace synthetic test-only 'after protected Go' assumption with actual original Go TLS protected request/reply feature bit2 agreement and KDF/cold epoch/direction binding. Then connect original Rust owner source-first with M1 Fec2Owner ParityJob to M3 source/repair kind2/3 and M4 real raw/TUN/RX+M2 authenticated recovery. Validate stop/MTU/prefix-uncertain and product config; preserve FEC2 default OFF until end-to-end qualified."
+}
