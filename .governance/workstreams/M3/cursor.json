@@ -4,12 +4,12 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 32,
-  "checkpoint_sha": "33eff43ae7f742000124b81a5f887e16db41b626",
+  "sequence": 33,
+  "checkpoint_sha": "f3c9062cc4f684195e5318ad010aed0845a1b61b",
   "progress": "partial",
   "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
   "current_task": "FEC2 RS16 typed 10/12B wire, seven r profiles, prepared native/scalar API and missing-only e×e; scoped default-scalar worker+R0 source-locked PASS at CODE301; real ISA-L/cost still cross-owner blocked.",
-  "why_now": "Recovered H30 FAIL via S2938/H31; scoped CODE301 test binary artifact sha verified; fixed R0 count pollution and nonprefix matrix test; native-isal shared FFI exists on main only, not worker branch.",
+  "why_now": "017 CODE301 scoped scalar Actions 122 PASS/0FAIL/1ignored; R0 wire exact13 PASS, LINK/record PASS. H30 central39046275022 distinct non-PASS failure. Later governance run39082909578/39083303000 FAILED GitHub API HTTP403 remote registry/compare, not an attested scope result; append-only supplemental evidence now recorded.",
   "done_when": "M3 017 math/wire/bounded memory, actual ISA-L Linux x64 and applicable ARM/Windows native equivalence, source-pinned single-scene AB/BA same VM cost plus S→H evidence; no FEC-on product inference.",
   "next_action": "Await M0-owned source-pinned shared safe ISA-L/workflow interface request in docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md; run true V2 native + same VM 16:16 L1202/e4 AB/BA, fix codec if needed, then source-bound S→H.",
   "unverified": true,
@@ -19,12 +19,12 @@
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
+    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
     "docs/devlog/M3/R5-M3-FEC2-CODEC-NATIVE-017.md",
     "docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md",
     "docs/evidence/M3/017-intake-recovered-H30.json",
-    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json",
-    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-native-pass.json"
+    "docs/evidence/M3/016-422a26127496560c0a52e6745ecc8f354e3f4f18-ready-ABBA.json"
   ],
-  "partial_summary": "CODE301 Actions run39082909579 122 PASS/0FAIL/1ignored, R0 wire39082909584 exact13 PASS, record/link PASS; source-lock binary2b37ae... verified. H30 central39046275022 FAIL remains; current governance39082909578 FAIL. V2 native feature not present in worker branch; real ISA-L/ARM/Windows sameVM ABBA and FEC-on NOT_RUN. M0 shared build interface separately requested; no old016 rewrite/product activation."
+  "partial_summary": "H33 appends evidence for registry/compare GitHub HTTP403 governance failures (runs39082909578/39083303000), separate from H30 central non-PASS audit FAIL. CODE301 122 worker scalar PASS / R0 13 PASS verified; record/LINK PASS; V2 real ISA-L and paired sameVM CPU, ARM/Win native, product FEC-on NOT_RUN. M0 shared native interface blocked; no false PASS."
 }
