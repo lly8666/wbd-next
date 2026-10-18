@@ -4,24 +4,27 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 19,
-  "checkpoint_sha": "4581a68fb46e73f513c5177b4bbf6be8f5332298",
-  "progress": "ready_for_integration",
-  "task_id": "R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013",
-  "current_task": "PACK-013 frozen and ready for M0 stage integration; recovered after H scope/Governance outcomes without changing component CODE.",
-  "why_now": "Incoming M4 recovered unacknowledged post-H Actions: H 0f492ee4 exact main central ROLE_SCOPE_PASS (39011763693) and old worker Governance FAIL (39011750362, frozen v1 64 limit). S 4581a68f preserves downloaded artifact hashes and previous CODE failures; no new product implementation or qualification.",
-  "done_when": "PACK-013 M4: 保持冻结012 PMTU/设备失效/Stop安全；0/1/32/33/满额/空额、Linux真实无特权内核支持的多帧批、部分完成及未知尾项、错码EAGAIN/EINTR/EMSGSIZE/ENODEV/short write、generation/Stop/late-loan和稀疏立即服务反例；精确SOURCE编译一次native Actions+产物审计。确不能使用的raw/TUN privileged及真实单syscall批路径标UNSUPPORTED/NOT_RUN而不伪称性能，最终提供M0安全且冻结的调用签名/回退。",
-  "next_action": "M0 pin exact M4 platform CODE SOURCE b7bcde7dde64633532cae99460eb00855a2e119a and review frozen Rust internal signatures/Stop-loan/MTU and copied-prefix/uncertain semantics in docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json. Integrate authenticated Go ColdSnapshot to Rust AEAD/PN owner under M0 scope, with real privileged raw/TUN, physical device and product/performance tests separately required; none are claimed here. M4 holds this workpack complete and adds no integration-wait features.",
-  "unverified": false,
+  "sequence": 20,
+  "checkpoint_sha": "291b23a9e5e2a8dcdc8ff024a12a4c9e61816e24",
+  "progress": "blocked",
+  "task_id": "R5-M4-FEC2-COLD-POLICY-PLATFORMS-014",
+  "current_task": "FEC2 cold Go policy replay and ISA-L ARM64/Windows target linkage authored on the three exact permitted files; Actions real-Go-clone injection and target native qualification still missing.",
+  "why_now": "Main PLAN-007 replaced already-completed PACK-013; authority unchanged rev2/epoch1. Baseline a48c53f contained only one previously checkpointed cursor-only H beyond S, no new unreviewed code. This pack SOURCE 7cef7e8 is not product-integrated or tested.",
+  "done_when": "F2-CONTROL pure Go deterministic replay for 7 profiles, normal/aggressive, direction/client isolation, sparse/censored/loss/idle, revision; target-native build/loader cases or honest NOT_RUN, exact SOURCE evidence, handoff to M0 real Go UI/config; no product enabled.",
+  "next_action": "M0 supplies exact original Go-clone Actions insertion/test and Linux ARM64/Windows x64 native/cross backend/loader entry under shared ownership per M4 request; M4 then inspects actual run/attempt artifacts, fixes only its three scoped files, and records final S→H. Real CLI/GUI/catalog/applied revision and product Go/Rust wiring remain solely M0.",
+  "unverified": true,
   "last_tested_source": "b7bcde7dde64633532cae99460eb00855a2e119a",
   "evidence_refs": [
-    "docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json"
+    "docs/evidence/M4/R5-M4-FEC2-COLD-POLICY-PLATFORMS-014.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M4/requests/R5-M4-FEC2-014-M0-REAL-GO-PLATFORM-ACTIONS.md"
+  ],
   "context_refs": [
-    "docs/GOVERNANCE.md",
-    "docs/devlog/M4/R1-M4-PACK-013-POST-H-RECOVERED-2026-10-17.md",
-    "docs/architecture/modules/00-CONTRACTS.md"
+    "docs/evidence/M4/R1-M4-LEASED-KERNEL-MULTIMSG-WORKPACK-013.json",
+    "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
+    "docs/architecture/FEC_V2_BALANCED.md",
+    "docs/architecture/FEC_V2_TEST_PLAN.md"
   ],
-  "partial_summary": "PACK-013 unchanged and frozen: CODE b7bcde7 94/94 Linux GNU native PASS only. Previous H 0f492ee central scoped PASS and old v1 Governance FAIL recovered in S 4581a68f; that new S/current H do not inherit earlier HEAD audit. Fresh S Governance 39012474694 FAIL old checker; central v2 S/H exact scope must be read separately if needed. Privileged raw/TUN, Windows/ARM native, Go-authenticated product, physical and performance NOT_RUN; V4 DISABLED."
+  "partial_summary": "CODE 7cef7e8 includes cold FEC2 replay and target-aware ISA-L; Go replay, all new native backend/driver/loader execution, source scope checks, config/UI effective receipt and product wiring NOT_RUN. Old last_tested_source b7bcde7 belongs only to frozen PACK-013 94/94 Linux GNU; D10/codec timeouts/p99 OPEN. M0 shared injection entry is the sole remaining test-enabling blocker; no FEC2 product support enabled."
 }
