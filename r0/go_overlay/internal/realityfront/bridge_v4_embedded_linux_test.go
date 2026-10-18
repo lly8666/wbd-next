@@ -1300,6 +1300,101 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=%d fragments=%d fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
         len(reassembledJumbo),len(jumboFragments))
+    // Force a REAL 65KiB packet to pause precisely after its first
+    // kernel-copied <=32-frame M4 batch. Change the actual kernel TUN link
+    // revision while the other 19 original LINK frames have not been sealed.
+    // There is no synthetic prefix/error injector in this test.
+    pauseStatus,_,err:=b.rustOwnerDebugJumboPause(true)
+    if err!=nil||pauseStatus {t.Fatalf("arm original kernel pause: %t %v",pauseStatus,err)}
+    defer func(){_,_,_=b.rustOwnerDebugJumboPause(false)}()
+    midflightBefore,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    midflightRevision,healthy,err:=b.rustOwnerRouteEventState()
+    if err!=nil||!healthy{t.Fatalf("midflight kernel route watcher: %d %t %v",midflightRevision,healthy,err)}
+    if n,e:=app.WriteToUDP(jumboPayload,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(jumboPayload){
+        t.Fatalf("second real kernel 65KiB in-flight source: n=%d err=%v",n,e)
+    }
+    paused:=false
+    midflightLoans:=uint32(0)
+    for lim:=time.Now().Add(3*time.Second);time.Now().Before(lim);{
+        var e error
+        paused,midflightLoans,e=b.rustOwnerDebugJumboPause(true)
+        if e!=nil{t.Fatalf("real midflight barrier error: %v",e)}
+        if paused{break}
+        time.Sleep(time.Millisecond)
+    }
+    if !paused||midflightLoans!=0{
+        t.Fatalf("original kernel <=32 turn not quiescent: paused=%t loans=%d",paused,midflightLoans)
+    }
+    midflightFirst,err:=b.rustOwnerLoopStats()
+    if err!=nil||midflightFirst.TxOK!=midflightBefore.TxOK+32{
+        t.Fatalf("original native first 32 kernel-copied frames incomplete: before=%+v after=%+v err=%v",
+            midflightBefore,midflightFirst,err)
+    }
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65534").CombinedOutput();e!=nil{
+        t.Fatalf("live in-flight TUN MTU -1 mutation: %v %s",e,out)
+    }
+    witnessed:=false
+    for lim:=time.Now().Add(750*time.Millisecond);time.Now().Before(lim);{
+        rev,ok,e:=b.rustOwnerRouteEventState()
+        if e!=nil||!ok{t.Fatalf("in-flight route event watcher unhealthy rev=%d err=%v",rev,e)}
+        if rev>midflightRevision{witnessed=true;break}
+        time.Sleep(time.Millisecond)
+    }
+    if !witnessed{t.Fatal("no real netlink route revision while original 65KiB packet paused")}
+    if _,_,e:=b.rustOwnerDebugJumboPause(false);e!=nil{t.Fatal(e)}
+    // This bounded wait is test observation for an already-triggered real
+    // event, not an extra batch fill timer in the production owner.
+    time.Sleep(200*time.Millisecond)
+    midflightAfter,err:=b.rustOwnerLoopStats()
+    if err!=nil||midflightAfter.TxOK!=midflightFirst.TxOK{
+        t.Fatalf("old packet ID tail sent after true kernel MTU change: first=%+v after=%+v err=%v",
+            midflightFirst,midflightAfter,err)
+    }
+    // The unrelated packet after abandoning the 65KiB old-ID tail must
+    // still reach real M4 raw/TCP; restore input MTU for existing next gate.
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65535").CombinedOutput();e!=nil{
+        t.Fatalf("restore TUN MTU for independent following packet: %v %s",e,out)
+    }
+    time.Sleep(200*time.Millisecond)
+    midflightFollower:=bytes.Repeat([]byte{0x53},37)
+    if n,e:=app.WriteToUDP(midflightFollower,&net.UDPAddr{IP:remoteIP,Port:42001});e!=nil||n!=len(midflightFollower){
+        t.Fatalf("midflight aborted jumbo follower source n=%d err=%v",n,e)
+    }
+    foundMidflightFollower:=false
+    var abandonedID uint32
+    var abandonedParts int
+    for lim:=time.Now().Add(4*time.Second);time.Now().Before(lim)&&!foundMidflightFollower;{
+        pkt:=make([]byte,2048)
+        n,_,e:=syscall.Recvfrom(peer,pkt,0)
+        if e!=nil||n<40||pkt[0]>>4!=4||pkt[9]!=6{continue}
+        ihl:=int(pkt[0]&0xf)*4
+        if ihl<20||ihl+20>n||!bytes.Equal(pkt[12:16],b.originalFlow.ServerIP[:])||
+            !bytes.Equal(pkt[16:20],b.originalFlow.ClientIP[:]){continue}
+        if binary.BigEndian.Uint16(pkt[ihl:ihl+2])!=b.originalFlow.ServerPort||
+            binary.BigEndian.Uint16(pkt[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+        tcpLen:=int(pkt[ihl+12]>>4)*4
+        if tcpLen<20||ihl+tcpLen>n||pkt[ihl+13]&0x08==0||n-ihl-tcpLen<=31{continue}
+        rec,e:=open.OpenRecord(pkt[ihl+tcpLen:n])
+        if e!=nil||rec.Kind!=tlsrecord.KindLINK{t.Fatalf("midflight real Go AEAD: %v",e)}
+        if len(rec.Payload)>20&&string(rec.Payload[:8])=="WBDLFRG1"{
+            id:=binary.BigEndian.Uint32(rec.Payload[16:20])
+            if abandonedID==0{abandonedID=id}
+            if id!=abandonedID{t.Fatalf("mixed old-ID midflight frames: %d != %d",id,abandonedID)}
+            abandonedParts++
+            if abandonedParts>32{t.Fatal("old 65KiB packet emitted tail after route event")}
+        }else if len(rec.Payload)==28+len(midflightFollower)&&
+            bytes.Equal(rec.Payload[28:],midflightFollower){
+            foundMidflightFollower=true
+        }
+    }
+    if !foundMidflightFollower||abandonedParts!=32{
+        t.Fatalf("real midflight abort lost healthy follower or incomplete initial prefix: parts=%d follower=%t",abandonedParts,foundMidflightFollower)
+    }
+    t.Logf("EMBEDDED_REAL_JUMBO_MIDFLIGHT_MTU_ABORT_NO_TAIL_PASS copied_prefix=32 sealed_tail=0 old_id_parts=%d loans=%d original_M4_kernel=1 real_netlink=1 follower=1",
+        abandonedParts,midflightLoans)
+
     // Live original Linux netlink TUN MTU -1 after the complete jumbo:
     // the next independent small packet cannot be consumed and dropped
     // merely because owner route refresh is in its short defer window.

@@ -1629,6 +1629,9 @@ struct LoopCounts {
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
+    // M0 developer-only deterministic barrier between 32-slot real kernel
+    // turns. Never compiled into ordinary FEC2-OFF production builds.
+    debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 struct LoopWorkers{
@@ -2419,6 +2422,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }
+                // Deterministic developer probe: the first real kernel
+                // sendmmsg has COMPLETED and loans returned, but the next
+                // 65KiB LINK turn has not sealed any fresh AEAD/PN. Stop
+                // always overrides the barrier; no lock is held here.
+                if active_jumbo.as_ref().is_some_and(
+                    |p|p.issued>0 && !p.done()
+                ) && stats.debug_pause_jumbo.load(Ordering::Acquire){
+                    stats.debug_jumbo_paused.store(true,Ordering::Release);
+                    while stats.debug_pause_jumbo.load(Ordering::Acquire)
+                        && !stop_tx.load(Ordering::Acquire){
+                        thread::sleep(Duration::from_millis(1));
+                    }
+                    stats.debug_jumbo_paused.store(false,Ordering::Release);
+                }
                 let _=slice_start;
             }
             active_jumbo.take();
@@ -2475,6 +2492,26 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
     OK
 }
 
+// M0 developer-only test rendezvous. A real original M4 sendmmsg prefix
+// must finish before the concurrent Go netlink MTU mutation is permitted.
+// Never blocks under the M0 registry or owner lock; no synthetic driver
+// result or alternate packet sender exists.
+#[cfg(all(feature="m0_v4_probe",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_debug_pause_jumbo(
+    handle:u64,enabled:u32,paused:*mut u32,loaned:*mut u32
+)->i32{
+    if paused.is_null()||loaned.is_null()||enabled>1{return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    e.counters.debug_pause_jumbo.store(enabled!=0,Ordering::Release);
+    unsafe{
+        paused.write(u32::from(e.counters.debug_jumbo_paused.load(Ordering::Acquire)));
+        loaned.write(e.arena.report().loaned as u32);
+    }
+    OK
+}
 // Developer-mode per-worker *actual Linux thread CPU time* for 10s+60s
 // receipt. Combined process CPU includes Go sender/reader; independent
 // exact user-vs-kernel attribution within that residual is NOT available.
