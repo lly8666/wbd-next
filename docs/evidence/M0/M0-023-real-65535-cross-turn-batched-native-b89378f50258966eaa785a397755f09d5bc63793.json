@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "b89378f50258966eaa785a397755f09d5bc63793",
+  "progress": "partial",
+  "unverified": true,
+  "production_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "result": "SCOPED_REAL_65535_GO_TLS_RUST_M1_M3_M4_KERNEL_PASS_NOT_PRODUCT",
+  "recovery": {
+    "previous_h": "1102dccf93d9fbd6f75da6c750ce05f6220369e3",
+    "previous_checkpoint": "8d7212a1b1bf68292b0b8fd812543099271dbe27",
+    "seven_new_code_and_ci_commits_checked": [
+      "103a0348ad25edd8965f12b01a6a275625db21b5",
+      "72ba3c8557caa4a20af684dfbadaca329ac41aae",
+      "0c3d6cbb66c4fa8866de453b7f494acd0fdf09ce",
+      "5023f2ed4816a8d826219b2822617d6af9e31898",
+      "6f8d609880af5ed772a906475fd569ca722f26ba",
+      "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "b89378f50258966eaa785a397755f09d5bc63793"
+    ],
+    "paths_checked": true,
+    "worker_owned_paths_changed": false
+  },
+  "tested_scope": [
+    "actual Go credential TLS -> original Rust M1/M3 generation owner -> M4 native Linux raw/TUN -> independent Go authenticated peer, 65535B full IPv4, 51 LINK fragments over >=2 kernel batches, exact reassembly, small follower no HOL",
+    "after successful jumbo, live TUN netlink MTU minus one follower delivered; original Stop and route invalidation functional checks",
+    "three cipher original raw/TUN paths, 10ms and one 150ms exploratory netem, twelve packet per direction steady baseline, targeted actual encrypted kernel loss -> next first packet noHOL",
+    "single native SOURCE build reused for batch; only changed M0 CI step order to run 65535 hard gate before historic 150ms failure-prone smoke; no waiver"
+  ],
+  "actions": {
+    "native_probe": {
+      "run_id": 39143973567,
+      "attempt": 1,
+      "conclusion": "success",
+      "build": "PASS",
+      "consume": "PASS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39143973567",
+      "build_artifact": {
+        "id": 12142098289,
+        "provider_sha256": "22998bd9f3063fc8f3d4680b5adf5910fac654cd8d1234599cf3b071e36461d9"
+      },
+      "result_artifact": {
+        "id": 12143220063,
+        "provider_sha256": "012cf91a6666453b517f1f6860ba14ccb72e37645e858824146dc0c099a9f4a8"
+      },
+      "observed_markers": [
+        "EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=51 fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+        "EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=5 after=6 copied=1 owner_tx_error_growth=0",
+        "EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true",
+        "PRELIM_NETEM_KERNEL_SMOKE_PASS delay_ms=150 qdisc_packets_positive=true",
+        "STEADY_BURST_BASELINE_PASS",
+        "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS",
+        "ORIGINAL_RUST_NORMAL_OFF_BILATERAL_DEVELOPMENT_MEASUREMENT_RECORDED"
+      ],
+      "performance": "10+60s developer diagnostic only, not AB/BA or product PASS"
+    },
+    "governance": {
+      "run_id": 39143973564,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "run_id": 39143973494,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "historical": {
+    "previous_source": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+    "full_matrix": {
+      "run_id": 39142346680,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": "14/14",
+      "go_kernel_artifact_id": 12141868727,
+      "go_kernel_provider_sha256": "cb494b6e99d52092a2d54e46debc8a5e462b11da40c5b2b85e5e54daaae39b31",
+      "not_inherited_to_new_source": true
+    },
+    "failed_native": {
+      "run_id": 39142346744,
+      "attempt": 1,
+      "conclusion": "failure",
+      "failure": "150ms netem suite-2 real M4 raw to TUN first LINK fragment INVALID rc=1",
+      "artifact_id": 12142630460,
+      "provider_sha256": "933b0ef7b2f61a4569935cf5bbdf0a5403262706d7f49f9a01f0ce9bd1c6b340"
+    },
+    "older_150ms_intermittent": "OPEN; current single exploratory PASS does not close reproducibility red"
+  },
+  "remaining_hard_gates": {
+    "M2_actual_authenticated_reverse_kind1": "NOT_RUN",
+    "M1_live_FEC2_scheduler_feedback_sender_budget": "NOT_RUN",
+    "Go_applied_CLI_GUI_fixed_auto_revision": "NOT_RUN",
+    "M4_2_to_32_frozen_distinct_partial_uncertain_stop": "NOT_RUN",
+    "live_inflight_jumbo_MTU_generation_full_matrix": "NOT_RUN",
+    "physical_2_endpoints": "NOT_RUN",
+    "full_original_ARM_Windows_drivers": "NOT_RUN",
+    "same_VM_240s_D10_p99_ABBA": "NOT_RUN",
+    "product_qualification": "NOT_RUN"
+  }
+}
