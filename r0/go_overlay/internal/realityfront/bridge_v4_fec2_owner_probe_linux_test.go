@@ -119,6 +119,9 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             })
             if e!=nil{t.Fatal(e)}
             defer app.Close()
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(11_000_000,1);e==nil{
+                t.Fatal("M2 emitted feedback before any authenticated kernel FEC2 DATA")
+            }
             peer,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
             if e!=nil{t.Fatal(e)}
             defer syscall.Close(peer)
@@ -184,6 +187,14 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 t.Fatalf("authenticated raw SOURCE had unexpected delivery: pn=%d kind=%d n=%d err=%v",
                     gotPN,gotKind,len(recovered),recvErr)
             }
+            // A merely authenticated source fragment is not an IP
+            // datagram. The OS app must have NOTHING before recovered e1.
+            if err:=app.SetReadDeadline(time.Now().Add(30*time.Millisecond));err!=nil{t.Fatal(err)}
+            pre:=make([]byte,160)
+            nPre,_,errPre:=app.ReadFromUDP(pre)
+            if ne,ok:=errPre.(net.Error);nPre!=0||!ok||!ne.Timeout(){
+                t.Fatalf("unauthenticated/pending source leaked UDP app output n=%d err=%v",nPre,errPre)
+            }
             // Same valid cipher bytes are a REPLAY, never a second source.
             if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(captured[0]);recvErr==nil{
                 t.Fatal("original M3 unique replay PN failed to reject duplicate source")
@@ -192,6 +203,13 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             corrupted[len(corrupted)/2]^=0x40
             if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(corrupted);recvErr==nil{
                 t.Fatal("M3 AEAD admitted tampered independent kernel ciphertext")
+            }
+            // Tampered repair and duplicate source MUST NOT trigger
+            // application delivery or advance M2's authenticated PN ledger.
+            if err:=app.SetReadDeadline(time.Now().Add(30*time.Millisecond));err!=nil{t.Fatal(err)}
+            nPre,_,errPre=app.ReadFromUDP(pre)
+            if ne,ok:=errPre.(net.Error);nPre!=0||!ok||!ne.Timeout(){
+                t.Fatalf("tamper/replay leaked UDP app output n=%d err=%v",nPre,errPre)
             }
             gotPN,gotKind,recovered,recvErr=b.fec2ProbeActualPeerConsume(captured[1])
             expectRecovered:=make([]byte,127)
@@ -232,11 +250,57 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 t.Fatalf("real original M4 TUN recovery app UDP failed suite=%d n=%d source=%v err=%v",
                     cipher,n,peerAddr,appErr)
             }
-            t.Logf("M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=%d recovered_ip=127 udp_payload=%d",cipher,n)
+            // M2 original bounded RX feedback is fed ONLY successful
+            // original M3 AEAD+PN and typed source/repair; no ACK of ACK
+            // or untrusted Go-supplied receipt. One 256-PN page, bits0&1.
+            // Check actual driver-outcome lifecycle in the SAME owner:
+            // pre-deadline, NotSent, retry, Accepted, one repeat Uncertain.
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(9_000_000,1);e==nil{
+                t.Fatal("M2 report emitted before 10ms steady delay")
+            }
+            seqM,maxM,baseM,bitsM,e:=b.fec2ProbeActualM2RxFeedback(11_000_000,0)
+            if e!=nil||seqM!=0||maxM!=1||baseM!=0||bitsM!=3{
+                t.Fatalf("M2 NotSent bits from real AEAD wrong seq=%d max=%d base=%d bitmap=%d err=%v",
+                    seqM,maxM,baseM,bitsM,e)
+            }
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(12_000_000,1);e==nil{
+                t.Fatal("M2 NotSent allowed too-early retry")
+            }
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(13_000_000,3);e==nil{
+                t.Fatal("M2 accepted unsupported fake send status")
+            }
+            seqM,maxM,baseM,bitsM,e=b.fec2ProbeActualM2RxFeedback(13_000_000,1)
+            if e!=nil||seqM!=1||maxM!=1||baseM!=0||bitsM!=3{
+                t.Fatalf("M2 Accepted draft incorrect seq=%d max=%d base=%d bitmap=%d err=%v",
+                    seqM,maxM,baseM,bitsM,e)
+            }
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(14_000_000,2);e==nil{
+                t.Fatal("M2 allowed a repeat before srtt/4")
+            }
+            seqM,maxM,baseM,bitsM,e=b.fec2ProbeActualM2RxFeedback(15_000_000,2)
+            if e!=nil||seqM!=2||maxM!=1||baseM!=0||bitsM!=3{
+                t.Fatalf("M2 Uncertain draft wrong seq=%d max=%d base=%d bitmap=%d err=%v",
+                    seqM,maxM,baseM,bitsM,e)
+            }
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(17_000_000,1);e==nil{
+                t.Fatal("M2 repeated indefinitely after bounded second emission")
+            }
+            t.Logf("M0_REAL_GO_KERNEL_FEC2_M2_AUTH_RX_FEEDBACK_PASS suite=%d bitmap=03 largest=1 notsent=1 accepted=1 uncertain=1",cipher)
+                        t.Logf("M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=%d recovered_ip=127 udp_payload=%d",cipher,n)
             t.Logf("M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=%d e=1 restored=%d source_pn=%d parity_pn=%d",
                 cipher,len(recovered),pn[0],pn[1])
             t.Logf("M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=%d source_pn=%d repair_pn=%d source_seq=%d repair_seq=%d",
                 cipher,pn[0],pn[1],seq[0],seq[1])
+            // Stop is a hard terminal for both M2 drafts and recovered
+            // kernel ciphertext ingress; stale old handle is not valid.
+            if err:=b.stopRelease();err!=nil{t.Fatalf("final Stop/Release: %v",err)}
+            if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(19_000_000,1);e==nil{
+                t.Fatal("M2 RX feedback survived original owner Stop")
+            }
+            if _,_,_,e:=b.fec2ProbeActualPeerConsume(captured[1]);e==nil{
+                t.Fatal("stale owner admitted authenticated repair after Stop")
+            }
+            t.Logf("M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite=%d no_partial_udp=1 no_tamper_udp=1 stop_revokes=1",cipher)
         })
     }
 }
