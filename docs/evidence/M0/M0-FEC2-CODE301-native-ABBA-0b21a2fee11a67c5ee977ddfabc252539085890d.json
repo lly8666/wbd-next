@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "0b21a2fee11a67c5ee977ddfabc252539085890d",
+  "result": "M3_CODE301_V2_NATIVE_FUNCTIONAL_10_OF_11_FAIL_INVALID_TEST_ROW_ABBA_EXECUTED_CPU_INCONCLUSIVE_PRODUCT_OFF",
+  "unverified": true,
+  "artifact_zip_rehash_verified": false,
+  "reason": "M0 owns shared build/CI; provide first true FEC2 CODE301 feature=real ISA-L native and same-process one-scenario ABBA entry without importing worker blobs into production or reopening V1 Go wire.",
+  "code": {
+    "m0_s_harness": "29e20f047c3d07c2e7b0eb1c0c6a951d39fe8763",
+    "m0_s_workflow": "4198e21cec8ff374eeec3cef139817802bb09f3b",
+    "m0_s_preserve_failure_and_measure": "0b21a2fee11a67c5ee977ddfabc252539085890d",
+    "entry": ".github/workflows/m0-fec2-codec-native-abba.yml",
+    "harness": "r0/fec2_codec_abba_probe.rs",
+    "m3_fec_v2_worker": "3011431370f1757212df92800c1b56e87ba51d65",
+    "m4_target_build_worker": "7cef7e849e293373d907a3b64007b4ce8946da78",
+    "intel_isa_l": "c387163fcbca62701d646149564c550c78a4f985",
+    "rust": "1.85.1",
+    "target": "x86_64-unknown-linux-gnu",
+    "assembly": "Only temporary Actions working tree contains M3 source/test and M4 native build.rs, M0 root native-isal feature/Cargo.lock and this paired harness; no production code or feature switched."
+  },
+  "runs": [
+    {
+      "id": 39086268414,
+      "attempt": 1,
+      "head_sha": "4198e21cec8ff374eeec3cef139817802bb09f3b",
+      "conclusion": "failure",
+      "build_job": 117553393006,
+      "build_conclusion": "success",
+      "consume_job": 117553642580,
+      "consume_conclusion": "failure",
+      "functional": {
+        "result": "FAIL",
+        "passed": 10,
+        "failed": 1,
+        "filtered": 141,
+        "error": "fec_v2_tests::r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence at fec_v2_tests.rs:234 returned InvalidRow; k=2 Maximum r=3 but test demanded 4 parity rows",
+        "not_codec_math_crash": true
+      },
+      "paired": "NOT_RUN_DUE_TO_STEP_FAILURE",
+      "artifacts": [
+        {
+          "id": 12121016930,
+          "name": "fec2-codec-build-39086268414-1",
+          "digest": "sha256:a963930077ff4fa343310a2005808a27f06aac4b881804582c14221d8b9a94d7"
+        },
+        {
+          "id": 12121106762,
+          "name": "fec2-codec-result-39086268414-1",
+          "digest": "sha256:ba529082add44ec972c21e6582a1eb6a032c4d703da9895722a3a6cc72c2d84f"
+        }
+      ]
+    },
+    {
+      "id": 39086460623,
+      "attempt": 1,
+      "head_sha": "0b21a2fee11a67c5ee977ddfabc252539085890d",
+      "conclusion": "failure",
+      "build_job": 117553963911,
+      "build_conclusion": "success",
+      "consume_job": 117554231404,
+      "consume_conclusion": "failure",
+      "functional": {
+        "result": "FAIL",
+        "passed": 10,
+        "failed": 1,
+        "filtered": 141,
+        "error": "Same known k2 max r3 / requested4 InvalidRow in M3-owned native test; not converted to PASS."
+      },
+      "paired": {
+        "result": "SCOPED_COMPONENT_EXECUTED_CPU_INCONCLUSIVE_SHORT_WINDOW",
+        "test_result": "1 PASS 0 FAIL",
+        "scenario": "k16/r16 1200B frames, 96 blocks and 1536 parity symbols/leg, same consume job & process",
+        "order": [
+          "scalar",
+          "native-isal",
+          "native-isal",
+          "scalar"
+        ],
+        "checksum": 1683360,
+        "wall_ns": [
+          18159519,
+          405490,
+          344249,
+          18371933
+        ],
+        "cpu_ticks": [
+          1,
+          0,
+          1,
+          1
+        ],
+        "unit": "single codec operation batch; not packet latency, CPU-s/GiB, Go, driver or product",
+        "confidence": "Too short for reliable process CPU ticks/host-effects. Absolute wall ratio is not qualified; do not advertise 44x or CPU savings."
+      },
+      "artifacts": [
+        {
+          "id": 12120947704,
+          "name": "fec2-codec-build-39086460623-1",
+          "digest": "sha256:41c2c636c1c94887bec3e564fa960f20bb450c22edba8ced70f642a6fd1cded0"
+        },
+        {
+          "id": 12121480102,
+          "name": "fec2-codec-result-39086460623-1",
+          "digest": "sha256:c9b1bd6437039aa4175338fa255a97eafc93dfc16e7f810f1e9717f78b515b1f"
+        }
+      ],
+      "main_governance": {
+        "run": 39086460588,
+        "result": "success",
+        "scope": "identity_structure_only"
+      },
+      "maintenance": {
+        "run": 39086460606,
+        "result": "success",
+        "scope": "governance-tool-maintenance-not-F2"
+      }
+    }
+  ],
+  "source_conclusions": {
+    "native_f2_math_wire": "FAIL_TEST_INPUT_SPECIFIC; 10 isolated tests PASS, one V2 native test wrongly requests illegal parity count for k2; M3 owns correction and own SOURCE retest.",
+    "actual_native_path": "native-isal linked via real Intel static ISA-L; prepared native cache/encode assertion passed; not whole M3 pack/target matrix.",
+    "kernel_ABBA": "EXECUTED_SHORT_WINDOW_INCONCLUSIVE; same binary and VM/process output checksum equal; no defensible CPU gain.",
+    "first_arrival_packet_p99": "NOT_RUN",
+    "original_go_tls_and_raw_tun_with_v2": "NOT_RUN",
+    "windows_arm64_full_m3_v2": "NOT_RUN",
+    "applied_profile_cli_gui": "NOT_RUN",
+    "capability_bit2_kinds2_3": "RESERVED_DISABLED",
+    "product_FEC_on": "OFF",
+    "physical": "NOT_RUN",
+    "inherited_D10": "39032995995 FAIL/INCONCLUSIVE old A",
+    "inherited_native_codec_timeout": "39047975666 and 39048697568 FAIL 240s",
+    "inherited_p99": "P10 AB+4.58%/BA-1.46% CPU and SPARSE B p99 168->196us/341->394us remain OPEN"
+  },
+  "stop_decision": "Do not rerun same worker InvalidRow twice without M3 source correction. Existing module functional proof is scoped; follow R0-023 actual Go source/MTU/Stop integration instead of redoing 024 or heavy performance.",
+  "next_action": "M0 resume original V4 authenticated real Go-to-Rust LINK oversize fragment TX and peer reassembly under Stop/MTU safety with L01-L04/B01-B04 exact Actions; M3 independently fixes its k2 parity-count native test within assigned 017 package."
+}
