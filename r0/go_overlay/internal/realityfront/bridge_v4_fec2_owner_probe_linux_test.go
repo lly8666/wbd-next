@@ -171,6 +171,23 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
         t.Run(fmt.Sprintf("suite-%d-%s",cipher,mode),func(t *testing.T){
             store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
             b:=&v4EmbeddedNativeBridge{}
+            var policyState FecV2State
+            // Real ORIGINAL Go cold policy drives original Rust M1/M3
+            // parity, not just an independent table test. Different modes
+            // require different on-wire e1 plan for k2 (Mild => r1).
+            if mode!="single"{
+                chosen,revision:=FecV2High,uint64(5)
+                if mode=="kernel-multimsg"{
+                    chosen,revision=FecV2Mild,9
+                }
+                var policyErr error
+                policyState,policyErr=b.fec2ProbeChoosePolicy(FecV2Config{
+                    Client:"protected-owner",Direction:FecV2S2C,
+                    Transport:FecV2Normal,Mode:FecV2Fixed,
+                    Profile:chosen,ConfigRevision:revision,
+                })
+                if policyErr!=nil{t.Fatalf("Go policy pre-TLS mode=%s: %v",mode,policyErr)}
+            }
             c,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,cipher,true)
             if ce!=nil||se!=nil||c==nil||server==nil||!b.committed{
                 t.Fatalf("real TLS FEC2 bound original Rust owner: %v %v",ce,se)
@@ -184,6 +201,24 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }()
             if !b.fec2ProbeScope(server.Epoch){
                 t.Fatal("source2/repair3 raw send attempted without Go TLS grant")
+            }
+            if mode!="single"{
+                effective,policyErr:=b.fec2ProbeAppliedPolicy(policyState)
+                if policyErr!=nil||effective.AppliedRevision!=policyState.RequestedRevision||
+                   effective.AppliedProfile!=policyState.Desired||effective.AppliedOff{
+                    t.Fatalf("Go policy not really applied by original authenticated Rust owner mode=%s effective=%+v err=%v",
+                        mode,effective,policyErr)
+                }
+                stale,ok,policyErr:=FecV2Apply(effective,FecV2Ack{
+                    Client:effective.Client,Direction:effective.Direction,
+                    Revision:effective.RequestedRevision-1,
+                    Profile:effective.Desired,Applied:true,
+                })
+                if policyErr!=nil||ok||stale.AppliedRevision!=effective.AppliedRevision{
+                    t.Fatal("stale Go policy application receipt rewrote effective state")
+                }
+                t.Logf("M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=%d mode=%s profile=%d revision=%d applied=1 stale_ack=deny",
+                    cipher,mode,effective.AppliedProfile,effective.AppliedRevision)
             }
             if e=b.attachKernelTun(tun.Fd(),tunName);e!=nil{
                 t.Fatalf("original M4 TUN scoped FD attach: %v",e)
