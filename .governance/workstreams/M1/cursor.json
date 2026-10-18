@@ -4,19 +4,18 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 17,
-  "checkpoint_sha": "44ddf61d24669f142e70f27e5152decd64181c6c",
+  "sequence": 18,
+  "checkpoint_sha": "e0454ae807754f85ff7118527ba9ebd37173cac5",
   "progress": "blocked",
   "task_id": "R5-M1-FEC2-OWNER-SCHEDULING-014",
-  "current_task": "M1 FEC2 014 owner-local 3class and bounded parity implementation completed, CODE 3f78a671... native 130/130 PASS; H blocked on old worker G2 checker cap64 vs 75 immutable commits, M0-only sync; integrated Go/live/cost not run.",
-  "why_now": "Main registry rev2 M1 epoch1 ACTIVE assigns R5-M1-FEC2-OWNER-SCHEDULING-014; prior GAME013 e2050aec 117/117 accepted and preserved. Authority read main freeze PLAN007/FEC_V2_BALANCED section2/4/8 and F2-SCHED/MEM; this H supersedes old 013 cursor while retaining historical artifact.",
-  "done_when": "Owner 014: three 256/512/MTU classes k1..16, source first ready, 250ms per-class lambda frozen T Normal<=24ms Game<=12ms, 30Mbps mixed partial, parity r<=20 first-send DRR and 10/5ms expiry, Stop/loan/unknown capacity, native source-locked F2-SCHED/MEM PASS; M0-owned checker and isolated FEC2 A/B host cost must be supplied before declaring whole pack governance/integration qualification.",
-  "next_action": "M0 must perform reviewed sync of main paginated G2 scope checker to worker branch (old tools/worker_scope_ci.py cap64, actual 75 commits) or equivalent main-scoped attestation; then rerun source-locked H Governance and provide one isolated paired same-VM FEC2 cost Action after M0/M3 integration. M1 must not change tools/, root/ABI, Go TLS, M3 wire or M2 quotas; Game013 e2050aec remains frozen.",
+  "current_task": "014 M1 three-class FEC2 owner scoped CODE 3f78a671… native 130/130 PASS; central v2 receipt metadata reconciled by S/H, awaiting exact-H central scope PASS and M0 integration/cost. No new code.",
+  "why_now": "Main registry rev2 epoch1 still assigns 014. Governance v2 supersedes old worker G2 lifetime cap: central checker checks 64 new commits since main-approved checkpoint. Attempt1 H central failed GitHub rate limit, attempt2 failed strict result/current SOURCE metadata. S corrected result=PASS scoped; this H retains only same-CODE evidence and moves previous Game013 evidence to historical context.",
+  "done_when": "M1 scoped 3class/<=16 source-first-ready, per-class rate deadlines, partial/30Mbps fake clock, parity 16:20, fairness/expiry, bounded Stop/loans/stats fully tested at CODE 3f78a671 (130/130). Only central scope receipt metadata remains to verify; M0 owns wire/Go integration and isolated FEC2 old/new same-VM AB/BA cost, all NOT_RUN, no product claim.",
+  "next_action": "Check Central worker scope audit for exact current H SOURCE; if PASS, M0 may integrate fixed CODE 3f78a671 with M3 wire and Go owner then run isolated FEC2 paired cost and product qualification. Do not synchronize obsolete worker checker. M1 only resumes on actual M1-scope integration defect/new assignment.",
   "unverified": false,
   "last_tested_source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
   "evidence_refs": [
-    "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json",
-    "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json"
+    "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -27,7 +26,8 @@
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/decisions/M0-fec-v2-workpacks-2026-10-18.md",
     "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/architecture/FEC_V2_TEST_PLAN.md"
+    "docs/architecture/FEC_V2_TEST_PLAN.md",
+    "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json"
   ],
-  "partial_summary": "CODE 3f78a671ae228f21e34eb6679b2d0347fcd6c7a4 worker-native Actions39082738345 compiled-once build117542902310 consume117542963040 PASS 130/130 scoped (117 previous+13 FEC2). Downloaded exact GitHub artifact12119139114 independently sha256 checked ZIP4ea2f832,result1d4653cb,testlogfaf5dfb6,binarycf6c8053. 3 classes, source before FEC wait, deadline after first source-rate sample T normal<=24ms Game<=12ms, mixed30Mbps fake clock partial/full, 16:20 parity first-send, expiry, Stop external loan, class k/r_sent/unknown. GAME013 CODE e2050aec untouched. Old failures source65321d test fixture four, sourcefd4131 sparse deadline one were corrected; current 130/0 PASS. Same CODE Governance39082738365 FAIL due pre-main worker tools checker max64 vs actual G2 75 while main is paginated cap512; M0-only request created and S44ddf61d contains exact evidence/devlog/request. Historical R0-native-ABI39082738373 M0-owned parser FAIL despite Rust rc0 132pass1ignored. No sameVM FEC2 AB/BA cost, M3 wire RX heavy, Go TLS/live/physical/500Mbps/product evidence; all NOT_RUN. Ownership remains M1 file scope; H only cursor."
+  "partial_summary": "H18: CODE 3f78a671ae228f21e34eb6679b2d0347fcd6c7a4 unchanged, native Actions39082738345 130/130 PASS, artifact verified. Central scope Actions39083333199 retry2 failed exact result PASS and Game013 cross-source evidence references (not code). S18 e0454ae8 corrected evidence result and superseded old M0 checker request; H18 current evidence only 014; old Game013 e2050aec historical context. Central current-H PASS PENDING; paired FEC2 AB/BA, integrated Go/TLS/M3/M4, real Mbps, p99, physical/product all NOT_RUN. Owner 014 is otherwise stopped pending M0."
 }
