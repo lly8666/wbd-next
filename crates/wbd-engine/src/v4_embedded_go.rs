@@ -903,7 +903,7 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
 // production M4 batch completion semantics.
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 fn fec2_probe_real_frozen_repair_prefix_two(
-    handle:u64,
+    handle:u64,actual_kernel_batch:bool,
 )->Result<(u64,u32,u32,u64,u64),i32>{
     use wbd_recovery::{
         reserve_frozen_submission,complete_driver_prefix,
@@ -968,21 +968,37 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         (reserved_second.reservation_id,sender.route),
     ];
     drop(process);
-    // EXACT original M4 syscall for slot0, no second syscall. Successful
-    // kernel copy is NOT peer acknowledgement.
-    let first_result=raw.send_one(
-        generation,first.frozen(),tuple,presentation
-    );
+    // Actual native M4 sendmmsg consumes BOTH ORIGINAL FrozenRecord Arcs
+    // in ONE kernel call, with no plaintext clone, re-seal or PN mutation.
+    // The alternate control case remains a REAL single M4 sendto and an
+    // explicit, verifiably NEVER-entered-kernel second slot.
+    // DO NOT hold global M2 mutex across either blocking syscall.
+    let actual_report=if actual_kernel_batch{
+        let frozen=[first.frozen().clone(),second.frozen().clone()];
+        Some(raw.send_kernel_multimsg(
+            generation,&frozen,tuple,&[presentation,presentation]
+        ))
+    }else{None};
+    let first_result=if actual_kernel_batch{None}else{
+        Some(raw.send_one(generation,first.frozen(),tuple,presentation))
+    };
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(now.0);
-    let observation=if first_result.is_ok(){
+    // The original kernel report is the ONLY source of Accepted count.
+    // Any positive-short/errno-unknown remainder is Unproven and keeps
+    // M2 process debt; NEVER relabel it definitely NotSent.
+    let observation=if let Some(report)=actual_report.as_ref(){
+        let count=report.outcome.accepted_prefix.min(2);
+        let uncertain=report.outcome.uncertain_index
+            .filter(|&at|at==count&&at<2);
+        DriverPrefixObservation::checked(
+            2,count,uncertain,BatchSuffixEvidence::Unproven
+        )
+    }else if first_result.as_ref().is_some_and(|r|r.is_ok()){
         DriverPrefixObservation::checked(
             2,1,None,BatchSuffixEvidence::ProvenNotAttempted
         )
     }else{
-        // A real syscall error is NOT definitive NotSent. Both slots'
-        // quota stays conserved (unknown first, deliberately unattempted
-        // second still unproven in this error case).
         DriverPrefixObservation::checked(
             2,0,Some(0),BatchSuffixEvidence::Unproven
         )
@@ -996,25 +1012,41 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         sender.shadow.on_send_result(candidate,status,now)
             .map_err(|_|INVALID)?;
     }
-    if first_result.is_err(){return Err(INVALID)}
+    let all_kernel_copied=actual_report.as_ref().is_some_and(
+        |r|r.outcome.accepted_prefix==2
+            &&r.outcome.uncertain_index.is_none()
+            &&r.outcome.error.is_none()
+            &&r.signal==wbd_platform::linux_batch::KernelSendSignal::None
+    );
+    if actual_kernel_batch&&!all_kernel_copied{return Err(INVALID)}
+    if !actual_kernel_batch&&first_result.as_ref().is_none_or(|x|x.is_err()){
+        return Err(INVALID)
+    }
+    let charged=if actual_kernel_batch{total}else{first_outer};
     if settled.shadow_result(0)!=Some(RepairSendResult::Accepted)
-        ||settled.shadow_result(1)!=Some(RepairSendResult::NotSent)
-        ||settled.counts.accepted!=1
-        ||settled.counts.definitely_not_sent!=1
+        ||settled.shadow_result(1)!=Some(if actual_kernel_batch{
+            RepairSendResult::Accepted
+        }else{RepairSendResult::NotSent})
+        ||settled.counts.accepted!=if actual_kernel_batch{2}else{1}
+        ||settled.counts.definitely_not_sent!=if actual_kernel_batch{0}else{1}
         ||settled.counts.uncertain!=0
         ||settled.counts.held_unproven!=0
         ||process.broker.snapshot().pending!=0
-        ||process.broker.snapshot().charged_repairs!=before+first_outer
+        ||process.broker.snapshot().charged_repairs!=before+charged
         ||sender.shadow.outstanding()!=2{return Err(INVALID)}
-    // This refund is strictly a proven never-entered-kernel slot; do not
-    // re-send or retire PN1 as peer received merely because of the refund.
+    // Successful sendmmsg means kernel copies, NOT peer receipt.
+    // Unsent test slot explicitly never reached kernel; both scenarios
+    // retire FrozenRecord only on subsequent original reverse AEAD receipt.
     process.broker.revoke(lease,now).map_err(|_|INVALID)?;
     sender.repair_submitted=true;
-    let bytes=first_result.map_err(|_|INVALID)?;
-    if bytes as u64!=first_outer{return Err(INVALID)}
+    if !actual_kernel_batch &&
+        first_result.as_ref().is_none_or(|r|r.as_ref().ok()
+            .is_none_or(|n|*n as u64!=first_outer)){
+        return Err(INVALID)
+    }
     Ok((first.pn().0,first_meta.seq.0 as u32,
         u32::try_from(first.frozen().bytes().len()).map_err(|_|INVALID)?,
-        first_outer,second_outer))
+        charged,second_outer))
 }
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
@@ -1024,10 +1056,31 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
 )->i32{
     if pn.is_null()||seq.is_null()||wire.is_null()
         ||accepted.is_null()||not_attempted.is_null(){return INVALID}
-    match fec2_probe_real_frozen_repair_prefix_two(handle){
+    match fec2_probe_real_frozen_repair_prefix_two(handle,false){
         Ok((p,s,w,a,n))=>{
             unsafe{pn.write(p);seq.write(s);wire.write(w);
                 accepted.write(a);not_attempted.write(n)};
+            OK
+        },
+        Err(v)=>v,
+    }
+}
+
+// Same original session/FrozenRecord/M2 setup, but two messages in ONE
+// original M4 Linux sendmmsg kernel syscall. The second output denotes
+// per-slot outer bytes charged, NOT an unsent/refunded slot.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
+    handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
+    accepted:*mut u64,second_outer:*mut u64,
+)->i32{
+    if pn.is_null()||seq.is_null()||wire.is_null()
+        ||accepted.is_null()||second_outer.is_null(){return INVALID}
+    match fec2_probe_real_frozen_repair_prefix_two(handle,true){
+        Ok((p,s,w,a,n))=>{
+            unsafe{pn.write(p);seq.write(s);wire.write(w);
+                accepted.write(a);second_outer.write(n)};
             OK
         },
         Err(v)=>v,
