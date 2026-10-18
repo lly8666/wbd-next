@@ -56,7 +56,7 @@ func TestF2ControlOffFixedGameAndStrictRevisions(t *testing.T) {
     _,_,e=FecV2Step(f2Config("alice",FecV2C2S,FecV2Off,""),s,FecV2Snapshot{},time.Hour)
     if !errors.Is(e,ErrFecV2Revision) {t.Fatal("rolled back config",e)}
     old:=FecV2Ack{Client:"alice",Direction:FecV2C2S,Revision:1,Applied:true,Off:true,Profile:FecV2Light}
-    s2,ok,e=FecV2Apply(s,old)
+    s2,ok,e:=FecV2Apply(s,old)
     if ok||e!=nil||s2.AppliedRevision!=0 {t.Fatal("late ack repainted UI",e)}
     wrong:=FecV2Ack{Client:"bob",Direction:FecV2C2S,Revision:i.Revision,Applied:true,Profile:i.Profile}
     _,ok,e=FecV2Apply(s,wrong)
@@ -92,7 +92,7 @@ func TestF2ControlSampleValidityAndFrozenHost(t *testing.T) {
     }{
         {"zero",func(v *FecV2Snapshot){v.Fast=FecV2Window{}},FecV2Unknown},
         {"lost_feedback",func(v *FecV2Snapshot){v.Validity=FecV2Unknown},FecV2Unknown},
-        {"censored",func(v *FecV2Snapshot){v.Slow.Unknown=1000;v.Slow.Observed=5000},FecV2Censored},
+        {"censored",func(v *FecV2Snapshot){v.Validity=FecV2Censored;v.Slow.Censored=1000;v.Slow.Observed=5000},FecV2Censored},
         {"coverage",func(v *FecV2Snapshot){v.Slow.Observed=4000},FecV2Unknown},
         {"whole_group_disappeared",func(v *FecV2Snapshot){v.ActualK=[16]uint64{}},FecV2Unknown},
         {"host_drop",func(v *FecV2Snapshot){v.HostDrops=1},FecV2HostCapacity},
