@@ -24,6 +24,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
     uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
+    uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
     uint64_t,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_hold(
@@ -218,4 +220,22 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeRealFrozenPrefixTwo()(
         errV4Embedded,int(rc))}
     return uint64(pn),uint32(seq),uint32(wire),
         uint64(accepted),uint64(notAttempted),nil
+}
+
+// Actual original M4 ONE Linux sendmmsg syscall with two original M1
+// FrozenRecord immutable buffers and one original M2 global scoped broker.
+// Test-only, not peer ACK or production interface.
+func (b *v4EmbeddedNativeBridge) fec2ProbeRealKernelMultimsgTwo()(
+    uint64,uint32,uint32,uint64,uint64,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,0,0,0,0,errV4Embedded
+    }
+    var pn,charged,secondOuter C.uint64_t
+    var seq,wire C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
+        C.uint64_t(b.handle),&pn,&seq,&wire,&charged,&secondOuter)
+    if rc!=0{return 0,0,0,0,0,fmt.Errorf("%w: original native 2-slot M4 sendmmsg rc=%d",
+        errV4Embedded,int(rc))}
+    return uint64(pn),uint32(seq),uint32(wire),
+        uint64(charged),uint64(secondOuter),nil
 }
