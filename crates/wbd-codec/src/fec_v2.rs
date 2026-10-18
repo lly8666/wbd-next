@@ -1,0 +1,457 @@
+//! FEC2 RS16 scheme-local codec. Operates ONLY on already-authenticated
+//! record payloads. Record kind (2/3), capability, tunnel epoch, direction,
+//! monotonic block id and first-delivery dedup are enforced by the caller/M0.
+//! No V1 WF magic sniffing, Go V1 format, timers, threads, PN or AEAD here.
+#![forbid(unsafe_code)]
+
+use std::collections::{BTreeMap, VecDeque};
+
+pub const SOURCE_HEADER: usize = 10;
+pub const REPAIR_HEADER: usize = 12;
+pub const RECORD_RESERVATION: usize = 14;
+pub const MAX_K: usize = 16;
+pub const MAX_R: usize = 20;
+pub const MAX_SYMBOL_LEN: usize = u16::MAX as usize;
+pub const MAX_ORIGINAL_LEN: usize = MAX_SYMBOL_LEN - 2;
+pub const DECODE_CACHE_LIMIT: usize = 64;
+pub const MAX_BATCH_ROWS: usize = 4;
+
+/// Record kinds are reserved; these are not wired into the public AEAD kind
+/// selector or negotiated admission feature. M0 alone activates them.
+pub const AUTHENTICATED_FEC2_SOURCE_KIND: u8 = 2;
+pub const AUTHENTICATED_FEC2_REPAIR_KIND: u8 = 3;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Error {
+    UnsupportedProfile,
+    InvalidK,
+    InvalidRow,
+    InvalidIndex,
+    InvalidLength,
+    NonzeroFlags,
+    BudgetExceeded,
+    DuplicateParity,
+    ConflictingMeta,
+    TooManyMissing,
+    Singular,
+    CorruptProtectedLength,
+    NativeUnavailable,
+    NativeFailure,
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BackendChoice { Scalar, PreferNative, RequireNative }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BackendUsed { Scalar, NativeIsaL }
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Profile { Light, Mild, Medium, Balanced, High, Strong, Maximum }
+impl Profile {
+    pub const ALL: [Profile; 7] = [
+        Profile::Light, Profile::Mild, Profile::Medium, Profile::Balanced,
+        Profile::High, Profile::Strong, Profile::Maximum,
+    ];
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Light => "light", Self::Mild => "mild",
+            Self::Medium => "medium", Self::Balanced => "balanced",
+            Self::High => "high", Self::Strong => "strong",
+            Self::Maximum => "maximum",
+        }
+    }
+    pub fn ratio(self) -> (usize, usize) {
+        match self {
+            Self::Light => (1,8), Self::Mild => (1,4),
+            Self::Medium => (3,8), Self::Balanced => (1,2),
+            Self::High => (3,4), Self::Strong => (1,1),
+            Self::Maximum => (5,4),
+        }
+    }
+    pub fn parity_count(self, k: usize) -> Result<usize, Error> {
+        if !(1..=MAX_K).contains(&k) { return Err(Error::InvalidK); }
+        let (n,d) = self.ratio();
+        Ok(((k*n+d-1)/d).min(MAX_R))
+    }
+}
+impl std::str::FromStr for Profile {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self,Self::Err> {
+        Self::ALL.into_iter().find(|p| p.name() == s)
+            .ok_or(Error::UnsupportedProfile)
+    }
+}
+
+/// The limit is authenticated RECORD PAYLOAD bytes, *not* outer IP MTU and
+/// not the LINK/Game capacity. M0 calls path_budget once, then passes it here.
+pub fn max_original_for_record_budget(record_payload_budget: usize) -> Result<usize,Error> {
+    record_payload_budget.checked_sub(RECORD_RESERVATION)
+        .map(|n| n.min(MAX_ORIGINAL_LEN)).ok_or(Error::BudgetExceeded)
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Source<'a> {
+    pub block_id: u64,
+    pub source_index: u8,
+    pub frame: &'a [u8],
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Repair<'a> {
+    pub block_id: u64,
+    pub parity_row: u8,
+    pub actual_k: u8,
+    pub symbol_len: u16,
+    pub body: &'a [u8],
+}
+pub fn source_into(block_id: u64, index: u8, frame: &[u8],
+                   record_payload_budget: usize, out: &mut [u8])
+                   -> Result<usize,Error> {
+    if block_id == 0 || usize::from(index) >= MAX_K { return Err(Error::InvalidIndex); }
+    if frame.len() > max_original_for_record_budget(record_payload_budget)? {
+        return Err(Error::BudgetExceeded);
+    }
+    let needed = SOURCE_HEADER + frame.len();
+    if needed > record_payload_budget || out.len() < needed { return Err(Error::BudgetExceeded); }
+    out[..8].copy_from_slice(&block_id.to_be_bytes());
+    out[8] = index;
+    out[9] = 0;
+    out[SOURCE_HEADER..needed].copy_from_slice(frame);
+    Ok(needed)
+}
+pub fn source_owned(block_id: u64, index: u8, frame: &[u8],
+                    budget: usize) -> Result<Vec<u8>,Error> {
+    if frame.len() > max_original_for_record_budget(budget)? {
+        return Err(Error::BudgetExceeded);
+    }
+    let mut out = vec![0; SOURCE_HEADER + frame.len()];
+    let n = source_into(block_id,index,frame,budget,&mut out)?;
+    out.truncate(n);
+    Ok(out)
+}
+pub fn parse_source(data: &[u8], record_payload_budget: usize) -> Result<Source<'_>,Error> {
+    if data.len() > record_payload_budget { return Err(Error::BudgetExceeded); }
+    if data.len() < SOURCE_HEADER { return Err(Error::InvalidLength); }
+    let block_id = u64::from_be_bytes(data[..8].try_into().map_err(|_|Error::InvalidLength)?);
+    if block_id == 0 || usize::from(data[8]) >= MAX_K { return Err(Error::InvalidIndex); }
+    if data[9] != 0 { return Err(Error::NonzeroFlags); }
+    let frame=&data[SOURCE_HEADER..];
+    if frame.len() > max_original_for_record_budget(record_payload_budget)? {
+        return Err(Error::BudgetExceeded);
+    }
+    Ok(Source { block_id, source_index:data[8], frame })
+}
+pub fn parse_repair(data: &[u8], record_payload_budget: usize) -> Result<Repair<'_>,Error> {
+    if data.len() > record_payload_budget { return Err(Error::BudgetExceeded); }
+    if data.len() < REPAIR_HEADER { return Err(Error::InvalidLength); }
+    let block_id=u64::from_be_bytes(data[..8].try_into().map_err(|_|Error::InvalidLength)?);
+    if block_id==0 || usize::from(data[8])>=MAX_R { return Err(Error::InvalidRow); }
+    if !(1..=MAX_K as u8).contains(&data[9]) { return Err(Error::InvalidK); }
+    let len = u16::from_be_bytes([data[10],data[11]]) as usize;
+    if len < 2 || len > record_payload_budget.saturating_sub(REPAIR_HEADER) ||
+       data.len() != REPAIR_HEADER+len {
+        return Err(Error::InvalidLength);
+    }
+    Ok(Repair {block_id, parity_row:data[8], actual_k:data[9],
+        symbol_len:len as u16,body:&data[REPAIR_HEADER..]})
+}
+
+/// Local-only GF256 0x11d oracle; no Go/V1 generator normalization.
+struct Gf {
+    exp:[u8;512], log:[u8;256],
+}
+impl Gf {
+    fn new()->Self {
+        let mut gf=Self {exp:[0;512],log:[0;256]};
+        let mut x=1u16;
+        for i in 0..255 {
+            gf.exp[i]=x as u8;gf.log[x as usize]=i as u8;
+            x<<=1;if x&256!=0 { x^=0x11d; }
+        }
+        for i in 255..512 {gf.exp[i]=gf.exp[i-255];}
+        gf
+    }
+    fn mul(&self,a:u8,b:u8)->u8 {
+        if a==0 || b==0 { 0 } else {
+            self.exp[usize::from(self.log[a as usize])+usize::from(self.log[b as usize])]
+        }
+    }
+    fn div(&self,a:u8,b:u8)->u8 {
+        if a==0 {0} else {
+            let index=(255 + usize::from(self.log[a as usize])
+                - usize::from(self.log[b as usize]))%255;
+            self.exp[index]
+        }
+    }
+    fn inverse(&self, a:&[Vec<u8>])->Result<Vec<Vec<u8>>,Error> {
+        let n=a.len();
+        if n==0 || n>MAX_K || a.iter().any(|r|r.len()!=n) {return Err(Error::InvalidLength);}
+        let mut aug=vec![vec![0u8;2*n];n];
+        for (i,row) in a.iter().enumerate() {
+            aug[i][..n].copy_from_slice(row);
+            aug[i][n+i]=1;
+        }
+        for col in 0..n {
+            let pivot=(col..n).find(|&r|aug[r][col]!=0).ok_or(Error::Singular)?;
+            aug.swap(col,pivot);
+            let p=self.div(1,aug[col][col]);
+            for x in 0..2*n { aug[col][x]=self.mul(aug[col][x],p); }
+            for row in 0..n {
+                if row==col {continue;}
+                let factor=aug[row][col];
+                if factor==0 {continue;}
+                for x in 0..2*n {aug[row][x]^=self.mul(factor,aug[col][x]);}
+            }
+        }
+        Ok(aug.into_iter().map(|r|r[n..].to_vec()).collect())
+    }
+}
+#[derive(Clone,Copy,Debug,Eq,PartialEq,Ord,PartialOrd)]
+struct CacheKey {k:u8, missing:u16, selected_rows:u32}
+pub struct Rs16 {
+    gf:Gf,
+    inverses:BTreeMap<CacheKey,Vec<Vec<u8>>>,
+    order:VecDeque<CacheKey>,
+}
+impl Default for Rs16 {fn default()->Self{Self::new()}}
+impl Rs16 {
+    pub fn new()->Self {
+        Self {gf:Gf::new(),inverses:BTreeMap::new(),order:VecDeque::new()}
+    }
+    pub fn cache_entries(&self)->usize {self.inverses.len()}
+    /// GF Cauchy row: first row XOR, remaining y_j/(x_i XOR y_j).
+    /// k1 is a repetition code for ALL rows.
+    pub fn coefficient(&self, row:usize, col:usize, k:usize)->Result<u8,Error> {
+        if !(1..=MAX_K).contains(&k) {return Err(Error::InvalidK);}
+        if row>=MAX_R {return Err(Error::InvalidRow);}
+        if col>=k {return Err(Error::InvalidIndex);}
+        if row==0 || k==1 {return Ok(1);}
+        let y=32+col as u8;
+        Ok(self.gf.div(y,(row as u8)^y))
+    }
+    fn validate_sources(sources:&[&[u8]],budget:usize)->Result<usize,Error> {
+        if !(1..=MAX_K).contains(&sources.len()) { return Err(Error::InvalidK); }
+        let limit=max_original_for_record_budget(budget)?;
+        if sources.iter().any(|s|s.len()>limit) { return Err(Error::BudgetExceeded); }
+        Ok(sources.iter().map(|s|s.len()).max().unwrap_or(0)+2)
+    }
+    fn symbol_byte(frame:&[u8], pos:usize)->u8 {
+        if pos<2 {(frame.len() as u16).to_be_bytes()[pos]}
+        else {frame.get(pos-2).copied().unwrap_or(0)}
+    }
+    fn scalar_row(&self,sources:&[&[u8]], row:usize, output:&mut [u8]) -> Result<(),Error>{
+        output.fill(0);let k=sources.len();
+        for (col,src) in sources.iter().enumerate() {
+            let c=self.coefficient(row,col,k)?;
+            for (at,d) in output.iter_mut().enumerate() {
+                let b=Self::symbol_byte(src,at);
+                *d^=if c==1 {b} else {self.gf.mul(c,b)};
+            }
+        }
+        Ok(())
+    }
+    /// Exactly one owner polling quantum. The caller allocates final 12+L
+    /// outputs, this method writes their bodies directly (no parity staging).
+    /// All sources borrowed, no output aliases a source in safe Rust.
+    /// Returning NativeIsaL requires an ACTUAL Tables::encode invocation.
+    pub fn encode_into(&self,block_id:u64,sources:&[&[u8]],profile:Profile,
+        first_row:usize,outputs:&mut [&mut [u8]],
+        record_payload_budget:usize,backend:BackendChoice)
+        ->Result<BackendUsed,Error> {
+        let symbol_len=Self::validate_sources(sources,record_payload_budget)?;
+        let total=profile.parity_count(sources.len())?;
+        if block_id==0 || outputs.is_empty() || outputs.len()>MAX_BATCH_ROWS ||
+           first_row>=total || outputs.len()>total-first_row {
+            return Err(Error::InvalidRow);
+        }
+        let needed=REPAIR_HEADER+symbol_len;
+        if needed>record_payload_budget || outputs.iter().any(|o|o.len()!=needed) {
+            return Err(Error::BudgetExceeded);
+        }
+        // Reject unsupported native BEFORE mutating output.
+        let run_native=backend!=BackendChoice::Scalar && symbol_len>=64 && sources.len()>1;
+        if backend==BackendChoice::RequireNative {
+            #[cfg(not(feature="native-isal"))]
+            {return Err(Error::NativeUnavailable);}
+            if !run_native {return Err(Error::NativeUnavailable);}
+        }
+        let mut used=BackendUsed::Scalar;
+        if run_native {
+            #[cfg(feature="native-isal")]
+            {
+                let k=sources.len();
+                let mut coefs=Vec::with_capacity(k*outputs.len());
+                for row in first_row..first_row+outputs.len() {
+                    for col in 0..k {coefs.push(self.coefficient(row,col,k)?);}
+                }
+                // The 2B protected length must be part of the mathematical
+                // input. Allocate one bounded, length-exact temporary per
+                // source; never expose dirty arena capacity to ISA-L.
+                let mut owned=vec![vec![0u8;symbol_len];k];
+                for (o,src) in owned.iter_mut().zip(sources) {
+                    o[..2].copy_from_slice(&(src.len() as u16).to_be_bytes());
+                    o[2..2+src.len()].copy_from_slice(src);
+                }
+                let inputs=owned.iter().map(Vec::as_slice).collect::<Vec<_>>();
+                let tables=wbd_isal_safe::Tables::new(k,outputs.len(),&coefs)
+                    .map_err(|_|Error::NativeFailure)?;
+                let mut dst=outputs.iter_mut().map(|o|&mut o[REPAIR_HEADER..])
+                    .collect::<Vec<_>>();
+                tables.encode(&inputs,&mut dst).map_err(|_|Error::NativeFailure)?;
+                used=BackendUsed::NativeIsaL;
+            }
+        }
+        if used==BackendUsed::Scalar {
+            for (index,out) in outputs.iter_mut().enumerate() {
+                self.scalar_row(sources,first_row+index,&mut out[REPAIR_HEADER..])?;
+            }
+        }
+        for (index,out) in outputs.iter_mut().enumerate() {
+            out[..8].copy_from_slice(&block_id.to_be_bytes());
+            out[8]=(first_row+index) as u8;
+            out[9]=sources.len() as u8;
+            out[10..12].copy_from_slice(&(symbol_len as u16).to_be_bytes());
+        }
+        Ok(used)
+    }
+    pub fn encode_owned(&self,block_id:u64,sources:&[&[u8]],profile:Profile,
+        first_row:usize,count:usize,budget:usize,backend:BackendChoice)
+        ->Result<(Vec<Vec<u8>>,BackendUsed),Error> {
+        let len=Self::validate_sources(sources,budget)?;
+        if count==0 || count>MAX_BATCH_ROWS {return Err(Error::InvalidRow);}
+        let mut rows=vec![vec![0u8;REPAIR_HEADER+len];count];
+        let used={
+            let mut dest=rows.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+            self.encode_into(block_id,sources,profile,first_row,&mut dest,budget,backend)?
+        };
+        Ok((rows,used))
+    }
+    fn inverse_cached(&mut self,k:usize,missing:&[usize],selected:&[Repair<'_>])
+        ->Result<Vec<Vec<u8>>,Error> {
+        let mask=missing.iter().fold(0u16,|m,&col|m|(1u16<<col));
+        let rows=selected.iter().fold(0u32,|m,r|m|(1u32<<r.parity_row));
+        let key=CacheKey {k:k as u8,missing:mask,selected_rows:rows};
+        if let Some(hit)=self.inverses.get(&key) {return Ok(hit.clone());}
+        let mut matrix=Vec::with_capacity(missing.len());
+        for repair in selected {
+            let mut line=Vec::with_capacity(missing.len());
+            for &col in missing {
+                line.push(self.coefficient(repair.parity_row as usize,col,k)?);
+            }
+            matrix.push(line);
+        }
+        let inverse=self.gf.inverse(&matrix)?;
+        if self.order.len()==DECODE_CACHE_LIMIT {
+            if let Some(old)=self.order.pop_front() {self.inverses.remove(&old);}
+        }
+        self.order.push_back(key);
+        self.inverses.insert(key,inverse.clone());
+        Ok(inverse)
+    }
+    /// Recover only e missing originals. Sources may be absent, but all
+    /// surviving original frames are authenticated, never mathematical symbols.
+    /// Parity is authenticated by the caller and strictly parsed using
+    /// parse_repair. Caller retains epoch/direction/late/Stop and dedup.
+    /// No output is deliverable until protected original_len and zero tail
+    /// are validated. No len-array exists on V2 wire.
+    pub fn recover_missing(&mut self,block_id:u64,
+        sources:&[Option<&[u8]>],repairs:&[Repair<'_>],
+        record_payload_budget:usize,backend:BackendChoice)
+        ->Result<(Vec<(u8,Vec<u8>)>,BackendUsed),Error> {
+        if block_id==0 || !(1..=MAX_K).contains(&sources.len()){return Err(Error::InvalidK);}
+        let k=sources.len();
+        let mut sorted=repairs.to_vec();sorted.sort_by_key(|r|r.parity_row);
+        let mut len=None;
+        for (i,r) in sorted.iter().enumerate() {
+            if r.block_id!=block_id || r.actual_k as usize!=k {
+                return Err(Error::ConflictingMeta);
+            }
+            if r.parity_row as usize>=MAX_R {return Err(Error::InvalidRow);}
+            if i>0 && sorted[i-1].parity_row==r.parity_row {return Err(Error::DuplicateParity);}
+            if r.body.len()!=r.symbol_len as usize || r.symbol_len<2 ||
+               REPAIR_HEADER+r.body.len()>record_payload_budget {
+                return Err(Error::InvalidLength);
+            }
+            if len.is_some_and(|l|l!=r.body.len()) {return Err(Error::ConflictingMeta);}
+            len=Some(r.body.len());
+        }
+        let missing=(0..k).filter(|&i|sources[i].is_none()).collect::<Vec<_>>();
+        if missing.is_empty() {return Ok((Vec::new(),BackendUsed::Scalar));}
+        let e=missing.len();
+        if sorted.len()<e {return Err(Error::TooManyMissing);}
+        let symbol_len=len.ok_or(Error::TooManyMissing)?;
+        if sources.iter().flatten().any(|s|s.len()>symbol_len-2 ||
+            s.len()>MAX_ORIGINAL_LEN) {return Err(Error::ConflictingMeta);}
+        let chosen=&sorted[..e];
+        let inverse=self.inverse_cached(k,&missing,chosen)?;
+        let known=(0..k).filter_map(|j|sources[j].map(|s|(j,s))).collect::<Vec<_>>();
+        let mut recovered=vec![vec![0u8;symbol_len];e];
+        let run_native=backend!=BackendChoice::Scalar && symbol_len>=64 && k>1;
+        if backend==BackendChoice::RequireNative {
+            #[cfg(not(feature="native-isal"))]
+            {return Err(Error::NativeUnavailable);}
+            if !run_native {return Err(Error::NativeUnavailable);}
+        }
+        let mut used=BackendUsed::Scalar;
+        if run_native {
+            #[cfg(feature="native-isal")]
+            {
+                let input_count=e+known.len();
+                let mut coeff=Vec::with_capacity(e*input_count);
+                for out in 0..e {
+                    coeff.extend_from_slice(&inverse[out]);
+                    for &(col,_) in &known {
+                        let mut c=0u8;
+                        for (i,r) in chosen.iter().enumerate() {
+                            c^=self.gf.mul(inverse[out][i],
+                                self.coefficient(r.parity_row as usize,col,k)?);
+                        }
+                        coeff.push(c);
+                    }
+                }
+                let owned=known.iter().map(|(_,frame)| {
+                    let mut data=vec![0u8;symbol_len];
+                    data[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
+                    data[2..2+frame.len()].copy_from_slice(frame);
+                    data
+                }).collect::<Vec<_>>();
+                let mut inputs=chosen.iter().map(|r|r.body).collect::<Vec<_>>();
+                inputs.extend(owned.iter().map(Vec::as_slice));
+                let tables=wbd_isal_safe::Tables::new(input_count,e,&coeff)
+                    .map_err(|_|Error::NativeFailure)?;
+                let mut dst=recovered.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+                tables.encode(&inputs,&mut dst).map_err(|_|Error::NativeFailure)?;
+                used=BackendUsed::NativeIsaL;
+            }
+        }
+        if used==BackendUsed::Scalar {
+            for (out,row) in recovered.iter_mut().enumerate() {
+                for (p,r) in chosen.iter().enumerate() {
+                    let c=inverse[out][p];
+                    for (j,d) in row.iter_mut().enumerate(){
+                        *d^=if c==1 {r.body[j]} else {self.gf.mul(c,r.body[j])};
+                    }
+                }
+                for &(col,frame) in &known {
+                    let mut c=0u8;
+                    for (p,r) in chosen.iter().enumerate() {
+                        c^=self.gf.mul(inverse[out][p],
+                            self.coefficient(r.parity_row as usize,col,k)?);
+                    }
+                    for (j,d) in row.iter_mut().enumerate() {
+                        let b=Self::symbol_byte(frame,j);
+                        *d^=if c==1 {b} else {self.gf.mul(c,b)};
+                    }
+                }
+            }
+        }
+        let mut outputs=Vec::with_capacity(e);
+        for (&index,bytes) in missing.iter().zip(recovered) {
+            let n=u16::from_be_bytes([bytes[0],bytes[1]]) as usize;
+            if n>symbol_len-2 || bytes[2+n..].iter().any(|&b|b!=0) {
+                return Err(Error::CorruptProtectedLength);
+            }
+            outputs.push((index as u8,bytes[2..2+n].to_vec()));
+        }
+        Ok((outputs,used))
+    }
+}
+#[cfg(test)]
+#[path="fec_v2_tests.rs"]
+mod tests;
