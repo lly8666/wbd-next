@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+  "result": "PASS_SCOPED_EXPLICIT_OPT_IN_FEC2_REAL_AEAD_PN_REPLAY_3_CIPHERS",
+  "progress": "partial",
+  "unverified": true,
+  "scope": {
+    "code": [
+      "crates/wbd-codec/src/record_crypto.rs",
+      "crates/wbd-codec/src/record_replay.rs",
+      "crates/wbd-codec/src/record_crypto_tests.rs",
+      "crates/wbd-codec/src/record_replay_tests.rs",
+      "crates/wbd-codec/Cargo.toml"
+    ],
+    "feature": "m0-fec2-record-probe (default off, no engine/Go public C ABI exposed)",
+    "integration": "Reuses production compiled LaneTxCrypto and LaneRxCrypto and ReplayProtectedLaneRx. Default seal_in_place/open_in_place/open_unique_in_place accept authenticated old kind0 LINK/kind1 HEALTH only. New explicitly named FEC2 caller-after-Go-admission methods on THE SAME lane crypto/PN allocator and replay bitmap opt in to kind2 FEC2_SOURCE and kind3 FEC2_REPAIR. M3 original source/repair geometry, encoded parity and one missing source recovered after verified AEAD. No second AEAD, no PN reset or replay window.",
+    "failclosed": [
+      "unnegotiated receiver returns InvalidKind for authenticated kind2/3 without mutating replay PN bitmap",
+      "ordinary kind0 interleaves; late PN0 delivered after valid PN2 and PN1 without HOL",
+      "duplicate old/FEC PN denied by same original replay state",
+      "tampered ciphertext/tag returns Authentication and does not burn RX replay PN0",
+      "bad source flags pass AEAD then M3 source parser rejects with NonzeroFlags",
+      "unsupported sender kinds fail and consume TX PN never reused",
+      "normal production method cannot seal 2/3 even when feature compiled; new opt-in entry cannot seal old kind0/1"
+    ],
+    "requires_real_protected_go_admission": "NOT_WIRED; scoped CALLER must independently bind feature bit2, epoch, direction, generation and KDF before using optional APIs; this proof does not assert such a Go binding."
+  },
+  "actions": {
+    "targeted": {
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39098885644",
+      "run_id": 39098885644,
+      "attempt": 1,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "job_id": 117590887047,
+      "conclusion": "success",
+      "tests": [
+        "r1_m0_fec2_three_suite_single_pn_real_aead_and_missing_only_recovery",
+        "r1_m0_fec2_three_suite_real_replay_shared_with_link_no_kind_bypass"
+      ],
+      "default_build": "2 PASS,0 FAIL",
+      "explicit_feature_build": "2 PASS,0 FAIL",
+      "cipher_suites": [
+        "ChaCha20-Poly1305",
+        "AES-128-GCM",
+        "AES-256-GCM"
+      ],
+      "artifact_id": 12125319675,
+      "artifact_digest": "sha256:7ee4beec5c611be0f4ad2ee22ce37d05d8124aafa08e50ac762f9c47b1d4b023"
+    },
+    "g2_bootstrap": {
+      "run_id": 39098885668,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "success"
+    },
+    "r0_wire_codec": {
+      "run_id": 39098885673,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "success"
+    },
+    "r0_record_wire": {
+      "run_id": 39098885649,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "success"
+    },
+    "r0_link_fec_mtu": {
+      "run_id": 39098885643,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "success"
+    },
+    "main_governance_S": {
+      "run_id": 39098885646,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "success"
+    },
+    "full_native_functional": {
+      "run_id": 39098885670,
+      "head_sha": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+      "conclusion": "IN_PROGRESS_AT_RECEIPT",
+      "checked_jobs": "build and engine/normal/fec/kernel/receipt SUCCESS; legacy codec group in progress under old 240s budget, do not infer pass"
+    },
+    "prior_failed_build": {
+      "run_id": 39098807187,
+      "source_sha": "0ad33f45d2c0bf6d26b5223d5bae4a3421c079c0",
+      "conclusion": "failure",
+      "cause": "new record_replay_tests.rs temporary Vec clone borrowed past statement E0716; corrected in source ee5; exact targeted and Rust bootstrap Actions pass"
+    }
+  },
+  "github_artifact_zip_independent_rehash": "NOT_DONE; GitHub reported artifact digest, Actions test logs and receipt generated from same SOURCE",
+  "product": {
+    "FEC2_capability": "OFF",
+    "default_production_kind2_3": "DENIED",
+    "original_Go_TLS_KDF_epoch": "NOT_RUN",
+    "M0_ProtectedScopedOwner_live_source_and_repair_seal": "NOT_WIRED",
+    "M4_raw_TUN_FEC2": "NOT_RUN",
+    "M2_auth_receipt_recovery": "NOT_RUN",
+    "GUI_config_applied": "NOT_RUN",
+    "full_Arm64_Windows_new_FEC2_codec": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "original_R0_023_big_udp_cross_turn_Stop_MTU": "OPEN",
+    "D10_p99_old_codec_timeout": "OPEN"
+  },
+  "next_action": "Connect explicit record-kind feature behind actual protected Go feature-bit2/KDF and generation/epoch/direction policy in M0 original ProtectedScopedOwner; then use original M1 ParityJob and M3 Rs16 source/parity kind2/3 on real M4 raw/TUN with M2 real authenticated ingress. Do not enable default production until end-to-end through CLI/GUI target tests; in parallel R0-023 65KiB TUN cross-turn/MTU/Stop remains."
+}
