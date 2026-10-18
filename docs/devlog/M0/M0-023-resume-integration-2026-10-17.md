@@ -94,3 +94,17 @@ Actions：
 两次初期真实错误已保留：旧SOURCE 39103821683 缺Go普通版空回调文件，39104016657定向Actions在编译原测试包时漏原native-probe raw辅助文件/标签，均按原实际编译边界修复后通过；先前39103933765旧150ms内核netem独立试验FAIL，旧codec240s/D10/p99也仍OPEN。
 
 **重要非产品说明：**原Rust不能独立密码学证明任意同进程C调用确由Go TLS凭据拥有者发起；此信任依赖原Go私有同进程代码路径，且仅额外测试标签编译。Strong/1只是探针，不是已生效真实Go FEC2自动/固定CLI/GUI配置。没有实际FEC2 parity经过M4 raw/TUN、没有M2认证反馈、没有产品用户态启用，FEC2产品OFF；原023 65KiB跨轮次/MTU/Stop/prefix不确定仍未收口。**下一动作为**将已有绑定生命周期送入原M1 source-first+M3 FEC2→M4真实收发和M2 auth ingress，逐条Source锁真实业务反例，非再跑微基准。
+
+## 2026-10-18 · M0 R0-023 真实 Linux M4 raw TCP FEC2 source2/repair3 端到内核
+
+已把上轮 H141「真 Go TLS→私有 Rust owner epoch/grant」推进至**真实 M4 内核发送**：额外test-only feature 下，`v4_embedded_go.rs` 的单轮有界探针预先用 M3 真 RS16 Strong k2 制备 113/127B 两源和一条 repair（这里只发送source索引0与repair行0，**没有**把原M1 Fec2Owner实时调度当已接入）；在任何PN/Seq前取得两个原 M1 Arena slab；每个走同一 `ProtectedScopedOwner.seal_fec2_probe_one` →原AEAD/8B HP/PN→冻结M1 TX→原 `ScopedRawIpv4Tx.send_one`，不自造第二加密器。真实 Go credential-checked 0x0007 私有scope已成功绑定 generation/epoch；错误scope在发送前拒绝。独立 Go syscall.SOCK_RAW/IPPROTO_TCP 原raw socket 在专用root netns捕获真正源/目的地址、端口、TCP Seq、密文长度（不以源码内计数代替收包）；3个cipher各 2 条刚好 PN0/1，连续Seq。真实内核raw链路已实测，但**尚无客户端解码/恢复或FEC2 TUN应用交付**，也没有实际applied Go CLI/GUI FEC2配置，产品开关仍OFF。
+
+精确SOURCE `f6069a955d06508814341a23e22db27713424454`：
+- [定向真实Go/Rust/M4 raw Actions39106157016](https://github.com/lly8666/wbd-next/actions/runs/39106157016) attempt1 job117612320575 **SUCCESS**，Go `TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS` 三套cipher内核实包均PASS，保留原3套Go TLS授权/原Rust FrozenRecord真实AEAD测试，Rust生产默认build不含任何该授权FFI。Artifact12128403235 GitHub ZIP sha256 `f75578329961529947d32281e3b5d02691a70f0a8e41efa6639889b847054250`，M0已下载并**独立重新计算完全一致**；`real-kernel.log` SHA256 `0db2038762f05c9f107303a4270db9bf4b363a7029d0cd8fd168507026342632`；3种cipher返回PN均0/1。
+- 同SOURCE [旧完整Normal/off原内核39106157061](https://github.com/lly8666/wbd-next/actions/runs/39106157061) **整体FAIL**，build SUCCESS，原正常 Go/TUN raw双向0ms真实三套都PASS、10ms configured netem三套探针仅EXPLORATORY_PASS，但旧150ms configured netem中第三cipher的第二个合法LINK fragment经过原M3表后仍无完整应用交付（raw_to_tun=INVALID），前两cipher在该场景PASS。**旧150ms红灯保留OPEN**，不能用0/10ms和本次FEC2实包成功覆盖。
+- 第一次定向 `39105586754` 被新增shell选择器漏引号阻止执行，后来 `39105856135` 真FEC2内核raw已PASS，但原传统Action因为意外重复拼接的脚本尾部syntax失败；`f606`修复重复尾部并同时复核上述真实old0ms/10ms与150ms，记录全部发生经过。未刷seed/增加场景来粉饰高延迟异常。
+- 同SOURCE治理工具maintenance39106157020和S Governance39106157008 SUCCESS。
+
+[SOURCE、zip成员SHA、历史失败和下一硬门精确回执](../../evidence/M0/M0-023-fec2-actual-m4-kernel-source-repair-f6069a955d06508814341a23e22db27713424454.json)。
+
+**后续优先**：原实包的真正下游Rx同一认证PN/范围和M3 e1缺失恢复→原M2反馈→独立TUN app，区别「实际TCP raw发送成功」和「真实FEC2修复应用收到」。产品Go实际applied fixed/auto revision、M1短块source-first完整调度、Windows/ARM64、R0-023 65KiB跨轮次/Stop/MTU、旧codec 240秒与D10/p99都继续OPEN。旧150ms source fragment失败先限一条可重复的新根因假设，不盲跑全部网况。
