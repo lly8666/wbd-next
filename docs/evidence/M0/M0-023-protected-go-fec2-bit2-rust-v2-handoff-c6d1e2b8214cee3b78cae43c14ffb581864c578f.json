@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "c6d1e2b8214cee3b78cae43c14ffb581864c578f",
+  "result": "PASS_SCOPED_ORIGINAL_GO_TLS_FEC2_BIT2_KDF_PRIVATE_RUST_OWNER_HANDOFF_V2",
+  "progress": "partial",
+  "unverified": true,
+  "scope": {
+    "exact_code": [
+      "r0/go_overlay/internal/realityfront/admission_v4.go",
+      "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go",
+      "crates/wbd-engine/src/v4_protected_handoff.rs",
+      ".github/workflows/m0-v4-native-owner-probe.yml",
+      ".governance/native-suites.json"
+    ],
+    "real_protected_go": "Existing original pinned wobuzhidao Go TLS+FakeTCP credential-authenticated single roundtrip V4 request and reply; unexported fec2ProbeOnly client/server opt-in only, public default 0x0003, private 0x0007. Server requires exact offered feature set after actual password verification; mismatch rejects with no fallback or published epoch. Original exporter KDF binds full protected extension (features/epoch) plus identity, limits, cipher and policy. Go session and verified cold snapshot freeze this exact feature value; old cold248 reserved byte11 remains zero and cannot itself authorize FEC2.",
+    "go_private_to_rust": "From frozen post-credential Go snapshot, private in-process bridge produces unchanged 32B v1 command for default 0x0003; for 0x0007 produces version2 with exact BE features in existing bytes27:29. Existing original Go embedded and probe bridge entrypoints consume this same verified snapshot. Normal Rust private handoff checks v2 exact pattern [0,7] and all three trailing bytes zero, v1 still requires five reserved zeros; no untrusted arbitrary feature set admitted. Original Rust Owner Prepare/Commit succeeds for three cipher suites in real Go TLS with version2.",
+    "rust_authority_boundary": "PrivateGoV4Handoff negotiated_features is parsed as metadata only and NOT wired as an authenticated activation permit. Original ProtectedScopedOwner still runs default Normal/off. FEC2 kind2/3 live permissions, owner runtime policy and M1/M3/M4/M2 network path are NOT ACTIVATED. No new production C ABI."
+  },
+  "tests": {
+    "original_go_real_tls": {
+      "run_id": 39102069847,
+      "source_sha": "49498f3a7aeda36e5310f8c1af5c736240f86c24",
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117600204327,
+      "consume_job": 117600314381,
+      "test_summary": "17 actual Go TestR0V4 top-level tests PASS, 16 required tests incl four new checks: full ChaCha/AES128/AES256 real TLS bit2 0x0007 and frozen snapshot; true/false and false/true fail plus same identity epoch rollback; reject partial/unknown feature bits; deterministic exporter same nonce/epoch/policy off-vs-on KDF separation. Old default Go v1 tests remain.",
+      "artifact_build": {
+        "id": 12127450572,
+        "digest": "sha256:86e7ab1c1411bb58fa51f1c4fd3a5fb3b9785be9c4e00d1d7ea2f86cd9742e02"
+      },
+      "artifact_result": {
+        "id": 12126862362,
+        "digest": "sha256:5dacce1c2e16a1258e54908c365114cd9b9919d3e166307f7f8462b0b3cfec73"
+      }
+    },
+    "exact_real_go_rust": {
+      "run_id": 39102424680,
+      "source_sha": "c6d1e2b8214cee3b78cae43c14ffb581864c578f",
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job": 117601245951,
+      "consume_job": 117601531073,
+      "new_go_test": "TestR0V4EmbeddedNativeProtectedFec2Bit2Scope / 1,2,3 ALL PASS actual credential-checked V4 Go TLS→private V2 control→original Rust Active→Stop/Release",
+      "new_rust_test": "m0_private_v4_real_go_fec2_bit2_handoff_is_metadata_not_permission PASS strict exact v2 feature/reserved and v1 reject",
+      "other_native_checks": "All existing source-frozen Normal/off kernel raw/TUN, non-FEC LINK reassembly, native Go/Rust and development 10Mbps diagnostics PASS as required by workflow; does not test FEC2 DATA.",
+      "artifact_build": {
+        "id": 12126927912,
+        "digest": "sha256:2812a5f1d1e7f0a6f4dab72aec00cdcfab7cf298fcba4857c5687acca3b95f63"
+      },
+      "artifact_result": {
+        "id": 12126823433,
+        "digest": "sha256:e3ee941b366c718953efde02c23942a37161c48dcb0b2839d1b9849a5e360a0b"
+      }
+    },
+    "maintenance": {
+      "run_id": 39102424631,
+      "source_sha": "c6d1e2b8214cee3b78cae43c14ffb581864c578f",
+      "conclusion": "success",
+      "job": 117601245729,
+      "artifact_id": 12127001525,
+      "digest": "sha256:527dd858112d0bcf95775ae7eac26621c056fd7f648adb97798f9719e174a8ea"
+    },
+    "source_control_governance": {
+      "run_id": 39102424605,
+      "source_sha": "c6d1e2b8214cee3b78cae43c14ffb581864c578f",
+      "conclusion": "success"
+    },
+    "previous_failure": {
+      "run_id": 39102069872,
+      "source_sha": "49498f3a7aeda36e5310f8c1af5c736240f86c24",
+      "conclusion": "failure",
+      "reason": "Old native-functional codec 240s timeout; platform/kernel/engine/recovery/receipt/fec/normal passed. Go TLS and separate native Go/Rust SOURCE-specific tests passed; do not label legacy codec qualified."
+    }
+  },
+  "artifact_zips_independent_rehash": "NOT_DONE; authoritative GitHub reported SHA256 and build/consume source/hash manifests checked in workflows",
+  "product": {
+    "FEC2_default": "OFF",
+    "public_go_enable": "NOT_EXPOSED",
+    "actual_rust_kind2_3_after_verified_go": "NOT_WIRED",
+    "full_M1_FEC2_parity_in_real_live_owner": "NOT_WIRED",
+    "M4_real_FEC2_raw_TUN": "NOT_RUN",
+    "M2_authenticated_receipt": "NOT_RUN",
+    "real_Go_UI_config_applied": "NOT_RUN",
+    "ARM64_Windows_full_codec": "NOT_RUN",
+    "legacy_codec_240s": "FAIL_OPEN",
+    "R0_65k_cross_turn_mtu_stop": "OPEN",
+    "D10_p99": "OPEN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "M0 integrate true authenticated Go private post-Detach FEC2 feature into original Rust ProtectedScopedOwner as an unforgeable same-process lifetime permission, not merely parsed v2 metadata. Gate actual Source2/Repair3 TX and shared RX replay by generation/epoch/direction and selected applied FEC2 policy, then original M1 source-first/RS16/M4 raw/TUN/M2 authenticated recovery. Add source-locked real FEC2 network loss and negative no-downgrade/Stop/prefix tests; default public FEC2 remains OFF. R0 65KiB cross-turn and historical codec240s remain open."
+}
