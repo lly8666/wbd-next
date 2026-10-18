@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "367913cada290cf5e3171307c85c514be88b4b7f",
+  "progress": "partial",
+  "unverified": true,
+  "product_fec2": "OFF",
+  "result": "PASS_TEST_ONLY_ORIGINAL_M4_ONE_ACTUAL_KERNEL_ACCEPTED_PLUS_ONE_EXPLICIT_NEVER_SYSCALLED_M2_SCOPED_PROVEN_NOT_ATTEMPTED_TWO_SLOT_PREFIX_THREE_CIPHERS",
+  "verified": [
+    "Recovered clean H153 main 8af3a5ac087c5141f0feae9fc53c6b17716a79eb; registry rr2 M0 epoch1 unchanged, no pending Actions. Only M0-owned Go/Rust integration paths and scoped CI changed.",
+    "One original Go TLS verified FEC2 opt-in private owner per suite/case, original Rust M1 FrozenRecord/source-first, M3 actual AEAD/PN RS16 and original Linux M4 raw/TUN OS UDP 99B remain functional. Real reverse kind1 52B test-only payload authenticated by same original M3 lane PN after raw kernel receive, then original typed M2 ingress; original sender shadow release requires positive peer authenticated bitmap.",
+    "Each of three original cipher suites runs two separate real raw kernel cases: existing selective bit0 positive/PN1 missing -> one-slot same PN1/Seq/ciphertext FROZEN M4 Accepted then late authenticated positive receipt; and NEW test-only zero-positive bitmap -> both previously confirmed original M1 FrozenRecords PN0/PN1 remain outstanding until M2 PTO, process-global original M2 grant and reserve_frozen_submission independently reserve both original frozen slots in original order.",
+    "The two-slot case uses original M4 ScopedRawIpv4Tx::send_one on first original FrozenRecord ONLY: actual IPv4 raw socket kernel copied bytes, independent Go raw peer captured exactly original PN0 ciphertext, same PN and TCP sequence. The second slot is EXPLICITLY withheld before any syscall, providing positively known never-attempted evidence. Original M2 complete_driver_prefix validates ordered scoped reservations and settlement (accepted=1, definitely_not_sent=1, uncertain=0, held_unproven=0), retains quota charge only for actual first raw copied record and refunds second to same process epoch/grant, followed by explicit revocation of remaining grant.",
+    "Go authenticated later C2S kind1 PN1 positive bitmap releases original two FrozenRecord shadow entries in mixed scenario; tamper, reverse replay, invalid positive out-of-scope bitmap, stale Stop owner, immediate duplicate dispatch all rejected. Three original TLS cipher suite pairs pass, six real root-netns test subruns.",
+    "Existing test-only three simultaneous original Go TLS owner one shared process 65,536-byte cap, two 32KiB held grants block third, Stop reclaims only unused grant, remains PASS.",
+    "No second M4 syscall was invoked in mixed scenario; this DOES NOT test sendmmsg incomplete completion or legal uncertainty from an actual attempted failing driver call. No simulated NotSent from EAGAIN, short send, cancellation or unknown completion."
+  ],
+  "exact_source_actions": {
+    "focused": {
+      "run_id": 39122251474,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 117660047972,
+      "artifact_id": 12134563030,
+      "artifact": "m0-real-go-fec2-owner-grant-39122251474-1",
+      "github_artifact_sha256": "630b7a68f40399aacc76260ecd504bab93da27623c11e06c0545aa7ec165fdcb",
+      "independent_rehashed_artifact_sha256": "630b7a68f40399aacc76260ecd504bab93da27623c11e06c0545aa7ec165fdcb",
+      "receipt_source_sha": "367913cada290cf5e3171307c85c514be88b4b7f",
+      "three_cipher_original_single_slot_markers": 3,
+      "three_cipher_mixed_two_slot_markers": 3,
+      "raw_cipher_byte_and_seq_match": true,
+      "original_go_process_budget_three_live_owners": true,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39122251474"
+    },
+    "main_governance": {
+      "run_id": 39122251478,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "run_id": 39122251461,
+      "attempt": 1,
+      "conclusion": "success"
+    }
+  },
+  "parallel_code_stage_reference": {
+    "code_sha": "f7d827e4c80df6be0627de0fdc98723594dd0c82",
+    "note": "All changed original Rust M0 two-slot adapter code compiled and selected native/ARM64/Windows GNU tests passed at this preceding CODE SOURCE. Final SOURCE 367913 additionally contains Go test scenarios and focused workflow; cross/native runs do NOT certify that later source's native full matrix.",
+    "native_functional": {
+      "run_id": 39122133434,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "run_id": 39122133310,
+      "conclusion": "success",
+      "scope": "selected Linux aarch64 and Windows GNU build/consume; not native complete codec"
+    },
+    "native_abi": {
+      "run_id": 39122133542,
+      "conclusion": "success"
+    },
+    "bootstrap": {
+      "run_id": 39122133324,
+      "conclusion": "success"
+    },
+    "static": {
+      "run_id": 39122133327,
+      "conclusion": "success"
+    },
+    "normal_off_kernel": {
+      "run_id": 39122133390,
+      "conclusion": "success",
+      "artifact_id": 12134438350,
+      "artifact_sha256": "8746e9882d97d31211b5190042792285f575055bcb55a4c7b586a69deb88f560",
+      "scope": "selected normal/off configured 150ms exploratory only, not repeated reliability or RTT/p99"
+    },
+    "governance": {
+      "run_id": 39122133407,
+      "conclusion": "success"
+    }
+  },
+  "residual_product_hard_gates": [
+    "Real M4 sendmmsg multi-slot 2..32 with prefix from actual kernel complete/partial/error, Uncertain/unproven suffix, provable NotSent semantics and driver loan/epoch/Stop race NOT_RUN; this test exercises 2-slot typed M2 adapter with only 1 real syscall and positive no-syscall suffix.",
+    "The missing feedback was SYNTHETIC peer-authenticated test wire bitmap, not automatically produced by true network packet loss; canonical kind1 product schema and peer automatic feedback NOT_WIRED.",
+    "Go applied fixed/auto revision per-direction CLI/GUI and continuous runtime FEC2 M1 scheduler NOT_WIRED, production FEC2 OFF.",
+    "Legal ~65KiB IPv4 UDP across >32 turns, MTU±1, cross-turn Stop/loans/noHOL, long 150ms intermittent historical failures, full codec240s/D10/p99 pair, native ARM64+Windows full codec/loader and physical two-endpoint quality remain OPEN/NOT_RUN."
+  ],
+  "retained_historical_failures": [
+    "H152 Governance39120265346 unbounded context_refs FAIL; H153 Governance39120352528 corrected PASS.",
+    "Old Rust process global quota E0502 SOURCE3114bb4 Action39119538366 FAIL, corrected.",
+    "Old malformed scoped YAML SOURCE432f32 Action39119642191 FAIL zero jobs, corrected.",
+    "Original normal/off 150ms SOURCE6e8497 Action39118278579 intermittent fail (pending fragment/first packet); one normal/off exploratory green not close long-run.",
+    "Earlier M2 fixture cap and codec240s/D10/p99 historical reds remain available in prior evidence and history index."
+  ],
+  "next_action": "Under M0 R0-023 and rr2/epoch1, develop original M4 driver true 2..32 mixed prefix and unproven/Uncertain/Stop epoch safety without falsely inferring definitely NotSent; follow with real peer feedback on actual drop, canonical kind1 format and applied Go per-direction fixed/auto CLI/GUI, large UDP/Stop/MTU/noHOL qualification. Keep FEC2 OFF."
+}
