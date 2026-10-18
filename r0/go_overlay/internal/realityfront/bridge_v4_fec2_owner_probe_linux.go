@@ -22,6 +22,10 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
     uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     uint64_t,uint64_t *,uint32_t *,uint32_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
+    uint64_t,uint32_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_process_quota_hold(
+    uint64_t,uint64_t);
 */
 import "C"
 import (
@@ -169,4 +173,29 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeRealFrozenRepair()(
             errV4Embedded,int(rc))
     }
     return uint64(pn),uint32(seq),uint32(wire),uint64(charged),nil
+}
+
+// Test-only real protected TLS owner process-shared M2 admission.
+// Does not prove real kernel send prefix or concurrent production deployment.
+func (b *v4EmbeddedNativeBridge) fec2ProbeProcessQuotaSnapshot()(
+    uint32,uint64,uint64,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,0,0,errV4Embedded
+    }
+    var count C.uint32_t
+    var held,cap C.uint64_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
+        C.uint64_t(b.handle),&count,&held,&cap)
+    if rc!=0{return 0,0,0,fmt.Errorf("%w: process quota snapshot rc=%d",
+        errV4Embedded,int(rc))}
+    return uint32(count),uint64(held),uint64(cap),nil
+}
+func (b *v4EmbeddedNativeBridge) fec2ProbeProcessQuotaHold(bytes uint64) error{
+    if b.handle==0||!b.committed||b.protectedFeatures!=7 {
+        return errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_fec2_probe_process_quota_hold(
+        C.uint64_t(b.handle),C.uint64_t(bytes))
+    if rc!=0{return fmt.Errorf("%w: process quota claim rc=%d",errV4Embedded,int(rc))}
+    return nil
 }
