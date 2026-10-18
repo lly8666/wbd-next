@@ -43,6 +43,8 @@ type v4EmbeddedNativeBridge struct {
     originalFlow faketcp.ServerFlow
     rxBoundary uint32
     txBoundary uint32
+    protectedEpoch [16]byte
+    protectedFeatures uint16
 }
 func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
@@ -62,6 +64,8 @@ func (b *v4EmbeddedNativeBridge) prepare(
     b.handle=uint64(h)
     b.originalFlow=peer.flow
     b.rxBoundary=boundary
+    b.protectedEpoch=s.epoch
+    b.protectedFeatures=s.features
     return &v4EmbeddedPending{b:b},nil
 }
 type v4EmbeddedPending struct{
@@ -84,6 +88,17 @@ func (p *v4EmbeddedPending) commit(early []faketcp.TransitionPacket,tx uint32)er
     rc:=C.wbd_m0_embedded_go_commit(C.uint64_t(p.b.handle),
         C.uint32_t(len(early)),C.uint32_t(total),C.uint32_t(tx))
     if rc!=0{return fmt.Errorf("%w: commit=%d",errV4Embedded,int(rc))}
+    // The normal build uses an inert hook. Only the separate explicit
+    // wbd_v4_fec2_owner_probe build can bind after this true Go TLS/Detach
+    // callback; a forged WBGH version2 is NOT permission by itself.
+    if err:=v4Fec2ProbeAfterProtectedCommit(p.b);err!=nil{
+        // A failed post-reply probe grant cannot leave a live detached
+        // Rust generation after Go rolls back its epoch transaction.
+        _=C.wbd_m0_embedded_go_stop(C.uint64_t(p.b.handle))
+        _=C.wbd_m0_embedded_go_release(C.uint64_t(p.b.handle))
+        p.b.handle=0;p.done=true
+        return err
+    }
     p.done=true;p.b.committed=true
     p.b.txBoundary=tx
     return nil
