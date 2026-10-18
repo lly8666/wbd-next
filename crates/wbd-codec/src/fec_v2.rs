@@ -152,6 +152,19 @@ pub fn parse_repair(data: &[u8], record_payload_budget: usize) -> Result<Repair<
         symbol_len:len as u16,body:&data[REPAIR_HEADER..]})
 }
 
+/// Before accepting a known systematic source into a block with authoritative
+/// parity metadata, check block identity, index < actual_k and L bounds.
+/// Tunnel epoch/direction are authenticated owner scope, not wire fields.
+pub fn validate_source_against_repair(source:&Source<'_>,repair:&Repair<'_>)
+    ->Result<(),Error> {
+    if source.block_id!=repair.block_id {return Err(Error::ConflictingMeta);}
+    if source.source_index>=repair.actual_k {return Err(Error::InvalidIndex);}
+    if source.frame.len()+2>usize::from(repair.symbol_len) {
+        return Err(Error::ConflictingMeta);
+    }
+    Ok(())
+}
+
 /// Local-only GF256 0x11d oracle; no Go/V1 generator normalization.
 struct Gf {
     exp:[u8;512], log:[u8;256],
