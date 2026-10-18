@@ -353,9 +353,18 @@ fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
     ).map_err(|_|BAD_STAGE)?;
     drop(returned);
     e.arena.drain_returns();
-    if report.completed!=1||report.authenticated.link_ready!=1||
-       delivered!=1||failed!=0{return Err(INVALID)}
-    Ok((delivered,failed))
+    // A valid authenticated fragment is deliberately NOT a business packet.
+    // Keep the M3 reassembly slot for the next raw record; pending must never
+    // write a partial IP datagram to TUN or be counted as a failed delivery.
+    if report.authenticated.link_ready!=1 || failed!=0 || report.malformed!=0
+        || report.discarded!=0{return Err(INVALID)}
+    if report.completed==1 && delivered==1 && report.pending==0{
+        return Ok((delivered,failed))
+    }
+    if report.pending==1 && report.completed==0 && delivered==0{
+        return Ok((0,0))
+    }
+    Err(INVALID)
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
