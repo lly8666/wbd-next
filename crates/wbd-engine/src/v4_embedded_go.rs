@@ -278,6 +278,31 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
 // First completely materialize M3 source/repair in two original M1 slabs;
 // use the SAME ProtectedScopedOwner / AEAD / PN / Seq / FrozenRecord,
 // SAME M4 ScopedRawIpv4Tx, and definite synchronous kernel send result.
+// Valid IPv4 UDP (127B total, 99B app), not a fake arbitrary RS symbol.
+// The Go kernel app independently checks the UDP delivery and payload.
+// Underlying original FEC2 parity geometry remains k2, e1.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_expected_udp_ipv4()->Vec<u8>{
+    let mut b=vec![0u8;127];
+    b[0]=0x45;b[8]=64;b[9]=17;
+    b[2..4].copy_from_slice(&127u16.to_be_bytes());
+    b[4..6].copy_from_slice(&9102u16.to_be_bytes());
+    b[12..16].copy_from_slice(&[10,241,20,2]);
+    b[16..20].copy_from_slice(&[10,241,20,1]);
+    b[20..22].copy_from_slice(&42001u16.to_be_bytes());
+    b[22..24].copy_from_slice(&49231u16.to_be_bytes());
+    b[24..26].copy_from_slice(&107u16.to_be_bytes());
+    for (i,v) in b[28..].iter_mut().enumerate(){
+        *v=((i*7+5)%251) as u8
+    }
+    let mut sum=0u32;
+    for pair in b[..20].chunks_exact(2){
+        sum+=u32::from(u16::from_be_bytes([pair[0],pair[1]]));
+    }
+    while sum>0xffff{sum=(sum&0xffff)+(sum>>16)}
+    b[10..12].copy_from_slice(&(!(sum as u16)).to_be_bytes());
+    b
+}
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 fn fec2_probe_real_kernel_raw_once(
     handle:u64,ifindex:u32
@@ -300,7 +325,7 @@ fn fec2_probe_real_kernel_raw_once(
     ).map_err(|_|INVALID)?;
     let budget=route.frame;
     let a=(0..113).map(|n|(n%251) as u8).collect::<Vec<_>>();
-    let b=(0..127).map(|n|((n*7+5)%251) as u8).collect::<Vec<_>>();
+    let b=fec2_probe_expected_udp_ipv4();
     let source=wbd_codec::fec_v2::source_owned(
         9102,0,&a,budget.record_payload_mtu
     ).map_err(|_|INVALID)?;
@@ -385,6 +410,14 @@ fn fec2_peer_received_actual_cipher(
     let (pn,kind,frame)=receiver.consume(wire.to_vec(),budget)
         .map_err(|_|INVALID)?;
     if frame.len()>out.len(){return Err(INVALID)}
+    if kind==3 {
+        // Only the actual AEAD-unique M3 RS16 result, never Go-supplied
+        // plaintext. The ORIGINAL M4 TUN sink owns fd/loan/Stop/generation.
+        // A write is kernel copy, not a claim of application delivery.
+        let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
+        if tun.write_authenticated_ipv4(e.generation,&frame)
+            .ok()!=Some(frame.len()){return Err(INVALID)}
+    }
     out[..frame.len()].copy_from_slice(&frame);
     Ok((pn,kind,frame.len()))
 }
