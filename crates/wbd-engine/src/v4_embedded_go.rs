@@ -77,17 +77,21 @@ struct Fec2ActualPeerRxProbe{
     block_id:Option<u64>,
     source0:Option<Vec<u8>>,
     finished:bool,
+    // Original M2 bounded receive-side feedback, fed only after successful
+    // original M3 AEAD/replay + legal FEC2 kind/body checks.
+    feedback:wbd_recovery::RxFeedbackState,
 }
 #[cfg(feature="m0_fec2_owner_probe")]
 impl Fec2ActualPeerRxProbe{
     fn consume(&mut self,mut wire:Vec<u8>,budget:usize)
         ->Result<(u64,u8,Vec<u8>),()>{
-        if self.finished{return Err(())}
+        // Do real replay/AEAD first even for a completed block, never
+        // mistake application-completion status for a PN replay check.
         let decoded=self.opener.open_unique_with_fec2_after_admission_in_place(
             wire.as_mut_slice()
         ).map_err(|_|())?;
-        if decoded.pn>1{return Err(())}
-        match (decoded.pn,decoded.kind){
+        if self.finished||decoded.pn>1{return Err(())}
+        let result=match (decoded.pn,decoded.kind){
             (0,2)=>{
                 let src=wbd_codec::fec_v2::parse_source(decoded.payload,budget)
                     .map_err(|_|())?;
@@ -114,7 +118,14 @@ impl Fec2ActualPeerRxProbe{
                 Ok((decoded.pn,3,recovered.into_iter().next().ok_or(())?.1))
             }
             _=>Err(()),
+        };
+        if let Ok((pn,_,_))=&result {
+            use wbd_recovery::FeedbackReceive;
+            if self.feedback.on_authenticated_data(
+                wbd_types::RecordPn(*pn),MonoNs(0)
+            )!=FeedbackReceive::First {return Err(())}
         }
+        result
     }
 }
 struct Entry{
@@ -191,9 +202,15 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         let opener=wbd_codec::record_replay::ReplayProtectedLaneRx::new_for_suite(
             s2c,usize::from(data.identity().client_limit),suite,replay
         ).map_err(|_|INVALID)?;
+        let feedback=wbd_recovery::RxFeedbackState::new(
+            wbd_recovery::RxFeedbackConfig{
+                max_retained_pages:8,max_pages_per_report:8,
+                retention_ns:100_000_000,srtt_ns:8_000_000,
+            }
+        ).map_err(|_|INVALID)?;
         Some(Fec2ActualPeerRxProbe{
             opener,codec:wbd_codec::fec_v2::Rs16::new(),
-            block_id:None,source0:None,finished:false
+            block_id:None,source0:None,finished:false,feedback
         })
     }else{None};
     let owner=handoff.prepare_scoped_owner(&data,generation,handle)
@@ -438,6 +455,50 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     else{return INVALID};
     unsafe{pn.write(received_pn);kind.write(received_kind);
         recovered_len.write(actual_len as u32)}
+    OK
+}
+
+// Actual M2 RX feedback draft created ONLY from authenticated M3 data
+// observed above. This stage is not a peer-authenticated receipt encoder,
+// not a control kind1 send, and not a quota release or kernel ACK.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_peer_feedback_draft(
+    handle:u64,now_ns:u64,send_result:u8
+)->Result<(u32,u64,u64,u8),i32>{
+    use wbd_recovery::FeedbackSendResult;
+    let send=match send_result{
+        0=>FeedbackSendResult::NotSent,
+        1=>FeedbackSendResult::Accepted,
+        2=>FeedbackSendResult::Uncertain,
+        _=>return Err(INVALID),
+    };
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE || e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
+    let rx=e.fec2_actual_peer_rx.as_mut().ok_or(BAD_STAGE)?;
+    let draft=rx.feedback.on_due(MonoNs(now_ns)).ok_or(INVALID)?;
+    if draft.pages().len()!=1{return Err(INVALID)}
+    let base=draft.pages()[0].base_pn.0;
+    let bits=draft.pages()[0].bitmap[0];
+    let output=(draft.report_seq(),draft.largest_data_pn().0,base,bits);
+    rx.feedback.on_send_result(&draft,send,MonoNs(now_ns))
+        .map_err(|_|INVALID)?;
+    Ok(output)
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
+    handle:u64,now_ns:u64,send_result:u8,
+    report_seq:*mut u32,largest:*mut u64,base:*mut u64,bits:*mut u8
+)->i32{
+    if report_seq.is_null()||largest.is_null()||base.is_null()
+        ||bits.is_null(){return INVALID}
+    let Ok((seq,max,first,mask))=
+        fec2_peer_feedback_draft(handle,now_ns,send_result)
+    else{return INVALID};
+    unsafe{report_seq.write(seq);largest.write(max);base.write(first);
+        bits.write(mask)}
     OK
 }
 
