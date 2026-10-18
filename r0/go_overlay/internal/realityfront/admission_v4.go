@@ -27,6 +27,7 @@ const (
     v4ExtensionLen = 24
     v4FeatureReceipt = uint16(1)
     v4FeatureSharedGame = uint16(2)
+    v4FeatureFEC2 = uint16(4) // reserved: no production FEC2 yet
     v4RequiredFeatures = v4FeatureReceipt | v4FeatureSharedGame
     v4FeedbackPages = byte(8)
 )
@@ -35,10 +36,12 @@ type V4Extension struct {
     Features uint16
     Epoch [16]byte
 }
+// Exactly 3(default) or 7(private test), rejecting all unknown/partial sets.
+func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4RequiredFeatures|v4FeatureFEC2)}
 
 func v4Encode(e V4Extension) ([24]byte, error) {
     var buf [24]byte
-    if e.Features != v4RequiredFeatures { return buf, ErrAdmissionUnsupported }
+    if !v4KnownFeatureSet(e.Features) { return buf, ErrAdmissionUnsupported }
     binary.BigEndian.PutUint16(buf[0:2], 1)
     binary.BigEndian.PutUint16(buf[2:4], e.Features)
     copy(buf[4:20], e.Epoch[:])
@@ -52,7 +55,7 @@ func v4Decode(raw []byte) (V4Extension,error) {
     if binary.BigEndian.Uint16(raw[:2])!=1 || raw[20]!=v4FeedbackPages ||
        raw[21]!=0 || raw[22]!=0 || raw[23]!=0 { return e,ErrAdmissionParams }
     e.Features=binary.BigEndian.Uint16(raw[2:4])
-    if e.Features!=v4RequiredFeatures { return V4Extension{},ErrAdmissionUnsupported }
+    if !v4KnownFeatureSet(e.Features) { return V4Extension{},ErrAdmissionUnsupported }
     copy(e.Epoch[:],raw[4:20])
     return e,nil
 }
@@ -62,6 +65,7 @@ func v4Decode(raw []byte) (V4Extension,error) {
 type V4ClientOptions struct {
     DataPlaneReady bool
     Epoch [16]byte // zero only for the first lane of a new logical tunnel
+    fec2ProbeOnly bool // unexported and default false: no product authority
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -124,6 +128,7 @@ type v4OwnerBridge interface {
 }
 type V4ServerOptions struct {
     DataPlaneReady bool
+    fec2ProbeOnly bool // package-private, no production caller switch
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
@@ -136,6 +141,7 @@ type V4ClientSession struct {
     authenticatedPrincipal string
     // Freeze once, so caller-mutable Negotiated fields never mint new authority.
     verifiedCold V4ColdSessionSnapshot
+    negotiatedFeatures uint16
 }
 type V4ServerSession struct {
     *ServerAdmissionSession
@@ -144,6 +150,7 @@ type V4ServerSession struct {
     coldAuthenticated bool
     authenticatedPrincipal string
     verifiedCold V4ColdSessionSnapshot
+    negotiatedFeatures uint16
 }
 
 type v4Entry struct {
@@ -360,7 +367,9 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
         Username:cfg.Username,Password:cfg.Password,
     }
     if cfg.Policy.Schema!=PolicySchemaV3 || cfg.Policy.SupportedNow()!=nil {return nil,ErrAdmissionUnsupported}
-    wire,err:=v4RequestWire(req,V4Extension{Features:v4RequiredFeatures,Epoch:opt.Epoch})
+    offeredFeatures:=v4RequiredFeatures
+    if opt.fec2ProbeOnly {offeredFeatures |= v4FeatureFEC2}
+    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch})
     if err!=nil{return nil,err}
     guard,err:=beginCandidateDeadline(ctx,conn,cfg.TLS.Timeout)
     if err!=nil{return nil,err}
@@ -374,7 +383,8 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err:=writeFull(client,wire);err!=nil{return nil,candidateError(ctx,err)}
     result,extension,err:=v4ReadReply(client,req)
     if err!=nil{return nil,candidateError(ctx,err)}
-    if extension.Features!=v4RequiredFeatures || extension.Epoch==[16]byte{} ||
+    // No protected reply feature downgrade/upgrade is admissible.
+    if extension.Features!=offeredFeatures || extension.Epoch==[16]byte{} ||
        (opt.Epoch!=[16]byte{} && opt.Epoch!=extension.Epoch) {
         return nil,ErrAdmissionParams
     }
@@ -383,14 +393,14 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
-    frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false)
+    frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false,extension.Features)
     if err!=nil{return nil,err}
     success=true
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
-        verifiedCold:frozen,
+        verifiedCold:frozen,negotiatedFeatures:extension.Features,
     },nil
 }
 
@@ -421,6 +431,12 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if !credentialsMatch(req.Username,req.Password,cfg.ExpectedUsername,cfg.ExpectedPassword) {
         _=writeAdmissionFailure(tlsConn,admissionAuthFail)
         return nil,ErrAdmissionAuth
+    }
+    serverFeatures:=v4RequiredFeatures
+    if opt.fec2ProbeOnly {serverFeatures |= v4FeatureFEC2}
+    if offered.Features!=serverFeatures {
+        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        return nil,ErrAdmissionUnsupported
     }
     if err:=req.Policy.SupportedNow();err!=nil{
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
@@ -466,14 +482,14 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:v4RequiredFeatures,Epoch:epoch}
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
     // Prepare the immutable copy; publish only after protected reply+detach.
-    frozen,err:=v4ColdSnapshot(result,epoch,req.Username,true)
+    frozen,err:=v4ColdSnapshot(result,epoch,req.Username,true,ext.Features)
     if err!=nil{return nil,err}
     boundary,err:=assoc.PrepareTransition(int(cfg.ServerLimit))
     if err!=nil{return nil,err}
@@ -524,7 +540,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
-        verifiedCold:frozen,
+        verifiedCold:frozen,negotiatedFeatures:ext.Features,
     },nil
 }
 
@@ -539,6 +555,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
 // are local owner decisions, NOT derivable from Go's wire TunnelID/LaneID.
 type V4ColdSessionSnapshot struct {
     server bool
+    features uint16 // exporter-bound private feature, NOT Rust owner authority
     principal string
     tunnelID [16]byte
     epoch [16]byte
@@ -559,7 +576,7 @@ func (s *V4ClientSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
        s.ClientAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false,s.negotiatedFeatures)
     if err!=nil{return V4ColdSessionSnapshot{},err}
     // An apparently valid post-TLS edit to cipher, limits or key material
     // must not yield a fresh "authenticated" authority.
@@ -573,16 +590,16 @@ func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
        s.ServerAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true,s.negotiatedFeatures)
     if err!=nil{return V4ColdSessionSnapshot{},err}
     if current!=s.verifiedCold || s.ServerAdmissionSession.TLS.Keys!=s.verifiedCold.keys {
         return V4ColdSessionSnapshot{},ErrAdmissionParams
     }
     return s.verifiedCold,nil
 }
-func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool)(V4ColdSessionSnapshot,error){
+func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool,features uint16)(V4ColdSessionSnapshot,error){
     var out V4ColdSessionSnapshot
-    if principal=="" || epoch==[16]byte{} || result.RecordVersion!=V4RecordVersion ||
+    if !v4KnownFeatureSet(features) || principal=="" || epoch==[16]byte{} || result.RecordVersion!=V4RecordVersion ||
        len(result.TunnelID)!=16 || !validAdmissionLaneID(result.LaneID) ||
        result.ClientLimit==0 || result.ServerLimit==0 ||
        result.Policy.Schema!=PolicySchemaV3 || result.Policy.SupportedNow()!=nil {
@@ -597,6 +614,7 @@ func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,serve
     }
     copy(out.tunnelID[:],result.TunnelID)
     out.server=server
+    out.features=features
     out.principal=principal
     out.epoch=epoch
     out.incarnation=result.IncarnationNonce
