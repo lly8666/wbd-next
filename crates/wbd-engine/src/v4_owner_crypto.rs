@@ -581,6 +581,29 @@ impl ProtectedScopedOwner {
             buffer,payload_len,snapshot.frame,carrier_snapshot,now
         )
     }
+    /// The original worker retains an owner-created path snapshot for one
+    /// bounded TX turn. A fragment requires precisely the same generation,
+    /// epoch, owner and original SYN MSS as an ordinary packet. The kernel
+    /// raw sender independently enforces the live route/MTU at syscall time.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn seal_fragment_with_worker_snapshot(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        snapshot:&ScopedLinuxBudget,expected_ifindex:u32,
+        expected_destination:Ipv4Addr,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || self.generation!=snapshot.generation
+            || self.epoch!=snapshot.epoch
+            || self.token.owner_id()!=snapshot.owner_id
+            || snapshot.observed_ifindex!=expected_ifindex
+            || snapshot.route_destination!=Some(expected_destination)
+            || snapshot.observed_route_mtu.is_none()
+            || payload_len>snapshot.frame.link_frame_mtu {
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        self.seal_normal_off_fragment_one(
+            buffer,payload_len,snapshot.frame,carrier_snapshot,now)
+    }
     /// Actual OS TUN app packet -> original M1 slab (no intermediate copy)
     /// -> original protected Rust owner Normal/off LINK -> S2C AEAD/PN and
     /// scoped FrozenRecord TX queue. Only packet sizes fitting the current
