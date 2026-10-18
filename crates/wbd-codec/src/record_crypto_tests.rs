@@ -260,8 +260,9 @@ fn r1_m0_fec2_three_suite_single_pn_real_aead_and_missing_only_recovery() {
         // A V2-gated recipient retains the ability to accept ordinary LINK,
         // without a second PN allocator / resync or plaintext magic sniffing.
         for (kind,pn,wire) in &sent {
+            let mut authenticated_wire=wire.clone();
             let opened=v2.open_with_fec2_after_admission_in_place(
-                &mut wire.clone()
+                &mut authenticated_wire
             ).unwrap();
             assert_eq!((opened.kind,opened.pn),(*kind,*pn));
             match kind {
