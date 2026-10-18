@@ -20,3 +20,8 @@
 Normal/off 旧冻结源码、D10 红灯、原 240s codec timeout、P10 次序矛盾和 SPARSE p99 回退均 OPEN。原始真实 Go TLS V4→Rust raw/TUN 已证明 oversize fail-closed + 小包不受阻 + Stop/lease 可回收，但超 MTU 业务 LINK 自动分片并在 peer 端交付**未完成**；不能靠新的 codec 组件补这条产品 hard gate。FEC2 bit2/kind2/3、applied revision、GUI、Windows/ARM 完整 native codec、Game+repair 与物理依然 DISABLED/NOT_RUN。
 
 **下一动作（M0，一项）**：沿原 V4 Go→Rust owner 路径实现/接线认证后 LINK 大包有界 fragment TX 与 peer reassembly，复用现有 M3 LINK 组件及测试入口，并把 Stop、MTU−1/等于/+1、恢复小包、旧generation/loan 的 L01–L04/B01–B04 反例在精确 Actions 验证；不要开启 FEC-on 或重跑 024/D10。M3 017 的非法 row 测试由其工位自主修复，视为独立组件阻塞而非 M0 整体主线等待门。
+
+## H129 Governance 结构修复（recovered）
+
+- H129 `95f9b57d8804d762bcc065e5b9728c8652a39060` 的普通 Governance run `39086745204` attempt1 **FAIL**：`tools/governance.py::validate_cursor` 对 `context_refs` 限制最多8条；H129为便利引用插入本日志但未移除旧参考，共9条，`SCOPE_AUDIT_FAILED: unbounded context_refs`。这是 M0 cursor-only 自身结构边界错误，非CODE301 codec或产品失败；不能作为 Governance PASS。完整selftest/model本次NOT_RUN。
+- 立即仅压缩 M0 cursor 的context_refs（旧024历史/失败仍通过已有evidence、其它历史入口可追溯），不改分配、产品状态、S构建或任何worker源；用新的H修正，不重跑M3失败组件。原 Governance 红灯保留历史，并以修复H的精确新run判断当前交接是否PASS。
