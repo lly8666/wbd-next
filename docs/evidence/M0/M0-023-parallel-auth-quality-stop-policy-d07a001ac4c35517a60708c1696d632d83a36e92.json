@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "d07a001ac4c35517a60708c1696d632d83a36e92",
+  "progress": "partial",
+  "unverified": true,
+  "production_FEC2": "OFF",
+  "result": "PASS_TEST_ONLY_PARALLEL_TWO_JOBS_8_ORIGINAL_GO_POLICY_CHECKS_PLUS_3_CIPHER_9_REAL_KERNEL_GO_TLS_OWNER_FEC2_M3_AUTH_PEER_RX_QUALITY_UNKNOWN_NO_FALSE_LOSS_EPOCH_STOP",
+  "changes": [
+    "Original Rust M0 protected FEC2 actual peer keeps three saturating counters only AFTER real original M3 AEAD/unique-PN/replay and original M2 FeedbackReceive::First: first source records, first parity/repair, successfully recovered source. No guessed first-sent denominator, network loss, timer or independent codec.",
+    "Opt-in native C boundary exports first unique source,repair,recovered under exact original Go verified TLS session's protected epoch/generation and only ACTIVE owner; wrong epoch, Stop, stale client, disabled feature rejected.",
+    "Original Go FecV2Snapshot built from true M3 counts is explicitly FecV2Unknown with no Fast/Slow FirstSent or Observed, no fabricated denominator; separated source/repair/recovered are diagnostics only. Original Go FecV2Step receiving that real yet immature observation after synthetic 2x2s high-loss AUTO upgrade must not extrapolate 0% loss or change applied grade.",
+    "Actual original Go TLS 3 cipher suites × 3 independent original Linux raw/TUN kernel integration modes assert preauthenticated zero counters, after source+RS16 parity recover exactly source1 repair1 recovered1, missing valid mature denominator, foreign epoch observation/rewiring denial, profile7 rejection, duplicate pending revision6 rejection, stopped owner observation/revision denial.",
+    "Original Rust M1/M3 auto pending→M4 real kernel next block applied High5→Maximum6 plus fixed Mild9, M2 global three original Go live owners, native M4 one real sendmmsg two immutable frozen messages, typed driver Unproven shape matrix, and source+parity to 99B real UDP TUN app remain PASS.",
+    "One NEW independent workflow job does policy-only 8 actual original Go F2Control tests on pinned original Go checkout in parallel with original Go/TLS native kernel feature-gated run; independent logs, artifact, exact SOURCE receipts and SHA256."
+  ],
+  "parallel_exact_source_actions": [
+    {
+      "run_id": 39130534228,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "2 independent jobs same SOURCE and native real Go/TLS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39130534228",
+      "jobs": [
+        {
+          "job_id": 117684598695,
+          "name": "go-control-policy",
+          "status": "success",
+          "artifact_id": 12137582030,
+          "artifact": "m0-go-control-only-39130534228-1",
+          "sha256": "7b5e3a0ea0104e160610f1dc6f62fe73269ddbeca8fa787bd4294ca0668b1479",
+          "independent_zip_sha256": "7b5e3a0ea0104e160610f1dc6f62fe73269ddbeca8fa787bd4294ca0668b1479",
+          "original_pinned_go_policy_tests": 8,
+          "receipt_source_matches": "d07a001ac4c35517a60708c1696d632d83a36e92"
+        },
+        {
+          "job_id": 117684598761,
+          "name": "native",
+          "status": "success",
+          "artifact_id": 12138166045,
+          "artifact": "m0-real-go-fec2-owner-grant-39130534228-1",
+          "sha256": "492acb7b1b53627cb1a55c212b071c23bbc7aa8363e1d17c8e0fd9ee42a3fb43",
+          "independent_zip_sha256": "492acb7b1b53627cb1a55c212b071c23bbc7aa8363e1d17c8e0fd9ee42a3fb43",
+          "receipt_source_matches": "d07a001ac4c35517a60708c1696d632d83a36e92",
+          "privileged_original_Go_TLS_cipher_suites": 3,
+          "real_original_kernel_scenarios": 9,
+          "authenticated_M3_peer_quality_log_markers": 9,
+          "real_GO_AUTO_new_block_log_markers": 3
+        }
+      ]
+    },
+    {
+      "run_id": 39130534276,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "final exact source Governance"
+    },
+    {
+      "run_id": 39130167119,
+      "attempt": 1,
+      "conclusion": "success",
+      "source": "837ee0919c3b543e8b0b60347d11b88354419865",
+      "scope": "prior SOURCE parallel policy and M3 real kernel before correction not to invent FirstSent"
+    },
+    {
+      "source": "8ee2e6e087e8b01197bf72e58bc4b67c290c4596",
+      "scope": "only intermediate Rust integration code (not final SOURCE): all selected CI PASS",
+      "selected_native_functional": 39129748266,
+      "limited_cross_abi": 39129748191,
+      "native_abi": 39129748302,
+      "scoped_bootstrap": 39129748230,
+      "static": 39129748214,
+      "normal_off_kernel_exploratory": 39129748301,
+      "scoped_fec2_go_tls": 39129748309,
+      "governance": 39129748250
+    }
+  ],
+  "limits": [
+    "Actual authenticated RX here observes ONE original source and ONE parity and one RS16 reconstructed missing source. The missing source was deliberately not first enqueued on the original M1 source-first probe. No physical wire loss estimate or matured FirstSent denominator can be inferred; Go FecV2Snapshot remains UNKNOWN, auto is not driven by production telemetry.",
+    "The 2x2-second VALID high-loss Go FecV2Snapshots used for the earlier pending profile6 test remain SYNTHETIC; the new REAL AEAD input is sparse and explicitly prevents false extrapolation. No deployed 2-second goroutine/control loop yet.",
+    "Canonical product kind1 reverse wire with genuine peer-observed physical loss, original Go single CLI/GUI parameter catalog and user-visible accepted/pending/applied/rejected, continuous original M1 runtime scheduler not connected. FEC2 production OFF.",
+    "True M4 2..32 DISTINCT original M1 frozen PN batch with kernel partial/EINTR/EAGAIN, Stop/MTU±1/loan/noHOL unsafe races, ~65KiB legal cross-turn UDP and real loss noHOL qualification NOT_RUN.",
+    "Historical intermittent 150ms Normal/off failure remains, one selected Normal/off exploratory green in intermediate Rust build not proof of stability; full codec240s/D10/p99 same-VM paired ABBA, full native Linux arm64/Windows+loaders and 2 physical endpoints still OPEN."
+  ],
+  "historical_failures_retained": [
+    "Previous H157/H158 Go control source first failed for state writeback and was corrected in earlier evidence; H158 green does not remove this history.",
+    "Old normal/off 150ms intermittent 39118278579 FAIL; exploratory 150ms single green at intermediate Rust SOURCE is not stable proof.",
+    "Old 240s long codec/D10/p99/physical/ARM+Windows hard gates remain OPEN and are not promoted by these 3-cipher integration results."
+  ],
+  "next_action": "Stage actual trusted first-sent lifecycle/peer missing coverage and source-derived 2s mature loss window across real multiple blocks, Go protected per-client/dir continuous 2s policy goroutine and single catalog/CLI/GUI effective receipt, canonical original M3 C2S kind1 producer, true original M4 multiple DISTINCT 2..32 full+unknown-stop MTU/loans and ~65KiB fragmented UDP/noHOL; repeated 150ms/codec240s/D10/p99, native ARM/Windows and physical qualification. Never promote production FEC2 before all hard gates."
+}
