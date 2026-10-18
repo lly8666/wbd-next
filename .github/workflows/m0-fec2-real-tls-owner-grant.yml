@@ -58,7 +58,100 @@ jobs:
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/owner-grant.test" ./internal/realityfront)
-          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" ./owner-grant.test -test.v -test.count=1 -test.run '^TestR0V4(Fec2ActualGoTLSEpochOwnerGrantScoped|EmbeddedNativeProtectedControlAllCiphers|EmbeddedNativeProtectedFec2Bit2Scope)$' >owner-grant-result/go.log 2>&1
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" ./owner-grant.test -test.v -test.count=1 -test.run '^TestR0V4(Fec2ActualGoTLSEpochOwnerGrantScoped|Fec2ActualGoTLSProcessSharedRepairQuota|EmbeddedNativeProtectedControlAllCiphers|EmbeddedNativeProtectedFec2Bit2Scope) >owner-grant-result/go.log 2>&1
+          # One actual isolated Linux netns raw IPv4/TCP kernel send path.
+          # It uses the existing pinned original Go TLS and same original
+          # Rust scoped owner; no additional FEC2 producer/decryptor.
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          mkdir -p owner-grant-netns
+          cp target/release/libwbd_engine.so owner-grant-netns/
+          cp owner-grant.test owner-grant-netns/owner-go.test
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh owner-grant-netns >owner-grant-result/real-kernel.log 2>&1
+          grep -q 'M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=1' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=2' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=3' owner-grant-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_KERNEL_FEC2_M2_AUTH_RX_FEEDBACK_PASS suite=$suite bitmap=03 largest=1 notsent=1 accepted=1 uncertain=1" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite=$suite no_partial_udp=1 no_tamper_udp=1 stop_revokes=1" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=$suite pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" owner-grant-result/real-kernel.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path("owner-grant-result")
+          go=(root/"go.log").read_text()
+          rust=(root/"rust.log").read_text()
+          names=["TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped",
+                 "TestR0V4Fec2ActualGoTLSProcessSharedRepairQuota",
+                 "TestR0V4EmbeddedNativeProtectedControlAllCiphers",
+                 "TestR0V4EmbeddedNativeProtectedFec2Bit2Scope"]
+          assert all(re.search(r"^--- PASS: "+n+r" \(",go,re.M) for n in names)
+          assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
+          assert "M0_ORIGINAL_GO_TLS_THREE_OWNER_PROCESS_GLOBAL_M2_CAP_PASS registered=3 two_32KiB=held third=denied stop_unused=reclaimed independent_owner=preserved" in go
+          assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
+          assert "r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure ... ok" in rust
+          assert "r1_m0_m2_reverse_authenticated_kind1_frozen_shadow_three_suites ... ok" in rust
+          kernel=(root/"real-kernel.log").read_text()
+          assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
+          for suite in [1,2,3]:
+              assert f"M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite={suite}" in kernel
+              assert f"M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite={suite} e=1 restored=127 source_pn=0 parity_pn=1" in kernel
+              assert f"M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite={suite} recovered_ip=127 udp_payload=99" in kernel
+              assert f"M0_REAL_GO_KERNEL_FEC2_M2_AUTH_RX_FEEDBACK_PASS suite={suite} bitmap=03 largest=1 notsent=1 accepted=1 uncertain=1" in kernel
+              assert f"M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite={suite} no_partial_udp=1 no_tamper_udp=1 stop_revokes=1" in kernel
+              assert f"M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite={suite} retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny" in kernel
+              assert f"M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite={suite} pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" in kernel
+          assert re.search(r"test result: ok\. 3 passed; 0 failed;",rust)
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
+             "crates/wbd-engine/src/v4_probe_bridge.rs",
+             "tools/run-v4-tun-netns.sh",
+             "r0/go_overlay/internal/realityfront/admission_v4.go",
+             "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+             "crates/wbd-engine/Cargo.toml","Cargo.lock"]
+          receipt={"result":"PASS_SCOPED_GO_TLS_TO_ORIGINAL_FEC2_OWNER_LIFETIME",
+            "source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+            "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "real_original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "real_protected_tls_ciphers":3,"original_owner_scoped_aeAD_and_pn_probe":True,
+            "M1_original_sourcefirst_scheduler":"SCOPED_NORMAL_GAME_K2_DUE_PARITY_JOB_M3_RS16_E1_PRESSURE_NOHOL_STOP_3SUITES",
+            "wrong_epoch_and_stop_revoked":True,"default_build_fec2_permission":"OFF",
+            "feature_only_cffi":"m0_fec2_owner_probe",
+            "actual_applied_FEC2_policy":"NOT_WIRED",
+            "real_FEC2_kernel_raw_tx":"ACTUAL_M4_SCOPED_LINUX_RAW_TWO_RECORD_SOURCE_REPAIR_THREE_SUITES",
+            "actual_independent_kernel_capture_to_Rust_M3_AEAD_PN_RS16_e1":"THREE_SUITES_SOURCE_FIRST_TAMPER_REPLAY_REJECT_EXACT_127B_RECOVER",
+            "real_FEC2_kernel_TUN_restored_UDP_delivery":"TEST_ONLY_ACTUAL_M4_SCOPED_TUN_127B_IPV4_99B_APP_ALL_3_SUITES",
+            "actual_M2_authenticated_data_RX_feedback_drafts":"TEST_ONLY_REAL_AEAD_PN_BITMAP_03_TIMED_NOTSENT_ACCEPTED_UNCERTAIN_THREE_SUITES",
+            "actual_M2_peer_authenticated_reverse_receipt":"TEST_ONLY_ACTUAL_ORIGINAL_GO_TLS_KIND1_C2S_RAW_KERNEL_TO_ORIGINAL_RUST_M3_AEAD_PN_M2_FROZEN_SHADOW_THREE_SUITES; PRODUCT_KIND1_SCHEMA_AND_REPAIR_NOT_WIRED",
+            "actual_M2_frozen_repair_driver_prefix":"TEST_ONLY_ORIGINAL_FROZEN_SAME_PN_SEQ_ACTUAL_KERNEL_GO_CAPTURE_GLOBAL_GRANT_PREFIX_ACCEPTED_THREE_SUITES; SYNTHETIC_AUTHENTICATED_MISSING_BITMAP_AND_PRODUCT_OFF",
+            "actual_M2_process_global_budget":"TEST_ONLY_THREE_SIMULTANEOUS_ORIGINAL_GO_TLS_OWNERS_ONE_PROCESS_64K_CAP_TWO_32K_GRANTS_THIRD_DENIED_STOP_RECLAIMS_UNUSED; NOT_PRODUCT",
+            "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
+            "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
+            "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
+            "input_sha256":{p:sha(p) for p in inputs},
+            "test_log_sha256":{"rust":sha(root/"rust.log"),"go":sha(root/"go.log"),
+                 "real_kernel_raw":sha(root/"real-kernel.log")},
+            "default_build_sha256":sha(root/"default-build.log"),
+            "opt_in_build_sha256":sha(root/"opt-in-build.log")}
+          (root/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-real-go-fec2-owner-grant-${{ github.run_id }}-${{ github.run_attempt }}
+          path: owner-grant-result/
+          retention-days: 30
+          if-no-files-found: warn
+ >owner-grant-result/go.log 2>&1
           # One actual isolated Linux netns raw IPv4/TCP kernel send path.
           # It uses the existing pinned original Go TLS and same original
           # Rust scoped owner; no additional FEC2 producer/decryptor.
