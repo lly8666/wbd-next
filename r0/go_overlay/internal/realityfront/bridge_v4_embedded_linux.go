@@ -51,7 +51,7 @@ func (b *v4EmbeddedNativeBridge) prepare(
     b.stopped=false
     cold,err:=s.MarshalColdBundle()
     if err!=nil{return nil,err}
-    cmd,err:=v4PrivateHandoffV1(boundary,peer)
+    cmd,err:=v4PrivateHandoffFromVerifiedSession(boundary,peer,s)
     if err!=nil{return nil,err}
     var h C.uint64_t
     rc:=C.wbd_m0_embedded_go_prepare(
