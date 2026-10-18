@@ -177,14 +177,23 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             // require different on-wire e1 plan for k2 (Mild => r1).
             if mode!="single"{
                 chosen,revision:=FecV2High,uint64(5)
+                policyMode:=FecV2Auto
+                var start *FecV2Profile
                 if mode=="kernel-multimsg"{
                     chosen,revision=FecV2Mild,9
+                    policyMode=FecV2Fixed
+                }else{
+                    // M4 original Go AUTO startup selects High. This is
+                    // a policy-applied REAL TLS kernel path, not continuous
+                    // 2s auto sampling or production GUI/CLI.
+                    start=&chosen
                 }
                 var policyErr error
                 policyState,policyErr=b.fec2ProbeChoosePolicy(FecV2Config{
                     Client:"protected-owner",Direction:FecV2S2C,
-                    Transport:FecV2Normal,Mode:FecV2Fixed,
-                    Profile:chosen,ConfigRevision:revision,
+                    Transport:FecV2Normal,Mode:policyMode,
+                    Profile:chosen,AutoPolicy:FecV2Conservative,
+                    StartProfile:start,ConfigRevision:revision,
                 })
                 if policyErr!=nil{t.Fatalf("Go policy pre-TLS mode=%s: %v",mode,policyErr)}
             }
@@ -217,8 +226,8 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 if policyErr!=nil||ok||stale.AppliedRevision!=effective.AppliedRevision{
                     t.Fatal("stale Go policy application receipt rewrote effective state")
                 }
-                t.Logf("M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=%d mode=%s profile=%d revision=%d applied=1 stale_ack=deny",
-                    cipher,mode,effective.AppliedProfile,effective.AppliedRevision)
+                t.Logf("M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=%d mode=%s policy=%s profile=%d revision=%d applied=1 stale_ack=deny",
+                    cipher,mode,policyState.Mode,effective.AppliedProfile,effective.AppliedRevision)
             }
             if e=b.attachKernelTun(tun.Fd(),tunName);e!=nil{
                 t.Fatalf("original M4 TUN scoped FD attach: %v",e)
