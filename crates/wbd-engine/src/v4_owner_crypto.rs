@@ -943,6 +943,62 @@ impl ProtectedScopedOwner {
         outcome
     }
 
+    // Test-scope only: retain the exact M1 FrozenRecord that the original M4
+    // raw driver definitely copied. No new PN, second seal, retransmission or
+    // cloned ciphertext bytes. A failed/uncertain syscall grants NO shadow.
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    pub(crate) fn submit_scoped_raw_tx_shadow_probe_reusing(
+        &mut self,driver:&ScopedRawIpv4Tx,
+        tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
+        storage:&mut Vec<TxDispatch>,
+    )->Result<(usize,crate::memory::FrozenRecord),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            ||driver.generation()!=self.generation||driver.is_stopping()
+            ||!self.is_fec2_probe_bound()||!storage.is_empty()
+            ||storage.capacity()==0{return Err(ProtectedCryptoError::Inactive)}
+        let available=std::mem::take(storage);
+        let batch=match self.drain_tx(now,available){
+            Ok(v)=>v,Err((_,back))=>{
+                *storage=back;return Err(ProtectedCryptoError::Owner)
+            }
+        };
+        let outcome=(||{
+            let ready=self.checked_tx_ready(&batch)?;
+            if ready.len()!=1 ||ready[0].kind!=crate::runtime::TxKind::Fresh{
+                return Err(ProtectedCryptoError::Tx)
+            }
+            let copied=driver.send_one(self.generation,
+                &ready[0].record,tuple,presentation)
+                .map_err(|_|ProtectedCryptoError::Owner)?;
+            Ok((copied,ready[0].record.clone()))
+        })();
+        *storage=batch.recycle();
+        outcome
+    }
+
+    // Original protected owner C2S M3 replay bitmap. Restricted to active,
+    // privately verified Go TLS bit2 and no detached background RX worker.
+    // Returning a borrowed authenticated record cannot attest a peer by itself:
+    // M0 separately pins exact epoch/direction/lane before M2 admission.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn open_reverse_health_probe<'a>(
+        &mut self,wire:&'a mut [u8],
+    )->Result<wbd_codec::record_crypto::OpenedRecord<'a>,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached()
+            ||!self.is_fec2_probe_bound(){return Err(ProtectedCryptoError::Inactive)}
+        let rx=self.crypto.rx.as_mut().ok_or(ProtectedCryptoError::Inactive)?;
+        let record=rx.open_unique_in_place(wire)
+            .map_err(|_|ProtectedCryptoError::Tx)?;
+        if record.kind!=wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND{
+            return Err(ProtectedCryptoError::Tx)
+        }
+        Ok(record)
+    }
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn receipt_probe_identity(&self)->Option<(wbd_types::LaneKey,[u8;16])>{
+        self.is_fec2_probe_bound().then_some((self.token.lane(),self.epoch))
+    }
+
     /// Consume frozen M4-013 Linux sendmmsg scatter path from the SAME original
     /// protected Go-authenticated Rust M1 LoanBatch. This invokes one real
     /// sendmmsg syscall over header iovec + borrowed immutable ciphertext.
