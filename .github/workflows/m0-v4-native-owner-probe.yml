@@ -349,6 +349,41 @@ jobs:
           print(json.dumps(receipt,indent=2))
           PY
           test "$STATE" != FAIL
+      # R0-023 integration hard gate first: preserve its own evidence even if
+      # the historical 150ms exploratory network regression fails afterward.
+      # This changes test ordering only; no red light is bypassed or waived.
+      - name: Independent Rust original owner raw/TUN background workers functional (NOT throughput)
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          WBD_M0_BACKGROUND_LOOP=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/original-rust-background-loop.log 2>&1
+          RC=$?
+          set -e
+          cat native-probe-result/original-rust-background-loop.log
+          if [[ "$RC" != 0 ]]; then
+            echo "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FAIL exit=$RC" >&2
+            exit "$RC"
+          fi
+          grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
+          grep -Eq 'EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=[0-9]+ fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true' native-probe-result/original-rust-background-loop.log
+          grep -q 'EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=' native-probe-result/original-rust-background-loop.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("native-probe-build/manifest.json"))
+          l=pathlib.Path("native-probe-result/original-rust-background-loop.log").read_bytes()
+          receipt={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+            "scope":"ORIGINAL_GO_AUTHENTICATED_NORMAL_RUST_M4_BACKGROUND_RAW_RX_TUN_TX",
+            "result":"FUNCTIONAL_PASS","go_drives_each_rx_tx":False,
+            "real_tun_raw_direction_each_packets":8,
+            "actual_measurement_10mbps":"NOT_RUN","rx_lock_bounded":False,
+            "product_qualification":"NOT_RUN","production_features":0,
+            "log_sha256":hashlib.sha256(l).hexdigest()}
+          pathlib.Path("native-probe-result/original-rust-background-loop.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          PY
       - name: Exploratory 150ms configured Linux kernel netem same-owner smoke
         shell: bash
         run: |
@@ -496,38 +531,6 @@ jobs:
           print(json.dumps(x,indent=2))
           PY
           test "$STATE" != FAIL
-      - name: Independent Rust original owner raw/TUN background workers functional (NOT throughput)
-        shell: bash
-        run: |
-          set -euo pipefail
-          set +e
-          WBD_M0_BACKGROUND_LOOP=1 bash tools/run-v4-tun-netns.sh native-probe-build >native-probe-result/original-rust-background-loop.log 2>&1
-          RC=$?
-          set -e
-          cat native-probe-result/original-rust-background-loop.log
-          if [[ "$RC" != 0 ]]; then
-            echo "ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FAIL exit=$RC" >&2
-            exit "$RC"
-          fi
-          grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' native-probe-result/original-rust-background-loop.log
-          grep -Eq 'EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=[0-9]+ fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1' native-probe-result/original-rust-background-loop.log
-          grep -q 'EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=' native-probe-result/original-rust-background-loop.log
-          grep -q 'EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=8 S2C=8 threads=2 NoGoPerPacketHelpers=true' native-probe-result/original-rust-background-loop.log
-          grep -q 'EMBEDDED_REAL_OWNER_MTU_CHANGE_FAIL_CLOSED_PASS old_mtu=65536 new_mtu=1500 s2c_tx_ok=8 driver_reject_increased=true' native-probe-result/original-rust-background-loop.log
-          grep -q 'EMBEDDED_REAL_NETLINK_ROUTE_INVALIDATION_PASS revision_before=' native-probe-result/original-rust-background-loop.log
-          python3 - <<'PY'
-          import hashlib,json,pathlib
-          m=json.load(open("native-probe-build/manifest.json"))
-          l=pathlib.Path("native-probe-result/original-rust-background-loop.log").read_bytes()
-          receipt={"source_sha":m["source_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
-            "scope":"ORIGINAL_GO_AUTHENTICATED_NORMAL_RUST_M4_BACKGROUND_RAW_RX_TUN_TX",
-            "result":"FUNCTIONAL_PASS","go_drives_each_rx_tx":False,
-            "real_tun_raw_direction_each_packets":8,
-            "actual_measurement_10mbps":"NOT_RUN","rx_lock_bounded":False,
-            "product_qualification":"NOT_RUN","production_features":0,
-            "log_sha256":hashlib.sha256(l).hexdigest()}
-          pathlib.Path("native-probe-result/original-rust-background-loop.json").write_text(json.dumps(receipt,indent=2)+"\n")
-          PY
       - name: ONE fixed Normal-off 10Mbps each direction developer diagnostic (10s+60s)
         shell: bash
         timeout-minutes: 3
