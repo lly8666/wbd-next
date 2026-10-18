@@ -345,10 +345,10 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeStageAutoTick(
 // zero packet loss or an auto down/up decision.
 func (b *v4EmbeddedNativeBridge) fec2ProbeObservedQuality(
     exactEpoch [16]byte,at time.Duration,
-)(FecV2Snapshot,uint64,uint64,error){
+)(FecV2Snapshot,uint64,uint64,uint64,error){
     var empty FecV2Snapshot
     if !b.committed||b.stopped||b.handle==0||at<0{
-        return empty,0,0,errV4Embedded
+        return empty,0,0,0,errV4Embedded
     }
     var source,repair,recovered C.uint64_t
     rc:=C.wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
@@ -357,19 +357,18 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeObservedQuality(
         &source,&repair,&recovered)
     runtime.KeepAlive(exactEpoch)
     if rc!=0{
-        return empty,0,0,fmt.Errorf("%w: verified first-RX scope rc=%d",
+        return empty,0,0,0,fmt.Errorf("%w: verified first-RX scope rc=%d",
             errV4Embedded,int(rc))
     }
-    sent:=uint64(source)
     snapshot:=FecV2Snapshot{
         Client:"protected-owner",Direction:FecV2S2C,
         At:at,Validity:FecV2Unknown,
-        Fast:FecV2Window{FirstSent:sent,Observed:sent},
-        Slow:FecV2Window{FirstSent:sent,Observed:sent},
     }
-    // The accepted repair and recovered source counters cannot be counted
-    // as first-submitted source samples or definite network-loss votes.
-    return snapshot,uint64(repair),uint64(recovered),nil
+    // Receiver alone cannot attest the sender's FirstSent denominator.
+    // No Fast/Slow FirstSent/Observed samples are invented even if source
+    // AEAD succeeds; deliver those three separate identity-scoped counters
+    // to diagnostics, NEVER to the sender-loss estimator.
+    return snapshot,uint64(source),uint64(repair),uint64(recovered),nil
 }
 
 // M0-only fault-injection entry for exact epoch/revision lifecycle checks.
