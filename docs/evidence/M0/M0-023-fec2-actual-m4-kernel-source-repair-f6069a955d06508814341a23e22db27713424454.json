@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "f6069a955d06508814341a23e22db27713424454",
+  "progress": "partial",
+  "unverified": true,
+  "result": "PASS_SCOPED_REAL_GO_TLS_AUTHENTICATED_ORIGINAL_RUST_M1_M3_AEAD_M4_KERNEL_RAW_FEC2_SOURCE_REPAIR_TX",
+  "scope": {
+    "code": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "crates/wbd-engine/src/v4_owner_crypto.rs",
+      "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+      "tools/run-v4-tun-netns.sh",
+      ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+    ],
+    "real_kernel_path": "Original Go pinned TLS credential/feature-bit2/KDF private post-Detach scoped Rust owner grant; original M3 FEC2 RS16 Strong emits one source kind2 and one repair kind3 (2-source block); both complete M1 generation Arena buffers allocated before PN; exact original ProtectedScopedOwner AEAD/PN/Seq FrozenRecord send, original M4 ScopedRawIpv4Tx Linux AF_INET IPPROTO_RAW IPv4/TCP; independent Go SOCK_RAW TCP socket in isolated real Linux netns binds original client IP, checks source/dest TCP tuple, source/repair ciphertext lengths, fresh PN0/PN1 and continuous TCP Seq and no obvious unencrypted source header. Three original cipher suites ChaCha/AES128/AES256 succeeded.",
+    "source_bytes": "Deterministic fixture source a=113 bytes and b=127 bytes; M3 encodes k2 Strong but only 1 repair row is actually sent, not whole Fec2Owner scheduler. No app TUN packet, no peer FEC2 record AEAD decode/reconstruction in this test.",
+    "limits": "Opt-in test-only Rust m0_fec2_owner_probe and Go wbd_v4_fec2_owner_probe; no product FEC2 exposure. Kernel raw syscall success and independent socket observation are real, not physical network delivery. No M2 receipt or real recovery, source-first M1 Fec2Owner remains a separate previously scoped component. Same-process Go callback authority is not independently cryptographically attested in Rust."
+  },
+  "actions": {
+    "qualification": {
+      "run_id": 39106157016,
+      "attempt": 1,
+      "source_sha": "f6069a955d06508814341a23e22db27713424454",
+      "conclusion": "success",
+      "job_id": 117612320575,
+      "artifact": {
+        "id": 12128403235,
+        "name": "m0-real-go-fec2-owner-grant-39106157016-1",
+        "github_digest": "sha256:f75578329961529947d32281e3b5d02691a70f0a8e41efa6639889b847054250",
+        "independently_downloaded_and_rehashed_zip": "sha256:f75578329961529947d32281e3b5d02691a70f0a8e41efa6639889b847054250",
+        "receipt_json_sha256": "b52c468ac4a0868587b08d5ac825092d8a1ad3940c19d348861e7798cc347d7e",
+        "real_kernel_log_sha256": "0db2038762f05c9f107303a4270db9bf4b363a7029d0cd8fd168507026342632"
+      },
+      "go_test": "TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS",
+      "result": "ALL_3_CIPHERS_PASS_ONE_SOURCE_AND_ONE_REPAIR_TRUE_M4_RAW_KERNEL_PACKET",
+      "pn_per_suite": [
+        0,
+        1
+      ],
+      "source_repair_seq_per_suite": [
+        [
+          5948,
+          6102
+        ],
+        [
+          5948,
+          6102
+        ],
+        [
+          5947,
+          6101
+        ]
+      ],
+      "other_tests": "Original Go TLS grants/Stop exact 3 suites and original Rust owner AEAD PN source/repair probe PASS; default Rust release no FEC2 grant C symbol."
+    },
+    "same_source_original_baseline": {
+      "run_id": 39106157061,
+      "attempt": 1,
+      "source_sha": "f6069a955d06508814341a23e22db27713424454",
+      "overall_conclusion": "failure",
+      "build_job": 117612320662,
+      "build_conclusion": "success",
+      "consume_job": 117612648950,
+      "consume_conclusion": "failure",
+      "result_json": "PASS original Go/Rust original owner and non-network probes",
+      "tun_netns_json": "PASS real Normal/off bidirectional Go TLS→Rust M4 raw/TUN suite1/2/3",
+      "netem_10ms_json": "EXPLORATORY_PASS actual original Normal/off 3 ciphers, configured qdisc delay only; not measured RTT",
+      "netem_150ms_json": "FAIL suite3 original Go LINK over-budget 2nd authenticated fragment had pending no complete TUN output, raw_to_tun=INVALID. Same workload suite1/2 PASS. No guessed root cause; historical netem high-delay risk still open.",
+      "result_artifact_id": 12128935670,
+      "result_artifact_digest": "sha256:54af8c1544e19231123d05db3840f8169c4b8fa832c5ab6977fe3e3409e30793",
+      "native_build_artifact_id": 12128049254,
+      "native_build_digest": "sha256:3d0a94d98e15b8afa64ea2e9f730deb3a5eb072320d7f0b0a7e865c08f01e3bd"
+    },
+    "governance_maintenance": {
+      "run_id": 39106157020,
+      "source_sha": "f6069a955d06508814341a23e22db27713424454",
+      "conclusion": "success"
+    },
+    "main_governance_S": {
+      "run_id": 39106157008,
+      "source_sha": "f6069a955d06508814341a23e22db27713424454",
+      "conclusion": "success"
+    },
+    "retained_failed_runs": [
+      {
+        "run_id": 39105586754,
+        "source_sha": "2b3dd9c767c456e66356e65e531d0d489f14358e",
+        "cause": "new netns test selector Bash malformed quote; no actual kernel probe executed"
+      },
+      {
+        "run_id": 39105856253,
+        "source_sha": "db6d78d8924ed46482a30c26186a7b0cd425fae8",
+        "cause": "dedicated true FEC2 real kernel raw PASS, old normal probe then FAIL from accidental duplicate script tail syntax; removed f606, actual original normal netns now PASS at zero and 10ms but 150ms scenario separately FAIL"
+      }
+    ]
+  },
+  "product": {
+    "FEC2_default": "OFF",
+    "public_options": "OFF",
+    "actual_go_applied_fixed_auto_gui": "NOT_WIRED",
+    "M1_Fec2Owner_source_first_real_kernel": "NOT_WIRED",
+    "M3_FEC2_kernel_tx_2records": "PASS_SCOPED_PROBE",
+    "M4_actual_Linux_raw_kernel_socket_receipt": "PASS_SCOPED_PROBE",
+    "independent_client_AEAD_replay_and_M3_loss_recovery": "NOT_RUN",
+    "M2_authenticated_receipt": "NOT_RUN",
+    "real_TUN_FEC2_business_delivery": "NOT_RUN",
+    "ARM64_Windows_native": "NOT_RUN",
+    "R0_65KiB_Link_cross_turn_Stop_MTU_prefix_unknown": "OPEN",
+    "original_normal_off_netem_150ms_fragment_pending": "FAIL_OPEN",
+    "old_codec240s_D10_p99": "OPEN",
+    "physical": "NOT_RUN"
+  },
+  "next_action": "Advance from opt-in kernel FEC2 TX to truly independently authenticated Rust/Go client-side kind2/3 replay and M3 missing-only recovery, original M2 receipt, real TUN/driver delivery with no HOL. Isolate one rooted 150ms Normal/off fragment timeout/reassembly hypothesis, preserve old 240s codec/D10/p99, 65KiB cross-turn/Stop/MTU; keep public FEC2 OFF."
+}
