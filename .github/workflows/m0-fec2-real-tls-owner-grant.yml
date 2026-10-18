@@ -51,7 +51,7 @@ jobs:
           cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib >owner-grant-result/opt-in-build.log 2>&1
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_fec2_probe_scope_status$'
-          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib r1_m0_original_owner_fec2_source_repair_same_pn_staged -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib r1_m0_original_ -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
           for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
@@ -89,6 +89,7 @@ jobs:
           assert all(re.search(r"^--- PASS: "+n+r" \(",go,re.M) for n in names)
           assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
           assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
+          assert "r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure ... ok" in rust
           kernel=(root/"real-kernel.log").read_text()
           assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
           for suite in [1,2,3]:
@@ -97,7 +98,7 @@ jobs:
               assert f"M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite={suite} recovered_ip=127 udp_payload=99" in kernel
               assert f"M0_REAL_GO_KERNEL_FEC2_M2_AUTH_RX_FEEDBACK_PASS suite={suite} bitmap=03 largest=1 notsent=1 accepted=1 uncertain=1" in kernel
               assert f"M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite={suite} no_partial_udp=1 no_tamper_udp=1 stop_revokes=1" in kernel
-          assert re.search(r"test result: ok\. 1 passed; 0 failed;",rust)
+          assert re.search(r"test result: ok\. 2 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
              "crates/wbd-engine/src/v4_probe_bridge.rs",
@@ -114,6 +115,7 @@ jobs:
             "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "real_original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
             "real_protected_tls_ciphers":3,"original_owner_scoped_aeAD_and_pn_probe":True,
+            "M1_original_sourcefirst_scheduler":"SCOPED_NORMAL_GAME_K2_DUE_PARITY_JOB_M3_RS16_E1_PRESSURE_NOHOL_STOP_3SUITES",
             "wrong_epoch_and_stop_revoked":True,"default_build_fec2_permission":"OFF",
             "feature_only_cffi":"m0_fec2_owner_probe",
             "actual_applied_FEC2_policy":"NOT_WIRED",
