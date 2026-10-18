@@ -610,3 +610,38 @@ func TestR0V4Fec2ExtensionExactBitPatternRejectUnknown(t *testing.T){
         }
     }
 }
+
+type v4FixedProbeExporter struct{}
+func (v4FixedProbeExporter) ExportKeyingMaterial(label string,context []byte,length int)([]byte,error){
+    // Deterministically emulate ONLY the exporter context binding; original
+    // TLS handshake tests above use real crypto/tls and real credentials.
+    if length!=32{return nil,ErrAdmissionParams}
+    material:=append(append([]byte(label),0),context...)
+    value:=sha256.Sum256(material)
+    return value[:],nil
+}
+func TestR0V4Fec2RealExporterContextSeparatesBit2(t *testing.T){
+    var nonce [16]byte;nonce[0]=0xc4
+    var epoch [16]byte;epoch[0]=0xd5
+    for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+        result:=AdmissionResult{
+            RecordVersion:V4RecordVersion,Policy:v4TestPolicy(1,cipher),
+            TunnelID:[]byte("0123456789abcdef"),IncarnationNonce:nonce,
+            ClientLimit:1400,ServerLimit:1400,
+        }
+        off,err:=v4DeriveRecordKeys(v4FixedProbeExporter{},result,
+            V4Extension{Features:v4RequiredFeatures,Epoch:epoch})
+        if err!=nil{t.Fatal(err)}
+        on,err:=v4DeriveRecordKeys(v4FixedProbeExporter{},result,
+            V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,Epoch:epoch})
+        if err!=nil{t.Fatal(err)}
+        if off==on || off.C2S==on.C2S || off.S2C==on.S2C ||
+           on.C2S==on.S2C || off.C2S==off.S2C {
+            t.Fatalf("FEC2 bit2 not cryptographically separated by original exporter cipher=%d",cipher)
+        }
+        // Feature transcript cannot be forged using bit2 alone.
+        _,err=v4DeriveRecordKeys(v4FixedProbeExporter{},result,
+            V4Extension{Features:v4FeatureFEC2,Epoch:epoch})
+        if !errors.Is(err,ErrAdmissionUnsupported){t.Fatalf("partial KDF feature accepted: %v",err)}
+    }
+}
