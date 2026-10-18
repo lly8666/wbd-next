@@ -59,7 +59,7 @@ fn all_rows(rs:&Rs16,block:u64,frames:&[Vec<u8>],p:Profile,limit:usize)
     out
 }
 #[test]
-fn f2_independent_cauchy_all_rows_and_profiles() {
+fn r1_f2_independent_cauchy_all_rows_and_profiles() {
     let rs=Rs16::new();
     for k in 1..=16 {
         for p in Profile::ALL {
@@ -87,7 +87,7 @@ fn f2_independent_cauchy_all_rows_and_profiles() {
     assert_eq!(Profile::Strong.parity_count(0),Err(Error::InvalidK));
 }
 #[test]
-fn f2_wire_golden_endianness_short_zero_and_strict_header() {
+fn r1_f2_wire_golden_endianness_short_zero_and_strict_header() {
     let src=source_owned(0x0102030405060708,15,b"ab",100).unwrap();
     assert_eq!(src,vec![1,2,3,4,5,6,7,8,15,0,b'a',b'b']);
     let s=parse_source(&src,100).unwrap();
@@ -120,7 +120,7 @@ fn f2_wire_golden_endianness_short_zero_and_strict_header() {
     assert!(parse_repair(&bad,15).is_err());
 }
 #[test]
-fn f2_full_profiles_all_k_and_every_erasure_count() {
+fn r1_f2_full_profiles_all_k_and_every_erasure_count() {
     for k in 1..=MAX_K {
         let f=frames(k);
         for p in Profile::ALL {
@@ -152,7 +152,7 @@ fn f2_full_profiles_all_k_and_every_erasure_count() {
     }
 }
 #[test]
-fn f2_odd_size_mtu_dirty_outputs_and_direct_borrowed() {
+fn r1_f2_odd_size_mtu_dirty_outputs_and_direct_borrowed() {
     let rs=Rs16::new();
     let input=vec![vec![3u8;65],vec![8;1],vec![],vec![0x7f;63]];
     let src=input.iter().map(Vec::as_slice).collect::<Vec<_>>();
@@ -180,7 +180,7 @@ fn f2_odd_size_mtu_dirty_outputs_and_direct_borrowed() {
     assert_eq!(source_owned(17,0,&vec![0;66],79),Err(Error::BudgetExceeded));
 }
 #[test]
-fn f2_malformed_parity_scope_conflict_protected_length_and_no_capability_shortcut() {
+fn r1_f2_malformed_parity_scope_conflict_protected_length_and_no_capability_shortcut() {
     let mut rs=Rs16::new();
     let f=vec![b"a".to_vec(),b"b".to_vec()];
     let wires=all_rows(&rs,99,&f,Profile::Strong,80);
@@ -208,7 +208,7 @@ fn f2_malformed_parity_scope_conflict_protected_length_and_no_capability_shortcu
         BackendChoice::RequireNative),Err(Error::NativeUnavailable));
 }
 #[test]
-fn f2_decode_cache_bounded_and_partial_with_repair_first() {
+fn r1_f2_decode_cache_bounded_and_partial_with_repair_first() {
     let mut rs=Rs16::new();
     let f=(0..16).map(|i|vec![i as u8;65]).collect::<Vec<_>>();
     let rows=all_rows(&rs,44,&f,Profile::Maximum,100);
@@ -224,7 +224,7 @@ fn f2_decode_cache_bounded_and_partial_with_repair_first() {
 }
 #[cfg(feature="native-isal")]
 #[test]
-fn f2_real_isal_exact_rows_and_missing_only_native_equivalence() {
+fn r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence() {
     let mut scalar=Rs16::new();
     let mut native=Rs16::new();
     for k in [2usize,3,8,16] {
