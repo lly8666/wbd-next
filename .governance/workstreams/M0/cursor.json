@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 135,
-  "checkpoint_sha": "2e99c4782afb46cc1f2ecfe2110274050e490c9e",
+  "sequence": 136,
+  "checkpoint_sha": "0459632acec78d8dcaa6536b7bf39fdf21f6756c",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 original Go→Rust raw/TUN safety partial. M3 H37 CODE8cc Linux x64 actual ISA-L native 11/11 and qualified sameVM 400k k16/r16/e4 ABBA ACCEPTED_FOR_M0_INTEGRATION; H37 worker Governance PASS and main G2 central M3 job PASS. Central Scope now shares main G2 512/80 strict fully-paginated commit/path checker, no independent 64 single-page gate; FEC2 product still OFF.",
-  "why_now": "User requested verify M3 completion and unify conflicting central v2 64-single-page rule with G2's 512/80 complete-pagination standard. Verified immutable H37 worker and source-owned x64 codec artifacts; rewired central to reuse exact G2 audit_worker_history, removed legacy checkpoint/context-only blocking rules, then stopped redundant four-worker full-history main-push scans after Actions GitHub API exhaustion.",
+  "current_task": "R0-023 main integration now contains exact accepted M3 CODE8cc FEC2 RS16/source+repair and tests, M4 CODE7cef Go cold policy, M1 CODE3f78 3class FEC2 scheduler+tests; M0 staged real M1 original Arena→M3 PreparedBlock bounded <=4 parity rows→e1 missing-only recovery component PASS. All capability/kind2/3/Go actual product FEC2 remain OFF.",
+  "why_now": "User requested accelerated M0 main rather than more standalone microbench. Source-frozen M1/M3/M4 six worker files imported into main with identical Git blobs; original Rust/Go binary/test Action tests confirm main direct source not temporary worker clones, and new source-first/parity/repair glue gives first proven M1→M3 composition. Kept Normal/off identical and old 240s codec historical FAIL distinct.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Continue R0-023 genuine 65KiB TUN UDP buffered cross-turn LINK fragments, no small-packet HOL, MTU shrink/Stop/driver prefix-uncertain safety in SOURCE-locked Actions. Then M0 stage integrate exact M3 CODE8cc and M1/M2/M4 into real Go authenticated FEC2 owner; obtain full Linux ARM64/Windows M3 codec native and Windows loader/GUI qualification before any product enable. Historical scope failures and GitHub Actions rate-limited checks remain factual.",
+  "next_action": "Complete real protected Go V4 admission FEC2 capability/epoch/KDF and kind2/3 into original M0 Rust owner, bind staged M1→M3 repair output to original AEAD/PN and M4 raw/TUN + M2 authenticated ingress with source-first/noHOL/Stop/unknown completion. Also finish original 023 legal 65KiB cross-turn LINK/MTU/Stop safety. Exact-source Actions only; no repeat 400k CODE8cc CPU microbench; do not enable product until end-to-end and UI/other targets qualify.",
   "unverified": true,
-  "last_tested_source": "39ea51ea507b00dd88330af7a1c9ea4545ab42f5",
+  "last_tested_source": "1395d9c5477ae7097fef2aedaaa5630253266da0",
   "evidence_refs": [
-    "docs/evidence/M0/M0-M3-017-scoped-acceptance-unified-G2-2026-10-18.json"
+    "docs/evidence/M0/M0-023-FEC2-main-3worker-staged-1395d9c5477ae7097fef2aedaaa5630253266da0.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-next-stage-snapshot-2026-10-18.md",
     "docs/evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json",
-    "docs/evidence/M0/M0-FEC2-CODE8CC-qualified-native-ABBA-f088ca04541df962d483751a759959ac3caf0c39.json",
+    "docs/evidence/M0/M0-M3-017-scoped-acceptance-unified-G2-2026-10-18.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
-    "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json",
+    "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/architecture/TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "M3 CODE8cc scoped Linux x64 real ISA-L 11/11 and one fixed 400k encode/e4 decode ABBA CPU qualified 39090941413; worker H37 41ef0e29 Governance39094273613 SUCCESS, main-owned new G2 code central run39095544653 M3 job117581113937 SUCCESS (overall FAIL earlier M4 independent metadata), historic 64 audit fails retained. M0 central now reuses G2 audit_worker_history immutable source with 512/80 full pages and exact parent/paths, separate cursor schema, no policy64/checkpoint scope veto; workflow only triggered by corresponding worker Governance, no full-history sweeps per main push. Exact maint SOURCE39ea51ea governance-maintenance39095981610 SUCCESS; later main/scope jobs 403 GitHub rate_limited remaining=0 due past 4x parallel history pushes, not proven latest all-role PASS. M3 ARM64/Windows full FEC2 codec/NEON/WinGo loader NOT_RUN, worker H37 partial; M0 original 023 super-MTU >2048B/32 parts cross-turn/MTU/Stop/kernel uncertain OPEN, M1/M2/M4 integration OPEN, D10/p99 OPEN, FEC2 product OFF."
+  "partial_summary": "SOURCE1395d9c5 M1/M3 main staged code and real M1 Arena→M3 RS16 parity generation/one dropped source recovery PASS, engine native-functional39097343657 129/0/1 + 4 other scoped groups PASS; original Go TLS Rust raw/TUN native39097343616 build+consume PASS; ABI39097343599 bootstrap39097343596 crossABI39097343554 PASS. Main M3 real ISA-L CODE8cc39096791296 11/11 PASS, main Go M4 policy original realityfront39096875504 8/8 PASS; six imported Git blobs exact worker snapshots CODE8cc/7cef/3f78. Historical codec native-functional39096586112 240s timeout/ignored diagnostic FAIL retained, pre-fix M1 missing test file compiler FAIL corrected, M0 023 65k cross-turn/Stop MTU prefix uncertain, actual FEC2 Go KDF kind2/3 AEAD M2/M4 wire, CLI GUI, ARM Windows, p99 D10 physical all OPEN. FEC2 default OFF, no product qualification."
 }
