@@ -1808,20 +1808,39 @@ fn stage_bounded_original_link(
     ).map_err(|_|INVALID)?;
     let count=plan.total_frames();
     if count==0 || count>available_records || count>32{return Err(FULL)}
+    let staged=stage_next_original_link_turn(
+        arena,&mut plan,frame_mtu,available_records
+    )?;
+    if staged.len()!=count || plan.issued()!=count
+        || plan.issue_next(frame_mtu).map_err(|_|INVALID)?.is_some(){
+        return Err(INVALID)
+    }
+    Ok(staged)
+}
+
+// M0 incremental integration: original M1 arena/loan plus original M3
+// LINK20 planner stage ONE bounded owner turn of a >32-frame packet.
+// Production TUN worker cannot yet persist plan+source across turns.
+// On ANY failure caller must retire the whole plan/packet ID, not retry
+// after a partially issued cursor, to avoid mixed-stride logical packets.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+fn stage_next_original_link_turn(
+    arena:&mut Arena,plan:&mut LinkPacketPlan<'_>,
+    current_frame_mtu:usize,available_records:usize
+)->Result<Vec<(crate::memory::UniqueBuffer,usize)>,i32>{
+    if available_records==0 || plan.is_abandoned(){return Err(FULL)}
+    let remaining=plan.total_frames().checked_sub(plan.issued()).ok_or(INVALID)?;
+    if remaining==0{return Ok(Vec::new())}
+    let count=remaining.min(available_records).min(32);
     let mut staged=Vec::with_capacity(count);
     for _ in 0..count{
-        let part=plan.issue_next(frame_mtu).map_err(|_|INVALID)?
+        let part=plan.issue_next(current_frame_mtu).map_err(|_|INVALID)?
             .ok_or(INVALID)?;
-        // Acquire the full bounded loan set before consuming ANY PN. On
-        // allocation error earlier slabs simply return to this same arena.
         let mut slot=arena.allocate().map_err(|_|FULL)?;
         let end=14usize.checked_add(part.len()).ok_or(INVALID)?;
         if end>slot.writable().len(){return Err(INVALID)}
         slot.writable()[14..end].copy_from_slice(&part);
         staged.push((slot,part.len()));
-    }
-    if plan.issue_next(frame_mtu).map_err(|_|INVALID)?.is_some(){
-        return Err(INVALID)
     }
     Ok(staged)
 }
@@ -2493,6 +2512,93 @@ mod tests{
              original_owner_32_slot_gate=BLOCKED_FAIL_CLOSED \
              staged_partial=0 loan_leak=0 real_tls_kernel=NOT_RUN"
         );
+    }
+
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_link_original_m1_arena_two_turn_65k_32_plus_16_stop_mtu_nohol(){
+        use wbd_codec::link_reassembly::{
+            ReassemblyTable,ReassemblyScope,LinkDirection,LinkDelivery
+        };
+        let data=(0..65_535usize).map(|i|((i*23+5)%251) as u8)
+            .collect::<Vec<_>>();
+        let scope=|packet:u64|ReassemblyScope{
+            tunnel_epoch:91,direction:LinkDirection::ServerToClient,
+            packet_id_ext:packet
+        };
+        let mut original_m1=Arena::new(410,32,2048,32,128_000).unwrap();
+        let mut plan=LinkPacketPlan::new(
+            &data,1400,LinkMode::FixedOff,91
+        ).unwrap();
+        let mut original_m3=ReassemblyTable::new(
+            1400,1400,LinkMode::FixedOff
+        ).unwrap();
+        assert_eq!(plan.total_frames(),48);
+        for (turn,expected) in [(0usize,32usize),(1,16)]{
+            let staged=stage_next_original_link_turn(
+                &mut original_m1,&mut plan,1400,32
+            ).unwrap();
+            assert_eq!(staged.len(),expected);
+            for (idx,(mut loan,len)) in staged.into_iter().enumerate(){
+                let frame=&loan.writable()[14..14+len];
+                let opened=original_m3.push_after_record_auth(
+                    frame,scope(91),(turn*32+idx) as u64
+                ).unwrap();
+                if turn==1 && idx==15{
+                    assert_eq!(opened,LinkDelivery::Reassembled(data.clone()));
+                }else{
+                    assert_eq!(opened,LinkDelivery::Pending);
+                    assert_eq!(
+                        original_m3.push_after_record_auth(
+                            b"unrelated-small-packet",scope(0),
+                            (turn*32+idx) as u64
+                        ),
+                        Ok(LinkDelivery::Ordinary(b"unrelated-small-packet"))
+                    );
+                }
+            }
+            original_m1.drain_returns();
+            assert_eq!(original_m1.report().loaned,0);
+            assert_eq!(plan.issued(),if turn==0{32}else{48});
+        }
+        assert!(stage_next_original_link_turn(
+            &mut original_m1,&mut plan,1400,32
+        ).unwrap().is_empty());
+        assert_eq!(original_m3.state().assemblies,0);
+
+        let mut abandoned=LinkPacketPlan::new(
+            &data,1400,LinkMode::FixedOff,92
+        ).unwrap();
+        let prefix=stage_next_original_link_turn(
+            &mut original_m1,&mut abandoned,1400,12
+        ).unwrap();
+        assert_eq!(prefix.len(),12);
+        drop(prefix);
+        original_m1.drain_returns();
+        assert_eq!(original_m1.report().loaned,0);
+        assert_eq!(
+            stage_next_original_link_turn(
+                &mut original_m1,&mut abandoned,1300,32
+            ).err(),Some(INVALID)
+        );
+        assert!(abandoned.is_abandoned());
+        assert_eq!(
+            stage_next_original_link_turn(
+                &mut original_m1,&mut abandoned,1400,32
+            ).err(),Some(FULL)
+        );
+        assert_eq!(original_m1.report().loaned,0);
+        let mut healthy=LinkPacketPlan::new(
+            b"healthy-following-packet",1400,LinkMode::FixedOff,93
+        ).unwrap();
+        let loans=stage_next_original_link_turn(
+            &mut original_m1,&mut healthy,1400,32
+        ).unwrap();
+        assert_eq!(loans.len(),1);
+        drop(loans);
+        original_m1.drain_returns();
+        assert_eq!(original_m1.report().loaned,0);
+        println!("M0_ORIGINAL_M1_65K_TWO_TURN_LOANS_32_PLUS_16_MTU_STOP_NOHOL_PASS production_tun_worker=BLOCKED_NO_PERSISTENT_PLAN real_kernel=NOT_RUN");
     }
 
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
