@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 138,
-  "checkpoint_sha": "3b888d70658453a232dc9645d7a9d5e22a9077c4",
+  "sequence": 139,
+  "checkpoint_sha": "e960a88330854541907ad5798025b7634e296b73",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 main original record kind2/3 staged AEAD/8B-HP/PN replay real three suites remains PASS_SCOPED at SOURCEee5 (Actions39098885644 default and explicit opt-in 2/2 each); full native-functional codec suite historical 240s timeout FAIL, all other groups PASS; actual FEC2 product OFF.",
-  "why_now": "Reconcile final exact-source late run39098885670 result: legacy codec group timed out after240s and reported unexpected ignored diagnostic while five other functional groups passed. Neither erase the red nor mislabel targeted real three-suite protected FEC2/PN/replay test; preserved precise evidence and no redundant seed runs.",
+  "current_task": "R0-023 M0 original protected Rust owner now has explicit test-only feature-gated FEC2 kind2/3 path running SAME original AEAD/PN/Seq/M1 FrozenRecord TX queue as Normal/off; 3 real suites passed original owner test and unchanged default release, exact SOURCE c60. Actual Go TLS bit2 and network FEC2 product OFF.",
+  "why_now": "User asked fast M0 progress. Previous scoped record-layer FEC2 source/repair shared PN proof did not yet exercise original ProtectedScopedOwner. Added min owner-specific probe seam by refactoring original seal kernel, preserving default and failing closed on typed M3 invalid frame or pre-commit. Fixed two integration test errors against real M1 preallocated output contract, then Actions proved frozen TX PN+Seq and normal Go raw/TUN baseline.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "M0 R0-023: wire actual Go protected bit2 KDF/epoch/direction and one applied policy into SAME original ProtectedScopedOwner PN/Replay, then M1 staged source/parity M3 kind2/3 through M4 real raw/TUN and M2 authenticated recovery. Keep product OFF and old 240s codec timeout/ignored blocker separate, add focused root-cause reproduction only with new hypothesis. Legal65KiB UDP cross-turn, MTU/Stop prefix/uncertain remain OPEN.",
+  "next_action": "M0 bind original Go V4 protected request/reply negotiated feature bit2 and KDF/epoch/direction/actual applied FEC profile to SAME committed original ProtectedScopedOwner; only then move test-only source2/repair3 into authenticated TX/RX path alongside M1 source-first ParityJob and M3 RS16, M4 actual raw/TUN and M2 authenticated repair receipt. In parallel close R0-023 real 65KiB UDP cross-turn MTU/Stop/kernel prefix-uncertain, retain legacy 240s codec/D10/p99 OPEN; no default FEC2 enable until hard gates.",
   "unverified": true,
-  "last_tested_source": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
+  "last_tested_source": "c60e9d6e95aff49cc98eb039e7347659eaaa6213",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-fec2-protected-record-ee5d2cad1ba8818488a91097e4da04fcc55b8e63.json"
+    "docs/evidence/M0/M0-023-original-owner-fec2-same-pn-c60e9d6e95aff49cc98eb039e7347659eaaa6213.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
+    "docs/evidence/M0/M0-023-fec2-protected-record-ee5d2cad1ba8818488a91097e4da04fcc55b8e63.json",
     "docs/evidence/M0/M0-023-FEC2-main-3worker-staged-1395d9c5477ae7097fef2aedaaa5630253266da0.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
-    "docs/architecture/modules/06-LINK-MTU.md",
     "docs/architecture/TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCEee5d2cad main default old kind0/1 AEAD/opener PN and explicit opt-in FEC2 kind2/3 use original ChaCha/AES128/AES256 AEAD/8-byte HP and same PN and replay bitmap, normal noHOL, tamper authentication prior replay, duplicate cross-kind deny and M3 protected source/repair missing-only RS16 recover PASS in run39098885644 default2/2 opt-in2/2, GH artifact12125319675 digest7ee4be...; G2 bootstrap39098885668, wire39098885673, record framing39098885649, LINK MTU39098885643 and main governance39098885646 PASS. Full native-functional39098885670 final FAIL only codec117591061533 240s exit124 and prior unexpected ignored test r1_tx_cooperative_release_cpu_wall_diagnostic; build/engine/normal/fec/kernel/receipt PASS, no overall qualification. E0716 new test temporary clone borrow errors first observed run39098807187 corrected source ee5 and passing native Rust test. Go actual protected FEC2 admission/KDF and M0 original owner AEAD activation/M4 raw/TUN M2 receipt not wired, FEC2 product OFF, old D10/p99, R0-023 65K cross-turn/MTU/Stop/prefix unknown and ARM/Windows all OPEN."
+  "partial_summary": "SOURCE c60e9d6e95aff49cc98eb039e7347659eaaa6213 original Rust ProtectedScopedOwner test-only m0_fec2_owner_probe reuses SAME normal owner validated FrameBudget, real crypto PN+Seq, M1 Arena/FrozenRecord TX and no extra owner; 3 suites synthetic protected private callback verified source2/repair3 authenticated with original S2C replay and M3 RS16 missing-only restoration, rejects pre-Detach/dirty source before any PN and returns loan after batch/Stop. Actions39100892712 SUCCESS (targeted1/1, default release build PASS, artifact12126114397), original Go V4→Rust normal/off native39100892715 build/consume SUCCESS, native-functional39100892732 engine/normal/fec/kernel/receipt SUCCESS but legacy codec not selected in that run, abi39100892718 crossabi39100892706 G2bootstrap39100892806 SUCCESS. Initial new test E0277 run39100648669, then M1 Vec0-capacity test fixture bug run39100727877 corrected without touching M1; both failed runs retained. Real Go bit2 credentials/KDF/applied, production FEC2 kind2/3 raw/TUN M2 still NOT_RUN; FEC2 default OFF; historical codec240s/D10/p99 and R0 65k/MTU/Stop prefix uncertain OPEN."
 }
