@@ -10,6 +10,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_scope_status(
     uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_applied_policy(
     uint64_t,uint8_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_stage_policy(
+    uint64_t,const unsigned char *,size_t,uint8_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
@@ -279,7 +281,9 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeChoosePolicy(
 func (b *v4EmbeddedNativeBridge) fec2ProbeAppliedPolicy(
     state FecV2State,
 )(FecV2State,error){
-    if !b.committed||b.stopped||b.handle==0||!b.fec2ProbePolicySet{
+    if !b.committed||b.stopped||b.handle==0||!b.fec2ProbePolicySet||
+       state.Client!="protected-owner"||state.Direction!=FecV2S2C ||
+       !b.fec2ProbeScope(b.protectedEpoch){
         return state,errV4Embedded
     }
     var profile C.uint8_t
@@ -288,8 +292,8 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeAppliedPolicy(
         C.uint64_t(b.handle),&profile,&revision)
     if rc!=0{return state,fmt.Errorf("%w: Rust applied policy rc=%d",
         errV4Embedded,int(rc))}
-    if uint8(profile)!=b.fec2ProbeProfile||
-       uint64(revision)!=b.fec2ProbeRevision {
+    if uint8(profile)!=uint8(state.Desired)||
+       uint64(revision)!=state.RequestedRevision {
         return state,errV4Embedded
     }
     applied,ok,err:=FecV2Apply(state,FecV2Ack{
@@ -298,5 +302,36 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeAppliedPolicy(
         Applied:true,
     })
     if err!=nil||!ok{return state,errV4Embedded}
+    b.fec2ProbeProfile=uint8(profile)
+    b.fec2ProbeRevision=uint64(revision)
     return applied,nil
+}
+
+// Actual authenticated Go AUTO quality tick -> original Rust pending
+// revision. No client-supplied FEC2 hot config, bypass of TLS or product
+// timer. Applied readback remains old until original M1 starts the next
+// block and original M4 kernel positively copies its source and repair.
+func (b *v4EmbeddedNativeBridge) fec2ProbeStageAutoTick(
+    cfg FecV2Config,state FecV2State,snapshot FecV2Snapshot,now time.Duration,
+)(FecV2State,FecV2Intent,error){
+    var invalid FecV2Intent
+    if !b.committed||b.stopped||b.handle==0||!b.fec2ProbePolicySet||
+        !b.fec2ProbeScope(b.protectedEpoch)||
+        cfg.Client!="protected-owner"||cfg.Direction!=FecV2S2C||
+        cfg.Transport!=FecV2Normal||cfg.Mode!=FecV2Auto {
+        return state,invalid,errV4Embedded
+    }
+    next,intent,e:=FecV2Step(cfg,state,snapshot,now)
+    if e!=nil||!intent.Send{return next,intent,e}
+    if !intent.Profile.Valid()||intent.Revision<=state.RequestedRevision{
+        return state,intent,errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_fec2_probe_stage_policy(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),
+        C.size_t(16),C.uint8_t(intent.Profile),C.uint64_t(intent.Revision))
+    runtime.KeepAlive(b.protectedEpoch)
+    if rc!=0{return state,intent,fmt.Errorf("%w: authenticated Go auto stage rc=%d",
+        errV4Embedded,int(rc))}
+    return next,intent,nil
 }
