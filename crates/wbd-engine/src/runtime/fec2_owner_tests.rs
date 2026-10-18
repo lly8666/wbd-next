@@ -194,7 +194,7 @@ fn r1_fec2_f2_mem_pressure_source_first_ready_no_out_of_range_index() {
     assert_eq!(o.report().classes[0].k_hist[1],2);
     assert_eq!(o.report().classes[0].unknown_capacity,1);
     drain(&mut o,1);
-    o.stop();assert!(a.quiesced());
+    o.stop();a.stop();assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_off_is_immediate_and_uses_no_encoder_timer() {
@@ -208,7 +208,7 @@ fn r1_fec2_f2_sched_off_is_immediate_and_uses_no_encoder_timer() {
     assert_eq!(o.next_deadline(),None);
     assert_eq!(o.report().charged_bytes,0);
     assert_eq!(o.report().classes[0].accepted,0);
-    o.stop();assert!(a.quiesced());
+    o.stop();a.stop();assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_game_source_single_logical_offer_no_lane_barrier() {
@@ -231,7 +231,7 @@ fn r1_fec2_f2_sched_game_source_single_logical_offer_no_lane_barrier() {
     assert!(out.source_enqueued);
     o.on_due(MonoNs(3_000_000)).unwrap();
     drain(&mut o,3_000_000);
-    o.stop();assert!(a.quiesced());
+    o.stop();a.stop();assert!(a.quiesced());
 }
 #[test]
 fn r1_fec2_f2_sched_profile_k1_to16_all_seven_and_unknown_completion() {
@@ -253,5 +253,5 @@ fn r1_fec2_f2_sched_profile_k1_to16_all_seven_and_unknown_completion() {
     o.finish_parity(j,0,false);
     assert_eq!(o.report().classes[0].r_sent,0);
     assert_eq!(o.report().classes[0].unknown_capacity,1);
-    o.stop();assert!(a.quiesced());
+    o.stop();a.stop();assert!(a.quiesced());
 }
