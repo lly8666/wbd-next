@@ -173,7 +173,7 @@ jobs:
           set +e
           bash tools/run-v4-kernel-loopback.sh --prebuilt native-probe-build --all >native-probe-result/go.log 2>&1
           G=$?
-          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|TwoGenerationStopIsolation)$' >>native-probe-result/go.log 2>&1
+          ./native-probe-build/owner-go.test -test.v -test.count=1 -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|NativeProtectedFec2Bit2Scope|TwoGenerationStopIsolation)$' >>native-probe-result/go.log 2>&1
           GE=$?
           if [[ "$GE" != 0 ]]; then G=$GE; fi
           ./native-probe-build/owner-rust.test r0_m0_native_probe_ --nocapture >native-probe-result/rust.log 2>&1
@@ -211,15 +211,18 @@ jobs:
           ./native-probe-build/owner-rust.test m0_link_materialization_never_admits_half_packet_on_arena_failure --nocapture >>native-probe-result/rust.log 2>&1
           R9=$?
           if [[ "$R9" != 0 ]]; then R=$R9; fi
+          ./native-probe-build/owner-rust.test m0_private_v4_real_go_fec2_bit2_handoff_is_metadata_not_permission --nocapture >>native-probe-result/rust.log 2>&1
+          R10=$?
+          if [[ "$R10" != 0 ]]; then R=$R10; fi
           set -e
           cat native-probe-result/go.log native-probe-result/rust.log
           GO_EXIT="$G" RUST_EXIT="$R" python3 - <<'PY'
           import hashlib,json,os,pathlib,re,sys
           go=pathlib.Path("native-probe-result/go.log").read_text()
           rust=pathlib.Path("native-probe-result/rust.log").read_text()
-          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4EmbeddedTwoGenerationStopIsolation",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4EmbeddedNativeProtectedControlAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelBudget",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelRoutePmtu",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustGoAdmissionRetainedHeapIndicative",go,re.M))
+          good_go=os.environ["GO_EXIT"]=="0" and bool(re.search(r"^--- PASS: TestR0V4EmbeddedTwoGenerationStopIsolation",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4EmbeddedNativeProtectedFec2Bit2Scope",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4EmbeddedNativeProtectedControlAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProbeActualProtectedFreshOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedAEADReplayAllCiphers",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffLinkFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustProtectedNormalOffBidirectionalScopedFirst",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelBudget",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustLinuxKernelRoutePmtu",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpScopedTxFirstPacket",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustM4KernelUdpC2SIntoOriginalOwner",go,re.M)) and bool(re.search(r"^--- PASS: TestR0V4NativeRustGoAdmissionRetainedHeapIndicative",go,re.M))
           m=re.search(r"test result: ok\. (\d+) passed; 0 failed",rust)
-          good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust and "m0_normal_build_v4_go_private_handoff_version_and_scope ... ok" in rust and "m0_embedded_go_private_control_rejects_unknown_and_null ... ok" in rust and "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok" in rust and "m0_tx_turn_completion_preserves_prefix_tail_and_typed_path ... ok" in rust and "m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate ... ok" in rust and "r1_m0_original_data_return_budget_yields_at_64_128_33 ... ok" in rust and "r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance ... ok" in rust and "m0_original_tx_seq64_never_restarts_pn_at_wire32_wrap ... ok" in rust and "m0_link_materialization_never_admits_half_packet_on_arena_failure ... ok" in rust
+          good_rust=os.environ["RUST_EXIT"]=="0" and bool(m) and int(m.group(1))==1 and "r0_m0_native_probe_local_fresh_generation_and_bounded_phases ... ok" in rust and "m0_normal_build_v4_go_private_handoff_version_and_scope ... ok" in rust and "m0_embedded_go_private_control_rejects_unknown_and_null ... ok" in rust and "ready_only_batch_0_1_32_33_and_failure_do_not_wait ... ok" in rust and "m0_tx_turn_completion_preserves_prefix_tail_and_typed_path ... ok" in rust and "m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate ... ok" in rust and "r1_m0_original_data_return_budget_yields_at_64_128_33 ... ok" in rust and "r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance ... ok" in rust and "m0_original_tx_seq64_never_restarts_pn_at_wire32_wrap ... ok" in rust and "m0_link_materialization_never_admits_half_packet_on_arena_failure ... ok" in rust and "m0_private_v4_real_go_fec2_bit2_handoff_is_metadata_not_permission ... ok" in rust
           data=json.load(open("native-probe-build/manifest.json"))
           sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
           result={"source_sha":data["source_sha"],"run_id":data["run_id"],
