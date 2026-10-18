@@ -125,7 +125,7 @@ GitHub API 不可读、权限不足、结果分页超限都明确报出，不回
 
 **唯一提交/路径/merge 审查标准为 main 的 `tools/worker_scope_ci.py`：** `G2_BASE` 固定冻结起点、`G2_ACTIVATION_MAX_COMMITS=512`、`G2_ACTIVATION_PAGE_SIZE=80`。在有限512个历史提交内，按完整 SHA 固定 SOURCE 分页，检查每页总数/顺序、末尾 SOURCE、SHA 唯一、每个实际提交的完整路径及重命名旧路径、单/双亲和已经由 M0 精确批准的历史工具同步/merge。缺页、反常父关系、越权修改、不完整路径或 SOURCE 不可达必须失败；**不是取消边界或把历史免审**。超过512需 M0单独设计受审的接续方案，不能自动截短成“前512个通过”。
 
-`tools/scope_audit.py` 在**只检出主线代码**的中央 Actions 中直接调用同一个 `audit_worker_history()`；中央自身只追加 main registry 生效权限快照、worker cursor **结构**验证和开始/结束SOURCE祖先关系检查；同源证据/工件及跨分支 context_refs 仍由普通 Governance/专项资格另验，**不加入第二套 Scope 权限拒绝条件**，**不再另用64提交单页审计或第二套主线路径白名单**。任何一次 worker Governance 的完成会触发相应工位中央审计；main 修改工具时对M1/M2/M3/M4并发做精确当前 SOURCE 检查并各存独立receipt。普通 worker Governance 和中央 receipt 是可互查的两条执行入口、同一条**历史路径判定代码**；两者不代表产品通过。
+`tools/scope_audit.py` 在**只检出主线代码**的中央 Actions 中直接调用同一个 `audit_worker_history()`；中央自身只追加 main registry 生效权限快照、worker cursor **结构**验证和开始/结束SOURCE祖先关系检查；同源证据/工件及跨分支 context_refs 仍由普通 Governance/专项资格另验，**不加入第二套 Scope 权限拒绝条件**，**不再另用64提交单页审计或第二套主线路径白名单**。任何一次 worker Governance 的完成只触发**该工位**的精确 SOURCE 中央审计；main 修改检查器时由既有 governance-maintenance Action 跑治理工具回归测试，**不自动对四个工位重复扫描完整512提交历史**，避免耗尽共享GitHub API配额。需要另行完整复审某工位时，走该工位正式Governance事件和相应SOURCE，不能借主线push冒充worker新证明。普通 worker Governance 和中央 receipt 是可互查的两条执行入口、同一条**历史路径判定代码**；两者不代表产品通过。
 
 旧 `.governance/scope-checkpoints.json` 和历史中央64增量审计收据**保留作历史证据**，但不再由当前中央 Scope 决定通过/失败；无需 worker 自行修改，不以旧检查点提前截断已发生的变更，也不借移动检查点忽略越权提交。`.governance/policy.json:max_delta_commits=64` 仍保留在 **`tools/governance.py audit` 交接完整性的一次有界 cursor/HEAD 恢复诊断**（与角色 Scope 安全审计不同），中央 Scope/G2 不读取它。旧失败仍有准确来源，不会被重新标成过去已成功。
 
