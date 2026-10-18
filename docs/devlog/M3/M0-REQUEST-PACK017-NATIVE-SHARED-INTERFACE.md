@@ -36,3 +36,15 @@
 原 `39086460623` 四腿 ABBA checksum 相等而 CPU 测量仅 **0.34–18.4ms 每腿**，`CPU_INCONCLUSIVE_SHORT_WINDOW`。M0 请在同一固定 k16/r16/1200B、同一消费 VM、同一 Release 二进制中使用**足够长、事先约定的有界测量窗**（如每腿 `>=1s`、真实进程 CPU tick 可靠，事前固定总工作量或预热标定；容量不足直接 INCONCLUSIVE），纳入缺 `e=4` recovery 且对齐每腿相同真实 workload，随后 AB 与 BA 保留全部原始数据；禁止把原短窗壁钟比宣传为吞吐收益。流程继续只读 FEC2 codec、无 Go V1 wire 承诺、不启 product FEC-on。AArch64/Windows 现阶段只有 safe-wrapper native，不等于该 M3 V2 codec 原生三目标通过。
 
 M3 本工位继续完成 scalar/治理 Actions 与 S→H 证据。M0 共享入口不需等 M3 任务整体完成才重新锁源执行；若公共 workflow 尚未更新，则明确 `M3_NATIVE_RETEST_PENDING_M0_SHARED_ACTION`。
+
+## 2026-10-18 · CODE8cc Linux x64 已解决；剩余唯一共享与治理请求
+
+M0 已按上述修复 SRC 重新锁定共享 native 工作流，run `39090941413` attempt1 **build+consume SUCCESS；真实 F2 native 11/11 PASS，k16/r16/1200B/e4 400000次 ABBA 进程CPU窗合格**。M3 独立验证两份 ZIP 和10份成员 SHA256，收据在 `docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json`。因此原先“CODE301→CODE8cc source swap”及 Linux x64 CPU时窗要求已经**关闭**，不要再次重复相同测量，防止用不同宿主挑好结果。
+
+现在只请求 M0 在其**独占 shared/CI/main** 范围逐项判断：
+
+1. **治理分段验收**：M3 H35 Governance `39088913192` 是 `ROLE_SCOPE_FAILED: control or source moved mid-audit`；M0 中央 scope `39089044776` 因从 main `scope-checkpoints.json` 当前 M3 checkpoint `0ecb459c9686254625a045ea19b85ae0e8d43080` 到新 worker 源超 `max_delta_commits` 而 FAIL。由 M0 在不跳过任何 worker commit/path、核对已审计记录后创建正式**中继scope receipt/更新 main checkpoint**。不得 M3 自改main，不提高总量限制，不把 H33/H35 局部Governance或 G2 bootstrapping 冒充中央scope PASS。
+2. **跨平台 codec，而不是 wrapper**：Linux aarch64 与 Win64 各提供完整 M3 FEC2 `fec_v2.rs` + `fec_v2_tests.rs` + safe ISA-L feature 的源锁原生 runner；目前只验证了三目标包装层 `ec_encode_data`，不等于完整 V2 7档/partial/corrupt/恢复内核。AArch64 要注明 NEON 是否确实调度；Win64 的 Go bridge loader 是另一所有者 M4/M0，不可将 wrapper native PASS 冒作它。
+3. 若平台条件不足，精确记录 `NOT_RUN` / `UNSUPPORTED` 并按相应 gate 保留，不扩大测试矩阵，不因Linux x64 组件PASS开启 product FEC-on。
+
+共享工作流、根Cargo/lock、`.governance/scope-checkpoints.json`、M0原 Go/ABI 仍由 M0 拥有。旧 H30 `39046275022` FAIL、CODE301 两次原生 F2 FAIL、原96组 CPU短窗、H35治理 FAIL 保留。M3 后续只因真实新缺陷改本工位 codec。
