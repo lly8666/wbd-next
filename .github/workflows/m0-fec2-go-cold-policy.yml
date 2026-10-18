@@ -1,0 +1,134 @@
+name: M0 FEC2 real Go clone cold policy source-locked
+run-name: "M0|FEC2-GO|M4-7cef7e8|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-fec2-go-cold-policy.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-fec2-go-${{ github.sha }}-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile real pinned Go package plus exact M4 SOURCE overlay once
+        shell: bash
+        env: {GOTOOLCHAIN: local}
+        run: |
+          set -euo pipefail
+          test "$(git -C worker-m4 rev-parse HEAD)" = 7cef7e849e293373d907a3b64007b4ce8946da78
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          for file in fec_v2_policy.go fec_v2_policy_test.go; do
+            test ! -e "legacy/internal/realityfront/$file"
+            cp "worker-m4/r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          (cd legacy && go test -c -o "$GITHUB_WORKSPACE/fec2-real-go.test" ./internal/realityfront)
+          mkdir -p fec2-go-build
+          mv fec2-real-go.test fec2-go-build/fec2-real-go.test
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          paths=["fec_v2_policy.go","fec_v2_policy_test.go"]
+          source="worker-m4/r0/go_overlay/internal/realityfront/"
+          m={"schema_version":1,"result":"COMPILED_NOT_TESTED",
+             "control_sha":os.environ["GITHUB_SHA"],"worker_sha":"7cef7e849e293373d907a3b64007b4ce8946da78",
+             "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "target":"linux-amd64","toolchain":"go1.23.12",
+             "worker_go_sha256":{p:sha(source+p) for p in paths},
+             "binary_sha256":sha("fec2-go-build/fec2-real-go.test"),
+             "workflow_sha256":sha(".github/workflows/m0-fec2-go-cold-policy.yml"),
+             "scope":"real pinned original Go realityfront package, cold pure FEC2 policy only; V4 capability and product remain disabled"}
+          pathlib.Path("fec2-go-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print(json.dumps(m,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fec2-go-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-go-build/
+          retention-days: 30
+          if-no-files-found: error
+  consume:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 7cef7e849e293373d907a3b64007b4ce8946da78
+          path: worker-m4
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: fec2-go-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-go-build/
+      - name: Verify immutable SOURCES and execute 8 compiled real-package control tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fec2-go-result
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          m=json.load(open("fec2-go-build/manifest.json"))
+          assert m["schema_version"]==1 and m["control_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["worker_sha"]=="7cef7e849e293373d907a3b64007b4ce8946da78"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for p,d in m["worker_go_sha256"].items():
+              assert sha("worker-m4/r0/go_overlay/internal/realityfront/"+p)==d,p
+          assert sha(".github/workflows/m0-fec2-go-cold-policy.yml")==m["workflow_sha256"]
+          assert sha("fec2-go-build/fec2-real-go.test")==m["binary_sha256"]
+          PY
+          chmod +x fec2-go-build/fec2-real-go.test
+          ./fec2-go-build/fec2-real-go.test -test.v -test.run '^TestF2Control' -test.count=1 | tee fec2-go-result/tests.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          s=pathlib.Path("fec2-go-result/tests.log").read_text()
+          passed=re.findall(r"^--- PASS: (TestF2Control[^ ]+)",s,re.M)
+          failed=re.findall(r"^--- FAIL: (TestF2Control[^ ]+)",s,re.M)
+          assert len(passed)==8 and len(set(passed))==8 and not failed,(passed,failed)
+          assert re.search(r"^PASS$",s,re.M),s[-500:]
+          m=json.load(open("fec2-go-build/manifest.json"))
+          v={"result":"PASS","control_sha":m["control_sha"],"worker_sha":m["worker_sha"],
+             "original_go_sha":m["original_go_sha"],"run_id":m["run_id"],"attempt":m["attempt"],
+             "target":m["target"],"toolchain":m["toolchain"],"compiled_binary_sha256":m["binary_sha256"],
+             "overlay_sha256":m["worker_go_sha256"],"tested":passed,"test_count":len(passed),
+             "test_log_sha256":hashlib.sha256(s.encode()).hexdigest(),
+             "real_original_Go_package":"PASS","Go_V4_admission_wire":"NOT_WIRED",
+             "CLI_GUI_catalog_applied":"NOT_RUN","product_FEC2":"DISABLED",
+             "ISA_L":"NOT_RUN","physical":"NOT_RUN"}
+          pathlib.Path("fec2-go-result/result.json").write_text(json.dumps(v,indent=2)+"\n")
+          print(json.dumps(v,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fec2-go-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-go-result/
+          retention-days: 30
+          if-no-files-found: warn
