@@ -12,6 +12,8 @@ import (
     "syscall"
     "unsafe"
     "time"
+
+    "github.com/lly8666/wobuzhidao/internal/tlsrecord"
 )
 
 // Actual original Go recognized TLS + password + private V4 reply, then
@@ -291,9 +293,93 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 cipher,len(recovered),pn[0],pn[1])
             t.Logf("M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=%d source_pn=%d repair_pn=%d source_seq=%d repair_seq=%d",
                 cipher,pn[0],pn[1],seq[0],seq[1])
+            // ACTUAL original Go TLS credential-checked C2S key seals
+            // authenticated kind1. Real AF_INET/IP_HDRINCL kernel packets
+            // cross M4 raw RX into the ORIGINAL Rust scoped M3 C2S opener
+            // and M2 typed ingress, releasing only previously confirmed
+            // ORIGINAL M1 FrozenRecord sender loans. 52-byte typed receipt
+            // grammar remains opt-in fixture, not product peer wire policy.
+            outstanding,e:=b.fec2ProbeShadowOutstanding()
+            if e!=nil||outstanding!=2 {
+                t.Fatalf("raw kernel confirmed sender shadows=%d err=%v",outstanding,e)
+            }
+            if e=b.attachRawRx(uint32(iface.Index));e!=nil{
+                t.Fatalf("original M4 reverse raw RX: %v",e)
+            }
+            origCold,e:=c.ColdSnapshot()
+            if e!=nil{t.Fatal(e)}
+            _,c2sLimit:=origCold.RecordLimits()
+            reverseSealer,e:=tlsrecord.NewSealerForCipher(
+                origCold.DirectionKeys().C2S,int(c2sLimit),cipher)
+            if e!=nil{t.Fatal(e)}
+            receipt:=make([]byte,52)
+            binary.BigEndian.PutUint32(receipt[0:4],seqM)
+            binary.BigEndian.PutUint64(receipt[4:12],maxM)
+            binary.BigEndian.PutUint64(receipt[12:20],baseM)
+            receipt[20]=bitsM
+            if seqM!=2||maxM!=1||baseM!=0||bitsM!=3{
+                t.Fatal("M2 actual authenticated draft source changed")
+            }
+            encryptedControl,controlPN,e:=reverseSealer.SealHealth(receipt)
+            if e!=nil||controlPN!=0{
+                t.Fatalf("original Go C2S control seal pn=%d err=%v",controlPN,e)
+            }
+            rawControlFD,e:=syscall.Socket(syscall.AF_INET,
+                syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+            if e!=nil{t.Fatal(e)}
+            defer syscall.Close(rawControlFD)
+            if e=syscall.SetsockoptInt(rawControlFD,syscall.IPPROTO_IP,
+                syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
+            sendControl:=func(record []byte){
+                rawPacket:=v4RawC2STestPacket(record,b.rxBoundary,b.originalFlow)
+                if sendErr:=syscall.Sendto(rawControlFD,rawPacket,0,
+                    &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});
+                    sendErr!=nil{t.Fatalf("actual C2S control raw: %v",sendErr)}
+            }
+            badCipher:=append([]byte(nil),encryptedControl...)
+            badCipher[len(badCipher)/2]^=0x40
+            sendControl(badCipher)
+            if n,left,err:=b.fec2ProbeReverseRawReceipt();
+                err==nil||n!=0||left!=0{
+                t.Fatalf("tampered real reverse kind1 released shadow n=%d left=%d err=%v",n,left,err)
+            }
+            if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=2{
+                t.Fatal("bad AEAD mutated original sender frozen loans")
+            }
+            sendControl(encryptedControl)
+            retired,left,e:=b.fec2ProbeReverseRawReceipt()
+            if e!=nil||retired!=2||left!=0{
+                t.Fatalf("original M3 reverse kind1 AEAD+M2 release n=%d remaining=%d err=%v",
+                    retired,left,e)
+            }
+            if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
+                t.Fatal("authenticated receipt did not retire exact original frozen loans")
+            }
+            sendControl(encryptedControl)
+            if _,_,e:=b.fec2ProbeReverseRawReceipt();e==nil{
+                t.Fatal("real reverse replay PN released already retired shadow")
+            }
+            invalidReceipt:=append([]byte(nil),receipt...)
+            invalidReceipt[20]=0x80 // PN7 outside pinned data scope 0..1
+            badScopeWire,badScopePN,e:=reverseSealer.SealHealth(invalidReceipt)
+            if e!=nil||badScopePN!=1{t.Fatalf("control PN allocation: %v %d",e,badScopePN)}
+            sendControl(badScopeWire)
+            if _,_,e:=b.fec2ProbeReverseRawReceipt();e==nil{
+                t.Fatal("authenticated out-of-scope bitmap admitted")
+            }
+            if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
+                t.Fatal("out-of-scope receipt changed original frozen sender state")
+            }
+            t.Logf("M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=%d retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny",cipher)
             // Stop is a hard terminal for both M2 drafts and recovered
             // kernel ciphertext ingress; stale old handle is not valid.
             if err:=b.stopRelease();err!=nil{t.Fatalf("final Stop/Release: %v",err)}
+            if _,e:=b.fec2ProbeShadowOutstanding();e==nil{
+                t.Fatal("stale M2 sender shadow survived original owner Stop")
+            }
+            if _,_,e:=b.fec2ProbeReverseRawReceipt();e==nil{
+                t.Fatal("stale original Rust M3 reverse ingress survived Stop")
+            }
             if _,_,_,_,e:=b.fec2ProbeActualM2RxFeedback(19_000_000,1);e==nil{
                 t.Fatal("M2 RX feedback survived original owner Stop")
             }
