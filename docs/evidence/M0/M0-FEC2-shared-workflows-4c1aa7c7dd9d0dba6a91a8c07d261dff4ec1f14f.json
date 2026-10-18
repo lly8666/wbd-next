@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f",
+  "result": "SCOPED_FEC2_COLD_GO_AND_3_TARGET_ISAL_SAFE_NATIVE_SUCCESS_PRODUCT_NOT_RUN",
+  "unverified": true,
+  "artifact_zip_rehash_verified": false,
+  "scope": "M0-owned source-pinned shared build/consumer workflow enabling new M4 pure policy and ISA-L safe wrapper. No FEC2 full codec/native M3 paired, actual V4 policy applied, GUI, Go bridge, driver, product or physical qualifications.",
+  "inputs": {
+    "worker_M4": "7cef7e849e293373d907a3b64007b4ce8946da78",
+    "worker_M3_scalar": "3011431370f1757212df92800c1b56e87ba51d65",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_l": "c387163fcbca62701d646149564c550c78a4f985",
+    "go_version": "1.23.12",
+    "rust_version": "1.85.1"
+  },
+  "go_cold_policy": {
+    "workflow": ".github/workflows/m0-fec2-go-cold-policy.yml",
+    "run_id": 39084384517,
+    "attempt": 1,
+    "conclusion": "success",
+    "control_sha": "9e157211ff556716f529ea2ee00c1ce9be9f1da5",
+    "build_job": 117547791296,
+    "consume_job": 117547889012,
+    "result": "PASS_EIGHT_ORIGINAL_REALITYFRONT_TESTF2CONTROL",
+    "checks": "M4 two exact overlay Go files pinned, Go clone SHA fixed, compile once build and verify file/workflow/binary sha256 in consumer before running 8 tests; no product enable",
+    "artifacts": [
+      {
+        "id": 12120635238,
+        "type": "build",
+        "digest": "sha256:e5013db31d1e4b986078902a84616ae98ce7ff097e886b1719c7a07814b4b3d5"
+      },
+      {
+        "id": 12119849227,
+        "type": "result",
+        "digest": "sha256:e8a4839d957361afaf27d2000a4d5c6df060262a13509de0ff37fa201b1a0e9c"
+      }
+    ]
+  },
+  "platform_native": {
+    "workflow": ".github/workflows/m0-fec2-isal-platform.yml",
+    "linux": [
+      {
+        "target": "x86_64-unknown-linux-gnu",
+        "run_id": 39084579161,
+        "attempt": 1,
+        "control_sha": "c81127be4de445791cd0a3a8f6855d9c5b6427cb",
+        "job_id": 117548359979,
+        "result": "PASS_real_Linux_x64_c_ec_encode_data_safe_wrapper",
+        "artifact_id": 12120310860,
+        "digest": "sha256:2d52df06cbc31f574670f59be3a993177d01fcefbf9aedc348348f48fc1ee9d8"
+      },
+      {
+        "target": "aarch64-unknown-linux-gnu",
+        "run_id": 39084579161,
+        "attempt": 1,
+        "control_sha": "c81127be4de445791cd0a3a8f6855d9c5b6427cb",
+        "job_id": 117548359906,
+        "result": "PASS_real_Linux_ARM64_c_ec_encode_data_safe_wrapper_NEON_actual_instruction_NOT_PROVEN",
+        "artifact_id": 12119329369,
+        "digest": "sha256:bcd07fbe74cef7ac7f7bff9a96bb81d8a3b11b49617ff39545cdb82fb15e4324"
+      }
+    ],
+    "windows_original_failure": {
+      "run_id": 39084579161,
+      "attempt": 1,
+      "control_sha": "c81127be4de445791cd0a3a8f6855d9c5b6427cb",
+      "job_id": 117548360017,
+      "conclusion": "failure",
+      "cause": "Official ISA-L nmake attempted NASM gf_vect_mul_sse.asm, nasm executable missing from PATH; no Rust native reached",
+      "artifact_id": 12120585746,
+      "digest": "sha256:352f2cdd5bbf6fb6c9cde01536e8532e015c5ebeddf52c21cef82a4136bc5a0e"
+    },
+    "windows_targeted_fix": {
+      "run_id": 39084759926,
+      "attempt": 1,
+      "control_sha": "4c1aa7c7dd9d0dba6a91a8c07d261dff4ec1f14f",
+      "job_id": 117548891652,
+      "conclusion": "success",
+      "result": "PASS_MSVC_nmake_isa_l_static_lib_and_REAL_ISAL_V2311_EC_ENCODE_DATA_PASS_2_test",
+      "linux_jobs": "SKIPPED_BY_DESIGN_UNCHANGED_SUCCESSES_PRESERVED",
+      "artifact_id": 12120675261,
+      "digest": "sha256:2c28e68ea1a32456ffb453a16376f3182dd81d16bdee3bcf31f39f2eeeac28dc"
+    },
+    "not_qualified": [
+      "M3 CODE301 FEC2 NativeIsaL specifically",
+      "ARM NEON CPU dispatch instruction-level attestation",
+      "Windows real original Go bridge / ABI loader",
+      "target-independent artifact packaging",
+      "FEC-on actual authenticated Go-Rust-Linux",
+      "all physical throughput"
+    ]
+  },
+  "governance_limits": {
+    "M3_H30_non_pass": {
+      "run_id": 39046275022,
+      "conclusion": "failure",
+      "kept": true
+    },
+    "M3_H33": {
+      "branch_head": "1cf6b1b8184fe6d4880cee7ef8ef815249929859",
+      "progress": "partial",
+      "unverified": true,
+      "last_tested_source": "3011431370f1757212df92800c1b56e87ba51d65",
+      "governance_HTTP403": "supplemental evidence on M3 branch; no false scope PASS from failed runs",
+      "central_S_scoped_pass": {
+        "run_id": 39083652143,
+        "scope_only": "M3 pre-H source f3c9062; not entire H33 or product qualification"
+      }
+    },
+    "M1_latest_scope": {
+      "run_id": 39083333199,
+      "conclusion": "failure",
+      "precise_cause": "HTTP 403 github_rate_limited remaining=0 attempts=3; reading M1 evidence",
+      "is_64_commit_budget": false,
+      "previous_worker_local_64_budget": {
+        "run_id": 39082738365,
+        "independent_old_checker": true
+      },
+      "M1_native": {
+        "source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+        "run_id": 39082738345,
+        "result": "130/130 component PASS; not central scope PASS"
+      }
+    }
+  },
+  "next_action": "M4 inspect exact M0 Go/native run attempts and artifact hash then repair own three files if needed; M3 actual FEC2 ISA-L/native e4 and same-VM AB/BA remains shared M0 build entrance; M0 preserves original R0-023 stop/MTU and D10, unified codec timeout/p99 facts; product FEC2 off."
+}
