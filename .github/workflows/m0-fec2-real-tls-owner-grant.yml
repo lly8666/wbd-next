@@ -480,7 +480,7 @@ jobs:
           CASE: ${{ matrix.mode }}
         run: |
           set -euo pipefail
-          mkdir -p blocker-normal-result
+          mkdir -p blocker-normal-result native-probe-result
           python3 - <<'PY'
           import hashlib,json,os,pathlib
           r=pathlib.Path("blocker-normal-bin")
