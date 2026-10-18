@@ -51,12 +51,12 @@ jobs:
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls$'
           nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_embedded_go_fec2_probe_scope_status$'
           cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib r1_m0_original_owner_fec2_source_repair_same_pn_staged -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
-          for file in admission_v4.go admission_v4_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/owner-grant.test" ./internal/realityfront)
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/owner-grant.test" ./internal/realityfront)
           LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" ./owner-grant.test -test.v -test.count=1 -test.run '^TestR0V4(Fec2ActualGoTLSEpochOwnerGrantScoped|EmbeddedNativeProtectedControlAllCiphers|EmbeddedNativeProtectedFec2Bit2Scope)$' >owner-grant-result/go.log 2>&1
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
