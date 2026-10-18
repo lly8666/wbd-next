@@ -6,6 +6,8 @@
 // M0-owned composition hooks. Worker M1 owns the implementations below.
 #[path = "runtime/mod.rs"]
 pub mod runtime;
+/// Staged M0 M1→M3 FEC2 parity batches; wire kinds and capability remain disabled.
+pub mod fec2_staged;
 #[path = "memory/mod.rs"]
 pub mod memory;
 /// M0 bounded authentication/receipt assembly; no production V4 enablement.
