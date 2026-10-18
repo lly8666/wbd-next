@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "branch": "work/m3-r1-codec",
+  "source_sha": "3011431370f1757212df92800c1b56e87ba51d65",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "PACK017 SCOPED DEFAULT SCALAR MATH/WIRE/BUFFER ONLY; NOT native/PRODUCT",
+  "progress": "partial",
+  "unverified": true,
+  "provenance": {
+    "main_registry": "M3 017 assigned; reservation_revision2 assignment_epoch1",
+    "worker_branch": "work/m3-r1-codec",
+    "build_compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "target": "x86_64-unknown-linux-gnu",
+    "feature": "default, native-isal feature ABSENT",
+    "native_feature": "NOT_COMPILED",
+    "source_pinned_actions": true,
+    "test_binary_sha256": "2b37ae32b77e3839dca7f951cfce7a5af5b1ad45ba7c2f30814a5a45eec6689f",
+    "legacy_v1_frozen": "422a26127496560c0a52e6745ecc8f354e3f4f18"
+  },
+  "scoped_work": {
+    "v2_math": "GF256 0x11d independent Cauchy row0 XOR and k1 all-row repetition; k1..16 and all 7 profile ceil ratios; all20 parity row matrix, e×e missing-only; no Go V2 equivalence claim",
+    "v2_wire": "10B source/12B repair u64 BE, original_len protected prefix, authenticated record kind2/3 typed constants; max frame budget -14; zero-tail rejection",
+    "buffer": "final-output encode_into; per <=4 parity rows; reusable PreparedBlock symbols and optional per-block native GF table cache; bounded decode cache64 and in-place return",
+    "scope": "does not activate record kind2/3/capability, owner timing, shared ABI/Go/CI/KDF or FEC-on product"
+  },
+  "actions": {
+    "worker_default": {
+      "run_id": 39082909579,
+      "attempt": 1,
+      "build_job_id": 117543410833,
+      "consume_job_id": 117543522476,
+      "conclusion": "success",
+      "result": "PASS_SCOPED_WORKER_TESTS",
+      "passed": 122,
+      "failed": 0,
+      "ignored": 1,
+      "build_artifact_id": 12119481787,
+      "build_artifact_digest": "sha256:16f234148091fea1d536091452fe34a9f7e8b57407e1aa2d5dcaa4142b23ba2c",
+      "result_artifact_id": 12119931461,
+      "result_artifact_digest": "sha256:06cbf0444065b4f4050581a3ecbacf0dec4187cb0f466ef24b6f2ea17349b4b3",
+      "verified": "Downloaded manifest+result ZIP, matching full SOURCE, compile toolchain and reported binary sha; tests include 9 standalone r1_f2_ cases and old frozen r1 tests"
+    },
+    "r0_wire": {
+      "run_id": 39082909584,
+      "attempt": 1,
+      "build_job_id": 117543410904,
+      "consume_job_id": 117543552047,
+      "conclusion": "success",
+      "result": "PASS",
+      "passed": 13,
+      "failed": 0,
+      "result_artifact_id": 12119601594,
+      "result_artifact_digest": "sha256:7ded257c41279528b994a8fdcabea2f81378764c728d3b18cbd868b59c7af81a",
+      "binary_sha256": "cfdff3cf455da1afc6ff4ef78a29dbfb47640258c9bd97993e6b7509e207d3c5",
+      "verified": "Downloaded R0 result receipt, exact frozen 13 names and matching full SOURCE"
+    },
+    "r0_record": {
+      "run_id": 39082909569,
+      "conclusion": "success",
+      "build_job_id": 117543411053,
+      "consume_job_id": 117543676140
+    },
+    "r0_link_mtu": {
+      "run_id": 39082909547,
+      "conclusion": "success",
+      "build_job_id": 117543410564,
+      "consume_job_id": 117543661119
+    },
+    "g2_scoped_bootstrap": {
+      "run_id": 39082909583,
+      "conclusion": "success",
+      "claim": "scope/bootstrap job only, not M3 product qualification"
+    },
+    "governance": {
+      "run_id": 39082909578,
+      "conclusion": "failure",
+      "claim": "FAIL; repo structure stage exit2, exact reason not independently recovered; do not claim governance passed"
+    }
+  },
+  "resolved_failures": [
+    {
+      "run_id": 39081969748,
+      "scope": "R0 wire exact count",
+      "failure": "new F2 tests originally selected by legacy global --skip filter, 19 vs expected 13; fixed by placing tests under record_frame namespace; later R0 run39082909584 PASS"
+    },
+    {
+      "run_id": 39082110143,
+      "scope": "R0 wire exact count",
+      "failure": "same global -skip issue before moving namespace; preserved"
+    },
+    {
+      "run_id": 39082673465,
+      "scope": "worker F2 test",
+      "failure": "independent non-prefix MDS test indexed r=ceil(k*5/4) emitted frames as if 20 rows; test fixture corrected to separately generate all 20 Cauchy rows; latest worker39082909579 PASS"
+    }
+  ],
+  "blockers": {
+    "shared_native": "M0 safe FFI native/isal-safe present only in main, not worker branch and not in worker codec Cargo; M3 no authority to rewrite native build/ABI/root/workflow",
+    "real_isal_linux_x64": "NOT_RUN",
+    "linux_aarch64_native": "NOT_RUN",
+    "windows_native": "NOT_RUN",
+    "cross_build_is_native": false,
+    "same_vm_AB_BA_16_16_e4_component_CPU": "NOT_RUN",
+    "product_FEC_on": "NOT_RUN",
+    "owner_first_delivery_30_50_100Mbps_real_NIC_p99": "NOT_RUN",
+    "prior_H30_central_scope_39046275022": "FAIL",
+    "current_governance_39082909578": "FAIL"
+  },
+  "rollback": "Keep V2 disabled at negotiated capability; no modifications to old V1 wire/Go golden/KDF/PN/AEAD. Scalar explicitly selectable; RequireNative refuses when unavailable.",
+  "next_action": "M0 supplies source-pinned native safe wrapper and one scenario sameVM ABBA native action per docs/devlog/M3/M0-REQUEST-PACK017-NATIVE-SHARED-INTERFACE.md; replay F2 native tests and bounded CPU, then H with exact evidence; continue M3 codec-only fixes if actual test defects."
+}
