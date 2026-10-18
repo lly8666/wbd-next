@@ -1,0 +1,78 @@
+name: M0 FEC2 protected record and shared replay opt-in contract
+run-name: "M0|FEC2-AEAD-PN-REPLAY|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-fec2-record-crypto-probe.yml"
+      - "crates/wbd-codec/src/record_crypto.rs"
+      - "crates/wbd-codec/src/record_crypto_tests.rs"
+      - "crates/wbd-codec/src/record_replay.rs"
+      - "crates/wbd-codec/src/record_replay_tests.rs"
+      - "crates/wbd-codec/src/fec_v2.rs"
+      - "crates/wbd-codec/Cargo.toml"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-fec2-record-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real original AEAD/HP/PN opt-in and default fail-closed for 3 ciphers
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          mkdir -p fec2-record-result
+          cargo +1.85.1 test --release --locked -p wbd-codec --lib r1_m0_fec2_ -- --test-threads=1 --nocapture 2>&1 | tee fec2-record-result/default.log
+          cargo +1.85.1 test --release --locked -p wbd-codec --features m0-fec2-record-probe --lib r1_m0_fec2_ -- --test-threads=1 --nocapture 2>&1 | tee fec2-record-result/opt-in.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          tests={"r1_m0_fec2_three_suite_single_pn_real_aead_and_missing_only_recovery",
+                 "r1_m0_fec2_three_suite_real_replay_shared_with_link_no_kind_bypass"}
+          for filename in ["default.log","opt-in.log"]:
+              s=pathlib.Path("fec2-record-result/"+filename).read_text()
+              got=set(re.findall(r"test (?:\S*::)?(r1_m0_fec2_\w+) \.\.\. ok",s))
+              assert got==tests,(filename,got)
+              assert re.search(r"test result: ok\. 2 passed; 0 failed;",s),s[-600:]
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          inputs=["crates/wbd-codec/src/record_crypto.rs",
+                  "crates/wbd-codec/src/record_crypto_tests.rs",
+                  "crates/wbd-codec/src/record_replay.rs",
+                  "crates/wbd-codec/src/record_replay_tests.rs",
+                  "crates/wbd-codec/src/fec_v2.rs",
+                  "crates/wbd-codec/Cargo.toml",
+                  "Cargo.lock"]
+          receipt={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+                   "run_id":os.environ["GITHUB_RUN_ID"],
+                   "attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+                   "result":"PASS_SCOPED_FEC2_REAL_3SUITE_AEAD_PN_REPLAY_PROBE",
+                   "default_normal_opener_and_sealer_kind_2_3":"REJECT",
+                   "opt_in":"EXPLICIT_COMPILER_FEATURE_PLUS_CALLER_POST_GO_AUTHORIZATION_REQUIRED",
+                   "actual_real_suite_count":3,"case_count_each_build":2,
+                   "total_test_pass_instances":4,
+                   "same_original_pn_allocator_and_replay_bitmap":True,
+                   "old_kind0_interleaved_without_hol":True,
+                   "tamper_and_replay_fail_closed":True,
+                   "original_go_v4_capability_kdf":"NOT_WIRED",
+                   "original_owner_plus_M4_raw_TUN":"NOT_RUN",
+                   "product_FEC2":"OFF",
+                   "input_sha256":{p:sha(p) for p in inputs},
+                   "log_sha256":{p:sha("fec2-record-result/"+p)
+                                 for p in ["default.log","opt-in.log"]}}
+          pathlib.Path("fec2-record-result/receipt.json").write_text(
+              json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-fec2-record-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fec2-record-result/
+          retention-days: 30
+          if-no-files-found: warn
