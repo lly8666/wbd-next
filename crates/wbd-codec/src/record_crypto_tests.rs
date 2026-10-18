@@ -208,3 +208,108 @@ fn r1_crypto_aes_burn_pn_on_fail_and_refuse_wrap() {
         assert_eq!(tx.seal_in_place(0,&mut tiny,0,0),Err(CryptoError::PnExhausted));
     }
 }
+
+// M0 pre-admission wire seam: exercise the SAME real ChaCha/AES AEAD/8B-HP
+// allocator across ordinary kind0 and explicit FEC2 kind2/3. This is not a
+// trusted Go exporter, PN replay window, kernel delivery or production switch.
+#[test]
+fn r1_m0_fec2_three_suite_single_pn_real_aead_and_missing_only_recovery() {
+    use crate::fec_v2::{
+        self,BackendChoice,BackendUsed,Profile,Rs16,
+        AUTHENTICATED_FEC2_SOURCE_KIND,AUTHENTICATED_FEC2_REPAIR_KIND,
+    };
+    let frame_a=(0..121).map(|i|(i%251) as u8).collect::<Vec<_>>();
+    let frame_b=(0..131).map(|i|((i*13+7)%251) as u8).collect::<Vec<_>>();
+    let source=fec_v2::source_owned(901,0,&frame_a,1400).unwrap();
+    let (repairs,used)=Rs16::new().encode_owned(
+        901,&[&frame_a,&frame_b],Profile::Strong,0,1,1400,BackendChoice::Scalar
+    ).unwrap();
+    assert_eq!(used,BackendUsed::Scalar);
+    for suite in [RecordSuite::ChaCha20Poly1305,RecordSuite::Aes128Gcm,
+                  RecordSuite::Aes256Gcm] {
+        let material=|| if suite==RecordSuite::ChaCha20Poly1305 {
+            keys()
+        } else {aes_v3_keys(suite)};
+        let mut tx=LaneTxCrypto::new_for_suite(material(),1600,suite).unwrap();
+        let old=LaneRxCrypto::new_for_suite(material(),1600,suite).unwrap();
+        let v2=LaneRxCrypto::new_for_suite(material(),1600,suite).unwrap();
+        let mut sent=Vec::new();
+        for (kind,data) in [
+            (0u8,b"next ordinary frame".as_slice()),
+            (AUTHENTICATED_FEC2_SOURCE_KIND,source.as_slice()),
+            (AUTHENTICATED_FEC2_REPAIR_KIND,repairs[0].as_slice()),
+        ] {
+            let mut wire=vec![0u8;FIXED_WIRE_OVERHEAD+data.len()];
+            wire[CIPHER_OFFSET+1..CIPHER_OFFSET+1+data.len()].copy_from_slice(data);
+            let (pn,len)=if kind==0 {
+                tx.seal_in_place(kind,&mut wire,data.len(),0).unwrap()
+            } else {
+                tx.seal_fec2_after_admission_in_place(
+                    kind,&mut wire,data.len(),0
+                ).unwrap()
+            };
+            assert_eq!(pn,sent.len() as u64);
+            assert_eq!(len,wire.len());
+            sent.push((kind,pn,wire));
+        }
+        // An unnegotiated recipient MUST NOT accept genuine AEAD+PN kind2/3.
+        for (_,_,wire) in &sent[1..] {
+            assert_eq!(old.open_in_place(&mut wire.clone()),
+                       Err(CryptoError::InvalidKind));
+        }
+        // A V2-gated recipient retains the ability to accept ordinary LINK,
+        // without a second PN allocator / resync or plaintext magic sniffing.
+        for (kind,pn,wire) in &sent {
+            let opened=v2.open_with_fec2_after_admission_in_place(
+                &mut wire.clone()
+            ).unwrap();
+            assert_eq!((opened.kind,opened.pn),(*kind,*pn));
+            match kind {
+                0=>assert_eq!(opened.payload,b"next ordinary frame"),
+                2=>{
+                    let frame=fec_v2::parse_source(opened.payload,1400).unwrap();
+                    assert_eq!((frame.block_id,frame.source_index),(901,0));
+                    assert_eq!(frame.frame,frame_a);
+                },
+                3=>{
+                    let parity=fec_v2::parse_repair(opened.payload,1400).unwrap();
+                    assert_eq!((parity.block_id,parity.parity_row,parity.actual_k),
+                               (901,0,2));
+                    let mut rs=Rs16::new();
+                    let (restored,backend)=rs.recover_missing(
+                        901,&[None,Some(frame_b.as_slice())],&[parity],
+                        1400,BackendChoice::Scalar
+                    ).unwrap();
+                    assert_eq!(backend,BackendUsed::Scalar);
+                    assert_eq!(restored,vec![(0u8,frame_a.clone())]);
+                },
+                _=>unreachable!(),
+            }
+            let mut corrupted=wire.clone();
+            let at=corrupted.len()-1;
+            corrupted[at]^=1;
+            assert_eq!(v2.open_with_fec2_after_admission_in_place(&mut corrupted),
+                       Err(CryptoError::Authentication));
+        }
+        // After all three sends, even INVALID requests to either method
+        // consume a single never-reused PN. Ordinary remains OFF.
+        let mut temp=[0u8;FIXED_WIRE_OVERHEAD];
+        assert_eq!(tx.seal_in_place(2,&mut temp,0,0),
+                   Err(CryptoError::InvalidKind));
+        assert_eq!(tx.seal_fec2_after_admission_in_place(0,&mut temp,0,0),
+                   Err(CryptoError::InvalidKind));
+        assert_eq!(tx.seal_in_place(0,&mut temp,0,0).unwrap().0,5);
+        // Independently well-formed FEC wire with dirty flags is still
+        // rejected AFTER real AEAD and before any reassembly table.
+        let mut dirty=source.clone();dirty[9]=1;
+        let mut wire=vec![0u8;FIXED_WIRE_OVERHEAD+dirty.len()];
+        wire[CIPHER_OFFSET+1..CIPHER_OFFSET+1+dirty.len()].copy_from_slice(&dirty);
+        assert_eq!(tx.seal_fec2_after_admission_in_place(
+            2,&mut wire,dirty.len(),0).unwrap().0,6);
+        let authenticated=v2.open_with_fec2_after_admission_in_place(
+            &mut wire).unwrap();
+        assert_eq!(authenticated.pn,6);
+        assert_eq!(fec_v2::parse_source(authenticated.payload,1400),
+                   Err(fec_v2::Error::NonzeroFlags));
+    }
+}
