@@ -220,11 +220,6 @@ impl LaneTxCrypto {
     pub fn seal_fec2_after_admission_in_place(
         &mut self, kind: u8, wire: &mut [u8], payload_len: usize, padding: usize,
     ) -> Result<(u64,usize),CryptoError> {
-        if kind != AUTHENTICATED_FEC2_SOURCE_KIND
-            && kind != AUTHENTICATED_FEC2_REPAIR_KIND {
-            // Preserve the original never-roll-back PN-on-bad-kind contract.
-            return self.seal_allowed_in_place(kind,wire,payload_len,padding,false)
-        }
         self.seal_allowed_in_place(kind,wire,payload_len,padding,true)
     }
 
@@ -236,8 +231,8 @@ impl LaneTxCrypto {
         let pn = self.next_pn;
         if pn == u64::MAX { self.exhausted = true; } else { self.next_pn += 1; }
 
-        if kind != AUTHENTICATED_LINK_KIND && kind != AUTHENTICATED_HEALTH_KIND
-            && !(allow_fec2 && matches!(kind,2|3)) {
+        if !(if allow_fec2 {matches!(kind,2|3)}
+             else {matches!(kind,AUTHENTICATED_LINK_KIND|AUTHENTICATED_HEALTH_KIND)}) {
             return Err(CryptoError::InvalidKind);
         }
         let used = FIXED_WIRE_OVERHEAD
@@ -354,7 +349,8 @@ impl LaneRxCrypto {
             return Err(CryptoError::InvalidInnerMarker);
         }
         let kind=plain[0];
-        if kind != AUTHENTICATED_LINK_KIND && kind != AUTHENTICATED_HEALTH_KIND {
+        if kind != AUTHENTICATED_LINK_KIND && kind != AUTHENTICATED_HEALTH_KIND
+            && !(allow_fec2 && matches!(kind,2|3)) {
             return Err(CryptoError::InvalidKind);
         }
         Ok(OpenedRecord { pn, kind, payload:&plain[1..marker_at] })
