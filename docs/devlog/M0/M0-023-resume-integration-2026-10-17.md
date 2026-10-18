@@ -70,3 +70,17 @@ SOURCE `ee5d2cad1ba8818488a91097e4da04fcc55b8e63`：在**原有** `wbd-codec/rec
 固定 SOURCE `c60e9d6e95aff49cc98eb039e7347659eaaa6213` [Run39100892712](https://github.com/lly8666/wbd-next/actions/runs/39100892712) attempt1 原owner feature-only test **1/1 PASS** + 生产缺省Rust build PASS，artifact12126114397 GH digest b19162c0...；同 SOURCE [原真实Go V4/Rust raw/TUN 39100892715](https://github.com/lly8666/wbd-next/actions/runs/39100892715) build/consume均**SUCCESS**、原先Normal/off按原用例稳定；`native-functional 39100892732` 的 plan/build/engine/fec/kernel/normal/receipt全 PASS，**该main changed-path matrix没有执行codec分组**，不得据此说旧codec 240s红灯消失；r0-native-abi39100892718、cross-abi39100892706、G2bootstrap39100892806均 SUCCESS。所有SOURCE/hash、区分底层证明和网络资格见 [收据](../../evidence/M0/M0-023-original-owner-fec2-same-pn-c60e9d6e95aff49cc98eb039e7347659eaaa6213.json)。
 
 **下一关键瓶颈：**在原真实Go V4的*受保护 TLS 请求/回应*完成 feature bit2 的双方能力/epoch/direction/KDF 和独立的applied policy，才能让原owner从 test-only 进入授权的真实send/receive；再把 M1 source-first与ParityJob、M3修复、M4真实raw/TUN、M2认证后反馈贯通。Go TLS bit2/完整产品 FEC2仍 OFF，原R0-023 65KiB UDP跨轮次、MTU/Stop/driver 前缀未知、历史D10/p99 和旧codec 240s均未结项，不能用已成功的原owner FEC2 **测试**代替网络产品资格。
+
+## 2026-10-18 · M0 real Go TLS bit2 capability & source-locked private Rust V2 handoff（加速集成）
+
+本轮把**原Go真TLS credential-checked admission**从严格 feature `0x0003` 扩展为**仅包内未导出的私有测试开关**可提出 `0x0007`（bit2=FEC2）。原 `EstablishClientV4` / `EstablishServerV4` 默认公开配置不提供 bit2：旧0x0003位于相同v1闭环、未知/残缺feature拒绝。真TLS凭据校验后服务器必须与请求 feature 精确匹配，0x0003↔0x0007不静默升级/降级，失败候选不commit epoch。原Go exporter/KDF对实际受保护扩展(含bit2/epoch)计算hash上下文并派生C2S/S2C密钥；Go verified snapshot冻结功能位，`cold248` 原reserved11仍为0，绝不使用它自行赋予Rust写入权限。
+
+紧接原 private `v4OwnerBridge.prepare`，`v4PrivateHandoffFromVerifiedSession` 根据同一Go credential-check 产生的**冻结snapshot**为默认0x0003继续生成原32B `WBGH/v1`，而0x0007仅生成 `WBGH/v2`，offset27:29 exact BE 0x0007，剩余3B保留清零；Go真正 embedded/probe bridge 都走此统一入口。Rust `PrivateGoV4Handoff::decode` v1要求全部尾5B为0，v2要求固定feature0x0007+3B reserved0，失败不释放有效 owner。**Rust目前只解析授权上下文的结构化 metadata，不因此令 FEC2 source2/repair3 进入生产。** 真授权/方向/applied profile/owner Stop lifetime 与数据面仍待接线。
+
+Actions：
+- [真实 Go V4 TLS 39102069847](https://github.com/lly8666/wbd-next/actions/runs/39102069847) SOURCE49498f3a7... build/consume PASS，17个 V4 顶层Go测试PASS、16项作为required：真TLS三cipher bit2 7/epoch与双方方向KDF，双向协商不一致硬拒+epoch rollback，未知feature非法，受保护exporter精确上下文 off↔on独立；
+- [原 Go真实TLS→嵌入式 Rust owner 39102424680](https://github.com/lly8666/wbd-next/actions/runs/39102424680) **SOURCE c6d1e2b8214cee3b78cae43c14ffb581864c578f** build117601245951 / consume117601531073 SUCCESS：新增 `TestR0V4EmbeddedNativeProtectedFec2Bit2Scope` 三cipher真实Go保护协商→Go私有handoff v2→原Rust owner Prepare/Commit→Stop/Release全部PASS，原Rust v1/v2 malformed字段负例 `m0_private_v4_real_go_fec2_bit2_handoff_is_metadata_not_permission` PASS，其它原Normal/off Go/Rust raw/TUN保持真回归PASS；
+- 同SOURCE治理maintenance39102424631 SUCCESS；工件GH摘要/排除项见 [精确回执](../../evidence/M0/M0-023-protected-go-fec2-bit2-rust-v2-handoff-c6d1e2b8214cee3b78cae43c14ffb581864c578f.json)；
+- 历史原native-functional run39102069872 codec组240秒 FAIL（其它组通过）和前SOURCE cdc176 的native 10ms smoke FAIL均按真实run保留、不以本轮c6成功消去旧红灯。
+
+最短下一动作是**让Go真TLS经Private owner已提交、代际/epoch/方向/真实applied policy后向Rust赋予一次性仅属于该scope的 FEC2 2/3使用权**（不是只相信可伪造私有32B metadata），然后在已导入M1/M3/M4/M2代码上跑真实FEC2 source/repair过OS原raw/TUN/driver；失败的历史codec/D10/p99与原R0-023大UDP跨轮次MTU/Stop边界保留OPEN。默认公开FEC2产品OFF；本轮**是控制链路成功，不是FEC2网络产品资格**。
