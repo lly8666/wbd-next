@@ -1030,5 +1030,24 @@
     "same_run_AB_BA_for_this_change": "NOT_RUN",
     "product": "NOT_RUN",
     "production_features": 0
+  },
+  "m0_023_true_go_rust_link_fragment_20261018": {
+    "source_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+    "result": "PARTIAL_REAL_AUTHENTICATED_LINK_FRAGMENT_BIDIRECTIONAL_FUNCTIONAL_PASS_PRODUCT_NOT_RUN",
+    "evidence": "docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json",
+    "run_id": 39089250014,
+    "attempt": 1,
+    "build_and_consume": "PASS",
+    "real_original_go_c2s_1370_two_fragments_three_ciphers": "PASS",
+    "real_rust_s2c_1728_two_fragments_original_go_tls_peer_reassembly": "PASS",
+    "first_piece_no_delivery": "PASS",
+    "stop_and_mtu_failclosed": "SCOPED_PASS",
+    "packet_after_fragment_no_HOL": "PASS",
+    "large_udp_over32_fragment_turn": "NOT_RUN_FAIL_CLOSED",
+    "partial_driver_prefix_midfragment_mtu_change": "NOT_RUN",
+    "new_same_VM_performance_ABBA": "NOT_RUN",
+    "default_production_features": "ZERO_FEC2_OFF",
+    "full_product": "NOT_RUN",
+    "physical": "NOT_RUN"
   }
 }
