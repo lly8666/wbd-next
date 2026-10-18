@@ -132,7 +132,7 @@ type FecV2Snapshot struct {
     UnexplainedDenominatorJump bool
     HostDrops uint64
     QueueGrowing bool
-    TrustedMissingOrLate uint64   // independently confirmed business events
+    TrustedMissingOrLate uint64   // monotonic cumulative confirmed business misses/late events
     ConsecutiveMatureGaps uint8   // burst hint, not IID wire loss
 }
 
@@ -157,6 +157,7 @@ type FecV2State struct {
     DownSources uint64
     LastDown time.Duration
     LastSparseUp time.Duration
+    LastSparseEvents uint64 // last consumed cumulative trustworthy events
     BurstUntil time.Duration
 }
 type FecV2Intent struct {
@@ -192,7 +193,7 @@ func fecV2Start(c FecV2Config) FecV2Profile {
 func fecV2Issue(c FecV2Config, s FecV2State, out FecV2Intent, p FecV2Profile, off bool) (FecV2State,FecV2Intent,error) {
     n,e := fecV2NextRevision(c,s)
     if e != nil { return s,out,e }
-    s.Desired,p = p,p
+    s.Desired = p
     s.DesiredOff = off
     s.RequestedRevision = n
     out.Send,out.Profile,out.Revision = true,p,n
@@ -323,9 +324,17 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     out.Validity,out.Reason=validity,reason
     if validity!=FecV2Valid {
         s.HighFastWindows,s.DownSources,s.DownSince=0,0,0
-        if validity!=FecV2HostCapacity && snap.TrustedMissingOrLate>=2 &&
+        // Host-limited misses cannot be banked for a later network-loss
+        // escalation. Consume them while freezing the known good profile.
+        if validity==FecV2HostCapacity && snap.TrustedMissingOrLate>s.LastSparseEvents {
+            s.LastSparseEvents=snap.TrustedMissingOrLate
+        }
+        freshSparse:=snap.TrustedMissingOrLate>s.LastSparseEvents &&
+            snap.TrustedMissingOrLate-s.LastSparseEvents>=2
+        if validity!=FecV2HostCapacity && freshSparse &&
             (s.LastSparseUp==0 || now-s.LastSparseUp>=10*time.Second) &&
             s.Desired<FecV2Maximum {
+            s.LastSparseEvents=snap.TrustedMissingOrLate
             s.LastSparseUp=now
             out.Reason="bounded sparse credible misses"
             return fecV2Issue(c,s,out,fecV2Raise(s.Desired),false)
