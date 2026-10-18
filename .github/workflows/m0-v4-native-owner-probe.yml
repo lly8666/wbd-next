@@ -143,9 +143,14 @@ jobs:
           retention-days: 30
           if-no-files-found: error
   consume:
+    name: batch-${{ matrix.lane }}
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [critical, impairment, metric]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -153,7 +158,7 @@ jobs:
         with:
           name: m0-v4-native-probe-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: native-probe-build
-      - name: Verify native binary hashes; real protected Go TLS calls Rust owner
+      - name: Verify all reused binaries and exact SOURCE manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -169,8 +174,13 @@ jobs:
           for p,h in m["binary_sha256"].items():assert sha("native-probe-build/"+p)==h,p
           PY
           chmod +x native-probe-build/*.test
-          export LD_LIBRARY_PATH="$PWD/native-probe-build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          echo "LD_LIBRARY_PATH=$PWD/native-probe-build" >> "$GITHUB_ENV"
           mkdir native-probe-result
+      - name: Actual original Go TLS and Rust owner native controls
+        if: ${{ matrix.lane == 'critical' }}
+        shell: bash
+        run: |
+          set -euo pipefail
           set +e
           bash tools/run-v4-kernel-loopback.sh --prebuilt native-probe-build --all >native-probe-result/go.log 2>&1
           G=$?
@@ -249,6 +259,7 @@ jobs:
           if not(good_go and good_rust):sys.exit(1)
           PY
       - name: Real Linux TUN L3 app ingress in owned netns (capability-gated)
+        if: ${{ matrix.lane == 'critical' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -303,6 +314,7 @@ jobs:
           PY
           test "$STATE" != FAIL
       - name: Preliminary controlled 10ms netem same native owner smoke (NOT product)
+        if: ${{ matrix.lane == 'impairment' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -353,6 +365,7 @@ jobs:
       # the historical 150ms exploratory network regression fails afterward.
       # This changes test ordering only; no red light is bypassed or waived.
       - name: Independent Rust original owner raw/TUN background workers functional (NOT throughput)
+        if: ${{ matrix.lane == 'critical' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -385,6 +398,7 @@ jobs:
           pathlib.Path("native-probe-result/original-rust-background-loop.json").write_text(json.dumps(receipt,indent=2)+"\n")
           PY
       - name: Exploratory 150ms configured Linux kernel netem same-owner smoke
+        if: ${{ matrix.lane == 'impairment' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -430,6 +444,7 @@ jobs:
           PY
           test "$STATE" != FAIL
       - name: Real original embedded owner 12-packet bilateral steady baseline
+        if: ${{ matrix.lane == 'critical' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -452,6 +467,7 @@ jobs:
           pathlib.Path("native-probe-result/steady-burst-baseline.json").write_text(json.dumps(p,indent=2)+"\n")
           PY
       - name: Real 1 percent tc loss finite bilateral observation (not resilience PASS)
+        if: ${{ matrix.lane == 'impairment' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -496,6 +512,7 @@ jobs:
           PY
           test "$STATE" != FAIL
       - name: Exact encrypted DATA kernel drop -> fresh next PN no-HOL (functional)
+        if: ${{ matrix.lane == 'critical' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -532,6 +549,7 @@ jobs:
           PY
           test "$STATE" != FAIL
       - name: ONE fixed Normal-off 10Mbps each direction developer diagnostic (10s+60s)
+        if: ${{ matrix.lane == 'metric' }}
         shell: bash
         timeout-minutes: 3
         run: |
@@ -574,7 +592,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: m0-v4-native-probe-result-${{ github.run_id }}-${{ github.run_attempt }}
+          name: m0-v4-native-probe-${{ matrix.lane }}-result-${{ github.run_id }}-${{ github.run_attempt }}
           path: native-probe-result/
           retention-days: 30
           if-no-files-found: warn
