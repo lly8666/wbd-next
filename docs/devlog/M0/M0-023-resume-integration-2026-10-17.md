@@ -84,3 +84,13 @@ Actions：
 - 历史原native-functional run39102069872 codec组240秒 FAIL（其它组通过）和前SOURCE cdc176 的native 10ms smoke FAIL均按真实run保留、不以本轮c6成功消去旧红灯。
 
 最短下一动作是**让Go真TLS经Private owner已提交、代际/epoch/方向/真实applied policy后向Rust赋予一次性仅属于该scope的 FEC2 2/3使用权**（不是只相信可伪造私有32B metadata），然后在已导入M1/M3/M4/M2代码上跑真实FEC2 source/repair过OS原raw/TUN/driver；失败的历史codec/D10/p99与原R0-023大UDP跨轮次MTU/Stop边界保留OPEN。默认公开FEC2产品OFF；本轮**是控制链路成功，不是FEC2网络产品资格**。
+
+## 2026-10-18 · M0 Go真实TLS→原Rust owner 的受限FEC2 epoch/Stop grant
+
+承接H140 Go原真TLS bit2/受保护KDF→原Rust私有WBGH/v2元数据，本轮补真正的**测试专用owner授权状态**。`ProtectedScopedOwner` 新增feature-gated `Fec2ProbeScope`（原generation、epoch、M1 owner ID、lane、探针用Strong profile5/revision1），默认`None`；在owner Commit之后仍拒绝kind2/3，只有独立的原Go package-private callback完成TLS认证、受保护应答、Detach和原Rust Commit后通过额外`wbd_v4_fec2_owner_probe`测试构建调用匹配的Rust绑定，才被允许原source/repair探针。错误epoch/feature/profile/revision、重复绑定拒绝，Stop撤销，旧handle不能再确认旧scope。默认Go hook为空操作，默认Rust release完全**没有** grant/status FFI符号。owner真正AEAD/PN/Seq与M1 FrozenRecord仍只有一份；没有旁路数据/第二套密码分配器。
+
+精确SOURCE `c534e5892bbe4ef3d18355ac71723f6bcf6d41d5` 的 [Actions39104136996](https://github.com/lly8666/wbd-next/actions/runs/39104136996) attempt1 **SUCCESS**：原Go pinned `a7a82db31fe736ffedee330795a3234d358f1984` 真人口TLS与原Rust native release联合，同一job三套密码套件运行 `TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped`、原默认0x0003控制与元数据0x0007兼容测试，Rust `r1_m0_original_owner_fec2_source_repair_same_pn_staged`验证Commit后scope前禁止、绑定后真正原M1→FEC2 source2/repair3 AEAD PN/Seq以及错误参数拒绝。Rust普通release无上述授权符号。工件 ID12127314845，GitHub SHA256 `3acb8f2c00c574f6532c46fbdf9d1d50a4b0448a2989db47bbe29b206393f058`（未另行重新计算ZIP digest）；完整字段在 [SOURCE证据](../../evidence/M0/M0-023-real-go-fec2-owner-grant-c534e5892bbe4ef3d18355ac71723f6bcf6d41d5.json)。
+
+两次初期真实错误已保留：旧SOURCE 39103821683 缺Go普通版空回调文件，39104016657定向Actions在编译原测试包时漏原native-probe raw辅助文件/标签，均按原实际编译边界修复后通过；先前39103933765旧150ms内核netem独立试验FAIL，旧codec240s/D10/p99也仍OPEN。
+
+**重要非产品说明：**原Rust不能独立密码学证明任意同进程C调用确由Go TLS凭据拥有者发起；此信任依赖原Go私有同进程代码路径，且仅额外测试标签编译。Strong/1只是探针，不是已生效真实Go FEC2自动/固定CLI/GUI配置。没有实际FEC2 parity经过M4 raw/TUN、没有M2认证反馈、没有产品用户态启用，FEC2产品OFF；原023 65KiB跨轮次/MTU/Stop/prefix不确定仍未收口。**下一动作为**将已有绑定生命周期送入原M1 source-first+M3 FEC2→M4真实收发和M2 auth ingress，逐条Source锁真实业务反例，非再跑微基准。
