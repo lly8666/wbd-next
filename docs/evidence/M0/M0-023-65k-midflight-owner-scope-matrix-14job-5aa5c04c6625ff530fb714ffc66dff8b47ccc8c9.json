@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "5aa5c04c6625ff530fb714ffc66dff8b47ccc8c9",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "result": "PASS_SCOPED_ORIGINAL_LINK_SCOPE_OWNER_FAIL_CLOSED_65_MATRIX_AND_EXACT_SOURCE_PARALLEL_14_PLUS_4_JOB",
+  "changes": [
+    "crates/wbd-engine/src/v4_embedded_go.rs original production PendingOriginalJumbo valid_for checks generation, route revision and frozen frame MTU identity at every next owner turn (including MTU+1 and MTU-1).",
+    "Original kernel TxTurnCompletion reused through retire_after_turn: definite full copied may continue; Stop/partial/Uncertain/failure/route invalidation retire immutable packet ID and tail with no new PN.",
+    "Original M1 Arena and M3 65KiB 48 frame source deterministic 0..32 prefix and uncertain outcomes 65 cases, scope changes and zero outstanding unique loan; actual original M4 send_kernel_multimsg completion transcribes typed outcome, but synthetic branch samples do not themselves execute kernel faults.",
+    ".github/workflows/m0-v4-native-owner-probe.yml critical lane source-locked the exact new Rust test and PASS marker; original real Go TLS and M4 raw/TUN 51 pieces remain unchanged."
+  ],
+  "actions": {
+    "source_governance": {
+      "run_id": 39147295315,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "governance_maintenance": {
+      "run_id": 39147295303,
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "m0_native_probe": {
+      "run_id": 39147295342,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39147295342",
+      "jobs": {
+        "build": "PASS",
+        "critical": "PASS",
+        "impairment": "PASS",
+        "metric": "PASS"
+      },
+      "artifacts": [
+        {
+          "role": "build",
+          "id": 12143612456,
+          "provider_sha256": "c12ef5fae582dc800c52df74165c1ffaf02b31e46550644c0d3a2aa07081f508"
+        },
+        {
+          "role": "critical",
+          "id": 12143668460,
+          "provider_sha256": "432735af739bd005171e42aa9326b5e4dcf9473046377771e963f8ad96e23329"
+        },
+        {
+          "role": "impairment",
+          "id": 12144111067,
+          "provider_sha256": "f79d27838169df946c015109df7e33a28662e9fa5ec681cfbd3c10bd0c0cef5c"
+        },
+        {
+          "role": "metric",
+          "id": 12144280443,
+          "provider_sha256": "0203468966ce6f5206625a05a87a5a8f9cd39676511c6a2daac8fe38d30d6922"
+        }
+      ],
+      "observed": [
+        "M0_ORIGINAL_JUMBO_MIDFLIGHT_PREFIX_SCOPE_STOP_MATRIX_PASS tested=65 generation=1 mtu_plus_minus=1 route_revision=1 loans=0 real_kernel=NOT_RUN",
+        "EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=51 fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+        "EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=5 after=6 copied=1 owner_tx_error_growth=0",
+        "TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS"
+      ]
+    },
+    "all_scoped_parallel": {
+      "run_id": 39147295354,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs_total": 14,
+      "jobs_passed": 14,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39147295354",
+      "artifact_witnesses": [
+        {
+          "role": "native_linux_x64",
+          "id": 12142864859,
+          "provider_sha256": "3d36b76f8bd69d3655d91f1734ec3cd8d2e4aca674b4c7a64f25b69902344130"
+        },
+        {
+          "role": "native_linux_arm64",
+          "id": 12143509013,
+          "provider_sha256": "76037bb0aeaaf520efba0529f5c10d7a01f94ed10b5bb840c78ad61cfdd9642b"
+        },
+        {
+          "role": "windows_msvc",
+          "id": 12143878140,
+          "provider_sha256": "70982bdc5adfbee268ed4ea7cb2e3fb0a11aeba6aa76299fa853f9f1cd2a5f1b"
+        },
+        {
+          "role": "original_go_tls",
+          "id": 12144061947,
+          "provider_sha256": "3011f483175cd42baede4276ba68bbd3158dfb3905f5db64d9a6b8af9c614ef3"
+        },
+        {
+          "role": "original_link_fec",
+          "id": 12143917768,
+          "provider_sha256": "21fba9db9560c764b9c27c9316dff6291758da05a5c18115ea02307fc965ab1c"
+        },
+        {
+          "role": "pinned_native_ISA_L",
+          "id": 12143748705,
+          "provider_sha256": "10c131d08021cdd6fe4edf84edead7529980951d2e9ea7bf76e99a334eb63e56"
+        },
+        {
+          "role": "hard_gate_ledger",
+          "id": 12142874490,
+          "provider_sha256": "943e62ab99703466e18353ffa567b685ef2ad8b1f706807cb038f280446f86c6"
+        }
+      ],
+      "notes": "14 jobs all success; CODEC ISA-L isolated original test is not product throughput or packet p99; ARM/Windows not full original driver/TLS production qualification"
+    }
+  },
+  "historical_reds": [
+    {
+      "source_sha": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "run_id": 39142346744,
+      "attempt": 1,
+      "conclusion": "failure",
+      "scope": "original exploratory 150ms intermittent; kept open despite newer exploratory passes"
+    },
+    {
+      "source_sha": "6e8497bef6a92ccb8e0e26f1b654084d6d32ed1f",
+      "run_id": 39118278579,
+      "conclusion": "failure",
+      "scope": "earlier 150ms Normal/off"
+    }
+  ],
+  "remaining_hard_gates": {
+    "original_M4_actual_2_to_32_distinct_kernel_partial_eintr_eagain_uncertain_stop_midflight": "NOT_RUN",
+    "real_65k_while_transmitting_two_batches_stop_generation_mtu_route_interruption": "NOT_RUN",
+    "actual_authenticated_M2_reverse_C2S_kind1_in_production": "NOT_RUN",
+    "original_M1_live_FEC2_scheduling_repair_firstsent_feedback": "NOT_RUN",
+    "Go_per_client_direction_auto2s_CLI_GUI_applied_config": "NOT_RUN",
+    "two_physical_endpoints": "NOT_RUN",
+    "full_ARM_Windows_original_TLS_driver": "NOT_RUN",
+    "business_D10_240s_p99_same_job_ABBA": "NOT_RUN",
+    "final_product_qualification": "NOT_RUN"
+  },
+  "qa": "Scoped native original M1/M3 + actual Go TLS and Linux kernel positive paths do not imply actual injected native kernel partial/Uncertain fault qualification or product FEC2 activation."
+}
