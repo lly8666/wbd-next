@@ -54,7 +54,7 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             }
             oldHandle:=scoped.handle
             if err:=scoped.stopRelease();err!=nil{t.Fatal(err)}
-            if _,_,_,err:=scoped.fec2ProbeObservedQuality(s.Epoch,8*time.Second);err==nil{
+            if _,_,_,_,err:=scoped.fec2ProbeObservedQuality(s.Epoch,8*time.Second);err==nil{
                 t.Fatal("retired Go TLS generation leaked original M3 observation")
             }
             if err:=scoped.fec2ProbeTryStageExact(s.Epoch,6,100);err==nil{
@@ -294,9 +294,9 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 syscall.SO_RCVTIMEO,&timeval);e!=nil{t.Fatal(e)}
             // ORIGINAL M3 peer has received nothing yet: scoped source
             // observability must never conjure a mature 0%-loss sample.
-            unobserved,preRep,preRecovered,obsErr:=
+            unobserved,preSource,preRep,preRecovered,obsErr:=
                 b.fec2ProbeObservedQuality(server.Epoch,0)
-            if obsErr!=nil||preRep!=0||preRecovered!=0||
+            if obsErr!=nil||preSource!=0||preRep!=0||preRecovered!=0||
                 unobserved.Fast.Observed!=0||
                 unobserved.Validity!=FecV2Unknown{
                 t.Fatalf("pre-RX original M3 fabricated mature quality: %+v %d %d %v",
@@ -304,7 +304,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }
             wrongEpoch:=server.Epoch
             wrongEpoch[0]^=0x40
-            if _,_,_,e:=b.fec2ProbeObservedQuality(wrongEpoch,time.Second);e==nil{
+            if _,_,_,_,e:=b.fec2ProbeObservedQuality(wrongEpoch,time.Second);e==nil{
                 t.Fatal("foreign Go epoch read protected peer observability")
             }
             if e:=b.fec2ProbeTryStageExact(wrongEpoch,6,100);e==nil{
@@ -460,13 +460,12 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             // source, not from generated percentages or Go packet guesses.
             // One observed source is INSUFFICIENT for a mature AUTO
             // denominator, and parity/recovery are NOT source samples.
-            peerQuality,firstRepair,firstRecovered,obsErr:=
+            peerQuality,firstSource,firstRepair,firstRecovered,obsErr:=
                 b.fec2ProbeObservedQuality(server.Epoch,6*time.Second)
-            if obsErr!=nil||firstRepair!=1||firstRecovered!=1||
-                peerQuality.Fast.FirstSent!=1||
-                peerQuality.Fast.Observed!=1||
-                peerQuality.Fast.Missing!=0||
-                peerQuality.Slow.FirstSent!=1||
+            if obsErr!=nil||firstSource!=1||
+                firstRepair!=1||firstRecovered!=1||
+                peerQuality.Fast!= (FecV2Window{})||
+                peerQuality.Slow!= (FecV2Window{})||
                 peerQuality.Validity!=FecV2Unknown||
                 peerQuality.ActualK!=[16]uint64{}{
                 t.Fatalf("original M3 unique peer sample contaminated mature Go loss %+v repairs=%d recovered=%d err=%v",
