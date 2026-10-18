@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 134,
-  "checkpoint_sha": "56e721033862c8c7ce7039259764f50a3f41bd12",
+  "sequence": 135,
+  "checkpoint_sha": "2e99c4782afb46cc1f2ecfe2110274050e490c9e",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 original Go authenticated V4→Rust original M1/M3/M4 raw/TUN Normal/off LINK: now pre-materializes every <=32-fragment original M1 slab before AEAD/PN, source-pinned true native Go/Rust all targeted tests PASS, while full large UDP cross-turn/unknown kernel/Stop+MTU remain OPEN. FEC2 off.",
-  "why_now": "Original oversized S2C inner packet could stage/seal some LINK records then fail next M1 arena allocation, leaving partial logical packet. Reused original M3 LinkPacketPlan and original M1 slab staging in bounded same-turn M0 producer, with genuine negative capacity test and real Go/Rust Actions. Independent M3 H36 acknowledges CODE8cc native+CPU but still pending central checkpoint and ARM/Windows.",
+  "current_task": "R0-023 original Go→Rust raw/TUN safety partial. M3 H37 CODE8cc Linux x64 actual ISA-L native 11/11 and qualified sameVM 400k k16/r16/e4 ABBA ACCEPTED_FOR_M0_INTEGRATION; H37 worker Governance PASS and main G2 central M3 job PASS. Central Scope now shares main G2 512/80 strict fully-paginated commit/path checker, no independent 64 single-page gate; FEC2 product still OFF.",
+  "why_now": "User requested verify M3 completion and unify conflicting central v2 64-single-page rule with G2's 512/80 complete-pagination standard. Verified immutable H37 worker and source-owned x64 codec artifacts; rewired central to reuse exact G2 audit_worker_history, removed legacy checkpoint/context-only blocking rules, then stopped redundant four-worker full-history main-push scans after Actions GitHub API exhaustion.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "R0-023 complete bounded 65KiB original TUN intake and >32 fragment cross-turn TX scheduling without normal small HOL, then B01-B04/L01-L04 actual midfragment route shrink, kernel copied-prefix/uncertain completion, Stop/loans and generation retirement in SOURCE-locked Actions. Separately M0 must review M3 historical 75 commits and approve intermediate scope checkpoint without raising 64 limit; never grant FEC2 product ON from codec microbenchmark.",
+  "next_action": "Continue R0-023 genuine 65KiB TUN UDP buffered cross-turn LINK fragments, no small-packet HOL, MTU shrink/Stop/driver prefix-uncertain safety in SOURCE-locked Actions. Then M0 stage integrate exact M3 CODE8cc and M1/M2/M4 into real Go authenticated FEC2 owner; obtain full Linux ARM64/Windows M3 codec native and Windows loader/GUI qualification before any product enable. Historical scope failures and GitHub Actions rate-limited checks remain factual.",
   "unverified": true,
-  "last_tested_source": "1689d67ab23ada9f4130a963ec7cc223e1f1cca4",
+  "last_tested_source": "39ea51ea507b00dd88330af7a1c9ea4545ab42f5",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json"
+    "docs/evidence/M0/M0-M3-017-scoped-acceptance-unified-G2-2026-10-18.json"
   ],
   "context_refs": [
     "docs/devlog/M0/M0-023-next-stage-snapshot-2026-10-18.md",
-    "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
+    "docs/evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json",
     "docs/evidence/M0/M0-FEC2-CODE8CC-qualified-native-ABBA-f088ca04541df962d483751a759959ac3caf0c39.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/evidence/M0/M0-024-tun-tx-completion-fca4456313e59c0a67f4d8b98959a62d2af71b12.json",
-    "docs/decisions/M0-hotpath-cost-first-2026-10-16.md",
     "docs/architecture/TEST_PLAN.md",
+    "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE1689d67 original Rust M1 full <=32 LINK fragment preseal staging negative capacity test pass: all slab allocations/valid LinkPacketPlan before first AEAD PN, fail returns preseal slabs, no preseal partial publication. Native owner run39093072101 attempt1 build117573724785+consume117573990178 SUCCESS, original authenticated Go↔Rust real C2S loss/noHOL 3 ciphers and S2C 1728B 2 frames original Go peer once + later small, netlink/MTU/Stop PASS, bilateral Normal/off 10Mbps developer 10s+60s diagnostic recorded not product. Old CODE8cc M3 Linux x64 native F2 11/11 and same VM 400k encode/e4 ABBA valid component CPU; M3 H36 remains partial and central 75>64 scope checkpoint review pending; M1 130/130 component, M2 70/70 integration ready, M4 control8/8 and platform safe wrapper ready. Original TUN 2048B slab / >32 cross turn, midfragment route/kernel uncertain + full product/netem/p99/Windows/ARM FEC2 codec remain OPEN; FEC2 capability OFF, D10 original FAIL retained."
+  "partial_summary": "M3 CODE8cc scoped Linux x64 real ISA-L 11/11 and one fixed 400k encode/e4 decode ABBA CPU qualified 39090941413; worker H37 41ef0e29 Governance39094273613 SUCCESS, main-owned new G2 code central run39095544653 M3 job117581113937 SUCCESS (overall FAIL earlier M4 independent metadata), historic 64 audit fails retained. M0 central now reuses G2 audit_worker_history immutable source with 512/80 full pages and exact parent/paths, separate cursor schema, no policy64/checkpoint scope veto; workflow only triggered by corresponding worker Governance, no full-history sweeps per main push. Exact maint SOURCE39ea51ea governance-maintenance39095981610 SUCCESS; later main/scope jobs 403 GitHub rate_limited remaining=0 due past 4x parallel history pushes, not proven latest all-role PASS. M3 ARM64/Windows full FEC2 codec/NEON/WinGo loader NOT_RUN, worker H37 partial; M0 original 023 super-MTU >2048B/32 parts cross-turn/MTU/Stop/kernel uncertain OPEN, M1/M2/M4 integration OPEN, D10/p99 OPEN, FEC2 product OFF."
 }
