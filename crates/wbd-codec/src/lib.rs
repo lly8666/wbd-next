@@ -16,6 +16,8 @@ pub mod link_fec_wire;
 pub mod link_reassembly;
 /// Genuine old-Go RS(20,R) GF256 scalar parity and missing-only recovery.
 pub mod fec_math;
+/// Source-pinned FEC2 RS16 Cauchy component (not wired into product capability/kinds).
+pub mod fec_v2;
 /// Bounded first-source FEC TX block owner.
 pub mod fec_tx;
 /// Authenticated-input bounded Heavy/Compact FEC RX owner.
