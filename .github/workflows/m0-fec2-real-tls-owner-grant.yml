@@ -72,6 +72,9 @@ jobs:
           grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=1' owner-grant-result/real-kernel.log
           grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=2' owner-grant-result/real-kernel.log
           grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=3' owner-grant-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" owner-grant-result/real-kernel.log
+          done
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
           root=pathlib.Path("owner-grant-result")
@@ -87,6 +90,7 @@ jobs:
           assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
           for suite in [1,2,3]:
               assert f"M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite={suite}" in kernel
+              assert f"M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite={suite} e=1 restored=127 source_pn=0 parity_pn=1" in kernel
           assert re.search(r"test result: ok\. 1 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
@@ -108,6 +112,7 @@ jobs:
             "feature_only_cffi":"m0_fec2_owner_probe",
             "actual_applied_FEC2_policy":"NOT_WIRED",
             "real_FEC2_kernel_raw_tx":"ACTUAL_M4_SCOPED_LINUX_RAW_TWO_RECORD_SOURCE_REPAIR_THREE_SUITES",
+            "actual_independent_kernel_capture_to_Rust_M3_AEAD_PN_RS16_e1":"THREE_SUITES_SOURCE_FIRST_TAMPER_REPLAY_REJECT_EXACT_127B_RECOVER",
             "real_FEC2_kernel_raw_tun_Rx_repair":"NOT_RUN","product_FEC2":"OFF",
             "input_sha256":{p:sha(p) for p in inputs},
             "test_log_sha256":{"rust":sha(root/"rust.log"),"go":sha(root/"go.log"),
