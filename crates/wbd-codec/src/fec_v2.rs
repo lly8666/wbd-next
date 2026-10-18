@@ -204,6 +204,41 @@ impl Gf {
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Ord,PartialOrd)]
 struct CacheKey {k:u8, missing:u16, selected_rows:u32}
+/// A single owned mathematical copy retained for a block, independent of
+/// fresh first-send/AEAD ownership. Reusable by <=4-row encoding quanta, so
+/// ISA-L does NOT pad/copy k full source symbols for each quantum.
+pub struct PreparedBlock {
+    symbols: Vec<Vec<u8>>,
+    symbol_len: usize,
+    #[cfg(feature="native-isal")]
+    native_tables: BTreeMap<(usize,usize),wbd_isal_safe::Tables>,
+}
+impl PreparedBlock {
+    pub fn from_frames(frames:&[&[u8]],record_payload_budget:usize)->Result<Self,Error> {
+        let len=Rs16::validate_sources(frames,record_payload_budget)?;
+        let symbols=frames.iter().map(|frame|{
+            let mut out=vec![0u8;len];
+            out[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
+            out[2..2+frame.len()].copy_from_slice(frame);
+            out
+        }).collect();
+        Ok(Self{symbols,symbol_len:len,
+            #[cfg(feature="native-isal")]
+            native_tables:BTreeMap::new(),
+        })
+    }
+    pub fn k(&self)->usize{self.symbols.len()}
+    pub fn symbol_len(&self)->usize{self.symbol_len}
+    /// Native GFTables retained within this one block only; no unbounded global
+    /// cache and no cross-owner implicit sharing.
+    pub fn cached_native_tables(&self)->usize {
+        #[cfg(feature="native-isal")]
+        {self.native_tables.len()}
+        #[cfg(not(feature="native-isal"))]
+        {0}
+    }
+}
+
 pub struct Rs16 {
     gf:Gf,
     inverses:BTreeMap<CacheKey,Vec<Vec<u8>>>,
@@ -322,6 +357,71 @@ impl Rs16 {
         };
         Ok((rows,used))
     }
+    /// Block-reusable encoder: consumes a PreparedBlock built once. The
+    /// prepared symbol already includes original_len:u16 and zero tail.
+    /// Produces exact final 12B+L repair slices; native GF tables cached per
+    /// (first_row,row_count) for this block, bounded by 20 possible rows.
+    pub fn encode_prepared_into(&self, block_id:u64,prepared:&mut PreparedBlock,
+        profile:Profile,first_row:usize,outputs:&mut [&mut [u8]],
+        record_payload_budget:usize,backend:BackendChoice)->Result<BackendUsed,Error> {
+        let k=prepared.k();
+        let len=prepared.symbol_len();
+        let total=profile.parity_count(k)?;
+        if block_id==0 || outputs.is_empty() || outputs.len()>MAX_BATCH_ROWS ||
+            first_row>=total || outputs.len()>total-first_row {return Err(Error::InvalidRow);}
+        if REPAIR_HEADER+len>record_payload_budget ||
+            outputs.iter().any(|o|o.len()!=REPAIR_HEADER+len) {
+            return Err(Error::BudgetExceeded);
+        }
+        let native_ok=backend!=BackendChoice::Scalar && len>=64 && k>1;
+        if backend==BackendChoice::RequireNative {
+            #[cfg(not(feature="native-isal"))]
+            {return Err(Error::NativeUnavailable);}
+            if !native_ok {return Err(Error::NativeUnavailable);}
+        }
+        let mut used=BackendUsed::Scalar;
+        if native_ok {
+            #[cfg(feature="native-isal")]
+            {
+                let cache_key=(first_row,outputs.len());
+                if !prepared.native_tables.contains_key(&cache_key) {
+                    let mut coeff=Vec::with_capacity(k*outputs.len());
+                    for row in first_row..first_row+outputs.len() {
+                        for col in 0..k {coeff.push(self.coefficient(row,col,k)?);}
+                    }
+                    let tables=wbd_isal_safe::Tables::new(k,outputs.len(),&coeff)
+                        .map_err(|_|Error::NativeFailure)?;
+                    prepared.native_tables.insert(cache_key,tables);
+                }
+                let tables=prepared.native_tables.get(&cache_key).ok_or(Error::NativeFailure)?;
+                let src=prepared.symbols.iter().map(Vec::as_slice).collect::<Vec<_>>();
+                let mut dest=outputs.iter_mut().map(|o|&mut o[REPAIR_HEADER..])
+                    .collect::<Vec<_>>();
+                tables.encode(&src,&mut dest).map_err(|_|Error::NativeFailure)?;
+                used=BackendUsed::NativeIsaL;
+            }
+        }
+        if used==BackendUsed::Scalar {
+            for (i,o) in outputs.iter_mut().enumerate() {
+                let dst=&mut o[REPAIR_HEADER..];
+                dst.fill(0);
+                for (col,src) in prepared.symbols.iter().enumerate() {
+                    let c=self.coefficient(first_row+i,col,k)?;
+                    for (b,&x) in dst.iter_mut().zip(src.iter()) {
+                        *b^=if c==1{x}else{self.gf.mul(c,x)};
+                    }
+                }
+            }
+        }
+        for (i,o) in outputs.iter_mut().enumerate() {
+            o[..8].copy_from_slice(&block_id.to_be_bytes());
+            o[8]=(first_row+i) as u8;
+            o[9]=k as u8;
+            o[10..12].copy_from_slice(&(len as u16).to_be_bytes());
+        }
+        Ok(used)
+    }
+
     fn inverse_cached(&mut self,k:usize,missing:&[usize],selected:&[Repair<'_>])
         ->Result<Vec<Vec<u8>>,Error> {
         let mask=missing.iter().fold(0u16,|m,&col|m|(1u16<<col));
