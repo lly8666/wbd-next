@@ -894,6 +894,146 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
     OK
 }
 
+// M0 opt-in integration of TWO original M1 FrozenRecord repair candidates
+// with the original M4 raw syscall and the original M2 scoped batch contract.
+// The first slot is REALLY submitted to Linux; the second is deliberately
+// stopped BEFORE the syscall. Only this explicit no-attempt decision makes
+// the second suffix ProvenNotAttempted; EAGAIN/short/unknown can NEVER do so.
+// It is not a kernel sendmmsg prefix/uncertain classifier, and does not claim
+// production M4 batch completion semantics.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn fec2_probe_real_frozen_repair_prefix_two(
+    handle:u64,
+)->Result<(u64,u32,u32,u64,u64),i32>{
+    use wbd_recovery::{
+        reserve_frozen_submission,complete_driver_prefix,
+        DriverPrefixObservation,BatchSuffixEvidence,RepairSendResult,
+    };
+    let cell=session(handle)?;
+    let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    if e.phase!=PH_ACTIVE||e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
+    let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    if raw.generation()!=e.generation||raw.is_stopping(){return Err(BAD_STAGE)}
+    let generation=e.generation;
+    let flow=e.flow;
+    let tuple=Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    };
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    let sender=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
+    if sender.repair_submitted{return Err(INVALID)}
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let now=process.at_least(sender.start_ns.saturating_add(31_000_000));
+    let poll=sender.shadow.on_timer(now);
+    if !poll.releases.is_empty()||poll.candidates.len()!=2{return Err(INVALID)}
+    let mut iter=poll.candidates.into_iter();
+    let first=iter.next().ok_or(INVALID)?;
+    let second=iter.next().ok_or(INVALID)?;
+    if first.pn().0!=0||second.pn().0!=1
+        ||!sender.shadow.preflight(&first,now)
+        ||!sender.shadow.preflight(&second,now){return Err(INVALID)}
+    let first_meta=first.frozen().metadata();
+    let second_meta=second.frozen().metadata();
+    let first_outer=first.frozen().bytes().len()
+        .checked_add(40).ok_or(INVALID)? as u64;
+    let second_outer=second.frozen().bytes().len()
+        .checked_add(40).ok_or(INVALID)? as u64;
+    let total=first_outer.checked_add(second_outer).ok_or(INVALID)?;
+    let before=process.broker.snapshot().charged_repairs;
+    let lease=process.broker.grant(
+        sender.direction,total,20_000_000,now
+    ).map_err(|_|INVALID)?;
+    let reserved_first=reserve_frozen_submission(
+        &mut process.broker,lease,sender.route,&sender.shadow,
+        &first,first_outer,now
+    ).map_err(|_|INVALID)?;
+    let reserved_second=reserve_frozen_submission(
+        &mut process.broker,lease,sender.route,&sender.shadow,
+        &second,second_outer,now
+    ).map_err(|_|INVALID)?;
+    if reserved_first.driver.metadata!=first_meta
+        ||reserved_second.driver.metadata!=second_meta
+        ||reserved_first.driver.wire.as_ptr()!=first.frozen().bytes().as_ptr()
+        ||reserved_second.driver.wire.as_ptr()!=second.frozen().bytes().as_ptr()
+        ||!sender.shadow.preflight(&first,now)
+        ||!sender.shadow.preflight(&second,now){return Err(INVALID)}
+    let ordered=[
+        (reserved_first.reservation_id,sender.route),
+        (reserved_second.reservation_id,sender.route),
+    ];
+    drop(process);
+    // EXACT original M4 syscall for slot0, no second syscall. Successful
+    // kernel copy is NOT peer acknowledgement.
+    let first_result=raw.send_one(
+        generation,first.frozen(),tuple,presentation
+    );
+    let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
+    let now=process.at_least(now.0);
+    let observation=if first_result.is_ok(){
+        DriverPrefixObservation::checked(
+            2,1,None,BatchSuffixEvidence::ProvenNotAttempted
+        )
+    }else{
+        // A real syscall error is NOT definitive NotSent. Both slots'
+        // quota stays conserved (unknown first, deliberately unattempted
+        // second still unproven in this error case).
+        DriverPrefixObservation::checked(
+            2,0,Some(0),BatchSuffixEvidence::Unproven
+        )
+    }.map_err(|_|INVALID)?;
+    let settled=complete_driver_prefix(
+        &mut process.broker,&ordered,observation,now
+    ).map_err(|_|INVALID)?;
+    if settled.len()!=2{return Err(INVALID)}
+    for (index,candidate) in [&first,&second].into_iter().enumerate(){
+        let status=settled.shadow_result(index).ok_or(INVALID)?;
+        sender.shadow.on_send_result(candidate,status,now)
+            .map_err(|_|INVALID)?;
+    }
+    if first_result.is_err(){return Err(INVALID)}
+    if settled.shadow_result(0)!=Some(RepairSendResult::Accepted)
+        ||settled.shadow_result(1)!=Some(RepairSendResult::NotSent)
+        ||settled.counts.accepted!=1
+        ||settled.counts.definitely_not_sent!=1
+        ||settled.counts.uncertain!=0
+        ||settled.counts.held_unproven!=0
+        ||process.broker.snapshot().pending!=0
+        ||process.broker.snapshot().charged_repairs!=before+first_outer
+        ||sender.shadow.outstanding()!=2{return Err(INVALID)}
+    // This refund is strictly a proven never-entered-kernel slot; do not
+    // re-send or retire PN1 as peer received merely because of the refund.
+    process.broker.revoke(lease,now).map_err(|_|INVALID)?;
+    sender.repair_submitted=true;
+    let bytes=first_result.map_err(|_|INVALID)?;
+    if bytes as u64!=first_outer{return Err(INVALID)}
+    Ok((first.pn().0,first_meta.seq.0 as u32,
+        u32::try_from(first.frozen().bytes().len()).map_err(|_|INVALID)?,
+        first_outer,second_outer))
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
+    handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
+    accepted:*mut u64,not_attempted:*mut u64,
+)->i32{
+    if pn.is_null()||seq.is_null()||wire.is_null()
+        ||accepted.is_null()||not_attempted.is_null(){return INVALID}
+    match fec2_probe_real_frozen_repair_prefix_two(handle){
+        Ok((p,s,w,a,n))=>{
+            unsafe{pn.write(p);seq.write(s);wire.write(w);
+                accepted.write(a);not_attempted.write(n)};
+            OK
+        },
+        Err(v)=>v,
+    }
+}
+
 // Actual M2 RX feedback draft created ONLY from authenticated M3 data
 // observed above. This stage is not a peer-authenticated receipt encoder,
 // not a control kind1 send, and not a quota release or kernel ACK.
