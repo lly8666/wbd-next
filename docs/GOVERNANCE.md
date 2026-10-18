@@ -121,14 +121,15 @@ worker ready_for_integration 前：接口行为、正确性证据、适用配置
 
 GitHub API 不可读、权限不足、结果分页超限都明确报出，不回退到猜测旧缓存。
 
-## 10. v2 增量审计与共享工具（覆盖 v1 G2 固定起点审计）
+## 10. 中央 Scope 统一采用 G2 完整分页审计（2026-10-18 修订）
 
-- 主线 `.governance/scope-checkpoints.json` 是 M0 已验收范围检查点，不是 worker 可自行移动的交接 cursor。首次基线来自已留痕的四个 worker H / Governance 证据。
-- `Central worker scope audit` 从主线快照运行 `tools/scope_audit.py`，只读 GitHub 元数据，绝不执行 worker 代码。worker 每次 Governance 完成会触发中央审计；不需要复制新工具或改工作分支。每份结果含 SOURCE、checker/control SHA、权限快照与 run 身份。
-- 每轮只审检查点后的完整提交；路径改后又撤回仍检查。64 是单轮增量预算，不是分支终身提交上限。达到约 20–30 个新增提交或模块集成完成，M0 读取最新中央 PASS artifact / GitHub conclusion 后将该角色检查点推进到实际验过的 SOURCE，同时附 evidence_ref。只改检查点不授予产品资格，不能根据 worker 自报 PASS 推进。
-- 权限仅采用 main 的 branch/state/epoch/revision/paths/语义；目标文字变化不会废除旧证据。审计开始固定快照，结束重新核权限和 SOURCE 祖先。分支继续前进允许返回 is_current_head=false，不能拿旧 SOURCE 当新 HEAD PASS。权限变化/历史被移除仍拒绝。
-- 旧 G2 检查器和反例保留用于解释历史，不再增加特定父 SHA 的同步例外。旧分支 Governance 若仅因旧 scope 上限/工具同步失败，中央精确 SOURCE PASS 可替代该范围检查；未执行的结构/恢复测试不得因此冒充通过，worker native 资格仍独立。
-- 新 worker merge、权限变更仍由 M0 审核，不把普通主线同步泛化成任意写根文件权限。任何新 epoch 必须重新建立范围检查点。
+**唯一提交/路径/merge 审查标准为 main 的 `tools/worker_scope_ci.py`：** `G2_BASE` 固定冻结起点、`G2_ACTIVATION_MAX_COMMITS=512`、`G2_ACTIVATION_PAGE_SIZE=80`。在有限512个历史提交内，按完整 SHA 固定 SOURCE 分页，检查每页总数/顺序、末尾 SOURCE、SHA 唯一、每个实际提交的完整路径及重命名旧路径、单/双亲和已经由 M0 精确批准的历史工具同步/merge。缺页、反常父关系、越权修改、不完整路径或 SOURCE 不可达必须失败；**不是取消边界或把历史免审**。超过512需 M0单独设计受审的接续方案，不能自动截短成“前512个通过”。
+
+`tools/scope_audit.py` 在**只检出主线代码**的中央 Actions 中直接调用同一个 `audit_worker_history()`；中央自身只追加 main registry 生效权限快照、worker cursor/同源证据与请求引用、开始/结束SOURCE祖先关系检查，**不再另用64提交单页审计或第二套主线路径白名单**。任何一次 worker Governance 的完成会触发相应工位中央审计；main 修改工具时对M1/M2/M3/M4并发做精确当前 SOURCE 检查并各存独立receipt。普通 worker Governance 和中央 receipt 是可互查的两条执行入口、同一条**历史路径判定代码**；两者不代表产品通过。
+
+旧 `.governance/scope-checkpoints.json` 和历史中央64增量审计收据**保留作历史证据**，但不再由当前中央 Scope 决定通过/失败；无需 worker 自行修改，不以旧检查点提前截断已发生的变更，也不借移动检查点忽略越权提交。`.governance/policy.json:max_delta_commits=64` 仍保留在 **`tools/governance.py audit` 交接完整性的一次有界 cursor/HEAD 恢复诊断**（与角色 Scope 安全审计不同），中央 Scope/G2 不读取它。旧失败仍有准确来源，不会被重新标成过去已成功。
+
+每份新中央结果带SOURCE、G2 activation anchor、512与80参数、通过的历史提交数/非worker来源数、当前权限快照、control和完成时主线SHA、当前HEAD匹配标记、run/attempt及产品 NOT_RUN。worker SOURCE 不变而 HEAD 继续前进时可产生 `is_current_head=false`，不能拿旧receipt声称当前HEAD已审。任何权限更改或新epoch仍必须按主线真实权限另行审核，不借当前自动审计扩权。
 
 ## 11. 控制信息减重
 
