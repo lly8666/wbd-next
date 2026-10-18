@@ -295,3 +295,50 @@ fn r1_f2_prepared_native_cached_tables_real_ec_encode_data() {
     }
     assert_eq!(block.cached_native_tables(),1);
 }
+
+#[test]
+fn r1_f2_source_membership_and_index_reject_conflict() {
+    let rs=Rs16::new();
+    let f=frames(2);
+    let wires=all_rows(&rs,47,&f,Profile::Strong,100);
+    let repair=parse_repair(&wires[0],100).unwrap();
+    let src=source_owned(47,1,&f[1],100).unwrap();
+    assert_eq!(validate_source_against_repair(&parse_source(&src,100).unwrap(),&repair),Ok(()));
+    let wrong_block=source_owned(48,1,&f[1],100).unwrap();
+    assert_eq!(validate_source_against_repair(&parse_source(&wrong_block,100).unwrap(),&repair),
+        Err(Error::ConflictingMeta));
+    let wrong_index=source_owned(47,2,&f[1],100).unwrap();
+    assert_eq!(validate_source_against_repair(&parse_source(&wrong_index,100).unwrap(),&repair),
+        Err(Error::InvalidIndex));
+    let oversize=source_owned(47,0,&vec![0xab;65],100).unwrap();
+    assert_eq!(validate_source_against_repair(&parse_source(&oversize,100).unwrap(),&repair),
+        Err(Error::ConflictingMeta));
+}
+#[test]
+fn r1_f2_mds_nonprefix_repair_pairs_and_variable_missing() {
+    let mut rs=Rs16::new();
+    for k in 2usize..=4 {
+        let f=frames(k);
+        let full=all_rows(&rs,500+k as u64,&f,Profile::Maximum,100);
+        // Exhaust all 190 parity-row pairs including row 19, and every
+        // distinct pair of erased systematic sources. Independent oracle
+        // ensures matrix actually encodes 0x11d Cauchy, not just roundtrip.
+        for a in 0..20 {
+            for b in a+1..20 {
+                let repairs=[parse_repair(&full[a],100).unwrap(),
+                             parse_repair(&full[b],100).unwrap()];
+                for x in 0..k {
+                    for y in x+1..k {
+                        let mut original=f.iter().map(|s|Some(s.as_slice())).collect::<Vec<_>>();
+                        original[x]=None;original[y]=None;
+                        let (decoded,how)=rs.recover_missing(500+k as u64,&original,
+                            &repairs,100,BackendChoice::Scalar).unwrap();
+                        assert_eq!(how,BackendUsed::Scalar);
+                        assert_eq!(decoded,vec![(x as u8,f[x].clone()),(y as u8,f[y].clone())]);
+                    }
+                }
+            }
+        }
+        assert!(rs.cache_entries()<=DECODE_CACHE_LIMIT);
+    }
+}
