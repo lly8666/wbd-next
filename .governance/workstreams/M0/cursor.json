@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 136,
-  "checkpoint_sha": "0459632acec78d8dcaa6536b7bf39fdf21f6756c",
+  "sequence": 137,
+  "checkpoint_sha": "dee5df2a4e624d5262194b432bc56e2825e92a4d",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 main integration now contains exact accepted M3 CODE8cc FEC2 RS16/source+repair and tests, M4 CODE7cef Go cold policy, M1 CODE3f78 3class FEC2 scheduler+tests; M0 staged real M1 original Arena→M3 PreparedBlock bounded <=4 parity rows→e1 missing-only recovery component PASS. All capability/kind2/3/Go actual product FEC2 remain OFF.",
-  "why_now": "User requested accelerated M0 main rather than more standalone microbench. Source-frozen M1/M3/M4 six worker files imported into main with identical Git blobs; original Rust/Go binary/test Action tests confirm main direct source not temporary worker clones, and new source-first/parity/repair glue gives first proven M1→M3 composition. Kept Normal/off identical and old 240s codec historical FAIL distinct.",
+  "current_task": "R0-023 continued M0 live integration: original Rust three-suite AEAD/8-byte HP and SAME TX PN allocator + original ReplayProtectedLaneRx shared PN window now have explicit FEC2 source2/repair3 opt-in-only record methods, default 0/1 unchanged. SOURCE ee5 exact GitHub Actions two builds each 2/2 PASS; pre-product scope only.",
+  "why_now": "After importing immutable M1 owner/M3 FEC2 codec/M4 Go cold policy to main and passing first M1→M3 staged parity test, next real bottleneck was original record_crypto and replay rejecting authenticated FEC2 kinds. Reused original per-lane crypto/PN and bounded replay; explicit opt-in compiler-only pre-admission methods let Go protected authority be attached later without silently changing default normal/off. Native initial E0716 test borrow failure fixed from Actions output.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "Complete real protected Go V4 admission FEC2 capability/epoch/KDF and kind2/3 into original M0 Rust owner, bind staged M1→M3 repair output to original AEAD/PN and M4 raw/TUN + M2 authenticated ingress with source-first/noHOL/Stop/unknown completion. Also finish original 023 legal 65KiB cross-turn LINK/MTU/Stop safety. Exact-source Actions only; no repeat 400k CODE8cc CPU microbench; do not enable product until end-to-end and UI/other targets qualify.",
+  "next_action": "Bind independently verified protected Go V4 bit2/capability, epoch/direction, KDF and applied profile to original ProtectedScopedOwner and its same TX PN/RX replay instance; then test M1 systematic immediate, M3 kind2/3 actual original AEAD and M4 raw/TUN with M2 authenticated receipt, all SOURCE-locked. Keep actual FEC2 OFF until UI/config, cross-platform and full product hard gates; retain R0-023 legal 65KiB LINK cross-turn, MTU/Stop prefix-uncertain + old D10/p99 and codec240s risks.",
   "unverified": true,
-  "last_tested_source": "1395d9c5477ae7097fef2aedaaa5630253266da0",
+  "last_tested_source": "ee5d2cad1ba8818488a91097e4da04fcc55b8e63",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-FEC2-main-3worker-staged-1395d9c5477ae7097fef2aedaaa5630253266da0.json"
+    "docs/evidence/M0/M0-023-fec2-protected-record-ee5d2cad1ba8818488a91097e4da04fcc55b8e63.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/M0-023-next-stage-snapshot-2026-10-18.md",
-    "docs/evidence/M0/M0-023-preseal-full-link-staging-1689d67ab23ada9f4130a963ec7cc223e1f1cca4.json",
-    "docs/evidence/M0/M0-M3-017-scoped-acceptance-unified-G2-2026-10-18.json",
+    "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
+    "docs/evidence/M0/M0-023-FEC2-main-3worker-staged-1395d9c5477ae7097fef2aedaaa5630253266da0.json",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
+    "docs/architecture/modules/06-LINK-MTU.md",
     "docs/architecture/TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE1395d9c5 M1/M3 main staged code and real M1 Arena→M3 RS16 parity generation/one dropped source recovery PASS, engine native-functional39097343657 129/0/1 + 4 other scoped groups PASS; original Go TLS Rust raw/TUN native39097343616 build+consume PASS; ABI39097343599 bootstrap39097343596 crossABI39097343554 PASS. Main M3 real ISA-L CODE8cc39096791296 11/11 PASS, main Go M4 policy original realityfront39096875504 8/8 PASS; six imported Git blobs exact worker snapshots CODE8cc/7cef/3f78. Historical codec native-functional39096586112 240s timeout/ignored diagnostic FAIL retained, pre-fix M1 missing test file compiler FAIL corrected, M0 023 65k cross-turn/Stop MTU prefix uncertain, actual FEC2 Go KDF kind2/3 AEAD M2/M4 wire, CLI GUI, ARM Windows, p99 D10 physical all OPEN. FEC2 default OFF, no product qualification."
+  "partial_summary": "SOURCEee5d2cad real Rust ChaCha20/AES128/AES256 shared PN 0LINK/1SOURCE/2REPAIR and opt-in same ReplayProtectedLaneRx bitmap with out-of-order ordinary, duplicate reject, AEAD tamper reject before replay, M3 real source/repair parse and e1 RS16 missing-only restored; default seal/open/unique deny2/3. New CODEC opt-in m0-fec2-record-probe feature NOT default production; two tests each default+explicit opt-in build 2/2 PASS in Actions39098885644 exact SOURCE, artifact12125319675 SHA256 7ee4beec... reported. G2 bootstrap39098885668, wire39098885673, framing39098885649, LINK/MTU39098885643 and S governance39098885646 SUCCESS. Full native-functional39098885670 engine/normal/fec/kernel/receipt SUCCESS, historical codec long group IN_PROGRESS_AT_RECORD (do not promote). Initial E0716 Rust test borrow build failure39098807187 corrected before ee5. Original protected Go bit2/KDF and real M0 owner FEC2 source/repair delivery+M4/M2 not wired; 65KiB cross-turn/Stop/MTU unknown, product UI/ARM/Win/p99 D10 all OPEN; FEC2 capability OFF."
 }
