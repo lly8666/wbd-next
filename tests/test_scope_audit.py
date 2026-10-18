@@ -106,6 +106,26 @@ class CentralReusesG2(unittest.TestCase):
                     with self.assertRaises(g.ContractError):
                         s.audit(api,api.role["branch"],B,C)
 
+    def test_scoped_component_pass_receipt_not_product_pass(self):
+        class Evidence:
+            def __init__(self,result,verified):
+                self.result=result;self.verified=verified
+            def file(self,path,source):
+                return {"schema_version":1,"source_sha":B,
+                        "result":self.result,"artifact_verified":self.verified}
+            def get(self,endpoint):
+                return {"type":"file"}
+        cursor={"evidence_refs":["docs/evidence/M4/component.json"],
+                "context_refs":[],"open_requests":[],
+                "last_tested_source":B,"unverified":False}
+        for label in ("PASS","PASS_SCOPED_COLD_GO_AND_ISAL_SAFE_WRAPPER_ONLY"):
+            s.check_role_metadata(Evidence(label,True),{"id":"M4"},B,cursor)
+        for label,verified in (
+            ("FAIL",True),("INCONCLUSIVE",True),("PASS_SCOPED_F2",False),
+            ("PASS_NOT_RUN",True)):
+            with self.subTest(label=label),self.assertRaises(g.ContractError):
+                s.check_role_metadata(Evidence(label,verified),{"id":"M4"},B,cursor)
+
     def test_coordination_markdown_is_not_dispatch_json(self):
         class Notes:
             def get(self,endpoint):
