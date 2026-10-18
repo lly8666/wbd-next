@@ -232,3 +232,320 @@ jobs:
           path: go-control-result/
           retention-days: 30
           if-no-files-found: warn
+
+  # Source-locked aggregate blocker sweep: all jobs independent.
+  # No runner-only success promotes the production FEC2 feature.
+  m0-native-architecture:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            arch: aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual native Linux codec recovery and original integration unit suite
+        shell: bash
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          EXPECTED_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          mkdir -p blocker-native
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-codec --lib r1_f2_ -- --test-threads=2 --nocapture >blocker-native/fec2-codec.log 2>&1
+          cargo +1.85.1 test --release --locked -p wbd-recovery --lib -- --test-threads=2 >blocker-native/m2-recovery.log 2>&1
+          if [[ "$EXPECTED_ARCH" == x86_64 ]]; then
+            cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_ -- --test-threads=1 >blocker-native/m0-integration.log 2>&1
+          fi
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,re
+          root=pathlib.Path("blocker-native")
+          logs={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob("*.log")}
+          assert logs and all(re.search(r"test result: ok\.",p.read_text()) for p in root.glob("*.log"))
+          j={"result":"PASS_SCOPED_NATIVE_COMPONENT_ONLY","source_sha":os.environ["GITHUB_SHA"],
+             "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+             "host_arch":platform.machine(),"target":os.environ["EXPECTED_TARGET"],
+             "logs":logs,"production_FEC2":"OFF",
+             "actual_arm_full_go_tls_kernel":"NOT_RUN",
+             "arm_native_fec2_isa_l_backend":"NOT_RUN"}
+          (root/"result.json").write_text(json.dumps(j,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-native-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-native/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-windows-native:
+    runs-on: windows-2022
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual Windows x64 MSVC scalar FEC2 codec and M2 recovery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory blocker-windows -Force | Out-Null
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-codec --lib r1_f2_ -- --test-threads=2 *> blocker-windows/fec2-codec.log
+          if ($LASTEXITCODE -ne 0) { Get-Content blocker-windows/fec2-codec.log -Tail 45; throw 'Windows native F2 fail' }
+          cargo +1.85.1 test --release --locked -p wbd-recovery --lib -- --test-threads=2 *> blocker-windows/m2-recovery.log
+          if ($LASTEXITCODE -ne 0) { Get-Content blocker-windows/m2-recovery.log -Tail 45; throw 'Windows native M2 fail' }
+          $digest=(Get-FileHash blocker-windows/fec2-codec.log -Algorithm SHA256).Hash.ToLowerInvariant()
+          $out=@{result="PASS_WINDOWS_NATIVE_SCALAR_FEC2_M2_ONLY";source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;test_log_sha256=$digest;native_target="x86_64-pc-windows-msvc";production_FEC2="OFF";windows_real_go_TLS_raw_driver="NOT_RUN";windows_native_isa_l="NOT_RUN"}
+          ($out|ConvertTo-Json) | Set-Content blocker-windows/result.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-windows-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-windows/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-actual-isal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Pinned official ISA-L native backend FEC2 full profile suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p blocker-isal
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool gcc make
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/one-sweep-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >blocker-isal/build.log 2>&1
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --lib r1_f2_ -- --test-threads=4 --nocapture >blocker-isal/native.log 2>&1
+          python3 - <<'PY'
+          import pathlib,re,json,os,hashlib
+          root=pathlib.Path("blocker-isal")
+          s=(root/"native.log").read_text()
+          names=set(re.findall(r"test (?:\S*::)?(r1_f2_\w+) \.\.\. ok",s))
+          assert len(names)==11,(len(names),sorted(names))
+          result={"result":"PASS_SCOPED_ORIGINAL_LINUX_X64_REAL_ISAL_11",
+           "source_sha":os.environ["GITHUB_SHA"],"native_oracles":len(names),
+           "upstream_isa_l_sha":"c387163fcbca62701d646149564c550c78a4f985",
+           "native_log_sha256":hashlib.sha256((root/"native.log").read_bytes()).hexdigest(),
+           "product_full_240s_ABBA":"NOT_RUN","FEC2_product":"OFF"}
+          (root/"result.json").write_text(json.dumps(result,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-actual-isal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-isal/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-original-link-fec:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Real pinned Go LINK/FEC source and Rust LINK/MTU/reassembly suites
+        shell: bash
+        env: {GOTOOLCHAIN: local}
+        run: |
+          set -euo pipefail
+          mkdir -p blocker-link
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          (cd legacy && go test -v -count=1 ./internal/linkdata ./internal/fec) >blocker-link/go-link-fec.log 2>&1
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-codec --lib link_ -- --test-threads=2 >blocker-link/rust-link.log 2>&1
+          python3 - <<'PY'
+          import json,os,pathlib,hashlib
+          root=pathlib.Path("blocker-link")
+          h=lambda p:hashlib.sha256((root/p).read_bytes()).hexdigest()
+          x={"result":"PASS_SCOPED_LINK_FEC_UNIT_ONLY","source_sha":os.environ["GITHUB_SHA"],
+            "original_go_link_fec_log_sha256":h("go-link-fec.log"),
+            "rust_link_log_sha256":h("rust-link.log"),"product_65KiB_multi_turn":"NOT_RUN",
+            "MTU_pm1_real_network":"NOT_RUN","FEC2_product":"OFF"}
+          (root/"result.json").write_text(json.dumps(x,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-original-link-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-link/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-normal-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build one original Go TLS / Rust normal-off binary for independent netem runners
+        shell: bash
+        env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          mkdir -p blocker-normal-bin
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go >blocker-normal-bin/build.log 2>&1
+          cp target/release/libwbd_engine.so blocker-normal-bin/libwbd_engine.so
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/blocker-normal-bin/owner-go.test" ./internal/realityfront)
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib
+          r=pathlib.Path("blocker-normal-bin")
+          h=lambda p:hashlib.sha256((r/p).read_bytes()).hexdigest()
+          x={"source_sha":os.environ["GITHUB_SHA"],
+            "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "legacy_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "binaries":{p:h(p) for p in ["owner-go.test","libwbd_engine.so"]},
+            "features":"m0_v4_probe,m0_v4_embedded_go","FEC2":"OFF"}
+          (r/"manifest.json").write_text(json.dumps(x,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-normal-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-normal-bin/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-normal-network:
+    needs: m0-normal-build
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [netem-10ms, netem-150ms-A, netem-150ms-B, netem-150ms-C, normal-off-10mbps]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-normal-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-normal-bin
+      - name: Source-locked independent real Linux TUN/netem or Normal-off 10 Mbps
+        shell: bash
+        env:
+          CASE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          mkdir -p blocker-normal-result
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          r=pathlib.Path("blocker-normal-bin")
+          m=json.loads((r/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["run_id"]==os.environ["GITHUB_RUN_ID"]
+          for p,h in m["binaries"].items():
+            assert hashlib.sha256((r/p).read_bytes()).hexdigest()==h,p
+          PY
+          chmod +x blocker-normal-bin/owner-go.test
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          case "$CASE" in
+            netem-10ms) export WBD_M0_PRELIM_NETEM_DELAY_MS=10 ;;
+            netem-150ms-*) export WBD_M0_PRELIM_NETEM_DELAY_MS=150 ;;
+            normal-off-10mbps) export WBD_M0_PERF_BASELINE=1 ;;
+            *) exit 2 ;;
+          esac
+          # The original runner uses actual namespace TUN, not fake timing.
+          bash tools/run-v4-tun-netns.sh blocker-normal-bin >blocker-normal-result/real-kernel.log 2>&1
+          grep -Eq 'TUN|NETEM|PASS' blocker-normal-result/real-kernel.log
+          python3 - <<'PY'
+          import json,os,hashlib,pathlib
+          root=pathlib.Path("blocker-normal-result")
+          s=(root/"real-kernel.log").read_bytes()
+          j={"source_sha":os.environ["GITHUB_SHA"],"case":os.environ["CASE"],
+            "result":"PASS_EXPLORATORY_SINGLE_NETWORK_CASE",
+            "kernel_log_sha256":hashlib.sha256(s).hexdigest(),
+            "configured_delay_not_measured_RTT":True,
+            "historical_150ms_intermittent_failure_not_cleared":True,
+            "full_FEC2_product_quality":"NOT_RUN"}
+          (root/"result.json").write_text(json.dumps(j,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-normal-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-normal-result/
+          retention-days: 30
+          if-no-files-found: warn
+
+  m0-unqualified-gate-ledger:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-locked non-promotional product hard gates, explicit not-run and blocked
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p blocker-ledger
+          python3 - <<'PY'
+          import json,os,pathlib,hashlib
+          gates={
+            "continuous_per_direction_original_Go_quality_ticker":"NOT_IMPLEMENTED_PRODUCT",
+            "real_first_sent_mature_loss_denominator":"NOT_WIRED",
+            "canonical_production_kind1_authenticated_receiver":"NOT_WIRED",
+            "product_fixed_auto_CLI_GUI_effective_revision":"NOT_WIRED",
+            "M4_32_distinct_frozen_partial_EINTR_Stop_loans":"NOT_QUALIFIED",
+            "legal_65KiB_MTU_pm1_cross_turn_noHOL":"NOT_QUALIFIED",
+            "full_codec_240s_D10_p99_paired_ABBA":"NOT_RUN",
+            "native_Windows_FEC2_original_TLS_GUI_loader":"NOT_RUN",
+            "native_ARM64_FEC2_original_TLS_driver":"NOT_RUN",
+            "two_physical_endpoints":"BLOCKED_NO_RUNNER_OR_PEER",
+            "historical_150ms_intermit":"UNRESOLVED"
+          }
+          m=pathlib.Path("r0/qualification-manifest.json").read_bytes()
+          result={"source_sha":os.environ["GITHUB_SHA"],
+            "production_FEC2":"OFF","all_product_gates_PASSED":False,
+            "integration_test_matrix_is_NOT_product_qualification":True,
+            "hard_gates":gates,
+            "qualification_manifest_sha256":hashlib.sha256(m).hexdigest()}
+          pathlib.Path("blocker-ledger/gates.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-hard-gates-${{ github.run_id }}-${{ github.run_attempt }}
+          path: blocker-ledger/
+          retention-days: 30
