@@ -454,4 +454,4 @@ impl Rs16 {
 }
 #[cfg(test)]
 #[path="fec_v2_tests.rs"]
-mod tests;
+mod f2_oracle;
