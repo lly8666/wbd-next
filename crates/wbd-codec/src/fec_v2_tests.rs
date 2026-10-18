@@ -319,14 +319,26 @@ fn r1_f2_mds_nonprefix_repair_pairs_and_variable_missing() {
     let mut rs=Rs16::new();
     for k in 2usize..=4 {
         let f=frames(k);
-        let full=all_rows(&rs,500+k as u64,&f,Profile::Maximum,100);
+        // Profiles emit only first ceil(k*rho) rows. To independently prove
+        // the ENTIRE 20-row Cauchy family is MDS, synthesize legal typed
+        // repair rows using the separate GF oracle, without pretending an
+        // actual k=2 profile transmitted 20 repairs.
+        let original_refs=f.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let bodies=(0..MAX_R).map(|row|oracle_row(&original_refs,row))
+            .collect::<Vec<_>>();
         // Exhaust all 190 parity-row pairs including row 19, and every
         // distinct pair of erased systematic sources. Independent oracle
         // ensures matrix actually encodes 0x11d Cauchy, not just roundtrip.
         for a in 0..20 {
             for b in a+1..20 {
-                let repairs=[parse_repair(&full[a],100).unwrap(),
-                             parse_repair(&full[b],100).unwrap()];
+                let repairs=[
+                    Repair {block_id:500+k as u64,parity_row:a as u8,
+                        actual_k:k as u8,symbol_len:bodies[a].len() as u16,
+                        body:&bodies[a]},
+                    Repair {block_id:500+k as u64,parity_row:b as u8,
+                        actual_k:k as u8,symbol_len:bodies[b].len() as u16,
+                        body:&bodies[b]},
+                ];
                 for x in 0..k {
                     for y in x+1..k {
                         let mut original=f.iter().map(|s|Some(s.as_slice())).collect::<Vec<_>>();
