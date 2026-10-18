@@ -229,6 +229,43 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 t.Logf("M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=%d mode=%s policy=%s profile=%d revision=%d applied=1 stale_ack=deny",
                     cipher,mode,policyState.Mode,effective.AppliedProfile,effective.AppliedRevision)
             }
+            // Same ORIGINAL protected TLS epoch/generation: two mature
+            // Go AUTO observation windows from the existing policy module
+            // request Maximum/revision6, but MUST NOT mark it applied yet.
+            // The next original M1 new-block/M4 real kernel copy commits.
+            if mode=="mixed-prefix"{
+                cfg:=FecV2Config{
+                    Client:"protected-owner",Direction:FecV2S2C,
+                    Transport:FecV2Normal,Mode:FecV2Auto,
+                    AutoPolicy:FecV2Conservative,ConfigRevision:5,
+                }
+                for _,sec:=range []int{2,4}{
+                    at:=time.Duration(sec)*time.Second
+                    quality:=FecV2Snapshot{
+                        Client:"protected-owner",Direction:FecV2S2C,
+                        At:at,Validity:FecV2Valid,
+                        Fast:FecV2Window{FirstSent:1024,Observed:1024,Missing:310},
+                        Slow:FecV2Window{FirstSent:6000,Observed:6000,Missing:1800},
+                    }
+                    quality.ActualK[15]=375
+                    newState,intent,tickErr:=b.fec2ProbeStageAutoTick(
+                        cfg,policyState,quality,at)
+                    if tickErr!=nil||intent.Send!=(sec==4){
+                        t.Fatalf("original Go matured AUTO policy tick sec=%d state=%+v intent=%+v err=%v",
+                            sec,newState,intent,tickErr)
+                    }
+                    policyState=newState
+                }
+                if policyState.Desired!=FecV2Maximum ||
+                    policyState.RequestedRevision!=6||
+                    policyState.AppliedRevision!=5{
+                    t.Fatalf("Go auto2s did not stage new profile without early applied ack: %+v",policyState)
+                }
+                if _,e:=b.fec2ProbeAppliedPolicy(policyState);e==nil{
+                    t.Fatal("pending Go AUTO revision was falsely acknowledged by Rust before new M1 block")
+                }
+                t.Logf("M0_GO_FEC2_AUTO_PENDING_BEFORE_NEW_BLOCK_PASS suite=%d requested=6 applied=5 two_real_policy_windows=1",cipher)
+            }
             if e=b.attachKernelTun(tun.Fd(),tunName);e!=nil{
                 t.Fatalf("original M4 TUN scoped FD attach: %v",e)
             }
@@ -254,6 +291,23 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 wireLen[0]<42||wireLen[1]<43||wireLen[0]>1400||wireLen[1]>1400 {
                 t.Fatalf("original M1/M4 raw source/repair failed pn=%v seq=%v len=%v err=%v",
                     pn,seq,wireLen,e)
+            }
+            if mode=="mixed-prefix"{
+                applied,ackErr:=b.fec2ProbeAppliedPolicy(policyState)
+                if ackErr!=nil||applied.AppliedRevision!=6||
+                    applied.AppliedProfile!=FecV2Maximum{
+                    t.Fatalf("new original M1 block/M4 kernel copy failed exact pending Rust apply ack state=%+v err=%v",
+                        applied,ackErr)
+                }
+                if _,e:=b.fec2ProbeAppliedPolicy(FecV2State{
+                    Initialized:true,Client:"protected-owner",
+                    Direction:FecV2S2C,RequestedRevision:5,
+                    Desired:FecV2High,
+                });e==nil{
+                    t.Fatal("old same-epoch Go AUTO applied readback repainted revision6")
+                }
+                t.Logf("M0_GO_FEC2_AUTO_TWO_WINDOWS_NEXT_M1_M4_BLOCK_APPLIED_PASS suite=%d initial=high5 requested=maximum6 applied=maximum6 old_ack=deny",cipher)
+                policyState=applied
             }
             seen:=[2]bool{}
             var captured [2][]byte
