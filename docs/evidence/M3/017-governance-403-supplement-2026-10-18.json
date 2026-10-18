@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "source_sha": "cd36678df9a2eba374e5aa8c852b03175fc9163b",
+  "amends_interpretation_of": "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
+  "purpose": "APPEND_ONLY CLARIFICATION of exact pushed-governance failure stage; source-bound scalar test PASS unaffected",
+  "errors": [
+    {
+      "run_id": 39082909578,
+      "source_sha": "3011431370f1757212df92800c1b56e87ba51d65",
+      "conclusion": "failure",
+      "job_id": 117543410894,
+      "exact": "ROLE_SCOPE_FAILED: GitHub read failed HTTP 403: contents/.governance/registry.json",
+      "interpretation": "role scope remote lookup failed before structure/check/receipt can be classified; initial evidence said structure exit2; this supplemental log is the exact reported failure"
+    },
+    {
+      "run_id": 39083303000,
+      "source_sha": "cd36678df9a2eba374e5aa8c852b03175fc9163b",
+      "conclusion": "failure",
+      "exact": "ROLE_SCOPE_FAILED: GitHub read failed HTTP 403: compare/83bd720368b9be68b3c4c94d7462d20cf4d796db...cd36678df9a2eba374e5aa8c852b03175fc9163b",
+      "interpretation": "GitHub 403 remote compare; cannot infer M3 scope PASS or a code validation failure"
+    }
+  ],
+  "older_independent_failure": {
+    "run_id": 39046275022,
+    "job_id": 117435515352,
+    "conclusion": "failure",
+    "exact": "SCOPE_AUDIT_FAILED: verified cursor lacks reviewed PASS evidence",
+    "still_failed": true
+  },
+  "notice": "Do not rewrite older H30 evidence or promote any governance result to PASS. Preserve 403 logs as remote API blocked/inconclusive scope; source-locked FEC2 default scalar 122 PASS and frozen R0 wire13 PASS remain distinct verified Actions.",
+  "retry_policy": "Do not blindly respawn heavy Actions under API403/capacity; M0 may retry central exact-source scope once read access is working.",
+  "native_gap": "Shared native/isal-safe only main; no native ISA-L FEC2 or paired cost evidence. Product FEC-on not activated."
+}
