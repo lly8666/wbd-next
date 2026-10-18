@@ -41,7 +41,7 @@ impl Profile {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum FecError { Stopped, InvalidWindow, Oversize, Exhausted, ClockRollback }
+pub enum FecError { Stopped, InvalidWindow, Oversize, Exhausted, ClockRollback, StalePolicy }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SourceTicket {
     pub block_id: u64, pub index: u8, pub class: Class,
@@ -130,6 +130,14 @@ pub struct ParityJob {
 impl ParityJob {
     pub fn source(&mut self, index: usize) -> Option<&[u8]> {
         self.sources.get_mut(index).map(Source::bytes)
+    }
+    /// Borrow the one-copy sources for M3 encode_into. Stack-only references.
+    pub fn with_sources<R>(&mut self, encode: impl FnOnce(&[&[u8]]) -> R) -> R {
+        let mut refs: [&[u8]; SOURCE_MAX] = [&[]; SOURCE_MAX];
+        for (dst, source) in refs.iter_mut().zip(self.sources.iter_mut()) {
+            *dst = source.bytes();
+        }
+        encode(&refs[..self.sources.len()])
     }
     pub fn source_count(&self) -> usize { self.sources.len() }
     pub fn charge_bytes(&self) -> usize { self.charge }
@@ -269,6 +277,13 @@ impl Fec2Owner {
         max_frame:usize,now:MonoNs)->Result<(),FecError> {
         self.clock(now)?;
         if max_frame == 0 || max_frame > 65535 { return Err(FecError::Oversize); }
+        if revision.0 < self.revision.0 ||
+            (revision == self.revision &&
+                (mode != self.mode || profile != self.profile ||
+                 max_frame != self.limits.max_frame)) {
+            return Err(FecError::StalePolicy);
+        }
+        if revision == self.revision { return Ok(()); }
         for c in [Class::Small,Class::Medium,Class::Mtu] {
             self.close(c,now,false);
         }
