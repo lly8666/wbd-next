@@ -133,11 +133,12 @@ impl ParityJob {
     }
     /// Borrow the one-copy sources for M3 encode_into. Stack-only references.
     pub fn with_sources<R>(&mut self, encode: impl FnOnce(&[&[u8]]) -> R) -> R {
+        let count = self.sources.len();
         let mut refs: [&[u8]; SOURCE_MAX] = [&[]; SOURCE_MAX];
         for (dst, source) in refs.iter_mut().zip(self.sources.iter_mut()) {
             *dst = source.bytes();
         }
-        encode(&refs[..self.sources.len()])
+        encode(&refs[..count])
     }
     pub fn source_count(&self) -> usize { self.sources.len() }
     pub fn charge_bytes(&self) -> usize { self.charge }
