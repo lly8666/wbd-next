@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "4c19cb7720dc0b639789618208b28fa60d4c19fd",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "qualification_passed": false,
+  "scope_result": "PASS_SCOPED_SINGLE_SOURCE_PARALLEL_4_NATIVE_PLUS_14_OWNER_FEC2_JOBS_NOT_FULL_PRODUCT",
+  "source_commit_history_since_H164": [
+    {
+      "sha": "0d6caab6fa4397a0393b14ed7c9f02d0db9c3661",
+      "result": "FAIL_COMPILE_E0596",
+      "run_id": 39148432055,
+      "attempt": 1
+    },
+    {
+      "sha": "03728f6fbd4938d958144876b8da5aaa97141e8d",
+      "result": "PASS_SCOPED_4_PLUS_14_FIXED_COMPILE"
+    },
+    {
+      "sha": "6cb6f84654c37a724631321c71388e1e08a8fcbb",
+      "result": "PASS_SCOPED_REAL_MIDFLIGHT_STOP"
+    },
+    {
+      "sha": "4c19cb7720dc0b639789618208b28fa60d4c19fd",
+      "result": "PASS_SCOPED_EXACT_SOURCE_4_PLUS_14_AND_NONPROMOTIONAL_GATE_LEDGER"
+    }
+  ],
+  "exact_runs": [
+    {
+      "name": "m0-v4-native-owner-probe",
+      "run_id": 39149242943,
+      "attempt": 1,
+      "source_sha": "4c19cb7720dc0b639789618208b28fa60d4c19fd",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": "4/4",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39149242943",
+      "scope": "TRUE_GO_TLS_RAW_TUN_65K_MIDFLIGHT_MTU_AND_STOP_10MS_150MS_LOSS_DEV_METRIC"
+    },
+    {
+      "name": "m0-fec2-real-tls-owner-grant",
+      "run_id": 39149242868,
+      "attempt": 1,
+      "source_sha": "4c19cb7720dc0b639789618208b28fa60d4c19fd",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": "14/14",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39149242868",
+      "scope": "TEST_ONLY_PROTECTED_ORIGINAL_GO_M1_M2_M3_M4_SCOPED_OWNER_LINUX_ARM_WINDOWS_ISAL_NOT_PRODUCT"
+    }
+  ],
+  "governance": {
+    "source_run_id": 39149242919,
+    "source_result": "PASS",
+    "maintenance_run_id": 39149242841,
+    "maintenance_result": "PASS"
+  },
+  "artifacts": [
+    {
+      "run_id": 39149242943,
+      "attempt": 1,
+      "items": [
+        {
+          "id": 12144741035,
+          "name": "m0-v4-native-probe-build-39149242943-1",
+          "provider_sha256": "15a7f7b67d45932852b0e698f3c94f7fd503ca5d40cc6b5131862fe4131fcba8",
+          "size_bytes": 8538310
+        },
+        {
+          "id": 12144631458,
+          "name": "m0-v4-native-probe-metric-result-39149242943-1",
+          "provider_sha256": "589d2df8457d4988db96d635ec4755a9de47585288ff16f6ffd8c434cc2e4f10",
+          "size_bytes": 2447
+        },
+        {
+          "id": 12143983876,
+          "name": "m0-v4-native-probe-critical-result-39149242943-1",
+          "provider_sha256": "8ec8203c1c847674bab236f5388d8989b49458d6f891dbad2702409430b28cd2",
+          "size_bytes": 8176
+        },
+        {
+          "id": 12143799402,
+          "name": "m0-v4-native-probe-impairment-result-39149242943-1",
+          "provider_sha256": "dcb5d92f4b39ee41705e99fbd332093a78ed7617ccf7e0929b5a23c0967863a5",
+          "size_bytes": 4199
+        }
+      ]
+    },
+    {
+      "run_id": 39149242868,
+      "attempt": 1,
+      "items": [
+        {
+          "id": 12144960792,
+          "name": "m0-native-aarch64-39149242868-1",
+          "provider_sha256": "3bcdbd4c3f76c4f2a58c090613821e09c4e0cafbe7270abdebb869b74a7db807",
+          "size_bytes": 3979
+        },
+        {
+          "id": 12144926283,
+          "name": "m0-normal-normal-off-10mbps-39149242868-1",
+          "provider_sha256": "9bf350be16af8bb3c9b6832b24f62f70206898d461304974cd95293d8a346890",
+          "size_bytes": 947
+        },
+        {
+          "id": 12144911270,
+          "name": "m0-windows-native-39149242868-1",
+          "provider_sha256": "471cd2c59d3214c3bb1409d1ed8bc13b0e2fc280a25a68cbf39b98f6a189a879",
+          "size_bytes": 4335
+        },
+        {
+          "id": 12144845784,
+          "name": "m0-normal-binaries-39149242868-1",
+          "provider_sha256": "0953ae354b249b83eb12dfd7270c0e5b72d2fa69442b9b6cf2547d599d225cea",
+          "size_bytes": 7361733
+        },
+        {
+          "id": 12144706802,
+          "name": "m0-go-control-only-39149242868-1",
+          "provider_sha256": "c8dd00f984cb6db281a74cc27e386501c06774cfde133edada3f5a46093be32c",
+          "size_bytes": 1240
+        },
+        {
+          "id": 12144442825,
+          "name": "m0-real-go-fec2-owner-grant-39149242868-1",
+          "provider_sha256": "d72e646d17708710a0a2bb3f7abf2c9942cfe727c7722453d4bb41bd5c767d4e",
+          "size_bytes": 13925
+        },
+        {
+          "id": 12144437964,
+          "name": "m0-original-link-39149242868-1",
+          "provider_sha256": "491b3b68e4763848dd46dff29b22db27f5d038c9eb22324aa64c613721c81773",
+          "size_bytes": 11977
+        },
+        {
+          "id": 12144407950,
+          "name": "m0-normal-netem-150ms-A-39149242868-1",
+          "provider_sha256": "dc1ce5c41cb9973111913b70e1e0de9957feed1903657af975df1dccc67006d1",
+          "size_bytes": 1321
+        },
+        {
+          "id": 12144253519,
+          "name": "m0-hard-gates-39149242868-1",
+          "provider_sha256": "e63149115f0ebee1cf60884bd0ddf2828f46e3815d6da5713e61fd8facf28dff",
+          "size_bytes": 1084
+        },
+        {
+          "id": 12144188873,
+          "name": "m0-normal-netem-10ms-39149242868-1",
+          "provider_sha256": "2caecc2b8bf51ebf986b1e01b3fbb2b7a7102e0537eab3acc1965b503c4cc3cb",
+          "size_bytes": 1315
+        },
+        {
+          "id": 12144043676,
+          "name": "m0-normal-netem-150ms-B-39149242868-1",
+          "provider_sha256": "f90267f9c4ad1959793ab322167aa10ba816b540b8d6ada114cf032cfbb253b4",
+          "size_bytes": 1323
+        },
+        {
+          "id": 12143784431,
+          "name": "m0-native-x86_64-39149242868-1",
+          "provider_sha256": "32b389c30f4f00d3b5bcb3809e0054d785a37162e073057589021d2b3cac38ec",
+          "size_bytes": 14964
+        },
+        {
+          "id": 12143759818,
+          "name": "m0-actual-isal-39149242868-1",
+          "provider_sha256": "163c6653b4baede8770869e72f5a3cb1257509bac49a6fa01bc0614efde9a0f1",
+          "size_bytes": 7275
+        },
+        {
+          "id": 12143734695,
+          "name": "m0-normal-netem-150ms-C-39149242868-1",
+          "provider_sha256": "54cc02b4dc66c42eddd0aebd3728a9bbd2d677b6eac2d1376d4ad6bbf9feb653",
+          "size_bytes": 1322
+        }
+      ]
+    }
+  ],
+  "hard_gates": {
+    "real_Go_private_TLS_Rust_M1_M3_M4_raw_TUN_65535_51_frame": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "One original Go-credential owner, real Linux kernel TUN/raw IPv4 TCP sendmmsg; exact 65535B original peer AEAD/PN and reassembly, follower no HOL"
+    },
+    "live_65k_two_turn_MTU_route_event_change": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "First exactly 32 genuine M4 kernel-copied frames, actual RTM_NEWLINK TUN MTU-1 while owner paused between turns; zero remaining old-ID frames, loan zero, new independent follower"
+    },
+    "live_65k_two_turn_Stop_Release": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "After exactly 32 real kernel copied frames, true Stop/Release joins original RX/TX workers and retires M4 drivers; no late old-ID tail, 0 loan"
+    },
+    "new_generation_vs_old_frozen_tail": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Existing Go TLS two-generation Stop isolation and current single-generation real kernel Stop PASS; full two live kernel generations with blocked old FD and new peer remains NOT_RUN"
+    },
+    "M4_distinct_frozen_2_to_32_partial_EINTR_EAGAIN_uncertain_stop": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Test-only two original immutable frozen PN/Seq in real Linux sendmmsg PASS, typed 0..32/1122 completion matrix PASS; real native kernel fault injection and distinct 3..32 partial/unknown/Stop NOT_RUN"
+    },
+    "M2_canonical_reverse_authenticated_kind1_FrozenRecord": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Feature-gated original Go TLS kind1 C2S actual raw kernel -> original Rust M3 AEAD/PN -> M2 frozen shadow in 3 ciphers PASS; canonical production receiver/schema and quota transition NOT_WIRED"
+    },
+    "M1_live_FEC2_firstsent_scheduling_recovery": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Original M1 source-first parity and source/repair jobs in feature-gated 3-cipher real kernel probe PASS; normal production continuous scheduler/counters/budget not wired"
+    },
+    "Go_continuous_per_client_direction_AUTO_2s_and_CLI_GUI_effective": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Go pure fixed/auto policy, test-only authentic Rust stage/readback and delayed 2s synthetic mature windows PASS; real production Go CLI/GUI applied config, timer and telemetry not wired"
+    },
+    "Linux_x64_ARM64_Windows_full_original_drivers": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "Linux native x64/ARM64 and Windows MSVC codec/recovery PASS in matrix; full original Go TLS/TUN/raw Windows and ARM drivers NOT_RUN"
+    },
+    "physical_two_endpoint_authentic_FEC2": {
+      "integration": "NOT_RUN",
+      "product": "NOT_RUN",
+      "reason": "No two independent provisioned physical endpoint peers or credentialed production runner"
+    },
+    "240s_business_D10_p99_same_job_VM_ABBA": {
+      "integration": "NOT_RUN",
+      "product": "NOT_RUN",
+      "reason": "Only separate 10s+60s Normal/off developer 10Mbps diagnostics and same-run 400k ISA-L/scalar CODEC ABBA; these are not 240s FEC2 business p99 under identical same-job VM AB/BA"
+    },
+    "history_150ms_regression": {
+      "integration": "PASS",
+      "product": "NOT_RUN",
+      "scope": "10ms and 150ms scenario A/B/C current scoped probes PASS; historical 150ms failures preserved, reliability/product qualification not granted"
+    }
+  },
+  "native_real_log_markers": [
+    "EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=65535 fragments=51 fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
+    "EMBEDDED_REAL_JUMBO_MIDFLIGHT_MTU_ABORT_NO_TAIL_PASS copied_prefix=32 sealed_tail=0 old_id_parts=32 loans=0 original_M4_kernel=1 real_netlink=1 follower=1",
+    "EMBEDDED_REAL_JUMBO_MIDFLIGHT_STOP_NO_TAIL_PASS copied_prefix=32 old_id_parts=32 remaining_sent=0 loans=0 join=1 original_M4_kernel=1",
+    "M0_ORIGINAL_JUMBO_MIDFLIGHT_PREFIX_SCOPE_STOP_MATRIX_PASS tested=65 generation=1 mtu_plus_minus=1 route_revision=1 loans=0 real_kernel=NOT_RUN"
+  ],
+  "retained_historical_reds": [
+    {
+      "source_sha": "0d6caab6fa4397a0393b14ed7c9f02d0db9c3661",
+      "run_id": 39148432055,
+      "attempt": 1,
+      "conclusion": "failure",
+      "failure": "E0596 Rust developer loan-report guard; fixed at 03728f6"
+    },
+    {
+      "source_sha": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "run_id": 39142346744,
+      "attempt": 1,
+      "conclusion": "failure",
+      "failure": "Exploratory original 150ms suite-2 LINK pending/miss, not erased by new runs"
+    }
+  ],
+  "no_product_activation": true,
+  "interpretation": "Only completed same-SOURCE authentic scope tests may be PASS. Test-only repair/feedback and codec ABBA, missing physical endpoints and absent product wiring remain NOT_RUN. No cross-run VM throughput or p99 inference."
+}
