@@ -8,6 +8,9 @@ extern int32_t wbd_m0_embedded_go_bind_fec2_probe_after_verified_tls(
     uint64_t,const unsigned char *,size_t,uint16_t,uint8_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_scope_status(
     uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
+    uint64_t,uint32_t,uint64_t *,uint64_t *,
+    uint32_t *,uint32_t *,uint32_t *,uint32_t *);
 */
 import "C"
 import (
@@ -41,4 +44,27 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeScope(epoch [16]byte) bool {
         C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&epoch[0])),C.size_t(16))
     runtime.KeepAlive(epoch)
     return rc==0
+}
+
+// Explicit EXTRA-test-only bound Go TLS owner M4 raw kernel FEC2 send.
+// Not the real automatic M1 scheduler or RX repair, never a product API.
+func (b *v4EmbeddedNativeBridge) fec2ProbeKernelRawTx(
+    ifindex uint32,
+)([2]uint64,[2]uint32,[2]uint32,error){
+    var pn [2]uint64
+    var seq [2]uint32
+    var length [2]uint32
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return pn,seq,length,errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_fec2_probe_real_raw_tx(
+        C.uint64_t(b.handle),C.uint32_t(ifindex),
+        (*C.uint64_t)(unsafe.Pointer(&pn[0])),
+        (*C.uint64_t)(unsafe.Pointer(&pn[1])),
+        (*C.uint32_t)(unsafe.Pointer(&seq[0])),
+        (*C.uint32_t)(unsafe.Pointer(&seq[1])),
+        (*C.uint32_t)(unsafe.Pointer(&length[0])),
+        (*C.uint32_t)(unsafe.Pointer(&length[1])))
+    if rc!=0 {return pn,seq,length,fmt.Errorf("%w: native M4 FEC2 raw probe %d",errV4Embedded,int(rc))}
+    return pn,seq,length,nil
 }
