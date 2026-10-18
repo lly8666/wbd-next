@@ -242,6 +242,9 @@ fn r1_fec2_f2_sched_profile_k1_to16_all_seven_and_unknown_completion() {
     ];
     for (p,expected) in ps {
         assert_eq!(p.redundancy(16),expected);
+        for k in 1..=16 {
+            assert!((1..=20).contains(&p.redundancy(k)));
+        }
         assert!(p.redundancy(1)>=1 && p.redundancy(1)<=2);
         assert_eq!(p.redundancy(0),0);
     }
@@ -253,5 +256,61 @@ fn r1_fec2_f2_sched_profile_k1_to16_all_seven_and_unknown_completion() {
     o.finish_parity(j,0,false);
     assert_eq!(o.report().classes[0].r_sent,0);
     assert_eq!(o.report().classes[0].unknown_capacity,1);
+    o.stop();a.stop();assert!(a.quiesced());
+}
+
+#[test]
+fn r1_fec2_f2_mem_borrow_all_sources_no_second_copy() {
+    let mut o=owner(FecMode::Normal,PENDING_BYTES_DEFAULT);
+    let mut a=arena(913,8,256);
+    for n in 1..=3 { push(&mut o,&mut a,n,n as u64); }
+    o.on_due(MonoNs(6_000_001)).unwrap();
+    let mut job=o.take_parity(MonoNs(6_000_001)).unwrap().unwrap();
+    assert_eq!((job.k,job.r),(3,3));
+    job.with_sources(|sources| {
+        assert_eq!(sources.iter().map(|s|s.len()).collect::<Vec<_>>(),vec![1,2,3]);
+        assert!(sources.iter().all(|s|s.iter().all(|x|*x==0x5a)));
+    });
+    assert_eq!(job.charge_bytes(),128 + 3 * (256+48));
+    o.finish_parity(job,2,true);
+    assert_eq!(o.report().classes[0].r_sent,2);
+    o.stop();a.stop();assert!(a.quiesced());
+}
+#[test]
+fn r1_fec2_f2_sched_policy_revision_replay_does_not_close_live_block() {
+    let mut o=owner(FecMode::Normal,PENDING_BYTES_DEFAULT);
+    let mut a=arena(914,8,256);
+    let ticket=push(&mut o,&mut a,1,0).ticket.unwrap();
+    assert_eq!(o.change_policy(FecMode::Normal,Profile::Strong,ConfigRevision(0),
+        1536,MonoNs(0)),Err(FecError::StalePolicy));
+    assert_eq!(o.change_policy(FecMode::Normal,Profile::Maximum,ConfigRevision(1),
+        1536,MonoNs(0)),Err(FecError::StalePolicy));
+    assert_eq!(o.change_policy(FecMode::Normal,Profile::Strong,ConfigRevision(1),
+        1536,MonoNs(0)),Ok(()));
+    let next=push(&mut o,&mut a,1,1).ticket.unwrap();
+    assert_eq!((ticket.block_id,next.block_id,next.index),(1,1,1));
+    assert_eq!(o.report().classes[0].closed,0);
+    o.change_policy(FecMode::Off,Profile::Strong,ConfigRevision(2),1536,MonoNs(1)).unwrap();
+    let old=o.take_parity(MonoNs(1)).unwrap().unwrap();
+    assert_eq!((old.k,old.revision),(2,ConfigRevision(1)));
+    o.finish_parity(old,0,false);
+    assert!(push(&mut o,&mut a,1,2).ticket.is_none());
+    assert_eq!(o.next_deadline(),None);
+    o.stop();a.stop();assert!(a.quiesced());
+}
+#[test]
+fn r1_fec2_f2_sched_sparse_rate_minimum_not_long_maximum() {
+    let mut o=owner(FecMode::Normal,PENDING_BYTES_DEFAULT);
+    let mut a=arena(915,8,256);
+    o.trusted_rtt(&[Some(600_000_000)],MonoNs(0)).unwrap();
+    let first=push(&mut o,&mut a,1,0).ticket.unwrap();
+    o.on_due(first.deadline).unwrap();
+    drain(&mut o,first.deadline.0);
+    // At 1pps observed, lambda*C < 1, so new block expires at Tmin=4ms.
+    let t=push(&mut o,&mut a,1,1_000_000_000).ticket.unwrap();
+    assert_eq!(o.deadline_span_ns(Class::Small),4_000_000);
+    assert_eq!(t.deadline,MonoNs(1_000_004_000_000));
+    o.on_due(t.deadline).unwrap();
+    drain(&mut o,t.deadline.0);
     o.stop();a.stop();assert!(a.quiesced());
 }
