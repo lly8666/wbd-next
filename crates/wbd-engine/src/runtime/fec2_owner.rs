@@ -83,7 +83,6 @@ struct Source {
 }
 impl Source {
     fn bytes(&mut self) -> &[u8] { &self.buffer.writable()[self.window.clone()] }
-    fn charge(&mut self) -> usize { self.buffer.writable().len().saturating_add(SOURCE_OVERHEAD) }
 }
 struct Open {
     block_id: u64, first: MonoNs, deadline: MonoNs,
@@ -263,7 +262,7 @@ impl Fec2Owner {
     }
     pub fn next_deadline(&self) -> Option<MonoNs> {
         self.open.iter().filter_map(|o| o.as_ref().map(|b|b.deadline))
-            .chain(self.pending.front().map(|b|b.expire_at))
+            .chain(self.pending.front().map(|b|MonoNs(b.expire_at.0.saturating_add(1))))
             .min_by_key(|t|t.0)
     }
     pub fn change_policy(&mut self,mode:FecMode,profile:Profile,revision:ConfigRevision,
@@ -310,6 +309,32 @@ impl Fec2Owner {
             });
             self.open_bytes+=JOB_OVERHEAD;
         }
+        let charge=buffer.writable().len().saturating_add(SOURCE_OVERHEAD);
+        // Admission pressure must be decided BEFORE publishing the source
+        // index: an unretained index>=k would be invalid on the wire.
+        if !self.can_retain(charge) {
+            self.close(class,now,false);
+            // Avoid a zero-source block. Give this valid systematic its own
+            // unique singleton block ID, with r_sent=0 and capacity UNKNOWN.
+            let vacant = self.open[idx].take().unwrap();
+            self.open_bytes-=vacant.charge;
+            let id=match self.new_id(){Ok(id)=>id,Err(e)=>return Err((e,buffer))};
+            let ticket=SourceTicket{block_id:id,index:0,class,
+                revision:self.revision,deadline:now};
+            let enqueued=send(SourceFirstReady{ticket:Some(ticket),
+                frame:&buffer.writable()[valid]});
+            let st=&mut self.stats[idx];
+            st.accepted+=1;
+            st.pressure_sources+=1;
+            st.unknown_capacity+=1;
+            st.closed+=1;
+            st.partial+=1;
+            st.k_hist[1]+=1;
+            if !enqueued{st.source_not_ready+=1;}
+            self.rate[idx].accepted(now);
+            return Ok(Accepted{ticket:Some(ticket),fec_retained:false,
+                source_enqueued:enqueued,closed_full:false});
+        }
         let open=self.open[idx].as_ref().unwrap();
         let ticket=SourceTicket{
             block_id:open.block_id,index:open.sources.len() as u8,
@@ -320,21 +345,11 @@ impl Fec2Owner {
         self.stats[idx].accepted+=1;
         if !enqueued { self.stats[idx].source_not_ready+=1; }
         self.rate[idx].accepted(now);
-        let charge=buffer.writable().len().saturating_add(SOURCE_OVERHEAD);
-        let mut retained=false;
-        if self.can_retain(charge) {
-            let open=self.open[idx].as_mut().unwrap();
-            open.sources.push(Source{buffer,window:valid});
-            open.charge+=charge;
-            self.open_bytes+=charge;
-            retained=true;
-        } else {
-            self.stats[idx].pressure_sources+=1;
-            self.stats[idx].unknown_capacity+=1;
-            // The source already entered first-ready, never gate fresh
-            // behind the FEC retention limit. Close partial on pressure.
-            self.close(class,now,false);
-        }
+        let open=self.open[idx].as_mut().unwrap();
+        open.sources.push(Source{buffer,window:valid});
+        open.charge+=charge;
+        self.open_bytes+=charge;
+        let retained=true;
         let full=retained && self.open[idx].as_ref()
             .is_some_and(|b|b.sources.len()==SOURCE_MAX);
         if full {self.close(class,now,true);}
@@ -372,3 +387,7 @@ impl Fec2Owner {
             queued_jobs:self.pending.len(),stopped:self.stopping}
     }
 }
+
+#[cfg(test)]
+#[path = "fec2_owner_tests.rs"]
+mod tests;
