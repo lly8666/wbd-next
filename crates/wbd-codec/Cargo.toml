@@ -6,6 +6,8 @@ rust-version.workspace = true
 license.workspace = true
 
 [features]
+# Opt-in code-only FEC2 record probe; never part of default public ABI.
+m0-fec2-record-probe = []
 native-isal = ["dep:wbd-isal-safe", "wbd-isal-safe/native"]
 
 [dependencies]
