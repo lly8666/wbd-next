@@ -644,11 +644,12 @@ fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
         p[12..20].try_into().map_err(|_|INVALID)?));
     let mut bitmap=[0u8;32];
     bitmap.copy_from_slice(&p[20..52]);
+    let (_,verified_epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
     let peer=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
     let verified=ReceiptOpenFacts{
         verified_reverse_lane:peer.route.outbound_lane(),
         verified_reverse_direction:wbd_recovery::WireDirection::ClientToServer,
-        verified_tunnel_epoch:e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?.1,
+        verified_tunnel_epoch:verified_epoch,
         control_record_pn:RecordPn(opened.pn),
     };
     let released=admit_opened_receipt(
