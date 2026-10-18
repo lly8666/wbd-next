@@ -1233,7 +1233,7 @@ mod m0_fec2_owner_integration_tests{
                 max_pending:4,max_pending_bytes:5600,
             },MonoNs(0)).unwrap();
             broker.register(direction,RepairBudgetConfig{
-                outer_mtu:1400,max_repair_bytes_per_epoch:10_000,
+                outer_mtu:1400,max_repair_bytes_per_epoch:65_536,
                 max_pending_reservations:4,max_pending_bytes:5600,
                 io_timeout_ns:10_000_000,
             },MonoNs(0)).unwrap();
