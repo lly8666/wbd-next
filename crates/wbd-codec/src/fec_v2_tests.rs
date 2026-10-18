@@ -230,10 +230,25 @@ fn r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence() {
     for k in [2usize,3,8,16] {
         let f=(0..k).map(|i|vec![(i*7) as u8;128+i]).collect::<Vec<_>>();
         let src=f.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        // The final batch is bounded by the actual profile parity count:
+        // Maximum(k=2) has ceil(2*5/4)=3 rows, not four.
+        let parity_rows=Profile::Maximum.parity_count(k).unwrap();
+        let batch=parity_rows.min(MAX_BATCH_ROWS);
         let (scalar_rows,_) =scalar.encode_owned(400+k as u64,&src,
-            Profile::Maximum,0,4,180,BackendChoice::Scalar).unwrap();
+            Profile::Maximum,0,batch,180,BackendChoice::Scalar).unwrap();
         let (native_rows,used) =native.encode_owned(400+k as u64,&src,
-            Profile::Maximum,0,4,180,BackendChoice::RequireNative).unwrap();
+            Profile::Maximum,0,batch,180,BackendChoice::RequireNative).unwrap();
+        if k==2 {
+            // Invalid rows must remain rejected on BOTH backends; never
+            // weaken the codec boundary to accommodate a bad test fixture.
+            assert_eq!(parity_rows,3);
+            assert_eq!(scalar.encode_owned(400+k as u64,&src,
+                Profile::Maximum,0,4,180,BackendChoice::Scalar),
+                Err(Error::InvalidRow));
+            assert_eq!(native.encode_owned(400+k as u64,&src,
+                Profile::Maximum,0,4,180,BackendChoice::RequireNative),
+                Err(Error::InvalidRow));
+        }
         assert_eq!(used,BackendUsed::NativeIsaL);
         assert_eq!(scalar_rows,native_rows);
         let mut originals=f.iter().map(|x|Some(x.as_slice())).collect::<Vec<_>>();
