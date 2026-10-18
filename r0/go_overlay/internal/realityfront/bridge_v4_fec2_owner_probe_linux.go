@@ -14,6 +14,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
 extern int32_t wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     uint64_t,const unsigned char *,size_t,unsigned char *,size_t,
     uint64_t *,uint8_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
+    uint64_t,uint64_t,uint8_t,uint32_t *,uint64_t *,uint64_t *,uint8_t *);
 */
 import "C"
 import (
@@ -95,4 +97,24 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeActualPeerConsume(
             errV4Embedded,int(rc))
     }
     return uint64(pn),uint8(kind),decoded[:int(actual)],nil
+}
+
+// Actual M2 RX feedback draft only, NOT a cryptographically opened reverse
+// receipt or a real on-wire send. Sent outcome is one of NotSent, Accepted,
+// Uncertain, bound to the very same authenticated session/owner.
+func (b *v4EmbeddedNativeBridge) fec2ProbeActualM2RxFeedback(
+    nowNS uint64, outcome uint8,
+)(uint32,uint64,uint64,uint8,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,0,0,0,errV4Embedded
+    }
+    var seq C.uint32_t
+    var max,base C.uint64_t
+    var bits C.uint8_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
+        C.uint64_t(b.handle),C.uint64_t(nowNS),C.uint8_t(outcome),
+        &seq,&max,&base,&bits)
+    if rc!=0{return 0,0,0,0,
+        fmt.Errorf("%w: authenticated M2 RX draft rc=%d",errV4Embedded,int(rc))}
+    return uint32(seq),uint64(max),uint64(base),uint8(bits),nil
 }
