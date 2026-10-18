@@ -8,7 +8,9 @@ import (
     "fmt"
     "net"
     "os"
+    "os/exec"
     "syscall"
+    "unsafe"
     "time"
 )
 
@@ -73,6 +75,24 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
     }
     iface,err:=net.InterfaceByName("lo")
     if err!=nil||iface.Index<=0{t.Fatalf("real lo: %v",err)}
+    // Original OS TUN owner, not an anonymous pipe/fake app. Root netns
+    // isolated by the same original M4 shell driver as Normal/off.
+    const tunName="wbdfec2t0"
+    tun,e:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if e!=nil{t.Fatal(e)}
+    defer tun.Close()
+    var ifreq [40]byte
+    copy(ifreq[:16],[]byte(tunName))
+    binary.LittleEndian.PutUint16(ifreq[16:18],0x1001)
+    _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,tun.Fd(),0x400454ca,
+        uintptr(unsafe.Pointer(&ifreq[0])))
+    if errno!=0{t.Fatalf("real FEC2 TUN create: %v",errno)}
+    for _,args:=range [][]string{{"addr","add","10.241.20.1/24","dev",tunName},
+        {"link","set","dev",tunName,"up"}}{
+        if out,e:=exec.Command("ip",args...).CombinedOutput();e!=nil{
+            t.Fatalf("real FEC2 TUN config %v: %v %s",args,e,out)
+        }
+    }
     for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
         t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
             store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
@@ -91,6 +111,14 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if !b.fec2ProbeScope(server.Epoch){
                 t.Fatal("source2/repair3 raw send attempted without Go TLS grant")
             }
+            if e=b.attachKernelTun(tun.Fd(),tunName);e!=nil{
+                t.Fatalf("original M4 TUN scoped FD attach: %v",e)
+            }
+            app,e:=net.ListenUDP("udp4",&net.UDPAddr{
+                IP:net.IPv4(10,241,20,1),Port:49231,
+            })
+            if e!=nil{t.Fatal(e)}
+            defer app.Close()
             peer,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
             if e!=nil{t.Fatal(e)}
             defer syscall.Close(peer)
@@ -167,7 +195,20 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }
             gotPN,gotKind,recovered,recvErr=b.fec2ProbeActualPeerConsume(captured[1])
             expectRecovered:=make([]byte,127)
-            for i:=range expectRecovered{expectRecovered[i]=byte((i*7+5)%251)}
+            expectRecovered[0]=0x45
+            expectRecovered[8]=64;expectRecovered[9]=17
+            binary.BigEndian.PutUint16(expectRecovered[2:4],127)
+            binary.BigEndian.PutUint16(expectRecovered[4:6],9102)
+            copy(expectRecovered[12:16],net.IPv4(10,241,20,2).To4())
+            copy(expectRecovered[16:20],net.IPv4(10,241,20,1).To4())
+            binary.BigEndian.PutUint16(expectRecovered[20:22],42001)
+            binary.BigEndian.PutUint16(expectRecovered[22:24],49231)
+            binary.BigEndian.PutUint16(expectRecovered[24:26],107)
+            for i:=28;i<127;i++{
+                expectRecovered[i]=byte(((i-28)*7+5)%251)
+            }
+            binary.BigEndian.PutUint16(expectRecovered[10:12],
+                v4RawCheckSum(expectRecovered[:20]))
             if recvErr!=nil||gotPN!=1||gotKind!=3||
                !bytes.Equal(recovered,expectRecovered){
                 t.Fatalf("M3 RS16 missing source1 actual kernel parity recovered wrong pn=%d kind=%d len=%d err=%v",
@@ -176,6 +217,22 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if _,_,_,recvErr=b.fec2ProbeActualPeerConsume(captured[1]);recvErr==nil{
                 t.Fatal("completed M3 parity replay generated another recovery")
             }
+            // The result came from actual kernel ciphertext -> M3 AEAD /
+            // replay / RS16 and was submitted to ORIGINAL ScopedTunSink.
+            // Independent Linux UDP application receipt is mandatory.
+            if err:=app.SetReadDeadline(time.Now().Add(2*time.Second));err!=nil{
+                t.Fatal(err)
+            }
+            appPayload:=make([]byte,150)
+            n,peerAddr,appErr:=app.ReadFromUDP(appPayload)
+            if appErr!=nil||peerAddr==nil||
+                !peerAddr.IP.Equal(net.IPv4(10,241,20,2))||
+                peerAddr.Port!=42001||n!=99||
+                !bytes.Equal(appPayload[:n],expectRecovered[28:]){
+                t.Fatalf("real original M4 TUN recovery app UDP failed suite=%d n=%d source=%v err=%v",
+                    cipher,n,peerAddr,appErr)
+            }
+            t.Logf("M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=%d recovered_ip=127 udp_payload=%d",cipher,n)
             t.Logf("M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=%d e=1 restored=%d source_pn=%d parity_pn=%d",
                 cipher,len(recovered),pn[0],pn[1])
             t.Logf("M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=%d source_pn=%d repair_pn=%d source_seq=%d repair_seq=%d",
