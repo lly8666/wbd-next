@@ -23,3 +23,11 @@
 7. **P6：可交付与物理验收。** 可运行的目标平台/安装、GUI服务启停、与原控制迁移行为逐项验收，实际 Linux ARM64/Windows codec-native和完整装载链、R6长时/80s风险、真实物理500Mbps另列，不因 Actions 部分绿色关闭资格。
 
 以上7项是**剩余产品验收关口分类**，不是7个要新派工位的任务、更不是严格线性排程。可在基础/合同就绪后合理并行开展小的独立平台/恢复反例；总体阻塞链是 **R0 安全原路径 → M1/M2/M3/M4 实际组合 → 正式双方协议/配置生效 → 持续业务/弱网/三目标/发布资格**。可见的“工位空闲”主要是 M2/M4 模块已交接待 M0，并非“产品开发只剩最后5%”。
+
+## 2026-10-18 · M3 H37 验收与单一 G2 中央 Scope 标准
+
+M3 精确 HEAD `41ef0e29c9029949136fe54169f6628eca01fdfa` 由自身 [Governance39094273613](https://github.com/lly8666/wbd-next/actions/runs/39094273613) attempt1 SUCCESS；M0 中央 [run39095544653](https://github.com/lly8666/wbd-next/actions/runs/39095544653) 精确主线 `37d0e43c5327a5bf2f59fb028bd05398e8eb6d05` 的 **M3 job117581113937 SUCCESS**，同时 M1/M2 也通过。**该run整体FAIL** 是 M4 单独的额外 evidence 结果字符串误判，不能写成整run PASS。CODE8cc 原生 Linux x64 真实 ISA-L F2 11/11、40万/腿 k16r16 L1202、e4 recovery 同VM ABBA CPU 合格、M3 独立两个 ZIP 与十个成员 SHA256 复核已经可作为 **M3 scoped codec 组件接入验收**；不得由此关闭 Linux ARM64/Windows x64 完整 M3 新 V2 codec native、Go Windows loader、实际 FEC-on、p99/物理资格。worker H37 仍为 `partial`，不擅改 M3 branch/cursor/epoch。详见 [M0精确验收回执](../evidence/M0/M0-M3-017-scoped-acceptance-unified-G2-2026-10-18.json)。
+
+新主线中央 `tools/scope_audit.py` 移除了独立的64增量检查与第二套检查点范围判定，直接复用原 M0/G2 `tools/worker_scope_ci.py.audit_worker_history` 的冻结 `G2_BASE`、最多512提交、80条/页、完整 SHA/顺序/页数/每提交完整路径/受审历史合并。中央另外只核实时 main registry、cursor 结构与前后来源祖先，不用 M4 的 MAIN-only context_ref 或 PASS_SCOPED 组件文字另造角色拒绝。旧 `scope-checkpoints.json` 留历史，policy64仍属 standalone `governance.py audit` 有界交接诊断、不再约束中央 Scope。Actions 精确 [governance-maintenance39095981610](https://github.com/lly8666/wbd-next/actions/runs/39095981610) SOURCE `39ea51ea507b00dd88330af7a1c9ea4545ab42f5` SUCCESS（治理回归全部 Actions），中心历史扫描在同一 M3 SOURCE 的先前 `37d0...` 有确切 PASS。
+
+**配额教训**：过渡期多次主线 push 同时触发四条 G2 全历史扫描，短时间用尽 GitHub Actions API（403 remaining=0），部分后续 main Governance/central run 因环境配额 FAIL，非算法或真实scope越权。随后将 `scope-audit.yml` 改为**仅 worker Governance completed 的单一工位精确 SOURCE**运行中央重扫；主线治理工具 push 走既有 maintenance 自动自测，不再无意义地四重重复扫描。不能把 API rate-limited 的控制run改称 PASS，也不因此撤回以前的真实M3 scoped成功收据。下一步仍按原R0-023 的跨轮次大 UDP、MTU中途变化、原driver未知完成/Stop，之后 FEC2 真实 Go认证→Rust owner 集中接线并排缺少的跨平台完整 native 门。
