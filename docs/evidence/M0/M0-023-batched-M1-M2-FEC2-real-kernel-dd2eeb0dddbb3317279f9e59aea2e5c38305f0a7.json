@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
+  "result": "PASS_SCOPED_BATCH_M1_SOURCEFIRST_RS16_M2_RX_FEEDBACK_GO_TLS_KERNEL_FEC2_TUN_UDP_3SUITES",
+  "progress": "partial",
+  "unverified": true,
+  "changes": [
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-engine/src/v4_probe_bridge.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+  ],
+  "batch": {
+    "real_M1_M3_native": "Exact original M1 Fec2Owner and original Arena source slabs; Normal and Game class startup deadline at 8ms close sparse k2; synchronous source0/index0 and source1/index1 first-ready callbacks confirm original bytes before parity; actual ParityJob.with_sources borrows retained M1 slabs into original M3 Rs16 Strong parity row0; one missing source1 mathematically reconstructed; after finish_parity job/charge/loan cleared, Stop rejects; separate 256B resource pressure still publishes systematic source but drops FEC retention/parity. Three suite contexts, 2 sched modes, explicit pressure case per suite. NOT wired as real M1 sender-scheduler of the Go kernel probe.",
+    "owner_AEAD_native": "Original ProtectedScopedOwner after private test authority uses unchanged M1 FrozenRecord, three cipher suites, same PN/Seq for old LINK0/FEC2 SOURCE2/REPAIR3, flags and precommit/wrong epoch/revision/duplicate scope denied; authenticated M3 recover.",
+    "real_Go_Linux": "Original credential-checked pinned Go V4 TLS feature bit2 and validated original Rust generation/epoch; same original M1 Arena/FrozenRecord AEAD/PN sends source2 PN0 and repair3 PN1 via original M4 ScopedRawIpv4Tx real Linux AF_INET raw. Independent Go raw socket captures actual ciphertext, M3 genuine ReplayProtectedLaneRx AEAD/replay parses and RS16 e1 reconstructs deliberately omitted source1 as checksum-correct 127B IPv4 UDP; original M4 ScopedTunSink writes after AEAD and original Linux kernel hands 99B payload to independent Go UDP application, all three suites. This is an extra feature/tag only native opt-in; not product Go UI or external client.",
+    "native_M2_state": "Same per-session original wbd-recovery RxFeedbackState is updated ONLY after original M3 AEAD+unique PN and legal typed kind2/3 payload. M2 feedback draft after both PN0/PN1 has largest=1, one page base0 bits=0x03. M2 refuses before data and before 10ms deadline; at 11ms NotSent leaves dirty, 12ms retry denied, 13ms bogus outcome denied before consuming draft, 13ms Accepted, 14ms premature repeat denied, 15ms Uncertain repeat, 17ms unbounded repeat denied. Reports are bounded drafts only, not actual reverse wire kind1 receipt; no peer ACK, M2 send reservation/driver-prefix/repair budget wired.",
+    "real_kernel_negative_matrix": "Per ChaCha/AES128/AES256: source only must not reach UDP; replay source0 denied; tampered repair denied and must not deliver UDP; legitimate parity recovers one 127B datagram, app sees 99B; repeated parity denied; after original owner Stop/Release both M3 peer ingress and M2 RX feedback must fail; default production shared library contains no feature-only FEC2 permission symbols. Also TLS wrong epoch/permissions and original scope checks retained.",
+    "caution": "No loss injection: missing source1 never transmitted. Sender currently uses M0 one-shot private probe and original M1 Arena/FrozenRecord; the separate M1 Fec2Owner→M3 ParityJob proof is a staged native composition test, not attached to that kernel sender. M2 feedback is a draft with simulation of NotSent/Accepted/Uncertain; no actual authenticated feedback control packet/receipt transmitted or admitted to sender and no real M2 quota settlement. Public FEC2 default OFF, no Go applied CLI/GUI revision, no cross-machine peer, no product qualification."
+  },
+  "actions": {
+    "targeted": {
+      "run_id": 39110293670,
+      "attempt": 1,
+      "source_sha": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
+      "conclusion": "success",
+      "job_id": 117624780613,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39110293670",
+      "rust": "2 passed,0 failed,0 ignored; original M1 source-first sched and original owner source/repair exact M0 integration module",
+      "go": "Original Go real protected TLS suites+native owner lifetime tests PASS; separate isolated root netns FEC2 source2/repair3→independent Go raw→original Rust M3 AEAD/PN/RS16→original M4 TUN→Go UDP all three suites PASS with M2 RX feedback and negative matrix",
+      "artifact": {
+        "id": 12130720199,
+        "name": "m0-real-go-fec2-owner-grant-39110293670-1",
+        "github_sha256": "75bb6b834797bd08473f452f942f98cd041e84258b4f0eddd945716c7eba54a7",
+        "downloaded_zip_independently_rehashed_sha256": "75bb6b834797bd08473f452f942f98cd041e84258b4f0eddd945716c7eba54a7",
+        "receipt_json_sha256": "1eff2092692c1629460bf8d6b9075f4cad6c5f2a05205f86b696766add46c5e8",
+        "rust_log_sha256": "3f868d4f5bbcd47037b0d5cb3fd1256416d929b3f969f21a57ca8551006c9e8e",
+        "go_log_sha256": "97870e8a65ccc5d2fe3c5809fe4c4ca86d1f97449a3aff0d28ad700ea47cdb3b",
+        "kernel_log_sha256": "55931f854bb2f46b21393d9a7934286f111899bb2e91baab6c213015b4cc3725"
+      },
+      "observed_all_three_ciphers": [
+        "M0_REAL_GO_KERNEL_FEC2_M2_AUTH_RX_FEEDBACK_PASS suite=N bitmap=03 largest=1 notsent=1 accepted=1 uncertain=1",
+        "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=N recovered_ip=127 udp_payload=99",
+        "M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite=N no_partial_udp=1 no_tamper_udp=1 stop_revokes=1"
+      ]
+    },
+    "main_governance_S": {
+      "run_id": 39110293609,
+      "head_sha": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
+      "conclusion": "success"
+    },
+    "governance_maintenance_S": {
+      "run_id": 39110293594,
+      "head_sha": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
+      "conclusion": "success"
+    },
+    "prior_selector_mismatch": {
+      "run_id": 39110071356,
+      "source_sha": "652f0ef1625be065db352acfe3ae45d8a9c14647",
+      "conclusion": "failure",
+      "root": "Rust release executed THREE passing tests (two targeted plus incidental existing v4_embedded_go::tests::r1_m0_original_data_return_budget...), Actions parser incorrectly required exactly TWO. All real kernel Go/M2 cases and all three Rust tests actually passed; fixed by exact module filter in source dd2, rechecked 2/2 pass, not a product logic change."
+    },
+    "native_func_prior": {
+      "run_id": 39110045239,
+      "source_sha": "3a51bb7545b42579c5dc5dda0a62f2b38910f2d8",
+      "conclusion": "success",
+      "limitation": "changed-path native-functional selected test groups, NOT a rerun/closure of historical codec240s full group"
+    }
+  },
+  "open": [
+    "Actual live M1 Fec2Owner scheduler not yet wired as Go kernel sender (only original Arena/FrozenRecord in kernel path)",
+    "M2 actual authenticated reverse receipt and sender shadow/repair quota/driver-prefix accounting NOT_RUN",
+    "Go product CLI/GUI applied fixed/auto profile/revision NOT_WIRED; probe Strong/1 is synthetic",
+    "FEC2 public product OFF and feature-only C ABI absent from default release",
+    "Normal/off configured netem150ms suite3 second LINK fragment pending FAIL from 39106157061, NOT requalified",
+    "Original R0-023 max legal ~65KiB UDP cross-turn/MTU/Stop/prefix-uncertain loan safety OPEN",
+    "Old codec240s full suite FAIL, D10/p99 regression OPEN; Windows/ARM64/physical NOT_RUN"
+  ],
+  "next_action": "M0 join actual M1 Fec2Owner source-first/ParityJob with the already-qualified test-only live Go/M4 kernel sender, then use original M2 typed authenticated reverse receipt and same frozen PN in sender shadow/repair state. Validate original app noHOL/loss, 150ms pending second fragment, MTU/Stop/generation, big UDP; no FEC2 product enable without Go applied policy and two-peer/target gates."
+}
