@@ -167,7 +167,8 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
         }
     }
     for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
-        t.Run(fmt.Sprintf("suite-%d",cipher),func(t *testing.T){
+        for _,mode:=range []string{"single","mixed-prefix"}{
+        t.Run(fmt.Sprintf("suite-%d-%s",cipher,mode),func(t *testing.T){
             store,e:=NewV4EpochStore(1);if e!=nil{t.Fatal(e)}
             b:=&v4EmbeddedNativeBridge{}
             c,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,cipher,true)
@@ -392,6 +393,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             // leaving parity PN1 missing. This is NOT a proven packet
             // drop: the separate RS16 test already consumed both records.
             receipt[20]=1
+            if mode=="mixed-prefix"{receipt[20]=0}
             if seqM!=2||maxM!=1||baseM!=0||bitsM!=3{
                 t.Fatal("M2 actual authenticated draft source changed")
             }
@@ -423,22 +425,40 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }
             sendControl(encryptedControl)
             retired,left,e:=b.fec2ProbeReverseRawReceipt()
-            if e!=nil||retired!=1||left!=1{
-                t.Fatalf("selective M2 receipt should retire only PN0 n=%d remaining=%d err=%v",
-                    retired,left,e)
+            expectedRetired,expectedLeft:=uint32(1),uint32(1)
+            if mode=="mixed-prefix"{expectedRetired,expectedLeft=0,2}
+            if e!=nil||retired!=expectedRetired||left!=expectedLeft{
+                t.Fatalf("selective M2 receipt mode=%s n=%d remaining=%d err=%v",
+                    mode,retired,left,e)
             }
-            if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=1{
-                t.Fatal("M2 missing bitmap prematurely retired original parity PN1")
+            if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=expectedLeft{
+                t.Fatalf("M2 missing PN bitmap changed original shadows mode=%s n=%d err=%v",mode,n,e)
             }
             // PTO and original global M2 scoped grant reserve exactly one
             // ORIGINAL FrozenRecord. Actual M4 send_one copies the SAME
             // PN1/Seq/ciphertext: no new seal or fresh TX queue. Driver
             // accepted prefix does not mean peer received anything.
-            repairPN,repairSeq,repairWire,charged,e:=b.fec2ProbeRealFrozenRepair()
-            if e!=nil||repairPN!=pn[1]||repairSeq!=seq[1]||
-                repairWire!=wireLen[1]||charged<=uint64(repairWire){
-                t.Fatalf("same M1 frozen retransmission mismatch PN=%d Seq=%d wire=%d charge=%d err=%v",
-                    repairPN,repairSeq,repairWire,charged,e)
+            expectedRepaired:=1
+            var repairPN uint64
+            var repairSeq,repairWire uint32
+            var charged uint64
+            if mode=="mixed-prefix"{
+                expectedRepaired=0
+                var neverAttempted uint64
+                repairPN,repairSeq,repairWire,charged,neverAttempted,e=
+                    b.fec2ProbeRealFrozenPrefixTwo()
+                if e!=nil||neverAttempted<=uint64(wireLen[1]){
+                    t.Fatalf("positive no-syscall slot must be charged then refunded bytes=%d err=%v",neverAttempted,e)
+                }
+            }else{
+                repairPN,repairSeq,repairWire,charged,e=b.fec2ProbeRealFrozenRepair()
+            }
+            if e!=nil||repairPN!=pn[expectedRepaired]||
+                repairSeq!=seq[expectedRepaired]||
+                repairWire!=wireLen[expectedRepaired]||
+                charged<=uint64(repairWire){
+                t.Fatalf("same M1 frozen repair mode=%s PN=%d Seq=%d wire=%d charge=%d err=%v",
+                    mode,repairPN,repairSeq,repairWire,charged,e)
             }
             repairSeen:=false
             for attempts:=0;attempts<48;attempts++{
@@ -459,7 +479,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 if tcpLen<20||ihl+tcpLen>n{continue}
                 if binary.BigEndian.Uint32(buf[ihl+4:ihl+8])!=repairSeq{continue}
                 if uint32(n-ihl-tcpLen)!=repairWire||
-                    !bytes.Equal(buf[ihl+tcpLen:n],captured[1]){
+                    !bytes.Equal(buf[ihl+tcpLen:n],captured[expectedRepaired]){
                     t.Fatalf("real kernel repair mutated original M3 ciphertext or PN/Seq")
                 }
                 repairSeen=true
@@ -472,8 +492,14 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if _,_,e:=b.fec2ProbeReverseRawReceipt();e==nil{
                 t.Fatal("real reverse replay PN granted another repair")
             }
-            if _,_,_,_,e:=b.fec2ProbeRealFrozenRepair();e==nil{
-                t.Fatal("same evidence produced an immediate second repair")
+            if mode=="mixed-prefix"{
+                if _,_,_,_,_,e:=b.fec2ProbeRealFrozenPrefixTwo();e==nil{
+                    t.Fatal("same evidence produced a second mixed-prefix reservation")
+                }
+            }else{
+                if _,_,_,_,e:=b.fec2ProbeRealFrozenRepair();e==nil{
+                    t.Fatal("same evidence produced an immediate second repair")
+                }
             }
             // Fresh authenticated positive PN1 from the independent Go
             // TLS direction retires only the still retained repaired handle.
@@ -484,9 +510,9 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if e!=nil||positivePN!=1{t.Fatalf("positive control PN err=%v pn=%d",e,positivePN)}
             sendControl(positiveWire)
             retired,left,e=b.fec2ProbeReverseRawReceipt()
-            if e!=nil||retired!=1||left!=0{
-                t.Fatalf("late positive authenticated PN1 missing release n=%d left=%d err=%v",
-                    retired,left,e)
+            if e!=nil||retired!=expectedLeft||left!=0{
+                t.Fatalf("late positive authenticated missing release mode=%s n=%d left=%d err=%v",
+                    mode,retired,left,e)
             }
             if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
                 t.Fatal("late authenticated receipt did not retire exact original frozen handle")
@@ -502,7 +528,11 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
                 t.Fatal("out-of-scope receipt changed original frozen sender state")
             }
-            t.Logf("M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=%d pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1",cipher)
+            if mode=="mixed-prefix"{
+                t.Logf("M0_REAL_GO_M2_MIXED_TWO_FROZEN_DRIVER_PREFIX_PASS suite=%d actual_kernel_first=1 proven_no_syscall_second=1 refunded_unused=1 later_auth_releases_two=1 same_pn_seq_cipher=1",cipher)
+            }else{
+                t.Logf("M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=%d pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1",cipher)
+            }
             t.Logf("M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=%d retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny",cipher)
             // Stop is a hard terminal for both M2 drafts and recovered
             // kernel ciphertext ingress; stale old handle is not valid.
@@ -521,5 +551,6 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }
             t.Logf("M0_REAL_GO_KERNEL_FEC2_NEGATIVE_LIFECYCLE_PASS suite=%d no_partial_udp=1 no_tamper_udp=1 stop_revokes=1",cipher)
         })
+        }
     }
 }
