@@ -16,6 +16,10 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     uint64_t *,uint8_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
     uint64_t,uint64_t,uint8_t,uint32_t *,uint64_t *,uint64_t *,uint8_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
+    uint64_t,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
+    uint64_t,uint32_t *);
 */
 import "C"
 import (
@@ -117,4 +121,30 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeActualM2RxFeedback(
     if rc!=0{return 0,0,0,0,
         fmt.Errorf("%w: authenticated M2 RX draft rc=%d",errV4Embedded,int(rc))}
     return uint32(seq),uint64(max),uint64(base),uint8(bits),nil
+}
+
+// Private Linux FEC2 probe only: ORIGINAL raw C2S M4 capture -> original
+// scoped Rust M3 reverse AEAD/unique PN -> M2 authenticated typed receipt.
+// Driver copy alone never releases the original frozen owner shadow.
+func (b *v4EmbeddedNativeBridge) fec2ProbeReverseRawReceipt()(uint32,uint32,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7 {
+        return 0,0,errV4Embedded
+    }
+    var released,remaining C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
+        C.uint64_t(b.handle),&released,&remaining)
+    if rc!=0{return 0,0,fmt.Errorf("%w: reverse raw authenticated receipt rc=%d",
+        errV4Embedded,int(rc))}
+    return uint32(released),uint32(remaining),nil
+}
+func (b *v4EmbeddedNativeBridge) fec2ProbeShadowOutstanding()(uint32,error){
+    if b.handle==0||!b.committed||b.protectedFeatures!=7{
+        return 0,errV4Embedded
+    }
+    var outstanding C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
+        C.uint64_t(b.handle),&outstanding)
+    if rc!=0{return 0,fmt.Errorf("%w: frozen shadow status rc=%d",
+        errV4Embedded,int(rc))}
+    return uint32(outstanding),nil
 }
