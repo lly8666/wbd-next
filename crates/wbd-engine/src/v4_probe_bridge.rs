@@ -1166,6 +1166,185 @@ mod m0_fec2_owner_integration_tests{
         }
     }
 
+
+    // M0-owned composition: original M1 FrozenRecord handles are retained
+    // until M3 validates reverse kind1 AEAD+unique control PN and M2 checks
+    // independently pinned epoch/lane/PN scope. The peer below is a NATIVE
+    // crypto test fixture, not a Go CLI/GUI or real reverse socket receipt.
+    #[test]
+    fn r1_m0_m2_reverse_authenticated_kind1_frozen_shadow_three_suites(){
+        use crate::memory::FrozenRecord;
+        use wbd_codec::record_crypto::LaneTxCrypto;
+        use wbd_types::buffer_contract::driver_read;
+        use wbd_types::{LaneKey,RecordPn};
+        use wbd_recovery::{
+            BudgetDirection,WireDirection,ReceiptState,ReceiptConfig,
+            GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,
+            ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ReleaseReason,
+            admit_opened_receipt,
+        };
+        for suite_id in [1u8,2,3]{
+            let raw=cold(suite_id);
+            let id=probe_prepare(&raw,&command()).unwrap();
+            assert_eq!(probe_commit(id,0,0,777),OK);
+            let budget=FrameBudget::derive(FrameBudgetInput{
+                connection_mtu:1500,local_packet_mtu:0,
+                ipv4_header_len:20,tcp_header_len:20,peer_mss:Some(1360),
+                record_wire_limit:1400,fec:FecReservation::FixedOff,game:false,
+            }).unwrap();
+            let retained:Vec<FrozenRecord>={
+                let mut state=registry().lock().unwrap();
+                let p=state.slots.get_mut(&id).unwrap();
+                assert!(p.owner.bind_fec2_probe_from_private_go(
+                    7,[2;16],5,1).is_ok());
+                for i in 0..2u8 {
+                    let frame=vec![0x51+i;64];
+                    let body=fec_v2::source_owned(
+                        92,i,&frame,budget.record_payload_mtu).unwrap();
+                    assert!(push(p,&body,2,budget).is_ok());
+                }
+                let batch=p.owner.drain_tx(MonoNs(0),Vec::with_capacity(4))
+                    .unwrap_or_else(|_|panic!("original frozen owner drain"));
+                let ready=p.owner.checked_tx_ready(&batch).unwrap();
+                assert_eq!(ready.len(),2);
+                let originals=ready.iter().map(|d|d.record.clone())
+                    .collect::<Vec<_>>();
+                drop(batch);
+                p.arena.drain_returns();
+                assert_eq!(p.arena.report().loaned,2,
+                    "M2 frozen shadows hold the ORIGINAL M1 loan");
+                originals
+            };
+            assert_eq!((retained[0].metadata().pn.0,
+                        retained[1].metadata().pn.0),(0,1));
+            let lane=retained[0].metadata().lane;
+            assert_eq!(lane,retained[1].metadata().lane);
+            let reverse=LaneKey{slot:lane.slot+1,..lane};
+            let direction=BudgetDirection{
+                tunnel:lane.tunnel,direction:WireDirection::ServerToClient,
+            };
+            let mut shadow=ReceiptState::new(lane,ReceiptConfig{
+                max_shadow_entries:4,pto_ns:30_000_000,
+                reorder_window_ns:2_000_000,
+            }).unwrap();
+            let mut broker=GlobalRepairAllocator::new(GlobalRepairConfig{
+                max_bytes_per_epoch:8192,max_directions:2,
+                max_grant_bytes:1400,max_grant_lifetime_ns:100_000_000,
+                max_pending:4,max_pending_bytes:5600,
+            },MonoNs(0)).unwrap();
+            broker.register(direction,RepairBudgetConfig{
+                outer_mtu:1400,max_repair_bytes_per_epoch:10_000,
+                max_pending_reservations:4,max_pending_bytes:5600,
+                io_timeout_ns:10_000_000,
+            },MonoNs(0)).unwrap();
+            let route=ReceiptRouteScope::checked(
+                lane,reverse,WireDirection::ServerToClient,[2;16],
+                (RecordPn(0),RecordPn(1)),
+                (RecordPn(0),RecordPn(10))
+            ).unwrap();
+            broker.bind_receipt_route(direction,route,MonoNs(0)).unwrap();
+            for frozen in &retained {
+                let read=driver_read(frozen);
+                assert_eq!(read.wire,frozen.bytes());
+                shadow.on_sent(frozen.clone(),MonoNs(0),
+                    MonoNs(150_000_000)).unwrap();
+                broker.on_fresh_accepted(direction,
+                    read.wire.len() as u64,MonoNs(0)).unwrap();
+            }
+            assert_eq!(shadow.outstanding(),2);
+            let parsed=UntrustedColdV4::parse(&raw).unwrap();
+            let (c2s,_s2c)=parsed.internal_direction_keys();
+            let suite=RecordSuite::try_from(suite_id).unwrap();
+            let mut remote_tx=LaneTxCrypto::new_for_suite(c2s,1400,suite)
+                .unwrap();
+            let (c2s,_)=parsed.internal_direction_keys();
+            let mut opener=ReplayProtectedLaneRx::new_for_suite(
+                c2s,1400,suite,ReplayWindowConfig{
+                    pn_per_second:1000,cache_horizon_ms:3000,
+                    fec_horizon_ms:0,rtt_ms:500,metadata_budget_bytes:8192,
+                }).unwrap();
+            // Fixture receipt structure: seq32, largest64, page base64,
+            // bitmap256; wire syntax is NOT claimed as product kind1 schema.
+            let mut payload=[0u8;52];
+            payload[..4].copy_from_slice(&1u32.to_be_bytes());
+            payload[4..12].copy_from_slice(&1u64.to_be_bytes());
+            payload[12..20].copy_from_slice(&0u64.to_be_bytes());
+            payload[20]=0b11;
+            let mut wire=vec![0u8;128];
+            wire[14..66].copy_from_slice(&payload);
+            let (control_pn,len)=remote_tx.seal_in_place(
+                1,&mut wire,payload.len(),0).unwrap();
+            assert_eq!(control_pn,0);
+            wire.truncate(len);
+            let mut tamper=wire.clone();
+            tamper[24]^=0x40;
+            assert!(opener.open_unique_in_place(&mut tamper).is_err(),
+                "tampered receipt cannot mutate shadow or quota");
+            assert_eq!(shadow.outstanding(),2);
+            let opened_record=opener.open_unique_in_place(&mut wire)
+                .expect("independent original M3 reverse AEAD+PN");
+            assert_eq!((opened_record.kind,opened_record.pn),(1,0));
+            assert_eq!(opened_record.payload.len(),52);
+            let report_seq=u32::from_be_bytes(
+                opened_record.payload[..4].try_into().unwrap());
+            let largest=RecordPn(u64::from_be_bytes(
+                opened_record.payload[4..12].try_into().unwrap()));
+            let base=RecordPn(u64::from_be_bytes(
+                opened_record.payload[12..20].try_into().unwrap()));
+            let mut bitmap=[0u8;32];
+            bitmap.copy_from_slice(&opened_record.payload[20..52]);
+            let pages=vec![ReceiptPage{base_pn:base,bitmap}];
+            let verified=ReceiptOpenFacts{
+                verified_reverse_lane:reverse,
+                verified_reverse_direction:WireDirection::ClientToServer,
+                verified_tunnel_epoch:[2;16],
+                control_record_pn:RecordPn(opened_record.pn),
+            };
+            let wrong=ReceiptOpenFacts{
+                verified_tunnel_epoch:[3;16],..verified};
+            assert!(admit_opened_receipt(
+                &mut broker,direction,&mut shadow,route,wrong,largest,
+                report_seq,pages.clone(),MonoNs(10_000_000)).is_err());
+            let wrong_lane=ReceiptOpenFacts{
+                verified_reverse_lane:lane,..verified};
+            assert!(admit_opened_receipt(
+                &mut broker,direction,&mut shadow,route,wrong_lane,largest,
+                report_seq,pages.clone(),MonoNs(10_000_000)).is_err());
+            assert_eq!(shadow.outstanding(),2);
+            let releases=admit_opened_receipt(
+                &mut broker,direction,&mut shadow,route,verified,largest,
+                report_seq,pages,MonoNs(10_000_000)).unwrap();
+            assert_eq!(releases.len(),2);
+            assert!(releases.iter().all(|r|
+                r.reason==ReleaseReason::ReceivedByPeer));
+            for (original,released) in retained.iter().zip(releases.iter()){
+                assert_eq!(original.origin(),released.frozen.origin());
+                assert_eq!(original.metadata(),released.frozen.metadata());
+                assert_eq!(original.bytes().as_ptr(),
+                           released.frozen.bytes().as_ptr(),
+                    "M2 must release SAME ORIGINAL frozen ciphertext");
+            }
+            assert_eq!(shadow.outstanding(),0);
+            // Reverse control replay is rejected by ORIGINAL M3 bitmap.
+            let mut replay=wire.clone();
+            assert!(opener.open_unique_in_place(&mut replay).is_err());
+            assert_eq!(broker.retire_tunnel(lane.tunnel,
+                MonoNs(12_000_000)).unwrap(),1);
+            assert!(admit_opened_receipt(
+                &mut broker,direction,&mut shadow,route,verified,
+                RecordPn(1),2,vec![],MonoNs(13_000_000)).is_err());
+            drop(releases);drop(shadow);drop(retained);
+            {
+                let mut state=registry().lock().unwrap();
+                let p=state.slots.get_mut(&id).unwrap();
+                p.arena.drain_returns();
+                assert_eq!(p.arena.report().loaned,0);
+            }
+            assert_eq!(probe_stop(id),OK);
+            assert_eq!(probe_release(id),OK);
+        }
+    }
+
     #[test]
     fn r1_m0_original_owner_fec2_source_repair_same_pn_staged(){
         // This producer exercises the REAL Rust-owned prepared/committed
