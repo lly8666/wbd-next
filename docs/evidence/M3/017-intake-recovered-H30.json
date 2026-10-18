@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+  "branch": "work/m3-r1-codec",
+  "result": "RECOVERED_H30_SCOPE_AUDIT_FAILURE_NOT_PASS",
+  "handoff": {
+    "control": "main .governance/registry.json reservation_revision=2 assignment_epoch=1 active assigned_task=R5-M3-FEC2-CODEC-NATIVE-017",
+    "worker_head": "093e6f7bbc5f933172d95d5610c7a272d3e66e3a",
+    "checkpoint_sha": "09a181d679d050fe7d07c473feaa54b1a411c4be",
+    "ahead_by": 1,
+    "changed_paths": [
+      ".governance/workstreams/M3/cursor.json"
+    ],
+    "observed": "H30 cursor-only; no missing codec source work",
+    "state": "RECOVERY_REQUIRED until H30 fail logged, afterward scoped handoff clean, audit gap remains OPEN"
+  },
+  "audit": {
+    "run_id": 39046275022,
+    "job_id": 117435515352,
+    "conclusion": "failure",
+    "log": "SCOPE_AUDIT_FAILED: verified cursor lacks reviewed PASS evidence",
+    "artifacts": [],
+    "scope_pass": false,
+    "remediation": "Retain legacy 016 evidence; M0 central checker reviews exact new SOURCE/result and scope evidence; do not rewrite result as PASS"
+  },
+  "legacy_016": {
+    "frozen_code": "422a26127496560c0a52e6745ecc8f354e3f4f18",
+    "result": "scoped native/Go+scalar + ABBA only",
+    "old_go_v1_golden": "PRESERVED",
+    "product_fec_on": "NOT_RUN"
+  },
+  "new017": {
+    "authorized": true,
+    "scope": "crates/wbd-codec only, devlog/evidence/cursor",
+    "implementation": "NOT_YET_TESTED",
+    "real_native_v2": "NOT_RUN",
+    "product": "NOT_RUN"
+  },
+  "recovered": true
+}
