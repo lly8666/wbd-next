@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "caa5f97bb4cfc0969338198578c97cf39bc8ddaf",
+  "progress": "partial",
+  "unverified": true,
+  "production_FEC2": "OFF",
+  "full_product_qualification": "NOT_RUN",
+  "result": "PASS_SCOPED_LIVE_ORIGINAL_GO_2S_AUTO_TO_AUTHENTIC_RUST_APPLIED_ACK_AND_NORMAL_KERNEL",
+  "source_changes": [
+    "New M0-owned Go fec_v2_runtime_controller.go: per authenticated epoch/client/direction scheduler with real 2s ticker, FecV2Step policy, requested != applied, no premature ACK, stale/foreign ACK rejection, Stop joins in-flight stage and prevents late write.",
+    "New deterministic concurrent Go tests TestF2ControlRuntimeAutoCadenceUnknownAndOriginalAppliedAck and TestF2ControlRuntimeStopJoinsBlockedOriginalStage; Go original controller 10 tests all PASS at source b741 and at this source.",
+    "Original Go TLS private-probe bridge actual native Rust applied readback backend using wbd_m0_embedded_go_fec2_probe_applied_policy; if already applied exact startup profile skip duplicate Stage, otherwise epoch-scoped Rust stage. Actual original Go TLS 3 ciphers require runtime Tick(1s/3s), Rust applied revision1 Strong, Stop shuts runtime before Rust session release.",
+    "Ordinary Go V4 owner has inert nil stop callback (default build product FEC2 OFF), no ordinary Rust FEC2 ABI symbol exported, no production hot feature."
+  ],
+  "source_history": [
+    {
+      "sha": "023755abb7a0fbce42c38e2a96633bc8f0b5eb91",
+      "run_id": 39155292919,
+      "go_control": "FAIL_MOCK_ABSENT_ACK_MISREAD"
+    },
+    {
+      "sha": "b7412e605dc4b8391b47a6437c1c9549b76bd892",
+      "run_id": 39155330087,
+      "scope": "PASS_ORIGINAL_GO_CONTROL_14_14"
+    },
+    {
+      "sha": "caa5f97bb4cfc0969338198578c97cf39bc8ddaf",
+      "scope": "LIVE_ORIGINAL_RUST_BACKEND_ORIGINAL_TLS_3_CIPHERS_ALL_NATIVE_PASS"
+    }
+  ],
+  "runs": {
+    "native_probe": {
+      "id": 39155864102,
+      "attempt": 1,
+      "conclusion": "success",
+      "source_sha": "caa5f97bb4cfc0969338198578c97cf39bc8ddaf",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39155864102",
+      "jobs": "4/4 PASS"
+    },
+    "fec2_matrix": {
+      "id": 39155864117,
+      "attempt": 1,
+      "source_sha": "caa5f97bb4cfc0969338198578c97cf39bc8ddaf",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39155864117",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs_total": 14,
+      "jobs_passed": 14,
+      "pending": [],
+      "failures": [],
+      "native_go_tls_three_suite": true
+    }
+  },
+  "artifacts": [
+    {
+      "run_id": 39155864117,
+      "attempt": 1,
+      "items": [
+        {
+          "id": 12147320845,
+          "name": "m0-actual-isal-39155864117-1",
+          "provider_sha256": "sha256:68954450f2be102a73ebce06087639a93db97d805794576dc42b4f7e5cf3f749",
+          "size": 7272
+        },
+        {
+          "id": 12147315339,
+          "name": "m0-native-x86_64-39155864117-1",
+          "provider_sha256": "sha256:2289c9f528c93804dced8f53731b5c56c37a9f604682eed880d0df2eeb41dc3c",
+          "size": 14963
+        },
+        {
+          "id": 12147156947,
+          "name": "m0-original-link-39155864117-1",
+          "provider_sha256": "sha256:b504c37f1ec5250ff795c0a291efc0dc92d1d69b3d30b73173614a0affb868aa",
+          "size": 11983
+        },
+        {
+          "id": 12147142007,
+          "name": "m0-normal-netem-10ms-39155864117-1",
+          "provider_sha256": "sha256:017e9b5b9428b9a55403046ad8292286fdea84d145c00b0a1a24d4fdc488240e",
+          "size": 1312
+        },
+        {
+          "id": 12147137139,
+          "name": "m0-windows-native-39155864117-1",
+          "provider_sha256": "sha256:239825324945d50321c532490cea74da69624bb5ad645e46fee12a0a7ddf7b3e",
+          "size": 4338
+        },
+        {
+          "id": 12147072327,
+          "name": "m0-go-control-only-39155864117-1",
+          "provider_sha256": "sha256:94cffe8809c3e7942e86cc18022cb2a983a2757541d7c95929520c18eff759be",
+          "size": 1398
+        },
+        {
+          "id": 12147047564,
+          "name": "m0-normal-binaries-39155864117-1",
+          "provider_sha256": "sha256:575ac13d9d6ac8b27a6a57410e42259ede4f27e02fea5d3fc7d7de294fdada58",
+          "size": 7361573
+        },
+        {
+          "id": 12147026548,
+          "name": "m0-hard-gates-39155864117-1",
+          "provider_sha256": "sha256:bcffdc92edc880bd3bac748408c1f53d07c95b4ccd64a742c1a805c9265691bd",
+          "size": 1085
+        },
+        {
+          "id": 12147012541,
+          "name": "m0-native-aarch64-39155864117-1",
+          "provider_sha256": "sha256:7789130d8ea7cf992c8af0b928f8af4ae8565ca3d2f88cfae346f15142ed0a20",
+          "size": 3977
+        },
+        {
+          "id": 12146958204,
+          "name": "m0-normal-normal-off-10mbps-39155864117-1",
+          "provider_sha256": "sha256:c6cdb9d91fdd3f1680bbbb2f17862012bd6aa4b29bf0b12bc3d4e5c864d1c6e5",
+          "size": 950
+        },
+        {
+          "id": 12146822123,
+          "name": "m0-real-go-fec2-owner-grant-39155864117-1",
+          "provider_sha256": "sha256:cb1b0b9dc29d84ed99b8727a85c9d5deec74741dcd538a20141a79b0f7655d61",
+          "size": 14109
+        },
+        {
+          "id": 12146268734,
+          "name": "m0-normal-netem-150ms-A-39155864117-1",
+          "provider_sha256": "sha256:258d368da73f9141a50d2f1e93d3f5bd42953957f0bd9a57289bf3602a00144a",
+          "size": 1325
+        },
+        {
+          "id": 12146223937,
+          "name": "m0-normal-netem-150ms-C-39155864117-1",
+          "provider_sha256": "sha256:6137e3e8039593c85bbc3a52fc2696693de52a072d83cfa6bf355c3f45b0e73b",
+          "size": 1320
+        },
+        {
+          "id": 12146104353,
+          "name": "m0-normal-netem-150ms-B-39155864117-1",
+          "provider_sha256": "sha256:b6e98c96b8d450870bc11e81449427748002abf82ed80a16e6bbe84603b4207f",
+          "size": 1324
+        }
+      ]
+    },
+    {
+      "run_id": 39155864102,
+      "attempt": 1,
+      "items": [
+        {
+          "id": 12147216263,
+          "name": "m0-v4-native-probe-build-39155864102-1",
+          "provider_sha256": "sha256:98061a6638ee3b548fe85a5a1427c08f84a4eb1106eb6236c8f5523dbfe89edd",
+          "size": 8538148
+        },
+        {
+          "id": 12146847089,
+          "name": "m0-v4-native-probe-critical-result-39155864102-1",
+          "provider_sha256": "sha256:352cec77143920ab85d107d26c720eb11c0b0d42084cfb9a540ae98ad11cef91",
+          "size": 8166
+        },
+        {
+          "id": 12146643977,
+          "name": "m0-v4-native-probe-metric-result-39155864102-1",
+          "provider_sha256": "sha256:f78b5e7c4a654babc5834a6d2718cee2b7d18980adc88350eac68ba26065e1b9",
+          "size": 2459
+        },
+        {
+          "id": 12146383270,
+          "name": "m0-v4-native-probe-impairment-result-39155864102-1",
+          "provider_sha256": "sha256:c0136d3225a5a79dd31a884f62fe38828a38bd1e5e4b1ca8f4c67964ff157b1e",
+          "size": 4208
+        }
+      ]
+    }
+  ],
+  "new_qualification": {
+    "Go_real_authenticated_epoch_2s_runtime_and_Rust_applied_readback": "PASS_TEST_ONLY_3_CIPHERS",
+    "Stop_precedes_native_owner_release": "PASS_TEST_ONLY",
+    "Unknown_feedback_never_fabricated_loss": "PASS_TEST_ONLY",
+    "original_65k_kernel_and_midflight_MTU_Stop": "PASS_SCOPED_PRIOR_AND_CURRENT",
+    "product_Go_CLI_GUI_continuous_runtime": "NOT_RUN",
+    "real_M1_firstsent_denominator": "NOT_WIRED",
+    "canonical_M2_production_kind1": "NOT_WIRED",
+    "M4_real_native_2_to_32_fault_matrix": "NOT_RUN",
+    "physical_two_peers": "NOT_RUN",
+    "product_240s_D10_p99_same_VM_ABBA": "NOT_RUN",
+    "Windows_ARM_full_TLS_driver": "NOT_RUN"
+  },
+  "historic_reds_retained": [
+    {
+      "run_id": 39155292919,
+      "source_sha": "023755abb7a0fbce42c38e2a96633bc8f0b5eb91",
+      "reason": "Go control fake readback lacked absent receipt handling, fixed in b741"
+    },
+    {
+      "run_id": 39142346744,
+      "source_sha": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "reason": "historical intermittent 150ms old regression not erased"
+    }
+  ],
+  "interpretation": "Only test-only original authenticated Go TLS/Rust receiver applied ACK and scoped original kernel are PASS. Still no product CLI/GUI implementation, authentic loss-denominator-based 2s decision, physical dual endpoint/driver/p99. Leave FEC2 OFF."
+}
