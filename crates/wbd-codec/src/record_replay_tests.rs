@@ -166,3 +166,67 @@ fn r1_replay_metadata_pressure_fails_closed_and_no_invalid_record_advances_floor
     assert_eq!(rx.open_unique_in_place(&mut wire(suite,744,b"old")),Err(UniqueOpenError::Retired));
     assert_eq!(rx.stats().invalid_records,1);
 }
+
+#[test]
+fn r1_m0_fec2_three_suite_real_replay_shared_with_link_no_kind_bypass(){
+    use crate::fec_v2::{source_owned,AUTHENTICATED_FEC2_SOURCE_KIND};
+    let f2=source_owned(4097,0,b"independently authenticated source",1400).unwrap();
+    for suite in [
+        RecordSuite::ChaCha20Poly1305,RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm
+    ] {
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),MAX_WIRE_LEN,suite).unwrap();
+        let mut normal=receiver(suite,cfg(1000,200,0,8192));
+        let mut admitted=receiver(suite,cfg(1000,200,0,8192));
+        let build=|tx:&mut LaneTxCrypto,kind:u8,payload:&[u8]|{
+            let mut out=vec![0u8;FIXED_WIRE_OVERHEAD+payload.len()];
+            out[DATA_OFFSET..DATA_OFFSET+payload.len()].copy_from_slice(payload);
+            let (pn,used)=if kind==0 {
+                tx.seal_in_place(0,&mut out,payload.len(),0).unwrap()
+            } else {
+                tx.seal_fec2_after_admission_in_place(kind,&mut out,payload.len(),0).unwrap()
+            };
+            assert_eq!(used,out.len());
+            (pn,out)
+        };
+        let (p0,ordinary)=build(&mut tx,0,b"old ordinary");
+        let (p1,source)=build(&mut tx,AUTHENTICATED_FEC2_SOURCE_KIND,&f2);
+        let (p2,later)=build(&mut tx,0,b"later ordinary");
+        assert_eq!((p0,p1,p2),(0,1,2));
+        // Original unnegotiated opener sees the real authenticated PN but
+        // DENIES kind2 before entering the replay bitmap or FEC table.
+        assert!(matches!(
+            normal.open_unique_in_place(&mut source.clone()),
+            Err(UniqueOpenError::InvalidRecord(CryptoError::InvalidKind))
+        ));
+        assert_eq!(normal.max_seen(),None);
+        // FEC2 gated path shares ONE original replay window for all kinds.
+        // Out-of-order and small independent ordinary remains permitted.
+        let r=admitted.open_unique_with_fec2_after_admission_in_place(
+            &mut later.clone()).unwrap();
+        assert_eq!((r.pn,r.kind,r.payload),(2,0,b"later ordinary".as_slice()));
+        let r=admitted.open_unique_with_fec2_after_admission_in_place(
+            &mut source.clone()).unwrap();
+        assert_eq!((r.pn,r.kind,r.payload),(1,2,f2.as_slice()));
+        assert_eq!(admitted.max_seen(),Some(2));
+        assert!(matches!(
+            admitted.open_unique_with_fec2_after_admission_in_place(
+                &mut source.clone()
+            ), Err(UniqueOpenError::Duplicate)
+        ));
+        let mut modified=ordinary.clone();
+        let idx=modified.len()-1;
+        modified[idx]^=1;
+        assert!(matches!(
+            admitted.open_unique_with_fec2_after_admission_in_place(&mut modified),
+            Err(UniqueOpenError::InvalidRecord(CryptoError::Authentication))
+        ));
+        // Failed PN0 authentication did NOT use or retire PN0.
+        assert_eq!(admitted.open_unique_with_fec2_after_admission_in_place(
+            &mut ordinary.clone()).unwrap().pn,0);
+        assert!(matches!(
+            admitted.open_unique_in_place(&mut ordinary.clone()),
+            Err(UniqueOpenError::Duplicate)
+        ));
+        assert_eq!(admitted.stats().delivered,3);
+    }
+}
