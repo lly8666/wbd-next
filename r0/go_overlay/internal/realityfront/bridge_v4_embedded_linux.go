@@ -51,6 +51,9 @@ type v4EmbeddedNativeBridge struct {
     fec2ProbePolicySet bool
     fec2ProbeProfile uint8
     fec2ProbeRevision uint64
+    // Optional authenticated control-loop shutdown. Ordinary FEC2-OFF
+    // sessions keep nil; Stop always joins the loop before Rust release.
+    fec2AutoStop func()
 }
 func (b *v4EmbeddedNativeBridge) prepare(
     s V4ColdSessionSnapshot,boundary uint32,peer v4PeerTransport,
@@ -130,6 +133,11 @@ func (b *v4EmbeddedNativeBridge) state()(uint32,error){
 func (b *v4EmbeddedNativeBridge) stopRelease()error{
     if b.stopped && b.handle==0 && !b.committed{return nil} // repeated Stop
     if b.handle==0||!b.committed{return errV4Embedded}
+    if b.fec2AutoStop!=nil{
+        stop:=b.fec2AutoStop
+        b.fec2AutoStop=nil
+        stop()
+    }
     rc:=C.wbd_m0_embedded_go_stop(C.uint64_t(b.handle))
     if rc!=0{return fmt.Errorf("%w: STOP_INCOMPLETE_OR_FAILED=%d",errV4Embedded,int(rc))}
     rc=C.wbd_m0_embedded_go_release(C.uint64_t(b.handle))

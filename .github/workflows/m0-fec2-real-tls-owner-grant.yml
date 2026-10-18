@@ -56,7 +56,7 @@ jobs:
           cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_owner_integration_tests -- --test-threads=1 --nocapture >owner-grant-result/rust.log 2>&1
           cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe --lib m0_fec2_original_m4_m2_batch_0_32_unknown_prefix_never_refunds -- --test-threads=1 --nocapture >>owner-grant-result/rust.log 2>&1
           grep -q "M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes=1122" owner-grant-result/rust.log
-          for file in fec_v2_policy.go fec_v2_policy_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+          for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
@@ -102,6 +102,7 @@ jobs:
                  "TestR0V4EmbeddedNativeProtectedFec2Bit2Scope"]
           assert all(re.search(r"^--- PASS: "+n+r" \(",go,re.M) for n in names)
           assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
+          assert len(re.findall(r"M0_ORIGINAL_GO_TLS_LIVE_AUTO_APPLIED_NO_IDLE_WRITES_PASS cipher=",go))==3
           assert "M0_ORIGINAL_GO_TLS_THREE_OWNER_PROCESS_GLOBAL_M2_CAP_PASS registered=3 two_32KiB=held third=denied stop_unused=reclaimed independent_owner=preserved" in go
           assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
           assert "r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure ... ok" in rust
@@ -157,6 +158,7 @@ jobs:
             "actual_M2_typed_two_slot_mixed_driver_prefix":"TEST_ONLY_M4_KERNEL_SLOT0_TRUE_SEND_ONE_AND_EXPLICIT_NEVER_SYSCALLED_SLOT1_PROVEN_NOT_ATTEMPTED_REFUND; NO_UNKNOWN_COMPLETION_OR_BATCH_SENDMMSG_QUALIFICATION",
             "actual_M4_true_kernel_sendmmsg_M2_scoped_two_FrozenRecord":"TEST_ONLY_SINGLE_ORIGINAL_LINUX_SENDMMSG_TWO_ORIGINAL_FROZEN_PN_SEQ_PRESERVED_ALL_THREE_CIPHERS; FULL_2_TO_32_UNKNOWN_COMPLETIONS_NOT_QUALIFIED",
             "M0_M4_to_M2_native_batch_prefix_0_32":"TEST_ONLY_1122_VALID_TYPED_SLOTS_PLUS_STOP_ROUTE_EINTR_BACKPRESSURE_MTU_INVALID_PREFIX_FAIL_CLOSED_NO_FABRICATED_NOTSENT; KERNEL_PARTIAL_CONDITIONS_NOT_FORCE_INJECTED",
+            "M0_original_Go_live_2s_AUTO_Rust_applied_ACK":"TEST_ONLY_GO_TLS_EXACT_EPOCH_RUST_APPLIED_READBACK_NO_IDLE_REWRITE_STOP_GOROUTINE_JOIN_THREE_CIPHERS_UNKNOWN_FEEDBACK; PRODUCT_CLI_GUI_AND_MATURE_LOSS_NOT_WIRED",
             "M0_original_Go_policy_applied_M1_M3":"TEST_ONLY_GO_FECV2STEP_AUTO_START_HIGH_REV5_AND_FIXED_MILD_REV9_TLS_VERIFIED_RUST_POLICY_READBACK_FECV2APPLY_STALE_ACK_DENIED_REAL_KERNEL_3_CIPHERS; PRODUCT_GUI_CLI_AND_CONTINUOUS_AUTO_NOT_WIRED",
             "M0_Go_auto_2s_pending_Rust_new_block_revision":"TEST_ONLY_ORIGINAL_GO_TWO_SYNTHETIC_MATURE_HIGH_LOSS_WINDOWS_PROPOSE_MAXIMUM_REV6_RUST_PENDING_WITHHOLDS_APPLIED_ACK_UNTIL_REAL_M1_NEW_BLOCK_M4_KERNEL_SOURCE_PARITY_COPIED; 3_CIPHERS; NOT_PRODUCT_TELEMETRY_OR_AUTOMATIC_RUNTIME_TIMER",
             "M0_original_M3_real_auth_RX_quality_policy":"TEST_ONLY_PROTECTED_EXACT_GO_TLS_EPOCH_M3_AEAD_UNIQUE_FIRST_SRC1_REPAIR1_RECOVERED1_SIGNAL_GO_AUTO_UNKNOWN_LACKS_MATURE_DENOMINATOR; 3_CIPHERS; STOP_WRONG_EPOCH_DUPLICATE_REVISION_DENIED; REAL_PRODUCT_MATURE_LOSS_COLLECTOR_NOT_WIRED",

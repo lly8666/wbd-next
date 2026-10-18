@@ -52,8 +52,27 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             if scoped.fec2ProbeScope(bad)||scoped.fec2ProbeScope(s0.Epoch){
                 t.Fatal("wrong or retired epoch inherited private FEC2 permission")
             }
+            // Real original TLS -> Rust applied ACK, on the live Go 2s
+            // AUTO controller, across all three native ciphers.
+            cfg:=f2Config("protected-owner",FecV2S2C,FecV2Auto,FecV2Conservative)
+            auto,autoErr:=scoped.fec2ProbeStartAutoRuntime(cfg)
+            if autoErr!=nil{t.Fatalf("authenticated AUTO start: %v",autoErr)}
+            if e:=auto.Tick(time.Second);e!=nil{t.Fatal(e)}
+            if e:=auto.Tick(3*time.Second);e!=nil{t.Fatal(e)}
+            effective,autoErr:=auto.Snapshot()
+            if autoErr!=nil||!effective.Initialized||
+                effective.AppliedRevision!=1||
+                effective.AppliedProfile!=FecV2Strong||
+                effective.RequestedRevision!=1{
+                t.Fatalf("original Rust applied Go AUTO mismatch: %+v err=%v",effective,autoErr)
+            }
+            t.Logf("M0_ORIGINAL_GO_TLS_LIVE_AUTO_APPLIED_NO_IDLE_WRITES_PASS cipher=%d revision=%d",
+                cipher,effective.AppliedRevision)
             oldHandle:=scoped.handle
             if err:=scoped.stopRelease();err!=nil{t.Fatal(err)}
+            if e:=auto.Tick(5*time.Second);e!=errFecV2RuntimeStopped{
+                t.Fatalf("late AUTO stage after Rust Stop: %v",e)
+            }
             if _,_,_,_,err:=scoped.fec2ProbeObservedQuality(s.Epoch,8*time.Second);err==nil{
                 t.Fatal("retired Go TLS generation leaked original M3 observation")
             }

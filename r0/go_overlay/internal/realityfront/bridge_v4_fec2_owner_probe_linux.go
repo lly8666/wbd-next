@@ -371,6 +371,62 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeObservedQuality(
     return snapshot,uint64(source),uint64(repair),uint64(recovered),nil
 }
 
+// Live original Go 2s scheduler backend: ONLY the credential-verified
+// test-owner may stage/read back its native Rust applied revision.
+type fecV2OriginalRustBackend struct{ b *v4EmbeddedNativeBridge }
+func (p fecV2OriginalRustBackend) valid(epoch [16]byte,client string,d FecV2Direction)bool{
+    b:=p.b
+    return b!=nil&&b.committed&&!b.stopped&&b.handle!=0&&
+        b.protectedFeatures==7&&epoch==b.protectedEpoch&&
+        client=="protected-owner"&&d==FecV2S2C&&b.fec2ProbeScope(epoch)
+}
+func (p fecV2OriginalRustBackend) Observe(
+    epoch [16]byte,client string,d FecV2Direction,now time.Duration,
+)(FecV2Snapshot,error){
+    if !p.valid(epoch,client,d){return FecV2Snapshot{},ErrFecV2Scope}
+    snap,_,_,_,err:=p.b.fec2ProbeObservedQuality(epoch,now)
+    return snap,err
+}
+func (p fecV2OriginalRustBackend) Readback(
+    epoch [16]byte,client string,d FecV2Direction,
+)(FecV2Ack,error){
+    if !p.valid(epoch,client,d){return FecV2Ack{},ErrFecV2Scope}
+    var profile C.uint8_t
+    var revision C.uint64_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_applied_policy(
+        C.uint64_t(p.b.handle),&profile,&revision)
+    if rc!=0{return FecV2Ack{},fmt.Errorf("%w: Rust applied rc=%d",errV4Embedded,int(rc))}
+    return FecV2Ack{Client:client,Direction:d,Revision:uint64(revision),
+        Profile:FecV2Profile(profile),Applied:true},nil
+}
+func (p fecV2OriginalRustBackend) Stage(epoch [16]byte,v FecV2Intent)error{
+    if !p.valid(epoch,v.Client,v.Direction)||v.Mode!=FecV2Auto||
+        v.Revision==0||!v.Profile.Valid(){return ErrFecV2Scope}
+    ack,err:=p.Readback(epoch,v.Client,v.Direction)
+    if err!=nil{return err}
+    if ack.Revision==v.Revision && ack.Profile==v.Profile{return nil}
+    if ack.Revision>=v.Revision{return ErrFecV2Revision}
+    return p.b.fec2ProbeTryStageExact(epoch,uint8(v.Profile),v.Revision)
+}
+// Feature-opt-in only; product FEC2 remains OFF. The goroutine runs only
+// after real Go TLS credential verification. Original Stop joins it before
+// destroying the Rust owner, so no late SetTxFec can race generation reuse.
+func (b *v4EmbeddedNativeBridge) fec2ProbeStartAutoRuntime(
+    cfg FecV2Config,
+)(*fecV2ControlRuntime,error){
+    if !b.committed||b.stopped||b.handle==0||b.fec2AutoStop!=nil||
+        b.protectedFeatures!=7||cfg.Client!="protected-owner"||
+        cfg.Direction!=FecV2S2C||!b.fec2ProbeScope(b.protectedEpoch){
+        return nil,ErrFecV2Scope
+    }
+    r,err:=newFecV2ControlRuntime(
+        cfg,b.protectedEpoch,fecV2OriginalRustBackend{b:b})
+    if err!=nil{return nil,err}
+    if err:=r.Start();err!=nil{return nil,err}
+    b.fec2AutoStop=r.Stop
+    return r,nil
+}
+
 // M0-only fault-injection entry for exact epoch/revision lifecycle checks.
 // No public Go or product API; wrong epochs must be rejected by ORIGINAL
 // protected Rust owner even when a different Go session has a valid token.
