@@ -1275,7 +1275,7 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
         }
     }
     debugStats,debugErr:=b.rustOwnerLoopStats()
-    t.Logf("M0_JUMBO_REAL_NEGATIVE_DIAG fragments=%d expected=%d reassembled=%d follower=%t raw_other=%v tx_before=%d tx_after=%d tx_error=%d stat_error=%v",
+    t.Logf("M0_JUMBO_REAL_KERNEL_OBSERVATION fragments=%d expected=%d reassembled=%d follower=%t raw_other=%v tx_before=%d tx_after=%d tx_error=%d stat_error=%v",
         len(jumboFragments),expectedJumboFrames,len(reassembledJumbo),sawFollower,
         unexpectedSmall,jumboBefore.TxOK,debugStats.TxOK,debugStats.TxErr,debugErr)
     if expectedJumboFrames<48 || len(jumboFragments)!=expectedJumboFrames ||
@@ -1300,6 +1300,63 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_REAL_GO_TLS_RUST_M4_TUN_65535_CROSS_TURN_LINK_NOHOL_PASS ipv4=%d fragments=%d fragment_count_ge_48=1 follower=1 original_AEAD_PN=1 native_M4_sendmmsg=1",
         len(reassembledJumbo),len(jumboFragments))
+    // Live original Linux netlink TUN MTU -1 after the complete jumbo:
+    // the next independent small packet cannot be consumed and dropped
+    // merely because owner route refresh is in its short defer window.
+    // It is NOT a claim that an in-flight jumbo may change fragment stride.
+    mtuEventBefore,healthy,err:=b.rustOwnerRouteEventState()
+    if err!=nil||!healthy{t.Fatalf("before real TUN MTU-1 race event: %d %t %v",mtuEventBefore,healthy,err)}
+    beforeRouteFollower,err:=b.rustOwnerLoopStats()
+    if err!=nil{t.Fatal(err)}
+    if out,e:=exec.Command("ip","link","set","dev",tunName,"mtu","65534").CombinedOutput();e!=nil{
+        t.Fatalf("real TUN -1 MTU link event setup: %v %s",e,out)
+    }
+    racedFollower:=bytes.Repeat([]byte{0x4e},29)
+    if n,e:=app.WriteToUDP(racedFollower,&net.UDPAddr{IP:remoteIP,Port:42001});
+        e!=nil||n!=len(racedFollower){
+        t.Fatalf("TUN MTU -1 follower injection n=%d err=%v",n,e)
+    }
+    afterEventRev:=mtuEventBefore
+    for lim:=time.Now().Add(750*time.Millisecond);time.Now().Before(lim);{
+        now,ok,e:=b.rustOwnerRouteEventState()
+        if e!=nil||!ok{t.Fatalf("live TUN event watcher unhealthy rev=%d err=%v",now,e)}
+        if now>mtuEventBefore{afterEventRev=now;break}
+        time.Sleep(5*time.Millisecond)
+    }
+    if afterEventRev<=mtuEventBefore{
+        t.Fatalf("kernel TUN MTU -1 did not deliver real netlink event rev=%d",mtuEventBefore)
+    }
+    receivedRouteFollower:=false
+    for lim:=time.Now().Add(3*time.Second);time.Now().Before(lim) && !receivedRouteFollower;{
+        pkt:=make([]byte,2048)
+        n,_,recvErr:=syscall.Recvfrom(peer,pkt,0)
+        if recvErr!=nil||n<40||pkt[0]>>4!=4||pkt[9]!=6{continue}
+        ihl:=int(pkt[0]&0xf)*4
+        if ihl<20||ihl+20>n{continue}
+        if !bytes.Equal(pkt[12:16],b.originalFlow.ServerIP[:])||
+            !bytes.Equal(pkt[16:20],b.originalFlow.ClientIP[:])||
+            binary.BigEndian.Uint16(pkt[ihl:ihl+2])!=b.originalFlow.ServerPort||
+            binary.BigEndian.Uint16(pkt[ihl+2:ihl+4])!=b.originalFlow.ClientPort{continue}
+        tcpLen:=int(pkt[ihl+12]>>4)*4
+        if tcpLen<20||ihl+tcpLen>n||pkt[ihl+13]&0x08==0||n-ihl-tcpLen<=31{continue}
+        opened,e:=open.OpenRecord(pkt[ihl+tcpLen:n])
+        if e!=nil||opened.Kind!=tlsrecord.KindLINK{
+            t.Fatalf("MTU -1 netlink follower Go original AEAD: pn=%d err=%v",opened.PN,e)
+        }
+        if len(opened.Payload)==28+len(racedFollower) &&
+            bytes.Equal(opened.Payload[28:],racedFollower){
+            receivedRouteFollower=true
+        }
+    }
+    afterRouteFollower,err:=b.rustOwnerLoopStats()
+    if err!=nil||!receivedRouteFollower||
+        afterRouteFollower.TxOK!=beforeRouteFollower.TxOK+1||
+        afterRouteFollower.TxErr>beforeRouteFollower.TxErr+5{
+        t.Fatalf("real TUN MTU -1 follower HOL/error loop failure delivered=%t before=%+v after=%+v err=%v",
+            receivedRouteFollower,beforeRouteFollower,afterRouteFollower,err)
+    }
+    t.Logf("EMBEDDED_REAL_TUN_MTU_MINUS1_FOLLOWER_NOHOL_PASS before=%d after=%d copied=1 owner_tx_error_growth=%d",
+        mtuEventBefore,afterEventRev,afterRouteFollower.TxErr-beforeRouteFollower.TxErr)
     // Stop while both originally spawned RX/TX workers and both actual
     // kernel drivers remain installed. Join and retire before any generation
     // can reattach; the M4 late-LoanBatch deterministic contract is a

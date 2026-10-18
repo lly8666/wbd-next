@@ -1915,19 +1915,39 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // The caller has ALREADY polled the first TUN packet. Never wait for
     // batch fill: one sparse packet is sealed/submitted immediately.
     // The stack-owned vectors are reserved once per worker (not per DATA).
-    pending.clear();
+    // Retain already-read but NOT admitted original M1 loaned small packets
+    // across a route/coalescing abort. Never silently clear a kernel-consumed
+    // packet on the next owner turn; it still belongs to this generation.
+    let recovered_small=!pending.is_empty();
     ready_records.clear();
     presentations.clear();
     let started=Instant::now();
-    let generation={
-        let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    let observed_event=events.snapshot();
+    let (generation,defer_route)={
+        let e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-        e.generation
+        let defer_route=e.tx_route.as_ref().is_some_and(|cache|
+            wbd_platform::linux_route_events::classify(
+                cache.route_event_revision,observed_event.revision,
+                cache.observed_at.elapsed()
+            )==wbd_platform::linux_route_events::EventRefresh::Defer
+        );
+        (e.generation,defer_route)
     };
+    if defer_route{
+        // The source has not been read from TUN yet, so its first arrival
+        // cannot be lost by the route's 100ms coalescing window. No busy
+        // spin on an already-ready TUN fd or active jumbo plan.
+        if !stop.load(Ordering::Acquire){
+            thread::sleep(Duration::from_millis(1));
+        }
+        return Ok(TxTurnCompletion::default())
+    }
     let mut ingress_error=false;
     let mut observed=0usize;
     if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
+        if recovered_small{break}
         if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
         // A full-size, reusable TUN scratch is necessary: Linux TUN read()
         // truncates a packet irreversibly if called with the 2034B small slab.
