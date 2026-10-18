@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "39ea51ea507b00dd88330af7a1c9ea4545ab42f5",
+  "result": "PASS_SCOPED_G2_STANDARD_UNIFICATION_AND_M3_LINUX_X64_ACCEPTANCE",
+  "artifact_verified": false,
+  "acceptance_date": "2026-10-18",
+  "decision": "ACCEPT_M3_017_LINUX_X64_REAL_ISAL_FEC2_CODE_AND_NATIVE_COST_COMPONENT_FOR_M0_INTEGRATION; DO_NOT_CLOSE_FULL_THREE_TARGET_OR_PRODUCT_GATE",
+  "m3": {
+    "branch": "work/m3-r1-codec",
+    "reviewed_head": "41ef0e29c9029949136fe54169f6628eca01fdfa",
+    "cursor": "H37",
+    "cursor_progress": "partial",
+    "task_id": "R5-M3-FEC2-CODEC-NATIVE-017",
+    "code_source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "worker_governance": {
+      "run_id": 39094273613,
+      "attempt": 1,
+      "head_sha": "41ef0e29c9029949136fe54169f6628eca01fdfa",
+      "conclusion": "success",
+      "job_id": 117577323794,
+      "artifact_id": 12123981745,
+      "artifact_digest": "sha256:ac979bc4d6d5a018b0d725b58666018036c4ec32f348697c7b1842785d3a8e49"
+    },
+    "central_g2": {
+      "run_id": 39095544653,
+      "attempt": 1,
+      "control_sha": "37d0e43c5327a5bf2f59fb028bd05398e8eb6d05",
+      "m3_job_id": 117581113937,
+      "m3_job": "success",
+      "m3_scoped_artifact_id": 12124518024,
+      "m3_scoped_artifact_digest": "sha256:3051a86542da27b0b0ce8b9bb819346c24b22b7b6d97d04a8ebf63e640b54d3e",
+      "run_overall_conclusion": "failure",
+      "overall_failure_reason": "Independent M4 job rejected M4 scoped evidence string in this earlier control snapshot. M3/M1/M2 jobs each succeeded; failure is NOT an M3 failure."
+    },
+    "functional": {
+      "action": 39090941413,
+      "attempt": 1,
+      "build_job": 117567366371,
+      "consume_job": 117567553814,
+      "real_native_isal_fec2": "11/11 PASS Linux x64",
+      "worker_regression": "122 pass, 0 fail, 1 ignored; legacy wire13 record6 link7 separate source-locked Actions",
+      "same_vm_abba": "k16/r16 L1202 e4 recovery 400000 blocks and 400000 e4 decodes per leg, scalar/native/native/scalar, all CPU/wall segment >=1.13s, all parity/recover checksum equal",
+      "encode_scalar_to_native_cpu_ratio_AB": 57.33588,
+      "encode_BA": 57.73846,
+      "recover_AB": 17.58407,
+      "recover_BA": 17.58407,
+      "artifact_zip_independent_rehash_by_M3": true,
+      "source_detail": "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json"
+    }
+  },
+  "scope_unification": {
+    "code_source": "39ea51ea507b00dd88330af7a1c9ea4545ab42f5",
+    "unified_impl": "Central tools/scope_audit.py directly calls main-owned tools/worker_scope_ci.py audit_worker_history: G2_BASE exact, MAX512, PAGE80; full frozen-source pagination cardinality/unique SHA/terminal identity; every original commit paths, parents and reviewed strict historical sync/merge. Central separately validates main registry, cursor syntax, start/end source ancestry only.",
+    "legacy_retirement": "Central no longer consumes .governance/policy.json max_delta_commits64 nor .governance/scope-checkpoints.json, which remain historical/standalone cursor handoff diagnostics. Cross-branch cursor context/evidence qualification no longer blocks path/role Scope.",
+    "workflow": "Central triggers only from completed worker Governance to audit one exact worker SHA, never replays all four histories per main push. Main changes verified through governance-maintenance regression.",
+    "test": {
+      "run_id": 39095981610,
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 117582392949,
+      "artifact_id": 12125115244,
+      "artifact_digest": "sha256:fb9ccffe60c1e7d04d86d3992075ea80b7aab60e835bd9869c6953e235853554",
+      "test_scope": "Full local governance maintenance suite in Actions on exact SOURCE; path scanner pagination tests 100/180/512, >512, missing/duplicate/reordered pages and new central adapter contract are included."
+    },
+    "current_live_central_full_rerun": "NOT_RUN; after repeated push all-role scans exhausted GitHub Actions API remaining=0, historical red CI emitted HTTP403. The M3 exact G2 source-locked job PASS above remains valid only at its audited snapshot.",
+    "historical_failures_kept": [
+      "39089044776 old v2 central 64 delta exceeded",
+      "39094473898 old central M3 H37 64 delta exceeded",
+      "39095544653 earlier M4 scoped evidence result exact-PASS false rejection",
+      "39095706731 M4 worker-main context 404",
+      "39095855291/39095981577 later API quota HTTP403; do not claim code failure"
+    ]
+  },
+  "open": {
+    "linux_arm64_full_M3_fec2_native": "NOT_RUN",
+    "windows_x64_full_M3_fec2_native": "NOT_RUN",
+    "arm64_real_NEON_instruction_dispatch": "NOT_PROVEN",
+    "windows_real_Go_loader": "NOT_RUN",
+    "real_original_Go_to_Rust_FEC2_capability_KDF_and_applied_policy": "NOT_RUN",
+    "multi_client_Game_2_4_recovery_auto_p99": "NOT_RUN",
+    "product_fec2": "OFF",
+    "original_m0_023_large_udp_cross_turn_stop_mtu": "OPEN",
+    "legacy_d10_and_sparse_p99": "OPEN"
+  },
+  "rollback": "No FEC2 capability, kind2/3, production config, real Go KDF or original owner enabled. M3 code checked but not yet staged into main Rust product; no worker registry/cursor changed by M0."
+}
