@@ -652,10 +652,17 @@ fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
         verified_tunnel_epoch:verified_epoch,
         control_record_pn:RecordPn(opened.pn),
     };
+    // Deterministic opt-in probe clock: before first PTO at 12ms, after
+    // ACTUAL M4 repair / M2 grant at 31ms at 32ms. Never call the global
+    // process quota owner with a synthetic backwards time; production must
+    // use one real monotonic owner clock rather than this one-shot probe.
+    let now=if peer.broker.snapshot().charged_repairs!=0{
+        MonoNs(32_000_000)
+    }else{MonoNs(12_000_000)};
     let released=admit_opened_receipt(
         &mut peer.broker,peer.direction,&mut peer.shadow,peer.route,
         verified,largest,report_seq,
-        vec![ReceiptPage{base_pn:base,bitmap}],MonoNs(12_000_000)
+        vec![ReceiptPage{base_pn:base,bitmap}],now
     ).map_err(|_|INVALID)?;
     let count=released.len() as u32;
     let left=peer.shadow.outstanding() as u32;
