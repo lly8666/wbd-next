@@ -83,8 +83,8 @@ jobs:
             grep -q "M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=$suite pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_M2_MIXED_TWO_FROZEN_DRIVER_PREFIX_PASS suite=$suite actual_kernel_first=1 proven_no_syscall_second=1 refunded_unused=1 later_auth_releases_two=1 same_pn_seq_cipher=1" owner-grant-result/real-kernel.log
             grep -q "M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite=$suite real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" owner-grant-result/real-kernel.log
-            grep -q "M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=mixed-prefix profile=4 revision=5 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
-            grep -q "M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=kernel-multimsg profile=1 revision=9 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=mixed-prefix policy=auto profile=4 revision=5 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
+            grep -q "M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite=$suite mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" owner-grant-result/real-kernel.log
           done
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
@@ -114,8 +114,8 @@ jobs:
               assert f"M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite={suite} pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1" in kernel
               assert f"M0_REAL_GO_M2_MIXED_TWO_FROZEN_DRIVER_PREFIX_PASS suite={suite} actual_kernel_first=1 proven_no_syscall_second=1 refunded_unused=1 later_auth_releases_two=1 same_pn_seq_cipher=1" in kernel
               assert f"M0_REAL_GO_M4_NATIVE_SENDMMSG_TWO_ORIGINAL_FROZEN_M2_PREFIX_PASS suite={suite} real_kernel_messages=2 same_pn_seq_cipher=2 original_m2_reserved=2 charged=2 late_auth_releases=2 no_reseal=1" in kernel
-              assert f"M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=mixed-prefix profile=4 revision=5 applied=1 stale_ack=deny" in kernel
-              assert f"M0_REAL_GO_FEC2_FIXED_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=kernel-multimsg profile=1 revision=9 applied=1 stale_ack=deny" in kernel
+              assert f"M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=mixed-prefix policy=auto profile=4 revision=5 applied=1 stale_ack=deny" in kernel
+              assert f"M0_REAL_GO_FEC2_POLICY_APPLIED_ORIGINAL_RUST_OWNER_PASS suite={suite} mode=kernel-multimsg policy=fixed profile=1 revision=9 applied=1 stale_ack=deny" in kernel
           assert re.search(r"test result: ok\. 3 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
@@ -147,7 +147,7 @@ jobs:
             "actual_M2_typed_two_slot_mixed_driver_prefix":"TEST_ONLY_M4_KERNEL_SLOT0_TRUE_SEND_ONE_AND_EXPLICIT_NEVER_SYSCALLED_SLOT1_PROVEN_NOT_ATTEMPTED_REFUND; NO_UNKNOWN_COMPLETION_OR_BATCH_SENDMMSG_QUALIFICATION",
             "actual_M4_true_kernel_sendmmsg_M2_scoped_two_FrozenRecord":"TEST_ONLY_SINGLE_ORIGINAL_LINUX_SENDMMSG_TWO_ORIGINAL_FROZEN_PN_SEQ_PRESERVED_ALL_THREE_CIPHERS; FULL_2_TO_32_UNKNOWN_COMPLETIONS_NOT_QUALIFIED",
             "M0_M4_to_M2_native_batch_prefix_0_32":"TEST_ONLY_1122_VALID_TYPED_SLOTS_PLUS_STOP_ROUTE_EINTR_BACKPRESSURE_MTU_INVALID_PREFIX_FAIL_CLOSED_NO_FABRICATED_NOTSENT; KERNEL_PARTIAL_CONDITIONS_NOT_FORCE_INJECTED",
-            "M0_original_Go_fixed_policy_applied_M1_M3":"TEST_ONLY_GO_FECV2STEP_FIXED_HIGH_REV5_AND_MILD_REV9_TLS_VERIFIED_RUST_POLICY_READBACK_FECV2APPLY_STALE_ACK_DENIED_REAL_KERNEL_3_CIPHERS; PRODUCT_GUI_CLI_AND_CONTINUOUS_AUTO_NOT_WIRED",
+            "M0_original_Go_policy_applied_M1_M3":"TEST_ONLY_GO_FECV2STEP_AUTO_START_HIGH_REV5_AND_FIXED_MILD_REV9_TLS_VERIFIED_RUST_POLICY_READBACK_FECV2APPLY_STALE_ACK_DENIED_REAL_KERNEL_3_CIPHERS; PRODUCT_GUI_CLI_AND_CONTINUOUS_AUTO_NOT_WIRED",
             "M2_native_frozen_shadow_reverse_kind1_AEAD_PN":"SCOPED_TEST_ONLY_ORIGINAL_FROZEN_PLUS_THREE_SUITES_NO_LIVE_REVERSE_WIRE",
             "negative_matrix":"3_CIPHERS_X_NO_PREMATURE_APP_NO_TAMPER_APP_REPLAY_DENIED_INVALID_STATUS_STOP_REVOKES",
             "real_FEC2_product_RX_and_M2_receipt":"NOT_RUN","product_FEC2":"OFF",
