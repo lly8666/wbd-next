@@ -365,9 +365,14 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                     pn2,seq2,bridge.txBoundary,e)
             }
             var cipherRecord []byte
-            for attempt:=0;attempt<16;attempt++{
+            rawDeadline:=time.Now().Add(3*time.Second)
+            for attempt:=0;attempt<48&&time.Now().Before(rawDeadline);attempt++{
                 buf:=make([]byte,2048)
                 count,_,err:=syscall.Recvfrom(rawPeer,buf,0)
+                // Real Linux netem may interrupt a blocking raw read. EINTR
+                // and per-read SO_RCVTIMEO are NOT proof of packet loss;
+                // keep one absolute bound and still require exact PN/seq.
+                if err==syscall.EINTR||err==syscall.EAGAIN {continue}
                 if err!=nil{t.Fatalf("real Linux Go raw peer receive: %v",err)}
                 if count<40||buf[0]>>4!=4||buf[9]!=6{continue}
                 ihl:=int(buf[0]&0xf)*4
@@ -416,9 +421,11 @@ func TestR0V4EmbeddedRealM4RawToTun(t *testing.T){
                     pn3,seq3,seq2,len(cipherRecord),err)
             }
             var record2 []byte
-            for attempt:=0;attempt<16;attempt++{
+            secondDeadline:=time.Now().Add(3*time.Second)
+            for attempt:=0;attempt<48&&time.Now().Before(secondDeadline);attempt++{
                 buf:=make([]byte,2048)
                 count,_,recvErr:=syscall.Recvfrom(rawPeer,buf,0)
+                if recvErr==syscall.EINTR||recvErr==syscall.EAGAIN {continue}
                 if recvErr!=nil{t.Fatalf("second Linux raw peer receive: %v",recvErr)}
                 if count<40||buf[0]>>4!=4||buf[9]!=6{continue}
                 ihl:=int(buf[0]&0xf)*4
