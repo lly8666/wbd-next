@@ -2503,7 +2503,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_debug_pause_jumbo(
 )->i32{
     if paused.is_null()||loaned.is_null()||enabled>1{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
-    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
     e.counters.debug_pause_jumbo.store(enabled!=0,Ordering::Release);
     unsafe{
