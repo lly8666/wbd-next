@@ -15,6 +15,8 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go"
+      - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go"
       - "crates/wbd-engine/Cargo.toml"
   workflow_dispatch:
 permissions: {contents: read}
@@ -200,7 +202,7 @@ jobs:
           set -euo pipefail
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           mkdir -p go-control-result
-          for file in fec_v2_policy.go fec_v2_policy_test.go; do
+          for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go; do
             test ! -e "legacy/internal/realityfront/$file"
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
@@ -210,17 +212,19 @@ jobs:
           root=pathlib.Path("go-control-result")
           raw=(root/"go-policy.log").read_text()
           passed=re.findall(r"^--- PASS: TestF2Control[^\s]*",raw,re.M)
-          assert len(passed)==8,(len(passed),passed)
+          assert len(passed)==10,(len(passed),passed)
           assert not re.search(r"^--- FAIL:",raw,re.M)
           assert re.search(r"^PASS$",raw,re.M)
           digest=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           receipt={"result":"PASS_ORIGINAL_GO_INDEPENDENT_CONTROL_ONLY",
             "source_sha":os.environ["GITHUB_SHA"],
             "real_original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
-            "actual_original_go_control_tests":8,
+            "actual_original_go_control_tests":10,
             "input_sha256":{p:digest(p) for p in [
               "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
-              "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go"]},
+              "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+              "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
+              "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go"]},
             "go_log_sha256":digest(root/"go-policy.log")}
           (root/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
           print(json.dumps(receipt,indent=2))
