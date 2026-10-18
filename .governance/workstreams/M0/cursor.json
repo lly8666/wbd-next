@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 146,
-  "checkpoint_sha": "a2a6ce086d4e90bed6679d6a4c9f6fa4f6cb78c7",
+  "sequence": 147,
+  "checkpoint_sha": "1eede657a8d2afbc8723deab35e9bb98cdebebff",
   "progress": "partial",
   "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "R0-023 still partial: existing exact SOURCE dd2 scoped M1 source-first+M3/real Go TLS→Rust M4 kernel raw/TUN/99B UDP+M2 RX feedback batch PASS. This H146 only consolidates onboarding and workstream handoff documentation; product FEC2 OFF and all older regressions OPEN.",
-  "why_now": "User explicitly asked to close interrupted task and streamline ALL role handoff documents for a completely new agent, with old archives preserved. Confirmed H145 already closes source dd2 Action39110293670 SUCCESS and main governance39110760761 SUCCESS. Replaced stale date-stamped root onboarding and M0-M4 prompts with stable role boundaries, created one as-of status index and six verbatim historical prompt copies; registry permissions, branch cursors, code and product qualification unchanged. S commit a2a6ce0 governance39112549292 and maintenance39112549258 SUCCESS.",
+  "current_task": "R0-023 partial: original Go TLS granted test-only kernel sender NOW runs original M1 Fec2Owner Normal source-first/ParityJob→M3 RS16 row0→original Rust AEAD/PN/FrozenRecord→M4 raw/TUN→independent UDP 99B for three suites. M2 only authenticated-data RxFeedback draft; production still OFF.",
+  "why_now": "M0 resumed H146 at HEAD 4ad1af2, verified one cursor-only commit since checkpoint a2a6ce0 and Governance39112716668 PASS; no pending runs. Main source S62c0428 first compile E0502 FAIL39114049974, corrected source S395a711 native scoped kernel39114076177 PASS and selected native-functional39114076171 PASS, Governance39114076173 PASS; original Normal/off configured150ms suite3 remains real FAIL39114076155. Exact artifact SHA independently rehashed and receipts preserved in S1eede657.",
   "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "M0 resume original R0-023 integration: wire actual M1 live Fec2Owner scheduler into real Go TLS→Rust M4 kernel sender, then M2 authenticated reverse kind1 receipt and sender frozen PN shadow/quota/driver prefix; real Go applied CLI/GUI fixed/auto revision. Separate full Normal/off configured150ms suite3 second LINK pending FAIL, legal ~65KiB cross-turn/MTU/Stop/prefix uncertain, codec240s/D10/p99, full native targets/physical. No production FEC2 enable without hard gates. For any new agent start at START_HERE.md → docs/handoff/README.md → latest registry/role-branch cursor; historical long prompts in docs/history/handoff/2026-10-18-pre-slim/.",
+  "next_action": "Continue assigned R0-023 without changing roles: integrate actual M2 typed authenticated reverse kind1 receipt after original M3 AEAD unique PN into sender frozen shadow/repair quota/driver prefix-uncertain path, then real Go applied fixed/auto CLI/GUI per-direction revision; cover generation/Stop/MTU±1/loan/large ~65KiB cross-turn/LINK configured150ms suite3 noHOL. Existing M1 kernel send is test-only deterministic one-shot, not continuous production scheduler. Historical codec240s/D10/p99, Windows/ARM64/physical gates remain OPEN/NOT_RUN; FEC2 product OFF.",
   "unverified": true,
-  "last_tested_source": "dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7",
+  "last_tested_source": "395a711ff28dfda9b89b772fdf296fc0f4f9f449",
   "evidence_refs": [
-    "docs/evidence/M0/M0-023-batched-M1-M2-FEC2-real-kernel-dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7.json"
+    "docs/evidence/M0/M0-023-M1-test-only-kernel-scheduler-395a711ff28dfda9b89b772fdf296fc0f4f9f449.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/M0-023-batched-M1-M2-FEC2-real-kernel-dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7.json",
     "docs/handoff/README.md",
     "docs/history/INDEX.md",
-    "docs/devlog/M0/M0-023-resume-integration-2026-10-17.md",
     "docs/decisions/M0-fec-v2-contract-freeze-2026-10-18.md",
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/GOVERNANCE.md",
     "r0/qualification-manifest.json"
   ],
   "open_requests": [],
-  "partial_summary": "H146 DOCUMENTATION-ONLY, no new product code/test SOURCE: existing dd2eeb0dddbb3317279f9e59aea2e5c38305f0a7 Action39110293670 2 scoped native Rust PASS + original Go real 3-cipher TLS/M1 M3 AEAD PN RS16/M4 Linux raw+TUN actual 99B UDP app/M2 authenticated RX draft timing/anti-replay-tamper/Stop PASS, exact artifact 12130720199 sha256 75bb6b834797bd08473f452f942f98cd041e84258b4f0eddd945716c7eba54a7; not formal M1 live kernel scheduler, not M2 reverse authenticated sender receipt, not applied Go config or product. Earlier 652 CI selector false FAIL (three passed vs expected two) was corrected in dd2, H145 already governed SUCCESS. User interruption request fulfilled via S a2a6ce086d4e90bed6679d6a4c9f6fa4f6cb78c7: root START_HERE and M0-M4 stable prompts simplified, as-of five-role snapshot docs/handoff/README.md, 6 original documents archived verbatim under docs/history/handoff/2026-10-18-pre-slim, docs/history/INDEX and project hot_read_set updated. S Governance39112549292 and maintenance39112549258 SUCCESS. No changes to worker branch cursors or main assignments. FEC2 OFF; Normal/off150ms, 65KiB Stop/MTU, codec240s D10 p99 native targets/physical OPEN."
+  "partial_summary": "H147 M0 023 scoped/test-only real M1 kernel sender integrated on exact SOURCE395a711, Action39114076177 attempt1 PASS 2 Rust native + original Go 3 cipher TLS/k2 source-first M3 RS16/e1 M4 raw/TUN 127B IPv4/99B app, M2 AEAD-unique RX draft only; artifact12131527951 independently SHA256 aa50373a9d85d5a08033044470ef870bc884d6dfe0074a49b8faf895ff3c9149. Selected native-functional39114076171 and crossABI39114076223 PASS bounded; first S62c0428 E0502 FAIL39114049974 artifact12131995737 retained; SAME SOURCE395a711 Normal/off150ms suite3 second LINK FAIL39114076155 artifact12132100712 retained. New evidence S1eede657, cursor-only H147. No M2 reverse receipt, applied CLI/GUI, actual continuous scheduler, ~65KiB cross-turn, MTU/Stop/loan/prefix, physical/native/old D10/p99 product qualification. OFF."
 }
