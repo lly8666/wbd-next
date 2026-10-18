@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "source_sha": "708ecd311770c469fca7a155435cd10cab47db47",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "product_qualified": false,
+  "previous_time_scoped_S": "07d837bb3e627b5a149635a0536a4baa65931e9f",
+  "final_run": {
+    "id": 39176419445,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "source_sha": "708ecd311770c469fca7a155435cd10cab47db47",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39176419445",
+    "jobs_total": 14,
+    "jobs_passed": 14,
+    "jobs_failed": 0,
+    "jobs": [
+      {
+        "id": 117819923904,
+        "name": "m0-native-architecture (ubuntu-24.04-arm, aarch64-unknown-linux-gnu, aarch64)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924061,
+        "name": "go-control-policy",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924065,
+        "name": "m0-windows-native",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924071,
+        "name": "m0-native-architecture (ubuntu-24.04, x86_64-unknown-linux-gnu, x86_64)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924090,
+        "name": "m0-actual-isal",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924092,
+        "name": "m0-normal-build",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924099,
+        "name": "native",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924102,
+        "name": "m0-original-link-fec",
+        "conclusion": "success"
+      },
+      {
+        "id": 117819924124,
+        "name": "m0-unqualified-gate-ledger",
+        "conclusion": "success"
+      },
+      {
+        "id": 117820226225,
+        "name": "m0-normal-network (netem-150ms-A)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117820226283,
+        "name": "m0-normal-network (netem-150ms-B)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117820226285,
+        "name": "m0-normal-network (netem-150ms-C)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117820226321,
+        "name": "m0-normal-network (netem-10ms)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117820226325,
+        "name": "m0-normal-network (normal-off-10mbps)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "final_artifacts": [
+    {
+      "id": 12154865565,
+      "name": "m0-original-link-39176419445-1",
+      "provider_sha256": "sha256:374f0606c85c7c39c2609ca8f0cae6386aaff43ff766568d9224aa38f886d3e8"
+    },
+    {
+      "id": 12154786450,
+      "name": "m0-normal-normal-off-10mbps-39176419445-1",
+      "provider_sha256": "sha256:b48d05335608caae08214de666a27f09337580ccf402a59192caf70ce607333f"
+    },
+    {
+      "id": 12154706884,
+      "name": "m0-native-x86_64-39176419445-1",
+      "provider_sha256": "sha256:52da0c0231a8c8e0b459dd3f1482d302079fe344002e575a5921c9b4b8752e9a"
+    },
+    {
+      "id": 12154566613,
+      "name": "m0-real-go-fec2-owner-grant-39176419445-1",
+      "provider_sha256": "sha256:49cba1ea4ae2c7a3cea0d8adf35b3cdd62d4fc0ac369684d0303347d87377d27"
+    },
+    {
+      "id": 12154503047,
+      "name": "m0-normal-netem-150ms-A-39176419445-1",
+      "provider_sha256": "sha256:efdd5c3a57fe68eec01499a10c9b8c6766228310bd5982002c3f0c1da4ce0444"
+    },
+    {
+      "id": 12154468207,
+      "name": "m0-normal-netem-150ms-B-39176419445-1",
+      "provider_sha256": "sha256:a2e002a4a7f14f0564c73ba46916dcf3923e19f9939ba61cf26f33c2ee30f539"
+    },
+    {
+      "id": 12154362261,
+      "name": "m0-normal-netem-150ms-C-39176419445-1",
+      "provider_sha256": "sha256:33c5f4a4955147c3c5e9de9c6b6a2d157a466fb7591ff0f9da081fd3b71c393a"
+    },
+    {
+      "id": 12154327695,
+      "name": "m0-actual-isal-39176419445-1",
+      "provider_sha256": "sha256:a36a4a2ecfd58f2ca9b57b79739ec3eeae81ae2e57163f4a3f9bdfea5172de3b"
+    },
+    {
+      "id": 12154327238,
+      "name": "m0-go-control-only-39176419445-1",
+      "provider_sha256": "sha256:b1ecd5d560a0f323f693733496840256f1ce0973c3decd2a451d85beb4726d72"
+    },
+    {
+      "id": 12154283833,
+      "name": "m0-normal-binaries-39176419445-1",
+      "provider_sha256": "sha256:ab91eeb6c380038f422d69333997c419655cc7ec79ea7e5433a612ff7dd0f54e"
+    },
+    {
+      "id": 12154167746,
+      "name": "m0-windows-native-39176419445-1",
+      "provider_sha256": "sha256:117ebdb1ec2748454d4c6fb7bd7b01a82e49b86a5b73bd1e79d0fb46585a7232"
+    },
+    {
+      "id": 12154112895,
+      "name": "m0-native-aarch64-39176419445-1",
+      "provider_sha256": "sha256:ad3da2b0dcf472d090e836d30469a97d448204e06d8edad848466cdd5032b585"
+    },
+    {
+      "id": 12153778781,
+      "name": "m0-hard-gates-39176419445-1",
+      "provider_sha256": "sha256:5ce87bfe7f6e4543d8ed3f8d850e31150c294e2ef077abe528c9475e0ba130ea"
+    },
+    {
+      "id": 12153629592,
+      "name": "m0-normal-netem-10ms-39176419445-1",
+      "provider_sha256": "sha256:1b9e3a1fa1efb2dc4c39a1a696460c17d262143bc416f4b62b8af31578cd6a6d"
+    }
+  ],
+  "applied_contract": {
+    "code_commit": "708ecd311770c469fca7a155435cd10cab47db47",
+    "original_go_test_count": 11,
+    "actual_real_TLS_native_three_ciphers": "PASS_SCOPED",
+    "operator_auth_epoch_client_direction_revision_and_Rust_stage": "PASS_SCOPED",
+    "pending_fixed_profile_high_revision2_original_Rust_applied_strong_revision1": "PASS_SCOPED_NO_FALSE_ACK",
+    "invalid_epoch_cross_client_stale_revision_backend_failure_stop_rejection": "PASS_SCOPED",
+    "off_native_not_wired": "DENY_EXPLICIT",
+    "product_cli_gui": "NOT_WIRED_IN_THIS_REPO",
+    "product_authenticated_reverse_kind1_and_M1_mature_telemetry": "NOT_WIRED",
+    "physical_dual_peer_240s_D10_p99_full_Windows_ARM": "NOT_RUN"
+  },
+  "prior_reds_preserved": [
+    "39155292919",
+    "39142346744"
+  ],
+  "interpretation": "Go scoped original native pending vs applied wiring is proven. 14/14 component/integration jobs do not grant normal production FEC2 or original legacy app CLI/GUI. Do not claim 240s product business ABBA from ISA-L codec-only ABBA."
+}
