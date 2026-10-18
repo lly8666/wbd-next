@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "ac6f5b737b2631717030f2b95b78b0b15d9736ec",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "result": "PASS_TEST_ONLY_ORIGINAL_GO_TWO_AUTO_MATURE_SAMPLE_TICKS_PENDING_REV6_THEN_ORIGINAL_M1_M3_NEW_FEC_BLOCK_REAL_M4_RAW_KERNEL_CONFIRMS_RUST_APPLIED_REV6_THREE_ORIGINAL_GO_TLS_CIPHERS",
+  "source_paths": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+    ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
+  ],
+  "verified": [
+    "Remote initial H157 main a104f09169561825c815d4476d07f87222bf0b75 clean, registry reservation_revision2, M0 epoch1 task R0-023. M0 integration-owned only; M1/M2/M3/M4 worker files unchanged.",
+    "Original private Go credential-checked V4 TLS session authenticates exact epoch/generation for original Rust protected owner. AUTO High profile4 revision5 actually applied on initial original Go FecV2Step and Rust readback FecV2Apply. Same authenticated Go session then supplies TWO time-separated 2-second FecV2Snapshot quality window inputs with valid mature 30% loss profiles and actualK[15]=375 through original Go FecV2Step (NOT automatically observed product network telemetry). At first window: no intent; at second: requests Maximum profile6 revision6.",
+    "New original Rust M0 Entry private TLS-scope stage_policy validates exact active epoch, protected bits, separate monotonic >applied/pending revision, valid profile0..6, no worker handoff; keeps pending separate from applied and rejects premature applied acknowledgement. Applies pending only after original M1 original Fec2Owner constructs k2 parity job with revision6 and original M3 Rs16 Maximum and original M4 actual Linux raw send_one positively copies both original immutable encrypted/source+parity records for the next new FEC block; Go applied readback now matches Maximum/rev6 and old rev5 readback is denied. This is a FEATURE-GATED one-shot first new block after policy request, not a deployed continuous live scheduler.",
+    "Three original cipher suites x three Linux privileged netns subcases continue PASS: default Strong single, AUTO dynamic two-window mixed two-slot M2 refund, FIXED Mild9 one original M4 native sendmmsg two frozen; independent original Go raw peer byte-confirms PN/Seq/cipher and original M3 RS16 e1 into real TUN 99B UDP app, original Go M3 C2S kind1 test-only AEAD PN → original M2 scoped frozen ACK/retransmit.",
+    "Original M0/typed M2 0..32 1122 conservative shapes and original Go FEC2 8 policy tests PASS, default Rust FEC2 OFF."
+  ],
+  "exact_source_actions": [
+    {
+      "run_id": 39128302868,
+      "attempt": 1,
+      "status": "success",
+      "job_id": 117678000254,
+      "artifact_id": 12136957373,
+      "artifact_zip_sha256": "27dd3e07e7d233e27dd29ed90e5aacaab98068a3f749c46d1153a5dd460bcd99",
+      "independently_rehashed_sha256": "27dd3e07e7d233e27dd29ed90e5aacaab98068a3f749c46d1153a5dd460bcd99",
+      "receipt_source_sha": "ac6f5b737b2631717030f2b95b78b0b15d9736ec",
+      "three_cipher_pending_before_new_block": 3,
+      "three_cipher_applied_after_actual_kernel_block": 3,
+      "go_real_kernel_cases": 9,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39128302868"
+    },
+    {
+      "run_id": 39128302862,
+      "attempt": 1,
+      "status": "success",
+      "scope": "exact source Governance"
+    }
+  ],
+  "selected_prior_native_code_batch": {
+    "source": "80661e9502f71a0edfce5e7f28b0b548921e25ba",
+    "scope": "intermediate original Rust stage+new-block code SOURCE; selected native-functional, scoped Linux kernel Normal/off, crossABI Linux ARM64/Windows GNU, native ABI, bootstrap, static and governance passed. Final SOURCE differs by Go test/FFI and workflow; do NOT infer full matrix for final SOURCE.",
+    "native_functional": 39127931757,
+    "cross_abi": 39127931804,
+    "normal_off": 39127931853,
+    "native_abi": 39127931755,
+    "bootstrap": 39127931806,
+    "static": 39127931788,
+    "go_tls_focused": 39127931743
+  },
+  "retained_failed_attempt": {
+    "source": "c79205ef028050405c2d3fc54605a050ecfd1166",
+    "run_id": 39128110536,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12136533003,
+    "zip_sha256": "ca67a95b283b4dabd2fa1c32f9afc0e92e606998d4601ffb66e3a97a202bf422",
+    "independent_zip_sha256": "ca67a95b283b4dabd2fa1c32f9afc0e92e606998d4601ffb66e3a97a202bf422",
+    "finding": "Initial applied Go FecV2Apply returned desired current High5 but test failed to persist updated FecV2State into policyState, yielding pending rev6/applied0 assertion; Rust builds and other cases passed. Corrected original Go test state write-back at final source ac6f5b7; scoped kernel test PASS."
+  },
+  "limits": [
+    "Injected synthetic quality sample windows rather than real peer-derived mature feedback, no production 2s control goroutine/ticker, no real applied CLI/GUI parameter catalog, no actual new-block multi-block continuous scheduling, no production traffic FEC2 enablement.",
+    "Original M2 kind1 reverse test fixture 52B nonproduct schema and synthetic missing bitmap; actual packet-loss-derived receiver feedback and canonical peer wire NOT_WIRED.",
+    "Two slot original M4 real sendmmsg full-positive only, not arbitrary 2..32 distinct FEC2 FrozenRecords partial/EINTR/EAGAIN/Unproven/Stop races.",
+    "Legal ~65KiB UDP multiple turns/MTU±1/noHOL/loans, 150ms historical intermittent, 240s codec/D10/p99 ABBA, native Win/ARM full codec and two physical machines NOT_RUN; historical fails retained."
+  ],
+  "next_action": "M0 R0-023 next wire original Go real per-client/direction runtime observed mature feedback to FecV2Step on 2s control loop, pending→first new block applied ACK and existing product single catalog/CLI/GUI; canonical authenticated kind1 actual packet loss and continuous multi-block original M1; large UDP and qualification. Keep FEC2 OFF."
+}
