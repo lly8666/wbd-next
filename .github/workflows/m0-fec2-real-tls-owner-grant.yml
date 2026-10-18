@@ -7,6 +7,7 @@ on:
       - ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "tools/run-v4-tun-netns.sh"
       - "crates/wbd-engine/src/v4_probe_bridge.rs"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
@@ -23,7 +24,7 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -58,6 +59,19 @@ jobs:
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/owner-grant.test" ./internal/realityfront)
           LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" ./owner-grant.test -test.v -test.count=1 -test.run '^TestR0V4(Fec2ActualGoTLSEpochOwnerGrantScoped|EmbeddedNativeProtectedControlAllCiphers|EmbeddedNativeProtectedFec2Bit2Scope)$' >owner-grant-result/go.log 2>&1
+          # One actual isolated Linux netns raw IPv4/TCP kernel send path.
+          # It uses the existing pinned original Go TLS and same original
+          # Rust scoped owner; no additional FEC2 producer/decryptor.
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          mkdir -p owner-grant-netns
+          cp target/release/libwbd_engine.so owner-grant-netns/
+          cp owner-grant.test owner-grant-netns/owner-go.test
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh owner-grant-netns >owner-grant-result/real-kernel.log 2>&1
+          grep -q 'M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=1' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=2' owner-grant-result/real-kernel.log
+          grep -q 'M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite=3' owner-grant-result/real-kernel.log
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
           root=pathlib.Path("owner-grant-result")
@@ -69,10 +83,15 @@ jobs:
           assert all(re.search(r"^--- PASS: "+n+r" \(",go,re.M) for n in names)
           assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
           assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
+          kernel=(root/"real-kernel.log").read_text()
+          assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
+          for suite in [1,2,3]:
+              assert f"M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite={suite}" in kernel
           assert re.search(r"test result: ok\. 1 passed; 0 failed;",rust)
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_embedded_go.rs",
              "crates/wbd-engine/src/v4_probe_bridge.rs",
+             "tools/run-v4-tun-netns.sh",
              "r0/go_overlay/internal/realityfront/admission_v4.go",
              "r0/go_overlay/internal/realityfront/admission_v4_test.go",
              "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
@@ -88,9 +107,11 @@ jobs:
             "wrong_epoch_and_stop_revoked":True,"default_build_fec2_permission":"OFF",
             "feature_only_cffi":"m0_fec2_owner_probe",
             "actual_applied_FEC2_policy":"NOT_WIRED",
-            "real_FEC2_kernel_raw_tun":"NOT_RUN","product_FEC2":"OFF",
+            "real_FEC2_kernel_raw_tx":"ACTUAL_M4_SCOPED_LINUX_RAW_TWO_RECORD_SOURCE_REPAIR_THREE_SUITES",
+            "real_FEC2_kernel_raw_tun_Rx_repair":"NOT_RUN","product_FEC2":"OFF",
             "input_sha256":{p:sha(p) for p in inputs},
-            "test_log_sha256":{"rust":sha(root/"rust.log"),"go":sha(root/"go.log")},
+            "test_log_sha256":{"rust":sha(root/"rust.log"),"go":sha(root/"go.log"),
+                 "real_kernel_raw":sha(root/"real-kernel.log")},
             "default_build_sha256":sha(root/"default-build.log"),
             "opt_in_build_sha256":sha(root/"opt-in-build.log")}
           (root/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
