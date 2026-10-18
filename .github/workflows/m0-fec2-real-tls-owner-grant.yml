@@ -349,16 +349,33 @@ jobs:
           test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
           nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
           cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --lib r1_f2_ -- --test-threads=4 --nocapture >blocker-isal/native.log 2>&1
+          # Actual x64 same-run original F2 native/scalar C(k16,r16,e4)
+          # ABBA paired 400k encode+recovery per leg, not packet p99.
+          mkdir -p crates/wbd-codec/tests
+          cp r0/fec2_codec_abba_probe.rs crates/wbd-codec/tests/m0_fec2_codec_paired.rs
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --test m0_fec2_codec_paired m0_f2_codec_k16_r16_1200_abba -- --ignored --exact --nocapture --test-threads=1 >blocker-isal/abba.log 2>&1
           python3 - <<'PY'
           import pathlib,re,json,os,hashlib
           root=pathlib.Path("blocker-isal")
           s=(root/"native.log").read_text()
           names=set(re.findall(r"test (?:\S*::)?(r1_f2_\w+) \.\.\. ok",s))
           assert len(names)==11,(len(names),sorted(names))
-          result={"result":"PASS_SCOPED_ORIGINAL_LINUX_X64_REAL_ISAL_11",
+          abba=(root/"abba.log").read_text()
+          rows=re.findall(r"F2_ABBA_RESULT leg=(\d+) mode=(A|B) backend=(Scalar|NativeIsaL) blocks=(\d+) recoveries=(\d+) e=4 k=16 r=16 frame_bytes=1200 parity_symbols=(\d+) encode_checksum=(\d+) recovery_checksum=(\d+) encode_wall_ns=(\d+) encode_cpu_ticks=(UNKNOWN|\d+) recovery_wall_ns=(\d+) recovery_cpu_ticks=(UNKNOWN|\d+)",abba)
+          assert len(rows)==4,rows
+          assert [r[1] for r in rows]==["A","B","B","A"]
+          assert [r[2] for r in rows]==["Scalar","NativeIsaL","NativeIsaL","Scalar"]
+          assert all(int(r[3])==400000 and int(r[4])==400000 and int(r[5])==6400000 for r in rows)
+          assert len({r[6] for r in rows})==len({r[7] for r in rows})==1
+          assert "F2_ABBA_SCENARIO_DONE" in abba
+          result={"result":"PASS_SCOPED_ORIGINAL_LINUX_X64_REAL_ISAL_11_AND_COMPONENT_ABBA_400K",
            "source_sha":os.environ["GITHUB_SHA"],"native_oracles":len(names),
            "upstream_isa_l_sha":"c387163fcbca62701d646149564c550c78a4f985",
            "native_log_sha256":hashlib.sha256((root/"native.log").read_bytes()).hexdigest(),
+           "component_abba_legs":4,"component_abba_blocks_per_leg":400000,
+           "component_abba_recoveries_per_leg":400000,
+           "abba_log_sha256":hashlib.sha256((root/"abba.log").read_bytes()).hexdigest(),
+           "component_pairing_not_packet_p99":True,
            "product_full_240s_ABBA":"NOT_RUN","FEC2_product":"OFF"}
           (root/"result.json").write_text(json.dumps(result,indent=2)+"\n")
           PY
