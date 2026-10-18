@@ -182,6 +182,8 @@ struct Entry{
     fec2_probe_budget_direction:Option<wbd_recovery::BudgetDirection>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fec2_probe_budget_start_ns:u64,
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_probe_pending_policy:Option<(u8,u64)>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -280,6 +282,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         fec2_probe_budget_direction:None,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_probe_budget_start_ns:0,
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_probe_pending_policy:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
@@ -415,7 +419,9 @@ fn fec2_probe_real_kernel_raw_once(
     // bound after its authenticated TLS/Detach commit. No cold/peer
     // unauthenticated value can supply this setting. This is still only
     // the feature-gated one-shot probe, NOT a product continuous scheduler.
-    let (policy,revision)=e.owner.fec2_probe_applied_policy().ok_or(BAD_STAGE)?;
+    let (policy,revision)=e.fec2_probe_pending_policy
+        .or_else(||e.owner.fec2_probe_applied_policy())
+        .ok_or(BAD_STAGE)?;
     let m1_profile=match policy{
         0=>M1Profile::Light,1=>M1Profile::Mild,
         2=>M1Profile::Medium,3=>M1Profile::Balanced,
@@ -547,6 +553,14 @@ fn fec2_probe_real_kernel_raw_once(
         return Err(INVALID)
     }
     if confirmed.len()!=2{return Err(INVALID)}
+    // Only now has the actual original M1 block formed with the chosen
+    // profile and the original M4 kernel positively copied its immutable
+    // source+repair. Before this point Go requested != Rust applied.
+    if let Some((p,r))=e.fec2_probe_pending_policy {
+        e.owner.apply_fec2_probe_new_block_policy(e.owner.epoch(),p,r)
+            .map_err(|_|BAD_STAGE)?;
+        e.fec2_probe_pending_policy=None;
+    }
     let (lane,epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
     use wbd_recovery::{
         BudgetDirection,WireDirection,ReceiptState,ReceiptConfig,
@@ -1195,6 +1209,27 @@ fn bind_fec2_from_private_go(
         e.fec2_probe_budget_start_ns=now.0;
         e.fec2_probe_budget_direction=Some(direction);
     }
+    OK
+}
+// Pending means requested but NOT applied. The authenticated Go/Detach
+// owner, not cold metadata or a peer control frame, may stage a profile.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_stage_policy(
+    handle:u64,epoch:*const u8,len:usize,profile:u8,revision:u64
+)->i32{
+    if epoch.is_null()||len!=16||profile>6||revision==0{return INVALID}
+    let mut exact=[0u8;16];
+    exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_some()
+        ||e.protected_fec2_features!=7
+        ||!e.owner.is_fec2_probe_bound_to(exact){return BAD_STAGE}
+    let Some((_,applied))=e.owner.fec2_probe_applied_policy()else{return BAD_STAGE};
+    let latest=e.fec2_probe_pending_policy.map_or(applied,|(_,r)|r);
+    if revision<=latest{return INVALID}
+    e.fec2_probe_pending_policy=Some((profile,revision));
     OK
 }
 #[cfg(feature="m0_fec2_owner_probe")]
