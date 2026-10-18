@@ -1,5 +1,5 @@
-name: M0 FEC2 CODE301 real ISA-L native F2 and one ABBA cost scenario
-run-name: "M0|FEC2-CODE301-NATIVE-ABBA|${{ github.sha }}"
+name: M0 FEC2 CODE8CC real ISA-L native F2 plus qualified e4 ABBA CPU windows
+run-name: "M0|FEC2-CODE8CC-NATIVE-ABBA|${{ github.sha }}"
 on:
   push:
     branches: [main]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
-  group: m0-fec2-code301-${{ github.sha }}-${{ github.run_id }}
+  group: m0-fec2-code8cc-${{ github.sha }}-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: 3011431370f1757212df92800c1b56e87ba51d65
+          ref: 8cc5b06d6832565a80b60402a5fe2e1078e9ab2e
           path: worker-m3
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C worker-m3 rev-parse HEAD)" = 3011431370f1757212df92800c1b56e87ba51d65
+          test "$(git -C worker-m3 rev-parse HEAD)" = 8cc5b06d6832565a80b60402a5fe2e1078e9ab2e
           test "$(git -C worker-m4 rev-parse HEAD)" = 7cef7e849e293373d907a3b64007b4ce8946da78
           test "$(uname -m)" = x86_64
           rustup toolchain install 1.85.1 --profile minimal
@@ -42,7 +42,7 @@ jobs:
           git clone --quiet https://github.com/intel/isa-l.git isa-l
           git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
           test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
-          export WBD_ISAL_PREFIX="$RUNNER_TEMP/fec2-code301-isal"
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/fec2-code8cc-isal"
           export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
           (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
           test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
@@ -78,7 +78,7 @@ jobs:
             "cargo_manifest":"crates/wbd-codec/Cargo.toml"}
           m={"schema_version":1,"result":"BUILT_NOT_TESTED",
              "control_sha":os.environ["GITHUB_SHA"],
-             "worker_m3_sha":"3011431370f1757212df92800c1b56e87ba51d65",
+             "worker_m3_sha":"8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
              "worker_m4_sha":"7cef7e849e293373d907a3b64007b4ce8946da78",
              "upstream_isal_sha":"c387163fcbca62701d646149564c550c78a4f985",
              "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
@@ -101,14 +101,14 @@ jobs:
   consume:
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wbd-next
-          ref: 3011431370f1757212df92800c1b56e87ba51d65
+          ref: 8cc5b06d6832565a80b60402a5fe2e1078e9ab2e
           path: worker-m3
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -121,7 +121,7 @@ jobs:
         with:
           name: fec2-codec-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: fec2-codec-build
-      - name: Verify exact CODE301/native sources, same-run binaries and built library witness
+      - name: Verify exact CODE8CC/native sources, same-run binaries and built library witness
         shell: bash
         run: |
           set -euo pipefail
@@ -132,7 +132,7 @@ jobs:
           m=json.load(open("fec2-codec-build/manifest.json"))
           assert m["control_sha"]==os.environ["GITHUB_SHA"]
           assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
-          assert m["worker_m3_sha"]=="3011431370f1757212df92800c1b56e87ba51d65"
+          assert m["worker_m3_sha"]=="8cc5b06d6832565a80b60402a5fe2e1078e9ab2e"
           assert m["worker_m4_sha"]=="7cef7e849e293373d907a3b64007b4ce8946da78"
           assert m["upstream_isal_sha"]=="c387163fcbca62701d646149564c550c78a4f985"
           inputs={
@@ -166,7 +166,7 @@ jobs:
           assert re.search(r"test result: ok\. \d+ passed; 0 failed;",s),s[-500:]
           print("F2_NATIVE_CODEC_SCOPED_PASS",len(names))
           PY
-      - name: Exactly one codec C k16/r16 1200B ABBA paired same-VM measurement job
+      - name: ONE codec C k16/r16 1200B e4 fixed 400k encode and recovery ABBA same-VM CPU measurement
         # Collect independent paired evidence even when an upstream M3 unit test
         # fails. Do NOT erase the unit failure or mark this workflow successful.
         if: always()
@@ -175,36 +175,65 @@ jobs:
           set -euo pipefail
           lscpu > fec2-codec-result/host-lscpu.txt
           (cat /sys/fs/cgroup/cpu.max || echo UNKNOWN) > fec2-codec-result/cpu-quota.txt
+          getconf CLK_TCK > fec2-codec-result/cpu-clk-tck.txt
           fec2-codec-build/fec2-paired.test m0_f2_codec_k16_r16_1200_abba --ignored --exact --nocapture --test-threads=1 2>&1 | tee fec2-codec-result/abba.log
           python3 - <<'PY'
           import hashlib,json,os,pathlib,re
           log=pathlib.Path("fec2-codec-result/abba.log").read_text()
-          rows=re.findall(r"F2_ABBA_RESULT leg=(\d+) mode=(A|B) backend=(Scalar|NativeIsaL) blocks=(\d+) k=16 r=16 frame_bytes=1200 parity_symbols=(\d+) checksum=(\d+) wall_ns=(\d+) cpu_ticks=(UNKNOWN|\d+)",log)
+          rows=re.findall(r"F2_ABBA_RESULT leg=(\d+) mode=(A|B) backend=(Scalar|NativeIsaL) blocks=(\d+) recoveries=(\d+) e=4 k=16 r=16 frame_bytes=1200 parity_symbols=(\d+) encode_checksum=(\d+) recovery_checksum=(\d+) encode_wall_ns=(\d+) encode_cpu_ticks=(UNKNOWN|\d+) recovery_wall_ns=(\d+) recovery_cpu_ticks=(UNKNOWN|\d+)",log)
           assert len(rows)==4,rows
           assert [r[1] for r in rows]==["A","B","B","A"]
           assert [r[2] for r in rows]==["Scalar","NativeIsaL","NativeIsaL","Scalar"]
-          assert len({r[5] for r in rows})==1
-          assert all(int(r[3])==96 and int(r[4])==1536 and int(r[6])>0 for r in rows)
+          assert len({r[6] for r in rows})==1 and len({r[7] for r in rows})==1
+          assert all(int(r[3])==400000 and int(r[4])==400000 and int(r[5])==6400000 for r in rows)
+          assert all(int(r[8])>0 and int(r[10])>0 for r in rows)
           assert "F2_ABBA_SCENARIO_DONE" in log and re.search(r"test result: ok\. 1 passed; 0 failed;",log)
           m=json.load(open("fec2-codec-result/source-manifest.json"))
           for i,r in enumerate(rows): assert int(r[0])==i
-          results=[{"leg":int(r[0]),"mode":r[1],"backend":r[2],
-                    "blocks":int(r[3]),"parity_symbols":int(r[4]),
-                    "checksum":int(r[5]),"wall_ns":int(r[6]),
-                    "cpu_ticks":None if r[7]=="UNKNOWN" else int(r[7])} for r in rows]
-          qualified=all(x["cpu_ticks"] is not None and x["cpu_ticks"]>=100
-                        and x["wall_ns"]>=1_000_000_000 for x in results)
-          receipt={"result":"COMPONENT_FUNCTIONAL_PASS",
-                   "cost_qualification":"CPU_WINDOW_READY_FOR_REVIEW" if qualified else "CPU_INCONCLUSIVE_SHORT_WINDOW",
+          tck=int(pathlib.Path("fec2-codec-result/cpu-clk-tck.txt").read_text())
+          assert 50<=tck<=1000,tck
+          results=[]
+          for r in rows:
+            v={"leg":int(r[0]),"mode":r[1],"backend":r[2],
+               "blocks":int(r[3]),"recoveries":int(r[4]),"parity_symbols":int(r[5]),
+               "encode_checksum":int(r[6]),"recovery_checksum":int(r[7]),
+               "encode_wall_ns":int(r[8]),
+               "encode_cpu_ticks":None if r[9]=="UNKNOWN" else int(r[9]),
+               "recovery_wall_ns":int(r[10]),
+               "recovery_cpu_ticks":None if r[11]=="UNKNOWN" else int(r[11])}
+            for stage in ["encode","recovery"]:
+              ticks=v[f"{stage}_cpu_ticks"]
+              v[f"{stage}_cpu_ns_per_block"]=None if ticks is None else round(ticks*1e9/tck/v["blocks"])
+              v[f"{stage}_wall_ns_per_block"]=round(v[f"{stage}_wall_ns"]/v["blocks"])
+            results.append(v)
+          qualified=all(
+            x[stage+"_cpu_ticks"] is not None
+            and x[stage+"_cpu_ticks"]>=tck
+            and x[stage+"_wall_ns"]>=1_000_000_000
+            for x in results for stage in ["encode","recovery"]
+          )
+          ratios={}
+          if qualified:
+            for stage in ["encode","recovery"]:
+              # A-B and B-A are two within-worker adjacent CPU comparisons.
+              ratios[stage+"_scalar_cpu_over_native_AB"]=round(
+                results[0][stage+"_cpu_ticks"]/results[1][stage+"_cpu_ticks"],5)
+              ratios[stage+"_scalar_cpu_over_native_BA"]=round(
+                results[3][stage+"_cpu_ticks"]/results[2][stage+"_cpu_ticks"],5)
+          receipt={"result":"F2_NATIVE_AND_COMPONENT_PAIRED_FUNCTIONAL_PASS",
+                   "cost_qualification":"CPU_WINDOW_READY_FOR_REVIEW" if qualified else "CPU_INCONCLUSIVE_WINDOW_OR_CAPACITY",
                    "worker_M3":m["worker_m3_sha"],"worker_M4":m["worker_m4_sha"],
                    "control":m["control_sha"],"isa_l":m["upstream_isal_sha"],
                    "run_id":m["run_id"],"attempt":m["attempt"],
                    "binary_sha256":m["paired_binary_sha256"],
-                   "scenario":"one codec C k16/r16 1200B, ABBA same VM/process",
+                   "scenario":"ONE codec C k16/r16/1200B/e4, 400000 blocks+400000 e4 recoveries per ABBA leg; fixed deterministic sources/erasure pattern",
                    "leg_order":["scalar","native-isal","native-isal","scalar"],
+                   "min_stage_wall_ns":1000000000,"min_stage_cpu_ticks":tck,
+                   "cpu_clock_ticks_per_second":tck,"stage_cpu_comparison":ratios,
                    "legs":results,"abba_log_sha256":hashlib.sha256(log.encode()).hexdigest(),
                    "f2_native_test_log_sha256":hashlib.sha256(pathlib.Path("fec2-codec-result/f2-native-tests.log").read_bytes()).hexdigest(),
                    "host_lscpu_sha256":hashlib.sha256(pathlib.Path("fec2-codec-result/host-lscpu.txt").read_bytes()).hexdigest(),
+                   "cpu_quota":pathlib.Path("fec2-codec-result/cpu-quota.txt").read_text().strip(),
                    "scope_exclusions":["GoV1-compat","original Go admission","realGo/Rust raw/TUN","production kind2/3","GUI/applied policy","packet p99","physical"]}
           pathlib.Path("fec2-codec-result/receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
           print(json.dumps(receipt,indent=2))
