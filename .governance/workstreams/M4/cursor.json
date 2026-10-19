@@ -4,16 +4,16 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 34,
-  "checkpoint_sha": "b4720862b3d83b201c7174eb9cc267ad19d949e7",
+  "sequence": 35,
+  "checkpoint_sha": "8052563a4e85f4ad62b3ee5e76fd635fa539defe",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "PLAN010 M4-016 original Go/WinForms native Windows lifecycle. I006 Windows2022 full original CLI+GUI scoped PASS; new batched I007 33-op source-pinned read-only native disk/WAL diagnostics and GUI+CLI native test, no system WFP mutation or network product claim.",
-  "why_now": "M0 H190 confirms original M4 I006 39271382181 identity+Win2022 native scoped PASS, old dispatcher HOL fixed, issue17 closed. M4 added one substantial batch: original windowsclient native disk-only status inspector and Go test, original CLI --native-state-json, managed one-catalog field, same-original Go GUI read-only button, four original GUI->Go cases, explicit Actions named test/receipt checks. 9 original anchored replaces and 24 overlay blobs all match frozen original/donor sources, canonical manifest 33 operations SHA256 3a5f32. WFP Arm still denies production.",
+  "current_task": "M4-016 original Windows product Go/WinForms. Previous I007 actual Windows scoped Go GUI PASS; one independent I008 source adds native Win32 API/WFP/admin preflight that is explicitly read-only and never authorizes connection; real native WFP Apply still guarded.",
+  "why_now": "User closed old M0-dependent issue18 not_planned; M4 worked alone inside reserved paths. I008 one batch: new actual read-only native Win32 API, WFP layer and elevation preflight + WAL state; original CLI --native-preflight-json, WinForms original-Go button, single managed parameter catalog, real process-backed GUI and native Go negatives. All 35/35 exact Git blobs verified, donor12 immutable, manifest SHA256 2af3d90a. I007 run39282207647 identity+Win2022 scoped PASS; new I008 NOT_RUN.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Consume exact H34 central G2 and M0-only Windows-2022 native product workflow for immutable I007 14cc425 candidate S b472086 manifest SHA256 3a5f32bff576eaef0e6e93f37a1fb219134a4d619002f3db15746b53ae16ee4e. Verify named Go native disk-state test, original CLI full package and four actual GUI->Go state tests with real receipt; if red, repair M4 source and batch next I. Full WFP real Connect/Stop/readback/Rust applied requires isolated owner+M0 and remains NOT_RUN, FEC2 OFF.",
+  "next_action": "Consume actual exact H35 central G2 and autonomous Windows-2022 I008 26f91dae SOURCE S8052563 manifest SHA256 2af3d90a6a8b7e0540f6973d3e51e40be0c772f7c73084f22eb094e58014e33f. Verify native Go TestPLAN010NativeOriginalProductPreflightReadOnlyDenied and GUI two new real-Go named checks plus old tests, inspect exact artifact if red. Any actual network WFP Arm/continuous Connect-Stop and Rust applied needs proven isolated Windows owner/system readback; no main commit, production FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "60aaf224572578028ed68e23e5a4ac186fac779c",
+  "last_tested_source": "b4720862b3d83b201c7174eb9cc267ad19d949e7",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
@@ -25,12 +25,13 @@
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-004.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-005.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-006.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-007.json"
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-007.json",
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-008.json"
   ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H34 ACTIVE. M4 I006 Windows-2022 Actions39271382181 FULL ORIGINAL CLI Go + WinForms SCOPED PASS, identity artifacts exact; real product networking still NOT_RUN. New candidate S b472086 I007 14cc425: 33 exact ops original Go and WinForms native WAL disk-only inspector (absent/legacy/orphan/valid checksum/bad WAL/collision), CLI --native-state-json, managed PARAMETERS/gui-fields, GUI read-only button and four real Go subprocess negative checks; all 9 anchored original and 24 overlay Git blobs statically verified. New native Windows Actions NOT_RUN. Product WFP Arm closed, Rust Stop/applied M0, physical/2025 NOT_RUN, FEC2 OFF."
+  "partial_summary": "H35 M4 independent worker batch S8052563 I008 26f91da, 35 pinned ops SHA256 2af3d90a; new actual original Win32 API/WFP/read-only admin preflight, original Go CLI + WinForms real executable, tests and provenance, 35/35 static source PASS; previous I007 Windows native scoped Actions39282207647 both jobs PASS. Issue18 canceled per user; no new M0 issue or shared-code changes. New I008 Actions/G2 still NOT_RUN; product live WFP Arm remains closed, original authenticated Stop/Rust applied and isolated route/DNS/IPv6 readback NOT_RUN, FEC2 OFF."
 }
