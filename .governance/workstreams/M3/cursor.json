@@ -4,21 +4,21 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 41,
-  "checkpoint_sha": "857ac9c232383435ead4b9d02ef4eebdebc11cda",
+  "sequence": 42,
+  "checkpoint_sha": "33196ab2e194a88143f798df1d7ce9ccbbff1e08",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 FEC2 CODE8cc A/CODE437 B real ISA-L functional prepare on M0-published qualification/worker-ci-v5, exact pinned request PLANNED; sameVM A-B-B-A native e4 measurement remains NOT_RUN until functional prepare artifacts PASS.",
-  "why_now": "Main registry remains PLAN008-018. Latest M0-published controlled worker_component_validation v5 supports M3 source-locked real official ISA-L Linux x64 two-stage prepare/paired. S 857ac9c records exact control/source/fixture digest and first prepare request, not a test result. Current connected GitHub tool lacks workflow_dispatch, so do NOT claim job started; worker default 123/0/1 and H40 full governance + central G2 PASS remain separate source-scoped history.",
+  "current_task": "PLAN008-018: v6 exact official ISA-L Linux x64 CODE437 native prepare requested via new request M3-018-NATIVE-E4-PREPARE-002, auto-dispatch on successful central G2; real old/new ABBA not run.",
+  "why_now": "M0 closed old v5 --stage argument parsing blocker via frozen qualification/worker-ci-v6 fab2e1d and main-only audited auto-dispatch. Old v5 M3 prepare 39204914148 stopped before build and remains FAIL. S33196ab added fresh v6 PLANNED intent with exact unchanged native CODE437 candidate, accepted CODE8cc baseline and a5de harness, config hash and new unique request ID. Functional/native test result not yet reported.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Dispatch worker-component-validation.yml on immutable qualification/worker-ci-v5 with role_id=M3, stage=prepare, request_id=M3-018-NATIVE-E4-PREPARE-001, request_ref=857ac9c232383435ead4b9d02ef4eebdebc11cda. Verify prepare native tests/manifest/artifact and only then file one paired_abba 4-leg request for same-VM e4 CPU/alloc, using this exact artifact and lock. No duplicate dispatch, FEC2 product OFF.",
+  "next_action": "Observe exact H42 worker Governance, central G2 SOURCE receipt, resulting main-only dispatcher and v6 M3 prepare ACTION for request M3-018-NATIVE-E4-PREPARE-002. If prepare succeeds, inspect exact run/attempt/artifact and manifest bytes, then create one paired_abba performance request; if failures, record/repair owned codec only. FEC2 product stays OFF.",
   "unverified": true,
   "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
   "evidence_refs": [
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-001.json"
+    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-002.json"
   ],
   "context_refs": [
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
@@ -30,5 +30,5 @@
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
     "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
-  "partial_summary": "H41 one source-locked real ISA-L functional test intent, not PASS: exact A8cc/B437 and frozen a5de fixture, published v5 control 484861e5 and verified config SHA256; request PLANNED. H40 Governance39191438124 PASS and central G2 39191688326 PASS; 437 CODE scalar 123/0/1 PASS. Actual native CODE437 feature test and same-VM ABBA remain NOT_RUN until Actions workflow_dispatch. No algorithm, ABI, Go, product gate change."
+  "partial_summary": "H42 checkpoint of S33196ab new M3 v6 native FEC2-018 prepare PLANNED; old v5 39204914148 authorize FAIL retained. Accepted baseline CODE8cc, candidate CODE437, test harness a5de frozen. CODE437 default 123/0/1 PASS, H40 Governance and central G2 PASS. New v6 real ISA-L native F2 and old/new sameVM ABBA still NOT_RUN; no product enablement."
 }
