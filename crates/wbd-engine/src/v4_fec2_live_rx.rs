@@ -5,7 +5,8 @@
 #![forbid(unsafe_code)]
 use std::collections::BTreeMap;
 use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
-use wbd_codec::record_crypto::{DirectionKeys,RecordSuite};
+// The authenticated original-owner RX opener is MOVED here; never minted
+// separately from keys, or duplicate normal/FEC PN windows could exist.
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
 use wbd_types::MonoNs;
 
@@ -53,8 +54,9 @@ impl Fec2LiveRx{
     // This evidence must be supplied by the same Rust Go TLS owner that
     // verified the original exporter's principal, epoch and feature bit2.
     // A raw packet, peer request or config file is NEVER an admission fact.
-    pub(crate) fn new(verified:VerifiedReceiveEpoch,keys:DirectionKeys,
-        suite:RecordSuite,wire_max:usize)->Result<Self,ReceiveError>{
+    pub(crate) fn from_original_owner(
+        verified:VerifiedReceiveEpoch,opener:ReplayProtectedLaneRx,
+        wire_max:usize)->Result<Self,ReceiveError>{
         if verified.generation==0||verified.epoch==[0;16]||
            verified.negotiated_features!=7||!verified.direction_s2c{
             return Err(ReceiveError::Authorization)
@@ -62,12 +64,6 @@ impl Fec2LiveRx{
         let budget=wire_max.checked_sub(wbd_codec::record_frame::FIXED_WIRE_OVERHEAD)
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
-        let opener=ReplayProtectedLaneRx::new_for_suite(keys,wire_max,suite,
-            ReplayWindowConfig{
-                pn_per_second:20000,cache_horizon_ms:200,
-                fec_horizon_ms:150,rtt_ms:100,
-                metadata_budget_bytes:256*1024,
-            }).map_err(|_|ReceiveError::Invalid)?;
         Ok(Self{credential:verified,opener,rs:Rs16::new(),budget,
             stopped:false,highest_block:0,blocks:BTreeMap::new(),stored:0})
     }
@@ -192,7 +188,15 @@ impl Fec2LiveRx{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wbd_codec::record_crypto::LaneTxCrypto;
+    use wbd_codec::record_crypto::{LaneTxCrypto,DirectionKeys,RecordSuite};
+    fn opened(suite:RecordSuite)->ReplayProtectedLaneRx{
+        ReplayProtectedLaneRx::new_for_suite(keys(),1400,suite,
+            ReplayWindowConfig{
+                pn_per_second:20000,cache_horizon_ms:200,
+                fec_horizon_ms:150,rtt_ms:100,
+                metadata_budget_bytes:256*1024
+            }).unwrap()
+    }
     fn keys()->DirectionKeys{DirectionKeys{
         aead_key:[39;32],iv:[40;12],hp_key:[41;32]}}
     fn epoch()->VerifiedReceiveEpoch{VerifiedReceiveEpoch{
@@ -209,9 +213,9 @@ mod tests {
         for suite in [RecordSuite::ChaCha20Poly1305,
                 RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm]{
             let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
-            let mut rx=Fec2LiveRx::new(epoch(),keys(),suite,1400).unwrap();
-            assert_eq!(Fec2LiveRx::new(VerifiedReceiveEpoch{
-                negotiated_features:3,..epoch()},keys(),suite,1400)
+            let mut rx=Fec2LiveRx::from_original_owner(epoch(),opened(suite),1400).unwrap();
+            assert_eq!(Fec2LiveRx::from_original_owner(VerifiedReceiveEpoch{
+                negotiated_features:3,..epoch()},opened(suite),1400)
                 .err(),Some(ReceiveError::Authorization));
             let codec=Rs16::new();
             let mut queued=Vec::new();
