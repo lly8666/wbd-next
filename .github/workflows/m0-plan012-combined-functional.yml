@@ -57,7 +57,7 @@ jobs:
           cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/opt-in-build.log 2>&1
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fixed_pending_readback$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
-          for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go; do
+          for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -80,7 +80,8 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
-            "tools/run-v4-tun-netns.sh",".github/workflows/m0-fixed-real-kernel-applied.yml"]
+            "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go",
+            "tools/run-v4-tun-netns.sh",".github/workflows/m0-plan012-combined-functional.yml"]
           m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
             "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
             "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
@@ -117,6 +118,15 @@ jobs:
             grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
             grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
           done
+          # One additional original Go TLS S2C background TX with four
+          # actual TUN UDP packets + >=2 real source/parity blocks received
+          # through an independent original-key M3 client replay decoder.
+          # No FAKE peer APPLIED or product release from a private verifier.
+          WBD_M0_FEC2_CONTINUOUS=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/continuous-kernel.log 2>&1 || {
+            cat fixed-kernel-result/continuous-kernel.log;exit 1;
+          }
+          cat fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_PASS' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           p=pathlib.Path("fixed-kernel-result")
@@ -136,12 +146,16 @@ jobs:
             native_multiblock_stream_only="PASS_3_BLOCKS",
             fec_release_record_3ciphers="PASS_NATIVE",
             game_2_4_own_AEAD_PN_replay="PASS_NATIVE_NOT_KERNEL",
+            background_real_kernel_FEC_multiblock_source_repair="PASS_SCOPED_DEV_INDEPENDENT_PEER_NOT_PRODUCT_CLIENT",
+            fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
+            FEC2_production="OFF",
             fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
             network_multiblock="NOT_RUN",
             repeatable_background_multiblock_product="NOT_RUN",
             auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
             production_FEC2="OFF",
             kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest(),
+            background_kernel_log_sha256=hashlib.sha256((p/"continuous-kernel.log").read_bytes()).hexdigest(),
             release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
             game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
             continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
