@@ -447,6 +447,12 @@
       "path": "internal/windowsclient/native_product_entry_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
       "result_blob": "9866a5815f91d4678b5c30fab544aa7567e2e3ee"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/native_owner_slot_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/native_owner_slot_windows_test.go",
+      "result_blob": "e6d39932c112bf47db25ffb127d82f114fad1ad6"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
