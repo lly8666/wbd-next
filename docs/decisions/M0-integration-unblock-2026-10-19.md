@@ -33,6 +33,8 @@ M1/M3不等待产品完整集成才开发，M0也不等待其优化才把已冻�
 
 ## 2. 产品源码可复现装配，停止把缺目录当授权阻塞
 
+**后续Windows去脚本临时包**：[PLAN-010](M0-windows-native-migration-2026-10-19.md)给出已核对的donor差异、原生网络接线和M0/M4临时职责。M4先结算015在途GUI修复，在安全交接点由M0登记016与新增windowsclient overlay路径；其他工位不被拉去重写冷层，main registry/cursor不因本方案自动改变。
+
 沿用固定旧SOURCE的Actions检出，而非复制整个旧仓库或重写GUI。已确认旧源有`cmd/wbd-client/main_{linux,windows}.go`、`cmd/wbd-server/main_linux.go`、`internal/configfile/config.go`、`windows/gui/{MainForm,Portable,GuiTests}.cs`、`windows/gui/fields.json`、`docs/PARAMETERS.json`和`scripts/build_windows_gui.ps1`。
 
 本仓库保存最小适配文件/patch及一份装配清单：旧SOURCE、本仓库SOURCE、每个replace目标的原blob/hash、create目标必须不存在、结果hash、工具链/target/features。只在Actions临时checkout应用；拒绝浮动旧分支、模糊patch或静默覆盖。创建文件继续可用现有overlay机制，修改原文件须显式replace记录。清单是构建来源，不是第二份功能/进度目录。
