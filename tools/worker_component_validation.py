@@ -76,6 +76,20 @@ def check_abba_lines(lines,clock_ticks):
              int(x["cpu_ticks"])/clock_ticks>=1 for x in parsed),
          "quantized native CPU measurement inconclusive")
     return parsed
+def verify_functional_log(data,role):
+    # Cargo can return 0 and still print 'test result: ok.'; this is NOT
+    # functional evidence. Count actual passed tests, deny failed/zero.
+    need(isinstance(data,str) and role in SUITES,"invalid functional log")
+    counts=re.findall(r"test result: ok\\. (\\d+) passed; (\\d+) failed; (\\d+) ignored;",data)
+    need(len(counts)>=1,"incomplete Cargo test result")
+    passed=sum(int(p) for p,_,_ in counts)
+    need(passed>0 and all(int(f)==0 for _,f,_ in counts),
+         "zero functional cases or failed tests")
+    if role=="M3":
+        need("r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact" in data,
+             "native M3 workspace dirty-tail test absent")
+    return passed
+
 def validate_manifest(m,role,req,control):
     need(m.get("schema_version")==1 and m.get("stage")=="prepare","wrong manifest")
     need(m.get("role_id")==role and m.get("scenario")==req["scenario"] and
@@ -234,8 +248,8 @@ def compile_prepare(request,output):
         with (output/("functional-"+label+".log")).open("wb") as log:
             shell(args+focused+["--","--nocapture"],cwd=workspace,env=env,out=log)
         logdata=(output/("functional-"+label+".log")).read_text()
-        need("test result: ok." in logdata,"focused functional tests missing PASS")
-        functional[label]=sha(logdata.encode())
+        passed=verify_functional_log(logdata,role)
+        functional[label]={"sha256":sha(logdata.encode()),"passed":passed}
         with (output/("compile-"+label+".log")).open("wb") as log:
             shell(args+["--test",test,"--no-run"],cwd=workspace,env=env,out=log)
         artifacts=list((workspace/"target/release/deps").glob(test+"-*"))

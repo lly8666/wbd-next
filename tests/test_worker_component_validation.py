@@ -82,6 +82,21 @@ class ValidationTests(unittest.TestCase):
             if what=="missing":v.pop()
             with self.subTest(what=what),self.assertRaises(ValueError):
                 w.check_abba_lines(v,100)
+    def test_prepare_does_not_pass_zero_or_missing_functional_tests(self):
+        for role in ("M1","M3"):
+            header=("test fec_v2_tests::r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact ... ok\\n"
+                    if role=="M3" else "test game_shared_tests::first_delivery ... ok\\n")
+            good=header+"test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out\\n"
+            self.assertEqual(w.verify_functional_log(good,role),1)
+            for bad in ("test result: ok. 0 passed; 0 failed; 0 ignored; 100 filtered out",
+                        "test result: FAILED. 1 passed; 1 failed; 0 ignored",
+                        "compiling... cargo returned 0 without running tests",
+                        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 filtered out"):
+                # For M3 a success without the named native test is also invalid.
+                if role=="M1" and bad.startswith("test result: ok. 1 passed"):
+                    continue
+                with self.subTest(role=role,bad=bad),self.assertRaises(ValueError):
+                    w.verify_functional_log(bad,role)
     def test_manifest_rejects_platform_scalar_old_source_or_missing_binary(self):
         d=request("M3")
         manifest={"schema_version":1,"stage":"prepare","role_id":"M3",
