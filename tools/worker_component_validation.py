@@ -148,7 +148,7 @@ def remote_preflight(args):
          "invalid worker request")
     need(SHA.fullmatch(args.request_ref) and SHA.fullmatch(args.control_sha),
          "request/control must be exact SHA")
-    need(args.control_ref=="qualification/worker-ci-v1","not published control ref")
+    need(args.control_ref=="qualification/worker-ci-v2","not published control ref")
     registry=api("contents/.governance/registry.json?ref=main")
     registry=json.loads(base64.b64decode(registry["content"]))
     worker=next(z for z in registry["roles"] if z["id"]==role)
@@ -346,7 +346,7 @@ def paired_run(request,bundle,out,control):
         (out/"log-abba.txt").write_text(result.stdout+result.stderr)
         need(result.returncode==0 and "test result: ok." in result.stdout,
              "M3 native fixture failed")
-        lines=re.findall(r"^M3_018_ABBA leg=[^\n]*",result.stdout,re.M)
+        lines=re.findall(r"M3_018_ABBA leg=[^\n]*",result.stdout)
         parsed=check_abba_lines(lines,clock)
         need("M3_018_ABBA_DONE" in result.stdout,"M3 terminal ABBA missing")
         # This existing fixture records in-process CPU ticks/wall but NOT

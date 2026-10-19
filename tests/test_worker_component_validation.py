@@ -18,7 +18,7 @@ def request(role="M1",stage="prepare"):
        "source_sha":B,"harness_sha":H,"baseline_sha":A,
        "config_path":fixture,"config_sha256":w.sha(CFG),
        "scenario":suite,"seed":631,"workflow":w.CONTROL_WORKFLOW,
-       "dispatch_ref":"qualification/worker-ci-v1","measurement_jobs":1,
+       "dispatch_ref":"qualification/worker-ci-v2","measurement_jobs":1,
        "samples":1 if stage=="prepare" else 2 if role=="M1" else 4,
        "status":"PLANNED","_request_path":".governance/workstreams/"+role+"/requests/WR-001.json"}
     if stage=="paired":
@@ -30,7 +30,7 @@ def request(role="M1",stage="prepare"):
                        for x in ("AB" if role=="M1" else "ABBA")])
     return d
 def check(d,stage,cfg=CFG):
-    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v1",
+    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v2",
              CONTROL,reg(d["role_id"]),"e"*40,"f"*40,cfg)
 class ValidationTests(unittest.TestCase):
     def test_valid_both_stages(self):
@@ -66,6 +66,12 @@ class ValidationTests(unittest.TestCase):
         lines=["M3_018_ABBA leg=%d version=%s backend=NativeIsaL k=16 r=16 e=4 recoveries=2000000 checksum=83 wall_ns=1100000000 cpu_ticks=150"%(i,x)
                for i,x in enumerate("ABBA")]
         self.assertEqual(len(w.check_abba_lines(lines,100)),4)
+        # Rust libtest --nocapture can print the test-name prefix before
+        # the FIRST fixture marker, which must not silently drop leg 0.
+        streamed="test worker_fixture ... "+lines[0]+"\n"+"\n".join(lines[1:])
+        import re
+        found=re.findall(r"M3_018_ABBA leg=[^\n]*",streamed)
+        self.assertEqual(len(w.check_abba_lines(found,100)),4)
         for what in ("scalar","order","checksum","work","cpu","missing"):
             v=lines[:]
             if what=="scalar":v[1]=v[1].replace("NativeIsaL","Scalar")
