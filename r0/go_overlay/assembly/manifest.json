@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "5c738da2a0e70ee3897f3299279efb7d19566c13",
+      "result_blob": "84a809968e0fd2993cd8050164b8d0efbfe33a5b",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -100,6 +100,14 @@
         {
           "find": "\tif *recoverNetwork {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn windowsclient.N4NativeRecoverState(ctx, *statePath)\n\t}",
           "replace": "\tif *recoverNetwork {\n        // Manual CLI Recover and GUI-owned Connect share the SAME named\n        // machine slot. Avoid TOCTOU: the GUI's read-only ClientBusy check\n        // is advisory; only this atomic OS event fences actual recovery.\n        slot, err := acquireGUIClientSlot()\n        if err != nil { return err }\n        defer windows.CloseHandle(slot)\n        ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n        defer cancel()\n        return windowsclient.N4NativeRecoverState(ctx, *statePath)\n    }"
+        },
+        {
+          "find": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")",
+          "replace": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")\n\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")"
+        },
+        {
+          "find": "\tflag.Parse()\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {",
+          "replace": "\tflag.Parse()\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {\n        if *recoverNetwork {return errors.New(\"native-state-json and recover-network cannot run together\")}\n        snapshot, err := windowsclient.N4NativeInspectState(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(snapshot)\n    }\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {"
         }
       ]
     },
