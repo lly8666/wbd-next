@@ -4,16 +4,16 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 32,
-  "checkpoint_sha": "eddcee59156a8ae49bb9cc00afc8621e8a4ad37d",
+  "sequence": 33,
+  "checkpoint_sha": "60aaf224572578028ed68e23e5a4ac186fac779c",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "PLAN010 M4-016 Windows native original-Go/WinForms product: test actual OS named exclusive owner/release for CLI Connect vs manual Recover, source-locked 28-op assembly, runtime PowerShell-free recovery; native WFP real network still fail-closed/unverified.",
-  "why_now": "File inventory largely authored but user-operable Connect/Disconnect and durable WFP are not qualified. Existing original Go CreateEvent helper handles ERROR_ALREADY_EXISTS, now I005 adds actual native Windows original CLI named owner test including second-owner reject/release/reclaim plus named PASS. Exact new 28-op canonical manifest SHA256 b8e263, single immutable I005 request; G2/Windows Action not yet verified. I002 original artifact Windows FAIL preserved.",
+  "current_task": "PLAN010 M4-016 original Windows CLI/WinForms native no-shell product. I003/I004 Windows scoped PASS; I005 full CLI tests FAIL on retired shell helper references. I006 migrates three exact pinned original test files and runs complete native CLI test suite with named attestation, remains unverified.",
+  "why_now": "After central G2 H32 PASS run39255478870 and main dispatcher39255960341 dispatch accepted I003/I004/I005, Windows I003 39256215954 PASS and I004 39256220073 PASS, I005 39256224174 Windows FAIL at old test source compile undefined defaultWindowsNetworkScript/runNetworkActionContext/applyOwnedNetworkWith/networkCommandContext; original Go build and native no-shell recover case passed. New 31-op manifest updates EXACT three cold Go tests without restoring obsolete runtime scripts, retains 12 immutable donor files.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Consume H32 exact central G2 and I005 source eddcee59 one Windows-2022 original Go owner test (named PASS), recover test and GUI selftest. If red inspect actual logs and repair scoped source. For core product, original WFP Arm remains fail-closed; implement isolated owned real Wintun/DNS/IPv6/route guarded Apply/Cleanup with M0 authenticated Rust Stop and source-locked real readback before any production enable. Windows2025/physical still NOT_RUN; product FEC2 OFF.",
+  "next_action": "Verify exact H33 central G2, main-only auto dispatch I006 c2e16595 candidate S60aaf2 manifest 323458998ceb69eab1d3398f8f0a032314029e0ab3ad17ba64a8c4c6d6d06cf7; consume real Windows native full CLI suite named PASS, original GUI smoke, failure artifact if any. M0 owns shared Rust Stop ABI and dispatcher, production WFP Arm remains fail-closed; no isolated native Connect/Disconnect/DNS/IPv6/route PASS yet. FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "8b02bd2a6c78c01610b4a15db9e2236fdbda2899",
+  "last_tested_source": "eddcee59156a8ae49bb9cc00afc8621e8a4ad37d",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
@@ -23,12 +23,13 @@
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-002.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-003.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-004.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-005.json"
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-005.json",
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-006.json"
   ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H32 active. New source eddcee59 I005 744e4cbd 28-op manifest SHA256 b8e263, added original Windows Go native owner event first/duplicate/reacquire test and explicit named PASS in Actions smoke. Prior 9/9 original and 18/18 overlay exact Git blob verification at H31; new test blob pinned. No independently confirmed recent I003/I004 Windows/G2 results; I002 exact assembly FAIL historical. WFP Arm deliberately rejects, real Connect/Stop/isolated DNS/route/Rust applied unqualified, production FEC2 OFF, main merge M0-owned."
+  "partial_summary": "H33 ACTIVE. G2 H32 39255478870 PASS and dispatcher39255960341 accepted I003/4/5. Windows2022 I003 39256215954 scoped PASS, I004 39256220073 scoped PASS; I005 39256224174 attested but Windows FAIL when 3 old Go test files reference removed PowerShell helpers, native Recover named PASS prior to Go CLI tests. M4 S60aaf2 replaced 3 original tests with native admission/owner/Stop checks via 31 exact original+12-donor ops, request I006 c2e165. New full original Go CLI test + GUI NOT_RUN; WFP Arm closed, Rust applied/network isolated/Win2025/physical NOT_RUN, feature OFF."
 }
