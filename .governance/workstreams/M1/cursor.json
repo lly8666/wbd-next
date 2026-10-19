@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 24,
-  "checkpoint_sha": "a3920da49a69ae13bd02460ef99f51c6ea9e18e5",
+  "sequence": 25,
+  "checkpoint_sha": "366aca69d5034f7fe03cb7a14ee01704528457bb",
   "progress": "partial",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 Game015 M1 component release A/B: worker frozen v6 prepare intent M1-GAME015-AB-PREP-003 published S24, G2->M0 main-only auto-dispatch should start on exact current H24 audit. Old v5 preflight CLI failure retained; native 133/133 CODE functional still PASS, cost NOT_RUN until paired.",
-  "why_now": "M0 PLAN-009 autonomous dispatcher main after G2 accepted, issue #14 requested forward-only new v6 M1 request. Old request002 actually dispatched by dispatcher39204817044 -> workflow39204910923 FAIL authorize argparse --stage not recognized; never built Rust, not a functional regression. v6 control fab2e1d7 S contract 39205218653 PASS. S24 request003 retains same code/harness/fixture SHA and rev2 epoch1, supersedes request002.",
-  "done_when": "One exact v6 prepare run passes real affected nonzero test and produces two distinct release artifacts/manifest, then a new paired_ab request pins real prepare run/attempt/artifact/hash. Pair old/new same VM on identical fixture; check outputs/CPU/RSS/capacity and write factual report. Until complete old source functional133/133 PASS only; performance NOT_RUN and Go/physical/product NOT_RUN.",
-  "next_action": "Watch M0 audited worker dispatcher triggered by CENTRAL G2 exact H24 after worker Governance; verify v6 workflow run named M1|M1-GAME015-AB-PREP-003|prepare|fab2e1d7... and its authorize+prepare jobs. Do not manually redispatch or rerun old v5. On prepare SUCCESS download exact manifest and create independent paired_ab request I. On FAIL preserve logs and repair only authorized M1 fixture or coordinate M0 tooling as applicable.",
+  "current_task": "Game015 same-VM old/new Release paired AB: v6 prepare independently verified PASS and exact performance request M1-GAME015-AB-PAIRED-001 published S25. Paired Action awaits H25 central G2 main-owned autonomous dispatch.",
+  "why_now": "M0 automatic dispatch repairs verified: requested v6 M1 prepare003 actual Action39208300168 attempt1 SUCCESS authorize+prepare, 13/13 focused old and new each; worker-prepare artifact12166063332 ZIP sha256 6549b2c4f..., manifest bytes sha256 85f77330bc7a..., binaries A 3f2d6d08... B b1e9d6e1... independently verified. User asked continue AB; new paired request freezes real artifact; never extrapolate prepare as performance PASS.",
+  "done_when": "Wait on central exact H25 G2 ROLE_SCOPE_PASS and matching M0 v6 dispatcher Action; require one paired Action with a single measurement job, actual verified identical business receipts and CPU >=1s each, kernel/CPU quota/PSI and RSS. Preserve FAIL/INCONCLUSIVE/no performance claim unless real receipt and jobs check. Upon actual AB receipt PASS or honest FAIL, update evidence and cursor as S->H. Product/physical Go NOT_RUN.",
+  "next_action": "Check latest H25 central G2 and main-only worker auto-dispatch (do not manually duplicate). Require v6 run name M1|M1-GAME015-AB-PAIRED-001|paired|fab2e1d7... and run source fab2e1d7..., verify paired job successful and artifact worker-paired-<run>-<attempt> receipt JSON against new request, manifest SHA256 85f77330..., build run39208300168 attempt1 artifact12166063332. Diagnose capacity or test failure before next action; no shared CI edits.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -24,11 +24,12 @@
     ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md",
     ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-001.json",
     ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-002.json",
-    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-003.json"
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-003.json",
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PAIRED-001.json"
   ],
   "context_refs": [
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H24 cursor-only after S24 a3920da49a69ae13bd02460ef99f51c6ea9e18e5; v6 request003 code/harness64102db5, frozen baseline c80ff6a5, config SHA256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8, control fab2e1d7; M0 autonomous dispatch confirmed previous v5 run39204910923 failed in --stage argument parsing (no Cargo). G2 native CODE39188056715 133/133 PASS, H23 central exact scope39201507034 success. New v6 prepare currently pending automatic dispatch; no paired receipt yet, cost NOT_RUN."
+  "partial_summary": "H25 after S25 366aca69d5034f7fe03cb7a14ee01704528457bb. User HOLD lifted. Native CODE64102db5 133/133 PASS, v6 same-Vm release prepare39208300168 attempt1 AUTH+PREPARE success, 13 A and 13 B tests, artifact12166063332 downloaded ZIP+real manifest and executables SHA256 verified, ref qualification/worker-ci-v6 fab2e1d7cbe12109ef9215c6caf358946ead522b. New paired_ab M1-GAME015-AB-PAIRED-001 references exact manifest 85f77330bc7a8fdd679b543c60714210bee350685c8bfc1884cd485ca2b97481. No paired run or CPU claim yet. v5 argparse FAILED remains recorded, product/Go/physical NOT_RUN."
 }
