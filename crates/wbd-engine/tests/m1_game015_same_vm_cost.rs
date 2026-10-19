@@ -10,6 +10,7 @@ use wbd_engine::{memory::Arena,runtime::game_shared::{
     PieceProgress,QualifiedLane,RxLimits,
 }};
 use wbd_types::{BlockIdExt,LaneKey,LogicalPacketId,TunnelKey};
+use wbd_types::buffer_contract::UniqueSealable;
 
 #[test]
 #[ignore = "M0-owned isolated paired same-VM ACTION required; ordinary worker-native is functional only"]
