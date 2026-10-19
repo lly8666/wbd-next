@@ -4,16 +4,16 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 39,
+  "sequence": 40,
   "checkpoint_sha": "a5de4452a7c240d4866352de157deed3565a17b6",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 FEC2 RS16 cache/workspace old vs new source-locked real ISA-L e4 ABBA entry committed; single H39 cursor-only governance review. Native ABBA measurement still NOT_RUN.",
-  "why_now": "User requests exactly one H checkpoint and only check its result. Previous S a5de445 added test-only accepted-code8cc exact blob and same-process CODE437 native-old/new 2M e4 x ABBA harness without modifying production codec. At S source a5de worker-native 39189856227 123 PASS/0 FAIL/1 ignored; baseline native new CODE437 and ignored ABBA are NOT_RUN. S governance 39189856158 failed GitHub HTTP403, not a scope or native assertion. H39 is the only additional push.",
+  "current_task": "PLAN008-018 codec e4 recovery cache/workspace exact SOURCE qualification; separate test-only old/new native ISA-L ABBA entry committed at a5de445, actual ABBA still NOT_RUN.",
+  "why_now": "H39 worker Governance39190706888 reached ROLE_SCOPE_PASS over 158 history commits but structure validation exited 2 because cursor evidence_refs fixture source 437cc721 did not equal H39 last_tested_source a5de445. Central G2 exact H39 run39190960449 PASS. H40 corrects only this SOURCE evidence alignment. CODE437 default/scalar cache evidence remains exact; a5de445 added test-only ABBA integration fixture and worker-native39189856227 PASS 123/0/1, not a real ISA-L benchmark.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Observe exactly H39 Governance and associated central unified G2 run; report observed PASS/FAIL and error. Do not commit anything else or re-run native ABBA until a supported real ISA-L Actions runner executes the ignored test. FEC2 product OFF.",
+  "next_action": "Confirm H40 ordinary Governance structure and central G2 on exact HEAD. Preserve SOURCE-qualified CODE437 cache evidence; ABBA fixture a5de445 real ISA-L old/new sameVM ABBA and new cfg(native-isal) equivalence still NOT_RUN until authorized native Actions execution. Do not enable FEC2 product.",
   "unverified": true,
-  "last_tested_source": "a5de4452a7c240d4866352de157deed3565a17b6",
+  "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
   "evidence_refs": [
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json"
   ],
@@ -28,5 +28,5 @@
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
     "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
-  "partial_summary": "H39 one cursor-only checkpoint over S a5de445. Pinned A 8cc5b06 and B 437cc721 in a single ignored test-only Release native-isal ABBA fixture, 2M e4 recoveries/leg, A-B-B-A; actual native ABBA NOT_RUN. S a5de native-default 39189856227 PASS 123/0/1; R0 wire/record/link/static and scoped bootstrap also PASS. S governance39189856158 FAIL GitHub API HTTP403; central G2 no64 gate. H39 governance result pending. No product FEC2 enablement."
+  "partial_summary": "H40 fixes previous evidence SOURCE mismatch without adding code/tests or fabricating results: last_tested_source CODE437 matches single CODE437 cache evidence (123 default PASS, 0 fail, 1 ignored at 39187710688). S a5de445 benchmark fixture separately had default worker-native 39189856227 123/0/1 PASS but the ignored real ISA-L ABBA remains NOT_RUN. H39 role history scope PASS (158), central G2 39190960449 PASS; H39 overall Governance FAIL structure evidence mismatch, retained. H40 pending. FEC2 product OFF."
 }
