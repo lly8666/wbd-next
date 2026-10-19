@@ -13,6 +13,10 @@ on:
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_fixed_stream.rs"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
+      - "tools/run-v4-tun-netns.sh"
 permissions: {contents: read}
 concurrency:
   group: m0-plan012-combined-functional-${{ github.sha }}
