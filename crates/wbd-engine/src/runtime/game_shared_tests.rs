@@ -633,6 +633,7 @@ fn game_r5_lane25m_case(nlanes:usize,payload:usize){
     // PASS only asserts correctness, not that the host achieved rate/capacity.
     println!("M1_GAME_LANE25_PROFILE profile=debug mode=Game lanes={nlanes} payload_bytes={payload} target_per_lane_mbps=25 target_aggregate_mbps={} wall_ns={wall_ns} offered_packets={packets} unique_rx={first} duplicate_rx={duplicate} copies={} actual_aggregate_mbps={measured_mbps:.5} per_lane_mbps={:.5} p50_processing_ns={p50_ns} p99_processing_ns={p99_ns} cpu_ns={} cpu_percent={} cpu_ns_per_logical={} tx_bytes={good_bytes} lane_payload_bytes={max_slot_bytes} total_copied_bytes={emitted_bytes} copied_byte_checksum={byte_sum} lane_copy_drop={} tardy_ticks={tardy_ticks} max_tick_lateness_us={max_lateness_us} rss_before_kib={} rss_after_kib={} hwm_before_kib={} hwm_after_kib={} cgroup_anon_before={} cgroup_anon_after={} nr_throttled_delta={} throttled_us_delta={} host_capacity_25m_met={} network=NOT_RUN tls=NOT_RUN fec=NOT_RUN release=NOT_RUN",
         nlanes*25,
+        packets*nlanes as u64,
         measured_mbps/nlanes as f64,
         cpu_ns.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
         cpu_percent.map_or_else(||"NOT_RUN".into(),|v|format!("{v:.4}")),
