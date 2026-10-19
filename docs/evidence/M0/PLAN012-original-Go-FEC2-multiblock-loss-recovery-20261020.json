@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "28fe89d447d4bd5c7d3310b43c48465f9dc7bf77",
+  "scope": "ACCEPTED_SCOPED_DEV_ORIGINAL_GO_TLS_MULTIBLOCK_KERNEL_SOURCE_PARITY_INDEPENDENT_TEST_ONLY_PEER_RS16_RECOVERY",
+  "result": "PASS_SCOPED_NOT_PRODUCT",
+  "run_id": 39293609828,
+  "run_attempt": 1,
+  "job_id": 118200326820,
+  "artifact_id": 12205873379,
+  "artifact_sha256": "8f79c9aaae9d6a508e89fec8d88eb27426a2b2dd109211b7448f9ac930a13037",
+  "test_harness": ".github/workflows/m0-plan012-combined-functional.yml",
+  "exact_marker": "M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_RECOVERY_PASS",
+  "counts": {
+    "go_kernel_original_fec_blocks": 4,
+    "m4_parity_records": 3,
+    "real_go_tun_ipv4_test_frames": 4,
+    "test_peer_missing_raw_ciphertext": 1,
+    "rs16_recovered_candidate": 1,
+    "client_real_tun_write": 0
+  },
+  "tests": {
+    "release_fec_record": "PASS_1_OF_1",
+    "game_native_lanes": "PASS_2_OF_2",
+    "fec_multi_rx_native": "PASS_3_OF_3",
+    "fixed_stream_native": "PASS_3_OF_3",
+    "go_kernel_original_tls_one_block_suite": "PASS_3_SUITE_REGRESSION",
+    "go_kernel_real_background_multiblock": "PASS_DEVELOPER_ONLY_INDEPENDENT_TLS_KEY_RECEIVER"
+  },
+  "gate": {
+    "original_go_product_client_rx": "NOT_RUN",
+    "real_client_tun_udp_app": "NOT_RUN",
+    "fixed_remote_authenticated_M2_APPLIED": "NOT_RUN",
+    "Auto_live_M2_closed_loop": "NOT_RUN",
+    "Game_real_2_4_kernel": "NOT_RUN",
+    "Windows_native_WFP_product": "NOT_RUN",
+    "sustained_20Mbps": "NOT_RUN",
+    "production_FEC2": "OFF"
+  },
+  "old_failure": {
+    "run_id": 39287323889,
+    "result": "FAIL",
+    "reason": "CI grep excluded third new native receiver test; fixed in prior source"
+  },
+  "preceding_source": {
+    "sha": "a5f6572ed978e0084cf8d4c1bb04a6a07b374de3",
+    "run_id": 39292881806,
+    "result": "PASS_SCOPED_WITHOUT_LOSS",
+    "artifact_sha256": "f57ab96846ab4ccd41cd67ec464df2bef736bffadcfd878aec385f9177db6b48"
+  }
+}
