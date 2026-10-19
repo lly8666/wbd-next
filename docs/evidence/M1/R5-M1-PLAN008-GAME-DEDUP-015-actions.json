@@ -8,7 +8,7 @@
   "source_sha": "64102db5e101df1f678e17919169927ad19bad06",
   "result": "PASS",
   "artifact_verified": true,
-  "qualification": "M1 Game RX dedup/open-index functional native and bounded-operation component only; strict separate-SOURCE ABBA cost and Go/live/product NOT_RUN",
+  "qualification": "PLAN-008 GameRX ring dedup/open index bounded operations and native functional, plus one source-locked same-VM two-release-binary paired_ab component CPU run PASS. ABBA/Go/physical/product NOT_RUN; full product readiness not claimed.",
   "scope": "PLAN-008 §1 M1/§4, preserves Game013 public/ownership semantics, no M0 admission, codec wire, recovery or driver qualification",
   "native": {
     "run_id": 39188056715,
@@ -58,9 +58,9 @@
     "fixture": "64 independently verified rounds x 262144 GameRx inputs, one old/new frozen fixture each, total 16777216 inputs; identical RX ids/lane/blocks/Stop/loans per round, receipts explicitly print rounds and total_inputs; unmodified frozen runner expects per-round inputs=262144.",
     "old_code_source_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
     "new_code_source_sha": "64102db5e101df1f678e17919169927ad19bad06",
-    "required": "M0-owned isolated same-VM two-release-binary paired ABBA: exact old+new SHAs and identical fixture hash, each binary SHA, one measurement job, cpu/quota/PSI/steal + RSS, same input checksum, capacity stop",
-    "status": "NEW_64ROUND_PREPARE_PASS_PAIRED_PENDING",
-    "diagnostic": "Unrelated worker-native owner sample and test-run timing are NOT an isolated Game015 old/new performance comparison. Fixture compiled by Actions but #[ignore] not executed.",
+    "required": "One representative same-VM old/new GameRX cost: M1 PLAN-009 frozen v6 paired_ab A then B, identical compile control and fixture, one measurement job, source/binary and receipt hashes; preserve separate former ABBA ask unrun; memory/quota/PSI limits explicitly tagged.",
+    "status": "PAIRED_AB_PASS_SCOPED_WITH_WORK_ACCOUNTING_NOTE",
+    "diagnostic": "First v6 262144-input paired001 Action39210280319 INCONCLUSIVE on CPU <1s; second identical 64x fixture build/run PASS with genuine 16,777,216 inputs per leg. Not a product CPU claim. Shared runner's receipt.work=262144 is PER-ROUND while fixture logs total_inputs=16777216; report corrected denominator and never silently equate the two. RSS measured as cumulative RUSAGE_CHILDREN high-water and cannot compare leg A vs B independent memory.",
     "mode": "paired_ab",
     "prepare": {
       "request_id": "M1-GAME015-AB-PREP-004",
@@ -93,12 +93,85 @@
     },
     "paired": {
       "request_id": "M1-GAME015-AB-PAIRED-002",
-      "request_status": "PLANNED",
+      "request_ref": "42eb18a81abf7dc776570bb62c165ed63ae5ccb5",
       "mode": "paired_ab",
+      "dispatch_ref": "qualification/worker-ci-v6",
+      "control_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "run_id": 39212126443,
+      "attempt": 1,
+      "status": "PASS",
+      "conclusion": "success",
+      "workflow": ".github/workflows/worker-component-validation.yml",
+      "measurement_job_id": 117927717275,
+      "authorize_job_id": 117927653363,
+      "artifact_id": 12167324094,
+      "artifact_name": "worker-paired-39212126443-1",
+      "artifact_zip_sha256": "b76a7da03ebf6af2b14e70b63f9570a4178d0e33e69347da32db209511918e8b",
+      "receipt_json_sha256": "2bf4e73706480e8446703a2b5b757fd7037fa5a4c16b3da278eac99786d9808d",
+      "log_A_sha256": "df09cc316e7700e90676ab5f1688534d11b7dc75c592b77ac0bc73628bf8a2bc",
+      "log_B_sha256": "a08a469d9eec3072dfc4dd1fd3bc552d3c3056caf44e39bda991a54e2dab65c5",
       "prepare_run_id": 39211331750,
+      "prepare_run_attempt": 1,
       "prepare_artifact_id": 12167499186,
-      "manifest_sha256": "7573ed1c74ea92634b03a3aa063e823fe0a1835cf5ce7ba24e8d38c87f5eec32",
-      "result": "NOT_RUN"
+      "prepare_manifest_sha256": "7573ed1c74ea92634b03a3aa063e823fe0a1835cf5ce7ba24e8d38c87f5eec32",
+      "harness_sha": "c6f8c1e971ce82cf76b44427f86f4dac123afc5e",
+      "config_sha256": "81aa223a21bc2a1f5e914b9e22768ad506eeba886c00816ae1390e1063a6b9c8",
+      "sample_info": {
+        "window": 65536,
+        "lanes": 4,
+        "rounds": 64,
+        "per_round_inputs": 262144,
+        "true_total_inputs_per_leg": 16777216,
+        "receipt_work_field_per_leg": 262144,
+        "receipt_work_field_semantics": "per-round only; shared runner fixed parser",
+        "first_each": 15790336,
+        "duplicate_each": 986880,
+        "complete_each": 63488,
+        "checksum_each": "506340864",
+        "equal_business_work_and_output": true,
+        "code_sources_distinct": true,
+        "fixture_blob_identical": true
+      },
+      "A": {
+        "source_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+        "cpu_s": 11.374184,
+        "wall_ns": 11375180027,
+        "start_monotonic_ns": 104857812487,
+        "end_monotonic_ns": 116232992514,
+        "source_actual_log_elapsed_ns": 11373401565,
+        "peak_rss_kib_cumulative_children": 49548
+      },
+      "B": {
+        "source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+        "cpu_s": 1.5778890000000008,
+        "wall_ns": 1578203135,
+        "start_monotonic_ns": 116233382768,
+        "end_monotonic_ns": 117811585903,
+        "source_actual_log_elapsed_ns": 1576689141,
+        "peak_rss_kib_cumulative_children": 49548
+      },
+      "cpu_ratio_A_over_B": 7.208481711958188,
+      "cpu_reduction_fraction": 0.8612745318697147,
+      "actual_cpu_ns_per_true_input_A": 677.9541969299316,
+      "actual_cpu_ns_per_true_input_B": 94.04951333999638,
+      "same_measurement_job": true,
+      "nonoverlapping_monotonic_legs": true,
+      "cpu_s_min_one_second_each": true,
+      "host": {
+        "architecture": "x86_64",
+        "cpu_count": 4,
+        "kernel": "6.17.0-1022-azure",
+        "cgroup_cpu_max": "NOT_RUN",
+        "pressure_cpu": "some avg10=0.00 avg60=0.45 avg300=0.38 total=1920588; full avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "clock_ticks_per_second": 100
+      },
+      "capacity_and_memory_limits": [
+        "A/B single job and both cpu windows >1s. Cannot conclude quota normalization: cgroup_cpu_max NOT_RUN on host.",
+        "Peak RSS 49548 KiB is cumulative resource.RUSAGE_CHILDREN max; no independent per-leg process RSS comparison.",
+        "One AB order, no BA/ABBA reverse-order or repeated-host variance; synthetic release fixture only.",
+        "Fixture included 64 fresh scoped receiver windows, not live original Go/FEC2/physical or product p99/500 Mbps."
+      ],
+      "independently_verified": "Downloaded official paired artifact ZIP; checked raw ZIP/receipt/log SHA256, exact GitHub run/attempt/single paired job IDs/status, source/control/fixture/manifest/leg intervals, both CPU>=1s, actual 64-round per-leg counts/output/checksum; normalized true work from fixture logs rather than undercounted receipt.work."
     },
     "history_control_failure": {
       "run_id": 39204910923,
@@ -136,10 +209,11 @@
       "rounds": 64,
       "per_round_inputs": 262144,
       "total_inputs": 16777216,
-      "status": "PASS",
+      "status": "PASS_COMPLETED",
       "run_id": 39211331750,
       "manifest_sha256": "7573ed1c74ea92634b03a3aa063e823fe0a1835cf5ce7ba24e8d38c87f5eec32",
-      "artifact_id": 12167499186
+      "artifact_id": 12167499186,
+      "followup": "paired002 Action39212126443 PASS"
     },
     "previous_prepare": {
       "control_ref": "qualification/worker-ci-v6",
@@ -218,20 +292,27 @@
       "run_id": 39206565174,
       "result": "ROLE_SCOPE_PASS",
       "conclusion": "success"
+    },
+    "latest_h27_central": {
+      "source_sha": "4199ab358d483bbf5a1963cb843ca11a38319d0a",
+      "run_id": 39211809153,
+      "result": "ROLE_SCOPE_PASS",
+      "conclusion": "success",
+      "note": "H27 current branch exact source; new H28 must audit separately"
     }
   },
   "not_run": {
-    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN; M1 paired_ab separate stage",
-    "isolated_cpu_s_and_RSS_comparison": "Original paired001 INCONCLUSIVE retained, new identical 64-round paired002 NOT_RUN pending current G2",
+    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN (separate full ABBA/BA request not executed)",
+    "isolated_cpu_s_and_RSS_comparison": "CPU comparison PASS scoped AB; independent per-leg RSS comparison NOT_INSTRUMENTED; cgroup quota NOT_RUN",
     "M0_M3_Go_tls_game_live_multilane": "NOT_RUN",
     "physical_product_p99_500Mbps": "NOT_RUN"
   },
   "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts.",
   "handoff": {
-    "state": "NEW_PAIRED_AB_REQUEST_READY_AUTODISPATCH",
+    "state": "M1_GAME015_AB_COMPONENT_PASS",
     "recorded_on": "2026-10-19",
-    "next_execution": "V6_PAIRED002_CONSUME_REAL_64ROUND_PREPARE",
-    "preserved": "v5 authorize FAIL, v6 paired001 CPU INCONCLUSIVE, original native133 PASS, new prepare004 13+13 PASS; product NOT_RUN",
-    "coordination": "M1 tests-only fixture S26 and owned request004; M0 frozen v6 auto dispatch unchanged"
+    "next_execution": "M0 consumes scoped unchanged GameRx interface; distinct BA/ABBA and product remain not run",
+    "preserved": "Historical v5 CLI FAIL and v6 paired001 inconclusive retained; v6 paired002 current PASS limited to same-VM synthetic GameRx cost, product OFF.",
+    "coordination": "M1 owns fixture/test evidence; M0 owns shared CI, optional receipt.work total-round metadata correction, and original Go product integration."
   }
 }
