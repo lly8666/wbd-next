@@ -126,7 +126,7 @@ jobs:
             cat fixed-kernel-result/continuous-kernel.log;exit 1;
           }
           cat fixed-kernel-result/continuous-kernel.log
-          grep -q 'M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_CLIENT_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           p=pathlib.Path("fixed-kernel-result")
@@ -147,7 +147,7 @@ jobs:
             fec_release_record_3ciphers="PASS_NATIVE",
             game_2_4_own_AEAD_PN_replay="PASS_NATIVE_NOT_KERNEL",
             background_real_kernel_FEC_multiblock_source_repair="PASS_SCOPED_DEV_INDEPENDENT_PEER_NOT_PRODUCT_CLIENT",
-            one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_NOT_CLIENT_TUN_APPLIED",
+            one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
             fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
             FEC2_production="OFF",
             fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
