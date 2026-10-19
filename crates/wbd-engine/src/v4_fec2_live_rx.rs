@@ -167,10 +167,18 @@ impl Fec2LiveRx{
                 let recovered=self.rs.recover_missing(id,&live,&repairs,
                     self.budget,BackendChoice::Scalar)
                     .map_err(|_|ReceiveError::Codec)?.0;
+                let recovered_bytes=recovered.iter()
+                    .try_fold(0usize,|total,(_,frame)|total.checked_add(frame.len()))
+                    .ok_or(ReceiveError::Capacity)?;
+                if recovered_bytes>MAX_STORED_BYTES.saturating_sub(self.stored){
+                    return Err(ReceiveError::Capacity)
+                }
                 for (i,frame) in recovered {
                     let bit=1u16<<i;
                     if b.delivered&bit!=0{return Err(ReceiveError::ConflictingBlock)}
                     b.delivered|=bit;
+                    self.stored+=frame.len();
+                    b.bytes+=frame.len();
                     b.sources[i as usize]=Some(frame.clone());
                     output.push(FirstDelivery{block_id:id,index:i,
                         recovered:true,frame});
