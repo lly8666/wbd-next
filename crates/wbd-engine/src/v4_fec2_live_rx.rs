@@ -108,12 +108,22 @@ impl Fec2LiveRx{
     /// block completes. An independent AEAD/replay bitmap is forbidden.
     pub(crate) fn consume(&mut self,scope:VerifiedReceiveEpoch,
         wire:&mut [u8],now:MonoNs)->Result<Vec<FirstDelivery>,ReceiveError>{
+        self.consume_with_pn(scope,wire,now).map(|(_,deliveries)|deliveries)
+    }
+    /// The exact M3 AEAD+unique replay PN consumed for this DATA record.
+    /// Only after this return may M2 native RX count it as received.
+    /// Never infer record PN from untrusted outer header or application ID.
+    pub(crate) fn consume_with_pn(&mut self,scope:VerifiedReceiveEpoch,
+        wire:&mut [u8],now:MonoNs)
+        ->Result<(u64,Vec<FirstDelivery>),ReceiveError>{
         if self.stopped{return Err(ReceiveError::Stopped)}
         if scope!=self.credential{return Err(ReceiveError::Authorization)}
         let rec=self.opener.as_mut().ok_or(ReceiveError::Authorization)?
             .open_unique_with_fec2_after_admission_in_place(wire)
             .map_err(|_|ReceiveError::ReplayOrAuthentication)?;
-        self.accept_authenticated(scope,rec.kind,rec.payload,now)
+        let pn=rec.pn;
+        let deliveries=self.accept_authenticated(scope,rec.kind,rec.payload,now)?;
+        Ok((pn,deliveries))
     }
     /// Only callable from the original worker AFTER its single moved
     /// ReplayProtectedLaneRx has admitted AEAD and a unique PN. There is
