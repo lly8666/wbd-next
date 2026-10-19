@@ -22,8 +22,8 @@ from tools import governance as g
 from tools import worker_component_validation as entry
 
 ROLES = ("M1", "M3")
-CONTROL_REF = "qualification/worker-ci-v5"
-CONTROL_SHA = "484861e5aff4eb9098a25a42f1522e19716f09e8"
+CONTROL_REF = "qualification/worker-ci-v6"
+CONTROL_SHA = "fab2e1d7cbe12109ef9215c6caf358946ead522b"
 TARGET_WORKFLOW = ".github/workflows/worker-component-validation.yml"
 SCOPE_WORKFLOW = "scope-audit.yml"
 MAX_PAGES = 25
