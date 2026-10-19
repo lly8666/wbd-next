@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M1",
+  "branch": "work/m1-r1-runtime",
+  "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "M1 Game RX dedup/open-index functional native and bounded-operation component only; strict separate-SOURCE ABBA cost and Go/live/product NOT_RUN",
+  "scope": "PLAN-008 §1 M1/§4, preserves Game013 public/ownership semantics, no M0 admission, codec wire, recovery or driver qualification",
+  "native": {
+    "run_id": 39188056715,
+    "attempt": 1,
+    "workflow": "worker-native",
+    "build_job": 117854571541,
+    "consume_job": 117854676161,
+    "conclusion": "success",
+    "passed": 133,
+    "failed": 0,
+    "new_tests": 3,
+    "prior_scoped_tests": 130,
+    "filtered_r0": 3,
+    "artifact_id": 12158088977,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/39188056715/artifacts/12158088977",
+    "artifact_zip_sha256": "24e2c1809a11d2ad9ea5abd6655d499782d61a777e8d44a3853615f619147cbd",
+    "result_json_sha256": "e167975b85484ba45f15658cd152d1e6e3e6218d0522c3539ef90efdfacd5435",
+    "test_log_sha256": "d1ec59ee72344577eebacc22e53d5b213f27c929314aec8cdce34c5919b3f146",
+    "compiled_binary_sha256": "a11400b0af06f5300ec32e24ffe3a7dc2e4dd9ac12f4c478136047157b078a58",
+    "independently_checked": "Downloaded actual GitHub Actions result archive and SHA256 verified ZIP/result.json/test.log; result SOURCE/run/attempt 133 unique names match three new Game015 tests."
+  },
+  "files": [
+    "crates/wbd-engine/src/runtime/game_shared.rs",
+    "crates/wbd-engine/src/runtime/game_shared_tests.rs",
+    "crates/wbd-engine/tests/m1_game015_same_vm_cost.rs"
+  ],
+  "changes": [
+    "GameRx delivered window previously Vec<bool> rotate_left(shift) and full fill; now packed Vec<u64> and ring head, clears only expired bits via one/two partial word boundaries and whole expired words",
+    "size remains limited by RxLimits.delivered_window <=65536, packed bitmap <=8192 bytes versus old boolean <=65536 bytes; full huge-gap reset at most1024 words, sequential 1-step expiry at most one word",
+    "GameRx open block search previously Vec::iter().position O(open_blocks); now BTreeMap<BlockIdExt,usize> worst-case O(log open_blocks) <=8192, remaps the moved block after swap_remove and clears map on stop",
+    "Retains unmodified GameTx shared logical job, per-lane seal/first-delivery and Stop/loan semantics and old FEC2 014 deadlines"
+  ],
+  "tests": [
+    "r1_game_r5_dedup_ring_matches_old_reference_wrap_huge_gap_and_u64_max",
+    "r1_game_r5_sequential_full_window_advancement_is_constant_word_work",
+    "r1_game_r5_open_index_swap_remove_pressure_and_external_loan"
+  ],
+  "proof": {
+    "oracle": "Independent old Vec<bool> rotate_left reference, widths1/2/7/64/65/256/65536, sparse reorder/dup/stale, ring wrap, huge jump and u64::MAX",
+    "operations": "Test-only dedup_clear_word_ops: 4097 sequential arrivals after filled width65536 require <=4097 expired-word touches, versus old full-window moves; huge gap resets at most1024 words",
+    "index": "128 out-of-order two-shard blocks, 128 capacity denial, complete permutations with swap_remove, invariant open_index.len()==open.len() and all indices map correctly, external loan survives stop",
+    "carryover": "130 previously passing M1 scoped tests including Game013 and FEC2 014 remained passing"
+  },
+  "cost": {
+    "case": "crates/wbd-engine/tests/m1_game015_same_vm_cost.rs",
+    "fixture_blob_sha": "4c70bedf3bd4d07e959eaf73dcd63feb1ebe2821",
+    "fixture": "ignored stable 262144 RX inputs/65536 window/4 lanes/17th duplicate + 32-block pair every8192; identical fixture for both immutable code SOURCES, success checksums",
+    "old_code_source_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+    "new_code_source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+    "required": "M0-owned isolated same-VM two-release-binary paired ABBA: exact old+new SHAs and identical fixture hash, each binary SHA, one measurement job, cpu/quota/PSI/steal + RSS, same input checksum, capacity stop",
+    "status": "NOT_RUN",
+    "diagnostic": "Unrelated worker-native owner sample and test-run timing are NOT an isolated Game015 old/new performance comparison. Fixture compiled by Actions but #[ignore] not executed."
+  },
+  "history": [
+    {
+      "source": "d78c13199f610a78a77c022a491e51bea04085d4",
+      "run_id": 39187512339,
+      "status": "FAIL 132pass 1 failed NEW fixture used open_bytes128 when 128 first shards filled budget"
+    },
+    {
+      "source": "bd32edd233aebafe960f9b60d2fd4718a429d336",
+      "run_id": 39187671797,
+      "status": "PASS 133/133 three Game015 tests; before ignored paired fixture added"
+    },
+    {
+      "source": "da9c05d29c364d2301a8538312e784ae81f7c663",
+      "run_id": 39187966124,
+      "status": "FAIL compile cost fixture lacks UniqueSealable trait import"
+    },
+    {
+      "source": "1d504b30cdc49407ea0f71dc04ac3aeaf650816d",
+      "run_id": 39187995934,
+      "status": "FAIL compile ignored cost fixture needs mutable original for writable byte witness"
+    },
+    {
+      "source": "64102db5e101df1f678e17919169927ad19bad06",
+      "run_id": 39188056715,
+      "status": "PASS 133/133, ignored fixture compiled not run"
+    }
+  ],
+  "governance": {
+    "prior_014_h": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+    "prior_014_central": "39095544653 per PLAN-008 M0 audited M1 source ROLE_SCOPE_PASS; old M1 Governance failure retained",
+    "current_015_central": "PENDING_SOURCE_LOCKED_G2_SCOPE",
+    "current_015_h": "PENDING_CURSOR_HANDOFF"
+  },
+  "not_run": {
+    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN",
+    "isolated_cpu_s_and_RSS_comparison": "NOT_RUN",
+    "M0_M3_Go_tls_game_live_multilane": "NOT_RUN",
+    "physical_product_p99_500Mbps": "NOT_RUN"
+  },
+  "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts."
+}
