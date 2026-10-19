@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 170,
-  "checkpoint_sha": "60b65015edb581bcffd51abceffe2a0f76389816",
+  "sequence": 171,
+  "checkpoint_sha": "818e753d914180ffbd1061f8b5e4bcb46de37baf",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-009 §5 M0-025 short prerequisite: publish protected worker-owned prepare/paired M1 Game015 and M3 FEC2-018 native test harness, frozen qualification/worker-ci-v5 @ 484861e5aff4eb9098a25a42f1522e19716f09e8, 3 exact-source smoke/maintenance/governance PASS; M4 H24 central G2 39197439844 PASS scope only. No worker source/branch/cursor modified, FEC2 product OFF, M1/M3 actual performance NOT_RUN.",
-  "why_now": "User interrupted while completing PLAN-009. Recovered main at 3f87, identified v1/v2/v3 separate frozen branches, M4 latest central G2 success. Published v3 public manifest guide (S c533), then closed a genuine Cargo 'ok. 0 passed' false-green gate with source e782 regex red, repaired fd6. Fixed frozen control dispatch identity requirement and sealed immutable v5 source 484861, Action39199797039 contract-smoke +39199797121 maintenance +39199797034 governance success. One S 60b650 published v5 executable M1/M3 prepare→paired I request examples and Action artifacts; source Governance39200068463 PASS. Old red and source snapshots retained. Worker dispatch not fabricated; no new user permission needed.",
+  "current_task": "PLAN-009 §5 v5 worker selftest entry frozen, real M1/M3 prepare/paired worker-owned and NOT_RUN. M4 central G2 exact H24 PASS scope. Main M0 R0-025 protected owner product integration remains partial, FEC2 production OFF.",
+  "why_now": "Recovered interrupted PLAN-009, old v1-v4 historical immutable controls. v5 exact frozen SOURCE484861e5 Action39199797039 contract smoke +39199797121 maintenance +39199797034 main governance all PASS. Main runbook/receipt S60b650 includes independently executable M1/M3 requests+manifest/source hashes. H170 e02ae2 governance failed for missing evidence.source_sha (not code test regression), remedied by evidence-only S818e and exact source Governance39200481716 PASS. H171 cursor-only references same exact SOURCE, old failure retained. Worker-owned source/cursors untouched, M4 G2 39197439844 actual SUCCESS and product paused.",
   "done_when": "PLAN-009 §5 public entry contract/identity/negative smoke and fixed SHA+call examples published. Worker-specific prepare/paired are autonomous ownership, not an M0 task PASS; actual CI execute and receipt verification left to worker. R0-025 still needs true Go/Rust authenticated reverse C2S kind1 and M2 mature firstsend automatic quality, plus actual old-Go product ingress and M4 assembly; keep qualification hard gates OFF.",
-  "next_action": "Resume PLAN-008 R0-M0-025 product owner vertical integration, not workflow rewrite: verify current M2 exact mature telemetry and M4 paused state, wire canonical authentic reverse C2S kind1/FrozenRecord and firstsent mature 2s per-client/direction input through original Go TLS and Rust owner without worker files. Consume M1/M3 tested module deliverables only on exact SOURCE; accept independent worker prepare/paired requests (v5) without M0 rerun. Product FEC2 remains OFF until normal client/server+physical D10/p99+Windows/ARM qualification.",
+  "next_action": "Resume M0 PLAN-008 original Go TLS→Rust owner authenticated reverse kind1 and M2 actual mature firstsend feedback per-client/direction 2s AUTO; respect M4 HOLD and user worker autonomy. Worker can use frozen qualification/worker-ci-v5 no need M0 changes or approvals: M1 Game015 old/new AB, M3 FEC2 native ABBA may return INCONCLUSIVE until M3 supplies per-leg absolute intervals. Do not inherit component PASS as full product, FEC2 remains OFF until normal original client/server and physical D10/p99 all qualified.",
   "unverified": true,
   "last_tested_source": "484861e5aff4eb9098a25a42f1522e19716f09e8",
   "evidence_refs": [
@@ -22,10 +22,9 @@
     "docs/decisions/M0-worker-selftest-entry-2026-10-19.md",
     "docs/evidence/M0/PLAN-008-workpacks-registered.json",
     "docs/evidence/M0/PLAN008-025-scoped-native-off-reenable-3383990bdceda76335e4ae53d8c64b5e95b11f98.json",
-    "docs/evidence/M0/PLAN-009-worker-ci-v3-3f87d3ec9c06f7362c95c301437116d53be14c4f.json",
     "docs/GOVERNANCE.md",
     "docs/history/INDEX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H170 rr2 epoch1 PLAN009 first release v5 static contract complete, M0-025 product partial/unverified. Source 484861e5 frozen qualification/worker-ci-v5: main 3 exact Actions SUCCESS 39199797039/39199797121/39199797034; docs/evidence S60b650. M4 immutable two-SHA H24 CENTRAL G2 scope39197439844 PASS; old non-authorized create/remove and worker HOLD retained. Generic prepare M1 Game015 normal Release, M3 FEC2 native ISA-L fixed pin with 0-pass prevention. Paired M1 AB, M3 internal ABBA lacking true per-leg monotonic boundaries => INCONCLUSIVE. Worker actual performance NOT_RUN (self-trigger), no worker cursors modified, product FEC2 OFF. Continue authenticated reverse kind1/mature M2 feedback actual product admission."
+  "partial_summary": "H171 M0-025 remains partial/unverified product OFF. M4 H24 G2 scope PASS action39197439844. PLAN009 freeze qualification/worker-ci-v5 SOURCE484861, Action39199797039 smoke/39199797121 maintenance/39199797034 Governance 3/3 PASS. M1/M3 actual functional prepare and paired cost not triggered by M0, worker self-owned. One source exact runbook and typed evidence S818e. H170 governance failed due evidence.source_sha absent, corrected in S818e and main governance39200481716 success; historical fail retained. Next protected original Go authenticated reverse kind1/M2 mature firstsend original owner product integration, no worker cursor edit."
 }
