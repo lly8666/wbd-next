@@ -30,6 +30,7 @@ func TestR0V4EmbeddedNormalOffProductRevisionReadback(t *testing.T){
             t.Fatalf("fixed not supported must reject %+v %+v %v",same,rejected,e)
         }
         denied.Mode=FecV2Auto
+        denied.AutoPolicy=FecV2Conservative // legal automatic config, must reach explicit native refusal
         _,rejected,e=b.stageOriginalNormalOff(denied,applied,epoch)
         if e==nil||!rejected.Rejected{t.Fatal("auto not supported must reject")}
         wrong:=cfg;wrong.ConfigRevision=2;wrong.Client="wrong-principal"
