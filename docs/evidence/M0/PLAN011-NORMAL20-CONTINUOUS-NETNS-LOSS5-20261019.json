@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_REAL_20MBPS_NETEM_LOSS_OBSERVATION_NOT_RECOVERY",
+  "source_sha": "2656cf9221c567f4287e67e2604b032211c1c349",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 39255888901,
+  "attempt": 1,
+  "measure_job_id": 118070980971,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39255888901",
+  "intent": ".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-5-20261019-ready.json",
+  "artifact": {
+    "id": 12186883460,
+    "zip_sha256": "826ce2cc2dba5b406f2944b2a7300a506db2fb0fad738ce8268d946421fb1ae5",
+    "summary_sha256": "2f01021703b64d88b54ea694167966fc9838cbc47a208d988554dd1828859485",
+    "raw_measured_sha256": "2d383810cfd0f97c38e7a49321092c4ef99e55fbcead564cc0c6001c407d1f38",
+    "netns_log_sha256": "098121ce4befabbe68f26e1aee8d376cd39dc66650c0e10aac0bb0c0156f502f"
+  },
+  "measurement": {
+    "loss_config_percent": 5,
+    "mode": "Normal_OFF",
+    "warmup_seconds": 10,
+    "measure_seconds": 60,
+    "desired_mbps_inner_ipv4_each_direction": 20,
+    "kernel_qdisc_dropped_including_control": 48144,
+    "c2s": {
+      "offered_mbps": 20.000199866666666,
+      "delivered_mbps": 18.9789712,
+      "offered_packets": 210603,
+      "delivered_packets": 199918,
+      "missing_packets": 10685,
+      "invalid": 0,
+      "duplicates": 0,
+      "injector_errors": 0
+    },
+    "s2c": {
+      "offered_mbps": 20.000199866666666,
+      "delivered_mbps": 18.993940666666667,
+      "offered_packets": 210603,
+      "delivered_packets": 199989,
+      "missing_packets": 10614,
+      "invalid": 0,
+      "duplicates": 0,
+      "injector_errors": 0
+    },
+    "rust_rx_worker_cpu_s": 4.996028517,
+    "rust_tx_worker_cpu_s": 4.999100835
+  },
+  "governance": {
+    "run_id": 39255888929,
+    "result": "success",
+    "scope": "SOURCE request and structural contracts only, not product pass"
+  },
+  "interpretation": "Sustained 20Mbps each direction actually injected 60s under real 5% kernel netem on original Go credential-checked TLS → Rust independent owner → real loopback raw/TUN; losses observed, no FEC recovery. Normal/off missing expected; all valid packets verified. Per-scenario one job one source and frozen binary. qdisc drops include non-business and cannot stand in for application missing.",
+  "unqualified": {
+    "production_FEC2": "OFF",
+    "real_FEC_Fixed_Auto": "NOT_RUN",
+    "real_Game2_Game4": "NOT_RUN",
+    "product_CLI_GUI_Windows": "NOT_RUN",
+    "independent_veth_physical": "NOT_RUN",
+    "true_RTT_p99": "NOT_RUN",
+    "network_full_real_TCP_UDP_mix": "NOT_RUN"
+  },
+  "next_action": "Capacity appears sufficient 20Mbps at 5% with no injector errors; one standalone 10% kernel loss continuous 20Mbps scenario; 20/30 only if 10% still offered meets target and host/qdisc capacity allow. Preserve no-FEC app missing."
+}
