@@ -207,17 +207,40 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         clientDelivered[got]=true
     }
     if len(clientDelivered)!=packets{t.Fatalf("client TUN app only received %d",len(clientDelivered))}
-    // M2 is derived strictly from the same AEAD/unique-PN record path,
-    // not from the raw TCP header or application payload. Kernel receipt
-    // send result is explicitly NotSent; server must stay pending.
+    // The CLIENT's independently bound C2S AEAD sealer derived a
+    // WBC4/M2 receipt only from original S2C authenticated+unique PNs.
+    // Send THIS exact encrypted record across actual Linux IP_HDRINCL,
+    // and let original Rust M4 receive it on its single C2S opener.
     time.Sleep(12*time.Millisecond)
     draft,e:=releaseClient.feedbackDue()
     if e!=nil||len(draft.Ciphertext)<31{
         t.Fatalf("client authenticated M2 C2S draft absent: %d %v",
             len(draft.Ciphertext),e)
     }
-    if e:=releaseClient.feedbackKernelResult(draft.RecordPN,0);e!=nil{
-        t.Fatalf("client M2 correctly denied send: %v",e)
+    rawFeedback,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
+    if e!=nil{t.Fatal(e)}
+    defer syscall.Close(rawFeedback)
+    if e:=syscall.SetsockoptInt(rawFeedback,syscall.IPPROTO_IP,
+        syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
+    c2sPacket:=v4RawC2STestPacket(draft.Ciphertext,b.rxBoundary,b.originalFlow)
+    if e:=syscall.Sendto(rawFeedback,c2sPacket,0,
+        &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
+        t.Fatalf("client authenticated FEC M2 kernel TX: %v",e)
+    }
+    if e:=releaseClient.feedbackKernelResult(draft.RecordPN,1);e!=nil{
+        t.Fatalf("client M2 actual kernel send classification: %v",e)
+    }
+    acceptedM2:=false
+    for deadline:=time.Now().Add(350*time.Millisecond);
+        time.Now().Before(deadline);time.Sleep(5*time.Millisecond){
+        coverage,e:=b.rustOwnerNormalM2Coverage()
+        if e!=nil{t.Fatalf("original Rust M2 coverage readback: %v",e)}
+        if coverage.AuthenticatedReverseReports>=1{
+            acceptedM2=true;break
+        }
+    }
+    if !acceptedM2{
+        t.Fatal("original server moved C2S AEAD/replay owner did not accept real kernel authenticated client feedback")
     }
     // A source queued or even copied locally is NOT an authenticated
     // remote application-APPLIED receipt. Keep truthful pending.
@@ -225,6 +248,6 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_prepared_not_sent=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
         recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
 }
