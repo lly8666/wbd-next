@@ -5,8 +5,8 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "branch": "work/m4-r1-platform",
-  "source_sha": "3fe2b01a4ebe0f688bce6c60aedbd012306482eb",
-  "result": "PARTIAL_SOURCE_LOCKED_IMPORT_PENDING_WINDOWS_ACTIONS",
+  "source_sha": "90c4313959539e1db6ee741b2ee3d45cfc463be1",
+  "result": "PARTIAL_SOURCE_ONLY_WINDOWS_NATIVE_CLI_GUI_SCRIPT_FREE_FAIL_CLOSED_UNVERIFIED",
   "artifact_verified": false,
   "product_fec2": "OFF",
   "main_decision": "docs/decisions/M0-windows-native-migration-2026-10-19.md",
@@ -23,11 +23,11 @@
     "worker_governance_result": "FAIL"
   },
   "verification": {
-    "donor_exact_blob_import": "SOURCE_PINNED_12_DONOR_BLOBS_AND_ORIGINALS_GITHUB_VERIFIED_UNRUN_ASSEMBLY",
+    "donor_exact_blob_import": "12/12_GITHUB_SHA_MATCH; 27-OPIGINAL_MANIFEST_PREFLIGHT_NOT_RUN",
     "windows_native_2022": "NOT_RUN",
     "windows_native_2025": "NOT_RUN",
-    "runtime_no_shell": "NOT_RUN_LEGACY_CLI_GUI_STILL_REQUIRES_POWERSHELL",
-    "native_connect_disconnect_recover": "NOT_RUN",
+    "runtime_no_shell": "SOURCE_RECONSTRUCTED_ORIGINAL_GO_CLIENT_GUI_PORTABLE_NO_NETWORK_SCRIPT_SPAWN; REAL_PROCESS_TREE_NOT_RUN",
+    "native_connect_disconnect_recover": "RECOVER_NATIVE_ABSENT_STATE_AND_LEGACY/WAL_REJECT_TESTS_AUTHORED_UNRUN; APPLY_NATIVE_WFP_FAIL_CLOSED_NOT_PRODUCT_READY",
     "single_instance_owned_WAL": "NOT_RUN",
     "DNS_IPv6_WFP_route_readback": "NOT_RUN",
     "native_Rust_applied": "NOT_RUN_M0_OWNER",
@@ -36,18 +36,27 @@
     "final_main_merge": "NOT_DONE",
     "assembler_negative_regression": "AUTHORED_NOT_YET_EXECUTED",
     "windows_package_compile": "AUTHORED_SMOKE_GO_TEST_C_ONLY; NOT_RUN",
-    "native_windows_2022": "NOT_RUN"
+    "native_windows_2022": "NOT_RUN_FOR_NEW_CODE_SOURCE",
+    "native_windows_2025": "NOT_RUN",
+    "original_gui_native_build": "NOT_RUN_NEW_SOURCE",
+    "original_go_config_catalog": "SOURCE_RECONSTRUCTED_SINGLE_PARAMS+GUI_FIELDS_MATCH_UNRUN_NATIVE",
+    "original_go_stop_cleanup": "SOURCE_FAIL_CLOSED_EXIT_NONZERO_ON_CLEANUP_FAILURE; M0_RUST_OWNER_STOP_NOT_WIRED",
+    "actual_network_ownership": "NOT_RUN_M4_GUARD_UNWIRED"
   },
-  "request_I": "NOT_CREATED",
-  "next_action": "Submit exact worker M4-016 I for scoped donor CLI/GUI Windows compile with source 3fe2b01, digest d51027...; consume G2+Windows native artifacts; further implement full WFP guard + native CLI/GUI shell-free lifecycle in follow-on source and new I. No product PASS until actual network and authenticated Rust Stop.",
+  "request_I": "PENDING_NEW_IMMUTABLE_I_002",
+  "next_action": "Freeze new exact SOURCE+manifest SHA256, create one immutable I request M4-016-WIN-NATIVE-002, S→H; require same-source central G2 + main-only Windows-2022 runner. Fix only observed Go compile/GUI native failures; WFP Apply and Rust owner admission remain hard-gated, FEC2 OFF. M0 owns protected Rust Stop/ACK and final merge.",
   "manifest": {
     "path": "r0/go_overlay/assembly/manifest.json",
-    "sha256": "d51027bb5c8b0452d607fafce5612c8023af5f711fd055491842ce232246ef0e",
-    "git_blob": "0645e5bafcb9e75e8ca051faa849268e71285c36",
-    "operations": 24,
-    "original_PLAN008": 12,
-    "donor_windows": 12,
-    "donor_created": 4,
-    "donor_replaced": 8
-  }
+    "sha256": "7cbaacf7a8a87e1a09d5a7a40bdb9be80e18eeb3184f87f5815cf464ab8029d7",
+    "git_blob": "f2f49244005944a86dcd545d8c7e5281fcef39fb",
+    "operation_count": 27,
+    "prior_015": 12,
+    "pinned_donor": 12,
+    "new_native_helpers": 2,
+    "new_portable_file": 1,
+    "source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "donor": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
+  },
+  "previous_request_I": "7abc527d2599aac6b7261b8d05dabedbbbbf4570",
+  "previous_request_windows_runner": "NOT_CONFIRMED"
 }
