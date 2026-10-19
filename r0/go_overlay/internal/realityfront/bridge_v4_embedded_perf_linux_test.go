@@ -144,10 +144,13 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
     // The 10Mbps P10 fixture remains byte-for-byte the default mode.
     sparse:=os.Getenv("WBD_M0_P10_SPARSE")=="1"
     diag:=os.Getenv("WBD_M0_D10_DIAG")=="1"
+    sustained20:=os.Getenv("WBD_M0_SUSTAINED_20MBPS")=="1"
+    if sustained20&&(paired||sparse||diag){t.Fatal("20Mbps continuous must be one independent unpaired no-diagnostics Action")}
     if sparse&&diag{t.Fatal("one fixed scenario per Action")}
     if diag&&!paired{t.Fatal("diagnostic requires paired normal-off fixture")}
     if sparse&&!paired{t.Fatal("sparse requires paired normal-off fixture")}
     rateBits:=m0Perf10TargetBits
+    if sustained20{rateBits=2*m0Perf10TargetBits}
     if paired {
         m0PerfIPv4Sizes=[]int{92,284,1228}
         rateBits=m0Perf10TargetBits*(92+284+1228)/(64+256+1200)
@@ -444,6 +447,7 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         pairedAppMbps=0.0256
     }
     if diag{profile="D10_NORMAL_OFF_10MBPS_DIAGNOSTIC_ON_5S_PLUS_15S"}
+    if sustained20{profile="NORMAL_OFF_CONTINUOUS_20MBPS_EACH_DIRECTION_REAL_KERNEL_DEV_ANCHOR"}
     res:=map[string]any{
         "scope":"GOV005_FIRST_DEVELOPER_PERF_DIAGNOSTIC_SAME_GO_PROCESS_ORIGINAL_RUST_OWNER",
         "result":status,"normal_lane_count":1,"fec":"fixed_off",
@@ -458,6 +462,7 @@ func TestR0V4EmbeddedNormalOff10MbpsDevelopment(t *testing.T) {
         "original_go_c2s_record_wire_limit_bytes":serverLimit,
         "packet_mix_by_count":packetMix,
         "explicit_sparse_fixture":sparse,
+        "explicit_20mbps_continuous_fixture":sustained20,
         "explicit_d10_fixture":diag,
         "syscall_summary_scope":map[bool]string{true:"strace -f -qq -c entire child lifetime including setup and Go injector, not just 15s measure",false:"NOT_RUN"}[diag],
         "sparse_packets_per_second_each_direction":map[bool]any{true:20,false:"NOT_APPLICABLE"}[sparse],
