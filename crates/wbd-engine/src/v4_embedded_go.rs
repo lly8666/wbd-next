@@ -198,8 +198,11 @@ fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 struct NormalFirstSendM2 {
     lane:wbd_types::LaneKey,
+    route:wbd_recovery::ReceiptRouteScope,
+    epoch:[u8;16],
     state:wbd_recovery::MatureFirstSend,
     accepted:u64,unknown_2s:u64,unknown_8s:u64,
+    covered_2s:u64,covered_8s:u64,authenticated_reverse_reports:u64,
     censored:bool,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -212,7 +215,8 @@ impl NormalFirstSendM2 {
         ).map_err(|_|INVALID)?;
         let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:4096},now)
             .map_err(|_|INVALID)?;
-        Ok(Self{lane,state,accepted:0,unknown_2s:0,unknown_8s:0,censored:false})
+        Ok(Self{lane,route,epoch,state,accepted:0,unknown_2s:0,unknown_8s:0,
+            covered_2s:0,covered_8s:0,authenticated_reverse_reports:0,censored:false})
     }
     fn poll(&mut self,now:MonoNs){
         match self.state.on_due(now){
@@ -221,10 +225,44 @@ impl NormalFirstSendM2 {
                     result.window_2s.uncovered);
                 self.unknown_8s=self.unknown_8s.saturating_add(
                     result.window_8s.uncovered);
+                self.covered_2s=self.covered_2s.saturating_add(
+                    result.window_2s.covered);
+                self.covered_8s=self.covered_8s.saturating_add(
+                    result.window_8s.covered);
                 if result.capacity_limited{self.censored=true}
             }
             Err(_)=>self.censored=true,
         }
+    }
+    // The only telemetry bridge from the SAME original moved server RX
+    // (C2S original AEAD/PN) into M2. A real WBC4 kind1 receipt is parsed
+    // ONLY by ProtectedBackgroundRx after authenticating ciphertext.
+    // No synthetic ACK or alternate C2S decryptor may call this on wire.
+    fn on_original_authenticated_reverse(
+        &mut self,opened:crate::v4_owner_crypto::AuthenticatedNormalKind1,
+        now:MonoNs
+    )->Result<(),wbd_recovery::DataError>{
+        use wbd_recovery::{ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,WireDirection};
+        let facts=ReceiptOpenFacts{
+            verified_reverse_lane:self.lane,
+            verified_reverse_direction:WireDirection::ClientToServer,
+            verified_tunnel_epoch:self.epoch,
+            control_record_pn:wbd_types::RecordPn(opened.reverse_record_pn),
+        };
+        let pages=opened.receipt.pages.into_iter().map(|page|ReceiptPage{
+            base_pn:wbd_types::RecordPn(page.base_pn),bitmap:page.bitmap
+        }).collect();
+        let scoped=ScopedAuthenticatedReceipt::checked_after_open(
+            self.route,facts,wbd_types::RecordPn(opened.receipt.largest_data_pn),
+            opened.receipt.report_seq,pages)?;
+        // M2 may reject time reversal/capacity without inventing coverage;
+        // that case must censor auto observations, not roll back AEAD replay.
+        if self.state.on_authenticated_receipt(&scoped,now).is_err(){
+            self.censored=true;
+            return Err(wbd_recovery::DataError::Stale)
+        }
+        self.authenticated_reverse_reports=self.authenticated_reverse_reports.saturating_add(1);
+        Ok(())
     }
     fn on_real_kernel_turn(&mut self,records:&[(wbd_types::RecordPn,u64)],
         result:TxTurnCompletion,now:MonoNs){
@@ -264,7 +302,7 @@ struct Entry{
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-    normal_firstsend_m2:Option<NormalFirstSendM2>,
+    normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -1578,7 +1616,8 @@ fn stop(handle:u64)->i32{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
     }
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-    if let Some(mut first)=e.normal_firstsend_m2.take(){
+    if let Some(first)=e.normal_firstsend_m2.take(){
+        let Ok(mut first)=first.lock()else{return BAD_STAGE};
         let now=loop_now();
         first.poll(now);
         if first.state.stop(now).is_err(){return BAD_STAGE}
@@ -1881,6 +1920,7 @@ fn background_raw_once(
     flow:crate::v4_protected_handoff::GoFlow,generation:u32,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
+    mature:&Arc<Mutex<NormalFirstSendM2>>,
 )->Result<u32,i32>{
     // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
     // table are now owned by RX, not re-initialized or cloned. RX never
@@ -1910,6 +1950,7 @@ fn background_raw_once(
     let mut delivered_total=0u32;
     let mut pending_valid=false;
     let mut invalid_seen=false;
+    let mut authenticated_control=false;
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
@@ -1924,13 +1965,27 @@ fn background_raw_once(
             Ok(n)=>n,Err(_)=>{drop(slab);continue}
         };
         // Exactly one actual M3 opener and unique replay PN bitmap.
-        let receipt=owner.consume_original(slab,len,tun,loop_now());
+        let when=loop_now();
+        let receipt=owner.consume_original(slab,len,tun,when);
         let Some(next)=authenticated_rx_anchor(
             *anchor,absolute,len,receipt.authenticated_link
         )else{continue};
         *anchor=next;
         pending_valid |=receipt.pending>0;
         invalid_seen |=receipt.invalid>0 || receipt.failed>0;
+        if let Some(control)=receipt.reverse_kind1{
+            // RX never locks Entry/TX and never holds a driver slab after
+            // opener returns. Shared M2 state is one bounded mutex.
+            if stop.load(Ordering::Acquire){break}
+            match mature.lock(){
+                Ok(mut first)=>{
+                    if first.on_original_authenticated_reverse(control,when).is_ok(){
+                        authenticated_control=true;
+                    }else{invalid_seen=true;}
+                },
+                Err(_)=>invalid_seen=true,
+            }
+        }
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
@@ -1939,7 +1994,9 @@ fn background_raw_once(
     // A unique authenticated LINK shard with no completed datagram is
     // healthy progress, not a spurious RX error. A malformed/discarded shard
     // must still register an error even if another pending shard was valid.
-    if invalid_seen || (delivered_total==0 && !pending_valid){return Err(INVALID)}
+    if invalid_seen || (delivered_total==0 && !pending_valid && !authenticated_control){
+        return Err(INVALID)
+    }
     Ok(delivered_total)
 }
 // Independently wait for the REAL TUN application RX OUTSIDE registry lock.
@@ -2421,10 +2478,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
-    if let Some(first)=e.normal_firstsend_m2.as_mut(){
-        // Actual syscalls have finished and no borrow remains. This is the
-        // sender's only final first-send event into frozen M2 maturity.
-        first.on_real_kernel_turn(actual_firstsend,finish,loop_now());
+    if let Some(first)=e.normal_firstsend_m2.as_ref(){
+        // The sole sender-owned original M2 ledger is also shared with
+        // the true C2S AEAD/replay RX worker for authenticated kind1 only.
+        match first.lock(){
+            Ok(mut observer)=>observer.on_real_kernel_turn(actual_firstsend,finish,loop_now()),
+            Err(_)=>return Err(BAD_STAGE)
+        }
     }
     actual_firstsend.clear();
     if finish.invalidate_route{e.tx_route=None}
@@ -2541,7 +2601,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let Some((lane,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
     let Ok(first)=NormalFirstSendM2::new(lane,epoch,loop_now())
         else{return INVALID};
-    e.normal_firstsend_m2=Some(first);
+    let mature=Arc::new(Mutex::new(first));
+    e.normal_firstsend_m2=Some(Arc::clone(&mature));
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
     let mut original_rx=match e.owner.detach_background_rx(normal){
         Ok(rx)=>rx,
@@ -2571,7 +2632,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 match background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
                     rx_flow,generation,&raw_for_rx,&tun_for_rx,
-                    &stop_rx,&mut rx_pending
+                    &stop_rx,&mut rx_pending,&mature
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
@@ -2714,7 +2775,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
-    let Some(first)=e.normal_firstsend_m2.as_mut()else{return BAD_STAGE};
+    let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
+    let Ok(mut first)=first.lock()else{return BAD_STAGE};
     first.poll(loop_now());
     let counts=first.state.counters();
     unsafe{
@@ -2723,6 +2785,31 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
         uncertain.write(counts.uncertain_originals);
         unknown_2s.write(first.unknown_2s);
         unknown_8s.write(first.unknown_8s);
+        censored.write(u32::from(first.censored));
+    }
+    OK
+}
+// Explicit coverage counters are separate from UNKNOWN and kernel copied.
+// A positive number requires actual original C2S kind1 received, opened
+// with the moved M3 replay state and pinned into M2, not an RX count.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2_coverage(
+    h:u64,covered_2s:*mut u64,covered_8s:*mut u64,
+    reverse_reports:*mut u64,censored:*mut u32
+)->i32{
+    if covered_2s.is_null()||covered_8s.is_null()
+        ||reverse_reports.is_null()||censored.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
+    let Ok(mut first)=first.lock()else{return BAD_STAGE};
+    first.poll(loop_now());
+    unsafe{
+        covered_2s.write(first.covered_2s);
+        covered_8s.write(first.covered_8s);
+        reverse_reports.write(first.authenticated_reverse_reports);
         censored.write(u32::from(first.censored));
     }
     OK

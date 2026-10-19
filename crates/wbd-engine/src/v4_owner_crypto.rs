@@ -290,13 +290,21 @@ pub(crate) struct ProtectedBackgroundRx{
     generation:u32,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
-#[derive(Clone,Copy,Debug,Default)]
+#[derive(Debug,Default)]
 pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_link:u32,
     pub(crate) delivered:u32,
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
+    // Only created after the SAME moved original M3 AEAD + unique PN opener.
+    pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[derive(Debug)]
+pub(crate) struct AuthenticatedNormalKind1{
+    pub(crate) reverse_record_pn:u64,
+    pub(crate) receipt:wbd_codec::Receipt,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 impl ProtectedBackgroundRx{
@@ -312,6 +320,27 @@ impl ProtectedBackgroundRx{
             Ok(opened)=>opened,
             Err(_)=>return receipt,
         };
+        if opened.kind==wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND{
+            // The server's moved C2S opener consumed the ONLY original PN.
+            // This can never be reconstructed from raw Go metadata or
+            // client-supplied bitmap without AEAD + unique replay admission.
+            receipt.authenticated_link=1; // authenticated seq32 anchor only
+            if opened.payload.len()>512 {
+                receipt.invalid=1;
+                return receipt
+            }
+            match wbd_codec::decode_control(opened.payload,512){
+                Ok(mut items) if items.len()==1 =>{
+                    if let wbd_codec::ControlTlv::Receipt(received)=items.remove(0){
+                        receipt.reverse_kind1=Some(AuthenticatedNormalKind1{
+                            reverse_record_pn:opened.pn,receipt:received
+                        });
+                    }else{receipt.invalid=1;}
+                },
+                _=>receipt.invalid=1,
+            }
+            return receipt
+        }
         if opened.kind!=AUTHENTICATED_LINK_KIND{return receipt}
         receipt.authenticated_link=1;
         let mut link_report=NormalOffReport::default();
