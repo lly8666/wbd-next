@@ -61,7 +61,7 @@
     ]
   },
   "verification": {
-    "scope_audit": "NOT_RUN_ON_NEW_HEAD",
+    "scope_audit": "BLOCKED_PRIOR_TWO_EXACT_UNPERMITTED_HISTORY_COMMITS; OFFICIAL_CURRENT_H_G2_NOT_RUN",
     "manifest_blob_calculation": "PASS_STATIC_SOURCE_HASH_CHECK_ONLY",
     "assembly_unittest": "NOT_RUN_ACTIONS",
     "real_original_go_clone_linux_build": "NOT_RUN",
@@ -82,12 +82,26 @@
     "correction_delete_commit": "85911ac3cd73d153b74315fdc764db4e7ad13cde",
     "authorized_relocation": "r0/go_overlay/internal/configfile/fec2_product_test.go",
     "resolved_current_tree": true,
-    "historical_authority": "NEEDS_M0_GOVERNANCE_REVIEW",
-    "warning": "Current tree compliance not equivalent to full per-commit role scope PASS; do not rewrite history or suppress failure."
+    "historical_authority": "M0_REVIEW_REQUIRED_ISSUE_13; NEVER_SELF_APPROVED",
+    "warning": "Current tree compliance not equivalent to full per-commit role scope PASS; do not rewrite history or suppress failure.",
+    "central_issue": "https://github.com/lly8666/wbd-next/issues/13",
+    "source_pair": [
+      "2cfd979b8c10aca2a1abffb68b0994a960713164",
+      "85911ac3cd73d153b74315fdc764db4e7ad13cde"
+    ],
+    "old_central_failure": {
+      "run_id": 39095544653,
+      "job_id": 117581113810,
+      "source_sha": "6363bb98acfb6d789b1ea5eeda16dc1f10b52ba6",
+      "result": "FAIL",
+      "reason": "verified cursor lacks reviewed PASS evidence",
+      "scope": "H21 only, not current H23 or new per-commit violation"
+    },
+    "safe_m0_path": "Main-owned single G2 checked historical one-off immutable pair, both SHA/path/status/order/parent pinned with negative tests, disclosed in receipt; or reviewed supersession. Do not rewrite worker history or extend runtimeentry/ wildcard."
   },
   "request": ".governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md",
-  "current_scope_qualification": "SOURCE_AUTHORED_STATIC_CHECKS_ONLY",
-  "next_action": "M0 invokes pinned original Go/Windows GUI Actions/owned native ABI loader on this exact M4 source and adjudicates historical single-path scope. M4 consumes exact run/job/attempt/artifacts and repairs only its permitted overlay/assembly files, then finishes S→H when real product-assembly tests meet package done_when.",
+  "current_scope_qualification": "CURRENT_H_SCOPE_BLOCKED; STRUCTURAL_H_CHECK_PASS_ONLY; G2_NOT_VERIFIED; PRODUCT_NOT_RUN",
+  "next_action": "Central scope ONLY. M0 acts on issue #13 and worker request, validates exact G2 history and negative cases in main Actions, generates new M4-only ROLE_SCOPE result at frozen current HEAD; M4 records observed receipt and keeps product work paused. No other tests.",
   "rollback": "Remove only M4 new assembly, configfile, new runtimeentry adapter and submitted M4 permitted overlay revisions from staging; original legacy source unchanged; production FEC2 remains OFF.",
   "previous_risks_preserved": [
     "Old FEC2 014 Go pure tests/native safe wrapper success does not attest new PLAN008 product",
