@@ -1,0 +1,8 @@
+# M0 S282 full background product TX integration intent
+H193 exact checkpoint 94b7638ea6330f662f76790bee7c4f79885aecc6, H193 cursor-only 056a2ede3491e5dbd353cda98df37848782f908c. Main task rev2 epoch1 unchanged, no in-flight combined product test. Existing source6e5091e1787dd9ca39d4caa6dffabe57633e4970 Actions39287817507 PASS (native live RX tests, one-block dev Go TLS→kernel), not production. Gov39288904549 SUCCESS. User explicitly requests complete FEC2 release.
+
+Product-facing real gap: original Go verified Fixed REQUESTED/PENDING not connected to normal background TUN TX, only private fec probe. Plan one source-locked combined full functional job, no extra micro workflows:
+- M0 ProtectedScopedOwner production-option `fec2_product_record` method validates M3 source/repair and shares original AEAD/PN seq/M1 queue, only when Go epoch/Fixed authenticated; no second ciphertext implementation.
+- Original Go TLS+Rust background TX uses one `FixedStream` per original generation, source-first immediate seal into original owner; parity selected at bounded due and only M4 definite-copy results can transition pending->applied; no no-data sleep or HOL and never forge credit for mere callback queue acceptance. M4 asynchronous Stop cancels.
+- Original RX already uses sole moved replay bitmap and optional actual APPLIED grant. Final client-side Go original product reception, >1 genuine netns blocks, M2 Auto feedback, lifecycle and CLI readback must be independently demonstrated. Until fully passed, FEC2 default OFF, Auto NOT_RUN and no production claim. M1/M3 frozen modules not rewritten.
+- All execution via Actions; retain FAIL and NOT_RUN. M0 main owner only, no worker conflict.
