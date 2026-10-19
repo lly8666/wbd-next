@@ -5,6 +5,9 @@
 name: M0 PLAN012 combined FEC record Game lanes original Go kernel functional
 run-name: "M0|PLAN012-COMBINED-REAL-GO|${{ github.sha }}"
 on:
+  # M4 can run this SAME exact-source Linux real Connect/Stop gate once
+  # without creating an I011 Windows request or changing shared workflow.
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -134,6 +137,7 @@ jobs:
           }
           cat fixed-kernel-result/continuous-kernel.log
           grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
           grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
@@ -158,6 +162,9 @@ jobs:
             one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
             fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
             FEC2_production="OFF",
+            M4_Linux_connect_real_netns_client_server_stop_owned_cleanup="PASS_ACTIONS_SCOPED",
+            M4_Windows_network="NOT_RUN_DEFERRED",
+            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_FIXED_PENDING",
             fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
             network_multiblock="NOT_RUN",
             repeatable_background_multiblock_product="NOT_RUN",
