@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "2c096f20daac33a3ff42a142e5bd36d78bd2fef3",
+  "result": "PASS_SCOPED_RELEASE_CODE_DEV_ORIGINAL_GO_TLS_REAL_MULTIBLOCK_LOSS_RS16_CLIENT_KERNEL_TUN_UDP_NOT_PRODUCT",
+  "run": {
+    "id": 39300491496,
+    "attempt": 1,
+    "job_id": 118224102414,
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "status": "completed",
+    "conclusion": "success",
+    "artifact_id": 12212216179,
+    "artifact_name": "m0-plan012-combined-39300491496-1",
+    "sha256": "6e579d65c7412de961b39a015f423128bbb3bc22a099607e732feff45f7a746a"
+  },
+  "observed_log": "M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_CLIENT_TUN_UDP_RECOVERY_PASS blocks=4 real_app_ipv4=4 parity=3 recovered_missing=1 native_ScopedTunSink=1 client_udp=4 M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+  "checks": {
+    "original_Go_TLS_private_feature7": "PASS_DEVELOPER_ONLY",
+    "original_Go_UDP_to_real_TUN_to_Rust_background_M1_M3_M4_FEC_TX": "PASS_REAL_KERNEL",
+    "authenticated_release_FEC2_record_PN_plus_replay": "PASS",
+    "four_distinct_blocks": "PASS_4",
+    "kernel_parity": "PASS_3",
+    "deliberate_real_raw_source_drop": "PASS_1",
+    "M3_RS16_recovered_IP": "PASS_1",
+    "original_Rust_ScopedTunSink_client_kernel_ipv4_write": "PASS_4",
+    "independent_Linux_client_UDP_app_receive": "PASS_4_OF_4",
+    "original_Go_Fixed_requested_and_not_false_applied": "PASS_PENDING",
+    "release_FEC_record_test": "PASS_1_OF_1",
+    "Game_native_2_4": "PASS_2_OF_2",
+    "FEC_RX_native": "PASS_3_OF_3",
+    "FixedStream_native": "PASS_3_OF_3",
+    "original_Go_TLS_3_cipher_single_block_regression": "PASS",
+    "Governance_same_source_run39300491307": "SUCCESS",
+    "maintenance_same_source_run39300491506": "SUCCESS"
+  },
+  "previous_failure": {
+    "source_sha": "f4766b83089b4c90e7cfa47b0038020f83336e24",
+    "run_id": 39299800690,
+    "job_id": 118221683489,
+    "result": "FAIL",
+    "artifact_id": 12211036017,
+    "sha256": "b639ac2f51bad7dc9a28a2be641f00958619f20e34bdd0e54a9f71f2f7257ffa",
+    "root_cause": "single isolated Linux netns gave both test TUN interfaces local source 10.241.24.1, martian/rp_filter blocked independent client UDP app despite Rust native TUN write",
+    "fix_source": "9dbc8c381990afe69c91bd81bd4c84795e1b6a98",
+    "fix": "test-netns-only all and client device rp_filter=0, client interface accept_local=1; no production Linux sysctl change",
+    "ci_paths_corrected_source": "2c096f20daac33a3ff42a142e5bd36d78bd2fef3"
+  },
+  "non_prod_qualifications": {
+    "original_go_release_client_Connect_Receive_Stop": "NOT_RUN",
+    "original_client_real_network_process_not_test_probe": "NOT_RUN",
+    "authenticated_remote_source_denominator_and_Fixed_M2_APPLIED": "NOT_RUN",
+    "original_Go_Auto_actual_M2_dynamic_revision": "NOT_RUN",
+    "Game2_4_original_Go_real_kernel_independent_lanes": "NOT_RUN",
+    "real_Windows_WFP_native_product": "NOT_RUN",
+    "physical_network_and_20Mbps_sustained_p99": "NOT_RUN",
+    "production_FEC2": "OFF"
+  },
+  "next_action": "Replace developer-only Go feature7 client negotiation with actual original-Go verified client V4 native RX/driver and authenticated M2 feedback: consume same release FEC receiver and genuine Rust-owned client TUN, compute typed actual kernel source denominator and remote applied/Stop/revision; one complete exact-source Actions product test and only then consider product ON."
+}
