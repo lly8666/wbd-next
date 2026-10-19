@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "280ad093e940433907d164ebba599ab5dce5ae17",
+  "result": "PARTIAL_COMPONENT_ACCEPTANCE_MAIN_INTEGRATION",
+  "artifact_verified": true,
+  "interrupted_recovery": {
+    "from_h181": "44a6e87f7302d11c7fd36b418b5086886743defd",
+    "reviewed_intervening_s": "f9809c028dadd7a3c4d335d706799ab97eee7917",
+    "reviewed_s_paths": [
+      "docs/evidence/M0/PLAN010-real-Stop-plus-M4-selfdispatch-20261019.json"
+    ],
+    "historical_stop_matrix_39235733630": "SUCCESS_14_OF_14_SCOPED_SOURCE_4f3585251a3288ca2b2a62a23d26fa740f6e8248",
+    "next_intent_s": "e4043059260401cebd228c5b6dc3e08edda1f341"
+  },
+  "m4": {
+    "m4_015_source": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+    "m4_015_g2_run_id": 39225046360,
+    "m4_015_three_platform_original_go_gui_run_id": 39225427878,
+    "m4_015_scoped_result": "PASS",
+    "m4_015_worker_governance_run_id": 39225015969,
+    "m4_015_worker_governance_result": "FAIL",
+    "m4_016_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+    "m4_016_branch_head_at_review": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+    "m4_016_worker_cursor_sequence": 26,
+    "m4_016_request": "NOT_CREATED",
+    "m4_016_new_native_runtime": "NOT_RUN",
+    "m4_016_full_powershell_free_original_go_cli_gui": "NOT_RUN",
+    "selfdispatch": {
+      "control_ref": "qualification/m4-product-windows-v1",
+      "control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+      "main_dispatch_source": "e2be381fd0a4e7b327800899d72919fc65abb835",
+      "main_dispatch_run_id": 39234078787,
+      "result": "SUCCESS_NO_M4_016_REQUEST",
+      "example": "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md",
+      "issue": "https://github.com/lly8666/wbd-next/issues/13#issuecomment-6265044746"
+    },
+    "ownership": "M4 must settle its own cursor and write 016, M0 does NOT write worker branch/cursor; no broadening root or other roles"
+  },
+  "m1": {
+    "task": "R5-M1-PLAN008-GAME-DEDUP-015",
+    "source": "64102db5e101df1f678e17919169927ad19bad06",
+    "accepted_result": "PASS_SCOPED_COMPLETE_AND_ALREADY_MAIN_INTEGRATED",
+    "source_locked_native": {
+      "run": 39188056715,
+      "tests_passed": 133,
+      "tests_failed": 0
+    },
+    "paired_release": {
+      "run": 39212126443,
+      "conclusion": "success",
+      "receipt": "PASS_SCOPED_SAME_VM_AB",
+      "work_inputs_per_leg": 16777216,
+      "cpu_A_seconds": 11.374184,
+      "cpu_B_seconds": 1.577889,
+      "ratio": 7.208481711958188,
+      "quota_normalization": "NOT_RUN",
+      "per_leg_rss": "NOT_MEASURED"
+    },
+    "debug_component_lane_probe": {
+      "run": 39216826201,
+      "tests_passed": 134,
+      "one_lane_25mbps_in_memory": "PASS",
+      "four_lanes_4x25mbps_copied": "PASS",
+      "release_over_actual_network": "NOT_RUN",
+      "actual_kernel_throughput": "NOT_RUN",
+      "product_p99": "NOT_RUN"
+    },
+    "main_integration_commit": "ae75b92d75cbacf2041aa073242fe9210a4dfd33",
+    "main_integration_original_native_regression_run": 39219594724,
+    "main_native_regression": "SUCCESS_7_JOBS",
+    "main_integrated_git_blobs": {
+      "game_shared": "9ac8d6784d2e942e04287ec2e2e59fb62ff1255d",
+      "game_shared_tests": "2cbe7bc046d37994e903bee21776434ac4423547"
+    },
+    "new_task": "NONE",
+    "repeat_testing": "NOT_DONE",
+    "full_game_product": "NOT_RUN"
+  },
+  "m3": {
+    "task": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+    "candidate_source": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+    "official_prepare_run_id": 39218789735,
+    "official_native_result": "PASS_13_OF_13_ISAL",
+    "same_vm_abba_run_id": 39229126775,
+    "old_source": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "abba_order": "ABBA",
+    "recoveries_each": 2000000,
+    "checksum_each": 3400000000,
+    "cpu_A_average_seconds": 5.34,
+    "cpu_B_average_seconds": 3.5,
+    "observed_cost": "CPU_B_LOWER_34_46_PERCENT_IN_ONE_FIXED_ABBA_ONLY",
+    "official_performance_gate": "INCONCLUSIVE_MISSING_ABSOLUTE_MONOTONIC_PER_LEG_TIME",
+    "alloc_A_calls_per_leg": 68000000,
+    "alloc_B_calls_per_leg": 28000000,
+    "alloc_requested_bytes_not_actual_copy_or_rss": true,
+    "main_scoped_acceptance": "PASS_REAL_NATIVE_F2_CODE_INTEGRATED_PERFORMANCE_INCONCLUSIVE",
+    "main_code_commit": "0d55aadeef73144b5b278bb50aae50e32c618312",
+    "native_contract_repair_commit": "280ad093e940433907d164ebba599ab5dce5ae17",
+    "exact_2_blobs": {
+      "fec_v2_rs": "e73b10a78f49743880f1e4b07ecda0705872d400",
+      "fec_v2_tests_rs": "7c477f03839fbcf7781656af88508e3e4d68e3e8"
+    },
+    "main_real_isal": {
+      "run_id": 39238279378,
+      "attempt": 1,
+      "conclusion": "success",
+      "cases": 13,
+      "failed": 0,
+      "artifact_id": 12179524655,
+      "artifact_sha256": "e1b9758486d6aa668e1de2089e6187baf908679d46d62bf441f970dfb3a467ff",
+      "receipt_sha256": "7c9a33f77b880f3520241754ac078cb98db5425660665bc3f9f5195ea819ec6e",
+      "log_sha256": "59819d2ef60056b9386be3268543250331d685f7b325b9947785b9b4a7500f65",
+      "backend": "NativeIsaL",
+      "official_isal": "c387163fcbca62701d646149564c550c78a4f985",
+      "scope": "linux_x86_64"
+    },
+    "r0_wire_anchor": {
+      "run_id": 39238279325,
+      "attempt": 1,
+      "conclusion": "success",
+      "exact_named_wire_anchors": 13,
+      "all_rust_libtest_cases": 23,
+      "failed": 0,
+      "artifact_id": 12180246216,
+      "artifact_sha256": "98fc8c98f718a6cffaaf1b70254fec24abf0508f0dda50610accc8cc834937ae",
+      "result_sha256": "3c782cbc253d2b1843f62df2dbfce8fb1cd936a298f11d44eb5afd69073f4874",
+      "log_sha256": "549683df67e98f8fe2a982acd0113faba5cd7e60176994800ee1e3530b23d5ab"
+    },
+    "historical_native_workflow_fail": {
+      "run_id": 39237770266,
+      "source": "0d55aadeef73144b5b278bb50aae50e32c618312",
+      "result": "FAIL",
+      "reason": "Native ISA-L 26/26 functional PASS but duplicate codec-module registration 13x2 violated old CI literal 11 total; no failed case",
+      "fixed_by": "280ad093e940433907d164ebba599ab5dce5ae17"
+    },
+    "historical_other_ci": {
+      "run_id": 39237770232,
+      "result": "FAIL",
+      "source": "0d55aadeef73144b5b278bb50aae50e32c618312",
+      "cause": "codec-group native regression 240s timeout / unexpected cost diagnostic; not a F2 native test assertion failure"
+    },
+    "new_worker_perf_fixture_source": "496aace6b888fdda8b108c3ce381934392cee8fb",
+    "worker_fix_scope": "only M3-owned crates/wbd-codec/tests/fec2_plan008_abba.rs adds absolute CLOCK_MONOTONIC interval; not independently qualified or integrated and no new paired request",
+    "main_native_regression": {
+      "run_id": 39238279390,
+      "status": "IN_PROGRESS_AT_RECEIPT_CREATION",
+      "groups_success_so_far": [
+        "engine",
+        "kernel",
+        "receipt",
+        "fec",
+        "normal"
+      ],
+      "codec": "IN_PROGRESS"
+    },
+    "next_performance": "Requires new pinned M3-owned request/source/prepare/paired run with real per-leg monotonic intervals; until then INCONCLUSIVE. Do not repeat old cost run merely for the same source."
+  },
+  "m0_product": {
+    "original_tls_mature_firstsend_source": "d98b1c7ad58972f4bdaf7b7c4d731e7ebfce3e2a",
+    "original_tls_mature_firstsend_run_id": 39228592102,
+    "normal_frozen_m2_accepted": 8,
+    "normal_mature2s_unknown_without_receipt": 8,
+    "shared_stop_source": "4f3585251a3288ca2b2a62a23d26fa740f6e8248",
+    "shared_stop_run_id": 39235733652,
+    "shared_go_stop_cleanup_run_id": 39235733659,
+    "full_normal_product_run": "NOT_RUN",
+    "actual_C2S_authenticated_reverse_kind1_and_covered_m2": "NOT_RUN",
+    "requested_pending_applied_rejected_real_product": "NOT_RUN",
+    "m4_016_native_windows_integration": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "FEC2_production": "OFF"
+  },
+  "next_action": "M0 continue same original Go protected Rust RX to M2 authentic reverse kind1, typed scoped receipt/Stop and product requested-pending-applied-rejected; M4 independently implements 016 Windows whole package; M3 independently source-locks valid monotonic ABBA before performance promotion. Do not reopen M1, FEC2 OFF."
+}
