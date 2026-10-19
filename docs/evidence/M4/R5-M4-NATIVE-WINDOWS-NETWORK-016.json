@@ -6,7 +6,7 @@
   "assignment_epoch": 1,
   "branch": "work/m4-r1-platform",
   "source_sha": "f1e790fcd00d9e3425a1f8e771e099f84ac4b891",
-  "result": "PARTIAL_I009_EXACT_WINDOWS_2022_WFP_ATOMIC_PRIMITIVE_SCOPED_PASS_PRODUCT_ARM_GUARDED",
+  "result": "PARTIAL_I009_SCOPED_WINDOWS_PASS_I010_AUTHORING_ONLY_DISPATCH_BLOCKED_NO_WINDOWS_RUN",
   "artifact_verified": false,
   "product_fec2": "OFF",
   "main_decision": "docs/decisions/M0-windows-native-migration-2026-10-19.md",
@@ -265,10 +265,40 @@
       "windows_2025": "NOT_RUN",
       "physical": "NOT_RUN",
       "product_fec2": "OFF"
+    },
+    "windows_010": {
+      "request_id": "M4-016-WIN-NATIVE-010",
+      "code_source_sha": "3bbec46b2ae9a1fcd990bbddb69dc0bdbdec0675",
+      "I_commit_sha": "1d5806655796edd360b7abc4c2078f857cc73eea",
+      "H_commit_sha": "3697eb14b04d7661a146f069c5f4d81d0d8a9db7",
+      "manifest_sha256": "08e1e5ff300b75857b02d8d2801d30d74be2ab0f44d4d536a55da0aca85a66e7",
+      "control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+      "current_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+      "central_g2_run_id": 39302484315,
+      "central_g2_job_id": 118230981927,
+      "central_g2_result": "ROLE_SCOPE_PASS",
+      "central_g2_ancestry_commits": 217,
+      "central_g2_artifact_id": 12212413202,
+      "central_g2_artifact_provider_sha256": "249f7d32d22976cd121df266fe5dbee4c74a4652e9a6e44e1e409a04472c6b44",
+      "dispatch_run_id": 39302887219,
+      "dispatch_attempt_1": "FAIL_MAIN_CHANGED_AFTER_M4_DISPATCH_AUTHORIZATIONS",
+      "dispatch_attempt_2": "FAIL_MAIN_MOVED_BEFORE_DISPATCH_PLANNING",
+      "dispatch_retry_intent": "EXISTING_IMMUTABLE_I010_ONLY",
+      "windows_run_id": null,
+      "windows_job_id": null,
+      "windows_2022_20_native_named_cases": "NOT_RUN",
+      "original_go_cli_gui_2022_new_source": "NOT_RUN",
+      "windows_2025": "NOT_RUN",
+      "true_isolated_wfp_route_dns_ipv6": "NOT_RUN",
+      "real_connect_disconnect_recover": "NOT_RUN",
+      "authenticated_rust_owner_stop": "M0_ONLY_NOT_RUN",
+      "product_fec2": "OFF",
+      "artifact_level": "NO_WINDOWS_RUN_NO_WINDOWS_ARTIFACT",
+      "conclusion": "CONTROL_DISPATCH_BLOCKED_NOT_A_WINDOWS_FUNCTIONAL_FAIL"
     }
   },
-  "request_I": "PENDING_IMMUTABLE_I008",
-  "next_action": "No further I009 reruns. One genuine isolated recoverable Windows original-owner native WFP/route/DNS/IPv6 Connect→Stop→Recover system readback with M0 authenticated Rust Stop is required to cross hard product gate; otherwise retain NOT_RUN and FEC2 OFF.",
+  "request_I": "I010_PLANNED_ONLY_G2_PASS_DISPATCH_ATTEMPT1_AND2_FAIL_NO_WINDOWS_RUN",
+  "next_action": "Use the existing immutable I010 through M0-owned frozen workflow manual fallback after confirming no run and stable main (role M4, exact I/S/G2/control fields). Do not duplicate request or claim native PASS; full product requires separately isolated Windows host and M0 authenticated Stop.",
   "manifest": {
     "path": "r0/go_overlay/assembly/manifest.json",
     "sha256": "2af3d90a6a8b7e0540f6973d3e51e40be0c772f7c73084f22eb094e58014e33f",
@@ -287,5 +317,6 @@
     "native_status_test": "internal/windowsclient/native_product_status_windows_test.go"
   },
   "previous_request_I": "7abc527d2599aac6b7261b8d05dabedbbbbf4570",
-  "previous_request_windows_runner": "NOT_CONFIRMED"
+  "previous_request_windows_runner": "NOT_CONFIRMED",
+  "pending_source_sha": "3bbec46b2ae9a1fcd990bbddb69dc0bdbdec0675"
 }
