@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "request_id": "M0-PLAN011-CONT20-NORMALOFF-KERNEL-NETEM-1P-20261019",
+  "kind": "performance_real_continuous_loss_one_scenario",
+  "workflow": ".github/workflows/m0-cont20-loss-request.yml",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "compiled_run_id": 39252845558,
+  "compiled_artifact_id": 12185284718,
+  "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "mode": "Normal_OFF",
+  "loss_pct": 1,
+  "target_inner_ipv4_mbps_each_direction": 20,
+  "warmup_seconds": 10,
+  "measure_seconds": 60,
+  "fixed_ip_size_classes_bytes": [
+    64,
+    256,
+    1200,
+    1329
+  ],
+  "network": "Linux original-Go protected TLS → Rust independent Normal/OFF owner RX/TX → actual kernel isolated raw/TUN",
+  "intent": "One isolated 1% netem tc qdisc case, 20 Mbps each direction inner IPv4, count actual offered/delivered/missing/invalid and kernel drop, not a FEC recovery or Game run. Do not claim all packet delivery; no auto retry or alternate seed. If target offered under 19Mbps or host capacity unsuitable, halt higher-loss cases.",
+  "product_FEC2": "OFF",
+  "true_FEC_FIXED_AUTO_GAME": "NOT_RUN"
+}
