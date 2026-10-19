@@ -22,6 +22,8 @@ extern int32_t wbd_m0_embedded_go_release_client_fec2_feedback_result(
     uint64_t,const unsigned char *,size_t,uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_release_client_fec2_stop(
     uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_fixed_commit_mature_m2(
+    uint64_t,const unsigned char *,size_t,uint64_t);
 */
 import "C"
 import (
@@ -140,5 +142,26 @@ func (r *v4Fec2ReleaseClientRx) stop()error{
         C.size_t(16))
     if rc!=0{return fmt.Errorf("%w: client FEC2 stop=%d",errV4Embedded,int(rc))}
     r.owner=0;r.stopped=true
+    return nil
+}
+
+// Original server's single Fixed transition after actual M4 source/parity
+// copied AND authentic C2S AEAD receipt has covered matured 2s first sends.
+// Caller only carries requested revision; Rust computes success itself.
+// NO product mode change is inferred from receipt count or queue copying.
+func (b *v4EmbeddedNativeBridge) commitOriginalFixedMatureM2(
+    epoch [16]byte,revision uint64,
+)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        epoch==[16]byte{}||epoch!=b.protectedEpoch||
+        revision==0||b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2){
+        return ErrFecV2Scope
+    }
+    rc:=C.wbd_m0_embedded_go_fixed_commit_mature_m2(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&epoch[0])),
+        C.size_t(16),C.uint64_t(revision))
+    runtime.KeepAlive(epoch)
+    if rc!=0{return fmt.Errorf("%w: Fixed not mature authenticated M2=%d",
+        errV4Embedded,int(rc))}
     return nil
 }
