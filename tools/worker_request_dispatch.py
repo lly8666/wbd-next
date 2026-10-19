@@ -229,6 +229,13 @@ def plan(api, main_sha):
                     data.get("control_sha") != CONTROL_SHA or
                     data.get("role_id") != role):
                 continue  # Historical/other-control requests are not candidates.
+            # Reassignment supersedes immutable older-task requests: they
+            # cannot authorize execution or prevent a separate role's work.
+            # A CURRENT-task candidate still gets every existing exact gate.
+            if data.get("task_id") != worker["assigned_task"]:
+                decisions.append({"role":role,"request_id":rid,
+                    "worker_head":head,"result":"SKIP_SUPERSEDED_TASK"})
+                continue
             stage = ("prepare" if data.get("kind") == "functional" else
                      "paired" if data.get("kind") == "performance" else None)
             require(stage is not None, "candidate requests only support two stages")

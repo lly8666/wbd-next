@@ -156,10 +156,19 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual([x["result"] for x in outcomes],["SKIP_SCOPE_NOT_READY"]*2)
         d.execute(api,outcomes)
         self.assertEqual(api.posts,[])
-    def test_stale_epoch_bad_config_and_wrong_control_fail_closed(self):
-        for mutation in ("task","epoch","digest","control","source"):
+    def test_historical_m3_task_skipped_not_block_m4_or_other_roles(self):
+        api=Mock()
+        api.reg["roles"][2]["assigned_task"]="R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019"
+        api.requests["M3"]["task_id"]="R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018"
+        planned=d.plan(api,MAIN)
+        self.assertEqual([(x["role"],x["result"]) for x in planned],
+                         [("M1","READY"),("M3","SKIP_SUPERSEDED_TASK")])
+        d.execute(api,planned)
+        self.assertEqual([p["inputs"]["role_id"] for p in api.posts],["M1"])
+        self.assertEqual(api.requests["M3"]["status"],"PLANNED")
+    def test_current_task_epoch_digest_source_and_control_fail_closed(self):
+        for mutation in ("epoch","digest","control","source"):
             api=Mock()
-            if mutation=="task":api.requests["M1"]["task_id"]="old"
             if mutation=="epoch":api.requests["M1"]["assignment_epoch"]=55
             if mutation=="digest":api.requests["M1"]["config_sha256"]="0"*64
             if mutation=="control":api.requests["M1"]["control_sha"]="0"*40
