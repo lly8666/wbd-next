@@ -88,7 +88,7 @@ def verify_functional_log(data,role):
     if role=="M3":
         # The exact candidate native case must actually report PASS, not just
         # appear in a compile log or get ignored by the libtest filter.
-        need(re.search(r"test [^\\n]*r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact \\.\\.\\. ok(?:\\n|$)",data) is not None,
+        need(re.search(r"test [^\n]*r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact \.\.\. ok(?:\n|$)",data) is not None,
              "candidate native M3 workspace dirty-tail case did not PASS")
     return passed
 
