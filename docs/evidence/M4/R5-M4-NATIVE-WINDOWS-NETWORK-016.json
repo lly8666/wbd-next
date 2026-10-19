@@ -5,8 +5,8 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "branch": "work/m4-r1-platform",
-  "source_sha": "afd93ca4f5ec64e168c0daf058ecafcadf945733",
-  "result": "NOT_RUN",
+  "source_sha": "3fe2b01a4ebe0f688bce6c60aedbd012306482eb",
+  "result": "PARTIAL_SOURCE_LOCKED_IMPORT_PENDING_WINDOWS_ACTIONS",
   "artifact_verified": false,
   "product_fec2": "OFF",
   "main_decision": "docs/decisions/M0-windows-native-migration-2026-10-19.md",
@@ -23,18 +23,31 @@
     "worker_governance_result": "FAIL"
   },
   "verification": {
-    "donor_exact_blob_import": "NOT_STARTED",
+    "donor_exact_blob_import": "SOURCE_PINNED_12_DONOR_BLOBS_AND_ORIGINALS_GITHUB_VERIFIED_UNRUN_ASSEMBLY",
     "windows_native_2022": "NOT_RUN",
     "windows_native_2025": "NOT_RUN",
-    "runtime_no_shell": "NOT_RUN",
+    "runtime_no_shell": "NOT_RUN_LEGACY_CLI_GUI_STILL_REQUIRES_POWERSHELL",
     "native_connect_disconnect_recover": "NOT_RUN",
     "single_instance_owned_WAL": "NOT_RUN",
     "DNS_IPv6_WFP_route_readback": "NOT_RUN",
     "native_Rust_applied": "NOT_RUN_M0_OWNER",
     "physical": "NOT_RUN",
     "cost": "NOT_RUN",
-    "final_main_merge": "NOT_DONE"
+    "final_main_merge": "NOT_DONE",
+    "assembler_negative_regression": "AUTHORED_NOT_YET_EXECUTED",
+    "windows_package_compile": "AUTHORED_SMOKE_GO_TEST_C_ONLY; NOT_RUN",
+    "native_windows_2022": "NOT_RUN"
   },
   "request_I": "NOT_CREATED",
-  "next_action": "M4 import exactly 12 donor Windows delta files under own overlay, extend original hash-locked manifest, complete CLI/GUI native product. Commit code SOURCE then one exact request I; central G2 + main auto dispatcher. M0 handles protected Rust Stop and final main merge."
+  "next_action": "Submit exact worker M4-016 I for scoped donor CLI/GUI Windows compile with source 3fe2b01, digest d51027...; consume G2+Windows native artifacts; further implement full WFP guard + native CLI/GUI shell-free lifecycle in follow-on source and new I. No product PASS until actual network and authenticated Rust Stop.",
+  "manifest": {
+    "path": "r0/go_overlay/assembly/manifest.json",
+    "sha256": "d51027bb5c8b0452d607fafce5612c8023af5f711fd055491842ce232246ef0e",
+    "git_blob": "0645e5bafcb9e75e8ca051faa849268e71285c36",
+    "operations": 24,
+    "original_PLAN008": 12,
+    "donor_windows": 12,
+    "donor_created": 4,
+    "donor_replaced": 8
+  }
 }
