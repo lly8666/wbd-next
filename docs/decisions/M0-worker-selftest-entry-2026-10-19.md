@@ -70,6 +70,10 @@
 
 **收口**：无需M0改CI源码或代dispatch，M1/M3可对包内新提交自行prepare→paired→修复→新请求，证据可恢复，共享CI所有权和产品硬门不变。组件成本不能升级为整链路/500Mbps/p99/Windows/ARM物理通过。
 
-## 6. 实际入口发布记录（M0-025，方案后独立实施）
+## 6. 历史 v3 入口发布记录（由第 7 节 v5 取代）
 
 2026-10-19：第 5 节公共入口已在 `.github/workflows/worker-component-validation.yml` 与 `tools/worker_component_validation.py` 实装，推荐冻结控制 `qualification/worker-ci-v3` → `3f87d3ec9c06f7362c95c301437116d53be14c4f`；[实际调用、manifest消费、M1/M3例子](../devlog/M0/PLAN-009-worker-ci-v3-runbook-20261019.md)。旧 v1/v2 独立保留不移动。精确控制 SOURCE 的 contract-smoke `39197303106`、maintenance `39197303104`、Governance `39197303044` 均 SUCCESS。实现证明仅覆盖入口静态契约/负例回归；M1/M3 的真实 prepare 和 paired run 由工位自行请求、执行及验收，当前证据仍为 NOT_RUN。M3 现有四腿 fixture 缺绝对每腿 monotonic timestamp，成品只可记 INCONCLUSIVE，不冒充 validated paired_abba PASS。M4 当前独立中央 G2 `39197439844` SUCCESS，不覆盖 M4 产品装配 HOLD。产品 FEC2 OFF、性能资格 NOT_RUN。
+
+## 7. v5 后续版本（当前唯一推荐入口）
+
+v3 是历史合同/回归通过的控制 SOURCE；v4 为历史冻结检查点，**均已被 v5 取代**，冻结分支不移动。当前推荐：`qualification/worker-ci-v5` → `484861e5aff4eb9098a25a42f1522e19716f09e8`。v5 增加 Cargo libtest 非零功能测试计数验证，避免 `0 passed` 也错误进入性能准备阶段；对应完整 SOURCE 的 [contract-smoke 39199797039](https://github.com/lly8666/wbd-next/actions/runs/39199797039)、[maintenance 39199797121](https://github.com/lly8666/wbd-next/actions/runs/39199797121) 和 [Governance 39199797034](https://github.com/lly8666/wbd-next/actions/runs/39199797034) 均 SUCCESS。两角色独立 request/prepare/paired 调用、工件核验和版本限制见 [v5 操作手册](../devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md)。目前未运行角色实际性能：M1/M3 自主 dispatch/功能验收/优化交付；M0 不代工位写 cursor。M3 旧 ABBA 日志没有四个绝对 monotonic 时间区间，仍如实 INCONCLUSIVE。产品 FEC2 默认 OFF。

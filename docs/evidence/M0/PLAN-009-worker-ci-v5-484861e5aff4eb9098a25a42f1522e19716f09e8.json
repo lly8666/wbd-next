@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "plan": "PLAN-009 §5",
+  "control_ref": "qualification/worker-ci-v5",
+  "control_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+  "workflow": ".github/workflows/worker-component-validation.yml",
+  "runner": "tools/worker_component_validation.py",
+  "status": "PUBLIC_CONTRACT_SOURCE_LOCKED_STATIC_CI_PASS_REAL_WORKER_PREPARE_AND_PAIRED_NOT_RUN",
+  "workflow_dispatch_input": [
+    "role_id",
+    "stage",
+    "request_id",
+    "request_ref"
+  ],
+  "features": [
+    "M1 Game015 default Release two-binary old/new",
+    "M3 FEC2-018 official ISA-L Release internal A/B/B/A native",
+    "exact artifact run/attempt/id+manifest SHA256",
+    "separate immutable request I source and control ref",
+    "nonzero actual Cargo passed tests required",
+    "same-job paired AB/BA or ABBA/BAAB negative validations",
+    "M3 missing absolute per-leg intervals remain INCONCLUSIVE"
+  ],
+  "action_results": [
+    {
+      "kind": "contract-smoke",
+      "id": 39199797039,
+      "attempt": 1,
+      "source": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 12163575563,
+      "provider_digest": "sha256:007879779c4d666e9bf756fb6830bc44f21356319fbb947981d193612697572f"
+    },
+    {
+      "kind": "governance-maintenance",
+      "id": 39199797121,
+      "attempt": 1,
+      "source": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 12162944230,
+      "provider_digest": "sha256:978d868a4b49ffa4a2a43d0c45a30ba395c1c28e9716a5debf4d8fa2b6dd3f47"
+    },
+    {
+      "kind": "main-governance",
+      "id": 39199797034,
+      "attempt": 1,
+      "source": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 12163680485,
+      "provider_digest": "sha256:2c5afcb94f8d970dacc67984f4f28007fadecd558cd24e6e4f5082a949e587a0"
+    }
+  ],
+  "M4_G2": {
+    "run_id": 39197439844,
+    "attempt": 1,
+    "head_sha": "c51037853d68b30512e9da0a62523b1d0fcf5c9f",
+    "result": "success",
+    "job_id": 117883140170,
+    "artifact_id": 12163020135,
+    "artifact_digest": "sha256:5ce0fd3176667c2008d7b3a0121cf3fe4cc48eb8d472f050e4e0e2f8279d34d3",
+    "scope": "central G2 ancestry only; M4 remains paused"
+  },
+  "prior_versions": {
+    "v1": "fd8296e81ba2c89a8779813d0072c58fd92266c7",
+    "v2": "4307a39a661b6a0b227cdcc117f16010779de00f",
+    "v3": "3f87d3ec9c06f7362c95c301437116d53be14c4f",
+    "v4": "fd6f5db648141ed4fc998d7430d2d8386d2dd9b3"
+  },
+  "historical_reds_retained": [
+    39196392783,
+    39196306066,
+    39199473414,
+    39199473438
+  ],
+  "not_run": [
+    "M1 Game actual prepare",
+    "M1 Game actual paired cost",
+    "M3 native actual prepare",
+    "M3 native actual paired ABBA",
+    "module optimization benefits",
+    "original full Go/Windows/ARM/physical/D10 p99 product tests"
+  ],
+  "product_FEC2": "OFF",
+  "scope_exclusions": "No modifications to M1/M3/M4 source, requests, branches, cursors, registry or scopes; no module-specific dispatch by M0."
+}

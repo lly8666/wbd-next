@@ -49,3 +49,7 @@ manifest 包含实际 SOURCE、workflow ref、run ID/attempt、平台与产物�
 `native-regression.yml` 接替九个重复的 R1/R2 native workflow：按依赖选组，一次 Release 构建，八个功能组复用有 SOURCE/平台/工具链/选项/依赖/二进制 hash 的产物。组与历史 workflow 映射及必跑 ID 在 `.governance/native-suites.json`。消费者只认可同 run/attempt 的构建，不取 latest；缺用例、非零退出、意外 ignore、残缺日志必须失败。新增用例不因总数变化失败。关键 ID 删改需要独立说明。此矩阵仅为功能测试，不是性能实验。
 
 旧新性能仍一场景、同 job/VM 顺序 AB/BA。不要以八组功能 CI 作为性能矩阵的先例。跨目标平台不共用二进制，跨源码不继承 PASS。旧结果保留原 workflow/run 身份。
+
+## PLAN-009 已发布公共工位执行入口（2026-10-19）
+
+workflow `.github/workflows/worker-component-validation.yml`，M0 固定 `qualification/worker-ci-v5` → `484861e5aff4eb9098a25a42f1522e19716f09e8`。M1/M3 的 `source_sha`、`harness_sha`、`baseline_sha`、`request_ref` 与公共 `control_sha` 必须分别精确锁定。提交各自分支请求 I 后，执行 `gh workflow run worker-component-validation.yml --ref qualification/worker-ci-v5 -f role_id=M1 -f stage=prepare -f request_id=<请求ID> -f request_ref=<完整40位I_SHA>`（M3 角色替换）；再以新的性能请求 I2 的 `stage=paired` 消费已验证的 `prepare_run_id/prepare_artifact_id/prepare_manifest_sha256`。**真实完整示例、M3 native 注意事项、ABBA 范围和 hash 复验**见 [v5 操作手册](devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md)。入口静态合同通过，不代表 worker 实际 prepare/paired 或产品性能已通过；旧 v1-v4 不移，生产 FEC2 OFF。
