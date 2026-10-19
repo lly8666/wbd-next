@@ -83,5 +83,24 @@
     "Old 015 worker governance failure remains distinct from successful central G2.",
     "Existing M4-015 GUI native PASS direct reuse, no Windows functionality for 016 inferred."
   ],
-  "next_action": "M4 independently settles its 015 ledger, implements all 016 Windows runtime shell-free paths and creates immutable I request; central G2 auto dispatch on pinned control. M0 meanwhile wire same original Go protected Rust C2S kind1 receipt and shared Stop product integration, FEC2 OFF."
+  "next_action": "M4 independently settles its 015 ledger, implements all 016 Windows runtime shell-free paths and creates immutable I request; central G2 auto dispatch on pinned control. M0 meanwhile wire same original Go protected Rust C2S kind1 receipt and shared Stop product integration, FEC2 OFF.",
+  "post_source_evidence": [
+    {
+      "source_sha": "437cb2a7afb439d133b1abad29b0fbb0c135d223",
+      "governance_run_id": 39234786246,
+      "governance_result": "FAIL",
+      "maintenance_run_id": 39234786423,
+      "maintenance_result": "FAIL",
+      "reason": "hot read set 32926 bytes exceeded policy; project.next_decision too verbose; no M4 code test failure"
+    },
+    {
+      "source_sha": "f80509301a91a4d51d7ccb6afa1ca0f525ce0d6d",
+      "governance_run_id": 39234938398,
+      "governance_result": "success",
+      "remedy": "project.next_decision compacted to references, preserving detailed PLAN010 and executor docs"
+    }
+  ],
+  "m4_016_manual_actions": "NOT_RUN_NO_WORKER_REQUEST_I",
+  "m4_016_auto_actions": "NOT_RUN_NO_WORKER_REQUEST_I",
+  "entry_operational_policy": "M4 worker submits only its own request JSON in one new commit I; current central ROLE_SCOPE_PASS triggers trusted main-only dispatcher. Control ref immutable at 17263, code exact source+config SHA and duplicate run guard; manual gh workflow dispatch is optional, not required for worker token."
 }
