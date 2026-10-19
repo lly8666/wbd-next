@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -63,7 +64,8 @@ def main():
     native=(sys.platform.startswith("linux") and triple[0]=="linux" and
             ((os.uname().machine=="x86_64" and triple[1]=="amd64") or
              (os.uname().machine=="aarch64" and triple[1]=="arm64"))) or (
-            sys.platform=="win32" and triple==("windows","amd64"))
+            sys.platform=="win32" and triple==("windows","amd64") and
+            platform.machine().lower() in ("amd64","x86_64"))
     if native:
         name="wbd-client"
         invoke([str(out/(name+suffix)),"--version"],legacy,env,out/"client-version.log")
@@ -76,7 +78,17 @@ def main():
         exe=out/("fec2-config.test"+suffix)
         invoke(["go","test","-c","-o",str(exe),"./internal/configfile"],legacy,env,out/"config-build.log")
         text=invoke([str(exe),"-test.run","^TestPLAN008FEC2","-test.v"],legacy,env,out/"config-test.log")
-        if "PASS" not in text: raise RuntimeError("Go config test PASS marker absent")
+        # A Go test binary can exit 0 and print "PASS" even when its -run
+        # regex selects ZERO tests. Never certify a green empty test suite.
+        expected={
+            "TestPLAN008FEC2ProductStrictFlagAndEffective",
+            "TestPLAN008FEC2ReadbackRevisionIdentityAndStop",
+        }
+        passed={line.split(" (",1)[0].removeprefix("--- PASS: ")
+                for line in text.splitlines() if line.startswith("--- PASS: ")}
+        if not expected.issubset(passed):
+            raise RuntimeError("original Go FEC2 config tests missing explicit PASS: "
+                               +",".join(sorted(expected-passed)))
         tests="PASS_SCOPED_FEC2_PARSER_READBACK_ONLY"
     version=invoke(["go","version"],legacy,env,out/"go-version.log").strip()
     if "go1.23.12" not in version: raise RuntimeError("unmatched pinned original Go toolchain")
