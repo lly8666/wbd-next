@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "request_id": "M4-016-WIN-NATIVE-010",
+  "role_id": "M4",
+  "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "kind": "functional",
+  "status": "PLANNED",
+  "workflow": ".github/workflows/m0-m4-product-assembly.yml",
+  "dispatch_ref": "qualification/m4-product-windows-v1",
+  "control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+  "source_sha": "3bbec46b2ae9a1fcd990bbddb69dc0bdbdec0675",
+  "harness_sha": "3bbec46b2ae9a1fcd990bbddb69dc0bdbdec0675",
+  "baseline_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "config_path": "r0/go_overlay/assembly/manifest.json",
+  "config_sha256": "08e1e5ff300b75857b02d8d2801d30d74be2ab0f44d4d536a55da0aca85a66e7",
+  "scenario": "windows-native-product-runtime-016",
+  "seed": 1,
+  "samples": 1,
+  "measurement_jobs": 1,
+  "target": "windows-amd64"
+}
