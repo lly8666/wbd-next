@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "source_sha": "d98b1c7ad58972f4bdaf7b7c4d731e7ebfce3e2a",
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "status": "PARTIAL",
+  "stage": "ORIGINAL_GO_TLS_NORMAL_OFF_REAL_KERNEL_FIRSTSEND_M2_WIRED",
+  "main_branch": "main",
+  "files": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+  ],
+  "technical_contract": {
+    "entry": "original verified Go credential TLS/Detach Active Rust scoped owner with lane + epoch, not cold248 or user ready bool",
+    "engine": "same original M1 FrozenRecord AEAD/PN/Seq; same M4 kernel sendmmsg; one final M2 first-send per ready record after syscall",
+    "kernel_outcomes": "actual copied prefix Accepted; at most one explicit Uncertain index; untouched suffix DefinitelyNotSent; no retry/reseal, no RX-based denominator",
+    "metadata": "exact frozen record PN, ciphertext length plus original legacy IPv4/TCP 40-byte header; bounded 32 slot preallocated metadata vector per worker",
+    "maturity": "M2 MatureFirstSend bounded 4096 records; 2s/8s maturity; in absence of authenticated kind1, all matured samples UNKNOWN rather than no loss; capacity/error censors",
+    "scope": "same lane, direction ServerToClient, authenticated Go epoch; Stop joins workers, stops M2 state then retires driver/session",
+    "product_gate": "FEC2 OFF; no real authenticated reverse kind1 or requested-pending-applied product ACK; test-mode original embedded bridge only"
+  },
+  "source_locked_actions": [
+    {
+      "run_id": 39228592102,
+      "attempt": 1,
+      "workflow": "M0 V4 native owner probe",
+      "conclusion": "success",
+      "jobs": [
+        "build",
+        "batch-critical",
+        "batch-impairment",
+        "batch-metric"
+      ],
+      "critical_job_id": 117981491520,
+      "critical_artifact_id": 12175222344,
+      "critical_artifact_zip_sha256": "d185dba7974f92570e34894a50b055dda34496c7b7ee617b55e9ad8aea143097",
+      "critical_log_sha256": "e2de78e23db13b98459bda6319538ff94c1b6b207a80c79524d2f3a874a49fc0",
+      "witness": "M0_ORIGINAL_REAL_KERNEL_NORMAL_M2_FIRSTSEND_UNKNOWN_PASS accepted=8 covered=0 unknown2s=8 unknown8s=0 authentic_receipt=NOT_RUN",
+      "actual_go_tcp_tls": true,
+      "original_kernel_c2s": 8,
+      "original_kernel_s2c": 8,
+      "first_send_accepted": 8,
+      "uncertain": 0,
+      "definitely_not_sent": 0,
+      "mature_2s_uncovered": 8,
+      "mature_8s_run": "NOT_RUN"
+    },
+    {
+      "run_id": 39228591841,
+      "attempt": 1,
+      "workflow": "Native Regression",
+      "conclusion": "success",
+      "jobs": [
+        "plan",
+        "build",
+        "verify normal",
+        "verify engine",
+        "verify fec",
+        "verify receipt",
+        "verify kernel"
+      ]
+    },
+    {
+      "run_id": 39228591865,
+      "attempt": 1,
+      "workflow": "R0 native ABI",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 39228591914,
+      "attempt": 1,
+      "workflow": "R0 cross ABI",
+      "conclusion": "success",
+      "qualification": "CROSS_ONLY"
+    },
+    {
+      "run_id": 39228591997,
+      "attempt": 1,
+      "workflow": "M0 original owner record crypto",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 39228592079,
+      "attempt": 1,
+      "workflow": "Governance",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 39228591882,
+      "attempt": 1,
+      "workflow": "M0 scoped TLS FEC2 owner",
+      "conclusion": "IN_PROGRESS_AT_EVIDENCE_CHECK",
+      "platform_results": {
+        "native_normal_build": "PASS",
+        "original_link_fec": "PASS",
+        "netem_150ms_C": "PASS_SAME_SOURCE_SINGLE_RUN_NOT_HISTORICAL_CLOSURE",
+        "normal_10mbps": "PASS",
+        "windows_native": "FAIL_EXTERNAL_DEPENDENCY_Chocolatey_NASM_download_HTTP_504",
+        "official_isal": "IN_PROGRESS"
+      },
+      "source_comment": "Network PASS is bounded one-run evidence; historical unrelated 150ms-C FAIL retained."
+    }
+  ],
+  "new_m4_native_product_assembly_consumable": {
+    "original_legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "worker_source_sha": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+    "g2_run_id": 39225046360,
+    "g2_result": "ROLE_SCOPE_PASS",
+    "main_ci_run_id": 39225427878,
+    "attempt": 1,
+    "conclusion": "success",
+    "linux_x64": "SCOPED_BUILD_AND_NATIVE_CONFIG_PASS",
+    "linux_arm64": "SCOPED_BUILD_AND_NATIVE_CONFIG_PASS",
+    "windows_x64": "NATIVE_ORIGINAL_GO_AND_WINFORMS_GUI_SELFTEST_PASS",
+    "windows_artifact_id": 12173732000,
+    "windows_artifact_zip_sha256": "0e53ef5392611d9910e2843ed77f48c917dda7e6b08417b9597b4c2eb79b906b",
+    "windows_receipt_sha256": "43c6b2c247a3bb490dfe316bab4dc5669aa7030de0b3c52aa261df1061608633",
+    "windows_gui_exe_sha256": "8302c0db9c9370661828a47fdcead6cc77d0ee5b8d357eeed9f161d16b681572",
+    "windows_original_go_cli_sha256": "c8da25b3f0afaad7b660c8f3aa11a55830c19c7b75ca7483a0381d37109b589d",
+    "real_rust_loader": "NOT_RUN",
+    "applied_policy": "NOT_RUN",
+    "driver": "NOT_RUN"
+  },
+  "not_run": [
+    "actual reverse C2S authenticated kind1 product sender/receive",
+    "real mature covered/positive/negative 2s/8s based on cryptographically checked peer",
+    "actual original client/server product engine activation through CLI/GUI",
+    "requested/pending/applied/rejected Rust ACK",
+    "physical",
+    "p99",
+    "Windows ARM",
+    "product FEC2"
+  ],
+  "historical_failures_preserved": [
+    "M0 prior 150ms-C fragment pending (not erased by new scoped success)",
+    "M4 prior Windows GUI missing receipt (superseded only for same new M4 source)",
+    "M3 prepare003 no-test CI; M3 ABBA not promoted",
+    "Windows native Chocolatey NASM HTTP504 new run"
+  ],
+  "next_action": "Wire actual inbound authenticated C2S kind1 through the SAME original moved Rust replay opener to M2 MatureFirstSend and unique FrozenRecord shadow, then real original client/server product backend with Stop. No fake ready/applied; FEC2 production OFF."
+}
