@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "role_id": "M2",
+  "task_id": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011",
+  "branch": "work/m2-r2-recovery",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
+  "result": "PASS",
+  "result_scope": "PURE_R2_FIRSTSEND_2S_8S_MATURE_EVENT_REPLAY_ONLY",
+  "artifact_verified": true,
+  "inherited": [
+    "009 source6124ce1012e69a2003bdffdc179a774e21096bc3 native 67/67",
+    "010 source654a3c12941a799d1b65b20606f5ddd3e7778aa3 native 70/70"
+  ],
+  "native": {
+    "run_id": 39188056003,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job_id": 117854569321,
+    "consume_job_id": 117854643482,
+    "tests_passed": 76,
+    "tests_failed": 0,
+    "filtered_out": 1,
+    "added_maturity_tests_executed": 6,
+    "compiled_once": true,
+    "binary_sha256": "da7d57acb66873b82132ffc9a0c304e8833e9bba3ea6fe3b2931d5a51f0a6c51",
+    "test_log_sha256": "7c141d9b7d079593abfc593c3e3079942809cf42edf4b6edaad1a253a35daf4f",
+    "artifact_id": 12158264874,
+    "artifact_sha256": "7855503528b6c0499cf11c5f6660d34fd91991ffa69f134d2df4b7b4c42d2e38",
+    "zip_sha256_verified": true
+  },
+  "g2": {
+    "run_id": 39188055915,
+    "conclusion": "success",
+    "scope": "BOOTSTRAP_ONLY",
+    "artifact_id": 12159220229,
+    "artifact_sha256": "1872d363c9eb0e9060c92210f76f25baac9b5e1863583833cc4529c9aabb0849",
+    "zip_sha256_verified": true
+  },
+  "static": {
+    "run_id": 39188055945,
+    "conclusion": "success",
+    "scope": "STATIC_ONLY",
+    "artifact_id": 12159061764,
+    "artifact_sha256": "b801223a4b0d33f7de6ce8728c322e080156f40bcb2e86af98252edf9c81ce80",
+    "zip_sha256_verified": true
+  },
+  "scope_status": {
+    "current_source_central_run": 39188236554,
+    "conclusion": "failure",
+    "result": "BLOCKED_INFRA",
+    "source_sha": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
+    "reason": "GitHub read failed HTTP 403 (github_rate_limited; remaining=0; attempts=3): compare/83bd7203...3c186cbf",
+    "old_worker_governance_run": 39188055948,
+    "worker_conclusion": "failure",
+    "worker_reason": "GitHub read failed HTTP403 commits/e4626cbc...",
+    "earlier_untested_source_central_pass": {
+      "source_sha": "48ff938b389cc6eef6c51b16f9ea1c1160cc81e7",
+      "run_id": 39187910551,
+      "transferable_to_tested_source": false
+    },
+    "current_source_role_scope_pass": false,
+    "distinct_from_functional_failure": true
+  },
+  "test_filter_correction": {
+    "source_sha": "03694472062e4213d471cbd286c3cb71cf82c32f",
+    "native_run": 39187929325,
+    "conclusion": "success",
+    "tests_passed": 70,
+    "filtered_out": 7,
+    "qualification": "Not a PACK-011 verification: 6 maturity tests had no r2_ prefix and were filtered. Renamed existing six tests; no algorithm change at final source."
+  },
+  "api": {
+    "entry": "crates/wbd-recovery/src/maturity.rs",
+    "public_exports": [
+      "MatureFirstSend",
+      "MaturityConfig",
+      "MaturityError",
+      "FirstSendKind",
+      "FirstSendOutcome",
+      "MatureWindow",
+      "MaturityPoll",
+      "MaturityStop",
+      "ObservationCounters"
+    ],
+    "pinned": "MatureFirstSend::new(pinned ReceiptRouteScope, MaturityConfig, injected MonoNs); M0 owns authentic route/epoch/direction, one owner per observed lane/generation.",
+    "original_kernel": "on_first_send accepts only FINAL first-send platform Accepted/DefinitelyNotSent/Uncertain; explicit kind Data/Control; DATA Accepted actual outer wire bytes makes denominator, Control/NotSent/Uncertain excluded and surfaced by counters, one final event per original PN.",
+    "reverse_auth": "on_authenticated_receipt accepts ScopedAuthenticatedReceipt constructed only AFTER real AEAD, control PN replay and trusted lane/tunnel lookup; report-seq serial prevents old bitmap zeros from becoming fresh loss evidence, old positive remains valid.",
+    "recovery": "on_possible_recovery marks actual Accepted/Uncertain repair or FEC restoration as possible alternative arrival; later authenticated positive is attribution-ambiguous, not first-send success. DefinitelyNotSent does not taint.",
+    "matured": "on_due emits 2s/8s source-time-binned outcomes: unambiguous positive, explicit covered missing, recovered ambiguous, uncovered UNKNOWN. Counts/wire bytes conserved independently. Feedback arriving after deadline never backfills earlier bin even if poll is delayed.",
+    "live_stop": "stop returns censored current live records/bytes, clears timer nodes, refuses late events; new epoch creates new owner with different pinned scope.",
+    "integration": "M0 feeds bounded mature counts to existing single Go controller no per-data-record Go callback or second controller/probe. Caller must treat zero coverage and capacity_censored as UNKNOWN/CAPACITY_LIMITED, not zero-loss."
+  },
+  "limits": {
+    "max_live_data": 200000,
+    "per_entry_timer_nodes": 2,
+    "max_timer_events_per_poll": 64,
+    "window_ns": [
+      2000000000,
+      8000000000
+    ],
+    "only_live_memory": "O(max_live_data) BTreeMap entries plus <=2 indexes each; no dynamic unbounded per-PN history",
+    "capacity_semantics": "CapacityLimited still increments censored records/bytes, all subsequent maturity polls flagged capacity_limited. Do not compute rate from incomplete denominator.",
+    "kind_boundary": "DATA only; Control excluded; metrics do not change quota/FEC/RACK."
+  },
+  "verified_replay": [
+    "page reported vs unreported PNs and deadline crossing",
+    "complete 5-record no-feedback block -> unknown, not fake loss",
+    "fresh seq vs old/duplicate report; stale positive valid but negative invalid",
+    "actual unsent/uncertain/control and max-live censored fail-closed",
+    "possible repair and NotSent do not conflate authentic positive with original success",
+    "Stop/epoch/lane/clock reversals isolated",
+    "4096 DATA across 128 blocks, 8192 timer nodes, <=64 processed each poll, 2s/8s count/byte conservation"
+  ],
+  "rollback": "M0 disconnects maturity observer from original owner/controller; leave first-send/repair/fresh path unchanged and RECOVERY_ENGINE_READY false; no new wire/probes/controller or change to old 009/010 behavior.",
+  "not_run": [
+    "M0 actual kernel original TX prefix source wiring",
+    "Actual Go V4 TLS/AEAD/replay authentic reverse receipt producer",
+    "M3 codec real receipt control",
+    "M1 original arena and M4 real raw/TUN completion/Stop",
+    "Existing Go controller quality decision/cold 2s with live network",
+    "P10/D10, weak-network netns product, CPU/p99/5205/physical/Windows/GUI"
+  ],
+  "product": "NOT_RUN",
+  "real_auth": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "M0 stage-integrate pure maturity source in original first-send owner and existing Go controller after trusted send and authenticated reverse Receipt. Resolve rate-limited central G2/Governance under main-owned infrastructure before SOURCE-scope signoff; M2 only fixes concrete 011 regression."
+}
