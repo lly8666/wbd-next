@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "FAIL_PRECHECK_UNBOUND_VARIABLE_NO_NETWORK_MEASUREMENT",
+  "source_sha": "b64db95314a17f7ca84640a6eb9cb0b634844d87",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "request_id": "M0-PLAN011-CONT20-NORMALOFF-KERNEL-NETEM-1P-20261019",
+  "loss_percent": 1,
+  "run_id": 39254185879,
+  "attempt": 1,
+  "job_id": 118065212170,
+  "run_result": "failure",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39254185879",
+  "build_artifact_from_run": 39252845558,
+  "binary_manifest_verified": true,
+  "actual_loss_measurement": "NOT_RUN",
+  "error": "tools/run-v4-tun-netns.sh: line 56: LOSS: unbound variable",
+  "explanation": "A new optional CONT20 loss guard references LOSS before initialization. The frozen compiled Go/Rust pair downloaded, request/source/binary verified, but test stopped before setup of netem or any timed network measurements. This is harness FAIL, not dataplane FAIL or a capacity result. Fix in 15d7b54e72a12c15a095def372f9c8983fe6872a.",
+  "artifact_id": 12187610620,
+  "artifact_zip_sha256": "51fe059bdc219a5918d9219a95395486697208c820f200a7b4f22eb717ccd244",
+  "kernel_log_sha256": "ccdd7cc3d5e8510c17a1aadc08ddede75dd93cf2a6b999e04b3bf3e7f80a9851",
+  "governance_on_source": {
+    "run_id": 39254185914,
+    "conclusion": "failure",
+    "reason": "scope_audit GitHub ref main HTTP403 github_rate_limited remaining=0 attempts=3; not an audited scope PASS"
+  },
+  "continued_action": "New explicit request superseding this failed request only after fixed isolated script; one 1% loss observation, never retroactively alter original FAIL. FEC fixed/auto/Game/product remain NOT_RUN."
+}
