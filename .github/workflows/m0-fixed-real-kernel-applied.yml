@@ -82,6 +82,7 @@ jobs:
           cat fixed-kernel-result/real-kernel.log
           for suite in 1 2 3; do
             grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_ORIGINAL_GO_FIXED_KERNEL_QUIESCENT_OFF_AFTER_M2_SETTLED_PASS suite=$suite before_ack=deny after_auth_receipt=off5 fixed_rev4=retired" fixed-kernel-result/real-kernel.log
             grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" fixed-kernel-result/real-kernel.log
             grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
             grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
@@ -95,7 +96,9 @@ jobs:
             original_m3_aead_unique_replay_and_rs16=True,
             original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
             real_original_m2_authenticated_reverse_receipt=True,
-            applied_before_kernel_copy=False,real_data_blocks_per_case=1,
+            applied_before_kernel_copy=False,
+            authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
+            real_data_blocks_per_case=1,
             repeatable_background_multiblock_product="NOT_RUN",
             auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
             production_FEC2="OFF",
