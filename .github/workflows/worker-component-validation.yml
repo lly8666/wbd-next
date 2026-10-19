@@ -1,0 +1,167 @@
+name: Worker component validation prepare and paired
+run-name: "${{ inputs.role_id || 'M0' }|${{ inputs.request_id || 'contract-smoke' }|${{ inputs.stage || 'smoke' }|${{ github.sha }"
+on:
+  workflow_dispatch:
+    inputs:
+      role_id:
+        description: "Registered worker role"
+        required: true
+        type: choice
+        options: [M1, M3]
+      stage:
+        description: "prepare build and functional, or paired artifact consumer"
+        required: true
+        type: choice
+        options: [prepare, paired]
+      request_id:
+        description: "Unique worker request file stem"
+        required: true
+        type: string
+      request_ref:
+        description: "Full immutable 40-character request commit I"
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/worker-component-validation.yml"
+      - "tools/worker_component_validation.py"
+      - "tests/test_worker_component_validation.py"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: "worker-component-${{ github.event_name }-${{ inputs.role_id || 'M0' }-${{ inputs.request_id || github.sha }-${{ inputs.stage || 'smoke' }"
+  cancel-in-progress: false
+jobs:
+  contract-smoke:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual runner/ABBA scope, source and native-negative unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -v -s tests -p 'test_worker_component_validation.py'
+          python3 -m unittest discover -v -s tests -p 'test_governance.py'
+          python3 tools/worker_component_validation.py selftest
+          python3 -m py_compile tools/worker_component_validation.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: worker-validation-smoke-${{ github.run_id }-${{ github.run_attempt }
+          path: tests/test_worker_component_validation.py
+          retention-days: 30
+  authorize:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Bind actual worker role task epoch config path I and pinned source
+        shell: bash
+        env:
+          ROLE_ID: ${{ inputs.role_id }
+          REQUEST_ID: ${{ inputs.request_id }
+          REQUEST_REF: ${{ inputs.request_ref }
+          CONTROL_REF: ${{ github.ref_name }
+          CONTROL_SHA: ${{ github.sha }
+          STAGE: ${{ inputs.stage }
+        run: |
+          set -euo pipefail
+          python3 tools/worker_component_validation.py preflight \
+            --role-id "$ROLE_ID" --request-id "$REQUEST_ID" \
+            --request-ref "$REQUEST_REF" --control-ref "$CONTROL_REF" \
+            --control-sha "$CONTROL_SHA" --stage "$STAGE" \
+            --output validation/request.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          path: validation/request.json
+          retention-days: 30
+          if-no-files-found: warn
+  prepare:
+    if: github.event_name == 'workflow_dispatch' && inputs.stage == 'prepare'
+    needs: authorize
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          path: validation
+      - name: Pinned Rust native Linux build target, never install during measurement
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc +1.85.1 --version)" = 'rustc 1.85.1 (4eb161250 2025-03-15)'
+      - name: M3 only - official ISA-L 2.31.1 exact upstream static archive
+        if: inputs.role_id == 'M3'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool nasm make gcc
+          git clone --quiet https://github.com/intel/isa-l.git worker-isal
+          git -C worker-isal checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C worker-isal rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/worker-isal"
+          (cd worker-isal && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >> "$GITHUB_ENV"
+      - name: One frozen Cargo lock and wrapper, module-only overlays and actual functional tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p prepared
+          python3 tools/worker_component_validation.py prepare \
+            --request-file validation/request.json --output prepared
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: worker-prepare-${{ github.run_id }-${{ github.run_attempt }
+          path: prepared/
+          retention-days: 30
+          if-no-files-found: warn
+  paired:
+    if: github.event_name == 'workflow_dispatch' && inputs.stage == 'paired'
+    needs: authorize
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    env:
+      GH_TOKEN: ${{ github.token }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          path: validation
+      - name: Exact prior run/attempt/artifact/hash consumption - no install or compilation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p validation/bundle paired-result
+          python3 tools/worker_component_validation.py paired \
+            --request-file validation/request.json \
+            --bundle validation/bundle --output paired-result
+          test -s paired-result/receipt.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: worker-paired-${{ github.run_id }-${{ github.run_attempt }
+          path: paired-result/
+          retention-days: 30
+          if-no-files-found: warn
