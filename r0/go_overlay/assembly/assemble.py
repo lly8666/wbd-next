@@ -48,6 +48,21 @@ def plan(legacy: Path, overlay: Path, spec: dict) -> tuple[list, dict]:
     actual = git_head(overlay)
     if len(actual) != 40:
         raise ValueError("invalid overlay SOURCE")
+    # One pinned donor batch; keep donor provenance distinct from the
+    # worker's final overlay blob. This does not repin the original Go tree.
+    donor = spec.get("windows_donor_source")
+    donor_rows = [e for e in spec["operations"] if "donor_blob" in e]
+    if donor is not None:
+        if not isinstance(donor,str) or len(donor)!=40 or len(donor_rows)!=12:
+            raise ValueError("exact Windows donor source/12-file batch missing")
+        if len({e["path"] for e in donor_rows})!=12 or any(
+            not e["path"].startswith("internal/windowsclient/")
+            or e.get("overlay_path")!="r0/go_overlay/"+e["path"]
+            or e.get("donor_source")!=donor for e in donor_rows
+        ):
+            raise ValueError("Windows donor paths/source must be exact original subset")
+    elif donor_rows:
+        raise ValueError("unreviewed donor file without source")
     seen = set()
     staged = []
     receipts = []
@@ -73,23 +88,39 @@ def plan(legacy: Path, overlay: Path, spec: dict) -> tuple[list, dict]:
             prior = blob_sha(data)
             if prior != e["original_blob"]:
                 raise ValueError("original blob mismatch: " + target)
-            text = data.decode("utf-8")
-            for item in e["patches"]:
-                before, after = item["find"], item["replace"]
-                if text.count(before) != item.get("count", 1):
-                    raise ValueError("non-exact replacement anchor in: " + target)
-                text = text.replace(before, after)
-            result = text.encode("utf-8")
+            if "overlay_path" in e:
+                # Windows donor exact full-file replacement. Both the
+                # ORIGINAL Git blob and donor/final bytes must match.
+                if e.get("patches") is not None:
+                    raise ValueError("donor full file cannot also use patches")
+                src = within(overlay, e["overlay_path"])
+                result = src.read_bytes()
+                if len(result) > 1048576:
+                    raise ValueError("oversized replacement overlay")
+            else:
+                text = data.decode("utf-8")
+                for item in e["patches"]:
+                    before, after = item["find"], item["replace"]
+                    if text.count(before) != item.get("count", 1):
+                        raise ValueError("non-exact replacement anchor in: " + target)
+                    text = text.replace(before, after)
+                result = text.encode("utf-8")
         else:
             raise ValueError("unknown manifest operation")
         got = blob_sha(result)
+        if "donor_blob" in e and got != e["donor_blob"]:
+            raise ValueError("Windows exact pinned donor blob mismatch: " + target)
         if got != e["result_blob"]:
             raise ValueError("overlay result blob mismatch: " + target)
         staged.append((dst, result))
         receipts.append(dict(path=target, kind=e["kind"], original_blob=prior,
-                             result_blob=got, bytes=len(result)))
+                             result_blob=got, bytes=len(result),
+                             donor_blob=e.get("donor_blob")))
     return staged, dict(schema_version=1, legacy_source=spec["legacy_source"],
                         overlay_source=actual, rust_source=spec["rust_source"],
+                        rust_source_note="reference_only_not_actual_linked_ABI",
+                        windows_donor_source=donor,
+                        donor_file_count=len(donor_rows),
                         effective_catalog="docs/PARAMETERS.json", result="VALIDATED",
                         files=receipts, actual_product_engine="NOT_WIRED",
                         physical="NOT_RUN")
