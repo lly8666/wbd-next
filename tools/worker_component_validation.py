@@ -6,6 +6,7 @@ module and its owned fixture are overlaid. No request can run arbitrary shell.
 """
 import argparse, base64, hashlib, io, json, os, pathlib, platform, re, resource
 import shutil, subprocess, sys, tarfile, time, urllib.parse, urllib.request, zipfile
+sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
 from tools import governance as g
 
 SHA=re.compile(r"[0-9a-f]{40}\Z")
@@ -276,8 +277,7 @@ def verify_artifact(request,bundle,control):
     with zipfile.ZipFile(zip_path) as z:
         for entry in z.infolist():
             name=pathlib.PurePosixPath(entry.filename)
-            need(not name.is_absolute() and ".." not in name.parts and
-                 not entry.is_dir() or entry.is_dir() and ".." not in name.parts,
+            need(not name.is_absolute() and ".." not in name.parts,
                  "unsafe artifact member")
         z.extractall(bundle)
     raw=(bundle/"prepare-manifest.json").read_bytes()
@@ -299,6 +299,12 @@ def verify_artifact(request,bundle,control):
     return m
 def paired_run(request,bundle,out,control):
     m=verify_artifact(request,bundle,control)
+    if not os.environ.get("MEASURE_JOB_ID"):
+        jobs=api("actions/runs/"+os.environ["GITHUB_RUN_ID"]+"/jobs?per_page=100")
+        matches=[j for j in jobs["jobs"] if j.get("name")=="paired"]
+        need(len(matches)==1 and matches[0]["run_id"]==int(os.environ["GITHUB_RUN_ID"]),
+             "paired job could not be independently identified")
+        os.environ["MEASURE_JOB_ID"]=str(matches[0]["id"])
     role=request["role_id"];mode=request["mode"];clock=os.sysconf("SC_CLK_TCK")
     need(clock>0 and platform.system()=="Linux" and platform.machine()=="x86_64",
          "wrong paired host")
