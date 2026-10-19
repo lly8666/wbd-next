@@ -207,12 +207,24 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         clientDelivered[got]=true
     }
     if len(clientDelivered)!=packets{t.Fatalf("client TUN app only received %d",len(clientDelivered))}
+    // M2 is derived strictly from the same AEAD/unique-PN record path,
+    // not from the raw TCP header or application payload. Kernel receipt
+    // send result is explicitly NotSent; server must stay pending.
+    time.Sleep(12*time.Millisecond)
+    draft,e:=releaseClient.feedbackDue()
+    if e!=nil||len(draft.Ciphertext)<31{
+        t.Fatalf("client authenticated M2 C2S draft absent: %d %v",
+            len(draft.Ciphertext),e)
+    }
+    if e:=releaseClient.feedbackKernelResult(draft.RecordPN,0);e!=nil{
+        t.Fatalf("client M2 correctly denied send: %v",e)
+    }
     // A source queued or even copied locally is NOT an authenticated
     // remote application-APPLIED receipt. Keep truthful pending.
     got,applied,e:=b.readbackOriginalFixedPending(pending,server.Epoch)
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_prepared_not_sent=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
         recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
 }
