@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M0/§3/§4: build original Go protected admission → Rust owner Normal/off→fixed→auto product vertical slice, freeze ABI/typed authentic reverse kind1, actual OFF transition and applied ACK, integrate frozen M1/M2/M3/M4; M0 alone owns shared entry/CI and final product qualification.",
+      "goal": "PLAN-012 docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md §1/§3 (continuation of PLAN-008 §1 M0/§3/§4): original Go authenticated Rust FEC Fixed→Auto then real Game2/4 vertical slice, typed actual applied and kernel RX/TX/Stop. Reuse accepted M1/M3; M0 owns shared gate/CI/product.",
       "done_when": "One buildable original client/server Normal experiment with verified TLS/owner/data/feedback/Stop and actual requested/pending/applied/rejected, combined netns function batch and artifact-backed SOURCE; keep CLI/GUI/physical/Windows ARM/full D10/p99 and FEC2 OFF until explicitly proven; no probe-only substitution.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
@@ -45,9 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M1/§4: first reconcile old H19 blocked with already audited exact-SOURCE central G2 receipt (retain old FAIL); then replace Game per-packet rotate_left with bounded paged/ring generation dedup, and open-block linear search with bounded lookup. Preserve one shared encoding and all generation/Stop/loan semantics; no Arc-pool or deadline rework.",
-      "done_when": "Source-locked deterministic wrap/large-gap/old-ID/duplicate/multi-lane/pressure/Stop equivalence; operations-bounded proof (no per-packet full-window shift), one same-VM old/new Game representative cost with bounded memory; original fail retained and unchanged owner contract delivered to M0.",
-      "assigned_task": "R5-M1-PLAN008-GAME-DEDUP-015"
+      "goal": "PLAN-012 docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md §2/§3: original M1 already-accepted GameTx/dedup, deliver bounded typed authenticated 2/4 lane dispatch/receipt integration contract solely within runtime; no real Go/kernel/product claims.",
+      "done_when": "One source-locked buildable M1 scoped bounded 2/4-lane first-ready dispatch contract with one owned logical frame, per-lane independent tickets and native deterministic generation/MTU/backpressure/late/Stop dedup/no-HOL tests; stable M0 consumable interface and perf only if cost changed. Original actual Go+kernel product and Game applied remain M0 NOT_RUN.",
+      "assigned_task": "R5-M1-PLAN012-GAME-REAL-LANE-016"
     },
     {
       "id": "M2",
