@@ -906,6 +906,47 @@ impl ProtectedScopedOwner {
         )
     }
 
+    /// Release-only original Go TLS verified FEC source/repair sealing.
+    /// The caller supplies exact verified epoch/feature7/Fixed revision,
+    /// while the SAME owner burns its ordinary AEAD PN and TCP seq and
+    /// publishes immutable M1 records. Queue success is NOT kernel APPLIED.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn seal_fec2_product_one(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,kind:u8,
+        budget:FrameBudget,carrier_snapshot:u64,epoch:[u8;16],now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if epoch==[0;16]||epoch!=self.epoch||
+            self.state!=OwnerPhase::Active||!self.rx_tx.detached(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let end=14usize.checked_add(payload_len).ok_or(ProtectedCryptoError::Tx)?;
+        let frame=buffer.writable().get(14..end).ok_or(ProtectedCryptoError::Tx)?;
+        if budget.fec_overhead!=0||budget.game_overhead!=0||
+            budget.record_payload_mtu<=14||
+            payload_len>budget.record_payload_mtu{return Err(ProtectedCryptoError::Tx)}
+        match kind{
+            2=>{
+                let src=wbd_codec::fec_v2::parse_source(
+                    frame,budget.record_payload_mtu)
+                    .map_err(|_|ProtectedCryptoError::Tx)?;
+                if src.frame.is_empty()||src.frame.len()>budget.record_payload_mtu-14{
+                    return Err(ProtectedCryptoError::Tx)
+                }
+            }
+            3=>{
+                let rep=wbd_codec::fec_v2::parse_repair(
+                    frame,budget.record_payload_mtu)
+                    .map_err(|_|ProtectedCryptoError::Tx)?;
+                if rep.body.len()>budget.record_payload_mtu-14{
+                    return Err(ProtectedCryptoError::Tx)
+                }
+            }
+            _=>return Err(ProtectedCryptoError::Tx)
+        }
+        self.seal_scoped_authenticated_one(
+            buffer,payload_len,budget,carrier_snapshot,now,false,kind)
+    }
+
     fn seal_normal_off_validated_link(
         &mut self,buffer:UniqueBuffer,payload_len:usize,
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
@@ -961,11 +1002,11 @@ impl ProtectedScopedOwner {
                 AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0
             )
         }else{
-            #[cfg(feature="m0_fec2_owner_probe")]
+            #[cfg(any(feature="m0_fec2_owner_probe",feature="fec2_product_record"))]
             {self.crypto.tx.seal_fec2_after_admission_in_place(
                 kind,buffer.writable(),payload_len,0
             )}
-            #[cfg(not(feature="m0_fec2_owner_probe"))]
+            #[cfg(not(any(feature="m0_fec2_owner_probe",feature="fec2_product_record")))]
             {return Err(ProtectedCryptoError::Tx)}
         }.map_err(|_|ProtectedCryptoError::Tx)?;
         // No sequence reuse even if freezing/queue admission fails.
