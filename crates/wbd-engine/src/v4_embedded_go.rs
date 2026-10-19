@@ -241,7 +241,7 @@ impl NormalFirstSendM2 {
     fn on_original_authenticated_reverse(
         &mut self,opened:crate::v4_owner_crypto::AuthenticatedNormalKind1,
         now:MonoNs
-    )->Result<(),wbd_recovery::DataError>{
+    )->Result<(),wbd_types::DataError>{
         use wbd_recovery::{ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,WireDirection};
         let facts=ReceiptOpenFacts{
             verified_reverse_lane:self.lane,
@@ -259,7 +259,7 @@ impl NormalFirstSendM2 {
         // that case must censor auto observations, not roll back AEAD replay.
         if self.state.on_authenticated_receipt(&scoped,now).is_err(){
             self.censored=true;
-            return Err(wbd_recovery::DataError::Stale)
+            return Err(wbd_types::DataError::Stale)
         }
         self.authenticated_reverse_reports=self.authenticated_reverse_reports.saturating_add(1);
         Ok(())
