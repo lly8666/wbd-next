@@ -6,6 +6,37 @@ $out = [IO.Path]::GetFullPath($OutputDirectory)
 $source = (git -C $overlay rev-parse HEAD).Trim()
 if ($source -notmatch '^[0-9a-f]{40}$') { throw 'invalid exact overlay SOURCE' }
 New-Item -ItemType Directory -Force $out | Out-Null
+# Windows checkout filters can change the bytes of overlay FULL-FILE donor
+# replacements. The main checkout repair restores original Go target blobs,
+# but its replace branch does not restore the overlay sources themselves.
+# Rematerialize exact pinned Git object bytes on this TEMP checkout only,
+# before running the existing assembler. No fuzzy patch / hash bypass.
+@'
+import hashlib,json,pathlib,subprocess,sys
+overlay=pathlib.Path(sys.argv[1]).resolve(strict=True)
+expected=sys.argv[2]
+assert subprocess.check_output(["git","-C",str(overlay),"rev-parse","HEAD"],text=True).strip()==expected
+manifest=json.loads((overlay/"r0/go_overlay/assembly/manifest.json").read_text(encoding="utf-8"))
+def gitblob(raw):
+    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+restored=0
+for op in manifest["operations"]:
+    name=op.get("overlay_path")
+    if name is None:
+        continue
+    pure=pathlib.PurePosixPath(name)
+    assert not pure.is_absolute() and all(x not in ("",".","..") for x in pure.parts) and "\\" not in name
+    target=overlay.joinpath(*pure.parts)
+    assert target.is_file() and not target.is_symlink()
+    assert target.resolve().is_relative_to(overlay)
+    raw=subprocess.check_output(["git","-C",str(overlay),"show",expected+":"+name])
+    assert gitblob(raw)==op["result_blob"],"pinned overlay Git blob drift: "+name
+    target.write_bytes(raw)
+    restored+=1
+assert restored>=18,("expected complete 016 overlay source files, got "+str(restored))
+print("M4_PINNED_WINDOWS_OVERLAY_GIT_BYTES_RESTORED",restored)
+'@ | python - $overlay $source
+if ($LASTEXITCODE -ne 0) { throw 'exact Windows overlay Git objects cannot be materialized' }
 # Compile original Go Windows executable after source-locked fail-closed overlay.
 & python (Join-Path $overlay 'r0/go_overlay/scripts/fec2_assembly_smoke.py') --legacy-root $legacy --overlay-root $overlay --out (Join-Path $out 'go-build') --target windows-amd64
 if ($LASTEXITCODE -ne 0) { throw 'exact assembly/Windows Go build failed' }
