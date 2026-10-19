@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+  "result": "PASS",
+  "qualification": "SCOPED_LINUX_X86_64_REAL_NATIVE_ISAL_FEC2_13_TESTS_AND_FIXED_ARTIFACT_ONLY",
+  "progress": "partial",
+  "unverified": true,
+  "prepare": {
+    "workflow": ".github/workflows/worker-component-validation.yml",
+    "run_id": 39218789735,
+    "attempt": 1,
+    "request_id": "M3-018-NATIVE-E4-PREPARE-004",
+    "request_commit": "1efd5e153b5aea697ea251b56a7ea3609d5df717",
+    "worker_H45": "7cd5da6f561d521d3a6bf46e70eec0a14a1961f0",
+    "control_ref": "qualification/worker-ci-v7",
+    "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+    "authorize": "PASS",
+    "prepare": "PASS",
+    "paired": "SKIPPED_BY_DESIGN",
+    "run_conclusion": "success",
+    "platform": "linux-x86_64",
+    "rustc": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "feature": "native-isal",
+    "official_isal_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "official_isal_archive_sha256": "70611db3a20e18e0a230dcdafaef9919055d36dce72ec7c7306bd73d47fa2a88",
+    "cargo_lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8",
+    "case_name": "r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact",
+    "actual_native_libtest": {
+      "passed": 13,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 156,
+      "mandatory_dirty_tail": "PASS",
+      "oracle_math_wire_cache_eviction": "PASS"
+    },
+    "baseline_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "harness_sha": "42b3d213674fd90a253f77029e4c12531468ee1c",
+    "config_sha256": "fae9f3b197d7f94da8e723cadaefdcb1d7a08e9f9894c486d9dd079b5ce779dd"
+  },
+  "artifact": {
+    "id": 12170931928,
+    "name": "worker-prepare-39218789735-1",
+    "size_bytes": 560980,
+    "zip_sha256": "55987fddd629142497121b692a3f9fad949b4ed5a426f12889b2f59a0480a3bc",
+    "members": [
+      {
+        "name": "prepare-manifest.json",
+        "bytes": 1702,
+        "sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37"
+      },
+      {
+        "name": "functional-B.log",
+        "bytes": 1309,
+        "sha256": "b936272897d9a0e16ef2ae5ddb31fcbe0da9283720dc5b83ea6ef8559e769c9c"
+      },
+      {
+        "name": "compile-B.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "m3-abba",
+        "bytes": 1370952,
+        "sha256": "ee8bccb44ff7bba2267186f05f1cf507f2c115e22e04001af4243cd5733d05f1"
+      }
+    ],
+    "source_blobs": {
+      "candidate_module": "e73b10a78f49743880f1e4b07ecda0705872d400",
+      "candidate_tests": "7c477f03839fbcf7781656af88508e3e4d68e3e8",
+      "harness_fixture": "73e832db49bf56282120a38241038af9939cc044"
+    },
+    "independently_checked": "Downloaded GitHub Actions artifact ZIP with GitHub connector; independently rehashed exact zip bytes and each of 4 members using SHA256. Exact prepare-manifest fields checked against request and component native test log."
+  },
+  "governance": {
+    "H45_worker_run": 39217621133,
+    "result": "PASS",
+    "H45_central_run": 39218223699
+  },
+  "known_unrelated_ci_failure": {
+    "run": 39217619084,
+    "name": "r0-wire-codec",
+    "result": "FAIL",
+    "cause": "R0 shared consumer requires exactly 13 total libtest successes; after adding source-linked FEC2 test module libtest had 23 PASS, 0 FAIL, but shared consumer checks literal 'test result: ok. 13 passed'. No WBC4/WBG4 anchor assertion failed.",
+    "owner": "M0 shared tools/r0_codec_bundle.py / policy",
+    "not_codec_math_failure": true
+  },
+  "historical_failures_retained": [
+    39204914148,
+    39210496325,
+    39216588118
+  ],
+  "performance": {
+    "status": "NOT_RUN",
+    "request_id": "M3-018-NATIVE-E4-PAIRED-001",
+    "order": "ABBA",
+    "k": 16,
+    "r": 16,
+    "frame_bytes": 1200,
+    "erased_sources": [
+      1,
+      5,
+      10,
+      14
+    ],
+    "per_leg_recoveries": 2000000,
+    "same_job": true,
+    "expected_qualification": "INCONCLUSIVE_UNTIL_FIXTURE_HAS_ABSOLUTE_PER_LEG_MONOTONIC_BOUNDARIES",
+    "caveats": [
+      "Native-vs-scalar 017 prior cost not repeated",
+      "Allocator gross requested bytes not copy traffic or peak RSS",
+      "A cache stats absent is not 0-byte A memory",
+      "M3 v7 paired receipt cannot claim valid absolute interval, even if test passes; report INCONCLUSIVE honestly"
+    ]
+  },
+  "next_action": "Run exactly new paired ABBA request after current H audited and central G2 accepted. Verify actual process, stable fixed-source artifact, 4 equal checksum/work legs, CPU ticks and stdout; retain INCONCLUSIVE until absolute timing windows qualified. M0 owns R0 anchor-count CI contract. FEC2 product OFF.",
+  "product_FEC2": "OFF",
+  "not_run": [
+    "full-product/physical/p99",
+    "Windows ARM codec native",
+    "Go product FEC2 activation"
+  ]
+}

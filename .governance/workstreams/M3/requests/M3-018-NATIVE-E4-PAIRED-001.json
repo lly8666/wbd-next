@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "request_id": "M3-018-NATIVE-E4-PAIRED-001",
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "kind": "performance",
+  "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+  "harness_sha": "42b3d213674fd90a253f77029e4c12531468ee1c",
+  "baseline_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+  "config_path": "crates/wbd-codec/tests/fec2_plan008_abba.rs",
+  "config_sha256": "fae9f3b197d7f94da8e723cadaefdcb1d7a08e9f9894c486d9dd079b5ce779dd",
+  "scenario": "fec2-018-native-e4",
+  "seed": 1,
+  "workflow": ".github/workflows/worker-component-validation.yml",
+  "dispatch_ref": "qualification/worker-ci-v7",
+  "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+  "measurement_jobs": 1,
+  "samples": 4,
+  "mode": "paired_abba",
+  "status": "PLANNED",
+  "prepare_run_id": 39218789735,
+  "prepare_run_attempt": 1,
+  "prepare_artifact_id": 12170931928,
+  "prepare_manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37",
+  "legs": [
+    {
+      "label": "A",
+      "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+      "build_manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37"
+    },
+    {
+      "label": "B",
+      "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+      "build_manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37"
+    },
+    {
+      "label": "B",
+      "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+      "build_manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37"
+    },
+    {
+      "label": "A",
+      "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+      "build_manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37"
+    }
+  ]
+}

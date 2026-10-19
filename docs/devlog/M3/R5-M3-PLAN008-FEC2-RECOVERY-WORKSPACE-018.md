@@ -28,3 +28,9 @@ M3 不写 main/shared workflow、`native/isal-safe`、`r0/` benchmark fixture或
 ## 任务状态
 
 `partial/unverified`：默认/scalar 功能及内存静态上限已验；新版 ISA-L native、旧新同VM ABBA/CPU、运行时分配/拷贝数、跨平台 V2、产品路径仍 `NOT_RUN`。下一步只有 M0 交付上述一次共享 Actions 入口或报告不可跑原因后，M3 复核实测结果并针对真实 codec 回归修复。
+
+## 2026-10-19 · 原生 PREPARE-004 通过，提交唯一 4-leg paired 请求
+
+真实官方 ISA-L source-lock native [Actions 39218789735](https://github.com/lly8666/wbd-next/actions/runs/39218789735) attempt1：authorize/prepare PASS，13/13 F2 native oracle（含 decoder-table/workspace dirty-tail）PASS，Linux x64 Rust1.85.1。主机上全套原生 prepare 原始 ZIP `12170931928` 与全部4项内部文件由 M3 独立重新 SHA256 验证；manifest `cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37`，同一 release m3-abba 二进制 `ee8bccb44ff7bba2267186f05f1cf507f2c115e22e04001af4243cd5733d05f1`。详见 `docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json`。基线 A CODE8cc；优化 B CODEb4d（仅补 #[cfg(test)] 测试模块注册）；夹具 CODE42b3。
+
+新 `M3-018-NATIVE-E4-PAIRED-001` 独立 `kind=performance`、`mode=paired_abba`、`samples=4`、`measurement_jobs=1`、`A-B-B-A`、k16/r16/1200B/e4，每腿2,000,000恢复，必须消费上述 *同一个* prepare manifest。FEC2 product OFF。现有 runner 的 M3 收据缺每腿绝对单调时间边界；即使测试实际执行，官方评级仍 **INCONCLUSIVE**，直到另行修复/验收资格，不夸大速度。测试计数造成的 R0 wire shared consumer FAIL [39217619084](https://github.com/lly8666/wbd-next/actions/runs/39217619084)（实际23/23 passed，消费者死校验13），与 FEC2 正确性分开。
