@@ -51,11 +51,12 @@ try {
         throw 'pinned original Go Windows native package compile failed'
     }
     $nativeRecoveryLog=Join-Path $out 'native-recover-test.log'
-    & go test -count=1 -v -run '^TestPLAN010(OriginalNativeRecoveryNoShellOrLegacyFallback|NativeReadOnlyDiskStatusAndConflict)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
+    & go test -count=1 -v -run '^TestPLAN010(OriginalNativeRecoveryNoShellOrLegacyFallback|NativeReadOnlyDiskStatusAndConflict|NativeOriginalProductPreflightReadOnlyDenied)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
     if ($LASTEXITCODE -ne 0) { throw 'native original Go recovery/state read-only regression failed' }
     foreach ($named in @(
         'TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback',
-        'TestPLAN010NativeReadOnlyDiskStatusAndConflict'
+        'TestPLAN010NativeReadOnlyDiskStatusAndConflict',
+        'TestPLAN010NativeOriginalProductPreflightReadOnlyDenied'
     )) {
         if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch ("--- PASS: " + $named) -Quiet)) {
             throw ("native Windows original Go test was NOT executed: " + $named)
@@ -127,7 +128,9 @@ foreach ($name in @(
     'GUI original Go reports absent disk state, not network connected',
     'GUI original Go detects old script state without migration',
     'GUI original Go detects orphan intent and preserves it',
-    'GUI rejects invalid WAL; not a fake safe or ready result'
+    'GUI rejects invalid WAL; not a fake safe or ready result',
+    'GUI real Go native preflight checks OS APIs without claiming Connect ready',
+    'GUI native preflight preserves legacy WAL as blocked'
 )) {
     if ($report.checks -notcontains $name) {
         throw ("native GUI status regression NOT_RUN: " + $name)
