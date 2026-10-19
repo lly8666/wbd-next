@@ -38,7 +38,9 @@ jobs:
       - name: Compile selected packages once; retain exact binaries and source manifest
         env:
           GROUPS_JSON: ${{ needs.plan.outputs.groups }}
-        run: python tools/native_regression.py pack --groups "$GROUPS_JSON"
+        run: |
+          python3 -m unittest discover -s tests -p 'test_native_regression_m3_scope.py' -v
+          python tools/native_regression.py pack --groups "$GROUPS_JSON"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: native-build-${{ github.run_id }}-${{ github.run_attempt }}

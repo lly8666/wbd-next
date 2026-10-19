@@ -115,6 +115,21 @@ def verify(manifest, group):
     return binary
 
 
+def native_group_selection(group,spec):
+    """M3's separately tested F2 must not starve mandatory R1 codec matrix.
+
+    The dedicated pinned official ISA-L main Action has exact 13 native F2
+    anchors. The broad R1 matrix keeps its own mandatory tests + 240s cap.
+    Refuse to skip F2 if the R1 required inventory ever includes F2.
+    """
+    selected=[spec["filter"]] if spec["filter"] else []
+    if group=="codec":
+        if any(name.startswith("r1_f2_") for name in spec["required"]):
+            raise ValueError("cannot skip mandatory F2 from R1 codec matrix")
+        selected+=["--skip","r1_f2_"]
+    return selected
+
+
 def consume(group):
     spec = suites()[group]
     manifest = json.loads((BUILD / "manifest.json").read_text())
@@ -132,8 +147,7 @@ def consume(group):
     # NOT a same-VM CPU performance trial. Keep CPU/p99 qualification separate.
     # Other groups keep their original serialized order.
     command = [str(binary.resolve()), "--test-threads=" + ("4" if group == "codec" else "1")]
-    if spec["filter"]:
-        command.append(spec["filter"])
+    command += native_group_selection(group,spec)
     try:
         run = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              text=True, timeout=240)
