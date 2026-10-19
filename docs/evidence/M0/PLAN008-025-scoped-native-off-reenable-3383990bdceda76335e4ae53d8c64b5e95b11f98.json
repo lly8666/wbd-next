@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "decision_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+  "source_sha": "3383990bdceda76335e4ae53d8c64b5e95b11f98",
+  "result": "PASS_SCOPED_TEST_ONLY_AUTHENTIC_GO_TLS_RUST_QUIESCENT_OFF_REENABLE_KERNEL",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "product_qualification": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "changes": [
+    "Original Rust ScopedOwner keeps authenticated exact epoch/generation/client/lane while internal profile7 marks quiescent OFF distinct from all seven on-wire FEC2 grades0..6. Native owner refuses OFF when any original M1 loaned buffer or unsettled M2 shadow remains; monotonic native revision and exact-epoch enforced.",
+    "Native original M1/M3/M4 FEC2 source+repair call rejects fresh block while OFF (no fresh PN); exact new enable profile remains requested/pending until real M4 kernel source/parity copied. Stale/foreign epoch denied, old ciphertext identity not regenerated.",
+    "Original Go FecV2ControlRuntime fixed/auto/off revision transaction: authenticated backend must Stage successfully before requested changes; Rust original applied sentinel7 mapped into a typed FecV2Ack{Off:true,Profile:Light}; applied is never inferred from requested; Stop still joins controller.",
+    "Feature-only scope; normal client/server production runtimeentry remains fail closed; no actual GUI/M4 assembly/M2 mature feedback integration or physical performance qualification"
+  ],
+  "tests": [
+    "Three real original Go TLS cipher suites: Strong rev1 -> Fixed High rev2 pending -> OFF rev3 quiescent ACK; zero false early fixed ACK; foreign epoch cannot reenable.",
+    "Original privileged Linux netns M4 raw sender: OFF rejects source/repair FEC2 attempt before fresh PN; valid same-epoch profile5 rev3 pending -> real kernel source0/repair1 PN and Seq delivered for all three ciphers.",
+    "Independent Go controller tests: foreign and stale ACK, late rev2 cannot repaint OFF rev3, stop after applied ACK; real Go control 11 cases PASS.",
+    "Existing source-locked Go/Rust component and Linux ARM/Windows codec and 150ms netem suites tested separately; only completed jobs recorded here."
+  ],
+  "run": {
+    "id": 39188007060,
+    "attempt": 1,
+    "head_sha": "3383990bdceda76335e4ae53d8c64b5e95b11f98",
+    "status_when_recorded": "completed",
+    "conclusion_when_recorded": "success",
+    "passed_jobs": 14,
+    "total_jobs": 14,
+    "failed_jobs": [],
+    "pending_jobs": [],
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39188007060",
+    "job_results": [
+      {
+        "name": "go-control-policy",
+        "id": 117854422994,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "native",
+        "id": 117854423147,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-native-architecture (ubuntu-24.04, x86_64-unknown-linux-gnu, x86_64)",
+        "id": 117854423159,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-original-link-fec",
+        "id": 117854423213,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-windows-native",
+        "id": 117854423224,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-build",
+        "id": 117854423259,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-actual-isal",
+        "id": 117854423311,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-native-architecture (ubuntu-24.04-arm, aarch64-unknown-linux-gnu, aarch64)",
+        "id": 117854423316,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-unqualified-gate-ledger",
+        "id": 117854423324,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-C)",
+        "id": 117854788914,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-B)",
+        "id": 117854788918,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-10ms)",
+        "id": 117854788933,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (normal-off-10mbps)",
+        "id": 117854788954,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-A)",
+        "id": 117854788963,
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "native_critical": {
+    "job_name": "native",
+    "conclusion": "success",
+    "downloaded_artifact_id": 12158083992,
+    "locally_rehashed_zip_sha256": "ccca15b6612de43dcc455029c234f8aa4da95066da9517bcab5ee7b48cedd23a",
+    "source": "3383990bdceda76335e4ae53d8c64b5e95b11f98",
+    "verified_log_markers": [
+      "M0_ORIGINAL_GO_RUST_QUIESCENT_OFF_APPLIED_PASS cipher=1 revision=3 loans=0 foreign_epoch=deny",
+      "M0_ORIGINAL_GO_RUST_QUIESCENT_OFF_APPLIED_PASS cipher=2 revision=3 loans=0 foreign_epoch=deny",
+      "M0_ORIGINAL_GO_RUST_QUIESCENT_OFF_APPLIED_PASS cipher=3 revision=3 loans=0 foreign_epoch=deny",
+      "M0_ORIGINAL_KERNEL_QUIESCENT_OFF_NO_FEC_PN_PASS applied_off=1 blocked_new=1 foreign=deny",
+      "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 12159400261,
+      "name": "m0-actual-isal-39188007060-1",
+      "provider_zip_sha256": "sha256:b6d4e30328300f4a72cf208784f4c3249018b8fbbbcaeb87dbdbd9ce7d5a46af"
+    },
+    {
+      "id": 12159330161,
+      "name": "m0-normal-normal-off-10mbps-39188007060-1",
+      "provider_zip_sha256": "sha256:6f47d3c9b2c94cd4016251492621c2897a33df96bfeb83c372c0f64e780a1f31"
+    },
+    {
+      "id": 12159165470,
+      "name": "m0-hard-gates-39188007060-1",
+      "provider_zip_sha256": "sha256:883fce41508bf2cb23c7421f1b8b35557732a7a5a4c42d40685aa5f5b5e8d254"
+    },
+    {
+      "id": 12159061793,
+      "name": "m0-native-aarch64-39188007060-1",
+      "provider_zip_sha256": "sha256:5ca6fe68ef850d25ac772dff1d2bb8463a263231a44ea33a2622151e049adbd7"
+    },
+    {
+      "id": 12158986517,
+      "name": "m0-normal-netem-150ms-B-39188007060-1",
+      "provider_zip_sha256": "sha256:a777ecd47e69476d5ae3afedf9efbecddb4ad6410182abe02c225266e257fbb4"
+    },
+    {
+      "id": 12158872861,
+      "name": "m0-windows-native-39188007060-1",
+      "provider_zip_sha256": "sha256:3f0b44c6489f646f71c431784dd601319ebc7140c59c99f0912c1139808cd481"
+    },
+    {
+      "id": 12158803056,
+      "name": "m0-normal-netem-150ms-A-39188007060-1",
+      "provider_zip_sha256": "sha256:93c283babdc3010f598dcf128788290041f9c9fc63aa515da5bc5c8aaeb9919f"
+    },
+    {
+      "id": 12158667363,
+      "name": "m0-normal-netem-10ms-39188007060-1",
+      "provider_zip_sha256": "sha256:1f5293afb40a5114708a3a4662724c5552e675c790087b0148e71736d3115533"
+    },
+    {
+      "id": 12158409628,
+      "name": "m0-original-link-39188007060-1",
+      "provider_zip_sha256": "sha256:96176eebf14d87685a11720121e94f26f96488d59b801295b7f090b6e001570b"
+    },
+    {
+      "id": 12158389592,
+      "name": "m0-normal-binaries-39188007060-1",
+      "provider_zip_sha256": "sha256:1a62f681c7c75b04727ce35a922b344b60b859f7dd8dbbb68273aa4cf9c3b5d8"
+    },
+    {
+      "id": 12158308146,
+      "name": "m0-native-x86_64-39188007060-1",
+      "provider_zip_sha256": "sha256:8d7ae4cbfb5330cf3f8280722ad35ecf9452fcf7064649708d35dfe9a19d0f36"
+    },
+    {
+      "id": 12158228252,
+      "name": "m0-go-control-only-39188007060-1",
+      "provider_zip_sha256": "sha256:2849fdf73035e2a3427eb2fd1f1ce1205ee7cdf5d53f01dd0e562dc54fabdafb"
+    },
+    {
+      "id": 12158088994,
+      "name": "m0-normal-netem-150ms-C-39188007060-1",
+      "provider_zip_sha256": "sha256:4ea6e91981b63bdd02a67a57228b7ab6398ed8b2a23fb2a063d8d0ad9898d434"
+    },
+    {
+      "id": 12158083992,
+      "name": "m0-real-go-fec2-owner-grant-39188007060-1",
+      "provider_zip_sha256": "sha256:ccca15b6612de43dcc455029c234f8aa4da95066da9517bcab5ee7b48cedd23a"
+    }
+  ],
+  "historical_reds_retained": [
+    {
+      "source": "e686766d7b1e8daee5ca3dccba483eb303fe0222",
+      "run_id": 39187577266,
+      "conclusion": "failure",
+      "reason": "Go test undefined identifier e, fixed in source127a3a"
+    },
+    {
+      "source": "127a3a0752cd437da4dd225d66e9d6c6fe2571c7",
+      "run_id": 39187709690,
+      "conclusion": "failure_of_native_job",
+      "reason": "Old profile7 invalid test assumed 7 reserved; new internal OFF is exactly7, 8 remains invalid; fixed in current source"
+    },
+    {
+      "source": "091d0dff8d0f8cc0e8f315ca4d3ac75f1cadd331",
+      "run_id": 39142346744,
+      "reason": "old 150ms suite intermittency historic red retained"
+    }
+  ],
+  "remaining_hard_gates": {
+    "FEC2_normal_product_enable": "NOT_RUN_OFF",
+    "actual_live_mature_M2_firstsent_feedback": "NOT_WIRED",
+    "M1_continuous_normal_original_product_FEC2_schedule": "NOT_RUN",
+    "M2_original_peer_authenticated_kind1_product_receiver": "NOT_RUN",
+    "M4_original_Go_client_server_GUI_assembly": "NOT_RUN",
+    "full_inflight_FEC2_pending_M2_off_drain": "NOT_RUN",
+    "actual_fault_injected_M4_2_to_32": "NOT_RUN",
+    "two_physical_peer": "NOT_RUN",
+    "native_Windows_ARM_full_product_loader": "NOT_RUN",
+    "business_240s_D10_p99_ABBA": "NOT_RUN"
+  },
+  "policy": "This exact native kernel PASS is feature-gated and not a full product, a live OFF of active outstanding shadow, or business throughput approval; default FEC2 stays OFF."
+}
