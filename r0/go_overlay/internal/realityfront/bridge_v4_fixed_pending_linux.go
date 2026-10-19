@@ -39,7 +39,11 @@ func (b *v4EmbeddedNativeBridge) stageOriginalFixedPending(
     if err:=cfg.validate();err!=nil{
         ack.Rejected=true;return prev,ack,err
     }
-    if cfg.Mode!=FecV2Fixed{
+    // Auto's first selected, bounded profile uses this SAME original
+    // authenticated native FixedStream owner. Future Auto changes still
+    // require a separately accepted revision and real feedback; UNKNOWN
+    // first-send coverage is never a zero-loss selection.
+    if cfg.Mode!=FecV2Fixed&&cfg.Mode!=FecV2Auto{
         ack.Rejected=true;return prev,ack,errFecV2Policy
     }
     if prev.Initialized&&cfg.ConfigRevision<=prev.ConfigRevision{
@@ -78,7 +82,8 @@ func (b *v4EmbeddedNativeBridge) readbackOriginalFixedPending(
         epoch==[16]byte{}||epoch!=b.protectedEpoch||
         !pending.Initialized||pending.Client!=b.authenticatedPrincipal||
         b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)||
-        pending.Direction!=FecV2S2C||pending.Mode!=FecV2Fixed{
+        pending.Direction!=FecV2S2C||
+        (pending.Mode!=FecV2Fixed&&pending.Mode!=FecV2Auto){
         return pending,ack,ErrFecV2Scope
     }
     var profile C.uint8_t
