@@ -167,6 +167,111 @@
       "path": "internal/realityfront/fec_v2_policy_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
       "result_blob": "7ad3bf27365b0f5f04a180b11a686888623f22cb"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_admin_preroute_real_crash_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_admin_preroute_real_crash_windows_test.go",
+      "original_blob": "46f1c9eb300904b0cb404c18b1decbea9133bcd0",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a",
+      "result_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_admin_unified_wal_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_admin_unified_wal_windows_test.go",
+      "original_blob": "cf51e76ca6b3b2312f74405b18cb2e77270b794b",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "4407375879b7e00edb4458dba033a552006cc99a",
+      "result_blob": "4407375879b7e00edb4458dba033a552006cc99a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_dns_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "985be09054322e183693644e225f492ed0019a81",
+      "result_blob": "985be09054322e183693644e225f492ed0019a81"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_dns_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows_test.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "00dc19131a5dc4ddeff7610fbb5cbaf82ec844fd",
+      "result_blob": "00dc19131a5dc4ddeff7610fbb5cbaf82ec844fd"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_lease_audit_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_lease_audit_windows.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "ec228a8b103fe60c8338b2c05fb328df947c0282",
+      "result_blob": "ec228a8b103fe60c8338b2c05fb328df947c0282"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_lease_audit_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_lease_audit_windows_test.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "918bb01ad25c520e41271ac27882d99255fc3792",
+      "result_blob": "918bb01ad25c520e41271ac27882d99255fc3792"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_persisted_preroute_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_persisted_preroute_windows.go",
+      "original_blob": "8e230ed317d4b36034a308b7ed8d0120e894717b",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f",
+      "result_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_pnp_probe_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_pnp_probe_windows.go",
+      "original_blob": "44abe4b2bff022357741d3ede2f84d783f5bb997",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "fe60f3297a1860e0ca915d827235b283dc3407c6",
+      "result_blob": "fe60f3297a1860e0ca915d827235b283dc3407c6"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_pnp_probe_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_pnp_probe_windows_test.go",
+      "original_blob": "3d498cdfd4e85354151137152caae4b405b4cf52",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "151bd2e59ecd4ce744d615e722ff40bce6d8184f",
+      "result_blob": "151bd2e59ecd4ce744d615e722ff40bce6d8184f"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_assembly_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_assembly_windows.go",
+      "original_blob": "e880d1bb1fb309946307b17914c62db1b83f627f",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "5ecc75d43e333d5826a3ecffa8d38e6146f1a3f2",
+      "result_blob": "5ecc75d43e333d5826a3ecffa8d38e6146f1a3f2"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_assembly_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_assembly_windows_test.go",
+      "original_blob": "7b884cac80d0023cfcb266c51a606aa89304683f",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7",
+      "result_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_network_transaction.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+      "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
     }
-  ]
+  ],
+  "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
 }
