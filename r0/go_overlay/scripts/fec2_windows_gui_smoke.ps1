@@ -51,10 +51,15 @@ try {
         throw 'pinned original Go Windows native package compile failed'
     }
     $nativeRecoveryLog=Join-Path $out 'native-recover-test.log'
-    & go test -count=1 -v -run '^TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
-    if ($LASTEXITCODE -ne 0) { throw 'native original Go no-shell recovery regression failed' }
-    if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch '--- PASS: TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback' -Quiet)) {
-        throw 'native original Go no-shell recovery test was NOT executed; zero-test PASS refused'
+    & go test -count=1 -v -run '^TestPLAN010(OriginalNativeRecoveryNoShellOrLegacyFallback|NativeReadOnlyDiskStatusAndConflict)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
+    if ($LASTEXITCODE -ne 0) { throw 'native original Go recovery/state read-only regression failed' }
+    foreach ($named in @(
+        'TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback',
+        'TestPLAN010NativeReadOnlyDiskStatusAndConflict'
+    )) {
+        if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch ("--- PASS: " + $named) -Quiet)) {
+            throw ("native Windows original Go test was NOT executed: " + $named)
+        }
     }
     # The real original Windows CLI owns a named OS event shared by manual
     # native Recover and GUI Connect. Verify exclusivity, release/reclaim,
