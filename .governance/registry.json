@@ -95,9 +95,9 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M3/§4: maintain frozen FEC2 wire/matrix/k/r/e recovery exact equivalence; optimize inverse-table cache hit copies and bounded reused input/output workspace, final decoding table where safe, report memory accounting; no algorithm/profile change.",
-      "done_when": "SOURCE-pinned vectors + dirty-tail/length/partial/missing/eviction equivalence, allocation/copy/cache metrics and finite memory bound; one same-VM old/new k16/r16/1200B/e4 native AB cost (not ISA-L-vs-scalar repeat); return rollback/inconclusive honestly.",
-      "assigned_task": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018"
+      "goal": "PLAN-012 docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md §4/§3: accepted native FEC2 codec/wire PASS is frozen; product-specific source/repair authenticated record seal/open/replay APIs currently behind m0-fec2-record-probe need narrow release-code opt-in preserving exact ABI/PN/wire and fail-closed caller authorization. M0 owns client/epoch grant, feature integration, raw/TUN and applied.",
+      "done_when": "Source-pinned wbd-codec FEC2 real-record source/repair production-option API with unchanged cryptographic/PN/replay behavior and existing FEC2 M3 native/wire vectors; one Actions functional/cross-build suite proves feature off fails closed and opt-in release-record works without probe symbols. Stable exact signatures to M0, no new codec algorithm/benchmark or product enable claim.",
+      "assigned_task": "R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019"
     },
     {
       "id": "M4",
