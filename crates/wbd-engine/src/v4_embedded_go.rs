@@ -305,6 +305,12 @@ struct Entry{
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     normal_off_applied_revision:u64,
+    // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
+    // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    protected_features:u16,
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fixed_pending:Option<(u8,u64)>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -415,6 +421,10 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         normal_firstsend_m2:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         normal_off_applied_revision:0,
+        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        protected_features:handoff.negotiated_features,
+        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fixed_pending:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -2824,6 +2834,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     // This actual owner has only Normal/OFF. Persist the exact successful
     // OFF revision in its own generation; readback is separate from intent.
     e.normal_off_applied_revision=revision;
+    e.fixed_pending=None; // verified OFF cancels any unstarted Fixed intent
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2837,6 +2848,50 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if !verified_normal_off_owner(&e,&epoch){return BAD_STAGE}
     unsafe{out.write(e.normal_off_applied_revision)};
+    OK
+}
+
+// Original-Go authenticated mode intent boundary, independent of the
+// m0_fec2_owner_probe test-only ABI. The ordinary Rust owner can accept
+// Fixed REQUEST/PENDING only for a negotiated TLS feature7 epoch, but has
+// NO authority to call this APPLIED until real source+parity kernel copies
+// and authenticated RX recovery are connected. No synthetic readiness flag.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
+    h:u64,epoch:*const u8,len:usize,profile:u8,revision:u64
+)->i32{
+    if profile>6 || revision==0{return INVALID}
+    let Ok(epoch)=verified_normal_off_epoch(epoch,len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch)
+        ||e.protected_features!=7{return BAD_STAGE}
+    let current=e.fixed_pending.map_or(e.normal_off_applied_revision,|(_,r)|r);
+    if revision<=current || revision<=e.normal_off_applied_revision{return INVALID}
+    e.fixed_pending=Some((profile,revision));
+    OK
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
+    h:u64,epoch:*const u8,len:usize,profile:*mut u8,
+    revision:*mut u64,applied:*mut u32
+)->i32{
+    if profile.is_null()||revision.is_null()||applied.is_null(){return INVALID}
+    let Ok(epoch)=verified_normal_off_epoch(epoch,len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch)
+        ||e.protected_features!=7{return BAD_STAGE}
+    let Some((p,r))=e.fixed_pending else{return BAD_STAGE};
+    unsafe{
+        profile.write(p);
+        revision.write(r);
+        // Real parity source/repair and recover-to-TUN missing. Never infer
+        // APPLIED from accepted request, authenticated TLS or test evidence.
+        applied.write(0);
+    }
     OK
 }
 
