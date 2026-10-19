@@ -1015,29 +1015,68 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
         stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
-    // M2 receives the ACTUAL final original M4 kernel copied PN/outer
-    // byte outcome without Go per-DATA callbacks. No authentic reverse
-    // kind1 exists here, so 2s maturity MUST report UNKNOWN (not zero loss).
+    // Genuine original Go TLS CLIENT C2S kind1 through a real M4 Linux
+    // IP_HDRINCL raw send. Only the SAME moved M3 AEAD+unique PN server
+    // receiver can admit this control to the already sender-owned M2.
+    // WBC4 has exactly one 60B receipt TLV, one covered PN0..PN7 page.
+    // This is not a production GUI/applied ACK or synthetic M2 callback.
+    beforeReceipt,e:=b.rustOwnerNormalM2Coverage()
+    if e!=nil||beforeReceipt.AuthenticatedReverseReports!=0||
+       beforeReceipt.Covered2s!=0||beforeReceipt.Covered8s!=0{
+        t.Fatalf("pre-peer original M2 manufactured coverage %+v err=%v",beforeReceipt,e)
+    }
+    receiptBody:=make([]byte,72)
+    copy(receiptBody[0:4],[]byte("WBC4"))
+    receiptBody[4]=1;receiptBody[5]=1
+    binary.BigEndian.PutUint16(receiptBody[6:8],72)
+    receiptBody[8]=1 // receipt TLV only; flags zero
+    binary.BigEndian.PutUint16(receiptBody[10:12],60)
+    binary.BigEndian.PutUint64(receiptBody[12:20],packets-1)
+    binary.BigEndian.PutUint32(receiptBody[24:28],1) // first report_seq
+    receiptBody[28]=1 // page count; flags/reserved are zero
+    binary.BigEndian.PutUint64(receiptBody[32:40],0) // PN0 base
+    receiptBody[40]=0xff // eight exact real S2C PN0..7 admitted by independent Go opener
+    encryptedKind1,pnHealth,e:=seal.SealHealth(receiptBody)
+    if e!=nil||pnHealth!=packets{
+        t.Fatalf("original Go C2S authenticated kind1 pn=%d err=%v",pnHealth,e)
+    }
+    if e=syscall.Sendto(raw,v4RawC2STestPacket(encryptedKind1,seq,b.originalFlow),0,
+       &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
+        t.Fatalf("original Go C2S kind1 actual raw kernel transmission: %v",e)
+    }
+    seq+=uint32(len(encryptedKind1))
+    reverseDeadline:=time.Now().Add(650*time.Millisecond)
+    var coverage v4NormalM2Coverage
+    for time.Now().Before(reverseDeadline){
+        coverage,e=b.rustOwnerNormalM2Coverage()
+        if e!=nil{t.Fatal(e)}
+        if coverage.AuthenticatedReverseReports==1{break}
+        time.Sleep(5*time.Millisecond)
+    }
+    if coverage.AuthenticatedReverseReports!=1||coverage.Censored{
+        t.Fatalf("real C2S kind1 was not admitted by original Rust AEAD PN worker: %+v",coverage)
+    }
+    // M2 actual kernel accepted denominator MUST mature as covered, not
+    // UNKNOWN or guessed lost: 2s event time and original S2C PN0..7.
     var firstsend v4NormalM2Firstsend
-    deadlineM2:=time.Now().Add(2500*time.Millisecond)
+    deadlineM2:=time.Now().Add(2600*time.Millisecond)
     for time.Now().Before(deadlineM2){
         firstsend,e=b.rustOwnerNormalM2Firstsend()
         if e!=nil{t.Fatal(e)}
-        if firstsend.Accepted==packets && firstsend.Unknown2s==packets{break}
+        coverage,e=b.rustOwnerNormalM2Coverage()
+        if e!=nil{t.Fatal(e)}
+        if firstsend.Accepted==packets && coverage.Covered2s==packets{break}
         time.Sleep(10*time.Millisecond)
     }
     if firstsend.Accepted!=packets||firstsend.DefinitelyNotSent!=0||
-       firstsend.Uncertain!=0||firstsend.Unknown2s!=packets||
-       firstsend.Unknown8s!=0||firstsend.Censored{
-        t.Fatalf("real protected Normal/M2 kernel maturity wrong: %+v",firstsend)
+       firstsend.Uncertain!=0||firstsend.Unknown2s!=0||
+       coverage.Covered2s!=packets||coverage.AuthenticatedReverseReports!=1||
+       firstsend.Censored||coverage.Censored{
+        t.Fatalf("genuine Go TLS C2S kind1 to real owner M2 coverage failed sender=%+v receipt=%+v",
+            firstsend,coverage)
     }
-    coverage,e:=b.rustOwnerNormalM2Coverage()
-    if e!=nil||coverage.Covered2s!=0||coverage.Covered8s!=0||
-       coverage.AuthenticatedReverseReports!=0||coverage.Censored{
-        t.Fatalf("no genuine C2S kind1 may fabricate M2 bitmap coverage: %+v %v",coverage,e)
-    }
-    t.Logf("M0_ORIGINAL_REAL_KERNEL_NORMAL_M2_FIRSTSEND_UNKNOWN_PASS accepted=%d covered2s=%d unknown2s=%d unknown8s=%d authentic_receipt=NOT_RUN",
-        firstsend.Accepted,coverage.Covered2s,firstsend.Unknown2s,firstsend.Unknown8s)
+    t.Logf("M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=%d authentic_reports=%d covered2s=%d unknown2s=%d FEC2=OFF",
+        firstsend.Accepted,coverage.AuthenticatedReverseReports,coverage.Covered2s,firstsend.Unknown2s)
 
     eventBefore,eventHealthy,err:=b.rustOwnerRouteEventState()
     if err!=nil||!eventHealthy{
