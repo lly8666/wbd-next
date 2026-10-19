@@ -34,3 +34,11 @@ M3 不写 main/shared workflow、`native/isal-safe`、`r0/` benchmark fixture或
 真实官方 ISA-L source-lock native [Actions 39218789735](https://github.com/lly8666/wbd-next/actions/runs/39218789735) attempt1：authorize/prepare PASS，13/13 F2 native oracle（含 decoder-table/workspace dirty-tail）PASS，Linux x64 Rust1.85.1。主机上全套原生 prepare 原始 ZIP `12170931928` 与全部4项内部文件由 M3 独立重新 SHA256 验证；manifest `cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37`，同一 release m3-abba 二进制 `ee8bccb44ff7bba2267186f05f1cf507f2c115e22e04001af4243cd5733d05f1`。详见 `docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json`。基线 A CODE8cc；优化 B CODEb4d（仅补 #[cfg(test)] 测试模块注册）；夹具 CODE42b3。
 
 新 `M3-018-NATIVE-E4-PAIRED-001` 独立 `kind=performance`、`mode=paired_abba`、`samples=4`、`measurement_jobs=1`、`A-B-B-A`、k16/r16/1200B/e4，每腿2,000,000恢复，必须消费上述 *同一个* prepare manifest。FEC2 product OFF。现有 runner 的 M3 收据缺每腿绝对单调时间边界；即使测试实际执行，官方评级仍 **INCONCLUSIVE**，直到另行修复/验收资格，不夸大速度。测试计数造成的 R0 wire shared consumer FAIL [39217619084](https://github.com/lly8666/wbd-next/actions/runs/39217619084)（实际23/23 passed，消费者死校验13），与 FEC2 正确性分开。
+
+## 2026-10-19 · 真实原生 ABBA 已执行，资格仍 INCONCLUSIVE
+
+[PAIRED-001 Actions 39229126775](https://github.com/lly8666/wbd-next/actions/runs/39229126775) attempt1 **SUCCESS**，授权与同一 VM/job `117982629177` 的实际 `m3-abba` Rust test **1 PASS**。A/B/B/A 各200万次真实 `NativeIsaL` k16/r16/1200B/e4 缺源恢复，四腿校验和均 `3400000000`（总计800万次）。同一个先前成功的 `PREPARE-004` artifact id12170931928、manifest sha256 `cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37`，没有换版本/工况。
+
+独立下载 paired artifact id **12175592655**，原始 ZIP sha256 `93b6a3025be943959c2c934478c3a645b7a0b02669400a87760d2529a7a77946`，两个 member `log-abba.txt` / `receipt.json` 的散列/原文一致。腿序 CPU ticks **544(A),351(B),349(B),524(A)**，clock 100ticks/s，平均 A=5.34s、B=3.50s；**本固定场景的观察值** CPU 约减少34.46%（A/B约1.526倍）、申请 heap allocations 次数由每腿6800万降至2800万（少58.82%），gross requested bytes由每腿46,368,000,000降至12,496,000,000（少73.05%）。这不是实际内存复制量/RSS；A未提供 retained payload 统计，不能把其统计0误作消耗0。
+
+**正式收据必须维持 `INCONCLUSIVE`**：v7 runner缺每腿 absolute monotonic start/end，尽管 fixture 原生 CPU 每腿≥100 ticks/1s 且测试 PASS；不据此签发正式性能提升或产品资格。完整原始数据/哈希/局限详见 `docs/evidence/M3/018-b4d638ab-39229126775-native-e4-old-new-abba-inconclusive.json`。Windows/ARM、Go TLS、产品500Mbps/p99/物理路径仍 NOT_RUN，**FEC2产品OFF**。H47普通治理曾因 main移动两次失败，但同一 HEAD 的中央 G2已有两次 PASS；旧失败保持原记录。

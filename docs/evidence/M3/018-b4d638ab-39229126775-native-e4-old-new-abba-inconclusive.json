@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+  "result": "INCONCLUSIVE",
+  "execution_result": "PASS",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "qualification": "FIXED_ONE_SCENARIO_NATIVE_ABBA_OBSERVED_CPU_AND_ALLOC_NOT_FINAL_PERF_GATE",
+  "run": {
+    "id": 39229126775,
+    "attempt": 1,
+    "conclusion": "success",
+    "event": "workflow_dispatch",
+    "job_id": 117982629177,
+    "paired_job": "success",
+    "control_ref": "qualification/worker-ci-v7",
+    "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+    "request_id": "M3-018-NATIVE-E4-PAIRED-001",
+    "request_commit": "ea5b93c962b2d866d32243c12b16ddbeddc56e91",
+    "request_branch_head": "0ce24505fe84cd9da6c2453dfa6fda997fdacac9",
+    "mode": "paired_abba",
+    "same_vm_same_job_single_test_process": true,
+    "platform": "Linux x86_64",
+    "official_isal_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "harness_sha": "42b3d213674fd90a253f77029e4c12531468ee1c",
+    "fixture_sha256": "fae9f3b197d7f94da8e723cadaefdcb1d7a08e9f9894c486d9dd079b5ce779dd"
+  },
+  "prepare": {
+    "run_id": 39218789735,
+    "attempt": 1,
+    "artifact_id": 12170931928,
+    "manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37",
+    "binary_sha256": "ee8bccb44ff7bba2267186f05f1cf507f2c115e22e04001af4243cd5733d05f1",
+    "native_F2_tests": "13 PASS 0 FAIL incl dirty-tail"
+  },
+  "artifact": {
+    "id": 12175592655,
+    "name": "worker-paired-39229126775-1",
+    "size_bytes": 1922,
+    "zip_sha256": "93b6a3025be943959c2c934478c3a645b7a0b02669400a87760d2529a7a77946",
+    "members": [
+      {
+        "name": "log-abba.txt",
+        "size_bytes": 1937,
+        "sha256": "a97a4b573add489e6845c6d06d5f41e2150f095a27a87bb737d5545de6898be9"
+      },
+      {
+        "name": "receipt.json",
+        "size_bytes": 3993,
+        "sha256": "6d59a9509c139b89c5846a6befe82e184931f336b4c7a71b531ce27e001e0fcc"
+      }
+    ],
+    "independent_check": "M3 downloaded original ZIP and computed SHA256 for the ZIP and each member; parsed raw log-abba.txt and receipt.json and checked identical four checksums/constant work and identical pinned source/manifest; all match."
+  },
+  "test": {
+    "k": 16,
+    "r": 16,
+    "frame_bytes": 1200,
+    "e": 4,
+    "missing": [
+      1,
+      5,
+      10,
+      14
+    ],
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "legs": [
+      {
+        "leg": 0,
+        "label": "A",
+        "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+        "backend": "NativeIsaL",
+        "recoveries": 2000000,
+        "checksum": 3400000000,
+        "wall_ns": 5445949207,
+        "cpu_ticks": 544,
+        "alloc_calls": 68000000,
+        "alloc_requested_bytes": 46368000000,
+        "retained_stats_payload_bytes": null
+      },
+      {
+        "leg": 1,
+        "label": "B",
+        "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+        "backend": "NativeIsaL",
+        "recoveries": 2000000,
+        "checksum": 3400000000,
+        "wall_ns": 3505585448,
+        "cpu_ticks": 351,
+        "alloc_calls": 28000000,
+        "alloc_requested_bytes": 12496000000,
+        "retained_stats_payload_bytes": 16488
+      },
+      {
+        "leg": 2,
+        "label": "B",
+        "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+        "backend": "NativeIsaL",
+        "recoveries": 2000000,
+        "checksum": 3400000000,
+        "wall_ns": 3492175708,
+        "cpu_ticks": 349,
+        "alloc_calls": 28000000,
+        "alloc_requested_bytes": 12496000000,
+        "retained_stats_payload_bytes": 16488
+      },
+      {
+        "leg": 3,
+        "label": "A",
+        "source_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+        "backend": "NativeIsaL",
+        "recoveries": 2000000,
+        "checksum": 3400000000,
+        "wall_ns": 5243080071,
+        "cpu_ticks": 524,
+        "alloc_calls": 68000000,
+        "alloc_requested_bytes": 46368000000,
+        "retained_stats_payload_bytes": null
+      }
+    ],
+    "total_recoveries": 8000000,
+    "per_leg_checksum": 3400000000,
+    "backend": "ACTUAL_ISAL",
+    "all_cpu_windows_over_1s_100ticks": true
+  },
+  "observed_cost": {
+    "clock_ticks_per_second": 100,
+    "avg_A_cpu_seconds": 5.34,
+    "avg_B_cpu_seconds": 3.5,
+    "observed_cpu_ratio_A_div_B": 1.5257142857142858,
+    "observed_cpu_cost_reduction_percent": 34.45692883895131,
+    "avg_A_wall_seconds": 5.344514639,
+    "avg_B_wall_seconds": 3.498880578,
+    "observed_wall_cost_reduction_percent": 34.53323988547129,
+    "alloc_calls_A_per_leg": 68000000,
+    "alloc_calls_B_per_leg": 28000000,
+    "observed_alloc_calls_reduction_percent": 58.82352941176471,
+    "gross_requested_bytes_A_per_leg": 46368000000,
+    "gross_requested_bytes_B_per_leg": 12496000000,
+    "observed_gross_requested_bytes_reduction_percent": 73.0503795721187,
+    "optimized_retained_decode_payload_bytes_B": 16488,
+    "baseline_retained_decode_payload_bytes_A": "NOT_INSTRUMENTED"
+  },
+  "receipt": {
+    "result": "INCONCLUSIVE",
+    "legs_result": "INCONCLUSIVE",
+    "absolute_per_leg_monotonic_start_end": "NOT_INSTRUMENTED",
+    "cgroup_cpu_max": "NOT_RUN",
+    "cpu_pressure": "some avg10=0.04 avg60=0.97 avg300=0.44 / full avg10=0.00"
+  },
+  "caveats": [
+    "The observed ratio is informative only for this fixed native FEC2 e4 kernel/fixture and not product performance, network throughput, p99, Go/Windows/ARM, or real-world 500Mbps.",
+    "Official v7 performance qualification intentionally INCONCLUSIVE: no absolute per-leg monotonic start/end, despite observed fixture 1s/100-tick windows.",
+    "Allocator global gross requested bytes and call counts are not actual copied bytes, live RSS, or absolute peak memory.",
+    "A's zero reported retained payload is a placeholder because A lacked the new statistics API, not evidence of 0 bytes.",
+    "No candidate-vs-scalar performance competition; baseline and candidate both native ISA-L. No optimization gate or product enablement claimed."
+  ],
+  "governance": {
+    "H45_worker_governance": 39217621133,
+    "H45_central_G2": 39218223699,
+    "H47_central_G2_PASSES": [
+      39228429476,
+      39229024088
+    ],
+    "H47_worker_attempt_2": 39227742499,
+    "H47_worker_attempt2_result": "FAIL: control or source moved mid-audit (main M0 churn, no code-scope assertion)",
+    "H46_worker_result": "FAIL: context_refs 10 > max 8; corrected H47",
+    "scope": "No change to runtime FEC2 product gate"
+  },
+  "next_action": "M0/worker-owned authoritative performance gate needs absolute per-leg monotonic timestamps and stable frozen control. Keep exact observed results and historical failures. Re-run only via new frozen source-locked harness+control+prepare with independently validated artifact. M0 R0 shared anchor count bug is separate; FEC2 product OFF."
+}
