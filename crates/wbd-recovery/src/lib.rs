@@ -4,13 +4,15 @@
 pub use wbd_types::{LaneKey, MonoNs, RecordPn};
 pub mod receipt;
 pub mod rx_feedback;
+pub mod budget;
+pub mod global_sparse;
 pub mod ingress;
+pub mod maturity;
+pub use maturity::{MatureFirstSend,MaturityConfig,MaturityError,FirstSendKind,FirstSendOutcome,MatureWindow,MaturityPoll,MaturityStop,ObservationCounters};
 pub use ingress::{
     admit_opened_receipt, reserve_frozen_submission, complete_driver_prefix,
     DriverPrefixObservation, FrozenRepairSubmission, IngressBatchSettlement,
 };
-pub mod budget;
-pub mod global_sparse;
 pub use global_sparse::{
     BatchCompletionCounts, BatchSuffixEvidence, ValidatedRepairBatchOutcome,
     GlobalRepairAllocator, GlobalRepairConfig, GlobalRepairError, GlobalRepairSnapshot,

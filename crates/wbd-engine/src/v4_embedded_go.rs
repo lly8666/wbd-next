@@ -153,6 +153,11 @@ struct Fec2ProbeReceiptSender{
     route:wbd_recovery::ReceiptRouteScope,
     start_ns:u64,
     repair_submitted:bool,
+    // Copied-first-send denominator from ORIGINAL M4, never RX counters.
+    mature:wbd_recovery::MatureFirstSend,
+    mature_2s:wbd_recovery::MatureWindow,
+    mature_8s:wbd_recovery::MatureWindow,
+    mature_invalid:bool,
 }
 // Exactly ONE opt-in M0 process owner budget shared by all original
 // verified Go TLS sessions (not a per-connection "global" copy).
@@ -606,8 +611,17 @@ fn fec2_probe_real_kernel_raw_once(
     let start=process.at_least(e.fec2_probe_budget_start_ns);
     process.broker.bind_receipt_route(direction,route,start)
         .map_err(|_|INVALID)?;
+    use wbd_recovery::{MatureFirstSend,MaturityConfig,FirstSendKind,FirstSendOutcome};
+    let mut mature=MatureFirstSend::new(
+        route,MaturityConfig{max_live_data:4096},start
+    ).map_err(|_|INVALID)?;
     for (frozen,outer_bytes) in confirmed {
-        // Exact M4 kernel copied handle, not a queued or merely tried send.
+        // This is the FINAL synchronous original M4 kernel copied prefix:
+        // firstsent is never estimated from RX, repair or allocation.
+        mature.on_first_send(lane,FirstSendKind::Data,
+            FirstSendOutcome::Accepted{
+                pn:frozen.metadata().pn,wire_bytes:outer_bytes as u64
+            },start).map_err(|_|INVALID)?;
         shadow.on_sent(frozen,start,MonoNs(start.0.saturating_add(150_000_000)))
             .map_err(|_|INVALID)?;
         process.broker.on_fresh_accepted(direction,outer_bytes as u64,start)
@@ -615,7 +629,9 @@ fn fec2_probe_real_kernel_raw_once(
     }
     if shadow.outstanding()!=2{return Err(INVALID)}
     e.fec2_receipt_sender=Some(Fec2ProbeReceiptSender{
-        shadow,direction,route,start_ns:start.0,repair_submitted:false
+        shadow,direction,route,start_ns:start.0,repair_submitted:false,
+        mature,mature_2s:wbd_recovery::MatureWindow::default(),
+        mature_8s:wbd_recovery::MatureWindow::default(),mature_invalid:false
     });
     e.arena.drain_returns();
     Ok(out)
@@ -749,11 +765,22 @@ fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
     );
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(target);
+    let pages=vec![ReceiptPage{base_pn:base,bitmap}];
+    // Build M2's checked scope only AFTER the ORIGINAL Rust C2S
+    // AEAD/replay opener succeeded. The exact same facts must first pass
+    // the original process-wide M2 admission, never a raw Go bitmap.
+    let scoped=wbd_recovery::ScopedAuthenticatedReceipt::checked_after_open(
+        peer.route,verified,largest,report_seq,pages.clone()
+    ).map_err(|_|INVALID)?;
     let released=admit_opened_receipt(
         &mut process.broker,peer.direction,&mut peer.shadow,peer.route,
-        verified,largest,report_seq,
-        vec![ReceiptPage{base_pn:base,bitmap}],now
+        verified,largest,report_seq,pages,now
     ).map_err(|_|INVALID)?;
+    if peer.mature.on_authenticated_receipt(&scoped,now).is_err(){
+        // Telemetry errors must not refund or undo a valid receipt.
+        // Disable AUTO and report censored, not a guessed zero loss.
+        peer.mature_invalid=true;
+    }
     let count=released.len() as u32;
     let left=peer.shadow.outstanding() as u32;
     // Original frozen loan releases here; kernel copied bytes are NOT an
@@ -876,6 +903,9 @@ fn fec2_probe_real_frozen_repair_one(
     let status=settlement.shadow_result(0).ok_or(INVALID)?;
     sender.shadow.on_send_result(&candidate,status,now)
         .map_err(|_|INVALID)?;
+    if sender.mature.on_possible_recovery(
+        sender.route.outbound_lane(),candidate.pn(),status,now
+    ).is_err(){sender.mature_invalid=true;}
     if driver_result.is_err(){return Err(INVALID)}
     if status!=RepairSendResult::Accepted || settlement.counts.accepted!=1
         ||settlement.counts.uncertain!=0 || settlement.counts.held_unproven!=0
@@ -1082,6 +1112,9 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         let status=settled.shadow_result(index).ok_or(INVALID)?;
         sender.shadow.on_send_result(candidate,status,now)
             .map_err(|_|INVALID)?;
+        if sender.mature.on_possible_recovery(
+            sender.route.outbound_lane(),candidate.pn(),status,now
+        ).is_err(){sender.mature_invalid=true;}
     }
     let all_kernel_copied=actual_report.as_ref().is_some_and(
         |r|r.outcome.accepted_prefix==2
@@ -1227,6 +1260,73 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
     else{return INVALID};
     unsafe{report_seq.write(seq);largest.write(max);base.write(first);
         bits.write(mask)}
+    OK
+}
+
+// Actual sender-local M2 observation, feature-gated and validated under
+// this SAME original TLS/Detach owner. Eight words are
+// firstsent, covered, missing, uncovered for 2s and 8s. Ambiguous
+// repair observations are returned separately as CENSORED, never loss=0.
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn m0_add_mature_window(
+    dst:&mut wbd_recovery::MatureWindow,src:wbd_recovery::MatureWindow
+){
+    dst.first_sent=dst.first_sent.saturating_add(src.first_sent);
+    dst.first_sent_wire_bytes=dst.first_sent_wire_bytes.saturating_add(src.first_sent_wire_bytes);
+    dst.unambiguous_positive=dst.unambiguous_positive.saturating_add(src.unambiguous_positive);
+    dst.positive_wire_bytes=dst.positive_wire_bytes.saturating_add(src.positive_wire_bytes);
+    dst.covered_missing=dst.covered_missing.saturating_add(src.covered_missing);
+    dst.missing_wire_bytes=dst.missing_wire_bytes.saturating_add(src.missing_wire_bytes);
+    dst.repaired_or_ambiguous=dst.repaired_or_ambiguous.saturating_add(src.repaired_or_ambiguous);
+    dst.ambiguous_wire_bytes=dst.ambiguous_wire_bytes.saturating_add(src.ambiguous_wire_bytes);
+    dst.uncovered=dst.uncovered.saturating_add(src.uncovered);
+    dst.uncovered_wire_bytes=dst.uncovered_wire_bytes.saturating_add(src.uncovered_wire_bytes);
+}
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_mature_firstsend(
+    handle:u64,epoch:*const u8,len:usize,elapsed_ns:u64,
+    fast:*mut u64,slow:*mut u64,validity:*mut u8,
+)->i32{
+    if epoch.is_null()||len!=16||fast.is_null()||slow.is_null()||
+       validity.is_null(){return INVALID}
+    let mut exact=[0u8;16];
+    exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE || e.protected_fec2_features!=7 ||
+       !e.owner.is_fec2_probe_bound_to(exact){return BAD_STAGE}
+    let Some(sender)=e.fec2_receipt_sender.as_mut()else{return BAD_STAGE};
+    let Some(when)=sender.start_ns.checked_add(elapsed_ns)else{return INVALID};
+    let pol=sender.mature.on_due(MonoNs(when));
+    match pol {
+        Ok(pol)=>{
+            m0_add_mature_window(&mut sender.mature_2s,pol.window_2s);
+            m0_add_mature_window(&mut sender.mature_8s,pol.window_8s);
+            if pol.capacity_limited{sender.mature_invalid=true;}
+        },
+        Err(_)=>sender.mature_invalid=true,
+    };
+    let a=&sender.mature_2s;
+    let b=&sender.mature_8s;
+    if !a.conserved()||!b.conserved(){sender.mature_invalid=true;}
+    // Distinguish no information (UNKNOWN), uncovered (UNKNOWN), and
+    // a true original M4 repair (CENSORED). They are not a zero-loss ACK.
+    let state=if sender.mature_invalid {3u8}
+        else if a.first_sent==0||b.first_sent==0||a.uncovered!=0||b.uncovered!=0 {1u8}
+        else if a.repaired_or_ambiguous!=0||b.repaired_or_ambiguous!=0 {2u8}
+        else {0u8};
+    let data=|m:&wbd_recovery::MatureWindow|{
+        [m.first_sent,
+         m.unambiguous_positive.saturating_add(m.covered_missing),
+         m.covered_missing,m.uncovered,m.repaired_or_ambiguous]
+    };
+    let one=data(a);
+    let two=data(b);
+    unsafe{
+        for i in 0..5{fast.add(i).write(one[i]);slow.add(i).write(two[i]);}
+        validity.write(state);
+    }
     OK
 }
 

@@ -18,6 +18,9 @@ on:
       - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go"
       - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go"
       - "crates/wbd-engine/Cargo.toml"
+      - "crates/wbd-recovery/src/maturity.rs"
+      - "crates/wbd-recovery/src/receipt.rs"
+      - "crates/wbd-recovery/src/lib.rs"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

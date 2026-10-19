@@ -36,6 +36,10 @@ pub struct AuthenticatedReceipt {
 impl AuthenticatedReceipt {
     /// Lane is provided only after the M0-verified authenticated open.
     pub fn verified_lane(&self) -> LaneKey { self.lane }
+    /// Parsed values after the trusted caller's authenticated-open boundary.
+    pub fn largest_data_pn(&self)->RecordPn{self.largest}
+    pub fn report_seq(&self)->u32{self.report_seq}
+    pub fn pages(&self)->&[ReceiptPage]{&self.pages}
     pub fn after_authenticated_open(
         verified_lane: LaneKey,
         largest_data_pn: RecordPn,
@@ -216,6 +220,9 @@ struct Entry<H: FrozenRecordHandle> {
     rearm_at: MonoNs,
     queued: Option<Queued>,
     indexed_wake: Option<u64>,
+    indexed_queue: Option<u64>, // queued tokens must expire even when PTO is throttled
+    // Last-sent key in the independent lazy-free RACK eligibility index.
+    indexed_rack: Option<u64>,
 }
 #[derive(Clone, Copy)]
 struct Witness {
@@ -229,11 +236,20 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     // One exact index node per shadow; no lazy tombstone pile after ACK/stop.
     expiry_index: BTreeSet<(u64, RecordPn)>,
     wake_index: BTreeSet<(u64, RecordPn)>,
+    queued_index: BTreeSet<(u64, RecordPn)>,
+    // Dynamic RACK: key by original send time, never a stale RTT-derived
+    // deadline. A new positive witness changes only three scalar witnesses.
+    rack_index: BTreeSet<(u64, RecordPn)>,
+    #[cfg(test)]
+    last_receipt_index_ops: usize,
     #[cfg(test)]
     last_timer_index_pops: usize,
     last_report_seq: Option<u32>,
     witnesses: Vec<Witness>, // latest three distinct, verified data sends
     rack_ack_ns: Option<u64>,
+    // One unreported PTO tail probe per lane/PTO period. RACK and queue expiry
+    // remain independent: repeated owner polls cannot drain 10k tail probes.
+    next_tail_probe: MonoNs,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
     let d = seq.wrapping_sub(prev);
@@ -249,10 +265,14 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         Ok(Self {
             lane, config, entries: BTreeMap::new(),
             expiry_index: BTreeSet::new(), wake_index: BTreeSet::new(),
+            rack_index: BTreeSet::new(), queued_index: BTreeSet::new(),
+            #[cfg(test)]
+            last_receipt_index_ops: 0,
             #[cfg(test)]
             last_timer_index_pops: 0,
             last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,
+            next_tail_probe: MonoNs(0),
         })
     }
 
@@ -270,7 +290,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
             retry_epoch: 0, missing_reported: false, rearm_at: at, queued: None,
-            indexed_wake: None,
+            indexed_wake: None, indexed_queue: None, indexed_rack: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
         self.refresh_wake(meta.pn);
@@ -278,33 +298,104 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     }
 
 
-    /// Index only the next owned wake event; hard expiry is independent.
-    /// This key is always removed on ACK, expiry or a state transition.
+    /// The ordinary queued/PTO/rearm wake is independent of changing RACK
+    /// witness RTTs. Only entry-local changes touch this ordered index.
+    fn base_due_at(&self, e: &Entry<H>) -> MonoNs {
+        MonoNs(e.last_sent.0.saturating_add(self.config.pto_ns)
+            .max(e.rearm_at.0))
+    }
     fn wake_at(&self, e: &Entry<H>) -> Option<u64> {
         if let Some(q) = &e.queued { Some(q.until.0) }
         else if e.repair_attempts < 2 && e.retry_epoch < u32::MAX {
-            Some(self.due_at(e).0)
+            Some(self.base_due_at(e).0)
         } else { None }
     }
-    fn refresh_wake(&mut self, pn: RecordPn) {
-        let old = self.entries.get(&pn).expect("indexed entry").indexed_wake;
-        if let Some(at) = old { assert!(self.wake_index.remove(&(at, pn))); }
-        let next = self.wake_at(self.entries.get(&pn).expect("indexed entry"));
-        self.entries.get_mut(&pn).expect("indexed entry").indexed_wake=next;
-        if let Some(at) = next { assert!(self.wake_index.insert((at, pn))); }
+    /// RACK can make an entry earlier ONLY before its first repair, when
+    /// a fresh negative report exists and its original rearm is unchanged.
+    /// A NotSent rearm is now+PTO after its due send: it cannot be accelerated
+    /// by an old witness. A charged Uncertain/Accepted attempt is excluded.
+    fn rack_member(&self, e: &Entry<H>) -> Option<u64> {
+        (e.queued.is_none() && e.missing_reported && e.repair_attempts == 0
+            && e.retry_epoch < u32::MAX && e.rearm_at <= e.last_sent)
+            .then_some(e.last_sent.0)
     }
-    fn remove_indexes(&mut self, pn: RecordPn, entry: &Entry<H>, expiry_popped: bool) {
-        if !expiry_popped { assert!(self.expiry_index.remove(&(entry.hard_expiry.0,pn))); }
-        if let Some(at)=entry.indexed_wake {
+    /// Refresh one entry's two indexes, returning the number of real tree
+    /// mutations. No retained tombstones, no hot global reindex.
+    fn refresh_wake(&mut self, pn: RecordPn) -> usize {
+        let (old_wake,old_queue,old_rack)={
+            let e=self.entries.get(&pn).expect("indexed entry");
+            (e.indexed_wake,e.indexed_queue,e.indexed_rack)
+        };
+        let mut operations=0;
+        if let Some(at)=old_wake {
             assert!(self.wake_index.remove(&(at,pn)));
+            operations+=1;
         }
+        if let Some(at)=old_queue {
+            assert!(self.queued_index.remove(&(at,pn)));
+            operations+=1;
+        }
+        if let Some(at)=old_rack {
+            assert!(self.rack_index.remove(&(at,pn)));
+            operations+=1;
+        }
+        let (wake,queued,rack)={
+            let e=self.entries.get(&pn).expect("indexed entry");
+            (self.wake_at(e),e.queued.as_ref().map(|q|q.until.0),self.rack_member(e))
+        };
+        let e=self.entries.get_mut(&pn).expect("indexed entry");
+        e.indexed_wake=wake;
+        e.indexed_queue=queued;
+        e.indexed_rack=rack;
+        if let Some(at)=wake {
+            assert!(self.wake_index.insert((at,pn)));
+            operations+=1;
+        }
+        if let Some(at)=queued {
+            assert_eq!(wake,Some(at));
+            assert!(self.queued_index.insert((at,pn)));
+            operations+=1;
+        }
+        if let Some(at)=rack {
+            assert!(self.rack_index.insert((at,pn)));
+            operations+=1;
+        }
+        operations
     }
-    /// Genuine new RTT witnesses can advance a RACK timer. Reindex only at
-    /// this authenticated receipt event, not on every timer/fresh callback.
-    /// Full rebuild remains bounded by configured max_shadow_entries.
-    fn refresh_rack_wakes(&mut self) {
-        let keys:Vec<_>=self.entries.keys().copied().collect();
-        for pn in keys {self.refresh_wake(pn);}
+    fn remove_indexes(&mut self, pn: RecordPn, e: &Entry<H>,
+        expiry_popped: bool) -> usize
+    {
+        let mut ops=0;
+        if !expiry_popped {
+            assert!(self.expiry_index.remove(&(e.hard_expiry.0,pn)));
+            ops+=1;
+        }
+        if let Some(at)=e.indexed_wake {
+            assert!(self.wake_index.remove(&(at,pn)));
+            ops+=1;
+        }
+        if let Some(at)=e.indexed_queue {
+            assert!(self.queued_index.remove(&(at,pn)));
+            ops+=1;
+        }
+        if let Some(at)=e.indexed_rack {
+            assert!(self.rack_index.remove(&(at,pn)));
+            ops+=1;
+        }
+        ops
+    }
+    /// RACK's third/newest witness threshold defines a prefix of original
+    /// send times. The first index node is earliest among that prefix, so
+    /// comparing its dynamic due time against the PTO head is sufficient.
+    /// Witness updates change no index nodes (O(3) witness observations).
+    fn rack_head(&self) -> Option<(u64, RecordPn)> {
+        if self.witnesses.len()!=3 { return None; }
+        let ack=self.rack_ack_ns?;
+        let &(sent,pn)=self.rack_index.first()?;
+        if sent>=self.witnesses[0].sent_at.0 {return None;}
+        let delta=ack.saturating_add(self.config.reorder_window_ns)
+            .min(self.config.pto_ns);
+        Some((sent.saturating_add(delta),pn))
     }
 
     /// Positive bitmap bits may release once even from an old report.
@@ -318,7 +409,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         if fresh { self.last_report_seq = Some(receipt.report_seq); }
         let mut releases = Vec::new();
         let mut dirty = Vec::new();
-        let mut rack_changed = false;
+        let mut index_ops=0usize;
         for page in &receipt.pages {
             let base = page.base_pn.0;
             if base > receipt.largest.0 { continue; }
@@ -327,12 +418,11 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 let key=RecordPn(pn);
                 if page.received(pn) {
                     if let Some(entry)=self.entries.remove(&key) {
-                        self.remove_indexes(key,&entry,false);
+                        index_ops+=self.remove_indexes(key,&entry,false);
                         let within_lifetime=now<entry.hard_expiry;
                         if fresh && within_lifetime && entry.repair_attempts==0 {
                             self.rack_ack_ns=Some(now.elapsed_since(entry.last_sent).max(1));
                             self.observe_witness(Witness {pn:key,sent_at:entry.last_sent});
-                            rack_changed=true;
                         }
                         releases.push(Release {
                             pn:key,
@@ -352,11 +442,11 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 }
             }
         }
-        if rack_changed {
-            self.refresh_rack_wakes();
-        } else {
-            for key in dirty {self.refresh_wake(key);}
-        }
+        for key in dirty {index_ops+=self.refresh_wake(key);}
+        #[cfg(test)]
+        { self.last_receipt_index_ops=index_ops; }
+        #[cfg(not(test))]
+        let _=index_ops;
         Ok(releases)
     }
 
@@ -365,20 +455,6 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.witnesses.push(witness);
         self.witnesses.sort_by_key(|w| (w.sent_at, w.pn));
         if self.witnesses.len() > 3 { self.witnesses.remove(0); }
-    }
-
-    fn due_at(&self, entry: &Entry<H>) -> MonoNs {
-        let pto = entry.last_sent.0.saturating_add(self.config.pto_ns);
-        let mut due = pto;
-        if entry.repair_attempts == 0 && entry.missing_reported
-            && self.witnesses.iter().filter(|w| w.sent_at > entry.last_sent).count() == 3
-        {
-            if let Some(rack_ack) = self.rack_ack_ns {
-                due = due.min(entry.last_sent.0.saturating_add(rack_ack)
-                    .saturating_add(self.config.reorder_window_ns));
-            }
-        }
-        MonoNs(due.max(entry.rearm_at.0))
     }
 
     /// Called with an injected monotonic clock. At most 32 candidates per
@@ -402,21 +478,46 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 pn,reason:ReleaseReason::HardExpired,frozen:entry.frozen
             });
         }
-        // Timeouts and new candidate dispatches share the SAME per-tick
-        // cap: 10k previously queued deadlines cannot monopolize one tick.
+        // Three separately ordered facts compete: a plain PTO wake, an
+        // already queued token's absolute expiry, and authenticated RACK.
+        // Rate-limiting PTO must not hide queue timeout behind a 10k-entry
+        // unreported prefix, nor throttle up to 32 genuinely RACK-eligible
+        // records. Each mutation is indexed; no scan of live shadow here.
         let mut wake_events=0usize;
         while candidates.len()<MAX_POLL_CANDIDATES
             && wake_events<MAX_POLL_CANDIDATES
         {
-            let Some(&(wake,pn))=self.wake_index.first() else {break;};
-            wake_events+=1;
+            let base=self.wake_index.first().copied().map(|(at,pn)| {
+                let e=self.entries.get(&pn).expect("wake owner present");
+                let due=if e.queued.is_some() {at}
+                    else {at.max(self.next_tail_probe.0)};
+                (due,at,pn,false)
+            });
+            let queued=self.queued_index.first().copied()
+                .map(|(at,pn)|(at,at,pn,false));
+            let rack=self.rack_head().map(|(at,pn)|(at,at,pn,true));
+            let Some((wake,indexed_at,pn,is_rack))=[base,queued,rack]
+                .into_iter().flatten()
+                .min_by_key(|&(due,_,_,rack)| (due,if rack {0} else {1}))
+            else {break;};
             if wake>now.0 {break;}
-            self.wake_index.pop_first();
+            wake_events+=1;
+            if is_rack {
+                let sent=self.entries.get(&pn)
+                    .expect("RACK owner present").indexed_rack
+                    .expect("RACK membership");
+                assert!(self.rack_index.remove(&(sent,pn)));
+                self.entries.get_mut(&pn).expect("RACK owner present")
+                    .indexed_rack=None;
+            } else {
+                assert!(self.wake_index.remove(&(indexed_at,pn)));
+                let e=self.entries.get_mut(&pn).expect("wake index synchronized");
+                assert_eq!(e.indexed_wake,Some(indexed_at));
+                e.indexed_wake=None;
+            }
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
-            let entry=self.entries.get_mut(&pn).expect("wake index synchronized");
-            assert_eq!(entry.indexed_wake,Some(wake));
-            entry.indexed_wake=None;
+            let entry=self.entries.get_mut(&pn).expect("indexed owner present");
             if entry.queued.as_ref().is_some_and(|q| now>=q.until) {
                 entry.queued=None;
                 entry.rearm_at=MonoNs(now.0.saturating_add(self.config.pto_ns));
@@ -430,6 +531,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
                     dispatch_by:until,frozen:entry.frozen.clone()
                 });
+                if !is_rack {
+                    self.next_tail_probe=MonoNs(now.0.saturating_add(self.config.pto_ns));
+                }
             }
             self.refresh_wake(pn);
         }
@@ -474,12 +578,21 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
 
     pub fn next_deadline(&self) -> Option<MonoNs> {
         let hard=self.expiry_index.first().map(|&(at,_)|at);
-        let wake=self.wake_index.first().map(|&(at,_)|at);
-        hard.into_iter().chain(wake).min().map(MonoNs)
+        let wake=self.wake_index.first().map(|&(at,pn)| {
+            let e=self.entries.get(&pn).expect("wake owner present");
+            if e.queued.is_some() {at} else {at.max(self.next_tail_probe.0)}
+        });
+        let queued=self.queued_index.first().map(|&(at,_)|at);
+        let rack=self.rack_head().map(|(at,_)|at);
+        hard.into_iter().chain(wake).chain(queued).chain(rack).min().map(MonoNs)
     }
     #[cfg(test)]
     pub(crate) fn last_timer_index_pops(&self)->usize {
         self.last_timer_index_pops
+    }
+    #[cfg(test)]
+    pub(crate) fn last_receipt_index_ops(&self)->usize {
+        self.last_receipt_index_ops
     }
     pub fn outstanding(&self) -> usize { self.entries.len() }
 }
@@ -655,84 +768,77 @@ mod tests {
     }
 
     #[test]
-    fn r2_bounded_shadow_and_32_candidates_per_tick_failed_send_no_charge() {
-        let mut s = state(40, 10);
-        for pn in 0..40 { add(&mut s, pn, 0, 100); }
-        assert!(matches!(s.on_sent(frozen(40), MonoNs(0), MonoNs(100)),
+    fn r2_bounded_shadow_and_single_unreported_tail_no_fresh_gate() {
+        let mut s=state(40,10);
+        for pn in 0..40 {add(&mut s,pn,0,100);}
+        assert!(matches!(s.on_sent(frozen(40),MonoNs(0),MonoNs(100)),
             Err(DataError::NoCapacity(LimitedResource::ShadowBytes))));
-        let first = s.on_timer(MonoNs(10));
-        assert_eq!(first.candidates.len(), 32);
-        let remaining = s.on_timer(MonoNs(10));
-        assert_eq!(remaining.candidates.len(), 8);
-        let c = &first.candidates[0];
-        s.on_send_result(c, RepairSendResult::NotSent, MonoNs(10)).unwrap();
+        let first=s.on_timer(MonoNs(10));
+        assert_eq!(first.candidates.len(),1);
+        assert_eq!(s.next_deadline(),Some(MonoNs(20)));
+        let c=&first.candidates[0];
+        s.on_send_result(c,RepairSendResult::NotSent,MonoNs(10)).unwrap();
         assert!(s.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(s.on_timer(MonoNs(100)).releases.len(), 40);
+        assert_eq!(s.on_timer(MonoNs(20)).candidates.len(),1);
+        assert_eq!(s.on_timer(MonoNs(20)).candidates.len(),0);
+        assert_eq!(s.on_timer(MonoNs(100)).releases.len(),40);
+        assert!(s.queued_index.is_empty());
     }
 
     #[test]
-    fn r2_burst_indexed_0_1_32_33_deadlines_without_table_rescan() {
+    fn r2_burst_indexed_0_1_32_33_tail_paced_without_table_rescan() {
         let mut empty=state(1,10);
         assert_eq!(empty.next_deadline(),None);
         assert!(empty.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(empty.last_timer_index_pops(),0);
         add(&mut empty,1,0,100);
         assert_eq!(empty.next_deadline(),Some(MonoNs(10)));
-        assert_eq!(empty.on_timer(MonoNs(9)).candidates.len(),0);
-        assert_eq!(empty.last_timer_index_pops(),0);
+        assert!(empty.on_timer(MonoNs(9)).candidates.is_empty());
         let c=empty.on_timer(MonoNs(10)).candidates;
         assert_eq!(c.len(),1);
         assert_eq!(empty.last_timer_index_pops(),1);
         assert!(empty.preflight(&c[0],MonoNs(10)));
         assert!(empty.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(empty.last_timer_index_pops(),0);
         let mut full=state(33,10);
-        for pn in 0..33 {add(&mut full,pn,0,100);}
-        assert_eq!(full.on_timer(MonoNs(10)).candidates.len(),32);
-        assert_eq!(full.last_timer_index_pops(),32);
-        assert_eq!(full.on_timer(MonoNs(10)).candidates.len(),1);
-        assert_eq!(full.last_timer_index_pops(),1);
-        assert!(full.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(full.last_timer_index_pops(),0);
-        assert_eq!(full.expiry_index.len(),33);
+        for pn in 0..33 {add(&mut full,pn,0,1_000_000);}
+        for i in 0..33_u64 {
+            let now=MonoNs(10+i*10);
+            assert_eq!(full.next_deadline(),Some(now));
+            let r=full.on_timer(now);
+            assert_eq!(r.candidates.len(),1);
+            assert_eq!(r.candidates[0].pn().0,i);
+            assert_eq!(full.last_timer_index_pops(),1);
+            assert!(full.on_timer(now).candidates.is_empty());
+            assert_eq!(full.last_timer_index_pops(),0);
+        }
+        assert_eq!(full.queued_index.len(),33);
         assert_eq!(full.wake_index.len(),33);
+        assert_eq!(full.expiry_index.len(),33);
     }
 
     #[test]
-    fn r2_burst_10000_due_drained_32_per_poll_counted_index_only() {
+    fn r2_burst_10000_unreported_tail_paces_one_per_pto_with_index_only() {
         const N:u64=10_000;
         let mut s=state(N as usize,10);
         for pn in 0..N {add(&mut s,pn,0,100_000_000);}
         assert_eq!(s.expiry_index.len(),N as usize);
         assert_eq!(s.wake_index.len(),N as usize);
-        assert_eq!(s.next_deadline(),Some(MonoNs(10)));
-        let mut observed=vec![false;N as usize];
-        let mut accepted=0usize;
-        let mut polls=0usize;
-        while accepted<N as usize {
-            let poll=s.on_timer(MonoNs(10));
-            polls+=1;
-            assert!(poll.releases.is_empty());
-            assert!(!poll.candidates.is_empty());
-            assert!(poll.candidates.len()<=32);
-            assert!(s.last_timer_index_pops()<=32,
-                "no full table scan per fake clock owner tick");
-            for c in &poll.candidates {
-                let at=c.pn().0 as usize;
-                assert!(!observed[at],"candidate duplicated within one epoch");
-                observed[at]=true;
-                assert!(s.preflight(c,MonoNs(10)));
-            }
-            accepted+=poll.candidates.len();
-            assert!(polls<400);
+        for i in 0..33_u64 {
+            let at=MonoNs(10+i*10);
+            assert_eq!(s.next_deadline(),Some(at));
+            let poll=s.on_timer(at);
+            assert_eq!(poll.candidates.len(),1);
+            assert_eq!(poll.candidates[0].pn().0,i);
+            assert_eq!(s.last_timer_index_pops(),1);
+            assert_eq!(s.on_timer(at).candidates.len(),0);
+            assert_eq!(s.last_timer_index_pops(),0);
         }
-        assert_eq!(polls,313); // 312*32 + 16, no 10k-per-tick rescans
-        assert_eq!(accepted,N as usize);
-        assert!(observed.into_iter().all(|yes|yes));
-        assert!(s.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(s.last_timer_index_pops(),0);
-        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.outstanding(),N as usize);
         assert_eq!(s.wake_index.len(),N as usize);
+        assert_eq!(s.queued_index.len(),33);
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.on_timer(MonoNs(100_000_000)).releases.len(),N as usize);
+        assert!(s.queued_index.is_empty());
+        assert_eq!(s.next_deadline(),None);
     }
 
     #[test]
@@ -759,62 +865,47 @@ mod tests {
     }
 
     #[test]
-    fn r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry() {
+    fn r2_burst_queued_timeout_ack_and_other_tail_are_independent() {
         let mut s=state(35,10);
         for pn in 0..35 {add(&mut s,pn,0,100_000_000);}
-        let mut first=s.on_timer(MonoNs(10)).candidates;
-        assert_eq!(first.len(),32);
-        let old=first.remove(0);
+        let old=s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert_eq!(s.queued_index.len(),1);
         assert!(s.on_receipt(&receipt(1,0,vec![page(0,&[0])]),MonoNs(11))
             .unwrap().iter().any(|r|r.pn==RecordPn(0)));
         assert!(!s.preflight(&old,MonoNs(12)));
-        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,MonoNs(12)),
-            Err(DataError::Stale));
+        assert!(s.queued_index.is_empty());
         let second=s.on_timer(MonoNs(20)).candidates;
-        assert_eq!(second.len(),3);
-        assert_eq!(s.last_timer_index_pops(),3);
-        assert!(s.on_timer(MonoNs(21)).candidates.is_empty());
-        assert_eq!(s.last_timer_index_pops(),0);
-        // Existing 31 remaining queued candidates time out at 20m+10.
-        // The three queued at t=20 have a different, later dispatch window.
-        let expired_queues=s.on_timer(MonoNs(20_000_011));
-        assert!(expired_queues.candidates.is_empty());
-        assert_eq!(s.wake_index.len(),s.outstanding());
-        assert_eq!(s.expiry_index.len(),s.outstanding());
-        assert_eq!(s.outstanding(),34);
-        assert_eq!(s.last_timer_index_pops(),31);
-        let later=s.on_timer(MonoNs(20_000_021)).candidates;
-        assert_eq!(later.len(),29); // 3 newer queued time out, 29 earlier due
-        assert_eq!(s.last_timer_index_pops(),32);
+        assert_eq!(second.len(),1);
+        assert_eq!(second[0].pn().0,1);
+        assert!(s.on_timer(MonoNs(20)).candidates.is_empty());
+        let late=s.on_timer(MonoNs(20_000_021));
+        assert!(!s.preflight(&second[0],MonoNs(20_000_021)));
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,
+            MonoNs(20_000_021)),Err(DataError::Stale));
+        assert_eq!(late.candidates.len(),1);
+        assert!(s.last_timer_index_pops()<=32);
+        assert_eq!(s.queued_index.len(),1);
         assert_eq!(s.outstanding(),34);
     }
 
     #[test]
-    fn r2_burst_10000_queued_timeouts_are_also_index_budgeted() {
+    fn r2_burst_10000_queue_timeout_not_hidden_by_tail_cooldown() {
         const N:u64=10_000;
         let mut s=state(N as usize,10);
         for pn in 0..N {add(&mut s,pn,0,100_000_000);}
-        for _ in 0..313 {s.on_timer(MonoNs(10));}
-        let mut popped=0usize;
-        let mut ticks=0usize;
-        while popped<N as usize {
-            let r=s.on_timer(MonoNs(20_000_011));
-            assert!(r.candidates.is_empty());
-            assert!(r.releases.is_empty());
-            let n=s.last_timer_index_pops();
-            assert!(n>0 && n<=32);
-            popped+=n;
-            ticks+=1;
-        }
-        assert_eq!(ticks,313);
-        assert_eq!(s.wake_index.len(),N as usize);
-        assert_eq!(s.expiry_index.len(),N as usize);
-        assert_eq!(s.outstanding(),N as usize);
-        assert_eq!(s.on_timer(MonoNs(20_000_011)).candidates.len(),0);
+        let first=s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert_eq!(s.on_timer(MonoNs(20)).candidates.len(),1);
+        assert_eq!(s.queued_index.len(),2);
+        let poll=s.on_timer(MonoNs(20_000_011));
+        assert_eq!(poll.candidates.len(),1);
+        assert_eq!(poll.candidates[0].pn().0,2);
+        assert!(!s.preflight(&first,MonoNs(20_000_011)));
+        assert_eq!(s.queued_index.len(),2);
+        assert!(s.last_timer_index_pops()<=32);
+        assert!(s.on_timer(MonoNs(20_000_011)).candidates.is_empty());
         assert_eq!(s.last_timer_index_pops(),0);
-        // Dead queued tokens cannot be resurrected: only new epoch candidates
-        // become dispatchable after the explicitly bounded rearm timer.
-        assert_eq!(s.on_timer(MonoNs(20_000_021)).candidates.len(),32);
+        assert_eq!(s.wake_index.len(),N as usize);
+        assert_eq!(s.outstanding(),N as usize);
     }
 
     #[test]
@@ -836,6 +927,236 @@ mod tests {
         assert_eq!(new.on_timer(MonoNs(21)).candidates.len(),1);
         assert_eq!(new.last_timer_index_pops(),1);
         assert_eq!(new.outstanding(),1);
+    }
+
+
+    /// Build 10k actual frozen shadow entries and mark all as missing through
+    /// bounded 8-page receipts; add 33 independently timestamped positive
+    /// witness records in disjoint receipt pages. Fake monotonic only.
+    fn r2_rack_10k_missing_fixture() -> ReceiptState<FakeFrozen> {
+        const N:u64=10_000;
+        let mut s=state((N+33) as usize,1_000);
+        for pn in 0..N {add(&mut s,pn,1_000,1_000_000);}
+        for j in 0..33 {
+            add(&mut s,25_600+j*256,1_001,1_000_000);
+        }
+        let mut seq=1;
+        for batch in (0..40).collect::<Vec<_>>().chunks(8) {
+            let pages=batch.iter().map(|i|page((*i as u64)*256,&[])).collect();
+            s.on_receipt(&receipt(seq,34_000,pages),MonoNs(1_002)).unwrap();
+            assert!(s.last_receipt_index_ops()<=8*256*3);
+            seq+=1;
+        }
+        assert_eq!(s.rack_index.len(),N as usize);
+        assert_eq!(s.wake_index.len(),(N+33) as usize);
+        assert_eq!(s.next_deadline(),Some(MonoNs(2_000)));
+        s
+    }
+
+    #[test]
+    fn r2_rack_10k_positive_witness_1_32_33_no_full_reindex() {
+        const N:usize=10_000;
+        let mut s=r2_rack_10k_missing_fixture();
+        for j in 0..33 {
+            let pn=25_600+j*256;
+            let now=1_100+j;
+            let released=s.on_receipt(
+                &receipt(100+j as u32,34_000,vec![page(pn,&[pn])]),
+                MonoNs(now)
+            ).unwrap();
+            assert_eq!(released.len(),1);
+            assert_eq!(released[0].pn,RecordPn(pn));
+            assert_eq!(released[0].reason,ReleaseReason::ReceivedByPeer);
+            // Only the two index nodes owned by the ACKed witness changed.
+            assert!(s.last_receipt_index_ops()<=4,
+                "no witness-triggered O(10000) shadow reindex");
+            assert_eq!(s.rack_index.len(),N);
+            assert_eq!(s.expiry_index.len(),N+32-j as usize);
+            assert_eq!(s.wake_index.len(),N+32-j as usize);
+            if j<2 {
+                assert_eq!(s.next_deadline(),Some(MonoNs(2_000)));
+            } else {
+                // Equal original witness send times remain strictly newer
+                // than the 10k originals; newest receipt RTT is now-1001.
+                assert_eq!(s.next_deadline(),Some(MonoNs(now+4)));
+            }
+            if j==0 || j==31 || j==32 {
+                assert_eq!(s.outstanding(),N+32-j as usize);
+            }
+        }
+        assert_eq!(s.witnesses.len(),3);
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_136)));
+        let none=s.on_timer(MonoNs(1_135));
+        assert_eq!(none.candidates.len(),0);
+        assert_eq!(s.last_timer_index_pops(),0);
+        let batch=s.on_timer(MonoNs(1_136));
+        assert_eq!(batch.candidates.len(),32);
+        assert_eq!(s.last_timer_index_pops(),32);
+        assert_eq!(batch.candidates[0].pn(),RecordPn(0));
+        assert_eq!(s.rack_index.len(),N-32);
+        assert_eq!(s.expiry_index.len(),N);
+        assert_eq!(s.wake_index.len(),N);
+        assert_eq!(batch.next_deadline,Some(MonoNs(1_136)));
+        assert!(s.on_timer(MonoNs(1_136)).candidates.len()<=32);
+    }
+
+    #[test]
+    fn r2_rack_10k_positive_32_then_33_eager_ack_not_replayed() {
+        let mut s=state(10_033,10_000);
+        for pn in 0..10_000 {add(&mut s,pn,1_000,20_000);}
+        for j in 0..33 {add(&mut s,20_000+j,1_001,20_000);}
+        for k in 0..5 {
+            let pages=(k*8..(k*8+8)).map(|i|page((i as u64)*256,&[])).collect();
+            s.on_receipt(&receipt(1+k as u32,21_000,pages),MonoNs(1_002)).unwrap();
+        }
+        let pins:(Vec<u64>,Vec<u64>)=(
+            (20_000..20_032).collect(),vec![20_032]);
+        let first=s.on_receipt(&receipt(6,21_000,
+            vec![page(19_968,&pins.0)]),MonoNs(1_101)).unwrap();
+        assert_eq!(first.len(),32);
+        assert!(s.last_receipt_index_ops()<=130);
+        assert_eq!(s.witnesses.len(),3);
+        assert_eq!(s.rack_index.len(),10_001); // last witness now negative
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_105)));
+        let last=s.on_receipt(&receipt(7,21_000,
+            vec![page(19_968,&pins.1)]),MonoNs(1_111)).unwrap();
+        assert_eq!(last.len(),1);
+        assert!(s.last_receipt_index_ops()<=4);
+        assert_eq!(s.rack_index.len(),10_000);
+        // The old 1105 wake was never stored; latest ACK changes it to1115.
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_115)));
+        assert!(s.on_timer(MonoNs(1_114)).candidates.is_empty());
+        assert_eq!(s.on_timer(MonoNs(1_115)).candidates.len(),32);
+        // Old replay cannot re-add ACKed record or manufacture fresh witness.
+        assert!(s.on_receipt(&receipt(6,21_000,
+            vec![page(19_968,&pins.0)]),MonoNs(1_115))
+            .unwrap().is_empty());
+        assert_eq!(s.last_receipt_index_ops(),0);
+    }
+
+    #[test]
+    fn r2_rack_10k_witness_clock_jump_hard_expiry_no_stale_nodes() {
+        let mut s=r2_rack_10k_missing_fixture();
+        for j in 0..3 {
+            let pn=25_600+j*256;
+            s.on_receipt(&receipt(50+j as u32,34_000,
+                vec![page(pn,&[pn])]),MonoNs(1_100+j)).unwrap();
+        }
+        assert_eq!(s.rack_index.len(),10_000);
+        let res=s.on_timer(MonoNs(1_000_000));
+        assert_eq!(res.releases.len(),10_030); // 10k + 30 still-unacked witnesses
+        assert!(res.releases.iter().all(|r|r.reason==ReleaseReason::HardExpired));
+        assert!(res.candidates.is_empty());
+        assert_eq!(s.outstanding(),0);
+        assert!(s.rack_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert!(s.expiry_index.is_empty());
+        assert_eq!(s.next_deadline(),None);
+        assert_eq!(s.last_timer_index_pops(),10_030);
+        assert!(s.on_timer(MonoNs(1_000_001)).releases.is_empty());
+        assert_eq!(s.last_timer_index_pops(),0);
+    }
+
+    #[test]
+    fn r2_tail_cooldown_never_blocks_32_genuinely_witnessed_rack_repairs() {
+        let mut s=state(48,100);
+        for pn in 0..40 {add(&mut s,pn,0,1_000_000);}
+        for pn in 300..303 {add(&mut s,pn,1,1_000_000);}
+        s.on_receipt(&receipt(1,302,vec![page(0,&[])]),MonoNs(80)).unwrap();
+        let tail=s.on_timer(MonoNs(100));
+        assert_eq!(tail.candidates.len(),1);
+        assert_eq!(tail.candidates[0].pn().0,0);
+        assert_eq!(s.next_tail_probe,MonoNs(200));
+        s.on_receipt(&receipt(2,302,vec![page(256,&[300,301,302])]),
+            MonoNs(101)).unwrap();
+        let rack=s.on_timer(MonoNs(101));
+        assert_eq!(rack.candidates.len(),32);
+        assert_eq!(rack.candidates[0].pn().0,1);
+        assert_eq!(rack.candidates[31].pn().0,32);
+        assert!(s.last_timer_index_pops()<=32);
+        assert_eq!(s.next_tail_probe,MonoNs(200));
+        assert_eq!(s.on_timer(MonoNs(101)).candidates.len(),7);
+        assert!(s.on_timer(MonoNs(101)).candidates.is_empty());
+        assert_eq!(s.queued_index.len(),40);
+        assert_eq!(s.outstanding(),40);
+    }
+
+    /// A bounded owner may hold 100k immutable records. A large fake-clock
+    /// jump must evict only expired entries (not scan for eligible repairs),
+    /// clear all three wake/RACK/queued nodes, invalidate an old queued probe
+    /// and allow a new independent fresh shadow after the pressure release.
+    #[test]
+    fn r2_timer_100k_clock_jump_queued_and_positive_release_no_tombstones() {
+        const N:u64=100_000;
+        let mut s=state(N as usize,50);
+        for pn in 0..N {
+            add(&mut s,pn,0,1_000+(pn%2));
+        }
+        assert_eq!(s.outstanding(),N as usize);
+        assert_eq!(s.expiry_index.len(),N as usize);
+        assert_eq!(s.wake_index.len(),N as usize);
+        assert!(s.queued_index.is_empty());
+        let old=s.on_timer(MonoNs(50)).candidates.remove(0);
+        assert_eq!(old.pn(),RecordPn(0));
+        assert_eq!(s.queued_index.len(),1);
+        assert!(s.preflight(&old,MonoNs(50)));
+        // Receipt of a different already-sent record removes exactly that
+        // shadow, not neighboring skipped or control PNs.
+        let confirmed=s.on_receipt(&receipt(1,N-1,vec![page(0,&[5])]),
+            MonoNs(60)).unwrap();
+        assert_eq!(confirmed.len(),1);
+        assert_eq!(confirmed[0].pn,RecordPn(5));
+        assert_eq!(confirmed[0].reason,ReleaseReason::ReceivedByPeer);
+        assert_eq!(s.outstanding(),N as usize-1);
+        let expired=s.on_timer(MonoNs(1_001));
+        assert_eq!(expired.releases.len(),N as usize-1);
+        assert!(expired.releases.iter().all(|r|
+            r.reason==ReleaseReason::HardExpired));
+        assert!(expired.candidates.is_empty());
+        assert_eq!(s.last_timer_index_pops(),N as usize-1);
+        assert_eq!(s.outstanding(),0);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert!(s.queued_index.is_empty());
+        assert!(s.rack_index.is_empty());
+        assert_eq!(s.next_deadline(),None);
+        assert!(!s.preflight(&old,MonoNs(1_001)));
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Uncertain,
+            MonoNs(1_001)),Err(DataError::Stale));
+        // The prior PTO gate and 100k expired owners cannot prevent fresh
+        // state admission after the cleanup (actual fresh transport belongs M0).
+        add(&mut s,N,1_002,2_000);
+        assert_eq!(s.outstanding(),1);
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_052)));
+        assert!(s.on_timer(MonoNs(1_051)).candidates.is_empty());
+        assert_eq!(s.on_timer(MonoNs(1_052)).candidates.len(),1);
+        assert_eq!(s.last_timer_index_pops(),1);
+    }
+
+    #[test]
+    fn r2_rack_notsent_rearm_does_not_promote_old_bitmap_early() {
+        let mut s=state(4,100);
+        add(&mut s,1,1_000,5_000);
+        s.on_receipt(&receipt(1,1,vec![page(0,&[])]),MonoNs(1_010))
+            .unwrap();
+        assert_eq!(s.rack_index.len(),1);
+        let old=s.on_timer(MonoNs(1_100)).candidates.remove(0);
+        assert!(s.preflight(&old,MonoNs(1_100)));
+        s.on_send_result(&old,RepairSendResult::NotSent,MonoNs(1_100))
+            .unwrap();
+        assert!(s.rack_index.is_empty());
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_200)));
+        for j in 0..3 {
+            add(&mut s,10+j,1_101,5_000);
+            s.on_receipt(&receipt(2+j as u32,20,
+                vec![page(0,&[10+j])]),MonoNs(1_105+j)).unwrap();
+        }
+        assert_eq!(s.rack_index.len(),0);
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_200)));
+        assert!(s.on_timer(MonoNs(1_199)).candidates.is_empty());
+        assert_eq!(s.on_timer(MonoNs(1_200)).candidates.len(),1);
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,
+            MonoNs(1_200)),Err(DataError::Stale));
     }
 
 }

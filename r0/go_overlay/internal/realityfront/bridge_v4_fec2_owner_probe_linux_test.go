@@ -787,6 +787,26 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
                 t.Fatal("late authenticated receipt did not retire exact original frozen handle")
             }
+            // First-send is from two actual M4 kernel copied originals,
+            // and PN1's late repair must be CENSORED rather than magically
+            // treated as unambiguous loss-free delivery.
+            mature,e:=b.fec2ProbeMatureQuality(server.Epoch,8*time.Second)
+            if e!=nil||mature.Fast.FirstSent!=2||
+                mature.Slow.FirstSent!=2||
+                mature.Fast.Observed!=1||mature.Slow.Observed!=1||
+                mature.Fast.Censored!=1||mature.Slow.Censored!=1||
+                mature.Fast.Unknown!=0||mature.Slow.Unknown!=0||
+                mature.Fast.Missing!=0||mature.Slow.Missing!=0||
+                mature.Validity!=FecV2Censored{
+                t.Fatalf("genuine firstsent M2 reverse maturity created false zero loss mode=%s mature=%+v err=%v",
+                    mode,mature,e)
+            }
+            if _,e:=b.fec2ProbeMatureQuality(func() [16]byte {
+                wrong:=server.Epoch;wrong[0]^=1;return wrong
+            }(),9*time.Second);e==nil{
+                t.Fatal("foreign authenticated epoch read M2 mature denominator")
+            }
+            t.Logf("M0_REAL_GO_M4_FIRSTSENT_M2_AUTH_REVERSE_2S_8S_CENSORED_PASS suite=%d firstsent=2 observed=1 repaired_ambiguous=1 untrusted=deny",cipher)
             invalidReceipt:=append([]byte(nil),positiveReceipt...)
             invalidReceipt[20]=0x80 // PN7 outside pinned data scope 0..1
             badScopeWire,badScopePN,e:=reverseSealer.SealHealth(invalidReceipt)

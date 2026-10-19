@@ -14,6 +14,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_stage_policy(
     uint64_t,const unsigned char *,size_t,uint8_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
     uint64_t,const unsigned char *,size_t,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_mature_firstsend(
+    uint64_t,const unsigned char *,size_t,uint64_t,uint64_t *,uint64_t *,uint8_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
@@ -371,6 +373,42 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeObservedQuality(
     return snapshot,uint64(source),uint64(repair),uint64(recovered),nil
 }
 
+// Mature 2s/8s readback from the original Rust sender's FINAL kernel
+// copied-firstsend plus AEAD/replay verified C2S receipts. An ambiguous
+// repair is CENSORED, uncovered UNKNOWN; no RX-only fake denominator.
+func (b *v4EmbeddedNativeBridge) fec2ProbeMatureQuality(
+    exactEpoch [16]byte,at time.Duration,
+)(FecV2Snapshot,error){
+    snap:=FecV2Snapshot{Client:"protected-owner",Direction:FecV2S2C,
+        At:at,Validity:FecV2Unknown}
+    if !b.committed||b.stopped||b.handle==0||at<0||
+        !b.fec2ProbeScope(exactEpoch){return snap,ErrFecV2Scope}
+    var fast,slow [5]C.uint64_t
+    var status C.uint8_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_mature_firstsend(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&exactEpoch[0])),C.size_t(16),
+        C.uint64_t(uint64(at)),&fast[0],&slow[0],&status)
+    runtime.KeepAlive(exactEpoch)
+    if rc!=0{return snap,fmt.Errorf("%w: M2 genuine maturity rc=%d",
+        errV4Embedded,int(rc))}
+    converted:=func(values [5]C.uint64_t)FecV2Window{
+        return FecV2Window{FirstSent:uint64(values[0]),
+            Observed:uint64(values[1]),Missing:uint64(values[2]),
+            Unknown:uint64(values[3]),Censored:uint64(values[4])}
+    }
+    snap.Fast=converted(fast)
+    snap.Slow=converted(slow)
+    switch status {
+    case 0:snap.Validity=FecV2Valid
+    case 1:snap.Validity=FecV2Unknown
+    case 2:snap.Validity=FecV2Censored
+    case 3:snap.Validity=FecV2HostCapacity
+    default:return FecV2Snapshot{},ErrFecV2Scope
+    }
+    return snap,nil
+}
+
 // Live original Go 2s scheduler backend: ONLY the credential-verified
 // test-owner may stage/read back its native Rust applied revision.
 type fecV2OriginalRustBackend struct{ b *v4EmbeddedNativeBridge }
@@ -384,8 +422,8 @@ func (p fecV2OriginalRustBackend) Observe(
     epoch [16]byte,client string,d FecV2Direction,now time.Duration,
 )(FecV2Snapshot,error){
     if !p.valid(epoch,client,d){return FecV2Snapshot{},ErrFecV2Scope}
-    snap,_,_,_,err:=p.b.fec2ProbeObservedQuality(epoch,now)
-    return snap,err
+    // Genuine 2s/8s M2 sender window, never the peer-side RX counters.
+    return p.b.fec2ProbeMatureQuality(epoch,now)
 }
 func (p fecV2OriginalRustBackend) Readback(
     epoch [16]byte,client string,d FecV2Direction,
