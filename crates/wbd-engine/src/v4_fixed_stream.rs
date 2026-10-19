@@ -65,7 +65,15 @@ impl FixedStream {
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
-    pub fn next_deadline(&self)->Option<MonoNs>{self.owner.next_deadline()}
+    pub fn next_deadline(&self)->Option<MonoNs>{
+        if self.in_flight.as_ref().is_some_and(|j|
+            j.staged==0&&j.prepared.remaining_rows()>0){
+            // No new kernel borrow outstanding: schedule the next <=4
+            // rows immediately without waiting for another TUN packet.
+            return Some(MonoNs(0))
+        }
+        self.owner.next_deadline()
+    }
     /// One source is handed to the original owner's AEAD+driver IMMEDIATELY.
     /// A false/not-sent callback is never counted as an accepted send;
     /// FEC storage remains charged through its original M1 slab lifetime.
