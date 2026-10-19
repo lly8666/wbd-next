@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 184,
-  "checkpoint_sha": "0a2e889a3f82cae646f4baff3529e253dfab55d5",
+  "sequence": 185,
+  "checkpoint_sha": "88ae2a0169a1e820cf0f45a3a4b87a945fc0691e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-011 user-directed loss matrix 10/20/30 + 1/5 via source-locked real Linux netns original Go TLS/Rust Normal OFF; test gate for requested FEC fixed/auto and Game 2/4 explicitly NOT_RUN until real product mode applied and 2-way wire.",
-  "why_now": "After H183 clean, S201 intent c404, S202 real Go/Rust native Normal/off netem observer 176b, baseline Normal common Action39250039752 SUCCESS, S203 opt-in matrix source 6ee471 run39250263364 all 7 jobs SUCCESS (everyday, blocked-mode ledger, 5 loss jobs); genuine configured 1/5/10/20/30 observed drops 1/7/16/33/44. Each: 36 original Go TLS encrypted packets sent per direction, C2S delivered 36/35/33/27/26, S2C delivered 35/33/32/27/18. This is LOSS OBSERVATION NOT robust application delivery PASS. S204 source-locked receipt stored; main Governance 39250263476 and evidence-source Governance39250828803 SUCCESS. FEC Fixed/Auto/Game ON original Go applied & real data sender/receiver NOT_RUN; M4 worker unchanged.",
-  "done_when": "One buildable real original Go protected client/server Normal→FEC fixed→FEC auto and Game 2/4 product modes with typed requested→pending→actual applied/rejected, real RX/TX+M2, Stop, app-delivery and bounded real Linux netns loss 0/1/5/10/20/30 SOURCE-locked; fixed/auto/Game missing stays OFF/NOT_RUN until enabled. Keep physical, WinARM, 500Mbps full product, p99 NOT_RUN until proven.",
-  "next_action": "Implement genuine original Go protected Rust FEC Fixed ON requested/pending/applied and native source+parity/recovery end-to-end on same owner, then run actual 0/1/5/10/20/30 matrix with delivered recovered app payload and Stop; Auto after mature M2 feedback; Game 2/4 only after real scheduler and physical lanes are wired. Do NOT flip legacy unsupported guard or count native codec/Game dedup tests as real network. M4 Windows016 still independent; no worker cursor/code edits.",
+  "current_task": "PLAN-008 original-Go TLS protected Rust product integration: first actual FEC Fixed native requested/pending/applied and real source/parity/recovery; next Auto authentic M2; then real Game2/4 lanes. User explicitly accepts M3 native codec functional tests as success; stop network matrix expansion.",
+  "why_now": "Recovery S222 audited every H184→S221 commit. Authentic Normal OFF 20Mbps loss0 SUCCESS39252845558, 1% SUCCESS39254760343, 5% SUCCESS39255888901 with real application missing; previous 1% FAIL39254185879 retained. Governance latest source2656 SUCCESS39255888929, unrelated original historical 403/structure FAIL preserved. M1 Game dedup integrated; M3 FEC native ISA-L13/13 and wire23/23 accepted; producer old ABBA performance remains INCONCLUSIVE. Original FEC Fixed/Auto and Game2/4 native applied+kernel RX recovery still NOT_RUN.",
+  "done_when": "Original Go/TLS authenticated real Normal→FEC fixed→auto and Game2/4 same Rust owner with genuine native applied/rejected, end-to-end encrypted data/recovery and Stop/MTU/first-delivery under bounded netns SOURCE Actions. Do not enable product defaults, CLI/GUI/Windows/physical/500Mbps/p99 or claim FEC/Game until exact proof.",
+  "next_action": "Implement real original-Go protected Rust FEC Fixed staged request→actual owner APPLIED and native encrypted source/parity+RX recovery via real M3/M1 owner, verifying on Actions in a single compact function batch; use frozen native codec, no probe-only substitution. Then Auto with M2 authentic feedback and Game2/4 true lane before enabling product capability.",
   "unverified": true,
   "last_tested_source": "6ee471c79f0e1f08b6b4d77a961d44d15cbc842d",
   "evidence_refs": [
     "docs/evidence/M0/PLAN011-normal-loss-1-5-10-20-30-20261019.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN011-loss-matrix-user-start-intent-20261019.md",
-    "docs/evidence/M0/PLAN011-real-go-normal-common-smoke-and-off-applied-20261019.json",
+    "docs/devlog/M0/PLAN011-20261019-recovered-S221-and-FEC-GAME-priority.md",
+    "docs/evidence/M0/PLAN011-NORMAL20-CONTINUOUS-NETNS-LOSS1-20261019.json",
     "docs/evidence/M0/PLAN010-M1-M3-accepted-M4-016-handoff-20261019.json",
-    "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
+    "docs/decisions/M0-integration-unblock-2026-10-19.md"
   ],
   "open_requests": [],
-  "partial_summary": "H184: source6ee workflow39250263364 PASS all7 jobs, actual original Go TLS / Rust Normal_OFF isolated Linux kernel netem loss1,5,10,20,30; qdisc drops1/7/16/33/44; per36 per direction C2S app delivered36/35/33/27/26; S2C Go authenticated peer delivered35/33/32/27/18. Observational PASS only, actual business loss on high loss plainly visible. One run/seed only, not throughput/recovery/p99 product success. True FEC Fixed, Auto, Game2/4 network 24 cases are NOT_RUN until genuine applied and real sender/receiver. M1/M3 component prior PASS not repeated; M4 Windows016 worker independent. Main Governance39250263476 SUCCESS and evidence Governance39250828803 SUCCESS. Production FEC2 OFF."
+  "partial_summary": "H185 recovery CLEAN of 18 linear commits; S222 records exact run39255888901 5% Normal/OFF sustained SOURCE2656, loss not repaired, and user FEC/Game launch priority. Existing M3 native codec functional PASS accepted, historical ABBA formal perf INCONCLUSIVE/other CI FAIL retained; M1 Game shared dedup accepted/in main. No FEC Fixed/Auto/Game product apply or real multi-lane qualification; FEC2 OFF; one next action: actual Fixed mode real sender/recovery integration."
 }
