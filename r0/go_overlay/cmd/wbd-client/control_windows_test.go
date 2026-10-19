@@ -55,7 +55,8 @@ func TestGUIClientSlotFencesUntilCleanupEnds(t *testing.T) {
 	windows.CloseHandle(h)
 }
 
-// Original portable v4 no longer accepts a runtime script pathname.\nfunc TestWindowsDefaultFilesAnchorToExecutable(t *testing.T) {
+// Original portable v4 no longer accepts a runtime script pathname.
+func TestWindowsDefaultFilesAnchorToExecutable(t *testing.T) {
 	exe,err:=os.Executable()
 	if err!=nil {t.Fatal(err)}
 	if defaultWindowsStatePath()!=filepath.Join(filepath.Dir(exe),"data","network-state.json") {
