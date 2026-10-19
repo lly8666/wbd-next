@@ -6,7 +6,7 @@ run-name: "M0|PLAN011-CONT20-LOSS-REQUEST|${{ github.sha }}"
 on:
   push:
     branches: [main]
-    paths: [".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-*.json"]
+    paths: [".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-*-ready.json"]
 permissions: {contents: read, actions: read}
 concurrency:
   group: m0-cont20-loss-${{ github.sha }}
@@ -32,7 +32,7 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,os,pathlib,subprocess,re
           source=os.environ["GITHUB_SHA"]
-          changed=subprocess.check_output(["git","diff","--name-only",source+"^",source],text=True).splitlines()
+          changed=subprocess.check_output(["git","diff","--diff-filter=A","--name-only",source+"^",source],text=True).splitlines()
           if len(changed)!=1 or not re.fullmatch(r"\.governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-(1|5|10|20|30)-[a-z0-9-]+\.json",changed[0]):
             raise SystemExit("single exact new M0 request file required")
           f=pathlib.Path(changed[0])
@@ -44,7 +44,7 @@ jobs:
             raise SystemExit("registry task or role mismatch")
           if req["compiled_source_sha"]!="896faa72cbe8ef8a8f37948c657ce1c57ce9028a":
             raise SystemExit("unfrozen compiled source")
-          if req["target_inner_ipv4_mbps_each_direction"]!=20 or req["warmup_seconds"]!=10 or req["measure_seconds"]!=60 or req["mode"]!="Normal_OFF":
+          if req["target_inner_ipv4_mbps_each_direction"]!=20 or req["warmup_seconds"]!=10 or req["measure_seconds"]!=60 or req["product_mode"]!="Normal_OFF":
             raise SystemExit("request changed the fixed scenario")
           m=json.load(open("cont20-build/manifest.json"))
           assert m["source_sha"]==req["compiled_source_sha"] and m["run_id"]=="39252845558" and m["attempt"]=="1"
