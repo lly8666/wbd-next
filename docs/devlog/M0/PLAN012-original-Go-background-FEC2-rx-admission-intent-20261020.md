@@ -1,0 +1,7 @@
+# M0 S272 intent — original Go authenticated background RX uses single PN bitmap for optional FEC2
+
+H192 checkpoint 8689925e0ce5c40048ceaef8910860abc355ad8d, only H192 cursor successor acb754014bec9cc82be9da90f686aa5ef73b423f. Registry M0 rev2 epoch1 unchanged. Source36c6ccec17d11aec6190b2172f889f98c495c610 combined Action39279297062 attempt1 SUCCESS, artifact12198821821 sha256 1c8d98e07a44c0bc26e364ff092b4c96ef89042153f048ef2d34a36f68c1124c; native/cross/G2/Gov all SUCCESS. H192 QUEUED status is now recovered as PASS. This is four interleaved FEC RX native plus one-shot original Go real kernel, not product.
+
+Next product seam: original continuous ProtectedBackgroundRx owns ONE moved original Go-authenticated M3 ReplayProtectedLaneRx and Normal LINK. Do NOT create second FEC opener/PN bitmap. Split Fec2LiveRx processing into already-authenticated parser using original mover's opened kind2/3. Gate under opt-in fec2_product_record and Go verified feature7 epoch/generation, authenticated Fixed PENDING grant via shared original generation switch; reject FEC before grant, after OFF/Stop and wrong kinds; ordinary Normal/off kind1 and health M2 unchanged. Recovered candidates go through scoped M4 TUN validation, not manufactured ACK.
+
+One exact SOURCE combined native + original-Go kernel functional Actions; negative no second opener and no FEC before grant. True continuous outbound M1 source/parity, real 2+ network blocks, Auto authentic M2/CLI applied still NOT_RUN. Product FEC2 remains OFF.
