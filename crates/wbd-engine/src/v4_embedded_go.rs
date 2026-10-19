@@ -2371,7 +2371,18 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         if !loop_readiness(tun.readiness_fd(),stop,0){break}
     }
     if pending.is_empty() && jumbo_queue.is_empty() && active_jumbo.is_none(){
-        return if ingress_error{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
+        #[cfg(feature="fec2_product_record")]
+        let due={
+            let e=cell.lock().map_err(|_|BAD_STAGE)?;
+            e.fec2_live_tx.as_ref().is_some_and(|s|
+                s.report().queued_jobs>0 ||
+                s.next_deadline().is_some_and(|d|d.0<=loop_now().0))
+        };
+        #[cfg(not(feature="fec2_product_record"))]
+        let due=false;
+        if !due{
+            return if ingress_error{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
+        }
     }
     // Route validation and original M1/M3 AEAD/PN/queue admission occur
     // under the current generation's owner. M4's real sendmmsg follows
@@ -2438,6 +2449,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut accepted=0usize;
         let mut failed=ingress_error;
         let mut jumbo_staged=false;
+        #[cfg(feature="fec2_product_record")]
+        {
+            // The previous kernel send is synchronous and settled before a
+            // new turn may allocate new encrypted FEC PNs.
+            if !e.fec2_staged_pns.is_empty(){return Err(BAD_STAGE)}
+        }
         for (mut slab,n) in pending.drain(..){
             if stop.load(Ordering::Acquire){failed=true;break}
             // The NORMAL small-packet path stays unchanged: no LINK20, no
@@ -2448,6 +2465,18 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // a naked over-budget ordinary frame.
             let frame_mtu=e.tx_route.as_ref().ok_or(BAD_STAGE)?
                 .scoped.frame.link_frame_mtu;
+            #[cfg(feature="fec2_product_record")]
+            if e.protected_features==7 &&
+                (e.fixed_pending.is_some()||e.fixed_applied.is_some()){
+                let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
+                match original_fixed_stage_source(e,slab,n,budget,loop_now()){
+                    Ok(true)=>accepted+=1,
+                    _=>failed=true,
+                }
+                // An authenticated Fixed source must never silently escape
+                // onto Normal/off kind1 when oversize or pressure occurs.
+                continue
+            }
             if n<=frame_mtu {
                 let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
                 let result=e.owner.seal_normal_off_with_worker_snapshot(
@@ -2480,6 +2509,21 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 );
                 if result.is_ok(){accepted+=1}else{failed=true;break}
             }
+        }
+        #[cfg(feature="fec2_product_record")]
+        if e.protected_features==7 &&
+            (e.fixed_pending.is_some()||e.fixed_applied.is_some()){
+            // Current Fixed mode does not authorize LINK fragmentation as
+            // plain Normal/off. Reject jumbo rather than emit mixed kinds.
+            if !jumbo_queue.is_empty()||active_jumbo.is_some(){
+                failed=true;jumbo_queue.clear();active_jumbo.take();
+            }
+            let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
+            let before=e.fec2_staged_pns.len();
+            if original_fixed_stage_due(e,budget,loop_now()).is_err(){
+                failed=true
+            }
+            accepted+=e.fec2_staged_pns.len().saturating_sub(before);
         }
         // A jumbo is eligible for a new <=32-frame turn even without new
         // TUN readiness. Preserve small packet priority within this turn,
@@ -2593,12 +2637,47 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    #[cfg(feature="fec2_product_record")]
+    {
+        let mut parity_copied=0u8;
+        let mut parity_not_sent=0u8;
+        let mut parity_uncertain=0u8;
+        for (pn,kind) in e.fec2_staged_pns.drain(..){
+            let idx=actual_firstsend.iter().position(|x|x.0.0==pn);
+            let copied=idx.is_some_and(|i|i<finish.copied as usize);
+            let uncertain=idx.is_some_and(|i|
+                finish.uncertain==1&&i==finish.copied as usize);
+            if kind==2{
+                if copied{e.fec2_copied_source=e.fec2_copied_source.saturating_add(1);}
+            }else{
+                if copied{
+                    parity_copied+=1;
+                    e.fec2_copied_repair=e.fec2_copied_repair.saturating_add(1);
+                }else if uncertain{parity_uncertain+=1}else{parity_not_sent+=1}
+            }
+        }
+        if parity_copied+parity_not_sent+parity_uncertain>0{
+            let stream=e.fec2_live_tx.as_mut().ok_or(BAD_STAGE)?;
+            stream.settle_staged(parity_copied,parity_not_sent,parity_uncertain)
+                .map_err(|_|BAD_STAGE)?;
+        }
+        // A true kernel copy proves local transmission ONLY. No authentic
+        // remote receipt and first TUN delivery has yet confirmed the
+        // product. Keep Fixed REQUESTED/PENDING, never fabricate APPLIED.
+    }
     if let Some(first)=e.normal_firstsend_m2.as_ref(){
-        // The sole sender-owned original M2 ledger is also shared with
-        // the true C2S AEAD/replay RX worker for authenticated kind1 only.
-        match first.lock(){
-            Ok(mut observer)=>observer.on_real_kernel_turn(actual_firstsend,finish,loop_now()),
-            Err(_)=>return Err(BAD_STAGE)
+        // Original M2 observes only Normal/off first sends. FEC ciphertext
+        // cannot masquerade as authenticated kind1 delivery/denominator.
+        #[cfg(feature="fec2_product_record")]
+        let has_fec=e.fixed_pending.is_some()||e.fixed_applied.is_some();
+        #[cfg(not(feature="fec2_product_record"))]
+        let has_fec=false;
+        if !has_fec{
+            match first.lock(){
+                Ok(mut observer)=>observer.on_real_kernel_turn(
+                    actual_firstsend,finish,loop_now()),
+                Err(_)=>return Err(BAD_STAGE)
+            }
         }
     }
     actual_firstsend.clear();
@@ -2801,8 +2880,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                if active_jumbo.is_none() && jumbo_queue.is_empty()
-                    && !loop_readiness(tun_fd,&stop_tx,10){continue}
+                let tun_ready=loop_readiness(tun_fd,&stop_tx,10);
+                #[cfg(feature="fec2_product_record")]
+                let fec_due=tx_cell.lock().ok().is_some_and(|e|
+                    e.fec2_live_tx.as_ref().is_some_and(|s|
+                        s.report().queued_jobs>0 ||
+                        s.next_deadline().is_some_and(|d|d.0<=loop_now().0)));
+                #[cfg(not(feature="fec2_product_record"))]
+                let fec_due=false;
+                if !tun_ready && active_jumbo.is_none() &&
+                    jumbo_queue.is_empty()&&!fec_due{continue}
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
