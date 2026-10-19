@@ -435,6 +435,13 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                     t.Fatalf("real M4 source+repair copy failed Go Fixed applied ACK: %+v %+v %v",
                         effective,ack,readErr)
                 }
+                offBefore:=FecV2Config{Client:"protected-owner",
+                    Direction:FecV2S2C,Transport:FecV2Normal,
+                    Mode:FecV2Off,ConfigRevision:5}
+                if _,_,offErr:=b.stageOriginalNormalOff(
+                    offBefore,effective,server.Epoch);offErr==nil{
+                    t.Fatal("unsettled original kernel source/repair shadow falsely admitted quiescent OFF")
+                }
                 t.Logf("M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=%d requested=4 copied=2 applied=4 no_premature_ack=1",
                     cipher)
             }
@@ -863,6 +870,35 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 t.Logf("M0_REAL_GO_M2_SAME_FROZEN_RAW_REPAIR_PREFIX_PASS suite=%d pn=1 same_seq=1 byte_identical=1 global_grant=1 driver_accepted=1 late_auth_receipt=1 synthetic_negative=1",cipher)
             }
             t.Logf("M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=%d retired=2 original_pn=0,1 tamper=deny replay=deny bitmap_scope=deny",cipher)
+            if mode=="single"{
+                fixedApplied,_,fixedErr:=b.readbackOriginalFixedPending(
+                    fixedRequested,server.Epoch)
+                if fixedErr!=nil||fixedApplied.AppliedRevision!=4{
+                    t.Fatal("already applied native Fixed state lost before OFF")
+                }
+                offCfg:=FecV2Config{Client:"protected-owner",
+                    Direction:FecV2S2C,Transport:FecV2Normal,
+                    Mode:FecV2Off,ConfigRevision:5}
+                offPending,offAck,offErr:=b.stageOriginalNormalOff(
+                    offCfg,fixedApplied,server.Epoch)
+                if offErr!=nil||offAck.Applied||offPending.RequestedRevision!=5{
+                    t.Fatalf("quiescent original Rust OFF request did not stage: %+v %+v %v",
+                        offPending,offAck,offErr)
+                }
+                offApplied,offAck,offErr:=b.readbackOriginalNormalOff(
+                    offPending,server.Epoch)
+                if offErr!=nil||!offAck.Applied||!offAck.Off||
+                    !offApplied.AppliedOff||offApplied.AppliedRevision!=5{
+                    t.Fatalf("original Rust owner did not acknowledge actual quiescent OFF: %+v %+v %v",
+                        offApplied,offAck,offErr)
+                }
+                if _,_,err:=b.readbackOriginalFixedPending(
+                    fixedRequested,server.Epoch);err==nil{
+                    t.Fatal("quiescent OFF leaked old Fixed applied readback")
+                }
+                t.Logf("M0_ORIGINAL_GO_FIXED_KERNEL_QUIESCENT_OFF_AFTER_M2_SETTLED_PASS suite=%d before_ack=deny after_auth_receipt=off5 fixed_rev4=retired",
+                    cipher)
+            }
             // Stop is a hard terminal for both M2 drafts and recovered
             // kernel ciphertext ingress; stale old handle is not valid.
             if err:=b.stopRelease();err!=nil{t.Fatalf("final Stop/Release: %v",err)}
