@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 178,
-  "checkpoint_sha": "8ea33bb88c0289638aaec066715d5e7fb9f12ec5",
+  "sequence": 179,
+  "checkpoint_sha": "4160ab4965538bdba396fd166632063552c81dc5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-008 §1/§3/§4 main product vertical R0-025: exact M1 Game015 frozen two files integrated with main-native PASS, M2 maturity already in main, M4 pinned original Go/Linux+ARM native client/server/config build PASS, Windows Go/WinForms compile PASS but original GUI self-test receipt absent FAIL. True original Go↔Rust authenticated Normal/off + reverse kind1/mature firstsend/applied ACK remains OPEN; FEC2 production OFF.",
-  "why_now": "G2 worker source M4 H25 152f0a and M1 CODE641 consumed with exact source attestation; main integration ae75 native/ABI/feature loop Actions PASS. M0-owned original-Go 3-platform Actions built Linux x64/ARM and Windows CLI; Win GUI lacks actual selftest receipt, worker-owned script fix delegated Issue13. All historical red retained in evidence. Actual Rust product entry/control still not wired.",
-  "done_when": "Registry R0-025: original client/server protected TLS→Rust owner Normal/off/fixed/auto slice with real reverse feedback/Stop, requested→pending→applied/rejected, native build/netns batch, artifact-backed exact SOURCE; keep physical/GUI/Windows ARM/p99 and FEC2 product OFF until proven.",
-  "next_action": "Connect original Go protected client/server Normal product admission to Rust owner, authenticated C2S kind1 and M2 mature first-send receipt through actual sender; run one exact-source Actions product batch with Stop and fail-closed capability gates.",
+  "current_task": "PLAN008 R0-025 original protected Go TLS→Rust Normal first-send M2: M0 S d98b1c7a bound original M4 sendmmsg final copied/uncertain/definitely-not-sent to M2 MatureFirstSend exact lane/epoch. Genuine real raw+TUN independent worker test 8/8 kernel first-send + 2s UNKNOWN 8/8 PASS. Original Go M4 product CLI/WinForms native Linux amd64/arm64 + Windows x64 scoped PASS at worker SOURCE c6683c; no real product Rust loader or applied ACK, FEC2 OFF.",
+  "why_now": "Consumed prior H178 clean checkpoint and M4 current c668 G2 audited native GUI scoped PASS Action39225427878. M2 original owner gap was true kernel first-send denominator missing; implemented sender-bound M2 with no GO packet callbacks; Action39228592102 critical/impairment/metric four jobs success, exact zipped critical log/manifest verified. Main NativeRegression39228591841, ABI39228591865/cross39228591914 and Go owner39228591997 PASS. M0 TLS matrix39228591882 overall FAIL solely Windows NASM Chocolatey HTTP504, Linux/actual ISA-L/netem150msC etc individual PASS. Keep original historical failures.",
+  "done_when": "Registry R0-025 buildable actual original Go client/server authenticated TLS→same Rust owner Normal/off plus genuine C2S kind1/M2 receipt + requested/pending/applied/rejected/Stop, bounded netns tests and exact SOURCE; product FEC2 fixed/auto only after real ACK. Physical, GUI driver, Windows ARM/p99 NOT_RUN until proven, FEC2 OFF.",
+  "next_action": "Connect actual authenticated C2S kind1 through the SAME moved Rust replay RX owner to M2 normal firstsend, bounded receipt bitmap scope and immutable M1 FrozenRecord shadow, then original client/server experimental Normal backend+Stop. Do not synthesize receipts or force product CLI/GUI applied. Keep FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "d34a03e9b98685c7de565d368d93c17556284a13",
+  "last_tested_source": "d98b1c7ad58972f4bdaf7b7c4d731e7ebfce3e2a",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN008-original-normal-M2-real-firstsend-20261019.json",
     "docs/evidence/M0/PLAN008-M1-M4-integration-20261019.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/PLAN008-H178-original-normal-m2-firstsend-intent-20261019.md",
     "docs/devlog/M0/PLAN008-native-game-m4-source-intake-20261019.md",
     "docs/devlog/M0/PLAN008-H177-component-intake-and-product-resume-20261019.md",
     "docs/devlog/M0/PLAN008-M4-original-product-ci-intent-20261019.md",
@@ -27,5 +29,5 @@
     "docs/GOVERNANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H178 S8ea M1 two-file Game015 integrated main ae75, NativeRegression39219594724 7 jobs + ABI/cross/loop SUCCESS; M2 mature same blob already main. M3 native v7 13/13 PASS, ABBA NOT_RUN. M4 original Go SOURCE a7a/M4 H25 SOURCE152: Linux x64+ARM64 native client/server/config PASS Action39221442451 artifacts verified; Windows native client/config and WBD.exe compile PASS on Action39222289145 but missing GUI selftest receipt => FAIL, M4 sole script owner notified Issue13. Original Go/Rust product/real kind1 feedback/applied/physical NOT_RUN, FEC2 production OFF, historical 150ms-C FAIL retained."
+  "partial_summary": "H179 M0 SOURCE d98: real original Go TLS kernel RX/TX Normal off→same original M4 sendmmsg completion→M2 MatureFirstSend 8 accepted, no unsent/uncertain, 2s 8 UNKNOWN without authentic kind1. Native real netns Action39228592102 four jobs PASS and exact critical ZIP sha256 d185dba verified; main NativeRegression39228591841 all seven PASS; ABI/cross and Go owner PASS. Full TLS matrix39228591882 FAIL because Windows NASM Chocolatey504 only, Linux netem150msC, native actual ISA-L PASS scoped; old reds retained. M4 new source c668 original Go Linux x64/ARM + native Windows GUI scoped PASS 39225427878, Rust loader/applied still NOT_RUN. Main product R0-025 partial, actual reverse kind1/auth receipt not wired, FEC2 OFF."
 }
