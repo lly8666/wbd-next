@@ -247,5 +247,18 @@
     "full driver 2..32 fault injection and drain",
     "physical peer D10 p99 ABBA",
     "original Windows/ARM product loader"
-  ]
+  ],
+  "targeted_retry_attempt2": {
+    "run_id": 39202525812,
+    "attempt": 2,
+    "job_id": 117899989322,
+    "job_name": "m0-normal-network (netem-150ms-C)",
+    "conclusion": "failure",
+    "stage": "DOWNLOAD_BUILD_ARTIFACT_PRE_NETWORK",
+    "attempted_kernel_network_test": false,
+    "error": "download-artifact could not find m0-normal-binaries-39202525812-2; original exact-source build artifact was named m0-normal-binaries-39202525812-1",
+    "false_inference_denied": "Do not count as second 150ms packet failure or use attempt2 to overwrite attempt1 kernel test failure",
+    "next": "When touching shared CI again, make rerun pinned to original successful build run/attempt artifact SHA; avoid repeating unaffected 14 jobs without actual code change."
+  },
+  "statement": "SOURCE3501 attempt1 feature-gated real Go TLS native kernel 3x3 maturity PASS, unrelated Normal/off 150ms-C single-index0 true FAIL. Attempt2 attempted targeted C rerun but stopped before network due old workflow artifact attempt locator; no attempt2 network pass/fail. Product FEC2 OFF and main M0 task partial/unverified."
 }
