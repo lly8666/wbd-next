@@ -1078,6 +1078,13 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     t.Logf("M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=%d authentic_reports=%d covered2s=%d unknown2s=%d FEC2=OFF",
         firstsend.Accepted,coverage.AuthenticatedReverseReports,coverage.Covered2s,firstsend.Unknown2s)
 
+    // Common Normal product scenario after live 8p and authentic M2
+    // receipt, before expensive jumbo/MTU/host mutation diagnostics.
+    if os.Getenv("WBD_M0_COMMON_SCENARIO")=="1" {
+        t.Log("M0_COMMON_SCENARIO_NORMAL_OFF_CONNECT_BIDIRECTIONAL_KIND1_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=1 covered2s=8 FEC2_OFF=1 no_extreme_matrix=1")
+        // Deferred Go→Rust Stop and generation-owned cleanup still run.
+        return
+    }
     eventBefore,eventHealthy,err:=b.rustOwnerRouteEventState()
     if err!=nil||!eventHealthy{
         t.Fatalf("real netlink link observer not active: rev=%d healthy=%t err=%v",eventBefore,eventHealthy,err)

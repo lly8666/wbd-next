@@ -40,6 +40,7 @@ sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
 PRELIM_MS="${WBD_M0_PRELIM_NETEM_DELAY_MS:-}"
 STEADY="${WBD_M0_STEADY_BURST:-}"
 BACKGROUND="${WBD_M0_BACKGROUND_LOOP:-}"
+COMMON="${WBD_M0_COMMON_SCENARIO:-}"
 PERF="${WBD_M0_PERF_BASELINE:-}"
 D10="${WBD_M0_D10_DIAG:-}"
 TARGETED="${WBD_M0_TARGETED_DROP:-}"
@@ -82,6 +83,12 @@ if [[ "$PERF" == 1 ]]; then
   fi
   TEST_FILTER='^TestR0V4EmbeddedNormalOff10MbpsDevelopment$'
 fi
+if [[ -n "$COMMON" && "$COMMON" != 1 ]]; then
+  echo 'COMMON_SCENARIO_INVALID'; exit 2
+fi
+if [[ "$COMMON" == 1 && "$BACKGROUND" != 1 ]]; then
+  echo 'COMMON_SCENARIO_REQUIRES_ORIGINAL_BACKGROUND_OWNER'; exit 2
+fi
 if [[ "$BACKGROUND" == 1 ]]; then
   if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" ]]; then
     echo 'BACKGROUND_LOOP_INVALID requires isolated owner functional case' >&2; exit 2
@@ -110,7 +117,7 @@ if [[ "$D10" == 1 ]]; then
   TRACE_CMD=(strace -f -qq -c -o "$ROOT/native-probe-result/d10-syscalls.txt")
 fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_FEC2_KERNEL_TX="$FEC2_PROBE" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_P10_SPARSE="${WBD_M0_P10_SPARSE:-}" WBD_M0_D10_DIAG="$D10" WBD_M0_PAIRED_OLD_NEW="${WBD_M0_PAIRED_OLD_NEW:-}" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "${TRACE_CMD[@]}" "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_COMMON_SCENARIO="$COMMON" WBD_M0_FEC2_KERNEL_TX="$FEC2_PROBE" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_P10_SPARSE="${WBD_M0_P10_SPARSE:-}" WBD_M0_D10_DIAG="$D10" WBD_M0_PAIRED_OLD_NEW="${WBD_M0_PAIRED_OLD_NEW:-}" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "${TRACE_CMD[@]}" "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 # The owned netns test runs as root; never let a successful measurement

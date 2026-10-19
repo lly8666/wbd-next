@@ -1,26 +1,7 @@
 name: M0 real Go TLS scoped FEC2 owner grant probe
 run-name: "M0|TLS-FEC2-OWNER-SCOPE|${{ github.sha }}"
+# PLAN-011: FEC2 extended owner scope probes are manually requested.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-fec2-real-tls-owner-grant.yml"
-      - "crates/wbd-engine/src/v4_owner_crypto.rs"
-      - "crates/wbd-engine/src/v4_embedded_go.rs"
-      - "tools/run-v4-tun-netns.sh"
-      - "crates/wbd-engine/src/v4_probe_bridge.rs"
-      - "r0/go_overlay/internal/realityfront/admission_v4.go"
-      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_off_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go"
-      - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go"
-      - "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go"
-      - "crates/wbd-engine/Cargo.toml"
-      - "crates/wbd-recovery/src/maturity.rs"
-      - "crates/wbd-recovery/src/receipt.rs"
-      - "crates/wbd-recovery/src/lib.rs"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

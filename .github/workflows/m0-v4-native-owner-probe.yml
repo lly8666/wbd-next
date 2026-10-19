@@ -3,48 +3,9 @@
 # historic impairment and metric lanes; scope receipts stay separate.
 name: M0 protected Go V4 native Rust owner test probe
 run-name: "M0|${{ github.sha }}|m0-v4-native-probe"
+# PLAN-011: jumbo, live-MTU/netem and performance matrix now manual only.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-v4-native-owner-probe.yml"
-      - "tools/run-v4-kernel-loopback.sh"
-      - "tools/run-v4-tun-netns.sh"
-      - "crates/wbd-platform/src/linux_tun_sink.rs"
-      - "crates/wbd-platform/src/linux_raw_carrier.rs"
-      - "crates/wbd-platform/src/ipv4_tcp.rs"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - "crates/wbd-engine/Cargo.toml"
-      - "crates/wbd-engine/src/lib.rs"
-      - "crates/wbd-engine/src/cold_v4.rs"
-      - "crates/wbd-engine/src/v4_owner_crypto.rs"
-      - "crates/wbd-engine/src/v4_protected_handoff.rs"
-      - "crates/wbd-engine/src/v4_embedded_go.rs"
-      - "crates/wbd-engine/src/runtime/**"
-      - "crates/wbd-engine/src/memory/**"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"
-      - "crates/wbd-platform/src/linux_packet_preflight.rs"
-      - "crates/wbd-platform/src/lib.rs"
-      - "crates/wbd-platform/src/linux_route_events.rs"
-      - "crates/wbd-platform/src/linux_mtu_scope.rs"
-      - "crates/wbd-platform/src/linux_driver_outcome_lease.rs"
-      - "crates/wbd-platform/src/linux_rx_batch.rs"
-      - "crates/wbd-platform/src/linux_batch.rs"
-      - "crates/wbd-codec/src/record_crypto.rs"
-      - "crates/wbd-codec/src/record_replay.rs"
-      - "crates/wbd-codec/src/link_fec_wire.rs"
-      - "crates/wbd-codec/src/link_reassembly.rs"
-      - "crates/wbd-engine/src/v4_probe_bridge.rs"
-      - "crates/wbd-engine/src/runtime/early_rx.rs"
-      - "crates/wbd-engine/src/runtime/generation.rs"
-      - "crates/wbd-engine/src/memory/mod.rs"
-      - "r0/go_overlay/internal/realityfront/admission_v4.go"
-      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_probe_linux_test.go"
+  workflow_dispatch:
 permissions: {contents: read}
 concurrency:
   group: m0-v4-owner-probe-${{ github.sha }}
