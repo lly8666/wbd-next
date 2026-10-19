@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 174,
-  "checkpoint_sha": "2aec2a7b6f49dbbb19b23edf5bd3aa2a74b46062",
+  "sequence": 175,
+  "checkpoint_sha": "a5130d8eecd3bdbf5c27aa97b184db7771c41404",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "RECOVERED H174 PLAN-009: central G2 PASS but M0 dispatcher workflow_run job skipped due mutable run-name check; M1 worker Governance legacy G2 ancestry FAIL retained. Repair public entry as short prerequisite before R0-M0-025.",
-  "why_now": "After H173 main cursor-only HEAD, M1 S24/H24 central exact G2 passed, yet main dispatcher 39206705410/39206773772 skipped; GitHub central API dynamic run-name differs static workflow name required in main workflow/runner. Recorded actual FAIL/PASS/SKIP per SOURCE in recovered S174; no v6 prepare sent.",
-  "done_when": "PLAN-009 §5 central G2-to-v6 triggering correct on real worker SOURCE with exact run/attempt and any failures honestly recorded, no worker cursor/token changes; R0-M0-025 Normal product slice still partial.",
-  "next_action": "Main-owned shared CI repair dynamic run-name identity to stable scope-audit workflow path/ID, preserve exact SOURCE G2 and dedupe guards; test only in Actions and capture v6 M1 prepare or explicit failure. M3 needs worker-owned fresh v6 request. Then resume R0-M0-025 true Go/Rust integration.",
+  "current_task": "PLAN-008 §1 M0 product vertical integration R0-025, after PLAN-009 §5 shared worker CI entry unblock: central G2→frozen v6 M1 prepare real Actions PASS. M3 fresh worker v6 intent not yet issued. M0 resumes original protected Go→Rust Normal/off/fixed/auto and authenticated reverse receipt.",
+  "why_now": "Recovered missed M1 worker Governance FAIL and central G2 PASS/SKIP under H174; main CI S2def fixed dynamic scope run-name trigger with immutable workflow ID/path, Actions main dispatch39208175321 PASS, worker v6 authorize+prepare39208300168 PASS on independent SHA-verified manifest. No overbroad worker token/paths; old v5 FAIL retained.",
+  "done_when": "Main registry R0-025: one buildable original client/server Normal experiment with genuine TLS/owner/data/feedback/Stop and actual requested/pending/applied/rejected, combined netns function evidence; product/Windows ARM/physical/p99 remain NOT_RUN until precise proof.",
+  "next_action": "Resume M0 R0-025 original Go/Rust product vertical: wire authenticated reverse client→server kind1 and M2 mature firstsend into real sender, retain fail-closed policy and FEC2 OFF; consume accepted worker components only on frozen SOURCE.",
   "unverified": true,
-  "last_tested_source": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
+  "last_tested_source": "2defed85dad2c66055aec212bef460ec4a030174",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN009-auto-worker-dispatch-v6-05af40990b5d7c3095ee95f3637a968e1620ae7b.json"
+    "docs/evidence/M0/PLAN009-H175-M1-v6-prepare-20261019.json"
   ],
   "context_refs": [
     "docs/devlog/M0/PLAN009-H173-recovery-dispatch-trigger-20261019.md",
+    "docs/evidence/M0/PLAN009-auto-worker-dispatch-v6-05af40990b5d7c3095ee95f3637a968e1620ae7b.json",
     "docs/devlog/M0/PLAN009-auto-worker-dispatch-v6-20261019.md",
     "docs/devlog/M0/PLAN-009-worker-ci-v6-migration.md",
     "docs/devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md",
     "docs/evidence/M0/PLAN008-025-auth-m2-mature-3501b929fd980110de83ebed14eace146e4f20e1.json",
     "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md",
-    "docs/GOVERNANCE.md",
-    "docs/history/INDEX.md"
+    "docs/GOVERNANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "RECOVERED H174: main checkpoint H173→HEAD only cursor, M1/M3 only H cursors. M1 39206478349/39206548038 worker Governance FAIL inherited ancestry; same SOURCE central G2 39206492421/39206565174 PASS. Downstream dispatcher 39206705410/39206773772 SKIPPED before job. No v6 workflow_dispatch (only old v5 authorize FAIL), costs/product NOT_RUN. Repair intent is S2aec; preserve old outcomes."
+  "partial_summary": "H175 S a513 evidence: M0 S2def shared YAML/dispatch/script/test fix, source locked governance39208175002 and maintenance39208174956 SUCCESS; true audited dispatcher39208175321 PASS. M1 v6 prepare39208300168 authorize/prepare SUCCESS, artifact12166063332 ZIP SHA6549b2..., manifest SHA85f773..., two leg binaries verified + 13/13 each, performance paired NOT_RUN. M3 native v6 prepare NOT_RUN pending M3-owned new request. M1 worker-local Governance two FAIL remain, central G2 separate PASS. Product R0-025 still partial/off, physical NOT_RUN."
 }
