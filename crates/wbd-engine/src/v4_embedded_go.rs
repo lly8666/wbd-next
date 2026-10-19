@@ -519,9 +519,7 @@ fn fec2_probe_expected_udp_ipv4()->Vec<u8>{
 fn fec2_probe_real_kernel_raw_once(
     handle:u64,ifindex:u32
 )->Result<[(u64,u32,usize);2],i32>{
-    use crate::runtime::fec2_owner::{
-        Fec2Owner,FecMode,Profile as M1Profile,Limits,SourceTicket,
-    };
+    use crate::v4_fixed_stream::{FixedStream,DriverProof};
     use wbd_types::ConfigRevision;
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
@@ -567,26 +565,12 @@ fn fec2_probe_real_kernel_raw_once(
         .or(e.fec2_probe_pending_policy)
         .or_else(||e.owner.fec2_probe_applied_policy())
         .ok_or(BAD_STAGE)?;
-    let m1_profile=match policy{
-        0=>M1Profile::Light,1=>M1Profile::Mild,
-        2=>M1Profile::Medium,3=>M1Profile::Balanced,
-        4=>M1Profile::High,5=>M1Profile::Strong,
-        6=>M1Profile::Maximum,_=>return Err(INVALID),
-    };
-    let m3_profile=match policy{
-        0=>wbd_codec::fec_v2::Profile::Light,
-        1=>wbd_codec::fec_v2::Profile::Mild,
-        2=>wbd_codec::fec_v2::Profile::Medium,
-        3=>wbd_codec::fec_v2::Profile::Balanced,
-        4=>wbd_codec::fec_v2::Profile::High,
-        5=>wbd_codec::fec_v2::Profile::Strong,
-        6=>wbd_codec::fec_v2::Profile::Maximum,
-        _=>return Err(INVALID)
-    };
-    let mut scheduler=Fec2Owner::new(
-        FecMode::Normal,m1_profile,ConfigRevision(revision),
-        Limits{pending_bytes:2*1024*1024,pending_jobs:64,
-            max_frame:budget.record_payload_mtu.saturating_sub(14)},
+    // M0's already Actions-frozen bounded multi-block owner composition,
+    // reused by this SAME original Go TLS->Rust owner and M4 raw kernel.
+    // The probe requests only one k2 source pair (real multi-block kernel
+    // delivery still separately unqualified).
+    let mut stream=FixedStream::new(
+        policy,revision,budget.record_payload_mtu
     ).ok_or(INVALID)?;
     let mut storage=Vec::with_capacity(1);
     let mut out=[(0u64,0u32,0usize);2];
@@ -598,15 +582,12 @@ fn fec2_probe_real_kernel_raw_once(
         if end>source_slab.writable().len(){return Err(INVALID)}
         source_slab.writable()[14..end].copy_from_slice(frame);
         let mut callback_error=None;
-        let accepted=scheduler.push_source(
+        let accepted=stream.offer_source(
             source_slab,14..end,MonoNs((i as u64)*1_000),
-            |first|{
-                let Some(ticket)=first.ticket else{
-                    callback_error=Some(INVALID);return false
-                };
+            |ticket,first_frame|{
                 if ticket.index!=i as u8 ||
                     ticket.revision!=ConfigRevision(revision) ||
-                    first.frame!=frame{
+                    first_frame!=frame{
                     callback_error=Some(INVALID);return false
                 }
                 tickets[i]=Some(ticket);
@@ -616,7 +597,7 @@ fn fec2_probe_real_kernel_raw_once(
                 if i==1{return false}
                 let sent=(||->Result<(u64,u32,usize),i32>{
                     let payload=wbd_codec::fec_v2::source_owned(
-                        ticket.block_id,ticket.index,first.frame,
+                        ticket.block_id,ticket.index,first_frame,
                         budget.record_payload_mtu
                     ).map_err(|_|INVALID)?;
                     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
@@ -652,49 +633,53 @@ fn fec2_probe_real_kernel_raw_once(
     if first.block_id!=missing.block_id ||first.index!=0||missing.index!=1{
         return Err(INVALID)
     }
-    // M1 closes a sparse k2 block at its original absolute deadline.
-    // Parity borrows original Arena slabs via ParityJob, then M3 RS16
-    // materializes row0. Source0 has ALREADY gone through real raw TX.
-    if scheduler.on_due(MonoNs(8_000_000)).map_err(|_|INVALID)?!=1{
-        return Err(INVALID)
-    }
-    let mut job=scheduler.take_parity(MonoNs(8_000_001))
-        .map_err(|_|INVALID)?.ok_or(INVALID)?;
-    if job.block_id!=first.block_id||job.k!=2||
-        job.r!=m1_profile.redundancy(job.k){
-        return Err(INVALID)
-    }
-    let parity_block_id=job.block_id;
-    let (repairs,_)=job.with_sources(|frames|{
-        wbd_codec::fec_v2::Rs16::new().encode_owned(
-            parity_block_id,frames,m3_profile,
-            0,1,budget.record_payload_mtu,
-            wbd_codec::fec_v2::BackendChoice::Scalar
-        )
-    }).map_err(|_|INVALID)?;
-    let parity=repairs.into_iter().next().ok_or(INVALID)?;
-    let mut repair_slab=e.arena.allocate().map_err(|_|FULL)?;
-    let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
-    if end>repair_slab.writable().len(){return Err(INVALID)}
-    repair_slab.writable()[14..end].copy_from_slice(&parity);
-    let sealed=e.owner.seal_fec2_probe_one(
-        repair_slab,parity.len(),3,budget,15,loop_now()
+    // Original bounded M1 scheduler closes the sparse k2 block at its
+    // due deadline. M3's prepared RS16 quantum is shared with the true
+    // multi-block production-composition interface. For this *one-shot*
+    // proof only row0 is sent; any other profile-planned rows are strictly
+    // NOT_SENT, not a fabricated kernel copy or recovered peer delivery.
+    let mut parity_error=None;
+    let (emitted,confirmed_rows)=stream.poll_parity(
+        MonoNs(8_000_001),|parity,block_id,row,actual_revision|{
+            if block_id!=first.block_id ||
+                actual_revision!=ConfigRevision(revision){
+                parity_error=Some(INVALID);
+                return DriverProof::NotSent
+            }
+            if row!=0{return DriverProof::NotSent}
+            let attempt=(||->Result<(u64,u32,usize),i32>{
+                let mut repair_slab=e.arena.allocate().map_err(|_|FULL)?;
+                let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
+                if end>repair_slab.writable().len(){return Err(INVALID)}
+                repair_slab.writable()[14..end].copy_from_slice(parity);
+                let sealed=e.owner.seal_fec2_probe_one(
+                    repair_slab,parity.len(),3,budget,15,loop_now()
+                ).map_err(|_|INVALID)?;
+                let (copied,frozen)=e.owner.submit_scoped_raw_tx_shadow_probe_reusing(
+                    &raw,tuple,presentation,loop_now(),&mut storage
+                ).map_err(|_|INVALID)?;
+                if copied<=sealed.2||frozen.metadata().pn.0!=sealed.0{
+                    return Err(INVALID)
+                }
+                confirmed.push((frozen,copied));
+                Ok(sealed)
+            })();
+            match attempt{
+                Ok(sealed)=>{out[1]=sealed;DriverProof::Copied},
+                Err(err)=>{parity_error=Some(err);DriverProof::NotSent},
+            }
+        }
     ).map_err(|_|INVALID)?;
-    let (copied,frozen)=e.owner.submit_scoped_raw_tx_shadow_probe_reusing(
-        &raw,tuple,presentation,loop_now(),&mut storage
-    ).map_err(|_|INVALID)?;
-    if copied<=sealed.2||frozen.metadata().pn.0!=sealed.0{return Err(INVALID)}
-    confirmed.push((frozen,copied));
-    out[1]=sealed;
-    scheduler.finish_parity(job,1,true);
-    let report=scheduler.report();
+    if let Some(err)=parity_error{return Err(err)}
+    if emitted==0||confirmed_rows!=1{return Err(INVALID)}
+    let report=stream.report();
     if report.outstanding_jobs!=0||report.queued_jobs!=0
         ||report.charged_bytes!=0||report.classes[0].r_sent!=1
         ||report.classes[0].source_not_ready!=1{
         return Err(INVALID)
     }
-    scheduler.stop();
-    if scheduler.take_parity(MonoNs(8_000_002)).is_ok(){
+    stream.stop();
+    if stream.poll_parity(MonoNs(8_000_002),|_,_,_,_|DriverProof::Copied).is_ok(){
         return Err(INVALID)
     }
     if confirmed.len()!=2{return Err(INVALID)}
