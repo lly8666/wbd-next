@@ -235,6 +235,36 @@ class EvidenceDrills(unittest.TestCase):
         for order in ("AB", "BA"):
             self.assertTrue(g.verify_receipt(*self.paired(order)))
 
+    def test_four_leg_abba_and_baab_source_locked_and_nonoverlap(self):
+        for order in ("ABBA", "BAAB"):
+            value,receipt,run,jobs=self.paired()
+            legs={leg["label"]:leg for leg in value["legs"]}
+            value.update(mode="paired_abba", samples=4,
+                         legs=[dict(legs[label]) for label in order])
+            receipt.update(mode="paired_abba", samples=4,
+                legs=[dict(leg,job_id=321,config_sha256=value["config_sha256"],
+                           scenario=value["scenario"],seed=value["seed"],
+                           harness_sha=value["harness_sha"],result="PASS",
+                           start_monotonic_ns=i*200,end_monotonic_ns=i*200+100)
+                      for i,leg in enumerate(value["legs"])])
+            self.assertTrue(g.verify_receipt(value,receipt,run,jobs))
+            for tamper in ("status","source","config","overlap","job","missing","label"):
+                v=dict(value,legs=[dict(x) for x in value["legs"]])
+                e=dict(receipt,legs=[dict(x) for x in receipt["legs"]])
+                if tamper=="status":e["legs"][3]["result"]="NOT_RUN"
+                if tamper=="source":v["legs"][3]["source_sha"]="f"*40
+                if tamper=="config":e["legs"][2]["config_sha256"]="f"*64
+                if tamper=="overlap":e["legs"][2]["start_monotonic_ns"]=100
+                if tamper=="job":e["legs"][3]["job_id"]=999
+                if tamper=="missing":e["legs"].pop()
+                if tamper=="label":v["legs"][1]["label"]="A"
+                with self.subTest(order=order,tamper=tamper),self.assertRaises(g.ContractError):
+                    g.verify_receipt(v,e,run,jobs)
+        # Four samples cannot pass as 2-leg paired_ab nor undocumented mode.
+        v,_,_,_=self.paired()
+        v["samples"]=4
+        with self.assertRaises(g.ContractError):g.validate_request(v)
+
     def test_paired_wrong_source_build_config_job_and_overlap_rejected(self):
         for key, wrong in (("source_sha", "e"*40), ("build_manifest_sha256", "e"*64),
                            ("config_sha256", "e"*64), ("job_id", 999), ("start_monotonic_ns", 50),

@@ -154,21 +154,30 @@ def validate_request(request):
     need(integer(request.get("samples"), 1) and integer(request.get("measurement_jobs"), 1), "invalid samples/jobs")
     if request["kind"] == "performance":
         mode = request.get("mode", "single")
-        need(mode in {"single", "paired_ab"}, "unknown performance mode")
+        need(mode in {"single", "paired_ab", "paired_abba"}, "unknown performance mode")
         need(request["measurement_jobs"] == 1, "one measurement job/VM per Action")
         if mode == "single":
             need(request["samples"] == 1 and not request.get("legs"), "single mode needs one sample")
         else:
             legs = request.get("legs")
-            need(request["samples"] == 2 and isinstance(legs, list) and len(legs) == 2,
-                 "paired_ab needs exactly two sequential legs")
+            length = 4 if mode == "paired_abba" else 2
+            need(request["samples"] == length and isinstance(legs, list) and len(legs) == length,
+                 "paired mode requires exact sequential leg count")
             need(all(isinstance(leg, dict) for leg in legs), "invalid paired legs")
-            need([leg.get("label") for leg in legs] in (["A", "B"], ["B", "A"]), "order must be AB or BA")
+            orders=([["A","B","B","A"],["B","A","A","B"]]
+                    if mode=="paired_abba" else [["A","B"],["B","A"]])
+            need([leg.get("label") for leg in legs] in orders,
+                 "paired mode needs AB/BA or exact ABBA/BAAB")
             for leg in legs:
                 need(isinstance(leg.get("source_sha"), str) and SHA.fullmatch(leg["source_sha"]), "invalid leg SOURCE")
                 need(isinstance(leg.get("build_manifest_sha256"), str)
                      and DIGEST.fullmatch(leg["build_manifest_sha256"]), "missing pinned leg build")
-            need(legs[0]["source_sha"] != legs[1]["source_sha"], "comparison needs distinct sources")
+            identities={label:{(leg["source_sha"],leg["build_manifest_sha256"])
+                               for leg in legs if leg["label"]==label}
+                        for label in ("A","B")}
+            need(all(len(v)==1 for v in identities.values()) and
+                 next(iter(identities["A"]))[0]!=next(iter(identities["B"]))[0],
+                 "paired A/B must have one immutable identity each, with distinct sources")
             need(next(leg for leg in legs if leg["label"] == "B")["source_sha"] == request["source_sha"],
                  "request SOURCE must identify candidate B")
     previous = request.get("supersedes_request")
@@ -189,13 +198,15 @@ def verify_receipt(request, receipt, run, jobs=None):
     if receipt["result"] == "PASS":
         need(run.get("status") == "completed" and run.get("conclusion") == "success", "unfinished/failed run is not PASS")
         need(receipt.get("artifact_verified") is True, "PASS requires artifact verification")
-    if request["kind"] == "performance" and request.get("mode") == "paired_ab":
-        need(receipt.get("mode") == "paired_ab", "receipt lost paired identity")
+    if request["kind"] == "performance" and request.get("mode") in {"paired_ab","paired_abba"}:
+        need(receipt.get("mode") == request["mode"], "receipt lost paired identity")
         legs = receipt.get("legs")
-        need(isinstance(legs, list) and len(legs) == 2 and all(isinstance(leg, dict) for leg in legs),
+        need(isinstance(legs, list) and len(legs) == len(request["legs"])
+             and all(isinstance(leg, dict) for leg in legs),
              "missing observed paired legs")
         need(isinstance(jobs, list), "paired receipt requires independently fetched GitHub jobs")
-        need(integer(legs[0].get("job_id"), 1) and legs[0].get("job_id") == legs[1].get("job_id"),
+        need(integer(legs[0].get("job_id"), 1) and
+             all(leg.get("job_id")==legs[0]["job_id"] for leg in legs),
              "comparison must run on one GitHub job")
         matched = [job for job in jobs if job.get("id") == legs[0]["job_id"]]
         need(len(matched) == 1 and matched[0].get("run_id") == run["id"]
