@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "rust_source": "76f3fd695c0be4d5ad6bf447ead52ee0bc7b672f",
+  "operations": [
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/main_linux.go",
+      "original_blob": "b239b92006504500c76fb9148f735c484a0f011c",
+      "result_blob": "2b4adb951f40e0e0ec0901db098f98834a7205e9",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/main_windows.go",
+      "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
+      "result_blob": "8f4bc1772a412b230a2379e91e53246fa29fd148",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n"
+        },
+        {
+          "find": "\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-server/main_linux.go",
+      "original_blob": "930976ec6b2d7fa82f98378c7aa985fb4e8e4363",
+      "result_blob": "e042732d613763b0748494b93d1e60339a9651f1",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n"
+        },
+        {
+          "find": "\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/fields.json",
+      "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
+      "result_blob": "4094cc937b6bfb7464eda0edc64789306dcda508",
+      "patches": [
+        {
+          "find": "  \"fec-mode\": [",
+          "replace": "  \"fec.mode\": [\n    \"传输\",\n    \"FEC2 新模式\",\n    \"off（默认）|fixed|auto；未接真实 native applied 时拒绝开启\"\n  ],\n  \"fec.profile\": [\n    \"传输\",\n    \"FEC2 固定七档\",\n    \"light / mild / medium / balanced / high / strong / maximum\"\n  ],\n  \"fec.auto_policy\": [\n    \"传输\",\n    \"FEC2 自动政策\",\n    \"normal 或 aggressive，激进只在普通目标上加一档\"\n  ],\n  \"fec.auto_start_profile\": [\n    \"传输\",\n    \"FEC2 自动起步档\",\n    \"默认 strong；激进在起步档上再加一级\"\n  ],\n  \"fec-mode\": ["
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/MainForm.cs",
+      "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
+      "result_blob": "f37b2a22a94dda80b31f3fef8ced4300088b3702",
+      "patches": [
+        {
+          "find": "f.Key == \"fec-mode\" ||",
+          "replace": "f.Key == \"fec-mode\" || f.Key == \"fec.mode\" || f.Key == \"fec.profile\" || f.Key == \"fec.auto_policy\" || f.Key == \"fec.auto_start_profile\" ||"
+        },
+        {
+          "find": "                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {",
+          "replace": "                if (f.Key == \"fec.mode\") c.Items.AddRange(new[] { new Choice(\"off\",\"关闭（未启用FEC2）\"), new Choice(\"fixed\",\"固定档（需native应用）\"), new Choice(\"auto\",\"自动档（需native应用）\") });\n                if (f.Key == \"fec.profile\" || f.Key == \"fec.auto_start_profile\") c.Items.AddRange(new[] { new Choice(\"light\",\"light · 12.5%\"), new Choice(\"mild\",\"mild · 25%\"), new Choice(\"medium\",\"medium · 37.5%\"), new Choice(\"balanced\",\"balanced · 50%\"), new Choice(\"high\",\"high · 75%\"), new Choice(\"strong\",\"strong · 100%\"), new Choice(\"maximum\",\"maximum · 125%\") });\n                if (f.Key == \"fec.auto_policy\") c.Items.AddRange(new[] { new Choice(\"normal\",\"Normal · 普通\"), new Choice(\"aggressive\",\"Normal · 激进 +1\") });\n                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {"
+        },
+        {
+          "find": "        public async Task ValidateSelectedAsync() { await session.ValidateAsync(Prepare()); ShowState(\"配置校验通过 · 尚未建立网络连接\"); Enqueue(\"真实客户端已接受当前配置；驱动、服务端连通性在连接时检验。\"); }",
+          "replace": "        public async Task ValidateSelectedAsync() {\n            var result = await session.ValidateAsync(Prepare());\n            object status;\n            if (result.TryGetValue(\"fec.status\",out status) && Convert.ToString(status) == \"rejected\") {\n                object reason;\n                string detail = result.TryGetValue(\"fec.reject_reason\",out reason) ? Convert.ToString(reason) : \"需要认证引擎\";\n                ShowState(\"FEC2 已保存但未生效 · rejected\"); Enqueue(\"FEC2 拒绝：\" + detail);\n            } else ShowState(\"配置校验通过 · 尚未建立网络连接（FEC2 applied：未知）\");\n        }"
+        },
+        {
+          "find": "            string pending = Prepare(); await session.ValidateAsync(pending);",
+          "replace": "            string pending = Prepare(); var validated = await session.ValidateAsync(pending);\n            object fec2Status;\n            if (validated.TryGetValue(\"fec.status\",out fec2Status) && Convert.ToString(fec2Status) == \"rejected\")\n                throw new InvalidOperationException(\"FEC2 未获得 Rust 实际应用回执，拒绝连接；请关闭FEC2或使用已验证实验引擎。\");"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/GuiTests.cs",
+      "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
+      "result_blob": "e8d86b535ba04914c69f24f717fad775da2cd4ac",
+      "patches": [
+        {
+          "find": "{\"fec-mode\",\"legacy\"}",
+          "replace": "{\"fec-mode\",\"legacy\"},{\"fec.mode\",\"off\"},{\"fec.profile\",\"strong\"},{\"fec.auto_policy\",\"normal\"},{\"fec.auto_start_profile\",\"strong\"}"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "docs/PARAMETERS.json",
+      "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
+      "result_blob": "70ae0e4ab7bf3f5fa3c121306ce97e6315305d2c",
+      "patches": [
+        {
+          "find": "      \"fec-parity\": {",
+          "replace": "      \"fec.mode\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"off\\\"\",\n        \"help\": \"off|fixed|auto; experimental FEC2 requires authenticated owner, no silent legacy fallback\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.profile\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"strong\\\"\",\n        \"help\": \"fixed profile light|mild|medium|balanced|high|strong|maximum; actual r=ceil(k*rho)\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.auto_policy\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"normal\\\"\",\n        \"help\": \"normal|aggressive; aggressive adds one tier; Game auto rejected\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.auto_start_profile\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"strong\\\"\",\n        \"help\": \"auto start profile, aggressive adds one tier; new blocks only\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec-parity\": {",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "docs/PARAMETERS.md",
+      "original_blob": "9b49ca638cc6f12434f57acd49a8c1e1cb49dd81",
+      "result_blob": "bb8e099e3e69f452140ae2293dc936b72bc100ce",
+      "patches": [
+        {
+          "find": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n",
+          "replace": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n\n\n## PLAN-008 FEC2 新模式与可见迁移（尚未产品启用）\n\n单一权威参数目录仍是同目录 `PARAMETERS.json`，对应原客户端CLI、JSON和Windows便携GUI。\n新增 `fec.mode=off|fixed|auto`（默认off），`fec.profile` 七档（默认strong），`fec.auto_policy=normal|aggressive`（默认normal），`fec.auto_start_profile`（默认strong）。\n原 `fec-mode/fec-parity/fec-min-parity/fec-start-parity` 为旧Go V1历史配置，不映射成新FEC2档位；老用户选择新FEC2需明确重新保存。Game auto拒绝。\n受保护Go/Rust ABI 尚未在此M4源码接线：fixed/auto即使保存成功也显示 `rejected`、applied_revision/actual_profile 为未知，启动失败而不偷偷走旧Go FEC。默认FEC2 off时原Go启动/Stop/DNS/MTU/IPv6/portable语义不受影响。\n生产feature仍 OFF；只有M0认证owner真实 applied ACK 可以改变GUI显示，不允许通过CLI/GUI伪造 ready 或Applied。\n"
+        }
+      ]
+    },
+    {
+      "kind": "create",
+      "path": "internal/configfile/fec2_product_test.go",
+      "overlay_path": "r0/go_overlay/internal/configfile/fec2_product_test.go",
+      "result_blob": "774976b765cfd16638f866ef8c07bbd33c13abe6"
+    },
+    {
+      "kind": "create",
+      "path": "internal/runtimeentry/r0_fec2_product_adapter.go",
+      "overlay_path": "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
+      "result_blob": "2dbb06dcb5c33878c450a594e56345b281ad6186"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/fec_v2_policy.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+      "result_blob": "733656ec92c2e2848c3913606c1f9f56cc8747b7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/fec_v2_policy_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+      "result_blob": "7ad3bf27365b0f5f04a180b11a686888623f22cb"
+    }
+  ]
+}
