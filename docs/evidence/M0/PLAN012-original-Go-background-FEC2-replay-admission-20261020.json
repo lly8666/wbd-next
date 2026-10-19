@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6e5091e1787dd9ca39d4caa6dffabe57633e4970",
+  "qualification": "PASS_SCOPED_ORIGINAL_GO_AUTH_BACKGROUND_RX_CODE_AND_NATIVE_RS16_TESTS_NOT_FEC2_PRODUCT",
+  "result": "PASS_SCOPED",
+  "recent_status_recovered": {
+    "prior_h192_action": {
+      "source_sha": "36c6ccec17d11aec6190b2172f889f98c495c610",
+      "run_id": 39279297062,
+      "attempt": 1,
+      "job_id": 118150432130,
+      "result": "SUCCESS",
+      "artifact_id": 12198821821,
+      "artifact_sha256": "1c8d98e07a44c0bc26e364ff092b4c96ef89042153f048ef2d34a36f68c1124c",
+      "native_rx_four_blocks": "PASS",
+      "original_go_one_block": "PASS"
+    },
+    "first_background_attempt": {
+      "source_sha": "7cffd0d4d577c485d99c4a83a6732629d7dfc57f",
+      "run_id": 39287323889,
+      "attempt": 1,
+      "job_id": 118177959804,
+      "result": "FAIL_CI_SELECTOR",
+      "artifact_id": 12203776929,
+      "artifact_sha256": "3497a2d3c5afa1b4d5df16991a2fd15d0a911bccb4cd8a10c2947b1412500fdb",
+      "release_record": "PASS_1_1",
+      "game_native": "PASS_2_2",
+      "continuous_rx": "PASS_2_2",
+      "reason": "third new background receiver test excluded from m0_fec2_live_rx selector, script expected 3 but got 2",
+      "default_build": "NOT_RUN",
+      "go_kernel": "NOT_RUN"
+    },
+    "fixed_attempt": {
+      "source_sha": "6e5091e1787dd9ca39d4caa6dffabe57633e4970",
+      "run_id": 39287817507,
+      "attempt": 1,
+      "job_id": 118180091622,
+      "result": "SUCCESS",
+      "artifact_id": 12204471076,
+      "artifact_sha256": "5e3844f09ebdd4ebb1b7527055b8faee3a215ceb515199422da79b9f277b714c",
+      "manifest_scope": "COMBINED_RELEASE_FEC_RECORD_GAME2_4_NATIVE_AND_ONE_SHOT_GO_TLS_REAL_KERNEL",
+      "original_go_pinned_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "rust_toolchain": "1.85.1",
+      "go_toolchain": "1.23.12"
+    }
+  },
+  "product_implementation": {
+    "files": [
+      "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+      "crates/wbd-engine/src/v4_owner_crypto.rs",
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "crates/wbd-engine/src/lib.rs"
+    ],
+    "controls": [
+      "Exact original-Go TLS negotiated feature7+epoch and generation scopes optional background FEC RX mode, no untrusted packet grants",
+      "Original production background RX uses only moved original M3 AEAD/PN replay opener; FEC parser accepts already-opened kinds2/3, not independent PN bitmap",
+      "Optional code compiled only with fec2_product_record, grant remains false until actual Fixed native applied, OFF and Stop revoke",
+      "FEC first candidates go through real M4 ScopedTunSink::write_authenticated_ipv4; validation refusal never reports app success",
+      "32 outstanding blocks and 1MiB bounded cache, 150ms and block tombstones; evict old incomplete on pressure, do not HOL new sources",
+      "Normal kind1 LINK and original authenticated kind1 reverse M2 remain on single old opener"
+    ],
+    "default_runtime_FEC2": "OFF",
+    "default_ABI_test_symbol": false,
+    "original_client_FEC2_product_receiver": "NOT_RUN"
+  },
+  "combined_verified": {
+    "release_record_three_suites": "PASS_1_OF_1",
+    "game_two_four_lanes_native": "PASS_2_OF_2",
+    "live_fec_receiver_three_tests": "PASS_3_OF_3",
+    "original_go_tls_cipher_suites": "PASS_3_OF_3",
+    "original_m4_kernel_source_and_repair": "PASS_ONE_BLOCK_DEV_PROBE",
+    "independent_real_TUN_UDP_recover": "PASS_127_BYTE_IP_99_BYTE_UDP_SINGLE_BLOCK",
+    "genuine_original_M2_reverse_and_quiescent_off": "PASS_SINGLE_BLOCK",
+    "concurrent_original_Go_background_FEC_mode_real_kernel_delivery": "NOT_RUN",
+    "real_persistent_multiblock_kernel_app": "NOT_RUN"
+  },
+  "remaining_hard_gates": [
+    "Actual original TLS-authenticated Go client receiver product path and Rust source/parity producer must transact >1 continuous block through kernel with first TUN app delivery",
+    "FEC Fixed→Auto genuine M2 feedback selected profile applied, stale revision rejection, Stop/MTU and no HOL under real asynchronous loss",
+    "Go CLI/GUI native product requested/applied readback and default mode enabled only after exact go-live tests",
+    "Game2/4 true raw/kernel lanes and Windows WFP/physical independent, not inferred from native adapter",
+    "20Mbps sustained realistic traffic/loss and p99 performance separate Actions qualification NOT_RUN"
+  ],
+  "next_action": "Integrate original Go credential-bound continuous M1 source+repair TX with the same M3 AEAD/PN/M4 driver and actual client-side FEC RX (not probe); exact Go TLS multi-block app recovery, live M2/Auto/Stop/MTU readback in one complete native-netns functional Actions; only then activate production FEC2 if success."
+}
