@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 23,
-  "checkpoint_sha": "26c9c57f090ebc1e97b74d359527caad4614f667",
+  "sequence": 24,
+  "checkpoint_sha": "a3920da49a69ae13bd02460ef99f51c6ea9e18e5",
   "progress": "partial",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 Game015: native correctness 133/133 PASS CODE64102db5, G2 scoped. HOLD lifted. M0 PLAN-009 current frozen v5 test request M1-GAME015-AB-PREP-002 PLANNED; request authored and pushed only, no prepare or paired AB Actions dispatched.",
-  "why_now": "M0 published current recommended PLAN-009 control qualification/worker-ci-v5 484861e5, static contract smoke39199797039 PASS; v3 request from H22 superseded due zero-functional-tests safeguard. User requests direct AB. M1 within rev2 epoch1 role paths; only request+cursor files updated; no new benchmark dispatch exists. Connected Chat GitHub actions do not implement workflow_dispatch; local runtime has no gh CLI, credentials or GitHub network.",
-  "done_when": "Already code-correctness native133 PASS and source/G2 PASS. M1 Game015 cost still requires v5 prepare built release old/new distinct binaries and exact actual artifact, then a NEW paired_ab request run in one VM with matched checksum and host/capacity CPU/RSS; no CPU or product PASS before provider Actions receipt.",
-  "next_action": "DISPATCH_CAPABILITY_BLOCKED, not repo scope ACL. With GitHub Actions write-capable gh/UI/Work Cloud Browser launch current unique v5 request once: workflow worker-component-validation.yml at qualification/worker-ci-v5, role_id=M1, stage=prepare, request_id=M1-GAME015-AB-PREP-002, request_ref=26c9c57f090ebc1e97b74d359527caad4614f667. Verify successful prepare artifact run/attempt/manifest sha, then create separate pinned paired_ab I and dispatch it. Do not reuse superseded v3 request, do not rerun smoke/governance, do not call performance PASS before run.",
+  "current_task": "PLAN-008 Game015 M1 component release A/B: worker frozen v6 prepare intent M1-GAME015-AB-PREP-003 published S24, G2->M0 main-only auto-dispatch should start on exact current H24 audit. Old v5 preflight CLI failure retained; native 133/133 CODE functional still PASS, cost NOT_RUN until paired.",
+  "why_now": "M0 PLAN-009 autonomous dispatcher main after G2 accepted, issue #14 requested forward-only new v6 M1 request. Old request002 actually dispatched by dispatcher39204817044 -> workflow39204910923 FAIL authorize argparse --stage not recognized; never built Rust, not a functional regression. v6 control fab2e1d7 S contract 39205218653 PASS. S24 request003 retains same code/harness/fixture SHA and rev2 epoch1, supersedes request002.",
+  "done_when": "One exact v6 prepare run passes real affected nonzero test and produces two distinct release artifacts/manifest, then a new paired_ab request pins real prepare run/attempt/artifact/hash. Pair old/new same VM on identical fixture; check outputs/CPU/RSS/capacity and write factual report. Until complete old source functional133/133 PASS only; performance NOT_RUN and Go/physical/product NOT_RUN.",
+  "next_action": "Watch M0 audited worker dispatcher triggered by CENTRAL G2 exact H24 after worker Governance; verify v6 workflow run named M1|M1-GAME015-AB-PREP-003|prepare|fab2e1d7... and its authorize+prepare jobs. Do not manually redispatch or rerun old v5. On prepare SUCCESS download exact manifest and create independent paired_ab request I. On FAIL preserve logs and repair only authorized M1 fixture or coordinate M0 tooling as applicable.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -23,11 +23,12 @@
     ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md",
     ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md",
     ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-001.json",
-    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-002.json"
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-002.json",
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-003.json"
   ],
   "context_refs": [
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H23 after S23 26c9c57f090ebc1e97b74d359527caad4614f667. Superseded v3 M1-GAME015-AB-PREP-001 with v5 M1-GAME015-AB-PREP-002; control ref qualification/worker-ci-v5=484861e5; source old c80ff6a5 candidate/harness 64102db5; exact fixture blob4c70bedf/sha256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8. v5 public contract smoke39199797039 PASS, no real prepare or paired run; AB performance NOT_RUN. GitHub Chat connector lacks dispatch tool; shell gh not installed/no egress. H23 cursor-only. Old worker governance FAIL retained, central H22 scope success39199194716. Function native39188056715 133/133 PASS. User HOLD lifted, product/Go/physical NOT_RUN."
+  "partial_summary": "H24 cursor-only after S24 a3920da49a69ae13bd02460ef99f51c6ea9e18e5; v6 request003 code/harness64102db5, frozen baseline c80ff6a5, config SHA256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8, control fab2e1d7; M0 autonomous dispatch confirmed previous v5 run39204910923 failed in --stage argument parsing (no Cargo). G2 native CODE39188056715 133/133 PASS, H23 central exact scope39201507034 success. New v6 prepare currently pending automatic dispatch; no paired receipt yet, cost NOT_RUN."
 }
