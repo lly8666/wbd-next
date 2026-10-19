@@ -5,8 +5,8 @@
   "reservation_revision": 2,
   "assignment_epoch": 1,
   "branch": "work/m4-r1-platform",
-  "source_sha": "9feab316b486e2f5fe76a078a9f81e9abf08784f",
-  "result": "PARTIAL_I005_SOURCE_ONLY_NATIVE_OWNER_LOCK_TEST_UNRUN",
+  "source_sha": "c58346b9846acbb3ec91dc3dd95f55959c71a340",
+  "result": "PARTIAL_I003_I004_SCOPED_WINDOWS_PASS_I005_ORIGINAL_LEGACY_TEST_COMPILE_FAIL_I006_PENDING",
   "artifact_verified": false,
   "product_fec2": "OFF",
   "main_decision": "docs/decisions/M0-windows-native-migration-2026-10-19.md",
@@ -36,7 +36,7 @@
     "final_main_merge": "NOT_DONE",
     "assembler_negative_regression": "AUTHORED_NOT_YET_EXECUTED",
     "windows_package_compile": "AUTHORED_SMOKE_GO_TEST_C_ONLY; NOT_RUN",
-    "native_windows_2022": "NOT_RUN_I004",
+    "native_windows_2022": "I003_I004_SCOPED_PASS; I005_BUILD_FAIL; NEXT_SOURCE_PENDING",
     "native_windows_2025": "NOT_RUN",
     "original_gui_native_build": "NOT_RUN_NEW_SOURCE",
     "original_go_config_catalog": "SOURCE_RECONSTRUCTED_SINGLE_PARAMS+GUI_FIELDS_MATCH_UNRUN_NATIVE",
@@ -67,22 +67,99 @@
     "windows_004_result": "NOT_CONFIRMED_FROM_SOURCE_CURRENT_READ; NO_PASS_INHERITED",
     "native_real_owner_event_regression": "SOURCE_AUTHORED_WINDOWS_GO_TestPLAN010OwnerSlotIsActuallyExclusive; NOT_RUN_NATIVE",
     "original_go_test_named_pass": "WINDOWS_SMOKE_REQUIRES_REAL_---PASS_LINE_FOR_NATIVE_RECOVER_AND_OWNER_LOCK, NO_ZERO_TEST_SUCCESS",
-    "manifest_canonical": "28_OPS_SOURCE_ONLY (12 old + 12 donor + 3 earlier creates/replacements + 1 owner event regression)"
+    "manifest_canonical": "28_OPS_SOURCE_ONLY (12 old + 12 donor + 3 earlier creates/replacements + 1 owner event regression)",
+    "h32_central_scope": {
+      "run_id": 39255478870,
+      "attempt": 1,
+      "job_id": 118069568529,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS",
+      "source_sha": "c36a5a11880d0c63f89657fc6926aed433aed228",
+      "artifact_id": 12187508306,
+      "zip_sha256": "d8a7b2d8c10c8bd07ba531f231ec3de75914560b9e2edce26b0c9340e61faf15"
+    },
+    "auto_dispatch": {
+      "run_id": 39255960341,
+      "attempt": 1,
+      "job_id": 118071179626,
+      "conclusion": "success",
+      "request_results": {
+        "I001": "SKIP_ALREADY_DISPATCHED",
+        "I002": "SKIP_ALREADY_DISPATCHED",
+        "I003": "DISPATCH_ACCEPTED_NOT_QUALIFIED",
+        "I004": "DISPATCH_ACCEPTED_NOT_QUALIFIED",
+        "I005": "DISPATCH_ACCEPTED_NOT_QUALIFIED"
+      },
+      "artifact_id": 12186788660,
+      "zip_sha256": "dd4696c768d6cfc878628fd754eaa9e52f4f8f99e5671836e98a8ab2279d90bc",
+      "main_head": "2656cf9221c567f4287e67e2604b032211c1c349"
+    },
+    "windows_003": {
+      "request": "M4-016-WIN-NATIVE-003",
+      "source_sha": "73d39c98696b580e0ac96bffef786d01f9f71789",
+      "run_id": 39256215954,
+      "attempt": 1,
+      "attest_job_id": 118072061732,
+      "windows_job_id": 118072171885,
+      "conclusion": "success_scoped_original_go_GUI_NO_WFP_PRODUCT",
+      "windows_artifact_id": 12187523887,
+      "windows_zip_sha256": "a23e6f0bd338a7cc70373b6eb378e48c198415a44233e604e6a2dc0a6b1b9403"
+    },
+    "windows_004": {
+      "request": "M4-016-WIN-NATIVE-004",
+      "source_sha": "fe63e5cc648544bba2bd57a1043d7182edc24676",
+      "run_id": 39256220073,
+      "attempt": 1,
+      "attest_job_id": 118072074927,
+      "windows_job_id": 118072181064,
+      "conclusion": "success_scoped_original_go_GUI_no_script_NO_WFP_PRODUCT",
+      "windows_artifact_id": 12186988840,
+      "windows_zip_sha256": "bc56c19f636c46f032d2f52fa7de1e7c57693f5b6d277244bb26655e661e74bc"
+    },
+    "windows_005": {
+      "request": "M4-016-WIN-NATIVE-005",
+      "source_sha": "eddcee59156a8ae49bb9cc00afc8621e8a4ad37d",
+      "run_id": 39256224174,
+      "attempt": 1,
+      "attest_job_id": 118072088075,
+      "windows_job_id": 118072206717,
+      "conclusion": "failure",
+      "windows_artifact_id": 12188165266,
+      "windows_zip_sha256": "1582e7c44ebaefe52b32cb4596154ac3e4f820b3b95bd981a08c684bbe9e4bd9",
+      "positive_pre_failure": [
+        "exact_28_op_assembly_pass",
+        "original_Go_Windows_executable_build_pass",
+        "native_windowsclient_no_shell_Recovery_TEST_NAMED_PASS"
+      ],
+      "failure": "GO_TEST_COMPILE_OLD_CLI_TESTS_UNDEFINED_RETIRED_POWERSHELL_HELPERS",
+      "missing": [
+        "defaultWindowsNetworkScript",
+        "runNetworkActionContext",
+        "applyOwnedNetworkWith",
+        "networkCommandContext"
+      ],
+      "new_owner_test_ran": false
+    },
+    "migrated_original_windows_cli_tests": "SOURCE_ONLY three exact original legacy *_windows_test.go replaced via M4 overlay, preserving relevant GUI Stop/event/exclusive tests while switching obsolete shell test expectations to guarded native admission; full Go CLI suite UNRUN at new SOURCE",
+    "native_WFP_Apply": "FAIL_CLOSED_NOT_ENABLED",
+    "real_network_product": "NOT_RUN"
   },
-  "request_I": "PENDING_ONE_FILE_I005",
-  "next_action": "Freeze SOURCE and exact SHA256 b8e2636... manifest, one-file I005 + cursor H32. Consume exact current G2/Windows Actions receipts. Verify native original Go named owner exclusivity test and native recovery test + WinForms under source; do not infer WFP real Connect or Rust authenticated applied.",
+  "request_I": "PENDING_ONE_FILE_I006_NEW_SOURCE",
+  "next_action": "Freeze 31-op SHA256 323458... and candidate source after evidence/devlog; submit I006 one-file then H33. Require new exact central G2 and Windows-2022 Actions for full native original Go CLI test package + WinForms selftest, preserve old I005 FAIL, never re-enable PowerShell; production WFP and Rust owner still NOT_RUN.",
   "manifest": {
     "path": "r0/go_overlay/assembly/manifest.json",
-    "sha256": "b8e2636c7a49cfae352485063850f1b3bcf11e9625867b19e26e5577e66d33b8",
-    "git_blob": "3124fcf58560baadbc2dfa4d863f7b05752c0fa5",
-    "operation_count": 28,
+    "sha256": "323458998ceb69eab1d3398f8f0a032314029e0ab3ad17ba64a8c4c6d6d06cf7",
+    "git_blob": "92ab82b4248c9bec99b2d1b4822203cbc30380be",
+    "operation_count": 31,
     "prior_015": 12,
     "pinned_donor": 12,
     "new_native_helpers": 2,
     "new_portable_file": 1,
     "source": "a7a82db31fe736ffedee330795a3234d358f1984",
     "donor": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
-    "original_created_test": "cmd/wbd-client/native_owner_slot_windows_test.go"
+    "original_created_test": "cmd/wbd-client/native_owner_slot_windows_test.go",
+    "donor_entries": 12,
+    "migrated_original_windows_cli_test_replacements": 3
   },
   "previous_request_I": "7abc527d2599aac6b7261b8d05dabedbbbbf4570",
   "previous_request_windows_runner": "NOT_CONFIRMED"
