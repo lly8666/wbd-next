@@ -293,6 +293,11 @@ struct Entry{
     fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
     #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fec2_live_peer_rx:Option<crate::v4_fec2_live_rx::Fec2LiveRx>,
+    // Developer-only separate original-Go TLS client TUN sink. Not a
+    // product receive device or public capability grant.
+    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+        target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_live_peer_tun:Option<Arc<ScopedTunSink>>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fec2_receipt_sender:Option<Fec2ProbeReceiptSender>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -443,6 +448,9 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         fec2_actual_peer_rx,
         #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_live_peer_rx,
+        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_live_peer_tun:None,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_receipt_sender:None,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -798,6 +806,32 @@ fn fec2_probe_real_kernel_raw_once(
     e.arena.drain_returns();
     Ok(out)
 }
+// The independent authenticated client test owns a separate real Linux
+// IFF_TUN+NO_PI descriptor, moved to original M4 ScopedTunSink semantics.
+// Opt-in BOTH developer and release-code features, never public product.
+#[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+    target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_attach_tun(
+    h:u64,fd:i32,name:*const u8,name_len:usize
+)->i32{
+    if fd<3||name.is_null()||name_len==0||name_len>15{return INVALID}
+    let Ok(label)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(name,name_len)
+    })else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.protected_features!=7||
+        e.fec2_live_peer_rx.is_none()||e.fec2_live_peer_tun.is_some(){
+        return BAD_STAGE
+    }
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(tun)=ScopedTunSink::from_owned_fd(dup,e.generation,label)
+        else{return INVALID};
+    e.fec2_live_peer_tun=Some(Arc::new(tun));
+    OK
+}
 // Developer ONLY: independent verified-original-Go TLS CLIENT FEC receiver
 // consumes ciphertext captured from actual M4 Linux raw socket. It is NOT
 // a product client, TUN applied ACK, nor a second server replay bitmap.
@@ -822,6 +856,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_consume(
             Some((_,epoch))=>epoch,None=>return BAD_STAGE,
         },negotiated_features:7,direction_s2c:true,
     };
+    // Require the real OS device BEFORE spending an authenticated PN.
+    let Some(tun)=e.fec2_live_peer_tun.as_ref().cloned()else{return BAD_STAGE};
+    let generation=e.generation;
     let Some(client)=e.fec2_live_peer_rx.as_mut()else{return BAD_STAGE};
     let mut ciphertext=unsafe{std::slice::from_raw_parts(wire,wire_len)}.to_vec();
     let Ok(candidates)=client.consume(exact,&mut ciphertext,loop_now())
@@ -830,6 +867,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_consume(
     unsafe{count.write(candidates.len() as u32);used.write(0)}
     if let Some(first)=candidates.into_iter().next(){
         if first.frame.len()>capacity{return FULL}
+        // The same scoped Rust kernel sink validates complete IPv4,
+        // real synchronous bytes copied, no count on failure.
+        if tun.write_authenticated_ipv4(generation,&first.frame)
+            .ok()!=Some(first.frame.len()){return INVALID}
         unsafe{
             block.write(first.block_id);
             index.write(first.index);
@@ -1705,6 +1746,9 @@ fn stop(handle:u64)->i32{
         if let Some(ref raw)=e.raw_rx {raw.begin_stop()}
         if let Some(ref raw)=e.raw_tx {raw.begin_stop()}
         if let Some(ref tun)=e.tun_sink {tun.begin_stop()}
+        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        if let Some(ref tun)=e.fec2_live_peer_tun {tun.begin_stop()}
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     {
@@ -1726,6 +1770,11 @@ fn stop(handle:u64)->i32{
             drained &= raw.stop_until(Instant::now())==StopResult::Drained;
         }
         if let Some(ref tun)=e.tun_sink{
+            drained &= tun.stop_until(Instant::now())==StopResult::Drained;
+        }
+        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        if let Some(ref tun)=e.fec2_live_peer_tun{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
         }
     }
