@@ -49,7 +49,7 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     store,err:=NewV4EpochStore(1)
     if err!=nil{t.Fatal(err)}
     b:=&v4EmbeddedNativeBridge{}
-    _,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha,true)
+    client,server,ce,se:=v4PairWithPrivateBridgeCipher(t,b,store,CipherChaCha,true)
     if ce!=nil||se!=nil||server==nil||!b.committed||
         b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2){
         t.Fatalf("Go protected feature7 TLS credentials/epoch missing: %v %v",ce,se)
@@ -132,14 +132,19 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     clientApp,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dst,Port:42125})
     if e!=nil{t.Fatal(e)}
     defer clientApp.Close()
-    if e:=b.fec2ProbeLivePeerAttachTun(clientDev.Fd(),clientName);e!=nil{
-        t.Fatal(e)
-    }
-    blocks:=map[uint64]bool{}
-    paritySeen:=0
+    if client==nil{t.Fatal("original TLS V4 client missing")}
+    releaseClient,e:=client.prepareFec2ReleaseClientTun(clientDev.Fd(),clientName)
+    if e!=nil{t.Fatalf("original Go verified release client install: %v",e)}
+    defer func(){
+        if e:=releaseClient.stop();e!=nil{
+            t.Errorf("original Rust release client Stop: %v",e)
+        }
+    }()
+    originalDelivered:=0
+    paritySilent:=0
     recoveredFirst:=0
+    recordsSeen:=0
     droppedOneOriginalSource:=false
-    delivered:=map[string]bool{}
     deadline:=time.Now().Add(4*time.Second)
     for time.Now().Before(deadline) {
         buf:=make([]byte,2048)
@@ -166,32 +171,22 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
             droppedOneOriginalSource=true
             continue
         }
-        block,index,recovered,plain,e:=b.fec2ProbeLivePeerConsume(wire)
-        if e!=nil{t.Fatalf("original Go TLS keyed independent M3 FEC peer: %v",e)}
-        if len(plain)==0{
-            // AEAD/unique-PN admitted parity for a complete block. The
-            // earlier deliberately absent source MUST be recovered by
-            // separate actual parity, not by pretending it was received.
-            paritySeen++
-            if len(blocks)==packets && paritySeen>=2&&recoveredFirst>=1{break}
-            continue
+        result,e:=releaseClient.consumeAuthenticatedKernelRecord(wire)
+        if e!=nil{
+            t.Fatalf("original TLS client release M3 AEAD FEC2 peer: %v",e)
         }
-        if recovered{recoveredFirst++;paritySeen++}
-        if block==0||index!=0||len(plain)<28+64||
-            plain[0]>>4!=4||plain[9]!=17{
-            t.Fatalf("first source not IPv4 application block=%d idx=%d len=%d",block,index,len(plain))
+        recordsSeen++
+        originalDelivered+=int(result.KernelDelivered)
+        recoveredFirst+=int(result.Recovered)
+        if result.KernelDelivered==0{paritySilent++}
+        if originalDelivered==packets && recoveredFirst>=1 && recordsSeen>=6{
+            break
         }
-        udp:=string(plain[len(plain)-64:])
-        if !expected[udp]||delivered[udp]{
-            t.Fatalf("wrong/duplicate real Go TUN UDP source block=%d",block)
-        }
-        delivered[udp]=true
-        blocks[block]=true
-        if len(blocks)==packets && paritySeen>=2&&recoveredFirst>=1{break}
     }
-    if len(blocks)<2||len(delivered)<2||
-        paritySeen<2||recoveredFirst<1||!droppedOneOriginalSource{
-        t.Fatalf("real original Go continuous kernel FEC source/repair recovery incomplete blocks=%d app=%d parity=%d recovered=%d",len(blocks),len(delivered),paritySeen,recoveredFirst)
+    if !droppedOneOriginalSource||recordsSeen<6||originalDelivered!=packets||
+        recoveredFirst<1||paritySilent<2{
+        t.Fatalf("real original Go release client FEC2 data incomplete copies=%d seen=%d parity=%d recovered=%d",
+            originalDelivered,recordsSeen,paritySilent,recoveredFirst)
     }
     // Every first-delivery candidate is sent through the original
     // scoped Rust M4 device writer into the real client TUN. Check an
@@ -218,6 +213,6 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_CLIENT_TUN_UDP_RECOVERY_PASS blocks=%d real_app_ipv4=%d parity=%d recovered_missing=%d native_ScopedTunSink=1 client_udp=4 M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
-        len(blocks),len(delivered),paritySeen,recoveredFirst)
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+        recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
 }
