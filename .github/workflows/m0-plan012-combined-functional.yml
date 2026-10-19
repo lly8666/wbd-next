@@ -105,6 +105,7 @@ jobs:
             "production_Fixed_Auto_live_kernel":"NOT_RUN",
             "original_background_FEC_RX_uses_one_moved_replay_opener":"COMPILED_OPTIONAL_DORMANT_PENDING_NOT_PRODUCT",
             "production_FEC2_default":"OFF",
+            "release_client_original_M2_actual_kernel_C2S_authenticated":"PASS_SCOPE_ONLY_WITHOUT_POLICY_APPLIED",
             "source_inputs_sha256":{p:sha(p) for p in source},
             "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
           pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
@@ -133,6 +134,7 @@ jobs:
           }
           cat fixed-kernel-result/continuous-kernel.log
           grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           p=pathlib.Path("fixed-kernel-result")
