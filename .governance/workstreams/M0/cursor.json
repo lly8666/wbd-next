@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 194,
-  "checkpoint_sha": "ab50a95cc03d44da24b907bfe5787b79fbd9f341",
+  "sequence": 195,
+  "checkpoint_sha": "427218850d131690e30923556c77d61a9573b48c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 original Go FEC2 product: exact release opt-in original TLS/Rust M1/M3/M4 background Fixed 4 source blocks, 3 parity and one deliberately lost source RS16 recovered through independent Rust ScopedTunSink into real client Linux UDP app all 4/4 PASS. Still developer-only Go feature7 handshake and client test bridge; actual product native client Connect/M2 Auto APPLIED missing, production FEC2 OFF.",
-  "why_now": "H193 checkpoint94b7638 + H193 cursor, S282–S299 true background source/parity, S300 recovered evidence source28fe89d Actions39293609828 SUCCESS. S301–S304 added dev-only TLS-keyed client native Rust TUN sink and real UDP app; first exact source f4766b Actions39299800690 job118221683489 FAIL after native/kernel compile because server/client same test namespace local source martian/rp_filter dropped client app, artifact12211036017 original retained. S305 scoped netns-only accept_local+rp_filter corrected, S306 workflow test trigger. SOURCE2c096f20daac33a3ff42a142e5bd36d78bd2fef3 Action39300491496 attempt1 job118224102414 SUCCESS artifact12212216179 sha256 6e579d65c7412de961b39a015f423128bbb3bc22a099607e732feff45f7a746a: real Go TLS dev feature7 sparse 4 UDP→TUN original Rust continuous FEC4 blocks 3 parity raw kernel, client Rust AEAD/PN/RS16 source loss1 recovered, ScopedTunSink direct client TUN kernel write and independent UDP app 4/4 bytes. Full old one-shot Go 3-suite, release record, Game2/4 native and FEC RX/FixedStream native PASS same job. SOURCE same Gov39300491307 and maintenance39300491506 SUCCESS. S307 exact evidence and S307 recovery. M0 main branch tested release product end-to-end client still NOT_RUN because raw-peer client is developer-only and Fixed was PENDING not APPLIED; production FEC2 OFF.",
-  "done_when": "Original Go verified TLS release client + server full persistent FEC Fixed/Auto source/parity/recovery across actual kernel with genuine client Connect/Stop, authenticated FEC M2 firstsend/denominator, product applied revision/MTU/noHOL and real Game2/4 independent native and product lane if combined done_when requires it; one exact-source Actions product proof then and only then enable FEC2 production. Developer-only private CLI and PENDING are not product qualification.",
-  "next_action": "Implement one original Go RELEASE client V4 Connect/Stop native Rust FEC2 receive/data device consuming existing exact S2C release Fec2LiveRx + ScopedTunSink (without m0_fec2_owner_probe), and authenticated C2S typed M2 feedback/firstsent denominator to promote actual Fixed and Auto revision APPLIED; verify two+ real lost-source blocks and Stop/MTU with genuine product-level CLIENT/CLI readback in one source-locked Linux netns Actions. Only if all applicable hard gates PASS, turn FEC2 production ON; until then OFF.",
+  "current_task": "PLAN012 Linux-only FEC2/Game release: original TLS release-option Fixed and Auto starting policy each produce real FEC kernel/TUN/UDP and genuine 2s mature original C2S M2 revision4 APPLIED; shared M4 Linux Connect→real network→Stop/owned cleanup complete exact Actions. Game 2/4 independent REAL M4 lanes and product CLI/cold capability not yet wired, FEC2/Game production OFF.",
+  "why_now": "Recovered H194 then 13 linear M0 S308–S319 main commits; original source420e02b combined39304462497 PASS released client+authentic C2S M2 but Fixed PENDING; original gov39304462492 FAIL external GitHub rate limit403. S320 atomic registry/decision assigns M4 Linux017, preserves Windows I010 PLANNED history and old M4 H41 branch. S321–S322 M4 shared Go original TLS real client/server Stop, postStop reject TUN cleanup, shared workflow_dispatch; SOURCE a31e2b Actions39307319244 PASS art12214277535. S323–S326 genuine M4 kernel source+repair and authenticated M2 positive/covered2s maturity gate Fixed rev4 native applied, source e4b69e Actions39308029694 PASS art12215340294. S327–S329 original Go Auto initial profile within same authenticated owner, separate 2 normal TLS kernel sessions Fixed/Auto, 2s M2 rev4 applied, M4 Stop for each, source6c2b9bd Actions39308785179 PASS artifact12213764301; same Gov39308785317 and maintenance39308785126 PASS. S330 receipt4272188. Windows, Auto 512 source dynamic, real Game2/4 kernel, actual Linux product CLI are NOT_RUN; FEC2/Game OFF.",
+  "done_when": "Linux original Go verified release/client native FEC Fixed+Auto genuine applied with actual TLS AEAD, kernel source+parity, RS16 client UDP first, M2 matured receipt, Stop/MTU/noHOL; true Game2/4 independent native M4 raw kernel delivery and actual product Go CLI/Config applied readback all source-locked Actions. Only then turn matching feature ON; Windows deferred to separate future task.",
+  "next_action": "Wire product Linux Go CLI/cold feature7 opt-in and original credential-bound independent Game2/4 M4 raw kernel lanes with first client TUN/UDP delivery into one exact SOURCE combined functional Actions; enable only source-qualified Linux features; do not repeat passing Fixed/Auto and M4 Stop scopes.",
   "unverified": true,
-  "last_tested_source": "2c096f20daac33a3ff42a142e5bd36d78bd2fef3",
+  "last_tested_source": "6c2b9bd03250938c933ae77364e89348509c9d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-real-client-TUN-UDP-FEC2-recovery-20261020.json"
+    "docs/evidence/M0/PLAN012-Linux-M4-stop-Fixed-Auto-applied-20261020.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN012-H194-client-TUN-delivery-recovery-20261020.md",
-    "docs/devlog/M0/PLAN012-client-tun-netns-martian-recovery-20261020.md",
-    "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md",
-    "docs/evidence/M0/PLAN012-original-Go-FEC2-multiblock-loss-recovery-20261020.json"
+    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
+    "docs/devlog/M0/PLAN012-S320-M4-Linux-reassignment-recovery-20261020.md",
+    "docs/evidence/M0/PLAN012-real-client-TUN-UDP-FEC2-recovery-20261020.json",
+    "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md"
   ],
   "open_requests": [],
-  "partial_summary": "H194 M0 scoped developer-only real original Go TLS FEC source/repair 4 blocks parity3 lost source1 RS16 recovered CLIENT native ScopedTunSink and independent Linux UDP app 4/4 PASS source2c096f Actions39300491496 artifact12212216179; Go native release client and authenticated M2 Auto product APPLIED still NOT_RUN; Fixed PENDING, FEC2 production OFF. Earlier source f4766b Actions39299800690 FAIL real same-netns martian/rp_filter client timeout retained. Gov same-source PASS; one next original Go production-client+M2 full Actions."
+  "partial_summary": "H195 Linux-only M4 Connect native FEC real lost-source/UDP→Stop twice/stale packet reject/both TUN cleanup PASS sourcea31e2b run39307319244; M0 Fixed mature authentic C2S M2 actual rev4 APPLIED PASS sourcee4b run39308029694; Fixed AND Auto initial profile separate full TLS real kernel/mature M2 APPLIED PASS source6c2b run39308785179, same-source Gov+maintenance PASS; evidence S330. M4 new task Linux017 published, worker branch cursor still old H41 Windows016 and I010 retained PLANNED not re-dispatched. Game REAL 2/4 M4 routes, Auto dynamic 512-sample response and production Go CLI product flag NOT_RUN, FEC2/Game production OFF. One next main release Go CLI + Game independent real kernel lanes and one combined test."
 }
