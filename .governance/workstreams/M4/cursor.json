@@ -4,27 +4,25 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 41,
-  "checkpoint_sha": "0b8c48c19c94214be0394b7749da7789f49a6a49",
-  "progress": "blocked",
-  "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "M4-016 ongoing: S40 native original Windows Go 20 named WAL/mutex/WFP safe functional batch authored, I010 immutable current G2 H40 PASS, but main-owned dispatch attempts 1 and 2 denied before any Windows job. Product live native Connect/Stop remains gated.",
-  "why_now": "Central G2 run39302484315 ROLE_SCOPE_PASS for H40 217 commits. Dispatcher run39302887219 attempt1 FAIL main changed after authorization; attempt2 FAIL main moved before planning. Frozen workflow enumeration confirms zero I010 Windows runs. Task cannot be marked native PASS or ready_for_integration.",
-  "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "M0/authorized Actions operator: confirm no existing I010 Windows run, then use frozen manual workflow_dispatch once for I010 exact I/S/G2/control after main stabilizes; consume named Windows results and unblock an isolated native owner/Stop network test environment.",
+  "sequence": 42,
+  "checkpoint_sha": "f5ffe5dfeb3ff613ed0fc6b19cac736e0f8a2300",
+  "progress": "verifying",
+  "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
+  "current_task": "PLAN012 Linux M4 native real network Stop/owner: S42 actual owned FD/borrow conformance plus original Go TLS-FEC client/UDP cleanup test source; worker native and integrated original-Go Actions to verify.",
+  "why_now": "M0 main registry switched current task from Windows016 to Linux017; H41 checkpoint ancestry clean, Windows I010 historical PLANNED/deferred preserved. M0 real combined Linux netns source already has fixed/auto client TUN UDP Stop positive path; M4 owns new fd/borrow conformance and dedicated original Go post-Stop independent route check.",
+  "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
+  "next_action": "Read S42 worker-native Actions build/consume result; fix actual failures in M4-owned files, then provide M0 exact S42 Go test file to include in existing combined original-Go isolated netns workflow, retaining product FEC2 OFF.",
   "unverified": true,
   "last_tested_source": "f1e790fcd00d9e3425a1f8e771e099f84ac4b891",
   "evidence_refs": [
-    "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
-    "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
+    "docs/evidence/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.json",
+    "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-010.json"
-  ],
+  "open_requests": [],
   "context_refs": [
-    "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
-    "docs/decisions/M0-windows-native-migration-2026-10-19.md",
-    "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
+    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
+    "docs/devlog/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.md",
+    "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   ],
-  "partial_summary": "H41 S0b8c48c preserves I010 ACTIONS CONTROL BLOCKED (not native FAIL): SOURCE3bbec46b, I1d580665, H3697eb14, G2 PASS39302484315, dispatcher39302887219 attempts1+2 FAIL main-moving, no Windows run/artifacts, 20 named new cases NOT_RUN. Last actual Windows-tested SOURCE f1e790fc I009 scoped PASS. True owned WFP/route/DNS/IPv6 Connect/Stop/Recover, Windows2025, physical, M0 Rust Stop NOT_RUN; FEC2 OFF."
+  "partial_summary": "M4 H42 checkpoints S42 f5ffe5d. New PLAN012 Linux native Stop/FD ownership and original Go isolated FEC Connect→UDP→Stop cleanup test code authored, UNVERIFIED at S42. M0 existing combined Linux netns runner has scoped historic success but not this source. Old Windows016 I010 G2 PASS but no Windows job; dispatch attempt1/2 FAIL deferred. Production FEC2 OFF; Windows/physical NOT_RUN."
 }
