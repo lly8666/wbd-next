@@ -491,8 +491,10 @@ fn game_r5_read_u64(path:&str,key:&str)->Option<u64>{
         (parts.next()?==key).then(||parts.next()?.parse().ok()).flatten()
     })
 }
+// libtest runs the test on a child thread, not the process leader.
+// /proc/thread-self/schedstat measures the actual executing test thread.
 fn game_r5_sched_cpu_ns()->Option<u64>{
-    std::fs::read_to_string("/proc/self/schedstat").ok()?
+    std::fs::read_to_string("/proc/thread-self/schedstat").ok()?
         .split_whitespace().next()?.parse().ok()
 }
 fn game_r5_proc_status_kib(key:&str)->Option<u64>{
@@ -535,6 +537,9 @@ fn game_r5_lane25m_case(nlanes:usize,payload:usize){
     let mut tardy_ticks=0u64;
     let mut max_lateness_us=0u64;
     let cpu_before=game_r5_sched_cpu_ns();
+    let cpu_max=std::fs::read_to_string("/sys/fs/cgroup/cpu.max").ok()
+        .map(|value|value.split_whitespace().collect::<Vec<_>>().join("_"))
+        .unwrap_or_else(||"NOT_RUN".to_owned());
     let rss_before=game_r5_proc_status_kib("VmRSS:");
     let hwm_before=game_r5_proc_status_kib("VmHWM:");
     let cgroup_mem_before=game_r5_read_u64("/sys/fs/cgroup/memory.stat","anon");
@@ -631,7 +636,7 @@ fn game_r5_lane25m_case(nlanes:usize,payload:usize){
     let max_slot_bytes=lane_bytes[..nlanes].iter().copied().max().unwrap_or(0);
     // Printed by worker-native with --nocapture. Inspect this line; cargo
     // PASS only asserts correctness, not that the host achieved rate/capacity.
-    println!("M1_GAME_LANE25_PROFILE profile=debug mode=Game lanes={nlanes} payload_bytes={payload} target_per_lane_mbps=25 target_aggregate_mbps={} wall_ns={wall_ns} offered_packets={packets} unique_rx={first} duplicate_rx={duplicate} copies={} actual_aggregate_mbps={measured_mbps:.5} per_lane_mbps={:.5} p50_processing_ns={p50_ns} p99_processing_ns={p99_ns} cpu_ns={} cpu_percent={} cpu_ns_per_logical={} tx_bytes={good_bytes} lane_payload_bytes={max_slot_bytes} total_copied_bytes={emitted_bytes} copied_byte_checksum={byte_sum} lane_copy_drop={} tardy_ticks={tardy_ticks} max_tick_lateness_us={max_lateness_us} rss_before_kib={} rss_after_kib={} hwm_before_kib={} hwm_after_kib={} cgroup_anon_before={} cgroup_anon_after={} nr_throttled_delta={} throttled_us_delta={} host_capacity_25m_met={} network=NOT_RUN tls=NOT_RUN fec=NOT_RUN release=NOT_RUN",
+    println!("M1_GAME_LANE25_PROFILE profile=debug mode=Game lanes={nlanes} payload_bytes={payload} target_per_lane_mbps=25 target_aggregate_mbps={} wall_ns={wall_ns} offered_packets={packets} unique_rx={first} duplicate_rx={duplicate} copies={} actual_aggregate_mbps={measured_mbps:.5} per_lane_mbps={:.5} p50_processing_ns={p50_ns} p99_processing_ns={p99_ns} cpu_ns={} cpu_percent={} cpu_ns_per_logical={} cpu_accounting=thread-self-schedstat tx_bytes={good_bytes} lane_payload_bytes={max_slot_bytes} total_copied_bytes={emitted_bytes} copied_byte_checksum={byte_sum} lane_copy_drop={} tardy_ticks={tardy_ticks} max_tick_lateness_us={max_lateness_us} rss_before_kib={} rss_after_kib={} hwm_before_kib={} hwm_after_kib={} cgroup_anon_before={} cgroup_anon_after={} nr_throttled_delta={} throttled_us_delta={} host_capacity_25m_met={} cgroup_cpu_max={} network=NOT_RUN tls=NOT_RUN fec=NOT_RUN release=NOT_RUN",
         nlanes*25,
         packets*nlanes as u64,
         measured_mbps/nlanes as f64,
@@ -649,7 +654,8 @@ fn game_r5_lane25m_case(nlanes:usize,payload:usize){
             .map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
         cgroup_throttled_us_after.and_then(|v|cgroup_throttled_us_before.and_then(|w|v.checked_sub(w)))
             .map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
-        measured_mbps>=nlanes as f64*25.0*0.95);
+        measured_mbps>=nlanes as f64*25.0*0.95,
+        cpu_max);
 }
 #[test]
 fn r1_game_r5_25mbps_per_lane_one_and_four_256_and_1200_byte_profile(){
