@@ -100,7 +100,7 @@ def scope_receipt(zipped, role, head, run):
             receipt.get("run_id") == str(run["id"]) and
             receipt.get("run_attempt") == str(run["run_attempt"]) and
             bool(entry.SHA.fullmatch(receipt.get("control_sha", ""))) and
-            receipt.get("final_control_sha") == receipt.get("control_sha") and
+            bool(entry.SHA.fullmatch(receipt.get("final_control_sha", ""))) and
             receipt.get("authority", {}).get("id") == role and
             receipt["authority"].get("state") == "active" and
             receipt["authority"].get("assignment_epoch") == run["epoch"] and
@@ -179,9 +179,9 @@ def prior_dispatch(api, role, rid, stage):
         "event=workflow_dispatch&branch=" + urllib.parse.quote(CONTROL_REF, safe=""),
     )
     for run in runs:
-        if run.get("display_title") == title and
+        if (run.get("display_title") == title and
                 run.get("event") == "workflow_dispatch" and
-                run.get("head_sha") == CONTROL_SHA:
+                run.get("head_sha") == CONTROL_SHA):
             return run["id"]
     return None
 
@@ -217,15 +217,18 @@ def plan(api, main_sha):
             path = f"{base}/{file['name']}"
             data = json.loads(api.blob(path, head))
             rid = file["name"][:-5]
-            if data.get("status") != "PLANNED" or
+            if (data.get("status") != "PLANNED" or
                     data.get("dispatch_ref") != CONTROL_REF or
                     data.get("control_sha") != CONTROL_SHA or
-                    data.get("role_id") != role:
+                    data.get("role_id") != role):
                 continue  # Historical/other-control requests are not candidates.
             stage = ("prepare" if data.get("kind") == "functional" else
                      "paired" if data.get("kind") == "performance" else None)
             require(stage is not None, "candidate requests only support two stages")
-            require(attest is not None, f"{role} has no exact current G2 PASS for {head}")
+            if attest is None:
+                decisions.append({"role":role, "request_id":rid, "stage":stage,
+                    "worker_head":head, "result":"SKIP_SCOPE_NOT_READY"})
+                continue
             request_ref = request_identity(api, role, head, path)
             raw_config = api.blob(entry.SUITES[role][1], data["harness_sha"])
             data["_request_path"] = path
@@ -241,6 +244,7 @@ def plan(api, main_sha):
             existing = prior_dispatch(api, role, rid, stage)
             decision = {"role":role, "request_id":rid, "stage":stage,
                         "request_ref":request_ref, "worker_head":head,
+                        "worker_branch":branch,
                         "control_ref":CONTROL_REF, "control_sha":CONTROL_SHA,
                         "scope_run_id":attest["scope_run_id"],
                         "scope_artifact_id":attest["scope_artifact_id"],
@@ -259,6 +263,12 @@ def execute(api, decisions):
         # Re-read duplicates immediately before write. Dispatch is idempotent
         # by unique role/request/stage/control tuple. A failed execution
         # is never silently retried; worker must create a new request ID.
+        # Re-validate immutable branch SOURCE and frozen control immediately
+        # before invoking the privileged workflow_dispatch.
+        require(api.get("branches/" + entry_["worker_branch"])["commit"]["sha"]
+                == entry_["worker_head"], "worker branch moved during dispatch")
+        require(api.get("branches/" + CONTROL_REF)["commit"]["sha"] == CONTROL_SHA,
+                "frozen v5 ref moved during dispatch")
         prev = prior_dispatch(api, entry_["role"], entry_["request_id"],
                               entry_["stage"])
         if prev is not None:
