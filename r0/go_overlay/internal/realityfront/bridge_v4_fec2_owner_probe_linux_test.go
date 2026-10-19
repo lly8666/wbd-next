@@ -791,10 +791,16 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             // and PN1's late repair must be CENSORED rather than magically
             // treated as unambiguous loss-free delivery.
             mature,e:=b.fec2ProbeMatureQuality(server.Epoch,8*time.Second)
+            // Two actual sendmmsg repairs taint BOTH original PNs.
+            // Single/mixed-prefix copied exactly one old FrozenRecord.
+            expectedUnambiguous,expectedCensored:=uint64(1),uint64(1)
+            if mode=="kernel-multimsg"{expectedUnambiguous,expectedCensored=0,2}
             if e!=nil||mature.Fast.FirstSent!=2||
                 mature.Slow.FirstSent!=2||
-                mature.Fast.Observed!=1||mature.Slow.Observed!=1||
-                mature.Fast.Censored!=1||mature.Slow.Censored!=1||
+                mature.Fast.Observed!=expectedUnambiguous||
+                mature.Slow.Observed!=expectedUnambiguous||
+                mature.Fast.Censored!=expectedCensored||
+                mature.Slow.Censored!=expectedCensored||
                 mature.Fast.Unknown!=0||mature.Slow.Unknown!=0||
                 mature.Fast.Missing!=0||mature.Slow.Missing!=0||
                 mature.Validity!=FecV2Censored{
@@ -806,7 +812,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             }(),9*time.Second);e==nil{
                 t.Fatal("foreign authenticated epoch read M2 mature denominator")
             }
-            t.Logf("M0_REAL_GO_M4_FIRSTSENT_M2_AUTH_REVERSE_2S_8S_CENSORED_PASS suite=%d firstsent=2 observed=1 repaired_ambiguous=1 untrusted=deny",cipher)
+            t.Logf("M0_REAL_GO_M4_FIRSTSENT_M2_AUTH_REVERSE_2S_8S_CENSORED_PASS suite=%d firstsent=2 observed=%d repaired_ambiguous=%d untrusted=deny",cipher,expectedUnambiguous,expectedCensored)
             invalidReceipt:=append([]byte(nil),positiveReceipt...)
             invalidReceipt[20]=0x80 // PN7 outside pinned data scope 0..1
             badScopeWire,badScopePN,e:=reverseSealer.SealHealth(invalidReceipt)
