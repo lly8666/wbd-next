@@ -15,14 +15,32 @@ if ($LASTEXITCODE -ne 0) { throw 'native WinForms compiler failed' }
 Copy-Item (Join-Path $out 'go-build/wbd-client.exe') (Join-Path $portable 'wbd-client.exe')
 Copy-Item (Join-Path $legacy 'scripts/windows_client_network.ps1') (Join-Path $portable 'windows_client_network.ps1')
 if (-not (Test-Path (Join-Path $portable 'PARAMETERS.json')) -or -not (Test-Path (Join-Path $portable 'gui-fields.json')) -or -not (Test-Path (Join-Path $portable 'WBD.exe'))) {throw 'incomplete original portable GUI'}
-# Original native GUI self-test calls compiled original Go --check-config and
-# uses FakeSession only for driver/Stop simulation; no physical permission claim.
-& (Join-Path $portable 'WBD.exe') --self-test
-if ($LASTEXITCODE -ne 0) { throw 'native GUI self-test failed' }
+# WBD.exe is a Windows GUI subsystem executable. Invoking it with &
+# can return control before its self-test finishes. Wait for the REAL child
+# process, not a time-based guess, and keep both failure and success receipts.
+# FakeSession only simulates driver/Stop; native Go --check-config is real.
 $receipt=Join-Path $portable 'gui-test-result.json'
-if (-not (Test-Path $receipt)) {throw 'native GUI self-test produced no receipt'}
-$report=Get-Content $receipt -Raw | ConvertFrom-Json
-if ($report.result -ne 'PASS') {throw 'GUI did not report PASS'}
+if (Test-Path -LiteralPath $receipt) { throw 'stale GUI self-test receipt in fresh portable output' }
+$guiPath=Join-Path $portable 'WBD.exe'
+$guiProcess=Start-Process -FilePath $guiPath -ArgumentList @('--self-test') -WorkingDirectory $portable -PassThru -ErrorAction Stop
+try {
+    if (-not $guiProcess.WaitForExit(600000)) {
+        try { $guiProcess.Kill() } catch { }
+        throw 'native GUI self-test exceeded bounded 600s process timeout'
+    }
+    $guiProcess.Refresh()
+    $guiExit=$guiProcess.ExitCode
+} finally {
+    $guiProcess.Dispose()
+}
+if (-not (Test-Path -LiteralPath $receipt)) {
+    throw ("native GUI self-test produced no receipt after process exit code " + $guiExit)
+}
+$report=Get-Content -LiteralPath $receipt -Raw | ConvertFrom-Json
+if ($report.result -ne 'PASS' -or $guiExit -ne 0) {
+    $reason=if ($report.error) { [string]$report.error } else { 'no error detail in original GUI receipt' }
+    throw ("native GUI self-test failed: exit=" + $guiExit + " result=" + $report.result + " reason=" + $reason)
+}
 $sourceInfo=@{
     result='PASS_SCOPED_WINFORMS_AND_ORIGINAL_GO_CONFIG'
     legacy_source=(git -C $legacy rev-parse HEAD).Trim()
