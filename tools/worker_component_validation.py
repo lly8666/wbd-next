@@ -126,6 +126,8 @@ def validate_context(request,role,stage,control_ref,control_sha,registry,
          request["samples"]==(1 if stage=="prepare" else (2 if role=="M1" else 4)),
          "wrong sample/job count")
     if stage=="paired":
+        need(all(z["build_manifest_sha256"]==request["prepare_manifest_sha256"] for z in request["legs"]),
+             "request mixes different prepare artifacts")
         need(request["mode"]==("paired_ab" if role=="M1" else "paired_abba"),
              "role requires declared AB or ABBA")
         for label in ("A","B"):

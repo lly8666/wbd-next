@@ -257,7 +257,8 @@ class EvidenceDrills(unittest.TestCase):
                 if tamper=="overlap":e["legs"][2]["start_monotonic_ns"]=100
                 if tamper=="job":e["legs"][3]["job_id"]=999
                 if tamper=="missing":e["legs"].pop()
-                if tamper=="label":v["legs"][1]["label"]="A"
+                if tamper=="label":
+                    v["legs"][1]["label"]=("B" if v["legs"][1]["label"]=="A" else "A")
                 with self.subTest(order=order,tamper=tamper),self.assertRaises(g.ContractError):
                     g.verify_receipt(v,e,run,jobs)
         # Four samples cannot pass as 2-leg paired_ab nor undocumented mode.

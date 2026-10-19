@@ -1,5 +1,5 @@
 name: Worker component validation prepare and paired
-run-name: "${{ inputs.role_id || 'M0' }|${{ inputs.request_id || 'contract-smoke' }|${{ inputs.stage || 'smoke' }|${{ github.sha }"
+run-name: "${{ inputs.role_id || 'M0' }}|${{ inputs.request_id || 'contract-smoke' }}|${{ inputs.stage || 'smoke' }}|${{ github.sha }}"
 on:
   workflow_dispatch:
     inputs:
@@ -31,7 +31,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: "worker-component-${{ github.event_name }-${{ inputs.role_id || 'M0' }-${{ inputs.request_id || github.sha }-${{ inputs.stage || 'smoke' }"
+  group: "worker-component-${{ github.event_name }}-${{ inputs.role_id || 'M0' }}-${{ inputs.request_id || github.sha }}-${{ inputs.stage || 'smoke' }}"
   cancel-in-progress: false
 jobs:
   contract-smoke:
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: worker-validation-smoke-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-validation-smoke-${{ github.run_id }}-${{ github.run_attempt }}
           path: tests/test_worker_component_validation.py
           retention-days: 30
   authorize:
@@ -60,19 +60,19 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     env:
-      GH_TOKEN: ${{ github.token }
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - name: Bind actual worker role task epoch config path I and pinned source
         shell: bash
         env:
-          ROLE_ID: ${{ inputs.role_id }
-          REQUEST_ID: ${{ inputs.request_id }
-          REQUEST_REF: ${{ inputs.request_ref }
-          CONTROL_REF: ${{ github.ref_name }
-          CONTROL_SHA: ${{ github.sha }
-          STAGE: ${{ inputs.stage }
+          ROLE_ID: ${{ inputs.role_id }}
+          REQUEST_ID: ${{ inputs.request_id }}
+          REQUEST_REF: ${{ inputs.request_ref }}
+          CONTROL_REF: ${{ github.ref_name }}
+          CONTROL_SHA: ${{ github.sha }}
+          STAGE: ${{ inputs.stage }}
         run: |
           set -euo pipefail
           python3 tools/worker_component_validation.py preflight \
@@ -83,7 +83,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-intent-${{ github.run_id }}-${{ github.run_attempt }}
           path: validation/request.json
           retention-days: 30
           if-no-files-found: warn
@@ -97,7 +97,7 @@ jobs:
         with: {persist-credentials: false}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-intent-${{ github.run_id }}-${{ github.run_attempt }}
           path: validation
       - name: Pinned Rust native Linux build target, never install during measurement
         shell: bash
@@ -131,7 +131,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: worker-prepare-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-prepare-${{ github.run_id }}-${{ github.run_attempt }}
           path: prepared/
           retention-days: 30
           if-no-files-found: warn
@@ -141,13 +141,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 38
     env:
-      GH_TOKEN: ${{ github.token }
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: worker-intent-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-intent-${{ github.run_id }}-${{ github.run_attempt }}
           path: validation
       - name: Exact prior run/attempt/artifact/hash consumption - no install or compilation
         shell: bash
@@ -161,7 +161,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: worker-paired-${{ github.run_id }-${{ github.run_attempt }
+          name: worker-paired-${{ github.run_id }}-${{ github.run_attempt }}
           path: paired-result/
           retention-days: 30
           if-no-files-found: warn
