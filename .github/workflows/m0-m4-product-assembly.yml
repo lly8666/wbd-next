@@ -56,6 +56,10 @@ jobs:
 
   original-product:
     needs: attest
+    # M4 SOURCE and Linux runner inputs are unchanged from the first PASS.
+    # Main-only Windows byte-normalization repair must not repeat Linux PASS;
+    # fresh worker G2 events automatically qualify all three targets.
+    if: github.event_name == 'workflow_run' || github.event_name == 'push'
     strategy:
       fail-fast: false
       matrix:
@@ -83,6 +87,19 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Materialize exact original Git blobs on ephemeral Windows checkouts
+        if: matrix.target == 'windows-amd64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($folder in @('legacy','worker-overlay')) {
+            git -C $folder config core.autocrlf false
+            git -C $folder config core.eol lf
+            git -C $folder -c core.autocrlf=false -c core.eol=lf checkout-index --all --force
+            if ($LASTEXITCODE -ne 0) { throw "exact Git blob checkout failed: $folder" }
+          }
+          if ((git -C legacy rev-parse HEAD).Trim() -ne $env:LEGACY_SOURCE) {throw 'legacy SOURCE moved'}
+          if ((git -C worker-overlay rev-parse HEAD).Trim() -ne $env:M4_SOURCE) {throw 'M4 SOURCE moved'}
       - name: Fail closed on unpinned SOURCE and wrong Go toolchain
         shell: bash
         run: |
