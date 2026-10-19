@@ -59,11 +59,25 @@ try {
     # The real original Windows CLI owns a named OS event shared by manual
     # native Recover and GUI Connect. Verify exclusivity, release/reclaim,
     # and a genuinely executed named Go test on the native Windows host.
+    # Execute the FULL, exact-pinned original Windows Go CLI test package.
+    # Three historical script tests are migrated to native-only owner/deny
+    # semantics in the 31-op manifest. Never restore a shell runner to make
+    # obsolete tests compile. None of these cases mutates machine routes.
     $ownerTestLog=Join-Path $out 'native-owner-slot-test.log'
-    & go test -count=1 -v -run '^TestPLAN010OwnerSlotIsActuallyExclusive$' ./cmd/wbd-client 2>&1 | Tee-Object -FilePath $ownerTestLog
-    if ($LASTEXITCODE -ne 0) { throw 'original Windows CLI exclusive owner test failed' }
-    if (-not (Select-String -LiteralPath $ownerTestLog -SimpleMatch '--- PASS: TestPLAN010OwnerSlotIsActuallyExclusive' -Quiet)) {
-        throw 'original Windows CLI owner test ran ZERO cases; explicit named PASS missing'
+    & go test -count=1 -v ./cmd/wbd-client 2>&1 | Tee-Object -FilePath $ownerTestLog
+    if ($LASTEXITCODE -ne 0) { throw 'original Windows CLI native full test suite failed' }
+    foreach ($named in @(
+        'TestPLAN010OwnerSlotIsActuallyExclusive',
+        'TestGUIClientSlotFencesUntilCleanupEnds',
+        'TestN4WindowsEntryUsesSingleProtectedSenderAndNativeDirectIngress',
+        'TestN4WindowsNativeGuardRefusesUnqualifiedCapture',
+        'TestN4NativeApplyNeverFallsBackToPowerShell',
+        'TestN4NativeCanceledApplyMustNotReportSuccess',
+        'TestN4NativeRuntimeHasNoOldScriptCommandLauncher'
+    )) {
+        if (-not (Select-String -LiteralPath $ownerTestLog -SimpleMatch ("--- PASS: " + $named) -Quiet)) {
+            throw ("original Windows CLI native test was not executed: " + $named)
+        }
     }
 } finally { Pop-Location }
 $portable=Join-Path $out 'portable'
