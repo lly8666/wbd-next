@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M0 only: exact audited M1/M3 request -> frozen v6 workflow_dispatch.
+"""M0 only: exact audited M1/M3 request -> frozen v7 workflow_dispatch.
 
 Never executes worker code, checks out workers, edits cursors, mints tokens,
 or marks a component PASS. Runs only from a reviewed main checkout.
@@ -25,8 +25,8 @@ ROLES = ("M1", "M3")
 # workflow_run.name is a mutable run-name, not the workflow's static name.
 SCOPE_WORKFLOW_ID = 385257385
 SCOPE_PATH = ".github/workflows/scope-audit.yml"
-CONTROL_REF = "qualification/worker-ci-v6"
-CONTROL_SHA = "fab2e1d7cbe12109ef9215c6caf358946ead522b"
+CONTROL_REF = "qualification/worker-ci-v7"
+CONTROL_SHA = "c0c192cf293a294b5962f3f064d913149eb00639"
 TARGET_WORKFLOW = ".github/workflows/worker-component-validation.yml"
 SCOPE_WORKFLOW = "scope-audit.yml"
 MAX_PAGES = 25
@@ -194,7 +194,7 @@ def plan(api, main_sha):
     require(api.get("branches/main")["commit"]["sha"] == main_sha,
             "main moved before dispatch planning")
     require(api.get("branches/" + CONTROL_REF)["commit"]["sha"] == CONTROL_SHA,
-            "frozen v6 ref changed: do not dispatch")
+            "frozen v7 ref changed: do not dispatch")
     registry = json.loads(api.blob(".governance/registry.json", main_sha))
     g.validate_registry(registry)
     decisions = []
@@ -235,7 +235,7 @@ def plan(api, main_sha):
             request_ref = request_identity(api, role, head, path)
             raw_config = api.blob(entry.SUITES[role][1], data["harness_sha"])
             data["_request_path"] = path
-            # Identical validation as the v6 authorize job, before using
+            # Identical validation as the v7 authorize job, before using
             # an actions:write token. This is an extra gate, not a bypass.
             entry.validate_context(data, role, stage, CONTROL_REF, CONTROL_SHA,
                                    registry, head, request_ref, raw_config)
@@ -271,7 +271,7 @@ def execute(api, decisions):
         require(api.get("branches/" + entry_["worker_branch"])["commit"]["sha"]
                 == entry_["worker_head"], "worker branch moved during dispatch")
         require(api.get("branches/" + CONTROL_REF)["commit"]["sha"] == CONTROL_SHA,
-                "frozen v6 ref moved during dispatch")
+                "frozen v7 ref moved during dispatch")
         prev = prior_dispatch(api, entry_["role"], entry_["request_id"],
                               entry_["stage"])
         if prev is not None:

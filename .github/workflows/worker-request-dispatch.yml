@@ -1,4 +1,4 @@
-name: Audited worker v6 auto dispatch
+name: Audited worker v7 auto dispatch
 run-name: "audited-worker-dispatch|${{ github.event_name }}|${{ github.sha }}"
 on:
   push:
@@ -48,7 +48,7 @@ jobs:
           set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_worker_request_dispatch.py' -v
           python3 -m py_compile tools/worker_request_dispatch.py
-      - name: Main-only read exact central G2 artifact, verify immutable request I, dedupe and dispatch frozen v6
+      - name: Main-only read exact central G2 artifact, verify immutable request I, dedupe and dispatch frozen v7
         shell: bash
         run: |
           set -euo pipefail
