@@ -4,33 +4,33 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 45,
-  "checkpoint_sha": "1efd5e153b5aea697ea251b56a7ea3609d5df717",
+  "sequence": 46,
+  "checkpoint_sha": "ea5b93c962b2d866d32243c12b16ddbeddc56e91",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 FEC2 CODEb4d codec-only cfg(test) F2 oracle test registration, harness CODE42b3 source rebind, pinned v7 official native prepare004 requested; no runtime math change. Previous prepare003 0 cases FAIL preserved.",
-  "why_now": "M3 v7 prepare003 39216588118 authorized + ISA-L release built, but full --lib fec_v2_tests filter matched 0 tests / 156 filtered, so prepare FAIL before native correctness oracle. The v7 control overlays the test file correctly, but actual lib.rs/fec_v2.rs had not declared its test module. Within owned fec_v2.rs CODEb4d adds cfg(test) path module only; CODE42b3 changes ABBA harness candidate SOURCE constant. S1efd captures historical failure+fresh prepare004 pinned to CODEb4d + harness42b3, v7 immutable control c0c; no native result yet.",
+  "current_task": "PLAN008-018 real official ISA-L CODEb4d F2 13/13 functional PASS and source/artifact rehashed. Prepared one exact same-VM A-B-B-A k16/r16/1200B/e4 paired performance request; still NOT_RUN pending exact H46 G2 and main auto-dispatch.",
+  "why_now": "Main M0 verified v7 successful PREPARE-004 39218789735. M3 independently downloaded artifact12170931928 (ZIP digest 55987f...), parsed byte-exact manifest cc403870..., validated all 4 member hashes, native 13/0 includes dirty-tail, binary sha256 ee8bcc..., own source CODEb4d and harness42b3; moved prior CODE437-only evidence out of active evidence_refs to context because new last_tested_source is b4d. Source-locked independent performance request staged at S ea5b93. Known R0 wire 39217619084 FAIL is tool exact-total-13 assertion after 23/23 Rust tests, not FEC2 math.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Observe H45 worker Governance exact HEAD, central G2 and main auto-dispatch for new M3-018-NATIVE-E4-PREPARE-004. Require named real ISA-L r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact PASS + all module oracles and valid prepare manifest/binary. Only after exact artifact verified, create 4-leg paired_abba request; FAIL/INCONCLUSIVE stay visible. FEC2 product OFF.",
+  "next_action": "Watch H46 worker Governance and central exact-head G2 then M0 v7 auto-dispatch M3-018-NATIVE-E4-PAIRED-001. Verify pinned prepare-manifest, same A B B A test binary & checksum per 2M e4 leg, CPU ticks/alloc; preserve v7 INCONCLUSIVE because lacks per-leg absolute monotonic windows. If shared ABI/test_count issue, M0 owns. Product FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "last_tested_source": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
   "evidence_refs": [
-    "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
-    "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json",
-    "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json"
+    "docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-004.json"
+    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PAIRED-001.json"
   ],
   "context_refs": [
+    "docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json",
+    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PAIRED-001.json",
+    "docs/devlog/M3/R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018.md",
+    "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
+    "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json",
     "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json",
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
-    "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
-    "docs/devlog/M3/R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018.md",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-valid-row-scalar-partial.json",
-    "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json",
-    "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json"
+    "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json"
   ],
-  "partial_summary": "H45 created test-only codec F2 oracle module registration CODEb4d and self-rebound ABBA harness CODE42b3, v7 pinned prepare004 request I=1efd. Prior v7 prepare003 actual Rust compiled but 0 cases /156 filtered; its exact FAIL artifact SHA256 independently verified and preserved. CODE437 default scalar 123/0/1 PASS. New native source CODEb4d is NOT_RUN until v7 prepare004 completes; old-new sameVM ABBA NOT_RUN, no product enablement."
+  "partial_summary": "H46 partial: official Linux x64 real ISA-L CODEb4d native F2 prepare004 SUCCESS 13/13 incl cache/dirty-tail, artifacts ZIP+4 members independently rehashed; prior v5/v6/v7 0-case failures retained. New source-locked k16/r16/1200B/e4 4-leg native old8cc/newb4d/newb4d/old8cc ABBA paired request S ea5b93 PAIRED-001 pending dispatch. Existing v7 M3 paired runtime likely INCONCLUSIVE due missing absolute per-leg timing, cannot claim qualified CPU ratio. R0 shared 13-count anchor workflow FAIL despite 23 passed, M0-owned correction. FEC2 OFF, noncodec product gates NOT_RUN."
 }
