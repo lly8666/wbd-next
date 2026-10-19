@@ -115,6 +115,20 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
             t.Fatalf("real client TUN setup %v %v %s",args,e,output)
         }
     }
+    // This deliberate SAME-netns test has server source IP 10.241.24.1
+    // assigned locally on its original TUN. Linux would reject an inbound
+    // CLIENT-TUN packet with that *other local* source as a martian before
+    // UDP demux. Production client is a different netns/host and never
+    // needs accept_local. Only relax isolated test namespace filtering.
+    for file,value:=range map[string]string{
+        "/proc/sys/net/ipv4/conf/all/rp_filter":"0\n",
+        "/proc/sys/net/ipv4/conf/"+clientName+"/rp_filter":"0\n",
+        "/proc/sys/net/ipv4/conf/"+clientName+"/accept_local":"1\n",
+    }{
+        if e:=os.WriteFile(file,[]byte(value),0600);e!=nil{
+            t.Fatalf("isolated client test netns martian/rp_filter setup %s: %v",file,e)
+        }
+    }
     clientApp,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dst,Port:42125})
     if e!=nil{t.Fatal(e)}
     defer clientApp.Close()
