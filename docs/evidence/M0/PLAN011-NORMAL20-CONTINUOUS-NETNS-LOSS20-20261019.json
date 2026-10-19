@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_REAL_20MBPS_NETEM_LOSS_OBSERVATION_NOT_RECOVERY",
+  "source_sha": "b085d1122fce09c3129b953bcaa0d66efe509e3d",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 39256799761,
+  "attempt": 1,
+  "measure_job_id": 118074010449,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39256799761",
+  "intent": ".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-20-20261019-ready.json",
+  "artifact": {
+    "id": 12187923802,
+    "zip_sha256": "3cba62ca810b79cd5ac59fb6b97687be9de364479657dc6aaf575e7892aa69ae",
+    "summary_sha256": "6fc03db53ea373360f65b3dc83d5c278c384a73e0e3dee99aba824386a103412",
+    "raw_sha256": "b83e9080db55337280a8c175fcce10180698cfcfd360948c8935db07b38bab9d",
+    "log_sha256": "c5e180a6db1a6c81f0c5e6f183d81c25dc2321ae85f3a223c74c5e78c0c6fb30"
+  },
+  "measurement": {
+    "loss_config_pct": 20,
+    "mode": "Normal_OFF",
+    "target_inner_ipv4_mbps_per_direction": 20,
+    "warmup_s": 10,
+    "measure_s": 60,
+    "kernel_qdisc_dropped_including_control": 177293,
+    "c2s": {
+      "offered_mbps": 20.000199866666666,
+      "delivered_mbps": 15.984353066666666,
+      "offered_packets": 210603,
+      "delivered_packets": 168343,
+      "missing": 42260,
+      "invalid": 0,
+      "duplicates": 0,
+      "send_errors": 0
+    },
+    "s2c": {
+      "offered_mbps": 20.000199866666666,
+      "delivered_mbps": 15.973596666666666,
+      "offered_packets": 210603,
+      "delivered_packets": 168247,
+      "missing": 42356,
+      "invalid": 0,
+      "duplicates": 0,
+      "send_errors": 0
+    },
+    "rust_owner_rx_cpu_s": 2.636060094,
+    "rust_owner_tx_cpu_s": 2.819026227
+  },
+  "governance": {
+    "run_id": 39256800145,
+    "conclusion": "success",
+    "scope": "structure and source identity, NOT product"
+  },
+  "interpretation": "One-source one real Linux netns 20Mbps per direction steady 20pct loss for 60 seconds, exact app missing/kern qdisc drops. Normal/OFF no FEC repair intentionally incomplete delivery, no invalid/duplicate/injector issues and injected 20Mbps each direction. Increasing loss levels are not an AB performance claim; no comparison of different-run CPU or p99 permitted.",
+  "unqualified": {
+    "production_FEC2": "OFF",
+    "FEC_Fixed": "NOT_RUN",
+    "FEC_Auto": "NOT_RUN",
+    "Game2_Game4": "NOT_RUN",
+    "product_Windows_CLI_GUI": "NOT_RUN",
+    "veth_physical": "NOT_RUN",
+    "RTT_p99": "NOT_RUN"
+  },
+  "next_action": "Only one final 30pct 20Mbps real netns scenario justified by full offered rate, no injector send errors under 20pct. Stop matrix afterwards; no repeated successes, Stage Fixed actual mode before FEC network claims."
+}
