@@ -146,6 +146,35 @@ func v4PrivateHandoffFromVerifiedSession(
 type v4OwnerBridge interface {
     prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
 }
+
+// M0↔M4 original-Go V4 lifecycle seam, not a cold/credential/ACK authority.
+// M0 supplies the REAL backend; M4 Windows native cleanup must never run
+// before an actual original Rust owner and its kernel borrows have completed
+// Stop and generation release. This does not enable product FEC2.
+type V4OwnerStopCompletion struct {
+    Epoch [16]byte
+    OwnerAndDriversDrained bool
+    GenerationReleased bool
+}
+type V4OriginalOwnerStopper interface {
+    StopAndReleaseOriginalOwner() (V4OwnerStopCompletion,error)
+}
+// V4StopThenCleanupNetwork enforces Stop→owned native Cleanup order.
+// Any real Stop error retains network ownership for later recovery; never
+// invoke cleanup, never fabricate a "disconnected" result. Cleanup failure
+// propagates as partial network recovery AFTER verified owner shutdown.
+func V4StopThenCleanupNetwork(
+    owner V4OriginalOwnerStopper,cleanup func()error,
+)(V4OwnerStopCompletion,error){
+    var zero V4OwnerStopCompletion
+    if owner==nil||cleanup==nil{return zero,ErrAdmissionParams}
+    completed,err:=owner.StopAndReleaseOriginalOwner()
+    if err!=nil{return zero,err}
+    if completed.Epoch==[16]byte{} || !completed.OwnerAndDriversDrained ||
+       !completed.GenerationReleased{return zero,ErrAdmissionParams}
+    if err:=cleanup();err!=nil{return completed,err}
+    return completed,nil
+}
 type V4ServerOptions struct {
     DataPlaneReady bool
     fec2ProbeOnly bool // package-private, no production caller switch

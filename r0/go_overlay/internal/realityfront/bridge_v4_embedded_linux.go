@@ -131,6 +131,20 @@ func v4EmbeddedNativeState(handle uint64)(uint32,error){
 func (b *v4EmbeddedNativeBridge) state()(uint32,error){
     return v4EmbeddedNativeState(b.handle)
 }
+// Private original Go credential-bound Rust backend implements the M0/M4
+// shared shutdown boundary. A positive receipt is returned ONLY after the
+// true C Stop has joined its workers/drained device borrows and C Release
+// removed the generation. The same verified Go epoch is preserved.
+func (b *v4EmbeddedNativeBridge) StopAndReleaseOriginalOwner()(V4OwnerStopCompletion,error){
+    var zero V4OwnerStopCompletion
+    if b==nil || b.protectedEpoch==[16]byte{} {return zero,errV4Embedded}
+    epoch:=b.protectedEpoch
+    if err:=b.stopRelease();err!=nil{return zero,err}
+    if !b.stopped || b.handle!=0 || b.committed{return zero,errV4Embedded}
+    return V4OwnerStopCompletion{
+        Epoch:epoch,OwnerAndDriversDrained:true,GenerationReleased:true,
+    },nil
+}
 func (b *v4EmbeddedNativeBridge) stopRelease()error{
     if b.stopped && b.handle==0 && !b.committed{return nil} // repeated Stop
     if b.handle==0||!b.committed{return errV4Embedded}

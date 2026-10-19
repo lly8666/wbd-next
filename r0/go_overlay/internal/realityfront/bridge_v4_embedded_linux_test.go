@@ -493,9 +493,14 @@ func TestR0V4EmbeddedTwoGenerationStopIsolation(t *testing.T){
     if got,err:=v4EmbeddedNativeState(oldHandle);err!=nil||got!=2{
         t.Fatalf("old must be Active until its own Stop got=%d err=%v",got,err)
     }
-    if err:=old.stopRelease();err!=nil{t.Fatal(err)}
-    if err:=old.stopRelease();err!=nil{
-        t.Fatalf("repeat Stop after quiesced release must be idempotent: %v",err)
+    confirmed,e:=old.StopAndReleaseOriginalOwner()
+    if e!=nil||confirmed.Epoch!=oldServer.Epoch||
+       !confirmed.OwnerAndDriversDrained||!confirmed.GenerationReleased{
+        t.Fatalf("original Go credential epoch Rust owner Stop not drained: %+v %v",confirmed,e)
+    }
+    repeated,e:=old.StopAndReleaseOriginalOwner()
+    if e!=nil||repeated!=confirmed{
+        t.Fatalf("repeat Stop after quiesced release must preserve exact receipt: %+v %v",repeated,e)
     }
     if phase,err:=v4EmbeddedNativeState(oldHandle);err==nil{
         t.Fatalf("retired numeric old owner resurrected phase=%d",phase)
@@ -504,11 +509,16 @@ func TestR0V4EmbeddedTwoGenerationStopIsolation(t *testing.T){
         t.Fatalf("old retirement stopped the fresh generation: phase=%d err=%v",got,err)
     }
     newHandle:=fresh.handle
-    if err:=fresh.stopRelease();err!=nil{t.Fatal(err)}
+    freshConfirmed,e:=fresh.StopAndReleaseOriginalOwner()
+    if e!=nil||freshConfirmed.Epoch!=newServer.Epoch||
+       !freshConfirmed.OwnerAndDriversDrained||!freshConfirmed.GenerationReleased{
+        t.Fatalf("fresh independent Go/Rust Stop not drained: %+v %v",freshConfirmed,e)
+    }
     if err:=fresh.stopRelease();err!=nil{t.Fatal(err)}
     if err:=oldStore.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,oldServer.Epoch);err!=nil{t.Fatal(err)}
     if err:=newStore.ReleaseLane("protected-owner",[]byte("0123456789abcdef"),1,newServer.Epoch);err!=nil{t.Fatal(err)}
     t.Logf("EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS old=%d new=%d",oldHandle>>32,newHandle>>32)
+    t.Logf("M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS old=%d new=%d same_epoch=1 kernel_drained=1 stale_generation_denied=1",oldHandle>>32,newHandle>>32)
 }
 
 

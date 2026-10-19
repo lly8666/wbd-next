@@ -646,3 +646,56 @@ func TestR0V4Fec2RealExporterContextSeparatesBit2(t *testing.T){
         if !errors.Is(err,ErrAdmissionUnsupported){t.Fatalf("partial KDF feature accepted: %v",err)}
     }
 }
+
+// M0/M4 shared Stop barrier: no network cleanup if original Rust owner Stop
+// cannot be confirmed. These mocks ONLY test sequencing; real backend proof
+// is TestR0V4EmbeddedTwoGenerationStopIsolation on original Rust C owner.
+type v4StopSequenceProbe struct{
+    result V4OwnerStopCompletion
+    err error
+    calls int
+}
+func (p *v4StopSequenceProbe) StopAndReleaseOriginalOwner()(V4OwnerStopCompletion,error){
+    p.calls++
+    return p.result,p.err
+}
+func TestR0V4StopBeforeOwnedNetworkCleanupFailClosed(t *testing.T){
+    var epoch [16]byte;epoch[0]=0x5c
+    complete:=V4OwnerStopCompletion{Epoch:epoch,
+        OwnerAndDriversDrained:true,GenerationReleased:true}
+    for _,tc:=range []struct{
+        name string
+        stop V4OwnerStopCompletion
+        fail error
+        cleanup bool
+    }{
+        {"completed",complete,nil,true},
+        {"not_stopped",V4OwnerStopCompletion{Epoch:epoch},nil,false},
+        {"no_epoch",V4OwnerStopCompletion{OwnerAndDriversDrained:true,GenerationReleased:true},nil,false},
+        {"stop_failed",complete,ErrAdmissionParams,false},
+    }{
+        t.Run(tc.name,func(t *testing.T){
+            p:=&v4StopSequenceProbe{result:tc.stop,err:tc.fail}
+            cleaned:=0
+            got,err:=V4StopThenCleanupNetwork(p,func()error{cleaned++;return nil})
+            if p.calls!=1|| (cleaned==1)!=tc.cleanup || (err==nil)!=tc.cleanup{
+                t.Fatalf("incorrect original Rust Stop->Windows native owned cleanup fence: %+v got=%+v err=%v cleaned=%d",tc,got,err,cleaned)
+            }
+            if tc.cleanup&&got!=complete{t.Fatalf("wrong Stop receipt %+v",got)}
+        })
+    }
+    p:=&v4StopSequenceProbe{result:complete}
+    cleaned:=0
+    got,err:=V4StopThenCleanupNetwork(p,func()error{
+        cleaned++
+        return ErrAdmissionParams
+    })
+    if err==nil||got!=complete||cleaned!=1{
+        t.Fatalf("cleanup failure hid partially-owned network state: receipt=%+v err=%v cleanup=%d",got,err,cleaned)
+    }
+    p.calls=0
+    if _,err:=V4StopThenCleanupNetwork(p,nil);err==nil||p.calls!=0{
+        t.Fatal("nil cleanup must reject BEFORE consuming Rust Stop")
+    }
+    t.Log("M0_STOP_AND_OWNED_NETWORK_CLEANUP_ORDER_FAIL_CLOSED_PASS no_fake_disconnected=1")
+}
