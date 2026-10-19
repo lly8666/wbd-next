@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "main_checkpoint_before_work": "4b21dae4d547b0a4c6a70f7f067ef0202b7744a4",
+  "result": "PARTIAL_NATIVE_MULTIBLOCK_AND_REAL_ONE_BLOCK_KERNEL_INTEGRATION",
+  "audit": "H187→S249 verified 10 successive S commits one single-path each by original GitHub commit API and linear parents; no M1/M3/M4 owned path touched",
+  "intent": [
+    "docs/devlog/M0/PLAN012-fixed-stream-composition-intent-20261019.md",
+    "docs/devlog/M0/PLAN012-fixed-stream-original-Go-real-kernel-consumption-intent-20261019.md",
+    "docs/devlog/M0/PLAN012-fixed-stream-kernel-compile-recovery-20261019.md"
+  ],
+  "native_composition": {
+    "source_sha": "7b5533db6ffc7be7a950562bfaf642a68a75930b",
+    "workflow": ".github/workflows/m0-fixed-stream-functional.yml",
+    "run_id": 39266293420,
+    "run_attempt": 1,
+    "job_id": 118106623204,
+    "conclusion": "success",
+    "artifact_id": 12192702738,
+    "artifact_digest_sha256": "a730feb8922359bd95eceb1a899cafc5d1a40c3e5120c1c7c63a8bc2e52bff2f",
+    "checks": [
+      "M1 Fec2Owner first-ready sources across 3 blocks, M3 StagedParity and real RS16 e1 scalar missing source recovered",
+      "Strong k8 r8 split 4 rows/turn and late source not HOL-blocked by old parity",
+      "Kernel definitive copied vs uncertain modeled without changing M1 or M3",
+      "Old revision rejected, stop no further dispatch, retained slab bytes released",
+      "Ordinary release ABI rejects FEC2/Go test symbols"
+    ],
+    "status": "PASS_SCOPED_NATIVE_FUNCTIONAL",
+    "real_original_go_tls_native": "NOT_RUN_AT_THIS_SOURCE",
+    "real_kernel_multiblock": "NOT_RUN",
+    "formal_cost": "NOT_RUN"
+  },
+  "first_kernel_consumer": {
+    "source_sha": "9f5d77e4091128f432b1c4b580d684b63c5d3da6",
+    "workflow": ".github/workflows/m0-fixed-real-kernel-applied.yml",
+    "run_id": 39266993450,
+    "run_attempt": 1,
+    "job_id": 118109048385,
+    "result": "FAIL_COMPILE_E0412_NO_NETWORK",
+    "error": "Rust original sender consumer missing SourceTicket import, compile failed before Go and raw/TUN measurement",
+    "artifact_id": 12193088571,
+    "artifact_digest_sha256": "45b1a921986533fc7790fefbe58e6fd424a32eafebd2ecd43581734ea6c01b92",
+    "superseded_by_new_source": "13b7333789ba20cdf30032172915ecab1fe0e972"
+  },
+  "repaired_kernel_consumer": {
+    "source_sha": "13b7333789ba20cdf30032172915ecab1fe0e972",
+    "workflow": ".github/workflows/m0-fixed-real-kernel-applied.yml",
+    "run_id": 39267476054,
+    "run_attempt": 1,
+    "job_id": 118110718271,
+    "result": "PASS_SCOPED_ORIGINAL_GO_TLS_REAL_KERNEL_ONE_FEC_BLOCK_WITH_FIXED_STREAM",
+    "artifact_id": 12193558076,
+    "artifact_digest_sha256": "bcdbe74891328997ce72f2d1baa25a6ca310824122fa1c92f576ed4a21776733",
+    "governance": {
+      "run_id": 39267476233,
+      "status": "success"
+    },
+    "checks": [
+      "New M0 v4_fixed_stream source first and <=4-row bounded M3 RS16 parity consumer used in actual original TLS->Rust FEC native original owner",
+      "All three pinned Go TLS protected cipher suites, original credential epoch and M1/M3 same PN source and parity raw M4 kernel definitely copied",
+      "Independent original Go raw kernel capture and M3 authenticated replay/RS16 e1 reconstruct 127B missing IPv4 source to true M4 TUN/UDP 99B payload",
+      "Go Fixed revision4 remains pending before source/repair real kernel acceptance then native applied; exact original M2 authentication/settlement permits OFF5, previous readback revoked",
+      "M2 reverse authenticated receipts, replay/tamper/Stop failure boundaries remain verified",
+      "Default normal Rust ABI has no probe symbol, no product flag enabled"
+    ],
+    "continuous_network_multiblock": "NOT_RUN",
+    "product_release": "NOT_RUN"
+  },
+  "worker_dependencies": {
+    "M1": "Registry task R5-M1-PLAN012-GAME-REAL-LANE-016 authorized; last remote cursor still Game015 H29; no new frozen M1-016 SOURCE or Actions observed",
+    "M3": "Registry task R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019 authorized; last remote cursor still FEC018 H48; no new frozen release-code FEC record feature SOURCE observed",
+    "worker_dispatcher": {
+      "run_id": 39264433258,
+      "result": "FAIL",
+      "reason": "WORKER_DISPATCH_DENIED wrong role/task/epoch/revision for audited worker request; this did not start new M1/M3 implementation"
+    }
+  },
+  "qualification": {
+    "M3_previous_native_fec": "PASS_ACCEPTED_PREVIOUSLY_ISAL_13_WIRE_23",
+    "M1_game_scheduler_previous": "PASS_ACCEPTED_PREVIOUSLY",
+    "M0_native_composer_3_blocks": "PASS_SCOPED_NATIVE",
+    "M0_true_original_go_kernel_one_block": "PASS_SCOPED_REAL_NETWORK",
+    "M0_true_original_go_kernel_multiblock": "NOT_RUN",
+    "M0_release_fec2_record_crypto": "NOT_RUN",
+    "M0_fixed_continuous_original_go_client_server": "NOT_RUN",
+    "M0_auto_authenticated_m2_closed_loop": "NOT_RUN",
+    "M0_game_2_and_4_actual_independent_lanes": "NOT_RUN",
+    "Windows_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "RTT_p99": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "Implement original authenticated Go FEC Fixed persistent background RX/TX two-or-more real kernel blocks using same FixedStream with actual AEAD-unique M3 release-code record interface after M3-019 frozen source; verify independent true TUN/UDP first delivery, M2 and Stop one functional Actions job; do not turn product on or repeat successful one-block sample."
+}
