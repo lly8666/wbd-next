@@ -626,3 +626,11 @@ impl Rs16 {
         Ok((outputs,used))
     }
 }
+
+// Compile the source-locked FEC2 oracle suite as real library tests. Keeping
+// this declaration in the owned codec module ensures CI cannot silently
+// filter out the companion tests even when a shared harness overlays the two
+// files from one immutable worker SOURCE.
+#[cfg(test)]
+#[path = "fec_v2_tests.rs"]
+mod fec_v2_tests;
