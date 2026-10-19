@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 22,
-  "checkpoint_sha": "aa694811075f21ba51d62b5e3c5c560e983ec3ca",
+  "sequence": 23,
+  "checkpoint_sha": "26c9c57f090ebc1e97b74d359527caad4614f667",
   "progress": "partial",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 Game015 M1 release AB component cost: HOLD explicitly lifted; source-first native 133/133 PASS fixed CODE 64102db5 and central G2 H21 PASS, frozen PLAN-009 control worker-ci-v3. S22 precise prepare request created, not yet dispatched.",
-  "why_now": "User explicitly lifted previous HOLD and requested rule-compliant AB (two-leg) test. Main PLAN-009 frozen M1/M3 prepare/paired workflow qualification/worker-ci-v3 at 3f87d3ec, smoke39197303106 PASS. Current registered task rev2 epoch1 unchanged; source C80 old / 64102 new pinned; no ABBA claim. Central H21 exact scope39191830788 PASS; old worker Governance red retained.",
-  "done_when": "M1 Game015 native 133/133 PASS and operation bounds already proved at CODE64102db5. Remaining performance work: prepare two exact release binaries using identical SHA-256 pinned fixture and receipt; then worker-managed separate paired_ab on same runner with equal work/cpu/RSS and capacity checks; record real PASS/INCONCLUSIVE and keep Go/live/product NOT_RUN. No A/B CPU claims before a successful paired Action.",
-  "next_action": "Dispatch exactly one frozen control qualification/worker-ci-v3 workflow_dispatch with role_id=M1, stage=prepare, request_id=M1-GAME015-AB-PREP-001, request_ref=aa694811075f21ba51d62b5e3c5c560e983ec3ca. At present connected GitHub actions have no workflow_dispatch action; use GitHub UI or gh CLI with these four exact inputs, not a rerun of unrelated smoke. Verify prepare run/attempt/artifact ID+manifest hash and identical fixture before creating distinct paired_ab request I; then dispatch stage=paired and consume final receipt. Do not edit root, launch ABBA, repeat 133 or claim performance PASS without Action.",
+  "current_task": "PLAN-008 Game015: native correctness 133/133 PASS CODE64102db5, G2 scoped. HOLD lifted. M0 PLAN-009 current frozen v5 test request M1-GAME015-AB-PREP-002 PLANNED; request authored and pushed only, no prepare or paired AB Actions dispatched.",
+  "why_now": "M0 published current recommended PLAN-009 control qualification/worker-ci-v5 484861e5, static contract smoke39199797039 PASS; v3 request from H22 superseded due zero-functional-tests safeguard. User requests direct AB. M1 within rev2 epoch1 role paths; only request+cursor files updated; no new benchmark dispatch exists. Connected Chat GitHub actions do not implement workflow_dispatch; local runtime has no gh CLI, credentials or GitHub network.",
+  "done_when": "Already code-correctness native133 PASS and source/G2 PASS. M1 Game015 cost still requires v5 prepare built release old/new distinct binaries and exact actual artifact, then a NEW paired_ab request run in one VM with matched checksum and host/capacity CPU/RSS; no CPU or product PASS before provider Actions receipt.",
+  "next_action": "DISPATCH_CAPABILITY_BLOCKED, not repo scope ACL. With GitHub Actions write-capable gh/UI/Work Cloud Browser launch current unique v5 request once: workflow worker-component-validation.yml at qualification/worker-ci-v5, role_id=M1, stage=prepare, request_id=M1-GAME015-AB-PREP-002, request_ref=26c9c57f090ebc1e97b74d359527caad4614f667. Verify successful prepare artifact run/attempt/manifest sha, then create separate pinned paired_ab I and dispatch it. Do not reuse superseded v3 request, do not rerun smoke/governance, do not call performance PASS before run.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -22,11 +22,12 @@
     ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
     ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md",
     ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md",
-    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-001.json"
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-001.json",
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-002.json"
   ],
   "context_refs": [
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H22 after S22 aa694811075f21ba51d62b5e3c5c560e983ec3ca unique request M1-GAME015-AB-PREP-001.json (PLANNED, not dispatched). Explicit user HOLD lifted. Frozen control qualifier worker-ci-v3=3f87d3ec, smoke39197303106 PASS; pinned old c80ff6a5 new64102db5 with harness64102db5 fixture SHA256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8. CODE-native39188056715 133/133 and H21 central39191830788 ROLE_SCOPE_PASS. No new functional tests or AB receipt; performance NOT_RUN and Go/product NOT_RUN. This H changes only cursor. Waiting on first workflow_dispatch of prepare using exact I; no current tool capability."
+  "partial_summary": "H23 after S23 26c9c57f090ebc1e97b74d359527caad4614f667. Superseded v3 M1-GAME015-AB-PREP-001 with v5 M1-GAME015-AB-PREP-002; control ref qualification/worker-ci-v5=484861e5; source old c80ff6a5 candidate/harness 64102db5; exact fixture blob4c70bedf/sha256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8. v5 public contract smoke39199797039 PASS, no real prepare or paired run; AB performance NOT_RUN. GitHub Chat connector lacks dispatch tool; shell gh not installed/no egress. H23 cursor-only. Old worker governance FAIL retained, central H22 scope success39199194716. Function native39188056715 133/133 PASS. User HOLD lifted, product/Go/physical NOT_RUN."
 }
