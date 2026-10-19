@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_REAL_20MBPS_NETEM_LOSS_OBSERVATION_NOT_RECOVERY",
+  "source_sha": "7aff35aa61d8e2eae44af0f1b04498c449a4ec77",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 39256340758,
+  "attempt": 1,
+  "measure_job_id": 118072480000,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39256340758",
+  "intent": ".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-10-20261019-ready.json",
+  "artifact": {
+    "id": 12186494493,
+    "zip_sha256": "27ace89ff38db90cb0f02e78254795e350ac2cc1d7ee76ef50325a554a79ef99",
+    "summary_sha256": "edb9ab4bc3d768a5d907ada049d936b47bbc20e43cb24b6b573581ebc6f019af",
+    "raw_sha256": "fd54ced566f2b182ae27421594a3259ef41717f3470c8a9eb6bcffc81838b172",
+    "log_sha256": "294b59bf125db01d6c5bc64232da9b0f7ecff21968d7c64fc91255618edeb60a"
+  },
+  "measurement": {
+    "loss_config_pct": 10,
+    "mode": "Normal_OFF",
+    "target_mbps_each_direction_inner_ipv4": 20,
+    "warmup_s": 10,
+    "measure_s": 60,
+    "kernel_qdisc_dropped_including_control": 93395,
+    "c2s": {
+      "offered_mbps": 19.99982,
+      "delivered_mbps": 17.997562533333333,
+      "offered_packets": 210599,
+      "delivered_packets": 189489,
+      "missing": 21110,
+      "invalid": 0,
+      "duplicates": 0,
+      "send_errors": 0
+    },
+    "s2c": {
+      "offered_mbps": 19.99998,
+      "delivered_mbps": 18.008819466666665,
+      "offered_packets": 210600,
+      "delivered_packets": 189649,
+      "missing": 20951,
+      "invalid": 0,
+      "duplicates": 0,
+      "send_errors": 0
+    },
+    "rust_owner_rx_cpu_s": 2.337951288,
+    "rust_owner_tx_cpu_s": 2.401839638
+  },
+  "governance": {
+    "run_id": 39256340573,
+    "conclusion": "success",
+    "qualification": "structure/identity only"
+  },
+  "interpretation": "One honest 60s sustained 20Mbps per-direction actual original Go TLS/Rust Normal OFF under 10% configured netem, real qdisc drops and application missing, no integrity/duplicate/injector errors. Empty FEC2 production and Game modes NOT_RUN. No full app delivery, reliable RTT, or product pass. Lower CPU vs other runs cannot be treated as performance improvement: netem reduces delivered work, runner contexts differ.",
+  "unqualified": {
+    "FEC_Fixed": "NOT_RUN",
+    "FEC_Auto": "NOT_RUN",
+    "Game2_4": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "product_CLI_GUI_Windows": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "independent_RTT_p99": "NOT_RUN"
+  },
+  "next_action": "Once exact identity and resources confirmed, next independent 20% loss continuous 20Mbps scenario using same frozen Go/Rust binaries, then 30% only if 20% offer and host remain valid."
+}
