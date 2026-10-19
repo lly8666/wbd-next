@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "d67509b45c69188d332d951a5f6ab0f075a5708a",
+      "result_blob": "5c738da2a0e70ee3897f3299279efb7d19566c13",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -96,6 +96,10 @@
         {
           "find": "\tfmt.Printf(\"WBD_WINDOWS_CLIENT_STOPPED cleanup=state-owned-only lanes=%d physical=NOT_RUN\\n\", *lanes)",
           "replace": "\tfmt.Printf(\"WBD_WINDOWS_CLIENT_STOPPING owner_and_cleanup=UNVERIFIED lanes=%d physical=NOT_RUN\\n\", *lanes)"
+        },
+        {
+          "find": "\tif *recoverNetwork {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn windowsclient.N4NativeRecoverState(ctx, *statePath)\n\t}",
+          "replace": "\tif *recoverNetwork {\n        // Manual CLI Recover and GUI-owned Connect share the SAME named\n        // machine slot. Avoid TOCTOU: the GUI's read-only ClientBusy check\n        // is advisory; only this atomic OS event fences actual recovery.\n        slot, err := acquireGUIClientSlot()\n        if err != nil { return err }\n        defer windows.CloseHandle(slot)\n        ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n        defer cancel()\n        return windowsclient.N4NativeRecoverState(ctx, *statePath)\n    }"
         }
       ]
     },
@@ -199,7 +203,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "d05ecd160e4e088c0365f0248fd89dbdccf35510",
+      "result_blob": "27c9098f4b63966fa74489eea7ce7d61eb39f944",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -224,6 +228,10 @@
         {
           "find": "                using (var real = new ClientSession(store)) {",
           "replace": "                using (var inactive = new ClientSession(store)) {\n                    string residue = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(residue,\"orphan intent\");\n                    bool blocked = false;\n                    try { Wait(inactive.StopAsync()); } catch (IOException) { blocked = true; }\n                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);\n                    Wait(inactive.StopAsync());\n                }\n                using (var real = new ClientSession(store)) {"
+        },
+        {
+          "find": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);",
+          "replace": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    bool startDenied = false;\n                    try { Wait(inactive.StartAsync(store.InRoot(\"data/pending.json\"))); }\n                    catch (IOException) { startDenied = true; }\n                    Assert(startDenied && File.Exists(residue),\n                        \"direct real GUI client Start never bypasses orphan WAL recovery gate\");\n                    File.Delete(residue);"
         }
       ]
     },
@@ -412,9 +420,13 @@
         {
           "find": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\"))",
           "replace": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") || File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))"
+        },
+        {
+          "find": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");",
+          "replace": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");\n                // Direct API calls must not bypass MainForm's guarded\n                // Disconnect/Recover switch. Old or orphaned journals\n                // prevent a second client from acquiring network ownership.\n                string existing = store.InRoot(\"data/network-state.json\");\n                if (File.Exists(existing) || File.Exists(existing+\".n4-owned-wal\") ||\n                    File.Exists(existing+\".n4-owned-wal.routes\") || File.Exists(existing+\".routes\"))\n                    throw new IOException(\"检测到旧版或未恢复的原生 owned 网络状态，拒绝启动另一客户端。\");"
         }
       ],
-      "result_blob": "1ff81ef4825fbe3a9098bf05b47f7f733fd99977"
+      "result_blob": "2d377cb70e25a54011fe6a0fc894f1cdb258b2da"
     },
     {
       "kind": "create",
