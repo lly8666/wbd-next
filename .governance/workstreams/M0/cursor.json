@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 192,
-  "checkpoint_sha": "8689925e0ce5c40048ceaef8910860abc355ad8d",
+  "sequence": 193,
+  "checkpoint_sha": "94b7638ea6330f662f76790bee7c4f79885aecc6",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 FEC2 user-requested production release: M0 release-code original owner RX multi-block bounded authenticated RS16 component implemented under opt-in, source 36c6c... but same-source Actions QUEUED/NOT_RUN and original Go persistent TLS→Rust raw/TUN product still missing; production FEC2 OFF.",
-  "why_now": "H191 exact accepted old combined native+one-block real source e82202693a92418266a475f747e8cb0ff44e0d18; H191 Governance39276437599 success. S263 intent, S264–S270 coded new release-only v4_fec2_live_rx with moved single original ReplayProtectedLaneRx across FEC kinds, up to 32 interleaved blocks 1MiB cache/150ms deadline, first-arrival and oldest-block no HOL, per-block ID tombstones, M3 RS16 recovered candidate, Stop; new 3-cipher 4-block and 33-block eviction replay tests. Combined Actions final intended code source36c6ccec17d11aec6190b2172f889f98c495c610 run39279297062 attempt1 job118150432130 QUEUED no output, old 39278355473/39279099894 also queued, R0/G2 likewise queued due capacity. No claim test PASS; no production toggle. S271 durable WIP status source8689925e; unrelated main worker dispatch39277279598/39277346874 success. Full original Go TLS persistent real kernel multi-block release path and application RX/M2/Stop/product UI not wired, Auto/Game live still NOT_RUN.",
-  "done_when": "Prove production FEC2 on actual original Go authenticated bidirectional persistent Rust data-owner with at least two+ actual source/repair blocks copied through M4 kernel, receiver replay/RS16 first delivery through true TUN UDP app, M2 authenticated receipts with genuine Fixed→Auto/Off applied/rejected/Stop/MTU/noHOL, exact SOURCE combined Actions; then enable FEC2 product mode only if all applicable gates PASS. Unverified native component is insufficient.",
-  "next_action": "Read precise queued Actions39279297062 when it executes and repair any real compile/test error; then integrate the SAME moved original-Go-authenticated replay opener into original client persistent Rust FEC2 raw/TUN RX/TX, send/recover 2+ actual blocks, test mode/Stop/MTU and product APPLIED via one complete source-locked netns Actions before enabling production.",
+  "current_task": "PLAN012 FEC2 production: original Go-authenticated background Rust RX now has release-code kind2/3 + same unique PN replay/RS16 TUN candidate path gated by actual Fixed applied, compiled+functional PASS. Genuine ongoing original Go S2C Rust source+repair TX and client RX multi-block real kernel product, Auto feedback and production enable still NOT_RUN/OFF.",
+  "why_now": "H192 only cursor-only successor acb7540 after checkpoint8689925. Recovered H192 queued Action39279297062 actual SUCCESS source36c6c artifact12198821821, native/cross/G2/Gov PASS. S272 intent, S273–S278 single-opener original Go background FEC optional RX, OFF/Stop applied grant fence and native tests. Initial source7cffd0d Action39287323889 actual FAIL at CI grep selector (release-record1/1 and Game2/2 and FEC2 RX2/2 PASS; third named outside filter, default build+Go netns NOT_RUN); artifact12203776929 retained. S279 narrow test name fix, S280 original FAIL recovery. Corrected source6e5091e1787dd9ca39d4caa6dffabe57633e4970 Action39287817507 attempt1 job118180091622 SUCCESS artifact12204471076 sha256 5e3844f09ebdd4ebb1b7527055b8faee3a215ceb515199422da79b9f277b714c. FEC release record1/1, Game native2/2, live FEC RX3/3, original Go TLS triple suite one-shot actual kernel FEC source+parity RS16 recovered127B IPv4 to real TUN and 99B UDP/M2/quiescent OFF, default ABI no test symbols. Main Gov on S281 source94b7638 run39288692573 SUCCESS. S281 evidence exact. Combined native tests prove dormant background RX compiles but do NOT prove real background S2C multi-block kernel FEC product or a production config switch. Production FEC2 OFF.",
+  "done_when": "Only enable production FEC2 when original credential-checked Go control and actual client/server persistent Rust owner achieve >1 live source+parity blocks through real kernel with independent replay/RS16 application delivery, true M2 Fixed/Auto applied and actual OFF/Stop/MTU/noHOL, source-locked complete Actions and CLI/product applied readback. Prior single-block and native compositional PASS are insufficient.",
+  "next_action": "Build true original Go S2C continuous FEC2 TX+client RX product route: use existing original owner release-code kind2/3 + FixedStream, true definite M4 copy, same PN and M2, queue due parity without HOL; verify at least 2 real netns/TUN UDP application blocks plus authenticated Auto/Off/Stop/MTU and product applied via ONE complete Actions job; if PASS enable FEC2 production, otherwise retain OFF.",
   "unverified": true,
-  "last_tested_source": "e82202693a92418266a475f747e8cb0ff44e0d18",
+  "last_tested_source": "6e5091e1787dd9ca39d4caa6dffabe57633e4970",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-M0-takeover-fec2-release-record-game2-4-combined-20261019.json"
+    "docs/evidence/M0/PLAN012-original-Go-background-FEC2-replay-admission-20261020.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN012-H192-continuous-FEC2-live-RX-unverified-20261019.md",
+    "docs/devlog/M0/PLAN012-original-Go-background-FEC2-rx-admission-intent-20261020.md",
+    "docs/devlog/M0/PLAN012-background-FEC2-Actions-selector-recovery-20261020.md",
     "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md",
-    "docs/evidence/M0/PLAN012-FixedStream-native-multiblock-and-original-Go-kernel-consumption-20261019.json",
-    "docs/evidence/M0/PLAN012-M4-I006-historical-M3-dispatch-repair-and-real-Windows-20261019.json"
+    "docs/evidence/M0/PLAN012-M0-takeover-fec2-release-record-game2-4-combined-20261019.json"
   ],
   "open_requests": [],
-  "partial_summary": "H192 actual code source36c6c new release feature original-Go candidate FEC2 RX module multi-block/noHOL replay, source-locked combined native function Action39279297062 QUEUED (not RUN or PASS). S271 exact WIP recovery. Last proven functional source e8220269 Action39275492225 one original Go FEC Fixed kernel block and Game2/4 native; old failures retained. Product persistent multi-block raw/TUN + Auto feedback/app applied NOT_RUN, production FEC2 OFF. One next: finish queued Action then wire original credentialed persistent TX/RX and qualify real two+ TUN blocks."
+  "partial_summary": "H193 original-Go verified background FEC2 RX mounted on moved single AEAD replay owner and actual applied fence; native FEC 3/3, record 1/1, Game2/2 and original Go real single-block kernel regression PASS source6e5091e Actions39287817507 artifact12204471076, S281 evidence, Gov39288692573 PASS; initial selector FAIL source7cff 39287323889 retained. Genuine release persistent Go product TX/client RX two+ blocks, Auto real M2, actual go-live and performance NOT_RUN; FEC2 production OFF. One next action complete genuine product sender/client RX single combined netns Action, then conditional enable."
 }
