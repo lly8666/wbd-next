@@ -10,6 +10,7 @@ on:
     paths:
       - ".github/workflows/m0-plan012-combined-functional.yml"
       - "crates/wbd-engine/src/v4_game_lane.rs"
+      - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
 permissions: {contents: read}
 concurrency:
   group: m0-plan012-combined-functional-${{ github.sha }}
@@ -44,7 +45,7 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib m0_fec2_live_rx -- --test-threads=1 --nocapture >fixed-kernel-result/continuous-rx.log 2>&1 || { cat fixed-kernel-result/continuous-rx.log; exit 1; }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/release-record.log
           grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/game-lanes.log
-          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/continuous-rx.log
+          grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/continuous-rx.log
           cargo +1.85.1 build --release --locked -p wbd-engine >fixed-kernel-result/default-build.log 2>&1
           if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(embedded_go_|test_probe_)'; then
             echo 'M0_FIXED_PRODUCT_DEFAULT_ABI_LEAK' >&2; exit 1
@@ -87,6 +88,8 @@ jobs:
             "released_fec_record_crypto_native_test":"PASS_SCOPED",
             "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
             "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "continuous_FEC_RX_noHOL_old_incomplete_evict":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "production_FEC2_default":"OFF",
             "source_inputs_sha256":{p:sha(p) for p in source},
             "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
           pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
