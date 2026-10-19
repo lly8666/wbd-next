@@ -3008,18 +3008,51 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut parity_copied=0u8;
         let mut parity_not_sent=0u8;
         let mut parity_uncertain=0u8;
+        let mut actual_fec_sources=Vec::new();
+        let mut source_copied=0u32;
+        let mut source_uncertain=0u32;
         for (pn,kind) in e.fec2_staged_pns.drain(..){
             let idx=actual_firstsend.iter().position(|x|x.0.0==pn);
             let copied=idx.is_some_and(|i|i<finish.copied as usize);
             let uncertain=idx.is_some_and(|i|
                 finish.uncertain==1&&i==finish.copied as usize);
             if kind==2{
-                if copied{e.fec2_copied_source=e.fec2_copied_source.saturating_add(1);}
+                if let Some(i)=idx{
+                    actual_fec_sources.push(actual_firstsend[i]);
+                    if copied{
+                        source_copied=source_copied.saturating_add(1);
+                        e.fec2_copied_source=e.fec2_copied_source.saturating_add(1);
+                    }else if uncertain{
+                        source_uncertain=source_uncertain.saturating_add(1);
+                    }
+                }
             }else{
                 if copied{
                     parity_copied+=1;
                     e.fec2_copied_repair=e.fec2_copied_repair.saturating_add(1);
                 }else if uncertain{parity_uncertain+=1}else{parity_not_sent+=1}
+            }
+        }
+        // Only original M4 definitely-copied kind2 DATA becomes an M2
+        // source denominator. Parity is excluded; uncopied or uncertain
+        // DATA is censored. The RX worker later admits C2S receipts only
+        // after the same original AEAD+unique replay bitmap.
+        if !actual_fec_sources.is_empty(){
+            if let Some(first)=e.normal_firstsend_m2.as_ref(){
+                let observation=TxTurnCompletion{
+                    copied:source_copied,uncertain:source_uncertain,
+                    definitely_unsent:(actual_fec_sources.len() as u32)
+                        .saturating_sub(source_copied)
+                        .saturating_sub(source_uncertain),
+                    backpressure:finish.backpressure,
+                    failed:finish.failed,
+                    invalidate_route:finish.invalidate_route,
+                };
+                match first.lock(){
+                    Ok(mut observer)=>observer.on_real_kernel_turn(
+                        &actual_fec_sources,observation,loop_now()),
+                    Err(_)=>return Err(BAD_STAGE)
+                }
             }
         }
         if parity_copied+parity_not_sent+parity_uncertain>0{
@@ -3032,8 +3065,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // product. Keep Fixed REQUESTED/PENDING, never fabricate APPLIED.
     }
     if let Some(first)=e.normal_firstsend_m2.as_ref(){
-        // Original M2 observes only Normal/off first sends. FEC ciphertext
-        // cannot masquerade as authenticated kind1 delivery/denominator.
+        // Original M2 observes Normal/off first sends here. FEC source
+        // DATA is separately accounted above with exact kind2 PNs; repair
+        // kind3 is excluded from the source denominator.
         #[cfg(feature="fec2_product_record")]
         let has_fec=e.fixed_pending.is_some()||e.fixed_applied.is_some();
         #[cfg(not(feature="fec2_product_record"))]
