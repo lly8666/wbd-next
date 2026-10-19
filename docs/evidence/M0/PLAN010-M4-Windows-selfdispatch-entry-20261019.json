@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PARTIAL_AUTHORIZED_ENTRY_AND_DISPATCH_TESTS_PASS_NOT_PRODUCT",
+  "plan_source": "3b7a9f2cc577f7c93933da38d07b8ac9ce4c44b8",
+  "plan_maintenance_run_id": 39229824736,
+  "plan_maintenance_conclusion": "success",
+  "pr_number": 15,
+  "pr_merge_commit": "06397ca512a620befb412acbebf0c2768ad40c46",
+  "pr_status": "MERGED",
+  "frozen_windows_control_ref": "qualification/m4-product-windows-v1",
+  "frozen_windows_control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+  "m4_registry_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+  "m4_registry_new_scope": "r0/go_overlay/internal/windowsclient/",
+  "m4_epoch_unchanged": 1,
+  "registry_revision_unchanged": 2,
+  "m4_015_exact_source": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+  "m4_015_g2_scope_run_id": 39225046360,
+  "m4_015_native_original_go_gui_run_id": 39225427878,
+  "m4_015_native_original_go_gui_conclusion": "success",
+  "m4_015_independent_worker_governance_run_id": 39225015969,
+  "m4_015_independent_worker_governance_conclusion": "failure",
+  "m4_015_settlement": "WORKER_M4_MUST_WRITE_ITS_OWN_H_WITH_EXACT_RESULTS_NOT_M0",
+  "entry_actions": [
+    {
+      "source_sha": "da542338d66517acdc7bea1d91e43fb08f6c6d54",
+      "run_id": 39232979992,
+      "scope": "M4 workflow trigger negative identity tests + nonpromotional push",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+      "run_id": 39233420825,
+      "scope": "exact-I/manifest/authority negative manual trigger tests + fixed control code",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+      "run_id": 39234078787,
+      "scope": "M1/M3 v7 unaffected; M4 auto dispatcher unit negatives and real main-only execution, no 016 request",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+      "run_id": 39234078783,
+      "scope": "main governance",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+      "run_id": 39234078750,
+      "scope": "governance maintenance",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+      "run_id": 39234078734,
+      "scope": "M4 product workflow nonpromotional selftest only",
+      "conclusion": "success"
+    }
+  ],
+  "witnesses": {
+    "legacy_cold": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "donor_windows_12": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+    "worker_request_json": "NOT_CREATED_BY_M0",
+    "m4_016_manual_actions": "NOT_RUN",
+    "m4_016_auto_actions": "NOT_RUN",
+    "m4_016_actual_windows_network_native": "NOT_RUN",
+    "m4_016_script_free_runtime": "NOT_RUN",
+    "shared_stop_sequence": "DECIDED_IN_M0_M4_CONTRACT_ONLY_NATIVE_PRODUCT_NOT_RUN",
+    "r0_original_go_rust_product_kind1": "NOT_RUN",
+    "product_fec2": "OFF",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "windows_arm": "NOT_RUN"
+  },
+  "recovery_notes": [
+    "An earlier scope-triggered old 015 G2 must not authorize new registry 016; initial source e0c11653da3852acdc22bc0e8350bf5333240bdc M4 workflow push Action39232732481 FAIL in attest authority allowed_paths; preserved; fixed as gate-only push and new G2 requirement.",
+    "Old 015 worker governance failure remains distinct from successful central G2.",
+    "Existing M4-015 GUI native PASS direct reuse, no Windows functionality for 016 inferred."
+  ],
+  "next_action": "M4 independently settles its 015 ledger, implements all 016 Windows runtime shell-free paths and creates immutable I request; central G2 auto dispatch on pinned control. M0 meanwhile wire same original Go protected Rust C2S kind1 receipt and shared Stop product integration, FEC2 OFF."
+}

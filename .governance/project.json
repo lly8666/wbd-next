@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "PLAN-008 active assignments docs/decisions/M0-integration-unblock-2026-10-19.md: M0 original Go/Rust vertical integration; M4 legacy product shell/CLI/GUI; M2 mature authenticated first-send feedback; M1 bounded Game dedup; M3 finite recovery workspace. All product/physical qualifications NOT_RUN; FEC2 OFF. Authority = main registry; workers reconcile own cursors.",
+  "next_decision": "PLAN-010 active [docs/decisions/M0-windows-native-migration-2026-10-19.md] and executable M4 entry [docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md]: M4 R5-M4-NATIVE-WINDOWS-NETWORK-016 owns all Windows original Go runtime script-free CLI Connect/Disconnect/Recover, GUI, config, portable, owned WAL, single proxy per host with normal cancel/Stop/restore. M0 owns frozen Windows Actions v1 (qualification/m4-product-windows-v1 at 17263ad) with fresh current M4 central G2 + immutable I/SOURCE/manifest + duplicate denial, main/shared Stop integration and original Go→Rust Normal product connection. 12 pinned donor Windows overlay files only, old a7a82 Go cold base unchanged. Historic M4-015 GUI/Linux/ARM scoped PASS reused; M4-016 Windows runtime/product, real native network, Rust applied ACK, physical and p99 NOT_RUN, FEC2 product OFF. M1 only actual Stop contract need, M2/M3 unchanged. Registered M4 path only r0/go_overlay/internal/windowsclient/, no other scope enlargement.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
