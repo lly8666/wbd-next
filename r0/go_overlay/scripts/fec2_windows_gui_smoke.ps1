@@ -86,6 +86,56 @@ try {
             throw ("original Windows CLI native test was not executed: " + $named)
         }
     }
+
+    # A single bounded Windows-2022 feature batch: original Go five-stage WAL
+    # Apply/Recover fixtures, cancellation, partial/ambiguous durable intents,
+    # generation ownership and OS machine mutex, read-only native WFP identity,
+    # exact native assembler negative admission. The test fixtures DO NOT Arm
+    # host-global rules or modify adapter routes/DNS. Fail on zero matching tests.
+    $nativeSafetyLog=Join-Path $out 'native-owned-safety-batch.log'
+    $safetyPattern='^(TestN4NativeTxnUnified|TestN4NativeTxnDryAssembly|TestN4WindowsMachineGate|TestN4WFPGuard|TestN4WFPPartialGuard|TestN4WindowsNativeWALAssembler|TestN4WindowsNativeAssembly)'
+    & go test -count=1 -v -run $safetyPattern ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeSafetyLog
+    if ($LASTEXITCODE -ne 0) { throw 'Windows original Go native owned WAL/OS mutex/read-only WFP safety batch failed' }
+    $namedSafeTests=@(
+        'TestN4NativeTxnUnifiedHappyAndCrashRecovery',
+        'TestN4NativeTxnUnifiedCancelAfterOwnedStageThenRecover',
+        'TestN4NativeTxnUnifiedIntentAmbiguousNeverDeletes',
+        'TestN4NativeTxnUnifiedGuardCrashIntentExactOwnedRecovery',
+        'TestN4NativeTxnUnifiedGuardPartialOnlyAfterOtherStagesRetire',
+        'TestN4NativeTxnUnifiedForeignAndGenerationFence',
+        'TestN4NativeTxnUnifiedJournalBoundAndTamper',
+        'TestN4NativeTxnUnifiedExclusiveCreateCollision',
+        'TestN4NativeTxnUnifiedRequiresGenerationGateAndAllStages',
+        'TestN4NativeTxnUnifiedExistingJournalRejectedBeforeSnapshots',
+        'TestN4NativeTxnUnifiedHoldsGenerationFromSnapshotThroughUndo',
+        'TestN4NativeTxnDryAssemblyNeverCreatesJournalOrMutates',
+        'TestN4WindowsMachineGateCancelledBeforeWindowsMutation',
+        'TestN4WindowsMachineGateSerializesAndReleases',
+        'TestN4WFPGuardRequiresVerifiedExclusiveAdapter',
+        'TestN4WFPGuardRefusesAlteredForeignRule',
+        'TestN4WFPGuardMissingRulesReadOnly',
+        'TestN4WFPPartialGuardDeletePlanAfterRouteCleanup',
+        'TestN4WindowsNativeWALAssemblerRequiresOwnedWintunAndPersistentGuard',
+        'TestN4WindowsNativeAssemblyRejectsUnboundLegacyGUID'
+    )
+    foreach ($named in $namedSafeTests) {
+        if (-not (Select-String -LiteralPath $nativeSafetyLog -SimpleMatch ('--- PASS: ' + $named + ' ') -Quiet)) {
+            throw ('Windows native safety test NOT_RUN: ' + $named)
+        }
+    }
+    $nativeSafetyReceipt=@{
+        schema='wbd-m4-native-owned-safety-batch/v1'
+        result='PASS_SCOPED_ORIGINAL_WINDOWS_GO'
+        test_count=$namedSafeTests.Count
+        test_names=$namedSafeTests
+        product_network='NOT_RUN'
+        host_wfp_global_apply='NOT_RUN'
+        full_connect_disconnect='NOT_RUN'
+        actual_native_rust_stop='NOT_RUN'
+        physical='NOT_RUN'
+    }
+    $nativeSafetyReceipt | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $out 'native-owned-safety-batch.json')
+    Write-Output ('WBD_M4_NATIVE_OWNED_SAFETY_BATCH_PASS_NOT_PRODUCT_NETWORK test_count=' + $namedSafeTests.Count)
 } finally { Pop-Location }
 $portable=Join-Path $out 'portable'
 & (Join-Path $legacy 'scripts/build_windows_gui.ps1') -OutputDirectory $portable -SourceSHA $source -Version 'fec2-plan008'
