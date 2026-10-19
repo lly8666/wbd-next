@@ -1,0 +1,59 @@
+name: Audited worker v5 auto dispatch
+run-name: "audited-worker-dispatch|${{ github.event_name }|${{ github.sha }"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/worker-request-dispatch.yml"
+      - "tools/worker_request_dispatch.py"
+      - "tests/test_worker_request_dispatch.py"
+  workflow_run:
+    workflows: ["Central worker scope audit"]
+    types: [completed]
+# Only the main-owned runner can dispatch. No worker gets an Actions token
+# with write permissions or access to a shared root path.
+permissions:
+  contents: read
+  actions: write
+# Every invocation scans BOTH current worker heads. This prevents queued
+# workflow_run events from dropping a role when an earlier event is pending.
+concurrency:
+  group: m0-audited-worker-request-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.name == 'Central worker scope audit' &&
+       github.event.workflow_run.event == 'workflow_run' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }
+          persist-credentials: false
+      - name: Fail-closed dispatcher unit tests (real credential never exercised in tests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_worker_request_dispatch.py' -v
+          python3 -m py_compile tools/worker_request_dispatch.py
+      - name: Main-only read exact central G2 artifact, verify immutable request I, dedupe and dispatch frozen v5
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/worker_request_dispatch.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: audited-worker-dispatch-${{ github.run_id }-${{ github.run_attempt }
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
