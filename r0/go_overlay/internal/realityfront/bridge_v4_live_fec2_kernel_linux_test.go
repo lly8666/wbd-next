@@ -94,6 +94,33 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         // synthetic M1 producer call; these bytes originated in Go UDP.
         time.Sleep(18*time.Millisecond)
     }
+    // After original source TX has entered the real kernel, bring up a
+    // separate CLIENT TUN. This must NOT short-circuit the initial
+    // server UDP→TUN ingress: client IP becomes local only now.
+    const clientName="wbdfeccli0"
+    clientDev,e:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if e!=nil{t.Fatal(e)}
+    defer clientDev.Close()
+    var clientReq [40]byte
+    copy(clientReq[:16],[]byte(clientName))
+    binary.LittleEndian.PutUint16(clientReq[16:18],0x1001)
+    _,_,clientErrno:=syscall.Syscall(syscall.SYS_IOCTL,clientDev.Fd(),
+        0x400454ca,uintptr(unsafe.Pointer(&clientReq[0])))
+    if clientErrno!=0{t.Fatalf("real client TUN ioctl: %v",clientErrno)}
+    for _,args:=range [][]string{
+        {"addr","add","10.241.24.2/32","dev",clientName},
+        {"link","set","dev",clientName,"up"},
+    }{
+        if output,e:=exec.Command("ip",args...).CombinedOutput();e!=nil{
+            t.Fatalf("real client TUN setup %v %v %s",args,e,output)
+        }
+    }
+    clientApp,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:dst,Port:42125})
+    if e!=nil{t.Fatal(e)}
+    defer clientApp.Close()
+    if e:=b.fec2ProbeLivePeerAttachTun(clientDev.Fd(),clientName);e!=nil{
+        t.Fatal(e)
+    }
     blocks:=map[uint64]bool{}
     paritySeen:=0
     recoveredFirst:=0
@@ -152,12 +179,31 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         paritySeen<2||recoveredFirst<1||!droppedOneOriginalSource{
         t.Fatalf("real original Go continuous kernel FEC source/repair recovery incomplete blocks=%d app=%d parity=%d recovered=%d",len(blocks),len(delivered),paritySeen,recoveredFirst)
     }
+    // Every first-delivery candidate is sent through the original
+    // scoped Rust M4 device writer into the real client TUN. Check an
+    // independent Linux UDP application received four exactly-once,
+    // including the intentionally dropped source's RS16 recovery.
+    clientDelivered:=map[string]bool{}
+    for i:=0;i<packets;i++{
+        if e:=clientApp.SetReadDeadline(time.Now().Add(time.Second));e!=nil{t.Fatal(e)}
+        output:=make([]byte,256)
+        n,from,e:=clientApp.ReadFromUDP(output)
+        if e!=nil||from==nil||!from.IP.Equal(src)||n!=64{
+            t.Fatalf("real client TUN UDP delivery i=%d n=%d from=%v err=%v",i,n,from,e)
+        }
+        got:=string(output[:n])
+        if !expected[got]||clientDelivered[got]{
+            t.Fatalf("client native TUN app unauthorized/duplicate i=%d",i)
+        }
+        clientDelivered[got]=true
+    }
+    if len(clientDelivered)!=packets{t.Fatalf("client TUN app only received %d",len(clientDelivered))}
     // A source queued or even copied locally is NOT an authenticated
     // remote application-APPLIED receipt. Keep truthful pending.
     got,applied,e:=b.readbackOriginalFixedPending(pending,server.Epoch)
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_RECOVERY_PASS blocks=%d real_app_ipv4=%d parity=%d recovered_missing=%d M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_CLIENT_TUN_UDP_RECOVERY_PASS blocks=%d real_app_ipv4=%d parity=%d recovered_missing=%d native_ScopedTunSink=1 client_udp=4 M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
         len(blocks),len(delivered),paritySeen,recoveredFirst)
 }
