@@ -441,7 +441,7 @@ fn r1_game_r5_sequential_full_window_advancement_is_constant_word_work(){
 fn r1_game_r5_open_index_swap_remove_pressure_and_external_loan(){
     let mut arena=arena(300);
     let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2,3,4],256),
-        RxLimits{delivered_window:65,open_blocks:128,open_bytes:128}).unwrap();
+        RxLimits{delivered_window:65,open_blocks:128,open_bytes:256}).unwrap();
     let at=scope(FlowDirection::Rx,1);
     for block in 0..128u64{
         let result=rx.offer_piece(at,lane(1,1,256).key,BlockIdExt(block*5),
