@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 181,
-  "checkpoint_sha": "bce9045967d2fa9b5605cc99f40a77f454025dc3",
+  "sequence": 182,
+  "checkpoint_sha": "3f313ad09e85b90e009d1e1d457a04f66663cce4",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-010 PR15 merged and R0-025 live original Go→Rust Stop/Normal product integration. M4 016 now registered: original Windows single-proxy CLI/GUI/portable runtime script-free work M4-owned; exact frozen Windows self-dispatch/control implemented and Actions-tested by M0. M0 verified original Go TLS Rust Stop completion+no Cleanup before drain; real kind1 product still unwired.",
-  "why_now": "Main after H180 clean. PLAN-010 PR15 3b7a9f2 merged 06397ca; M4-015 native original GUI run39225427878 scoped PASS reused, M4 worker Governance39225015969 FAIL retained. New 016 has only one additional Windows overlay path, same rev2/epoch1; M4 worker cursor untouched. Existing M4 product workflow pinned qualification/m4-product-windows-v1 17263ad; main G2/immutable I dispatcher Action39234078787 SUCCESS, no worker-016 I yet. Main project hot-doc overrun at 437cb2 failed 39234786246/39234786423, compressed project and Governance 39234938398 PASS. M0 shared original Go/Rust Stop SOURCE4f358 Actions TLS39235733659 SUCCESS and real native critical39235733652 SUCCESS (real Stop complete), project functional 016 still NOT_RUN.",
+  "current_task": "R0-025 original Go protected TLS→M0 same Rust RX owner actual C2S kind1/WBC4→M2 mature 2s now SCOPED PASS; after PLAN010 M4 016 independently developing native Windows runtime; next actual product requested/pending/applied/rejected and Stop binding.",
+  "why_now": "Recovered H181 clean ancestry; audited 8 prior S commits incl native codec/G2, M1 accepted, M3 F2 functional real ISA-L 13 PASS, perf INCONCLUSIVE. New original Go C2S SealHealth real raw kernel kind1 to moved Rust M3 AEAD/PN with unique open and exact WBC4 post-open M2, lab SOURCE160711 Action39242631401 build+critical+impairment+metric SUCCESS. Witness S2C8, authentic C2S receipt1, M2 2s covered8/unknown0. Governance Action39242631177 FAIL ONLY GitHub REST 403 rate_limited remaining=0; prior 39240388109 attempts1/2 same 403; retain red, no scope PASS claim. Initial Rust compile failures corrected and old logs preserved. M4 writer branch/cursor/request untouched.",
   "done_when": "R0-025: actual original Go client/server authenticated TLS→Rust Normal data/feedback/Stop with authentic C2S kind1/M2 mature coverage, exact requested/pending/applied/rejected, netns artifacts and final product ABI. PLAN010 M0 scope only shared Stop, self-dispatch and final M4 integration; M4 owns Windows 016. CLI/GUI real network, physical, WinARM/p99 remain NOT_RUN unless exact Action; production FEC2 OFF.",
-  "next_action": "Continue M0 original Go/Rust authenticated reverse C2S kind1 to SAME moved replay owner and M2 mature firstsend, actual product requested/pending/applied/rejected and Stop; await M4 worker-owned 016 exact I/G2 Windows native functional receipt for final single-proxy no-PowerShell integration. No M1/M2/M3 new task unless real Stop contract defect; FEC2 OFF.",
+  "next_action": "Continue original Go client/server protected Normal product FEC2 OFF: wire policy requested/pending/applied/rejected with actual Rust owner and authentic C2S kind1/M2 coverage/Stop, run exact SOURCE combined netns. M4 owns complete Windows 016 powerShell-free runtime and requests; don't touch worker cursor. Recheck Github rate-limited Governance when new evidence exists; don't invent G2 PASS.",
   "unverified": true,
-  "last_tested_source": "4f3585251a3288ca2b2a62a23d26fa740f6e8248",
+  "last_tested_source": "1607114df1a6ab1f436b0a64ac77ae9e44edf2af",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN010-real-Stop-plus-M4-selfdispatch-20261019.json"
+    "docs/evidence/M0/PLAN008-original-normal-real-go-c2s-kind1-m2-covered-20261019.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/PLAN010-M1-M3-accepted-M4-016-handoff-20261019.json",
+    "docs/evidence/M0/PLAN010-real-Stop-plus-M4-selfdispatch-20261019.json",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md",
-    "docs/evidence/M0/PLAN010-M4-Windows-selfdispatch-entry-20261019.json",
     "docs/evidence/M0/PLAN008-original-normal-M2-real-firstsend-20261019.json",
-    "docs/devlog/M0/PLAN010-H180-PR15-recovery-and-M4-dispatch-intent-20261019.md"
+    "docs/devlog/M0/PLAN010-H181-M1-M3-acceptance-recovery-20261019.md"
   ],
   "open_requests": [],
-  "partial_summary": "M0 H181. PR15 PLAN010 merged exactly at 3b7a9f2→06397ca. M4 016 registered and sole extra r0/go_overlay/internal/windowsclient/ scope; worker M4 branch/cursor untouched. Frozen self-test control 17263ad and trusted main dispatcher auto M4 016 request I/G2 verification Action39234078787 PASS; actual M4 016 request/native network/script-free runtime NOT_RUN. M4 015 existing native Go/WinForms Linux x64/ARM+Windows PASS 39225427878 reused, old worker Governance FAIL separate. Real original Go/Rust C Stop/Release 4f358 Action39235733652 critical PASS + TLS39235733659 Go Stop→Cleanup sequencing PASS. M0 R0-025 kind1 product/actual requested-pending-applied/rejected and physical NOT_RUN, product FEC2 OFF. Full broad TLS matrix39235733630 had ISAL in progress at evidence S. Old failed hot project docs and corrected Governance preserved."
+  "partial_summary": "H182 checkpoint after S194 SOURCE160711 Action39242631401 SUCCESS all 4 jobs; REAL original Go TLS C2S SealHealth WBC4 kind1 via Linux raw kernel to SAME moved Rust AEAD+PN owner; M2 actual S2C firstsend8, authentic report1, covered2s8, unknown2s0. Not production original client/server applied CLI/GUI, physical or FEC2; FEC2 OFF. Old H181→S194 main code, M1 Game015 already accepted, M3 018 native 13 PASS/perf INCONCLUSIVE, M4 016 actively worker-owned untouched. Main governance 39242631177 FAILED external rate-limit403, no source scope qualification until real pass; historical failures preserved."
 }
