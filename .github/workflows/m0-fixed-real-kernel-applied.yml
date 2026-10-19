@@ -6,7 +6,10 @@ run-name: "M0|FIXED-KERNEL-APPLIED-DEV|${{ github.sha }}"
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/m0-fixed-real-kernel-applied.yml"]
+    paths:
+      - ".github/workflows/m0-fixed-real-kernel-applied.yml"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_fixed_stream.rs"
 permissions: {contents: read}
 concurrency:
   group: m0-fixed-real-kernel-applied-${{ github.sha }}
@@ -102,6 +105,8 @@ jobs:
             authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
             real_data_blocks_per_case=1,
             frozen_fixed_stream_composer_consumed=True,
+            previous_attempt_compilation_failure_run_id=39266993450,
+            previous_attempt_original_result="FAIL_E0412_GO_APP_NOT_RUN",
             native_multiblock_composer_source="7b5533db6ffc7be7a950562bfaf642a68a75930b",
             native_multiblock_stream_only="PASS_3_BLOCKS",
             network_multiblock="NOT_RUN",
