@@ -4,14 +4,14 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 46,
-  "checkpoint_sha": "ea5b93c962b2d866d32243c12b16ddbeddc56e91",
+  "sequence": 47,
+  "checkpoint_sha": "95e6b7c366d962e61637e28508c7c192849c20d0",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
   "current_task": "PLAN008-018 real official ISA-L CODEb4d F2 13/13 functional PASS and source/artifact rehashed. Prepared one exact same-VM A-B-B-A k16/r16/1200B/e4 paired performance request; still NOT_RUN pending exact H46 G2 and main auto-dispatch.",
-  "why_now": "Main M0 verified v7 successful PREPARE-004 39218789735. M3 independently downloaded artifact12170931928 (ZIP digest 55987f...), parsed byte-exact manifest cc403870..., validated all 4 member hashes, native 13/0 includes dirty-tail, binary sha256 ee8bcc..., own source CODEb4d and harness42b3; moved prior CODE437-only evidence out of active evidence_refs to context because new last_tested_source is b4d. Source-locked independent performance request staged at S ea5b93. Known R0 wire 39217619084 FAIL is tool exact-total-13 assertion after 23/23 Rust tests, not FEC2 math.",
+  "why_now": "H46 ordinary worker Governance 39227569163 FAIL ROLE_SCOPE_FAILED: unbounded context_refs (10 > max 8). H47 cursor-only fixes to exactly 8 valid authorized references, keeping exact CODEb4d real native 13/13 PASS evidence and single A-B-B-A PAIRED-001 pending intent. No codec/request changes, previous red receipts and files retained.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Watch H46 worker Governance and central exact-head G2 then M0 v7 auto-dispatch M3-018-NATIVE-E4-PAIRED-001. Verify pinned prepare-manifest, same A B B A test binary & checksum per 2M e4 leg, CPU ticks/alloc; preserve v7 INCONCLUSIVE because lacks per-leg absolute monotonic windows. If shared ABI/test_count issue, M0 owns. Product FEC2 OFF.",
+  "next_action": "Observe exact H47 worker Governance, central G2 and M0 main v7 auto-dispatch of pending M3-018-NATIVE-E4-PAIRED-001. Record 4-leg real ISA-L ABBA outcomes, keep qualification INCONCLUSIVE if absolute monotonic leg bounds absent. Product FEC2 OFF.",
   "unverified": true,
   "last_tested_source": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
   "evidence_refs": [
@@ -28,9 +28,7 @@
     "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json",
     "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json",
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
-    "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json",
-    "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-valid-row-scalar-partial.json",
-    "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json"
+    "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json"
   ],
-  "partial_summary": "H46 partial: official Linux x64 real ISA-L CODEb4d native F2 prepare004 SUCCESS 13/13 incl cache/dirty-tail, artifacts ZIP+4 members independently rehashed; prior v5/v6/v7 0-case failures retained. New source-locked k16/r16/1200B/e4 4-leg native old8cc/newb4d/newb4d/old8cc ABBA paired request S ea5b93 PAIRED-001 pending dispatch. Existing v7 M3 paired runtime likely INCONCLUSIVE due missing absolute per-leg timing, cannot claim qualified CPU ratio. R0 shared 13-count anchor workflow FAIL despite 23 passed, M0-owned correction. FEC2 OFF, noncodec product gates NOT_RUN."
+  "partial_summary": "H47 only cursor metadata corrected (context_refs 10→8); original H46 failed Governance for unbounded references, not FEC2 math or ABBA result. CODEb4d Linux x64 official ISA-L functional prepare004 13/13 PASS, independently rehashed manifest cc403870... and binary ee8bcc...; native A-B-B-A paired measurement request PAIRED-001 pending central G2. Other product gates OFF/NOT_RUN."
 }
