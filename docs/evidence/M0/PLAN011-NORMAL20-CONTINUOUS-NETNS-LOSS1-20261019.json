@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_REAL_20MBPS_1PCT_NETEM_NORMAL_OFF_OBSERVATION_NOT_FEC_RECOVERY",
+  "source_sha": "c975a8899a4fa3d147f61b987f27ab0b454f5593",
+  "compiled_source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 39254760343,
+  "attempt": 1,
+  "job_id": 118067134301,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39254760343",
+  "request_id": "M0-PLAN011-CONT20-NORMALOFF-KERNEL-NETEM-1P-RETRY1-20261019",
+  "supersedes_failed_request": "M0-PLAN011-CONT20-NORMALOFF-KERNEL-NETEM-1P-20261019",
+  "previous_failed_receipt": "docs/evidence/M0/PLAN011-NORMAL20-CONTINUOUS-NETNS-LOSS1-INITIAL-FAIL-20261019.json",
+  "intent": "docs/devlog/M0/PLAN011-20mbps-sustained-normal-off-intent-20261019.md",
+  "artifact": {
+    "id": 12187636582,
+    "zip_sha256": "1bc9215c23db3f3cc6d072509e59f145eb6a70361f300f11f596dfdf35fdcf2d",
+    "loss_summary_sha256": "50c93ceff2e45ec552fdb27d18860cbb83ba8d5c2cdb6672c1f410f2522ce0b9",
+    "measure_json_sha256": "f39a174f662f06a6646fba18094be248345fffe3c6079aee9003d4efc18862ee",
+    "kernel_log_sha256": "c10cecf7a48c35d65d5de7ee3dd7b1f1c1a27f6961e7afc268ee0e1eea07f6b8"
+  },
+  "measurement": {
+    "mode": "Normal_OFF",
+    "loss_percent_configured": 1,
+    "netem_kernel_packets_dropped_including_control": 9689,
+    "warmup_seconds": 10,
+    "measure_seconds": 60,
+    "inner_ipv4_size_class_bytes": [
+      64,
+      256,
+      1200,
+      1329
+    ],
+    "target_mbps_each_direction": 20,
+    "c2s": {
+      "offered_mbps": 20.000359866666667,
+      "delivered_mbps": 19.803673466666666,
+      "offered_packets": 210604,
+      "delivered_packets": 208487,
+      "missing_packets": 2117,
+      "invalid_received": 0,
+      "duplicate_received": 0,
+      "injector_send_errors": 0
+    },
+    "s2c": {
+      "offered_mbps": 20.000199866666666,
+      "delivered_mbps": 19.809029866666666,
+      "offered_packets": 210603,
+      "delivered_packets": 208550,
+      "missing_packets": 2053,
+      "invalid_received": 0,
+      "duplicate_received": 0,
+      "injector_send_errors": 0
+    },
+    "original_rust_worker_rx_cpu_s": 3.716258913,
+    "original_rust_worker_tx_cpu_s": 3.646230431,
+    "process_user_cpu_s": 5.453347,
+    "process_sys_cpu_s": 13.009864,
+    "cgroup_cpu_quota": "UNAVAILABLE",
+    "kernel_lo_rx_dropped": 0
+  },
+  "interpretation": "Authentic pinned Go TLS and Rust owner real Linux owned network namespace /dev/net/tun raw/TCP loopback, actual kernel tc netem drop counter and independent original-Go application delivery. 20Mbps per direction logically offered for 60 measured seconds under 1% configured tc loss, with nonzero missing (FEC OFF), no invalid/duplicates/errors. qdisc drop includes control traffic and cannot substitute application missing. One Action, one observation; not independently sampled multiple seeds or RTT p99. Not a reliable full app delivery PASS and no FEC/Game recovery.",
+  "unqualified": {
+    "true_fec_fixed": "NOT_RUN",
+    "true_fec_auto": "NOT_RUN",
+    "true_game_2_4": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "product_cli_gui_windows": "NOT_RUN",
+    "separate_host_veth": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "independent_RTT_p99": "NOT_RUN",
+    "full_500mbps": "NOT_RUN"
+  },
+  "governance": {
+    "run_id": 39254760332,
+    "result": "FAIL",
+    "identity": "PASS",
+    "structure": "FAIL_INVALID_SOURCE_SHA_IN_CUSTOM_REQUEST_RECORD",
+    "fix": "S217 workflow narrow -ready events; separately normalize historic intent records to standard request schema. No conversion of this governance FAIL to PASS."
+  },
+  "next_action": "Fix existing request JSON governance structure without re-running completed 1% test; then run independently one normal/off continuous 20Mbps 5% netem scenario using new valid request with frozen binary and observe host/injector limits before any 10/20/30 pressure."
+}
