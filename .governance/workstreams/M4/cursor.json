@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 30,
-  "checkpoint_sha": "73d39c98696b580e0ac96bffef786d01f9f71789",
+  "sequence": 31,
+  "checkpoint_sha": "fe63e5cc648544bba2bd57a1043d7182edc24676",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "PLAN010 M4-016 Windows original Go native CLI/GUI no runtime shell; correct source-locked PARAMETERS original three-occurrence Git blob after I002 real Windows assembly FAIL. Current I003 awaits central G2 and Windows build.",
-  "why_now": "Actions39247695185 I002 attestation success job118043559919 but Windows job118043652318 FAIL exact go-build/assembly.log PARAMETERS result blob mismatch. Original first fec-parity count=3 patch generates c45e6a... not prior JS first-occurrence dc41d7...; fixed manifest blob a04e72f SHA256 b7bb58. All 9 original anchored replacements independently checked exact Git SHA; no WFP/product PASS claimed.",
+  "current_task": "PLAN010 M4-016 source-pinned original Windows native CLI/GUI. I004 strengthens true owner event lock for Recover and rejects orphan WAL at GUI Start/Stop/Disconnect, hard gate native WFP Apply unchanged; product network execution NOT_RUN.",
+  "why_now": "Prior I002 actual Windows assembly FAIL preserved; corrected exact 3-count PARAMETERS result blob in I003 (status unconfirmed). New Sfe63e5: 9/9 original anchored replacements and 18/18 donor/create overlay SHA static checked; GUI offline and direct Start no false success, CLI Recover shares named OS slot. One exact I004 submitted, Windows native results not yet verified.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Read H30 exact new central G2 and one main-only Windows native Action from immutable I003 c16120f source S73d39c9 manifest SHA256 b7bb5809d4b581dedfbed743ae907bae1d8afdd43ac8e5d05a2244000fe82ac9. If Windows runner fails, inspect exact artifact/log and repair scoped code with new I. Native WFP Connect remains fail-closed, real system and Rust Stop unapplied. FEC2 OFF.",
+  "next_action": "Read H31 exact central G2 and Windows-2022 self-dispatched Action for I004 5d493d64 SOURCE fe63e5c manifest SHA256 5fbdca4d099bc08851b268c80ad8ae340751ae592f39b69f10fbbe8db283e6f6. If red inspect job/artifact and fix M4 scope. Then implement safely admitted native WFP/CLI real Apply-Cleanup only after isolated owner-readback; M0 real Rust Stop/ACK and main merge, FEC2 OFF.",
   "unverified": true,
   "last_tested_source": "8b02bd2a6c78c01610b4a15db9e2236fdbda2899",
   "evidence_refs": [
@@ -21,12 +21,13 @@
   "open_requests": [
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-001.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-002.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-003.json"
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-003.json",
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-004.json"
   ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H30 active. I002 source8b02 Actions39247695185 attest PASS but Windows FAIL exact docs/PARAMETERS.json generated blob mismatch, real artifact12183069200 zip SHA256 ea3747; correction uses global 3-anchor replacement c45e6a, all 9 original replace-result SHA exact static match. Source S73d39c manifest SHA256 b7bb58, I003 c16120f committed, central G2/Windows unverified. Runtime shell-free CLI/GUI Recovery authored; production native WFP Apply still refuses, real network/Rust applied NOT_RUN, FEC2 OFF."
+  "partial_summary": "H31 active. Sfe63e5 I004 5d493d exact original Go Windows GUI/CLI no-network-script native recovery plus OS single-owner slot, offline route WAL Start/Stop/Disconnect refusal, 27-op SHA256 5fbdca4; full original 9/9 and overlay18/18 Git blob static MATCH. Prior I002 Windows assembly FAIL preserved; I003 status no new confirmed receipt; new G2/Windows native unverified. Native WFP Arm still rejects unsafe apply; network isolated/Rust Stop & actual applied NOT_RUN. FEC2 OFF."
 }
