@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "request_id": "M3-018-NATIVE-E4-PREPARE-003",
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "kind": "functional",
+  "status": "PLANNED",
+  "workflow": ".github/workflows/worker-component-validation.yml",
+  "dispatch_ref": "qualification/worker-ci-v7",
+  "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+  "source_sha": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "baseline_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+  "harness_sha": "a5de4452a7c240d4866352de157deed3565a17b6",
+  "config_path": "crates/wbd-codec/tests/fec2_plan008_abba.rs",
+  "config_sha256": "10e71d88c51d5d8ff1498f5d43e41864ebf8e1bd8ef380017c7adf070e427932",
+  "scenario": "fec2-018-native-e4",
+  "seed": 1,
+  "samples": 1,
+  "measurement_jobs": 1,
+  "mode": "single",
+  "purpose": "One pinned CODE437 real native F2 full suite using v7 candidate-matched fec_v2.rs AND fec_v2_tests.rs (includes named ISA-L dirty-tail recovery) with accepted CODE8cc baseline and frozen a5de ABBA harness; source-locked prepare manifest needed before any 4-leg native paired request.",
+  "expected": "Preflight verifies immutable v5 control, role, task, request path and input SHA. Rust1.85.1 Linux x86_64 official ISA-L upstream c387163f pin, --features native-isal. Full FEC2 function tests including r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact. No packet/p99/product qualification.",
+  "not_run": [
+    "ABBA paired measurement until prepare run artifact verified",
+    "Windows ARM codec",
+    "Go end-to-end",
+    "product FEC2 remains OFF"
+  ],
+  "supersedes_request": "M3-018-NATIVE-E4-PREPARE-002"
+}
