@@ -23,6 +23,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_debug_pause_jumbo(uint64_t,uint32_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_route_refresh(uint64_t,uint64_t *);
@@ -228,6 +229,22 @@ func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Firstsend()(v4NormalM2Firstsen
     if rc!=0{return z,fmt.Errorf("%w: normal M2 actual firstsend=%d",errV4Embedded,int(rc))}
     return v4NormalM2Firstsend{uint64(a),uint64(n),uint64(u),uint64(s),uint64(l),c!=0},nil
 }
+// Read actual post-AEAD C2S kind1 receiver/first-send M2 coverage.
+ // With no authentic reverse report all these counters MUST be zero.
+ type v4NormalM2Coverage struct {
+     Covered2s,Covered8s,AuthenticatedReverseReports uint64
+     Censored bool
+ }
+ func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Coverage()(v4NormalM2Coverage,error){
+     var z v4NormalM2Coverage
+     if !b.committed||b.handle==0{return z,errV4Embedded}
+     var a,b8,reports C.uint64_t
+     var c C.uint32_t
+     rc:=C.wbd_m0_embedded_go_loop_firstsend_m2_coverage(
+         C.uint64_t(b.handle),&a,&b8,&reports,&c)
+     if rc!=0{return z,fmt.Errorf("%w: normal M2 authentic reverse coverage=%d",errV4Embedded,int(rc))}
+     return v4NormalM2Coverage{uint64(a),uint64(b8),uint64(reports),c!=0},nil
+ }
 // Developer-only feature-gated barrier. This is not a product scheduler,
 // data-plane syscall, or authorization to enable FEC2.
 func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uint32,error){

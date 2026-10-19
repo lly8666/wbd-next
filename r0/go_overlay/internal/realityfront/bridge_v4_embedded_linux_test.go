@@ -1031,8 +1031,13 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
        firstsend.Unknown8s!=0||firstsend.Censored{
         t.Fatalf("real protected Normal/M2 kernel maturity wrong: %+v",firstsend)
     }
-    t.Logf("M0_ORIGINAL_REAL_KERNEL_NORMAL_M2_FIRSTSEND_UNKNOWN_PASS accepted=%d covered=0 unknown2s=%d unknown8s=%d authentic_receipt=NOT_RUN",
-        firstsend.Accepted,firstsend.Unknown2s,firstsend.Unknown8s)
+    coverage,e:=b.rustOwnerNormalM2Coverage()
+    if e!=nil||coverage.Covered2s!=0||coverage.Covered8s!=0||
+       coverage.AuthenticatedReverseReports!=0||coverage.Censored{
+        t.Fatalf("no genuine C2S kind1 may fabricate M2 bitmap coverage: %+v %v",coverage,e)
+    }
+    t.Logf("M0_ORIGINAL_REAL_KERNEL_NORMAL_M2_FIRSTSEND_UNKNOWN_PASS accepted=%d covered2s=%d unknown2s=%d unknown8s=%d authentic_receipt=NOT_RUN",
+        firstsend.Accepted,coverage.Covered2s,firstsend.Unknown2s,firstsend.Unknown8s)
 
     eventBefore,eventHealthy,err:=b.rustOwnerRouteEventState()
     if err!=nil||!eventHealthy{
