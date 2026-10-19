@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "d34a03e9b98685c7de565d368d93c17556284a13",
+  "result": "PARTIAL",
+  "artifact_verified": true,
+  "qualification": "M1_NATIVE_MAIN_INTEGRATED_AND_M4_NATIVE_ORIGINAL_GO_BUILD_SCOPED; FEC2_PRODUCT_NOT_RUN",
+  "production_FEC2": "OFF",
+  "handoff": {
+    "from_checkpoint_sha": "000473a8f9cecbd3785d78550c818911a2ebfc5e",
+    "from_h177": "6e6a346f91190abe9a82350429a93cc65fde7e42",
+    "main_source_sha": "d34a03e9b98685c7de565d368d93c17556284a13",
+    "reviewed_ff_commits": 9,
+    "unknown_unpushed_work": "NOT_CLAIMED"
+  },
+  "m1": {
+    "name": "Game015 RX dedup ring and bounded lookup",
+    "worker_source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+    "worker_baseline_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+    "main_integration_sha": "ae75b92d75cbacf2041aa073242fe9210a4dfd33",
+    "exact_blobs": [
+      {
+        "path": "crates/wbd-engine/src/runtime/game_shared.rs",
+        "git_blob": "9ac8d6784d2e942e04287ec2e2e59fb62ff1255d"
+      },
+      {
+        "path": "crates/wbd-engine/src/runtime/game_shared_tests.rs",
+        "git_blob": "2cbe7bc046d37994e903bee21776434ac4423547"
+      }
+    ],
+    "preaccepted_native": {
+      "run_id": 39188056715,
+      "result": "PASS",
+      "tests": 133
+    },
+    "preaccepted_representative_cost": {
+      "run_id": 39212126443,
+      "result": "PASS_SCOPED_AB_ONLY",
+      "source_old": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+      "source_new": "64102db5e101df1f678e17919169927ad19bad06",
+      "same_VM": true,
+      "work_per_leg": 16777216,
+      "cpu_s_old": 11.374184,
+      "cpu_s_new": 1.577889,
+      "memory_comparison": "NOT_VERIFIED",
+      "full_product_benefit": "NOT_RUN"
+    },
+    "main_actions": [
+      {
+        "run_id": 39219594724,
+        "attempt": 1,
+        "source_sha": "ae75b92d75cbacf2041aa073242fe9210a4dfd33",
+        "result": "success",
+        "jobs": [
+          "plan",
+          "build",
+          "verify normal",
+          "verify engine",
+          "verify fec",
+          "verify receipt",
+          "verify kernel"
+        ],
+        "artifact_id": 12171446070,
+        "artifact_zip_digest": "sha256:508e6ac0b158486b16d8c4389176872a69ca186b7e21f2ae2849d8c8d7dcbcd9"
+      },
+      {
+        "run_id": 39219594737,
+        "attempt": 1,
+        "result": "success",
+        "scope": "native R0 ABI"
+      },
+      {
+        "run_id": 39219594770,
+        "attempt": 1,
+        "result": "success",
+        "scope": "cross ABI, not native platform"
+      },
+      {
+        "run_id": 39219594756,
+        "attempt": 1,
+        "result": "success",
+        "scope": "M0 V4 feature-gated native probe, not product"
+      },
+      {
+        "run_id": 39219594765,
+        "attempt": 1,
+        "result": "success",
+        "scope": "M1 runtime native"
+      },
+      {
+        "run_id": 39219594753,
+        "attempt": 1,
+        "result": "success",
+        "scope": "main Governance"
+      }
+    ],
+    "rollback": "Restore only two original baseline Git blobs on main; no worker HEAD/epoch rewrite"
+  },
+  "m2": {
+    "status": "ALREADY_IN_MAIN",
+    "accepted_worker_source_sha": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
+    "main_file": "crates/wbd-recovery/src/maturity.rs",
+    "unchanged_git_blob": "ae9eabe37d4d153b13bb684d6b6350045d532749",
+    "prior_event_replay": "76/76",
+    "actual_original_sender_mature_firstsend": "NOT_WIRED"
+  },
+  "m3": {
+    "status": "AVAILABLE_NATIVE_COMPONENT_NOT_FULL_OPTIMIZATION",
+    "candidate_source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+    "run_id": 39218789735,
+    "attempt": 1,
+    "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+    "official_native_isal": "PASS",
+    "native_fec2_cases": "13/13 PASS",
+    "artifact_id": 12170931928,
+    "artifact_zip_digest": "sha256:55987fddd629142497121b692a3f9fad949b4ed5a426f12889b2f59a0480a3bc",
+    "manifest_sha256": "cc403870009d17d135c27cfe754ef2d7feb3e314718d186c9e145a7a0450dc37",
+    "same_VM_e4_abba": "NOT_RUN",
+    "main_optimized_module_integration": "NOT_RUN"
+  },
+  "m4": {
+    "status": "G2_SCOPED_SOURCE_CONSUMED_NO_WORKER_MERGE",
+    "worker_source_sha": "152f0a880d9fe637a38d6a1b2e66c376cafdff35",
+    "legacy_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "scope_run_id": 39219843238,
+    "scope_result": "ROLE_SCOPE_PASS_WITH_REVIEWED_HISTORICAL_INCIDENT",
+    "scope_product": "NOT_RUN",
+    "original_assembly_operations": 12,
+    "linux": {
+      "action_run_id": 39221442451,
+      "attempt": 1,
+      "runner": "ubuntu-24.04 x86_64",
+      "status": "success",
+      "artifact_id": 12172001266,
+      "artifact_zip_digest": "sha256:18e0a5ec76a639f1f7893eebc612be5f669df2fba4090b9943bb6b5679f3696b",
+      "go_version": "1.23.12",
+      "client_sha256": "7e338c35b1f3968684f71a463a436f988920ffa23ff7fa990050ac0e5a57b05d",
+      "server_sha256": "0d7cf00cf23869783d990fc3c41fa040001ec64019ebd5b55cc6193cf6d81795",
+      "named_fec_config_tests": 2
+    },
+    "arm64": {
+      "action_run_id": 39221442451,
+      "attempt": 1,
+      "runner": "ubuntu-24.04-arm aarch64",
+      "status": "success",
+      "artifact_id": 12172370508,
+      "artifact_zip_digest": "sha256:2e884c7eb0d0682c913ab8cc962f67e88ac3c1efee7205a1c38f890ed89270b6",
+      "go_version": "1.23.12",
+      "client_sha256": "3993586ac17fc630849964fbd62f00f064b33c38fbbe5ef7518789d7d0a25f49",
+      "server_sha256": "2853c8d5267d55aec0522c89c005a2ef48a074510fc4517a99659a13d5fe1b03",
+      "native_not_cross": true,
+      "named_fec_config_tests": 2
+    },
+    "windows": {
+      "action_run_id": 39222289145,
+      "attempt": 1,
+      "main_control_sha": "d34a03e9b98685c7de565d368d93c17556284a13",
+      "runner": "windows-2022 x64",
+      "result": "FAIL_GUI_NO_RECEIPT",
+      "artifact_id": 12171868919,
+      "artifact_zip_digest": "sha256:41997cb5fd78618695f807284f3119935bba3195cc9a50553ec29d80ed9b7567",
+      "assembly": "12/12 Git original and overlay blobs matched",
+      "go_cli_native": "PASS",
+      "client_sha256": "c8da25b3f0afaad7b660c8f3aa11a55830c19c7b75ca7483a0381d37109b589d",
+      "named_original_config_tests": 2,
+      "winforms_executable_compiled": true,
+      "gui_selftest_receipt": "MISSING",
+      "gui_qualification": "FAIL",
+      "suspected_issue": "M4-owned PowerShell invokes Windows GUI subsystem WBD.exe with & then immediately checks receipt; process completion may not have been awaited; hypothesis, not proven",
+      "m4_issue_url": "https://github.com/lly8666/wbd-next/issues/13"
+    },
+    "main_control_actions": [
+      {
+        "source_sha": "f23ad3be91980a39721f2af0ee5df84eaa6543a3",
+        "run_id": 39221442416,
+        "result": "success",
+        "scope": "governance-maintenance"
+      },
+      {
+        "source_sha": "d34a03e9b98685c7de565d368d93c17556284a13",
+        "run_id": 39222289229,
+        "result": "success",
+        "scope": "governance-maintenance"
+      },
+      {
+        "source_sha": "d34a03e9b98685c7de565d368d93c17556284a13",
+        "run_id": 39222289168,
+        "result": "success",
+        "scope": "Governance"
+      }
+    ],
+    "not_run": [
+      "original Go to Rust authenticated protected product admission",
+      "native Rust product library loaded",
+      "requested-pending-applied-rejected real owner ACK",
+      "Windows GUI selftest completion",
+      "physical driver",
+      "whole product FEC2"
+    ]
+  },
+  "historical_failures_preserved": [
+    {
+      "run_id": 39220982417,
+      "result": "FAIL",
+      "reason": "unescaped GitHub expressions in first shared workflow"
+    },
+    {
+      "run_id": 39220983900,
+      "result": "FAIL",
+      "reason": "same workflow YAML escaping in maintenance"
+    },
+    {
+      "run_id": 39221442451,
+      "result": "FAIL",
+      "reason": "Windows original blob mismatch MainForm.cs; Linux jobs same run PASS"
+    },
+    {
+      "run_id": 39221808025,
+      "result": "FAIL",
+      "reason": "Windows worktree CRLF still not exact; Linux jobs succeeded"
+    },
+    {
+      "run_id": 39222227150,
+      "result": "FAIL",
+      "reason": "M0 literal Python Git blob NUL escaping; newer SOURCE fixes"
+    },
+    {
+      "run_id": 39222289145,
+      "result": "FAIL",
+      "reason": "Windows WinForms selftest receipt missing; Windows client/config/GUI compile PASS"
+    }
+  ],
+  "next_action": "M0 trusted original Go/Rust real admission and authenticated reverse kind1 + M2 mature first-send into actual owner; M4 independently repairs native GUI PowerShell selftest under own exclusive file ownership and central G2. No FEC2 product activation."
+}
