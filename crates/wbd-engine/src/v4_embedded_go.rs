@@ -520,6 +520,7 @@ fn fec2_probe_real_kernel_raw_once(
     handle:u64,ifindex:u32
 )->Result<[(u64,u32,usize);2],i32>{
     use crate::v4_fixed_stream::{FixedStream,DriverProof};
+    use crate::runtime::fec2_owner::SourceTicket;
     use wbd_types::ConfigRevision;
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
