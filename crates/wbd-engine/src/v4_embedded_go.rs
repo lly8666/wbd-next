@@ -313,6 +313,10 @@ struct Entry{
     fixed_pending:Option<(u8,u64)>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fixed_applied:Option<(u8,u64)>,
+    // Original Go's EXACT applied policy controls the background FEC
+    // receiver, not a second untrusted mode bit or a guessed TLS epoch.
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_rx_admit:Arc<AtomicBool>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -429,6 +433,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         fixed_pending:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fixed_applied:None,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_rx_admit:Arc::new(AtomicBool::new(false)),
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -693,6 +699,8 @@ fn fec2_probe_real_kernel_raw_once(
             .map_err(|_|BAD_STAGE)?;
         e.fixed_pending=None;
         e.fixed_applied=Some((p,r)); // confirmed source+repair raw kernel copy
+        #[cfg(feature="fec2_product_record")]
+        e.fec2_rx_admit.store(true,Ordering::Release);
     }else if let Some((p,r))=e.fec2_probe_pending_policy {
         let (_,exact_epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
         e.owner.apply_fec2_probe_new_block_policy(exact_epoch,p,r)
@@ -1583,6 +1591,8 @@ fn stop(handle:u64)->i32{
                 w.shutdown.store(true,Ordering::Release);
                 e.joining=true;
             }
+            #[cfg(feature="fec2_product_record")]
+            e.fec2_rx_admit.store(false,Ordering::Release);
             e.phase=PH_STOPPING;
             w
         };
@@ -2620,6 +2630,19 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Ok(rx)=>rx,
         Err((_,normal))=>{e.normal=Some(normal);return BAD_STAGE},
     };
+    #[cfg(feature="fec2_product_record")]
+    if e.protected_features==7 {
+        let verified=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+            generation:e.generation,epoch,
+            negotiated_features:e.protected_features,
+            // This original server's M4 RX direction is peer C2S.
+            direction_s2c:false,
+        };
+        if original_rx.arm_fec2_original_go_only(
+            verified,Arc::clone(&e.fec2_rx_admit),
+            usize::from(e.wire_limit)
+        ).is_err(){return BAD_STAGE}
+    }
     let mut rx_anchor=e.rx_seq_anchor;
     let rx_flow=e.flow;
     let generation=e.generation;
@@ -2853,6 +2876,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     e.normal_off_applied_revision=revision;
     e.fixed_pending=None;
     e.fixed_applied=None;
+    #[cfg(feature="fec2_product_record")]
+    e.fec2_rx_admit.store(false,Ordering::Release);
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
