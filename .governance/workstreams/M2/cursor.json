@@ -4,14 +4,14 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 26,
+  "sequence": 27,
   "checkpoint_sha": "2d7de62bb6aaba8d563f5160b7baa58d595898ce",
-  "progress": "verifying",
+  "progress": "paused",
   "task_id": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011",
-  "current_task": "PLAN-008 M2-011 bounded first-send maturity observer implemented in pure wbd-recovery. Exact code SOURCE3c186cb native39188056003 compiled once 76/76 PASS (six new event-replay tests actually included plus 010's 70). M0 product wiring NOT_RUN. Main G2 central role scope for current SOURCE BLOCKED by GitHub API rate limit, not by module behavior.",
-  "why_now": "main registry rev2 epoch1 explicitly assigned 011 after 010 was ready. Code S48ff938 implemented bounded raw-first-send mature observer; 0369447 test filter omitted six, 3c186cb fixed test names and ran 76/76. Old worker Governance39188055948 HTTP403 history, central39188236554 github_rate_limited remaining0; evidence S2d7de62 own Governance39188617095 HTTP403 main ref and central39188632194 HTTP403 remaining0. No false scope PASS claimed.",
-  "done_when": "011 bounded 2s/8s event time-source outcome bins positive, explicit covered missing, recovered ambiguous, uncovered UNKNOWN; definite first-send-only bytes, not sent/uncertain/control excluded; mixed report serial, lost full block, repaired positive, Stop/epoch, capacity and 4096 records/128 blocks/<=64 deadline ops fully tested native76/76 SOURCE3c186cb. Interface/resource/rollback/NOT_RUN pinned in evidence. Formal latest-main central SOURCE ROLE_SCOPE_PASS still NOT_OBTAINED due GitHub API quota.",
-  "next_action": "M0 resolve GitHub Actions G2 central API remaining=0 at request M2-PLAN008-011-CENTRAL-SCOPE-API-QUOTA; then obtain exact tested SOURCE/HEAD central ROLE_SCOPE_PASS without bypass. Once scope qualified, stage original kernel first-send and authenticated reverse receipt into existing Go controller; M2 only fixes concrete 011 integration regression, do not re-run unchanged native or add unassigned algorithms.",
+  "current_task": "PLAN-008 M2-011 frozen and on user-requested HOLD. Code SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d implements bounded 2s/8s actual first-send/verified-receipt maturity observation; native 76/76 PASS, G2 bootstrap and static PASS. Product path NOT_RUN; no new feature or tests authorized while held.",
+  "why_now": "2026-10-19 user explicitly instructed: finish H; put other work on hold. 011 functional code and exact SOURCE artifacts are preserved. Latest 011 worker/source/evidence/H Governance and main central G2 history checks failed GitHub API HTTP403/rate-limit remaining=0, NOT a recovery correctness failure. No current SOURCE ROLE_SCOPE_PASS. Prior 010 H ready_for_integration remains historical, not overwritten as a 011 qualification.",
+  "done_when": "Existing task R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011 still authorized by main. Pure 011 functional coverage/unknown/censored/conservation, Stop/epoch and 4096-data timer bound proven native 76/76 at exact SOURCE; typed API and resource/rollback evidence S 2d7de62bb6aaba8d563f5160b7baa58d595898ce remain frozen. Formal exact SOURCE/HEAD central scope PASS blocked by API quota. Real M0 sender/AEAD/Go controller, netns/product, CPU/p99/physical all NOT_RUN. User requested pause before further qualification/integration work.",
+  "next_action": "HOLD. On explicit resume/M0 coordination, first recheck main registry/HEAD and resolve existing M0 central GitHub API quota request for exact SOURCE scope, without rerunning unchanged native tests; only then respond to a concrete 011 integration regression.",
   "unverified": true,
   "last_tested_source": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
   "evidence_refs": [
@@ -25,5 +25,5 @@
     "docs/evidence/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.json",
     "docs/decisions/M0-integration-unblock-2026-10-19.md"
   ],
-  "partial_summary": "011 implementation and native functional batch done but current SOURCE scope blocked by external GitHub API quota; S2d7de62 evidence and M0 request checkpoint; native source3c186cb build/consume PASS 76/76 worker-native39188056003, G2 bootstrap39188055915 PASS, static39188055945 PASS, ZIP hashes validated. 011 tests 6 scoped event replay, 4096 records, <=64 per poll, 2s/8s bins/count-byte conservation, capacity UNKNOWN, Stop and epoch; 009/010 behavior unchanged. SOURCE old worker Governance39188055948 FAIL HTTP403, central39188236554 FAIL github_rate_limited remaining0, S Governance39188617095 FAIL HTTP403 main, S central39188632194 FAIL remaining0. No Go/TLS AEAD/driver/controller product, physical, p99 performance, 5205/Windows/GUI; all NOT_RUN. H seq26 verifying/unverified=true because no exact SOURCE central ROLE_SCOPE_PASS; do not reinterpret earlier central 48ff938 PASS as current."
+  "partial_summary": "HOLD at SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d (native #39188056003 76/76 PASS; G2 #39188055915 SUCCESS; static #39188055945 SUCCESS); evidence S 2d7de62bb6aaba8d563f5160b7baa58d595898ce retains API quota request. Exact SOURCE central #39188236554 FAIL github_rate_limited remaining=0; S central #39188632194 and H central #39188798578 also FAIL API quota. Native PASS != scope PASS != product PASS. Stop/epoch, 2s/8s coverage, firstsend denominator and UNKNOWN/censored unchanged. No code/wire/RACK/budget/algorithm modifications; only cursor-only H; REAL Go AEAD/driver/controller/netns/performance/physical NOT_RUN."
 }
