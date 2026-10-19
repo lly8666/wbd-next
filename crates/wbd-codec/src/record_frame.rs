@@ -101,9 +101,9 @@ pub fn split_one(input: &[u8], max_wire: usize) -> Result<(OpaqueFrame<'_>, &[u8
     Ok((frame, &input[total..]))
 }
 
-#[cfg(test)]
-#[path = "fec_v2_tests.rs"]
-mod fec_v2_oracle_tests;
+// Exactly one FEC2 native/oracle test-tree registration now belongs to
+// fec_v2.rs; duplicate registration here reruns identical tests, obscures
+// the checked 13 unique F2 anchors and wastes native CI time.
 
 #[cfg(test)]
 mod tests {

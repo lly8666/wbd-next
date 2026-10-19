@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Compile native main codec against PINNED official ISA-L, 11 F2 native oracles
+      - name: Compile native main codec against PINNED official ISA-L, 13 F2 native oracles
         shell: bash
         run: |
           set -euo pipefail
@@ -47,9 +47,11 @@ jobs:
           names=set(re.findall(r"test (?:\S*::)?(r1_f2_\w+) \.\.\. ok",log))
           required={"r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence",
                     "r1_f2_prepared_native_cached_tables_real_ec_encode_data",
-                    "r1_f2_full_profiles_all_k_and_every_erasure_count"}
-          assert len(names)==11 and required.issubset(names),(len(names),names)
-          assert re.search(r"test result: ok\. 11 passed; 0 failed;",log)
+                    "r1_f2_full_profiles_all_k_and_every_erasure_count",
+                     "r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact",
+                     "r1_f2_decode_workspace_cache_65_distinct_keys_and_eviction"}
+          assert len(names)==13 and required.issubset(names),(len(names),names)
+          assert re.search(r"test result: ok\. 13 passed; 0 failed;",log)
           h=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-codec/src/fec_v2.rs",
                   "crates/wbd-codec/src/fec_v2_tests.rs",
@@ -59,7 +61,7 @@ jobs:
              "source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"native_tests":len(names),
              "actual_backend":"NativeIsaL","test_source":"MAIN_CHECKOUT_NOT_WORKER_CLONE",
-             "original_m3_code_sha":"8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+             "original_m3_code_sha":"b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
              "official_isal":"c387163fcbca62701d646149564c550c78a4f985",
              "platform":"linux_x86_64","rust":"1.85.1",
              "input_sha256":{p:h(p) for p in inputs},
