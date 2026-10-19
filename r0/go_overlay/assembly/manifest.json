@@ -147,7 +147,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "904d063f193d35a842a2cfd3c56e38eb0c7dad9f",
+      "result_blob": "e1c4b25104cf9a574350ce312c04749c28b11216",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -184,6 +184,14 @@
         {
           "find": "\t\t\tif (File.Exists(store.InRoot(\"data/network-state.json\"))) await RecoverAsync();",
           "replace": "\t\t\tif (File.Exists(store.InRoot(\"data/network-state.json\")) || File.Exists(store.InRoot(\"data/network-state.json.n4-owned-wal\"))) await RecoverAsync();"
+        },
+        {
+          "find": "            if (!File.Exists(path) && !File.Exists(path+\".n4-owned-wal\")) { Enqueue(\"没有残留网络状态。\"); return; }",
+          "replace": "            if (!File.Exists(path) && !File.Exists(path+\".n4-owned-wal\") && !File.Exists(path+\".n4-owned-wal.routes\") && !File.Exists(path+\".routes\")) { Enqueue(\"没有残留网络状态。\"); return; }"
+        },
+        {
+          "find": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\"))",
+          "replace": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\") || File.Exists(path+\".n4-owned-wal.routes\") || File.Exists(path+\".routes\"))"
         }
       ]
     },
@@ -191,7 +199,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "188428a9511645db81957e6863dae116d390e821",
+      "result_blob": "d05ecd160e4e088c0365f0248fd89dbdccf35510",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -212,6 +220,10 @@
         {
           "find": "                Assert(store.Fields.Count >= 36, \"CLI catalogue complete including all managed operations\");",
           "replace": "                Assert(store.Fields.Count >= 36, \"CLI catalogue complete including all managed operations\");\n                Assert(!store.Fields.Any(f=>f.Key==\"network-script\"), \"network-script removed from portable catalogue\");\n                Assert(!File.Exists(store.InRoot(\"windows_client_network.ps1\")), \"portable release contains no network script\");\n                var nativeRecovery = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                    \"--recover-network --state-path \" + ClientSession.Quote(store.InRoot(\"data/absent-native-state.json\"))) {\n                    UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=store.Root\n                };\n                using (var child=Process.Start(nativeRecovery)) {\n                    if (!child.WaitForExit(20000)) { child.Kill(); throw new IOException(\"native recover hung\"); }\n                    Assert(child.ExitCode==0,\"original Go native no-state recovery is script-free\");\n                }"
+        },
+        {
+          "find": "                using (var real = new ClientSession(store)) {",
+          "replace": "                using (var inactive = new ClientSession(store)) {\n                    string residue = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(residue,\"orphan intent\");\n                    bool blocked = false;\n                    try { Wait(inactive.StopAsync()); } catch (IOException) { blocked = true; }\n                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);\n                    Wait(inactive.StopAsync());\n                }\n                using (var real = new ClientSession(store)) {"
         }
       ]
     },
@@ -392,9 +404,17 @@
         {
           "find": "                process.WaitForExit(); process.Dispose(); process = null;",
           "replace": "                process.WaitForExit();\n                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");\n                string owned = store.InRoot(\"data/network-state.json\");\n                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\"))\n                    throw new IOException(\"客户端已退出但 owned 网络 WAL 仍存在；请执行原生恢复，不允许假报断开。\");\n                process.Dispose(); process = null;"
+        },
+        {
+          "find": "                if (process == null) return;",
+          "replace": "                if (process == null) {\n                    // A dead/never-started process does NOT certify network\n                    // cleanup. Reject every independently persisted owner\n                    // journal before GUI reports \"disconnected\".\n                    string idle = store.InRoot(\"data/network-state.json\");\n                    if (File.Exists(idle) || File.Exists(idle+\".n4-owned-wal\") ||\n                        File.Exists(idle+\".n4-owned-wal.routes\") || File.Exists(idle+\".routes\"))\n                        throw new IOException(\"未运行客户端仍有 owned 网络状态；请先执行原生恢复。\");\n                    return;\n                }"
+        },
+        {
+          "find": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\"))",
+          "replace": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") || File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))"
         }
       ],
-      "result_blob": "cb3591649b6b31769b4509cdf5cc2afd623bcbe8"
+      "result_blob": "1ff81ef4825fbe3a9098bf05b47f7f733fd99977"
     },
     {
       "kind": "create",
