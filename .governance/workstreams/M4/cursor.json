@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 24,
-  "checkpoint_sha": "969ddea8cba5fde20d06b656509acad0cc7ede68",
-  "progress": "paused",
+  "sequence": 25,
+  "checkpoint_sha": "3f6e1c5451aa44147e0b21c0a9e283a3031afede",
+  "progress": "in_progress",
   "task_id": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015",
-  "current_task": "M4 PLAN008-015 product implementation PAUSED by user; central G2 scope incident triaged only. H24 checkpoint preserves S request/evidence. No product or physical qualification.",
-  "why_now": "Current central G2 cannot honestly pass: immutable commits 2cfd979 create and 85911ac delete one exact-unpermitted runtimeentry test path. Old M4 central run 39095544653 failed H21 reviewed-evidence gate, not H24. M0 single checker/authority is required for any explicit historical decision.",
+  "current_task": "PLAN008-015 pinned old Go client/server + portable Windows GUI product assembly, single PARAMETERS.json, requested/rejected and native smoke; manual HOLD lifted. Product FEC2 OFF.",
+  "why_now": "M0 main 086ed67 confirmed user HOLD lifted under same M4 rev2 epoch1. Central G2 39197439844 H24 SOURCE c510378 (109 worker commits ROLE_SCOPE_PASS) reviewed exact incident. New Go native smoke zero-case false-PASS code S2716caf plus current docs/evidence S pending new Actions; original product not yet qualified.",
   "done_when": "Pinned original-source and overlay hashes/checkable fail-closed create/replace manifest; runnable Linux original client/server and Windows GUI loader native smoke where supported; same-parameter save/restart, two client/dir, invalid mode, missing DLL/wrong target, stale revision, Stop, exact real native applied status; report physical NOT_RUN and keep production feature OFF.",
-  "next_action": "CENTRAL G2 ONLY when M0 responds to https://github.com/lly8666/wbd-next/issues/13: inspect M0 reviewed exact two-SHA policy, Actions maintenance and H24 source-locked M4 G2 run/attempt and artifact; no other product, code, workflow, Go/GUI/native/physical tests until user lifts HOLD.",
+  "next_action": "Run exact current M4 S checkpoint pinned Go1.23.12 legacy assembly/Linux amd64+arm64 and Windows Go+original WinForms GUI native smoke via M0-owned Actions; consume run/attempt/artifact and correct scoped defects. M0 owns protected Rust ABI and main merge; FEC2 OFF until proven.",
   "unverified": true,
   "last_tested_source": null,
   "evidence_refs": [
@@ -25,5 +25,5 @@
     "docs/decisions/M0-integration-unblock-2026-10-19.md",
     "docs/architecture/modules/10-LIFECYCLE-QUALITY.md"
   ],
-  "partial_summary": "H24 CURRENT_TREE_SCOPE_OK / H_STRUCTURAL_OK, G2_FULL_HISTORY_NOT_PASS: 2cfd979+85911ac off-scope path pair in ancestry. Coordinated in M4 request and GitHub issue #13, not force pushed, no registry/checker widening by worker. PLAN008 manifest static hash only; original Go/GUI/Rust ABI actual product NOT_RUN, FEC2 OFF. Prior 014 exact test7cef remains historical separate qualification. User explicitly paused all other work."
+  "partial_summary": "H25 active. H24 G2 SOURCE c510378 run39197439844 attempt1 job117883140170 ROLE_SCOPE_PASS digest recorded. Previous scope incident still disclosed; new code S 2716caf not yet native-verified or G2-qualified. Original Linux/Windows GUI/native Rust ABI/driver/physical NOT_RUN. Main merge not done; source-locked static manifest only, production FEC2 OFF."
 }
