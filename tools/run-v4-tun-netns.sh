@@ -164,7 +164,7 @@ if [[ "$PERF" == 1 ]]; then
     if [[ "$QDISC" != *"qdisc netem "* ]] || ! grep -Eq 'Sent [1-9][0-9]* bytes [1-9][0-9]* pkt' <<<"$QDISC"; then
       echo 'CONT20_LOSS_KERNEL_NOT_OBSERVED' >&2; exit 77
     fi
-    DROPPED="$(sed -nE 's/.*\\(dropped ([0-9]+),.*/\\1/p' <<<"$QDISC" | head -1)"
+    DROPPED="$(sed -nE 's/.*\(dropped ([0-9]+),.*/\1/p' <<<"$QDISC" | head -1)"
     if [[ ! "$DROPPED" =~ ^[0-9]+$ || "$DROPPED" == 0 ]]; then
       echo 'CONT20_LOSS_KERNEL_DROP_NOT_OBSERVED' >&2; exit 1
     fi
