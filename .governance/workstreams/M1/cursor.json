@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 21,
-  "checkpoint_sha": "d8353ac89c6b03ef6c96fd5fb24fc191d923596a",
-  "progress": "blocked",
+  "sequence": 22,
+  "checkpoint_sha": "aa694811075f21ba51d62b5e3c5c560e983ec3ca",
+  "progress": "partial",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 Game RX 015 functional and bounded-operations scoped CODE 64102db5 PASS 133/133. User-directed HOLD after S21 handoff; do not run ABBA, re-run G2, edit Rust/root, or start other work.",
-  "why_now": "User 2026-10-19 expressly instructed '把H做好，其他工作先hold'. S21 d8353ac8 records CODE scope G2 PASS run39188080829; H20 exact-scope audit39188532444 attempts1/2 both API403 rate-limited, not a scope violation nor PASS. ABBA has no Actions execution receipt, is M0-owned and ON HOLD. Preserve original historical FAIL.",
-  "done_when": "M1 Game RX ring/index 015 source-locked functional PASS 133/133, wrap/large-gap/u64MAX/old duplicate/multilane/pressure/Stop/loan and bounded operations proved. Whole PLAN-008 015 NOT yet complete: M0-owned single-VM two-source/two-binary ABBA CPU/RSS evidence NOT_RUN; separate Go/live/product/physical NOT_RUN. User pause applies until explicit resume.",
-  "next_action": "HOLD until explicit user resume. On resume first re-read main registry, branch HEAD and exact Actions; then consume or request M0-only Game015 old/new same-VM ABBA cost and H21 central audit status. No autonomous workflow dispatch, retries, code edits, new workpacks, or false cost/product PASS.",
+  "current_task": "PLAN-008 Game015 M1 release AB component cost: HOLD explicitly lifted; source-first native 133/133 PASS fixed CODE 64102db5 and central G2 H21 PASS, frozen PLAN-009 control worker-ci-v3. S22 precise prepare request created, not yet dispatched.",
+  "why_now": "User explicitly lifted previous HOLD and requested rule-compliant AB (two-leg) test. Main PLAN-009 frozen M1/M3 prepare/paired workflow qualification/worker-ci-v3 at 3f87d3ec, smoke39197303106 PASS. Current registered task rev2 epoch1 unchanged; source C80 old / 64102 new pinned; no ABBA claim. Central H21 exact scope39191830788 PASS; old worker Governance red retained.",
+  "done_when": "M1 Game015 native 133/133 PASS and operation bounds already proved at CODE64102db5. Remaining performance work: prepare two exact release binaries using identical SHA-256 pinned fixture and receipt; then worker-managed separate paired_ab on same runner with equal work/cpu/RSS and capacity checks; record real PASS/INCONCLUSIVE and keep Go/live/product NOT_RUN. No A/B CPU claims before a successful paired Action.",
+  "next_action": "Dispatch exactly one frozen control qualification/worker-ci-v3 workflow_dispatch with role_id=M1, stage=prepare, request_id=M1-GAME015-AB-PREP-001, request_ref=aa694811075f21ba51d62b5e3c5c560e983ec3ca. At present connected GitHub actions have no workflow_dispatch action; use GitHub UI or gh CLI with these four exact inputs, not a rerun of unrelated smoke. Verify prepare run/attempt/artifact ID+manifest hash and identical fixture before creating distinct paired_ab request I; then dispatch stage=paired and consume final receipt. Do not edit root, launch ABBA, repeat 133 or claim performance PASS without Action.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -21,11 +21,12 @@
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
     ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
     ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md",
-    ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md"
+    ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md",
+    ".governance/workstreams/M1/requests/M1-GAME015-AB-PREP-001.json"
   ],
   "context_refs": [
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H21 user HOLD after S21 d8353ac89c6b03ef6c96fd5fb24fc191d923596a. Last tested code 64102db5e101df1f678e17919169927ad19bad06 immutable; native39188056715 133/133 PASS, independently hashed artifact12158088977. CODE central G2 39188080829 PASS. H20 central39188532444 attempts1/2 FAIL GitHub API403 rate-limit; H21 central unverified, do not claim PASS. ABBA NOT_RUN, M0 request exists but paused; Go/live/product NOT_RUN; legacy Governance FAIL retained. This H changes only cursor. No new tests or manual Actions requested."
+  "partial_summary": "H22 after S22 aa694811075f21ba51d62b5e3c5c560e983ec3ca unique request M1-GAME015-AB-PREP-001.json (PLANNED, not dispatched). Explicit user HOLD lifted. Frozen control qualifier worker-ci-v3=3f87d3ec, smoke39197303106 PASS; pinned old c80ff6a5 new64102db5 with harness64102db5 fixture SHA256 dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8. CODE-native39188056715 133/133 and H21 central39191830788 ROLE_SCOPE_PASS. No new functional tests or AB receipt; performance NOT_RUN and Go/product NOT_RUN. This H changes only cursor. Waiting on first workflow_dispatch of prepare using exact I; no current tool capability."
 }
