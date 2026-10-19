@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "1607114df1a6ab1f436b0a64ac77ae9e44edf2af",
+  "result": "SCOPED_REAL_ORIGINAL_GO_C2S_KIND1_NORMAL_M2_COVERED_PASS_PRODUCT_PARTIAL",
+  "case": "TEST_ONLY_ORIGINAL_PROTECTED_GO_TLS_NORMAL_OFF_SAME_MOVED_RUST_RX_OWNER",
+  "files": [
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+  ],
+  "architecture": {
+    "original_crypto": "real original protected Go credential/TLS C2S direction, original M3 Rust AEAD + unique PN replay opener MOVED to existing independent RX thread; no duplicate crypto/replay",
+    "reverse_control": "Original Go tlsrecord.SealHealth genuine kind1 containing 72-byte WBC4 with one typed 60-byte receipt TLV; full 8-bit PN0..7 bitmap; exact negotiated session keys; one real AF_INET/IP_HDRINCL kernel send",
+    "sender_firstsend": "Only original Rust M4 sendmmsg definite kernel prefix populates M2 denominator; never infer from receiver, data packet, shadow or forged ACK",
+    "admission": "Kind1 admitted by same moved opener with unique PN; bounded <=512B strict WBC4 kind1 only, exactly one receipt TLV; postopen ReceiptRouteScope checked for direction/epoch/lane/data and C2S control PN; rejected parse/mismatch/capacity cannot manufacture coverage",
+    "ownership": "One Arc<Mutex<NormalFirstSendM2>> shared strictly between original source TX (kernel firstsend) and original RX (authenticated kind1); no Entry lock in RX loop; Stop joins workers before M2 stop and owned driver teardown",
+    "readback": "Go read-only v4NormalM2Coverage provides covered 2s/8s and count of authenticated C2S reports separately from unknown/uncertain; no Go per-DATA callback"
+  },
+  "actions": {
+    "real_original_go_netns": {
+      "run_id": 39242631401,
+      "attempt": 1,
+      "source_sha": "1607114df1a6ab1f436b0a64ac77ae9e44edf2af",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39242631401",
+      "conclusion": "success",
+      "jobs": {
+        "build": "success",
+        "batch-critical": "success",
+        "batch-impairment": "success",
+        "batch-metric": "success"
+      },
+      "critical_job_id": 118027520461,
+      "build_artifact_id": 12182635271,
+      "build_artifact_zip_sha256": "db3351902ab0ee6d6cd642e5bec11b7375d8ec0045dd995f53262bdea5c068f7",
+      "critical_artifact_id": 12182595365,
+      "critical_artifact_zip_sha256": "24ac280753754d1b6633a3800a206a31ad4666b43a70eb5c1cc37910732d647c",
+      "impairment_artifact_id": 12181608394,
+      "impairment_artifact_zip_sha256": "5cf505855599c9d3a00f1433969052bd6ad9dad403fa74f2e4758df5230178fd",
+      "witness": "M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=8 authentic_reports=1 covered2s=8 unknown2s=0 FEC2=OFF",
+      "normal_real_original_S2C_firstsend_packets": 8,
+      "normal_authenticated_reverse_C2S_kind1_reports": 1,
+      "normal_mature_2s_covered": 8,
+      "normal_mature_2s_unknown": 0,
+      "original_rx_TX_workers": "PASS_C2S_8_S2C_8",
+      "stop_kernel_release": "PASS_SHARED_EXISTING_CRITICAL",
+      "actual_native_platform": "linux_x86_64_REAL_NETNS",
+      "scope": "Scoped original-Go protected TLS ↔ existing Rust owner LIVE kernel background RX/TX+M2; not CLI/GUI product runtime"
+    },
+    "previous_source_real_functional": {
+      "run_id": 39242284675,
+      "source_sha": "a88db863b21320b20ef21800313a311cc53d3f30",
+      "result": "success",
+      "scope": "prepeer 2s UNKNOWN remains conservative no fabricated bitmap coverage"
+    },
+    "main_governance_for_real_source": {
+      "run_id": 39242631177,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "External GitHub REST 403 github_rate_limited remaining=0 to git/ref/heads/main after 3 attempts; no role/path assertion observed",
+      "governance_qualified": false
+    },
+    "main_governance_earlier_same_session": {
+      "initial_run_id": 39240388109,
+      "attempts": 2,
+      "conclusion": "failure",
+      "cause": "Both attempts exhausted GitHub API 403 remaining0, no scope inference"
+    },
+    "history_compiler_fails": [
+      {
+        "source": "bb5cfea02fa8ad6da627481609d8b8a027c0222a",
+        "reason": "MatureWindow covered is method, not field; corrected after Actions"
+      },
+      {
+        "source": "499190ad627ad0d8fd41b19257f4f08c64becca2",
+        "run": 39241535715,
+        "result": "failure",
+        "reason": "DataError was imported from wbd_recovery rather than wbd_types; corrected in S191"
+      },
+      {
+        "source": "674aefb6a1ac84fdd1174dc9b6a94feb0bbf615d",
+        "run": 39241864278,
+        "result": "success",
+        "scope": "Rust + original Go real TLS native critical 3-lane pass before new positive kind1 network test"
+      }
+    ]
+  },
+  "components": {
+    "m1_game015": "ALREADY_ACCEPTED_IN_MAIN_SOURCE_64102db5e101df1f678e17919169927ad19bad06_RELEASE_PAIRED_39212126443_PASS",
+    "m3_fec2_native": "INTEGRATED_IN_MAIN_CODE_b4d638abf80bb6f12e6c944565c2aa8bb4e90792_NATIVE_REAL_ISAL_39238279378_PASS13",
+    "m3_e4_native_ABBA": "EXECUTED_39229126775_OFFICIAL_PERFORMANCE_INCONCLUSIVE_NO_ABSOLUTE_LEG_TIMES",
+    "m4_plan010_016": "WORKER_ACTIVE_OWN_BRANCH_CURSOR_SAME_WRITER; M0 DID_NOT_EDIT_M4_WORKER_CURSOR_OR_REQUEST",
+    "m4_015": "HISTORICAL_NATIVE_3_PLATFORM_GO_GUI_PASS_39225427878_REUSED",
+    "m2": "AUTHENTIC_REAL_C2S_KIND1_NOW_INTEGRATED_WITH_ACTUAL_ORIGINAL_FIRSTSEND_2S_COVERAGE"
+  },
+  "qualification": {
+    "real_original_go_authenticated_c2s_kind1_scoped_linux": "PASS",
+    "real_normal_in_kernel_firstsend_to_peer_2s": "PASS_8_OF_8_IN_EXPERIMENT",
+    "requested_pending_applied_rejected_actual_original_GO_config": "NOT_RUN",
+    "normal_original_client_server_product_entry": "PARTIAL_ONLY_TEST_HARNESS_NOT_PRODUCT_ENTRY",
+    "windows_016_full_native_scriptfree": "NOT_RUN_M4_OWNS",
+    "physical": "NOT_RUN",
+    "release_network_long_duration": "NOT_RUN",
+    "windows_arm": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "full_500mbps": "NOT_RUN",
+    "product_fec2": "OFF"
+  },
+  "next_action": "M0 wire original Go client/server actual protected Normal/off policy requested/pending/applied/rejected and Stop to same source-locked Rust owner using real kind1/M2 covered API. Keep bounded full-product experiments; do not claim product GUI, Windows native M4-016, physical, FEC2 activation. M4 independently continues 016. Once GitHub API rate quota allows, reverify main governance exact SOURCE rather than waiving 403."
+}
