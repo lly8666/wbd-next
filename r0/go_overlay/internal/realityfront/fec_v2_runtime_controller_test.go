@@ -176,10 +176,10 @@ func TestF2ControlOperatorFixedAutoRevisionScopeAndFailClosedOff(t *testing.T){
     off:=fixed
     off.Mode=FecV2Off
     off.ConfigRevision=3
-    state,e=r.ApplyOperatorConfig(epoch,off,4*time.Second)
-    if e!=nil||!state.DesiredOff||state.RequestedRevision!=3||
+    state,err=r.ApplyOperatorConfig(epoch,off,4*time.Second)
+    if err!=nil||!state.DesiredOff||state.RequestedRevision!=3||
         state.AppliedRevision!=0||len(backend.staged)!=3{
-        t.Fatalf("Go claimed native quiescent OFF before ACK %+v %v",state,e)
+        t.Fatalf("Go claimed native quiescent OFF before ACK %+v %v",state,err)
     }
     // Late applied fixed rev2 must not repaint OFF requested rev3.
     backend.ack=FecV2Ack{Client:cfg.Client,Direction:cfg.Direction,
