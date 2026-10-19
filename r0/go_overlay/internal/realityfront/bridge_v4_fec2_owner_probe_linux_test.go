@@ -381,6 +381,7 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                     t.Fatal("duplicate pending original Go AUTO revision6 accepted")
                 }
             }
+            var fixedRequested FecV2State
             if mode=="single"{
                 // Live original kernel M4 driver exists. Quiescent Rust
                 // OFF must prevent all M1 FEC2 block/PN creation.
@@ -397,6 +398,25 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 if e:=b.fec2ProbeTryStageExact(server.Epoch,5,3);e!=nil{
                     t.Fatalf("fresh exact epoch enable after OFF: %v",e)
                 }
+                // Use the NEW original-Go product policy boundary on the
+                // exact verified TLS epoch. It supersedes the test-only
+                // pending revision3, without creating native FEC ciphertext.
+                fixedCfg:=FecV2Config{Client:"protected-owner",
+                    Direction:FecV2S2C,Transport:FecV2Normal,
+                    Mode:FecV2Fixed,Profile:FecV2High,ConfigRevision:4}
+                var fixedAck FecV2Ack
+                fixedRequested,fixedAck,e=b.stageOriginalFixedPending(
+                    fixedCfg,FecV2State{},server.Epoch)
+                if e!=nil||fixedAck.Applied||fixedAck.Rejected||
+                    fixedRequested.RequestedRevision!=4{
+                    t.Fatalf("verified Fixed Go TLS request did not stage: %+v %+v %v",
+                        fixedRequested,fixedAck,e)
+                }
+                if _,fixedAck,e=b.readbackOriginalFixedPending(
+                    fixedRequested,server.Epoch);e!=nil||fixedAck.Applied{
+                    t.Fatalf("native Fixed claimed applied before M4 kernel copy: %+v %v",
+                        fixedAck,e)
+                }
                 // Pending enable is NOT applied until actual M4 copy.
                 t.Log("M0_ORIGINAL_KERNEL_QUIESCENT_OFF_NO_FEC_PN_PASS applied_off=1 blocked_new=1 foreign=deny")
             }
@@ -406,6 +426,17 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 wireLen[0]<42||wireLen[1]<43||wireLen[0]>1400||wireLen[1]>1400 {
                 t.Fatalf("original M1/M4 raw source/repair failed pn=%v seq=%v len=%v err=%v",
                     pn,seq,wireLen,e)
+            }
+            if mode=="single"{
+                effective,ack,readErr:=b.readbackOriginalFixedPending(
+                    fixedRequested,server.Epoch)
+                if readErr!=nil||!ack.Applied||ack.Rejected||
+                    effective.AppliedRevision!=4||effective.AppliedProfile!=FecV2High{
+                    t.Fatalf("real M4 source+repair copy failed Go Fixed applied ACK: %+v %+v %v",
+                        effective,ack,readErr)
+                }
+                t.Logf("M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=%d requested=4 copied=2 applied=4 no_premature_ack=1",
+                    cipher)
             }
             if mode=="mixed-prefix"{
                 applied,ackErr:=b.fec2ProbeAppliedPolicy(policyState)
