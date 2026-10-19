@@ -19,6 +19,9 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_mature_firstsend(
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_live_peer_consume(
+    uint64_t,const unsigned char *,size_t,uint32_t *,uint64_t *,
+    uint8_t *,uint32_t *,unsigned char *,size_t,size_t *);
 extern int32_t wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     uint64_t,const unsigned char *,size_t,unsigned char *,size_t,
     uint64_t *,uint8_t *,uint32_t *);
@@ -108,6 +111,32 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeKernelRawTx(
 // Validated independent original Rust client receive-side AEAD/PN bitmap,
 // using the immutable ORIGINAL Go TLS S2C direction keys. It is accessible
 // only with the private feature+epoch bound sender owner still ACTIVE.
+// Developer-only actual M4 packet -> independent original Go TLS key
+// receive. Same Rust FEC2LiveRx code, not a product client or synthetic ACK.
+func (b *v4EmbeddedNativeBridge) fec2ProbeLivePeerConsume(
+    ciphertext []byte,
+)(block uint64,index uint8,recovered bool,frame []byte,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        len(ciphertext)<31||len(ciphertext)>2048{
+        err=errV4Embedded;return
+    }
+    output:=make([]byte,2048)
+    var n C.uint32_t
+    var id C.uint64_t
+    var idx C.uint8_t
+    var recover C.uint32_t
+    var used C.size_t
+    rc:=C.wbd_m0_embedded_go_fec2_probe_live_peer_consume(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&ciphertext[0])),
+        C.size_t(len(ciphertext)),&n,&id,&idx,&recover,
+        (*C.uchar)(unsafe.Pointer(&output[0])),C.size_t(len(output)),&used)
+    runtime.KeepAlive(ciphertext)
+    if rc!=0||n>1||int(used)>len(output) {
+        err=fmt.Errorf("%w: live independent peer=%d",errV4Embedded,int(rc));return
+    }
+    if n==0{return 0,0,false,nil,nil}
+    return uint64(id),uint8(idx),recover!=0,output[:int(used)],nil
+}
 func (b *v4EmbeddedNativeBridge) fec2ProbeActualPeerConsume(
     cipherRecord []byte,
 )(uint64,uint8,[]byte,error){
