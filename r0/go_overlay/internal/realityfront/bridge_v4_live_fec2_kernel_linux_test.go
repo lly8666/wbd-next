@@ -95,7 +95,7 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         time.Sleep(18*time.Millisecond)
     }
     blocks:=map[uint64]bool{}
-    kinds:=map[uint64]int{}
+    paritySeen:=0
     delivered:=map[string]bool{}
     deadline:=time.Now().Add(4*time.Second)
     for time.Now().Before(deadline) {
@@ -118,9 +118,10 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         block,index,recovered,plain,e:=b.fec2ProbeLivePeerConsume(wire)
         if e!=nil{t.Fatalf("original Go TLS keyed independent M3 FEC peer: %v",e)}
         if len(plain)==0{
-            // A verified kind3 parity with no missing source emits no
-            // application candidate. It still passed native AEAD+RS16
-            // grammar checks and unique replay PN.
+            // An AEAD/replay admitted kind3 parity with no missing source
+            // emits no candidate. It remains real original kernel parity.
+            paritySeen++
+            if len(blocks)==packets && paritySeen>=2{break}
             continue
         }
         if block==0||index!=0||recovered||len(plain)<28+64||
@@ -133,11 +134,10 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         }
         delivered[udp]=true
         blocks[block]=true
-        kinds[block]++
-        if len(blocks)==packets{break}
+        if len(blocks)==packets && paritySeen>=2{break}
     }
-    if len(blocks)<2||len(delivered)<2{
-        t.Fatalf("real original Go continuous kernel FEC source incomplete blocks=%d app=%d",len(blocks),len(delivered))
+    if len(blocks)<2||len(delivered)<2||paritySeen<2{
+        t.Fatalf("real original Go continuous kernel FEC source/repair incomplete blocks=%d app=%d parity=%d",len(blocks),len(delivered),paritySeen)
     }
     // A source queued or even copied locally is NOT an authenticated
     // remote application-APPLIED receipt. Keep truthful pending.
@@ -145,6 +145,6 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_PASS blocks=%d real_app_ipv4=%d M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
-        len(blocks),len(delivered))
+    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_PASS blocks=%d real_app_ipv4=%d parity=%d M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+        len(blocks),len(delivered),paritySeen)
 }
