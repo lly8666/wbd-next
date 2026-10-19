@@ -453,6 +453,27 @@
       "path": "cmd/wbd-client/native_owner_slot_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/native_owner_slot_windows_test.go",
       "result_blob": "e6d39932c112bf47db25ffb127d82f114fad1ad6"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/control_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/control_windows_test.go",
+      "original_blob": "354be63af0f0c578a42b942a671924adbc688bf6",
+      "result_blob": "4ac427a84135efcc6f92c8fd3561a812f2ec302b"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/n4_entry_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/n4_entry_windows_test.go",
+      "original_blob": "c02d6869537f5f2af1e7b6e839f4a15f380fd2b7",
+      "result_blob": "1f6854e6d9e2ad27e34d4958cb04ee8c3cd8517d"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/n4_network_cancel_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/n4_network_cancel_windows_test.go",
+      "original_blob": "644836eb227b63ac029a2b19e546dad28b95873d",
+      "result_blob": "a930b8129ac620947571eb34b1239af329ea5543"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
