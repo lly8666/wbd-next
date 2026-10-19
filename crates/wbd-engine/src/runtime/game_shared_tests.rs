@@ -476,3 +476,188 @@ fn r1_game_r5_open_index_swap_remove_pressure_and_external_loan(){
     drop(loan);
     assert_eq!(arena.report().loaned,0);
 }
+
+
+/// Component-only, paced Game fan-out/load probe. NOT a UDP/TLS/FEC/network
+/// benchmark and never a per-lane physical throughput or product qualification.
+/// M1 exercises only existing public GameTx/Arena/GameRx with real 256/1200B
+/// payload writes, per-lane owned copies, complete byte verification, and a
+/// deterministic 25 Mbps/lane offered payload schedule (1ms batches).
+/// Raw numbers are DEBUG-profile worker-native CI observations, not release CPU.
+fn game_r5_read_u64(path:&str,key:&str)->Option<u64>{
+    let data=std::fs::read_to_string(path).ok()?;
+    data.lines().find_map(|line|{
+        let mut parts=line.split_whitespace();
+        (parts.next()?==key).then(||parts.next()?.parse().ok()).flatten()
+    })
+}
+fn game_r5_sched_cpu_ns()->Option<u64>{
+    std::fs::read_to_string("/proc/self/schedstat").ok()?
+        .split_whitespace().next()?.parse().ok()
+}
+fn game_r5_proc_status_kib(key:&str)->Option<u64>{
+    game_r5_read_u64("/proc/self/status",key)
+}
+fn game_r5_p99_ns(v:&mut [u64])->u64{
+    v.sort_unstable();
+    let rank=(v.len()*99).div_ceil(100);
+    v[rank.saturating_sub(1)]
+}
+fn game_r5_lane25m_case(nlanes:usize,payload:usize){
+    use std::time::{Duration,Instant};
+    const RATE_BPS_PER_LANE:u64=25_000_000;
+    const DURATION_MS:u64=2_000;
+    assert!(nlanes==1||nlanes==4);
+    assert!(payload==256||payload==1200);
+    let per_tick_bits=RATE_BPS_PER_LANE/1000;
+    let bits_per_packet=(payload*8) as u64;
+    let lane_ids:Vec<u32>=(1..=nlanes as u32).collect();
+    let tx_scope=scope(FlowDirection::Tx,1);
+    let rx_scope=scope(FlowDirection::Rx,1);
+    let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&lane_ids,payload),
+        GameLimits{
+            jobs:64,logical_bytes:64*payload,
+            lane_slots:64,lane_bytes:64*payload,
+            max_age_ns:1_000_000_000,
+        }).expect("bounded GameTx");
+    let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&lane_ids,payload),
+        RxLimits{delivered_window:65536,open_blocks:64,open_bytes:payload*64})
+        .expect("bounded GameRx");
+    let class=if payload<=256{256}else{1536};
+    let mut tx_arena=Arena::new(701,64,class,64,500_000).expect("bounded Tx arena");
+    let mut rx_arena=Arena::new(702,64,class,64,500_000).expect("bounded Rx arena");
+    let mut lane_bytes=[0u64;4];
+    let mut packets=0u64;
+    let mut first=0u64;
+    let mut duplicate=0u64;
+    let mut byte_sum=0u64;
+    let mut delays=Vec::with_capacity((DURATION_MS*per_tick_bits/bits_per_packet) as usize);
+    let mut tardy_ticks=0u64;
+    let mut max_lateness_us=0u64;
+    let cpu_before=game_r5_sched_cpu_ns();
+    let rss_before=game_r5_proc_status_kib("VmRSS:");
+    let hwm_before=game_r5_proc_status_kib("VmHWM:");
+    let cgroup_mem_before=game_r5_read_u64("/sys/fs/cgroup/memory.stat","anon");
+    let cgroup_throttle_before=game_r5_read_u64("/sys/fs/cgroup/cpu.stat","nr_throttled");
+    let cgroup_throttled_us_before=game_r5_read_u64("/sys/fs/cgroup/cpu.stat","throttled_usec");
+    let start=Instant::now();
+    for tick in 0..DURATION_MS {
+        let release=start+Duration::from_millis(tick);
+        let now=Instant::now();
+        if now<release{std::thread::sleep(release-now);}
+        let late=Instant::now().saturating_duration_since(release);
+        if late>=Duration::from_millis(1){tardy_ticks+=1;}
+        max_lateness_us=max_lateness_us.max(late.as_micros() as u64);
+        // Exactly 25 Mbps offered per lane in 1ms batches; Game mode fans out
+        // one logical payload to all lanes. 4 lanes = 100 Mbps copied payload.
+        let target=((tick+1)*per_tick_bits)/bits_per_packet;
+        while packets<target {
+            let begin=Instant::now();
+            let mut source=tx_arena.allocate().expect("available Tx slab");
+            let bytes=&mut source.writable()[..payload];
+            let mut expected_sum=0u64;
+            for (i,b) in bytes.iter_mut().enumerate(){
+                *b=(packets.wrapping_mul(17).wrapping_add((i as u64)*3)%251) as u8;
+                expected_sum+=*b as u64;
+            }
+            let id=tx.offer(source,0..payload,Mode::Game,payload,None,
+                MonoNs(tick*1_000_000)).expect("Game offer")
+                .expect("Game must assign packet ID");
+            assert_eq!(id,LogicalPacketId(packets));
+            let emitted=tx.drain_ready(MonoNs(tick*1_000_000),32,|view|{
+                assert_eq!(view.mode,Mode::Game);
+                assert_eq!(view.logical_id,Some(id));
+                assert_eq!(view.scope,tx_scope);
+                assert_eq!(view.common_payload.len(),payload);
+                let slot=(view.lane.slot-1) as usize;
+                assert!(slot<nlanes);
+                let mut copy=rx_arena.allocate().expect("bounded per-lane Rx copy");
+                copy.writable()[..payload].copy_from_slice(view.common_payload);
+                let sum:u64=copy.writable()[..payload].iter().map(|&b|b as u64).sum();
+                assert_eq!(sum,expected_sum,"payload bytes altered");
+                byte_sum=byte_sum.wrapping_add(sum);
+                lane_bytes[slot]+=payload as u64;
+                match rx.first_delivery(rx_scope,view.lane,id,copy){
+                    Ok(first_buffer)=>{first+=1;drop(first_buffer);}
+                    Err((GameError::Duplicate,duplicate_buffer))=>{
+                        duplicate+=1;drop(duplicate_buffer);
+                    }
+                    Err((error,buffer))=>{
+                        drop(buffer);
+                        panic!("Game RX unexpected error: {error:?}");
+                    }
+                }
+                DispatchOutcome::Accepted
+            });
+            assert_eq!(emitted,nlanes,"each qualified Game lane must dispatch");
+            assert_eq!(tx.in_use(),(0,0));
+            packets+=1;
+            delays.push(begin.elapsed().as_nanos() as u64);
+        }
+    }
+    let deadline=start+Duration::from_millis(DURATION_MS);
+    let now=Instant::now();
+    if now<deadline{std::thread::sleep(deadline-now);}
+    let wall_ns=start.elapsed().as_nanos() as u64;
+    let cpu_after=game_r5_sched_cpu_ns();
+    let rss_after=game_r5_proc_status_kib("VmRSS:");
+    let hwm_after=game_r5_proc_status_kib("VmHWM:");
+    let cgroup_mem_after=game_r5_read_u64("/sys/fs/cgroup/memory.stat","anon");
+    let cgroup_throttle_after=game_r5_read_u64("/sys/fs/cgroup/cpu.stat","nr_throttled");
+    let cgroup_throttled_us_after=game_r5_read_u64("/sys/fs/cgroup/cpu.stat","throttled_usec");
+    let expected_packets=DURATION_MS*per_tick_bits/bits_per_packet;
+    assert_eq!(packets,expected_packets,"offered rate schedule");
+    assert_eq!(first,packets,"only first logical Game payload delivered");
+    assert_eq!(duplicate,packets*(nlanes as u64-1),"cross-lane duplicate copies");
+    let tx_counts=tx.counters();
+    assert_eq!(tx_counts.logical_jobs,packets);
+    assert_eq!(tx_counts.lane_dispatch,packets*nlanes as u64);
+    assert_eq!(tx_counts.lane_copy_drop,0);
+    assert_eq!(tx_counts.common_bytes,packets*payload as u64);
+    assert!(lane_bytes[..nlanes].iter().all(|&v|v==packets*payload as u64));
+    assert_eq!(tx.in_use(),(0,0));
+    assert_eq!(rx.open_state(),(0,0));
+    assert_eq!(tx.stop(),0);
+    assert_eq!(rx.stop(),0);
+    assert_eq!(tx_arena.report().loaned,0);
+    assert_eq!(rx_arena.report().loaned,0);
+    let p99_ns=game_r5_p99_ns(&mut delays);
+    let p50_ns=delays[delays.len()/2];
+    let good_bytes=packets*payload as u64;
+    let emitted_bytes=good_bytes*nlanes as u64;
+    let measured_mbps=(emitted_bytes as f64)*8_000.0/(wall_ns as f64);
+    let cpu_ns=cpu_after.and_then(|after|cpu_before.and_then(|before|after.checked_sub(before)));
+    let cpu_percent=cpu_ns.map(|n|n as f64*100.0/wall_ns as f64);
+    let max_slot_bytes=lane_bytes[..nlanes].iter().copied().max().unwrap_or(0);
+    // Printed by worker-native with --nocapture. Inspect this line; cargo
+    // PASS only asserts correctness, not that the host achieved rate/capacity.
+    println!("M1_GAME_LANE25_PROFILE profile=debug mode=Game lanes={nlanes} payload_bytes={payload} target_per_lane_mbps=25 target_aggregate_mbps={} wall_ns={wall_ns} offered_packets={packets} unique_rx={first} duplicate_rx={duplicate} copies={} actual_aggregate_mbps={measured_mbps:.5} per_lane_mbps={:.5} p50_processing_ns={p50_ns} p99_processing_ns={p99_ns} cpu_ns={} cpu_percent={} cpu_ns_per_logical={} tx_bytes={good_bytes} lane_payload_bytes={max_slot_bytes} total_copied_bytes={emitted_bytes} copied_byte_checksum={byte_sum} lane_copy_drop={} tardy_ticks={tardy_ticks} max_tick_lateness_us={max_lateness_us} rss_before_kib={} rss_after_kib={} hwm_before_kib={} hwm_after_kib={} cgroup_anon_before={} cgroup_anon_after={} nr_throttled_delta={} throttled_us_delta={} host_capacity_25m_met={} network=NOT_RUN tls=NOT_RUN fec=NOT_RUN release=NOT_RUN",
+        nlanes*25,
+        measured_mbps/nlanes as f64,
+        cpu_ns.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        cpu_percent.map_or_else(||"NOT_RUN".into(),|v|format!("{v:.4}")),
+        cpu_ns.map_or_else(||"NOT_RUN".into(),|v|format!("{:.4}",v as f64/packets as f64)),
+        tx_counts.lane_copy_drop,
+        rss_before.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        rss_after.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        hwm_before.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        hwm_after.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        cgroup_mem_before.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        cgroup_mem_after.map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        cgroup_throttle_after.and_then(|v|cgroup_throttle_before.and_then(|w|v.checked_sub(w)))
+            .map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        cgroup_throttled_us_after.and_then(|v|cgroup_throttled_us_before.and_then(|w|v.checked_sub(w)))
+            .map_or_else(||"NOT_RUN".into(),|v|v.to_string()),
+        measured_mbps>=nlanes as f64*25.0*0.95);
+}
+#[test]
+fn r1_game_r5_25mbps_per_lane_one_and_four_256_and_1200_byte_profile(){
+    // Sequential profiles share process and debug build; no clean-room
+    // independent RSS claim. This observes bounded owner overhead at target,
+    // not one NIC, not 25 Mbps of unique bytes for four replicated lanes.
+    for payload in [256usize,1200]{
+        for nlanes in [1usize,4]{
+            game_r5_lane25m_case(nlanes,payload);
+        }
+    }
+}
