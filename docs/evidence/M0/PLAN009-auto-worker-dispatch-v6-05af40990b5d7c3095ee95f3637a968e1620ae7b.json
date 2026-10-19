@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "source_sha": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "state": "CENTRAL_AUTODISPATCH_SOURCE_PASS_NEW_WORKER_V6_INTENT_NOT_RUN",
+  "product_FEC2": "OFF",
+  "immutable_control": {
+    "ref": "qualification/worker-ci-v6",
+    "sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+    "original_v5_ref": "qualification/worker-ci-v5",
+    "original_v5_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+    "never_move_old": true
+  },
+  "scope": {
+    "roles": [
+      "M1",
+      "M3"
+    ],
+    "registry_rev": 2,
+    "worker_only_paths": [
+      ".governance/workstreams/M1/requests/",
+      " .governance/workstreams/M3/requests/"
+    ],
+    "main_owned_changes": [
+      ".github/workflows/worker-request-dispatch.yml",
+      "tools/worker_request_dispatch.py",
+      "tests/test_worker_request_dispatch.py",
+      "tools/worker_component_validation.py",
+      "tests/test_worker_component_validation.py"
+    ],
+    "no_worker_branch_cursor_modified": true
+  },
+  "source_locked_actions": [
+    {
+      "name": "v5 initial central dispatch real acceptance",
+      "run_id": 39204817044,
+      "attempt": 1,
+      "source_sha": "3588dcf33add58881e5e7732888b5c4847068c32",
+      "status": "success",
+      "artifact_id": 12164389604,
+      "sha256": "sha256:b980e6f6dca0d3672816b810e31e7485d38658755abdc7f683f4e74adedabf47",
+      "M1_I": "26c9c57f090ebc1e97b74d359527caad4614f667",
+      "M3_I": "857ac9c232383435ead4b9d02ef4eebdebc11cda"
+    },
+    {
+      "name": "old v5 M1 actually dispatched authorize argument failure",
+      "run_id": 39204910923,
+      "control_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+      "status": "failure",
+      "stage": "AUTHORIZE_--stage_unrecognized",
+      "compile": "NOT_RUN"
+    },
+    {
+      "name": "old v5 M3 actually dispatched authorize argument failure",
+      "run_id": 39204914148,
+      "control_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+      "status": "failure",
+      "stage": "AUTHORIZE_--stage_unrecognized",
+      "compile": "NOT_RUN"
+    },
+    {
+      "name": "frozen v6 contract-smoke",
+      "run_id": 39205218653,
+      "attempt": 1,
+      "source_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "status": "success",
+      "artifact_id": 12165002893,
+      "sha256": "sha256:bc82999e8fc4791f5f5331f1f9a18bf6261d6167d791c9ab5ce1743dc456c9ca"
+    },
+    {
+      "name": "frozen v6 governance maintenance",
+      "run_id": 39205218741,
+      "attempt": 1,
+      "source_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "status": "success",
+      "artifact_id": 12164894777,
+      "sha256": "sha256:25e4221cce96fce0fb6b38c242e77ef96dac573bdd58357fb2397453b851adc5"
+    },
+    {
+      "name": "frozen v6 main governance",
+      "run_id": 39205218683,
+      "attempt": 1,
+      "source_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "status": "success",
+      "artifact_id": 12165795162,
+      "sha256": "sha256:a26d2921015f9b30f41c838ee61fa9f0ca5a351cdfeca48904c53e34ee3976b6"
+    },
+    {
+      "name": "v6 main-only dispatcher actual no-op with historical v5 intents",
+      "run_id": 39205332501,
+      "attempt": 1,
+      "source_sha": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
+      "status": "success",
+      "artifact_id": 12165945047,
+      "sha256": "sha256:e00d5aef45cd916543f1f0f0ff369ab3815f26d19983ce8f1f622f40247e63d4",
+      "decisions": []
+    },
+    {
+      "name": "v6 main governance",
+      "run_id": 39205332571,
+      "attempt": 1,
+      "source_sha": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
+      "status": "success"
+    },
+    {
+      "name": "v6 dispatcher maintenance",
+      "run_id": 39205332381,
+      "attempt": 1,
+      "source_sha": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
+      "status": "success",
+      "artifact_id": 12165446335,
+      "sha256": "sha256:8f91f3511aadfcde2155a4acac9626d95fef4bec6ac4fa25b475f3ba1896d4be"
+    }
+  ],
+  "actual_source_scope": {
+    "M1_G2_run": 39201507034,
+    "M1_G2_artifact_id": 12164361111,
+    "M1_head": "056cbad72aff251f989b14fa09684e915995e20a",
+    "M3_G2_run": 39202883789,
+    "M3_G2_artifact_id": 12164961266,
+    "M3_head": "016e08e244db92826eb38693cc0198cbbc4dd484",
+    "require_G2_PASS_full_artifact": true
+  },
+  "safety": {
+    "idempotency": "role/request_id/stage/control SHA whole run history, failed run not repeated",
+    "G2": "actual ROLE_SCOPE_PASS typed artifact exact worker source, 1 parent request intent, remote fixture SHA",
+    "prepare_paired": "separate functional + performance intents; performance exact successful prior prepare artifact bytes",
+    "actions_permission": "Only main-owned worker-request-dispatch uses built-in actions:write GITHUB_TOKEN; workers do not",
+    "max_pages": 25,
+    "main_owned_ref": "frozen v6"
+  },
+  "worker_next": {
+    "M1_new_request": "M1-GAME015-AB-PREP-003",
+    "M3_new_request": "M3-018-NATIVE-E4-PREPARE-002",
+    "issue": "https://github.com/lly8666/wbd-next/issues/14",
+    "paired": "after actual validated prepare only"
+  },
+  "not_run": [
+    "M1 v6 prepare",
+    "M3 v6 native prepare",
+    "M1 paired AB",
+    "M3 paired ABBA",
+    "Worker measured performance benefit",
+    "M0 original Go runtime FEC2 product qualification",
+    "Windows ARM physical D10 p99 ABBA"
+  ],
+  "historical_reds_retained": [
+    39204678926,
+    39204739157,
+    39204910923,
+    39204914148
+  ]
+}
