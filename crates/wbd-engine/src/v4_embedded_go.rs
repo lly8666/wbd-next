@@ -291,6 +291,8 @@ struct Entry{
     protected_fec2_features:u16,
     #[cfg(feature="m0_fec2_owner_probe")]
     fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
+    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_live_peer_rx:Option<crate::v4_fec2_live_rx::Fec2LiveRx>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fec2_receipt_sender:Option<Fec2ProbeReceiptSender>,
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -404,6 +406,27 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
             first_sources:0,first_repairs:0,recovered_sources:0
         })
     }else{None};
+    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    let fec2_live_peer_rx=if handoff.negotiated_features==7{
+        let (_,s2c)=data.internal_direction_keys();
+        let suite=wbd_codec::record_crypto::RecordSuite::try_from(
+            data.identity().cipher).map_err(|_|INVALID)?;
+        let rx=wbd_codec::record_replay::ReplayProtectedLaneRx::new_for_suite(
+            s2c,usize::from(data.identity().client_limit),suite,
+            wbd_codec::record_replay::ReplayWindowConfig{
+                pn_per_second:20000,cache_horizon_ms:200,
+                fec_horizon_ms:150,rtt_ms:100,metadata_budget_bytes:256*1024,
+            }
+        ).map_err(|_|INVALID)?;
+        let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+            generation,epoch:data.identity().logical_epoch,
+            negotiated_features:handoff.negotiated_features,
+            direction_s2c:true,
+        };
+        Some(crate::v4_fec2_live_rx::Fec2LiveRx::from_original_owner(
+            exact,rx,usize::from(data.identity().client_limit))
+            .map_err(|_|INVALID)?)
+    }else{None};
     let owner=handoff.prepare_scoped_owner(&data,generation,handle)
         .map_err(|_|INVALID)?;
     let link_mtu=usize::from(data.identity().server_limit)
@@ -418,6 +441,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         protected_fec2_features:handoff.negotiated_features,
         #[cfg(feature="m0_fec2_owner_probe")]
         fec2_actual_peer_rx,
+        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_live_peer_rx,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_receipt_sender:None,
         #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -772,6 +797,49 @@ fn fec2_probe_real_kernel_raw_once(
     });
     e.arena.drain_returns();
     Ok(out)
+}
+// Developer ONLY: independent verified-original-Go TLS CLIENT FEC receiver
+// consumes ciphertext captured from actual M4 Linux raw socket. It is NOT
+// a product client, TUN applied ACK, nor a second server replay bitmap.
+#[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
+    target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_consume(
+    handle:u64,wire:*const u8,wire_len:usize,
+    count:*mut u32,block:*mut u64,index:*mut u8,
+    recovered:*mut u32,original:*mut u8,capacity:usize,
+    used:*mut usize
+)->i32{
+    if wire.is_null()||wire_len<31||wire_len>2048||count.is_null()||
+        block.is_null()||index.is_null()||recovered.is_null()||
+        original.is_null()||used.is_null()||capacity<2048{return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.protected_features!=7{return BAD_STAGE}
+    let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+        generation:e.generation,
+        epoch:match e.owner.normal_firstsend_identity(){
+            Some((_,epoch))=>epoch,None=>return BAD_STAGE,
+        },negotiated_features:7,direction_s2c:true,
+    };
+    let Some(client)=e.fec2_live_peer_rx.as_mut()else{return BAD_STAGE};
+    let mut ciphertext=unsafe{std::slice::from_raw_parts(wire,wire_len)}.to_vec();
+    let Ok(candidates)=client.consume(exact,&mut ciphertext,loop_now())
+    else{return INVALID};
+    if candidates.len()>1{return FULL}
+    unsafe{count.write(candidates.len() as u32);used.write(0)}
+    if let Some(first)=candidates.into_iter().next(){
+        if first.frame.len()>capacity{return FULL}
+        unsafe{
+            block.write(first.block_id);
+            index.write(first.index);
+            recovered.write(u32::from(first.recovered));
+            std::ptr::copy_nonoverlapping(
+                first.frame.as_ptr(),original,first.frame.len());
+            used.write(first.frame.len());
+        }
+    }
+    OK
 }
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
