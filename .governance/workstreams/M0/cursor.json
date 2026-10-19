@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 177,
-  "checkpoint_sha": "000473a8f9cecbd3785d78550c818911a2ebfc5e",
+  "sequence": 178,
+  "checkpoint_sha": "8ea33bb88c0289638aaec066715d5e7fb9f12ec5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-008 R0-025 original Go/Rust product vertical; PLAN-009 §5 shared CI precondition M3 v6 zero-case fixed with frozen v7 and verified main dispatcher. M3 real native prepare/ABBA still worker-owned NOT_RUN; product FEC2 OFF.",
-  "why_now": "M3 v6 39210496325 zero cases proven CI overlay fault. M0 fixed and froze v7 c0c, smoke39214403113/maintenance39214403124/governance39214403112 PASS; switched dispatcher source86cab with run39214553911 PASS. H176 source 0deb Governance39214960099 FAIL due new evidence missing required source_sha, fixed evidence S000473 and exact main Governance39215146406 PASS, historical red preserved.",
-  "done_when": "Main registry R0-025: actual original client/server Normal protected TLS→Rust data/feedback/Stop and requested/pending/applied/rejected, netns evidence; Windows ARM/physical/p99 and full product qualification NOT_RUN, production FEC2 OFF until proven.",
-  "next_action": "Continue M0 R0-025 protected original Go/Rust product integration: authenticated reverse kind1 plus M2 mature firstsend in original sender, preserve OFF gate. M3 independently publishes v7 PREPARE-003 and tests to completion.",
+  "current_task": "PLAN-008 §1/§3/§4 main product vertical R0-025: exact M1 Game015 frozen two files integrated with main-native PASS, M2 maturity already in main, M4 pinned original Go/Linux+ARM native client/server/config build PASS, Windows Go/WinForms compile PASS but original GUI self-test receipt absent FAIL. True original Go↔Rust authenticated Normal/off + reverse kind1/mature firstsend/applied ACK remains OPEN; FEC2 production OFF.",
+  "why_now": "G2 worker source M4 H25 152f0a and M1 CODE641 consumed with exact source attestation; main integration ae75 native/ABI/feature loop Actions PASS. M0-owned original-Go 3-platform Actions built Linux x64/ARM and Windows CLI; Win GUI lacks actual selftest receipt, worker-owned script fix delegated Issue13. All historical red retained in evidence. Actual Rust product entry/control still not wired.",
+  "done_when": "Registry R0-025: original client/server protected TLS→Rust owner Normal/off/fixed/auto slice with real reverse feedback/Stop, requested→pending→applied/rejected, native build/netns batch, artifact-backed exact SOURCE; keep physical/GUI/Windows ARM/p99 and FEC2 product OFF until proven.",
+  "next_action": "Connect original Go protected client/server Normal product admission to Rust owner, authenticated C2S kind1 and M2 mature first-send receipt through actual sender; run one exact-source Actions product batch with Stop and fail-closed capability gates.",
   "unverified": true,
-  "last_tested_source": "c0c192cf293a294b5962f3f064d913149eb00639",
+  "last_tested_source": "d34a03e9b98685c7de565d368d93c17556284a13",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN009-M3-v7-test-overlay-source-20261019.json"
+    "docs/evidence/M0/PLAN008-M1-M4-integration-20261019.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN009-H175-M3-v6-missing-native-test-recovery-20261019.md",
-    "docs/devlog/M0/PLAN009-H173-recovery-dispatch-trigger-20261019.md",
-    "docs/evidence/M0/PLAN009-auto-worker-dispatch-v6-05af40990b5d7c3095ee95f3637a968e1620ae7b.json",
-    "docs/devlog/M0/PLAN009-auto-worker-dispatch-v6-20261019.md",
-    "docs/devlog/M0/PLAN-009-worker-ci-v6-migration.md",
-    "docs/devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md",
+    "docs/devlog/M0/PLAN008-native-game-m4-source-intake-20261019.md",
+    "docs/devlog/M0/PLAN008-H177-component-intake-and-product-resume-20261019.md",
+    "docs/devlog/M0/PLAN008-M4-original-product-ci-intent-20261019.md",
+    "docs/evidence/M0/PLAN009-M3-v7-test-overlay-source-20261019.json",
     "docs/evidence/M0/PLAN008-025-auth-m2-mature-3501b929fd980110de83ebed14eace146e4f20e1.json",
-    "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md"
+    "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md",
+    "docs/GOVERNANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H177 M3 v6 zero-case failure is CI assembly, no math FAIL. Frozen v7 c0c192cf includes candidate fec_v2.rs and native tests same SOURCE+blob, test suite and nonzero named PASS gate; main dispatcher86cab PASS, M3 v7 prepare/ABBA NOT_RUN until own PREPARE-003. Old v7 first smoke/maintenance f4f FAIL regex, corrected c0c PASS. H176 Governance39214960099 FAIL evidence source field, S000473 fixed and governance39215146406 SUCCESS. M0 product R0-025 partial FEC2 OFF; worker ownership/epoch unchanged."
+  "partial_summary": "H178 S8ea M1 two-file Game015 integrated main ae75, NativeRegression39219594724 7 jobs + ABI/cross/loop SUCCESS; M2 mature same blob already main. M3 native v7 13/13 PASS, ABBA NOT_RUN. M4 original Go SOURCE a7a/M4 H25 SOURCE152: Linux x64+ARM64 native client/server/config PASS Action39221442451 artifacts verified; Windows native client/config and WBD.exe compile PASS on Action39222289145 but missing GUI selftest receipt => FAIL, M4 sole script owner notified Issue13. Original Go/Rust product/real kind1 feedback/applied/physical NOT_RUN, FEC2 production OFF, historical 150ms-C FAIL retained."
 }
