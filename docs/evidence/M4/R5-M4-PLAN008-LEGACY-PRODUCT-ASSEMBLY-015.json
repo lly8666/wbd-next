@@ -16,9 +16,9 @@
     "last_tested_code": "7cef7e849e293373d907a3b64007b4ce8946da78",
     "not_requalified_here": true
   },
-  "code_source_sha": "c42ed0cc85866a2260274affb6a75c593826573d",
+  "code_source_sha": "2716caf153d2eb86e0b13cd05767a8e0f2b15221",
   "result": "NOT_RUN",
-  "progress": "BLOCKED_SHARED_ACTIONS_AND_ABI",
+  "progress": "IN_PROGRESS_UNVERIFIED_NATIVE_PRODUCT",
   "artifact_verified": false,
   "exact_source": {
     "original_go_repo": "lly8666/wobuzhidao",
@@ -61,7 +61,7 @@
     ]
   },
   "verification": {
-    "scope_audit": "BLOCKED_PRIOR_TWO_EXACT_UNPERMITTED_HISTORY_COMMITS; OFFICIAL_CURRENT_H_G2_NOT_RUN",
+    "scope_audit": "PASS_H24_EXACT_SOURCE_ONLY; NEW_M4_CODE_SOURCE_PENDING_SCOPE",
     "manifest_blob_calculation": "PASS_STATIC_SOURCE_HASH_CHECK_ONLY",
     "assembly_unittest": "NOT_RUN_ACTIONS",
     "real_original_go_clone_linux_build": "NOT_RUN",
@@ -74,7 +74,23 @@
     "legacy_dns_route_mtu_stop_in_product": "NOT_RUN",
     "physical_driver_or_user_system": "NOT_RUN",
     "performance": "NOT_RUN",
-    "fec2_feature": "OFF"
+    "fec2_feature": "OFF",
+    "scope_audit_h24": {
+      "source_sha": "c51037853d68b30512e9da0a62523b1d0fcf5c9f",
+      "control_sha": "3f87d3ec9c06f7362c95c301437116d53be14c4f",
+      "run_id": 39197439844,
+      "attempt": 1,
+      "job_id": 117883140170,
+      "conclusion": "SUCCESS",
+      "result": "ROLE_SCOPE_PASS",
+      "scope_commits_checked": 109,
+      "artifact_id": 12163020135,
+      "artifact_name": "central-scope-39197439844-1",
+      "provider_sha256": "5ce0fd3176667c2008d7b3a0121cf3fe4cc48eb8d472f050e4e0e2f8279d34d3",
+      "qualification": "G2 role scope only; not source 2716 or product PASS"
+    },
+    "nonempty_native_go_test_gate": "AUTHORED_SOURCE_2716caf153d2eb86e0b13cd05767a8e0f2b15221; UNRUN_ACTIONS",
+    "windows_native_host_guard": "AUTHORED_SOURCE_2716caf153d2eb86e0b13cd05767a8e0f2b15221; UNRUN_ACTIONS"
   },
   "scope_exception": {
     "historical_unpermitted_create_commit": "2cfd979b8c10aca2a1abffb68b0994a960713164",
@@ -82,7 +98,7 @@
     "correction_delete_commit": "85911ac3cd73d153b74315fdc764db4e7ad13cde",
     "authorized_relocation": "r0/go_overlay/internal/configfile/fec2_product_test.go",
     "resolved_current_tree": true,
-    "historical_authority": "M0_REVIEW_REQUIRED_ISSUE_13; NEVER_SELF_APPROVED",
+    "historical_authority": "M0_REVIEWED_EXACT_IMMUTABLE_PAIR_MAIN_c47d3cc38edc1e6723779a0295a469099518f9af; H24_G2_PASS; OLD_INVALID_HISTORY_RETAINED",
     "warning": "Current tree compliance not equivalent to full per-commit role scope PASS; do not rewrite history or suppress failure.",
     "central_issue": "https://github.com/lly8666/wbd-next/issues/13",
     "source_pair": [
@@ -100,8 +116,8 @@
     "safe_m0_path": "Main-owned single G2 checked historical one-off immutable pair, both SHA/path/status/order/parent pinned with negative tests, disclosed in receipt; or reviewed supersession. Do not rewrite worker history or extend runtimeentry/ wildcard."
   },
   "request": ".governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md",
-  "current_scope_qualification": "CURRENT_H_SCOPE_BLOCKED; STRUCTURAL_H_CHECK_PASS_ONLY; G2_NOT_VERIFIED; PRODUCT_NOT_RUN",
-  "next_action": "Central scope ONLY. M0 acts on issue #13 and worker request, validates exact G2 history and negative cases in main Actions, generates new M4-only ROLE_SCOPE result at frozen current HEAD; M4 records observed receipt and keeps product work paused. No other tests.",
+  "current_scope_qualification": "H24 ROLE_SCOPE_PASS (39197439844); new S pending fresh G2; products NOT_RUN",
+  "next_action": "User HOLD removed under main 086ed67 M0 decision. Request M0 protected CI runner to checkout current M4 S source, pinned original Go and Windows GUI and produce exact SOURCE native assembly receipts; fix M4-only failures, S→H. M0 owns Rust ABI/auth and final merge.",
   "rollback": "Remove only M4 new assembly, configfile, new runtimeentry adapter and submitted M4 permitted overlay revisions from staging; original legacy source unchanged; production FEC2 remains OFF.",
   "previous_risks_preserved": [
     "Old FEC2 014 Go pure tests/native safe wrapper success does not attest new PLAN008 product",
