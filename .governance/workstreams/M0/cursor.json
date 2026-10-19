@@ -4,27 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 167,
-  "checkpoint_sha": "2791816e7a284d8ca86ad68c07ff18b87ec77784",
-  "progress": "partial",
-  "task_id": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023",
-  "current_task": "M0 R0-023 H167: protected exact Go V4 original TLS → authenticated Rust owner operator revision handoff Fixed/AUTO; Go requested2 High only after real Rust staged; native Rust applied remains Strong revision1 until first M1 block, no false ACK. Off hot switch native absent => reject; default production FEC2 OFF. One exact SOURCE 708ecd311770c469fca7a155435cd10cab47db47 Action39176419445 attempt1 14/14 PASS Go controller 11 tests + actual protected TLS Rust 3 ciphers + Linux ARM Windows codec, native ISA-L, netem10/150 A/B/C and dev normal off. No product qualification.",
-  "why_now": "Recovered H166 main be76 CLEAN rr2/epoch1; original Go existing overlay had private 2s AUTO applied readback but lacked authenticated operator Fixed↔AUTO config revision transaction. Added M0-owned ApplyOperatorConfig with epoch/client/direction, monotonic revision, Rust native stage-before-Go requested, no premature applied, and STOP fence. Native Rust feature scoped test proves fixed High rev2 pending while actual Rust applied remains Strong rev1, no warm switch to unwired OFF. Scope Go tests expanded 10→11. Source 708ecd Action39176419445 14/14 PASS, maintenance39176419374 and source governance39176419464 PASS. Initial evidence S07d83 truthfully marked ISA-L IN_PROGRESS; final evidence S27918 shows same run 14/14 success with 14 provider artifact hashes. Historical red evidence retained; no extra CI rerun.",
-  "done_when": "R0-023 actual original authenticated LINK super-MTU peer fragmentation/reassembly and Stop/MTU±1/loan/generation safety with source-pinned Actions, p99 and historical regression risks accurately scoped. Do not promote module or CI results to product qualification.",
-  "next_action": "R0-023 still TRUE PRODUCT wiring blocker: main repo does NOT contain original wobuzhidao CLI/GUI source and V4 product runtimeentry correctly returns ErrR0V4DataPlaneUnavailable. Under explicit separately authorized legacy-product integration integrate new Go epoch/client/direction requested+applied API into real GUI/config persistence and original live Go server runtime, provide native Rust FEC2 OFF transition+ACK, canonical M2 actual reverse authenticated kind1 and M1 mature firstsent denominator feeding Go AUTO; preserve Freeze/Stop/noHOL. Then actual 2..32 distinct original M4 syscall fault matrix, original full Windows/ARM loader, two physical endpoints and 240s D10/p99 same VM A/B/B/A; do not turn on production FEC2 until all verified. No rerun unchanged ISA-L 400k or 14-job baseline solely for documenting next work.",
+  "sequence": 168,
+  "checkpoint_sha": "256bcd229d7b039059575db0aacc51fe0b10c58d",
+  "progress": "planned",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "current_task": "PLAN-008 M0-025 registered on main in one control-plane submission: fixed legacy Go source + product Rust verified vertical integration Normal/off→fixed→auto, real authenticated reverse kind1, native FEC2 OFF/applied ACK and single compiled client/server. M4 owns newly authorized product/CLI/GUI overlay, M2 first-send mature observations, M1 bounded Game dedup, M3 recovery workspace optimization; no product PASS implied.",
+  "why_now": "At main H167 checkpoint, user explicitly requested PR#11 merge and PLAN-008 once-only workpack registration. PR#11 merge fe0ba6f3 passed maintenance, assignment S256bcd updated five role task_id/goal/done_when and exact M4 overlay paths plus PLAN-008 evidence in one atomic commit; main Governance 39186023133 PASS. Worker branches/cursors/epochs not modified; reservation revision remains 2 to preserve live worker cursor authority and avoid false relaunch. Old M1 red historical and G2 exact-source acceptance kept distinct. New product assembly is not yet tested.",
+  "done_when": "According to docs/decisions/M0-integration-unblock-2026-10-19.md §1 M0, §3 and §4: original pinned Go client/server builds/loads, verified TLS→Rust Normal/off/fixed/auto and mature authenticated receipt, Stop/revision quality, exact source-locked functional/cost evidence; keep physical/full product gates NOT_RUN and FEC2 OFF until actually qualified.",
+  "next_action": "Execute PLAN-008 §1 M0 + §3/4 as one product vertical slice: prepare frozen original Go SOURCE a7a82db31fe736ffedee330795a3234d358f1984 normal-experiment runtime ABI with real Rust OFF transition and authenticated reverse kind1; integrate M2 firstsent/receipt API and consume M4 real client/server assembly when delivered. Do not edit new M4-exclusive overlay or M1/M2/M3 owned files. First check any open G2 scope/bootstrap Action and record exact result; avoid redundant 14-job.",
   "unverified": true,
-  "last_tested_source": "708ecd311770c469fca7a155435cd10cab47db47",
-  "evidence_refs": [
-    "docs/evidence/M0/M0-023-final-go-operator-14job-708ecd311770c469fca7a155435cd10cab47db47.json",
-    "docs/evidence/M0/M0-023-go-operator-revision-native-pending-708ecd311770c469fca7a155435cd10cab47db47.json"
-  ],
+  "last_tested_source": null,
+  "evidence_refs": [],
   "context_refs": [
-    "docs/evidence/M0/M0-023-original-go-2s-auto-auth-rust-readback-caa5f97bb4cfc0969338198578c97cf39bc8ddaf.json",
-    "docs/evidence/M0/M0-023-one-source-real-midflight-mtu-stop-product-gates-4c19cb7720dc0b639789618208b28fa60d4c19fd.json",
-    "docs/history/INDEX.md",
+    "docs/evidence/M0/PLAN-008-workpacks-registered.json",
+    "docs/evidence/M0/PLAN-008-integration-unblock.json",
+    "docs/evidence/M0/M0-023-final-go-operator-14job-708ecd311770c469fca7a155435cd10cab47db47.json",
+    "docs/decisions/M0-integration-unblock-2026-10-19.md",
     "docs/GOVERNANCE.md",
-    "r0/qualification-manifest.json"
+    "docs/history/INDEX.md"
   ],
   "open_requests": [],
-  "partial_summary": "M0 H167 rr2 epoch1, product FEC2 OFF, partial unverified. Production-Go package M0-owned FecV2ControlRuntime now accepts authenticated GUI/operator Fixed/Auto revision under exact epoch/client/dir and strict monotonic revision; native original Rust Stage must succeed first, applied revised only from Rust native ACK, native OFF unavailable and explicitly denied; Stop no late write. Real old Go TLS 3 ciphers feature test original Rust High rev2 pending/Strong rev1 applied FAIL_CLOSED. SOURCE708ecd311770c469fca7a155435cd10cab47db47 Action39176419445 attempt1 14/14 jobs PASS (ISA-L completed), provider 14 hashes in S2791816. Historical GO fake ACK and 150ms red retained. Repo lacks real old product GUI/CLI and V4 product runtimeentry remains blocked. M1/M2 canonical runtime FEC2, product OFF/Win ARM physical D10 p99 NOT_RUN. Next actual production change must cross legacy repo authorization."
+  "partial_summary": "H168 is a workpack publication/recovery checkpoint ONLY. PR#11 merged fe0ba6; S256bcd published five distinct PLAN-008 tasks in registry and exact M4 product/CLI/GUI overlay owner, branch and epoch unchanged, worker cursors remain untouched pending worker self-recovery. main Governance39186023133 PASS; new product SOURCE, product performance and physical endpoints NOT_RUN; historical scoped 14/14 SOURCE708ecd not inherited by PLAN-008. Product FEC2 OFF."
 }
