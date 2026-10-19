@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 20,
-  "checkpoint_sha": "338c3bd85b06108677ba536336daa12590673203",
-  "progress": "partial",
+  "sequence": 21,
+  "checkpoint_sha": "d8353ac89c6b03ef6c96fd5fb24fc191d923596a",
+  "progress": "blocked",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 M1 Game RX dedup ring/index: code 64102db5 source-locked native 133/133 PASS; operation bound tested, compatible ignored representative RX cost fixture compiled. Dedicated same-VM old/new two-binary ABBA NOT_RUN.",
-  "why_now": "Main registry rev2 epoch1 active reassigned from 014 to PLAN-008 Game 015. PLAN-008 confirms old 014 H19 c80ff6a5 scoped central G2 M1 PASS in M0 receipt39095544653 (its global run FAIL was independent M4); historical inherited M1 Governance red retained. 015 modifies only Game RX in M1 scope, preserves Game013/014 and tested with strict SOURCE evidence.",
-  "done_when": "Game RX packed ring no per-packet full-window rotate; open BTreeMap index bounded O(log8192); oracle wrap/huge jump/u64MAX/old duplicate/multilane/pressure/Stop/loan and operations counters native PASS at source 64102db5, 133/133. Final 015 resource-cost qualification requires M0-owned isolated single-VM old H19 vs new SOURCE paired ABBA fixture and bounded memory/cpu receipt; Go/live/product separately NOT_RUN.",
-  "next_action": "M0: run exactly one source-pinned Game015 old/new release same-VM ABBA using the compiled-identical M1 fixture and request M1-GAME-015-M0-ABBA.md; supply binary hashes and capacity/CPU/RSS artifact, or report BLOCKED/INCONCLUSIVE. M1: consume that evidence, repair only concrete M1 regression and finish 015. No root workflow edits or repeated 133 native tests.",
+  "current_task": "PLAN-008 Game RX 015 functional and bounded-operations scoped CODE 64102db5 PASS 133/133. User-directed HOLD after S21 handoff; do not run ABBA, re-run G2, edit Rust/root, or start other work.",
+  "why_now": "User 2026-10-19 expressly instructed '把H做好，其他工作先hold'. S21 d8353ac8 records CODE scope G2 PASS run39188080829; H20 exact-scope audit39188532444 attempts1/2 both API403 rate-limited, not a scope violation nor PASS. ABBA has no Actions execution receipt, is M0-owned and ON HOLD. Preserve original historical FAIL.",
+  "done_when": "M1 Game RX ring/index 015 source-locked functional PASS 133/133, wrap/large-gap/u64MAX/old duplicate/multilane/pressure/Stop/loan and bounded operations proved. Whole PLAN-008 015 NOT yet complete: M0-owned single-VM two-source/two-binary ABBA CPU/RSS evidence NOT_RUN; separate Go/live/product/physical NOT_RUN. User pause applies until explicit resume.",
+  "next_action": "HOLD until explicit user resume. On resume first re-read main registry, branch HEAD and exact Actions; then consume or request M0-only Game015 old/new same-VM ABBA cost and H21 central audit status. No autonomous workflow dispatch, retries, code edits, new workpacks, or false cost/product PASS.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -27,5 +27,5 @@
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "S20 338c3bd85b06108677ba536336daa12590673203 evidence+devlog+M0 cost request. CODE 64102db5e101df1f678e17919169927ad19bad06 native39188056715 build117854571541 consume117854676161 PASS 133/133, 3 new Game015; downloaded artifact12158088977 ZIP24e2c180 result e167975b testlog d1ec59ee and matching source. One historical native fixture 132/1 corrected and two paired-fixture compile errors corrected. Main PLAN-008 M0 already accepted prior 014 scoped G2. 015 ring/index correctness PASS; strict old/new 2-binary ABBA cost NOT_RUN, old/new CODE pinned c80ff6a5 vs 64102db5; integrated Go/live/perf/product NOT_RUN; task partial not ready_for_integration."
+  "partial_summary": "H21 user HOLD after S21 d8353ac89c6b03ef6c96fd5fb24fc191d923596a. Last tested code 64102db5e101df1f678e17919169927ad19bad06 immutable; native39188056715 133/133 PASS, independently hashed artifact12158088977. CODE central G2 39188080829 PASS. H20 central39188532444 attempts1/2 FAIL GitHub API403 rate-limit; H21 central unverified, do not claim PASS. ABBA NOT_RUN, M0 request exists but paused; Go/live/product NOT_RUN; legacy Governance FAIL retained. This H changes only cursor. No new tests or manual Actions requested."
 }
