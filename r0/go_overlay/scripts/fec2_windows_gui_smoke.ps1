@@ -121,6 +121,18 @@ if ($report.result -ne 'PASS' -or $guiExit -ne 0) {
     $reason=if ($report.error) { [string]$report.error } else { 'no error detail in original GUI receipt' }
     throw ("native GUI self-test failed: exit=" + $guiExit + " result=" + $report.result + " reason=" + $reason)
 }
+# Require new ORIGINAL WinForms -> ORIGINAL Go native status checks by exact
+# receipt name, never accept an old GUI's generic PASS as this feature's PASS.
+foreach ($name in @(
+    'GUI original Go reports absent disk state, not network connected',
+    'GUI original Go detects old script state without migration',
+    'GUI original Go detects orphan intent and preserves it',
+    'GUI rejects invalid WAL; not a fake safe or ready result'
+)) {
+    if ($report.checks -notcontains $name) {
+        throw ("native GUI status regression NOT_RUN: " + $name)
+    }
+}
 $sourceInfo=@{
     result='PASS_SCOPED_WINFORMS_AND_ORIGINAL_GO_CONFIG'
     legacy_source=(git -C $legacy rev-parse HEAD).Trim()
