@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M0 only: exact audited M1/M3 request -> frozen v5 workflow_dispatch.
+"""M0 only: exact audited M1/M3 request -> frozen v6 workflow_dispatch.
 
 Never executes worker code, checks out workers, edits cursors, mints tokens,
 or marks a component PASS. Runs only from a reviewed main checkout.
@@ -22,6 +22,9 @@ from tools import governance as g
 from tools import worker_component_validation as entry
 
 ROLES = ("M1", "M3")
+# workflow_run.name is a mutable run-name, not the workflow's static name.
+SCOPE_WORKFLOW_ID = 385257385
+SCOPE_PATH = ".github/workflows/scope-audit.yml"
 CONTROL_REF = "qualification/worker-ci-v6"
 CONTROL_SHA = "fab2e1d7cbe12109ef9215c6caf358946ead522b"
 TARGET_WORKFLOW = ".github/workflows/worker-component-validation.yml"
@@ -191,7 +194,7 @@ def plan(api, main_sha):
     require(api.get("branches/main")["commit"]["sha"] == main_sha,
             "main moved before dispatch planning")
     require(api.get("branches/" + CONTROL_REF)["commit"]["sha"] == CONTROL_SHA,
-            "frozen v5 ref changed: do not dispatch")
+            "frozen v6 ref changed: do not dispatch")
     registry = json.loads(api.blob(".governance/registry.json", main_sha))
     g.validate_registry(registry)
     decisions = []
@@ -232,7 +235,7 @@ def plan(api, main_sha):
             request_ref = request_identity(api, role, head, path)
             raw_config = api.blob(entry.SUITES[role][1], data["harness_sha"])
             data["_request_path"] = path
-            # Identical validation as the v5 authorize job, before using
+            # Identical validation as the v6 authorize job, before using
             # an actions:write token. This is an extra gate, not a bypass.
             entry.validate_context(data, role, stage, CONTROL_REF, CONTROL_SHA,
                                    registry, head, request_ref, raw_config)
@@ -268,7 +271,7 @@ def execute(api, decisions):
         require(api.get("branches/" + entry_["worker_branch"])["commit"]["sha"]
                 == entry_["worker_head"], "worker branch moved during dispatch")
         require(api.get("branches/" + CONTROL_REF)["commit"]["sha"] == CONTROL_SHA,
-                "frozen v5 ref moved during dispatch")
+                "frozen v6 ref moved during dispatch")
         prev = prior_dispatch(api, entry_["role"], entry_["request_id"],
                               entry_["stage"])
         if prev is not None:
@@ -285,6 +288,17 @@ def execute(api, decisions):
         entry_["result"] = "DISPATCH_ACCEPTED_NOT_QUALIFIED"
 
 
+def trusted_scope_trigger(run):
+    # This event is just a wake-up; plan() independently requires the actual
+    # ROLE_SCOPE_PASS artifact and fresh exact worker SOURCE and request I.
+    return (run.get("workflow_id") == SCOPE_WORKFLOW_ID and
+            run.get("path") == SCOPE_PATH and
+            run.get("conclusion") == "success" and
+            run.get("event") == "workflow_run" and
+            run.get("head_branch") == "main" and
+            (run.get("head_repository") or {}).get("full_name") == entry.REPO)
+
+
 def main():
     require(os.environ.get("GITHUB_REPOSITORY") == entry.REPO,
             "not requested repository")
@@ -298,12 +312,8 @@ def main():
     if os.environ.get("GITHUB_EVENT_NAME") == "workflow_run":
         trigger = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
         run = trigger.get("workflow_run", {})
-        require(run.get("name") == "Central worker scope audit" and
-                run.get("conclusion") == "success" and
-                run.get("event") == "workflow_run" and
-                run.get("head_branch") == "main" and
-                run.get("head_repository", {}).get("full_name") == entry.REPO,
-                "untrusted or unsuccessful central-scope event")
+        require(trusted_scope_trigger(run),
+                "untrusted or unsuccessful central-scope workflow identity/event")
     decisions = plan(api, expected)
     execute(api, decisions)
     Path("out").mkdir(exist_ok=True)

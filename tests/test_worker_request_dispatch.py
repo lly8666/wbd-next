@@ -115,6 +115,22 @@ class Mock:
         return b""
 
 class DispatchTests(unittest.TestCase):
+    def test_dynamic_run_name_triggers_only_exact_scope_workflow(self):
+        scope = {"name":"scope|work/m1-r1-runtime|" + M1,
+                 "display_title":"scope|work/m1-r1-runtime|" + M1,
+                 "workflow_id":d.SCOPE_WORKFLOW_ID,"path":d.SCOPE_PATH,
+                 "conclusion":"success","event":"workflow_run",
+                 "head_branch":"main",
+                 "head_repository":{"full_name":e.REPO}}
+        self.assertTrue(d.trusted_scope_trigger(scope))
+        self.assertTrue(d.trusted_scope_trigger({**scope,"name":"any dynamic run-name"}))
+        for changes in ({"workflow_id":0}, {"path":".github/workflows/unrelated.yml"},
+                        {"conclusion":"failure"}, {"event":"push"},
+                        {"head_branch":"work/m1-r1-runtime"},
+                        {"head_repository":{"full_name":"someone/untrusted"}},
+                        {"head_repository":None}):
+            with self.subTest(changes=changes):
+                self.assertFalse(d.trusted_scope_trigger({**scope,**changes}))
     def test_scope_receipt_accepts_real_main_control_rotation(self):
         r=fake_receipt("M1","work/m1",M1)
         run={"worker_branch":"work/m1","id":101,"run_attempt":1,"epoch":1,"revision":2}
