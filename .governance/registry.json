@@ -124,7 +124,8 @@
         "r0/go_overlay/docs/PARAMETERS.md",
         "r0/go_overlay/scripts/",
         "r0/go_overlay/assembly/",
-        "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
+        "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
+        "r0/go_overlay/internal/windowsclient/"
       ],
       "owned_semantics": [
         "platform_driver",
@@ -136,9 +137,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M4/§2/§3/§4: exact legacy SOURCE a7a82db31fe736ffedee330795a3234d358f1984 + explicit manifest/overlay construct original Go client/server and native Windows GUI; preserve one real PARAMETERS catalog, config persistence and CLI/UI requested/pending/applied/rejected with Stop/errors; M0 owns authenticated Rust ABI/admission readiness.",
-      "done_when": "Pinned original-source and overlay hashes/checkable fail-closed create/replace manifest; runnable Linux original client/server and Windows GUI loader native smoke where supported; same-parameter save/restart, two client/dir, invalid mode, missing DLL/wrong target, stale revision, Stop, exact real native applied status; report physical NOT_RUN and keep production feature OFF.",
-      "assigned_task": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015"
+      "goal": "PLAN-010 docs/decisions/M0-windows-native-migration-2026-10-19.md §§2-5: settle exact SOURCE M4-015 GUI/native results (reusing existing M4 G2 PASS Action39225427878), then exact a7a82db fixed original Go cold baseline plus 12 pinned Windows-only donor6ec6b583 overlay files, implement ENTIRE runtime PowerShell-free native Windows single-proxy operation: CLI Connect/Disconnect/Recover, GUI buttons and shared config/PARAMETERS, portable, WAL owned cleanup, normal errors/cancel/Stop/restart, old script references eliminated. Build/Actions pwsh allowed. M0 exclusively owns shared Stop ABI and Actions; M4 independently dispatches M4 Windows native tests using exact authenticated request.",
+      "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
+      "assigned_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016"
     }
   ]
 }

@@ -1,6 +1,33 @@
 name: M0 M4 pinned original Go and GUI product assembly
-run-name: "M0|m4-original-product|${{ github.event_name }}|${{ github.sha }}"
+run-name: "${{ github.event_name == 'workflow_dispatch' && format('M4|{0}|windows-amd64|{1}', inputs.request_id, github.sha) || format('M0|m4-original-product|{0}|{1}', github.event_name, github.sha) }}"
 on:
+  workflow_dispatch:
+    inputs:
+      role_id:
+        description: "Must match current M4 task/registry"
+        type: choice
+        required: true
+        options: [M4]
+      request_id:
+        description: "New immutable M4-016-* JSON request ID, once per run"
+        required: true
+        type: string
+      request_ref:
+        description: "Full 40-character single-file M4 request I commit"
+        required: true
+        type: string
+      worker_source_sha:
+        description: "Full 40-character immutable candidate M4 source before I"
+        required: true
+        type: string
+      control_sha:
+        description: "Exact latest main SHA for THIS workflow code/registry"
+        required: true
+        type: string
+      scope_run_id:
+        description: "Successful exact-current-M4 central G2 Actions run"
+        required: true
+        type: string
   push:
     branches: [main]
     paths:
@@ -14,13 +41,14 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: "m0-m4-original-product-${{ github.event_name }}-${{ github.event.workflow_run.id || github.sha }}"
+  group: "m0-m4-original-product-${{ github.event_name }}-${{ inputs.request_id || github.event.workflow_run.id || github.sha }}"
   cancel-in-progress: false
 
 jobs:
   attest:
     if: >-
       github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.role_id == 'M4' && github.ref_name == 'main') ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.workflow_id == 385257385 &&
        github.event.workflow_run.path == '.github/workflows/scope-audit.yml' &&
@@ -40,11 +68,24 @@ jobs:
         id: source
         shell: bash
         env:
-          SCOPE_RUN_ID: ${{ github.event.workflow_run.id || '39219843238' }}
+          SCOPE_RUN_ID: ${{ inputs.scope_run_id || github.event.workflow_run.id || '39219843238' }}
+          REQUEST_ID: ${{ inputs.request_id || '' }}
+          REQUEST_REF: ${{ inputs.request_ref || '' }}
+          WORKER_SOURCE_SHA: ${{ inputs.worker_source_sha || '' }}
+          CONTROL_SHA: ${{ inputs.control_sha || '' }}
         run: |
           set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_m4_product_source.py' -v
-          python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" --output m4-product-identity/receipt.json
+          python3 -m unittest discover -s tests -p 'test_m4_product_dispatch.py' -v
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            test "${{ inputs.role_id }}" = M4
+            python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" \
+              --request-id "$REQUEST_ID" --request-ref "$REQUEST_REF" \
+              --worker-source-sha "$WORKER_SOURCE_SHA" --control-sha "$CONTROL_SHA" \
+              --output m4-product-identity/receipt.json
+          else
+            python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" --output m4-product-identity/receipt.json
+          fi
           test -s m4-product-identity/receipt.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
@@ -59,14 +100,11 @@ jobs:
     # M4 SOURCE and Linux runner inputs are unchanged from the first PASS.
     # Main-only Windows byte-normalization repair must not repeat Linux PASS;
     # fresh worker G2 events automatically qualify all three targets.
-    if: github.event_name == 'workflow_run' || github.event_name == 'push'
+    if: github.event_name == 'workflow_run' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {target: linux-amd64, runner: ubuntu-24.04}
-          - {target: linux-arm64, runner: ubuntu-24.04-arm}
-          - {target: windows-amd64, runner: windows-2022}
+        include: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"target":"windows-amd64","runner":"windows-2022"}]' || '[{"target":"linux-amd64","runner":"ubuntu-24.04"},{"target":"linux-arm64","runner":"ubuntu-24.04-arm"},{"target":"windows-amd64","runner":"windows-2022"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 35
     env:
@@ -165,6 +203,39 @@ jobs:
           & ./worker-overlay/r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1 -LegacyRoot legacy -OverlayRoot worker-overlay -OutputDirectory m4-product-result
           if ($LASTEXITCODE -ne 0) {throw "original native WinForms smoke failed"}
           if (-not (Test-Path 'm4-product-result/windows-product-result.json')) {throw "missing Windows native receipt"}
+      - name: Bind Windows output to exact M4 manual request or automatic G2 identity
+        if: matrix.target == 'windows-amd64'
+        shell: pwsh
+        env:
+          GH_RUN_ID: ${{ github.run_id }}
+          GH_ATTEMPT: ${{ github.run_attempt }}
+          M4_REQUEST_ID: ${{ inputs.request_id || '' }}
+          M4_REQUEST_REF: ${{ inputs.request_ref || '' }}
+          M4_SCOPE_RUN_ID: ${{ inputs.scope_run_id || github.event.workflow_run.id || '' }}
+          MAIN_CONTROL: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import json,os,pathlib
+          path=pathlib.Path("m4-product-result")
+          path.mkdir(exist_ok=True)
+          source=os.environ["M4_SOURCE"]
+          assert len(source)==40
+          json.dump({"schema_version":1,"role_id":"M4",
+            "workflow":".github/workflows/m0-m4-product-assembly.yml",
+            "source_sha":source,"control_sha":os.environ["MAIN_CONTROL"],
+            "request_id":os.environ["M4_REQUEST_ID"] or None,
+            "request_ref":os.environ["M4_REQUEST_REF"] or None,
+            "scope_run_id":os.environ["M4_SCOPE_RUN_ID"] or None,
+            "run_id":int(os.environ["GH_RUN_ID"]),"attempt":int(os.environ["GH_ATTEMPT"]),
+            "target":"windows-amd64","legacy_source":os.environ["LEGACY_SOURCE"],
+            "result":"SCOPED_ORIGINAL_GO_WINDOWS_GUI_SMOKE_NOT_NETWORK_APPLIED",
+            "product_network_script_free":"NOT_RUN",
+            "native_windows_owned_network":"NOT_RUN",
+            "product_rust_ack":"NOT_RUN",
+            "product_fec2":"OFF"},open(path/"m4-request-source-binding.json","w"),indent=2)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'Windows scoped SOURCE binding failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

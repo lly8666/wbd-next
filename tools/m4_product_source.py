@@ -4,6 +4,9 @@
 This is read-only; component/product evidence is produced later by real Actions.
 """
 import argparse
+import base64
+import hashlib
+import re
 import io
 import json
 import os
@@ -71,6 +74,86 @@ def verified_receipt(raw, run, registry):
          "M4 reservation revision changed")
     return sha, data
 
+def verify_manual_request(api, attested, registry, current_main, request_id, request_ref, candidate_sha, current_run_id):
+    """Only M4-owned one-file immutable I + fresh central G2 may launch Windows.
+    
+    Candidate SOURCE must precede I and be reachable from current G2 HEAD.
+    Request file is never auto-authentication and never expands worker scope.
+    """
+    need(isinstance(request_id,str) and bool(g.IDENT.fullmatch(request_id))
+         and request_id.startswith("M4-016-"), "invalid M4-016 request name")
+    for name,value in (("request_ref",request_ref),("candidate",candidate_sha),
+                       ("main control",current_main)):
+        need(isinstance(value,str) and bool(g.SHA.fullmatch(value)),
+             "invalid exact SHA: "+name)
+    need(type(current_run_id) is int and current_run_id>0, "bad actual Actions run")
+    path=f".governance/workstreams/M4/requests/{request_id}.json"
+    commit=api.get("commits/"+request_ref)
+    parents=commit.get("parents",[])
+    need(commit.get("sha")==request_ref and len(parents)==1 and
+         len(commit.get("files",[]))==1 and
+         commit["files"][0].get("filename")==path and
+         commit["files"][0].get("status")=="added",
+         "M4 request I must add only exact one request JSON")
+    sha=attested["source_sha"]
+    for ancestor,descendant in ((candidate_sha,request_ref),
+                                (request_ref,sha)):
+        compare=api.get(f"compare/{ancestor}...{descendant}?per_page=1")
+        need(compare.get("status") in ("ahead","identical"),
+             "request SOURCE/I is not in current attested M4 ancestry")
+    branch=api.get("branches/"+BRANCH)
+    need(branch.get("commit",{}).get("sha")==sha,
+         "G2 must attest current exact M4 HEAD for manual dispatch")
+    def read_owned_text(file_path,at):
+        obj=api.get("contents/"+file_path+"?ref="+at)
+        need(obj.get("type")=="file" and obj.get("encoding")=="base64"
+             and isinstance(obj.get("content"),str), "not an immutable Git file")
+        return base64.b64decode(obj["content"],validate=False)
+    raw=read_owned_text(path,request_ref)
+    latest=read_owned_text(path,sha)
+    need(raw==latest and len(raw)<100_000, "M4 request I edited after creation")
+    req=json.loads(raw)
+    g.validate_request(req)
+    role=next(r for r in g.validate_registry(registry) if r["id"]=="M4")
+    for key,expected in {
+        "request_id":request_id,"role_id":"M4",
+        "task_id":role["assigned_task"],"assignment_epoch":role["assignment_epoch"],
+        "reservation_revision":registry["reservation_revision"],
+        "kind":"functional","status":"PLANNED",
+        "workflow":".github/workflows/m0-m4-product-assembly.yml",
+        "dispatch_ref":"main","control_sha":current_main,
+        "source_sha":candidate_sha,"harness_sha":candidate_sha,
+        "baseline_sha":LEGACY_SOURCE,
+        "scenario":"windows-native-product-runtime-016",
+        "seed":1,"samples":1,"measurement_jobs":1,
+    }.items():
+        need(req.get(key)==expected, "M4 request changed authority: "+key)
+    need(req.get("target")=="windows-amd64" and
+         req.get("config_path")=="r0/go_overlay/assembly/manifest.json",
+         "M4 Windows target/manifest not pinned")
+    raw_config=read_owned_text(req["config_path"],candidate_sha)
+    need(hashlib.sha256(raw_config).hexdigest()==req["config_sha256"],
+         "M4 candidate original-Go overlay manifest hash drift")
+    runs=api.get("actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&per_page=100")
+    need(runs.get("total_count",101)<=100, "M4 manual request scan unbounded")
+    matching=[r for r in runs.get("workflow_runs",[])
+              if r.get("event")=="workflow_dispatch" and
+                 r.get("display_title","").startswith(f"M4|{request_id}|windows-amd64|")]
+    need(len(matching)==1 and matching[0].get("id")==current_run_id
+         and matching[0].get("head_sha")==current_main,
+         "duplicate or unrecognized manual M4 Actions request")
+    report=dict(attested)
+    report.update(source_sha=candidate_sha,
+                  attested_worker_sha=sha,
+                  request_id=request_id,request_ref=request_ref,
+                  request_config_sha256=req["config_sha256"],
+                  control_sha=current_main,
+                  workflow=".github/workflows/m0-m4-product-assembly.yml",
+                  target="windows-amd64",
+                  dispatch_validation="IMMUTABLE_I_CURRENT_G2_MANIFEST_EXACT_SINGLE_RUN",
+                  product="NOT_RUN_UNTIL_WINDOWS_JOB")
+    return report
+
 def perform(api, run_id, event, current_main, registry):
     need(isinstance(run_id, int) and run_id > 0, "bad scope run ID")
     need(bool(g.SHA.fullmatch(current_main)), "bad actual main checkout SOURCE")
@@ -84,10 +167,12 @@ def perform(api, run_id, event, current_main, registry):
          "not an actual successful central G2 run")
     if event.get("event_type") == "workflow_run":
         need(trusted_event(event, run), "invalid central workflow event")
-    else:
-        need(event.get("event_type") == "push" and
-             run_id == BOOTSTRAP_SCOPE_RUN,
+    elif event.get("event_type") == "push":
+        need(run_id == BOOTSTRAP_SCOPE_RUN,
              "main bootstrap may consume only pre-reviewed M4 G2")
+    else:
+        need(event.get("event_type")=="workflow_dispatch",
+             "unsupported G2 consumer event")
     artifacts = api.get("actions/runs/" + str(run_id) + "/artifacts?per_page=100")
     chosen = [a for a in artifacts.get("artifacts", [])
               if a.get("name") == f"central-scope-{run_id}-{run['run_attempt']}"
@@ -137,18 +222,34 @@ class API:
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--scope-run-id", type=int, required=True)
+    p.add_argument("--request-id")
+    p.add_argument("--request-ref")
+    p.add_argument("--worker-source-sha")
+    p.add_argument("--control-sha")
     p.add_argument("--output", default="out/m4-source.json")
     args=p.parse_args()
     need(os.environ.get("GITHUB_REPOSITORY") == REPO, "wrong repo")
     actual=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
     need(actual == os.environ.get("GITHUB_SHA"), "main checkout differs")
     event_type=os.environ.get("GITHUB_EVENT_NAME")
-    need(event_type in ("push","workflow_run"), "unsupported trigger")
+    need(event_type in ("push","workflow_run","workflow_dispatch"), "unsupported trigger")
+    if event_type=="workflow_dispatch":
+        need(os.environ.get("GITHUB_REF_NAME")=="main" and
+             args.control_sha==actual, "manual dispatch must pin current main control")
+        need(all((args.request_id,args.request_ref,args.worker_source_sha,args.control_sha)),
+             "manual dispatch missing exact request/source/control")
+    else:
+        need(not any((args.request_id,args.request_ref,args.worker_source_sha,args.control_sha)),
+             "manual-only inputs on unsolicited event")
     event=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
     event["event_type"]=event_type
     registry=json.loads(Path(".governance/registry.json").read_text())
-    report=perform(API(os.environ.get("GH_TOKEN")),args.scope_run_id,
-                   event,actual,registry)
+    api=API(os.environ.get("GH_TOKEN"))
+    report=perform(api,args.scope_run_id,event,actual,registry)
+    if event_type=="workflow_dispatch":
+        report=verify_manual_request(
+            api,report,registry,actual,args.request_id,args.request_ref,
+            args.worker_source_sha,int(os.environ["GITHUB_RUN_ID"]))
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,indent=2)+"\n")
     with open(os.environ["GITHUB_OUTPUT"],"a") as stream:
