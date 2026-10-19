@@ -87,7 +87,9 @@ def verify_manual_request(api, attested, registry, current_main, request_id, req
                        ("main control",current_main)):
         need(isinstance(value,str) and bool(g.SHA.fullmatch(value)),
              "invalid exact SHA: "+name)
-    need(type(current_run_id) is int and current_run_id>0, "bad actual Actions run")
+    need(current_run_id is None or
+         (type(current_run_id) is int and current_run_id>0),
+         "bad actual Actions run")
     path=f".governance/workstreams/M4/requests/{request_id}.json"
     commit=api.get("commits/"+request_ref)
     parents=commit.get("parents",[])
@@ -135,15 +137,16 @@ def verify_manual_request(api, attested, registry, current_main, request_id, req
     raw_config=read_owned_text(req["config_path"],candidate_sha)
     need(hashlib.sha256(raw_config).hexdigest()==req["config_sha256"],
          "M4 candidate original-Go overlay manifest hash drift")
-    runs=api.get("actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&branch="+
-                 M4_CONTROL_REF.replace("/","%2F")+"&per_page=100")
-    need(runs.get("total_count",101)<=100, "M4 manual request scan unbounded")
-    matching=[r for r in runs.get("workflow_runs",[])
-              if r.get("event")=="workflow_dispatch" and
-                 r.get("display_title","").startswith(f"M4|{request_id}|windows-amd64|")]
-    need(len(matching)==1 and matching[0].get("id")==current_run_id
-         and matching[0].get("head_sha")==current_main,
-         "duplicate or unrecognized manual M4 Actions request")
+    if current_run_id is not None:
+        runs=api.get("actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&branch="+
+                     M4_CONTROL_REF.replace("/","%2F")+"&per_page=100")
+        need(runs.get("total_count",101)<=100, "M4 manual request scan unbounded")
+        matching=[r for r in runs.get("workflow_runs",[])
+                  if r.get("event")=="workflow_dispatch" and
+                     r.get("display_title","").startswith(f"M4|{request_id}|windows-amd64|")]
+        need(len(matching)==1 and matching[0].get("id")==current_run_id
+             and matching[0].get("head_sha")==current_main,
+             "duplicate or unrecognized manual M4 Actions request")
     report=dict(attested)
     report.update(source_sha=candidate_sha,
                   attested_worker_sha=sha,

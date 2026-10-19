@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M0 only: exact audited M1/M3 request -> frozen v7 workflow_dispatch.
+"""M0 only: exact audited M1/M3 v7 + M4 original Windows v1 auto-dispatch.
 
 Never executes worker code, checks out workers, edits cursors, mints tokens,
 or marks a component PASS. Runs only from a reviewed main checkout.
@@ -20,6 +20,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools import governance as g
 from tools import worker_component_validation as entry
+from tools import m4_product_source as m4
 
 ROLES = ("M1", "M3")
 # workflow_run.name is a mutable run-name, not the workflow's static name.
@@ -29,6 +30,9 @@ CONTROL_REF = "qualification/worker-ci-v7"
 CONTROL_SHA = "c0c192cf293a294b5962f3f064d913149eb00639"
 TARGET_WORKFLOW = ".github/workflows/worker-component-validation.yml"
 SCOPE_WORKFLOW = "scope-audit.yml"
+M4_CONTROL_REF = m4.M4_CONTROL_REF
+M4_CONTROL_SHA = "17263ad85a41639a569af914b4157520daf84ecb"
+M4_TARGET_WORKFLOW = "m0-m4-product-assembly.yml"
 MAX_PAGES = 25
 REQUEST = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{2,90}\Z")
 
@@ -288,6 +292,112 @@ def execute(api, decisions):
         entry_["result"] = "DISPATCH_ACCEPTED_NOT_QUALIFIED"
 
 
+def prior_m4_dispatch(api,rid):
+    title=f"M4|{rid}|windows-amd64|{M4_CONTROL_SHA}"
+    runs=list_runs(api,M4_TARGET_WORKFLOW,
+        "event=workflow_dispatch&branch="+urllib.parse.quote(M4_CONTROL_REF,safe=""))
+    matches=[r for r in runs if r.get("event")=="workflow_dispatch"
+             and r.get("display_title")==title and
+             r.get("head_sha")==M4_CONTROL_SHA]
+    require(len(matches)<=1,"duplicate M4 Windows manual runs: do not cherry-pick")
+    return matches[0]["id"] if matches else None
+
+
+def plan_m4(api,main_sha):
+    """M4 requests use the EXISTING original Windows workflow, not M1/M3 v7.
+
+    Read current main registry and exact M4 central G2, candidate I,
+    manifest digest and frozen control. No arbitrary role/scope/target.
+    """
+    require(api.get("branches/main")["commit"]["sha"]==main_sha,
+            "main changed before M4 dispatch plan")
+    require(api.get("branches/"+M4_CONTROL_REF)["commit"]["sha"]==M4_CONTROL_SHA,
+            "M4 frozen Windows control moved")
+    reg=json.loads(api.blob(".governance/registry.json",main_sha))
+    roles=g.validate_registry(reg)
+    role=next((r for r in roles if r["id"]=="M4" and r["state"]=="active"
+               and not r["global_writer"]),None)
+    require(role is not None and
+            role["branch"]==m4.BRANCH and
+            role["assigned_task"]=="R5-M4-NATIVE-WINDOWS-NETWORK-016" and
+            "r0/go_overlay/internal/windowsclient/" in role["allowed_paths"],
+            "M4 Windows 016 authority not activated")
+    head=api.get("branches/"+m4.BRANCH)["commit"]["sha"]
+    require(bool(entry.SHA.fullmatch(head)),"bad M4 worker HEAD")
+    base=".governance/workstreams/M4/requests"
+    files=api.get("contents/"+base+"?ref="+head)
+    require(isinstance(files,list),"M4 worker request directory missing")
+    entries=[f for f in files if f.get("type")=="file" and
+             f.get("name","").endswith(".json") and
+             REQUEST.fullmatch(f["name"][:-5])]
+    require(len(entries)<=64,"M4 request cap exceeded")
+    candidates=[]
+    for f in entries:
+        rid=f["name"][:-5]
+        path=base+"/"+f["name"]
+        request=json.loads(api.blob(path,head))
+        if (request.get("role_id")=="M4" and
+            request.get("status")=="PLANNED" and
+            request.get("dispatch_ref")==M4_CONTROL_REF and
+            request.get("control_sha")==M4_CONTROL_SHA and
+            rid.startswith("M4-016-")):
+            candidates.append((rid,path,request))
+    if not candidates:return []
+    scope=latest_scope(api,"M4",m4.BRANCH,head,
+                       role["assignment_epoch"],reg["reservation_revision"])
+    if scope is None:
+        return [{"role":"M4","request_id":rid,
+                 "result":"SKIP_SCOPE_NOT_READY","worker_head":head}
+                for rid,_,_ in candidates]
+    # Authoritative fresh central receipt, full allowed_paths and CURRENT main
+    # matching the frozen M4 control; only then consume M4's immutable request.
+    report=m4.perform(api,scope["scope_run_id"],
+                      {"event_type":"workflow_dispatch"},M4_CONTROL_SHA,reg)
+    decisions=[]
+    for rid,path,request in candidates:
+        ref=request_identity(api,"M4",head,path)
+        pinned=m4.verify_manual_request(api,report,reg,M4_CONTROL_SHA,
+                 rid,ref,request["source_sha"],None)
+        require(pinned["request_ref"]==ref and
+                pinned["source_sha"]==request["source_sha"],
+                "M4 request decision diverged from exact immutable I")
+        prior=prior_m4_dispatch(api,rid)
+        decisions.append({"role":"M4","request_id":rid,"request_ref":ref,
+                          "worker_branch":m4.BRANCH,"worker_head":head,
+                          "worker_source_sha":request["source_sha"],
+                          "control_ref":M4_CONTROL_REF,"control_sha":M4_CONTROL_SHA,
+                          "scope_run_id":scope["scope_run_id"],
+                          "scope_artifact_id":scope["scope_artifact_id"],
+                          "prior_run_id":prior,
+                          "result":"SKIP_ALREADY_DISPATCHED" if prior else "READY"})
+    require(api.get("branches/main")["commit"]["sha"]==main_sha,
+            "main changed after M4 dispatch authorizations")
+    return decisions
+
+
+def execute_m4(api,decisions):
+    for row in decisions:
+        if row["result"]!="READY":continue
+        require(api.get("branches/"+row["worker_branch"])["commit"]["sha"]
+                ==row["worker_head"],"M4 HEAD moved before Windows dispatch")
+        require(api.get("branches/"+M4_CONTROL_REF)["commit"]["sha"]
+                ==M4_CONTROL_SHA,"M4 frozen control moved before dispatch")
+        previous=prior_m4_dispatch(api,row["request_id"])
+        if previous is not None:
+            row["result"]="SKIP_ALREADY_DISPATCHED"
+            row["prior_run_id"]=previous
+            continue
+        api.post("actions/workflows/"+M4_TARGET_WORKFLOW+"/dispatches",{
+            "ref":M4_CONTROL_REF,"inputs":{
+                "role_id":"M4","request_id":row["request_id"],
+                "request_ref":row["request_ref"],
+                "worker_source_sha":row["worker_source_sha"],
+                "control_sha":M4_CONTROL_SHA,
+                "scope_run_id":str(row["scope_run_id"]),
+            }})
+        row["result"]="DISPATCH_ACCEPTED_NOT_QUALIFIED"
+
+
 def trusted_scope_trigger(run):
     # This event is just a wake-up; plan() independently requires the actual
     # ROLE_SCOPE_PASS artifact and fresh exact worker SOURCE and request I.
@@ -315,13 +425,17 @@ def main():
         require(trusted_scope_trigger(run),
                 "untrusted or unsuccessful central-scope workflow identity/event")
     decisions = plan(api, expected)
+    m4_decisions = plan_m4(api, expected)
     execute(api, decisions)
+    execute_m4(api, m4_decisions)
     Path("out").mkdir(exist_ok=True)
     Path("out/worker-dispatch.json").write_text(json.dumps({
         "schema_version":1,"dispatcher_source_sha":expected,
         "control_ref":CONTROL_REF,"control_sha":CONTROL_SHA,
         "event":os.environ.get("GITHUB_EVENT_NAME"),
-        "decisions":decisions,"product":"NOT_RUN","performance":"NOT_RUN",
+        "decisions":decisions,"m4_windows_decisions":m4_decisions,
+        "m4_control_ref":M4_CONTROL_REF,"m4_control_sha":M4_CONTROL_SHA,
+        "product":"NOT_RUN_UNTIL_EXACT_M4_WINDOWS_RUN","performance":"NOT_RUN",
     }, indent=2)+"\n")
     print(json.dumps(decisions,indent=2))
 

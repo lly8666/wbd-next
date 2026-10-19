@@ -1,4 +1,4 @@
-name: Audited worker v7 auto dispatch
+name: Audited worker v7 and M4 Windows auto dispatch
 run-name: "audited-worker-dispatch|${{ github.event_name }}|${{ github.sha }}"
 on:
   push:
@@ -7,6 +7,8 @@ on:
       - ".github/workflows/worker-request-dispatch.yml"
       - "tools/worker_request_dispatch.py"
       - "tests/test_worker_request_dispatch.py"
+      - "tools/m4_product_source.py"
+      - "tests/test_m4_auto_dispatch.py"
   workflow_run:
     workflows: ["Central worker scope audit"]
     types: [completed]
@@ -15,7 +17,7 @@ on:
 permissions:
   contents: read
   actions: write
-# Every invocation scans BOTH current worker heads. This prevents queued
+# Every invocation scans current M1/M3 and scoped M4 windows candidate heads. This prevents queued
 # workflow_run events from dropping a role when an earlier event is pending.
 # Central scope uses dynamic run-name 'scope|branch|SHA'; verify stable workflow
 # ID/path here, and the full event identity and artifact again in Python.
@@ -47,8 +49,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_worker_request_dispatch.py' -v
+          python3 -m unittest discover -s tests -p 'test_m4_auto_dispatch.py' -v
           python3 -m py_compile tools/worker_request_dispatch.py
-      - name: Main-only read exact central G2 artifact, verify immutable request I, dedupe and dispatch frozen v7
+      - name: Main-only verify exact G2, immutable I and dedupe into frozen M1/M3 v7 or M4 Windows v1
         shell: bash
         run: |
           set -euo pipefail
