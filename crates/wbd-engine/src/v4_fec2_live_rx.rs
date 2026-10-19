@@ -68,9 +68,12 @@ impl Fec2LiveRx{
     pub(crate) fn from_authenticated_scope(
         verified:VerifiedReceiveEpoch,wire_max:usize)->Result<Self,ReceiveError>{
         if verified.generation==0||verified.epoch==[0;16]||
-           verified.negotiated_features!=7||!verified.direction_s2c{
+           verified.negotiated_features!=7{
             return Err(ReceiveError::Authorization)
         }
+        // Direction is authenticated by the original Go owner and carried
+        // in this immutable scope. Both C2S and S2C are legitimate V2
+        // directions; never infer one from an unauthenticated wire header.
         let budget=wire_max.checked_sub(wbd_codec::record_frame::FIXED_WIRE_OVERHEAD)
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
