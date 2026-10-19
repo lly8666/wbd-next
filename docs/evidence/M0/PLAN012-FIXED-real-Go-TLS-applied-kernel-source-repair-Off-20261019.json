@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "808c132c6ce261dd5b79f362512f811f0a7e2f5f",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_SINGLE_REAL_KERNEL_FEC_FIXED_SOURCE_REPAIR_GO_TLS_APPLIED_NATIVE_AND_QUIESCENT_OFF_NOT_CONTINUOUS_PRODUCT",
+  "intent_refs": [
+    "docs/devlog/M0/PLAN012-FIXED-AUTH-PENDING-CONTRACT-intent-20261019.md",
+    "docs/devlog/M0/PLAN012-FIXED-KERNEL-COPY-APPLIED-intent-20261019.md",
+    "docs/devlog/M0/PLAN012-FIXED-OFF-QUIESCENCE-intent-20261019.md"
+  ],
+  "source_and_runs": {
+    "pending_only": {
+      "source_sha": "1479881a72359d3ad36b16ce97bbe1bd3d634184",
+      "run_id": 39260828052,
+      "attempt": 1,
+      "job_id": 118087691291,
+      "conclusion": "success",
+      "artifact_id": 12189967448,
+      "zip_sha256": "020533ae4ce0f17a8bef71cb2d8fd66f66d6c2fbdddfdde3a036a8e0db8ca32d",
+      "normal_off_real_kernel_regression": "PASS",
+      "real_fixed_applied": "NOT_RUN_AT_THIS_SOURCE",
+      "governance": {
+        "run_id": 39260827902,
+        "result": "FAIL",
+        "cause": "GitHub API 403 quota scope audit"
+      }
+    },
+    "kernel_one_shot_pre_quiescence_fix": {
+      "source_sha": "06fabb4fa05d57d094c8f0da6448651af5714d7f",
+      "run_id": 39262052842,
+      "attempt": 1,
+      "job_id": 118091965652,
+      "conclusion": "success",
+      "artifact_id": 12191782476,
+      "zip_sha256": "d0e5b2c9046deb673624807bdd68766e45c8dc459a1792ef41a2072ead3e6f41",
+      "modes": "one source+repair per case original M1/M3/M4 kernel accepted, independent real authenticated peer RS16 recovered real UDP through TUN",
+      "governance": {
+        "run_id": 39262052815,
+        "result": "FAIL",
+        "cause": "GitHub API 403 quota scope audit"
+      }
+    },
+    "final": {
+      "source_sha": "808c132c6ce261dd5b79f362512f811f0a7e2f5f",
+      "run_id": 39262936232,
+      "attempt": 1,
+      "job_id": 118095029781,
+      "conclusion": "success",
+      "artifact_id": 12191068595,
+      "zip_sha256": "ce91456c6dfdf5f7099b0137408b1132320c0834d8de0cd0379d24a57f2b8711",
+      "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39262936232",
+      "governance": {
+        "run_id": 39262936403,
+        "result": "SUCCESS"
+      }
+    }
+  },
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "native_rust_compiler": "rustc 1.85.1 (4eb161250 2025-03-15)",
+  "go_compiler": "go1.23.12",
+  "feature": "m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe",
+  "tests": [
+    {
+      "name": "Original Go TLS verified Fixed requested/pending/rejected",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "status": "PASS",
+      "detail": "Unnegotiated feature3, wrong epoch, stale revision, Stop rejected; no early applied ACK"
+    },
+    {
+      "name": "Actual native source+repair kernel-copied Fixed applied",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "status": "PASS",
+      "detail": "Original M1 Fec2Owner scheduler, M3 AEAD monotonic original PN0/1, original M4 raw TCP copy; Go Fixed revision4 moves pending→applied only after source and parity positive copy"
+    },
+    {
+      "name": "Independent real raw peer missing-source recovery and real application delivery",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "status": "PASS",
+      "detail": "Authentic raw ciphertext observed independently, AEAD/replay PN, M3 RS16 e1 reconstructs missing IPv4 source (127B), original Linux TUN receives and UDP application receives 99B; replay/tamper rejected"
+    },
+    {
+      "name": "Actual authenticated M2 reverse receipt and sender frozen settlement",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "status": "PASS",
+      "detail": "Original Go protected reverse direction M3 AEAD/PN kind1 and M2 release of original 2 FrozenRecords, unique receipt, late/censored handled"
+    },
+    {
+      "name": "Fixed applied to actual quiescent OFF",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "status": "PASS",
+      "detail": "Before outstanding M2 shadow retirement original Go OFF5 rejected; after genuine authentication+release Rust OFF5 APPLIED and old Fixed4 readback revoked; Stop terminal"
+    },
+    {
+      "name": "Default normal Rust release ABI",
+      "status": "PASS",
+      "detail": "Original cdylib unfeatured rejects m0 embedded/probe symbols; source-locked feature-only library not production release"
+    }
+  ],
+  "safety": {
+    "actual_requested_pending_applied_rejected": "PASS_SCOPED_ONE_SHOT_GO_TLS_DEV_OWNER",
+    "auto_mode_operator_policy_real_product": "NOT_RUN",
+    "fec_fixed_continuous_multiblock": "NOT_RUN",
+    "fec_auto_continuous_mature_real_network": "NOT_RUN",
+    "game_2_4_real_kernel_lanes": "NOT_RUN",
+    "actual_separate_original_go_client_server_product": "NOT_RUN",
+    "full_cli_gui_windows": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "user_oneway_RTT_p99": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "NOT_ENABLED",
+    "user_accepted_M3_FEC_native": "PASS_SCOPED_NATIVE_ALREADY_ACCEPTED_13_OF_13_ISAL_AND_23_OF_23_WIRE_NOT_REPEATED"
+  },
+  "next_action": "After frozen M3 task019 release-code record API and M1 task016 Game lane ABI arrive, integrate FEC Fixed into original Go TLS-authorized continuous Rust owner TX/RX actual source/parity and repair-to-TUN for multiple blocks in one real kernel functional Actions batch; only then Auto real M2 mature feedback and Game2/4 true lane, product default remains OFF until exact certification."
+}
