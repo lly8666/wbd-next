@@ -44,7 +44,17 @@ func N4NativeRecoverState(ctx context.Context, statePath string) error {
     }
     nativePath:=statePath+".n4-owned-wal"
     info,err:=os.Lstat(nativePath)
-    if errors.Is(err,os.ErrNotExist){return nil}
+    if errors.Is(err,os.ErrNotExist){
+        // A crash may strand a route sidecar even if the primary WAL was
+        // lost. Do not display "recovered" while any owned route intent
+        // remains on disk without a verifiable journal.
+        for _,candidate:=range []string{nativePath+".routes",statePath+".routes"} {
+            _,sideErr:=os.Lstat(candidate)
+            if sideErr==nil{return fmt.Errorf("%w: orphan route sidecar without owned WAL: %s",ErrN4JournalConflict,candidate)}
+            if !errors.Is(sideErr,os.ErrNotExist){return sideErr}
+        }
+        return nil
+    }
     if err!=nil{return err}
     if info.Mode()&os.ModeSymlink!=0 || !info.Mode().IsRegular(){
         return ErrN4JournalConflict
