@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "source_sha": "4f3585251a3288ca2b2a62a23d26fa740f6e8248",
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PARTIAL_MAIN_INTEGRATION_STOP_PASS_M4_016_PRODUCT_NOT_RUN",
+  "plan_010": {
+    "pr_number": 15,
+    "pr_head_sha": "3b7a9f2cc577f7c93933da38d07b8ac9ce4c44b8",
+    "merge_commit_sha": "06397ca512a620befb412acbebf0c2768ad40c46",
+    "status": "MERGED_PLAN_ONLY",
+    "maintenance_id": 39229824736,
+    "maintenance_conclusion": "success",
+    "plan_path": "docs/decisions/M0-windows-native-migration-2026-10-19.md"
+  },
+  "m4_015_reuse": {
+    "worker_source_sha": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+    "worker_h_sequence": 26,
+    "worker_governance_run_id": 39225015969,
+    "worker_governance_conclusion": "failure",
+    "central_g2_run_id": 39225046360,
+    "central_g2_conclusion": "success",
+    "native_original_go_product_assembly_run_id": 39225427878,
+    "run_attempt": 1,
+    "result": "SUCCESS_SCOPED_LINUX_AMD64_LINUX_ARM64_WINDOWS_AMD64_ORIGINAL_GO_CLI_GUI_NATIVE_SELFTEST",
+    "product_native_network": "NOT_RUN",
+    "rust_loader": "NOT_RUN",
+    "m4_015_worker_settlement": "WORKER_M4_PENDING_SELF_H"
+  },
+  "m4_016_authority": {
+    "role": "M4",
+    "assigned_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+    "allowed_paths_new": [
+      "r0/go_overlay/internal/windowsclient/"
+    ],
+    "unchanged_assignment_epoch": 1,
+    "unchanged_reservation_revision": 2,
+    "worker_cursor_changes_by_M0": "NONE",
+    "cold_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+    "donor_file_delta_count": 12,
+    "scope": "single proxy per host, CLI connect/disconnect/recover, GUI/config/portable/WAL native network owned cleanup, no runtime powershell; CI scripts permitted",
+    "excluded": "multi-proxy arbitration and extreme PnP ghost self-heal; no Rust hotpath/source-lock changes"
+  },
+  "m4_016_actions_entry": {
+    "workflow": ".github/workflows/m0-m4-product-assembly.yml",
+    "main_only_dispatcher": ".github/workflows/worker-request-dispatch.yml",
+    "control_ref": "qualification/m4-product-windows-v1",
+    "control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+    "request_json_scope": ".governance/workstreams/M4/requests/M4-016-*.json",
+    "target": "windows-amd64",
+    "runner": "windows-2022",
+    "auth": "fresh central M4 ROLE_SCOPE_PASS+exact approved registry+immutable single-file request I+candidate source SHA+manifest SHA256+same frozen control+branch HEAD+duplicate request exclusion",
+    "example_doc": "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md",
+    "token_boundary": "M4 writes owned request only, main trusted dispatcher alone actions:write, worker does not edit shared workflow",
+    "evidence_source_sha": "e2be381fd0a4e7b327800899d72919fc65abb835",
+    "dispatcher_smoke_run": 39234078787,
+    "dispatcher_smoke_conclusion": "success",
+    "frozen_control_smoke_run": 39233420825,
+    "frozen_control_smoke_conclusion": "success",
+    "exact_manual_worker_request_run": "NOT_RUN_NO_WORKER_M4_I",
+    "exact_auto_worker_request_run": "NOT_RUN_NO_WORKER_M4_I",
+    "worker_016_feature_implementation": "NOT_RUN"
+  },
+  "original_go_stop_shared_API": {
+    "source_sha": "4f3585251a3288ca2b2a62a23d26fa740f6e8248",
+    "files": [
+      "r0/go_overlay/internal/realityfront/admission_v4.go",
+      "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+    ],
+    "interface": "V4OriginalOwnerStopper.StopAndReleaseOriginalOwner() (V4OwnerStopCompletion,error); V4StopThenCleanupNetwork(owner,cleanup)",
+    "security": "exact original protected Go credential TLS epoch; only Rust C Stop success and Release set owner/drivers drained + generation released; no owned native network cleanup before positive receipt; nil, failed or incomplete Stop blocks Cleanup; Cleanup failure retained as partial",
+    "nonclaim": "Go on Windows original runtime is NOT yet wired to actual Rust owner; interface is implemented for Linux original TLS experimental bridge and mocked ordering only for Windows cleanup",
+    "actions": [
+      {
+        "run_id": 39235733659,
+        "run_attempt": 1,
+        "conclusion": "success",
+        "scope": "original Go real protected TLS, shared Stop/negative cleanup sequencing",
+        "real_witness": "M0_STOP_AND_OWNED_NETWORK_CLEANUP_ORDER_FAIL_CLOSED_PASS no_fake_disconnected=1"
+      },
+      {
+        "run_id": 39235733774,
+        "run_attempt": 1,
+        "conclusion": "success",
+        "scope": "R0 cold native gate"
+      },
+      {
+        "run_id": 39235733652,
+        "run_attempt": 1,
+        "conclusion": "success",
+        "scope": "real original Go TLS and actual Rust kernel raw/TUN separate owner generation Stop; critical+impairment+metric all success",
+        "real_witness": "M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS old=7 new=8 same_epoch=1 kernel_drained=1 stale_generation_denied=1"
+      },
+      {
+        "run_id": 39235733694,
+        "run_attempt": 1,
+        "conclusion": "success",
+        "scope": "main governance"
+      },
+      {
+        "run_id": 39235733630,
+        "run_attempt": 1,
+        "conclusion": "IN_PROGRESS_AT_RECEIPT",
+        "scope": "main TLS FEC2 owner broad Linux+Windows matrix; previous run 39228591882 full FAIL due external NASM HTTP504 preserved; individual current nodes not promoted to whole PASS until finished"
+      }
+    ]
+  },
+  "history": {
+    "plan010_project_hot_bytes_failure": {
+      "source_sha": "437cb2a7afb439d133b1abad29b0fbb0c135d223",
+      "governance_run_id": 39234786246,
+      "result": "failure",
+      "maintenance_run_id": 39234786423,
+      "reason": "hot read 32926 > policy cap"
+    },
+    "recovery_success": {
+      "source_sha": "f80509301a91a4d51d7ccb6afa1ca0f525ce0d6d",
+      "governance_run_id": 39234938398,
+      "conclusion": "success",
+      "change": "project.next_decision replaced with bounded summary; detailed document unchanged"
+    },
+    "M4_old_governance_fail_preserved": true,
+    "M0_M2_real_firstsend_previous": {
+      "source_sha": "d98b1c7ad58972f4bdaf7b7c4d731e7ebfce3e2a",
+      "run_id": 39228592102,
+      "conclusion": "success",
+      "m2_unknown_2s": 8,
+      "kind1_authenticated_reverse": "NOT_RUN"
+    }
+  },
+  "product_state": {
+    "r0_025": "PARTIAL",
+    "windows_native_network": "NOT_RUN",
+    "m4_016_actual_runtime_without_powershell": "NOT_RUN",
+    "requested_pending_applied_rejected_product": "NOT_RUN",
+    "normal_client_server_vertical": "PARTIAL",
+    "real_authenticated_reverse_kind1": "NOT_RUN",
+    "native_windows_driver_owner_Stop": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "windows_arm": "NOT_RUN",
+    "fec2": "OFF"
+  },
+  "next_action": "M0 finish real original protected Go/Rust reverse C2S kind1 and M2 maturity, then actual product ABI/Stop; M4 independently settle 015 and implement entire PLAN010-016 Windows native runtime with one request I and owned Actions; M1 only real contract gap, M2/M3 unchanged."
+}
