@@ -4,29 +4,29 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 38,
-  "checkpoint_sha": "73d46f622b009c82fd1f53e6d23af67d990fdc0d",
+  "sequence": 39,
+  "checkpoint_sha": "a5de4452a7c240d4866352de157deed3565a17b6",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 FEC2 missing-only recover exact equivalence: cache borrowed inverse and ISA-L final decode tables, reuse zero-clean known-source workspace, bounded payload memory stats; pending new ISA-L and sameVM old/new native ABBA.",
-  "why_now": "Main registry switched M3 from accepted scoped017 to PLAN008-018. CODE17ca removed inverse-hit deep clone and caches ISA-L tables + known-source padding; CODE437 adds scalar eviction and cfg-native dirty-tail/workspace reuse test. CODE437 Release default worker-native 39187710688 123 PASS 0 FAIL 1 ignored, ZIP/4 members independently SHA256 checked. Native new source and old/new ABBA NOT_RUN. Main advanced mid CODE437 Governance39187710740: ROLE_SCOPE_FAILED; central new G2 run39188046597 failed HTTP403 github_rate_limited remaining=0, not 64 delta.",
+  "current_task": "PLAN008-018 FEC2 RS16 cache/workspace old vs new source-locked real ISA-L e4 ABBA entry committed; single H39 cursor-only governance review. Native ABBA measurement still NOT_RUN.",
+  "why_now": "User requests exactly one H checkpoint and only check its result. Previous S a5de445 added test-only accepted-code8cc exact blob and same-process CODE437 native-old/new 2M e4 x ABBA harness without modifying production codec. At S source a5de worker-native 39189856227 123 PASS/0 FAIL/1 ignored; baseline native new CODE437 and ignored ABBA are NOT_RUN. S governance 39189856158 failed GitHub HTTP403, not a scope or native assertion. H39 is the only additional push.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "M0 own one source-locked CODE8cc-baseline vs CODE437-candidate full real ISA-L native codec run plus one sameVM one-scenario k16/r16/1200B/e4 old/new/new/old CPU/alloc/copy/cache ABBA as specified in M3 workpack 018 devlog; M3 review/fix only owned source. Do not rerun scalar/native 017 cost or enable product FEC2.",
+  "next_action": "Observe exactly H39 Governance and associated central unified G2 run; report observed PASS/FAIL and error. Do not commit anything else or re-run native ABBA until a supported real ISA-L Actions runner executes the ignored test. FEC2 product OFF.",
   "unverified": true,
-  "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "last_tested_source": "a5de4452a7c240d4866352de157deed3565a17b6",
   "evidence_refs": [
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json"
   ],
   "open_requests": [],
   "context_refs": [
+    "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
     "docs/devlog/M3/R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018.md",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-valid-row-scalar-partial.json",
     "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json",
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
-    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json",
-    "docs/devlog/M3/R5-M3-FEC2-CODEC-NATIVE-017.md"
+    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
-  "partial_summary": "H38 PLAN008-018 partial: CODE437 scalar 123/0/1 PASS; ZIP/build/hash verified, wire/record/link/static/G2 bootstrap success. Reuse inverse borrow+final native table+zero-clean source padding, 64-key native/inverse cache and worst-case accounted heap payload <=1,523,697B excluding metadata/returned Vec. New feature-native test NOT_RUN, native old/new ABBA & alloc/copy counts NOT_RUN. CODE437 gov failed main/source moved; central unified G2 CODE437 failed GitHub rate_limit403 (NOT old64 budget). Legacy017 Linux x64 scoped accepted, older red retained. FEC2 product OFF."
+  "partial_summary": "H39 one cursor-only checkpoint over S a5de445. Pinned A 8cc5b06 and B 437cc721 in a single ignored test-only Release native-isal ABBA fixture, 2M e4 recoveries/leg, A-B-B-A; actual native ABBA NOT_RUN. S a5de native-default 39189856227 PASS 123/0/1; R0 wire/record/link/static and scoped bootstrap also PASS. S governance39189856158 FAIL GitHub API HTTP403; central G2 no64 gate. H39 governance result pending. No product FEC2 enablement."
 }
