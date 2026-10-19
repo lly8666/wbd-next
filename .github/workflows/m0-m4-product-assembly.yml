@@ -1,0 +1,129 @@
+name: M0 M4 pinned original Go and GUI product assembly
+run-name: "M0|m4-original-product|\${{ github.event_name }}|\${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-m4-product-assembly.yml"
+      - "tools/m4_product_source.py"
+      - "tests/test_m4_product_source.py"
+  workflow_run:
+    workflows: ["Central worker scope audit"]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: "m0-m4-original-product-\${{ github.event_name }}-\${{ github.event.workflow_run.id || github.sha }}"
+  cancel-in-progress: false
+
+jobs:
+  attest:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.workflow_id == 385257385 &&
+       github.event.workflow_run.path == '.github/workflows/scope-audit.yml' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       startsWith(github.event.workflow_run.display_title, 'scope|work/m4-r1-platform|'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    outputs:
+      source_sha: \${{ steps.source.outputs.source_sha }}
+    env:
+      GH_TOKEN: \${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: "\${{ github.sha }}", persist-credentials: false}
+      - name: Negative identity and artifact contract tests; then attest exact M4 G2 SOURCE
+        id: source
+        shell: bash
+        env:
+          SCOPE_RUN_ID: \${{ github.event.workflow_run.id || '39219843238' }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_m4_product_source.py' -v
+          python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" --output m4-product-identity/receipt.json
+          test -s m4-product-identity/receipt.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-m4-product-identity-\${{ github.run_id }}-\${{ github.run_attempt }}
+          path: m4-product-identity/
+          retention-days: 30
+          if-no-files-found: warn
+
+  original-product:
+    needs: attest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {target: linux-amd64, runner: ubuntu-24.04}
+          - {target: linux-arm64, runner: ubuntu-24.04-arm}
+          - {target: windows-amd64, runner: windows-2022}
+    runs-on: \${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      M4_SOURCE: \${{ needs.attest.outputs.source_sha }}
+      LEGACY_SOURCE: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: \${{ needs.attest.outputs.source_sha }}
+          path: worker-overlay
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Fail closed on unpinned SOURCE and wrong Go toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "$LEGACY_SOURCE"
+          test "$(git -C worker-overlay rev-parse HEAD)" = "$M4_SOURCE"
+          test "$(go version | awk '{print $3}')" = "go1.23.12"
+      - name: Linux exact old-Go assembly and native config/build, one per target
+        if: matrix.target != 'windows-amd64'
+        shell: bash
+        env:
+          TARGET: \${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s worker-overlay/r0/go_overlay/assembly -p 'test_assemble.py' -v
+          python3 worker-overlay/r0/go_overlay/scripts/fec2_assembly_smoke.py \
+            --legacy-root legacy --overlay-root worker-overlay \
+            --out m4-product-result --target "$TARGET"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('m4-product-result/result.json'))
+          assert d["target"]==os.environ["TARGET"] and d["host_native"] is True
+          assert d["go_tests"]=="PASS_SCOPED_FEC2_PARSER_READBACK_ONLY"
+          assert d["legacy_source"]==os.environ["LEGACY_SOURCE"]
+          assert d["overlay_source"]==os.environ["M4_SOURCE"]
+          assert d["native_rust_loader"]=="NOT_RUN" and d["product_fec2"]=="OFF"
+          PY
+      - name: Windows real original Go CLI and WinForms portable GUI native selftest
+        if: matrix.target == 'windows-amd64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m unittest discover -s worker-overlay/r0/go_overlay/assembly -p 'test_assemble.py' -v
+          if ($LASTEXITCODE -ne 0) {throw "assembler regression failed"}
+          & ./worker-overlay/r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1 -LegacyRoot legacy -OverlayRoot worker-overlay -OutputDirectory m4-product-result
+          if ($LASTEXITCODE -ne 0) {throw "original native WinForms smoke failed"}
+          if (-not (Test-Path 'm4-product-result/windows-product-result.json')) {throw "missing Windows native receipt"}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-m4-\${{ matrix.target }}-\${{ github.run_id }}-\${{ github.run_attempt }}
+          path: m4-product-result/
+          if-no-files-found: warn
+          retention-days: 30
