@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 190,
-  "checkpoint_sha": "4dcf586e041d0d8bf976d77f8e18763cce901e81",
+  "sequence": 191,
+  "checkpoint_sha": "81de053d439a39ef14116f72dc680f4aa967ac16",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 M0 shared Go TLS-Rust owner main/product: M4 I006 dispatcher historical-request HOL fixed, exact Windows CLI/GUI native PASS. M0 FEC Fixed one-block real-kernel and native bounded multi-block composer retained. Continuous FEC Fixed/Auto/Game remains NOT_RUN.",
-  "why_now": "H189 recovery complete. S252 intent, S253 main dispatcher/tests, S254 exact results. Dispatcher39271060933 SUCCESS, Governance39271061449 SUCCESS and maintenance39271060991 SUCCESS. M4 H33 G2 attempt3 SUCCESS retained, two old 403 failures retained. Existing M4 I006 Windows Action39271382181 attempt1 attest and Win2022 amd64 original Go CLI/WinForms PASS artifact12194304682; real WFP/Connect/Rust product applied/physical NOT_RUN. Issue17 updated and closed. Historical M3 PLANNED old task skipped, not rewritten; current task candidates retain exact G2, epoch, source, config and dedupe. FEC2 product OFF.",
-  "done_when": "One buildable original Go verified TLS client/server product with persistent Rust FEC Fixed+Auto and real Game2/4 lanes, source/repair, recovery into true TUN app, authentic M2 applied/Stop/MTU/noHOL. One exact-source combined Linux real kernel functional Actions job; Windows WFP, 20Mbps sustained, physical and p99 require separate qualification, production FEC2 OFF until proven.",
-  "next_action": "Consume exact frozen M3-019 release-code record and M1-016 Game lane interfaces, then integrate Fixed/Auto/Game2/4 into original Go TLS persistent Rust owner and test in ONE exact-source real kernel/TUN Actions functional batch; repair failures together, no more successful one-block micro-tests; product remains OFF.",
+  "current_task": "PLAN012 M0 user-authorized takeover of undelivered M3-019 release-code FEC2 record and M1-016 Game real lane adapter completed with exact-source combined functional PASS, but true persistent FEC Fixed/Auto/Game2/4 original-Go product data-plane NOT_RUN; production FEC2 OFF.",
+  "why_now": "Recovered H190 then S255 takeover decision and S256 FEC release-record, first state=integrated broke R0/G2 on exact main (original R0 run39273892893 FAIL; G2 39273892894 FAIL); S257 restored M1/M3 active role metadata and M0 temporary sole interface-file ownership; R0 static/ G2 now SUCCESS source e822. S258 M0 Game 2/4 per-lane AEAD+PN/Replay adapter; S259 opt-in engine; S260 combined workflow. First SOURCE cedf7d3 run39275160811 FAIL three Arena E0599 before Game or Go, FEC release-record 1/1 PASS. S261 fixed type errors, SOURCE e82202693a92418266a475f747e8cb0ff44e0d18 combined Action39275492225 attempt1 job118138614516 SUCCESS artifact12196154342: release FEC2 record 1/1 three cipher suites; Game 2/4 native 2/2 independently keyed lanes, noHOL, dedup/Stop; original Go TLS 3 ciphers feature-only true raw/TUN RS16 one kernel block, real M2 and quiescent Off PASS. G2 39275492352, R0 static39275492183, native39275492339, cross39275492398, governance39275492192, maintenance39275492332 SUCCESS. S262 evidence exact; main governance39276276282 PASS. BUT no original Go product persistent 2+ blocks, Auto authentic closed loop or Game 2/4 real lanes; FEC2 production OFF.",
+  "done_when": "One exact-source original-Go TLS verified product persistent FEC Fixed multi-block TX/RX + Auto genuine M2 selected native applied + Game2/4 qualified independent lane real kernel delivery, Stop/revision/MTU/noHOL, full Actions app receipt; then and only then enable FEC2 production. The newly published codec release API and Game adapter alone do not imply on.",
+  "next_action": "Build one M0-owned real original-Go TLS persistent Rust FEC Fixed/Auto/Game2/4 owner data-plane integration (not probe): true multi-block source+parity/decode recovered TUN/UDP, authentic M2 feedback and separate Game lane kernel receipts/Stop. Run one SOURCE-locked combined Linux Actions functional product job. Only on actual PASS plus product config/ABI readback enable production FEC2; until then OFF.",
   "unverified": true,
-  "last_tested_source": "c3503ac9ba1da044b02d2bf6d8a782fb9410cd96",
+  "last_tested_source": "e82202693a92418266a475f747e8cb0ff44e0d18",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-M4-I006-historical-M3-dispatch-repair-and-real-Windows-20261019.json"
+    "docs/evidence/M0/PLAN012-M0-takeover-fec2-release-record-game2-4-combined-20261019.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md",
+    "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md",
+    "docs/devlog/M0/PLAN012-combined-compiler-recovery-20261019.md",
     "docs/evidence/M0/PLAN012-FixedStream-native-multiblock-and-original-Go-kernel-consumption-20261019.json",
-    "docs/evidence/M0/PLAN012-FIXED-real-Go-TLS-applied-kernel-source-repair-Off-20261019.json",
-    "docs/devlog/M0/PLAN012-M4-I006-dispatch-repair-intent-20261019.md"
+    "docs/evidence/M0/PLAN012-M4-I006-historical-M3-dispatch-repair-and-real-Windows-20261019.json"
   ],
   "open_requests": [],
-  "partial_summary": "H190 M4 dispatcher HOL resolved S253 source c3503ac, Actions39271060933 PASS, original Windows I006 39271382181 PASS native CLI/GUI and original Go scoped, Issue17 closed. Old M3 PLAN008 requests and old 403 FAIL retained. M0 Fixed one-block real kernel PASS source13b, native multi-block 2/2 PASS source7b. Persistent FEC Fixed/Auto/Game true real kernel multi-block NOT_RUN, product FEC2 OFF. Next one combined source-locked E2E functional Actions after M3/M1 frozen delivery."
+  "partial_summary": "H191 M0 directly resolved undelivered M3 release-record and M1 Game 2/4 native adapter SOURCE e8220: combined Actions39275492225 PASS FEC release 3-cipher+Game lanes native2/2+actual original Go TLS single-block raw TUN and M2/off, exact artifact12196154342. First combined compile FAIL cedf retained; temporary integrated role metadata caused original G2/R0 FAIL, restored active and latest G2/R0 PASS. Core product persistent Fixed multi-block TX/RX, real Auto M2 and Game kernel 2/4 still NOT_RUN; production FEC2 OFF. Next one complete product persistent Go/Rust kernel Actions and enable only if all hard gates proven."
 }
