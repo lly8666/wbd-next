@@ -371,8 +371,10 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if e:=b.fec2ProbeTryStageExact(wrongEpoch,6,100);e==nil{
                 t.Fatal("foreign Go epoch staged a future FEC2 revision")
             }
-            if e:=b.fec2ProbeTryStageExact(server.Epoch,7,100);e==nil{
-                t.Fatal("profile outside seven original Go grades accepted")
+            // Native profile 7 is the reserved quiescent OFF transition;
+            // 8 remains invalid (there are still only seven FEC grades).
+            if e:=b.fec2ProbeTryStageExact(server.Epoch,8,100);e==nil{
+                t.Fatal("profile outside seven FEC grades plus internal OFF accepted")
             }
             if mode=="mixed-prefix"{
                 if e:=b.fec2ProbeTryStageExact(server.Epoch,6,6);e==nil{
