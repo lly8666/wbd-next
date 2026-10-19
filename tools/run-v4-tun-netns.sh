@@ -44,6 +44,7 @@ COMMON="${WBD_M0_COMMON_SCENARIO:-}"
 PERF="${WBD_M0_PERF_BASELINE:-}"
 SUSTAIN20="${WBD_M0_SUSTAINED_20MBPS:-}"
 CONT20_LOSS="${WBD_M0_CONT20_LOSS_PERCENT:-}"
+LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 D10="${WBD_M0_D10_DIAG:-}"
 TARGETED="${WBD_M0_TARGETED_DROP:-}"
 FEC2_PROBE="${WBD_M0_FEC2_KERNEL_TX:-}"
@@ -63,7 +64,6 @@ if [[ -n "$CONT20_LOSS" ]]; then
   echo "CONT20_LOSS_KERNEL_NETEM_APPLIED pct=$CONT20_LOSS dev=lo queue_limit=2048"
   sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
 fi
-LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 if [[ -n "$LOSS" ]]; then
   if [[ ! "$LOSS" =~ ^(1|5|10|20|30)$ || "$STEADY" != 1 || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$BACKGROUND" || -n "$FEC2_PROBE" || -n "$PERF" ]]; then
     echo 'STEADY_LOSS_INVALID only 1/5/10/20/30% with one isolated Normal OFF steady burst' >&2; exit 2
