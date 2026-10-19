@@ -92,8 +92,21 @@
   "governance": {
     "prior_014_h": "c80ff6a52ee58860f7c108307fe25d74438703e2",
     "prior_014_central": "39095544653 per PLAN-008 M0 audited M1 source ROLE_SCOPE_PASS; old M1 Governance failure retained",
-    "current_015_central": "PENDING_SOURCE_LOCKED_G2_SCOPE",
-    "current_015_h": "PENDING_CURSOR_HANDOFF"
+    "current_015_central": {
+      "code_source": "64102db5e101df1f678e17919169927ad19bad06",
+      "run_id": 39188080829,
+      "conclusion": "success",
+      "result": "ROLE_SCOPE_PASS_CODE_SOURCE_ONLY",
+      "note": "Exact CODE SOURCE G2 audit PASS; this is not current H21 scope qualification, nor product or performance qualification."
+    },
+    "current_015_h": {
+      "prior_h20_source": "dadb5f5e44c1c3edb0137d2d3ba5e3b44ba3620e",
+      "run_id": 39188532444,
+      "attempts": 2,
+      "conclusion": "failure",
+      "cause": "GitHub API 403 github_rate_limited remaining=0 both attempts; no scope violation was established.",
+      "new_h21_scope": "NOT_RUN_AT_S_HANDOFF"
+    }
   },
   "not_run": {
     "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN",
@@ -101,5 +114,12 @@
     "M0_M3_Go_tls_game_live_multilane": "NOT_RUN",
     "physical_product_p99_500Mbps": "NOT_RUN"
   },
-  "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts."
+  "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts.",
+  "handoff": {
+    "state": "HOLD_USER_DIRECTIVE",
+    "recorded_on": "2026-10-19",
+    "next_execution": "NO_DISPATCH_OR_RETRY_UNTIL_EXPLICIT_USER_RESUME",
+    "preserved": "Native 133/133 PASS at CODE source; Game015 old/new release same-VM ABBA NOT_RUN, Go/live/product/physical NOT_RUN.",
+    "coordination": "M0-owned ABBA request exists but is held; do not edit shared workflow or push to main."
+  }
 }
