@@ -4,22 +4,21 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 42,
-  "checkpoint_sha": "33196ab2e194a88143f798df1d7ce9ccbbff1e08",
-  "progress": "partial",
+  "sequence": 43,
+  "checkpoint_sha": "899a34fbe00f48afa5b0955d6ff7da873f462638",
+  "progress": "blocked",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018: v6 exact official ISA-L Linux x64 CODE437 native prepare requested via new request M3-018-NATIVE-E4-PREPARE-002, auto-dispatch on successful central G2; real old/new ABBA not run.",
-  "why_now": "M0 closed old v5 --stage argument parsing blocker via frozen qualification/worker-ci-v6 fab2e1d and main-only audited auto-dispatch. Old v5 M3 prepare 39204914148 stopped before build and remains FAIL. S33196ab added fresh v6 PLANNED intent with exact unchanged native CODE437 candidate, accepted CODE8cc baseline and a5de harness, config hash and new unique request ID. Functional/native test result not yet reported.",
+  "current_task": "PLAN008-018 FEC2 CODE437 real ISA-L native prepare attempted but BLOCKED by main-owned v6 shared test module overlay; no actual F2 native cases executed; await frozen corrected M0 control, then fresh prepare003 and ABBA.",
+  "why_now": "H42 Governance39209811567 and central G2 39210137428 PASS, main auto-dispatched M3 v6 native prepare002 39210496325. Auth PASS and real libisal / Rust native-code compile completed, but control fixture had 11 older F2 tests instead of CODE437 candidate 13: targeted native dirty-tail test filter ran 0 tests, checker rejected and prepare FAIL. Actual artifact ZIP/member independently SHA256 verified. M0 owns shared tool; issue#14 comment 6261243715 records smallest cross-SOURCE test overlay fix. V6 frozen; do not rerun 002.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Observe exact H42 worker Governance, central G2 SOURCE receipt, resulting main-only dispatcher and v6 M3 prepare ACTION for request M3-018-NATIVE-E4-PREPARE-002. If prepare succeeds, inspect exact run/attempt/artifact and manifest bytes, then create one paired_abba performance request; if failures, record/repair owned codec only. FEC2 product stays OFF.",
+  "next_action": "After M0 publishes and qualifies immutable v7 (or next) shared control with exact CODE437 fec_v2_tests.rs overlay, M3 issue unique PREPARE-003 using same CODE8cc baseline, CODE437 module, a5de ABBA fixture, then check real feature-native full cases and prepare artifact. Only after PASS create one 4-leg paired request; never enable product FEC2.",
   "unverified": true,
   "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
   "evidence_refs": [
-    "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json"
+    "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
+    "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-002.json"
-  ],
+  "open_requests": [],
   "context_refs": [
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
@@ -30,5 +29,5 @@
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
     "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
-  "partial_summary": "H42 checkpoint of S33196ab new M3 v6 native FEC2-018 prepare PLANNED; old v5 39204914148 authorize FAIL retained. Accepted baseline CODE8cc, candidate CODE437, test harness a5de frozen. CODE437 default 123/0/1 PASS, H40 Governance and central G2 PASS. New v6 real ISA-L native F2 and old/new sameVM ABBA still NOT_RUN; no product enablement."
+  "partial_summary": "H43 SOURCE CODE437 preserves default scalar PASS 123/0/1 + live v6 official ISA-L prepare002 FAIL_ZERO_CASES (not codec-native FAIL). Native lib compiled, but candidate new test absent from main control fc_v2_tests, test result 0 passed/154 filtered. ZIP/member rehashed. Native real CODE437 F2/ABBA and gains remain NOT_RUN. H42 governance and central G2 PASS; v5 fail historical retained. M0 shared test overlay defect sent issue#14; pending corrected frozen control. Product FEC2 OFF."
 }
