@@ -8,6 +8,9 @@
 pub mod runtime;
 /// Staged M0 M1→M3 FEC2 parity batches; wire kinds and capability remain disabled.
 pub mod fec2_staged;
+/// M0 continuous original-owner Fixed source-first/parity composition.
+/// Independent Go TLS/M4 integration still gates all real product capability.
+mod v4_fixed_stream;
 #[path = "memory/mod.rs"]
 pub mod memory;
 /// M0 bounded authentication/receipt assembly; no production V4 enablement.
