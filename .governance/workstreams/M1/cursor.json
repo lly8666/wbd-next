@@ -4,14 +4,14 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 27,
-  "checkpoint_sha": "42eb18a81abf7dc776570bb62c165ed63ae5ccb5",
-  "progress": "partial",
+  "sequence": 28,
+  "checkpoint_sha": "278717c24d4453f19415cd9b6e8c035d25353e5e",
+  "progress": "ready_for_integration",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "Game015 M1 R5 paired AB CPU window retest: revised ignored fixture64x262144 inputs compile and 133/133 worker-native PASS; v6 prepare004 Action39211331750 build A/B 13+13 focused PASS, hashes checked; S28 committed immutable paired002 to M0 G2 auto dispatcher, not yet measured.",
-  "why_now": "v6 paired001 run39210280319 kept CPU-window INCONCLUSIVE: same 262144 first246724 dup15420 complete992 checksum7911576; CPU <1s for one/both legs; need longer sample. M1-owned fixture S26 repeats original work64 times, identical old/new. Successful prepare004 real run39211331750 attempt1 artifact12167499186 exact manifest 7573ed1c74ea... and binary SHA256 independently verified. No changes to frozen v6 runner or role permissions.",
-  "done_when": "New paired002 one-job same-VM A then B run must validate actual original GameRx vs new, 64 rounds same 16777216 RX inputs and matched checksum, each CPU>=1 second with honest host quota/PSI/memory metadata. Preserve old INCONCLUSIVE. Record actual receipt and evaluate CPU per op and RAM interpretation without product extrapolation.",
-  "next_action": "Wait for current H27 central G2 exact SOURCE and M0 autonomous v6 dispatch of request M1-GAME015-AB-PAIRED-002. When actual paired run exists download worker-paired artifact and verify receipt source, exact prepare run39211331750 attempt1 artifact12167499186 manifest 7573ed1c74ea..., same job/leg chronology and matching checksum. On FAIL record cause and do not claim CPU PASS; on PASS write signed provider grounded evidence S/H. No manual dispatch and no shared files.",
+  "current_task": "PLAN-008 M1 Game RX bitmap ring/window and indexed open block completed for owner-local scoped delivery. Native 133/133 PASS at CODE64102db5; same-VM paired_ab 64-round Game015 two-release-binary PASS Action39212126443 after preserving short-window failure. Owner contract unchanged; ready for M0 component consumption (NOT product qualification).",
+  "why_now": "User resumed HOLD and required rule-based Actions AB. M0 PLAN-009 v6 auto-dispatch source-locked G2 verified code/fixture. Original short A/B run39210280319 failed CPU window; M1 S26 repeated the same workload64x and verified worker-native Action39210728731; exact v6 prepare004 39211331750 PASS A13+B13 and artifact12167499186/manifest7573ed1c... independent sha verified. Paired002 run39212126443 attempt1 PASS same job117927717275 CPU A11.374184s B1.577889s, actual16,777,216 inputs each and identical output checksum506340864; ratio7.2085x synthetic only. Shared receipt.work is per-round262144, true work count from logs, RSS cumulative and quota NOT_RUN explicitly qualified.",
+  "done_when": "Completed scoped M1 Game015: source-locked equivalent dedup wrap/old/pressure/multi-lane/Stop and operations-bounded bitmap/open-index, native133/133 PASS, one same-VM old/new equal 64round representative paired AB CPU PASS with bounded fixture and high-water memory observation, historical failures preserved. M0 can consume unchanged original owner API; requires separate original Go/live/physical/product gates and optional reverse BA/ABBA/cgroup quota if desired, all NOT_RUN.",
+  "next_action": "HANDOFF to M0: inspect docs/evidence/M1/R5-M1-PLAN008-GAME-DEDUP-015-actions.json cost.paired and companion devlog, consume unchanged GameRx implementation (CODE64102db5). Do not imply Go/TLS two-physical-D10/500Mbps/p99/product or independent per-leg RSS qualification. Shared v6 adapter receipt.work is per-round; normalization in evidence uses total_inputs log. Any BA/ABBA, standalone RSS quota or product work needs separate authorized task, not an automatic rerun.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
@@ -21,12 +21,11 @@
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
     ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
     ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md",
-    ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md",
-    ".governance/workstreams/M1/requests/M1-GAME015-AB-PAIRED-002.json"
+    ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md"
   ],
   "context_refs": [
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H27 cursor-only after S28 42eb18a81abf7dc776570bb62c165ed63ae5ccb5. Native CODE64102 133/133 PASS, S26 fixture 64*262144 total inputs=16777216, worker-native39210728731 SUCCESS. v6 new prepare004 Action39211331750 attempt1 SUCCESS A13/B13, verified ZIP c81dc378... / manifest7573ed1c74ea92634b03a3aa063e823fe0a1835cf5ce7ba24e8d38c87f5eec32 and executable A adfe9440..., B df75dfc2.... New paired002 source-locked request and expected M0 auto dispatch; no paired result yet. Old paired001 39210280319 FAIL CPU<1s and old v5 preflight FAIL retained; product/Go/physical NOT_RUN."
+  "partial_summary": "H28 after S29 278717c24d4453f19415cd9b6e8c035d25353e5e: Game015 M1 owner-local component READY_FOR_INTEGRATION. CODE64102db5 native133 PASS and bounded op oracle. Same-VM source-locked v6 prepare39211331750 A13+B13 PASS and paired39212126443 one-job CPU A11.374184s/B1.577889s matched real 64*262144=16777216 inputs; 7.208x ratio limited to synthetic fixture. A/B checksum506340864 identical; elapsed/manifest/log/receipt/archive independently SHA verified. Original v5 arg FAIL, v6 first paired CPU-window INCONCLUSIVE preserved. shared runner receipt.work=262144 per-round not full; independent RSS comparison NOT_INSTRUMENTED, cpu.max NOT_RUN. Old ABBA/Go/live/physical/product NOT_RUN."
 }
