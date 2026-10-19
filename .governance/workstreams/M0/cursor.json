@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 176,
-  "checkpoint_sha": "04a29c71cbf41139bd13994d3df9aba1f225fda3",
+  "sequence": 177,
+  "checkpoint_sha": "000473a8f9cecbd3785d78550c818911a2ebfc5e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "PLAN-008 R0-025 original Go/Rust product vertical; PLAN-009 §5 shared CI precondition M3 v6 zero-case fixed with frozen v7 and verified main dispatcher. M3 real native prepare/ABBA still worker-owned NOT_RUN; product FEC2 OFF.",
-  "why_now": "M3 v6 prepare39210496325 correctly rejected zero case from omitted fec_v2_tests.rs. M0 source-locked both files to candidate and added run-all native test + strict actual-case PASS. Initial f4f smoke/maintenance FAIL regex escaped incorrectly, corrected c0c Actions 39214403113/39214403124/39214403112 PASS; froze v7 c0c and main v7 dispatch source86cab Actions39214553911 PASS. Old FAIL retained.",
+  "why_now": "M3 v6 39210496325 zero cases proven CI overlay fault. M0 fixed and froze v7 c0c, smoke39214403113/maintenance39214403124/governance39214403112 PASS; switched dispatcher source86cab with run39214553911 PASS. H176 source 0deb Governance39214960099 FAIL due new evidence missing required source_sha, fixed evidence S000473 and exact main Governance39215146406 PASS, historical red preserved.",
   "done_when": "Main registry R0-025: actual original client/server Normal protected TLS→Rust data/feedback/Stop and requested/pending/applied/rejected, netns evidence; Windows ARM/physical/p99 and full product qualification NOT_RUN, production FEC2 OFF until proven.",
-  "next_action": "Resume M0 R0-025 true original Go/Rust vertical integration: connect authenticated reverse kind1 and M2 matured firstsend to actual sender/owner while keeping FEC2 production OFF. M3 separately issues fresh worker-owned v7 prepare then paired only on PASS.",
+  "next_action": "Continue M0 R0-025 protected original Go/Rust product integration: authenticated reverse kind1 plus M2 mature firstsend in original sender, preserve OFF gate. M3 independently publishes v7 PREPARE-003 and tests to completion.",
   "unverified": true,
   "last_tested_source": "c0c192cf293a294b5962f3f064d913149eb00639",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md"
   ],
   "open_requests": [],
-  "partial_summary": "H176 shared CI v7 M3 native test companion fixed. Original M3 v6 Action39210496325 zero-case prepare FAIL before codec test, NOT math failure; M0 first f4f CI smoke/maintenance FAIL due regex fixed source c0c =3 PASS. Frozen v7 c0c, main auto-dispatch 86cab Action39214553911 PASS; M3 new v7 prepare/paired NOT_RUN, owner must submit PREPARE-003. Worker paths untouched. M0 R0-025 product partial, FEC2 OFF, physical NOT_RUN."
+  "partial_summary": "H177 M3 v6 zero-case failure is CI assembly, no math FAIL. Frozen v7 c0c192cf includes candidate fec_v2.rs and native tests same SOURCE+blob, test suite and nonzero named PASS gate; main dispatcher86cab PASS, M3 v7 prepare/ABBA NOT_RUN until own PREPARE-003. Old v7 first smoke/maintenance f4f FAIL regex, corrected c0c PASS. H176 Governance39214960099 FAIL evidence source field, S000473 fixed and governance39215146406 SUCCESS. M0 product R0-025 partial FEC2 OFF; worker ownership/epoch unchanged."
 }
