@@ -9,6 +9,17 @@ New-Item -ItemType Directory -Force $out | Out-Null
 # Compile original Go Windows executable after source-locked fail-closed overlay.
 & python (Join-Path $overlay 'r0/go_overlay/scripts/fec2_assembly_smoke.py') --legacy-root $legacy --overlay-root $overlay --out (Join-Path $out 'go-build') --target windows-amd64
 if ($LASTEXITCODE -ne 0) { throw 'exact assembly/Windows Go build failed' }
+# Compile (do NOT execute) the entire original Windows native transaction
+# package with the 12 pinned donor files. Hosted CI is not a network-isolated
+# machine and must never exercise admin-owned WFP/routing mutations here.
+Push-Location $legacy
+try {
+    $nativeTest=Join-Path $out 'native-windowsclient.test.exe'
+    & go test -c -o $nativeTest ./internal/windowsclient
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $nativeTest)) {
+        throw 'pinned original Go Windows native package compile failed'
+    }
+} finally { Pop-Location }
 $portable=Join-Path $out 'portable'
 & (Join-Path $legacy 'scripts/build_windows_gui.ps1') -OutputDirectory $portable -SourceSHA $source -Version 'fec2-plan008'
 if ($LASTEXITCODE -ne 0) { throw 'native WinForms compiler failed' }
