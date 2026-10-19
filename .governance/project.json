@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "PLAN-010 Windows single-proxy runtime no-PowerShell: M4 R5-M4-NATIVE-WINDOWS-NETWORK-016 owns pinned 12-file original Go cold delta, CLI/GUI/portable/config and owned cleanup/recovery, exact Windows native Actions via frozen qualification/m4-product-windows-v1 and central G2 audited request I; M0 owns shared Stop and final Go/Rust product integration. See docs/decisions/M0-windows-native-migration-2026-10-19.md and docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md. Historic M4-015 GUI scoped PASS retained; new M4-016 functionality/physical NOT_RUN, product FEC2 OFF.",
+  "next_decision": "PLAN-011 user-priority: real original-Go TLS↔Rust Normal/off regular 8+8 kernel packets, authentic reverse kind1→M2 2s covered8/8, actual native OFF revision1/2 requested→pending→applied, fixed/auto REJECTED, two-generation Stop; one-job Actions39246776255 PASS at b6193d7. Jumbo/MTU/netem/perf matrices MANUAL. M4 Windows 016 in-progress independently; M0 final product CLI/GUI/Windows/physical NOT_RUN, FEC2 OFF. docs/evidence/M0/PLAN011-real-go-normal-common-smoke-and-off-applied-20261019.json",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

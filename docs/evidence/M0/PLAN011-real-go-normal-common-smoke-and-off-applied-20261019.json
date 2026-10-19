@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "b6193d7d4fd3c286efc9653c6e2be88f21e385d3",
+  "result": "SCOPED_COMMON_REAL_GO_RUST_NORMAL_OFF_FUNCTIONAL_PASS_PRODUCT_PARTIAL",
+  "intent": "docs/devlog/M0/PLAN011-H182-product-smoke-priority-intent-20261019.md",
+  "priority": "User explicitly prioritized complete common product functions before extremes. Do NOT automatically bulk run 65KiB jumbo, MTU stress, 150ms netem, ABBA or FEC2 production. No scope or qualification relaxation.",
+  "changes": [
+    "New single-job .github/workflows/m0-normal-product-smoke.yml continuously checks normal original-Go real TLS, 3-cipher admission, bounded real Linux kernel raw/TUN, bidirectional Normal data, real encrypted kind1 and M2 2s coverage, Stop/Restart isolation.",
+    "Extended original M0 V4 matrix .github/workflows/m0-v4-native-owner-probe.yml and FEC2 real TLS probe .github/workflows/m0-fec2-real-tls-owner-grant.yml switched to manual workflow_dispatch, not removed or claimed PASS on moving SOURCE.",
+    "Original C2S authenticated Go principal+epoch binds Normal OFF config revision Stage inside same Rust owner; separate true native readback, FecV2Apply; stale, cross-principal, wrong epoch, Stop reject, fixed/auto explicitly reject without pretending applied. Production FEC2 remains OFF.",
+    "Actual source-locked netns Go test exits before extreme live kernel MTU, jumbo, netem; full older test remains manually available.",
+    "Worker M4 branch/cursor and Windows 016 request untouched; accepted M1/M3 unchanged."
+  ],
+  "main_actions": {
+    "first_common_smoke": {
+      "run_id": 39245280166,
+      "source": "135621829a3d2b4d7c6db603a26e8848d63b2047",
+      "conclusion": "success",
+      "artifact_id": 12183227146,
+      "zip_sha256": "bf727c81d3d0eb9692a3f196264b091a4f312990c9774b45907459a05b5abdf8",
+      "scope": "Original Go TLS / real kernel Normal 8x2 / reverse M2 / Stop, BEFORE native config stage"
+    },
+    "first_native_config": {
+      "run_id": 39246418436,
+      "source": "dfa7f39b6505a727e4e10c268345e12133a6bf68",
+      "conclusion": "failure",
+      "artifact_id": 12182893100,
+      "zip_sha256": "c5982c930122f79ccf2964a707a2ff6a0266eb7c9d92b0bd2190b269b822d99b",
+      "cause": "Go test fixture passed invalid empty AutoPolicy; expected explicit REJECTED but failed validity before reaching native rejection; original Go+Rust compilation and existing TLS/Stop tests PASS. Fixed fixture with legal normal policy, not algorithm."
+    },
+    "final_common_smoke": {
+      "run_id": 39246776255,
+      "source": "b6193d7d4fd3c286efc9653c6e2be88f21e385d3",
+      "attempt": 1,
+      "conclusion": "success",
+      "job_id": 118040503213,
+      "artifact_id": 12183579085,
+      "artifact_zip_sha256": "9b13abe8c2467d249a0763b8757b6f72fcb235404cca1b50d564031f2948717b",
+      "receipt_sha256": "e40424640fa6bc2549e839cb00163c9e9aecd8d1e0627f8945a0daa266746f05",
+      "identity_sha256": "02318aaa98ffd377d7112345666e8a4555268bba3e1d2e67cf434cf31f6fe5d3",
+      "netns_log_sha256": "d458a0d5f0670e715e2cc1676da154d2e34f25a8f0f3276939774f8c758b5584",
+      "connect_stop_log_sha256": "6dcd3eb43be518e7119d5b0d2c359278541583991b253776205df41958b32167",
+      "binary_go_sha256": "3c330ac5f88052e659721bfee806453e42c82816c232f3cc21ee7501a16795f0",
+      "binary_rust_so_sha256": "b845e5793543136ed53eabf1b15ac12a48b844f1909e4592f6b6f2e2784213a2",
+      "ciphers": [
+        1,
+        2,
+        3
+      ],
+      "real_original_go_TLS": true,
+      "real_original_s2c_firstsend_data": 8,
+      "real_original_c2s_kind1_reports": 1,
+      "mature_2s_covered": 8,
+      "mature_2s_unknown": 0,
+      "normal_off_native_config_revisions_applied": [
+        1,
+        2
+      ],
+      "normal_off_stage_then_readback": "PASS_REAL_OWNER_REVISION",
+      "fixed_auto_config": "REJECTED_UNSUPPORTED_EXPLICITLY",
+      "stale_config_revision": "DENIED",
+      "wrong_auth_principal": "DENIED",
+      "wrong_epoch": "DENIED",
+      "post_Stop_readback": "DENIED",
+      "two_generation_Stop_and_release": "PASS",
+      "netns": "REAL_LINUX_X86_64",
+      "production_abi_probe": "ABSENT"
+    }
+  },
+  "governance": {
+    "latest_source": "b6193d7d4fd3c286efc9653c6e2be88f21e385d3",
+    "run_id": 39246776310,
+    "conclusion": "failure",
+    "issue": "SCOPE_AUDIT_FAILED HTTP 403 github_rate_limited remaining=0 attempts3 to compare/<self>...<self>; no PATH/role conclusion available",
+    "qualified": false,
+    "action_tests_not_governance_equivalence": true
+  },
+  "module_owners": {
+    "M1": "Game015 accepted, no repeated work",
+    "M3": "FEC2 native functional accepted, ABBA perf INCONCLUSIVE; production OFF",
+    "M4": "Windows 016 full no-PowerShell runtime worker in_progress, not modified by M0"
+  },
+  "limits": {
+    "normal_linux_original_go_rust_scoped_smoke": "PASS",
+    "original_normal_off_requested_pending_applied_rejected": "PASS_SCOPED_NOT_GUI_CLIENT_PRODUCT",
+    "original_go_cli_gui_windows_real_network": "NOT_RUN",
+    "real_windows_native_network_016": "NOT_RUN",
+    "fixed_auto_product_applied": "REJECTED_UNSUPPORTED",
+    "physical": "NOT_RUN",
+    "durational_throughput": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "FEC2_product": "OFF",
+    "product_qualification": "NOT_RUN"
+  },
+  "next_action": "M0 combine original real Go client/server Normal/off request/readback & Stop into shipping CLI/backend entry with M4's independently qualified 016 Windows runtime when ready. Test 1-2 common connection/reconnect/config/error scenarios, not all stress matrix; preserve FEC2 OFF. Recheck Governance externally rate-limited result without pretending PASS."
+}
