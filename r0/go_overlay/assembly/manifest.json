@@ -151,7 +151,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "e1c4b25104cf9a574350ce312c04749c28b11216",
+      "result_blob": "93a94ebc8ad746a5234f0406872b35da97cba5a8",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -196,6 +196,10 @@
         {
           "find": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\"))",
           "replace": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\") || File.Exists(path+\".n4-owned-wal.routes\") || File.Exists(path+\".routes\"))"
+        },
+        {
+          "find": "        public async Task DisconnectAsync() { leaseRestart = false; if (session.Active) ShowState(\"正在断开并清理网络状态…\"); await session.StopAsync(); Drain(); leaseRestart = false; connectedId = null; ClearQuality(); ShowState(\"未连接\"); servers.Invalidate(); }",
+          "replace": "        public async Task DisconnectAsync() {\n            leaseRestart = false;\n            if (session.Active) ShowState(\"正在断开并清理网络状态…\");\n            await session.StopAsync();\n            string owned = store.InRoot(\"data/network-state.json\");\n            if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") ||\n                File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))\n                throw new IOException(\"客户端停止后仍存在 owned WAL 或路由意图，拒绝显示已断开。\");\n            Drain();\n            leaseRestart = false; connectedId = null; ClearQuality();\n            ShowState(\"未连接\"); servers.Invalidate();\n        }"
         }
       ]
     },
@@ -203,7 +207,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "27c9098f4b63966fa74489eea7ce7d61eb39f944",
+      "result_blob": "f12a4d2579a33886ea4d7116271f32d9cca48558",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -232,6 +236,10 @@
         {
           "find": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);",
           "replace": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    bool startDenied = false;\n                    try { Wait(inactive.StartAsync(store.InRoot(\"data/pending.json\"))); }\n                    catch (IOException) { startDenied = true; }\n                    Assert(startDenied && File.Exists(residue),\n                        \"direct real GUI client Start never bypasses orphan WAL recovery gate\");\n                    File.Delete(residue);"
+        },
+        {
+          "find": "                    fake.FailStop = false; Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");",
+          "replace": "                    fake.FailStop = false;\n                    string sidecar = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(sidecar,\"orphan original route intent\");\n                    bool uiDenied = false;\n                    try { Wait(form.DisconnectAsync()); } catch (IOException) { uiDenied = true; }\n                    Assert(uiDenied && File.Exists(sidecar),\n                        \"GUI never paints disconnected while orphan owned route intent remains\");\n                    File.Delete(sidecar);\n                    Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");"
         }
       ]
     },
