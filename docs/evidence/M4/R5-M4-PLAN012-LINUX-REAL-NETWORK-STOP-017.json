@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
+  "status": "SOURCE_ONLY_UNVERIFIED",
+  "baseline": {
+    "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
+    "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
+    "old_checkpoint": "0b8c48c19c94214be0394b7749da7789f49a6a49",
+    "historical_windows_I010": "PLANNED_NOT_RUN_DEFERRED",
+    "historical_windows_I009": "SCOPED_PASS_EXACT_OLD_SOURCE",
+    "product_fec2": "OFF"
+  },
+  "scope": {
+    "native_rust_stop_borrow": "SOURCE_ONLY",
+    "native_real_tun_fd_isolated": "NOT_RUN",
+    "original_go_linux_tls_fec_client_udp_stop": "SOURCE_ONLY_NEEDS_M0_INTEGRATED_ACTIONS",
+    "windows": "NOT_RUN_DEFERRED",
+    "physical": "NOT_RUN"
+  },
+  "refs": {
+    "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
+    "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
+  },
+  "next_action": "Consume worker-native Actions for S42 and M0-owned combined original-Go isolated netns job with exactly this M4 test source."
+}

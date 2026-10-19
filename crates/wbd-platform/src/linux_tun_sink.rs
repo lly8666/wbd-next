@@ -353,3 +353,88 @@ mod ready_tests {
         // old from_owned_fd negative fixture proves TUNGETIFF rejection.
     }
 }
+
+
+// PLAN012: M4-owned Linux descriptor/borrow lifecycle conformance.
+// Only the last test may construct a TUN, and ONLY in an explicitly
+// isolated CAP_NET_ADMIN netns. Neither the default worker CI nor the
+// normal library build touches host network configuration.
+#[cfg(test)]
+mod m4_plan012_owned_stop_tests {
+    use super::*;
+    use std::os::fd::AsRawFd;
+
+    #[test]
+    fn r1_m4_plan012_rejected_tun_fd_returns_owned_descriptor_without_close() {
+        let fd: OwnedFd = std::fs::File::open("/dev/null").unwrap().into();
+        let original = fd.as_raw_fd();
+        let (error, still_owned) = match ScopedTunSink::from_owned_fd(fd, 7, "wbdm4stop") {
+            Ok(_) => panic!("untrusted /dev/null promoted to a TUN"),
+            Err(pair) => pair,
+        };
+        assert_eq!(error, TunError::InvalidFd);
+        assert_eq!(still_owned.as_raw_fd(), original);
+        assert!(unsafe { fcntl(original, F_GETFL) } >= 0);
+        drop(still_owned);
+        assert_eq!(unsafe { fcntl(original, F_GETFL) }, -1,
+            "owned fd not closed after explicit return and drop");
+    }
+
+    #[test]
+    fn r1_m4_plan012_stop_pending_loan_never_reports_cleaned_up() {
+        let fence = BorrowFence::default();
+        let loan = fence.try_enter_ready().unwrap();
+        assert_eq!(fence.outstanding(), 1);
+        assert_eq!(fence.wait_drained_until(Instant::now()),
+            StopResult::Pending { outstanding: 1 });
+        assert!(fence.is_stopping());
+        assert!(matches!(fence.try_enter_ready(), Err(BorrowError::Stopping)),
+            "post-Stop borrowed I/O admitted");
+        assert_eq!(fence.outstanding(), 1);
+        drop(loan);
+        assert_eq!(fence.wait_drained_until(Instant::now()), StopResult::Drained);
+        assert_eq!(fence.wait_drained_until(Instant::now()), StopResult::Drained);
+        assert_eq!(fence.outstanding(), 0);
+    }
+
+    #[test]
+    fn r1_m4_plan012_real_tun_fd_stop_only_in_isolated_linux_netns() {
+        if std::env::var("WBD_M4_PLAN012_ISOLATED_NETNS").as_deref() != Ok("1") {
+            eprintln!("M4_PLAN012_NATIVE_TUN_FD_NOT_RUN: requires isolated netns");
+            return;
+        }
+        assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"),
+            "privileged TUN fixture only in named Actions netns");
+        // Creating an ordinary TUN with no routes, DNS, persistent flag,
+        // IPv6 or WFP does not take over management-network connectivity.
+        let file = std::fs::OpenOptions::new().read(true).write(true)
+            .open("/dev/net/tun").expect("real /dev/net/tun required");
+        let name = "wbdm4stop";
+        let mut req = [0u8; 40];
+        req[..name.len()].copy_from_slice(name.as_bytes());
+        req[16..18].copy_from_slice(&(IFF_TUN | IFF_NO_PI).to_ne_bytes());
+        let rc = unsafe { ioctl(file.as_raw_fd(), 0x400454ca, req.as_mut_ptr()) };
+        assert_eq!(rc, 0, "kernel TUNSETIFF must actually succeed");
+        let native_fd = file.as_raw_fd();
+        let owner = ScopedTunSink::from_owned_fd(file.into(), 67, name)
+            .unwrap_or_else(|(e, _fd)| panic!("M4 true original native TUN ownership: {:?}", e));
+        assert_eq!(owner.generation(), 67);
+        assert_eq!(owner.readiness_fd(), native_fd);
+        assert_eq!(owner.outstanding(), 0);
+        assert_eq!(owner.stop_until(Instant::now()), StopResult::Drained);
+        assert_eq!(owner.stop_until(Instant::now()), StopResult::Drained);
+        let mut packet = [0u8; 20];
+        packet[0] = 0x45;
+        packet[2..4].copy_from_slice(&20u16.to_be_bytes());
+        assert_eq!(owner.write_authenticated_ipv4(67, &packet), Err(TunError::Stopped));
+        assert_eq!(owner.write_authenticated_ipv4(66, &packet), Err(TunError::InvalidScope));
+        assert_eq!(owner.read_ipv4_into(67, &mut packet), Err(TunError::Stopped));
+        assert_eq!(owner.outstanding(), 0);
+        drop(owner);
+        assert_eq!(unsafe { fcntl(native_fd, F_GETFL) }, -1,
+            "real owned Linux TUN fd survived final Stop/close");
+        assert!(!std::path::Path::new("/sys/class/net/wbdm4stop").exists(),
+            "nonpersistent original TUN interface leaked after descriptor close");
+        eprintln!("M4_PLAN012_REAL_LINUX_TUN_FD_REPEAT_STOP_POST_STOP_DENY_OWNED_CLEANUP_PASS");
+    }
+}
