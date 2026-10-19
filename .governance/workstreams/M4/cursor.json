@@ -4,16 +4,16 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 33,
-  "checkpoint_sha": "60aaf224572578028ed68e23e5a4ac186fac779c",
+  "sequence": 34,
+  "checkpoint_sha": "b4720862b3d83b201c7174eb9cc267ad19d949e7",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "PLAN010 M4-016 original Windows CLI/WinForms native no-shell product. I003/I004 Windows scoped PASS; I005 full CLI tests FAIL on retired shell helper references. I006 migrates three exact pinned original test files and runs complete native CLI test suite with named attestation, remains unverified.",
-  "why_now": "After central G2 H32 PASS run39255478870 and main dispatcher39255960341 dispatch accepted I003/I004/I005, Windows I003 39256215954 PASS and I004 39256220073 PASS, I005 39256224174 Windows FAIL at old test source compile undefined defaultWindowsNetworkScript/runNetworkActionContext/applyOwnedNetworkWith/networkCommandContext; original Go build and native no-shell recover case passed. New 31-op manifest updates EXACT three cold Go tests without restoring obsolete runtime scripts, retains 12 immutable donor files.",
+  "current_task": "PLAN010 M4-016 original Go/WinForms native Windows lifecycle. I006 Windows2022 full original CLI+GUI scoped PASS; new batched I007 33-op source-pinned read-only native disk/WAL diagnostics and GUI+CLI native test, no system WFP mutation or network product claim.",
+  "why_now": "M0 H190 confirms original M4 I006 39271382181 identity+Win2022 native scoped PASS, old dispatcher HOL fixed, issue17 closed. M4 added one substantial batch: original windowsclient native disk-only status inspector and Go test, original CLI --native-state-json, managed one-catalog field, same-original Go GUI read-only button, four original GUI->Go cases, explicit Actions named test/receipt checks. 9 original anchored replaces and 24 overlay blobs all match frozen original/donor sources, canonical manifest 33 operations SHA256 3a5f32. WFP Arm still denies production.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Verify exact H33 central G2, main-only auto dispatch I006 c2e16595 candidate S60aaf2 manifest 323458998ceb69eab1d3398f8f0a032314029e0ab3ad17ba64a8c4c6d6d06cf7; consume real Windows native full CLI suite named PASS, original GUI smoke, failure artifact if any. M0 owns shared Rust Stop ABI and dispatcher, production WFP Arm remains fail-closed; no isolated native Connect/Disconnect/DNS/IPv6/route PASS yet. FEC2 OFF.",
+  "next_action": "Consume exact H34 central G2 and M0-only Windows-2022 native product workflow for immutable I007 14cc425 candidate S b472086 manifest SHA256 3a5f32bff576eaef0e6e93f37a1fb219134a4d619002f3db15746b53ae16ee4e. Verify named Go native disk-state test, original CLI full package and four actual GUI->Go state tests with real receipt; if red, repair M4 source and batch next I. Full WFP real Connect/Stop/readback/Rust applied requires isolated owner+M0 and remains NOT_RUN, FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "eddcee59156a8ae49bb9cc00afc8621e8a4ad37d",
+  "last_tested_source": "60aaf224572578028ed68e23e5a4ac186fac779c",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
@@ -24,12 +24,13 @@
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-003.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-004.json",
     ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-005.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-006.json"
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-006.json",
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-007.json"
   ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H33 ACTIVE. G2 H32 39255478870 PASS and dispatcher39255960341 accepted I003/4/5. Windows2022 I003 39256215954 scoped PASS, I004 39256220073 scoped PASS; I005 39256224174 attested but Windows FAIL when 3 old Go test files reference removed PowerShell helpers, native Recover named PASS prior to Go CLI tests. M4 S60aaf2 replaced 3 original tests with native admission/owner/Stop checks via 31 exact original+12-donor ops, request I006 c2e165. New full original Go CLI test + GUI NOT_RUN; WFP Arm closed, Rust applied/network isolated/Win2025/physical NOT_RUN, feature OFF."
+  "partial_summary": "H34 ACTIVE. M4 I006 Windows-2022 Actions39271382181 FULL ORIGINAL CLI Go + WinForms SCOPED PASS, identity artifacts exact; real product networking still NOT_RUN. New candidate S b472086 I007 14cc425: 33 exact ops original Go and WinForms native WAL disk-only inspector (absent/legacy/orphan/valid checksum/bad WAL/collision), CLI --native-state-json, managed PARAMETERS/gui-fields, GUI read-only button and four real Go subprocess negative checks; all 9 anchored original and 24 overlay Git blobs statically verified. New native Windows Actions NOT_RUN. Product WFP Arm closed, Rust Stop/applied M0, physical/2025 NOT_RUN, FEC2 OFF."
 }
