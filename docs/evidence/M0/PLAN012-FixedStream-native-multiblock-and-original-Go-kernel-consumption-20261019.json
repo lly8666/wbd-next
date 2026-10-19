@@ -94,5 +94,7 @@
     "production_FEC2": "OFF",
     "production_Game": "OFF"
   },
-  "next_action": "Implement original authenticated Go FEC Fixed persistent background RX/TX two-or-more real kernel blocks using same FixedStream with actual AEAD-unique M3 release-code record interface after M3-019 frozen source; verify independent true TUN/UDP first delivery, M2 and Stop one functional Actions job; do not turn product on or repeat successful one-block sample."
+  "next_action": "Implement original authenticated Go FEC Fixed persistent background RX/TX two-or-more real kernel blocks using same FixedStream with actual AEAD-unique M3 release-code record interface after M3-019 frozen source; verify independent true TUN/UDP first delivery, M2 and Stop one functional Actions job; do not turn product on or repeat successful one-block sample.",
+  "source_sha": "13b7333789ba20cdf30032172915ecab1fe0e972",
+  "schema_recovery": "H188 Governance39268812376 originally FAIL structure BLOCKED evidence different SOURCE: evidence JSON omitted top-level source_sha while H188.last_tested_source pointed to exact real-kernel Actions SOURCE13b7333. Restored same exact original field, no new test claim or test re-execution. Original FAIL retained."
 }
