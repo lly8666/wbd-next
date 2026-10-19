@@ -18,7 +18,7 @@ def request(role="M1",stage="prepare"):
        "source_sha":B,"harness_sha":H,"baseline_sha":A,"control_sha":CONTROL,
        "config_path":fixture,"config_sha256":w.sha(CFG),
        "scenario":suite,"seed":631,"workflow":w.CONTROL_WORKFLOW,
-       "dispatch_ref":"qualification/worker-ci-v3","measurement_jobs":1,
+       "dispatch_ref":"qualification/worker-ci-v5","measurement_jobs":1,
        "samples":1 if stage=="prepare" else 2 if role=="M1" else 4,
        "status":"PLANNED","_request_path":".governance/workstreams/"+role+"/requests/WR-001.json"}
     if stage=="paired":
@@ -30,7 +30,7 @@ def request(role="M1",stage="prepare"):
                        for x in ("AB" if role=="M1" else "ABBA")])
     return d
 def check(d,stage,cfg=CFG):
-    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v3",
+    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v5",
              CONTROL,reg(d["role_id"]),"e"*40,"f"*40,cfg)
 class ValidationTests(unittest.TestCase):
     def test_valid_both_stages(self):
