@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 37,
-  "checkpoint_sha": "0209ee6645984e6ab0e23ddd382dad7c00851727",
+  "sequence": 38,
+  "checkpoint_sha": "e2636f36646933134266e2cbce88c5eea8830d4a",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "M4-016 original Go Windows product native CLI/WinForms: I008 exact Windows-2022 source-locked read-only native preflight/GUI and Go named tests scoped PASS; live WFP Apply/Stop and real system network remain unqualified.",
-  "why_now": "I008 Actions39294108179 attempt1 identity job118202060941 and original Windows-2022 Go/WinForms job118202180994 SUCCESS, 35-op exact original/donor source. Provider ZIP digests recorded without claiming independent extraction. Historical old worker Governance FAIL and main G2 H35 PASS kept separate; no rerun needed.",
+  "current_task": "M4-016 original Go Windows native network: S38 created 37-op exact assembly plus native WFP persistent guard atomic OS installer primitive and hosted-safe fail-before-write tests. Product Arm remains closed; I009 actual Actions pending.",
+  "why_now": "Completed I008 scoped Windows-2022 PASS; unqualified native WFP Apply is now narrowed to independently checkable package-private exact-created atomic install/readback with explicit rollback. No live host-global WFP or trusted Stop product qualification. I009 unique intent already submitted at e2636f3.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Advance one M4-owned real Windows five-stage native transaction/owned WFP readiness capability with a recoverable isolated host and exact readback proof; if isolation or authenticated Stop is unavailable, preserve production Arm guard and report the specific blocker rather than testing on the hosted Actions management network.",
+  "next_action": "Consume one I009 G2 and frozen Windows-2022 Actions exact SOURCE f1e790fc, run/attempt/artifacts; fix any real compile/test failure within M4 scope without reusing I009 ID; leave production Arm closed.",
   "unverified": true,
   "last_tested_source": "8052563a4e85f4ad62b3ee5e76fd635fa539defe",
   "evidence_refs": [
@@ -19,19 +19,12 @@
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-001.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-002.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-003.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-004.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-005.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-006.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-007.json",
-    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-008.json"
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-009.json"
   ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H37 S0209ee6 I008 SOURCE8052563 Windows-2022 scoped Go/WinForms native preflight PASS run39294108179 attempt1, identity+Win jobs success. I007 earlier scoped PASS, I002/I005 FAIL, old worker governance FAIL retained; central G2 H35 ROLE_SCOPE_PASS. Real Wintun/WFP Apply, owned route/DNS/IPv6, complete Connect/Disconnect/Recover, true authenticated Rust Stop, Windows2025, physical NOT_RUN. FEC2 OFF; no product release."
+  "partial_summary": "H38 S38 f1e790f / I009 e2636f3; 37 exact manifest ops, unchanged 12 donor. New package-private native WFP persistent batch with strict preflight, exact-created rollback, independent readback is SOURCE_ONLY until I009 actual Actions. I008 SOURCE8052563 scoped original Windows-2022 Go/GUI PASS retained. Live WFP/owned network Connect-Stop and M0 Rust Stop, Windows2025/physical NOT_RUN; production FEC2 OFF."
 }
