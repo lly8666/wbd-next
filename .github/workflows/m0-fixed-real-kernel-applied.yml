@@ -1,0 +1,112 @@
+# PLAN-012 M0 true original-Go TLS Fixed request -> actual Rust M1/M3/M4
+# source + parity copied -> original Go applied -> AEAD/RS16 real TUN app.
+# Feature-gated *one-shot* integration only; continuous product = NOT_RUN.
+name: M0 original Go Fixed kernel applied functional
+run-name: "M0|FIXED-KERNEL-APPLIED-DEV|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-fixed-real-kernel-applied.yml"]
+permissions: {contents: read}
+concurrency:
+  group: m0-fixed-real-kernel-applied-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build original pinned protected Go and frozen native Rust FEC owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result fixed-build
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          cargo +1.85.1 build --release --locked -p wbd-engine >fixed-kernel-result/default-build.log 2>&1
+          if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(embedded_go_|test_probe_)'; then
+            echo 'M0_FIXED_PRODUCT_DEFAULT_ABI_LEAK' >&2; exit 1
+          fi
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe >fixed-kernel-result/opt-in-build.log 2>&1
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fixed_pending_readback$'
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
+          for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
+          cp target/release/libwbd_engine.so fixed-build/
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          source=["crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/runtime/fec2_owner.rs",
+            "crates/wbd-codec/src/fec_v2.rs","crates/wbd-codec/src/record_crypto.rs",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
+            "tools/run-v4-tun-netns.sh",".github/workflows/m0-fixed-real-kernel-applied.yml"]
+          m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+            "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "toolchains":{"go":"1.23.12","rust":"1.85.1"},
+            "feature":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe",
+            "default_ABI_has_test_symbol":False,
+            "tested_scope":"ONE_SHOT_OPTIN_REAL_FEC2_APPLIED_AFTER_KERNEL_COPIED_SOURCE_REPAIR",
+            "continuous_Fixed_Auto_Game_product":"NOT_RUN",
+            "source_inputs_sha256":{p:sha(p) for p in source},
+            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
+          pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: One real Linux raw/TUN/UDP functional batch, 3 ciphers and original Fixed applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1
+          cat fixed-kernel-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          m=json.loads((p/"manifest.json").read_text())
+          m.update(result="PASS_SCOPED_OPTIN_FIXED_APPLIED_AFTER_REAL_KERNEL_COPY",
+            actual_original_go_tls_ciphers=3,original_m1_fec2_scheduler=True,
+            original_m3_aead_unique_replay_and_rs16=True,
+            original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
+            real_original_m2_authenticated_reverse_receipt=True,
+            applied_before_kernel_copy=False,real_data_blocks_per_case=1,
+            repeatable_background_multiblock_product="NOT_RUN",
+            auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
+            production_FEC2="OFF",
+            kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest())
+          (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-fixed-real-kernel-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fixed-kernel-result/
+          retention-days: 30
+          if-no-files-found: warn
