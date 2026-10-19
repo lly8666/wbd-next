@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015",
+  "authority": {
+    "main_registry_revision": 2,
+    "epoch": 1,
+    "active": true,
+    "branch": "work/m4-r1-platform",
+    "main_decision": "docs/decisions/M0-integration-unblock-2026-10-19.md"
+  },
+  "prior_package": {
+    "task": "R5-M4-FEC2-COLD-POLICY-PLATFORMS-014",
+    "handoff": "6363bb98acfb6d789b1ea5eeda16dc1f10b52ba6",
+    "status": "ready_for_integration",
+    "last_tested_code": "7cef7e849e293373d907a3b64007b4ce8946da78",
+    "not_requalified_here": true
+  },
+  "code_source_sha": "c42ed0cc85866a2260274affb6a75c593826573d",
+  "result": "NOT_RUN",
+  "progress": "BLOCKED_SHARED_ACTIONS_AND_ABI",
+  "artifact_verified": false,
+  "exact_source": {
+    "original_go_repo": "lly8666/wobuzhidao",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "wbd_main_rust_reference": "76f3fd695c0be4d5ad6bf447ead52ee0bc7b672f",
+    "go": "go1.23.12",
+    "rust": "1.85.1",
+    "manifest": "r0/go_overlay/assembly/manifest.json",
+    "assembly_script": "r0/go_overlay/assembly/assemble.py",
+    "manifest_8_replacements_hashed": true,
+    "manifest_4_creates_hashed": true,
+    "manifest_validation": "Original file sha from pinned GitHub and result blob SHA independently checked through GitHub create_blob, exact replacements; no real clone assembly or runtime binary executed yet."
+  },
+  "implementation": {
+    "original_product": "Only stage against pinned original Go source, do not vendor/overwrite original repo; preserved Linux client/server and Windows client GUI, lifetime and network management.",
+    "config": "Single original docs/PARAMETERS.json and PARAMETER.md + existing strict configfile and WinForms GUI field catalog, canonical fec.mode/profile/auto_policy/auto_start_profile.",
+    "behavior": "FEC2 default off. Config validates normal/aggressive, profiles and Game auto. Fixed/auto denied until authenticated native owner exists; UI can save request but check-config reports rejected/unknown, not applied. No synthetic ready boolean.",
+    "status": "Pure ProjectVerifiedFEC2Status validates client,direction,epoch,revision,profile and pending/applied/rejected; not itself authentication or live Rust applied.",
+    "scope": "Does not edit Go admission_v4, TLS/auth, Rust owner, root workflows/Cargo, original upstream, drivers or user system.",
+    "scripts": [
+      "r0/go_overlay/scripts/fec2_assembly_smoke.py",
+      "r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1",
+      "r0/go_overlay/scripts/fec2_native_bundle_probe.py"
+    ],
+    "negative_cases": [
+      "wrong legacy SHA",
+      "old blob drift",
+      "missing create target",
+      "preexisting create target",
+      "wrong expected result blob",
+      "duplicate path",
+      "symlink/traversal",
+      "Game auto",
+      "unknown mode/profile",
+      "stale/foreign revision ack",
+      "missing Rust ABI",
+      "Windows DLL wrong arch",
+      "Windows DLL wrong hash",
+      "product remains off"
+    ]
+  },
+  "verification": {
+    "scope_audit": "NOT_RUN_ON_NEW_HEAD",
+    "manifest_blob_calculation": "PASS_STATIC_SOURCE_HASH_CHECK_ONLY",
+    "assembly_unittest": "NOT_RUN_ACTIONS",
+    "real_original_go_clone_linux_build": "NOT_RUN",
+    "real_original_go_clone_arm_native": "NOT_RUN",
+    "real_original_go_clone_windows_build": "NOT_RUN",
+    "real_Windows_GUI_native_compiler_selftest": "NOT_RUN",
+    "missing_DLL_wrong_arch_load": "NOT_RUN",
+    "real_rust_ffi_loader": "NOT_RUN",
+    "requested_pending_applied_real_authenticated": "NOT_RUN_M0_INTERFACE_REQUIRED",
+    "legacy_dns_route_mtu_stop_in_product": "NOT_RUN",
+    "physical_driver_or_user_system": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "fec2_feature": "OFF"
+  },
+  "scope_exception": {
+    "historical_unpermitted_create_commit": "2cfd979b8c10aca2a1abffb68b0994a960713164",
+    "path": "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter_test.go",
+    "correction_delete_commit": "85911ac3cd73d153b74315fdc764db4e7ad13cde",
+    "authorized_relocation": "r0/go_overlay/internal/configfile/fec2_product_test.go",
+    "resolved_current_tree": true,
+    "historical_authority": "NEEDS_M0_GOVERNANCE_REVIEW",
+    "warning": "Current tree compliance not equivalent to full per-commit role scope PASS; do not rewrite history or suppress failure."
+  },
+  "request": ".governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md",
+  "current_scope_qualification": "SOURCE_AUTHORED_STATIC_CHECKS_ONLY",
+  "next_action": "M0 invokes pinned original Go/Windows GUI Actions/owned native ABI loader on this exact M4 source and adjudicates historical single-path scope. M4 consumes exact run/job/attempt/artifacts and repairs only its permitted overlay/assembly files, then finishes S→H when real product-assembly tests meet package done_when.",
+  "rollback": "Remove only M4 new assembly, configfile, new runtimeentry adapter and submitted M4 permitted overlay revisions from staging; original legacy source unchanged; production FEC2 remains OFF.",
+  "previous_risks_preserved": [
+    "Old FEC2 014 Go pure tests/native safe wrapper success does not attest new PLAN008 product",
+    "Old D10 FAIL, native unified codec timeout and p99 risks remain OPEN",
+    "No Windows driver/real authenticated Rust product claimed"
+  ]
+}
