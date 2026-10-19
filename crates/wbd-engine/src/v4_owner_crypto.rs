@@ -288,6 +288,12 @@ pub(crate) struct ProtectedBackgroundRx{
     rx:ReplayProtectedLaneRx,
     normal:NormalOffReceive,
     generation:u32,
+    #[cfg(feature="fec2_product_record")]
+    fec2:Option<(
+        crate::v4_fec2_live_rx::Fec2LiveRx,
+        crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
+        std::sync::Arc<std::sync::atomic::AtomicBool>,
+    )>,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[derive(Debug,Default)]
@@ -308,6 +314,23 @@ pub(crate) struct AuthenticatedNormalKind1{
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 impl ProtectedBackgroundRx{
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn arm_fec2_original_go_only(
+        &mut self,
+        exact:crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
+        admit:std::sync::Arc<std::sync::atomic::AtomicBool>,
+        wire_limit:usize,
+    )->Result<(),crate::v4_fec2_live_rx::ReceiveError>{
+        use crate::v4_fec2_live_rx::{Fec2LiveRx,ReceiveError};
+        if self.fec2.is_some()||exact.generation!=self.generation{
+            return Err(ReceiveError::Authorization)
+        }
+        // Does NOT allocate its own replay opener. The existing rx field
+        // owns every normal+FEC PN admission in this Go generation.
+        let blocks=Fec2LiveRx::from_authenticated_scope(exact,wire_limit)?;
+        self.fec2=Some((blocks,exact,admit));
+        Ok(())
+    }
     // The ONE moved original replay bitmap and original M3 LINK table.
     // Input is M4 checked-tuple but still UNAUTHENTICATED raw ciphertext.
     // The generation-scoped TUN driver and stop fence remain mandatory.
@@ -316,10 +339,50 @@ impl ProtectedBackgroundRx{
         let mut receipt=BackgroundRxReceipt::default();
         if tun.generation()!=self.generation||tun.is_stopping()
             ||len==0||len>slab.writable().len(){return receipt}
-        let opened=match self.rx.open_unique_in_place(&mut slab.writable()[..len]){
+        // Under the opt-in release feature, both kind1 and FEC kinds2/3
+        // consume the SAME moved original Go-authenticated replay window.
+        #[cfg(feature="fec2_product_record")]
+        let open_result=if self.fec2.is_some(){
+            self.rx.open_unique_with_fec2_after_admission_in_place(
+                &mut slab.writable()[..len])
+        }else{self.rx.open_unique_in_place(&mut slab.writable()[..len])};
+        #[cfg(not(feature="fec2_product_record"))]
+        let open_result=self.rx.open_unique_in_place(&mut slab.writable()[..len]);
+        let opened=match open_result{
             Ok(opened)=>opened,
             Err(_)=>return receipt,
         };
+        #[cfg(feature="fec2_product_record")]
+        if opened.kind==2||opened.kind==3{
+            use std::sync::atomic::Ordering;
+            let Some((blocks,exact,enabled))=self.fec2.as_mut()else{
+                receipt.invalid=1;return receipt
+            };
+            // Only original Go's verified Fixed APPLIED (after real
+            // kernel copy), not pending/control metadata, enables RX.
+            if !enabled.load(Ordering::Acquire){
+                receipt.invalid=1;return receipt
+            }
+            receipt.authenticated_link=1;
+            match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
+                Ok(deliveries)=>{
+                    if deliveries.is_empty(){receipt.pending=1}
+                    for first in deliveries{
+                        if tun.write_authenticated_ipv4(self.generation,&first.frame)
+                            .ok()==Some(first.frame.len()){
+                            receipt.delivered=receipt.delivered.saturating_add(1);
+                        }else{
+                            // A well-formed FEC symbol is not necessarily
+                            // a valid business IPv4 frame. M4 remains final
+                            // validator; no app delivery is inferred.
+                            receipt.failed=receipt.failed.saturating_add(1);
+                        }
+                    }
+                }
+                Err(_)=>receipt.invalid=1,
+            }
+            return receipt
+        }
         if opened.kind==wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND{
             // The server's moved C2S opener consumed the ONLY original PN.
             // This can never be reconstructed from raw Go metadata or
@@ -396,7 +459,11 @@ impl ProtectedScopedOwner {
         let Some(rx)=self.crypto.detach_rx_for_original_worker() else{
             return Err((ProtectedCryptoError::Inactive,normal))
         };
-        Ok(ProtectedBackgroundRx{rx,normal,generation:self.generation})
+        Ok(ProtectedBackgroundRx{
+            rx,normal,generation:self.generation,
+            #[cfg(feature="fec2_product_record")]
+            fec2:None,
+        })
     }
     pub(crate) fn prepare_from_protected_go(
         cold:&UntrustedColdV4, expected:&ExpectedRustOwner,
