@@ -22,6 +22,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_debug_pause_jumbo(uint64_t,uint32_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_route_refresh(uint64_t,uint64_t *);
@@ -197,6 +198,22 @@ func (b *v4EmbeddedNativeBridge) rustOwnerLoopStats()(v4EmbeddedLoopStats,error)
     return v4EmbeddedLoopStats{uint64(rx),uint64(tx),uint64(re),uint64(te)},nil
 }
 
+// Actual original M4 copied/uncertain/unsent records observed by frozen
+// M2; an absent authenticated peer receipt must never show zero loss.
+type v4NormalM2Firstsend struct {
+    Accepted,DefinitelyNotSent,Uncertain,Unknown2s,Unknown8s uint64
+    Censored bool
+}
+func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Firstsend()(v4NormalM2Firstsend,error){
+    var z v4NormalM2Firstsend
+    if !b.committed||b.handle==0{return z,errV4Embedded}
+    var a,n,u,s,l C.uint64_t
+    var c C.uint32_t
+    rc:=C.wbd_m0_embedded_go_loop_firstsend_m2(
+        C.uint64_t(b.handle),&a,&n,&u,&s,&l,&c)
+    if rc!=0{return z,fmt.Errorf("%w: normal M2 actual firstsend=%d",errV4Embedded,int(rc))}
+    return v4NormalM2Firstsend{uint64(a),uint64(n),uint64(u),uint64(s),uint64(l),c!=0},nil
+}
 // Developer-only feature-gated barrier. This is not a product scheduler,
 // data-plane syscall, or authorization to enable FEC2.
 func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uint32,error){

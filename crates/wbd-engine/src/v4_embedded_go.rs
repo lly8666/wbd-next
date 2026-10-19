@@ -189,6 +189,63 @@ fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
         Mutex::new(Fec2ProbeProcessQuota{broker,now_ns:0})
     })
 }
+// Sole real NORMAL/off sender-owned M2 maturity denominator. The
+// original Rust TX loop is the ONLY event source: M4 definite copied
+// prefix / one explicitly uncertain index / definitely-not-sent suffix.
+// Without authenticated reverse kind1 the matured result is UNKNOWN,
+// never zero loss or a fabricated receipt. All state is scoped to this
+// Go TLS credential-bound lane+epoch and bounded by M2 capacity.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+struct NormalFirstSendM2 {
+    lane:wbd_types::LaneKey,
+    state:wbd_recovery::MatureFirstSend,
+    accepted:u64,unknown_2s:u64,unknown_8s:u64,
+    censored:bool,
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+impl NormalFirstSendM2 {
+    fn new(lane:wbd_types::LaneKey,epoch:[u8;16],now:MonoNs)->Result<Self,i32>{
+        use wbd_recovery::{ReceiptRouteScope,WireDirection,MaturityConfig,MatureFirstSend};
+        let all=(wbd_types::RecordPn(0),wbd_types::RecordPn(u64::MAX));
+        let route=ReceiptRouteScope::checked(
+            lane,lane,WireDirection::ServerToClient,epoch,all,all
+        ).map_err(|_|INVALID)?;
+        let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:4096},now)
+            .map_err(|_|INVALID)?;
+        Ok(Self{lane,state,accepted:0,unknown_2s:0,unknown_8s:0,censored:false})
+    }
+    fn poll(&mut self,now:MonoNs){
+        match self.state.on_due(now){
+            Ok(result)=>{
+                self.unknown_2s=self.unknown_2s.saturating_add(
+                    result.window_2s.uncovered);
+                self.unknown_8s=self.unknown_8s.saturating_add(
+                    result.window_8s.uncovered);
+                if result.capacity_limited{self.censored=true}
+            }
+            Err(_)=>self.censored=true,
+        }
+    }
+    fn on_real_kernel_turn(&mut self,records:&[(wbd_types::RecordPn,u64)],
+        result:TxTurnCompletion,now:MonoNs){
+        use wbd_recovery::{FirstSendKind,FirstSendOutcome};
+        for (index,&(pn,outer_wire_bytes)) in records.iter().enumerate(){
+            let outcome=if index < result.copied as usize {
+                self.accepted=self.accepted.saturating_add(1);
+                FirstSendOutcome::Accepted{pn,wire_bytes:outer_wire_bytes}
+            }else if result.uncertain==1 && index==result.copied as usize {
+                FirstSendOutcome::Uncertain{pn,wire_bytes:outer_wire_bytes}
+            }else{
+                FirstSendOutcome::DefinitelyNotSent{pn}
+            };
+            if self.state.on_first_send(self.lane,FirstSendKind::Data,outcome,now).is_err(){
+                // A capacity/error interval is never a valid zero-loss sample.
+                self.censored=true;
+            }
+        }
+        self.poll(now);
+    }
+}
 struct Entry{
     generation:u32,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
@@ -206,6 +263,8 @@ struct Entry{
     fec2_probe_pending_policy:Option<(u8,u64)>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    normal_firstsend_m2:Option<NormalFirstSendM2>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -312,6 +371,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         flow:handoff.flow,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route:None,
+        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        normal_firstsend_m2:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -1516,6 +1577,12 @@ fn stop(handle:u64)->i32{
     if !drained{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
     }
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    if let Some(mut first)=e.normal_firstsend_m2.take(){
+        let now=loop_now();
+        first.poll(now);
+        if first.state.stop(now).is_err(){return BAD_STAGE}
+    }
     #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
     if let Some(direction)=e.fec2_probe_budget_direction{
         let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
@@ -2048,6 +2115,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
+    actual_firstsend:&mut Vec<(wbd_types::RecordPn,u64)>,
     events:&wbd_platform::linux_route_events::RouteEvents,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
     active_jumbo:&mut Option<PendingOriginalJumbo>)->Result<TxTurnCompletion,i32>{
@@ -2060,6 +2128,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let recovered_small=!pending.is_empty();
     ready_records.clear();
     presentations.clear();
+    actual_firstsend.clear();
     let started=Instant::now();
     let observed_event=events.snapshot();
     let (generation,defer_route)={
@@ -2320,6 +2389,11 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // Clone only Arc handles into preallocated metadata, NEVER the
         // plaintext/ciphertext. Both vectors are recycled next turn.
         for x in ready{
+            // Original M4 uses legacy IPv4+TCP fixed 40B scatter header,
+            // options=None; count the complete outer bytes, not ciphertext
+            // alone or an RX-derived estimate. Reuse fixed 32-slot metadata.
+            actual_firstsend.push((x.record.metadata().pn,
+                (x.record.bytes().len()+wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64));
             ready_records.push(x.record.clone());
             presentations.push(Presentation{
                 ack32:1,advertised_window:4096,ip_id:43,
@@ -2347,6 +2421,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    if let Some(first)=e.normal_firstsend_m2.as_mut(){
+        // Actual syscalls have finished and no borrow remains. This is the
+        // sender's only final first-send event into frozen M2 maturity.
+        first.on_real_kernel_turn(actual_firstsend,finish,loop_now());
+    }
+    actual_firstsend.clear();
     if finish.invalidate_route{e.tx_route=None}
     // The kernel's scoped prefix is the only positive send proof. Never
     // resume a mixed-stride/ambiguous/partially copied logical packet.
@@ -2455,6 +2535,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         drop(returned);
         drain_data_turn_returns(&mut e.arena);
     }
+    // Bind M2 to the ORIGINAL authenticated Go TLS identity before moving
+    // the sole AEAD/replay RX to its independent worker. No peer receipt is
+    // manufactured; every uncovered mature observation stays UNKNOWN.
+    let Some((lane,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
+    let Ok(first)=NormalFirstSendM2::new(lane,epoch,loop_now())
+        else{return INVALID};
+    e.normal_firstsend_m2=Some(first);
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
     let mut original_rx=match e.owner.detach_background_rx(normal){
         Ok(rx)=>rx,
@@ -2514,6 +2601,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
+            let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
             // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
@@ -2530,7 +2618,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
                     &mut tx_pending,&mut tx_records,&mut tx_presentations,
-                    &tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo
+                    &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo
                 ){
                     Ok(done)=>{
                         stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
@@ -2611,6 +2699,34 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
     OK
 }
 
+// Read-only original TLS session first-send M2 observation. Real DATA
+// denominator comes only from the original kernel-copied prefix; until an
+// authenticated reverse kind1 is wired, mature windows are UNKNOWN, not
+// loss=0. No Go per-packet callback, no control or FEC2 activation.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
+    h:u64,accepted:*mut u64,not_sent:*mut u64,uncertain:*mut u64,
+    unknown_2s:*mut u64,unknown_8s:*mut u64,censored:*mut u32
+)->i32{
+    if accepted.is_null()||not_sent.is_null()||uncertain.is_null()
+        ||unknown_2s.is_null()||unknown_8s.is_null()||censored.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    let Some(first)=e.normal_firstsend_m2.as_mut()else{return BAD_STAGE};
+    first.poll(loop_now());
+    let counts=first.state.counters();
+    unsafe{
+        accepted.write(first.accepted);
+        not_sent.write(counts.definitely_not_sent);
+        uncertain.write(counts.uncertain_originals);
+        unknown_2s.write(first.unknown_2s);
+        unknown_8s.write(first.unknown_8s);
+        censored.write(u32::from(first.censored));
+    }
+    OK
+}
 // M0 developer-only test rendezvous. A real original M4 sendmmsg prefix
 // must finish before the concurrent Go netlink MTU mutation is permitted.
 // Never blocks under the M0 registry or owner lock; no synthetic driver

@@ -1005,6 +1005,24 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
         stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
+    // M2 receives the ACTUAL final original M4 kernel copied PN/outer
+    // byte outcome without Go per-DATA callbacks. No authentic reverse
+    // kind1 exists here, so 2s maturity MUST report UNKNOWN (not zero loss).
+    var firstsend v4NormalM2Firstsend
+    deadlineM2:=time.Now().Add(2500*time.Millisecond)
+    for time.Now().Before(deadlineM2){
+        firstsend,e=b.rustOwnerNormalM2Firstsend()
+        if e!=nil{t.Fatal(e)}
+        if firstsend.Accepted==packets && firstsend.Unknown2s==packets{break}
+        time.Sleep(10*time.Millisecond)
+    }
+    if firstsend.Accepted!=packets||firstsend.DefinitelyNotSent!=0||
+       firstsend.Uncertain!=0||firstsend.Unknown2s!=packets||
+       firstsend.Unknown8s!=0||firstsend.Censored{
+        t.Fatalf("real protected Normal/M2 kernel maturity wrong: %+v",firstsend)
+    }
+    t.Logf("M0_ORIGINAL_REAL_KERNEL_NORMAL_M2_FIRSTSEND_UNKNOWN_PASS accepted=%d covered=0 unknown2s=%d unknown8s=%d authentic_receipt=NOT_RUN",
+        firstsend.Accepted,firstsend.Unknown2s,firstsend.Unknown8s)
 
     eventBefore,eventHealthy,err:=b.rustOwnerRouteEventState()
     if err!=nil||!eventHealthy{
