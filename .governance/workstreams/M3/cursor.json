@@ -4,31 +4,30 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 47,
-  "checkpoint_sha": "95e6b7c366d962e61637e28508c7c192849c20d0",
+  "sequence": 48,
+  "checkpoint_sha": "d334b7a603af0ed094b77a7081e23cedd533933d",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 real official ISA-L CODEb4d F2 13/13 functional PASS and source/artifact rehashed. Prepared one exact same-VM A-B-B-A k16/r16/1200B/e4 paired performance request; still NOT_RUN pending exact H46 G2 and main auto-dispatch.",
-  "why_now": "H46 ordinary worker Governance 39227569163 FAIL ROLE_SCOPE_FAILED: unbounded context_refs (10 > max 8). H47 cursor-only fixes to exactly 8 valid authorized references, keeping exact CODEb4d real native 13/13 PASS evidence and single A-B-B-A PAIRED-001 pending intent. No codec/request changes, previous red receipts and files retained.",
+  "current_task": "PLAN008-018 real official ISA-L FEC2 native CODEb4d oracle13/13 PASS and old A8cc/new Bb4d sameVM single-process k16/r16/1200B/e4 A-B-B-A 8M actual recoveries executed, checksum equality. Paired runner returned performance INCONCLUSIVE pending absolute monotonic per-leg timing, not product gate.",
+  "why_now": "M0 v7 audited dispatcher ran pinned M3-018-NATIVE-E4-PAIRED-001 39229126775 attempt1 with authorize PASS, paired PASS, shared receipt INCONCLUSIVE. M3 independently downloaded original paired ZIP12175592655 and SHA256-checked ZIP and two internal members, parsed four actual successful CPU_WINDOW_VALID native ISA-L 2M e4 recoveries per leg. Observed A/B CPU mean 5.34s/3.50s (B ~34.46% less), alloc count 68M/28M, gross requested bytes 46.368B/12.496B per leg; NOT formal CPU qualification because v7 lacks per-leg absolute monotonic start/end. Verified prepare004 exact artifact and native functional13 PASS unchanged; H47 two failed worker governance attempts due main moving; central G2 H47 two PASS. Source-locked evidence S d334b7, no codec changes.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Observe exact H47 worker Governance, central G2 and M0 main v7 auto-dispatch of pending M3-018-NATIVE-E4-PAIRED-001. Record 4-leg real ISA-L ABBA outcomes, keep qualification INCONCLUSIVE if absolute monotonic leg bounds absent. Product FEC2 OFF.",
+  "next_action": "M0 must accept scoped FEC2 native equivalence and retain performance INCONCLUSIVE, or publish newly frozen controlled fixture/runner with per-leg absolute monotonic time boundaries and allocation/copy separate accounting if formal perf gate required. Retain R0 wire 13-anchor consumer FAIL despite 23 real passing tests as distinct shared CI issue. Do not repeat ABBA without new valid frozen control. Product FEC2 OFF.",
   "unverified": true,
   "last_tested_source": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
   "evidence_refs": [
-    "docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json"
+    "docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json",
+    "docs/evidence/M3/018-b4d638ab-39229126775-native-e4-old-new-abba-inconclusive.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PAIRED-001.json"
-  ],
+  "open_requests": [],
   "context_refs": [
+    "docs/evidence/M3/018-b4d638ab-39229126775-native-e4-old-new-abba-inconclusive.json",
     "docs/evidence/M3/018-b4d638a-v7-prepare004-real-native-13pass.json",
     ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PAIRED-001.json",
     "docs/devlog/M3/R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018.md",
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
     "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json",
     "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json",
-    "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
-    "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json"
+    "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md"
   ],
-  "partial_summary": "H47 only cursor metadata corrected (context_refs 10→8); original H46 failed Governance for unbounded references, not FEC2 math or ABBA result. CODEb4d Linux x64 official ISA-L functional prepare004 13/13 PASS, independently rehashed manifest cc403870... and binary ee8bcc...; native A-B-B-A paired measurement request PAIRED-001 pending central G2. Other product gates OFF/NOT_RUN."
+  "partial_summary": "H48 S d334b7 pinned evidence: PREPARE004 official native ISA-L 13/13 PASS; PAIRED001 sameVM native 4 legs A-B-B-A x 2M each, equal 3.4B checksum and all 100tick/1s windows PASS; paired Actions SUCCESS; receipt INCONCLUSIVE (no per-leg absolute times). Observed fixed-case CPU B cost 34.46% below A, alloc calls -58.82%, gross requested bytes -73.05%; not speed qualification/product gate. Paired ZIP and members independently rehashed, all failures (old v5/v6/v7 0 cases, H46 context10, H47 main drift) retained. H48 Governance/G2 pending; CODEb4d unverified/partial, FEC2 OFF."
 }
