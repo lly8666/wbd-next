@@ -2206,6 +2206,81 @@ fn stage_next_original_link_turn(
     }
     Ok(staged)
 }
+// Genuine TLS-authorized Fixed/Normal product TX share original owner
+// M1 immutable FrozenRecord, M3 authenticated PN and M4 driver. This runs
+// ONLY after Go Fixed REQUESTED, not for a peer packet or a feature flag.
+#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn original_fixed_stage_source(e:&mut Entry,
+    slab:crate::memory::UniqueBuffer,n:usize,
+    budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<bool,i32>{
+    use crate::v4_fixed_stream::FixedStream;
+    use wbd_types::ConfigRevision;
+    let (profile,rev)=e.fixed_pending.or(e.fixed_applied).ok_or(BAD_STAGE)?;
+    if e.protected_features!=7||e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+    let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
+    if n==0||n>budget.record_payload_mtu.saturating_sub(14){return Err(INVALID)}
+    let mut stream=match e.fec2_live_tx.take(){
+        Some(old) if old.revision()==ConfigRevision(rev)=>old,
+        Some(old)=>{
+            // Never silently discard another revision's immutable sources.
+            e.fec2_live_tx=Some(old);return Err(BAD_STAGE)
+        }
+        None=>FixedStream::new(profile,rev,budget.record_payload_mtu).ok_or(INVALID)?,
+    };
+    let mut callback_error=None;
+    let offered=stream.offer_source(slab,14..14+n,now,|ticket,source|{
+        let attempt=(||->Result<(),i32>{
+            if ticket.revision!=ConfigRevision(rev){return Err(BAD_STAGE)}
+            let payload=wbd_codec::fec_v2::source_owned(
+                ticket.block_id,ticket.index,source,budget.record_payload_mtu)
+                .map_err(|_|INVALID)?;
+            let mut sealed=e.arena.allocate().map_err(|_|FULL)?;
+            let end=14usize.checked_add(payload.len()).ok_or(INVALID)?;
+            if end>sealed.writable().len(){return Err(FULL)}
+            sealed.writable()[14..end].copy_from_slice(&payload);
+            let (pn,_,_)=e.owner.seal_fec2_product_one(
+                sealed,payload.len(),2,budget,15,epoch,now)
+                .map_err(|_|BAD_STAGE)?;
+            e.fec2_staged_pns.push((pn,2));
+            Ok(())
+        })();
+        if let Err(err)=attempt{callback_error=Some(err);false}else{true}
+    });
+    e.fec2_live_tx=Some(stream);
+    let accepted=offered.map_err(|_|INVALID)?;
+    if let Some(err)=callback_error{return Err(err)}
+    Ok(accepted.source_enqueued)
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn original_fixed_stage_due(e:&mut Entry,
+    budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<usize,i32>{
+    use crate::v4_fixed_stream::DriverProof;
+    let Some(mut stream)=e.fec2_live_tx.take()else{return Ok(0)};
+    let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
+    let mut failed=None;
+    let result=stream.poll_parity(now,|parity,_block,row,revision|{
+        if e.fixed_pending.or(e.fixed_applied).is_none_or(|(_,r)|r!=revision.0)
+            ||row>=16{return DriverProof::NotSent}
+        let attempt=(||->Result<(),i32>{
+            let mut sealed=e.arena.allocate().map_err(|_|FULL)?;
+            let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
+            if end>sealed.writable().len(){return Err(FULL)}
+            sealed.writable()[14..end].copy_from_slice(parity);
+            let (pn,_,_)=e.owner.seal_fec2_product_one(
+                sealed,parity.len(),3,budget,15,epoch,now)
+                .map_err(|_|BAD_STAGE)?;
+            e.fec2_staged_pns.push((pn,3));
+            Ok(())
+        })();
+        match attempt{
+            Ok(())=>DriverProof::Staged,
+            Err(err)=>{failed=Some(err);DriverProof::NotSent},
+        }
+    });
+    e.fec2_live_tx=Some(stream);
+    if let Some(err)=failed{return Err(err)}
+    Ok(result.map_err(|_|BAD_STAGE)?.0)
+}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
