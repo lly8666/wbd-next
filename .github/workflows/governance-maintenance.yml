@@ -2,7 +2,7 @@ name: Governance maintenance regression
 run-name: "governance-maintenance|${{ github.sha }}"
 on:
   push:
-    branches: [main, governance/bridge-handoff-ci-20261015, plan/fec-v2-balanced-20261018, plan/integration-unblock-20261019, plan/worker-selftest-20261019]
+    branches: [main, governance/bridge-handoff-ci-20261015, plan/fec-v2-balanced-20261018, plan/integration-unblock-20261019, plan/worker-selftest-20261019, plan/windows-native-migration-20261019]
     paths:
       - "tools/**"
       - "tests/**"

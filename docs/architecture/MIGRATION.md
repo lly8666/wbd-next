@@ -2,6 +2,10 @@
 
 产品装配和并行归属按[PLAN-008](../decisions/M0-integration-unblock-2026-10-19.md)收口：复用固定旧SOURCE的Go冷层/配置/GUI已在用户授权范围；可在本仓库保存有hash的overlay/替换清单，Actions组装真实程序。缺少完整旧目录不构成再次申请许可的理由；不修改旧仓库主线、不移植旧数据wire、不移除未实现能力门来冒充接通。
 
+Windows运行时去PowerShell按[PLAN-010](../decisions/M0-windows-native-migration-2026-10-19.md)：保留a7a82冷层主基线，定向导入后续12文件原生恢复增量，再由M4接实际CLI/GUI网络事务；不是整体更新旧源或改写Rust OS管理。老版最新仍调用脚本、生产WFP/完整崩溃恢复尚未通过，移植与产品资格分开。M0一次登记临时包和精确新增路径，原015在安全交接点接续。
+
+用户最新限定：按一机单网络代理实例收口，M4完成整个产品运行时去脚本工作；不要求多代理共存或极端PnP自愈。M0须实际发布M4可用的最新Windows Actions调用入口，而非只授予文件路径；正常取消/清理/恢复、参数与真实无shell仍验，已有极端失败仅保留历史，不挡本包完成。
+
 2026-10-18用户明确**不需要新Rust与旧Go数据面互通**。[FEC v2](FEC_V2_BALANCED.md)覆盖下表旧GF矩阵、20源/六档/32ms/56B及auto旧策略必须照搬的约束；它们作为V1历史参考保留。旧控制/建连复用、用户功能可见迁移、产品硬门和未关闭问题不变。R3执行新专项而非重新刷全套Go字节相等；具体开工由[M0工作包](../decisions/M0-fec-v2-workpacks-2026-10-18.md)登记。
 
 ## 原版依据与继承规则
@@ -33,7 +37,7 @@
 
 | 项目 | 读取时状态 | 本轮处理 |
 |---|---|---|
-| N4 Windows orphan Wintun 精确 devnode、WFP/路由回滚 | a7a82db候选；前一版绿灯包含 unsupported skip，不是 native 全 PASS | 待原仓库收尾后导入；R6 真实目标验证 |
+| N4 Windows原生网络/恢复及运行时去脚本 | a7a82主基线+6ec6b583固定donor的12文件增量；现成Go API/WAL复用，正式CLI/GUI接线仍待做 | PLAN-010由M4限域导入及接线，M0提供Stop/CI/集成；不再无限等待旧仓库。ghost MTU恢复UNSUPPORTED、WFP生产门/真实全网络NOT_RUN保留 |
 | N2 auto FEC C04/C05效率、C10 GE p99 | OPEN | 策略先复用，R5 回归；必要修复单独来源与资格 |
 | N3 AES 更广弱网/CPU/native | scoped PASS，不全面 | R3/R5 补矩阵 |
 | N5 GUI 实际驱动质量、N6整包 | 未全部完成/NOT_STARTED | R6 接入，不重写UI |

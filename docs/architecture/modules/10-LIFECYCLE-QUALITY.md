@@ -24,6 +24,8 @@ receipts说明外层record是否到达，不等于线路原始loss（重传会�
 
 ## 配置安装
 
+Windows冷层运行时去PowerShell的新增授权见[PLAN-010](../../decisions/M0-windows-native-migration-2026-10-19.md)：沿用Go原生API/owned WAL，M4接CLI/GUI，M0接Stop完成边界；不改Rust热路径或另造网络管理服务。Apply/Cleanup/Recover不调用shell，构建/Actions脚本不在清除范围；完整网络及WFP未验门仍保留。下文“不授权重写原OS网络管理”不阻止这项已明确授权的定向移植。
+
 每个命令带revision，返回accepted/applied/rejected及effective值。可在block边界生效的项明确报告pending until block；cipher/认证/网站/地址等需新lane的项通过旧rotation/重连机制，不原地修改密钥。UI必须显示连接状态与清理未完成原因，不把busy吞掉留下永远转圈。
 
 迟到旧revision的applied回执只作历史事实，不能覆盖UI当前选择或把另一client/方向的配置标为生效。Go程序与Rust库按兼容ABI/能力和配套manifest一起打包；不能用“各自都编译成功”替代实际加载/生效。DNS、借站/服务器地址及direct出口沿原旁路与资源归属规则，防止控制连接再次被TUN接管形成循环；这不授权重写原OS网络管理。
