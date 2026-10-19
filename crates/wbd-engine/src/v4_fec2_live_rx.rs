@@ -1,0 +1,243 @@
+//! M0 original-Go-authorized, generation-local FEC2 **receive** composition.
+//! Not a credential grant, product enable switch, socket or TUN writer.
+//! One AEAD/PN replay owner protects all interleaved blocks, then M3 RS16
+//! emits first-delivery candidates. M4 must validate/submit each candidate.
+#![forbid(unsafe_code)]
+use std::collections::BTreeMap;
+use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
+use wbd_codec::record_crypto::{DirectionKeys,RecordSuite};
+use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
+use wbd_types::MonoNs;
+
+const MAX_ACTIVE:usize=32;
+const MAX_STORED_BYTES:usize=1024*1024;
+const MAX_BLOCK_AGE_NS:u64=150_000_000;
+const BLOCK_REORDER_SPAN:u64=128;
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub(crate) struct VerifiedReceiveEpoch {
+    pub generation:u32,pub epoch:[u8;16],
+    pub negotiated_features:u16,pub direction_s2c:bool,
+}
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub(crate) enum ReceiveError {
+    Authorization,Stopped,Invalid,Capacity,ReplayOrAuthentication,
+    ConflictingBlock,Codec
+}
+#[derive(Debug,PartialEq,Eq)]
+pub(crate) struct FirstDelivery {
+    pub block_id:u64,pub index:u8,pub recovered:bool,pub frame:Vec<u8>,
+}
+struct LiveBlock {
+    touched:MonoNs,
+    sources:Vec<Option<Vec<u8>>>,
+    repairs:BTreeMap<u8,Vec<u8>>,
+    actual_k:Option<u8>,
+    delivered:u16,
+    bytes:usize,
+}
+impl LiveBlock {
+    fn new(now:MonoNs)->Self{
+        Self{touched:now,sources:vec![None;fec_v2::MAX_K],
+            repairs:BTreeMap::new(),actual_k:None,delivered:0,bytes:0}
+    }
+}
+pub(crate) struct Fec2LiveRx {
+    credential:VerifiedReceiveEpoch,
+    opener:ReplayProtectedLaneRx,
+    rs:Rs16,budget:usize,stopped:bool,
+    highest_block:u64,
+    blocks:BTreeMap<u64,LiveBlock>,
+    stored:usize,
+}
+impl Fec2LiveRx{
+    // This evidence must be supplied by the same Rust Go TLS owner that
+    // verified the original exporter's principal, epoch and feature bit2.
+    // A raw packet, peer request or config file is NEVER an admission fact.
+    pub(crate) fn new(verified:VerifiedReceiveEpoch,keys:DirectionKeys,
+        suite:RecordSuite,wire_max:usize)->Result<Self,ReceiveError>{
+        if verified.generation==0||verified.epoch==[0;16]||
+           verified.negotiated_features!=7||!verified.direction_s2c{
+            return Err(ReceiveError::Authorization)
+        }
+        let budget=wire_max.checked_sub(wbd_codec::record_frame::FIXED_WIRE_OVERHEAD)
+            .ok_or(ReceiveError::Invalid)?;
+        if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
+        let opener=ReplayProtectedLaneRx::new_for_suite(keys,wire_max,suite,
+            ReplayWindowConfig{
+                pn_per_second:20000,cache_horizon_ms:200,
+                fec_horizon_ms:150,rtt_ms:100,
+                metadata_budget_bytes:256*1024,
+            }).map_err(|_|ReceiveError::Invalid)?;
+        Ok(Self{credential:verified,opener,rs:Rs16::new(),budget,
+            stopped:false,highest_block:0,blocks:BTreeMap::new(),stored:0})
+    }
+    pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
+    pub(crate) fn stored_bytes(&self)->usize{self.stored}
+    pub(crate) fn stop(&mut self){
+        self.stopped=true;self.blocks.clear();self.stored=0;
+    }
+    fn retire(&mut self,now:MonoNs){
+        let floor=self.highest_block.saturating_sub(BLOCK_REORDER_SPAN);
+        let keys=self.blocks.iter().filter_map(|(&id,b)|{
+            if id<floor||now.elapsed_since(b.touched)>MAX_BLOCK_AGE_NS{
+                Some(id)
+            }else{None}
+        }).collect::<Vec<_>>();
+        for id in keys{
+            if let Some(old)=self.blocks.remove(&id){
+                self.stored=self.stored.saturating_sub(old.bytes)
+            }
+        }
+    }
+    /// First delivery can occur from a systematic source before ANY prior
+    /// block completes. An independent AEAD/replay bitmap is forbidden.
+    pub(crate) fn consume(&mut self,scope:VerifiedReceiveEpoch,
+        wire:&mut [u8],now:MonoNs)->Result<Vec<FirstDelivery>,ReceiveError>{
+        if self.stopped{return Err(ReceiveError::Stopped)}
+        if scope!=self.credential{return Err(ReceiveError::Authorization)}
+        let rec=self.opener.open_unique_with_fec2_after_admission_in_place(wire)
+            .map_err(|_|ReceiveError::ReplayOrAuthentication)?;
+        let (id,index,kind,body,k)=match rec.kind{
+            2=>{
+                let src=fec_v2::parse_source(rec.payload,self.budget)
+                    .map_err(|_|ReceiveError::Invalid)?;
+                (src.block_id,src.source_index,2,src.frame.to_vec(),None)
+            }
+            3=>{
+                let repair=fec_v2::parse_repair(rec.payload,self.budget)
+                    .map_err(|_|ReceiveError::Invalid)?;
+                (repair.block_id,repair.parity_row,3,rec.payload.to_vec(),
+                    Some(repair.actual_k))
+            }
+            _=>return Err(ReceiveError::Invalid)
+        };
+        if id==0||id<self.highest_block.saturating_sub(BLOCK_REORDER_SPAN){
+            return Err(ReceiveError::Invalid)
+        }
+        self.highest_block=self.highest_block.max(id);
+        self.retire(now);
+        if !self.blocks.contains_key(&id)&&self.blocks.len()>=MAX_ACTIVE{
+            return Err(ReceiveError::Capacity)
+        }
+        let old=self.blocks.get(&id);
+        if old.is_some_and(|b|b.touched.0>now.0){return Err(ReceiveError::Invalid)}
+        if body.len()>MAX_STORED_BYTES.saturating_sub(self.stored){
+            return Err(ReceiveError::Capacity)
+        }
+        let b=self.blocks.entry(id).or_insert_with(||LiveBlock::new(now));
+        b.touched=now;
+        let mut output=Vec::new();
+        if kind==2{
+            let index=index as usize;
+            if b.sources[index].is_some()||(b.delivered & (1u16<<index))!=0||
+                b.actual_k.is_some_and(|k|index>=usize::from(k)){
+                return Err(ReceiveError::ConflictingBlock)
+            }
+            // An authenticated source can be immediately returned to the
+            // original LINK or IP candidate validator, without waiting for
+            // parity or a previous block (first-arrival, no cross-block HOL).
+            b.delivered|=1u16<<index;
+            output.push(FirstDelivery{block_id:id,index:index as u8,
+                recovered:false,frame:body.clone()});
+            b.sources[index]=Some(body);
+        }else{
+            let Some(actual_k)=k else{return Err(ReceiveError::Invalid)};
+            if b.actual_k.is_some_and(|old|old!=actual_k)||
+                b.sources.iter().enumerate().any(|(i,s)|i>=actual_k as usize&&s.is_some())||
+                b.repairs.contains_key(&index){
+                return Err(ReceiveError::ConflictingBlock)
+            }
+            b.actual_k=Some(actual_k);
+            b.repairs.insert(index,body);
+        }
+        let charge=if kind==2{b.sources[index as usize].as_ref().map_or(0,Vec::len)}
+            else{b.repairs.get(&index).map_or(0,Vec::len)};
+        self.stored=self.stored.saturating_add(charge);
+        b.bytes=b.bytes.saturating_add(charge);
+        if let Some(k)=b.actual_k {
+            let live=b.sources.iter().take(k as usize)
+                .map(Option::as_deref).collect::<Vec<_>>();
+            let missing=live.iter().filter(|v|v.is_none()).count();
+            if missing>0&&b.repairs.len()>=missing{
+                // Owned parity remains bound to this exact authenticated
+                // block+generation; reparsing keeps the M3 wire invariants.
+                let repairs=b.repairs.values().map(|bytes|
+                    fec_v2::parse_repair(bytes,self.budget)
+                ).collect::<Result<Vec<_>,_>>().map_err(|_|ReceiveError::Codec)?;
+                let recovered=self.rs.recover_missing(id,&live,&repairs,
+                    self.budget,BackendChoice::Scalar)
+                    .map_err(|_|ReceiveError::Codec)?.0;
+                for (i,frame) in recovered {
+                    let bit=1u16<<i;
+                    if b.delivered&bit!=0{return Err(ReceiveError::ConflictingBlock)}
+                    b.delivered|=bit;
+                    b.sources[i as usize]=Some(frame.clone());
+                    output.push(FirstDelivery{block_id:id,index:i,
+                        recovered:true,frame});
+                }
+            }
+        }
+        Ok(output)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wbd_codec::record_crypto::LaneTxCrypto;
+    fn keys()->DirectionKeys{DirectionKeys{
+        aead_key:[39;32],iv:[40;12],hp_key:[41;32]}}
+    fn epoch()->VerifiedReceiveEpoch{VerifiedReceiveEpoch{
+        generation:2,epoch:[10;16],negotiated_features:7,direction_s2c:true}}
+    fn seal(tx:&mut LaneTxCrypto,kind:u8,payload:&[u8])->Vec<u8>{
+        let mut wire=vec![0u8;1400];
+        wire[14..14+payload.len()].copy_from_slice(payload);
+        let (_,n)=tx.seal_fec2_after_admission_in_place(
+            kind,&mut wire,payload.len(),0).unwrap();
+        wire.truncate(n);wire
+    }
+    #[test]
+    fn m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop(){
+        for suite in [RecordSuite::ChaCha20Poly1305,
+                RecordSuite::Aes128Gcm,RecordSuite::Aes256Gcm]{
+            let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+            let mut rx=Fec2LiveRx::new(epoch(),keys(),suite,1400).unwrap();
+            assert_eq!(Fec2LiveRx::new(VerifiedReceiveEpoch{
+                negotiated_features:3,..epoch()},keys(),suite,1400)
+                .err(),Some(ReceiveError::Authorization));
+            let codec=Rs16::new();
+            let mut queued=Vec::new();
+            for id in 1..=4u64{
+                let first=vec![id as u8;100];
+                let second=vec![(id as u8)+9;100];
+                let src=fec_v2::source_owned(id,0,&first,1369).unwrap();
+                let repaired=codec.encode_owned(id,&[&first,&second],
+                    fec_v2::Profile::Mild,0,1,1369,BackendChoice::Scalar)
+                    .unwrap().0.remove(0);
+                let mut ciphertext=seal(&mut tx,2,&src);
+                let original=ciphertext.clone();
+                let delivery=rx.consume(epoch(),&mut ciphertext,MonoNs(id*1_000)).unwrap();
+                assert_eq!(delivery,vec![FirstDelivery{block_id:id,index:0,
+                    recovered:false,frame:first}]);
+                let mut again=original;
+                assert_eq!(rx.consume(epoch(),&mut again,MonoNs(id*1_001)),
+                    Err(ReceiveError::ReplayOrAuthentication));
+                queued.push((id,second,seal(&mut tx,3,&repaired)));
+            }
+            assert_eq!(rx.active_blocks(),4);
+            let mut recovered=0;
+            for (id,second,mut parity) in queued.into_iter().rev(){
+                let out=rx.consume(epoch(),&mut parity,MonoNs(20_000+id)).unwrap();
+                assert_eq!(out,vec![FirstDelivery{block_id:id,index:1,
+                    recovered:true,frame:second}]);
+                recovered+=1;
+            }
+            assert_eq!(recovered,4);
+            assert!(rx.stored_bytes()>0);
+            rx.stop();assert_eq!(rx.active_blocks(),0);
+            assert_eq!(rx.stored_bytes(),0);
+            assert_eq!(rx.consume(epoch(),&mut vec![0u8;40],MonoNs(30_000)),
+                Err(ReceiveError::Stopped));
+        }
+    }
+}
