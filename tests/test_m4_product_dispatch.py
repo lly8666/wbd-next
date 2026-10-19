@@ -21,7 +21,7 @@ REG={"schema_version":1,"reservation_revision":2,"roles":[{
     "assigned_task":"R5-M4-NATIVE-WINDOWS-NETWORK-016","goal":"native","done_when":"native"}]}
 REQ={"schema_version":1,"request_id":RID,"role_id":"M4","task_id":REG["roles"][0]["assigned_task"],
     "assignment_epoch":1,"reservation_revision":2,"kind":"functional","status":"PLANNED",
-    "workflow":".github/workflows/m0-m4-product-assembly.yml","dispatch_ref":"main",
+    "workflow":".github/workflows/m0-m4-product-assembly.yml","dispatch_ref":m.M4_CONTROL_REF,
     "control_sha":C,"source_sha":S,"harness_sha":S,"baseline_sha":m.LEGACY_SOURCE,
     "config_sha256":hashlib.sha256(CFG).hexdigest(),
     "config_path":"r0/go_overlay/assembly/manifest.json",
@@ -46,7 +46,7 @@ class API:
         if path=="contents/r0/go_overlay/assembly/manifest.json?ref="+S:return git_file(self.config)
         if path.startswith("compare/"):return {"status":"ahead"}
         if path=="branches/"+m.BRANCH:return {"commit":{"sha":self.current}}
-        if path=="actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&per_page=100":
+        if path=="actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&branch=qualification%2Fm4-product-windows-v1&per_page=100":
             return self.runs
         raise AssertionError(path)
 class Tests(unittest.TestCase):

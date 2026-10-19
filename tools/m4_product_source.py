@@ -24,6 +24,7 @@ BRANCH = "work/m4-r1-platform"
 SCOPE_PATH = ".github/workflows/scope-audit.yml"
 SCOPE_WORKFLOW_ID = 385257385
 BOOTSTRAP_SCOPE_RUN = 39219843238
+M4_CONTROL_REF = "qualification/m4-product-windows-v1"
 LEGACY_SOURCE = "a7a82db31fe736ffedee330795a3234d358f1984"
 
 def need(condition, reason):
@@ -121,7 +122,7 @@ def verify_manual_request(api, attested, registry, current_main, request_id, req
         "reservation_revision":registry["reservation_revision"],
         "kind":"functional","status":"PLANNED",
         "workflow":".github/workflows/m0-m4-product-assembly.yml",
-        "dispatch_ref":"main","control_sha":current_main,
+        "dispatch_ref":M4_CONTROL_REF,"control_sha":current_main,
         "source_sha":candidate_sha,"harness_sha":candidate_sha,
         "baseline_sha":LEGACY_SOURCE,
         "scenario":"windows-native-product-runtime-016",
@@ -134,7 +135,8 @@ def verify_manual_request(api, attested, registry, current_main, request_id, req
     raw_config=read_owned_text(req["config_path"],candidate_sha)
     need(hashlib.sha256(raw_config).hexdigest()==req["config_sha256"],
          "M4 candidate original-Go overlay manifest hash drift")
-    runs=api.get("actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&per_page=100")
+    runs=api.get("actions/workflows/m0-m4-product-assembly.yml/runs?event=workflow_dispatch&branch="+
+                 M4_CONTROL_REF.replace("/","%2F")+"&per_page=100")
     need(runs.get("total_count",101)<=100, "M4 manual request scan unbounded")
     matching=[r for r in runs.get("workflow_runs",[])
               if r.get("event")=="workflow_dispatch" and
@@ -179,12 +181,37 @@ def perform(api, run_id, event, current_main, registry):
               and not a.get("expired")]
     need(len(chosen) == 1, "missing/ambiguous current G2 receipt artifact")
     sha, receipt = verified_receipt(api.artifact_zip(chosen[0]["id"]), run, registry)
-    need(api.get("compare/" + run["head_sha"] + "..." + current_main +
-                 "?per_page=1").get("status") in ("ahead", "identical"),
-         "G2 main checker SOURCE not in current main ancestry")
-    need(api.get("compare/" + receipt["final_control_sha"] + "..." +
-                 current_main + "?per_page=1").get("status") in ("ahead", "identical"),
-         "G2 final main authority not in current ancestry")
+    if event.get("event_type")=="workflow_dispatch":
+        # Frozen M4 control remains usable while M0 independently advances
+        # main. The central G2 must have been run AFTER this immutable
+        # control was frozen, with the same live M4 authority.
+        latest=api.get("branches/main").get("commit",{}).get("sha","")
+        need(bool(g.SHA.fullmatch(latest)), "live main unavailable")
+        for origin,end in ((current_main,run["head_sha"]),
+                           (current_main,receipt["final_control_sha"]),
+                           (run["head_sha"],latest),
+                           (receipt["final_control_sha"],latest)):
+            need(api.get(f"compare/{origin}...{end}?per_page=1").get("status")
+                 in ("ahead","identical"), "stale/diverged central G2 vs frozen M4 control")
+        live_blob=api.get("contents/.governance/registry.json?ref=main")
+        need(live_blob.get("type")=="file" and live_blob.get("encoding")=="base64",
+             "current main registry not immutable file")
+        live=json.loads(base64.b64decode(live_blob["content"]))
+        current_roles=g.validate_registry(live)
+        local=next(r for r in g.validate_registry(registry) if r["id"]=="M4")
+        current=next(r for r in current_roles if r["id"]=="M4")
+        need(live["reservation_revision"]==registry["reservation_revision"] and
+             all(local.get(k)==current.get(k) for k in
+                 ("id","branch","state","assignment_epoch","allowed_paths",
+                  "owned_semantics","assigned_task","global_writer")),
+             "M4 control retired by current main authorization")
+    else:
+        need(api.get("compare/" + run["head_sha"] + "..." + current_main +
+                     "?per_page=1").get("status") in ("ahead", "identical"),
+             "G2 main checker SOURCE not in current main ancestry")
+        need(api.get("compare/" + receipt["final_control_sha"] + "..." +
+                     current_main + "?per_page=1").get("status") in ("ahead", "identical"),
+             "G2 final main authority not in current ancestry")
     branch = api.get("branches/" + BRANCH)
     current = (branch.get("commit") or {}).get("sha", "")
     need(isinstance(current, str) and bool(g.SHA.fullmatch(current)),
@@ -234,8 +261,8 @@ def main():
     event_type=os.environ.get("GITHUB_EVENT_NAME")
     need(event_type in ("push","workflow_run","workflow_dispatch"), "unsupported trigger")
     if event_type=="workflow_dispatch":
-        need(os.environ.get("GITHUB_REF_NAME")=="main" and
-             args.control_sha==actual, "manual dispatch must pin current main control")
+        need(os.environ.get("GITHUB_REF_NAME")==M4_CONTROL_REF and
+             args.control_sha==actual, "manual dispatch must pin frozen M4 control")
         need(all((args.request_id,args.request_ref,args.worker_source_sha,args.control_sha)),
              "manual dispatch missing exact request/source/control")
     else:

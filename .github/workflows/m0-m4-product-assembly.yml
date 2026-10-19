@@ -48,7 +48,7 @@ jobs:
   attest:
     if: >-
       github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && inputs.role_id == 'M4' && github.ref_name == 'main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.role_id == 'M4' && github.ref_name == 'qualification/m4-product-windows-v1') ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.workflow_id == 385257385 &&
        github.event.workflow_run.path == '.github/workflows/scope-audit.yml' &&
@@ -106,7 +106,11 @@ jobs:
     # M4 SOURCE and Linux runner inputs are unchanged from the first PASS.
     # Main-only Windows byte-normalization repair must not repeat Linux PASS;
     # fresh worker G2 events automatically qualify all three targets.
-    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
+    # Existing 015 automatic three-platform PASS is already archived at
+    # Action 39225427878. New 016 central G2 is only authorization;
+    # product execution is worker-requested on immutable control. This
+    # prevents duplicate in-flight automatic and manual product runs.
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
