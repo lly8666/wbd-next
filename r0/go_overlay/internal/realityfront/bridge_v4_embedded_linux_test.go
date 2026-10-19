@@ -531,7 +531,7 @@ func TestR0V4EmbeddedSteadyBurst(t *testing.T) {
     if os.Getenv("WBD_REAL_TUN")!="1"||os.Getenv("WBD_M0_STEADY_BURST")!="1" {
         t.Skip("owned privileged netns only")
     }
-    lossy:=os.Getenv("WBD_M0_STEADY_LOSS_PERCENT")=="1"
+    lossy:=os.Getenv("WBD_M0_STEADY_LOSS_PERCENT")!=""
     const packets=12
     const tunName="wbdmbur0"
     f,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
@@ -672,9 +672,9 @@ func TestR0V4EmbeddedSteadyBurst(t *testing.T) {
             if !lossy&&(cDelivered!=packets||sDelivered!=packets||cMiss!=0||sMiss!=0){
                 t.Fatalf("no-loss real Linux burst delivery incomplete C2S=%d S2C=%d",cDelivered,sDelivered)
             }
-            t.Logf("EMBEDDED_STEADY_BURST_%s suite=%d c2s_sent=%d c2s_delivered=%d c2s_missing_or_rejected=%d c2s_bytes_sent=%d s2c_sent=%d s2c_delivered=%d s2c_missing_or_rejected=%d s2c_bytes_sent=%d elapsed_ns=%d",
+            t.Logf("EMBEDDED_STEADY_BURST_%s loss_config_pct=%s mode=Normal_OFF suite=%d c2s_sent=%d c2s_delivered=%d c2s_missing_or_rejected=%d c2s_bytes_sent=%d s2c_sent=%d s2c_delivered=%d s2c_missing_or_rejected=%d s2c_bytes_sent=%d elapsed_ns=%d",
                 map[bool]string{true:"LOSS_OBSERVATION",false:"PASS"}[lossy],
-                cipher,cSent,cDelivered,cMiss,cBytes,sSent,sDelivered,sMiss,sBytes,elapsed.Nanoseconds())
+                os.Getenv("WBD_M0_STEADY_LOSS_PERCENT"),cipher,cSent,cDelivered,cMiss,cBytes,sSent,sDelivered,sMiss,sBytes,elapsed.Nanoseconds())
         })
     }
 }

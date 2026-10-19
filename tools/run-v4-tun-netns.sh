@@ -48,16 +48,16 @@ FEC2_PROBE="${WBD_M0_FEC2_KERNEL_TX:-}"
 if [[ -n "$TARGETED" && "$TARGETED" != 1 ]]; then echo 'TARGETED_DROP_INVALID' >&2; exit 2; fi
 LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 if [[ -n "$LOSS" ]]; then
-  if [[ "$LOSS" != 1 || "$STEADY" != 1 || -n "$PRELIM_MS" ]]; then
-    echo 'STEADY_LOSS_INVALID only 1% in isolated steady burst' >&2; exit 2
+  if [[ ! "$LOSS" =~ ^(1|5|10|20|30)$ || "$STEADY" != 1 || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$BACKGROUND" || -n "$FEC2_PROBE" || -n "$PERF" ]]; then
+    echo 'STEADY_LOSS_INVALID only 1/5/10/20/30% with one isolated Normal OFF steady burst' >&2; exit 2
   fi
   if ! command -v tc >/dev/null; then
     echo 'STEADY_LOSS_UNSUPPORTED tc unavailable'; exit 77
   fi
-  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem loss 1% limit 256; then
+  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem loss "$LOSS%" limit 256; then
     echo 'STEADY_LOSS_UNSUPPORTED kernel qdisc refused'; exit 77
   fi
-  echo 'STEADY_LOSS_QDISC_ATTACHED loss_percent=1 dev=lo bounded_packets=256'
+  echo "STEADY_LOSS_QDISC_ATTACHED loss_percent=$LOSS dev=lo bounded_packets=256 mode=Normal_OFF"
   sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
 fi
 if [[ -n "$PRELIM_MS" ]]; then
@@ -158,7 +158,7 @@ if [[ "$TARGETED" == 1 ]]; then
   echo 'TARGETED_ENCRYPTED_DATA_DROP_CASE_PASS original Go TLS PN0 lost in exact kernel u32 egress classifier; PN1 delivered by original Rust Normal/off to independent real TUN application.'
   exit 0
 fi
-if [[ "$LOSS" == 1 ]]; then
+if [[ -n "$LOSS" ]]; then
   QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"
   echo "$QDISC"
   if [[ "$QDISC" != *"qdisc netem "* ]] || ! grep -Eq 'Sent [1-9][0-9]* bytes [1-9][0-9]* pkt' <<<"$QDISC"; then
@@ -166,8 +166,12 @@ if [[ "$LOSS" == 1 ]]; then
   fi
   DROPPED="$(sed -nE 's/.*\(dropped ([0-9]+),.*/\1/p' <<<"$QDISC" | head -1)"
   [[ "$DROPPED" =~ ^[0-9]+$ ]] || { echo 'STEADY_LOSS_NOT_OBSERVED drop counter missing'; exit 77; }
-  echo "STEADY_LOSS_CASE_RECORDED configured_loss_percent=1 kernel_dropped_packets=$DROPPED observed_drop=$([[ "$DROPPED" -gt 0 ]] && echo yes || echo no)"
-  echo 'STEADY_LOSS_LIMITS finite 12p/direction/cipher; no FEC, repair, throughput or product success claim.'
+  if ((LOSS >= 10 && DROPPED == 0)); then
+    echo "STEADY_LOSS_EXPECTED_DROP_NOT_OBSERVED configured_loss_percent=$LOSS kernel_dropped_packets=0" >&2
+    exit 1
+  fi
+  echo "STEADY_LOSS_CASE_RECORDED configured_loss_percent=$LOSS kernel_dropped_packets=$DROPPED observed_drop=$([[ "$DROPPED" -gt 0 ]] && echo yes || echo no) mode=Normal_OFF"
+  echo 'STEADY_LOSS_LIMITS finite 12p/direction/cipher; no FEC, Game, repair, throughput or full product claim.'
   exit 0
 fi
 if [[ "$STEADY" == 1 ]]; then
