@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 22,
+  "sequence": 23,
   "checkpoint_sha": "1107d885c68c63f57a7502e1318c80108f7f2e27",
-  "progress": "blocked",
+  "progress": "paused",
   "task_id": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015",
-  "current_task": "PLAN008-015 scoped original Go/WinForms product assembly and single original PARAMETER catalog authored; eight pinned replacements/four creates statically blob-verified. Real Linux/Windows Actions and authenticated native loader/applied remain unverified.",
-  "why_now": "Main PLAN008 task superseded completed FEC2-014; old H21 was exact branch head. M4 authored original-source manifest, fail-closed FEC2 flags/UI and build/native loader smoke. Current-tree paths fit registry, but one accidentally created then removed exact-unpermitted test path survives in commit history and needs M0 scope adjudication.",
+  "current_task": "PLAN008-015 M4 source-locked original Go/WinForms assembly and H handoff recorded; user explicitly holds all other work. Scoped static manifests checked, original product Actions/ABI and driver remain NOT_RUN; FEC2 OFF.",
+  "why_now": "User requested finish H and checks, hold other work. Exact H22 was cursor-only over S 1107d885c68c63f57a7502e1318c80108f7f2e27; historical off-scope create 2cfd979 in audit ancestry remains unresolved despite immediate delete 85911ac. Do not claim ROLE_SCOPE_PASS.",
   "done_when": "Pinned original-source and overlay hashes/checkable fail-closed create/replace manifest; runnable Linux original client/server and Windows GUI loader native smoke where supported; same-parameter save/restart, two client/dir, invalid mode, missing DLL/wrong target, stale revision, Stop, exact real native applied status; report physical NOT_RUN and keep production feature OFF.",
-  "next_action": "M0 invoke exact M4 SOURCE c42ed0cc85866a2260274affb6a75c593826573d product-assembly/Linux/Windows native CI with original Go SHA a7a82db and M0 real Rust ABI/loader, and adjudicate historical one-path scope incident. M4 will consume precise run/attempt/artifact, fix only permitted files and finish scoped S→H when done_when really proven.",
+  "next_action": "HOLD. No additional M4 product work or tests until explicit user resume; M0 alone to review documented historical per-commit scope incident and arrange source-locked PLAN008 original Go/Windows/real Rust ABI Actions when ready. On resume recheck main registry, branch, audit run/attempt and artifacts; do not inherit previous PASS.",
   "unverified": true,
   "last_tested_source": "7cef7e849e293373d907a3b64007b4ce8946da78",
   "evidence_refs": [
@@ -25,5 +25,5 @@
     "docs/decisions/M0-integration-unblock-2026-10-19.md",
     "docs/architecture/modules/10-LIFECYCLE-QUALITY.md"
   ],
-  "partial_summary": "PLAN008 source c42ed0 is authored/static SHA checked only. Eight old original file replacements + four creates in exact assembly manifest; original Go config/CLI/GUI and FEC2 fail-closed readback projected, scripts for real Linux/Windows native assembly+loader written. All PLAN008 executable Go/WinForms/rust-ABI/physical Actions NOT_RUN. Old code7cef tested only FEC2-014, not this task. Historic off-scope path at 2cfd removed 85911 but historical G2 review OPEN. M0 remains sole authenticated Rust owner/CI writer; FEC2 production OFF."
+  "partial_summary": "User HOLD. H23 cursor-only; S checkpoint 1107d885c68c63f57a7502e1318c80108f7f2e27 and exact code snapshot c42ed0cc85866a2260274affb6a75c593826573d. PLAN008 static blob checks only; original Go/Windows GUI/native Rust loader/real applied/physical NOT_RUN; product FEC2 OFF. Historical per-commit scope exception 2cfd create then 85911 delete is OPEN with M0 request; structural H check not official G2 PASS. Prior FEC2-014 code7cef scoped 8/8 and platform safe-wrapper native successes remain separate historic sources."
 }
