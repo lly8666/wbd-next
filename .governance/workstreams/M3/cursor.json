@@ -4,32 +4,33 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 44,
-  "checkpoint_sha": "78128d4652a3d9e0ed994e4b545173046a726093",
+  "sequence": 45,
+  "checkpoint_sha": "1efd5e153b5aea697ea251b56a7ea3609d5df717",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 FEC2 CODE437 native real ISA-L test prepare003 requested under corrected frozen v7 candidate implementation+test overlay, via central G2 main-only audited dispatch. Previous v5/v6 failures retained. ABBA not yet run.",
-  "why_now": "M0 fixed v6 ZERO_TESTS by pinning candidate fec_v2.rs and fec_v2_tests.rs together and matching source test digest; frozen v7 c0c192 passed smoke39214403113/maintenance39214403124/Governance39214403112. Exact S78128d only v7 PLANNED prepare003. Existing v6 prepare002 39210496325 failed 0 tests before native oracle, preserved; no CODE437 new native qualified results yet.",
+  "current_task": "PLAN008-018 FEC2 CODEb4d codec-only cfg(test) F2 oracle test registration, harness CODE42b3 source rebind, pinned v7 official native prepare004 requested; no runtime math change. Previous prepare003 0 cases FAIL preserved.",
+  "why_now": "M3 v7 prepare003 39216588118 authorized + ISA-L release built, but full --lib fec_v2_tests filter matched 0 tests / 156 filtered, so prepare FAIL before native correctness oracle. The v7 control overlays the test file correctly, but actual lib.rs/fec_v2.rs had not declared its test module. Within owned fec_v2.rs CODEb4d adds cfg(test) path module only; CODE42b3 changes ABBA harness candidate SOURCE constant. S1efd captures historical failure+fresh prepare004 pinned to CODEb4d + harness42b3, v7 immutable control c0c; no native result yet.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Observe H44 worker Governance and central G2; follow main-owned v7 auto-dispatch M3-018-NATIVE-E4-PREPARE-003. Verify actual focused+full native F2 tests, successful artifact and complete manifest+SHA before issuing independent paired 4-leg ABBA request. Never resubmit previous request IDs or enable product FEC2.",
+  "next_action": "Observe H45 worker Governance exact HEAD, central G2 and main auto-dispatch for new M3-018-NATIVE-E4-PREPARE-004. Require named real ISA-L r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact PASS + all module oracles and valid prepare manifest/binary. Only after exact artifact verified, create 4-leg paired_abba request; FAIL/INCONCLUSIVE stay visible. FEC2 product OFF.",
   "unverified": true,
   "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
   "evidence_refs": [
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
-    "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json"
+    "docs/evidence/M3/018-CODE437-v6-prepare002-zero-tests-39210496325-fail.json",
+    "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-003.json"
+    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-004.json"
   ],
   "context_refs": [
+    "docs/evidence/M3/018-CODE437-v7-prepare003-zero-tests-39216588118-fail.json",
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
     "docs/devlog/M3/R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018.md",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-real-isal-e4-abba-partial.json",
     "docs/evidence/M3/017-8cc5b06d6832565a80b60402a5fe2e1078e9ab2e-valid-row-scalar-partial.json",
     "docs/evidence/M3/017-H33-1cf6b1b8184fe6d4880cee7ef8ef815249929859-scope-recovery.json",
-    "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
-    "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
+    "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json"
   ],
-  "partial_summary": "H44 S78128d fresh v7 source-locked native test intent on exact candidate CODE437 / old CODE8cc / harness a5de, no new CODE changes. v7 shared test overlay fixed and 3/3 shared smoke/governance tests PASS; actual M3 native prepare003 pending. Older v6 prepare002 native compiled but 0 cases and FAIL preserved, v5 authorize FAIL preserved. Default CODE437 123/0/1 PASS; CPU/alloc 4leg A-B-B-A NOT_RUN. Product FEC2 OFF."
+  "partial_summary": "H45 created test-only codec F2 oracle module registration CODEb4d and self-rebound ABBA harness CODE42b3, v7 pinned prepare004 request I=1efd. Prior v7 prepare003 actual Rust compiled but 0 cases /156 filtered; its exact FAIL artifact SHA256 independently verified and preserved. CODE437 default scalar 123/0/1 PASS. New native source CODEb4d is NOT_RUN until v7 prepare004 completes; old-new sameVM ABBA NOT_RUN, no product enablement."
 }
