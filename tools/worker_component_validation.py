@@ -164,7 +164,7 @@ def remote_preflight(args):
          "invalid worker request")
     need(SHA.fullmatch(args.request_ref) and SHA.fullmatch(args.control_sha),
          "request/control must be exact SHA")
-    need(args.control_ref=="qualification/worker-ci-v5","not published control ref")
+    need(args.control_ref=="qualification/worker-ci-v6","not published control ref")
     registry=api("contents/.governance/registry.json?ref=main")
     registry=json.loads(base64.b64decode(registry["content"]))
     worker=next(z for z in registry["roles"] if z["id"]==role)
@@ -183,7 +183,7 @@ def remote_preflight(args):
     config_path=urllib.parse.quote(SUITES[role][1],safe="/")
     config_entry=api("contents/"+config_path+"?ref="+config_ref)
     config=base64.b64decode(config_entry["content"])
-    validate_context(request,role,args.stage,args.control_ref,args.control_sha,
+    validate_context(request,role,args.request_stage,args.control_ref,args.control_sha,
                      registry,head,args.request_ref,config)
     request["_control_sha"]=args.control_sha
     request["_request_ref"]=args.request_ref
@@ -400,6 +400,8 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("stage",choices=("preflight","prepare","paired","selftest"))
     p.add_argument("--role-id");p.add_argument("--request-id")
+    p.add_argument("--stage",dest="request_stage",choices=("prepare","paired"),
+                   help="Worker request stage for preflight; distinct from positional preflight command")
     p.add_argument("--request-ref");p.add_argument("--control-ref")
     p.add_argument("--control-sha");p.add_argument("--output",default="validation/request.json")
     p.add_argument("--request-file",default="validation/request.json")
@@ -411,6 +413,8 @@ def main():
         print("WORKER_COMPONENT_VALIDATION_STATIC_PASS")
         return
     if args.stage=="preflight":
+        need(args.request_stage in ("prepare","paired"),
+             "preflight requires explicit prepare or paired request stage")
         remote_preflight(args);return
     request=json.loads(pathlib.Path(args.request_file).read_text())
     output=pathlib.Path(args.output);output.mkdir(parents=True,exist_ok=True)

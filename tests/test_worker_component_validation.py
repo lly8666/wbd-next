@@ -18,7 +18,7 @@ def request(role="M1",stage="prepare"):
        "source_sha":B,"harness_sha":H,"baseline_sha":A,"control_sha":CONTROL,
        "config_path":fixture,"config_sha256":w.sha(CFG),
        "scenario":suite,"seed":631,"workflow":w.CONTROL_WORKFLOW,
-       "dispatch_ref":"qualification/worker-ci-v5","measurement_jobs":1,
+       "dispatch_ref":"qualification/worker-ci-v6","measurement_jobs":1,
        "samples":1 if stage=="prepare" else 2 if role=="M1" else 4,
        "status":"PLANNED","_request_path":".governance/workstreams/"+role+"/requests/WR-001.json"}
     if stage=="paired":
@@ -30,7 +30,7 @@ def request(role="M1",stage="prepare"):
                        for x in ("AB" if role=="M1" else "ABBA")])
     return d
 def check(d,stage,cfg=CFG):
-    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v5",
+    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v6",
              CONTROL,reg(d["role_id"]),"e"*40,"f"*40,cfg)
 class ValidationTests(unittest.TestCase):
     def test_valid_both_stages(self):
@@ -51,6 +51,24 @@ class ValidationTests(unittest.TestCase):
                 check(d,"prepare")
         with self.assertRaises((ValueError,g.ContractError)):
             check(request(),"prepare",b"tampered")
+    def test_preflight_cli_stage_contract_no_network(self):
+        from unittest import mock
+        import sys
+        with mock.patch.object(w,"remote_preflight") as fn:
+            with mock.patch.object(sys,"argv",["worker_component_validation.py",
+                "preflight","--stage","prepare","--role-id","M1",
+                "--request-id","M1-PREPARE-001","--control-ref",
+                "qualification/worker-ci-v6","--control-sha","a"*40]):
+                w.main()
+            self.assertEqual(fn.call_count,1)
+            self.assertEqual(fn.call_args.args[0].request_stage,"prepare")
+        with mock.patch.object(w,"remote_preflight") as fn:
+            with mock.patch.object(sys,"argv",["worker_component_validation.py",
+                "preflight","--role-id","M1"]):
+                with self.assertRaises(ValueError):
+                    w.main()
+            fn.assert_not_called()
+
     def test_paired_artifact_identity_and_shape(self):
         for role in ("M1","M3"):
             for what in ("missing","wrong-source","wrong-build","wrong-mode","two-jobs"):
