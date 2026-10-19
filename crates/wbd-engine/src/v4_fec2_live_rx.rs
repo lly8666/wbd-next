@@ -249,7 +249,7 @@ mod tests {
         wire.truncate(n);wire
     }
     #[test]
-    fn m0_fec2_background_receiver_cannot_admit_without_original_opener(){
+    fn m0_fec2_live_rx_background_receiver_cannot_admit_without_original_opener(){
         let suite=RecordSuite::ChaCha20Poly1305;
         let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
         let mut blocks=Fec2LiveRx::from_authenticated_scope(epoch(),1400).unwrap();
