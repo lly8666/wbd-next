@@ -77,7 +77,13 @@ jobs:
           set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_m4_product_source.py' -v
           python3 -m unittest discover -s tests -p 'test_m4_product_dispatch.py' -v
-          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+          if [[ "${{ github.event_name }}" == 'push' ]]; then
+            # PLAN-010 extended M4 authority invalidates old 015 G2: PUSH is
+            # nonpromotional control/selftest ONLY. Real product needs new
+            # current M4-016 G2; never reuse old scope artifact as authority.
+            mkdir -p m4-product-identity
+            printf '%s\n' '{"schema_version":1,"kind":"entry-selftest","result":"GATE_TESTS_PASS_ONLY","product":"NOT_RUN","M4_016":"NOT_RUN"}' >m4-product-identity/receipt.json
+          elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
             test "${{ inputs.role_id }}" = M4
             python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" \
               --request-id "$REQUEST_ID" --request-ref "$REQUEST_REF" \
@@ -100,7 +106,7 @@ jobs:
     # M4 SOURCE and Linux runner inputs are unchanged from the first PASS.
     # Main-only Windows byte-normalization repair must not repeat Linux PASS;
     # fresh worker G2 events automatically qualify all three targets.
-    if: github.event_name == 'workflow_run' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
