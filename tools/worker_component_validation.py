@@ -365,7 +365,8 @@ def paired_run(request,bundle,out,control):
     need(len(legs)==len(request["legs"]),"missing observed legs")
     record={k:request[k] for k in ("request_id","role_id","kind","source_sha",
                                   "harness_sha","config_sha256","scenario","seed")}
-    record.update(mode=mode,run_id=int(os.environ["GITHUB_RUN_ID"]),
+    record.update(control_sha=control,dispatch_ref=request["dispatch_ref"],
+        mode=mode,run_id=int(os.environ["GITHUB_RUN_ID"]),
         run_attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
         result="PASS" if role=="M1" else "INCONCLUSIVE",
         artifact_verified=True,product="NOT_RUN",

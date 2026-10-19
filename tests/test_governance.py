@@ -266,6 +266,41 @@ class EvidenceDrills(unittest.TestCase):
         v["samples"]=4
         with self.assertRaises(g.ContractError):g.validate_request(v)
 
+    def test_frozen_public_control_is_distinct_from_worker_harness(self):
+        value,receipt,run,jobs=self.paired()
+        value["workflow"]=".github/workflows/worker-component-validation.yml"
+        value["dispatch_ref"]="qualification/worker-ci-v1"
+        run["path"]=value["workflow"]+"@refs/heads/qualification/worker-ci-v1"
+        run["head_sha"]="d"*40
+        receipt["control_sha"]="d"*40
+        receipt["dispatch_ref"]=value["dispatch_ref"]
+        self.assertTrue(g.verify_receipt(value,receipt,run,jobs))
+        for mutation in (dict(control_sha="f"*40),dict(dispatch_ref="main")):
+            with self.assertRaises(g.ContractError):
+                g.verify_receipt(value,dict(receipt,**mutation),run,jobs)
+        # Native M3 old fixture has genuine ABBA ticks but lacks exact
+        # monotonic per-leg windows: INCONCLUSIVE only, never PASS.
+        value["mode"]="paired_abba"
+        value["samples"]=4
+        value["legs"]=[dict(receipt["legs"][0]),
+                       dict(receipt["legs"][1]),
+                       dict(receipt["legs"][1]),
+                       dict(receipt["legs"][0])]
+        receipt["mode"]="paired_abba"
+        receipt["result"]="INCONCLUSIVE"
+        receipt["legs"]=[dict(z,job_id=321,absolute_window="NOT_INSTRUMENTED",
+                              result="INCONCLUSIVE",
+                              start_monotonic_ns=None,end_monotonic_ns=None)
+                         for z in value["legs"]]
+        for leg in value["legs"]:
+            leg.pop("job_id",None)
+            for key in ("config_sha256","scenario","seed","harness_sha","result",
+                        "start_monotonic_ns","end_monotonic_ns"):
+                leg.pop(key,None)
+        self.assertTrue(g.verify_receipt(value,receipt,run,jobs))
+        with self.assertRaises(g.ContractError):
+            g.verify_receipt(value,dict(receipt,result="PASS"),run,jobs)
+
     def test_paired_wrong_source_build_config_job_and_overlap_rejected(self):
         for key, wrong in (("source_sha", "e"*40), ("build_manifest_sha256", "e"*64),
                            ("config_sha256", "e"*64), ("job_id", 999), ("start_monotonic_ns", 50),

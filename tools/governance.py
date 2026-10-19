@@ -193,7 +193,15 @@ def verify_receipt(request, receipt, run, jobs=None):
     need(receipt.get("result") in RESULTS, "invalid receipt result")
     need(integer(receipt.get("run_id"), 1) and integer(receipt.get("run_attempt"), 1), "missing run identity")
     need(run.get("id") == receipt["run_id"] and run.get("run_attempt") == receipt["run_attempt"], "wrong run/attempt")
-    need(run.get("head_sha") == receipt["harness_sha"], "wrong workflow checkout")
+    if request["workflow"] == ".github/workflows/worker-component-validation.yml":
+        # Public frozen control/ref is separate from owned fixture/harness.
+        need(receipt.get("control_sha") is not None and
+             SHA.fullmatch(receipt["control_sha"]) and
+             run.get("head_sha")==receipt["control_sha"] and
+             receipt.get("dispatch_ref")==request["dispatch_ref"],
+             "public worker control/ref not pinned to actual Action")
+    else:
+        need(run.get("head_sha") == receipt["harness_sha"], "wrong workflow checkout")
     need(run.get("path", "").split("@")[0] == request["workflow"], "wrong workflow identity")
     if receipt["result"] == "PASS":
         need(run.get("status") == "completed" and run.get("conclusion") == "success", "unfinished/failed run is not PASS")
@@ -218,9 +226,17 @@ def verify_receipt(request, receipt, run, jobs=None):
             for key in ("config_sha256", "scenario", "seed", "harness_sha"):
                 need(actual.get(key) == request[key], f"paired leg changed common {key}")
             start, end = actual.get("start_monotonic_ns"), actual.get("end_monotonic_ns")
-            need(integer(start) and integer(end) and start < end, "invalid leg interval")
-            need(previous_end is None or previous_end <= start, "paired legs overlap or reverse time")
-            previous_end = end
+            if (receipt["result"]=="INCONCLUSIVE" and
+                actual.get("result")=="INCONCLUSIVE" and
+                actual.get("absolute_window")=="NOT_INSTRUMENTED" and
+                start is None and end is None):
+                # M3's existing native ABBA fixture has per-leg CPU ticks/
+                # wall duration, NOT absolute monotonic windows. Never PASS.
+                pass
+            else:
+                need(integer(start) and integer(end) and start < end, "invalid leg interval")
+                need(previous_end is None or previous_end <= start, "paired legs overlap or reverse time")
+                previous_end = end
             need(actual.get("result") in RESULTS, "unknown leg result")
             if receipt["result"] == "PASS":
                 need(actual["result"] == "PASS", "failed/unrun leg cannot become paired PASS")
