@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 185,
-  "checkpoint_sha": "88ae2a0169a1e820cf0f45a3a4b87a945fc0691e",
+  "sequence": 186,
+  "checkpoint_sha": "56bf8b32bd52b91ceaa49297494d6fe4666ef21f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-008 original-Go TLS protected Rust product integration: first actual FEC Fixed native requested/pending/applied and real source/parity/recovery; next Auto authentic M2; then real Game2/4 lanes. User explicitly accepts M3 native codec functional tests as success; stop network matrix expansion.",
-  "why_now": "Recovery S222 audited every H184→S221 commit. Authentic Normal OFF 20Mbps loss0 SUCCESS39252845558, 1% SUCCESS39254760343, 5% SUCCESS39255888901 with real application missing; previous 1% FAIL39254185879 retained. Governance latest source2656 SUCCESS39255888929, unrelated original historical 403/structure FAIL preserved. M1 Game dedup integrated; M3 FEC native ISA-L13/13 and wire23/23 accepted; producer old ABBA performance remains INCONCLUSIVE. Original FEC Fixed/Auto and Game2/4 native applied+kernel RX recovery still NOT_RUN.",
-  "done_when": "Original Go/TLS authenticated real Normal→FEC fixed→auto and Game2/4 same Rust owner with genuine native applied/rejected, end-to-end encrypted data/recovery and Stop/MTU/first-delivery under bounded netns SOURCE Actions. Do not enable product defaults, CLI/GUI/Windows/physical/500Mbps/p99 or claim FEC/Game until exact proof.",
-  "next_action": "Implement real original-Go protected Rust FEC Fixed staged request→actual owner APPLIED and native encrypted source/parity+RX recovery via real M3/M1 owner, verifying on Actions in a single compact function batch; use frozen native codec, no probe-only substitution. Then Auto with M2 authentic feedback and Game2/4 true lane before enabling product capability.",
+  "current_task": "User-prioritized PLAN012 true FEC2 Fixed→Auto and Game2/4 original-Go authenticated Rust product integration. Main delegated M1 whole Game lane runtime016 and M3 narrow product FEC record API019; M0 solely owns full real protected Go/Rust/driver/CI and product qualification; already accepted codec/Game modules not retested.",
+  "why_now": "Recovered H185 scope CLEAN. S223 atomic PLAN012 decision+registry published M1 Game lane016; S224 exact code inspection proved M3 record source/repair AEAD/replay API presently test-gated so published M3 FEC product record019, no change epoch/revision/branch. M3 native FEC ISA-L13/13 + wire23/23 accepted as user asked; old ABBA perf INCONCLUSIVE. S223 Governance39257625290 SUCCESS and maintenance39257625089 SUCCESS. S224 Governance39258383418 original FAIL GitHub HTTP403 rate_limited (not source code failure); maintenance39258383599 SUCCESS, bootstrap39258383457 SUCCESS, central audit still pending when checked. No real FEC/Game release yet.",
+  "done_when": "Authentic original Go client/server mode Fixed, Auto, Game2/4 actual Rust owner applied/readback with real kernel source/parity recovery and multi-lane app delivery, M2 original authenticated feedback, Stop/MTU/no HOL, source-locked combined Actions. Default release FEC2 OFF and Game reject until each mode's actual product qualifications proved; physical/Windows/RTT p99 NOT_RUN.",
+  "next_action": "Consume M3 frozen release-record feature/API from new task019 when source+Actions validated; then implement protected original-Go/Rust background-owner FEC Fixed source+parity and RX recovery to TUN with genuine applied ACK and Stop in M0-owned entry, run one bounded source-locked real netns function Action. Independently prepare M0 multi-lane protected admission for M1 Game ticket contract; do not overwrite worker-owned files.",
   "unverified": true,
   "last_tested_source": "6ee471c79f0e1f08b6b4d77a961d44d15cbc842d",
   "evidence_refs": [
     "docs/evidence/M0/PLAN011-normal-loss-1-5-10-20-30-20261019.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md",
     "docs/devlog/M0/PLAN011-20261019-recovered-S221-and-FEC-GAME-priority.md",
-    "docs/evidence/M0/PLAN011-NORMAL20-CONTINUOUS-NETNS-LOSS1-20261019.json",
     "docs/evidence/M0/PLAN010-M1-M3-accepted-M4-016-handoff-20261019.json",
-    "docs/decisions/M0-integration-unblock-2026-10-19.md"
+    "docs/evidence/M0/PLAN011-NORMAL20-CONTINUOUS-NETNS-LOSS1-20261019.json"
   ],
   "open_requests": [],
-  "partial_summary": "H185 recovery CLEAN of 18 linear commits; S222 records exact run39255888901 5% Normal/OFF sustained SOURCE2656, loss not repaired, and user FEC/Game launch priority. Existing M3 native codec functional PASS accepted, historical ABBA formal perf INCONCLUSIVE/other CI FAIL retained; M1 Game shared dedup accepted/in main. No FEC Fixed/Auto/Game product apply or real multi-lane qualification; FEC2 OFF; one next action: actual Fixed mode real sender/recovery integration."
+  "partial_summary": "H186: atomic S223/S224 PLAN012 current task entry and new M1 Game lane runtime016 + M3 FEC release-record API019 published; old worker results accepted, no epoch change or worker cursor edits. M3 codec native13/wire23 PASS, historical ABBA performance INCONCLUSIVE; Game015 already main accepted. Main S224 Governance HTTP403 quota FAIL preserved, not disguised as PASS. Production FEC2 OFF; original Go product Fixed/Auto/Game2/4 actual applied and continuous real RX/TX NOT_RUN. M0 next one action source-locked original owner real Fixed integration once M3 release API arrives."
 }
