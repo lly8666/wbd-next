@@ -10,7 +10,6 @@ mod accepted_code8cc;
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::hint::black_box;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
-use std::time::Instant;
 use wbd_codec::fec_v2 as candidate_code437;
 
 const ACCEPTED_SHA: &str = "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e";
@@ -77,6 +76,30 @@ impl AllocCounts {
     }
 }
 
+// Linux x86_64 CLOCK_MONOTONIC is the same clock domain as Python
+// time.monotonic_ns() on the paired-run host (clockid_t=1). These are
+// absolute readings within one boot, NOT epoch/wall-clock timestamps.
+// Extern libc ABI matches timespec {time_t, long} on Linux x86_64.
+// The symbol is provided by the platform C runtime, no new Cargo dep.
+#[repr(C)]
+struct MonotonicTimespec {
+    tv_sec: i64,
+    tv_nsec: i64,
+}
+unsafe extern "C" {
+    fn clock_gettime(clock_id: i32, ts: *mut MonotonicTimespec) -> i32;
+}
+fn monotonic_ns() -> u128 {
+    let mut ts = MonotonicTimespec { tv_sec: 0, tv_nsec: 0 };
+    // SAFETY: pointer references a live, writable timespec with the
+    // Linux x86_64 C ABI. CLOCK_MONOTONIC always has clock ID 1.
+    let rc = unsafe { clock_gettime(1, &mut ts) };
+    assert_eq!(rc, 0, "CLOCK_MONOTONIC read failed");
+    assert!(ts.tv_sec >= 0 && (0..1_000_000_000).contains(&ts.tv_nsec),
+        "invalid CLOCK_MONOTONIC timespec");
+    ts.tv_sec as u128 * 1_000_000_000 + ts.tv_nsec as u128
+}
+
 // Linux process user+system CPU ticks; use getconf CLK_TCK from the same
 // runner to interpret ticks. A zero or too-short window is INCONCLUSIVE.
 fn process_cpu_ticks() -> Option<u64> {
@@ -133,6 +156,7 @@ fn m3_plan008_fec2_e4_old_new_abba() {
     ).collect::<Vec<_>>();
 
     let mut prior_checksum = None;
+    let mut prior_end_monotonic_ns = None;
     for (leg, version) in ["A", "B", "B", "A"].into_iter().enumerate() {
         // Distinct per-leg owner instances. Warm exactly one e4 decode
         // before collecting cost: compare the steady/hot cache path only.
@@ -162,7 +186,13 @@ fn m3_plan008_fec2_e4_old_new_abba() {
 
         let cpu_begin = process_cpu_ticks();
         let alloc_begin = AllocCounts::snapshot();
-        let start = Instant::now();
+        // Bracket ONLY the steady-state recovery loop with two absolute
+        // monotonic readings. No inter-leg clock inference.
+        let start_monotonic_ns = monotonic_ns();
+        if let Some(last_end) = prior_end_monotonic_ns {
+            assert!(start_monotonic_ns >= last_end,
+                "ABBA leg monotonic intervals overlap or move backward");
+        }
         let mut checksum = 0u64;
         if version == "A" {
             for _ in 0..ITERATIONS_PER_LEG {
@@ -182,7 +212,11 @@ fn m3_plan008_fec2_e4_old_new_abba() {
             }
         }
         black_box(checksum);
-        let wall_ns = start.elapsed().as_nanos();
+        let end_monotonic_ns = monotonic_ns();
+        assert!(end_monotonic_ns > start_monotonic_ns,
+            "empty/reversed monotonic recovery interval");
+        let wall_ns = end_monotonic_ns - start_monotonic_ns;
+        prior_end_monotonic_ns = Some(end_monotonic_ns);
         let alloc = AllocCounts::snapshot().since(alloc_begin);
         let cpu_ticks = cpu_begin.zip(process_cpu_ticks())
             .map(|(before, after)| after.saturating_sub(before));
@@ -205,7 +239,8 @@ fn m3_plan008_fec2_e4_old_new_abba() {
             "M3_018_ABBA leg={leg} version={version} backend=NativeIsaL k={K} r={R} \
              frame_bytes={FRAME_LEN} e=4 recoveries={ITERATIONS_PER_LEG} \
              checksum={checksum} wall_ns={wall_ns} cpu_ticks={} cpu_window={cpu_state} \
-             alloc_calls={} alloc_requested_bytes={} inverse_entries={inverse_entries} \
+             start_monotonic_ns={start_monotonic_ns} end_monotonic_ns={end_monotonic_ns} \
+             monotonic_clock=CLOCK_MONOTONIC alloc_calls={} alloc_requested_bytes={} inverse_entries={inverse_entries} \
              native_tables={native_tables} reported_retained_payload_bytes={retained_payload} \
              product=OFF packet_p99=NOT_RUN first_delivery=NOT_RUN",
             cpu_ticks.map_or("UNKNOWN".into(), |n| n.to_string()),
@@ -217,6 +252,6 @@ fn m3_plan008_fec2_e4_old_new_abba() {
          order=ABBA scope=CODEC_ONLY native=ACTUAL_ISAL \
          overhead=COUNTED_GLOBAL_ALLOCATOR source_copy_bytes=NOT_INSTRUMENTED \
          allocations=REQUESTED_GROSS_BYTES cpu_window_requires_1s_and_100ticks \
-         upstream_isal_source=PIN_EXTERNALLY product=OFF"
+         absolute_leg_bounds=CLOCK_MONOTONIC_NS upstream_isal_source=PIN_EXTERNALLY product=OFF"
     );
 }
