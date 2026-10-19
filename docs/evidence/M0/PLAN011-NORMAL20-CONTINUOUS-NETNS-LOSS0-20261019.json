@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "result": "PASS_SCOPED_20MBPS_PER_DIRECTION_CONTINUOUS_NORMAL_OFF_DEV_LOOPBACK_LOSS0",
+  "source_sha": "896faa72cbe8ef8a8f37948c657ce1c57ce9028a",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "intent": "docs/devlog/M0/PLAN011-20mbps-sustained-normal-off-intent-20261019.md",
+  "workflow": ".github/workflows/m0-normal20-continuous.yml",
+  "run_id": 39252845558,
+  "attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39252845558",
+  "build_job_id": 118060662248,
+  "measure_job_id": 118061302110,
+  "build_job_result": "success",
+  "measure_job_result": "success",
+  "result_artifact": {
+    "id": 12186476532,
+    "sha256": "55e2dcaaf94edeba8625155d684e42e6fb101299b45c50c94cfd04bf600170c6",
+    "summary_file_sha256": "b4429309d479ab99c40fe8105d0fe112036eefd11cd16c3e2b8540c60cbf303b",
+    "raw_file_sha256": "1ac48f46db0a16d605b91cd4c2da65e736aa8fc49f6bf3c5b94f22a95f5fa8ee"
+  },
+  "build_artifact": {
+    "id": 12185284718,
+    "sha256": "594188e1f67fa27d44e30415b943a0bb4ab4945c5695a1eb435b58fe703b6bba",
+    "binary_sha256": {
+      "owner-go.test": "15775200a6d922cde490e73339dd8f0aece4a0eae9c4d4e4694568d634e5ce84",
+      "libwbd_engine.so": "b845e5793543136ed53eabf1b15ac12a48b844f1909e4592f6b6f2e2784213a2"
+    }
+  },
+  "manifest_sha256": "090e0714ccfdb6e39f480b3fd4c255dca0ba9dfc8f0d951a1746aec26f503dbe",
+  "kernel_log_sha256": "caa7f406d7603f1bffda745f61238974f6c4d574c0e042e00fd7430b5a901964",
+  "network": "real isolated Linux x86-64 network namespace loopback with original Go credential/TLS, original Rust Normal OFF persistent independent RX/TX owner workers and real raw IPv4/TCP plus /dev/net/tun real UDP application, developer feature only",
+  "measurement": {
+    "warmup_seconds": 10,
+    "measure_seconds": 60,
+    "drain_seconds": 3,
+    "mode": "Normal_OFF",
+    "netem_loss_percent": 0,
+    "offered_mbps_each_direction_inner_ipv4": 20,
+    "size_mix_ipv4_bytes": [
+      64,
+      256,
+      1200,
+      1329
+    ],
+    "actual_s2c_inner_ipv4_budget": 1329,
+    "c2s": {
+      "offered_packets": 210600,
+      "delivered_packets": 210600,
+      "missing": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "send_errors": 0,
+      "offered_mbps": 19.99998,
+      "delivered_mbps": 19.99998,
+      "samehost_app_age_p99_us": 112
+    },
+    "s2c": {
+      "offered_packets": 210600,
+      "delivered_packets": 210600,
+      "missing": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "send_errors": 0,
+      "offered_mbps": 19.99998,
+      "delivered_mbps": 19.99998,
+      "samehost_app_age_p99_us": 132
+    },
+    "rust_rx_worker_cpu_s": 3.562426164,
+    "rust_tx_worker_cpu_s": 3.373194022,
+    "loopback_kernel_rx_dropped": 0,
+    "loopback_kernel_tx_dropped": 0,
+    "cpu_psi_avg60_before": 1.55,
+    "cpu_psi_avg60_after": 1.83,
+    "rss_kib_before": 20252,
+    "rss_kib_after": 44412,
+    "rss_hwm_kib_after": 55556,
+    "cgroup_cpu_quota": "UNAVAILABLE"
+  },
+  "interpretation": "Verified real 20Mbps INNER IPV4 logical offered and delivered for both directions during exactly one 60s lossless single-host developer Action, one cipher, mixed real IP sizes. This permits the next one-scenario measured impaired 20Mbps trial but is not a formal cross-VM 10Mbps vs 20Mbps throughput comparison, not independent host capacity, and not product enabled.",
+  "limitations": {
+    "native_linux_dev_capacity": "SCOPED_PASS",
+    "full_original_go_cli_gui_windows": "NOT_RUN",
+    "true_fec_fixed_auto_and_game_lanes": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "same_vm_old_new_paired_performance": "NOT_RUN",
+    "independent_RTT_p99": "NOT_RUN",
+    "separate_injector_process_CPU": "NOT_RUN",
+    "full_veth_external_syn_and_driver_loan": "NOT_RUN",
+    "full_product_FEC2": "OFF",
+    "formal_500mbps": "NOT_RUN"
+  },
+  "next_action": "Run one exact-source separate 20Mbps-per-direction real netns 1% loss observation using immutable artifact 12185284718; only proceed to 5/10/20/30 if injector/host capacity is acceptable, preserve actual missing/drop and no FEC/Game qualification."
+}
