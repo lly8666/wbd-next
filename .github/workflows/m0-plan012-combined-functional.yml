@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/m0-plan012-combined-functional.yml"
+      - "crates/wbd-engine/src/v4_game_lane.rs"
 permissions: {contents: read}
 concurrency:
   group: m0-plan012-combined-functional-${{ github.sha }}

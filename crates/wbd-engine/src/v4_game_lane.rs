@@ -60,7 +60,7 @@ impl GameAdapter{
             delivered_window:4096,open_blocks:64,open_bytes:256*1024
         }).ok_or(Error::Invalid)?;
         let arena=Arena::new(905,256,2048,256,1024*1024)
-            .ok_or(Error::Capacity)?;
+            .map_err(|_|Error::Capacity)?;
         Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false})
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
@@ -69,7 +69,7 @@ impl GameAdapter{
         if data.is_empty()||data.len()>1200{return Err(Error::Invalid)}
         let id=self.tx.next_packet().ok_or(Error::Stopped)?;
         let packet=wbd_codec::encode_game(id,data,1216).map_err(|_|Error::Invalid)?;
-        let mut slab=self.arena.allocate().ok_or(Error::Capacity)?;
+        let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
         let end=14+packet.len();
         slab.writable()[14..end].copy_from_slice(&packet);
         let offered=self.tx.offer(slab,14..end,Mode::Game,31+packet.len(),
@@ -110,7 +110,7 @@ impl GameAdapter{
         let (id,payload)=wbd_codec::decode_game(opened.payload,1216)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>1200{return Err(Error::Invalid)}
-        let mut owned=self.arena.allocate().ok_or(Error::Capacity)?;
+        let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
         owned.writable()[14..14+payload.len()].copy_from_slice(payload);
         match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
             Ok(mut b)=>Ok(Some(b.writable()[14..14+payload.len()].to_vec())),
