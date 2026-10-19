@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 173,
-  "checkpoint_sha": "40dcd5e9ce5d7ea987b5a494e493ef6534360f81",
+  "sequence": 174,
+  "checkpoint_sha": "2aec2a7b6f49dbbb19b23edf5bd3aa2a74b46062",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-009 §5 short precondition: M0 main-only central G2-attested automatic workflow_dispatch for M1/M3, frozen v6 preflight fixed, worker intents remain owned; R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025 product integration continues, FEC2 production OFF.",
-  "why_now": "User reported M1/M3 cannot trigger GHA. M0 created main-owned dispatcher with actions:write token only in protected runner and read-only G2 artifact exact SOURCE, worker task/epoch/path/config/source/I and duplicate protections. Action39204817044 first real G2->v5 dispatch PASS for M1 I26c9 and M3 I857a, but v5 39204910923 and 39204914148 both authorize FAIL unrecognized --stage; no Cargo test run. Never rewrote v5 frozen branch or worker intents. M0 released v6 exact freeze fab2 with corrected positional preflight plus required --stage and negative CLI tests, source-locked Actions 39205218653 smoke /39205218741 maintenance/39205218683 main governance all PASS. Dispatcher promoted to v6 CODE05af, Action39205332501 actual PASS with empty decisions (no v6 worker intents yet), maintenance39205332381 and governance39205332571 PASS. New worker migration exact request IDs and field deltas recorded Issue14, S40d evidence/runbook and governance39205807839 PASS. Actual M1/M3 v6 prepare and paired NOT_RUN, no worker cursor/code or registry permission edits.",
-  "done_when": "PLAN-009 §5 public entry contract/identity/negative smoke and fixed SHA+call examples published. Worker-specific prepare/paired are autonomous ownership, not an M0 task PASS; actual CI execute and receipt verification left to worker. R0-025 still needs true Go/Rust authenticated reverse C2S kind1 and M2 mature firstsend automatic quality, plus actual old-Go product ingress and M4 assembly; keep qualification hard gates OFF.",
-  "next_action": "M1 and M3 independently commit fresh worker-owned v6 JSON request IDs M1-GAME015-AB-PREP-003 and M3-018-NATIVE-E4-PREPARE-002 (unchanged SOURCE/fixture, updated request ID/control_ref/control_sha). Ordinary worker push -> Governance -> central full G2 scope PASS -> main dispatcher automatically verifies I and invokes v6 prepare with Actions token; no M0 clicks/tokens/worker root grants. Validate real prepare run/attempt/binary manifest then worker publishes distinct paired request I; no paired before success. Monitor future workflow_run only if user explicitly wants continued monitoring; no background guarantee. Resume R0-M0-025 original client/server production integration, keep FEC2 OFF and historical netem 150ms-C FAIL.",
+  "current_task": "RECOVERED H174 PLAN-009: central G2 PASS but M0 dispatcher workflow_run job skipped due mutable run-name check; M1 worker Governance legacy G2 ancestry FAIL retained. Repair public entry as short prerequisite before R0-M0-025.",
+  "why_now": "After H173 main cursor-only HEAD, M1 S24/H24 central exact G2 passed, yet main dispatcher 39206705410/39206773772 skipped; GitHub central API dynamic run-name differs static workflow name required in main workflow/runner. Recorded actual FAIL/PASS/SKIP per SOURCE in recovered S174; no v6 prepare sent.",
+  "done_when": "PLAN-009 §5 central G2-to-v6 triggering correct on real worker SOURCE with exact run/attempt and any failures honestly recorded, no worker cursor/token changes; R0-M0-025 Normal product slice still partial.",
+  "next_action": "Main-owned shared CI repair dynamic run-name identity to stable scope-audit workflow path/ID, preserve exact SOURCE G2 and dedupe guards; test only in Actions and capture v6 M1 prepare or explicit failure. M3 needs worker-owned fresh v6 request. Then resume R0-M0-025 true Go/Rust integration.",
   "unverified": true,
   "last_tested_source": "05af40990b5d7c3095ee95f3637a968e1620ae7b",
   "evidence_refs": [
     "docs/evidence/M0/PLAN009-auto-worker-dispatch-v6-05af40990b5d7c3095ee95f3637a968e1620ae7b.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/PLAN009-H173-recovery-dispatch-trigger-20261019.md",
     "docs/devlog/M0/PLAN009-auto-worker-dispatch-v6-20261019.md",
     "docs/devlog/M0/PLAN-009-worker-ci-v6-migration.md",
     "docs/devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md",
@@ -27,5 +28,5 @@
     "docs/history/INDEX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H173 PLAN009 M0 central automatic dispatch validated; product M0-025 partial/unverified FEC2 OFF. M1+M3 exact G2 runs 39201507034 and39202883789, first actual main dispatcher run39204817044 PASS and both v5 authorize failed CLI no --stage, Cargo NOT_RUN. Fixed forward-only control qualification/worker-ci-v6 @ fab2e1d7; smoke39205218653, maintenance39205218741, governance39205218683 3/3 PASS. Main dispatcher CODE05af Action39205332501 PASS empty decisions until new worker v6 intent. Issue14 worker-specific v6 IDs/new request field instructions. M0 evidence S40d and governance39205807839 PASS. No worker owner files/cursor touched, duplicates not retried, paired only after exact prepare. Continue product integration separate."
+  "partial_summary": "RECOVERED H174: main checkpoint H173→HEAD only cursor, M1/M3 only H cursors. M1 39206478349/39206548038 worker Governance FAIL inherited ancestry; same SOURCE central G2 39206492421/39206565174 PASS. Downstream dispatcher 39206705410/39206773772 SKIPPED before job. No v6 workflow_dispatch (only old v5 authorize FAIL), costs/product NOT_RUN. Repair intent is S2aec; preserve old outcomes."
 }
