@@ -107,11 +107,15 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "e8d86b535ba04914c69f24f717fad775da2cd4ac",
+      "result_blob": "9ffe62b1ab779e3bd1e226c0e8f29714b8a72a7f",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
           "replace": "{\"fec-mode\",\"legacy\"},{\"fec.mode\",\"off\"},{\"fec.profile\",\"strong\"},{\"fec.auto_policy\",\"normal\"},{\"fec.auto_start_profile\",\"strong\"}"
+        },
+        {
+          "find": "                    p.Values[\"fec-parity\"] = 0; p.Values[\"lanes\"] = 1;\n                    // Native Go admission",
+          "replace": "                    p.Values[\"fec-parity\"] = 0; p.Values[\"lanes\"] = 1;\n                    // Real original Go --check-config distinguishes saved\n                    // request from Rust-applied state without a fake ACK.\n                    foreach (string mode2 in new[]{\"fixed\",\"auto\"}) {\n                        p.Values[\"fec.mode\"]=mode2;\n                        store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                        var fec2Result=Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));\n                        Assert(Convert.ToString(fec2Result[\"fec.status\"])==\"rejected\" &&\n                               Convert.ToString(fec2Result[\"fec.applied_profile\"])==\"unknown\",\n                               \"native GUI FEC2 requested but unwired remains rejected/unknown\");\n                    }\n                    p.Values[\"fec.mode\"]=\"auto\"; p.Values[\"lanes\"]=2;\n                    store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                    bool gameAutoRejected=false;\n                    try {Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));}catch{gameAutoRejected=true;}\n                    Assert(gameAutoRejected,\"Game auto FEC2 explicitly rejected by original Go client\");\n                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    // Native Go admission"
         }
       ]
     },
