@@ -4,25 +4,27 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 39,
-  "checkpoint_sha": "3f49a10f08de4cd3048be07a18d9aee715e4558e",
-  "progress": "in_progress",
+  "sequence": 40,
+  "checkpoint_sha": "1d5806655796edd360b7abc4c2078f857cc73eea",
+  "progress": "verifying",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "M4-016 Windows original Go product: native WFP persistent install/readback/rollback helper code and source-locked I009 Windows-2022 Go/WinForms negative test PASS; full real network Connect/Stop/Recover NOT_RUN.",
-  "why_now": "I009 exact source f1e790f Actions39300163157 attempt1 identity118222997110 and Windows-2022 native Go/GUI118223121805 SUCCESS; central G2 H38 run39299064097 212 commits PASS. 37 pinned manifest ops, unchanged donor12; test only validates fail-before-write, no global WFP activation.",
+  "current_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016: S40 adds one original Go Windows-2022 20-test native WAL/owner/WFP state functional batch; I010 immutable source request in flight. Live product Connect/Stop/Recover, Windows2025 and isolated global WFP not qualified.",
+  "why_now": "I009 passed exactly-scoped WFP prewrite plan unit tests. Frozen workflow currently only Windows-2022 hosted non-isolated. Additional 20 native mutex/owned WAL/guard/readback-negative Go fixtures now requested once via I010, without host-wide network mutation.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "On a proven isolated recoverable Windows host with M0-authenticated Rust Stop, validate one actual original Go owned WFP/route/DNS/IPv6 Connect→Stop→Recover readback and preserve exact SOURCE receipts; absent that host/Stop, retain product guard OFF and do not repeat scoped I009.",
+  "next_action": "Consume I010's actual central G2 and Windows job logs/artifacts once; fix first real scoped failure if any; publish SOURCE-separated PASS/FAIL/NOT_RUN M0 interface handoff without claiming true network until isolated Windows and authenticated Stop are verified.",
   "unverified": true,
   "last_tested_source": "f1e790fcd00d9e3425a1f8e771e099f84ac4b891",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-010.json"
+  ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H39 S3f49a10 exact I009 SOURCE f1e790f native Windows2022 scoped PASS run39300163157, named WFP exact-arm preflight 8 negative subtests PASS, Go/portable WinForms PASS; artifact provider digests recorded, ZIP independent extraction NOT_RUN. Prior I008 scoped PASS, I002/I005 FAIL, old worker Governance FAIL preserved. Production WFP Arm, true Connect/Stop/Recover, DNS/IPv6/route, Rust Stop, Windows2025/physical NOT_RUN; FEC2 OFF."
+  "partial_summary": "S40 SOURCE3bbec46b I010 1d580665: one Windows-2022 20-test Go native WAL/recovery/OS gate/WFP read-only batch plus existing original CLI/GUI/assembler in fixed workflow. I009 exact SOURCE f1e790f PASS retained; I002/I005 FAIL retained. I010 job NOT_RUN until Actions. M0-owned isolated runner/Windows2025/real Rust Stop absent; true WFP/Connect/Stop/DNS/IPv6/route remain NOT_RUN, FEC2 OFF."
 }
