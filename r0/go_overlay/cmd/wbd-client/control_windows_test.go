@@ -1,0 +1,64 @@
+//go:build windows
+
+package main
+
+import (
+	"context"
+	"golang.org/x/sys/windows"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestGUIControlStopAndOwnerEOF(t *testing.T) {
+	for _, stop := range []bool{false, true} {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		go watchGUIControl(r, cancel)
+		if stop {
+			if _, err = w.WriteString("ignored\nstop\n"); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			w.Close()
+		}
+		select {
+		case <-ctx.Done():
+		case <-time.After(time.Second):
+			t.Fatal("GUI stop/owner EOF did not cancel")
+		}
+		r.Close()
+		w.Close()
+		cancel()
+	}
+}
+
+func TestGUIClientSlotFencesUntilCleanupEnds(t *testing.T) {
+	h, err := acquireGUIClientSlot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h2, err := acquireGUIClientSlot(); err == nil {
+		windows.CloseHandle(h2)
+		windows.CloseHandle(h)
+		t.Fatal("overlapping GUI client allowed")
+	}
+	windows.CloseHandle(h)
+	h, err = acquireGUIClientSlot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	windows.CloseHandle(h)
+}
+
+// Original portable v4 no longer accepts a runtime script pathname.\nfunc TestWindowsDefaultFilesAnchorToExecutable(t *testing.T) {
+	exe,err:=os.Executable()
+	if err!=nil {t.Fatal(err)}
+	if defaultWindowsStatePath()!=filepath.Join(filepath.Dir(exe),"data","network-state.json") {
+		t.Fatal("Windows portable defaults depend on caller working directory")
+	}
+}
