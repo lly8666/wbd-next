@@ -139,7 +139,8 @@ jobs:
           grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
           grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
           grep -q 'M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
-          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           p=pathlib.Path("fixed-kernel-result")
@@ -167,7 +168,8 @@ jobs:
             M4_Windows_network="NOT_RUN_DEFERRED",
             M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_AUTHENTIC_MATURE_FIXED_APPLIED",
             Fixed_revision4_mature_original_go_M2="PASS_LINUX_SCOPED_AUTHENTIC_2S_AFTER_CLIENT_TUN",
-            Auto_mode_product="NOT_RUN",
+            Auto_initial_profile_authenticated_M2_APPLIED="PASS_LINUX_SCOPED_STARTUP_PROFILE_ONLY",
+            Auto_dynamic_512_mature_samples="NOT_RUN",
             fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
             network_multiblock="NOT_RUN",
             repeatable_background_multiblock_product="NOT_RUN",
