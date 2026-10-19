@@ -399,8 +399,41 @@ mod m4_plan012_owned_stop_tests {
 
     #[test]
     fn r1_m4_plan012_real_tun_fd_stop_only_in_isolated_linux_netns() {
-        if std::env::var("WBD_M4_PLAN012_ISOLATED_NETNS").as_deref() != Ok("1") {
-            eprintln!("M4_PLAN012_NATIVE_TUN_FD_NOT_RUN: requires isolated netns");
+        let isolated = std::env::var("WBD_M4_PLAN012_ISOLATED_NETNS")
+            .as_deref() == Ok("1");
+        if !isolated {
+            if std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {
+                // This is an opt-in privileged positive, never a local
+                // developer host assertion or an implicit sudo operation.
+                eprintln!("M4_PLAN012_NATIVE_TUN_FD_NOT_RUN: requires Actions");
+                return;
+            }
+            // No shared workflow edits: the frozen worker-native runner is
+            // permitted to spawn ONE fresh Linux network namespace. Do NOT
+            // touch the runner's original namespace, routes or DNS. Root is
+            // used only INSIDE this dedicated netns to open a nonpersistent
+            // TUN, and the child exits with the last owned descriptor.
+            let exe = std::env::current_exe().expect("self source-locked test executable");
+            let test = concat!(
+                "linux_tun_sink::m4_plan012_owned_stop_tests::",
+                "r1_m4_plan012_real_tun_fd_stop_only_in_isolated_linux_netns");
+            let output = std::process::Command::new("sudo")
+                .arg("-n").arg("unshare").arg("--net").arg("--")
+                .arg("env")
+                .arg("GITHUB_ACTIONS=true")
+                .arg("WBD_M4_PLAN012_ISOLATED_NETNS=1")
+                .arg(exe).arg("--exact").arg(test).arg("--nocapture")
+                .output().expect("sudo isolated netns child must launch");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(output.status.success()
+                && stdout.contains("running 1 test")
+                && stdout.contains(&format!("test {} ... ok", test))
+                && stderr.contains(
+                    "M4_PLAN012_REAL_LINUX_TUN_FD_REPEAT_STOP_POST_STOP_DENY_OWNED_CLEANUP_PASS"),
+                "isolated real TUN Stop failed (not a scoped PASS): status={:?} stdout={} stderr={}",
+                output.status, stdout, stderr);
+            eprintln!("M4_PLAN012_ISOLATED_NETNS_REAL_TUN_CHILD_VERIFIED_PASS");
             return;
         }
         assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"),
