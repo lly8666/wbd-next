@@ -86,5 +86,6 @@
     "original full Go/Windows/ARM/physical/D10 p99 product tests"
   ],
   "product_FEC2": "OFF",
-  "scope_exclusions": "No modifications to M1/M3/M4 source, requests, branches, cursors, registry or scopes; no module-specific dispatch by M0."
+  "scope_exclusions": "No modifications to M1/M3/M4 source, requests, branches, cursors, registry or scopes; no module-specific dispatch by M0.",
+  "source_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8"
 }
