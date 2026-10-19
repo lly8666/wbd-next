@@ -104,6 +104,7 @@ jobs:
           assert len(re.findall(r"^--- FAIL:",go,re.M))==0 and re.search(r"^PASS$",go,re.M)
           assert len(re.findall(r"M0_ORIGINAL_GO_TLS_LIVE_AUTO_APPLIED_NO_IDLE_WRITES_PASS cipher=",go))==3
           assert len(re.findall(r"M0_REAL_GO_TLS_FIXED_REV2_PENDING_RUST_APPLIED_REV1_PASS cipher=",go))==3
+          assert len(re.findall(r"M0_ORIGINAL_GO_RUST_QUIESCENT_OFF_APPLIED_PASS cipher=",go))==3
           assert "M0_ORIGINAL_GO_TLS_THREE_OWNER_PROCESS_GLOBAL_M2_CAP_PASS registered=3 two_32KiB=held third=denied stop_unused=reclaimed independent_owner=preserved" in go
           assert "r1_m0_original_owner_fec2_source_repair_same_pn_staged ... ok" in rust
           assert "r1_m0_original_m1_fec2_sourcefirst_due_rs16_e1_pressure ... ok" in rust
@@ -111,6 +112,7 @@ jobs:
           assert "M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes=1122" in rust
           kernel=(root/"real-kernel.log").read_text()
           assert "M0_REAL_GO_TLS_FEC2_OWNER_M4_KERNEL_RAW_TX_SCOPED_PASS" in kernel
+          assert "M0_ORIGINAL_KERNEL_QUIESCENT_OFF_NO_FEC_PN_PASS applied_off=1 blocked_new=1 foreign=deny" in kernel
           for suite in [1,2,3]:
               assert f"M0_REAL_GO_TLS_ORIGINAL_RUST_FEC2_M4_RAW_TX_PASS suite={suite}" in kernel
               assert f"M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite={suite} e=1 restored=127 source_pn=0 parity_pn=1" in kernel

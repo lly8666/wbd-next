@@ -410,6 +410,11 @@ fn fec2_probe_real_kernel_raw_once(
         ||e.fec2_receipt_sender.is_some(){
         return Err(BAD_STAGE)
     }
+    // Actual OFF means no new M1 source/parity or M3 PN can be sealed.
+    // A newer requested enable may only become applied after M4 copies a
+    // new authenticated block; a stale OFF status cannot send anything.
+    if e.owner.fec2_probe_applied_policy().is_some_and(|(p,_)|p==7)
+        && e.fec2_probe_pending_policy.is_none(){return Err(BAD_STAGE)}
     if e.raw_tx.is_none(){
         let raw=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
             .map_err(|_|INVALID)?;
@@ -1263,7 +1268,7 @@ fn bind_fec2_from_private_go(
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_stage_policy(
     handle:u64,epoch:*const u8,len:usize,profile:u8,revision:u64
 )->i32{
-    if epoch.is_null()||len!=16||profile>6||revision==0{return INVALID}
+    if epoch.is_null()||len!=16||profile>7||revision==0{return INVALID}
     let mut exact=[0u8;16];
     exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,len)});
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -1274,6 +1279,20 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_stage_policy(
     let Some((_,applied))=e.owner.fec2_probe_applied_policy()else{return BAD_STAGE};
     let latest=e.fec2_probe_pending_policy.map_or(applied,|(_,r)|r);
     if revision<=latest{return INVALID}
+    if profile==7 {
+        // M0: no new FEC block can be admitted while an old immutable
+        // shadow remains unsettled. A process-global repair grant is never
+        // inferred released; the existing Stop owner retires its budget.
+        if e.arena.report().loaned!=0||
+           e.fec2_receipt_sender.as_ref().is_some_and(
+               |s|s.shadow.outstanding()!=0
+           ){return BAD_STAGE}
+        if e.owner.apply_fec2_probe_quiescent_off(exact,revision).is_err(){
+            return BAD_STAGE
+        }
+        e.fec2_probe_pending_policy=None;
+        return OK
+    }
     e.fec2_probe_pending_policy=Some((profile,revision));
     OK
 }

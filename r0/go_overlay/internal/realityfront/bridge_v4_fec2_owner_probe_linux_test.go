@@ -92,11 +92,24 @@ func TestR0V4Fec2ActualGoTLSEpochOwnerGrantScoped(t *testing.T){
             off:=fixed
             off.Mode=FecV2Off
             off.ConfigRevision=3
-            if _,e:=auto.ApplyOperatorConfig(scoped.protectedEpoch,
-                off,6*time.Second);e!=errFecV2RuntimeOffUnwired{
-                t.Fatalf("unwired actual Rust OFF falsely ACKed %v",e)
+            quiescent,e:=auto.ApplyOperatorConfig(scoped.protectedEpoch,
+                off,6*time.Second)
+            if e!=nil||quiescent.RequestedRevision!=3||
+                !quiescent.DesiredOff||quiescent.AppliedRevision!=1{
+                t.Fatalf("original Rust OFF transaction not pending %+v %v",quiescent,e)
             }
-            t.Logf("M0_REAL_GO_TLS_FIXED_REV2_PENDING_RUST_APPLIED_REV1_PASS cipher=%d no_false_ack=1 off_unwired=deny",cipher)
+            if e:=auto.Tick(7*time.Second);e!=nil{t.Fatal(e)}
+            quiescent,e=auto.Snapshot()
+            if e!=nil||quiescent.AppliedRevision!=3||!quiescent.AppliedOff{
+                t.Fatalf("actual original Rust did not ACK quiescent OFF %+v %v",quiescent,e)
+            }
+            wrong:=scoped.protectedEpoch
+            wrong[0]^=0x80
+            if e:=scoped.fec2ProbeTryStageExact(wrong,5,4);e==nil{
+                t.Fatal("foreign epoch resumed native FEC2 after OFF")
+            }
+            t.Logf("M0_REAL_GO_TLS_FIXED_REV2_PENDING_RUST_APPLIED_REV1_PASS cipher=%d no_false_ack=1",cipher)
+            t.Logf("M0_ORIGINAL_GO_RUST_QUIESCENT_OFF_APPLIED_PASS cipher=%d revision=3 loans=0 foreign_epoch=deny",cipher)
             oldHandle:=scoped.handle
             if err:=scoped.stopRelease();err!=nil{t.Fatal(err)}
             if e:=auto.Tick(5*time.Second);e!=errFecV2RuntimeStopped{
@@ -365,6 +378,25 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                 if e:=b.fec2ProbeTryStageExact(server.Epoch,6,6);e==nil{
                     t.Fatal("duplicate pending original Go AUTO revision6 accepted")
                 }
+            }
+            if mode=="single"{
+                // Live original kernel M4 driver exists. Quiescent Rust
+                // OFF must prevent all M1 FEC2 block/PN creation.
+                if e:=b.fec2ProbeTryStageExact(server.Epoch,7,2);e!=nil{
+                    t.Fatalf("authenticated native OFF refused: %v",e)
+                }
+                if _,_,_,e:=b.fec2ProbeKernelRawTx(uint32(iface.Index));e==nil{
+                    t.Fatal("original M4 emitted FEC2 block while applied OFF")
+                }
+                wrong:=server.Epoch;wrong[0]^=0x1
+                if e:=b.fec2ProbeTryStageExact(wrong,5,3);e==nil{
+                    t.Fatal("foreign epoch reenabled FEC2 from OFF")
+                }
+                if e:=b.fec2ProbeTryStageExact(server.Epoch,5,3);e!=nil{
+                    t.Fatalf("fresh exact epoch enable after OFF: %v",e)
+                }
+                // Pending enable is NOT applied until actual M4 copy.
+                t.Log("M0_ORIGINAL_KERNEL_QUIESCENT_OFF_NO_FEC_PN_PASS applied_off=1 blocked_new=1 foreign=deny")
             }
             pn,seq,wireLen,e:=b.fec2ProbeKernelRawTx(uint32(iface.Index))
             if e!=nil||pn!=[2]uint64{0,1}||

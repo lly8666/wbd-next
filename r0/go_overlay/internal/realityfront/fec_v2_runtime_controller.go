@@ -12,7 +12,6 @@ import (
 )
 
 var errFecV2RuntimeStopped = errors.New("fec v2: original Go controller stopped")
-var errFecV2RuntimeOffUnwired = errors.New("fec v2: Rust OFF transition not yet wired; refusing fake applied receipt")
 const fecV2RuntimeCadence = 2*time.Second
 
 type fecV2RuntimeBackend interface {
@@ -96,8 +95,9 @@ func (r *fecV2ControlRuntime) Tick(now time.Duration) error {
 // operator input. No product V4 admission or FEC2 permission is granted.
 // The original Rust owner must positively stage the revision before the Go
 // requested state changes; actual applied state changes only on readback.
-// OFF is fail-closed until a native OFF transition+ACK exists, rather than
-// pretending that stopping a timer disabled the real FEC2 sender.
+// OFF requires the authenticated native owner to prove a quiescent
+// transition and return an exact applied revision on subsequent readback;
+// simply stopping a ticker is never an ACK.
 func (r *fecV2ControlRuntime) ApplyOperatorConfig(
     epoch [16]byte,cfg FecV2Config,now time.Duration,
 )(FecV2State,error){
@@ -110,7 +110,6 @@ func (r *fecV2ControlRuntime) ApplyOperatorConfig(
         return r.state,ErrFecV2Scope
     }
     if err:=cfg.validate();err!=nil{return r.state,err}
-    if cfg.Mode==FecV2Off{return r.state,errFecV2RuntimeOffUnwired}
     if cfg.ConfigRevision<=r.cfg.ConfigRevision{
         return r.state,ErrFecV2Revision
     }

@@ -444,13 +444,32 @@ impl ProtectedScopedOwner {
         Ok(())
     }
 
+    // Feature-only authenticated/quiescent OFF is not a zero-parity grade:
+    // 7 is a strictly INTERNAL owner state, never an on-wire profile.
+    // The caller must prove no in-flight M1 loans or unsettled M2 shadow.
+    // Existing ciphertext/record identities are not regenerated/refunded.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    pub(crate) fn apply_fec2_probe_quiescent_off(
+        &mut self,epoch:[u8;16],revision:u64
+    )->Result<(),ProtectedCryptoError>{
+        if !self.is_fec2_probe_bound_to(epoch)||revision==0{
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let current=self.fec2_probe_scope.ok_or(ProtectedCryptoError::Inactive)?;
+        if revision<=current.revision{return Err(ProtectedCryptoError::Inactive)}
+        self.fec2_probe_scope=Some(Fec2ProbeScope{
+            profile:7,revision,..current
+        });
+        Ok(())
+    }
+
     #[cfg(feature="m0_fec2_owner_probe")]
     pub(crate) fn is_fec2_probe_bound_to(&self,epoch:[u8;16])->bool{
         self.state==OwnerPhase::Active&&self.crypto.active
         &&self.fec2_probe_scope.is_some_and(|s|
             s.generation==self.generation&&s.epoch==epoch
             &&s.owner_id==self.token.owner_id()
-            &&s.go_lane==self.go_lane&&s.profile<=6&&s.revision!=0)
+            &&s.go_lane==self.go_lane&&s.profile<=7&&s.revision!=0)
     }
 
     #[cfg(feature="m0_fec2_owner_probe")]

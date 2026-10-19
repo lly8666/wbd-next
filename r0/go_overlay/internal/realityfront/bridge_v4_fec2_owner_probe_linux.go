@@ -396,17 +396,29 @@ func (p fecV2OriginalRustBackend) Readback(
     rc:=C.wbd_m0_embedded_go_fec2_probe_applied_policy(
         C.uint64_t(p.b.handle),&profile,&revision)
     if rc!=0{return FecV2Ack{},fmt.Errorf("%w: Rust applied rc=%d",errV4Embedded,int(rc))}
+    // Rust profile 7 is a private "quiescent OFF" flag, not a grade.
+    // Keep the existing Go FecV2Ack.Off and its exact revision guard.
+    off:=profile==7
+    if profile>7{return FecV2Ack{},ErrFecV2Scope}
+    grade:=FecV2Profile(profile)
+    if off{grade=FecV2Light}
     return FecV2Ack{Client:client,Direction:d,Revision:uint64(revision),
-        Profile:FecV2Profile(profile),Applied:true},nil
+        Profile:grade,Off:off,Applied:true},nil
 }
 func (p fecV2OriginalRustBackend) Stage(epoch [16]byte,v FecV2Intent)error{
     if !p.valid(epoch,v.Client,v.Direction)||
-        (v.Mode!=FecV2Auto && v.Mode!=FecV2Fixed)||
+        (v.Mode!=FecV2Auto && v.Mode!=FecV2Fixed && v.Mode!=FecV2Off)||
         v.Revision==0||!v.Profile.Valid(){return ErrFecV2Scope}
     ack,err:=p.Readback(epoch,v.Client,v.Direction)
     if err!=nil{return err}
-    if ack.Revision==v.Revision && ack.Profile==v.Profile{return nil}
+    off:=v.Mode==FecV2Off
+    if ack.Revision==v.Revision && ack.Profile==v.Profile && ack.Off==off{return nil}
     if ack.Revision>=v.Revision{return ErrFecV2Revision}
+    if off{
+        // Only the Rust owner may assert a quiescent OFF and return ACK.
+        // A rejected unsettled shadow leaves the old Go config unchanged.
+        return p.b.fec2ProbeTryStageExact(epoch,7,v.Revision)
+    }
     return p.b.fec2ProbeTryStageExact(epoch,uint8(v.Profile),v.Revision)
 }
 // Feature-opt-in only; product FEC2 remains OFF. The goroutine runs only

@@ -176,21 +176,26 @@ func TestF2ControlOperatorFixedAutoRevisionScopeAndFailClosedOff(t *testing.T){
     off:=fixed
     off.Mode=FecV2Off
     off.ConfigRevision=3
-    if _,e:=r.ApplyOperatorConfig(epoch,off,4*time.Second);!errors.Is(e,errFecV2RuntimeOffUnwired){
-        t.Fatalf("unwired OFF was treated applied: %v",e)
+    state,e=r.ApplyOperatorConfig(epoch,off,4*time.Second)
+    if e!=nil||!state.DesiredOff||state.RequestedRevision!=3||
+        state.AppliedRevision!=0||len(backend.staged)!=3{
+        t.Fatalf("Go claimed native quiescent OFF before ACK %+v %v",state,e)
     }
-    if e:=r.Tick(5*time.Second);e!=nil{t.Fatal(e)}
-    state,_=r.Snapshot()
-    if state.AppliedRevision!=0||state.RequestedRevision!=2{
-        t.Fatalf("no original Rust ACK rewrote Go UI %+v",state)
-    }
+    // Late applied fixed rev2 must not repaint OFF requested rev3.
     backend.ack=FecV2Ack{Client:cfg.Client,Direction:cfg.Direction,
         Revision:2,Profile:FecV2High,Applied:true}
+    if e:=r.Tick(5*time.Second);e!=nil{t.Fatal(e)}
+    state,_=r.Snapshot()
+    if state.AppliedRevision!=0||state.RequestedRevision!=3{
+        t.Fatalf("late revision repainted OFF %+v",state)
+    }
+    backend.ack=FecV2Ack{Client:cfg.Client,Direction:cfg.Direction,
+        Revision:3,Profile:FecV2Light,Off:true,Applied:true}
     if e:=r.Tick(7*time.Second);e!=nil{t.Fatal(e)}
     state,_=r.Snapshot()
-    if state.AppliedRevision!=2||state.AppliedProfile!=FecV2High||
-        len(backend.staged)!=2{
-        t.Fatalf("Rust applied fixed receipt was not reflected %+v",state)
+    if state.AppliedRevision!=3||!state.AppliedOff||
+        state.AppliedProfile!=FecV2Light||len(backend.staged)!=3{
+        t.Fatalf("native quiescent OFF not applied after true ACK %+v",state)
     }
     r.Stop()
     if _,e:=r.ApplyOperatorConfig(epoch,off,8*time.Second);!errors.Is(e,errFecV2RuntimeStopped){
