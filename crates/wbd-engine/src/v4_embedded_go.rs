@@ -311,6 +311,8 @@ struct Entry{
     protected_features:u16,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fixed_pending:Option<(u8,u64)>,
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fixed_applied:Option<(u8,u64)>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -425,6 +427,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         protected_features:handoff.negotiated_features,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fixed_pending:None,
+        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fixed_applied:None,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -532,7 +536,8 @@ fn fec2_probe_real_kernel_raw_once(
     // A newer requested enable may only become applied after M4 copies a
     // new authenticated block; a stale OFF status cannot send anything.
     if e.owner.fec2_probe_applied_policy().is_some_and(|(p,_)|p==7)
-        && e.fec2_probe_pending_policy.is_none(){return Err(BAD_STAGE)}
+        && e.fec2_probe_pending_policy.is_none()
+        && e.fixed_pending.is_none(){return Err(BAD_STAGE)}
     if e.raw_tx.is_none(){
         let raw=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
             .map_err(|_|INVALID)?;
@@ -558,7 +563,8 @@ fn fec2_probe_real_kernel_raw_once(
     // bound after its authenticated TLS/Detach commit. No cold/peer
     // unauthenticated value can supply this setting. This is still only
     // the feature-gated one-shot probe, NOT a product continuous scheduler.
-    let (policy,revision)=e.fec2_probe_pending_policy
+    let (policy,revision)=e.fixed_pending
+        .or(e.fec2_probe_pending_policy)
         .or_else(||e.owner.fec2_probe_applied_policy())
         .ok_or(BAD_STAGE)?;
     let m1_profile=match policy{
@@ -695,7 +701,13 @@ fn fec2_probe_real_kernel_raw_once(
     // Only now has the actual original M1 block formed with the chosen
     // profile and the original M4 kernel positively copied its immutable
     // source+repair. Before this point Go requested != Rust applied.
-    if let Some((p,r))=e.fec2_probe_pending_policy {
+    if let Some((p,r))=e.fixed_pending {
+        let (_,exact_epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
+        e.owner.apply_fec2_probe_new_block_policy(exact_epoch,p,r)
+            .map_err(|_|BAD_STAGE)?;
+        e.fixed_pending=None;
+        e.fixed_applied=Some((p,r)); // confirmed source+repair raw kernel copy
+    }else if let Some((p,r))=e.fec2_probe_pending_policy {
         let (_,exact_epoch)=e.owner.receipt_probe_identity().ok_or(BAD_STAGE)?;
         e.owner.apply_fec2_probe_new_block_policy(exact_epoch,p,r)
             .map_err(|_|BAD_STAGE)?;
@@ -2835,6 +2847,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     // OFF revision in its own generation; readback is separate from intent.
     e.normal_off_applied_revision=revision;
     e.fixed_pending=None; // verified OFF cancels any unstarted Fixed intent
+    e.fixed_applied=None; // and releases any earlier private-source applied status
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2870,6 +2883,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
     let current=e.fixed_pending.map_or(e.normal_off_applied_revision,|(_,r)|r);
     if revision<=current || revision<=e.normal_off_applied_revision{return INVALID}
     e.fixed_pending=Some((profile,revision));
+    // Private legacy FEC probe must never leave a different pending policy
+    // overriding an original-Go Fixed revision in a feature-enabled test.
+    #[cfg(feature="m0_fec2_owner_probe")]
+    {e.fec2_probe_pending_policy=None;}
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2884,13 +2901,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if !verified_normal_off_owner(&e,&epoch)
         ||e.protected_features!=7{return BAD_STAGE}
-    let Some((p,r))=e.fixed_pending else{return BAD_STAGE};
+    let Some((p,r,published))=e.fixed_pending.map(|(p,r)|(p,r,false))
+        .or_else(||e.fixed_applied.map(|(p,r)|(p,r,true)))
+    else{return BAD_STAGE};
     unsafe{
         profile.write(p);
         revision.write(r);
-        // Real parity source/repair and recover-to-TUN missing. Never infer
-        // APPLIED from accepted request, authenticated TLS or test evidence.
-        applied.write(0);
+        // Only the M0 opt-in original M1+M3+M4 native real kernel copy
+        // path may commit this; ordinary builds never publish APPLIED.
+        applied.write(u32::from(published));
     }
     OK
 }
