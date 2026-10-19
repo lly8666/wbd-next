@@ -139,7 +139,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "023b1679cec05eb961e854f6223203f6a0f891ce",
+      "result_blob": "dd126c5a3792c16ceb0e21aebc240bbc21420b23",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -152,6 +152,10 @@
         {
           "find": "  \"state-path\": [",
           "replace": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],\n  \"state-path\": ["
+        },
+        {
+          "find": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],",
+          "replace": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],\n  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],"
         }
       ]
     },
@@ -159,7 +163,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "93a94ebc8ad746a5234f0406872b35da97cba5a8",
+      "result_blob": "bb40be9538be48175183bfc83bc701f3dc5dbc5a",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -208,6 +212,14 @@
         {
           "find": "        public async Task DisconnectAsync() { leaseRestart = false; if (session.Active) ShowState(\"正在断开并清理网络状态…\"); await session.StopAsync(); Drain(); leaseRestart = false; connectedId = null; ClearQuality(); ShowState(\"未连接\"); servers.Invalidate(); }",
           "replace": "        public async Task DisconnectAsync() {\n            leaseRestart = false;\n            if (session.Active) ShowState(\"正在断开并清理网络状态…\");\n            await session.StopAsync();\n            string owned = store.InRoot(\"data/network-state.json\");\n            if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") ||\n                File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))\n                throw new IOException(\"客户端停止后仍存在 owned WAL 或路由意图，拒绝显示已断开。\");\n            Drain();\n            leaseRestart = false; connectedId = null; ClearQuality();\n            ShowState(\"未连接\"); servers.Invalidate();\n        }"
+        },
+        {
+          "find": "            driverBar.Controls.Add(Button(\"恢复残留网络状态\", async () => await RunAsync(RecoverAsync)));",
+          "replace": "            driverBar.Controls.Add(Button(\"恢复残留网络状态\", async () => await RunAsync(RecoverAsync)));\n            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));"
+        },
+        {
+          "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
+          "replace": "        // The same original Go executable reports ONLY files on disk.\n        // Do not infer active WFP, current Wintun ownership, or connection.\n        public async Task<string> ReadNativeDiskStatusAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-state-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute = false, CreateNoWindow = true,\n                WorkingDirectory = store.Root, RedirectStandardOutput = true,\n                RedirectStandardError = true\n            };\n            info.EnvironmentVariables[\"TEMP\"] = store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"] = store.InRoot(\"data/tmp\");\n            using (var process = Process.Start(info)) {\n                Task<string> output = process.StandardOutput.ReadToEndAsync();\n                Task<string> error = process.StandardError.ReadToEndAsync();\n                bool ended = await Task.Run(() => process.WaitForExit(20000));\n                if (!ended) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生状态检查超时；未改变系统网络。\");\n                }\n                string stdout = await output, stderr = await error;\n                if (process.ExitCode != 0)\n                    throw new IOException(\"原生只读状态检查未通过：\" + Redact(stderr));\n                if (stdout.Length > 4096)\n                    throw new IOException(\"原生状态输出超出上限。\");\n                var status = store.Json.Deserialize<Dictionary<string, object>>(stdout);\n                object schema, state, guard;\n                if (status == null ||\n                    !status.TryGetValue(\"schema\", out schema) ||\n                    !status.TryGetValue(\"state\", out state) ||\n                    !status.TryGetValue(\"guard_qualified\", out guard) ||\n                    Convert.ToString(schema)!=\"wbd-native-network-disk-status/v1\" ||\n                    Convert.ToBoolean(guard) ||\n                    !new[] {\"absent\", \"legacy_journal\", \"orphan_route_intent\", \"native_wal_unverified\"}.Contains(Convert.ToString(state)))\n                    throw new IOException(\"客户端只读状态收据不可信，不能宣告网络就绪。\");\n                string result = Convert.ToString(state);\n                Enqueue(\"只读原生磁盘状态：\" + result + \"；仅文件检查，WFP、驱动和连通性未经确认。\");\n                return result;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
         }
       ]
     },
@@ -215,7 +227,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "f12a4d2579a33886ea4d7116271f32d9cca48558",
+      "result_blob": "1e0f4a82af6dc8bb8ba599db14c3c1848fae53ac",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -248,6 +260,10 @@
         {
           "find": "                    fake.FailStop = false; Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");",
           "replace": "                    fake.FailStop = false;\n                    string sidecar = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(sidecar,\"orphan original route intent\");\n                    bool uiDenied = false;\n                    try { Wait(form.DisconnectAsync()); } catch (IOException) { uiDenied = true; }\n                    Assert(uiDenied && File.Exists(sidecar),\n                        \"GUI never paints disconnected while orphan owned route intent remains\");\n                    File.Delete(sidecar);\n                    Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");"
+        },
+        {
+          "find": "                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));",
+          "replace": "                // True original WinForms -> ORIGINAL Go CLI (no FakeSession)\n                // observes disk-only states without mutating WFP/routes.\n                using (var diskForm = new MainForm(reopened,new FakeSession(),\n                    ()=>new DependencyState {Admin=false,Npcap=false,Wintun=false})) {\n                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();\n                    Wait((Task)read);\n                    Assert(read.Result==\"absent\", \"GUI original Go reports absent disk state, not network connected\");\n                    File.WriteAllText(stateFile,\"legacy shell intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    File.Delete(stateFile);\n                    string sidecar = stateFile+\".n4-owned-wal.routes\";\n                    File.WriteAllText(sidecar,\"route intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"orphan_route_intent\" && File.Exists(sidecar),\n                        \"GUI original Go detects orphan intent and preserves it\");\n                    File.Delete(sidecar);\n                    string wal = stateFile+\".n4-owned-wal\";\n                    File.WriteAllText(wal,\"not a SHA-valid native journal\");\n                    bool denied = false;\n                    try { Wait((Task)diskForm.ReadNativeDiskStatusAsync()); }\n                    catch (IOException) { denied = true; }\n                    Assert(denied && File.Exists(wal), \"GUI rejects invalid WAL; not a fake safe or ready result\");\n                    File.Delete(wal);\n                }\n                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));"
         }
       ]
     },
@@ -255,7 +271,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "c45e6a82ab96759ef8413655315f965da546babc",
+      "result_blob": "1f7213d5ed2edee135307856ff6f4907be9c2682",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -269,6 +285,10 @@
         {
           "find": "      \"state-path\": {\n        \"type\": \"String\",\n        \"default_expression\": \"defaultWindowsStatePath()\",",
           "replace": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"state-path\": {\n        \"type\": \"String\",\n        \"default_expression\": \"defaultWindowsStatePath()\","
+        },
+        {
+          "find": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
+          "replace": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
         }
       ]
     },
@@ -482,6 +502,18 @@
       "overlay_path": "r0/go_overlay/cmd/wbd-client/n4_network_cancel_windows_test.go",
       "original_blob": "644836eb227b63ac029a2b19e546dad28b95873d",
       "result_blob": "a930b8129ac620947571eb34b1239af329ea5543"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_status_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
+      "result_blob": "83452baab8358f0f7e0be5527e54fc8e6360248f"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_status_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
+      "result_blob": "c9157436a57ea16500484ca4a72a1214968cd57c"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
