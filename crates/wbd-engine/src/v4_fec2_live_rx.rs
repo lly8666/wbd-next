@@ -48,7 +48,7 @@ pub(crate) struct Fec2LiveRx {
     rs:Rs16,budget:usize,stopped:bool,
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,
-    stored:usize,
+    stored:usize,evicted:u64,
 }
 impl Fec2LiveRx{
     // This evidence must be supplied by the same Rust Go TLS owner that
@@ -65,10 +65,12 @@ impl Fec2LiveRx{
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener,rs:Rs16::new(),budget,
-            stopped:false,highest_block:0,blocks:BTreeMap::new(),stored:0})
+            stopped:false,highest_block:0,blocks:BTreeMap::new(),stored:0,evicted:0})
     }
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
+    /// Lost/expired old blocks are never counted as delivered or credited.
+    pub(crate) fn evicted_blocks(&self)->u64{self.evicted}
     pub(crate) fn stop(&mut self){
         self.stopped=true;self.blocks.clear();self.stored=0;
     }
@@ -81,7 +83,8 @@ impl Fec2LiveRx{
         }).collect::<Vec<_>>();
         for id in keys{
             if let Some(old)=self.blocks.remove(&id){
-                self.stored=self.stored.saturating_sub(old.bytes)
+                self.stored=self.stored.saturating_sub(old.bytes);
+                self.evicted=self.evicted.saturating_add(1);
             }
         }
     }
@@ -113,7 +116,15 @@ impl Fec2LiveRx{
         self.highest_block=self.highest_block.max(id);
         self.retire(now);
         if !self.blocks.contains_key(&id)&&self.blocks.len()>=MAX_ACTIVE{
-            return Err(ReceiveError::Capacity)
+            // Never allow old incomplete parity/source work to block a
+            // freshly authenticated source. Evict ONE oldest incomplete
+            // block; this is a censored drop, not successful recovery.
+            let oldest=self.blocks.iter()
+                .min_by_key(|(id,b)|(b.touched.0,**id))
+                .map(|(&id,_)|id).ok_or(ReceiveError::Capacity)?;
+            let retired=self.blocks.remove(&oldest).ok_or(ReceiveError::Capacity)?;
+            self.stored=self.stored.saturating_sub(retired.bytes);
+            self.evicted=self.evicted.saturating_add(1);
         }
         let old=self.blocks.get(&id);
         if old.is_some_and(|b|b.touched.0>now.0){return Err(ReceiveError::Invalid)}
@@ -207,6 +218,26 @@ mod tests {
         let (_,n)=tx.seal_fec2_after_admission_in_place(
             kind,&mut wire,payload.len(),0).unwrap();
         wire.truncate(n);wire
+    }
+    #[test]
+    fn m0_fec2_live_rx_old_incomplete_blocks_cannot_head_of_line_fresh(){
+        let suite=RecordSuite::ChaCha20Poly1305;
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+        let mut rx=Fec2LiveRx::from_original_owner(
+            epoch(),opened(suite),1400).unwrap();
+        for id in 1..=33u64{
+            // Every block is deliberately incomplete. A busy old block
+            // cannot force an authenticated new source to wait.
+            let src=fec_v2::source_owned(id,0,&[id as u8;32],1369).unwrap();
+            let mut wire=seal(&mut tx,2,&src);
+            let out=rx.consume(epoch(),&mut wire,MonoNs(id)).unwrap();
+            assert_eq!(out.len(),1);
+            assert_eq!(out[0].block_id,id);
+        }
+        assert_eq!(rx.active_blocks(),32);
+        assert_eq!(rx.evicted_blocks(),1);
+        assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
+        rx.stop();assert_eq!(rx.stored_bytes(),0);
     }
     #[test]
     fn m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop(){
