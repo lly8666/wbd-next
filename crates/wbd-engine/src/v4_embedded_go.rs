@@ -226,9 +226,9 @@ impl NormalFirstSendM2 {
                 self.unknown_8s=self.unknown_8s.saturating_add(
                     result.window_8s.uncovered);
                 self.covered_2s=self.covered_2s.saturating_add(
-                    result.window_2s.covered);
+                    result.window_2s.covered());
                 self.covered_8s=self.covered_8s.saturating_add(
-                    result.window_8s.covered);
+                    result.window_8s.covered());
                 if result.capacity_limited{self.censored=true}
             }
             Err(_)=>self.censored=true,
