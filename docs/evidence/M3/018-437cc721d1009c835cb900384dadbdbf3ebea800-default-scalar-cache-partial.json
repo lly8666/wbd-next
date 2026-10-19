@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "source_sha": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "result": "PASS",
+  "qualification": "SCOPED_DEFAULT_FEATURE_SCALAR_CACHE_TESTS_ONLY",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "artifact_zip_rehash_verified": true,
+  "assignment": {
+    "control_main": "76f3fd695c0be4d5ad6bf447ead52ee0bc7b672f",
+    "authority_revision": 2,
+    "role": "M3",
+    "branch": "work/m3-r1-codec",
+    "owner_paths": [
+      "crates/wbd-codec/",
+      "docs/devlog/M3/",
+      "docs/evidence/M3/",
+      ".governance/workstreams/M3/cursor.json"
+    ],
+    "decision": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+    "section": "§1 M3 / §4",
+    "legacy_task_017": "M0 previously accepted SCOPED Linux x64 only; FEC2 product OFF"
+  },
+  "code": {
+    "implementation_commit": "17ca59c01e8cb4c2963f466b109d7d8d1d55801b",
+    "test_commit": "437cc721d1009c835cb900384dadbdbf3ebea800",
+    "files": [
+      "crates/wbd-codec/src/fec_v2.rs",
+      "crates/wbd-codec/src/fec_v2_tests.rs"
+    ],
+    "changes": [
+      "Cache hits borrow immutable inverse matrix under stable CacheKey (no deep clone)",
+      "Real ISA-L cache stores final e-by-k decoding GF table per exact missing/index row key, same FIFO eviction",
+      "Private known-source padded input Vecs reused, each active symbol completely zeroed before protected-length and data copy",
+      "DecodeCacheStats accounts inverse payload capacity, ISA-L 32-byte per coefficient table payload and reusable source buffer capacity, excluding map/node metadata and owned returned outputs"
+    ],
+    "no_changes": [
+      "GF(0x11d) canonical Cauchy",
+      "7 profiles",
+      "10/12B kinds2/3 wire",
+      "output format",
+      "caller AEAD/PN/owner/Stop",
+      "shared workflows/ABI",
+      "product FEC2 OFF"
+    ]
+  },
+  "bound": {
+    "cache_entries_max": 64,
+    "k_max": 16,
+    "symbol_length_max": 65535,
+    "source_workspace_buffers_max": 15,
+    "inverse_payload_upper_bound_bytes": 16384,
+    "native_table_payload_upper_bound_bytes": 524288,
+    "source_workspace_payload_upper_bound_bytes": 983025,
+    "sum_payload_upper_bound_bytes": 1523697,
+    "does_not_include": "BTreeMap/Vec metadata, allocator overhead, temporary returned recovered outputs and chosen repair borrowing",
+    "shape_only_actual_capacity_may_depend_on_allocator": true
+  },
+  "actions": {
+    "run": 39187710688,
+    "attempt": 1,
+    "conclusion": "success",
+    "build_job": 117853543702,
+    "consume_job": 117853689284,
+    "target": "ubuntu-24.04 x86_64-unknown-linux-gnu",
+    "rust": "1.85.1",
+    "test_result": {
+      "pass": 123,
+      "fail": 0,
+      "ignored": 1,
+      "filtered": 26,
+      "new_case": "r1_f2_decode_workspace_cache_65_distinct_keys_and_eviction",
+      "real_isa_l_new_case": "NOT_RUN because cfg(native-isal) compiled out in default worker"
+    },
+    "binary_sha256": "26c1f9fd2e8000d2fadb2087da21e016fbaa3052598a377bf2c69aa90445e1ca",
+    "log_sha256": "dcf87fd16490de2b75cf6eb23e621accb25aab4df908e88d408364caab64c969",
+    "artifact_build": {
+      "id": 12158403934,
+      "size_bytes": 5777989,
+      "zip_sha256": "fc5b66fd39d6cb2b82e57149826156e49bb300549391d458c6cf6d8d49b7013c",
+      "members": [
+        {
+          "name": "manifest.json",
+          "sha256": "6a2e41ae6ebc62b3e3d2fb245248d7410df2ec818a749a0987e33973f257d035"
+        },
+        {
+          "name": "worker-m3.test",
+          "sha256": "26c1f9fd2e8000d2fadb2087da21e016fbaa3052598a377bf2c69aa90445e1ca"
+        }
+      ]
+    },
+    "artifact_result": {
+      "id": 12158931965,
+      "size_bytes": 8245,
+      "zip_sha256": "7983c8d69c4e85fc558a8ec7afc3802138a81fd550ca482825fa6134d5dca789",
+      "members": [
+        {
+          "name": "result.json",
+          "sha256": "83dae72cfb6121f1833dcf83d6ddcf55bb350a7e6f8b3de1687da9a1d2638ade"
+        },
+        {
+          "name": "test.log",
+          "sha256": "dcf87fd16490de2b75cf6eb23e621accb25aab4df908e88d408364caab64c969"
+        }
+      ]
+    },
+    "independent_checks": "Downloaded both ZIPs and individually rehashed all 4 members; no mismatch between content/test log/manifest and GitHub ZIP digest."
+  },
+  "other_scoped_actions": {
+    "r0_wire": {
+      "run": 39187710648,
+      "conclusion": "success"
+    },
+    "r0_record": {
+      "run": 39187710734,
+      "conclusion": "success"
+    },
+    "r0_link": {
+      "run": 39187710935,
+      "conclusion": "success"
+    },
+    "r0_static": {
+      "run": 39187710661,
+      "conclusion": "success"
+    },
+    "g2_bootstrap": {
+      "run": 39187710675,
+      "conclusion": "success"
+    }
+  },
+  "governance": {
+    "worker_governance": {
+      "run": 39187710740,
+      "conclusion": "failure",
+      "error": "ROLE_SCOPE_FAILED: control or source moved mid-audit. Main committed PLAN008-025 work during worker frozen review, not codec correctness.",
+      "code": "437cc721d1009c835cb900384dadbdbf3ebea800"
+    },
+    "central_new_standard": "G2_ACTIVATION_COMPLETE_PAGINATED_V1 (max512 page80), separate source-scope result remains to be read; old max_delta_commits64 no longer applies"
+  },
+  "not_run": {
+    "actual_ISA_L_new_src_full_native_tests": "NOT_RUN",
+    "native_cache_evict_and_workspace_dirty_case": "NOT_RUN",
+    "source_locked_old8cc_new437_same_VM_native_ABBA": "NOT_RUN",
+    "allocation_counter_runtime": "NOT_RUN",
+    "Windows_ARM_FEC2": "NOT_RUN",
+    "Go_product": "OFF",
+    "packet_p99": "NOT_RUN"
+  },
+  "next_action": "M0-owned one new exact CODE437 Linux x64 real ISA-L feature-native F2 full tests with M4 reviewed build.rs, and one old(CODE8cc) vs new(CODE437) k16/r16/1200B/e4 same VM/process ABBA recovery, report CPU/wall/copy/allocation/caches; M3 fixes only owned bug. FEC2 product OFF."
+}
