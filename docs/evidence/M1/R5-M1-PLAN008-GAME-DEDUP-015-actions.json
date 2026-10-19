@@ -59,8 +59,48 @@
     "old_code_source_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
     "new_code_source_sha": "64102db5e101df1f678e17919169927ad19bad06",
     "required": "M0-owned isolated same-VM two-release-binary paired ABBA: exact old+new SHAs and identical fixture hash, each binary SHA, one measurement job, cpu/quota/PSI/steal + RSS, same input checksum, capacity stop",
-    "status": "NOT_RUN",
-    "diagnostic": "Unrelated worker-native owner sample and test-run timing are NOT an isolated Game015 old/new performance comparison. Fixture compiled by Actions but #[ignore] not executed."
+    "status": "PREPARE_PASS_PAIRED_NOT_RUN",
+    "diagnostic": "Unrelated worker-native owner sample and test-run timing are NOT an isolated Game015 old/new performance comparison. Fixture compiled by Actions but #[ignore] not executed.",
+    "mode": "paired_ab",
+    "prepare": {
+      "control_ref": "qualification/worker-ci-v6",
+      "control_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "request_id": "M1-GAME015-AB-PREP-003",
+      "request_ref": "a3920da49a69ae13bd02460ef99f51c6ea9e18e5",
+      "run_id": 39208300168,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact_id": 12166063332,
+      "artifact_name": "worker-prepare-39208300168-1",
+      "artifact_zip_sha256": "6549b2c40f6ed837b7581b2033cf7eb4b389f825691e325c0ef3eeeda33f3391",
+      "prepare_manifest_sha256": "85f77330bc7a8fdd679b543c60714210bee350685c8bfc1884cd485ca2b97481",
+      "build_feature": "default",
+      "platform": "linux-x86_64",
+      "rustc": "rustc 1.85.1 (4eb161250 2025-03-15)",
+      "cargo_lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8",
+      "baseline_module_git_blob": "17e57f900852010fbd7952c57ec1e3131b1c4872",
+      "candidate_module_git_blob": "9ac8d6784d2e942e04287ec2e2e59fb62ff1255d",
+      "identical_fixture_git_blob": "4c70bedf3bd4d07e959eaf73dcd63feb1ebe2821",
+      "identical_fixture_sha256": "dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8",
+      "focused_functional_A_passed": 13,
+      "focused_functional_B_passed": 13,
+      "executable_A_sha256": "3f2d6d08178e5d6f1771eeb3cc97c396f2e5b53a12ddf9d589c966ecf0385df5",
+      "executable_B_sha256": "b1e9d6e1600b583be5d65752aedbc9e25420ea9b5a79770a1f7df0d1b4212a7f",
+      "independently_verified": "Downloaded official GitHub Actions worker-prepare zip; checked ZIP SHA256, byte-exact manifest SHA256, real A/B executable SHA256, manifest source/fixture/control, 13/13 each functional logs; neither ignored performance test was executed during prepare."
+    },
+    "paired": {
+      "request_id": "M1-GAME015-AB-PAIRED-001",
+      "request_status": "PLANNED",
+      "run_id": null,
+      "run_attempt": null,
+      "result": "NOT_RUN"
+    },
+    "history_control_failure": {
+      "run_id": 39204910923,
+      "conclusion": "failure",
+      "stage": "authorize",
+      "cause": "Frozen v5 passed --stage argument to runner that did not implement it; no build run. Preserved."
+    }
   },
   "history": [
     {
@@ -106,20 +146,26 @@
       "conclusion": "failure",
       "cause": "GitHub API 403 github_rate_limited remaining=0 both attempts; no scope violation was established.",
       "new_h21_scope": "NOT_RUN_AT_S_HANDOFF"
+    },
+    "latest_h24_central": {
+      "source_sha": "b17a444e7781df800f867850bf66a6d6a2a1c74b",
+      "run_id": 39206565174,
+      "result": "ROLE_SCOPE_PASS",
+      "conclusion": "success"
     }
   },
   "not_run": {
-    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN",
-    "isolated_cpu_s_and_RSS_comparison": "NOT_RUN",
+    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN; changed requested scope to M1-authorized paired AB",
+    "isolated_cpu_s_and_RSS_comparison": "PAIRED_AB_REQUEST_CREATED_NOT_RUN",
     "M0_M3_Go_tls_game_live_multilane": "NOT_RUN",
     "physical_product_p99_500Mbps": "NOT_RUN"
   },
   "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts.",
   "handoff": {
-    "state": "HOLD_USER_DIRECTIVE",
+    "state": "RESUMED_USER_DIRECTIVE",
     "recorded_on": "2026-10-19",
-    "next_execution": "NO_DISPATCH_OR_RETRY_UNTIL_EXPLICIT_USER_RESUME",
-    "preserved": "Native 133/133 PASS at CODE source; Game015 old/new release same-VM ABBA NOT_RUN, Go/live/product/physical NOT_RUN.",
-    "coordination": "M0-owned ABBA request exists but is held; do not edit shared workflow or push to main."
+    "next_execution": "V6_PAIRED_AB_REQUEST_SUBMITTED_AUTODISPATCH_EXPECTED",
+    "preserved": "CODE native 133/133 PASS; old v5 authorize FAIL retained; current v6 prepare succeeded with 13/13 each; paired AB pending; product NOT_RUN",
+    "coordination": "M0 main-only audited worker dispatch; no shared changes by M1"
   }
 }
