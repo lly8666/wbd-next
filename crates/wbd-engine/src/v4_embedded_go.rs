@@ -817,6 +817,11 @@ struct ReleaseClientRx {
     epoch:[u8;16],generation:u32,
     rx:crate::v4_fec2_live_rx::Fec2LiveRx,
     tun:ScopedTunSink,
+    // C2S feedback comes only from AEAD-unique S2C DATA, never raw
+    // metadata, and never grants remote APPLIED until actual kernel copy.
+    feedback:wbd_recovery::RxFeedbackState,
+    feedback_tx:wbd_codec::record_crypto::LaneTxCrypto,
+    feedback_pending:Option<(wbd_recovery::FeedbackDraft,u64)>,
     delivered:u64,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -852,7 +857,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
     if id.server||id.logical_epoch==[0;16]{return INVALID}
     let Ok(suite)=wbd_codec::record_crypto::RecordSuite::try_from(id.cipher)
         else{return INVALID};
-    let (_,recv)=cold.internal_direction_keys();
+    let (send,recv)=cold.internal_direction_keys();
+    let feedback=match wbd_recovery::RxFeedbackState::new(
+        wbd_recovery::RxFeedbackConfig{
+            max_retained_pages:8,max_pages_per_report:8,
+            retention_ns:100_000_000,srtt_ns:8_000_000,
+        }){Ok(f)=>f,Err(_)=>return INVALID};
+    let feedback_tx=match wbd_codec::record_crypto::LaneTxCrypto::new_for_suite(
+        send,usize::from(id.server_limit),suite,
+    ){Ok(tx)=>tx,Err(_)=>return INVALID};
     let mut r=match release_clients().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     if r.clients.len()>=MAX_SESSIONS||r.next==u32::MAX{return FULL}
     let generation=r.next;r.next+=1;
@@ -875,7 +888,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
     let Ok(tun)=ScopedTunSink::from_owned_fd(dup,generation,name)
         else{return INVALID};
     r.clients.insert(handle,ReleaseClientRx{
-        epoch:id.logical_epoch,generation,rx,tun,delivered:0,
+        epoch:id.logical_epoch,generation,rx,tun,
+        feedback,feedback_tx,feedback_pending:None,delivered:0,
     });
     unsafe{out.write(handle)};
     OK
@@ -903,8 +917,13 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_receive(
     // Keep the original M3 replay bitmap local to this authenticated
     // generation. AEAD/replay rejects raw, duplicate and tampered frames.
     let mut input=record.to_vec();
-    let Ok(packets)=client.rx.consume(exact,&mut input,loop_now())
-        else{return INVALID};
+    let now=loop_now();
+    let Ok((authenticated_pn,packets))=client.rx.consume_with_pn(
+        exact,&mut input,now)else{return INVALID};
+    // Data with authentic AEAD/PN is an M2 received packet even if its
+    // FEC repair row yields no new client IPv4. No ACK-of-ACK is possible.
+    use wbd_types::RecordPn;
+    client.feedback.on_authenticated_data(RecordPn(authenticated_pn),now);
     let mut n=0u32;let mut recovered_n=0u32;
     for packet in packets{
         if client.tun.write_authenticated_ipv4(client.generation,&packet.frame)
@@ -916,6 +935,97 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_receive(
     unsafe{delivered.write(n);recovered.write(recovered_n)}
     OK
 }
+// Prepare at most one original-M2 C2S AEAD control record when the
+// bounded feedback scheduler says due. The result is ONLY ciphertext:
+// Go's real kernel sender must report copied/unsent/uncertain separately.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_due(
+    handle:u64,epoch:*const u8,epoch_len:usize,
+    out:*mut u8,capacity:usize,used:*mut usize,record_pn:*mut u64
+)->i32{
+    if handle==0||epoch.is_null()||epoch_len!=16||out.is_null()||
+       capacity<512||capacity>2048||used.is_null()||record_pn.is_null(){
+        return INVALID
+    }
+    let scope=unsafe{std::slice::from_raw_parts(epoch,16)};
+    let Ok(mut r)=release_clients().lock()else{return BAD_STAGE};
+    let Some(client)=r.clients.get_mut(&handle)else{return UNKNOWN};
+    if scope!=client.epoch||client.tun.is_stopping()||
+        client.feedback_pending.is_some(){return BAD_STAGE}
+    let now=loop_now();
+    let Some(draft)=client.feedback.on_due(now)else{
+        unsafe{used.write(0);record_pn.write(0)};
+        return OK
+    };
+    let msg=wbd_codec::Receipt{
+        largest_data_pn:draft.largest_data_pn().0,
+        ack_delay_us:0,
+        report_seq:draft.report_seq(),
+        pages:draft.pages().iter().map(|p|wbd_codec::ReceiptPage{
+            base_pn:p.base_pn.0,bitmap:p.bitmap,
+        }).collect(),
+    };
+    let bytes=match wbd_codec::encode_control(
+        &[wbd_codec::ControlTlv::Receipt(msg)],512
+    ){
+        Ok(b)=>b,Err(_)=>{
+            let _=client.feedback.on_send_result(&draft,
+                wbd_recovery::FeedbackSendResult::NotSent,now);
+            return INVALID
+        }
+    };
+    if bytes.len()+31>capacity{
+        let _=client.feedback.on_send_result(&draft,
+            wbd_recovery::FeedbackSendResult::NotSent,now);
+        return FULL
+    }
+    let mut wire=vec![0u8;capacity];
+    wire[14..14+bytes.len()].copy_from_slice(&bytes);
+    let (pn,n)=match client.feedback_tx.seal_in_place(
+        wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND,
+        &mut wire,bytes.len(),0
+    ){
+        Ok(a)=>a,Err(_)=>{
+            let _=client.feedback.on_send_result(&draft,
+                wbd_recovery::FeedbackSendResult::NotSent,now);
+            return INVALID
+        }
+    };
+    unsafe{
+        std::ptr::copy_nonoverlapping(wire.as_ptr(),out,n);
+        used.write(n);record_pn.write(pn);
+    }
+    client.feedback_pending=Some((draft,pn));
+    OK
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_result(
+    handle:u64,epoch:*const u8,epoch_len:usize,pn:u64,outcome:u32
+)->i32{
+    if handle==0||epoch.is_null()||epoch_len!=16||outcome>2{return INVALID}
+    let scope=unsafe{std::slice::from_raw_parts(epoch,16)};
+    let Ok(mut r)=release_clients().lock()else{return BAD_STAGE};
+    let Some(client)=r.clients.get_mut(&handle)else{return UNKNOWN};
+    if client.epoch!=scope||client.tun.is_stopping(){return BAD_STAGE}
+    let Some((draft,expected))=client.feedback_pending.as_ref()
+        else{return BAD_STAGE};
+    if *expected!=pn{return BAD_STAGE}
+    let res=match outcome{
+        1=>wbd_recovery::FeedbackSendResult::Accepted,
+        2=>wbd_recovery::FeedbackSendResult::Uncertain,
+        _=>wbd_recovery::FeedbackSendResult::NotSent
+    };
+    if client.feedback.on_send_result(draft,res,loop_now()).is_err(){
+        return BAD_STAGE
+    }
+    client.feedback_pending=None;
+    OK
+}
+
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
