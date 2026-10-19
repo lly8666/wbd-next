@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "request_id": "M1-GAME015-AB-PREP-002",
+  "role_id": "M1",
+  "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "kind": "functional",
+  "source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+  "harness_sha": "64102db5e101df1f678e17919169927ad19bad06",
+  "baseline_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+  "config_path": "crates/wbd-engine/tests/m1_game015_same_vm_cost.rs",
+  "config_sha256": "dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8",
+  "scenario": "game015-receive",
+  "seed": 631,
+  "workflow": ".github/workflows/worker-component-validation.yml",
+  "dispatch_ref": "qualification/worker-ci-v5",
+  "control_sha": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+  "measurement_jobs": 1,
+  "samples": 1,
+  "status": "PLANNED",
+  "supersedes_request": "M1-GAME015-AB-PREP-001"
+}
