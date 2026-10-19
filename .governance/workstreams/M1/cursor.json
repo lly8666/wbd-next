@@ -4,18 +4,19 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 28,
-  "checkpoint_sha": "278717c24d4453f19415cd9b6e8c035d25353e5e",
+  "sequence": 29,
+  "checkpoint_sha": "a6596878460bdd5587c3fbfe87add983362b9ea3",
   "progress": "ready_for_integration",
   "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
-  "current_task": "PLAN-008 M1 Game RX bitmap ring/window and indexed open block completed for owner-local scoped delivery. Native 133/133 PASS at CODE64102db5; same-VM paired_ab 64-round Game015 two-release-binary PASS Action39212126443 after preserving short-window failure. Owner contract unchanged; ready for M0 component consumption (NOT product qualification).",
-  "why_now": "User resumed HOLD and required rule-based Actions AB. M0 PLAN-009 v6 auto-dispatch source-locked G2 verified code/fixture. Original short A/B run39210280319 failed CPU window; M1 S26 repeated the same workload64x and verified worker-native Action39210728731; exact v6 prepare004 39211331750 PASS A13+B13 and artifact12167499186/manifest7573ed1c... independent sha verified. Paired002 run39212126443 attempt1 PASS same job117927717275 CPU A11.374184s B1.577889s, actual16,777,216 inputs each and identical output checksum506340864; ratio7.2085x synthetic only. Shared receipt.work is per-round262144, true work count from logs, RSS cumulative and quota NOT_RUN explicitly qualified.",
-  "done_when": "Completed scoped M1 Game015: source-locked equivalent dedup wrap/old/pressure/multi-lane/Stop and operations-bounded bitmap/open-index, native133/133 PASS, one same-VM old/new equal 64round representative paired AB CPU PASS with bounded fixture and high-water memory observation, historical failures preserved. M0 can consume unchanged original owner API; requires separate original Go/live/physical/product gates and optional reverse BA/ABBA/cgroup quota if desired, all NOT_RUN.",
-  "next_action": "HANDOFF to M0: inspect docs/evidence/M1/R5-M1-PLAN008-GAME-DEDUP-015-actions.json cost.paired and companion devlog, consume unchanged GameRx implementation (CODE64102db5). Do not imply Go/TLS two-physical-D10/500Mbps/p99/product or independent per-leg RSS qualification. Shared v6 adapter receipt.work is per-round; normalization in evidence uses total_inputs log. Any BA/ABBA, standalone RSS quota or product work needs separate authorized task, not an automatic rerun.",
+  "current_task": "PLAN-008 M1 Game015 owner-local CODE64102db5 and v6 Release paired_ab cost39212126443 PASS, ready for M0 integration. Supplemental user-requested 25Mbps/lane 1/4-lane GameTx->owned per-lane payload copy->GameRx DEBUG-profile probe S32 cbc8c0c4 Action39216826201 PASS134/134 with actual test-thread CPU and processing p99; exact packet counts and no copy drops. Product and network NOT_RUN.",
+  "why_now": "User specifically requested Game mode one and four lanes, each 25Mbps; tested owned GameTx/GameRx using 256B/1200B full-byte fill/copy/verify in 1ms pacing buckets. Final CI39216826201 pass all 134 (existing133+new profile test); independently downloaded ZIP,result/log SHA256. First compile FAIL39216371829 and initial invalid CPU accounting39216529828 preserved; fixed /proc/thread-self/schedstat in code S32. The per-lane 25Mbps is internal copied-byte schedule, 4 lane means100Mbps replicated but only 25Mbps unique logical data, not NIC.",
+  "done_when": "Original M1 Game015 scoped functional and v6 paired Release AB already PASS. Supplemental Game owner DEBUG 25Mbps/lane 1x/4x 256B/1200B all four cases meet offered in-memory pacing, 134/134 PASS, payload bytes copied+verified, first/dup correct, zero loan/copy drops, benchmark-thread CPU and in-memory processing p99 captured. Full Release/UDP/TLS/FEC/real network/two-physical devices/product p99/RSS quota remain NOT_RUN and require M0-owned integrated runner.",
+  "next_action": "Provide user the measured four cases and exact limitations from docs/evidence/M1/PLAN008-GAME015-25MBPS-LANE-PROFILE-20261019.json. H29 current HEAD central G2 must be audited separately; retain existing M1 ready_for_integration for original Game015. Request M0-owned real network + release/driver harness if product-level 1-lane25 Mbps and Game4x25 Mbps is required; do not pretend M1 debug CI proves NIC/Go and do not edit shared M0 files. No repeated tests without changed source or method.",
   "unverified": false,
   "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
-    "docs/evidence/M1/R5-M1-PLAN008-GAME-DEDUP-015-actions.json"
+    "docs/evidence/M1/R5-M1-PLAN008-GAME-DEDUP-015-actions.json",
+    "docs/evidence/M1/PLAN008-GAME015-25MBPS-LANE-PROFILE-20261019.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
@@ -27,5 +28,5 @@
     "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
     "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H28 after S29 278717c24d4453f19415cd9b6e8c035d25353e5e: Game015 M1 owner-local component READY_FOR_INTEGRATION. CODE64102db5 native133 PASS and bounded op oracle. Same-VM source-locked v6 prepare39211331750 A13+B13 PASS and paired39212126443 one-job CPU A11.374184s/B1.577889s matched real 64*262144=16777216 inputs; 7.208x ratio limited to synthetic fixture. A/B checksum506340864 identical; elapsed/manifest/log/receipt/archive independently SHA verified. Original v5 arg FAIL, v6 first paired CPU-window INCONCLUSIVE preserved. shared runner receipt.work=262144 per-round not full; independent RSS comparison NOT_INSTRUMENTED, cpu.max NOT_RUN. Old ABBA/Go/live/physical/product NOT_RUN."
+  "partial_summary": "H29 after S33 a6596878460bdd5587c3fbfe87add983362b9ea3. User 25Mbps/lane Game 1/4 probe S30 added Rust test, run39216371829 compile FAIL println, S31 run39216529828 134/134 PASS CPU invalid (process leader), S32 SOURCE cbc8c0c45203dc9d8c861220026ef8c6e905f978 fixed test-thread CPU, run39216826201 134/134 PASS with 4 debug cases: 1x256 24.99909Mbps CPU17.8369% p99 39.344us;4x256 99.99624Mbps CPU33.4626% p99 35.337us;1x1200 24.99747Mbps CPU14.3825% p99 69.821us;4x1200 99.98975Mbps CPU27.3006% p99 112.381us. Single process RSS ~5.8-6.2MiB, throttle deltas0, cgroup cpu.max unavailable, no actual network/AEAD/FEC/Release. 4-lane duplicates same logical 25Mbps data. Original Game015 source CODE64102db5 Release AB paired39212126443 PASS7.208x synthetic unchanged and product NOT_RUN."
 }
