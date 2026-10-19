@@ -91,9 +91,15 @@ func (b *v4EmbeddedNativeBridge) readbackOriginalFixedPending(
     if rc!=0{return pending,ack,fmt.Errorf("%w: native Fixed pending readback=%d",
         errV4Embedded,int(rc))}
     if uint8(profile)!=uint8(pending.Desired)||
-        uint64(revision)!=pending.RequestedRevision||
-        uint32(applied)!=0{
+        uint64(revision)!=pending.RequestedRevision||uint32(applied)>1{
         return pending,ack,errFecV2Policy
     }
-    return pending,ack,nil
+    if applied==0{return pending,ack,nil}
+    // Only a successful ORIGINAL native kernel source+repair transition
+    // can return applied=1, in an explicitly opt-in FEC sender. The default
+    // engine has no such path; Go never promotes accepted intent by itself.
+    ack.Applied=true
+    actual,changed,err:=FecV2Apply(pending,ack)
+    if err!=nil||!changed{return pending,ack,errFecV2Policy}
+    return actual,ack,nil
 }
