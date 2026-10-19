@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "source_sha": "3501b929fd980110de83ebed14eace146e4f20e1",
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "result": "SCOPED_NATIVE_PASS_COMPOSITE_150MS_C_FAIL",
+  "progress": "partial",
+  "unverified": true,
+  "product_FEC2": "OFF",
+  "release": {
+    "M2": "MANUAL_HOLD_LIFTED",
+    "M4": "MANUAL_HOLD_LIFTED",
+    "doc": "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md",
+    "issue_comment_M2": 6259933164,
+    "issue_comment_M4": 6259933892,
+    "no_worker_cursor_changed": true
+  },
+  "integration": {
+    "M2_pure_source": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
+    "pure_maturity_blob": "ae9eabe37d4d153b13bb684d6b6350045d532749",
+    "original_receipt_preserved": "fc522e1d main RACK/PTO preserved; M2 only readonly maturity getters",
+    "firstsent": "Original M4 raw kernel confirmed copied first-send PN and wire bytes, not RX or repair copy",
+    "reverse": "Original Go TLS Rust scoped C2S M3 AEAD/replay + M2 trusted ReceiptRouteScope",
+    "maturity": "M2 2s/8s event-time plus original M2 repair outcome censored and Go two-second AUTO observes genuine readback",
+    "product": "Feature gated only, not original public normal client/server continuous scheduling"
+  },
+  "native": {
+    "job_id": 117898336694,
+    "result": "success",
+    "artifact_id": 12164670567,
+    "provider_sha256": "sha256:229227b76de0f0c15afba6866a7d3c2f166535d5a7afedfd6ff689891b97ff7d",
+    "independently_checked_zip_sha256": "229227b76de0f0c15afba6866a7d3c2f166535d5a7afedfd6ff689891b97ff7d",
+    "suites": [
+      1,
+      2,
+      3
+    ],
+    "modes": [
+      "single",
+      "mixed-prefix",
+      "kernel-multimsg"
+    ],
+    "total_cases": 9,
+    "result_counts": {
+      "single": "firstsent=2,observed=1,censored=1",
+      "mixed_prefix": "firstsent=2,observed=1,censored=1",
+      "kernel_multimsg": "firstsent=2,observed=0,censored=2"
+    },
+    "negative": [
+      "tamper deny",
+      "replay deny",
+      "out-of-scope bitmap deny",
+      "foreign epoch denied"
+    ],
+    "terminal": "real-kernel.log final PASS"
+  },
+  "red": {
+    "job": "m0-normal-network (netem-150ms-C)",
+    "id": 117898701426,
+    "result": "failure",
+    "artifact_id": 12163929559,
+    "sha256": "sha256:42ff51a57d7a5a4741abb8a9c37e749d6c79fe7947ab541a99ec3356382d19b3",
+    "error": "Original Go Normal/off 150ms-C suite3 index0 first fragment M4 RX failure, same class as prior historic red; not masked by scoped native success"
+  },
+  "action": {
+    "run_id": 39202525812,
+    "attempt": 1,
+    "head_sha": "3501b929fd980110de83ebed14eace146e4f20e1",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39202525812",
+    "status_when_recorded": "completed",
+    "conclusion_when_recorded": "failure",
+    "passed_jobs": 13,
+    "total_jobs": 14,
+    "failed_jobs": [
+      "m0-normal-network (netem-150ms-C)"
+    ],
+    "pending_jobs": [],
+    "jobs": [
+      {
+        "name": "native",
+        "id": 117898336694,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-windows-native",
+        "id": 117898336788,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-actual-isal",
+        "id": 117898336813,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-original-link-fec",
+        "id": 117898336844,
+        "conclusion": "success"
+      },
+      {
+        "name": "go-control-policy",
+        "id": 117898336891,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-build",
+        "id": 117898336903,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-native-architecture (ubuntu-24.04, x86_64-unknown-linux-gnu, x86_64)",
+        "id": 117898336920,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-native-architecture (ubuntu-24.04-arm, aarch64-unknown-linux-gnu, aarch64)",
+        "id": 117898336969,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-unqualified-gate-ledger",
+        "id": 117898337443,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-B)",
+        "id": 117898701362,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-10ms)",
+        "id": 117898701411,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (normal-off-10mbps)",
+        "id": 117898701417,
+        "conclusion": "success"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-C)",
+        "id": 117898701426,
+        "conclusion": "failure"
+      },
+      {
+        "name": "m0-normal-network (netem-150ms-A)",
+        "id": 117898701443,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 12164830656,
+      "name": "m0-normal-netem-150ms-A-39202525812-1",
+      "digest": "sha256:b6285cdf56258400ecf90911f5f5c3308ae3c068fba8fe62a4e97a1e91aff15e",
+      "expired": false
+    },
+    {
+      "id": 12164785716,
+      "name": "m0-original-link-39202525812-1",
+      "digest": "sha256:c443ade826f60cd647558f7b3e142b05a12ea93fa115e7859868fc753a6b04ac",
+      "expired": false
+    },
+    {
+      "id": 12164670567,
+      "name": "m0-real-go-fec2-owner-grant-39202525812-1",
+      "digest": "sha256:229227b76de0f0c15afba6866a7d3c2f166535d5a7afedfd6ff689891b97ff7d",
+      "expired": false
+    },
+    {
+      "id": 12164631276,
+      "name": "m0-actual-isal-39202525812-1",
+      "digest": "sha256:b3e9e83ab64948a6b5ad33c2d3eabc8b4e5dec8a8c61ba0293648d1e9a8e0f55",
+      "expired": false
+    },
+    {
+      "id": 12164441487,
+      "name": "m0-normal-netem-10ms-39202525812-1",
+      "digest": "sha256:618f42ff2a3ee2cfa62b7acc8c9662adc75fdfeeb7659cdec6f6b9d7b692d472",
+      "expired": false
+    },
+    {
+      "id": 12164431487,
+      "name": "m0-normal-binaries-39202525812-1",
+      "digest": "sha256:3907ad52d683b4e1db14a24f46c8313394c1717ef267e4f6e2e21eb5ea1c3316",
+      "expired": false
+    },
+    {
+      "id": 12164397655,
+      "name": "m0-native-x86_64-39202525812-1",
+      "digest": "sha256:a16c57e4a98f71cb6bd428c16a91f437c1d0e053babfff4d5d5c6a6ea79965e9",
+      "expired": false
+    },
+    {
+      "id": 12164327713,
+      "name": "m0-hard-gates-39202525812-1",
+      "digest": "sha256:d8c6d97b2a6b646716c8b924ab62063a2b68f40a0ebf7871ed672d27169de0f3",
+      "expired": false
+    },
+    {
+      "id": 12164089385,
+      "name": "m0-normal-normal-off-10mbps-39202525812-1",
+      "digest": "sha256:3fe35c78054e7a29bbfdf24386259c54573e081d4687fc24f74b89da83e2b5c5",
+      "expired": false
+    },
+    {
+      "id": 12164038955,
+      "name": "m0-native-aarch64-39202525812-1",
+      "digest": "sha256:2f4865a5fc98c136bedfd0d04267e24472f1539990b05939ab7c2c63813b6e5c",
+      "expired": false
+    },
+    {
+      "id": 12163929559,
+      "name": "m0-normal-netem-150ms-C-39202525812-1",
+      "digest": "sha256:42ff51a57d7a5a4741abb8a9c37e749d6c79fe7947ab541a99ec3356382d19b3",
+      "expired": false
+    },
+    {
+      "id": 12163914678,
+      "name": "m0-normal-netem-150ms-B-39202525812-1",
+      "digest": "sha256:bd5489a911c94db886a1cf3de56f3d64d216fe287d710f84a87e0d8ed29e932c",
+      "expired": false
+    },
+    {
+      "id": 12163858264,
+      "name": "m0-windows-native-39202525812-1",
+      "digest": "sha256:e52e653c2419f91cbb48879260d0cfcd348eff3bfc0f66529607833d57059b48",
+      "expired": false
+    },
+    {
+      "id": 12163844951,
+      "name": "m0-go-control-only-39202525812-1",
+      "digest": "sha256:baa274ec20a95a7c99d56f861252bcf864bb8b50b6b1cb3755ef1534b472c66d",
+      "expired": false
+    }
+  ],
+  "historical_failures_retained": [
+    39201963235,
+    39202299834,
+    39142346744
+  ],
+  "remaining": [
+    "M2 full continuous feed/firstsend per-client/direction",
+    "public original Go client/server/GUI applied config",
+    "full driver 2..32 fault injection and drain",
+    "physical peer D10 p99 ABBA",
+    "original Windows/ARM product loader"
+  ]
+}
