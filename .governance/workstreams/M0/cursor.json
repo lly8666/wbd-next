@@ -4,29 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 180,
-  "checkpoint_sha": "fd822e295a38240fb9382f42c692af6d751a1a0e",
+  "sequence": 181,
+  "checkpoint_sha": "bce9045967d2fa9b5605cc99f40a77f454025dc3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN008 R0-025 original protected Go TLS→Rust Normal first-send M2: M0 S d98b1c7a bound original M4 sendmmsg final copied/uncertain/definitely-not-sent to M2 MatureFirstSend exact lane/epoch. Genuine real raw+TUN independent worker test 8/8 kernel first-send + 2s UNKNOWN 8/8 PASS. Original Go M4 product CLI/WinForms native Linux amd64/arm64 + Windows x64 scoped PASS at worker SOURCE c6683c; no real product Rust loader or applied ACK, FEC2 OFF.",
-  "why_now": "Consumed prior H178 clean checkpoint and M4 current c668 G2 audited native GUI scoped PASS Action39225427878. M2 original owner gap was true kernel first-send denominator missing; implemented sender-bound M2 with no GO packet callbacks; Action39228592102 critical/impairment/metric four jobs success, exact zipped critical log/manifest verified. Main NativeRegression39228591841, ABI39228591865/cross39228591914 and Go owner39228591997 PASS. M0 TLS matrix39228591882 overall FAIL solely Windows NASM Chocolatey HTTP504, Linux/actual ISA-L/netem150msC etc individual PASS. Keep original historical failures. H179 Governance39229506231 FAIL structural mixed-source evidence ref; Sfd822 repaired by moving old d34 M1/M4 receipt to context refs, no code/source modification.",
-  "done_when": "Registry R0-025 buildable actual original Go client/server authenticated TLS→same Rust owner Normal/off plus genuine C2S kind1/M2 receipt + requested/pending/applied/rejected/Stop, bounded netns tests and exact SOURCE; product FEC2 fixed/auto only after real ACK. Physical, GUI driver, Windows ARM/p99 NOT_RUN until proven, FEC2 OFF.",
-  "next_action": "Connect actual authenticated C2S kind1 through the SAME moved Rust replay RX owner to M2 normal firstsend, bounded receipt bitmap scope and immutable M1 FrozenRecord shadow, then original client/server experimental Normal backend+Stop. Do not synthesize receipts or force product CLI/GUI applied. Keep FEC2 OFF.",
+  "current_task": "PLAN-010 PR15 merged and R0-025 live original Go→Rust Stop/Normal product integration. M4 016 now registered: original Windows single-proxy CLI/GUI/portable runtime script-free work M4-owned; exact frozen Windows self-dispatch/control implemented and Actions-tested by M0. M0 verified original Go TLS Rust Stop completion+no Cleanup before drain; real kind1 product still unwired.",
+  "why_now": "Main after H180 clean. PLAN-010 PR15 3b7a9f2 merged 06397ca; M4-015 native original GUI run39225427878 scoped PASS reused, M4 worker Governance39225015969 FAIL retained. New 016 has only one additional Windows overlay path, same rev2/epoch1; M4 worker cursor untouched. Existing M4 product workflow pinned qualification/m4-product-windows-v1 17263ad; main G2/immutable I dispatcher Action39234078787 SUCCESS, no worker-016 I yet. Main project hot-doc overrun at 437cb2 failed 39234786246/39234786423, compressed project and Governance 39234938398 PASS. M0 shared original Go/Rust Stop SOURCE4f358 Actions TLS39235733659 SUCCESS and real native critical39235733652 SUCCESS (real Stop complete), project functional 016 still NOT_RUN.",
+  "done_when": "R0-025: actual original Go client/server authenticated TLS→Rust Normal data/feedback/Stop with authentic C2S kind1/M2 mature coverage, exact requested/pending/applied/rejected, netns artifacts and final product ABI. PLAN010 M0 scope only shared Stop, self-dispatch and final M4 integration; M4 owns Windows 016. CLI/GUI real network, physical, WinARM/p99 remain NOT_RUN unless exact Action; production FEC2 OFF.",
+  "next_action": "Continue M0 original Go/Rust authenticated reverse C2S kind1 to SAME moved replay owner and M2 mature firstsend, actual product requested/pending/applied/rejected and Stop; await M4 worker-owned 016 exact I/G2 Windows native functional receipt for final single-proxy no-PowerShell integration. No M1/M2/M3 new task unless real Stop contract defect; FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "d98b1c7ad58972f4bdaf7b7c4d731e7ebfce3e2a",
+  "last_tested_source": "4f3585251a3288ca2b2a62a23d26fa740f6e8248",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN008-original-normal-M2-real-firstsend-20261019.json"
+    "docs/evidence/M0/PLAN010-real-Stop-plus-M4-selfdispatch-20261019.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN008-H179-governance-evidence-source-recovery-20261019.md",
-    "docs/evidence/M0/PLAN008-M1-M4-integration-20261019.json",
-    "docs/devlog/M0/PLAN008-H178-original-normal-m2-firstsend-intent-20261019.md",
-    "docs/devlog/M0/PLAN008-native-game-m4-source-intake-20261019.md",
-    "docs/devlog/M0/PLAN008-H177-component-intake-and-product-resume-20261019.md",
-    "docs/devlog/M0/PLAN008-M4-original-product-ci-intent-20261019.md",
-    "docs/evidence/M0/PLAN009-M3-v7-test-overlay-source-20261019.json",
-    "docs/evidence/M0/PLAN008-025-auth-m2-mature-3501b929fd980110de83ebed14eace146e4f20e1.json"
+    "docs/decisions/M0-windows-native-migration-2026-10-19.md",
+    "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md",
+    "docs/evidence/M0/PLAN010-M4-Windows-selfdispatch-entry-20261019.json",
+    "docs/evidence/M0/PLAN008-original-normal-M2-real-firstsend-20261019.json",
+    "docs/devlog/M0/PLAN010-H180-PR15-recovery-and-M4-dispatch-intent-20261019.md"
   ],
   "open_requests": [],
-  "partial_summary": "H179 M0 SOURCE d98: real original Go TLS kernel RX/TX Normal off→same original M4 sendmmsg completion→M2 MatureFirstSend 8 accepted, no unsent/uncertain, 2s 8 UNKNOWN without authentic kind1. Native real netns Action39228592102 four jobs PASS and exact critical ZIP sha256 d185dba verified; main NativeRegression39228591841 all seven PASS; ABI/cross and Go owner PASS. Full TLS matrix39228591882 FAIL because Windows NASM Chocolatey504 only, Linux netem150msC, native actual ISA-L PASS scoped; old reds retained. M4 new source c668 original Go Linux x64/ARM + native Windows GUI scoped PASS 39225427878, Rust loader/applied still NOT_RUN. Main product R0-025 partial, actual reverse kind1/auth receipt not wired, FEC2 OFF. H179 Governance39229506231 structural FAIL old-source evidence ref, corrected at Sfd822 and H180; no native test change."
+  "partial_summary": "M0 H181. PR15 PLAN010 merged exactly at 3b7a9f2→06397ca. M4 016 registered and sole extra r0/go_overlay/internal/windowsclient/ scope; worker M4 branch/cursor untouched. Frozen self-test control 17263ad and trusted main dispatcher auto M4 016 request I/G2 verification Action39234078787 PASS; actual M4 016 request/native network/script-free runtime NOT_RUN. M4 015 existing native Go/WinForms Linux x64/ARM+Windows PASS 39225427878 reused, old worker Governance FAIL separate. Real original Go/Rust C Stop/Release 4f358 Action39235733652 critical PASS + TLS39235733659 Go Stop→Cleanup sequencing PASS. M0 R0-025 kind1 product/actual requested-pending-applied/rejected and physical NOT_RUN, product FEC2 OFF. Full broad TLS matrix39235733630 had ISAL in progress at evidence S. Old failed hot project docs and corrected Governance preserved."
 }
