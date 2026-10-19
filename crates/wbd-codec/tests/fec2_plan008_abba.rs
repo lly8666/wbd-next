@@ -14,7 +14,7 @@ use std::time::Instant;
 use wbd_codec::fec_v2 as candidate_code437;
 
 const ACCEPTED_SHA: &str = "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e";
-const CANDIDATE_SHA: &str = "437cc721d1009c835cb900384dadbdbf3ebea800";
+const CANDIDATE_SHA: &str = "b4d638abf80bb6f12e6c944565c2aa8bb4e90792";
 const K: usize = 16;
 const R: usize = 16;
 const FRAME_LEN: usize = 1200;
