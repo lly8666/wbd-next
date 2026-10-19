@@ -1706,6 +1706,15 @@ fn stop(handle:u64)->i32{
         if let Some(ref raw)=e.raw_tx {raw.begin_stop()}
         if let Some(ref tun)=e.tun_sink {tun.begin_stop()}
     }
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    {
+        // Both kernel workers are joined: M1 retained FEC source/parity
+        // slabs may now be retired exactly once, never while M4 borrows
+        // cipher bytes or original driver's synchronous call is in flight.
+        if let Some(stream)=e.fec2_live_tx.as_mut(){stream.stop()}
+        e.fec2_live_tx=None;
+        e.fec2_staged_pns.clear();
+    }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -3117,6 +3126,21 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
                 |s|s.shadow.outstanding()!=0
             ){return BAD_STAGE}
         if e.owner.apply_fec2_probe_quiescent_off(epoch,revision).is_err(){
+            return BAD_STAGE
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    {
+        // Fixed remains PENDING until a remote authenticated M2/product
+        // receipt. Even an OFF request must not discard old FEC plaintext
+        // or a staged ciphertext while an M1 job or real M4 kernel copy is
+        // unsettled. No queue acceptance is a quiescent proof.
+        if !e.fec2_staged_pns.is_empty()||
+            e.fec2_live_tx.as_ref().is_some_and(|s|{
+                let r=s.report();
+                r.open_bytes!=0||r.charged_bytes!=0||
+                    r.queued_jobs!=0||r.outstanding_jobs!=0
+            }){
             return BAD_STAGE
         }
     }
