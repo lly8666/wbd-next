@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M4",
+  "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "branch": "work/m4-r1-platform",
+  "source_sha": "afd93ca4f5ec64e168c0daf058ecafcadf945733",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "product_fec2": "OFF",
+  "main_decision": "docs/decisions/M0-windows-native-migration-2026-10-19.md",
+  "cold_legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+  "donor_file_delta_count": 12,
+  "m4_prior_015": {
+    "h26": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+    "central_g2_run_id": 39225046360,
+    "g2_result": "PASS",
+    "three_platform_native_run_id": 39225427878,
+    "result": "SUCCESS_SCOPED_NOT_PRODUCT",
+    "worker_governance_run_id": 39225015969,
+    "worker_governance_result": "FAIL"
+  },
+  "verification": {
+    "donor_exact_blob_import": "NOT_STARTED",
+    "windows_native_2022": "NOT_RUN",
+    "windows_native_2025": "NOT_RUN",
+    "runtime_no_shell": "NOT_RUN",
+    "native_connect_disconnect_recover": "NOT_RUN",
+    "single_instance_owned_WAL": "NOT_RUN",
+    "DNS_IPv6_WFP_route_readback": "NOT_RUN",
+    "native_Rust_applied": "NOT_RUN_M0_OWNER",
+    "physical": "NOT_RUN",
+    "cost": "NOT_RUN",
+    "final_main_merge": "NOT_DONE"
+  },
+  "request_I": "NOT_CREATED",
+  "next_action": "M4 import exactly 12 donor Windows delta files under own overlay, extend original hash-locked manifest, complete CLI/GUI native product. Commit code SOURCE then one exact request I; central G2 + main auto dispatcher. M0 handles protected Rust Stop and final main merge."
+}
