@@ -3,7 +3,7 @@
 //! One AEAD/PN replay owner protects all interleaved blocks, then M3 RS16
 //! emits first-delivery candidates. M4 must validate/submit each candidate.
 #![forbid(unsafe_code)]
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap,BTreeSet};
 use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
 // The authenticated original-owner RX opener is MOVED here; never minted
 // separately from keys, or duplicate normal/FEC PN windows could exist.
@@ -47,7 +47,7 @@ pub(crate) struct Fec2LiveRx {
     opener:ReplayProtectedLaneRx,
     rs:Rs16,budget:usize,stopped:bool,
     highest_block:u64,
-    blocks:BTreeMap<u64,LiveBlock>,
+    blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
     stored:usize,evicted:u64,
 }
 impl Fec2LiveRx{
@@ -65,17 +65,19 @@ impl Fec2LiveRx{
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener,rs:Rs16::new(),budget,
-            stopped:false,highest_block:0,blocks:BTreeMap::new(),stored:0,evicted:0})
+            stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
+            stored:0,evicted:0})
     }
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
     /// Lost/expired old blocks are never counted as delivered or credited.
     pub(crate) fn evicted_blocks(&self)->u64{self.evicted}
     pub(crate) fn stop(&mut self){
-        self.stopped=true;self.blocks.clear();self.stored=0;
+        self.stopped=true;self.blocks.clear();self.retired.clear();self.stored=0;
     }
     fn retire(&mut self,now:MonoNs){
         let floor=self.highest_block.saturating_sub(BLOCK_REORDER_SPAN);
+        self.retired.retain(|id|*id>=floor);
         let keys=self.blocks.iter().filter_map(|(&id,b)|{
             if id<floor||now.elapsed_since(b.touched)>MAX_BLOCK_AGE_NS{
                 Some(id)
@@ -84,6 +86,7 @@ impl Fec2LiveRx{
         for id in keys{
             if let Some(old)=self.blocks.remove(&id){
                 self.stored=self.stored.saturating_sub(old.bytes);
+                self.retired.insert(id);
                 self.evicted=self.evicted.saturating_add(1);
             }
         }
@@ -110,7 +113,8 @@ impl Fec2LiveRx{
             }
             _=>return Err(ReceiveError::Invalid)
         };
-        if id==0||id<self.highest_block.saturating_sub(BLOCK_REORDER_SPAN){
+        if id==0||id<self.highest_block.saturating_sub(BLOCK_REORDER_SPAN)
+            ||self.retired.contains(&id){
             return Err(ReceiveError::Invalid)
         }
         self.highest_block=self.highest_block.max(id);
@@ -124,6 +128,7 @@ impl Fec2LiveRx{
                 .map(|(&id,_)|id).ok_or(ReceiveError::Capacity)?;
             let retired=self.blocks.remove(&oldest).ok_or(ReceiveError::Capacity)?;
             self.stored=self.stored.saturating_sub(retired.bytes);
+            self.retired.insert(oldest);
             self.evicted=self.evicted.saturating_add(1);
         }
         let old=self.blocks.get(&id);
@@ -237,6 +242,12 @@ mod tests {
         assert_eq!(rx.active_blocks(),32);
         assert_eq!(rx.evicted_blocks(),1);
         assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
+        // Even a distinct authenticated PN with the same retired block
+        // identity MUST NOT redeliver the evicted source.
+        let prior=fec_v2::source_owned(1,0,&[99u8;32],1369).unwrap();
+        let mut late=seal(&mut tx,2,&prior);
+        assert_eq!(rx.consume(epoch(),&mut late,MonoNs(34)),
+            Err(ReceiveError::Invalid));
         rx.stop();assert_eq!(rx.stored_bytes(),0);
     }
     #[test]
