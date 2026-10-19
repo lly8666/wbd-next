@@ -246,7 +246,27 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     // remote application-APPLIED receipt. Keep truthful pending.
     got,applied,e:=b.readbackOriginalFixedPending(pending,server.Epoch)
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
-        t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
+        t.Fatalf("false product Fixed applied before M2 maturity: %+v %+v %v",got,applied,e)
+    }
+    // M2 2s is genuine elapsed time from original M4 accepted first sends,
+    // not a forged timer advance. Only the actual AEAD C2S receipt and
+    // complete recovered client TUN UDP may let the operator commit rev4.
+    mature:=false
+    for until:=time.Now().Add(4*time.Second);time.Now().Before(until);
+        time.Sleep(20*time.Millisecond){
+        if e:=b.commitOriginalFixedMatureM2(server.Epoch,4);e==nil{
+            mature=true;break
+        }
+    }
+    if !mature{
+        coverage,e:=b.rustOwnerNormalM2Coverage()
+        t.Fatalf("actual M2 mature Fixed rev4 not APPLIED coverage=%+v err=%v",
+            coverage,e)
+    }
+    got,applied,e=b.readbackOriginalFixedPending(pending,server.Epoch)
+    if e!=nil||!applied.Applied||got.AppliedRevision!=4{
+        t.Fatalf("authenticated 2s M2 Fixed revision not APPLIED: %+v %+v %v",
+            got,applied,e)
     }
     t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
         recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
@@ -271,5 +291,6 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if _,e:=net.InterfaceByName(tunName);e==nil{
         t.Fatal("server TUN interface leaked after native Stop + Go fd close")
     }
+    t.Log("M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS revision=4 kernel_source_parity=1 coverage_2s=positive client_udp=4 no_fake_apply=1")
     t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_m2_deny=1 both_tun_devices_gone=1")
 }
