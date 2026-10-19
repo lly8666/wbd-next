@@ -79,10 +79,44 @@ def fetch_complete_g2_ancestry(api, source):
     return complete_g2_ancestry(complete,expected_source=source)
 
 
+# M0-reviewed immutable M4 transient scope violation; never an extra grant.
+# Git history cannot be erased by a later deletion or a net-zero tree diff.
+M4_INCIDENT_CREATE = "2cfd979b8c10aca2a1abffb68b0994a960713164"
+M4_INCIDENT_REMOVE = "85911ac3cd73d153b74315fdc764db4e7ad13cde"
+M4_INCIDENT_PARENT = "ae5ec6a543488af8e4c5ea3980b587594bf37401"
+M4_INCIDENT_PATH = "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter_test.go"
+
+def review_m4_transient_incident(api,role,sha,detail):
+    """One exact historical create+delete pair, retaining both negative edges."""
+    g.need(role["id"]=="M4" and sha in {M4_INCIDENT_CREATE,M4_INCIDENT_REMOVE},
+           "M4 historical incident identity mismatch")
+    g.need(detail["parents"]==1 and detail["paths"]==[M4_INCIDENT_PATH],
+           "M4 incident must be exactly one single-parent unauthorized path")
+    actual=api.get(f"commits/{sha}?per_page=100")
+    parents=actual.get("parents",[])
+    expected_parent=(M4_INCIDENT_PARENT if sha==M4_INCIDENT_CREATE else M4_INCIDENT_CREATE)
+    expected_status=("added" if sha==M4_INCIDENT_CREATE else "removed")
+    fs=actual.get("files",[])
+    g.need(len(parents)==1 and parents[0].get("sha")==expected_parent and
+           len(fs)==1 and fs[0].get("filename")==M4_INCIDENT_PATH and
+           fs[0].get("status")==expected_status and
+           not fs[0].get("previous_filename"),
+           "M4 transient incident parent/status/path differs from M0 review")
+    return {"reviewed_m4_transient_incident":True,
+            "incident_status":expected_status,"incident_parent":expected_parent}
+
 def audit_worker_history(api,role,source,control_sha):
     """Every commit's FULL path list, parent count and exceptional sync reviewed."""
     commits=fetch_complete_g2_ancestry(api,source)
     edges=[]
+    if role["id"]=="M4":
+        ids=[c["sha"] for c in commits]
+        seen=[(x,ids.index(x)) for x in (M4_INCIDENT_CREATE,M4_INCIDENT_REMOVE) if x in ids]
+        # Historical whitelist is indivisible; no replay of just the added
+        # file, and the two exact commits must remain consecutive, in order.
+        if seen:
+            g.need(len(seen)==2 and seen[1][1]==seen[0][1]+1,
+                   "M4 reviewed create/delete history is missing or nonconsecutive")
     for commit in commits:
         sha=commit["sha"]
         on_main=api.get(f"compare/{sha}...{control_sha}?per_page=1")
@@ -91,6 +125,9 @@ def audit_worker_history(api,role,source,control_sha):
         ancestor=on_main["status"] in {"ahead","identical"}
         detail=g.commit_delta(api,sha,256)
         sync={}
+        if (role["id"]=="M4" and not ancestor and
+                sha in {M4_INCIDENT_CREATE,M4_INCIDENT_REMOVE}):
+            sync=review_m4_transient_incident(api,role,sha,detail)
         if (role["id"]=="M3" and not ancestor and detail["parents"]==1
                 and detail["paths"]==[M3_G2_REFRESH_PATH]):
             # The original historical sync is immutable. A SECOND one-shot
@@ -394,11 +431,31 @@ M2_SYNC_PROTECTED = frozenset({
 def verify_worker_commits(role, commits):
     """Only original worker paths; one reviewed M3 main-sync merge is exceptional."""
     checked=0
+    incidents=[x for x in commits if x.get("reviewed_m4_transient_incident")]
+    if incidents:
+        g.need(role["id"]=="M4" and len(incidents)==2 and
+               [x.get("sha") for x in incidents]==
+               [M4_INCIDENT_CREATE,M4_INCIDENT_REMOVE] and
+               all(x.get("is_main_ancestor") is False for x in incidents),
+               "M4 incident must retain both reviewed historical violations")
     for item in commits:
         g.need(item.get("is_main_ancestor") is True or item.get("is_main_ancestor") is False,
                "worker ancestry unknown")
         if item["is_main_ancestor"]:
             # M0 commits on main are already under main-role validation.
+            continue
+        if item.get("reviewed_m4_transient_incident") is True:
+            expected_status=("added" if item.get("sha")==M4_INCIDENT_CREATE else "removed")
+            expected_parent=(M4_INCIDENT_PARENT if item.get("sha")==M4_INCIDENT_CREATE
+                             else M4_INCIDENT_CREATE)
+            g.need(role["id"]=="M4" and
+                   item.get("sha") in {M4_INCIDENT_CREATE,M4_INCIDENT_REMOVE} and
+                   item.get("parents")==1 and
+                   item.get("paths")==[M4_INCIDENT_PATH] and
+                   item.get("incident_status")==expected_status and
+                   item.get("incident_parent")==expected_parent,
+                   "M4 incident exceeds exact original SHA/parent/path/status review")
+            checked+=1
             continue
         if item.get("approved_g2_tool_refresh") is True:
             g.need(role["id"]=="M3" and item.get("parents")==1 and

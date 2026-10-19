@@ -48,6 +48,60 @@ class WorkerRoleTests(unittest.TestCase):
             with self.assertRaises(g.ContractError):
                 w.verify_worker_commits(role,[edge])
 
+    def test_m4_exact_transient_incident_retained_but_no_future_grant(self):
+        role=dict(roles()["roles"][1],id="M4",
+                  allowed_paths=["r0/go_overlay/internal/configfile/"])
+        original=[
+            {"sha":w.M4_INCIDENT_CREATE,"is_main_ancestor":False,
+             "parents":1,"paths":[w.M4_INCIDENT_PATH],
+             "incident_status":"added","incident_parent":w.M4_INCIDENT_PARENT,
+             "reviewed_m4_transient_incident":True},
+            {"sha":w.M4_INCIDENT_REMOVE,"is_main_ancestor":False,
+             "parents":1,"paths":[w.M4_INCIDENT_PATH],
+             "incident_status":"removed","incident_parent":w.M4_INCIDENT_CREATE,
+             "reviewed_m4_transient_incident":True}]
+        self.assertEqual(w.verify_worker_commits(role,original),2)
+        mutations=[
+            original[:1],original[1:],list(reversed(original)),
+            [dict(original[0],sha="f"*40),original[1]],
+            [dict(original[0],paths=["r0/go_overlay/internal/runtimeentry/other_test.go"]),original[1]],
+            [dict(original[0],incident_status="modified"),original[1]],
+            [dict(original[0],incident_parent="e"*40),original[1]],
+            [dict(original[0],parents=2),original[1]],
+            [original[0],dict(original[1],incident_status="added")],
+            [original[0],dict(original[1],reviewed_m4_transient_incident=False)]]
+        for bad in mutations:
+            with self.subTest(bad=bad),self.assertRaises(g.ContractError):
+                w.verify_worker_commits(role,bad)
+        # No M4 role or unrelated path obtains a write grant.
+        with self.assertRaises(g.ContractError):
+            w.verify_worker_commits(roles()["roles"][1],original)
+        with self.assertRaises(g.ContractError):
+            w.verify_worker_commits(role,[{"sha":"f"*40,"parents":1,
+                "is_main_ancestor":False,"paths":[w.M4_INCIDENT_PATH]}])
+
+    def test_m4_incident_remote_proof_requires_exact_git_parent_and_status(self):
+        role={"id":"M4"}
+        for sha,parent,status in [
+            (w.M4_INCIDENT_CREATE,w.M4_INCIDENT_PARENT,"added"),
+            (w.M4_INCIDENT_REMOVE,w.M4_INCIDENT_CREATE,"removed")]:
+            class Api:
+                def __init__(self):
+                    self.parent=parent;self.status=status;self.path=w.M4_INCIDENT_PATH
+                def get(self,_):
+                    return {"parents":[{"sha":self.parent}],
+                            "files":[{"filename":self.path,"status":self.status}]}
+            detail={"parents":1,"paths":[w.M4_INCIDENT_PATH]}
+            self.assertTrue(w.review_m4_transient_incident(Api(),role,sha,detail))
+            for key,value in [("parent","0"*40),("status","modified"),
+                              ("path","other.go")]:
+                fake=Api();setattr(fake,key,value)
+                with self.subTest(key=key,sha=sha),self.assertRaises(g.ContractError):
+                    w.review_m4_transient_incident(fake,role,sha,detail)
+        with self.assertRaises(g.ContractError):
+            w.review_m4_transient_incident(Api(),{"id":"M1"},w.M4_INCIDENT_CREATE,
+                                           {"parents":1,"paths":[w.M4_INCIDENT_PATH]})
+
     def test_one_m0_reviewed_m3_main_sync_preserves_worker_scope(self):
         role=dict(roles()["roles"][1])
         role["id"]="M3"
