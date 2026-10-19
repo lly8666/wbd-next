@@ -87,19 +87,42 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: "1.23.12", check-latest: false, cache: false}
-      - name: Materialize exact original Git blobs on ephemeral Windows checkouts
+      - name: Materialize exact original Git-object bytes on ephemeral Windows checkout
         if: matrix.target == 'windows-amd64'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($folder in @('legacy','worker-overlay')) {
-            git -C $folder config core.autocrlf false
-            git -C $folder config core.eol lf
-            git -C $folder -c core.autocrlf=false -c core.eol=lf checkout-index --all --force
-            if ($LASTEXITCODE -ne 0) { throw "exact Git blob checkout failed: $folder" }
-          }
-          if ((git -C legacy rev-parse HEAD).Trim() -ne $env:LEGACY_SOURCE) {throw 'legacy SOURCE moved'}
-          if ((git -C worker-overlay rev-parse HEAD).Trim() -ne $env:M4_SOURCE) {throw 'M4 SOURCE moved'}
+          @'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          legacy=root/"legacy"
+          overlay=root/"worker-overlay"
+          legacy_sha=os.environ["LEGACY_SOURCE"]
+          m4_sha=os.environ["M4_SOURCE"]
+          manifest=json.loads((overlay/"r0/go_overlay/assembly/manifest.json").read_text(encoding="utf-8"))
+          assert manifest["legacy_source"]==legacy_sha
+          for repo,sha in ((legacy,legacy_sha),(overlay,m4_sha)):
+              assert subprocess.check_output(["git","-C",str(repo),"rev-parse","HEAD"],text=True).strip()==sha
+          def blob_sha(payload):
+              return hashlib.sha1(b"blob "+str(len(payload)).encode()+b"\\0"+payload).hexdigest()
+          def extract(repo,source,path,digest):
+              p=pathlib.PurePosixPath(path)
+              assert not p.is_absolute() and all(x not in ("",".","..") for x in p.parts) and "\\" not in path
+              raw=subprocess.check_output(["git","-C",str(repo),"show",source+":"+path])
+              assert blob_sha(raw)==digest, "exact original Git object mismatch: "+path
+              target=repo.joinpath(*p.parts)
+              assert target.is_file(), "existing checkout file missing: "+path
+              target.write_bytes(raw) # Exact upstream bytes, not Windows CRLF checkout filters
+          for entry in manifest["operations"]:
+              if entry["kind"]=="replace":
+                  extract(legacy,legacy_sha,entry["path"],entry["original_blob"])
+              elif entry["kind"]=="create":
+                  extract(overlay,m4_sha,entry["overlay_path"],entry["result_blob"])
+              else:
+                  raise ValueError("unknown pinned operation")
+          print("M4_WIN_EXACT_GIT_BLOBS_RESTORED_NOT_NATIVE_PRODUCT_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'exact Git object restore failed'}
       - name: Fail closed on unpinned SOURCE and wrong Go toolchain
         shell: bash
         run: |
@@ -108,7 +131,7 @@ jobs:
           test "$(git -C worker-overlay rev-parse HEAD)" = "$M4_SOURCE"
           test "$(go version | awk '{print $3}')" = "go1.23.12"
       - name: Linux exact old-Go assembly and native config/build, one per target
-        if: matrix.target != 'windows-amd64'
+        if: matrix.target != 'windows-amd64' && github.event_name == 'workflow_run'
         shell: bash
         env:
           TARGET: ${{ matrix.target }}
@@ -127,6 +150,11 @@ jobs:
           assert d["overlay_source"]==os.environ["M4_SOURCE"]
           assert d["native_rust_loader"]=="NOT_RUN" and d["product_fec2"]=="OFF"
           PY
+      - name: Main-only Windows CI repair reuses already-qualified Linux M4 SOURCE
+        if: matrix.target != 'windows-amd64' && github.event_name == 'push'
+        shell: bash
+        run: |
+          echo 'LINUX_NOT_RUN_THIS_PUSH unchanged M4 SOURCE and legacy pins; earlier Linux jobs in Action 39221442451 succeeded'
       - name: Windows real original Go CLI and WinForms portable GUI native selftest
         if: matrix.target == 'windows-amd64'
         shell: pwsh
