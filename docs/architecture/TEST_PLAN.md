@@ -21,6 +21,8 @@ M0已有持续业务开发基线；2026-10-16的 [热路径成本补充方案](.
 
 ## 1. 一次构建，多次验证
 
+模块测试入口按[PLAN-009](../decisions/M0-worker-selftest-entry-2026-10-19.md)补齐：M0一次提供公共prepare/paired执行能力，worker自己维护模块夹具、请求与结果。先编译/验功能取得真实manifest，再发独立性能请求消费产物；不能因worker不能修改workflow就要求M0逐条代跑。入口及有界ABBA扩展需实际实现/验证后才能使用，现有两leg规则不被文档自动绕过。
+
 构建 job 固定 product SOURCE、legacy SOURCE、Cargo.lock、Rust toolchain、Go toolchain、C/汇编编译器、target/features/profile。产物含库/控制程序/预编译test二进制、manifest、SOURCE、文件size/hash、工具链和ISA能力说明。Linux x64、Linux ARM64、Windows x64 各自构建；cross-build成功不等于native性能通过。
 
 Rust使用固定release配置（初始opt-level3、thin LTO、保留line tables用于profile；以构建耗时/运行证据再调），旧新对比不能偷偷使用不同性能flags。portable 不用 `target-cpu=native` 编译给别的VM，SIMD走runtime dispatch。依赖/编译缓存只加速构建，不能代替来源验证。AWS-LC/ISA-L native对象按目标固定，避免“Rust源码相同、Cflags不同”被忽略。
