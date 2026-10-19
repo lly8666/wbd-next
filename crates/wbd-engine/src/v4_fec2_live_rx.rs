@@ -44,7 +44,9 @@ impl LiveBlock {
 }
 pub(crate) struct Fec2LiveRx {
     credential:VerifiedReceiveEpoch,
-    opener:ReplayProtectedLaneRx,
+    // Optional only for standalone native tests. Background original Go
+    // owner keeps the *one* moved opener and supplies AEAD-admitted frames.
+    opener:Option<ReplayProtectedLaneRx>,
     rs:Rs16,budget:usize,stopped:bool,
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
@@ -57,6 +59,14 @@ impl Fec2LiveRx{
     pub(crate) fn from_original_owner(
         verified:VerifiedReceiveEpoch,opener:ReplayProtectedLaneRx,
         wire_max:usize)->Result<Self,ReceiveError>{
+        let mut rx=Self::from_authenticated_scope(verified,wire_max)?;
+        rx.opener=Some(opener);
+        Ok(rx)
+    }
+    /// M0 original-Go background owner already moved the only replay opener
+    /// to its RX worker. This bounded FEC cache MUST NOT clone its keys.
+    pub(crate) fn from_authenticated_scope(
+        verified:VerifiedReceiveEpoch,wire_max:usize)->Result<Self,ReceiveError>{
         if verified.generation==0||verified.epoch==[0;16]||
            verified.negotiated_features!=7||!verified.direction_s2c{
             return Err(ReceiveError::Authorization)
@@ -64,7 +74,7 @@ impl Fec2LiveRx{
         let budget=wire_max.checked_sub(wbd_codec::record_frame::FIXED_WIRE_OVERHEAD)
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
-        Ok(Self{credential:verified,opener,rs:Rs16::new(),budget,
+        Ok(Self{credential:verified,opener:None,rs:Rs16::new(),budget,
             stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
             stored:0,evicted:0})
     }
@@ -97,18 +107,29 @@ impl Fec2LiveRx{
         wire:&mut [u8],now:MonoNs)->Result<Vec<FirstDelivery>,ReceiveError>{
         if self.stopped{return Err(ReceiveError::Stopped)}
         if scope!=self.credential{return Err(ReceiveError::Authorization)}
-        let rec=self.opener.open_unique_with_fec2_after_admission_in_place(wire)
+        let rec=self.opener.as_mut().ok_or(ReceiveError::Authorization)?
+            .open_unique_with_fec2_after_admission_in_place(wire)
             .map_err(|_|ReceiveError::ReplayOrAuthentication)?;
-        let (id,index,kind,body,k)=match rec.kind{
+        self.accept_authenticated(scope,rec.kind,rec.payload,now)
+    }
+    /// Only callable from the original worker AFTER its single moved
+    /// ReplayProtectedLaneRx has admitted AEAD and a unique PN. There is
+    /// no independent decryptor, seq/PN acceptance or peer grant here.
+    pub(crate) fn accept_authenticated(&mut self,scope:VerifiedReceiveEpoch,
+        kind:u8,payload:&[u8],now:MonoNs)
+        ->Result<Vec<FirstDelivery>,ReceiveError>{
+        if self.stopped{return Err(ReceiveError::Stopped)}
+        if scope!=self.credential{return Err(ReceiveError::Authorization)}
+        let (id,index,kind,body,k)=match kind{
             2=>{
-                let src=fec_v2::parse_source(rec.payload,self.budget)
+                let src=fec_v2::parse_source(payload,self.budget)
                     .map_err(|_|ReceiveError::Invalid)?;
                 (src.block_id,src.source_index,2,src.frame.to_vec(),None)
             }
             3=>{
-                let repair=fec_v2::parse_repair(rec.payload,self.budget)
+                let repair=fec_v2::parse_repair(payload,self.budget)
                     .map_err(|_|ReceiveError::Invalid)?;
-                (repair.block_id,repair.parity_row,3,rec.payload.to_vec(),
+                (repair.block_id,repair.parity_row,3,payload.to_vec(),
                     Some(repair.actual_k))
             }
             _=>return Err(ReceiveError::Invalid)
@@ -223,6 +244,31 @@ mod tests {
         let (_,n)=tx.seal_fec2_after_admission_in_place(
             kind,&mut wire,payload.len(),0).unwrap();
         wire.truncate(n);wire
+    }
+    #[test]
+    fn m0_fec2_background_receiver_cannot_admit_without_original_opener(){
+        let suite=RecordSuite::ChaCha20Poly1305;
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+        let mut blocks=Fec2LiveRx::from_authenticated_scope(epoch(),1400).unwrap();
+        let payload=fec_v2::source_owned(7,0,b"source",1369).unwrap();
+        let mut wire=seal(&mut tx,2,&payload);
+        assert_eq!(blocks.consume(epoch(),&mut wire,MonoNs(1)),
+            Err(ReceiveError::Authorization));
+        assert_eq!(blocks.accept_authenticated(
+            VerifiedReceiveEpoch{epoch:[99;16],..epoch()},2,
+            &payload,MonoNs(1)),Err(ReceiveError::Authorization));
+        // This packet has NOT been AEAD opened: only an authentic worker
+        // may call accept_authenticated; native API is module-private.
+        let mut admitted=opened(suite);
+        let actual=admitted.open_unique_with_fec2_after_admission_in_place(
+            &mut wire).unwrap();
+        let result=blocks.accept_authenticated(epoch(),actual.kind,
+            actual.payload,MonoNs(2)).unwrap();
+        assert_eq!(result.len(),1);
+        assert_eq!(result[0].frame,b"source");
+        blocks.stop();
+        assert_eq!(blocks.accept_authenticated(epoch(),2,&payload,MonoNs(3)),
+            Err(ReceiveError::Stopped));
     }
     #[test]
     fn m0_fec2_live_rx_old_incomplete_blocks_cannot_head_of_line_fresh(){
