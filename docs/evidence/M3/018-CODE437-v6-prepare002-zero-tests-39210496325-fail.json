@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "source_sha": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "result": "FAIL",
+  "qualification": "REAL_ISAL_PREPARE_NOT_QUALIFIED_ZERO_NATIVE_CASES_TEST_OVERLAY_MISSING",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "run": {
+    "id": 39210496325,
+    "attempt": 1,
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "failure",
+    "worker_request": "M3-018-NATIVE-E4-PREPARE-002",
+    "request_commit": "33196ab2e194a88143f798df1d7ce9ccbbff1e08",
+    "worker_h42": "ccf3c2d3e5de3368fd5862fb8d8e664165b22adf",
+    "control_ref": "qualification/worker-ci-v6",
+    "control_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+    "authorize_job": 117922560421,
+    "authorize": "success",
+    "prepare_job": 117922622144,
+    "prepare": "failure",
+    "paired": "skipped",
+    "official_isal_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "rust": "1.85.1",
+    "platform": "linux_x86_64",
+    "features": "native-isal",
+    "cargo": "--release --locked",
+    "native_library": "built_and_linked",
+    "functional_test_result": {
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 154,
+      "actual_native_backend_executed": false
+    },
+    "prepare_manifest": "NOT_CREATED",
+    "native_ABBA": "NOT_RUN"
+  },
+  "artifact": {
+    "id": 12167348230,
+    "name": "worker-prepare-39210496325-1",
+    "zip_sha256": "c7ffef2128564c14ed40b451223635b172844d2b0e5823d5eaa773fdfc33351f",
+    "size_bytes": 235,
+    "members": [
+      {
+        "path": "functional-B.log",
+        "size_bytes": 115,
+        "sha256": "e2f0262ccd58bb15c85df786241cba66fbeb4e2f675d02147cf72ad5aec4793e",
+        "exact": "\\nrunning 0 tests\\n\\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 154 filtered out; finished in 0.00s\\n"
+      }
+    ],
+    "verified": "M3 downloaded artifact ZIP and independently calculated ZIP and single member sha256"
+  },
+  "root_cause": {
+    "code": "CROSS_SOURCE_TEST_MODULE_NOT_OVERLAID",
+    "shared_tool": "tools/worker_component_validation.py",
+    "entry": "source_overlay(role,root,source,harness) writes only worker source fec_v2.rs and ABBA test fixture",
+    "filter": "r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact",
+    "candidate_test_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
+    "candidate_test_path": "crates/wbd-codec/src/fec_v2_tests.rs",
+    "candidate_test_blob": "7c477f03839fbcf7781656af88508e3e4d68e3e8",
+    "control_test_blob": "46989fdd17b83768970f4f0d513a3b735b9cc970",
+    "candidate_test_exists": true,
+    "control_test_exists": false,
+    "conclusion": "Feature-native library compiled but target oracle absent. This is not a tested RS16 correctness failure and is not a benchmark."
+  },
+  "coordination": {
+    "issue": "https://github.com/lly8666/wbd-next/issues/14#issuecomment-6261243715",
+    "m0_owned_fix": "Overlay candidate fec_v2_tests.rs alongside candidate fec_v2.rs from exact worker SHA in main-owned native preparation adapter, record both blob/hash provenance, add zero-oracle regression; freeze a new immutable control ref, no mutation to v6 and no rerun of failed prepare002.",
+    "next_unique_request": "M3-018-NATIVE-E4-PREPARE-003",
+    "new_request_status": "NOT_CREATED_PENDING_M0_NEW_CONTROL"
+  },
+  "scoped_other_evidence": {
+    "default_scalar": "worker-native 39189856227 123 PASS/0 FAIL/1 ignored (different native off execution)",
+    "H42_worker_governance": 39209811567,
+    "H42_central_g2": 39210137428
+  },
+  "not_run": {
+    "candidate_real_native_e4": "NOT_RUN",
+    "old_new_isa_l_abba": "NOT_RUN",
+    "allocation_cpu_gain": "NOT_RUN",
+    "physical_and_packet_p99": "NOT_RUN",
+    "windows_arm_native": "NOT_RUN",
+    "product_fec2": "OFF"
+  },
+  "preserve_historical_red": [
+    39204914148,
+    39210496325
+  ]
+}
