@@ -11,6 +11,8 @@ on:
       - ".github/workflows/m0-plan012-combined-functional.yml"
       - "crates/wbd-engine/src/v4_game_lane.rs"
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
+      - "crates/wbd-engine/src/v4_owner_crypto.rs"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
 permissions: {contents: read}
 concurrency:
   group: m0-plan012-combined-functional-${{ github.sha }}
@@ -45,7 +47,7 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib m0_fec2_live_rx -- --test-threads=1 --nocapture >fixed-kernel-result/continuous-rx.log 2>&1 || { cat fixed-kernel-result/continuous-rx.log; exit 1; }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/release-record.log
           grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/game-lanes.log
-          grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/continuous-rx.log
+          grep -q 'test result: ok. 3 passed; 0 failed' fixed-kernel-result/continuous-rx.log
           cargo +1.85.1 build --release --locked -p wbd-engine >fixed-kernel-result/default-build.log 2>&1
           if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(embedded_go_|test_probe_)'; then
             echo 'M0_FIXED_PRODUCT_DEFAULT_ABI_LEAK' >&2; exit 1
@@ -67,6 +69,7 @@ jobs:
             "crates/wbd-engine/src/v4_fixed_stream.rs",
             "crates/wbd-engine/src/v4_game_lane.rs",
             "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
             "crates/wbd-codec/tests/fec2_release_record.rs",
             "crates/wbd-codec/Cargo.toml",
             "crates/wbd-engine/Cargo.toml",
@@ -89,6 +92,7 @@ jobs:
             "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
             "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
             "continuous_FEC_RX_noHOL_old_incomplete_evict":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_background_FEC_RX_uses_one_moved_replay_opener":"COMPILED_OPTIONAL_DORMANT_PENDING_NOT_PRODUCT",
             "production_FEC2_default":"OFF",
             "source_inputs_sha256":{p:sha(p) for p in source},
             "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
