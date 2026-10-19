@@ -43,6 +43,7 @@ BACKGROUND="${WBD_M0_BACKGROUND_LOOP:-}"
 COMMON="${WBD_M0_COMMON_SCENARIO:-}"
 PERF="${WBD_M0_PERF_BASELINE:-}"
 SUSTAIN20="${WBD_M0_SUSTAINED_20MBPS:-}"
+CONT20_LOSS="${WBD_M0_CONT20_LOSS_PERCENT:-}"
 D10="${WBD_M0_D10_DIAG:-}"
 TARGETED="${WBD_M0_TARGETED_DROP:-}"
 FEC2_PROBE="${WBD_M0_FEC2_KERNEL_TX:-}"
@@ -50,6 +51,17 @@ if [[ -n "$TARGETED" && "$TARGETED" != 1 ]]; then echo 'TARGETED_DROP_INVALID' >
 if [[ -n "$SUSTAIN20" && "$SUSTAIN20" != 1 ]]; then echo 'SUSTAIN20_INVALID' >&2; exit 2; fi
 if [[ "$SUSTAIN20" == 1 && ( "$PERF" != 1 || -n "$D10" || -n "$BACKGROUND" || -n "$STEADY" || -n "$FEC2_PROBE" || -n "$TARGETED" || -n "$PRELIM_MS" ) ]]; then
   echo 'SUSTAIN20_INVALID requires independent Normal OFF real-kernel performance job, no competing scenario' >&2; exit 2
+fi
+if [[ -n "$CONT20_LOSS" ]]; then
+  if [[ ! "$CONT20_LOSS" =~ ^(1|5|10|20|30)$ || "$SUSTAIN20" != 1 || "$PERF" != 1 || -n "$D10" || -n "$LOSS" ]]; then
+    echo 'CONT20_LOSS_INVALID each Action exactly one real 20Mbps Normal OFF loss 1/5/10/20/30 case' >&2; exit 2
+  fi
+  if ! command -v tc >/dev/null; then echo 'CONT20_LOSS_UNSUPPORTED tc unavailable'; exit 77; fi
+  if ! sudo -n ip netns exec "$NS" tc qdisc replace dev lo root netem loss "$CONT20_LOSS%" limit 2048; then
+    echo 'CONT20_LOSS_UNSUPPORTED kernel netem refused'; exit 77
+  fi
+  echo "CONT20_LOSS_KERNEL_NETEM_APPLIED pct=$CONT20_LOSS dev=lo queue_limit=2048"
+  sudo -n ip netns exec "$NS" tc -s qdisc show dev lo
 fi
 LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 if [[ -n "$LOSS" ]]; then
@@ -146,7 +158,19 @@ if [[ "$PERF" == 1 ]]; then
   [[ -s "$PERF_RECEIPT" ]] || {
     echo 'PERF_MEASUREMENT_INVALID missing actual Go kernel receipt' >&2; exit 1;
   }
-  if [[ "$D10" == 1 ]]; then
+  if [[ -n "$CONT20_LOSS" ]]; then
+    QDISC="$(sudo -n ip netns exec "$NS" tc -s qdisc show dev lo)"
+    echo "$QDISC"
+    if [[ "$QDISC" != *"qdisc netem "* ]] || ! grep -Eq 'Sent [1-9][0-9]* bytes [1-9][0-9]* pkt' <<<"$QDISC"; then
+      echo 'CONT20_LOSS_KERNEL_NOT_OBSERVED' >&2; exit 77
+    fi
+    DROPPED="$(sed -nE 's/.*\\(dropped ([0-9]+),.*/\\1/p' <<<"$QDISC" | head -1)"
+    if [[ ! "$DROPPED" =~ ^[0-9]+$ || "$DROPPED" == 0 ]]; then
+      echo 'CONT20_LOSS_KERNEL_DROP_NOT_OBSERVED' >&2; exit 1
+    fi
+    echo "CONT20_LOSS_KERNEL_CASE pct=$CONT20_LOSS qdisc_dropped=$DROPPED mode=Normal_OFF real_20mbps_per_direction=1"
+    echo 'CONT20_LOSS_SCOPE real continuous Go TLS/Rust raw TUN observation; missing expected for FEC OFF; no robust application delivery or product PASS.'
+  elif [[ "$D10" == 1 ]]; then
     echo 'ORIGINAL_RUST_D10_STRACE_DIAGNOSTIC_ON_5S_15S_RECORDED whole-child syscalls include startup and Go injector; NOT performance comparison.'
   elif [[ "$SUSTAIN20" == 1 ]]; then
     echo 'ORIGINAL_RUST_NORMAL_OFF_20MBPS_EACH_DIRECTION_DEVELOPMENT_RECORDED real mixed-size continuous app input; 10s warmup 60s measured; capacity verdict in receipt; NOT product qualification.'
