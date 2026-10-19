@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "f153abcda42f46d595fc31223f53f88ec0bc0c49",
+      "result_blob": "44959758ac81289b4433ef60ded356d3ee142382",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -79,6 +79,10 @@
         },
         {
           "find": "func networkCommandContext(ctx context.Context, args []string) *exec.Cmd {\n\tcmd := exec.CommandContext(ctx, \"powershell.exe\", args...)\n\tcmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}\n\treturn cmd\n}\n\n",
+          "replace": ""
+        },
+        {
+          "find": "func defaultWindowsNetworkScript() string {\n\treturn filepath.Join(windowsExecutableDir(), \"windows_client_network.ps1\")\n}\n\n",
           "replace": ""
         }
       ]
@@ -216,11 +220,15 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.md",
       "original_blob": "9b49ca638cc6f12434f57acd49a8c1e1cb49dd81",
-      "result_blob": "bb8e099e3e69f452140ae2293dc936b72bc100ce",
+      "result_blob": "870f51a6f935ed87215e36b6c7d2cfc05f50b5e2",
       "patches": [
         {
           "find": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n",
           "replace": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n\n\n## PLAN-008 FEC2 新模式与可见迁移（尚未产品启用）\n\n单一权威参数目录仍是同目录 `PARAMETERS.json`，对应原客户端CLI、JSON和Windows便携GUI。\n新增 `fec.mode=off|fixed|auto`（默认off），`fec.profile` 七档（默认strong），`fec.auto_policy=normal|aggressive`（默认normal），`fec.auto_start_profile`（默认strong）。\n原 `fec-mode/fec-parity/fec-min-parity/fec-start-parity` 为旧Go V1历史配置，不映射成新FEC2档位；老用户选择新FEC2需明确重新保存。Game auto拒绝。\n受保护Go/Rust ABI 尚未在此M4源码接线：fixed/auto即使保存成功也显示 `rejected`、applied_revision/actual_profile 为未知，启动失败而不偷偷走旧Go FEC。默认FEC2 off时原Go启动/Stop/DNS/MTU/IPv6/portable语义不受影响。\n生产feature仍 OFF；只有M0认证owner真实 applied ACK 可以改变GUI显示，不允许通过CLI/GUI伪造 ready 或Applied。\n"
+        },
+        {
+          "find": "Windows state-path 默认 EXE 同目录 data/network-state.json；network-script 默认 EXE 同目录 windows_client_network.ps1，裸 CLI 不再依赖调用者 CWD，也与便携包脚本位置一致。显式 CLI 路径仍保留运维能力；GUI将这些路径固定为本文件夹且拒绝越界。",
+          "replace": "Windows state-path 默认 EXE 同目录 data/network-state.json。原生 --recover-network 只按该目录恢复经精确所有权验证的 owned WAL；旧版 network-script 参数已从产品和便携目录移除。升级前的脚本 journal 必须由旧版程序完成恢复，不静默跨格式接管。Windows native WFP 与真实原生网络还在验收门之后，不能因去脚本而假报已连接。"
         }
       ]
     },
