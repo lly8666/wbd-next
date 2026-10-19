@@ -1,0 +1,243 @@
+# PLAN-011: one real original-Go/Rust Normal/off everyday check, NOT full product.
+# Rare jumbo/MTU/netem/performance matrices are opt-in; FEC2 stays OFF.
+name: M0 network loss Normal OFF matrix
+run-name: "M0|LOSS-1-5-10-20-30|${{ github.sha }}"
+# User-requested real Normal/OFF packet-loss exploration, not product FEC or Game.
+# Source-locked optional matrix runs once on introduction, then manual.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-network-loss-matrix.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-network-loss-matrix-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  everyday:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build frozen original Go with same Rust owner, reject test ABI in production
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          cargo build --release --locked -p wbd-engine
+          test -s target/release/libwbd_engine.so
+          if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(test_probe_|embedded_go_)'; then
+            echo 'NORMAL_PRODUCT_SMOKE_DEFAULT_ABI_LEAK' >&2
+            exit 1
+          fi
+          cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
+          mkdir common-build common-result
+          cp target/release/libwbd_engine.so common-build/libwbd_engine.so
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go fec_v2_policy.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/common-build/owner-go.test" ./internal/realityfront)
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          files=["crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_embedded_go.rs",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+            "tools/run-v4-tun-netns.sh",
+            ".github/workflows/m0-normal-product-smoke.yml"]
+          json.dump({"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+            "run_id":int(os.environ["GITHUB_RUN_ID"]),"attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "baseline":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "go":"1.23.12","rust":"1.85.1","FEC2":"OFF",
+            "original_build_features":"m0_v4_probe,m0_v4_embedded_go",
+            "prod_abi_probe":"ABSENT",
+            "binary_sha256":{p:sha("common-build/"+p) for p in ("owner-go.test","libwbd_engine.so")},
+            "inputs_sha256":{p:sha(p) for p in files},
+            "product_qualification":"NOT_RUN"},
+            open("common-result/identity.json","w"),indent=2)
+          PY
+      - name: Common credential TLS, three ciphers, repeat Stop and reconnect generation
+        shell: bash
+        run: |
+          set -euo pipefail
+          LD_LIBRARY_PATH="$PWD/common-build" ./common-build/owner-go.test \
+            -test.v -test.count=1 \
+            -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|NormalOffProductRevisionReadback|TwoGenerationStopIsolation)$' \
+            >common-result/connect-stop.log 2>&1
+          cat common-result/connect-stop.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_NORMAL_OFF_REQUEST_PENDING_APPLIED_REJECTED_PASS cipher=$suite real_revision=2" common-result/connect-stop.log
+          done
+          grep -q 'M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS' common-result/connect-stop.log
+          grep -q 'EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS' common-result/connect-stop.log
+      - name: Common live netns bidirectional Normal8, authentic kind1 to M2, Stop/cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_M0_BACKGROUND_LOOP=1 WBD_M0_COMMON_SCENARIO=1 \
+            bash tools/run-v4-tun-netns.sh common-build \
+            >common-result/common-netns.log 2>&1
+          cat common-result/common-netns.log
+          grep -q 'M0_COMMON_SCENARIO_NORMAL_OFF_CONNECT_BIDIRECTIONAL_KIND1_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=1 covered2s=8 FEC2_OFF=1 no_extreme_matrix=1' common-result/common-netns.log
+          grep -q 'M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=8 authentic_reports=1 covered2s=8 unknown2s=0 FEC2=OFF' common-result/common-netns.log
+          grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' common-result/common-netns.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("common-result")
+          receipt=json.load(open(p/"identity.json"))
+          receipt.update(result="PASS_SCOPED_REAL_GO_RUST_NORMAL_EVERYDAY",
+            common_scenario="original TLS, 3-cipher admission, live RX/TX 8 each, authenticated C2S kind1 1, M2 covered2s 8/8, Stop/release/reconnect generation",
+            authenticated_reverse_kind1_reports=1,actual_firstsend_data=8,
+            covered_2s=8,unknown_2s=0,
+            common_netns_log_sha256=hashlib.sha256((p/"common-netns.log").read_bytes()).hexdigest(),
+            connect_stop_log_sha256=hashlib.sha256((p/"connect-stop.log").read_bytes()).hexdigest(),
+            full_original_go_cli_gui_windows="NOT_RUN",
+            normal_off_native_applied="PASS_3_CIPHERS_AND_TWO_ACTUAL_OWNER_REVISIONS",
+            original_go_fixed_auto_applied="REJECTED_UNSUPPORTED",
+            physical="NOT_RUN",p99="NOT_RUN")
+          (p/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-normal-common-${{ github.run_id }}-${{ github.run_attempt }}
+          path: common-result/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Preserve compiled original cold-Go Rust test pair for 5 isolated loss levels
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-loss-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: common-build/
+          retention-days: 7
+          if-no-files-found: error
+  loss:
+    name: "Real Normal/OFF netns loss ${{ matrix.loss_pct }}"
+    needs: everyday
+    strategy:
+      fail-fast: false
+      matrix: {loss_pct: [1,5,10,20,30]}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-loss-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: loss-build/
+      - name: Verify compiled exact Go/Rust identity in copied artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s loss-build/owner-go.test
+          test -s loss-build/libwbd_engine.so
+          chmod +x loss-build/owner-go.test
+          sha256sum loss-build/owner-go.test loss-build/libwbd_engine.so
+      - name: Real original Go TLS, Rust owner, isolated netem kernel delivery and loss counts
+        shell: bash
+        env:
+          LOSS: ${{ matrix.loss_pct }}
+        run: |
+          set -euo pipefail
+          mkdir -p netem-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          set +e
+          WBD_M0_STEADY_BURST=1 WBD_M0_STEADY_LOSS_PERCENT="$LOSS" \
+             bash tools/run-v4-tun-netns.sh loss-build >netem-result/kernel.log 2>&1
+          code=$?
+          set -e
+          cat netem-result/kernel.log
+          LOSS="$LOSS" CASE_EXIT="$code" python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          log=pathlib.Path("netem-result/kernel.log").read_text(errors="replace")
+          loss=int(os.environ["LOSS"])
+          exit_code=int(os.environ["CASE_EXIT"])
+          rows=re.findall(
+              r"EMBEDDED_STEADY_BURST_LOSS_OBSERVATION loss_config_pct=(\d+) mode=Normal_OFF "
+              r"suite=(\d+) c2s_sent=(\d+) c2s_delivered=(\d+) "
+              r"c2s_missing_or_rejected=(\d+) c2s_bytes_sent=(\d+) "
+              r"s2c_sent=(\d+) s2c_delivered=(\d+) "
+              r"s2c_missing_or_rejected=(\d+) s2c_bytes_sent=(\d+) elapsed_ns=(\d+)",log)
+          suites={}
+          for row in rows:
+              cfg,suite,cs,cd,cm,cb,ss,sd,sm,sb,elapsed=map(int,row)
+              if cfg!=loss or suite in suites:break
+              if cs!=12 or ss!=12 or cd+cm!=cs or sd+sm!=ss:break
+              suites[suite]={"c2s_sent":cs,"c2s_delivered":cd,"c2s_missing":cm,
+                  "s2c_sent":ss,"s2c_delivered":sd,"s2c_missing":sm,
+                  "elapsed_ns":elapsed}
+          kernel=re.search(
+              r"STEADY_LOSS_CASE_RECORDED configured_loss_percent=(\d+) kernel_dropped_packets=(\d+) observed_drop=(yes|no) mode=Normal_OFF",log)
+          dropped=int(kernel.group(2)) if kernel else None
+          passed=(exit_code==0 and kernel is not None and
+                  int(kernel.group(1))==loss and set(suites)=={1,2,3}
+                  and (loss<10 or dropped>0))
+          result={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+              "run_id":int(os.environ["GITHUB_RUN_ID"]),
+              "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "mode":"Normal_OFF","configured_loss_pct":loss,
+              "kernel_netem_dropped_packets":dropped,
+              "observed":suites,"exit_code":exit_code,
+              "result":"PASS_SCOPED_OBSERVATION" if passed else "FAIL_OR_UNVERIFIED",
+              "FEC_Fixed_ON":"NOT_RUN_NO_ACTUAL_MODE_APPLIED",
+              "FEC_Auto_ON":"NOT_RUN_NO_ACTUAL_MODE_APPLIED",
+              "Game":"NOT_RUN_NO_REAL_GAME_SCHEDULER",
+              "full_product":"NOT_RUN","physical":"NOT_RUN",
+              "log_sha256":hashlib.sha256(log.encode()).hexdigest()}
+          pathlib.Path("netem-result/receipt.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          if not passed:raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-normal-loss-${{ matrix.loss_pct }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: netem-result/
+          retention-days: 30
+          if-no-files-found: warn
+  product-mode-readiness:
+    name: Document FEC ON / Game gates for EVERY requested loss
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Fail-closed 24 unexecuted FEC and Game cases
+        run: |
+          set -euo pipefail
+          mkdir -p readiness
+          python3 - <<'PY'
+          import json,os,pathlib
+          result={"source_sha":os.environ["GITHUB_SHA"],
+            "result":"PRODUCT_MODES_NOT_RUN_NO_AUTHENTIC_APPLIED",
+            "FEC2_production":"OFF",
+            "cases":[{"mode":mode,"configured_loss_pct":loss,
+              "result":"NOT_RUN_NO_AUTHENTIC_MODE_APPLIED_AND_REAL_TX_RX"}
+              for mode in ("FEC_Fixed_ON","FEC_Auto_ON","Game_2lane","Game_4lane")
+              for loss in (0,1,5,10,20,30)]}
+          assert len(result["cases"])==24
+          pathlib.Path("readiness/modes.json").write_text(json.dumps(result,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-fec-game-unqualified-modes-${{ github.run_id }}
+          path: readiness/
+          retention-days: 30
