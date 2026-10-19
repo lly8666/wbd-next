@@ -1,0 +1,120 @@
+# PLAN-011 continued true 20 Mbps continuous original-Go TLS/Rust Normal OFF network matrix.
+# One append-only intent file triggers exactly one loss scenario/Actions measurement job.
+# Consume immutably compiled 0%-loss binary source; refuse float HEAD binary.
+name: M0 real continuous 20Mbps single-loss request
+run-name: "M0|PLAN011-CONT20-LOSS-REQUEST|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [".governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-*.json"]
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-cont20-loss-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-cont20-binaries-39252845558-1
+          run-id: 39252845558
+          github-token: ${{ github.token }}
+          path: cont20-build/
+      - name: Validate unique request, two frozen SOURCE identities and compiled binary hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-probe-result
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,re
+          source=os.environ["GITHUB_SHA"]
+          changed=subprocess.check_output(["git","diff","--name-only",source+"^",source],text=True).splitlines()
+          if len(changed)!=1 or not re.fullmatch(r"\.governance/workstreams/M0/requests/M0-PLAN011-NORMAL20-LOSS-(1|5|10|20|30)-[a-z0-9-]+\.json",changed[0]):
+            raise SystemExit("single exact new M0 request file required")
+          f=pathlib.Path(changed[0])
+          req=json.loads(f.read_text())
+          loss=int(req["loss_pct"])
+          if loss not in (1,5,10,20,30) or f"LOSS-{loss}-" not in f.name:
+            raise SystemExit("loss request filename and configured loss disagree")
+          if req["task_id"]!="R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025" or req["role_id"]!="M0":
+            raise SystemExit("registry task or role mismatch")
+          if req["compiled_source_sha"]!="896faa72cbe8ef8a8f37948c657ce1c57ce9028a":
+            raise SystemExit("unfrozen compiled source")
+          if req["target_inner_ipv4_mbps_each_direction"]!=20 or req["warmup_seconds"]!=10 or req["measure_seconds"]!=60 or req["mode"]!="Normal_OFF":
+            raise SystemExit("request changed the fixed scenario")
+          m=json.load(open("cont20-build/manifest.json"))
+          assert m["source_sha"]==req["compiled_source_sha"] and m["run_id"]=="39252845558" and m["attempt"]=="1"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["product_abi_probe_absent"] and m["production_FEC2"]=="OFF"
+          sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          for p,h in m["binary_sha256"].items():assert sha("cont20-build/"+p)==h,p
+          # A new script/harness SOURCE is allowed; the Go binary must be immutable.
+          assert sha("r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go")==m["inputs_sha256"]["r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go"]
+          req["request_source_sha"]=source
+          req["request_path"]=str(f)
+          req["frozen_binaries_sha256"]=m["binary_sha256"]
+          req["run_id"]=int(os.environ["GITHUB_RUN_ID"])
+          req["attempt"]=int(os.environ["GITHUB_RUN_ATTEMPT"])
+          req["request_sha256"]=sha(f)
+          pathlib.Path("native-probe-result/request-identity.json").write_text(json.dumps(req,indent=2)+"\n")
+          with open(os.environ["GITHUB_ENV"],"a") as env:env.write(f"LOSS_PCT={loss}\n")
+          PY
+          chmod +x cont20-build/owner-go.test
+      - name: Real original Go protected continuous 20 Mbps under one isolated tc netem loss
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          set +e
+          WBD_M0_PERF_BASELINE=1 WBD_M0_SUSTAINED_20MBPS=1 WBD_M0_CONT20_LOSS_PERCENT="$LOSS_PCT" \
+            bash tools/run-v4-tun-netns.sh cont20-build >native-probe-result/cont20-loss.log 2>&1
+          runner_rc=$?
+          set -e
+          cat native-probe-result/cont20-loss.log
+          CASE_RC="$runner_rc" python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          p=pathlib.Path("native-probe-result")
+          req=json.load(open(p/"request-identity.json"))
+          loss=req["loss_pct"]
+          log=(p/"cont20-loss.log").read_text(errors="replace")
+          match=re.search(r"CONT20_LOSS_KERNEL_CASE pct=(\d+) qdisc_dropped=(\d+) mode=Normal_OFF real_20mbps_per_direction=1",log)
+          dropped=int(match.group(2)) if match and int(match.group(1))==loss else None
+          raw=p/"normal-off-dev-20mbps.json"
+          observed=json.loads(raw.read_text()) if raw.exists() else None
+          verdict="FAIL_NO_MEASUREMENT_OR_KERNEL_DROP"
+          if observed and dropped is not None and dropped>0 and os.environ["CASE_RC"]=="0":
+            c=observed["c2s"];s=observed["s2c"]
+            valid=all(d[k]==0 for d in [c,s] for k in ["invalid_received","injector_send_errors","duplicate_received"])
+            offered=all(d["offered_ipv4_mbps"]>=19 for d in [c,s])
+            delivered_bounds=all(d["delivered_ipv4_business_packets"]<=d["offered_ipv4_business_packets"] for d in [c,s])
+            if not valid:verdict="FAIL_INTEGRITY_OR_SEND"
+            elif not offered:verdict="INVALID_INJECTOR_OR_CAPACITY_LIMITED"
+            elif not delivered_bounds:verdict="FAIL_DELIVERY_ACCOUNTING"
+            else:verdict="PASS_SCOPED_REAL_20MBPS_NETEM_LOSS_OBSERVATION_NOT_RECOVERY"
+          result={"schema_version":1,"role_id":"M0","task_id":req["task_id"],
+            "result":verdict,"source_sha":req["request_source_sha"],
+            "compiled_source_sha":req["compiled_source_sha"],
+            "request_id":req["request_id"],"loss_pct":loss,
+            "run_id":int(os.environ["GITHUB_RUN_ID"]),"attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "job_scope":"ONE_PERFORMANCE_SCENARIO_ONE_JOB","runner_rc":int(os.environ["CASE_RC"]),
+            "kernel_netem_dropped_including_control_packets":dropped,
+            "real_netns_original_go_tls_rust_normal_off_observed":observed,
+            "real_fixed_auto_game2_game4":"NOT_RUN",
+            "product_CLI_GUI_Windows_physical_qualified":"NOT_RUN",
+            "log_sha256":hashlib.sha256(log.encode()).hexdigest()}
+          (p/"loss-summary.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps({k:v for k,v in result.items() if k!="real_netns_original_go_tls_rust_normal_off_observed"},indent=2))
+          if verdict!="PASS_SCOPED_REAL_20MBPS_NETEM_LOSS_OBSERVATION_NOT_RECOVERY":raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-cont20-loss-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-probe-result/
+          retention-days: 30
+          if-no-files-found: warn
