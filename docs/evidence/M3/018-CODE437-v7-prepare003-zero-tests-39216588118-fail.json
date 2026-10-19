@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "role_id": "M3",
+  "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+  "source_sha": "437cc721d1009c835cb900384dadbdbf3ebea800",
+  "result": "FAIL",
+  "progress": "partial",
+  "unverified": true,
+  "artifact_verified": true,
+  "qualification": "V7_NATIVE_PREPARE_ZERO_CASES_RUST_MODULE_UNREGISTERED_NOT_CODEC_FAILURE",
+  "run": {
+    "id": 39216588118,
+    "attempt": 1,
+    "conclusion": "failure",
+    "stage": "prepare",
+    "request_id": "M3-018-NATIVE-E4-PREPARE-003",
+    "request_I": "78128d4652a3d9e0ed994e4b545173046a726093",
+    "worker_H44": "082b2e4adf5626e938446dbb1eef68f69f72abe7",
+    "control_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+    "authorize": "success",
+    "native_isal_build": "success",
+    "rust_release_compile": "success",
+    "actual_test_cases": 0,
+    "test_cases_filtered": 156,
+    "prepare": "failure",
+    "paired": "skipped"
+  },
+  "artifact": {
+    "id": 12169289960,
+    "name": "worker-prepare-39216588118-1",
+    "zip_sha256": "e9d25f735725be6511f9efcc343c25621af10a7f5ef5fd7bff18fd39f8f45bdc",
+    "members": [
+      {
+        "name": "functional-B.log",
+        "size_bytes": 115,
+        "sha256": "4141aac1ecc0140d470528c2575f51b89f0fa12d6bff02916737bc3bab18c05d",
+        "contents": "running 0 tests; 0 passed; 0 failed; 156 filtered out"
+      }
+    ],
+    "independent_sha256_verified": true
+  },
+  "root_cause": "Control v7 correctly overlays candidate fec_v2.rs AND fec_v2_tests.rs but crate root lib.rs and original fec_v2.rs had no #[cfg(test)] module registration; --lib fec_v2_tests matched zero tests. Tests are orphan files even though owned source test file exists. v7 correctly rejects zero-pass.",
+  "owned_fix": {
+    "source_sha": "b4d638abf80bb6f12e6c944565c2aa8bb4e90792",
+    "registration_in": "crates/wbd-codec/src/fec_v2.rs",
+    "registration": "#[cfg(test)] #[path = \"fec_v2_tests.rs\"] mod fec_v2_tests;",
+    "runtime_codec_math": "UNCHANGED",
+    "frozen_harness": "42b3d213674fd90a253f77029e4c12531468ee1c",
+    "new_request_id": "M3-018-NATIVE-E4-PREPARE-004"
+  },
+  "preserved_previous_failed_runs": [
+    39204914148,
+    39210496325,
+    39216588118
+  ],
+  "native_functional": "NOT_RUN_0_CASES",
+  "native_ABBA": "NOT_RUN",
+  "product_fec2": "OFF"
+}
