@@ -36,6 +36,10 @@ pub struct AuthenticatedReceipt {
 impl AuthenticatedReceipt {
     /// Lane is provided only after the M0-verified authenticated open.
     pub fn verified_lane(&self) -> LaneKey { self.lane }
+    /// Parsed values after the trusted caller's authenticated-open boundary.
+    pub fn largest_data_pn(&self)->RecordPn{self.largest}
+    pub fn report_seq(&self)->u32{self.report_seq}
+    pub fn pages(&self)->&[ReceiptPage]{&self.pages}
     pub fn after_authenticated_open(
         verified_lane: LaneKey,
         largest_data_pn: RecordPn,
