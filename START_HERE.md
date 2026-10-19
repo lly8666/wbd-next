@@ -15,6 +15,8 @@
 
 CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action 推进一项完整能力批次（可同时跑许多便宜功能断言）；M0 的共享集成不需要等所有工位齐活。必要时按角色只读 `docs/architecture/modules/README.md`、`docs/architecture/TEST_PLAN.md` 和冻结 FEC2 规范，勿一次加载历史文档。
 
+**任务发现**：registry的`goal`应引用当前任务决策文件和本角色章节，详细验收读那里；`docs/prompts/<role>.md`仅是长期启动说明，不发布具体任务。新包由M0一次更新registry+决策发布，工位补旧事实后自行接续；不需要每轮给用户换初始提示词。缺引用由M0补入口，禁止从历史日期猜任务。详见GOVERNANCE第3节。
+
 写入：先 S（代码/收据/文档），精确 SOURCE Actions 验证，后 H（**只修改自己的 cursor**）；再次刷新远端确认。工作分支不得修改 main 的登记权限，不 force push，不擅自开展下一包。每个性能 Action 单一场景；AB/BA 必须同 job/VM。无新增信息的重复失败先缩小复现，不刷 seed。
 
 **产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。

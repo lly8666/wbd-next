@@ -22,6 +22,16 @@ G1 在授权范围内自主执行。G2 接口/职责调整由 M0 合并影响与
 
 ## 3. 一个控制面，多条工作线，一条集成通道
 
+### 长期提示词与任务发布分离
+
+`docs/prompts/M0.md`至`M4.md`只保存稳定职责、远端发现/恢复、边界和完成纪律，不写本轮task编号、源码、进度、参数或临时优化。用户长期复用同一提示词即可；发布任务不更新提示词。
+
+沿用现有四层，不建新任务系统：**main registry**的`assigned_task`发布唯一当前包，`goal`须给出本轮`docs/decisions/...`的精确路径和该工位章节，`done_when`给简洁验收边界，branch/allowed_paths给权限；**决策文件**保存理由、接口、依赖、冻结来源、测试/停止条件；**worker cursor**记录当前事实及下一动作；**evidence/devlog**保留精确结果/过程。说明文件写“建议”或聊天提到一个优化不等于已发布任务，权限生效只看main registry。
+
+M0一次提交本轮任务说明与registry分配（涉及权限按现有规则修订），不代写worker cursor为已开始/已完成，不把几步内部实现拆成反复派单。worker启动/恢复和关键外部动作前刷新registry：若task变化，先结算旧包未记事实及在途动作，再切到新包；若仍是旧包ready，查询接线反馈或等待，不从旧计划自选下一优化。引用缺失由M0补明确入口，不让worker猜旧文档。包内无需每个提交重新分配，达done_when交付即可。
+
+历史索引和source-lock中的旧资格描述不能覆盖实时cursor及SOURCE证据。热文档只保留当前入口/未解决项，历史结果通过引用保留；不复制整套日志到每份提示词。
+
 main 的 registry 是权限依据；worker 分支不能通过修改自己的 registry 扩权。worker 的 cursor 是当前工作事实，不是 main 上那份旧副本。
 
 M0 登记 active role 的 branch、epoch、revision、写入前缀、语义归属、goal、done_when；工作分支从明确基线创建。不同 active worker 的写入范围不能重叠。共享接口、根依赖、CI、章程、全局目录交 M0 串行集成。
