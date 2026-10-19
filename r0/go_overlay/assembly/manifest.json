@@ -219,7 +219,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "dc41d7f435b37f65faa4df30ab45c269edd24c29",
+      "result_blob": "c45e6a82ab96759ef8413655315f965da546babc",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
