@@ -806,6 +806,136 @@ fn fec2_probe_real_kernel_raw_once(
     e.arena.drain_returns();
     Ok(out)
 }
+// Real release-code client FEC2 ingress owner: the ONLY Go caller is the
+// verified V4ClientSession ColdSnapshot after original TLS feature7.
+// Not reachable from the default engine ABI or the ordinary feature3 Go
+// build. Go must still supply a real raw/TCP checked ingress and authenticated
+// M2 acknowledgment before this can become a product feature.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+struct ReleaseClientRx {
+    epoch:[u8;16],generation:u32,
+    rx:crate::v4_fec2_live_rx::Fec2LiveRx,
+    tun:ScopedTunSink,
+    delivered:u64,
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+struct ReleaseClientRegistry {
+    next:u32,clients:BTreeMap<u64,ReleaseClientRx>,
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+fn release_clients()->&'static Mutex<ReleaseClientRegistry>{
+    static REG:OnceLock<Mutex<ReleaseClientRegistry>>=OnceLock::new();
+    REG.get_or_init(||Mutex::new(ReleaseClientRegistry{
+        next:1,clients:BTreeMap::new(),
+    }))
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
+    cold:*const u8,cold_len:usize,fd:i32,
+    name:*const u8,name_len:usize,out:*mut u64
+)->i32{
+    if cold.is_null()||cold_len!=COLD_V4_LEN||
+       fd<3||name.is_null()||name_len==0||name_len>15||
+       out.is_null(){return INVALID}
+    let Ok(name)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(name,name_len)
+    })else{return INVALID};
+    let Ok(cold)=UntrustedColdV4::parse(unsafe{
+        std::slice::from_raw_parts(cold,cold_len)
+    })else{return INVALID};
+    let id=cold.identity();
+    if id.server||id.logical_epoch==[0;16]{return INVALID}
+    let Ok(suite)=wbd_codec::record_crypto::RecordSuite::try_from(id.cipher)
+        else{return INVALID};
+    let (_,recv)=cold.internal_direction_keys();
+    let mut r=match release_clients().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+    if r.clients.len()>=MAX_SESSIONS||r.next==u32::MAX{return FULL}
+    let generation=r.next;r.next+=1;
+    let Some(handle)=(u64::from(generation)<<32).checked_add(0x434Cu64)
+        else{return FULL};
+    let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+        generation,epoch:id.logical_epoch,negotiated_features:7,
+        direction_s2c:true,
+    };
+    let wire_max=usize::from(id.client_limit);
+    let opener=match wbd_codec::record_replay::ReplayProtectedLaneRx::new_for_suite(
+        recv,wire_max,suite,wbd_codec::record_replay::ReplayWindowConfig{
+            pn_per_second:20000,cache_horizon_ms:200,fec_horizon_ms:150,
+            rtt_ms:100,metadata_budget_bytes:256*1024,
+        }){Ok(rx)=>rx,Err(_)=>return INVALID};
+    let rx=match crate::v4_fec2_live_rx::Fec2LiveRx::from_original_owner(
+        exact,opener,wire_max){Ok(rx)=>rx,Err(_)=>return INVALID};
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(tun)=ScopedTunSink::from_owned_fd(dup,generation,name)
+        else{return INVALID};
+    r.clients.insert(handle,ReleaseClientRx{
+        epoch:id.logical_epoch,generation,rx,tun,delivered:0,
+    });
+    unsafe{out.write(handle)};
+    OK
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_receive(
+    handle:u64,epoch:*const u8,epoch_len:usize,
+    record:*const u8,record_len:usize,
+    delivered:*mut u32,recovered:*mut u32
+)->i32{
+    if handle==0||epoch.is_null()||epoch_len!=16||
+        record.is_null()||record_len<31||record_len>2048||
+        delivered.is_null()||recovered.is_null(){return INVALID}
+    let epoch=unsafe{std::slice::from_raw_parts(epoch,16)};
+    let record=unsafe{std::slice::from_raw_parts(record,record_len)};
+    let Ok(mut r)=release_clients().lock()else{return BAD_STAGE};
+    let Some(client)=r.clients.get_mut(&handle)else{return UNKNOWN};
+    if epoch!=client.epoch||client.tun.is_stopping(){return BAD_STAGE}
+    let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+        generation:client.generation,epoch:client.epoch,
+        negotiated_features:7,direction_s2c:true,
+    };
+    // Keep the original M3 replay bitmap local to this authenticated
+    // generation. AEAD/replay rejects raw, duplicate and tampered frames.
+    let mut input=record.to_vec();
+    let Ok(packets)=client.rx.consume(exact,&mut input,loop_now())
+        else{return INVALID};
+    let mut n=0u32;let mut recovered_n=0u32;
+    for packet in packets{
+        if client.tun.write_authenticated_ipv4(client.generation,&packet.frame)
+            .ok()!=Some(packet.frame.len()){return INVALID}
+        n=n.saturating_add(1);
+        if packet.recovered{recovered_n=recovered_n.saturating_add(1)}
+    }
+    client.delivered=client.delivered.saturating_add(u64::from(n));
+    unsafe{delivered.write(n);recovered.write(recovered_n)}
+    OK
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_stop(
+    handle:u64,epoch:*const u8,epoch_len:usize
+)->i32{
+    if handle==0||epoch.is_null()||epoch_len!=16{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(epoch,16)};
+    let Ok(mut r)=release_clients().lock()else{return BAD_STAGE};
+    let Some(client)=r.clients.get_mut(&handle)else{return UNKNOWN};
+    if bytes!=client.epoch{return BAD_STAGE}
+    client.tun.begin_stop();
+    if client.tun.stop_until(Instant::now())!=StopResult::Drained{
+        return STOP_INCOMPLETE
+    }
+    client.rx.stop();
+    r.clients.remove(&handle);
+    OK
+}
+
 // The independent authenticated client test owns a separate real Linux
 // IFF_TUN+NO_PI descriptor, moved to original M4 ScopedTunSink semantics.
 // Opt-in BOTH developer and release-code features, never public product.
