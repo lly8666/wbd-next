@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN012 docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md all sections: M0 sole file owner for undelivered M3 release FEC record + M1 Game real lane integration and shared original Go TLS Rust owner; complete full functional Actions and only then production FEC2.",
-      "done_when": "Original Go TLS verified, real continuous FEC Fixed/Auto source+parity/recovery and genuine Game2/4 independent encrypted lanes with native requested→applied, bounded Stop/MTU/noHOL, complete source-locked Actions; only then safely enable FEC2 production. Keep release OFF if any hard gate NOT_RUN.",
+      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 plus docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md: original Go TLS/Rust FEC2/Auto and Game2/4 shared Linux integration, sole product permission and final Actions qualification; Windows deferred.",
+      "done_when": "Linux original-Go authenticated Fixed/Auto real firstsend M2 rev APPLIED, real client kernel/TUN lost-source, Stop/MTU/noHOL and genuine Game2/4 independent M4 raw lane first-app, one combined exact SOURCE Linux Actions; FEC2+Game production Linux release only after positive gate; Windows independent future NOT_RUN.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
     {
@@ -125,7 +125,9 @@
         "r0/go_overlay/scripts/",
         "r0/go_overlay/assembly/",
         "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
-        "r0/go_overlay/internal/windowsclient/"
+        "r0/go_overlay/internal/windowsclient/",
+        "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+        "crates/wbd-platform/tests/"
       ],
       "owned_semantics": [
         "platform_driver",
@@ -137,9 +139,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "PLAN-010 docs/decisions/M0-windows-native-migration-2026-10-19.md §§2-5: settle exact SOURCE M4-015 GUI/native results (reusing existing M4 G2 PASS Action39225427878), then exact a7a82db fixed original Go cold baseline plus 12 pinned Windows-only donor6ec6b583 overlay files, implement ENTIRE runtime PowerShell-free native Windows single-proxy operation: CLI Connect/Disconnect/Recover, GUI buttons and shared config/PARAMETERS, portable, WAL owned cleanup, normal errors/cancel/Stop/restart, old script references eliminated. Build/Actions pwsh allowed. M0 exclusively owns shared Stop ABI and Actions; M4 independently dispatches M4 Windows native tests using exact authenticated request.",
-      "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-      "assigned_task": "R5-M4-NATIVE-WINDOWS-NETWORK-016"
+      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M4: Linux real netns authentic original-Go/Rust connected network lifecycle, Stop and owned cleanup, one source-locked Actions proof; Windows I010 retained historical and deferred.",
+      "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
+      "assigned_task": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017"
     }
   ]
 }
