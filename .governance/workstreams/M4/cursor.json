@@ -4,25 +4,27 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 27,
-  "checkpoint_sha": "efa8ea9647131ddbc664c231ad0f190c880c867e",
+  "sequence": 28,
+  "checkpoint_sha": "933bb9e0048669a9e7f04c4b296af4415975be9e",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "PLAN-010 M4-016: complete runtime PowerShell-free native Windows single-proxy original Go CLI/GUI/portable/network WAL and actual Actions; original 015 H26 G2 and Linux/ARM/Win native GUI scoped PASS settled, Rust applied remains M0.",
-  "why_now": "main registry rev2/epoch1 reassigned same M4 branch to native Windows 016; added only internal/windowsclient overlay scope. Old 015 code H26 G2 39225046360 SUCCESS plus Actions39225427878 four scoped original Go/GUI native jobs SUCCESS; separate worker Governance39225015969 failed, full protected Rust/network not proven.",
+  "current_task": "PLAN010 M4-016 full original Windows script-free product runtime. First source-locked donor12 Windows import plus original12 manifest, full package compile-only test and one authenticated Windows Actions request I. Network CLI/GUI native activation NOT yet implemented; FEC2 OFF.",
+  "why_now": "New M4-016 assigned by main rev2/epoch1, exact 12 donor files frozen base a7a82db/donor6ec6b583 verified, one manifest 24 operations + negative tests; I M4-016-WIN-NATIVE-001 source 933bb9e, SHA256 d51027, M0 frozen control 17263ad. 015 H26 scoped triple native PASS reused; new functional runtime NOT_RUN.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Implement exact 12 donor Windows files from 6ec6b583 over frozen cold a7a82db source; update sole hash-locked assembly manifest + tests, then CLI/GUI product process-tree PowerShell-free paths and owned recovery. Freeze code S; submit one authenticated I and H via source-locked G2/Windows Actions; preserve product FEC2 OFF.",
+  "next_action": "Consume exact H28 central G2, main auto-dispatched M4 Windows runner for I7abc527 + manifest d51027. Verify source/Windows Go package compile/GUI receipts; fix scoped build failures. Then complete guarded native single-proxy network Apply/Cleanup/Recover and original Go CLI/GUI/portable no runtime shell, with a subsequent new SOURCE+I and isolated real product network qualification. M0 owns Rust Stop/ACK and final merge; production FEC2 OFF.",
   "unverified": true,
   "last_tested_source": null,
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M4/requests/M4-016-WIN-NATIVE-001.json"
+  ],
   "context_refs": [
     "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H27 M4-016 active, M4-015 exact H26 central G2 and Linux/ARM/Win original Go+WinForms scoped PASS reused, worker Governance historical FAIL retained; new full Windows script-free runtime work UNRUN. Base a7a82db/donor 6ec6b583/12 files locked in main; no new manifest, CLI/GUI native adoption or 016 I yet. M0 sole protected Rust Stop/native Actions/merge. FEC2 OFF."
+  "partial_summary": "H28 016 ACTIVE. Imported 12 verified exact donor Windowsclient files (8 replace+4 create) into allowed overlay, 24-op cold manifest source-locked sha256 d51027; old 015 Linux amd64/arm64+Windows Go/GUI scoped PASS 39225427878 and central G2 39225046360 recorded, old worker Governance FAIL retained. New I7abc527 source933bb9e submitted, Windows native donor compile & GUI pending Actions; 016 runtime network no-shell, true WFP guard, CLI/GUI Recover and Rust applied remain NOT_RUN. FEC2 OFF."
 }
