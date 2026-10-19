@@ -2,7 +2,7 @@
 //! One logical pre-seal owned frame / epoch; lane queues contain only slot keys.
 //! M0 must validate each lane and call the real per-lane codec/driver separately.
 #![forbid(unsafe_code)]
-use std::{collections::VecDeque,ops::Range};
+use std::{collections::{BTreeMap,VecDeque},ops::Range};
 use wbd_types::{BlockIdExt,LaneKey,LogicalPacketId,MonoNs,TunnelKey};
 use wbd_types::buffer_contract::{UniqueSealable,checked_wire_range};
 use crate::memory::UniqueBuffer;
@@ -286,17 +286,25 @@ impl RxLimits{
     }
 }
 pub struct GameRx{
-    scope:GameScope,admitted:Vec<LaneKey>,base:u64,delivered:Vec<bool>,
-    open:Vec<OpenBlock>,used:usize,limit:RxLimits,stopped:bool,
+    scope:GameScope,admitted:Vec<LaneKey>,base:u64,
+    // Physical bit positions are stable; head maps logical base to the ring.
+    // A sequential new ID clears just the expired bit, not the entire window.
+    delivered:Vec<u64>,head:usize,
+    open:Vec<OpenBlock>,open_index:BTreeMap<BlockIdExt,usize>,
+    used:usize,limit:RxLimits,stopped:bool,
+    #[cfg(test)]
+    dedup_clear_word_ops:u64,
 }
 impl GameRx{
     pub fn new(snapshot:ActiveLaneSnapshot,limits:RxLimits)->Option<Self>{
         if !limits.valid(){return None;}
         Some(Self{scope:snapshot.scope,admitted:snapshot.lanes.into_iter()
             .map(|l|l.key).collect(),base:0,
-            delivered:vec![false;limits.delivered_window],
-            open:Vec::with_capacity(limits.open_blocks),
-            used:0,limit:limits,stopped:false})
+            delivered:vec![0;limits.delivered_window.div_ceil(64)],head:0,
+            open:Vec::with_capacity(limits.open_blocks),open_index:BTreeMap::new(),
+            used:0,limit:limits,stopped:false,
+            #[cfg(test)]
+            dedup_clear_word_ops:0})
     }
     pub fn add_lane(&mut self,scope:GameScope,lane:LaneKey)->Result<(),GameError>{
         if scope!=self.scope{return Err(GameError::Scope);}
@@ -330,7 +338,8 @@ impl GameRx{
             Ok(r)=>r,Err(_)=>return Err((GameError::InvalidWindow,buffer))
         };
         let bytes=range.len();
-        let found=self.open.iter().position(|b|b.block==block);
+        // Deterministic O(log open_blocks) lookup, not a linear scan over 8192.
+        let found=self.open_index.get(&block).copied();
         if let Some(i)=found{
             if self.open[i].packet!=packet||self.open[i].needed!=needed{
                 return Err((GameError::Scope,buffer));
@@ -345,19 +354,56 @@ impl GameRx{
             return Err((GameError::ByteBudget,buffer));
         }
         let at=if let Some(i)=found{i}else{
+            let slot=self.open.len();
             self.open.push(OpenBlock{block,packet,needed,
                 pieces:std::array::from_fn(|_|None),count:0,bytes:0});
-            self.open.len()-1
+            let previous=self.open_index.insert(block,slot);
+            debug_assert!(previous.is_none());
+            slot
         };
         self.open[at].pieces[index as usize]=Some(ShardPiece{lane,wire:range,buffer});
         self.open[at].count+=1;
         self.open[at].bytes+=bytes;self.used+=bytes;
         if self.open[at].count<needed {return Ok(PieceProgress::Pending);}
         let completed=self.open.swap_remove(at);
+        self.open_index.remove(&block);
+        // swap_remove moved the last open block into 'at', if any.
+        if at<self.open.len(){
+            self.open_index.insert(self.open[at].block,at);
+        }
         self.used-=completed.bytes;
         Ok(PieceProgress::Complete(CompletedBlock{
             scope,block,packet,pieces:completed.pieces
         }))
+    }
+    /// Clear physical ring positions [from,to), bounded by words *actually*
+    /// expired, with at most two partial words. No full-window rotation.
+    fn clear_interval(&mut self,mut from:usize,to:usize){
+        while from<to {
+            let word=from/64;
+            let until=to.min((word+1)*64);
+            let width=until-from;
+            let low=from%64;
+            let mask=if width==64 {u64::MAX}
+                else {((1u64<<width)-1)<<low};
+            self.delivered[word]&=!mask;
+            #[cfg(test)]
+            {self.dedup_clear_word_ops+=1;}
+            from=until;
+        }
+    }
+    fn expire_head(&mut self,shift:usize,width:usize){
+        if shift>=width {
+            self.delivered.fill(0);
+            self.head=0;
+            #[cfg(test)]
+            {self.dedup_clear_word_ops+=self.delivered.len() as u64;}
+        }else {
+            let first=(width-self.head).min(shift);
+            self.clear_interval(self.head,self.head+first);
+            if first<shift {self.clear_interval(0,shift-first);}
+            self.head=(self.head+shift)%width;
+        }
     }
     /// Consumes only M0/M3-authenticated and decoded/reassembled results.
     /// Shared logical PacketID dedup across lanes and recovered candidates.
@@ -367,29 +413,29 @@ impl GameRx{
         ->Result<UniqueBuffer,(GameError,UniqueBuffer)>{
         if let Err(e)=self.validate(scope,lane){return Err((e,buffer));}
         if id.0<self.base{return Err((GameError::Stale,buffer));}
-        let width=self.delivered.len() as u64;
-        if id.0-self.base>=width{
-            let delta=id.0-self.base;
-            let shift=usize::try_from(delta-width+1).unwrap_or(usize::MAX);
-            if shift>=self.delivered.len(){
-                self.delivered.fill(false);
-            }else{
-                self.delivered.rotate_left(shift);
-                let end=self.delivered.len();
-                self.delivered[end-shift..].fill(false);
-            }
-            self.base=id.0-width+1;
+        let width=self.limit.delivered_window;
+        let delta=id.0-self.base;
+        if delta>=width as u64 {
+            // Subtract after delta>=width; supports IDs up to u64::MAX
+            // without ever computing base+width (which could overflow).
+            let shift=delta-(width as u64)+1;
+            self.expire_head(shift.min(width as u64) as usize,width);
+            self.base=id.0-(width as u64)+1;
         }
-        let index=(id.0-self.base) as usize;
-        if self.delivered[index]{return Err((GameError::Duplicate,buffer));}
-        self.delivered[index]=true;
+        let position=(self.head+(id.0-self.base) as usize)%width;
+        let word=position/64;
+        let mask=1u64<<(position%64);
+        if self.delivered[word]&mask!=0 {
+            return Err((GameError::Duplicate,buffer));
+        }
+        self.delivered[word]|=mask;
         Ok(buffer)
     }
     pub fn stop(&mut self)->usize{
         if self.stopped{return 0;}
         self.stopped=true;
         let n:usize=self.open.iter().map(|b|b.count as usize).sum();
-        self.open.clear();self.used=0;n
+        self.open.clear();self.open_index.clear();self.used=0;n
     }
 }
 

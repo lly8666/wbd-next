@@ -360,3 +360,119 @@ fn r1_game_r4_g04_completed_shards_external_loan_survives_stop(){
     drop(rejected);
     assert_eq!(a.report().loaned,0);
 }
+
+#[test]
+fn r1_game_r5_dedup_ring_matches_old_reference_wrap_huge_gap_and_u64_max(){
+    // Independent bounded old-013 oracle, deliberately only inside tests.
+    struct Reference{base:u64,bits:Vec<bool>}
+    impl Reference{
+        fn accept(&mut self,id:u64)->Result<(),GameError>{
+            if id<self.base{return Err(GameError::Stale);}
+            let width=self.bits.len() as u64;
+            let delta=id-self.base;
+            if delta>=width {
+                let shift=(delta-width+1).min(width) as usize;
+                if shift>=self.bits.len(){self.bits.fill(false);}
+                else {self.bits.rotate_left(shift);
+                    let end=self.bits.len();self.bits[end-shift..].fill(false);}
+                self.base=id-width+1;
+            }
+            let idx=(id-self.base) as usize;
+            if self.bits[idx]{return Err(GameError::Duplicate);}
+            self.bits[idx]=true;Ok(())
+        }
+    }
+    let mut arena=arena(8);
+    for width in [1,2,7,64,65,256,65536]{
+        let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2,3,4],256),
+            RxLimits{delivered_window:width,open_blocks:2,open_bytes:16}).unwrap();
+        let mut old=Reference{base:0,bits:vec![false;width]};
+        let mut ids=vec![0,0,1,1,2,3,3,5,9,8,9,200,201,199,1000,1001,
+            1002,1002,1003,1004,1004,90000,90001,7,100_001];
+        for i in 0..300u64{
+            ids.push(100_002+i);
+            if i%13==0{ids.push(100_002+i);}
+            if i%17==0{ids.push(i);}
+        }
+        ids.extend([u64::MAX-1,u64::MAX,u64::MAX,0,u64::MAX-2]);
+        for (iteration,id) in ids.into_iter().enumerate(){
+            let chosen=lane(1,(iteration%4+1) as u32,256).key;
+            let expected=old.accept(id);
+            let actual=rx.first_delivery(scope(FlowDirection::Rx,1),chosen,
+                LogicalPacketId(id),input(&mut arena,(iteration%251) as u8));
+            let mapped=actual.as_ref().map(|_|()).map_err(|(e,_)|*e);
+            assert_eq!(mapped,expected,"width={width} id={id} at={iteration}");
+            drop(actual);
+            assert_eq!(rx.base,old.base);
+        }
+        assert_eq!(rx.stop(),0);
+        assert_eq!(arena.report().loaned,0);
+    }
+}
+#[test]
+fn r1_game_r5_sequential_full_window_advancement_is_constant_word_work(){
+    let mut arena=arena(8);
+    let width=65536;
+    let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1],256),
+        RxLimits{delivered_window:width,open_blocks:1,open_bytes:4}).unwrap();
+    let before=rx.dedup_clear_word_ops;
+    for id in 0..10000u64 {
+        drop(rx.first_delivery(scope(FlowDirection::Rx,1),lane(1,1,256).key,
+            LogicalPacketId(id),input(&mut arena,1)).unwrap());
+    }
+    // Fill a whole 65536 logical positions with no clearing.
+    assert_eq!(rx.dedup_clear_word_ops,before);
+    drop(rx.first_delivery(scope(FlowDirection::Rx,1),lane(1,1,256).key,
+        LogicalPacketId(width as u64),input(&mut arena,1)).unwrap());
+    assert_eq!(rx.dedup_clear_word_ops-before,1);
+    for id in width as u64+1..width as u64+4097{
+        drop(rx.first_delivery(scope(FlowDirection::Rx,1),lane(1,1,256).key,
+            LogicalPacketId(id),input(&mut arena,1)).unwrap());
+    }
+    // Each sequential step clears one word; never shifts 65536 bools.
+    assert!(rx.dedup_clear_word_ops-before<=4097);
+    let mark=rx.dedup_clear_word_ops;
+    drop(rx.first_delivery(scope(FlowDirection::Rx,1),lane(1,1,256).key,
+        LogicalPacketId(9_000_000),input(&mut arena,1)).unwrap());
+    assert_eq!(rx.dedup_clear_word_ops-mark,width as u64/64);
+    assert_eq!(arena.report().loaned,0);
+}
+#[test]
+fn r1_game_r5_open_index_swap_remove_pressure_and_external_loan(){
+    let mut arena=arena(300);
+    let mut rx=GameRx::new(snap(FlowDirection::Rx,1,&[1,2,3,4],256),
+        RxLimits{delivered_window:65,open_blocks:128,open_bytes:128}).unwrap();
+    let at=scope(FlowDirection::Rx,1);
+    for block in 0..128u64{
+        let result=rx.offer_piece(at,lane(1,1,256).key,BlockIdExt(block*5),
+            LogicalPacketId(block),0,2,input(&mut arena,1),0..1);
+        assert!(matches!(result,Ok(PieceProgress::Pending)));
+    }
+    assert_eq!(rx.open_state(),(128,128));
+    assert_eq!(rx.open_index.len(),128);
+    let denied=rx.offer_piece(at,lane(1,2,256).key,BlockIdExt(999),
+        LogicalPacketId(999),0,1,input(&mut arena,2),0..1);
+    assert!(matches!(denied,Err((GameError::Capacity,_))));
+    drop(denied);
+    let mut loan=None;
+    // Complete in a scrambled permutation; swap_remove moves old last many times.
+    for v in 0..128usize{
+        let index=(v*73)%128;
+        let block=BlockIdExt(index as u64*5);
+        let r=rx.offer_piece(at,lane(1,2,256).key,block,
+            LogicalPacketId(index as u64),1,2,input(&mut arena,2),0..1).unwrap();
+        let PieceProgress::Complete(done)=r else {panic!("should complete");};
+        assert_eq!(done.block,block);
+        assert_eq!(done.packet,LogicalPacketId(index as u64));
+        if v==1{loan=Some(done);}else{drop(done);}
+        assert_eq!(rx.open.len(),rx.open_index.len());
+        assert!(rx.open.iter().enumerate().all(|(i,b)|
+            rx.open_index.get(&b.block)==Some(&i)));
+    }
+    assert_eq!(rx.open_state(),(0,0));
+    assert_eq!(rx.stop(),0);
+    assert!(rx.open_index.is_empty());
+    assert_eq!(arena.report().loaned,2);
+    drop(loan);
+    assert_eq!(arena.report().loaned,0);
+}
