@@ -69,3 +69,7 @@
 5. 主线登记实际workflow/ref、请求示例、产物消费方法和入口证据。工位自行改过时“等M0代跑”下一动作。M0继续产品纵向集成，M1/M3验完交付冻结模块。M2/M4随后复用，不以全平台/所有模块适配挡住这两项。
 
 **收口**：无需M0改CI源码或代dispatch，M1/M3可对包内新提交自行prepare→paired→修复→新请求，证据可恢复，共享CI所有权和产品硬门不变。组件成本不能升级为整链路/500Mbps/p99/Windows/ARM物理通过。
+
+## 6. 实际入口发布记录（M0-025，方案后独立实施）
+
+2026-10-19：第 5 节公共入口已在 `.github/workflows/worker-component-validation.yml` 与 `tools/worker_component_validation.py` 实装，推荐冻结控制 `qualification/worker-ci-v3` → `3f87d3ec9c06f7362c95c301437116d53be14c4f`；[实际调用、manifest消费、M1/M3例子](../devlog/M0/PLAN-009-worker-ci-v3-runbook-20261019.md)。旧 v1/v2 独立保留不移动。精确控制 SOURCE 的 contract-smoke `39197303106`、maintenance `39197303104`、Governance `39197303044` 均 SUCCESS。实现证明仅覆盖入口静态契约/负例回归；M1/M3 的真实 prepare 和 paired run 由工位自行请求、执行及验收，当前证据仍为 NOT_RUN。M3 现有四腿 fixture 缺绝对每腿 monotonic timestamp，成品只可记 INCONCLUSIVE，不冒充 validated paired_abba PASS。M4 当前独立中央 G2 `39197439844` SUCCESS，不覆盖 M4 产品装配 HOLD。产品 FEC2 OFF、性能资格 NOT_RUN。

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN-009 §5",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "state": "SHARED_ENTRY_CONTRACT_PUBLISHED_WORKER_PERFORMANCE_NOT_RUN",
+  "control_ref": "qualification/worker-ci-v3",
+  "control_sha": "3f87d3ec9c06f7362c95c301437116d53be14c4f",
+  "workflow": ".github/workflows/worker-component-validation.yml",
+  "runner": "tools/worker_component_validation.py",
+  "cases": [
+    "M1 Game015 default Release two-binary AB or BA",
+    "M3 FEC2-018 official ISA-L native Release single-binary ABBA, missing leg absolute intervals means INCONCLUSIVE"
+  ],
+  "artifact_contract": {
+    "prepare": "run+attempt+manifest sha256+actual binary hashes",
+    "paired": "exact prepare artifact ID, SHA256, single measurement job, M1 paired_ab or M3 paired_abba"
+  },
+  "source_pin_proof": {
+    "branch": "qualification/worker-ci-v3",
+    "sha": "3f87d3ec9c06f7362c95c301437116d53be14c4f"
+  },
+  "validation": [
+    {
+      "name": "worker-component-validation contract-smoke",
+      "run_id": 39197303106,
+      "attempt": 1,
+      "result": "success",
+      "artifact_id": 12161853630,
+      "artifact_sha256": "sha256:462876b17c5e3220e116ab60e600c7fc3754dabf84300a668484ba1a6fe33c8e"
+    },
+    {
+      "name": "governance-maintenance",
+      "run_id": 39197303104,
+      "attempt": 1,
+      "result": "success",
+      "artifact_id": 12162800175,
+      "artifact_sha256": "sha256:d974e50567733a15ae4cc7d37dd377e213cb0034eaa2275c1667736f2a809e1b"
+    },
+    {
+      "name": "main Governance",
+      "run_id": 39197303044,
+      "attempt": 1,
+      "result": "success"
+    }
+  ],
+  "M4_ancestry_scope": {
+    "source_sha": "c51037853d68b30512e9da0a62523b1d0fcf5c9f",
+    "run_id": 39197439844,
+    "attempt": 1,
+    "job_id": 117883140170,
+    "result": "success",
+    "artifact_id": 12163020135,
+    "artifact_sha256": "sha256:5ce0fd3176667c2008d7b3a0121cf3fe4cc48eb8d472f050e4e0e2f8279d34d3",
+    "meaning": "H24 scope only; product HOLD/unverified remains"
+  },
+  "prior_failure_retained": [
+    "39196392783 broken workflow expression",
+    "39196306066 contract negative cases",
+    "39194192479 historical M4 scope fail"
+  ],
+  "explicitly_not_run": {
+    "M1_Game_prepare": "NOT_RUN",
+    "M1_Game_paired": "NOT_RUN",
+    "M3_native_prepare": "NOT_RUN",
+    "M3_native_paired": "NOT_RUN",
+    "actual_worker_dispatch_permissions": "NOT_VERIFIED",
+    "original_Go_Rust_product": "NOT_RUN",
+    "physical_2peer": "NOT_RUN",
+    "D10_p99": "NOT_RUN"
+  },
+  "exclusions": [
+    "No worker-owned source/branch/cursor changed",
+    "No M0 dispatch for worker costs",
+    "No production FEC2 activation"
+  ],
+  "product_FEC2": "OFF"
+}
