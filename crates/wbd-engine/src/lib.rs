@@ -11,6 +11,9 @@ pub mod fec2_staged;
 /// M0 continuous original-owner Fixed source-first/parity composition.
 /// Independent Go TLS/M4 integration still gates all real product capability.
 mod v4_fixed_stream;
+/// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
+/// Not a public Go product grant until real lanes are bound.
+mod v4_game_lane;
 #[path = "memory/mod.rs"]
 pub mod memory;
 /// M0 bounded authentication/receipt assembly; no production V4 enablement.
