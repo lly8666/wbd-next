@@ -1,5 +1,5 @@
 name: Audited worker v5 auto dispatch
-run-name: "audited-worker-dispatch|${{ github.event_name }|${{ github.sha }"
+run-name: "audited-worker-dispatch|${{ github.event_name }}|${{ github.sha }}"
 on:
   push:
     branches: [main]
@@ -33,11 +33,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      GH_TOKEN: ${{ github.token }
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: ${{ github.sha }
+          ref: ${{ github.sha }}
           persist-credentials: false
       - name: Fail-closed dispatcher unit tests (real credential never exercised in tests)
         shell: bash
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: audited-worker-dispatch-${{ github.run_id }-${{ github.run_attempt }
+          name: audited-worker-dispatch-${{ github.run_id }}-${{ github.run_attempt }}
           path: out/
           retention-days: 30
           if-no-files-found: warn
