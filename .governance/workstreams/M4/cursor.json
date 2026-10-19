@@ -4,26 +4,25 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 26,
-  "checkpoint_sha": "f502f59d01576cf705032f8491c0b002df48084c",
+  "sequence": 27,
+  "checkpoint_sha": "efa8ea9647131ddbc664c231ad0f190c880c867e",
   "progress": "in_progress",
-  "task_id": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015",
-  "current_task": "PLAN008-015 original client/server + native WinForms GUI M4 source-locked assembly. H25 Linux x64 ARM native and Windows Go compile/config passed; Windows GUI selftest missing receipt FAIL. M4 repaired Windows child-process wait under S4f7346; current H26 rerun pending.",
-  "why_now": "M0 main H178 consumed M4 H25 152f0a under G2 run39219843238 ROLE_SCOPE_PASS, executed Linux native x64+ARM 39221442451 scoped PASS; Windows 39222289145 CLI/WinForms compiled but GUI receipt not yet written when old PS launcher checked. Fixed only allowed M4 Windows smoke S4f7346 via WaitForExit(600000), enforce real exit and raw result; no synthetic PASS.",
-  "done_when": "Pinned original-source and overlay hashes/checkable fail-closed create/replace manifest; runnable Linux original client/server and Windows GUI loader native smoke where supported; same-parameter save/restart, two client/dir, invalid mode, missing DLL/wrong target, stale revision, Stop, exact real native applied status; report physical NOT_RUN and keep production feature OFF.",
-  "next_action": "Read exact new H26 worker Governance and central G2, then source-pinned shared M0-m4-original-product Actions Windows GUI --self-test after real process WaitForExit. Preserve red and error details, fix any observed M4 paths only; if Windows native PASS, request M0 product Rust real ABI/ACK and safe main integration. Production FEC2 OFF.",
+  "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
+  "current_task": "PLAN-010 M4-016: complete runtime PowerShell-free native Windows single-proxy original Go CLI/GUI/portable/network WAL and actual Actions; original 015 H26 G2 and Linux/ARM/Win native GUI scoped PASS settled, Rust applied remains M0.",
+  "why_now": "main registry rev2/epoch1 reassigned same M4 branch to native Windows 016; added only internal/windowsclient overlay scope. Old 015 code H26 G2 39225046360 SUCCESS plus Actions39225427878 four scoped original Go/GUI native jobs SUCCESS; separate worker Governance39225015969 failed, full protected Rust/network not proven.",
+  "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
+  "next_action": "Implement exact 12 donor Windows files from 6ec6b583 over frozen cold a7a82db source; update sole hash-locked assembly manifest + tests, then CLI/GUI product process-tree PowerShell-free paths and owned recovery. Freeze code S; submit one authenticated I and H via source-locked G2/Windows Actions; preserve product FEC2 OFF.",
   "unverified": true,
-  "last_tested_source": "152f0a880d9fe637a38d6a1b2e66c376cafdff35",
+  "last_tested_source": null,
   "evidence_refs": [
+    "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
   ],
-  "open_requests": [
-    ".governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md"
-  ],
+  "open_requests": [],
   "context_refs": [
-    "docs/evidence/M4/R5-M4-FEC2-COLD-POLICY-PLATFORMS-014.json",
-    "docs/decisions/M0-integration-unblock-2026-10-19.md",
-    "docs/architecture/modules/10-LIFECYCLE-QUALITY.md"
+    "docs/devlog/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.md",
+    "docs/decisions/M0-windows-native-migration-2026-10-19.md",
+    "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H26 active. Code4f7346 repairs M4 PowerShell GUI-process wait and actual receipt / exit validation; fix UNRUN at this source. Prior H25 G2 39219843238 SUCCESS, prior Linux native/ARM 39221442451 PASS, Win Go/native WinForms compile 39222289145 PASS, GUI selftest FAIL/no receipt. Legacy pinned a7a82, new S f502f, pending fresh G2 and Windows Actions. Original FEC2 protected Go/Rust live applied, physical, D10/p99 NOT_RUN; production OFF. Prior historical G2 exception and old failures preserved."
+  "partial_summary": "H27 M4-016 active, M4-015 exact H26 central G2 and Linux/ARM/Win original Go+WinForms scoped PASS reused, worker Governance historical FAIL retained; new full Windows script-free runtime work UNRUN. Base a7a82db/donor 6ec6b583/12 files locked in main; no new manifest, CLI/GUI native adoption or 016 I yet. M0 sole protected Rust Stop/native Actions/merge. FEC2 OFF."
 }
