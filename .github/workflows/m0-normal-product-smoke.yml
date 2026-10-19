@@ -12,6 +12,8 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_normal_off_policy_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_normal_off_policy_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go"
       - "r0/go_overlay/internal/realityfront/fec_v2_policy.go"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
@@ -67,7 +69,7 @@ jobs:
           cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
           mkdir common-build common-result
           cp target/release/libwbd_engine.so common-build/libwbd_engine.so
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go fec_v2_policy.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go fec_v2_policy.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -98,11 +100,14 @@ jobs:
           set -euo pipefail
           LD_LIBRARY_PATH="$PWD/common-build" ./common-build/owner-go.test \
             -test.v -test.count=1 \
-            -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|NormalOffProductRevisionReadback|TwoGenerationStopIsolation)$' \
+            -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|NormalOffProductRevisionReadback|FixedPendingRealGoTLSNoPrematureApplied|TwoGenerationStopIsolation)$' \
             >common-result/connect-stop.log 2>&1
           cat common-result/connect-stop.log
           for suite in 1 2 3; do
             grep -q "M0_ORIGINAL_GO_NORMAL_OFF_REQUEST_PENDING_APPLIED_REJECTED_PASS cipher=$suite real_revision=2" common-result/connect-stop.log
+          done
+          for suite in 1 2 3; do
+            grep -q "M0_FIXED_ORIGINAL_TLS_PENDING_ONLY_PASS cipher=$suite revisions=1,2 applied=0 foreign=deny original_off3=applied stop=deny" common-result/connect-stop.log
           done
           grep -q 'M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS' common-result/connect-stop.log
           grep -q 'EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS' common-result/connect-stop.log
@@ -129,7 +134,9 @@ jobs:
             connect_stop_log_sha256=hashlib.sha256((p/"connect-stop.log").read_bytes()).hexdigest(),
             full_original_go_cli_gui_windows="NOT_RUN",
             normal_off_native_applied="PASS_3_CIPHERS_AND_TWO_ACTUAL_OWNER_REVISIONS",
-            original_go_fixed_auto_applied="REJECTED_UNSUPPORTED",
+            original_go_fixed_auto_applied="NOT_RUN",
+            real_tls_fixed_pending_only="PASS_3_CIPHERS_NOT_APPLIED",
+            auto_product_applied="NOT_RUN",
             physical="NOT_RUN",p99="NOT_RUN")
           (p/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
           print(json.dumps(receipt,indent=2))
