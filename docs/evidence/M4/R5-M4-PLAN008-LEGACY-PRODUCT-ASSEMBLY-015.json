@@ -18,8 +18,8 @@
   },
   "code_source_sha": "4f7346d3c9f65f3c06b6ddeb502937967f9a01f4",
   "result": "PARTIAL",
-  "progress": "ACTIVE_WINDOWS_GUI_PROCESS_WAIT_FIX_PENDING_NATIVE_RERUN",
-  "artifact_verified": false,
+  "progress": "SCOPED_ORIGINAL_GO_LINUX_ARM_WINDOWS_ASSEMBLY_DONE; REAL_PRODUCT_ABI_PENDING_M0",
+  "artifact_verified": true,
   "exact_source": {
     "original_go_repo": "lly8666/wobuzhidao",
     "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
@@ -61,16 +61,16 @@
     ]
   },
   "verification": {
-    "scope_audit": "PASS_H25_EXACT_152f0a_ACTION39219843238; NEW_M4_CODE_PENDING_CURRENT_G2",
+    "scope_audit": "H26_SOURCE_c6683c66 G2_39225046360_PASS; independent worker Governance39225015969 FAIL preserved",
     "manifest_blob_calculation": "PASS_STATIC_SOURCE_HASH_CHECK_ONLY",
     "assembly_unittest": "PASS_ACTION39221442451_LINUX; WINDOWS_PASS_39222289145",
-    "real_original_go_clone_linux_build": "PASS_ACTION39221442451_NATIVE_X64_CLIENT_SERVER_CONFIG_2_TESTS",
-    "real_original_go_clone_arm_native": "PASS_ACTION39221442451_NATIVE_ARM64_CLIENT_SERVER_CONFIG_2_TESTS",
-    "real_original_go_clone_windows_build": "PASS_ACTION39222289145_NATIVE_X64_CLIENT_AND_CONFIG_2_TESTS",
-    "real_Windows_GUI_native_compiler_selftest": "COMPILER_PASS_SELFTEST_FAIL_NO_RECEIPT_ACTION39222289145; WORKER_PROCESS_WAIT_FIX_S_4f7346_UNRUN",
+    "real_original_go_clone_linux_build": "PASS_SCOPED_ACTION39225427878",
+    "real_original_go_clone_arm_native": "PASS_SCOPED_ACTION39225427878",
+    "real_original_go_clone_windows_build": "PASS_SCOPED_ACTION39225427878",
+    "real_Windows_GUI_native_compiler_selftest": "PASS_SCOPED_ACTION39225427878",
     "missing_DLL_wrong_arch_load": "NOT_RUN",
     "real_rust_ffi_loader": "NOT_RUN",
-    "requested_pending_applied_real_authenticated": "NOT_RUN_M0_INTERFACE_REQUIRED",
+    "requested_pending_applied_real_authenticated": "NOT_RUN_M0_OWNER",
     "legacy_dns_route_mtu_stop_in_product": "NOT_RUN",
     "physical_driver_or_user_system": "NOT_RUN",
     "performance": "NOT_RUN",
@@ -116,6 +116,45 @@
       "m4_fix_source": "4f7346d3c9f65f3c06b6ddeb502937967f9a01f4",
       "correction": "Start-Process -PassThru then bounded WaitForExit(600000), assert actual ExitCode and original GUI receipt; no synthetic PASS",
       "correction_verification": "NOT_RUN_NEW_SOURCE"
+    },
+    "scope_audit_h26": {
+      "source_sha": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+      "run_id": 39225046360,
+      "attempt": 1,
+      "job_id": 117969159793,
+      "conclusion": "success",
+      "artifact_id": 12172779881,
+      "artifact_zip_sha256": "1492170198ee16f74251ad9e21af18262407e5850f3be6f1d6eaaad52d71d2e8"
+    },
+    "original_three_native_platforms": {
+      "source_sha": "c6683c66f57b0b3cf4cc113c0d21266992d24186",
+      "run_id": 39225427878,
+      "attempt": 1,
+      "result": "SUCCESS_SCOPED_ORIGINAL_GO_CLI_CONFIG_WINFORMS_GUI",
+      "jobs": {
+        "attest": 117970424157,
+        "linux_amd64": 117970498297,
+        "linux_arm64": 117970498457,
+        "windows_amd64": 117970498310
+      },
+      "artifacts": [
+        {
+          "id": 12173732000,
+          "sha256": "0e53ef5392611d9910e2843ed77f48c917dda7e6b08417b9597b4c2eb79b906b"
+        },
+        {
+          "id": 12173616396,
+          "sha256": "84ecfcdf95a5a4cc7d0af105047a5160e0bcd1eb4793759c549eb74180973eb7"
+        },
+        {
+          "id": 12173422773,
+          "sha256": "2af1e06d1986aeb238301a6108a3be99aca9be41bb06cddbf918c5d7e0857ffc"
+        },
+        {
+          "id": 12172629504,
+          "sha256": "fb275961600da4fb9dd7d89f194ff00713c5a58a9c7efabe591b914d8161388f"
+        }
+      ]
     }
   },
   "scope_exception": {
@@ -142,8 +181,8 @@
     "safe_m0_path": "Main-owned single G2 checked historical one-off immutable pair, both SHA/path/status/order/parent pinned with negative tests, disclosed in receipt; or reviewed supersession. Do not rewrite worker history or extend runtimeentry/ wildcard."
   },
   "request": ".governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md",
-  "current_scope_qualification": "H25 exact source 152f0a ROLE_SCOPE_PASS 39219843238; new M4 S G2 pending; product PARTIAL",
-  "next_action": "On H checkpoint, M0-owned central source-locked workflow .github/workflows/m0-m4-product-assembly.yml should rerun Windows original GUI self-test with explicit process wait; preserve real FAIL if test error; M4 correct only in allowed paths. M0 owns actual protected Rust applied and main merge.",
+  "current_scope_qualification": "H26 G2 PASS and 3-platform original Go+GUI scoped native PASS; product Go-Rust ABI, live network, physical NOT_RUN",
+  "next_action": "M4 scope transitions to new registry task R5-M4-NATIVE-WINDOWS-NETWORK-016; carry original Go pinned assembler and tested GUI as baseline. M0 sole owner of real Rust applied and main integration.",
   "rollback": "Remove only M4 new assembly, configfile, new runtimeentry adapter and submitted M4 permitted overlay revisions from staging; original legacy source unchanged; production FEC2 remains OFF.",
   "previous_risks_preserved": [
     "Old FEC2 014 Go pure tests/native safe wrapper success does not attest new PLAN008 product",
