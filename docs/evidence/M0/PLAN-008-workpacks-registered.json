@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "plan_id": "PLAN-008",
+  "role_id": "M0",
+  "type": "MAIN_REGISTRY_ASSIGNMENT_EVIDENCE",
+  "merged_pr": 11,
+  "pr_source": "50ec96ccc010d3c5c4002cb08dfa51ba5074a4e1",
+  "merge_sha": "fe0ba6f3aac4f36707d7edddd30c58679f0540fd",
+  "decision": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+  "prior_registry_reservation_revision": 2,
+  "registered_registry_reservation_revision": 2,
+  "reason_no_revision_or_epoch_bump": "This is a continuous same-writer workpack transition; all live worker cursors remain rev2/epoch1 and must not be rewritten by M0. Revocation is not requested; new M4 exact paths are authorized by this atomic main control-plane assignment and original conflicting worker scopes remain disjoint.",
+  "authorizing_user_request": "合入 PR #11，按 PLAN-008 一次登记本轮工作包",
+  "frozen_worker_branch_heads": {
+    "M1": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+    "M2": "9b70e35b97de724abf52d3f1cff30891ab489b72",
+    "M3": "41ef0e29c9029949136fe54169f6628eca01fdfa",
+    "M4": "6363bb98acfb6d789b1ea5eeda16dc1f10b52ba6"
+  },
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "assignments": [
+    {
+      "role_id": "M0",
+      "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+      "branch": "main",
+      "epoch": 1,
+      "goal_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+      "scope": [
+        "*"
+      ]
+    },
+    {
+      "role_id": "M1",
+      "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
+      "branch": "work/m1-r1-runtime",
+      "epoch": 1,
+      "goal_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+      "scope": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/",
+        "docs/devlog/M1/",
+        "docs/evidence/M1/",
+        ".governance/workstreams/M1/cursor.json",
+        ".governance/workstreams/M1/requests/"
+      ]
+    },
+    {
+      "role_id": "M2",
+      "task_id": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011",
+      "branch": "work/m2-r2-recovery",
+      "epoch": 1,
+      "goal_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+      "scope": [
+        "crates/wbd-recovery/",
+        "docs/devlog/M2/",
+        "docs/evidence/M2/",
+        ".governance/workstreams/M2/cursor.json",
+        ".governance/workstreams/M2/requests/"
+      ]
+    },
+    {
+      "role_id": "M3",
+      "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
+      "branch": "work/m3-r1-codec",
+      "epoch": 1,
+      "goal_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+      "scope": [
+        "crates/wbd-codec/",
+        "docs/devlog/M3/",
+        "docs/evidence/M3/",
+        ".governance/workstreams/M3/cursor.json",
+        ".governance/workstreams/M3/requests/"
+      ]
+    },
+    {
+      "role_id": "M4",
+      "task_id": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015",
+      "branch": "work/m4-r1-platform",
+      "epoch": 1,
+      "goal_ref": "docs/decisions/M0-integration-unblock-2026-10-19.md",
+      "scope": [
+        "crates/wbd-platform/",
+        "r1/go-bridge/",
+        "docs/devlog/M4/",
+        "docs/evidence/M4/",
+        ".governance/workstreams/M4/cursor.json",
+        ".governance/workstreams/M4/requests/",
+        "native/isal-safe/build.rs",
+        "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+        "r0/go_overlay/internal/configfile/",
+        "r0/go_overlay/cmd/wbd-client/",
+        "r0/go_overlay/cmd/wbd-server/",
+        "r0/go_overlay/windows/gui/",
+        "r0/go_overlay/docs/PARAMETERS.json",
+        "r0/go_overlay/docs/PARAMETERS.md",
+        "r0/go_overlay/scripts/",
+        "r0/go_overlay/assembly/",
+        "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
+      ]
+    }
+  ],
+  "m4_new_exclusive_grants": [
+    "r0/go_overlay/internal/configfile/",
+    "r0/go_overlay/cmd/wbd-client/",
+    "r0/go_overlay/cmd/wbd-server/",
+    "r0/go_overlay/windows/gui/",
+    "r0/go_overlay/docs/PARAMETERS.json",
+    "r0/go_overlay/docs/PARAMETERS.md",
+    "r0/go_overlay/scripts/",
+    "r0/go_overlay/assembly/",
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
+  ],
+  "excluded_for_m4": [
+    "crates/wbd-engine/src/v4_*",
+    "r0/go_overlay/internal/realityfront/ (except preexisting exact cold-policy files)",
+    "r0/go_overlay/internal/runtimeentry/r0_admission_mode.go",
+    ".github/",
+    "tools/",
+    "other active worker prefixes"
+  ],
+  "task_submission": "Atomic main registry + project entry, not worker cursor rewrites. Worker refresh/recover before acting; M1 historic old blocked remains until worker self-handoff; central receipt from PR evidence is historical role-scope only.",
+  "phase": "ASSIGNED_NOT_STARTED_OR_QUALIFIED",
+  "product": "NOT_QUALIFIED",
+  "FEC2": "OFF",
+  "physical": "NOT_RUN",
+  "business_p99": "NOT_RUN",
+  "PR_maintenance": {
+    "run_id": 39184972734,
+    "source_sha": "50ec96ccc010d3c5c4002cb08dfa51ba5074a4e1",
+    "conclusion": "success"
+  }
+}

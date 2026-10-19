@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "按 docs/handoff/README.md 导航；任务/权限以 main registry、进度以各角色分支 cursor 为权威。M0 R0-023 继续 live M1 scheduler + M2 reverse authenticated receipt/repair 与原 Go applied 配置；150ms Normal/off、65KiB/Stop/MTU、旧codec240s/D10/p99和目标native OPEN。FEC2 default OFF，产品/物理资格 NOT_RUN。",
+  "next_decision": "PLAN-008 active assignments docs/decisions/M0-integration-unblock-2026-10-19.md: M0 original Go/Rust vertical integration; M4 legacy product shell/CLI/GUI; M2 mature authenticated first-send feedback; M1 bounded Game dedup; M3 finite recovery workspace. All product/physical qualifications NOT_RUN; FEC2 OFF. Authority = main registry; workers reconcile own cursors.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

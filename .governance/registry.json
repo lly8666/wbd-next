@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "Continue R0-023 real protected Go/Rust owner Stop/MTU/LINK, source-frozen FEC2 shared contract/integration; exact Normal/off fca4456313e59c0a67f4d8b98959a62d2af71b12 baseline, D10 FAIL retained. M1/M3/M4 autonomous FEC2 tasks; M2 remains standby, no 024 micro-tuning.",
-      "done_when": "原023真实Go/Rust/raw/TUN最小接入及Stop/MTU±1/超限/必要LINK分片的准确功能反例、限定同机性能与SOURCE证据齐全；缺失产品硬门标OPEN，不以模块PASS提升产品资格。",
-      "assigned_task": "R0-M0-V4-PROTECTED-OWNER-COMMIT-023"
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M0/§3/§4: build original Go protected admission → Rust owner Normal/off→fixed→auto product vertical slice, freeze ABI/typed authentic reverse kind1, actual OFF transition and applied ACK, integrate frozen M1/M2/M3/M4; M0 alone owns shared entry/CI and final product qualification.",
+      "done_when": "One buildable original client/server Normal experiment with verified TLS/owner/data/feedback/Stop and actual requested/pending/applied/rejected, combined netns function batch and artifact-backed SOURCE; keep CLI/GUI/physical/Windows ARM/full D10/p99 and FEC2 OFF until explicitly proven; no probe-only substitution.",
+      "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
     {
       "id": "M1",
@@ -45,9 +45,9 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "FEC2 bounded 3class runtime and Game shared owner scheduling; reuse frozen Game013, source first-ready, class-rate short-block deadline, parity fair service, Stop/loan, never edit M0 owner or codec wire.",
-      "done_when": "F2-SCHED/MEM deterministic and native tests cover k1..16, 0/1/32/33, 30Mbps mixed partial, sparse first arrival, deadline/revision, Game one logical encoding, slow lane noHOL, parity expiry, bounded memory and loan Stop; source-locked artifact, cost/rollback and live Go NOT_RUN.",
-      "assigned_task": "R5-M1-FEC2-OWNER-SCHEDULING-014"
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M1/§4: first reconcile old H19 blocked with already audited exact-SOURCE central G2 receipt (retain old FAIL); then replace Game per-packet rotate_left with bounded paged/ring generation dedup, and open-block linear search with bounded lookup. Preserve one shared encoding and all generation/Stop/loan semantics; no Arc-pool or deadline rework.",
+      "done_when": "Source-locked deterministic wrap/large-gap/old-ID/duplicate/multi-lane/pressure/Stop equivalence; operations-bounded proof (no per-packet full-window shift), one same-VM old/new Game representative cost with bounded memory; original fail retained and unchanged owner contract delivered to M0.",
+      "assigned_task": "R5-M1-PLAN008-GAME-DEDUP-015"
     },
     {
       "id": "M2",
@@ -70,9 +70,9 @@
       ],
       "prompt": "docs/prompts/M2.md",
       "cursor": ".governance/workstreams/M2/cursor.json",
-      "goal": "已交付009纯恢复组件；在wbd-recovery权限内补最小引擎接入契约：认证后receipt作用域、冻结repair句柄与kernel prefix/uncertain完成翻译、fresh独立/预算，供M0真实Go/Rust owner集中接线。",
-      "done_when": "PACK-010 M2：A01–A06/R01–R04现有含跨界与partial/unknown/同cipher最多2次/稀疏资源上限的typed ingress adapter反例，在精确SOURCE native Actions通过，冻结参数、失败行为与预算，保留009 PASS；Go认证入口、M3封包、M4 raw/TUN/物理与产品资格NOT_RUN并交M0。",
-      "assigned_task": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010"
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M2/§3/§4: within wbd-recovery derive bounded mature 2s/8s first-send denominator from actual definite kernel send and authenticated reverse receipts, coverage, unknown/censored and repair outcomes; freeze event API for M0 original owner integration. No fabricated zero-loss or second controller.",
+      "done_when": "One source-locked pure-event replay suite for covered/uncovered/lost-block/reorder/duplicate/lost-receipt/unsent/uncertain/recovery/Stop/epoch; denominator conservation and memory/time bounds; provide typed API and NOT_RUN real M0 network evidence, without RACK reindex or changing repair budget.",
+      "assigned_task": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011"
     },
     {
       "id": "M3",
@@ -95,9 +95,9 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "FEC2 new RS16 canonical Cauchy GF256, k1 repeat/first XOR, typed 10B source/12B repair record kinds, e-dimensional recovery, ISA-L and scalar; no requirement to reproduce legacy Go data wire.",
-      "done_when": "F2-MATH/WIRE native/scalar/actual ISA-L tests cover k1..16, seven profiles and r<=20, partial recovery and protected length, all malformed/dirty/MTU/scope/Stop, direct output and finite caches, source-hashed artifact, isolated one-scenario CPU; real Go/driver/physical NOT_RUN.",
-      "assigned_task": "R5-M3-FEC2-CODEC-NATIVE-017"
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M3/§4: maintain frozen FEC2 wire/matrix/k/r/e recovery exact equivalence; optimize inverse-table cache hit copies and bounded reused input/output workspace, final decoding table where safe, report memory accounting; no algorithm/profile change.",
+      "done_when": "SOURCE-pinned vectors + dirty-tail/length/partial/missing/eviction equivalence, allocation/copy/cache metrics and finite memory bound; one same-VM old/new k16/r16/1200B/e4 native AB cost (not ISA-L-vs-scalar repeat); return rollback/inconclusive honestly.",
+      "assigned_task": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018"
     },
     {
       "id": "M4",
@@ -115,20 +115,30 @@
         ".governance/workstreams/M4/requests/",
         "native/isal-safe/build.rs",
         "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
-        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go"
+        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+        "r0/go_overlay/internal/configfile/",
+        "r0/go_overlay/cmd/wbd-client/",
+        "r0/go_overlay/cmd/wbd-server/",
+        "r0/go_overlay/windows/gui/",
+        "r0/go_overlay/docs/PARAMETERS.json",
+        "r0/go_overlay/docs/PARAMETERS.md",
+        "r0/go_overlay/scripts/",
+        "r0/go_overlay/assembly/",
+        "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
       ],
       "owned_semantics": [
         "platform_driver",
         "go_bridge_adapter",
         "lifecycle_integration",
         "fec2_cold_policy_component",
-        "native_isal_target_build"
+        "native_isal_target_build",
+        "legacy_go_client_server_gui_assembly"
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "Scoped existing Go overlay cold policy 7 FEC2 profiles, per-direction auto valid/unknown/censored/host, applied revision; ISA-L Linux ARM64/Windows target build packaging. M0 exclusively integrates real Go admission, existing CLI/GUI, root deps and shared CI.",
-      "done_when": "F2-CONTROL pure Go deterministic replay for 7 profiles, normal/aggressive, direction/client isolation, sparse/censored/loss/idle, revision; target-native build/loader cases or honest NOT_RUN, exact SOURCE evidence, handoff to M0 real Go UI/config; no product enabled.",
-      "assigned_task": "R5-M4-FEC2-COLD-POLICY-PLATFORMS-014"
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M4/§2/§3/§4: exact legacy SOURCE a7a82db31fe736ffedee330795a3234d358f1984 + explicit manifest/overlay construct original Go client/server and native Windows GUI; preserve one real PARAMETERS catalog, config persistence and CLI/UI requested/pending/applied/rejected with Stop/errors; M0 owns authenticated Rust ABI/admission readiness.",
+      "done_when": "Pinned original-source and overlay hashes/checkable fail-closed create/replace manifest; runnable Linux original client/server and Windows GUI loader native smoke where supported; same-parameter save/restart, two client/dir, invalid mode, missing DLL/wrong target, stale revision, Stop, exact real native applied status; report physical NOT_RUN and keep production feature OFF.",
+      "assigned_task": "R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015"
     }
   ]
 }
