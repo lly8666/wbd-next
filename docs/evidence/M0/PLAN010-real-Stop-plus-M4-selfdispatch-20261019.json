@@ -105,10 +105,29 @@
       {
         "run_id": 39235733630,
         "run_attempt": 1,
-        "conclusion": "IN_PROGRESS_AT_RECEIPT",
-        "scope": "main TLS FEC2 owner broad Linux+Windows matrix; previous run 39228591882 full FAIL due external NASM HTTP504 preserved; individual current nodes not promoted to whole PASS until finished"
+        "conclusion": "success",
+        "scope": "same SOURCE broad normal TLS/FEC2 *scoped* native matrix 14 successful jobs, no product FEC2 activation",
+        "completed_job_count": 14,
+        "failed_job_count": 0,
+        "successful_scoped_jobs": [
+          "m0-actual-isal",
+          "go-control-policy",
+          "m0-normal-build",
+          "m0-original-link-fec",
+          "m0-windows-native",
+          "m0-native-architecture-linux-x64",
+          "m0-native-architecture-linux-arm64",
+          "native",
+          "m0-normal-network-netem-150ms-A",
+          "m0-normal-network-netem-150ms-B",
+          "m0-normal-network-netem-150ms-C",
+          "m0-normal-network-netem-10ms",
+          "m0-normal-network-normal-off-10mbps",
+          "m0-unqualified-gate-ledger"
+        ]
       }
-    ]
+    ],
+    "matrix_followup_at_same_code_source": "ACTION_39235733630_SUCCESS_ALL_14_JOBS"
   },
   "history": {
     "plan010_project_hot_bytes_failure": {
