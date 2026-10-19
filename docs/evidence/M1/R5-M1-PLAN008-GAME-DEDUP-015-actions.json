@@ -54,12 +54,12 @@
   },
   "cost": {
     "case": "crates/wbd-engine/tests/m1_game015_same_vm_cost.rs",
-    "fixture_blob_sha": "4c70bedf3bd4d07e959eaf73dcd63feb1ebe2821",
-    "fixture": "ignored stable 262144 RX inputs/65536 window/4 lanes/17th duplicate + 32-block pair every8192; identical fixture for both immutable code SOURCES, success checksums",
+    "fixture_blob_sha": "81ff52152c81ed1ae4634b7881a94111d590e324",
+    "fixture": "64 independently verified rounds x 262144 GameRx inputs, one old/new frozen fixture each, total 16777216 inputs; identical RX ids/lane/blocks/Stop/loans per round, receipts explicitly print rounds and total_inputs; unmodified frozen runner expects per-round inputs=262144.",
     "old_code_source_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
     "new_code_source_sha": "64102db5e101df1f678e17919169927ad19bad06",
     "required": "M0-owned isolated same-VM two-release-binary paired ABBA: exact old+new SHAs and identical fixture hash, each binary SHA, one measurement job, cpu/quota/PSI/steal + RSS, same input checksum, capacity stop",
-    "status": "PREPARE_PASS_PAIRED_NOT_RUN",
+    "status": "REVISED_FIXTURE_PREPARE_NOT_RUN",
     "diagnostic": "Unrelated worker-native owner sample and test-run timing are NOT an isolated Game015 old/new performance comparison. Fixture compiled by Actions but #[ignore] not executed.",
     "mode": "paired_ab",
     "prepare": {
@@ -90,16 +90,48 @@
     },
     "paired": {
       "request_id": "M1-GAME015-AB-PAIRED-001",
-      "request_status": "PLANNED",
-      "run_id": null,
-      "run_attempt": null,
-      "result": "NOT_RUN"
+      "run_id": 39210280319,
+      "attempt": 1,
+      "status": "INCONCLUSIVE_CPU_WINDOW",
+      "actions_conclusion": "failure",
+      "followup": "new fixture S26 c6f8c1e9, new v6 prepare request004, then only separate new paired request with real new build hash"
     },
     "history_control_failure": {
       "run_id": 39204910923,
       "conclusion": "failure",
       "stage": "authorize",
       "cause": "Frozen v5 passed --stage argument to runner that did not implement it; no build run. Preserved."
+    },
+    "failed_paired_trials": [
+      {
+        "request_id": "M1-GAME015-AB-PAIRED-001",
+        "run_id": 39210280319,
+        "run_attempt": 1,
+        "artifact_id": 12166844152,
+        "artifact_zip_sha256": "56b97970c07737f00aebab1f982c0a455de3e71ae6c0c44b4a1c1ba2c329c937",
+        "result": "INCONCLUSIVE",
+        "actions_conclusion": "failure",
+        "failed_gate": "CPU resolution/volume inconclusive: one of A/B legs CPU <1s; neither qualifies for final performance",
+        "old_fixture_git_blob": "4c70bedf3bd4d07e959eaf73dcd63feb1ebe2821",
+        "old_per_round_inputs": 262144,
+        "old_A_elapsed_ns": 234212346,
+        "old_B_elapsed_ns": 31801343,
+        "old_first": 246724,
+        "old_duplicate": 15420,
+        "old_complete": 992,
+        "old_checksum": 7911576,
+        "note": "Same 262144 work and checksum; raw fixture elapsed values diagnostic only, do NOT claim product speedup."
+      }
+    ],
+    "next_prepare": {
+      "request_id": "M1-GAME015-AB-PREP-004",
+      "request_status": "PLANNED",
+      "harness_sha": "c6f8c1e971ce82cf76b44427f86f4dac123afc5e",
+      "fixture_blob_sha": "81ff52152c81ed1ae4634b7881a94111d590e324",
+      "fixture_sha256": "81aa223a21bc2a1f5e914b9e22768ad506eeba886c00816ae1390e1063a6b9c8",
+      "rounds": 64,
+      "per_round_inputs": 262144,
+      "total_inputs": 16777216
     }
   },
   "history": [
@@ -155,17 +187,17 @@
     }
   },
   "not_run": {
-    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN; changed requested scope to M1-authorized paired AB",
-    "isolated_cpu_s_and_RSS_comparison": "PAIRED_AB_REQUEST_CREATED_NOT_RUN",
+    "same_vm_two_binary_old_new_GAME015_ABBA": "NOT_RUN; M1 paired_ab separate stage",
+    "isolated_cpu_s_and_RSS_comparison": "Prior v6 paired Action39210280319 INCONCLUSIVE: CPU<1s; 64x fixture retest pending, not qualified",
     "M0_M3_Go_tls_game_live_multilane": "NOT_RUN",
     "physical_product_p99_500Mbps": "NOT_RUN"
   },
   "rollback": "Restore only original game_shared.rs GameRx delivered Vec<bool> rotate_left and Vec<OpenBlock> scan at old H19, remove 015 tests and cost fixture. Preserve GameTx, 013, FEC2 014, and M0/M3 contracts.",
   "handoff": {
-    "state": "RESUMED_USER_DIRECTIVE",
+    "state": "AB_CPU_WINDOW_RETEST_AUTHORIZED",
     "recorded_on": "2026-10-19",
-    "next_execution": "V6_PAIRED_AB_REQUEST_SUBMITTED_AUTODISPATCH_EXPECTED",
-    "preserved": "CODE native 133/133 PASS; old v5 authorize FAIL retained; current v6 prepare succeeded with 13/13 each; paired AB pending; product NOT_RUN",
-    "coordination": "M0 main-only audited worker dispatch; no shared changes by M1"
+    "next_execution": "V6_PREPARE004_FRESH_HARNESS_AFTER_INCONCLUSIVE",
+    "preserved": "Legacy v5 args failure, v6 prepare003 PASS/paired001 INCONCLUSIVE, CODE native133 PASS; product NOT_RUN",
+    "coordination": "M1 tests-only fixture S26 and owned request004; M0 frozen v6 auto dispatch unchanged"
   }
 }
