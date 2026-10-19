@@ -1591,7 +1591,7 @@ fn stop(handle:u64)->i32{
                 w.shutdown.store(true,Ordering::Release);
                 e.joining=true;
             }
-            #[cfg(feature="fec2_product_record")]
+            #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
             e.fec2_rx_admit.store(false,Ordering::Release);
             e.phase=PH_STOPPING;
             w
@@ -2630,7 +2630,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Ok(rx)=>rx,
         Err((_,normal))=>{e.normal=Some(normal);return BAD_STAGE},
     };
-    #[cfg(feature="fec2_product_record")]
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
     if e.protected_features==7 {
         let verified=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
             generation:e.generation,epoch,
