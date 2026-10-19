@@ -19,76 +19,86 @@ fn m1_game015_same_vm_game_receive_fixed_scenario(){
     const INPUTS:u64=262144;
     const BLOCK_BATCH:u64=32;
     const BLOCK_PERIOD:u64=8192;
-    let tunnel=TunnelKey{slot:41,generation:1};
-    let scope=GameScope{tunnel,epoch:[7;16],direction:FlowDirection::Rx};
-    let lanes=(1..=4).map(|slot|QualifiedLane{
-        key:LaneKey{tunnel,slot,generation:1},mss:256
-    }).collect();
-    let snapshot=ActiveLaneSnapshot::new(scope,lanes).expect("authenticated fixture");
-    let mut rx=GameRx::new(snapshot,RxLimits{
-        delivered_window:WINDOW,open_blocks:64,open_bytes:128
-    }).expect("valid scoped limits");
-    let mut arena=Arena::new(501,128,256,1,300000).expect("bounded buffer arena");
+    // Repeated independent identical RX windows make both CPU windows measurable.
+    // Per-round inputs remain 262144 for frozen M0 v6 receipt validation.
+    const ROUNDS:u64=64;
     let mut first=0u64;
     let mut duplicate=0u64;
     let mut complete=0u64;
     let start=Instant::now();
-    for seq in 0..INPUTS{
-        let id=if seq>0 && seq%17==0 {seq-1} else {seq};
-        let lane=LaneKey{tunnel,slot:seq as u32%4+1,generation:1};
-        let mut buffer=arena.allocate().expect("returned previous loan");
-        buffer.writable()[0]=(seq%251) as u8;
-        match rx.first_delivery(scope,lane,LogicalPacketId(id),buffer){
-            Ok(mut original)=>{
-                assert_eq!(original.writable()[0],(seq%251) as u8);
-                first+=1;
-                std::hint::black_box(&original);
-                drop(original);
+    for round in 0..ROUNDS {
+        let tunnel=TunnelKey{slot:41,generation:1};
+        let scope=GameScope{tunnel,epoch:[7;16],direction:FlowDirection::Rx};
+        let lanes=(1..=4).map(|slot|QualifiedLane{
+            key:LaneKey{tunnel,slot,generation:1},mss:256
+        }).collect();
+        let snapshot=ActiveLaneSnapshot::new(scope,lanes).expect("authenticated fixture");
+        let mut rx=GameRx::new(snapshot,RxLimits{
+            delivered_window:WINDOW,open_blocks:64,open_bytes:128
+        }).expect("valid scoped limits");
+        let mut arena=Arena::new(501,128,256,1,300000).expect("bounded buffer arena");
+        for seq in 0..INPUTS{
+            let id=if seq>0 && seq%17==0 {seq-1} else {seq};
+            let lane=LaneKey{tunnel,slot:seq as u32%4+1,generation:1};
+            let mut buffer=arena.allocate().expect("returned previous loan");
+            buffer.writable()[0]=(seq%251) as u8;
+            match rx.first_delivery(scope,lane,LogicalPacketId(id),buffer){
+                Ok(mut original)=>{
+                    assert_eq!(original.writable()[0],(seq%251) as u8);
+                    first+=1;
+                    std::hint::black_box(&original);
+                    drop(original);
+                }
+                Err((GameError::Duplicate,original))=>{
+                    duplicate+=1;
+                    drop(original);
+                }
+                Err((e,buffer))=>{
+                    drop(buffer);
+                    panic!("unexpected game delivery rejection: {e:?} id={id}");
+                }
             }
-            Err((GameError::Duplicate,original))=>{
-                duplicate+=1;
-                drop(original);
-            }
-            Err((e,buffer))=>{
-                drop(buffer);
-                panic!("unexpected game delivery rejection: {e:?} id={id}");
+            if seq>0 && seq%BLOCK_PERIOD==0{
+                // One open set, then complete in a permutation; stresses old
+                // linear scan versus indexed swap_remove without new wire/codec.
+                let block_base=(seq/BLOCK_PERIOD)*BLOCK_BATCH;
+                for k in 0..BLOCK_BATCH{
+                    let block=BlockIdExt(block_base+k);
+                    let buffer=arena.allocate().expect("64 bounded open slots");
+                    let progress=rx.offer_piece(scope,LaneKey{tunnel,slot:1,generation:1},
+                        block,LogicalPacketId(seq),0,2,buffer,0..1)
+                        .expect("first shard");
+                    assert!(matches!(progress,PieceProgress::Pending));
+                }
+                for k in (0..BLOCK_BATCH).rev(){
+                    let block=BlockIdExt(block_base+k);
+                    let buffer=arena.allocate().expect("bounded open slots");
+                    let progress=rx.offer_piece(scope,LaneKey{tunnel,slot:2,generation:1},
+                        block,LogicalPacketId(seq),1,2,buffer,0..1)
+                        .expect("second shard");
+                    let PieceProgress::Complete(block)=progress else {
+                        panic!("complete 2/2 shard");
+                    };
+                    complete+=1;
+                    drop(block);
+                }
             }
         }
-        if seq>0 && seq%BLOCK_PERIOD==0{
-            // One open set, then complete in a permutation; stresses old
-            // linear scan versus indexed swap_remove without new wire/codec.
-            let block_base=(seq/BLOCK_PERIOD)*BLOCK_BATCH;
-            for k in 0..BLOCK_BATCH{
-                let block=BlockIdExt(block_base+k);
-                let buffer=arena.allocate().expect("64 bounded open slots");
-                let progress=rx.offer_piece(scope,LaneKey{tunnel,slot:1,generation:1},
-                    block,LogicalPacketId(seq),0,2,buffer,0..1)
-                    .expect("first shard");
-                assert!(matches!(progress,PieceProgress::Pending));
-            }
-            for k in (0..BLOCK_BATCH).rev(){
-                let block=BlockIdExt(block_base+k);
-                let buffer=arena.allocate().expect("bounded open slots");
-                let progress=rx.offer_piece(scope,LaneKey{tunnel,slot:2,generation:1},
-                    block,LogicalPacketId(seq),1,2,buffer,0..1)
-                    .expect("second shard");
-                let PieceProgress::Complete(block)=progress else {
-                    panic!("complete 2/2 shard");
-                };
-                complete+=1;
-                drop(block);
-            }
-        }
+        // Every round is semantically equivalent to the original fixture.
+        assert_eq!(first+duplicate,INPUTS*(round+1));
+        assert_eq!(duplicate,((INPUTS-1)/17)*(round+1));
+        assert_eq!(complete,((INPUTS-1)/BLOCK_PERIOD)*BLOCK_BATCH*(round+1));
+        assert_eq!(rx.open_state(),(0,0));
+        assert_eq!(rx.stop(),0);
+        assert_eq!(arena.report().loaned,0);
     }
     let elapsed_ns=start.elapsed().as_nanos();
-    assert_eq!(first+duplicate,INPUTS);
-    assert_eq!(duplicate,(INPUTS-1)/17);
-    assert_eq!(rx.open_state(),(0,0));
-    assert_eq!(rx.stop(),0);
-    assert_eq!(arena.report().loaned,0);
-    // Machine-parseable for paired Action, but wall clock by itself is NOT
-    // comparable across runners/jobs or uncontrolled CI contention.
-    println!("M1_GAME015_COST_RESULT window={} inputs={} first={} duplicate={} complete={} elapsed_ns={} checksum={}",
-        WINDOW,INPUTS,first,duplicate,complete,elapsed_ns,
+    assert_eq!(first+duplicate,INPUTS*ROUNDS);
+    assert_eq!(duplicate,((INPUTS-1)/17)*ROUNDS);
+    assert_eq!(complete,((INPUTS-1)/BLOCK_PERIOD)*BLOCK_BATCH*ROUNDS);
+    // Frozen runner checks inputs=262144 as a per-round contract;
+    // rounds and total_inputs explicitly report the actual measured work.
+    println!("M1_GAME015_COST_RESULT window={} inputs={} rounds={} total_inputs={} first={} duplicate={} complete={} elapsed_ns={} checksum={}",
+        WINDOW,INPUTS,ROUNDS,INPUTS*ROUNDS,first,duplicate,complete,elapsed_ns,
         first.wrapping_mul(31).wrapping_add(duplicate*17).wrapping_add(complete));
 }
