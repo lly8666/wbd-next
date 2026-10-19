@@ -31,17 +31,20 @@ func TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup(t *testing.T) {
     // TUN interfaces. No second FEC simulator or acceptance path.
     realOriginalGoFec2LinuxMode(t, FecV2Fixed)
 
+    // Query the entire isolated namespace route table: asking ip-route
+    // for "dev <already deleted interface>" itself fails ENODEV even when
+    // cleanup is correct. Read table/all once, then look for owned names.
+    output,err:=exec.Command("ip","-4","route","show","table","all").CombinedOutput()
+    if err!=nil {
+        t.Fatalf("M4 isolated native route table readback: %v %s",err,output)
+    }
+    routes:=string(output)
     for _,device:=range []string{"wbdfeccont0","wbdfeccli0"} {
         if _,err:=net.InterfaceByName(device);err==nil {
             t.Fatalf("M4 original Go Stop retained interface %s",device)
         }
-        output,err:=exec.Command("ip","-4","route","show","dev",device).CombinedOutput()
-        if err!=nil {
-            t.Fatalf("M4 isolated native route cleanup readback %s: %v %s",
-                device,err,output)
-        }
-        if strings.TrimSpace(string(output))!="" {
-            t.Fatalf("M4 Stop left owned capture route for %s: %s",device,output)
+        if strings.Contains(routes,"dev "+device) {
+            t.Fatalf("M4 Stop left owned capture route for %s: %s",device,routes)
         }
     }
     t.Log("M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS")
