@@ -96,6 +96,8 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     }
     blocks:=map[uint64]bool{}
     paritySeen:=0
+    recoveredFirst:=0
+    droppedOneOriginalSource:=false
     delivered:=map[string]bool{}
     deadline:=time.Now().Add(4*time.Second)
     for time.Now().Before(deadline) {
@@ -115,16 +117,26 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         if tcpLen<20||ihl+tcpLen>n||buf[ihl+13]&0x08==0||
             n-ihl-tcpLen<31{continue}
         wire:=buf[ihl+tcpLen:n]
+        if !droppedOneOriginalSource{
+            // The client-side simulated network boundary loses the first
+            // ACTUAL raw-kernel source ciphertext. No native M3 opener
+            // sees this PN; later real parity MUST reconstruct that
+            // original IPv4 application packet, not merely source-copy it.
+            droppedOneOriginalSource=true
+            continue
+        }
         block,index,recovered,plain,e:=b.fec2ProbeLivePeerConsume(wire)
         if e!=nil{t.Fatalf("original Go TLS keyed independent M3 FEC peer: %v",e)}
         if len(plain)==0{
-            // An AEAD/replay admitted kind3 parity with no missing source
-            // emits no candidate. It remains real original kernel parity.
+            // AEAD/unique-PN admitted parity for a complete block. The
+            // earlier deliberately absent source MUST be recovered by
+            // separate actual parity, not by pretending it was received.
             paritySeen++
-            if len(blocks)==packets && paritySeen>=2{break}
+            if len(blocks)==packets && paritySeen>=2&&recoveredFirst>=1{break}
             continue
         }
-        if block==0||index!=0||recovered||len(plain)<28+64||
+        if recovered{recoveredFirst++;paritySeen++}
+        if block==0||index!=0||len(plain)<28+64||
             plain[0]>>4!=4||plain[9]!=17{
             t.Fatalf("first source not IPv4 application block=%d idx=%d len=%d",block,index,len(plain))
         }
@@ -134,10 +146,11 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         }
         delivered[udp]=true
         blocks[block]=true
-        if len(blocks)==packets && paritySeen>=2{break}
+        if len(blocks)==packets && paritySeen>=2&&recoveredFirst>=1{break}
     }
-    if len(blocks)<2||len(delivered)<2||paritySeen<2{
-        t.Fatalf("real original Go continuous kernel FEC source/repair incomplete blocks=%d app=%d parity=%d",len(blocks),len(delivered),paritySeen)
+    if len(blocks)<2||len(delivered)<2||
+        paritySeen<2||recoveredFirst<1||!droppedOneOriginalSource{
+        t.Fatalf("real original Go continuous kernel FEC source/repair recovery incomplete blocks=%d app=%d parity=%d recovered=%d",len(blocks),len(delivered),paritySeen,recoveredFirst)
     }
     // A source queued or even copied locally is NOT an authenticated
     // remote application-APPLIED receipt. Keep truthful pending.
@@ -145,6 +158,6 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
         t.Fatalf("false product Fixed applied without actual peer M2: %+v %+v %v",got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_PASS blocks=%d real_app_ipv4=%d parity=%d M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
-        len(blocks),len(delivered),paritySeen)
+    t.Logf("M0_REAL_ORIGINAL_GO_BACKGROUND_FIXED_MULTIBLOCK_M4_SOURCE_REPAIR_RECOVERY_PASS blocks=%d real_app_ipv4=%d parity=%d recovered_missing=%d M3_AEAD_peer=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
+        len(blocks),len(delivered),paritySeen,recoveredFirst)
 }
