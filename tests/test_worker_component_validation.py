@@ -15,10 +15,10 @@ def request(role="M1",stage="prepare"):
     d={"request_id":"WR-001","role_id":role,
        "task_id":reg(role)["roles"][0]["assigned_task"],"assignment_epoch":1,
        "reservation_revision":2,"kind":"functional" if stage=="prepare" else "performance",
-       "source_sha":B,"harness_sha":H,"baseline_sha":A,
+       "source_sha":B,"harness_sha":H,"baseline_sha":A,"control_sha":CONTROL,
        "config_path":fixture,"config_sha256":w.sha(CFG),
        "scenario":suite,"seed":631,"workflow":w.CONTROL_WORKFLOW,
-       "dispatch_ref":"qualification/worker-ci-v2","measurement_jobs":1,
+       "dispatch_ref":"qualification/worker-ci-v3","measurement_jobs":1,
        "samples":1 if stage=="prepare" else 2 if role=="M1" else 4,
        "status":"PLANNED","_request_path":".governance/workstreams/"+role+"/requests/WR-001.json"}
     if stage=="paired":
@@ -30,7 +30,7 @@ def request(role="M1",stage="prepare"):
                        for x in ("AB" if role=="M1" else "ABBA")])
     return d
 def check(d,stage,cfg=CFG):
-    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v2",
+    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v3",
              CONTROL,reg(d["role_id"]),"e"*40,"f"*40,cfg)
 class ValidationTests(unittest.TestCase):
     def test_valid_both_stages(self):
@@ -45,7 +45,7 @@ class ValidationTests(unittest.TestCase):
                         ("config_sha256","f"*64),
                         ("dispatch_ref","main"),
                         ("workflow",".github/workflows/governance.yml"),
-                        ("scenario","arbitrary-shell")]:
+                        ("scenario","arbitrary-shell"),("control_sha",A)]:
             d=request();d[key]=bad
             with self.subTest(key=key),self.assertRaises((ValueError,g.ContractError)):
                 check(d,"prepare")

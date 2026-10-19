@@ -106,7 +106,9 @@ def validate_context(request,role,stage,control_ref,control_sha,registry,
          request["reservation_revision"]==registry["reservation_revision"],
          "wrong role/task/epoch/revision")
     need(request["workflow"]==CONTROL_WORKFLOW and
-         request["dispatch_ref"]==control_ref,"unexpected workflow/control ref")
+         request["dispatch_ref"]==control_ref and
+         request.get("control_sha")==control_sha,
+         "unexpected workflow/ref or moved immutable control commit")
     need(request["request_id"]==pathlib.PurePosixPath(
          request.get("_request_path","")).stem,"wrong request identity/path")
     need(role in ("M1","M3") and worker["branch"].startswith("work/"),
@@ -148,7 +150,7 @@ def remote_preflight(args):
          "invalid worker request")
     need(SHA.fullmatch(args.request_ref) and SHA.fullmatch(args.control_sha),
          "request/control must be exact SHA")
-    need(args.control_ref=="qualification/worker-ci-v2","not published control ref")
+    need(args.control_ref=="qualification/worker-ci-v3","not published control ref")
     registry=api("contents/.governance/registry.json?ref=main")
     registry=json.loads(base64.b64decode(registry["content"]))
     worker=next(z for z in registry["roles"] if z["id"]==role)
