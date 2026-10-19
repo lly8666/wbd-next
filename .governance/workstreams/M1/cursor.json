@@ -4,26 +4,28 @@
   "branch": "work/m1-r1-runtime",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 19,
-  "checkpoint_sha": "e0454ae807754f85ff7118527ba9ebd37173cac5",
-  "progress": "blocked",
-  "task_id": "R5-M1-FEC2-OWNER-SCHEDULING-014",
-  "current_task": "014 M1 three-class FEC2 owner scoped CODE 3f78a671… native 130/130 PASS; central v2 receipt metadata reconciled by S/H, awaiting exact-H central scope PASS and M0 integration/cost. No new code.",
-  "why_now": "Main rev2 epoch1 still assigns FEC2 014. Main central v2 requires current 014 receipt result PASS, exact tested source, and all cursor context_refs to exist on the WORKER SOURCE. H18 corrected result/old Game refs; central run39086205021 then identified four main-only design documents incorrectly listed as worker context_refs (HTTP404). This H19 removes nonexistent worker refs; those main authority documents remain named in devlog.",
-  "done_when": "M1 scoped 3class/<=16 source-first-ready, per-class rate deadlines, partial/30Mbps fake clock, parity 16:20, fairness/expiry, bounded Stop/loans/stats fully tested at CODE 3f78a671 (130/130). Only central scope receipt metadata remains to verify; M0 owns wire/Go integration and isolated FEC2 old/new same-VM AB/BA cost, all NOT_RUN, no product claim.",
-  "next_action": "Verify central scope audit for exact H19 SOURCE. Once PASS, M0 can integrate M1 CODE 3f78a671 with M3 wire/Go, run old/new same-VM paired FEC2 cost and real product gates. No M1 scope code is pending; do not edit root checker, repeat native tests, or pull main design docs into this worker history.",
+  "sequence": 20,
+  "checkpoint_sha": "338c3bd85b06108677ba536336daa12590673203",
+  "progress": "partial",
+  "task_id": "R5-M1-PLAN008-GAME-DEDUP-015",
+  "current_task": "PLAN-008 M1 Game RX dedup ring/index: code 64102db5 source-locked native 133/133 PASS; operation bound tested, compatible ignored representative RX cost fixture compiled. Dedicated same-VM old/new two-binary ABBA NOT_RUN.",
+  "why_now": "Main registry rev2 epoch1 active reassigned from 014 to PLAN-008 Game 015. PLAN-008 confirms old 014 H19 c80ff6a5 scoped central G2 M1 PASS in M0 receipt39095544653 (its global run FAIL was independent M4); historical inherited M1 Governance red retained. 015 modifies only Game RX in M1 scope, preserves Game013/014 and tested with strict SOURCE evidence.",
+  "done_when": "Game RX packed ring no per-packet full-window rotate; open BTreeMap index bounded O(log8192); oracle wrap/huge jump/u64MAX/old duplicate/multilane/pressure/Stop/loan and operations counters native PASS at source 64102db5, 133/133. Final 015 resource-cost qualification requires M0-owned isolated single-VM old H19 vs new SOURCE paired ABBA fixture and bounded memory/cpu receipt; Go/live/product separately NOT_RUN.",
+  "next_action": "M0: run exactly one source-pinned Game015 old/new release same-VM ABBA using the compiled-identical M1 fixture and request M1-GAME-015-M0-ABBA.md; supply binary hashes and capacity/CPU/RSS artifact, or report BLOCKED/INCONCLUSIVE. M1: consume that evidence, repair only concrete M1 regression and finish 015. No root workflow edits or repeated 133 native tests.",
   "unverified": false,
-  "last_tested_source": "3f78a671ae228f21e34eb6679b2d0347fcd6c7a4",
+  "last_tested_source": "64102db5e101df1f678e17919169927ad19bad06",
   "evidence_refs": [
-    "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
+    "docs/evidence/M1/R5-M1-PLAN008-GAME-DEDUP-015-actions.json"
   ],
   "open_requests": [
     ".governance/workstreams/M1/requests/M1-R1-SPSC-DEPS.md",
     ".governance/workstreams/M1/requests/M1-R0-ABI-HARNESS.md",
-    ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md"
+    ".governance/workstreams/M1/requests/M1-FEC2-014-M0-CHECKER-AND-COST.md",
+    ".governance/workstreams/M1/requests/M1-GAME-015-M0-ABBA.md"
   ],
   "context_refs": [
-    "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json"
+    "docs/evidence/M1/R4-M1-GAME-SHARED-PIPELINE-WORKPACK-013-actions.json",
+    "docs/evidence/M1/R5-M1-FEC2-OWNER-SCHEDULING-014-actions.json"
   ],
-  "partial_summary": "H19 only cursor fix: code SOURCE 3f78a671ae228f21e34eb6679b2d0347fcd6c7a4 unchanged, native39082738345 130/130 PASS and artifact verified. S18 e0454ae8 updated scoped evidence result=PASS without widening qualification. H18 e2eb9ba1 central39086205021 failed 404 because main-only docs were in worker context_refs. H19 removes those four missing refs; retains historical Game013 evidence, keeps only 014 current PASS evidence, all three existing requests verified present. Central current-H PASS PENDING; actual M0/M3/Go/live and same-VM AB/BA cost NOT_RUN."
+  "partial_summary": "S20 338c3bd85b06108677ba536336daa12590673203 evidence+devlog+M0 cost request. CODE 64102db5e101df1f678e17919169927ad19bad06 native39188056715 build117854571541 consume117854676161 PASS 133/133, 3 new Game015; downloaded artifact12158088977 ZIP24e2c180 result e167975b testlog d1ec59ee and matching source. One historical native fixture 132/1 corrected and two paired-fixture compile errors corrected. Main PLAN-008 M0 already accepted prior 014 scoped G2. 015 ring/index correctness PASS; strict old/new 2-binary ABBA cost NOT_RUN, old/new CODE pinned c80ff6a5 vs 64102db5; integrated Go/live/perf/product NOT_RUN; task partial not ready_for_integration."
 }
