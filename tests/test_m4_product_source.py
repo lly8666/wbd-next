@@ -12,7 +12,8 @@ RUN=m.BOOTSTRAP_SCOPE_RUN
 role={"id":"M4","branch":m.BRANCH,"state":"active","assignment_epoch":1,
       "allowed_paths":["r0/go_overlay/assembly/"],"owned_semantics":["product"],
       "cursor":".governance/workstreams/M4/cursor.json",
-      "global_writer":False}
+      "global_writer":False,"prompt":"docs/prompts/M4.md",
+      "goal":"original-Go product assembly","done_when":"native smoke verified"}
 registry={"schema_version":1,"reservation_revision":2,"roles":[
     dict(role, id="M0",branch="main",state="active",global_writer=True,
          owned_semantics=["governance"],cursor=".governance/workstreams/M0/cursor.json"),
