@@ -250,4 +250,26 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     }
     t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
         recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
+    // M4 Linux lifecycle contract: after real traffic, Stop must join
+    // native client borrow/receiver before the Go-owned TUN is released.
+    // A second Stop is idempotent, and old epoch RX/feedback is rejected.
+    if e:=releaseClient.stop();e!=nil{t.Fatalf("client native Stop: %v",e)}
+    if e:=releaseClient.stop();e!=nil{t.Fatalf("repeated client Stop: %v",e)}
+    if _,e:=releaseClient.consumeAuthenticatedKernelRecord(
+        make([]byte,40));e==nil{
+        t.Fatal("stopped client still accepts old-generation network RX")
+    }
+    if _,e:=releaseClient.feedbackDue();e==nil{
+        t.Fatal("stopped client still issues feedback")
+    }
+    if e:=clientDev.Close();e!=nil{t.Fatalf("client TUN Go owner close: %v",e)}
+    if _,e:=net.InterfaceByName(clientName);e==nil{
+        t.Fatal("native client TUN interface leaked after native Stop + Go fd close")
+    }
+    if e:=b.stopRelease();e!=nil{t.Fatalf("server Rust original Stop: %v",e)}
+    if e:=dev.Close();e!=nil{t.Fatalf("server TUN Go owner close: %v",e)}
+    if _,e:=net.InterfaceByName(tunName);e==nil{
+        t.Fatal("server TUN interface leaked after native Stop + Go fd close")
+    }
+    t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_m2_deny=1 both_tun_devices_gone=1")
 }
