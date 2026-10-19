@@ -93,16 +93,35 @@
       "run_id": 39228591882,
       "attempt": 1,
       "workflow": "M0 scoped TLS FEC2 owner",
-      "conclusion": "IN_PROGRESS_AT_EVIDENCE_CHECK",
+      "conclusion": "failure",
       "platform_results": {
         "native_normal_build": "PASS",
         "original_link_fec": "PASS",
         "netem_150ms_C": "PASS_SAME_SOURCE_SINGLE_RUN_NOT_HISTORICAL_CLOSURE",
         "normal_10mbps": "PASS",
-        "windows_native": "FAIL_EXTERNAL_DEPENDENCY_Chocolatey_NASM_download_HTTP_504",
-        "official_isal": "IN_PROGRESS"
+        "windows_native": "FAIL_EXTERNAL_DEPENDENCY_Chocolatey_NASM_version_3.2.0_HTTP_504_Gateway_Timeout",
+        "official_isal": "PASS"
       },
-      "source_comment": "Network PASS is bounded one-run evidence; historical unrelated 150ms-C FAIL retained."
+      "source_comment": "Network PASS is bounded one-run evidence; historical unrelated 150ms-C FAIL retained.",
+      "separate_job_conclusions": {
+        "native": "PASS",
+        "go_control_policy": "PASS",
+        "native_x64": "PASS",
+        "native_arm64": "PASS",
+        "actual_isal": "PASS",
+        "netem_10ms": "PASS",
+        "netem_150ms_A": "PASS",
+        "netem_150ms_B": "PASS",
+        "netem_150ms_C": "PASS",
+        "normal_off_10mbps": "PASS",
+        "windows_native": "FAIL_EXTERNAL_DEPENDENCY_NASM_HTTP504"
+      },
+      "windows_job_id": 117980822864,
+      "netem_150ms_C_job_id": 117981436530,
+      "netem_150ms_C_artifact_id": 12175452244,
+      "netem_150ms_C_artifact_zip_sha256": "6cb8cd23ec6d2cbe1fc18d6b3663b409d970bca8908a31dac8af17ce005d8052",
+      "normal_off_10mbps_artifact_id": 12176721375,
+      "normal_off_10mbps_artifact_zip_sha256": "955013d848831952b1934760c0c98b7f89bbf57a1c6ddf169df5b2c3113c0b55"
     }
   ],
   "new_m4_native_product_assembly_consumable": {
