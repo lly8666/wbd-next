@@ -222,6 +222,75 @@ fn r1_f2_decode_cache_bounded_and_partial_with_repair_first() {
     // No admission/lifecycle state is modified by mathematical recovery:
     // the authenticated owner must enforce first arrival, epoch and Stop.
 }
+#[test]
+fn r1_f2_decode_workspace_cache_65_distinct_keys_and_eviction() {
+    let mut rs=Rs16::new();
+    let f=(0..MAX_K).map(|i|vec![(i*11) as u8;65+i%3]).collect::<Vec<_>>();
+    let rows=all_rows(&rs,771,&f,Profile::Maximum,128);
+    for step in 0..DECODE_CACHE_LIMIT+2 {
+        let removed=step%MAX_K;
+        let parity=step/MAX_K;
+        let mut original=f.iter().map(|b|Some(b.as_slice())).collect::<Vec<_>>();
+        original[removed]=None;
+        let r=parse_repair(&rows[parity],128).unwrap();
+        let (actual,backend)=rs.recover_missing(771,&original,&[r],128,
+            BackendChoice::Scalar).unwrap();
+        assert_eq!(backend,BackendUsed::Scalar);
+        assert_eq!(actual,vec![(removed as u8,f[removed].clone())]);
+        let stats=rs.decode_cache_stats();
+        assert!(stats.inverses<=DECODE_CACHE_LIMIT);
+        assert!(stats.inverse_payload_bytes<=DECODE_CACHE_LIMIT*MAX_K*MAX_K);
+        assert_eq!(stats.native_tables,0);
+        assert_eq!(stats.source_workspace_capacity_bytes,0);
+    }
+    assert_eq!(rs.cache_entries(),DECODE_CACHE_LIMIT);
+    // Evicted key is reconstructed and still yields the same authenticated
+    // source. Cache eviction must never affect mathematical decoding.
+    let mut original=f.iter().map(|b|Some(b.as_slice())).collect::<Vec<_>>();
+    original[0]=None;
+    let r=parse_repair(&rows[0],128).unwrap();
+    let (again,_) =rs.recover_missing(771,&original,&[r],128,
+        BackendChoice::Scalar).unwrap();
+    assert_eq!(again,vec![(0,f[0].clone())]);
+    assert_eq!(rs.cache_entries(),DECODE_CACHE_LIMIT);
+}
+
+#[cfg(feature="native-isal")]
+#[test]
+fn r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact() {
+    let mut rs=Rs16::new();
+    let missing=[1usize,5,10,14];
+    let mut old_stats=None;
+    // Same k/missing/selected repair rows across different blocks and
+    // original lengths; cached coefficients must not capture source bytes.
+    for variant in 0..3 {
+        let f=(0..MAX_K).map(|i| {
+            let len=if variant==1 {80+i%4} else {120+i%7};
+            vec![(i*13+variant) as u8;len]
+        }).collect::<Vec<_>>();
+        let rows=all_rows(&rs,900+variant as u64,&f,Profile::Maximum,180);
+        let repaired=rows[..missing.len()].iter()
+            .map(|b|parse_repair(b,180).unwrap()).collect::<Vec<_>>();
+        let mut originals=f.iter().map(|b|Some(b.as_slice())).collect::<Vec<_>>();
+        for &m in &missing { originals[m]=None; }
+        let (decoded,backend)=rs.recover_missing(900+variant as u64,
+            &originals,&repaired,180,BackendChoice::RequireNative).unwrap();
+        assert_eq!(backend,BackendUsed::NativeIsaL);
+        let expected=missing.iter().map(|&m|(m as u8,f[m].clone())).collect::<Vec<_>>();
+        assert_eq!(decoded,expected);
+        let stats=rs.decode_cache_stats();
+        assert_eq!(stats.inverses,1);
+        assert_eq!(stats.native_tables,1);
+        assert_eq!(stats.native_table_payload_bytes,32*MAX_K*missing.len());
+        assert!(stats.source_workspace_capacity_bytes<=
+            (MAX_K-missing.len())*MAX_SYMBOL_LEN);
+        if variant==2 {
+            assert_eq!(stats,old_stats.unwrap());
+        }
+        if variant==0 {old_stats=Some(stats);}
+    }
+}
+
 #[cfg(feature="native-isal")]
 #[test]
 fn r1_f2_real_isal_exact_rows_and_missing_only_native_equivalence() {
