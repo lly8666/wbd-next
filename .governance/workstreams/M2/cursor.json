@@ -4,15 +4,15 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 27,
+  "sequence": 28,
   "checkpoint_sha": "2d7de62bb6aaba8d563f5160b7baa58d595898ce",
   "progress": "paused",
   "task_id": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011",
-  "current_task": "PLAN-008 M2-011 frozen and on user-requested HOLD. Code SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d implements bounded 2s/8s actual first-send/verified-receipt maturity observation; native 76/76 PASS, G2 bootstrap and static PASS. Product path NOT_RUN; no new feature or tests authorized while held.",
-  "why_now": "2026-10-19 user explicitly instructed: finish H; put other work on hold. 011 functional code and exact SOURCE artifacts are preserved. Latest 011 worker/source/evidence/H Governance and main central G2 history checks failed GitHub API HTTP403/rate-limit remaining=0, NOT a recovery correctness failure. No current SOURCE ROLE_SCOPE_PASS. Prior 010 H ready_for_integration remains historical, not overwritten as a 011 qualification.",
-  "done_when": "Existing task R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011 still authorized by main. Pure 011 functional coverage/unknown/censored/conservation, Stop/epoch and 4096-data timer bound proven native 76/76 at exact SOURCE; typed API and resource/rollback evidence S 2d7de62bb6aaba8d563f5160b7baa58d595898ce remain frozen. Formal exact SOURCE/HEAD central scope PASS blocked by API quota. Real M0 sender/AEAD/Go controller, netns/product, CPU/p99/physical all NOT_RUN. User requested pause before further qualification/integration work.",
-  "next_action": "HOLD. On explicit resume/M0 coordination, first recheck main registry/HEAD and resolve existing M0 central GitHub API quota request for exact SOURCE scope, without rerunning unchanged native tests; only then respond to a concrete 011 integration regression.",
-  "unverified": true,
+  "current_task": "PLAN-008 M2-011 pure first-send maturity observer frozen under user HOLD. Exact functional code SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d native 76/76 PASS; product integration NOT_RUN. Current HEAD prior to this H has main-owned central G2 ROLE_SCOPE_PASS (#39192504137); finish native Governance/central attestation of this cursor-only H without changing code.",
+  "why_now": "Governance #39192261716 failed structure validation: cursor context_refs pointed to docs/decisions/M0-integration-unblock-2026-10-19.md, present only on main and absent on worker. Fix only the invalid worker-local path reference. Main central Scope #39192504137 separately verified prior full M2 HEAD faf93f35 ROLE_SCOPE_PASS under control b176a5d, including 79 worker commits; historical API quota failures remain on record. This repair does not change workpack algorithms or product qualification.",
+  "done_when": "011 native 76/76 on fixed SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d; 2s/8s bounded first-send/event-time bins, covered missing/uncovered UNKNOWN, censored/capacity, Stop/epoch and 4096-record index proof retained in source evidence. Current worker HEAD prior to this cursor-only fix central G2 PASS. Required final action: new H native Governance structure PASS and new H exact SOURCE central G2 PASS. Real Go AEAD, kernel driver, Go controller, netns/physical/performance remain NOT_RUN.",
+  "next_action": "HOLD all development and unchanged native tests. If H Governance and central G2 both succeed, retain paused status and exact evidence. Existing API-quota request is historical reliability monitoring, not a new module correctness failure; M0 alone may decide systemic closeout/product integration.",
+  "unverified": false,
   "last_tested_source": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
   "evidence_refs": [
     "docs/evidence/M2/R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011.json"
@@ -23,7 +23,7 @@
   "context_refs": [
     "docs/devlog/M2/R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011.md",
     "docs/evidence/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.json",
-    "docs/decisions/M0-integration-unblock-2026-10-19.md"
+    "docs/architecture/modules/08-RECOVERY.md"
   ],
-  "partial_summary": "HOLD at SOURCE 3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d (native #39188056003 76/76 PASS; G2 #39188055915 SUCCESS; static #39188055945 SUCCESS); evidence S 2d7de62bb6aaba8d563f5160b7baa58d595898ce retains API quota request. Exact SOURCE central #39188236554 FAIL github_rate_limited remaining=0; S central #39188632194 and H central #39188798578 also FAIL API quota. Native PASS != scope PASS != product PASS. Stop/epoch, 2s/8s coverage, firstsend denominator and UNKNOWN/censored unchanged. No code/wire/RACK/budget/algorithm modifications; only cursor-only H; REAL Go AEAD/driver/controller/netns/performance/physical NOT_RUN."
+  "partial_summary": "Pure M2 011 native-source PASS 76/76, current G2 scope source prior H faf93f35 PASS 39192504137; correcting only bad worker-local cursor context reference. Historical HTTP403 quota failures preserved. H new central proof must match new HEAD before claiming final scope. Product NOT_RUN; user-requested HOLD."
 }
