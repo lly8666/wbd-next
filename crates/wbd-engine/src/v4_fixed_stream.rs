@@ -16,13 +16,14 @@ use wbd_types::{ConfigRevision,MonoNs};
 
 /// This confirms an immutable ciphertext kernel-copy prefix, not delivery.
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub enum DriverProof { Copied, NotSent, Uncertain }
+pub enum DriverProof { Copied, NotSent, Uncertain, Staged }
 #[derive(Debug)]
 pub enum StreamError { Stopped, StaleRevision, Busy, Invalid, Owner(FecError), Codec(CodecError) }
 struct InFlight {
     job:ParityJob,
     prepared:StagedParity,
     copied:u8,
+    staged:u8,
     capacity_known:bool,
 }
 /// Exactly one original generation/direction owns one instance; no global queue.
@@ -123,9 +124,13 @@ impl FixedStream {
                     return Err(StreamError::Codec(e))
                 }
             };
-            self.in_flight=Some(InFlight{job,prepared,copied:0,capacity_known:true});
+            self.in_flight=Some(InFlight{job,prepared,copied:0,staged:0,capacity_known:true});
         }
         let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
+        // The original kernel batch still borrows these immutable
+        // ciphertexts. Never complete or encode another parity job until
+        // actual M4 definite-prefix resolution is reported.
+        if cur.staged>0{return Ok((0,0))}
         if now.0>cur.job.expire_at.0{
             let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
             self.owner.finish_parity(job.job,job.copied,false);
@@ -150,16 +155,35 @@ impl FixedStream {
                 DriverProof::Copied=>{cur.copied=cur.copied.saturating_add(1);copied_now+=1;},
                 DriverProof::NotSent=>{},
                 DriverProof::Uncertain=>cur.capacity_known=false,
+                DriverProof::Staged=>cur.staged=cur.staged.saturating_add(1),
             }
         }
         let emitted=rows.len();
-        if cur.prepared.remaining_rows()==0{
+        if cur.prepared.remaining_rows()==0 && cur.staged==0{
             let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
             self.owner.finish_parity(
                 finished.job,finished.copied,finished.capacity_known
             );
         }
         Ok((emitted,copied_now))
+    }
+    /// The SAME original M4 kernel batch resolves staged immutable parity
+    /// records only after its synchronous sendmmsg definite prefix. Neither
+    /// a Rust queue acceptance nor an uncertain syscall counts copied.
+    pub fn settle_staged(&mut self,copied:u8,not_sent:u8,uncertain:u8)
+        ->Result<(),StreamError>{
+        if self.stopped{return Err(StreamError::Stopped)}
+        let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
+        if u16::from(copied)+u16::from(not_sent)+u16::from(uncertain)
+            !=u16::from(cur.staged){return Err(StreamError::Invalid)}
+        cur.copied=cur.copied.saturating_add(copied);
+        cur.capacity_known &= uncertain==0;
+        cur.staged=0;
+        if cur.prepared.remaining_rows()==0{
+            let done=self.in_flight.take().ok_or(StreamError::Invalid)?;
+            self.owner.finish_parity(done.job,done.copied,done.capacity_known);
+        }
+        Ok(())
     }
     /// Stop cancels owned parity and prevents all subsequent source/cipher
     /// outputs. Outer original Go/Rust generation stops its driver separately.
@@ -237,6 +261,25 @@ mod tests{
             Err(StreamError::Stopped)));
         arena.stop();arena.drain_returns();
         assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn m0_fixed_stream_staged_parity_requires_genuine_m4_prefix_ack(){
+        let mut arena=Arena::new(606,24,2048,24,1_000_000).unwrap();
+        let mut stream=FixedStream::new(1,11,1400).unwrap();
+        let mut sends=Vec::new();
+        push(&mut stream,&mut arena,&[1u8;96],1,&mut sends);
+        push(&mut stream,&mut arena,&[2u8;96],2,&mut sends);
+        let (emitted,copied)=stream.poll_parity(MonoNs(6_100_001),
+            |_,_,_,_|DriverProof::Staged).unwrap();
+        assert_eq!((emitted,copied),(1,0));
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        assert_eq!(stream.poll_parity(MonoNs(6_100_002),
+            |_,_,_,_|panic!("cannot repeat staged job")).unwrap(),(0,0));
+        assert!(matches!(stream.settle_staged(0,0,0),
+            Err(StreamError::Invalid)));
+        stream.settle_staged(1,0,0).unwrap();
+        assert_eq!(stream.report().classes[0].r_sent,1);
+        stream.stop();arena.stop();arena.drain_returns();
     }
     #[test]
     fn m0_fixed_stream_eight_repair_rows_bounded_quantum_and_pressure_no_hol(){
