@@ -42,10 +42,15 @@ STEADY="${WBD_M0_STEADY_BURST:-}"
 BACKGROUND="${WBD_M0_BACKGROUND_LOOP:-}"
 COMMON="${WBD_M0_COMMON_SCENARIO:-}"
 PERF="${WBD_M0_PERF_BASELINE:-}"
+SUSTAIN20="${WBD_M0_SUSTAINED_20MBPS:-}"
 D10="${WBD_M0_D10_DIAG:-}"
 TARGETED="${WBD_M0_TARGETED_DROP:-}"
 FEC2_PROBE="${WBD_M0_FEC2_KERNEL_TX:-}"
 if [[ -n "$TARGETED" && "$TARGETED" != 1 ]]; then echo 'TARGETED_DROP_INVALID' >&2; exit 2; fi
+if [[ -n "$SUSTAIN20" && "$SUSTAIN20" != 1 ]]; then echo 'SUSTAIN20_INVALID' >&2; exit 2; fi
+if [[ "$SUSTAIN20" == 1 && ( "$PERF" != 1 || -n "$D10" || -n "$BACKGROUND" || -n "$STEADY" || -n "$FEC2_PROBE" || -n "$TARGETED" || -n "$PRELIM_MS" ) ]]; then
+  echo 'SUSTAIN20_INVALID requires independent Normal OFF real-kernel performance job, no competing scenario' >&2; exit 2
+fi
 LOSS="${WBD_M0_STEADY_LOSS_PERCENT:-}"
 if [[ -n "$LOSS" ]]; then
   if [[ ! "$LOSS" =~ ^(1|5|10|20|30)$ || "$STEADY" != 1 || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$BACKGROUND" || -n "$FEC2_PROBE" || -n "$PERF" ]]; then
@@ -116,17 +121,19 @@ if [[ "$D10" == 1 ]]; then
   command -v strace >/dev/null || { echo 'D10_TRACE_UNAVAILABLE strace absent'; exit 77; }
   TRACE_CMD=(strace -f -qq -c -o "$ROOT/native-probe-result/d10-syscalls.txt")
 fi
+PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"
+if [[ "$SUSTAIN20" == 1 ]]; then PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-20mbps.json"; fi
 set +e
-sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_COMMON_SCENARIO="$COMMON" WBD_M0_FEC2_KERNEL_TX="$FEC2_PROBE" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_P10_SPARSE="${WBD_M0_P10_SPARSE:-}" WBD_M0_D10_DIAG="$D10" WBD_M0_PAIRED_OLD_NEW="${WBD_M0_PAIRED_OLD_NEW:-}" WBD_M0_PERF_RECEIPT="$ROOT/native-probe-result/normal-off-dev-10mbps.json"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "${TRACE_CMD[@]}" "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
+sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_STEADY_BURST="$STEADY" WBD_M0_STEADY_LOSS_PERCENT="$LOSS" WBD_M0_TARGETED_DROP="$TARGETED" WBD_M0_BACKGROUND_LOOP="$BACKGROUND" WBD_M0_COMMON_SCENARIO="$COMMON" WBD_M0_FEC2_KERNEL_TX="$FEC2_PROBE" WBD_M0_PERF_BASELINE="$PERF" WBD_M0_SUSTAINED_20MBPS="$SUSTAIN20" WBD_M0_P10_SPARSE="${WBD_M0_P10_SPARSE:-}" WBD_M0_D10_DIAG="$D10" WBD_M0_PAIRED_OLD_NEW="${WBD_M0_PAIRED_OLD_NEW:-}" WBD_M0_PERF_RECEIPT="$PERF_RECEIPT"   LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"   "${TRACE_CMD[@]}" "$BIN" -test.v -test.count=1   -test.run "$TEST_FILTER"
 RC=$?
 set -e
 # The owned netns test runs as root; never let a successful measurement
 # become an unauditable GitHub artifact due to the 0600 root-only receipt.
 # Change ownership of ONLY the exact declared perf JSON after child exit;
 # no private credentials or large traffic body are present in the receipt.
-if [[ "$PERF" == 1 && -f "$ROOT/native-probe-result/normal-off-dev-10mbps.json" ]]; then
-  sudo -n chown -- "$(id -u):$(id -g)" "$ROOT/native-probe-result/normal-off-dev-10mbps.json"
-  chmod 0644 "$ROOT/native-probe-result/normal-off-dev-10mbps.json"
+if [[ "$PERF" == 1 && -f "$PERF_RECEIPT" ]]; then
+  sudo -n chown -- "$(id -u):$(id -g)" "$PERF_RECEIPT"
+  chmod 0644 "$PERF_RECEIPT"
 fi
 if [[ "$D10" == 1 && -f "$ROOT/native-probe-result/d10-syscalls.txt" ]]; then
   sudo -n chown -- "$(id -u):$(id -g)" "$ROOT/native-probe-result/d10-syscalls.txt"
@@ -136,11 +143,13 @@ if ((RC!=0)); then
   echo "TUN_APP_FIRST_PACKET_FAIL exit=$RC" >&2; exit "$RC";
 fi
 if [[ "$PERF" == 1 ]]; then
-  [[ -s "$ROOT/native-probe-result/normal-off-dev-10mbps.json" ]] || {
+  [[ -s "$PERF_RECEIPT" ]] || {
     echo 'PERF_MEASUREMENT_INVALID missing actual Go kernel receipt' >&2; exit 1;
   }
   if [[ "$D10" == 1 ]]; then
     echo 'ORIGINAL_RUST_D10_STRACE_DIAGNOSTIC_ON_5S_15S_RECORDED whole-child syscalls include startup and Go injector; NOT performance comparison.'
+  elif [[ "$SUSTAIN20" == 1 ]]; then
+    echo 'ORIGINAL_RUST_NORMAL_OFF_20MBPS_EACH_DIRECTION_DEVELOPMENT_RECORDED real mixed-size continuous app input; 10s warmup 60s measured; capacity verdict in receipt; NOT product qualification.'
   else
     echo 'ORIGINAL_RUST_NORMAL_OFF_BILATERAL_DEVELOPMENT_MEASUREMENT_RECORDED 10s warmup 60s measurement fixed mix; this is NOT product qualification.'
   fi
