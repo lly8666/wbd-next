@@ -25,7 +25,7 @@
     {
       "id": "M1",
       "name": "运行时与内存",
-      "state": "integrated",
+      "state": "active",
       "branch": "work/m1-r1-runtime",
       "assignment_epoch": 1,
       "global_writer": false,
@@ -45,8 +45,8 @@
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "PLAN-012 docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md §2/§3: original M1 already-accepted GameTx/dedup, deliver bounded typed authenticated 2/4 lane dispatch/receipt integration contract solely within runtime; no real Go/kernel/product claims.",
-      "done_when": "One source-locked buildable M1 scoped bounded 2/4-lane first-ready dispatch contract with one owned logical frame, per-lane independent tickets and native deterministic generation/MTU/backpressure/late/Stop dedup/no-HOL tests; stable M0 consumable interface and perf only if cost changed. Original actual Go+kernel product and Game applied remain M0 NOT_RUN.",
+      "goal": "M0 sole current PLAN012 missing-interface writer under docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md; M1 retains earlier accepted frozen source and role metadata for R0/G2, no concurrent edits to M0-owned product integration/release-record/Game lane files until a new explicit registry decision.",
+      "done_when": "Historic M1 accepted module evidence preserved; current PLAN012 interface reassigned to M0; no worker-source activity under this paused-in-practice package, and no fake new SOURCE or repeated tests.",
       "assigned_task": "R5-M1-PLAN012-GAME-REAL-LANE-016"
     },
     {
@@ -77,7 +77,7 @@
     {
       "id": "M3",
       "name": "编码与数据保护",
-      "state": "integrated",
+      "state": "active",
       "branch": "work/m3-r1-codec",
       "assignment_epoch": 1,
       "global_writer": false,
@@ -95,8 +95,8 @@
       ],
       "prompt": "docs/prompts/M3.md",
       "cursor": ".governance/workstreams/M3/cursor.json",
-      "goal": "PLAN-012 docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md §4/§3: accepted native FEC2 codec/wire PASS is frozen; product-specific source/repair authenticated record seal/open/replay APIs currently behind m0-fec2-record-probe need narrow release-code opt-in preserving exact ABI/PN/wire and fail-closed caller authorization. M0 owns client/epoch grant, feature integration, raw/TUN and applied.",
-      "done_when": "Source-pinned wbd-codec FEC2 real-record source/repair production-option API with unchanged cryptographic/PN/replay behavior and existing FEC2 M3 native/wire vectors; one Actions functional/cross-build suite proves feature off fails closed and opt-in release-record works without probe symbols. Stable exact signatures to M0, no new codec algorithm/benchmark or product enable claim.",
+      "goal": "M0 sole current PLAN012 missing-interface writer under docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md; M3 retains earlier accepted frozen source and role metadata for R0/G2, no concurrent edits to M0-owned product integration/release-record/Game lane files until a new explicit registry decision.",
+      "done_when": "Historic M3 accepted module evidence preserved; current PLAN012 interface reassigned to M0; no worker-source activity under this paused-in-practice package, and no fake new SOURCE or repeated tests.",
       "assigned_task": "R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019"
     },
     {

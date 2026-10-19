@@ -1,0 +1,3 @@
+# M0 recovery intent
+
+S255 integrated-state shortcut broke R0 and G2 bootstrap Actions on exact main SOURCE e0db9bd1caead01a4333aa71b407adca4bfa36be: G2 39273892894 `worker active metadata missing`, R0 39273892893 `M1 worker scope/epoch/branch drift`, both original FAIL. Reinstate `active` role metadata and hold old branches operationally without worker file contention; M0 only writes the specific product missing-interface files per PLAN012 decision. Previous native M1/M3 accepted evidence unchanged, no new SOURCE inferred. Next one combined Actions for opt-in release codec+Game adapter with default product FEC2 OFF.
