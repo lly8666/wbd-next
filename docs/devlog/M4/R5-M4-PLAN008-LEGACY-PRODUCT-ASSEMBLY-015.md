@@ -1,0 +1,24 @@
+# M4 PLAN-008-015 · Real legacy product assembly (2026-10-19)
+
+## Recovery / official task
+
+Main `76f3fd695c0be4d5ad6bf447ead52ee0bc7b672f` registers active M4 task `R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015` in registry rev2 epoch1, preserving branch `work/m4-r1-platform`. Previous H21 `6363bb98acfb6d789b1ea5eeda16dc1f10b52ba6` was exact current HEAD with zero unacknowledged worker commits. Previous FEC2-014 component was delivered; its CODE `7cef7e8` Go 8/8 and safe wrapper native platform tests remain prior scoped evidence, never product qualification. New task comes from PLAN-008 decision, not the old cursor's next_action.
+
+## Scoped implementation source
+
+- Source root: original legacy repo `lly8666/wobuzhidao` at exact `a7a82db31fe736ffedee330795a3234d358f1984` (Go 1.23.12), no upstream changes; planned M0 Rust baseline `76f3fd6` is recorded as **reference**, not proof of ABI linking.
+- `r0/go_overlay/assembly/manifest.json` includes **eight original blob -> resulting blob exact replacements**, **four create-only targets**, all original sources and prospective result blobs checked against GitHub SHA. `assemble.py` rejects wrong original SHA, duplicate/op overreach, symlinks, non-unique anchor, unexpected existing target, wrong result SHA and unpinned checkout before writing. `--dry-run` and standalone deterministic negative test cases are present. No full old repository copy or new TLS/data plane.
+- Existing CLI Go binaries retain original V3 legacy path when canonical `fec.mode=off`; new `fec.mode/fec.profile/fec.auto_policy/fec.auto_start_profile` keys are registered on original Go FlagSet and its *one* `PARAMETERS.json`. Normal fixed/auto are parsed but **fail closed** before network launch with `ErrFEC2ProductUnwired`; Game auto is explicitly rejected. This is deliberately not a fake native engine activation switch. Original DNS, split routing, IPv6, MTU, drivers, Stop and portable semantics are not replaced.
+- Original WinForms gets the same four fields, original editor/portable save/reload and user-visible `requested/rejected/unknown` feedback from original Go `--check-config`, never painting synthetic applied state. Existing GUI test suite is extended to call the **real Windows client** for fixed/auto rejection and Game auto refusal. Typed Go readback projection is bound to exact client/direction/epoch/revision/profile, but real authenticated status ownership is M0.
+- Original Go client/server and Windows GUI native smoke scripts and a strict native library PE/ELF machine/hash/load/symbol probe have been added; scripts never install a driver or manipulate user network. Windows GUI smoke uses original pinned C#/Go sources, real `WBD.exe --self-test` and explicitly separates test FakeSession device operations from original real CLI config.
+- Manifest stable result hash for GUI tests updated after adding this explicit native Go denial test. M4 product CODE snapshot `c42ed0cc85866a2260274affb6a75c593826573d` (follow-on evidence/test-source changes are documented as untested S, do not inherit any Actions PASS).
+
+## Qualification and blocker
+
+**Source-side static hash check:** original 8 file hashes and computed replacements match all expected Git blobs, four overlay create hashes match, no fuzzy patch. This is only preflight source checking.
+
+**Actual Actions:** `NOT_RUN` for PLAN-008 assembly parser test, compiled runnable Linux client/server, original Windows Go config + C# GUI `--self-test`, portable save/restart, absent/wrong target Rust library native loading, actual authenticated Rust pending/applied ACK or physical driver. No new shared CI invocation exists in M4's permissions. The M0-only production ABI/admission readiness remains unwired in this overlay. Prior FEC2 OFF, D10 FAIL, native codec timeout, p99 and physical NOT_RUN remain intact.
+
+**Historical scope incident (preserved):** The first Go adapter exploratory test was mistakenly committed to exact-unpermitted `r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter_test.go` at `2cfd979`, promptly deleted at `85911ac` and relocated inside permitted `r0/go_overlay/internal/configfile/`. Current tree complies with allowed paths; historical per-commit G2 may still fail. No force push or retroactive green result is claimed. Exact request to M0 covers minimal review rather than a generic directory expansion.
+
+**Single next action:** M0 invokes the pinned product assembly/Windows GUI/native DLL Actions and adjudicates the historical scope exception in `.governance/workstreams/M4/requests/R5-M4-PLAN008-015-M0-SHARED-ACTIONS-SCOPE.md`. Then M4 reads actual run/attempt/compiled artifact logs, corrects only permitted files, and finishes this entire workpack when `done_when` is verifiably met. Do not expand Rust engine, OS installer, TLS, root workflow or originally validated platform batch paths.
