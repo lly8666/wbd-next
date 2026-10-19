@@ -4,26 +4,26 @@
   "branch": "work/m2-r2-recovery",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 25,
-  "checkpoint_sha": "3e2ba0130d8b092d22c825bfeb220d31858bd80a",
-  "progress": "ready_for_integration",
-  "task_id": "R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010",
-  "current_task": "PACK-010 scoped pure R2 typed ingress delivered: authenticated-open receipt scope -> existing shadow; original FrozenRecordHandle driver_read + scoped last-chance budget reservation; 0..32 driver prefix/one Uncertain/Unproven vs proven NotSent mapping to quota and shadow status. Exact SOURCE 654a3c12941a799d1b65b20606f5ddd3e7778aa3 worker-native 70/70 PASS.",
-  "why_now": "M0 main registry explicitly assigned 010 after 009. Original 009 SOURCE6124ce1 67/67 kept; no new engine or algorithm. First 010 SOURCE4e24f66 native FAIL69/70 from fixture ClockReversed; corrected test fixture in SOURCE654a3c1; code central scope39045719817 PASS and evidence S 3e2ba0130d8b092d22c825bfeb220d31858bd80a central scope39046193167 PASS. Old worker Governance39045616461 main moved; no functional failure.",
-  "done_when": "PACK-010 typed post-authenticated receipt, frozen repair submission, validated kernel success prefix/Uncertain/unproven, no false peer ACK/refund, 2-attempt same ciphertext, fresh independence, 8-page/32-slot bounded budgets/sparse/global tested native70/70 compiled-once on exact SOURCE with G2/static SUCCESS and main central role-scope PASS. Frozen API, failure behavior, rollback and NOT_RUN product scope documented in evidence. Done for pure module only.",
-  "next_action": "M0 stage-integrate exact SOURCE654a3c1 with authenticated Go V4/M3 opened control and M1 frozen arena/M4 verified driver prefix in real owner; M2 handles only concrete regression under 010, no unassigned work.",
-  "unverified": false,
-  "last_tested_source": "654a3c12941a799d1b65b20606f5ddd3e7778aa3",
+  "sequence": 26,
+  "checkpoint_sha": "2d7de62bb6aaba8d563f5160b7baa58d595898ce",
+  "progress": "verifying",
+  "task_id": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011",
+  "current_task": "PLAN-008 M2-011 bounded first-send maturity observer implemented in pure wbd-recovery. Exact code SOURCE3c186cb native39188056003 compiled once 76/76 PASS (six new event-replay tests actually included plus 010's 70). M0 product wiring NOT_RUN. Main G2 central role scope for current SOURCE BLOCKED by GitHub API rate limit, not by module behavior.",
+  "why_now": "main registry rev2 epoch1 explicitly assigned 011 after 010 was ready. Code S48ff938 implemented bounded raw-first-send mature observer; 0369447 test filter omitted six, 3c186cb fixed test names and ran 76/76. Old worker Governance39188055948 HTTP403 history, central39188236554 github_rate_limited remaining0; evidence S2d7de62 own Governance39188617095 HTTP403 main ref and central39188632194 HTTP403 remaining0. No false scope PASS claimed.",
+  "done_when": "011 bounded 2s/8s event time-source outcome bins positive, explicit covered missing, recovered ambiguous, uncovered UNKNOWN; definite first-send-only bytes, not sent/uncertain/control excluded; mixed report serial, lost full block, repaired positive, Stop/epoch, capacity and 4096 records/128 blocks/<=64 deadline ops fully tested native76/76 SOURCE3c186cb. Interface/resource/rollback/NOT_RUN pinned in evidence. Formal latest-main central SOURCE ROLE_SCOPE_PASS still NOT_OBTAINED due GitHub API quota.",
+  "next_action": "M0 resolve GitHub Actions G2 central API remaining=0 at request M2-PLAN008-011-CENTRAL-SCOPE-API-QUOTA; then obtain exact tested SOURCE/HEAD central ROLE_SCOPE_PASS without bypass. Once scope qualified, stage original kernel first-send and authenticated reverse receipt into existing Go controller; M2 only fixes concrete 011 integration regression, do not re-run unchanged native or add unassigned algorithms.",
+  "unverified": true,
+  "last_tested_source": "3c186cbf08eb037d0ca8a4626fa6c8bdae355f4d",
   "evidence_refs": [
-    "docs/evidence/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.json"
+    "docs/evidence/M2/R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011.json"
   ],
   "open_requests": [
-    ".governance/workstreams/M2/requests/M2-PACK-009-CENTRAL-GOVERNANCE-COMPARE-403.md"
+    ".governance/workstreams/M2/requests/M2-PLAN008-011-CENTRAL-SCOPE-API-QUOTA.md"
   ],
   "context_refs": [
-    "docs/devlog/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.md",
-    "docs/devlog/M2/R2-M2-RECEIPT-REPAIR-BOUNDED-WORKPACK-009.md",
-    "docs/architecture/modules/08-RECOVERY.md"
+    "docs/devlog/M2/R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011.md",
+    "docs/evidence/M2/R2-M2-AUTHENTICATED-REPAIR-INGRESS-WORKPACK-010.json",
+    "docs/decisions/M0-integration-unblock-2026-10-19.md"
   ],
-  "partial_summary": "Component PASS only: source654a3c1 worker-native39045616456 70/70, G2 39045616446, static39045616475, central scope39045719817; evidence S3e2ba01 Gov39046076255 SUCCESS, central39046193167 PASS. Code worker Governance39045616461 FAIL main source moved, first native39045483735 FAIL fixture ClockReversed, historical retained. Old 009 H c345061 unchanged; 010 H seq25 cursor-only. Real GoV4 AEAD/replay/PN proof, M1 real arena, M3 codec, M4 raw/TUN driver, engine owner, CPU/p99/500Mbps/physical all NOT_RUN; RECOVERY_ENGINE_READY=false."
+  "partial_summary": "011 implementation and native functional batch done but current SOURCE scope blocked by external GitHub API quota; S2d7de62 evidence and M0 request checkpoint; native source3c186cb build/consume PASS 76/76 worker-native39188056003, G2 bootstrap39188055915 PASS, static39188055945 PASS, ZIP hashes validated. 011 tests 6 scoped event replay, 4096 records, <=64 per poll, 2s/8s bins/count-byte conservation, capacity UNKNOWN, Stop and epoch; 009/010 behavior unchanged. SOURCE old worker Governance39188055948 FAIL HTTP403, central39188236554 FAIL github_rate_limited remaining0, S Governance39188617095 FAIL HTTP403 main, S central39188632194 FAIL remaining0. No Go/TLS AEAD/driver/controller product, physical, p99 performance, 5205/Windows/GUI; all NOT_RUN. H seq26 verifying/unverified=true because no exact SOURCE central ROLE_SCOPE_PASS; do not reinterpret earlier central 48ff938 PASS as current."
 }
