@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "kind": "shared_worker_ci_repair",
+  "qualification": "CI_CONTRACT_PASS_NATIVE_M3_PREPARE_NOT_RUN",
+  "product_FEC2": "OFF",
+  "product_qualification": "NOT_RUN",
+  "repair_source_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+  "main_dispatch_source_sha": "86cab9c50104a05024573ae9bebf442c6d6af10b",
+  "frozen_control": {
+    "ref": "qualification/worker-ci-v7",
+    "sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+    "prior_v6_ref": "qualification/worker-ci-v6",
+    "prior_v6_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+    "prior_v6_unchanged": true
+  },
+  "m3_failed_intent": {
+    "request_id": "M3-018-NATIVE-E4-PREPARE-002",
+    "source_sha": "437cc721d1009c835cb900384dadbdbf3ebea800",
+    "baseline_sha": "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e",
+    "harness_sha": "a5de4452a7c240d4866352de157deed3565a17b6",
+    "candidate_tests_git_blob": "7c477f03839fbcf7781656af88508e3e4d68e3e8",
+    "run_id": 39210496325,
+    "attempt": 1,
+    "authorize": "PASS",
+    "official_isal_build": "PASS",
+    "rust_native_release_compile": "PASS",
+    "functional_executed": 0,
+    "prepare": "FAIL",
+    "reason": "candidate fec_v2_tests.rs not overlaid; stale control-tree test list; NOT_FEC_MATH_FAIL"
+  },
+  "changes": [
+    "main-only exact candidate module+companion test overlay",
+    "pin native tests Git blob and SHA256 in prepare manifest",
+    "full fec_v2_tests libtest instead of single missing-case selector",
+    "require target dirty-tail test actually reports ok; negatives for missing/ignored"
+  ],
+  "source_locked_actions": [
+    {
+      "source_sha": "f4f8660f8d8e171c8edda3b4b5ab97e194611c79",
+      "run_id": 39214300653,
+      "attempt": 1,
+      "workflow": "worker-component-validation contract-smoke",
+      "conclusion": "FAIL",
+      "cause": "new M0 Python regex double-escaping; not native codec test"
+    },
+    {
+      "source_sha": "f4f8660f8d8e171c8edda3b4b5ab97e194611c79",
+      "run_id": 39214300811,
+      "attempt": 1,
+      "workflow": "governance-maintenance",
+      "conclusion": "FAIL",
+      "cause": "same double-escaping unit test"
+    },
+    {
+      "source_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+      "run_id": 39214403113,
+      "attempt": 1,
+      "workflow": "worker-component-validation contract-smoke",
+      "conclusion": "success",
+      "artifact_id": 12169135733,
+      "artifact_zip_digest": "sha256:b025f42f4d59b6dab4b14da318da75a5615ef387de3504dd62d90a2aff73f858"
+    },
+    {
+      "source_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+      "run_id": 39214403124,
+      "attempt": 1,
+      "workflow": "governance-maintenance",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+      "run_id": 39214403112,
+      "attempt": 1,
+      "workflow": "Governance",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "86cab9c50104a05024573ae9bebf442c6d6af10b",
+      "run_id": 39214553911,
+      "attempt": 1,
+      "workflow": "audited-worker-dispatch",
+      "conclusion": "success",
+      "artifact_id": 12169395999,
+      "artifact_zip_digest": "sha256:785b3f9332feafdc645472ceb54c843ae651d24270608ddbd8cd72cb56ae79b0"
+    },
+    {
+      "source_sha": "86cab9c50104a05024573ae9bebf442c6d6af10b",
+      "run_id": 39214553774,
+      "attempt": 1,
+      "workflow": "governance-maintenance",
+      "conclusion": "success"
+    },
+    {
+      "source_sha": "86cab9c50104a05024573ae9bebf442c6d6af10b",
+      "run_id": 39214553945,
+      "attempt": 1,
+      "workflow": "Governance",
+      "conclusion": "success"
+    }
+  ],
+  "not_run": [
+    "M3 v7 real ISA-L CODE437 full native tests",
+    "M3 one sameVM ABBA e4",
+    "physical",
+    "product",
+    "Windows ARM"
+  ],
+  "pending_worker_owned_next": "M3-018-NATIVE-E4-PREPARE-003 v7 exact intent on M3 branch, then real prepare artifact; only then distinct paired ABBA intent",
+  "permissions": "M0 owns shared CI; no M3 worker cursor/source/request modified; no GitHub Actions token expansion; v5/v6 immutable"
+}
