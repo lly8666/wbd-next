@@ -30,7 +30,11 @@ def roledef(role):
         "assigned_task":f"{role}-TEST","branch":f"work/{role.lower()}",
         "assignment_epoch":1,
         "allowed_paths":["crates/wbd-engine/tests/"] if role=="M1"
-                        else ["crates/wbd-codec/"]}
+                        else ["crates/wbd-codec/"],
+        "prompt":f"docs/prompts/{role}.md",
+        "goal":"bounded module work","done_when":"scoped exact-source tests",
+        "cursor":f".governance/workstreams/{role}/cursor.json",
+        "owned_semantics":[role+"-exclusive"]}
 def req(role):
     suite,fixture,*_=e.SUITES[role]
     return {"schema_version":1,"request_id":role+"-PREPARE-001",
@@ -46,7 +50,11 @@ class Mock:
         self.reg={"schema_version":1,"reservation_revision":2,
                   "roles":[{"id":"M0","state":"active","global_writer":True,
                             "branch":"main","assignment_epoch":1,
-                            "assigned_task":"M0","allowed_paths":["*"]},
+                            "assigned_task":"M0","allowed_paths":["*"],
+                            "prompt":"docs/prompts/M0.md",
+                            "goal":"bounded integration","done_when":"integration tested",
+                            "cursor":".governance/workstreams/M0/cursor.json",
+                            "owned_semantics":["m0-exclusive"]},
                            roledef("M1"),roledef("M3")]}
         self.src={"M1":M1,"M3":M3}
         self.requests={"M1":req("M1"),"M3":req("M3")}
