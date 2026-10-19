@@ -1,0 +1,159 @@
+# PLAN-011 explicitly requested continuous real business traffic capacity anchor.
+# Exactly one NORMAL/OFF no-impairment 20Mbps each-direction measurement job.
+# This is NOT the preexisting 36-packet loss matrix, FEC ON, Game, or product PASS.
+name: M0 continuous real Normal OFF 20Mbps capacity anchor
+run-name: "M0|PLAN011-CONT20-LOSS0|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-normal20-continuous.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-cont20-loss0-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build real pinned Go/TLS to Rust normal owner once, verify non-probe default ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          cargo build --release --locked -p wbd-engine
+          test -s target/release/libwbd_engine.so
+          if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(test_probe_|embedded_go_)'; then
+            echo 'M0_CONT20_DEFAULT_PRODUCTION_ABI_LEAK' >&2
+            exit 1
+          fi
+          cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
+          mkdir -p cont20-build
+          cp target/release/libwbd_engine.so cont20-build/libwbd_engine.so
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go fec_v2_policy.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/cont20-build/owner-go.test" ./internal/realityfront)
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          paths=["tools/run-v4-tun-netns.sh",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_perf_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
+            "crates/wbd-engine/src/v4_embedded_go.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            ".github/workflows/m0-normal20-continuous.yml"]
+          m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+            "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+            "request_id":"M0-PLAN011-NORMAL-OFF-20M-CAPACITY-LOSS0-20261019",
+            "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "go":"1.23.12","rust":"1.85.1","features":"m0_v4_probe,m0_v4_embedded_go",
+            "product_abi_probe_absent":True,"production_FEC2":"OFF",
+            "scenario":"Normal/OFF, real Linux netns, 20Mbps each-direction inner IPv4 mixed UDP, loss0, 10s+60s",
+            "inputs_sha256":{p:sha(p) for p in paths},
+            "binary_sha256":{p:sha("cont20-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
+          pathlib.Path("cont20-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-cont20-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cont20-build/
+          retention-days: 14
+          if-no-files-found: error
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-cont20-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cont20-build/
+      - name: Verify SOURCE and both downloaded compiled binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda path:hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          m=json.load(open("cont20-build/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==os.environ["GITHUB_RUN_ID"] and m["attempt"]==os.environ["GITHUB_RUN_ATTEMPT"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["product_abi_probe_absent"] and m["production_FEC2"]=="OFF"
+          for p,h in m["inputs_sha256"].items(): assert sha(p)==h,p
+          for p,h in m["binary_sha256"].items(): assert sha("cont20-build/"+p)==h,p
+          PY
+          chmod +x cont20-build/owner-go.test
+      - name: Single real 20 Mbps per-direction 60-second kernel TUN/raw continuous business observation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-probe-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          set +e
+          WBD_M0_PERF_BASELINE=1 WBD_M0_SUSTAINED_20MBPS=1 \
+            bash tools/run-v4-tun-netns.sh cont20-build >native-probe-result/cont20.log 2>&1
+          case_rc=$?
+          set -e
+          cat native-probe-result/cont20.log
+          CASE_RC="$case_rc" python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("native-probe-result")
+          m=json.load(open("cont20-build/manifest.json"))
+          log=(p/"cont20.log").read_bytes()
+          raw=p/"normal-off-dev-20mbps.json"
+          receipt=json.loads(raw.read_text()) if raw.is_file() else None
+          verdict="FAIL_NO_MEASUREMENT"
+          if receipt is not None:
+            c=receipt["c2s"];s=receipt["s2c"]
+            valid=all(c[k]==0 and s[k]==0 for k in ["invalid_received","duplicate_received","injector_send_errors"])
+            offered=all(d["offered_ipv4_mbps"]>=19 for d in [c,s])
+            delivered=all(d["delivered_ipv4_mbps"]>=19 and d["missing_or_not_delivered"]==0 for d in [c,s])
+            if not valid:verdict="INVALID_INTEGRITY_OR_SEND"
+            elif not offered:verdict="INVALID_INJECTOR_OR_HOST_CAPACITY"
+            elif not delivered:verdict="OBSERVED_DELIVERY_SHORTFALL"
+            elif os.environ["CASE_RC"]=="0":verdict="PASS_SCOPED_20MBPS_CONTINUOUS_LOSS0_DEV_ANCHOR"
+            else:verdict="FAIL_RUNNER_OR_OWNER"
+          result={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+            "run_id":int(os.environ["GITHUB_RUN_ID"]),"attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "request_id":m["request_id"],"manifest_sha256":hashlib.sha256(pathlib.Path("cont20-build/manifest.json").read_bytes()).hexdigest(),
+            "original_go_sha":m["original_go_sha"],"binary_sha256":m["binary_sha256"],
+            "result":verdict,"case_exit_code":int(os.environ["CASE_RC"]),
+            "observed_profile":receipt["experiment_profile"] if receipt else "NOT_RUN",
+            "observed":receipt,"kernel_log_sha256":hashlib.sha256(log).hexdigest(),
+            "mode":"Normal_OFF","loss_percent":0,
+            "true_fixed_auto_game2_game4":"NOT_RUN",
+            "product_CLI_GUI_Windows_physical_RTT_p99":"NOT_RUN",
+            "one_measuring_job":True}
+          (p/"cont20-summary.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps({k:v for k,v in result.items() if k!="observed"},indent=2))
+          if verdict!="PASS_SCOPED_20MBPS_CONTINUOUS_LOSS0_DEV_ANCHOR":raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-cont20-loss0-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: native-probe-result/
+          retention-days: 30
+          if-no-files-found: warn
