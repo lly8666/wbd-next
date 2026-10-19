@@ -2,6 +2,8 @@
 
 2026-10-19用户要求核对老项目后续去脚本内容、规划移植及相关工位临时任务。本页补充PLAN-008/009与MIGRATION；是可实施决策，不是已完成移植或新的产品PASS。M0合并后按第5节发布临时包，worker不能靠本文自扩权限。[精确差异和事实](../evidence/M0/PLAN-010-windows-native-migration.json)。
 
+**用户最新收口要求（覆盖本页先前的多代理/极端场景要求）**：产品环境按“一台电脑同一时刻只运行一个网络代理相关实例”设计。M4负责把全部产品运行时去PowerShell工作做完，不能只交原生helper或迁移清单；M0一次发布M4最新Windows Actions自主测试入口和权限。无需支持多VPN/多Wintun并行接管、第三方同时改网络、极端PnP ghost自动修复。正常错误、取消/退出、一般异常终止后的owned恢复仍保留；检测到明显不满足单实例前提就清楚拒绝，不实现共存协调系统。构建/Actions开发脚本可继续使用PowerShell。
+
 ## 1. 审查结论：组件很多已在基线，完整运行时去脚本尚未完成
 
 - wbd-next固定冷层基线：`a7a82db31fe736ffedee330795a3234d358f1984`。
@@ -41,9 +43,9 @@
 - 地址租约、MTU、路由沿IP Helper；DNS沿已有原生Get/Set接口与快照回读；WFP仍用已有成熟封装。应用前记录意图、写入后读回；撤销比较当下状态与本程序写入值，仅恢复自己实际更改的值。其他程序中途更改则报冲突，不覆盖。
 - 保留DNS 1.1.1.1/8.8.8.8互备、借站/服务器/Direct出口旁路，IPv6默认拦截、LAN/可选中国IP用户态分流与少量系统引导路由。不是零条Windows路由，也不能把CIDR表再次展开成数千路由。
 - 不重写Direct TCP/gVisor/UDP实现、不新增WFP callout驱动或WinDivert路线；本包只保证已有Direct与原生网络管理的出口/生命周期接口一致，其真实业务通过性按测试范围报告。
-- native能力预检包含实际OS/API可用性、权限、接口身份、DNS快照可恢复性、所有权冲突；任一不满足在写系统状态前返回。不能因为是Windows或Win2022/2025绿灯就声称所有客户端OS均兼容。
-- **WFP生产缺口必须正面解决**：先将旧全机“LUID != 本TUN”规则拆成可审查的作用域/接口/方向/地址族/DNS目标表，选用支持相应条件的层，保留独立原生读回和精确对象ID。不能将“单Wintun=true”或机器锁当其他软件不会创建接口的证明；也不能只过滤本exe却声称覆盖了系统DNS/IPv6。
-- M4负责有限作用域guard候选及双接口/多TUN反例，M0验收其覆盖DNS/IPv6与不破坏管理/Direct出口的实际证据；新接口/出口变化须通过原生通知或现有出口变更事件重新预检，有界地停止不再满足前提的接管。没有可证明的政策与隔离环境就维持WINDOWS_NATIVE_ACTIVATION_BLOCKED，不能删Arm拒绝与assemblyOnly来刷绿。**正确性门保留，但不因此卡住Linux产品/其他模块的独立接线**。
+- native能力预检包含实际OS/API、管理员权限、当前接口身份和基本状态可恢复性；任一不满足在写系统状态前明确返回。使用现有机器级实例锁防本程序重复启动；不开发第三方代理检测大全，也不证明未来任何软件都不会插入网卡。
+- **WFP按用户明确的单代理运行环境收口**：复用旧规则规划与owned API，核清作用域/方向/地址族/DNS覆盖和必要旁路，完成原生读回及正常撤销后可用真实事务替换Arm恒拒绝/assemblyOnly。旧“不能与其他Wintun共存”不再是本包必须解决的产品阻塞；不做多代理仲裁、共享过滤规则或动态多TUN白名单。系统DNS/IPv6必须实际受控，不能只过滤本exe就宣称全局行为完成。
+- 正常网卡/出口变化沿既有事件重新预检，恢复失败有界退出并保留owned状态，不建设极端热插拔自愈系统。仍不能仅删guard拒绝而不实现/验证真正Apply和Cleanup。单代理产品前提不等于可以切断Actions宿主的管理网络，完整接管的隔离要求只约束测试环境。**正常场景通过就收口，Linux与其他模块接线继续独立进行。**
 
 ### 状态兼容与portable
 
@@ -58,13 +60,13 @@
 | 验收组 | 必验内容与边界 |
 |---|---|
 | 装配/源码 | 12文件base/donor/final hash，错blob/重复目标/越界拒绝；最终原客户端/GUI真实构建，不只是helper；原Linux/ARM装配不退化 |
-| 纯状态机/race | Apply五阶段各点失败/取消、重复Stop、部分写入、并发启动、旧epoch、外来对象变化、旧journal/坏WAL；一批覆盖，已有精确同源证据不重刷 |
-| Windows native | windows-2022与windows-2025，真实API/唯一owned Wintun/原生回读与正常恢复；DLL/API不支持明确拒绝；无管理员/接口复用/多TUN/外来规则反例。两server runner不等于Win10/11物理资格 |
+| 纯状态机/race | 正常Apply/Stop/Recover、每阶段已知失败/取消、重复启动拒绝、部分写入、旧journal/坏WAL不误清理；合批，不为极端并发/第三方篡改新建矩阵 |
+| Windows native | windows-2022与windows-2025，真实API/单实例owned Wintun/原生回读与正常恢复；DLL/API不支持、无管理员清楚拒绝。多代理共存/极端网卡重建不作验收前置；两server runner不等于Win10/11物理资格 |
 | CLI/GUI/runtime无shell | 启动→应用→停止→恢复走真实入口；跟踪**产品进程树**不得产生powershell/pwsh/cmd/netsh/route网络子进程（Actions宿主shell不算）；删除发行目录.ps1仍能执行；退出码和真实完成收据，防仅静态grep或渲染测试刷绿 |
 | 隔离完整网络 | 在已证明确有隔离的Windows来宾/专用可恢复环境中，少量server旁路+capture路由、DNS双备/主失效、IPv6拦截、LAN/中国分流、Direct TCP/UDP、断开恢复和崩溃后重新启动；实际业务和系统回读结合。未有隔离不能在承载CI管理连接的宿主装全机WFP/默认路由 |
 | 停止/热路径保护 | 有业务时Stop/连接失败回滚、休眠后唤醒、rotation不重装网络、TUN借用归还；原有无HOL/MTU/FEC/cipher参数不变，不把去脚本变成数据面重写 |
 
-优先复用旧native admin/owned transaction用例和当前M4原产品/GUIworkflow，由M0给公共Windows执行入口，M4自行发request/验结果/修复。不要复制旧项目整套八十个workflow。运行时去脚本不要求将CI PowerShell转写另一语言。
+优先复用旧native admin/owned transaction用例和当前M4原产品/GUIworkflow，由M0给公共Windows执行入口，M4自行发request/验结果/修复。正常路径、实际无shell、恢复和必要参数生效成立就停止加样本；极端场景仅保留已有证据/UNSUPPORTED，不新开发。不要复制旧项目整套八十个workflow。运行时去脚本不要求将CI PowerShell转写另一语言。
 
 隔离不可用时明确完整Windows网络 `NOT_RUN/UNSUPPORTED`：继续完成组件/构建/CLI语义与正常恢复；报告具体缺口，不无限换runner刷ghost结果，也不能让模拟PASS代替缺的完整门。物理测试另排，不由本包自动部署用户机器。
 
@@ -72,16 +74,24 @@
 
 ## 5. 临时任务发布与单一文件所有者
 
-**M4当前015先完成正在修的Windows GUI进程等待/收据及已有在途Actions，在安全交接点保留准确partial/ready事实；之后再切临时包。** 未完成的真正产品接线验收转入本包引用，不要求先伪称015全部完成，也不让M0/M4同时改同一个overlay。主线task/权限登记后才实施。
+**先结算M4当前015与在途Actions，在安全交接点保留准确partial/ready事实；已有GUI修复PASS直接复用，不重复等待或重跑，随后切临时包。** 未完成的真正产品接线验收转入本包引用，不要求先伪称015全部完成，也不让M0/M4同时改同一个overlay。主线task/权限登记后才实施。
 
 | 工位 | 临时职责 / 退出条件 |
 |---|---|
-| M4（主做） | 建议包 `R5-M4-NATIVE-WINDOWS-NETWORK-016`：定向导入、原生门面、正常Apply/Cleanup/Recover、GUI/config/portable及功能/Windows Actions。只按授权文件做，完整Windows门未跑就明确partial；范围正确且所需环境可用时完成，不以ghost全恢复或新驱动研究无限延期 |
-| M0（短配套） | 在025加本决策引用：一次登记M4新包/新增路径、核装配与共享Stop接口、提供/复用Windows公共CI及隔离能力说明、最终集成。保留真实Go↔Rust产品工作，不亲写M4文件、不逐条代跑 |
+| M4（全包负责） | `R5-M4-NATIVE-WINDOWS-NETWORK-016`：完成所有产品运行时去PowerShell，包括CLI连接/断开/恢复、GUI按钮/配置/portable、旧脚本引用/依赖清除及自主Actions验收。单代理正常工况完成即可，不只交helper，也不等极端ghost完全自愈 |
+| M0（一次配套） | 在025登记M4新包/路径，给M4当前可用的Windows Actions自主触发/读取产物/修复复测能力；补共享Stop接口与最终集成。入口未支持M4必须先补，不只口头授权。保留产品工作，不亲写M4文件、不逐条代跑 |
 | M1 | **无默认新包**；仅当M0发现真实quiesce/设备借用契约缺口时，在其模块现有职责内给一个有复现的最小修复；不能提前为此重写runtime |
 | M2/M3 | **无新增任务**，继续当前验收/交付；不改恢复/FEC/加密/报文 |
 
 M4建议唯一新增allowed_path：`r0/go_overlay/internal/windowsclient/`；其CLI/GUI/config/PARAMETERS/scripts/assembly已有权限。必要新增native Windows参数测试也放该路径，不开放整个internal/或runtimeentry/realityfront。root source-lock/deps/公共ABI/workflow仍由M0；若出现新依赖先证明为何已有x/sys、wf与原库不能满足。donor增量本身不需要改go.mod/go.sum。
+
+### M0必须一次开通M4实际可用的最新Actions入口
+
+核到main `fff6d04`时，`worker-component-validation.yml`的adapter/role校验仍只支持M1/M3；`m0-m4-product-assembly.yml`支持push/中央scope完成自动触发，**尚无workflow_dispatch**。不能让M4照抄M1/M3请求再撞拒绝，也不能靠无关提交蹭自动跑。
+
+M0优先给现有M4产品workflow补手动请求入口，或在公共入口补M4 Windows adapter，二选一复用，不重复建两套。一次登记实际workflow、固定control ref、M4 role/task、精确request/source/scope回执、Windows目标和artifact入口；正常无变化源码可复用已有构建。提供一个真实可执行示例并在Actions验证身份/来源和调用链。保留自动触发时先查同源码同范围在途run，避免手动重复。
+
+M4在包内自行提交intent、dispatch、下载核验、修复和重新请求，不等M0合并每个源码或代跑；功能Windows矩阵可批量，性能仍一Action一场景/一个测量job、同机旧新顺序。若聊天凭据确实缺dispatch权限，M0明确补实际执行通道，不通过扩大worker共享源码写权限替代。公共workflow维护仍M0，场景/夹具仍M4。该入口发布是M0短前置，不以所有极端场景齐全为条件。
 
 M0在一个登记提交里给goal引用本文、done_when写真实能力/NOT_RUN边界；沿既有revision/epoch规则，不无故重置所有工位。先核在途请求，保留旧合法run的精确来源，新的请求用最新登记。**不改长期提示词、不代写worker cursor、不另起新聊天/任务数据库。**
 
