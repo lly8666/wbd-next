@@ -34,9 +34,9 @@ on:
       - ".github/workflows/m0-m4-product-assembly.yml"
       - "tools/m4_product_source.py"
       - "tests/test_m4_product_source.py"
-  workflow_run:
-    workflows: ["Central worker scope audit"]
-    types: [completed]
+  # PLAN-010 M4-016 new worker SOURCE must be launched by exact immutable
+  # request I after current central G2. Do NOT wake on every moving M4 HEAD;
+  # those unsolicited attest runs raced G2 and gave spurious red failures.
 permissions:
   contents: read
   actions: read
@@ -48,13 +48,9 @@ jobs:
   attest:
     if: >-
       github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && inputs.role_id == 'M4' && github.ref_name == 'qualification/m4-product-windows-v1') ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.workflow_id == 385257385 &&
-       github.event.workflow_run.path == '.github/workflows/scope-audit.yml' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_repository.full_name == github.repository &&
-       startsWith(github.event.workflow_run.display_title, 'scope|work/m4-r1-platform|'))
+      (github.event_name == 'workflow_dispatch' &&
+       inputs.role_id == 'M4' &&
+       github.ref_name == 'qualification/m4-product-windows-v1')
     runs-on: ubuntu-24.04
     timeout-minutes: 9
     outputs:
