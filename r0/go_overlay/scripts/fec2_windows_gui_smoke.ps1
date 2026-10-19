@@ -1,0 +1,38 @@
+param([Parameter(Mandatory=$true)][string]$LegacyRoot,[Parameter(Mandatory=$true)][string]$OverlayRoot,[Parameter(Mandatory=$true)][string]$OutputDirectory)
+$ErrorActionPreference = 'Stop'
+$legacy = [IO.Path]::GetFullPath($LegacyRoot)
+$overlay = [IO.Path]::GetFullPath($OverlayRoot)
+$out = [IO.Path]::GetFullPath($OutputDirectory)
+$source = (git -C $overlay rev-parse HEAD).Trim()
+if ($source -notmatch '^[0-9a-f]{40}$') { throw 'invalid exact overlay SOURCE' }
+New-Item -ItemType Directory -Force $out | Out-Null
+# Compile original Go Windows executable after source-locked fail-closed overlay.
+& python (Join-Path $overlay 'r0/go_overlay/scripts/fec2_assembly_smoke.py') --legacy-root $legacy --overlay-root $overlay --out (Join-Path $out 'go-build') --target windows-amd64
+if ($LASTEXITCODE -ne 0) { throw 'exact assembly/Windows Go build failed' }
+$portable=Join-Path $out 'portable'
+& (Join-Path $legacy 'scripts/build_windows_gui.ps1') -OutputDirectory $portable -SourceSHA $source -Version 'fec2-plan008'
+if ($LASTEXITCODE -ne 0) { throw 'native WinForms compiler failed' }
+Copy-Item (Join-Path $out 'go-build/wbd-client.exe') (Join-Path $portable 'wbd-client.exe')
+Copy-Item (Join-Path $legacy 'scripts/windows_client_network.ps1') (Join-Path $portable 'windows_client_network.ps1')
+if (-not (Test-Path (Join-Path $portable 'PARAMETERS.json')) -or -not (Test-Path (Join-Path $portable 'gui-fields.json')) -or -not (Test-Path (Join-Path $portable 'WBD.exe'))) {throw 'incomplete original portable GUI'}
+# Original native GUI self-test calls compiled original Go --check-config and
+# uses FakeSession only for driver/Stop simulation; no physical permission claim.
+& (Join-Path $portable 'WBD.exe') --self-test
+if ($LASTEXITCODE -ne 0) { throw 'native GUI self-test failed' }
+$receipt=Join-Path $portable 'gui-test-result.json'
+if (-not (Test-Path $receipt)) {throw 'native GUI self-test produced no receipt'}
+$report=Get-Content $receipt -Raw | ConvertFrom-Json
+if ($report.result -ne 'PASS') {throw 'GUI did not report PASS'}
+$sourceInfo=@{
+    result='PASS_SCOPED_WINFORMS_AND_ORIGINAL_GO_CONFIG'
+    legacy_source=(git -C $legacy rev-parse HEAD).Trim()
+    overlay_source=$source
+    go_exe_sha256=(Get-FileHash (Join-Path $portable 'wbd-client.exe') -Algorithm SHA256).Hash.ToLower()
+    gui_exe_sha256=(Get-FileHash (Join-Path $portable 'WBD.exe') -Algorithm SHA256).Hash.ToLower()
+    gui_receipt_sha256=(Get-FileHash $receipt -Algorithm SHA256).Hash.ToLower()
+    product_rust_native_loader='NOT_RUN'
+    actual_fec2_applied='NOT_RUN'
+    physical_driver='NOT_RUN'
+}
+$sourceInfo | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $out 'windows-product-result.json')
+Write-Output 'FEC2_PLAN008_WINFORMS_NATIVE_CONFIG_PASS_NOT_PRODUCT_FEC2'
