@@ -4,16 +4,16 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 36,
-  "checkpoint_sha": "8e86a0b893709f500c7de2cbf17bbe1abd7b52d6",
+  "sequence": 37,
+  "checkpoint_sha": "0209ee6645984e6ab0e23ddd382dad7c00851727",
   "progress": "in_progress",
   "task_id": "R5-M4-NATIVE-WINDOWS-NETWORK-016",
-  "current_task": "M4-016 original Go Windows product native CLI/WinForms. H36 recovered I008/H35 audit; I008 original Windows Win32/WFP read-only preflight remains pending actual Actions result. Full live WFP/network qualification not granted.",
-  "why_now": "Recovered exact two commits after prior checkpoint: I008 immutable request then cursor-only H35, both authorized. Worker-local Governance 39293099013/39293229896 FAIL old incomplete-G2 ancestry, central G2 39293277830 PASS for H35 exact source (205 commits). I008 frozen Windows run39294108179 attempt1 in progress at recovery; do not duplicate or pre-claim native PASS.",
+  "current_task": "M4-016 original Go Windows product native CLI/WinForms: I008 exact Windows-2022 source-locked read-only native preflight/GUI and Go named tests scoped PASS; live WFP Apply/Stop and real system network remain unqualified.",
+  "why_now": "I008 Actions39294108179 attempt1 identity job118202060941 and original Windows-2022 Go/WinForms job118202180994 SUCCESS, 35-op exact original/donor source. Provider ZIP digests recorded without claiming independent extraction. Historical old worker Governance FAIL and main G2 H35 PASS kept separate; no rerun needed.",
   "done_when": "From one pinned a7a82db original cold source plus exactly 12 donor6ec6b583 Windows delta entries, fail-closed assembly SHA creates/replaces, actual original Go CLI and Windows portable WinForms GUI runtime without powershell/pwsh/cmd/netsh/route network-management processes: real Connect, Disconnect, normal Recover, DNS/IPv6/route/bypass/owned WFP readback and bounded cleanup, cancel/exception/partial journal, single-process lease/repeated-start reject, config/save/reopen and script-less packaging. SOURCE-locked self-dispatched Windows Actions including windows-2022 and windows-2025 *where supported*, exact native/isolated network results and historical FAIL/NOT_RUN. No multivpn arbitration/extreme PnP self-heal/physical qualification. Native Rust product applied ACK remains M0 integration and must not be faked; product FEC2 OFF until certified.",
-  "next_action": "Consume exact I008 run39294108179 attempt1 Windows-2022 named Go/WinForms tests, source/manifest/artifacts and record actual PASS/FAIL; if red repair only first M4-scoped cause with new immutable request; leave live WFP Arm closed.",
+  "next_action": "Advance one M4-owned real Windows five-stage native transaction/owned WFP readiness capability with a recoverable isolated host and exact readback proof; if isolation or authenticated Stop is unavailable, preserve production Arm guard and report the specific blocker rather than testing on the hosted Actions management network.",
   "unverified": true,
-  "last_tested_source": "b4720862b3d83b201c7174eb9cc267ad19d949e7",
+  "last_tested_source": "8052563a4e85f4ad62b3ee5e76fd635fa539defe",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json",
     "docs/evidence/M4/R5-M4-PLAN008-LEGACY-PRODUCT-ASSEMBLY-015.json"
@@ -33,5 +33,5 @@
     "docs/decisions/M0-windows-native-migration-2026-10-19.md",
     "docs/decisions/M0-M4-016-Windows-Actions-self-dispatch-2026-10-19.md"
   ],
-  "partial_summary": "H36 recovery S8e86a0b restored H35/I008 scope and Actions facts. I007 scoped original Go GUI PASS retained; worker Governance historical FAIL retained, main G2 H35 PASS. I008 35-operation static source preflight only until run39294108179 result. Original live WFP/route/DNS/IPv6/owned network, Rust authenticated Stop and applied, Windows2025/physical NOT_RUN; FEC2 OFF."
+  "partial_summary": "H37 S0209ee6 I008 SOURCE8052563 Windows-2022 scoped Go/WinForms native preflight PASS run39294108179 attempt1, identity+Win jobs success. I007 earlier scoped PASS, I002/I005 FAIL, old worker governance FAIL retained; central G2 H35 ROLE_SCOPE_PASS. Real Wintun/WFP Apply, owned route/DNS/IPv6, complete Connect/Disconnect/Recover, true authenticated Rust Stop, Windows2025, physical NOT_RUN. FEC2 OFF; no product release."
 }
