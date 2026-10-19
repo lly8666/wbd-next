@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "c3503ac9ba1da044b02d2bf6d8a782fb9410cd96",
+  "result": "PASS_SCOPED_DISPATCH_REPAIR_AND_M4_WINDOWS_NATIVE_BUILD_AND_GUI_SMOKE",
+  "main_base_before": "07372112d3b7915b839da6e3f2950c7667691848",
+  "intent": "docs/devlog/M0/PLAN012-M4-I006-dispatch-repair-intent-20261019.md",
+  "code_paths": [
+    "tools/worker_request_dispatch.py",
+    "tests/test_worker_request_dispatch.py"
+  ],
+  "cause": "M3 PLAN008-018 immutable old PLANNED requests during main registry task PLAN012-019 blocked the unrelated M4 I006. Historical requests stay immutable and non-executable; no current authorization relaxed.",
+  "historical": [
+    {
+      "run_id": 39258713110,
+      "attempts": [
+        {
+          "attempt": 1,
+          "result": "FAIL_GITHUB_API_403"
+        },
+        {
+          "attempt": 2,
+          "result": "FAIL_GITHUB_API_403"
+        },
+        {
+          "attempt": 3,
+          "result": "SUCCESS_G2_M4_H33"
+        }
+      ],
+      "worker_source_sha": "a1aafa5c42d00c713f8d209511da836f71d93b5e",
+      "scope_artifact_id": 12192336011
+    },
+    {
+      "run_id": 39264433258,
+      "attempt": 1,
+      "result": "FAIL_WRONG_ROLE_TASK_EPOCH_REVISION_BEFORE_M4_DISPATCH"
+    }
+  ],
+  "dispatcher": {
+    "source_sha": "c3503ac9ba1da044b02d2bf6d8a782fb9410cd96",
+    "workflow": ".github/workflows/worker-request-dispatch.yml",
+    "run_id": 39271060933,
+    "attempt": 1,
+    "job_id": 118123155437,
+    "result": "SUCCESS",
+    "artifact_id": 12194278791,
+    "artifact_sha256": "26fb5e129aa7b58e9cd3a8b35c4d12d02e535339ee193655449c6a770747c5d1",
+    "gates": [
+      "old M3 PLANNED task mismatch -> SKIP_SUPERSEDED_TASK, no worker request rewritten",
+      "current task candidates retain exact G2, epoch, revision, request origin, config hash and dedupe",
+      "one historical M3 negative unit test plus old active task FAIL tests",
+      "M4 current H33 exact central G2 and immutable I006 authorized once"
+    ],
+    "governance": {
+      "run_id": 39271061449,
+      "result": "SUCCESS"
+    },
+    "governance_maintenance": {
+      "run_id": 39271060991,
+      "result": "SUCCESS"
+    }
+  },
+  "M4_windows": {
+    "role_source_sha": "60aaf224572578028ed68e23e5a4ac186fac779c",
+    "role_cursor_h33": "a1aafa5c42d00c713f8d209511da836f71d93b5e",
+    "request_ref": "c2e1659532d7ff90b403eed3fd0b9c5aa8ab2642",
+    "request_id": "M4-016-WIN-NATIVE-006",
+    "control_sha": "17263ad85a41639a569af914b4157520daf84ecb",
+    "assembly_manifest_sha256": "323458998ceb69eab1d3398f8f0a032314029e0ab3ad17ba64a8c4c6d6d06cf7",
+    "workflow": ".github/workflows/m0-m4-product-assembly.yml",
+    "run_id": 39271382181,
+    "attempt": 1,
+    "result": "SUCCESS",
+    "jobs": [
+      {
+        "job_id": 118124293668,
+        "name": "attest",
+        "result": "SUCCESS"
+      },
+      {
+        "job_id": 118124430499,
+        "name": "original-product windows-amd64 windows-2022",
+        "result": "SUCCESS"
+      }
+    ],
+    "artifact_identity_id": 12195991530,
+    "artifact_identity_sha256": "2eacb45eb1b51e5dedd8cfa6c07d10282db212daaece3f0c21f5661d8368f0a2",
+    "artifact_windows_id": 12194304682,
+    "artifact_windows_sha256": "33e838b3ea7119ef84f07c7b6ad8eb0417662d130cbda6feadb18c74e88048a0",
+    "environment": "Windows 2022 amd64, pinned Go 1.23.12",
+    "assertions": [
+      "7 assembler negative regression tests PASS",
+      "Pinned original-Go legacy baseline and M4 native overlay assembly passed",
+      "Original Windows CLI cmd/wbd-client package Go tests passed",
+      "Native Windows recovery, owner slot/cancel, shell fallback rejection Go unit tests passed",
+      "WinForms C# build and GUI smoke passed marker FEC2_PLAN008_WINFORMS_NATIVE_CONFIG_PASS_NOT_PRODUCT_FEC2"
+    ],
+    "not_run": [
+      "Real WFP capture/Arm",
+      "Physical native Connect/Disconnect/DNS/IPv6/route applied readback",
+      "Actual linked native Rust product ABI and user client product end-to-end",
+      "Native FEC2 product runtime"
+    ]
+  },
+  "qualification": {
+    "M4_G2_exact_H33": "PASS_ATTEMPT3",
+    "M0_dispatcher": "PASS",
+    "M4_Windows_native_Go_CLI_GUI_scoped": "PASS",
+    "M4_WFP_real_network": "NOT_RUN",
+    "M4_Rust_product_applied": "NOT_RUN",
+    "M0_FEC_Fixed_kernel_oneblock_previous": "PASS_SCOPED_SOURCE_13b7333",
+    "M0_FEC_continuous_multiblock": "NOT_RUN",
+    "M0_FEC_Auto": "NOT_RUN",
+    "M0_Game_2_4_lanes": "NOT_RUN",
+    "product_FEC2": "OFF"
+  },
+  "next_action": "After frozen M3-019 record and M1-016 lane interfaces exist, batch M0 original-Go TLS->persistent Rust FEC Fixed/Auto plus independent Game2/4+Stop in one exact SOURCE complete Linux kernel/TUN product functional Actions job, rather than more isolated one-off workflow runs; preserve 20Mbps network performance as one scenario per Action after functional qualification."
+}
