@@ -78,9 +78,11 @@ def main():
         text=invoke([str(exe),"-test.run","^TestPLAN008FEC2","-test.v"],legacy,env,out/"config-test.log")
         if "PASS" not in text: raise RuntimeError("Go config test PASS marker absent")
         tests="PASS_SCOPED_FEC2_PARSER_READBACK_ONLY"
+    version=invoke(["go","version"],legacy,env,out/"go-version.log").strip()
+    if "go1.23.12" not in version: raise RuntimeError("unmatched pinned original Go toolchain")
     report={
         "schema_version":1,"result":"PASS_SCOPED_BUILD_AND_NATIVE_IF_AVAILABLE",
-        "target":args.target,"host_native":native,"toolchain":invoke(["go","version"],legacy,env,out/"go-version.log").strip(),
+        "target":args.target,"host_native":native,"toolchain":version,
         "legacy_source":values["legacy_source"],"overlay_source":values["overlay_source"],
         "rust_source_reference":values["rust_source"],"assembly_sha256":sha(receipt),
         "files":values["files"],"binaries":binaries,"go_tests":tests,
