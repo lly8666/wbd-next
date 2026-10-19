@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "84a809968e0fd2993cd8050164b8d0efbfe33a5b",
+      "result_blob": "6fd15a297f92cb6df0b5e2c56b393f3633cede2e",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -108,6 +108,14 @@
         {
           "find": "\tflag.Parse()\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {",
           "replace": "\tflag.Parse()\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {\n        if *recoverNetwork {return errors.New(\"native-state-json and recover-network cannot run together\")}\n        snapshot, err := windowsclient.N4NativeInspectState(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(snapshot)\n    }\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {"
+        },
+        {
+          "find": "\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")",
+          "replace": "\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")\n\t\treadNativePreflight = flag.Bool(\"native-preflight-json\", false, \"inspect native Windows system APIs, WFP layer and own WAL read-only; never enables product network\")"
+        },
+        {
+          "find": "    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {",
+          "replace": "    // Run read-only actions BEFORE configuration and credentials. They cannot\n    // activate native WFP, Wintun, DNS or routes, or promote the product.\n    if *readNativePreflight {\n        if *readNativeState || *recoverNetwork {return errors.New(\"native-preflight-json cannot combine with another network operation\")}\n        report, err := windowsclient.N4ReadOnlyProductPreflight(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(report)\n    }\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {"
         }
       ]
     },
@@ -139,7 +147,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "dd126c5a3792c16ceb0e21aebc240bbc21420b23",
+      "result_blob": "15c7b5e85e6a16a67ea6b2eb45a3155f7b7a2ed6",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -156,6 +164,10 @@
         {
           "find": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],",
           "replace": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],\n  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],"
+        },
+        {
+          "find": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],",
+          "replace": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],\n  \"native-preflight-json\": [\n    \"操作\",\n    \"原生系统预检\",\n    \"只检查 Windows 原生 API、WFP 层、权限和磁盘状态；不会启动连接\"\n  ],"
         }
       ]
     },
@@ -163,7 +175,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "bb40be9538be48175183bfc83bc701f3dc5dbc5a",
+      "result_blob": "ce52295e62ddca5c14267dfa839aa5b84f509e10",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -220,6 +232,14 @@
         {
           "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
           "replace": "        // The same original Go executable reports ONLY files on disk.\n        // Do not infer active WFP, current Wintun ownership, or connection.\n        public async Task<string> ReadNativeDiskStatusAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-state-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute = false, CreateNoWindow = true,\n                WorkingDirectory = store.Root, RedirectStandardOutput = true,\n                RedirectStandardError = true\n            };\n            info.EnvironmentVariables[\"TEMP\"] = store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"] = store.InRoot(\"data/tmp\");\n            using (var process = Process.Start(info)) {\n                Task<string> output = process.StandardOutput.ReadToEndAsync();\n                Task<string> error = process.StandardError.ReadToEndAsync();\n                bool ended = await Task.Run(() => process.WaitForExit(20000));\n                if (!ended) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生状态检查超时；未改变系统网络。\");\n                }\n                string stdout = await output, stderr = await error;\n                if (process.ExitCode != 0)\n                    throw new IOException(\"原生只读状态检查未通过：\" + Redact(stderr));\n                if (stdout.Length > 4096)\n                    throw new IOException(\"原生状态输出超出上限。\");\n                var status = store.Json.Deserialize<Dictionary<string, object>>(stdout);\n                object schema, state, guard;\n                if (status == null ||\n                    !status.TryGetValue(\"schema\", out schema) ||\n                    !status.TryGetValue(\"state\", out state) ||\n                    !status.TryGetValue(\"guard_qualified\", out guard) ||\n                    Convert.ToString(schema)!=\"wbd-native-network-disk-status/v1\" ||\n                    Convert.ToBoolean(guard) ||\n                    !new[] {\"absent\", \"legacy_journal\", \"orphan_route_intent\", \"native_wal_unverified\"}.Contains(Convert.ToString(state)))\n                    throw new IOException(\"客户端只读状态收据不可信，不能宣告网络就绪。\");\n                string result = Convert.ToString(state);\n                Enqueue(\"只读原生磁盘状态：\" + result + \"；仅文件检查，WFP、驱动和连通性未经确认。\");\n                return result;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
+        },
+        {
+          "find": "            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));",
+          "replace": "            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));\n            driverBar.Controls.Add(Button(\"原生系统预检（只读）\", async () => await RunAsync(async () => { await ReadNativeProductPreflightAsync(); })));"
+        },
+        {
+          "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
+          "replace": "        // The original Go CLI checks ACTUAL Win32 APIs and WFP layers.\n        // Preflight is diagnostic only. It MUST NEVER report native Connect\n        // ready until authenticated owner Stop and real WFP are qualified.\n        public async Task<string> ReadNativeProductPreflightAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-preflight-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute=false, CreateNoWindow=true, WorkingDirectory=store.Root,\n                RedirectStandardOutput=true, RedirectStandardError=true\n            };\n            info.EnvironmentVariables[\"TEMP\"]=store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"]=store.InRoot(\"data/tmp\");\n            using (var process=Process.Start(info)) {\n                Task<string> output=process.StandardOutput.ReadToEndAsync();\n                Task<string> error=process.StandardError.ReadToEndAsync();\n                if (!await Task.Run(() => process.WaitForExit(20000))) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生系统预检超时；未修改网络。\");\n                }\n                string stdout=await output, stderr=await error;\n                if (process.ExitCode!=0)\n                    throw new IOException(\"只读原生系统预检失败：\" + Redact(stderr));\n                if (stdout.Length>4096)\n                    throw new IOException(\"原生系统预检输出超出上限。\");\n                var report=store.Json.Deserialize<Dictionary<string,object>>(stdout);\n                object schema,ready,qualified,state;\n                if (report==null ||\n                    !report.TryGetValue(\"schema\",out schema) ||\n                    !report.TryGetValue(\"ready\",out ready) ||\n                    !report.TryGetValue(\"wfp_install_qualified\",out qualified) ||\n                    !report.TryGetValue(\"disk_state\",out state) ||\n                    Convert.ToString(schema)!=\"wbd-native-product-preflight/v1\" ||\n                    Convert.ToBoolean(ready) || Convert.ToBoolean(qualified) ||\n                    !stdout.Contains(\"wfp_guard_and_authenticated_stop_not_qualified\"))\n                    throw new IOException(\"原生预检不能授予 WFP/Stop 产品资格。\");\n                string disk=Convert.ToString(state);\n                Enqueue(\"原生系统只读预检：\" + disk +\n                    \"；WFP 生产启用和认证 Stop 尚未验收，不允许连接。\");\n                return disk;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
         }
       ]
     },
@@ -227,7 +247,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "1e0f4a82af6dc8bb8ba599db14c3c1848fae53ac",
+      "result_blob": "0ba459b8793f4e986a3d0d34a43f72e3e312377a",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -264,6 +284,14 @@
         {
           "find": "                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));",
           "replace": "                // True original WinForms -> ORIGINAL Go CLI (no FakeSession)\n                // observes disk-only states without mutating WFP/routes.\n                using (var diskForm = new MainForm(reopened,new FakeSession(),\n                    ()=>new DependencyState {Admin=false,Npcap=false,Wintun=false})) {\n                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();\n                    Wait((Task)read);\n                    Assert(read.Result==\"absent\", \"GUI original Go reports absent disk state, not network connected\");\n                    File.WriteAllText(stateFile,\"legacy shell intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    File.Delete(stateFile);\n                    string sidecar = stateFile+\".n4-owned-wal.routes\";\n                    File.WriteAllText(sidecar,\"route intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"orphan_route_intent\" && File.Exists(sidecar),\n                        \"GUI original Go detects orphan intent and preserves it\");\n                    File.Delete(sidecar);\n                    string wal = stateFile+\".n4-owned-wal\";\n                    File.WriteAllText(wal,\"not a SHA-valid native journal\");\n                    bool denied = false;\n                    try { Wait((Task)diskForm.ReadNativeDiskStatusAsync()); }\n                    catch (IOException) { denied = true; }\n                    Assert(denied && File.Exists(wal), \"GUI rejects invalid WAL; not a fake safe or ready result\");\n                    File.Delete(wal);\n                }\n                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));"
+        },
+        {
+          "find": "                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();",
+          "replace": "                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var preflight = diskForm.ReadNativeProductPreflightAsync();\n                    Wait((Task)preflight);\n                    Assert(preflight.Result==\"absent\",\"GUI real Go native preflight checks OS APIs without claiming Connect ready\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();"
+        },
+        {
+          "find": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");",
+          "replace": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    preflight = diskForm.ReadNativeProductPreflightAsync(); Wait((Task)preflight);\n                    Assert(preflight.Result==\"legacy_journal\",\"GUI native preflight preserves legacy WAL as blocked\");"
         }
       ]
     },
@@ -271,7 +299,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "1f7213d5ed2edee135307856ff6f4907be9c2682",
+      "result_blob": "08094cb000e114fe073b5f780386d54e37e80d5d",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -289,6 +317,10 @@
         {
           "find": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
           "replace": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
+        },
+        {
+          "find": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
+          "replace": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-preflight-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect native Windows system APIs, WFP layer and own WAL read-only; never enables product network\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
         }
       ]
     },
@@ -514,6 +546,18 @@
       "path": "internal/windowsclient/native_product_status_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
       "result_blob": "c9157436a57ea16500484ca4a72a1214968cd57c"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_preflight_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
+      "result_blob": "bfe2eb69305b1599b0798b92aa38a3ff282ea529"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_preflight_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go",
+      "result_blob": "e13390c864e6631c619139a919d54632e9296147"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
