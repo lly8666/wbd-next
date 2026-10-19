@@ -80,7 +80,7 @@ def verify_functional_log(data,role):
     # Cargo can return 0 and still print 'test result: ok.'; this is NOT
     # functional evidence. Count actual passed tests, deny failed/zero.
     need(isinstance(data,str) and role in SUITES,"invalid functional log")
-    counts=re.findall(r"test result: ok\\. (\\d+) passed; (\\d+) failed; (\\d+) ignored;",data)
+    counts=re.findall(r"test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;",data)
     need(len(counts)>=1,"incomplete Cargo test result")
     passed=sum(int(p) for p,_,_ in counts)
     need(passed>0 and all(int(f)==0 for _,f,_ in counts),
