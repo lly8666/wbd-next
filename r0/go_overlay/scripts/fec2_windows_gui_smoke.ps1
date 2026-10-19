@@ -50,8 +50,12 @@ try {
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $nativeTest)) {
         throw 'pinned original Go Windows native package compile failed'
     }
-    & go test -count=1 -run '^TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback$' ./internal/windowsclient
+    $nativeRecoveryLog=Join-Path $out 'native-recover-test.log'
+    & go test -count=1 -v -run '^TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
     if ($LASTEXITCODE -ne 0) { throw 'native original Go no-shell recovery regression failed' }
+    if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch '--- PASS: TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback' -Quiet)) {
+        throw 'native original Go no-shell recovery test was NOT executed; zero-test PASS refused'
+    }
 } finally { Pop-Location }
 $portable=Join-Path $out 'portable'
 & (Join-Path $legacy 'scripts/build_windows_gui.ps1') -OutputDirectory $portable -SourceSHA $source -Version 'fec2-plan008'
