@@ -17,6 +17,13 @@ import (
 // and an independent authenticated original exporter-key CLIENT RX.
 // This is not a real production client or AUTO/GUI qualification.
 func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
+    for _,mode:=range []FecV2Mode{FecV2Fixed,FecV2Auto}{
+        t.Run(string(mode),func(t *testing.T){
+            realOriginalGoFec2LinuxMode(t,mode)
+        })
+    }
+}
+func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
     if os.Getenv("WBD_REAL_TUN")!="1"||
        os.Getenv("WBD_M0_FEC2_CONTINUOUS")!="1"{
         t.Skip("requires one isolated M0 original Linux netns")
@@ -64,8 +71,12 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         }
     })
     cfg:=FecV2Config{Client:"protected-owner",Direction:FecV2S2C,
-        Transport:FecV2Normal,Mode:FecV2Fixed,Profile:FecV2Mild,
-        ConfigRevision:4}
+        Transport:FecV2Normal,Mode:mode,Profile:FecV2Mild,
+        AutoPolicy:FecV2Conservative,ConfigRevision:4}
+    if mode==FecV2Auto{
+        start:=FecV2Mild
+        cfg.StartProfile=&start
+    }
     pending,ack,e:=b.stageOriginalFixedPending(cfg,FecV2State{},server.Epoch)
     if e!=nil||ack.Applied||ack.Rejected||pending.RequestedRevision!=4{
         t.Fatalf("original Go Fixed TLS stage %+v %+v %v",pending,ack,e)
@@ -268,8 +279,8 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
         t.Fatalf("authenticated 2s M2 Fixed revision not APPLIED: %+v %+v %v",
             got,applied,e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_not_applied=1 FEC2_PRODUCT_OFF=1",
-        recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS mode=%s kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1",
+        mode,recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
     // M4 Linux lifecycle contract: after real traffic, Stop must join
     // native client borrow/receiver before the Go-owned TUN is released.
     // A second Stop is idempotent, and old epoch RX/feedback is rejected.
@@ -291,6 +302,10 @@ func TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity(t *testing.T){
     if _,e:=net.InterfaceByName(tunName);e==nil{
         t.Fatal("server TUN interface leaked after native Stop + Go fd close")
     }
-    t.Log("M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS revision=4 kernel_source_parity=1 coverage_2s=positive client_udp=4 no_fake_apply=1")
+    if mode==FecV2Auto{
+        t.Log("M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS revision=4 startup_profile=mild bounded_unknown_feedback=hold M2_2s=covered client_udp=4")
+    }else{
+        t.Log("M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS revision=4 kernel_source_parity=1 coverage_2s=positive client_udp=4 no_fake_apply=1")
+    }
     t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_m2_deny=1 both_tun_devices_gone=1")
 }
