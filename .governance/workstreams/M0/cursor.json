@@ -4,27 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 171,
-  "checkpoint_sha": "818e753d914180ffbd1061f8b5e4bcb46de37baf",
+  "sequence": 172,
+  "checkpoint_sha": "b2703f2807d3cdeed259aaf82c2cfbd2012620fd",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-009 §5 v5 worker selftest entry frozen, real M1/M3 prepare/paired worker-owned and NOT_RUN. M4 central G2 exact H24 PASS scope. Main M0 R0-025 protected owner product integration remains partial, FEC2 production OFF.",
-  "why_now": "Recovered interrupted PLAN-009, old v1-v4 historical immutable controls. v5 exact frozen SOURCE484861e5 Action39199797039 contract smoke +39199797121 maintenance +39199797034 main governance all PASS. Main runbook/receipt S60b650 includes independently executable M1/M3 requests+manifest/source hashes. H170 e02ae2 governance failed for missing evidence.source_sha (not code test regression), remedied by evidence-only S818e and exact source Governance39200481716 PASS. H171 cursor-only references same exact SOURCE, old failure retained. Worker-owned source/cursors untouched, M4 G2 39197439844 actual SUCCESS and product paused.",
+  "current_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025: M2 genuine firstsend 2s/8s into original Go TLS/Rust M4 copied PN and typed AEAD C2S M2 receipt, scoped 3x3 real kernel PASS; M2 and M4 user manual HOLDs lifted centrally, cursors owned by workers; product FEC2 OFF.",
+  "why_now": "User authorized start product integration and lift manually paused roles. Central decision S086ed67 and comments issue3 6259933164 issue13 6259933892 release M2/M4 only; M1 already running, M3 not paused, registry active rev2/epoch1 unchanged. Exact M2 code3c186 maturity/lib mirrored onto main, original receipt/RACK preserved with only 3 readonly mature accessors after M2-branch receipt extra RACK changes caused 6 native regressions in source124ef (historical FAIL retained). Source fc522 restored 3x3 real Go TLS previous control; source3501 corrected actual two-copy native driver CENSORED 0/2 (not fabricated 1/1). Source3501 Go/Rust owner native Action39202525812 attempt1 job117898336694 SUCCESS and zip12164670567 independently SHA verified. Kernel 9/9 ciphers/modes PASS; other 13 jobs PASS, old Normal/off netem-150ms-C job117898701426 FAIL fragment0 absent. Targeted attempt2 rerun job117899989322 FAIL before network due old runner artifact locator '-2' vs original build '-1' (not a second network fail). Evidence S b270 typed both. Product still OFF and partial/unverified.",
   "done_when": "PLAN-009 §5 public entry contract/identity/negative smoke and fixed SHA+call examples published. Worker-specific prepare/paired are autonomous ownership, not an M0 task PASS; actual CI execute and receipt verification left to worker. R0-025 still needs true Go/Rust authenticated reverse C2S kind1 and M2 mature firstsend automatic quality, plus actual old-Go product ingress and M4 assembly; keep qualification hard gates OFF.",
-  "next_action": "Resume M0 PLAN-008 original Go TLS→Rust owner authenticated reverse kind1 and M2 actual mature firstsend feedback per-client/direction 2s AUTO; respect M4 HOLD and user worker autonomy. Worker can use frozen qualification/worker-ci-v5 no need M0 changes or approvals: M1 Game015 old/new AB, M3 FEC2 native ABBA may return INCONCLUSIVE until M3 supplies per-leg absolute intervals. Do not inherit component PASS as full product, FEC2 remains OFF until normal original client/server and physical D10/p99 all qualified.",
+  "next_action": "Continue true M0-025 product wiring beyond feature-only probe: original Go client/server Normal/off release into authenticated real C2S kind1 2s maturity lifecycle continuously per-client/direction, consume resumed M4 public config/GUI overlay and M2 mature scope, integrate M1 continuous FEC2 scheduler; test actual M4 partial/EAGAIN 2..32, Stop/generation and unknown; record true per-epoch applied status. Before rerunning single old Normal/off 150ms-C again, fix shared workflow's build-artifact retry attempt pin (attempt2 currently cannot download '-2'). Preserve historical red; no repeated unaffected multiarch/ISA-L or 14-job sweep without new CODE. Native full product/Windows ARM/physical D10/p99 NOT_RUN; product FEC2 remains OFF.",
   "unverified": true,
-  "last_tested_source": "484861e5aff4eb9098a25a42f1522e19716f09e8",
+  "last_tested_source": "3501b929fd980110de83ebed14eace146e4f20e1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN-009-worker-ci-v5-484861e5aff4eb9098a25a42f1522e19716f09e8.json"
+    "docs/evidence/M0/PLAN008-025-auth-m2-mature-3501b929fd980110de83ebed14eace146e4f20e1.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md",
+    "docs/decisions/M0-PLAN008-resume-M2-M4-2026-10-19.md",
     "docs/decisions/M0-worker-selftest-entry-2026-10-19.md",
-    "docs/evidence/M0/PLAN-008-workpacks-registered.json",
+    "docs/devlog/M0/PLAN-009-worker-ci-v5-runbook-20261019.md",
+    "docs/evidence/M0/PLAN-009-worker-ci-v5-484861e5aff4eb9098a25a42f1522e19716f09e8.json",
     "docs/evidence/M0/PLAN008-025-scoped-native-off-reenable-3383990bdceda76335e4ae53d8c64b5e95b11f98.json",
     "docs/GOVERNANCE.md",
     "docs/history/INDEX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H171 M0-025 remains partial/unverified product OFF. M4 H24 G2 scope PASS action39197439844. PLAN009 freeze qualification/worker-ci-v5 SOURCE484861, Action39199797039 smoke/39199797121 maintenance/39199797034 Governance 3/3 PASS. M1/M3 actual functional prepare and paired cost not triggered by M0, worker self-owned. One source exact runbook and typed evidence S818e. H170 governance failed due evidence.source_sha absent, corrected in S818e and main governance39200481716 success; historical fail retained. Next protected original Go authenticated reverse kind1/M2 mature firstsend original owner product integration, no worker cursor edit."
+  "partial_summary": "H172 M0-025 partial/unverified FEC2 product OFF. Manual HOLD removed for M2/M4 by M0 central decision086ed67 + issue comments, no worker cursor/edit/registry or permission changes. M2 maturity exact pure CODE3c186 native 76 historical, main module + read-only receipt accessors hooked to original Go TLS scoped Rust original M4 firstsend kernel, authenticated reverse C2S kind1 M2 typed receipt, Go FecV2 AUTO observe genuine 2s/8s and censor repair-ambiguous. Source3501 native original Go TLS 3 ciphers x3 repair modes=9 PASS job117898336694 Action39202525812 attempt1 artifact12164670567 sha229227...; unrelated Normal/off 150ms-C kernel fragment0 failed, attempt2 targeted retry failed pre-network due artifact run_attempt mismatch. Evidence S b270 preserves both negatives, global combo NOT PASS. Resume public original product admission/GUI wiring separately."
 }
