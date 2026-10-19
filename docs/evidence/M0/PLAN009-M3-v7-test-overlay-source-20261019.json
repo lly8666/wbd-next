@@ -110,5 +110,13 @@
     "Windows ARM"
   ],
   "pending_worker_owned_next": "M3-018-NATIVE-E4-PREPARE-003 v7 exact intent on M3 branch, then real prepare artifact; only then distinct paired ABBA intent",
-  "permissions": "M0 owns shared CI; no M3 worker cursor/source/request modified; no GitHub Actions token expansion; v5/v6 immutable"
+  "permissions": "M0 owns shared CI; no M3 worker cursor/source/request modified; no GitHub Actions token expansion; v5/v6 immutable",
+  "source_sha": "c0c192cf293a294b5962f3f064d913149eb00639",
+  "h176_governance_failure": {
+    "run_id": 39214960099,
+    "attempt": 1,
+    "source_sha": "0deb49e33ec31012d0c74ed814bafa7d47c77520",
+    "result": "FAIL",
+    "reason": "tools/governance.py validate cursor evidence_refs source_sha mismatch; v7 evidence lacked mandatory source_sha; role/scope pass, structural validation blocked; no native test executed"
+  }
 }
