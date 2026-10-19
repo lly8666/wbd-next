@@ -51,12 +51,13 @@ try {
         throw 'pinned original Go Windows native package compile failed'
     }
     $nativeRecoveryLog=Join-Path $out 'native-recover-test.log'
-    & go test -count=1 -v -run '^TestPLAN010(OriginalNativeRecoveryNoShellOrLegacyFallback|NativeReadOnlyDiskStatusAndConflict|NativeOriginalProductPreflightReadOnlyDenied)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
+    & go test -count=1 -v -run '^TestPLAN010(OriginalNativeRecoveryNoShellOrLegacyFallback|NativeReadOnlyDiskStatusAndConflict|NativeOriginalProductPreflightReadOnlyDenied|N4ExactWFPArmPlanPreflightDeniesUnowned)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeRecoveryLog
     if ($LASTEXITCODE -ne 0) { throw 'native original Go recovery/state read-only regression failed' }
     foreach ($named in @(
         'TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback',
         'TestPLAN010NativeReadOnlyDiskStatusAndConflict',
-        'TestPLAN010NativeOriginalProductPreflightReadOnlyDenied'
+        'TestPLAN010NativeOriginalProductPreflightReadOnlyDenied',
+        'TestPLAN010N4ExactWFPArmPlanPreflightDeniesUnowned'
     )) {
         if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch ("--- PASS: " + $named) -Quiet)) {
             throw ("native Windows original Go test was NOT executed: " + $named)

@@ -558,6 +558,18 @@
       "path": "internal/windowsclient/native_product_preflight_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go",
       "result_blob": "e13390c864e6631c619139a919d54632e9296147"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_exact_arm_windows.go",
+      "result_blob": "f46b85b56d5c5a318c400b7cbab30a6032de5f01",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows.go"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
+      "result_blob": "0cca3e225ea95932eab09666cf5195107bd61351",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
