@@ -86,8 +86,10 @@ def verify_functional_log(data,role):
     need(passed>0 and all(int(f)==0 for _,f,_ in counts),
          "zero functional cases or failed tests")
     if role=="M3":
-        need("r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact" in data,
-             "native M3 workspace dirty-tail test absent")
+        # The exact candidate native case must actually report PASS, not just
+        # appear in a compile log or get ignored by the libtest filter.
+        need(re.search(r"test [^\\n]*r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact \\.\\.\\. ok(?:\\n|$)",data) is not None,
+             "candidate native M3 workspace dirty-tail case did not PASS")
     return passed
 
 def validate_manifest(m,role,req,control):
@@ -164,7 +166,7 @@ def remote_preflight(args):
          "invalid worker request")
     need(SHA.fullmatch(args.request_ref) and SHA.fullmatch(args.control_sha),
          "request/control must be exact SHA")
-    need(args.control_ref=="qualification/worker-ci-v6","not published control ref")
+    need(args.control_ref=="qualification/worker-ci-v7","not published control ref")
     registry=api("contents/.governance/registry.json?ref=main")
     registry=json.loads(base64.b64decode(registry["content"]))
     worker=next(z for z in registry["roles"] if z["id"]==role)
@@ -195,6 +197,15 @@ def source_overlay(role,root,source,harness):
     fixture_target=root/fixture;fixture_target.parent.mkdir(parents=True,exist_ok=True)
     fixture_target.write_bytes(git_blob(harness,fixture))
     if role=="M3":
+        # M3 candidate implementation and its cfg(test) companion must be
+        # overlaid from the SAME exact SOURCE; v6 used frozen, older tests.
+        native_tests="crates/wbd-codec/src/fec_v2_tests.rs"
+        test_bytes=git_blob(source,native_tests)
+        need(b"fn r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact" in test_bytes,
+             "M3 candidate native workspace test missing from pinned SOURCE")
+        tests_target=root/native_tests
+        tests_target.parent.mkdir(parents=True,exist_ok=True)
+        tests_target.write_bytes(test_bytes)
         support="crates/wbd-codec/tests/support/fec_v2_code8cc.rs"
         (root/support).parent.mkdir(parents=True,exist_ok=True)
         accepted=git_blob(harness,support)
@@ -208,8 +219,12 @@ def source_overlay(role,root,source,harness):
         need(match is not None,"M3 candidate identity absent")
         need(sha(git_blob(match.group(1),module))==sha(git_blob(source,module)),
              "M3 fixture candidate constant differs from actual module")
-    return {"module_git_blob":capture(["git","rev-parse",source+":"+module]),
-            "fixture_git_blob":capture(["git","rev-parse",harness+":"+fixture])}
+    blobs={"module_git_blob":capture(["git","rev-parse",source+":"+module]),
+           "fixture_git_blob":capture(["git","rev-parse",harness+":"+fixture])}
+    if role=="M3":
+        blobs["native_tests_git_blob"]=capture(["git","rev-parse",source+":"+native_tests])
+        blobs["native_tests_sha256"]=sha(test_bytes)
+    return blobs
 def archive_checkout(control,root):
     root.mkdir(parents=True,exist_ok=False)
     archive=subprocess.check_output(["git","archive","--format=tar",control])
@@ -244,7 +259,7 @@ def compile_prepare(request,output):
         if role=="M3":args+=["--features","native-isal"]
         # Functional tests exercise affected module before any performance.
         focused=(["--lib","game_shared"] if role=="M1" else
-                 ["--lib","r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact"])
+                 ["--lib","fec_v2_tests"])
         with (output/("functional-"+label+".log")).open("wb") as log:
             shell(args+focused+["--","--nocapture"],cwd=workspace,env=env,out=log)
         logdata=(output/("functional-"+label+".log")).read_text()

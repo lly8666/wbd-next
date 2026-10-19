@@ -18,7 +18,7 @@ def request(role="M1",stage="prepare"):
        "source_sha":B,"harness_sha":H,"baseline_sha":A,"control_sha":CONTROL,
        "config_path":fixture,"config_sha256":w.sha(CFG),
        "scenario":suite,"seed":631,"workflow":w.CONTROL_WORKFLOW,
-       "dispatch_ref":"qualification/worker-ci-v6","measurement_jobs":1,
+       "dispatch_ref":"qualification/worker-ci-v7","measurement_jobs":1,
        "samples":1 if stage=="prepare" else 2 if role=="M1" else 4,
        "status":"PLANNED","_request_path":".governance/workstreams/"+role+"/requests/WR-001.json"}
     if stage=="paired":
@@ -30,7 +30,7 @@ def request(role="M1",stage="prepare"):
                        for x in ("AB" if role=="M1" else "ABBA")])
     return d
 def check(d,stage,cfg=CFG):
-    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v6",
+    return w.validate_context(d,d["role_id"],stage,"qualification/worker-ci-v7",
              CONTROL,reg(d["role_id"]),"e"*40,"f"*40,cfg)
 class ValidationTests(unittest.TestCase):
     def test_valid_both_stages(self):
@@ -58,7 +58,7 @@ class ValidationTests(unittest.TestCase):
             with mock.patch.object(sys,"argv",["worker_component_validation.py",
                 "preflight","--stage","prepare","--role-id","M1",
                 "--request-id","M1-PREPARE-001","--control-ref",
-                "qualification/worker-ci-v6","--control-sha","a"*40]):
+                "qualification/worker-ci-v7","--control-sha","a"*40]):
                 w.main()
             self.assertEqual(fn.call_count,1)
             self.assertEqual(fn.call_args.args[0].request_stage,"prepare")
@@ -100,6 +100,37 @@ class ValidationTests(unittest.TestCase):
             if what=="missing":v.pop()
             with self.subTest(what=what),self.assertRaises(ValueError):
                 w.check_abba_lines(v,100)
+    def test_m3_source_overlay_binds_candidate_native_tests_and_rejects_missing(self):
+        from unittest import mock
+        import tempfile
+        from pathlib import Path
+        role="M3";source=B;harness=H
+        module=w.SUITES[role][2];fixture=w.SUITES[role][1]
+        native="crates/wbd-codec/src/fec_v2_tests.rs"
+        support="crates/wbd-codec/tests/support/fec_v2_code8cc.rs"
+        accepted=b"accepted pinned source"
+        raw_fixture=(b'const ACCEPTED_SHA: &str = "8cc5b06d6832565a80b60402a5fe2e1078e9ab2e";\\n'
+                     b'const CANDIDATE_SHA: &str = "'+source.encode()+b'";\\n')
+        candidate=(b'#[cfg(feature="native-isal")]\\n'
+                   b'fn r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact() {}\\n')
+        def blob(ref,path):
+            if path==module:return accepted if ref.startswith("8cc5") else b"candidate source"
+            if path==fixture:return raw_fixture
+            if path==support:return accepted
+            if path==native:return candidate
+            raise AssertionError("unapproved overlay path "+path)
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(w,"git_blob",side_effect=blob),mock.patch.object(w,"capture",return_value="a"*40):
+                metadata=w.source_overlay(role,Path(tmp),source,harness)
+                self.assertEqual((Path(tmp)/native).read_bytes(),candidate)
+                self.assertEqual(metadata["native_tests_sha256"],w.sha(candidate))
+                self.assertIn("native_tests_git_blob",metadata)
+                def no_test(ref,path):
+                    return b"old test module" if path==native else blob(ref,path)
+                with mock.patch.object(w,"git_blob",side_effect=no_test):
+                    with self.assertRaisesRegex(ValueError,"native workspace test missing"):
+                        w.source_overlay(role,Path(tmp),source,harness)
+
     def test_prepare_does_not_pass_zero_or_missing_functional_tests(self):
         for role in ("M1","M3"):
             header=("test fec_v2_tests::r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact ... ok\n"
@@ -115,6 +146,12 @@ class ValidationTests(unittest.TestCase):
                     continue
                 with self.subTest(role=role,bad=bad),self.assertRaises(ValueError):
                     w.verify_functional_log(bad,role)
+        with self.assertRaisesRegex(ValueError,"did not PASS"):
+            w.verify_functional_log(
+                "test fec_v2_tests::r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact ... ignored\\n"
+                "test fec_v2_tests::other_native ... ok\\n"
+                "test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out\\n",
+                "M3")
     def test_manifest_rejects_platform_scalar_old_source_or_missing_binary(self):
         d=request("M3")
         manifest={"schema_version":1,"stage":"prepare","role_id":"M3",
