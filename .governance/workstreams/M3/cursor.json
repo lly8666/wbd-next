@@ -4,20 +4,22 @@
   "branch": "work/m3-r1-codec",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 40,
-  "checkpoint_sha": "a5de4452a7c240d4866352de157deed3565a17b6",
+  "sequence": 41,
+  "checkpoint_sha": "857ac9c232383435ead4b9d02ef4eebdebc11cda",
   "progress": "partial",
   "task_id": "R5-M3-PLAN008-FEC2-RECOVERY-WORKSPACE-018",
-  "current_task": "PLAN008-018 codec e4 recovery cache/workspace exact SOURCE qualification; separate test-only old/new native ISA-L ABBA entry committed at a5de445, actual ABBA still NOT_RUN.",
-  "why_now": "H39 worker Governance39190706888 reached ROLE_SCOPE_PASS over 158 history commits but structure validation exited 2 because cursor evidence_refs fixture source 437cc721 did not equal H39 last_tested_source a5de445. Central G2 exact H39 run39190960449 PASS. H40 corrects only this SOURCE evidence alignment. CODE437 default/scalar cache evidence remains exact; a5de445 added test-only ABBA integration fixture and worker-native39189856227 PASS 123/0/1, not a real ISA-L benchmark.",
+  "current_task": "PLAN008-018 FEC2 CODE8cc A/CODE437 B real ISA-L functional prepare on M0-published qualification/worker-ci-v5, exact pinned request PLANNED; sameVM A-B-B-A native e4 measurement remains NOT_RUN until functional prepare artifacts PASS.",
+  "why_now": "Main registry remains PLAN008-018. Latest M0-published controlled worker_component_validation v5 supports M3 source-locked real official ISA-L Linux x64 two-stage prepare/paired. S 857ac9c records exact control/source/fixture digest and first prepare request, not a test result. Current connected GitHub tool lacks workflow_dispatch, so do NOT claim job started; worker default 123/0/1 and H40 full governance + central G2 PASS remain separate source-scoped history.",
   "done_when": "PLAN008-018 exact SOURCE old/new k16/r16/1200B/e4 sameVM real native ABBA, full F2 native scalar equivalence/corruption/eviction, allocation/copy/cache and finite memory, rollback; do not change wire, r, profile or product gate.",
-  "next_action": "Confirm H40 ordinary Governance structure and central G2 on exact HEAD. Preserve SOURCE-qualified CODE437 cache evidence; ABBA fixture a5de445 real ISA-L old/new sameVM ABBA and new cfg(native-isal) equivalence still NOT_RUN until authorized native Actions execution. Do not enable FEC2 product.",
+  "next_action": "Dispatch worker-component-validation.yml on immutable qualification/worker-ci-v5 with role_id=M3, stage=prepare, request_id=M3-018-NATIVE-E4-PREPARE-001, request_ref=857ac9c232383435ead4b9d02ef4eebdebc11cda. Verify prepare native tests/manifest/artifact and only then file one paired_abba 4-leg request for same-VM e4 CPU/alloc, using this exact artifact and lock. No duplicate dispatch, FEC2 product OFF.",
   "unverified": true,
   "last_tested_source": "437cc721d1009c835cb900384dadbdbf3ebea800",
   "evidence_refs": [
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json"
   ],
-  "open_requests": [],
+  "open_requests": [
+    ".governance/workstreams/M3/requests/M3-018-NATIVE-E4-PREPARE-001.json"
+  ],
   "context_refs": [
     "docs/devlog/M3/PLAN008-018-old-new-real-ISA-L-ABBA-entry.md",
     "docs/evidence/M3/018-437cc721d1009c835cb900384dadbdbf3ebea800-default-scalar-cache-partial.json",
@@ -28,5 +30,5 @@
     "docs/evidence/M3/017-governance-403-supplement-2026-10-18.json",
     "docs/evidence/M3/017-3011431370f1757212df92800c1b56e87ba51d65-scalar-wire-partial.json"
   ],
-  "partial_summary": "H40 fixes previous evidence SOURCE mismatch without adding code/tests or fabricating results: last_tested_source CODE437 matches single CODE437 cache evidence (123 default PASS, 0 fail, 1 ignored at 39187710688). S a5de445 benchmark fixture separately had default worker-native 39189856227 123/0/1 PASS but the ignored real ISA-L ABBA remains NOT_RUN. H39 role history scope PASS (158), central G2 39190960449 PASS; H39 overall Governance FAIL structure evidence mismatch, retained. H40 pending. FEC2 product OFF."
+  "partial_summary": "H41 one source-locked real ISA-L functional test intent, not PASS: exact A8cc/B437 and frozen a5de fixture, published v5 control 484861e5 and verified config SHA256; request PLANNED. H40 Governance39191438124 PASS and central G2 39191688326 PASS; 437 CODE scalar 123/0/1 PASS. Actual native CODE437 feature test and same-VM ABBA remain NOT_RUN until Actions workflow_dispatch. No algorithm, ABI, Go, product gate change."
 }
