@@ -19,6 +19,8 @@ extern int32_t wbd_m0_embedded_go_fec2_probe_mature_firstsend(
 extern int32_t wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     uint64_t,uint32_t,uint64_t *,uint64_t *,
     uint32_t *,uint32_t *,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_fec2_probe_live_peer_attach_tun(
+    uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_fec2_probe_live_peer_consume(
     uint64_t,const unsigned char *,size_t,uint32_t *,uint64_t *,
     uint8_t *,uint32_t *,unsigned char *,size_t,size_t *);
@@ -111,6 +113,17 @@ func (b *v4EmbeddedNativeBridge) fec2ProbeKernelRawTx(
 // Validated independent original Rust client receive-side AEAD/PN bitmap,
 // using the immutable ORIGINAL Go TLS S2C direction keys. It is accessible
 // only with the private feature+epoch bound sender owner still ACTIVE.
+func (b *v4EmbeddedNativeBridge) fec2ProbeLivePeerAttachTun(fd uintptr,name string)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+       fd<3||len(name)==0||len(name)>15{return errV4Embedded}
+    buf:=[]byte(name)
+    rc:=C.wbd_m0_embedded_go_fec2_probe_live_peer_attach_tun(
+        C.uint64_t(b.handle),C.int32_t(fd),
+        (*C.uchar)(unsafe.Pointer(&buf[0])),C.size_t(len(buf)))
+    runtime.KeepAlive(buf)
+    if rc!=0{return fmt.Errorf("%w: independent client TUN=%d",errV4Embedded,int(rc))}
+    return nil
+}
 // Developer-only actual M4 packet -> independent original Go TLS key
 // receive. Same Rust FEC2LiveRx code, not a product client or synthetic ACK.
 func (b *v4EmbeddedNativeBridge) fec2ProbeLivePeerConsume(
