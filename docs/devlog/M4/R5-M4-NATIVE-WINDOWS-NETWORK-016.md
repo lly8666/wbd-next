@@ -16,3 +16,12 @@ Prior H26 `c6683c66f57b0b3cf4cc113c0d21266992d24186`, central G2 run 39225046360
 - Native Windows 2022 and 2025 where supported, plus isolated network full product only with proven isolated recovery. Record run/attempt/jobs/artifacts, preserve FAIL, and do not infer physical/Windows 10/11 or Rust product qualification from unit tests. FEC2 production OFF.
 
 State: work initiated, **016 product implementation/test NOT_RUN** until exact current Actions. Full product main merge M0-only after verified acceptance.
+
+
+## First S batch: exact pinned native donor and safe preflight
+
+- Imported the 12 immutable donor files under `r0/go_overlay/internal/windowsclient/` after matching each Git blob against main M0 delta evidence; eight exact-base replacements and four create-only files. Original `lly8666/wobuzhidao` is not modified.
+- Extended **only** the existing `assemble.py` with mutually exclusive full-file donor replace vs original anchored patch and per-entry `donor_blob` proof, source batch is exactly 12 unique Windowsclient paths. Existing twelve 015 operations unchanged. Added positive and negative source/tamper/baseline/batch regression tests in `assembly/test_assemble.py`.
+- One canonical manifest: 24 operations (12 old + 12 donor); original cold SHA `a7a82db31fe736ffedee330795a3234d358f1984`, donor SHA `6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340`; immutable manifest raw SHA256 `d51027bb5c8b0452d607fafce5612c8023af5f711fd055491842ce232246ef0e` at Git blob `0645e5bafcb9e75e8ca051faa849268e71285c36`. Rust `rust_source` in old manifest remains a **reference only** and assembler explicitly labels it; not real linked FFI.
+- Added Windows smoke `go test -c` compile-only for fully overlaid `internal/windowsclient` package. This intentionally **does not execute privileged native routing/WFP/DNS tests** on an unisolated hosted Actions runner.
+- **Not claimed:** Windows live Connect/Disconnect/Recover shell removal, durable WFP guard production readiness, native owner Rust applied, full isolation, script-less shipping or any physical product qualification. Those remain undone. New I `M4-016-WIN-NATIVE-001.json` is an early **scoped Windows compile/WinForms guard run** under the official 016 scenario, not whole-product PASS even if it succeeds. Next source iteration must implement CLI/GUI façade and real native state ownership, with fresh attested I.
