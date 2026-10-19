@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "e82202693a92418266a475f747e8cb0ff44e0d18",
+  "result": "PASS_SCOPED_RELEASE_FEC2_RECORD_GAME2_4_NATIVE_AND_GO_KERNEL_SINGLE_BLOCK_NOT_PRODUCT",
+  "scope": "M0 integrated takeover replacing missing undelivered M3-019 and M1-016 source artifacts, NOT original workers' unissued completion",
+  "decision": "DO_NOT_ENABLE_PRODUCTION_FEC2: Missing exact original-Go persistent product RX/TX source/repair/late/Stop/cross-mode integrity gate and UI/control actual APPLIED. No security or correctness gate may be inferred from green opt-in tests.",
+  "intent": "docs/devlog/M0/PLAN012-takeover-full-product-20261019.md",
+  "recovery": "docs/devlog/M0/PLAN012-takeover-active-metadata-recovery-20261019.md",
+  "missing_worker_sources_resolved_by_M0_code": {
+    "M3_019": {
+      "status": "M0_IMPLEMENTED_AND_SCOPED_ACTION_PASS",
+      "cargo_feature": "wbd-codec/fec2-product-record",
+      "engine_feature": "fec2_product_record",
+      "files": [
+        "crates/wbd-codec/Cargo.toml",
+        "crates/wbd-codec/src/record_crypto.rs",
+        "crates/wbd-codec/src/record_replay.rs",
+        "crates/wbd-codec/tests/fec2_release_record.rs"
+      ],
+      "feature_default": "OFF",
+      "result": "PASS release integration not cfg(test), three Go suite ID variants, one PN across normal-kind reject, authenticated kind2/source and kind3/repair, replay duplicate, tamper and ordinary opener rejects kind2",
+      "actual_go_tls_product_applied": "NOT_RUN"
+    },
+    "M1_016": {
+      "status": "M0_IMPLEMENTED_AND_SCOPED_ACTION_PASS",
+      "files": [
+        "crates/wbd-engine/src/v4_game_lane.rs",
+        "crates/wbd-engine/src/lib.rs"
+      ],
+      "uses_frozen": "runtime/game_shared.rs GameTx/GameRx",
+      "result": "PASS native 2/4 lane independent per-lane AEAD/PN/replay, first-arrival dedup, pressure no HOL, Stop; Go TLS and kernel driver lane wiring remain NOT_RUN",
+      "real_kernel_lanes": "NOT_RUN"
+    }
+  },
+  "frozen_previous_component_evidence": {
+    "M3_FEC2_native": "ACCEPTED old M3 13/13 ISA-L and 23/23 FEC wire, no repeat",
+    "M1_Game": "ACCEPTED prior M1 Game015 scheduler/dedup",
+    "M0_fixed_one_shot": "ACCEPTED original pinned Go TLS three-cipher one kernel FEC source/parity RS16 to TUN/UDP, STOP/OFF"
+  },
+  "attempts": [
+    {
+      "source_sha": "cedf7d3bd3bb59276b84835bac38a14bff9f1652",
+      "run_id": 39275160811,
+      "attempt": 1,
+      "job_id": 118137425925,
+      "result": "FAIL",
+      "artifact_id": 12198036343,
+      "artifact_digest_sha256": "b03b1c32337b1220644e56eb5e7340c431d89f691fd9d626467fe4be1e73a164",
+      "release_record_3ciphers": "PASS",
+      "game_adapter": "NOT_RUN_COMPILE_E0599_ARENA_RESULT",
+      "original_go_kernel": "NOT_RUN"
+    },
+    {
+      "source_sha": "e82202693a92418266a475f747e8cb0ff44e0d18",
+      "run_id": 39275492225,
+      "attempt": 1,
+      "job_id": 118138614516,
+      "result": "SUCCESS",
+      "artifact_id": 12196154342,
+      "artifact_digest_sha256": "d107a8148512c06f5744527e1abf53991e300b00868b194e7d02e8e64bbcd69a",
+      "manifest_digest_attested_source": true,
+      "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "toolchains": {
+        "rust": "1.85.1",
+        "go": "1.23.12"
+      },
+      "checks": {
+        "release_code_record_test": "1/1 PASS three suites, same PN authenticated kind2/3, replay/tamper and ordinary reject",
+        "game_shared_adapter": "2/2 PASS Game2/4 independent per-lane PN+AEAD, first-arrival once, single-lane pressure not HOL, Stop",
+        "go_real_kernel": "PASS three pinned original Go TLS suites with one feature-gated Fixed FEC source and repair kernel copied, 127B missing source reconstruct, real 99B UDP delivered over /dev/net/tun, real M2 and Fixed4->quiescent Off5",
+        "default_binary_abi": "PASS unfeatured engine CDYLIB has no exported FEC2 probe/Go test C symbol",
+        "cross_abi": "PASS R0 cross-ABI workflow 39275492398",
+        "native_abi": "PASS R0 native-ABI workflow 39275492339",
+        "r0_static_qualification": "PASS 39275492183",
+        "g2_bootstrap": "PASS 39275492352",
+        "governance": "PASS 39275492192",
+        "governance_maintenance": "PASS 39275492332",
+        "native_regression": "PASS 39275492562"
+      },
+      "limitations": [
+        "feature-gated one-shot Go TLS kernel FEC test, not persistent multi-block real network",
+        "Game2/4 per-lane native only, not original Go authenticated real independent NIC/kernel lanes",
+        "Auto mature original M2 closed-loop selected settings and true product applied not executed",
+        "Windows CLI/GUI smoke I006 PASS separately, full native Windows WFP/Rust product not tested",
+        "source-lock manifest records old fixed-kernel workflow input but actual combined workflow exact SHA and run identity are externally available; no consequence for packet outcome"
+      ]
+    }
+  ],
+  "critical_not_run": {
+    "original_go_tls_Fixed_persistent_multiblock_tx_rx": "NOT_RUN",
+    "original_go_tls_Auto_live_M2_adaptation": "NOT_RUN",
+    "original_go_tls_Game2_4_true_kernel_independent_lanes": "NOT_RUN",
+    "production_GO_CLI_or_proxy_use": "NOT_RUN",
+    "Windows_WFP_and_Rust_applied": "NOT_RUN",
+    "physical_network": "NOT_RUN",
+    "sustained_FEC_20Mbps_p99": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "One single complete M0 source-locked real original-Go TLS persistent background owner product functional Action with at least 2 actual source+repair blocks crossing kernel netns and real TUN application, true M2 Auto mode selection/revision and Game2/4 independent NIC lane loss/noHOL/Stop; only after PASS of this explicit go-live gate and CLI product readback may enable FEC2 production. No more isolated one-shot samples."
+}
