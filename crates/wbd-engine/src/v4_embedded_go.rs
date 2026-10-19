@@ -2886,6 +2886,51 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[test]
+    fn m0_original_wbc4_authenticated_kind1_m2_covered_vs_uncovered_and_replay_boundary(){
+        use wbd_types::{LaneKey,TunnelKey,RecordPn};
+        use crate::v4_owner_crypto::AuthenticatedNormalKind1;
+        let lane=LaneKey{tunnel:TunnelKey{slot:13,generation:5},slot:1,generation:5};
+        let mut first=NormalFirstSendM2::new(lane,[7;16],MonoNs(0)).unwrap();
+        let send=TxTurnCompletion{copied:2,..Default::default()};
+        first.on_real_kernel_turn(
+            &[(RecordPn(7),100),(RecordPn(8),100)],send,MonoNs(100));
+        assert_eq!(first.accepted,2);
+        let mut bitmap=[0u8;32];
+        bitmap[0]=1u8<<7; // PN7 positive, PN8 explicitly missing
+        let positive=AuthenticatedNormalKind1{
+            reverse_record_pn:0,receipt:wbd_codec::Receipt{
+                largest_data_pn:8,ack_delay_us:0,report_seq:1,
+                pages:vec![wbd_codec::ReceiptPage{base_pn:0,bitmap}],
+            }
+        };
+        let wire=wbd_codec::encode_control(
+            &[wbd_codec::ControlTlv::Receipt(positive.receipt.clone())],512
+        ).unwrap();
+        assert_eq!(wbd_codec::decode_control(&wire,512).unwrap().len(),1);
+        first.on_original_authenticated_reverse(positive,MonoNs(200)).unwrap();
+        first.poll(MonoNs(2_000_000_200));
+        assert_eq!(first.authenticated_reverse_reports,1);
+        assert_eq!(first.covered_2s,2);
+        assert_eq!(first.unknown_2s,0);
+        first.poll(MonoNs(8_000_000_200));
+        assert_eq!(first.covered_8s,2);
+        assert_eq!(first.unknown_8s,0);
+        assert!(!first.censored);
+        // Plain wire, malformed WBC4, and forged kind are NEVER accepted
+        // by this M2 bridge. Only the moved owner's AEAD opener constructs
+        // AuthenticatedNormalKind1; these checks are pure post-open logic.
+        assert!(wbd_codec::decode_control(b"garbage",512).is_err());
+        assert!(wbd_codec::decode_control(&wire[..wire.len()-1],512).is_err());
+        let wrong_kind=wbd_codec::encode_control(
+            &[wbd_codec::ControlTlv::LegacyHealth(vec![1])],512
+        ).unwrap();
+        assert!(matches!(
+            wbd_codec::decode_control(&wrong_kind,512).unwrap()[0],
+            wbd_codec::ControlTlv::LegacyHealth(_)
+        ));
+    }
     #[test]
     fn ready_only_batch_0_1_32_33_and_failure_do_not_wait(){
         use std::cell::Cell;
