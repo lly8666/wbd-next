@@ -39,7 +39,7 @@ fn m1_game015_same_vm_game_receive_fixed_scenario(){
         let mut buffer=arena.allocate().expect("returned previous loan");
         buffer.writable()[0]=(seq%251) as u8;
         match rx.first_delivery(scope,lane,LogicalPacketId(id),buffer){
-            Ok(original)=>{
+            Ok(mut original)=>{
                 assert_eq!(original.writable()[0],(seq%251) as u8);
                 first+=1;
                 std::hint::black_box(&original);
