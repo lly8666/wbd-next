@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6c2b9bd03250938c933ae77364e89348509c9d27",
+  "result": "PASS_SCOPED_LINUX_ORIGINAL_GO_FIXED_AND_AUTO_STARTUP_APPLIED_AND_M4_REAL_CONNECT_STOP",
+  "scope": "Linux Ubuntu24.04 Actions original TLS verified Go/Rust kernel FEC real four-block source+parity, missing-source RS16 client TUN/UDP; M2 authentic C2S 2s matured Fixed or Auto starter revision applied; M4 real client/server Stop/owned TUN cleanup",
+  "actions": [
+    {
+      "source_sha": "a31e2b89d20507aceb8e03cc717f7729eb1c9eda",
+      "run_id": 39307319244,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "artifact_id": 12214277535,
+      "digest": "sha256:75b1eb5fd3f54839966a1dd7c6da170498f09eca144e946c03d2d45854882756",
+      "observed": "M4 Linux original TLS connection real FEC client UDP 4, native Stop repeat stale packet/feedback rejected, server Stop, both Linux owned TUN interfaces removed"
+    },
+    {
+      "source_sha": "e4b69ecd0e4375bb2fbccdf34948af099ed038ad",
+      "run_id": 39308029694,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "artifact_id": 12215340294,
+      "digest": "sha256:7e8565ae8fea754c37751423b124110bd47952954d4cae82f0aa22f4a24cacef",
+      "observed": "Fixed original-Go TLS revision4 from PENDING to APPLIED ONLY after actual kernel source+parity definite-prefix, native client UDP and C2S authenticated M2 mature 2s positive/correct denominator"
+    },
+    {
+      "source_sha": "6c2b9bd03250938c933ae77364e89348509c9d27",
+      "run_id": 39308785179,
+      "attempt": 1,
+      "result": "SUCCESS",
+      "artifact_id": 12213764301,
+      "digest": "sha256:bb2264982119b891a02585177423717dfd77e0186be4c83a6d25a0be7c40b5f3",
+      "job_id": 118252662822,
+      "governance_run": 39308785317,
+      "governance_result": "SUCCESS",
+      "maintenance_run": 39308785126,
+      "maintenance_result": "SUCCESS",
+      "observed": "Fixed and Auto initial-profile separate original Go TLS source-locked netns sessions; each actual 4 source blocks, repair/loss RS16 real native client UDP; original C2S authenticated first-send M2 2s maturity and rev4 applied; separate M4 Stop and cleanup"
+    }
+  ],
+  "authentic_linux_qualifications": {
+    "source_and_parity_real_M4_kernel": "PASS",
+    "client_s2c_AEAD_replay_and_RS16": "PASS",
+    "real_application_udp_missing_source": "PASS_4_OF_4_PER_SESSION",
+    "real_authenticated_C2S_M2_reverse": "PASS",
+    "Fixed_rev4_APPLIED": "PASS",
+    "Auto_initial_profile_rev4_APPLIED": "PASS_NOT_DYNAMIC_ADAPTATION",
+    "Stop_client_server": "PASS",
+    "Stop_idempotent_and_old_rx_rejected": "PASS",
+    "both_scoped_TUN_devices_removed": "PASS",
+    "native_3_cipher_baseline": "PASS_SCOPED_OLD_ORIGINAL_GO_PROBE",
+    "Game_2_and_4_independent_AEAD_PN_and_cross_lane_first_delivery": "PASS_NATIVE_ONLY",
+    "Game_real_independent_M4_kernel_lanes": "NOT_RUN",
+    "Auto_dynamic_policy_512_mature_samples": "NOT_RUN",
+    "Linux_Go_product_CLI_connect_disconnect_release_config": "NOT_RUN",
+    "production_default_FEC2": "OFF",
+    "production_Game": "OFF",
+    "Windows_product": "NOT_RUN_DEFERRED_BY_USER",
+    "physical": "NOT_RUN",
+    "sustained_20Mbps": "NOT_RUN"
+  },
+  "M4_task": {
+    "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
+    "published_on_main": "bdff5af79238a415c1705e4a43758bdf03f328de",
+    "branch": "work/m4-r1-platform",
+    "worker_cursor_still_old_Windows_H41": true,
+    "old_Windows_I010": "HISTORICAL_PLANNED_NOT_DISPATCHED",
+    "shared_Actions_entry": ".github/workflows/m0-plan012-combined-functional.yml",
+    "shared_manual_trigger": "workflow_dispatch ON MAIN, exact SHA of invocation; no extra Linux workflow",
+    "worker_owned_future_test_file": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+    "shared_original_Go_Stop_contract": "stop ingress->join Rust kernel TX/RX borrows->destroy FEC owner and client RX->close owned FD->Go cleanup native TUN; second Stop idempotent; stale generation data/M2 denied",
+    "worker_end_to_end_evidence": "M0 shared original source PASS; worker branch-specific test/source still NOT_RUN, no fabricated H42"
+  },
+  "prior_failures": [
+    {
+      "run_id": 39304462492,
+      "source_sha": "420e02b03888e4e7e6d0e1830342c3f3d8da842a",
+      "result": "FAIL",
+      "cause": "GitHub external read HTTP403 rate_limit, not native FEC or Stop"
+    },
+    {
+      "run_id": 39299800690,
+      "result": "FAIL",
+      "cause": "same test netns martian/rp_filter client UDP timeout; recovered in later fixed source"
+    }
+  ],
+  "release_decision": "Do not enable production FEC2 or GameMode yet. Linux-only scope is authorized, but real independent 2/4 kernel Game lanes and production CLI/cold-control capability are NOT_RUN; Auto dynamic adaptation also separate NOT_RUN. Stop and Fixed/Auto startup evidence must not be extended to these unchecked product claims.",
+  "next_action": "Finish production Go Linux client/CLI cold feature7 opt-in and Game2/4 independent real Linux M4 lane kernel delivery using same original authenticated session, then run one exact SOURCE combined real network/Stop Actions and activate only features meeting their gates."
+}
