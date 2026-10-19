@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 187,
-  "checkpoint_sha": "04060c7f85b9adb097fc4dfccca1ebf47d283f53",
+  "sequence": 188,
+  "checkpoint_sha": "0f252247e234a2f4b3246ec924629377778346da",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 real original-Go TLS scoped FEC Fixed request→pending→real M1/M3/M4 kernel source+repair applied→M2 auth return→quiescent OFF: one-shot opt-in native integrated PASS on 3 ciphers. Next convert this proven behavior to continuous genuine product owner; M1 Game016 and M3 release-record019 remain independent. Game2/4, Auto and release/physical NOT_RUN.",
-  "why_now": "Recovered H186 and Actions checked. S225 real pending intent, S226–S229 original Go/native protected Fixed pending source1479881a Actions39260828052 SUCCESS with triple cipher + old Normal real kernel, artifact12189967448. S230 real native apply intent, S231–S234 source06fabb4f Actions39262052842 SUCCESS source+parity actual copied, original RS16 recovered UDP via real TUN, artifact12191782476; historical Governance39262052815 FAIL HTTP403 retained. S235 quiescent OFF intent, S236–S238 source808c132c Actions39262936232 SUCCESS job118095029781 artifact12191068595 ZIP SHA256 ce91456c6dfdf5f7099b0137408b1132320c0834d8de0cd0379d24a57f2b8711: 3 original TLS suites Fixed4 pending→kernel copied applied, sender shadow outstanding OFF5 denied, genuine M2 receipt retirement OFF5 applied and old Fixed readback gone; Go real kernel recovered 127B IPv4 and 99B UDP, M2 genuine reverse, tamper/Stop denied. Main Governance39262936403 SUCCESS. S239 reviewed evidence04060c, Governance39263590820 SUCCESS. M3 FEC native 13/13 and wire23/23 frozen acceptance reused, not retested. Continuous product mode still unsupported.",
-  "done_when": "Original Go credential-checked real Fixed/Auto and Game2/4 source-locked continuous product vertical slice with actual data+parity/recovery, true applied/readback/rejected, real lane independent delivery, M2 and Stop/MTU/noHOL, bounded real netns application delivery. Keep default FEC OFF and Game off, CLI/GUI/Windows/physical/RTT p99 NOT_RUN until proven.",
-  "next_action": "Integrate frozen M3-019 feature-gated release-record API into same original Go TLS scoped continuous Rust background-owner Fixed RX/TX (not one-shot probe): real multi-block source+parity M1/M3/M4, actual TUN app recovery and requested→applied/Stop; one functional Actions batch only; then Auto genuine M2 quality, then M1-016 Game2/4 real independent lanes. Do not merge floating worker code or enable default product prematurely.",
+  "current_task": "PLAN012 original-Go TLS FEC Fixed: M0 multi-block source-first M1 Fec2Owner + M3 StagedParity composer now integrated into actual single-block Rust native kernel source+repair Go APPLIED/M2/Stop path. Parallel M1-016 Game real-lane and M3-019 release-record remain registry-assigned but no frozen SOURCE yet. Persistent original owner RX/TX multi-block product NOT_RUN.",
+  "why_now": "After H187 only one H187 cursor commit plus 10 M0-owned S240–S249 linear one-path changes; individually checked all 10 GitHub commit parents/paths. Native source7b5533d Actions39266293420 SUCCESS 2/2 bounded 3-block, four-rows quantum, Stop, artifact12192702738. Initial consumer9f5d77e run39266993450 FAILED Rust E0412 before network (preserved). Corrected source13b733378 Actions39267476054 SUCCESS three-cipher original Go TLS real M4 kernel one source+repair block, recovered real TUN UDP, native Fixed APPLIED only after copy and OFF only after M2; artifact12193558076; Gov39267476233 SUCCESS. Evidence S250 0f252247. Worker dispatcher39264433258 FAIL wrong role/task/epoch/revision, new M1/M3 cursors not advanced. Default FEC2 OFF.",
+  "done_when": "PLAN012 real original-Go authenticated client/server FEC Fixed multi-block persistent RX/TX and recovered TUN app across loss, true Auto matured M2 applied closed loop, Game2/4 independently qualified lanes and Stop/MTU/no HOL, exact-source Actions. Native component and feature-only one-shot not product. Preserve original failures, Windows/physical/p99 NOT_RUN.",
+  "next_action": "Consume exact frozen M3-019 release record source when worker delivers; M0 connect current FixedStream to original Go TLS persistent Rust background TX and moved original RX AEAD/replay to genuine multi-block real TUN/UDP delivery, run exactly one source-locked real kernel functional Action, then Auto and real Game2/4; no product default toggle before proof.",
   "unverified": true,
-  "last_tested_source": "808c132c6ce261dd5b79f362512f811f0a7e2f5f",
+  "last_tested_source": "13b7333789ba20cdf30032172915ecab1fe0e972",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-FIXED-real-Go-TLS-applied-kernel-source-repair-Off-20261019.json"
+    "docs/evidence/M0/PLAN012-FixedStream-native-multiblock-and-original-Go-kernel-consumption-20261019.json"
   ],
   "context_refs": [
     "docs/decisions/M0-FEC-GAME-product-lane-integration-2026-10-19.md",
-    "docs/devlog/M0/PLAN012-FIXED-KERNEL-COPY-APPLIED-intent-20261019.md",
-    "docs/devlog/M0/PLAN012-FIXED-OFF-QUIESCENCE-intent-20261019.md",
+    "docs/evidence/M0/PLAN012-FIXED-real-Go-TLS-applied-kernel-source-repair-Off-20261019.json",
+    "docs/devlog/M0/PLAN012-fixed-stream-kernel-compile-recovery-20261019.md",
     "docs/evidence/M0/PLAN010-M1-M3-accepted-M4-016-handoff-20261019.json"
   ],
   "open_requests": [],
-  "partial_summary": "H187 complete scoped M0 PLAN012 developer FEC Fixed native real kernel source+repair applied and subsequent authenticated M2 settlement allowing genuine OFF verified at SOURCE808c Action39262936232 3 suites SUCCESS artifact12191068595, Governance39262936403 SUCCESS and S239 evidence. Old failed Gov runs HTTP403 retained. M3 native codec accepted unchanged. Product continuous Fixed, Auto and Game2/4 not run; default FEC2 OFF; next consumer M3 release-record feature in multi-block continuous owner only."
+  "partial_summary": "H188 M0 FixedStream multi-block composer and bounded source-first native tests 2/2 PASS (7b5533d), real original Go TLS/M1/M3/M4 kernel consumer one-block new implementation PASS source13b7333 (3 ciphers, TUN app, M2/OFF). Initial E0412 first try FAIL9f5d remains. Main evidence S250. M1/Game016 and M3/FEC record019 assigned but role cursors still prior tasks, unverified/not frozen. Product continuous Fixed, Auto, Game2/4 remain NOT_RUN, FEC2 OFF. One next action M3 frozen API→true original Rust background RX/TX multi-block real netns."
 }
