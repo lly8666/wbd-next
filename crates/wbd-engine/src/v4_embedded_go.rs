@@ -202,8 +202,8 @@ struct NormalFirstSendM2 {
     epoch:[u8;16],
     state:wbd_recovery::MatureFirstSend,
     accepted:u64,unknown_2s:u64,unknown_8s:u64,
-    covered_2s:u64,covered_8s:u64,authenticated_reverse_reports:u64,
-    censored:bool,
+    covered_2s:u64,covered_8s:u64,positive_2s:u64,
+    authenticated_reverse_reports:u64,censored:bool,
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 impl NormalFirstSendM2 {
@@ -216,7 +216,8 @@ impl NormalFirstSendM2 {
         let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:4096},now)
             .map_err(|_|INVALID)?;
         Ok(Self{lane,route,epoch,state,accepted:0,unknown_2s:0,unknown_8s:0,
-            covered_2s:0,covered_8s:0,authenticated_reverse_reports:0,censored:false})
+            covered_2s:0,covered_8s:0,positive_2s:0,
+            authenticated_reverse_reports:0,censored:false})
     }
     fn poll(&mut self,now:MonoNs){
         match self.state.on_due(now){
@@ -227,6 +228,8 @@ impl NormalFirstSendM2 {
                     result.window_8s.uncovered);
                 self.covered_2s=self.covered_2s.saturating_add(
                     result.window_2s.covered());
+                self.positive_2s=self.positive_2s.saturating_add(
+                    result.window_2s.unambiguous_positive);
                 self.covered_8s=self.covered_8s.saturating_add(
                     result.window_8s.covered());
                 if result.capacity_limited{self.censored=true}
@@ -3439,7 +3442,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
         .max(e.fixed_applied.map_or(0,|(_,r)|r));
     if revision<=latest{return INVALID}
     #[cfg(feature="m0_fec2_owner_probe")]
-    if e.fixed_applied.is_some(){
+    if e.fixed_applied.is_some() && e.fec2_receipt_sender.is_some(){
         // Real source/repair is copied, but until all immutable original
         // sender shadows are settled by genuine M2 acknowledgments, even
         // an authenticated OFF request is not quiescent. Never rewrite
@@ -3560,6 +3563,46 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
     OK
 }
 
+// One authenticated original-Go TLS revision may become APPLIED only when
+// M4 definitely copied source+parity and the SAME moved C2S AEAD opener
+// delivered M2, with a genuinely matured/covered first-send denominator.
+// This is NOT an external client-supplied success boolean.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
+    h:u64,epoch:*const u8,len:usize,revision:u64
+)->i32{
+    if revision==0{return INVALID}
+    let Ok(epoch)=verified_normal_off_epoch(epoch,len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch)||
+        e.protected_features!=7||
+        !e.fixed_pending.is_some_and(|(_,r)|r==revision)||
+        e.fec2_copied_source==0||e.fec2_copied_repair==0||
+        !e.fec2_staged_pns.is_empty(){return BAD_STAGE}
+    if let Some(stream)=e.fec2_live_tx.as_ref(){
+        let report=stream.report();
+        if report.open_bytes!=0||report.charged_bytes!=0||
+           report.outstanding_jobs!=0||report.queued_jobs!=0{
+            return BAD_STAGE
+        }
+    }else{return BAD_STAGE}
+    let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
+    let covered={
+        let Ok(mut m2)=first.lock()else{return BAD_STAGE};
+        m2.poll(loop_now());
+        m2.authenticated_reverse_reports>0 &&
+        m2.positive_2s>0 && !m2.censored &&
+        m2.unknown_2s==0 && m2.covered_2s>=e.fec2_copied_source
+    };
+    if !covered{return BAD_STAGE}
+    let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
+    e.fixed_applied=Some(policy);
+    e.fec2_rx_admit.store(true,Ordering::Release);
+    OK
+}
 // Explicit coverage counters are separate from UNKNOWN and kernel copied.
 // A positive number requires actual original C2S kind1 received, opened
 // with the moved M3 replay state and pinned into M2, not an RX count.
