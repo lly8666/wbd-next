@@ -104,7 +104,7 @@ jobs:
           for repo,sha in ((legacy,legacy_sha),(overlay,m4_sha)):
               assert subprocess.check_output(["git","-C",str(repo),"rev-parse","HEAD"],text=True).strip()==sha
           def blob_sha(payload):
-              return hashlib.sha1(b"blob "+str(len(payload)).encode()+b"\\0"+payload).hexdigest()
+              return hashlib.sha1(b"blob "+str(len(payload)).encode()+b"\0"+payload).hexdigest()
           def extract(repo,source,path,digest):
               p=pathlib.PurePosixPath(path)
               assert not p.is_absolute() and all(x not in ("",".","..") for x in p.parts) and "\\" not in path
