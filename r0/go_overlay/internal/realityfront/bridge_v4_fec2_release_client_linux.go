@@ -15,6 +15,11 @@ extern int32_t wbd_m0_embedded_go_release_client_fec2_prepare(
 extern int32_t wbd_m0_embedded_go_release_client_fec2_receive(
     uint64_t,const unsigned char *,size_t,const unsigned char *,size_t,
     uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_release_client_fec2_feedback_due(
+    uint64_t,const unsigned char *,size_t,
+    unsigned char *,size_t,size_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_release_client_fec2_feedback_result(
+    uint64_t,const unsigned char *,size_t,uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_release_client_fec2_stop(
     uint64_t,const unsigned char *,size_t);
 */
@@ -86,6 +91,43 @@ func (r *v4Fec2ReleaseClientRx) consumeAuthenticatedKernelRecord(
     return v4Fec2NativeReceipt{
         KernelDelivered:uint32(copied),Recovered:uint32(recovered),
     },nil
+}
+// This is a prepared encrypted CONTROL record, never an operator
+// APPLIED event. Actual client raw kernel TX must copy it and report a
+// definite-prefix result; unknown/failed bytes cannot credit M2.
+type v4Fec2ClientFeedback struct {
+    RecordPN uint64
+    Ciphertext []byte
+}
+func (r *v4Fec2ReleaseClientRx) feedbackDue()(v4Fec2ClientFeedback,error){
+    var empty v4Fec2ClientFeedback
+    if r==nil||r.stopped||r.owner==0{return empty,ErrAdmissionParams}
+    wire:=make([]byte,2048)
+    var n C.size_t
+    var pn C.uint64_t
+    rc:=C.wbd_m0_embedded_go_release_client_fec2_feedback_due(
+        C.uint64_t(r.owner),(*C.uchar)(unsafe.Pointer(&r.epoch[0])),
+        C.size_t(16),(*C.uchar)(unsafe.Pointer(&wire[0])),
+        C.size_t(len(wire)),&n,&pn)
+    if rc!=0||int(n)>len(wire){
+        return empty,fmt.Errorf("%w: M2 client due=%d",errV4Embedded,int(rc))
+    }
+    if n==0{return empty,nil}
+    return v4Fec2ClientFeedback{RecordPN:uint64(pn),
+        Ciphertext:wire[:int(n)]},nil
+}
+func (r *v4Fec2ReleaseClientRx) feedbackKernelResult(
+    pn uint64,outcome uint32,
+)error{
+    if r==nil||r.stopped||r.owner==0||outcome>2{
+        return ErrAdmissionParams
+    }
+    rc:=C.wbd_m0_embedded_go_release_client_fec2_feedback_result(
+        C.uint64_t(r.owner),(*C.uchar)(unsafe.Pointer(&r.epoch[0])),
+        C.size_t(16),C.uint64_t(pn),C.uint32_t(outcome))
+    if rc!=0{return fmt.Errorf("%w: client real M2 kernel result=%d",
+        errV4Embedded,int(rc))}
+    return nil
 }
 // Stop is terminal; an incomplete Rust kernel borrowing drain retains
 // ownership so Go can retry and does not issue a false Disconnect.
