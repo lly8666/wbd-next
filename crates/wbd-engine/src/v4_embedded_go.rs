@@ -2842,12 +2842,31 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if !verified_normal_off_owner(&e,&epoch){return BAD_STAGE}
-    if revision<=e.normal_off_applied_revision{return INVALID}
-    // This actual owner has only Normal/OFF. Persist the exact successful
-    // OFF revision in its own generation; readback is separate from intent.
+    // Reject an old OFF revision relative to either a pending or an
+    // already kernel-copied original-Go Fixed policy. A stale operator
+    // intent can never wipe more recent data-plane authority.
+    let latest=e.normal_off_applied_revision
+        .max(e.fixed_pending.map_or(0,|(_,r)|r))
+        .max(e.fixed_applied.map_or(0,|(_,r)|r));
+    if revision<=latest{return INVALID}
+    #[cfg(feature="m0_fec2_owner_probe")]
+    if e.fixed_applied.is_some(){
+        // Real source/repair is copied, but until all immutable original
+        // sender shadows are settled by genuine M2 acknowledgments, even
+        // an authenticated OFF request is not quiescent. Never rewrite
+        // the Go-facing ACK simply to silence the FEC scheduler.
+        if e.arena.report().loaned!=0||
+            e.fec2_receipt_sender.as_ref().is_some_and(
+                |s|s.shadow.outstanding()!=0
+            ){return BAD_STAGE}
+        if e.owner.apply_fec2_probe_quiescent_off(epoch,revision).is_err(){
+            return BAD_STAGE
+        }
+    }
+    // Only an authenticated, quiescent original owner can publish OFF.
     e.normal_off_applied_revision=revision;
-    e.fixed_pending=None; // verified OFF cancels any unstarted Fixed intent
-    e.fixed_applied=None; // and releases any earlier private-source applied status
+    e.fixed_pending=None;
+    e.fixed_applied=None;
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
