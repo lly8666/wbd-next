@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "6ee471c79f0e1f08b6b4d77a961d44d15cbc842d",
+  "result": "SCOPED_REAL_LINUX_NORMAL_OFF_NETEM_OBSERVATIONAL_PASS_FEC_AND_GAME_NOT_RUN",
+  "qualification": "ONE_SHORT_SOURCE_LOCKED_REAL_GO_TLS_RUST_NORMAL_OFF_UNDER_KERNEL_LOSS",
+  "intent": "docs/devlog/M0/PLAN011-loss-matrix-user-start-intent-20261019.md",
+  "workflow": ".github/workflows/m0-network-loss-matrix.yml",
+  "run_id": 39250263364,
+  "attempt": 1,
+  "run_result": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/39250263364",
+  "source_locked_build": {
+    "job_id": 118052049580,
+    "conclusion": "success",
+    "artifact_id": 12184977486,
+    "zip_sha256": "548c6b7265e4e2f54a95ae992c96963a4f675af261b03f9682e187a2175bf9b9",
+    "legacy_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "features": "m0_v4_probe,m0_v4_embedded_go",
+    "same_binary_reused_for_all_loss_jobs": true,
+    "normal_tls_config_stop_baseline": "PASS"
+  },
+  "normal_0_baseline": {
+    "run_id": 39246776255,
+    "source_sha": "b6193d7d4fd3c286efc9653c6e2be88f21e385d3",
+    "result": "SCOPED_PASS",
+    "new_source_zero_loss": "NOT_REPEATED_BASELINE_ONLY"
+  },
+  "scope": {
+    "runner": "ubuntu-24.04",
+    "network": "real isolated Linux netns loopback with tc netem; original Go TLS authenticated C2S encrypted DATA + Rust original owner + actual kernel TUN/RAW S2C Go peer; three ciphers ChaCha/AES128/AES256",
+    "mode": "Normal_OFF",
+    "netem_loss_percent_values": [
+      1,
+      5,
+      10,
+      20,
+      30
+    ],
+    "per_loss_packets_per_direction": 36,
+    "per_cipher_packets_per_direction": 12,
+    "expected_results": "OBSERVATION_NOT_ALL_PACKETS_DELIVERED",
+    "high_loss_full_delivery": "NOT_EXPECTED",
+    "case_count": 5,
+    "cipher_subcases_per_loss": 3,
+    "scoped_cases": 15
+  },
+  "cases": [
+    {
+      "loss_config_pct": 1,
+      "job_id": 118052634236,
+      "conclusion": "success",
+      "kernel_dropped": 1,
+      "c2s_sent": 36,
+      "c2s_delivered": 36,
+      "c2s_missing": 0,
+      "s2c_sent": 36,
+      "s2c_delivered": 35,
+      "s2c_missing": 1,
+      "artifact_id": 12185231968,
+      "zip_sha256": "eba43c97294e0f70aab28b44de98a2ff961dde3ac48ce2b478bb133b6feab152"
+    },
+    {
+      "loss_config_pct": 5,
+      "job_id": 118052634287,
+      "conclusion": "success",
+      "kernel_dropped": 7,
+      "c2s_sent": 36,
+      "c2s_delivered": 35,
+      "c2s_missing": 1,
+      "s2c_sent": 36,
+      "s2c_delivered": 33,
+      "s2c_missing": 3,
+      "artifact_id": 12184942440,
+      "zip_sha256": "d5df3c2a3463f2d04a0cd1343deee5c22d803fb83b7655cc8055fe856a49fd4d"
+    },
+    {
+      "loss_config_pct": 10,
+      "job_id": 118052634201,
+      "conclusion": "success",
+      "kernel_dropped": 16,
+      "c2s_sent": 36,
+      "c2s_delivered": 33,
+      "c2s_missing": 3,
+      "s2c_sent": 36,
+      "s2c_delivered": 32,
+      "s2c_missing": 4,
+      "artifact_id": 12185077269,
+      "zip_sha256": "8afa393b5e596ca0e81b949f40a10cb520da04729fd7e1c02141b5e1dfc7d6d0"
+    },
+    {
+      "loss_config_pct": 20,
+      "job_id": 118052634453,
+      "conclusion": "success",
+      "kernel_dropped": 33,
+      "c2s_sent": 36,
+      "c2s_delivered": 27,
+      "c2s_missing": 9,
+      "s2c_sent": 36,
+      "s2c_delivered": 27,
+      "s2c_missing": 9,
+      "artifact_id": 12184604641,
+      "zip_sha256": "7c20b2730049082246fc72ba93ac5aad0fa8c885c549329ec989edf6a49d542a"
+    },
+    {
+      "loss_config_pct": 30,
+      "job_id": 118052634237,
+      "conclusion": "success",
+      "kernel_dropped": 44,
+      "c2s_sent": 36,
+      "c2s_delivered": 26,
+      "c2s_missing": 10,
+      "s2c_sent": 36,
+      "s2c_delivered": 18,
+      "s2c_missing": 18,
+      "artifact_id": 12185331851,
+      "zip_sha256": "22ccde30efea5eb0577806a6989c3187514f12d7dc7c7117d6291200cd77f34c"
+    }
+  ],
+  "critical_interpretation": {
+    "high_loss_result": "30pct_config S2C 18 of 36 arrived; 20pct S2C 27 of 36; no retransmission or FEC recovery was applied; these are functional loss observations, not robust network PASS",
+    "kernel_qdisc_drop_includes_nonapp_packets": true,
+    "configured_netem_rate_not_equal_realized_business_loss_rate": true,
+    "C2S_metrics_count_application_deliveries": "Yes original Go→Rust→TUN app",
+    "S2C_metrics_count_authenticated_original_peer": "Yes original Go TLS AEAD validates Rust outgoing received records",
+    "data_error_or_stop_failures": "NONE_REPORTED_FIVE_JOBS",
+    "throughput_and_p99": "NOT_MEASURED",
+    "network_random_seed_repeatability": "ONE_ATTEMPT_ONLY",
+    "full_long_lived_proxy": "NOT_RUN"
+  },
+  "unqualified_modes": {
+    "artifact_id": 12185730600,
+    "zip_sha256": "09453b4fc784b333355e200c8ed6daf11ccb4bb5ee2da9296e70f9eadc6442b7",
+    "test_executed": false,
+    "status": "NOT_RUN_REAL_MODE_AND_APPLIED_NOT_AVAILABLE",
+    "modes": [
+      "FEC_Fixed_ON",
+      "FEC_Auto_ON",
+      "Game_2lane",
+      "Game_4lane"
+    ],
+    "reserved_loss_percent": [
+      0,
+      1,
+      5,
+      10,
+      20,
+      30
+    ],
+    "cases": 24,
+    "why": "Original Go→Rust real Normal/OFF mode only. M3 ISA-L functional PASS and M1 Game dedup PASS do not establish original Go product FEC fixed/auto or multi-lane Game applied & wire enabled.",
+    "FEC_product": "OFF"
+  },
+  "source_actions": [
+    {
+      "run_id": 39250263476,
+      "status": "success",
+      "scope": "main Governance exact SOURCE"
+    },
+    {
+      "run_id": 39250263524,
+      "status": "success",
+      "scope": "governance maintenance exact SOURCE"
+    }
+  ],
+  "worker_ownership": {
+    "M4": "Windows 016 in independent development, not modified or dispatched by M0",
+    "M1": "Game015 component already accepted, no task growth",
+    "M3": "native FEC2 component accepted, perf formal inconclusive; no task growth"
+  },
+  "next_action": "M0 wire REAL original Go protected FEC Fixed ON staging/applied and honest S2C parity producer + RX decoder into actual owner first. Then run exactly same loss=0/1/5/10/20/30 Linux netns with real FEC source+repair-delivered payload; Auto only after Fixed and M2 feedback drive actual grant; Game after real 2/4 lane sender and dedup. Preserve Normal results separately, FEC2 default OFF and product qualification NOT_RUN."
+}
