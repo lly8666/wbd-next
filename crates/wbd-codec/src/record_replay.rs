@@ -211,7 +211,7 @@ impl ReplayProtectedLaneRx {
     /// window as ordinary LINK/HEALTH. An AEAD-valid FEC2 source/repair
     /// cannot bypass PN uniqueness just because its authenticated kind is
     /// different. No test-only extra replay object or Go KDF is created.
-    #[cfg(any(test,feature = "m0-fec2-record-probe"))]
+    #[cfg(any(test,feature = "m0-fec2-record-probe", feature = "fec2-product-record"))]
     pub fn open_unique_with_fec2_after_admission_in_place<'a>(
         &mut self,wire:&'a mut [u8]
     )->Result<OpenedRecord<'a>,UniqueOpenError>{

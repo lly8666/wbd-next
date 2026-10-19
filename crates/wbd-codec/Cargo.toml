@@ -8,6 +8,9 @@ license.workspace = true
 [features]
 # Opt-in code-only FEC2 record probe; never part of default public ABI.
 m0-fec2-record-probe = []
+# Release-code FEC2 record primitives, opt-in ONLY after M0 original-Go TLS
+# grant; not a feature grant, policy ACK, or default product enablement.
+fec2-product-record = []
 native-isal = ["dep:wbd-isal-safe", "wbd-isal-safe/native"]
 
 [dependencies]

@@ -11,7 +11,7 @@ use chacha20::ChaCha20;
 use aes::{Aes128, Aes256};
 use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
 
-#[cfg(any(test, feature = "m0-fec2-record-probe"))]
+#[cfg(any(test, feature = "m0-fec2-record-probe", feature = "fec2-product-record"))]
 use crate::fec_v2::{AUTHENTICATED_FEC2_SOURCE_KIND,AUTHENTICATED_FEC2_REPAIR_KIND};
 
 use crate::record_frame::{
@@ -216,7 +216,7 @@ impl LaneTxCrypto {
     /// always rejects kinds 2/3, and default production omits this API.
     /// Sharing self preserves one genuine PN allocator across old and V2
     /// record kinds. No second AEAD context or packet numbering path.
-    #[cfg(any(test, feature = "m0-fec2-record-probe"))]
+    #[cfg(any(test, feature = "m0-fec2-record-probe", feature = "fec2-product-record"))]
     pub fn seal_fec2_after_admission_in_place(
         &mut self, kind: u8, wire: &mut [u8], payload_len: usize, padding: usize,
     ) -> Result<(u64,usize),CryptoError> {
@@ -311,7 +311,7 @@ impl LaneRxCrypto {
     /// has been bound to this lane. Returns the same authenticated borrow;
     /// PN replay admission and inner FEC scope parsing remain caller duties.
     /// Old opener remains default and rejects even VALID encrypted kind2/3.
-    #[cfg(any(test,feature = "m0-fec2-record-probe"))]
+    #[cfg(any(test,feature = "m0-fec2-record-probe", feature = "fec2-product-record"))]
     pub fn open_with_fec2_after_admission_in_place<'a>(
         &self, wire:&'a mut [u8],
     )->Result<OpenedRecord<'a>,CryptoError>{
