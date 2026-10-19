@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "8f4bc1772a412b230a2379e91e53246fa29fd148",
+      "result_blob": "f153abcda42f46d595fc31223f53f88ec0bc0c49",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -40,6 +40,46 @@
         {
           "find": "\tdefer startQualificationCPUProfile()()",
           "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        },
+        {
+          "find": "\t\"os/exec\"\n",
+          "replace": ""
+        },
+        {
+          "find": "\t\tscriptPath         = flag.String(\"network-script\", defaultWindowsNetworkScript(), \"Windows network Apply/Cleanup script; default beside executable\")",
+          "replace": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif *recoverNetwork {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn windowsclient.N4NativeRecoverState(ctx, *statePath)\n\t}\n"
+        },
+        {
+          "find": " || strings.TrimSpace(*scriptPath) == \"\"",
+          "replace": ""
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\t// No legacy script fallback is permitted on original Windows runtime.\n\t// Block BEFORE TLS, TUN or NIC changes while production WFP/Stop are unwired.\n\tif err := windowsclient.N4NativeNetworkReady(context.Background()); err != nil {\n\t\treturn err\n\t}\n\tdefer startQualificationCPUProfile()()"
+        },
+        {
+          "find": "\tcleanupNetwork, err := applyOwnedNetwork(ctx, networkPlan, *scriptPath)",
+          "replace": "\tcleanupNetwork, err := applyOwnedNetwork(ctx, networkPlan)"
+        },
+        {
+          "find": "\t// Register owned rollback even when Apply fails or GUI Stop cancels a\n\t// long-running PowerShell route mutation. Cleanup receives an independent\n\t// bounded context so an already-cancelled parent cannot skip it.",
+          "replace": "\t// Native-only owned rollback: no shell fallback and no early cleanup\n\t// before the authenticated network owner has been stopped."
+        },
+        {
+          "find": "\t// Control plane still uses legacy owned PowerShell until native\n\t// lease/MTU/DNS/WFP/route Apply+Recover is fully qualified.\n\tlog.Printf(\"WBD_WINDOWS_CAPTURE compact_routes=%d direct_tcp=userspace_gvisor direct_udp=native network_control=legacy_powershell\",len(networkPlan.CaptureRoutes))",
+          "replace": "\tlog.Printf(\"WBD_WINDOWS_CAPTURE compact_routes=%d direct_tcp=userspace_gvisor direct_udp=native network_control=native_only\",len(networkPlan.CaptureRoutes))"
+        },
+        {
+          "find": "// applyOwnedNetwork uses an independent cleanup context after any Apply error,\n// including GUI stop, while preserving the existing state-owned journal scope.\nfunc applyOwnedNetwork(ctx context.Context, plan windowsclient.NetworkPlan, script string) (func() error, error) {\n\treturn applyOwnedNetworkWith(ctx, plan, script, runNetworkActionContext)\n}\n\n// The runner argument is test-only injection; production always passes the\n// actual PowerShell command with an OS-process cancellation handle.\nfunc applyOwnedNetworkWith(ctx context.Context, plan windowsclient.NetworkPlan, script string,\n\trun func(context.Context, windowsclient.NetworkPlan, string, string) error) (func() error, error) {\n\tif ctx == nil || run == nil {\n\t\treturn nil, windowsclient.ErrNetworkPlan\n\t}\n\tcleanup := sync.OnceValue(func() error {\n\t\t// Bounded even if an abandoned script/kernel call never exits. The\n\t\t// state file remains available for a later owned recovery on failure.\n\t\tcleanupCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn run(cleanupCtx, plan, \"Cleanup\", script)\n\t})\n\tif err := run(ctx, plan, \"Apply\", script); err != nil {\n\t\tif cleanupErr := cleanup(); cleanupErr != nil {\n\t\t\treturn nil, errors.Join(err, fmt.Errorf(\"partial Apply owned rollback: %w\", cleanupErr))\n\t\t}\n\t\treturn nil, err\n\t}\n\treturn cleanup, nil\n}\n\nfunc runNetworkActionContext(ctx context.Context, plan windowsclient.NetworkPlan, action, script string) error {\n\tif ctx == nil { return windowsclient.ErrNetworkPlan }\n\tif err := ctx.Err(); err != nil { return err }\n\t// The compatibility shell must NEVER take the old massive-CIDR path.\n\t// Native compact capture and per-flow CN/LAN classification are now the\n\t// only admitted product policy. Fail before spawning any child process.\n\tif len(plan.CaptureRoutes)>8 || len(plan.DirectRoutes)!=0 || plan.CapturePrefixFile4!=\"\" {\n\t\treturn windowsclient.ErrNetworkPlan\n\t}\n\targs, err := plan.PowerShellArgs(action, script)\n\tif err != nil {\n\t\treturn err\n\t}\n\tout, err := networkCommandContext(ctx, args).CombinedOutput()\n\tif err != nil {\n\t\treturn fmt.Errorf(\"powershell %s: %w: %s\", action, err, strings.TrimSpace(string(out)))\n\t}\n\treturn nil\n}\n\n",
+          "replace": "// This boundary never starts an OS process. The real native Apply/Cleanup\n// façade remains gated until durable WFP and authenticated owner Stop are\n// certified. Returning a hard error keeps old route/DNS settings untouched.\nfunc applyOwnedNetwork(ctx context.Context, plan windowsclient.NetworkPlan) (func() error, error) {\n    return nil, windowsclient.N4NativeNetworkReady(ctx)\n}\n\n"
+        },
+        {
+          "find": "func networkCommandContext(ctx context.Context, args []string) *exec.Cmd {\n\tcmd := exec.CommandContext(ctx, \"powershell.exe\", args...)\n\tcmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}\n\treturn cmd\n}\n\n",
+          "replace": ""
         }
       ]
     },
