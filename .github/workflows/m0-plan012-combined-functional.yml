@@ -41,8 +41,10 @@ jobs:
           test "$(go version | awk '{print $3}')" = go1.23.12
           cargo +1.85.1 test --locked -p wbd-codec --features fec2-product-record --test fec2_release_record -- --nocapture >fixed-kernel-result/release-record.log 2>&1 || { cat fixed-kernel-result/release-record.log; exit 1; }
           cargo +1.85.1 test --locked -p wbd-engine --lib m0_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/game-lanes.log 2>&1 || { cat fixed-kernel-result/game-lanes.log; exit 1; }
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib m0_fec2_live_rx -- --test-threads=1 --nocapture >fixed-kernel-result/continuous-rx.log 2>&1 || { cat fixed-kernel-result/continuous-rx.log; exit 1; }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/release-record.log
           grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/game-lanes.log
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/continuous-rx.log
           cargo +1.85.1 build --release --locked -p wbd-engine >fixed-kernel-result/default-build.log 2>&1
           if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(embedded_go_|test_probe_)'; then
             echo 'M0_FIXED_PRODUCT_DEFAULT_ABI_LEAK' >&2; exit 1
@@ -63,6 +65,7 @@ jobs:
             "crates/wbd-engine/src/runtime/fec2_owner.rs",
             "crates/wbd-engine/src/v4_fixed_stream.rs",
             "crates/wbd-engine/src/v4_game_lane.rs",
+            "crates/wbd-engine/src/v4_fec2_live_rx.rs",
             "crates/wbd-codec/tests/fec2_release_record.rs",
             "crates/wbd-codec/Cargo.toml",
             "crates/wbd-engine/Cargo.toml",
@@ -83,6 +86,7 @@ jobs:
             "continuous_Fixed_Auto_Game_product":"NOT_RUN",
             "released_fec_record_crypto_native_test":"PASS_SCOPED",
             "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
             "source_inputs_sha256":{p:sha(p) for p in source},
             "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
           pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
@@ -121,13 +125,15 @@ jobs:
             native_multiblock_stream_only="PASS_3_BLOCKS",
             fec_release_record_3ciphers="PASS_NATIVE",
             game_2_4_own_AEAD_PN_replay="PASS_NATIVE_NOT_KERNEL",
+            fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
             network_multiblock="NOT_RUN",
             repeatable_background_multiblock_product="NOT_RUN",
             auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
             production_FEC2="OFF",
             kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest(),
             release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
-            game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest())
+            game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
+            continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest())
           (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
           print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
           PY

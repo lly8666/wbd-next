@@ -14,6 +14,10 @@ mod v4_fixed_stream;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.
 mod v4_game_lane;
+/// Release-option original-owner persistent multi-block authenticated FEC RX
+/// component only: not a live Go/kernel product route or public enablement.
+#[cfg(feature="fec2_product_record")]
+mod v4_fec2_live_rx;
 #[path = "memory/mod.rs"]
 pub mod memory;
 /// M0 bounded authentication/receipt assembly; no production V4 enablement.
