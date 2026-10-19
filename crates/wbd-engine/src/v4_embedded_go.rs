@@ -303,6 +303,8 @@ struct Entry{
     tx_route:Option<WorkerRouteBudget>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
+    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    normal_off_applied_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route_revision:u64,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -411,6 +413,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         tx_route:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         normal_firstsend_m2:None,
+        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        normal_off_applied_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route_revision:0,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -2789,6 +2793,53 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
     }
     OK
 }
+// Exact original credential-bound Normal/OFF native mode acknowledgment.
+// This does not stage any FEC2 fixed/auto sender, nor activate a policy
+// from untrusted 248B cold metadata; actual Go TLS+Detach owns the handle.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn verified_normal_off_epoch(ptr:*const u8,len:usize)->Result<[u8;16],i32>{
+    if ptr.is_null()||len!=16{return Err(INVALID)}
+    let mut epoch=[0u8;16];
+    epoch.copy_from_slice(unsafe{std::slice::from_raw_parts(ptr,16)});
+    if epoch==[0u8;16]{return Err(INVALID)}
+    Ok(epoch)
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn verified_normal_off_owner(e:&Entry,epoch:&[u8;16])->bool{
+    e.phase==PH_ACTIVE&&!e.joining&&
+        e.owner.normal_firstsend_identity()
+        .is_some_and(|(_,real_epoch)|&real_epoch==epoch)
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
+    h:u64,epoch:*const u8,epoch_len:usize,revision:u64
+)->i32{
+    if revision==0{return INVALID}
+    let Ok(epoch)=verified_normal_off_epoch(epoch,epoch_len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch){return BAD_STAGE}
+    if revision<=e.normal_off_applied_revision{return INVALID}
+    // This actual owner has only Normal/OFF. Persist the exact successful
+    // OFF revision in its own generation; readback is separate from intent.
+    e.normal_off_applied_revision=revision;
+    OK
+}
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
+    h:u64,epoch:*const u8,epoch_len:usize,out:*mut u64
+)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(epoch)=verified_normal_off_epoch(epoch,epoch_len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch){return BAD_STAGE}
+    unsafe{out.write(e.normal_off_applied_revision)};
+    OK
+}
+
 // Explicit coverage counters are separate from UNKNOWN and kernel copied.
 // A positive number requires actual original C2S kind1 received, opened
 // with the moved M3 replay state and pinned into M2, not an RX count.

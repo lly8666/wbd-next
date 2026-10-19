@@ -47,6 +47,7 @@ type v4EmbeddedNativeBridge struct {
     rxBoundary uint32
     txBoundary uint32
     protectedEpoch [16]byte
+    authenticatedPrincipal string
     protectedFeatures uint16
     // M0-only opt-in settings. Actual production config/state still lives
     // in the Go parameter owner and remains FEC2-OFF until product wiring.
@@ -76,6 +77,7 @@ func (b *v4EmbeddedNativeBridge) prepare(
     b.originalFlow=peer.flow
     b.rxBoundary=boundary
     b.protectedEpoch=s.epoch
+    b.authenticatedPrincipal=s.principal
     b.protectedFeatures=s.features
     return &v4EmbeddedPending{b:b},nil
 }

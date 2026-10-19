@@ -10,6 +10,9 @@ on:
       - "tools/run-v4-tun-netns.sh"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_normal_off_policy_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_normal_off_policy_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/fec_v2_policy.go"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
@@ -64,7 +67,7 @@ jobs:
           cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
           mkdir common-build common-result
           cp target/release/libwbd_engine.so common-build/libwbd_engine.so
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go; do
+          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go fec_v2_policy.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -95,9 +98,12 @@ jobs:
           set -euo pipefail
           LD_LIBRARY_PATH="$PWD/common-build" ./common-build/owner-go.test \
             -test.v -test.count=1 \
-            -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|TwoGenerationStopIsolation)$' \
+            -test.run '^TestR0V4Embedded(NativeProtectedControlAllCiphers|NormalOffProductRevisionReadback|TwoGenerationStopIsolation)$' \
             >common-result/connect-stop.log 2>&1
           cat common-result/connect-stop.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_NORMAL_OFF_REQUEST_PENDING_APPLIED_REJECTED_PASS cipher=$suite real_revision=2" common-result/connect-stop.log
+          done
           grep -q 'M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS' common-result/connect-stop.log
           grep -q 'EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS' common-result/connect-stop.log
       - name: Common live netns bidirectional Normal8, authentic kind1 to M2, Stop/cleanup
@@ -122,7 +128,8 @@ jobs:
             common_netns_log_sha256=hashlib.sha256((p/"common-netns.log").read_bytes()).hexdigest(),
             connect_stop_log_sha256=hashlib.sha256((p/"connect-stop.log").read_bytes()).hexdigest(),
             full_original_go_cli_gui_windows="NOT_RUN",
-            original_go_fixed_auto_applied="NOT_RUN",
+            normal_off_native_applied="PASS_3_CIPHERS_AND_TWO_ACTUAL_OWNER_REVISIONS",
+            original_go_fixed_auto_applied="REJECTED_UNSUPPORTED",
             physical="NOT_RUN",p99="NOT_RUN")
           (p/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
           print(json.dumps(receipt,indent=2))
