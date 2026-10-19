@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-19",
+  "scope": "GOVERNANCE_PLAN_AND_READ_ONLY_WORKER_CI_AUDIT",
+  "control_source": "b176a5d361901f853a3f5d9db94c6e7967663e0c",
+  "observed_workers": [
+    {
+      "role": "M1",
+      "head": "dadb5f5e44c1c3edb0137d2d3ba5e3b44ba3620e",
+      "cursor_sequence": 20,
+      "progress": "partial",
+      "source": "64102db5e101df1f678e17919169927ad19bad06",
+      "run": 39188056715,
+      "api_conclusion": "success",
+      "worker_reported_pass": 133,
+      "pending": "old/new same-VM Game cost requested from M0"
+    },
+    {
+      "role": "M3",
+      "head": "a5de4452a7c240d4866352de157deed3565a17b6",
+      "cursor_sequence": 38,
+      "checkpoint": "73d46f622b009c82fd1f53e6d23af67d990fdc0d",
+      "progress": "partial",
+      "source": "437cc721d1009c835cb900384dadbdbf3ebea800",
+      "run": 39187710688,
+      "api_conclusion": "success",
+      "worker_reported_pass": 123,
+      "pending": "new native cfg and same-VM old/new native cost; latest fixture commit not covered by H38"
+    }
+  ],
+  "independent_verification": {
+    "git_sources_and_current_workflow": true,
+    "run_api_identity_and_conclusion": true,
+    "all_functional_artifacts_redownloaded": false,
+    "latest_m3_fixture_execution": "NOT_VERIFIED"
+  },
+  "findings": [
+    "Workers have automatic push functional tests; generic native old/new cost execution is missing",
+    "Workers own fixture paths but not shared workflows; current requests explicitly delegate execution to M0",
+    "Existing validator supports exactly 2 paired_ab legs; proposed bounded 4-leg extension is not implemented by this patch",
+    "M3 has a new existing module-local native ABBA fixture; reuse after source/content/compile verification"
+  ],
+  "implementation_status": "PLANNED_NOT_IMPLEMENTED",
+  "product": "NOT_QUALIFIED_BY_THIS_CHANGE",
+  "physical": "NOT_RUN",
+  "unchanged": [
+    "registry assignments/permissions",
+    "long-lived role prompts",
+    "worker source and cursors",
+    "product capability gates"
+  ],
+  "next": "M0 merge PLAN-009 and implement/publish one shared component prepare/paired entry, then workers self-dispatch and finish current packages"
+}

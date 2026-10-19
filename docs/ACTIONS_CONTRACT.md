@@ -34,6 +34,10 @@ manifest 包含实际 SOURCE、workflow ref、run ID/attempt、平台与产物�
 
 ## 能力限制
 
+共享workflow维护归M0，已分配工作包的调用/结果验收/修复归worker，不逐次审批。工位公共入口按[PLAN-009](decisions/M0-worker-selftest-entry-2026-10-19.md)实施：prepare先输出真实manifest/hash，paired再引用产物，避免请求预填尚不存在的build hash。固定control ref与candidate/harness/request SOURCE分别记账，不沿用Governance的source=harness假设。此为实施方案，入口未发布前不得宣称已可用。
+
+现有校验器仍只接受single/paired_ab。PLAN-009允许M0实现有界paired_abba扩展并补正反例后使用；在此之前4腿不得冒充2腿请求通过。历史ABBA收据原样保留，不由文档更新自动获得新资格。
+
 只有 GitHub 读写能力的聊天可直接读 workflow/run/artifact 接续；不能下载产物时保留 NEEDS_ARTIFACT_REVIEW，不把 job 绿灯转换成业务 PASS。没有 dispatch 权限时记录具体缺口，由有权限的集成流程接手。
 
 ## 阈值修改
