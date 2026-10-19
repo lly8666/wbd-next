@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_maturity_2s_8s_event_time_holes_and_late_covered_receipts(){
+    fn r2_plan008_maturity_2s_8s_event_time_holes_and_late_covered_receipts(){
         let mut s=state(6);
         for pn in [1,2,3,4,260] {accepted(&mut s,pn,100,0);}
         s.on_authenticated_receipt(&open(pinned(),1,260,vec![page(0,&[1])]),
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_missing_whole_block_lost_feedback_and_old_report_positive(){
+    fn r2_plan008_missing_whole_block_lost_feedback_and_old_report_positive(){
         let mut s=state(5);
         for pn in 256..261 {accepted(&mut s,pn,120,0);}
         // Entire 5-record block is unobserved at 2s: UNKNOWN, not 5 losses.
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_accepted_only_denominator_unknown_unsent_control_and_capacity(){
+    fn r2_plan008_accepted_only_denominator_unknown_unsent_control_and_capacity(){
         let mut s=state(1);
         accepted(&mut s,1,100,0);
         s.on_first_send(lane(),FirstSendKind::Data,
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_repaired_positive_is_ambiguous_notsent_never_taints(){
+    fn r2_plan008_repaired_positive_is_ambiguous_notsent_never_taints(){
         let mut s=state(3);
         for pn in 1..4 {accepted(&mut s,pn,100,0);}
         s.on_possible_recovery(lane(),RecordPn(1),RepairSendResult::Accepted,
@@ -444,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_stop_epoch_generation_and_clock_reversed_stay_isolated(){
+    fn r2_plan008_stop_epoch_generation_and_clock_reversed_stay_isolated(){
         let mut old=state(3);
         accepted(&mut old,1,100,0);
         accepted(&mut old,2,100,0);
@@ -478,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    fn plan008_4096_records_128_blocks_bounded_timer_budget_and_conservation(){
+    fn r2_plan008_4096_records_128_blocks_bounded_timer_budget_and_conservation(){
         const N:u64=4096;
         let mut s=state(N as usize);
         for pn in 1..=N {accepted(&mut s,pn,96,0);}
