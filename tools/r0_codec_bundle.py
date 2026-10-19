@@ -76,6 +76,28 @@ def pack(a):
     (out/"manifest.json").write_text(json.dumps(info,indent=2)+"\n")
     print(json.dumps(info,indent=2))
 
+def validate_wire_anchors(log, returncode):
+    """Exact 13 named R0 WBC4/WBG4 wire anchors, not 13 TOTAL Rust libtests.
+
+    M3 FEC2 may register extra true tests in the same library test tree.
+    A missing anchor, duplicate, suite failure or total/printed mismatch
+    must not be promoted by a broader compiled/tested component.
+    """
+    anchors=re.findall(r"^test tests::(r0_[a-z0-9_]+) \.\.\. ok$",log,re.M)
+    failed=re.findall(r"^test (\S+) \.\.\. FAILED$",log,re.M)
+    all_passed=re.findall(r"^test \S+ \.\.\. ok$",log,re.M)
+    result=re.findall(
+        r"^test result: ok\. (\d+) passed; (\d+) failed; "
+        r"(\d+) ignored; (\d+) measured; (\d+) filtered out; finished in ",
+        log,re.M)
+    passed_total=int(result[0][0]) if len(result)==1 else -1
+    valid=(returncode==0 and len(result)==1 and int(result[0][1])==0 and
+           len(anchors)==len(TESTS) and set(anchors)==set(TESTS) and
+           not failed and passed_total==len(all_passed) and
+           passed_total>=len(TESTS))
+    return anchors,failed,valid,passed_total
+
+
 def consume(a):
     manifest=Path(a.manifest)
     m=json.loads(manifest.read_text())
@@ -103,11 +125,7 @@ def consume(a):
     output=Path("r0-codec-result")
     output.mkdir(exist_ok=True)
     (output/"tests.log").write_text(log)
-    passed=re.findall(r"^test tests::(r0_[a-z0-9_]+) \.\.\. ok$",log,re.M)
-    failed=re.findall(r"^test tests::(r0_[a-z0-9_]+) \.\.\. FAILED$",log,re.M)
-    success=(result.returncode==0 and len(passed)==len(TESTS) and
-             set(passed)==set(TESTS) and not failed and
-             "test result: ok. 13 passed; 0 failed" in log)
+    passed,failed,success,all_lib_tests=validate_wire_anchors(log,result.returncode)
     receipt={
         "schema_version":1,
         "source_sha":a.source,
@@ -116,6 +134,8 @@ def consume(a):
         "result":"PASS" if success else "FAIL",
         "tests_passed":len(passed),
         "tests_failed":len(failed),
+        "all_rust_libtest_cases_passed":all_lib_tests,
+        "other_codecs_not_wire_anchors":max(0,all_lib_tests-len(TESTS)),
         "rust_test_binary_sha256":expected["sha256"],
         "test_log_sha256":digest(output/"tests.log"),
         "tests":list(passed),

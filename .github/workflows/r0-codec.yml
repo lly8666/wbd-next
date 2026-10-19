@@ -61,6 +61,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_r0_codec_bundle_anchor.py' -v
           python tools/r0_codec_bundle.py consume \
             --manifest r0-codec-bundle/manifest.json \
             --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \

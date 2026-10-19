@@ -252,17 +252,52 @@ impl PreparedBlock {
     }
 }
 
+/// Retained decode heap payload counts. Excludes BTree nodes, Vec headers,
+/// allocator overhead, and caller-owned recovered output allocations.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct DecodeCacheStats {
+    pub inverses:usize,
+    pub inverse_payload_bytes:usize,
+    pub native_tables:usize,
+    pub native_table_payload_bytes:usize,
+    pub source_workspace_capacity_bytes:usize,
+}
 pub struct Rs16 {
     gf:Gf,
     inverses:BTreeMap<CacheKey,Vec<Vec<u8>>>,
     order:VecDeque<CacheKey>,
+    #[cfg(feature="native-isal")]
+    native_tables:BTreeMap<CacheKey,wbd_isal_safe::Tables>,
+    #[cfg(feature="native-isal")]
+    native_source_workspace:Vec<Vec<u8>>,
 }
 impl Default for Rs16 {fn default()->Self{Self::new()}}
 impl Rs16 {
     pub fn new()->Self {
-        Self {gf:Gf::new(),inverses:BTreeMap::new(),order:VecDeque::new()}
+        Self {gf:Gf::new(),inverses:BTreeMap::new(),order:VecDeque::new(),
+            #[cfg(feature="native-isal")]
+            native_tables:BTreeMap::new(),
+            #[cfg(feature="native-isal")]
+            native_source_workspace:Vec::new(),
+        }
     }
     pub fn cache_entries(&self)->usize {self.inverses.len()}
+    /// Exact ISA-L table payload is 32 bytes per decoding coefficient.
+    /// Other counts exclude allocation metadata and caller-owned outputs.
+    pub fn decode_cache_stats(&self)->DecodeCacheStats {
+        let inverse_payload_bytes=self.inverses.values()
+            .map(|m|m.iter().map(Vec::capacity).sum::<usize>()).sum();
+        #[cfg(feature="native-isal")]
+        let (native_tables,native_table_payload_bytes,source_workspace_capacity_bytes)=(
+            self.native_tables.len(),
+            self.native_tables.keys().map(|key|
+                usize::from(key.k)*key.missing.count_ones() as usize*32).sum(),
+            self.native_source_workspace.iter().map(Vec::capacity).sum());
+        #[cfg(not(feature="native-isal"))]
+        let (native_tables,native_table_payload_bytes,source_workspace_capacity_bytes)=(0,0,0);
+        DecodeCacheStats {inverses:self.inverses.len(),inverse_payload_bytes,
+            native_tables,native_table_payload_bytes,source_workspace_capacity_bytes}
+    }
     /// GF Cauchy row: first row XOR, remaining y_j/(x_i XOR y_j).
     /// k1 is a repetition code for ALL rows.
     pub fn coefficient(&self, row:usize, col:usize, k:usize)->Result<u8,Error> {
@@ -435,12 +470,13 @@ impl Rs16 {
         Ok(used)
     }
 
-    fn inverse_cached(&mut self,k:usize,missing:&[usize],selected:&[Repair<'_>])
-        ->Result<Vec<Vec<u8>>,Error> {
+    /// Cache hit returns a key, not a cloned e-by-e inverse.
+    fn ensure_inverse_cached(&mut self,k:usize,missing:&[usize],selected:&[Repair<'_>])
+        ->Result<CacheKey,Error> {
         let mask=missing.iter().fold(0u16,|m,&col|m|(1u16<<col));
         let rows=selected.iter().fold(0u32,|m,r|m|(1u32<<r.parity_row));
         let key=CacheKey {k:k as u8,missing:mask,selected_rows:rows};
-        if let Some(hit)=self.inverses.get(&key) {return Ok(hit.clone());}
+        if self.inverses.contains_key(&key) {return Ok(key);}
         let mut matrix=Vec::with_capacity(missing.len());
         for repair in selected {
             let mut line=Vec::with_capacity(missing.len());
@@ -451,11 +487,15 @@ impl Rs16 {
         }
         let inverse=self.gf.inverse(&matrix)?;
         if self.order.len()==DECODE_CACHE_LIMIT {
-            if let Some(old)=self.order.pop_front() {self.inverses.remove(&old);}
+            if let Some(old)=self.order.pop_front() {
+                self.inverses.remove(&old);
+                #[cfg(feature="native-isal")]
+                self.native_tables.remove(&old);
+            }
         }
         self.order.push_back(key);
-        self.inverses.insert(key,inverse.clone());
-        Ok(inverse)
+        self.inverses.insert(key,inverse);
+        Ok(key)
     }
     /// Recover only e missing originals. Sources may be absent, but all
     /// surviving original frames are authenticated, never mathematical symbols.
@@ -492,7 +532,7 @@ impl Rs16 {
         if sources.iter().flatten().any(|s|s.len()>symbol_len-2 ||
             s.len()>MAX_ORIGINAL_LEN) {return Err(Error::ConflictingMeta);}
         let chosen=&sorted[..e];
-        let inverse=self.inverse_cached(k,&missing,chosen)?;
+        let key=self.ensure_inverse_cached(k,&missing,chosen)?;
         let known=(0..k).filter_map(|j|sources[j].map(|s|(j,s))).collect::<Vec<_>>();
         let mut recovered=vec![vec![0u8;symbol_len];e];
         let run_native=backend!=BackendChoice::Scalar && symbol_len>=64 && k>1;
@@ -505,35 +545,52 @@ impl Rs16 {
         if run_native {
             #[cfg(feature="native-isal")]
             {
-                let input_count=e+known.len();
-                let mut coeff=Vec::with_capacity(e*input_count);
-                for out in 0..e {
-                    coeff.extend_from_slice(&inverse[out]);
-                    for &(col,_) in &known {
-                        let mut c=0u8;
-                        for (i,r) in chosen.iter().enumerate() {
-                            c^=self.gf.mul(inverse[out][i],
-                                self.coefficient(r.parity_row as usize,col,k)?);
+                // Sorted repairs and increasing source indices make the
+                // entire final e-by-k decoding table stable per cache key.
+                if !self.native_tables.contains_key(&key) {
+                    let inverse=self.inverses.get(&key).ok_or(Error::Singular)?;
+                    let mut coeff=Vec::with_capacity(e*k);
+                    for out in 0..e {
+                        coeff.extend_from_slice(&inverse[out]);
+                        for &(col,_) in &known {
+                            let mut c=0u8;
+                            for (i,r) in chosen.iter().enumerate() {
+                                c^=self.gf.mul(inverse[out][i],
+                                    self.coefficient(r.parity_row as usize,col,k)?);
+                            }
+                            coeff.push(c);
                         }
-                        coeff.push(c);
                     }
+                    let tables=wbd_isal_safe::Tables::new(k,e,&coeff)
+                        .map_err(|_|Error::NativeFailure)?;
+                    self.native_tables.insert(key,tables);
                 }
-                let owned=known.iter().map(|(_,frame)| {
-                    let mut data=vec![0u8;symbol_len];
-                    data[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
-                    data[2..2+frame.len()].copy_from_slice(frame);
-                    data
-                }).collect::<Vec<_>>();
+                // Private owned padding reused across authenticated blocks.
+                // No source borrow survives this synchronous call.
+                if self.native_source_workspace.len()<known.len() {
+                    self.native_source_workspace.resize_with(known.len(),Vec::new);
+                }
+                for (space, &(_,frame)) in self.native_source_workspace.iter_mut().zip(&known) {
+                    if space.capacity()<symbol_len {
+                        *space=vec![0u8;symbol_len];
+                    } else {
+                        space.resize(symbol_len,0);
+                        space.fill(0);
+                    }
+                    space[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
+                    space[2..2+frame.len()].copy_from_slice(frame);
+                }
                 let mut inputs=chosen.iter().map(|r|r.body).collect::<Vec<_>>();
-                inputs.extend(owned.iter().map(Vec::as_slice));
-                let tables=wbd_isal_safe::Tables::new(input_count,e,&coeff)
-                    .map_err(|_|Error::NativeFailure)?;
+                inputs.extend(self.native_source_workspace[..known.len()]
+                    .iter().map(Vec::as_slice));
+                let tables=self.native_tables.get(&key).ok_or(Error::NativeFailure)?;
                 let mut dst=recovered.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
                 tables.encode(&inputs,&mut dst).map_err(|_|Error::NativeFailure)?;
                 used=BackendUsed::NativeIsaL;
             }
         }
         if used==BackendUsed::Scalar {
+            let inverse=self.inverses.get(&key).ok_or(Error::Singular)?;
             for (out,row) in recovered.iter_mut().enumerate() {
                 for (p,r) in chosen.iter().enumerate() {
                     let c=inverse[out][p];
@@ -569,3 +626,11 @@ impl Rs16 {
         Ok((outputs,used))
     }
 }
+
+// Compile the source-locked FEC2 oracle suite as real library tests. Keeping
+// this declaration in the owned codec module ensures CI cannot silently
+// filter out the companion tests even when a shared harness overlays the two
+// files from one immutable worker SOURCE.
+#[cfg(test)]
+#[path = "fec_v2_tests.rs"]
+mod fec_v2_tests;
