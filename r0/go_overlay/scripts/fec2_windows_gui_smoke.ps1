@@ -56,6 +56,15 @@ try {
     if (-not (Select-String -LiteralPath $nativeRecoveryLog -SimpleMatch '--- PASS: TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback' -Quiet)) {
         throw 'native original Go no-shell recovery test was NOT executed; zero-test PASS refused'
     }
+    # The real original Windows CLI owns a named OS event shared by manual
+    # native Recover and GUI Connect. Verify exclusivity, release/reclaim,
+    # and a genuinely executed named Go test on the native Windows host.
+    $ownerTestLog=Join-Path $out 'native-owner-slot-test.log'
+    & go test -count=1 -v -run '^TestPLAN010OwnerSlotIsActuallyExclusive$' ./cmd/wbd-client 2>&1 | Tee-Object -FilePath $ownerTestLog
+    if ($LASTEXITCODE -ne 0) { throw 'original Windows CLI exclusive owner test failed' }
+    if (-not (Select-String -LiteralPath $ownerTestLog -SimpleMatch '--- PASS: TestPLAN010OwnerSlotIsActuallyExclusive' -Quiet)) {
+        throw 'original Windows CLI owner test ran ZERO cases; explicit named PASS missing'
+    }
 } finally { Pop-Location }
 $portable=Join-Path $out 'portable'
 & (Join-Path $legacy 'scripts/build_windows_gui.ps1') -OutputDirectory $portable -SourceSHA $source -Version 'fec2-plan008'
