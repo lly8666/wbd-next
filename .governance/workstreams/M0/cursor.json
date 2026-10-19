@@ -4,17 +4,19 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 168,
-  "checkpoint_sha": "256bcd229d7b039059575db0aacc51fe0b10c58d",
-  "progress": "planned",
+  "sequence": 169,
+  "checkpoint_sha": "efc9437c7d0f4e5a13e3c41b64444a028e807cfe",
+  "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN-008 M0-025 registered on main in one control-plane submission: fixed legacy Go source + product Rust verified vertical integration Normal/off→fixed→auto, real authenticated reverse kind1, native FEC2 OFF/applied ACK and single compiled client/server. M4 owns newly authorized product/CLI/GUI overlay, M2 first-send mature observations, M1 bounded Game dedup, M3 recovery workspace optimization; no product PASS implied.",
-  "why_now": "At main H167 checkpoint, user explicitly requested PR#11 merge and PLAN-008 once-only workpack registration. PR#11 merge fe0ba6f3 passed maintenance, assignment S256bcd updated five role task_id/goal/done_when and exact M4 overlay paths plus PLAN-008 evidence in one atomic commit; main Governance 39186023133 PASS. Worker branches/cursors/epochs not modified; reservation revision remains 2 to preserve live worker cursor authority and avoid false relaunch. Old M1 red historical and G2 exact-source acceptance kept distinct. New product assembly is not yet tested.",
+  "current_task": "PLAN-008 M0-025 scoped original Go TLS → Rust owner quiescent OFF/next revision re-enable completed with real M4 Linux raw kernel under three ciphers; OFF is distinct from seven FEC grades, no new PN while OFF, exact epoch guard, and Go applied only on real Rust ACK. Product FEC2 still OFF; normal client/server/GUI and mature feedback not wired.",
+  "why_now": "PLAN-008 M0 source implemented Rust internal code7 quiescent OFF on exact authenticated owner: no original M1 loans/unsettled M2 shadow, and strict revision. Go pending fixed High2 -> OFF3 applied after genuine Rust ACK, wrong/old epoch denied; original M4 FEC source/repair PN0/1 copied after exact new enable. E686 Go test undefined local failed, repaired127a; 127a preexisting invalid-profile7 negative failed, corrected to invalid8 at source338. Exact-source 39188007060 attempt1 14/14 success; native artifact12158083992 downloaded and ZIP hash verified. Evidence S efc9437c records 14 artifact hashes; no new ordinary FEC2 enabling.",
   "done_when": "According to docs/decisions/M0-integration-unblock-2026-10-19.md §1 M0, §3 and §4: original pinned Go client/server builds/loads, verified TLS→Rust Normal/off/fixed/auto and mature authenticated receipt, Stop/revision quality, exact source-locked functional/cost evidence; keep physical/full product gates NOT_RUN and FEC2 OFF until actually qualified.",
-  "next_action": "Execute PLAN-008 §1 M0 + §3/4 as one product vertical slice: prepare frozen original Go SOURCE a7a82db31fe736ffedee330795a3234d358f1984 normal-experiment runtime ABI with real Rust OFF transition and authenticated reverse kind1; integrate M2 firstsent/receipt API and consume M4 real client/server assembly when delivered. Do not edit new M4-exclusive overlay or M1/M2/M3 owned files. First check any open G2 scope/bootstrap Action and record exact result; avoid redundant 14-job.",
+  "next_action": "Execute next PLAN-008 M0-025 true vertical product slice after checking M2 and M4 branch sources: integrate canonical authenticated reverse C2S kind1 and M2 firstsent mature quality into original owner 2s Go AUTO, plus explicit Normal/off experimental original Go entry using frozen old source and M4 exact overlay when available. Keep FEC2 production OFF; quiescent-off-on-active-outstanding M2 shadow only rejects, not full drain; full continuous M1/physical/windows ARM/D10/p99 remain NOT_RUN. Avoid redundant unchanged 14-job/ISA-L; prefer impacted authentic original Go/Rust kernel test.",
   "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "last_tested_source": "3383990bdceda76335e4ae53d8c64b5e95b11f98",
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN008-025-scoped-native-off-reenable-3383990bdceda76335e4ae53d8c64b5e95b11f98.json"
+  ],
   "context_refs": [
     "docs/evidence/M0/PLAN-008-workpacks-registered.json",
     "docs/evidence/M0/PLAN-008-integration-unblock.json",
@@ -24,5 +26,5 @@
     "docs/history/INDEX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H168 is a workpack publication/recovery checkpoint ONLY. PR#11 merged fe0ba6; S256bcd published five distinct PLAN-008 tasks in registry and exact M4 product/CLI/GUI overlay owner, branch and epoch unchanged, worker cursors remain untouched pending worker self-recovery. main Governance39186023133 PASS; new product SOURCE, product performance and physical endpoints NOT_RUN; historical scoped 14/14 SOURCE708ecd not inherited by PLAN-008. Product FEC2 OFF."
+  "partial_summary": "H169 PLAN-008 M0-025 still partial/unverified product FEC2 OFF. Feature-scoped real original Go credential TLS exact epoch ↔ original Rust owner accepts quiescent OFF revision3, owner rejects unverified old/replay epoch and new FEC2 PN while OFF. Separate original kernel M4 same-epoch re-enable pending profile5 revision3 followed by real immutable SOURCE PN0/REPAIR PN1 works for 3 suites. Exact SOURCE 3383990bdceda76335e4ae53d8c64b5e95b11f98 Action39188007060 attempt1 14/14 PASS; S efc9437c 14 provider artifact digests and native Zip SHA256 independently verified. Earlier e686 and127a failures are retained. Product normal server/GUI wiring and M2 mature feedback, M1 continuous scheduler, full OFF with unsettled shadow drain, Windows/ARM original loader, physical/D10/p99 NOT_RUN."
 }
