@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "state": "PLAN009_MAIN_CENTRAL_AUTODISPATCH_PASS_M1_V6_PREPARE_FUNCTIONAL_PASS_M3_V6_NOT_RUN",
+  "source_sha": "2defed85dad2c66055aec212bef460ec4a030174",
+  "code_paths": [
+    ".github/workflows/worker-request-dispatch.yml",
+    "tools/worker_request_dispatch.py",
+    "tests/test_worker_request_dispatch.py"
+  ],
+  "cause": "Central worker scope audit has dynamic workflow_run.name scope|branch|SOURCE; main dispatch YAML and script used impossible static name, so real central G2 SUCCESS was skipped.",
+  "repair": "Verify stable workflow_id 385257385 and path .github/workflows/scope-audit.yml plus conclusion/same-repo/main trigger; reverify current G2 artifact, worker SOURCE/request I/path/epoch/config and duplicate scan in main-only privileged runner.",
+  "historical_results_preserved": [
+    {
+      "run_id": 39206478349,
+      "role": "M1",
+      "result": "FAIL",
+      "reason": "worker-local governance G2 bounded ancestry preflight before structure"
+    },
+    {
+      "run_id": 39206548038,
+      "role": "M1",
+      "result": "FAIL",
+      "reason": "worker-local governance G2 bounded ancestry preflight before structure"
+    },
+    {
+      "run_id": 39206492421,
+      "role": "M1",
+      "result": "ROLE_SCOPE_PASS",
+      "source_sha": "a3920da49a69ae13bd02460ef99f51c6ea9e18e5"
+    },
+    {
+      "run_id": 39206565174,
+      "role": "M1",
+      "result": "ROLE_SCOPE_PASS",
+      "source_sha": "b17a444e7781df800f867850bf66a6d6a2a1c74b"
+    },
+    {
+      "run_id": 39206705410,
+      "result": "SKIPPED",
+      "reason": "old static run-name job if"
+    },
+    {
+      "run_id": 39206773772,
+      "result": "SKIPPED",
+      "reason": "old static run-name job if"
+    },
+    {
+      "run_id": 39204910923,
+      "role": "M1",
+      "result": "FAIL",
+      "stage": "v5 authorize CLI",
+      "cargo": "NOT_RUN"
+    },
+    {
+      "run_id": 39204914148,
+      "role": "M3",
+      "result": "FAIL",
+      "stage": "v5 authorize CLI",
+      "cargo": "NOT_RUN"
+    }
+  ],
+  "actions": [
+    {
+      "name": "main governance",
+      "run_id": 39208175002,
+      "attempt": 1,
+      "source_sha": "2defed85dad2c66055aec212bef460ec4a030174",
+      "result": "success"
+    },
+    {
+      "name": "shared maintenance",
+      "run_id": 39208174956,
+      "attempt": 1,
+      "source_sha": "2defed85dad2c66055aec212bef460ec4a030174",
+      "result": "success"
+    },
+    {
+      "name": "main M0 audited dispatch",
+      "run_id": 39208175321,
+      "attempt": 1,
+      "source_sha": "2defed85dad2c66055aec212bef460ec4a030174",
+      "result": "success",
+      "artifact_id": 12166257649,
+      "artifact_zip_sha256": "d76054e56ecb320931b04dac80371cb8a7a28807e85afcb4a123497b30392a6d",
+      "worker_decision": "M1 M1-GAME015-AB-PREP-003 DISPATCH_ACCEPTED_NOT_QUALIFIED"
+    },
+    {
+      "name": "M1 frozen v6 prepare",
+      "run_id": 39208300168,
+      "attempt": 1,
+      "control_sha": "fab2e1d7cbe12109ef9215c6caf358946ead522b",
+      "request_ref": "a3920da49a69ae13bd02460ef99f51c6ea9e18e5",
+      "result": "success",
+      "authorize_job": 117915849820,
+      "prepare_job": 117915895280,
+      "artifact_id": 12166063332,
+      "artifact_zip_sha256": "6549b2c40f6ed837b7581b2033cf7eb4b389f825691e325c0ef3eeeda33f3391",
+      "manifest_name": "prepare-manifest.json",
+      "manifest_sha256": "85f77330bc7a8fdd679b543c60714210bee350685c8bfc1884cd485ca2b97481"
+    }
+  ],
+  "m1_prepare": {
+    "role_id": "M1",
+    "request_id": "M1-GAME015-AB-PREP-003",
+    "stage": "prepare",
+    "functional_result": "PASS",
+    "native_backend": "none",
+    "platform": "linux-x86_64",
+    "feature": "default",
+    "rustc": "rustc 1.85.1 (4eb161250 2025-03-15)",
+    "baseline_sha": "c80ff6a52ee58860f7c108307fe25d74438703e2",
+    "source_sha": "64102db5e101df1f678e17919169927ad19bad06",
+    "harness_sha": "64102db5e101df1f678e17919169927ad19bad06",
+    "config_sha256": "dd93515734f83d50e524c2d2fd010a574326a95cff114513bee679ca1703e8b8",
+    "fixture_git_blob": "4c70bedf3bd4d07e959eaf73dcd63feb1ebe2821",
+    "actual_passed": {
+      "A": 13,
+      "B": 13
+    },
+    "binary_sha256": {
+      "leg-A": "3f2d6d08178e5d6f1771eeb3cc97c396f2e5b53a12ddf9d589c966ecf0385df5",
+      "leg-B": "b1e9d6e1600b583be5d65752aedbc9e25420ea9b5a79770a1f7df0d1b4212a7f"
+    },
+    "cargo_lock_sha256": "3a9cd335f100c3c12063ced36517b40e3b9f557e7fb6ddaf7c3dab9ec142a5f8",
+    "validation": "Downloaded genuine Actions artifact 12166063332, independently SHA256-checked ZIP, each leg executable and prepare-manifest.json bytes, verified manifest exact identifiers and 13+13 positive functional tests. Executables not run outside Actions."
+  },
+  "unverified": {
+    "M1_game_cost_paired": "NOT_RUN (new worker-owned kind=performance request required)",
+    "M3_v6_prepare": "NOT_RUN (M3 has only historical v5 request; worker must issue M3-018-NATIVE-E4-PREPARE-002)",
+    "M3_native_e4_paired": "NOT_RUN",
+    "M0_go_rust_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "FEC2_production": "OFF",
+    "M1_legacy_worker_governance": "FAIL remains preserved, central role scope PASS is not equivalently complete worker Governance"
+  },
+  "permissions": "No registry change, no worker branch/cursor/source write, workers retain module-only rights, M0 main-only actions:write.",
+  "next_action": "M1 autonomously creates paired AB intent from exact PASS prepare artifact; M3 autonomously creates fresh v6 prepare intent then paired only after PASS. M0 resumes R0-025 authenticated real Go/Rust integration."
+}
