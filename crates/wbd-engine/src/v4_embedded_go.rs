@@ -313,6 +313,16 @@ struct Entry{
     fixed_pending:Option<(u8,u64)>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fixed_applied:Option<(u8,u64)>,
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_live_tx:Option<crate::v4_fixed_stream::FixedStream>,
+    // Actual pending driver loans, each tagged with its original same
+    // M3 AEAD PN and source/repair kind. Reset only after synchronous M4.
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_staged_pns:Vec<(u64,u8)>,
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_copied_source:u64,
+    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    fec2_copied_repair:u64,
     // Original Go's EXACT applied policy controls the background FEC
     // receiver, not a second untrusted mode bit or a guessed TLS epoch.
     #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -433,6 +443,14 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         fixed_pending:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fixed_applied:None,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_live_tx:None,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_staged_pns:Vec::new(),
+        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_copied_source:0,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        fec2_copied_repair:0,
         #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fec2_rx_admit:Arc::new(AtomicBool::new(false)),
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -2877,7 +2895,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     e.fixed_pending=None;
     e.fixed_applied=None;
     #[cfg(feature="fec2_product_record")]
-    e.fec2_rx_admit.store(false,Ordering::Release);
+    {
+        e.fec2_rx_admit.store(false,Ordering::Release);
+        if let Some(stream)=e.fec2_live_tx.as_mut(){stream.stop()}
+        e.fec2_live_tx=None;
+        e.fec2_staged_pns.clear();
+    }
     OK
 }
 #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2912,6 +2935,22 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
         ||e.protected_features!=7{return BAD_STAGE}
     let current=e.fixed_pending.map_or(e.normal_off_applied_revision,|(_,r)|r);
     if revision<=current || revision<=e.normal_off_applied_revision{return INVALID}
+    #[cfg(feature="fec2_product_record")]
+    {
+        // A new policy is NOT allowed to truncate or reprofile any older
+        // unretired FEC source/parity block; preserve old authority until
+        // a genuine application control quiescent transition.
+        if e.fec2_live_tx.as_ref().is_some_and(|s|
+            s.report().charged_bytes!=0 || s.report().outstanding_jobs!=0
+            || s.report().open_bytes!=0) || !e.fec2_staged_pns.is_empty(){
+            return BAD_STAGE
+        }
+        if let Some(old)=e.fec2_live_tx.as_mut(){old.stop()}
+        e.fec2_live_tx=None;
+        e.fec2_copied_source=0;
+        e.fec2_copied_repair=0;
+        e.fec2_rx_admit.store(false,Ordering::Release);
+    }
     e.fixed_pending=Some((profile,revision));
     // Private legacy FEC probe must never leave a different pending policy
     // overriding an original-Go Fixed revision in a feature-enabled test.
