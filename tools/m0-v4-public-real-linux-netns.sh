@@ -3,7 +3,7 @@
 # 2 isolated namespaces + real raw veth + original TLS + scoped native
 # Rust M1/M3/M4 owner + real TUN + kernel UDP echo + signal/Stop cleanup.
 set -euo pipefail
-ROOT="${1:?expected bundle path with wbd-v4-{client,server} + libwbd_engine.so}"
+ROOT="${1:?expected argument: directory containing the V4 client, server and Rust native library}"
 ROOT="$(realpath "$ROOT")"
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
