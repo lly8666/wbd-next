@@ -42,6 +42,15 @@ struct Entry {
     bytes:u32,
     owner:ProtectedScopedOwner,
     arena:Arena,
+    authenticated_epoch:[u8;16],
+    device:Option<ScopedWindowsWintunIdentity>,
+}
+// An original-Go-verified WintunReservation.Hold on the actual native OS
+// adapter is REQUIRED before this private record can be created. This C ABI
+// cannot itself open or validate a Wintun and does NOT grant OS Apply.
+#[derive(Clone,Copy)]
+struct ScopedWindowsWintunIdentity {
+    luid:u64,ifindex:u32,quiesced:bool,
 }
 #[derive(Default)]
 struct Registry {
@@ -74,7 +83,9 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     r.entries.insert(handle,Entry{
         generation,phase:PH_PREPARED,role_server:server,
         rx_boundary:handoff.rx_boundary,limit:rx_limit,count:0,bytes:0,
-        owner,arena
+        owner,arena,
+        authenticated_epoch:parsed.identity().logical_epoch,
+        device:None
     });
     Ok(handle)
 }
@@ -108,10 +119,31 @@ fn commit(r:&mut Registry,h:u64,count:u32,total:u32,tx_boundary:u32)->i32{
     e.phase=PH_ACTIVE;
     OK
 }
+fn bind_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
+    if luid==0||ifindex==0||epoch==[0;16]{return INVALID}
+    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    if e.phase!=PH_ACTIVE||e.device.is_some(){return BAD_STAGE}
+    if epoch!=e.authenticated_epoch{return INVALID}
+    e.device=Some(ScopedWindowsWintunIdentity{luid,ifindex,quiesced:false});
+    OK
+}
+fn quiesce_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
+    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    if e.phase!=PH_ACTIVE{return BAD_STAGE}
+    let Some(device)=e.device.as_mut()else{return BAD_STAGE};
+    if epoch!=e.authenticated_epoch||luid!=device.luid||ifindex!=device.ifindex{
+        return INVALID
+    }
+    device.quiesced=true;
+    OK
+}
 fn stop(r:&mut Registry,h:u64)->i32{
     let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
     if e.phase==PH_STOPPED{return OK}
     if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
+    // Keep authenticated crypto owner alive if M4's current Wintun hold
+    // has not ended its packet workers and completed the exact close fence.
+    if e.device.is_some_and(|d|!d.quiesced){return STOP_INCOMPLETE}
     e.phase=PH_STOPPING;
     let Ok(retired)=e.owner.stop()else{return STOP_INCOMPLETE};
     if !retired.ready.batch_handles_released(){return STOP_INCOMPLETE}
@@ -214,6 +246,61 @@ pub extern "C" fn wbd_m0_win_owner_v1_state(
     })}
     OK
 }
+// All v2 device calls are bounded, fixed-size and private to SAME-PROCESS
+// original-Go post-credential callback. A token/record is not proof of WFP,
+// real OS applied network, packet TX or M4 Stop; product_applied stays zero.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsDeviceFenceV2{
+    pub abi_version:u32,
+    pub struct_size:u32,
+    pub generation:u32,
+    pub bound:u32,
+    pub quiesced:u32,
+    pub product_applied:u32,
+    pub ifindex:u32,
+    pub reserved:u32,
+    pub luid:u64,
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v2_bind_wintun(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+)->i32{
+    if epoch.is_null()||epoch_len!=16{return INVALID}
+    let mut exact=[0u8;16];
+    exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,16)});
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    bind_wintun(&mut r,h,exact,luid,ifindex)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v2_quiesce_wintun(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+)->i32{
+    if epoch.is_null()||epoch_len!=16{return INVALID}
+    let mut exact=[0u8;16];
+    exact.copy_from_slice(unsafe{std::slice::from_raw_parts(epoch,16)});
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    quiesce_wintun(&mut r,h,exact,luid,ifindex)
+}
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v2_device_state(
+    h:u64,out:*mut WbdWindowsDeviceFenceV2,out_size:u32,
+)->i32{
+    if out.is_null()||out_size!=std::mem::size_of::<WbdWindowsDeviceFenceV2>() as u32{
+        return INVALID
+    }
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let (bound,quiesced,ifindex,luid)=match e.device{
+        Some(d)=>(1,u32::from(d.quiesced),d.ifindex,d.luid),
+        None=>(0,0,0,0)
+    };
+    unsafe{out.write(WbdWindowsDeviceFenceV2{
+        abi_version:2,struct_size:out_size,generation:e.generation,
+        bound,quiesced,product_applied:PRODUCT_APPLIED,ifindex,reserved:0,luid
+    })}
+    OK
+}
 #[no_mangle]
 pub extern "C" fn wbd_m0_win_owner_v1_stop(h:u64)->i32{
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
@@ -298,4 +385,32 @@ mod tests {
         assert_eq!(stop(&mut r,good),OK);
         assert_eq!(release(&mut r,good),OK);
     }
+    #[test]
+    fn m0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale(){
+        let mut r=Registry{generation:91,entries:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let exact=[3u8;16];
+        assert_eq!(bind_wintun(&mut r,h,exact,123,77),BAD_STAGE);
+        assert_eq!(commit(&mut r,h,0,0,901),OK);
+        assert_eq!(bind_wintun(&mut r,h,[0;16],123,77),INVALID);
+        assert_eq!(bind_wintun(&mut r,h,[9;16],123,77),INVALID);
+        assert_eq!(bind_wintun(&mut r,h,exact,0,77),INVALID);
+        assert_eq!(bind_wintun(&mut r,h,exact,123,77),OK);
+        assert_eq!(bind_wintun(&mut r,h,exact,123,77),BAD_STAGE);
+        assert_eq!(stop(&mut r,h),STOP_INCOMPLETE);
+        assert_eq!(release(&mut r,h),BAD_STAGE);
+        assert_eq!(quiesce_wintun(&mut r,h,[9;16],123,77),INVALID);
+        assert_eq!(quiesce_wintun(&mut r,h,exact,124,77),INVALID);
+        assert_eq!(quiesce_wintun(&mut r,h,exact,123,78),INVALID);
+        assert_eq!(stop(&mut r,h),STOP_INCOMPLETE);
+        assert_eq!(quiesce_wintun(&mut r,h,exact,123,77),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+        assert_eq!(quiesce_wintun(&mut r,h,exact,123,77),UNKNOWN);
+        let next=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_ne!(h,next);
+        assert_eq!(bind_wintun(&mut r,h,exact,123,77),UNKNOWN);
+        assert_eq!(PRODUCT_APPLIED,0);
+    }
+
 }
