@@ -1,7 +1,7 @@
-# PLAN012 release pre-enable, all three missing positive product gates
-# genuinely execute on Actions; never call missing/skip PASS or auto-edit main.
-# Fixed/Auto genuine M2 + lost source M4 Stop reuse the full existing gate
-# in ONE same-SOURCE run. Product preflights execute concurrently with it.
+# PLAN012 original-Go Linux pre-enable. REAL kernel Game2/4 tested once
+# in shared combined workflow; require exact artifact identity and marker.
+# Public original-Go CLI Connect/Disconnect APPLIED is separate mandatory,
+# FAIL/CANCEL/NOT_RUN prevents ON even if scoped crypto+kernel already PASS.
 name: M0 PLAN012 Linux parallel pre-enable hard gates
 run-name: "M0|PLAN012-PREENABLE|${{ github.sha }}"
 on:
@@ -12,89 +12,98 @@ on:
       - ".github/workflows/m0-plan012-preenable-parallel.yml"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go"
+      - "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs"
+      - "crates/wbd-engine/src/v4_game_lane.rs"
 permissions: {contents: read}
 concurrency:
   group: m0-plan012-preenable-${{ github.sha }}
   cancel-in-progress: false
 jobs:
-  original-fec-fixed-auto-m2-m4:
-    # Compiles real original-Go TLS + Rust once, runs existing SOURCE-locked
-    # lost-source Fixed/Auto authentic APPLIED, UDP and M4 S46 Stop assertions.
+  original-fec-game-m2-m4:
+    # ONE original-Go real TLS->Rust Game2/4 M4 raw/TUN UDP kernel case plus
+    # Fixed/Auto applied after genuine M2 and repeated owned M4 Stop.
     uses: ./.github/workflows/m0-plan012-combined-functional.yml
     permissions: {contents: read}
 
-  positive-source-probe:
+  game-kernel-receipt:
+    needs: original-fec-game-m2-m4
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 4
     strategy:
       fail-fast: false
-      max-parallel: 3
-      matrix:
-        include:
-          - gate: public-cli
-            file: r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go
-            test: TestM0Plan012OriginalGoPublicLinuxCLIConnectDisconnectApplied
-            owner: r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go
-          - gate: game2
-            file: r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go
-            test: TestM0Plan012OriginalGoGame2RealKernelFirstApp
-            owner: r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go
-          - gate: game4
-            file: r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go
-            test: TestM0Plan012OriginalGoGame4RealKernelFirstApp
-            owner: r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go
+      max-parallel: 2
+      matrix: {lane: [2, 4]}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Ensure real test and owner implementation exist; no native-only stand-in
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
+          path: result
+      - name: Verify exact same run, attempt, Git source and real kernel application receipt
         env:
-          GATE: ${{ matrix.gate }}
-          TEST_FILE: ${{ matrix.file }}
-          TEST_NAME: ${{ matrix.test }}
-          OWNER_FILE: ${{ matrix.owner }}
+          REQUIRED_LANES: ${{ matrix.lane }}
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import os,pathlib,re,sys
-          gate=os.environ["GATE"]
-          expected=[os.environ["TEST_FILE"],os.environ["OWNER_FILE"]]
-          missing=[p for p in expected if not pathlib.Path(p).is_file()]
-          test=os.environ["TEST_NAME"]
-          if not missing:
-            source=pathlib.Path(expected[0]).read_text()
-            if not re.search(r"(?m)^func\s+"+re.escape(test)+r"\s*\(\s*t\s+\*testing\.T\s*\)",source):
-              missing.append("non-skipped real "+test)
-          if gate in ("game2","game4"):
-            native=pathlib.Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
-            if "wbd_m0_embedded_go_game_" not in native:
-              missing.append("auth-bound Rust Game2/4 owner C ABI")
-          if missing:
-            print(f"::error::M0_PLAN012_{gate}_NOT_RUN missing="+", ".join(missing))
-            sys.exit(2)
-          print(f"M0_PLAN012_{gate}_POSITIVE_TEST_PRESENT_NOT_YET_RUN")
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path("result/fixed-kernel-result")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==int(os.environ["GITHUB_RUN_ID"])
+          assert m["attempt"]==int(os.environ["GITHUB_RUN_ATTEMPT"])
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          lane=int(os.environ["REQUIRED_LANES"])
+          assert lane in (2,4)
+          log=(root/"game-real-kernel.log").read_bytes()
+          assert hashlib.sha256(log).hexdigest()==m["original_go_tls_game_m4_real_kernel_log_sha256"]
+          native=(root/"real-go-native-game-lanes.log").read_text()
+          original=(root/"original-go-game-tls.log").read_text()
+          marker=f"M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes={lane} authenticated_original_go_tls=1 native_M3_AEAD_PN=1 raw_kernel_copies={lane} independent_lanes={lane} udp_payload=99 unique_app=1 stop_stale_denied=1 NOT_PUBLIC_GO_CLI=1 GAME_PRODUCTION_OFF=1"
+          assert log.decode().count(marker)==1, "missing/duplicate actual Go-TLS native raw/TUN UDP proof"
+          assert f"M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes={lane}" in native
+          assert f"M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes={lane}" in original
+          for src in ["crates/wbd-engine/src/v4_game_kernel_linux_tests.rs",
+                      "crates/wbd-engine/src/v4_game_lane.rs",
+                      "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go"]:
+              assert src in m["source_inputs_sha256"],src
+              assert hashlib.sha256(pathlib.Path(src).read_bytes()).hexdigest()==m["source_inputs_sha256"][src]
+          print(f"M0_PLAN012_GAME{lane}_ORIGINAL_GO_TLS_M4_KERNEL_UDP_SCOPED_PASS same_source=1 real_kernel=1 NOT_PUBLIC_GO_CLI=1 production=OFF")
           PY
 
-  execute-public-and-game-kernel:
-    needs: [original-fec-fixed-auto-m2-m4, positive-source-probe]
+  original-public-cli-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require real Go public binary product and explicit non-skipped original test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,re,sys
+          paths=[
+            pathlib.Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go"),
+            pathlib.Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go"),
+          ]
+          missing=[str(p) for p in paths if not p.is_file()]
+          if not missing:
+            t=paths[1].read_text()
+            name="TestM0Plan012OriginalGoPublicLinuxCLIConnectDisconnectApplied"
+            if not re.search(r"(?m)^func\s+"+name+r"\s*\(\s*t\s+\*testing\.T\s*\)",t) or re.search(r"\bt\.Skip(?:Now|f)?\s*\(",t):
+              missing.append("non-skipped "+name)
+          if missing:
+            print("::error::M0_PLAN012_PUBLIC_CLI_NOT_RUN missing="+", ".join(missing))
+            sys.exit(2)
+          print("M0_PLAN012_PUBLIC_CLI_SOURCE_PRESENT_ACTUAL_EXECUTION_REQUIRED")
+          PY
+
+  execute-public-original-go-cli:
+    needs: [original-fec-game-m2-m4, game-kernel-receipt, original-public-cli-source]
     runs-on: ubuntu-24.04
     timeout-minutes: 12
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        include:
-          - gate: public-cli
-            test: TestM0Plan012OriginalGoPublicLinuxCLIConnectDisconnectApplied
-            marker: M0_PLAN012_PUBLIC_LINUX_FEATURE7_CLI_CONNECT_DISCONNECT_APPLIED_PASS
-          - gate: game2
-            test: TestM0Plan012OriginalGoGame2RealKernelFirstApp
-            marker: M0_PLAN012_ORIGINAL_GO_GAME2_M4_RAW_TUN_FIRST_APP_PASS
-          - gate: game4
-            test: TestM0Plan012OriginalGoGame4RealKernelFirstApp
-            marker: M0_PLAN012_ORIGINAL_GO_GAME4_M4_RAW_TUN_FIRST_APP_PASS
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -102,50 +111,49 @@ jobs:
         with:
           name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
           path: product-artifact
-      - name: Actual isolated Linux kernel owner, not compilation or canned output
-        env:
-          GATE: ${{ matrix.gate }}
-          TEST_NAME: ${{ matrix.test }}
-          REQUIRED_MARKER: ${{ matrix.marker }}
+      - name: Original Go CLI binary actual product Connect Disconnect and authenticated APPLIED
         shell: bash
         run: |
           set -euo pipefail
           test -s product-artifact/fixed-build/owner-go.test
+          # This MUST be the actual pinned Go public executable, not a
+          # package-private V4 TLS fixture or forged release-capability flag.
+          test -s product-artifact/fixed-build/wbd-client
           test -s product-artifact/fixed-build/libwbd_engine.so
           python3 - <<'PY'
-          import json,os,pathlib
+          import hashlib,json,os,pathlib
           p=pathlib.Path("product-artifact/fixed-kernel-result/manifest.json")
-          j=json.loads(p.read_text())
-          assert j["source_sha"]==os.environ["GITHUB_SHA"],"wrong prebuilt SOURCE"
-          assert j["run_id"]==int(os.environ["GITHUB_RUN_ID"]),"wrong reusable run"
-          assert j["attempt"]==int(os.environ["GITHUB_RUN_ATTEMPT"]),"wrong attempt"
+          m=json.loads(p.read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["run_id"]==int(os.environ["GITHUB_RUN_ID"])
+          assert m["attempt"]==int(os.environ["GITHUB_RUN_ATTEMPT"])
+          assert hashlib.sha256(pathlib.Path("product-artifact/fixed-build/wbd-client").read_bytes()).hexdigest()==m["binaries_sha256"]["wbd-client"]
           PY
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
           test -c /dev/net/tun
-          NS="wbdp_${GITHUB_RUN_ID}_${GATE}"
+          NS="wbdcli_${GITHUB_RUN_ID}"
           sudo -n ip netns add "$NS"
           trap 'sudo -n ip netns del "$NS" || true' EXIT
           sudo -n ip -n "$NS" link set lo up
           sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
           sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
-          sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_PLAN012_PRODUCT_GATE="$GATE" LD_LIBRARY_PATH="$GITHUB_WORKSPACE/product-artifact/fixed-build" "$GITHUB_WORKSPACE/product-artifact/fixed-build/owner-go.test" -test.v -test.count=1 -test.run "^$TEST_NAME$" | tee "preenable-$GATE.log"
-          grep -Fq -- "--- PASS: $TEST_NAME " "preenable-$GATE.log"
-          grep -Fq "$REQUIRED_MARKER" "preenable-$GATE.log"
-          echo "M0_PLAN012_TRUE_PRODUCT_GATE_PASS gate=$GATE SOURCE=$GITHUB_SHA"
+          sudo -n ip netns exec "$NS" env WBD_REAL_TUN=1 WBD_M0_PLAN012_PRODUCT_GATE=public-cli WBD_ORIGINAL_PUBLIC_GO_BINARY="$GITHUB_WORKSPACE/product-artifact/fixed-build/wbd-client" LD_LIBRARY_PATH="$GITHUB_WORKSPACE/product-artifact/fixed-build" "$GITHUB_WORKSPACE/product-artifact/fixed-build/owner-go.test" -test.v -test.count=1 -test.run '^TestM0Plan012OriginalGoPublicLinuxCLIConnectDisconnectApplied$' | tee public-cli.log
+          grep -Fq -- '--- PASS: TestM0Plan012OriginalGoPublicLinuxCLIConnectDisconnectApplied ' public-cli.log
+          grep -Fq 'M0_PLAN012_PUBLIC_LINUX_FEATURE7_CLI_CONNECT_DISCONNECT_APPLIED_PASS' public-cli.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: m0-plan012-product-${{ matrix.gate }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: preenable-*.log
+          name: m0-plan012-public-cli-${{ github.run_id }}-${{ github.run_attempt }}
+          path: public-cli.log
           if-no-files-found: warn
           retention-days: 30
 
   linux-release-qualified:
-    needs: [original-fec-fixed-auto-m2-m4, positive-source-probe, execute-public-and-game-kernel]
+    needs: [original-fec-game-m2-m4, game-kernel-receipt, original-public-cli-source, execute-public-original-go-cli]
     runs-on: ubuntu-24.04
     steps:
-      - name: All positive Linux prerequisites actually passed on one SOURCE
+      - name: All TRUE actual-source public CLI and private original-Go Game2/4/FEC2 kernel gates passed
         run: |
           echo "M0_PLAN012_LINUX_PREENABLE_ALL_TRUE_GATES_PASS SOURCE=$GITHUB_SHA"
-          echo "This is a qualification receipt; code/config remains OFF until M0 separately activates and verifies shipping artifacts."
+          echo "This only confirms evidence; actual production deployment permission remains a separate verified M0 source commit."
