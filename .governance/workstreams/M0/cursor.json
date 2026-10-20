@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 213,
-  "checkpoint_sha": "8c9125fc07f57fc0b29bd8490fe219879936776d",
+  "sequence": 214,
+  "checkpoint_sha": "c716eb7cfa1b914cde7f536658a65776b95da8c8",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN019 M0 original Go public Game2/4 source-locked TLS→single Rust GameAdapter→per-lane M4 raw/TUN/UDP and Stop partial. Precise original S489 public Game2/4 independent Linux Actions39427677138/1 job118644240431 and118644241059 both FAIL application echo; Game4 kernel header TCP PSH+ACK client healthy ports41032–41034 to server444–446 on both raw veth, but no proven M4 RX AEAD first/echo. Native private Game M4 and real public Fixed/Auto remain accepted from separate sources. Production Game/FEC2 OFF, Windows/physical NOT_RUN.",
-  "why_now": "S487 malformed YAML Actions39427195857 FAIL; S488 fixed syntax but Game2/4 public still FAIL Actions39427318548; S489 genuine IP TCP headers Game4 both endpoints visible but app still FAIL39427677138. H212 evidence_refs mismatch made mandatory governance39427677262 and selftests39427677375 fail; S490 authored exact S489 SOURCE JSON and records original FAIL, never relax evidence validator. No in-flight M0 runtime Actions when recovered and no new M1/M4 worker branch source.",
-  "done_when": "One exact source original Go public Linux Game2/4 authenticated TLS lane group, distinct M3 PN, native raw/TUN application echo BOTH directions under damaged lane1/no HOL, joined Stop, no fake cold grant; Fixed/Auto source-locked mature M2 accepted. Platform Windows native/physical/performance tracked separately, product/FEC2 production OFF until scope passes.",
-  "next_action": "Fix original Go Game2/4 public Rust M4 inbound parser or first-delivery/TUN path after physical TCP header verified both veth interfaces; run one exact compiled SOURCE Game2/Game4 parallel dual role app no-HOL Stop Actions only; do not repeat accepted Normal/off, Fixed/Auto, private Game native.",
+  "current_task": "M0 PLAN012/019 source-locked Linux original Go V4 public Game2/4 real authenticated TLS 2/4 independent lanes, Rust one GameAdapter M4 raw/TUN, actual 5/5 bidirectional UDP each under lane1 kernel TCP damage and owned Stop PASS_SCOPED at S497 SOURCE bdcd66c6ccf973f26af7e9e4eb035457108cb7dd Actions39431226207/1. S497 fixed real 750ms blocking shared TUN read/write mutex HOL by native Game-ready poll0 plus 2ms bounded sleep; production Game/FEC2 OFF. Fixed/Auto authentic M2 first group source adf4 frozen PASS, not rerun. Shared Windows original-Go WinForms/native Rust authenticated owner→OS applied/Stop ABI and real Windows 2022 product qualification still NOT_RUN, no full cross-product same-SOURCE promotion.",
+  "why_now": "Reconciled H213 checkpoint 8c9125 through S491/S498: S493 instrument RX, S494 stage real 1 authenticated/tun written but timeout; S495 exact veth+TUN header Actions39430776859 original Game2/4 FAIL found 6.4s server TUN delay and reverse >12s, not AEAD failure. S496 intent S497 restores low latency by replacing TUN 750ms poll under serialized mutex with existing M4 ready poll0 and bounded 2ms idle yield in M0 GameKernelOwner. Combined exact SOURCE bdcd66 Actions39431226207 SUCCESS both real public Game2/4 5/5 UDP lane1 damaged and joined Stop, artifact12268980051 digest5fd581...; original Fails retained in S498 evidence. H214 refers precise SOURCE, no repeated accepted positives.",
+  "done_when": "Linux original Go public Game2/4 2/4 credential TLS independently authenticated M4 raw/TUN five real kernel UDP echoed under one failed lane and joined Stop now PASS_SCOPED at SOURCE bdcd; Fixed/Auto original M2 authenticated initial APPLIED already accepted separately at source adf4. Before production ON require combined all-modes one SOURCE decisions plus Windows exact native UI→original Go→Rust authenticated owner/Stop ABI and Windows OS native qualification, physical separately NOT_RUN. No false applied or stale completion.",
+  "next_action": "Consume frozen M4 Windows task R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018 branch b53b5dac422a634cdd82178a29071f9f9f0ae5e7 without floating source, implement missing M0-owned Windows-compatible real original-Go verified TLS→Rust authenticated owner Stop/readback ABI and run exact-SOURCE native Windows 2022 Go/WinForms OS qualification; preserve Linux Game2/4 accepted no duplicate samples.",
   "unverified": true,
-  "last_tested_source": "2cd126aee8e5277a2dd201abb45fd6965c2da30a",
+  "last_tested_source": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN019-public-Game-inbound-TCP-source-locked-S489-20261020.json"
+    "docs/evidence/M0/PLAN019-original-Go-public-Game2-4-real-M4-source-locked-PASS-S497-20261020.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H213 reconciled S487–S490: Go/Rust V4 Game2+Game4 public true TLS and M4 READY but full product first-app echo FAIL. Game4 S489 TCP 3 healthy raw packets client->server captured on both veth with P+ACK DF TTL64 payload165; not AEAD/TUN acceptance. S490 exact-SOURCE evidence / original YAML+functional fails. H212 mismatched SOURCE evidence caused governance FAIL intentionally; H213 points to matching S489 evidence, production OFF. M1 runtime not frozen/received, Windows native/physical NOT_RUN."
+  "partial_summary": "H214 S491–S498: NEW real original Go TLS Game2/4 PUBLIC Linux 5/5 UDP echoes per Game under genuine damaged TCP lane1, no-HOL and joined Stop PASS_SCOPED at SOURCE bdcd66 Actions39431226207/1/job118656504467 artifact12268980051 SHA256 5fd581f4...; original TLS M3 protected and M4 raw/TUN positive, corrected M4 shared TUN read/write HOL (750ms lock poll -> poll0+2ms idle yield). S494 and S495 original both Game FAIL preserved; S497 stale old-binary independent matrix FAIL preserved, diagnostic-only push disabled S498. Prior Fixed/Auto initial M2 SOURCE adf4 accepted. Main task still partial Windows original-Go/Rust native owner/Go UI OS tests NOT_RUN; Game/FEC2 default OFF, no production ON, physical/p99 NOT_RUN."
 }
