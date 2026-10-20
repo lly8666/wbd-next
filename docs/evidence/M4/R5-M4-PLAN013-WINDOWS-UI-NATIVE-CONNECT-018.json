@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "result": "SOURCE_ENHANCED_REAL_GO_PROCESS_AND_GAME_1_2_4_ACTIONS_PENDING",
+  "result": "PARTIAL_SCOPED_WINDOWS2022_REAL_ORIGINAL_GO_CLI_WINFORMS_PASS_NATIVE_PRODUCT_NETWORK_NOT_RUN",
   "registry_revision": 2,
   "assignment_epoch": 1,
   "previous_linux": {
@@ -16,10 +16,88 @@
   "test_blob": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
   "actual_native_network": "NOT_RUN",
   "actual_Rust_Stop": "NOT_RUN_M0_ONLY",
-  "next_action": "Consume exact S53 Windows-2022 real pinned original Go CLI+GUI G2 and verify all named negative process, Game1/2/4 and false READY cases; repair compile/functional errors and obtain artifact.",
+  "next_action": "Consume M0 exact authenticated Go/Rust Windows Stop owner ABI and isolated recoverable Windows network host from issue20; implement M4-owned WFP/Wintun/DNS/routes positive Apply→readback→Stop→Recover and rerun one exact Windows2022 scoped/full test. Preserve current S53 scoped PASS and product OFF.",
   "new_original_go_process_tests": [
     "PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied",
     "PLAN013 original Go process refuses unsafe Connect before network-ready",
     "PLAN013 refused original Go Connect leaves no owned journal or routes"
-  ]
+  ],
+  "source_sha": "32fd73e9b2904b79d82bbcbb416d3bd53bb9d2f8",
+  "main_observed_sha": "34955c75c3fdab7214acfcb7520e58191d41d315",
+  "verification": {
+    "exact_central_g2": {
+      "run_id": 39365023412,
+      "job_id": 118439776974,
+      "result": "ROLE_SCOPE_PASS",
+      "source_sha": "32fd73e9b2904b79d82bbcbb416d3bd53bb9d2f8"
+    },
+    "native_windows_2022": {
+      "run_id": 39365281132,
+      "attempt": 1,
+      "attest_job_id": 118440601979,
+      "attest_conclusion": "success",
+      "windows_job_id": 118440664955,
+      "windows_conclusion": "success",
+      "workflow_conclusion": "success",
+      "workflow": ".github/workflows/m0-m4-product-assembly.yml",
+      "control_sha": "904838e528db4e065d879c1f7f0154bf0c018c85",
+      "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "overlay_source": "32fd73e9b2904b79d82bbcbb416d3bd53bb9d2f8",
+      "windows_artifact_id": 12239082327,
+      "windows_artifact_provider_sha256": "61b258abf9589afff8fe756f5726d0ede931d8cf40eee213e83f3278f7200f4f",
+      "windows_artifact_independent_sha256": "61b258abf9589afff8fe756f5726d0ede931d8cf40eee213e83f3278f7200f4f",
+      "windows_artifact_bytes": 30757063,
+      "identity_artifact_id": 12238828699,
+      "identity_artifact_provider_sha256": "88c8ffe3d510bfe0ba8b054c0920f5ebc7e9357e6c65f16edb958666c8a8822e",
+      "git_blob_original_gui": "9015c6a05de702fcacb92cb6b29fbf9c90a63ee9",
+      "git_blob_original_gui_tests": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
+      "original_client_exe_sha256": "fea0fb887d2f00a0fab12d05462a48ff575d2814dd2d3556f4cd163e98bf206b",
+      "native_gui_exe_sha256": "a6f3c0e3baf717e1e0728112ecba99bc390d9533357582b2b395fd8d47ed5a14",
+      "native_gui_selftest": "PASS_REAL_WINDOWS2022_GUI_CHILD_PROCESS",
+      "native_gui_selftest_check_assertions": 314,
+      "native_go_owned_safety_tests": 20,
+      "original_go_game_configuration_lanes": [
+        1,
+        2,
+        4
+      ],
+      "actual_original_go_connect_negative": "PASS_NONZERO_NATIVE_WFP_OWNER_GUARD_BEFORE_READY",
+      "rejected_connect_left_no_owned_wal_or_routes": true,
+      "legacy_ready_nonpromotional_to_connected": true,
+      "native_WFP_filter_install": "NOT_RUN",
+      "live_Wintun_DNS_routes_IPv6_owned_readback": "NOT_RUN",
+      "actual_authenticated_Rust_Stop": "NOT_RUN_MAIN_OWNED",
+      "game_real_2_4_packet_lanes": "NOT_RUN",
+      "original_Windows_product_Connected": "NOT_RUN",
+      "production_FEC2_Game": "OFF"
+    }
+  },
+  "historical_failures": [
+    {
+      "run_id": 39365105883,
+      "result": "FAIL_ATTEST_SCOPE_SOURCE_CONTROL_RUN_MISMATCH",
+      "cause": "older S52 G2 source audited as branch advanced to S53; original Windows job SKIPPED"
+    },
+    {
+      "run_id": 39256224174,
+      "result": "FAIL_OLD_GO_SHELL_TEST_COMPILE_OLD_SOURCE"
+    },
+    {
+      "run_id": 39247695185,
+      "result": "FAIL_ASSEMBLY_OLD_PARAM_HASH"
+    },
+    {
+      "run_id": 39302887219,
+      "result": "FAIL_MAIN_DISPATCH_RACE_NO_I010_WINDOWS_JOB"
+    }
+  ],
+  "shared_owner_blocker": {
+    "issue_url": "https://github.com/lly8666/wbd-next/issues/20",
+    "owner": "M0",
+    "owner_interface": "verified original Go TLS and Rust owner Stop/quiesced/FD-loans-drained actual acknowledgement linked to live client+epoch",
+    "m4_current_guard": "N4NativeNetworkReady rejects; native_unified_assembly_windows.go assemblyOnly=true",
+    "available_host": "windows-2022 shared Actions unprivileged scoped tests only, no demonstrated isolated recoverable full network",
+    "resolution_needed": "M0 shared ABI and isolated recoverable Windows runner; then M4 finishes positive native owned WFP/TUN/DNS/route application/recovery without disabling guards",
+    "status": "BLOCKED_POSITIVE_NETWORK_ONLY_NOT_A_GREEN_PRODUCT"
+  }
 }
