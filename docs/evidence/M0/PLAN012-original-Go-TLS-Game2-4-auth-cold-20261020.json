@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "intent_path": "docs/devlog/M0/PLAN012-original-Go-Game2-4-auth-cold-intent-20261020.md",
+  "source_sha": "7dd10a2dcda165f408b9231d228345b328c9481a",
+  "result": "PASS_SCOPED_ORIGINAL_GO_REAL_TLS_GAME2_4_AUTHENTICATED_COLD_SET_NOT_LINUX_GAME_KERNEL_OR_PRODUCT",
+  "authored_files": [
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
+    ".github/workflows/m0-plan012-combined-functional.yml"
+  ],
+  "original_go_control_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "go_toolchain": "1.23.12",
+  "rust_toolchain": "1.85.1",
+  "run": {
+    "id": 39358619164,
+    "attempt": 1,
+    "job_id": 118419235932,
+    "head_sha": "7dd10a2dcda165f408b9231d228345b328c9481a",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "artifact_id": 12236611409,
+    "artifact_name": "m0-plan012-combined-39358619164-1",
+    "artifact_digest_sha256": "4b57ce1f55eb7cb051a56bb20ae4ce167abcfdd8fc4b5fbceed03f6eb8df7c77",
+    "artifact_expires_at": "2026-11-19T02:25:25Z",
+    "artifact_includes": [
+      "original-go-game-tls.log",
+      "manifest.json",
+      "receipt.json",
+      "real-kernel.log",
+      "continuous-kernel.log",
+      "release-record.log",
+      "game-lanes.log"
+    ]
+  },
+  "direct_job_grep_markers": [
+    "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2",
+    "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4"
+  ],
+  "tested": [
+    "Actual pinned original-Go credential-protected TLS Game2/Game4 lane joins under one epoch, independent exporter key material and canonical ordered cold lane identities",
+    "Mutated negotiated Game policy and C2S key rejected from protected ColdSnapshot",
+    "Duplicate/incomplete lane, forged mixed FEC feature, different authenticated principal rejected at typed cold set",
+    "Same source Linux prior Fixed/Auto real missing-source client TUN/UDP, genuine mature C2S M2 applied and M4 S46 route/rule/FD Stop assertions remain success: separate accepted scope, no Game product extrapolation"
+  ],
+  "governance": {
+    "run_id": 39358619226,
+    "attempt": 1,
+    "result": "success",
+    "head_sha": "7dd10a2dcda165f408b9231d228345b328c9481a"
+  },
+  "maintenance": {
+    "run_id": 39358619152,
+    "attempt": 1,
+    "result": "success",
+    "head_sha": "7dd10a2dcda165f408b9231d228345b328c9481a"
+  },
+  "related_M4_scope": {
+    "run_id": 39357872032,
+    "attempt": 1,
+    "result": "success",
+    "worker_source": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
+    "main_control_source": "9c40b406e7e17ea39d8f2d8849a550b639fd261e",
+    "scope": "CENTRAL_M4_G2_NOT_M0_GAME_PRODUCT"
+  },
+  "retained_qualification": {
+    "original_go_tls_game_2_4_cold_set": "PASS_SCOPED",
+    "game_2_4_rust_native_adapter": "PASS_NATIVE_ONLY",
+    "game_2_4_independent_authenticated_M4_raw_kernel_first_application": "NOT_RUN",
+    "original_go_public_feature7_linux_cli_connect_disconnect_cold_applied_readback": "NOT_RUN",
+    "original_go_real_Fixed_Auto_initial_M2_revision_applied": "PASS_SCOPED_LINUX",
+    "original_M4_S46_stop_route_rule_fd_cleanup": "PASS_SCOPED_LINUX",
+    "auto_dynamic_512_valid_sources": "NOT_RUN",
+    "fec2_product_on": "OFF",
+    "game_product_on": "OFF",
+    "windows": "NOT_RUN_DEFERRED",
+    "physical": "NOT_RUN_DEFERRED",
+    "performance_20Mbps": "NOT_RUN_DEFERRED"
+  },
+  "prior_failures_retained": [
+    {
+      "run_id": 39351470773,
+      "result": "FAIL_original netns workflow shell selector"
+    },
+    {
+      "run_id": 39351905299,
+      "result": "FAIL_original duplicate netns script suffix"
+    },
+    {
+      "run_id": 39353264860,
+      "result": "FAIL_original worker dispatcher identity"
+    }
+  ],
+  "next_action": "Wire this frozen original-Go TLS Game2/4 cold set into the original Rust GameAdapter lane-scoped AEAD/PN and M4 raw kernel RX/TUN first-app owner, plus public Linux Go CLI feature7 Connect/Disconnect/applied readback; run one source-locked combined Linux functional gate before enabling FEC2/Game production."
+}
