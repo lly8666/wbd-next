@@ -27,6 +27,9 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go"
+      - "r0/go_overlay/internal/v4productcli/game_linux.go"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
@@ -86,7 +89,7 @@ jobs:
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
-          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
+          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_linux_game_product.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           # Optional product conformance: missing files are NOT_RUN at
@@ -100,6 +103,7 @@ jobs:
           # sources, not a clone of V3 or a package-private Go test binary.
           mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
           cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
           cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -190,6 +194,9 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_disabled_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+            "r0/go_overlay/internal/v4productcli/game_linux.go",
+            "crates/wbd-engine/src/v4_game_public_kernel.rs",
             "r0/go_overlay/internal/v4productcli/linux.go",
             "r0/go_overlay/cmd/wbd-v4-client/main.go",
             "r0/go_overlay/cmd/wbd-v4-server/main.go",
