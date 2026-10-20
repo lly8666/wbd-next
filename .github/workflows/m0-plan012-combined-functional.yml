@@ -342,6 +342,19 @@ jobs:
           cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
           grep -q 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
             fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+      - name: Two real original-Go product Game2/4 multi-lane TLS -> M4 raw/TUN first-app and damaged lane no-HOL
+        shell: bash
+        run: |
+          set -euo pipefail
+          for game in game2 game4; do
+            WBD_V4_PUBLIC_MODE="$game" bash tools/m0-v4-public-real-linux-netns.sh fixed-build >"fixed-kernel-result/v4-public-$game-real-cli.log" 2>&1 || {
+              tail -115 "fixed-kernel-result/v4-public-$game-real-cli.log" >&2
+              exit 1
+            }
+            lanes="${game#game}"
+            grep -q "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$lanes" "fixed-kernel-result/v4-public-$game-real-cli.log"
+            echo "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=$game" 
+          done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
