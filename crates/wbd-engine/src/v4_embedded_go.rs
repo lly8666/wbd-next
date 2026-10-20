@@ -329,6 +329,8 @@ struct Entry{
     #[cfg(feature="fec2_product_record")]
     rx_feedback:Option<Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
+    original_public_feedback_armed:bool,
+    #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     normal_off_applied_revision:u64,
@@ -503,6 +505,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         normal_firstsend_m2:None,
         #[cfg(feature="fec2_product_record")]
         rx_feedback:None,
+        #[cfg(feature="fec2_product_record")]
+        original_public_feedback_armed:false,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2140,6 +2144,28 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
     unsafe{out.write(e.phase)};OK
 }
 
+/// Bind genuine public original-Go V4 TLS session to the SAME original
+/// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
+/// This is a mode authorization, NOT a separate data plane or self-attested
+/// epoch: generation handle already required private protected Go Prepare,
+/// actual FakeTCP Detach/Commit, and original TX/RX owner activation.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize
+)->i32{
+    let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if !verified_normal_off_owner(&e,&epoch)||
+        e.workers.is_some()||e.original_public_feedback_armed||
+        e.raw_rx.is_none()||e.tun_sink.is_none()||
+        e.raw_ifname.is_none(){return BAD_STAGE}
+    e.original_public_feedback_armed=true;
+    OK
+}
+
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
@@ -2399,7 +2425,7 @@ fn background_raw_once(
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
-    feedback:&Arc<Mutex<wbd_recovery::RxFeedbackState>>,
+    feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
 )->Result<u32,i32>{
     // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
     // table are now owned by RX, not re-initialized or cloned. RX never
@@ -2459,7 +2485,7 @@ fn background_raw_once(
         // first-delivery M2 feedback. Raw tuple/seq, FEC parity guess or
         // a replayed PN can never fabricate an ACK.
         #[cfg(feature="fec2_product_record")]
-        if let Some(pn)=receipt.authenticated_data_pn{
+        if let (Some(feedback),Some(pn))=(feedback,receipt.authenticated_data_pn){
             if let Ok(mut state)=feedback.lock(){
                 state.on_authenticated_data(wbd_types::RecordPn(pn),when);
             }else{invalid_seen=true}
@@ -2498,7 +2524,8 @@ fn background_raw_once(
 #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
 fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     if e.feedback_queued.is_some(){return Ok(false)}
-    let feedback=Arc::clone(e.rx_feedback.as_ref().ok_or(BAD_STAGE)?);
+    let Some(feedback)=e.rx_feedback.as_ref().map(Arc::clone)
+        else{return Ok(false)};
     let mut rx=feedback.lock().map_err(|_|BAD_STAGE)?;
     let Some(draft)=rx.on_due(now)else{return Ok(false)};
     let attempt=(||->Result<u64,i32>{
@@ -3383,8 +3410,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         else{return INVALID};
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
+    // Only the REAL published original-Go product API explicitly arms the
+    // native bidirectional M2 feedback worker under verified epoch. Existing
+    // separate-sender scoped source proofs keep their independently
+    // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
-    let feedback_rx={
+    let feedback_rx=if e.original_public_feedback_armed{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
                 max_retained_pages:8,max_pages_per_report:8,
@@ -3393,8 +3424,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         )else{return INVALID};
         let shared=Arc::new(Mutex::new(state));
         e.rx_feedback=Some(Arc::clone(&shared));
-        shared
-    };
+        Some(shared)
+    }else{None};
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
     let mut original_rx=match e.owner.detach_background_rx(normal){
         Ok(rx)=>rx,
@@ -3440,7 +3471,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
-                    &feedback_rx
+                    feedback_rx.as_ref()
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
