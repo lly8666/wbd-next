@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "PARTIAL_M4_NATIVE_KERNEL_STOP_PASS_ORIGINAL_GO_S43_NAMED_PASS_BUT_M0_WORKFLOW_FAIL_S46_NOT_RUN",
+  "status": "PARTIAL_MAIN_S43_REAL_GO_COMBINED_ACTIONS_PASS_WITH_SOURCE_LOCKED_ARTIFACT_S46_STRICT_BASELINE_NOT_RUN",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -22,7 +22,7 @@
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "M0 fix its tools/run-v4-tun-netns.sh trailing fi on main and import exact M4 S46 enhanced Go test blob, then run one new combined Actions. M4 independently check final overall SUCCESS and named test markers/baseline before declaring ready.",
+  "next_action": "M0 copy exact newer M4 S46 Go test source f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6 into current main pinned original Go combined netns and run one full SUCCESS named test. If M0 explicitly accepts S43 real Go + S44 real native TUN evidence as current done_when and excludes enhanced S46, retain S46 NOT_RUN as extra, never mark its new checks PASS.",
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "verification": {
     "worker_native": {
@@ -123,6 +123,34 @@
       "raw_log_artifact_provider_sha256": "3caf7cc07d257f004823422d573ad643d917e5886f4b55e17e31da12dbbf331f",
       "artifact_independent_zip_extraction": "NOT_RUN",
       "actual_workflow_pass": false,
+      "product_fec2": "OFF",
+      "previous_run_failure_preserved": true
+    },
+    "M0_original_go_S43_final_actual": {
+      "main_source_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985",
+      "worker_exact_source_sha": "3156a2907b1ecc975fae552da4665de1f1aa21b5",
+      "worker_exact_go_blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+      "integrated_main_go_blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+      "same_git_blob": true,
+      "run_id": 39352250946,
+      "attempt": 1,
+      "job_id": 118398882536,
+      "run_conclusion": "success",
+      "job_conclusion": "success",
+      "original_go_auth_tls": "PASS_ACTUAL",
+      "original_go_fec_source_loss_rs16_recovery": "PASS_ACTUAL",
+      "client_rust_tun_udp_four_first_deliveries": "PASS_ACTUAL",
+      "real_go_client_c2s_m2_receipt_and_mature_fixed": "PASS_ACTUAL",
+      "repeated_stop_and_stale_epoch_rx_feedback_reject": "PASS_ACTUAL",
+      "owned_tun_links_absent": "PASS_ACTUAL",
+      "exact_named_test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+      "exact_test_result": "PASS_REAL_LINUX_NETNS_S43",
+      "exact_log_marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+      "result_artifact_id": 12232849167,
+      "result_artifact_provider_sha256": "093db8f5d850edf35abea140750c1b810c9d577015af22ff03f73eb1dfbe15c0",
+      "artifact_independently_unzipped": false,
+      "stronger_S46_route_rule_fd_baseline": "NOT_RUN",
+      "original_go_real_network_journal_restore": "NOT_RUN_UNLESS_CONCRETE_JOURNAL_CONTRACT_IS_PRESENT",
       "product_fec2": "OFF"
     }
   },
@@ -139,5 +167,5 @@
   },
   "last_authored_go_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
   "native_validated_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
-  "main_observed_sha": "45af4b2fc9a8cee9e32eeb32fde2a4ca603f6216"
+  "main_observed_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985"
 }
