@@ -111,7 +111,7 @@ jobs:
               if v.get("kind")=="netem":
                 st=v.get("stats",{})
                 queue=st.get("queue",{}) if isinstance(st,dict) else {}
-                drops.append(int(queue.get("drops",st.get("drops",0))) if isinstance(st,dict) else 0)
+                drops.append(int(v.get("drops",queue.get("drops",st.get("drops",0)))))
               for x in v.values():walk(x)
             elif isinstance(v,list):
               for x in v:walk(x)
