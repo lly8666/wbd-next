@@ -1,0 +1,118 @@
+//go:build linux && cgo && wbd_v4_embedded_go
+
+package realityfront
+
+// V4 Linux original-Go server's NON-TEST protected-TLS -> Rust owner -> real
+// M4 raw/TUN lifecycle. No caller may install a raw cold bundle or forge
+// DataPlaneReady: ownerBridge is filled only INSIDE the verified admission.
+// This is a server-side integration component. A public Go CLI and symmetric
+// V4 client runtime are still required before declaring a released product.
+import (
+    "context"
+    "errors"
+    "fmt"
+    "net"
+    "os"
+    "sync"
+
+    "github.com/lly8666/wobuzhidao/internal/faketcp"
+)
+
+// V4LinuxServerProductConfig must be constructed from the running server's
+// actual original Go FakeTCP association and its owned OS network resources.
+// The original Go caller retains the TUN fd; Rust duplicates it under the
+// credential-bound generation. Cleanup is called ONLY after Rust Stop drains
+// both M4 drivers, pending slab loans and owner worker threads.
+type V4LinuxServerProductConfig struct {
+    Epochs *V4EpochStore
+    NetworkInterface string
+    NetworkIfIndex uint32
+    Tun *os.File
+    TunName string
+    CleanupOwnedNetwork func()error
+}
+type V4LinuxServerProduct struct {
+    mu sync.Mutex
+    cfg V4LinuxServerProductConfig
+    owner *v4EmbeddedNativeBridge
+    session *V4ServerSession
+    stopped bool
+}
+// NewV4LinuxServerProduct requires the real kernel device, rather than a
+// loopback hardcoded developer test path. It does not grant any session before
+// credential-protected EstablishServerV4 succeeds on a real association.
+func NewV4LinuxServerProduct(cfg V4LinuxServerProductConfig)(*V4LinuxServerProduct,error){
+    if cfg.Epochs==nil||cfg.Tun==nil||cfg.CleanupOwnedNetwork==nil||
+       cfg.NetworkIfIndex==0||cfg.NetworkInterface==""||len(cfg.TunName)==0||
+       len(cfg.TunName)>15 {
+        return nil,ErrAdmissionParams
+    }
+    iface,err:=net.InterfaceByName(cfg.NetworkInterface)
+    if err!=nil||uint32(iface.Index)!=cfg.NetworkIfIndex{
+        return nil,ErrAdmissionParams
+    }
+    if _,err:=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
+    return &V4LinuxServerProduct{cfg:cfg},nil
+}
+
+// AcceptAuthenticatedPeer is the REAL original Go TLS admission, detach,
+// exact FakeTCP transition, Rust M1/M3 owner Commit, actual M4 raw/TUN attach
+// and continuous native worker start. Never call on a candidate that has not
+// passed the original Go FakeTCP recognized/credential authentication.
+func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
+    ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,
+)(*V4ServerSession,error){
+    if p==nil||assoc==nil{return nil,ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
+    bridge:=&v4EmbeddedNativeBridge{}
+    session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
+        DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
+    })
+    if err!=nil{return nil,err}
+    // From this point the original Go server has detached the authenticated
+    // association and committed the Rust owner. Any driver/start error must
+    // first Stop/release Rust; no system route/TUN cleanup can race that Stop.
+    p.owner=bridge
+    p.session=session
+    if err=bridge.attachRawRxOnInterface(
+        p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,
+    );err==nil{
+        err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
+    }
+    if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
+    if err!=nil{
+        shutdown:=p.closeLocked()
+        return nil,errors.Join(
+            fmt.Errorf("V4 genuine Go TLS/Rust M4 driver start: %w",err),
+            shutdown,
+        )
+    }
+    return session,nil
+}
+
+// Close returns ONLY after original Rust has stopped its packet workers,
+// drained M1/M4 outstanding borrows and released the generation; THEN the
+// externally owned Go kernel/WAL/route/TUN cleanup runs, THEN the protected
+// Go logical lane epoch may be reused. Errors remain retryable.
+func (p *V4LinuxServerProduct) Close()error{
+    if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    return p.closeLocked()
+}
+func (p *V4LinuxServerProduct) closeLocked()error{
+    if p.stopped{return nil}
+    if p.owner==nil||p.session==nil{return ErrAdmissionUnsupported}
+    _,err:=V4StopThenCleanupNetwork(p.owner,p.cfg.CleanupOwnedNetwork)
+    if err!=nil{return err}
+    cold,err:=p.session.ColdSnapshot()
+    if err!=nil{return err}
+    tunnel:=cold.TunnelID()
+    if err=p.cfg.Epochs.ReleaseLane(
+        cold.Principal(),tunnel[:],cold.LaneID(),cold.Epoch(),
+    );err!=nil{return err}
+    p.stopped=true
+    return nil
+}
