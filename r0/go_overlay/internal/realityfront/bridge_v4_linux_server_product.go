@@ -126,6 +126,15 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
 // drained M1/M4 outstanding borrows and released the generation; THEN the
 // externally owned Go kernel/WAL/route/TUN cleanup runs, THEN the protected
 // Go logical lane epoch may be reused. Errors remain retryable.
+// Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
+// operator can forge these numbers; every metric comes from original Rust.
+func (p *V4LinuxServerProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
+    if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicOuterCounters()
+}
 func (p *V4LinuxServerProduct) Close()error{
     if p==nil{return ErrAdmissionParams}
     p.mu.Lock()
