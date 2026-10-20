@@ -2377,6 +2377,20 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
     OK
 }
 
+#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_rx_diagnostics(
+    group:u64,raw_copied:*mut u64,auth_rejected:*mut u64,
+)->i32{
+    if raw_copied.is_null()||auth_rejected.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped{return BAD_STAGE}
+    let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
+    let (raw,auth)=driver.receive_diagnostics();
+    unsafe{raw_copied.write(raw);auth_rejected.write(auth)}
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_release(group:u64)->i32{
