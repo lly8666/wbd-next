@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "bfab03c195a5835679cd85e36c42545b31f98c10",
+  "result": "PASS_SCOPED_EXACT_FROZEN_M4_WINDOWS_MAIN_OVERLAY_INTEGRATION_NOT_PRODUCT",
+  "frozen_m4_branch": "work/m4-r1-platform",
+  "frozen_m4_head": "e359fde5703cc7b92ac4cfcb09d79f388d55ce93",
+  "accepted_m4_code_checkpoint": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "intent_path": "docs/devlog/M0/PLAN014-frozen-M4-Windows-overlay-main-import-intent-20261020.md",
+  "import_commit": "735074465a58634d81e330fc21a46245bf41b0ef",
+  "imported_git_blob_count": 32,
+  "preexisting_identical_git_blob_count": 2,
+  "pinned_m4_file_count": 34,
+  "manifest_operations": 37,
+  "manifest_created_go_overlay_files": 17,
+  "exact_preexisting_scope": "main original Rust/Go realityfront unchanged; no worker branch edits or changed M4 cursor",
+  "validation": {
+    "run_id": 39364646232,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "bfab03c195a5835679cd85e36c42545b31f98c10",
+    "job_id": 118438575202,
+    "workflow": ".github/workflows/governance-maintenance.yml",
+    "runner": "ubuntu-24.04",
+    "named_cases": [
+      "test_m4_frozen_windows_main_import.M4FrozenOverlay.test_import_all_frozen_original_go_windows_source",
+      "test_m4_frozen_windows_main_import.M4FrozenOverlay.test_original_go_manifest_and_guard_remain_exact"
+    ],
+    "tests_total": 208,
+    "tests_result": "OK",
+    "marker": "M0_PLAN014_MAIN_IMPORT_34_M4_GIT_BLOBS_PASS_NETWORK_NOT_RUN",
+    "artifact_id": 12238138393,
+    "artifact_name": "governance-maintenance-39364646232-1",
+    "artifact_digest_sha256": "9cc2f2751a064938fb89a0ed497fe88118f448d5e288f7dee07a61e707c05f82",
+    "expires_at": "2026-11-19T03:30:36Z"
+  },
+  "governance": {
+    "run_id": 39364646252,
+    "attempt": 1,
+    "result": "success",
+    "head_sha": "bfab03c195a5835679cd85e36c42545b31f98c10"
+  },
+  "previously_native_windows": {
+    "run_id": 39362863445,
+    "attempt": 1,
+    "result": "PASS_SCOPED_GO_CLI_WINFORMS_NATIVE_NOT_PRODUCT_NETWORK",
+    "main_control_source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
+    "consumed_m4_code_source": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
+    "windows_job_id": 118432853197,
+    "artifact_id": 12237544999,
+    "artifact_digest_sha256": "6317b855ac3d04a5e52db0293fae0ee4edb854e902dfc4b836ac95160a410fb6",
+    "limitation": "Imported 34 M4 overlay source Git blobs now byte-identical; Windows native runner source had been frozen old branch, not newly main-produced Windows execution. Equivalent source byte proof only, no new product OS result."
+  },
+  "original_failed_results_retained": [
+    {
+      "run_id": 39364544545,
+      "source": "75fb893872177d778692f31b5a5830c72e25684f",
+      "result": "FAIL original import verifier wrong Git blob separator, test source rolled back in commit 2f293ad5b34786d535039a5f237feb78dc1d9c06"
+    },
+    {
+      "run_id": 39361154267,
+      "source": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+      "result": "FAIL original-GO public CLI and independent Game2/4 native kernel product entry NOT_RUN"
+    }
+  ],
+  "still_unqualified": {
+    "original_go_linux_public_feature7_cli_connect_disconnect_applied": "NOT_RUN",
+    "original_go_game2_real_m4_kernel_tun_first_app": "NOT_RUN",
+    "original_go_game4_real_m4_kernel_tun_first_app": "NOT_RUN",
+    "windows_original_go_authenticated_rust_owner_bridge": "NOT_RUN",
+    "windows_native_owned_wfp_tun_dns_route_actual_apply_stop": "NOT_RUN",
+    "windows_gui_live_connect_applied_state": "NOT_RUN",
+    "physical_network_device": "NOT_RUN",
+    "fec2_product": "OFF",
+    "game_product": "OFF"
+  },
+  "next_action": "M0 main-owned actual public original-Go feature7 admission/Connect/Disconnect/APPLIED and genuine Go TLS verified Game2/4 independent M4 raw/TUN first-app, together with Windows authenticated Rust owner/native safe Apply/Stop; run one fresh exact-SOURCE native Windows+Linux functional release gate, no duplicate native smoke or premature ON."
+}
