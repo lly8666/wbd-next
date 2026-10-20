@@ -303,6 +303,10 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
+    // Exact peer data PN, only after this SAME protected original M3
+    // opener consumed an authentic, unique normal/FEC business record.
+    // Never acknowledge unauthenticated tuples, replay or malformed LINK.
+    pub(crate) authenticated_data_pn:Option<u64>,
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
 }
@@ -366,6 +370,7 @@ impl ProtectedBackgroundRx{
             receipt.authenticated_link=1;
             match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
                 Ok(deliveries)=>{
+                    receipt.authenticated_data_pn=Some(opened.pn);
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
                         if tun.write_authenticated_ipv4(self.generation,&first.frame)
@@ -416,6 +421,9 @@ impl ProtectedBackgroundRx{
             },&mut link_report);
         receipt.pending=link_report.pending;
         receipt.invalid=link_report.malformed.saturating_add(link_report.discarded);
+        if receipt.invalid==0 && receipt.failed==0 {
+            receipt.authenticated_data_pn=Some(opened.pn);
+        }
         receipt
     }
 }
@@ -1018,6 +1026,26 @@ impl ProtectedScopedOwner {
         self.rx_tx.offer_tx_fresh(&self.token,frozen,now)
             .map_err(|_|ProtectedCryptoError::Owner)?;
         Ok((pn,seq,sealed_len))
+    }
+
+    /// Original Go TLS-bound bidirectional M2 feedback uses the SAME
+    /// original active lane AEAD/PN and M1 frozen kernel queue as real DATA.
+    /// Control does not create another sealer or another epoch, and never
+    /// authorizes an FEC APPLIED revision by itself.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn seal_original_authenticated_receipt(
+        &mut self,mut slab:UniqueBuffer,tlv:&[u8],budget:FrameBudget,
+        carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if tlv.is_empty() || tlv.len()>512 ||
+            tlv.len()+14>slab.writable().len() {
+            return Err(ProtectedCryptoError::Tx)
+        }
+        slab.writable()[14..14+tlv.len()].copy_from_slice(tlv);
+        self.seal_scoped_authenticated_one(
+            slab,tlv.len(),budget,carrier_snapshot,now,false,
+            wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND
+        )
     }
 
     /// The actual M1 generation-fenced FrozenRecord ready batch. It keeps
