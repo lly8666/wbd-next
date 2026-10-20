@@ -107,7 +107,7 @@ fn m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun(){
             .expect("M4 real original scoped Linux raw egress");
         let raw_rx=ScopedRawIpv4Rx::open("lo",index,7)
             .expect("M4 real protected TCP ingress");
-        let arena=Arena::new(914+n as u32,32,2048,32,131072)
+        let mut arena=Arena::new(914+n as u32,32,2048,32,131072)
             .expect("same original M1 arena handles");
         let app=vec![n as u8;99];
         let ipv4=original_udp_ipv4(port,&app);
