@@ -163,10 +163,11 @@ jobs:
           root=pathlib.Path.cwd()
           src=root/"r0/go_overlay/internal/realityfront"
           dest=root/"legacy/internal/realityfront"
-          for filename in ("bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go"):
+          for filename in ("admission_v4.go","admission_v4_test.go",
+                           "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go"):
               relative="r0/go_overlay/internal/realityfront/"+filename
               payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
-              assert not (dest/filename).exists(),"M4 owns this Go file; no same-file author"
+              assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
               (dest/filename).write_bytes(payload)
           print("M0_WIN_GO_POST_TLS_NATIVE_RUST_BRIDGE_SOURCE_LOCKED")
           '@ | python -
