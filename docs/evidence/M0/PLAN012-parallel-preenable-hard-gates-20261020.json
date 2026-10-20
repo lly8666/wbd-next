@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+  "intent_path": "docs/devlog/M0/PLAN012-preenable-parallel-intent-20261020.md",
+  "scope": "LINUX_FEC2_GAME_PRODUCT_PREENABLE_PARALLEL_FUNCTIONAL_HARD_GATE",
+  "result": "FAIL_PREENABLE_POSITIVE_PRODUCT_GATES_ABSENT_PRODUCTION_OFF",
+  "original_linux_combined": {
+    "run_id": 39361154267,
+    "attempt": 1,
+    "job_id": 118427405739,
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "invocation": "reusable_workflow_same_SHA",
+    "artifact_id": 12237311946,
+    "artifact_name": "m0-plan012-combined-39361154267-1",
+    "artifact_digest_sha256": "ca1d5d055d309297e5927d013a84114eb8db307430158ff2099a464ab2081e48",
+    "artifact_expires_at": "2026-11-19T02:53:06Z",
+    "tested": [
+      "original Go TLS Game2 and Game4 authenticated cold sets with independent lane exporters and mutation negatives: grep-asserted in same SOURCE Go build",
+      "actual original Go TLS Fixed and Auto startup revision4 authentic M2 mature 2s APPLIED via real S2C FEC source+parity and missing-source recovered client TUN UDP first application; 4 original client UDP deliveries per mode",
+      "M4 real Linux native S46 Stop, repeated Stop, post-stop stale RX/M2 denial and route/rule/TUN FD cleanup",
+      "Rust native GameAdapter two/four lanes and FEC record/FixedStream/continuous RX compiled and native tests PASS, not Go Game kernel"
+    ]
+  },
+  "parallel_run": {
+    "id": 39361154267,
+    "attempt": 1,
+    "head_sha": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "workflow": ".github/workflows/m0-plan012-preenable-parallel.yml",
+    "independent_source_probes": [
+      {
+        "gate": "game4",
+        "job_id": 118427405397,
+        "result": "NOT_RUN_MISSING_IMPLEMENTATION",
+        "observed_error": "M0_PLAN012_game4_NOT_RUN missing=bridge_v4_game_kernel_linux_test.go, bridge_v4_game_product_linux.go, auth-bound Rust Game2/4 owner C ABI"
+      },
+      {
+        "gate": "public-cli",
+        "job_id": 118427405614,
+        "result": "NOT_RUN_MISSING_IMPLEMENTATION",
+        "observed_error": "M0_PLAN012_public-cli_NOT_RUN missing=bridge_v4_linux_public_product_test.go, bridge_v4_linux_public_product.go"
+      },
+      {
+        "gate": "game2",
+        "job_id": 118427405711,
+        "result": "NOT_RUN_MISSING_IMPLEMENTATION",
+        "observed_error": "M0_PLAN012_game2_NOT_RUN missing=bridge_v4_game_kernel_linux_test.go, bridge_v4_game_product_linux.go, auth-bound Rust Game2/4 owner C ABI"
+      }
+    ],
+    "executable_product_jobs": "SKIPPED_DEPENDENCY_PROBES_FAILED",
+    "release_qualified_job": "SKIPPED_DEPENDENCY_PROBES_FAILED"
+  },
+  "governance": {
+    "run_id": 39361154141,
+    "attempt": 1,
+    "source_sha": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+    "result": "success",
+    "scope": "governance_identity_and_structure_NOT_PRODUCT"
+  },
+  "maintenance": {
+    "run_id": 39361154180,
+    "attempt": 1,
+    "source_sha": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+    "result": "success",
+    "scope": "governance_maintenance_NOT_PRODUCT"
+  },
+  "qualification": {
+    "authentic_go_tls_game2_4_cold": "PASS_SCOPED_REAL_TLS",
+    "rust_game2_4_crypto_dedup": "PASS_NATIVE_ONLY",
+    "actual_original_go_fixed_auto_m2_applied": "PASS_SCOPED_LINUX_CURRENT_SOURCE",
+    "actual_m4_route_rule_tun_fd_stop": "PASS_SCOPED_LINUX_CURRENT_SOURCE",
+    "public_original_go_feature7_cli_connect_disconnect_applied": "NOT_RUN_IMPLEMENTATION_MISSING",
+    "game2_independent_authenticated_m4_raw_kernel_to_tun_first_app": "NOT_RUN_IMPLEMENTATION_MISSING",
+    "game4_independent_authenticated_m4_raw_kernel_to_tun_first_app": "NOT_RUN_IMPLEMENTATION_MISSING",
+    "original_linux_release_gate": "FAIL_GATES_NOT_MET",
+    "fec2_production": "OFF",
+    "game_production": "OFF",
+    "windows": "NOT_RUN_DEFERRED",
+    "physical": "NOT_RUN_DEFERRED",
+    "sustained_20mbps": "NOT_RUN_DEFERRED"
+  },
+  "prior_failures_retained": [
+    {
+      "run_id": 39358990793,
+      "result": "FAIL_H199_governance_mismatched_evidence_SOURCE_recovered_H200"
+    },
+    {
+      "run_id": 39359244330,
+      "result": "FAIL_S337_same_mismatched_evidence_before_H200_recovery"
+    },
+    {
+      "run_id": 39351470773,
+      "result": "FAIL_original_netns_workflow_shell"
+    },
+    {
+      "run_id": 39351905299,
+      "result": "FAIL_original_netns_duplicate_selector"
+    }
+  ],
+  "next_action": "Implement the missing genuine original-Go Linux public feature7 Connect/Disconnect applied product and independent Game2/4 Rust GameAdapter bound to authentic Go TLS with actual M4 raw/TUN application first delivery, in one single-writer capability batch. Then run existing parallel pre-enable SOURCE-locked Actions; only on all-positive qualified real code enable Linux FEC2/Game and validate shipping artifact."
+}
