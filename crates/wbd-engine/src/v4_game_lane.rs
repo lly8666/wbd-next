@@ -123,11 +123,11 @@ impl GameAdapter{
             incarnations.push(id.incarnation);
             let mss=id.client_limit.min(id.server_limit).min(2048);
             if mss<64{return Err(Error::Invalid)}
+            let (tx,rx)=if server{(s2c,c2s)}else{(c2s,s2c)};
             indexed[usize::from(id.go_lane_id)-1]=Some(ScopedKeys{
                 lane:QualifiedLane{key:LaneKey{tunnel:owner_tunnel,
                     slot:u32::from(id.go_lane_id),generation},mss:usize::from(mss)},
-                tx:if server{s2c}else{c2s},
-                rx:if server{c2s}else{s2c},
+                tx,rx,
             });
         }
         let material=indexed.into_iter()
