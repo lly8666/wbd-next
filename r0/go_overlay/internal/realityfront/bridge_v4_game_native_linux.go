@@ -14,6 +14,8 @@ extern int32_t wbd_m0_embedded_go_game_group_loop_start(uint64_t,
     const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_kernel_counters(
     uint64_t,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_game_group_rx_diagnostics(
+    uint64_t,uint64_t *,uint64_t *);
 */
 import "C"
 import (
@@ -110,7 +112,10 @@ func (g *v4NativeGameJoined) startNativeM4(
     if !ready||int(lanes)!=len(g.laneOwners){return ErrAdmissionUnsupported}
     return nil
 }
-type V4GameKernelCounters struct { Copied,Delivered,Rejected uint64 }
+type V4GameKernelCounters struct {
+    Copied,Delivered,Rejected uint64
+    RawReceived,AuthenticatedRejected uint64
+}
 func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
     if g==nil||g.handle==0||g.stopped{return V4GameKernelCounters{},ErrAdmissionUnsupported}
     var tx,rx,rejected C.uint64_t
@@ -118,7 +123,15 @@ func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
         C.uint64_t(g.handle),&tx,&rx,&rejected,
     )
     if rc!=0{return V4GameKernelCounters{},fmt.Errorf("%w: native Game kernel counters=%d",errV4Embedded,int(rc))}
-    return V4GameKernelCounters{Copied:uint64(tx),Delivered:uint64(rx),Rejected:uint64(rejected)},nil
+    var seen,bad C.uint64_t
+    rc=C.wbd_m0_embedded_go_game_group_rx_diagnostics(
+        C.uint64_t(g.handle),&seen,&bad,
+    )
+    if rc!=0{return V4GameKernelCounters{},fmt.Errorf("%w: native Game M4 receive=%d",errV4Embedded,int(rc))}
+    return V4GameKernelCounters{
+        Copied:uint64(tx),Delivered:uint64(rx),Rejected:uint64(rejected),
+        RawReceived:uint64(seen),AuthenticatedRejected:uint64(bad),
+    },nil
 }
 
 // A joined crypto-only group must Stop BEFORE per-lane original Go owner
