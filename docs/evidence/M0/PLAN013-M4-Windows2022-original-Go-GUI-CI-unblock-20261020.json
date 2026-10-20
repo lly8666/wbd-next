@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
+  "result": "PASS_SCOPED_WINDOWS_2022_EXACT_FROZEN_M4_ORIGINAL_GO_CLI_WINFORMS_CI_UNBLOCK_NOT_PRODUCT_NETWORK",
+  "assignment": {
+    "published_commit": "279ed06d01211988a21d5d5622dd4a7ebb35cb97",
+    "registry_revision": 2,
+    "new_M4_task": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
+    "decision": "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
+    "worker_branch": "work/m4-r1-platform",
+    "worker_source_head_before_assignment": "e359fde5703cc7b92ac4cfcb09d79f388d55ce93",
+    "worker_cursor_H": 51,
+    "worker_cursor_checkpoint": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
+    "recovered_post_checkpoint": "one cursor-only commit, no new source",
+    "worker_progress": "NOT_YET_CLAIMED_NEW_TASK"
+  },
+  "main_workflow": ".github/workflows/m0-m4-product-assembly.yml",
+  "workflow_change": {
+    "commit": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
+    "behavior": "Consume current central scope G2 workflow_run success for M4, then frozen worker SOURCE original pinned Go Windows 2022 native Go CLI and WinForms; one Windows target, no Linux repeat; historical manual I010 not replayed",
+    "new_worker_positive": "NOT_RUN_NEW_M4_SOURCE"
+  },
+  "run": {
+    "id": 39362863445,
+    "attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "main_workflow_source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
+    "m4_frozen_code_source": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
+    "legacy_original_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "identity_job_id": 118432819673,
+    "windows_2022_job_id": 118432853197,
+    "identity_artifact_id": 12238166353,
+    "identity_artifact_sha256": "b185de5ec09c121d121087c9fb57ab4a1a3e1e7ec6fccbcf642ce766fb3a3f72",
+    "windows_artifact_id": 12237544999,
+    "windows_artifact_sha256": "6317b855ac3d04a5e52db0293fae0ee4edb854e902dfc4b836ac95160a410fb6",
+    "artifact_expiry_note": "GitHub 30d retention declared"
+  },
+  "observed_scoped": [
+    "attest push selftest PASS; original pinned Go checkout source and exact M4 Git-object manifest retained",
+    "Windows Go tests include native read-only/preflight WFP, no legacy PowerShell fallback, exclusive GUI client slot, owned journal sequence and fail-closed network guards",
+    "Go native M4 batch printed WBD_M4_NATIVE_OWNED_SAFETY_BATCH_PASS_NOT_PRODUCT_NETWORK test_count=20",
+    "original WinForms actual build and GUI-to-original-Go config smoke printed FEC2_PLAN008_WINFORMS_NATIVE_CONFIG_PASS_NOT_PRODUCT_FEC2",
+    "Windows native real network WFP Apply/route/DNS/TUN owner not exercised; no product applied revision, Rust Windows owner Stop not exercised"
+  ],
+  "other_source_governance": {
+    "run_id": 39362863433,
+    "attempt": 1,
+    "status": "success",
+    "source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3"
+  },
+  "maintenance": {
+    "run_id": 39362863400,
+    "attempt": 1,
+    "status": "success",
+    "source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3"
+  },
+  "prior_results_retained": [
+    {
+      "id": 39302887219,
+      "result": "I010 dispatch attempt1 and2 FAIL, no Windows native I010 run"
+    },
+    {
+      "id": 39361154267,
+      "result": "Linux preenable FAIL: original FEC/M2/M4 PASS, public feature7 CLI and Game2/4 real kernel NOT_RUN"
+    },
+    {
+      "id": 39358990793,
+      "result": "prior M0 Governance SOURCE mismatch FAIL; H200 repaired"
+    }
+  ],
+  "remaining": {
+    "M4_windows_new_task_source": "NOT_RUN_NO_NEW_M4_BRANCH_COMMIT",
+    "M4_WinForms_full_live_status": "NOT_RUN",
+    "native_WFP_route_DNS_TUN_Apply_Stop": "NOT_RUN",
+    "Windows_Rust_authenticated_owner_abi": "NOT_RUN",
+    "Windows_physical_device": "NOT_RUN",
+    "Linux_public_feature7_CLI": "NOT_RUN",
+    "Linux_Game2_4_independent_M4_raw_TUN_first_app": "NOT_RUN",
+    "Windows_FEC2_Game_production": "OFF",
+    "Linux_FEC2_Game_production": "OFF"
+  },
+  "next_action": "M4 consumes main PLAN013 Windows task on branch and independently implements UI→actual protected original-Go Windows Connect/Disconnect/readback and owned native application/rollback, running fresh central G2→Windows native Actions SOURCE; M0 concurrently writes missing shared authenticated Rust/Go interface and integrates exact result. No second worker file writer."
+}
