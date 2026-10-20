@@ -71,6 +71,19 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
+    // The real native per-lane Normal owner cannot safely interpret Game
+    // or a requested FEC2 profile yet. Deny only these uninstalled modes
+    // before original Go publishes a TLS reply/Rust session. Normal/off is
+    // independently usable and must never be blocked by missing Game.
+    priorPolicyAllow:=cfg.PolicyAllow
+    cfg.PolicyAllow=func(policy AdmissionPolicy)error{
+        if policy.Transport!=TransportNormal||policy.FECMode!=FECOff||
+            policy.DesiredLanes!=1 {
+            return ErrAdmissionUnsupported
+        }
+        if priorPolicyAllow!=nil{return priorPolicyAllow(policy)}
+        return nil
+    }
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
