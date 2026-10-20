@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "20916d27018b2a039221923db5034e009b9c2e3b",
+  "result": "PASS_LINUX_M4_S46_REAL_ORIGINAL_GO_NETWORK_STOP_EXACT_BLOB_NOT_PRODUCT_FEC2_ON",
+  "issue_number": 19,
+  "intent_path": "docs/devlog/M0/PLAN012-M4-S46-cleanup-integration-intent-20261020.md",
+  "worker_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
+  "worker_cursor": "H50",
+  "worker_task": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
+  "worker_integrated_blob_sha": "4fab31cd531867b8a3db73ba275223abd49b0ce9",
+  "former_main_M4_blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+  "merged_files": [
+    "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+    ".github/workflows/m0-plan012-combined-functional.yml"
+  ],
+  "run": {
+    "id": 39357046267,
+    "attempt": 1,
+    "job_id": 118414112835,
+    "source_sha": "20916d27018b2a039221923db5034e009b9c2e3b",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "artifact_id": 12235553552,
+    "artifact_name": "m0-plan012-combined-39357046267-1",
+    "artifact_digest_sha256": "71adbc87b5edd15d84cadc72b655486a403c9e0bc252c302f949154ac54920a4"
+  },
+  "governance": {
+    "run_id": 39357046062,
+    "result": "success",
+    "source_sha": "20916d27018b2a039221923db5034e009b9c2e3b"
+  },
+  "maintenance": {
+    "run_id": 39357046358,
+    "result": "success",
+    "source_sha": "20916d27018b2a039221923db5034e009b9c2e3b"
+  },
+  "observed": [
+    "Exact imported S46 Linux named test TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup completed, log marker M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+    "Original Go actual feature7 verified TLS in combined dev/Linux test, FEC real missing-source RS16 parity recovery and real client TUN UDP application first delivery 4/4",
+    "Fixed original C2S authenticated mature 2s M2 applied rev4, Auto initial profile rev4 APPLIED, not dynamic 512-sample adaptation",
+    "Source-owned Linux original-Go Stop twice, old epoch RX/M2 rejection and both TUN removed",
+    "S46 new independent test full IPv4 route table and policy routing before vs after snapshots byte-equal; /proc/self/fd /dev/net/tun count equality; both owned names absent",
+    "Existing release FEC record, FEC RX, FixedStream and Game 2/4 native tests as bundled in same Actions PASS"
+  ],
+  "prior_failures_retained": [
+    {
+      "run_id": 39351470773,
+      "result": "FAIL_original shell selector unterminated quote"
+    },
+    {
+      "run_id": 39351905299,
+      "result": "FAIL_original shell duplicate suffix"
+    },
+    {
+      "run_id": 39353264860,
+      "result": "FAIL_worker dispatcher identity"
+    },
+    {
+      "run_id": 39299800690,
+      "result": "FAIL_original test same netns martian source"
+    }
+  ],
+  "linux_product_remaining": {
+    "m4_exact_S46_Linux_network_stop": "PASS",
+    "fec2_release_original_Go_client_CLI_public_feature7_Connect_Disconnect_cold_applied_readback": "NOT_RUN",
+    "game2_and4_original_Go_TLS_independent_M4_raw_kernel_lanes_first_app": "NOT_RUN",
+    "game2_and4_native_adapters": "PASS_ONLY_NATIVE",
+    "fec2_original_Go_TLS_Fixed_M2_2s_APPLIED": "PASS_SCOPED",
+    "fec2_original_Go_TLS_Auto_initial_M2_2s_APPLIED": "PASS_SCOPED_STARTUP",
+    "windows_product": "NOT_RUN_DEFERRED",
+    "physical_and_20Mbps": "NOT_RUN_DEFERRED",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "Complete Linux original Go production CLI feature7 operator Connect/Disconnect/cold APPLIED readback and authenticated Game 2/4 separate M4 raw kernel lanes real app with Stop, one exact SOURCE combined Linux Actions. Only after both PASS activate Linux FEC2/Game production."
+}
