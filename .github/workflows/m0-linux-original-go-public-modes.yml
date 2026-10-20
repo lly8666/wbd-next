@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        mode: [auto] # S379 already PASS fixed/Game2/Game4: do not repeat identical green source
+        mode: [fixed, auto, game2, game4] # NEW qualification: actual backend counters and live lane cardinality, not old application-only smoke
     env:
       MODE: ${{ matrix.mode }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
@@ -135,12 +135,18 @@ jobs:
           print("M0_PUBLIC_GO_V3_"+mode["mode"].upper()+"_REAL_APPLICATION_PASS")
           print(json.dumps(out))
           PY
+      - name: Read actual running Go owner qualified lanes, per-lane FEC applied and outer SACK/RACK repair counters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_original_go_product_telemetry.py --root live --mode "$MODE"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: go-public-real-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             live/mode-receipt.json
+            live/mode-telemetry.json
             live/source-lock.json
             live/main-biz.json
             live/main-target.json
