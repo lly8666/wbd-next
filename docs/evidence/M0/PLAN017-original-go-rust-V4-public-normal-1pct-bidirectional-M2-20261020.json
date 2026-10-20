@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
+  "result": "PASS_SCOPED_REAL_ORIGINAL_GO_PUBLIC_RUST_V4_NORMAL_OFF_1PCT_BIDIRECTIONAL_M2_FROZEN_DELIVERY_NOT_FEC2_GAME_PRODUCT",
+  "recovered_from": "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
+  "strict_original_source": {
+    "repository": "lly8666/wobuzhidao",
+    "commit": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "go_release_tags": [
+      "wbd_v4_embedded_go",
+      "wbd_v4_fec2_product"
+    ],
+    "rust_release_features": [
+      "m0_v4_probe",
+      "m0_v4_embedded_go",
+      "m0_fec2_owner_probe",
+      "fec2_product_record"
+    ],
+    "source_assembly_file": ".github/workflows/m0-plan012-combined-functional.yml",
+    "original_go_owner": "one protected TLS-bound Rust generation"
+  },
+  "actions": {
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "run_id": 39392110629,
+    "attempt": 1,
+    "job_id": 118525859738,
+    "head_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
+    "conclusion": "success",
+    "artifact_id": 12250640523,
+    "artifact_name": "m0-plan012-combined-39392110629-1",
+    "artifact_zip_digest_sha256": "274a2034474d28cc8706dca96c0377e680598db4d9fabd720d4a44d772fc0560",
+    "artifact_size_bytes": 19045915,
+    "source_locked": true
+  },
+  "combined_pass": {
+    "build_original_go_rust": true,
+    "build_previous_fec2_file_missing_fixed": true,
+    "release_record_3_ciphers": "PASS_SCOPED",
+    "native_game2_4": "PASS_NATIVE_AND_GO_TLS_M4_KERNEL_SCOPED_NOT_PUBLIC_CLI",
+    "scoped_actual_original_go_kernel_fec2_fixed_mature": "PASS_SCOPED",
+    "scoped_actual_original_go_kernel_fec2_auto_initial": "PASS_SCOPED_STARTUP_NOT_ADAPTIVE_PUBLIC_PRODUCT",
+    "go_v4_original_public_normal_off_baseline": "PASS",
+    "go_v4_original_public_normal_off_under_kernel_1pct": "PASS",
+    "original_tls": true,
+    "real_m4_raw_tun": true,
+    "stop_drained_both": true
+  },
+  "public_1pct_telemetry": {
+    "exact_log_marker": "M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS",
+    "requested_loss_percent": 1,
+    "real_udp_echo": 512,
+    "kernel_netem_drops": 7,
+    "native_m2_frozen_retransmitted": 141,
+    "authenticated_m2_acks": 1006,
+    "actual_kernel_first_copied": 1024,
+    "Stop_drained_both": 1,
+    "aggregation_note": "Kernel drop and retransmission totals are independent counters; this receipt does not assign every dropped packet to a specific repair, nor prove a latency distribution or <=10% measured repair bandwidth."
+  },
+  "previous_original_fails": [
+    {
+      "source_sha": "6346508003c104068f750f6d09ed43d5ef2e9aef",
+      "run_id": 39389626400,
+      "attempt": 1,
+      "result": "FAIL_BUILD",
+      "reason": "Frozen legacy Go assembly did not include new 3 FEC2 public product/mature files; original native packet steps SKIPPED",
+      "artifact_id": 12249555169
+    },
+    {
+      "source_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
+      "run_id": 39392110691,
+      "attempt": 1,
+      "result": "FAIL_GOVERNANCE",
+      "reason": "H207 mismatched V3 evidence_refs and V4 last_tested_source; H208 corrected without falsifying source"
+    },
+    {
+      "source_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
+      "run_id": 39392110602,
+      "attempt": 1,
+      "result": "FAIL_GOVERNANCE_MAINTENANCE",
+      "reason": "Same H207 evidence/source mismatch; H208 post-repair Governance SUCCESS run39392275966"
+    }
+  ],
+  "qualification": {
+    "linux_native_build": "PASS_SCOPED",
+    "linux_original_public_normal_off_real_network": "PASS_SCOPED_AT_THIS_SOURCE",
+    "linux_fixed_auto_public_product_FEC2": "NOT_RUN_AT_THIS_SOURCE",
+    "linux_Game2_4_public_independent_lane_under_damage": "NOT_RUN",
+    "Windows_native_OS_Rust_owner": "NOT_RUN",
+    "cross_build": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "per_app_repair_latency": "NOT_RUN",
+    "bandwidth_budget_measured": "NOT_RUN",
+    "fec2_production": "OFF",
+    "m2_max_retransmission_limit": "IMPLEMENTED_NOT_FULL_PRODUCT_PROVED"
+  },
+  "interfaces": [
+    "r0/go_overlay/cmd/wbd-v4-client/main.go",
+    "r0/go_overlay/cmd/wbd-v4-server/main.go",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
+  ],
+  "next_action": "Run one exact-source public original-Go V4 Fixed/Auto real first-group applied and independent Game2/4 raw/TUN/no-HOL functional gate, identify minimal missing product wiring; do not rerun successful Normal/off."
+}
