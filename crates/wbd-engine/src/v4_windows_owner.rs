@@ -389,7 +389,8 @@ mod tests {
     fn m0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale(){
         let mut r=Registry{generation:91,entries:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
-        let exact=[3u8;16];
+        // cold fixture uses [28..44] as logical_epoch; [44..60] is incarnation.
+        let exact=[2u8;16];
         assert_eq!(bind_wintun(&mut r,h,exact,123,77),BAD_STAGE);
         assert_eq!(commit(&mut r,h,0,0,901),OK);
         assert_eq!(bind_wintun(&mut r,h,[0;16],123,77),INVALID);
