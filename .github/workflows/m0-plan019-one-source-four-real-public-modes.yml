@@ -1,0 +1,115 @@
+name: M0 PLAN019 one exact native source four real Go public V4 modes
+run-name: "M0|PUBLIC-FOUR-MODES-ONE-SOURCE|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan019-one-source-four-real-public-modes.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-plan019-four-real-source-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  independent-real-public-mode:
+    name: "original-Go PUBLIC V4 ${{ matrix.mode }} actual kernel M4"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [fec-fixed, fec-auto, game2, game4]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan012-combined-39431226207-1
+          run-id: 39431226207
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: immutable-product
+      - name: Verify every original Go and Rust executable from same frozen S497 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p four-mode-result fixed-kernel-result
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path("immutable-product")
+          m=json.loads((root/"fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]=="bdcd66c6ccf973f26af7e9e4eb035457108cb7dd"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["run_id"]==39431226207 and m["attempt"]==1
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          assert m["feature"]=="m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              blob=root/"fixed-build"/name
+              assert blob.is_file() and blob.stat().st_size>10000
+              checksum=hashlib.sha256(blob.read_bytes()).hexdigest()
+              assert checksum==m["binaries_sha256"][name],name
+          print("M0_PLAN019_ONE_SOURCE_BOTH_ORIGINAL_GO_RUST_NATIVE_BINARIES_PINNED_PASS")
+          PY
+          chmod +x immutable-product/fixed-build/wbd-v4-client immutable-product/fixed-build/wbd-v4-server
+          nm -D immutable-product/fixed-build/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_loop_start$'
+      - name: Install real Linux veth netns and TUN runtime (one functional scene)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl >four-mode-result/packages.log 2>&1
+      - name: Real original Go TLS client/server independent application and actual M4 Stop
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          if ! WBD_V4_PUBLIC_MODE="$MODE" bash tools/m0-v4-public-real-linux-netns.sh immutable-product/fixed-build >four-mode-result/real-kernel.log 2>&1; then
+            tail -100 four-mode-result/real-kernel.log >&2
+            cp fixed-kernel-result/public-v4-normal-business.log four-mode-result/app-original.log 2>/dev/null || true
+            cp fixed-kernel-result/v4-public-1pct-failure-diagnostics.log four-mode-result/diagnostics.log 2>/dev/null || true
+            echo "M0_PLAN019_SINGLE_SOURCE_PUBLIC_PRODUCT_FAIL mode=$MODE" >four-mode-result/outcome.log
+            exit 1
+          fi
+          case "$MODE" in
+            fec-fixed|fec-auto)
+              grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE" four-mode-result/real-kernel.log
+              grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=64" four-mode-result/real-kernel.log
+              ;;
+            game2|game4)
+              lanes="${MODE#game}"
+              grep -q "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$lanes udp_app=5" four-mode-result/real-kernel.log
+              grep -q "M0_GAME_PUBLIC_ORIGINAL_GO_M4_FIRST_APP_WITH_LANE1_DAMAGE_PASS lanes=$lanes udp=5" four-mode-result/real-kernel.log
+              ;;
+            *) echo "wrong exact product mode" >&2; exit 2 ;;
+          esac
+          cp fixed-kernel-result/public-v4-normal-business.log four-mode-result/app-original.log
+          echo "M0_PLAN019_SINGLE_SOURCE_PUBLIC_PRODUCT_PASS mode=$MODE" | tee four-mode-result/outcome.log
+      - name: Immutable original result and source receipt, including original FAIL
+        if: always()
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          mkdir -p four-mode-result
+          python3 - <<'PY'
+          import pathlib,os,json
+          p=pathlib.Path("four-mode-result")
+          result=(p/"outcome.log").read_text().strip() if (p/"outcome.log").is_file() else "FAIL_OR_NOT_RUN_NO_OUTCOME"
+          receipt={"source_sha":os.environ["GITHUB_SHA"],
+                   "binary_source_sha":"bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+                   "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+                   "source_build_run_id":39431226207,"source_artifact_id":12268980051,
+                   "mode":os.environ["MODE"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+                   "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+                   "result":result,"Linux_public_qualified":result.startswith("M0_PLAN019_SINGLE_SOURCE_PUBLIC_PRODUCT_PASS"),
+                   "Windows_native":"NOT_RUN","physical":"NOT_RUN","p99":"NOT_RUN",
+                   "production_Game":"OFF","production_FEC2":"OFF"}
+          (p/"manifest.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "m0-plan019-four-modes-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: four-mode-result/
+          retention-days: 30
