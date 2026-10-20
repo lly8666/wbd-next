@@ -22,6 +22,7 @@ var errV4WindowsOwner=errors.New("original-Go private Windows Rust owner refused
 type v4WindowsNativeOwnerBridge struct {
     dll *syscall.DLL
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
+    bindWintunProc,quiesceWintunProc,deviceStateProc *syscall.Proc
     handle uint64
     epoch [16]byte
     serverSide bool
@@ -45,6 +46,9 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
         {"wbd_m0_win_owner_v1_state",&b.stateProc},
         {"wbd_m0_win_owner_v1_stop",&b.stopProc},
         {"wbd_m0_win_owner_v1_release",&b.releaseProc},
+        {"wbd_m0_win_owner_v2_bind_wintun",&b.bindWintunProc},
+        {"wbd_m0_win_owner_v2_quiesce_wintun",&b.quiesceWintunProc},
+        {"wbd_m0_win_owner_v2_device_state",&b.deviceStateProc},
     }
     for _,entry:=range names{
         p,e:=find(entry.name)
