@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "result": "S58_WINDOWS_HOSTED_POWERHELL_PARSER_REPAIR_AND_SEPARATE_SAFE_REAL_OS_LAB_ACTIONS_PENDING",
+  "result": "S59_SCOPED_WIN2022_NATIVE_OS_WFP_WINTUN_DNS_ROUTE_WAL_PASS_PRODUCTION_STOP_NOT_RUN",
   "registry_revision": 2,
   "assignment_epoch": 1,
   "previous_linux": {
@@ -16,7 +16,7 @@
   "test_blob": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
   "actual_native_network": "NOT_RUN",
   "actual_Rust_Stop": "NOT_RUN_M0_ONLY",
-  "next_action": "Source-locked S58 Windows2022 Actions: invoke separate bounded hosted native lab script without corrupting main original Go CLI+WinForms smoke; inspect named real WFP/Wintun/Win32 WAL receipts, repair any actual failure.",
+  "next_action": "M0 shared Windows authenticated Go/Rust Stop and release admission remain unverified. M4 hosted native scoped Windows S59 complete, product FEC2/Game OFF.",
   "new_original_go_process_tests": [
     "PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied",
     "PLAN013 original Go process refuses unsafe Connect before network-ready",
@@ -71,22 +71,45 @@
       "original_Windows_product_Connected": "NOT_RUN",
       "production_FEC2_Game": "OFF"
     },
-    "live_WFP_IPHelper_DNS_route_new_host_probe": "NOT_RUN_NEW_S55",
+    "live_WFP_IPHelper_DNS_route_new_host_probe": "PASS_WINDOWS2022",
     "live_WFP_IPHelper_DNS_route_new_host_probe_result_marker": "PLAN013_WINDOWS_LIVE_WFP_IPHELPER_DNS_ROUTE_READBACK_NO_HOST_MUTATION_PASS",
     "real_windows_testnet_wfp": {
-      "state": "NOT_RUN_S58_REPAIRED_ACTIONS_PENDING",
+      "state": "PASS_SCOPED_ACTUAL_OS",
       "source": "original Go existing native_wfp_persistent_lab_windows_test.go",
       "positive": "REAL_SCOPED_WFP_PERSISTENT_HOST_WRITE_REOPENED_READBACK_AND_CAS_DELETE",
       "scope": "TEST-NET-3 203.0.113.254 remote port65530 only disposable GitHub-hosted VM"
     },
     "real_process_created_wintun": {
-      "state": "NOT_RUN_S58_REPAIRED_ACTIONS_PENDING",
+      "state": "PASS_REAL_CREATED_WINTUN",
       "source": "original Go existing native_admin_created_wintun_windows_test.go",
       "positive": "CREATE UNIQUE WINTUN OWNER AND NATIVE LUID, IPv4+DNS READBACK; no address/route/DNS/MTU mutation",
       "expected_unavailable": "UNSUPPORTED rather than green"
     },
-    "real_native_test_adapter_write_restore": "NOT_RUN_S58_REPAIRED_ACTIONS_PENDING",
-    "real_native_unified_wal_apply_stop_recover": "NOT_RUN_S58_REPAIRED_ACTIONS_PENDING"
+    "real_native_test_adapter_write_restore": "PASS_NATIVE_OS_TEST_ADAPTER",
+    "real_native_unified_wal_apply_stop_recover": "PASS_REAL_OS_FAKE_WFP_GUARD",
+    "S59_hosted_windows": {
+      "workflow_run_id": 39371230050,
+      "attempt": 1,
+      "conclusion": "success",
+      "attest_job_id": 118459323414,
+      "windows_job_id": 118459366653,
+      "g2_run_id": 39370944075,
+      "scope_conclusion": "success",
+      "source_sha": "d9a9bbf0da6aa8054145193567a45cc6bc985131",
+      "control_sha": "389e19b751a88728a2991645547661ee5e02a333",
+      "artifact_id": 12241229223,
+      "artifact_zip_sha256": "08ebce928182cfece0372764a97398f01660fb8dc67452953c75433489b3facb",
+      "independent_sha256_matches": true,
+      "native_safety_tests": 21,
+      "winforms_checks": 314,
+      "wfp_scoped_testnet_persistence_cleanup": "PASS_REAL_WIN32",
+      "wintun_process_created_identity": "PASS_REAL_DRIVER",
+      "owned_test_adapter_ip_mtu_dns_route_cleanup": "PASS_REAL_WIN32",
+      "owned_test_adapter_unified_wal_repeat_recovery": "PASS_REAL_WIN32",
+      "live_OS_readonly_network_snapshot": "PASS",
+      "production_wfp_capture": "NOT_RUN",
+      "authenticated_rust_owner_stop": "NOT_RUN"
+    }
   },
   "historical_failures": [
     {
@@ -121,5 +144,6 @@
     "available_host": "windows-2022 shared Actions unprivileged scoped tests only, no demonstrated isolated recoverable full network",
     "resolution_needed": "M0 shared ABI and isolated recoverable Windows runner; then M4 finishes positive native owned WFP/TUN/DNS/route application/recovery without disabling guards",
     "status": "BLOCKED_POSITIVE_NETWORK_ONLY_NOT_A_GREEN_PRODUCT"
-  }
+  },
+  "last_tested_source": "d9a9bbf0da6aa8054145193567a45cc6bc985131"
 }
