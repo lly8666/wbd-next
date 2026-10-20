@@ -81,9 +81,21 @@ jobs:
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          # One original credential-checked Go TLS 2/4 fixture, consumed in
+          # the SAME Actions VM by the actual native Rust GameAdapter.
+          # Contains raw exporter keys: keep only in ephemeral RUNNER_TEMP,
+          # never upload and do not print. Wipe after bridge test.
+          export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
+          mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^TestM0V4OriginalTLSGame2And4AuthenticatedColdSet$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
+          rm -f "$WBD_GAME_TLS_FIXTURE_DIR"/*.cold
+          rmdir "$WBD_GAME_TLS_FIXTURE_DIR"
+          unset WBD_GAME_TLS_FIXTURE_DIR
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
           cp target/release/libwbd_engine.so fixed-build/
           python3 - <<'PY'
@@ -209,6 +221,7 @@ jobs:
             background_kernel_log_sha256=hashlib.sha256((p/"continuous-kernel.log").read_bytes()).hexdigest(),
             release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
             game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
+            real_go_native_game_lanes_log_sha256=hashlib.sha256((p/"real-go-native-game-lanes.log").read_bytes()).hexdigest(),
             original_go_game_tls_log_sha256=hashlib.sha256((p/"original-go-game-tls.log").read_bytes()).hexdigest(),
             continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
             fixed_stream_log_sha256=hashlib.sha256((p/"fixed-tx-stream.log").read_bytes()).hexdigest())
