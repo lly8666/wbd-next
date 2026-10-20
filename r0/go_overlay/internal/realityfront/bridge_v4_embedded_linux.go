@@ -25,6 +25,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -274,6 +275,32 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
 // authentication, FakeTCP Detach and real native M4 driver binding may
 // arm original M2 feedback on this same Rust owner. Scoped old-Go fixture
 // has its own authenticated receipt sender; it must not race a second one.
+// Original public CLI exposes only Rust's post-kernel, post-AEAD M2
+// counters. These are facts, NOT a synthetic readiness or APPLIED grant.
+type V4PublicOuterCounters struct{
+    FirstKernelCopied uint64
+    AuthenticatedAckRetired uint64
+    OriginalFrozenRepaired uint64
+    DriverUncertain uint64
+    BudgetOrCapacityBlocked uint64
+    RetiredTotal uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
+    var zero V4PublicOuterCounters
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var values [6]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_outer_counters(
+        C.uint64_t(b.handle),&values[0],6)
+    if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
+    return V4PublicOuterCounters{
+        FirstKernelCopied:uint64(values[0]),
+        AuthenticatedAckRetired:uint64(values[1]),
+        OriginalFrozenRepaired:uint64(values[2]),
+        DriverUncertain:uint64(values[3]),
+        BudgetOrCapacityBlocked:uint64(values[4]),
+        RetiredTotal:uint64(values[5]),
+    },nil
+}
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
         b.protectedEpoch==[16]byte{} {return errV4Embedded}
