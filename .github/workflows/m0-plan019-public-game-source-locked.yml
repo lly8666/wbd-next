@@ -74,14 +74,14 @@ jobs:
           anchor='# Real LOSS is imposed on the actual Linux underlay'
           assert src.count(anchor)==1
           script=r'''if [[ "$GAME" != 0 ]];then
-  # Narrow SOURCE-locked Linux pcap header summaries; no TLS keys/payloads.
-  sudo -n ip netns exec "$NSC" tcpdump -n -q -l -s 64 -i wbdvc0 'tcp and host 10.25.0.1' >"$TMP/game-client-wire-headers.log" 2>/dev/null &
-  CAPC=$!
-  sudo -n ip netns exec "$NSS" tcpdump -n -q -l -s 64 -i wbdvs0 'tcp and host 10.25.0.2' >"$TMP/game-server-wire-headers.log" 2>/dev/null &
-  CAPS=$!
-  sleep 0.1
-fi
-'''
+            # Narrow SOURCE-locked Linux pcap header summaries; no TLS keys/payloads.
+            sudo -n ip netns exec "$NSC" tcpdump -n -q -l -s 64 -i wbdvc0 'tcp and host 10.25.0.1' >"$TMP/game-client-wire-headers.log" 2>/dev/null &
+            CAPC=$!
+            sudo -n ip netns exec "$NSS" tcpdump -n -q -l -s 64 -i wbdvs0 'tcp and host 10.25.0.2' >"$TMP/game-server-wire-headers.log" 2>/dev/null &
+            CAPS=$!
+            sleep 0.1
+          fi
+          '''
           src=src.replace(anchor,script+anchor)
           initial="PIDC='' PIDS='' APPS=''"
           assert src.count(initial)==1
@@ -92,12 +92,12 @@ fi
           marker='      echo "M0_GAME_AUTH_NATIVE_FINAL_SERVER_UDP_RECEIPT"'
           assert src.count(marker)==1
           inspect=r'''      sudo -n kill -TERM "$CAPC" "$CAPS" 2>/dev/null || true
-      sleep 0.1
-      echo 'M0_GAME_WIRE_CLIENT_V4_TCP_HEADERS'
-      tail -35 "$TMP/game-client-wire-headers.log" || true
-      echo 'M0_GAME_WIRE_SERVER_V4_TCP_HEADERS'
-      tail -35 "$TMP/game-server-wire-headers.log" || true
-'''
+                sleep 0.1
+                echo 'M0_GAME_WIRE_CLIENT_V4_TCP_HEADERS'
+                tail -35 "$TMP/game-client-wire-headers.log" || true
+                echo 'M0_GAME_WIRE_SERVER_V4_TCP_HEADERS'
+                tail -35 "$TMP/game-server-wire-headers.log" || true
+          '''
           src=src.replace(marker,inspect+marker)
           Path('game-result/trace-netns.sh').write_text(src)
           print('M0_GAME_WIRE_SOURCE_LOCKED_HEADER_TRACE_INSTALLED')
