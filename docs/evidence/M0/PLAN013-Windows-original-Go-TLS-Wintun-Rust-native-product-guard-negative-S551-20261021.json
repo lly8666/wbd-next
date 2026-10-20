@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "06ffb779ad7c8dff1933f02cfe10123072ce0cdd",
+  "result": "PASS_SCOPED_NATIVE_WINDOWS_ORIGINAL_GO_TLS_SIGNED_WINTUN_RUST_LIVE_OWNER_M4_PRODUCT_GUARD_DENIAL_NO_WAL_MUTATION",
+  "run": {
+    "workflow": ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml",
+    "id": 39514832761,
+    "attempt": 1,
+    "job_id": 118944380496,
+    "runner": "windows-2022",
+    "conclusion": "success",
+    "artifact_id": 12307232498,
+    "artifact_name": "m0-plan013-windows-native-owner-39514832761-1",
+    "artifact_zip_digest": "sha256:1fdde1893e717fc4d1cafce008311172c756b771a3ef485bc11bf21e77f68b0c",
+    "independent_digest_verification": false
+  },
+  "sources": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "m4_frozen": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "windows_owner_code": "06ffb779ad7c8dff1933f02cfe10123072ce0cdd",
+    "official_wintun_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "checks": [
+    {
+      "name": "genuine process-created original M4 Windows signed Wintun GUID LUID index Hold",
+      "status": "PASS_SCOPED_REAL_WINDOWS",
+      "marker": "M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS"
+    },
+    {
+      "name": "real original Go credential TLS signed Wintun same epoch Rust M1/M3 owner active v2 bind real Win32 device and ordered Stop",
+      "status": "PASS_SCOPED_REAL_WINDOWS",
+      "marker": "M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS"
+    },
+    {
+      "name": "M4 real native global WFP Apply product guard error retained even with genuine TLS/native Wintun identity",
+      "status": "PASS_NEGATIVE",
+      "marker": "M0_PLAN013_TRUE_TLS_WINTUN_RUST_OS_PRODUCT_GUARD_DENIED_NO_WAL_MUTATION_PASS",
+      "scope": "errors.Is(...,windowsclient.ErrN4NativeGuard)==true"
+    },
+    {
+      "name": "no native network OS/WAL mutation after product guard refusal",
+      "status": "PASS_NEGATIVE",
+      "scope": "state .n4-owned-wal and .routes all absent; live Wintun current native readback and scoped Rust owner remain valid until Stop"
+    },
+    {
+      "name": "original Go native Windows client and server x64 binary compile",
+      "status": "PASS_BUILD_ONLY",
+      "marker": "M0_PLAN013_ORIGINAL_GO_WINDOWS_CLIENT_SERVER_NATIVE_X64_OWNER_COMPILE_PASS_ONLY"
+    },
+    {
+      "name": "Rust native Windows C ABI + original Go three-suite TLS",
+      "status": "PASS_SCOPED_FROZEN",
+      "scope": "same workflow prerequisites; not OS product"
+    }
+  ],
+  "retained_positive": [
+    {
+      "run": 39433130093,
+      "scope": "Linux original-Go Fixed/Auto/Game2/Game4 same exact binary four modes 4/4 PASS_SCOPED"
+    },
+    {
+      "run": 39459651371,
+      "scope": "Windows Go client/server+Rust opt-in native PE build-only PASS"
+    },
+    {
+      "run": 39458853750,
+      "scope": "original Go TLS, true signed Wintun current OS device Hold and Rust scoped Stop PASS"
+    }
+  ],
+  "qualification": {
+    "actual_original_Windows_TLS_Rust_Wintun_scoped_owner": "PASS_SCOPED",
+    "native_product_OS_Apply": "NOT_RUN",
+    "native_WFP_persistent_guard": "NOT_RUN",
+    "native_WFP_route_DNS_IPv6_live_positive": "NOT_RUN",
+    "native_kernel_UDP_original_Go_product": "NOT_RUN",
+    "M4_native_driver_loans_joined_Stop": "NOT_RUN",
+    "original_Windows_WinForms_UI_Connected": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "blocker": {
+    "owner": "M4",
+    "branch": "work/m4-r1-platform",
+    "frozen_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "code_file": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+    "reason": "N4NativeNetworkReady unconditionally returns ErrN4NativeGuard; N4NativeUnifiedTxn remains assemblyOnly; no full native WFP/packet driver/OS route CAS verified product",
+    "handoff": "docs/decisions/M0-PLAN013-M4-authenticated-Windows-native-product-OS-packet-contract-20261021.md"
+  },
+  "next_action": "Consume M4-owned real native WFP persistent-guard + Wintun packet driver + OS Apply/Stop+CAS exact SOURCE when delivered; bind same original-Go credential TLS owner and real Windows signed device generation; qualify Windows2022 CLI/WinForms native UDP first-app and Stop. Do not disable guard to fake PASS."
+}
