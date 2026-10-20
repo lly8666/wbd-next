@@ -116,7 +116,12 @@ jobs:
             elif isinstance(v,list):
               for x in v:walk(x)
           walk(raw)
+          # Preserve the exact TC JSON shape on initial ambiguity: netem
+          # qdisc counters may be reported in different nesting on runners.
+          print("M0_NETEM_COUNTER_DIAGNOSTIC="+json.dumps(raw,sort_keys=True)[:7500])
           assert len(drops)>=2,("real qdisc missing",drops)
+          # Require actual positive drop counters; configured 1% alone
+          # cannot qualify a delivered/repaired packet.
           assert sum(drops)>0,("loss percentage configured but no kernel drop observed",drops)
           assert not any(n.startswith(("lbiz-","lcli-","lrtr-","lsrv-","ltgt-")) for n in subprocess.check_output(["ip","netns","list"],text=True).split())
           receipt={"schema_version":1,"test_source_sha":os.environ["GITHUB_SHA"],
@@ -138,6 +143,10 @@ jobs:
         if: always()
         with:
           name: normal-off-original-go-real-1pct-loss-${{ github.run_id }}-${{ github.run_attempt }}
-          path: immutable-release/loss1-receipt.json
+          path: |
+            immutable-release/loss1-receipt.json
+            test-art/router-qdisc-final.json
+            test-art/main-biz.json
+            test-art/main-target.json
           if-no-files-found: warn
           retention-days: 30
