@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "PARTIAL_MAIN_S43_REAL_GO_COMBINED_ACTIONS_PASS_WITH_SOURCE_LOCKED_ARTIFACT_S46_STRICT_BASELINE_NOT_RUN",
+  "status": "BLOCKED_ONLY_ON_M0_OWNED_S46_COMBINED_IMPORT_AND_EXECUTION",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -22,7 +22,7 @@
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "M0 copy exact newer M4 S46 Go test source f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6 into current main pinned original Go combined netns and run one full SUCCESS named test. If M0 explicitly accepts S43 real Go + S44 real native TUN evidence as current done_when and excludes enhanced S46, retain S46 NOT_RUN as extra, never mark its new checks PASS.",
+  "next_action": "M0 follows https://github.com/lly8666/wbd-next/issues/19: replace S43 file with exact M4 S46 Go blob in main-owned combined Go build, run single real Linux netns Actions source-locked, require entire job SUCCESS + actual S46 route/rule/TUN FD pre/post proof; M4 only consumes result.",
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "verification": {
     "worker_native": {
@@ -167,5 +167,23 @@
   },
   "last_authored_go_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
   "native_validated_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
-  "main_observed_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985"
+  "main_observed_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985",
+  "coordination": {
+    "issue": "https://github.com/lly8666/wbd-next/issues/19",
+    "status": "OPEN_M0_MAIN_WORKFLOW_OWNER_ACTION_REQUIRED",
+    "created_after_H49": true,
+    "M4_role_cannot_write": [
+      ".github/workflows/m0-plan012-combined-functional.yml",
+      "tools/run-v4-tun-netns.sh"
+    ],
+    "latest_worker_strict_test_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
+    "latest_worker_test_blob_sha": "4fab31cd531867b8a3db73ba275223abd49b0ce9",
+    "latest_main_strict_test_present": false,
+    "existing_main_original_Go_test": "S43 scoped original Go TLS/FEC/UDP/Stop PASS at main614a747eff374e2e6b9aabd0a2497b0d08381985 run39352250946",
+    "existing_native_kernel": "PASS worker-native39344699874",
+    "strict_S46_go_assertions": "NOT_RUN",
+    "new_S46_qualified_combined_run_id": null,
+    "constraint": "No worker token/Actions workflow_dispatch tool may write M0-owned workflow or run updated unimported Go source",
+    "product_FEC2": "OFF"
+  }
 }
