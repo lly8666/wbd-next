@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "d5ba6df8e41b4eb8e8312139318c5136a453070b",
+  "delivery_name": "PLAN015 REAL ORIGINAL GO LINUX NORMAL/OFF TWO PRODUCT BINARIES",
+  "result": "PASS_SCOPED_PUBLIC_V3_LINUX_NORMAL_OFF_LOSSLESS_AND_ACTUAL_1PCT_APP_DELIVERY_NOT_NEW_RUST_V4_RECOVERY",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "workflow_source": "d5ba6df8e41b4eb8e8312139318c5136a453070b",
+  "production_binary_source": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+  "toolchain": "go1.23.12",
+  "build_tags": [],
+  "executable_pair": [
+    "cmd/wbd-client",
+    "cmd/wbd-server"
+  ],
+  "source_lock_binary_sha256": {
+    "client": "2dfe0a776b1aa0fee973ce105c7591f282f871557389d9ef89e6aa943f4d22cc",
+    "server": "c3167d66358a354bcfba3de3428f0305b92657645b56816b4fb13c565720be9f"
+  },
+  "artifact": {
+    "build_and_no_loss": {
+      "run_id": 39369570717,
+      "attempt": 1,
+      "job_id": 118454145390,
+      "conclusion": "success",
+      "exact_build_source_sha": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+      "original_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "artifact_id": 12241206041,
+      "artifact_name": "linux-normal-off-two-real-clis-39369570717-1",
+      "artifact_digest_sha256": "25c5301fbf3ed4c25e8ba0327203100e8355990d8dc06dc0bf2352309c4e84e6",
+      "tarball_name": "linux-normal-off-original-go-amd64.tar.gz",
+      "tarball_sha256": "9c0a0f0fdf77f0ef27865640b3143c440a109d3ae704cf8e17f46f72b89ca66b",
+      "Linux_netns": 5,
+      "real_TLS_authenticated": true,
+      "client_to_server_app_packets": {
+        "sent": 60,
+        "received_unique": 60,
+        "bytes": 30400
+      },
+      "server_to_client_app_packets": {
+        "sent": 60,
+        "received_unique": 60,
+        "bytes": 30400
+      },
+      "owned_namespaces_after_SIGTERM": 0
+    },
+    "real_one_percent": {
+      "workflow": ".github/workflows/m0-linux-normal-off-1pct-loss.yml",
+      "run_id": 39370506439,
+      "attempt": 1,
+      "job_id": 118457084605,
+      "conclusion": "success",
+      "test_source_sha": "d5ba6df8e41b4eb8e8312139318c5136a453070b",
+      "original_go_binary_source_sha": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+      "artifact_id": 12241486052,
+      "artifact_name": "normal-off-original-go-real-1pct-loss-39370506439-1",
+      "artifact_digest_sha256": "8d6f392c7f6ae02b4909c619f902dd8086a2a075d5108388e8d770671c0645e1",
+      "script_original_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "original_fixture_script_sha256": "d9da98f98b338d82c3b00a806f9a6009ada8b0ced4d10d78acbf4b574b897ffe",
+      "modified_fixture_script_sha256": "8ba1797c4d364112c09a809b13f1e4b900c14e2130d4f268d9d907848255a0db",
+      "modified_fixture_contract": "Only 1% netem in BOTH directions and same real application scenario 32s/0.2 Mbps each; exact original Go CLI binary build reused, no test Go ABI, no seed changes.",
+      "configured_loss_percent": 1,
+      "observed_qdisc_drops": [
+        38,
+        35
+      ],
+      "observed_total_drops": 73,
+      "app_from_client": {
+        "sent_packets": 1581,
+        "received_unique": 1581,
+        "sent_bytes": 801040,
+        "received_bytes": 801040
+      },
+      "app_from_server": {
+        "sent_packets": 1581,
+        "received_unique": 1581,
+        "sent_bytes": 801040,
+        "received_bytes": 801040
+      },
+      "owned_namespaces_after_SIGTERM": 0,
+      "new_rust_M2_rack_outside_recovery": "NOT_WIRED",
+      "original_go_legacy_retransmitted_ciphertext_packets": "NOT_INSTRUMENTED",
+      "rescued_packets_attributable_to_legacy_retransmission": "NOT_PROVABLE",
+      "repair_latency_ms": "NOT_INSTRUMENTED",
+      "repair_failure_reasons": "NOT_INSTRUMENTED",
+      "result": "PASS_ORIGINAL_GO_V3_PUBLIC_CLI_REAL_1PCT_NETEM_AND_DUPLEX_APP_NOT_RUST_RECOVERY_QUALIFICATION"
+    }
+  },
+  "attempted_failures": [
+    {
+      "run_id": 39370124110,
+      "source_sha": "5e66d12bbc1e39eb3209e8182271049af011602b",
+      "result": "FAIL_TEST_READER",
+      "reason": "tc qdisc JSON reports drops in qdisc TOP LEVEL, not stats.queue; raw 30 and 33 and real 1581/1581 independently downloaded; no retx attribution"
+    },
+    {
+      "run_id": 39370315312,
+      "source_sha": "526aae4d136f8f4da14a4bc56b35a85558c3250b",
+      "result": "FAIL_TEST_READER",
+      "reason": "narrowed 5 netns source-locked no different binaries/seed; original exact TC JSON showed drops top-level rcli30 rsrv33, failed nested-field assertion; fixed S375"
+    },
+    {
+      "run_id": 39368220417,
+      "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+      "result": "FAIL_V4_PUBLIC_ENTRY_ABSENT",
+      "reason": "real V4 Game2 and Game4 kernels PASS individually but original Go public V4 CLI absent; not waived"
+    }
+  ],
+  "m4_windows_concurrent": {
+    "worker_branch": "work/m4-r1-platform",
+    "code_writes_by_M0": "NONE",
+    "issue": 20,
+    "shared_interface_delivery_comment_id": 6283379488,
+    "existing_public_go_contract": "V4OriginalOwnerStopper.StopAndReleaseOriginalOwner + V4StopThenCleanupNetwork",
+    "limits": "Windows-authenticated native Rust owner and real WFP/Wintun/DNS/route POSITIVE still NOT_RUN; existing Linux cgo ABI is not Windows."
+  },
+  "capability_states": {
+    "Linux_V3_Normal_off": "EXPERIMENTAL_BINARY_AVAILABLE_REAL_PUBLIC_CLI_TLS_DUPLEX_LOSSLESS_AND_1PCT",
+    "Linux_V3_legacy_fixed": "CONFIG_SUPPORTED_NOT_TESTED_THIS_SOURCE_FOR_REAL_LOSS_RECOVERY",
+    "Linux_Rust_V4_Normal_off": "NOT_WIRED_IN_RELEASE_BINARY",
+    "Linux_V4_FEC2_fixed": "PRODUCTION_OFF",
+    "Linux_V4_FEC2_auto": "PRODUCTION_OFF",
+    "Linux_V4_Game2_4": "REAL_ORIGINAL_GO_TLS_RUST_M4_KERNEL_COMPONENT_PASS_NO_FORMAL_PUBLIC_BINARY_OFF",
+    "Windows_all_modes": "M4_DEVELOPING_FULL_NATIVE_NETWORK_NOT_RUN"
+  },
+  "next_action": "Build formal original Go V4/Linux client-server Connect→Rust owner (independent lane epoch/M3 AEAD and actual M4 raw/TUN)→normal/off actual outer M2 retransmission with frozen ciphertext and maturity feedback→Stop, then verify full CLI 1% recovered counts/latency, promote V4 Normal/off independent of FEC2 auto/Game/Windows."
+}
