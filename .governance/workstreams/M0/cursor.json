@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 202,
-  "checkpoint_sha": "1b598963fe6eab7fa114ba0db62cf93011ae2c74",
+  "sequence": 203,
+  "checkpoint_sha": "5b49c27925d3039615a5421addcdca6b16b371ae",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 Linux original Go FEC2/Game final permission remains partial/OFF; preenable Actions39361154267 proved old Linux Fixed/Auto M2/M4 but public feature7 CLI and independently keyed Game2/4 real kernel first-app absent. User additionally activated PLAN013 Windows M4 native GUI→original Go product; main registry published M4 new Windows018, M0 owns shared ABI+CI. Windows 2022 original Go+WinForms existing scoped native smoke now reachable/Actions PASS, but native Windows WFP/TUN route DNS Apply/Stop and Rust owner product still NOT_RUN.",
-  "why_now": "S342 main279ed06 published PLAN013 new M4 Windows018 assignment on unchanged worker branch/epoch, preserving old Linux017 and Windows I010 failure. S343 main79afc9 repaired main-owned Windows Actions: central G2 immutable M4 SOURCE workflow_run native Windows2022, one target, no manual I010 replay. Existing source46e13f6 reused in exact main SOURCE79afc9 Actions39362863445 attempt1 identity job118432819673 and Windows job118432853197 SUCCESS, artifacts12238166353 sha256b185de5 and12237544999 sha2566317b855, Go 20 native safety tests and original WinForms GUI PASS_SCOPED_NOT_PRODUCT_NETWORK. Governance39362863433 and maintenance39362863400 SUCCESS. S344 exact evidence. M4 worker cursor H51 untouched and new Windows task not claimed by worker yet.",
+  "current_task": "PLAN012/013 original-Go Linux FEC2/Game and Windows native product user-requested one-time shared integration. Frozen M4 Windows source 34 original Git blobs (32 new + 2 already identical) now in main; byte-checked manifest37 operations Actions39364646232 208 tests PASS scoped. Original Go Windows native CLI/WinForms prior run39362863445 PASS scoped unchanged. Public feature7 Go CLI, Game2/4 independent M4 real kernel/TUN first application and Windows authenticated Rust owner/native WFP Apply/Stop still NOT_RUN. Both product modes OFF.",
+  "why_now": "M0 global writer under user temporary integration permission; no M4 branch/cursor changes, only frozen complete M4 H51 source e359fde. S346 intent at a94d121, S347 main 7350744 imported 32 noncolliding M4 exact Git blobs into main, 2 same blobs already present; no overlap edits. S348 verifier malformed Git blob NUL caused governance-maintenance39364544545 original FAIL, rollback S350 2f293ad; corrected S351 bfab03c Actions39364646232 attempt1 job118438575202 208/208 PASS (34 blobs/37 manifest) artifact12238138393 digest9cc2f275, Governance39364646252 SUCCESS; S352 exact receipt. No new main Windows native product run, old frozen M4 Actions39362863445 Windows2022 scoped Go/WinForms PASS source-equal only. Workflow main source selection update blocked by execution safety checker, not falsely claimed successful.",
   "done_when": "Current PLAN012 Linux original-Go public feature7 Connect/Disconnect/applied and independently authenticated M4 real Game2/4 kernel/TUN first-app plus already-scoped Fixed/Auto authentic M2 + Stop all pass exact Actions before Linux ON; PLAN013 M0 shared Windows Go/Rust product authority and native G2→Windows Actions entry reliable, integrate worker exact Windows GUI network/Stop source; Windows real OS/physical release qualification separate, no false ON.",
-  "next_action": "Implement missing original-Go authenticated Linux feature7 CLI and Game2/4 real M4 kernel first-app interfaces in M0-only source, and provide Windows actual Rust owner bridge for M4 Windows GUI/native Apply; consume frozen M4 Windows018 SOURCE through functioning central G2→Windows2022 Actions, integrate only after same-source positive network product tests.",
+  "next_action": "Complete original-Go public feature7 CLI Connect/Disconnect/authenticated APPLIED and Game2/Game4 real independent authenticated M4 kernel→TUN first app plus Windows native Rust-owner/WFP applied Stop bridge; run one new exact SOURCE Linux/Windows real functional hard gate, only then permit FEC2/Game ON. No duplicate imported-source native sample.",
   "unverified": true,
-  "last_tested_source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
+  "last_tested_source": "bfab03c195a5835679cd85e36c42545b31f98c10",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN013-M4-Windows2022-original-Go-GUI-CI-unblock-20261020.json"
+    "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
+    "docs/devlog/M0/PLAN014-frozen-M4-Windows-overlay-main-import-intent-20261020.md",
+    "docs/evidence/M0/PLAN013-M4-Windows2022-original-Go-GUI-CI-unblock-20261020.json",
     "docs/evidence/M0/PLAN012-parallel-preenable-hard-gates-20261020.json",
     "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json",
     "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json",
-    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
-    "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md",
-    "docs/devlog/M0/PLAN012-preenable-parallel-intent-20261020.md"
+    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
+    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md"
   ],
   "open_requests": [],
-  "partial_summary": "H202 Windows M4 PLAN013 task published, no worker cursor fabrication. Shared old I010 dispatcher issue bypassed by immutable G2→native Windows workflow; old pinned M4 original Go+WinForms Windows2022 Actions39362863445 PASS_SCOPED safety20/20 and GUI; artifact12237544999, exact main SOURCE79af, M4 frozen code46e; real WFP/TUN/route/DNS/rust-owner Windows product still NOT_RUN. Linux public feature7/Game M4 kernel first-app NOT_RUN and production FEC2/Game OFF."
+  "partial_summary": "H203 complete frozen M4 Windows overlay import (32 new + 2 existing identical, 34 SHA checked, 37 manifest ops), exact main source bfab03c Actions39364646232 208-test PASS scoped artifact12238138393; prior Actions39364544545 verifier original FAIL retained and fixed. Native Windows Go/WinForms source-equivalent PASS scoped from 39362863445; real Windows WFP/TUN Apply+auth Stop, Linux original-Go public feature7 CLI and Game2/4 independent M4 kernel first app remain NOT_RUN, production OFF."
 }
