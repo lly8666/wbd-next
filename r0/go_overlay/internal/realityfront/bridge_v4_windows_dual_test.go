@@ -5,15 +5,22 @@ import (
     "context"
     "crypto/tls"
     "errors"
-    "fmt"
     "os"
     "testing"
-
-    "github.com/lly8666/wobuzhidao/internal/windowsclient"
     "time"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
+
+// An external package is the ONLY place permitted to import M4 windowsclient.
+// Mock device never returns a live OS Hold, so Go TLS alone cannot arm Rust.
+type m0DeniedWindowsDevice struct{}
+func (m0DeniedWindowsDevice) HoldCurrentNative(context.Context,V4WindowsNativeDeviceIdentity)(func(),error){
+    return nil,errV4WindowsOwner
+}
+func (m0DeniedWindowsDevice) VerifyCurrentNative(context.Context,V4WindowsNativeDeviceIdentity)error{
+    return errV4WindowsOwner
+}
 
 // Two ACTUAL original Go FakeTCP associations, not a net.Pipe pretending
 // to supply a ClientAssociation Detach receipt. They exchange normal
@@ -141,11 +148,11 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                 if err!=nil||st.Version!=2||st.Bound!=0||st.Applied!=0{
                     t.Fatalf("credential TLS attached phantom Windows device: %+v err=%v",st,err)
                 }
-                fake:=&windowsclient.TUN{}
-                supplied:=windowsclient.N4UnifiedIdentity{
+                fake:=m0DeniedWindowsDevice{}
+                supplied:=V4WindowsNativeDeviceIdentity{
                     Installation:[16]byte{17},Generation:owner.epoch,
-                    WintunLUID:7,WintunIndex:7,WintunGUID:"11111111-2222-3333-4444-555555555555",
-                    AdapterAlias:"WBD-foreign",
+                    LUID:7,InterfaceIndex:7,GUID:"11111111-2222-3333-4444-555555555555",
+                    Alias:"WBD-foreign",
                 }
                 if lease,e:=owner.holdOriginalCreatedWintun(context.Background(),fake,supplied);
                     !errors.Is(e,errV4WindowsOwner)||lease!=nil{
@@ -158,38 +165,7 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                     t.Fatalf("stale epoch obtained Win native lease: lease=%v err=%v",lease,e)
                 }
             }
-            if cipher==CipherChaCha && os.Getenv("WBD_M0_TRY_SCOPED_NATIVE_WINTUN")=="1"{
-                name:=fmt.Sprintf("WBD-M0-PLAN013-%s",os.Getenv("GITHUB_RUN_ID"))
-                tun,openErr:=windowsclient.OpenTUN(name)
-                if openErr!=nil{
-                    // CI's legally unprivileged runner may not contain the
-                    // real Wintun DLL/driver. This is UNSUPPORTED, not PASS.
-                    t.Logf("M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED open=%v",openErr)
-                }else{
-                    defer tun.Close()
-                    actual,actualErr:=tun.NativeIdentity(context.Background())
-                    if actualErr!=nil{
-                        t.Fatalf("real process-created Wintun native identity failure: %v",actualErr)
-                    }
-                    if !actual.CreatedByProcess{
-                        t.Log("M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED borrowed_existing")
-                    }else{
-                        id,e:=v4WindowsOriginalWintunIdentity(context.Background(),
-                            tun,[16]byte{17},cliOwner.epoch)
-                        if e!=nil{t.Fatalf("same-process actual GUID LUID identity: %v",e)}
-                        lease,e:=cliOwner.holdOriginalCreatedWintun(context.Background(),tun,id)
-                        if e!=nil{t.Fatalf("exact original Go TLS to M4 live Wintun Hold: %v",e)}
-                        if err:=cliOwner.stopRustOwnerOnly();!errors.Is(err,errV4WindowsOwner){
-                            t.Fatalf("live original M4 Wintun did not block unquiesced Rust Stop: %v",err)
-                        }
-                        if e:=lease.quiesceAndStopRustOnly(context.Background());e!=nil{
-                            t.Fatalf("exact real Wintun lease→Rust quiesce→Stop: %v",e)
-                        }
-                        t.Logf("M0_PLAN013_REAL_CREATED_WINTUN_RUST_OWNER_LIFETIME_STOP_PASS os_luid=%d ifindex=%d product_applied=0 no_kernel_udp_claim=1",
-                            id.WintunLUID,id.WintunIndex)
-                    }
-                }
-            }
+            t.Log("M0_PLAN013_REAL_CREATED_WINTUN_DEVICE_OS_LEASE_NOT_RUN_IN_REALITYFRONT_SCOPE external_adapter_required=1")
             // Actual Rust owner Stop first, before original-Go epoch/pipe
             // cleanup, and both terminal tokens cannot revive after release.
             for _,owner:=range []*v4WindowsNativeOwnerBridge{cliOwner,srvOwner}{
