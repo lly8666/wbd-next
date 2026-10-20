@@ -3452,6 +3452,131 @@ fn ready_only_slice(
     }
     count
 }
+// REAL original TLS V4 public product outer retransmission, for either
+// direction, using M2's EXISTING <=2 PTO/RACK immutable candidate producer,
+// process-global sparse/10% byte grants and exact M4 raw syscall result.
+// No simulated receipt, alternative encoder or fresh PN is used anywhere.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+fn background_original_repair_once(
+    cell:&Mutex<Entry>,stop:&AtomicBool
+)->Result<u32,i32>{
+    use wbd_recovery::{
+        reserve_frozen_submission,complete_driver_prefix,
+        DriverPrefixObservation,BatchSuffixEvidence,RepairSendResult
+    };
+    if stop.load(Ordering::Acquire){return Ok(0)}
+    let (shared,raw,flow,server,generation)={
+        let e=cell.lock().map_err(|_|BAD_STAGE)?;
+        if e.phase!=PH_ACTIVE||e.workers.is_none(){return Ok(0)}
+        let Some(shared)=e.original_outer.as_ref().map(Arc::clone)
+            else{return Ok(0)};
+        let Some(raw)=e.raw_tx.as_ref().map(Arc::clone)
+            else{return Err(BAD_STAGE)};
+        if raw.is_stopping()||e.tx_route.is_none(){return Ok(0)}
+        (shared,raw,e.flow,e.server_side,e.generation)
+    };
+    let now=loop_now();
+    let candidates={
+        let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
+        let polled=own.shadow.on_timer(now);
+        own.retired=own.retired.saturating_add(polled.releases.len() as u64);
+        polled.candidates
+    };
+    let tuple=if server{Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    }}else{Ipv4Tuple{
+        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+        src_port:flow.client_port,dst_port:flow.server_port,
+    }};
+    let presentation=Presentation{
+        ack32:1,advertised_window:4096,ip_id:43,
+        persona:PacketPersona::Legacy,
+    };
+    let mut repaired=0;
+    for candidate in candidates{
+        if stop.load(Ordering::Acquire){break}
+        let wire_bytes=(candidate.frozen().bytes().len()+
+            wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
+        let now=loop_now();
+        // Lock order is uniform: this session shadow then ONE shared global
+        // process budget. RX authentic receipts use exactly the same order.
+        let reserved={
+            let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
+            if !own.shadow.preflight(&candidate,now){continue}
+            let dir=own.direction;
+            let route=own.route;
+            let mut global=original_process_repair_quota().lock()
+                .map_err(|_|BAD_STAGE)?;
+            match global.grant(dir,wire_bytes,40_000_000,now){
+                Ok(lease)=>{
+                    match reserve_frozen_submission(
+                        &mut global,lease,route,&own.shadow,
+                        &candidate,wire_bytes,now
+                    ){
+                        Ok(submission)=>{
+                            // no mutation, cipher duplication, or new AEAD
+                            if submission.driver.metadata!=candidate.frozen().metadata()
+                                ||submission.driver.wire.as_ptr()!=
+                                    candidate.frozen().bytes().as_ptr(){
+                                own.repair_blocked=own.repair_blocked.saturating_add(1);
+                                let _=global.revoke(lease,now);
+                                let _=own.shadow.on_send_result(
+                                    &candidate,RepairSendResult::NotSent,now);
+                                continue
+                            }
+                            Some((lease,submission.reservation_id,route))
+                        },
+                        Err(_)=>{
+                            let _=global.revoke(lease,now);
+                            own.repair_blocked=own.repair_blocked.saturating_add(1);
+                            let _=own.shadow.on_send_result(
+                                &candidate,RepairSendResult::NotSent,now);
+                            None
+                        }
+                    }
+                },
+                Err(_)=>{
+                    own.repair_blocked=own.repair_blocked.saturating_add(1);
+                    let _=own.shadow.on_send_result(
+                        &candidate,RepairSendResult::NotSent,now);
+                    None
+                }
+            }
+        };
+        let Some((lease,id,route))=reserved else{continue};
+        // No owner, quota, or RX lock held across the genuine raw socket IO.
+        let copied=raw.send_one(generation,candidate.frozen(),tuple,presentation)
+            .ok().is_some_and(|n|n as u64==wire_bytes);
+        let now=loop_now();
+        let observation=DriverPrefixObservation::checked(
+            1,usize::from(copied),if copied{None}else{Some(0)},
+            BatchSuffixEvidence::Unproven
+        ).map_err(|_|BAD_STAGE)?;
+        let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
+        let mut global=original_process_repair_quota().lock()
+            .map_err(|_|BAD_STAGE)?;
+        let results=complete_driver_prefix(
+            &mut global,&[(id,route)],observation,now
+        );
+        let status=match results {
+            Ok(s)=>s.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
+            Err(_)=>RepairSendResult::Uncertain, // conservative debt
+        };
+        // Authenticated peer ACK may race this actual kernel send and
+        // retire shadow; stale here is legitimate, NEVER resurrect record.
+        let _=own.shadow.on_send_result(&candidate,status,now);
+        let _=global.revoke(lease,now); // unused grant only, not send debit
+        if copied && status==RepairSendResult::Accepted{
+            repaired+=1;
+            own.repair_copied=own.repair_copied.saturating_add(1);
+        }else{
+            own.repair_uncertain=own.repair_uncertain.saturating_add(1);
+        }
+    }
+    Ok(repaired)
+}
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn start_loop(handle:u64,ifindex:u32)->i32{
     // One shared Linux link/route listener for all live owner sessions.
