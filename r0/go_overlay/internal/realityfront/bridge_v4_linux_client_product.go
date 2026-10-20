@@ -81,6 +81,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
+    if err==nil{err=bridge.armOriginalPublicM2Feedback()}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()
