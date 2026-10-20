@@ -82,6 +82,16 @@ class Tests(unittest.TestCase):
         api=API();out=self.plan(api);api.branch="f"*40
         with self.assertRaises(ValueError):d.execute_m4(api,out)
         self.assertEqual(api.posts,[])
+    def test_main_linux017_skips_historical_windows_i_without_dispatch(self):
+        api=API()
+        api.reg["roles"][0]["assigned_task"]="R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017"
+        api.control="0"*40
+        planned=d.plan_m4(api,d.M4_CONTROL_SHA)
+        self.assertEqual([x["result"] for x in planned],
+                         ["SKIP_SUPERSEDED_WINDOWS_TASK"])
+        d.execute_m4(api,planned)
+        self.assertEqual(api.posts,[])
+        self.assertEqual(api.request["status"],"PLANNED")
     def test_no_g2_does_not_launch_windows(self):
         api=API()
         with patch.object(d,"latest_scope",return_value=None):
