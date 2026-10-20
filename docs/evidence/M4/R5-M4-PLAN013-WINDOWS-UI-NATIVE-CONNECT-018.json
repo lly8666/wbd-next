@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "result": "PARTIAL_SCOPED_WINDOWS2022_REAL_ORIGINAL_GO_CLI_WINFORMS_PASS_NATIVE_PRODUCT_NETWORK_NOT_RUN",
+  "result": "S55_SOURCE_REAL_WINDOWS_NATIVE_WFP_IPHELPER_DNS_ROUTE_OS_READBACK_ACTIONS_PENDING",
   "registry_revision": 2,
   "assignment_epoch": 1,
   "previous_linux": {
@@ -16,7 +16,7 @@
   "test_blob": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
   "actual_native_network": "NOT_RUN",
   "actual_Rust_Stop": "NOT_RUN_M0_ONLY",
-  "next_action": "Consume M0 exact authenticated Go/Rust Windows Stop owner ABI and isolated recoverable Windows network host from issue20; implement M4-owned WFP/Wintun/DNS/routes positive Apply→readback→Stop→Recover and rerun one exact Windows2022 scoped/full test. Preserve current S53 scoped PASS and product OFF.",
+  "next_action": "Run G2 + Windows2022 exact new S55 original Go native OS readback and canceled route guard, inspect named PASS marker and artifact; continue positive isolated Windows native system test when authorized environment actually exists.",
   "new_original_go_process_tests": [
     "PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied",
     "PLAN013 original Go process refuses unsafe Connect before network-ready",
@@ -70,7 +70,9 @@
       "game_real_2_4_packet_lanes": "NOT_RUN",
       "original_Windows_product_Connected": "NOT_RUN",
       "production_FEC2_Game": "OFF"
-    }
+    },
+    "live_WFP_IPHelper_DNS_route_new_host_probe": "NOT_RUN_NEW_S55",
+    "live_WFP_IPHelper_DNS_route_new_host_probe_result_marker": "PLAN013_WINDOWS_LIVE_WFP_IPHELPER_DNS_ROUTE_READBACK_NO_HOST_MUTATION_PASS"
   },
   "historical_failures": [
     {

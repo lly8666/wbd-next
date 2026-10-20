@@ -93,7 +93,7 @@ try {
     # exact native assembler negative admission. The test fixtures DO NOT Arm
     # host-global rules or modify adapter routes/DNS. Fail on zero matching tests.
     $nativeSafetyLog=Join-Path $out 'native-owned-safety-batch.log'
-    $safetyPattern='^(TestN4NativeTxnUnified|TestN4NativeTxnDryAssembly|TestN4WindowsMachineGate|TestN4WFPGuard|TestN4WFPPartialGuard|TestN4WindowsNativeWALAssembler|TestN4WindowsNativeAssembly)'
+    $safetyPattern='^(TestN4NativeTxnUnified|TestN4NativeTxnDryAssembly|TestN4WindowsMachineGate|TestN4WFPGuard|TestN4WFPPartialGuard|TestN4WindowsNativeWALAssembler|TestN4WindowsNativeAssembly|TestPLAN013LiveNativeWFPIPHelperDNSAndCanceledRouteNeverMutatesHost)'
     & go test -count=1 -v -run $safetyPattern ./internal/windowsclient 2>&1 | Tee-Object -FilePath $nativeSafetyLog
     if ($LASTEXITCODE -ne 0) { throw 'Windows original Go native owned WAL/OS mutex/read-only WFP safety batch failed' }
     $namedSafeTests=@(
@@ -116,7 +116,8 @@ try {
         'TestN4WFPGuardMissingRulesReadOnly',
         'TestN4WFPPartialGuardDeletePlanAfterRouteCleanup',
         'TestN4WindowsNativeWALAssemblerRequiresOwnedWintunAndPersistentGuard',
-        'TestN4WindowsNativeAssemblyRejectsUnboundLegacyGUID'
+        'TestN4WindowsNativeAssemblyRejectsUnboundLegacyGUID',
+        'TestPLAN013LiveNativeWFPIPHelperDNSAndCanceledRouteNeverMutatesHost'
     )
     foreach ($named in $namedSafeTests) {
         if (-not (Select-String -LiteralPath $nativeSafetyLog -SimpleMatch ('--- PASS: ' + $named + ' ') -Quiet)) {
