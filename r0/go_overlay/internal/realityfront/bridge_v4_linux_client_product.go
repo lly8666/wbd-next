@@ -92,6 +92,15 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     }
     return session,nil
 }
+// Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
+// operator can forge these numbers; every metric comes from original Rust.
+func (p *V4LinuxClientProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
+    if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicOuterCounters()
+}
 func (p *V4LinuxClientProduct) Close()error{
     if p==nil{return ErrAdmissionParams}
     p.mu.Lock()
