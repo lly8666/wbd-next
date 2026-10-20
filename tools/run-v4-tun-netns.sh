@@ -124,7 +124,7 @@ if [[ "$FEC2_CONT" == 1 ]]; then
   if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$PERF" || -n "$BACKGROUND" || -n "$FEC2_PROBE" ]]; then
     echo 'FEC2_CONTINUOUS_INVALID requires isolated original authenticated kernel functional case' >&2; exit 2
   fi
-  TEST_FILTER='^(TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity|TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup)
+  TEST_FILTER='^(TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity|TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup)$'
 fi
 if [[ "$FEC2_PROBE" == 1 ]]; then
   if [[ -n "$STEADY" || -n "$LOSS" || -n "$PRELIM_MS" || -n "$TARGETED" || -n "$PERF" || -n "$BACKGROUND" || -n "$FEC2_CONT" ]]; then
