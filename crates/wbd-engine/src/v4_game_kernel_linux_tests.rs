@@ -7,7 +7,6 @@
 use crate::cold_v4::UntrustedColdV4;
 use crate::memory::Arena;
 use crate::v4_game_lane::{Error,GameAdapter};
-use crate::runtime::game_shared::GameError;
 use std::ffi::{CString,c_char};
 use std::fs::OpenOptions;
 use std::net::UdpSocket;
@@ -15,11 +14,12 @@ use std::os::fd::{AsRawFd,OwnedFd};
 use std::path::Path;
 use std::process::Command;
 use std::time::{Duration,Instant};
-use wbd_types::{BufferKey,LaneKey,LogicalPacketId,MonoNs,RecordPn,SeqOffset,TunnelKey};
+use wbd_types::{LogicalPacketId,MonoNs,RecordPn,SeqOffset,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
 use wbd_platform::linux_tun_sink::ScopedTunSink;
+use wbd_platform::r1::StopResult;
 
 unsafe extern "C"{
     fn ioctl(fd:i32,request:usize,...) -> i32;
@@ -169,9 +169,9 @@ fn m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun(){
         client.stop();server.stop();server.stop();
         raw_tx.begin_stop();raw_rx.begin_stop();tun.begin_stop();
         let deadline=Instant::now()+Duration::from_secs(1);
-        assert!(format!("{:?}",raw_tx.stop_until(deadline)).contains("Complete"));
-        assert!(format!("{:?}",raw_rx.stop_until(deadline)).contains("Complete"));
-        assert!(format!("{:?}",tun.stop_until(deadline)).contains("Complete"));
+        assert_eq!(raw_tx.stop_until(deadline),StopResult::Drained);
+        assert_eq!(raw_rx.stop_until(deadline),StopResult::Drained);
+        assert_eq!(tun.stop_until(deadline),StopResult::Drained);
         assert!(matches!(client.offer(b"stale",MonoNs(2)),Err(Error::Stopped)));
         assert!(tun.write_authenticated_ipv4(7,&ipv4).is_err());
         println!("M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes={n} authenticated_original_go_tls=1 native_M3_AEAD_PN=1 raw_kernel_copies={n} independent_lanes={n} udp_payload=99 unique_app=1 stop_stale_denied=1 NOT_PUBLIC_GO_CLI=1 GAME_PRODUCTION_OFF=1");
