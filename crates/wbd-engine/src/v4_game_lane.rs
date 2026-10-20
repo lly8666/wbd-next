@@ -109,12 +109,17 @@ impl GameAdapter{
             let same=|a:&DirectionKeys,b:&DirectionKeys|
                 a.aead_key==b.aead_key&&a.iv==b.iv&&a.hp_key==b.hp_key;
             if same(&c2s,&s2c) ||
-               all_materials.iter().any(|old|same(old,&c2s)||same(old,&s2c)) {
+               all_materials.iter().any(|old:&([u8;32],[u8;12],[u8;32])|{
+                   let match_dir=|d:&DirectionKeys|
+                       old.0==d.aead_key&&old.1==d.iv&&old.2==d.hp_key;
+                   match_dir(&c2s)||match_dir(&s2c)
+               }) {
                 return Err(Error::Unauthorized)
             }
-            // Duplicate keys across any direction or lane violate distinct
-            // exporter ownership. Native AEAD never rekeys or reuses a PN.
-            all_materials.push(c2s);all_materials.push(s2c);
+            // Retain immutable comparable bytes only, never move the
+            // non-Copy key owners before constructing Tx/Rx AEAD sessions.
+            all_materials.push((c2s.aead_key,c2s.iv,c2s.hp_key));
+            all_materials.push((s2c.aead_key,s2c.iv,s2c.hp_key));
             incarnations.push(id.incarnation);
             let mss=id.client_limit.min(id.server_limit).min(2048);
             if mss<64{return Err(Error::Invalid)}
