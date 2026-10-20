@@ -318,12 +318,19 @@ def plan_m4(api,main_sha):
     """
     require(api.get("branches/main")["commit"]["sha"]==main_sha,
             "main changed before M4 dispatch plan")
-    require(api.get("branches/"+M4_CONTROL_REF)["commit"]["sha"]==M4_CONTROL_SHA,
-            "M4 frozen Windows control moved")
     reg=json.loads(api.blob(".governance/registry.json",main_sha))
     roles=g.validate_registry(reg)
     role=next((r for r in roles if r["id"]=="M4" and r["state"]=="active"
                and not r["global_writer"]),None)
+    # Main registry replaced Windows016 with Linux017. Historical
+    # Windows I is immutable, not an active request or an unrelated-role
+    # dispatch blocker. The real Linux gate runs in M0 combined Actions.
+    if (role is not None and role["branch"]==m4.BRANCH and
+            role["assigned_task"]=="R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017"):
+        return [{"role":"M4","task_id":role["assigned_task"],
+                 "result":"SKIP_SUPERSEDED_WINDOWS_TASK"}]
+    require(api.get("branches/"+M4_CONTROL_REF)["commit"]["sha"]==M4_CONTROL_SHA,
+            "M4 frozen Windows control moved")
     require(role is not None and
             role["branch"]==m4.BRANCH and
             role["assigned_task"]=="R5-M4-NATIVE-WINDOWS-NETWORK-016" and
