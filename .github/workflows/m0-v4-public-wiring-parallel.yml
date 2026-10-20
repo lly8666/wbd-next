@@ -1,5 +1,5 @@
 name: M0 V4 public real wiring parallel Fixed Auto Game lane gate
-run-name: "M0|V4-WIRING-PARALLEL|\u0024{{ github.sha }}"
+run-name: "M0|V4-WIRING-PARALLEL|${{ github.sha }}"
 on:
   push:
     branches: [main]
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [fec-fixed, fec-auto, game2, game4]
+        mode: [fec-fixed]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -56,7 +56,7 @@ jobs:
           if [[ "$MODE" == game2 || "$MODE" == game4 ]];then
             # The existing genuine public V4 parser only supports one
             # authenticated lane. A Game cold-set/native demo is NOT this.
-            if source-artifact/fixed-build/wbd-v4-client --mode "$MODE"                >parallel-results/negative-game.log 2>&1;then
+            if LD_LIBRARY_PATH="$GITHUB_WORKSPACE/source-artifact/fixed-build" source-artifact/fixed-build/wbd-v4-client --mode "$MODE"                >parallel-results/negative-game.log 2>&1;then
               echo 'UNSAFE_GAME_CLI_UNQUALIFIED_ACCEPT' >&2;exit 1
             fi
             grep -q 'not installed in native public owner' parallel-results/negative-game.log
@@ -65,7 +65,23 @@ jobs:
           fi
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl >parallel-results/apt.log 2>&1
-          WBD_V4_PUBLIC_MODE="$MODE" bash tools/m0-v4-public-real-linux-netns.sh source-artifact/fixed-build >parallel-results/real-mode.log 2>&1 || {
+          # Narrow reproducible diagnosis on the previously failed genuine Go
+          # Fixed client READY cliff. Instrument only the ephemeral harness
+          # failure path; source-locked original Go and Rust binaries unchanged.
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('tools/m0-v4-public-real-linux-netns.sh').read_text()
+          needle='  echo \'M0_V4_PUBLIC_REAL_CLIENT_SERVER_NOT_READY\' >&2'
+          assert src.count(needle)==1
+          inject='''  echo 'M0_V4_PUBLIC_READY_CLI_BOUNDARY_DIAG' >&2
+            echo "client PID $(cat "$TMP/client.pid")" >&2
+            sudo -n kill -QUIT "$(cat "$TMP/client.pid")" 2>/dev/null || true
+            sleep 0.4
+            grep -E 'goroutine [0-9]+ |github.com/lly8666/wobuzhidao/internal/(realityfront|faketcp|v4productcli)|runtime\\.gopark|runtime\\.chanrecv' "$TMP/client.log" | tail -45 >&2 || true
+          '''
+          Path('parallel-results/trace-netns.sh').write_text(src.replace(needle,inject+needle))
+          PY
+          WBD_V4_PUBLIC_MODE="$MODE" bash parallel-results/trace-netns.sh source-artifact/fixed-build >parallel-results/real-mode.log 2>&1 || {
             tail -100 parallel-results/real-mode.log >&2
             echo "M0_V4_PUBLIC_MODE_REAL_GATE_FAIL mode=$MODE" >parallel-results/outcome.log
             exit 1
