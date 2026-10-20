@@ -108,7 +108,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
             ClientPort:flow.LocalPort,ServerPort:flow.PeerPort,
         },
     }
-    cmd,err:=v4PrivateHandoffV1(handoff.ReceiveNext,peer)
+    cmd,err:=v4PrivateHandoffFromVerifiedClientSession(handoff.ReceiveNext,peer,cold)
     if err!=nil{return err}
     var h C.uint64_t
     rc:=C.wbd_m0_embedded_go_prepare_client(
