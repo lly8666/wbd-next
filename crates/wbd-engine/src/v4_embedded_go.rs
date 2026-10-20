@@ -2259,10 +2259,13 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
         tun,slab,&route,15,MonoNs(0)
     ).map_err(|_|INVALID)?;
     let raw=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
-    let tuple=Ipv4Tuple{
+    let tuple=if server{Ipv4Tuple{
         src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
         src_port:flow.server_port,dst_port:flow.client_port,
-    };
+    }}else{Ipv4Tuple{
+        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+        src_port:flow.client_port,dst_port:flow.server_port,
+    }};
     let presentation=Presentation{
         ack32:1,advertised_window:4096,ip_id:43,
         persona:PacketPersona::Legacy,
