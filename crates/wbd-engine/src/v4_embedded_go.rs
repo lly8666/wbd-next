@@ -2490,6 +2490,48 @@ fn background_raw_once(
     }
     Ok(delivered_total)
 }
+// The actual peer ACK is generated only from original M3 authenticated,
+// unique RX PNs. Exactly the SAME original TX AEAD/PN, M1 frozen buffer queue
+// and M4 sendmmsg dispatch carries this kind1 receipt, including idle time.
+// The queued draft is terminally settled ONLY from actual kernel copied /
+// uncertain / definitely-not-sent evidence. Never fabricate a peer ACK.
+#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
+    if e.feedback_queued.is_some(){return Ok(false)}
+    let feedback=Arc::clone(e.rx_feedback.as_ref().ok_or(BAD_STAGE)?);
+    let mut rx=feedback.lock().map_err(|_|BAD_STAGE)?;
+    let Some(draft)=rx.on_due(now)else{return Ok(false)};
+    let attempt=(||->Result<u64,i32>{
+        let msg=wbd_codec::Receipt{
+            largest_data_pn:draft.largest_data_pn().0,ack_delay_us:0,
+            report_seq:draft.report_seq(),
+            pages:draft.pages().iter().map(|p|wbd_codec::ReceiptPage{
+                base_pn:p.base_pn.0,bitmap:p.bitmap,
+            }).collect(),
+        };
+        let tlv=wbd_codec::encode_control(
+            &[wbd_codec::ControlTlv::Receipt(msg)],512
+        ).map_err(|_|INVALID)?;
+        let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
+        let slab=e.arena.allocate().map_err(|_|FULL)?;
+        let (pn,_,_)=e.owner.seal_original_authenticated_receipt(
+            slab,&tlv,budget,15,now
+        ).map_err(|_|BAD_STAGE)?;
+        Ok(pn)
+    })();
+    match attempt{
+        Ok(pn)=>{
+            e.feedback_queued=Some((draft,pn));
+            Ok(true)
+        },
+        Err(err)=>{
+            let _=rx.on_send_result(
+                &draft,wbd_recovery::FeedbackSendResult::NotSent,now
+            );
+            Err(err)
+        }
+    }
+}
 // Independently wait for the REAL TUN application RX OUTSIDE registry lock.
 // Only original owner grants route-bound budget, seals AEAD/PN and submits
 // original frozen M1 record through genuine scoped M4 raw TX.
@@ -2825,9 +2867,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         #[cfg(feature="fec2_product_record")]
         let due={
             let e=cell.lock().map_err(|_|BAD_STAGE)?;
-            e.fec2_live_tx.as_ref().is_some_and(|s|
+            let fec=e.fec2_live_tx.as_ref().is_some_and(|s|
                 s.report().queued_jobs>0 ||
-                s.next_deadline().is_some_and(|d|d.0<=loop_now().0))
+                s.next_deadline().is_some_and(|d|d.0<=loop_now().0));
+            let reverse=e.feedback_queued.is_none() &&
+                e.rx_feedback.as_ref().is_some_and(|f|
+                    f.lock().ok().and_then(|rx|rx.next_deadline())
+                    .is_some_and(|d|d.0<=loop_now().0));
+            fec||reverse
         };
         #[cfg(not(feature="fec2_product_record"))]
         let due=false;
@@ -3031,6 +3078,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 }
             }
         }
+        #[cfg(feature="fec2_product_record")]
+        if accepted<32{
+            match stage_original_reverse_feedback(e,loop_now()){
+                Ok(true)=>accepted+=1,
+                Ok(false)=>{},
+                Err(_)=>failed=true,
+            }
+        }
         if accepted==0{
             drain_data_turn_returns(&mut e.arena);
             return if failed{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
@@ -3093,6 +3148,34 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    // Keep M2 original outbound DATA denominator separate from a native
+    // receipt record. Control is appended last after all application
+    // first-sends; failure to preserve this order censors the owner, never
+    // counts an authenticated ACK as successful new business DATA.
+    #[cfg(feature="fec2_product_record")]
+    let feedback_last=if let Some((_,pn))=e.feedback_queued.as_ref(){
+        if !actual_firstsend.last().is_some_and(|x|x.0.0==*pn){
+            return Err(BAD_STAGE)
+        }
+        true
+    }else{false};
+    #[cfg(not(feature="fec2_product_record"))]
+    let feedback_last=false;
+    #[cfg(feature="fec2_product_record")]
+    if let Some((draft,_))=e.feedback_queued.take(){
+        let idx=actual_firstsend.len().checked_sub(1).ok_or(BAD_STAGE)?;
+        let status=if idx<finish.copied as usize{
+            wbd_recovery::FeedbackSendResult::Accepted
+        }else if finish.uncertain==1&&idx==finish.copied as usize{
+            wbd_recovery::FeedbackSendResult::Uncertain
+        }else{
+            wbd_recovery::FeedbackSendResult::NotSent
+        };
+        let feedback=e.rx_feedback.as_ref().ok_or(BAD_STAGE)?;
+        feedback.lock().map_err(|_|BAD_STAGE)?
+            .on_send_result(&draft,status,loop_now())
+            .map_err(|_|BAD_STAGE)?;
+    }
     #[cfg(feature="fec2_product_record")]
     {
         let mut parity_copied=0u8;
@@ -3163,9 +3246,21 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         #[cfg(not(feature="fec2_product_record"))]
         let has_fec=false;
         if !has_fec{
+            let data_count=actual_firstsend.len()
+                .saturating_sub(usize::from(feedback_last));
+            let data=&actual_firstsend[..data_count];
+            let copied=finish.copied.min(data_count as u32);
+            let uncertain=if finish.uncertain==1 &&
+                (finish.copied as usize)<data_count{1}else{0};
+            let data_finish=TxTurnCompletion{
+                copied,uncertain,
+                definitely_unsent:(data_count as u32)
+                    .saturating_sub(copied).saturating_sub(uncertain),
+                ..finish
+            };
             match first.lock(){
                 Ok(mut observer)=>observer.on_real_kernel_turn(
-                    actual_firstsend,finish,loop_now()),
+                    data,data_finish,loop_now()),
                 Err(_)=>return Err(BAD_STAGE)
             }
         }
