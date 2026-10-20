@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 plus docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md: original Go TLS/Rust FEC2/Auto and Game2/4 shared Linux integration, sole product permission and final Actions qualification; Windows deferred.",
-      "done_when": "Linux original-Go authenticated Fixed/Auto real firstsend M2 rev APPLIED, real client kernel/TUN lost-source, Stop/MTU/noHOL and genuine Game2/4 independent M4 raw lane first-app, one combined exact SOURCE Linux Actions; FEC2+Game production Linux release only after positive gate; Windows independent future NOT_RUN.",
+      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 and PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M0: original Go TLS/Rust FEC2/Game shared Linux product integration plus Windows native shared owner/CLI/Actions unblock; M0 solely authorizes actual production.",
+      "done_when": "Linux original Go public CLI and Game2/4 independent authenticated M4 raw/TUN first-app plus Fixed/Auto M2 and Stop pass one exact SOURCE gate before Linux ON; M0 also provides working source-locked Windows M4 native CI and minimum shared Go/Rust ABI for UI→real applied state; Windows production independently NOT_RUN until real native OS+owner proof.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
     {
@@ -139,9 +139,9 @@
       ],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M4: Linux real netns authentic original-Go/Rust connected network lifecycle, Stop and owned cleanup, one source-locked Actions proof; Windows I010 retained historical and deferred.",
-      "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
-      "assigned_task": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017"
+      "goal": "PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M4: real original Go Windows native client+WinForms UI→Connect/Disconnect/status, owned network and truthful FEC2/Game controls, source-locked Windows 2022 Actions. Accepted M4 Linux017 held intact.",
+      "done_when": "Windows native Go CLI+WinForms actual config/save/reload/launch→Connect/Disconnect+requested/pending/applied readback, owned WFP/TUN/DNS/route native stop/cleanup where supported; same frozen SOURCE Windows 2022 Actions named tests and artifact, original FAIL/UNSUPPORTED/NOT_RUN preserved; no false production ON.",
+      "assigned_task": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018"
     }
   ]
 }
