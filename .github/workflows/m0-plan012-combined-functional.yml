@@ -308,6 +308,19 @@ jobs:
           }
           cat fixed-kernel-result/v4-public-normal-real-cli.log
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
+          cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+          # The two exact same compiled product binaries, reused, now under
+          # genuine 1% independent Linux veth netem kernel loss BOTH ways.
+          # Assert real dropped kernel packets, original M3 authentic ACK,
+          # original M2 SAME ciphertext frozen retransmission, all 512
+          # application UDP round trips and joined native Stop.
+          WBD_V4_PUBLIC_KERNEL_LOSS=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/v4-public-1pct-real-cli.log 2>&1 || {
+            tail -85 fixed-kernel-result/v4-public-1pct-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+          grep -q 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
+            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
