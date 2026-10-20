@@ -14,7 +14,7 @@ use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
-use wbd_platform::linux_tun_sink::ScopedTunSink;
+use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
 
@@ -83,8 +83,31 @@ impl GameKernelOwner{
                 let start=Instant::now();
                 let mut inbound=[0u8;2048];
                 while !tx_stop.load(Ordering::Acquire){
-                    let Ok(len)=tx_tun.read_ipv4_into(generation,&mut inbound)else{
-                        continue // bounded kernel poll, not a busy spin
+                    // Never hold the TUN device's shared serialized mutex
+                    // during a 750ms missing-app poll: authenticated RX
+                    // needs the SAME device mutex for first-delivery write.
+                    // Ready-only poll(0) holds it only for an actual read.
+                    let mut slots:[&mut [u8];1]=[&mut inbound];
+                    let len=match tx_tun.read_ready_batch(generation,&mut slots){
+                        Ok(batch)=>match batch.entry(0){
+                            Some(TunReadyEntry::UntrustedIpv4{len})=>len,
+                            Some(TunReadyEntry::Rejected)=>{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                continue
+                            },
+                            _=>{
+                                // Bounded 2ms idle wait yields to peer RX/TUN
+                                // and limits empty-device wakes to <=500/s.
+                                thread::sleep(Duration::from_millis(2));
+                                continue
+                            }
+                        },
+                        Err(_)=>{
+                            if tx_stop.load(Ordering::Acquire){break}
+                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            thread::sleep(Duration::from_millis(2));
+                            continue
+                        }
                     };
                     if len==0||len>1200{
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
