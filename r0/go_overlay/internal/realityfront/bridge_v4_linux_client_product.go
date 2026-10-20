@@ -23,6 +23,8 @@ type V4LinuxClientProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    FECMode FecV2Mode
+    FECProfile FecV2Profile
 }
 type V4LinuxClientProduct struct {
     mu sync.Mutex
@@ -30,6 +32,7 @@ type V4LinuxClientProduct struct {
     owner *v4EmbeddedNativeBridge
     session *V4ClientSession
     association *faketcp.ClientAssociation
+    fec *v4ProductFecMonitor
     stopped bool
 }
 func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProduct,error){
@@ -42,6 +45,9 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
         return nil,ErrAdmissionParams
     }
     if _,err:=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
+    if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
+        !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
+    if cfg.FECMode==FecV2Fixed&&!cfg.FECProfile.Valid(){return nil,ErrAdmissionParams}
     return &V4LinuxClientProduct{cfg:cfg},nil
 }
 // ConnectAuthenticatedPeer is the real TLS client public product half:
@@ -58,13 +64,20 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
     conn:=assoc.BootstrapConn()
     if conn==nil{return nil,ErrAdmissionParams}
-    // Strict runtime feature3 Normal/off until the separate Rust FEC2
-    // source/repair and Game2/4 lane groups are bound to the native client.
-    if cfg.Policy.Transport!=TransportNormal||cfg.Policy.FECMode!=FECOff||
-       cfg.DesiredLanes!=1{
+    // One TLS exporter binds the requested FEC mode to the same
+    // original-Go V4 Rust owner, never a legacy V3 separate FEC stream.
+    mode:=p.cfg.FECMode
+    if mode==""{mode=FecV2Off}
+    wireMode:=FECOff
+    if mode==FecV2Fixed{wireMode=FECFixed}
+    if mode==FecV2Auto{wireMode=FECAuto}
+    if cfg.Policy.Transport!=TransportNormal||
+       cfg.Policy.FECMode!=wireMode||cfg.DesiredLanes!=1{
         return nil,ErrAdmissionUnsupported
     }
-    session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{DataPlaneReady:true})
+    session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{
+        DataPlaneReady:true,fec2Product:v4ProductFecEnabled(mode),
+    })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()
     if err!=nil{return nil,err}
@@ -81,6 +94,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
+    if err==nil{
+        p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
+    }
     if err==nil{err=bridge.armOriginalPublicM2Feedback()}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
@@ -90,7 +106,15 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             shutdown,
         )
     }
+    if p.fec!=nil{p.fec.start(bridge)}
     return session,nil
+}
+func (p *V4LinuxClientProduct) OriginalFECReadback()(V4PublicFecReadback,error){
+    if p==nil{return V4PublicFecReadback{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecReadback{},ErrAdmissionUnsupported}
+    return p.fec.readback(p.owner)
 }
 // Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
 // operator can forge these numbers; every metric comes from original Rust.
@@ -103,6 +127,10 @@ func (p *V4LinuxClientProduct) OriginalOuterCounters()(V4PublicOuterCounters,err
 }
 func (p *V4LinuxClientProduct) Close()error{
     if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    worker:=p.fec
+    p.mu.Unlock()
+    if worker!=nil{worker.stop()}
     p.mu.Lock()
     defer p.mu.Unlock()
     return p.closeLocked()
