@@ -14,6 +14,10 @@ mod v4_fixed_stream;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.
 mod v4_game_lane;
+/// Linux-only privileged same-Actions original-Go TLS Game2/4 actual M4
+/// raw/TUN/UDP application ingress. Never a public capability or default run.
+#[cfg(all(test,target_os="linux"))]
+mod v4_game_kernel_linux_tests;
 /// Release-option original-owner persistent multi-block authenticated FEC RX
 /// component only: not a live Go/kernel product route or public enablement.
 #[cfg(feature="fec2_product_record")]
