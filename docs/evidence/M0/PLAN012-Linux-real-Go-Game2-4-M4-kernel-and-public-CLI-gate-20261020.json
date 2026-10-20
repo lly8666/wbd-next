@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+  "result": "PARTIAL_LINUX_REAL_GO_TLS_GAME2_GAME4_REAL_M4_RAW_TUN_UDP_SCOPED_PASS_PUBLIC_GO_CLI_NOT_RUN_RELEASE_OFF",
+  "intent_refs": [
+    "docs/devlog/M0/PLAN012-Linux-only-Game2-4-real-owner-intent-20261020.md",
+    "docs/devlog/M0/PLAN012-Linux-release-gate-real-Game-kernel-selector-repair-intent-20261020.md"
+  ],
+  "scope": {
+    "original_go": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust": "1.85.1",
+    "runner": "ubuntu-24.04 x86_64 privileged network namespace",
+    "go": "1.23.12",
+    "note": "The Go credential-checked TLS Game 2/4 exporter is emitted only into ephemeral 0600 runner-local material and wiped; production authenticated Go→Rust owner lifetime/capability still NOT_WIRED."
+  },
+  "same_source_parallel": {
+    "workflow": ".github/workflows/m0-plan012-preenable-parallel.yml",
+    "run_id": 39368220417,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+    "jobs": [
+      {
+        "name": "original-public-cli-source",
+        "id": 118449830445,
+        "result": "failure",
+        "reason": "NOT_RUN: real bridge_v4_linux_public_product.go and bridge_v4_linux_public_product_test.go missing"
+      },
+      {
+        "name": "original-fec-game-m2-m4 / native",
+        "id": 118449830706,
+        "result": "success"
+      },
+      {
+        "name": "game-kernel-receipt (4)",
+        "id": 118450332232,
+        "result": "success",
+        "scope": "authentic original Go TLS exported four independently keyed Rust GameAdapter lanes, actual M4 raw kernel and TUN, real UDP app first packet"
+      },
+      {
+        "name": "game-kernel-receipt (2)",
+        "id": 118450332304,
+        "result": "success",
+        "scope": "authentic original Go TLS exported two independently keyed Rust GameAdapter lanes, actual M4 raw kernel and TUN, real UDP app first packet"
+      },
+      {
+        "name": "execute-public-original-go-cli",
+        "id": 118450376984,
+        "result": "skipped",
+        "reason": "public source preflight failed"
+      },
+      {
+        "name": "linux-release-qualified",
+        "id": 118450377850,
+        "result": "skipped",
+        "reason": "no real public binary or actual positive CLI Connect/Disconnect/APPLIED"
+      }
+    ],
+    "actual_original_go_combined": {
+      "artifact_id": 12239789649,
+      "artifact_name": "m0-plan012-combined-39368220417-1",
+      "artifact_digest_sha256": "1bb922954418ad3e70dd0fe1472a6d32c87d09151fa622fa6030dcbb2324206b",
+      "artifact_expires_at": "2026-11-19T04:12:47Z",
+      "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+      "realityfront_go_game": "PASSED_ORIGINAL_AUTHENTIC_TLS_2_4_COLD",
+      "native_game_AEAD_PN": "PASSED_GO_TLS_REAL_NATIVE_CRYPTO_2_4",
+      "actual_kernel_game": "PASSED_SCOPE_ONLY_GO_TLS_NATIVE_RUST_M1_M3_AND_M4_RAW_TO_TUN_UDP_2_4",
+      "game_2_raw_kernel_copies": 2,
+      "game_4_raw_kernel_copies": 4,
+      "game_udp_payload_bytes": 99,
+      "game_crosslane_first_app_unique": true,
+      "game_stale_delivery_after_stop": "DENIED",
+      "fixed_authenticated_m2_applied": "PASS_SCOPED_REV4_2S",
+      "auto_initial_authenticated_m2_applied": "PASS_SCOPED_STARTUP",
+      "original_Go_S2C_lost_source_FEC_4_real_UDP": "PASS_SCOPED",
+      "M4_route_rule_TUN_FD_Stop": "PASS_SCOPED"
+    }
+  },
+  "original_actions_first_real_kernel": {
+    "source_sha": "4a3a6864ebddf716d01c7eae0b8eac282afa166b",
+    "run_id": 39367261484,
+    "attempt": 1,
+    "job_id": 118446820914,
+    "result": "success",
+    "artifact_id": 12239334954,
+    "artifact_digest_sha256": "59656fb0c6fcdb4d6dfe247d7c797a2fca64e0f1123aa1fab1b9e36378b47f7a"
+  },
+  "historic_failed_runs_preserved": [
+    {
+      "run_id": 39367904000,
+      "source": "b7f7f29563fbb1ce33646c4daf32d07af9f91d21",
+      "result": "failure",
+      "reason": "game scoped receipt used initial manifest.json instead of final receipt.json, and public CLI absent; genuine kernel job PASS"
+    },
+    {
+      "run_id": 39367131273,
+      "source": "27ca28bcc6211f0cd581c240bc2eccd3d4b99523",
+      "result": "failure",
+      "reason": "actual native Rust kernel Game test E0596 arena mutability; corrected in S365"
+    },
+    {
+      "run_id": 39366257461,
+      "source": "a6d42ecefa3200ee33bc8eba62a803265cdd528c",
+      "result": "failure",
+      "reason": "Go direction key material Rust E0382 move; corrected S359"
+    },
+    {
+      "run_id": 39361154267,
+      "result": "failure",
+      "reason": "old Linux public Go CLI and Game2/4 real kernel proof NOT_RUN at source a22cbe4; later Game fixed"
+    }
+  ],
+  "governance": {
+    "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+    "run_id": 39368220299,
+    "result": "success"
+  },
+  "maintenance": {
+    "source_sha": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
+    "run_id": 39368220407,
+    "result": "success"
+  },
+  "Windows_M4_concurrent": "UNTOUCHED_BY_M0_LINUX_PACKAGE",
+  "qualification": {
+    "original_Go_TLS_Game2_4_native_M4_raw_TUN_UDP": "PASS_SCOPED_ACTUAL_LINUX_KERNEL",
+    "public_original_go_cli_feature7_real_connect_disconnect_applied": "NOT_RUN_MISSING_IMPLEMENTATION",
+    "original_go_public_binary_product_runtime": "NOT_BUILT",
+    "game_production_continuous_real_original_go_cli": "NOT_RUN",
+    "fec2_production": "OFF",
+    "game_production": "OFF",
+    "Windows": "M4_INDEPENDENT_CONCURRENT_DEVELOPMENT_NOT_CLAIMED"
+  },
+  "next_action": "Complete genuine pinned original-Go public feature7 CLI runtime wiring: actual Connect/Disconnect, live credential-bound Rust Game2/4/Fixed+Auto sessions, real original kernel/TUN packets, Stop + authenticated M2 APPLIED on operator readback, then same-source preenable final Actions. Do not synthesize APPLIED or substitute scoped Rust test for real Go public product."
+}
