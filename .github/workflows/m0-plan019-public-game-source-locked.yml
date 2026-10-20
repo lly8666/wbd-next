@@ -75,9 +75,9 @@ jobs:
           assert src.count(anchor)==1
           script=r'''if [[ "$GAME" != 0 ]];then
             # Narrow SOURCE-locked Linux pcap header summaries; no TLS keys/payloads.
-            sudo -n ip netns exec "$NSC" tcpdump -n -q -l -s 64 -i wbdvc0 'tcp and host 10.25.0.1' >"$TMP/game-client-wire-headers.log" 2>/dev/null &
+            sudo -n ip netns exec "$NSC" tcpdump -nn -vvv -l -s 64 -i wbdvc0 'tcp and host 10.25.0.1' >"$TMP/game-client-wire-headers.log" 2>/dev/null &
             CAPC=$!
-            sudo -n ip netns exec "$NSS" tcpdump -n -q -l -s 64 -i wbdvs0 'tcp and host 10.25.0.2' >"$TMP/game-server-wire-headers.log" 2>/dev/null &
+            sudo -n ip netns exec "$NSS" tcpdump -nn -vvv -l -s 64 -i wbdvs0 'tcp and host 10.25.0.2' >"$TMP/game-server-wire-headers.log" 2>/dev/null &
             CAPS=$!
             sleep 0.1
           fi
