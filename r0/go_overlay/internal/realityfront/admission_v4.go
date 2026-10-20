@@ -144,6 +144,24 @@ func v4PrivateHandoffFromVerifiedSession(
     }
     return command,nil
 }
+// Authenticated verified CLIENT result is symmetric to the original Go
+// server v2 feature7 command. A raw caller cannot submit these bytes as
+// proof of the Go TLS exporter; this stays package-private.
+func v4PrivateHandoffFromVerifiedClientSession(
+    boundary uint32,peer v4PeerTransport,s V4ColdSessionSnapshot,
+)([v4PrivateHandoffLen]byte,error){
+    var zero [v4PrivateHandoffLen]byte
+    if s.server||s.principal==""||s.epoch==[16]byte{}||
+        !v4KnownFeatureSet(s.features){return zero,ErrAdmissionParams}
+    command,err:=v4PrivateHandoffV1(boundary,peer)
+    if err!=nil{return zero,err}
+    if s.features==(v4RequiredFeatures|v4FeatureFEC2){
+        binary.BigEndian.PutUint16(command[4:6],2)
+        binary.BigEndian.PutUint16(command[27:29],s.features)
+    }
+    return command,nil
+}
+
 type v4OwnerBridge interface {
     prepare(verified V4ColdSessionSnapshot, rxBoundary uint32, observedPeer v4PeerTransport) (v4PreparedOwner, error)
 }
