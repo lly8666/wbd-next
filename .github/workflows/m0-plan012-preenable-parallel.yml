@@ -50,6 +50,11 @@ jobs:
           import hashlib,json,os,pathlib,re
           root=pathlib.Path("result/fixed-kernel-result")
           m=json.loads((root/"manifest.json").read_text())
+          receipt=json.loads((root/"receipt.json").read_text())
+          assert receipt["source_sha"]==m["source_sha"]
+          assert receipt["run_id"]==m["run_id"]
+          assert receipt["attempt"]==m["attempt"]
+          assert receipt["source_inputs_sha256"]==m["source_inputs_sha256"]
           assert m["source_sha"]==os.environ["GITHUB_SHA"]
           assert m["run_id"]==int(os.environ["GITHUB_RUN_ID"])
           assert m["attempt"]==int(os.environ["GITHUB_RUN_ATTEMPT"])
@@ -57,7 +62,7 @@ jobs:
           lane=int(os.environ["REQUIRED_LANES"])
           assert lane in (2,4)
           log=(root/"game-real-kernel.log").read_bytes()
-          assert hashlib.sha256(log).hexdigest()==m["original_go_tls_game_m4_real_kernel_log_sha256"]
+          assert hashlib.sha256(log).hexdigest()==receipt["original_go_tls_game_m4_real_kernel_log_sha256"]
           native=(root/"real-go-native-game-lanes.log").read_text()
           original=(root/"original-go-game-tls.log").read_text()
           marker=f"M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes={lane} authenticated_original_go_tls=1 native_M3_AEAD_PN=1 raw_kernel_copies={lane} independent_lanes={lane} udp_payload=99 unique_app=1 stop_stale_denied=1 NOT_PUBLIC_GO_CLI=1 GAME_PRODUCTION_OFF=1"
