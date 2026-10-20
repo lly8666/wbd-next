@@ -17,6 +17,7 @@ import (
     "fmt"
     "math/big"
     "os"
+    "path/filepath"
     "testing"
     "time"
 
@@ -156,6 +157,25 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                     t.Fatalf("actual TLS native driver binding false status: %+v err=%v",state,e)
                 }
                 installed=true
+                // This is a REAL original-Go TLS + live M4 native Wintun
+                // with Rust generation/hold, not a fabricated device.
+                // The M4 owner intentionally refuses global WFP Apply:
+                // confirm no WAL or OS mutation and no false GUI Connected.
+                statePath:=filepath.Join(t.TempDir(),"native-original-state.json")
+                admission,guardErr:=scoped.NativeProductAdmission(ctx,statePath)
+                if !errors.Is(guardErr,windowsclient.ErrN4NativeGuard)||
+                    admission.ProductApplied||!admission.OriginalTLSOwner.DeviceBound||
+                    admission.OriginalTLSOwner.Generation==0||
+                    admission.NativeIdentity.LUID!=id.LUID||
+                    admission.DiskState.State!="absent" {
+                    t.Fatalf("real signed Wintun+TLS bypassed M4 native WFP guard: %+v guard=%v",admission,guardErr)
+                }
+                for _,name:=range []string{statePath,statePath+".n4-owned-wal",statePath+".n4-owned-wal.routes"}{
+                    if _,err:=os.Lstat(name);!errors.Is(err,os.ErrNotExist){
+                        t.Fatalf("guard denial must never mutate native network WAL %s: %v",name,err)
+                    }
+                }
+                t.Log("M0_PLAN013_TRUE_TLS_WINTUN_RUST_OS_PRODUCT_GUARD_DENIED_NO_WAL_MUTATION_PASS")
                 if e=scoped.StopRustScoped(ctx);e!=nil{t.Fatal("M4 original native Wintun real quiesce->Rust owner Stop",e)}
                 t.Logf("M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=%d index=%d os_applied=0 no_wfp_or_kernel_app=1",id.LUID,id.InterfaceIndex)
             }
