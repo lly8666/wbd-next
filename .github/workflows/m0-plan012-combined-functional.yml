@@ -7,11 +7,11 @@ run-name: "M0|PLAN012-COMBINED-REAL-GO|${{ github.sha }}"
 on:
   # M4 can run this SAME exact-source Linux real Connect/Stop gate once
   # without creating an I011 Windows request or changing shared workflow.
+  workflow_call:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan012-combined-functional.yml"
       - "crates/wbd-engine/src/v4_game_lane.rs"
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
@@ -72,6 +72,13 @@ jobs:
           for file in bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
+          # Optional product conformance: missing files are NOT_RUN at
+          # the separate parallel pre-enable gate, not silently skipped PASS.
+          for file in bridge_v4_linux_public_product.go bridge_v4_game_product_linux.go bridge_v4_linux_public_product_test.go bridge_v4_game_kernel_linux_test.go; do
+            if [[ -f "r0/go_overlay/internal/realityfront/$file" ]]; then
+              cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+            fi
+          done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^TestM0V4OriginalTLSGame2And4AuthenticatedColdSet$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
@@ -103,6 +110,14 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
             "tools/run-v4-tun-netns.sh",".github/workflows/m0-plan012-combined-functional.yml"]
+          for optional in [
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go",
+            ".github/workflows/m0-plan012-preenable-parallel.yml",
+          ]:
+            if pathlib.Path(optional).is_file(): source.append(optional)
           m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
             "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
             "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
@@ -204,6 +219,8 @@ jobs:
         if: always()
         with:
           name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
-          path: fixed-kernel-result/
+          path: |
+            fixed-kernel-result/
+            fixed-build/
           retention-days: 30
           if-no-files-found: warn
