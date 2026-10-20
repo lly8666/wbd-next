@@ -55,6 +55,7 @@ type v4EmbeddedNativeBridge struct {
     protectedEpoch [16]byte
     authenticatedPrincipal string
     protectedFeatures uint16
+    protectedLane uint8 // original immutable Go TLS negotiated 1..4 lane
     // M0-only opt-in settings. Actual production config/state still lives
     // in the Go parameter owner and remains FEC2-OFF until product wiring.
     fec2ProbePolicySet bool
@@ -86,6 +87,7 @@ func (b *v4EmbeddedNativeBridge) prepare(
     b.protectedEpoch=s.epoch
     b.authenticatedPrincipal=s.principal
     b.protectedFeatures=s.features
+    b.protectedLane=s.laneID
     return &v4EmbeddedPending{b:b},nil
 }
 // Actual original Go client TLS reply is checked before this private
@@ -132,6 +134,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
     b.protectedEpoch=cold.Epoch()
     b.authenticatedPrincipal=cold.Principal()
     b.protectedFeatures=session.negotiatedFeatures
+    b.protectedLane=cold.laneID
     b.committed=true
     return nil
 }
