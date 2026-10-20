@@ -175,6 +175,16 @@ func Run(role string,args []string)error{
     }
     return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
+func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_M2_OUTER role=%s real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d max_retransmits=2",
+        role,v.FirstKernelCopied,v.AuthenticatedAckRetired,
+        v.OriginalFrozenRepaired,v.DriverUncertain,
+        v.BudgetOrCapacityBlocked,v.RetiredTotal)
+}
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -226,7 +236,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     case <-ctx.Done():
     case err=<-errs:
     }
+    counters,countErr:=native.OriginalOuterCounters()
+    logAuthenticOuter("client",counters,countErr)
     closeErr:=native.Close()
+    if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
@@ -315,7 +328,10 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }()
     select{case <-ctx.Done():case err=<-errs:}
     if *connected{
+        counters,countErr:=product.OriginalOuterCounters()
+        logAuthenticOuter("server",counters,countErr)
         closeErr:=product.Close()
+        if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=server")}
         if err!=nil{return errors.Join(err,closeErr)}
         return closeErr
     }
