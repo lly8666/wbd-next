@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 210,
-  "checkpoint_sha": "d7f90377c854d2f69297fc55f2726de1704e664e",
+  "sequence": 211,
+  "checkpoint_sha": "3e11399a90274986ecd51c46221409accd8a7a23",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "M0 current PLAN012/PLAN013 product V4 original-Go TLS→Rust M1/M2/M3/M4 Linux. Original Go protected client feature7 V2 handoff corrected S450, one source-locked build SOURCE621bc and four parallel job Actions39397459128 at harness SOURCEadf4 PASS_SCOPED: real PUBLIC Linux Fixed/Auto initial source+repair with authenticated M2 mature requested=applied=1, real 64 UDP app each, joined Stop both roles. Game2/4 jobs PASS only negative fail-closed CLI rejection; actual public independent Game lanes/damaged lane noHOL NOT_RUN. FEC2 production OFF; Windows original Rust owner/physical NOT_RUN.",
-  "why_now": "H209 checkpoint was S446 eaf8a88; commits S447 intent, S448 parallel harness, S449 narrow diagnostic, S450 original V2 trusted client feature7 + one build, S451 harness exact SOURCE reuse, S452 isolated receipt dir, S453 precise receipt. Original FAIL Actions39396003853,39396438181,39397026210,39397322763 preserved; successful final four-job run39397459128/1 source adf4 but only Fixed/Auto product positive. Full PLAN012 Game release gate still unmet.",
+  "current_task": "PLAN019 Linux original Go V4 Game2/4 public multi-lane integration remains partial. Added real original-Go TLS private verified 2/4 lane Game M3 AEAD/PN -> independent M4 kernel raw/TUN first and SECOND app, sustained lane1 kernel-copy denial proves healthy lane delivery no HOL under exact SOURCE3742 Actions39400497230 PASS_SCOPED. Original Go PUBLIC Game2/4 CLI still NOT_WIRED / product NOT_RUN, preenable39400497260 FAIL (missing true public group files). Fixed/Auto original public first group accepted earlier, production FEC2/Game OFF. Registry now activates M1 Game016 only for independent runtime/game_m4 module, M0 retains public Go/FFI/CI ownership; M1 worker cursor not fabricated. Windows OS/physical NOT_RUN.",
+  "why_now": "Checkpoint H210 d7f9->main current: S454 intent, S455 game kernel later-app damage code, S456 record exact Actions and publish M1 independent runtime task decision. Verified original no-HOL SOURCE3742 with two REAL M4 kernel lanes tests PASS, native-functional PASS, G2/static/cross scoped, preenable original FAIL from absent public group. M1 branch H29 old task Game015 and no in-flight new code; explicit PLAN019 §M1 permission prevents same-file conflicts. No production promotion.",
   "done_when": "One exact-source original Go public Linux V4 Fixed/Auto genuine M2 mature and Game2/4 independent authenticated M4 raw/TUN first-app with single-lane damage/no HOL and lifecycle Stop; native/cross/platform/product/physical separate. Windows M4 source-locked native CI/Go Rust owner remain independently unqualified until real OS proof; production FEC2 OFF before full gate.",
-  "next_action": "Implement the remaining genuine original-Go public V4 Game2/4 authenticated multi-lane owner to M4 raw/TUN, run one real per-lane damaged/no-HOL first-app and owned Stop exact SOURCE gate; do not rerun accepted Fixed/Auto initial applied nor old V3 Game.",
+  "next_action": "Wire M0-owned original-Go V4 one-process PUBLIC 2/4 protected TLS session group to single GameAdapter/M4 raw/TUN owner and Stop using only frozen M1 runtime/game_m4 delivery when available; run one exact-SOURCE Game public product gate with lane1 damage/no HOL and do not rerun accepted native or Fixed/Auto successes.",
   "unverified": true,
-  "last_tested_source": "adf4e7d90d024d73969b376036910a3b28ce679f",
+  "last_tested_source": "3742a2c2a140f95fafb1a78ad286ae2142aef9da",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
+    "docs/evidence/M0/PLAN019-real-Go-TLS-native-Game2-4-lane-damaged-noHOL-20261020.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN015-Linux-formal-Go-two-binary-lossless-1pct-real-network-20261020.json",
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
     "docs/devlog/M0/PLAN016-original-Go-public-FEC-Game-mode-real-app-intent-20261020.md",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
     "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json",
     "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
-    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json"
+    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json",
+    "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H210: one SOURCE-locked Go/Rust binary build 39397026210 source621bc, reused in parallel Actions39397459128 sourceadf4: Fixed/Auto true public TLS + M4 raw/TUN 64/64 per mode & both Go roles original M2 genuine mature requested/applied1 Stop PASS_SCOPED. Game2/4 CLI rejected unsupported by design; public game lanes NOT_RUN. S453 evidence exact jobs/artifact hashes and all original failed runs. Combined source has no Windows native OS Game nor physical/p99; product FEC2 OFF, registry task unchanged."
+  "partial_summary": "H211 S454–S456: SOURCE3742 original TLS Go Game2/4 **native real M4** lane1 damaged second 99B app via other 1/3 lane, no HOL, Stop stale deny, Actions39400497230 PASS_SCOPED artifact12253543767 sha bad9c37. Preenable39400497260 original FAIL missing true original-Go public group and public tests; product OFF. M1 Game016 isolated runtime/game_m4 file writer unlocked in registry PLAN019, worker H29 old Game015 unchanged. M0 Go public/FFI exclusive. Fixed/Auto sourceadf4 accepted no rerun; Windows/physical NOT_RUN."
 }
