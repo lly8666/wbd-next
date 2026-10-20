@@ -2096,6 +2096,18 @@ fn stop(handle:u64)->i32{
     if !drained{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
     }
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        target_arch="x86_64",target_env="gnu"))]
+    if let Some(outer)=e.original_outer.take(){
+        let Ok(active)=outer.lock()else{return BAD_STAGE};
+        let Ok(mut broker)=original_process_repair_quota().lock()
+            else{return BAD_STAGE};
+        // Only AFTER joined RX/TX and original M4 kernel borrow drain.
+        // An uncertain syscall debt remains charged until this whole
+        // generation is retired; per-session Stop never refunds it.
+        if broker.retire_tunnel(active.direction.tunnel,loop_now()).ok()
+            !=Some(1){return BAD_STAGE}
+    }
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     if let Some(first)=e.normal_firstsend_m2.take(){
         let Ok(mut first)=first.lock()else{return BAD_STAGE};
@@ -2178,7 +2190,31 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
     unsafe{out.write(e.phase)};OK
 }
 
-/// Bind genuine public original-Go V4 TLS session to the SAME original
+//// Non-test public V4 original TLS owner counters. Only actual M4 copied
+/// records and SAME original M3 authenticated reverse receipts may advance
+/// these. No positive count from bootstrap ACK, queue acceptance, or Go caller.
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=6{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE{return BAD_STAGE}
+        let Some(outer)=e.original_outer.as_ref()else{return BAD_STAGE};
+        let Ok(v)=outer.lock()else{return BAD_STAGE};
+        let vals=[v.sent_fresh,v.authentic_ack,v.repair_copied,
+            v.repair_uncertain,v.repair_blocked,v.retired];
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,6)}
+        OK
+    }
+}
+// Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested
 /// epoch: generation handle already required private protected Go Prepare,
