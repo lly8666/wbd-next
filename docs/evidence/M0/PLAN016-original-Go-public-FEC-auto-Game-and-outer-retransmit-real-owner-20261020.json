@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "9910a8623f7f9438354e0dfdd67a67af6563929d",
+  "result": "PASS_PUBLIC_ORIGINAL_GO_V3_NORMAL_FIXED_AUTO_GAME2_GAME4_REAL_BIDIRECTIONAL_CLIENT_SERVER_OWNER_FEEDBACK_EXPERIMENT_ONLY_NEW_RUST_V4_NOT_WIRED",
+  "actual_binary": {
+    "original_repo": "lly8666/wobuzhidao",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "original_go_compilation_main_source": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+    "go_toolchain": "go1.23.12",
+    "platform": "linux-amd64",
+    "build_tags": [],
+    "client": "cmd/wbd-client",
+    "server": "cmd/wbd-server",
+    "sha256": {
+      "wbd-client": "2dfe0a776b1aa0fee973ce105c7591f282f871557389d9ef89e6aa943f4d22cc",
+      "wbd-server": "c3167d66358a354bcfba3de3428f0305b92657645b56816b4fb13c565720be9f"
+    },
+    "architecture": "The existing original-Go V3 runtimeentry/legacy datapath and bounded SACK/RACK shadow repair; Rust V4 owner not linked to these binaries"
+  },
+  "package": {
+    "build_workflow": ".github/workflows/m0-original-go-mode-bundle.yml",
+    "source_sha": "9910a8623f7f9438354e0dfdd67a67af6563929d",
+    "run_id": 39373388583,
+    "attempt": 1,
+    "job_id": 118466012777,
+    "result": "success",
+    "artifact_id": 12242123649,
+    "artifact_name": "original-go-public-normal-fixed-auto-game-real-binaries-39373388583-1",
+    "artifact_digest_sha256": "affb27d13e34f1e23e25b743900ada354e95c9054183e4173ef7f57757ed71d4",
+    "inner_tar_name": "go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz",
+    "inner_tar_sha256": "18048f4938ed5fa89fd246919a7205bc26bb677caea551264174fe95014e260a",
+    "contains": [
+      "wbd-client",
+      "wbd-server",
+      "MODES.md",
+      "source-manifest.json",
+      "capability-manifest.json",
+      "runtime-receipt.json",
+      "cases/fixed.json",
+      "cases/fixed-telemetry.json",
+      "cases/auto.json",
+      "cases/auto-telemetry.json",
+      "cases/game2.json",
+      "cases/game2-telemetry.json",
+      "cases/game4.json",
+      "cases/game4-telemetry.json"
+    ]
+  },
+  "formal_process_tests": {
+    "normal_off": {
+      "run_id": 39369570717,
+      "result": "success",
+      "no_loss_client_packets": "60/60",
+      "no_loss_server_packets": "60/60",
+      "artifact_id": 12241206041
+    },
+    "normal_off_1pct": {
+      "run_id": 39370506439,
+      "result": "success",
+      "original_same_binary": true,
+      "observed_kernel_drops": 73,
+      "app_each_direction": "1581/1581",
+      "bytes_each_direction": 801040,
+      "outer_retransmission_attribution": "NOT_OBSERVED_THERE_ONLY_REAL_APP_AND_KERNEL_DROP"
+    },
+    "modes": {
+      "workflow": ".github/workflows/m0-linux-original-go-public-modes.yml",
+      "run_id": 39373130689,
+      "attempt": 1,
+      "source_sha": "3ab20822ebe3d23b1388070b6a11207e7dc4666c",
+      "result": "success",
+      "no_recompile": true,
+      "actions_jobs": [
+        {
+          "mode": "fixed",
+          "job_id": 118465211805,
+          "result": "success",
+          "artifact_id": 12242387720,
+          "artifact_sha256": "07a7f4e6213f075d18005d392f3c3bd7a84f785b74c5d752fd9e9d208511861e"
+        },
+        {
+          "mode": "auto",
+          "job_id": 118465212069,
+          "result": "success",
+          "artifact_id": 12242471024,
+          "artifact_sha256": "ec7ac6db9ba8e52953f7500e95eb5909d4ff7b61384dad935e4d9228ccd1fca7"
+        },
+        {
+          "mode": "game2",
+          "job_id": 118465211959,
+          "result": "success",
+          "artifact_id": 12242575591,
+          "artifact_sha256": "55309ff5514fdf34dc373b7da44e2d5100b3664c6ea59b7d7c377b383423d7fb"
+        },
+        {
+          "mode": "game4",
+          "job_id": 118465212037,
+          "result": "success",
+          "artifact_id": 12242232046,
+          "artifact_sha256": "f34447fde079eb22b28b24cbcd10dbd8e717fb6bf5760d2555e651e7dd910c9d"
+        }
+      ],
+      "data": {
+        "fixed": {
+          "lanes_live_client": 1,
+          "lanes_live_server": 1,
+          "actual_tx_parity_client": 4,
+          "actual_tx_parity_server": 4,
+          "real_netem_drops": 15,
+          "app_each_direction": "278/278",
+          "app_bytes_each_direction": 140160,
+          "original_Go_SACK_RACK_Retransmitted_client": 4,
+          "server": 4,
+          "failures_client": 0,
+          "failures_server": 0
+        },
+        "auto": {
+          "lanes_live_client": 1,
+          "lanes_live_server": 1,
+          "negotiated_mode_code": 2,
+          "actual_tx_parity_client": 20,
+          "actual_tx_parity_server": 20,
+          "real_netem_drops": 31,
+          "app_each_direction": "278/278",
+          "app_bytes_each_direction": 140160,
+          "original_Go_SACK_RACK_Retransmitted_client": 6,
+          "server": 11,
+          "failures_client": 0,
+          "failures_server": 0,
+          "observed_adaptive_newgroup_transition": "NOT_PROVEN"
+        },
+        "game2": {
+          "lanes_live_client": 2,
+          "lanes_live_server": 2,
+          "actual_tx_parity": 0,
+          "real_netem_drops": 0,
+          "app_each_direction": "278/278",
+          "app_bytes_each_direction": 140160,
+          "one_lane_loss_no_HOL": "NOT_RUN"
+        },
+        "game4": {
+          "lanes_live_client": 4,
+          "lanes_live_server": 4,
+          "actual_tx_parity": 0,
+          "real_netem_drops": 0,
+          "app_each_direction": "278/278",
+          "app_bytes_each_direction": 140160,
+          "one_lane_loss_no_HOL": "NOT_RUN"
+        }
+      }
+    }
+  },
+  "retained_original_fails": [
+    {
+      "run_id": 39371841035,
+      "result": "FAIL_AGGREGATE_AUTO",
+      "reason": "Original Go V3 auto mode requires client parity0, server max20; fixed/Game2/Game4 jobs passed; client fixture repaired S380"
+    },
+    {
+      "run_id": 39372953101,
+      "result": "FAIL_ACTUAL_DIAGNOSTIC_READER",
+      "reason": "Original Go runtime serializes zero qualified lanes at startup as JSON null; original app four modes succeeded, script parser corrected S385"
+    },
+    {
+      "run_id": 39368220417,
+      "result": "FAIL_ORIGINAL_V4_PRODUCT_GATE",
+      "reason": "New Rust V4 TLS native real Game2/4 kernel-only PASS, but public V4 CLI truly absent; unchanged"
+    }
+  ],
+  "source_inputs": {
+    "intent": "docs/devlog/M0/PLAN016-original-Go-public-FEC-Game-mode-real-app-intent-20261020.md",
+    "pinned_public_fixture": "tools/m0_original_go_public_modes.py",
+    "real_owner_observation": "tools/m0_original_go_product_telemetry.py",
+    "public_actions": ".github/workflows/m0-linux-original-go-public-modes.yml",
+    "release_actions": ".github/workflows/m0-original-go-mode-bundle.yml"
+  },
+  "never_equate": {
+    "older_V3_outer_retransmission": "ACTUAL_FORMAL_PUBLIC_GO_CLIENT_SERVER_RETRANSMIT_COUNTERS_OBSERVED_FIXED_AUTO",
+    "new_Rust_V4_M2_outer_retransmission": "NOT_INTEGRATED_IN_ANY_PUBLISHED_PUBLIC_CLIENT_SERVER",
+    "new_Rust_FEC2_fixed_auto": "PRODUCTION_OFF",
+    "new_Rust_Game2_4": "REAL_GO_TLS_RUST_SCOPED_KERNEL_PASS_BUT_PUBLIC_V4_PRODUCT_OFF",
+    "windows": "M4_SEPARATE_ACTIVE_SCOPE_NOT_QUALIFIED",
+    "confidence": "Legacy public application, negotiated policy and live lane owner counters PASS; not rescue attribution, under-spec max-two-retries/10pct budget, V4 first group applied, per-Game damaged lane, or physical production."
+  },
+  "next_action": "Replace V3-only main formal product session with true Go V4 authenticated client+server TLS->Rust M1/M2/M3/M4 owner and shared raw/TUN transport. Bind already-qualified GoTLS/RustGame native kernel and Fixed/Auto release to that SAME continuous public CLI lifecycle, with frozen-cipher bounded max-two outer recovery, real per-group M2 applied and Stop; run one exact build SOURCE suite. Leave V4 OFF until completed."
+}
