@@ -435,9 +435,15 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
     let data=UntrustedColdV4::parse(cold).map_err(|_|INVALID)?;
     if data.identity().server!=server_side{return Err(INVALID)}
-    // FEC2 client reception/reverse mature APPLIED is a separate native
-    // product lane: do not enable feature7 until actually installed.
-    if !server_side && handoff.negotiated_features!=3{return Err(INVALID)}
+    // Feature7 is permitted only in the genuine pinned original-Go V4 TLS
+    // post-reply/Detach owner and only with compiled M3 source/repair record,
+    // true client-side RX, and original M2 reverse feedback native integration.
+    if !server_side && handoff.negotiated_features!=3 {
+        #[cfg(feature="fec2_product_record")]
+        if handoff.negotiated_features!=7{return Err(INVALID)}
+        #[cfg(not(feature="fec2_product_record"))]
+        {return Err(INVALID)}
+    }
     let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
     if r.entries.len()>=MAX_SESSIONS{return Err(FULL)}
     let generation=r.generation;
@@ -3729,13 +3735,23 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let verified=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
             generation:e.generation,epoch,
             negotiated_features:e.protected_features,
-            // This original server's M4 RX direction is peer C2S.
-            direction_s2c:false,
+            // Original-Go TLS binding selects the reverse direction:
+            // server opens C2S; client opens S2C, never same-direction keys.
+            direction_s2c:!e.server_side,
         };
         if original_rx.arm_fec2_original_go_only(
             verified,Arc::clone(&e.fec2_rx_admit),
             usize::from(e.wire_limit)
         ).is_err(){return BAD_STAGE}
+    }
+    #[cfg(feature="fec2_product_record")]
+    if e.original_public_feedback_armed && e.protected_features==7 &&
+        e.fixed_pending.is_some(){
+        // TLS feature7 + original Go operator's native FIXED/PENDING
+        // authorizes inbound FEC source/repair *parsing*. Sender APPLIED
+        // remains separate and requires actual kernel copies plus mature
+        // authenticated reverse receipts, never a requested flag.
+        e.fec2_rx_admit.store(true,Ordering::Release);
     }
     let mut rx_anchor=e.rx_seq_anchor;
     let rx_flow=e.flow;
