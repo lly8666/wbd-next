@@ -51,6 +51,7 @@ type config struct{
     tunnel [16]byte
     fecMode realityfront.FecV2Mode
     fecProfile realityfront.FecV2Profile
+    gameLanes uint8
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -71,13 +72,15 @@ func parse(role string,args []string)(config,error){
     user:=flags.String("username","","original protected admission user")
     pass:=flags.String("password","","original protected admission password")
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
-    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto (actual original TLS/Rust)")
+    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     if err:=flags.Parse(args);err!=nil{return c,err}
     switch *mode{
     case "normal":c.fecMode=realityfront.FecV2Off
     case "fec-fixed":c.fecMode=realityfront.FecV2Fixed
     case "fec-auto":c.fecMode=realityfront.FecV2Auto
+    case "game2":c.gameLanes=2;c.fecMode=realityfront.FecV2Off
+    case "game4":c.gameLanes=4;c.fecMode=realityfront.FecV2Off
     default:return c,fmt.Errorf("V4 mode %q not installed in native public owner",*mode)
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
@@ -169,6 +172,11 @@ func Run(role string,args []string)error{
     // An active owner's Close performs Stop->release->network cleanup instead.
     connected:=false
     defer func(){if !connected {_ = tun.Close()}}()
+    if cfg.gameLanes!=0{
+        ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
+        defer stop()
+        return runGame(ctx,cfg,uint32(iface.Index),tun,&connected)
+    }
     raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
         cfg.rawInterface,cfg.localIP.As4(),faketcp.PacketPersonaLegacy,
         faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
