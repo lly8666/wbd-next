@@ -27,7 +27,7 @@ func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected
 }
 func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
     n:=int(c.gameLanes)
-    policy,err:=realityfront.FixedPolicyForClient(c.gameLanes,4)
+    policy,err:=realityfront.FixedPolicyForClient(int(c.gameLanes),4)
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     assocs:=make([]*faketcp.ClientAssociation,0,n)
