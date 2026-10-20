@@ -4,27 +4,28 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 201,
-  "checkpoint_sha": "a3e0bb802c1fe7cdd1b7aea3dda55073bd432acc",
+  "sequence": 202,
+  "checkpoint_sha": "1b598963fe6eab7fa114ba0db62cf93011ae2c74",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 Linux FEC2/Game original-Go production preenable partial. Same exact-source parallel Actions passes genuine Fixed/Auto startup rev4 authenticated M2, client FEC recovered UDP app + M4 S46 route/rule/TUN FD Stop, and TLS Game2/4 cold/native. Public feature7 CLI Connect/Disconnect/applied and Game2/4 separately M4 raw/TUN first app are absent/NOT_RUN; release gate FAIL; FEC2/Game production OFF.",
-  "why_now": "H200 clean; S338 preenable intent; S339 exact commit a22cbe4 added reusable existing real kernel job and independent three-source parallel hard probes. GitHub Actions39361154267 attempt1 original FEC/M2/M4 job118427405739 SUCCESS with artifact12237311946 digest ca1d5d...; Game2 118427405711, Game4 118427405397, public CLI118427405614 preflights exit2 NOT_RUN missing actual source, overall run FAIL. Same SOURCE Governance39361154141 and maintenance39361154180 SUCCESS. S340 exact-source receipt; no production enable. Historical Governance red retained.",
-  "done_when": "Linux original Go authenticated public feature7 CLI Connect/Disconnect/cold applied readback, independent Game2 and Game4 original Rust M4 raw kernel/TUN first-app and accepted Fixed/Auto M2 + M4 Stop, full exact-source Linux parallel and combined Actions positive before production ON; Windows/physical/20Mbps independently NOT_RUN. Never treat missing test as PASS.",
-  "next_action": "Implement missing genuine Go public Linux feature7 operator Connect/Disconnect/APPLIED and authentic multi-lane Rust GameAdapter M4 raw/TUN first-app for both Game2/4 with Stop/MTU/noHOL, then execute existing exact-SOURCE parallel Actions and only after all-positive enable production FEC2/Game Linux.",
+  "current_task": "PLAN012 Linux original Go FEC2/Game final permission remains partial/OFF; preenable Actions39361154267 proved old Linux Fixed/Auto M2/M4 but public feature7 CLI and independently keyed Game2/4 real kernel first-app absent. User additionally activated PLAN013 Windows M4 native GUI→original Go product; main registry published M4 new Windows018, M0 owns shared ABI+CI. Windows 2022 original Go+WinForms existing scoped native smoke now reachable/Actions PASS, but native Windows WFP/TUN route DNS Apply/Stop and Rust owner product still NOT_RUN.",
+  "why_now": "S342 main279ed06 published PLAN013 new M4 Windows018 assignment on unchanged worker branch/epoch, preserving old Linux017 and Windows I010 failure. S343 main79afc9 repaired main-owned Windows Actions: central G2 immutable M4 SOURCE workflow_run native Windows2022, one target, no manual I010 replay. Existing source46e13f6 reused in exact main SOURCE79afc9 Actions39362863445 attempt1 identity job118432819673 and Windows job118432853197 SUCCESS, artifacts12238166353 sha256b185de5 and12237544999 sha2566317b855, Go 20 native safety tests and original WinForms GUI PASS_SCOPED_NOT_PRODUCT_NETWORK. Governance39362863433 and maintenance39362863400 SUCCESS. S344 exact evidence. M4 worker cursor H51 untouched and new Windows task not claimed by worker yet.",
+  "done_when": "Current PLAN012 Linux original-Go public feature7 Connect/Disconnect/applied and independently authenticated M4 real Game2/4 kernel/TUN first-app plus already-scoped Fixed/Auto authentic M2 + Stop all pass exact Actions before Linux ON; PLAN013 M0 shared Windows Go/Rust product authority and native G2→Windows Actions entry reliable, integrate worker exact Windows GUI network/Stop source; Windows real OS/physical release qualification separate, no false ON.",
+  "next_action": "Implement missing original-Go authenticated Linux feature7 CLI and Game2/4 real M4 kernel first-app interfaces in M0-only source, and provide Windows actual Rust owner bridge for M4 Windows GUI/native Apply; consume frozen M4 Windows018 SOURCE through functioning central G2→Windows2022 Actions, integrate only after same-source positive network product tests.",
   "unverified": true,
-  "last_tested_source": "a22cbe4bb5770fe6183c18fc6bd90cf31a920b07",
+  "last_tested_source": "79afc9f41e4c6de2d7b9348800cbd9bb302832c3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-parallel-preenable-hard-gates-20261020.json"
+    "docs/evidence/M0/PLAN013-M4-Windows2022-original-Go-GUI-CI-unblock-20261020.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN012-preenable-parallel-intent-20261020.md",
+    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
+    "docs/evidence/M0/PLAN012-parallel-preenable-hard-gates-20261020.json",
     "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json",
     "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md",
-    "docs/devlog/M0/PLAN012-H199-governance-evidence-SOURCE-recovery-20261020.md"
+    "docs/devlog/M0/PLAN012-preenable-parallel-intent-20261020.md"
   ],
   "open_requests": [],
-  "partial_summary": "H201 exact SOURCE a22cbe4 parallel preenable Actions39361154267 attempt1 overall FAIL as required: independent Game2/Game4/public CLI source gates NOT_RUN, original combined Fixed/Auto authentic M2/M4 real Linux Stop PASS artifact12237311946. Same-source Governance/maintenance PASS; product FEC2/Game stays OFF, not enabled. Release next only after missing real positive Go product and M4 kernel lane implementations. Windows/physical/20Mbps separate NOT_RUN."
+  "partial_summary": "H202 Windows M4 PLAN013 task published, no worker cursor fabrication. Shared old I010 dispatcher issue bypassed by immutable G2→native Windows workflow; old pinned M4 original Go+WinForms Windows2022 Actions39362863445 PASS_SCOPED safety20/20 and GUI; artifact12237544999, exact main SOURCE79af, M4 frozen code46e; real WFP/TUN/route/DNS/rust-owner Windows product still NOT_RUN. Linux public feature7/Game M4 kernel first-app NOT_RUN and production FEC2/Game OFF."
 }
