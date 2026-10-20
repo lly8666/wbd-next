@@ -49,6 +49,8 @@ type config struct{
     username string
     password string
     tunnel [16]byte
+    fecMode realityfront.FecV2Mode
+    fecProfile realityfront.FecV2Profile
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -69,11 +71,17 @@ func parse(role string,args []string)(config,error){
     user:=flags.String("username","","original protected admission user")
     pass:=flags.String("password","","original protected admission password")
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
-    mode:=flags.String("mode","normal","V4 mode; only real-installed normal is currently released")
+    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto (actual original TLS/Rust)")
+    profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     if err:=flags.Parse(args);err!=nil{return c,err}
-    if *mode!="normal"{
-        return c,fmt.Errorf("V4 %s needs real FEC2/Game native product owner, unavailable in this binary",*mode)
+    switch *mode{
+    case "normal":c.fecMode=realityfront.FecV2Off
+    case "fec-fixed":c.fecMode=realityfront.FecV2Fixed
+    case "fec-auto":c.fecMode=realityfront.FecV2Auto
+    default:return c,fmt.Errorf("V4 mode %q not installed in native public owner",*mode)
     }
+    if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
+    c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
        *tunCIDR==""||*name==""||*user==""||*pass==""||
        *port==0||*port>65535||len(*route)<32{
@@ -216,12 +224,21 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
     if err:=assoc.WaitEstablished(dialCtx);err!=nil{return err}
-    policy,err:=realityfront.FixedPolicyForClient(1,0)
+    var policy realityfront.AdmissionPolicy
+    switch c.fecMode{
+    case realityfront.FecV2Fixed:
+        policy,err=realityfront.FixedPolicyForClient(1,4)
+    case realityfront.FecV2Auto:
+        policy,err=realityfront.PolicyForClientWithInitial(1,"auto",0,4,20)
+    default:
+        policy,err=realityfront.FixedPolicyForClient(1,0)
+    }
     if err!=nil{return err}
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            FECMode:c.fecMode,FECProfile:c.fecProfile,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -238,6 +255,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
+    if c.fecMode!=realityfront.FecV2Off {
+        actual,e:=native.OriginalFECReadback()
+        if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
+        if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+    }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
     if err!=nil{return errors.Join(err,closeErr)}
@@ -253,6 +275,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            FECMode:c.fecMode,FECProfile:c.fecProfile,
         })
     if err!=nil{return err}
     table,err:=faketcp.NewServerAssociationTable(32,emit)
@@ -330,6 +353,11 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if *connected{
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
+        if c.fecMode!=realityfront.FecV2Off {
+            actual,e:=product.OriginalFECReadback()
+            if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
+            if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+        }
         closeErr:=product.Close()
         if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=server")}
         if err!=nil{return errors.Join(err,closeErr)}
