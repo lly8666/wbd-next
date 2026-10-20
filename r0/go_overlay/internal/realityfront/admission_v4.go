@@ -190,6 +190,7 @@ type V4ClientSession struct {
     authenticatedPrincipal string
     // Freeze once, so caller-mutable Negotiated fields never mint new authority.
     verifiedCold V4ColdSessionSnapshot
+    verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
 }
 type V4ServerSession struct {
@@ -199,6 +200,7 @@ type V4ServerSession struct {
     coldAuthenticated bool
     authenticatedPrincipal string
     verifiedCold V4ColdSessionSnapshot
+    verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
 }
 
@@ -449,7 +451,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
-        verifiedCold:frozen,negotiatedFeatures:extension.Features,
+        verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
     },nil
 }
 
@@ -589,7 +591,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
-        verifiedCold:frozen,negotiatedFeatures:ext.Features,
+        verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
     },nil
 }
 
@@ -629,7 +631,8 @@ func (s *V4ClientSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
     if err!=nil{return V4ColdSessionSnapshot{},err}
     // An apparently valid post-TLS edit to cipher, limits or key material
     // must not yield a fresh "authenticated" authority.
-    if current!=s.verifiedCold || s.ClientAdmissionSession.TLS.Keys!=s.verifiedCold.keys {
+    if current!=s.verifiedCold || s.ClientAdmissionSession.TLS.Keys!=s.verifiedCold.keys ||
+       s.Negotiated.Policy!=s.verifiedPolicy {
         return V4ColdSessionSnapshot{},ErrAdmissionParams
     }
     return s.verifiedCold,nil
@@ -641,7 +644,8 @@ func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
     }
     current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true,s.negotiatedFeatures)
     if err!=nil{return V4ColdSessionSnapshot{},err}
-    if current!=s.verifiedCold || s.ServerAdmissionSession.TLS.Keys!=s.verifiedCold.keys {
+    if current!=s.verifiedCold || s.ServerAdmissionSession.TLS.Keys!=s.verifiedCold.keys ||
+       s.Negotiated.Policy!=s.verifiedPolicy {
         return V4ColdSessionSnapshot{},ErrAdmissionParams
     }
     return s.verifiedCold,nil
