@@ -29,6 +29,7 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
             // may be represented, never a feature7 or Game authorization.
             policy:=v4TestPolicy(1,cipher)
             policy.FECMode=FECOff
+            policy.FixedParity=0
             flow:=faketcp.ClientFlow{
                 LocalIP:[4]byte{10,77,0,2},PeerIP:[4]byte{10,77,0,1},
                 LocalPort:41401,PeerPort:443,
