@@ -23,6 +23,8 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
@@ -104,9 +106,11 @@ jobs:
           # never upload and do not print. Wipe after bridge test.
           export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
           mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
-          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^TestM0V4OriginalTLSGame2And4AuthenticatedColdSet$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
           cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
