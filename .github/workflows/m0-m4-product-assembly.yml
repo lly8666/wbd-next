@@ -1,6 +1,10 @@
 name: M0 M4 pinned original Go and GUI product assembly
 run-name: "${{ github.event_name == 'workflow_dispatch' && format('M4|{0}|windows-amd64|{1}', inputs.request_id, github.sha) || format('M0|m4-original-product|{0}|{1}', github.event_name, github.sha) }}"
 on:
+  # Native consumer of an actual successful central M4 scope Actions SOURCE.
+  workflow_run:
+    workflows: [Central worker scope audit]
+    types: [completed]
   workflow_dispatch:
     inputs:
       role_id:
@@ -34,9 +38,8 @@ on:
       - ".github/workflows/m0-m4-product-assembly.yml"
       - "tools/m4_product_source.py"
       - "tests/test_m4_product_source.py"
-  # PLAN-010 M4-016 new worker SOURCE must be launched by exact immutable
-  # request I after current central G2. Do NOT wake on every moving M4 HEAD;
-  # those unsolicited attest runs raced G2 and gave spurious red failures.
+  # New PLAN013 M4 Windows tests consume immutable successful central G2.
+  # Historical I010 manual dispatch remains failed, not silently replayed.
 permissions:
   contents: read
   actions: read
@@ -48,6 +51,8 @@ jobs:
   attest:
     if: >-
       github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        inputs.role_id == 'M4' &&
        github.ref_name == 'qualification/m4-product-windows-v1')
@@ -74,11 +79,11 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_m4_product_source.py' -v
           python3 -m unittest discover -s tests -p 'test_m4_product_dispatch.py' -v
           if [[ "${{ github.event_name }}" == 'push' ]]; then
-            # PLAN-010 extended M4 authority invalidates old 015 G2: PUSH is
-            # nonpromotional control/selftest ONLY. Real product needs new
-            # current M4-016 G2; never reuse old scope artifact as authority.
+            # One pre-reviewed historic M4 S51 source regression of this
+            # main-owned Windows entry. Does NOT validate PLAN013 product.
             mkdir -p m4-product-identity
-            printf '%s\n' '{"schema_version":1,"kind":"entry-selftest","result":"GATE_TESTS_PASS_ONLY","product":"NOT_RUN","M4_016":"NOT_RUN"}' >m4-product-identity/receipt.json
+            printf '%s\n' '{"schema_version":1,"kind":"entry-selftest","result":"GATE_TESTS_PASS_ONLY","product":"NOT_RUN","M4_018":"NOT_RUN"}' >m4-product-identity/receipt.json
+            echo "source_sha=46e13f6e6210b9786c2d1c69f43111943410dbaf" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
             test "${{ inputs.role_id }}" = M4
             python3 tools/m4_product_source.py --scope-run-id "$SCOPE_RUN_ID" \
@@ -99,18 +104,15 @@ jobs:
 
   original-product:
     needs: attest
-    # M4 SOURCE and Linux runner inputs are unchanged from the first PASS.
-    # Main-only Windows byte-normalization repair must not repeat Linux PASS;
-    # fresh worker G2 events automatically qualify all three targets.
-    # Existing 015 automatic three-platform PASS is already archived at
-    # Action 39225427878. New 016 central G2 is only authorization;
-    # product execution is worker-requested on immutable control. This
-    # prevents duplicate in-flight automatic and manual product runs.
-    if: github.event_name == 'workflow_dispatch'
+    # Windows 2022 actual pinned original Go + M4 WinForms exactly once
+    # per successful G2/explicit request. No repeat of accepted Linux tests.
+    if: needs.attest.result == 'success'
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"target":"windows-amd64","runner":"windows-2022"}]' || '[{"target":"linux-amd64","runner":"ubuntu-24.04"},{"target":"linux-arm64","runner":"ubuntu-24.04-arm"},{"target":"windows-amd64","runner":"windows-2022"}]') }}
+        include:
+          - target: windows-amd64
+            runner: windows-2022
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 35
     env:
