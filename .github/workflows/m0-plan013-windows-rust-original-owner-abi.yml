@@ -16,6 +16,10 @@ jobs:
   native-windows-real-rust-owner:
     runs-on: windows-2022
     timeout-minutes: 28
+    env:
+      # AWS-LC v0.45 pinned Windows x64 non-FIPS prebuilt NASM object path;
+      # avoids dependence on runner-global nasm.exe and no-ASM crypto regressions.
+      AWS_LC_SYS_PREBUILT_NASM: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
