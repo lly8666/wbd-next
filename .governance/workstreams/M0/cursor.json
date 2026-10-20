@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 207,
-  "checkpoint_sha": "97a24742428fd1c129300d1e18e8c68fbb7808b1",
+  "sequence": 208,
+  "checkpoint_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "Recovered prior H206->S443 source and original Actions, active PLAN012/PLAN013 M0 shared scope unchanged. Real original-Go public V4 Normal/off authenticated TLS, Rust M1/M2/M3/M4 raw/TUN/Stop has scoped 2-netns SOURCE 197de529 Actions39383696231 PASS. Subsequent original V4 outer retrans+Fixed/Auto product code exists, but latest exact SOURCE 6346508 Actions39389626400 FAIL at legacy Go overlay assembly (missing 3 new Go FEC2 product files); subsequent Linux product kernel execution NOT_RUN. Earlier V3 complete modes preserved separately and cannot qualify V4. Game2/4 V4 public CLI NOT_WIRED; Windows/physical NOT_RUN, FEC2 OFF.",
-  "why_now": "M0 60 linear per-commit S/H audited from checkpoint 4e02324 to HEAD 6346508; no active Actions/open requests, no task/permission change. S444 recovered devlog records all original source-specific PASS, prior FAIL and newly observed compile FAIL; current workflow copies legacy Go files from a fixed explicit list missing newly introduced product FEC2 policy/mature files. H207 closes recovery before touching implementation.",
+  "why_now": "S444 actual recovered 60 commits and S445 original Go frozen overlay build-tag assembly fix committed. The first H207 temporarily tied last_tested_source to new V4 FAIL source but evidence_refs remains accepted old V3 SOURCE9910a862: Governance39392110691 and Maintenance39392110602 correctly FAIL structure ('evidence is for a different SOURCE'). Restore evidence/source identity, keep new V4 original FAIL and pending run facts separately in prose. No other source scope change.",
   "done_when": "Original Go V3 public experimental Normal/off, fixed/auto FEC and Game2/4 compiled original binary with real process-TLS-raw/TUN-bidirectional UDP-Stop and runtime per lane/repair counters delivered as reusable independent artifact. New Rust V4 product still requires actual original Go public V4 TLS client+server continuous Rust M1/M2/M3/M4 owner with FEC2 fixed/auto real new-group APPLIED, Game2/4 independent damage/no-HOL, frozen-cipher outer max-two retrans and real delivery under loss; one exact SOURCE Actions before V4 production ON. Windows M4 remains independent.",
-  "next_action": "Fix M0-owned PLAN012 combined workflow frozen Go original assembly: include protected V4 FEC2 product+mature/disabled build-tag files, build both original V4 product binaries with consistent Go wbd_v4_fec2_product and Rust fec2_product_record, record manifests, then inspect newly triggered exact-source Actions. Preserve 39389626400 original FAIL; continue FEC2/Game native real gate without editing M4 Windows.",
+  "next_action": "Inspect existing exact S445 SOURCE0a786de Actions39392110629 attempt1 native Go/Rust real Linux result and separate post-H governance, diagnose first concrete failure or record PASS_SCOPED. Do NOT retrigger same-source Actions and never claim Linux FEC2/Game V4 ON before actual valid full gate.",
   "unverified": true,
-  "last_tested_source": "6346508003c104068f750f6d09ed43d5ef2e9aef",
+  "last_tested_source": "9910a8623f7f9438354e0dfdd67a67af6563929d",
   "evidence_refs": [
     "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json"
   ],
@@ -27,5 +27,5 @@
     "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md"
   ],
   "open_requests": [],
-  "partial_summary": "RECOVERED S444/H207. Current HEAD pre-dev=6346508 scoped module Actions success but COMBINED FAIL at missing Go FEC2 product assembly (39389626400/1/job118517721579 artifact12249555169). Legacy V3 PLAN016 artifact remains accepted, original Go public V4 Normal/off real netns PASS only earlier SOURCE197de52; 1% complete V4, Fixed/Auto mature+Game2/4 public product NOT_RUN/FAIL; production FEC2 OFF, Windows physical NOT_RUN. Exact 60 changed-commit paths and run results in docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md."
+  "partial_summary": "H208 correction: evidence_refs is V3-only qualified SOURCE9910a862; current V4 combined SOURCE6346508 run39389626400 FAIL Go assembly, S445 SOURCE0a786de fixed frozen three FEC2 Go files and product Go tags; existing auto-run39392110629 observed in_progress. Governance39392110691 and maintenance39392110602 FAIL caused by H207 evidence/source mismatch, not compiler; kept as original FAIL. Current V4 Linux/FEC2/Game full gate NOT_PASS, FEC2 OFF; Windows/physical NOT_RUN. S444 recovery log includes all 60 commit audit."
 }
