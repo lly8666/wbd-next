@@ -175,7 +175,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "ce52295e62ddca5c14267dfa839aa5b84f509e10",
+      "result_blob": "9015c6a05de702fcacb92cb6b29fbf9c90a63ee9",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -240,6 +240,14 @@
         {
           "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
           "replace": "        // The original Go CLI checks ACTUAL Win32 APIs and WFP layers.\n        // Preflight is diagnostic only. It MUST NEVER report native Connect\n        // ready until authenticated owner Stop and real WFP are qualified.\n        public async Task<string> ReadNativeProductPreflightAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-preflight-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute=false, CreateNoWindow=true, WorkingDirectory=store.Root,\n                RedirectStandardOutput=true, RedirectStandardError=true\n            };\n            info.EnvironmentVariables[\"TEMP\"]=store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"]=store.InRoot(\"data/tmp\");\n            using (var process=Process.Start(info)) {\n                Task<string> output=process.StandardOutput.ReadToEndAsync();\n                Task<string> error=process.StandardError.ReadToEndAsync();\n                if (!await Task.Run(() => process.WaitForExit(20000))) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生系统预检超时；未修改网络。\");\n                }\n                string stdout=await output, stderr=await error;\n                if (process.ExitCode!=0)\n                    throw new IOException(\"只读原生系统预检失败：\" + Redact(stderr));\n                if (stdout.Length>4096)\n                    throw new IOException(\"原生系统预检输出超出上限。\");\n                var report=store.Json.Deserialize<Dictionary<string,object>>(stdout);\n                object schema,ready,qualified,state;\n                if (report==null ||\n                    !report.TryGetValue(\"schema\",out schema) ||\n                    !report.TryGetValue(\"ready\",out ready) ||\n                    !report.TryGetValue(\"wfp_install_qualified\",out qualified) ||\n                    !report.TryGetValue(\"disk_state\",out state) ||\n                    Convert.ToString(schema)!=\"wbd-native-product-preflight/v1\" ||\n                    Convert.ToBoolean(ready) || Convert.ToBoolean(qualified) ||\n                    !stdout.Contains(\"wfp_guard_and_authenticated_stop_not_qualified\"))\n                    throw new IOException(\"原生预检不能授予 WFP/Stop 产品资格。\");\n                string disk=Convert.ToString(state);\n                Enqueue(\"原生系统只读预检：\" + disk +\n                    \"；WFP 生产启用和认证 Stop 尚未验收，不允许连接。\");\n                return disk;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
+        },
+        {
+          "find": "if (line == \"WBD_WINDOWS_CLIENT_READY\") { if (connectedId!=null && session.Active) ShowState(\"已连接 · \" + (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\")); line = \"隧道已就绪，网络配置已应用。\"; }",
+          "replace": "if (line == \"WBD_WINDOWS_CLIENT_READY\") { if (connectedId!=null && session.Active) ShowState(\"客户端进程就绪 · 待 TLS/WFP/DNS/路由/Stop 归属回读\"); line = \"旧版 READY 不证明网络已应用；等待所有权与完成回执。\"; }"
+        },
+        {
+          "find": "        void ShowState(string text) { state.Text = text; }",
+          "replace": "        public string ConnectionStateText { get { return state.Text; } }\n        public void DrainOwnedClientEvents() { Drain(); }\n        void ShowState(string text) { state.Text = text; }"
         }
       ]
     },
@@ -247,7 +255,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "0ba459b8793f4e986a3d0d34a43f72e3e312377a",
+      "result_blob": "329d4ad80a553dc935253d937c0a91ab2087286a",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -292,6 +300,10 @@
         {
           "find": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");",
           "replace": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    preflight = diskForm.ReadNativeProductPreflightAsync(); Wait((Task)preflight);\n                    Assert(preflight.Result==\"legacy_journal\",\"GUI native preflight preserves legacy WAL as blocked\");"
+        },
+        {
+          "find": "                    Wait(form.ConnectSelectedAsync()); Assert(fake.Active, \"GUI connect starts client\");",
+          "replace": "                    Wait(form.ConnectSelectedAsync()); Assert(fake.Active, \"GUI connect starts client\");\n                    form.DrainOwnedClientEvents();\n                    Assert(!form.ConnectionStateText.StartsWith(\"已连接\", StringComparison.Ordinal) &&\n                           form.ConnectionStateText.Contains(\"待 TLS/WFP/DNS\"),\n                           \"PLAN013 legacy READY does not fake Windows native applied network\");"
         }
       ]
     },

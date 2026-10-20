@@ -1,0 +1,5 @@
+# M4 PLAN013 Windows-018 initial native UI real status source
+
+M0 has activated task R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018 rev2 epoch1. Accepted Linux017 S46/H51 is frozen. I010 Windows016 immutable PLANNED remains historical NOT_RUN and must not dispatch.
+
+S52 changes only exact original pinned WinForms MainForm and GuiTests assembly patches, and one existing Windows2022 selftest marker. The old Go line WBD_WINDOWS_CLIENT_READY is only process startup, NOT proof of actual host WFP, DNS, IPv4 routes, TUN or Rust Stop. The GUI now stays in pending readback and selftest invokes FakeSession READY to assert that it is not Connected. This is an original WinForms safety correction, NOT real product network PASS. Existing M0-owned original Go shared ABI, WFP production Arm and Rust Stop remain fail closed. Next native 2022 Action must compile/exercise exact pinned original source. Game2/4, actual original-Go child and Stop checks are subsequent M4-owned test additions. Product FEC2/Game OFF.

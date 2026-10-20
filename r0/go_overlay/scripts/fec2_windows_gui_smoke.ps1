@@ -181,7 +181,8 @@ foreach ($name in @(
     'GUI original Go detects orphan intent and preserves it',
     'GUI rejects invalid WAL; not a fake safe or ready result',
     'GUI real Go native preflight checks OS APIs without claiming Connect ready',
-    'GUI native preflight preserves legacy WAL as blocked'
+    'GUI native preflight preserves legacy WAL as blocked',
+    'PLAN013 legacy READY does not fake Windows native applied network'
 )) {
     if ($report.checks -notcontains $name) {
         throw ("native GUI status regression NOT_RUN: " + $name)
