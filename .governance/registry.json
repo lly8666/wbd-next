@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reservation_revision": 2,
+  "reservation_revision": 3,
   "roles": [
     {
       "id": "M0",
@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 and PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M0: original Go TLS/Rust FEC2/Game shared Linux product integration plus Windows native shared owner/CLI/Actions unblock; M0 solely authorizes actual production. PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M0: original-Go public authenticated grouped Game2/4 CLI, Rust versioned private owner handoff, integrated source-locked real combined gate.",
-      "done_when": "Linux original Go public CLI and Game2/4 independent authenticated M4 raw/TUN first-app plus Fixed/Auto M2 and Stop pass one exact SOURCE gate before Linux ON; M0 also provides working source-locked Windows M4 native CI and minimum shared Go/Rust ABI for UI→real applied state; Windows production independently NOT_RUN until real native OS+owner proof.",
+      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 and PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M0: original Go TLS/Rust FEC2/Game shared Linux product integration plus Windows native shared owner/CLI/Actions unblock; M0 solely authorizes actual production. PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M0: original-Go public authenticated grouped Game2/4 CLI, Rust versioned private owner handoff, integrated source-locked real combined gate. PLAN020 docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md §M0: user-authorized sole current Windows WFP persistent guard/default-route/DNS IPv6, Wintun real packet driver, real original Go/Rust owner Stop, Windows Go CLI and WinForms true Applied/Disconnect plus Actions source-locked positive and negative.",
+      "done_when": "Linux original Go public CLI and Game2/4 independent authenticated M4 raw/TUN first-app plus Fixed/Auto M2 and Stop pass one exact SOURCE gate before Linux ON; M0 also provides working source-locked Windows M4 native CI and minimum shared Go/Rust ABI for UI→real applied state; Windows production independently NOT_RUN until real native OS+owner proof. PLAN020 M0 now owns and must qualify the full Windows native OS+kernel UDP+Go/WinForms product transaction under original credential TLS on Windows2022 with owned WAL CAS Stop and foreign/stale negatives; partial results never production ON.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
     {
@@ -103,45 +103,16 @@
     {
       "id": "M4",
       "name": "平台与产品接入",
-      "state": "active",
+      "state": "reserved",
       "branch": "work/m4-r1-platform",
-      "assignment_epoch": 1,
+      "assignment_epoch": 2,
       "global_writer": false,
-      "allowed_paths": [
-        "crates/wbd-platform/",
-        "r1/go-bridge/",
-        "docs/devlog/M4/",
-        "docs/evidence/M4/",
-        ".governance/workstreams/M4/cursor.json",
-        ".governance/workstreams/M4/requests/",
-        "native/isal-safe/build.rs",
-        "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
-        "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
-        "r0/go_overlay/internal/configfile/",
-        "r0/go_overlay/cmd/wbd-client/",
-        "r0/go_overlay/cmd/wbd-server/",
-        "r0/go_overlay/windows/gui/",
-        "r0/go_overlay/docs/PARAMETERS.json",
-        "r0/go_overlay/docs/PARAMETERS.md",
-        "r0/go_overlay/scripts/",
-        "r0/go_overlay/assembly/",
-        "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
-        "r0/go_overlay/internal/windowsclient/",
-        "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
-        "crates/wbd-platform/tests/"
-      ],
-      "owned_semantics": [
-        "platform_driver",
-        "go_bridge_adapter",
-        "lifecycle_integration",
-        "fec2_cold_policy_component",
-        "native_isal_target_build",
-        "legacy_go_client_server_gui_assembly"
-      ],
+      "allowed_paths": [],
+      "owned_semantics": [],
       "prompt": "docs/prompts/M4.md",
       "cursor": ".governance/workstreams/M4/cursor.json",
-      "goal": "PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M4: real original Go Windows native client+WinForms UI→Connect/Disconnect/status, owned network and truthful FEC2/Game controls, source-locked Windows 2022 Actions. Accepted M4 Linux017 held intact.",
-      "done_when": "Windows native Go CLI+WinForms actual config/save/reload/launch→Connect/Disconnect+requested/pending/applied readback, owned WFP/TUN/DNS/route native stop/cleanup where supported; same frozen SOURCE Windows 2022 Actions named tests and artifact, original FAIL/UNSUPPORTED/NOT_RUN preserved; no false production ON.",
+      "goal": "PLAN020 docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md §M4: user explicitly transferred all remaining Windows native WFP, default-route, UDP-driver, WinForms Applied/Disconnect and Windows2022 validation to M0. M4 worker source b53b5dac422a634cdd82178a29071f9f9f0ae5e7 and cursor H53 remain frozen historical; no new writes without a later registry reassignment.",
+      "done_when": "Role reserved; no new M4 commits to work/m4-r1-platform or its files. Previously accepted scoped source and original FAIL remain unchanged, M0 alone owns the live product gate.",
       "assigned_task": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018"
     }
   ]
