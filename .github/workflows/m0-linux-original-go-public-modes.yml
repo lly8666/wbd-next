@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        mode: [fixed, auto, game2, game4]
+        mode: [auto] # S379 already PASS fixed/Game2/Game4: do not repeat identical green source
     env:
       MODE: ${{ matrix.mode }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
@@ -81,6 +81,22 @@ jobs:
           export WBD_LIFECYCLE_PADDING=0
           sudo --preserve-env=GITHUB_SHA,WBD_LIFECYCLE_ARTIFACT_DIR,WBD_LIFECYCLE_SCENARIO,WBD_LIFECYCLE_LANES,WBD_LIFECYCLE_SEED,WBD_LIFECYCLE_FEC,WBD_LIFECYCLE_PADDING env GITHUB_WORKSPACE="$GITHUB_WORKSPACE/legacy" bash live/actual-cli.sh
           sudo chown -R "$(id -u):$(id -g)" live
+      - name: Print bounded original CLI process diagnostics on failure only
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,re
+          for f in ("client.log","server.log"):
+            p=pathlib.Path("live")/f
+            if not p.exists():continue
+            lines=p.read_text(errors="replace").splitlines()
+            print("ORIGINAL_GO_PRODUCT_"+f+" TAIL (sensitive values redacted)")
+            for line in lines[-90:]:
+              line=re.sub(r'(?i)(password|passwd|token|secret|route-key|key-hex)[=:]\S+',r'\1=[REDACTED]',line)
+              line=line.replace("qualpass","[REDACTED]")
+              print(line[:500])
+          PY
       - name: Evaluate real duplex UDP app per capability and actual kernel loss
         shell: bash
         run: |
