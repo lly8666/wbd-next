@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 208,
-  "checkpoint_sha": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
+  "sequence": 209,
+  "checkpoint_sha": "eaf8a88a62e1ca17841abb9ce839e07adbe222ea",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "Recovered prior H206->S443 source and original Actions, active PLAN012/PLAN013 M0 shared scope unchanged. Real original-Go public V4 Normal/off authenticated TLS, Rust M1/M2/M3/M4 raw/TUN/Stop has scoped 2-netns SOURCE 197de529 Actions39383696231 PASS. Subsequent original V4 outer retrans+Fixed/Auto product code exists, but latest exact SOURCE 6346508 Actions39389626400 FAIL at legacy Go overlay assembly (missing 3 new Go FEC2 product files); subsequent Linux product kernel execution NOT_RUN. Earlier V3 complete modes preserved separately and cannot qualify V4. Game2/4 V4 public CLI NOT_WIRED; Windows/physical NOT_RUN, FEC2 OFF.",
-  "why_now": "S444 actual recovered 60 commits and S445 original Go frozen overlay build-tag assembly fix committed. The first H207 temporarily tied last_tested_source to new V4 FAIL source but evidence_refs remains accepted old V3 SOURCE9910a862: Governance39392110691 and Maintenance39392110602 correctly FAIL structure ('evidence is for a different SOURCE'). Restore evidence/source identity, keep new V4 original FAIL and pending run facts separately in prose. No other source scope change.",
+  "current_task": "PLAN017 true original Go public Rust V4 Linux two binaries: original credential TLS, Rust M1/M2/M3/M4, genuine M4 raw/TUN and Stop. Source0a786de Actions39392110629/1/job118525859738 SUCCESS Linux public Normal/off baseline and actual 1% 512 UDP original M2 frozen retrans. Separate Fixed/Auto M2 real-kernel component PASS_SCOPED; these FEC2 modes and Game2/4 still lack PUBLIC V4 product eligibility and per-group/no-HOL proof. Windows/physical NOT_RUN, production FEC2 OFF.",
+  "why_now": "Recovery S444/H207, S445 frozen Go 3-file FEC2 release assembly fix, H208 evidence identity repair, source-locked Actions39392110629/1 SUCCESS and S446 scoped evidence. Real app 512/512 at kernel netem7 drops; actual 141 original Rust frozen retrans and 1006 authenticated M2 ACK; aggregate not performance qualification. Governance H208 run39392275966 SUCCESS. Current meaningful missing capability is same two public binaries Fixed/Auto first-group mature APPLIED and Game2/4 independent kernel lanes+damaged-lane no-HOL, not V3 or native-only demos.",
   "done_when": "Original Go V3 public experimental Normal/off, fixed/auto FEC and Game2/4 compiled original binary with real process-TLS-raw/TUN-bidirectional UDP-Stop and runtime per lane/repair counters delivered as reusable independent artifact. New Rust V4 product still requires actual original Go public V4 TLS client+server continuous Rust M1/M2/M3/M4 owner with FEC2 fixed/auto real new-group APPLIED, Game2/4 independent damage/no-HOL, frozen-cipher outer max-two retrans and real delivery under loss; one exact SOURCE Actions before V4 production ON. Windows M4 remains independent.",
-  "next_action": "Inspect existing exact S445 SOURCE0a786de Actions39392110629 attempt1 native Go/Rust real Linux result and separate post-H governance, diagnose first concrete failure or record PASS_SCOPED. Do NOT retrigger same-source Actions and never claim Linux FEC2/Game V4 ON before actual valid full gate.",
+  "next_action": "Implement source-locked single original-Go V4 Linux PUBLIC CLI Fixed/Auto one-group M2 mature authenticated requested->pending->applied and Game2/4 independent M4 raw/TUN first-app under lane damage/no HOL, preserving Normal/off qualified binary paths and Stop; run one combined Actions functional gate, report real APPLIED or actual precise blocker without enabling production prematurely.",
   "unverified": true,
-  "last_tested_source": "9910a8623f7f9438354e0dfdd67a67af6563929d",
+  "last_tested_source": "0a786de2b341bb54830e6824ffd9329f2f3eb361",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json"
+    "docs/evidence/M0/PLAN017-original-go-rust-V4-public-normal-1pct-bidirectional-M2-20261020.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN015-Linux-formal-Go-two-binary-lossless-1pct-real-network-20261020.json",
@@ -24,8 +24,9 @@
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
     "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json",
-    "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md"
+    "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
+    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H208 correction: evidence_refs is V3-only qualified SOURCE9910a862; current V4 combined SOURCE6346508 run39389626400 FAIL Go assembly, S445 SOURCE0a786de fixed frozen three FEC2 Go files and product Go tags; existing auto-run39392110629 observed in_progress. Governance39392110691 and maintenance39392110602 FAIL caused by H207 evidence/source mismatch, not compiler; kept as original FAIL. Current V4 Linux/FEC2/Game full gate NOT_PASS, FEC2 OFF; Windows/physical NOT_RUN. S444 recovery log includes all 60 commit audit."
+  "partial_summary": "H209: S445 Actions39392110629/1 SOURCE0a786de2 PASS_SCOPED original Go public V4 Normal/off TLS->Rust M1/M2/M3/M4 2 CLI real 1pct 512/512 UDP; 7 kernel drops, 141 M2 immutable retries, 1006 auth ACK, 1024 first copied, Stop both drained; artifact12250640523 ZIP sha274a2034. S446 exact evidence; old combined FAIL39389626400 and H207 governance FAIL preserved. V4 Fixed/Auto public APPLIED and Game2/4 damaged lane still NOT_RUN; Windows/physical NOT_RUN; FEC2 OFF."
 }
