@@ -83,18 +83,17 @@ impl GameKernelOwner{
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
                     }
                     game.drain(now,|lane,_,pn,wire|{
-                        use crate::runtime::game_shared::DispatchOutcome;
                         let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return DispatchOutcome::PressureDrop
+                            return false
                         };
                         let Ok(mut slab)=arena.allocate()else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return DispatchOutcome::PressureDrop
+                            return false
                         };
                         if wire.len()>slab.writable().len(){
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return DispatchOutcome::PressureDrop
+                            return false
                         }
                         slab.writable()[..wire.len()].copy_from_slice(wire);
                         let Ok(frozen)=slab.freeze(0..wire.len(),FrozenMetadata{
@@ -102,7 +101,7 @@ impl GameKernelOwner{
                             carrier_snapshot:1
                         })else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return DispatchOutcome::PressureDrop
+                            return false
                         };
                         let f=item.flow;
                         let (src,dst,sp,dp)=if server{
@@ -122,10 +121,10 @@ impl GameKernelOwner{
                         if ok {
                             item.seq=item.seq.saturating_add(wire.len() as u64);
                             tx_copy.fetch_add(1,Ordering::Relaxed);
-                            DispatchOutcome::Accepted
+                            true
                         }else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            DispatchOutcome::PressureDrop
+                            false
                         }
                     });
                     arena.drain_returns();
