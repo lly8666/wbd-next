@@ -311,6 +311,10 @@ struct Entry{
     fec2_probe_pending_policy:Option<(u8,u64)>,
     #[cfg(all(target_arch="x86_64",target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
+    // Original Go TLS-scoped verified interface used by every M4 RX/TX,
+    // route, MTU and worker turn. Never accept a different device at Stop.
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    raw_ifname:Option<String>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -469,6 +473,8 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
         flow:handoff.flow,
         #[cfg(all(target_arch="x86_64",target_env="gnu"))]
         tx_route:None,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        raw_ifname:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         normal_firstsend_m2:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2097,13 +2103,14 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
-fn attach_raw(handle:u64,ifindex:u32)->i32{
+fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.raw_rx.is_some(){return BAD_STAGE}
-    let Ok(driver)=ScopedRawIpv4Rx::open("lo",ifindex,(handle>>32) as u32)
+    let Ok(driver)=ScopedRawIpv4Rx::open(ifname,ifindex,(handle>>32) as u32)
     else{return INVALID};
-    e.raw_rx=Some(Arc::new(driver));OK
+    e.raw_rx=Some(Arc::new(driver));
+    e.raw_ifname=Some(ifname.to_owned());OK
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
@@ -2158,7 +2165,20 @@ fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_attach_raw_rx(h:u64,ifindex:u32)->i32{
-    attach_raw(h,ifindex)
+    // Existing exact-source developer ABI retained unchanged.
+    attach_raw(h,ifindex,"lo")
+}
+/// Real product interface is bound ONCE to the same credential-verified Go
+/// generation. M4 opens the real kernel socket and checks ifname+ifindex.
+#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
+    h:u64,ifindex:u32,name:*const u8,len:usize
+)->i32{
+    if name.is_null()||len==0||len>15{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(ifname)=std::str::from_utf8(bytes)else{return INVALID};
+    attach_raw(h,ifindex,ifname)
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
@@ -2193,18 +2213,19 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
     let e:&mut Entry=&mut guard;
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return Err(BAD_STAGE)}
+    let ifname=e.raw_ifname.clone().ok_or(BAD_STAGE)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let flow=e.flow;
     if e.raw_tx.is_none(){
-        let driver=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
+        let driver=ScopedRawIpv4Tx::open(&ifname,ifindex,(handle>>32) as u32)
             .map_err(|_|INVALID)?;
         let observed=wbd_platform::linux_packet_preflight::observe_interface_mtu(
-            "lo",ifindex).map_err(|_|INVALID)?;
+            &ifname,ifindex).map_err(|_|INVALID)?;
         e.raw_tx_lease_mtu=observed.kernel_mtu;
         e.raw_tx=Some(Arc::new(driver));
     }
     let route=e.owner.observe_linux_normal_off_route_budget(
-        "lo",ifindex,Ipv4Addr::from(flow.client_ip)
+        &ifname,ifindex,Ipv4Addr::from(flow.client_ip)
     ).map_err(|_|INVALID)?;
     let slab=e.arena.allocate().map_err(|_|FULL)?;
     let (pn,seq,_wire_len,app_len)=e.owner.seal_tun_ipv4_normal_off(
@@ -2652,7 +2673,7 @@ fn original_fixed_stage_due(e:&mut Entry,
 }
 #[cfg(all(target_arch="x86_64",target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
-    stop:&AtomicBool,ifindex:u32,tx_storage:&mut Vec<TxDispatch>,
+    stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
@@ -2787,14 +2808,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             let has_cache=e.tx_route.is_some();
             e.tx_route=None;
             let snapshot=e.owner.observe_linux_normal_off_route_budget(
-                "lo",ifindex,destination
+                ifname,ifindex,destination
             ).map_err(|_|INVALID)?;
             let must_reopen=raw_driver_reopen_on_route_change(
                 has_cache,e.tx_route_revision,snapshot.observed_interface_mtu,
                 e.raw_tx_lease_mtu
             );
             if must_reopen{
-                let fresh=ScopedRawIpv4Tx::open("lo",ifindex,e.generation)
+                let fresh=ScopedRawIpv4Tx::open(ifname,ifindex,e.generation)
                     .map_err(|_|INVALID)?;
                 let old=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
                 // One unique active TX loop: no asynchronous kernel data
@@ -3159,15 +3180,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
     let (Some(raw),Some(tun))=(e.raw_rx.as_ref(),e.tun_sink.as_ref())
     else{return BAD_STAGE};
+    let Some(ifname)=e.raw_ifname.clone()else{return BAD_STAGE};
     let raw=Arc::clone(raw);
     let tun=Arc::clone(tun);
     let raw_fd=raw.readiness_fd();
     let tun_fd=tun.readiness_fd();
     if e.raw_tx.is_none(){
-        let Ok(tx)=ScopedRawIpv4Tx::open("lo",ifindex,(handle>>32) as u32)
+        let Ok(tx)=ScopedRawIpv4Tx::open(&ifname,ifindex,(handle>>32) as u32)
         else{return INVALID};
         let Ok(observed)=wbd_platform::linux_packet_preflight::observe_interface_mtu(
-            "lo",ifindex) else{return INVALID};
+            &ifname,ifindex) else{return INVALID};
         e.raw_tx_lease_mtu=observed.kernel_mtu;
         e.raw_tx=Some(Arc::new(tx));
     }
@@ -3264,6 +3286,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
+    let tx_ifname=ifname;
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
@@ -3295,7 +3318,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     jumbo_queue.is_empty()&&!fec_due{continue}
                 let slice_start=Instant::now();
                 match background_tun_once(
-                    &tx_cell,&tun,&stop_tx,ifindex,&mut tx_storage,
+                    &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
                     &mut tx_pending,&mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo
                 ){
@@ -3688,8 +3711,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     if e.phase!=PH_ACTIVE||e.tun_sink.is_none()||e.raw_rx.is_none(){
         return BAD_STAGE
     }
+    let Some(ifname)=e.raw_ifname.as_deref()else{return BAD_STAGE};
     let route=e.owner.observe_linux_normal_off_route_budget(
-        "lo",ifindex,Ipv4Addr::from(e.flow.client_ip));
+        ifname,ifindex,Ipv4Addr::from(e.flow.client_ip));
     let Ok(route)=route else{return INVALID};
     let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
     else{return INVALID};
