@@ -4,25 +4,27 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 51,
-  "checkpoint_sha": "46e13f6e6210b9786c2d1c69f43111943410dbaf",
-  "progress": "ready_for_integration",
-  "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "current_task": "M4 PLAN012-017 Linux scoped real original-Go TLS/FEC→4 native client TUN UDP→Stop/owned link cleanup and S46 byte-equal IPv4 routes/policy rules/TUN FD before-after PASS exact integrated main SOURCE 20916d27018b2a039221923db5034e009b9c2e3b Actions39357046267. M4 native kernel owned FD/borrow Stop 97/97 PASS Actions39344699874. Scope DONE, product not released.",
-  "why_now": "M0 Issue19 CLOSED, original Go main imported exact S46 M4 Git blob4fab31cd unchanged; combined Action39357046267 attempt1 job118414112835 FULL SUCCESS, manifest and receipt source/run match; M4 independently downloaded artifact12235553552 and matched ZIP SHA256+six log hashes and named 2.11s real Go Linux netns S46 PASS. Exact route/rule/TUNFD baseline restored; standalone journal file not asserted. M0 product public CLI/Game independent real kernel gates still NOT_RUN, FEC2 OFF.",
-  "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
-  "next_action": "M0 consume M4 S51 scoped Linux017 ready_for_integration evidence and continue main-owned original-Go public feature7 CLI Connect/Disconnect/cold applied plus real Game2/4 separate M4 raw kernel lanes gates; keep production FEC2/Game OFF until their exact Linux combined Actions PASS. No M4 S46 retest needed.",
-  "unverified": false,
-  "last_tested_source": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
+  "sequence": 52,
+  "checkpoint_sha": "c188063b6864ee1b84b3f0f2a31943a428038dc0",
+  "progress": "partial",
+  "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
+  "current_task": "PLAN013 Windows018: exact M4 S53 source original Go/WinForms Windows-2022 pinned legacy compiled and exercised real child process + Game1/2/4 saved config readback; 314 GUI checks and 20 named native owned transaction/WAL/WFP safety tests PASS. Native WFP/TUN/route/DNS/IPv6 actual product Apply, authenticated Rust Stop and real connected traffic NOT_RUN, guarded OFF.",
+  "why_now": "User temporary authorization now matched formal main registry Windows018. S53 central G2 Actions39365023412 SUCCESS. Exact main-owned Windows2022 Actions39365281132 attempt1 attest118440601979 and native118440664955 BOTH SUCCESS; ZIP artifact12239082327 independent sha256 verified61b258ab. Original Go child native WFP/auth Stop safety denial before READY, no owned WAL; GUI no false Connected on legacy READY. Historical S52 main consumer39365105883 identity fail due moved worker source retained; neither source proves real WFP positive.",
+  "done_when": "Windows native Go CLI+WinForms actual config/save/reload/launch→Connect/Disconnect+requested/pending/applied readback, owned WFP/TUN/DNS/route native stop/cleanup where supported; same frozen SOURCE Windows 2022 Actions named tests and artifact, original FAIL/UNSUPPORTED/NOT_RUN preserved; no false production ON.",
+  "next_action": "M0 provide exact Windows-compatible authenticated original Go/Rust owner Stop/drained loans ABI and isolated recoverable Windows full-network test host per issue20 comment6282786676; M4 will then wire native WFP/Wintun/DNS/routes owned positive Apply→readback→Stop→Recover and one exact Windows Actions proof without disabling admission guard.",
+  "unverified": true,
+  "last_tested_source": "32fd73e9b2904b79d82bbcbb416d3bd53bb9d2f8",
   "evidence_refs": [
+    "docs/evidence/M4/R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018.json",
     "docs/evidence/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.json",
     "docs/evidence/M4/R5-M4-NATIVE-WINDOWS-NETWORK-016.json"
   ],
   "open_requests": [],
   "context_refs": [
-    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
-    "docs/devlog/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.md",
-    "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
+    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
+    "docs/devlog/M4/R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018.md",
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1"
   ],
-  "partial_summary": "H51 SOURCE checkpoint S51 46e13f6, M4 Linux017 ready_for_integration scoped only: real M4 owned Linux kernel TUN fd/borrow Stop Actions39344699874 97/97 PASS at S44 bdd6f6c; original-Go exact imported S46 Go blob4fab31c (worker source f0e5b251) main20916d Actions39357046267 FULL SUCCESS including real TLS→FEC lost source recovery→4 UDP client app→auth M2→repeat Stop→stale RX reject→route/rule/TUN FD before-after identity. Artifact12235553552 ZIP sha256 71adbc87 independently matched plus six receipt log hashes. Historical shell failures retained, journal not separately asserted, product public CLI/Game NOT_RUN FEC2/Game OFF, Windows I010/physical deferred."
+  "partial_summary": "H52 checkpoint S54 c188063 Windows PLAN013; worker S53 32fd73e G2 39365023412 PASS, Windows Actions39365281132 full SUCCESS original pinned Go WinForms GUI (314 checks) and 20 native safety tests, provider ZIP artifact12239082327 sha256 61b258ab independently verified, live original Go Game1/2/4 config and native guard before network mutations. NOT RUN production WFP/TUN/DNS/route/IPv6, public feature7, authenticated Rust Stop and first real app packet; protected ABI and isolated Windows guest M0 issue20. Product FEC2/Game OFF. Old Windows I010 PLANNED NOT_RUN, S52 identity FAIL, I002/I005 FAIL preserved. Prior Linux017 accepted H51, real netns S46 original Go PASS."
 }
