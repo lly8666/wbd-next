@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "product_scope": "FORMAL_ORIGINAL_GO_LINUX_V3_NORMAL_OFF_EXPERIMENTAL_ONLY",
+  "test_source_sha": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+  "build_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "fixture_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "validated_workflow_source_sha": "9b1dec079f4d955d7f4d8a049349a00922c58032",
+  "original_source_repo": "lly8666/wobuzhidao",
+  "binary_entrypoints": [
+    "cmd/wbd-client",
+    "cmd/wbd-server"
+  ],
+  "build": {
+    "toolchain_go": "go1.23.12",
+    "platform": "linux/amd64",
+    "build_tags": [],
+    "builtin_rust_v4": false,
+    "sha256": {
+      "wbd-client": "2dfe0a776b1aa0fee973ce105c7591f282f871557389d9ef89e6aa943f4d22cc",
+      "wbd-server": "c3167d66358a354bcfba3de3428f0305b92657645b56816b4fb13c565720be9f"
+    }
+  },
+  "exact_original_cli_product_actions": {
+    "workflow": ".github/workflows/m0-linux-original-go-normal-product.yml",
+    "run_id": 39369570717,
+    "attempt": 1,
+    "job_id": 118454145390,
+    "conclusion": "success",
+    "artifact_id": 12241206041,
+    "artifact_name": "linux-normal-off-two-real-clis-39369570717-1",
+    "artifact_digest_sha256": "25c5301fbf3ed4c25e8ba0327203100e8355990d8dc06dc0bf2352309c4e84e6",
+    "downloadable_tar": "linux-normal-off-original-go-amd64.tar.gz",
+    "tar_sha256": "9c0a0f0fdf77f0ef27865640b3143c440a109d3ae704cf8e17f46f72b89ca66b",
+    "real_cli_processes": true,
+    "real_tls_credential": true,
+    "isolated_linux_netns_count": 5,
+    "actual_udp_application_packets": {
+      "client_originated": {
+        "sent": 60,
+        "received": 60
+      },
+      "server_originated": {
+        "sent": 60,
+        "received": 60
+      }
+    },
+    "client_originated_bytes": {
+      "sent": 30400,
+      "received": 30400
+    },
+    "server_originated_bytes": {
+      "sent": 30400,
+      "received": 30400
+    },
+    "processes_terminated_via_SIGTERM": true,
+    "owned_netns_removed": true,
+    "scenario": "l0_config",
+    "fec_parity": 0,
+    "lanes": 1,
+    "padding": false,
+    "source_and_binary_hash_attested": true
+  },
+  "first_m4_interop": {
+    "issue": 20,
+    "comment_id": 6283379488,
+    "frozen_real_Go_stop_contract": "V4OriginalOwnerStopper/StopAndReleaseOriginalOwner; V4StopThenCleanupNetwork requires actual Epoch+OwnerAndDriversDrained+GenerationReleased",
+    "real_linux_implementation": "v4EmbeddedNativeBridge.StopAndReleaseOriginalOwner uses C Rust Stop then C Release",
+    "windows_rust_live_stop_qualification": "NOT_RUN",
+    "worker_branch": "work/m4-r1-platform",
+    "no_overlapping_m4_windows_code_writes": true
+  },
+  "separate_source_qualified_v4_kernel": {
+    "linux_game2_4_original_Go_TLS_Rust_M4_raw_TUN": "PASS_SCOPED_ACTIONS39368220417",
+    "linux_fixed_auto_original_Go_early_M2": "PASS_SCOPED_ACTIONS39368220417",
+    "public_product_entrypoint": "NOT_WIRED_TO_V4_IN_THIS_RELEASE",
+    "next_arch_FEC2_Game": "PRODUCTION_OFF"
+  },
+  "capability_matrix": {
+    "linux_v3_normal_off": {
+      "artifact": "AVAILABLE",
+      "real_application": "PASS",
+      "real_Stop": "PASS_SCOPE_OWNED_NETNS",
+      "outer_retransmission_1pct": "NOT_RUN",
+      "status": "EXPERIMENTAL"
+    },
+    "linux_v3_fixed": {
+      "artifact": "SAME_BINARIES_ACCEPT_FEC_PARITY_FLAGS",
+      "real_loss_repair_current_source": "NOT_RUN",
+      "status": "NOT_QUALIFIED"
+    },
+    "linux_rust_v4_normal_off": {
+      "product_binary": "NOT_BUILT",
+      "status": "NOT_WIRED"
+    },
+    "linux_rust_v4_fec2_fixed": {
+      "product_binary": "NOT_BUILT",
+      "status": "OFF"
+    },
+    "linux_rust_v4_fec2_auto": {
+      "product_binary": "NOT_BUILT",
+      "status": "OFF"
+    },
+    "linux_rust_v4_game2_4": {
+      "real_native_kernel": "PASS_SCOPED",
+      "product_binary": "NOT_BUILT",
+      "status": "OFF"
+    },
+    "windows": {
+      "worker": "M4",
+      "real_owner_network_Apply_Stop": "NOT_RUN",
+      "status": "OFF"
+    }
+  },
+  "security_limits": "No credentials, private key, packet capture or business payload uploaded in the distributable. Original Go product uses real Linux privileged raw/TUN and requires operator-provided credentials. Old-Go V3 is explicitly not Rust V4.",
+  "next_action": "Integrate actual product Go V4 CLI Connect/Disconnect with live Rust authenticated lane owner and Stop so true Normal/off with bounded outer retransmission can ship independently; release each mode only after same-source real process-level Actions. Keep Windows M4 concurrent scope independent."
+}
