@@ -92,7 +92,8 @@ func (g *V4LinuxGameVerifiedGroup) withPrivateOriginalTLS(
 )error{
     if g==nil||fn==nil{return ErrAdmissionParams}
     g.mu.Lock();defer g.mu.Unlock()
-    if g.stopped||len(g.cold)!=int(g.id.Lanes){return ErrAdmissionUnsupported}
+    if g.stopped||(g.id.Lanes!=2&&g.id.Lanes!=4)||
+       len(g.cold)!=int(g.id.Lanes){return ErrAdmissionUnsupported}
     snapshot:=append([]V4ColdSessionSnapshot(nil),g.cold...)
     // Fail-closed callback until the actual M0 C owner reports installed.
     return fn(snapshot)
