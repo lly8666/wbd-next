@@ -103,8 +103,13 @@ impl GameAdapter{
                 return Err(Error::Unauthorized)
             }
             let (c2s,s2c)=b.internal_direction_keys();
-            if c2s==s2c || all_materials.contains(&c2s) ||
-                all_materials.contains(&s2c) {
+            // DirectionKeys intentionally does not implement PartialEq
+            // (crypto material must not be casually compared). This private
+            // TLS lane admission checks exact exporter bytes explicitly.
+            let same=|a:&DirectionKeys,b:&DirectionKeys|
+                a.aead_key==b.aead_key&&a.iv==b.iv&&a.hp_key==b.hp_key;
+            if same(&c2s,&s2c) ||
+               all_materials.iter().any(|old|same(old,&c2s)||same(old,&s2c)) {
                 return Err(Error::Unauthorized)
             }
             // Duplicate keys across any direction or lane violate distinct
@@ -115,7 +120,7 @@ impl GameAdapter{
             if mss<64{return Err(Error::Invalid)}
             indexed[usize::from(id.go_lane_id)-1]=Some(ScopedKeys{
                 lane:QualifiedLane{key:LaneKey{tunnel:owner_tunnel,
-                    slot:u32::from(id.go_lane_id),generation},mss},
+                    slot:u32::from(id.go_lane_id),generation},mss:usize::from(mss)},
                 tx:if server{s2c}else{c2s},
                 rx:if server{c2s}else{s2c},
             });
