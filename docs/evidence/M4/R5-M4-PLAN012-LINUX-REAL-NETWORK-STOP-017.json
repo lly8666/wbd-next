@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "PARTIAL_NATIVE_ISOLATED_FD_STOP_PASS_GO_EXTRA_ROUTE_READBACK_NOT_RUN",
+  "status": "PARTIAL_REAL_LINUX_TUN_OWNER_STOP_PASS_POST_STOP_FULL_ORIGINAL_GO_M4_ASSERTIONS_NOT_RUN",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -22,7 +22,7 @@
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "M0 integrate exact M4 new Go file into existing original-Go Linux combined workflow, run one fixed genuine lost-source Connect->4 UDP client->Stop->owned route cleanup named test, return run/attempt/manifest; M4 consumes and closes task if exact.",
+  "next_action": "M0 integrate M4 Go test file from exact S46 f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6 into existing original pinned Go/Linux combined workflow's overlay copy and netns TEST_FILTER; assert exact M4 PLAN012 PASS marker; then M4 verify same SOURCE/Actions and mark qualified. Product FEC2 stays OFF without M0 full gate.",
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "verification": {
     "worker_native": {
@@ -70,15 +70,48 @@
       "r0_fake_platform_S42": "39344197688 wrapper FAIL exact test count despite 105/105 Rust actual PASS",
       "windows_I010": "DEFERRED_NOT_RUN_dispatch_failure_attempts_1_2",
       "windows_I002_I005": "HISTORICAL_FAIL_UNCHANGED"
+    },
+    "central_scope_H45": {
+      "run_id": 39345075239,
+      "attempt": 1,
+      "job_id": 118375599826,
+      "result": "ROLE_SCOPE_PASS",
+      "commits_checked": 225,
+      "source_sha": "dc04341fe3c19ae38209ffd1b2a2bb23238b8daa",
+      "artifact_id": 12230377465,
+      "provider_artifact_sha256": "b1c988d37f8b893896492afd9cc7722d75d301446e674a98b778ac817dc3fda7"
+    },
+    "S46_go_hardening": {
+      "source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
+      "full_original_go_test_name": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+      "result": "NOT_RUN_NO_M0_COMBINED_IMPORT_OR_RUN",
+      "require_exact_m0_real_helper": "realOriginalGoFec2LinuxMode(t,FecV2Fixed)",
+      "checks": [
+        "pre_post_ip4_all_tables_baseline_equal",
+        "pre_post_ip4_policy_rules_equal",
+        "pre_post_proc_self_fd_dev_net_tun_count_equal",
+        "client_and_server_owned_TUN_links_absent",
+        "no_leftover_owned_capture_routes",
+        "original_real_TLS_FEC_lost_source_RS16_client_UDP_authenticated_M2_Stop_twice_stale_denial"
+      ],
+      "file": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+      "go_test_workflow_status": "NOT_RUN_WITH_NEW_SOURCE",
+      "source_scope_G2": "IN_PROGRESS_AT_RECEIPT_AUTHORING",
+      "product_result": "NOT_RUN"
     }
   },
   "integration": {
     "file_to_copy": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
-    "worker_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+    "worker_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
     "new_go_test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
     "main_owned_workflow": ".github/workflows/m0-plan012-combined-functional.yml",
     "requires": "M0 inserts exact M4-owned file into original Go assembly and selects named test inside isolated WBD_M0_FEC2_CONTINUOUS netns; consume actual named PASS and route cleanup readback; keep original main Go code/wire shared-owned.",
     "not_run": "M4 added original Go route cleanup test compiled/run on combined exact integrated M0 source",
-    "product_fec2": "OFF"
-  }
+    "product_fec2": "OFF",
+    "required_marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+    "can_worker_modify_m0_combined_workflow": false
+  },
+  "last_authored_go_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
+  "native_validated_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+  "main_observed_sha": "45af4b2fc9a8cee9e32eeb32fde2a4ca603f6216"
 }
