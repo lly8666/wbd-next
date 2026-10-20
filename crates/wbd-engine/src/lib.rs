@@ -39,6 +39,10 @@ mod v4_owner_crypto;
 mod v4_protected_handoff;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
+// M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device
+// lease, OS applied status or product activation is granted by this module.
+#[cfg(all(feature = "m0_v4_embedded_go", target_os = "windows"))]
+mod v4_windows_owner;
 #[cfg(all(feature = "m0_v4_probe", target_os = "linux"))]
 mod v4_probe_bridge;
 
