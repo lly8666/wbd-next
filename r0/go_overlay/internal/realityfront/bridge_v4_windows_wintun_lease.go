@@ -9,11 +9,46 @@ package realityfront
 import (
     "context"
     "errors"
+    "fmt"
     "runtime"
+    "syscall"
     "unsafe"
+
+    "golang.org/x/sys/windows"
 
     "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
+
+// Pin the native GUID from IP Helper in the SAME process and CURRENT
+// Wintun handle, without adopting an alias or trusting a JSON configuration.
+// M4 independently repeats this OS GUID/LUID/index check in Hold and Verify.
+func v4WindowsOriginalWintunIdentity(
+    ctx context.Context,tun *windowsclient.TUN,
+    installation,epoch [16]byte,
+)(windowsclient.N4UnifiedIdentity,error){
+    var zero windowsclient.N4UnifiedIdentity
+    if ctx==nil||tun==nil||installation==[16]byte{}||epoch==[16]byte{}{
+        return zero,errV4WindowsOwner
+    }
+    actual,err:=tun.NativeIdentity(ctx)
+    if err!=nil{return zero,errors.Join(errV4WindowsOwner,err)}
+    if !actual.CreatedByProcess||actual.Index==0||actual.LUID==0||
+        tun.Name()==""{return zero,errV4WindowsOwner}
+    proc:=syscall.NewLazyDLL("iphlpapi.dll").NewProc("ConvertInterfaceLuidToGuid")
+    if err:=proc.Find();err!=nil{return zero,errors.Join(errV4WindowsOwner,err)}
+    var guid windows.GUID
+    status,_,_:=proc.Call(uintptr(unsafe.Pointer(&actual.LUID)),
+        uintptr(unsafe.Pointer(&guid)))
+    if status!=0{return zero,fmt.Errorf("%w: native interface GUID status=%d",errV4WindowsOwner,status)}
+    id:=windowsclient.N4UnifiedIdentity{
+        Installation:installation,Generation:epoch,
+        WintunLUID:actual.LUID,WintunIndex:actual.Index,
+        WintunGUID:guid.String(),AdapterAlias:tun.Name(),
+    }
+    // No product/full OS claim: the M4 protected five-stage owner must
+    // separately bind its durable PnP instance pin, WFP guard and WAL.
+    return id,nil
+}
 
 // v4WindowsRealWintunLease retains M4's ORIGINAL live Wintun adapter/session
 // across the Rust owner, preventing a caller from swapping the adapter after
