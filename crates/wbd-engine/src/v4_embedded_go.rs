@@ -2183,21 +2183,25 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 /// This is a mode authorization, NOT a separate data plane or self-attested
 /// epoch: generation handle already required private protected Go Prepare,
 /// actual FakeTCP Detach/Commit, and original TX/RX owner activation.
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     h:u64,epoch_ptr:*const u8,epoch_len:usize
 )->i32{
-    let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
-    let Ok(cell)=session(h)else{return UNKNOWN};
-    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if !verified_normal_off_owner(&e,&epoch)||
-        e.workers.is_some()||e.original_public_feedback_armed||
-        e.raw_rx.is_none()||e.tun_sink.is_none()||
-        e.raw_ifname.is_none(){return BAD_STAGE}
-    e.original_public_feedback_armed=true;
-    OK
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=(h,epoch_ptr,epoch_len);BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if !verified_normal_off_owner(&e,&epoch)||
+            e.workers.is_some()||e.original_public_feedback_armed||
+            e.raw_rx.is_none()||e.tun_sink.is_none()||
+            e.raw_ifname.is_none(){return BAD_STAGE}
+        e.original_public_feedback_armed=true;
+        OK
+    }
 }
 
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
