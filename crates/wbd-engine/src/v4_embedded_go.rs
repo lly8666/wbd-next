@@ -3707,7 +3707,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
                 max_retained_pages:8,max_pages_per_report:8,
-                retention_ns:100_000_000,srtt_ns:8_000_000,
+                // Receipt page = 256 PN. 100ms expiry retired the
+                // entire still-active PN page: after ~19 app packets
+                // all later authentic DATA/feedback were classified Late.
+                // Keep exactly <=8 bounded pages until newer-page
+                // eviction or original Go owner Stop; no memory growth.
+                retention_ns:u64::MAX/4,srtt_ns:8_000_000,
             }
         )else{return INVALID};
         let shared=Arc::new(Mutex::new(state));
