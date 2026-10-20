@@ -2240,6 +2240,7 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     let ifname=e.raw_ifname.clone().ok_or(BAD_STAGE)?;
     let tun=e.tun_sink.as_ref().ok_or(BAD_STAGE)?;
     let flow=e.flow;
+    let server=e.server_side;
     if e.raw_tx.is_none(){
         let driver=ScopedRawIpv4Tx::open(&ifname,ifindex,(handle>>32) as u32)
             .map_err(|_|INVALID)?;
@@ -2249,7 +2250,9 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
         e.raw_tx=Some(Arc::new(driver));
     }
     let route=e.owner.observe_linux_normal_off_route_budget(
-        &ifname,ifindex,Ipv4Addr::from(flow.client_ip)
+        &ifname,ifindex,Ipv4Addr::from(
+            if server{flow.client_ip}else{flow.server_ip}
+        )
     ).map_err(|_|INVALID)?;
     let slab=e.arena.allocate().map_err(|_|FULL)?;
     let (pn,seq,_wire_len,app_len)=e.owner.seal_tun_ipv4_normal_off(
@@ -2372,6 +2375,7 @@ fn background_raw_once(
     owner:&mut crate::v4_owner_crypto::ProtectedBackgroundRx,
     arena:&mut Arena,anchor:&mut u64,
     flow:crate::v4_protected_handoff::GoFlow,generation:u32,
+    server_side:bool,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
@@ -2386,10 +2390,13 @@ fn background_raw_once(
         }
     }
     if rx_pending.is_empty(){return Err(FULL)}
-    let tuple=Ipv4Tuple{
+    let tuple=if server_side{Ipv4Tuple{
         src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
         src_port:flow.client_port,dst_port:flow.server_port,
-    };
+    }}else{Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    }};
     let slot_count=rx_pending.len();
     let mut slots:[&mut [u8];32]=std::array::from_fn(|_|&mut [][..]);
     for (dst,slab) in slots.iter_mut().zip(rx_pending.iter_mut()){
@@ -2801,12 +2808,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // Route validation and original M1/M3 AEAD/PN/queue admission occur
     // under the current generation's owner. M4's real sendmmsg follows
     // OUTSIDE Entry lock with an immutable original LoanBatch.
-    let (batch,raw,flow,generation,admitted,seal_failed,jumbo_staged)={
+    let (batch,raw,flow,server_side,generation,admitted,seal_failed,jumbo_staged)={
         let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
         let e:&mut Entry=&mut guard;
         if e.phase!=PH_ACTIVE||stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
         let flow=e.flow;
-        let destination=Ipv4Addr::from(flow.client_ip);
+        let destination=Ipv4Addr::from(
+            if e.server_side{flow.client_ip}else{flow.server_ip}
+        );
         let event=events.snapshot();
         if let Some(cache)=e.tx_route.as_ref(){
             if wbd_platform::linux_route_events::classify(
@@ -3030,13 +3039,16 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 persona:PacketPersona::Legacy,
             });
         }
-        (batch,raw,flow,e.generation,ready_records.len(),failed,jumbo_staged)
+        (batch,raw,flow,e.server_side,e.generation,ready_records.len(),failed,jumbo_staged)
     };
     let report=if stop.load(Ordering::Acquire){None}else{
-        let tuple=Ipv4Tuple{
+        let tuple=if server_side{Ipv4Tuple{
             src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
             src_port:flow.server_port,dst_port:flow.client_port,
-        };
+        }}else{Ipv4Tuple{
+            src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+            src_port:flow.client_port,dst_port:flow.server_port,
+        }};
         Some(raw.send_kernel_multimsg(
             generation,ready_records.as_slice(),tuple,presentations.as_slice()
         ))
@@ -3266,6 +3278,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     }
     let mut rx_anchor=e.rx_seq_anchor;
     let rx_flow=e.flow;
+    let rx_server_side=e.server_side;
     let generation=e.generation;
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
@@ -3287,7 +3300,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if !loop_readiness(raw_fd,&stop_rx,10){continue}
                 match background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
-                    rx_flow,generation,&raw_for_rx,&tun_for_rx,
+                    rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
@@ -3737,7 +3750,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     }
     let Some(ifname)=e.raw_ifname.as_deref()else{return BAD_STAGE};
     let route=e.owner.observe_linux_normal_off_route_budget(
-        ifname,ifindex,Ipv4Addr::from(e.flow.client_ip));
+        ifname,ifindex,Ipv4Addr::from(
+            if e.server_side{e.flow.client_ip}else{e.flow.server_ip}
+        ));
     let Ok(route)=route else{return INVALID};
     let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
     else{return INVALID};
