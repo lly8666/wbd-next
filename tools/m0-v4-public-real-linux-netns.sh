@@ -152,13 +152,13 @@ if [[ "$LOSS" == 1 ]];then
 import pathlib,re,sys
 p=pathlib.Path(sys.argv[1]);out=pathlib.Path(sys.argv[2])
 def read(name):return (p/name).read_text()
-drops=sum(sum(map(int,re.findall(r'dropped (\\d+)',read(n)))) for n in
+drops=sum(sum(map(int,re.findall(r'dropped (\d+)',read(n)))) for n in
     ('kernel-client-netem.txt','kernel-server-netem.txt'))
-repairs=sum(sum(map(int,re.findall(r'original_frozen_retransmitted=(\\d+)',read(n))))
+repairs=sum(sum(map(int,re.findall(r'original_frozen_retransmitted=(\d+)',read(n))))
     for n in ('client.log','server.log'))
-copied=sum(sum(map(int,re.findall(r'real_first_copy=(\\d+)',read(n))))
+copied=sum(sum(map(int,re.findall(r'real_first_copy=(\d+)',read(n))))
     for n in ('client.log','server.log'))
-acks=sum(sum(map(int,re.findall(r'authenticated_ack=(\\d+)',read(n))))
+acks=sum(sum(map(int,re.findall(r'authenticated_ack=(\d+)',read(n))))
     for n in ('client.log','server.log'))
 assert drops>0,f"kernel 1% dropped=0 not a real loss proof"
 assert copied>=1024,f"true first-copy count wrong: {copied}"
