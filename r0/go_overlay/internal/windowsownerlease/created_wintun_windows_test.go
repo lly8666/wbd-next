@@ -6,10 +6,41 @@ import (
     "errors"
     "fmt"
     "os"
+    "path/filepath"
+    "syscall"
     "testing"
 
     "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
+// Original Windows M4 Wintun uses a LazyDLL whose missing file/exports
+// trigger a Go runtime panic before OpenTUN can return an error. This is an
+// independent test *preflight*, not a new shadow Wintun device. Missing
+// signed DLL on hosted runner is UNSUPPORTED, never a fabricated PASS.
+func m0NativeWintunAvailable(t *testing.T)bool{
+    t.Helper()
+    exe,e:=os.Executable()
+    if e!=nil{t.Logf("M0_WIN_NATIVE_WINTUN_HOST_UNSUPPORTED executable=%v",e);return false}
+    path:=filepath.Join(filepath.Dir(exe),"wintun.dll")
+    file,e:=os.Lstat(path)
+    if e!=nil||!file.Mode().IsRegular()||file.Mode()&os.ModeSymlink!=0{
+        t.Logf("M0_WIN_NATIVE_WINTUN_HOST_UNSUPPORTED signed_DLL_absent=%s err=%v",path,e)
+        return false
+    }
+    dll,e:=syscall.LoadDLL(path)
+    if e!=nil{t.Logf("M0_WIN_NATIVE_WINTUN_HOST_UNSUPPORTED native_DLL_unloadable=%v",e);return false}
+    defer dll.Release()
+    for _,name:=range []string{
+        "WintunOpenAdapter","WintunCreateAdapter","WintunCloseAdapter",
+        "WintunStartSession","WintunEndSession","WintunGetReadWaitEvent",
+        "WintunGetAdapterLUID",
+    }{
+        if _,e:=dll.FindProc(name);e!=nil{
+            t.Logf("M0_WIN_NATIVE_WINTUN_HOST_UNSUPPORTED missing_export=%s: %v",name,e)
+            return false
+        }
+    }
+    return true
+}
 func TestM0WindowsRealCreatedWintunOneWayAdapterNativeIdentityAndLifetime(t *testing.T){
     ctx:=context.Background()
     var empty CreatedWintun
@@ -19,6 +50,10 @@ func TestM0WindowsRealCreatedWintunOneWayAdapterNativeIdentityAndLifetime(t *tes
     }
     if os.Getenv("WBD_M0_TRY_SCOPED_NATIVE_WINTUN")!="1"{
         t.Log("M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED explicit_native_probe_off")
+        return
+    }
+    if !m0NativeWintunAvailable(t){
+        t.Log("M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED missing_local_signed_Wintun_DLL_or_exports")
         return
     }
     name:=fmt.Sprintf("WBD-M0-SCOPE-%s",os.Getenv("GITHUB_RUN_ID"))
