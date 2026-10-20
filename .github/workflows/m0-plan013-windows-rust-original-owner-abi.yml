@@ -225,7 +225,14 @@ jobs:
             if ($LASTEXITCODE -ne 0) {throw 'source-locked original Go native M4 Windows proof executable compile failed'}
           } finally {Pop-Location}
           $env:WBD_M0_TRY_SCOPED_NATIVE_WINTUN="1"
-          & ./windows-owner-native-bin/m0-original-go-tls-wintun-lease.exe -test.v -test.run '^TestM0Windows(RealCreatedWintunOneWayAdapterNativeIdentityAndLifetime|RealOriginalGoTLSRustM4CreatedWintunSameGeneration)$' 2>&1 | Tee-Object -FilePath windows-owner-result/m4-device-proof.log
+          # PowerShell may interpret a dotted -test.v token as '-test',
+          # which the Go compiled test EXE rejects. Pass literal Go flag
+          # strings using array splatting with explicit '=value' syntax.
+          $nativeGoTestArgs=@(
+            '-test.v=true',
+            '-test.run=^TestM0Windows(RealCreatedWintunOneWayAdapterNativeIdentityAndLifetime|RealOriginalGoTLSRustM4CreatedWintunSameGeneration)$'
+          )
+          & ./windows-owner-native-bin/m0-original-go-tls-wintun-lease.exe @nativeGoTestArgs 2>&1 | Tee-Object -FilePath windows-owner-result/m4-device-proof.log
           if ($LASTEXITCODE -ne 0) {throw 'actual one-way M4 native Windows Wintun Hold proof failed'}
           if (!(Select-String -Path windows-owner-result/m4-device-proof.log -SimpleMatch 'M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS' -Quiet)) {
             Write-Output 'M0_PLAN013_REAL_NATIVE_WINTUN_OS_LEASE_UNSUPPORTED despite verified official signed DLL: preserve actual cause'
