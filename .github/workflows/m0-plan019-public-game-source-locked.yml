@@ -28,8 +28,8 @@ jobs:
         with: {persist-credentials: false}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: m0-plan012-combined-39425976728-1
-          run-id: 39425976728
+          name: m0-plan012-combined-39429778349-1
+          run-id: 39429778349
           repository: lly8666/wbd-next
           github-token: ${{ github.token }}
           path: pinned-source
@@ -42,8 +42,8 @@ jobs:
           import hashlib,json,pathlib
           root=pathlib.Path('pinned-source')
           m=json.loads((root/'fixed-kernel-result/manifest.json').read_text())
-          assert m['source_sha']=='40800f74b0150008b9cefa1cd35f1e88d87601dc'
-          assert m['run_id']==39425976728 and m['attempt']==1
+          assert m['source_sha']=='0aa9017f69f0a4b0266dc7c7e3f503d9158dfb70'
+          assert m['run_id']==39429778349 and m['attempt']==1
           assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
           assert m['toolchains']=={'go':'1.23.12','rust':'1.85.1'}
           assert m["feature"]=="m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record"
@@ -84,24 +84,34 @@ jobs:
             CAPC=$!
             sudo -n ip netns exec "$NSS" tcpdump -nn -vvv -l -s 64 -i wbdvs0 'tcp and host 10.25.0.2' >"$TMP/game-server-wire-headers.log" 2>/dev/null &
             CAPS=$!
+            sudo -n ip netns exec "$NSS" tcpdump -nn -vvv -l -s 128 -i wbdvs4 'udp and host 10.66.0.2' >"$TMP/game-server-tun-headers.log" 2>/dev/null &
+            CAPTS=$!
+            sudo -n ip netns exec "$NSC" tcpdump -nn -vvv -l -s 128 -i wbdvc4 'udp and host 10.66.0.1' >"$TMP/game-client-tun-headers.log" 2>/dev/null &
+            CAPTC=$!
             sleep 0.1
           fi
           '''
           src=src.replace(anchor,script+anchor)
           initial="PIDC='' PIDS='' APPS=''"
           assert src.count(initial)==1
-          src=src.replace(initial,initial+" CAPC='' CAPS=''")
+          src=src.replace(initial,initial+" CAPC='' CAPS='' CAPTS='' CAPTC=''")
           cleanup='for p in "$PIDC" "$PIDS" "$APPS"; do'
           assert src.count(cleanup)==1
-          src=src.replace(cleanup,'for p in "$PIDC" "$PIDS" "$APPS" "$CAPC" "$CAPS"; do')
+          src=src.replace(cleanup,'for p in "$PIDC" "$PIDS" "$APPS" "$CAPC" "$CAPS" "$CAPTS" "$CAPTC"; do')
           marker='      echo "M0_GAME_AUTH_NATIVE_FINAL_SERVER_UDP_RECEIPT"'
           assert src.count(marker)==1
-          inspect=r'''      sudo -n kill -TERM "$CAPC" "$CAPS" 2>/dev/null || true
+          inspect=r'''      sudo -n kill -TERM "$CAPC" "$CAPS" "$CAPTS" "$CAPTC" 2>/dev/null || true
                 sleep 0.1
                 echo 'M0_GAME_WIRE_CLIENT_V4_TCP_HEADERS'
                 tail -35 "$TMP/game-client-wire-headers.log" || true
                 echo 'M0_GAME_WIRE_SERVER_V4_TCP_HEADERS'
                 tail -35 "$TMP/game-server-wire-headers.log" || true
+                echo 'M0_GAME_SERVER_TUN_UDP_HEADERS'
+                tail -25 "$TMP/game-server-tun-headers.log" || true
+                echo 'M0_GAME_CLIENT_TUN_UDP_HEADERS'
+                tail -25 "$TMP/game-client-tun-headers.log" || true
+                echo 'M0_GAME_SERVER_SNMP_UDP_ERRORS'
+                sudo -n ip netns exec "$NSS" sed -n '/^Udp:/p' /proc/net/snmp || true
           '''
           src=src.replace(marker,inspect+marker)
           Path('game-result/trace-netns.sh').write_text(src)
@@ -136,8 +146,8 @@ jobs:
           p=pathlib.Path('game-result')
           result=(p/'outcome.log').read_text().strip() if (p/'outcome.log').exists() else 'NOT_RUN_NO_OUTCOME'
           receipt=dict(harness_source=os.environ["GITHUB_SHA"],
-            binary_source="40800f74b0150008b9cefa1cd35f1e88d87601dc",
-            source_build_run=39425976728,source_build_artifact_id=12266310860,
+            binary_source="0aa9017f69f0a4b0266dc7c7e3f503d9158dfb70",
+            source_build_run=39429778349,source_build_artifact_id=12266544999,
             original_go_sha="a7a82db31fe736ffedee330795a3234d358f1984",
             run_id=int(os.environ["GITHUB_RUN_ID"]),attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
             mode=os.environ["MODE"],result=result,product_qualified=result.startswith("M0_PLAN019_PUBLIC_GAME_REAL_MODE_PASS"),
