@@ -4,6 +4,8 @@
 //! per-lane AEAD/PN/replay are independently allocated; no public Go grant.
 #![forbid(unsafe_code)]
 use crate::memory::Arena;
+use crate::cold_v4::UntrustedColdV4;
+use wbd_types::TunnelKey;
 use crate::runtime::game_shared::{
     ActiveLaneSnapshot,DispatchOutcome,FlowDirection,GameCounters,GameError,
     GameLimits,GameRx,GameScope,GameTx,Mode,QualifiedLane,RxLimits
@@ -62,6 +64,70 @@ impl GameAdapter{
         let arena=Arena::new(905,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
         Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false})
+    }
+    /// The only prospective Go TLS→Game adapter construction boundary.
+    /// The Go caller MUST have run its private 2/4 original TLS ColdSnapshot
+    /// verification on the same live sessions. Input bytes alone are NOT
+    /// authentication; do not export this as a public installer or enable
+    /// Game production using this scoped composition.
+    pub(crate) fn from_private_original_go_tls(
+        cold:Vec<UntrustedColdV4>,server:bool,owner_tunnel:TunnelKey,
+        generation:u32,
+    )->Result<Self,Error>{
+        let n=cold.len();
+        if !matches!(n,2|4)||owner_tunnel.slot==0||
+            owner_tunnel.generation==0||generation==0 {
+            return Err(Error::Unauthorized)
+        }
+        let first=cold[0].identity();
+        if first.server!=server || first.logical_epoch==[0;16]{
+            return Err(Error::Unauthorized)
+        }
+        let suite=RecordSuite::try_from(first.cipher)
+            .map_err(|_|Error::Unauthorized)?;
+        let mut indexed:Vec<Option<ScopedKeys>>=
+            (0..n).map(|_|None).collect();
+        let mut incarnations=Vec::new();
+        let mut all_materials=Vec::new();
+        for b in &cold {
+            let id=b.identity();
+            if id.server!=server||id.tunnel_id!=first.tunnel_id||
+                id.logical_epoch!=first.logical_epoch||
+                id.principal_hash!=first.principal_hash||
+                id.cipher!=first.cipher||
+                id.client_limit!=first.client_limit||
+                id.server_limit!=first.server_limit||
+                id.go_lane_id==0||usize::from(id.go_lane_id)>n||
+                indexed[usize::from(id.go_lane_id)-1].is_some()||
+                incarnations.contains(&id.incarnation){
+                return Err(Error::Unauthorized)
+            }
+            let (c2s,s2c)=b.internal_direction_keys();
+            if c2s==s2c || all_materials.contains(&c2s) ||
+                all_materials.contains(&s2c) {
+                return Err(Error::Unauthorized)
+            }
+            // Duplicate keys across any direction or lane violate distinct
+            // exporter ownership. Native AEAD never rekeys or reuses a PN.
+            all_materials.push(c2s);all_materials.push(s2c);
+            incarnations.push(id.incarnation);
+            let mss=id.client_limit.min(id.server_limit).min(2048);
+            if mss<64{return Err(Error::Invalid)}
+            indexed[usize::from(id.go_lane_id)-1]=Some(ScopedKeys{
+                lane:QualifiedLane{key:LaneKey{tunnel:owner_tunnel,
+                    slot:u32::from(id.go_lane_id),generation},mss},
+                tx:if server{s2c}else{c2s},
+                rx:if server{c2s}else{s2c},
+            });
+        }
+        let material=indexed.into_iter()
+            .collect::<Option<Vec<_>>>().ok_or(Error::Unauthorized)?;
+        let tx_scope=GameScope{
+            tunnel:owner_tunnel,epoch:first.logical_epoch,
+            direction:FlowDirection::Tx
+        };
+        let rx_scope=GameScope{direction:FlowDirection::Rx,..tx_scope};
+        Self::new(tx_scope,rx_scope,material,suite)
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
@@ -182,5 +248,68 @@ mod tests{
         let (lane,wire)=newer.pop().unwrap();
         assert_eq!(game.receive(lane,wire).unwrap(),Some(b"two".to_vec()));
         game.stop();
+    }    #[test]
+    fn m0_private_go_game_2_4_real_tls_independent_native_first_delivery(){
+        use std::path::Path;
+        let Ok(dir)=std::env::var("WBD_GAME_TLS_FIXTURE_DIR") else {
+            // Real TLS fixture is required by the combined GitHub Actions
+            // harness. Ordinary local native suite cannot claim this proof.
+            return
+        };
+        let mut cases=0;
+        for n in [2,4] {
+            let mut read=|side:&str|->Vec<UntrustedColdV4>{
+                (1..=n).map(|i|{
+                    let path=Path::new(&dir).join(format!("game{n}-{side}-{i}.cold"));
+                    let bytes=std::fs::read(path).expect("actual original Go TLS cold fixture");
+                    UntrustedColdV4::parse(&bytes).expect("real original Go TLS cold grammar")
+                }).collect()
+            };
+            let tunnel=TunnelKey{slot:14,generation:n as u32};
+            let mut client=GameAdapter::from_private_original_go_tls(
+                read("client"),false,tunnel,7).expect("client real Go TLS");
+            let mut server=GameAdapter::from_private_original_go_tls(
+                read("server"),true,tunnel,7).expect("server real Go TLS");
+            assert_eq!(client.offer(b"actual-original-Go-TLS",MonoNs(0)).unwrap(),LogicalPacketId(0));
+            let mut wires=Vec::new();
+            assert_eq!(client.drain(MonoNs(1),|lane,id,pn,wire|{
+                wires.push((lane,id,pn,wire.to_vec()));true
+            }),n);
+            assert_eq!(wires.len(),n);
+            let mut seen=Vec::new();
+            for (lane,id,pn,wire) in wires.into_iter().rev(){
+                assert_eq!(id,LogicalPacketId(0));assert_eq!(pn,0);
+                if let Some(payload)=server.receive(lane,wire).unwrap(){
+                    seen.push(payload)
+                }
+            }
+            assert_eq!(seen,vec![b"actual-original-Go-TLS".to_vec()]);
+            server.offer(b"server-back",MonoNs(2)).unwrap();
+            let mut back=Vec::new();
+            assert_eq!(server.drain(MonoNs(3),|lane,_,_,wire|{
+                back.push((lane,wire.to_vec()));true
+            }),n);
+            let mut received=Vec::new();
+            for (lane,wire) in back.into_iter().rev(){
+                if let Some(msg)=client.receive(lane,wire).unwrap(){received.push(msg)}
+            }
+            assert_eq!(received,vec![b"server-back".to_vec()]);
+            let mut forged=read("client");
+            forged[1]=UntrustedColdV4::parse(&std::fs::read(
+                Path::new(&dir).join(format!("game{n}-client-1.cold"))
+            ).unwrap()).unwrap();
+            assert!(matches!(
+                GameAdapter::from_private_original_go_tls(forged,false,tunnel,7),
+                Err(Error::Unauthorized)));
+            assert!(matches!(
+                GameAdapter::from_private_original_go_tls(read("client"),true,tunnel,7),
+                Err(Error::Unauthorized)));
+            client.stop();server.stop();
+            assert!(matches!(client.offer(b"stale",MonoNs(4)),Err(Error::Stopped)));
+            println!("M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes={n} independent_exporters=1 original_tls_fixture=1 REAL_M4_RAW_TUN_FIRST_APP_NOT_RUN=1");
+            cases+=1;
+        }
+        assert_eq!(cases,2);
     }
+
 }
