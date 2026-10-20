@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "3742a2c2a140f95fafb1a78ad286ae2142aef9da",
+  "result": "PASS_SCOPED_GO_TLS_NATIVE_GAME2_4_M4_REAL_DAMAGED_LANE_SECOND_APP_NO_HOL_NOT_PUBLIC_PRODUCT",
+  "run": {
+    "id": 39400497230,
+    "attempt": 1,
+    "job_id": 118553708644,
+    "conclusion": "success",
+    "artifact_id": 12253543767,
+    "artifact_name": "m0-plan012-combined-39400497230-1",
+    "zip_sha256": "bad9c37ae5a60dea91a417ff4c114a2938ff2246798158c79dd13ac828ce22f0"
+  },
+  "contract": {
+    "original_go_tls_private_exporters": true,
+    "game2": {
+      "lanes": 2,
+      "healthy_copied_after_lane1_damage": 1,
+      "later_udp_first_delivery": 1
+    },
+    "game4": {
+      "lanes": 4,
+      "healthy_copied_after_lane1_damage": 3,
+      "later_udp_first_delivery": 1
+    },
+    "same_m3_AEAD_PN_and_kernel_M4": true,
+    "GameRx_dedup_exactly_one": true,
+    "Stop_stale_denied": true
+  },
+  "retained_red": {
+    "run": 39400497260,
+    "attempt": 1,
+    "conclusion": "failure",
+    "failed_job_id": 118553708760,
+    "reason": "M0_PLAN012_PUBLIC_CLI_NOT_RUN missing actual original-Go V4 public bridge_v4_linux_public_product.go and _test.go",
+    "artifact_id": 12253424143,
+    "zip_sha256": "860ff79b7ee6ccce0977cf84afdfff678385998c937edffcc9f6847d347b6638"
+  },
+  "other_scoped": {
+    "native_functional_run_id": 39400497180,
+    "conclusion": "success"
+  },
+  "limits": {
+    "public_original_go_game2_4": "NOT_RUN",
+    "public_linux_game_stop_after_lane_damage": "NOT_RUN",
+    "Windows_real_owner": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "cross_build": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_Game": "OFF",
+    "production_FEC2": "OFF"
+  },
+  "next_action": "Integrate genuine one-process original Go V4 2/4 protected TLS lane group into Rust Game M4 owner using explicitly M1-owned runtime game_m4 and M0-owned public Go/FFI; run one new exact source combined public game product gate."
+}

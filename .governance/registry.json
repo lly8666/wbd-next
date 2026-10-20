@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 and PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M0: original Go TLS/Rust FEC2/Game shared Linux product integration plus Windows native shared owner/CLI/Actions unblock; M0 solely authorizes actual production.",
+      "goal": "PLAN012 docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md §M0 and PLAN013 docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md §M0: original Go TLS/Rust FEC2/Game shared Linux product integration plus Windows native shared owner/CLI/Actions unblock; M0 solely authorizes actual production. PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M0: original-Go public authenticated grouped Game2/4 CLI, Rust versioned private owner handoff, integrated source-locked real combined gate.",
       "done_when": "Linux original Go public CLI and Game2/4 independent authenticated M4 raw/TUN first-app plus Fixed/Auto M2 and Stop pass one exact SOURCE gate before Linux ON; M0 also provides working source-locked Windows M4 native CI and minimum shared Go/Rust ABI for UI→real applied state; Windows production independently NOT_RUN until real native OS+owner proof.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
@@ -41,12 +41,13 @@
       "owned_semantics": [
         "runtime_owner",
         "buffer_arena",
-        "normal_off_scheduler"
+        "normal_off_scheduler",
+        "game_m4_lane_runtime"
       ],
       "prompt": "docs/prompts/M1.md",
       "cursor": ".governance/workstreams/M1/cursor.json",
-      "goal": "M0 sole current PLAN012 missing-interface writer under docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md; M1 retains earlier accepted frozen source and role metadata for R0/G2, no concurrent edits to M0-owned product integration/release-record/Game lane files until a new explicit registry decision.",
-      "done_when": "Historic M1 accepted module evidence preserved; current PLAN012 interface reassigned to M0; no worker-source activity under this paused-in-practice package, and no fake new SOURCE or repeated tests.",
+      "goal": "PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M1: independent bounded runtime Game2/4 per-lane kernel M4 dispatch/stop module only; consume exact M0 accepted protected TLS GameAdapter, no edits to M0 public Go/FFI/shared workflow; prior frozen Game015 remains accepted.",
+      "done_when": "Deliver M1-owned crates/wbd-engine/src/runtime/game_m4.rs (and runtime/mod.rs only for module export) with genuine M4 per-lane unique immutable frozen ciphertext dispatch, one failed lane not HOL blocking healthy source, generation-scoped Stop/loan drain; source-locked native Actions including positive/negative. No product ON; M0 owns public TLS group and CLI.",
       "assigned_task": "R5-M1-PLAN012-GAME-REAL-LANE-016"
     },
     {
