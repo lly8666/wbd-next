@@ -3228,6 +3228,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             generation,ready_records.as_slice(),tuple,presentations.as_slice()
         ))
     };
+    // Hold only immutable Arc frozen records until the actual synchronous
+    // M4 syscall returns. No reserve/ACK is inferred from queue acceptance.
+    #[cfg(feature="fec2_product_record")]
+    let frozen_for_outer=ready_records.clone();
     ready_records.clear();
     presentations.clear();
     *tx_storage=batch.recycle();
@@ -3238,6 +3242,33 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    #[cfg(feature="fec2_product_record")]
+    if let Some(shared)=e.original_outer.as_ref(){
+        let mut original=shared.lock().map_err(|_|BAD_STAGE)?;
+        let mut global=original_process_repair_quota().lock()
+            .map_err(|_|BAD_STAGE)?;
+        let now=loop_now();
+        let copied=(finish.copied as usize).min(frozen_for_outer.len());
+        // Fresh ciphertext is registered only for the actual M4 definite
+        // copied prefix; never register health-control kind1, driver-unknown,
+        // or definitely-not-sent as missing data.
+        let control_last=e.feedback_queued.is_some();
+        let data_count=frozen_for_outer.len()-usize::from(control_last);
+        for record in frozen_for_outer.iter().take(copied.min(data_count)){
+            let frame_bytes=(record.bytes().len()+
+                wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
+            let registered=global.on_fresh_accepted(
+                original.direction,frame_bytes,now
+            ).is_ok();
+            if registered && original.shadow.on_sent(
+                record.clone(),now,MonoNs(now.0.saturating_add(2_000_000_000))
+            ).is_ok(){
+                original.sent_fresh=original.sent_fresh.saturating_add(1);
+            }else{
+                original.repair_blocked=original.repair_blocked.saturating_add(1);
+            }
+        }
+    }
     // Keep M2 original outbound DATA denominator separate from a native
     // receipt record. Control is appended last after all application
     // first-sends; failure to preserve this order censors the owner, never
