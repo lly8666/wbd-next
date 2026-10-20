@@ -203,11 +203,88 @@ jobs:
           foreach ($name in @('TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers','TestM0WindowsActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust')) {
             if ($got -notmatch ('--- PASS: '+[regex]::Escape($name))) {throw "original-Go TLS native Rust callback NOT_RUN $name"}
           }
+          # The official signed Wintun DLL is NOT installed on hosted
+          # windows-2022 by default. Original Go's native Wintun LazyDLL
+          # resolves beside os.Executable(), not the source tree or PATH.
+          # Build a fixed source-locked Go test EXE to a private directory
+          # and put only the HASH-PINNED official release beside that EXE.
+          New-Item -ItemType Directory -Force -Path windows-owner-native-bin | Out-Null
+          $archive='windows-owner-native-bin/wintun-0.14.1.zip'
+          Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $archive
+          $officialHash='07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'
+          $actualHash=(Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $officialHash) {throw "official Wintun 0.14.1 ZIP SHA256 mismatch: $actualHash"}
+          Expand-Archive -LiteralPath $archive -DestinationPath windows-owner-native-bin/release -Force
+          $dll='windows-owner-native-bin/release/wintun/bin/amd64/wintun.dll'
+          if (!(Test-Path -LiteralPath $dll -PathType Leaf)) {throw 'official signed Wintun archive lacks amd64 DLL'}
+          $signature=Get-AuthenticodeSignature -FilePath $dll
+          if ($signature.Status -ne 'Valid') {
+            throw "official Wintun DLL authenticode signature invalid: $($signature.Status)"
+          }
+          Copy-Item -LiteralPath $dll -Destination windows-owner-native-bin/wintun.dll
+          Write-Output "M0_PLAN013_OFFICIAL_SIGNED_WINTUN_NATIVE_DLL_VERIFIED zip_sha256=$officialHash signature=$($signature.Status)"
           Push-Location legacy
           try {
-            & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0Windows(RealCreatedWintunOneWayAdapterNativeIdentityAndLifetime|RealOriginalGoTLSRustM4CreatedWintunSameGeneration)$' ./internal/windowsownerlease 2>&1 | Tee-Object -FilePath ../windows-owner-result/m4-device-proof.log
-            if ($LASTEXITCODE -ne 0) {throw 'actual one-way M4 native Windows created Wintun Hold verification failed'}
+            & go test -c -tags wbd_v4_embedded_go -o ../windows-owner-native-bin/m0-original-go-tls-wintun-lease.exe ./internal/windowsownerlease
+            if ($LASTEXITCODE -ne 0) {throw 'original Go M4 Wintun proof native Windows test executable failed to build'}
           } finally {Pop-Location}
+          $env:WBD_M0_TRY_SCOPED_NATIVE_WINTUN="1"
+          & ./windows-owner-native-bin/m0-original-go-tls-wintun-lease.exe -test.v -test.run '^TestM0Windows(RealCreatedWintunOneWayAdapterNativeIdentityAndLifetime|RealOriginalGoTLSRustM4CreatedWintunSameGeneration)
+          $nativeLog=Get-Content windows-owner-result/m4-device-proof.log -Raw
+          if ($nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS' -and $nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED') {
+            throw 'real M4 Wintun native OS result not PASS or explicit UNSUPPORTED'
+          }
+          if ($nativeLog -notmatch 'M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS' -and $nativeLog -notmatch 'M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_UNSUPPORTED') {
+            throw 'real original Go TLS and native Wintun generation result is missing or falsely qualified'
+          }
+          if ($nativeLog -notmatch '--- PASS: TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration') {
+            throw 'real credential original Go TLS/native Rust and M4 device handshake test never ran'
+          }
+          @'
+          import json,pathlib,hashlib
+          p=pathlib.Path("windows-owner-result/receipt.json")
+          receipt=json.loads(p.read_text())
+          receipt["original_go_credential_verified_TLS_to_native_Rust"]="PASS_SCOPED_REAL_BOTH_FAKETCP_ASSOCIATIONS_WIN2022"
+          receipt["original_Go_server_and_client_private_owner_prepared_committed_stopped"]="PASS_SCOPED_DUAL_ROLE_3_CIPHERS"
+          receipt["original_go_m4_frozen_overlay_sha"]="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
+          receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_BOTH_ROLES_NO_WFP_M4_DEVICE"
+          receipt["windows_M4_real_device"]="NOT_RUN"
+          receipt["windows_product_applied"]="OFF"
+          native_log=pathlib.Path("windows-owner-result/m4-device-proof.log").read_text(errors="replace")
+          if "M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS" in native_log:
+              receipt["original_M4_process_created_Wintun_OS_Hold"]="PASS_SCOPED_NATIVE_DEVICE"
+          elif "M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED" in native_log:
+              receipt["original_M4_process_created_Wintun_OS_Hold"]="UNSUPPORTED_NATIVE_DEVICE_OR_HOST_PRIVILEGE"
+          else:
+              raise RuntimeError("native M4 Wintun OS identity was neither tested nor marked UNSUPPORTED")
+          if "M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS" in native_log:
+              receipt["single_same_TLS_generation_Wintun_OS_native_product"]="PASS_SCOPED_REAL_TLS_PLUS_NATIVE_CREATED_DEVICE_ONLY_NO_WFP"
+          elif "M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_UNSUPPORTED" in native_log:
+              receipt["single_same_TLS_generation_Wintun_OS_native_product"]="UNSUPPORTED_NATIVE_DRIVER_OR_HOST_CAPACITY"
+          else:
+              raise RuntimeError("original credential TLS plus M4 created Wintun not qualified")
+          receipt["native_WFP_default_route_and_M4_kernel_app"]="NOT_RUN"
+          receipt["windows_product_applied"]="OFF"
+          receipt["rust_authenticated_owner_Wintun_v2_fence"]="PASS_SCOPED_NATIVE_UNIT_NOT_APPLIED"
+          receipt["windows_product"]="NOT_QUALIFIED"
+          p.write_text(json.dumps(receipt,indent=2)+"\n")
+          print("M0_PLAN013_WINDOWS_ORIGINAL_GO_DUAL_ROLE_CREDENTIAL_TLS_RUST_PRIVATE_OWNERS_STOP_SCOPED_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'native Windows original-Go/Rust TLS source receipt failed'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan013-windows-native-owner-${{ github.run_id }}-${{ github.run_attempt }}
+          path: windows-owner-result/
+          if-no-files-found: warn
+          retention-days: 30
+ 2>&1 | Tee-Object -FilePath windows-owner-result/m4-device-proof.log
+          if ($LASTEXITCODE -ne 0) {throw 'actual one-way M4 native Windows Wintun Hold verification failed'}
+          if (!(Select-String -Path windows-owner-result/m4-device-proof.log -SimpleMatch 'M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS' -Quiet)) {
+            Write-Output 'M0_PLAN013_REAL_NATIVE_WINTUN_OS_LEASE_UNSUPPORTED despite verified signed official DLL: preserve actual cause'
+          }
+          Remove-Item -LiteralPath windows-owner-native-bin -Recurse -Force
+
           $nativeLog=Get-Content windows-owner-result/m4-device-proof.log -Raw
           if ($nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS' -and $nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED') {
             throw 'real M4 Wintun native OS result not PASS or explicit UNSUPPORTED'
