@@ -1,0 +1,7 @@
+# M0 S486 — PLAN019 exact recovery and pending M4 return path gate
+
+Current registry/epoch unchanged. S457–S485 reconciled after H211; actual public Game2 and Game4 are FAIL, not READY product. Accepted Fixed/Auto real initial M2 and Normal 1pct kernel not requalified. Source-locked binary S476 artifact 12264967774 and run 39423888402 prove both Go/Rust binaries built, combined normal 512/1pct PASS but game2 first app timeouts. S479 parallel matrix pin had a checksum transcription test FAIL (S480 corrected). S480 Actions39425196813 four results not merged: 2 actual Game2 and Game4 jobs both TLS/M4 READY and both fail return UDP, Game4 server authenticates first original 1 request and copies 3 reverse raw packets, client delivered0. No full end-to-end product qualification.
+
+S481–S485 add counters separating real native kernel raw RX from AEAD rejections for each original Go role and repair failure logs. Several source push Actions still running; no additional stress/dispatch permitted until concrete results consumed. See exact per-source runs/hashes/unchanged FAIL in docs/evidence/M0/PLAN019-public-Game-multigroup-recovery-20261020.json. FEC2/Game production OFF, Windows native/physical NOT_RUN, M1 Game016 separate owner branch unchanged.
+
+Next single action: consume newest S485 raw/auth counters from Actions and repair the true return-direction bug; only then source-lock Game2/4 positive/negative application/Stop gate.

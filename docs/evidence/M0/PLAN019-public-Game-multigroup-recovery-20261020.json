@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "assignment_epoch": 1,
+  "reservation_revision": 2,
+  "checkpoint_through_source": "40800f74b0150008b9cefa1cd35f1e88d87601dc",
+  "result": "PARTIAL_REAL_PUBLIC_TLS_M4_GAME2_4_BIDIRECTIONAL_APP_FAIL_PRESERVED",
+  "accepted_unchanged": [
+    {
+      "claim": "original public Normal/off loss 1pct both Go binary real M4 512 echo mature",
+      "source": "86f1980d31d583d9b7fb5374b92fb9eaa655752b",
+      "run": 39423888402,
+      "scope": "PASS_SCOPED_WITHIN_FAILED_COMBINED_ACTION"
+    },
+    {
+      "claim": "real original public FEC fixed auto initial both M2 mature",
+      "source": "adf4e7d90d024d73969b376036910a3b28ce679f",
+      "run": 39397459128,
+      "scope": "PASS_SCOPED_ACCEPTED"
+    },
+    {
+      "claim": "original TLS Game 2/4 independently authenticated native raw M4 first+damaged second app private",
+      "source": "3742a2c2a140f95fafb1a78ad286ae2142aef9da",
+      "run": 39400497230,
+      "scope": "PASS_SCOPED_NOT_PUBLIC"
+    }
+  ],
+  "newly_failed": [
+    {
+      "source": "86f1980d31d583d9b7fb5374b92fb9eaa655752b",
+      "run": 39423888402,
+      "job": 118631423185,
+      "conclusion": "FAIL_GAME2_PUBLIC_APP_TIMEOUT",
+      "app_status": "Game2 TLS M4 both READY, app first request/echo NOT_CONFIRMED, Game4 NOT_RUN due sequential fail",
+      "fixed_binary_artifact_id": 12264967774,
+      "artifact_zip_sha256": "1812bb3cf23b5b1004edd96c792bf88233fe7a1fd68812d16c17146f547014be"
+    },
+    {
+      "source": "3b7edf152028cb24cf54ca445d8426ce69e0d145",
+      "run": 39424940640,
+      "conclusion": "FAIL_HARNESS_PIN_TRANSCRIPTION",
+      "reason": "client binary SHA256 typed short; corrected S480 no actual product attempted"
+    },
+    {
+      "source": "99d9f6c8e5610fb7fa27cc5a2ced1bf047223cf2",
+      "run": 39425196813,
+      "conclusion": "FAIL_TWO_REAL_PUBLIC_GAME_INDEPENDENT_JOBS",
+      "job_game2": 118635883293,
+      "job_game4": 118635883609,
+      "Game2": {
+        "connected_both": true,
+        "kernel_client_copied": 1,
+        "server_delivered": 0,
+        "client_delivered": 0,
+        "app": "TIMEOUT"
+      },
+      "Game4": {
+        "connected_both": true,
+        "kernel_client_copied": 3,
+        "kernel_server_delivered": 1,
+        "kernel_server_copied": 3,
+        "client_delivered": 0,
+        "app": "TIMEOUT"
+      }
+    }
+  ],
+  "binary_identity": {
+    "source": "86f1980d31d583d9b7fb5374b92fb9eaa655752b",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "build_run": 39423888402,
+    "artifact": 12264967774,
+    "sha256": {
+      "wbd-v4-client": "2d0e44726d06259be403985507849756b47fa0810cb4a46cb228fa1eb4ce0f96",
+      "wbd-v4-server": "a92badbd4ecd49050cac030d79aa9e1582d2115b11419a418262ffc8428fbf1b",
+      "libwbd_engine.so": "c90804ab61d592c7283f625ccd933d999fe3baddeba284a9e33d942590e9ae09"
+    }
+  },
+  "in_flight_snapshot_at_record": {
+    "heads": [
+      "c078ae0004e2aa00309698ac8cb01b13e440c147",
+      "33e17b01139af093d75b5daaf8cc54602fa4fdd1",
+      "a5d64b5b22dd96452579e57fd75aed666d151ba7",
+      "1b374acb35746b9c4a69e10ed669b57bd51b2623",
+      "40800f74b0150008b9cefa1cd35f1e88d87601dc"
+    ],
+    "runs": [
+      39425745997,
+      39425795406,
+      39425853550,
+      39425930079,
+      39425976728
+    ],
+    "note": "source changes auto-fired too many expensive runners, STOP new tests until these resolve"
+  },
+  "new_source_boundaries": [
+    "S476 Go mode client policy integer + fail-closed build feature",
+    "S477–S480 pinned build artifact Go Game2/4 parallel Actions fail fast false",
+    "S481 M4 raw receive/AEAD separation counters",
+    "S482 Rust opt-in readback",
+    "S483 Go native readback",
+    "S484 Go public CLI real per-direction diagnostics",
+    "S485 harness var interpolation"
+  ],
+  "product_qualification": {
+    "original_Go_public_Game2": "FAIL",
+    "original_Go_public_Game4": "FAIL",
+    "Go_original_TLS_M4_workers": "READY_ONLY",
+    "end_to_end_game2_4_reverse": "NOT_QUALIFIED",
+    "native_windows": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "cross_build": "SCOPED_UNCHANGED",
+    "production_Game": "OFF",
+    "production_FEC2": "OFF"
+  },
+  "next_action": "Consume actual latest S485 Actions raw_received vs authenticated_rejected by role for Game2/4; correct one exact return-direction kernel/AEAD bug, then run one source-locked 2/4 parallel product gate. No more runner load until current runs complete."
+}
