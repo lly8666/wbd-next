@@ -11,6 +11,9 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_dual_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go"
+      - "r0/go_overlay/internal/windowsownerlease/created_wintun_windows.go"
+      - "r0/go_overlay/internal/windowsownerlease/created_wintun_windows_test.go"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
@@ -170,12 +173,21 @@ jobs:
           dest=root/"legacy/internal/realityfront"
           for filename in ("admission_v4.go","admission_v4_test.go",
                            "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go",
-                           "bridge_v4_windows_dual_test.go","bridge_v4_windows_wintun_lease.go"):
+                           "bridge_v4_windows_dual_test.go","bridge_v4_windows_wintun_lease.go",
+                           "bridge_v4_windows_scoped_client.go"):
               relative="r0/go_overlay/internal/realityfront/"+filename
               payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
               assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
               (dest/filename).write_bytes(payload)
-          print("M0_WIN_GO_POST_TLS_NATIVE_RUST_BRIDGE_SOURCE_LOCKED")
+          for filename in ("created_wintun_windows.go","created_wintun_windows_test.go"):
+              relative="r0/go_overlay/internal/windowsownerlease/"+filename
+              destdir=root/"legacy/internal/windowsownerlease"
+              destdir.mkdir(parents=True,exist_ok=True)
+              path=destdir/filename
+              assert not path.exists(),"foreign preexisting native M4 Go package"
+              path.write_bytes(subprocess.check_output(
+                  ["git","show",os.environ["GITHUB_SHA"]+":"+relative]))
+          print("M0_WIN_GO_POST_TLS_NATIVE_RUST_BRIDGE_AND_ONE_WAY_M4_ADAPTER_SOURCE_LOCKED")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'M0-only private Windows Go Rust bridge not exact SOURCE'}
           $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path 'target/release/wbd_engine.dll').Path
@@ -189,8 +201,14 @@ jobs:
           foreach ($name in @('TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers','TestM0WindowsActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust')) {
             if ($got -notmatch ('--- PASS: '+[regex]::Escape($name))) {throw "original-Go TLS native Rust callback NOT_RUN $name"}
           }
-          if ($got -notmatch 'M0_PLAN013_REAL_CREATED_WINTUN_RUST_OWNER_LIFETIME_STOP_PASS' -and $got -notmatch 'M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED') {
-            throw 'native Wintun real OS proof missing and not marked UNSUPPORTED'
+          Push-Location legacy
+          try {
+            & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0WindowsRealCreatedWintunOneWayAdapterNativeIdentityAndLifetime$' ./internal/windowsownerlease 2>&1 | Tee-Object -FilePath ../windows-owner-result/m4-device-proof.log
+            if ($LASTEXITCODE -ne 0) {throw 'actual one-way M4 native Windows created Wintun Hold verification failed'}
+          } finally {Pop-Location}
+          $nativeLog=Get-Content windows-owner-result/m4-device-proof.log -Raw
+          if ($nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS' -and $nativeLog -notmatch 'M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED') {
+            throw 'real M4 Wintun native OS result not PASS or explicit UNSUPPORTED'
           }
           @'
           import json,pathlib,hashlib
@@ -202,13 +220,15 @@ jobs:
           receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_BOTH_ROLES_NO_WFP_M4_DEVICE"
           receipt["windows_M4_real_device"]="NOT_RUN"
           receipt["windows_product_applied"]="OFF"
-          go_log=pathlib.Path("windows-owner-result/original-go-tls-native-rust.log").read_text(errors="replace")
-          if "M0_PLAN013_REAL_CREATED_WINTUN_RUST_OWNER_LIFETIME_STOP_PASS" in go_log:
-              receipt["original_Go_real_Wintun_to_Rust_authenticated_epoch_lease"]="PASS_SCOPED_REAL_OS_CREATED"
-          elif "M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED" in go_log:
-              receipt["original_Go_real_Wintun_to_Rust_authenticated_epoch_lease"]="UNSUPPORTED_NATIVE_WINTUN_NOT_AVAILABLE_OR_FOREIGN"
+          native_log=pathlib.Path("windows-owner-result/m4-device-proof.log").read_text(errors="replace")
+          if "M0_PLAN013_CREATED_WINTUN_OS_HOLD_READBACK_SCOPED_PASS" in native_log:
+              receipt["original_M4_process_created_Wintun_OS_Hold"]="PASS_SCOPED_NATIVE_DEVICE"
+          elif "M0_PLAN013_CREATED_WINTUN_OS_PROOF_UNSUPPORTED" in native_log:
+              receipt["original_M4_process_created_Wintun_OS_Hold"]="UNSUPPORTED_NATIVE_DEVICE_OR_HOST_PRIVILEGE"
           else:
-              raise RuntimeError("native Wintun did not run or report UNSUPPORTED")
+              raise RuntimeError("native M4 Wintun OS identity was neither tested nor marked UNSUPPORTED")
+          receipt["single_same_TLS_generation_Wintun_OS_native_product"]="NOT_RUN_NO_M4_PRODUCT_APPLY"
+          receipt["rust_authenticated_owner_Wintun_v2_fence"]="PASS_SCOPED_NATIVE_UNIT_NOT_APPLIED"
           receipt["windows_product"]="NOT_QUALIFIED"
           p.write_text(json.dumps(receipt,indent=2)+"\n")
           print("M0_PLAN013_WINDOWS_ORIGINAL_GO_DUAL_ROLE_CREDENTIAL_TLS_RUST_PRIVATE_OWNERS_STOP_SCOPED_PASS")
