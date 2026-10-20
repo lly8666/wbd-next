@@ -39,9 +39,11 @@ for side in ("client", "server"):
                 snap = tunnels[0] if tunnels else {}
         else:
             snap = obj
-        lanes = snap.get("lanes", [])
+        lanes = snap.get("lanes") or []
+        # Original Go serializes a not-yet-connected []Lane as null, not [].
+        # It is a startup sample, never evidence of a positive qualified lane.
         if not isinstance(lanes, list):
-            p.error("invalid actual original Go lane snapshot")
+            p.error("invalid actual original Go lane snapshot shape")
         if not lanes:
             continue
         evidence += 1
