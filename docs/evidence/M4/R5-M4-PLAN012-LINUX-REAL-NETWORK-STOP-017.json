@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "PARTIAL_REAL_LINUX_TUN_OWNER_STOP_PASS_POST_STOP_FULL_ORIGINAL_GO_M4_ASSERTIONS_NOT_RUN",
+  "status": "PARTIAL_M4_NATIVE_KERNEL_STOP_PASS_ORIGINAL_GO_S43_NAMED_PASS_BUT_M0_WORKFLOW_FAIL_S46_NOT_RUN",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -22,7 +22,7 @@
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "M0 integrate M4 Go test file from exact S46 f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6 into existing original pinned Go/Linux combined workflow's overlay copy and netns TEST_FILTER; assert exact M4 PLAN012 PASS marker; then M4 verify same SOURCE/Actions and mark qualified. Product FEC2 stays OFF without M0 full gate.",
+  "next_action": "M0 fix its tools/run-v4-tun-netns.sh trailing fi on main and import exact M4 S46 enhanced Go test blob, then run one new combined Actions. M4 independently check final overall SUCCESS and named test markers/baseline before declaring ready.",
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "verification": {
     "worker_native": {
@@ -96,8 +96,34 @@
       ],
       "file": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
       "go_test_workflow_status": "NOT_RUN_WITH_NEW_SOURCE",
-      "source_scope_G2": "IN_PROGRESS_AT_RECEIPT_AUTHORING",
-      "product_result": "NOT_RUN"
+      "source_scope_G2": "ROLE_SCOPE_PASS",
+      "product_result": "NOT_RUN",
+      "central_g2_run_id": 39351643859,
+      "central_g2_job_id": 118396938170,
+      "central_g2_artifact_id": 12233468274,
+      "central_g2_artifact_provider_sha256": "6e3334565e8246bfb75dad433bd6da49ea9391151be2430d24a84fce1c2d8d66"
+    },
+    "M0_original_go_S43_first_actual": {
+      "main_source_sha": "404806590689ccb7fc4e715d36b50c37c59042b4",
+      "worker_exact_source_sha": "3156a2907b1ecc975fae552da4665de1f1aa21b5",
+      "worker_exact_go_blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+      "main_exact_go_blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+      "go_blob_byte_equal": true,
+      "run_id": 39351905299,
+      "attempt": 1,
+      "job_id": 118397800899,
+      "job_conclusion": "failure",
+      "failure_reason": "M0_OWNED_TOOLS_RUN_V4_TUN_NETNS_SH_LINE_240_UNEXPECTED_FI_AFTER_REAL_TEST",
+      "test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+      "test_execution": "PASS_REAL_GO_ISOLATED_LINUX_NETNS_S43_VERSION",
+      "marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+      "original_tls_lost_source_rs16_four_udp_and_stop": "PASS_REAL_LINUX_NETNS_S43_VERSION",
+      "s46_stronger_route_policy_tunfd_before_after": "NOT_RUN",
+      "raw_log_artifact_id": 12233940414,
+      "raw_log_artifact_provider_sha256": "3caf7cc07d257f004823422d573ad643d917e5886f4b55e17e31da12dbbf331f",
+      "artifact_independent_zip_extraction": "NOT_RUN",
+      "actual_workflow_pass": false,
+      "product_fec2": "OFF"
     }
   },
   "integration": {
