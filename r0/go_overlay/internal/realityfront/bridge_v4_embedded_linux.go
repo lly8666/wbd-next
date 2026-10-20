@@ -16,6 +16,7 @@ extern int32_t wbd_m0_embedded_go_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_release(uint64_t);
 extern int32_t wbd_m0_embedded_go_state(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_attach_raw_rx(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_attach_raw_rx_on_interface(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
@@ -168,6 +169,26 @@ func (b *v4EmbeddedNativeBridge) attachRawRx(ifindex uint32)error{
     if !b.committed||b.handle==0{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_attach_raw_rx(C.uint64_t(b.handle),C.uint32_t(ifindex))
     if rc!=0{return fmt.Errorf("%w: bind real raw=%d",errV4Embedded,int(rc))}
+    return nil
+}
+// The shipping original-Go V4 Linux admission owner MUST bind actual
+// operator-selected underlay, never the old opt-in loopback-only ABI.
+// Rust checks actual kernel ifname/ifindex under the authenticated generation.
+func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex uint32)error{
+    if !b.committed||b.handle==0||ifindex==0||len(ifname)==0||len(ifname)>15{
+        return errV4Embedded
+    }
+    for _,ch:=range []byte(ifname){
+        if !(ch>='a'&&ch<='z'||ch>='A'&&ch<='Z'||ch>='0'&&ch<='9'||ch=='_'||ch=='-'){
+            return errV4Embedded
+        }
+    }
+    bytes:=[]byte(ifname)
+    rc:=C.wbd_m0_embedded_go_attach_raw_rx_on_interface(
+        C.uint64_t(b.handle),C.uint32_t(ifindex),
+        (*C.uchar)(unsafe.Pointer(&bytes[0])),C.size_t(len(bytes)))
+    runtime.KeepAlive(bytes)
+    if rc!=0{return fmt.Errorf("%w: authenticated raw underlay %q/%d bind=%d",errV4Embedded,ifname,ifindex,int(rc))}
     return nil
 }
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
