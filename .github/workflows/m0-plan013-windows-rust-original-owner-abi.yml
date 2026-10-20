@@ -15,6 +15,7 @@ on:
       - "r0/go_overlay/internal/windowsownerlease/created_wintun_windows.go"
       - "r0/go_overlay/internal/windowsownerlease/created_wintun_windows_test.go"
       - "r0/go_overlay/internal/windowsownerlease/original_go_tls_join_windows_test.go"
+      - "r0/go_overlay/internal/windowsownerlease/scoped_original_tls_native_wintun_windows.go"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
@@ -181,7 +182,8 @@ jobs:
               assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
               (dest/filename).write_bytes(payload)
           for filename in ("created_wintun_windows.go","created_wintun_windows_test.go",
-                           "original_go_tls_join_windows_test.go"):
+                           "original_go_tls_join_windows_test.go",
+                           "scoped_original_tls_native_wintun_windows.go"):
               relative="r0/go_overlay/internal/windowsownerlease/"+filename
               destdir=root/"legacy/internal/windowsownerlease"
               destdir.mkdir(parents=True,exist_ok=True)
