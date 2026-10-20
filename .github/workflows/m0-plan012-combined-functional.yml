@@ -18,6 +18,7 @@ on:
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_fixed_stream.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go"
       - "tools/run-v4-tun-netns.sh"
