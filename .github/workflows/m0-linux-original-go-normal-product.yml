@@ -1,0 +1,128 @@
+name: M0 Linux original Go Normal off executable product
+run-name: "M0|LINUX-REAL-CLI-NORMAL|${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-linux-original-go-normal-product.yml"
+permissions: {contents: read}
+concurrency:
+  group: m0-linux-real-cli-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  actual-client-server:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      LEGACY_SOURCE: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Build two actual untagged production Go CLI executables once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "$LEGACY_SOURCE"
+          mkdir -p product runtime
+          (cd legacy && go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/product/wbd-client" ./cmd/wbd-client)
+          (cd legacy && go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/product/wbd-server" ./cmd/wbd-server)
+          product/wbd-client --version >product/client-version.txt
+          product/wbd-server --version >product/server-version.txt
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("product")
+          h=lambda f:hashlib.sha256((root/f).read_bytes()).hexdigest()
+          assert (root/"wbd-client").stat().st_size>1000000
+          assert (root/"wbd-server").stat().st_size>1000000
+          m={"schema_version":1,"main_source":os.environ["GITHUB_SHA"],
+             "original_go_binary_source":os.environ["LEGACY_SOURCE"],
+             "fixture_source":os.environ["LEGACY_SOURCE"],
+             "go_version":"go1.23.12","build_tags":[],
+             "binary_sha256":{"wbd-client":h("wbd-client"),"wbd-server":h("wbd-server")},
+             "mode":"original-Go-V3-Normal-off","rust_v4_owner":"NOT_WIRED",
+             "fec2_game":"NOT_PACKAGED"}
+          (root/"source-manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: Launch EXACT two public Go binaries in 5 true Linux namespaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables nftables tcpdump openssl
+          test -c /dev/net/tun
+          cp product/wbd-client runtime/wbd-client
+          cp product/wbd-server runtime/wbd-server
+          export WBD_LIFECYCLE_ARTIFACT_DIR="$GITHUB_WORKSPACE/runtime"
+          export WBD_LIFECYCLE_SCENARIO=l0_config
+          export WBD_LIFECYCLE_LANES=1
+          export WBD_LIFECYCLE_SEED=101
+          export WBD_LIFECYCLE_FEC=0
+          export WBD_LIFECYCLE_PADDING=0
+          sudo --preserve-env=GITHUB_SHA,WBD_LIFECYCLE_ARTIFACT_DIR,WBD_LIFECYCLE_SCENARIO,WBD_LIFECYCLE_LANES,WBD_LIFECYCLE_SEED,WBD_LIFECYCLE_FEC,WBD_LIFECYCLE_PADDING env GITHUB_WORKSPACE="$GITHUB_WORKSPACE/legacy" bash legacy/scripts/lifecycle_acceptance_sample.sh
+          sudo chown -R "$(id -u):$(id -g)" runtime
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          a=pathlib.Path("runtime")
+          m=json.loads(pathlib.Path("product/source-manifest.json").read_text())
+          traffic={}
+          for role in ("biz","target"):
+            stats=json.loads((a/("main-"+role+".json")).read_text())["stats"]
+            sent,received=stats["sent_packets"],stats["recv_unique_packets"]
+            assert sent>0 and received>0,(role,sent,received)
+            assert stats["sent_bytes"]>0 and stats["recv_unique_bytes"]>0
+            traffic[role]={"sent_packets":sent,"recv_unique_packets":received,
+               "sent_bytes":stats["sent_bytes"],"recv_unique_bytes":stats["recv_unique_bytes"]}
+          for b in ("wbd-client","wbd-server"):
+            assert hashlib.sha256((a/b).read_bytes()).hexdigest()==m["binary_sha256"][b]
+          remaining=subprocess.check_output(["ip","netns","list"],text=True)
+          assert not any(n.startswith(("lbiz-","lcli-","lrtr-","lsrv-","ltgt-")) for n in remaining.split()),"namespace cleanup incomplete"
+          receipt={"schema_version":1,"main_source":os.environ["GITHUB_SHA"],
+            "original_go_binary_source":m["original_go_binary_source"],
+            "binaries_sha256":m["binary_sha256"],
+            "real_original_TLS":True,"real_Netns_client_server":True,
+            "udp_app_both_directions":traffic,
+            "Stop_SIGTERM_and_owned_netns_cleanup":"observed",
+            "Normal_off":"PASS_EXPERIMENTAL_LEGACY_V3_REAL_CLI",
+            "Normal_outer_retransmission_1pct":"NOT_RUN",
+            "Rust_V4_FEC2_fixed_auto_Game2_Game4":"NOT_WIRED_OFF"}
+          pathlib.Path("product/runtime-receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print("M0_ORIGINAL_GO_NORMAL_OFF_PUBLIC_LINUX_CLIENT_SERVER_REAL_TLS_DUPLEX_UDP_STOP_PASS")
+          print(json.dumps(receipt))
+          PY
+      - name: Package real client/server binaries and measured exact SOURCE
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >product/README.txt <<'EOF'
+          Experimental original Go Linux Normal/off client and server.
+          Actual untagged original Go V3 binaries: wbd-client and wbd-server.
+          Real TLS + 5 netns duplex UDP application tested from these exact files.
+          Use --help and --check-config; needs elevated Linux network privileges,
+          configured TLS/credentials and physical interface before deployment.
+          This does NOT include Rust V4 owner, FEC2 or new Game2/4; all OFF.
+          EOF
+          tar -C product -czf linux-normal-off-original-go-amd64.tar.gz             wbd-client wbd-server README.txt client-version.txt server-version.txt             source-manifest.json runtime-receipt.json
+          sha256sum linux-normal-off-original-go-amd64.tar.gz >linux-normal-off-original-go-amd64.tar.gz.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-normal-off-two-real-clis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            linux-normal-off-original-go-amd64.tar.gz
+            linux-normal-off-original-go-amd64.tar.gz.sha256
+            product/source-manifest.json
+            product/runtime-receipt.json
+          retention-days: 30
+          if-no-files-found: warn
