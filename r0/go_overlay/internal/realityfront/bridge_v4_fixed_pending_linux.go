@@ -32,7 +32,10 @@ func (b *v4EmbeddedNativeBridge) stageOriginalFixedPending(
         epoch==[16]byte{}||epoch!=b.protectedEpoch||
         b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)||
         cfg.Client!=b.authenticatedPrincipal||
-        cfg.Direction!=FecV2S2C||cfg.Transport!=FecV2Normal{
+        cfg.Direction!=func()FecV2Direction{
+            if b.serverSide{return FecV2S2C}
+            return FecV2C2S
+        }()||cfg.Transport!=FecV2Normal{
         ack.Rejected=true
         return prev,ack,ErrFecV2Scope
     }
@@ -82,7 +85,10 @@ func (b *v4EmbeddedNativeBridge) readbackOriginalFixedPending(
         epoch==[16]byte{}||epoch!=b.protectedEpoch||
         !pending.Initialized||pending.Client!=b.authenticatedPrincipal||
         b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)||
-        pending.Direction!=FecV2S2C||
+        pending.Direction!=func()FecV2Direction{
+            if b.serverSide{return FecV2S2C}
+            return FecV2C2S
+        }()||
         (pending.Mode!=FecV2Fixed&&pending.Mode!=FecV2Auto){
         return pending,ack,ErrFecV2Scope
     }
