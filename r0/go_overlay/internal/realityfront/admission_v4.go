@@ -66,6 +66,7 @@ type V4ClientOptions struct {
     DataPlaneReady bool
     Epoch [16]byte // zero only for the first lane of a new logical tunnel
     fec2ProbeOnly bool // unexported and default false: no product authority
+    fec2Product bool // original-Go TLS + true native Linux feature7 owner only
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -178,6 +179,7 @@ func V4StopThenCleanupNetwork(
 type V4ServerOptions struct {
     DataPlaneReady bool
     fec2ProbeOnly bool // package-private, no production caller switch
+    fec2Product bool // package-private genuine Linux fixed/auto owner
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
@@ -419,7 +421,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     }
     if cfg.Policy.Schema!=PolicySchemaV3 || cfg.Policy.SupportedNow()!=nil {return nil,ErrAdmissionUnsupported}
     offeredFeatures:=v4RequiredFeatures
-    if opt.fec2ProbeOnly {offeredFeatures |= v4FeatureFEC2}
+    if opt.fec2ProbeOnly||opt.fec2Product {offeredFeatures |= v4FeatureFEC2}
     wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch})
     if err!=nil{return nil,err}
     guard,err:=beginCandidateDeadline(ctx,conn,cfg.TLS.Timeout)
@@ -484,7 +486,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         return nil,ErrAdmissionAuth
     }
     serverFeatures:=v4RequiredFeatures
-    if opt.fec2ProbeOnly {serverFeatures |= v4FeatureFEC2}
+    if opt.fec2ProbeOnly||opt.fec2Product {serverFeatures |= v4FeatureFEC2}
     if offered.Features!=serverFeatures {
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,ErrAdmissionUnsupported
