@@ -93,6 +93,45 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
+          # Real kernel Game2 + Game4 paths use the SAME actual original-Go
+          # TLS private per-lane KDF material and M1 frozen/M3 AEAD+replay,
+          # M4 ScopedRawIpv4Tx/Rx and ScopedTunSink, a real UDP socket.
+          # The test binary must be identified from Cargo's actual build
+          # metadata, never choose an unrelated prior feature test binary.
+          cargo +1.85.1 test --locked -p wbd-engine --lib --no-run --message-format=json >fixed-kernel-result/game-kernel-build.jsonl 2>fixed-kernel-result/game-kernel-build.stderr || {
+            cat fixed-kernel-result/game-kernel-build.stderr; exit 1;
+          }
+          GAME_TEST_BIN="$(python3 - <<'PY'
+          import json
+          found=[]
+          for line in open("fixed-kernel-result/game-kernel-build.jsonl"):
+            try: obj=json.loads(line)
+            except ValueError: continue
+            if obj.get("reason")=="compiler-artifact" and obj.get("target",{}).get("name")=="wbd_engine" and obj.get("executable"):
+              found.append(obj["executable"])
+          assert len(found)==1,("ambiguous native Linux Game test binary",len(found))
+          print(found[0])
+          PY
+          )"
+          test -x "$GAME_TEST_BIN"
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          NS="wbdgame_${GITHUB_RUN_ID}"
+          sudo -n ip netns add "$NS"
+          cleanup_game_ns(){ sudo -n ip netns del "$NS" || true; }
+          trap cleanup_game_ns EXIT
+          sudo -n ip -n "$NS" link set lo up
+          sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
+          sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
+          sudo -n ip netns exec "$NS" env WBD_M0_GAME_KERNEL_TUN=1 WBD_GAME_TLS_FIXTURE_DIR="$WBD_GAME_TLS_FIXTURE_DIR" "$GAME_TEST_BIN" --nocapture --test-threads=1 m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun >fixed-kernel-result/game-real-kernel.log 2>&1 || {
+            cat fixed-kernel-result/game-real-kernel.log; exit 1;
+          }
+          cat fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=2' fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=4' fixed-kernel-result/game-real-kernel.log
+          cleanup_game_ns
+          trap - EXIT
           rm -f "$WBD_GAME_TLS_FIXTURE_DIR"/*.cold
           rmdir "$WBD_GAME_TLS_FIXTURE_DIR"
           unset WBD_GAME_TLS_FIXTURE_DIR
@@ -105,6 +144,7 @@ jobs:
             "crates/wbd-engine/src/runtime/fec2_owner.rs",
             "crates/wbd-engine/src/v4_fixed_stream.rs",
             "crates/wbd-engine/src/v4_game_lane.rs",
+            "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs",
             "crates/wbd-engine/src/v4_fec2_live_rx.rs",
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "crates/wbd-codec/tests/fec2_release_record.rs",
@@ -200,7 +240,8 @@ jobs:
             native_multiblock_composer_source="7b5533db6ffc7be7a950562bfaf642a68a75930b",
             native_multiblock_stream_only="PASS_3_BLOCKS",
             fec_release_record_3ciphers="PASS_NATIVE",
-            game_2_4_own_AEAD_PN_replay="PASS_NATIVE_NOT_KERNEL",
+            game_2_4_own_AEAD_PN_replay="PASS_REAL_GO_TLS_NATIVE_AND_M4_KERNEL_UDP_SCOPED",
+            independent_original_go_tls_game_2_4_m4_raw_tun_udp_first_app="PASS_SCOPED_REAL_KERNEL_NOT_ORIGINAL_PUBLIC_GO_CLI",
             background_real_kernel_FEC_multiblock_source_repair="PASS_ORIGINAL_GO_RELEASE_CLIENT_RUST_RX_SCOPED_LINUX_KERNEL_NOT_PRODUCT_CONNECT",
             one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
             fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
@@ -222,6 +263,7 @@ jobs:
             release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
             game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
             real_go_native_game_lanes_log_sha256=hashlib.sha256((p/"real-go-native-game-lanes.log").read_bytes()).hexdigest(),
+            original_go_tls_game_m4_real_kernel_log_sha256=hashlib.sha256((p/"game-real-kernel.log").read_bytes()).hexdigest(),
             original_go_game_tls_log_sha256=hashlib.sha256((p/"original-go-game-tls.log").read_bytes()).hexdigest(),
             continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
             fixed_stream_log_sha256=hashlib.sha256((p/"fixed-tx-stream.log").read_bytes()).hexdigest())
