@@ -8,11 +8,15 @@ ROOT="$(realpath "$ROOT")"
 LOSS="${WBD_V4_PUBLIC_KERNEL_LOSS:-0}"
 MODE="${WBD_V4_PUBLIC_MODE:-normal}"
 case "$MODE" in
-  normal|fec-fixed|fec-auto) ;;
+  normal|fec-fixed|fec-auto|game2|game4) ;;
   *) echo "V4 public product mode not yet authenticated/installed: $MODE" >&2; exit 2 ;;
 esac
-FEC=0
-if [[ "$MODE" != normal ]];then FEC=1;fi
+FEC=0 GAME=0
+case "$MODE" in
+  fec-fixed|fec-auto) FEC=1 ;;
+  game2) GAME=2 ;;
+  game4) GAME=4 ;;
+esac
 if [[ "$LOSS" != 0 && "$LOSS" != 1 ]];then
   echo "invalid exact public V4 netem loss selector" >&2;exit 2
 fi
@@ -107,8 +111,13 @@ APPS=$!
 # readiness within a bounded time. Never infer readiness from config.
 ready=0
 for i in {1..40}; do
-  if grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log" &&
-     grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"; then
+  if [[ "$GAME" != 0 ]];then
+    if grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log" &&
+       grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=$GAME" "$TMP/server.log";then
+      ready=1;break
+    fi
+  elif grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log" &&
+       grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"; then
     ready=1;break
   fi
   sleep 0.25
@@ -124,6 +133,13 @@ fi
 if [[ "$LOSS" == 1 ]];then
   sudo -n ip netns exec "$NSC" tc qdisc add dev wbdvc0 root netem loss 1%
   sudo -n ip netns exec "$NSS" tc qdisc add dev wbdvs0 root netem loss 1%
+fi
+if [[ "$GAME" != 0 ]];then
+  # After true Go TLS and Rust M4 device readiness, break exactly the
+  # FIRST Game's original TCP carrier in both directions. The second
+  # logical UDP app still must arrive over a healthy independent lane.
+  sudo -n ip netns exec "$NSC" iptables -I OUTPUT 1 -p tcp --dport 443 -j DROP
+  sudo -n ip netns exec "$NSS" iptables -I OUTPUT 1 -p tcp --sport 443 -j DROP
 fi
 if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" python3 -u -c '
 import socket,time,os
@@ -180,6 +196,9 @@ s.close()
   exit 1
 fi
 if [[ "$PACKETS" == 5 || "$FEC" == 1 ]];then cat "$ART/public-v4-normal-business.log";fi
+if [[ "$GAME" != 0 ]];then
+  echo "M0_GAME_PUBLIC_ORIGINAL_GO_M4_FIRST_APP_WITH_LANE1_DAMAGE_PASS lanes=$GAME udp=$PACKETS first_real_app=1 healthy_lane_no_hol=1"
+fi
 if [[ "$FEC" == 1 ]];then
   # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL
   # M2 2s matured authenticated reverse receipts while both owners run.
@@ -199,9 +218,29 @@ if sudo -n kill -0 "$(cat "$TMP/client.pid")" 2>/dev/null ||
 fi
 # Sensitive logs contain NO TLS secret/cold/exporter keys. Persist only the
 # exact readiness and packet count; erase ephemeral TLS files and logs.
-grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
-grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
-if [[ "$FEC" == 1 ]];then
+if [[ "$GAME" != 0 ]];then
+  grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log"
+  grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=$GAME" "$TMP/server.log"
+else
+  grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
+  grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
+fi
+if [[ "$GAME" != 0 ]];then
+  test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
+  for role in client server;do
+    grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=$role lanes=$GAME" "$TMP/$role.log"
+    grep -q "V4_PUBLIC_GAME_KERNEL role=$role lanes=$GAME" "$TMP/$role.log"
+  done
+  python3 - "$TMP" "$GAME" <<'PY'
+import pathlib,re,sys
+p=pathlib.Path(sys.argv[1]);n=int(sys.argv[2])
+for role in ("client","server"):
+    data=(p/(role+".log")).read_text()
+    matches=re.findall(r"V4_PUBLIC_GAME_KERNEL role="+role+
+        r" lanes="+str(n)+r" copied=(\d+) delivered=(\d+) rejected=(\d+)",data)
+    assert matches and int(matches[-1][0])>=5 and int(matches[-1][1])>=5,        (role,matches)
+PY
+elif [[ "$FEC" == 1 ]];then
   grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
   for role in client server;do
     if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=(fixed|auto) requested=1 applied=1 profile=[0-6] pending=false" "$TMP/$role.log";then
@@ -213,8 +252,10 @@ if [[ "$FEC" == 1 ]];then
 else
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
 fi
-grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
-grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+if [[ "$GAME" == 0 ]];then
+  grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
+  grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+fi
 if [[ "$LOSS" == 1 ]];then
   sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$TMP/kernel-client-netem.txt"
   sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 >"$TMP/kernel-server-netem.txt"
@@ -240,6 +281,8 @@ print(marker)
 PY
 elif [[ "$FEC" == 1 ]];then
   echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
+elif [[ "$GAME" != 0 ]];then
+  echo "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$GAME udp_app=$PACKETS auth_go=1 native_m4=1 lane1_underlay_dropped=1 stop_drained=1 production_off=1"
 else
   echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
 fi
