@@ -7,6 +7,8 @@ on:
       - ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml"
       - "crates/wbd-engine/src/v4_windows_owner.rs"
       - "crates/wbd-engine/src/lib.rs"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner_test.go"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
@@ -29,6 +31,14 @@ jobs:
           ref: b53b5dac422a634cdd82178a29071f9f9f0ae5e7
           path: frozen-m4
           persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
       - name: Pin original legacy / worker Windows Go source without rerunning accepted M4 native scenarios
         shell: pwsh
         run: |
@@ -77,7 +87,7 @@ jobs:
           p=pathlib.Path("target/release/wbd_engine.dll")
           assert p.is_file() and p.stat().st_size>100000,"native MSVC DLL missing"
           dll=ctypes.WinDLL(str(p.resolve()))
-          names=("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare","wbd_m0_win_owner_v1_stage",
+          names=("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare","wbd_m0_win_owner_v1_stage","wbd_m0_win_owner_v1_abort",
                  "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_state",
                  "wbd_m0_win_owner_v1_stop","wbd_m0_win_owner_v1_release")
           for name in names:assert getattr(dll,name,None) is not None,name
@@ -118,6 +128,74 @@ jobs:
           print("M0_PLAN013_WINDOWS_RUST_ORIGINAL_OWNER_NATIVE_DLL_AND_C_ABI_PASS")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'actual native Windows Rust C ABI DLL call failed'}
+      - name: Compile and exercise actual original Go credential-verified V4 TLS into same native Windows Rust DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          legacy=root/"legacy";overlay=root/"frozen-m4"
+          m4="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
+          original="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert subprocess.check_output(["git","-C",str(legacy),"rev-parse","HEAD"],text=True).strip()==original
+          assert subprocess.check_output(["git","-C",str(overlay),"rev-parse","HEAD"],text=True).strip()==m4
+          manifest=json.loads((overlay/"r0/go_overlay/assembly/manifest.json").read_text(encoding="utf8"))
+          assert manifest["legacy_source"]==original
+          def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          for item in manifest["operations"]:
+              if item["kind"]=="replace":
+                  raw=subprocess.check_output(["git","-C",str(legacy),"show",original+":"+item["path"]])
+                  assert blob(raw)==item["original_blob"]
+                  p=legacy/item["path"];assert p.is_file();p.write_bytes(raw)
+              overlay_path=item.get("overlay_path")
+              if overlay_path:
+                  raw=subprocess.check_output(["git","-C",str(overlay),"show",m4+":"+overlay_path])
+                  assert blob(raw)==item["result_blob"]
+                  p=overlay/overlay_path;assert p.is_file();p.write_bytes(raw)
+          print("M0_WIN_GO_PINNED_M4_OVERLAY_AND_LEGACY_EXACT_GIT_BYTES")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'original Go/M4 frozen assembly objects not pinned'}
+          & python frozen-m4/r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root frozen-m4 --manifest frozen-m4/r0/go_overlay/assembly/manifest.json --receipt windows-owner-result/go-assembly.json
+          if ($LASTEXITCODE -ne 0) {throw 'original Windows Go assembly failed'}
+          @'
+          import os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          src=root/"r0/go_overlay/internal/realityfront"
+          dest=root/"legacy/internal/realityfront"
+          for filename in ("bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go"):
+              relative="r0/go_overlay/internal/realityfront/"+filename
+              payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
+              assert not (dest/filename).exists(),"M4 owns this Go file; no same-file author"
+              (dest/filename).write_bytes(payload)
+          print("M0_WIN_GO_POST_TLS_NATIVE_RUST_BRIDGE_SOURCE_LOCKED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'M0-only private Windows Go Rust bridge not exact SOURCE'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path 'target/release/wbd_engine.dll').Path
+          Push-Location legacy
+          try {
+            & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0WindowsOriginalGo' ./internal/realityfront 2>&1 | Tee-Object -FilePath ../windows-owner-result/original-go-tls-native-rust.log
+            if ($LASTEXITCODE -ne 0) {throw 'genuine original Go credential TLS -> Windows Rust owner/Stop failed'}
+          } finally {Pop-Location}
+          $got=Get-Content windows-owner-result/original-go-tls-native-rust.log -Raw
+          foreach ($name in @('TestM0WindowsOriginalGoRealCredentialTLSProtectedRustOwnerStopOnly','TestM0WindowsOriginalGoPrivateCallbackInvalidBeforeAuthenticatedTLS')) {
+            if ($got -notmatch ('--- PASS: '+[regex]::Escape($name))) {throw "original-Go TLS native Rust callback NOT_RUN $name"}
+          }
+          @'
+          import json,pathlib,hashlib
+          p=pathlib.Path("windows-owner-result/receipt.json")
+          receipt=json.loads(p.read_text())
+          receipt["original_go_credential_verified_TLS_to_native_Rust"]="PASS_SCOPED_REAL_PROCESS_WIN2022"
+          receipt["original_Go_server_private_owner_prepared_committed_stopped"]="PASS_SCOPED_3_CIPHERS"
+          receipt["original_go_m4_frozen_overlay_sha"]="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
+          receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_SERVER_ONLY_NO_WFP_M4_DEVICE"
+          receipt["windows_M4_real_device"]="NOT_RUN"
+          receipt["windows_product_applied"]="OFF"
+          receipt["windows_product"]="NOT_QUALIFIED"
+          p.write_text(json.dumps(receipt,indent=2)+"\n")
+          print("M0_PLAN013_WINDOWS_ORIGINAL_GO_CREDENTIAL_TLS_RUST_PRIVATE_OWNER_STOP_SCOPED_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'native Windows original-Go/Rust TLS source receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
