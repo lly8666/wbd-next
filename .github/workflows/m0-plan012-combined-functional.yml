@@ -25,6 +25,8 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux_test.go"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
@@ -80,9 +82,9 @@ jobs:
           cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/opt-in-build.log 2>&1
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fixed_pending_readback$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_attach_raw_rx_on_interface$'
-          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_prepare_client$'
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_prepare_client
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
-          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
+          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           # Optional product conformance: missing files are NOT_RUN at
@@ -106,11 +108,790 @@ jobs:
           # never upload and do not print. Wipe after bridge test.
           export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
           mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
-          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_NATIVE_GAME_SHARED_ORIGINAL_TLS_MISSING_AUTH_DENIED" fixed-kernel-result/original-go-game-tls.log
+          cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
+          # Real kernel Game2 + Game4 paths use the SAME actual original-Go
+          # TLS private per-lane KDF material and M1 frozen/M3 AEAD+replay,
+          # M4 ScopedRawIpv4Tx/Rx and ScopedTunSink, a real UDP socket.
+          # The test binary must be identified from Cargo's actual build
+          # metadata, never choose an unrelated prior feature test binary.
+          cargo +1.85.1 test --locked -p wbd-engine --lib --no-run --message-format=json >fixed-kernel-result/game-kernel-build.jsonl 2>fixed-kernel-result/game-kernel-build.stderr || {
+            cat fixed-kernel-result/game-kernel-build.stderr; exit 1;
+          }
+          GAME_TEST_BIN="$(python3 - <<'PY'
+          import json
+          found=[]
+          for line in open("fixed-kernel-result/game-kernel-build.jsonl"):
+            try: obj=json.loads(line)
+            except ValueError: continue
+            if obj.get("reason")=="compiler-artifact" and obj.get("target",{}).get("name")=="wbd_engine" and obj.get("executable"):
+              found.append(obj["executable"])
+          assert len(found)==1,("ambiguous native Linux Game test binary",len(found))
+          print(found[0])
+          PY
+          )"
+          test -x "$GAME_TEST_BIN"
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          NS="wbdgame_${GITHUB_RUN_ID}"
+          sudo -n ip netns add "$NS"
+          cleanup_game_ns(){ sudo -n ip netns del "$NS" || true; }
+          trap cleanup_game_ns EXIT
+          sudo -n ip -n "$NS" link set lo up
+          sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
+          sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
+          sudo -n ip netns exec "$NS" env WBD_M0_GAME_KERNEL_TUN=1 WBD_GAME_TLS_FIXTURE_DIR="$WBD_GAME_TLS_FIXTURE_DIR" "$GAME_TEST_BIN" --nocapture --test-threads=1 m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun >fixed-kernel-result/game-real-kernel.log 2>&1 || {
+            cat fixed-kernel-result/game-real-kernel.log; exit 1;
+          }
+          cat fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=2' fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=4' fixed-kernel-result/game-real-kernel.log
+          cleanup_game_ns
+          trap - EXIT
+          rm -f "$WBD_GAME_TLS_FIXTURE_DIR"/*.cold
+          rmdir "$WBD_GAME_TLS_FIXTURE_DIR"
+          unset WBD_GAME_TLS_FIXTURE_DIR
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
+          cp target/release/libwbd_engine.so fixed-build/
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          file fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          source=["crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/runtime/fec2_owner.rs",
+            "crates/wbd-engine/src/v4_fixed_stream.rs",
+            "crates/wbd-engine/src/v4_game_lane.rs",
+            "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs",
+            "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_protected_handoff.rs",
+            "crates/wbd-codec/tests/fec2_release_record.rs",
+            "crates/wbd-codec/Cargo.toml",
+            "crates/wbd-engine/Cargo.toml",
+            "crates/wbd-engine/src/fec2_staged.rs",
+            "crates/wbd-codec/src/fec_v2.rs","crates/wbd-codec/src/record_crypto.rs",
+            "r0/go_overlay/internal/realityfront/admission_v4.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_disabled_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux_test.go",
+            "r0/go_overlay/internal/v4productcli/linux.go",
+            "r0/go_overlay/cmd/wbd-v4-client/main.go",
+            "r0/go_overlay/cmd/wbd-v4-server/main.go",
+            "tools/m0-v4-public-real-linux-netns.sh",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+            "tools/run-v4-tun-netns.sh",".github/workflows/m0-plan012-combined-functional.yml"]
+          for optional in [
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go",
+            ".github/workflows/m0-plan012-preenable-parallel.yml",
+          ]:
+            if pathlib.Path(optional).is_file(): source.append(optional)
+          m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+            "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "toolchains":{"go":"1.23.12","rust":"1.85.1"},
+            "feature":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record",
+            "default_ABI_has_test_symbol":False,
+            "tested_scope":"COMBINED_RELEASE_FEC_RECORD_GAME2_4_NATIVE_AND_ONE_SHOT_GO_TLS_REAL_KERNEL",
+            "continuous_Fixed_Auto_Game_product":"NOT_RUN",
+            "released_fec_record_crypto_native_test":"PASS_SCOPED",
+            "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_go_game_2_4_tls_cold_set":"TESTED_REAL_TLS_ONLY_NO_M4_KERNEL",
+            "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "continuous_FEC_RX_noHOL_old_incomplete_evict":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_TLS_FixedStream_deferred_parity_kernel_receipt":"PASS_NATIVE_ONLY",
+            "production_Fixed_Auto_live_kernel":"NOT_RUN",
+            "original_background_FEC_RX_uses_one_moved_replay_opener":"COMPILED_OPTIONAL_DORMANT_PENDING_NOT_PRODUCT",
+            "production_FEC2_default":"OFF",
+            "release_client_original_M2_actual_kernel_C2S_authenticated":"PASS_SCOPE_ONLY_WITHOUT_POLICY_APPLIED",
+            "source_inputs_sha256":{p:sha(p) for p in source},
+            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so","wbd-v4-client","wbd-v4-server"]}}
+          pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: One real Linux raw/TUN/UDP functional batch, 3 ciphers and original Fixed applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1
+          cat fixed-kernel-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_ORIGINAL_GO_FIXED_KERNEL_QUIESCENT_OFF_AFTER_M2_SETTLED_PASS suite=$suite before_ack=deny after_auth_receipt=off5 fixed_rev4=retired" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
+          done
+          # One additional original Go TLS S2C background TX with four
+          # actual TUN UDP packets + >=2 real source/parity blocks received
+          # through an independent original-key M3 client replay decoder.
+          # No FAKE peer APPLIED or product release from a private verifier.
+          WBD_M0_FEC2_CONTINUOUS=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/continuous-kernel.log 2>&1 || {
+            cat fixed-kernel-result/continuous-kernel.log;exit 1;
+          }
+          cat fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          m=json.loads((p/"manifest.json").read_text())
+          m.update(result="PASS_SCOPED_OPTIN_FIXED_APPLIED_AFTER_REAL_KERNEL_COPY",
+            actual_original_go_tls_ciphers=3,original_m1_fec2_scheduler=True,
+            original_m3_aead_unique_replay_and_rs16=True,
+            original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
+            real_original_m2_authenticated_reverse_receipt=True,
+            applied_before_kernel_copy=False,
+            authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
+            real_data_blocks_per_case=1,
+            frozen_fixed_stream_composer_consumed=True,
+            previous_attempt_compilation_failure_run_id=39266993450,
+            previous_attempt_original_result="FAIL_E0412_GO_APP_NOT_RUN",
+            native_multiblock_composer_source="7b5533db6ffc7be7a950562bfaf642a68a75930b",
+            native_multiblock_stream_only="PASS_3_BLOCKS",
+            fec_release_record_3ciphers="PASS_NATIVE",
+            game_2_4_own_AEAD_PN_replay="PASS_REAL_GO_TLS_NATIVE_AND_M4_KERNEL_UDP_SCOPED",
+            independent_original_go_tls_game_2_4_m4_raw_tun_udp_first_app="PASS_SCOPED_REAL_KERNEL_NOT_ORIGINAL_PUBLIC_GO_CLI",
+            background_real_kernel_FEC_multiblock_source_repair="PASS_ORIGINAL_GO_RELEASE_CLIENT_RUST_RX_SCOPED_LINUX_KERNEL_NOT_PRODUCT_CONNECT",
+            one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
+            fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
+            FEC2_production="OFF",
+            M4_Linux_connect_real_netns_client_server_stop_owned_cleanup="PASS_ACTIONS_SCOPED",
+            M4_route_readback_after_Stop="PASS_M4_SOURCE_OWNED_COMBINED_ACTIONS",
+            M4_Windows_network="NOT_RUN_DEFERRED",
+            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_AUTHENTIC_MATURE_FIXED_APPLIED",
+            Fixed_revision4_mature_original_go_M2="PASS_LINUX_SCOPED_AUTHENTIC_2S_AFTER_CLIENT_TUN",
+            Auto_initial_profile_authenticated_M2_APPLIED="PASS_LINUX_SCOPED_STARTUP_PROFILE_ONLY",
+            Auto_dynamic_512_mature_samples="NOT_RUN",
+            fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
+            network_multiblock="NOT_RUN",
+            repeatable_background_multiblock_product="NOT_RUN",
+            auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
+            production_FEC2="OFF",
+            kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest(),
+            background_kernel_log_sha256=hashlib.sha256((p/"continuous-kernel.log").read_bytes()).hexdigest(),
+            release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
+            game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
+            real_go_native_game_lanes_log_sha256=hashlib.sha256((p/"real-go-native-game-lanes.log").read_bytes()).hexdigest(),
+            original_go_tls_game_m4_real_kernel_log_sha256=hashlib.sha256((p/"game-real-kernel.log").read_bytes()).hexdigest(),
+            original_go_game_tls_log_sha256=hashlib.sha256((p/"original-go-game-tls.log").read_bytes()).hexdigest(),
+            continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
+            fixed_stream_log_sha256=hashlib.sha256((p/"fixed-tx-stream.log").read_bytes()).hexdigest())
+          (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
+          PY
+      - name: Run BOTH actual original-Go V4 client and server entrypoints through real TLS, Rust M1/M3/M4 and Linux UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash tools/m0-v4-public-real-linux-netns.sh fixed-build >fixed-kernel-result/v4-public-normal-real-cli.log 2>&1 || {
+            cat fixed-kernel-result/v4-public-normal-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-normal-real-cli.log
+          grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
+          cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+          # The two exact same compiled product binaries, reused, now under
+          # genuine 1% independent Linux veth netem kernel loss BOTH ways.
+          # Assert real dropped kernel packets, original M3 authentic ACK,
+          # original M2 SAME ciphertext frozen retransmission, all 512
+          # application UDP round trips and joined native Stop.
+          WBD_V4_PUBLIC_KERNEL_LOSS=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/v4-public-1pct-real-cli.log 2>&1 || {
+            tail -85 fixed-kernel-result/v4-public-1pct-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+          grep -q 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
+            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            fixed-kernel-result/
+            fixed-build/
+          retention-days: 30
+          if-no-files-found: warn
+
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
+          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          # Optional product conformance: missing files are NOT_RUN at
+          # the separate parallel pre-enable gate, not silently skipped PASS.
+          for file in bridge_v4_linux_public_product.go bridge_v4_game_product_linux.go bridge_v4_linux_public_product_test.go bridge_v4_game_kernel_linux_test.go; do
+            if [[ -f "r0/go_overlay/internal/realityfront/$file" ]]; then
+              cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+            fi
+          done
+          # Assemble ACTUAL public original-Go V4 client and server entry
+          # sources, not a clone of V3 or a package-private Go test binary.
+          mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          # One original credential-checked Go TLS 2/4 fixture, consumed in
+          # the SAME Actions VM by the actual native Rust GameAdapter.
+          # Contains raw exporter keys: keep only in ephemeral RUNNER_TEMP,
+          # never upload and do not print. Wipe after bridge test.
+          export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
+          mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_NATIVE_GAME_SHARED_ORIGINAL_TLS_MISSING_AUTH_DENIED" fixed-kernel-result/original-go-game-tls.log
+          cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
+          # Real kernel Game2 + Game4 paths use the SAME actual original-Go
+          # TLS private per-lane KDF material and M1 frozen/M3 AEAD+replay,
+          # M4 ScopedRawIpv4Tx/Rx and ScopedTunSink, a real UDP socket.
+          # The test binary must be identified from Cargo's actual build
+          # metadata, never choose an unrelated prior feature test binary.
+          cargo +1.85.1 test --locked -p wbd-engine --lib --no-run --message-format=json >fixed-kernel-result/game-kernel-build.jsonl 2>fixed-kernel-result/game-kernel-build.stderr || {
+            cat fixed-kernel-result/game-kernel-build.stderr; exit 1;
+          }
+          GAME_TEST_BIN="$(python3 - <<'PY'
+          import json
+          found=[]
+          for line in open("fixed-kernel-result/game-kernel-build.jsonl"):
+            try: obj=json.loads(line)
+            except ValueError: continue
+            if obj.get("reason")=="compiler-artifact" and obj.get("target",{}).get("name")=="wbd_engine" and obj.get("executable"):
+              found.append(obj["executable"])
+          assert len(found)==1,("ambiguous native Linux Game test binary",len(found))
+          print(found[0])
+          PY
+          )"
+          test -x "$GAME_TEST_BIN"
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          NS="wbdgame_${GITHUB_RUN_ID}"
+          sudo -n ip netns add "$NS"
+          cleanup_game_ns(){ sudo -n ip netns del "$NS" || true; }
+          trap cleanup_game_ns EXIT
+          sudo -n ip -n "$NS" link set lo up
+          sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
+          sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
+          sudo -n ip netns exec "$NS" env WBD_M0_GAME_KERNEL_TUN=1 WBD_GAME_TLS_FIXTURE_DIR="$WBD_GAME_TLS_FIXTURE_DIR" "$GAME_TEST_BIN" --nocapture --test-threads=1 m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun >fixed-kernel-result/game-real-kernel.log 2>&1 || {
+            cat fixed-kernel-result/game-real-kernel.log; exit 1;
+          }
+          cat fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=2' fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=4' fixed-kernel-result/game-real-kernel.log
+          cleanup_game_ns
+          trap - EXIT
+          rm -f "$WBD_GAME_TLS_FIXTURE_DIR"/*.cold
+          rmdir "$WBD_GAME_TLS_FIXTURE_DIR"
+          unset WBD_GAME_TLS_FIXTURE_DIR
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
+          cp target/release/libwbd_engine.so fixed-build/
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          file fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          source=["crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/runtime/fec2_owner.rs",
+            "crates/wbd-engine/src/v4_fixed_stream.rs",
+            "crates/wbd-engine/src/v4_game_lane.rs",
+            "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs",
+            "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_protected_handoff.rs",
+            "crates/wbd-codec/tests/fec2_release_record.rs",
+            "crates/wbd-codec/Cargo.toml",
+            "crates/wbd-engine/Cargo.toml",
+            "crates/wbd-engine/src/fec2_staged.rs",
+            "crates/wbd-codec/src/fec_v2.rs","crates/wbd-codec/src/record_crypto.rs",
+            "r0/go_overlay/internal/realityfront/admission_v4.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_disabled_linux.go",
+            "r0/go_overlay/internal/v4productcli/linux.go",
+            "r0/go_overlay/cmd/wbd-v4-client/main.go",
+            "r0/go_overlay/cmd/wbd-v4-server/main.go",
+            "tools/m0-v4-public-real-linux-netns.sh",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+            "tools/run-v4-tun-netns.sh",".github/workflows/m0-plan012-combined-functional.yml"]
+          for optional in [
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go",
+            ".github/workflows/m0-plan012-preenable-parallel.yml",
+          ]:
+            if pathlib.Path(optional).is_file(): source.append(optional)
+          m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+            "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "toolchains":{"go":"1.23.12","rust":"1.85.1"},
+            "feature":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record",
+            "default_ABI_has_test_symbol":False,
+            "tested_scope":"COMBINED_RELEASE_FEC_RECORD_GAME2_4_NATIVE_AND_ONE_SHOT_GO_TLS_REAL_KERNEL",
+            "continuous_Fixed_Auto_Game_product":"NOT_RUN",
+            "released_fec_record_crypto_native_test":"PASS_SCOPED",
+            "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_go_game_2_4_tls_cold_set":"TESTED_REAL_TLS_ONLY_NO_M4_KERNEL",
+            "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "continuous_FEC_RX_noHOL_old_incomplete_evict":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_TLS_FixedStream_deferred_parity_kernel_receipt":"PASS_NATIVE_ONLY",
+            "production_Fixed_Auto_live_kernel":"NOT_RUN",
+            "original_background_FEC_RX_uses_one_moved_replay_opener":"COMPILED_OPTIONAL_DORMANT_PENDING_NOT_PRODUCT",
+            "production_FEC2_default":"OFF",
+            "release_client_original_M2_actual_kernel_C2S_authenticated":"PASS_SCOPE_ONLY_WITHOUT_POLICY_APPLIED",
+            "source_inputs_sha256":{p:sha(p) for p in source},
+            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so","wbd-v4-client","wbd-v4-server"]}}
+          pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: One real Linux raw/TUN/UDP functional batch, 3 ciphers and original Fixed applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1
+          cat fixed-kernel-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_ORIGINAL_GO_FIXED_KERNEL_QUIESCENT_OFF_AFTER_M2_SETTLED_PASS suite=$suite before_ack=deny after_auth_receipt=off5 fixed_rev4=retired" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
+          done
+          # One additional original Go TLS S2C background TX with four
+          # actual TUN UDP packets + >=2 real source/parity blocks received
+          # through an independent original-key M3 client replay decoder.
+          # No FAKE peer APPLIED or product release from a private verifier.
+          WBD_M0_FEC2_CONTINUOUS=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/continuous-kernel.log 2>&1 || {
+            cat fixed-kernel-result/continuous-kernel.log;exit 1;
+          }
+          cat fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          m=json.loads((p/"manifest.json").read_text())
+          m.update(result="PASS_SCOPED_OPTIN_FIXED_APPLIED_AFTER_REAL_KERNEL_COPY",
+            actual_original_go_tls_ciphers=3,original_m1_fec2_scheduler=True,
+            original_m3_aead_unique_replay_and_rs16=True,
+            original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
+            real_original_m2_authenticated_reverse_receipt=True,
+            applied_before_kernel_copy=False,
+            authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
+            real_data_blocks_per_case=1,
+            frozen_fixed_stream_composer_consumed=True,
+            previous_attempt_compilation_failure_run_id=39266993450,
+            previous_attempt_original_result="FAIL_E0412_GO_APP_NOT_RUN",
+            native_multiblock_composer_source="7b5533db6ffc7be7a950562bfaf642a68a75930b",
+            native_multiblock_stream_only="PASS_3_BLOCKS",
+            fec_release_record_3ciphers="PASS_NATIVE",
+            game_2_4_own_AEAD_PN_replay="PASS_REAL_GO_TLS_NATIVE_AND_M4_KERNEL_UDP_SCOPED",
+            independent_original_go_tls_game_2_4_m4_raw_tun_udp_first_app="PASS_SCOPED_REAL_KERNEL_NOT_ORIGINAL_PUBLIC_GO_CLI",
+            background_real_kernel_FEC_multiblock_source_repair="PASS_ORIGINAL_GO_RELEASE_CLIENT_RUST_RX_SCOPED_LINUX_KERNEL_NOT_PRODUCT_CONNECT",
+            one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
+            fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
+            FEC2_production="OFF",
+            M4_Linux_connect_real_netns_client_server_stop_owned_cleanup="PASS_ACTIONS_SCOPED",
+            M4_route_readback_after_Stop="PASS_M4_SOURCE_OWNED_COMBINED_ACTIONS",
+            M4_Windows_network="NOT_RUN_DEFERRED",
+            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_AUTHENTIC_MATURE_FIXED_APPLIED",
+            Fixed_revision4_mature_original_go_M2="PASS_LINUX_SCOPED_AUTHENTIC_2S_AFTER_CLIENT_TUN",
+            Auto_initial_profile_authenticated_M2_APPLIED="PASS_LINUX_SCOPED_STARTUP_PROFILE_ONLY",
+            Auto_dynamic_512_mature_samples="NOT_RUN",
+            fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
+            network_multiblock="NOT_RUN",
+            repeatable_background_multiblock_product="NOT_RUN",
+            auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
+            production_FEC2="OFF",
+            kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest(),
+            background_kernel_log_sha256=hashlib.sha256((p/"continuous-kernel.log").read_bytes()).hexdigest(),
+            release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
+            game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
+            real_go_native_game_lanes_log_sha256=hashlib.sha256((p/"real-go-native-game-lanes.log").read_bytes()).hexdigest(),
+            original_go_tls_game_m4_real_kernel_log_sha256=hashlib.sha256((p/"game-real-kernel.log").read_bytes()).hexdigest(),
+            original_go_game_tls_log_sha256=hashlib.sha256((p/"original-go-game-tls.log").read_bytes()).hexdigest(),
+            continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
+            fixed_stream_log_sha256=hashlib.sha256((p/"fixed-tx-stream.log").read_bytes()).hexdigest())
+          (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
+          PY
+      - name: Run BOTH actual original-Go V4 client and server entrypoints through real TLS, Rust M1/M3/M4 and Linux UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash tools/m0-v4-public-real-linux-netns.sh fixed-build >fixed-kernel-result/v4-public-normal-real-cli.log 2>&1 || {
+            cat fixed-kernel-result/v4-public-normal-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-normal-real-cli.log
+          grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
+          cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+          # The two exact same compiled product binaries, reused, now under
+          # genuine 1% independent Linux veth netem kernel loss BOTH ways.
+          # Assert real dropped kernel packets, original M3 authentic ACK,
+          # original M2 SAME ciphertext frozen retransmission, all 512
+          # application UDP round trips and joined native Stop.
+          WBD_V4_PUBLIC_KERNEL_LOSS=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/v4-public-1pct-real-cli.log 2>&1 || {
+            tail -85 fixed-kernel-result/v4-public-1pct-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+          grep -q 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
+            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            fixed-kernel-result/
+            fixed-build/
+          retention-days: 30
+          if-no-files-found: warn
+
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
+          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          # Optional product conformance: missing files are NOT_RUN at
+          # the separate parallel pre-enable gate, not silently skipped PASS.
+          for file in bridge_v4_linux_public_product.go bridge_v4_game_product_linux.go bridge_v4_linux_public_product_test.go bridge_v4_game_kernel_linux_test.go; do
+            if [[ -f "r0/go_overlay/internal/realityfront/$file" ]]; then
+              cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+            fi
+          done
+          # Assemble ACTUAL public original-Go V4 client and server entry
+          # sources, not a clone of V3 or a package-private Go test binary.
+          mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          # One original credential-checked Go TLS 2/4 fixture, consumed in
+          # the SAME Actions VM by the actual native Rust GameAdapter.
+          # Contains raw exporter keys: keep only in ephemeral RUNNER_TEMP,
+          # never upload and do not print. Wipe after bridge test.
+          export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
+          mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_NATIVE_GAME_SHARED_ORIGINAL_TLS_MISSING_AUTH_DENIED" fixed-kernel-result/original-go-game-tls.log
+          cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
+          # Real kernel Game2 + Game4 paths use the SAME actual original-Go
+          # TLS private per-lane KDF material and M1 frozen/M3 AEAD+replay,
+          # M4 ScopedRawIpv4Tx/Rx and ScopedTunSink, a real UDP socket.
+          # The test binary must be identified from Cargo's actual build
+          # metadata, never choose an unrelated prior feature test binary.
+          cargo +1.85.1 test --locked -p wbd-engine --lib --no-run --message-format=json >fixed-kernel-result/game-kernel-build.jsonl 2>fixed-kernel-result/game-kernel-build.stderr || {
+            cat fixed-kernel-result/game-kernel-build.stderr; exit 1;
+          }
+          GAME_TEST_BIN="$(python3 - <<'PY'
+          import json
+          found=[]
+          for line in open("fixed-kernel-result/game-kernel-build.jsonl"):
+            try: obj=json.loads(line)
+            except ValueError: continue
+            if obj.get("reason")=="compiler-artifact" and obj.get("target",{}).get("name")=="wbd_engine" and obj.get("executable"):
+              found.append(obj["executable"])
+          assert len(found)==1,("ambiguous native Linux Game test binary",len(found))
+          print(found[0])
+          PY
+          )"
+          test -x "$GAME_TEST_BIN"
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          NS="wbdgame_${GITHUB_RUN_ID}"
+          sudo -n ip netns add "$NS"
+          cleanup_game_ns(){ sudo -n ip netns del "$NS" || true; }
+          trap cleanup_game_ns EXIT
+          sudo -n ip -n "$NS" link set lo up
+          sudo -n ip -n "$NS" addr add 10.0.0.2/32 dev lo
+          sudo -n ip -n "$NS" addr add 10.0.1.1/32 dev lo
+          sudo -n ip netns exec "$NS" env WBD_M0_GAME_KERNEL_TUN=1 WBD_GAME_TLS_FIXTURE_DIR="$WBD_GAME_TLS_FIXTURE_DIR" "$GAME_TEST_BIN" --nocapture --test-threads=1 m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun >fixed-kernel-result/game-real-kernel.log 2>&1 || {
+            cat fixed-kernel-result/game-real-kernel.log; exit 1;
+          }
+          cat fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=2' fixed-kernel-result/game-real-kernel.log
+          grep -q 'M0_ORIGINAL_GO_TLS_GAME_M4_RAW_TUN_UDP_FIRST_APP_PASS lanes=4' fixed-kernel-result/game-real-kernel.log
+          cleanup_game_ns
+          trap - EXIT
+          rm -f "$WBD_GAME_TLS_FIXTURE_DIR"/*.cold
+          rmdir "$WBD_GAME_TLS_FIXTURE_DIR"
+          unset WBD_GAME_TLS_FIXTURE_DIR
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
+          cp target/release/libwbd_engine.so fixed-build/
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          file fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          source=["crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/runtime/fec2_owner.rs",
+            "crates/wbd-engine/src/v4_fixed_stream.rs",
+            "crates/wbd-engine/src/v4_game_lane.rs",
+            "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs",
+            "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_protected_handoff.rs",
+            "crates/wbd-codec/tests/fec2_release_record.rs",
+            "crates/wbd-codec/Cargo.toml",
+            "crates/wbd-engine/Cargo.toml",
+            "crates/wbd-engine/src/fec2_staged.rs",
+            "crates/wbd-codec/src/fec_v2.rs","crates/wbd-codec/src/record_crypto.rs",
+            "r0/go_overlay/internal/realityfront/admission_v4.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_mature_disabled_linux.go",
+            "r0/go_overlay/internal/v4productcli/linux.go",
+            "r0/go_overlay/cmd/wbd-v4-client/main.go",
+            "r0/go_overlay/cmd/wbd-v4-server/main.go",
+            "tools/m0-v4-public-real-linux-netns.sh",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+            "tools/run-v4-tun-netns.sh",".github/workflows/m0-plan012-combined-functional.yml"]
+          for optional in [
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_product_linux.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_linux_public_product_test.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_game_kernel_linux_test.go",
+            ".github/workflows/m0-plan012-preenable-parallel.yml",
+          ]:
+            if pathlib.Path(optional).is_file(): source.append(optional)
+          m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+            "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+            "toolchains":{"go":"1.23.12","rust":"1.85.1"},
+            "feature":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record",
+            "default_ABI_has_test_symbol":False,
+            "tested_scope":"COMBINED_RELEASE_FEC_RECORD_GAME2_4_NATIVE_AND_ONE_SHOT_GO_TLS_REAL_KERNEL",
+            "continuous_Fixed_Auto_Game_product":"NOT_RUN",
+            "released_fec_record_crypto_native_test":"PASS_SCOPED",
+            "m1_game_2_4_independent_lanes_native_test":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_go_game_2_4_tls_cold_set":"TESTED_REAL_TLS_ONLY_NO_M4_KERNEL",
+            "continuous_FEC_RX_4_interleaved_blocks_native":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "continuous_FEC_RX_noHOL_old_incomplete_evict":"PASS_SCOPED_NOT_ORIGINAL_GO_KERNEL",
+            "original_TLS_FixedStream_deferred_parity_kernel_receipt":"PASS_NATIVE_ONLY",
+            "production_Fixed_Auto_live_kernel":"NOT_RUN",
+            "original_background_FEC_RX_uses_one_moved_replay_opener":"COMPILED_OPTIONAL_DORMANT_PENDING_NOT_PRODUCT",
+            "production_FEC2_default":"OFF",
+            "release_client_original_M2_actual_kernel_C2S_authenticated":"PASS_SCOPE_ONLY_WITHOUT_POLICY_APPLIED",
+            "source_inputs_sha256":{p:sha(p) for p in source},
+            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so","wbd-v4-client","wbd-v4-server"]}}
+          pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          PY
+      - name: One real Linux raw/TUN/UDP functional batch, 3 ciphers and original Fixed applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1
+          cat fixed-kernel-result/real-kernel.log
+          for suite in 1 2 3; do
+            grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_ORIGINAL_GO_FIXED_KERNEL_QUIESCENT_OFF_AFTER_M2_SETTLED_PASS suite=$suite before_ack=deny after_auth_receipt=off5 fixed_rev4=retired" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_AUTHENTICATED_FEC2_RS16_MISSING_SOURCE_PASS suite=$suite e=1 restored=127 source_pn=0 parity_pn=1" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_RAW_RUST_FEC2_RS16_M4_TUN_UDP_DELIVERY_PASS suite=$suite recovered_ip=127 udp_payload=99" fixed-kernel-result/real-kernel.log
+            grep -q "M0_REAL_GO_TLS_M4_RAW_REVERSE_M3_AEAD_PN_M2_FROZEN_RECEIPT_PASS suite=$suite" fixed-kernel-result/real-kernel.log
+          done
+          # One additional original Go TLS S2C background TX with four
+          # actual TUN UDP packets + >=2 real source/parity blocks received
+          # through an independent original-key M3 client replay decoder.
+          # No FAKE peer APPLIED or product release from a private verifier.
+          WBD_M0_FEC2_CONTINUOUS=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/continuous-kernel.log 2>&1 || {
+            cat fixed-kernel-result/continuous-kernel.log;exit 1;
+          }
+          cat fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          m=json.loads((p/"manifest.json").read_text())
+          m.update(result="PASS_SCOPED_OPTIN_FIXED_APPLIED_AFTER_REAL_KERNEL_COPY",
+            actual_original_go_tls_ciphers=3,original_m1_fec2_scheduler=True,
+            original_m3_aead_unique_replay_and_rs16=True,
+            original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
+            real_original_m2_authenticated_reverse_receipt=True,
+            applied_before_kernel_copy=False,
+            authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
+            real_data_blocks_per_case=1,
+            frozen_fixed_stream_composer_consumed=True,
+            previous_attempt_compilation_failure_run_id=39266993450,
+            previous_attempt_original_result="FAIL_E0412_GO_APP_NOT_RUN",
+            native_multiblock_composer_source="7b5533db6ffc7be7a950562bfaf642a68a75930b",
+            native_multiblock_stream_only="PASS_3_BLOCKS",
+            fec_release_record_3ciphers="PASS_NATIVE",
+            game_2_4_own_AEAD_PN_replay="PASS_REAL_GO_TLS_NATIVE_AND_M4_KERNEL_UDP_SCOPED",
+            independent_original_go_tls_game_2_4_m4_raw_tun_udp_first_app="PASS_SCOPED_REAL_KERNEL_NOT_ORIGINAL_PUBLIC_GO_CLI",
+            background_real_kernel_FEC_multiblock_source_repair="PASS_ORIGINAL_GO_RELEASE_CLIENT_RUST_RX_SCOPED_LINUX_KERNEL_NOT_PRODUCT_CONNECT",
+            one_missing_source_actual_kernel_parity_Rs16_recovery="PASS_SCOPED_DEV_REAL_CLIENT_TUN_UDP_NOT_PRODUCT_CLIENT",
+            fixed_applied_from_background="PENDING_AWAIT_AUTHENTICATED_M2_APP",
+            FEC2_production="OFF",
+            M4_Linux_connect_real_netns_client_server_stop_owned_cleanup="PASS_ACTIONS_SCOPED",
+            M4_route_readback_after_Stop="PASS_M4_SOURCE_OWNED_COMBINED_ACTIONS",
+            M4_Windows_network="NOT_RUN_DEFERRED",
+            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_AUTHENTIC_MATURE_FIXED_APPLIED",
+            Fixed_revision4_mature_original_go_M2="PASS_LINUX_SCOPED_AUTHENTIC_2S_AFTER_CLIENT_TUN",
+            Auto_initial_profile_authenticated_M2_APPLIED="PASS_LINUX_SCOPED_STARTUP_PROFILE_ONLY",
+            Auto_dynamic_512_mature_samples="NOT_RUN",
+            fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
+            network_multiblock="NOT_RUN",
+            repeatable_background_multiblock_product="NOT_RUN",
+            auto_product="NOT_RUN",game_2_or_4_lanes_product="NOT_RUN",
+            production_FEC2="OFF",
+            kernel_log_sha256=hashlib.sha256((p/"real-kernel.log").read_bytes()).hexdigest(),
+            background_kernel_log_sha256=hashlib.sha256((p/"continuous-kernel.log").read_bytes()).hexdigest(),
+            release_record_log_sha256=hashlib.sha256((p/"release-record.log").read_bytes()).hexdigest(),
+            game_lanes_log_sha256=hashlib.sha256((p/"game-lanes.log").read_bytes()).hexdigest(),
+            real_go_native_game_lanes_log_sha256=hashlib.sha256((p/"real-go-native-game-lanes.log").read_bytes()).hexdigest(),
+            original_go_tls_game_m4_real_kernel_log_sha256=hashlib.sha256((p/"game-real-kernel.log").read_bytes()).hexdigest(),
+            original_go_game_tls_log_sha256=hashlib.sha256((p/"original-go-game-tls.log").read_bytes()).hexdigest(),
+            continuous_rx_log_sha256=hashlib.sha256((p/"continuous-rx.log").read_bytes()).hexdigest(),
+            fixed_stream_log_sha256=hashlib.sha256((p/"fixed-tx-stream.log").read_bytes()).hexdigest())
+          (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
+          PY
+      - name: Run BOTH actual original-Go V4 client and server entrypoints through real TLS, Rust M1/M3/M4 and Linux UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash tools/m0-v4-public-real-linux-netns.sh fixed-build >fixed-kernel-result/v4-public-normal-real-cli.log 2>&1 || {
+            cat fixed-kernel-result/v4-public-normal-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-normal-real-cli.log
+          grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
+          cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+          # The two exact same compiled product binaries, reused, now under
+          # genuine 1% independent Linux veth netem kernel loss BOTH ways.
+          # Assert real dropped kernel packets, original M3 authentic ACK,
+          # original M2 SAME ciphertext frozen retransmission, all 512
+          # application UDP round trips and joined native Stop.
+          WBD_V4_PUBLIC_KERNEL_LOSS=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/v4-public-1pct-real-cli.log 2>&1 || {
+            tail -85 fixed-kernel-result/v4-public-1pct-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+          grep -q 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
+            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            fixed-kernel-result/
+            fixed-build/
+          retention-days: 30
+          if-no-files-found: warn
+
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
+          for file in bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go bridge_v4_game_cold_set.go bridge_v4_game_cold_set_test.go fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_release_client_linux.go bridge_v4_fec2_public_product_linux.go bridge_v4_fec2_public_mature_linux.go bridge_v4_fec2_public_mature_disabled_linux.go bridge_v4_game_native_linux.go bridge_v4_game_native_linux_test.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go bridge_v4_live_fec2_kernel_linux_test.go bridge_v4_m4_linux_connect_stop_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+          done
+          # Optional product conformance: missing files are NOT_RUN at
+          # the separate parallel pre-enable gate, not silently skipped PASS.
+          for file in bridge_v4_linux_public_product.go bridge_v4_game_product_linux.go bridge_v4_linux_public_product_test.go bridge_v4_game_kernel_linux_test.go; do
+            if [[ -f "r0/go_overlay/internal/realityfront/$file" ]]; then
+              cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
+            fi
+          done
+          # Assemble ACTUAL public original-Go V4 client and server entry
+          # sources, not a clone of V3 or a package-private Go test binary.
+          mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          # One original credential-checked Go TLS 2/4 fixture, consumed in
+          # the SAME Actions VM by the actual native Rust GameAdapter.
+          # Contains raw exporter keys: keep only in ephemeral RUNNER_TEMP,
+          # never upload and do not print. Wipe after bridge test.
+          export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
+          mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
+          grep -q "M0_PLAN019_NATIVE_GAME_SHARED_ORIGINAL_TLS_MISSING_AUTH_DENIED" fixed-kernel-result/original-go-game-tls.log
           cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
