@@ -6,11 +6,24 @@ set -euo pipefail
 ROOT="${1:?expected argument: directory containing the V4 client, server and Rust native library}"
 ROOT="$(realpath "$ROOT")"
 LOSS="${WBD_V4_PUBLIC_KERNEL_LOSS:-0}"
+MODE="${WBD_V4_PUBLIC_MODE:-normal}"
+case "$MODE" in
+  normal|fec-fixed|fec-auto) ;;
+  *) echo "V4 public product mode not yet authenticated/installed: $MODE" >&2; exit 2 ;;
+esac
+FEC=0
+if [[ "$MODE" != normal ]];then FEC=1;fi
 if [[ "$LOSS" != 0 && "$LOSS" != 1 ]];then
   echo "invalid exact public V4 netem loss selector" >&2;exit 2
 fi
 PACKETS=5
 if [[ "$LOSS" == 1 ]];then PACKETS=512;fi
+# A single group of actual PUBLIC native FEC2 traffic; keep original
+# Normal/off mode and its accepted 512-packet reference unchanged.
+if [[ "$FEC" == 1 ]];then
+  [[ "$LOSS" == 0 ]] || { echo "FEC2 product mode loss not yet qualified" >&2;exit 2; }
+  PACKETS=64
+fi
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
 : "${GITHUB_RUN_ID:?source-locked GitHub Actions only}"
@@ -63,7 +76,7 @@ sudo -n ip netns exec "$NSS" bash -c "
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
     --username '$USER' --password '$PASS' --tunnel-id '$TUNNEL' \
     --tls-cert '$TMP/server-cert.pem' --tls-key '$TMP/server-key.pem' \
-    --mode normal" >"$TMP/server.log" 2>&1 &
+    --mode "$MODE" --fec-profile 1" >"$TMP/server.log" 2>&1 &
 PIDS=$!
 sleep 1
 sudo -n ip netns exec "$NSC" bash -c "
@@ -74,7 +87,7 @@ sudo -n ip netns exec "$NSC" bash -c "
     --tun-name wbdvc4 --tun-ipv4 10.66.0.2/24 \
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
     --username '$USER' --password '$PASS' --tunnel-id '$TUNNEL' \
-    --mode normal" >"$TMP/client.log" 2>&1 &
+    --mode "$MODE" --fec-profile 1" >"$TMP/client.log" 2>&1 &
 PIDC=$!
 # Real server-side Python socket only ECHOES a real UDP packet the Linux
 # kernel accepted from the owner TUN. It never makes fake TCP ciphertext.
@@ -112,17 +125,39 @@ if [[ "$LOSS" == 1 ]];then
   sudo -n ip netns exec "$NSC" tc qdisc add dev wbdvc0 root netem loss 1%
   sudo -n ip netns exec "$NSS" tc qdisc add dev wbdvs0 root netem loss 1%
 fi
-if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
+if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" python3 -u -c '
 import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.2",45902));s.settimeout(12)
-for i in range(int(os.environ["WBD_REAL_COUNT"])):
-    msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
-    s.sendto(msg,("10.66.0.1",45901))
-    data,src=s.recvfrom(8192)
-    assert data==b"V4_SERVER_APP_ECHO/"+msg,(i,data)
-    assert src[0]=="10.66.0.1"
-    print("M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK",i,flush=True)
+count=int(os.environ["WBD_REAL_COUNT"])
+fec=os.environ.get("WBD_REAL_FEC")=="1"
+if fec:
+    # Send a genuine source GROUP before awaiting echoes, not a fake
+    # one-by-one application stop-and-wait that starves FEC composer.
+    payloads={}
+    for i in range(count):
+        msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
+        payloads[msg]=i
+        s.sendto(msg,("10.66.0.1",45901))
+        time.sleep(.003)
+    unique=set()
+    s.settimeout(24)
+    while len(unique)<count:
+        data,src=s.recvfrom(8192)
+        assert data.startswith(b"V4_SERVER_APP_ECHO/")
+        assert src[0]=="10.66.0.1"
+        msg=data[len(b"V4_SERVER_APP_ECHO/"):]
+        assert msg in payloads,(msg,len(unique))
+        unique.add(payloads[msg])
+    print("M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode="+os.environ.get("WBD_REAL_MODE","")+" delivered="+str(len(unique)),flush=True)
+else:
+    for i in range(count):
+        msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
+        s.sendto(msg,("10.66.0.1",45901))
+        data,src=s.recvfrom(8192)
+        assert data==b"V4_SERVER_APP_ECHO/"+msg,(i,data)
+        assert src[0]=="10.66.0.1"
+        print("M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK",i,flush=True)
 s.close()
 ' >"$ART/public-v4-normal-business.log" 2>&1;then
   # Failure stays failure. Ask the REAL public processes to Stop so their
@@ -144,7 +179,12 @@ s.close()
   } | tee "$ART/v4-public-1pct-failure-diagnostics.log" >&2
   exit 1
 fi
-if [[ "$PACKETS" == 5 ]];then cat "$ART/public-v4-normal-business.log";fi
+if [[ "$PACKETS" == 5 || "$FEC" == 1 ]];then cat "$ART/public-v4-normal-business.log";fi
+if [[ "$FEC" == 1 ]];then
+  # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL
+  # M2 2s matured authenticated reverse receipts while both owners run.
+  sleep 3
+fi
 # Confirm clean signal-to-actual-Rust-Stop; no test-only positive receipt.
 sudo -n kill -TERM "$(cat "$TMP/client.pid")"
 sudo -n kill -TERM "$(cat "$TMP/server.pid")"
@@ -161,7 +201,18 @@ fi
 # exact readiness and packet count; erase ephemeral TLS files and logs.
 grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
 grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
-test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
+if [[ "$FEC" == 1 ]];then
+  grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
+  for role in client server;do
+    if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=(fixed|auto) requested=1 applied=1 profile=[0-6] pending=false" "$TMP/$role.log";then
+      echo "M0_PUBLIC_V4_FEC2_NOT_AUTHENTICALLY_APPLIED role=$role mode=$MODE" >&2
+      grep -E 'V4_PUBLIC_FEC2_READBACK|V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP' "$TMP/$role.log" >&2 || true
+      exit 1
+    fi
+  done
+else
+  test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
+fi
 grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
 grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
 if [[ "$LOSS" == 1 ]];then
@@ -187,6 +238,8 @@ marker=f"M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS original_t
 (out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\\n')
 print(marker)
 PY
+elif [[ "$FEC" == 1 ]];then
+  echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
 else
   echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
 fi

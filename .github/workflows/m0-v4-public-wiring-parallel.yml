@@ -1,0 +1,99 @@
+name: M0 V4 public real wiring parallel Fixed Auto Game lane gate
+run-name: "M0|V4-WIRING-PARALLEL|\u0024{{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-v4-public-wiring-parallel.yml"
+      - "tools/m0-v4-public-real-linux-netns.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-v4-wiring-parallel-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  real-public-lanes:
+    name: "M0 original Go V4 public ${{ matrix.mode }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [fec-fixed, fec-auto, game2, game4]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan012-combined-39392110629-1
+          run-id: 39392110629
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: source-artifact
+      - name: Pin original Go two product binaries and native original Rust owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p parallel-results
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path('source-artifact')
+          m=json.loads((p/'fixed-kernel-result/manifest.json').read_text())
+          assert m['source_sha']=='0a786de2b341bb54830e6824ffd9329f2f3eb361'
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          for binary in ('wbd-v4-client','wbd-v4-server','libwbd_engine.so'):
+              b=p/'fixed-build'/binary
+              assert b.is_file() and hashlib.sha256(b.read_bytes()).hexdigest()==m['binaries_sha256'][binary]
+          print('M0_SOURCE_LOCKED_ORIGINAL_GO_V4_RUST_OWNER_BINARIES_PASS')
+          PY
+          chmod +x source-artifact/fixed-build/wbd-v4-client source-artifact/fixed-build/wbd-v4-server
+      - name: One genuine mode, independent VM / no cross-job performance comparison
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          if [[ "$MODE" == game2 || "$MODE" == game4 ]];then
+            # The existing genuine public V4 parser only supports one
+            # authenticated lane. A Game cold-set/native demo is NOT this.
+            if source-artifact/fixed-build/wbd-v4-client --mode "$MODE"                >parallel-results/negative-game.log 2>&1;then
+              echo 'UNSAFE_GAME_CLI_UNQUALIFIED_ACCEPT' >&2;exit 1
+            fi
+            grep -q 'not installed in native public owner' parallel-results/negative-game.log
+            echo "M0_GAME_PUBLIC_PRODUCT_UNWIRED mode=$MODE original_tls_lane_count=0 native_game_kernel_component=PASS_SCOPED product=NOT_RUN" | tee parallel-results/outcome.log
+            exit 0
+          fi
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl >parallel-results/apt.log 2>&1
+          WBD_V4_PUBLIC_MODE="$MODE" bash tools/m0-v4-public-real-linux-netns.sh source-artifact/fixed-build >parallel-results/real-mode.log 2>&1 || {
+            tail -100 parallel-results/real-mode.log >&2
+            echo "M0_V4_PUBLIC_MODE_REAL_GATE_FAIL mode=$MODE" >parallel-results/outcome.log
+            exit 1
+          }
+          grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE" parallel-results/real-mode.log
+          echo "M0_V4_PUBLIC_MODE_REAL_GATE_PASS mode=$MODE" >parallel-results/outcome.log
+      - name: Immutable per-lane receipt (failures must remain)
+        if: always()
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          mkdir -p parallel-results
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path('parallel-results')
+          mode=os.environ['MODE']
+          status=(p/'outcome.log').read_text().strip() if (p/'outcome.log').exists() else 'FAIL_NO_OUTCOME'
+          receipt={'source_sha':os.environ['GITHUB_SHA'],'binary_source_sha':'0a786de2b341bb54830e6824ffd9329f2f3eb361',
+              'legacy_original_go':'a7a82db31fe736ffedee330795a3234d358f1984',
+              'run_id':int(os.environ['GITHUB_RUN_ID']),'attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+              'mode':mode,'result':status,'product_qualified':status.startswith('M0_V4_PUBLIC_MODE_REAL_GATE_PASS'),
+              'Windows':'NOT_RUN','physical':'NOT_RUN','performance':'NOT_RUN'}
+          (p/'manifest.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "m0-v4-public-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: parallel-results/
+          retention-days: 30
