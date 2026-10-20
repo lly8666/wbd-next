@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 47,
-  "checkpoint_sha": "b380933d8d60865ed137a5170e31e15ab69f1406",
+  "sequence": 48,
+  "checkpoint_sha": "d5ae6b392dd0cb15133792926a71cf7c46b18f80",
   "progress": "partial",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "current_task": "PLAN012 Linux native isolated TUN FD and Stop/borrow 97/97 PASS exact S44 worker Actions; current Go fixture S46 added pre/post route+policy+TunFD independent cleanup assertions, not yet run in M0 combined original Go.",
-  "why_now": "H45 central G2 39345075239 ROLE_SCOPE_PASS 225 commits. Main M0 combined source6c2b9bd run39308785179 real original Go TLS/FEC+client UDP/repeated Stop PASS, but does not compile M4 S46 named Go test; S46 actual integrated Go test awaits M0-owned workflow. Native source locked S44 valid, FEC2 OFF.",
+  "current_task": "PLAN012 Linux M4 real native TUN Stop PASS worker39344699874; original-Go M4 S43 exact Git blob test ACTUALLY PASS inside main combined39351905299 but whole job FAIL M0-owned script stray fi. Enhanced M4 S46 route/rule/fd baseline still NOT_RUN.",
+  "why_now": "Main run39351905299 exact source4048065906 Go TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup ---PASS real TLS FEC+TUN UDP/Stop 2.09s, exact S43 Go blob e7e8a64f, but shell syntax error at tools/run-v4-tun-netns.sh line240 turns whole job FAIL. M4 S46 G2 central39351643859 PASS, stronger Go file not integrated. Main owner must repair script and re-run.",
   "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
-  "next_action": "M0 copy M4 file r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go from exact S46 f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6, include named test in existing combined original-Go Linux isolated netns Actions, require M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS; M4 consume run/attempt/artifact and mark ready only on actual test PASS.",
+  "next_action": "M0 fix main-owned tools/run-v4-tun-netns.sh trailing fi and copy S46 enhanced Go test f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6, run ONE exact new integrated original-Go Linux netns Actions; M4 verify full SUCCESS+named marker+original route/policy/TUNFD cleanup before ready_for_integration.",
   "unverified": true,
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "evidence_refs": [
@@ -24,5 +24,5 @@
     "docs/devlog/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.md",
     "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   ],
-  "partial_summary": "H47 S47 b380933 follows S46 f0e5b251 M4 original Go owned state enhancement (route all/policy rules/TUN FD exact before/after). New Go test NOT_RUN, no M0 combined import. Native S44 bdd6f6c Action39344699874 97/97 incl exact sudo netns live Tun fd Stop PASS. H45 central G2 39345075239 ROLE_SCOPE_PASS 225 commits; S46 central pending when S47 recorded. M0 prior main original Linux FEC fixed/auto netns Actions39308785179 PASS distinct source6c2b9bd. Windows I010 NOT_RUN historical, old failures retained, physical NOT_RUN, production FEC2 OFF."
+  "partial_summary": "H48 S48 d5ae6b3; native S44 bdd6f6c worker39344699874 97/97 incl privileged one-off true Linux TUN FD/Stop PASS. Main GO source4048065906 run39351905299 actual S43 M4 named Go Test PASS original TLS FEC lost source client UDP Stop, but overall job FAIL due main shell fi at line240. M4 strengthened S46 f0e5b251 G2 PASS39351643859 not in run, original Go baseline restore NOT_RUN. No product pass; old Windows I010 deferred, FEC2 OFF, physical NOT_RUN."
 }
