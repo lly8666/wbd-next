@@ -1,0 +1,133 @@
+name: M0 actual public Go FEC fixed auto Game2 Game4
+run-name: "M0|REAL-GO-PUBLIC-FEC-GAME|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-linux-original-go-public-modes.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  exact-public-cli:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        mode: [fixed, auto, game2, game4]
+    env:
+      MODE: ${{ matrix.mode }}
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+      BUILD_SRC: 9b1dec079f4d955d7f4d8a049349a00922c58032
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: linux-normal-off-two-real-clis-39369570717-1
+          run-id: 39369570717
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: frozen
+      - name: Reuse exact original Go untagged binary pair and produce real public CLI process mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "$GO_SRC"
+          mkdir -p product live
+          echo "9c0a0f0fdf77f0ef27865640b3143c440a109d3ae704cf8e17f46f72b89ca66b  frozen/linux-normal-off-original-go-amd64.tar.gz" | sha256sum -c -
+          tar -C product -xzf frozen/linux-normal-off-original-go-amd64.tar.gz
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          m=json.loads(pathlib.Path("product/source-manifest.json").read_text())
+          assert m["main_source"]==os.environ["BUILD_SRC"]
+          assert m["original_go_binary_source"]==os.environ["GO_SRC"]
+          assert m["build_tags"]==[]
+          for name,h in m["binary_sha256"].items():
+            assert hashlib.sha256((pathlib.Path("product")/name).read_bytes()).hexdigest()==h
+          PY
+          python3 tools/m0_original_go_public_modes.py \
+            --original legacy/scripts/lifecycle_acceptance_sample.sh \
+            --output live/actual-cli.sh --mode "$MODE" \
+            --expected-sha256 d9da98f98b338d82c3b00a806f9a6009ada8b0ced4d10d78acbf4b574b897ffe
+          cp product/wbd-client live/wbd-client
+          cp product/wbd-server live/wbd-server
+      - name: Two actual Go public TLS binaries true real kernel traffic and Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables nftables tcpdump openssl
+          test -c /dev/net/tun
+          eval "$(python3 - <<'PY'
+          import json
+          d=json.load(open("live/source-lock.json"))
+          for k,v in (("LANES",d["lanes"]),("FEC",d["parity"])):
+            print("export "+k+"="+str(v))
+          PY
+          )"
+          export WBD_LIFECYCLE_ARTIFACT_DIR="$GITHUB_WORKSPACE/live"
+          export WBD_LIFECYCLE_SCENARIO=l0_config
+          export WBD_LIFECYCLE_LANES="$LANES"
+          export WBD_LIFECYCLE_SEED=101
+          export WBD_LIFECYCLE_FEC="$FEC"
+          export WBD_LIFECYCLE_PADDING=0
+          sudo --preserve-env=GITHUB_SHA,WBD_LIFECYCLE_ARTIFACT_DIR,WBD_LIFECYCLE_SCENARIO,WBD_LIFECYCLE_LANES,WBD_LIFECYCLE_SEED,WBD_LIFECYCLE_FEC,WBD_LIFECYCLE_PADDING env GITHUB_WORKSPACE="$GITHUB_WORKSPACE/legacy" bash live/actual-cli.sh
+          sudo chown -R "$(id -u):$(id -g)" live
+      - name: Evaluate real duplex UDP app per capability and actual kernel loss
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          p=pathlib.Path("live")
+          mode=json.loads((p/"source-lock.json").read_text())
+          m=json.loads(pathlib.Path("product/source-manifest.json").read_text())
+          for name,h in m["binary_sha256"].items():
+            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==h
+          traffic={}
+          for side in ("biz","target"):
+            s=json.loads((p/("main-"+side+".json")).read_text())["stats"]
+            assert s["sent_packets"]>50 and s["recv_unique_packets"]>0,(side,s)
+            traffic[side]={"sent":s["sent_packets"],"received":s["recv_unique_packets"],
+              "sent_bytes":s["sent_bytes"],"received_bytes":s["recv_unique_bytes"]}
+          raw=json.loads((p/"router-qdisc-final.json").read_text())
+          tc=[{"dev":x["dev"],"drops":int(x.get("drops",0)),"packets":int(x.get("packets",0))}
+              for x in raw if x.get("kind")=="netem"]
+          assert len(tc)==2 and all(x["packets"]>0 for x in tc),tc
+          if mode["loss"]: assert sum(x["drops"] for x in tc)>0,tc
+          assert not any(n.startswith(("lbiz-","lcli-","lrtr-","lsrv-","ltgt-"))
+              for n in subprocess.check_output(["ip","netns","list"],text=True).split())
+          out={"source":os.environ["GITHUB_SHA"],"original_go_source":os.environ["GO_SRC"],
+            "binary_build_source":os.environ["BUILD_SRC"],"binary_sha256":m["binary_sha256"],
+            "mode":"Go_V3_"+mode["mode"],"real_public_client_and_server":True,
+            "real_TLS_and_raw_TUN":True,"lanes_requested":mode["lanes"],
+            "FEC_parity_requested":mode["parity"],"kernel_netem":tc,
+            "actual_duplex_udp":traffic,"Stop_owned_network":"PASS",
+            "actual_FEC_recovered_packets":"NOT_INSTRUMENTED",
+            "actual_auto_policy_applied":"NOT_INSTRUMENTED",
+            "actual_outer_retransmission":"NOT_INSTRUMENTED",
+            "new_Rust_V4":"NOT_WIRED","release":"V3_EXPERIMENTAL_ONLY"}
+          (p/"mode-receipt.json").write_text(json.dumps(out,indent=2)+"\n")
+          print("M0_PUBLIC_GO_V3_"+mode["mode"].upper()+"_REAL_APPLICATION_PASS")
+          print(json.dumps(out))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: go-public-real-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            live/mode-receipt.json
+            live/source-lock.json
+            live/main-biz.json
+            live/main-target.json
+            live/router-qdisc-final.json
+          if-no-files-found: warn
+          retention-days: 30
