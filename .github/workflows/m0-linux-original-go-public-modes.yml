@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/m0-linux-original-go-public-modes.yml"
+      - "tools/m0_original_go_product_telemetry.py"
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
