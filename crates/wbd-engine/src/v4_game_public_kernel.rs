@@ -27,6 +27,9 @@ pub(crate) struct GameKernelOwner{
     tx:Vec<Arc<ScopedRawIpv4Tx>>,rx:Vec<Arc<ScopedRawIpv4Rx>>,
     copied:Arc<AtomicU64>,delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
     raw_received:Arc<AtomicU64>,authenticated_rejected:Arc<AtomicU64>,
+    rx_driver_timeout:Arc<AtomicU64>,rx_driver_other:Arc<AtomicU64>,
+    rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
+    rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
 }
 impl GameKernelOwner{
     pub(crate) fn start(
@@ -54,6 +57,12 @@ impl GameKernelOwner{
         let rejected=Arc::new(AtomicU64::new(0));
         let raw_received=Arc::new(AtomicU64::new(0));
         let authenticated_rejected=Arc::new(AtomicU64::new(0));
+        let rx_driver_timeout=Arc::new(AtomicU64::new(0));
+        let rx_driver_other=Arc::new(AtomicU64::new(0));
+        let rx_mutex_acquired=Arc::new(AtomicU64::new(0));
+        let rx_authenticated_some=Arc::new(AtomicU64::new(0));
+        let rx_dedup_none=Arc::new(AtomicU64::new(0));
+        let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -145,6 +154,12 @@ impl GameKernelOwner{
             let recv_rejected=Arc::clone(&rejected);
             let raw_seen=Arc::clone(&raw_received);
             let auth_denied=Arc::clone(&authenticated_rejected);
+            let rx_err_timeout=Arc::clone(&rx_driver_timeout);
+            let rx_err_other=Arc::clone(&rx_driver_other);
+            let rx_held=Arc::clone(&rx_mutex_acquired);
+            let rx_some=Arc::clone(&rx_authenticated_some);
+            let rx_none=Arc::clone(&rx_dedup_none);
+            let tun_failed=Arc::clone(&rx_tun_failed);
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
                 let (src,dst,sp,dp)=if server{
@@ -155,22 +170,39 @@ impl GameKernelOwner{
                 let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
                 let mut wire=[0u8;2048];
                 while !rx_stop.load(Ordering::Acquire){
-                    let Ok((len,_))=raw.recv_one_into(
+                    let (len,_)=match raw.recv_one_into(
                         generation,&mut wire,tuple,PacketPersona::Legacy
-                    )else{continue};
+                    ){
+                        Ok(data)=>data,
+                        Err(wbd_platform::linux_raw_carrier::RawTxError::Kernel(110))=>{
+                            rx_err_timeout.fetch_add(1,Ordering::Relaxed);
+                            continue
+                        },
+                        Err(_)=>{
+                            rx_err_other.fetch_add(1,Ordering::Relaxed);
+                            continue
+                        }
+                    };
                     if rx_stop.load(Ordering::Acquire){break}
                     raw_seen.fetch_add(1,Ordering::Relaxed);
                     let received={
                         let Ok(mut game)=client_rx_adapter.lock()else{break};
+                        rx_held.fetch_add(1,Ordering::Relaxed);
                         game.receive(lane,wire[..len].to_vec())
                     };
                     match received{
                         Ok(Some(plaintext))=>{
+                            rx_some.fetch_add(1,Ordering::Relaxed);
                             if rx_tun.write_authenticated_ipv4(generation,&plaintext).is_ok(){
                                 recv_count.fetch_add(1,Ordering::Relaxed);
-                            }else{recv_rejected.fetch_add(1,Ordering::Relaxed);}
+                            }else{
+                                tun_failed.fetch_add(1,Ordering::Relaxed);
+                                recv_rejected.fetch_add(1,Ordering::Relaxed);
+                            }
                         },
-                        Ok(None)=>{}, // exact GameRx cross-lane dedup
+                        Ok(None)=>{
+                            rx_none.fetch_add(1,Ordering::Relaxed);
+                        }, // exact GameRx cross-lane dedup
                         Err(_)=>{
                             auth_denied.fetch_add(1,Ordering::Relaxed);
                             recv_rejected.fetch_add(1,Ordering::Relaxed);
@@ -188,7 +220,9 @@ impl GameKernelOwner{
             }
         }
         Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected,
-            raw_received,authenticated_rejected})
+            raw_received,authenticated_rejected,
+            rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
+            rx_authenticated_some,rx_dedup_none,rx_tun_failed})
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){
         (self.copied.load(Ordering::Relaxed),
@@ -206,6 +240,19 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
+        // Counters distinguish real kernel ingress from blocked shared
+        // GameAdapter lock, AEAD/GameRx duplicate and TUN failure.
+        // No packet content, secret, raw key, TLS material or payload emitted.
+        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} adapter_lock={} authenticated_some={} duplicate_none={} aead_denied={} tun_fail={} tun_delivered={}",
+            self.raw_received.load(Ordering::Relaxed),
+            self.rx_driver_timeout.load(Ordering::Relaxed),
+            self.rx_driver_other.load(Ordering::Relaxed),
+            self.rx_mutex_acquired.load(Ordering::Relaxed),
+            self.rx_authenticated_some.load(Ordering::Relaxed),
+            self.rx_dedup_none.load(Ordering::Relaxed),
+            self.authenticated_rejected.load(Ordering::Relaxed),
+            self.rx_tun_failed.load(Ordering::Relaxed),
+            self.delivered.load(Ordering::Relaxed));
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}
         for x in &self.rx{x.begin_stop()}
