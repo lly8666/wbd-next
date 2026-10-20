@@ -131,7 +131,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
         t.Fatalf("original native Rust TLS active owner false APPLIED: %+v err=%v",readback,e)
     }
     installed:=false
-    if os.Getenv("WBD_M0_TRY_SCOPED_NATIVE_WINTUN")=="1"{
+    if os.Getenv("WBD_M0_TRY_SCOPED_NATIVE_WINTUN")=="1" && m0NativeWintunAvailable(t){
         name:=fmt.Sprintf("WBD-M0-OWNER-%s",os.Getenv("GITHUB_RUN_ID"))
         tun,e:=windowsclient.OpenTUN(name)
         if e!=nil{
