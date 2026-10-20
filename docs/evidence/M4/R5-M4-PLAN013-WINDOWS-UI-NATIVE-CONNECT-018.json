@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "result": "SOURCE_AUTHORED_PENDING_WINDOWS2022_ACTIONS",
+  "result": "SOURCE_ENHANCED_REAL_GO_PROCESS_AND_GAME_1_2_4_ACTIONS_PENDING",
   "registry_revision": 2,
   "assignment_epoch": 1,
   "previous_linux": {
@@ -13,8 +13,13 @@
   "historical_I010": "PLANNED_NOT_RUN_DEFERRED_DO_NOT_DISPATCH",
   "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
   "gui_blob": "9015c6a05de702fcacb92cb6b29fbf9c90a63ee9",
-  "test_blob": "329d4ad80a553dc935253d937c0a91ab2087286a",
+  "test_blob": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
   "actual_native_network": "NOT_RUN",
   "actual_Rust_Stop": "NOT_RUN_M0_ONLY",
-  "next_action": "Consume new exact-SOURCE G2 and original Go Windows2022 Actions; expand negative real process and Game configuration checks after first compile."
+  "next_action": "Consume exact S53 Windows-2022 real pinned original Go CLI+GUI G2 and verify all named negative process, Game1/2/4 and false READY cases; repair compile/functional errors and obtain artifact.",
+  "new_original_go_process_tests": [
+    "PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied",
+    "PLAN013 original Go process refuses unsafe Connect before network-ready",
+    "PLAN013 refused original Go Connect leaves no owned journal or routes"
+  ]
 }

@@ -182,7 +182,10 @@ foreach ($name in @(
     'GUI rejects invalid WAL; not a fake safe or ready result',
     'GUI real Go native preflight checks OS APIs without claiming Connect ready',
     'GUI native preflight preserves legacy WAL as blocked',
-    'PLAN013 legacy READY does not fake Windows native applied network'
+    'PLAN013 legacy READY does not fake Windows native applied network',
+    'PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied',
+    'PLAN013 original Go process refuses unsafe Connect before network-ready',
+    'PLAN013 refused original Go Connect leaves no owned journal or routes'
 )) {
     if ($report.checks -notcontains $name) {
         throw ("native GUI status regression NOT_RUN: " + $name)
