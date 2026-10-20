@@ -2332,6 +2332,51 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     e.stopped=true;e.stopping=false;OK
 }
+#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
+    group:u64,ifname:*const u8,ifname_len:usize,ifindex:u32,
+    fd:i32,tunname:*const u8,tunname_len:usize,
+)->i32{
+    if ifname.is_null()||ifname_len==0||ifname_len>15||
+       tunname.is_null()||tunname_len==0||tunname_len>15||
+       ifindex==0||fd<3{return INVALID}
+    let Ok(ifname)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(ifname,ifname_len)
+    })else{return INVALID};
+    let Ok(tunname)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(tunname,tunname_len)
+    })else{return INVALID};
+    // Duplicate real Go-owned TUN FD. Original Go retains its descriptor
+    // until native joined Stop has reclaimed raw/TUN worker loans.
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+    else{return INVALID};
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
+    let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
+        Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
+        ifname,ifindex,dup,tunname,(group>>32) as u32
+    );
+    let Ok(owner)=owner else{return BAD_STAGE};
+    e.drivers=Some(owner);
+    OK
+}
+#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
+    group:u64,copied:*mut u64,delivered:*mut u64,rejected:*mut u64,
+)->i32{
+    if copied.is_null()||delivered.is_null()||rejected.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped{return BAD_STAGE}
+    let Some(native)=e.drivers.as_ref()else{return BAD_STAGE};
+    let (a,b,c)=native.counters();
+    unsafe{copied.write(a);delivered.write(b);rejected.write(c)}
+    OK
+}
+
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_release(group:u64)->i32{
