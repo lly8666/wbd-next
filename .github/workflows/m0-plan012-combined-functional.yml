@@ -12,6 +12,9 @@ on:
   push:
     branches: [main]
     paths:
+      - ".github/workflows/m0-plan012-combined-functional.yml"
+      - "crates/wbd-engine/src/v4_game_kernel_linux_tests.rs"
+      - "crates/wbd-engine/src/lib.rs"
       - "crates/wbd-engine/src/v4_game_lane.rs"
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
