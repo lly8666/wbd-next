@@ -195,7 +195,7 @@ s.close()
       echo "M0_GAME_AUTH_NATIVE_FINAL_SERVER_UDP_RECEIPT"
       tail -8 "$TMP/echo.log" || true
       for role in client server;do
-        echo "M0_GAME_$role_NATIVE_LAST_EVENTS"
+        echo "M0_GAME_${role}_NATIVE_LAST_EVENTS"
         sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' "$TMP/$role.log" | tail -20 || true
       done
     fi
