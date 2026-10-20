@@ -1,0 +1,110 @@
+name: M0 PLAN019 original Go public Game2 Game4 exact-binary parallel M4 gate
+run-name: "M0|PLAN019-PUBLIC-GAME-MATRIX|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan019-public-game-source-locked.yml"
+      - "r0/go_overlay/internal/v4productcli/game_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
+      - "tools/m0-v4-public-real-linux-netns.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-plan019-exact-binary-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  true-public-game:
+    name: "Original Go V4 ${{ matrix.mode }} real M4 after authenticated TLS"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [game2, game4]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan012-combined-39423888402-1
+          run-id: 39423888402
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: pinned-source
+      - name: Pin exact original Go V4 and Rust feature-enabled binary source, not current mutable HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p game-result fixed-kernel-result
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('pinned-source')
+          m=json.loads((root/'fixed-kernel-result/manifest.json').read_text())
+          assert m['source_sha']=='86f1980d31d583d9b7fb5374b92fb9eaa655752b'
+          assert m['run_id']==39423888402 and m['attempt']==1
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert m['toolchains']=={'go':'1.23.12','rust':'1.85.1'}
+          binaries={"wbd-v4-client":"2d0e44726d06259be403985507849756b47fa0810cb228fa1eb4ce0f96",
+            "wbd-v4-server":"a92badbd4ecd49050cac030d79aa9e1582d2115b11419a418262ffc8428fbf1b",
+            "libwbd_engine.so":"c90804ab61d592c7283f625ccd933d999fe3baddeba284a9e33d942590e9ae09"}
+          for filename,digest in binaries.items():
+              p=root/'fixed-build'/filename
+              assert p.is_file()
+              got=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert got==digest and m['binaries_sha256'][filename]==digest,filename
+          print('M0_PLAN019_SOURCE_LOCKED_GO_RUST_PUBLIC_PRODUCT_BINARY_OK')
+          PY
+          chmod +x pinned-source/fixed-build/wbd-v4-client pinned-source/fixed-build/wbd-v4-server
+          nm -D pinned-source/fixed-build/libwbd_engine.so | grep -q " wbd_m0_embedded_go_game_group_loop_start$"
+      - name: Install real Linux M4 raw/TUN netns prerequisites once
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl >game-result/packages.log 2>&1
+      - name: Real public one-mode original Go TLS and independent Rust Game2/4 M4, blocked lane1, unique UDP/Stop
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          if ! WBD_V4_PUBLIC_MODE="$MODE" bash tools/m0-v4-public-real-linux-netns.sh pinned-source/fixed-build >game-result/public-game.log 2>&1; then
+            tail -120 game-result/public-game.log >&2
+            cp fixed-kernel-result/public-v4-normal-business.log game-result/udp-business.log 2>/dev/null || true
+            echo "M0_PLAN019_PUBLIC_GAME_REAL_MODE_FAIL mode=$MODE" | tee game-result/outcome.log
+            exit 1
+          fi
+          lanes="${MODE#game}"
+          grep -q "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$lanes" game-result/public-game.log
+          grep -q "M0_GAME_PUBLIC_ORIGINAL_GO_M4_FIRST_APP_WITH_LANE1_DAMAGE_PASS lanes=$lanes" game-result/public-game.log
+          cp fixed-kernel-result/public-v4-normal-business.log game-result/udp-business.log
+          echo "M0_PLAN019_PUBLIC_GAME_REAL_MODE_PASS mode=$MODE" | tee game-result/outcome.log
+      - name: Preserve precise source and independent job result, including actual FAIL
+        shell: bash
+        if: always()
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          mkdir -p game-result
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path('game-result')
+          result=(p/'outcome.log').read_text().strip() if (p/'outcome.log').exists() else 'NOT_RUN_NO_OUTCOME'
+          receipt=dict(harness_source=os.environ["GITHUB_SHA"],
+            binary_source="86f1980d31d583d9b7fb5374b92fb9eaa655752b",
+            source_build_run=39423888402,source_build_artifact_id=12264967774,
+            original_go_sha="a7a82db31fe736ffedee330795a3234d358f1984",
+            run_id=int(os.environ["GITHUB_RUN_ID"]),attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            mode=os.environ["MODE"],result=result,product_qualified=result.startswith("M0_PLAN019_PUBLIC_GAME_REAL_MODE_PASS"),
+            Windows="NOT_RUN",physical="NOT_RUN",performance="NOT_RUN",production_Game="OFF")
+          (p/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan019-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: game-result/
+          retention-days: 30
+          if-no-files-found: warn
