@@ -1,0 +1,12 @@
+# M0 S501 — one exact SOURCE real public Fixed/Auto/Game2/Game4 Linux functional 4/4 PASS (2026-10-20)
+
+Following S499 intent and S500 workflow: one Linux functional source-lock matrix Actions `39433130093` attempt1 overall SUCCESS on test source `c81838f10371d9ecb6a88fd3cabb8692fd8fff85`, four independent Ubuntu runners all SUCCESS. Every runner downloaded exact already-built `39431226207/1` artifact `12268980051`, binary SOURCE `bdcd66c6ccf973f26af7e9e4eb035457108cb7dd`, original Go SHA `a7a82db31fe736ffedee330795a3234d358f1984`. Each runner rehashed actual client/server/native Rust bytes against immutable source manifest and used same original `tools/m0-v4-public-real-linux-netns.sh` genuine two-process underlay; no repeat native compilation, no perf scenario.
+
+- Fixed `118663074741` artifact `12269635814` SHA256 `8e2bcede...`: 64 distinct real Linux UDP app returns, TLS→original Rust FEC source+parity + M2 genuine mature revision1 both roles APPLIED pendingfalse and joined Stop.
+- Auto `118663074424` artifact `12268408558` SHA256 `8e1974d7...`: same 64 app and honest initial revision1 APPLIED, not adaptive second-policy claim.
+- Game2 `118663073945` artifact `12269640814` SHA256 `2b567743...`: 2 real credential TLS lanes, one real Linux TCP lane DROP, 5 real bidirectional UDP echoes independent healthy lane, joined native M4 Stop.
+- Game4 `118663074727` artifact `12268453215` SHA256 `bd982f1b...`: 4 independent credential TLS lanes, one real TCP lane DROP, 5 real bidirectional UDP echoes, joined native M4 Stop.
+
+All four same exact binary SOURCE product scope PASS. Root fixed at S497 was blocking 750ms TUN reader mutex HOL; ready-only poll0 + 2ms idle yield. Prior original source FAILs in JSON remain FAIL. Linux S500 marks current one-source functional done_when MET_SCOPED; production Game/FEC2 remains OFF pending separate release/config decision. Windows original-Go/WinForms M4 S59 genuinely real Windows scoped OS TEST-NET WFP/Wintun WAL already PASS frozen; missing actual original Windows authenticated TLS→Rust shared Stop, full production WFP capture and owned default-route apply remain NOT_RUN, cannot infer Windows from Linux.
+
+Precise machine-readable SOURCE and artifact receipts: `docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json`. Do not repeat this accepted four-mode functional matrix or re-dispatch old successful jobs.

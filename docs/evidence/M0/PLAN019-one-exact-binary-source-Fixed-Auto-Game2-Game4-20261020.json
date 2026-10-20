@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+  "binary_source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "PASS_SCOPED_REAL_LINUX_ONE_BINARY_SOURCE_FIXED_AUTO_GAME2_GAME4_ORIGINAL_GO_TLS_RUST_M4",
+  "done_when_linux_functional": "MET_FOR_CURRENT_SCOPED_TESTS",
+  "overall_M0_registry_done_when": "PARTIAL_MISSING_WINDOWS_SHARED_PRODUCT",
+  "source_build": {
+    "run_id": 39431226207,
+    "attempt": 1,
+    "job_id": 118656504467,
+    "artifact_id": 12268980051,
+    "name": "m0-plan012-combined-39431226207-1",
+    "zip_sha256": "5fd581f4a5e6309e248fec415fadd1e8287700f81b8471179439e470dc825f79",
+    "toolchain_go": "1.23.12",
+    "toolchain_rust": "1.85.1",
+    "features": [
+      "m0_v4_probe",
+      "m0_v4_embedded_go",
+      "m0_fec2_owner_probe",
+      "fec2_product_record"
+    ]
+  },
+  "actions": {
+    "workflow": ".github/workflows/m0-plan019-one-source-four-real-public-modes.yml",
+    "run_id": 39433130093,
+    "attempt": 1,
+    "conclusion": "success",
+    "harness_source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+    "fail_fast": false,
+    "jobs": [
+      {
+        "mode": "fec-fixed",
+        "job_id": 118663074741,
+        "result": "PASS_REAL_ORIGINAL_GO_FIXED_M2_AUTH_APPLIED_BOTH_ROLES_64_UNIQUE_APP_STOP",
+        "artifact_id": 12269635814,
+        "zip_sha256": "8e2bcede0450bf530bdc352dd94df85f9844efaa1e196140620f8b8e9299689b"
+      },
+      {
+        "mode": "fec-auto",
+        "job_id": 118663074424,
+        "result": "PASS_REAL_ORIGINAL_GO_AUTO_INITIAL_M2_AUTH_APPLIED_BOTH_ROLES_64_UNIQUE_APP_STOP",
+        "artifact_id": 12268408558,
+        "zip_sha256": "8e1974d7041f46401b4fcba995da91c57ff428c92e11aff1df3e3bd3ebca7243"
+      },
+      {
+        "mode": "game2",
+        "job_id": 118663073945,
+        "result": "PASS_ORIGINAL_GO_TWO_TLS_LANES_SINGLE_RUST_M4_RAW_TUN_FIVE_UDP_LANE1_DAMAGED_NO_HOL_STOP",
+        "artifact_id": 12269640814,
+        "zip_sha256": "2b567743305fbe2ce2a89340447f8188f672e2d4ece8e9672dc603bf96d1d47c"
+      },
+      {
+        "mode": "game4",
+        "job_id": 118663074727,
+        "result": "PASS_ORIGINAL_GO_FOUR_TLS_LANES_SINGLE_RUST_M4_RAW_TUN_FIVE_UDP_LANE1_DAMAGED_NO_HOL_STOP",
+        "artifact_id": 12268453215,
+        "zip_sha256": "bd982f1b72aba37c63957c32a1a73837b0feca742def5fd17fb902369e2672ae"
+      }
+    ]
+  },
+  "contract": {
+    "same_three_exact_binary_hashes_verified_against_source_manifest": true,
+    "no_repeat_native_compile": true,
+    "independent_linux_netns_owner_each": true,
+    "actual_original_Go_credential_TLS_two_processes": true,
+    "same_native_Rust_M4_owner_authorized_per_group": true,
+    "real_raw_TUN_linux_and_udp_app": true,
+    "Fixed_Auto": {
+      "original_authenticated_M2_mature_both_roles": true,
+      "requested": 1,
+      "applied": 1,
+      "pending": false,
+      "unique_udp_each": 64,
+      "FEC2_starts_off": true,
+      "auto": "INITIAL_PROFILE_NOT_ADAPTIVE_SECOND_SWITCH"
+    },
+    "Game2": {
+      "real_lanes": 2,
+      "damaged_tcp_lane": 1,
+      "unique_udp_echoes": 5,
+      "copy_and_delivery_counter_both_roles": true,
+      "joined_stop": true
+    },
+    "Game4": {
+      "real_lanes": 4,
+      "damaged_tcp_lane": 1,
+      "unique_udp_echoes": 5,
+      "copy_and_delivery_counter_both_roles": true,
+      "joined_stop": true
+    },
+    "actual_application_not_fixture_only": true
+  },
+  "retained_red": [
+    {
+      "run_id": 39427677138,
+      "result": "FAIL_GAME2_GAME4_APP_TIMEOUT",
+      "source_sha": "2cd126aee8e5277a2dd201abb45fd6965c2da30a"
+    },
+    {
+      "run_id": 39429778349,
+      "result": "FAIL_GAME2_APP_TIMEOUT_AFTER_RX_TUN_NOT_YET_APP",
+      "source_sha": "0aa9017f69f0a4b0266dc7c7e3f503d9158dfb70"
+    },
+    {
+      "run_id": 39430776859,
+      "result": "FAIL_GAME2_GAME4_TUN_HOL_BEFORE_FIX",
+      "source_sha": "b2770ea77758a6ec4d9a4fd64064ae1d5bcadc5d"
+    },
+    {
+      "run_id": 39431226350,
+      "result": "FAIL_STALE_BINARY_DIAG_MATRIX_NOT_S497_PRODUCT",
+      "source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd"
+    }
+  ],
+  "limits": {
+    "Linux_four_modes_one_exact_SOURCE": "PASS_SCOPED",
+    "Fixed_Auto_under_kernel_loss": "NOT_RUN",
+    "Auto_adaptive_policy_revision": "NOT_RUN",
+    "Windows_native_owner": "NOT_RUN",
+    "full_WFP_global_capture": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "Implement M0-owned authenticated original Go Windows→Rust owner/Stop exact-generation and native Windows 2022 real product gate consuming frozen M4 source; do not rerun accepted Linux all-mode one-source sample."
+}
