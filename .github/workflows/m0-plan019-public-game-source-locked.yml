@@ -46,7 +46,7 @@ jobs:
           assert m['run_id']==39423888402 and m['attempt']==1
           assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
           assert m['toolchains']=={'go':'1.23.12','rust':'1.85.1'}
-          binaries={"wbd-v4-client":"2d0e44726d06259be403985507849756b47fa0810cb228fa1eb4ce0f96",
+          binaries={"wbd-v4-client":"2d0e44726d06259be403985507849756b47fa0810cb4a46cb228fa1eb4ce0f96",
             "wbd-v4-server":"a92badbd4ecd49050cac030d79aa9e1582d2115b11419a418262ffc8428fbf1b",
             "libwbd_engine.so":"c90804ab61d592c7283f625ccd933d999fe3baddeba284a9e33d942590e9ae09"}
           for filename,digest in binaries.items():
