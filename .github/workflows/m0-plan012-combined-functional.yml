@@ -26,6 +26,9 @@ on:
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
+      - "r0/go_overlay/cmd/wbd-v4-client/main.go"
+      - "r0/go_overlay/cmd/wbd-v4-server/main.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go"
@@ -86,6 +89,12 @@ jobs:
               cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
             fi
           done
+          # Assemble ACTUAL public original-Go V4 client and server entry
+          # sources, not a clone of V3 or a package-private Go test binary.
+          mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           # One original credential-checked Go TLS 2/4 fixture, consumed in
@@ -144,6 +153,9 @@ jobs:
           unset WBD_GAME_TLS_FIXTURE_DIR
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
           cp target/release/libwbd_engine.so fixed-build/
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          file fixed-build/wbd-v4-client fixed-build/wbd-v4-server
           python3 - <<'PY'
           import hashlib,json,os,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
@@ -163,6 +175,9 @@ jobs:
             "r0/go_overlay/internal/realityfront/admission_v4.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+            "r0/go_overlay/internal/v4productcli/linux.go",
+            "r0/go_overlay/cmd/wbd-v4-client/main.go",
+            "r0/go_overlay/cmd/wbd-v4-server/main.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
@@ -200,7 +215,7 @@ jobs:
             "production_FEC2_default":"OFF",
             "release_client_original_M2_actual_kernel_C2S_authenticated":"PASS_SCOPE_ONLY_WITHOUT_POLICY_APPLIED",
             "source_inputs_sha256":{p:sha(p) for p in source},
-            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so"]}}
+            "binaries_sha256":{p:sha("fixed-build/"+p) for p in ["owner-go.test","libwbd_engine.so","wbd-v4-client","wbd-v4-server"]}}
           pathlib.Path("fixed-kernel-result/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
           PY
       - name: One real Linux raw/TUN/UDP functional batch, 3 ciphers and original Fixed applied
