@@ -9,11 +9,18 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_release(uint64_t);
+extern int32_t wbd_m0_embedded_go_game_group_loop_start(uint64_t,
+    const unsigned char *,size_t,uint32_t,int32_t,
+    const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_game_group_kernel_counters(
+    uint64_t,uint64_t *,uint64_t *,uint64_t *);
 */
 import "C"
 import (
     "errors"
     "fmt"
+    "net"
+    "os"
     "unsafe"
 )
 
@@ -79,6 +86,41 @@ func (g *v4NativeGameJoined) originalCryptoState()(lanes uint32,drivers bool,err
     if rc!=0{return 0,false,fmt.Errorf("%w: native Game state=%d",errV4Embedded,int(rc))}
     return uint32(n),ready!=0,nil
 }
+// Real original-Go M4 raw/TUN worker install. The actual Go owner
+// supplies its nonzero current ifindex and a real /dev/net/tun FD; Rust
+// verifies the device and retains a DUPLICATED fd until group Stop.
+func (g *v4NativeGameJoined) startNativeM4(
+    iface string,ifindex uint32,tun *os.File,tunName string,
+)error{
+    if g==nil||g.handle==0||g.stopped||tun==nil||
+       iface==""||len(iface)>15||ifindex==0||
+       tunName==""||len(tunName)>15{return ErrAdmissionParams}
+    ni,e:=net.InterfaceByName(iface)
+    if e!=nil||ni==nil||uint32(ni.Index)!=ifindex{return ErrAdmissionUnsupported}
+    if _,e=tun.Stat();e!=nil{return errors.Join(ErrAdmissionParams,e)}
+    rc:=C.wbd_m0_embedded_go_game_group_loop_start(
+        C.uint64_t(g.handle),
+        (*C.uchar)(unsafe.Pointer(unsafe.StringData(iface))),C.size_t(len(iface)),
+        C.uint32_t(ifindex),C.int32_t(tun.Fd()),
+        (*C.uchar)(unsafe.Pointer(unsafe.StringData(tunName))),C.size_t(len(tunName)),
+    )
+    if rc!=0{return fmt.Errorf("%w: original-Go Rust Game M4 start=%d",errV4Embedded,int(rc))}
+    lanes,ready,e:=g.originalCryptoState()
+    if e!=nil{return e}
+    if !ready||int(lanes)!=len(g.laneOwners){return ErrAdmissionUnsupported}
+    return nil
+}
+type V4GameKernelCounters struct { Copied,Delivered,Rejected uint64 }
+func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
+    if g==nil||g.handle==0||g.stopped{return V4GameKernelCounters{},ErrAdmissionUnsupported}
+    var tx,rx,rejected C.uint64_t
+    rc:=C.wbd_m0_embedded_go_game_group_kernel_counters(
+        C.uint64_t(g.handle),&tx,&rx,&rejected,
+    )
+    if rc!=0{return V4GameKernelCounters{},fmt.Errorf("%w: native Game kernel counters=%d",errV4Embedded,int(rc))}
+    return V4GameKernelCounters{Copied:uint64(tx),Delivered:uint64(rx),Rejected:uint64(rejected)},nil
+}
+
 // A joined crypto-only group must Stop BEFORE per-lane original Go owner
 // release. Callers must separately prove original M4 drivers and then
 // clean owned Go kernel state; this method itself NEVER claims product ON.
