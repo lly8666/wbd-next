@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "SOURCE_ONLY_UNVERIFIED",
+  "status": "PARTIAL_NATIVE_ISOLATED_FD_STOP_PASS_GO_EXTRA_ROUTE_READBACK_NOT_RUN",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -12,9 +12,9 @@
     "product_fec2": "OFF"
   },
   "scope": {
-    "native_rust_stop_borrow": "SOURCE_ONLY",
-    "native_real_tun_fd_isolated": "NOT_RUN",
-    "original_go_linux_tls_fec_client_udp_stop": "SOURCE_ONLY_NEEDS_M0_INTEGRATED_ACTIONS",
+    "native_rust_stop_borrow": "PASS_SCOPED_WORKER_ACTIONS",
+    "native_real_tun_fd_isolated": "PASS_REAL_KERNEL_TUN_IN_DISPOSABLE_NETNS",
+    "original_go_linux_tls_fec_client_udp_stop": "M0_COMBINED_PRIOR_MAIN_SOURCE_SCOPED_PASS; M4_EXTRA_GO_ROUTE_READBACK_NOT_RUN",
     "windows": "NOT_RUN_DEFERRED",
     "physical": "NOT_RUN"
   },
@@ -22,5 +22,63 @@
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "Consume worker-native Actions for S42 and M0-owned combined original-Go isolated netns job with exactly this M4 test source."
+  "next_action": "M0 integrate exact M4 new Go file into existing original-Go Linux combined workflow, run one fixed genuine lost-source Connect->4 UDP client->Stop->owned route cleanup named test, return run/attempt/manifest; M4 consumes and closes task if exact.",
+  "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+  "verification": {
+    "worker_native": {
+      "source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+      "run_id": 39344699874,
+      "attempt": 1,
+      "conclusion": "success",
+      "build_job_id": 118374384668,
+      "build_conclusion": "success",
+      "consume_job_id": 118374470963,
+      "consume_conclusion": "success",
+      "worker_named_tests_total": 97,
+      "worker_named_tests_passed": 97,
+      "actual_isolated_kernel_tun_test": "r1_m4_plan012_real_tun_fd_stop_only_in_isolated_linux_netns",
+      "actual_isolated_child_marker": "M4_PLAN012_ISOLATED_NETNS_REAL_TUN_CHILD_VERIFIED_PASS",
+      "actual_ownership_test": "r1_m4_plan012_rejected_tun_fd_returns_owned_descriptor_without_close",
+      "pending_loan_test": "r1_m4_plan012_stop_pending_loan_never_reports_cleaned_up",
+      "actual_fd_stop_assertions": "TUNSETIFF_TUNGETIFF_GENERATION_REPEAT_STOP_POST_STOP_DENY_LAST_FD_CLOSE_NONPERSISTENT_LINK_GONE",
+      "artifact_build_id": 12230257098,
+      "artifact_build_provider_sha256": "9127d44644411f8804d85f0410d77d77b81432d1d8052d29a74e86fc3f89be70",
+      "artifact_result_id": 12229539867,
+      "artifact_result_provider_sha256": "1bc67498bafe02a74ee922330c1aee465b5ad25d6f5f6bf8ca5cdc0b56a318fe",
+      "artifact_independent_zip_extraction": "NOT_RUN",
+      "scoped_result": "PASS_REAL_KERNEL_PLATFORM_OWNER_STOP_NOT_FULL_ORIGINAL_GO_PRODUCT"
+    },
+    "original_go_main_existing": {
+      "source_sha": "6c2b9bd03250938c933ae77364e89348509c9d27",
+      "run_id": 39308785179,
+      "attempt": 1,
+      "conclusion": "success",
+      "native_job_id": 118252662822,
+      "artifact_id": 12213764301,
+      "artifact_provider_sha256": "bb2264982119b891a02585177423717dfd77e0186be4c83a6d25a0be7c40b5f3",
+      "actual_markers": [
+        "M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS",
+        "M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS"
+      ],
+      "test_scope": "original protected Go TLS fixed/auto, real kernel RS16 missing-source, 4 client UDP packets, authenticated M2, repeated Stop, stale RX/feedback deny, both TUN interfaces gone",
+      "is_this_M4_new_Go_test_source": "NO; M4 extra Go route proof NOT_RUN"
+    },
+    "historic_failures": {
+      "worker_governance_S42": "39344197723 ROLE_SCOPE_FAILED old activation ancestry",
+      "central_scope_S42": "39344221236 ROLE_SCOPE_PASS 220 commits",
+      "central_scope_S43": "39344466568 FAIL_HTTP_RemoteDisconnected_no_product_inference",
+      "r0_fake_platform_S42": "39344197688 wrapper FAIL exact test count despite 105/105 Rust actual PASS",
+      "windows_I010": "DEFERRED_NOT_RUN_dispatch_failure_attempts_1_2",
+      "windows_I002_I005": "HISTORICAL_FAIL_UNCHANGED"
+    }
+  },
+  "integration": {
+    "file_to_copy": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+    "worker_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+    "new_go_test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+    "main_owned_workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "requires": "M0 inserts exact M4-owned file into original Go assembly and selects named test inside isolated WBD_M0_FEC2_CONTINUOUS netns; consume actual named PASS and route cleanup readback; keep original main Go code/wire shared-owned.",
+    "not_run": "M4 added original Go route cleanup test compiled/run on combined exact integrated M0 source",
+    "product_fec2": "OFF"
+  }
 }
