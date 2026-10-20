@@ -9,6 +9,8 @@ package realityfront
 #include <stddef.h>
 extern int32_t wbd_m0_embedded_go_prepare(const unsigned char *,size_t,
     const unsigned char *,size_t,uint64_t *);
+extern int32_t wbd_m0_embedded_go_prepare_client(const unsigned char *,size_t,
+    const unsigned char *,size_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_stage(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_commit(uint64_t,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_abort(uint64_t);
@@ -81,6 +83,52 @@ func (b *v4EmbeddedNativeBridge) prepare(
     b.authenticatedPrincipal=s.principal
     b.protectedFeatures=s.features
     return &v4EmbeddedPending{b:b},nil
+}
+// Actual original Go client TLS reply is checked before this private
+// wrapper can construct original C2S/S2C exporter material. The client
+// FakeTCP Detach supplies the exact transport RX/TX boundaries; no arbitrary
+// operator cold bytes can enable the Rust owner.
+func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
+    session *V4ClientSession,handoff faketcp.ClientHandoff,
+    flow faketcp.ClientFlow,
+)error{
+    if b==nil||b.handle!=0||b.committed||session==nil{return errV4Embedded}
+    cold,err:=session.ColdSnapshot()
+    if err!=nil||cold.ServerSide() {return errV4Embedded}
+    snapshot,err:=cold.MarshalColdBundle()
+    if err!=nil{return err}
+    peer:=v4PeerTransport{
+        mss:handoff.Peer.MSS,advertised:handoff.Peer.AdvertisedMSS,
+        flow:faketcp.ServerFlow{
+            ClientIP:flow.LocalIP,ServerIP:flow.PeerIP,
+            ClientPort:flow.LocalPort,ServerPort:flow.PeerPort,
+        },
+    }
+    cmd,err:=v4PrivateHandoffV1(handoff.ReceiveNext,peer)
+    if err!=nil{return err}
+    var h C.uint64_t
+    rc:=C.wbd_m0_embedded_go_prepare_client(
+        (*C.uchar)(unsafe.Pointer(&snapshot[0])),C.size_t(len(snapshot)),
+        (*C.uchar)(unsafe.Pointer(&cmd[0])),C.size_t(len(cmd)),&h)
+    runtime.KeepAlive(snapshot);runtime.KeepAlive(cmd)
+    if rc!=0||h==0{return fmt.Errorf("%w: client prepare=%d",errV4Embedded,int(rc))}
+    b.handle=uint64(h)
+    // The original Go association has already detached; there can be no
+    // live Rust TUN/driver before exact commit of protected TLS seq limits.
+    rc=C.wbd_m0_embedded_go_commit(C.uint64_t(b.handle),0,0,C.uint32_t(handoff.SendNext))
+    if rc!=0{
+        _=C.wbd_m0_embedded_go_abort(C.uint64_t(b.handle))
+        b.handle=0
+        return fmt.Errorf("%w: client commit=%d",errV4Embedded,int(rc))
+    }
+    b.originalFlow=peer.flow
+    b.rxBoundary=handoff.ReceiveNext
+    b.txBoundary=handoff.SendNext
+    b.protectedEpoch=cold.Epoch()
+    b.authenticatedPrincipal=cold.Principal()
+    b.protectedFeatures=session.negotiatedFeatures
+    b.committed=true
+    return nil
 }
 type v4EmbeddedPending struct{
     b *v4EmbeddedNativeBridge
