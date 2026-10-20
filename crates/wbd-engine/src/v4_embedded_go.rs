@@ -289,6 +289,7 @@ impl NormalFirstSendM2 {
 }
 struct Entry{
     generation:u32,
+    server_side:bool,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
     #[cfg(feature="m0_fec2_owner_probe")]
     protected_fec2_features:u16,
@@ -382,9 +383,15 @@ fn session(handle:u64)->Result<Arc<Mutex<Entry>>,i32>{
     r.entries.get(&handle).cloned().ok_or(UNKNOWN)
 }
 fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
+    prepare_side(cold,command,true)
+}
+fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
     let data=UntrustedColdV4::parse(cold).map_err(|_|INVALID)?;
-    if !data.identity().server{return Err(INVALID)}
+    if data.identity().server!=server_side{return Err(INVALID)}
+    // FEC2 client reception/reverse mature APPLIED is a separate native
+    // product lane: do not enable feature7 until actually installed.
+    if !server_side && handoff.negotiated_features!=3{return Err(INVALID)}
     let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
     if r.entries.len()>=MAX_SESSIONS{return Err(FULL)}
     let generation=r.generation;
@@ -439,16 +446,21 @@ fn prepare(cold:&[u8],command:&[u8])->Result<u64,i32>{
             exact,rx,usize::from(data.identity().client_limit))
             .map_err(|_|INVALID)?)
     }else{None};
-    let owner=handoff.prepare_scoped_owner(&data,generation,handle)
-        .map_err(|_|INVALID)?;
-    let link_mtu=usize::from(data.identity().server_limit)
+    let owner=handoff.prepare_scoped_owner_for_side(
+        &data,generation,handle,server_side
+    ).map_err(|_|INVALID)?;
+    let link_mtu=usize::from(if server_side {
+        data.identity().server_limit
+    }else{
+        data.identity().client_limit
+    })
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
     let arena=Arena::new(generation,128,2048,128,1_000_000)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
-        generation,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        generation,server_side,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         #[cfg(feature="m0_fec2_owner_probe")]
         protected_fec2_features:handoff.negotiated_features,
         #[cfg(feature="m0_fec2_owner_probe")]
@@ -2073,6 +2085,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_prepare(
     let cold=unsafe{std::slice::from_raw_parts(cold,cold_len)};
     let cmd=unsafe{std::slice::from_raw_parts(cmd,cmd_len)};
     match prepare(cold,cmd){Ok(h)=>{unsafe{out.write(h)};OK},Err(e)=>e}
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_prepare_client(
+    cold:*const u8,cold_len:usize,cmd:*const u8,cmd_len:usize,out:*mut u64
+)->i32{
+    if cold.is_null()||cmd.is_null()||out.is_null()
+        ||cold_len!=COLD_V4_LEN||cmd_len!=HANDOFF_V1_LEN{return INVALID}
+    let cold=unsafe{std::slice::from_raw_parts(cold,cold_len)};
+    let cmd=unsafe{std::slice::from_raw_parts(cmd,cmd_len)};
+    match prepare_side(cold,cmd,false){
+        Ok(h)=>{unsafe{out.write(h)};OK},Err(e)=>e
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_stage(
