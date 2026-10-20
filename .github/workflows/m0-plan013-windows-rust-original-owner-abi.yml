@@ -281,6 +281,46 @@ jobs:
           print("M0_PLAN013_WINDOWS_ORIGINAL_GO_DUAL_ROLE_CREDENTIAL_TLS_RUST_PRIVATE_OWNERS_STOP_SCOPED_PASS")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'native Windows original-Go/Rust TLS source receipt failed'}
+      - name: Build BOTH actual old-Go Windows client/server with M0 Rust-lease callback in same frozen native source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path windows-native-client-server-build | Out-Null
+          Push-Location legacy
+          try {
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../windows-native-client-server-build/wbd-client.exe ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) {throw 'original Go Windows CLIENT with authenticated Rust owner opt-in did not compile'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../windows-native-client-server-build/wbd-server.exe ./cmd/wbd-server
+            if ($LASTEXITCODE -ne 0) {throw 'original Go Windows SERVER with authenticated Rust owner opt-in did not compile'}
+          } finally {Pop-Location}
+          @'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path('windows-native-client-server-build')
+          hashes={}
+          for name in ('wbd-client.exe','wbd-server.exe'):
+              raw=(p/name).read_bytes()
+              assert len(raw)>100000 and raw[:2]==b'MZ'
+              offset=struct.unpack_from('<I',raw,0x3c)[0]
+              assert raw[offset:offset+4]==b'PE\x00\x00'
+              assert struct.unpack_from('<H',raw,offset+4)[0]==0x8664,'non-x64 executable'
+              hashes[name]=hashlib.sha256(raw).hexdigest()
+          rust=pathlib.Path('target/release/wbd_engine.dll')
+          assert rust.is_file()
+          hashes['wbd_engine.dll']=hashlib.sha256(rust.read_bytes()).hexdigest()
+          result=dict(schema_version=1,source_sha=os.environ['GITHUB_SHA'],
+              original_go_sha='a7a82db31fe736ffedee330795a3234d358f1984',
+              frozen_m4_sha='b53b5dac422a634cdd82178a29071f9f9f0ae5e7',
+              rust_target='x86_64-pc-windows-msvc',go_version='1.23.12',
+              binaries_sha256=hashes,client_executable='PASS_NATIVE_PE_BUILD_ONLY',
+              server_executable='PASS_NATIVE_PE_BUILD_ONLY',
+              original_Go_windows_product_WFP_apply='NOT_RUN',
+              original_Go_windows_GUI_connected='NOT_RUN',
+              production_fec2='OFF',production_game='OFF')
+          pathlib.Path('windows-owner-result/original-go-native-cli-build.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('M0_PLAN013_ORIGINAL_GO_WINDOWS_CLIENT_SERVER_NATIVE_X64_OWNER_COMPILE_PASS_ONLY')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'native Go clients/server binary architecture/hash attestation failed'}
+          Remove-Item -LiteralPath windows-native-client-server-build -Recurse -Force
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
