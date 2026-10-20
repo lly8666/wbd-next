@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "status": "BLOCKED_ONLY_ON_M0_OWNED_S46_COMBINED_IMPORT_AND_EXECUTION",
+  "status": "READY_FOR_INTEGRATION_M4_017_LINUX_SCOPED_EXACT_S46_ACTIONS_PASS",
   "baseline": {
     "main_task_decision": "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "old_worker_head": "73af5c1c368a798d138aaf118642b099c8d2ae08",
@@ -14,16 +14,16 @@
   "scope": {
     "native_rust_stop_borrow": "PASS_SCOPED_WORKER_ACTIONS",
     "native_real_tun_fd_isolated": "PASS_REAL_KERNEL_TUN_IN_DISPOSABLE_NETNS",
-    "original_go_linux_tls_fec_client_udp_stop": "M0_COMBINED_PRIOR_MAIN_SOURCE_SCOPED_PASS; M4_EXTRA_GO_ROUTE_READBACK_NOT_RUN",
-    "windows": "NOT_RUN_DEFERRED",
-    "physical": "NOT_RUN"
+    "original_go_linux_tls_fec_client_udp_stop": "PASS_S46_EXACT_IMPORTED_ORIGINAL_GO_LINUX_REAL_NETNS",
+    "windows": "NOT_RUN_DEFERRED_BY_M0_PLAN012",
+    "physical": "NOT_RUN_DEFERRED_BY_M0_PLAN012"
   },
   "refs": {
     "rust": "crates/wbd-platform/src/linux_tun_sink.rs",
     "go_fixture": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   },
-  "next_action": "M0 follows https://github.com/lly8666/wbd-next/issues/19: replace S43 file with exact M4 S46 Go blob in main-owned combined Go build, run single real Linux netns Actions source-locked, require entire job SUCCESS + actual S46 route/rule/TUN FD pre/post proof; M4 only consumes result.",
-  "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+  "next_action": "M0 consume this M4 Linux017 ready_for_integration scoped PASS handoff and continue separate main-owned public original-Go feature7 CLI/Game actual Linux product release gates; do not repeat M4 S46 qualified network/Stop test or claim production FEC2 ON.",
+  "last_tested_source": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
   "verification": {
     "worker_native": {
       "source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
@@ -84,7 +84,7 @@
     "S46_go_hardening": {
       "source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
       "full_original_go_test_name": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
-      "result": "NOT_RUN_NO_M0_COMBINED_IMPORT_OR_RUN",
+      "result": "PASS_ACTUAL_REAL_ORIGINAL_GO_LINUX_NETNS_COMBINED",
       "require_exact_m0_real_helper": "realOriginalGoFec2LinuxMode(t,FecV2Fixed)",
       "checks": [
         "pre_post_ip4_all_tables_baseline_equal",
@@ -95,13 +95,51 @@
         "original_real_TLS_FEC_lost_source_RS16_client_UDP_authenticated_M2_Stop_twice_stale_denial"
       ],
       "file": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
-      "go_test_workflow_status": "NOT_RUN_WITH_NEW_SOURCE",
+      "go_test_workflow_status": "PASS_EXACT_S46_BLOB_AND_WHOLE_ACTIONS_JOB",
       "source_scope_G2": "ROLE_SCOPE_PASS",
-      "product_result": "NOT_RUN",
+      "product_result": "SCOPED_GO_KERNEL_LIFECYCLE_PASS_PRODUCT_FEC2_OFF",
       "central_g2_run_id": 39351643859,
       "central_g2_job_id": 118396938170,
       "central_g2_artifact_id": 12233468274,
-      "central_g2_artifact_provider_sha256": "6e3334565e8246bfb75dad433bd6da49ea9391151be2430d24a84fce1c2d8d66"
+      "central_g2_artifact_provider_sha256": "6e3334565e8246bfb75dad433bd6da49ea9391151be2430d24a84fce1c2d8d66",
+      "actual_integrated_main_sha": "20916d27018b2a039221923db5034e009b9c2e3b",
+      "actual_test_duration_seconds": 2.11,
+      "actual_test_blob_sha": "4fab31cd531867b8a3db73ba275223abd49b0ce9",
+      "actual_test_file_sha256": "41e82c3a64c094950a3893fdd06727faf68e17b6ab139c64f7739421dded4d66",
+      "actual_test_marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+      "actual_before_after_check": "PASS_IN_REAL_Go_SOURCE_BY_NAMED_TEST_BEFORE_AFTER_IPV4_ROUTES_POLICY_RULES_PROC_SELF_TUN_FD_COUNT_AND_BOTH_OWNED_LINKS",
+      "journal": "NOT_ASSERTED_BY_NAMED_TEST_NO_SEPARATE_LINUX_JOURNAL_PROBE",
+      "original_fail_status": "S43_FIRST_RUN_39351905299_FAIL_SHELL_SYNTAX_RETAINED",
+      "actions": {
+        "run_id": 39357046267,
+        "attempt": 1,
+        "job_id": 118414112835,
+        "run_conclusion": "success",
+        "job_conclusion": "success",
+        "source_sha": "20916d27018b2a039221923db5034e009b9c2e3b",
+        "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+        "test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+        "artifact_id": 12235553552,
+        "artifact_name": "m0-plan012-combined-39357046267-1",
+        "provider_zip_sha256": "71adbc87b5edd15d84cadc72b655486a403c9e0bc252c302f949154ac54920a4",
+        "downloaded_zip_sha256": "71adbc87b5edd15d84cadc72b655486a403c9e0bc252c302f949154ac54920a4",
+        "zip_identity": "INDEPENDENT_LOCAL_SHA256_MATCH",
+        "zip_entries": [
+          "manifest.json",
+          "receipt.json",
+          "continuous-kernel.log",
+          "real-kernel.log",
+          "release-record.log",
+          "game-lanes.log",
+          "continuous-rx.log",
+          "fixed-tx-stream.log",
+          "default-build.log",
+          "opt-in-build.log"
+        ],
+        "log_hash_verification": "PASS_ALL_SIX_RECEIPT_SHA256S_MATCH_UNCOMPRESSED_ZIP_LOG_BYTES",
+        "named_test_pass_in_zip_log": true,
+        "native_borrow_separate_run": 39344699874
+      }
     },
     "M0_original_go_S43_first_actual": {
       "main_source_sha": "404806590689ccb7fc4e715d36b50c37c59042b4",
@@ -163,14 +201,16 @@
     "not_run": "M4 added original Go route cleanup test compiled/run on combined exact integrated M0 source",
     "product_fec2": "OFF",
     "required_marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
-    "can_worker_modify_m0_combined_workflow": false
+    "can_worker_modify_m0_combined_workflow": false,
+    "actual_main_integrated_sha": "20916d27018b2a039221923db5034e009b9c2e3b",
+    "result": "COMPLETE_M0_SOURCE_LOCKED_S46_LINUX_NETNS"
   },
   "last_authored_go_source_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
   "native_validated_source_sha": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
-  "main_observed_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985",
+  "main_observed_sha": "9c40b406e7e17ea39d8f2d8849a550b639fd261e",
   "coordination": {
     "issue": "https://github.com/lly8666/wbd-next/issues/19",
-    "status": "OPEN_M0_MAIN_WORKFLOW_OWNER_ACTION_REQUIRED",
+    "status": "CLOSED_M0_INTEGRATION_PASS",
     "created_after_H49": true,
     "M4_role_cannot_write": [
       ".github/workflows/m0-plan012-combined-functional.yml",
@@ -178,12 +218,22 @@
     ],
     "latest_worker_strict_test_sha": "f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6",
     "latest_worker_test_blob_sha": "4fab31cd531867b8a3db73ba275223abd49b0ce9",
-    "latest_main_strict_test_present": false,
+    "latest_main_strict_test_present": true,
     "existing_main_original_Go_test": "S43 scoped original Go TLS/FEC/UDP/Stop PASS at main614a747eff374e2e6b9aabd0a2497b0d08381985 run39352250946",
     "existing_native_kernel": "PASS worker-native39344699874",
-    "strict_S46_go_assertions": "NOT_RUN",
-    "new_S46_qualified_combined_run_id": null,
+    "strict_S46_go_assertions": "PASS_ACTUAL_S46_EXACT_SOURCE_ACTIONS",
+    "new_S46_qualified_combined_run_id": 39357046267,
     "constraint": "No worker token/Actions workflow_dispatch tool may write M0-owned workflow or run updated unimported Go source",
-    "product_FEC2": "OFF"
+    "product_FEC2": "OFF",
+    "issue_closed_at": "2026-10-20T02:10:28Z"
+  },
+  "product_remaining": {
+    "main_owned_public_feature7_CLI_Connect_Disconnect_cold_APPLIED": "NOT_RUN",
+    "main_owned_Game2_Game4_authenticated_separate_kernel_lanes_first_application": "NOT_RUN",
+    "Auto_dynamic_512_samples": "NOT_RUN",
+    "Windows_WFP_DNS_IPv6_route": "NOT_RUN_DEFERRED",
+    "physical_20Mbps": "NOT_RUN_DEFERRED",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
   }
 }
