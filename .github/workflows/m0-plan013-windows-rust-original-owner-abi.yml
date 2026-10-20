@@ -10,6 +10,7 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_dual_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
@@ -74,7 +75,8 @@ jobs:
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go --lib v4_windows_owner::tests -- --nocapture 2>&1 | Tee-Object -FilePath windows-owner-result/native-tests.log
           if ($LASTEXITCODE -ne 0) {throw 'actual Windows original Rust owner lifecycle tests FAIL'}
           $log=Get-Content windows-owner-result/native-tests.log -Raw
-          foreach ($test in @('m0_windows_owner_real_native_prepare_commit_stop_generation_scoped','m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply')) {
+          foreach ($test in @('m0_windows_owner_real_native_prepare_commit_stop_generation_scoped','m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply',
+                   'm0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale')) {
             if ($log -notmatch ('test .*'+[regex]::Escape($test)+'.* ok')) {throw "native Rust test NOT_RUN $test"}
           }
       - name: Build actual Windows Rust DLL and inspect external C FFI without simulated native products
@@ -90,7 +92,9 @@ jobs:
           dll=ctypes.WinDLL(str(p.resolve()))
           names=("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare","wbd_m0_win_owner_v1_stage","wbd_m0_win_owner_v1_abort",
                  "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_state",
-                 "wbd_m0_win_owner_v1_stop","wbd_m0_win_owner_v1_release")
+                 "wbd_m0_win_owner_v1_stop","wbd_m0_win_owner_v1_release",
+                 "wbd_m0_win_owner_v2_bind_wintun","wbd_m0_win_owner_v2_quiesce_wintun",
+                 "wbd_m0_win_owner_v2_device_state")
           for name in names:assert getattr(dll,name,None) is not None,name
           class S(ctypes.Structure):
               _fields_=[(name,ctypes.c_uint32) for name in ("version","size","generation","phase","server","applied","loans_drained","reserved")]
@@ -166,7 +170,7 @@ jobs:
           dest=root/"legacy/internal/realityfront"
           for filename in ("admission_v4.go","admission_v4_test.go",
                            "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go",
-                           "bridge_v4_windows_dual_test.go"):
+                           "bridge_v4_windows_dual_test.go","bridge_v4_windows_wintun_lease.go"):
               relative="r0/go_overlay/internal/realityfront/"+filename
               payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
               assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
@@ -175,6 +179,7 @@ jobs:
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'M0-only private Windows Go Rust bridge not exact SOURCE'}
           $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path 'target/release/wbd_engine.dll').Path
+          $env:WBD_M0_TRY_SCOPED_NATIVE_WINTUN="1"
           Push-Location legacy
           try {
             & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0Windows(TwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers|ActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust)$' ./internal/realityfront 2>&1 | Tee-Object -FilePath ../windows-owner-result/original-go-tls-native-rust.log
@@ -183,6 +188,9 @@ jobs:
           $got=Get-Content windows-owner-result/original-go-tls-native-rust.log -Raw
           foreach ($name in @('TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers','TestM0WindowsActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust')) {
             if ($got -notmatch ('--- PASS: '+[regex]::Escape($name))) {throw "original-Go TLS native Rust callback NOT_RUN $name"}
+          }
+          if ($got -notmatch 'M0_PLAN013_REAL_CREATED_WINTUN_RUST_OWNER_LIFETIME_STOP_PASS' -and $got -notmatch 'M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED') {
+            throw 'native Wintun real OS proof missing and not marked UNSUPPORTED'
           }
           @'
           import json,pathlib,hashlib
@@ -194,6 +202,13 @@ jobs:
           receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_BOTH_ROLES_NO_WFP_M4_DEVICE"
           receipt["windows_M4_real_device"]="NOT_RUN"
           receipt["windows_product_applied"]="OFF"
+          go_log=pathlib.Path("windows-owner-result/original-go-tls-native-rust.log").read_text(errors="replace")
+          if "M0_PLAN013_REAL_CREATED_WINTUN_RUST_OWNER_LIFETIME_STOP_PASS" in go_log:
+              receipt["original_Go_real_Wintun_to_Rust_authenticated_epoch_lease"]="PASS_SCOPED_REAL_OS_CREATED"
+          elif "M0_PLAN013_REAL_CREATED_WINTUN_OS_LEASE_UNSUPPORTED" in go_log:
+              receipt["original_Go_real_Wintun_to_Rust_authenticated_epoch_lease"]="UNSUPPORTED_NATIVE_WINTUN_NOT_AVAILABLE_OR_FOREIGN"
+          else:
+              raise RuntimeError("native Wintun did not run or report UNSUPPORTED")
           receipt["windows_product"]="NOT_QUALIFIED"
           p.write_text(json.dumps(receipt,indent=2)+"\n")
           print("M0_PLAN013_WINDOWS_ORIGINAL_GO_DUAL_ROLE_CREDENTIAL_TLS_RUST_PRIVATE_OWNERS_STOP_SCOPED_PASS")
