@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 212,
-  "checkpoint_sha": "7c3543652e78c1c2db094678e500bff81b979184",
+  "sequence": 213,
+  "checkpoint_sha": "8c9125fc07f57fc0b29bd8490fe219879936776d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN019 Game2/4 original-Go public two executable TLS per-lane group->one Rust GameAdapter/M3 AEAD->M4 raw/TUN/UDP and Stop. S457–S486 source in main, S476 binary builds, S480 exact Game2/4 parallel Actions both CONNECTED/driver READY but FAIL public full UDP reverse. S485 raw RX counters latest original combined still FAIL: Game2 client first copy1 raw_received0 delivered0; server raw_received1 auth_rejected0 delivered0. Game4 original S480 server delivered request1 and returned raw copies3, client delivered0. M0 public Game/FEC2 production OFF, no fabricated APPLIED; Windows native/physical NOT_RUN; M1 Game016 isolated branch unchanged.",
-  "why_now": "Recovered H211 through S486 commits instead of treating chat progress as authority. True original go TLS group positive S459, native Game M4 private positive S455 remain accepted. Original Game2/4 public 39423888402 and 39425196813 FAIL both request/reverse; new S485 combined 39425976728 FAIL with peer M4 raw_received separately counted. Several auto-triggered redundant Actions overloaded runners, stopped dispatching; S486 records precise SOURCE, jobs, artifacts and original fails. H212 pauses product promotion on real inbound M4 return path (not blocked old V4 installation).",
+  "current_task": "PLAN019 M0 original Go public Game2/4 source-locked TLS→single Rust GameAdapter→per-lane M4 raw/TUN/UDP and Stop partial. Precise original S489 public Game2/4 independent Linux Actions39427677138/1 job118644240431 and118644241059 both FAIL application echo; Game4 kernel header TCP PSH+ACK client healthy ports41032–41034 to server444–446 on both raw veth, but no proven M4 RX AEAD first/echo. Native private Game M4 and real public Fixed/Auto remain accepted from separate sources. Production Game/FEC2 OFF, Windows/physical NOT_RUN.",
+  "why_now": "S487 malformed YAML Actions39427195857 FAIL; S488 fixed syntax but Game2/4 public still FAIL Actions39427318548; S489 genuine IP TCP headers Game4 both endpoints visible but app still FAIL39427677138. H212 evidence_refs mismatch made mandatory governance39427677262 and selftests39427677375 fail; S490 authored exact S489 SOURCE JSON and records original FAIL, never relax evidence validator. No in-flight M0 runtime Actions when recovered and no new M1/M4 worker branch source.",
   "done_when": "One exact source original Go public Linux Game2/4 authenticated TLS lane group, distinct M3 PN, native raw/TUN application echo BOTH directions under damaged lane1/no HOL, joined Stop, no fake cold grant; Fixed/Auto source-locked mature M2 accepted. Platform Windows native/physical/performance tracked separately, product/FEC2 production OFF until scope passes.",
-  "next_action": "Check one source-locked real kernel ingress TCP tuple/packet acceptance for Game2 and Game4 reverse using actual underlay only, repair corresponding one M4 raw receive/Go flow invariant, then run one combined Game2/4 independent real app + no-HOL + Stop gate without re-running accepted Normal/off Fixed/Auto.",
+  "next_action": "Fix original Go Game2/4 public Rust M4 inbound parser or first-delivery/TUN path after physical TCP header verified both veth interfaces; run one exact compiled SOURCE Game2/Game4 parallel dual role app no-HOL Stop Actions only; do not repeat accepted Normal/off, Fixed/Auto, private Game native.",
   "unverified": true,
-  "last_tested_source": "40800f74b0150008b9cefa1cd35f1e88d87601dc",
+  "last_tested_source": "2cd126aee8e5277a2dd201abb45fd6965c2da30a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN019-public-Game-multigroup-recovery-20261020.json"
+    "docs/evidence/M0/PLAN019-public-Game-inbound-TCP-source-locked-S489-20261020.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H212: S457-S486 many real source batches. Go/Rust public Game2/4 CLI builds S476 and real both role READY, but product still FAIL original 39423888402/39425196813 and latest 39425976728. Game4 S480 first client->server UDP delivery1 and server copied3 reverse, client0. Game2 S485 client TX copied1; server native raw_seen1 AEAD drop0 but delivered0, client raw_seen0; origin network/flow/timing must be isolated. S481–S485 per-role raw vs auth counters, old fails preserved. Standalone exact-binary parallel suite avoids fixed/auto reruns. FEC2/Game production OFF, Windows/physical NOT_RUN."
+  "partial_summary": "H213 reconciled S487–S490: Go/Rust V4 Game2+Game4 public true TLS and M4 READY but full product first-app echo FAIL. Game4 S489 TCP 3 healthy raw packets client->server captured on both veth with P+ACK DF TTL64 payload165; not AEAD/TUN acceptance. S490 exact-SOURCE evidence / original YAML+functional fails. H212 mismatched SOURCE evidence caused governance FAIL intentionally; H213 points to matching S489 evidence, production OFF. M1 runtime not frozen/received, Windows native/physical NOT_RUN."
 }
