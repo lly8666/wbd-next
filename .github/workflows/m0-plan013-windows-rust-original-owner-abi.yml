@@ -9,6 +9,7 @@ on:
       - "crates/wbd-engine/src/lib.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_dual_test.go"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
@@ -164,7 +165,8 @@ jobs:
           src=root/"r0/go_overlay/internal/realityfront"
           dest=root/"legacy/internal/realityfront"
           for filename in ("admission_v4.go","admission_v4_test.go",
-                           "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go"):
+                           "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go",
+                           "bridge_v4_windows_dual_test.go"):
               relative="r0/go_overlay/internal/realityfront/"+filename
               payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
               assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
@@ -175,26 +177,26 @@ jobs:
           $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path 'target/release/wbd_engine.dll').Path
           Push-Location legacy
           try {
-            & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0WindowsOriginalGo' ./internal/realityfront 2>&1 | Tee-Object -FilePath ../windows-owner-result/original-go-tls-native-rust.log
+            & go test -count=1 -tags wbd_v4_embedded_go -v -run '^TestM0Windows(TwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers|ActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust)$' ./internal/realityfront 2>&1 | Tee-Object -FilePath ../windows-owner-result/original-go-tls-native-rust.log
             if ($LASTEXITCODE -ne 0) {throw 'genuine original Go credential TLS -> Windows Rust owner/Stop failed'}
           } finally {Pop-Location}
           $got=Get-Content windows-owner-result/original-go-tls-native-rust.log -Raw
-          foreach ($name in @('TestM0WindowsOriginalGoRealCredentialTLSProtectedRustOwnerStopOnly','TestM0WindowsOriginalGoPrivateCallbackInvalidBeforeAuthenticatedTLS')) {
+          foreach ($name in @('TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers','TestM0WindowsActualClientOwnerRejectsUnsupportedBeforeNetworkOrRust')) {
             if ($got -notmatch ('--- PASS: '+[regex]::Escape($name))) {throw "original-Go TLS native Rust callback NOT_RUN $name"}
           }
           @'
           import json,pathlib,hashlib
           p=pathlib.Path("windows-owner-result/receipt.json")
           receipt=json.loads(p.read_text())
-          receipt["original_go_credential_verified_TLS_to_native_Rust"]="PASS_SCOPED_REAL_PROCESS_WIN2022"
-          receipt["original_Go_server_private_owner_prepared_committed_stopped"]="PASS_SCOPED_3_CIPHERS"
+          receipt["original_go_credential_verified_TLS_to_native_Rust"]="PASS_SCOPED_REAL_BOTH_FAKETCP_ASSOCIATIONS_WIN2022"
+          receipt["original_Go_server_and_client_private_owner_prepared_committed_stopped"]="PASS_SCOPED_DUAL_ROLE_3_CIPHERS"
           receipt["original_go_m4_frozen_overlay_sha"]="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
-          receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_SERVER_ONLY_NO_WFP_M4_DEVICE"
+          receipt["Go_windows_native_shared_callback_scope"]="PRIVATE_BOTH_ROLES_NO_WFP_M4_DEVICE"
           receipt["windows_M4_real_device"]="NOT_RUN"
           receipt["windows_product_applied"]="OFF"
           receipt["windows_product"]="NOT_QUALIFIED"
           p.write_text(json.dumps(receipt,indent=2)+"\n")
-          print("M0_PLAN013_WINDOWS_ORIGINAL_GO_CREDENTIAL_TLS_RUST_PRIVATE_OWNER_STOP_SCOPED_PASS")
+          print("M0_PLAN013_WINDOWS_ORIGINAL_GO_DUAL_ROLE_CREDENTIAL_TLS_RUST_PRIVATE_OWNERS_STOP_SCOPED_PASS")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'native Windows original-Go/Rust TLS source receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
