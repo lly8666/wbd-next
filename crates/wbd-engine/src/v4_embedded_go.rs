@@ -3772,7 +3772,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 #[cfg(not(feature="fec2_product_record"))]
                 let fec_due=false;
                 if !tun_ready && active_jumbo.is_none() &&
-                    jumbo_queue.is_empty()&&!fec_due{continue}
+                    jumbo_queue.is_empty()&&!fec_due{
+                    #[cfg(feature="fec2_product_record")]
+                    if background_original_repair_once(&tx_cell,&stop_tx).is_err(){
+                        stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                    }
+                    continue
+                }
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
@@ -3787,6 +3793,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         if done.failed{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     }
                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+                #[cfg(feature="fec2_product_record")]
+                if background_original_repair_once(&tx_cell,&stop_tx).is_err(){
+                    stats.tx_error.fetch_add(1,Ordering::Relaxed);
                 }
                 // Deterministic developer probe: the first real kernel
                 // sendmmsg has COMPLETED and loans returned, but the next
