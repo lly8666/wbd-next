@@ -110,6 +110,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     );err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
+    if err==nil{err=bridge.armOriginalPublicM2Feedback()}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()
