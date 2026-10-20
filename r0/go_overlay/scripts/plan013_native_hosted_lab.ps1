@@ -37,11 +37,32 @@ try {
     } finally {
         Remove-Item Env:\WBD_N4_WFP_ISOLATED_LAB -ErrorAction SilentlyContinue
     }
+    $labDir=Join-Path $env:RUNNER_TEMP ('wbd-plan013-wintun-'+$env:GITHUB_RUN_ID)
+    New-Item -ItemType Directory -Force $labDir | Out-Null
+    $archive=Join-Path $labDir 'wintun.zip'
+    # Exactly the pinned official original-Go N4 Windows Actions dependency.
+    Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $archive -TimeoutSec 60
+    $expected='07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'
+    if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) {throw 'pinned official Wintun archive SHA256 mismatch'}
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $z=[IO.Compression.ZipFile]::OpenRead($archive)
+    try {
+        $entry=$z.GetEntry('wintun/bin/amd64/wintun.dll')
+        if ($null -eq $entry) {throw 'pinned Win64 Wintun DLL missing'}
+        $inputStream=$entry.Open()
+        $outputStream=[IO.File]::Create((Join-Path $labDir 'wintun.dll'))
+        try {$inputStream.CopyTo($outputStream)}
+        finally {$outputStream.Dispose();$inputStream.Dispose()}
+    } finally {$z.Dispose()}
+    $labExe=Join-Path $labDir 'windowsclient.test.exe'
+    & go test -mod=readonly -c -o $labExe ./internal/windowsclient
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $labExe)) {throw 'native Go test exe beside pinned official DLL failed'}
+    $receipt.wintun_archive_sha256=$expected
     $env:WBD_N4_ADMIN_ISOLATED='1'
     $env:WBD_N4_ADMIN_PROBE_REPORT=Join-Path $out 'plan013-wintun-capability.json'
     try {
         $tunLog=Join-Path $out 'plan013-created-wintun.log'
-        & go test -count=1 -timeout 2m -v -run '^TestN4WindowsHostedCreatedWintunReadOnlyCapability$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath $tunLog
+        & $labExe '-test.v' '-test.run=^TestN4WindowsHostedCreatedWintunReadOnlyCapability$' '-test.timeout=2m' 2>&1 | Tee-Object -FilePath $tunLog
         if ($LASTEXITCODE -ne 0) {throw 'real isolated created-Wintun test failed'}
         if (-not (Test-Path -LiteralPath $env:WBD_N4_ADMIN_PROBE_REPORT)) {throw 'Wintun capability missing receipt'}
         $cap=Get-Content -LiteralPath $env:WBD_N4_ADMIN_PROBE_REPORT -Raw | ConvertFrom-Json
@@ -71,7 +92,7 @@ try {
         Set-Item -Path ('Env:'+$case.report) -Value $path
         try {
             $log=Join-Path $out ($case.name+'.log')
-            & go test -count=1 -timeout 3m -v -run ('^'+$case.name+'$') ./internal/windowsclient 2>&1 | Tee-Object -FilePath $log
+            & $labExe '-test.v' ('-test.run=^'+$case.name+'$') '-test.timeout=3m' 2>&1 | Tee-Object -FilePath $log
             if ($LASTEXITCODE -ne 0) {throw ('real native Win32 hosted adapter stage failed: '+$case.name)}
             if (-not (Test-Path -LiteralPath $path)) {throw ('native stage missing report: '+$case.name)}
             $result=Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
@@ -88,6 +109,7 @@ try {
         }
     }
 } finally {
+    if ($labDir -and (Test-Path -LiteralPath $labDir)) {Remove-Item -LiteralPath $labDir -Recurse -Force -ErrorAction SilentlyContinue}
     $receipt | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 $destination
     Write-Output ('PLAN013_NATIVE_OS_LAB WFP='+$receipt.wfp_testnet+' WINTUN='+$receipt.wintun_created+' WAL='+$receipt.native_owned_wal)
 }
