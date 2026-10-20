@@ -72,7 +72,15 @@ impl PrivateGoV4Handoff {
     pub(crate) fn prepare_scoped_owner(
         &self,cold:&UntrustedColdV4,generation:u32,owner_id:u64,
     )->Result<ProtectedScopedOwner,()>{
-        if generation==0 || !cold.identity().server{return Err(())}
+        self.prepare_scoped_owner_for_side(cold,generation,owner_id,true)
+    }
+    // Both original-Go TLS sides are cryptographically symmetric after real
+    // verified post-reply/Detach. A caller may NEVER substitute server cold
+    // into client owner or vice versa; the C entrypoint chooses the role.
+    pub(crate) fn prepare_scoped_owner_for_side(
+        &self,cold:&UntrustedColdV4,generation:u32,owner_id:u64,server:bool,
+    )->Result<ProtectedScopedOwner,()>{
+        if generation==0 || cold.identity().server!=server{return Err(())}
         let identity=cold.identity();
         let lane=LaneKey{
             tunnel:TunnelKey{slot:1,generation},
@@ -82,7 +90,7 @@ impl PrivateGoV4Handoff {
             lane,owner_generation:generation,
             logical_epoch:identity.logical_epoch,
             tunnel_id:identity.tunnel_id,
-            go_lane_id:identity.go_lane_id,server:true,
+            go_lane_id:identity.go_lane_id,server,
         };
         ProtectedScopedOwner::prepare_from_protected_go(
             cold,&expected,owner_id,self.rx_boundary,
