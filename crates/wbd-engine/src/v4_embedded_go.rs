@@ -2460,6 +2460,8 @@ fn background_raw_once(
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
+    #[cfg(feature="fec2_product_record")]
+    outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
 )->Result<u32,i32>{
     // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
     // table are now owned by RX, not re-initialized or cloned. RX never
@@ -2530,8 +2532,35 @@ fn background_raw_once(
             if stop.load(Ordering::Acquire){break}
             match mature.lock(){
                 Ok(mut first)=>{
-                    if first.on_original_authenticated_reverse(control,when).is_ok(){
+                    if let Ok(scoped)=first.on_original_authenticated_reverse(control,when){
                         authenticated_control=true;
+                        // The SAME original TLS-bound authenticated control
+                        // retires frozen M2 shadows; TCP ACK is never trust.
+                        #[cfg(feature="fec2_product_record")]
+                        if let Some(shared)=outer {
+                            match shared.lock(){
+                                Ok(mut active)=>{
+                                    let dir=active.direction;
+                                    let result=original_process_repair_quota().lock()
+                                        .map_err(|_|BAD_STAGE)
+                                        .and_then(|mut global|
+                                            global.observe_scoped_receipt(
+                                                dir,&mut active.shadow,&scoped,when
+                                            ).map_err(|_|BAD_STAGE)
+                                        );
+                                    match result{
+                                        Ok(released)=>{
+                                            active.authentic_ack=active.authentic_ack
+                                                .saturating_add(released.len() as u64);
+                                            active.retired=active.retired
+                                                .saturating_add(released.len() as u64);
+                                        },
+                                        Err(_)=>invalid_seen=true,
+                                    }
+                                },
+                                Err(_)=>invalid_seen=true,
+                            }
+                        }
                     }else{invalid_seen=true;}
                 },
                 Err(_)=>invalid_seen=true,
@@ -3442,6 +3471,35 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let Some((lane,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
     let Ok(first)=NormalFirstSendM2::new(lane,epoch,e.server_side,loop_now())
         else{return INVALID};
+    #[cfg(feature="fec2_product_record")]
+    let original_outer_rx=if e.original_public_feedback_armed{
+        let now=loop_now();
+        let direction=wbd_recovery::BudgetDirection{
+            tunnel:lane.tunnel,
+            direction:first.route.outbound_direction(),
+        };
+        let route=first.route;
+        let Ok(shadow)=wbd_recovery::ReceiptState::new(
+            lane,wbd_recovery::ReceiptConfig{
+                max_shadow_entries:4096,pto_ns:80_000_000,
+                reorder_window_ns:15_000_000,
+            }
+        )else{return INVALID};
+        let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
+        if global.register(direction,wbd_recovery::RepairBudgetConfig{
+            outer_mtu:u64::from(e.raw_tx_lease_mtu),
+            max_repair_bytes_per_epoch:65_536,
+            max_pending_reservations:128,max_pending_bytes:131_072,
+            io_timeout_ns:100_000_000,
+        },now).is_err(){return BAD_STAGE}
+        if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
+        let active=Arc::new(Mutex::new(OriginalOuterRepair{
+            shadow,direction,route,sent_fresh:0,authentic_ack:0,
+            repair_copied:0,repair_uncertain:0,repair_blocked:0,retired:0,
+        }));
+        e.original_outer=Some(Arc::clone(&active));
+        Some(active)
+    }else{None};
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
     // Only the REAL published original-Go product API explicitly arms the
@@ -3505,7 +3563,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
-                    feedback_rx.as_ref()
+                    feedback_rx.as_ref(),
+                    #[cfg(feature="fec2_product_record")]
+                    original_outer_rx.as_ref()
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
