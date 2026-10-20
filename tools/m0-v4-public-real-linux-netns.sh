@@ -112,7 +112,7 @@ if [[ "$LOSS" == 1 ]];then
   sudo -n ip netns exec "$NSC" tc qdisc add dev wbdvc0 root netem loss 1%
   sudo -n ip netns exec "$NSS" tc qdisc add dev wbdvs0 root netem loss 1%
 fi
-sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
+if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
 import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.2",45902));s.settimeout(12)
@@ -124,8 +124,27 @@ for i in range(int(os.environ["WBD_REAL_COUNT"])):
     assert src[0]=="10.66.0.1"
     print("M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK",i,flush=True)
 s.close()
-' >"$ART/public-v4-normal-business.log" 2>&1
-cat "$ART/public-v4-normal-business.log"
+' >"$ART/public-v4-normal-business.log" 2>&1;then
+  # Failure stays failure. Ask the REAL public processes to Stop so their
+  # counters distinguish lost peer ACK, candidate/budget, and kernel TX.
+  sudo -n kill -TERM "$(cat "$TMP/client.pid")" 2>/dev/null || true
+  sudo -n kill -TERM "$(cat "$TMP/server.pid")" 2>/dev/null || true
+  sleep 0.5
+  {
+    echo 'M0_V4_PUBLIC_KERNEL_NETEM_GENUINE_FAILURE'
+    tail -5 "$ART/public-v4-normal-business.log"
+    for role in client server;do
+      echo "Original native $role readiness / M2 / Stop"
+      grep -E 'V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP|V4_ORIGINAL_GO_.*_NATIVE_READY' "$TMP/$role.log" || true
+    done
+    if [[ "$LOSS" == 1 ]];then
+      sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 || true
+      sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 || true
+    fi
+  } | tee "$ART/v4-public-1pct-failure-diagnostics.log" >&2
+  exit 1
+fi
+if [[ "$PACKETS" == 5 ]];then cat "$ART/public-v4-normal-business.log";fi
 # Confirm clean signal-to-actual-Rust-Stop; no test-only positive receipt.
 sudo -n kill -TERM "$(cat "$TMP/client.pid")"
 sudo -n kill -TERM "$(cat "$TMP/server.pid")"
