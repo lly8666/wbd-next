@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "adf4e7d90d024d73969b376036910a3b28ce679f",
+  "result": "PASS_SCOPED_PUBLIC_ORIGINAL_GO_V4_FIXED_AUTO_INITIAL_APPLIED_GAME2_4_PRODUCT_NOT_RUN",
+  "all_product_done_when": "NOT_MET",
+  "binary_source_sha": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "compiled_artifact": {
+    "run_id": 39397026210,
+    "attempt": 1,
+    "job_id": 118542165394,
+    "artifact_id": 12252520773,
+    "artifact_name": "m0-v4-source-build-39397026210-1",
+    "zip_sha256": "b053263df578f6724eeb00cb665fae095b8c384d156758ceb2416fda1bb3ed14",
+    "Go_tags": [
+      "wbd_v4_embedded_go",
+      "wbd_v4_fec2_product"
+    ],
+    "Rust_features": [
+      "m0_v4_probe",
+      "m0_v4_embedded_go",
+      "m0_fec2_owner_probe",
+      "fec2_product_record"
+    ]
+  },
+  "actions": {
+    "run_id": 39397459128,
+    "attempt": 1,
+    "workflow": ".github/workflows/m0-v4-public-wiring-parallel.yml",
+    "harness_source_sha": "adf4e7d90d024d73969b376036910a3b28ce679f",
+    "conclusion": "success",
+    "matrix": "independent jobs fail-fast false, binary reused, no cross-VM performance comparison",
+    "jobs": [
+      {
+        "mode": "fec-fixed",
+        "job_id": 118543631716,
+        "status": "PASS_SCOPED_REAL_PUBLIC_GO_V4_M2_FEC2_64_APP_BOTH_APPLIED_STOP",
+        "artifact_id": 12252242677,
+        "artifact_sha256": "428f8625242cc4a07785604d386f354b562c44449667891640036e63297b3c87"
+      },
+      {
+        "mode": "fec-auto",
+        "job_id": 118543631365,
+        "status": "PASS_SCOPED_REAL_PUBLIC_GO_V4_M2_INITIAL_AUTO_64_APP_BOTH_APPLIED_STOP",
+        "artifact_id": 12253170086,
+        "artifact_sha256": "e5bb96397e34012d299a355fdeb227c4aedc0ada57a101da43346f84bea3b1c3"
+      },
+      {
+        "mode": "game2",
+        "job_id": 118543631502,
+        "status": "PASS_NEGATIVE_UNWIRED_CLI_REJECTED_PRODUCT_NOT_RUN",
+        "artifact_id": 12252327492,
+        "artifact_sha256": "2948a894de59f959f7e855e676b682ca11abf470c9afbe58f3f189ff0064af6f"
+      },
+      {
+        "mode": "game4",
+        "job_id": 118543631589,
+        "status": "PASS_NEGATIVE_UNWIRED_CLI_REJECTED_PRODUCT_NOT_RUN",
+        "artifact_id": 12253165086,
+        "artifact_sha256": "f487b7ba5353cefb78fde15ace4844d8929a4797985ce8db02afc7d4916177c1"
+      }
+    ]
+  },
+  "positive_assertions": {
+    "source_locked_binary_checksum": true,
+    "original_TLS_verified_client_V2_feature7": true,
+    "actual_original_Go_client_server_CLI": true,
+    "one_real_Rust_M1_M2_M3_M4_per_role": true,
+    "real_Linux_raw_TUN_UDP_app": true,
+    "unique_echo_per_mode": 64,
+    "both_roles_FEC2_requested_revision": 1,
+    "both_roles_FEC2_applied_revision": 1,
+    "both_roles_pending": false,
+    "mature_confirmation": "native Rust real M4 copied source and repair + genuine M3 opened opposite protected kind1 2s coverage required; no synthetic applied callback",
+    "native_Stop_drained_both": true,
+    "qualifies": "initial Fixed and Auto only, no loss"
+  },
+  "missing": {
+    "V4_public_Game2_4_independent_authenticated_owner_first_app": "NOT_WIRED_NOT_RUN",
+    "V4_Game_damaged_lane_no_HOL": "NOT_RUN",
+    "V4_Fixed_Auto_1pct_loss": "NOT_RUN",
+    "Auto_second_policy_change": "NOT_RUN",
+    "Windows_OS_owner": "NOT_RUN",
+    "cross_build": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "FEC2_production": "OFF"
+  },
+  "original_failures_preserved": [
+    {
+      "run_id": 39396003853,
+      "result": "FAIL",
+      "source": "feebdf5ac984dddcc8e6f32ae3e89e58f7f102ad",
+      "reason": "original Go V4 client feature7 V2 handoff absent and negative harness library path; not success"
+    },
+    {
+      "run_id": 39396438181,
+      "result": "FAIL_NARROW_DIAG",
+      "source": "f9922925aef7a8450781fa980158d340ee542b3b",
+      "reason": "real original client Fixed pending BAD_STAGE=3 from V1 handoff, identified before fix"
+    },
+    {
+      "run_id": 39397026210,
+      "result": "FAIL_HARNESS",
+      "source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+      "reason": "Go/Rust source-locked build PASS, matrix pin step FAIL missing Python os import"
+    },
+    {
+      "run_id": 39397322763,
+      "result": "FAIL_HARNESS",
+      "source": "1ac90c2ff62554b5bb4e674672746fafd9a88cd3",
+      "reason": "all matrix fixed/auto app scenario NOT_RUN: output directory absent"
+    },
+    {
+      "run_id": 39389626400,
+      "result": "FAIL_BUILD_OLDER",
+      "source": "6346508003c104068f750f6d09ed43d5ef2e9aef",
+      "reason": "original Go FEC2 public product assembly list initially missing"
+    }
+  ],
+  "next_action": "Bind original-Go V4 Game2/4 true per-lane authenticated M4 raw/TUN and single-lane damage no-HOL/Stop gate on one exact SOURCE. Do not rerun accepted Fixed/Auto initial no-loss."
+}
