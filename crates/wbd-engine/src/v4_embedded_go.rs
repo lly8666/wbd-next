@@ -2188,8 +2188,12 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     for e in &locks{
         if e.phase!=PH_ACTIVE||e.server_side!=server||
            e.protected_features!=7||e.game_joined||
-           e.game_pending_cold.is_none()||e.workers.is_some()||
-           e.raw_tx.is_some()||e.raw_rx.is_some()||e.tun_sink.is_some(){
+           e.game_pending_cold.is_none(){
+            return Err(BAD_STAGE)
+        }
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        if e.workers.is_some()||e.raw_tx.is_some()||
+           e.raw_rx.is_some()||e.tun_sink.is_some(){
             return Err(BAD_STAGE)
         }
         let id=e.game_pending_cold.as_ref().ok_or(BAD_STAGE)?.identity();
@@ -3773,6 +3777,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_some(){return BAD_STAGE}
+    // Grouped Game2/4 consumes these TLS keys into a different SINGLE
+    // GameAdapter. Starting a second Normal owner would duplicate PN/AEAD.
+    #[cfg(feature="fec2_product_record")]
+    if e.game_joined{return BAD_STAGE}
     let (Some(raw),Some(tun))=(e.raw_rx.as_ref(),e.tun_sink.as_ref())
     else{return BAD_STAGE};
     let Some(ifname)=e.raw_ifname.clone()else{return BAD_STAGE};
