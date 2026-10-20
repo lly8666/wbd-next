@@ -5,6 +5,12 @@
 set -euo pipefail
 ROOT="${1:?expected argument: directory containing the V4 client, server and Rust native library}"
 ROOT="$(realpath "$ROOT")"
+LOSS="${WBD_V4_PUBLIC_KERNEL_LOSS:-0}"
+if [[ "$LOSS" != 0 && "$LOSS" != 1 ]];then
+  echo "invalid exact public V4 netem loss selector" >&2;exit 2
+fi
+PACKETS=5
+if [[ "$LOSS" == 1 ]];then PACKETS=512;fi
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
 : "${GITHUB_RUN_ID:?source-locked GitHub Actions only}"
@@ -72,12 +78,12 @@ sudo -n ip netns exec "$NSC" bash -c "
 PIDC=$!
 # Real server-side Python socket only ECHOES a real UDP packet the Linux
 # kernel accepted from the owner TUN. It never makes fake TCP ciphertext.
-sudo -n ip netns exec "$NSS" python3 -u -c '
-import socket,time
+sudo -n ip netns exec "$NSS" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
+import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45901));s.settimeout(28)
 try:
-    for i in range(5):
+    for i in range(int(os.environ["WBD_REAL_COUNT"])):
         data,src=s.recvfrom(8192)
         assert data.startswith(b"WBD_REAL_V4_ORIGINAL_GO")
         s.sendto(b"V4_SERVER_APP_ECHO/"+data,src)
@@ -99,12 +105,19 @@ if [[ "$ready" != 1 ]];then
   sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' "$TMP/client.log" "$TMP/server.log" | tail -65 >&2
   exit 1
 fi
-sudo -n ip netns exec "$NSC" python3 -u -c '
-import socket,time
+# Real LOSS is imposed on the actual Linux underlay AFTER both original
+# Go TLS handshakes and both native Rust/M4 driver bindings are READY.
+# The exact existing CLI binaries, not an alternative sender, handle it.
+if [[ "$LOSS" == 1 ]];then
+  sudo -n ip netns exec "$NSC" tc qdisc add dev wbdvc0 root netem loss 1%
+  sudo -n ip netns exec "$NSS" tc qdisc add dev wbdvs0 root netem loss 1%
+fi
+sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
+import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.2",45902));s.settimeout(12)
-for i in range(5):
-    msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i])*64)
+for i in range(int(os.environ["WBD_REAL_COUNT"])):
+    msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
     s.sendto(msg,("10.66.0.1",45901))
     data,src=s.recvfrom(8192)
     assert data==b"V4_SERVER_APP_ECHO/"+msg,(i,data)
@@ -129,5 +142,32 @@ fi
 # exact readiness and packet count; erase ephemeral TLS files and logs.
 grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
 grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
-test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq 5
-echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
+test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
+grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
+grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+if [[ "$LOSS" == 1 ]];then
+  sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$TMP/kernel-client-netem.txt"
+  sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 >"$TMP/kernel-server-netem.txt"
+  python3 - "$TMP" "$ART" <<'PY'
+import pathlib,re,sys
+p=pathlib.Path(sys.argv[1]);out=pathlib.Path(sys.argv[2])
+def read(name):return (p/name).read_text()
+drops=sum(sum(map(int,re.findall(r'dropped (\\d+)',read(n)))) for n in
+    ('kernel-client-netem.txt','kernel-server-netem.txt'))
+repairs=sum(sum(map(int,re.findall(r'original_frozen_retransmitted=(\\d+)',read(n))))
+    for n in ('client.log','server.log'))
+copied=sum(sum(map(int,re.findall(r'real_first_copy=(\\d+)',read(n))))
+    for n in ('client.log','server.log'))
+acks=sum(sum(map(int,re.findall(r'authenticated_ack=(\\d+)',read(n))))
+    for n in ('client.log','server.log'))
+assert drops>0,f"kernel 1% dropped=0 not a real loss proof"
+assert copied>=1024,f"true first-copy count wrong: {copied}"
+assert repairs>0,f"no real M2 original-frozen retransmissions: {repairs}"
+assert acks>0,f"no real peer AEAD kind1 receipt retirement: {acks}"
+marker=f"M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS original_tls=1 real_udp_echo=512 kernel_netem_drops={drops} native_m2_frozen_retransmitted={repairs} authenticated_m2_acks={acks} actual_kernel_first_copied={copied} Stop_drained_both=1"
+(out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\\n')
+print(marker)
+PY
+else
+  echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
+fi
