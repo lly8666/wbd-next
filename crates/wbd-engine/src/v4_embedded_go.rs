@@ -250,7 +250,7 @@ impl NormalFirstSendM2 {
     fn on_original_authenticated_reverse(
         &mut self,opened:crate::v4_owner_crypto::AuthenticatedNormalKind1,
         now:MonoNs
-    )->Result<(),wbd_types::DataError>{
+    )->Result<wbd_recovery::ScopedAuthenticatedReceipt,wbd_types::DataError>{
         use wbd_recovery::{ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,WireDirection};
         let facts=ReceiptOpenFacts{
             verified_reverse_lane:self.lane,
@@ -271,7 +271,7 @@ impl NormalFirstSendM2 {
             return Err(wbd_types::DataError::Stale)
         }
         self.authenticated_reverse_reports=self.authenticated_reverse_reports.saturating_add(1);
-        Ok(())
+        Ok(scoped)
     }
     fn on_real_kernel_turn(&mut self,records:&[(wbd_types::RecordPn,u64)],
         result:TxTurnCompletion,now:MonoNs){
@@ -292,6 +292,36 @@ impl NormalFirstSendM2 {
         }
         self.poll(now);
     }
+}
+// Actual production V4 original-Go M2 outer retransmit. One shadow of
+// immutable first-copied M1 frozen ciphertext per authenticated direction.
+// No separate sealer, PN allocator, or Go V3 retransmit is reachable.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+struct OriginalOuterRepair{
+    shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
+    direction:wbd_recovery::BudgetDirection,
+    route:wbd_recovery::ReceiptRouteScope,
+    sent_fresh:u64,
+    authentic_ack:u64,
+    repair_copied:u64,
+    repair_uncertain:u64,
+    repair_blocked:u64,
+    retired:u64,
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    target_arch="x86_64",target_env="gnu"))]
+fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAllocator>{
+    static BROKER:OnceLock<Mutex<wbd_recovery::GlobalRepairAllocator>>=OnceLock::new();
+    BROKER.get_or_init(||{
+        let cfg=wbd_recovery::GlobalRepairConfig{
+            max_bytes_per_epoch:131_072,max_directions:32,
+            max_grant_bytes:32_768,max_grant_lifetime_ns:50_000_000,
+            max_pending:128,max_pending_bytes:131_072,
+        };
+        Mutex::new(wbd_recovery::GlobalRepairAllocator::new(
+            cfg,MonoNs(0)).expect("constant bounded global M2 repair config"))
+    })
 }
 struct Entry{
     generation:u32,
@@ -332,6 +362,8 @@ struct Entry{
     original_public_feedback_armed:bool,
     #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
+    #[cfg(feature="fec2_product_record")]
+    original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
@@ -509,6 +541,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         original_public_feedback_armed:false,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
+        #[cfg(feature="fec2_product_record")]
+        original_outer:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         normal_off_applied_revision:0,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
