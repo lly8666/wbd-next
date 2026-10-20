@@ -186,8 +186,19 @@ s.close()
     tail -5 "$ART/public-v4-normal-business.log"
     for role in client server;do
       echo "Original native $role readiness / M2 / Stop"
-      grep -E 'V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP|V4_ORIGINAL_GO_.*_NATIVE_READY' "$TMP/$role.log" || true
+      grep -E 'V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP|V4_ORIGINAL_GO_.*_NATIVE_READY|V4_PUBLIC_GAME_KERNEL|V4_PUBLIC_GAME_NATIVE_STOP' "$TMP/$role.log" || true
     done
+    if [[ "$GAME" != 0 ]];then
+      echo "M0_GAME_APP_TIMED_OUT_DIAG mode=$MODE lane1_drop_rule_bytes:"
+      sudo -n ip netns exec "$NSC" iptables -nvL OUTPUT | head -12 || true
+      sudo -n ip netns exec "$NSS" iptables -nvL OUTPUT | head -12 || true
+      echo "M0_GAME_AUTH_NATIVE_FINAL_SERVER_UDP_RECEIPT"
+      tail -8 "$TMP/echo.log" || true
+      for role in client server;do
+        echo "M0_GAME_$role_NATIVE_LAST_EVENTS"
+        sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' "$TMP/$role.log" | tail -20 || true
+      done
+    fi
     if [[ "$LOSS" == 1 ]];then
       sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 || true
       sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 || true
