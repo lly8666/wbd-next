@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "2cd126aee8e5277a2dd201abb45fd6965c2da30a",
+  "source_type": "harness",
+  "result": "FAIL_PUBLIC_GAME2_GAME4_BIDIRECTIONAL_FIRST_APP_UNQUALIFIED",
+  "artifact_verified": false,
+  "binary": {
+    "source_sha": "86f1980d31d583d9b7fb5374b92fb9eaa655752b",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "build_run_id": 39423888402,
+    "artifact_id": 12264967774,
+    "zip_sha256": "1812bb3cf23b5b1004edd96c792bf88233fe7a1fd68812d16c17146f547014be"
+  },
+  "actions": [
+    {
+      "run_id": 39427195857,
+      "source_sha": "37595f756bba9fa07add1bb385cc80f83281b322",
+      "result": "FAIL_WORKFLOW_SYNTAX",
+      "jobs": "NOT_RUN",
+      "reason": "source YAML diagnostic embedded shell heredoc not indented"
+    },
+    {
+      "run_id": 39427318548,
+      "source_sha": "5ff72cc38ecb6b45d1feca938871588b3afa34e8",
+      "result": "FAIL_PRODUCT_BOTH",
+      "jobs": [
+        {
+          "mode": "game2",
+          "job_id": 118643035040,
+          "status": "FAIL_UDP_ECHO"
+        },
+        {
+          "mode": "game4",
+          "job_id": 118643034789,
+          "status": "FAIL_UDP_ECHO"
+        }
+      ]
+    },
+    {
+      "run_id": 39427677138,
+      "source_sha": "2cd126aee8e5277a2dd201abb45fd6965c2da30a",
+      "result": "FAIL_PRODUCT_BOTH",
+      "jobs": [
+        {
+          "mode": "game2",
+          "job_id": 118644240431,
+          "status": "FAIL_APP_TIMEOUT",
+          "artifact_id": 12266167660,
+          "zip_sha256": "6054d0e4513752b05cfd8bef4f8d7957287f91553b4c4aafd0baef19391a13ba",
+          "tcp_head_observation": "EMPTY_THIS_ITERATION"
+        },
+        {
+          "mode": "game4",
+          "job_id": 118644241059,
+          "status": "FAIL_APP_TIMEOUT",
+          "artifact_id": 12266352415,
+          "zip_sha256": "8a428f17b07a7dbca2640b2e49c1ad58442a54d4532a5906d5004484c4c0196a",
+          "tcp_head_observation": "3 healthy client ciphertext packets 165 TCP bytes each, source 10.25.0.2 ports41032,41033,41034 to dest10.25.0.1 ports444,445,446, IP TTL64 DF no fragmentation TCP flags PSH ACK observed on client and server veth; no application success"
+        }
+      ]
+    }
+  ],
+  "retained_accepted": [
+    {
+      "source_sha": "adf4e7d90d024d73969b376036910a3b28ce679f",
+      "run_id": 39397459128,
+      "scope": "original-Go V4 Fixed/Auto initial genuine both role M2 applied +64UDP PASS_SCOPED"
+    },
+    {
+      "source_sha": "3742a2c2a140f95fafb1a78ad286ae2142aef9da",
+      "run_id": 39400497230,
+      "scope": "private original TLS Game2/4 M4 first and second UDP app lane1 damage no-HOL PASS_SCOPED_NOT_PUBLIC"
+    }
+  ],
+  "scope": {
+    "original_go_public_game2": "FAIL",
+    "original_go_public_game4": "FAIL",
+    "original_go_public_game_first_app": "NOT_QUALIFIED",
+    "kernel_onwire_game4": "OBSERVED_RAW_TCP_3_HEALTHY_LANES_NOT_AUTHENTICATED",
+    "full_bidirectional": "FAIL",
+    "Windows_native": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_Game": "OFF",
+    "production_FEC2": "OFF"
+  },
+  "governance": {
+    "run_id": 39427677262,
+    "conclusion": "FAIL",
+    "reason": "M0 H212 cursor evidence_refs file S486 lacked source_sha matching last_tested_source 40800f...; fail-closed mandatory check correct",
+    "maintenance_run_id": 39427677375,
+    "maintenance_conclusion": "FAIL",
+    "reason2": "same source mismatch breaks selftest; do not loosen guard"
+  },
+  "next_action": "repair true original-Go Game raw TCP input parser/filter or GameRx-to-TUN delivery under kernel loss with one instrumented exact-source binary and dual-job real application gate; do not repeat accepted Fixed/Auto/Normal test"
+}
