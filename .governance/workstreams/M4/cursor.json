@@ -4,16 +4,16 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 52,
-  "checkpoint_sha": "c188063b6864ee1b84b3f0f2a31943a428038dc0",
+  "sequence": 53,
+  "checkpoint_sha": "27bf52af7dafe278f8c1a321a7d1072f40d715c6",
   "progress": "partial",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "current_task": "PLAN013 Windows018: exact M4 S53 source original Go/WinForms Windows-2022 pinned legacy compiled and exercised real child process + Game1/2/4 saved config readback; 314 GUI checks and 20 named native owned transaction/WAL/WFP safety tests PASS. Native WFP/TUN/route/DNS/IPv6 actual product Apply, authenticated Rust Stop and real connected traffic NOT_RUN, guarded OFF.",
-  "why_now": "User temporary authorization now matched formal main registry Windows018. S53 central G2 Actions39365023412 SUCCESS. Exact main-owned Windows2022 Actions39365281132 attempt1 attest118440601979 and native118440664955 BOTH SUCCESS; ZIP artifact12239082327 independent sha256 verified61b258ab. Original Go child native WFP/auth Stop safety denial before READY, no owned WAL; GUI no false Connected on legacy READY. Historical S52 main consumer39365105883 identity fail due moved worker source retained; neither source proves real WFP positive.",
+  "current_task": "PLAN013 Windows018: S59 genuine hosted Windows2022 real WFP TEST-NET persistent rule CAS+cleanup, process-owned official Wintun created LUID, native IPv4 lease/DAD, MTU, DNS, single /32 route, actual WAL Apply/Recover repeated all PASS; original Go WinForms 314 and native21 PASS. Production original Go TLS client→authenticated Rust Stop and host-wide WFP capture remain NOT_RUN, guarded OFF.",
+  "why_now": "M4 S59 source d9a9bbf G2 39370944075 SUCCESS; exact main Actions39371230050 attempt1 whole SUCCESS (attest118459323414, Windows118459366653). Artifact12241229223 downloaded independently sha256 08ebce928182cfece0372764a97398f01660fb8dc67452953c75433489b3facb exactly provider match. Scoped true Win32 native WFP/Wintun/lease/DNS/route/WAL positive not mocks. Staging result S60 a38e24d and S61 27bf52a; old S57 PowerShell parser FAIL remains history.",
   "done_when": "Windows native Go CLI+WinForms actual config/save/reload/launch→Connect/Disconnect+requested/pending/applied readback, owned WFP/TUN/DNS/route native stop/cleanup where supported; same frozen SOURCE Windows 2022 Actions named tests and artifact, original FAIL/UNSUPPORTED/NOT_RUN preserved; no false production ON.",
-  "next_action": "M0 provide exact Windows-compatible authenticated original Go/Rust owner Stop/drained loans ABI and isolated recoverable Windows full-network test host per issue20 comment6282786676; M4 will then wire native WFP/Wintun/DNS/routes owned positive Apply→readback→Stop→Recover and one exact Windows Actions proof without disabling admission guard.",
+  "next_action": "M0 integrate Windows original-Go authenticated TLS→Rust owner Stop/quiesced+loans-drained exact identity ABI and provide qualification of full-product WFP/default-route capture. M4 connect native guarded product only against real authenticated owner and real isolated final OS lifecycle; no need to rerun already-qualified S59 Windows scoped tests. Keep FEC2/Game OFF.",
   "unverified": true,
-  "last_tested_source": "32fd73e9b2904b79d82bbcbb416d3bd53bb9d2f8",
+  "last_tested_source": "d9a9bbf0da6aa8054145193567a45cc6bc985131",
   "evidence_refs": [
     "docs/evidence/M4/R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018.json",
     "docs/evidence/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.json",
@@ -26,5 +26,5 @@
     "r0/go_overlay/assembly/manifest.json",
     "r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1"
   ],
-  "partial_summary": "H52 checkpoint S54 c188063 Windows PLAN013; worker S53 32fd73e G2 39365023412 PASS, Windows Actions39365281132 full SUCCESS original pinned Go WinForms GUI (314 checks) and 20 native safety tests, provider ZIP artifact12239082327 sha256 61b258ab independently verified, live original Go Game1/2/4 config and native guard before network mutations. NOT RUN production WFP/TUN/DNS/route/IPv6, public feature7, authenticated Rust Stop and first real app packet; protected ABI and isolated Windows guest M0 issue20. Product FEC2/Game OFF. Old Windows I010 PLANNED NOT_RUN, S52 identity FAIL, I002/I005 FAIL preserved. Prior Linux017 accepted H51, real netns S46 original Go PASS."
+  "partial_summary": "H53 checkpoint S61 27bf52a. Win2022 S59 native real WFP TEST-NET host filter persistence/CAS rollback, process-created Wintun, test-interface lease/MTU/DNS/test /32 route and WAL Apply/Recover all source-locked full SUCCESS Action39371230050, 21 native and 314 GUI PASS, matching ZIP SHA256 08ebce9. Product-wide native WFP capture and Windows original-Go TLS→authenticated Rust Stop ACK NOT_RUN; stage firewall guard fake by design, FEC2/Game OFF; original I010 planned NOT_RUN. Linux017 S46 accepted."
 }
