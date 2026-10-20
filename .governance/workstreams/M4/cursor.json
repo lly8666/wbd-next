@@ -4,14 +4,14 @@
   "branch": "work/m4-r1-platform",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 49,
-  "checkpoint_sha": "2ea90ee3c82a7f55261e06e22f2d6a635f6fac66",
-  "progress": "partial",
+  "sequence": 50,
+  "checkpoint_sha": "9055f86b971a0438f095d004c15d48e722baec21",
+  "progress": "blocked",
   "task_id": "R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017",
-  "current_task": "M4-017 exact native S44 real isolated TUN FD Stop PASS 97/97, and original-Go M4 S43 named Stop test inside M0 full combined Linux Actions39352250946 PASS. Newer S46 stricter route/rule/FD pre/post restoration Go source not yet run; production FEC2 OFF.",
-  "why_now": "M0 main source614a747eff374e2e6b9aabd0a2497b0d08381985 combined full SUCCESS39352250946 job118398882536 artifact12232849167 with original Go TLS FEC recovery client UDP and S43 M4 named PASS. Prior main run39351905299 actual named PASS but overall FAIL main script syntax now fixed. M4 S46 central G2 PASS39351643859 but M0 compiled earlier S43 blob only.",
+  "current_task": "PLAN012-017: native live Linux TUN fd Stop 97/97 PASS (S44), original pinned-Go TLS/FEC/4 UDP/Stop M4 S43 named PASS combined main614a747 Action39352250946; last S46 stricter actual same-netns pre/post route/policy/TUN FD cleanup test NOT_RUN pending M0-only import.",
+  "why_now": "Main f7a4868 Go test remains Git blob e7e8a64f from M4 S43, not M4 S46 blob4fab31cd. S46 G2 PASS39351643859; worker H49 central PASS39352718743; no new original Go S46 run. M4 has no permission for main-owned workflow or tools/run-v4-tun-netns.sh. Exact coordination issue https://github.com/lly8666/wbd-next/issues/19 created to ask M0 to import S46 and run one combined Actions, with historic outcomes preserved.",
   "done_when": "M4 branch-owned scoped Linux TUN/raw network fixture and native platform Stop/owned descriptor test, verified original Go TLS Connect→real FEC source+parity/loss recovery→M4 ScopedTunSink client UDP→Stop/Disconnect→post-Stop reject+fd/journal/route cleanup; one exact SOURCE Linux Actions PASS with artifact and original FAIL/NOT_RUN. Windows deferred, no extreme PnP.",
-  "next_action": "M0 import exact M4 S46 f0e5b2516f4b5069a95616c9d6bdd3f5bab454e6 Go test into existing source-locked original Go Linux combined netns workflow and run once; consume full Action/marker with route-table, rule-table and /dev/net/tun descriptor baseline equal. Until then call S46 NOT_RUN; if M0 accepts earlier S43 as sufficient retain separate excluded newer check.",
+  "next_action": "M0 resolve GitHub issue #19 by replacing original Go integrated M4 S43 blob with exact S46 blob4fab31cd531867b8a3db73ba275223abd49b0ce9 and run one new source-locked Linux combined Actions with full SUCCESS and TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup route/rule/TUN FD before-after; M4 consume artifacts and mark done, not otherwise.",
   "unverified": true,
   "last_tested_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
   "evidence_refs": [
@@ -24,5 +24,5 @@
     "docs/devlog/M4/R5-M4-PLAN012-LINUX-REAL-NETWORK-STOP-017.md",
     "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
   ],
-  "partial_summary": "H49 S49 2ea90ee; M4 native S44 bdd6f6c Actions39344699874 97/97 true one-off netns TUN FD/Stop PASS. M0 original-Go main SOURCE614a747 Actions39352250946 full SUCCESS including S43 M4 Stop named test and original TLS/lost-source FEC recovery 4 UDP client M2. M4 stronger S46 f0e5b251 source G2 PASS39351643859 but not run on M0 original Go. Main previous FAIL39351905299 retained. Windows I010 deferred, physical NOT_RUN, FEC2 OFF."
+  "partial_summary": "H50 checkpoint S50 9055f86b. Native live TUN FD Stop S44 source bdd6f6c Actions39344699874 97/97 PASS; M0 original Go TLS FEC source loss RS16 and UDP Stop S43 main614a747 Actions39352250946 whole PASS. S46 Go enhanced route+rule+/dev/net/tun fd BEFORE/AFTER still NOT_RUN because M0 main copies S43 file; M4 scope disallows workflow/script main write and no Actions workflow_dispatch available. Precise GitHub M0 handoff issue19. Historical failures preserved, Windows I010 deferred, physical NOT_RUN, product FEC2 OFF."
 }
