@@ -8,10 +8,10 @@ import (
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
 type ScopedOriginalTLSNativeWintun struct {
- Owner *realityfront.V4WindowsAuthenticatedClientOwner
- Native CreatedWintun
- Identity realityfront.V4WindowsNativeDeviceIdentity
- Bound bool
+ owner *realityfront.V4WindowsAuthenticatedClientOwner
+ native CreatedWintun
+ identity realityfront.V4WindowsNativeDeviceIdentity
+ bound bool
 }
 func ConnectScopedOriginalTLSWintun(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
@@ -19,22 +19,22 @@ func ConnectScopedOriginalTLSWintun(ctx context.Context,
 )(*ScopedOriginalTLSNativeWintun,error){
  if ctx==nil||owner==nil||tun==nil||installation==[16]byte{}||
  epoch==[16]byte{}{return nil,ErrNativeDeviceNotOwned}
- out:=&ScopedOriginalTLSNativeWintun{Owner:owner,Native:CreatedWintun{TUN:tun}}
- id,err:=out.Native.Identity(ctx,installation,epoch)
+ out:=&ScopedOriginalTLSNativeWintun{owner:owner,native:CreatedWintun{TUN:tun}}
+ id,err:=out.native.identity(ctx,installation,epoch)
  if err!=nil{return nil,err}
- out.Identity=id
- if err=owner.BindOriginalM4NativeDevice(ctx,out.Native,id);err!=nil{
+ out.identity=id
+ if err=owner.BindOriginalM4NativeDevice(ctx,out.native,id);err!=nil{
   return out,errors.Join(ErrNativeDeviceNotOwned,err)
  }
  state,err:=owner.OriginalOwnerReadback()
  if err!=nil||!state.OwnerActive||!state.DeviceBound||
  state.DeviceQuiesced||state.ProductApplied{return out,ErrNativeDeviceNotOwned}
- out.Bound=true
+ out.bound=true
  return out,nil
 }
 func(s *ScopedOriginalTLSNativeWintun) StopRustScoped(ctx context.Context)error{
- if s==nil||s.Owner==nil||ctx==nil{return ErrNativeDeviceNotOwned}
- err:=s.Owner.StopScopedOwner(ctx)
- if err==nil{s.Bound=false}
+ if s==nil||s.owner==nil||ctx==nil{return ErrNativeDeviceNotOwned}
+ err:=s.owner.StopScopedOwner(ctx)
+ if err==nil{s.bound=false}
  return err
 }
