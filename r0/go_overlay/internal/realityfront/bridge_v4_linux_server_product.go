@@ -36,6 +36,11 @@ type V4LinuxServerProduct struct {
     cfg V4LinuxServerProductConfig
     owner *v4EmbeddedNativeBridge
     session *V4ServerSession
+    // Immutable TLS identity survives caller mutation of the result view.
+    principal string
+    tunnel [16]byte
+    lane uint8
+    epoch [16]byte
     stopped bool
 }
 // NewV4LinuxServerProduct requires the real kernel device, rather than a
@@ -76,6 +81,17 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     // first Stop/release Rust; no system route/TUN cleanup can race that Stop.
     p.owner=bridge
     p.session=session
+    // Freeze original authenticated source *before* returning any exported
+    // mutable AdmissionResult or allowing Stop concurrently.
+    verified,verifyErr:=session.ColdSnapshot()
+    if verifyErr!=nil{
+        shutdown:=p.closeLocked()
+        return nil,errors.Join(verifyErr,shutdown)
+    }
+    p.principal=verified.Principal()
+    p.tunnel=verified.TunnelID()
+    p.lane=verified.LaneID()
+    p.epoch=verified.Epoch()
     if err=bridge.attachRawRxOnInterface(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,
     );err==nil{
@@ -107,11 +123,11 @@ func (p *V4LinuxServerProduct) closeLocked()error{
     if p.owner==nil||p.session==nil{return ErrAdmissionUnsupported}
     _,err:=V4StopThenCleanupNetwork(p.owner,p.cfg.CleanupOwnedNetwork)
     if err!=nil{return err}
-    cold,err:=p.session.ColdSnapshot()
-    if err!=nil{return err}
-    tunnel:=cold.TunnelID()
+    if p.principal==""||p.epoch==[16]byte{}||p.lane==0 {
+        return ErrAdmissionParams
+    }
     if err=p.cfg.Epochs.ReleaseLane(
-        cold.Principal(),tunnel[:],cold.LaneID(),cold.Epoch(),
+        p.principal,p.tunnel[:],p.lane,p.epoch,
     );err!=nil{return err}
     p.stopped=true
     return nil
