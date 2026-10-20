@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+  "result": "PASS_SCOPED_LINUX_REAL_ORIGINAL_GO_V4_PUBLIC_GAME2_AND_GAME4_M4_NATIVE_KERNEL_UDP_DAMAGE_STOP",
+  "overall_task_done_when": "PARTIAL_WINDOWS_SHARED_OWNER_NOT_RUN",
+  "build_source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "actions": {
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "run_id": 39431226207,
+    "attempt": 1,
+    "job_id": 118656504467,
+    "conclusion": "success",
+    "artifact_id": 12268980051,
+    "artifact_name": "m0-plan012-combined-39431226207-1",
+    "artifact_zip_sha256": "5fd581f4a5e6309e248fec415fadd1e8287700f81b8471179439e470dc825f79",
+    "binary_sha256": {
+      "go_client": "7308889741f63b2a99320db1a28490d2e464f5a9f21609cb522c8f65f42bcfc3",
+      "go_server": "252c227429e4f07a395701562e4214ee6c7a5d398acc6d9efdb7cf1fb319cd62",
+      "rust_lib": "46fb92f0326dc3a8c5c98c9540fb0171a72c71511d18d80f843b40e604b18fd7"
+    },
+    "toolchains": {
+      "go": "1.23.12",
+      "rust": "1.85.1"
+    },
+    "rust_features": "m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record"
+  },
+  "real_public_game": {
+    "game2": {
+      "original_go_processes": 2,
+      "independent_tls_lanes": 2,
+      "true_linux_raw_tun": true,
+      "actual_kernel_lane_1_underlay_dropped": true,
+      "unique_udp_echo": 5,
+      "server_and_client_stop": "DRAINED",
+      "result": "PASS_SCOPED"
+    },
+    "game4": {
+      "original_go_processes": 2,
+      "independent_tls_lanes": 4,
+      "true_linux_raw_tun": true,
+      "actual_kernel_lane_1_underlay_dropped": true,
+      "unique_udp_echo": 5,
+      "server_and_client_stop": "DRAINED",
+      "result": "PASS_SCOPED"
+    },
+    "source_locked_assertion": "m0-v4-public-real-linux-netns.sh exact mode flags and both real CLI, package real original Go TLS credentials, Rust authenticated AEAD per lane and M4 raw/TUN, five unique bidirectional UDP round trips, native per-role copied/delivered >=5, original owned Stop, no fake native-only fallbacks",
+    "root_cause_and_fix": "S495 Game4 actual 6.4s user RX/TUN delay: GameKernelOwner TX used ScopedTunSink::read_ipv4_into with serialized device mutex held 750ms poll, starving Game RX write on same fd; S497 replaced with existing trusted ready-only poll(0) plus 2ms bounded yield, no M4 shared-device ABI change, packet crypto unchanged."
+  },
+  "retained_accepted": {
+    "Fixed_Auto_source_sha": "adf4e7d90d024d73969b376036910a3b28ce679f",
+    "Fixed_Auto_run_id": 39397459128,
+    "Fixed_Auto_scope": "initial genuine original Go M2 requested1 applied1 pendingfalse and 64 UDP per mode",
+    "private_Game_source_sha": "3742a2c2a140f95fafb1a78ad286ae2142aef9da",
+    "private_Game_run_id": 39400497230,
+    "private_Game_scope": "native private original-Go TLS M4 2/4 first+second app blocked lane1 no HOL"
+  },
+  "retained_original_failures": [
+    {
+      "run_id": 39427677138,
+      "source_sha": "2cd126aee8e5277a2dd201abb45fd6965c2da30a",
+      "result": "FAIL_REAL_GAME2_GAME4_PUBLIC_APP_TIMEOUT"
+    },
+    {
+      "run_id": 39429778349,
+      "source_sha": "0aa9017f69f0a4b0266dc7c7e3f503d9158dfb70",
+      "result": "FAIL_REAL_GAME2_APP_TIMEOUT_BEFORE_LOCK_FIX",
+      "artifact_id": 12266544999
+    },
+    {
+      "run_id": 39430776859,
+      "source_sha": "b2770ea77758a6ec4d9a4fd64064ae1d5bcadc5d",
+      "result": "FAIL_REAL_GAME2_GAME4_APP_TIMEOUT_S495_TUN_HEADERS"
+    },
+    {
+      "run_id": 39431226350,
+      "source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+      "result": "FAIL_SEPARATE_DIAGNOSTIC_MATRIX_USING_OLD_S494_BINARY_SOURCE",
+      "note": "not current GameKernelOwner S497 binary, cannot disqualify new S497 source; preserve"
+    }
+  ],
+  "qualification": {
+    "Linux_native_public_Game2_Game4": "PASS_SCOPED_ONE_COMBINED_EXACT_SOURCE",
+    "original_Linux_Normal_off_1pct": "PASS",
+    "Fixed_Auto_initial": "PASS_SCOPED_FROZEN_SEPARATE_SOURCE",
+    "Linux_product_full_all_modes_one_exact_SOURCE": "NOT_RUN",
+    "Windows_native_original_owner": "NOT_RUN",
+    "cross_build": "PASS_SCOPED",
+    "physical": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "Game_production": "OFF",
+    "FEC2_production": "OFF"
+  },
+  "next_action": "Consume M4 frozen Windows original-Go UI native source and implement/validate M0-owned Windows compatible authenticated Rust owner/Stop ABI plus exact-source Windows 2022 Actions. Do not rerun accepted Linux Game2/4 samples."
+}
