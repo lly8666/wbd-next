@@ -1005,9 +1005,12 @@ impl ProtectedScopedOwner {
             u64::try_from(used).map_err(|_|ProtectedCryptoError::Tx)?
         ).ok_or(ProtectedCryptoError::Tx)?;
         let seq=seq64 as u32;
-        let (pn,sealed_len)=if kind==AUTHENTICATED_LINK_KIND{
+        let (pn,sealed_len)=if matches!(kind,
+            AUTHENTICATED_LINK_KIND |
+            wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND
+        ){
             self.crypto.tx.seal_in_place(
-                AUTHENTICATED_LINK_KIND,buffer.writable(),payload_len,0
+                kind,buffer.writable(),payload_len,0
             )
         }else{
             #[cfg(any(feature="m0_fec2_owner_probe",feature="fec2_product_record"))]
