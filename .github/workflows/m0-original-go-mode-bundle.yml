@@ -1,0 +1,138 @@
+name: M0 immutable public Linux Go FEC Game experimental release
+run-name: "M0|V3-PUBLIC-MODES-RELEASE|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-original-go-mode-bundle.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  assemble-verified-public-modes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: linux-normal-off-two-real-clis-39369570717-1
+          run-id: 39369570717
+          github-token: ${{ github.token }}
+          repository: lly8666/wbd-next
+          path: original
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: go-public-real-fixed-39371841035-1
+          run-id: 39371841035
+          github-token: ${{ github.token }}
+          repository: lly8666/wbd-next
+          path: fixed
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: go-public-real-game2-39371841035-1
+          run-id: 39371841035
+          github-token: ${{ github.token }}
+          repository: lly8666/wbd-next
+          path: game2
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: go-public-real-game4-39371841035-1
+          run-id: 39371841035
+          github-token: ${{ github.token }}
+          repository: lly8666/wbd-next
+          path: game4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: go-public-real-auto-39372148109-1
+          run-id: 39372148109
+          github-token: ${{ github.token }}
+          repository: lly8666/wbd-next
+          path: auto
+      - name: Assemble source-locked binary bytes and all four genuine CLI real-app receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/cases
+          echo "9c0a0f0fdf77f0ef27865640b3143c440a109d3ae704cf8e17f46f72b89ca66b  original/linux-normal-off-original-go-amd64.tar.gz" | sha256sum -c -
+          tar -C bundle -xzf original/linux-normal-off-original-go-amd64.tar.gz
+          for mode in fixed auto game2 game4; do
+            cp "$mode/mode-receipt.json" "bundle/cases/$mode.json"
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("bundle")
+          manifest=json.loads((p/"source-manifest.json").read_text())
+          assert manifest["main_source"]=="9b1dec079f4d955d7f4d8a049349a00922c58032"
+          assert manifest["original_go_binary_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert manifest["build_tags"]==[]
+          for file,h in manifest["binary_sha256"].items():
+            assert hashlib.sha256((p/file).read_bytes()).hexdigest()==h
+          expected={
+            "fixed":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",1,4,1),
+            "auto":("8166870304e506c4194a19cf7dcb87cdc8c1e260",1,20,1),
+            "game2":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",2,0,0),
+            "game4":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",4,0,0),
+          }
+          verified={}
+          for mode,(source,lanes,parity,loss) in expected.items():
+            v=json.loads((p/"cases"/(mode+".json")).read_text())
+            assert v["source"]==source and v["original_go_source"]==manifest["original_go_binary_source"]
+            assert v["binary_build_source"]==manifest["main_source"]
+            assert v["binary_sha256"]==manifest["binary_sha256"]
+            assert (v["lanes_requested"],v["FEC_parity_requested"])==(lanes,parity)
+            assert v["new_Rust_V4"]=="NOT_WIRED"
+            if loss:assert sum(x["drops"] for x in v["kernel_netem"])>0
+            for side in ("biz","target"):
+              app=v["actual_duplex_udp"][side]
+              assert app["sent"]>50 and app["received"]>0
+            assert v["Stop_owned_network"]=="PASS"
+            verified[mode]={"test_source":source,"requested_lanes":lanes,
+              "requested_parity":parity,"actual_kernel_drops":sum(x["drops"] for x in v["kernel_netem"]),
+              "actual_bidirectional_business":v["actual_duplex_udp"],
+              "qualification":"OLD_GO_V3_EXPERIMENT_ONLY"}
+          release={"schema_version":1,"package_source":os.environ["GITHUB_SHA"],
+            "binary_build_source":manifest["main_source"],
+            "original_go_source":manifest["original_go_binary_source"],
+            "binary_sha256":manifest["binary_sha256"],"build_tags":[],
+            "normal_off":{"run_id":39369570717,"real_UDP":"60/60 each"},
+            "tested_modes":verified,"V4_Rust_outer_retrans_FEC2_Game":"NOT_WIRED",
+            "fec2_game_production":"OFF"}
+          (p/"capability-manifest.json").write_text(json.dumps(release,indent=2)+"\n")
+          print("M0_REAL_ORIGINAL_GO_PUBLIC_OLD_V3_FIXED_AUTO_GAME2_GAME4_RELEASE_4_CAPABILITIES_PASS")
+          PY
+          cat >bundle/MODES.md <<'EOF'
+          # Linux amd64 original Go experimental client and server
+          Actual untagged original Go version V3, pinned to a7a82db31fe736ffedee330795a3234d358f1984.
+          Use the two executables wbd-client and wbd-server together. Configure
+          real TLS certificates, account credentials, underlay interfaces and
+          Linux CAP_NET_ADMIN/CAP_NET_RAW. See ./wbd-client --help and ./wbd-server --help.
+          Normal/off: client --lanes 1 --fec-mode off --fec-parity 0;
+            server --lanes 1 --fec-parity 0
+          Legacy fixed4: client --lanes 1 --fec-mode fixed --fec-parity 4;
+            server --lanes 1 --fec-parity 4
+          Legacy auto Normal: client --lanes 1 --fec-mode auto --fec-parity 0
+            --fec-min-parity 4 --fec-start-parity 20;
+            server --lanes 1 --fec-parity 20
+          Legacy Game2: client and server --lanes 2 --fec-parity 0
+          Legacy Game4: client and server --lanes 4 --fec-parity 0
+          Normal/fixed/auto/Game are validated as original Go V3 real-process,
+          real-TLS/kernel UDP functional cases, not new Rust V4 FEC2/Game protocol.
+          FEC recovery counter, auto policy actually-applied revision and outer
+          retransmission attribution are not instrumented by these cases.
+          New Rust M2 outbound retrans, V4 FEC2 and independently keyed Rust
+          Game2/4 are not attached to these binaries; DO NOT claim those ON.
+          EOF
+          tar -C bundle -czf go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz \
+            wbd-client wbd-server MODES.md README.txt source-manifest.json \
+            capability-manifest.json runtime-receipt.json client-version.txt server-version.txt cases
+          sha256sum go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz >go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-go-public-normal-fixed-auto-game-real-binaries-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz
+            go-v3-public-normal-fec-auto-game-linux-amd64.tar.gz.sha256
+            bundle/capability-manifest.json
+          retention-days: 30
+          if-no-files-found: error
