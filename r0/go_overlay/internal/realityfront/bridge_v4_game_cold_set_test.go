@@ -2,6 +2,9 @@ package realityfront
 
 import (
     "errors"
+    "fmt"
+    "os"
+    "path/filepath"
     "testing"
 )
 
@@ -34,6 +37,25 @@ func TestM0V4OriginalTLSGame2And4AuthenticatedColdSet(t *testing.T){
             recv,err:=v4OriginalGameClientColdSet(clients...)
             if err!=nil{t.Fatalf("client cold set: %v",err)}
             if len(send)!=n||len(recv)!=n{t.Fatal("not exact 2/4")}
+            // Ephemeral original credential-checked Go TLS → actual Rust
+            // GameAdapter interop. The temporary raw keys must NOT be
+            // checked in, logged or uploaded as an Actions artifact.
+            if dir:=os.Getenv("WBD_GAME_TLS_FIXTURE_DIR");dir!="" {
+                if err:=os.MkdirAll(dir,0700);err!=nil{t.Fatal(err)}
+                for _,pair:=range []struct{
+                    kind string
+                    lanes []V4ColdSessionSnapshot
+                }{{"client",recv},{"server",send}}{
+                    for _,cold:=range pair.lanes{
+                        wire,err:=cold.MarshalColdBundle()
+                        if err!=nil{t.Fatal(err)}
+                        path:=filepath.Join(dir,fmt.Sprintf(
+                            "game%d-%s-%d.cold",n,pair.kind,cold.laneID))
+                        if err:=os.WriteFile(path,wire[:],0600);err!=nil{t.Fatal(err)}
+                    }
+                }
+                t.Logf("M0_REAL_GO_TLS_GAME_EPHEMERAL_NATIVE_FIXTURE_WRITTEN lanes=%d no_keys_logged=1",n)
+            }
             for i:=0;i<n;i++{
                 if send[i].laneID!=uint8(i+1)||recv[i].laneID!=uint8(i+1)||
                     send[i].keys!=recv[i].keys||send[i].epoch!=epoch||
