@@ -100,8 +100,9 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     select{case <-ctx.Done():case err=<-fail:}
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
-        log.Printf("V4_PUBLIC_GAME_KERNEL role=client lanes=%d copied=%d delivered=%d rejected=%d",
-            n,counters.Copied,counters.Delivered,counters.Rejected)
+        log.Printf("V4_PUBLIC_GAME_KERNEL role=client lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
+            n,counters.Copied,counters.Delivered,counters.Rejected,
+            counters.RawReceived,counters.AuthenticatedRejected)
     }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
@@ -216,8 +217,9 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     select{case <-ctx.Done():case err=<-failed:}
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
-        log.Printf("V4_PUBLIC_GAME_KERNEL role=server lanes=%d copied=%d delivered=%d rejected=%d",
-            n,counters.Copied,counters.Delivered,counters.Rejected)
+        log.Printf("V4_PUBLIC_GAME_KERNEL role=server lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
+            n,counters.Copied,counters.Delivered,counters.Rejected,
+            counters.RawReceived,counters.AuthenticatedRejected)
     }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server lanes=%d",n)}
