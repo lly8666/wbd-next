@@ -20,7 +20,7 @@ func ConnectScopedOriginalTLSWintun(ctx context.Context,
  if ctx==nil||owner==nil||tun==nil||installation==[16]byte{}||
  epoch==[16]byte{}{return nil,ErrNativeDeviceNotOwned}
  out:=&ScopedOriginalTLSNativeWintun{owner:owner,native:CreatedWintun{TUN:tun}}
- id,err:=out.native.identity(ctx,installation,epoch)
+ id,err:=out.native.Identity(ctx,installation,epoch)
  if err!=nil{return nil,err}
  out.identity=id
  if err=owner.BindOriginalM4NativeDevice(ctx,out.native,id);err!=nil{
