@@ -1,0 +1,143 @@
+# Actual original Go V3 Normal/off 1% netem loss, reuse exact previously
+# qualified untagged client/server binaries from Actions39369570717.
+# Single 32-second original public product process case; original Go legacy
+# recovery is NOT claimed to be new Rust M2/RACK. Record observed kernel drops.
+name: M0 Linux original CLI Normal off 1 percent loss
+run-name: "M0|NORMAL-REAL-CLI-LOSS1|${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-linux-normal-off-1pct-loss.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  same-binary-real-one-percent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    env:
+      SOURCE_RUN: "39369570717"
+      SOURCE_SHA: "9b1dec079f4d955d7f4d8a049349a00922c58032"
+      ORIGINAL_GO: "a7a82db31fe736ffedee330795a3234d358f1984"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: linux-normal-off-two-real-clis-39369570717-1
+          run-id: 39369570717
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: immutable-release
+      - name: Recover exact reusable real original binaries, not rebuild or substitute
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = "$ORIGINAL_GO"
+          mkdir -p product test-art
+          cp immutable-release/linux-normal-off-original-go-amd64.tar.gz product/
+          (cd product && echo '9c0a0f0fdf77f0ef27865640b3143c440a109d3ae704cf8e17f46f72b89ca66b  linux-normal-off-original-go-amd64.tar.gz' | sha256sum -c -)
+          tar -C product -xzf product/linux-normal-off-original-go-amd64.tar.gz
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("product")
+          m=json.loads((p/"source-manifest.json").read_text())
+          assert m["main_source"]==os.environ["SOURCE_SHA"]
+          assert m["original_go_binary_source"]==os.environ["ORIGINAL_GO"]
+          assert m["build_tags"]==[]
+          for name,sha in m["binary_sha256"].items():
+            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==sha
+          PY
+      - name: Inject one 1pct loss into an original real network fixture only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          original=Path("legacy/scripts/lifecycle_acceptance_sample.sh").read_text()
+          a='tc qdisc add dev rsrv root netem limit 50000 delay 50ms'
+          b='tc qdisc add dev rcli root netem limit 50000 delay 50ms'
+          c='start_traffic main 8 .03 .03'
+          assert original.count(a)==1 and original.count(b)==1 and original.count(c)==1
+          mod=original.replace(a,a+' loss 1%').replace(b,b+' loss 1%')
+          mod=mod.replace(c,'start_traffic main 32 .20 .20')
+          Path("test-art/original-go-cli-loss1-fixture.sh").write_text(mod)
+          print("M0_LOSS1_ORIGINAL_FIXTURE_SHA256="+hashlib.sha256(original.encode()).hexdigest())
+          print("M0_LOSS1_MODIFIED_FIXTURE_SHA256="+hashlib.sha256(mod.encode()).hexdigest())
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables nftables tcpdump openssl
+          test -c /dev/net/tun
+          cp product/wbd-client test-art/wbd-client
+          cp product/wbd-server test-art/wbd-server
+          export WBD_LIFECYCLE_ARTIFACT_DIR="$GITHUB_WORKSPACE/test-art"
+          export WBD_LIFECYCLE_SCENARIO=l0_config
+          export WBD_LIFECYCLE_LANES=1
+          export WBD_LIFECYCLE_SEED=101
+          export WBD_LIFECYCLE_FEC=0
+          export WBD_LIFECYCLE_PADDING=0
+          sudo --preserve-env=GITHUB_SHA,WBD_LIFECYCLE_ARTIFACT_DIR,WBD_LIFECYCLE_SCENARIO,WBD_LIFECYCLE_LANES,WBD_LIFECYCLE_SEED,WBD_LIFECYCLE_FEC,WBD_LIFECYCLE_PADDING env GITHUB_WORKSPACE="$GITHUB_WORKSPACE/legacy" bash test-art/original-go-cli-loss1-fixture.sh
+          sudo chown -R "$(id -u):$(id -g)" test-art
+      - name: Measure real application loss and observed kernel drops, no synthetic repair rate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          p=pathlib.Path("test-art")
+          m=json.loads(pathlib.Path("product/source-manifest.json").read_text())
+          for name,sha in m["binary_sha256"].items():
+            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==sha
+          data={}
+          for r in ("biz","target"):
+            q=json.loads((p/("main-"+r+".json")).read_text())["stats"]
+            assert q["sent_packets"]>200 and q["recv_unique_packets"]>0,(r,q)
+            data[r]={"sent":q["sent_packets"],"unique_delivered":q["recv_unique_packets"],
+               "sent_bytes":q["sent_bytes"],"received_bytes":q["recv_unique_bytes"],
+               "unreceived":q["sent_packets"]-q["recv_unique_packets"]}
+          raw=json.loads((p/"router-qdisc-final.json").read_text())
+          # tc -s -j exposes qdisc stats per netem; no configured percentage
+          # alone is ever counted as an observed loss.
+          drops=[]
+          def walk(v):
+            if isinstance(v,dict):
+              if v.get("kind")=="netem":
+                st=v.get("stats",{})
+                queue=st.get("queue",{}) if isinstance(st,dict) else {}
+                drops.append(int(queue.get("drops",st.get("drops",0))) if isinstance(st,dict) else 0)
+              for x in v.values():walk(x)
+            elif isinstance(v,list):
+              for x in v:walk(x)
+          walk(raw)
+          assert len(drops)>=2,("real qdisc missing",drops)
+          assert sum(drops)>0,("loss percentage configured but no kernel drop observed",drops)
+          assert not any(n.startswith(("lbiz-","lcli-","lrtr-","lsrv-","ltgt-")) for n in subprocess.check_output(["ip","netns","list"],text=True).split())
+          receipt={"schema_version":1,"test_source_sha":os.environ["GITHUB_SHA"],
+            "binary_build_source_sha":os.environ["SOURCE_SHA"],
+            "original_go_source_sha":os.environ["ORIGINAL_GO"],
+            "binary_sha256":m["binary_sha256"],
+            "netem_real_loss_percent":1,"observed_kernel_qdisc_drops":drops,
+            "scenario_seconds":32,"true_original_CLI_TLS_and_udp":data,
+            "actual_legacy_retransmitted_records":"NOT_INSTRUMENTED",
+            "loss_recovered_by_outer_retransmissions":"NOT_PROVABLE_FROM_APPLICATION_DELIVERY",
+            "new_Rust_M2_outer_recovery":"NOT_WIRED",
+            "Stop_owned_netns":"removed",
+            "result":"SCOPED_ORIGINAL_V3_NORMAL_OFF_REAL_1PCT_LOSS_APP_MEASUREMENT"}
+          pathlib.Path("immutable-release/loss1-receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print("M0_NORMAL_PUBLIC_CLI_REAL_1PCT_KERNEL_LOSS_CASE_MEASURED")
+          print(json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: normal-off-original-go-real-1pct-loss-${{ github.run_id }}-${{ github.run_attempt }}
+          path: immutable-release/loss1-receipt.json
+          if-no-files-found: warn
+          retention-days: 30
