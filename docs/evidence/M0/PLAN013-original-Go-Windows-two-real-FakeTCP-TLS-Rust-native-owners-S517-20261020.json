@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "f0f6f2f43589305c8898a65deed706c71db0be0d",
+  "result": "PASS_SCOPED_WINDOWS2022_ORIGINAL_GO_TWO_REAL_FAKETCP_PEER_ASSOCIATIONS_TLS_TO_TWO_RUST_PROTECTED_OWNERS_STOP",
+  "harness_source_sha": "f0f6f2f43589305c8898a65deed706c71db0be0d",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "m4_frozen_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+  "real_windows_native_action": {
+    "run_id": 39441150744,
+    "attempt": 1,
+    "job_id": 118691019840,
+    "workflow": ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml",
+    "runner": "windows-2022",
+    "native_rust_target": "x86_64-pc-windows-msvc",
+    "rust_toolchain": "1.85.1",
+    "go_toolchain": "1.23.12",
+    "conclusion": "success",
+    "artifact_id": 12274056405,
+    "name": "m0-plan013-windows-native-owner-39441150744-1",
+    "zip_digest": "sha256:3a4986aed29b67e8cf71ed9c443320bca514fa9870b8701a82a3bb5dfd786cfc",
+    "digest_independently_verified": false
+  },
+  "checks": [
+    {
+      "name": "actual separate original Go FakeTCP client and server association",
+      "result": "PASS",
+      "scope": "distinct original legacy client and server association objects with actual SYN/SYNACK, ACK, bounded in-memory SegmentEmitter, protected Go TLS credential exchange, both original Detach; not Windows raw kernel WFP packet"
+    },
+    {
+      "name": "original Go TLS supported cipher triples",
+      "result": "PASS",
+      "cases": [
+        "ChaCha20-Poly1305",
+        "AES-128-GCM",
+        "AES-256-GCM"
+      ]
+    },
+    {
+      "name": "native Windows Rust M1/M3 exact protected dual role",
+      "result": "PASS",
+      "scope": "Rust C ABI private owner prepare role-client0 and role-server1, independently allocated generation handles, original Go TLS exported cold epoch equals both directions, exact FakeTCP SendNext/ReceiveNext, Active phase2, product_applied0"
+    },
+    {
+      "name": "native Rust scoped Stop and original Go epoch cleanup",
+      "result": "PASS",
+      "scope": "both owner Stop and Release before Go epoch/association cleanup, repeat Stop safe, stale owner state refuses; only Rust owner queues drained, NO M4 Wintun/WFP native borrow verified"
+    },
+    {
+      "name": "bad client admission",
+      "result": "PASS",
+      "scope": "nil original association cannot get Rust token, unsupported FEC2/Game guarded in private client before actual TLS"
+    },
+    {
+      "name": "Windows Rust original native prior unit components",
+      "result": "PASS_SCOPED",
+      "scope": "native Windows 2/2 cargo tests and optimized DLL 8 C ABI exported and WinDLL query no applied authority (workflow build prerequisite)"
+    }
+  ],
+  "retained_accepted": [
+    {
+      "source_sha": "2b653e9caa4bc909e3ab837c2f15b9d7b859fb2d",
+      "run_id": 39437722965,
+      "scope": "real original Go TLS SERVER credential callback Rust Windows owner 3 suites PASS_SCOPED"
+    },
+    {
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "run_id": 39433130093,
+      "scope": "Linux original Go public Fixed/Auto/Game2/Game4 exact binary 4/4 PASS_SCOPED; no re-run"
+    },
+    {
+      "source_sha": "d9a9bbf0da6aa8054145193567a45cc6bc985131",
+      "run_id": 39371230050,
+      "scope": "M4 frozen Windows WFP TEST-NET Wintun/WinForms WAL scoped native; NO real product WFP"
+    }
+  ],
+  "inferred_from_native_assembly": {
+    "original_go_windows_native_wrapper": "M0-only wbd_v4_embedded_go opt-in; no public CLI route",
+    "m4_native_product_unblock": "NO: M4 r0/go_overlay/internal/windowsclient/native_product_entry_windows.go currently N4NativeNetworkReady unconditionally returns ErrN4NativeGuard",
+    "native_wintun_actual_device_open": "NOT_RUN",
+    "native_wfp_persistent_default_capture": "NOT_RUN",
+    "dns_route_global": "NOT_RUN",
+    "authenticated_kernel_raw_tun_udp_first_app": "NOT_RUN",
+    "M4_native_borrow_joined_stop": "NOT_RUN",
+    "actual_original_client_binary_winforms_UI_to_product": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF",
+    "physical": "NOT_RUN",
+    "performance_p99": "NOT_RUN"
+  },
+  "qualification": {
+    "windows_private_original_Go_two_authenticated_tls_sides": "PASS_SCOPED",
+    "windows_M1_M3_owner_native_lifecycle": "PASS_SCOPED",
+    "Windows_original_public_full_product": "NOT_RUN",
+    "Windows_WFP_Wintun_UDP_original_credentials_same_kernel_generation": "NOT_RUN",
+    "linux_four_modes_original_one_SOURCE": "PASS_SCOPED",
+    "production_enable": "OFF"
+  },
+  "next_action": "Close M0/M4 shared Windows kernel device ownership seam: consume immutable M4 native Wintun/WFP live lease and exact OS guard receipt as same verified original-Go/Rust generation (not cold bytes), implement ordered kernel-driver quiesce/borrow drain then Rust owner Stop/Release and OS CAS WAL rollback; only then source-locked Windows2022 real original GUI/CLI→OS applied/UDP/Stop gate. M4 worker owns native network files, do not bypass its unconditional N4NativeNetworkReady guard; do not repeat accepted TLS and Linux tests."
+}
