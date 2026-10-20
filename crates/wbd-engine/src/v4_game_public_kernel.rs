@@ -26,6 +26,7 @@ pub(crate) struct GameKernelOwner{
     tun:Arc<ScopedTunSink>,
     tx:Vec<Arc<ScopedRawIpv4Tx>>,rx:Vec<Arc<ScopedRawIpv4Rx>>,
     copied:Arc<AtomicU64>,delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
+    raw_received:Arc<AtomicU64>,authenticated_rejected:Arc<AtomicU64>,
 }
 impl GameKernelOwner{
     pub(crate) fn start(
@@ -51,6 +52,8 @@ impl GameKernelOwner{
         let copied=Arc::new(AtomicU64::new(0));
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
+        let raw_received=Arc::new(AtomicU64::new(0));
+        let authenticated_rejected=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -140,6 +143,8 @@ impl GameKernelOwner{
             let rx_stop=Arc::clone(&stop);
             let recv_count=Arc::clone(&delivered);
             let recv_rejected=Arc::clone(&rejected);
+            let raw_seen=Arc::clone(&raw_received);
+            let auth_denied=Arc::clone(&authenticated_rejected);
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
                 let (src,dst,sp,dp)=if server{
@@ -154,6 +159,7 @@ impl GameKernelOwner{
                         generation,&mut wire,tuple,PacketPersona::Legacy
                     )else{continue};
                     if rx_stop.load(Ordering::Acquire){break}
+                    raw_seen.fetch_add(1,Ordering::Relaxed);
                     let received={
                         let Ok(mut game)=client_rx_adapter.lock()else{break};
                         game.receive(lane,wire[..len].to_vec())
@@ -165,7 +171,10 @@ impl GameKernelOwner{
                             }else{recv_rejected.fetch_add(1,Ordering::Relaxed);}
                         },
                         Ok(None)=>{}, // exact GameRx cross-lane dedup
-                        Err(_)=>{recv_rejected.fetch_add(1,Ordering::Relaxed);}
+                        Err(_)=>{
+                            auth_denied.fetch_add(1,Ordering::Relaxed);
+                            recv_rejected.fetch_add(1,Ordering::Relaxed);
+                        }
                     }
                 }
             });
@@ -178,12 +187,19 @@ impl GameKernelOwner{
                 }
             }
         }
-        Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected})
+        Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected,
+            raw_received,authenticated_rejected})
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){
         (self.copied.load(Ordering::Relaxed),
          self.delivered.load(Ordering::Relaxed),
          self.rejected.load(Ordering::Relaxed))
+    }
+    // Split received kernel TCP data from AEAD/replay refusal. Successful
+    // first kernel copy is not proof of peer raw receive or TUN delivery.
+    pub(crate) fn receive_diagnostics(&self)->(u64,u64){
+        (self.raw_received.load(Ordering::Relaxed),
+         self.authenticated_rejected.load(Ordering::Relaxed))
     }
     pub(crate) fn stop_and_drain(&mut self)->Result<(),()>{
         self.stop.store(true,Ordering::Release);
