@@ -2,7 +2,7 @@
   "schema_version": 1,
   "role_id": "M4",
   "task_id": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018",
-  "result": "S56_SOURCE_WINDOWS2022_REAL_SCOPED_WFP_TESTNET_APPLY_REMOVE_AND_CREATED_WINTUN_CAPABILITY_PENDING",
+  "result": "S57_SOURCE_BUNDLE_LIVE_WFP_TESTNET_WINTUN_CREATED_AND_OWNED_IP_DNS_ROUTE_WAL_PROBES_PENDING",
   "registry_revision": 2,
   "assignment_epoch": 1,
   "previous_linux": {
@@ -16,7 +16,7 @@
   "test_blob": "4c01e8a9b37de88476ba2018c0b44e5af5e397e3",
   "actual_native_network": "NOT_RUN",
   "actual_Rust_Stop": "NOT_RUN_M0_ONLY",
-  "next_action": "Consume S56 exact central G2 and native Windows-2022 real WFP scoped TESTNET positive lab and disposable-created Wintun probe, preserve specific PASS/UNSUPPORTED markers and rollback; full product network still needs shared Rust owner Stop/positive isolated qualified application.",
+  "next_action": "Run S57 exact G2 Windows-2022 Actions, inspect real WFP TESTNET persistent filter, created Wintun, lease MTU DNS route state and owned-WAL Apply/Recover receipts; mark driver/privilege unsupported where actual. Full product authenticated original-Go TLS/Rust Stop with global WFP/IPv6 remains gated.",
   "new_original_go_process_tests": [
     "PLAN013 original Go Normal Game2 Game4 config roundtrip remains unapplied",
     "PLAN013 original Go process refuses unsafe Connect before network-ready",
@@ -84,7 +84,9 @@
       "source": "original Go existing native_admin_created_wintun_windows_test.go",
       "positive": "CREATE UNIQUE WINTUN OWNER AND NATIVE LUID, IPv4+DNS READBACK; no address/route/DNS/MTU mutation",
       "expected_unavailable": "UNSUPPORTED rather than green"
-    }
+    },
+    "real_native_test_adapter_write_restore": "NOT_RUN_NEW_S57",
+    "real_native_unified_wal_apply_stop_recover": "NOT_RUN_NEW_S57"
   },
   "historical_failures": [
     {
