@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 203,
-  "checkpoint_sha": "5b49c27925d3039615a5421addcdca6b16b371ae",
+  "sequence": 204,
+  "checkpoint_sha": "53d2026e47fed50d39188613c2a1913f8768bcb6",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012/013 original-Go Linux FEC2/Game and Windows native product user-requested one-time shared integration. Frozen M4 Windows source 34 original Git blobs (32 new + 2 already identical) now in main; byte-checked manifest37 operations Actions39364646232 208 tests PASS scoped. Original Go Windows native CLI/WinForms prior run39362863445 PASS scoped unchanged. Public feature7 Go CLI, Game2/4 independent M4 real kernel/TUN first application and Windows authenticated Rust owner/native WFP Apply/Stop still NOT_RUN. Both product modes OFF.",
-  "why_now": "M0 global writer under user temporary integration permission; no M4 branch/cursor changes, only frozen complete M4 H51 source e359fde. S346 intent at a94d121, S347 main 7350744 imported 32 noncolliding M4 exact Git blobs into main, 2 same blobs already present; no overlap edits. S348 verifier malformed Git blob NUL caused governance-maintenance39364544545 original FAIL, rollback S350 2f293ad; corrected S351 bfab03c Actions39364646232 attempt1 job118438575202 208/208 PASS (34 blobs/37 manifest) artifact12238138393 digest9cc2f275, Governance39364646252 SUCCESS; S352 exact receipt. No new main Windows native product run, old frozen M4 Actions39362863445 Windows2022 scoped Go/WinForms PASS source-equal only. Workflow main source selection update blocked by execution safety checker, not falsely claimed successful.",
-  "done_when": "Current PLAN012 Linux original-Go public feature7 Connect/Disconnect/applied and independently authenticated M4 real Game2/4 kernel/TUN first-app plus already-scoped Fixed/Auto authentic M2 + Stop all pass exact Actions before Linux ON; PLAN013 M0 shared Windows Go/Rust product authority and native G2→Windows Actions entry reliable, integrate worker exact Windows GUI network/Stop source; Windows real OS/physical release qualification separate, no false ON.",
-  "next_action": "Complete original-Go public feature7 CLI Connect/Disconnect/authenticated APPLIED and Game2/Game4 real independent authenticated M4 kernel→TUN first app plus Windows native Rust-owner/WFP applied Stop bridge; run one new exact SOURCE Linux/Windows real functional hard gate, only then permit FEC2/Game ON. No duplicate imported-source native sample.",
+  "current_task": "M0 Linux PLAN012 direct original-Go TLS Game2/4 native Rust M1/M3/M4 real raw/TUN UDP kernel integration now PASS_SCOPED same SOURCE, with original Go TLS per-lane C2S/S2C keys, 2/4 independent kernel raw copies, deduped 99-byte real UDP app and Stop old-generation rejection. Original Go Fixed/Auto rev4 authenticated M2 and M4 Stop still PASS same SOURCE. Linux release preenable corrected to consume exactly these real 2/4 kernel receipts, both Game jobs PASS, while true public pinned original Go feature7 CLI Connect/Disconnect/APPLIED source remains absent and final release FAIL/NOT_RUN. FEC2/Game production OFF. Windows M4 concurrent active writer untouched.",
+  "why_now": "S353 Linux-only intent; S354–359 original-Go TLS Game2/4 private Rust GameAdapter binding and correct non-Copy Go exporter direction; S360–365 real isolated kernel M4 raw/TUN UDP application first packet; Actions39367261484 source4a3a686 PASS real 2/4 kernel Go TLS, artifact12239334954. S366 intent, S367 release gate selector repair, original same-source Actions39367904000 FAIL because initial manifest used for final kernel hash; S368 9e46c7 final receipt.json correct hash, Actions39368220417 attempt1 baseline job118449830706 SUCCESS + both independent game2 job118450332304 SUCCESS/game4 job118450332232 SUCCESS; public CLI source job118449830445 NOT_RUN fail, final release skipped, overall FAIL correct. Artifact12239789649 digest1bb92295. Same-source Governance39368220299 and maintenance39368220407 SUCCESS. S369 exact receipt. M4 Windows branch moved concurrently and remains exclusively worker-owned.",
+  "done_when": "Linux original pinned public Go feature7 CLI executable actually Connects/Disconnects with authenticated live Rust owner and true Fixed/Auto M2 APPLIED readback and separate independent Game2/4 real kernel/TUN first-app + noHOL/Stop. Same exact SOURCE preenable final Actions positive before production ON. M0 owns shared backend and Actions; M4 Windows branch fully independent and no concurrent path edits.",
+  "next_action": "Implement missing genuine original pinned Go public Linux feature7 CLI Connect/Disconnect/APPLIED end-to-end runtime wiring to already-validated Go TLS Rust native Game2/4+Fixed/Auto kernel owners and Stop, build actual CLI executable, then rerun one exact-SOURCE preenable; only all-positive unlocks Linux production.",
   "unverified": true,
-  "last_tested_source": "bfab03c195a5835679cd85e36c42545b31f98c10",
+  "last_tested_source": "9e46c7d7e27af6de09e0d09435af6ae3ff73742c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json"
+    "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN014-frozen-M4-Windows-overlay-main-import-intent-20261020.md",
+    "docs/devlog/M0/PLAN012-Linux-only-Game2-4-real-owner-intent-20261020.md",
+    "docs/devlog/M0/PLAN012-Linux-release-gate-real-Game-kernel-selector-repair-intent-20261020.md",
+    "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json",
     "docs/evidence/M0/PLAN013-M4-Windows2022-original-Go-GUI-CI-unblock-20261020.json",
     "docs/evidence/M0/PLAN012-parallel-preenable-hard-gates-20261020.json",
     "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json",
     "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json",
-    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md"
   ],
   "open_requests": [],
-  "partial_summary": "H203 complete frozen M4 Windows overlay import (32 new + 2 existing identical, 34 SHA checked, 37 manifest ops), exact main source bfab03c Actions39364646232 208-test PASS scoped artifact12238138393; prior Actions39364544545 verifier original FAIL retained and fixed. Native Windows Go/WinForms source-equivalent PASS scoped from 39362863445; real Windows WFP/TUN Apply+auth Stop, Linux original-Go public feature7 CLI and Game2/4 independent M4 kernel first app remain NOT_RUN, production OFF."
+  "partial_summary": "H204 SOURCE 9e46c7 exact Linux parallel Actions39368220417: real original-Go TLS Game2 and Game4 independent Rust M1/M3 owner actual M4 raw/TUN+UDP first app receipts PASS separately, accepted Fixed/Auto rev4 M2 and M4 Stop PASS; public original pinned Go feature7 CLI Connect/Disconnect/APPLIED NOT_RUN (missing implementation), so release workflow FAIL as intended and production FEC2/Game OFF. Artifact12239789649 1bb92295, native original full kernel Actions39367261484 PASS artifact12239334954. Old original Rust compile and gate process FAIL retained. M4 Windows active concurrent branch untouched."
 }
