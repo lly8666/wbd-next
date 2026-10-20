@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "614a747eff374e2e6b9aabd0a2497b0d08381985",
+  "result": "PASS_LINUX_SCOPED_REAL_GO_FIXED_AUTO_M4_CONNECT_STOP_ROUTE_CLEANUP",
+  "tested_run": {
+    "id": 39352250946,
+    "attempt": 1,
+    "job_id": 118398882536,
+    "conclusion": "success",
+    "artifact_id": 12232849167,
+    "artifact_digest": "sha256:093db8f5d850edf35abea140750c1b810c9d577015af22ff03f73eb1dfbe15c0"
+  },
+  "m4": {
+    "frozen_worker_source": "bdd6f6c892e88d7e56fe1500307d9dfcdd389cda",
+    "worker_head_after_cursor": "dc04341fe3c19ae38209ffd1b2a2bb23238b8daa",
+    "source_file": "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go",
+    "blob_sha": "e7e8a64fd895c59987a03af5afa0479e942ea3ab",
+    "worker_native_run": 39344699874,
+    "worker_native_result": "PASS_SCOPED",
+    "named_test": "TestM4Plan012OriginalGoLinuxConnectStopOwnedCleanup",
+    "marker": "M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS",
+    "named_test_result": "PASS_IN_M0_COMBINED_REAL_NETNS",
+    "checks": [
+      "original protected Go TLS real Linux Connect",
+      "source/repair with one actually lost source RS16 recovered to client scoped TUN and independent UDP app",
+      "Stop and repeated Stop idempotent",
+      "post-Stop authenticated RX and feedback rejected",
+      "both owned Linux TUN device names disappeared",
+      "ip -4 route show table all has no owned dev route"
+    ],
+    "m4_role_cursor_h45": "STILL_PARTIAL_UNTIL_M4_CONSUMES_MAIN_PROOF"
+  },
+  "m0": {
+    "fixed": "PASS_VERIFIED_2S_MATURE_AUTH_C2S_M2_APPLIED_REVISION4",
+    "auto": "PASS_SCOPED_INITIAL_PROFILE_MILD_AUTH_C2S_M2_APPLIED_REVISION4",
+    "netns_real_udp": "4_OF_4_PER_MODE",
+    "lost_source": "RS16_ONE_REAL_RAW_KERNEL_LOST",
+    "release_record": "PASS",
+    "Game_2_4": "PASS_NATIVE_ONLY_NOT_REAL_M4_KERNEL"
+  },
+  "preserved_attempts": [
+    {
+      "source_sha": "45af4b2fc9a8cee9e32eeb32fde2a4ca603f6216",
+      "run_id": 39351470773,
+      "result": "FAIL_SHELL_SELECTOR_UNTERMINATED_QUOTE_BEFORE_NETNS",
+      "job_id": 118396377222,
+      "artifact_id": 12233830691,
+      "digest": "sha256:16f5f41970985460f348087a27647c6251c38a64f3e50ae95b17272495cb59d8"
+    },
+    {
+      "source_sha": "404806590689ccb7fc4e715d36b50c37c59042b4",
+      "run_id": 39351905299,
+      "result": "FAIL_SHELL_DUPLICATE_SUFFIX_AFTER_REAL_M4_MARKER_PASS",
+      "job_id": 118397800899,
+      "artifact_id": 12233940414,
+      "digest": "sha256:3caf7cc07d257f004823422d573ad643d917e5886f4b55e17e31da12dbbf331f"
+    }
+  ],
+  "prior_main": {
+    "source_sha": "6c2b9bd03250938c933ae77364e89348509c9d27",
+    "run_id": 39308785179,
+    "result": "PASS_LINUX_SCOPE_FIXED_AUTO_BUT_NOT_M4_EXTRA_ROUTE"
+  },
+  "dispatch": {
+    "original_run_id": 39352338464,
+    "result": "FAIL_M4_WINDOWS016_AUTH_NOT_ACTIVE",
+    "repair_sources": [
+      "89ab49c6a4e0a171abe73d76468c03ef47931443",
+      "cfad78ee69bd1f51f18a506236ffa6a4105963e0"
+    ],
+    "new_logic": "SKIP only when current main registry M4 assigned Linux017; preserve historical Windows PLANNED, no dispatch, old Windows016 current task fail closed",
+    "verification": "NEW_DISPATCHER_ACTION_AWAITED_OR_CANCELLED_UNTIL_NEXT_MAIN_SOURCE"
+  },
+  "release_gates": {
+    "linux_M4_lifecycle": "PASS",
+    "linux_FEC_Fixed": "PASS_SCOPED",
+    "linux_FEC_Auto": "PASS_SCOPED_STARTUP_ONLY",
+    "Linux_Game_2_4_real_independent_raw_lane": "NOT_RUN",
+    "Linux_Go_public_CLI_V4_FEC2_release_connect": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF",
+    "Windows": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "sustained_20Mbps": "NOT_RUN"
+  },
+  "next_action": "Complete original Go Linux production CLI V4 feature7 credential-bound Connect/Disconnect/cold applied readback and Game2/4 independently authenticated M4 raw lanes with true first-client UDP app into one exact-source Actions; only after PASS Linux production mode enable. Windows deferred."
+}

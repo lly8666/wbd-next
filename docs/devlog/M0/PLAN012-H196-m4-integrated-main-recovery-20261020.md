@@ -1,0 +1,11 @@
+# M0 Linux product and M4 Stop recovery — final integrated proof
+
+From H195 checkpoint427218850d131690e30923556c77d61a9573b48c, only H195 cursor successor394de2f5bed603651dde1e1f644ebbf359c371bb, M0 S320 intent; S321 copied *exact* immutable M4 file blob e7e8a64fd895c59987a03af5afa0479e942ea3ab into original-Go combined assembly and selected both original Fixed/Auto and named M4 route test in the single real netns Action. Two original failed iterations: 39351470773 malformed M0 selector quote before netns; 39351905299 M4 named test actually PASS but old duplicated netns shell suffix line240 caused top-level FAIL; artifacts12233830691 and12233940414 retained. S322 and S323 narrowed corrections, no worker M4 file edits.
+
+Exact M0 SOURCE614a747eff374e2e6b9aabd0a2497b0d08381985: Action39352250946 attempt1 job118398882536 SUCCESS, artifact12232849167 provider sha256 093db8f5d850edf35abea140750c1b810c9d577015af22ff03f73eb1dfbe15c0. Actual job printed source M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS. Original Go TLS feature7 Fixed and Auto native real S2C kernel loss recovery to 4/4 client UDP, C2S matured 2s real authenticated M2 APPLIED revision4, Stop/Disconnect repeated, stale RX and feedback blocked, server+client TUN removed and M4 table all route cleanup successful. Original Rust and Go native unit and 3-suite regression same Action. Governance39352250898 and maintenance39352250887 SUCCESS.
+
+M4 H45 still partial until worker cursor consumes these exact facts; worker native source bdd6f6c Actions39344699874 PASS native/FD Stop. Do not rewrite M4 cursor. Windows I010 old PLANNED deferred.
+
+Original dispatcher run39352338464 FAIL because obsolete M4 Windows016 plan enforced old registry even though M4 task Linux017. S324 main-owned exact skip Linux017, S325 test, original 39352826626 main moved before planning FAIL and 39352854057 concurrency CANCELLED are retained. No weakening active Windows authorization. Next source dispatcher job must confirm PASS.
+
+Production safety: M4 Linux proof now qualified but Go public Linux CLI V4 feature7 Connect path and actual Game2/4 independent raw M4 lanes still NOT_RUN. No fabricated product enable; production FEC2/Game OFF. Minimum one complete Linux release integration after true components, not a 20Mbps or physical matrix.
