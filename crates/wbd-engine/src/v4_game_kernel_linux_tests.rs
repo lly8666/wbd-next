@@ -166,6 +166,76 @@ fn m0_original_tls_game_kernel_2_4_first_app_real_m4_raw_tun(){
             .expect("actual netns UDP application first packet from TUN");
         assert_eq!(size,app.len());assert_eq!(&buffer[..size],&app);
         assert_eq!(from.ip().to_string(),"10.66.0.2");
+
+        // Keep lane1 permanently blocked at the ACTUAL kernel-copy
+        // boundary. The NEXT logical app packet must still reach the
+        // kernel UDP listener through an independent original TLS lane.
+        // A fake GameTx callback alone cannot satisfy this assertion.
+        let second_app=vec![0xA0|n as u8;99];
+        let second_ipv4=original_udp_ipv4(port,&second_app);
+        assert_eq!(client.offer(&second_ipv4,MonoNs(2)).unwrap(),LogicalPacketId(1));
+        let prior_drop=client.counters().lane_copy_drop;
+        let mut damaged_lane_rejected=0usize;
+        let mut healthy_real_kernel=0usize;
+        let mut second_first_delivery=0usize;
+        let processed=client.drain(MonoNs(3),|lane,logical,pn,wire|{
+            assert_eq!(logical,LogicalPacketId(1));
+            assert_eq!(pn,1,"each lane owns its own monotonically advancing M3 PN");
+            if lane.slot==1 {
+                // No syscall and no invented packet delivered: sustained
+                // single-lane failure, not merely an artificial bad ACK.
+                damaged_lane_rejected+=1;
+                return false
+            }
+            let mut slab=arena.allocate().expect("M1 immutable second Game slab");
+            assert!(wire.len()<=slab.writable().len());
+            slab.writable()[..wire.len()].copy_from_slice(wire);
+            let frozen=slab.freeze(0..wire.len(),FrozenMetadata{
+                lane,seq:SeqOffset(8192+u64::from(lane.slot)*2048),
+                pn:RecordPn(pn),carrier_snapshot:1
+            }).expect("original M1 second immutable M4 loan");
+            let src_port=41000+lane.slot as u16;
+            let src_ip=[10,0,0,2];let dst_ip=[10,0,1,1];
+            let tuple=Ipv4Tuple{
+                src_ip:&src_ip,dst_ip:&dst_ip,src_port,dst_port:443,
+            };
+            let presentation=Presentation{
+                ack32:1,advertised_window:4096,
+                ip_id:75+lane.slot as u16,persona:PacketPersona::Legacy
+            };
+            let copied=raw_tx.send_one(7,&frozen,tuple,presentation)
+                .expect("undamaged lane must get real M4 kernel copy");
+            assert!(copied>wire.len());
+            healthy_real_kernel+=1;
+            let mut observed=[0u8;2048];
+            let (size,_)=raw_rx.recv_one_into(
+                7,&mut observed,tuple,PacketPersona::Legacy
+            ).expect("real second kernel packet, no other lane proxy");
+            assert_eq!(&observed[..size],wire);
+            match server.receive(lane,observed[..size].to_vec())
+                .expect("original Go TLS unique second authenticated M3 PN"){
+                Some(delivered)=>{
+                    assert_eq!(delivered,second_ipv4);
+                    assert_eq!(tun.write_authenticated_ipv4(7,&delivered)
+                        .expect("M4 actual TUN second IPv4 delivery"),second_ipv4.len());
+                    second_first_delivery+=1;
+                },
+                None=>{}
+            }
+            true
+        });
+        assert_eq!(processed,n,"stalled lane cannot block independent dispatch");
+        assert_eq!(damaged_lane_rejected,1);
+        assert_eq!(healthy_real_kernel,n-1);
+        assert_eq!(second_first_delivery,1,"healthy lane has unique Game first delivery");
+        assert_eq!(client.counters().lane_copy_drop,prior_drop+1);
+        let (second_size,second_from)=socket.recv_from(&mut buffer)
+            .expect("later app packet through healthy lane despite damaged lane1");
+        assert_eq!(second_size,second_app.len());
+        assert_eq!(&buffer[..second_size],&second_app);
+        assert_eq!(second_from.ip().to_string(),"10.66.0.2");
+        println!("M0_ORIGINAL_GO_TLS_GAME_M4_REAL_DAMAGED_LANE_NO_HOL_PASS lanes={n} damaged_lane=1 actual_kernel_healthy={} second_logical_id=1 second_unique_udp=1 original_tls_lane_keys=1 stopped_later=1 NOT_PUBLIC_GO_CLI=1",healthy_real_kernel);
+
         client.stop();server.stop();server.stop();
         raw_tx.begin_stop();raw_rx.begin_stop();tun.begin_stop();
         let deadline=Instant::now()+Duration::from_secs(1);
