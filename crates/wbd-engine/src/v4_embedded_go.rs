@@ -370,6 +370,13 @@ struct Entry{
     // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     protected_features:u16,
+    // One original credential-checked Go TLS GoLane snapshot. This remains
+    // dormant until a complete original 2/4 lane set consumes it exactly
+    // once into ONE native GameAdapter. Never hand caller raw key bytes.
+    #[cfg(feature="fec2_product_record")]
+    game_pending_cold:Option<UntrustedColdV4>,
+    #[cfg(feature="fec2_product_record")]
+    game_joined:bool,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fixed_pending:Option<(u8,u64)>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -419,10 +426,24 @@ struct Entry{
 // Global registry only handles lifetime lookup. Once the original
 // authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
 // LINK and M1 arena are MOVED to RX; this Entry guards TX/control only.
-struct Registry{generation:u32,entries:BTreeMap<u64,Arc<Mutex<Entry>>>}
+struct GameGroupNative{
+    adapter:crate::v4_game_lane::GameAdapter,
+    handles:Vec<u64>,stopped:bool,
+}
+// Dedicated group handles have different low tag from existing original
+// committed per-lane Go owner. Both must be stopped/released together.
+struct Registry{
+    generation:u32,entries:BTreeMap<u64,Arc<Mutex<Entry>>>,
+    #[cfg(feature="fec2_product_record")]
+    game_groups:BTreeMap<u64,GameGroupNative>,
+}
 fn registry()->&'static Mutex<Registry>{
     static R:OnceLock<Mutex<Registry>>=OnceLock::new();
-    R.get_or_init(||Mutex::new(Registry{generation:1,entries:BTreeMap::new()}))
+    R.get_or_init(||Mutex::new(Registry{
+        generation:1,entries:BTreeMap::new(),
+        #[cfg(feature="fec2_product_record")]
+        game_groups:BTreeMap::new(),
+    }))
 }
 fn session(handle:u64)->Result<Arc<Mutex<Entry>>,i32>{
     let r=registry().lock().map_err(|_|BAD_STAGE)?;
@@ -553,6 +574,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         normal_off_applied_revision:0,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         protected_features:handoff.negotiated_features,
+        #[cfg(feature="fec2_product_record")]
+        game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
+        #[cfg(feature="fec2_product_record")]
+        game_joined:false,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fixed_pending:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -2137,6 +2162,123 @@ fn stop(handle:u64)->i32{
     }
     e.phase=PH_STOPPED;OK
 }
+// A native Game group consumes only already COMMITTED original-Go credential
+// TLS lane handles. No exported cold248, KDF material, FakeTCP flow or
+// untrusted caller byte can create the group. This is a true shared AEAD/PN
+// GameAdapter, but no M4 driver or CLI APPLIED until separately installed.
+#[cfg(feature="fec2_product_record")]
+fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
+    if !matches!(handles.len(),2|4){return Err(INVALID)}
+    let mut ids=handles.to_vec();
+    ids.sort_unstable();
+    ids.dedup();
+    if ids.len()!=handles.len(){return Err(INVALID)}
+    // Resolve references with registry lock released before Entry locks, so
+    // original Stop never deadlocks against a group constructor.
+    let cells={
+        let r=registry().lock().map_err(|_|BAD_STAGE)?;
+        ids.iter().map(|id|r.entries.get(id).cloned().ok_or(UNKNOWN))
+            .collect::<Result<Vec<_>,_>>()?
+    };
+    let mut locks=cells.iter().map(|cell|cell.lock().map_err(|_|BAD_STAGE))
+        .collect::<Result<Vec<_>,_>>()?;
+    let mut epoch=None;
+    let mut tunnel=None;
+    let mut seen:u8=0;
+    for e in &locks{
+        if e.phase!=PH_ACTIVE||e.server_side!=server||
+           e.protected_features!=7||e.game_joined||
+           e.game_pending_cold.is_none()||e.workers.is_some()||
+           e.raw_tx.is_some()||e.raw_rx.is_some()||e.tun_sink.is_some(){
+            return Err(BAD_STAGE)
+        }
+        let id=e.game_pending_cold.as_ref().ok_or(BAD_STAGE)?.identity();
+        if id.server!=server||id.logical_epoch==[0;16]||
+           id.go_lane_id==0||usize::from(id.go_lane_id)>handles.len(){
+            return Err(INVALID)
+        }
+        let bit=1u8<<(id.go_lane_id-1);
+        if seen&bit!=0{return Err(INVALID)}
+        seen|=bit;
+        if epoch.is_some_and(|old|old!=id.logical_epoch)||
+           tunnel.is_some_and(|old|old!=id.tunnel_id){return Err(INVALID)}
+        epoch=Some(id.logical_epoch);tunnel=Some(id.tunnel_id);
+    }
+    if seen!=((1u8<<handles.len())-1){return Err(INVALID)}
+    let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
+    if r.game_groups.len()>=MAX_SESSIONS/2{return Err(FULL)}
+    let generation=r.generation;
+    r.generation=generation.checked_add(1).ok_or(FULL)?;
+    let group_handle=(u64::from(generation)<<32)|0x474Du64;
+    let mut cold=Vec::with_capacity(handles.len());
+    for e in &mut locks{
+        // Consume the sole per-lane original-Go cold authority. Failure in
+        // any subsequent native constructor is terminal fail-closed; no
+        // duplicate AEAD/PN allocator may be activated on these lane handles.
+        e.game_joined=true;
+        cold.push(e.game_pending_cold.take().ok_or(BAD_STAGE)?);
+    }
+    let adapter=crate::v4_game_lane::GameAdapter::from_private_original_go_tls(
+        cold,server,wbd_types::TunnelKey{slot:14,generation},generation
+    ).map_err(|_|INVALID)?;
+    r.game_groups.insert(group_handle,GameGroupNative{
+        adapter,handles:ids,stopped:false
+    });
+    Ok(group_handle)
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_join(
+    handles:*const u64,count:usize,server:u32,out:*mut u64
+)->i32{
+    if handles.is_null()||out.is_null()||!matches!(count,2|4)||server>1{
+        return INVALID
+    }
+    let hs=unsafe{std::slice::from_raw_parts(handles,count)};
+    match game_group_join_original(hs,server!=0){
+        Ok(h)=>{unsafe{out.write(h)};OK},Err(e)=>e
+    }
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
+    group:u64,lanes:*mut u32,drivers_installed:*mut u32,
+)->i32{
+    if lanes.is_null()||drivers_installed.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped{return BAD_STAGE}
+    unsafe{lanes.write(e.handles.len() as u32);drivers_installed.write(0)}
+    // Explicit zero is critical: this is authenticated shared crypto owner
+    // installation ONLY, not a positive M4 kernel/TUN product readiness.
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if e.stopped{return OK}
+    e.adapter.stop();e.stopped=true;OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_release(group:u64)->i32{
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if !e.stopped{return BAD_STAGE}
+    // Native group cannot release a still-live protected Go lane. Original
+    // per-lane M4/owner StopAndRelease is a separate hard requirement.
+    let ids=e.handles.clone();
+    for h in ids{
+        let Some(cell)=r.entries.get(&h)else{continue};
+        let Ok(guard)=cell.lock()else{return BAD_STAGE};
+        if guard.phase!=PH_STOPPED{return BAD_STAGE}
+    }
+    r.game_groups.remove(&group);
+    OK
+}
+
 fn release(handle:u64)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
