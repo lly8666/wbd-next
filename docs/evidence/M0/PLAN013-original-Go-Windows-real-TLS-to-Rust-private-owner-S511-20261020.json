@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 2,
+  "assignment_epoch": 1,
+  "source_sha": "2b653e9caa4bc909e3ab837c2f15b9d7b859fb2d",
+  "result": "PASS_SCOPED_NATIVE_WINDOWS_ORIGINAL_GO_CREDENTIAL_TLS_TO_REAL_RUST_OWNER_DETACH_COMMIT_STOP_NOT_OS_APPLIED",
+  "harness_source_sha": "2b653e9caa4bc909e3ab837c2f15b9d7b859fb2d",
+  "legacy_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "m4_frozen_branch": "work/m4-r1-platform",
+  "m4_frozen_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+  "actions": {
+    "workflow": ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml",
+    "run_id": 39437722965,
+    "attempt": 1,
+    "job_id": 118679075901,
+    "runner": "windows-2022",
+    "target": "x86_64-pc-windows-msvc",
+    "toolchains": {
+      "rust": "1.85.1",
+      "go": "1.23.12"
+    },
+    "conclusion": "success",
+    "artifact_id": 12271747987,
+    "artifact_name": "m0-plan013-windows-native-owner-39437722965-1",
+    "artifact_zip_sha256": "804855f8549d7adbe71aaad5906e7e338ed29b3f6ce17a920b8505a2eccbfbcd",
+    "artifact_digest_independently_verified": false
+  },
+  "tested": [
+    {
+      "layer": "Rust native ProtectedScopedOwner (actual M1/M3 crypto + original Go private strict handoff)",
+      "result": "PASS",
+      "scope": "2 named native Windows Rust tests; prepare/role/generation, misordered commit/stage, one-use protected Detach, terminal Stop, repeat Stop, release/stale fencing, uncommitted abort and FEC2 feature7 reject"
+    },
+    {
+      "layer": "Real native Windows MSVC optimized Rust DLL external C ABI",
+      "result": "PASS",
+      "scope": "native ctypes.WinDLL loaded, exact version1/struct32, exported seven base calls plus abort, query product_applied=0, invalid size/null/unknown token rejected"
+    },
+    {
+      "layer": "Original legacy Go V4 real credential TLS through injected main-owned native Windows private Rust adapter",
+      "result": "PASS",
+      "scope": "native original Go Server EstablishServerV4 authenticated credentials and FakeTCP original Detach/Tx boundary, real Rust Prepare/Commit/state/Stop/release; ChaCha/AES128/AES256 subtests passed; no fake cold installation"
+    },
+    {
+      "layer": "Unauthorized original-Go private callback",
+      "result": "PASS",
+      "scope": "zero/forged snapshot refused, uncommitted Stop refused, no false V4OriginalOwnerStopper full product implementation"
+    },
+    {
+      "layer": "M4 frozen exact source present in native integration build",
+      "result": "PASS_SCOPED",
+      "scope": "Windows exact original Go SHA and frozen M4 assembly operations Git blob verification; main M0-owned admission and private bridge added only to ephemeral isolated native runner, no worker files edited"
+    },
+    {
+      "layer": "Windows global network native WFP default capture+Wintun+route/DNS/IPv6 in SAME protected session",
+      "result": "NOT_RUN",
+      "scope": "M4 prior isolated TEST-NET native platform component positive does not equal original Go/TLS->real OS applied product"
+    },
+    {
+      "layer": "Windows original Go GUI real requested vs applied / network Connect Disconnect",
+      "result": "NOT_RUN",
+      "scope": "M4 prior WinForms GUI scoped 314 tests already accepted separately; this action tests M0 shared ABI only"
+    }
+  ],
+  "retained_original_failures": [
+    {
+      "run_id": 39435598541,
+      "source_sha": "42c918bea80d26a051e325f43a00abef74e9d424",
+      "conclusion": "failure",
+      "reason": "aws-lc-sys 0.45 Windows x64 NASM prerequisite absent; owner tests NOT_RUN"
+    },
+    {
+      "run_id": 39437094086,
+      "source_sha": "e8dbe14fee835277e787ada2b87d4a57e01cb4e1",
+      "conclusion": "failure",
+      "reason": "M0 admission_v4.go absent from frozen M4-only temporary original Go overlay -> undefined V4ColdSessionSnapshot; Rust tests+DLL PASS but Go TLS compiler FAIL, product NOT_RUN"
+    }
+  ],
+  "retained_accepted": [
+    {
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "binary_source_sha": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+      "run_id": 39433130093,
+      "scope": "Linux four real public modes one binary SOURCE 4/4 PASS_SCOPED; not rerun"
+    },
+    {
+      "source_sha": "d9a9bbf0da6aa8054145193567a45cc6bc985131",
+      "run_id": 39371230050,
+      "scope": "M4 native Windows WFP TEST-NET Wintun and owned test-interface WAL/WinForms scoped PASS, not full product; not rerun"
+    }
+  ],
+  "qualification": {
+    "windows_rust_native_compilation": "PASS",
+    "windows_rust_native_component": "PASS_SCOPED",
+    "windows_native_original_Go_TLS_Rust_owner": "PASS_SCOPED",
+    "linux_four_mode_source_locked": "PASS_SCOPED_PREVIOUS",
+    "windows_original_Go_product_CLI_UI_network_apply": "NOT_RUN",
+    "windows_product_driver_and_OS_cleanup": "NOT_RUN",
+    "Windows_real_WFP_default_capture": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "Implement one M0-owned exact original-Go verified Windows Rust M4 device lease and product Stop/readback handoff consumed by M4-owned native WFP/Wintun network transaction, then execute one isolated source-locked Windows 2022 real original CLI Connect -> OS applied + UDP -> owner Stop -> exact owned cleanup gate; do not repeat the accepted scoped tests."
+}
