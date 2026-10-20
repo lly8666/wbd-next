@@ -1,0 +1,123 @@
+name: M0 PLAN013 real native Windows Rust original Go owner lifecycle ABI
+run-name: "M0|WINDOWS-RUST-OWNER-ABI|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml"
+      - "crates/wbd-engine/src/v4_windows_owner.rs"
+      - "crates/wbd-engine/src/lib.rs"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-plan013-windows-original-owner-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native-windows-real-rust-owner:
+    runs-on: windows-2022
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: b53b5dac422a634cdd82178a29071f9f9f0ae5e7
+          path: frozen-m4
+          persist-credentials: false
+      - name: Pin original legacy / worker Windows Go source without rerunning accepted M4 native scenarios
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path windows-owner-result | Out-Null
+          @'
+          import json,os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          main=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          assert main==os.environ["GITHUB_SHA"]
+          ref="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
+          assert subprocess.check_output(["git","-C","frozen-m4","rev-parse","HEAD"],text=True).strip()==ref
+          m=json.loads((root/"frozen-m4/r0/go_overlay/assembly/manifest.json").read_text(encoding="utf8"))
+          assert m["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          print("M0_PLAN013_WINDOWS_GO_M4_FROZEN_SHA_OWNERSHIP_VERIFIED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'frozen Windows M4 producer not exact SOURCE'}
+      - name: Native Windows 2022 actual x64 Rust MSVC target toolchain
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) {throw 'exact pinned Rust toolchain absent'}
+          $v=& rustc +1.85.1 --version
+          if ($v -notmatch '^rustc 1.85.1 ') {throw "wrong toolchain: $v"}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if ($LASTEXITCODE -ne 0) {throw 'missing actual native Windows MSVC rust target'}
+      - name: Actual Rust original M1/M3 owner prepare commit Stop staging generation native Windows tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go --lib v4_windows_owner::tests -- --nocapture 2>&1 | Tee-Object -FilePath windows-owner-result/native-tests.log
+          if ($LASTEXITCODE -ne 0) {throw 'actual Windows original Rust owner lifecycle tests FAIL'}
+          $log=Get-Content windows-owner-result/native-tests.log -Raw
+          foreach ($test in @('m0_windows_owner_real_native_prepare_commit_stop_generation_scoped','m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply')) {
+            if ($log -notmatch ('test .*'+[regex]::Escape($test)+'.* ok')) {throw "native Rust test NOT_RUN $test"}
+          }
+      - name: Build actual Windows Rust DLL and inspect external C FFI without simulated native products
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go
+          if ($LASTEXITCODE -ne 0) {throw 'native Rust DLL build failed'}
+          @'
+          import ctypes,hashlib,json,os,pathlib
+          p=pathlib.Path("target/release/wbd_engine.dll")
+          assert p.is_file() and p.stat().st_size>100000,"native MSVC DLL missing"
+          dll=ctypes.WinDLL(str(p.resolve()))
+          names=("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare","wbd_m0_win_owner_v1_stage",
+                 "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_state",
+                 "wbd_m0_win_owner_v1_stop","wbd_m0_win_owner_v1_release")
+          for name in names:assert getattr(dll,name,None) is not None,name
+          class S(ctypes.Structure):
+              _fields_=[(name,ctypes.c_uint32) for name in ("version","size","generation","phase","server","applied","loans_drained","reserved")]
+          q=dll.wbd_m0_win_owner_v1_query
+          q.argtypes=[ctypes.POINTER(S),ctypes.c_uint32];q.restype=ctypes.c_int32
+          state=S()
+          assert q(ctypes.byref(state),ctypes.sizeof(state))==0
+          assert (state.version,state.size,state.generation,state.phase,state.applied,state.loans_drained)==(1,32,0,0,0,0)
+          assert q(ctypes.byref(state),16)==1
+          prep=dll.wbd_m0_win_owner_v1_prepare
+          prep.argtypes=[ctypes.c_void_p,ctypes.c_size_t,ctypes.c_void_p,ctypes.c_size_t,ctypes.c_uint32,ctypes.POINTER(ctypes.c_uint64)]
+          prep.restype=ctypes.c_int32
+          token=ctypes.c_uint64(0)
+          assert prep(None,248,None,32,0,ctypes.byref(token))==1
+          assert token.value==0
+          commit=dll.wbd_m0_win_owner_v1_commit
+          commit.argtypes=[ctypes.c_uint64,ctypes.c_uint32,ctypes.c_uint32,ctypes.c_uint32]
+          commit.restype=ctypes.c_int32
+          assert commit(0,0,0,1)==2
+          stop=dll.wbd_m0_win_owner_v1_stop
+          stop.argtypes=[ctypes.c_uint64];stop.restype=ctypes.c_int32
+          assert stop(0)==2
+          sha=hashlib.sha256(p.read_bytes()).hexdigest()
+          receipt=dict(schema_version=1,role_id="M0",source_sha=os.environ["GITHUB_SHA"],
+             rust_native_target="x86_64-pc-windows-msvc",rust_toolchain="1.85.1",
+             original_go_sha="a7a82db31fe736ffedee330795a3234d358f1984",
+             m4_frozen_sha="b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+             run_id=int(os.environ["GITHUB_RUN_ID"]),attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
+             dll_sha256=sha,abi_version=1,exported_symbols=names,
+             native_owner_tests="PASS_SCOPED",ffi_live_dll_calls="PASS_SCOPED",
+             original_go_verified_tls_callback="NOT_RUN",windows_M4_real_device="NOT_RUN",
+             windows_product_applied="OFF",windows_WFP_default_capture="NOT_RUN",
+             stop_quiesced_rust_loans="PASS_SCOPED_NO_NATIVE_DRIVER",physical="NOT_RUN",
+             windows_product="NOT_QUALIFIED")
+          pathlib.Path("windows-owner-result/receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print("M0_PLAN013_WINDOWS_RUST_ORIGINAL_OWNER_NATIVE_DLL_AND_C_ABI_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'actual native Windows Rust C ABI DLL call failed'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan013-windows-native-owner-${{ github.run_id }}-${{ github.run_attempt }}
+          path: windows-owner-result/
+          if-no-files-found: warn
+          retention-days: 30
