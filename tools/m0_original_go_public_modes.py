@@ -37,6 +37,11 @@ for side in ("server", "client"):
     old = original_lines[0]
     new = old[:-1] + ' --lanes "$LANES"'
     if args.mode == "auto" and side == "client":
+        # V3 policy requires client auto parity=0; server provides max=20.
+        # Keep original per-peer two-sided CLI FEC contract intact.
+        if new.count('--fec-parity "$FEC"') != 1:
+            p.error("original client parity CLI anchor changed")
+        new = new.replace('--fec-parity "$FEC"', "--fec-parity 0")
         new += " --fec-mode auto"
     new += ")"
     exactly_once(old, new)
