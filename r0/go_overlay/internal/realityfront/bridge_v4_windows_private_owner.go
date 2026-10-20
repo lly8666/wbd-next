@@ -7,6 +7,7 @@
 package realityfront
 
 import (
+    "context"
     "errors"
     "fmt"
     "path/filepath"
@@ -23,6 +24,7 @@ type v4WindowsNativeOwnerBridge struct {
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
     handle uint64
     epoch [16]byte
+    serverSide bool
     committed,stopped bool
 }
 func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwnerBridge,error){
@@ -74,8 +76,79 @@ func (b *v4WindowsNativeOwnerBridge) prepare(
         uintptr(unsafe.Pointer(&h)))
     runtime.KeepAlive(cold);runtime.KeepAlive(handoff)
     if err!=nil||h==0{return nil,errV4WindowsOwner}
-    b.handle=h;b.epoch=snapshot.epoch
+    b.handle=h;b.epoch=snapshot.epoch;b.serverSide=true
     return &v4WindowsNativeOwnerPrepared{owner:b},nil
+}
+// ConnectVerifiedClient is the sole client-side original-Go V4 protected TLS
+// path into the same M1/M3 Windows Rust owner. The original FakeTCP Client
+// Association (not a bare net.Conn or forged WBGH) supplies Detach's actual
+// two sequence limits. This is a private opt-in control seam, NOT Windows
+// kernel/WFP activation. A bad/unsupported policy never touches the DLL.
+func (b *v4WindowsNativeOwnerBridge) connectVerifiedClient(
+    ctx context.Context, assoc *faketcp.ClientAssociation, cfg ClientAdmissionConfig,
+)(*V4ClientSession,error){
+    if b==nil||b.dll==nil||b.handle!=0||b.committed||b.stopped||
+        ctx==nil||assoc==nil||assoc.BootstrapConn()==nil{
+        return nil,errV4WindowsOwner
+    }
+    if cfg.Policy.Transport!=TransportNormal||cfg.Policy.FECMode!=FECOff||
+        cfg.Policy.DesiredLanes!=1||cfg.DesiredLanes!=1{
+        return nil,ErrAdmissionUnsupported
+    }
+    session,err:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
+        V4ClientOptions{DataPlaneReady:true})
+    if err!=nil{return nil,err}
+    // No access to Rust owner on a rejected/modified post-TLS snapshot.
+    if _,err=session.ColdSnapshot();err!=nil{return nil,err}
+    handoff,err:=assoc.Detach()
+    if err!=nil{return nil,err}
+    if err=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
+        return nil,fmt.Errorf("%w: real original-Go client Detach/Rust owner: %v",
+            errV4WindowsOwner,err)
+    }
+    return session,nil
+}
+func (b *v4WindowsNativeOwnerBridge) prepareAuthenticatedClient(
+    session *V4ClientSession,handoff faketcp.ClientHandoff,flow faketcp.ClientFlow,
+)error{
+    if b==nil||b.dll==nil||b.handle!=0||b.committed||b.stopped||
+        session==nil{return errV4WindowsOwner}
+    if err:=flow.Validate();err!=nil{return errV4WindowsOwner}
+    cold,err:=session.ColdSnapshot()
+    if err!=nil||cold.ServerSide(){return errV4WindowsOwner}
+    snapshot,err:=cold.MarshalColdBundle()
+    if err!=nil{return err}
+    peer:=v4PeerTransport{
+        mss:handoff.Peer.MSS,advertised:handoff.Peer.AdvertisedMSS,
+        flow:faketcp.ServerFlow{
+            ClientIP:flow.LocalIP,ServerIP:flow.PeerIP,
+            ClientPort:flow.LocalPort,ServerPort:flow.PeerPort,
+        },
+    }
+    command,err:=v4PrivateHandoffFromVerifiedClientSession(
+        handoff.ReceiveNext,peer,cold)
+    if err!=nil{return err}
+    var handle uint64
+    err=winOwnerCall(b.prepareProc,uintptr(unsafe.Pointer(&snapshot[0])),
+        uintptr(len(snapshot)),uintptr(unsafe.Pointer(&command[0])),
+        uintptr(len(command)),0,uintptr(unsafe.Pointer(&handle)))
+    runtime.KeepAlive(snapshot);runtime.KeepAlive(command)
+    if err!=nil||handle==0{return errV4WindowsOwner}
+    b.handle=handle
+    // Do not claim active on original Go Detach until Rust's exact
+    // SendNext committal. A failed Commit discards ONLY this PREPARED
+    // generation and never calls Stop on an uncommitted owner.
+    if err=winOwnerCall(b.commitProc,uintptr(handle),0,0,
+        uintptr(handoff.SendNext));err!=nil{
+        if winOwnerCall(b.abortProc,uintptr(handle))==nil{
+            b.handle=0
+        }
+        return err
+    }
+    b.epoch=cold.Epoch()
+    b.serverSide=false
+    b.committed=true
+    return nil
 }
 type v4WindowsNativeOwnerPrepared struct {
     owner *v4WindowsNativeOwnerBridge
@@ -123,8 +196,10 @@ func (b *v4WindowsNativeOwnerBridge) state()(v4WindowsOwnerState,error){
     if b==nil||b.handle==0{return v,errV4WindowsOwner}
     if err:=winOwnerCall(b.stateProc,uintptr(b.handle),
         uintptr(unsafe.Pointer(&v)),uintptr(unsafe.Sizeof(v)));err!=nil{return v,err}
+    expectedRole:=uint32(0)
+    if b.serverSide{expectedRole=1}
     if v.version!=1||v.structSize!=uint32(unsafe.Sizeof(v))||v.generation!=uint32(b.handle>>32)||
-        v.server!=1||v.applied!=0||v.reserved!=0{return v,errV4WindowsOwner}
+        v.server!=expectedRole||v.applied!=0||v.reserved!=0{return v,errV4WindowsOwner}
     return v,nil
 }
 // Explicit narrow component Stop. Deliberately does NOT implement the
