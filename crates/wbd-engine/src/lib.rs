@@ -18,6 +18,10 @@ mod v4_game_lane;
 /// raw/TUN/UDP application ingress. Never a public capability or default run.
 #[cfg(all(test,target_os="linux"))]
 mod v4_game_kernel_linux_tests;
+/// One original-Go TLS shared Game2/4 AEAD owner → real independent M4
+/// raw/TUN packet drivers with joined Stop. Opt-in, product gate pending.
+#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+mod v4_game_public_kernel;
 /// Release-option original-owner persistent multi-block authenticated FEC RX
 /// component only: not a live Go/kernel product route or public enablement.
 #[cfg(feature="fec2_product_record")]

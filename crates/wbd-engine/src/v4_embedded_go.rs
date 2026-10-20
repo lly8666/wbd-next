@@ -377,6 +377,8 @@ struct Entry{
     game_pending_cold:Option<UntrustedColdV4>,
     #[cfg(feature="fec2_product_record")]
     game_joined:bool,
+    #[cfg(feature="fec2_product_record")]
+    game_tx_boundary:u32,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
     fixed_pending:Option<(u8,u64)>,
     #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -427,8 +429,16 @@ struct Entry{
 // authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
 // LINK and M1 arena are MOVED to RX; this Entry guards TX/control only.
 struct GameGroupNative{
-    adapter:crate::v4_game_lane::GameAdapter,
-    handles:Vec<u64>,stopped:bool,
+    adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
+    handles:Vec<u64>,stopped:bool,stopping:bool,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    server:bool,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    flows:Vec<crate::v4_protected_handoff::GoFlow>,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    tx_seqs:Vec<u64>,
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    drivers:Option<crate::v4_game_public_kernel::GameKernelOwner>,
 }
 // Dedicated group handles have different low tag from existing original
 // committed per-lane Go owner. Both must be stopped/released together.
@@ -578,6 +588,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
         #[cfg(feature="fec2_product_record")]
         game_joined:false,
+        #[cfg(feature="fec2_product_record")]
+        game_tx_boundary:0,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
         fixed_pending:None,
         #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
@@ -640,6 +652,8 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     // Only Go's private callback after protected reply and successful
     // DetachTransition knows the exact post-reply SenderNext boundary.
     if e.owner.commit_after_detach(tx_boundary).is_err(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {e.game_tx_boundary=tx_boundary;}
     e.phase=PH_ACTIVE;
     OK
 }
@@ -2225,8 +2239,31 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     let adapter=crate::v4_game_lane::GameAdapter::from_private_original_go_tls(
         cold,server,wbd_types::TunnelKey{slot:14,generation},generation
     ).map_err(|_|INVALID)?;
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    let (flows,tx_seqs)={
+        let mut ordered=locks.iter().map(|e|{
+            let lane=e.owner.normal_firstsend_identity()
+                .map(|(k,_)|k.slot).unwrap_or(0);
+            (lane,e.flow,u64::from(e.game_tx_boundary))
+        }).collect::<Vec<_>>();
+        ordered.sort_by_key(|v|v.0);
+        if ordered.iter().enumerate().any(|(i,x)|x.0!=i as u32+1||x.2==0){
+            return Err(INVALID)
+        }
+        (ordered.iter().map(|v|v.1).collect::<Vec<_>>(),
+         ordered.iter().map(|v|v.2).collect::<Vec<_>>())
+    };
     r.game_groups.insert(group_handle,GameGroupNative{
-        adapter,handles:ids,stopped:false
+        adapter:Arc::new(Mutex::new(adapter)),handles:ids,
+        stopped:false,stopping:false,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        server,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        flows,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        tx_seqs,
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        drivers:None,
     });
     Ok(group_handle)
 }
@@ -2252,7 +2289,13 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped{return BAD_STAGE}
-    unsafe{lanes.write(e.handles.len() as u32);drivers_installed.write(0)}
+    unsafe{
+        lanes.write(e.handles.len() as u32);
+        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        drivers_installed.write(u32::from(e.drivers.is_some()));
+        #[cfg(not(all(target_arch="x86_64",target_env="gnu")))]
+        drivers_installed.write(0);
+    }
     // Explicit zero is critical: this is authenticated shared crypto owner
     // installation ONLY, not a positive M4 kernel/TUN product readiness.
     OK
@@ -2260,10 +2303,34 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
+    let (adapter,mut driver)={
+        let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+        let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+        if e.stopped{return OK}
+        if e.stopping{return STOP_INCOMPLETE}
+        e.stopping=true;
+        (Arc::clone(&e.adapter),
+         {
+             #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+             {e.drivers.take()}
+             #[cfg(not(all(target_arch="x86_64",target_env="gnu")))]
+             {None::<()>}
+         })
+    };
+    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    if let Some(ref mut native)=driver{
+        if native.stop_and_drain().is_err(){
+            let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+            e.drivers=driver;e.stopping=false;
+            return STOP_INCOMPLETE
+        }
+    }
+    let Ok(mut game)=adapter.lock()else{return STOP_INCOMPLETE};
+    game.stop();drop(game);
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
-    if e.stopped{return OK}
-    e.adapter.stop();e.stopped=true;OK
+    e.stopped=true;e.stopping=false;OK
 }
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
