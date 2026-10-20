@@ -49,6 +49,7 @@ type v4EmbeddedNativeBridge struct {
     committed bool
     stopped bool // terminal release receipt; not a Rust owner token
     originalFlow faketcp.ServerFlow
+    serverSide bool // original Go protected TLS cold snapshot, not caller data
     rxBoundary uint32
     txBoundary uint32
     protectedEpoch [16]byte
@@ -80,6 +81,7 @@ func (b *v4EmbeddedNativeBridge) prepare(
     if rc!=0||h==0{return nil,fmt.Errorf("%w: prepare=%d",errV4Embedded,int(rc))}
     b.handle=uint64(h)
     b.originalFlow=peer.flow
+    b.serverSide=true
     b.rxBoundary=boundary
     b.protectedEpoch=s.epoch
     b.authenticatedPrincipal=s.principal
@@ -124,6 +126,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
         return fmt.Errorf("%w: client commit=%d",errV4Embedded,int(rc))
     }
     b.originalFlow=peer.flow
+    b.serverSide=false
     b.rxBoundary=handoff.ReceiveNext
     b.txBoundary=handoff.SendNext
     b.protectedEpoch=cold.Epoch()
