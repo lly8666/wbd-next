@@ -23,29 +23,29 @@ jobs:
           path: original
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: go-public-real-fixed-39371841035-1
-          run-id: 39371841035
+          name: go-public-real-fixed-39373130689-1
+          run-id: 39373130689
           github-token: ${{ github.token }}
           repository: lly8666/wbd-next
           path: fixed
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: go-public-real-game2-39371841035-1
-          run-id: 39371841035
+          name: go-public-real-game2-39373130689-1
+          run-id: 39373130689
           github-token: ${{ github.token }}
           repository: lly8666/wbd-next
           path: game2
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: go-public-real-game4-39371841035-1
-          run-id: 39371841035
+          name: go-public-real-game4-39373130689-1
+          run-id: 39373130689
           github-token: ${{ github.token }}
           repository: lly8666/wbd-next
           path: game4
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: go-public-real-auto-39372148109-1
-          run-id: 39372148109
+          name: go-public-real-auto-39373130689-1
+          run-id: 39373130689
           github-token: ${{ github.token }}
           repository: lly8666/wbd-next
           path: auto
@@ -58,6 +58,7 @@ jobs:
           tar -C bundle -xzf original/linux-normal-off-original-go-amd64.tar.gz
           for mode in fixed auto game2 game4; do
             cp "$mode/mode-receipt.json" "bundle/cases/$mode.json"
+            cp "$mode/mode-telemetry.json" "bundle/cases/$mode-telemetry.json"
           done
           python3 - <<'PY'
           import hashlib,json,os,pathlib
@@ -69,10 +70,10 @@ jobs:
           for file,h in manifest["binary_sha256"].items():
             assert hashlib.sha256((p/file).read_bytes()).hexdigest()==h
           expected={
-            "fixed":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",1,4,1),
-            "auto":("8166870304e506c4194a19cf7dcb87cdc8c1e260",1,20,1),
-            "game2":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",2,0,0),
-            "game4":("73660c7f7e0f6fd861c19c97e3285d3de499bc62",4,0,0),
+            "fixed":("3ab20822ebe3d23b1388070b6a11207e7dc4666c",1,4,1),
+            "auto":("3ab20822ebe3d23b1388070b6a11207e7dc4666c",1,20,1),
+            "game2":("3ab20822ebe3d23b1388070b6a11207e7dc4666c",2,0,0),
+            "game4":("3ab20822ebe3d23b1388070b6a11207e7dc4666c",4,0,0),
           }
           verified={}
           for mode,(source,lanes,parity,loss) in expected.items():
@@ -87,9 +88,22 @@ jobs:
               app=v["actual_duplex_udp"][side]
               assert app["sent"]>50 and app["received"]>0
             assert v["Stop_owned_network"]=="PASS"
+            live=json.loads((p/"cases"/(mode+"-telemetry.json")).read_text())
+            assert live["mode"]=="original-Go-V3-"+mode
+            assert live["new_Rust_V4_retrans_FEC2_Game"]=="NOT_ATTACHED"
+            for side in ("client","server"):
+              assert live[side]["actual_lanes_max"]==lanes
+              assert live[side]["real_active_samples"]>0
+            if mode=="fixed":
+              assert all(4 in live[side]["actual_tx_parity_observed"] for side in ("client","server"))
+              assert all(live[side]["actual_Retransmitted_counter_max_across_lanes"]>0 for side in ("client","server"))
+            if mode=="auto":
+              assert all(2 in live[side]["actually_negotiated_FEC_modes"] for side in ("client","server"))
+              assert all(live[side]["actual_Retransmitted_counter_max_across_lanes"]>0 for side in ("client","server"))
             verified[mode]={"test_source":source,"requested_lanes":lanes,
               "requested_parity":parity,"actual_kernel_drops":sum(x["drops"] for x in v["kernel_netem"]),
               "actual_bidirectional_business":v["actual_duplex_udp"],
+              "real_live_owner":live,
               "qualification":"OLD_GO_V3_EXPERIMENT_ONLY"}
           release={"schema_version":1,"package_source":os.environ["GITHUB_SHA"],
             "binary_build_source":manifest["main_source"],
@@ -118,8 +132,13 @@ jobs:
           Legacy Game4: client and server --lanes 4 --fec-parity 0
           Normal/fixed/auto/Game are validated as original Go V3 real-process,
           real-TLS/kernel UDP functional cases, not new Rust V4 FEC2/Game protocol.
-          FEC recovery counter, auto policy actually-applied revision and outer
-          retransmission attribution are not instrumented by these cases.
+          Actual V3 qualified lane cardinalities, requested vs actual parity
+          and per-side SACK/RACK owner RepairAttempts/Retransmitted counters
+          are independently recorded in cases/*-telemetry.json. Fixed4 both
+          sides actually transmitted parity4; auto both negotiated mode2 and
+          transmitted parity20 in the observed window. Neither receiver-side
+          FEC rescue attribution nor a V4 M2 controller/new-group applied
+          revision is proven by these old V3 counters.
           New Rust M2 outbound retrans, V4 FEC2 and independently keyed Rust
           Game2/4 are not attached to these binaries; DO NOT claim those ON.
           EOF
