@@ -120,6 +120,15 @@ fn stop(r:&mut Registry,h:u64)->i32{
     e.phase=PH_STOPPED;
     OK
 }
+fn abort(r:&mut Registry,h:u64)->i32{
+    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    // A half-prepared owner holds no published DATA or native device lease.
+    // A failed original protected TLS/transition must discard this generation
+    // rather than ever making a forged Detach/Stop look successful.
+    if e.phase!=PH_PREPARED{return BAD_STAGE}
+    r.entries.remove(&h);
+    OK
+}
 fn release(r:&mut Registry,h:u64)->i32{
     let Some(e)=r.entries.get(&h)else{return UNKNOWN};
     if e.phase!=PH_STOPPED{return BAD_STAGE}
@@ -175,6 +184,11 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v1_stage(
     let bytes=unsafe{std::slice::from_raw_parts(data,len)};
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     stage(&mut r,h,seq,bytes)
+}
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v1_abort(h:u64)->i32{
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    abort(&mut r,h)
 }
 #[no_mangle]
 pub extern "C" fn wbd_m0_win_owner_v1_commit(
@@ -255,6 +269,9 @@ mod tests {
         assert_eq!(r.entries[&h].phase,PH_STOPPED);
         assert_eq!(release(&mut r,h),OK);
         assert_eq!(commit(&mut r,h,0,0,801),UNKNOWN);
+        let prepared=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(abort(&mut r,prepared),OK);
+        assert_eq!(abort(&mut r,prepared),UNKNOWN);
         let newer=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_ne!(newer,h);
         assert_eq!(stop(&mut r,h),UNKNOWN);
@@ -276,6 +293,7 @@ mod tests {
         assert_eq!(stage(&mut r,good,500,&[0u8;9]),OK);
         assert_eq!(commit(&mut r,good,0,0,900),INVALID);
         assert_eq!(commit(&mut r,good,1,9,900),OK);
+        assert_eq!(abort(&mut r,good),BAD_STAGE);
         assert_eq!(stage(&mut r,good,500,&[0u8;9]),BAD_STAGE);
         assert_eq!(stop(&mut r,good),OK);
         assert_eq!(release(&mut r,good),OK);
