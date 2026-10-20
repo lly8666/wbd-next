@@ -24,6 +24,7 @@ extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -269,6 +270,19 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
 
 // Development-only original Rust owner continuous worker controls. No Go
 // per-packet RX/TX invocation while the loop owns both drivers.
+// Only the actual shipping original Go V4 client/server after credential
+// authentication, FakeTCP Detach and real native M4 driver binding may
+// arm original M2 feedback on this same Rust owner. Scoped old-Go fixture
+// has its own authenticated receipt sender; it must not race a second one.
+func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        b.protectedEpoch==[16]byte{} {return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_arm_public_original_m2_feedback(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16))
+    if rc!=0{return fmt.Errorf("%w: original public M2 feedback bind=%d",errV4Embedded,int(rc))}
+    return nil
+}
 func (b *v4EmbeddedNativeBridge) startRustOwnerLoop(ifindex uint32)error{
     if !b.committed||b.handle==0{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_loop_start(C.uint64_t(b.handle),C.uint32_t(ifindex))
