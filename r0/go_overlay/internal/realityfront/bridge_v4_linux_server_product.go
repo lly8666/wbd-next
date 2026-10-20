@@ -30,12 +30,15 @@ type V4LinuxServerProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    FECMode FecV2Mode
+    FECProfile FecV2Profile
 }
 type V4LinuxServerProduct struct {
     mu sync.Mutex
     cfg V4LinuxServerProductConfig
     owner *v4EmbeddedNativeBridge
     session *V4ServerSession
+    fec *v4ProductFecMonitor
     // Immutable TLS identity survives caller mutation of the result view.
     principal string
     tunnel [16]byte
@@ -57,6 +60,9 @@ func NewV4LinuxServerProduct(cfg V4LinuxServerProductConfig)(*V4LinuxServerProdu
         return nil,ErrAdmissionParams
     }
     if _,err:=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
+    if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
+        !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
+    if cfg.FECMode==FecV2Fixed&&!cfg.FECProfile.Valid(){return nil,ErrAdmissionParams}
     return &V4LinuxServerProduct{cfg:cfg},nil
 }
 
@@ -71,13 +77,14 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
-    // The real native per-lane Normal owner cannot safely interpret Game
-    // or a requested FEC2 profile yet. Deny only these uninstalled modes
-    // before original Go publishes a TLS reply/Rust session. Normal/off is
-    // independently usable and must never be blocked by missing Game.
+    mode:=p.cfg.FECMode
+    if mode==""{mode=FecV2Off}
+    expectedWireMode:=FECOff
+    if mode==FecV2Fixed{expectedWireMode=FECFixed}
+    if mode==FecV2Auto{expectedWireMode=FECAuto}
     priorPolicyAllow:=cfg.PolicyAllow
     cfg.PolicyAllow=func(policy AdmissionPolicy)error{
-        if policy.Transport!=TransportNormal||policy.FECMode!=FECOff||
+        if policy.Transport!=TransportNormal||policy.FECMode!=expectedWireMode||
             policy.DesiredLanes!=1 {
             return ErrAdmissionUnsupported
         }
@@ -87,6 +94,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
+        fec2Product:v4ProductFecEnabled(mode),
     })
     if err!=nil{return nil,err}
     // From this point the original Go server has detached the authenticated
@@ -110,6 +118,9 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     );err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
+    if err==nil{
+        p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,verified)
+    }
     if err==nil{err=bridge.armOriginalPublicM2Feedback()}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
@@ -119,7 +130,15 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
             shutdown,
         )
     }
+    if p.fec!=nil{p.fec.start(bridge)}
     return session,nil
+}
+func (p *V4LinuxServerProduct) OriginalFECReadback()(V4PublicFecReadback,error){
+    if p==nil{return V4PublicFecReadback{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecReadback{},ErrAdmissionUnsupported}
+    return p.fec.readback(p.owner)
 }
 
 // Close returns ONLY after original Rust has stopped its packet workers,
@@ -137,6 +156,10 @@ func (p *V4LinuxServerProduct) OriginalOuterCounters()(V4PublicOuterCounters,err
 }
 func (p *V4LinuxServerProduct) Close()error{
     if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    worker:=p.fec
+    p.mu.Unlock()
+    if worker!=nil{worker.stop()}
     p.mu.Lock()
     defer p.mu.Unlock()
     return p.closeLocked()
