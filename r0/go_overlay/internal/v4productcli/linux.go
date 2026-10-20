@@ -280,9 +280,13 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             }
             assoc,ok:=table.GetSegment(seg)
             if !ok || assoc.State()==faketcp.ServerAssociationClosed{continue}
-            if _,detached:=assoc.TransitionState();detached{
-                // Rust owns authenticated steady ciphertext after Detach.
-                // Original Go never double-consumes a native packet.
+            if state,exists:=assoc.TransitionState();exists &&
+               state==faketcp.TransitionDetached{
+                // Only post-Detach ciphertext belongs to Rust. During
+                // PREPARED the original TLS protected reply is still an
+                // in-flight FakeTCP write: sender ACK/window updates MUST
+                // continue. Skipping all non-nil transitions deadlocked the
+                // server before it could publish the real Rust owner.
                 continue
             }
             outcome,e:=assoc.HandleSegment(seg,time.Now())
