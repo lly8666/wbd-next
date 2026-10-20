@@ -29,6 +29,7 @@ on:
       - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/cmd/wbd-v4-client/main.go"
       - "r0/go_overlay/cmd/wbd-v4-server/main.go"
+      - "tools/m0-v4-public-real-linux-netns.sh"
       - "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go"
@@ -178,6 +179,7 @@ jobs:
             "r0/go_overlay/internal/v4productcli/linux.go",
             "r0/go_overlay/cmd/wbd-v4-client/main.go",
             "r0/go_overlay/cmd/wbd-v4-server/main.go",
+            "tools/m0-v4-public-real-linux-netns.sh",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
@@ -295,6 +297,17 @@ jobs:
           (p/"receipt.json").write_text(json.dumps(m,indent=2)+"\n")
           print("M0_FIXED_APPLIED_AFTER_REAL_KERNEL_SOURCE_AND_REPAIR_COPY_SCOPED_NOT_PRODUCT")
           PY
+      - name: Run BOTH actual original-Go V4 client and server entrypoints through real TLS, Rust M1/M3/M4 and Linux UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash tools/m0-v4-public-real-linux-netns.sh fixed-build >fixed-kernel-result/v4-public-normal-real-cli.log 2>&1 || {
+            cat fixed-kernel-result/v4-public-normal-real-cli.log; exit 1;
+          }
+          cat fixed-kernel-result/v4-public-normal-real-cli.log
+          grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
