@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 199,
-  "checkpoint_sha": "436bc12d716b33da8e6c22e5a5a0cd2a884d23b4",
+  "sequence": 200,
+  "checkpoint_sha": "e17f8282a91c023c336019fb5036ec4d922b9616",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "PLAN012 M0 Linux original-Go FEC2/Game product integration partial. Accepted M4 S46 Stop route/rule/TUN FD + genuine Fixed/Auto 2s M2 rev4 APPLIED real kernel remain PASS. New original Go real TLS Game2/4 per-lane authenticated cold collector, immutable policy and adversarial scope negative tests source7dd10a2d scoped PASS. Independent M4 Game raw first-app and public Go Linux feature7 CLI Connect/Disconnect/applied remain NOT_RUN, FEC2/Game production OFF.",
-  "why_now": "S331 declared original-Go Game2/4 cold lane seam; S332 new private collector, S333 frozen TLS policy, S334 real TLS 2/4 + negative tests, S335 original combined workflow. Exact SOURCE7dd10a2dcda165f408b9231d228345b328c9481a Linux combined Actions39358619164 attempt1 job118419235932 SUCCESS artifact12236611409 digest4b57ce1f; same-source Governance39358619226, maintenance39358619152 SUCCESS. S336 precise scoped evidence. M4 central scope39357872032 success on worker46e13f not M0 product. No Game real kernel or public product claim.",
+  "why_now": "S337 recovered H199 Governance39358990793 attempt1 original FAIL from current evidence_refs mixing historic M4 source20916d with latest Game cold source7dd10a; original structure.json BLOCKED evidence is for a different SOURCE. H200 retains old receipt in context_refs only, latest exact-source evidence_refs one matching source7dd10a. Same source real TLS Game2/4 scoped functional Actions39358619164 success with artifact12236611409, Governance39358619226 maintenance39358619152 success. No new Go/Rust code test or product promotion.",
   "done_when": "PLAN012 Linux original-Go product public feature7 CLI Connect/Disconnect/cold applied readback plus independent Game2 and Game4 authenticated M4 raw kernel first app + Fixed/Auto genuine M2 APPLIED and accepted M4 Stop/MTU/noHOL; one exact SOURCE Linux combined Actions then and only then Linux production enable. Windows/physical/20Mbps remain separately NOT_RUN. Existing S46 Stop and Game TLS cold PASS not redone.",
   "next_action": "Connect original Go verified Game2/4 cold lane source to Rust GameAdapter and actual M4 independent raw kernel/TUN first app + public Linux feature7 CLI Connect/Disconnect/applied readback; run one exact SOURCE combined Linux functional Action and permit production enable only after full PASS.",
   "unverified": true,
   "last_tested_source": "7dd10a2dcda165f408b9231d228345b328c9481a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json",
-    "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json"
+    "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/PLAN012-H199-governance-evidence-SOURCE-recovery-20261020.md",
+    "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json",
     "docs/devlog/M0/PLAN012-original-Go-Game2-4-auth-cold-intent-20261020.md",
     "docs/devlog/M0/PLAN012-H197-postcursor-recovery-20261020.md",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md"
   ],
   "open_requests": [],
-  "partial_summary": "H199 exact-source Linux combined39358619164 PASS Game2/4 original Go TLS authenticated cold sets only, native Game2/4 and original Fixed/Auto+M4 S46 Stop scoped unchanged. Artifact12236611409, evidence PLAN012-original-Go-TLS-Game2-4-auth-cold. Game real independent raw kernel/TUN first app and public Go CLI feature7 remains NOT_RUN; FEC2/Game production OFF; Windows/physical/20Mbps deferred."
+  "partial_summary": "H200 metadata repair: H199 exact Governance39358990793 FAIL retained, SOURCE mismatch old accepted M4 receipt moved to context_refs; only new evidence_refs uses 7dd10a Game2/4 original-Go TLS scoped PASS. Product Game M4 independent kernel first app/public Linux feature7 CLI NOT_RUN; production FEC2/Game OFF. Await exact Governance validation of this cursor, not a product test rerun."
 }
