@@ -1,0 +1,13 @@
+# M0 S513 — Windows original Go real client+server authenticated Rust owner integration intent (2026-10-20)
+
+At main 8ac82dc9df301f4046e42e5e8e9870d71c468808, M0 registry main rev2/epoch1 task R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025, H216 checkpoint ff856a86128a5580be9f4a71c8c963d0aa4514a2 → HEAD only one H216 cursor-only. Main latest Governance39438788134 SUCCESS, all main Actions finished, no open requests. M4 original branch b53b5dac422a634cdd82178a29071f9f9f0ae5e7 H53 remains frozen. Do not touch M4-owned Go Windows OS/CLI GUI files.
+
+Accepted prior SOURCE 2b653e9caa4bc909e3ab837c2f15b9d7b859fb2d Windows Actions39437722965/1 with legacy a7a82db31fe736ffedee330795a3234d358f1984 and native 1.85.1 x64 MSVC, old original Go verified **server** TLS/three ciphers → native M1/M3 protected Rust owner Prepare Detach Commit Stop PASS_SCOPED. No real Go V4 client Rust Windows owner; no host-native M4 device lease or WFP/route applied, full product NOT_RUN. Original Linux same binary 4/4 source and M4 S59 TEST-NET component accepted separately, not rerun.
+
+New integrated batch within same task:
+1. Add M0-only Windows original **client** private V4 bridge invoked from original `faketcp.ClientAssociation` post actual credential-TLS reply, exact `assoc.Detach()` SendNext/ReceiveNext, validated original `ClientFlow`, authenticated immutable cold export, one actual Rust Windows C ABI owner handle role=client. No arbitrary cold bytes from CLI/GUI, feature7 FEC2 denied. Refuse stale/repeated calls, invoke original Rust Abort on failure; no driver/APPLIED grant.
+2. Native Windows exact-source integration test constructs two genuine old-Go FakeTCP associations with packet emitter, original Go credential-protected TLS on both directions with 3 suites, both independent Rust owner generations + correct role/epoch, real protected M1/M3 owner commits both, no fake crypto; tests truthful scoped Stop both before Go cleanup, generation invalidation, wrong/unsupported mode negative.
+3. Extend existing Windows2022 source-locked workflow with **one** combined exact source functional test, no duplicated accepted standalone Linux and M4 WFP/component tests. Keep native Rust DLL previous tests only as build prerequisite for new C symbols; metadata applies only to new SAME source. Preserve earlier original FAIL and product NOT_RUN.
+4. If missing M4 true global WFP/default-route/host owner proof persists, do not mutate M4 worker files or forcibly enable N4NativeNetworkReady; leave Windows product OFF/NOT_RUN with actionable native adapter boundary. M0 shared owner is only M1/M3, its no-driver Stop cannot be mistaken for M4 OS teardown.
+
+All external Actions after this intent; no redundant manually dispatched runs.
