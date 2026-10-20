@@ -144,8 +144,11 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                 t.Logf("M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_UNSUPPORTED preexisting_or_foreign=%v",e)
             }else{
                 if e!=nil{t.Fatal(e)}
-                if e=native.BindOriginalM4NativeDevice(ctx,device,id);e!=nil{
-                    t.Fatalf("real original Go credential TLS to same live M4 Wintun and Rust v2 lease refused: %v",e)
+                scoped,boundErr:=ConnectScopedOriginalTLSWintun(
+                    ctx,native,tun,[16]byte{17},cliSession.Epoch)
+                if boundErr!=nil{
+                    if scoped!=nil{_ = scoped.StopRustScoped(ctx)}
+                    t.Fatalf("typed original Go TLS->real M4 Wintun->Rust v2 owner refused: %v",boundErr)
                 }
                 state,e:=native.OriginalOwnerReadback()
                 if e!=nil||!state.DeviceBound||state.DeviceQuiesced||
@@ -153,6 +156,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                     t.Fatalf("actual TLS native driver binding false status: %+v err=%v",state,e)
                 }
                 installed=true
+                if e=scoped.StopRustScoped(ctx);e!=nil{t.Fatal("M4 original native Wintun real quiesce->Rust owner Stop",e)}
                 t.Logf("M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=%d index=%d os_applied=0 no_wfp_or_kernel_app=1",id.LUID,id.InterfaceIndex)
             }
         }
