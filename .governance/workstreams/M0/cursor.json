@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 2,
   "assignment_epoch": 1,
-  "sequence": 198,
-  "checkpoint_sha": "2925b96ff23ebb32e4e53ac71dc3c05c7e91bbc3",
+  "sequence": 199,
+  "checkpoint_sha": "436bc12d716b33da8e6c22e5a5a0cd2a884d23b4",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN012 Linux FEC/Game original-Go product main integration. M4 S46 exact source Stop/route/rule/TUN FD cleanup imported and full real netns Actions PASS. Fixed and Auto initial genuinely authenticated M2 revision4 APPLIED, real four UDP loss recovery accepted. Product public Go feature7 cold/CLI Connect/Disconnect applied and Game2/4 genuine M4 independent raw kernel first app NOT_RUN, FEC2/Game production OFF.",
-  "why_now": "Recovered post-H197 main commit 9c40b406: sole post-checkpoint H197 cursor-only; M0 open_requests empty. S330 docs/devlog/M0/PLAN012-H197-postcursor-recovery-20261020.md records exact main Governance39357544868 SUCCESS on 9c40b406, central M4 scope39357872032 in_progress at read (UNKNOWN, not M0 product), prior combined39357046267 scoped PASS. No new source beyond accepted M4 S46; FEC2/Game production OFF.",
-  "done_when": "Linux original-Go authenticated product public operator V4 client/server feature7 release CLI Connect/Disconnect/cold applied/readback, genuine Fixed/Auto mature M2 revision APP and real M4 client kernel/TUN loss recovery plus Stop noHOL, Game2 and Game4 independently authenticated original M4 kernel lane first app; full source-locked Linux combined Actions then enable FEC2/Game Linux release. M4 S46 Linux Stop done, no redo; Windows/physical/20Mbps separate NOT_RUN and not release blockers.",
-  "next_action": "M0 complete original-Go PUBLIC Linux V4 feature7 cold/CLI client/server Connect/Disconnect/applied mode readback plus actual independently keyed Game2/4 M4 raw kernel lane first-app (no native-only substitute), run exactly one source-locked complete Linux combined Actions with Fixed/Auto and M4 Stop retained; only on full PASS enable Linux FEC2/Game production. Keep OFF until then.",
+  "current_task": "PLAN012 M0 Linux original-Go FEC2/Game product integration partial. Accepted M4 S46 Stop route/rule/TUN FD + genuine Fixed/Auto 2s M2 rev4 APPLIED real kernel remain PASS. New original Go real TLS Game2/4 per-lane authenticated cold collector, immutable policy and adversarial scope negative tests source7dd10a2d scoped PASS. Independent M4 Game raw first-app and public Go Linux feature7 CLI Connect/Disconnect/applied remain NOT_RUN, FEC2/Game production OFF.",
+  "why_now": "S331 declared original-Go Game2/4 cold lane seam; S332 new private collector, S333 frozen TLS policy, S334 real TLS 2/4 + negative tests, S335 original combined workflow. Exact SOURCE7dd10a2dcda165f408b9231d228345b328c9481a Linux combined Actions39358619164 attempt1 job118419235932 SUCCESS artifact12236611409 digest4b57ce1f; same-source Governance39358619226, maintenance39358619152 SUCCESS. S336 precise scoped evidence. M4 central scope39357872032 success on worker46e13f not M0 product. No Game real kernel or public product claim.",
+  "done_when": "PLAN012 Linux original-Go product public feature7 CLI Connect/Disconnect/cold applied readback plus independent Game2 and Game4 authenticated M4 raw kernel first app + Fixed/Auto genuine M2 APPLIED and accepted M4 Stop/MTU/noHOL; one exact SOURCE Linux combined Actions then and only then Linux production enable. Windows/physical/20Mbps remain separately NOT_RUN. Existing S46 Stop and Game TLS cold PASS not redone.",
+  "next_action": "Connect original Go verified Game2/4 cold lane source to Rust GameAdapter and actual M4 independent raw kernel/TUN first app + public Linux feature7 CLI Connect/Disconnect/applied readback; run one exact SOURCE combined Linux functional Action and permit production enable only after full PASS.",
   "unverified": true,
-  "last_tested_source": "20916d27018b2a039221923db5034e009b9c2e3b",
+  "last_tested_source": "7dd10a2dcda165f408b9231d228345b328c9481a",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN012-original-Go-TLS-Game2-4-auth-cold-20261020.json",
     "docs/evidence/M0/PLAN012-M4-S46-Linux-network-Stop-exact-source-20261020.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/PLAN012-original-Go-Game2-4-auth-cold-intent-20261020.md",
     "docs/devlog/M0/PLAN012-H197-postcursor-recovery-20261020.md",
-    "docs/devlog/M0/PLAN012-H197-M4-S46-Linux-Stop-recovery-20261020.md",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
-    "docs/evidence/M0/PLAN012-Linux-M4-stop-Fixed-Auto-applied-20261020.json",
-    "docs/evidence/M0/PLAN012-M4-Linux-auth-network-Stop-integrated-20261020.json"
+    "docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md"
   ],
   "open_requests": [],
-  "partial_summary": "H198 CLEAN recovered H197 post-cursor Governance source9c40b406 run39357544868 success and M4 central scope in-flight status only; accepted Fixed/Auto real M2 and M4 Stop combined source20916d run39357046267 unchanged. Product public original-Go feature7 CLI/cold and independent Game2/4 M4 raw kernel first-app NOT_RUN; FEC2/Game OFF; Windows/physical/20Mbps NOT_RUN."
+  "partial_summary": "H199 exact-source Linux combined39358619164 PASS Game2/4 original Go TLS authenticated cold sets only, native Game2/4 and original Fixed/Auto+M4 S46 Stop scoped unchanged. Artifact12236611409, evidence PLAN012-original-Go-TLS-Game2-4-auth-cold. Game real independent raw kernel/TUN first app and public Go CLI feature7 remains NOT_RUN; FEC2/Game production OFF; Windows/physical/20Mbps deferred."
 }
