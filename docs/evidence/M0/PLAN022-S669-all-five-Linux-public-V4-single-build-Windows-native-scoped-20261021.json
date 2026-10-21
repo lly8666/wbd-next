@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "111fd39bc9cfda3dc03ef10c80c43ff86ad07845",
+  "result": "PASS_FUNCTIONAL_CI_LINUX_PUBLIC_GO_V4_ALL_FIVE_MODES_ONE_BUILD_BATCH_AND_WINDOWS_NORMAL_OFF_SCOPED_WIN_FEC_GAME_NOT_WIRED",
+  "decision": "docs/decisions/M0-PLAN022-one-batch-public-V4-modes-integration-20261021.md",
+  "user_instruction": "one-time public mode wiring integration and batch Actions test, do not promote one-by-one green",
+  "source_contract": {
+    "main_source": "111fd39bc9cfda3dc03ef10c80c43ff86ad07845",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "linux_tools": {
+      "go": "1.23.12",
+      "rust": "1.85.1"
+    },
+    "feature_flags": "wbd_v4_embedded_go,wbd_v4_fec2_product",
+    "native_rust_flags": "m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record",
+    "old_receipts_not_reused_as_new_qualification": true
+  },
+  "linux": {
+    "platform": "ubuntu-24.04 x64 GitHub Actions, two real isolated netns+veth+TUN+raw FakeTCP TLS Go binaries and Rust M4",
+    "run_id": 39629082813,
+    "attempt": 1,
+    "job_id": 119322043051,
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": "m0-plan012-combined-functional.yml",
+    "artifact_id": 12357134780,
+    "artifact_name": "m0-plan012-combined-39629082813-1",
+    "artifact_sha256": "43d669cf0441c4aee917c4982bc6cfb02a49c55a0c434ee6f748ac8c7933cc4f",
+    "artifact_size_bytes": 19207811,
+    "same_binary_for_all_modes": true,
+    "public_modes": {
+      "normal": {
+        "result": "PASS_FUNCTIONAL_CI_OPEN_FOR_NETWORK_TEST",
+        "scope": "public original-Go V4 client/server real TLS Rust M4 TUN UDP Stop",
+        "marker": "M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS",
+        "kernel_1pct_loss": {
+          "result": "PASS_SCOPED_1PCT",
+          "echo": "512/512",
+          "observed_kernel_drops": 10,
+          "original_frozen_retransmissions": 120,
+          "authenticated_M2_acks": 1003,
+          "first_copied": 1024
+        }
+      },
+      "fixed": {
+        "result": "PASS_FUNCTIONAL_CI_OPEN_FOR_NETWORK_TEST",
+        "scope": "public original-Go V4 both actual TLS roles 64 real application UDP, authentic M2 FEC2 applied rev1, real Rust M4 TUN and Stop",
+        "marker": "M0_PLAN022_PUBLIC_V4_FEC_MODE_REAL_APP_M2_AND_STOP_PASS mode=fec-fixed same_binary=1 first_app=64",
+        "loss": "NOT_RUN",
+        "dynamic": "NOT_RUN"
+      },
+      "auto": {
+        "result": "PASS_FUNCTIONAL_CI_OPEN_FOR_NETWORK_TEST",
+        "scope": "public original-Go V4 both actual TLS roles 64 real application UDP, authentic INITIAL M2 Auto applied rev1, real Rust M4 TUN and Stop",
+        "marker": "M0_PLAN022_PUBLIC_V4_FEC_MODE_REAL_APP_M2_AND_STOP_PASS mode=fec-auto same_binary=1 first_app=64",
+        "loss": "NOT_RUN",
+        "second_revision": "NOT_RUN"
+      },
+      "game2": {
+        "result": "PASS_FUNCTIONAL_CI_OPEN_FOR_NETWORK_TEST",
+        "scope": "public original-Go V4 grouped 2 independent credential TLS authenticated lanes native M4 raw/TUN UDP first app after lane1 underlay blocked, no HOL and Stop",
+        "marker": "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "kernel_UDP_packets": "5/5",
+        "correlated_loss": "NOT_RUN"
+      },
+      "game4": {
+        "result": "PASS_FUNCTIONAL_CI_OPEN_FOR_NETWORK_TEST",
+        "scope": "public original-Go V4 grouped 4 independent credential TLS authenticated lanes native M4 raw/TUN UDP first app after lane1 underlay blocked, no HOL and Stop",
+        "marker": "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4",
+        "kernel_UDP_packets": "5/5",
+        "correlated_loss": "NOT_RUN"
+      }
+    },
+    "comprehensive_weak_network_matrix": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "linux_native_product": "OPEN_FOR_NETWORK_TEST_PER_CI_SCOPE"
+  },
+  "windows": {
+    "platform": "Windows Server 2022 x64 GitHub Actions",
+    "run_id": 39629082860,
+    "attempt": 1,
+    "job_id": 119322044262,
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": "m0-plan020-windows-native-os-receipt.yml",
+    "artifact_id": 12357084609,
+    "artifact_name": "m0-plan020-win-wal-39629082860-1",
+    "artifact_sha256": "6282ea21ce2ce2072e4afe91d0e27641d6a34910cda57441f5fa447a013ec480",
+    "artifact_size_bytes": 47209207,
+    "normal_off": "PASS_SCOPED_OPEN_FOR_NETWORK_TEST",
+    "marker": "M0_PLAN022_WINDOWS_V4_OFF_WIRED_FEC2_GAME_NOT_YET_WIRED_HONEST",
+    "actual_Go_credential_TLS_Rust_M3_signed_Wintun_kernel_UDP_both_directions": "PASS_SCOPED",
+    "native_IP_MTU_DNS_lease_WAL": "PASS_SCOPED",
+    "persistent_WFP_TESTNET": "PASS_SCOPED_FOREIGN_CAS_AND_EXACT_STOP",
+    "WinForms_portable_build": "PASS_SCOPED_TEST_CHILD_ONLY",
+    "full_host_global_WFP": "NOT_RUN",
+    "default_two_half_routes": "NOT_RUN",
+    "full_public_OS_GUI_Applied_Disconnect": "NOT_RUN",
+    "fixed": "EXPOSED_NOT_WIRED",
+    "auto": "EXPOSED_NOT_WIRED",
+    "game2": "EXPOSED_NOT_WIRED",
+    "game4": "EXPOSED_NOT_WIRED",
+    "definitive_source_blockers": [
+      "original Windows Go V4 bridge_v4_windows_private_owner.go rejects cfg.Policy.FECMode!=FECOff and cfg.Policy.DesiredLanes!=1",
+      "original Windows public m0_native_v4_windows.go hard selects FixedPolicyForClient(1,0) with DesiredLanes:1",
+      "native Rust crates/wbd-engine/src/v4_windows_owner.rs publicly exports Normal/off record seal/open but no Windows FEC2 Fixed/Auto or Game2/4 native data-plane ABI",
+      "real Windows WFP IPv6/DNS and both /1 host routing still require isolated full native source testing (not ordinary shared hosted-runner)"
+    ]
+  },
+  "governance": {
+    "run_id": 39629082854,
+    "attempt": 1,
+    "conclusion": "success",
+    "maintenance_run_id": 39629082889,
+    "maintenance_conclusion": "success"
+  },
+  "history": "Earlier PLAN018 public Game2/4 NEGATIVE was tied to an older compiled binary; this exact-source Linux public Game2/4 run is positive. Old FAIL and source-scoped receipts remain unmodified. No Windows FEC2/Game product claims borrowed from Linux.",
+  "next_task": "One complete Windows native FEC2 Fixed/Auto/Game2/Game4 original credential TLS→Rust M2/M3/M4 native C-ABI and public CLI/WinForms wiring package, with one Windows same-source real application positive and negative Actions matrix. This is genuine missing code, not a test-only flag. No fake Applied or broad host WFP/route mutation. After Windows is wired the actual network-condition matrix continues on opened modes."
+}
