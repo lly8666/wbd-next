@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "0036578ae3f220e6fe992c59e14426fa0724c9f3",
+  "result": "PASS_SCOPED_REAL_WINDOWS2022_SAME_SIGNED_WINTUN_TEMP_WFP_PERSISTENT_TESTNET_NATIVE_ROUTE_CAS_AND_REAL_UDP_APP_STALE_STOP_NOT_PRODUCT_APPLIED",
+  "test_run": {
+    "id": 39538443449,
+    "attempt": 1,
+    "job_id": 119020417075,
+    "conclusion": "success",
+    "artifact_id": 12317668919,
+    "artifact_name": "m0-plan020-native-udp-39538443449-1",
+    "sha256": "64586fd6b045dd7b0f9000fe7f5612439d34be19151c333814234764feca1861",
+    "workflow": ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml"
+  },
+  "source_inputs": {
+    "go_original": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "m4_frozen": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "wintun_signed": "0.14.1",
+    "official_signed_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "checks": [
+    {
+      "label": "Windows2022 actual created signed Wintun native GUID/LUID/ifindex/PnP with exclusive generation lease",
+      "result": "PASS"
+    },
+    {
+      "label": "real OS IP Helper creates DAD-preferred 198.18.20.77/32 on signed Wintun",
+      "result": "PASS"
+    },
+    {
+      "label": "test-only temporary Defender exact inbound UDP source 198.18.20.88 destination 198.18.20.77 and dynamic port, remove on exit",
+      "result": "PASS_TEST_ONLY_NO_GLOBAL_WFP"
+    },
+    {
+      "label": "same signed Wintun actual non-dynamic WFP native persistent TEST-NET-3:65530 ActionBlock after engine close, independent OS readback, forged owner condition denial, exact CAS cleanup",
+      "result": "PASS_SCOPED"
+    },
+    {
+      "label": "same Wintun real IP Helper TEST-NET-3 /32 onlink route exact kernel readback, foreign metric CAS deletion denied, owned route exact removal",
+      "result": "PASS_SCOPED_TESTNET_NOT_DEFAULT_ROUTE"
+    },
+    {
+      "label": "one real WintunSendPacket → Windows UDP socket full first payload, source address exact, stale kernel leases denied, repeated Stop",
+      "result": "PASS_SCOPED"
+    },
+    {
+      "label": "new native original Go TLS Rust authenticated ciphertext with same WFP/route/UDP job",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "real crash-durable WAL bound to same WFP+default-route/DNS/IPv6+MTU and authenticated Rust owner",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "WinForms actual requested/pending/applied/disconnect end-to-end",
+      "result": "NOT_RUN"
+    }
+  ],
+  "retained_prior": [
+    {
+      "run_id": 39524896364,
+      "source_sha": "5f481072a50e03796b40cde7758777a7ac7cce34",
+      "result": "FAIL_REAL_WINDOWS_SIGNED_WINTUN_UDP_TIMEOUT"
+    },
+    {
+      "run_id": 39536888877,
+      "source_sha": "6847fef558c7564f5f2800a37b72e23c652a065e",
+      "result": "PASS_SCOPED_REAL_WINTUN_UDP_TEMP_FIREWALL",
+      "artifact_id": 12318545777
+    },
+    {
+      "run_id": 39538116756,
+      "source_sha": "192dac66fb90c036d0a047c090595f51b60c7d9d",
+      "result": "PASS_SCOPED_REAL_NATIVE_SAME_WINTUN_PERSISTENT_WFP_TESTNET_PLUS_UDP",
+      "artifact_id": 12318388230
+    },
+    {
+      "run_id": 39537705334,
+      "source_sha": "bfa7de75b32cea0cde75a32354bbe784305df82f",
+      "result": "PASS_GOVERNANCE_MAINTENANCE_R0_REV3_CONTROLLED"
+    },
+    {
+      "run_id": 39433130093,
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "result": "PASS_SCOPED_LINUX_FOUR_MODES_SAME_BINARY_SOURCE"
+    },
+    {
+      "run_id": 39437722965,
+      "source_sha": "2b653e9caa4bc909e3ab837c2f15b9d7b859fb2d",
+      "result": "PASS_SCOPED_WIN_REAL_GO_CREDENTIAL_TLS_TO_RUST_OWNER_THREE_CIPHERS"
+    }
+  ],
+  "governance_same_source": {
+    "run_id": 39538443432,
+    "conclusion": "success"
+  },
+  "limits": {
+    "full_host_WFP_dns_ipv6": "NOT_RUN",
+    "default_route_capture_0slash1_128slash1": "NOT_RUN",
+    "real_authenticated_original_Go_TLS_Rust_kernel_udp_one_source": "NOT_RUN",
+    "full_Windows_native_wal_transaction": "NOT_RUN",
+    "WinForms_real_applied_disconnect": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "next_action": "Implement one authenticated owner-bound, source-locked Windows2022 full WFP persistent host guard + WAL/CAS default-route/DNS/IPv6/MTU and original-Go/Rust Wintun bidirectional UDP with WinForms readback Applied/Disconnect; only after native OS positive/negative exact-source evidence, never promote isolated TEST-NET pass."
+}
