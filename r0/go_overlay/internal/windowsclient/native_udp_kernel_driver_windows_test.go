@@ -242,6 +242,52 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
         t.Fatalf("foreign WFP deletion was not independently refused: %v",e)
     }
     t.Log("M0_PLAN020_SAME_NATIVE_WINTUN_WFP_PERSISTENT_TEST_NET_OWNED_CAS_PASS")
+    // Native IP Helper route exercised on the very same signed Wintun
+    // while its real WFP TEST-NET guard is persistent. This is ONE safe
+    // reserved destination /32, NEVER a host default, split /1 route, or
+    // synthetic in-memory route backend. Exact CAS denial must leave
+    // the OS entry untouched before owned Stop.
+    route:=NativeRouteKey{
+        Prefix:netip.MustParsePrefix("203.0.113.251/32"),
+        Interface:now.Index,NextHop:netip.MustParseAddr("0.0.0.0"),Metric:5,
+    }
+    backend:=N4WindowsRouteBackend{}
+    already,_,e:=backend.Lookup(ctx,route)
+    if e!=nil||already{
+        t.Fatalf("TEST-NET route preflight already owned/foreign: present=%v err=%v",already,e)
+    }
+    if e:=backend.CreateIfAbsent(ctx,route);e!=nil{
+        t.Fatalf("real Windows native IP Helper isolated Wintun route creation: %v",e)
+    }
+    routeOwned:=true
+    defer func(){
+        if !routeOwned{return}
+        cleanup,done:=context.WithTimeout(context.Background(),10*time.Second)
+        defer done()
+        if e:=backend.RemoveOwned(cleanup,route);e!=nil{
+            t.Errorf("native exact-owned TEST-NET route CAS cleanup failed: %v",e)
+        }
+    }()
+    has,exact,e:=backend.Lookup(ctx,route)
+    if e!=nil||!has||!exact{
+        t.Fatalf("real Windows IP Helper route OS readback missing/mismatch: %v %v %v",has,exact,e)
+    }
+    foreignRoute:=route
+    foreignRoute.Metric=route.Metric+1
+    if e:=backend.RemoveOwned(ctx,foreignRoute);!errors.Is(e,ErrN4ForeignRoute){
+        t.Fatalf("forged metric deleted original route: %v",e)
+    }
+    if has,exact,e=backend.Lookup(ctx,route);e!=nil||!has||!exact{
+        t.Fatalf("foreign route CAS changed genuine exact-owned Windows route: %v %v %v",has,exact,e)
+    }
+    if e:=backend.RemoveOwned(ctx,route);e!=nil{
+        t.Fatalf("real Windows route Stop/RemoveOwned after WFP readback: %v",e)
+    }
+    routeOwned=false
+    if has,_,e=backend.Lookup(ctx,route);e!=nil||has{
+        t.Fatalf("real Windows route removal did not verify absent: %v %v",has,e)
+    }
+    t.Log("M0_PLAN020_SAME_WINTUN_NATIVE_ROUTE_IP_HELPER_CAS_TEST_NET_PASS")
     app:=[]byte("M0-PLAN020-actual-Windows-IP-helper-kernel-udp-first-app")
     packet:=n4MakeKernelUDP([4]byte{198,18,20,88},[4]byte{198,18,20,77},
         41131,destPort,app)
@@ -276,6 +322,7 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
     receipt["actual_native_kernel_udp_app"]="PASS_SIGNED_WINTUN_KERNEL_COPY_TO_REAL_WINDOWS_UDP_SOCKET"
     receipt["native_test_only_firewall_rule"]="EXACT_UDP_SRC_DST_PORT_EPHEMERAL_ALLOW_REMOVED_ON_STOP_NOT_PRODUCT_WFP"
     receipt["native_same_wintun_persistent_WFP"]="PASS_REAL_EXACT_TEST_NET_RULE_FOREIGN_REJECTED_CAS_REMOVED_AFTER_SESSION_NOT_GLOBAL_CAPTURE"
+    receipt["native_same_wintun_IP_Helper_route"]="PASS_REAL_ONE_TEST_NET_32_OS_READBACK_FOREIGN_METRIC_DENIED_EXACT_CAS_DELETE_NO_DEFAULT_ROUTE"
     receipt["signed_adapter"]="PASS_CREATED_GUID_LUID_IFINDEX_PNP_PIN"
     receipt["native_stop"]="PASS_BOUNDED_NO_WAIT_STALE_DENIED"
     receipt["result"]="PASS_SCOPED_REAL_WIN_KERNEL_UDP_FIRST_APP_NO_CREDENTIAL_OWNER_CONNECTED"
