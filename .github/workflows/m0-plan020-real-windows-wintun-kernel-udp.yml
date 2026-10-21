@@ -47,6 +47,27 @@ jobs:
           assert subprocess.check_output(["git","-C","frozen-m4","rev-parse","HEAD"],text=True).strip()=="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
           m=json.loads((root/"frozen-m4/r0/go_overlay/assembly/manifest.json").read_text(encoding="utf-8"))
           assert m["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          # On Windows checkout converts CRLF for selected old-Go/M4 paths.
+          # Assemble only original byte-exact Git blobs, not normalized tree
+          # files, otherwise preflight correctly rejects a different blob.
+          import hashlib
+          def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
+          for item in m["operations"]:
+              if item["kind"]=="replace":
+                  raw=subprocess.check_output(["git","-C","legacy","show",
+                    "a7a82db31fe736ffedee330795a3234d358f1984:"+item["path"]])
+                  assert blob(raw)==item["original_blob"],item["path"]
+                  p=root/"legacy"/item["path"]
+                  assert p.is_file() and not p.is_symlink()
+                  p.write_bytes(raw)
+              overlay_path=item.get("overlay_path")
+              if overlay_path:
+                  raw=subprocess.check_output(["git","-C","frozen-m4","show",
+                    "b53b5dac422a634cdd82178a29071f9f9f0ae5e7:"+overlay_path])
+                  assert blob(raw)==item["result_blob"],overlay_path
+                  p=root/"frozen-m4"/overlay_path
+                  assert p.is_file() and not p.is_symlink()
+                  p.write_bytes(raw)
           print("M0_PLAN020_EXACT_ORIGINAL_GO_M4_OWNER_SOURCES_PINNED")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'source not immutable'}
