@@ -207,7 +207,8 @@ def audit():
             frozen_m4["role_id"]=="M4" and
             frozen_m4["branch"]=="work/m4-r1-platform" and
             frozen_m4["reservation_revision"]==2 and
-            frozen_m4["assignment_epoch"]==1 and frozen_m4["sequence"]==53,
+            frozen_m4["assignment_epoch"]==1 and
+            frozen_m4["sequence"]==0 and frozen_m4["checkpoint_sha"] is None,
             "M4 revoked/frozen Windows write ownership changed")
     gates = m["evidence_gates"]
     require({g["gate"] for g in gates} == set(EXPECTED_GATES) and len(gates)==len(EXPECTED_GATES),
