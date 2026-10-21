@@ -611,19 +611,19 @@
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "d78ae3fc17d1931ea86a09fd3d5af375d54e44f6"
+      "result_blob": "60bbe4992b537417d02f3a8b6afc99d3aef027ee"
     },
     {
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "1c8a21d82b197b8f09facf7e13382063e45aaea4"
+      "result_blob": "b081a32086ba152da675d1b781f23fcd6a08081d"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "9f85bf0efbbe89b8503ab164fb2d992c5258ff0d"
+      "result_blob": "3235254d846624653765beb408fbee25a38445be"
     },
     {
       "kind": "create",

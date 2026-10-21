@@ -304,3 +304,22 @@ func(s *V4WindowsAuthenticatedServerOwner) StopScopedOwner(ctx context.Context)e
     if s.device!=nil{return s.device.quiesceAndStopRustOnly(ctx)}
     return s.bridge.stopRustOwnerOnly()
 }
+
+// OriginalVerifiedTCPBoundaries exposes ONLY original FakeTCP Detach's
+// authenticated TCP seq/ACK starting fence for the packet transport.
+// It is not a cold key, a Rust handle or an OS network authorization.
+func(s *V4WindowsAuthenticatedClientOwner) OriginalVerifiedTCPBoundaries()(
+ sendNext,receiveNext uint32,err error,
+){
+ if s==nil||s.bridge==nil||s.device==nil||!s.bridge.committed||
+  s.bridge.stopped||s.bridge.tcpSendNext==0||
+  s.bridge.tcpRecvNext==0{
+  return 0,0,errV4WindowsOwner
+ }
+ state,e:=s.OriginalOwnerReadback()
+ if e!=nil||!state.OwnerActive||!state.DeviceBound||
+  state.DeviceQuiesced||state.ProductApplied{
+  return 0,0,errV4WindowsOwner
+ }
+ return s.bridge.tcpSendNext,s.bridge.tcpRecvNext,nil
+}

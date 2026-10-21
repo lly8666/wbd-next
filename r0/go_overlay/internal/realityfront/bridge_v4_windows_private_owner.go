@@ -27,6 +27,9 @@ type v4WindowsNativeOwnerBridge struct {
     handle uint64
     epoch [16]byte
     serverSide bool
+    // Frozen original-Go FakeTCP Detach receive/send NEXT boundaries.
+    // Only the verified credential TLS callback can populate these.
+    tcpRecvNext,tcpSendNext uint32
     committed,stopped bool
 }
 func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwnerBridge,error){
@@ -152,6 +155,8 @@ func (b *v4WindowsNativeOwnerBridge) prepareAuthenticatedClient(
         }
         return err
     }
+    b.tcpRecvNext=handoff.ReceiveNext
+    b.tcpSendNext=handoff.SendNext
     b.epoch=cold.Epoch()
     b.serverSide=false
     b.committed=true

@@ -182,3 +182,14 @@ func (d *N4OriginalKernelPacketLease) Stop(ctx context.Context)error{
     return nil
 }
 var _ syscall.Errno = errorNoMoreItems
+
+// Native Rust M3 transport is the sole current-generation owner of this
+// exported nonblocking ring API. Rust AEAD authenticity is NOT established
+// by these methods; the caller must first be the real original TLS owner
+// that received the lease from N4PrepareRealWindowsProduct.
+func(d *N4OriginalKernelPacketLease) ReceiveReadyIPv4(
+ ctx context.Context,dst []byte,
+)(int,error){return d.n4ReceiveReadyIPv4(ctx,dst)}
+func(d *N4OriginalKernelPacketLease) WriteAuthenticatedIPv4(
+ ctx context.Context,payload []byte,
+)(int,error){return d.n4DeliverAuthenticatedIPv4(ctx,payload)}

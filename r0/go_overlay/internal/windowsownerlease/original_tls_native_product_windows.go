@@ -20,6 +20,7 @@ import (
 // synthetic success, and drain all asynchronous outbound/receive loans
 // without releasing Rust/Wintun while native host WAL is still armed.
 type N4NativeAuthenticatedPeerTraffic interface {
+ BindNativeRing(context.Context,*windowsclient.N4OriginalKernelPacketLease,windowsclient.N4UnifiedIdentity)error
  VerifyPeerFirstAndReverse(context.Context,
   *realityfront.V4WindowsAuthenticatedClientOwner,
   *windowsclient.TUN,windowsclient.N4UnifiedIdentity)error
@@ -65,6 +66,14 @@ func(p *originalTLSLiveProductProof) VerifyOriginalNativeHold(
 func(p *originalTLSLiveProductProof) VerifyOriginalCredentialAndKernelOwner(
  ctx context.Context,id windowsclient.N4UnifiedIdentity,
 )error{return p.VerifyOriginalNativeHold(ctx,id)}
+func(p *originalTLSLiveProductProof) BindOriginalNativePacketRing(
+ ctx context.Context,id windowsclient.N4UnifiedIdentity,
+ ring *windowsclient.N4OriginalKernelPacketLease,
+)error{
+ if ring==nil{return ErrNativeDeviceNotOwned}
+ if err:=p.VerifyOriginalNativeHold(ctx,id);err!=nil{return err}
+ return p.packet.BindNativeRing(ctx,ring,id)
+}
 func(p *originalTLSLiveProductProof) VerifyBidirectionalAuthenticatedFirstDelivery(
  ctx context.Context,id windowsclient.N4UnifiedIdentity,
 )error{

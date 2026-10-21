@@ -55,6 +55,7 @@ func N4OriginalCurrentPinnedWintunIdentity(
 type N4NativeProductLiveOwner interface {
  N4OriginalAuthenticatedPacketProof
  VerifyOriginalNativeHold(context.Context,N4UnifiedIdentity) error
+ BindOriginalNativePacketRing(context.Context,N4UnifiedIdentity,*N4OriginalKernelPacketLease)error
  FinishOriginalNativeStop(context.Context,N4UnifiedIdentity) error
 }
 
@@ -93,6 +94,11 @@ func N4PrepareRealWindowsProduct(
  // the created ring lease is held until ALL native host changes are gone.
  kernel,err:=n4CreateOriginalKernelPacketLease(ctx,tun,id)
  if err!=nil{return nil,err}
+ // Give only the precise live M0 original TLS peer transport access to
+ // the one exclusive native ring; no dummy packet proof can bypass it.
+ if err=owner.BindOriginalNativePacketRing(ctx,id,kernel);err!=nil{
+  return nil,errors.Join(err,kernel.Stop(context.Background()))
+ }
  guard:=&n4WindowsPersistentWFPGuard{
   InstallationID:id.Installation,WintunLUID:id.WintunLUID,
   ExclusiveSingleWintun:true,
