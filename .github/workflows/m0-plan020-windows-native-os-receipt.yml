@@ -8,6 +8,7 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
@@ -124,6 +125,40 @@ jobs:
             if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
           } finally {Pop-Location}
           Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
+      - name: Assert source-locked public Windows V4 trial admission preserves real owner and OS receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import pathlib,sys
+          src=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+          for anchor in (
+            "runM0NativeV4Windows(o m0NativeV4Options)",
+            "realityfront.V4WindowsEstablishOriginalClientOwner(",
+            "windowsownerlease.PrepareOriginalTLSNativeProduct(",
+            "receipt,e:=product.Apply(ctx)",
+            "if !receipt.AllNativeOSApplied",
+            "observed,e:=product.LiveReceipt(ctx)",
+            "if e!=nil||!observed.AllNativeOSApplied",
+            "stopErr:=cleanup()",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+          ):
+              if anchor not in src: raise AssertionError("native owner/readback/Stop removed: "+anchor)
+          if "windowsclient.N4NativeNetworkReady(ctx)" in src:
+              # A frozen, universally-denying old product preflight cannot
+              # be on the opt-in V4 trial execution path.
+              if "if e=windowsclient.N4NativeNetworkReady(ctx)" in src:
+                  raise AssertionError("unconditional old Windows product gate still active")
+          controller=pathlib.Path("legacy/internal/windowsclient/native_product_activation_windows.go").read_text()
+          for anchor in ("c.txn.Apply(ctx)","c.txn.VerifyLiveOSApplied(ctx)",
+                         "c.proof.VerifyBidirectionalAuthenticatedFirstDelivery(ctx,id)",
+                         "c.proof.DrainCryptoAndKernelLoans(ctx,id)",
+                         "c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx)",
+                         "c.txn.VerifyLiveOSDisconnected(ctx)"):
+              if anchor not in controller: raise AssertionError("native product authority missing: "+anchor)
+          print("M0_PLAN021_WINDOWS_V4_TRIAL_ADMISSION_OWNER_WAL_CAS_LIVE_RECEIPT_SAME_SOURCE_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'public native V4 trial owner-readback source contract FAIL'}
       - name: Native Windows five-stage WAL readback and false Applied negatives
         shell: pwsh
         env:

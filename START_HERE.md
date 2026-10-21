@@ -22,3 +22,5 @@ CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action �
 **产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。
 
 说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。
+
+**2026-10-21 用户变更的功能开放门（PLAN021）**：对已接好且被**其精确 SOURCE 的 GitHub Actions 正向功能测试**覆盖的模式，允许进入 `OPEN_FOR_NETWORK_TEST` 并通过现有显式入口开展网络工况测试；不再先等物理机／所有场景／完整大矩阵。没有实现或只有负例/组件替身的模式标为 `EXPOSED_NOT_WIRED` 或 `NOT_RUN`，不能伪造 Applied。真实认证、WFP/路由 owned WAL、清理、generation、原生读回仍由运行时强制；测试开放不等于物理性能已达标或自动生产部署。见 [PLAN021](docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md)；早期日期的全局 OFF 描述须结合此决策与最新 Actions 读取。

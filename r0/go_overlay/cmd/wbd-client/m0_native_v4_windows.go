@@ -2,9 +2,9 @@
 package main
 
 // Real PUBLIC native Windows CLI protected FakeTCP/TLS original-Go Rust
-// V4 admission. This is the new mainline pre-OS stage; no test-only
-// server channels or fake Rust tokens. Production WFP remains fail-closed
-// until the same true owner is wired to live M3 peer data plane.
+// V4 admission. Explicit --native-v4-product opens a PLAN021 network
+// test-channel trial after exact-source Actions validation, not automatic
+// host activation or any fake Applied result.
 import(
  "context"
  "crypto/rand"
@@ -159,13 +159,14 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   defer c()
   return product.Stop(stop)
  }
- // A linked native entry is not a product qualification. Until isolated
- // OS WFP/default-route/DNS/MTU WAL + first-app/peer/recovery source gate
- // passes, THIS exact public path refuses host-global activation.
- // Never use a CLI flag or source-locked component build as a bypass.
- if e=windowsclient.N4NativeNetworkReady(ctx);e!=nil{
-  return errors.Join(e,cleanup())
- }
+ // PLAN021 explicit user authorization: exact-source GitHub Actions
+ // functional PASS admits opt-in --native-v4-product NETWORK TRIALS.
+ // The old frozen N4NativeNetworkReady is an unconditional V3 product
+ // barrier and cannot decide whether this V4 product's real per-session
+ // original TLS/Rust/Wintun/WFP/route WAL owner is valid. Do not call it.
+ // This is NOT an Applied grant: Apply/LiveReceipt/Stop remain the sole
+ // native generation/OS/crypto authorities, and an unsupported WFP, /1
+ // route, bad owner or failed packet remains a real error and retained WAL.
  receipt,e:=product.Apply(ctx)
  if e!=nil{return errors.Join(e,cleanup())}
  if !receipt.AllNativeOSApplied{return errors.Join(windowsclient.ErrN4NativeGuard,cleanup())}
