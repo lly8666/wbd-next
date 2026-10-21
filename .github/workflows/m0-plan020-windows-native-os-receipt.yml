@@ -21,6 +21,9 @@ jobs:
   original-go-native-wal:
     runs-on: windows-2022
     timeout-minutes: 28
+    env:
+      # Same verified aws-lc-sys 0.45 Windows MSVC strategy as original Rust native ABI CI.
+      AWS_LC_SYS_PREBUILT_NASM: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}

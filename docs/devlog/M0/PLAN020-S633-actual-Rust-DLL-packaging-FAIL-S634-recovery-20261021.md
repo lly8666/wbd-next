@@ -1,0 +1,5 @@
+# M0 S634 — Rust V4 portable build original FAIL, same-source AWS-LC NASM recovery
+
+S633 SOURCE `b6f5db02f03988f64ddec33c68df0e099bc807c8` Windows2022 Action39500491316 is **NOT** the correct run number. The actual original run is **39600491316/1**, job119223450592, **FAIL** at source-locked Rust 1.85.1 MSVC release DLL build before package, artifact12346082812 SHA256 33d73b15c98986adb6928e7559fa742ca7e3c9b7ac0500bb2bc45da54cd9e7fe. Exact primary error: aws-lc-sys 0.45.0 `NASM command not found! Build cannot continue.` Also a C stdalign probe failed with missing integer include on this hosted runner. Original separate m0-plan013 Windows Rust owner DLL workflow already source-proves AWS_LC_SYS_PREBUILT_NASM="1" to select non-FIPS prebuilt NASM objects on same pinned toolchain; do not fetch unpinned NASM or change Rust crypto. Apply identical job env and re-test exact SOURCE, retain S633 original FAIL.
+
+The new original-Go V4 WinForms trigger and source-receipt build are still not qualified until this new Actions run succeeds. Full live OS WFP/default /1 DNS IPv6 MTU WAL and original public V4 peer app remain NOT_RUN; Windows/FEC2/Game production OFF.
