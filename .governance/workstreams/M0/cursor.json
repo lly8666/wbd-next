@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 223,
-  "checkpoint_sha": "908398359d516f7c6b39ac182be0cf9995912609",
+  "sequence": 224,
+  "checkpoint_sha": "236d785b82540a537f66f2c3f8f837ecd140d45a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 Windows native product M0 sole owner: S579 real Rust M1 FrozenRecord/M3 AEAD+PN v3 Windows private normal/off record seal/open and replay/stale/Wintun generation-bound negatives; S580 ACTUAL original-Go credential TLS→same signed created Wintun live Hold→Rust v3 AEAD record seal PASS_SCOPED Windows2022 SOURCE f4d7b30 Action39546076149/1 artifact12321578130. This proves one genuine TLS-bound client sealing, NOT ciphertext transmitted on Windows kernel or peer decrypted, and NOT host-wide OS WAL/WinForms. FEC2/Game production OFF.",
-  "why_now": "H222 recovery CLEAN: checkpoint S577→H222 only cursor-only; no unfinished Actions. S578 external-action intent, S579 actual Rust native scoped ABI tests, S580 original-Go TLS/Wintun/Rust first protected record successfully native Actions; S581 exact SOURCE evidence, Governance39546642921 SUCCESS. G2 bootstrap inherited rev2 fixture expected mismatch FAIL39545775173 and S577 Governance39544137139 stale H221 refs FAIL remain in S581 historical receipts. Previous native S575 kernel real UDP PASS_SCOPED is separate SOURCE, not combined.",
-  "done_when": "Current native protected Rust record ABI and original Go credential TLS + same signed Wintun Hold scoped M3 seal achieved, source f4d7b30. Full PLAN020 remains incomplete: one Windows2022 SOURCE must prove original TLS-bound M1/M3 AEAD immutable ciphertext actually travels signed Wintun kernel and is authenticated by real opposite Rust owner with first/reverse application delivery, true persistent host-wide WFP/default-route/DNS/IPv6/MTU WAL CAS and Go CLI/WinForms Applied/Disconnect/Recover foreign/stale negatives. Windows product/physical/performance NOT_RUN until proven.",
-  "next_action": "Join original Go TLS-bound Rust v3 immutable ciphertext with the SAME signed Windows Wintun kernel driver, authenticated opposite Rust owner decode and first/reverse native app delivery; integrate durable host-wide WFP/default-route/DNS/IPv6/MTU WAL and original Go CLI/WinForms OS Applied/Disconnect under one Windows2022 exact-source positive+negative gate. No production ON until fully qualified.",
+  "current_task": "PLAN020 M0 single-owner Windows product. S582–S589 added source-locked original Go native five-stage WAL live OS readback VerifyLiveOSApplied/VerifyLiveOSDisconnected with guard+lease+MTU+DNS+routes all owned and foreign/stale/absent negatives, plus WinForms READY no false Applied. S588 source5fb00ca native Windows2022 original Go Go test and assembled GUI source assertion PASS_SCOPED Action39557024467/1 artifact12326405311. Frozen M4 donor and original 37-op manifest restored to exact blob; M0 extension manifest separate. Real host-global WFP, default /1 routes, DNS/IPv6/MTU OS Apply/Recover, actual WinForms Applied/Disconnect remain NOT_RUN. CLI N4NativeNetworkReady remains hard-denied. Production FEC2/Game OFF.",
+  "why_now": "H223 recovery CLEAN: checkpoint S581→H223 cursor-only; no in-progress old Actions. S582 intent; S583 code; S584 workflow config FAIL39555998587; S585 fix; S586 frozen donor mismatch FAIL39556113464 then restore; S587 source-file static check FAIL39556357188 (Go native stage test passed); S588 separate M0 manifest after frozen main manifest caused maintenance FAIL39556612680; latest same-source native PASS39557024467, main Governance39557024247 PASS, Maintenance39557024322 PASS. All original FAILs preserved in S589 source-qualified evidence. No host-wide capture installed on shared Windows Actions runner.",
+  "done_when": "This component done: real Windows2022 Go compilation and scoped five-stage native WAL live OS readback + failed-state false Applied/Disconnected assertions source5fb00ca. Parent PLAN020 NOT DONE until same source proves original Go credential TLS/Rust AEAD real first+reverse Wintun packet app, durable full host-WFP+two /1 default capture+DNS/IPv6/MTU own native WAL Apply/Stop/Recover with foreign/stale, CLI/WinForms real Applied/Disconnect, dedicated isolated host and safety. Windows product NOT_RUN, production FEC2/Game OFF.",
+  "next_action": "Wire the original Go TLS/Rust authenticated signed Wintun native packet driver to the live five-stage native WAL and true CLI/WinForms Applied/Disconnect, then qualify the host-wide persistent WFP and default /1, DNS/IPv6/MTU Apply/Stop/Recover on an isolated Windows2022 network with exact-source positive/foreign/stale/interrupt tests; remove current hard guard only after proof.",
   "unverified": true,
-  "last_tested_source": "f4d7b30f139e6a7406b2de8fc04cba023542b0cb",
+  "last_tested_source": "5fb00ca8d51153b81864a359b3f290f60cd334a6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-original-Go-TLS-bound-Windows-Rust-v3-AEAD-S580-20261021.json"
+    "docs/evidence/M0/PLAN020-Windows-live-native-five-stage-OS-WAL-S588-20261021.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H223 S578–S581: original Windows2022 pinned Go credential TLS→same signed Wintun Hold→Rust v3 M1/M3 AEAD normal/off seal PASS_SCOPED Action39546076149/1, job119044433384, artifact12321578130 SHA d5ad7be...; Rust owner v3 replay/tamper/foreign epoch/Stop native tests PASS in same action. Kernel ciphertext TX/peer authenticated first+reverse native app, OS global WFP/default route/DNS/IPv6/MTU WAL and Go/WinForms Applied/Disconnect NOT_RUN; prior S575 real native kernel UDP sample is separate SOURCE. G2 bootstrap old revision mismatch FAIL retained. Production FEC2/Game OFF."
+  "partial_summary": "M0 H224: S588 SOURCE5fb00ca8 Windows2022 native original Go five-stage WAL OS verification contract PASS_SCOPED with synthetic stage negative/Stop; GUI assembled source READY no longer implies Applied; artifact12326405311 sha39717dce..., exact M4 donor plus base manifest hash ebe2bea restored. Main Governance and Maintenance PASS. Prior workflow assembly/governance FAILs 39555998587/39556113464/39556357188/39556612680 preserved. Actual global WFP/default routes/DNS/IPv6/MTU native host, complete Rust kernel ciphertext and WinForms process Applied/Disconnect NOT_RUN; product not qualified."
 }
