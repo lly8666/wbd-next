@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 231,
-  "checkpoint_sha": "494ea8d2f2bc1924a7e3a2d69d16276003309f43",
+  "sequence": 232,
+  "checkpoint_sha": "4d4f66f2a09bca473c704a7f81e8ecc0c440814c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0 Windows mainline V4. User asked to enable startup gates and finish Rust DLL/V4 exe. S631 intent→S632 original WinForms launches tagged V4 Go and accepts only real OS Applied/Stop receipt→S633 Rust 1.85.1 MSVC M3 DLL packaging→S634 AWS-LC NASM fix→S635 official signed Wintun ZIP SHA256 + Authenticode portable→S636 WinForms PE size rule fix. SOURCE249b7af Windows2022 Action39601695842/1 ALL PASS_SCOPED, genuine four-file Windows portable WBD.exe, V4 tagged wbd-client.exe, wbd_engine.dll M1/M3 exported, signed wintun.dll, artifact12347060387. Exact evidence S637–S638, Governance39601695901 PASS, maintenance39601695861 PASS. Global OS WFP/default route/DNS IPv6 MTU positive/negative not run; production Windows/FEC2/Game OFF.",
-  "why_now": "H230 checkpoint S629 partial and rev3 epoch1. User wanted missing native binaries packaged, startup path on, test/fix. Real original Windows2022 Rust release build first FAIL Action39600491316 NASM missing. Original verified native Rust AWS_LC_SYS_PREBUILT_NASM=1 fixed it; Actions39601037715 and39601240806 built DLL, WinForms and V4 but FAIL receipt >100KiB WinForms check. S636 Action39601695842 PASS same-source packaged genuine signed Wintun/V4 Go/Rust DLL/WinForms with hashes and test-only GUI negative; all original FAILs retained. No verified isolated OS-host or real public OS/WAL full product proof, no unsafe default enable.",
-  "done_when": "All four real Windows portable binaries now source-locked bundled and Windows2022 build PASS_SCOPED. Parent PLAN020 still requires packaged original public GUI→Go V4 credential TLS/Rust M3 actual remote peer→signed Wintun app first+reverse under full global native WFP two /1 default/underlay DNS IPv6 MTU durable WAL Apply/Recover/Stop on verified isolated Windows with foreign/stale/crash negatives, no fake READY. ONLY then Windows ON; FEC2/Game separate source gate OFF; physical/perf NOT_RUN.",
-  "next_action": "Use released GitHub Actions artifact12347060387 on verified isolated native Windows host for one actual full OS WFP /1 routes DNS IPv6 MTU WAL + original public V4 TLS/Rust M3 first+reverse and GUI Applied/Disconnect + crash/foreign/stale Stop/Recover; debug exact errors then authorize product ON only on same-source pass. Do not repeat separate packet edge tests.",
+  "current_task": "PLAN020 M0 Windows production. Per user, tested real original credential TLS Rust M3 signed Wintun kernel UDP actual app first+reverse AND native OS IP/MTU/DNS WAL Apply→Recover→Stop SAME SOURCE S641 Windows2022 Action39604806420: both PASS_SCOPED. Real TerminateProcess WAL crash failed strict release: pinned original Wintun PnP devnode GONE_13, Windows IPv4/IPv6 interface row 1168, DNS only CAS cleared; MTU/lease/guard WAL retained. Production WFP Arm and CLI N4NativeNetworkReady still unconditional deny; global WFP/two /1/underlay/default/real WinForms NOT_RUN. Windows/FEC2/Game OFF.",
+  "why_now": "H231 release artifact V4 Go Rust signed Wintun WinForms passed build; user explicitly requested real Actions run as release. S639 intent, S640 malformed workflow Action39604486921 FAIL, S641 repaired and ran native Windows2022 Action39604806420 FAIL after real scoped TLS/Rust signed kernel two way PASS and native lease MTU DNS WAL Apply/Recover PASS; real child crash native OS 1168 UNSUPPORTED and strict CI fails. S642 safe terminal ghost recovery intent only, NOT_IMPLEMENTED. S643 exact source/run/artifact/log evidence, historical FAIL preserved. No verified isolated host-global WFP/route/GUI gate.",
+  "done_when": "Done only when same source original public packaged V4 WinForms→Go credential TLS Rust M3 peer/Wintun live app↔same host global owned persistent WFP two /1 default underlay DNS IPv6 MTU WAL Apply, crash/stale/foreign owned CAS clean recovery, real GUI Applied/Disconnect PASS on verified isolated native Windows with no remaining OS mutations. S641 peer and three native stages scoped PASS; crash full recovery FAIL; global WFP/routes NOT_RUN. No Windows/FEC2/Game ON.",
+  "next_action": "Fix pinned Wintun PnP ghost device-gone original crash terminal WAL cleanup, with proven no original IPv4/IPv6 row/full unicast/exact lease, real persistent guard exact CAS and no capture routes; never infer MTU restored from 1168. Then test actual host WFP persistent sublayer, two /1 routes, underlay/DNS/IPv6/MTU WAL + packaged original public CLI GUI positive/negative on verified isolated Windows Actions runner. Only release on same-source PASS.",
   "unverified": true,
-  "last_tested_source": "249b7af42fdcc84d6e064ada36a2b7ec331c12d3",
+  "last_tested_source": "4311f2127568f6faedc0ba74410f558b9fe905ac",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json"
+    "docs/evidence/M0/PLAN020-same-SOURCE-original-TLS-Rust-native-Wintun-IP-MTU-DNS-WAL-real-child-crash-S641-20261021.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H231: official signed Wintun0.14.1 and Rust 1.85.1 M1/M3 wbd_engine.dll + tagged original Go V4 wbd-client.exe + original WinForms WBD.exe same-SOURCE artifact12347060387 SHA 4a36b3ce... Windows2022 S636 Action39601695842 PASS_SCOPED. GUI V4 launch and actual OS_APPLIED + STOP receipts wired. Old S633 NASM FAIL39600491316; S634/S635 WinForms receipt size FAIL39601037715/39601240806 kept in evidence. Full host OS product NOT_RUN, native guard still OFF. Windows/FEC2/Game OFF."
+  "partial_summary": "H232: S641 SOURCE4311f212 Windows2022 Action39604806420/1 artifact12347527857 SHA e9f48648... real original-Go credential TLS Rust M3 peer encrypted signed Wintun kernel UDP first+reverse PASS_SCOPED and real native Wintun lease/MTU/DNS WAL Apply/Recover/Stop PASS_SCOPED. Child TerminateProcess real crash recovery FAIL: exact original PnP GONE_13, IPv4+IPv6 interface row MISSING_1168, native DNS partial CAS PASS, MTU/lease/guard WAL retained. Full global WFP persistent Arm+default /1 routes not run, original public V4 WinForms host Applied/Disconnect NOT_RUN. FEC2/Game/Windows OFF. S640 workflow YAML FAIL also preserved, S643 evidence."
 }
