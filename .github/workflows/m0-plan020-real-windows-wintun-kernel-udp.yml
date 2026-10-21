@@ -1,0 +1,135 @@
+name: M0 PLAN020 real native signed Wintun Windows kernel UDP app
+run-name: "M0|PLAN020-WINDOWS-REAL-KERNEL-UDP|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml"
+      - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go"
+      - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-plan020-win-udp-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  actual-wintun-kernel-udp-and-stale-stop:
+    runs-on: windows-2022
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: b53b5dac422a634cdd82178a29071f9f9f0ae5e7
+          path: frozen-m4
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Verify exact original old Go and M4 manifests, assemble same signed native product
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -Force -ItemType Directory -Path result,win-native | Out-Null
+          @'
+          import pathlib,os,json,subprocess
+          root=pathlib.Path.cwd()
+          assert subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==os.environ["GITHUB_SHA"]
+          assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert subprocess.check_output(["git","-C","frozen-m4","rev-parse","HEAD"],text=True).strip()=="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
+          m=json.loads((root/"frozen-m4/r0/go_overlay/assembly/manifest.json").read_text())
+          assert m["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          print("M0_PLAN020_EXACT_ORIGINAL_GO_M4_OWNER_SOURCES_PINNED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'source not immutable'}
+          & python frozen-m4/r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root frozen-m4 --manifest frozen-m4/r0/go_overlay/assembly/manifest.json --receipt result/assembly.json
+          if ($LASTEXITCODE -ne 0) {throw 'frozen legacy Windows native assembly not qualified'}
+          @'
+          import os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          destination=root/"legacy/internal/windowsclient"
+          for name in ("native_udp_kernel_driver_windows.go","native_udp_kernel_driver_windows_test.go"):
+              src="r0/go_overlay/internal/windowsclient/"+name
+              contents=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+src])
+              assert not (destination/name).exists(),"same-file M4 owner conflict"
+              (destination/name).write_bytes(contents)
+          print("M0_PLAN020_NATIVE_KERNEL_UDP_SOURCE_LOCKED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'M0 single writer source injection failed'}
+      - name: Verify original signed official Wintun x64 driver and compile actual Go native kernel test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $zip='win-native/wintun.zip'
+          Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $zip
+          $got=(Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
+          if ($got -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51') {
+            throw "original Wintun signed ZIP checksum mismatch: $got"
+          }
+          Expand-Archive -LiteralPath $zip -DestinationPath win-native/official -Force
+          $src='win-native/official/wintun/bin/amd64/wintun.dll'
+          $sig=Get-AuthenticodeSignature -FilePath $src
+          if ($sig.Status -ne 'Valid') {throw "Wintun signature not trusted: $($sig.Status)"}
+          Copy-Item -LiteralPath $src -Destination win-native/wintun.dll
+          Push-Location legacy
+          try {
+            & go test -c -o ../win-native/n4-real-udp-native.exe ./internal/windowsclient
+            if ($LASTEXITCODE -ne 0) {throw 'real original Go Windows native Wintun UDP test compile failed'}
+          } finally {Pop-Location}
+          Write-Output "M0_PLAN020_SIGNED_WIN_KERNEL_DRIVER_COMPILATION_PASS"
+      - name: Actual Windows kernel UDP application first delivery and guarded lease Stop
+        shell: pwsh
+        env:
+          WBD_M0_PLAN020_REAL_WINTUN_UDP: "1"
+          WBD_M0_PLAN020_UDP_REPORT: ${{ github.workspace }}\result\native-udp.json
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./win-native/n4-real-udp-native.exe '-test.v=true' '-test.timeout=4m' '-test.run=^TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop$' 2>&1 | Tee-Object -FilePath result/native-udp.log
+          if ($LASTEXITCODE -ne 0) {throw 'real Windows signed Wintun UDP app and stale Stop FAIL'}
+          $log=Get-Content result/native-udp.log -Raw
+          if ($log -notmatch 'M0_PLAN020_REAL_SIGNED_WINTUN_TO_ACTUAL_WINDOWS_UDP_APPLICATION_PASS') {
+            if ($log -match 'UNSUPPORTED_SIGNED_WINTUN_OR_ADMIN') {throw 'UNSUPPORTED_DRIVER_OR_ADMIN; real native kernel UDP NOT_RUN'}
+            throw 'real kernel UDP first-app did not qualify'
+          }
+          @'
+          import json,pathlib,os
+          p=pathlib.Path("result/native-udp.json")
+          r=json.loads(p.read_text())
+          assert r["source_sha"]==os.environ["GITHUB_SHA"]
+          assert r["result"]=="PASS_SCOPED_REAL_WIN_KERNEL_UDP_FIRST_APP_NO_CREDENTIAL_OWNER_CONNECTED"
+          assert r["wfp"]=="TEST_ONLY_FAKE_GUARD_NO_GLOBAL_WFP"
+          print("M0_PLAN020_REAL_SIGNED_WINTUN_UDP_KERNEL_SOCKET_COPY_PASS_SCOPED_NOT_PUBLIC_PRODUCT")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'OS kernel app receipt not consistent with real sample'}
+      - name: Immutable Windows real kernel first-app source and result including FAIL
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -Force -ItemType Directory -Path result | Out-Null
+          @'
+          import os,pathlib,json
+          p=pathlib.Path("result")
+          x=dict(schema_version=1,source_sha=os.environ["GITHUB_SHA"],
+                 run_id=int(os.environ["GITHUB_RUN_ID"]),attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
+                 original_go_sha="a7a82db31fe736ffedee330795a3234d358f1984",
+                 m4_frozen_sha="b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+                 signed_wintun_zip_sha256="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+                 native_udp_log_exists=(p/"native-udp.log").is_file(),
+                 native_udp_receipt_exists=(p/"native-udp.json").is_file(),
+                 windows_product_Connected="NOT_RUN",global_WFP="NOT_RUN",
+                 default_route="NOT_RUN",full_WinForms="NOT_RUN",production_FEC2="OFF",production_Game="OFF")
+          (p/"source.json").write_text(json.dumps(x,indent=2)+"\n")
+          '@ | python -
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan020-native-udp-${{ github.run_id }}-${{ github.run_attempt }}
+          path: result/
+          retention-days: 30
