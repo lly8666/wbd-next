@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "fd5e1e4b6d7ad44195b82548c420d61aa1dfea73",
+  "result": "PASS_SCOPED_REAL_ORIGINAL_GO_PUBLIC_V4_RUST_M3_SIGNED_WINTUN_TO_NATIVE_WAL_COMPILED_NOT_LIVE_OS_APPLIED",
+  "native_windows2022": {
+    "run_id": 39597711102,
+    "attempt": 1,
+    "job_id": 119214064100,
+    "conclusion": "success",
+    "artifact_id": 12344164669,
+    "artifact_name": "m0-plan020-win-wal-39597711102-1",
+    "artifact_sha256": "d76e5cd46df5617ac5f6f6b9819d0cce53ded874c0924852c8598af6113c01f3"
+  },
+  "same_source_governance": {
+    "run_id": 39597711017,
+    "conclusion": "success"
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "runner": "windows-2022",
+    "go": "1.23.12"
+  },
+  "passed_build_markers": [
+    "M0_PLAN020_ORIGINAL_TLS_RUST_TO_NATIVE_HOST_WAL_BUNDLE_EXACT_SAME_SOURCE",
+    "M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS",
+    "--- PASS: TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop (0.22s)",
+    "--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks (0.16s)",
+    "M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256=231d898984609c6f95d539395ce5d151580f114a6f081961a162373ac3e35742",
+    "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+  ],
+  "new_mainline_code": {
+    "V4_auth": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "live_original_M3_transport": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "original_TLS_TCP_ack_pin": "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go",
+    "original_Wintun_signed_kernel": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
+    "original_native_OS_WAL_product": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+    "typed_original_TLS_product_bridge": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go"
+  },
+  "implemented_in_native_Go_build": [
+    "Public opt-in CLI real original-Go Npcap FakeTCP credential TLS -> Rust V4 native owner rather than V3 fallback",
+    "Original Go verified TCP Detach TX/RX seq and ACK boundaries preserved into actual original Rust M3 peer transport",
+    "Real native signed Wintun IPv4 nonblocking kernel receive -> original Rust M3 seal -> physical Npcap TCP, and independently received Npcap peer M3 -> Rust authenticated open -> Wintun kernel send",
+    "Typed same original Rust owner signed Wintun PnP+exclusive kernel ring -> five-stage persistent WFP/default-route/DNS/MTU WAL Apply/LiveReceipt/Stop, ordered drain",
+    "Original CLI V4 stops BEFORE global host OS policy mutation at original N4NativeNetworkReady unless real complete host product is qualified"
+  ],
+  "not_run": {
+    "full_original_public_CLI_end_to_end_peer_on_native_Wintun": "NOT_RUN",
+    "actual_live_host_global_WFP_split_default_routes_underlay_DNS_IPv6_MTU_WAL": "NOT_RUN",
+    "negative_foreign_stale_crash_recovery_on_isolated_Windows": "NOT_RUN",
+    "original_WinForms_real_V4_Applied_Disconnect": "NOT_RUN",
+    "WinForms_bundle_with_matching_Rust_DLL": "NOT_DONE",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "prior_exact_source": {
+    "source_sha": "92625bd76e28802a00bde2d33adb8f4137262379",
+    "run_id": 39589148814,
+    "conclusion": "success",
+    "scope": "real signed Wintun kernel UDP with original TLS dual Rust authenticated M3 peer first+reverse SCOPED, not public OS"
+  },
+  "production": {
+    "Windows": "OFF",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "next_action": "Package exact Rust DLL and V4-tagged CLI in WinForms, bind exclusively true OS Applied and native Stop receipts, run one real isolated Windows whole host-global WFP /1 DNS IPv6 MTU WAL + original public CLI peer first/reverse positive/negative; turn ON only on full source-locked pass."
+}
