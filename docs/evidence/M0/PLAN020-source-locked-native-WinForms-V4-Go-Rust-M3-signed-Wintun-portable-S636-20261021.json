@@ -104,7 +104,7 @@
   ],
   "same_source_native_governance": {
     "run_id": 39601695901,
-    "conclusion": "check_run_conclusion_before_final"
+    "conclusion": "success"
   },
   "safety_gate": {
     "V4_GUI_start_choice": "SOURCE_WIRED",
@@ -115,5 +115,9 @@
     "Game4": "OFF",
     "reason": "Original public native Go N4NativeNetworkReady still deliberately requires unverified fully isolated Windows host OS+peer positive/negative and fails closed on common shared Windows runner."
   },
-  "one_next_action": "On a verified isolated Windows host, exercise actual packaged WBD.exe → original Go V4 credential TLS → Rust M1/M3 → signed Wintun native first app+reverse → real persistent WFP /1 default+underlay route DNS IPv6 MTU OS WAL Apply/Stop/Recover; independently prove crash+foreign negatives and verify no host mutation remains. Only same-source PASS may enable production OS global gate; FEC2/Game independently gated."
+  "one_next_action": "On a verified isolated Windows host, exercise actual packaged WBD.exe → original Go V4 credential TLS → Rust M1/M3 → signed Wintun native first app+reverse → real persistent WFP /1 default+underlay route DNS IPv6 MTU OS WAL Apply/Stop/Recover; independently prove crash+foreign negatives and verify no host mutation remains. Only same-source PASS may enable production OS global gate; FEC2/Game independently gated.",
+  "same_source_maintenance": {
+    "run_id": 39601695861,
+    "conclusion": "success"
+  }
 }
