@@ -98,10 +98,13 @@ func (d *N4OriginalKernelPacketLease) n4DeliverAuthenticatedIPv4(
     d.copied++
     return n,nil
 }
-// n4ReceiveReadyIPv4 reads exactly ONE already available native Windows
-// Wintun ring packet. No WaitForMultipleObjects(INFINITE), no blocking
-// mutex across idle kernel poll, no empty queue busy-loop. Upper actor is
-// responsible for validating its source and handing to actual Rust M3 AEAD.
+// n4ReceiveReadyIPv4 returns at most ONE IPv4 packet from the true
+// Wintun receive ring, without waiting on an idle queue. Windows may emit
+// unsolicited IPv6 control frames immediately after a signed adapter is
+// created, even when this product has not enabled IPv6. The pinned original
+// Go TUN ReadPacket already discards non-IPv4 frames. Mirror that behavior
+// here, but with a strict eight-frame work limit to avoid an idle CPU loop,
+// cross-lane HOL or holding kernel ring loans across future polls.
 func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
     ctx context.Context,dst []byte,
 )(int,error){
@@ -111,27 +114,46 @@ func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
     if len(dst)==0{return 0,io.ErrShortBuffer}
     if !d.tun.beginCall(){return 0,ErrN4NativeGuard}
     defer d.tun.endCall()
-    var packetSize uint32
-    packet,_,callErr:=wintunReceivePacket.Call(
-        d.tun.session,uintptr(unsafe.Pointer(&packetSize)),
-    )
-    if packet==0{
-        if wintunErrno(callErr)==errorNoMoreItems{return 0,ErrN4NativeNoPacket}
-        if wintunErrno(callErr)==errorHandleEOF{return 0,io.EOF}
-        d.rejected++
-        return 0,wintunCallError("WintunReceivePacket",callErr,nil)
+    const maxNativeRingFramesPerPoll=8
+    for scanned:=0;scanned<maxNativeRingFramesPerPoll;scanned++{
+        // No pointer from an earlier frame may remain outstanding while
+        // asking Wintun for another. No deferred per-frame release.
+        var packetSize uint32
+        packet,_,callErr:=wintunReceivePacket.Call(
+            d.tun.session,uintptr(unsafe.Pointer(&packetSize)),
+        )
+        if packet==0{
+            if wintunErrno(callErr)==errorNoMoreItems{return 0,ErrN4NativeNoPacket}
+            if wintunErrno(callErr)==errorHandleEOF{return 0,io.EOF}
+            d.rejected++
+            return 0,wintunCallError("WintunReceivePacket",callErr,nil)
+        }
+        wire:=unsafe.Slice((*byte)(unsafe.Pointer(packet)),int(packetSize))
+        // Unrelated IPv6/control packets must be consumed from the real
+        // native ring but never delivered into the IPv4-only Rust owner.
+        if packetSize>=1 && wire[0]>>4!=4{
+            wintunReleaseReceivePacket.Call(d.tun.session,packet)
+            d.rejected++
+            continue
+        }
+        if packetSize<20 || !isIPv4Packet(wire){
+            wintunReleaseReceivePacket.Call(d.tun.session,packet)
+            d.rejected++
+            return 0,ErrInvalidBinding
+        }
+        if packetSize>uint32(len(dst)){
+            wintunReleaseReceivePacket.Call(d.tun.session,packet)
+            d.rejected++
+            return 0,io.ErrShortBuffer
+        }
+        n:=copy(dst,wire)
+        wintunReleaseReceivePacket.Call(d.tun.session,packet)
+        d.received++
+        return n,nil
     }
-    defer wintunReleaseReceivePacket.Call(d.tun.session,packet)
-    if packetSize>uint32(len(dst)) || packetSize<20{
-        d.rejected++;return 0,io.ErrShortBuffer
-    }
-    wire:=unsafe.Slice((*byte)(unsafe.Pointer(packet)),int(packetSize))
-    if !isIPv4Packet(wire){
-        d.rejected++;return 0,ErrInvalidBinding
-    }
-    n:=copy(dst,wire)
-    d.received++
-    return n,nil
+    // More than eight unrelated frames do not monopolize the caller.
+    // A later explicit poll can still receive the queued real IPv4 packet.
+    return 0,ErrN4NativeNoPacket
 }
 func (d *N4OriginalKernelPacketLease) Counts()(N4RealKernelPacketCounts,error){
     if d==nil{return N4RealKernelPacketCounts{},ErrN4NativeGuard}

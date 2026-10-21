@@ -387,7 +387,7 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
         t.Fatalf("stale generation read real kernel: %v",err)
     }
     counts,err:=driver.Counts()
-    if err!=nil||!counts.Stopped||counts.KernelCopied!=1||counts.KernelReceived<1||counts.Rejected!=1{
+    if err!=nil||!counts.Stopped||counts.KernelCopied!=1||counts.KernelReceived<1||counts.Rejected<1{
         t.Fatalf("inaccurate actual native kernel counters %+v %v",counts,err)
     }
     receipt["actual_native_kernel_udp_app"]="PASS_SIGNED_WINTUN_KERNEL_COPY_TO_REAL_WINDOWS_UDP_SOCKET"
