@@ -17,6 +17,7 @@ on:
       - "r0/go_overlay/internal/windowsownerlease/original_go_tls_join_windows_test.go"
       - "r0/go_overlay/internal/windowsownerlease/scoped_original_tls_native_wintun_windows.go"
       - "docs/devlog/M0/PLAN020-S598-exact-parallel-Windows-action-trigger-20261021.md"
+      - "docs/devlog/M0/PLAN020-S615-true-TLS-Rust-M3-native-kernel-parallel-Actions-trigger-20261021.md"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

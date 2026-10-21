@@ -8,6 +8,7 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go"
       - "docs/devlog/M0/PLAN020-S598-exact-parallel-Windows-action-trigger-20261021.md"
+      - "docs/devlog/M0/PLAN020-S615-true-TLS-Rust-M3-native-kernel-parallel-Actions-trigger-20261021.md"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
