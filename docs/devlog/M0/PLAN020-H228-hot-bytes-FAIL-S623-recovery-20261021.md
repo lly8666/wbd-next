@@ -1,0 +1,5 @@
+# M0 S623 — preserve H228 Governance hot-read FAIL and compact H229 cursor
+
+H228 SOURCE `f92b28f85bca32dc579daa0a57e0f89290426a17` Governance39593235316/1 job119199137271 **FAIL**, raw artifact12341194742 SHA256 4c0a932576501d807952f54da0183e095e33afb75b6694b63de0ddd05ce989da: `structure.json` state BLOCKED reason **combined hot byte budget exceeded: 32982**; role identity/ownership SUCCESS. No invalid source/evidence, no product test regression. This was caused by verbose M0 cursor's `current_task`, `why_now`, `done_when`, `partial_summary`; exact source-qualified facts remain in S622 evidence `docs/evidence/M0/PLAN020-original-TLS-Rust-Wintun-to-native-WAL-core-cross-package-S621-20261021.json`, S616 intent and Git history.
+
+S623 intent: compact ONLY cursor narrative strings at H229, retain seq checkpoint progression, active task epoch, last-tested exact S621 SOURCE and solely matching S622 evidence. H229 cursor-only commit afterward, no additional tests or worker edits. No host-global WFP or CLI ON. Earlier S617/S618/S620 native-assembly Actions FAIL retained alongside accepted S621 Windows native Go cross-package core build PASS.
