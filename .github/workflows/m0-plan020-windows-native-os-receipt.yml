@@ -8,6 +8,7 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
+      - ".github/workflows/m0-plan012-combined-functional.yml" # PLAN022 one identical SOURCE cross-OS functional batch
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
@@ -149,6 +150,14 @@ jobs:
               # be on the opt-in V4 trial execution path.
               if "if e=windowsclient.N4NativeNetworkReady(ctx)" in src:
                   raise AssertionError("unconditional old Windows product gate still active")
+          # PLAN022: assert that Windows public V4 is actually restricted to
+          # one authenticated Normal/off lane until a native Windows
+          # FEC2/Game owner has been wired and positively tested.
+          # Do not turn CLI parser acceptance into a fake runtime success.
+          assert 'realityfront.FixedPolicyForClient(1,0)' in src
+          assert 'DesiredLanes:1' in src
+          assert 'product.Apply(ctx)' in src
+          print("M0_PLAN022_WINDOWS_V4_OFF_WIRED_FEC2_GAME_NOT_YET_WIRED_HONEST")
           controller=pathlib.Path("legacy/internal/windowsclient/native_product_activation_windows.go").read_text()
           for anchor in ("c.txn.Apply(ctx)","c.txn.VerifyLiveOSApplied(ctx)",
                          "c.proof.VerifyBidirectionalAuthenticatedFirstDelivery(ctx,id)",
