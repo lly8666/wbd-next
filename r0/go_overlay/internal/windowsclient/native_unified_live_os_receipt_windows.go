@@ -84,6 +84,15 @@ func (n *N4NativeUnifiedTxn) VerifyLiveOSDisconnected(ctx context.Context)error{
   receipt,err:=s.Snapshot(ctx,n.Identity)
   if err!=nil{return err}
   if len(receipt)==0||!json.Valid(receipt){return ErrN4NativeGuard}
+  // A readable current baseline is not evidence that Stop removed the
+  // owned OS setting. In particular, native DNS Snapshot can succeed
+  // even while a static NameServer remains. Independently re-read the
+  // exact stage with that fresh baseline and require actual absence.
+  // This read is still generation-fenced and never mutates the host.
+  observed,err:=s.Inspect(ctx,n.Identity,receipt)
+  if err!=nil{return err}
+  if observed==N4UnifiedForeign{return ErrN4ForeignRoute}
+  if observed!=N4UnifiedAbsent{return ErrN4NativeGuard}
  }
  return ctx.Err()
 }

@@ -4,6 +4,7 @@ package windowsclient
 import (
  "context"
  "errors"
+ "encoding/json"
  "os"
  "testing"
 )
@@ -52,5 +53,37 @@ func TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks(t *testing.T){
  }
  if err:=tx.VerifyLiveOSDisconnected(ctx);!errors.Is(err,ErrN4NativeGuard){
   t.Fatalf("assembly-only Disconnected bypass: %v",err)
+ }
+}
+
+ // The original DNS stage can return a valid post-Stop snapshot even when
+ // a static setting remains. Simulate that independent read-only behavior:
+ // Snapshot succeeds; only Inspect can reject the surviving OS state.
+type n4M0PermissiveDisconnectedSnapshot struct{ *n4UnifiedTestStage }
+func(s *n4M0PermissiveDisconnectedSnapshot) Snapshot(_ context.Context,_ N4UnifiedIdentity)(json.RawMessage,error){
+ return json.RawMessage(`{"post_stop_readable":true}`),nil
+}
+func TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback(t *testing.T){
+ ctx:=context.Background()
+ tx,st,_,_:=n4UnifiedTestTxn(t)
+ tx.Stages[3]=&n4M0PermissiveDisconnectedSnapshot{st[3]}
+ if err:=tx.VerifyLiveOSDisconnected(ctx);err!=nil{
+  t.Fatalf("clean native OS state rejected: %v",err)
+ }
+ st[3].state=N4UnifiedOwned
+ if err:=tx.VerifyLiveOSDisconnected(ctx);!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("orphan static DNS with readable Snapshot falsely disconnected: %v",err)
+ }
+ st[3].state=N4UnifiedPartial
+ if err:=tx.VerifyLiveOSDisconnected(ctx);!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("partial native OS state falsely disconnected: %v",err)
+ }
+ st[3].state=N4UnifiedForeign
+ if err:=tx.VerifyLiveOSDisconnected(ctx);!errors.Is(err,ErrN4ForeignRoute){
+  t.Fatalf("foreign native OS state falsely disconnected: %v",err)
+ }
+ st[3].state=N4UnifiedAbsent
+ if err:=tx.VerifyLiveOSDisconnected(ctx);err!=nil{
+  t.Fatalf("native OS state not clean after regression reset: %v",err)
  }
 }
