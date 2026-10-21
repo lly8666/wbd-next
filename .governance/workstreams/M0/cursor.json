@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 229,
-  "checkpoint_sha": "8ebea16195949257483fb91f7aa29e0d07bd7006",
+  "sequence": 230,
+  "checkpoint_sha": "8988a4fb0d82ad29dee6819c06ad7217aa02dbce",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0 Windows product. S615 real original-Go TLS/Rust M3 peer authenticated both ways AFTER signed Wintun UDP kernel PASS_SCOPED. S617–S621 integrated signed Wintun kernel/PnP and real Rust owner with five-stage native WFP/route/DNS/MTU WAL service and ordered Stop. S621 Windows2022 original-Go cross-package build PASS; public CLI still legacy V3 and does not instantiate V4 service. Global OS Apply/WinForms real ON NOT_RUN.",
-  "why_now": "Restored H227→S615 exact Actions, all completed. User directed focus on full public product wiring, not peripheral packet samples. S621 exact Windows2022 Action39592497130/1 PASS linked original-Go V4 Rust owner/Wintun/native WAL; S622 evidence. H228 Governance39593235316 FAIL because hot bytes 32982 > limit; S623 preserves FAIL. Compact H229 cursor. No epoch/task/registry changes.",
-  "done_when": "Parent PLAN020 requires original public Go Windows CLI using SAME authenticated V4 Rust/Wintun owner and native WAL Apply/Stop, live global WFP, two /1 routes, DNS/IPv6/MTU and WinForms Applied/Disconnected on isolated native Windows with positive/foreign/crash negatives. S621 only cross-package build PASS_SCOPED. Product/physical/perf NOT_RUN; Windows/FEC2/Game OFF.",
-  "next_action": "Replace public Windows CLI legacy V3/PowerShell startup with original V4 credential TLS Rust/Wintun transport feeding PrepareOriginalTLSNativeProduct, publish real OS WAL Applied/Disconnect to WinForms, qualify full host-global positive/negative on isolated Windows. No more unrelated packet samples.",
+  "current_task": "M0 PLAN020 sole Windows public production. Public wbd-client real V4 path implemented (opt-in --native-v4-product): original Go Npcap FakeTCP credential TLS→Rust native M3 owner, true TCP seq/ACK, nonblocking same signed Wintun ring→Rust M3 seal→Npcap and peer Rust M3 open→Wintun kernel. Typed N4RealWindowsProduct binds same owner/kernel five-stage native OS WAL Apply/LiveReceipt/Stop, but original N4NativeNetworkReady still fail-closes before host-global Apply. Windows2022 SOURCEfd5e1e4b Action39597711102/1 build PASS_SCOPED; S629 receipt; no live public OS Applied, no actual WinForms V4 bundled. Windows/FEC2/Game OFF.",
+  "why_now": "Restored H229 current main, M0 rev3 epoch1 no in-flight Actions. S624 V4 public entry intent; S625 real protected TLS Npcap native owner branch and same Wintun compiled Action39596239201 PASS; S626 main packet intent; S627 exact original TLS TCP seq/ACK and exclusive ring binding; S628 public original Rust M3 physical Npcap/Wintun bidirectional packet pump integrated with native OS WAL, compiled Action39597711102 PASS, same source governance39597711017 PASS. S629 exact evidence, full product NOT_RUN. Packaged WinForms V4 executable + Rust native DLL and live UI receipt changes NOT_COMMITTED; no full OS testing; no production ON.",
+  "done_when": "Critical mainline Go V4 TLS/Rust M3 peer signed Wintun packet transport + typed native five-stage OS WAL product session now source-linked/Windows2022 build PASS_SCOPED. Parent PLAN020 remains NOT_DONE until exact V4-tagged public Go binary + source-locked Rust DLL packaged under WinForms, GUI reports only real OS receipt, and one verified isolated Windows host runs actual global WFP two /1 routes underlay DNS IPv6 MTU WAL Apply→real peer app first/reverse→crash/foreign/stale CAS→Stop/Recover positive-negative. Product Windows/FEC2/Game/physical/perf NOT_RUN/OFF.",
+  "next_action": "Complete source-locked original WinForms packaging of V4-tagged public Go CLI plus matching Rust DLL and native OS Applied/Stop receipts, then run one isolated native Windows full-host WFP /1/DNS/IPv6/MTU WAL + credential peer first-app/Disconnect positive/negative same SOURCE; authorize production only on full PASS. No standalone edge tests.",
   "unverified": true,
-  "last_tested_source": "5e31c967d655851b8c1973a6331da12f8d4773d7",
+  "last_tested_source": "fd5e1e4b6d7ad44195b82548c420d61aa1dfea73",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-original-TLS-Rust-Wintun-to-native-WAL-core-cross-package-S621-20261021.json"
+    "docs/evidence/M0/PLAN020-public-V4-CLI-real-M3-signed-Wintun-native-WAL-cross-package-S628-20261021.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H229: native Windows Rust/Wintun→five-stage OS WAL product owner session assembled in M0 original Go, source5e31c967 Action39592497130/1 PASS cross-package build/artifact12342363500; original CLI native V4 path still NOT_WIRED; full host WFP/default /1/DNS/IPv6/MTU and WinForms real ON NOT_RUN. H228 Governance hot-byte FAIL39593235316 retained S623; cursor compacted. S617/S618/S620 initial build FAILs preserved in S622 evidence. Windows/FEC2/Game OFF."
+  "partial_summary": "H230: S625–S628 public Go CLI actual Npcap FakeTCP TLS→Rust M3→same process-created signed Wintun native RX/TX ring→typed five-stage host WAL service integrated in source; S628 Windows2022 native original-Go cross-package build PASS_SCOPED Action39597711102 artifact12344164669 SHA d76e5cd46df...; governance39597711017 PASS. S629 evidence. Full WFP/default /1/DNS IPv6 MTU WAL live OS and WinForms bundled tagged Rust DLL/real Applied Disconnect NOT_RUN; N4NativeNetworkReady blocks production host mutation. Game/FEC2 OFF. No false release."
 }
