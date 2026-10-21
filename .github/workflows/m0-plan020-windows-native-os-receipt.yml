@@ -234,7 +234,10 @@ jobs:
           assert 'windowsclient.N4NativeNetworkReady(ctx)' in tagged
           for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
-              assert p.is_file() and p.stat().st_size>100000,name
+              # Native Go/Rust drivers are large PE binaries; genuine
+              # deterministic .NET WinForms EXEs can be under 100 KiB.
+              minimum=4096 if name=="WBD.exe" else 100000
+              assert p.is_file() and p.stat().st_size>minimum,name
           manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
                         native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
                         native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),
