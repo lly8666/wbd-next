@@ -18,6 +18,8 @@ import (
     "strings"
     "testing"
     "time"
+
+    "github.com/tailscale/wf"
 )
 func n4IPv4Checksum(b []byte)uint16{
     var sum uint32
@@ -188,6 +190,58 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
             }
         }
     }()
+    // Real WFP persistent engine in the SAME created native Wintun
+    // generation as the kernel UDP app. This is a second, independently
+    // qualified dimension. The one block is limited to reserved TEST-NET-3
+    // 203.0.113.254:65530, not host-wide DNS/IPv6/default-route capture.
+    // Use the very same exact-owned native WFP ARM + CAS/Disarm code that
+    // the M4 product backend consumes; do not treat this as global Applied.
+    sid:=wf.SublayerID(n4WFPTestGUID(t))
+    rid:=wf.RuleID(n4WFPTestGUID(t))
+    sub:=&wf.Sublayer{
+        ID:sid,Name:"WBD M0 PLAN020 native Wintun same-owner WFP limited",
+        Persistent:true,Weight:11,
+    }
+    narrowWfpRule:=&wf.Rule{
+        ID:rid,Name:"WBD M0 PLAN020 guarded TEST-NET-3 limited",
+        Layer:wf.LayerALEAuthConnectV4,Sublayer:sid,Weight:1,
+        Persistent:true,Action:wf.ActionBlock,
+        Conditions:[]*wf.Match{
+            {Field:wf.FieldIPRemoteAddress,Op:wf.MatchTypeEqual,
+                Value:netip.MustParseAddr("203.0.113.254")},
+            {Field:wf.FieldIPRemotePort,Op:wf.MatchTypeEqual,
+                Value:uint16(65530)},
+        },
+    }
+    wfpPlan:=n4WFPRulePlan{Sublayer:sub,Rules:[]*wf.Rule{narrowWfpRule}}
+    if err:=n4WFPArmExactPlan(ctx,wfpPlan);err!=nil{
+        t.Fatalf("real bounded WFP persistent same native Wintun generation ARM: %v",err)
+    }
+    wfpArmed:=true
+    defer func(){
+        if !wfpArmed{return}
+        cleanup,done:=context.WithTimeout(context.Background(),10*time.Second)
+        defer done()
+        if e:=n4WFPDisarmExactPlan(cleanup,wfpPlan,false);e!=nil{
+            t.Errorf("real persistent WFP TEST-NET owned exact CAS cleanup failure: %v",e)
+        }
+    }()
+    check,e:=wf.New(&wf.Options{Dynamic:false})
+    if e!=nil{t.Fatal(e)}
+    present,matching,e:=n4WFPReadOwned(check,wfpPlan)
+    closeErr:=check.Close()
+    if e!=nil||closeErr!=nil||!present||!matching[rid]{
+        t.Fatalf("independent WFP engine did not read persistent live generation rule: sub=%v rule=%v err=%v close=%v",
+            present,matching[rid],e,closeErr)
+    }
+    tampered:=*narrowWfpRule
+    tampered.Name="foreign replacement of native owned WFP rule"
+    if e:=n4WFPDisarmExactPlan(ctx,n4WFPRulePlan{
+        Sublayer:sub,Rules:[]*wf.Rule{&tampered},
+    },false);!errors.Is(e,ErrN4ForeignRoute){
+        t.Fatalf("foreign WFP deletion was not independently refused: %v",e)
+    }
+    t.Log("M0_PLAN020_SAME_NATIVE_WINTUN_WFP_PERSISTENT_TEST_NET_OWNED_CAS_PASS")
     app:=[]byte("M0-PLAN020-actual-Windows-IP-helper-kernel-udp-first-app")
     packet:=n4MakeKernelUDP([4]byte{198,18,20,88},[4]byte{198,18,20,77},
         41131,destPort,app)
@@ -221,8 +275,9 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
     }
     receipt["actual_native_kernel_udp_app"]="PASS_SIGNED_WINTUN_KERNEL_COPY_TO_REAL_WINDOWS_UDP_SOCKET"
     receipt["native_test_only_firewall_rule"]="EXACT_UDP_SRC_DST_PORT_EPHEMERAL_ALLOW_REMOVED_ON_STOP_NOT_PRODUCT_WFP"
+    receipt["native_same_wintun_persistent_WFP"]="PASS_REAL_EXACT_TEST_NET_RULE_FOREIGN_REJECTED_CAS_REMOVED_AFTER_SESSION_NOT_GLOBAL_CAPTURE"
     receipt["signed_adapter"]="PASS_CREATED_GUID_LUID_IFINDEX_PNP_PIN"
     receipt["native_stop"]="PASS_BOUNDED_NO_WAIT_STALE_DENIED"
     receipt["result"]="PASS_SCOPED_REAL_WIN_KERNEL_UDP_FIRST_APP_NO_CREDENTIAL_OWNER_CONNECTED"
-    t.Log("M0_PLAN020_REAL_SIGNED_WINTUN_TO_ACTUAL_WINDOWS_UDP_APPLICATION_PASS kernel_copy=1 app=1 stale_denied=1 fake_wfp_test_only=1")
+    t.Log("M0_PLAN020_REAL_SIGNED_WINTUN_TO_ACTUAL_WINDOWS_UDP_APPLICATION_PASS kernel_copy=1 app=1 stale_denied=1 real_scoped_WFP_persistent=1 full_global_WFP_NOT_RUN=1")
 }
