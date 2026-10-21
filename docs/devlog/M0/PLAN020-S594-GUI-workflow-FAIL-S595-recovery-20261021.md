@@ -1,0 +1,2 @@
+# M0 S595 recovery — S594 workflow YAML config FAIL
+SOURCE `9f466faf809ce6010b98c202c93aa1d40d9bb58b`, Action39560141693/1 **FAIL**, zero jobs: push paths element contains literal backslash-n followed by another YAML list entry; file malformed, GUI harness not compiled or executed, previous Go native tests at this exact SOURCE NOT_RUN. Repair that literal token only, preserve failed run; new exact-SOURCE Windows2022 Action required. Scope remains no host-global network mutation/product ON.

@@ -8,7 +8,8 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
-      - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"\n      - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
+      - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
+      - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
       - "r0/go_overlay/assembly/manifest-plan020-m0.json"
   workflow_dispatch:
 permissions: {contents: read}
