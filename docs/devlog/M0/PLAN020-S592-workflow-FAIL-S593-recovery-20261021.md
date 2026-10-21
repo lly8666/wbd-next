@@ -1,0 +1,2 @@
+# M0 S593 — S592 Windows workflow configuration FAIL retained
+SOURCE `2cdbf917a779d849ab191fa2ca7ace8a922369b1`, Action39559541696/1 **FAIL**, zero jobs: invalid YAML after JS replacement of an unescaped '$' regex suffix accidentally appended the old workflow tail. Go/WinForms Windows native tests at SOURCE were **NOT_RUN**. Repair exactly workflow suffix and test-selector quote; S591 source remains unchanged. No production OS WFP write occurred. Next SOURCE Windows2022 test required.

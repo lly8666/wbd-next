@@ -66,7 +66,7 @@ jobs:
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
-            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop) ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
+            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
             if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
           } finally {Pop-Location}
           foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop')) {
@@ -92,38 +92,6 @@ jobs:
           $sig=(Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
           if ($sig.Length -ne 64) {throw 'compiled WinForms file SHA missing'}
           Write-Output ('M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256='+$sig)
-      - name: Verify assembled WinForms source never maps READY to OS Applied
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          @'
-          import os,pathlib,json,re
-          gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
-          assert "WBD_WINDOWS_OS_APPLIED" in gui
-          assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
-          assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
-          assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
-          native=pathlib.Path("legacy/internal/windowsclient/native_unified_live_os_receipt_windows.go").read_text()
-          for term in ["VerifyLiveOSApplied","VerifyLiveOSDisconnected","s.Inspect(ctx,n.Identity","s.Snapshot(ctx,n.Identity"]:
-              assert term in native,term
-          r=dict(source_sha=os.environ["GITHUB_SHA"],result="PASS_SCOPED_NATIVE_GO_FIVE_STAGE_READBACK_AND_GUI_SOURCE_FALSE_READY",
-                 real_global_wfp="NOT_RUN",default_route="NOT_RUN",
-                 dns_ipv6_mtu_real_host="NOT_RUN",winforms_real_applied_disconnect="NOT_RUN",
-                 production_fec2="OFF",production_game="OFF")
-          pathlib.Path("result/receipt.json").write_text(json.dumps(r,indent=2)+"\n")
-          '@ | python -
-          if ($LASTEXITCODE -ne 0) {throw 'GUI SOURCE guard FAIL'}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: m0-plan020-win-wal-${{ github.run_id }}-${{ github.run_attempt }}
-          path: result/
-          if-no-files-found: warn
-          retention-days: 30
- ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
-            if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
-          } finally {Pop-Location}
-          if (!(Select-String -Path result/native-wal.log -SimpleMatch '--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks' -Quiet)) {throw 'native WAL test NOT_RUN'}
       - name: Verify assembled WinForms source never maps READY to OS Applied
         shell: pwsh
         run: |
