@@ -200,8 +200,32 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                     t.Fatalf("actual original TLS bound M1/M3 native packet seal refused: %v len=%d",e,len(wire))
                 }
                 t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SAME_SIGNED_WINTUN_RUST_AEAD_SEAL_PASS seq=%d pn=%d kernel_ciphertext_not_sent=1",seq,pn)
+                // Real original-Go credential TLS owner with a REAL
+                // signed native Wintun Hold, not an invented token:
+                // invalid peer AEAD and malformed records must never
+                // return a packet for injection into a kernel ring.
+                if decoded,openErr:=native.OpenBoundOriginalNormalOff(
+                    ctx,seq,wire);openErr==nil||len(decoded)!=0{
+                    t.Fatalf("real Rust owner self-TX ciphertext was incorrectly accepted as authenticated peer RX")
+                }
+                tampered:=append([]byte(nil),wire...)
+                tampered[len(tampered)-1]^=1
+                if decoded,openErr:=native.OpenBoundOriginalNormalOff(
+                    ctx,seq,tampered);openErr==nil||len(decoded)!=0{
+                    t.Fatalf("real Rust M3 receiver accepted unauthenticated modified record")
+                }
+                if decoded,openErr:=native.OpenBoundOriginalNormalOff(
+                    ctx,seq,[]byte{0x45});openErr==nil||len(decoded)!=0{
+                    t.Fatalf("short untrusted kernel M3 record decoded")
+                }
+                t.Log("M0_PLAN020_REAL_TLS_BOUND_SIGNED_WINTUN_RUST_M3_RECV_ABI_NEGATIVES_PASS same_held_device=1 invalid_peer=denied tampered=denied short=denied")
                 t.Log("M0_PLAN013_TRUE_TLS_WINTUN_RUST_OS_PRODUCT_GUARD_DENIED_NO_WAL_MUTATION_PASS")
                 if e=scoped.StopRustScoped(ctx);e!=nil{t.Fatal("M4 original native Wintun real quiesce->Rust owner Stop",e)}
+                if decoded,openErr:=native.OpenBoundOriginalNormalOff(
+                    ctx,seq,wire);openErr==nil||len(decoded)!=0{
+                    t.Fatalf("stale original TLS Rust owner RX used after Wintun Stop")
+                }
+                t.Log("M0_PLAN020_REAL_TLS_RUST_M3_RECEIVE_AFTER_NATIVE_WINTUN_QUIESCE_DENIED")
                 t.Logf("M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=%d index=%d os_applied=0 no_wfp_or_kernel_app=1",id.LUID,id.InterfaceIndex)
             }
         }

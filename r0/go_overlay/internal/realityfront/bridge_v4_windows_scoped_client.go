@@ -114,6 +114,54 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
     return wire,seq,pn,nil
 }
 
+// OpenBoundOriginalNormalOff authenticates a peer's M3 record using the
+// ORIGINAL Go credential-TLS-derived Rust owner AND the very same live
+// process-created Wintun generation. It neither accepts unauthenticated
+// IPv4 from a kernel socket nor itself grants WFP/route OS Applied.
+// A failed Rust AEAD / PN / replay result NEVER yields any plaintext.
+func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
+    ctx context.Context,seq uint32,wire []byte,
+)([]byte,error){
+    if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
+        s.bridge.openNormalProc==nil||len(wire)<51||len(wire)>543{
+        return nil,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return nil,err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+        return nil,errors.Join(errV4WindowsOwner,err)
+    }
+    state,err:=s.OriginalOwnerReadback()
+    if err!=nil||!state.OwnerActive||!state.DeviceBound||
+        state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
+        return nil,errV4WindowsOwner
+    }
+    plain:=make([]byte,len(wire))
+    var used uintptr
+    err=winOwnerCall(s.bridge.openNormalProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),
+        uintptr(s.device.identity.InterfaceIndex),
+        uintptr(seq),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&plain[0])),uintptr(len(plain)),
+        uintptr(unsafe.Pointer(&used)),
+    )
+    runtime.KeepAlive(wire)
+    runtime.KeepAlive(plain)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used<20||used>uintptr(len(plain)){
+        // Return NO data on any Rust error, including incomplete or
+        // non-single IPv4 records. Rust owns replay and authentication.
+        return nil,errors.Join(errV4WindowsOwner,err)
+    }
+    if plain[0]>>4!=4 || plain[0]&0xf<5 ||
+        int(plain[0]&0xf)*4>int(used){
+        return nil,errV4WindowsOwner
+    }
+    return plain[:used],nil
+}
+
 // This only stops Rust M1/M3 after an M4-held CURRENT created Wintun has
 // separately quiesced (or without any device binding at all). It cannot be
 // promoted to V4OriginalOwnerStopper's "OwnerAndDriversDrained" product
