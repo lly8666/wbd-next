@@ -12,6 +12,39 @@ import (
  "sync"
 )
 
+// N4OriginalCurrentPinnedWintunIdentity obtains fresh OS PnP identity
+// directly from the ORIGINAL process-created Wintun before building any
+// host-wide WFP/route/DNS/MTU WAL. A saved GUID/alias cannot become owner.
+func N4OriginalCurrentPinnedWintunIdentity(
+ ctx context.Context,tun *TUN,installation,generation [16]byte,
+)(N4UnifiedIdentity,error){
+ var id N4UnifiedIdentity
+ if ctx==nil||tun==nil||installation==[16]byte{}||
+  generation==[16]byte{}{return id,ErrN4NativeGuard}
+ now,err:=tun.NativeIdentity(ctx)
+ if err!=nil||!now.CreatedByProcess||now.LUID==0||now.Index==0{
+  return id,errors.Join(ErrN4NativeGuard,err)
+ }
+ guid,err:=n4NativeInterfaceGUID(now.Index)
+ if err!=nil{return id,err}
+ id=N4UnifiedIdentity{
+  Installation:installation,Generation:generation,
+  WintunLUID:now.LUID,WintunIndex:now.Index,
+  WintunGUID:guid.String(),AdapterAlias:tun.Name(),
+ }
+ pin,err:=n4ProbeOriginalWintunPnP(ctx,id)
+ if err!=nil{return N4UnifiedIdentity{},err}
+ id.PnPInstanceSHA256=pin.InstanceSHA256
+ if !n4ValidPinnedPnPHash(id.PnPInstanceSHA256){
+  return N4UnifiedIdentity{},ErrN4NativeGuard
+ }
+ owner:=N4WindowsCreatedWintunReservation{
+  Tunnel:tun,Installation:installation,Generation:generation,
+ }
+ if err=owner.Verify(ctx,id);err!=nil{return N4UnifiedIdentity{},err}
+ return id,nil
+}
+
 // N4NativeProductLiveOwner bridges real original-Go credential TLS -> Rust
 // M1/M3 peer -> same process-created signed Wintun. Unlike the lower-level
 // transaction test interface, a production owner must independently verify
