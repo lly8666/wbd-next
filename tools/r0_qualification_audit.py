@@ -168,14 +168,21 @@ def audit():
     require(project["product_qualification"] == project["physical"] == "NOT_RUN",
             "project qualification was promoted")
     roles={r["id"]:r for r in registry["roles"]}
+    # R0 historic qualification locks its original 2026-10-17 evidence
+    # and the REAL currently approved main writer. The explicit user
+    # 2026-10-21 PLAN020 M4->M0 takeover is revision3, not a vanished R0
+    # source and not a new M4 scope. The original M4 cursor is frozen.
     require(roles["M0"]["state"]=="active" and roles["M0"]["branch"]=="main" and
-            registry["reservation_revision"]==2 and roles["M0"]["assignment_epoch"]==1,
-            "M0 integration writer/revision changed")
+            registry["reservation_revision"]==3 and roles["M0"]["assignment_epoch"]==1 and
+            roles["M0"]["global_writer"] is True and
+            "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
+            in roles["M0"]["goal"] and
+            Path("docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md").is_file(),
+            "M0 user-authorized PLAN020 revision3 writer changed")
     expected_worker_paths = {
       "M1": ("work/m1-r1-runtime", ("crates/wbd-engine/src/runtime/","crates/wbd-engine/src/memory/")),
       "M2": ("work/m2-r2-recovery", ("crates/wbd-recovery/",)),
       "M3": ("work/m3-r1-codec", ("crates/wbd-codec/",)),
-      "M4": ("work/m4-r1-platform", ("crates/wbd-platform/","r1/go-bridge/")),
     }
     for role,(branch,paths) in expected_worker_paths.items():
         spec = roles[role]
@@ -184,10 +191,24 @@ def audit():
                 all(p in spec["allowed_paths"] for p in paths) and
                 f".governance/workstreams/{role}/cursor.json" in spec["allowed_paths"],
                 f"{role} worker scope/epoch/branch drift")
+        # Main mirrors are historical rev2 worker snapshots. Current worker
+        # authority lives on the worker branch and is checked there against
+        # the live rev3 registry before any worker write.
         local_cursor=read_json(f".governance/workstreams/{role}/cursor.json")
         require(local_cursor["role_id"]==role and local_cursor["branch"]==branch and
                 local_cursor["reservation_revision"]==2 and local_cursor["assignment_epoch"]==1,
-                f"{role} bootstrap cursor identity drift")
+                f"{role} historical main cursor identity drift")
+    m4=roles["M4"]
+    frozen_m4=read_json(".governance/workstreams/M4/cursor.json")
+    require(m4["state"]=="reserved" and m4["assignment_epoch"]==2 and
+            m4["branch"]=="work/m4-r1-platform" and
+            m4["global_writer"] is False and
+            m4["allowed_paths"]==[] and m4["owned_semantics"]==[] and
+            frozen_m4["role_id"]=="M4" and
+            frozen_m4["branch"]=="work/m4-r1-platform" and
+            frozen_m4["reservation_revision"]==2 and
+            frozen_m4["assignment_epoch"]==1 and frozen_m4["sequence"]==53,
+            "M4 revoked/frozen Windows write ownership changed")
     gates = m["evidence_gates"]
     require({g["gate"] for g in gates} == set(EXPECTED_GATES) and len(gates)==len(EXPECTED_GATES),
             "historic gate inventory drift")
