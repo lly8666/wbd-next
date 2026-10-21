@@ -6,6 +6,7 @@ import (
     "crypto/tls"
     "encoding/binary"
     "runtime"
+    "net"
     "unsafe"
     "errors"
     "os"
@@ -205,6 +206,17 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                 if length==0||length>uintptr(len(dst)){return nil,errV4WindowsOwner}
                 return dst[:length],nil
             }
+            // The authenticated M3 record must cross the ACTUAL Windows
+            // Winsock UDP4 stack (not just an FFI buffer copy) in both
+            // directions. Still no Wintun adapter, route or WFP mutation:
+            // this is scoped localhost peer-wire qualification only.
+            sockets:=make([]*net.UDPConn,2)
+            for i:=range sockets{
+                link,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IPv4(127,0,0,1)})
+                if e!=nil{t.Fatalf("real Windows UDP4 listener unavailable: %v",e)}
+                sockets[i]=link
+                defer link.Close()
+            }
             for direction:=0;direction<2;direction++{
                 sender,receiver:=endpoints[direction],endpoints[1-direction]
                 ipv4:=make([]byte,40)
@@ -234,7 +246,25 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                     t.Fatalf("actual original TLS peer Rust M1/M3 TX fail cipher=%d direction=%d err=%v used=%d seq=%d",cipher,direction,e,used,seq)
                 }
                 if string(sealed)==string(ipv4){t.Fatal("M3 AEAD returned cleartext")}
-                plain,e:=open(receiver,seq,sealed)
+                // Exact real packet copy via native socket, with no fake
+                // transport closure and bounded kernel datagram receive.
+                dstSock:=sockets[1-direction]
+                srcSock:=sockets[direction]
+                sent,e:=srcSock.WriteToUDP(sealed,dstSock.LocalAddr().(*net.UDPAddr))
+                if e!=nil||sent!=len(sealed){
+                    t.Fatalf("actual Winsock original TLS M3 send failed: %v sent=%d",e,sent)
+                }
+                if e:=dstSock.SetReadDeadline(time.Now().Add(2*time.Second));e!=nil{t.Fatal(e)}
+                buffer:=make([]byte,512)
+                received,remote,e:=dstSock.ReadFromUDP(buffer)
+                if e!=nil||remote==nil||received!=len(sealed)||
+                    !remote.IP.Equal(net.IPv4(127,0,0,1))||
+                    remote.Port!=srcSock.LocalAddr().(*net.UDPAddr).Port||
+                    string(buffer[:received])!=string(sealed){
+                    t.Fatalf("actual Windows UDP encrypted record mismatch n=%d remote=%v err=%v",received,remote,e)
+                }
+                wireRx:=append([]byte(nil),buffer[:received]...)
+                plain,e:=open(receiver,seq,wireRx)
                 if e!=nil||string(plain)!=string(ipv4){
                     t.Fatalf("real original Go TLS Rust peer M3 RX fail cipher=%d direction=%d seq=%d pn=%d err=%v",cipher,direction,seq,pn,e)
                 }
@@ -246,7 +276,7 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                 if _,e=open(receiver,seq+uint32(len(sealed)),corrupt);e==nil{
                     t.Fatal("original TLS Rust peer accepted tampered M3 tag")
                 }
-                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_TO_REAL_PEER_RUST_M3_AEAD_BIDIRECTIONAL_PASS cipher=%d direction=%d pn=%d seq=%d replay_denied=1 tamper_denied=1 test_only_device=1 kernel_not_run=1",cipher,direction,pn,seq)
+                t.Logf("M0_PLAN020_ORIGINAL_GO_TLS_RUST_M3_PEER_REAL_WINDOWS_UDP4_SOCKET_CARRIER_PASS cipher=%d direction=%d pn=%d seq=%d replay_denied=1 tamper_denied=1 test_only_Wintun_identity=1 signed_Wintun_ring_NOT_RUN=1",cipher,direction,pn,seq)
             }
             for _,endpoint:=range endpoints{
                 o:=endpoint.owner
