@@ -383,7 +383,7 @@
       "original_blob": "46f1c9eb300904b0cb404c18b1decbea9133bcd0",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a",
-      "result_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a"
+      "result_blob": "672c9ee126899f2300f161560c2cd91f5fbb55f2"
     },
     {
       "kind": "replace",
@@ -660,6 +660,12 @@
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
       "result_blob": "e6529a85b10fd722b65acfd5123088368eaf9b89"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+      "result_blob": "e00ceb38d643604f55edd800b42043b732418e59"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
