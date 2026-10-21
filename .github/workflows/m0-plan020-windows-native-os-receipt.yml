@@ -276,7 +276,11 @@ jobs:
           assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
           tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
           assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
-          assert 'windowsclient.N4NativeNetworkReady(ctx)' in tagged
+          assert 'if e=windowsclient.N4NativeNetworkReady(ctx)' not in tagged
+          assert 'receipt,e:=product.Apply(ctx)' in tagged
+          assert 'if !receipt.AllNativeOSApplied' in tagged
+          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged
+          assert 'stopErr:=cleanup()' in tagged
           for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
               # Native Go/Rust drivers are large PE binaries; genuine
