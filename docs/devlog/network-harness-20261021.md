@@ -11,3 +11,7 @@
 长期入口：`docs/testing/NETWORK_HARNESS.md`。不建立新治理、审批或交接系统；后续角色在既有devlog/evidence记录实际请求与run。
 
 首轮Actions39618861340：7项夹具单测（含真实UDP/TCP双向）PASS，tc seed能力步骤FAIL；实际基线39618861434同样在开始发业务前FAIL，原公共两端READY与Stop均正常。根因Ubuntu24.04自带tc不认识seed选项。修正为请求显式区分seeded与unseeded_recorded，后者保存实际损伤/随机性限制且不宣称逐包重放；不安装浮动网络工具、不假造可复现seed。首轮原失败保留，产品持续性能仍NOT_RUN，修正后原样重试一次。
+
+Actions39619133739（夹具7994b1a，产品bdcd66c）真实60s基线：C2S/S2C均103762/103762包、9.9999899Mbps、应用单程p99 0.4ms，probe597/597各向、Stop/owned namespace清理正常；产品CPU测量段12.07/12.03 CPU-s。原结果INCONCLUSIVE/Action failure，原因判定器以单个PSI峰值36.14直接否定样本；测量段平均PSI6.874，注入/交付均完整。原文件不改为PASS：修正通用判定器将真实业务结果与性能公平比较拆开，保留瞬时警告，持续争用使比较资格不确定而非直接认定host容量；添加反例测试。同步补实际时段首到字节、netem leaf/内核drop分账，TCP繁忙连接不阻塞其他空闲连接，rate_scale0不空转。重新跑同一基线用于验证判定器/字节计数变化，未改产品或损失门槛。
+
+Actions39619547664（6abb59e）：8项夹具测试以及真实内核GE/限速/乱序/重复/四lane分类器全部PASS。只是夹具能力，不扩张为产品弱网资格。

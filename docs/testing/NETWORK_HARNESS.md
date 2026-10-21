@@ -50,12 +50,12 @@
 
 - `PASS_SCOPED_OBSERVATION`：本场景已完整观测且满足声明门槛，不等于所有功能或性能验收完成。
 - `FAIL`：产品业务/完整性/Stop/配置回执/明确允许带失败。保留失败，不由 aggregate 换成通过。
-- `INCONCLUSIVE`：注入不足、夹具丢包、显著宿主争用、阶段时刻偏差等使性能结论不能成立。
+- `INCONCLUSIVE`：注入不足、夹具丢包、阶段时刻偏差等使本次实验结论不能成立。单次宿主PSI峰值单列警告，不自动否定已经真实完成的业务；持续争用令 `performance_comparison=INCONCLUSIVE_HOST_CONTENTION`，不凭一个CPU/PSI数字宣布容量不足。
 - `UNSUPPORTED` / `INVALID_REQUEST`：当前真实入口不支持或请求错误，不能填产品 PASS。
 
 UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效；TCP由于自身拥塞控制出现发送反压要单列 `TCP_BACKPRESSURED`，不直接归咎生成器。未交付通过 `missing_after_drain` 报告，超 deadline 包加未交付包一起统计。p99仅是已到包分布，不能丢掉慢/未到包后宣布低延迟成功。大 UDP 丢一个碎片即可丢整报文，不能与小包同用固定零损门。
 
-`cohort_delivered_app_mbps` 按发送阶段归属，包含 drain 内迟到交付，**不是阶段内即时 goodput**；10ms首到桶另外保留实际交付时刻。总进程CPU（处理双向）按本进程收到业务归一化 CPU-s/GiB 和 CPU-s/Mrecords，并公开分母；需与交付数量、发送比例一同对比。接口外层字节含控制/修复/冗余，但不能把总包数除首发包数当“重传字节超过10%”。稀疏业务还另有比例豁免。
+`cohort_delivered_app_mbps` 按发送阶段归属，包含 drain 内迟到交付，**不是阶段内即时 goodput**；`arrival_window_app_mbps` 和10ms首到字节桶另报实际时段交付，不能用drain掩盖阶段停顿。总进程CPU（处理双向）按本进程收到业务归一化 CPU-s/GiB 和 CPU-s/Mrecords，并公开分母；需与交付数量、发送比例一同对比。接口外层字节含控制/修复/冗余，但不能把总包数除首发包数当“重传字节超过10%”。稀疏业务还另有比例豁免。
 
 理论参考只解释，不充当万能门槛：IID下两次重传的理想残余为p³，期望修复为p+p²；p=5%时分别0.0125%、5.25%。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
 

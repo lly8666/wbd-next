@@ -89,6 +89,8 @@ class Worker:
         count = math.ceil((elapsed + config["drain_s"]) * 100) + 1
         self.tx_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.rx_bins = {p: array.array("I", [0]) * count for p in self.seq}
+        self.tx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
+        self.rx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.socket_drops = 0
         self.probe_seq, self.probe_outstanding, self.probe_seen = 0, {}, set()
         self.streams = []
@@ -159,6 +161,7 @@ class Worker:
         st["tx_packets"] += 1
         st["tx_bytes"] += size
         self.tx_bins[proto][self.bucket(now)] += 1
+        self.tx_byte_bins[proto][self.bucket(now)] += size
 
     def receive(self, data, now, proto):
         fallback = self.stats[proto][min(len(self.phases)-1, bisect.bisect_right(self.ends, now))]
@@ -202,6 +205,7 @@ class Worker:
         st["latency"].add(delay)
         st["late"] += int(delay > self.config["traffic"]["deadline_ms"])
         self.rx_bins[proto][self.bucket(now)] += 1
+        self.rx_byte_bins[proto][self.bucket(now)] += size
 
     def flush_tcp(self, s, now):
         if s not in self.pending:
@@ -309,8 +313,9 @@ class Worker:
                         due[proto] += max(1, int(interval))
                         data = self.packet(UDP if proto == "udp" else TCP, phase, seq, size, now)
                         if proto == "tcp":
-                            s = self.streams[seq % len(self.streams)]
-                            if s in self.pending:
+                            candidates = self.streams[seq % len(self.streams):] + self.streams[:seq % len(self.streams)]
+                            s = next((stream for stream in candidates if stream not in self.pending), None)
+                            if s is None:
                                 st["backpressure"] += 1
                                 continue
                             self.seq[proto] += 1
@@ -331,7 +336,7 @@ class Worker:
                         if now - due[proto] > max(20_000_000, int(t["burst_ms"] * 1e6)):
                             self.errors["pacing_catchup_limited"] += 1
                             due[proto] = now
-                next_due = min([probe_due] + [due[p] for p in shares if rate * shares[p] > 0])
+                next_due = min([probe_due] + [due[p] for p in shares if rate * shares[p] * self.phases[phase]["rate_scale"] > 0])
                 timeout = min(.002, max(0, (next_due - time.monotonic_ns()) / 1e9))
                 if t["burst_ms"]:
                     timeout = t["burst_ms"] / 1000
@@ -341,6 +346,7 @@ class Worker:
         result = {"role": self.role, "start_ns": self.start_ns, "end_ns": self.end_ns,
                   "clock": "same Linux host monotonic_ns", "units": "application bytes including test header",
                   "stats": {}, "tx_bins_10ms": self.tx_bins, "rx_bins_10ms": self.rx_bins,
+                  "tx_bytes_bins_10ms": self.tx_byte_bins, "rx_bytes_bins_10ms": self.rx_byte_bins,
                   "socket_drops": self.socket_drops, "effective_buffers": self.effective_buffers,
                   "errors": self.errors, "capacity_exceeded": self.capacity_exceeded,
                   "tcp_pending_at_deadline": len(self.pending)}

@@ -134,6 +134,12 @@ class Contracts(unittest.TestCase):
             tele = {"stop_drained_both": True, "effective_config_verified": True, "repair_packets": 0}
             report = summarize(r, c, s, tele, {})
             self.assertEqual(report["result"], "PASS_SCOPED_OBSERVATION", report["limits"])
+            report = summarize(r, c, s, tele, {"cpu_psi_some_peak": 36, "cpu_psi_some_mean": 7})
+            self.assertEqual(report["result"], "PASS_SCOPED_OBSERVATION")
+            self.assertTrue(report["warnings"])
+            report = summarize(r, c, s, tele, {"cpu_psi_some_peak": 36, "cpu_psi_some_mean": 30})
+            self.assertEqual(report["performance_comparison"], "INCONCLUSIVE_HOST_CONTENTION")
+            self.assertFalse(report["stop_heavier_resource_cases"])
             s["stats"]["udp"][1]["rx_packets"] -= 2
             r["acceptance"]["max_loss_pct"] = 0
             report = summarize(r, c, s, tele, {})

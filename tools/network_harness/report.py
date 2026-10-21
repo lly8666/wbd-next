@@ -5,6 +5,42 @@ from pathlib import Path
 from .config import fec_residual
 
 
+def snmp_counters(text):
+    rows = text.splitlines()
+    counters = {}
+    for names, values in zip(rows[::2], rows[1::2]):
+        a, b = names.split(), values.split()
+        if a and b and a[0] == b[0]:
+            counters.update({a[0].rstrip(":") + "." + k: int(v) for k, v in zip(a[1:], b[1:])})
+    return counters
+
+
+def network_accounting(snapshots):
+    """Leaf netem only (do not double-count prio parents); all traffic, not DATA-only."""
+    out = []
+    stages = [s for s in snapshots if s["name"].startswith("before-") or s["name"] == "measurement-end"]
+    for before, after in zip(stages, stages[1:]):
+        for role in ["client", "server"]:
+            a, b = before["network"][role], after["network"][role]
+            qa = {q["handle"]: q for q in a["qdisc"] if q["kind"] == "netem"}
+            qb = {q["handle"]: q for q in b["qdisc"] if q["kind"] == "netem"}
+            leaf = []
+            for handle, end in qb.items():
+                start = qa.get(handle, {})
+                packets = end.get("packets", 0) - start.get("packets", 0)
+                dropped = end.get("drops", 0) - start.get("drops", 0)
+                leaf.append({"handle": handle, "forwarded_packets": packets, "drops": dropped,
+                             "counter_reset": packets < 0 or dropped < 0,
+                             "approx_loss_pct": 100*dropped/(packets+dropped) if packets+dropped > 0 and dropped >= 0 else None,
+                             "end_backlog_bytes": end.get("backlog"), "end_qlen": end.get("qlen")})
+            sa, sb = snmp_counters(a["snmp"]), snmp_counters(b["snmp"])
+            fields = ["Udp.RcvbufErrors", "Udp.SndbufErrors", "Udp.InErrors", "Ip.ReasmFails", "Ip.FragFails", "Tcp.RetransSegs"]
+            out.append({"phase": before["name"][7:], "role": role, "netem": leaf,
+                        "kernel_delta": {k: sb[k]-sa[k] for k in fields if k in sb and k in sa},
+                        "interpretation": "all outer traffic incl ACK/control/repair; duplicates/backlog/queue overflow can bias netem ratio; inner TCP retrans separate"})
+    return out
+
+
 def active_gap(tx, rx, allowance_bins=0):
     """Only bins with ongoing offered business count; sparse silence is not HOL.
 
@@ -23,7 +59,7 @@ def active_gap(tx, rx, allowance_bins=0):
 
 
 def summarize(config, client, server, telemetry, host):
-    failures, limits, observed = [], [], []
+    failures, limits, observed, warnings = [], [], [], []
     phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
     a = config["acceptance"]
     for direction, sender, receiver, rate in [("c2s", client, server, config["traffic"]["c2s_mbps"]),
@@ -42,9 +78,13 @@ def summarize(config, client, server, telemetry, host):
                 missing = tx["tx_packets"] - rx["rx_packets"]
                 loss = 100 * missing / tx["tx_packets"] if tx["tx_packets"] else None
                 deadline_bad = missing + rx["late"]
+                first_bin = round(sum(p["seconds"] for p in phases[:i]) * 100)
+                last_bin = first_bin + round(ph["seconds"] * 100)
+                arrival_bytes = receiver.get("rx_bytes_bins_10ms", {}).get(proto)
                 row = {"direction": direction, "protocol": proto, "phase": ph["name"],
                        "target_app_mbps": target, "injected_app_mbps": injected,
                        "cohort_delivered_app_mbps": delivered, "sent": tx["tx_packets"],
+                       "arrival_window_app_mbps": sum(arrival_bytes[first_bin:last_bin])*8/ph["seconds"]/1e6 if arrival_bytes is not None else None,
                        "delivered": rx["rx_packets"], "missing_after_drain": missing,
                        "loss_pct": loss, "late_or_missing": deadline_bad,
                        "first_arrival_ms": rx["latency"], "send_lag_ms": tx["send_lag"],
@@ -97,11 +137,12 @@ def summarize(config, client, server, telemetry, host):
             if row["target_app_mbps"] and not row["delivered"] and d["loss_pct"] < 100 and len(d["blackhole_lanes"]) < lanes:
                 failures.append(f'{row["direction"]}/{row["phase"]}: no real delivery')
     # Host evidence is separate; high product CPU alone cannot excuse a product bottleneck.
-    host_limited = host.get("steal_pct_peak", 0) > 5 or host.get("cpu_psi_some_peak", 0) > 20
-    if host_limited:
-        limits.append("HOST_CONTENTION_OBSERVED; attribution remains inconclusive")
+    host_risk = host.get("steal_pct_peak", 0) > 5 or (host.get("cpu_psi_some_mean") or 0) > 20
+    if host_risk or host.get("cpu_psi_some_peak", 0) > 20:
+        warnings.append("HOST_CONTENTION_OBSERVED; inspect time series, not a capacity verdict from one CPU/PSI number")
     status = "FAIL" if failures else ("INCONCLUSIVE" if limits else "PASS_SCOPED_OBSERVATION")
-    return {"result": status, "failures": failures, "limits": limits, "observed": observed,
+    return {"result": status, "failures": failures, "limits": limits, "warnings": warnings, "observed": observed,
+            "performance_comparison": "INCONCLUSIVE_HOST_CONTENTION" if host_risk else "REQUIRES_MATCHED_VALID_AB_LEGS",
             "active_zero_delivery_ms": gaps, "telemetry": telemetry, "host": host,
             "probes": {role: [{"phase": ph["name"], "sent": st["probe_sent"],
                                 "received": st["probe_received"], "missing": st["probe_sent"]-st["probe_received"],
@@ -119,12 +160,13 @@ def summarize(config, client, server, telemetry, host):
 def markdown(result):
     lines = ["# Network scenario result", "", "Result: **" + result["result"] + "**", "",
              "Rates are application bytes, first-arrival delay uses the same Linux monotonic clock.", "",
-             "|Direction|Protocol|Phase|Offered Mbps|Delivered cohort Mbps|Missing|One-way p99 ms|",
-             "|---|---|---|---:|---:|---:|---:|"]
+             "|Direction|Protocol|Phase|Offered Mbps|Arrival Mbps|Delivered cohort Mbps|Missing|One-way p99 ms|",
+             "|---|---|---|---:|---:|---:|---:|---:|"]
     for r in result.get("observed", []):
         lines.append(f'|{r["direction"]}|{r["protocol"]}|{r["phase"]}|{r["injected_app_mbps"]:.3f}|'
-                     f'{r["cohort_delivered_app_mbps"]:.3f}|{r["missing_after_drain"]}|{r["first_arrival_ms"]["p99_ms"]}|')
+                     f'{r.get("arrival_window_app_mbps")}|{r["cohort_delivered_app_mbps"]:.3f}|{r["missing_after_drain"]}|{r["first_arrival_ms"]["p99_ms"]}|')
     lines += ["", "Failures: " + json.dumps(result.get("failures", [])),
               "", "Limits: " + json.dumps(result.get("limits", [])),
+              "", "Warnings: " + json.dumps(result.get("warnings", [])),
               "", "Lost/undelivered records are NOT removed from deadline metrics. Surviving-sample p99 alone is not success."]
     return "\n".join(lines) + "\n"

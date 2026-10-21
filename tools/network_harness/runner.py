@@ -20,7 +20,7 @@ from pathlib import Path
 
 from .artifacts import fetch, sha, verify
 from .config import Unsupported, netem_args, validate
-from .report import markdown, summarize
+from .report import markdown, summarize, network_accounting
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
@@ -70,15 +70,19 @@ class Monitor:
                 "processes": {name: process(p.pid) for name, p in self.products.items()}})
             self.stop.wait(1)
 
-    def finish(self):
+    def finish(self, window=None):
         self.stop.set()
         self.thread.join(3)
         dump(self.output / "host-samples.json", self.samples)
         peak_psi = peak_steal = 0.0
-        for s in self.samples:
+        samples = [s for s in self.samples if window is None or window[0] <= s["ns"] <= window[1]]
+        psi = []
+        for s in samples:
             m = re.search(r"some avg10=([\d.]+)", s["psi_cpu"])
+            if m:
+                psi.append(float(m[1]))
             peak_psi = max(peak_psi, float(m[1]) if m else 0)
-        for a, b in zip(self.samples, self.samples[1:]):
+        for a, b in zip(samples, samples[1:]):
             # guest/guest_nice already included in user/nice; exclude the double-count.
             total = sum(b["cpu"][:8]) - sum(a["cpu"][:8])
             if total > 0:
@@ -89,7 +93,9 @@ class Monitor:
             if points:
                 costs[name] = {"cpu_s_observed_including_warmup_setup_drain": points[-1]["cpu_s"]-points[0]["cpu_s"],
                                "rss_peak_bytes": max(p["rss_bytes"] for p in points)}
-        return {"cpu_psi_some_peak": peak_psi, "steal_pct_peak": peak_steal, "processes": costs}
+        return {"cpu_psi_some_peak": peak_psi, "cpu_psi_some_mean": sum(psi)/len(psi) if psi else None,
+                "cpu_psi_over20_fraction": sum(v > 20 for v in psi)/len(psi) if psi else None,
+                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal, "processes": costs}
 
 
 class LinuxExperiment:
@@ -307,7 +313,7 @@ class LinuxExperiment:
                 if p.returncode:
                     raise RuntimeError("traffic worker exited with failure")
             self.snapshot("drain-end")
-            host = self.monitor.finish()
+            host = self.monitor.finish((start_ns + int(self.config["warmup_s"] * 1e9), boundary))
             self.monitor = None
             for p in self.products.values():
                 p.terminate()
@@ -317,6 +323,7 @@ class LinuxExperiment:
                     raise RuntimeError("product nonzero exit on Stop")
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
+            result["network_accounting"] = network_accounting(self.snapshots)
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
@@ -417,6 +424,9 @@ def main():
         return
     if os.geteuid() != 0:
         raise RuntimeError("run needs sudo for OWNED namespaces only")
+    def cancelled(signum, _frame):
+        raise RuntimeError(f"cancelled by signal {signum}")
+    signal.signal(signal.SIGTERM, cancelled)
     if config != json.loads((directory / "request.json").read_text()):
         raise ValueError("prepared request changed")
     dump(directory / "host.json", host_identity())

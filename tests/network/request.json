@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "normal-off-10m-lossless-mixed-sizes",
+  "id": "normal-off-10m-lossless-mixed-sizes-v2",
   "owner": "network-harness",
   "seed": 5205,
   "product": {"mode": "normal", "fec_profile": 1},
