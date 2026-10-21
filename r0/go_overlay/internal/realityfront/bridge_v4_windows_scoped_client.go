@@ -183,3 +183,124 @@ func(s *V4WindowsAuthenticatedClientOwner) StopAndReleaseOriginalOwner()(
     // and CAS-proven OS WFP/route ownership.
     return V4OwnerStopCompletion{},errors.Join(errV4WindowsOwner,ErrAdmissionUnsupported)
 }
+
+
+// Authenticated SERVER half of the same original-Go FakeTCP credential TLS
+// callback and native Windows Rust M1/M3 owner; used for real peer receive.
+// It cannot be fabricated with caller-supplied cold material or exported
+// command-line parameters and does not authorize the host WFP product.
+type V4WindowsAuthenticatedServerOwner struct{
+    bridge *v4WindowsNativeOwnerBridge
+    device *v4WindowsRealDeviceLease
+}
+func V4WindowsEstablishOriginalServerOwner(
+    ctx context.Context,library string,assoc *faketcp.ServerAssociation,
+    cfg ServerAdmissionConfig,options V4ServerOptions,
+)(*V4WindowsAuthenticatedServerOwner,*V4ServerSession,error){
+    if ctx==nil||assoc==nil{return nil,nil,errV4WindowsOwner}
+    owner,err:=newV4WindowsPrivateOwnerBridge(library)
+    if err!=nil{return nil,nil,err}
+    if options.ownerBridge!=nil{return nil,nil,errV4WindowsOwner}
+    options.ownerBridge=owner
+    session,err:=EstablishServerV4(ctx,assoc,cfg,options)
+    if err!=nil{return nil,nil,err}
+    st,err:=owner.state()
+    if err!=nil||st.phase!=2||st.server!=1||st.applied!=0||
+        st.generation==0||!owner.committed{return nil,nil,errV4WindowsOwner}
+    return &V4WindowsAuthenticatedServerOwner{bridge:owner},session,nil
+}
+func(s *V4WindowsAuthenticatedServerOwner) BindOriginalM4NativeDevice(
+    ctx context.Context,device V4WindowsCurrentNativeDevice,
+    id V4WindowsNativeDeviceIdentity,
+)error{
+    if s==nil||s.bridge==nil||s.device!=nil{return errV4WindowsOwner}
+    hold,err:=s.bridge.holdOriginalCreatedWintun(ctx,device,id)
+    if hold!=nil{s.device=hold}
+    return err
+}
+func(s *V4WindowsAuthenticatedServerOwner) checkedBound(
+    ctx context.Context,
+)error{
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.handle==0{return errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+        return errors.Join(errV4WindowsOwner,err)
+    }
+    st,err:=s.bridge.state()
+    if err!=nil||st.phase!=2||st.server!=1||st.applied!=0||
+        st.generation==0{return errV4WindowsOwner}
+    dev,err:=s.bridge.realNativeDeviceState()
+    if err!=nil||dev.Bound!=1||dev.Quiesced!=0||dev.Applied!=0||
+        dev.IfIndex!=s.device.identity.InterfaceIndex||
+        dev.LUID!=s.device.identity.LUID{
+        return errV4WindowsOwner
+    }
+    return nil
+}
+// Actual original TLS-derived SERVER M3 authenticated decrypt, receiving
+// only the exact native kernel UDP application's wire record. The C ABI
+// consumes replay/PN and never returns failed AEAD plaintext.
+func(s *V4WindowsAuthenticatedServerOwner) OpenBoundOriginalNormalOff(
+    ctx context.Context,seq uint32,wire []byte,
+)([]byte,error){
+    if len(wire)<51||len(wire)>543{return nil,errV4WindowsOwner}
+    if err:=s.checkedBound(ctx);err!=nil{return nil,err}
+    plain:=make([]byte,len(wire))
+    var used uintptr
+    err:=winOwnerCall(s.bridge.openNormalProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),
+        uintptr(s.device.identity.InterfaceIndex),
+        uintptr(seq),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&plain[0])),uintptr(len(plain)),
+        uintptr(unsafe.Pointer(&used)))
+    runtime.KeepAlive(wire)
+    runtime.KeepAlive(plain)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used<20||used>uintptr(len(plain)){
+        return nil,errors.Join(errV4WindowsOwner,err)
+    }
+    if plain[0]>>4!=4||plain[0]&15<5||
+        int(plain[0]&15)*4>int(used){
+        return nil,errV4WindowsOwner
+    }
+    return plain[:used],nil
+}
+// True original TLS-derived SERVER M1 immutable outbound AEAD record,
+// using the same bounded 576-byte native normal/off Rust budget as client.
+func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalNormalOff(
+    ctx context.Context,ipv4 []byte,
+)([]byte,uint32,uint64,error){
+    if len(ipv4)<20||len(ipv4)>512||ipv4[0]>>4!=4{
+        return nil,0,0,errV4WindowsOwner
+    }
+    if err:=s.checkedBound(ctx);err!=nil{return nil,0,0,err}
+    wire:=make([]byte,len(ipv4)+31)
+    var used uintptr
+    var seq uint32
+    var pn uint64
+    err:=winOwnerCall(s.bridge.sealNormalProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),
+        uintptr(s.device.identity.InterfaceIndex),
+        uintptr(unsafe.Pointer(&ipv4[0])),uintptr(len(ipv4)),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&used)),
+        uintptr(unsafe.Pointer(&seq)),uintptr(unsafe.Pointer(&pn)))
+    runtime.KeepAlive(ipv4);runtime.KeepAlive(wire)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used!=uintptr(len(wire)){
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    return wire,seq,pn,nil
+}
+func(s *V4WindowsAuthenticatedServerOwner) StopScopedOwner(ctx context.Context)error{
+    if s==nil||ctx==nil||s.bridge==nil{return errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return err}
+    if s.device!=nil{return s.device.quiesceAndStopRustOnly(ctx)}
+    return s.bridge.stopRustOwnerOnly()
+}
