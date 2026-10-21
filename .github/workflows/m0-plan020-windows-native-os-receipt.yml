@@ -11,6 +11,8 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
       - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
       - "r0/go_overlay/assembly/manifest-plan020-m0.json"
+      - "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go"
+      - "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go"
       - "docs/devlog/M0/PLAN020-S598-exact-parallel-Windows-action-trigger-20261021.md"
       - "docs/devlog/M0/PLAN020-S615-true-TLS-Rust-M3-native-kernel-parallel-Actions-trigger-20261021.md"
   workflow_dispatch:
@@ -63,6 +65,56 @@ jobs:
           if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
           & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
           if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
+      - name: Compile linked ORIGINAL credential Go Rust + signed Wintun five-stage OS WAL production packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import os,pathlib,subprocess,hashlib
+          root=pathlib.Path.cwd()
+          sha=os.environ["GITHUB_SHA"]
+          # The frozen M4/Go assembly is already exact SOURCE verified.
+          # Copy ONLY the extra original Go credential-TLS Rust bridge
+          # necessary for the new M0 host-WFP WAL production package;
+          # no mock adapters, no original bytes overwritten.
+          for part,names in (
+            ("realityfront",(
+              "admission_v4.go",
+              "bridge_v4_windows_private_owner.go",
+              "bridge_v4_windows_wintun_lease.go",
+              "bridge_v4_windows_scoped_client.go",
+            )),
+            ("windowsownerlease",(
+              "created_wintun_windows.go",
+              "scoped_original_tls_native_wintun_windows.go",
+            )),
+          ):
+              dest=root/"legacy"/"internal"/part
+              dest.mkdir(parents=True,exist_ok=True)
+              for name in names:
+                  relative="r0/go_overlay/internal/"+part+"/"+name
+                  target=dest/name
+                  assert not target.exists(), "frozen Go/M4 has an existing competing owner: "+relative
+                  raw=subprocess.check_output(["git","show",sha+":"+relative])
+                  assert len(raw)>60 and raw.startswith(b"//go:build windows")
+                  target.write_bytes(raw)
+          # The actual M0 product service and native kernel ring are
+          # supplied by the SAME manifest-plan020-m0.json assembly, not
+          # copied from another source/branch.
+          assert (root/"legacy/internal/windowsownerlease/original_tls_native_product_windows.go").is_file()
+          assert (root/"legacy/internal/windowsclient/native_real_product_service_windows.go").is_file()
+          assert (root/"legacy/internal/windowsclient/native_udp_kernel_driver_windows.go").is_file()
+          print("M0_PLAN020_ORIGINAL_TLS_RUST_TO_NATIVE_HOST_WAL_BUNDLE_EXACT_SAME_SOURCE")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'full native Go/V4 Rust source-locked assembly FAIL'}
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
+          } finally {Pop-Location}
+          Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
       - name: Native Windows five-stage WAL readback and false Applied negatives
         shell: pwsh
         run: |
