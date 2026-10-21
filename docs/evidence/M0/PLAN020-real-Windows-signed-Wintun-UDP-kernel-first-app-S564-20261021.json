@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "6847fef558c7564f5f2800a37b72e23c652a065e",
+  "result": "PASS_SCOPED_REAL_SIGNED_WINDOWS2022_WINTUN_KERNEL_UDP_FIRST_APP_AFTER_TEST_ONLY_FIREWALL_PORT_GRANT_NO_PRODUCT_APPLIED",
+  "actions": {
+    "run_id": 39536888877,
+    "run_attempt": 1,
+    "workflow": ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml",
+    "job_id": 119015483079,
+    "runner": "windows-2022",
+    "conclusion": "success",
+    "artifact_id": 12318545777,
+    "artifact_name": "m0-plan020-native-udp-39536888877-1",
+    "artifact_sha256": "d01c0f94b3c07bdba400e73392f623e1c8f1642d1a7f89bb116e014b6cfa3503"
+  },
+  "locked_sources": {
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "m4_frozen_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "official_signed_wintun_version": "0.14.1",
+    "official_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "verified": {
+    "real_native_windows_kernel_Wintun_kernel_copy": 1,
+    "actual_windows_UDP_socket_payloads": 1,
+    "pinned_created_GUID_LUID_ifindex_PnP": true,
+    "actual_test_only_Windows_Defender_rule": "Exact local 198.18.20.77 remote 198.18.20.88 UDP dynamic destination port, rule unique per nonce, test cleanup with native netsh, never disables profiles or changes default route",
+    "source_ip_verified": true,
+    "destination_bound_to_original_Wintun_IP_DAD": true,
+    "ring_exclusive_owner": true,
+    "stale_kernel_copy_denied": true,
+    "repeat_stop_idempotent": true,
+    "temporary_test_guard_is_production_WFP": false,
+    "real_original_go_TLS_Rust_AEAD_packet_in_this_run": false
+  },
+  "original_fails": [
+    {
+      "source_sha": "2953c6e0c7663fd3a8052e529e163fe0a37a860b",
+      "run_id": 39524365192,
+      "result": "FAIL_REAL_WINDOWS_SIGNED_WINTUN_UDP_SOCKET_TIMEOUT"
+    },
+    {
+      "source_sha": "5f481072a50e03796b40cde7758777a7ac7cce34",
+      "run_id": 39524896364,
+      "result": "FAIL_REAL_WINTUN_UDP_SOCKET_TIMEOUT_BOUND_TO_OWNED_IPV4_NO_EXACT_FIREWALL_ALLOW"
+    },
+    {
+      "source_sha": "5f481072a50e03796b40cde7758777a7ac7cce34",
+      "run_id": 39524896381,
+      "result": "FAIL_GOVERNANCE_STRUCTURE_WORKER_MAIN_HISTORICAL_CURSOR_REV_MISMATCH"
+    },
+    {
+      "source_sha": "c5c4d74fb240719bab51f757cc0ccce0b0e6427a",
+      "run_id": 39537380444,
+      "result": "FAIL_STATIC_R0_AUDIT_ORIGINAL_ASSUMED_REV2_M4_ACTIVE"
+    },
+    {
+      "source_sha": "14e792ecf2bb437edd09ec8ff153710ef3331e33",
+      "run_id": 39537585697,
+      "result": "FAIL_STATIC_R0_AUDIT_WRONG_MAIN_M4_ARCHIVAL_CURSOR_SEQUENCE"
+    }
+  ],
+  "governance_after_fixes": [
+    {
+      "source_sha": "bfa7de75b32cea0cde75a32354bbe784305df82f",
+      "run_id": 39537705344,
+      "conclusion": "success",
+      "scope": "main registry role/identity/structure"
+    },
+    {
+      "source_sha": "bfa7de75b32cea0cde75a32354bbe784305df82f",
+      "run_id": 39537705334,
+      "conclusion": "success",
+      "scope": "full maintenance regression and historic qualification audit"
+    },
+    {
+      "source_sha": "bfa7de75b32cea0cde75a32354bbe784305df82f",
+      "run_id": 39537705272,
+      "conclusion": "success",
+      "scope": "R0 historic gate source/scope audit"
+    }
+  ],
+  "retained": {
+    "linux_four_modes_source": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+    "linux_one_source_run": 39433130093,
+    "windows_TLS_Rust_owner": "PASS_SCOPED_PREVIOUS_SOURCE",
+    "windows_SIGNED_Wintun_native_owner": "PASS_SCOPED_PREVIOUS_SOURCE"
+  },
+  "qualification": {
+    "windows_kernel_udp_first_app": "PASS_SCOPED_ONLY_WITH_NARROW_TEMPORARY_FIREWALL_RULE",
+    "windows_original_TLS_Rust_authenticated_app_same_source": "NOT_RUN",
+    "windows_full_persistent_WFP": "NOT_RUN",
+    "windows_owned_default_route_DNS_IPv6_MTU_WAL": "NOT_RUN",
+    "windows_WinForms_Connected_Disconnect": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "next_action": "Complete M0-owned Windows persistent WFP exact single-Wintun generation guard stage with OS readback, full controlled route/DNS/IPv6 WAL/CAS, and run original Go credential TLS→Rust authenticated UDP via signed Wintun into WinForms Applied/Disconnect/Stop in one isolated Windows2022 source-locked product workflow; refuse all partial APPLIED."
+}
