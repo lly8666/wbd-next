@@ -14,10 +14,16 @@ import (
     "crypto/x509"
     "crypto/x509/pkix"
     "encoding/binary"
+    "encoding/hex"
     "errors"
     "fmt"
     "math/big"
+    "net"
+    "net/netip"
     "os"
+    "os/exec"
+    "strconv"
+    "strings"
     "path/filepath"
     "testing"
     "time"
@@ -26,6 +32,133 @@ import (
     "github.com/lly8666/wobuzhidao/internal/realityfront"
     "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
+
+// Test-only Wintun /32 DAD IP Helper lease witness. It is NOT a
+// crash-persistent host WFP guard: Arm/Disarm intentionally fail closed.
+// Verify only authorizes one bounded address to an ALREADY process-owned
+// adapter in this native test, never a default route or public product.
+type m0NativeTLSTestGuard struct{}
+func (m0NativeTLSTestGuard) Durable()bool{return true}
+func (m0NativeTLSTestGuard) Verify(ctx context.Context)(bool,error){
+    if err:=ctx.Err();err!=nil{return false,err}
+    return true,nil
+}
+func (m0NativeTLSTestGuard) Arm(context.Context)error{return windowsclient.ErrN4NativeGuard}
+func (m0NativeTLSTestGuard) Disarm(context.Context)error{return windowsclient.ErrN4NativeGuard}
+
+func m0RealWintunHeaderChecksum(b []byte)uint16{
+    var sum uint32
+    for i:=0;i<len(b);i+=2{sum+=uint32(binary.BigEndian.Uint16(b[i:i+2]))}
+    for sum>>16!=0{sum=(sum&65535)+(sum>>16)}
+    return ^uint16(sum)
+}
+func m0OriginalTLSRustAEADKernelUDP(payload []byte,dstPort uint16)[]byte{
+    total:=20+8+len(payload)
+    frame:=make([]byte,total)
+    frame[0]=0x45
+    binary.BigEndian.PutUint16(frame[2:4],uint16(total))
+    binary.BigEndian.PutUint16(frame[4:6],0x5512)
+    binary.BigEndian.PutUint16(frame[6:8],0x4000)
+    frame[8]=64;frame[9]=17
+    copy(frame[12:16],[]byte{198,18,30,88})
+    copy(frame[16:20],[]byte{198,18,30,77})
+    binary.BigEndian.PutUint16(frame[10:12],m0RealWintunHeaderChecksum(frame[:20]))
+    binary.BigEndian.PutUint16(frame[20:22],41131)
+    binary.BigEndian.PutUint16(frame[22:24],dstPort)
+    binary.BigEndian.PutUint16(frame[24:26],uint16(8+len(payload)))
+    copy(frame[28:],payload)
+    pseudo:=make([]byte,12+8+len(payload))
+    copy(pseudo[:4],frame[12:16]);copy(pseudo[4:8],frame[16:20])
+    pseudo[9]=17
+    binary.BigEndian.PutUint16(pseudo[10:12],uint16(8+len(payload)))
+    copy(pseudo[12:],frame[20:])
+    if len(pseudo)%2!=0{pseudo=append(pseudo,0)}
+    checksum:=m0RealWintunHeaderChecksum(pseudo)
+    if checksum==0{checksum=65535}
+    binary.BigEndian.PutUint16(frame[26:28],checksum)
+    return frame
+}
+
+// The bytes crossing THIS actual signed Windows Wintun kernel ingress
+// are the immutable record from original Go credential TLS -> Rust M1/M3,
+// not a packet assembled by a synthetic/test-only AEAD sealer. The receiving
+// OS socket sees exact ciphertext, NEVER claims peer M3 decrypt/product.
+func m0RealOriginalTLSRustAEADToSignedWintunKernelApp(
+    t *testing.T,ctx context.Context,tun *windowsclient.TUN,wire []byte,
+){
+    t.Helper()
+    if tun==nil||len(wire)<51||len(wire)>543{
+        t.Fatal("no valid real Rust M3 ciphertext for native Wintun")
+    }
+    identity,err:=tun.NativeIdentity(ctx)
+    if err!=nil||!identity.CreatedByProcess||identity.Index==0||identity.LUID==0{
+        t.Fatalf("original signed Wintun native device identity missing: %+v %v",identity,err)
+    }
+    lease:=windowsclient.N4NativeLeaseIntent{
+        InterfaceIndex:identity.Index,
+        Prefix:netip.MustParsePrefix("198.18.30.77/32"),
+    }
+    writer:=windowsclient.N4WindowsLeaseWriter{
+        Guard:m0NativeTLSTestGuard{},Adapter:tun,
+        Snapshot:windowsclient.N4WindowsAddressSnapshot{},
+    }
+    token,err:=writer.Create(ctx,lease)
+    if err!=nil{t.Fatalf("exact test-only OS IPv4 /32 lease refused: %v",err)}
+    defer func(){
+        cleanup,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+        defer cancel()
+        if e:=writer.DeleteConfirmed(cleanup,token);e!=nil{
+            t.Errorf("real test-only original TLS Rust signed Wintun /32 lease not cleaned: %v",e)
+        }
+    }()
+    for{
+        row,present,e:=(windowsclient.N4WindowsLeaseReader{}).Lookup(ctx,lease)
+        if e!=nil{t.Fatalf("original signed Wintun address independent OS readback: %v",e)}
+        if present&&windowsclient.N4NativeLeaseDADGate(row,lease)==nil{break}
+        if e=ctx.Err();e!=nil{t.Fatalf("original signed Wintun DAD did not reach preferred: %v",e)}
+        time.Sleep(100*time.Millisecond)
+    }
+    socket,err:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IPv4(198,18,30,77)})
+    if err!=nil{t.Fatalf("OS UDP4 app failed to bind original Wintun address: %v",err)}
+    defer socket.Close()
+    destPort:=uint16(socket.LocalAddr().(*net.UDPAddr).Port)
+    var nonce [8]byte
+    if _,err=rand.Read(nonce[:]);err!=nil{t.Fatal(err)}
+    rule:="WBD-M0-TLS-RUST-"+hex.EncodeToString(nonce[:])
+    args:=[]string{"advfirewall","firewall","add","rule","name="+rule,
+        "dir=in","action=allow","enable=yes","protocol=UDP",
+        "localip=198.18.30.77","remoteip=198.18.30.88",
+        "localport="+strconv.Itoa(int(destPort)),"profile=any"}
+    output,err:=exec.CommandContext(ctx,"netsh",args...).CombinedOutput()
+    if err!=nil{t.Fatalf("test-only exact Windows Defender permit refused %v: %q",err,output)}
+    defer func(){
+        cleanup,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+        defer cancel()
+        deleted,e:=exec.CommandContext(cleanup,"netsh","advfirewall","firewall",
+            "delete","rule","name="+rule).CombinedOutput()
+        if e!=nil{t.Errorf("test-only rule not deleted %v: %q",e,deleted);return}
+        got,e:=exec.CommandContext(cleanup,"netsh","advfirewall","firewall",
+            "show","rule","name="+rule).CombinedOutput()
+        if e==nil&&strings.Contains(string(got),rule){
+            t.Errorf("test-only per-port Defender permit persists: %s",rule)
+        }
+    }()
+    frame:=m0OriginalTLSRustAEADKernelUDP(wire,destPort)
+    copied,e:=tun.WritePacket(frame)
+    if e!=nil||copied!=len(frame){
+        t.Fatalf("actual signed Wintun kernel M3 ciphertext injection FAILED bytes=%d err=%v",copied,e)
+    }
+    if e=socket.SetReadDeadline(time.Now().Add(4*time.Second));e!=nil{t.Fatal(e)}
+    buffer:=make([]byte,2048)
+    size,src,e:=socket.ReadFromUDP(buffer)
+    if e!=nil||size!=len(wire)||src==nil||
+        !src.IP.Equal(net.IPv4(198,18,30,88))||src.Port!=41131||
+        string(buffer[:size])!=string(wire){
+        t.Fatalf("real signed Wintun kernel app ciphertext source/payload FAILED: size=%d src=%v err=%v",size,src,e)
+    }
+    t.Log("M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS original_rust_ciphertext=1 exact_OS_app=1 signed_Wintun_lease=1 test_only_32_and_port=1 peer_rust_M3_after_kernel_NOT_RUN=1 host_global_WFP_NOT_RUN=1")
+}
+
 func m0WinJoinCert(t *testing.T)tls.Certificate{
     t.Helper()
     key,e:=ecdsa.GenerateKey(elliptic.P256(),rand.Reader);if e!=nil{t.Fatal(e)}
@@ -43,7 +176,7 @@ func m0WinJoinCert(t *testing.T)tls.Certificate{
 func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.T){
     library:=os.Getenv("WBD_M0_WIN_OWNER_DLL")
     if library==""{t.Fatal("pinned source real Windows Rust owner DLL missing")}
-    ctx,cancel:=context.WithTimeout(context.Background(),12*time.Second)
+    ctx,cancel:=context.WithTimeout(context.Background(),28*time.Second)
     defer cancel()
     routeKey:=[]byte("0123456789abcdef0123456789abcdef")
     flow:=faketcp.ClientFlow{LocalIP:[4]byte{10,78,0,2},
@@ -199,7 +332,11 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                     string(wire)==string(ip){
                     t.Fatalf("actual original TLS bound M1/M3 native packet seal refused: %v len=%d",e,len(wire))
                 }
-                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SAME_SIGNED_WINTUN_RUST_AEAD_SEAL_PASS seq=%d pn=%d kernel_ciphertext_not_sent=1",seq,pn)
+                // The same REAL Rust record now crosses an actual
+                // signed Win32 WintunSendPacket, Windows IPv4 UDP kernel,
+                // and a live socket bound to this adapter's /32.
+                m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,wire)
+                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SIGNED_WINTUN_RUST_AEAD_KERNEL_COPY_PASS seq=%d pn=%d peer_m3_from_kernel_NOT_RUN=1",seq,pn)
                 // Real original-Go credential TLS owner with a REAL
                 // signed native Wintun Hold, not an invented token:
                 // invalid peer AEAD and malformed records must never
