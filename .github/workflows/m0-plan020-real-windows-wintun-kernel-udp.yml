@@ -51,7 +51,7 @@ jobs:
           # Assemble only original byte-exact Git blobs, not normalized tree
           # files, otherwise preflight correctly rejects a different blob.
           import hashlib
-          def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
+          def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
           for item in m["operations"]:
               if item["kind"]=="replace":
                   raw=subprocess.check_output(["git","-C","legacy","show",
