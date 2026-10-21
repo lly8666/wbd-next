@@ -8,6 +8,8 @@ package realityfront
 import (
     "context"
     "errors"
+    "runtime"
+    "unsafe"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
@@ -65,6 +67,53 @@ func(s *V4WindowsAuthenticatedClientOwner) OriginalOwnerReadback()(V4WindowsScop
         ProductApplied:false,
     },nil
 }
+
+// SealBoundOriginalNormalOff is callable only AFTER original-Go verified
+// credential TLS, successful Rust commit and the same live M4-created native
+// Wintun Hold. It asks the SAME Rust M1 owner for a single immutable M3 AEAD
+// record. This makes NO assertion that any OS UDP packet was sent yet.
+func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
+    ctx context.Context,ipv4 []byte,
+)([]byte,uint32,uint64,error){
+    if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
+        s.bridge.sealNormalProc==nil||len(ipv4)<20||len(ipv4)>512||
+        ipv4[0]>>4!=4{
+        return nil,0,0,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return nil,0,0,err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    owner,err:=s.OriginalOwnerReadback()
+    if err!=nil||!owner.OwnerActive||!owner.DeviceBound||
+        owner.DeviceQuiesced||owner.ProductApplied{
+        return nil,0,0,errV4WindowsOwner
+    }
+    // 31 is the original M3 fixed on-wire record overhead. The v3 Rust
+    // authority also computes its own conservative 576B budget and rejects
+    // oversize data before consuming a PN.
+    wire:=make([]byte,len(ipv4)+31)
+    var used uintptr
+    var seq uint32
+    var pn uint64
+    err=winOwnerCall(s.bridge.sealNormalProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+        uintptr(unsafe.Pointer(&ipv4[0])),uintptr(len(ipv4)),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&used)),
+        uintptr(unsafe.Pointer(&seq)),uintptr(unsafe.Pointer(&pn)),
+    )
+    runtime.KeepAlive(ipv4)
+    runtime.KeepAlive(wire)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used!=uintptr(len(wire)){
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    return wire,seq,pn,nil
+}
+
 // This only stops Rust M1/M3 after an M4-held CURRENT created Wintun has
 // separately quiesced (or without any device binding at all). It cannot be
 // promoted to V4OriginalOwnerStopper's "OwnerAndDriversDrained" product

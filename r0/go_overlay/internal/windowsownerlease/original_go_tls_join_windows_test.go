@@ -13,6 +13,7 @@ import (
     "crypto/tls"
     "crypto/x509"
     "crypto/x509/pkix"
+    "encoding/binary"
     "errors"
     "fmt"
     "math/big"
@@ -175,6 +176,30 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                         t.Fatalf("guard denial must never mutate native network WAL %s: %v",name,err)
                     }
                 }
+
+                // A real original-Go credential TLS client holds this
+                // same signed Wintun generation while the actual Rust M1
+                // original owner creates an M3 authenticated/immutable record.
+                // The returned record is a carrier payload only. This test
+                // does NOT claim real Windows UDP I/O for that ciphertext.
+                ip:=make([]byte,40)
+                ip[0]=0x45
+                binary.BigEndian.PutUint16(ip[2:4],uint16(len(ip)))
+                ip[8]=64;ip[9]=17
+                copy(ip[12:16],[]byte{198,18,20,88})
+                copy(ip[16:20],[]byte{198,18,20,77})
+                binary.BigEndian.PutUint16(ip[20:22],41131)
+                binary.BigEndian.PutUint16(ip[22:24],41132)
+                binary.BigEndian.PutUint16(ip[24:26],20)
+                ip[28]=0xa7
+                // Real M3 Normal/off authenticated record seal, not a Go
+                // crypto surrogate and not a second Rust owner.
+                wire,seq,pn,e:=native.SealBoundOriginalNormalOff(ctx,ip)
+                if e!=nil||len(wire)!=len(ip)+31||seq==0||
+                    string(wire)==string(ip){
+                    t.Fatalf("actual original TLS bound M1/M3 native packet seal refused: %v len=%d",e,len(wire))
+                }
+                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SAME_SIGNED_WINTUN_RUST_AEAD_SEAL_PASS seq=%d pn=%d kernel_ciphertext_not_sent=1",seq,pn)
                 t.Log("M0_PLAN013_TRUE_TLS_WINTUN_RUST_OS_PRODUCT_GUARD_DENIED_NO_WAL_MUTATION_PASS")
                 if e=scoped.StopRustScoped(ctx);e!=nil{t.Fatal("M4 original native Wintun real quiesce->Rust owner Stop",e)}
                 t.Logf("M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=%d index=%d os_applied=0 no_wfp_or_kernel_app=1",id.LUID,id.InterfaceIndex)

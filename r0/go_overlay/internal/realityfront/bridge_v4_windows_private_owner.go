@@ -23,6 +23,7 @@ type v4WindowsNativeOwnerBridge struct {
     dll *syscall.DLL
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
     bindWintunProc,quiesceWintunProc,deviceStateProc *syscall.Proc
+    sealNormalProc,openNormalProc *syscall.Proc
     handle uint64
     epoch [16]byte
     serverSide bool
@@ -49,6 +50,8 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
         {"wbd_m0_win_owner_v2_bind_wintun",&b.bindWintunProc},
         {"wbd_m0_win_owner_v2_quiesce_wintun",&b.quiesceWintunProc},
         {"wbd_m0_win_owner_v2_device_state",&b.deviceStateProc},
+        {"wbd_m0_win_owner_v3_seal_normal_off",&b.sealNormalProc},
+        {"wbd_m0_win_owner_v3_open_normal_off",&b.openNormalProc},
     }
     for _,entry:=range names{
         p,e:=find(entry.name)

@@ -81,7 +81,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) {throw 'actual Windows original Rust owner lifecycle tests FAIL'}
           $log=Get-Content windows-owner-result/native-tests.log -Raw
           foreach ($test in @('m0_windows_owner_real_native_prepare_commit_stop_generation_scoped','m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply',
-                   'm0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale')) {
+                   'm0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale',
+                   'm0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation')) {
             if ($log -notmatch ('test .*'+[regex]::Escape($test)+'.* ok')) {throw "native Rust test NOT_RUN $test"}
           }
       - name: Build actual Windows Rust DLL and inspect external C FFI without simulated native products
@@ -99,7 +100,8 @@ jobs:
                  "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_state",
                  "wbd_m0_win_owner_v1_stop","wbd_m0_win_owner_v1_release",
                  "wbd_m0_win_owner_v2_bind_wintun","wbd_m0_win_owner_v2_quiesce_wintun",
-                 "wbd_m0_win_owner_v2_device_state")
+                 "wbd_m0_win_owner_v2_device_state",
+                 "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off")
           for name in names:assert getattr(dll,name,None) is not None,name
           class S(ctypes.Structure):
               _fields_=[(name,ctypes.c_uint32) for name in ("version","size","generation","phase","server","applied","loans_drained","reserved")]
