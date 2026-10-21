@@ -20,7 +20,7 @@ permissions: {contents: read}
 jobs:
   original-go-native-wal:
     runs-on: windows-2022
-    timeout-minutes: 18
+    timeout-minutes: 28
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -133,6 +133,28 @@ jobs:
               throw ('native owner/kernel/native WAL contract test NOT_RUN: '+$named)
             }
           }
+      - name: Build source-locked native Windows Rust DLL for V4 portable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) {throw 'pinned native Rust 1.85.1 unavailable'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if ($LASTEXITCODE -ne 0) {throw 'pinned Rust MSVC target unavailable'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go
+          if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
+          @'
+          import ctypes,hashlib,pathlib
+          p=pathlib.Path("target/release/wbd_engine.dll")
+          assert p.is_file() and p.stat().st_size>100000,"actual Rust DLL missing"
+          dll=ctypes.WinDLL(str(p.resolve()))
+          for name in ("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare",
+                      "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
+                      "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off"):
+              assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
+          print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'native Rust original TLS M3 C-ABI export check FAIL'}
       - name: Compile original WinForms executable and real original Go Windows CLI
         shell: pwsh
         run: |
@@ -146,7 +168,14 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath result/portable/WBD.exe)) {
             throw 'original native WinForms executable not compiled'
           }
-          Copy-Item -LiteralPath result/wbd-client.exe -Destination result/portable/wbd-client.exe
+          # Use the SAME pinned original-Go V4 Rust client that CI linked.
+          # Untagged V3 may still compile for legacy proof, never ship it.
+          Copy-Item -LiteralPath result/wbd-client-embedded.exe -Destination result/portable/wbd-client.exe
+          Copy-Item -LiteralPath target/release/wbd_engine.dll -Destination result/portable/wbd_engine.dll
+          if (!(Test-Path result/portable/wbd_engine.dll)) {throw 'portable Rust V4 native DLL absent'}
+          $clientHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd-client.exe).Hash.ToLowerInvariant()
+          $rustHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd_engine.dll).Hash.ToLowerInvariant()
+          Write-Output ('M0_PLAN020_ACTUAL_V4_CLIENT_AND_RUST_M3_PORTABLE_PASS client_sha256='+$clientHash+' dll_sha256='+$rustHash)
           $file='result/portable/WBD.exe'
           $sig=(Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
           if ($sig.Length -ne 64) {throw 'compiled WinForms file SHA missing'}
@@ -171,9 +200,29 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           @'
-          import os,pathlib,json,re
+          import os,pathlib,json,re,hashlib
           gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
           assert "WBD_WINDOWS_OS_APPLIED" in gui
+          portable=pathlib.Path("legacy/windows/gui/Portable.cs").read_text(encoding="utf8")
+          assert 'Info("--native-v4-product --control-stdin --config "' in portable
+          assert 'if (nativeApplied && !nativeStopped)' in portable
+          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable
+          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
+          tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
+          assert 'windowsclient.N4NativeNetworkReady(ctx)' in tagged
+          for name in ("wbd-client.exe","wbd_engine.dll","WBD.exe"):
+              p=pathlib.Path("result/portable")/name
+              assert p.is_file() and p.stat().st_size>100000,name
+          manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
+                        native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
+                        native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),
+                        winforms_sha256=hashlib.sha256(pathlib.Path("result/portable/WBD.exe").read_bytes()).hexdigest(),
+                        scope="SOURCE_LOCKED_REAL_NATIVE_V4_RUST_DLL_WINFORMS_BUNDLE_PASS_BUILD_ONLY",
+                        global_host_WFP_routes_DNS_IPv6_MTU_WAL="NOT_RUN",
+                        native_public_CLI_real_first_app_Apply_Stop="NOT_RUN",
+                        windows_production="OFF",fec2_production="OFF",game_production="OFF")
+          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\\n")
           assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
           assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
           assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
