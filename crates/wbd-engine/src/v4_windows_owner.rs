@@ -12,7 +12,10 @@ use crate::v4_owner_crypto::ProtectedScopedOwner;
 use crate::memory::Arena;
 use crate::runtime::early_rx::EarlyAccepted;
 use wbd_types::MonoNs;
-use wbd_types::buffer_contract::UniqueSealable;
+use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
+use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
+use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
+use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 
 const OK:i32=0;
 const INVALID:i32=1;
@@ -43,6 +46,9 @@ struct Entry {
     owner:ProtectedScopedOwner,
     arena:Arena,
     authenticated_epoch:[u8;16],
+    peer_mss:u16,
+    peer_mss_advertised:bool,
+    record_wire_limit:usize,
     device:Option<ScopedWindowsWintunIdentity>,
 }
 // An original-Go-verified WintunReservation.Hold on the actual native OS
@@ -79,13 +85,18 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     let arena=Arena::new(generation,64,2048,64,1_000_000).map_err(|_|FULL)?;
     let rx_limit=if server{parsed.identity().server_limit}
         else{parsed.identity().client_limit};
+    let record_wire_limit=usize::from(if server{
+        parsed.identity().client_limit
+    }else{parsed.identity().server_limit});
     r.generation=next;
     r.entries.insert(handle,Entry{
         generation,phase:PH_PREPARED,role_server:server,
         rx_boundary:handoff.rx_boundary,limit:rx_limit,count:0,bytes:0,
         owner,arena,
         authenticated_epoch:parsed.identity().logical_epoch,
-        device:None
+        peer_mss:handoff.peer_mss,
+        peer_mss_advertised:handoff.peer_mss_advertised,
+        record_wire_limit,device:None
     });
     Ok(handle)
 }
@@ -311,6 +322,142 @@ pub extern "C" fn wbd_m0_win_owner_v1_release(h:u64)->i32{
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     release(&mut r,h)
 }
+
+// V3 is deliberately a private RECORD boundary, not a Windows OS Applied
+// decision. The source of the real credentials is the existing original-Go
+// protected callback that issued this handle, never these C bytes alone.
+// The conservative 576-byte link budget must later be replaced by the
+// independently observed live Wintun+carrier MTU before product activation.
+fn normal_off_windows_budget(e:&Entry)->Result<FrameBudget,i32>{
+    FrameBudget::derive(FrameBudgetInput{
+        connection_mtu:576,local_packet_mtu:576,
+        ipv4_header_len:20,tcp_header_len:20,
+        peer_mss:if e.peer_mss_advertised {Some(e.peer_mss)} else {None},
+        record_wire_limit:e.record_wire_limit,
+        fec:FecReservation::FixedOff,game:false,
+    }).map_err(|_|INVALID)
+}
+fn v3_ready(r:&Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->bool{
+    r.entries.get(&h).is_some_and(|e|
+        e.phase==PH_ACTIVE && e.authenticated_epoch==epoch &&
+        e.device.is_some_and(|d|!d.quiesced && d.luid==luid && d.ifindex==ifindex))
+}
+fn v3_seal_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,ipv4:&[u8],out:&mut [u8]
+)->Result<(usize,u32,u64),i32>{
+    if !v3_ready(r,h,epoch,luid,ifindex)||ipv4.len()<20||
+        ipv4[0]>>4!=4 || ipv4.len()>2048 || out.len()<ipv4.len()+FIXED_WIRE_OVERHEAD{
+        return Err(INVALID)
+    }
+    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    let budget=normal_off_windows_budget(e)?;
+    if ipv4.len()>budget.single_business_payload_mtu ||
+        ipv4[0]&15<5{return Err(INVALID)}
+    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+    slab.writable()[14..14+ipv4.len()].copy_from_slice(ipv4);
+    let (pn,seq,used)=e.owner.seal_normal_off_one(
+        slab,ipv4.len(),budget,0,MonoNs(0)).map_err(|_|BAD_STAGE)?;
+    // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
+    // carrier buffer while its genuine LoanBatch remains borrowed; recycle
+    // generation-scoped loans on *every* path, including rejected batches.
+    let batch=e.owner.drain_tx(MonoNs(0),Vec::with_capacity(1))
+        .map_err(|_|BAD_STAGE)?;
+    let accepted=(||{
+        let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
+        if ready.len()!=1 || ready[0].record.bytes().len()!=used {
+            return Err(BAD_STAGE)
+        }
+        out[..used].copy_from_slice(ready[0].record.bytes());
+        Ok((used,seq,pn))
+    })();
+    let _unused_storage=batch.recycle();
+    accepted
+}
+fn v3_open_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
+)->Result<usize,i32>{
+    if !v3_ready(r,h,epoch,luid,ifindex)||
+        wire.len()<=FIXED_WIRE_OVERHEAD || wire.len()>2048 ||
+        out.len()<wire.len(){return Err(INVALID)}
+    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+    slab.writable()[..wire.len()].copy_from_slice(wire);
+    e.owner.offer_after_active(slab,0..wire.len(),u64::from(seq),MonoNs(0))
+        .map_err(|_|INVALID)?;
+    let mut len=0usize;
+    let mut valid=false;
+    let (storage,report)=e.owner.drain_authenticated(
+        MonoNs(0),Vec::with_capacity(1),|_pn,link|{
+            // No unauthenticated DATA, replay, HEALTH or fragmented LINK
+            // can reach a Windows kernel packet sink from this v3 boundary.
+            // Fragmentation will be installed with the complete M3 table.
+            if matches!(inspect_link(link,wire.len(),LinkMode::FixedOff),
+                Ok(LinkView::Ordinary(_))) &&
+                link.len()>=20 && link[0]>>4==4 &&
+                link[0]&15>=5 && link.len()<=out.len(){
+                out[..link.len()].copy_from_slice(link);
+                len=link.len();valid=true;
+            }
+        }).map_err(|_|BAD_STAGE)?;
+    drop(storage);
+    if valid && report.link_ready==1 && report.rejected==0
+        && report.control_ready==0 {Ok(len)} else {Err(INVALID)}
+}
+fn v3_epoch(ptr:*const u8,len:usize)->Option<[u8;16]>{
+    if ptr.is_null()||len!=16{return None}
+    let mut epoch=[0;16];
+    epoch.copy_from_slice(unsafe{std::slice::from_raw_parts(ptr,16)});
+    Some(epoch)
+}
+// A transport-layer Go driver still must prove the native Wintun OS
+// ownership/route readback before using this wire on an actual socket.
+// Epoch/luid/index are checked AGAINST an already bound Rust owner; passing
+// them as params cannot bind or grant an unauthorized device.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v3_seal_normal_off(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    ipv4:*const u8,ipv4_len:usize,out:*mut u8,capacity:usize,
+    used:*mut usize,seq:*mut u32,pn:*mut u64,
+)->i32{
+    if ipv4.is_null()||out.is_null()||used.is_null()||seq.is_null()||
+        pn.is_null()||ipv4_len<20||ipv4_len>2048||
+        capacity<ipv4_len+FIXED_WIRE_OVERHEAD||capacity>65535{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    // No mutable-aliasing FFI: input and output must not overlap.
+    let src_start=ipv4 as usize;let dst_start=out as usize;
+    if src_start.checked_add(ipv4_len).is_none_or(|end|
+        dst_start<end && src_start<dst_start.saturating_add(capacity)){return INVALID}
+    let data=unsafe{std::slice::from_raw_parts(ipv4,ipv4_len)};
+    let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
+    match v3_seal_one(&mut r,h,exact,luid,ifindex,data,dst){
+        Ok((n,s,p))=>{
+            unsafe{used.write(n);seq.write(s);pn.write(p)};OK
+        },
+        Err(e)=>e,
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v3_open_normal_off(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    seq:u32,wire:*const u8,wire_len:usize,out:*mut u8,capacity:usize,
+    used:*mut usize,
+)->i32{
+    if wire.is_null()||out.is_null()||used.is_null()||
+        wire_len<=FIXED_WIRE_OVERHEAD||wire_len>2048||
+        capacity<wire_len||capacity>65535{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let src_start=wire as usize;let dst_start=out as usize;
+    if src_start.checked_add(wire_len).is_none_or(|end|
+        dst_start<end && src_start<dst_start.saturating_add(capacity)){return INVALID}
+    let data=unsafe{std::slice::from_raw_parts(wire,wire_len)};
+    let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    match v3_open_one(&mut r,h,exact,luid,ifindex,seq,data,dst){
+        Ok(n)=>{unsafe{used.write(n)};OK},Err(e)=>e,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -412,6 +559,47 @@ mod tests {
         assert_ne!(h,next);
         assert_eq!(bind_wintun(&mut r,h,exact,123,77),UNKNOWN);
         assert_eq!(PRODUCT_APPLIED,0);
+    }
+
+    #[test]
+    fn m0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation(){
+        let mut r=Registry{generation:101,entries:BTreeMap::new()};
+        let client=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let server=allocate(&mut r,&cold(true),&cmd(),true).unwrap();
+        // Synthetic unit credentials do NOT authorize Windows product;
+        // positive record bytes still pass the actual M3 AEAD/PN and M1
+        // immutable FrozenRecord/borrowed owner queues (not a mock cipher).
+        assert_eq!(commit(&mut r,client,0,0,500),OK);
+        assert_eq!(commit(&mut r,server,0,0,500),OK);
+        let epoch=[2u8;16];
+        assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&[0x45;40],&mut [0;256]),
+            Err(INVALID)); // cannot seal without real original Wintun bind
+        assert_eq!(bind_wintun(&mut r,client,epoch,7,11),OK);
+        assert_eq!(bind_wintun(&mut r,server,epoch,8,12),OK);
+        let mut packet=[0u8;40];packet[0]=0x45;packet[2..4].copy_from_slice(&40u16.to_be_bytes());
+        packet[8]=64;packet[9]=17;
+        let mut encrypted=[0u8;256];
+        let (n,seq,pn)=v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted).unwrap();
+        assert_eq!(n,packet.len()+FIXED_WIRE_OVERHEAD);
+        assert_eq!(pn,0);
+        assert_ne!(&encrypted[..n],packet.as_slice());
+        let mut output=[0u8;256];
+        let used=v3_open_one(&mut r,server,epoch,8,12,seq,&encrypted[..n],&mut output).unwrap();
+        assert_eq!(&output[..used],packet.as_slice());
+        assert_eq!(v3_open_one(&mut r,server,epoch,8,12,seq,&encrypted[..n],&mut output),Err(INVALID));
+        let mut tampered=encrypted;
+        tampered[n-1]^=1;
+        assert_eq!(v3_open_one(&mut r,server,epoch,8,12,seq+n as u32,&tampered[..n],&mut output),Err(INVALID));
+        assert_eq!(v3_seal_one(&mut r,client,[9;16],7,11,&packet,&mut encrypted),Err(INVALID));
+        assert_eq!(v3_seal_one(&mut r,client,epoch,9,11,&packet,&mut encrypted),Err(INVALID));
+        assert_eq!(quiesce_wintun(&mut r,client,epoch,7,11),OK);
+        assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(INVALID));
+        assert_eq!(stop(&mut r,client),OK);
+        assert_eq!(release(&mut r,client),OK);
+        assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(INVALID));
+        assert_eq!(quiesce_wintun(&mut r,server,epoch,8,12),OK);
+        assert_eq!(stop(&mut r,server),OK);
+        assert_eq!(release(&mut r,server),OK);
     }
 
 }
