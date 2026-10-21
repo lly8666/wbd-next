@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "91b1ca9e5b257acf331b05bdf8a5c127df91e07a",
+  "result": "PASS_FUNCTIONAL_CI_WINDOWS_NATIVE_V4_NORMAL_OFF_ACTIONS_QUALIFIED_OPEN_FOR_NETWORK_TEST_ONLY",
+  "user_hard_gate_change": "2026-10-21 PLAN021: exact-SOURCE positive GitHub Actions functional PASS sufficient for wired feature opt-in network trials. Full host global WFP/default routes/physical/long-duration matrices are next scenarios, no longer a prerequisite to opening trial entry.",
+  "qualification_scope": {
+    "platform": "Windows Server 2022 x64 GitHub Actions",
+    "public_entry": "--native-v4-product; operator opt-in; original-Go TLS/Rust M3 signed Wintun, single lane Normal/off",
+    "test_channel": "OPEN_FOR_NETWORK_TEST",
+    "product_full_host_global_WFP_two_half_routes": "NOT_RUN",
+    "physical_network": "NOT_RUN",
+    "public_WinForms_real_OS_Applied_Disconnected": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "Windows_V4_Fixed_Auto_Game2_Game4": "EXPOSED_NOT_WIRED",
+    "Linux_V4_Fixed_Auto": "EXISTING_PRIOR_SOURCE_MODE_SCOPED_CI_POSITIVE_DO_NOT_ATTRIBUTED_TO_WINDOWS_SOURCE",
+    "Linux_V4_Game2_Game4": "REQUIRES_OWN_PUBLIC_CLI_EXACT_SOURCE_POSITIVE",
+    "legacy_Go_V3_modes": "SEPARATE_BINARY_SOURCE",
+    "automatic_production_install": "NOT_AUTHORIZED_NO_DEPLOYMENT"
+  },
+  "modified_feature_gate": {
+    "source": "91b1ca9e5b257acf331b05bdf8a5c127df91e07a",
+    "former_old_unconditional_block": "windowsclient.N4NativeNetworkReady(ctx) in M0 opt-in V4 path",
+    "new_trial_execution": "windowsownerlease.PrepareOriginalTLSNativeProduct -> product.Apply -> real independently confirmed receipt.AllNativeOSApplied and product.LiveReceipt -> product.Stop",
+    "runtime_security": "original credential TLS and AEAD, signed process-owned Wintun pinned PnP/generation, native WFP/WAL/routes/lease/MTU/DNS CAS and foreign/stale protection are retained; error never prints Applied",
+    "frozen_original_Go_product_barrier": "UNMODIFIED",
+    "m0_cli_blob": "beaed340b46d6f9bc2c1f84cd70edf32a1cbd7ef",
+    "workflow_blob": "9b8eba1e400ab15581e8182a0636730bc6e56c0a"
+  },
+  "actions": {
+    "id": 39623113021,
+    "attempt": 1,
+    "job_id": 119301394956,
+    "workflow": ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+    "head_sha": "91b1ca9e5b257acf331b05bdf8a5c127df91e07a",
+    "status": "completed",
+    "conclusion": "success",
+    "artifact_id": 12356441857,
+    "artifact_name": "m0-plan020-win-wal-39623113021-1",
+    "artifact_sha256": "d1d7a9ab9e33b7fcbccd58efd2275838a36b183e93ed4a2a482ca9d4867c6712",
+    "artifact_bytes": 47209207
+  },
+  "exact_positive_tests": [
+    "M0_PLAN021_WINDOWS_V4_TRIAL_ADMISSION_OWNER_WAL_CAS_LIVE_RECEIPT_SAME_SOURCE_PASS",
+    "TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop PASS (unit fake stage)",
+    "TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks PASS (unit fake stage)",
+    "TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback PASS (unit fake stage)",
+    "TestM0PLAN020RealScopedWFPArmAndForeignCAS PASS (real TEST-NET WFP persistent scoped rule)",
+    "TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery PASS (unit crash partial/foreign negatives)",
+    "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED",
+    "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN",
+    "N4_GHOST_TERMINAL_RECOVERY_PASS (real Wintun devnode gone; fake WFP / no routes)",
+    "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY",
+    "WinForms portable real tagged original Go V4 Rust M3 signed Wintun bundle source-locked compile PASS",
+    "final GUI source check preserves actual OS Applied/Disconn source contract without old V3 hard deny PASS"
+  ],
+  "separate_governance": {
+    "s662": {
+      "run_id": 39622264827,
+      "conclusion": "success",
+      "maintenance_id": 39622264915,
+      "maintenance_conclusion": "success"
+    },
+    "s664": {
+      "run_id": 39623112990,
+      "conclusion": "failure",
+      "cause": "hot read budget 32918 > 32768 before S666 compact fix",
+      "maintenance_id": 39623112987,
+      "maintenance_conclusion": "failure"
+    },
+    "s666": {
+      "source_sha": "226b70d30a57766dbd9ad5b89e24279d58deb41c",
+      "run_id": 39623469087,
+      "conclusion": "success",
+      "maintenance_id": 39623469283,
+      "maintenance_conclusion": "success"
+    }
+  },
+  "preserved_failures": [
+    {
+      "source_sha": "5f13059600105bf81d4af934f497ec17451b768a",
+      "run_id": 39622264672,
+      "result": "FAIL",
+      "reason": "old final GUI source harness incorrectly required obsolete unconditional V3 network-ready deny; true same-source core tests passed scoped, but complete Action FAIL"
+    },
+    {
+      "source_sha": "5f13059600105bf81d4af934f497ec17451b768a",
+      "run_id": 39622264928,
+      "result": "FAIL_LEGACY_G2_BOOTSTRAP",
+      "reason": "unrelated old unqualified scaffolding demands registry revision2/4 workers active; current rev3 M4 reserved; never relabel as native product result"
+    },
+    {
+      "source_sha": "91b1ca9e5b257acf331b05bdf8a5c127df91e07a",
+      "run_id": 39623112990,
+      "result": "FAIL_GOVERNANCE_BEFORE_S666_HOT_BUDGET_FIX",
+      "reason": "hot read set 32918 > allowed 32768; fixed S666; clean governance and maintenance success independently observed"
+    }
+  ],
+  "next_action": "Execute varied network-condition testing in controlled operator opt-in sessions on source-locked trial binary; start actual full global host WFP IPv6/DNS, two /1 physical underlay and GUI OS receipt first, then weak-net/FEC2/Game modes only once actually public-wired and same-source CI-qualified. No automatic production switch."
+}
