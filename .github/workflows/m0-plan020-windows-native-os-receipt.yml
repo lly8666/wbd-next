@@ -96,7 +96,11 @@ jobs:
                   target=dest/name
                   assert not target.exists(), "frozen Go/M4 has an existing competing owner: "+relative
                   raw=subprocess.check_output(["git","show",sha+":"+relative])
-                  assert len(raw)>60 and raw.startswith(b"//go:build windows")
+                  assert len(raw)>60
+                  if name=="admission_v4.go":
+                      assert b"package realityfront" in raw
+                  else:
+                      assert raw.startswith(b"//go:build windows"),relative
                   target.write_bytes(raw)
           # The actual M0 product service and native kernel ring are
           # supplied by the SAME manifest-plan020-m0.json assembly, not
