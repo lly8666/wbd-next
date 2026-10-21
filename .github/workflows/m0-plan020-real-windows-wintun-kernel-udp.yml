@@ -7,6 +7,7 @@ on:
       - ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml"
       - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go"
+      - "docs/devlog/M0/PLAN020-S598-exact-parallel-Windows-action-trigger-20261021.md"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
