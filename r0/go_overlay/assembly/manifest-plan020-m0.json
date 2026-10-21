@@ -678,6 +678,18 @@
       "path": "internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
       "result_blob": "426a8ce585a105a5a6062233374c7942d1f86bec"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_mode_selection.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+      "result_blob": "0ce3d5d22b75989d629f6da30be1e1f87176b1d0"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
+      "result_blob": "155e95d41eb06ba143d9b2212f8f6479fb0058ce"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
