@@ -4,6 +4,9 @@ package realityfront
 import (
     "context"
     "crypto/tls"
+    "encoding/binary"
+    "runtime"
+    "unsafe"
     "errors"
     "os"
     "testing"
@@ -165,6 +168,96 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                     t.Fatalf("stale epoch obtained Win native lease: lease=%v err=%v",lease,e)
                 }
             }
+            // Native Rust M1/M3 peer record regression against the ACTUAL
+            // credential-derived original Go TLS cold secret for BOTH sides.
+            // Bind here via direct test-only Rust C ABI device IDs: no real
+            // Wintun PnP Hold is asserted. This is NOT host/kernel evidence.
+            type testEndpoint struct{ owner *v4WindowsNativeOwnerBridge; luid uint64; idx uint32 }
+            endpoints:=[]testEndpoint{
+                {cliOwner,77,7},
+                {srvOwner,88,8},
+            }
+            for _,endpoint:=range endpoints{
+                o:=endpoint.owner
+                if err:=winOwnerCall(o.bindWintunProc,
+                    uintptr(o.handle),uintptr(unsafe.Pointer(&o.epoch[0])),16,
+                    uintptr(endpoint.luid),uintptr(endpoint.idx));err!=nil{
+                    t.Fatalf("real original TLS Rust v3 test-only bind refused: %v",err)
+                }
+                runtime.KeepAlive(o.epoch)
+                state,e:=o.realNativeDeviceState()
+                if e!=nil||state.Bound!=1||state.Applied!=0{
+                    t.Fatalf("original-Go verified Rust peer ABI test bind status %+v err %v",state,e)
+                }
+            }
+            open:=func(endpoint testEndpoint,seq uint32,wire []byte)([]byte,error){
+                o:=endpoint.owner
+                dst:=make([]byte,len(wire))
+                var length uintptr
+                e:=winOwnerCall(o.openNormalProc,
+                    uintptr(o.handle),uintptr(unsafe.Pointer(&o.epoch[0])),16,
+                    uintptr(endpoint.luid),uintptr(endpoint.idx),
+                    uintptr(seq),uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+                    uintptr(unsafe.Pointer(&dst[0])),uintptr(len(dst)),
+                    uintptr(unsafe.Pointer(&length)))
+                runtime.KeepAlive(o.epoch);runtime.KeepAlive(wire);runtime.KeepAlive(dst)
+                if e!=nil{return nil,e}
+                if length==0||length>uintptr(len(dst)){return nil,errV4WindowsOwner}
+                return dst[:length],nil
+            }
+            for direction:=0;direction<2;direction++{
+                sender,receiver:=endpoints[direction],endpoints[1-direction]
+                ipv4:=make([]byte,40)
+                ipv4[0]=0x45
+                binary.BigEndian.PutUint16(ipv4[2:4],uint16(len(ipv4)))
+                ipv4[8]=64;ipv4[9]=17
+                copy(ipv4[12:16],[]byte{198,18,20,byte(80+direction)})
+                copy(ipv4[16:20],[]byte{198,18,21,byte(80+direction)})
+                binary.BigEndian.PutUint16(ipv4[20:22],41131)
+                binary.BigEndian.PutUint16(ipv4[22:24],41132)
+                binary.BigEndian.PutUint16(ipv4[24:26],20)
+                ipv4[28]=byte(0xa0+direction)
+                sealed:=make([]byte,len(ipv4)+31)
+                var used uintptr
+                var seq uint32
+                var pn uint64
+                o:=sender.owner
+                e:=winOwnerCall(o.sealNormalProc,
+                    uintptr(o.handle),uintptr(unsafe.Pointer(&o.epoch[0])),16,
+                    uintptr(sender.luid),uintptr(sender.idx),
+                    uintptr(unsafe.Pointer(&ipv4[0])),uintptr(len(ipv4)),
+                    uintptr(unsafe.Pointer(&sealed[0])),uintptr(len(sealed)),
+                    uintptr(unsafe.Pointer(&used)),uintptr(unsafe.Pointer(&seq)),
+                    uintptr(unsafe.Pointer(&pn)))
+                runtime.KeepAlive(o.epoch);runtime.KeepAlive(ipv4);runtime.KeepAlive(sealed)
+                if e!=nil||used!=uintptr(len(sealed))||seq==0{
+                    t.Fatalf("actual original TLS peer Rust M1/M3 TX fail cipher=%d direction=%d err=%v used=%d seq=%d",cipher,direction,e,used,seq)
+                }
+                if string(sealed)==string(ipv4){t.Fatal("M3 AEAD returned cleartext")}
+                plain,e:=open(receiver,seq,sealed)
+                if e!=nil||string(plain)!=string(ipv4){
+                    t.Fatalf("real original Go TLS Rust peer M3 RX fail cipher=%d direction=%d seq=%d pn=%d err=%v",cipher,direction,seq,pn,e)
+                }
+                if _,e=open(receiver,seq,sealed);e==nil{
+                    t.Fatal("real original TLS Rust peer replay accepted")
+                }
+                corrupt:=append([]byte(nil),sealed...)
+                corrupt[len(corrupt)-1]^=1
+                if _,e=open(receiver,seq+uint32(len(sealed)),corrupt);e==nil{
+                    t.Fatal("original TLS Rust peer accepted tampered M3 tag")
+                }
+                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_TO_REAL_PEER_RUST_M3_AEAD_BIDIRECTIONAL_PASS cipher=%d direction=%d pn=%d seq=%d replay_denied=1 tamper_denied=1 test_only_device=1 kernel_not_run=1",cipher,direction,pn,seq)
+            }
+            for _,endpoint:=range endpoints{
+                o:=endpoint.owner
+                if err:=winOwnerCall(o.quiesceWintunProc,
+                    uintptr(o.handle),uintptr(unsafe.Pointer(&o.epoch[0])),16,
+                    uintptr(endpoint.luid),uintptr(endpoint.idx));err!=nil{
+                    t.Fatalf("native TLS Rust M3 test-only quiesce refused: %v",err)
+                }
+                runtime.KeepAlive(o.epoch)
+            }
+            t.Log("M0_PLAN020_ACTUAL_ORIGINAL_TLS_RUST_PEER_M3_AUTHENTICATED_TWO_DIRECTIONS_PASS_SYNTHETIC_WINTUN_ID_NOT_KERNEL_OR_PRODUCT")
             t.Log("M0_PLAN013_REAL_CREATED_WINTUN_DEVICE_OS_LEASE_NOT_RUN_IN_REALITYFRONT_SCOPE external_adapter_required=1")
             // Actual Rust owner Stop first, before original-Go epoch/pipe
             // cleanup, and both terminal tokens cannot revive after release.
