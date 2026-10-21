@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "75900051ef1839a9641681abfd79cf73664e8bda",
+  "result": "FAIL_REAL_WINDOWS2022_REVERSE_RING_NON_IPV4_FRAME_NOT_IGNORED",
+  "test_run": {
+    "id": 39543106596,
+    "attempt": 1,
+    "job_id": 119035106648,
+    "conclusion": "failure",
+    "workflow": ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml",
+    "artifact_id": 12320193181,
+    "artifact_name": "m0-plan020-native-udp-39543106596-1",
+    "artifact_sha256": "0148ac9037bd77c7e3ee4f5d6f6284df9f98b00929babb50748abb6db97d2f84"
+  },
+  "observed": [
+    "Signed original Wintun created and native Go test executable compiled",
+    "Wintun→Windows kernel UDP socket first payload, exact temporary Defender permission, persistent TEST-NET WFP and IP Helper CAS steps reached without reported failure",
+    "Reverse OS /32 route was installed and native readback reached; n4ReceiveReadyIPv4 returned ErrInvalidBinding in native_udp_kernel_driver_windows_test.go:355; reverse authenticated UDP NOT_VERIFIED"
+  ],
+  "diagnosis": "The original pinned Go native tun_windows.go ReadPacket loops past non-IPv4 native ring frames; new M0 one-frame nonblocking receive currently errors on !isIPv4Packet. Since the received frame bytes were not recorded, non-IPv4 background traffic is a plausible, not proven, causal explanation. Fix bounded nonblocking filtering and distinguish further failures.",
+  "repair_intent": "Change only M0-owned native_udp_kernel_driver_windows.go to consume/drop at most eight non-IPv4 Wintun frames per poll (immediate packet release), return ErrN4NativeNoPacket when no IPv4 frame accepted, keep malformed/oversized explicit and generation Stop enforced; adjust test rejection count to account for background skipped frames. A new exact-SOURCE Windows2022 event is required, not rerun original FAIL.",
+  "limits": {
+    "original_reverse_result": "FAIL",
+    "windows_authenticated_owner_packet": "NOT_RUN",
+    "host_WFP_default_route_dns_ipv6_mtu": "NOT_RUN",
+    "WinForms": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_fec2": "OFF",
+    "production_game": "OFF"
+  }
+}
