@@ -12,7 +12,10 @@ import (
     "net"
     "net/netip"
     "os"
+    "os/exec"
     "path/filepath"
+    "strconv"
+    "strings"
     "testing"
     "time"
 )
@@ -49,6 +52,16 @@ func n4MakeKernelUDP(src,dst [4]byte,srcPort,dstPort uint16,payload []byte)[]byt
     if sum==0{sum=0xffff}
     binary.BigEndian.PutUint16(b[26:28],sum)
     return b
+}
+func containsRuleName(output,name string)bool{
+    // A rule's exact user generated display name is the only match.
+    // No external config or global firewall state changes allowed.
+    for _,line:=range strings.Split(output,"\n"){
+        if strings.TrimSpace(line)==name || strings.TrimSpace(line)=="Rule Name: "+name{
+            return true
+        }
+    }
+    return false
 }
 func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T){
     if os.Getenv("WBD_M0_PLAN020_REAL_WINTUN_UDP")!="1" ||
@@ -137,6 +150,44 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
     if err!=nil{t.Fatal(err)}
     defer sock.Close()
     destPort:=uint16(sock.LocalAddr().(*net.UDPAddr).Port)
+    // DIAGNOSTIC ONLY. A Windows runner may classify its newly-created
+    // Wintun as Public and Windows Defender drops unsolicited incoming
+    // UDP before the bound socket. Install only one unique ephemeral,
+    // exact-source/exact-destination/exact-port ALLOW, never disable a
+    // firewall profile, never change default route, never promote the
+    // temporary rule to N4's persistent owned product WFP guard.
+    // No process production file imports exec/netsh; this is _test only.
+    narrowRule:="WBD-M0-TEST-UDP-"+hex.EncodeToString(nonce[:])
+    addArgs:=[]string{"advfirewall","firewall","add","rule",
+        "name="+narrowRule,"dir=in","action=allow","enable=yes",
+        "protocol=UDP","localip=198.18.20.77","remoteip=198.18.20.88",
+        "localport="+strconv.Itoa(int(destPort)),"profile=any"}
+    firewallOut,firewallErr:=exec.CommandContext(ctx,"netsh",addArgs...).CombinedOutput()
+    if firewallErr!=nil{
+        t.Fatalf("cannot install exact ephemeral native WFP/Defender test port permission (no fallback): %v output=%q",
+            firewallErr,string(firewallOut))
+    }
+    t.Log("M0_PLAN020_TEST_ONLY_EXACT_WINDOWS_DEFENDER_UDP_ALLOW",
+        narrowRule,"local=198.18.20.77",destPort,"remote=198.18.20.88")
+    defer func(){
+        cleanup,done:=context.WithTimeout(context.Background(),10*time.Second)
+        defer done()
+        deleted,outErr:=exec.CommandContext(cleanup,"netsh","advfirewall",
+            "firewall","delete","rule","name="+narrowRule).CombinedOutput()
+        if outErr!=nil{
+            t.Errorf("test-only narrow Windows Defender rule not deleted; no OS cleanup receipt: %v output=%q",outErr,string(deleted))
+            return
+        }
+        verify,err:=exec.CommandContext(cleanup,"netsh","advfirewall",
+            "firewall","show","rule","name="+narrowRule).CombinedOutput()
+        if err==nil && (len(verify)==0 || !errors.Is(err,exec.ErrNotFound)){
+            // netsh frequently exits 0 for 'No rules match', so look for
+            // unique rule name rather than assuming the exit status.
+            if string(verify)!="" && containsRuleName(string(verify),narrowRule){
+                t.Errorf("test-only WFP rule survived deletion: %s",narrowRule)
+            }
+        }
+    }()
     app:=[]byte("M0-PLAN020-actual-Windows-IP-helper-kernel-udp-first-app")
     packet:=n4MakeKernelUDP([4]byte{198,18,20,88},[4]byte{198,18,20,77},
         41131,destPort,app)
@@ -146,7 +197,12 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
     if err:=sock.SetReadDeadline(time.Now().Add(4*time.Second));err!=nil{t.Fatal(err)}
     out:=make([]byte,2048)
     n,from,err:=sock.ReadFromUDP(out)
-    if err!=nil{t.Fatalf("actual Windows UDP socket missed Wintun ring injected IPv4: %v",err)}
+    if err!=nil{
+        native,callErr:=exec.Command("netstat","-s","-p","udp").CombinedOutput()
+        t.Logf("M0_PLAN020_WINDOWS_UDP_KERNEL_NETSTACK_RECEIVE_DIAG error=%v netstat_error=%v counters=%q",
+            err,callErr,string(native))
+        t.Fatalf("actual Windows UDP socket missed Wintun ring injected IPv4 even after exact narrow test-only Defender permit: %v",err)
+    }
     if n!=len(app)||string(out[:n])!=string(app)||from==nil||
        !from.IP.Equal(net.ParseIP("198.18.20.88")){
         t.Fatalf("actual Windows UDP app payload/source mismatch len=%d",n)
@@ -164,6 +220,7 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
         t.Fatalf("inaccurate actual native kernel counters %+v %v",counts,err)
     }
     receipt["actual_native_kernel_udp_app"]="PASS_SIGNED_WINTUN_KERNEL_COPY_TO_REAL_WINDOWS_UDP_SOCKET"
+    receipt["native_test_only_firewall_rule"]="EXACT_UDP_SRC_DST_PORT_EPHEMERAL_ALLOW_REMOVED_ON_STOP_NOT_PRODUCT_WFP"
     receipt["signed_adapter"]="PASS_CREATED_GUID_LUID_IFINDEX_PNP_PIN"
     receipt["native_stop"]="PASS_BOUNDED_NO_WAIT_STALE_DENIED"
     receipt["result"]="PASS_SCOPED_REAL_WIN_KERNEL_UDP_FIRST_APP_NO_CREDENTIAL_OWNER_CONNECTED"
