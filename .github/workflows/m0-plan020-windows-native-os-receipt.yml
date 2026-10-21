@@ -1,5 +1,5 @@
 name: M0 PLAN020 Windows live OS WAL receipts and WinForms authority
-run-name: "M0|PLAN020-WIN-WAL|\${{ github.sha }}"
+run-name: "M0|PLAN020-WIN-WAL|${{ github.sha }}"
 on:
   push:
     branches: [main]
