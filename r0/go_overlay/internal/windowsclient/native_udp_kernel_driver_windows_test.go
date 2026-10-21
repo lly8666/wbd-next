@@ -35,8 +35,19 @@ func n4MakeKernelUDP(src,dst [4]byte,srcPort,dstPort uint16,payload []byte)[]byt
     binary.BigEndian.PutUint16(b[20:22],srcPort)
     binary.BigEndian.PutUint16(b[22:24],dstPort)
     binary.BigEndian.PutUint16(b[24:26],uint16(8+len(payload)))
-    // IPv4 permits UDP checksum=0. This is a true IPv4 UDP kernel frame.
     copy(b[28:],payload)
+    // A complete Windows NDIS/Wintun ingress packet carries a VALID UDP
+    // pseudoheader checksum. An IPv4 zero-checksum packet is legal on the
+    // wire, but it is not a sufficiently strict native driver qualification.
+    checksumInput:=make([]byte,12+8+len(payload))
+    copy(checksumInput[0:4],src[:]);copy(checksumInput[4:8],dst[:])
+    checksumInput[9]=17
+    binary.BigEndian.PutUint16(checksumInput[10:12],uint16(8+len(payload)))
+    copy(checksumInput[12:],b[20:])
+    if len(checksumInput)%2!=0{checksumInput=append(checksumInput,0)}
+    sum:=n4IPv4Checksum(checksumInput)
+    if sum==0{sum=0xffff}
+    binary.BigEndian.PutUint16(b[26:28],sum)
     return b
 }
 func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T){
@@ -118,7 +129,11 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
         if ctx.Err()!=nil{t.Fatalf("OS /32 not DAD preferred: %v",ctx.Err())}
         time.Sleep(100*time.Millisecond)
     }
-    sock,err:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IPv4zero,Port:0})
+    // Force the application socket to the verified DAD-preferred IPv4
+    // address on THIS process-created signed Wintun, not any host NIC.
+    sock,err:=net.ListenUDP("udp4",&net.UDPAddr{
+        IP:net.IPv4(198,18,20,77),Port:0,
+    })
     if err!=nil{t.Fatal(err)}
     defer sock.Close()
     destPort:=uint16(sock.LocalAddr().(*net.UDPAddr).Port)
