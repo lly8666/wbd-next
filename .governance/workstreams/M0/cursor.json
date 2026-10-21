@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 222,
-  "checkpoint_sha": "b4268d453d4f49542872773a829d295539f2af2c",
+  "sequence": 223,
+  "checkpoint_sha": "908398359d516f7c6b39ac182be0cf9995912609",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0-only Windows product takeover rev3. Native signed Wintun bidirectional actual UDP app and scoped TEST-NET persistent WFP/IP Helper CAS PASS_SCOPED SOURCE76f0fcede Actions39543578070/1; original S573 reverse ring FAIL39543106596 preserved in S576 evidence, S575 bounded non-IPv4 filter repair. H221 Governance39543942879/1 FAIL because mixed-SOURCE evidence_refs; S577 records recovered structure cause, H222 corrects same-source references. Product original Go TLS→Rust AEAD with these kernel packets, durable host-wide WFP/default route/DNS/IPv6/MTU WAL and CLI/WinForms OS Applied/Disconnect NOT_RUN; production Game/FEC2 OFF.",
-  "why_now": "H220 clean recovery completed; S572–S576 exact Windows native work and positive scoped evidence completed. H221 structure FAIL due archived sources mixed into current evidence_refs, not real test failure; S577 preserved run, artifact and repair. H222 keeps only source76f0fcede evidence while prior S573 FAIL and S570 PASS remain historically accessible via S576 receipt and Git history. No fresh product grant.",
-  "done_when": "Native signed Windows Wintun same-generation kernel UDP first and reverse OS-socket app, bounded ring poll and stale Stop with persistent TEST-NET WFP /32 route OS readback+CAS PASS_SCOPED at one exact SOURCE. Parent PLAN020 done only when same SOURCE demonstrates genuine original Go credential TLS Rust M1/M3 AEAD bidirectional data plus durable host-wide WFP/default-route/DNS/IPv6/MTU WAL owned CAS, Windows CLI/WinForms real Applied/Disconnect/Recover, native positive+negative. Until then Windows product NOT_RUN; FEC2/Game OFF.",
-  "next_action": "Bind real original-Go credential TLS→Rust M1/M3 AEAD bidirectional packet driver to the same signed Wintun generation, then qualify its native host-wide WFP/default-route/DNS/IPv6/MTU WAL CAS and Go CLI/WinForms Applied/Disconnect in a single source-locked Windows2022 positive+negative Action; retain scoped-only status until that gate passes.",
+  "current_task": "PLAN020 Windows native product M0 sole owner: S579 real Rust M1 FrozenRecord/M3 AEAD+PN v3 Windows private normal/off record seal/open and replay/stale/Wintun generation-bound negatives; S580 ACTUAL original-Go credential TLS→same signed created Wintun live Hold→Rust v3 AEAD record seal PASS_SCOPED Windows2022 SOURCE f4d7b30 Action39546076149/1 artifact12321578130. This proves one genuine TLS-bound client sealing, NOT ciphertext transmitted on Windows kernel or peer decrypted, and NOT host-wide OS WAL/WinForms. FEC2/Game production OFF.",
+  "why_now": "H222 recovery CLEAN: checkpoint S577→H222 only cursor-only; no unfinished Actions. S578 external-action intent, S579 actual Rust native scoped ABI tests, S580 original-Go TLS/Wintun/Rust first protected record successfully native Actions; S581 exact SOURCE evidence, Governance39546642921 SUCCESS. G2 bootstrap inherited rev2 fixture expected mismatch FAIL39545775173 and S577 Governance39544137139 stale H221 refs FAIL remain in S581 historical receipts. Previous native S575 kernel real UDP PASS_SCOPED is separate SOURCE, not combined.",
+  "done_when": "Current native protected Rust record ABI and original Go credential TLS + same signed Wintun Hold scoped M3 seal achieved, source f4d7b30. Full PLAN020 remains incomplete: one Windows2022 SOURCE must prove original TLS-bound M1/M3 AEAD immutable ciphertext actually travels signed Wintun kernel and is authenticated by real opposite Rust owner with first/reverse application delivery, true persistent host-wide WFP/default-route/DNS/IPv6/MTU WAL CAS and Go CLI/WinForms Applied/Disconnect/Recover foreign/stale negatives. Windows product/physical/performance NOT_RUN until proven.",
+  "next_action": "Join original Go TLS-bound Rust v3 immutable ciphertext with the SAME signed Windows Wintun kernel driver, authenticated opposite Rust owner decode and first/reverse native app delivery; integrate durable host-wide WFP/default-route/DNS/IPv6/MTU WAL and original Go CLI/WinForms OS Applied/Disconnect under one Windows2022 exact-source positive+negative gate. No production ON until fully qualified.",
   "unverified": true,
-  "last_tested_source": "76f0fcede48a9964d6333fcc280dd65104c2a637",
+  "last_tested_source": "f4d7b30f139e6a7406b2de8fc04cba023542b0cb",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-native-signed-Wintun-bidirectional-kernel-UDP-S575-20261021.json"
+    "docs/evidence/M0/PLAN020-original-Go-TLS-bound-Windows-Rust-v3-AEAD-S580-20261021.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H222: accepted source76f0fcede actual native Windows signed Wintun same kernel UDP first+reverse ring, isolated TEST-NET persistent WFP /32 route CAS, stale Stop PASS_SCOPED Action39543578070 artifact12320373165; original FAIL39543106596 preserved. H221 governance SOURCE-mismatch FAIL39543942879 recorded at S577; H222 repaired active evidence_refs only latest SOURCE. Full authenticated original Go TLS/Rust live packet, host OS WAL WFP/default-route/DNS/IPv6/MTU, WinForms Applied/Disconnect NOT_RUN; FEC2/Game OFF."
+  "partial_summary": "H223 S578–S581: original Windows2022 pinned Go credential TLS→same signed Wintun Hold→Rust v3 M1/M3 AEAD normal/off seal PASS_SCOPED Action39546076149/1, job119044433384, artifact12321578130 SHA d5ad7be...; Rust owner v3 replay/tamper/foreign epoch/Stop native tests PASS in same action. Kernel ciphertext TX/peer authenticated first+reverse native app, OS global WFP/default route/DNS/IPv6/MTU WAL and Go/WinForms Applied/Disconnect NOT_RUN; prior S575 real native kernel UDP sample is separate SOURCE. G2 bootstrap old revision mismatch FAIL retained. Production FEC2/Game OFF."
 }
