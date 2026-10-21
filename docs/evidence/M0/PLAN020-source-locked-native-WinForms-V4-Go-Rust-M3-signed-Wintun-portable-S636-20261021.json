@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "249b7af42fdcc84d6e064ada36a2b7ec331c12d3",
+  "result": "PASS_SCOPED_WINDOWS2022_SOURCE_LOCKED_ACTUAL_V4_GO_RUST_M3_SIGNED_WINTUN_WINFORMS_PORTABLE_FOUR_PE_AND_DLL_BUILD_NO_FULL_HOST_OS",
+  "run_id": 39601695842,
+  "attempt": 1,
+  "job_id": 119227525683,
+  "conclusion": "success",
+  "artifact_id": 12347060387,
+  "artifact_name": "m0-plan020-win-wal-39601695842-1",
+  "artifact_sha256": "4a36b3ce0e80936865ab977c8c3bde3986a74eba3d58afd03a5beb7783df3d40",
+  "workflow": ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "host": "windows-2022 GitHub hosted",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "official_wintun_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+    "ffi_symbols": [
+      "wbd_m0_win_owner_v1_query",
+      "wbd_m0_win_owner_v1_prepare",
+      "wbd_m0_win_owner_v1_commit",
+      "wbd_m0_win_owner_v1_stop",
+      "wbd_m0_win_owner_v3_seal_normal_off",
+      "wbd_m0_win_owner_v3_open_normal_off"
+    ]
+  },
+  "portable_artifact_paths": [
+    "portable/WBD.exe",
+    "portable/wbd-client.exe",
+    "portable/wbd_engine.dll",
+    "portable/wintun.dll",
+    "portable/source-receipt.json"
+  ],
+  "verified_SHA256": {
+    "wbd-client.exe": "61128b295506d6b0d055d27ae98cbc05946dd1c6c0765fbbc508542a6e4c7615",
+    "wbd_engine.dll": "4e9e620248d524498445a62c16eca2ae96ef612da89300877f187054153ddba0",
+    "WBD.exe": "d00983f90c0d9aff830a3d69930d497bf2f696cd17e496f9ff4f74945b017279",
+    "wintun.dll": "see portable/source-receipt.json SHA and Authenticode native job"
+  },
+  "passed": [
+    {
+      "test": "Original Go pinned public Windows CLI V4 native Rust M3 Wintun/WAL product cross-package -tags wbd_v4_embedded_go build",
+      "status": "PASS_BUILD"
+    },
+    {
+      "test": "Real Rust 1.85.1 MSVC release wbd_engine.dll with original M1/M3 v3 C ABI exported, native WinDLL load",
+      "status": "PASS_BUILD_AND_REAL_FFI_EXPORTS"
+    },
+    {
+      "test": "Signed Wintun 0.14.1 DLL official SHA256-locked ZIP and Windows Authenticode Valid",
+      "status": "PASS_SIGNATURE"
+    },
+    {
+      "test": "Original Go native tagged V4 client, Rust DLL, official signed Wintun, genuine compiled WinForms EXE same SOURCE packaged",
+      "status": "PASS_PORTABLE"
+    },
+    {
+      "test": "Original CLI and WinForms native five-stage WAL source build, mocked native staged OS Apply/Stop regression",
+      "status": "PASS_SCOPED_TEST_DOUBLE"
+    },
+    {
+      "test": "Compiled original WinForms EXE fake-child state transitions, refuses plain READY false Applied",
+      "status": "PASS_SCOPED_FAKE_CHILD"
+    },
+    {
+      "test": "GUI ClientSession source launches --native-v4-product and requires real OS_APPLIED and independent DISCONNECTED marker",
+      "status": "PASS_SOURCE_COMPILE"
+    }
+  ],
+  "not_run": {
+    "public_original_Go_V4_real_remote_peer_TCP_Rust_M3_Wintun_first_and_reverse_under_actual_full_native_OS_Apply": "NOT_RUN",
+    "live_host_global_WFP_persistent_guard_default_two_half_routes_underlay_escape_DNS_IPv6_MTU": "NOT_RUN",
+    "real_native_host_OS_CAS_crash_foreign_stale_Apply_Stop_Recover": "NOT_RUN",
+    "unmocked_WinForms_real_child_OS_Applied_Disconnect": "NOT_RUN",
+    "self_hosted_verified_isolated_Windows_runner": "UNKNOWN_NOT_VERIFIED",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "historic_failures": [
+    {
+      "source_sha": "b6f5db02f03988f64ddec33c68df0e099bc807c8",
+      "run_id": 39600491316,
+      "conclusion": "failure",
+      "cause": "AWS-LC pinned Windows Rust MASM/NASM NASM missing, fixed by identical original native Rust workflow AWS_LC_SYS_PREBUILT_NASM=1"
+    },
+    {
+      "source_sha": "502fc09e4b8ae535773363398e09c000261bceae",
+      "run_id": 39601037715,
+      "conclusion": "failure",
+      "cause": "genuine Rust DLL + V4 client + WinForms executable already built; arbitrary >100 KiB constraint incorrectly rejected smaller legitimate WinForms EXE"
+    },
+    {
+      "source_sha": "240a8b1a3979a7d83de1b3ced98d2af6f38ab4c7",
+      "run_id": 39601240806,
+      "conclusion": "failure",
+      "cause": "signed Wintun added and built but identical overlarge .NET WinForms arbitrary size gate rejected WBD.exe"
+    }
+  ],
+  "same_source_native_governance": {
+    "run_id": 39601695901,
+    "conclusion": "check_run_conclusion_before_final"
+  },
+  "safety_gate": {
+    "V4_GUI_start_choice": "SOURCE_WIRED",
+    "portable_Rust_V4_DLL": "BUNDLED",
+    "Windows_full_host_OS_production": "OFF",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF",
+    "reason": "Original public native Go N4NativeNetworkReady still deliberately requires unverified fully isolated Windows host OS+peer positive/negative and fails closed on common shared Windows runner."
+  },
+  "one_next_action": "On a verified isolated Windows host, exercise actual packaged WBD.exe → original Go V4 credential TLS → Rust M1/M3 → signed Wintun native first app+reverse → real persistent WFP /1 default+underlay route DNS IPv6 MTU OS WAL Apply/Stop/Recover; independently prove crash+foreign negatives and verify no host mutation remains. Only same-source PASS may enable production OS global gate; FEC2/Game independently gated."
+}
