@@ -7,7 +7,7 @@ on:
       - ".github/workflows/m0-plan020-windows-native-os-receipt.yml"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
-      - "r0/go_overlay/assembly/manifest.json"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -37,7 +37,7 @@ jobs:
           original="a7a82db31fe736ffedee330795a3234d358f1984"
           assert subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==main
           assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()==original
-          spec=json.loads((root/"r0/go_overlay/assembly/manifest.json").read_text(encoding="utf8"))
+          spec=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text(encoding="utf8"))
           assert spec["legacy_source"]==original
           def gitblob(data):return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
           for op in spec["operations"]:
@@ -56,7 +56,7 @@ jobs:
           print("M0_PLAN020_WIN_WAL_ORIGINAL_GO_PINNED")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
-          & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest.json --receipt result/assembly.json
+          & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
           if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
       - name: Native Windows five-stage WAL readback and false Applied negatives
         shell: pwsh

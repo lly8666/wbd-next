@@ -1,0 +1,592 @@
+{
+  "schema_version": 1,
+  "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "rust_source": "76f3fd695c0be4d5ad6bf447ead52ee0bc7b672f",
+  "operations": [
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/main_linux.go",
+      "original_blob": "b239b92006504500c76fb9148f735c484a0f011c",
+      "result_blob": "2b4adb951f40e0e0ec0901db098f98834a7205e9",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/main_windows.go",
+      "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
+      "result_blob": "6fd15a297f92cb6df0b5e2c56b393f3633cede2e",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n"
+        },
+        {
+          "find": "\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        },
+        {
+          "find": "\t\"os/exec\"\n",
+          "replace": ""
+        },
+        {
+          "find": "\t\tscriptPath         = flag.String(\"network-script\", defaultWindowsNetworkScript(), \"Windows network Apply/Cleanup script; default beside executable\")",
+          "replace": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif *recoverNetwork {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn windowsclient.N4NativeRecoverState(ctx, *statePath)\n\t}\n"
+        },
+        {
+          "find": " || strings.TrimSpace(*scriptPath) == \"\"",
+          "replace": ""
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\t// No legacy script fallback is permitted on original Windows runtime.\n\t// Block BEFORE TLS, TUN or NIC changes while production WFP/Stop are unwired.\n\tif err := windowsclient.N4NativeNetworkReady(context.Background()); err != nil {\n\t\treturn err\n\t}\n\tdefer startQualificationCPUProfile()()"
+        },
+        {
+          "find": "\tcleanupNetwork, err := applyOwnedNetwork(ctx, networkPlan, *scriptPath)",
+          "replace": "\tcleanupNetwork, err := applyOwnedNetwork(ctx, networkPlan)"
+        },
+        {
+          "find": "\t// Register owned rollback even when Apply fails or GUI Stop cancels a\n\t// long-running PowerShell route mutation. Cleanup receives an independent\n\t// bounded context so an already-cancelled parent cannot skip it.",
+          "replace": "\t// Native-only owned rollback: no shell fallback and no early cleanup\n\t// before the authenticated network owner has been stopped."
+        },
+        {
+          "find": "\t// Control plane still uses legacy owned PowerShell until native\n\t// lease/MTU/DNS/WFP/route Apply+Recover is fully qualified.\n\tlog.Printf(\"WBD_WINDOWS_CAPTURE compact_routes=%d direct_tcp=userspace_gvisor direct_udp=native network_control=legacy_powershell\",len(networkPlan.CaptureRoutes))",
+          "replace": "\tlog.Printf(\"WBD_WINDOWS_CAPTURE compact_routes=%d direct_tcp=userspace_gvisor direct_udp=native network_control=native_only\",len(networkPlan.CaptureRoutes))"
+        },
+        {
+          "find": "// applyOwnedNetwork uses an independent cleanup context after any Apply error,\n// including GUI stop, while preserving the existing state-owned journal scope.\nfunc applyOwnedNetwork(ctx context.Context, plan windowsclient.NetworkPlan, script string) (func() error, error) {\n\treturn applyOwnedNetworkWith(ctx, plan, script, runNetworkActionContext)\n}\n\n// The runner argument is test-only injection; production always passes the\n// actual PowerShell command with an OS-process cancellation handle.\nfunc applyOwnedNetworkWith(ctx context.Context, plan windowsclient.NetworkPlan, script string,\n\trun func(context.Context, windowsclient.NetworkPlan, string, string) error) (func() error, error) {\n\tif ctx == nil || run == nil {\n\t\treturn nil, windowsclient.ErrNetworkPlan\n\t}\n\tcleanup := sync.OnceValue(func() error {\n\t\t// Bounded even if an abandoned script/kernel call never exits. The\n\t\t// state file remains available for a later owned recovery on failure.\n\t\tcleanupCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn run(cleanupCtx, plan, \"Cleanup\", script)\n\t})\n\tif err := run(ctx, plan, \"Apply\", script); err != nil {\n\t\tif cleanupErr := cleanup(); cleanupErr != nil {\n\t\t\treturn nil, errors.Join(err, fmt.Errorf(\"partial Apply owned rollback: %w\", cleanupErr))\n\t\t}\n\t\treturn nil, err\n\t}\n\treturn cleanup, nil\n}\n\nfunc runNetworkActionContext(ctx context.Context, plan windowsclient.NetworkPlan, action, script string) error {\n\tif ctx == nil { return windowsclient.ErrNetworkPlan }\n\tif err := ctx.Err(); err != nil { return err }\n\t// The compatibility shell must NEVER take the old massive-CIDR path.\n\t// Native compact capture and per-flow CN/LAN classification are now the\n\t// only admitted product policy. Fail before spawning any child process.\n\tif len(plan.CaptureRoutes)>8 || len(plan.DirectRoutes)!=0 || plan.CapturePrefixFile4!=\"\" {\n\t\treturn windowsclient.ErrNetworkPlan\n\t}\n\targs, err := plan.PowerShellArgs(action, script)\n\tif err != nil {\n\t\treturn err\n\t}\n\tout, err := networkCommandContext(ctx, args).CombinedOutput()\n\tif err != nil {\n\t\treturn fmt.Errorf(\"powershell %s: %w: %s\", action, err, strings.TrimSpace(string(out)))\n\t}\n\treturn nil\n}\n\n",
+          "replace": "// This boundary never starts an OS process. The real native Apply/Cleanup\n// façade remains gated until durable WFP and authenticated owner Stop are\n// certified. Returning a hard error keeps old route/DNS settings untouched.\nfunc applyOwnedNetwork(ctx context.Context, plan windowsclient.NetworkPlan) (func() error, error) {\n    return nil, windowsclient.N4NativeNetworkReady(ctx)\n}\n\n"
+        },
+        {
+          "find": "func networkCommandContext(ctx context.Context, args []string) *exec.Cmd {\n\tcmd := exec.CommandContext(ctx, \"powershell.exe\", args...)\n\tcmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}\n\treturn cmd\n}\n\n",
+          "replace": ""
+        },
+        {
+          "find": "func defaultWindowsNetworkScript() string {\n\treturn filepath.Join(windowsExecutableDir(), \"windows_client_network.ps1\")\n}\n\n",
+          "replace": ""
+        },
+        {
+          "find": "func runWindows() error {",
+          "replace": "func runWindows() (retErr error) {"
+        },
+        {
+          "find": "\tdefer func() {\n\t\tif err := cleanupNetwork(); err != nil {\n\t\t\tlog.Printf(\"Windows owned cleanup incomplete (journal retained): %v\", err)\n\t\t}\n\t}()",
+          "replace": "\tdefer func() {\n        if cleanupErr := cleanupNetwork(); cleanupErr != nil {\n            retErr = errors.Join(retErr, fmt.Errorf(\"Windows owned cleanup incomplete (journal retained): %w\", cleanupErr))\n            log.Printf(\"Windows owned cleanup incomplete (journal retained): %v\", cleanupErr)\n        }\n    }()"
+        },
+        {
+          "find": "\tfmt.Printf(\"WBD_WINDOWS_CLIENT_STOPPED cleanup=state-owned-only lanes=%d physical=NOT_RUN\\n\", *lanes)",
+          "replace": "\tfmt.Printf(\"WBD_WINDOWS_CLIENT_STOPPING owner_and_cleanup=UNVERIFIED lanes=%d physical=NOT_RUN\\n\", *lanes)"
+        },
+        {
+          "find": "\tif *recoverNetwork {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n\t\tdefer cancel()\n\t\treturn windowsclient.N4NativeRecoverState(ctx, *statePath)\n\t}",
+          "replace": "\tif *recoverNetwork {\n        // Manual CLI Recover and GUI-owned Connect share the SAME named\n        // machine slot. Avoid TOCTOU: the GUI's read-only ClientBusy check\n        // is advisory; only this atomic OS event fences actual recovery.\n        slot, err := acquireGUIClientSlot()\n        if err != nil { return err }\n        defer windows.CloseHandle(slot)\n        ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)\n        defer cancel()\n        return windowsclient.N4NativeRecoverState(ctx, *statePath)\n    }"
+        },
+        {
+          "find": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")",
+          "replace": "\t\trecoverNetwork     = flag.Bool(\"recover-network\", false, \"recover exact owned native Windows network WAL; refuses old script journals\")\n\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")"
+        },
+        {
+          "find": "\tflag.Parse()\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {",
+          "replace": "\tflag.Parse()\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {\n        if *recoverNetwork {return errors.New(\"native-state-json and recover-network cannot run together\")}\n        snapshot, err := windowsclient.N4NativeInspectState(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(snapshot)\n    }\n\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {"
+        },
+        {
+          "find": "\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")",
+          "replace": "\t\treadNativeState     = flag.Bool(\"native-state-json\", false, \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\")\n\t\treadNativePreflight = flag.Bool(\"native-preflight-json\", false, \"inspect native Windows system APIs, WFP layer and own WAL read-only; never enables product network\")"
+        },
+        {
+          "find": "    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {",
+          "replace": "    // Run read-only actions BEFORE configuration and credentials. They cannot\n    // activate native WFP, Wintun, DNS or routes, or promote the product.\n    if *readNativePreflight {\n        if *readNativeState || *recoverNetwork {return errors.New(\"native-preflight-json cannot combine with another network operation\")}\n        report, err := windowsclient.N4ReadOnlyProductPreflight(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(report)\n    }\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-server/main_linux.go",
+      "original_blob": "930976ec6b2d7fa82f98378c7aa985fb4e8e4363",
+      "result_blob": "e042732d613763b0748494b93d1e60339a9651f1",
+      "patches": [
+        {
+          "find": "\tflag.Parse()",
+          "replace": "\tfec2Selection := runtimeentry.RegisterFEC2ProductFlags(flag.CommandLine)\n\tflag.Parse()"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
+          "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n"
+        },
+        {
+          "find": "\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "\tdefer startQualificationCPUProfile()()",
+          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/fields.json",
+      "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
+      "result_blob": "15c7b5e85e6a16a67ea6b2eb45a3155f7b7a2ed6",
+      "patches": [
+        {
+          "find": "  \"fec-mode\": [",
+          "replace": "  \"fec.mode\": [\n    \"传输\",\n    \"FEC2 新模式\",\n    \"off（默认）|fixed|auto；未接真实 native applied 时拒绝开启\"\n  ],\n  \"fec.profile\": [\n    \"传输\",\n    \"FEC2 固定七档\",\n    \"light / mild / medium / balanced / high / strong / maximum\"\n  ],\n  \"fec.auto_policy\": [\n    \"传输\",\n    \"FEC2 自动政策\",\n    \"normal 或 aggressive，激进只在普通目标上加一档\"\n  ],\n  \"fec.auto_start_profile\": [\n    \"传输\",\n    \"FEC2 自动起步档\",\n    \"默认 strong；激进在起步档上再加一级\"\n  ],\n  \"fec-mode\": ["
+        },
+        {
+          "find": "  \"network-script\": [\n    \"便携\",\n    \"网络配置脚本\",\n    \"使用本目录的 windows_client_network.ps1，不从其他位置执行\"\n  ],\n",
+          "replace": ""
+        },
+        {
+          "find": "  \"state-path\": [",
+          "replace": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],\n  \"state-path\": ["
+        },
+        {
+          "find": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],",
+          "replace": "  \"recover-network\": [\n    \"操作\",\n    \"原生恢复\",\n    \"只恢复真实 owned WAL；旧脚本状态须使用旧版程序恢复\"\n  ],\n  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],"
+        },
+        {
+          "find": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],",
+          "replace": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],\n  \"native-preflight-json\": [\n    \"操作\",\n    \"原生系统预检\",\n    \"只检查 Windows 原生 API、WFP 层、权限和磁盘状态；不会启动连接\"\n  ],"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/MainForm.cs",
+      "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
+      "result_blob": "5c7ffdf4f8aeacc620dbfb3542d174e312a53174",
+      "patches": [
+        {
+          "find": "f.Key == \"fec-mode\" ||",
+          "replace": "f.Key == \"fec-mode\" || f.Key == \"fec.mode\" || f.Key == \"fec.profile\" || f.Key == \"fec.auto_policy\" || f.Key == \"fec.auto_start_profile\" ||"
+        },
+        {
+          "find": "                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {",
+          "replace": "                if (f.Key == \"fec.mode\") c.Items.AddRange(new[] { new Choice(\"off\",\"关闭（未启用FEC2）\"), new Choice(\"fixed\",\"固定档（需native应用）\"), new Choice(\"auto\",\"自动档（需native应用）\") });\n                if (f.Key == \"fec.profile\" || f.Key == \"fec.auto_start_profile\") c.Items.AddRange(new[] { new Choice(\"light\",\"light · 12.5%\"), new Choice(\"mild\",\"mild · 25%\"), new Choice(\"medium\",\"medium · 37.5%\"), new Choice(\"balanced\",\"balanced · 50%\"), new Choice(\"high\",\"high · 75%\"), new Choice(\"strong\",\"strong · 100%\"), new Choice(\"maximum\",\"maximum · 125%\") });\n                if (f.Key == \"fec.auto_policy\") c.Items.AddRange(new[] { new Choice(\"normal\",\"Normal · 普通\"), new Choice(\"aggressive\",\"Normal · 激进 +1\") });\n                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {"
+        },
+        {
+          "find": "        public async Task ValidateSelectedAsync() { await session.ValidateAsync(Prepare()); ShowState(\"配置校验通过 · 尚未建立网络连接\"); Enqueue(\"真实客户端已接受当前配置；驱动、服务端连通性在连接时检验。\"); }",
+          "replace": "        public async Task ValidateSelectedAsync() {\n            var result = await session.ValidateAsync(Prepare());\n            object status;\n            if (result.TryGetValue(\"fec.status\",out status) && Convert.ToString(status) == \"rejected\") {\n                object reason;\n                string detail = result.TryGetValue(\"fec.reject_reason\",out reason) ? Convert.ToString(reason) : \"需要认证引擎\";\n                ShowState(\"FEC2 已保存但未生效 · rejected\"); Enqueue(\"FEC2 拒绝：\" + detail);\n            } else ShowState(\"配置校验通过 · 尚未建立网络连接（FEC2 applied：未知）\");\n        }"
+        },
+        {
+          "find": "            string pending = Prepare(); await session.ValidateAsync(pending);",
+          "replace": "            string pending = Prepare(); var validated = await session.ValidateAsync(pending);\n            object fec2Status;\n            if (validated.TryGetValue(\"fec.status\",out fec2Status) && Convert.ToString(fec2Status) == \"rejected\")\n                throw new InvalidOperationException(\"FEC2 未获得 Rust 实际应用回执，拒绝连接；请关闭FEC2或使用已验证实验引擎。\");"
+        },
+        {
+          "find": "            if (!File.Exists(path)) { Enqueue(\"没有残留网络状态。\"); return; }",
+          "replace": "            if (!File.Exists(path) && !File.Exists(path+\".n4-owned-wal\")) { Enqueue(\"没有残留网络状态。\"); return; }"
+        },
+        {
+          "find": "            // Cleanup validates and consumes only the owned JSON state; no profile guessing.\n            string script = store.InRoot(\"windows_client_network.ps1\");\n            var info = new ProcessStartInfo(\"powershell.exe\", \"-NoProfile -NonInteractive -ExecutionPolicy Bypass -File \" + ClientSession.Quote(script) + \" -Action Cleanup -StatePath \" + ClientSession.Quote(path)) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = store.Root, RedirectStandardError = true, RedirectStandardOutput = true };\n            info.EnvironmentVariables[\"TEMP\"] = store.InRoot(\"data/tmp\"); info.EnvironmentVariables[\"TMP\"] = store.InRoot(\"data/tmp\");\n            using (var p = Process.Start(info)) {\n                Task<string> error = p.StandardError.ReadToEndAsync(), output = p.StandardOutput.ReadToEndAsync();\n                await Task.Run(() => p.WaitForExit());\n                if (p.ExitCode != 0) throw new IOException(\"状态恢复失败：\" + await error); await output;\n            }\n",
+          "replace": "            // Same original Go executable; NO PowerShell/script fallback.\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--recover-network --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute = false, CreateNoWindow = true,\n                WorkingDirectory = store.Root, RedirectStandardError = true,\n                RedirectStandardOutput = true\n            };\n            info.EnvironmentVariables[\"TEMP\"] = store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"] = store.InRoot(\"data/tmp\");\n            using (var p = Process.Start(info)) {\n                Task<string> error = p.StandardError.ReadToEndAsync(), output = p.StandardOutput.ReadToEndAsync();\n                await Task.Run(() => { if (!p.WaitForExit(60000)) {\n                    try { p.Kill(); } catch { }\n                    throw new IOException(\"原生恢复超时；已保留 owned WAL。\");\n                } });\n                string stderr = await error; await output;\n                if (p.ExitCode != 0) throw new IOException(\"原生状态恢复未完成，旧脚本状态需原版本恢复：\" + stderr);\n            }\n            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\"))\n                throw new IOException(\"原生恢复返回成功但状态仍在，拒绝显示已清理。\");\n"
+        },
+        {
+          "find": "            if (File.Exists(store.InRoot(\"data/network-state.json\"))) await RecoverAsync();",
+          "replace": "            if (File.Exists(store.InRoot(\"data/network-state.json\")) || File.Exists(store.InRoot(\"data/network-state.json.n4-owned-wal\"))) await RecoverAsync();"
+        },
+        {
+          "find": "            if (File.Exists(store.InRoot(\"data/network-state.json\"))) Enqueue(\"检测到上次的网络状态；连接时会处理 owned 状态，也可在便携与驱动页面恢复。\");",
+          "replace": "            if (File.Exists(store.InRoot(\"data/network-state.json\")) || File.Exists(store.InRoot(\"data/network-state.json.n4-owned-wal\"))) Enqueue(\"检测到未清理的 owned 网络状态；请先执行原生恢复。\");"
+        },
+        {
+          "find": "\t\t\tif (File.Exists(store.InRoot(\"data/network-state.json\"))) await RecoverAsync();",
+          "replace": "\t\t\tif (File.Exists(store.InRoot(\"data/network-state.json\")) || File.Exists(store.InRoot(\"data/network-state.json.n4-owned-wal\"))) await RecoverAsync();"
+        },
+        {
+          "find": "            if (!File.Exists(path) && !File.Exists(path+\".n4-owned-wal\")) { Enqueue(\"没有残留网络状态。\"); return; }",
+          "replace": "            if (!File.Exists(path) && !File.Exists(path+\".n4-owned-wal\") && !File.Exists(path+\".n4-owned-wal.routes\") && !File.Exists(path+\".routes\")) { Enqueue(\"没有残留网络状态。\"); return; }"
+        },
+        {
+          "find": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\"))",
+          "replace": "            if (File.Exists(path) || File.Exists(path+\".n4-owned-wal\") || File.Exists(path+\".n4-owned-wal.routes\") || File.Exists(path+\".routes\"))"
+        },
+        {
+          "find": "        public async Task DisconnectAsync() { leaseRestart = false; if (session.Active) ShowState(\"正在断开并清理网络状态…\"); await session.StopAsync(); Drain(); leaseRestart = false; connectedId = null; ClearQuality(); ShowState(\"未连接\"); servers.Invalidate(); }",
+          "replace": "        public async Task DisconnectAsync() {\n            leaseRestart = false;\n            if (session.Active) ShowState(\"正在断开并清理网络状态…\");\n            await session.StopAsync();\n            string owned = store.InRoot(\"data/network-state.json\");\n            if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") ||\n                File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))\n                throw new IOException(\"客户端停止后仍存在 owned WAL 或路由意图，拒绝显示已断开。\");\n            Drain();\n            leaseRestart = false; connectedId = null; ClearQuality();\n            ShowState(\"未连接\"); servers.Invalidate();\n        }"
+        },
+        {
+          "find": "            driverBar.Controls.Add(Button(\"恢复残留网络状态\", async () => await RunAsync(RecoverAsync)));",
+          "replace": "            driverBar.Controls.Add(Button(\"恢复残留网络状态\", async () => await RunAsync(RecoverAsync)));\n            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));"
+        },
+        {
+          "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
+          "replace": "        // The same original Go executable reports ONLY files on disk.\n        // Do not infer active WFP, current Wintun ownership, or connection.\n        public async Task<string> ReadNativeDiskStatusAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-state-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute = false, CreateNoWindow = true,\n                WorkingDirectory = store.Root, RedirectStandardOutput = true,\n                RedirectStandardError = true\n            };\n            info.EnvironmentVariables[\"TEMP\"] = store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"] = store.InRoot(\"data/tmp\");\n            using (var process = Process.Start(info)) {\n                Task<string> output = process.StandardOutput.ReadToEndAsync();\n                Task<string> error = process.StandardError.ReadToEndAsync();\n                bool ended = await Task.Run(() => process.WaitForExit(20000));\n                if (!ended) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生状态检查超时；未改变系统网络。\");\n                }\n                string stdout = await output, stderr = await error;\n                if (process.ExitCode != 0)\n                    throw new IOException(\"原生只读状态检查未通过：\" + Redact(stderr));\n                if (stdout.Length > 4096)\n                    throw new IOException(\"原生状态输出超出上限。\");\n                var status = store.Json.Deserialize<Dictionary<string, object>>(stdout);\n                object schema, state, guard;\n                if (status == null ||\n                    !status.TryGetValue(\"schema\", out schema) ||\n                    !status.TryGetValue(\"state\", out state) ||\n                    !status.TryGetValue(\"guard_qualified\", out guard) ||\n                    Convert.ToString(schema)!=\"wbd-native-network-disk-status/v1\" ||\n                    Convert.ToBoolean(guard) ||\n                    !new[] {\"absent\", \"legacy_journal\", \"orphan_route_intent\", \"native_wal_unverified\"}.Contains(Convert.ToString(state)))\n                    throw new IOException(\"客户端只读状态收据不可信，不能宣告网络就绪。\");\n                string result = Convert.ToString(state);\n                Enqueue(\"只读原生磁盘状态：\" + result + \"；仅文件检查，WFP、驱动和连通性未经确认。\");\n                return result;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
+        },
+        {
+          "find": "            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));",
+          "replace": "            driverBar.Controls.Add(Button(\"只读检查网络状态\", async () => await RunAsync(async () => { await ReadNativeDiskStatusAsync(); })));\n            driverBar.Controls.Add(Button(\"原生系统预检（只读）\", async () => await RunAsync(async () => { await ReadNativeProductPreflightAsync(); })));"
+        },
+        {
+          "find": "        void RefreshDependencies() { dependencies.Text = detect().Description; }",
+          "replace": "        // The original Go CLI checks ACTUAL Win32 APIs and WFP layers.\n        // Preflight is diagnostic only. It MUST NEVER report native Connect\n        // ready until authenticated owner Stop and real WFP are qualified.\n        public async Task<string> ReadNativeProductPreflightAsync() {\n            string path = store.InRoot(\"data/network-state.json\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                \"--native-preflight-json --state-path \" + ClientSession.Quote(path)) {\n                UseShellExecute=false, CreateNoWindow=true, WorkingDirectory=store.Root,\n                RedirectStandardOutput=true, RedirectStandardError=true\n            };\n            info.EnvironmentVariables[\"TEMP\"]=store.InRoot(\"data/tmp\");\n            info.EnvironmentVariables[\"TMP\"]=store.InRoot(\"data/tmp\");\n            using (var process=Process.Start(info)) {\n                Task<string> output=process.StandardOutput.ReadToEndAsync();\n                Task<string> error=process.StandardError.ReadToEndAsync();\n                if (!await Task.Run(() => process.WaitForExit(20000))) {\n                    try { process.Kill(); } catch { }\n                    throw new IOException(\"原生系统预检超时；未修改网络。\");\n                }\n                string stdout=await output, stderr=await error;\n                if (process.ExitCode!=0)\n                    throw new IOException(\"只读原生系统预检失败：\" + Redact(stderr));\n                if (stdout.Length>4096)\n                    throw new IOException(\"原生系统预检输出超出上限。\");\n                var report=store.Json.Deserialize<Dictionary<string,object>>(stdout);\n                object schema,ready,qualified,state;\n                if (report==null ||\n                    !report.TryGetValue(\"schema\",out schema) ||\n                    !report.TryGetValue(\"ready\",out ready) ||\n                    !report.TryGetValue(\"wfp_install_qualified\",out qualified) ||\n                    !report.TryGetValue(\"disk_state\",out state) ||\n                    Convert.ToString(schema)!=\"wbd-native-product-preflight/v1\" ||\n                    Convert.ToBoolean(ready) || Convert.ToBoolean(qualified) ||\n                    !stdout.Contains(\"wfp_guard_and_authenticated_stop_not_qualified\"))\n                    throw new IOException(\"原生预检不能授予 WFP/Stop 产品资格。\");\n                string disk=Convert.ToString(state);\n                Enqueue(\"原生系统只读预检：\" + disk +\n                    \"；WFP 生产启用和认证 Stop 尚未验收，不允许连接。\");\n                return disk;\n            }\n        }\n        void RefreshDependencies() { dependencies.Text = detect().Description; }"
+        },
+        {
+          "find": "                if (line == \"WBD_WINDOWS_CLIENT_READY\") { if (connectedId!=null && session.Active) ShowState(\"已连接 · \" + (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\")); line = \"隧道已就绪，网络配置已应用。\"; }",
+          "replace": "                // A live client process or a READY log line is not Windows\n                // Applied: only the independently verified five-stage OS\n                // receipt AND same-generation authenticated Rust owner may\n                // cause the product to emit WBD_WINDOWS_OS_APPLIED.\n                if (line == \"WBD_WINDOWS_CLIENT_READY\") {\n                    if (connectedId != null && session.Active) ShowState(\"待验证 · 原生系统 Applied 未确认\");\n                    line = \"进程已启动，但不能代替 WFP/路由/DNS/MTU 内核回读。\";\n                }\n                if (line == \"WBD_WINDOWS_OS_APPLIED\") {\n                    // The Go producer must first verify real OS five-stage\n                    // state and authenticated Rust/kernel first delivery.\n                    if (connectedId != null && session.Active)\n                        ShowState(\"已连接 · 系统 Applied · \" +\n                            (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\"));\n                    line = \"客户端报告系统 Applied；停止时还必须验证 WAL/CAS 全部清理。\";\n                }"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/GuiTests.cs",
+      "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
+      "result_blob": "0ba459b8793f4e986a3d0d34a43f72e3e312377a",
+      "patches": [
+        {
+          "find": "{\"fec-mode\",\"legacy\"}",
+          "replace": "{\"fec-mode\",\"legacy\"},{\"fec.mode\",\"off\"},{\"fec.profile\",\"strong\"},{\"fec.auto_policy\",\"normal\"},{\"fec.auto_start_profile\",\"strong\"}"
+        },
+        {
+          "find": "                    p.Values[\"fec-parity\"] = 0; p.Values[\"lanes\"] = 1;\n                    // Native Go admission",
+          "replace": "                    p.Values[\"fec-parity\"] = 0; p.Values[\"lanes\"] = 1;\n                    // Real original Go --check-config distinguishes saved\n                    // request from Rust-applied state without a fake ACK.\n                    foreach (string mode2 in new[]{\"fixed\",\"auto\"}) {\n                        p.Values[\"fec.mode\"]=mode2;\n                        store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                        var fec2Result=Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));\n                        Assert(Convert.ToString(fec2Result[\"fec.status\"])==\"rejected\" &&\n                               Convert.ToString(fec2Result[\"fec.applied_profile\"])==\"unknown\",\n                               \"native GUI FEC2 requested but unwired remains rejected/unknown\");\n                    }\n                    p.Values[\"fec.mode\"]=\"auto\"; p.Values[\"lanes\"]=2;\n                    store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                    bool gameAutoRejected=false;\n                    try {Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));}catch{gameAutoRejected=true;}\n                    Assert(gameAutoRejected,\"Game auto FEC2 explicitly rejected by original Go client\");\n                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    // Native Go admission"
+        },
+        {
+          "find": "using System.Drawing;\n",
+          "replace": "using System.Drawing;\nusing System.Diagnostics;\n"
+        },
+        {
+          "find": "Assert(Convert.ToString(actual[\"network-script\"]) == store.InRoot(\"windows_client_network.ps1\"), \"script path portable for \" + f.Key);",
+          "replace": "Assert(!actual.ContainsKey(\"network-script\"), \"no runtime script parameter for \" + f.Key);"
+        },
+        {
+          "find": "                Assert(store.Fields.Count >= 36, \"CLI catalogue complete including all managed operations\");",
+          "replace": "                Assert(store.Fields.Count >= 36, \"CLI catalogue complete including all managed operations\");\n                Assert(!store.Fields.Any(f=>f.Key==\"network-script\"), \"network-script removed from portable catalogue\");\n                Assert(!File.Exists(store.InRoot(\"windows_client_network.ps1\")), \"portable release contains no network script\");\n                var nativeRecovery = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"),\n                    \"--recover-network --state-path \" + ClientSession.Quote(store.InRoot(\"data/absent-native-state.json\"))) {\n                    UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=store.Root\n                };\n                using (var child=Process.Start(nativeRecovery)) {\n                    if (!child.WaitForExit(20000)) { child.Kill(); throw new IOException(\"native recover hung\"); }\n                    Assert(child.ExitCode==0,\"original Go native no-state recovery is script-free\");\n                }"
+        },
+        {
+          "find": "                using (var real = new ClientSession(store)) {",
+          "replace": "                using (var inactive = new ClientSession(store)) {\n                    string residue = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(residue,\"orphan intent\");\n                    bool blocked = false;\n                    try { Wait(inactive.StopAsync()); } catch (IOException) { blocked = true; }\n                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);\n                    Wait(inactive.StopAsync());\n                }\n                using (var real = new ClientSession(store)) {"
+        },
+        {
+          "find": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    File.Delete(residue);",
+          "replace": "                    Assert(blocked && File.Exists(residue),\n                        \"GUI real original Go session refuses offline Stop success with orphan route intent\");\n                    bool startDenied = false;\n                    try { Wait(inactive.StartAsync(store.InRoot(\"data/pending.json\"))); }\n                    catch (IOException) { startDenied = true; }\n                    Assert(startDenied && File.Exists(residue),\n                        \"direct real GUI client Start never bypasses orphan WAL recovery gate\");\n                    File.Delete(residue);"
+        },
+        {
+          "find": "                    fake.FailStop = false; Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");",
+          "replace": "                    fake.FailStop = false;\n                    string sidecar = store.InRoot(\"data/network-state.json.n4-owned-wal.routes\");\n                    File.WriteAllText(sidecar,\"orphan original route intent\");\n                    bool uiDenied = false;\n                    try { Wait(form.DisconnectAsync()); } catch (IOException) { uiDenied = true; }\n                    Assert(uiDenied && File.Exists(sidecar),\n                        \"GUI never paints disconnected while orphan owned route intent remains\");\n                    File.Delete(sidecar);\n                    Wait(form.DisconnectAsync()); Assert(!fake.Active, \"GUI disconnect completes\");"
+        },
+        {
+          "find": "                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));",
+          "replace": "                // True original WinForms -> ORIGINAL Go CLI (no FakeSession)\n                // observes disk-only states without mutating WFP/routes.\n                using (var diskForm = new MainForm(reopened,new FakeSession(),\n                    ()=>new DependencyState {Admin=false,Npcap=false,Wintun=false})) {\n                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();\n                    Wait((Task)read);\n                    Assert(read.Result==\"absent\", \"GUI original Go reports absent disk state, not network connected\");\n                    File.WriteAllText(stateFile,\"legacy shell intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    File.Delete(stateFile);\n                    string sidecar = stateFile+\".n4-owned-wal.routes\";\n                    File.WriteAllText(sidecar,\"route intent\");\n                    read = diskForm.ReadNativeDiskStatusAsync(); Wait((Task)read);\n                    Assert(read.Result==\"orphan_route_intent\" && File.Exists(sidecar),\n                        \"GUI original Go detects orphan intent and preserves it\");\n                    File.Delete(sidecar);\n                    string wal = stateFile+\".n4-owned-wal\";\n                    File.WriteAllText(wal,\"not a SHA-valid native journal\");\n                    bool denied = false;\n                    try { Wait((Task)diskForm.ReadNativeDiskStatusAsync()); }\n                    catch (IOException) { denied = true; }\n                    Assert(denied && File.Exists(wal), \"GUI rejects invalid WAL; not a fake safe or ready result\");\n                    File.Delete(wal);\n                }\n                foreach (string file in new[] { \"data/field-check.json\", \"data/invalid.json\", \"data/pending.json\", \"data/active.json\", \"data/profiles.json\", \"data/china-test.txt\", \"data/import-test.json\" }) if (File.Exists(store.InRoot(file))) File.Delete(store.InRoot(file));"
+        },
+        {
+          "find": "                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();",
+          "replace": "                    string stateFile = store.InRoot(\"data/network-state.json\");\n                    var preflight = diskForm.ReadNativeProductPreflightAsync();\n                    Wait((Task)preflight);\n                    Assert(preflight.Result==\"absent\",\"GUI real Go native preflight checks OS APIs without claiming Connect ready\");\n                    var read = diskForm.ReadNativeDiskStatusAsync();"
+        },
+        {
+          "find": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");",
+          "replace": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    preflight = diskForm.ReadNativeProductPreflightAsync(); Wait((Task)preflight);\n                    Assert(preflight.Result==\"legacy_journal\",\"GUI native preflight preserves legacy WAL as blocked\");"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "docs/PARAMETERS.json",
+      "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
+      "result_blob": "08094cb000e114fe073b5f780386d54e37e80d5d",
+      "patches": [
+        {
+          "find": "      \"fec-parity\": {",
+          "replace": "      \"fec.mode\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"off\\\"\",\n        \"help\": \"off|fixed|auto; experimental FEC2 requires authenticated owner, no silent legacy fallback\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.profile\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"strong\\\"\",\n        \"help\": \"fixed profile light|mild|medium|balanced|high|strong|maximum; actual r=ceil(k*rho)\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.auto_policy\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"normal\\\"\",\n        \"help\": \"normal|aggressive; aggressive adds one tier; Game auto rejected\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec.auto_start_profile\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"strong\\\"\",\n        \"help\": \"auto start profile, aggressive adds one tier; new blocks only\",\n        \"source\": \"internal/runtimeentry/r0_fec2_product_adapter.go\",\n        \"json\": true\n      },\n      \"fec-parity\": {",
+          "count": 3
+        },
+        {
+          "find": "      \"network-script\": {\n        \"type\": \"String\",\n        \"default_expression\": \"defaultWindowsNetworkScript()\",\n        \"help\": \"Windows network Apply/Cleanup script; default beside executable\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
+          "replace": ""
+        },
+        {
+          "find": "      \"state-path\": {\n        \"type\": \"String\",\n        \"default_expression\": \"defaultWindowsStatePath()\",",
+          "replace": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"state-path\": {\n        \"type\": \"String\",\n        \"default_expression\": \"defaultWindowsStatePath()\","
+        },
+        {
+          "find": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
+          "replace": "      \"recover-network\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"recover exact owned native Windows network WAL; refuses old script journals\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
+        },
+        {
+          "find": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
+          "replace": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-preflight-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect native Windows system APIs, WFP layer and own WAL read-only; never enables product network\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "path": "docs/PARAMETERS.md",
+      "original_blob": "9b49ca638cc6f12434f57acd49a8c1e1cb49dd81",
+      "result_blob": "870f51a6f935ed87215e36b6c7d2cfc05f50b5e2",
+      "patches": [
+        {
+          "find": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n",
+          "replace": " (<=64/128/256/512/768/1024/1280/>1280B)，成功发送间隔桶 (<=500ms/1s/1.5s/2s/2.5s/3.5s/5s/>5s)，只有成功控制 Emit 才增长。实际 JSON 结构资格需新 SOURCE Go race 和官方 Actions。它是有限统计，不是 TCP/IP 包长也不是 HTTPS 伪装证明。\n\n\n## PLAN-008 FEC2 新模式与可见迁移（尚未产品启用）\n\n单一权威参数目录仍是同目录 `PARAMETERS.json`，对应原客户端CLI、JSON和Windows便携GUI。\n新增 `fec.mode=off|fixed|auto`（默认off），`fec.profile` 七档（默认strong），`fec.auto_policy=normal|aggressive`（默认normal），`fec.auto_start_profile`（默认strong）。\n原 `fec-mode/fec-parity/fec-min-parity/fec-start-parity` 为旧Go V1历史配置，不映射成新FEC2档位；老用户选择新FEC2需明确重新保存。Game auto拒绝。\n受保护Go/Rust ABI 尚未在此M4源码接线：fixed/auto即使保存成功也显示 `rejected`、applied_revision/actual_profile 为未知，启动失败而不偷偷走旧Go FEC。默认FEC2 off时原Go启动/Stop/DNS/MTU/IPv6/portable语义不受影响。\n生产feature仍 OFF；只有M0认证owner真实 applied ACK 可以改变GUI显示，不允许通过CLI/GUI伪造 ready 或Applied。\n"
+        },
+        {
+          "find": "Windows state-path 默认 EXE 同目录 data/network-state.json；network-script 默认 EXE 同目录 windows_client_network.ps1，裸 CLI 不再依赖调用者 CWD，也与便携包脚本位置一致。显式 CLI 路径仍保留运维能力；GUI将这些路径固定为本文件夹且拒绝越界。",
+          "replace": "Windows state-path 默认 EXE 同目录 data/network-state.json。原生 --recover-network 只按该目录恢复经精确所有权验证的 owned WAL；旧版 network-script 参数已从产品和便携目录移除。升级前的脚本 journal 必须由旧版程序完成恢复，不静默跨格式接管。Windows native WFP 与真实原生网络还在验收门之后，不能因去脚本而假报已连接。"
+        }
+      ]
+    },
+    {
+      "kind": "create",
+      "path": "internal/configfile/fec2_product_test.go",
+      "overlay_path": "r0/go_overlay/internal/configfile/fec2_product_test.go",
+      "result_blob": "774976b765cfd16638f866ef8c07bbd33c13abe6"
+    },
+    {
+      "kind": "create",
+      "path": "internal/runtimeentry/r0_fec2_product_adapter.go",
+      "overlay_path": "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
+      "result_blob": "2dbb06dcb5c33878c450a594e56345b281ad6186"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/fec_v2_policy.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+      "result_blob": "733656ec92c2e2848c3913606c1f9f56cc8747b7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/fec_v2_policy_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+      "result_blob": "7ad3bf27365b0f5f04a180b11a686888623f22cb"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_admin_preroute_real_crash_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_admin_preroute_real_crash_windows_test.go",
+      "original_blob": "46f1c9eb300904b0cb404c18b1decbea9133bcd0",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a",
+      "result_blob": "18876a185c2d1504379e81f9e5622dfbdf6f367a"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_admin_unified_wal_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_admin_unified_wal_windows_test.go",
+      "original_blob": "cf51e76ca6b3b2312f74405b18cb2e77270b794b",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "4407375879b7e00edb4458dba033a552006cc99a",
+      "result_blob": "4407375879b7e00edb4458dba033a552006cc99a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_dns_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "985be09054322e183693644e225f492ed0019a81",
+      "result_blob": "985be09054322e183693644e225f492ed0019a81"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_dns_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows_test.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "00dc19131a5dc4ddeff7610fbb5cbaf82ec844fd",
+      "result_blob": "00dc19131a5dc4ddeff7610fbb5cbaf82ec844fd"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_lease_audit_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_lease_audit_windows.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "ec228a8b103fe60c8338b2c05fb328df947c0282",
+      "result_blob": "ec228a8b103fe60c8338b2c05fb328df947c0282"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_orphan_ghost_lease_audit_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_lease_audit_windows_test.go",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "918bb01ad25c520e41271ac27882d99255fc3792",
+      "result_blob": "918bb01ad25c520e41271ac27882d99255fc3792"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_persisted_preroute_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_persisted_preroute_windows.go",
+      "original_blob": "8e230ed317d4b36034a308b7ed8d0120e894717b",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f",
+      "result_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_pnp_probe_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_pnp_probe_windows.go",
+      "original_blob": "44abe4b2bff022357741d3ede2f84d783f5bb997",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "fe60f3297a1860e0ca915d827235b283dc3407c6",
+      "result_blob": "fe60f3297a1860e0ca915d827235b283dc3407c6"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_pnp_probe_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_pnp_probe_windows_test.go",
+      "original_blob": "3d498cdfd4e85354151137152caae4b405b4cf52",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "151bd2e59ecd4ce744d615e722ff40bce6d8184f",
+      "result_blob": "151bd2e59ecd4ce744d615e722ff40bce6d8184f"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_assembly_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_assembly_windows.go",
+      "original_blob": "e880d1bb1fb309946307b17914c62db1b83f627f",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "5ecc75d43e333d5826a3ecffa8d38e6146f1a3f2",
+      "result_blob": "5ecc75d43e333d5826a3ecffa8d38e6146f1a3f2"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_assembly_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_assembly_windows_test.go",
+      "original_blob": "7b884cac80d0023cfcb266c51a606aa89304683f",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7",
+      "result_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_unified_network_transaction.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+      "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
+      "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
+      "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
+    },
+    {
+      "kind": "replace",
+      "path": "windows/gui/Portable.cs",
+      "original_blob": "1a788fc1aee06aedc8872878500013b7d355cb09",
+      "patches": [
+        {
+          "find": "            values[\"network-script\"] = InRoot(\"windows_client_network.ps1\");\n",
+          "replace": ""
+        },
+        {
+          "find": "                process.WaitForExit(); process.Dispose(); process = null;",
+          "replace": "                process.WaitForExit();\n                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");\n                string owned = store.InRoot(\"data/network-state.json\");\n                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\"))\n                    throw new IOException(\"客户端已退出但 owned 网络 WAL 仍存在；请执行原生恢复，不允许假报断开。\");\n                process.Dispose(); process = null;"
+        },
+        {
+          "find": "                if (process == null) return;",
+          "replace": "                if (process == null) {\n                    // A dead/never-started process does NOT certify network\n                    // cleanup. Reject every independently persisted owner\n                    // journal before GUI reports \"disconnected\".\n                    string idle = store.InRoot(\"data/network-state.json\");\n                    if (File.Exists(idle) || File.Exists(idle+\".n4-owned-wal\") ||\n                        File.Exists(idle+\".n4-owned-wal.routes\") || File.Exists(idle+\".routes\"))\n                        throw new IOException(\"未运行客户端仍有 owned 网络状态；请先执行原生恢复。\");\n                    return;\n                }"
+        },
+        {
+          "find": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\"))",
+          "replace": "                if (File.Exists(owned) || File.Exists(owned+\".n4-owned-wal\") || File.Exists(owned+\".n4-owned-wal.routes\") || File.Exists(owned+\".routes\"))"
+        },
+        {
+          "find": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");",
+          "replace": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");\n                // Direct API calls must not bypass MainForm's guarded\n                // Disconnect/Recover switch. Old or orphaned journals\n                // prevent a second client from acquiring network ownership.\n                string existing = store.InRoot(\"data/network-state.json\");\n                if (File.Exists(existing) || File.Exists(existing+\".n4-owned-wal\") ||\n                    File.Exists(existing+\".n4-owned-wal.routes\") || File.Exists(existing+\".routes\"))\n                    throw new IOException(\"检测到旧版或未恢复的原生 owned 网络状态，拒绝启动另一客户端。\");"
+        }
+      ],
+      "result_blob": "2d377cb70e25a54011fe6a0fc894f1cdb258b2da"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_entry_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+      "result_blob": "27e3d2721dd98a87806ed3eb12e7636584f043f7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_entry_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
+      "result_blob": "9866a5815f91d4678b5c30fab544aa7567e2e3ee"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/native_owner_slot_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/native_owner_slot_windows_test.go",
+      "result_blob": "e6d39932c112bf47db25ffb127d82f114fad1ad6"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/control_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/control_windows_test.go",
+      "original_blob": "354be63af0f0c578a42b942a671924adbc688bf6",
+      "result_blob": "4ac427a84135efcc6f92c8fd3561a812f2ec302b"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/n4_entry_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/n4_entry_windows_test.go",
+      "original_blob": "c02d6869537f5f2af1e7b6e839f4a15f380fd2b7",
+      "result_blob": "1f6854e6d9e2ad27e34d4958cb04ee8c3cd8517d"
+    },
+    {
+      "kind": "replace",
+      "path": "cmd/wbd-client/n4_network_cancel_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/n4_network_cancel_windows_test.go",
+      "original_blob": "644836eb227b63ac029a2b19e546dad28b95873d",
+      "result_blob": "a930b8129ac620947571eb34b1239af329ea5543"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_status_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
+      "result_blob": "83452baab8358f0f7e0be5527e54fc8e6360248f"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_status_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
+      "result_blob": "c9157436a57ea16500484ca4a72a1214968cd57c"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_preflight_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
+      "result_blob": "bfe2eb69305b1599b0798b92aa38a3ff282ea529"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_preflight_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go",
+      "result_blob": "e13390c864e6631c619139a919d54632e9296147"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_exact_arm_windows.go",
+      "result_blob": "f46b85b56d5c5a318c400b7cbab30a6032de5f01",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows.go"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
+      "result_blob": "0cca3e225ea95932eab09666cf5195107bd61351",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
+      "result_blob": "eeadda04aa1f43aeabb8a86ccfb1a62afc71b204"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "result_blob": "770865e580f7bb402ce8ec70ebf124c61d1d2777"
+    }
+  ],
+  "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
+}
