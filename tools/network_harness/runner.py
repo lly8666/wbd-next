@@ -198,9 +198,12 @@ class LinuxExperiment:
                 else:
                     args += ["root", "handle", "100:"]
                 seed = self.config["seed"] + index * 100 + lane + (10000 if role == "server" else 0)
+                if self.config["network"]["netem_rng"] == "unseeded_recorded":
+                    seed = None  # Explicit request mode, never silently fall back.
                 args += ["netem", *netem_args(d, seed, self.config["network"]["queue_packets"])]
                 self.nscommand(role, args)
-                event["commands"].append({"direction": direction, "lane": lane+1 if independent else "all", "argv": args})
+                event["commands"].append({"direction": direction, "lane": lane+1 if independent else "all", "argv": args,
+                                           "kernel_rng": self.config["network"]["netem_rng"]})
                 if initial and independent:
                     self.nscommand(role, ["tc", "filter", "add", "dev", dev, "parent", "1:", "protocol", "ip",
                         "pref", str(10+lane), "flower", "ip_proto", "tcp", "dst_port" if role == "client" else "src_port",

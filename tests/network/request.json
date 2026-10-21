@@ -9,7 +9,7 @@
     "sizes": [[64, 2], [256, 2], [1024, 3], [1172, 3]],
     "tcp_flows": 2, "probe_hz": 10, "deadline_ms": 250
   },
-  "network": {"outer_mtu": 1500, "lane_loss": "shared", "queue_packets": 32768},
+  "network": {"outer_mtu": 1500, "lane_loss": "shared", "queue_packets": 32768, "netem_rng": "unseeded_recorded"},
   "warmup_s": 10, "drain_s": 5,
   "phases": [{"name": "steady", "seconds": 60, "c2s": {}, "s2c": {}}],
   "acceptance": {"injection_tolerance_pct": 3, "max_loss_pct": 0.1},

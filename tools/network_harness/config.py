@@ -104,10 +104,13 @@ def validate(raw):
     if sum(w for _, w in t["sizes"]) > 512:
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
-    keys(n, ["outer_mtu", "lane_loss", "queue_packets"], "network")
+    keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng"], "network")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
+    n.setdefault("netem_rng", "unseeded_recorded")
+    if n["netem_rng"] not in ["seeded", "unseeded_recorded"]:
+        raise ValueError("netem_rng must be seeded or unseeded_recorded")
     integer(n["outer_mtu"], 1280, 9000, "outer_mtu")
     integer(n["queue_packets"], 1024, 131072, "queue_packets")
     if n["lane_loss"] not in ["shared", "independent"]:
@@ -173,7 +176,8 @@ def netem_args(d, seed, limit):
             args += [option, f'{d[field]}%']
     if d["rate_mbps"]:
         args += ["rate", f'{d["rate_mbps"]}mbit']
-    args += ["seed", str(seed)]
+    if seed is not None:
+        args += ["seed", str(seed)]
     return args
 
 

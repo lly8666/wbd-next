@@ -16,7 +16,7 @@ jobs:
         with: {persist-credentials: false}
       - name: Request, model, integrity, phase accounting and independent UDP TCP selfcheck
         run: python3 -m unittest discover -s tests/network -p 'test_*.py' -v
-      - name: Verify actual kernel seeded netem capability and readback in owned namespace
+      - name: Verify actual kernel netem and report seeded capability without claiming replay
         shell: bash
         run: |
           set -euo pipefail
@@ -24,5 +24,10 @@ jobs:
           trap 'sudo ip netns del "$NS" 2>/dev/null || true' EXIT
           sudo ip netns add "$NS"
           sudo ip -n "$NS" link set lo up
-          sudo ip netns exec "$NS" tc qdisc add dev lo root netem delay 25ms loss random 1% seed 5205 limit 32768
+          if sudo ip netns exec "$NS" tc qdisc add dev lo root netem delay 25ms loss random 1% seed 5205 limit 32768; then
+            echo 'KERNEL_SEEDED_NETEM_SUPPORTED'
+          else
+            echo 'KERNEL_SEEDED_NETEM_UNSUPPORTED; unseeded_recorded requests remain statistical experiments'
+            sudo ip netns exec "$NS" tc qdisc add dev lo root netem delay 25ms loss random 1% limit 32768
+          fi
           sudo ip netns exec "$NS" tc -s -j qdisc show dev lo

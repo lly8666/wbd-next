@@ -9,3 +9,5 @@
 验证计划：只在Actions跑夹具单测/真实socket自检及seeded netem能力检查；再以已接受构建源码 `bdcd66c6ccf973f26af7e9e4eb035457108cb7dd`、build39431226207、artifact12268980051跑一条双向10Mbps Normal/off、持续大小包60s、lossless开发基线。完整产品/Windows/物理/所有弱网矩阵不冒充已验。本提交是实现与测试intent，结果待独立收据补齐。
 
 长期入口：`docs/testing/NETWORK_HARNESS.md`。不建立新治理、审批或交接系统；后续角色在既有devlog/evidence记录实际请求与run。
+
+首轮Actions39618861340：7项夹具单测（含真实UDP/TCP双向）PASS，tc seed能力步骤FAIL；实际基线39618861434同样在开始发业务前FAIL，原公共两端READY与Stop均正常。根因Ubuntu24.04自带tc不认识seed选项。修正为请求显式区分seeded与unseeded_recorded，后者保存实际损伤/随机性限制且不宣称逐包重放；不安装浮动网络工具、不假造可复现seed。首轮原失败保留，产品持续性能仍NOT_RUN，修正后原样重试一次。

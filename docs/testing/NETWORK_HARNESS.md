@@ -22,7 +22,7 @@
 | 业务 | UDP、真实多连接 TCP、按字节份额混合；独立双向并发 RTT 探针；小包/大包按配置权重循环 |
 | 计数 | `sizes` 是应用 payload 字节，包含夹具序号/时间/完整性头；Mbps 是应用字节率。UDP 的内层 IPv4 长度再加 28B；TCP write 不是线上一个 IP 包，真实内核负责分段 |
 | 阶段 | 预声明 1..16 个阶段，总测量≤1200s；热身默认10s、尾部 drain 5s；各阶段双向损伤和负载比例独立 |
-| 损伤 | 每方向 delay/jitter、IID loss、netem Gilbert-Elliott、duplicate/reorder、速率限制，实际 `tc -s -j` 回读；要求 kernel/tc 支持 seed，不悄悄退回随机未播种模式 |
+| 损伤 | 每方向 delay/jitter、IID loss、netem Gilbert-Elliott、duplicate/reorder、速率限制，实际 `tc -s -j` 回读；Ubuntu24.04实测tc不支持seed，默认明确记 `netem_rng=unseeded_recorded`，seed只固定业务正文。请求seeded时必须系统支持，不悄悄回退 |
 | Game | 真实 Game2/4 CLI；独立 lane netem 队列/seed 或一个共享出口队列；可按 lane 端口阻断一条/全部，保留规则命中数 |
 | 相关性 | **共享 netem 随机队列不等于完美相关丢包**。相关黑洞用同一阶段阻断所有 lane；GE 以包转移概率定义，不能说它天然等于固定毫秒突发 |
 | MTU | 回读实际 TUN MTU；默认拒绝超 MTU UDP 负载计划，防止误把发送失败当线路损失；显式 `allow_fragmentation=true` 才测大 UDP 的真实 IPv4 分片兼容性 |
@@ -69,3 +69,5 @@ UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效�
 6. 有余量才10→50→100→200→500Mbps，每个点一个独立 Action。小包PPS另列，FEC/Game先算外层膨胀。发现注入器/宿主/内核容量不足就停止更重工况，写 PROJECTED_NOT_TESTED 与依据。产品单核/锁饱和仍是 DATAPLANE_BOTTLENECK 候选，不能以总CPU未到100%掩盖。
 
 同VM AB不能消除随时间变化的宿主争用；两leg都要有效且业务交付/冗余语义一致才能比较。当前报告保留成本原数，不自动宣布“优化X%”：由agent先核观测边界、背景PSI、丢包和队列，再给结论。如果数据不足，只补能区分原因的一项观测，别重新跑整套。
+
+`unseeded_recorded` 的损伤是同分布统计比较，**不是同一逐包丢包轨迹**；即使不同环境都支持seed，产品改变发包顺序/速率也会改变哪包被丢。比较结论必须看实测损伤计数/流量，不能把相同请求seed称逐包精确重放。确定性黑洞的时间表和规则另行记录。
