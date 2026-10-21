@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "0fed7ff8387409dfb10e5446a3df28d43e08df8d",
+  "result": "PASS_SCOPED_WINDOWS2022_NATIVE_PRODUCTION_WFP_CODE_AND_GO_WAL_CONTROLLER_AND_EXECUTED_WINFORMS_FAKE_CHILD_NOT_REAL_HOST_PRODUCT",
+  "action": {
+    "run_id": 39560246989,
+    "attempt": 1,
+    "job_id": 119089496222,
+    "conclusion": "success",
+    "artifact_id": 12326868590,
+    "artifact_name": "m0-plan020-win-wal-39560246989-1",
+    "artifact_sha256": "1aaea3881df72464fa394b62749225a940b5a6eb20100f9246199ae1f5fa1718"
+  },
+  "source_lock": {
+    "legacy_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "frozen_baseline_manifest_blob": "ebe2beac0aa5317eddf3c2d7db5d833d48ea01eb",
+    "m0_extension_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "windows_target": "windows-2022",
+    "go_version": "1.23.12"
+  },
+  "exact_markers": [
+    "--- PASS: TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop (0.33s)",
+    "--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks (0.14s)",
+    "M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256=040b14ba35c4b27336f95ef748a19624debce343f94383a064eb9caa805782bd",
+    "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+  ],
+  "checks": [
+    {
+      "label": "Actual native Go CLI compiled against exact original Go and M0 scoped manifest",
+      "result": "PASS_BUILD"
+    },
+    {
+      "label": "Native permanent host WFP real writer in n4QualifiedWindowsWFPStage using prior n4WFPArmExactPlan, not stub Arm",
+      "result": "IMPLEMENTED_NOT_OS_APPLIED"
+    },
+    {
+      "label": "Native five-stage WAL controller requires original owner + first/reverse kernel proof before AllNativeOSApplied, and retains WAL on foreign/loan Stop",
+      "result": "PASS_NATIVE_GO_TEST_DOUBLE"
+    },
+    {
+      "label": "WinForms actual .NET Framework exe compiled and executed harness with simulated child: READY pending, explicit Applied UI, WAL sidecar prevents fake Disconnect, absent WAL Stop",
+      "result": "PASS_REAL_EXECUTABLE_FAKE_CHILD"
+    },
+    {
+      "label": "Same-source actual original credential Go TLS client authenticated to Rust M1/M3 and bidirectional kernel Wintun packet",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "Same-source host persistent global WFP sublayer and rules real Apply/CAS, /1 default captures, underlay escape, real DNS IPv6 MTU OS WAL Apply/Stop/Recover",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "Same-source real unmocked WinForms Connect/Applied/Disconnect with network host OS readback",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "Production FEC2/Game",
+      "result": "OFF"
+    }
+  ],
+  "preserved_failures": [
+    {
+      "source": "2cdbf917a779d849ab191fa2ca7ace8a922369b1",
+      "run_id": 39559541696,
+      "conclusion": "failure",
+      "reason": "Malformed test selector and duplicated workflow tail in S592; zero jobs"
+    },
+    {
+      "source": "9f466faf809ce6010b98c202c93aa1d40d9bb58b",
+      "run_id": 39560141693,
+      "conclusion": "failure",
+      "reason": "Literal backslash-n broke workflow path list in S594; zero jobs"
+    },
+    {
+      "source": "75900051ef1839a9641681abfd79cf73664e8bda",
+      "run_id": 39543106596,
+      "conclusion": "failure",
+      "reason": "Historical original native Wintun reverse frame FAIL retained, later corrected separately"
+    },
+    {
+      "source": "b172eb63b77c0f5dac49dba91ab28cbbf16f4454",
+      "run_id": 39556612680,
+      "conclusion": "failure",
+      "reason": "Historical frozen main manifest regression repaired by separate M0 extension"
+    }
+  ],
+  "governance": {
+    "run_id": 39560246820,
+    "conclusion": "success",
+    "maintenance_run_id": 39560246869,
+    "maintenance_conclusion": "success"
+  },
+  "qualification": {
+    "go_native_windows_controller": "PASS_SCOPED_TEST_DOUBLE",
+    "actual_WFP_writer_source": "IMPLEMENTED_NOT_RUN",
+    "actual_host_WFP_global": "NOT_RUN",
+    "default_split_route_DNS_ipv6_MTU_real_OS": "NOT_RUN",
+    "real_CLI_installed_and_launched": "NOT_RUN",
+    "CLI_binary_cross_build": "PASS",
+    "winforms_binary_native_compilation": "PASS",
+    "winforms_executable_fake_session_state": "PASS_SCOPED",
+    "winforms_actual_product_os_applied_disconnect": "NOT_RUN",
+    "authenticated_kernel_same_source": "NOT_RUN",
+    "windows_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "fec2": "OFF",
+    "game": "OFF"
+  },
+  "next_action": "Implement original Go credential-TLS/Rust M1-M3 bidirectional signed native Wintun packet witness as the N4OriginalAuthenticatedPacketProof adapter, then connect N4WindowsNativeProductController to original public CLI/WinForms lifecycle. In an isolated Windows native network with rollback, run real global WFP /1 capture/DNS IPv6 MTU five-stage Apply/Stop/Recover with foreign, stale, cancelled, crash and whole UI positive/negative at ONE exact SOURCE before opening production."
+}
