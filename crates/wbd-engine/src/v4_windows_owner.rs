@@ -323,6 +323,29 @@ pub extern "C" fn wbd_m0_win_owner_v1_release(h:u64)->i32{
     release(&mut r,h)
 }
 
+// This read-only ABI binds public Windows mode claims to the actual native
+// dataplane implementation. Bits: Normal=1, Fixed=2, Auto=4, Game2=8,
+// Game4=16. Linux feature tests do not enable Windows modes.
+#[repr(C)]
+pub struct WbdWindowsV4ModeCapabilities {
+    pub version:u32,
+    pub size:u32,
+    pub supported_modes:u32,
+    pub authenticated_lanes:u32,
+    pub reserved:u32,
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_mode_capabilities(
+    out:*mut WbdWindowsV4ModeCapabilities,size:u32,
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WbdWindowsV4ModeCapabilities>() as u32{
+        return INVALID
+    }
+    unsafe{out.write(WbdWindowsV4ModeCapabilities{
+        version:4,size,supported_modes:1,authenticated_lanes:1,reserved:0,
+    })};
+    OK
+}
 // V3 is deliberately a private RECORD boundary, not a Windows OS Applied
 // decision. The source of the real credentials is the existing original-Go
 // protected callback that issued this handle, never these C bytes alone.
