@@ -283,15 +283,8 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
    continue
   }
   if rec.State=="intent" && observed!=N4UnifiedAbsent{
-   // An interrupted persistent WFP Arm can leave only some exact-owned
-   // filters/sub-layer. The already-fsynced guard intent may reclaim
-   // OWNED or PARTIAL guard ONLY as the sole remaining WAL stage.
-   // Other stages' uncertain writes still fail closed, and the earlier
-   // guard-required-for-routes check forbids this while network state
-   // could remain. Foreign WFP is rejected before any OS mutation.
-   if i!=0 || (observed!=N4UnifiedOwned && observed!=N4UnifiedPartial){
-    return ErrN4RouteAmbiguous
-   }
+   // Only exact-owned WFP guard itself may recover its interrupted Arm.
+   if i!=0 || observed!=N4UnifiedOwned{return ErrN4RouteAmbiguous}
   }
   if observed==N4UnifiedPartial && i!=0 && !(lastRoute && rec.State=="owned"){
    return ErrN4NativeGuard

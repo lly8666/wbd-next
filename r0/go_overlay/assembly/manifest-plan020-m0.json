@@ -478,7 +478,7 @@
       "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
-      "result_blob": "3f08f4c5d02f19a6a869aa09f2caebc796763ff8"
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
     },
     {
       "kind": "replace",
@@ -592,7 +592,7 @@
     {
       "kind": "create",
       "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
-      "result_blob": "932ae597af210e95e232c351a960dcb056a9541f",
+      "result_blob": "0cca3e225ea95932eab09666cf5195107bd61351",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
     },
     {
@@ -611,7 +611,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_activation_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
-      "result_blob": "f07c0f77d823b73a6c01ed894cee359984afaf79"
+      "result_blob": "4d026bd5ce40535f928ebef862b81644996e5ee6"
     },
     {
       "kind": "create",
@@ -666,6 +666,18 @@
       "path": "internal/windowsclient/native_orphan_ghost_terminal_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
       "result_blob": "e00ceb38d643604f55edd800b42043b732418e59"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+      "result_blob": "0e60ff71f36a50f86acb2c3530de7685ba0dce90"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
+      "result_blob": "85f68bb8f43944dfb68ad4e7a11ab5d8be669b8e"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
