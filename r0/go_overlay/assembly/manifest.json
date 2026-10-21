@@ -470,7 +470,7 @@
       "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
-      "result_blob": "9778f72e80993a065ea44f9dfd70b8acb494ac24"
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
     },
     {
       "kind": "replace",
@@ -580,6 +580,12 @@
       "path": "internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
       "result_blob": "eeadda04aa1f43aeabb8a86ccfb1a62afc71b204"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "result_blob": "770865e580f7bb402ce8ec70ebf124c61d1d2777"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
