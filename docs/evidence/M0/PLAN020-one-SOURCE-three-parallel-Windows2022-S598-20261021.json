@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "295c9da5ffaf1a369f6614f965b151b0c8de6f23",
+  "result": "PASS_SCOPED_THREE_PARALLEL_WINDOWS2022_REAL_SOURCE_IDENTICAL_COMPONENT_SCENARIOS_NOT_ONE_E2E_PRODUCT",
+  "workflows": [
+    {
+      "scenario": "credential_original_Go_TLS_Rust_M1_M3_signed_Wintun_owner",
+      "run_id": 39568333692,
+      "attempt": 1,
+      "job_id": 119116002931,
+      "conclusion": "success",
+      "artifact_id": 12331071936,
+      "artifact_name": "m0-plan013-windows-native-owner-39568333692-1",
+      "artifact_sha256": "38011821742c3c3de381ca66c4b9e810770b628f1c12dcc240e893416ee6bbea",
+      "exact_markers": [
+        "test v4_windows_owner::tests::m0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation ... ok",
+        "M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SAME_SIGNED_WINTUN_RUST_AEAD_SEAL_PASS seq=124288 pn=0 kernel_ciphertext_not_sent=1",
+        "M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=14918723521478656 index=7 os_applied=0 no_wfp_or_kernel_app=1",
+        "--- PASS: TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration (0.18s)"
+      ],
+      "qualification": "PASS_SCOPED_REAL_CREDENTIAL_OWNER_TLS_AND_NATIVE_WINTUN_HOLD_RUST_SEAL_NO_PEER_DECRYPT_NO_KERNEL_CIPHERTEXT"
+    },
+    {
+      "scenario": "one_same_signed_Wintun_actual_Windows_kernel_UDP_first_and_reverse",
+      "run_id": 39568333666,
+      "attempt": 1,
+      "job_id": 119116002147,
+      "conclusion": "success",
+      "artifact_id": 12330158798,
+      "artifact_name": "m0-plan020-native-udp-39568333666-1",
+      "artifact_sha256": "6e57fce92ca6e45b0d416d4cea5dccfa7e895af5870292deed112949c207da99",
+      "exact_markers": [
+        "M0_PLAN020_REAL_SIGNED_WINTUN_ACTUAL_WINDOWS_UDP_SOCKET_REVERSE_RING_PASS",
+        "M0_PLAN020_REAL_SIGNED_WINTUN_TO_ACTUAL_WINDOWS_UDP_APPLICATION_PASS kernel_copy=1 app=1 reverse_ring=1 stale_denied=1 real_scoped_WFP_persistent=1 full_global_WFP_NOT_RUN=1"
+      ],
+      "qualification": "PASS_SCOPED_ACTUAL_KERNEL_UDP_TEST_NET_WFP_ROUTE_OS_READBACK_NO_CREDENTIAL_RUST_AEAD"
+    },
+    {
+      "scenario": "native_Go_five_stage_WAL_product_controller_WinForms_real_executable_fake_child",
+      "run_id": 39568333629,
+      "attempt": 1,
+      "job_id": 119116007071,
+      "conclusion": "success",
+      "artifact_id": 12330373501,
+      "artifact_name": "m0-plan020-win-wal-39568333629-1",
+      "artifact_sha256": "4e15cf2c69cdde87e47bfeb8255780c03052bac5bd98028241c0caae25dc66c8",
+      "exact_markers": [
+        "--- PASS: TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop (0.28s)",
+        "--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks (0.23s)",
+        "M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256=d7eec3b88c7522f9bbe599885816c8ef2a3abff2ba2baa2fb53a257698cc299d",
+        "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+      ],
+      "qualification": "PASS_SCOPED_NATIVE_TEST_DOUBLE_WAL_AND_REAL_WINFORMS_EXECUTABLE_FAKE_CHILD_NO_GLOBAL_HOST_OS_APPLY"
+    }
+  ],
+  "governance": {
+    "main_run": 39568333643,
+    "main_conclusion": "success",
+    "maintenance_run": 39568333651,
+    "maintenance_conclusion": "success"
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "base_manifest_blob": "ebe2beac0aa5317eddf3c2d7db5d833d48ea01eb",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "runner": "windows-2022_GitHub_hosted_per_workflow_configuration"
+  },
+  "integrated_release_requirements": {
+    "same_process_TLS_Rust_AEAD_real_Wintun_kernel_first_reverse_application": "NOT_RUN",
+    "opposite_real_Rust_peer_authenticated_AEAD_decode_with_same_kernel_packet": "NOT_RUN",
+    "host_global_persistent_WFP_owned_exact_OS_Apply_and_Disconnect": "NOT_RUN",
+    "actual_two_default_split_routes_underlay_escape": "NOT_RUN",
+    "host_DNS_ipv6_MTU_OS_changes_and_durable_WAL_crash_recovery": "NOT_RUN",
+    "public_original_Go_CLI_live_Product_Applied_Stop": "NOT_RUN",
+    "actual_WinForms_unmocked_N4_Applied_Disconnect": "NOT_RUN",
+    "isolation_verified": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "deployment": {
+    "Windows_product": "OFF_NOT_QUALIFIED",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "retain_previous_failures_by_history": [
+    {
+      "run_id": 39559541696,
+      "reason": "S592 invalid workflow YAML",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 39560141693,
+      "reason": "S594 invalid workflow YAML",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 39543106596,
+      "reason": "S573 real reverse Wintun ring frame FAIL",
+      "conclusion": "failure"
+    }
+  ],
+  "action_authorization_boundary": "Same-SOURCE success of independently isolated scenarios is not authorization to turn ON host-global policies; no verified isolated Windows runner available through approved repository endpoints. Installing global WFP and two /1 default capture routes on the existing shared windows-2022 runner risks network blackholing and WAL persistence.",
+  "one_next_action": "Implement the one-process original-Go credential TLS→Rust M1/M3 authenticated send/peer receive wired into same signed Wintun kernel and the production five-stage WAL controller, then execute its real global WFP/default /1/DNS/IPv6/MTU OS readback, interrupted/foreign Stop CAS, and public CLI/WinForms Applied/Disconnect on a verified isolated native Windows runner; promote only on exact-source successful positive and negative evidence."
+}
