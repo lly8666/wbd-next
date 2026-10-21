@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "5fb00ca8d51153b81864a359b3f290f60cd334a6",
+  "result": "PASS_SCOPED_WINDOWS2022_ORIGINAL_GO_NATIVE_WAL_FIVE_STAGE_LIVE_READBACK_FAKE_STAGES_AND_WINFORMS_SOURCE_ONLY",
+  "run": {
+    "id": 39557024467,
+    "attempt": 1,
+    "job_id": 119079066227,
+    "conclusion": "success",
+    "artifact_id": 12326405311,
+    "artifact_name": "m0-plan020-win-wal-39557024467-1",
+    "artifact_sha256": "39717dcef38eeedbbf36b4470cf0ce7ba5a1abca6836574c8595e8e9077a2cd8",
+    "workflow": ".github/workflows/m0-plan020-windows-native-os-receipt.yml"
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "original_frozen_manifest_git_blob": "ebe2beac0aa5317eddf3c2d7db5d833d48ea01eb",
+    "m0_extension_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "m0_extension_git_blob": "2ef8a885a1cbd6311e876baf0971a74c827fac97",
+    "go_version": "1.23.12",
+    "windows_runner": "windows-2022"
+  },
+  "tests": [
+    {
+      "subject": "Exact pinned Go legacy + immutable M4 donor + M0 extension manifest assembly",
+      "status": "PASS_SCOPED_BUILD"
+    },
+    {
+      "subject": "Windows-native Go unit: five-stage WAL active + each stage owned => typed OS receipt, rejects absent WAL",
+      "status": "PASS_TEST_DOUBLE"
+    },
+    {
+      "subject": "Windows-native Go unit: dropped DNS/foreign WFP/active WAL/assemblyOnly cannot report Applied/Disconnected",
+      "status": "PASS_TEST_DOUBLE"
+    },
+    {
+      "subject": "Windows-native Go unit: Recover before Disconnected, denies surviving foreign owned host stage",
+      "status": "PASS_TEST_DOUBLE"
+    },
+    {
+      "subject": "WinForms assembled MainForm.cs source marker: READY cannot falsely display Applied",
+      "status": "PASS_SOURCE_ASSERTION_ONLY"
+    },
+    {
+      "subject": "Real host global WFP persistent sublayer/rules installed",
+      "status": "NOT_RUN"
+    },
+    {
+      "subject": "Real host default/split /1 route, underlay escape, DNS/IPv6/MTU with durable WAL recovery",
+      "status": "NOT_RUN"
+    },
+    {
+      "subject": "Original-Go TLS/Rust M1-M3 ciphertext actual same-source native Windows kernel first+reverse peer",
+      "status": "NOT_RUN"
+    },
+    {
+      "subject": "Compiled/running WinForms actual OS Applied, Disconnect, repeated Stop, foreign/stale and interrupted recovery",
+      "status": "NOT_RUN"
+    }
+  ],
+  "preserved_failures": [
+    {
+      "source_sha": "62f4f1b4dc37e82779e85be3edba28e8d97a433f",
+      "run": 39555998587,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "invalid GitHub workflow run-name literal backslash, no jobs"
+    },
+    {
+      "source_sha": "8e605bd425c586f84f7e37ce125c1b9c2a026814",
+      "run": 39556113464,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "M0 wrongly changed a frozen M4 donor_blob; exact assembly correctly refused"
+    },
+    {
+      "source_sha": "f60104bff162b38464dcd48ae5aebbd1c45147c3",
+      "run": 39556357188,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "Go native test passed but WinForms static test looked in old donor instead of M0 new source"
+    },
+    {
+      "source_sha": "b172eb63b77c0f5dac49dba91ab28cbbf16f4454",
+      "run": 39556612680,
+      "attempt": 1,
+      "conclusion": "failure",
+      "cause": "Go native WAL test success but governance-maintenance immutable original manifest changed, 2 exact freeze checks failed"
+    }
+  ],
+  "same_source_governance": {
+    "main_run": 39557024247,
+    "result": "success",
+    "maintenance_run": 39557024322
+  },
+  "qualification": {
+    "windows_native_os_receipt_contract": "PASS_SCOPED_TEST_DOUBLE",
+    "windows_original_Go_assembly": "PASS",
+    "winforms_source_authority": "PASS_SOURCE_ONLY",
+    "winforms_executable": "NOT_RUN",
+    "full_host_WFP": "NOT_RUN",
+    "default_route": "NOT_RUN",
+    "DNS_ipv6_MTU_real_host": "NOT_RUN",
+    "durable_OS_WAL_recovery": "NOT_RUN",
+    "TLS_authenticated_real_crypto_kernel_composition": "NOT_RUN",
+    "full_windows_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "live_blockers": [
+    "native_wfp_guard_windows.go guard.Arm unconditional ErrN4NativeGuard (frozen original Go)",
+    "native_unified_assembly_windows.go creates transaction assemblyOnly=true (frozen donor)",
+    "native_product_entry_windows.go N4NativeNetworkReady unconditional ErrN4NativeGuard and original CLI keeps product Connect gated",
+    "Full host-wide /1 capture and persistent global IPv6/DNS WFP must not be installed on shared hosted CI without isolated network + rollback and exact authenticated same-source Rust/kernel proof"
+  ],
+  "next_action": "Under isolated native Windows network authority, connect original-Go credential TLS/Rust active same-generation owner and real signed Wintun authenticated bidirectional kernel packets to the already implemented five OS stages; run persistent global WFP/default-route/DNS/IPv6/MTU WAL Apply+foreign/stale/Stop/Recover and WinForms true Applied/Disconnect as one exact SOURCE test before removing guard/assemblyOnly/CLI denial or enabling product."
+}
