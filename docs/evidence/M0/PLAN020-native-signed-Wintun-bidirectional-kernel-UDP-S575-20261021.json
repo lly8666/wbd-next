@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "76f0fcede48a9964d6333fcc280dd65104c2a637",
+  "result": "PASS_SCOPED_REAL_WINDOWS2022_SAME_SIGNED_WINTUN_KERNEL_BIDIRECTIONAL_UDP_TESTNET_ONLY_NOT_ORIGINAL_TLS_RUST_AEAD",
+  "test_run": {
+    "id": 39543578070,
+    "attempt": 1,
+    "job_id": 119036608788,
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan020-real-windows-wintun-kernel-udp.yml",
+    "artifact_id": 12320373165,
+    "artifact_name": "m0-plan020-native-udp-39543578070-1",
+    "sha256": "93ed6dc759ee23dccbd62a438e727cdb9073467550cffb1f30d1ea38d17a911a"
+  },
+  "inputs": {
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "m4_frozen_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "wintun_signed_zip_version": "0.14.1",
+    "wintun_official_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "checks": [
+    {
+      "label": "Actual signed process-created Wintun generation, GUID/LUID/ifindex and PnP pin",
+      "result": "PASS"
+    },
+    {
+      "label": "Same Wintun signed ring injection delivers exact first UDP app payload through Windows socket",
+      "result": "PASS"
+    },
+    {
+      "label": "Actual Windows UDP socket sends reverse packet onto SAME signed Wintun ring and native nonblocking receive verifies UDP bytes + addresses + ports",
+      "result": "PASS"
+    },
+    {
+      "label": "Native receive skips non-IPv4 unsolicited frames with strict 8-frame budget and immediate kernel loan release",
+      "result": "PASS_SCOPED_COMBINED_REAL_NATIVE"
+    },
+    {
+      "label": "TEST-NET-only IP Helper /32 OS route readback, foreign metric denial, exact CAS removal and no default route change",
+      "result": "PASS_SCOPED"
+    },
+    {
+      "label": "TEST-NET-only persistent WFP independent engine readback, forged rule deletion rejection, exact CAS removal",
+      "result": "PASS_SCOPED"
+    },
+    {
+      "label": "Native kernel lease stale generation reject, repeated Stop, receive and copy counters",
+      "result": "PASS"
+    },
+    {
+      "label": "Same-source original credential Go TLS + Rust AEAD decrypt/encrypt driving these packet flows",
+      "result": "NOT_RUN"
+    },
+    {
+      "label": "Host-wide WFP/default split-route DNS IPv6 MTU durable WAL CAS, WinForms Applied/Disconnect",
+      "result": "NOT_RUN"
+    }
+  ],
+  "preserved_fail": {
+    "run_id": 39543106596,
+    "attempt": 1,
+    "source_sha": "75900051ef1839a9641681abfd79cf73664e8bda",
+    "job_id": 119035106648,
+    "artifact_id": 12320193181,
+    "artifact_sha256": "0148ac9037bd77c7e3ee4f5d6f6284df9f98b00929babb50748abb6db97d2f84",
+    "conclusion": "failure",
+    "observed": "invalid Wintun logical tunnel binding on first reverse poll; ingress/WFP/route had reached pass markers",
+    "separate_receipt": "docs/evidence/M0/PLAN020-native-reverse-ring-S573-FAIL-20261021.json",
+    "repair": "S575 bounded skip for non-IPv4 native control packets inherited from original Go TUN semantics; actual Windows subsequent full same-device reverse gate passed. Original first failure is not retroactively PASS."
+  },
+  "governance": {
+    "same_source_run_id": 39543578073,
+    "conclusion": "success"
+  },
+  "scope": {
+    "native_windows_x64": "PASS_SCOPED",
+    "go_rust_module_exact_auth_packet": "NOT_RUN",
+    "cross_build": "PRIOR_HISTORIC_SCOPE_ONLY_NOT_RETESTED",
+    "windows_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "global_WFP": "NOT_RUN",
+    "default_route_dns_ipv6_mtu_wal": "NOT_RUN",
+    "winforms_applied_disconnect": "NOT_RUN",
+    "production_fec2": "OFF",
+    "production_game": "OFF"
+  },
+  "next_action": "Integrate actual original credential-Go TLS and Rust M1/M3 AEAD bidirectional packets into the same signed Wintun lease; bind full native persistent WFP/default-route/DNS/IPv6/MTU WAL CAS and Windows CLI/WinForms OS readback under one Windows2022 SOURCE before product ON."
+}
