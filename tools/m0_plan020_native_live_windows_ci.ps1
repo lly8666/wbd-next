@@ -38,6 +38,28 @@ foreach ($marker in @(
 if ($wire -match 'UNSUPPORTED|--- SKIP:') {throw 'real signed Wintun original TLS/Rust test was skipped'}
 Write-Output 'M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED'
 
+# M0-only exact SOURCE post-donor test override. This does not change the
+# 12 pinned Windows donor paths nor any production implementation. Check
+# full original Git donor SHA BEFORE replacing only the isolated TEST file.
+@'
+import os,pathlib,subprocess,hashlib
+root=pathlib.Path.cwd()
+sha=os.environ["GITHUB_SHA"]
+destination=root/"legacy/internal/windowsclient/native_admin_preroute_real_crash_windows_test.go"
+source="r0/go_overlay/ci/native_admin_preroute_real_crash_windows_test.go"
+def blob(raw):
+    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+old=destination.read_bytes()
+assert blob(old)=="18876a185c2d1504379e81f9e5622dfbdf6f367a","exact pinned donor altered"
+patch=subprocess.check_output(["git","show",sha+":"+source])
+assert blob(patch)=="672c9ee126899f2300f161560c2cd91f5fbb55f2","new M0 test fixture source SHA drift"
+assert b"n4RetirePinnedGhostPreRouteWAL" in patch
+destination.write_bytes(patch)
+assert blob(destination.read_bytes())==blob(patch)
+print("M0_PLAN020_EXACT_M0_NATIVE_CRASH_TEST_SOURCE_POST_PINNED_DONOR_PASS")
+'@ | python -
+if ($LASTEXITCODE -ne 0) {throw 'exact M0 post-donor native crash test SOURCE rejected'}
+
 Push-Location legacy
 try {
   & go test -c -o ../result/wintun-release/m0-actual-ip-mtu-dns.exe ./internal/windowsclient

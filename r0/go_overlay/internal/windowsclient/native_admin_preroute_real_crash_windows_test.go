@@ -291,32 +291,9 @@ func TestN4WindowsHostedRealPreRouteIPCrashWAL(t *testing.T){
       t.Logf("N4_GHOST_LEASE_AUDIT=%s; MTU_AND_GUARD_STILL_OPEN",report["ghost_lease_audit"])
      }
      t.Logf("N4_POSTCRASH_NATIVE_ROWS original=EXACT_TRIPLE ipv4=%s ipv6=%s guard=FAKE_ARMED wal=RETAINED",ghostProbe.IPv4,ghostProbe.IPv6)
-     // Only after native DNS has been CAS-cleared, both IP-family rows
-     // are GONE_1168, original PnP is GONE_13, full unicast table and
-     // exact lease are absent, and there are NO host capture routes.
-     // The dead interface MTU CANNOT be restored: do not claim it was.
-     if report["ghost_lease_audit"]=="PASS_NATIVE_FULL_TABLE_AND_EXACT_TUPLE_ABSENT_WAL_RETAINED" &&
-        report["ghost_dns_partial"]=="PASS_EXACT_PINNED_NATIVE_DNS_CLEARED_REMAINING_WAL_RETAINED"{
-      terminalCtx,terminalDone:=context.WithTimeout(context.Background(),15*time.Second)
-      terminalErr:=n4RetirePinnedGhostPreRouteWAL(terminalCtx,wal,j.Identity,fake)
-      terminalDone()
-      if terminalErr!=nil{t.Fatalf("original devnode-gone terminal OS WAL CAS recovery failed, WAL retained: %v",terminalErr)}
-      if fake.active||fake.disarmCount!=1||g.disarmCalls!=0{
-       t.Fatal("ghost terminal cleanup failed exact fake guard CAS or touched wrong guard")
-      }
-      if _,err:=os.Stat(wal);!errors.Is(err,os.ErrNotExist){
-       t.Fatalf("ghost terminal cleanup failed to retire confirmed original WAL: %v",err)
-      }
-      report["original_retired"]="PASS_EXACT_PINNED_DEVNODE_GONE_NO_INTERFACE_TO_RESTORE"
-      report["wal_recovery"]="PASS_TERMINAL_GHOST_PRE_ROUTE_WAL_CAS_NO_MTU_RESTORE"
-      report["mtu_after_crash"]="DEVICE_GONE_NO_INTERFACE_TO_RESTORE_NOT_BASELINE_RESTORED"
-      report["result"]="SCOPED_REAL_PINNED_GHOST_DEVICE_GONE_TERMINAL_WAL_CLEANUP_FAKE_WFP_PASS"
-      t.Log("N4_GHOST_TERMINAL_RECOVERY_PASS original PnP gone, both interface rows missing, native lease absent, DNS CAS cleared, no capture routes; OS MTU NOT restored (device gone); FAKE WFP only")
-      return
-     }
      report["result"]="UNSUPPORTED_EXACT_ORIGINAL_IPV4_ROW_UNAVAILABLE"
      report["original_retired"]="UNSUPPORTED_SAME_ORIGINAL_TRIPLE_WITHOUT_IPV4_ROW"
-     t.Skip("UNSUPPORTED: missing OS interface row, original WAL retained; no safe cleanup authority")
+     t.Skip("UNSUPPORTED: real child crash left exact original Win32 Wintun but no native IPv4 interface row; parent WAL retained, WFP FAKE remains armed")
     }
     if rollbackErr!=nil{
      t.Fatalf("same-original Win32 CAS rollback after real child crash failed (WAL retained): %v",rollbackErr)
