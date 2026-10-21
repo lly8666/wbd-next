@@ -4,29 +4,27 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 236,
-  "checkpoint_sha": "30d372d1012a8d917a429347713e70d647525345",
+  "sequence": 237,
+  "checkpoint_sha": "a7da42c6bcbc65caeabcc330f055a37b4f3906b0",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0 full Windows product integration. S657 restores immutable original Go WAL/WFP donor, adds M0-qualified guard-only persistent WFP partial intent recovery; S659 same-source native Windows2022 action PASS_SCOPED real TEST-NET WFP Arm→fresh-engine ownership→foreign CAS refusal→exact Stop and 5/5 Go named WAL regressions. The same job repeats accepted original credential Go TLS Rust M3 signed Wintun kernel app both directions, IP/MTU/DNS WAL and PnP ghost scoped positives; WinForms real EXE built but test child only. Global production WFP IPv6/DNS, two /1 routes/physical escape and real public GUI OS Applied/Disconnect NOT_RUN. Windows/FEC2/Game OFF.",
-  "why_now": "S652/S654/S655/S657 native and Governance failures preserved in S656/S658 and S660. H235 repaired current source evidence references and Governance39618733576 SUCCESS. S659 SOURCEe3e193edb0e8383a9db2c962e5bb5618bae31764 Windows2022 Action39618823911/1 SUCCESS; five exact Go tests including scoped real WFP and guard-only crash PASS, artifact12352554865 SHAcb09c036...; Governance39618823546 PASS. S660 exact receipt. S657 maintenance FAIL due old H234 cross-source; a clean current-source maintenance receipt was not obtained. Full product unqualified.",
-  "done_when": "PLAN020 full native Windows product one exact SOURCE with original credential TLS/Rust signed Wintun first/reverse, persistent WFP IPv6/DNS, both default /1+underlay physical escape, owned lease/MTU/DNS durable WAL Apply/Recover/Stop, real public Go+WinForms Applied/Disconnected and foreign/stale/crash negatives. Current native WFP TEST-NET lab is scoped only, product/physical NOT_RUN, FEC2/Game OFF.",
-  "next_action": "Run one verified isolated Windows2022 full host-native product source gate with real persistent global WFP IPv6/DNS, both /1 captures + physical underlay route, public original Go V4 TLS/Rust signed-Wintun kernel first/reverse, real WinForms Applied/Disconnect and WAL foreign/stale/crash negatives; preserve scoped lab separate and refuse production ON until same-source full PASS.",
+  "current_task": "PLAN021 user-authorized Actions-first opt-in network testing: full-OS/physical matrix no longer precondition. Windows original-Go TLS Rust M3 signed-Wintun V4 Normal/off public --native-v4-product old unconditional guard removed; exact SOURCE Actions S664 39623113021/1 complete SUCCESS, source-locked WinForms portable and scoped true kernel UDP/WAL/WFP tests PASS. OPEN_FOR_NETWORK_TEST for this wired Windows mode. Legacy Go V3 modes separate; Linux V4 Fixed/Auto initial source-scoped PASS, public V4 Game and Windows V4 FEC2/Game still EXPOSED_NOT_WIRED. Full host-global WFP/two /1/true WinForms OS/physical/perf NOT_RUN; no automatic production deployment.",
+  "why_now": "H236 checkpoint→HEAD one cursor-only, Governance39619910178 PASS; S661 PLAN021 user G3 gate override and S662 public code/registry. S662 native39622264672 FAIL obsolete WinForms source assertion (core scoped PASS), legacy G2 39622264928 FAIL rev2 expectation. S664 repaired assertion, native39623113021/1 SUCCESS 5 named Go tests + real TEST-NET WFP/foreign CAS, original TLS/Rust/Wintun first/reverse, IP/MTU/DNS WAL, real GUI build fake child, artifact12356441857 sha256 d1d7a9...; S664 Governance/maintenance FAILED hot-byte overflow; S666 compact repair Governance39623469087 and maintenance39623469283 PASS. S667 exact receipt, old red logs retained.",
+  "done_when": "PLAN021: a mode's exact-SOURCE positive functional Actions PASS is enough for OPEN_FOR_NETWORK_TEST through actual wired public entry; continue network conditions without full host-global/physical/performance pre-gate. Preserve native TLS/Rust/WFP/routes WAL Applied/Stop/CAS safety; NOT_RUN, unsupported and unwired modes truthful. Continue public V4 Linux Game2/4 and Windows V4 FEC2/Game wiring only when actually implemented and tested; no fake success.",
+  "next_action": "Test controlled Windows V4 opt-in native public end-to-end actual global WFP IPv6/DNS, two /1 underlay capture, native WinForms OS Applied/Disconnect, crash/foreign/stale; then weak network RTT/loss/MTU scenarios and mode-specific public V4 Fixed/Auto/Game once wired. No automatic deployment and no separate physical-prequalification hard gate.",
   "unverified": true,
-  "last_tested_source": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+  "last_tested_source": "91b1ca9e5b257acf331b05bdf8a5c127df91e07a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json"
+    "docs/evidence/M0/PLAN021-S664-Actions-pass-Windows-V4-Normal-off-open-network-trial-20261021.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md",
+    "docs/testing/PLAN021-Actions-qualified-network-trial-modes-20261021.md",
+    "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json",
     "docs/evidence/M0/PLAN020-S648-independent-native-post-stop-Absent-SOURCE-Windows2022-PASS_SCOPED-20261021.json",
-    "docs/evidence/M0/PLAN020-same-SOURCE-real-Windows-Rust-signed-Wintun-native-WAL-pinned-ghost-terminal-PASS-S645-20261021.json",
-    "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
-    "docs/devlog/M0/PLAN016-original-Go-public-FEC-Game-mode-real-app-intent-20261020.md",
-    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
-    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
-    "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
-    "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
+    "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json",
+    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
   ],
   "open_requests": [],
-  "partial_summary": "H236: exact SOURCE e3e193ed... Windows2022 Actions39618823911/1 SUCCESS same job five named Go tests (real persistent TEST-NET WFP scoped Arm fresh-engine/foreign CAS/Stop; exact partial guard-only crash; post-Stop owned/partial/foreign), original protected Go TLS Rust M3 signed Wintun actual UDP and IP/MTU/DNS WAL scoped PASS; artifact12352554865 sha256 cb09c036...; S660 receipt, source Governance39618823546 PASS. Frozen donor 34 blobs maintained. Original S652/S654/S655/S657 FAIL and maintenance S657 FAIL remain. Global WFP dual /1 real public GUI OS Applied/Disconnect/physical/performance NOT_RUN; Windows/FEC2/Game OFF."
+  "partial_summary": "H237: user PLAN021 Actions-first feature gate active. S664 exact SOURCE91b1ca9e... Windows2022 Action39623113021/1 SUCCESS, public native V4 trial admission source gate, 5 named Go tests, real isolated WFP TEST-NET Arm/Stop foreign CAS, original TLS Rust signed-Wintun kernel both UDP directions and native IP/MTU/DNS WAL scoped PASS; WinForms portable build/fake child PASS. Artifact12356441857 sha256:d1d7a9... S667 precise evidence. S662 stale GUI assert run39622264672 FAIL and G2 rev2 bootstrap FAIL retained; S664 hot budget Governance FAIL corrected by S666 Governance39623469087 + maintenance39623469283 SUCCESS. Windows V4 Normal/off OPEN_FOR_NETWORK_TEST, full /1/IPv6/WFP/GUI OS and physical NOT_RUN; V4 FEC/Game not wired, no production deployment."
 }
