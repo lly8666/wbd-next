@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "6fd15a297f92cb6df0b5e2c56b393f3633cede2e",
+      "result_blob": "0e6282fb097cbcab193153dc5ebda348358bf6d6",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -116,6 +116,14 @@
         {
           "find": "    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {",
           "replace": "    // Run read-only actions BEFORE configuration and credentials. They cannot\n    // activate native WFP, Wintun, DNS or routes, or promote the product.\n    if *readNativePreflight {\n        if *readNativeState || *recoverNetwork {return errors.New(\"native-preflight-json cannot combine with another network operation\")}\n        report, err := windowsclient.N4ReadOnlyProductPreflight(context.Background(),*statePath)\n        if err!=nil{return err}\n        return json.NewEncoder(os.Stdout).Encode(report)\n    }\n    // Disk inspection is independent of credentials, configuration, Wintun,\n    // TLS or the WFP engine. Never let this read-only report authorize Apply.\n    if *readNativeState {"
+        },
+        {
+          "find": "\t\tcheckConfig        = flag.Bool(\"check-config\", false, \"validate effective configuration without network or driver changes; credentials redacted\")",
+          "replace": "\t\tcheckConfig        = flag.Bool(\"check-config\", false, \"validate effective configuration without network or driver changes; credentials redacted\")\n\t\tnativeV4Product    = flag.Bool(\"native-v4-product\", false, \"real original-Go TLS/Rust V4 Windows native owner; fail closed until full signed-Wintun M3 packet and OS WAL product is qualified\")"
+        },
+        {
+          "find": "\t// No legacy script fallback is permitted on original Windows runtime.",
+          "replace": "\t// Public native V4 now uses real original Go FakeTCP protected credential\n\t// TLS + the exact Rust M1/M3 native owner and actual signed Wintun PnP.\n\t// This path never calls the old V3 runtime or PowerShell fallback.\n\t// It must NOT announce product Applied before peer packet and OS WAL proof.\n\tif *nativeV4Product {\n\t\tif *lanes != 1 || *fecParity != 0 || *fecMode == \"auto\" || *fecMode == \"auto-aggressive\" ||\n\t\t\t*recordCipher != \"chacha20-poly1305\" || autoLease {\n\t\t\treturn errors.New(\"original Windows native V4 only supports explicit lease, one Normal lane, FEC off, ChaCha; no downgrade\")\n\t\t}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{\n\t\t\tServerIP:serverIP,ServerPort:uint16(*serverPort),SourcePort:uint16(*sourcePort),\n\t\t\tServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,\n\t\t\tTunnelID:[16]byte(tunnelID),Installation:[16]byte(installation),\n\t\t\tLease4:leasePrefix,AdapterAlias:*adapterAlias,StatePath:*statePath,\n\t\t\tDNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),\n\t\t\tControlStdin:*controlStdin,\n\t\t})\n\t}\n\t// No legacy script fallback is permitted on original Windows runtime."
         }
       ]
     },
@@ -616,6 +624,24 @@
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
       "result_blob": "9f85bf0efbbe89b8503ab164fb2d992c5258ff0d"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+      "result_blob": "2957a21a88e69ba76ae52ed0f1e111b07df17bfe"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_unavailable_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_unavailable_windows.go",
+      "result_blob": "c83b5ddc81aa09e606a9415c3bd595b1b7fe9332"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+      "result_blob": "38dcff218134e4a42ff55a3a6df1cf4b2d20f6f9"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
