@@ -253,6 +253,15 @@ jobs:
           if ($nativeLog -notmatch '--- PASS: TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration') {
             throw 'real credential original Go TLS/native Rust and M4 device handshake test never ran'
           }
+          # This is a strict native Windows OS app delivery gate: an
+          # UNSUPPORTED/skip log MUST fail rather than inherit TLS PASS.
+          if ($nativeLog -notmatch 'M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS') {
+            throw 'REAL original TLS Rust M3 ciphertext did NOT cross signed Wintun kernel into an actual bound Windows UDP application'
+          }
+          if ($nativeLog -notmatch 'M0_PLAN020_REAL_TLS_BOUND_SIGNED_WINTUN_RUST_M3_RECV_ABI_NEGATIVES_PASS' -or
+              $nativeLog -notmatch 'M0_PLAN020_REAL_TLS_RUST_M3_RECEIVE_AFTER_NATIVE_WINTUN_QUIESCE_DENIED') {
+            throw 'bounded original TLS Rust M3 peer-receive and Wintun Stop negatives NOT_RUN'
+          }
           @'
           import json,pathlib,hashlib
           p=pathlib.Path("windows-owner-result/receipt.json")
@@ -276,7 +285,11 @@ jobs:
               receipt["single_same_TLS_generation_Wintun_OS_native_product"]="UNSUPPORTED_NATIVE_DRIVER_OR_HOST_CAPACITY"
           else:
               raise RuntimeError("original credential TLS plus M4 created Wintun not qualified")
-          receipt["native_WFP_default_route_and_M4_kernel_app"]="NOT_RUN"
+          receipt["original_TLS_Rust_M3_ciphertext_on_same_signed_Wintun_kernel_into_real_UDP_app"]="PASS_SCOPED_REAL_KERNEL_UDP_TEST_NET_APP"
+          receipt["original_TLS_Rust_bound_M3_receive_abi_stale_and_tamper"]="PASS_SCOPED_REAL_NATIVE_OWNER_NEGATIVES"
+          receipt["original_TLS_Rust_authenticated_OPPOSITE_peer_decrypt_of_same_Wintun_kernel_record"]="NOT_RUN"
+          receipt["full_host_WFP_default_route_DNS_ipv6_MTU_WAL_and_unmocked_CLI_GUI"]="NOT_RUN"
+          receipt["native_WFP_default_route_and_M4_kernel_app"]="NOT_RUN_FULL_PUBLIC_PRODUCT"
           receipt["windows_product_applied"]="OFF"
           receipt["rust_authenticated_owner_Wintun_v2_fence"]="PASS_SCOPED_NATIVE_UNIT_NOT_APPLIED"
           receipt["windows_product"]="NOT_QUALIFIED"
