@@ -61,6 +61,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if err!=nil{return err}
  defer assoc.Close()
  failure:=make(chan error,2)
+ nativeFrames:=make(chan faketcp.Segment,64)
  var readers sync.WaitGroup
  readers.Add(1)
  go func(){
@@ -72,10 +73,12 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
     return
    }
    if assoc.State()==faketcp.ClientAssociationDetached{
-    // A V4 TLS success hands all subsequent packets to Rust; the
-    // old Go bootstrap parser may NEVER ingest those ciphertexts.
-    // The real native M3 packet read loop is a separate required
-    // step and this mode will fail closed before OS Apply.
+    // Verified original TLS hands the bounded real TCP frame to Rust M3.
+    select{case nativeFrames<-seg:
+    default:
+     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+     return
+    }
     continue
    }
    if e=assoc.HandleSegment(seg,time.Now());e!=nil{
@@ -132,13 +135,8 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  tun,e:=windowsclient.OpenTUN(o.AdapterAlias)
  if e!=nil{return e}
  defer tun.Close()
- device:=windowsownerlease.CreatedWintun{TUN:tun}
- identity,e:=device.Identity(ctx,o.Installation,session.Epoch)
- if e!=nil{return e}
- if e=owner.BindOriginalM4NativeDevice(ctx,device,identity);e!=nil{return e}
- state,e:=owner.OriginalOwnerReadback()
- if e!=nil||!state.OwnerActive||!state.DeviceBound||state.DeviceQuiesced||
-  state.ProductApplied{return windowsclient.ErrN4NativeGuard}
+ // The sole typed product owns the exact Rust↔Wintun native hold,
+ // instead of a separate pre-binding that could outlive OS WAL.
  physical,e:=underlay.PhysicalPath()
  if e!=nil{return e}
  plan,e:=windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
@@ -151,14 +149,40 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  })
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
- // This is a real V4 TLS and signed Wintun native owner admission in
- // the PUBLIC wbd-client process. The live Npcap reader above is
- // deliberately NOT misrepresented as a Rust-owned M3 receive loop;
- // no native global WFP, two /1, DNS or MTU are installed here.
- // Next product step MUST supply genuine N4NativeAuthenticatedPeerTraffic
- // and invoke windowsownerlease.PrepareOriginalTLSNativeProduct.
- // No fallback to old V3 legacy runtime, no false READY or GUI Applied.
- return errors.Join(errM0NativeV4PacketBridge,
-  fmt.Errorf("native Rust owner generation=%d, adapter=%s, OS Apply=NOT_RUN",
-   state.Generation,plan.AdapterAlias))
+ transport,e:=newM0NativeV4Peer(owner,endpoint,flow,nativeFrames)
+ if e!=nil{return e}
+ product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
+  ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
+ if e!=nil{return e}
+ cleanup:=func()error{
+  stop,c:=context.WithTimeout(context.Background(),60*time.Second)
+  defer c()
+  return product.Stop(stop)
+ }
+ // A linked native entry is not a product qualification. Until isolated
+ // OS WFP/default-route/DNS/MTU WAL + first-app/peer/recovery source gate
+ // passes, THIS exact public path refuses host-global activation.
+ // Never use a CLI flag or source-locked component build as a bypass.
+ if e=windowsclient.N4NativeNetworkReady(ctx);e!=nil{
+  return errors.Join(e,cleanup())
+ }
+ receipt,e:=product.Apply(ctx)
+ if e!=nil{return errors.Join(e,cleanup())}
+ if !receipt.AllNativeOSApplied{return errors.Join(windowsclient.ErrN4NativeGuard,cleanup())}
+ observed,e:=product.LiveReceipt(ctx)
+ if e!=nil||!observed.AllNativeOSApplied{
+  return errors.Join(e,windowsclient.ErrN4NativeGuard,cleanup())
+ }
+ fmt.Println("WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1")
+ fmt.Println("WBD_WINDOWS_CLIENT_READY")
+ var runtimeErr error
+ select{
+ case <-ctx.Done():
+ case runtimeErr=<-failure:
+ case runtimeErr=<-transport.Errors():
+ }
+ stopErr:=cleanup()
+ if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
+ fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
+ return runtimeErr
 }
