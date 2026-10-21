@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 238,
-  "checkpoint_sha": "103c71d6dd9727bdab8ba3d1dc8ea57e8cb22ce0",
+  "sequence": 239,
+  "checkpoint_sha": "6ee8831cdbf1d16c32da5d849970a8eb3839b1ab",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN022 user one-shot all-mode batch: exact SOURCE111fd39b Linux original-Go V4 PUBLIC Normal/off Fixed Auto Game2 Game4 one build real TLS Rust M4 raw/TUN UDP native Stop all PASS Action39629082813/1. Fixed/Auto actual M2 Applied64, Game2/4 real TLS lanes blocked lane1 noHOL; Normal 1% kernel loss 512/512 frozen M2 repair. Windows same SOURCE Action39629082860/1 PASS_SCOPED original TLS Rust signed Wintun Normal/off, native WAL/TEST-NET WFP. Windows Fixed/Auto/Game2/4 still missing native Rust data-plane ABI; full global WFP/two /1 GUI true OS, physical/perf NOT_RUN.",
-  "why_now": "User explicitly authorized one complete mode batch, no per-mode incremental validation. S668 found Linux public Game2/4 and Fixed/Auto implementations already present but only older binary receipts. S669 extended existing one SOURCE Actions to test all five modes with same original Go/Rust binaries. Linux 39629082813/1 SUCCESS artifact12357134780 sha256:43d669cf...; Windows39629082860/1 SUCCESS artifact12357084609 sha256:6282ea21...; Governance39629082854 and maintenance39629082889 PASS. S670 precise evidence. Windows bridge_v4_windows_private_owner.go explicitly refuses FEC!=Off/lanes!=1 and Rust v4_windows_owner.rs exports only Normal/off cipher, no Windows Fixed/Auto/Game C ABI; do not pretend test green means these modes work.",
-  "done_when": "PLAN021 positive same-SOURCE CI is enough for OPEN_FOR_NETWORK_TEST. All five Linux public V4 Normal/off Fixed Auto Game2 Game4 now OPEN; Windows Normal/off OPEN scoped. Remaining parent work: Windows V4 Fixed/Auto/Game2/Game4 real authenticated native Rust FEC2/Game ABI+Go/WinForms wiring and one Windows positive Actions, then real global WFP/dual /1 and network test matrices. Fail-closed native CAS/Stop and no fake Applied retained.",
-  "next_action": "Implement Windows Fixed/Auto/Game2/Game4 as ONE complete original-Go TLS→Rust native owner C-ABI and Go CLI/WinForms interface batch; test one exact Windows2022 source all four modes with true signed Wintun kernel UDP, M2 Applied, blocked lane/noHOL, native WAL Stop/foreign/stale. Full host global WFP/dual /1/GUI true OS and weaknet next on isolated VM, not an entry pre-gate; never split into per-mode receipts.",
+  "current_task": "PLAN023 user asks Windows V4 Fixed Auto Game2 Game4 all open/test quickly. S672-S682 implemented original Go public five-mode CLI selection/no silent downgrade, genuine Windows Rust v4 capabilities ABI and pre-Npcap network check, original exact-Go overlay manifest and native Windows Actions Go/Rust ABI tests. Source3c4f046d Windows2022 39692983214/1 SUCCESS scoped (real Go TLS Rust signed Wintun off, native WAL/TESTNET WFP). Rust native ABI only Normal mask=1 so Windows Fixed Auto Game2 Game4 remain native NOT_WIRED. Linux public all five source111fd39b PASS distinct datapath. No full Windows four-mode qualification.",
+  "why_now": "Original M0 source H238 was clean sole main writer. S671 PLAN023 intent, S672-S682 code and Actions, S683 evidence. Failed intermediate Windows workflow S675 39691969735 and S676 39692339589 invalid YAML duplicate retained. S678 Windows original Go mode selection 39692647082 SUCCESS. Exact S682 SOURCE3c4f046d Action39692983214/1 SUCCESS with real compiled original Go selector tests TestM0PLAN023WindowsNativeV4FiveModes, TestM0PLAN023WindowsRustNativeModeABIRejectsUntrustedLibrary and real ctypes Rust ABI returns only Normal; artifacts12389272600 sha256:3230bedf... Governance39692983455 and maintenance39692983236 SUCCESS. Four source/repair M2 Fixed Auto native and Game multichannel original TLS Rust M4 drivers remain missing; no fake success.",
+  "done_when": "PLAN021 Actions PASS sufficient to OPEN_FOR_NETWORK_TEST only modes actually wired/tested. Linux public five V4 modes PASS/open; Windows Normal/off PASS_SCOPED/open; Windows Fixed/Auto/Game2/Game4 have typed source-locked selector+native capability ABI but backend NOT_WIRED. Need real FEC2 M2 Fixed/Auto and 2/4 GameAdapter independent authenticated Rust Windows Wintun packet driver plus one Windows source-locked four-mode positive app/Stop. Real host WFP /1, GUI OS/perf are later network matrices, not fake complete.",
+  "next_action": "Implement ONE full Windows Rust FEC2/Game native backend + original-Go credential per-lane TLS and Windows Wintun/packet driver, then one combined Windows2022 four-mode real application CI matrix and native Stop/WAL; do not merely change ABI supported mask. Host-global WFP/route must be tested in isolated VM.",
   "unverified": true,
-  "last_tested_source": "111fd39bc9cfda3dc03ef10c80c43ff86ad07845",
+  "last_tested_source": "3c4f046db6fea6fcacceec5238d682bc67de9d9c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN022-S669-all-five-Linux-public-V4-single-build-Windows-native-scoped-20261021.json"
+    "docs/evidence/M0/PLAN023-S682-Windows-five-mode-selector-Rust-ABI-PASS_SCOPED-20261022.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-PLAN022-one-batch-public-V4-modes-integration-20261021.md",
-    "docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md",
-    "docs/evidence/M0/PLAN021-S664-Actions-pass-Windows-V4-Normal-off-open-network-trial-20261021.json",
-    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
+    "docs/decisions/M0-PLAN023-Windows-four-mode-batch-intent-20261022.md",
+    "docs/evidence/M0/PLAN022-S669-all-five-Linux-public-V4-single-build-Windows-native-scoped-20261021.json",
+    "docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md"
   ],
   "open_requests": [],
-  "partial_summary": "H238: S669 same exact source 111fd39b Linux Action39629082813/1 completed SUCCESS all FIVE public V4 Go TLS Rust M4 native app modes one Go/Rust binary: Normal/off incl 1% 512 echo kernel drop10 original frozen repair120 M2 ack1003, Fixed/Auto 64 app M2 applied Stop, Game2/4 independent TLS 2/4 lanes blocked lane1 noHOL 5 UDP and Stop. Windows Action39629082860/1 success Normal/off native TLS Rust signed Wintun, WAL, scoped real WFP; Windows FEC2/Game C-ABI absent. S670 combined receipt, Governance39629082854 and maintenance39629082889 PASS. Linux all five OPEN_FOR_NETWORK_TEST, Windows off OPEN; physical/perf/global WFP /1/real GUI NOT_RUN; parent partial."
+  "partial_summary": "H239: S682 exact Windows2022 Action39692983214/1 SUCCESS: real compiled original Go V4 five-mode selector and negative cases, Rust win DLL capability FFI Normal=1 only, native off Go TLS Rust signed Wintun bidirectional, TESTNET WFP scoped, MTU/DNS WAL, WinForms build fake child. Artifact12389272600 sha256:3230bedf... S683 evidence, Governance/maintenance success. Windows Fixed Auto Game2 Game4 still missing native FEC2 M2 and game 2/4 authenticated group kernel drivers, NOT_WIRED. Prior Windows YAML red actions kept; no claim all four opened."
 }
