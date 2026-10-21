@@ -358,6 +358,31 @@ class RepositoryDrills(unittest.TestCase):
     def test_current_repository_structure(self):
         self.assertEqual(g.validate_repo(self.root)["product"], "NOT_RUN")
 
+    def test_main_historical_worker_snapshots_dont_claim_live_rev3_epoch(self):
+        # M1/M2/M3 cursors stored on main are archival. Their branch-local
+        # cursors must be refreshed before ACTIVE worker commits, rather
+        # than M0 silently changing another worker's checkpoint.
+        worker = self.root / ".governance/workstreams/M1/cursor.json"
+        original = json.loads(worker.read_text(encoding="utf-8"))
+        self.assertLessEqual(original["reservation_revision"], REVISION)
+        self.assertEqual(g.validate_repo(self.root)["scope"], "governance_structure_only")
+        self.mutate(".governance/workstreams/M1/cursor.json",
+                    lambda value: value.update(reservation_revision=REVISION+1))
+        with self.assertRaisesRegex(g.ContractError, "historical cursor revision"):
+            g.validate_repo(self.root)
+
+    def test_live_main_writer_stale_rev_is_always_rejected(self):
+        self.mutate(".governance/workstreams/M0/cursor.json",
+                    lambda value: value.update(reservation_revision=REVISION-1))
+        with self.assertRaisesRegex(g.ContractError, "stale reservation revision"):
+            g.validate_repo(self.root)
+
+    def test_historical_worker_role_or_epoch_is_not_relaxed(self):
+        self.mutate(".governance/workstreams/M1/cursor.json",
+                    lambda value: value.update(assignment_epoch=100))
+        with self.assertRaisesRegex(g.ContractError, "stale writer epoch"):
+            g.validate_repo(self.root)
+
     def test_context_growth_rejected(self):
         with (self.root / "PROJECT_CHARTER.md").open("a", encoding="utf-8") as stream:
             stream.write("X" * 32768)

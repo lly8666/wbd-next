@@ -302,7 +302,21 @@ def validate_repo(root):
         if role["state"] != "active":
             continue
         cursor = read_json(root, role["cursor"])
-        validate_cursor(cursor, role, registry["reservation_revision"], policy["max_cursor_refs"])
+        # The live writer cursor resides at registry[role.branch], not in
+        # the main checkout when the branch differs. Main retains a frozen
+        # historical copy of that worker's cursor; a rev3 main M4 ownership
+        # handoff must not impersonate M1/M2/M3 rev3 checkpoints. Validate
+        # the historical shape, age <= registry, role and unchanged epoch.
+        # Active writes on a WORKER branch still call validate_cursor
+        # with the exact current main revision and reject stale writers.
+        live_revision = registry["reservation_revision"]
+        if role["branch"] == "main":
+            snapshot_revision = live_revision
+        else:
+            snapshot_revision = cursor.get("reservation_revision")
+            need(integer(snapshot_revision, 1) and snapshot_revision <= live_revision,
+                 "worker main historical cursor revision invalid/future")
+        validate_cursor(cursor, role, snapshot_revision, policy["max_cursor_refs"])
         need((root / role["cursor"]).stat().st_size <= policy["max_cursor_bytes"], "cursor too large")
         read_set = list(dict.fromkeys(hot + [role["prompt"], role["cursor"]]))
         need(len(read_set) <= policy["max_hot_files"], "combined hot file budget exceeded")
