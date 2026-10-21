@@ -1,0 +1,98 @@
+name: M0 PLAN020 Windows live OS WAL receipts and WinForms authority
+run-name: "M0|PLAN020-WIN-WAL|\${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan020-windows-native-os-receipt.yml"
+      - "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go"
+      - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
+      - "r0/go_overlay/assembly/manifest.json"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-go-native-wal:
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble exact original Go plus source-locked M0 Windows WAL and WinForms
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @'
+          import pathlib,json,subprocess,os,hashlib
+          root=pathlib.Path.cwd()
+          main=os.environ["GITHUB_SHA"]
+          original="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==main
+          assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()==original
+          spec=json.loads((root/"r0/go_overlay/assembly/manifest.json").read_text(encoding="utf8"))
+          assert spec["legacy_source"]==original
+          def gitblob(data):return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+          for op in spec["operations"]:
+              if op["kind"]=="replace":
+                  content=subprocess.check_output(["git","-C","legacy","show",original+":"+op["path"]])
+                  assert gitblob(content)==op["original_blob"],op["path"]
+                  destination=root/"legacy"/op["path"]
+                  assert destination.is_file()
+                  destination.write_bytes(content)
+              if op.get("overlay_path"):
+                  content=subprocess.check_output(["git","show",main+":"+op["overlay_path"]])
+                  assert gitblob(content)==op["result_blob"],op["overlay_path"]
+                  destination=root/op["overlay_path"]
+                  assert destination.is_file()
+                  destination.write_bytes(content)
+          print("M0_PLAN020_WIN_WAL_ORIGINAL_GO_PINNED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
+          & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest.json --receipt result/assembly.json
+          if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
+      - name: Native Windows five-stage WAL readback and false Applied negatives
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go test -count=1 -v -run '^TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
+            if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
+          } finally {Pop-Location}
+          if (!(Select-String -Path result/native-wal.log -SimpleMatch '--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks' -Quiet)) {throw 'native WAL test NOT_RUN'}
+      - name: Verify actual WinForms compiled source never maps READY to OS Applied
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import os,pathlib,json,re
+          gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
+          assert "WBD_WINDOWS_OS_APPLIED" in gui
+          assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
+          assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
+          assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
+          native=pathlib.Path("legacy/internal/windowsclient/native_unified_network_transaction.go").read_text()
+          for term in ["VerifyLiveOSApplied","VerifyLiveOSDisconnected","s.Inspect(ctx,n.Identity","s.Snapshot(ctx,n.Identity"]:
+              assert term in native,term
+          r=dict(source_sha=os.environ["GITHUB_SHA"],result="PASS_SCOPED_NATIVE_GO_FIVE_STAGE_READBACK_AND_GUI_FALSE_READY",
+                 real_global_wfp="NOT_RUN",default_route="NOT_RUN",
+                 dns_ipv6_mtu_real_host="NOT_RUN",winforms_real_applied_disconnect="NOT_RUN",
+                 production_fec2="OFF",production_game="OFF")
+          pathlib.Path("result/receipt.json").write_text(json.dumps(r,indent=2)+"\n")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'GUI SOURCE guard FAIL'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan020-win-wal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: result/
+          if-no-files-found: warn
+          retention-days: 30
