@@ -40,11 +40,12 @@ jobs:
           New-Item -Force -ItemType Directory -Path result,win-native | Out-Null
           @'
           import pathlib,os,json,subprocess
+          os.environ['PYTHONIOENCODING']='utf-8'
           root=pathlib.Path.cwd()
           assert subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==os.environ["GITHUB_SHA"]
           assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()=="a7a82db31fe736ffedee330795a3234d358f1984"
           assert subprocess.check_output(["git","-C","frozen-m4","rev-parse","HEAD"],text=True).strip()=="b53b5dac422a634cdd82178a29071f9f9f0ae5e7"
-          m=json.loads((root/"frozen-m4/r0/go_overlay/assembly/manifest.json").read_text())
+          m=json.loads((root/"frozen-m4/r0/go_overlay/assembly/manifest.json").read_text(encoding="utf-8"))
           assert m["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
           print("M0_PLAN020_EXACT_ORIGINAL_GO_M4_OWNER_SOURCES_PINNED")
           '@ | python -
