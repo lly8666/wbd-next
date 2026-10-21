@@ -85,7 +85,7 @@ func m0OriginalTLSRustAEADKernelUDP(payload []byte,dstPort uint16)[]byte{
 // OS socket sees exact ciphertext, NEVER claims peer M3 decrypt/product.
 func m0RealOriginalTLSRustAEADToSignedWintunKernelApp(
     t *testing.T,ctx context.Context,tun *windowsclient.TUN,wire []byte,
-){
+)[]byte{
     t.Helper()
     if tun==nil||len(wire)<51||len(wire)>543{
         t.Fatal("no valid real Rust M3 ciphertext for native Wintun")
@@ -156,7 +156,8 @@ func m0RealOriginalTLSRustAEADToSignedWintunKernelApp(
         string(buffer[:size])!=string(wire){
         t.Fatalf("real signed Wintun kernel app ciphertext source/payload FAILED: size=%d src=%v err=%v",size,src,e)
     }
-    t.Log("M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS original_rust_ciphertext=1 exact_OS_app=1 signed_Wintun_lease=1 test_only_32_and_port=1 peer_rust_M3_after_kernel_NOT_RUN=1 host_global_WFP_NOT_RUN=1")
+    t.Log("M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS original_rust_ciphertext=1 exact_OS_app=1 signed_Wintun_lease=1 host_global_WFP_NOT_RUN=1")
+    return append([]byte(nil),buffer[:size]...)
 }
 
 func m0WinJoinCert(t *testing.T)tls.Certificate{
@@ -224,10 +225,15 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
     }()
     store,e:=realityfront.NewV4EpochStore(1)
     if e!=nil{t.Fatal(e)}
-    type response struct{session *realityfront.V4ServerSession;err error}
+    type response struct{
+        session *realityfront.V4ServerSession
+        owner *realityfront.V4WindowsAuthenticatedServerOwner
+        err error
+    }
     answer:=make(chan response,1)
     go func(){
-        session,err:=realityfront.EstablishServerV4(ctx,server,
+        peer,session,err:=realityfront.V4WindowsEstablishOriginalServerOwner(
+            ctx,library,server,
             realityfront.ServerAdmissionConfig{
                 TLS:realityfront.ServerConfig{
                     ServerName:"target.test",RouteKey:routeKey,
@@ -237,7 +243,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                 ExpectedUsername:"protected-owner",ExpectedPassword:"secret",
                 ServerLimit:1400,
             },realityfront.V4ServerOptions{DataPlaneReady:true,Epochs:store})
-        answer<-response{session,err}
+        answer<-response{session:session,owner:peer,err:err}
     }()
     policy,e:=realityfront.FixedPolicyForClient(1,0)
     if e!=nil{t.Fatal(e)}
@@ -254,7 +260,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
     case resp=<-answer:
     case <-ctx.Done():t.Fatalf("same-source original Go TLS server timeout: %v",ctx.Err())
     }
-    if err!=nil||resp.err!=nil||native==nil||cliSession==nil||resp.session==nil{
+    if err!=nil||resp.err!=nil||native==nil||cliSession==nil||resp.session==nil||resp.owner==nil{
         var transportErr error
         select{case transportErr=<-routerErr:default:}
         t.Fatalf("original Go FakeTCP TLS to actual Rust owner failed client=%v server=%v transport=%v",
@@ -284,6 +290,12 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                 if boundErr!=nil{
                     if scoped!=nil{_ = scoped.StopRustScoped(ctx)}
                     t.Fatalf("typed original Go TLS->real M4 Wintun->Rust v2 owner refused: %v",boundErr)
+                }
+                // Same original Go credential TLS created an independently
+                // authenticated Rust SERVER owner; hold the very same
+                // real signed Wintun generation across BOTH M3 peers.
+                if e:=resp.owner.BindOriginalM4NativeDevice(ctx,device,id);e!=nil{
+                    t.Fatalf("original TLS peer Rust server native Wintun OS Hold failed: %v",e)
                 }
                 state,e:=native.OriginalOwnerReadback()
                 if e!=nil||!state.DeviceBound||state.DeviceQuiesced||
@@ -335,8 +347,43 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                 // The same REAL Rust record now crosses an actual
                 // signed Win32 WintunSendPacket, Windows IPv4 UDP kernel,
                 // and a live socket bound to this adapter's /32.
-                m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,wire)
-                t.Logf("M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SIGNED_WINTUN_RUST_AEAD_KERNEL_COPY_PASS seq=%d pn=%d peer_m3_from_kernel_NOT_RUN=1",seq,pn)
+                received:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,wire)
+                clear,e:=resp.owner.OpenBoundOriginalNormalOff(ctx,seq,received)
+                if e!=nil||string(clear)!=string(ip){
+                    t.Fatalf("ORIGINAL GO TLS peer Rust SERVER M3 failed to authenticate exact signed Wintun kernel UDP app ciphertext: %v",e)
+                }
+                if repeated,openErr:=resp.owner.OpenBoundOriginalNormalOff(ctx,seq,received);
+                    openErr==nil||len(repeated)>0{
+                    t.Fatal("real Wintun kernel delivered M3 packet replay accepted by original TLS Rust server")
+                }
+                tamperedServer:=append([]byte(nil),received...)
+                tamperedServer[len(tamperedServer)-1]^=1
+                if modified,openErr:=resp.owner.OpenBoundOriginalNormalOff(
+                    ctx,seq+uint32(len(received)),tamperedServer);
+                    openErr==nil||len(modified)>0{
+                    t.Fatal("original TLS Rust server opened modified packet after signed Wintun kernel")
+                }
+                t.Logf("M0_PLAN020_REAL_ORIGINAL_GO_TLS_RUST_M3_PEER_DECRYPT_AFTER_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_DELIVERY_PASS seq=%d pn=%d replay_denied=1 tamper_denied=1",seq,pn)
+
+                // The separately credential-authenticated SERVER Rust
+                // sender now uses the same signed Wintun kernel in reverse.
+                // The same CLIENT owner must authenticate its output.
+                reverseIP:=append([]byte(nil),ip...)
+                reverseIP[28]^=0x5a
+                reverseWire,reverseSeq,reversePN,revErr:=resp.owner.SealBoundOriginalNormalOff(ctx,reverseIP)
+                if revErr!=nil||len(reverseWire)!=len(reverseIP)+31{
+                    t.Fatalf("real TLS Rust server reverse immutable M3 seal failed: %v",revErr)
+                }
+                reverseReceived:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,reverseWire)
+                reverseClear,revErr:=native.OpenBoundOriginalNormalOff(ctx,reverseSeq,reverseReceived)
+                if revErr!=nil||string(reverseClear)!=string(reverseIP){
+                    t.Fatalf("ORIGINAL TLS CLIENT Rust M3 failed to open same signed Wintun kernel reverse ciphertext: %v",revErr)
+                }
+                if again,openErr:=native.OpenBoundOriginalNormalOff(ctx,reverseSeq,reverseReceived);
+                    openErr==nil||len(again)>0{
+                    t.Fatal("same signed Wintun reverse M3 replay accepted")
+                }
+                t.Logf("M0_PLAN020_REAL_ORIGINAL_GO_TLS_DUAL_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_UDP_APP_BOTH_DIRECTIONS_PASS client_pn=%d server_pn=%d replay_denied=1 host_global_WFP_NOT_RUN=1",pn,reversePN)
                 // Real original-Go credential TLS owner with a REAL
                 // signed native Wintun Hold, not an invented token:
                 // invalid peer AEAD and malformed records must never
@@ -358,6 +405,13 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
                 t.Log("M0_PLAN020_REAL_TLS_BOUND_SIGNED_WINTUN_RUST_M3_RECV_ABI_NEGATIVES_PASS same_held_device=1 invalid_peer=denied tampered=denied short=denied")
                 t.Log("M0_PLAN013_TRUE_TLS_WINTUN_RUST_OS_PRODUCT_GUARD_DENIED_NO_WAL_MUTATION_PASS")
                 if e=scoped.StopRustScoped(ctx);e!=nil{t.Fatal("M4 original native Wintun real quiesce->Rust owner Stop",e)}
+                if e=resp.owner.StopScopedOwner(ctx);e!=nil{
+                    t.Fatalf("original Go TLS Rust server native Wintun Stop failed: %v",e)
+                }
+                if stale,openErr:=resp.owner.OpenBoundOriginalNormalOff(ctx,seq,received);
+                    openErr==nil||len(stale)>0{
+                    t.Fatal("stale peer Rust M3 server reopened after native Wintun Stop")
+                }
                 if decoded,openErr:=native.OpenBoundOriginalNormalOff(
                     ctx,seq,wire);openErr==nil||len(decoded)!=0{
                     t.Fatalf("stale original TLS Rust owner RX used after Wintun Stop")
