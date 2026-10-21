@@ -158,6 +158,23 @@ jobs:
           print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'native Rust original TLS M3 C-ABI export check FAIL'}
+      - name: Verify OFFICIAL signed Wintun 0.14.1 for portable V4 native kernel
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result/wintun-release | Out-Null
+          $archive='result/wintun-release/wintun-0.14.1.zip'
+          Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $archive
+          $expected='07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'
+          $actual=(Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) {throw "official Wintun native ZIP SHA256 mismatch: $actual"}
+          Expand-Archive -LiteralPath $archive -DestinationPath result/wintun-release/extracted -Force
+          $dll='result/wintun-release/extracted/wintun/bin/amd64/wintun.dll'
+          if (!(Test-Path -LiteralPath $dll -PathType Leaf)) {throw 'signed amd64 Wintun DLL absent'}
+          $signature=Get-AuthenticodeSignature -FilePath $dll
+          if ($signature.Status -ne 'Valid') {throw "official Wintun signature not valid: $($signature.Status)"}
+          Copy-Item -LiteralPath $dll -Destination result/wintun-release/wintun.dll
+          Write-Output 'M0_PLAN020_OFFICIAL_SIGNED_NATIVE_WINTUN_0141_DLL_PASS'
       - name: Compile original WinForms executable and real original Go Windows CLI
         shell: pwsh
         run: |
@@ -175,6 +192,7 @@ jobs:
           # Untagged V3 may still compile for legacy proof, never ship it.
           Copy-Item -LiteralPath result/wbd-client-embedded.exe -Destination result/portable/wbd-client.exe
           Copy-Item -LiteralPath target/release/wbd_engine.dll -Destination result/portable/wbd_engine.dll
+          Copy-Item -LiteralPath result/wintun-release/wintun.dll -Destination result/portable/wintun.dll
           if (!(Test-Path result/portable/wbd_engine.dll)) {throw 'portable Rust V4 native DLL absent'}
           $clientHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd-client.exe).Hash.ToLowerInvariant()
           $rustHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd_engine.dll).Hash.ToLowerInvariant()
@@ -214,13 +232,15 @@ jobs:
           tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
           assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
           assert 'windowsclient.N4NativeNetworkReady(ctx)' in tagged
-          for name in ("wbd-client.exe","wbd_engine.dll","WBD.exe"):
+          for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
               assert p.is_file() and p.stat().st_size>100000,name
           manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
                         native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
                         native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),
                         winforms_sha256=hashlib.sha256(pathlib.Path("result/portable/WBD.exe").read_bytes()).hexdigest(),
+                        signed_wintun_0141_sha256=hashlib.sha256(pathlib.Path("result/portable/wintun.dll").read_bytes()).hexdigest(),
+                        official_wintun_zip_sha256="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
                         scope="SOURCE_LOCKED_REAL_NATIVE_V4_RUST_DLL_WINFORMS_BUNDLE_PASS_BUILD_ONLY",
                         global_host_WFP_routes_DNS_IPv6_MTU_WAL="NOT_RUN",
                         native_public_CLI_real_first_app_Apply_Stop="NOT_RUN",
