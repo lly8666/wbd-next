@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "f4d7b30f139e6a7406b2de8fc04cba023542b0cb",
+  "result": "PASS_SCOPED_WIN2022_ORIGINAL_GO_CREDENTIAL_TLS_REAL_SIGNED_WINTUN_HOLD_RUST_M1_M3_AEAD_RECORD_SEAL_NO_KERNEL_CIPHERTEXT_TX",
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "native_target": "x86_64-pc-windows-msvc",
+    "signed_wintun": "0.14.1",
+    "signed_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "native_action": {
+    "run_id": 39546076149,
+    "run_attempt": 1,
+    "job_id": 119044433384,
+    "workflow": ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml",
+    "conclusion": "success",
+    "artifact_id": 12321578130,
+    "artifact_name": "m0-plan013-windows-native-owner-39546076149-1",
+    "artifact_sha256": "d5ad7beccb2e3b3f4d8ad6009f5d5efd58adb32928cc10e7d614414e5ffde24c"
+  },
+  "same_source_checks": [
+    {
+      "label": "Original Go protected FakeTCP credential TLS server/client and private Rust owner both roles three suites",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "label": "Signed official actual Windows2022 process-created Wintun GUID/LUID/index, original Go native Hold to client Rust v2 generation fence",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "label": "Rust original M1 immutable FrozenRecord, M3 AEAD/PN seal and RX distinct authenticated replay-state with stale/wrong epoch/foreign LUID/Stop negatives in native Windows synthetic-owner unit",
+      "status": "PASS_SCOPED_COMPONENT_ONLY"
+    },
+    {
+      "label": "ACTUAL original Go credential TLS-bound client, matching same real signed Wintun hold, Rust v3 authenticated M1/M3 Normal/off sealed record with nonzero Go TCP appearance sequence and PN; Stop/drain",
+      "status": "PASS_SCOPED_REAL_TLS_BOUND_SEAL"
+    },
+    {
+      "label": "One signed Wintun reverse UDP native kernel app driver runs at this same SHA",
+      "status": "NOT_RUN"
+    },
+    {
+      "label": "Ciphertext actually emitted on Windows kernel UDP, authenticated by peer Rust owner and delivered to native Windows UDP application",
+      "status": "NOT_RUN"
+    },
+    {
+      "label": "Persistent host-wide WFP+default/split-route DNS IPv6 MTU, owned WAL CAS interruption recovery",
+      "status": "NOT_RUN"
+    },
+    {
+      "label": "Public Windows Go CLI + WinForms real Requested/Pending/Applied/Disconnect",
+      "status": "NOT_RUN"
+    }
+  ],
+  "actual_log_markers": [
+    "test v4_windows_owner::tests::m0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation ... ok",
+    "M0_PLAN020_ORIGINAL_GO_CREDENTIAL_TLS_BOUND_SAME_SIGNED_WINTUN_RUST_AEAD_SEAL_PASS seq=124288 pn=0 kernel_ciphertext_not_sent=1",
+    "M0_PLAN013_TLS_PLUS_LIVE_WINTUN_SAME_EPOCH_SCOPED_PASS real_m4_luid=14918723521478656 index=7 os_applied=0 no_wfp_or_kernel_app=1",
+    "--- PASS: TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration"
+  ],
+  "same_source_governance": [
+    {
+      "run_id": 39546076050,
+      "conclusion": "success",
+      "scope": "identity/structure"
+    },
+    {
+      "run_id": 39546076060,
+      "conclusion": "success",
+      "scope": "governance-maintenance"
+    }
+  ],
+  "historical_separate_sources": [
+    {
+      "source_sha": "e1d3ee49e484d4ceb42a3ea793329afd60507bf2",
+      "run_id": 39545775193,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "Rust v3 synthetic/older Go native Windows qualification"
+    },
+    {
+      "source_sha": "e1d3ee49e484d4ceb42a3ea793329afd60507bf2",
+      "run_id": 39545775173,
+      "attempt": 1,
+      "conclusion": "failure",
+      "scope": "legacy G2 bootstrap native expected different registry revision",
+      "cause_observed": "ValueError: G2 registry revision changed",
+      "classification": "GOVERNANCE_FIXTURE_MISMATCH_NOT_CRYPTO_OR_PRODUCT_PASS"
+    },
+    {
+      "source_sha": "76f0fcede48a9964d6333fcc280dd65104c2a637",
+      "run_id": 39543578070,
+      "attempt": 1,
+      "conclusion": "success",
+      "scope": "separate original actual signed Wintun forward/reverse kernel UDP and scoped TEST-NET WFP/route"
+    },
+    {
+      "source_sha": "75900051ef1839a9641681abfd79cf73664e8bda",
+      "run_id": 39543106596,
+      "attempt": 1,
+      "conclusion": "failure",
+      "scope": "original reverse native ring non-IPv4 frame failure retained"
+    },
+    {
+      "source_sha": "7ebe11d0e82e0bd83b554a9ac3ef625663a463fb",
+      "run_id": 39543942879,
+      "attempt": 1,
+      "conclusion": "failure",
+      "scope": "H221 mixed old evidence_refs"
+    },
+    {
+      "source_sha": "b4268d453d4f49542872773a829d295539f2af2c",
+      "run_id": 39544137139,
+      "attempt": 1,
+      "conclusion": "failure",
+      "scope": "S577 still reflects then-live incorrect H221 cursor before H222 correction"
+    }
+  ],
+  "qualification": {
+    "windows_native_rust_aead": "PASS_SCOPED",
+    "original_go_authenticated_native_owner": "PASS_SCOPED",
+    "original_go_win_sealed_record": "PASS_SCOPED",
+    "native_kernel_ciphertext_and_reverse": "NOT_RUN",
+    "full_windows_product": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "host_wfp_default_route_dns_ipv6_mtu": "NOT_RUN",
+    "cli_winforms_applied_disconnect": "NOT_RUN",
+    "production_fec2": "OFF",
+    "production_game": "OFF"
+  },
+  "next_action": "Under original Go credential TLS, route Rust-v3 M1 immutable ciphertext through the exact signed Windows Wintun kernel I/O lease to an actual peer Rust v3 M3 AEAD/PN receiver and native application in BOTH directions; then join persistent host-WFP/default-route/DNS/IPv6/MTU WAL and WinForms OS Applied/Disconnect under one source-locked Windows2022 native positive+negative gate; no product ON until complete."
+}
