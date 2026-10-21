@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 235,
-  "checkpoint_sha": "22c7a8235b076d4a2b24a10ab37ddff5e6582c96",
+  "sequence": 236,
+  "checkpoint_sha": "30d372d1012a8d917a429347713e70d647525345",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 Windows full native product. S657 restored frozen original-Go transaction/WFP test blobs and adds M0-only exact guard-only partial-WFP WAL recovery and native TEST-NET scoped Arm test. S657 build fails at new M0 test missing time import, not OS execution. Prior S648 original Go TLS Rust M3 signed Wintun UDP + IP/MTU/DNS WAL PASS_SCOPED. Full global persistent WFP, two /1 and underlay routes, live public Go/WinForms OS Applied/Disconnect NOT_RUN; Windows/FEC2/Game OFF.",
-  "why_now": "S656/S658 recovered S652 Governance39616586640 FAIL, maintenance39616586712 FAIL: cursor cross-SOURCE and frozen M0-modified donor. S652 native39616586763 FAIL missing time; S654 native39617124207 and S655 native39617291359 FAIL source immutable transaction mismatch. S657 restored donor, but native39618156783 FAIL missing time in new test, Governance39618156896 and maintenance39618156841 FAIL due H234 two different evidence SOURCEs. H235 fixes source references; original results retained.",
-  "done_when": "One exact Windows2022 SOURCE real original TLS/Rust signed Wintun app plus full global WFP IPv6/DNS and two /1 underlay routes/owned lease MTU DNS WAL, real public Go/WinForms Applied/Disconnect, foreign/stale/crash negatives. Current scope partial; product, physical and performance NOT_RUN, FEC2/Game OFF.",
-  "next_action": "Fix missing time import ONLY in M0-owned WFP actual TEST-NET Arm/guard-intent recovery test, pin manifest and observe exact Windows2022 Actions + governance; after scoped qualification pursue isolated full global route+WFP+public UI OS product gate.",
+  "current_task": "PLAN020 M0 full Windows product integration. S657 restores immutable original Go WAL/WFP donor, adds M0-qualified guard-only persistent WFP partial intent recovery; S659 same-source native Windows2022 action PASS_SCOPED real TEST-NET WFP Arm→fresh-engine ownership→foreign CAS refusal→exact Stop and 5/5 Go named WAL regressions. The same job repeats accepted original credential Go TLS Rust M3 signed Wintun kernel app both directions, IP/MTU/DNS WAL and PnP ghost scoped positives; WinForms real EXE built but test child only. Global production WFP IPv6/DNS, two /1 routes/physical escape and real public GUI OS Applied/Disconnect NOT_RUN. Windows/FEC2/Game OFF.",
+  "why_now": "S652/S654/S655/S657 native and Governance failures preserved in S656/S658 and S660. H235 repaired current source evidence references and Governance39618733576 SUCCESS. S659 SOURCEe3e193edb0e8383a9db2c962e5bb5618bae31764 Windows2022 Action39618823911/1 SUCCESS; five exact Go tests including scoped real WFP and guard-only crash PASS, artifact12352554865 SHAcb09c036...; Governance39618823546 PASS. S660 exact receipt. S657 maintenance FAIL due old H234 cross-source; a clean current-source maintenance receipt was not obtained. Full product unqualified.",
+  "done_when": "PLAN020 full native Windows product one exact SOURCE with original credential TLS/Rust signed Wintun first/reverse, persistent WFP IPv6/DNS, both default /1+underlay physical escape, owned lease/MTU/DNS durable WAL Apply/Recover/Stop, real public Go+WinForms Applied/Disconnected and foreign/stale/crash negatives. Current native WFP TEST-NET lab is scoped only, product/physical NOT_RUN, FEC2/Game OFF.",
+  "next_action": "Run one verified isolated Windows2022 full host-native product source gate with real persistent global WFP IPv6/DNS, both /1 captures + physical underlay route, public original Go V4 TLS/Rust signed-Wintun kernel first/reverse, real WinForms Applied/Disconnect and WAL foreign/stale/crash negatives; preserve scoped lab separate and refuse production ON until same-source full PASS.",
   "unverified": true,
-  "last_tested_source": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+  "last_tested_source": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-S648-independent-native-post-stop-Absent-SOURCE-Windows2022-PASS_SCOPED-20261021.json"
+    "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/PLAN020-S648-independent-native-post-stop-Absent-SOURCE-Windows2022-PASS_SCOPED-20261021.json",
     "docs/evidence/M0/PLAN020-same-SOURCE-real-Windows-Rust-signed-Wintun-native-WAL-pinned-ghost-terminal-PASS-S645-20261021.json",
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
     "docs/devlog/M0/PLAN016-original-Go-public-FEC-Game-mode-real-app-intent-20261020.md",
     "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
     "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
     "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
-    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json",
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H235: H234 checkpoint→main only H234 cursor-only. S651/S653 intents; original S652/S654/S655 Windows and Governance FAILs preserved in S656/S658. S657 restored frozen donor, Windows39618156783/1 FAIL Go compile undefined time; TEST-NET native WFP NOT_RUN. Corrected evidence_refs to current S648 SOURCE bad7b414 only; older S645 in context_refs. Full WFP+routes+real GUI product NOT_RUN/OFF."
+  "partial_summary": "H236: exact SOURCE e3e193ed... Windows2022 Actions39618823911/1 SUCCESS same job five named Go tests (real persistent TEST-NET WFP scoped Arm fresh-engine/foreign CAS/Stop; exact partial guard-only crash; post-Stop owned/partial/foreign), original protected Go TLS Rust M3 signed Wintun actual UDP and IP/MTU/DNS WAL scoped PASS; artifact12352554865 sha256 cb09c036...; S660 receipt, source Governance39618823546 PASS. Frozen donor 34 blobs maintained. Original S652/S654/S655/S657 FAIL and maintenance S657 FAIL remain. Global WFP dual /1 real public GUI OS Applied/Disconnect/physical/performance NOT_RUN; Windows/FEC2/Game OFF."
 }
