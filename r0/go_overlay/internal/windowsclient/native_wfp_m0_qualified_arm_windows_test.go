@@ -11,6 +11,7 @@ import (
  "net/netip"
  "os"
  "testing"
+ "time"
 
  "github.com/tailscale/wf"
 )
