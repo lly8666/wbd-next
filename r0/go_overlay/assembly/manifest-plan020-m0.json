@@ -598,6 +598,12 @@
       "path": "internal/windowsclient/native_product_activation_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go",
       "result_blob": "852fff70466da2486b860e466509f9b2615a110b"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_real_product_service_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+      "result_blob": "e1debdc359de37d0b8077e96dbca6c2fb27e5940"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
