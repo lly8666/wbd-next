@@ -125,7 +125,9 @@ jobs:
           try {
             & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
             if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
-            & go test -count=1 -v -tags wbd_v4_embedded_go -run '^TestM0PLAN023WindowsNativeV4FiveModes
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run TestM0PLAN023WindowsNativeV4FiveModes ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) {throw 'PLAN023 native five-mode selector test failed'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
             if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
           } finally {Pop-Location}
           Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
