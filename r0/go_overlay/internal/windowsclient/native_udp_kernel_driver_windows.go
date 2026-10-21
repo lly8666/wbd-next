@@ -17,6 +17,17 @@ import (
 
 var ErrN4NativeNoPacket=errors.New("original native Wintun kernel ring has no packet ready")
 
+// Exactly one live native kernel sender/receiver lease can own a particular
+// process-created Wintun. An attacker-provided generation with the SAME
+// adapter/LUID must not claim an independent lease while the original Go
+// TLS+Rust generation still holds it. M4's original PnP checks alone
+// validate the device, not that generation exclusion.
+var n4OriginalRingOwners = struct{
+    sync.Mutex
+    held map[*TUN]N4UnifiedIdentity
+}{held:make(map[*TUN]N4UnifiedIdentity)}
+
+
 type N4RealKernelPacketCounts struct {
     KernelReceived uint64
     KernelCopied uint64
@@ -48,6 +59,14 @@ func n4CreateOriginalKernelPacketLease(ctx context.Context,tun *TUN,id N4Unified
         Tunnel:tun,Installation:id.Installation,Generation:id.Generation,
     }
     if err:=holder.Verify(ctx,id);err!=nil{return nil,err}
+    n4OriginalRingOwners.Lock()
+    defer n4OriginalRingOwners.Unlock()
+    if _,exists:=n4OriginalRingOwners.held[tun];exists {
+        // A second lease is not legitimate even if it supplies the exact
+        // generation. This also denies a new invented generation.
+        return nil,ErrN4NativeGuard
+    }
+    n4OriginalRingOwners.held[tun]=id
     return &N4OriginalKernelPacketLease{tun:tun,id:id,holder:holder},nil
 }
 func (d *N4OriginalKernelPacketLease) check(ctx context.Context)error{
@@ -127,6 +146,14 @@ func (d *N4OriginalKernelPacketLease) Stop(ctx context.Context)error{
     d.mu.Lock();defer d.mu.Unlock()
     if d.stopped{return nil}
     if err:=ctx.Err();err!=nil{return err}
+    n4OriginalRingOwners.Lock()
+    claimed,exists:=n4OriginalRingOwners.held[d.tun]
+    if !exists || claimed!=d.id {
+        n4OriginalRingOwners.Unlock()
+        return ErrN4NativeGuard
+    }
+    delete(n4OriginalRingOwners.held,d.tun)
+    n4OriginalRingOwners.Unlock()
     d.stopped=true
     // No device close or OS routes are stolen here. The original product
     // Stop joins this lease before stopping Rust then WAL CAS and TUN.Close.
