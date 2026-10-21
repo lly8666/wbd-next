@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "0e6282fb097cbcab193153dc5ebda348358bf6d6",
+      "result_blob": "f7896888e7c5d6779298bde834d5c04835ef59f1",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -39,7 +39,7 @@
         },
         {
           "find": "\tdefer startQualificationCPUProfile()()",
-          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+          "replace": "\tif !*nativeV4Product { if err := fec2Selection.RuntimeReady(); err != nil { return err } }\n\tdefer startQualificationCPUProfile()()"
         },
         {
           "find": "\t\"os/exec\"\n",
@@ -123,7 +123,7 @@
         },
         {
           "find": "\t// No legacy script fallback is permitted on original Windows runtime.",
-          "replace": "\t// Public native V4 now uses real original Go FakeTCP protected credential\n\t// TLS + the exact Rust M1/M3 native owner and actual signed Wintun PnP.\n\t// This path never calls the old V3 runtime or PowerShell fallback.\n\t// It must NOT announce product Applied before peer packet and OS WAL proof.\n\tif *nativeV4Product {\n\t\tif *lanes != 1 || *fecParity != 0 || *fecMode == \"auto\" || *fecMode == \"auto-aggressive\" ||\n\t\t\t*recordCipher != \"chacha20-poly1305\" || autoLease {\n\t\t\treturn errors.New(\"original Windows native V4 only supports explicit lease, one Normal lane, FEC off, ChaCha; no downgrade\")\n\t\t}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{\n\t\t\tServerIP:serverIP,ServerPort:uint16(*serverPort),SourcePort:uint16(*sourcePort),\n\t\t\tServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,\n\t\t\tTunnelID:[16]byte(tunnelID),Installation:[16]byte(installation),\n\t\t\tLease4:leasePrefix,AdapterAlias:*adapterAlias,StatePath:*statePath,\n\t\t\tDNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),\n\t\t\tControlStdin:*controlStdin,\n\t\t})\n\t}\n\t// No legacy script fallback is permitted on original Windows runtime."
+          "replace": "\t// Public native V4 now uses real original Go FakeTCP protected credential\n\t// TLS + the exact Rust M1/M3 native owner and actual signed Wintun PnP.\n\t// This path never calls the old V3 runtime or PowerShell fallback.\n\t// It must NOT announce product Applied before peer packet and OS WAL proof.\n\tif *nativeV4Product {\n\t\trequestedNativeMode, nativeModeErr := m0ParseWindowsV4Mode(*lanes, *fec2Selection.Mode, *fecMode, *fecParity)\n\t\tif nativeModeErr != nil { return nativeModeErr }\n\t\tif *recordCipher != \"chacha20-poly1305\" || autoLease {\n\t\t\treturn errors.New(\"original Windows V4 requires explicit lease and authenticated ChaCha; no downgrade\")\n\t\t}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{\n\t\t\tServerIP:serverIP,ServerPort:uint16(*serverPort),SourcePort:uint16(*sourcePort),\n\t\t\tServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,\n\t\t\tTunnelID:[16]byte(tunnelID),Installation:[16]byte(installation),\n\t\t\tLease4:leasePrefix,AdapterAlias:*adapterAlias,StatePath:*statePath,\n\t\t\tDNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),\n\t\t\tMode:requestedNativeMode,ControlStdin:*controlStdin,\n\t\t})\n\t}\n\t// No legacy script fallback is permitted on original Windows runtime."
         }
       ]
     },
@@ -641,7 +641,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "2957a21a88e69ba76ae52ed0f1e111b07df17bfe"
+      "result_blob": "c18ebdbc75cc6afc15c585ab91bb1290720b88d5"
     },
     {
       "kind": "create",
@@ -653,7 +653,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "beaed340b46d6f9bc2c1f84cd70edf32a1cbd7ef"
+      "result_blob": "135f6f227aa9ddc0b8fe5f8553c6ab1fa12d04f6"
     },
     {
       "kind": "create",
