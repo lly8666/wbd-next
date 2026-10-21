@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "dfb371104a42c39b29f27e46726838bc9392fcb2",
+  "result": "PASS_SCOPED_SAME_SOURCE_WINDOWS2022_REAL_ORIGINAL_TLS_RUST_M3_SIGNED_WINTUN_APP_PLUS_IP_MTU_DNS_WAL_AND_ORIGINAL_PINNED_GHOST_CRASH_TERMINAL_RECOVERY_NO_GLOBAL_WFP_OR_ROUTES",
+  "native_actions": {
+    "run_id": 39609149690,
+    "attempt": 1,
+    "job_id": 119253120624,
+    "conclusion": "success",
+    "artifact_id": 12349598134,
+    "artifact_name": "m0-plan020-win-wal-39609149690-1",
+    "artifact_sha256": "29a81408bf28e118c06fb00bdfc9742e7e0ef2a92c61b6307c74dfaaed27e181"
+  },
+  "governance": {
+    "run_id": 39609149768,
+    "conclusion": "success"
+  },
+  "maintenance": {
+    "run_id": 39609149734,
+    "conclusion": "success"
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "host": "windows-2022 hosted x64",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "wintun_official_signed_0141_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "source_files": [
+    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+    "r0/go_overlay/ci/native_admin_preroute_real_crash_windows_test.go",
+    "tools/m0_plan020_native_live_windows_ci.ps1",
+    ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+    "r0/go_overlay/assembly/manifest-plan020-m0.json"
+  ],
+  "exact_pass": [
+    {
+      "subject": "actual original Go protected TLS credential and Rust M3 signed Wintun to actual Windows UDP application first/reverse and peer AEAD authentication, replay/tamper/Stop negatives",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED",
+      "result": "PASS_SCOPED_REAL_NATIVE_KERNEL"
+    },
+    {
+      "subject": "real signed Wintun native Windows IP lease, MTU, DNS fsynced WAL Apply, second-controller CAS Recover/Stop and baseline readback",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN",
+      "result": "PASS_SCOPED_REAL_IP_MTU_DNS"
+    },
+    {
+      "subject": "real original Windows Wintun child TerminateProcess, PnP exact original devnode GONE_13, both IP helper rows MISSING_1168, independently verified no original unicast and exact lease, DNS cleared by exact CAS, zero /1 capture route/route WAL, original generation only, fake test guard disarmed and durable WAL removed",
+      "log": "N4_GHOST_TERMINAL_RECOVERY_PASS original PnP gone, both interface rows missing, native lease absent, DNS CAS cleared, no capture routes; OS MTU NOT restored (device gone); FAKE WFP only",
+      "result": "PASS_SCOPED_TERMINAL_DEVICE_GONE_WAL_SAFE_CLEANUP_NOT_MTU_BASELINE_RESTORE"
+    },
+    {
+      "subject": "compiled authentic Rust native V4 M1/M3 DLL exports, signed Wintun 0.14.1 Windows Authenticode, V4 Go tagged exe, original WinForms exe/portable/source receipt hashes",
+      "log": "M0_PLAN020_ACTUAL_V4_CLIENT_AND_RUST_M3_PORTABLE_PASS client_sha256=a43a1e345f28d55f97a7d682895d7a9b42cee93c54bad18b89271cbb14f6054d dll_sha256=d1c8f10923955a7b4716858d500b3700a2a8e51af16ad35858031e479656cdc5",
+      "result": "PASS_SCOPED_REAL_SOURCE_LOCKED_BUILD_AND_BUNDLE"
+    },
+    {
+      "subject": "full original WinForms EXE fake-child state regression",
+      "log": "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY",
+      "result": "PASS_TEST_CHILD_ONLY"
+    }
+  ],
+  "important_scope": {
+    "ghost_MTU": "NOT_RESTORED_DEVICE_GONE_NO_IPV4_IPV6_INTERFACE",
+    "ghost_WFP": "TEST_ONLY_FAKE_GUARD_DISARM_NOT_ACTUAL_PERSISTENT_WFP",
+    "ghost_routes": "NO_CAPTURE_ROUTES_IN_PRE_ROUTE_WAL_NOT_ACTUAL_TWO_HALF_DEFAULT_ROUTE_APPLIED",
+    "live_global_host_WFP": "NOT_RUN",
+    "live_default_two_1_routes_and_underlay_escape": "NOT_RUN",
+    "real_host_all_stage_one_transaction": "NOT_RUN",
+    "actual_public_GUI_child_OS_Applied_Disconnect": "NOT_RUN",
+    "actual_external_remote_peer": "NOT_RUN_LOCAL_ORIGINAL_TLS_TWO_OWNER_SCOPED_TEST",
+    "foreign_stale_ghost_negative_in_live_machine": "NOT_RUN_ADDITIONAL",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "preserved_original_failures": [
+    {
+      "source_sha": "4311f2127568f6faedc0ba74410f558b9fe905ac",
+      "run_id": 39604806420,
+      "conclusion": "failure",
+      "root_cause": "real Windows TerminateProcess leaves pinned original Wintun with PnP devnode gone but IPv4 row MIB 1168; legacy safe recovery retained WAL and test strict FAIL; fixed by new distinct devnode-gone terminal pre-route WAL path"
+    },
+    {
+      "source_sha": "3efe4c90f17e190e85b886bb0b4dbd437e734026",
+      "run_id": 39608501406,
+      "conclusion": "failure",
+      "root_cause": "M0 edited protected Windows donor test directly; immutable donor SHA validation rejected. S645 restores donor bytes and source-locks M0 post-assembly test-only override."
+    },
+    {
+      "source_sha": "7441b179a95467c010d4963dd46870627f9029b1",
+      "run_id": 39604486921,
+      "conclusion": "failure",
+      "root_cause": "malformed first YAML workflow graft; repaired S641 external exact SHA source script"
+    }
+  ],
+  "production": {
+    "Windows": "OFF_NOT_GLOBAL_OS_QUALIFIED",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "one_next_action": "Build one isolated-Windows machine whole-product gate for real persistent WFP Arm, two default /1, physical underlay, original Go public V4 TLS Rust M3 signed Wintun kernel first/reverse, host DNS/IPv6/MTU durable WAL and interrupted/foreign/stale Stop/Recover, and live WinForms Applied/Disconnected; release ON only after full exact-source positive+negative PASS. Preserve independently scoped PASS and previous FAILs."
+}
