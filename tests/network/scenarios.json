@@ -1,0 +1,105 @@
+{
+  "off-iid1-rtt50": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":1},"s2c":{"delay_ms":25,"loss_pct":1}}],
+    "acceptance":{"injection_tolerance_pct":3,"require_retransmission":true}
+  },
+  "off-iid5-rtt50": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":5},"s2c":{"delay_ms":25,"loss_pct":5}}],
+    "acceptance":{"injection_tolerance_pct":3,"require_retransmission":true}
+  },
+  "off-iid20-budget-observe": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":20},"s2c":{"delay_ms":25,"loss_pct":20}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-asymmetric-up5-down0": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":5},"s2c":{"delay_ms":25}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-asymmetric-up0-down5": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":25},"s2c":{"delay_ms":25,"loss_pct":5}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-rtt150-lossless": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":75},"s2c":{"delay_ms":75}}]
+  },
+  "off-rtt600-lossless": {
+    "phases": [{"name":"steady","seconds":60,"c2s":{"delay_ms":300},"s2c":{"delay_ms":300}}]
+  },
+  "normal-fixed-strong-5205": {
+    "product":{"mode":"fec-fixed","fec_profile":5},
+    "phases":[
+      {"name":"pre5","seconds":30,"c2s":{"delay_ms":300,"loss_pct":5},"s2c":{"delay_ms":300,"loss_pct":5}},
+      {"name":"stress20","seconds":60,"c2s":{"delay_ms":300,"loss_pct":20},"s2c":{"delay_ms":300,"loss_pct":20}},
+      {"name":"post5","seconds":30,"c2s":{"delay_ms":300,"loss_pct":5},"s2c":{"delay_ms":300,"loss_pct":5}}
+    ],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "auto-asymmetric-rise-recover": {
+    "product":{"mode":"fec-auto","fec_profile":1},
+    "phases":[
+      {"name":"low","seconds":30,"c2s":{"delay_ms":25,"loss_pct":1},"s2c":{"delay_ms":25}},
+      {"name":"up20","seconds":60,"c2s":{"delay_ms":25,"loss_pct":20},"s2c":{"delay_ms":25,"loss_pct":1}},
+      {"name":"recover","seconds":60,"c2s":{"delay_ms":25,"loss_pct":1},"s2c":{"delay_ms":25}}
+    ],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "game2-independent-loss5": {
+    "product":{"mode":"game2","fec_profile":1,"game_fec":"off"},
+    "traffic":{"c2s_mbps":3,"s2c_mbps":3,"udp_share":1,"sizes":[[64,4],[256,4],[1172,2]],"probe_hz":20,"deadline_ms":100},
+    "network":{"outer_mtu":1500,"lane_loss":"independent","queue_packets":32768},
+    "phases":[{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":5},"s2c":{"delay_ms":25,"loss_pct":5}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "game4-one-lane-blackhole": {
+    "product":{"mode":"game4","fec_profile":1,"game_fec":"off"},
+    "traffic":{"c2s_mbps":3,"s2c_mbps":3,"udp_share":1,"sizes":[[64,4],[256,4],[1172,2]],"probe_hz":20,"deadline_ms":100},
+    "phases":[
+      {"name":"pre","seconds":10,"c2s":{"delay_ms":25},"s2c":{"delay_ms":25}},
+      {"name":"one_dead","seconds":30,"c2s":{"delay_ms":25,"blackhole_lanes":[1]},"s2c":{"delay_ms":25,"blackhole_lanes":[1]}},
+      {"name":"recovery","seconds":20,"c2s":{"delay_ms":25},"s2c":{"delay_ms":25}}
+    ],
+    "acceptance":{"injection_tolerance_pct":3,"max_loss_pct":0.1}
+  },
+  "game4-correlated-blackhole1s": {
+    "product":{"mode":"game4","fec_profile":1,"game_fec":"off"},
+    "traffic":{"c2s_mbps":3,"s2c_mbps":3,"udp_share":1,"sizes":[[64,4],[256,4],[1172,2]],"deadline_ms":100},
+    "phases":[
+      {"name":"pre","seconds":15,"c2s":{},"s2c":{}},
+      {"name":"blackout","seconds":1,"c2s":{"blackhole_lanes":[1,2,3,4]},"s2c":{"blackhole_lanes":[1,2,3,4]}},
+      {"name":"recovery","seconds":30,"c2s":{},"s2c":{}}
+    ],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-reorder-duplicate-jitter": {
+    "phases":[{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"jitter_ms":10,"loss_pct":1,"duplicate_pct":2,"reorder_pct":5},"s2c":{"delay_ms":25,"jitter_ms":10,"loss_pct":1,"duplicate_pct":2,"reorder_pct":5}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "fixed-gilbert-elliott-burst": {
+    "product":{"mode":"fec-fixed","fec_profile":5},
+    "phases":[{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"gemodel":[1,20,90,0.1]},"s2c":{"delay_ms":25,"gemodel":[1,20,90,0.1]}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-mixed-tcp-udp-loss1": {
+    "traffic":{"c2s_mbps":10,"s2c_mbps":10,"udp_share":0.5,"sizes":[[64,2],[256,2],[1024,3],[1172,3]],"tcp_flows":4,"probe_hz":20,"deadline_ms":250},
+    "phases":[{"name":"steady","seconds":60,"c2s":{"delay_ms":25,"loss_pct":1},"s2c":{"delay_ms":25,"loss_pct":1}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-sparse-rtt150-loss5": {
+    "traffic":{"c2s_mbps":0.000512,"s2c_mbps":0.000512,"udp_share":1,"sizes":[[64,1]],"probe_hz":1,"deadline_ms":500},
+    "phases":[{"name":"steady","seconds":120,"c2s":{"delay_ms":75,"loss_pct":5},"s2c":{"delay_ms":75,"loss_pct":5}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-udp-fragmentation-lossless": {
+    "traffic":{"c2s_mbps":1,"s2c_mbps":1,"udp_share":1,"sizes":[[1172,4],[1400,2],[4096,2],[16000,1],[65507,1]],"allow_fragmentation":true,"deadline_ms":1000},
+    "phases":[{"name":"steady","seconds":60,"c2s":{},"s2c":{}}],
+    "acceptance":{"injection_tolerance_pct":3}
+  },
+  "off-rate-limited-queue-recover": {
+    "phases":[
+      {"name":"pre","seconds":15,"c2s":{"delay_ms":25},"s2c":{"delay_ms":25}},
+      {"name":"limited","seconds":30,"c2s":{"delay_ms":25,"rate_mbps":8},"s2c":{"delay_ms":25,"rate_mbps":8}},
+      {"name":"recovery","seconds":30,"c2s":{"delay_ms":25},"s2c":{"delay_ms":25}}
+    ],
+    "acceptance":{"injection_tolerance_pct":3}
+  }
+}

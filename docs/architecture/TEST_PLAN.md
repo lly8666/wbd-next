@@ -4,6 +4,8 @@ FEC v2工作包按[FEC_V2_TEST_PLAN](FEC_V2_TEST_PLAN.md)的短块/新wire/自�
 
 本文件是产品夹具与验收契约。当前已有治理、组件功能和专项测量 workflow；具体完成范围以精确 SOURCE 的 evidence 为准，不能把本文列出的工况或组件绿灯写成完整产品通过。
 
+可执行的公共V4持续业务入口与参数用法见 [NETWORK_HARNESS](../testing/NETWORK_HARNESS.md)：编译产物复用、独立双向UDP/TCP、单Action单场景、同job AB/BA及实际能力限制。预置工况不是已验资格，缺少的内部遥测必须保留NOT_OBSERVED。
+
 ## 0. 按能力交付，及时进入持续业务（2026-10-16 修订）
 
 本节统一任务粒度与推进规则；旧日志/cursor 中更细的下一步只作历史计划。任务 ID、权限、原有硬门不变。
