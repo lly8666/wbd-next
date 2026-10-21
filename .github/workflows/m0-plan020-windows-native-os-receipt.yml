@@ -8,7 +8,7 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
-      - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
+      - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"\n      - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
       - "r0/go_overlay/assembly/manifest-plan020-m0.json"
   workflow_dispatch:
 permissions: {contents: read}
@@ -92,6 +92,21 @@ jobs:
           $sig=(Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
           if ($sig.Length -ne 64) {throw 'compiled WinForms file SHA missing'}
           Write-Output ('M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256='+$sig)
+      - name: Run compiled real WinForms state transitions under a test-only fake child
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $csc='C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe'
+          $framework=Join-Path ${env:ProgramFiles(x86)} 'Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8'
+          $references=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess') | ForEach-Object { '/reference:'+(Join-Path $framework ($_.ToString()+'.dll')) }
+          $references+=('/reference:'+(Resolve-Path result/portable/WBD.exe).Path)
+          & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /optimize+ /utf8output /codepage:65001 '/out:result/portable/m0-plan020-gui-harness.exe' $references r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs
+          if ($LASTEXITCODE -ne 0) {throw 'native WinForms harness compile FAIL'}
+          $p=Start-Process -FilePath (Resolve-Path result/portable/m0-plan020-gui-harness.exe).Path -WorkingDirectory (Resolve-Path result/portable).Path -PassThru -Wait -ErrorAction Stop
+          try {
+            if ($p.ExitCode -ne 0) {throw ('actual compiled WinForms state regression FAIL '+$p.ExitCode)}
+          } finally { $p.Dispose() }
+          Write-Output 'M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY'
       - name: Verify assembled WinForms source never maps READY to OS Applied
         shell: pwsh
         run: |
