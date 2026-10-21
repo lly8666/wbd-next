@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "4311f2127568f6faedc0ba74410f558b9fe905ac",
+  "result": "FAIL_FULL_PRODUCT_GATE_DUE_REAL_WINDOWS_CRASH_WAL_UNRECOVERABLE_IPV4_INTERFACE_ROW_AND_GLOBAL_WFP_ROUTE_NOT_RUN",
+  "run_id": 39604806420,
+  "attempt": 1,
+  "job_id": 119238156621,
+  "conclusion": "failure",
+  "artifact_id": 12347527857,
+  "artifact_name": "m0-plan020-win-wal-39604806420-1",
+  "artifact_sha256": "e9f48648dcb4b8d32d1edf60dc52bf111f794cbf975e9f09fb6671d1912d000d",
+  "host": "Windows2022 GitHub Actions hosted native x64",
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "rust_source": "same S641",
+    "Wintun_official_signed_zip_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+  },
+  "actual_same_source_subtests": [
+    {
+      "case": "REAL original Go credential TLS client/server → independent actual Windows Rust M1/M3 → one signed Win32 Wintun kernel UDP actual app first+reverse→other peer Rust M3 opened original ciphertext, replay and tag tamper refused, Stop quiesce stale refused",
+      "result": "PASS_SCOPED_REAL_KERNEL",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED"
+    },
+    {
+      "case": "REAL original process-created signed Wintun native IP /32 DAD lease, MTU, DNS stage writes under checksum durable fsync WAL, second controller exact native OS CAS Recover/Stop, independent old baseline readback",
+      "result": "PASS_SCOPED_REAL_NATIVE_OS_IP_MTU_DNS",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN"
+    },
+    {
+      "case": "REAL child process creates signed Wintun and applies native lease, MTU, DNS with fsynced WAL, then TerminateProcess, independent parent probes same original PnP and OS",
+      "result": "FAIL_FULL_RECOVERY_UNSUPPORTED_NATIVE_OS_INTERFACE_1168",
+      "observed": {
+        "pinned_SWD_Wintun_device": "EXACT_PNP_DEVNODE_GONE_13; same pinned PnP instance and GAA GUID/LUID/index",
+        "ipv4_interface_row": "MISSING_1168",
+        "ipv6_interface_row": "MISSING_1168",
+        "original_unicast_full_table_and_exact_lease": "PASS_NO_OWNED_UNICAST",
+        "dns_clear": "PASS_EXACT_PINNED_NATIVE_DNS_CAS",
+        "MTU_native_restore": "NOT_POSSIBLE_INTERFACE_ROW_MISSING",
+        "lease_MTU_guard_WAL_terminal_cleanup": "NOT_RUN_UNPROVEN_GUARD_AND_WAL_RETAINED",
+        "log": "UNSUPPORTED_EXACT_ORIGINAL_IPV4_ROW_UNAVAILABLE",
+        "source_behavior": "Go test prints --- SKIP but strict workflow explicitly treats UNSUPPORTED as FAILURE, preserving evidence"
+      }
+    },
+    {
+      "case": "full host global crash persistent WFP install/Arm verify exact filters",
+      "result": "NOT_RUN_ORIGINAL_ARM_UNCONDITIONALLY_DENIES"
+    },
+    {
+      "case": "two global default /1 route halves, physical underlay escape, real source-locked public CLI/WinForms Applied Disconnect",
+      "result": "NOT_RUN_ORIGINAL_NATIVE_NETWORK_READY_UNCONDITIONALLY_DENIES"
+    },
+    {
+      "case": "real production FEC2/Game2/4 authenticated lane/restore",
+      "result": "NOT_RUN"
+    }
+  ],
+  "cause_and_unresolved": [
+    "Original Wintun kernel can retain GUID/LUID/index and pinned PnP identity after child death while GetIpInterfaceEntry IPv4/IPv6 no longer has a row. A missing MTU row is NOT evidence that original MTU baseline was restored. DNS-only cleanup and independent absence audit PASS; complete release-safe WAL and guard retirement has not been qualified.",
+    "Existing production n4WindowsPersistentWFPGuard.Arm() deliberately returns ErrN4NativeGuard without installing host-global rules.",
+    "Existing N4NativeNetworkReady() deliberately returns ErrN4NativeGuard without authorizing public full OS Apply.",
+    "Original public Windows packaged V4 TLS/Rust/WinForms real external full host Applied/Disconnect NOT_RUN; earlier true TLS Rust native peer test is scoped local two-ended test."
+  ],
+  "historical_prior_fail": {
+    "sha": "7441b179a95467c010d4963dd46870627f9029b1",
+    "run_id": 39604486921,
+    "conclusion": "failure",
+    "cause": "malformed initial inline YAML test graft; corrected in S641 with external exact source-locked PowerShell driver"
+  },
+  "same_source_governance": {
+    "run_id": 39604805334,
+    "conclusion": "success"
+  },
+  "same_source_governance_maintenance": {
+    "run_id": 39604804691,
+    "conclusion": "success"
+  },
+  "production": {
+    "Windows": "OFF",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "release_requirements": "Full SAME-SOURCE public client verified original-Go credential TLS/Rust M3 actual external packet first+reverse, genuine host persistent WFP two /1 routes, underlay escape, DNS IPv6 MTU durable WAL Apply/Stop and cross-process crash safe terminal cleanup with no native leak, real WinForms independent Applied/Disconnected readbacks on verified isolated Windows host. PASS_SCOPED != PASS_RELEASE.",
+  "next_action": "Do not reinterpret 1168 as MTU restoration. Implement a bounded original-PnP devnode-gone terminal recovery requiring exact-WAL and foreign/stale protection, no capture route, full native IP/DNS/lease absence checks, and exact persistent guard disarm after independent proof; test on native Windows2022 with real child TerminateProcess, not merely fake in-memory state. Separately qualify real exclusive-safe WFP Arm and two global /1 plus original public CLI live peer under isolating native runner. Only then set Windows ON."
+}
