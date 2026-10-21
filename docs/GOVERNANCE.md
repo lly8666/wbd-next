@@ -10,6 +10,9 @@
 
 格式检查只能证明结构符合规则，不证明产品正确。事实、判断、计划分开；“实现存在”“某场景通过”“全产品可交付”不是同一结论。
 
+**PLAN021 2026-10-21 用户优先级覆盖旧全量硬门**：精确 SOURCE 的 GitHub Actions **正向功能通过**即足以开放其实际覆盖的已接线模式供下一阶段网络工况验证；无须预先完成真实物理机、全部弱网/性能和全模式宿主机一体化。此为 `FUNCTIONAL_CI_PASS / OPEN_FOR_NETWORK_TEST`，不是全部产品/网络路径自动 PASS。真实 TLS/AEAD、generation、路由/WFP/MTU/DNS owned CAS、独立 Applied/Stop 失败处理保留；未接线/只测组件/仅测试负例保留 `NOT_RUN` 或 `EXPOSED_NOT_WIRED`，允许展示候选但不能用空成功替代实装。详见 `docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md`，历史旧硬门不再阻止测试渠道的公开可选入口。
+
+
 ## 2. 目标、范围与复杂度
 
 当前任务必须能解释：原子动作如何推进模块目标、阶段目标和项目主旨。只把这条关系的简洁结论留痕，不保存私人推理或每轮长篇自述。
