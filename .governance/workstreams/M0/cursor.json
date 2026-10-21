@@ -4,20 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 221,
-  "checkpoint_sha": "cb8beebe262375160856bd327fdf102de2285951",
+  "sequence": 222,
+  "checkpoint_sha": "b4268d453d4f49542872773a829d295539f2af2c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0-only Windows full product takeover rev3. S573 native real signed Wintun ingress was extended to reverse socket→same real receive ring; first S573 SOURCE75900051 Windows2022 FAIL on unfiltered non-IPv4 background ring packet, preserved in S574 receipt; S575 SOURCE76f0fcede native bounded eight-frame skip and exact TEST-NET route/WFP CAS bidirectional actual kernel first/reverse PASS_SCOPED Actions39543578070/1 artifact12320373165, governance PASS. Credential-authenticated original-Go TLS→Rust AEAD driving these packets, host-wide Windows WFP/default route/DNS/IPv6/MTU durable WAL and Windows Go/WinForms actual Applied/Disconnect remain NOT_RUN. Game/FEC2 production OFF.",
-  "why_now": "Recovered checkpoint a99cfc5→HEAD33ed147: only H220 cursor-only, existing Actions finished and no missing source. S572 intent→S573 real reverse FAIL39543106596 retained→S574 recovery+repair intent→S575 bounded ring non-IPv4 drop, source-locked Windows2022 PASS_SCOPED39543578070/1→S576 exact evidence. Original Go pinned a7a82db / frozen M4 b53b5dac unchanged, no generation reinitialization or worker collision. Reverse ring native success still excludes authenticated crypto and full OS/GUI product.",
+  "current_task": "PLAN020 M0-only Windows product takeover rev3. Native signed Wintun bidirectional actual UDP app and scoped TEST-NET persistent WFP/IP Helper CAS PASS_SCOPED SOURCE76f0fcede Actions39543578070/1; original S573 reverse ring FAIL39543106596 preserved in S576 evidence, S575 bounded non-IPv4 filter repair. H221 Governance39543942879/1 FAIL because mixed-SOURCE evidence_refs; S577 records recovered structure cause, H222 corrects same-source references. Product original Go TLS→Rust AEAD with these kernel packets, durable host-wide WFP/default route/DNS/IPv6/MTU WAL and CLI/WinForms OS Applied/Disconnect NOT_RUN; production Game/FEC2 OFF.",
+  "why_now": "H220 clean recovery completed; S572–S576 exact Windows native work and positive scoped evidence completed. H221 structure FAIL due archived sources mixed into current evidence_refs, not real test failure; S577 preserved run, artifact and repair. H222 keeps only source76f0fcede evidence while prior S573 FAIL and S570 PASS remain historically accessible via S576 receipt and Git history. No fresh product grant.",
   "done_when": "Native signed Windows Wintun same-generation kernel UDP first and reverse OS-socket app, bounded ring poll and stale Stop with persistent TEST-NET WFP /32 route OS readback+CAS PASS_SCOPED at one exact SOURCE. Parent PLAN020 done only when same SOURCE demonstrates genuine original Go credential TLS Rust M1/M3 AEAD bidirectional data plus durable host-wide WFP/default-route/DNS/IPv6/MTU WAL owned CAS, Windows CLI/WinForms real Applied/Disconnect/Recover, native positive+negative. Until then Windows product NOT_RUN; FEC2/Game OFF.",
   "next_action": "Bind real original-Go credential TLS→Rust M1/M3 AEAD bidirectional packet driver to the same signed Wintun generation, then qualify its native host-wide WFP/default-route/DNS/IPv6/MTU WAL CAS and Go CLI/WinForms Applied/Disconnect in a single source-locked Windows2022 positive+negative Action; retain scoped-only status until that gate passes.",
   "unverified": true,
   "last_tested_source": "76f0fcede48a9964d6333fcc280dd65104c2a637",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-native-signed-Wintun-bidirectional-kernel-UDP-S575-20261021.json",
-    "docs/evidence/M0/PLAN020-native-reverse-ring-S573-FAIL-20261021.json",
-    "docs/evidence/M0/PLAN020-same-Wintun-native-WFP-route-kernel-UDP-S570-20261021.json"
+    "docs/evidence/M0/PLAN020-native-signed-Wintun-bidirectional-kernel-UDP-S575-20261021.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
@@ -30,5 +28,5 @@
     "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
   ],
   "open_requests": [],
-  "partial_summary": "H221 after S572-S576. One actual Windows2022 same signed Wintun kernel inbound+reverse UDP app and bounded ring, persistent TEST-NET WFP, native IP Helper isolated /32 route CAS, exact stale/repeated Stop PASS_SCOPED S575/Action39543578070 artifact12320373165. Original reverse FAIL Action39543106596 retained; S574 diagnosed non-IPv4 native control frame handling, repaired S575. Full original authenticated Go TLS→Rust AEAD packet on native device, host-wide WFP/default-route/DNS/IPv6/MTU WAL and WinForms Applied/Disconnect NOT_RUN. Linux frozen four-mode retained, production FEC2/Game OFF."
+  "partial_summary": "H222: accepted source76f0fcede actual native Windows signed Wintun same kernel UDP first+reverse ring, isolated TEST-NET persistent WFP /32 route CAS, stale Stop PASS_SCOPED Action39543578070 artifact12320373165; original FAIL39543106596 preserved. H221 governance SOURCE-mismatch FAIL39543942879 recorded at S577; H222 repaired active evidence_refs only latest SOURCE. Full authenticated original Go TLS/Rust live packet, host OS WAL WFP/default-route/DNS/IPv6/MTU, WinForms Applied/Disconnect NOT_RUN; FEC2/Game OFF."
 }
