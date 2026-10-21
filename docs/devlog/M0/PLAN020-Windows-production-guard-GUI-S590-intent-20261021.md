@@ -1,0 +1,9 @@
+# M0 PLAN020 S590 intent — native WFP actual production owner assembly and real WinForms native build
+
+Recovery H224 checkpoint S589 236d785b82540a537f66f2c3f8f837ecd140d45a → HEAD 5e42b303dd125cc3214dab023a7ad5cb5db5437e: one H224 cursor-only. Registry main rev3 M0 active epoch1 on main, task R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025. H224 Governance39557443892 success. No open requests or unresolved completed Actions; scoped Windows2022 five-stage test SOURCE5fb00ca Action39557024467 success. Original FAILs retained in S589 evidence.
+
+User explicitly requests all Windows WFP/default route/DNS/IPv6/MTU/Go CLI/WinForms enabled rapidly. The runtime still uses frozen original M4 fail-closed n4WindowsPersistentWFPGuard.Arm and n4AssembleWindowsNativeOwnedTxn. Do NOT globally deactivate this protection: a persistent host-wide IPv6/DNS block + two /1 capture routes on shared Windows2022 could permanently strand traffic if wrong/foreign/crash and cannot be justified by a mock WAL unit test. Instead implement a real native production-guard stage using *existing exact* persistent WFP read/write/CAS, assemble it only behind original-Go authenticated generation/readback and bounded native kernel first+reverse proof; require both five-stage OS readback and owner witness before emitting public Applied. Keep default product OFF until full on-host gate. Do not modify frozen donor files or baseline 37-op manifest; add M0 files in manifest-plan020-m0.json only.
+
+Also compile actual original WinForms executable from exact source, exercising a real UI Ready-versus-Applied negative in Actions. No assertion that fake test proves host-global policy. Separate native/GUI/whole-product statuses.
+
+S→Actions→H. No production FEC2/Game ON without same-source true qualification. User's broad 'all open' is intent to finish supported modes, not license to invent successful kernel results or remove ownership and recovery constraints.
