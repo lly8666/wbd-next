@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+  "result": "PASS_SCOPED_WINDOWS2022_NATIVE_GO_OS_DISCONNECT_INDEPENDENT_ABSENT_NEGATIVE_AND_PRIOR_REAL_TLS_RUST_M3_SIGNED_WINTUN_SCOPED_NOT_PRODUCT",
+  "supersedes_pending_evidence": "docs/evidence/M0/PLAN020-S648-native-post-stop-independent-Absent-readback-pending-20261021.json",
+  "native_actions": {
+    "run_id": 39614119124,
+    "attempt": 1,
+    "workflow": "m0-plan020-windows-native-os-receipt.yml",
+    "event": "push",
+    "head_sha": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "conclusion": "success",
+    "job_id": 119270441214,
+    "job_name": "original-go-native-wal",
+    "runner": "windows-2022",
+    "artifact_id": 12352197588,
+    "artifact_name": "m0-plan020-win-wal-39614119124-1",
+    "artifact_sha256": "4eecca13829615d493fd178bc5f37cc6eda5f02b6a4216654ede9d57992a6440",
+    "artifact_bytes": 47187529
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "rust_compiled_source": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "same_source_overlay": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "new_go_blob": "07cd1c4e24c97f0d7714ad5a85374e7645716100",
+    "new_test_blob": "608d49887d1e760a48dbdca2149330b59ad6e588"
+  },
+  "code_change": {
+    "changed_paths": [
+      "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
+      ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+      "r0/go_overlay/assembly/manifest-plan020-m0.json"
+    ],
+    "contract": "After WFP+route WAL removal and readable Snapshot, each of five native stages must independently Inspect fresh baseline as N4UnifiedAbsent. Owned/Partial rejects ErrN4NativeGuard, Foreign rejects ErrN4ForeignRoute. No mutation or product admission."
+  },
+  "exact_pass": [
+    {
+      "case": "TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop",
+      "kind": "function-only fake-stage owner/lifecycle",
+      "log": "--- PASS"
+    },
+    {
+      "case": "TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks",
+      "kind": "function-only five-stage WAL readback",
+      "log": "--- PASS"
+    },
+    {
+      "case": "TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback",
+      "kind": "function-only Snapshot-permissive DNS leftover owned/partial/foreign negative",
+      "log": "--- PASS"
+    },
+    {
+      "case": "original Go TLS credential Rust M3 AEAD signed Wintun actual UDP app first/reverse",
+      "kind": "native same Windows2022 job scoped real Windows kernel app",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED"
+    },
+    {
+      "case": "actual Win32 IP/MTU/DNS WAL Apply Recover Stop",
+      "kind": "native Windows scoped WFP/route NOT_RUN",
+      "log": "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN"
+    },
+    {
+      "case": "original Wintun child process TerminateProcess pinned ghost PnP devnode-gone",
+      "kind": "native terminal WAL recovery fake WFP zero /1",
+      "log": "N4_GHOST_TERMINAL_RECOVERY_PASS original PnP gone"
+    },
+    {
+      "case": "WinForms real EXE build and fake-child UI state transition",
+      "kind": "native build and fake-child only",
+      "log": "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+    }
+  ],
+  "governance": {
+    "source_sha": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "run_id": 39614119441,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "maintenance": {
+    "source_sha": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "run_id": 39614119426,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "preserved_original_failures": [
+    {
+      "source": "4311f2127568f6faedc0ba74410f558b9fe905ac",
+      "run_id": 39604806420,
+      "result": "FAIL real crash 1168 before pinned ghost correction"
+    },
+    {
+      "source": "3efe4c90f17e190e85b886bb0b4dbd437e734026",
+      "run_id": 39608501406,
+      "result": "FAIL donor immutable source SHA mismatch"
+    },
+    {
+      "source": "7441b179a95467c010d4963dd46870627f9029b1",
+      "run_id": 39604486921,
+      "result": "FAIL initial malformed workflow graft"
+    }
+  ],
+  "qualification": {
+    "function_only": "PASS_SCOPED",
+    "native_windows_2022": "PASS_SCOPED",
+    "original_TLS_Rust_signed_Wintun_kernel": "PASS_SCOPED_REAL_NATIVE_PACKET",
+    "cross_build": "PASS_SCOPED",
+    "real_full_global_WFP": "NOT_RUN",
+    "two_default_half_routes_underlay_escape": "NOT_RUN",
+    "real_GUI_child_OS_Applied_Disconnect": "NOT_RUN",
+    "all_stage_one_host_transaction": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "windows_product": "OFF_NOT_QUALIFIED",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "one_next_action": "Implement the isolated full Windows global persistent WFP+two /1 underlay-escape owned WAL positive/foreign/stale/crash gate joined to original public Go V4 TLS Rust signed Wintun and real WinForms Applied/Disconnect, with actual native OS readbacks before any product ON."
+}
