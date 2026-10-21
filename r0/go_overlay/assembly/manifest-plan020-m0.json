@@ -586,6 +586,18 @@
       "path": "internal/windowsclient/native_unified_live_os_receipt_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
       "result_blob": "770865e580f7bb402ce8ec70ebf124c61d1d2777"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_activation_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
+      "result_blob": "f07c0f77d823b73a6c01ed894cee359984afaf79"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_product_activation_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go",
+      "result_blob": "852fff70466da2486b860e466509f9b2615a110b"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
