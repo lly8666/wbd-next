@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+  "result": "PENDING_NATIVE_WINDOWS2022_NOT_A_PASS",
+  "check_in_source": {
+    "commit": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+    "paths": [
+      "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
+      "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go",
+      ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+      "r0/go_overlay/assembly/manifest-plan020-m0.json"
+    ],
+    "expected_guard": "post-Stop all five stages independent Snapshot+Inspect must be Absent; leftover DNS/partial/foreign fail closed"
+  },
+  "windows_actions": {
+    "run_id": 39614119124,
+    "attempt": 1,
+    "workflow": "m0-plan020-windows-native-os-receipt.yml",
+    "observed_status": "queued",
+    "observed_conclusion": null,
+    "job_id": 119270441214,
+    "artifact_id": null,
+    "artifact_sha256": null,
+    "scope": "native original pinned Go/Rust signed Wintun, five-stage scoped WAL + new function-only negative; host WFP /1/public GUI not a PASS"
+  },
+  "governance": {
+    "run_id": 39614119441,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "maintenance": {
+    "run_id": 39614119426,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "preserved_prior_source": "dfb371104a42c39b29f27e46726838bc9392fcb2",
+  "preserved_prior_native_success_run": 39609149690,
+  "preserved_original_fail_run": 39608501406,
+  "product": {
+    "Windows": "OFF",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF",
+    "physical": "NOT_RUN",
+    "host_global_WFP": "NOT_RUN",
+    "two_default_half_routes": "NOT_RUN",
+    "public_WinForms_OS_Applied_Disconnect": "NOT_RUN"
+  },
+  "next_action": "Resolve existing exact SOURCE run 39614119124 attempt 1 from GitHub jobs/logs and artifact; record PASS_SCOPED or original FAIL/NOT_RUN without redispatch, then extend host-global WFP+route owner qualification only from new evidence."
+}
