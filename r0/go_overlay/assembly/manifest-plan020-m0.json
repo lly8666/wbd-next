@@ -478,7 +478,7 @@
       "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
-      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
+      "result_blob": "3f08f4c5d02f19a6a869aa09f2caebc796763ff8"
     },
     {
       "kind": "replace",
@@ -592,7 +592,7 @@
     {
       "kind": "create",
       "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
-      "result_blob": "67dc8b837d3333f65b4a6f6111e78e979f5f1ac6",
+      "result_blob": "67d45f149c5e42c74e83843af0c82b7a66ea522a",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
     },
     {

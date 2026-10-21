@@ -130,10 +130,10 @@ jobs:
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
-            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop|TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback|TestM0PLAN020RealScopedWFPArmAndForeignCAS)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
+            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop|TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback|TestM0PLAN020RealScopedWFPArmAndForeignCAS|TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
             if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
           } finally {Pop-Location}
-          foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop','TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback','TestM0PLAN020RealScopedWFPArmAndForeignCAS')) {
+          foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop','TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback','TestM0PLAN020RealScopedWFPArmAndForeignCAS','TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery')) {
             if (!(Select-String -Path result/native-wal.log -SimpleMatch ('--- PASS: '+$named) -Quiet)) {
               throw ('native owner/kernel/native WAL contract test NOT_RUN: '+$named)
             }

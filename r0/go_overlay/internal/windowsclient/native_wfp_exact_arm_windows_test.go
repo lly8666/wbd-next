@@ -8,6 +8,7 @@ import (
     "testing"
     "os"
     "net/netip"
+    "encoding/json"
 
     "github.com/tailscale/wf"
 )
@@ -140,4 +141,56 @@ func TestM0PLAN020RealScopedWFPArmAndForeignCAS(t *testing.T) {
    present,matches,err,closeErr)
  }
  t.Log("M0_PLAN020_REAL_NATIVE_SCOPED_TESTNET_WFP_ARM_FOREIGN_CAS_STOP_PASS host_global_WFP=NOT_RUN default_routes=NOT_RUN")
+}
+
+// Real WFP Arm is a multi-object persisted write: process death between
+// sublayer/rules and confirmation can strand a known subset. The sole guard
+// WAL intent may roll back that exact subset, never a foreign rule or a
+// partial guard protecting any later route, lease, MTU or DNS stage.
+func TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery(t *testing.T) {
+ ctx:=context.Background()
+ tx,st,_,_:=n4UnifiedTestTxn(t)
+ j:=n4UnifiedJournal{Schema:n4UnifiedSchema,Identity:tx.Identity,Phase:"applying",
+  Records:[]n4UnifiedRecord{
+   {Name:"guard",State:"intent",Before:json.RawMessage(`{"absent":true}`)},
+  },
+ }
+ if err:=n4UnifiedWrite(tx.Path,j,true);err!=nil{t.Fatal(err)}
+ st[0].state=N4UnifiedPartial
+ if err:=tx.Recover(ctx);err!=nil{
+  t.Fatalf("exact guard-only partial WFP intent never cleaned: %v",err)
+ }
+ if st[0].state!=N4UnifiedAbsent||st[0].undoCount!=1{
+  t.Fatalf("partial WFP guard-only recovery did not use exact Undo: %+v",st[0])
+ }
+ if _,err:=os.Stat(tx.Path);!os.IsNotExist(err){
+  t.Fatalf("guard-only WAL not durably retired: %v",err)
+ }
+ if err:=tx.Recover(ctx);err!=nil{t.Fatalf("retry Stop failed: %v",err)}
+ // Foreign WFP must not be mistaken for crash-owned sublayer/rules.
+ other,foreign,_,_:=n4UnifiedTestTxn(t)
+ j.Identity=other.Identity
+ if err:=n4UnifiedWrite(other.Path,j,true);err!=nil{t.Fatal(err)}
+ foreign[0].state=N4UnifiedForeign
+ if err:=other.Recover(ctx);!errors.Is(err,ErrN4ForeignRoute){
+  t.Fatalf("foreign guard unexpectedly reclaimed: %v",err)
+ }
+ if foreign[0].undoCount!=0{t.Fatal("foreign WFP mutated")}
+ if _,err:=os.Stat(other.Path);err!=nil{t.Fatal("foreign WFP WAL erased")}
+ // A partial guard with an actual lease WAL remains a hard stop BEFORE
+ // any OS Undo, even if its original guard record is only intent.
+ blocked,bs,_,_:=n4UnifiedTestTxn(t)
+ j.Identity=blocked.Identity
+ j.Records=append(j.Records,n4UnifiedRecord{
+  Name:"lease",State:"owned",Before:json.RawMessage(`{"absent":true}`),
+ })
+ if err:=n4UnifiedWrite(blocked.Path,j,true);err!=nil{t.Fatal(err)}
+ bs[0].state=N4UnifiedPartial
+ bs[1].state=N4UnifiedOwned
+ if err:=blocked.Recover(ctx);!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("partial WFP with a following owned lease wrongly recovered: %v",err)
+ }
+ if bs[0].undoCount!=0||bs[1].undoCount!=0{
+  t.Fatal("mutated host network state under a partial protective guard")
+ }
 }
