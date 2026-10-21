@@ -10,6 +10,9 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
       - ".github/workflows/m0-plan012-combined-functional.yml" # PLAN022 one identical SOURCE cross-OS functional batch
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go"
+      - "crates/wbd-engine/src/v4_windows_owner.rs"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
@@ -122,6 +125,214 @@ jobs:
           try {
             & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
             if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run '^TestM0PLAN023WindowsNativeV4FiveModes
+            if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
+          } finally {Pop-Location}
+          Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
+      - name: Assert source-locked public Windows V4 trial admission preserves real owner and OS receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import pathlib,sys
+          src=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+          for anchor in (
+            "runM0NativeV4Windows(o m0NativeV4Options)",
+            "realityfront.V4WindowsEstablishOriginalClientOwner(",
+            "windowsownerlease.PrepareOriginalTLSNativeProduct(",
+            "receipt,e:=product.Apply(ctx)",
+            "if !receipt.AllNativeOSApplied",
+            "observed,e:=product.LiveReceipt(ctx)",
+            "if e!=nil||!observed.AllNativeOSApplied",
+            "stopErr:=cleanup()",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+          ):
+              if anchor not in src: raise AssertionError("native owner/readback/Stop removed: "+anchor)
+          if "windowsclient.N4NativeNetworkReady(ctx)" in src:
+              # A frozen, universally-denying old product preflight cannot
+              # be on the opt-in V4 trial execution path.
+              if "if e=windowsclient.N4NativeNetworkReady(ctx)" in src:
+                  raise AssertionError("unconditional old Windows product gate still active")
+          # PLAN022: assert that Windows public V4 is actually restricted to
+          # one authenticated Normal/off lane until a native Windows
+          # FEC2/Game owner has been wired and positively tested.
+          # Do not turn CLI parser acceptance into a fake runtime success.
+          assert 'realityfront.FixedPolicyForClient(1,0)' in src
+          assert 'DesiredLanes:1' in src
+          assert 'product.Apply(ctx)' in src
+          print("M0_PLAN022_WINDOWS_V4_OFF_WIRED_FEC2_GAME_NOT_YET_WIRED_HONEST")
+          controller=pathlib.Path("legacy/internal/windowsclient/native_product_activation_windows.go").read_text()
+          for anchor in ("c.txn.Apply(ctx)","c.txn.VerifyLiveOSApplied(ctx)",
+                         "c.proof.VerifyBidirectionalAuthenticatedFirstDelivery(ctx,id)",
+                         "c.proof.DrainCryptoAndKernelLoans(ctx,id)",
+                         "c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx)",
+                         "c.txn.VerifyLiveOSDisconnected(ctx)"):
+              if anchor not in controller: raise AssertionError("native product authority missing: "+anchor)
+          print("M0_PLAN021_WINDOWS_V4_TRIAL_ADMISSION_OWNER_WAL_CAS_LIVE_RECEIPT_SAME_SOURCE_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'public native V4 trial owner-readback source contract FAIL'}
+      - name: Native Windows five-stage WAL readback and false Applied negatives
+        shell: pwsh
+        env:
+          WBD_N4_WFP_ISOLATED_LAB: '1' # native TEST-NET:203.0.113.254:65530 only; never host-global WFP
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop|TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback|TestM0PLAN020RealScopedWFPArmAndForeignCAS|TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
+            if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
+          } finally {Pop-Location}
+          foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop','TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback','TestM0PLAN020RealScopedWFPArmAndForeignCAS','TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery')) {
+            if (!(Select-String -Path result/native-wal.log -SimpleMatch ('--- PASS: '+$named) -Quiet)) {
+              throw ('native owner/kernel/native WAL contract test NOT_RUN: '+$named)
+            }
+          }
+      - name: Build source-locked native Windows Rust DLL for V4 portable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) {throw 'pinned native Rust 1.85.1 unavailable'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if ($LASTEXITCODE -ne 0) {throw 'pinned Rust MSVC target unavailable'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go
+          if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
+          @'
+          import ctypes,hashlib,pathlib
+          p=pathlib.Path("target/release/wbd_engine.dll")
+          assert p.is_file() and p.stat().st_size>100000,"actual Rust DLL missing"
+          dll=ctypes.WinDLL(str(p.resolve()))
+          for name in ("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare",
+                      "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
+                      "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off"):
+              assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
+          print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'native Rust original TLS M3 C-ABI export check FAIL'}
+      - name: Verify OFFICIAL signed Wintun 0.14.1 for portable V4 native kernel
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result/wintun-release | Out-Null
+          $archive='result/wintun-release/wintun-0.14.1.zip'
+          Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $archive
+          $expected='07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'
+          $actual=(Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) {throw "official Wintun native ZIP SHA256 mismatch: $actual"}
+          Expand-Archive -LiteralPath $archive -DestinationPath result/wintun-release/extracted -Force
+          $dll='result/wintun-release/extracted/wintun/bin/amd64/wintun.dll'
+          if (!(Test-Path -LiteralPath $dll -PathType Leaf)) {throw 'signed amd64 Wintun DLL absent'}
+          $signature=Get-AuthenticodeSignature -FilePath $dll
+          if ($signature.Status -ne 'Valid') {throw "official Wintun signature not valid: $($signature.Status)"}
+          Copy-Item -LiteralPath $dll -Destination result/wintun-release/wintun.dll
+          Write-Output 'M0_PLAN020_OFFICIAL_SIGNED_NATIVE_WINTUN_0141_DLL_PASS'
+      - name: Real SOURCE Windows original credential TLS Rust M3 Wintun and native WAL admin recovery
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          & ./tools/m0_plan020_native_live_windows_ci.ps1
+          if ($LASTEXITCODE -ne 0) {throw 'REAL native TLS Rust signed Wintun or OS WAL Apply Recover crash acceptance FAILED'}
+      - name: Compile original WinForms executable and real original Go Windows CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go build -o ../result/wbd-client.exe ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) { throw 'original native Go CLI compile FAILED' }
+          } finally {Pop-Location}
+          & ./legacy/scripts/build_windows_gui.ps1 -OutputDirectory result/portable -SourceSHA $env:GITHUB_SHA -Version 'plan020-native'
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath result/portable/WBD.exe)) {
+            throw 'original native WinForms executable not compiled'
+          }
+          # Use the SAME pinned original-Go V4 Rust client that CI linked.
+          # Untagged V3 may still compile for legacy proof, never ship it.
+          Copy-Item -LiteralPath result/wbd-client-embedded.exe -Destination result/portable/wbd-client.exe
+          Copy-Item -LiteralPath target/release/wbd_engine.dll -Destination result/portable/wbd_engine.dll
+          Copy-Item -LiteralPath result/wintun-release/wintun.dll -Destination result/portable/wintun.dll
+          if (!(Test-Path result/portable/wbd_engine.dll)) {throw 'portable Rust V4 native DLL absent'}
+          $clientHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd-client.exe).Hash.ToLowerInvariant()
+          $rustHash=(Get-FileHash -Algorithm SHA256 result/portable/wbd_engine.dll).Hash.ToLowerInvariant()
+          Write-Output ('M0_PLAN020_ACTUAL_V4_CLIENT_AND_RUST_M3_PORTABLE_PASS client_sha256='+$clientHash+' dll_sha256='+$rustHash)
+          $file='result/portable/WBD.exe'
+          $sig=(Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
+          if ($sig.Length -ne 64) {throw 'compiled WinForms file SHA missing'}
+          Write-Output ('M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256='+$sig)
+      - name: Run compiled real WinForms state transitions under a test-only fake child
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $csc='C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe'
+          $framework=Join-Path ${env:ProgramFiles(x86)} 'Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8'
+          $references=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess') | ForEach-Object { '/reference:'+(Join-Path $framework ($_.ToString()+'.dll')) }
+          $references+=('/reference:'+(Resolve-Path result/portable/WBD.exe).Path)
+          & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /optimize+ /utf8output /codepage:65001 '/out:result/portable/m0-plan020-gui-harness.exe' $references r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs
+          if ($LASTEXITCODE -ne 0) {throw 'native WinForms harness compile FAIL'}
+          $p=Start-Process -FilePath (Resolve-Path result/portable/m0-plan020-gui-harness.exe).Path -WorkingDirectory (Resolve-Path result/portable).Path -PassThru -Wait -ErrorAction Stop
+          try {
+            if ($p.ExitCode -ne 0) {throw ('actual compiled WinForms state regression FAIL '+$p.ExitCode)}
+          } finally { $p.Dispose() }
+          Write-Output 'M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY'
+      - name: Verify assembled WinForms source never maps READY to OS Applied
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import os,pathlib,json,re,hashlib
+          gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
+          assert "WBD_WINDOWS_OS_APPLIED" in gui
+          portable=pathlib.Path("legacy/windows/gui/Portable.cs").read_text(encoding="utf8")
+          assert 'Info("--native-v4-product --control-stdin --config "' in portable
+          assert 'if (nativeApplied && !nativeStopped)' in portable
+          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable
+          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
+          tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
+          assert 'if e=windowsclient.N4NativeNetworkReady(ctx)' not in tagged
+          assert 'receipt,e:=product.Apply(ctx)' in tagged
+          assert 'if !receipt.AllNativeOSApplied' in tagged
+          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged
+          assert 'stopErr:=cleanup()' in tagged
+          for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
+              p=pathlib.Path("result/portable")/name
+              # Native Go/Rust drivers are large PE binaries; genuine
+              # deterministic .NET WinForms EXEs can be under 100 KiB.
+              minimum=4096 if name=="WBD.exe" else 100000
+              assert p.is_file() and p.stat().st_size>minimum,name
+          manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
+                        native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
+                        native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),
+                        winforms_sha256=hashlib.sha256(pathlib.Path("result/portable/WBD.exe").read_bytes()).hexdigest(),
+                        signed_wintun_0141_sha256=hashlib.sha256(pathlib.Path("result/portable/wintun.dll").read_bytes()).hexdigest(),
+                        official_wintun_zip_sha256="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+                        scope="SOURCE_LOCKED_REAL_NATIVE_V4_RUST_DLL_WINFORMS_BUNDLE_PASS_BUILD_ONLY",
+                        global_host_WFP_routes_DNS_IPv6_MTU_WAL="NOT_RUN",
+                        native_public_CLI_real_first_app_Apply_Stop="NOT_RUN",
+                        windows_production="OFF",fec2_production="OFF",game_production="OFF")
+          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\\n")
+          assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
+          assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
+          assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
+          native=pathlib.Path("legacy/internal/windowsclient/native_unified_live_os_receipt_windows.go").read_text()
+          for term in ["VerifyLiveOSApplied","VerifyLiveOSDisconnected","s.Inspect(ctx,n.Identity","s.Snapshot(ctx,n.Identity"]:
+              assert term in native,term
+          r=dict(source_sha=os.environ["GITHUB_SHA"],result="PASS_SCOPED_NATIVE_GO_FIVE_STAGE_READBACK_AND_GUI_SOURCE_FALSE_READY",
+                 real_global_wfp="NOT_RUN",default_route="NOT_RUN",
+                 dns_ipv6_mtu_real_host="NOT_RUN",winforms_real_applied_disconnect="NOT_RUN",
+                 production_fec2="OFF",production_game="OFF")
+          pathlib.Path("result/receipt.json").write_text(json.dumps(r,indent=2)+"\n")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'GUI SOURCE guard FAIL'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan020-win-wal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: result/
+          if-no-files-found: warn
+          retention-days: 30
+ ./cmd/wbd-client 2>&1 | Tee-Object -FilePath ../result/plan023-native-modes.log
+            if ($LASTEXITCODE -ne 0) {throw 'PLAN023 native five-mode selector tests failed'}
+            if (!(Select-String -Path ../result/plan023-native-modes.log -SimpleMatch '--- PASS: TestM0PLAN023WindowsNativeV4FiveModes' -Quiet)) {throw 'PLAN023 native public selector test NOT_RUN'}
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
             if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
           } finally {Pop-Location}
