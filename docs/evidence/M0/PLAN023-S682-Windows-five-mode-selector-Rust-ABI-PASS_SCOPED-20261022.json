@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "3c4f046db6fea6fcacceec5238d682bc67de9d9c",
+  "result": "PASS_SCOPED_FIVE_MODE_PUBLIC_SELECTION_PLUS_REAL_NATIVE_ABI_WINDOWS_FOUR_DATA_PLANES_NOT_WIRED",
+  "actions": {
+    "windows": {
+      "id": 39692983214,
+      "attempt": 1,
+      "job_id": 119543448440,
+      "conclusion": "success",
+      "source_sha": "3c4f046db6fea6fcacceec5238d682bc67de9d9c",
+      "artifact_id": 12389272600,
+      "artifact_name": "m0-plan020-win-wal-39692983214-1",
+      "artifact_sha256": "3230bedf5635132e937b9307b5654faab88fcd62581e40bed24eb70abcfdc44f",
+      "artifact_size_bytes": 47222678
+    }
+  },
+  "positive": [
+    "TestM0PLAN023WindowsNativeV4FiveModes PASS compiled original Go Windows five-mode selector",
+    "TestM0PLAN023WindowsRustNativeModeABIRejectsUntrustedLibrary PASS",
+    "M0_PLAN023_REAL_WINDOWS_NATIVE_RUST_MODE_ABI_PASS actual native Rust DLL returns Normal=1 Fixed/Auto/Game2/Game4 NOT_WIRED",
+    "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED",
+    "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN",
+    "M0_PLAN020_REAL_NATIVE_SCOPED_TESTNET_WFP_ARM_FOREIGN_CAS_STOP_PASS",
+    "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+  ],
+  "changed": "original Go native entry now recognizes and forwards all five mode selectors; genuine Rust versioned FFI reports actual implementation mask before host changes; single-lane Normal/off remains real; four other modes refuse without quiet fallback; no false Applied",
+  "feature_status": {
+    "Windows_V4_Normal": "OPEN_FOR_NETWORK_TEST_SCOPED",
+    "Windows_V4_Fixed": "EXPOSED_NOT_WIRED",
+    "Windows_V4_Auto": "EXPOSED_NOT_WIRED",
+    "Windows_V4_Game2": "EXPOSED_NOT_WIRED",
+    "Windows_V4_Game4": "EXPOSED_NOT_WIRED",
+    "Linux_V4_all_five": "PRIOR_SOURCE_111fd39b_ACTION39629082813_PASS_SEPARATE_DATAPATH",
+    "host_WFP_and_dual_routes": "NOT_RUN",
+    "real_GUI_OS": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "blockers": [
+    "Windows Rust original M3/AEAD M2 FEC2 source and repair/Auto applied revision not installed",
+    "Windows native 2/4 lane original-Go authenticated TLS to Rust GameAdapter to Wintun driver not installed",
+    "No public four-mode actual Windows app-first/Stop positive Action"
+  ],
+  "preserved_failures": [
+    {
+      "source": "cea58281cf1810e2914aff2f840250d3d46b742f",
+      "run": 39691969735,
+      "result": "FAIL_YAML_TRUNCATION"
+    },
+    {
+      "source": "b3047f42c37e662796963285ee57b4363fc19efc",
+      "run": 39692339589,
+      "result": "FAIL_YAML_DUPLICATE"
+    }
+  ],
+  "entire_four_mode_product_complete": false
+}
