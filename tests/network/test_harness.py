@@ -12,6 +12,7 @@ from pathlib import Path
 from tools.network_harness.config import Unsupported, fec_residual, netem_args, validate
 from tools.network_harness.report import active_gap, summarize
 from tools.network_harness.traffic import Histogram, HEADER, UDP, Worker
+from tools.network_harness.artifacts import verify, sha
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -56,6 +57,29 @@ class Contracts(unittest.TestCase):
         self.assertIn("150ms", a)
         self.assertIn("5%", a)
         self.assertEqual(a[-2:], ["seed", "123"])
+        self.assertNotIn("seed", netem_args(d, None, 32768))
+
+    def test_bundle_source_platform_and_binary_tamper(self):
+        bundle = request()["bundles"]["A"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "fixed-build").mkdir()
+            (root / "fixed-kernel-result").mkdir()
+            hashes = {}
+            for name in ["wbd-v4-client", "wbd-v4-server", "libwbd_engine.so"]:
+                p = root / "fixed-build" / name
+                p.write_bytes(b"\x7fELF\x02\x01" + bytes(12) + b"\x3e\x00")
+                hashes[name] = sha(p)
+            manifest = {"source_sha": bundle["source"], "run_id": bundle["run_id"],
+                        "attempt": bundle["attempt"], "binaries_sha256": hashes}
+            (root / "fixed-kernel-result/manifest.json").write_text(json.dumps(manifest))
+            verify(root, bundle)
+            (root / "fixed-build/libwbd_engine.so").write_bytes(b"tampered")
+            with self.assertRaises(ValueError):
+                verify(root, bundle)
+            wrong = dict(bundle, source="0" * 40)
+            with self.assertRaises(ValueError):
+                verify(root, wrong)
 
     def test_histogram_empty_overflow_and_sparse_gap(self):
         h = Histogram()
