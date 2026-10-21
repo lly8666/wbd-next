@@ -174,6 +174,8 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   return errors.Join(e,windowsclient.ErrN4NativeGuard,cleanup())
  }
  fmt.Println("WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1")
+ // Native OS readback and original Rust M3 peer first+reverse proved.
+ fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
  var runtimeErr error
  select{

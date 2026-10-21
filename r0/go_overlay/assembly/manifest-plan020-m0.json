@@ -504,9 +504,21 @@
         {
           "find": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");",
           "replace": "                if (Active) throw new InvalidOperationException(\"旧客户端仍在运行，请先断开。\");\n                // Direct API calls must not bypass MainForm's guarded\n                // Disconnect/Recover switch. Old or orphaned journals\n                // prevent a second client from acquiring network ownership.\n                string existing = store.InRoot(\"data/network-state.json\");\n                if (File.Exists(existing) || File.Exists(existing+\".n4-owned-wal\") ||\n                    File.Exists(existing+\".n4-owned-wal.routes\") || File.Exists(existing+\".routes\"))\n                    throw new IOException(\"检测到旧版或未恢复的原生 owned 网络状态，拒绝启动另一客户端。\");"
+        },
+        {
+          "find": "        public event Action<string> Line;\n        public bool Active",
+          "replace": "        public event Action<string> Line;\n        // Only same-process live OS WAL receipts establish Connected/Stopped.\n        volatile bool nativeApplied, nativeStopped;\n        public bool Active"
+        },
+        {
+          "find": "                process = new Process { StartInfo = Info(\"--control-stdin --config \" + Quote(config)), EnableRaisingEvents = true };\n                process.OutputDataReceived += (s, e) => { if (e.Data != null && Line != null) Line(e.Data); };",
+          "replace": "                nativeApplied = nativeStopped = false;\n                process = new Process { StartInfo = Info(\"--native-v4-product --control-stdin --config \" + Quote(config)), EnableRaisingEvents = true };\n                process.OutputDataReceived += (s, e) => {\n                    if (e.Data == null) return;\n                    if (e.Data == \"WBD_WINDOWS_OS_APPLIED\") nativeApplied = true;\n                    if (e.Data == \"WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1\") nativeStopped = true;\n                    if (Line != null) Line(e.Data);\n                };"
+        },
+        {
+          "find": "                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");",
+          "replace": "                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");\n                if (nativeApplied && !nativeStopped)\n                    throw new IOException(\"已 Applied 的原生 Windows 网络缺少真实 WAL CAS/Rust Stop 回执，拒绝显示已断开。\");"
         }
       ],
-      "result_blob": "2d377cb70e25a54011fe6a0fc894f1cdb258b2da"
+      "result_blob": "e95cc78740b347278ab5550613f1e26ea9c8ad0f"
     },
     {
       "kind": "create",
@@ -641,7 +653,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "dfb9b4791eedc2f10694d0db6859412837ba5277"
+      "result_blob": "36f28e89e6a99e20428d8035a32c317a36613c6d"
     },
     {
       "kind": "create",
