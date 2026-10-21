@@ -12,6 +12,8 @@ on:
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go"
       - "crates/wbd-engine/src/v4_windows_owner.rs"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
@@ -125,7 +127,7 @@ jobs:
           try {
             & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
             if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
-            & go test -count=1 -v -tags wbd_v4_embedded_go -run TestM0PLAN023WindowsNativeV4FiveModes ./cmd/wbd-client
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run TestM0PLAN023Windows ./cmd/wbd-client
             if ($LASTEXITCODE -ne 0) {throw 'PLAN023 native five-mode selector test failed'}
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
             if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
@@ -208,6 +210,20 @@ jobs:
                       "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
                       "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off"):
               assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
+          class V4Modes(ctypes.Structure):
+              _fields_=[("version",ctypes.c_uint32),("size",ctypes.c_uint32),
+                        ("supported_modes",ctypes.c_uint32),
+                        ("authenticated_lanes",ctypes.c_uint32),
+                        ("reserved",ctypes.c_uint32)]
+          caps=V4Modes()
+          read=dll.wbd_m0_win_owner_v4_mode_capabilities
+          read.argtypes=[ctypes.POINTER(V4Modes),ctypes.c_uint32]
+          read.restype=ctypes.c_int32
+          assert read(ctypes.byref(caps),ctypes.sizeof(caps))==0
+          assert (caps.version,caps.size,caps.supported_modes,
+                  caps.authenticated_lanes,caps.reserved)==(
+                  4,ctypes.sizeof(caps),1,1,0)
+          print("M0_PLAN023_REAL_WINDOWS_NATIVE_RUST_MODE_ABI_PASS Normal=1 Fixed=NOT_WIRED Auto=NOT_WIRED Game2=NOT_WIRED Game4=NOT_WIRED")
           print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'native Rust original TLS M3 C-ABI export check FAIL'}

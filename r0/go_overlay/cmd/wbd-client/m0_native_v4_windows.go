@@ -29,7 +29,7 @@ import(
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // The original Windows owner supports single-lane Normal/off today.
  // Other selectors must not mutate WFP or silently downgrade to Normal.
- if o.Mode!=m0WinModeNormal{return fmt.Errorf("Windows V4 %s native Rust data plane not yet implemented",o.Mode)}
+ if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
