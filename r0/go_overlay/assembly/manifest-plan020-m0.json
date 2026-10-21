@@ -592,7 +592,7 @@
     {
       "kind": "create",
       "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
-      "result_blob": "67d45f149c5e42c74e83843af0c82b7a66ea522a",
+      "result_blob": "932ae597af210e95e232c351a960dcb056a9541f",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
     },
     {

@@ -178,9 +178,12 @@ func TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery(t *testing.T) {
  if foreign[0].undoCount!=0{t.Fatal("foreign WFP mutated")}
  if _,err:=os.Stat(other.Path);err!=nil{t.Fatal("foreign WFP WAL erased")}
  // A partial guard with an actual lease WAL remains a hard stop BEFORE
- // any OS Undo, even if its original guard record is only intent.
+ // any OS Undo. The journal shape enforces that a predecessor cannot
+ // remain "intent" once a later stage is recorded; use a LEGAL guard-owned
+ // entry, then independently simulate partial WFP loss on the host.
  blocked,bs,_,_:=n4UnifiedTestTxn(t)
  j.Identity=blocked.Identity
+ j.Records[0].State="owned"
  j.Records=append(j.Records,n4UnifiedRecord{
   Name:"lease",State:"owned",Before:json.RawMessage(`{"absent":true}`),
  })
