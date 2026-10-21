@@ -610,6 +610,12 @@
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
       "result_blob": "1c8a21d82b197b8f09facf7e13382063e45aaea4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
+      "result_blob": "9f85bf0efbbe89b8503ab164fb2d992c5258ff0d"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

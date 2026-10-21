@@ -1,0 +1,5 @@
+# M0 S619 — retain S617 native product linkage FAIL, recover exact missing kernel source
+
+SOURCE S617 `d17757ab18d497221f063ba24479ca86de2d6476`, Windows2022 Action39591246392/1 **FAIL**, job119192453861 at native Go compile: `undefined: N4OriginalKernelPacketLease` / `n4CreateOriginalKernelPacketLease`. The actual M0 signed Win32 Wintun ring producer `r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go` existed, but was missing from the M0-only PLAN020 assembly extension. This is an assembly dependency bug, not a signed-driver kernel failure. S618 source f1c7 introduced original-Go TLS owner and native OS WAL bridge while this FAIL was being completed; same omission affects it.
+
+Repair manifest only, add original M0 exact kernel ring Go blob without touching frozen M4 baseline manifest or original-Go pin. A Windows2022 new SOURCE must test build; historical S617 run stays FAIL, no full native production qualification. Actual Go public CLI remains v3/legacy and not yet routed to this native product service. FEC2/Game OFF.
