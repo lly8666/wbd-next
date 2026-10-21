@@ -262,6 +262,13 @@ jobs:
               $nativeLog -notmatch 'M0_PLAN020_REAL_TLS_RUST_M3_RECEIVE_AFTER_NATIVE_WINTUN_QUIESCE_DENIED') {
             throw 'bounded original TLS Rust M3 peer-receive and Wintun Stop negatives NOT_RUN'
           }
+          # These MUST be the same native Wintun kernel bytes that the
+          # opposite original credential-TLS Rust owner authenticated.
+          # A synthetic key or Winsock-localhost-only copy cannot satisfy.
+          if ($nativeLog -notmatch 'M0_PLAN020_REAL_ORIGINAL_GO_TLS_RUST_M3_PEER_DECRYPT_AFTER_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_DELIVERY_PASS' -or
+              $nativeLog -notmatch 'M0_PLAN020_REAL_ORIGINAL_GO_TLS_DUAL_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_UDP_APP_BOTH_DIRECTIONS_PASS') {
+            throw 'same signed Wintun kernel original-Go TLS Rust M3 opposite peer decrypt BOTH directions NOT_RUN'
+          }
           @'
           import json,pathlib,hashlib
           p=pathlib.Path("windows-owner-result/receipt.json")
@@ -287,7 +294,10 @@ jobs:
               raise RuntimeError("original credential TLS plus M4 created Wintun not qualified")
           receipt["original_TLS_Rust_M3_ciphertext_on_same_signed_Wintun_kernel_into_real_UDP_app"]="PASS_SCOPED_REAL_KERNEL_UDP_TEST_NET_APP"
           receipt["original_TLS_Rust_bound_M3_receive_abi_stale_and_tamper"]="PASS_SCOPED_REAL_NATIVE_OWNER_NEGATIVES"
-          receipt["original_TLS_Rust_authenticated_OPPOSITE_peer_decrypt_of_same_Wintun_kernel_record"]="NOT_RUN"
+          receipt["original_TLS_Rust_authenticated_OPPOSITE_peer_decrypt_of_same_Wintun_kernel_record"]="PASS_SCOPED_REAL_NATIVE_KERNEL_AND_TLS_DERIVED_M3_BIDIRECTIONAL"
+          receipt["signed_Wintun_original_Go_TLS_Rust_both_peers_replay_and_tamper"]="PASS_SCOPED_REAL_NATIVE_NEGATIVES"
+          receipt["full_host_global_WFP_two_default_1_routes_DNS_ipv6_MTU_WAL_Apply_Recovery"]="NOT_RUN"
+          receipt["public_original_Go_CLI_WinForms_real_Applied_Disconnect"]="NOT_RUN"
           receipt["full_host_WFP_default_route_DNS_ipv6_MTU_WAL_and_unmocked_CLI_GUI"]="NOT_RUN"
           receipt["native_WFP_default_route_and_M4_kernel_app"]="NOT_RUN_FULL_PUBLIC_PRODUCT"
           receipt["windows_product_applied"]="OFF"
