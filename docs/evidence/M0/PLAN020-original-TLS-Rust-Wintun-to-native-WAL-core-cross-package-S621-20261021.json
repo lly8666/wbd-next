@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "5e31c967d655851b8c1973a6331da12f8d4773d7",
+  "result": "PASS_SCOPED_WINDOWS2022_ORIGINAL_GO_TLS_RUST_WIN_SIGNED_WINTUN_KERNEL_OS_WAL_OWNER_CROSS_PACKAGE_COMPILE_ONLY_NOT_LIVE_PUBLIC_CLI",
+  "run": {
+    "run_id": 39592497130,
+    "attempt": 1,
+    "job_id": 119196664181,
+    "conclusion": "success",
+    "artifact_id": 12342363500,
+    "artifact_name": "m0-plan020-win-wal-39592497130-1",
+    "artifact_sha256": "4cc438143c364b3dd66ffbf3acfa4992ed2b288294f6afa9845afe5eca5567ed"
+  },
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "base_frozen_manifest_sha": "ebe2beac0aa5317eddf3c2d7db5d833d48ea01eb",
+    "extension_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "windows_hosted_runner": "windows-2022",
+    "go_version": "1.23.12"
+  },
+  "exact_markers": [
+    "M0_PLAN020_ORIGINAL_TLS_RUST_TO_NATIVE_HOST_WAL_BUNDLE_EXACT_SAME_SOURCE",
+    "M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS",
+    "--- PASS: TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop (0.50s)",
+    "--- PASS: TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks (0.17s)",
+    "M0_PLAN020_ORIGINAL_WINFORMS_NATIVE_EXECUTABLE_COMPILE_PASS sha256=eafb25e25cd039d479108cdc2991fab368f14a3b333cc5f89aa64c654af331db",
+    "M0_PLAN020_REAL_WINFORMS_EXE_STATE_MACHINE_PASS_TEST_CHILD_ONLY"
+  ],
+  "actual_core_source": {
+    "native_service": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+    "core_functions": [
+      "N4OriginalCurrentPinnedWintunIdentity",
+      "N4PrepareRealWindowsProduct",
+      "N4RealWindowsProduct.Apply",
+      "N4RealWindowsProduct.LiveReceipt",
+      "N4RealWindowsProduct.Stop"
+    ],
+    "original_tls_owner_adapter": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
+    "adapter_functions": [
+      "PrepareOriginalTLSNativeProduct",
+      "OriginalTLSNativeProductSession.Apply",
+      "OriginalTLSNativeProductSession.LiveReceipt",
+      "OriginalTLSNativeProductSession.Stop"
+    ],
+    "contract": "real original credential Go TLS Rust owner and independently validated signed Wintun LUID/index/GUID/PnP, exclusive kernel ring, true bidirectional network witness, five-stage durable WFP/default route/DNS/IPv6/MTU OS WAL; Rust and signed Wintun Stop only after native OS/CAS absence readback",
+    "qualification": "PASS_WINDOWS_SOURCE_LOCKED_CROSS_PACKAGE_BUILD_NOT_RUNNING_REAL_PRODUCT"
+  },
+  "checks": [
+    {
+      "subject": "Windows Go native product service + private authenticated Rust peer owner + original signed Wintun kernel lease and five-stage WAL compiled in ONE source-locked original Go module",
+      "result": "PASS_NATIVE_GO_BUILD"
+    },
+    {
+      "subject": "Original Go CLI executable with V4 Go source present compiles",
+      "result": "PASS_BUILD_NOT_WIRED_V4_PUBLIC_PATH"
+    },
+    {
+      "subject": "Original WinForms EXE compiled and fake child READY/Applied/Stop state tests",
+      "result": "PASS_SCOPED_FAKE_CHILD"
+    },
+    {
+      "subject": "Native five-stage WAL positive/negative tests use synthetic stage/owner",
+      "result": "PASS_TEST_DOUBLE"
+    },
+    {
+      "subject": "One process REAL original Go public CLI creating an authenticated TLS Rust owner that drives this native product session",
+      "result": "NOT_RUN_NOT_WIRED"
+    },
+    {
+      "subject": "Live global WFP persistent sublayer, real default/split /1 + underlay escape, real DNS/IPv6/MTU OS WAL Apply/Stop/Recover",
+      "result": "NOT_RUN"
+    },
+    {
+      "subject": "Actual WinForms unmocked OS Applied→Disconnect driven by new native service receipt",
+      "result": "NOT_RUN"
+    },
+    {
+      "subject": "Real same-source Rust peer authenticated Wintun kernel M3 first/reverse inside host-wide WAL transaction",
+      "result": "NOT_RUN"
+    }
+  ],
+  "previous_separate_source_proof": {
+    "source_sha": "92625bd76e28802a00bde2d33adb8f4137262379",
+    "runs": [
+      {
+        "run_id": 39589148814,
+        "conclusion": "success",
+        "scope": "same signed Wintun kernel two-direction original-Go credential TLS Rust M3 peer authenticated real UDP application"
+      },
+      {
+        "run_id": 39589148889,
+        "conclusion": "success",
+        "scope": "same signed Wintun kernel UDP with TEST-NET only native WFP/route CAS"
+      },
+      {
+        "run_id": 39589148707,
+        "conclusion": "success",
+        "scope": "Go WAL mocked five stages, compiled original Go CLI and WinForms with fake-child states"
+      }
+    ],
+    "note": "these successes are separate from real native product host OS Apply/Stop and only PASS_SCOPED"
+  },
+  "preserved_new_FAIL": [
+    {
+      "source_sha": "d17757ab18d497221f063ba24479ca86de2d6476",
+      "run_id": 39591246392,
+      "conclusion": "failure",
+      "cause": "native OS full service source referred to kernel lease before manifest included kernel source"
+    },
+    {
+      "source_sha": "f1c7a98ed16e4343ecf83dcc3fc7357a984d9c20",
+      "run_id": 39591606446,
+      "conclusion": "failure",
+      "cause": "same missing signed Wintun kernel Go file"
+    },
+    {
+      "source_sha": "7941dd211d67516b6e9ac33f166e95d82ef26579",
+      "run_id": 39592116402,
+      "conclusion": "failure",
+      "cause": "native full Rust bridge exact source validator wrongly expected a Windows build tag on shared V4 Go admission file"
+    }
+  ],
+  "same_source_governance": {
+    "governance_run": 39592497095,
+    "conclusion": "success",
+    "maintenance_run": 39592497072
+  },
+  "release_gate": {
+    "Windows_full_product": "NOT_RUN",
+    "Windows_public_CLI_V4_TLS_Rust_packet_WAL": "NOT_WIRED",
+    "Windows_global_WFP_default_routes_DNS_ipv6_MTU": "NOT_RUN",
+    "Windows_real_WinForms_Applied_Disconnect": "NOT_RUN",
+    "isolated_windows_host": "NOT_VERIFIED",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "production_Windows": "OFF",
+    "production_FEC2": "OFF",
+    "production_Game": "OFF"
+  },
+  "one_next_action": "Replace original public wbd-client Windows legacy runtimeentry/V3 + PowerShell admission with real original-Go credential V4 TLS Rust owner/wire transport supplying N4NativeAuthenticatedPeerTraffic; invoke PrepareOriginalTLSNativeProduct.Apply/LiveReceipt/Stop from that SAME CLI generation, feed only verified OS receipts to WinForms, and qualify host-global WFP/default split /1 DNS IPv6 MTU WAL and interrupted/foreign negative on verified isolated Windows native machine in one exact SOURCE. No more unrelated scoped packet samples."
+}
