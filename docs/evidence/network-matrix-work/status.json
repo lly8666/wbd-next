@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S028-original-M1-ingress-one-native-fixed30-measurement",
+  "phase": "S029-postloan-original-FEC-source-staging-reasons",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,45 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [
-    {
-      "id": "arm64-fixed30-original-M1-TUN-ingress-S028",
-      "type": "SINGLE_ARM64_PRODUCT_PERFORMANCE_MEASUREMENT",
-      "status": "QUEUED",
-      "trigger": "ONE request.json push; no direct manual dispatch",
-      "scenario": "unchanged S026 Fixed profile6 2Mbps/direction 50/50 UDP/TCP four flows 30pct IID one-way 300ms warmup15 steady120 drain30",
-      "source": "146f81ff70f49c0521dbc959beac5013219a8244",
-      "build_run": 39799604748,
-      "artifact_id": 12435082262,
-      "expected_observations": "true M1 TUN read/loan/prestage arena failure/jumbo/reject, FEC source acceptance/staging, M4 UDP/TCP real packets and kernel Input, TCPINFO/mode/duplicates/Stop",
-      "run_id": 39801548685,
-      "attempt": 1,
-      "harness_source": "8125a019ef283300308f778c7b5755b357135d87",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39801548685",
-      "harness_contract_run_id": 39801548948
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "S019-contract",
-      "result": "success",
-      "run": 39780496810,
-      "file": "S019-native-original-M2-build.json"
-    },
-    {
-      "id": "S020",
-      "result": "FAIL_DUPLICATE_SCOPED_PASS",
-      "run": 39780888799,
-      "file": "S020-fixed30-authentic-M2-TCP-state-fail.json",
-      "artifact_id": 12426133238
-    },
-    {
-      "id": "S021-build",
-      "result": "success",
-      "run": 39783512063,
-      "artifact_id": 12427229903,
-      "file": "S021-native-RX-proof-build.json"
-    },
     {
       "id": "S021-contract",
       "result": "success",
@@ -132,11 +95,22 @@
       "result": "success",
       "run": 39797003708,
       "file": "S027b-native-verified-build.json"
+    },
+    {
+      "id": "S028",
+      "result": "FAIL_EARLY_ARENA_GAP_DISPROVED",
+      "run": 39801548685,
+      "artifact_id": 12436311228,
+      "file": "S028-M1-TUN-loan-accounting-fail.json"
+    },
+    {
+      "id": "S028-contract",
+      "result": "success",
+      "run": 39801548948,
+      "file": "S028-M1-TUN-loan-accounting-fail.json"
     }
   ],
   "open_issues": [
-    "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported",
-    "S015 confirmed FEC arena 128→512 eliminates ~5k/18k source/parity NoCapacity each side and improves actual UDP; old/new both FAIL under 30% IID; B still 2 application duplicates, client Fixed pending, TCP no delivery.",
     "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next.",
     "S020 M2 real reverse reports 12047/12061, but unknown_2s 155/132 and censorship both; client Fixed pending, server applied1. Need bounded per-commit root/cause and FEC RX acceptance/decoding before changes.",
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
@@ -145,9 +119,10 @@
     "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
-    "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
+    "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
+    "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "S028 single original Fixed30 perf Action 39801548685 QUEUED, harness contract 39801548948 in progress; NO duplicate dispatch. Collect SOURCE-verified product and real M1 TUN intake read/loan/prestage arena fail/jumbo/reject, FEC accepted, kernel UDP/TCP/Stop. Compare accounting carefully; S026 hard FAIL remains.",
+  "next_action": "S028 evidence committed; do not rerun S028. Directed code review stage_original_fixed_stage_source guard n>budget.record_payload_mtu-14, Fec2Owner::push_source accepted semantics, and background_tun_once post-loan early exits. Add only one minimal bounded post-loan stage outcome ledger (attempts / too_large_precheck / owner_return_err / queued_yes / queued_no / mode_gap) with proper source/harness readback; validate native ARM64 and one targeted Fixed30. Before mechanism changes, measure whether oversized inner TCP is discarded; do not enlarge arena or relax MTU. Preserve S018 Normal/off PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "146f81ff70f49c0521dbc959beac5013219a8244",
