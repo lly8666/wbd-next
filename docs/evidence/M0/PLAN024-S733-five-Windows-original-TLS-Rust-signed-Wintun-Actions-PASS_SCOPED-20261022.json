@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "31ef3efb2a4ec999403085273b2e419edf0476d8",
+  "result": "PASS_SCOPED_WINDOWS2022_FIVE_MODE_NATIVE_ORIGINAL_GO_TLS_RUST_SIGNED_WINTUN_NOT_PUBLIC_PRODUCT_OR_SUSTAINED",
+  "run": {
+    "id": 39711053992,
+    "attempt": 1,
+    "source_sha": "31ef3efb2a4ec999403085273b2e419edf0476d8",
+    "conclusion": "success",
+    "job_id": 119602218191,
+    "artifact_id": 12397726229,
+    "artifact_name": "m0-plan020-win-wal-39711053992-1",
+    "artifact_bytes": 47383913,
+    "artifact_sha256": "e66a86311ee7f2fff72da2354af33fc27197bf2c767ad18e7e79ca37a26c127f"
+  },
+  "passed": [
+    "compiled original Windows public CLI and WinForms; WinForms child state only, not true OS Applied",
+    "TestM0PLAN025WindowsNativeV4OutOfOrderFirstAndRealCumulativeACK; TestM0PLAN025WindowsNativeV4SerialWrapAndOutOfOrderNoFalseACK",
+    "Native real Rust Game2/Game4 original AEAD replay, blocked-lane independent first delivery, Stop",
+    "Native real Rust FEC2 source/repair M1/M3 AEAD, RS16 recovery, Stop",
+    "actual original Go TLS Rust M3 signed Wintun kernel UDP app first/reverse, Normal",
+    "TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse/fixed and /auto, genuine Wintun+original TLS, PASS_SCOPED",
+    "TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse/game2 and /game4, genuine Wintun+original TLS blocked lane1 first/reverse and Stop PASS_SCOPED",
+    "real host TEST-NET WFP scoped persistence Arm/foreign CAS/Stop (NOT host-global policy)",
+    "same-source actual Windows IP/MTU/DNS WAL Apply/Recover/Stop; WFP/dual default routes NOT_RUN"
+  ],
+  "source_changes": [
+    "S706 intent; S707-710 real Wintun MTU and shared Rust FrameBudget bound by original Go TLS peer MSS",
+    "S711-714 production native Go peer replaces 4ms each-packet rate limit with bounded 32 packets or 2ms, cancellable idle wake, immutable ciphertext retranmission and bounded gap-aware cumulative TCP ACK",
+    "S716-725 Rust per-session M3 and FEC2, per-Game-group Arc/Mutex, release global registry before per-packet AEAD, serial TCP wrap handling",
+    "S726 correct post-release UNKNOWN and S727 >512B real M3 encryption out-of-order positive test",
+    "S728 fix exact Rust E0596, S729 generation-owned TX/RX scratch reused, S730 remove redundant Go ciphertext copy",
+    "S731 original pinned Go protected Fixed/Auto admission parity/minimum, S732 scoped TLS test explicit test MTU, S733 manifest source-lock current peer Git blob"
+  ],
+  "retained_prior_red": [
+    {
+      "source": "df95bc3f8f1e54d1bd8b0d93ddbc4aa45598f835",
+      "run": 39709092301,
+      "cause": "Rust scoped stale released handle expected INVALID instead of UNKNOWN; fixed S726"
+    },
+    {
+      "source": "df95bc3f8f1e54d1bd8b0d93ddbc4aa45598f835",
+      "run": 39709092362,
+      "cause": "E0596 Rust FEC2 per-session mut borrow; fixed S728"
+    },
+    {
+      "source": "d48056be7feb52da278737e34b3f98ae6e92a12e",
+      "run": 39710480758,
+      "cause": "Pinned original Go Fixed/Auto test parity/minimum invalid; fixed S731"
+    },
+    {
+      "source": "f4c9df0eddf4bfd48bdeea28a45a7fe80a88f537",
+      "run": 39710869574,
+      "cause": "Manifest peer result blob stale after S730; fixed S733"
+    }
+  ],
+  "still_unverified": [
+    "10Mbps c2s+s2c sustained lossless 60s, sizes across real negotiated MTU, load-time Stop and cancellation",
+    "1pct and 5pct loss source-locked Windows true public product in isolated network setup, directional RTT/p99/longest gap/CPU/RSS/queues/drop/retrans",
+    "same-VM same-job exact-source old/new sustained throughput baseline",
+    "actual original Go Windows public CLI/WinForms all modes M2 Fixed/Auto revisions and Game2/4 true production sessions; release DLL capability mask still Normal=1",
+    "host-global WFP IPv6/DNS and dual /1 routes, physical underlay route, true OS Applied/Disconnected in isolated VM"
+  ],
+  "qualification": {
+    "Windows_Normal": "PASS_SCOPED_NATIVE_RECORD_AND_KERNEL_APP",
+    "Windows_Fixed": "PASS_SCOPED_ORIGINAL_TLS_RUST_M3_WINTUN_NOT_PUBLIC_M2_APPLIED",
+    "Windows_Auto": "PASS_SCOPED_ORIGINAL_TLS_RUST_M3_WINTUN_NOT_AUTO_REVISION",
+    "Windows_Game2": "PASS_SCOPED_RUST_GAME_GROUP_WIN_KERN_NO_PUBLIC_MODE",
+    "Windows_Game4": "PASS_SCOPED_RUST_GAME_GROUP_WIN_KERN_NO_PUBLIC_MODE",
+    "sustained_performance": "NOT_RUN",
+    "full_product": "NOT_QUALIFIED"
+  },
+  "pr21_note": "PR #21 provides Linux network/traffic/report adapter only. Its Linux results are not Windows sustained qualification; reuse traffic+report with actual public Windows adapter, one scenario/seed/VM/measurement job each."
+}
