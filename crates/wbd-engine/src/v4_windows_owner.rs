@@ -7,6 +7,8 @@
 use std::collections::BTreeMap;
 use std::sync::{Mutex,OnceLock};
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
+#[path = "v4_windows_game_owner.rs"]
+mod game;
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::ProtectedScopedOwner;
 use crate::memory::Arena;
@@ -50,6 +52,9 @@ struct Entry {
     peer_mss_advertised:bool,
     record_wire_limit:usize,
     device:Option<ScopedWindowsWintunIdentity>,
+    feature7:bool,
+    game_cold:Option<UntrustedColdV4>,
+    game_group:Option<u64>,
 }
 // An original-Go-verified WintunReservation.Hold on the actual native OS
 // adapter is REQUIRED before this private record can be created. This C ABI
@@ -62,19 +67,24 @@ struct ScopedWindowsWintunIdentity {
 struct Registry {
     generation:u32,
     entries:BTreeMap<u64,Entry>,
+    game_groups:BTreeMap<u64,game::WinGameGroup>,
 }
 static REGISTRY:OnceLock<Mutex<Registry>>=OnceLock::new();
 fn registry()->&'static Mutex<Registry>{
-    REGISTRY.get_or_init(||Mutex::new(Registry{generation:1,entries:BTreeMap::new()}))
+    REGISTRY.get_or_init(||Mutex::new(Registry{generation:1,entries:BTreeMap::new(),game_groups:BTreeMap::new()}))
 }
 fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i32>{
     if r.entries.len()>=MAX_SESSIONS{return Err(FULL)}
     let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
-    // Windows FEC2/Game transport is NOT installed. Never allow metadata
-    // capability bit2 to silently switch modes or grant kernel authority.
-    if handoff.negotiated_features!=3{return Err(INVALID)}
+    // Feature7 is admitted only by explicit Rust FEC2 test-channel build.
+    // This is a cryptographic lane candidate, never a WFP/OS Applied grant.
+    if handoff.negotiated_features!=3 &&
+       !(cfg!(feature="fec2_product_record") && handoff.negotiated_features==7){
+        return Err(INVALID)
+    }
     let parsed=UntrustedColdV4::parse(cold).map_err(|_|INVALID)?;
     if parsed.identity().server!=server{return Err(INVALID)}
+    let identity=parsed.identity();
     let generation=r.generation;
     if generation==0{return Err(FULL)}
     let next=generation.checked_add(1).ok_or(FULL)?;
@@ -93,10 +103,13 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         generation,phase:PH_PREPARED,role_server:server,
         rx_boundary:handoff.rx_boundary,limit:rx_limit,count:0,bytes:0,
         owner,arena,
-        authenticated_epoch:parsed.identity().logical_epoch,
+        authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
-        record_wire_limit,device:None
+        record_wire_limit,device:None,
+        feature7:handoff.negotiated_features==7,
+        game_cold:if handoff.negotiated_features==7{Some(parsed)}else{None},
+        game_group:None,
     });
     Ok(handle)
 }
@@ -152,6 +165,7 @@ fn stop(r:&mut Registry,h:u64)->i32{
     let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
     if e.phase==PH_STOPPED{return OK}
     if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
+    if e.game_group.is_some(){return STOP_INCOMPLETE}
     // Keep authenticated crypto owner alive if M4's current Wintun hold
     // has not ended its packet workers and completed the exact close fence.
     if e.device.is_some_and(|d|!d.quiesced){return STOP_INCOMPLETE}
@@ -511,7 +525,7 @@ mod tests {
     }
     #[test]
     fn m0_windows_owner_real_native_prepare_commit_stop_generation_scoped(){
-        let mut r=Registry{generation:11,entries:BTreeMap::new()};
+        let mut r=Registry{generation:11,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_eq!(h>>32,11);
         assert_eq!(r.entries[&h].phase,PH_PREPARED);
@@ -536,14 +550,18 @@ mod tests {
     }
     #[test]
     fn m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply(){
-        let mut r=Registry{generation:3,entries:BTreeMap::new()};
+        let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         assert_eq!(allocate(&mut r,&cold(true),&cmd(),false),Err(INVALID));
         assert_eq!(allocate(&mut r,&cold(false),&cmd(),true),Err(INVALID));
         let mut bad=cmd();bad[27]=1;
         assert_eq!(allocate(&mut r,&cold(false),&bad,false),Err(INVALID));
         bad=cmd();bad[4..6].copy_from_slice(&2u16.to_be_bytes());
         bad[27..29].copy_from_slice(&7u16.to_be_bytes());
-        assert_eq!(allocate(&mut r,&cold(false),&bad,false),Err(INVALID));
+        let feature7=allocate(&mut r,&cold(false),&bad,false);
+        if cfg!(feature="fec2_product_record"){
+            let candidate=feature7.expect("feature7 candidate scope");
+            assert_eq!(abort(&mut r,candidate),OK);
+        }else{assert_eq!(feature7,Err(INVALID));}
         assert_eq!(PRODUCT_APPLIED,0);
         let good=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_eq!(stage(&mut r,good,500,&[]),INVALID);
@@ -557,7 +575,7 @@ mod tests {
     }
     #[test]
     fn m0_windows_authenticated_generation_real_wintun_lease_stop_fence_and_stale(){
-        let mut r=Registry{generation:91,entries:BTreeMap::new()};
+        let mut r=Registry{generation:91,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         // cold fixture uses [28..44] as logical_epoch; [44..60] is incarnation.
         let exact=[2u8;16];
@@ -586,7 +604,7 @@ mod tests {
 
     #[test]
     fn m0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation(){
-        let mut r=Registry{generation:101,entries:BTreeMap::new()};
+        let mut r=Registry{generation:101,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let client=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         let server=allocate(&mut r,&cold(true),&cmd(),true).unwrap();
         // Synthetic unit credentials do NOT authorize Windows product;
