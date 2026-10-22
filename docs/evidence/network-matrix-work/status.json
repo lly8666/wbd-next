@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S023-Fixed30-post-RX-decoder-reject-and-TCP-progress-triage",
+  "phase": "S023-real-inner-TCP-kernel-progress-contract",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,15 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S023-ss-TCP-INFO-aggregate-contract",
+      "type": "HARNESS_CONTRACT_ONLY",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "push existing tools/network_harness/runner.py and tests/network/test_harness.py; no performance run or product build",
+      "purpose": "add only per-snapshot counts/sums of genuine kernel TCP_INFO cwnd/unacked/notsent/bytes_acked/retrans, no addresses or packet body"
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S013",
@@ -117,7 +125,7 @@
     "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence"
   ],
-  "next_action": "S022 true Fixed30 Action 39784149202 FAIL archived, no repeat. Review Fec2LiveRx::accept_authenticated reject path and source route, original TCP kernel numeric cwnd/unacked/tun/probe; choose smallest differentiating per-reason RX/inner TCP counter OR minimal cause-specific fix, then same-source Actions and default off anchor. Avoid seed retries/queue growth; S018 default PASS and S017 duplicate fix preserved.",
+  "next_action": "Resolve S023 harness contract run exactly once and check robust numeric `ss -H -tin` output. Then one source-bound Fixed30 real measurement at same 2Mbps/dir to compare kernel TCP byte_acked/notsent/unacked against original M3 FEC and app progress. Preserve S022 failure, S018 default PASS; no product tuning from cumulative RX/TUN counters alone.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",

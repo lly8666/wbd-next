@@ -126,6 +126,50 @@ def tcp_socket_state_counts(output):
     return result
 
 
+def tcp_kernel_progress_counts(raw):
+    """From ss -H -tin: aggregate kernel TCP_INFO numbers; NEVER retain peers.
+
+    A field absent from the kernel output is NOT_OBSERVED, not numeric zero.
+    Per-socket endpoint lines are read only in memory and immediately dropped.
+    """
+    fields=("bytes_sent","bytes_acked","bytes_received","notsent",
+            "unacked","cwnd","snd_wnd","rto")
+    blocks=[]
+    current=None
+    for line in raw.splitlines():
+        if line.startswith("ESTAB ") or line.startswith("ESTAB\t"):
+            if current is not None:
+                blocks.append(current)
+            current=[]
+        elif current is not None and line[:1].isspace():
+            current.append(line)
+        else:
+            if current is not None:
+                blocks.append(current)
+            current=None
+    if current is not None:
+        blocks.append(current)
+    out={"established":len(blocks)}
+    values={k:[] for k in fields}
+    retrans=[]
+    for block in blocks:
+        details=" ".join(block)
+        for name in fields:
+            found=re.search(r"(?<![a-zA-Z0-9_])"+name+r":(\d+)(?![0-9])",details)
+            if found:
+                values[name].append(int(found.group(1)))
+        match=re.search(r"(?<![a-zA-Z0-9_])retrans:(\d+)/(\d+)",details)
+        if match:
+            retrans.append((int(match.group(1)),int(match.group(2))))
+    for name in fields:
+        v=values[name]
+        out[name]={"sampled_sockets":len(v),"sum":sum(v),"max":max(v)} if v else "NOT_OBSERVED"
+    out["retrans"]={"sampled_sockets":len(retrans),
+                    "in_flight_sum":sum(a for a,_ in retrans),
+                    "total_sum":sum(b for _,b in retrans)} if retrans else "NOT_OBSERVED"
+    return out
+
+
 def dump(path, value):
     Path(path).write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
 
@@ -352,6 +396,7 @@ class LinuxExperiment:
                 "udp_sockets": self.nscommand(role, ["ss", "-uanm"], False),
                 "packet_sockets": self.nscommand(role, ["ss", "-0", "-am"], False),
                 "tcp_states": tcp_socket_state_counts(self.nscommand(role, ["ss", "-H", "-tan"], False)),
+                "tcp_kernel_progress": tcp_kernel_progress_counts(self.nscommand(role, ["ss", "-H", "-tin"], False)),
                 "blackhole_counters": self.nscommand(role, ["iptables", "-nvxL", "WBN_LOSS"])}
         self.snapshots.append(row)
 

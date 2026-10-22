@@ -184,6 +184,32 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_rx_proof(row.replace("source_seen=1809","source_seen=9")))
         self.assertIsNone(public_fec_rx_proof(row.replace("admission_disabled=78","admission_disabled=90000")))
 
+    def test_tcp_kernel_cwnd_unacked_byte_progress_aggregates_without_endpoints(self):
+        from tools.network_harness.runner import tcp_kernel_progress_counts
+        input_text=(
+            "ESTAB 0 0 secret-client:5901 secret-server:5902\n"
+            "  cubic rto:804 cwnd:3 unacked:2 notsent:900 bytes_sent:1200 "
+            "bytes_acked:200 bytes_received:5 retrans:1/4 snd_wnd:1000\n"
+            "ESTAB 0 0 secret-client:5903 secret-server:5904\n"
+            "  cubic rto:402 cwnd:7 unacked:1 notsent:300 bytes_sent:500 "
+            "bytes_acked:400 retrans:0/2 snd_wnd:2000\n"
+        )
+        x=tcp_kernel_progress_counts(input_text)
+        self.assertEqual(x["established"],2)
+        self.assertEqual(x["bytes_sent"],{"sampled_sockets":2,"sum":1700,"max":1200})
+        self.assertEqual(x["bytes_acked"]["sum"],600)
+        self.assertEqual(x["notsent"]["sum"],1200)
+        self.assertEqual(x["unacked"]["sum"],3)
+        self.assertEqual(x["retrans"]["total_sum"],6)
+        self.assertEqual(x["bytes_received"]["sampled_sockets"],1)
+        self.assertNotIn("secret-",str(x))
+        missing=tcp_kernel_progress_counts("ESTAB 0 0 private:1 private:2\n")
+        self.assertEqual(missing["established"],1)
+        self.assertEqual(missing["bytes_acked"],"NOT_OBSERVED")
+        self.assertEqual(tcp_kernel_progress_counts(""),{"established":0,
+            **{k:"NOT_OBSERVED" for k in ("bytes_sent","bytes_acked",
+                "bytes_received","notsent","unacked","cwnd","snd_wnd","rto","retrans")}})
+
     def test_original_m2_numeric_proof_and_tcp_state_only_no_addresses(self):
         from tools.network_harness.runner import (
             public_fec_m2_proof, product_marker_line, tcp_socket_state_counts)
