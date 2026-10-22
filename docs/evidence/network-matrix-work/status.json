@@ -41,10 +41,14 @@
     },
     {
       "id": "S016-native-FEC-RX-expired-block-id-guard-build",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "type": "PRODUCT_SOURCE_BUILD_AND_NATIVE_FUNCTIONAL_UNIT",
       "trigger": "crates/wbd-engine/src/v4_fec2_live_rx.rs push starts exactly one ARM64 build; do not dispatch manually",
-      "scope": "post-retire same block identity rejection, protected AEAD k1 systematic then late parity native unit; does not change retention/replay/codec/Stop"
+      "scope": "post-retire same block identity rejection, protected AEAD k1 systematic then late parity native unit; does not change retention/replay/codec/Stop",
+      "run_id": 39776576033,
+      "attempt": 1,
+      "source": "66838c313ff9def6d4febedb61a018c372986154",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39776576033"
     }
   ],
   "recent_evidence": [
@@ -119,7 +123,7 @@
     "S013 proved original M1 TX arena NoCapacity at source/parity ~5.1k/18.6k per side; bounded feature7-only 512 slot candidate requires same-source build and real regression; not yet PASS",
     "S013 hard: UDP duplicates 4/3, Fixed pending on both, TCP blocked, actual 30% loss; keep OPEN even if arena throughput fixes"
   ],
-  "next_action": "S015 exact old-vs-arena512 AB run 39775828660 still in progress and independent of S016 source. S016 push starts native build/unit for real RX same-turn retirement duplicate hard gate; do not restart S015. Record both results separately, then rerun affected Fixed scenario with combined bounded fixes, default off same-job AB anchor, preserve any remaining readback/TCP problems.",
+  "next_action": "S015 same-host arena128-vs512 AB run39775828660 remains in progress; S016 RX late-parity original FEC identity regression and product build run39776576033 in progress. Both separate frozen SOURCE, no repeat dispatch. Record both artifacts/hard gates; after unit+build success run one combined Fixed30 regression then default off anchor.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
