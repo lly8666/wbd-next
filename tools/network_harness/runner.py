@@ -98,6 +98,31 @@ class Monitor:
                 "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal, "processes": costs}
 
 
+def startup_diagnostic(log_text):
+    """Never persist CLI stdout/stderr or secret-bearing argv: fixed labels only."""
+    tokens = {
+        "CLI_UNKNOWN_FLAG": "flag provided but not defined",
+        "CLI_BAD_ARGUMENTS": "missing/invalid real original v4 tls/raw/tun settings",
+        "CLI_BAD_ROUTE_KEY": "invalid tls route key",
+        "CLI_BAD_TUNNEL_ID": "invalid tunnel-id",
+        "RUNTIME_MISSING_SHARED_LIBRARY": "error while loading shared libraries",
+        "RUNTIME_MISSING_SYMBOL": "undefined symbol",
+        "KERNEL_NO_DEVICE": "no such device",
+        "KERNEL_TUN_UNAVAILABLE": "/dev/net/tun",
+        "KERNEL_PERMISSION": "operation not permitted",
+        "KERNEL_DENIED": "permission denied",
+        "KERNEL_ADDRESS_BUSY": "address already in use",
+        "KERNEL_INVALID_ARGUMENT": "invalid argument",
+        "KERNEL_NO_SUCH_FILE": "no such file or directory",
+        "NETWORK_CONNECT_REFUSED": "connection refused",
+        "NETWORK_TIMED_OUT": "i/o timeout",
+        "GO_PANIC": "panic:",
+    }
+    text = log_text.lower()
+    reasons = [label for label, token in tokens.items() if token in text]
+    return {"safe_failure_classes": reasons or ["UNCLASSIFIED_NO_RAW_LOG_PERSISTED"],
+            "log_lines_present": min(len(log_text.splitlines()), 100000)}
+
 class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):
         self.config, self.bundle = config, Path(bundle_dir) / "fixed-build"
@@ -165,7 +190,7 @@ class LinuxExperiment:
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             if any(p.poll() is not None for p in self.products.values()):
-                raise RuntimeError("public CLI exited before readiness; see bounded markers")
+                raise RuntimeError("public CLI exited before readiness: " + repr({r:p.poll() for r,p in self.products.items()}))
             if self.lanes > 1:
                 ready = all(f"V4_ORIGINAL_GO_GAME_NATIVE_READY role={r} lanes={self.lanes}" in read(self.private / (r + ".log")) for r in self.ns)
             else:
@@ -350,7 +375,12 @@ class LinuxExperiment:
         except Unsupported as e:
             result = {"result": "UNSUPPORTED", "reason": str(e)}
         except Exception as e:
-            result = {"result": "FAIL", "reason": str(e), "failures": [str(e)]}
+            diagnostics = {role: {**startup_diagnostic(read(self.private / (role + ".log"))),
+                                  "exit_before_cleanup": p.poll(),
+                                  "tun_present": bool(self.nscommand(role, ["ip", "link", "show", "wbntun0"], False))}
+                           for role, p in self.products.items()}
+            result = {"result": "FAIL", "reason": str(e), "failures": [str(e)],
+                      "safe_startup_diagnostics": diagnostics}
         finally:
             if self.monitor:
                 host = self.monitor.finish()

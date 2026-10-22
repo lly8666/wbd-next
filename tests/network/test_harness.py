@@ -117,6 +117,14 @@ class Contracts(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     verify(root, b)  # Native ARM64 cannot pass on x86_64 runner
 
+    def test_safe_startup_failure_diagnostic_redacts_private_input(self):
+        from tools.network_harness.runner import startup_diagnostic
+        raw = "password=secret_value route-key=do-not-persist\nerror: no such device"
+        d = startup_diagnostic(raw)
+        self.assertIn("KERNEL_NO_DEVICE", d["safe_failure_classes"])
+        self.assertNotIn("secret_value", json.dumps(d))
+        self.assertNotIn("do-not-persist", json.dumps(d))
+
     def test_histogram_empty_overflow_and_sparse_gap(self):
         h = Histogram()
         self.assertIsNone(h.result()["p99_ms"])

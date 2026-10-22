@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "first-native-arm64-sustained-duplex-mixed-baseline",
+  "phase": "startup-failure-triage-S001",
   "recovered": false,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -56,21 +56,31 @@
       "id": "arm64-off-duplex-mixed-10m-lossless-90s",
       "path": "tests/network/request.json",
       "scenario": "normal/off lossless 90s, UDP/TCP 50/50, 4 TCP flows, 64/256/1024/1172B, 20Hz probes; each direction 10Mbps",
-      "status": "ACTION_QUEUED",
+      "status": "FAIL_BEFORE_READY",
       "run_id": 39760409329,
       "attempt": 1,
       "build_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
       "artifact_id": 12417786567,
       "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39760409329"
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39760409329",
+      "result_artifact_id": 12418065932,
+      "failure": "Go CLI exited before READY; input ZIP/native ARM/source checks succeeded, no business measured; namespace cleanup true"
+    },
+    {
+      "id": "arm64-off-startup-diagnostic-12s",
+      "path": "tests/network/request.json",
+      "status": "INTENT_RECORDED_NOT_DISPATCHED",
+      "run_id": null,
+      "reason": "one evidence-gathering shorter run with allowlisted startup error classifiers; same seed/mode/product; no performance qualification"
     }
   ],
   "open_issues": [
+    "S001 real ARM64 product exited before READY; root cause unknown; no traffic observations; inspect safe startup diagnostics before code modifications",
     "No runtime repair byte budget and actual FEC k/r readback; NOT_OBSERVED",
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Observe actual S001 run 39760409329; do not redispatch; inspect one native ARM measure job/receipts, fix only evidence-based failures.",
+  "next_action": "First push diagnostic code/selfcheck, then same product/seed short startup diagnostic Action; do not rerun 90s or increase load until cause known.",
   "actions": [
     {
       "run_id": 39759842064,
