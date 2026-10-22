@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S024-original-TCP-INFO-fixed30-real-measurement",
+  "phase": "S025-scope-real-FEC-M4-IPv4-protocol-class-recovery",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,23 +23,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [
-    {
-      "id": "arm64-fixed30-real-TCP-INFO-FEC-RX-proof-S024",
-      "type": "ONE_PRODUCT_PERFORMANCE_ACTION",
-      "status": "QUEUED_OR_RUNNING",
-      "trigger": "one changed tests/network/request.json push; DO NOT manual workflow_dispatch",
-      "source": "370eb534621d76deda7888599bd089acc163acac",
-      "build_run": 39783512063,
-      "artifact_id": 12427229903,
-      "harness_contract": 39786357898,
-      "description": "S022 exact 2Mbps/direction 50/50 UDP/TCP 4 flows, 30% IID, RTT600ms 120s +15s warmup/30s drain; compare genuine kernel TCP_INFO aggregate at four snapshots and original M3 FEC/TUN/M2; no source/acceptance change",
-      "run_id": 39788742492,
-      "attempt": 1,
-      "harness_source": "230231140cbb0500dc870e6ea61d652b0a1e94e5",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39788742492"
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "S013",
@@ -124,6 +108,13 @@
       "run": 39786357898,
       "source": "b084206edaee3a874bc8b24e3e7b517be0830a28",
       "file": "S023-kernel-TCP-INFO-contract.json"
+    },
+    {
+      "id": "S024",
+      "result": "FAIL_TRUE_TCP_ACK_FREEZE",
+      "run": 39788742492,
+      "file": "S024-fixed30-TCP-INFO-ACK-stall.json",
+      "artifact_id": 12430711286
     }
   ],
   "open_issues": [
@@ -138,9 +129,10 @@
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED.",
     "S022 real original M3 FEC RX 23,488/23,579 parity accepted, 5,669/5,714 recovered→TUN, no M4 failure and TUN counter exact; actual UDP still missing33.10/33.14%, reason cannot be 'no FEC recovery', class/retire/decoder reject and cohort split OPEN",
     "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
-    "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence"
+    "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
+    "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning."
   ],
-  "next_action": "S024 true Fixed30 original product Action 39788742492 queued/running, contract 39788742607. Do not dispatch duplicate. Inspect aggregate kernel TCP_INFO bytes_sent/acked/unsent/unacked/cwnd/retrans in four snapshots and business TCP framing/backpressure; retain 30pct netem, FEC true RX/TUN, M2 mode and Stop. Separate app full frame completion from kernel partial nonblocking writes.",
+  "next_action": "S024 FAIL archived; no redispatch. Directed code review Fec2LiveRx M3→M4 actual IPv4 candidates and existing TCP checksum/de-dupe. Add minimum bounded per-session class totals for original FEC systematic/recovered successfully TUN-written UDP vs TCP, and TCP ACK-only vs data, plus reject code if necessary, no packet bodies/ports. Build new product SOURCE once; one targeted same Fixed30 measurement. S018 default mode PASS and S017 zero duplicates preserved. M2 mature gate not weakened.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",
