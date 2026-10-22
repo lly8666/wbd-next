@@ -2,7 +2,7 @@
 //! Attaches ONLY a caller-owned preconfigured TUN FD; Go retains OS network
 //! configuration. Not a RAW carrier, TLS authority, route manager or netem.
 //! Synchronous kernel write copy completion is NOT application receipt.
-#![cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
+#![cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::io;
 use std::os::fd::{AsRawFd,OwnedFd};
 use std::sync::atomic::{AtomicBool,Ordering};
