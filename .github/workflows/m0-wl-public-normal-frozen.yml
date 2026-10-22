@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/m0-wl-public-normal-frozen.yml
+      - tools/m0_wl_public_normal_e2e.py
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
