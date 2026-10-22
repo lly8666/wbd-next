@@ -191,13 +191,26 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
-        timeout-minutes: 10
+        timeout-minutes: 22
         run: |
           $ErrorActionPreference='Stop'
           $known=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
           if($known -notmatch 'Ubuntu'){
-            & wsl.exe --install --distribution Ubuntu --no-launch --web-download 2>&1 |
-              Out-File result/wl-public/wsl-install.log
+            # Old WSL Store/network launcher hung until the full product
+            # step timed out. Import real Ubuntu 24.04.5 WSL rootfs directly
+            # from Ubuntu's official release, pinning its published digest.
+            # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
+              Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'actual Ubuntu WSL2 distribution import failed'}
+            $installed=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
           }
           & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
           if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
