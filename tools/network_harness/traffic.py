@@ -70,9 +70,10 @@ def fresh_stats():
 
 
 class Worker:
-    def __init__(self, config, role, local, peer, port, output, start_ns):
+    def __init__(self, config, role, local, peer, port, output, start_ns, peer_port=None):
         self.config, self.role, self.local, self.peer = config, role, local, peer
         self.port, self.output, self.start_ns = port, Path(output), start_ns
+        self.peer_port = port if peer_port is None else peer_port
         self.sel = selectors.DefaultSelector()
         self.phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
         self.ends, elapsed = [], 0
@@ -145,7 +146,7 @@ class Worker:
                     s.bind((self.local, 0))
                     s.settimeout(1)
                     try:
-                        s.connect((self.peer, self.port + 2))
+                        s.connect((self.peer, self.peer_port + 2))
                         self.streams.append(s)
                         break
                     except OSError:
@@ -186,7 +187,7 @@ class Worker:
             return
         if kind == PROBE:
             try:
-                self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.port + 1))
+                self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.peer_port + 1))
             except OSError:
                 self.errors["probe_echo_send_error"] += 1
             return
@@ -339,7 +340,7 @@ class Worker:
                             self.flush_tcp(s, now)
                         else:
                             try:
-                                n = self.udp.sendto(data, (self.peer, self.port))
+                                n = self.udp.sendto(data, (self.peer, self.peer_port))
                                 if n != size:
                                     raise RuntimeError("partial UDP send")
                                 self.seq[proto] += 1
@@ -379,6 +380,7 @@ if __name__ == "__main__":
         ap.add_argument("--" + name, required=True)
     ap.add_argument("--port", type=int, default=45901)
     ap.add_argument("--start-ns", type=int, required=True)
+    ap.add_argument("--peer-port", type=int)
     a = ap.parse_args()
     Worker(json.loads(Path(a.config).read_text()), a.role, a.local, a.peer,
-           a.port, a.output, a.start_ns).run()
+           a.port, a.output, a.start_ns, peer_port=a.peer_port).run()
