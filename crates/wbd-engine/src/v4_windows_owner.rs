@@ -54,6 +54,8 @@ struct Entry {
     peer_mss:u16,
     peer_mss_advertised:bool,
     record_wire_limit:usize,
+    // Real pinned Win32 interface MTU, enrolled after M4 Wintun Hold.
+    path_mtu:u16,
     device:Option<ScopedWindowsWintunIdentity>,
     feature7:bool,
     game_cold:Option<UntrustedColdV4>,
@@ -111,7 +113,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
-        record_wire_limit,device:None,
+        record_wire_limit,path_mtu:0,device:None,
         feature7:handoff.negotiated_features==7,
         game_cold:if handoff.negotiated_features==7{Some(parsed)}else{None},
         game_group:None,
@@ -157,6 +159,34 @@ fn bind_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
     if epoch!=e.authenticated_epoch{return INVALID}
     e.device=Some(ScopedWindowsWintunIdentity{luid,ifindex,quiesced:false});
     OK
+}
+// Control plane only: Go verified this CURRENT Win32 Wintun and reads OS MTU.
+fn set_path_mtu(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,mtu:u16)->Result<u32,i32>{
+    if !(576..=2048).contains(&mtu){return Err(INVALID)}
+    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    if e.phase!=PH_ACTIVE||e.authenticated_epoch!=epoch||
+        !e.device.is_some_and(|d|!d.quiesced&&d.luid==luid&&d.ifindex==ifindex)||
+        e.path_mtu!=0 {return Err(BAD_STAGE)}
+    e.path_mtu=mtu;
+    match normal_off_windows_budget(e){
+        Ok(b) if b.single_business_payload_mtu>=20=>
+            Ok(b.single_business_payload_mtu as u32),
+        _=>{e.path_mtu=0;Err(INVALID)},
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_bind_real_path_mtu(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    mtu:u32,out:*mut u32,
+)->i32{
+    if out.is_null()||mtu>2048{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let Ok(mut registry)=registry().lock()else{return BAD_STAGE};
+    match set_path_mtu(&mut registry,h,exact,luid,ifindex,mtu as u16){
+        Ok(bound)=>{unsafe{out.write(bound)};OK},
+        Err(e)=>e,
+    }
 }
 fn quiesce_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
     let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
@@ -372,11 +402,13 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_mode_capabilities(
 // V3 is deliberately a private RECORD boundary, not a Windows OS Applied
 // decision. The source of the real credentials is the existing original-Go
 // protected callback that issued this handle, never these C bytes alone.
-// The conservative 576-byte link budget must later be replaced by the
-// independently observed live Wintun+carrier MTU before product activation.
+// Real OS pinned Wintun MTU + original Go TLS MSS, shared FrameBudget.
+// No arbitrary conservative 576/512 cap on the live packet path.
 fn normal_off_windows_budget(e:&Entry)->Result<FrameBudget,i32>{
+    if e.path_mtu<576{return Err(INVALID)}
+    let mtu=usize::from(e.path_mtu);
     FrameBudget::derive(FrameBudgetInput{
-        connection_mtu:576,local_packet_mtu:576,
+        connection_mtu:mtu,local_packet_mtu:mtu,
         ipv4_header_len:20,tcp_header_len:20,
         peer_mss:if e.peer_mss_advertised {Some(e.peer_mss)} else {None},
         record_wire_limit:e.record_wire_limit,
@@ -626,6 +658,8 @@ mod tests {
             Err(INVALID)); // cannot seal without real original Wintun bind
         assert_eq!(bind_wintun(&mut r,client,epoch,7,11),OK);
         assert_eq!(bind_wintun(&mut r,server,epoch,8,12),OK);
+        assert!(set_path_mtu(&mut r,client,epoch,7,11,1400).is_ok());
+        assert!(set_path_mtu(&mut r,server,epoch,8,12,1400).is_ok());
         let mut packet=[0u8;40];packet[0]=0x45;packet[2..4].copy_from_slice(&40u16.to_be_bytes());
         packet[8]=64;packet[9]=17;
         let mut encrypted=[0u8;256];
