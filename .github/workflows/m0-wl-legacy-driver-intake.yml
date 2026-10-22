@@ -146,8 +146,16 @@ jobs:
         if: always()
         shell: pwsh
         run: |
+          # The original helper checks the actual NPFInstall.exe ExitCode itself.
+          # Never interpret pwsh's inherited LASTEXITCODE after a PowerShell script.
           & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 | Tee-Object result/wl-driver/npcap-cleanup.log
-          if($LASTEXITCODE -ne 0){throw 'OWNED_NPCAP_DRIVER_CLEANUP_FAILED'}
+          $cleanup=Get-Content result/wl-driver/npcap-cleanup.log -Raw
+          if(-not ($cleanup.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or
+              $cleanup.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))) {
+            throw 'NPCAP_OWNED_CLEANUP_COMPLETION_MISSING'
+          }
+          if(Get-Service -Name npcap -ErrorAction SilentlyContinue) {throw 'NPCAP_SERVICE_STILL_INSTALLED_AFTER_CLEANUP'}
+          Write-Output 'WL_NPCAP_OWNED_CLEANUP_VERIFIED_SERVICE_ABSENT'
       - name: Publish truthful scope
         if: always()
         shell: pwsh
