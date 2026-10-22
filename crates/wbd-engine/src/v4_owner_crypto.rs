@@ -1391,6 +1391,55 @@ impl ProtectedScopedOwner {
         Ok((borrowed.recycle(),report))
     }
 
+    /// Windows M0's SAME original credential-TLS-scoped RX owner admits
+    /// canonical M2 kind1 only AFTER genuine M3 AEAD and UNIQUE replay-PN.
+    /// This does NOT construct a second opener, take Go's TCP ACK as trust,
+    /// or implement repair dispatch. The typed callback must be paired with
+    /// the current tunnel epoch/directional M2 receipt scope by its caller.
+    #[cfg(target_os="windows")]
+    pub(crate) fn drain_windows_authenticated_kind1<F,G>(
+        &mut self,now:MonoNs,storage:Vec<RxPacket>,
+        mut accept_link:F,mut accept_kind1:G,
+    )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
+               (ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,&[u8]), G:FnMut(u64,wbd_codec::Receipt) {
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut borrowed=self.rx_tx.drain_rx(&self.token,now,storage)
+            .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
+        let mut report=AuthenticatedRxReport::default();
+        for packet in borrowed.as_mut_slice(){
+            let Some(rx)=self.crypto.rx.as_mut() else{
+                report.rejected+=1;continue
+            };
+            match rx.open_unique_in_place(packet.wire_mut()){
+                Ok(record) if record.kind==AUTHENTICATED_LINK_KIND=>{
+                    accept_link(record.pn,record.payload);
+                    report.link_ready+=1;
+                },
+                Ok(record) if record.kind==
+                    wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND=>{
+                    if record.payload.len()>512 {
+                        report.rejected+=1;continue
+                    }
+                    match wbd_codec::decode_control(record.payload,512){
+                        Ok(mut items) if items.len()==1=>{
+                            if let wbd_codec::ControlTlv::Receipt(receipt)=items.remove(0){
+                                accept_kind1(record.pn,receipt);
+                                report.control_ready+=1;
+                            } else {report.rejected+=1}
+                        },
+                        _=>report.rejected+=1,
+                    }
+                },
+                Ok(_)=>report.rejected+=1,
+                Err(_)=>report.rejected+=1,
+            }
+        }
+        Ok((borrowed.recycle(),report))
+    }
+
     /// Windows original-Go feature7: the exact SAME original M1 RX owner
     /// and SAME protected M3 replay/AEAD opener admit FEC2 kind2/3.
     /// No independent second PN bitmap is created; callbacks receive only
