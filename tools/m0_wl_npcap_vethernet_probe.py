@@ -48,22 +48,29 @@ def main():
               "linux_to_windows": "NOT_RUN", "windows_to_linux": "NOT_RUN",
               "product_go_tls_rust": "NOT_RUN", "wl_n0_n1_n5": "NOT_RUN"}
     try:
-        adapter = ps_one("$a=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop | "
-                         "Where-Object {$_.Name -match 'WSL' -and $_.InterfaceGuid -ne $null}); "
-                         "if($a.Count -ne 1){throw ('Require ONE WSL vEthernet; found '+$a.Count)}; "
-                         "$a[0] | Select-Object Name,InterfaceGuid,MacAddress,Status | ConvertTo-Json -Compress")
-        if adapter.get("Status") not in ("Up", "Connected"):
-            raise RuntimeError("WSL Windows virtual NIC not UP")
-        guid = str(adapter["InterfaceGuid"]).strip("{}").upper()
-        device = "\\Device\\NPF_{" + guid + "}"
-        win_mac = mac_bytes(adapter["MacAddress"])
+        adapters = ps_one("$a=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop | "
+                          "Where-Object {$_.Name -match 'WSL' -and $_.InterfaceGuid -ne $null}); "
+                          "@($a | Select-Object Name,InterfaceGuid,MacAddress,Status) | ConvertTo-Json -Compress")
+        if isinstance(adapters, dict):
+            adapters = [adapters]
         linux_info = json.loads(wsl_python(
             "import json,subprocess;"
             "x=json.loads(subprocess.check_output(['ip','-j','link','show','dev','eth0']));"
             "assert len(x)==1;print(json.dumps({'mac':x[0]['address']}))"))
         linux_mac = mac_bytes(linux_info["mac"])
-        if win_mac == linux_mac or not linux_mac or win_mac == bytes(6):
-            raise RuntimeError("untrusted WSL/Windows Ethernet MAC binding")
+        candidates = []
+        for adapter in adapters:
+            if adapter.get("Status") not in ("Up", "Connected"):
+                continue
+            try:
+                guid = str(adapter["InterfaceGuid"]).strip("{}").upper()
+                win_mac = mac_bytes(adapter["MacAddress"])
+                if win_mac != linux_mac and win_mac != bytes(6) and guid:
+                    candidates.append(("\\Device\\NPF_{" + guid + "}", win_mac))
+            except (KeyError, ValueError, TypeError):
+                continue
+        if not candidates:
+            raise RuntimeError("no verified live Windows WSL NPF adapter candidate")
         dllpath = os.path.join(os.environ["WINDIR"], "System32", "Npcap", "wpcap.dll")
         if not os.path.isfile(dllpath):
             raise RuntimeError("Npcap official wpcap.dll not installed")
@@ -81,15 +88,10 @@ def main():
         lib.pcap_close.argtypes = [c.c_void_p]
         lib.pcap_close.restype = None
         errbuf = c.create_string_buffer(512)
-        handle = lib.pcap_open_live(device.encode("ascii"), 2048, 1, 100,
-                                    c.cast(errbuf, c.c_void_p))
-        if not handle:
-            raise RuntimeError("native pcap_open_live WSL vEthernet: " + errbuf.value.decode(errors="replace"))
-        try:
-            if lib.pcap_datalink(handle) != 1:
-                raise RuntimeError("physical NPF vEthernet is not DLT_EN10MB")
-            # Linux -> Windows: actual AF_PACKET send, pcap_next_ex in Windows.
-            linux_to_win = """
+        # Never trust a friendly-name count. On hosted Windows WSL can
+        # expose multiple vEthernet adapters: select solely by an observed
+        # Linux AF_PACKET frame traversing that exact real NPF device.
+        linux_to_win = """
 import socket,sys
 dst=bytes.fromhex(sys.argv[1]);src=bytes.fromhex(sys.argv[2])
 mark=bytes.fromhex(sys.argv[3])
@@ -98,26 +100,48 @@ n=s.send(dst+src+bytes.fromhex('88b5')+mark)
 assert n==14+len(mark), (n,len(mark))
 print('LINUX_RAW_ETHERNET_SENT='+str(n))
 """
-            print(wsl_python(linux_to_win, win_mac.hex(), linux_mac.hex(), MARK.hex(), timeout=25).strip())
-            until = time.monotonic() + 7
-            got = False
-            header = c.c_void_p()
-            payload = c.c_void_p()
-            while time.monotonic() < until:
-                rc = lib.pcap_next_ex(handle, c.byref(header), c.byref(payload))
-                if rc == 0:
+        handle = None
+        win_mac = None
+        for device, candidate_mac in candidates[:8]:
+            trial = lib.pcap_open_live(device.encode("ascii"), 2048, 1, 100,
+                                       c.cast(errbuf, c.c_void_p))
+            if not trial:
+                print("WL_NPF_CANDIDATE_OPEN_FAILED: "+errbuf.value.decode(errors="replace"))
+                continue
+            found = False
+            try:
+                if lib.pcap_datalink(trial) != 1:
                     continue
-                if rc != 1:
-                    raise RuntimeError("native pcap_next_ex error=" + str(rc))
-                caplen = c.c_uint32.from_address(header.value+8).value
-                if caplen < 14 or caplen > 2048:
-                    continue
-                wire = c.string_at(payload.value, caplen)
-                if wire[:6] == win_mac and wire[6:12] == linux_mac and wire[12:14] == ETHTYPE and wire[14:] == MARK:
-                    got = True
-                    break
-            if not got:
-                raise RuntimeError("native Windows pcap did not capture authentic WSL2 AF_PACKET frame")
+                print(wsl_python(linux_to_win,candidate_mac.hex(),linux_mac.hex(),
+                                 MARK.hex(),timeout=25).strip())
+                until = time.monotonic() + 5
+                header = c.c_void_p()
+                payload = c.c_void_p()
+                while time.monotonic() < until:
+                    rc = lib.pcap_next_ex(trial, c.byref(header), c.byref(payload))
+                    if rc == 0:
+                        continue
+                    if rc != 1:
+                        break
+                    caplen = c.c_uint32.from_address(header.value+8).value
+                    if caplen < 14 or caplen > 2048:
+                        continue
+                    wire = c.string_at(payload.value, caplen)
+                    if (wire[:6] == candidate_mac and wire[6:12] == linux_mac
+                            and wire[12:14] == ETHTYPE and wire[14:] == MARK):
+                        found = True
+                        break
+            finally:
+                if not found:
+                    lib.pcap_close(trial)
+            if found:
+                handle = trial
+                win_mac = candidate_mac
+                status["windows_npf_device_chosen_from"] = len(candidates)
+                break
+        if not handle:
+            raise RuntimeError("none of the live WSL NPF adapters observed real Linux AF_PACKET frame")
+        try:
             status["linux_to_windows"] = "PASS_REAL_LINUX_AF_PACKET_TO_WINDOWS_NPF"
             # Windows -> Linux: reverse receives on real Linux packet socket.
             python_rx = """
