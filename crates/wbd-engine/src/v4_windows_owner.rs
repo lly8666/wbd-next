@@ -181,9 +181,16 @@ fn set_path_mtu(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
         !e.device.is_some_and(|d|!d.quiesced&&d.luid==luid&&d.ifindex==ifindex)||
         e.path_mtu!=0 {return Err(BAD_STAGE)}
     e.path_mtu=mtu;
-    match normal_off_windows_budget(&e){
-        Ok(b) if b.single_business_payload_mtu>=20=>
-            Ok(b.single_business_payload_mtu as u32),
+    // Feature7 must reserve enough room for BOTH canonical FEC2
+    // 10B source and 12B+2B protected-symbol repair, never return the
+    // larger Normal/off packet ceiling and fail in the live seal path.
+    let business=normal_off_windows_budget(&e).ok().and_then(|b|
+        if e.feature7 {
+            b.record_payload_mtu.checked_sub(wbd_codec::fec_v2::RECORD_RESERVATION)
+        }else{Some(b.single_business_payload_mtu)}
+    );
+    match business {
+        Some(n) if n>=20=>Ok(n as u32),
         _=>{e.path_mtu=0;Err(INVALID)},
     }
 }

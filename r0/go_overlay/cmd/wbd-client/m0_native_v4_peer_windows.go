@@ -171,7 +171,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if p.mode==m0WinModeNormal {
   ciphertext,seq,_,err=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
  }else{
-  if n>p.maxIPv4-10||p.blockID==0||p.blockID==^uint64(0){
+  if n>p.maxIPv4||p.blockID==0||p.blockID==^uint64(0){
    p.mu.Lock();p.oversize++;p.mu.Unlock()
    return true,nil
   }
@@ -208,7 +208,9 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  }
  p.observePeerACK(seg.Ack)
  if len(seg.Payload)==0{return nil}
- if len(seg.Payload)<51||len(seg.Payload)>p.maxIPv4+31{
+ maxWire:=p.maxIPv4+31
+ if p.mode!=m0WinModeNormal{maxWire+=14}
+ if len(seg.Payload)<51||len(seg.Payload)>maxWire{
   p.mu.Lock();p.oversize++;p.mu.Unlock()
   return nil
  }

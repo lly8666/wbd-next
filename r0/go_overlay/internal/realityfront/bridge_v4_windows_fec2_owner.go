@@ -68,7 +68,7 @@ func V4WindowsEstablishOriginalFEC2ServerOwner(
  return &V4WindowsAuthenticatedServerOwner{bridge:b},session,nil
 }
 func winFec2Source(blockID uint64,index uint8,ipv4 []byte,maxBudget int)([]byte,error){
- if blockID==0||index>=16||maxBudget<30||len(ipv4)<20||len(ipv4)>maxBudget-10||
+ if blockID==0||index>=16||maxBudget<20||len(ipv4)<20||len(ipv4)>maxBudget||
   ipv4[0]>>4!=4||ipv4[0]&15<5{return nil,errV4WindowsOwner}
  out:=make([]byte,10+len(ipv4))
  binary.BigEndian.PutUint64(out[:8],blockID)
@@ -80,7 +80,7 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,kind uint32,symbol []byte,
 )([]byte,uint32,uint64,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  (kind!=2&&kind!=3)||len(symbol)<10||len(symbol)>device.maxIPv4{
+  (kind!=2&&kind!=3)||len(symbol)<10||len(symbol)>device.maxIPv4+14{
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
@@ -108,7 +108,7 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  len(wire)<=31||len(wire)>device.maxIPv4+31{return nil,errV4WindowsOwner}
+  len(wire)<=31||len(wire)>device.maxIPv4+14+31{return nil,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return nil,err}
  if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
   return nil,errors.Join(errV4WindowsOwner,err)
@@ -163,7 +163,7 @@ func(s *V4WindowsAuthenticatedClientOwner) EncodeBoundOriginalFEC2Repair(
  slots:=make([]byte,2048*len(frames))
  lengths:=make([]uint32,len(frames))
  for i,frame:=range frames{
-  if len(frame)<20||len(frame)>s.device.maxIPv4-14||
+  if len(frame)<20||len(frame)>s.device.maxIPv4||
    frame[0]>>4!=4||frame[0]&15<5{return nil,errV4WindowsOwner}
   copy(slots[i*2048:],frame)
   lengths[i]=uint32(len(frame))
@@ -179,7 +179,7 @@ func(s *V4WindowsAuthenticatedClientOwner) EncodeBoundOriginalFEC2Repair(
   uintptr(len(buffer)),uintptr(unsafe.Pointer(&used)))
  runtime.KeepAlive(s.bridge.epoch);runtime.KeepAlive(slots)
  runtime.KeepAlive(lengths);runtime.KeepAlive(buffer)
- if err!=nil||used<34||used>uintptr(s.device.maxIPv4){
+ if err!=nil||used<34||used>uintptr(s.device.maxIPv4+14){
   return nil,errors.Join(errV4WindowsOwner,err)
  }
  return buffer[:used],nil
