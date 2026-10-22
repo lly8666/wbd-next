@@ -187,14 +187,6 @@ jobs:
           print("WL_GENUINE_LINUX_PUBLIC_BINARIES_SOURCE_LOCKED")
           '@ | python -
           if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
-      - name: Linux original FakeTCP server owned RST suppression for actual raw eth0
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
-          if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
-          & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
-          if($LASTEXITCODE -ne 0){throw 'Linux public raw FakeTCP RST suppression failed'}
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
         timeout-minutes: 10
@@ -207,6 +199,10 @@ jobs:
           }
           & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
           if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
+          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+          if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+          & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
+          if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
           & python tools/m0_wl_public_normal_e2e.py 2>&1 |
             Tee-Object result/wl-public/direct-full.log
           if($LASTEXITCODE -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
