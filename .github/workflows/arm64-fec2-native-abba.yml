@@ -29,6 +29,10 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/isa-l-arm64-fec" rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
           export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
           export WBD_ISAL_PREFIX="$RUNNER_TEMP/isal-arm64-abba"
+          # A new Actions step is a new shell: persist the exact pinned
+          # archive path and SHA for the actual timed run, fail-closed.
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >>"$GITHUB_ENV"
+          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >>"$GITHUB_ENV"
           (cd "$RUNNER_TEMP/isa-l-arm64-fec" && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
           test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
           nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
