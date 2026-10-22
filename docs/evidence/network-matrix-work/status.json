@@ -27,13 +27,17 @@
     {
       "id": "arm64-fixed30-real-TCP-INFO-FEC-RX-proof-S024",
       "type": "ONE_PRODUCT_PERFORMANCE_ACTION",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED_OR_RUNNING",
       "trigger": "one changed tests/network/request.json push; DO NOT manual workflow_dispatch",
       "source": "370eb534621d76deda7888599bd089acc163acac",
       "build_run": 39783512063,
       "artifact_id": 12427229903,
       "harness_contract": 39786357898,
-      "description": "S022 exact 2Mbps/direction 50/50 UDP/TCP 4 flows, 30% IID, RTT600ms 120s +15s warmup/30s drain; compare genuine kernel TCP_INFO aggregate at four snapshots and original M3 FEC/TUN/M2; no source/acceptance change"
+      "description": "S022 exact 2Mbps/direction 50/50 UDP/TCP 4 flows, 30% IID, RTT600ms 120s +15s warmup/30s drain; compare genuine kernel TCP_INFO aggregate at four snapshots and original M3 FEC/TUN/M2; no source/acceptance change",
+      "run_id": 39788742492,
+      "attempt": 1,
+      "harness_source": "230231140cbb0500dc870e6ea61d652b0a1e94e5",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39788742492"
     }
   ],
   "recent_evidence": [
@@ -136,7 +140,7 @@
     "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence"
   ],
-  "next_action": "Resolve unique S024 performance run ID from request push, avoid duplicate. Retrieve artifact and compare tcp_kernel_progress in warmup/before-steady/end/drain with product FEC RX recovered/TUN and original M2, actual UDP/TCP application and Stop. If sockets have no bytes_acked vs large notsent/unacked, isolate kernel TCP receive; if bytes advance but generator counts zero, inspect app traffic/generator nonblocking send. Preserve S022 FAIL, S018 default-off PASS.",
+  "next_action": "S024 true Fixed30 original product Action 39788742492 queued/running, contract 39788742607. Do not dispatch duplicate. Inspect aggregate kernel TCP_INFO bytes_sent/acked/unsent/unacked/cwnd/retrans in four snapshots and business TCP framing/backpressure; retain 30pct netem, FEC true RX/TUN, M2 mode and Stop. Separate app full frame completion from kernel partial nonblocking writes.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",
