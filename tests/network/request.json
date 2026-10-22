@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "arm64-off-lossless90-arena512-vs-expiryguard-S018",
+  "id": "arm64-fixed30-original-M2-proof-and-tcp-state-S020",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
-    "mode": "normal",
-    "fec_profile": 1
+    "mode": "fec-fixed",
+    "fec_profile": 6
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
     "udp_share": 0.5,
     "sizes": [
       [
@@ -31,7 +31,7 @@
     ],
     "tcp_flows": 4,
     "probe_hz": 20,
-    "deadline_ms": 1000,
+    "deadline_ms": 3000,
     "max_packets": 20000000
   },
   "network": {
@@ -41,41 +41,33 @@
     "netem_rng": "unseeded_recorded"
   },
   "warmup_s": 15,
-  "drain_s": 15,
+  "drain_s": 30,
   "phases": [
     {
       "name": "steady",
-      "seconds": 90,
+      "seconds": 120,
       "c2s": {
-        "delay_ms": 0,
-        "loss_pct": 0
+        "delay_ms": 300,
+        "loss_pct": 30
       },
       "s2c": {
-        "delay_ms": 0,
-        "loss_pct": 0
+        "delay_ms": 300,
+        "loss_pct": 30
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0.1,
     "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
-      "run_id": 39775271407,
+      "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
+      "run_id": 39780156107,
       "attempt": 1,
-      "artifact_id": 12424665752,
-      "sha256": "c73b11e5801661399636827c7d6e590bbfd4ae6e3d78e771f2e8c9dfdbe4b1dd"
-    },
-    "B": {
-      "source": "66838c313ff9def6d4febedb61a018c372986154",
-      "run_id": 39776576033,
-      "attempt": 1,
-      "artifact_id": 12424288230,
-      "sha256": "9c552ef75a6f94ad86c2b1db98fefd71df0d946010fd15a81cbbb7e75f43a559"
+      "artifact_id": 12426721086,
+      "sha256": "725e00e1bfe440a890034359d36f8de27fe634bd988e8533f01a13a8bbaf8dc8"
     }
   },
-  "order": "AB"
+  "order": "A"
 }

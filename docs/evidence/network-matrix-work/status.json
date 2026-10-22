@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S019-public-original-M2-readonly-coverage-build",
+  "phase": "S020-Fixed30-real-M2-coverage-tcp-connect-diagnostic",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,23 +25,14 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S019-original-M2-coverage-build",
-      "type": "PRODUCT_SOURCE_BUILD",
-      "status": "IN_PROGRESS",
-      "trigger": "one r0/go_overlay/internal/realityfront source push starts one ARM64 original Go/Rust build; no manual dispatch",
-      "scope": "read-only original Rust M2 first-send and authenticated reverse coverage; no FEC protocol, release/Stop, crypto, maturity gate or TCP behavior change",
-      "run_id": 39780156107,
-      "attempt": 1,
-      "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39780156107"
-    },
-    {
-      "id": "S019-M2-proof-harness-contract",
-      "type": "HARNESS_CONTRACT_ONLY",
+      "id": "arm64-fixed30-original-M2-proof-and-tcp-state-S020",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "trigger": "push tools/network_harness/runner.py; not a performance measurement",
-      "source": "SELF_COMMIT_AFTER_PUSH",
-      "coverage": "real numeric Go M2 proof parser rejects missing/invalid and TCP socket states aggregate only"
+      "type": "ONE_TRUE_FIXED30_DIAGNOSTIC",
+      "trigger": "single changed request.json push starts one performance Action; do not manual dispatch",
+      "request_path": "tests/network/request.json",
+      "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
+      "artifact_id": 12426721086,
+      "scenario": "S017 B exact Fixed Maximum 2Mbps/direction 50/50 UDP/TCP four flows 30pct IID 300ms one-way 120s measurement; read only original M2 covered/unknown/AEAD reverse and TCP socket state counts"
     }
   ],
   "recent_evidence": [
@@ -105,6 +96,19 @@
       "result": "PASS_BOTH_DEFAULT_OFF_AB",
       "run": 39778358622,
       "file": "S018-default-off-AB-pass.json"
+    },
+    {
+      "id": "S019-build",
+      "result": "success",
+      "run": 39780156107,
+      "artifact_id": 12426721086,
+      "file": "S019-native-original-M2-build.json"
+    },
+    {
+      "id": "S019-contract",
+      "result": "success",
+      "run": 39780496810,
+      "file": "S019-native-original-M2-build.json"
     }
   ],
   "open_issues": [
@@ -115,13 +119,14 @@
     "S015 confirmed FEC arena 128→512 eliminates ~5k/18k source/parity NoCapacity each side and improves actual UDP; old/new both FAIL under 30% IID; B still 2 application duplicates, client Fixed pending, TCP no delivery.",
     "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next."
   ],
-  "next_action": "S019 product ARM64 builder39780156107 in progress; native numeric M2 proof contract one push pending. Do not dispatch twice. After product verified, one unchanged Fixed30 high-loss source-locked real business diagnostic with explicit accepted/unknown/covered/auth reverse + TCP socket state before/after, keep hard gates. S017 FAIL and S018 PASS remain.",
+  "next_action": "Resolve exactly one S020 Actions run created by this request JSON push, no repeat dispatch. Collect original proof marker and TCP state snapshots with FEC readback/duplicate/TCP/Stop, diagnose client pending: missing auth reverse vs unknown/uncovered vs quiescent. Missing marker NOT_OBSERVED; do not weaken mature M2 gate. S017 overall FAIL, S018 default PASS remain.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "66838c313ff9def6d4febedb61a018c372986154",
-    "run_id": 39776576033,
-    "artifact_id": 12424288230,
-    "zip_sha256": "9c552ef75a6f94ad86c2b1db98fefd71df0d946010fd15a81cbbb7e75f43a559",
-    "build_status": "success"
+    "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
+    "run_id": 39780156107,
+    "artifact_id": 12426721086,
+    "zip_sha256": "725e00e1bfe440a890034359d36f8de27fe634bd988e8533f01a13a8bbaf8dc8",
+    "build_status": "success",
+    "manifest_sha256": "e6817df9b7fff8db8ec00149f35bdd3dbaf4fb163509534f42e87f889f39b3b1"
   }
 }
