@@ -2795,6 +2795,10 @@ struct LoopCounts {
     fec_rx:[AtomicU64;11],
     #[cfg(feature="fec2_product_record")]
     fec_rx_ip:[AtomicU64;8],
+    // Genuine M1 TUN intake: read IPv4, small owner loan, owner
+    // NoCapacity, jumbo, rejected. No packet contents or endpoint logs.
+    #[cfg(feature="fec2_product_record")]
+    fec_m1_ingress:[AtomicU64;5],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -3333,7 +3337,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     actual_firstsend:&mut Vec<(wbd_types::RecordPn,u64)>,
     events:&wbd_platform::linux_route_events::RouteEvents,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
-    active_jumbo:&mut Option<PendingOriginalJumbo>)->Result<TxTurnCompletion,i32>{
+    active_jumbo:&mut Option<PendingOriginalJumbo>,
+    #[cfg(feature="fec2_product_record")]
+    ingress:&LoopCounts,
+    #[cfg(feature="fec2_product_record")]
+    fec_ingress_on:bool
+)->Result<TxTurnCompletion,i32>{
     // The caller has ALREADY polled the first TUN packet. Never wait for
     // batch fill: one sparse packet is sealed/submitted immediately.
     // The stack-owned vectors are reserved once per worker (not per DATA).
@@ -3385,7 +3394,15 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         match read {
             Ok(batch)=>match batch.entry(0) {
                 Some(TunReadyEntry::UntrustedIpv4{len})=>{
+                    #[cfg(feature="fec2_product_record")]
+                    if fec_ingress_on{
+                        ingress.fec_m1_ingress[0].fetch_add(1,Ordering::Relaxed);
+                    }
                     if len>M0_SMALL_ARENA_PAYLOAD {
+                        #[cfg(feature="fec2_product_record")]
+                        if fec_ingress_on{
+                            ingress.fec_m1_ingress[3].fetch_add(1,Ordering::Relaxed);
+                        }
                         jumbo_queue.push_back(jumbo_read[..len].to_vec());
                     }else{
                         let slab={
@@ -3398,12 +3415,27 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                                 slot.writable()[14..14+len]
                                     .copy_from_slice(&jumbo_read[..len]);
                                 pending.push((slot,len));
+                                #[cfg(feature="fec2_product_record")]
+                                if fec_ingress_on{
+                                    ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
+                                }
                             }
-                            Err(_)=>{ingress_error=true;break}
+                            Err(_)=>{
+                                #[cfg(feature="fec2_product_record")]
+                                if fec_ingress_on{
+                                    ingress.fec_m1_ingress[2].fetch_add(1,Ordering::Relaxed);
+                                }
+                                ingress_error=true;break
+                            }
                         }
                     }
                 }
-                Some(TunReadyEntry::Rejected)=>{},
+                Some(TunReadyEntry::Rejected)=>{
+                    #[cfg(feature="fec2_product_record")]
+                    if fec_ingress_on{
+                        ingress.fec_m1_ingress[4].fetch_add(1,Ordering::Relaxed);
+                    }
+                },
                 _=>break, // EAGAIN, EINTR or readiness race: healthy idle
             },
             Err(TunError::Stopped)=>return Err(BAD_STAGE),
@@ -4186,6 +4218,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let generation=e.generation;
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
+    #[cfg(feature="fec2_product_record")]
+    let fec_ingress_on=e.protected_features==7 &&
+        (e.fixed_pending.is_some()||e.fixed_applied.is_some());
     let stop_rx=Arc::clone(&shutdown);
     let stats_rx=Arc::clone(&stats);
     let raw_for_rx=Arc::clone(&raw);
@@ -4273,7 +4308,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
                     &mut tx_pending,&mut tx_records,&mut tx_presentations,
-                    &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo
+                    &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
+                    #[cfg(feature="fec2_product_record")]
+                    &stats,
+                    #[cfg(feature="fec2_product_record")]
+                    fec_ingress_on
                 ){
                     Ok(done)=>{
                         stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
@@ -4603,6 +4642,28 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_proof(
     }
     OK
 }
+// Read-only original M1 TUN intake evidence. This observes packet ownership
+// BEFORE FEC source staging and distinguishes genuine post-read NoCapacity.
+// No second device reader, data sampling or changed forwarding semantics.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_m1_ingress(
+    h:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=5{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||e.protected_features!=7{
+        return BAD_STAGE
+    }
+    for (i,counter) in e.counters.fec_m1_ingress.iter().enumerate(){
+        unsafe{out.add(i).write(counter.load(Ordering::Relaxed))};
+    }
+    OK
+}
+
 // Read-only FEC M3→M4 IP class numbers from original copied packets.
 // Private feature7 owner, exact 8 fields. Does not alter admission or TUN.
 #[cfg(all(feature="fec2_product_record",target_os="linux",

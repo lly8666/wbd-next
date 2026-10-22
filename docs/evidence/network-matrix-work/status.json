@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S027-focused-original-M1-TUN-ingress-accounting",
+  "phase": "S027-original-M1-TUN-prestage-owner-acceptance-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,16 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S027-original-M1-ingress-numeric-build",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "ONE_PRODUCT_SOURCE_BUILD",
+      "trigger": "only branch push to original Rust/Go source starts one ARM64 build; do not workflow_dispatch",
+      "previous_source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+      "scope": "real M1 read IPv4/small loan/prestage arena fail/jumbo/read reject 5 bounded counters; feature7-only, no buffer or retry or security change"
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S017",
@@ -125,7 +134,7 @@
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "S026 action 39793159261 FAIL archived. Source-review original background_tun_once genuine TUN M1 read->small arena allocate->original_fixed_stage_source. Add minimal per-session native counts for TUN read, pre-stage arena failure and source enqueued (plus read rejects), real Go numeric pre-Stop entry; one new ARM64 exact SOURCE build, then one targeted Fixed30 to account ~7k TUN outgoing-vs-FEC received gap without guessing. Do not resize buffers or weaken M2. Existing S018 default PASS; S024/S026 FAIL.",
+  "next_action": "Resolve exactly one S027 ARM64 native original Go/Rust build Action plus harness parser contract. Verify compile/source/ISA and 3 native units and ELF/hash. Then pin actual new artifact and run one S028 original 2Mbps/dir Fixed30 real business to reconcile M1 tun_read_ipv4, small_loaned, small_arena_fail, jumbo, rejected with existing FEC accepted/source arena and IP kernel InDatagrams; do not repeat S026 or bump memory by guess. Preserve S026 FAIL, S018 default PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",

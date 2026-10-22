@@ -28,10 +28,28 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+
+
+def public_fec_m1_ingress(log_text):
+    """True native pre-stage TUN receipt counts, never imply source delivery."""
+    fields=("read_ipv4","small_loaned","small_arena_fail","jumbo","rejected")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M1_INGRESS role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in values for k in fields):
+        return None
+    # Worker atomics are observed concurrently (not a transaction);
+    # bounded one-turn in-flight counts may differ by <=32.
+    done=(values["small_loaned"]+values["small_arena_fail"]+values["jumbo"])
+    if abs(values["read_ipv4"]-done)>32:
+        return None
+    return {k:values[k] for k in fields}
 
 
 def public_fec_rx_ip_class(log_text):
@@ -457,6 +475,7 @@ class LinuxExperiment:
         fec_m2 = {role:public_fec_m2_proof(log) for role,log in logs.items()}
         fec_rx = {role:public_fec_rx_proof(log) for role,log in logs.items()}
         fec_ip = {role:public_fec_rx_ip_class(log) for role,log in logs.items()}
+        fec_m1 = {role:public_fec_m1_ingress(log) for role,log in logs.items()}
         fec_class_valid = all(fec_ip[role] is not None and fec_rx[role] is not None and
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
@@ -467,6 +486,7 @@ class LinuxExperiment:
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
                 "original_fec_rx_ipv4_classes": fec_ip if fec_class_valid else "NOT_OBSERVED",
+                "original_fec_m1_tun_ingress": fec_m1 if all(v is not None for v in fec_m1.values()) else "NOT_OBSERVED",
                 "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
                 "FEC_k_r_parity_queue_decode": {

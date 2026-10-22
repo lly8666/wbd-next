@@ -48,6 +48,12 @@ type V4PublicFecRxProof struct {
 }
 // Original authenticated M3 FEC first-delivery bytes classified ONLY after
 // real TUN copied; does not include application receipt or raw packet data.
+// Real original M1 TUN read before product FEC source staging. Five bounded
+// event counts; cumulative and sampled without packet contents or addresses.
+type V4PublicFecM1Ingress struct {
+    ReadIPv4,SmallLoaned,SmallArenaFail,Jumbo,Rejected uint64
+}
+
 type V4PublicFecRxIpClass struct {
     SystematicUDP,RecoveredUDP,SystematicTCP,RecoveredTCP uint64
     OtherIP,TCPAckOnly,TCPData,TCPOther uint64

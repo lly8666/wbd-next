@@ -169,6 +169,17 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_original_fec_m1_tun_ingress_real_numeric_contract(self):
+        from tools.network_harness.runner import public_fec_m1_ingress,product_marker_line
+        row=("V4_PUBLIC_FEC2_M1_INGRESS role=client read_ipv4=1200 "
+             "small_loaned=1170 small_arena_fail=28 jumbo=2 rejected=5")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m1_ingress(row)["small_arena_fail"],28)
+        self.assertIsNone(public_fec_m1_ingress(""))
+        self.assertIsNone(public_fec_m1_ingress(row.replace("read_ipv4=1200","read_ipv4=20")))
+        self.assertIsNone(public_fec_m1_ingress(row.replace("small_loaned=1170","bad_loan=1170")))
+        self.assertEqual(public_fec_m1_ingress(row.replace("read_ipv4=1200","read_ipv4=1199"))["read_ipv4"],1199)
+
     def test_original_m4_ipv4_packet_class_proof_not_business_goodput(self):
         from tools.network_harness.runner import public_fec_rx_ip_class,product_marker_line
         line=("V4_PUBLIC_FEC2_RX_IP_CLASS role=client sys_udp=12 rec_udp=8 "
