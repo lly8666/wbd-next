@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed30-original-M1-TUN-ingress-S028",
+  "id": "arm64-fixed30-original-M1-postloan-stage-S030",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -62,11 +62,11 @@
   },
   "bundles": {
     "A": {
-      "source": "146f81ff70f49c0521dbc959beac5013219a8244",
-      "run_id": 39799604748,
+      "source": "2476b22f748a686907edfb995431a2b236ccebaa",
+      "run_id": 39803921701,
       "attempt": 1,
-      "artifact_id": 12435082262,
-      "sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705"
+      "artifact_id": 12436752126,
+      "sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219"
     }
   },
   "order": "A"

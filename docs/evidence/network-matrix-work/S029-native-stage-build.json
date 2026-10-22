@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "kind": "S029_REALELF_SOURCE_BUILD_AND_HARNESS_CONTRACT",
+  "result": "BUILD_PASS_ONLY",
+  "build": {
+    "run_id": 39803921701,
+    "attempt": 1,
+    "source": "2476b22f748a686907edfb995431a2b236ccebaa",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39803921701",
+    "artifact_id": 12436752126,
+    "artifact_zip_sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219",
+    "github_digest_sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219",
+    "manifest_sha256": "8f800aa83b28f0ff0216241f683b5905be98a6c7b57ed27ae58316a95a24d12f",
+    "arch": "aarch64",
+    "elf_machine": 183,
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "hashes": {
+      "wbd-v4-client": "72a9242e892951f683592768cf15c44bde73fbde2bae607c867c1e5e900d8772",
+      "wbd-v4-server": "1f46bce2a3447de7cfd4fd4793d5830051f0b94cdb3c3affb5cc7bd1edaec8db",
+      "libwbd_engine.so": "bd3c9632a224820d4fffee113fb8c0ff889904aaca6a48ba4586e3f9008d2608"
+    },
+    "sha256sums_match": true,
+    "real_application_network": "NOT_RUN_BUILD_ONLY",
+    "native_accel_dispatch": "NOT_OBSERVED"
+  },
+  "harness_contract": {
+    "run_id": 39803921828,
+    "conclusion": "success",
+    "test": "6-field bounded postloan real owner numeric parser, missing and inconsistent markers rejected, prior contracts retained"
+  },
+  "previous_failure_ref": "S028-M1-TUN-loan-accounting-fail.json"
+}

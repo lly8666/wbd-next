@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S029-original-FEC-M1-postloan-stage-numeric-build",
+  "phase": "S030-real-Fixed30-original-postloan-stage-diagnosis",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,34 +25,18 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S029-original-Fixed-TUN-postloan-stage-builder",
-      "type": "ONE_NEW_SOURCE_ARM64_PRODUCT_BUILD",
-      "status": "IN_PROGRESS",
-      "trigger": "one push Rust+Go stage marker (not manual dispatch)",
-      "previous_build_source": "146f81ff70f49c0521dbc959beac5013219a8244",
-      "scope": "feature7-only six integer stage outcome counts: attempted/enqueued/notready/error/over_budget/mode_gap, no changes to MTU, FEC, encryption, memory, admission or Stop",
-      "associated_harness_contract": "push tools/network_harness/runner.py and tests/network/test_harness.py triggers one separate contract Action",
-      "run_id": 39803921701,
-      "attempt": 1,
-      "source": "2476b22f748a686907edfb995431a2b236ccebaa",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39803921701",
-      "harness_contract_run_id": 39803921828
+      "id": "arm64-fixed30-original-M1-postloan-stage-S030",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "SINGLE_ONE_JOB_ONE_SCENARIO_PERFORMANCE_ACTION",
+      "trigger": "ONE changed request.json push only; do not manual dispatch",
+      "product_source": "2476b22f748a686907edfb995431a2b236ccebaa",
+      "build_run": 39803921701,
+      "artifact_id": 12436752126,
+      "scenario": "S028 exact Fixed Maximum profile6 30pct IID 300ms one way 2Mbps/direction mixed UDP/TCP four flows, 15s warmup 120s steady 30s drain",
+      "observations": "six authentic M1 stage counts, 5 genuine TUN reader counts, original FEC owner accepted and failure reasons, mode applied, TCP ACKs and duplicate/Stop"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S021-contract",
-      "result": "success",
-      "run": 39783756480,
-      "file": "S021-native-RX-proof-build.json"
-    },
-    {
-      "id": "S022",
-      "result": "FAIL_REAL_FEC_RX_RECOVERY_PROVEN",
-      "run": 39784149202,
-      "artifact_id": 12427433885,
-      "file": "S022-genuine-RX-parity-recovered-TUN-Fail.json"
-    },
     {
       "id": "S023-contract",
       "result": "success",
@@ -123,6 +107,19 @@
       "result": "success",
       "run": 39801548948,
       "file": "S028-M1-TUN-loan-accounting-fail.json"
+    },
+    {
+      "id": "S029-build",
+      "run": 39803921701,
+      "result": "success",
+      "artifact_id": 12436752126,
+      "file": "S029-native-stage-build.json"
+    },
+    {
+      "id": "S029-contract",
+      "run": 39803921828,
+      "result": "success",
+      "file": "S029-native-stage-build.json"
     }
   ],
   "open_issues": [
@@ -137,14 +134,13 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "S029 exact SOURCE 2476b22f748a686907edfb995431a2b236ccebaa ARM64 native product build Action 39803921701 + harness contract 39803921828 IN_PROGRESS; DO NOT redispatch. Verify build and six numeric stage counters parser, digest/manifest/ELF; then one original Fixed30 S030 exact high-loss. S028 source M1 early arena 24/42 disproved root; measure oversize callback post-loan before any mechanism/MTU change.",
+  "next_action": "Find exactly one S030 performance Action run ID spawned by this request push. DO NOT redispatch. Compare authentic M1 read/loan/stage attempted and over_budget/Err/Ok(true)/Ok(false)/mode_gap to FEC ClassStats accepted, and real TCP stall plus UDP/Stop. If thousands of over_budget confirmed, inspect true route budget vs inner TUN MTU and select minimal correct product MSS/fragmentation fix without compromising MTU, rather than expand arena or relax hard modes. S028 overall FAIL and S018 default off AB PASS stand.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "146f81ff70f49c0521dbc959beac5013219a8244",
-    "run_id": 39799604748,
-    "attempt": 1,
-    "artifact_id": 12435082262,
-    "zip_sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705",
+    "source": "2476b22f748a686907edfb995431a2b236ccebaa",
+    "run_id": 39803921701,
+    "artifact_id": 12436752126,
+    "zip_sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219",
     "arch": "aarch64",
     "build_status": "success"
   }
