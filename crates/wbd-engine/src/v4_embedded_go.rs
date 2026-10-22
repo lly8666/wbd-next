@@ -570,7 +570,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         fec2_probe_pending_policy:None,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
-        wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
+        wire_limit:if server_side{data.identity().server_limit}else{data.identity().client_limit},
+        staged_count:0,staged_bytes:0,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         flow:handoff.flow,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]

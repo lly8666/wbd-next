@@ -20,7 +20,7 @@ struct Lane{key:LaneKey,tx:LaneTxCrypto,rx:ReplayProtectedLaneRx}
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Crypto,Game(GameError)}
 pub struct GameAdapter{
     tx:GameTx,rx:GameRx,rx_scope:GameScope,
-    lanes:Vec<Lane>,arena:Arena,stopped:bool
+    lanes:Vec<Lane>,arena:Arena,stopped:bool,inner_mtu:usize
 }
 impl GameAdapter{
     /// Caller MUST independently check Go TLS feature, KDF, lane owner and
@@ -33,6 +33,7 @@ impl GameAdapter{
             tx_scope.epoch==[0;16]{return Err(Error::Unauthorized)}
         let mut infos=Vec::new();let mut lanes=Vec::new();
         let mut identities=Vec::new();
+        let mut inner_mtu=2048usize;
         for m in materials {
             if m.lane.key.tunnel!=tx_scope.tunnel||
                 m.lane.key.generation==0||
@@ -43,6 +44,9 @@ impl GameAdapter{
                 return Err(Error::Unauthorized)
             }
             identities.push((m.lane.key,m.tx.aead_key,m.tx.iv,m.tx.hp_key));
+            // Record31 + logical Game16. This also keeps the 14B arena
+            // prefix within the existing2048 slab; no larger hot allocation.
+            inner_mtu=inner_mtu.min(m.lane.mss-31-16);
             let tx=LaneTxCrypto::new_for_suite(m.tx,m.lane.mss,suite)
                 .map_err(|_|Error::Crypto)?;
             let rx=ReplayProtectedLaneRx::new_for_suite(m.rx,m.lane.mss,
@@ -63,7 +67,7 @@ impl GameAdapter{
         }).ok_or(Error::Invalid)?;
         let arena=Arena::new(905,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
-        Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false})
+        Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false,inner_mtu})
     }
     /// The only prospective Go TLS→Game adapter construction boundary.
     /// The Go caller MUST have run its private 2/4 original TLS ColdSnapshot
@@ -140,11 +144,12 @@ impl GameAdapter{
         Self::new(tx_scope,rx_scope,material,suite)
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
+    pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
     pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
         if self.stopped{return Err(Error::Stopped)}
-        if data.is_empty()||data.len()>1200{return Err(Error::Invalid)}
+        if data.is_empty()||data.len()>self.inner_mtu{return Err(Error::Invalid)}
         let id=self.tx.next_packet().ok_or(Error::Stopped)?;
-        let packet=wbd_codec::encode_game(id,data,1216).map_err(|_|Error::Invalid)?;
+        let packet=wbd_codec::encode_game(id,data,self.inner_mtu+16).map_err(|_|Error::Invalid)?;
         let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
         let end=14+packet.len();
         slab.writable()[14..end].copy_from_slice(&packet);
@@ -183,9 +188,9 @@ impl GameAdapter{
         let opened=lane.rx.open_unique_in_place(&mut wire)
             .map_err(|_|Error::Crypto)?;
         if opened.kind!=1{return Err(Error::Invalid)}
-        let (id,payload)=wbd_codec::decode_game(opened.payload,1216)
+        let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
-        if payload.len()>1200{return Err(Error::Invalid)}
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
         let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
         owned.writable()[14..14+payload.len()].copy_from_slice(payload);
         match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
@@ -214,6 +219,21 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[test]
+    fn game_mtu_uses_negotiated_record_budget_above_old1200(){
+        let mut game=build(2);
+        assert_eq!(game.inner_mtu(),1353); // authenticated record1400 -31 -16
+        assert!(matches!(game.offer(&vec![7;1354],MonoNs(0)),Err(Error::Invalid)));
+        let data=vec![7;1353];
+        game.offer(&data,MonoNs(1)).unwrap();
+        let mut copies=Vec::new();
+        assert_eq!(game.drain(MonoNs(2),|lane,_,_,wire|{
+            assert_eq!(wire.len(),1400);copies.push((lane,wire.to_vec()));true
+        }),2);
+        let (lane,wire)=copies.pop().unwrap();
+        assert_eq!(game.receive(lane,wire).unwrap(),Some(data));
+        game.stop();
     }
     #[test]
     fn m0_game_2_4_independent_record_pn_and_cross_lane_first_delivery(){

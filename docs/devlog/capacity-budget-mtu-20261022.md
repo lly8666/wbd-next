@@ -9,3 +9,7 @@
 模型与方案：tools/network_harness/envelope.py 复用 cost_model，区分外层/内层、包数权重、partial FEC、Game复制、保留缓存与短发送队列；prepare只输出估算，不改判定。主性能目标是近MTU大包+少量小探针，纯小包只诊断PPS，不要求500M小包。参数真实接线缺口和计算方法见 docs/testing/NETWORK_CAPACITY_ENVELOPE.md；不得把计算当实测，或把MTU修复当Fixed30整体PASS。
 
 执行状态：PENDING。提交后记录精确SOURCE/run与失败，核验后再更新范围；不得用本任务重启原工位已在途的请求。
+
+首轮SOURCE 37bea82516b06f850663c4bc0a0e5aabda9f9b49：network-harness-check run39874672789 PASS；ARM run39874672683 编译/Go预算单测与Normal原生双向/Stop PASS。九组合边界中7 PASS；两个FAIL原样保留（artifact12467328308）。Fixed客户端outer1500/服务端1280在prepare失败：Rust client rx_wire_limit错误取server_limit，与按client_limit建立的LINK RX矛盾。Game2/1500小包正常、大于1200拒绝：GameAdapter与kernel入口仍硬编码1200/1216。它们是实际路径预算bug，不是VM容量或随机丢包。
+
+下一SOURCE定向修复：Rust RX/TX限额取各自已认证方向，Game统一由每lane record预算扣31+16推导上限；保留既有2048slab和所有认证/路径门。加入Game超过旧1200的边界单测，重跑相同九组合而不重启压力矩阵。模型/文档后续提交f2c5811d未改产品，不影响首轮SOURCE归因。

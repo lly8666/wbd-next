@@ -76,6 +76,7 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
+        let inner_mtu=adapter.lock().map_err(|_|())?.inner_mtu();
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
@@ -109,7 +110,7 @@ impl GameKernelOwner{
                             continue
                         }
                     };
-                    if len==0||len>1200{
+                    if len==0||len>inner_mtu{
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
                     }
                     let now=MonoNs(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
