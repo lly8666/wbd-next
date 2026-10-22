@@ -546,7 +546,22 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
-    let arena=Arena::new(generation,128,2048,128,1_000_000)
+    // The genuine FEC2 owner keeps one original M1 plaintext loan until
+    // its short parity job retires PLUS a separate immutable ciphertext loan
+    // in the <=2s M2 receipt/repair shadow. At ~100+ actual outer first
+    // sends/s, 600ms RTT and partial feedback, the original 128-slot pool
+    // starved BOTH fresh systematic and parity (S013 measured 5k/18k
+    // NoCapacity failures per side with zero seal/driver failures).
+    // Preallocate a bounded ~1.1MiB owner-local FEC pool only for negotiated
+    // Linux feature7; ordinary/off and non-Linux retain 128-slot cost.
+    // Neither receipt expiry nor global retry quota nor original Stop changes.
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    let fec2_product_pool=handoff.negotiated_features==7;
+    #[cfg(not(all(feature="fec2_product_record",target_os="linux")))]
+    let fec2_product_pool=false;
+    let (slots,bytes)=if fec2_product_pool{(512,1_200_000)}
+        else{(128,1_000_000)};
+    let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,server_side,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
