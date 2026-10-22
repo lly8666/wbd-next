@@ -200,7 +200,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  }
  if err!=nil{return false,err} // exact generation/cipher failure: Stop
 
- if seq!=p.sendNext{return false,windowsclient.ErrN4NativeGuard}
+ if seq!=p.sendNext{return false,fmt.Errorf("%w: native normal TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq)}
  err=p.sendCarrier(seq,p.recvNext,ciphertext)
  if p.mode==m0WinModeNormal{
   // A valid original NPF pcap_sendpacket return is the ONLY new M2
@@ -234,7 +234,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
 }
 func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error{
  if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
-  return windowsclient.ErrN4NativeGuard
+  return fmt.Errorf("%w: native peer TCP carrier FIN/RST flags=%d",windowsclient.ErrN4NativeGuard,seg.Flags)
  }
  p.observePeerACK(seg.Ack)
  if len(seg.Payload)==0{return nil}
@@ -281,7 +281,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
    count,countErr:=p.owner.BoundOriginalM2Outstanding(ctx)
    if countErr!=nil{return countErr}
    p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
-  }else{return windowsclient.ErrN4NativeGuard}
+  }else{return fmt.Errorf("%w: native Rust M3 authenticated record kind=%d",windowsclient.ErrN4NativeGuard,kind)}
  }else{
   delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{
@@ -292,10 +292,10 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   for _,frame:=range delivered{frames=append(frames,frame.IPv4)}
  }
  for _,plain:=range frames{
-  if len(plain)<20||len(plain)>p.maxIPv4{return windowsclient.ErrN4NativeGuard}
+  if len(plain)<20||len(plain)>p.maxIPv4{return fmt.Errorf("%w: native M4 authenticated IPv4 len=%d max=%d",windowsclient.ErrN4NativeGuard,len(plain),p.maxIPv4)}
   copied,copyErr:=p.ring.WriteAuthenticatedIPv4(ctx,plain)
   if copyErr!=nil||copied!=len(plain){
-   return errors.Join(windowsclient.ErrN4NativeGuard,copyErr)
+   return errors.Join(fmt.Errorf("%w: native M4 Wintun write len=%d copied=%d",windowsclient.ErrN4NativeGuard,len(plain),copied),copyErr)
   }
  }
  if independent{
@@ -377,7 +377,7 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
   if done%2==0 {
    select{
    case seg,ok:=<-p.inbound:
-    if !ok{return done,windowsclient.ErrN4NativeGuard}
+    if !ok{return done,fmt.Errorf("%w: original NPF peer ingress queue closed during pulse",windowsclient.ErrN4NativeGuard)}
     if err:=p.receiveOne(ctx,seg);err!=nil{return done,err}
     done++;changed=true
    default:
@@ -391,7 +391,7 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
   if done<m0V4BatchPackets{
    select{
    case seg,ok:=<-p.inbound:
-    if !ok{return done,windowsclient.ErrN4NativeGuard}
+    if !ok{return done,fmt.Errorf("%w: original NPF peer ingress queue closed during pulse",windowsclient.ErrN4NativeGuard)}
     if err:=p.receiveOne(ctx,seg);err!=nil{return done,err}
     done++;changed=true
    default:
@@ -440,7 +440,7 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
   case <-timeout.Done():return timeout.Err()
   case <-p.stop:return context.Canceled
   case seg,ok:=<-p.inbound:
-   if !ok{return windowsclient.ErrN4NativeGuard}
+   if !ok{return fmt.Errorf("%w: original NPF peer ingress queue closed during first-reverse",windowsclient.ErrN4NativeGuard)}
    if err:=p.receiveOne(timeout,seg);err!=nil{return err}
   case <-idle.C:
   }
@@ -463,7 +463,7 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
    case <-workerCtx.Done():return
    case <-p.stop:return
    case seg,ok:=<-p.inbound:
-    if !ok{select{case p.failure<-windowsclient.ErrN4NativeGuard:default:};return}
+    if !ok{select{case p.failure<-fmt.Errorf("%w: original NPF peer ingress queue closed after Ready",windowsclient.ErrN4NativeGuard):default:};return}
     if err:=p.receiveOne(workerCtx,seg);err!=nil{
      if workerCtx.Err()==nil{select{case p.failure<-err:default:}}
      return

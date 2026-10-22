@@ -131,14 +131,14 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   for{
    seg,_,e:=endpoint.ReadSegment(1)
    if e!=nil{
-    select{case failure<-e:default:}
+    select{case failure<-fmt.Errorf("native NPF ReadSegment failed: %w",e):default:}
     return
    }
    if assoc.State()==faketcp.ClientAssociationDetached{
     // Verified original TLS hands the bounded real TCP frame to Rust M3.
     select{case nativeFrames<-seg:
     default:
-     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+     select{case failure<-fmt.Errorf("%w: detached original NPF ingress queue full depth=%d capacity=%d",windowsclient.ErrN4NativeGuard,len(nativeFrames),cap(nativeFrames)):default:}
      return
     }
     continue
@@ -282,13 +282,18 @@ waitNative:
  for{
   select{
   case <-ctx.Done():break waitNative
-  case runtimeErr=<-failure:break waitNative
-  case runtimeErr=<-transport.Errors():break waitNative
+  case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
+  case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
   case <-metricsTicker.C:
    if line,mErr:=json.Marshal(transport.Stats());mErr==nil{
     fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))
    }
   }
+ }
+ if runtimeErr!=nil{
+  if snapshot,marshalErr:=json.Marshal(transport.Stats());marshalErr==nil{
+   fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error()+" stats="+string(snapshot))
+  }else{fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error())}
  }
  stopErr:=cleanup()
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
