@@ -7,6 +7,7 @@ on:
     branches: [feature/arm64-linux-android-openwrt-autoaccel]
     paths:
       - '.github/workflows/arm64-linux-fec-fixed-frozen.yml'
+      - 'tools/arm64_linux_netns_smoke.sh'
   workflow_dispatch:
 permissions:
   contents: read

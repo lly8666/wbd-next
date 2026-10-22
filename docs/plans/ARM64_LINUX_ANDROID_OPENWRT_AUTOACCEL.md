@@ -1,5 +1,15 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
+## Recovery update — Linux ARM64 scoped product functional
+- ARM64 genuine original Go + Rust + pinned ISA-L **BUILD PASS**: Action [39751199619](https://github.com/lly8666/wbd-next/actions/runs/39751199619), SOURCE `34f89d303710f7c0e1d9c1c89cfff038c9839b54`, artifact manifest contains two Go binaries, Rust shared engine, SHA256 hashes.
+- ARM64 native platform/crypto/ISA-L test **PASS**: Action [39751199746](https://github.com/lly8666/wbd-next/actions/runs/39751199746), same SOURCE, no physical/product inference.
+- ARM64 **Normal/off real Linux OS functional PASS_SCOPED**: Action [39753488583](https://github.com/lly8666/wbd-next/actions/runs/39753488583), original product SOURCE `9194e20f2f53cd4ac0b85d3e7f5aa136f164d2c3`, harness SOURCE `c7b29ce8d537e2b2da5b18f9ffefb64f7d9c6689`. Two independent AArch64 network namespaces, real FakeTCP Go TLS + Rust raw/TUN, 3/3 ICMP responses in each direction, both owned Stop drained and namespace cleanup. Actual authenticated M2 original outer counters in both logs. NOT a long-duration or physical PASS.
+- A real first network attempt FAIL `39753205656` recorded kernel RST arriving on unmatched FakeTCP tuple; the **only** solution used was exact tuple TCP RST suppression in each disposable namespace, not host rules.
+- Initial frozen FEC2 Fixed trial [39753912460](https://github.com/lly8666/wbd-next/actions/runs/39753912460): both TLS/AEAD/raw/TUN directions and ICMP/Stop worked, BUT client/server readback showed `mode=fixed requested=1 applied=0 pending=true`. **FEC Fixed is NOT qualified**: request is not an applied backend. First test-harness check placement was also invalid and is now corrected; investigate the real current policy/feedback transition before touching protocol.
+- Hardware NEON explicit direct-path ISA-L test `REAL_ISAL_ARM64_NEON_EXPLICIT_EQUIVALENCE_PASS` ran under action `39749868638`'s scoped native ISA-L successful job; automatic dispatch choice and product actual Native count remain separately unproven.
+- Deferred clients remain Android/OpenWrt; no new work on them until Linux ARM64 product priorities close.
+
+
 **Active scope (2026-10-22): Linux ARM64 client AND server only.** Android and OpenWrt clients have been explicitly deferred by the user. Their previously committed source and scoped BUILD receipts are preserved; do not add more Android/OpenWrt features, jobs, packages, or release qualifications during the Linux phase. Windows ARM64 is out of scope. This is a separate feature branch; do not alter the main registry, role cursor, or other workers' files.
 
 ## Exact recovery and evidence

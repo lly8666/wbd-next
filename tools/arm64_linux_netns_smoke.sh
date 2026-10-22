@@ -151,16 +151,24 @@ stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
   if grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log" \
-    && grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"
-if [ "$mode" = fec-fixed ]; then
-  # READBACK is an observation, not a proof that native ISA-L had nonzero parity.
-  grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
-  grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
-fi; then break; fi
+    && grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"; then break; fi
   sleep .2
 done
 grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log"
 grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"
+if [ "$mode" = fec-fixed ]; then
+  # Policy requested isn't necessarily applied. No hardware/backend PASS
+  # unless both sides report applied>0 and pending=false.
+  grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
+  grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
+  if ! grep -Eq 'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=[0-9]+ applied=[1-9][0-9]* .*pending=false' "$out/client.log" \
+    || ! grep -Eq 'V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=[0-9]+ applied=[1-9][0-9]* .*pending=false' "$out/server.log"; then
+    echo 'ARM64_FEC2_FIXED_REAL_PRODUCT_NOT_APPLIED (original requested vs applied)'
+    tail -n 15 "$out/client.log" || true
+    tail -n 15 "$out/server.log" || true
+    exit 1
+  fi
+fi
 cleanup
 trap - EXIT
 if sudo -n ip netns list | grep -Eq "($client_ns|$server_ns)"; then
