@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_NATIVE_PUBLIC_WINDOWS_WSL_AFTER_REAL_TLS_WAL_ROUTE_OWNERSHIP_FAIL",
+  "windows_original_code_source": "68d52a8ace83ea7fb3ace9b41792b8d56c3f3484",
+  "linux_original_binary_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+  "actions": [
+    {
+      "run_id": 39765311632,
+      "attempt": 1,
+      "workflow": ".github/workflows/m0-wl-public-normal-frozen.yml",
+      "source_sha": "ad21544110c671d73d307f4188c99538aa818c0e",
+      "job_id": 119779174253,
+      "conclusion": "FAILURE",
+      "artifact": {
+        "id": 12419288993,
+        "digest": "sha256:896d768af247b2d9e8e2a11608c75775b31e3fe7b8f95b13644e99fe8e9679fe"
+      }
+    },
+    {
+      "run_id": 39765279336,
+      "attempt": 1,
+      "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+      "source_sha": "d7bfba9e54277f759b6bec5308de13e4056eb168",
+      "job_id": 119779066100,
+      "conclusion": "FAILURE",
+      "artifact": {
+        "id": 12419529903,
+        "digest": "sha256:26fccf051b72c62742bac5053fcee0e3292543ee2103af47784a1ae9f94a0aec"
+      }
+    }
+  ],
+  "real_positive": [
+    "signed Npcap1.88 and Wintun0.14.1 actual Windows kernel installed and owned cleanup",
+    "pinned official Ubuntu24.04.5 actual WSL2 Linux raw/TUN public server started",
+    "live OS-verified Linux guest Ethernet MAC selected and Windows exact neighbor/hyperV scope installed/removed",
+    "actual original Windows Go credential FakeTCP SYN ACK TLS protected frames reached Linux eth0 real AF_PACKET in both independent Actions",
+    "real native Go Windows OS plan no longer errored empty DNS after setting original DNS defaults"
+  ],
+  "real_failure": "Original Windows five-stage WAL returned windowsclient: unconfirmed route ownership; retain journal and fail closed before Windows OS Applied. No test claim for Windows Wintun business duplex or owned product Stop.",
+  "root_cause_hypothesis": "Original underlay selected own Windows vEthernet source IPv4 as physical NextHop for /32 Linux guest escape. Windows on-link route may canonicalize the route identity or reject owning a route whose gateway is self. Must prove through full Actions, do not override/readback just to pass.",
+  "historical_s852_scope_fail": {
+    "source_sha": "4bb7f01e305b4cc8074cc62bbfdfec6b7d61876a",
+    "action_runs": [
+      39766319041,
+      39766319065
+    ],
+    "reason": "Immutable 12-file donor native_unified_network_transaction.go accidentally modified; assembly correctly refused exact donor SHA. Source49943d restores exact original donor SHA 1e02718d9b9b7e00edb4458dba033a552006cc99 with manifest unchanged provenance, original FAIL kept."
+  },
+  "next": {
+    "full_source": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+    "run_id": 39766899588,
+    "change": "Use actual OS-authenticated guest IPv4 as scoped underlay /32 escape next hop rather than Windows vEthernet's own gateway, preserving original native route and WAL ownership readback/Stop checks.",
+    "status": "RUNNING_NOT_PASS"
+  },
+  "WL_N0": "NOT_RUN",
+  "WL_N1": "NOT_RUN",
+  "WL_N5": "NOT_RUN"
+}
