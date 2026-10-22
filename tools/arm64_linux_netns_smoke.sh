@@ -204,7 +204,7 @@ PY
 fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
-if [ "$mode" != normal ]; then sleep 3; fi
+if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
@@ -214,7 +214,15 @@ for i in $(seq 1 75); do
 done
 grep -q "$stop_marker" "$out/client.log"
 grep -q "$stop_marker" "$out/server.log"
-if [ "$mode" != normal ]; then
+if [ "$game_lanes" -gt 0 ]; then
+  # Game2/4 use authenticated GameAdapter grouped lanes, NOT Normal FEC2
+  # operator policies. Demand real kernel input/output and no auth rejection.
+  for side in client server; do
+    grep -Fq "V4_ORIGINAL_GO_GAME_NATIVE_READY role=$side lanes=$game_lanes original_tls=1 rust_m4=1" "$out/$side.log"
+    grep -Eq "V4_PUBLIC_GAME_KERNEL role=$side lanes=$game_lanes copied=[1-9][0-9]* delivered=[1-9][0-9]* rejected=0 raw_received=[1-9][0-9]* auth_rejected=0" "$out/$side.log"
+  done
+fi
+if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
   grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
