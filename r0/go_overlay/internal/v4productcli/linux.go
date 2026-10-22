@@ -340,6 +340,12 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 log.Printf("V4_PUBLIC_FEC2_RX_PROOF role=client source_seen=%d source_accepted=%d parity_seen=%d parity_accepted=%d systematic_candidate=%d recovered_candidate=%d systematic_tun=%d recovered_tun=%d tun_failed=%d decoder_rejected=%d admission_disabled=%d",
                     rx.SourceSeen,rx.SourceAccepted,rx.ParitySeen,rx.ParityAccepted,rx.SystematicCandidate,rx.RecoveredCandidate,rx.SystematicTun,rx.RecoveredTun,rx.TunFailed,rx.DecoderRejected,rx.AdmissionDisabled)
             }
+            stage,stageErr:=native.OriginalFecM1Stage()
+            if stageErr==nil {
+                log.Printf("V4_PUBLIC_FEC2_M1_STAGE role=client attempted=%d queued=%d not_ready=%d error=%d oversize=%d mode_skipped=%d",
+                    stage.Attempted,stage.Queued,stage.NotReady,stage.Error,
+                    stage.OversizePrecheck,stage.ModeSkipped)
+            }
             ingress,ingressErr:=native.OriginalFecM1Ingress()
             if ingressErr==nil {
                 log.Printf("V4_PUBLIC_FEC2_M1_INGRESS role=client read_ipv4=%d small_loaned=%d small_arena_fail=%d jumbo=%d rejected=%d",
@@ -467,6 +473,12 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             if rxErr==nil {
                 log.Printf("V4_PUBLIC_FEC2_RX_PROOF role=server source_seen=%d source_accepted=%d parity_seen=%d parity_accepted=%d systematic_candidate=%d recovered_candidate=%d systematic_tun=%d recovered_tun=%d tun_failed=%d decoder_rejected=%d admission_disabled=%d",
                     rx.SourceSeen,rx.SourceAccepted,rx.ParitySeen,rx.ParityAccepted,rx.SystematicCandidate,rx.RecoveredCandidate,rx.SystematicTun,rx.RecoveredTun,rx.TunFailed,rx.DecoderRejected,rx.AdmissionDisabled)
+            }
+            stage,stageErr:=product.OriginalFecM1Stage()
+            if stageErr==nil {
+                log.Printf("V4_PUBLIC_FEC2_M1_STAGE role=server attempted=%d queued=%d not_ready=%d error=%d oversize=%d mode_skipped=%d",
+                    stage.Attempted,stage.Queued,stage.NotReady,stage.Error,
+                    stage.OversizePrecheck,stage.ModeSkipped)
             }
             ingress,ingressErr:=product.OriginalFecM1Ingress()
             if ingressErr==nil {

@@ -10,6 +10,10 @@ func v4ReadOriginalFecRxIpClass(_ *v4EmbeddedNativeBridge)(V4PublicFecRxIpClass,
     return V4PublicFecRxIpClass{},ErrAdmissionUnsupported
 }
 
+func v4ReadOriginalFecM1Stage(_ *v4EmbeddedNativeBridge)(V4PublicFecM1Stage,error){
+    return V4PublicFecM1Stage{},ErrAdmissionUnsupported
+}
+
 func v4ReadOriginalFecM1Ingress(_ *v4EmbeddedNativeBridge)(V4PublicFecM1Ingress,error){
     return V4PublicFecM1Ingress{},ErrAdmissionUnsupported
 }

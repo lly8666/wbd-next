@@ -169,6 +169,19 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_original_fec_m1_postloan_stage_exact_causal_split(self):
+        from tools.network_harness.runner import public_fec_m1_stage,product_marker_line
+        row=("V4_PUBLIC_FEC2_M1_STAGE role=client attempted=120 "
+             "queued=100 not_ready=4 error=16 oversize=12 mode_skipped=3")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m1_stage(row)["oversize"],12)
+        self.assertIsNone(public_fec_m1_stage(""))
+        self.assertIsNone(public_fec_m1_stage(row.replace("oversize=12","no_size=12")))
+        self.assertIsNone(public_fec_m1_stage(row.replace("attempted=120","attempted=300")))
+        self.assertEqual(public_fec_m1_stage(row.replace("attempted=120","attempted=119"))["queued"],100)
+        # No endpoint, packet size, ack number or original plaintext appears.
+        self.assertNotIn("secret",str(public_fec_m1_stage(row)))
+
     def test_original_fec_m1_tun_ingress_real_numeric_contract(self):
         from tools.network_harness.runner import public_fec_m1_ingress,product_marker_line
         row=("V4_PUBLIC_FEC2_M1_INGRESS role=client read_ipv4=1200 "

@@ -28,10 +28,31 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+
+
+def public_fec_m1_stage(log_text):
+    """Original Fixed M1 handoff after successful TUN loan, numeric only.
+
+    A missing or malformed native readback remains NOT_OBSERVED, never zero.
+    Staging worker owns one 32-packet turn, so individual atomic readbacks
+    permit at most 32 in-flight count differences.
+    """
+    fields=("attempted","queued","not_ready","error","oversize","mode_skipped")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M1_STAGE role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in d for k in fields):
+        return None
+    actual=d["queued"]+d["not_ready"]+d["error"]
+    if abs(d["attempted"]-actual)>32 or d["oversize"]>d["error"]+32:
+        return None
+    return {k:d[k] for k in fields}
 
 
 def public_fec_m1_ingress(log_text):
@@ -476,6 +497,7 @@ class LinuxExperiment:
         fec_rx = {role:public_fec_rx_proof(log) for role,log in logs.items()}
         fec_ip = {role:public_fec_rx_ip_class(log) for role,log in logs.items()}
         fec_m1 = {role:public_fec_m1_ingress(log) for role,log in logs.items()}
+        fec_stage = {role:public_fec_m1_stage(log) for role,log in logs.items()}
         fec_class_valid = all(fec_ip[role] is not None and fec_rx[role] is not None and
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
@@ -487,6 +509,7 @@ class LinuxExperiment:
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
                 "original_fec_rx_ipv4_classes": fec_ip if fec_class_valid else "NOT_OBSERVED",
                 "original_fec_m1_tun_ingress": fec_m1 if all(v is not None for v in fec_m1.values()) else "NOT_OBSERVED",
+                "original_fec_m1_postloan_stage": fec_stage if all(v is not None for v in fec_stage.values()) else "NOT_OBSERVED",
                 "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
                 "FEC_k_r_parity_queue_decode": {

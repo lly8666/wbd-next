@@ -2799,6 +2799,11 @@ struct LoopCounts {
     // NoCapacity, jumbo, rejected. No packet contents or endpoint logs.
     #[cfg(feature="fec2_product_record")]
     fec_m1_ingress:[AtomicU64;5],
+    // Original feature7 post-TUN-loan Fixed stage outcomes: attempted,
+    // first_copy_queued, owner_not_ready, stage_error, over_budget,
+    // mode_skipped. Only per-session numeric counters, not packet data.
+    #[cfg(feature="fec2_product_record")]
+    fec_m1_stage:[AtomicU64;6],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -3551,13 +3556,36 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             if e.protected_features==7 &&
                 (e.fixed_pending.is_some()||e.fixed_applied.is_some()){
                 let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
+                // Real TUN input already has a bounded M1 slab. Record
+                // EXACTLY where the first-source handoff fails, including
+                // the pre-offer record-size guard not covered by source_payload.
+                e.counters.fec_m1_stage[0].fetch_add(1,Ordering::Relaxed);
+                if n>budget.record_payload_mtu.saturating_sub(14){
+                    e.counters.fec_m1_stage[4].fetch_add(1,Ordering::Relaxed);
+                }
                 match original_fixed_stage_source(e,slab,n,budget,loop_now()){
-                    Ok(true)=>accepted+=1,
-                    _=>failed=true,
+                    Ok(true)=>{
+                        accepted+=1;
+                        e.counters.fec_m1_stage[1].fetch_add(1,Ordering::Relaxed);
+                    }
+                    Ok(false)=>{
+                        e.counters.fec_m1_stage[2].fetch_add(1,Ordering::Relaxed);
+                    }
+                    Err(_)=>{
+                        failed=true;
+                        e.counters.fec_m1_stage[3].fetch_add(1,Ordering::Relaxed);
+                    }
                 }
                 // An authenticated Fixed source must never silently escape
                 // onto Normal/off kind1 when oversize or pressure occurs.
                 continue
+            }
+            #[cfg(feature="fec2_product_record")]
+            if fec_ingress_on{
+                // Read while genuinely Fixed, but switched mode before the
+                // owner processed the retained small packet. Do not infer
+                // it entered the FEC source counter.
+                e.counters.fec_m1_stage[5].fetch_add(1,Ordering::Relaxed);
             }
             if n<=frame_mtu {
                 let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
@@ -4642,6 +4670,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_proof(
     }
     OK
 }
+// Real post-TUN-loan Fixed source staging outcomes, exact six counters.
+// Private native feature7 owner. No alternate input or packet classification.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_m1_stage(
+    h:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=6{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||e.protected_features!=7{
+        return BAD_STAGE
+    }
+    for (i,counter) in e.counters.fec_m1_stage.iter().enumerate(){
+        unsafe{out.add(i).write(counter.load(Ordering::Relaxed))};
+    }
+    OK
+}
+
 // Read-only original M1 TUN intake evidence. This observes packet ownership
 // BEFORE FEC source staging and distinguishes genuine post-read NoCapacity.
 // No second device reader, data sampling or changed forwarding semantics.

@@ -50,6 +50,12 @@ type V4PublicFecRxProof struct {
 // real TUN copied; does not include application receipt or raw packet data.
 // Real original M1 TUN read before product FEC source staging. Five bounded
 // event counts; cumulative and sampled without packet contents or addresses.
+// Distinguishes already-loaned original feature7 TUN packets admitted into
+// FEC source TX vs rejected before it can enter ClassStats.accepted.
+type V4PublicFecM1Stage struct {
+    Attempted,Queued,NotReady,Error,OversizePrecheck,ModeSkipped uint64
+}
+
 type V4PublicFecM1Ingress struct {
     ReadIPv4,SmallLoaned,SmallArenaFail,Jumbo,Rejected uint64
 }

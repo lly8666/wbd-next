@@ -119,6 +119,14 @@ func (p *V4LinuxClientProduct) OriginalFecM2Proof()(V4PublicFecM2Proof,error){
     return v4ReadOriginalFecM2Proof(p.owner)
 }
 // Authentic original TUN intake counters only while this TLS FEC owner lives.
+// Same product-native owner, solely numeric evidence before Stop.
+func (p *V4LinuxClientProduct) OriginalFecM1Stage()(V4PublicFecM1Stage,error){
+    if p==nil{return V4PublicFecM1Stage{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM1Stage{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecM1Stage(p.owner)
+}
 func (p *V4LinuxClientProduct) OriginalFecM1Ingress()(V4PublicFecM1Ingress,error){
     if p==nil{return V4PublicFecM1Ingress{},ErrAdmissionParams}
     p.mu.Lock()
