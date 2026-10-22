@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S005-real-fixed30-hard-fail-investigation",
+  "phase": "S006-product-maxparity-row-guard-fix-build",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -19,7 +19,20 @@
     "status": "SUCCESS"
   },
   "latest_harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S006-arm64-fixed-maximum-row-guard-build",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "SOURCE_BUILD_AND_NATIVE_RUST_ASSERTION_NOT_PERFORMANCE_MEASUREMENT",
+      "source": "SELF_COMMIT_SHA_AFTER_PUSH",
+      "paths": [
+        "crates/wbd-engine/src/v4_embedded_go.rs",
+        ".github/workflows/arm64-public-go-build.yml"
+      ],
+      "trigger": "branch push, do not manual dispatch",
+      "intent": "Preserve immutable security/PN/Stop and all hard failures. Change only rejected parity row threshold from 16 to codec MAX_R20, assert actual public code branch; old frozen product stays distinct."
+    }
+  ],
   "latest_actions": [
     {
       "run": 39763271808,
@@ -71,5 +84,5 @@
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
-  "next_action": "Do NOT redispatch S005. FIRST read docs/architecture/modules/07-FEC.md, 09-PIPELINE-GAME.md if relevant, 08-RECOVERY.md and current real receive→FEC decode→TUN, duplicate suppression and recent changes; identify test-visible duplicate mechanism and missing fixed-applied readback. Create one minimal bounded functional differentiating Action before product fix, or if found fix specific root cause and rerun failing hard-case plus default anchor. Independently Game4/off representative may proceed, but never pronounce Fixed/Auto valid. Do not increase load on off low-loss issue."
+  "next_action": "Native ARM64 product build Action from source commit fixing row16..19 guard (look up run triggered by this push); do not dispatch manually. Check Rust unit test, build artifact SHA, then run scoped S005 hard-case regression/new bounded functional without widening gate; legacy S005 hard failure remains OPEN. No Game4 performance until builder settled if same runner capacity contention."
 }

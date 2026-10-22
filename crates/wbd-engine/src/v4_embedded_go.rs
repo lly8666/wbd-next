@@ -3108,6 +3108,14 @@ fn stage_next_original_link_turn(
     }
     Ok(staged)
 }
+// The public product accepts the same 20 parity row IDs as the FEC2 codec.
+// Strong uses rows 0..15; Maximum requires rows 0..19. Never truncate
+// Maximum to 16 while calling the unchanged authenticated M3/M4 owner.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_public_fixed_row_allowed(row:u8)->bool{
+    usize::from(row)<wbd_codec::fec_v2::MAX_R
+}
 // Genuine TLS-authorized Fixed/Normal product TX share original owner
 // M1 immutable FrozenRecord, M3 authenticated PN and M4 driver. This runs
 // ONLY after Go Fixed REQUESTED, not for a peer packet or a feature flag.
@@ -3162,7 +3170,7 @@ fn original_fixed_stage_due(e:&mut Entry,
     let mut failed=None;
     let result=stream.poll_parity(now,|parity,_block,row,revision|{
         if e.fixed_pending.or(e.fixed_applied).is_none_or(|(_,r)|r!=revision.0)
-            ||row>=16{return DriverProof::NotSent}
+            ||!original_public_fixed_row_allowed(row){return DriverProof::NotSent}
         let attempt=(||->Result<(),i32>{
             let mut sealed=e.arena.allocate().map_err(|_|FULL)?;
             let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
@@ -5200,6 +5208,17 @@ mod tests{
         ]{
             assert!(!raw_one_packet_copied(&KernelSendReport{outcome,signal}));
         }
+    }
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[test]
+    fn m0_public_fixed_maximum_all_20_rows_supported(){
+        assert_eq!(wbd_codec::fec_v2::MAX_R,20);
+        for row in 0..20u8{
+            assert!(original_public_fixed_row_allowed(row),"maximum parity row {row}");
+        }
+        assert!(!original_public_fixed_row_allowed(20));
+        assert!(!original_public_fixed_row_allowed(u8::MAX));
     }
     #[test]
     fn m0_embedded_go_private_control_rejects_unknown_and_null(){
