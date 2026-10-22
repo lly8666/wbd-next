@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S021-bounded-original-FEC-M3-RX-counters-build",
+  "phase": "S022-real-authenticated-FEC-RX-M4-TUN-differential",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,36 +25,17 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S021-authentic-FEC-RX-batch-observer-build",
-      "type": "PRODUCT_SOURCE_BUILD",
-      "status": "QUEUED_OR_RUNNING",
-      "trigger": "one original Rust and Go source push starts one native ARM64 build; no manual dispatch",
-      "scope": "feature7 only, 11 batch-aggregated per-session numeric AEAD-unique source/parity accepted, recovery candidate and actual M4 TUN writes; no codec/MTU/replay/FEC timers/mature-gate changes",
-      "run_id": 39783512063,
-      "attempt": 1,
-      "source": "370eb534621d76deda7888599bd089acc163acac",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39783512063"
-    },
-    {
-      "id": "S021-FEC-RX-parser-contract",
-      "type": "HARNESS_ONLY_ACTION",
+      "id": "arm64-fixed30-real-M3-FEC-RX-TUN-proof-S022",
+      "type": "ONE_TRUE_FIXED30_DIAGNOSTIC",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "trigger": "tools/network_harness/runner.py and tests/network/test_harness.py change, no product build",
-      "purpose": "strict authenticated source/parity recovered/TUN counters, conservative reject malformed and NOT_OBSERVED"
+      "trigger": "single committed tests/network/request.json push starts one Action, do not manually dispatch",
+      "source": "370eb534621d76deda7888599bd089acc163acac",
+      "artifact_id": 12427229903,
+      "path": "tests/network/request.json",
+      "scenario": "Exactly S020 2Mbps/dir 50/50 UDP/TCP Fixed Maximum profile6 IID30% 300ms one-way 120s steady +15s warmup+30s drain, real original source/parity accepted→RS recovery candidate→M4 TUN writes"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S010-single-A-unit-repair",
-      "result": "success",
-      "run": 39771546355
-    },
-    {
-      "id": "S012-initial-contract",
-      "result": "FAIL",
-      "run": 39773479228,
-      "detail": "new reason-parser incorrect raw regex escape; fixed harness only"
-    },
     {
       "id": "S012-contract-repair",
       "result": "success",
@@ -124,6 +105,19 @@
       "run": 39780888799,
       "file": "S020-fixed30-authentic-M2-TCP-state-fail.json",
       "artifact_id": 12426133238
+    },
+    {
+      "id": "S021-build",
+      "result": "success",
+      "run": 39783512063,
+      "artifact_id": 12427229903,
+      "file": "S021-native-RX-proof-build.json"
+    },
+    {
+      "id": "S021-contract",
+      "result": "success",
+      "run": 39783756480,
+      "file": "S021-native-RX-proof-build.json"
     }
   ],
   "open_issues": [
@@ -137,14 +131,16 @@
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
   ],
-  "next_action": "S021 builder 39783512063 running, harness parser contract pushed. Do not repeat. Verify build and test contracts, then one source-pinned unchanged Fixed30 real scene measuring actual FEC RX proof; preserve all previous FAIL and default off PASS.",
+  "next_action": "Resolve exactly one S022 measurement Action run ID from this request push; don't redispatch. Inspect actual original FEC RX source/parity AEAD seen/accepted, recovered candidates/write and disabled/reject, compare original M2 proof and TCP states. Preserve S020 FAIL and S018 default PASS; if RX path not received or decoded identify precise culprit before any source tuning.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
-    "run_id": 39780156107,
-    "artifact_id": 12426721086,
-    "zip_sha256": "725e00e1bfe440a890034359d36f8de27fe634bd988e8533f01a13a8bbaf8dc8",
+    "source": "370eb534621d76deda7888599bd089acc163acac",
+    "run_id": 39783512063,
+    "attempt": 1,
+    "artifact_id": 12427229903,
+    "sha256": "e9ea6e661aa2801b081fe9101f3694927815871c8279c13d47ab8e868a27b3c6",
     "build_status": "success",
-    "manifest_sha256": "e6817df9b7fff8db8ec00149f35bdd3dbaf4fb163509534f42e87f889f39b3b1"
+    "arch": "aarch64",
+    "runtime_native_backend": "NOT_OBSERVED"
   }
 }

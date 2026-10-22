@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "kind": "EXACT_ARM64_PUBLIC_BUILD_S021",
+  "source": "370eb534621d76deda7888599bd089acc163acac",
+  "action": {
+    "run": 39783512063,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12427229903,
+    "digest": "sha256:e9ea6e661aa2801b081fe9101f3694927815871c8279c13d47ab8e868a27b3c6",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39783512063"
+  },
+  "manifest": {
+    "source": "370eb534621d76deda7888599bd089acc163acac",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "arch": "aarch64",
+    "backend_requested": "native_fec_acceleration (pinned ISA-L static)",
+    "runtime_backend": "NOT_OBSERVED"
+  },
+  "files": {
+    "client": "ff37211faf2f2a01bdbde60ca2696a1ccb4351e1680873eedec2df55a221cf43",
+    "server": "2bacd55209e65be3af2f39ea206d868625460da4fce09c58917ddb831924bdf5",
+    "engine": "3a966372995718200e266142fff1360db7c321df4516d375eae6267c0c124545"
+  },
+  "sha256sums_verified": true,
+  "elf_machine": 183,
+  "product_network": "NOT_RUN_BUILD_ONLY",
+  "harness_contract": {
+    "run": 39783756480,
+    "result": "success"
+  }
+}
