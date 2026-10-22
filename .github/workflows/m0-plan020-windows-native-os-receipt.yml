@@ -377,3 +377,88 @@ jobs:
           path: result/
           if-no-files-found: warn
           retention-days: 30
+
+  # One source-locked Windows build/artifact is an admission prerequisite;
+  # then five real original-Go TLS -> signed-Wintun positive runs execute on
+  # five independent Windows2022 VMs in parallel. This is FUNCTIONAL ONLY.
+  # It cannot be reused as public WinForms OS Applied or sustained 10Mbps.
+  native-five-mode-parallel:
+    name: "SCOPED real TLS Wintun ${{ matrix.mode }}"
+    needs: original-go-native-wal
+    runs-on: windows-2022
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, fixed, auto, game2, game4]
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_M0_TRY_SCOPED_NATIVE_WINTUN: "1"
+    steps:
+      - name: Retrieve exact successful same-run original Windows binary bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          $name="m0-plan020-win-wal-${{ github.run_id }}-${{ github.run_attempt }}"
+          & gh run download ${{ github.run_id }} --repo ${{ github.repository }} --name $name --dir artifact
+          if ($LASTEXITCODE -ne 0) {throw 'upstream exact SOURCE Windows native artifact absent'}
+          $receipt=Get-Content artifact/portable/source-receipt.json -Raw | ConvertFrom-Json
+          if ($receipt.source_sha -ne '${{ github.sha }}' -or
+              $receipt.original_go -ne 'a7a82db31fe736ffedee330795a3234d358f1984') {
+            throw 'old source/artifact or unknown original Go donor'
+          }
+          foreach($file in @('artifact/portable/wbd_engine.dll','artifact/wintun-release/wintun.dll',
+                              'artifact/wintun-release/m0-original-peer-real.exe')) {
+            if (!(Test-Path -LiteralPath $file -PathType Leaf)) {throw ('missing same-source binary '+$file)}
+          }
+          $expected="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+          $zip='artifact/wintun-release/wintun-0.14.1.zip'
+          if ((Test-Path $zip) -and (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) {
+            throw 'official Wintun release original ZIP changed'
+          }
+          $sig=Get-AuthenticodeSignature -FilePath artifact/wintun-release/wintun.dll
+          if($sig.Status -ne 'Valid') {throw 'unsigned native Wintun DLL'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path artifact/portable/wbd_engine.dll).Path
+          "WBD_M0_WIN_OWNER_DLL=$env:WBD_M0_WIN_OWNER_DLL" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: One actual original TLS Rust Wintun native packet mode
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $mode='${{ matrix.mode }}'
+          $suite=if($mode -eq 'normal'){'^TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration$'}
+                 elseif($mode -eq 'fixed'){'^TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse$/^fixed$'}
+                 elseif($mode -eq 'auto'){'^TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse$/^auto$'}
+                 elseif($mode -eq 'game2'){'^TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse$/^game2$'}
+                 else{'^TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse$/^game4$'}
+          New-Item -ItemType Directory -Force -Path mode-result | Out-Null
+          & ./artifact/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=8m' ('-test.run='+$suite) 2>&1 |
+              Tee-Object -FilePath ('mode-result/'+$mode+'.log')
+          if($LASTEXITCODE -ne 0){throw ('actual Windows Wintun '+$mode+' positive test failed')}
+          $log=Get-Content ('mode-result/'+$mode+'.log') -Raw
+          $marker=switch($mode){
+            'normal' {'M0_PLAN020_REAL_ORIGINAL_GO_TLS_DUAL_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_UDP_APP_BOTH_DIRECTIONS_PASS'}
+            'fixed' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_fixed_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED'}
+            'auto' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_auto_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED'}
+            'game2' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME2_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
+            'game4' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME4_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
+          }
+          if(!$log.Contains($marker) -or $log -match '--- SKIP:|UNSUPPORTED' -or
+             $log -notmatch '--- PASS:') {throw ('real Windows native '+$mode+' never reached required kernel app or Stop marker')}
+          Write-Output ('M0_PLAN024_PARALLEL_SAME_SOURCE_ACTUAL_WINDOWS_SIGNED_WINTUN_'+$mode+'_PASS_SCOPED')
+          @{
+            source_sha='${{ github.sha }}'; mode=$mode; native_signed_wintun_real_tls='PASS_SCOPED';
+            official_public_mode_os_applied='NOT_RUN'; sustained_10mbps='NOT_RUN';
+            source_run_id='${{ github.run_id }}'; source_run_attempt='${{ github.run_attempt }}'
+          } | ConvertTo-Json | Out-File ('mode-result/'+$mode+'.json') -Encoding utf8
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "m0-native-mode-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: mode-result/
+          retention-days: 30
+          if-no-files-found: warn
