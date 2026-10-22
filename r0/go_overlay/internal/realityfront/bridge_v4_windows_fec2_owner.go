@@ -23,7 +23,7 @@ type V4WindowsFEC2Delivery struct{
 type winFec2RawDelivery struct{
  BlockID uint64
  Index,Length,Recovered uint32
- Frame [512]byte
+ Frame [2048]byte
 }
 func V4WindowsEstablishOriginalFEC2ClientOwner(
  ctx context.Context,library string,assoc *faketcp.ClientAssociation,
@@ -67,8 +67,8 @@ func V4WindowsEstablishOriginalFEC2ServerOwner(
   state.generation==0||!b.committed{return nil,nil,errV4WindowsOwner}
  return &V4WindowsAuthenticatedServerOwner{bridge:b},session,nil
 }
-func winFec2Source(blockID uint64,index uint8,ipv4 []byte)([]byte,error){
- if blockID==0||index>=16||len(ipv4)<20||len(ipv4)>450||
+func winFec2Source(blockID uint64,index uint8,ipv4 []byte,maxBudget int)([]byte,error){
+ if blockID==0||index>=16||maxBudget<30||len(ipv4)<20||len(ipv4)>maxBudget-10||
   ipv4[0]>>4!=4||ipv4[0]&15<5{return nil,errV4WindowsOwner}
  out:=make([]byte,10+len(ipv4))
  binary.BigEndian.PutUint64(out[:8],blockID)
@@ -80,7 +80,7 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,kind uint32,symbol []byte,
 )([]byte,uint32,uint64,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  kind!=2&&kind!=3||len(symbol)<10||len(symbol)>512{
+  kind!=2&&kind!=3||len(symbol)<10||len(symbol)>device.maxIPv4||
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
@@ -108,7 +108,7 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  len(wire)<=31||len(wire)>543{return nil,errV4WindowsOwner}
+  len(wire)<=31||len(wire)>device.maxIPv4+31{return nil,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return nil,err}
  if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
   return nil,errors.Join(errV4WindowsOwner,err)
@@ -128,7 +128,7 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  out:=make([]V4WindowsFEC2Delivery,0,count)
  for i:=uint32(0);i<count;i++{
   v:=raw[i]
-  if v.BlockID==0||v.Index>=16||v.Length<20||v.Length>512||
+  if v.BlockID==0||v.Index>=16||v.Length<20||v.Length>uint32(device.maxIPv4)||
    v.Frame[0]>>4!=4||v.Frame[0]&15<5{return nil,errV4WindowsOwner}
   out=append(out,V4WindowsFEC2Delivery{
    BlockID:v.BlockID,SourceIndex:v.Index,Recovered:v.Recovered==1,
@@ -144,7 +144,7 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFEC2Source(
  scope,err:=s.OriginalOwnerReadback()
  if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
   scope.DeviceQuiesced||scope.ServerSide{return nil,0,0,errV4WindowsOwner}
- symbol,err:=winFec2Source(blockID,index,ipv4)
+ symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
  if err!=nil{return nil,0,0,err}
  return winFec2Sealer(ctx,s.bridge,s.device,2,symbol)
 }
@@ -162,7 +162,7 @@ func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalFEC2Source(
 )([]byte,uint32,uint64,error){
  if s==nil||s.bridge==nil||s.device==nil{return nil,0,0,errV4WindowsOwner}
  if err:=s.checkedBound(ctx);err!=nil{return nil,0,0,err}
- symbol,err:=winFec2Source(blockID,index,ipv4)
+ symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
  if err!=nil{return nil,0,0,err}
  return winFec2Sealer(ctx,s.bridge,s.device,2,symbol)
 }
