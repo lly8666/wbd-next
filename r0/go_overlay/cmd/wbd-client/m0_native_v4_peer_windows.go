@@ -45,7 +45,7 @@ type m0NativeV4Peer struct {
  scratch []byte // one retained true kernel ring copy buffer for all pulses
  maxIPv4 int
  pending []m0NativeV4Outbound
- sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize uint64
+ sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
  oldestUnackedAt time.Time
  lastRXAt time.Time
@@ -323,6 +323,28 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  return p.sendACK()
 }
 
+// A real S2C M3 unique DATA PN creates a bounded reverse kind1 draft in
+// the SAME original Rust authenticated owner. Exactly one original M1
+// ciphertext/seq is copied through NPF; no TCP-ACK-derived M2 receipt.
+func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
+ if p.mode!=m0WinModeNormal||p.stopped(){return false,nil}
+ wire,seq,pn,err:=p.owner.NextBoundOriginalM2Feedback(ctx,p.maxIPv4+31)
+ if err!=nil{return false,err}
+ if len(wire)==0{return false,nil}
+ if seq!=p.sendNext{
+  settle:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,false)
+  return false,errors.Join(
+   fmt.Errorf("%w: original M2 control TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq),settle)
+ }
+ sentErr:=p.sendCarrier(seq,p.recvNext,wire)
+ settleErr:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,sentErr==nil)
+ if sentErr!=nil||settleErr!=nil{
+  return false,errors.Join(sentErr,settleErr)
+ }
+ p.sendNext=seq+uint32(len(wire))
+ p.mu.Lock();p.feedbackSent++;p.mu.Unlock()
+ return true,nil
+}
 // Normal/off retries are *only* originally frozen Rust M2 candidates,
 // after process-global receipt/repair byte budget admission. Go copies
 // ciphertext byte-exact through the same original Npcap endpoint; no new
@@ -406,6 +428,10 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
   var retried bool
   var err error
   if p.mode==m0WinModeNormal{
+   // Feedback is deadline-driven and never waits for a Go TCP presentation ACK.
+   acknowledged,feedbackErr:=p.rustFeedbackOne(ctx)
+   if feedbackErr!=nil{return done,feedbackErr}
+   if acknowledged{done++}
    retried,err=p.rustRepairOne(ctx)
   }else{
    retried,err=p.retryOne(time.Now())
@@ -514,6 +540,7 @@ type m0NativeV4PacketStats struct{
  TxPackets uint64 `json:"tx_records"`
  RxFirstDelivered uint64 `json:"rx_first_delivered_ipv4"`
  RetxRecords uint64 `json:"frozen_ciphertext_retransmits"`
+ AuthenticatedM2FeedbackSent uint64 `json:"original_authenticated_m2_reverse_controls_sent"`
  DuplicateCarrier uint64 `json:"duplicate_tcp_carriers"`
  RejectedAuth uint64 `json:"rejected_or_invalid_carriers"`
  ExplicitOversize uint64 `json:"oversize_rejects"`
@@ -530,7 +557,8 @@ func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
  if !p.oldestUnackedAt.IsZero(){age=now.Sub(p.oldestUnackedAt).Milliseconds()}
  return m0NativeV4PacketStats{
   Mode:p.mode,TxPackets:p.sent,RxFirstDelivered:p.opened,
-  RetxRecords:p.retries,DuplicateCarrier:p.duplicates,RejectedAuth:p.rejected,
+  RetxRecords:p.retries,AuthenticatedM2FeedbackSent:p.feedbackSent,
+  DuplicateCarrier:p.duplicates,RejectedAuth:p.rejected,
   ExplicitOversize:p.oversize,PendingRecords:p.pendingCount,
   OldestPendingMS:age,MaxInterdeliveryMS:p.maxRXInterdeliveryMs,
  }

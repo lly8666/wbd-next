@@ -23,7 +23,7 @@ use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
-use wbd_recovery::{BudgetDirection,WireDirection,ReceiptConfig,ReceiptState,ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,RepairCandidate,GrantLease,GlobalReservationId,RepairSendResult,reserve_frozen_submission,complete_driver_prefix,DriverPrefixObservation,BatchSuffixEvidence};
+use wbd_recovery::{BudgetDirection,WireDirection,ReceiptConfig,ReceiptState,ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,RepairCandidate,GrantLease,GlobalReservationId,RepairSendResult,reserve_frozen_submission,complete_driver_prefix,DriverPrefixObservation,BatchSuffixEvidence,RxFeedbackState,RxFeedbackConfig,FeedbackDraft,FeedbackSendResult};
 
 const OK:i32=0;
 const INVALID:i32=1;
@@ -63,6 +63,10 @@ struct WindowsOriginalM2 {
     direction:BudgetDirection,
     route:ReceiptRouteScope,
     in_flight:Option<WindowsM2QueuedRepair>,
+    // Feedback comes ONLY from this original M3 opener's unique reverse PN.
+    // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
+    feedback:RxFeedbackState,
+    feedback_pending:Option<(FeedbackDraft,u64)>,
 }
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
@@ -94,6 +98,10 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         max_shadow_entries:MAX_M2_FROZEN,pto_ns:80_000_000,
         reorder_window_ns:15_000_000,
     }).map_err(|_|INVALID)?;
+    let feedback=RxFeedbackState::new(RxFeedbackConfig{
+        max_retained_pages:8,max_pages_per_report:8,
+        retention_ns:100_000_000,srtt_ns:8_000_000,
+    }).map_err(|_|INVALID)?;
     let now=m2_clock();
     let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
     g.register(direction,RepairBudgetConfig{
@@ -107,7 +115,90 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     }
     e.m2=Some(WindowsOriginalM2{
         shadow,pending:BTreeMap::new(),direction,route,in_flight:None,
+        feedback,feedback_pending:None,
     });
+    Ok(())
+}
+// S865 original TLS-bound Windows reverse feedback: one bounded M3-unique
+// receipt draft. No TCP-appearance ACK, untrusted carrier, or replayed PN
+// may create a bit in this original-Go M2 receive bitmap.
+fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,out:&mut [u8]
+)->Result<Option<(usize,u32,u64)>,i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let now=m2_clock();
+    let draft={
+        let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+        if m.feedback_pending.is_some(){return Ok(None)}
+        let Some(draft)=m.feedback.on_due(now)else{return Ok(None)};
+        draft
+    };
+    let prepared=(||->Result<(usize,u32,u64),i32>{
+        let msg=wbd_codec::Receipt{
+            largest_data_pn:draft.largest_data_pn().0,
+            ack_delay_us:0,report_seq:draft.report_seq(),
+            pages:draft.pages().iter().map(|p|wbd_codec::ReceiptPage{
+                base_pn:p.base_pn.0,bitmap:p.bitmap,
+            }).collect(),
+        };
+        let tlv=wbd_codec::encode_control(
+            &[wbd_codec::ControlTlv::Receipt(msg)],512
+        ).map_err(|_|INVALID)?;
+        let budget=normal_off_windows_budget(e)?;
+        let slab=e.arena.allocate().map_err(|_|FULL)?;
+        let (pn,seq,used)=e.owner.seal_original_authenticated_receipt(
+            slab,&tlv,budget,15,now
+        ).map_err(|_|BAD_STAGE)?;
+        let storage=std::mem::take(&mut e.tx_scratch);
+        let batch=match e.owner.drain_tx(now,storage){
+            Ok(batch)=>batch,
+            Err((_,storage))=>{
+                e.tx_scratch=storage;
+                return Err(BAD_STAGE)
+            },
+        };
+        let read=(||{
+            let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
+            if ready.len()!=1 || ready[0].record.bytes().len()!=used ||
+                ready[0].record.metadata().pn!=RecordPn(pn) ||
+                ready[0].record.metadata().seq.0 as u32!=seq {
+                return Err(BAD_STAGE)
+            }
+            if used>out.len(){return Err(FULL)}
+            out[..used].copy_from_slice(ready[0].record.bytes());
+            Ok((used,seq,pn))
+        })();
+        e.tx_scratch=batch.recycle();
+        read
+    })();
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    match prepared{
+        Ok((n,seq,pn))=>{
+            m.feedback_pending=Some((draft,pn));
+            Ok(Some((n,seq,pn)))
+        },
+        Err(err)=>{
+            // No NPF syscall accepted this draft: restore dirty coverage.
+            let _=m.feedback.on_send_result(
+                &draft,FeedbackSendResult::NotSent,now
+            );
+            if err==FULL{Ok(None)}else{Err(err)}
+        },
+    }
+}
+fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,pn:u64,npcap_sent:u32
+)->Result<(),i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||npcap_sent>1{return Err(INVALID)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    let Some((draft,expected))=m.feedback_pending.as_ref()
+        else{return Err(BAD_STAGE)};
+    if *expected!=pn{return Err(INVALID)}
+    m.feedback.on_send_result(draft,if npcap_sent==1{
+        FeedbackSendResult::Accepted
+    }else{FeedbackSendResult::NotSent},m2_clock())
+        .map_err(|_|BAD_STAGE)?;
+    m.feedback_pending=None;
     Ok(())
 }
 fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
@@ -776,8 +867,14 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     e.rx_scratch=storage;
     if valid && report.link_ready==1 && report.rejected==0
         && report.control_ready==0 {
+        let unique_pn=opened_data_pn.ok_or(INVALID)?;
+        // Only the same owner-replay-checked M3 successful DATA opens
+        // activate RxFeedbackState. Control kind1 cannot ACK itself.
+        if let Some(m)=e.m2.as_mut(){
+            m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
+        }
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
-        Ok((len,1,opened_data_pn.ok_or(INVALID)?))
+        Ok((len,1,unique_pn))
     }
     // Only after the SAME original protected M3 AEAD and replay admission
     // can this typed kind1 enter the bounded staging lane. It does not yet
@@ -996,6 +1093,49 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_report_npcap_firstsend(
     }
 }
 
+// Bounded C ABI only through the exact credential-checked Go native owner,
+// current Wintun LUID/index and one original Rust M1/PN sender. No callback
+// indicates remote delivery: success here means ciphertext was staged.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v7_reverse_m2_feedback_due(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    out:*mut u8,capacity:usize,used:*mut usize,seq:*mut u32,pn:*mut u64
+)->i32{
+    if out.is_null()||used.is_null()||seq.is_null()||pn.is_null()||
+        capacity<128||capacity>2048{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
+    match m2_next_feedback_entry(&mut e,exact,luid,ifindex,dst){
+        Ok(Some((n,s,p)))=>{unsafe{
+            used.write(n);seq.write(s);pn.write(p);
+        };OK},
+        Ok(None)=>{unsafe{used.write(0);seq.write(0);pn.write(0)};OK},
+        Err(err)=>err,
+    }
+}
+// Commit exactly the NPF actual pcap_sendpacket result. Not a peer ACK.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v7_reverse_m2_feedback_result(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    pn:u64,npcap_sent:u32
+)->i32{
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_finish_feedback_entry(&mut e,exact,luid,ifindex,pn,npcap_sent){
+        Ok(())=>OK,Err(err)=>err,
+    }
+}
 // V5 returns TYPE only after the SAME real original M3 AEAD + unique PN
 // opener. Kind 1=verified business IPv4, 2=verified canonical M2 kind1;
 // kind2 is STAGED in the Rust owner and cannot authorize shadow release

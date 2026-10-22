@@ -9,6 +9,10 @@ on:
       - tools/m0_wl_real_wsl2_guest_probe.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
+      - r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go
+      - crates/wbd-engine/src/v4_windows_owner.rs
       - crates/wbd-engine/src/v4_embedded_go.rs
       - r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go
       - r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go
