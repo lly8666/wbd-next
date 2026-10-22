@@ -14,7 +14,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
-      WIN_BINARY_SRC: abea7a1851e913ab5a64d592c4ed61e9d8478e10
+      WIN_BINARY_SRC: b5f43562e25c7e9d3ebc04d6871c2254c2d5424c
       LINUX_BINARY_SRC: 621bc733becbb4bbcf23bc4b10c6150d22b3a073
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -25,7 +25,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Force frozen,result/wl-public | Out-Null
-          & gh run download 39753469567 --repo $env:GITHUB_REPOSITORY --name m0-plan020-win-wal-39753469567-1 --dir frozen
+          & gh run download 39757045499 --repo $env:GITHUB_REPOSITORY --name m0-plan020-win-wal-39757045499-1 --dir frozen
           if($LASTEXITCODE -ne 0){throw 'previous actual Windows original Go + Rust compiled product source unavailable'}
           @'
           import os,json,hashlib,pathlib,shutil
