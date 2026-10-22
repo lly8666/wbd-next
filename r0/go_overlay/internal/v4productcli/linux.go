@@ -335,6 +335,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+            rx,rxErr:=native.OriginalFecRxProof()
+            if rxErr==nil {
+                log.Printf("V4_PUBLIC_FEC2_RX_PROOF role=client source_seen=%d source_accepted=%d parity_seen=%d parity_accepted=%d systematic_candidate=%d recovered_candidate=%d systematic_tun=%d recovered_tun=%d tun_failed=%d decoder_rejected=%d admission_disabled=%d",
+                    rx.SourceSeen,rx.SourceAccepted,rx.ParitySeen,rx.ParityAccepted,rx.SystematicCandidate,rx.RecoveredCandidate,rx.SystematicTun,rx.RecoveredTun,rx.TunFailed,rx.DecoderRejected,rx.AdmissionDisabled)
+            }
             proof,m2err:=native.OriginalFecM2Proof()
             if m2err==nil {
                 firstCensored,coverCensored:=0,0
@@ -446,6 +451,11 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+            rx,rxErr:=product.OriginalFecRxProof()
+            if rxErr==nil {
+                log.Printf("V4_PUBLIC_FEC2_RX_PROOF role=server source_seen=%d source_accepted=%d parity_seen=%d parity_accepted=%d systematic_candidate=%d recovered_candidate=%d systematic_tun=%d recovered_tun=%d tun_failed=%d decoder_rejected=%d admission_disabled=%d",
+                    rx.SourceSeen,rx.SourceAccepted,rx.ParitySeen,rx.ParityAccepted,rx.SystematicCandidate,rx.RecoveredCandidate,rx.SystematicTun,rx.RecoveredTun,rx.TunFailed,rx.DecoderRejected,rx.AdmissionDisabled)
+            }
             proof,m2err:=product.OriginalFecM2Proof()
             if m2err==nil {
                 firstCensored,coverCensored:=0,0

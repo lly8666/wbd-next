@@ -41,6 +41,11 @@ func v4ReadOriginalFecM2Proof(b *v4EmbeddedNativeBridge)(V4PublicFecM2Proof,erro
     },nil
 }
 
+type V4PublicFecRxProof struct {
+    SourceSeen,SourceAccepted,ParitySeen,ParityAccepted uint64
+    SystematicCandidate,RecoveredCandidate,SystematicTun,RecoveredTun uint64
+    TunFailed,DecoderRejected,AdmissionDisabled uint64
+}
 type v4ProductFecMonitor struct {
     epoch [16]byte
     state FecV2State

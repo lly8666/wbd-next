@@ -309,6 +309,11 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_data_pn:Option<u64>,
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
+    // Genuine original AEAD/PN FEC counts only: source seen/accepted 0,1;
+    // parity seen/accepted 2,3; systematic/recovered candidates 4,5;
+    // actual TUN writes 6,7; TUN failure 8, FEC reject 9, disabled 10.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec_rx:[u32;11],
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Debug)]
@@ -359,24 +364,29 @@ impl ProtectedBackgroundRx{
         #[cfg(feature="fec2_product_record")]
         if opened.kind==2||opened.kind==3{
             use std::sync::atomic::Ordering;
+            if opened.kind==2{receipt.fec_rx[0]+=1}else{receipt.fec_rx[2]+=1}
             let Some((blocks,exact,enabled))=self.fec2.as_mut()else{
                 receipt.invalid=1;return receipt
             };
             // Only original Go's verified Fixed APPLIED (after real
             // kernel copy), not pending/control metadata, enables RX.
             if !enabled.load(Ordering::Acquire){
-                receipt.invalid=1;return receipt
+                receipt.invalid=1;receipt.fec_rx[10]+=1;return receipt
             }
             receipt.authenticated_link=1;
             match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
                 Ok(deliveries)=>{
+                    if opened.kind==2{receipt.fec_rx[1]+=1}else{receipt.fec_rx[3]+=1}
                     receipt.authenticated_data_pn=Some(opened.pn);
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
+                        if first.recovered{receipt.fec_rx[5]+=1}else{receipt.fec_rx[4]+=1}
                         if tun.write_authenticated_ipv4(self.generation,&first.frame)
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
+                            if first.recovered{receipt.fec_rx[7]+=1}else{receipt.fec_rx[6]+=1}
                         }else{
+                            receipt.fec_rx[8]+=1;
                             // A well-formed FEC symbol is not necessarily
                             // a valid business IPv4 frame. M4 remains final
                             // validator; no app delivery is inferred.
@@ -384,7 +394,7 @@ impl ProtectedBackgroundRx{
                         }
                     }
                 }
-                Err(_)=>receipt.invalid=1,
+                Err(_)=>{receipt.invalid=1;receipt.fec_rx[9]+=1},
             }
             return receipt
         }

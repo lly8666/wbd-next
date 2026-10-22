@@ -118,6 +118,13 @@ func (p *V4LinuxClientProduct) OriginalFecM2Proof()(V4PublicFecM2Proof,error){
     if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM2Proof{},ErrAdmissionUnsupported}
     return v4ReadOriginalFecM2Proof(p.owner)
 }
+func (p *V4LinuxClientProduct) OriginalFecRxProof()(V4PublicFecRxProof,error){
+    if p==nil{return V4PublicFecRxProof{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecRxProof{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecRxProof(p.owner)
+}
 func (p *V4LinuxClientProduct) OriginalFECReadback()(V4PublicFecReadback,error){
     if p==nil{return V4PublicFecReadback{},ErrAdmissionParams}
     p.mu.Lock()

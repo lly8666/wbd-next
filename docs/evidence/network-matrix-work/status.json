@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S021-original-M3-FEC-RX-identity-and-TUN-observer",
+  "phase": "S021-bounded-original-FEC-M3-RX-counters-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,15 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S021-authentic-FEC-RX-batch-observer-build",
+      "type": "PRODUCT_SOURCE_BUILD",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "one original Rust and Go source push starts one native ARM64 build; no manual dispatch",
+      "scope": "feature7 only, 11 batch-aggregated per-session numeric AEAD-unique source/parity accepted, recovery candidate and actual M4 TUN writes; no codec/MTU/replay/FEC timers/mature-gate changes"
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S010-single-A-unit-repair",
@@ -118,7 +126,7 @@
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
   ],
-  "next_action": "S020 true Fixed30 diagnosed FAIL and archived; no repeat. Read original RX moved M3 AEAD→Fec2LiveRx→M4 write path and add minimum bounded source vs parity admitted, decoded recovered and actual TUN write numerical counters plus first-send commit gate readback if necessary; compile one SOURCE and targeted real Fixed30. Do not loosen M2 genuine ACK/unknown gate or add queues; default off S018 remains PASS.",
+  "next_action": "Resolve sole S021 native ARM64 build Action and verify source SHA/ELF/SHA256SUMS. Add harness strict parser with NOT_OBSERVED missing markers and Actions contract, then one unchanged Fixed30 real diagnostic. Preserve S020 FAIL and S018 default PASS; never dispatch twice.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",

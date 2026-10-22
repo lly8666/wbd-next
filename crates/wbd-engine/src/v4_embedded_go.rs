@@ -2791,6 +2791,8 @@ struct LoopCounts {
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec_rx:[AtomicU64;11],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -2860,6 +2862,8 @@ fn background_raw_once(
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
+    fec_stats:&LoopCounts,
+    #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
@@ -2893,6 +2897,8 @@ fn background_raw_once(
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     if batch.observed==0{return Err(INVALID)}
     let mut delivered_total=0u32;
+    #[cfg(feature="fec2_product_record")]
+    let mut fec_batch=[0u64;11];
     let mut pending_valid=false;
     let mut invalid_seen=false;
     let mut authenticated_control=false;
@@ -2912,6 +2918,10 @@ fn background_raw_once(
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(slab,len,tun,when);
+        #[cfg(feature="fec2_product_record")]
+        for (dst,n) in fec_batch.iter_mut().zip(receipt.fec_rx.iter()){
+            *dst=dst.saturating_add(u64::from(*n));
+        }
         let Some(next)=authenticated_rx_anchor(
             *anchor,absolute,len,receipt.authenticated_link
         )else{continue};
@@ -2970,6 +2980,10 @@ fn background_raw_once(
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
+    }
+    #[cfg(feature="fec2_product_record")]
+    for (dst,n) in fec_stats.fec_rx.iter().zip(fec_batch){
+        if n>0{dst.fetch_add(n,Ordering::Relaxed);}
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     // A unique authenticated LINK shard with no completed datagram is
@@ -4181,6 +4195,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
+                    &stats_rx,
+                    #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
                     original_outer_rx.as_ref()
@@ -4553,6 +4569,26 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
     e.fixed_applied=Some(policy);
     e.fec2_rx_admit.store(true,Ordering::Release);
+    OK
+}
+// Sole original Go TLS M3 FEC RX/M4 TUN low-cost numeric-only counters.
+// No alternate opener, per-packet trace, payload, fake success or hot lock.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_proof(
+    h:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=11{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||e.protected_features!=7{
+        return BAD_STAGE
+    }
+    for (i,counter) in e.counters.fec_rx.iter().enumerate(){
+        unsafe{out.add(i).write(counter.load(Ordering::Relaxed))};
+    }
     OK
 }
 // Explicit coverage counters are separate from UNKNOWN and kernel copied.
