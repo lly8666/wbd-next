@@ -27,6 +27,7 @@ extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_rx_counters(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_tx_backend(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -297,6 +298,16 @@ type V4PublicFecRxCounters struct {
     AuthenticatedSource,AuthenticatedRepair uint64
     TunDeliveredSource,TunDeliveredRecovered uint64
     NativeDecodeCalls,ScalarDecodeCalls uint64
+}
+// Encoder call counters belong to the original M1/M3 parity quantum.
+type V4PublicFecTxBackend struct{NativeQuanta,ScalarQuanta uint64}
+func (b *v4EmbeddedNativeBridge) originalPublicFecTxBackend()(V4PublicFecTxBackend,error){
+    var empty V4PublicFecTxBackend
+    if b==nil||!b.committed||b.stopped||b.handle==0{return empty,errV4Embedded}
+    var counts [2]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_tx_backend(C.uint64_t(b.handle),&counts[0],2)
+    if rc!=0{return empty,fmt.Errorf("%w: FEC2 TX encoder backend=%d",errV4Embedded,int(rc))}
+    return V4PublicFecTxBackend{NativeQuanta:uint64(counts[0]),ScalarQuanta:uint64(counts[1])},nil
 }
 func (b *v4EmbeddedNativeBridge) originalPublicFecRxCounters()(V4PublicFecRxCounters,error){
     var zero V4PublicFecRxCounters

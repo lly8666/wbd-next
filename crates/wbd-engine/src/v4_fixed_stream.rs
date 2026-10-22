@@ -11,7 +11,7 @@ use crate::runtime::fec2_owner::{
     OwnerReport,SourceTicket,
 };
 use crate::fec2_staged::StagedParity;
-use wbd_codec::fec_v2::{BackendChoice,Profile as CodecProfile,Rs16,Error as CodecError};
+use wbd_codec::fec_v2::{BackendChoice,BackendUsed,Profile as CodecProfile,Rs16,Error as CodecError};
 use wbd_types::{ConfigRevision,MonoNs};
 
 /// This confirms an immutable ciphertext kernel-copy prefix, not delivery.
@@ -35,6 +35,8 @@ pub struct FixedStream {
     record_payload_budget:usize,
     in_flight:Option<InFlight>,
     stopped:bool,
+    // Actual successful codec quantum selection, not a feature/probe guess.
+    encoded_native:u64,encoded_scalar:u64,
 }
 impl FixedStream {
     /// Caller must have validated original Go TLS principal/epoch, feature7,
@@ -61,10 +63,13 @@ impl FixedStream {
             })?;
         Some(Self{owner,codec:Rs16::new(),profile:m3,
             revision:ConfigRevision(revision),record_payload_budget,
-            in_flight:None,stopped:false})
+            in_flight:None,stopped:false,encoded_native:0,encoded_scalar:0})
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
+    pub fn encode_backend_quanta(&self)->(u64,u64){
+        (self.encoded_native,self.encoded_scalar)
+    }
     pub fn next_deadline(&self)->Option<MonoNs>{
         if self.in_flight.as_ref().is_some_and(|j|
             j.staged==0&&j.prepared.remaining_rows()>0){
@@ -145,10 +150,14 @@ impl FixedStream {
             return Ok((0,0))
         }
         let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
+        let mut backend_used=None;
         let rows=match cur.prepared.next_quantum(
             &self.codec,self.record_payload_budget,BackendChoice::default()
         ){
-            Ok(Some((rows,_)))=>rows,
+            Ok(Some((rows,backend)))=>{
+                backend_used=Some(backend);
+                rows
+            },
             Ok(None)=>Vec::new(),
             Err(e)=>{
                 let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
@@ -167,6 +176,19 @@ impl FixedStream {
             }
         }
         let emitted=rows.len();
+        // Count actual completed encode calls, not copied parity or APPLIED.
+        // This is a bounded per-quantum counter, no per-packet logging.
+        if emitted>0 {
+            match backend_used {
+                Some(BackendUsed::NativeIsaL)=>{
+                    self.encoded_native=self.encoded_native.saturating_add(1);
+                },
+                Some(BackendUsed::Scalar)=>{
+                    self.encoded_scalar=self.encoded_scalar.saturating_add(1);
+                },
+                None=>{},
+            }
+        }
         if cur.prepared.remaining_rows()==0 && cur.staged==0{
             let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
             self.owner.finish_parity(
@@ -247,6 +269,10 @@ mod tests{
         }
         assert_eq!(sources.len(),6);
         assert_eq!(repairs.len(),3);
+        #[cfg(not(feature="native_fec_acceleration"))]
+        assert_eq!(stream.encode_backend_quanta(),(0,3));
+        #[cfg(feature="native_fec_acceleration")]
+        assert_eq!(stream.encode_backend_quanta(),(3,0));
         for (i,(id,wire)) in repairs.iter().enumerate(){
             assert_eq!(*id,(i+1) as u64);
             assert_eq!(&sources[i*2].0,id);

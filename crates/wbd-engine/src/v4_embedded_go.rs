@@ -2519,6 +2519,26 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_rx_counters(
     unsafe{std::ptr::copy_nonoverlapping(counts.as_ptr(),out,6)}
     OK
 }
+// Actual source-locked original-Go fixed/auto FEC2 TX encoder backend.
+// No parity kernel-delivery or peer FEC success inferred from this count.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_backend(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=2{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||
+       !e.original_public_feedback_armed||e.protected_features!=7||
+       !e.fec2_rx_admit.load(Ordering::Acquire){return BAD_STAGE}
+    let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
+    let (native,scalar)=stream.encode_backend_quanta();
+    let result=[native,scalar];
+    unsafe{std::ptr::copy_nonoverlapping(result.as_ptr(),out,2)}
+    OK
+}
 // Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested

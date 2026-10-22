@@ -236,6 +236,14 @@ func Run(role string,args []string)error{
     }
     return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
+func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxBackend,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_FEC2_TX_BACKEND_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_FEC2_TX_BACKEND role=%s native_encode_quanta=%d scalar_encode_quanta=%d sampling=pre_stop",
+        role,v.NativeQuanta,v.ScalarQuanta)
+}
 func logAuthenticFecRx(role string,v realityfront.V4PublicFecRxCounters,err error){
     if err!=nil{
         log.Printf("V4_PUBLIC_FEC2_RX_NOT_AVAILABLE role=%s error=%v",role,err)
@@ -324,6 +332,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if c.fecMode!=realityfront.FecV2Off {
         measured,readErr:=native.OriginalFecRxCounters()
         logAuthenticFecRx("client",measured,readErr)
+        txMeasured,txErr:=native.OriginalFecTxBackend()
+        logAuthenticFecTx("client",txMeasured,txErr)
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
@@ -424,6 +434,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         if c.fecMode!=realityfront.FecV2Off {
             measured,readErr:=product.OriginalFecRxCounters()
             logAuthenticFecRx("server",measured,readErr)
+            txMeasured,txErr:=product.OriginalFecTxBackend()
+            logAuthenticFecTx("server",txMeasured,txErr)
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
