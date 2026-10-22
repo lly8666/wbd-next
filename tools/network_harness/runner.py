@@ -28,10 +28,27 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+
+
+def public_fec_m2_proof(log_text):
+    """Only true original Go/Rust M2 counters once pre-Stop, never infer zero."""
+    fields=("accepted","not_sent","uncertain","unknown_2s","unknown_8s",
+            "covered_2s","covered_8s","reverse_reports","first_censored",
+            "cover_censored")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M2_PROOF role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in values for k in fields):
+        return None
+    if values["first_censored"] not in (0,1) or values["cover_censored"] not in (0,1):
+        return None
+    return {k:values[k] for k in fields}
 
 
 def public_fec_failure_reasons(log_text):
@@ -67,6 +84,19 @@ def public_fec_tx_snapshot(log_text):
 
 
 
+
+
+def tcp_socket_state_counts(output):
+    """Only count TCP states, never persist inner addresses/ports or payload."""
+    allowed={"LISTEN","SYN-SENT","SYN-RECV","ESTAB","FIN-WAIT-1",
+             "FIN-WAIT-2","CLOSE-WAIT","CLOSING","LAST-ACK","TIME-WAIT","CLOSED"}
+    result={}
+    for line in output.splitlines():
+        cols=line.split()
+        if cols and cols[0].upper() in allowed:
+            state=cols[0].upper()
+            result[state]=result.get(state,0)+1
+    return result
 
 
 def dump(path, value):
@@ -294,6 +324,7 @@ class LinuxExperiment:
                 "snmp": self.nscommand(role, ["cat", "/proc/net/snmp"]),
                 "udp_sockets": self.nscommand(role, ["ss", "-uanm"], False),
                 "packet_sockets": self.nscommand(role, ["ss", "-0", "-am"], False),
+                "tcp_states": tcp_socket_state_counts(self.nscommand(role, ["ss", "-H", "-tan"], False)),
                 "blackhole_counters": self.nscommand(role, ["iptables", "-nvxL", "WBN_LOSS"])}
         self.snapshots.append(row)
 
@@ -334,9 +365,12 @@ class LinuxExperiment:
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
         fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
+        fec_m2 = {role:public_fec_m2_proof(log) for role,log in logs.items()}
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
-                "repair_packets": repair, "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
+                "repair_packets": repair,
+                "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
+                "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
                 "FEC_k_r_parity_queue_decode": {
                     "real_tx_owner_end_snapshot": fec_tx,

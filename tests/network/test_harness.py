@@ -169,6 +169,23 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_original_m2_numeric_proof_and_tcp_state_only_no_addresses(self):
+        from tools.network_harness.runner import (
+            public_fec_m2_proof, product_marker_line, tcp_socket_state_counts)
+        row=("V4_PUBLIC_FEC2_M2_PROOF role=client accepted=113 not_sent=2 "
+             "uncertain=1 unknown_2s=17 unknown_8s=25 covered_2s=88 "
+             "covered_8s=74 reverse_reports=31 first_censored=0 cover_censored=1")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m2_proof(row)["unknown_2s"], 17)
+        self.assertIsNone(public_fec_m2_proof(""))
+        self.assertIsNone(public_fec_m2_proof(row.replace("reverse_reports=31","no_report=31")))
+        self.assertIsNone(public_fec_m2_proof(row.replace("cover_censored=1","cover_censored=3")))
+        counts=tcp_socket_state_counts("SYN-SENT 0 1 private:333 private:444\n"
+                                       "ESTAB 0 0 private:333 private:444\n"
+                                       "ESTAB 0 0 private:333 private:444\n")
+        self.assertEqual(counts, {"SYN-SENT":1, "ESTAB":2})
+        self.assertNotIn("private", str(counts))
+
     def test_real_fec_failure_reasons_negative_unknown(self):
         from tools.network_harness.runner import public_fec_failure_reasons,product_marker_line
         row=("V4_PUBLIC_FEC2_FAILURE role=client source_payload=0 source_arena=7 "
