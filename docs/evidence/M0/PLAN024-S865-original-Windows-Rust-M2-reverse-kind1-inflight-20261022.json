@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "qualification": "NO_NEW_FUNCTIONAL_CLAIM",
+  "scope": "Narrow same TLS-bound Windows Rust M3 reverse original M2 feedback: bounded RxFeedbackState armed under current signed Wintun M4 identity, only true AEAD unique S2C PN, one due canonical kind1 M1-sealed record, Go native NPF pcap_sendpacket copied/not-sent settlement, original sequence/fair pulse; no TCP ACK as M2, same wire/AEAD/PN, frozen repairs and quota unchanged.",
+  "intent_commit": "4129aa47439573a6bd89b65745d69c22928dde19",
+  "original_product_positive": {
+    "source_sha": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
+    "run_id": 39794445609,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12434340073,
+    "artifact_sha256": "0ad0e1c02e2a67a2f06a9b18187b4fb30bf884c20770fbdd826f970df6f8aab4",
+    "windows_app": {
+      "sent": 24,
+      "received": 34
+    },
+    "linux_app": {
+      "sent": 82,
+      "received": 24
+    },
+    "windows_wal_rust_stop": true,
+    "linux_rust_stop": true,
+    "linux_m2_authenticated_ack": 0,
+    "linux_m2_frozen_retransmitted": 164
+  },
+  "changed_files": [
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    ".github/workflows/m0-wl-public-normal-full.yml"
+  ],
+  "actions": [
+    {
+      "run_id": 39801422162,
+      "attempt": 1,
+      "kind": "Windows exact owner Rust ABI",
+      "status_at_record": "IN_PROGRESS"
+    },
+    {
+      "run_id": 39801422682,
+      "attempt": 1,
+      "kind": "Windows2025 original-Go Npcap/Wintun↔same-source Linux Rust raw/TUN",
+      "status_at_record": "QUEUED"
+    },
+    {
+      "run_id": 39801422270,
+      "attempt": 1,
+      "kind": "Original Go native Windows WAL regression",
+      "status_at_record": "QUEUED"
+    },
+    {
+      "run_id": 39801422698,
+      "attempt": 1,
+      "kind": "main governance",
+      "status_at_record": "IN_PROGRESS"
+    }
+  ],
+  "must_verify": [
+    "No new Rust/Go ABI compile failure",
+    "Linux genuinely original M2 authenticated_ack>0 and/or present explicit first missing boundary",
+    "Windows actual kernel-app to Linux true UDP and reverse + both Stop remain successful",
+    "Original TLS/WFP/WAL/Stop unchanged",
+    "No synthetic ACK or bypass of Rust replay",
+    "2 repair/Abandoned and fresh >256 gap still OPEN",
+    "WL-N0/N1/N5 10Mbps 60s real kernel netem NOT_RUN"
+  ],
+  "next_action": "Consume first exact source3e5 Windows Rust owner ABI and original Go Windows2025 build results. If compiler error, retain original FAIL and correct only exact source. If full original run produces authentic Linux authenticated_ack>0 with app duplex and Stop, mark scoped M2 feedback PASS and next test 2-repair/Abandoned plus >256 gap before WL 10Mbps 60s."
+}
