@@ -10,7 +10,7 @@
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": "b1c6a0a160d3b041d799065847016c63db8bdba5"
+    "harness_source": "242988e9f77f28337b34bee72a153a3ed31fefc5"
   },
   "build": {
     "run_id": 39759842150,
@@ -55,14 +55,17 @@
     {
       "id": "arm64-off-udp-only-loss1-rtt50-75s",
       "path": "tests/network/request.json",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "scenario": "S003 fixed same SOURCE and same 5Mbps UDP/direction as S002; no inner TCP, same sizes/1pct IID/25ms each/75s; discriminate TCP-dependent amplification vs off recovery alone",
       "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
       "build_run": 39759842150,
       "artifact_id": 12417786567,
       "attempt": 1,
       "trigger": "push of this one changed tests/network/request.json invokes one network Action; DO NOT separately dispatch",
-      "seed_note": "business seed 5205 held; kernel netem unseeded_recorded, not bitwise paired"
+      "seed_note": "business seed 5205 held; kernel netem unseeded_recorded, not bitwise paired",
+      "run_id": 39763535951,
+      "harness_source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39763535951"
     }
   ],
   "open_issues": [
@@ -71,7 +74,7 @@
     "Game+FEC, cipher/repair runtime toggles, no-payload idle and Windows not wired in this Linux harness",
     "Native ARM64 source/run/attempt/ZIP/ELF adapt PASS in existing selfcheck; 39762361004 selfcheck failed from inherited repair gate; test-only fix pending fresh Actions"
   ],
-  "next_action": "Resolve exactly one Actions run created by S003 request push; download source-bound artifact and record FAIL/PASS, qdisc, UDP first delivery/retransmit, Stop, host. No run ID yet; do not dispatch duplicate. If UDP-only still >0.1% continue recovery/source path diagnosis; otherwise test TCP interaction with real counters (not a product fix by inference).",
+  "next_action": "S003 run 39763535951 IN_PROGRESS and contract run 39763536014; do not redispatch. Collect original artifact and compare injection, UDP loss, timer and product/host accounting to S002; decide whether concurrent TCP required for observed residual.",
   "actions": [
     {
       "run_id": 39759842064,
