@@ -66,11 +66,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   parsedMAC,macErr:=net.ParseMAC(guestMAC)
   guestIP,ipErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4"))
   sourceIP,srcErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4"))
+  // Runtime identities are only diagnostic here; the same exact guard
+  // remains fail-closed. This is the real public product run, not a unit
+  // fixture; a mismatched original route must never be silently replaced.
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
    guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
    sourceIP!=underlay.Source4{
-    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override",windowsclient.ErrN4NativeGuard)
+    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
+     windowsclient.ErrN4NativeGuard,idx,underlay.InterfaceIndex,
+     guestIP,o.ServerIP,underlay.NextHop4,sourceIP,underlay.Source4,
+     guestMAC,parseErr,macErr,ipErr,srcErr)
   }
   var actual [6]byte
   copy(actual[:],parsedMAC)
