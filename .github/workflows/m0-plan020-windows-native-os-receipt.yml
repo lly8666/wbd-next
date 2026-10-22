@@ -232,6 +232,11 @@ jobs:
           & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_original_m3_kind1_aead_unique_pn_stages_only_once_then_stop -- --nocapture
           if ($LASTEXITCODE -ne 0) {throw 'M0 original Windows M3 kind1 auth / replay / Stop test FAIL'}
           Write-Output 'M0_PLAN024_WINDOWS_M3_AUTHENTIC_KIND1_TYPED_STAGE_PASS_SCOPED_NO_M2_SHADOW'
+          # M2 firstsend shadow is the ACTUAL original frozen M1 bytes only
+          # after a marked Npcap kernel success, then scoped kind1 retires it.
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'M0 real frozen M1 shadow / scoped authenticated kind1 M2 native test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_ORIGINAL_M1_M2_NPCAP_MARKED_FROZEN_SHADOW_AUTHENTIC_KIND1_RETIRE_PASS_SCOPED'
           & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
           @'
