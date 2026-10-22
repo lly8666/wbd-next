@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "qualification": "NOT_PROMOTED",
+  "parent_source": "56ce7127de4944810ea22770b56d066d69940fc0",
+  "repair_intent": "docs/devlog/M0/PLAN024-S860-original-NPF-bounded-burst-drop-no-global-kill-intent-20261022.md",
+  "repair_intent_sha": "28fc613f30661c10206ea0c48612ce84f3b1f592",
+  "affected_sources": [
+    {
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+      "git_blob": "6e1e2ee25ac8ca52f04268be3cd3c8a6096b594b"
+    },
+    {
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+      "git_blob": "82bbfa464f1b18d03406d641bea3a4ca4e89d7d4"
+    },
+    {
+      "path": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+      "git_blob": "fefd89aa61ac259b9b30aaa0c59d713bcd5bf0ad"
+    }
+  ],
+  "prior_exact_action": {
+    "run_id": 39778489109,
+    "attempt": 1,
+    "source_sha": "56ce7127de4944810ea22770b56d066d69940fc0",
+    "conclusion": "failure",
+    "job_id": 119823416032,
+    "artifact_id": 12426127256,
+    "artifact_sha256": "21eb8bd56ad95938159700a80504ccf2496baf86c9ad99ead17d99913df4e5ce",
+    "actual_earliest_failure": "native NPF reader: windowsclient: crash-persistent native DNS and IPv6 guard required: detached original NPF ingress queue full depth=64 capacity=64",
+    "win_original_go_rust_native_os_applied": true,
+    "linux_original_go_raw_tun_ready": true,
+    "windows_original_peer_stats": {
+      "tx_records": 9,
+      "rx_first_delivered_ipv4": 22,
+      "frozen_ciphertext_retransmits": 13,
+      "duplicate_tcp_carriers": 42,
+      "rejected_or_invalid_carriers": 0,
+      "pending_original_rust": 9
+    },
+    "linux_original_m2_stats": {
+      "real_first_copy": 82,
+      "authenticated_ack": 0,
+      "original_frozen_retransmitted": 163,
+      "driver_uncertain": 0,
+      "quota_or_capacity_blocked": 0,
+      "retired_total": 63,
+      "max_retransmits": 2
+    },
+    "windows_kernel_app_last_second": {
+      "sent": 4,
+      "received": 0
+    },
+    "linux_kernel_app_last_second": {
+      "sent": 73,
+      "received": 0
+    },
+    "full_duplex": "FAIL",
+    "owned_product_disconnection_marker": "PASS_SCOPED",
+    "full_stop_qualification": "NOT_RUN"
+  },
+  "changes": [
+    "Keep original NPF nativeFrames fixed 64 (no queue enlargement), no extra reassembly memory.",
+    "On full pre-auth detached NPF DATA/ACK queue only count local ingress loss and continue; do not claim Rust AEAD/open or apply any carrier ACK.",
+    "Still preserve FAIL on FIN/RST and NPF driver read, authenticated kind, generation/WAL/OS errors.",
+    "Expose local pre-auth drops as monotonically counted npcap_ingress_local_drops with existing 1Hz telemetry and existing failure snapshot; zero means measured zero."
+  ],
+  "current_actions": [
+    {
+      "id": 39781312249,
+      "attempt": 1,
+      "source_sha": "bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2",
+      "kind": "fresh real original Go Windows full WSL2 Linux raw/TUN Normal/off",
+      "status_at_record": "IN_PROGRESS"
+    },
+    {
+      "id": 39781312185,
+      "attempt": 1,
+      "source_sha": "bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2",
+      "kind": "Windows native WAL original-Go",
+      "status_at_record": "IN_PROGRESS"
+    },
+    {
+      "id": 39781312098,
+      "attempt": 1,
+      "source_sha": "bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2",
+      "kind": "governance",
+      "status_at_record": "IN_PROGRESS"
+    }
+  ],
+  "source_qualifications_not_run": [
+    "Windows→Linux Normal/off sustained actual kernel UDP duplex",
+    "authenticated M2 receipt/2 repair/Abandoned",
+    "fresh traffic after >256 carrier ACK hole",
+    "native actual netem",
+    "owned two-OS Stop success under uninterrupted app",
+    "WL-N0",
+    "WL-N1",
+    "WL-N5",
+    "physical windows/ARM",
+    "Android/OpenWrt product"
+  ],
+  "next_action": "Verify exact-source 39781312249 Windows original-Go complete real two-OS product result and local ingress drop counter. If no early Stop but app duplex still fails, identify earliest missing Windows→Linux hop and genuine M2 receipt/ACK; never lift performance gate until actual app+Stop PASS."
+}
