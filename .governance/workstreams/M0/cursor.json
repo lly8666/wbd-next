@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 264,
-  "checkpoint_sha": "269a518d0dc2cef2ad989c000b684cdcdf9088f6",
+  "sequence": 265,
+  "checkpoint_sha": "3bd4bc2e6fc637f3ac5e9aec82eb5adccf6b4f8e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 public Windows original Go TLS/Rust M2 Npcap/Wintun→WSL2 Linux raw/TUN Normal/off; independent genuine apps now start pre-READY. Frozen and fresh source05aadd attained authentic Windows OS Applied/READY and Linux READY but failed full UDP duplex/Stop on harness 18s premature join. New 1Hz real-kernel diagnostics SOURCEe77b full+frozen Actions 39774560726/39774561079 in progress; WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "PR24 successfully merged 2a4d4f; H262 circular client/app READY deadlock actually corrected at source05aadd. Real product first+reverse reached OS Applied on two Actions, but two independently compiled paths both failed Python app wait shorter than its own 30s+35s deadline; logs at end hid earliest missing kernel UDP hop. Recent test-only 1Hz liveness/owner exit diagnostics now running. Separate main NORMAL-COMMON x64 C ABI feature gating failures resolved at sourceae9c Actions39773757525 success, ARM64 bundle Action39773757655 success. Old failures and no product performance remain preserved.",
+  "current_task": "PLAN024 real Windows original Go TLS/Rust Npcap+signed Wintun→Ubuntu WSL2 Linux raw/TUN Normal/off; e77b harness true first/reverse unblocks OS Applied/READY but public sustained bidirectional/owned full Stop still FAIL. S859 exact SOURCE56ce errors now attributed by origin; full Action39778489109 and native WAL Action39778488947 running. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "Recovered H264 plus intent/source/evidence commits. Both exact harness sourcee77b Windows2025 original full39774560726 and frozen39774561079 concluded FAIL soon after real OS Applied/READY, Windows native product generic ErrN4NativeGuard as Stop completed; non-secret 1Hz genuine Windows UDP sent3/5, received0/22 and Linux sent64/73 received0. Current Go uses same ErrN4NativeGuard sentinel for multiple NPF queue, carrier, Rust peer, native M4 write failures; this text does not prove WFP/DNS actually went absent. S859 source56ce only adds non-hot-path contextual error evidence and one failure snapshot, atomically repins original-Go manifest; Action run in progress, no product PASS.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read exact Actions39774560726/39774561079 for source e77b0596026b4f27bbe4705b45dd8c1deb4f83ac and their 1Hz real Windows/Linux UDP plus native client liveness artifacts; fix the earliest observed genuine delivery/Stop blocker only, requalify one discriminating full path before starting WL-N0/N1/N5.",
+  "next_action": "Consume already-running original-Go SOURCE56ce7127de4944810ea22770b56d066d69940fc0 full Windows2025 Action39778489109 and Windows native WAL Action39778488947. Read exact WBD_WINDOWS_NATIVE_FAILURE_SOURCE and true kernel 1Hz receipts to identify earliest failure; repair only that cause, then one discriminating full real Windows↔Linux functional validation. Do not start WL-N0/N1/N5 until public duplex and owned Stop PASS.",
   "unverified": true,
   "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
   "evidence_refs": [],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json",
-    "docs/evidence/M0/PLAN024-S857-true-Windows-Linux-full-native-first-reverse-Apply-gate-BLOCKED-20261022.json",
-    "docs/evidence/arm64-main-integration-20261022.json"
+    "docs/evidence/M0/PLAN024-S859-real-native-failure-origin-probe-20261022.json",
+    "docs/devlog/M0/PLAN024-S859-frozen-guard-generic-sentinel-precise-failure-intent-20261022.md",
+    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H263: PR24 merged and 72 checkpoint→main commits/path reviewed; original main task/epoch unchanged. Two first post-fix authentic Actions 39772660895/39772660900 FAIL full public duplex after TRUE Windows OS Applied/READY and Linux READY. Corrected test only 1Hz/bounded timing sourcee77b 39774560726/39774561079 pending. Rust/Go optional-FEC symbol gate fixed, NORMAL-COMMON sourceae9c success. Normal product, true two-way UDP and Stop unqualified; WL0/1/5 and physical NOT_RUN. H263 governance FAIL39774850166 from mistakenly treating multi-SOURCE checkpoint as single-SOURCE evidence_refs; H264 moves multi-source to context only under unverified=true. NOT product promotion."
+  "partial_summary": "H265: H264→main 1 metadata commit, S859 read-only original-Go native failure origin study + atomic product error-attribution code SOURCE56ce + exact manifest pinned. Both earlier e77b original Windows↔Linux actions 39774560726/39774561079 FAIL after true OS Applied/READY due generic native guard sentinel and no continuous duplex, owned disconnection logged. Missing real failure provenance; new Actions 39778489109/39778488947 pending; governance39778489087 PASS. Product qualification OPEN, WL0/N1/N5/physical NOT_RUN; avoid treating same error string as proof WFP missing."
 }
