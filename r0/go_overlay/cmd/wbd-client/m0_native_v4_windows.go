@@ -27,9 +27,13 @@ import(
 )
 
 func runM0NativeV4Windows(o m0NativeV4Options)error{
- // The original Windows owner supports single-lane Normal/off today.
- // Other selectors must not mutate WFP or silently downgrade to Normal.
+ // Mode-specific original Rust capability is queried before Npcap,
+ // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
+ // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
+ if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
+  return fmt.Errorf("%w: public Windows Game group requires 2/4 genuine simultaneous Npcap/TLS lanes and OS Stop; single-owner runtime is forbidden",windowsclient.ErrN4NativeGuard)
+ }
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
@@ -110,8 +114,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  // Original pinned TLS handshake, protected credentials, exact
  // FakeTCP Detach and native Rust M1/M3 Commit: no synthetic cold key.
- policy,e:=realityfront.FixedPolicyForClient(1,0)
- if e!=nil{return e}
+ var policy realityfront.AdmissionPolicy
+ switch o.Mode{
+ case m0WinModeNormal:
+  policy,err=realityfront.FixedPolicyForClient(1,0)
+ case m0WinModeFixed:
+  policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   1,"fixed",4,4,20,realityfront.CipherChaCha)
+ case m0WinModeAuto:
+  policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   1,"auto",0,4,20,realityfront.CipherChaCha)
+ default:
+  return windowsclient.ErrN4NativeGuard
+ }
+ if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
     RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second},
@@ -122,8 +138,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  dll:=filepath.Join(windowsExecutableDir(),"wbd_engine.dll")
  if !filepath.IsAbs(dll){return windowsclient.ErrN4NativeGuard}
- owner,session,e:=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
- if e!=nil{return fmt.Errorf("original credential TLS→native Rust V4 owner rejected: %w",e)}
+ var owner *realityfront.V4WindowsAuthenticatedClientOwner
+ var session *realityfront.V4ClientSession
+ if o.Mode==m0WinModeNormal{
+  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
+ }else{
+  // Protected feature7 is real original credential TLS->Rust M1/M3,
+  // not a caller-selected FEC switch. The release capability gate still
+  // denies production Fixed/Auto pending genuine M2 applied revision.
+  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth)
+ }
+ if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied
  // because the Wintun alias/process exists.
@@ -152,7 +177,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  })
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
- transport,e:=newM0NativeV4Peer(owner,endpoint,flow,nativeFrames)
+ transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
  if e!=nil{return e}
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
   ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
