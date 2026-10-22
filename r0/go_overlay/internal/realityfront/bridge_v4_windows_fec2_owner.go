@@ -11,7 +11,6 @@ import (
  "errors"
  "fmt"
  "runtime"
- "syscall"
  "unsafe"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
