@@ -1,45 +1,40 @@
-# ARM64/Linux + Android/OpenWrt clients and auto acceleration — implementation plan
+# Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
-Status: IN_PROGRESS on isolated branch; no existing main role/cursor/task modified. Baseline main `5fd93440c42aeba8c64b4625b0d6b0f95adaa711`. This document is a proposed implementation plan, not a claim of product readiness.
+**Active scope (2026-10-22): Linux ARM64 client AND server only.** Android and OpenWrt clients have been explicitly deferred by the user. Their previously committed source and scoped BUILD receipts are preserved; do not add more Android/OpenWrt features, jobs, packages, or release qualifications during the Linux phase. Windows ARM64 is out of scope. This is a separate feature branch; do not alter the main registry, role cursor, or other workers' files.
 
-## Scope
-- Native Linux aarch64 client **and** server (public Go credential TLS -> Rust record/recovery/FEC -> Linux AF_PACKET/raw/TUN, two-way, owned Stop).
-- Android arm64 client via Android VpnService-owned TUN fd and protected underlay sockets; Android does **not** receive Linux raw-socket/CAP_NET_RAW privileges.
-- OpenWrt arm64 client using ordinary Linux TUN/raw or, where raw is unavailable, an explicitly qualified non-privileged transport adapter. No kernel/driver deception.
-- Keep existing Windows x64 and Linux x64 behavior. Windows ARM64 server/client is NOT in scope.
-- Hardware acceleration is **auto preferred** across all architectures: actual CPU-supported AEAD/HP in existing libraries; FEC2 uses pinned ISA-L when compiled/available, otherwise scalar. No hard crash or bogus NativeIsaL report on unsupported targets. No unverified driver or network performance label.
+## Exact recovery and evidence
+- Starting branch HEAD at reprioritization: `b9bf7cc7f6a422b3566cf17e2cb409daf6698556`. This is **not** a product PASS.
+- Previous full scoped Linux ARM64 native component/ISA-L workflow `39749018948` at `3fea6502193eda8a6864d89e5884795e6bf47ed1`: SUCCESS.
+- Previous cross-platform build-only workflow `39749868699` at `b9bf7cc7f6a422b3566cf17e2cb409daf6698556`: SUCCESS; Android/OpenWrt work now deferred.
+- Latest scoped Linux ARM64 `39749868638` same source: overall FAIL. ISA-L job PASS; `wbd-platform` test `r1_borrow_stop_and_acquire_race_is_fenced` intermittently FAIL due scheduling before main stop. Preserve the failure; fix test coordination without changing production shutdown semantics.
+- Public Go/Rust bundle `39749665256` at `aa0a52b83b568d2335b67c4537bf5f255edc6b9d`: FAIL, the assembled original Go V4 Game product symbols are absent because 3 additional overlay files are not copied. Do not mark as compiler/silicon failure; fix source-locked assembly list and verify Go/Rust full ABI on ARM64.
+- Full Linux ARM64 true app-to-app through privileged TUN/raw, authenticated receipts, owned Stop and impaired-network trials: **NOT_RUN**.
+- Pinned original Go `a7a82db31fe736ffedee330795a3234d358f1984`, ISA-L `c387163fcbca62701d646149564c550c78a4f985`, Rust `1.85.1`, Go `1.23.12`.
 
-## Reuse/reference inventory (do not fork protocol)
-- Pinned Rust 1.85.1; `aws-lc-rs=1.18.1`, `aes=0.8.4`, `chacha20=0.9.1`.
-- FEC2 `crates/wbd-codec/src/fec_v2.rs`: k<=16, Cauchy coefficients, 2-byte original-length source symbol, 12-byte repair header, max 4 parity rows/quantum, missing-only inverse. Do not use old V1 generator or ISA-L default matrix.
-- Native FFI `native/isal-safe`: pinned ISA-L v2.31.1 SHA `c387163fcbca62701d646149564c550c78a4f985`. The historical frozen `7cef7e849e293373d907a3b64007b4ce8946da78` target-aware build script already accepts aarch64 Linux. Native ARM64 wrapper Action `39084579161` ARM job passed; specific NEON/SVE dispatch and FEC2/product did NOT run. Avoid floating system archives.
-- `wbd-platform` Linux syscall islands currently x86_64-gnu cfg, with explicit struct layouts requiring separate aarch64 static/real ABI tests. `v4_embedded_go` additionally has x86 gates.
-- Go public Linux `r0/go_overlay/internal/v4productcli/linux.go` opens owned TUN and authenticates through original Go TLS. Android needs separate OS fd/process lifecycle contract; no permission to call that Linux path.
+## Product architecture to preserve
+- Genuine original Go credential-bound TLS and FakeTCP lifecycle; one Rust AEAD/PN/FrozenRecord and M2 feedback owner; existing Linux AF_PACKET/raw TX/RX, TUN and generation/Stop. No duplicate public identity or new fake protocol.
+- Preserve FEC2 mathematical coefficients/wire, authenticated input, low-HOL quantum, bounded caches and absent/recovered source accounting.
+- Existing `aws-lc-rs` AEAD CPU dispatch. For AArch64 RustCrypto AES-HP uses `aes_armv8` runtime CPU detection with software fallback. No forced unsafe CPU ISA in shipped binaries.
+- FEC2 `BackendChoice::default() = PreferNative`; when exact pinned ISA-L feature and library are present, short cases still use scalar and actual native reports only after the real encode/decode. No native feature means scalar. `RequireNative` remains diagnostic, not public default. Do not swallow runtime native errors as success.
+- The pinned ISA-L ARM NEON/SVE dispatch exists, but actual NEON path and product use require independently scoped proof; x86 ratios are not ARM64 performance claims.
 
-## Implementation packages (in-order gates, each may advance independently)
-1. **Architecture/cpu backend (this branch first).** Make platform-target ISA-L build explicit and source locked; add a backend preference that chooses native when genuinely linked and supported, scalar otherwise; make default runtime FEC2 owner *request* acceleration, not require it. Record Used=NativeIsaL only after C call. Verify ARM64 RustCrypto AES-HP configuration and AWS-LC built-in CPU dispatch. No new cipher.
-2. **Linux ARM64 syscall ABI and Go/Rust owner.** Replace hard-coded x86-only cfg only where ABI audit proves AArch64 GNU 64-bit layout. Add native assertions for msghdr/mmsghdr/iovec/ifreq/offsets, MSG_DONTWAIT, ioctl and real Stop. Port raw/TUN and scoped route watchers. Rebuild v4 embedded Go path in arm64 native runner, run genuine Go TLS + raw/TUN before any product PASS. Do not confuse cargo cross build with native OS run.
-3. **Android client.** An Android VpnService must create/protect the TUN and sockets, establish permitted routes, detach/join on Stop; an NDK Rust cdylib + JNI or an explicit minimal C ABI hands in owned FD, not a new authentication origin. Keep Go original credential TLS and immutable record path, never fake kernel WFP/raw. Must test emulator/real Android kernel VPN and native network; Gradle compile-only is NOT_RUN product.
-4. **OpenWrt client.** Build with target-specific toolchain (prefer aarch64 musl) and fixed source dependencies. Validate libc, ABI, TUN, CAP_NET_RAW/socket availability and normal init/ubus/process cleanup. Produce .ipk feed integration only after real target/emulated interface proof. Never assume Android or glibc archive can link on musl.
-5. **One-source Actions gates.** Cross build aarch64-linux-gnu, aarch64-linux-musl, aarch64-linux-android and x86_64 regressions; native `ubuntu-24.04-arm` crypto/FEC2/FFI/packet tests; pinned ISA-L actual encode; backend choice/fallback and equivalence. Network performance one independent scenario per Action (functional tests batched), same job prior/new for CPU. Calibrate host before increasing load. Preserve FAIL and NOT_RUN.
+## Linux ARM64 implementation gates (ordered)
+1. **Recover & stabilize components.** Fix ARM test scheduling nondeterminism, check exact ISA-L ARM64 actual SIMD direct call test, maintain scalar/native parity equality and x64 regression. A FAIL at previous SHA remains FAIL.
+2. **Native original Go ↔ Rust build.** Assemble *all* corresponding frozen original-Go overlay files into pinned legacy clone, build Rust cdylib with pinned ISA-L, test real original-Go adapter, compile native arm64 `wbd-v4-client` and `wbd-v4-server` against the same `libwbd_engine.so`, create verifiable SHA256 manifest and run `--version` or supported inert CLI launch. BUILD is not a TLS/data-plane PASS.
+3. **64-bit Linux ABI / privilege/Stop.** Verify AArch64 kernel `capget/capset`, `mmsghdr`/`msghdr`/`iovec`, `sockaddr_ll`, `ifreq`, route/MTU, batch/TUN, immutable-prefix receipts and generation-scoped Stop. Native unprivileged tests do not count as privileged raw/TUN.
+4. **Real two-way functional owner.** Use genuine Go TLS + Rust AEAD + raw/TUN across two independent Linux ARM64 endpoints or a fully qualified isolated network namespace with actual kernel routing and original application bytes; repeat first-send, recovered/lost feedback, stale/duplicate, failure close, restart and Stop. Do not fake PASS based on Go tests, iptables rules, or loopback-only fixtures.
+5. **Performance only after functional PASS.** One independently scoped trial per Action, same VM/job scalar/native pair, CPU cost + latency to first useful business + p99 + HOL/queue and memory. Avoid overload and don't promote cross-build or component PASS.
 
-## Backend policy
-- AEAD: `aws-lc-rs` in-process CPU-dispatched implementations; AES-HP: RustCrypto `aes_armv8` cfg for arm64 if native target supports it, otherwise software. x86 AES-NI remains library-managed.
-- FEC2: Auto selection means *try vetted native when compiled+correct*, scalar otherwise; length<64 or k=1 uses scalar. `RequireNative` remains a diagnostic hard assertion and must error when unavailable. A runtime C failure must be reported as a failure, not silently change the wire outcome.
-- ARM ISA-L dispatcher can choose SVE/NEON/basic using HWCAP; correctness equality and instruction-path proof are separate. Never set blanket unsafe `target-cpu=native` in distributed artifacts, never mix x86 ISA-L archives with arm64.
-- No feature gating or optimization is permitted to skip authentication, reuse PN, mutate FrozenRecord, block fresh on FEC, or skip owned Stop.
+## Minimal deliverables / done criteria
+- Build and artifact: exact SOURCE ARM64 Go client/server, Rust engine, pinned ISA-L, compiler/libraries and SHA256 receipt.
+- ARM64 NATIVE_COMPONENT: AEAD/HP/FEC2, native backend reporter, negative CPU/scalar fallback, Stop/loan test.
+- Linux NATIVE_OS: verified raw/TUN and actual original-Go handshake; record unavailable privileges as BLOCKED exact environment, not success.
+- PUBLIC PRODUCT: authenticated client-server bidirectional application delivery + bounded fresh/recovery/Stop evidence.
+- Performance: only after product functional pass, one scene per Action. Preserve original FAILs and NOT_RUNs.
 
-## Evidence levels and exit criteria
-| Level | Gate |
-|---|---|
-| BUILD | Exact target builds, link/ABI, dependency manifest; may not execute |
-| NATIVE_COMPONENT | Actual ARM64 crypto/FEC2 scalar/native matched wire+repair, negative cases |
-| NATIVE_OS | Genuine ARM Linux AF_PACKET/TUN, Go TLS -> Rust owner, owned stop |
-| ANDROID / OPENWRT PRODUCT | Real platform clients through OS interface and reverse app traffic; scoped environment and cleanup |
-| PERFORMANCE | Same-host one-scene original/accelerated A/B, CPU, p99, no new HOL, capacity measured |
+## Explicitly deferred
+- Android VpnService/JNI/NDK client, emulator/product/routing.
+- OpenWrt musl .ipk/procd client, SDK/real-router interoperability.
+- Any new Android/OpenWrt Actions are **manual only**, not part of Linux ARM64 required gates. Existing build-only results remain historical and are not OS or product-qualified.
 
-## Known initial gaps
-ARM64 product raw/TUN and Go/Rust linked runtime, Android VpnService/JNI and OpenWrt service package are **NOT_RUN**. ARM ISA-L `ec_encode_data` safe wrapper passed scoped in historical Action `39084579161`, but current main `native/isal-safe/build.rs` excludes ARM64; source lock needs integrating. Do not copy an x64 PASS onto ARM64.
-
-## Immediate working sequence
-Commit the plan and target-aware backend selector with a focused Rust native/ARM runner workflow; then audit and port Linux syscall islands; only after those gates bring up Android and OpenWrt adapters. Any missing run must remain NOT_RUN rather than claim a finished multi-platform product.
+**Immediate next action at this update:** fix source-locked Go overlay compilation and deterministic Stop race fixture, then verify the ARM64 bundle from the exact new branch SHA. Never infer future work completion from this plan.
