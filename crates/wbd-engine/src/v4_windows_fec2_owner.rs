@@ -192,6 +192,7 @@ mod tests{
         let h=allocate(r,&cold(server),&cmd(),server).unwrap();
         assert_eq!(commit(r,h,0,0,600),OK);
         assert_eq!(bind_wintun(r,h,[2;16],luid,index),OK);
+        assert!(set_path_mtu(r,h,[2;16],luid,index,1400).is_ok());
         h
     }
     fn data(byte:u8)->Vec<u8>{
