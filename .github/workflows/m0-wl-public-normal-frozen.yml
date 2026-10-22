@@ -114,15 +114,29 @@ jobs:
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
           $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
-          Start-Sleep -Milliseconds 600
+          # These OS route witnesses are captured during the SAME public
+          # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
+          Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+            Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route.json
+          Get-NetAdapter -IncludeHidden -ErrorAction Continue |
+            Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
+          & wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+            Out-File result/wl-public/linux-eth0.json
+          $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
+          Start-Sleep -Milliseconds 800
           try {
             & python tools/m0_wl_public_normal_e2e.py 2>&1 |
               Tee-Object result/wl-public/direct-full.log
             $e2eExit=$LASTEXITCODE
           } finally {
-            if(-not $witness.HasExited){Stop-Process -Id $witness.Id -Force -ErrorAction SilentlyContinue}
+            foreach($p in @($witness,$npf)){
+              if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
+            }
             Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
-            Get-Content result/wl-public/native-link-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
