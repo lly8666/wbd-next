@@ -4,8 +4,8 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 263,
-  "checkpoint_sha": "c2a928c810f6534ac54fe1787a50ffcdf7df16e2",
+  "sequence": 264,
+  "checkpoint_sha": "269a518d0dc2cef2ad989c000b684cdcdf9088f6",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "PLAN024 public Windows original Go TLS/Rust M2 Npcap/Wintun→WSL2 Linux raw/TUN Normal/off; independent genuine apps now start pre-READY. Frozen and fresh source05aadd attained authentic Windows OS Applied/READY and Linux READY but failed full UDP duplex/Stop on harness 18s premature join. New 1Hz real-kernel diagnostics SOURCEe77b full+frozen Actions 39774560726/39774561079 in progress; WL-N0/N1/N5 NOT_RUN.",
@@ -14,15 +14,14 @@
   "next_action": "Read exact Actions39774560726/39774561079 for source e77b0596026b4f27bbe4705b45dd8c1deb4f83ac and their 1Hz real Windows/Linux UDP plus native client liveness artifacts; fix the earliest observed genuine delivery/Stop blocker only, requalify one discriminating full path before starting WL-N0/N1/N5.",
   "unverified": true,
   "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json"
-  ],
+  "evidence_refs": [],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/testing/NETWORK_TRIAGE.md",
+    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json",
     "docs/evidence/M0/PLAN024-S857-true-Windows-Linux-full-native-first-reverse-Apply-gate-BLOCKED-20261022.json",
     "docs/evidence/arm64-main-integration-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H263: PR24 merged and 72 checkpoint→main commits/path reviewed; original main task/epoch unchanged. Two first post-fix authentic Actions 39772660895/39772660900 FAIL full public duplex after TRUE Windows OS Applied/READY and Linux READY. Corrected test only 1Hz/bounded timing sourcee77b 39774560726/39774561079 pending. Rust/Go optional-FEC symbol gate fixed, NORMAL-COMMON sourceae9c success. Normal product, true two-way UDP and Stop unqualified; WL0/1/5 and physical NOT_RUN."
+  "partial_summary": "H263: PR24 merged and 72 checkpoint→main commits/path reviewed; original main task/epoch unchanged. Two first post-fix authentic Actions 39772660895/39772660900 FAIL full public duplex after TRUE Windows OS Applied/READY and Linux READY. Corrected test only 1Hz/bounded timing sourcee77b 39774560726/39774561079 pending. Rust/Go optional-FEC symbol gate fixed, NORMAL-COMMON sourceae9c success. Normal product, true two-way UDP and Stop unqualified; WL0/1/5 and physical NOT_RUN. H263 governance FAIL39774850166 from mistakenly treating multi-SOURCE checkpoint as single-SOURCE evidence_refs; H264 moves multi-source to context only under unverified=true. NOT product promotion."
 }
