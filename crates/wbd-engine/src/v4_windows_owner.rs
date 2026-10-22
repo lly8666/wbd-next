@@ -23,7 +23,7 @@ use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
-use wbd_recovery::{BudgetDirection,WireDirection,ReceiptConfig,ReceiptState,ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig};
+use wbd_recovery::{BudgetDirection,WireDirection,ReceiptConfig,ReceiptState,ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig,RepairCandidate,GrantLease,GlobalReservationId,RepairSendResult,reserve_frozen_submission,complete_driver_prefix,DriverPrefixObservation,BatchSuffixEvidence};
 
 const OK:i32=0;
 const INVALID:i32=1;
@@ -52,11 +52,17 @@ const PRODUCT_APPLIED:u32=0;
 // The SAME original protected TLS lane and M1 FrozenRecord handles are
 // authoritative. Fresh shadow admission is only after the synchronous real
 // Npcap pcap_sendpacket return; TCP cumulative ACK cannot call this owner.
+struct WindowsM2QueuedRepair {
+    candidate:RepairCandidate<FrozenRecord>,
+    lease:GrantLease,
+    reservation_id:GlobalReservationId,
+}
 struct WindowsOriginalM2 {
     shadow:ReceiptState<FrozenRecord>,
     pending:BTreeMap<RecordPn,FrozenRecord>,
     direction:BudgetDirection,
     route:ReceiptRouteScope,
+    in_flight:Option<WindowsM2QueuedRepair>,
 }
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
@@ -100,7 +106,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         return Err(BAD_STAGE)
     }
     e.m2=Some(WindowsOriginalM2{
-        shadow,pending:BTreeMap::new(),direction,route,
+        shadow,pending:BTreeMap::new(),direction,route,in_flight:None,
     });
     Ok(())
 }
@@ -123,6 +129,92 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
     m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
         .map_err(|_|FULL)?;
+    Ok(m.shadow.outstanding() as u32)
+}
+// Poll is owner-time-only; an actual repair remains byte-exact from its
+// original M1 FrozenRecord and gets a GLOBAL process quota reservation BEFORE
+// going to the Windows Npcap sink. No private Go 750ms reseal/retry timer.
+// Successful return publishes one bounded repair candidate for Go to send;
+// no candidate never fabricates a peer ACK or consumes a new AEAD PN.
+fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,out:&mut [u8],
+)->Result<Option<(usize,u32,u64)>,i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    if m.in_flight.is_some(){return Err(BAD_STAGE)}
+    let now=m2_clock();
+    let polled=m.shadow.on_timer(now);
+    let mut selected=None;
+    for candidate in polled.candidates{
+        if selected.is_some(){ // remaining queue deadlines simply expire
+            continue
+        }
+        let wire=candidate.frozen().bytes();
+        if wire.len()>out.len()||wire.len()>2048 { 
+            let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
+            continue
+        }
+        let bytes=wire.len().checked_add(54).ok_or(INVALID)? as u64;
+        let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
+        let lease=match g.grant(m.direction,bytes,40_000_000,now){
+            Ok(v)=>v,
+            Err(_)=>{
+                let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
+                continue
+            }
+        };
+        let submission=reserve_frozen_submission(
+            &mut g,lease,m.route,&m.shadow,&candidate,bytes,now
+        );
+        let reservation_id=match submission {
+            Ok(v) if v.driver.metadata==candidate.frozen().metadata()
+                && v.driver.wire.as_ptr()==candidate.frozen().bytes().as_ptr() =>
+                v.reservation_id,
+            _=>{
+                let _=g.revoke(lease,now);
+                let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
+                continue
+            }
+        };
+        let n=wire.len();
+        let seq=candidate.frozen().metadata().seq.0 as u32;
+        let pn=candidate.pn().0;
+        // Only a byte-for-byte copy into the Go carrier writer: original M1
+        // frozen ciphertext itself stays pinned through actual kernel send.
+        out[..n].copy_from_slice(wire);
+        m.in_flight=Some(WindowsM2QueuedRepair{
+            candidate,lease,reservation_id
+        });
+        selected=Some((n,seq,pn));
+    }
+    Ok(selected)
+}
+fn m2_complete_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,pn:u64,sent:u32
+)->Result<u32,i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||sent>1{return Err(INVALID)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    let held=m.in_flight.take().ok_or(BAD_STAGE)?;
+    if held.candidate.pn()!=RecordPn(pn){
+        m.in_flight=Some(held);return Err(INVALID)
+    }
+    let now=m2_clock();
+    let observation=DriverPrefixObservation::checked(
+        1,usize::from(sent==1),if sent==1{None}else{Some(0)},
+        BatchSuffixEvidence::Unproven
+    ).map_err(|_|BAD_STAGE)?;
+    let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    let settled=complete_driver_prefix(
+        &mut g,&[(held.reservation_id,m.route)],observation,now
+    );
+    let status=match settled{
+        Ok(v)=>v.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
+        Err(_)=>RepairSendResult::Uncertain,
+    };
+    // If a real authenticated reverse ACK arrived between polls, the
+    // candidate is now stale and must never resurrect a retired shadow.
+    let _=m.shadow.on_send_result(&held.candidate,status,now);
+    let _=g.revoke(held.lease,now);
     Ok(m.shadow.outstanding() as u32)
 }
 fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
@@ -793,6 +885,48 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v3_open_normal_off(
     }
 }
 
+
+// One Rust-owned timer/repair turn. Caller must report its true Npcap
+// outcome before the next poll or Stop. A zero used means no repair ready.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v6_next_frozen_repair(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    out:*mut u8,capacity:usize,used:*mut usize,seq:*mut u32,pn:*mut u64,
+)->i32{
+    if out.is_null()||used.is_null()||seq.is_null()||pn.is_null()||
+        capacity<51||capacity>65535{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_next_repair_entry(&mut e,exact,luid,ifindex,dst){
+        Ok(Some((n,s,p)))=>{unsafe{used.write(n);seq.write(s);pn.write(p)};OK},
+        Ok(None)=>{unsafe{used.write(0);seq.write(0);pn.write(0)};OK},
+        Err(err)=>err,
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v6_finish_frozen_repair(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    pn:u64,npcap_sent:u32,outstanding:*mut u32
+)->i32{
+    if outstanding.is_null(){return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_complete_repair_entry(&mut e,exact,luid,ifindex,pn,npcap_sent){
+        Ok(n)=>{unsafe{outstanding.write(n)};OK},
+        Err(err)=>err
+    }
+}
 
 // V6 firstsend callback is valid only for the SAME activated, OS Wintun
 // epoch. Every callback matches exact original frozen PN/SEQ/len. Status 1
