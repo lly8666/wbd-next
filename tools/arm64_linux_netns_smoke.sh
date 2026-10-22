@@ -205,6 +205,61 @@ fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi
+if [ "${WBD_ARM64_DAMAGE_TRIAL:-}" = "fixed-2pct" ]; then
+  if [ "$mode" != fec-fixed ]; then
+    echo 'ARM64_DAMAGE_REQUIRES_FIXED_FEC2' >&2; exit 2
+  fi
+  command -v tc >/dev/null || { echo 'ARM64_DAMAGE_TC_MISSING' >&2; exit 77; }
+  # Namespace-local egress qdiscs: *after* original Go authenticated TLS
+  # and sufficient clean, real sources for FEC Applied maturity.
+  # 2% impairment is ONE bounded functional differentiation, not load testing.
+  sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss 2%
+  sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss 2%
+  set +e
+  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i .1 -c 120 -W 2 10.188.18.2 >"$out/loss-c2s.log" 2>&1
+  loss_c2s_rc=$?
+  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i .1 -c 120 -W 2 10.188.18.1 >"$out/loss-s2c.log" 2>&1
+  loss_s2c_rc=$?
+  set -e
+  sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/loss-qdisc-client.txt"
+  sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/loss-qdisc-server.txt"
+  # Capture without substituting wire drop for an authenticated source loss,
+  # FEC recovery count, or a delivery improvement vs Normal baseline.
+  export ARM64_LOSS_C2S_RC="$loss_c2s_rc" ARM64_LOSS_S2C_RC="$loss_s2c_rc"
+  OUTPUT="$out" python3 - <<'PY'
+import os,pathlib,re,json
+p=pathlib.Path(os.environ["OUTPUT"])
+def qdisc(name):
+ s=(p/name).read_text()
+ m=re.search(r'dropped\s+(\d+)',s)
+ if not m: raise SystemExit("MISSING_NETEM_KERNEL_DROP_COUNTER "+name)
+ return int(m.group(1))
+def ping(name):
+ s=(p/name).read_text()
+ m=re.search(r'(\d+) packets transmitted,\s*(\d+) received',s)
+ if not m: raise SystemExit("MISSING_REAL_APP_PACKET_SUMMARY "+name)
+ return int(m.group(1)),int(m.group(2))
+drops={k:qdisc('loss-qdisc-'+k+'.txt') for k in ['client','server']}
+apps={k:ping('loss-'+k+'.log') for k in ['c2s','s2c']}
+if min(drops.values())<=0:
+ raise SystemExit("NO_VERIFIED_KERNEL_NETEM_DROP_THIS_RUN "+repr(drops))
+if any(sent!=120 or recv<100 or recv>sent for sent,recv in apps.values()):
+ raise SystemExit("UNEXPECTED_APP_DELIVERY "+repr(apps))
+if any(os.environ[k]!="0" for k in ('ARM64_LOSS_C2S_RC','ARM64_LOSS_S2C_RC')):
+ raise SystemExit("PING_COMMAND_EXIT_NONZERO despite summary")
+receipt={"frozen_product_source":os.environ["WBD_ARM64_FROZEN_SOURCE"],
+"harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
+"mode":"fixed","impairment":"2pct_independent_kernel_netem_each_direction_after_authenticated_maturity",
+"qdisc_dropped_outer_packets":drops,
+"icmp_application_sent_received":{k:{"sent":v[0],"received":v[1]} for k,v in apps.items()},
+"status":"SCOPED_IMPAIRED_REAL_OS_INPUT_AND_APP_FUNCTIONAL",
+"exact_encrypted_source_loss":"NOT_PROVEN",
+"fec2_recovered_source_count":"NOT_EXPOSED",
+"m2_or_fec_causal_attribution":"UNKNOWN","physical":"NOT_RUN"}
+(p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
+print("ARM64_SCOPED_REAL_NETEM_OUTER_DROP_AND_APP_DELIVERY_PROVEN",drops,apps)
+PY
+fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
