@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "reservation_revision": 3,
+  "assignment_epoch": 1,
+  "source_sha": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+  "result": "PASS_SCOPED_REAL_WINDOWS2022_TESTNET_PERSISTENT_WFP_ARM_CAS_STOP_PLUS_EXACT_GUARD_ONLY_PARTIAL_WAL_RECOVERY_AND_EXISTING_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NO_GLOBAL_OS_ON",
+  "corrected_provenance": "H235 single-SOURCE current evidence refs; frozen 34 original Go blobs restored intact by S657",
+  "exact_source_lock": {
+    "main_overlay_source": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+    "original_credential_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "m4_frozen_producer": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "original_frozen_unified_txn_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
+    "original_frozen_wfp_test_blob": "0cca3e225ea95932eab09666cf5195107bd61351",
+    "new_m0_wfp_unit_test_blob": "426a8ce585a105a5a6062233374c7942d1f86bec",
+    "new_m0_guard_intent_helper_blob": "0e60ff71f36a50f86acb2c3530de7685ba0dce90",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "host": "windows-2022 x64"
+  },
+  "actions": {
+    "workflow": "m0-plan020-windows-native-os-receipt.yml",
+    "run_id": 39618823911,
+    "attempt": 1,
+    "job_id": 119286476836,
+    "job_name": "original-go-native-wal",
+    "head_sha": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+    "status": "completed",
+    "conclusion": "success",
+    "artifact_id": 12352554865,
+    "artifact_name": "m0-plan020-win-wal-39618823911-1",
+    "artifact_sha256": "cb09c036206181f7e5ffbe5236f4d24ef70363a38f4721de2003a36ef91e21cb",
+    "artifact_size": 47209907
+  },
+  "exact_native_cases": [
+    {
+      "test": "TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop",
+      "result": "PASS",
+      "scope": "fake stage unit contract"
+    },
+    {
+      "test": "TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks",
+      "result": "PASS",
+      "scope": "fake stage readback"
+    },
+    {
+      "test": "TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback",
+      "result": "PASS",
+      "scope": "fake stage old owned/partial/foreign negatives"
+    },
+    {
+      "test": "TestM0PLAN020RealScopedWFPArmAndForeignCAS",
+      "result": "PASS",
+      "scope": "real Windows native WFP persistence Arm→independent engine inspect→foreign rule CAS deny→Disarm+repeat→independent absent; only random GUID TEST-NET 203.0.113.254:65530, no host-global IPv6/DNS rules or routes",
+      "exact_log": "M0_PLAN020_REAL_NATIVE_SCOPED_TESTNET_WFP_ARM_FOREIGN_CAS_STOP_PASS host_global_WFP=NOT_RUN default_routes=NOT_RUN"
+    },
+    {
+      "test": "TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery",
+      "result": "PASS",
+      "scope": "pure WAL guard-only intent partial crash recovery, later stages absent and foreign/route-present negative"
+    },
+    {
+      "test": "Original credential Go TLS Rust M3 signed Wintun bidirectional UDP app",
+      "result": "PASS_SCOPED_REAL_NATIVE_KERNEL",
+      "exact_log": "M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED"
+    },
+    {
+      "test": "Native Windows lease MTU DNS WAL Apply/Recover/Stop",
+      "result": "PASS_SCOPED_REAL_NATIVE_OS",
+      "exact_log": "M0_PLAN020_SAME_SOURCE_REAL_WIN_NATIVE_IP_MTU_DNS_WAL_APPLY_RECOVER_STOP_PASS_SCOPED_WFP_ROUTES_NOT_RUN"
+    },
+    {
+      "test": "Original Wintun PnP devnode gone crash",
+      "result": "PASS_SCOPED",
+      "scope": "real Windows ghost terminal with FAKE WFP and zero capture routes; no pretend MTU restore"
+    },
+    {
+      "test": "real WinForms executable and portable bundle",
+      "result": "PASS_SCOPED_BUILD",
+      "scope": "WinForms UI state via fake child ONLY; real full public GUI/OS Applied NOT_RUN"
+    }
+  ],
+  "governance": {
+    "run_id": 39618823546,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "historical_failures_preserved": [
+    {
+      "source_sha": "b3a8fbaf23419a300d7eb5d17ce315d754ae1cb5",
+      "run_id": 39616586763,
+      "result": "FAIL missing time test import"
+    },
+    {
+      "source_sha": "b3a8fbaf23419a300d7eb5d17ce315d754ae1cb5",
+      "run_id": 39616586640,
+      "result": "FAIL wrong current evidence SOURCE"
+    },
+    {
+      "source_sha": "b3a8fbaf23419a300d7eb5d17ce315d754ae1cb5",
+      "run_id": 39616586712,
+      "result": "FAIL frozen original WFP test and evidence source"
+    },
+    {
+      "source_sha": "7bd26362ff9a28d6c4db45e656a959a43914014e",
+      "run_id": 39617124207,
+      "result": "FAIL frozen original transaction blob in Go assembly"
+    },
+    {
+      "source_sha": "5e8f545047906bfa282b62427404765a0d8b3755",
+      "run_id": 39617291359,
+      "result": "FAIL frozen original transaction blob"
+    },
+    {
+      "source_sha": "ba4071a78ade48d6e54515d884dea194bf12f8cd",
+      "run_id": 39618156783,
+      "result": "FAIL new M0 isolated test missing time import"
+    },
+    {
+      "source_sha": "ba4071a78ade48d6e54515d884dea194bf12f8cd",
+      "run_id": 39618156841,
+      "result": "FAIL governance maintenance due prior H234 source conflict, not remediated by this exact SOURCE workflow regression test"
+    }
+  ],
+  "qualifications": {
+    "source_handoff": "CLEAN_AFTER_H235",
+    "windows_function_tests": "PASS_SCOPED",
+    "windows_native_wfp": "PASS_SCOPED_ONLY_TESTNET_RULE",
+    "original_go_Rust_Wintun_real_kernel": "PASS_SCOPED",
+    "native_IP_MTU_DNS_WAL": "PASS_SCOPED",
+    "source_locked_native_build": "PASS_SCOPED",
+    "original_WinForms_build": "PASS_SCOPED_TEST_CHILD_ONLY",
+    "global_persistent_ipv6_dns_wfp": "NOT_RUN",
+    "full_two_default_half_routes_and_physical_underlay": "NOT_RUN",
+    "original_public_CLI_plus_real_WinForms_OS_Applied_Disconnect": "NOT_RUN",
+    "full_WFP_routes_TUN_TLS_one_transaction": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "windows_production": "OFF",
+    "FEC2": "OFF",
+    "Game2": "OFF",
+    "Game4": "OFF"
+  },
+  "next_action": "Build and independently qualify one exact-source isolated Windows global persistent WFP/dual-/1 underlay escape + original public V4 TLS Rust signed-Wintun/WinForms Applied/Disconnect full owner transaction with positive foreign/stale/crash negatives; do not enable production beforehand."
+}

@@ -8,6 +8,30 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
+      - ".github/workflows/m0-plan012-combined-functional.yml" # PLAN022 one identical SOURCE cross-OS functional batch
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go"
+      - "crates/wbd-engine/src/v4_windows_owner.rs"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go"
+      - "crates/wbd-engine/src/v4_windows_owner.rs"
+      - "crates/wbd-engine/src/v4_windows_game_owner.rs"
+      - "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
+      - "crates/wbd-engine/src/v4_owner_crypto.rs"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_fec2_owner.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go"
+      - "r0/go_overlay/internal/windowsownerlease/original_go_tls_game_windows_test.go"
+      - "r0/go_overlay/internal/windowsownerlease/original_go_tls_fec2_windows_test.go"
+      - "tools/m0_plan020_native_live_windows_ci.ps1"
+      - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
+      - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
       - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
       - "r0/go_overlay/assembly/manifest-plan020-m0.json"
@@ -84,6 +108,9 @@ jobs:
             ("realityfront",(
               "admission_v4.go",
               "bridge_v4_windows_private_owner.go",
+              "bridge_v4_windows_game_group.go",
+              "bridge_v4_windows_game_server_group.go",
+              "bridge_v4_windows_fec2_owner.go",
               "bridge_v4_windows_wintun_lease.go",
               "bridge_v4_windows_scoped_client.go",
             )),
@@ -118,20 +145,66 @@ jobs:
           try {
             & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
             if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run 'TestM0PLAN023Windows|TestM0PLAN025Windows|TestM0PLAN026Windows' ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) {throw 'PLAN023 native five-mode selector test failed'}
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
             if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
           } finally {Pop-Location}
           Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
+      - name: Assert source-locked public Windows V4 trial admission preserves real owner and OS receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import pathlib,sys
+          src=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+          for anchor in (
+            "runM0NativeV4Windows(o m0NativeV4Options)",
+            "realityfront.V4WindowsEstablishOriginalClientOwner(",
+            "windowsownerlease.PrepareOriginalTLSNativeProduct(",
+            "receipt,e:=product.Apply(ctx)",
+            "if !receipt.AllNativeOSApplied",
+            "observed,e:=product.LiveReceipt(ctx)",
+            "if e!=nil||!observed.AllNativeOSApplied",
+            "stopErr:=cleanup()",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+          ):
+              if anchor not in src: raise AssertionError("native owner/readback/Stop removed: "+anchor)
+          if "windowsclient.N4NativeNetworkReady(ctx)" in src:
+              # A frozen, universally-denying old product preflight cannot
+              # be on the opt-in V4 trial execution path.
+              if "if e=windowsclient.N4NativeNetworkReady(ctx)" in src:
+                  raise AssertionError("unconditional old Windows product gate still active")
+          # PLAN022: assert that Windows public V4 is actually restricted to
+          # one authenticated Normal/off lane until a native Windows
+          # FEC2/Game owner has been wired and positively tested.
+          # Do not turn CLI parser acceptance into a fake runtime success.
+          assert 'realityfront.FixedPolicyForClient(1,0)' in src
+          assert 'DesiredLanes:1' in src
+          assert 'product.Apply(ctx)' in src
+          print("M0_PLAN022_WINDOWS_V4_OFF_WIRED_FEC2_GAME_NOT_YET_WIRED_HONEST")
+          controller=pathlib.Path("legacy/internal/windowsclient/native_product_activation_windows.go").read_text()
+          for anchor in ("c.txn.Apply(ctx)","c.txn.VerifyLiveOSApplied(ctx)",
+                         "c.proof.VerifyBidirectionalAuthenticatedFirstDelivery(ctx,id)",
+                         "c.proof.DrainCryptoAndKernelLoans(ctx,id)",
+                         "c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx)",
+                         "c.txn.VerifyLiveOSDisconnected(ctx)"):
+              if anchor not in controller: raise AssertionError("native product authority missing: "+anchor)
+          print("M0_PLAN021_WINDOWS_V4_TRIAL_ADMISSION_OWNER_WAL_CAS_LIVE_RECEIPT_SAME_SOURCE_PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'public native V4 trial owner-readback source contract FAIL'}
       - name: Native Windows five-stage WAL readback and false Applied negatives
         shell: pwsh
+        env:
+          WBD_N4_WFP_ISOLATED_LAB: '1' # native TEST-NET:203.0.113.254:65530 only; never host-global WFP
         run: |
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
-            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop|TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
+            & go test -count=1 -v -run '^(TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks|TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop|TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback|TestM0PLAN020RealScopedWFPArmAndForeignCAS|TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery)$' ./internal/windowsclient 2>&1 | Tee-Object -FilePath ../result/native-wal.log
             if ($LASTEXITCODE -ne 0) {throw 'native Go five-stage WAL test FAIL'}
           } finally {Pop-Location}
-          foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop','TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback')) {
+          foreach ($named in @('TestM0PLAN020LiveFiveStageOSAppliedAndDisconnectedReadbacks','TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop','TestM0PLAN020DisconnectedRequiresRealAbsentStageReadback','TestM0PLAN020RealScopedWFPArmAndForeignCAS','TestM0PLAN020GuardOnlyInterruptedArmPartialWALRecovery')) {
             if (!(Select-String -Path result/native-wal.log -SimpleMatch ('--- PASS: '+$named) -Quiet)) {
               throw ('native owner/kernel/native WAL contract test NOT_RUN: '+$named)
             }
@@ -144,7 +217,30 @@ jobs:
           if ($LASTEXITCODE -ne 0) {throw 'pinned native Rust 1.85.1 unavailable'}
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           if ($LASTEXITCODE -ne 0) {throw 'pinned Rust MSVC target unavailable'}
-          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go
+          # PLAN024: real Windows M1 Game2/4 authenticated native group AEAD
+          # and independent later-lane delivery; NOT an OS Applied proof.
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_native_game_two_four_original_owner_aead_no_hol_and_stop -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'PLAN024 Windows native Game2/Game4 AEAD/PN/Stop positive test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_NATIVE_RUST_GAME2_GAME4_GROUP_AEAD_REPLAY_STALLED_LANE_STOP_PASS_SCOPED_NO_KERNEL'
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'PLAN024 Windows native FEC2 M3 AES/PN/RS16/Stop real crypto test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_NATIVE_RUST_FEC2_SOURCE_REPAIR_AEAD_RS16_RECOVERY_STOP_PASS_SCOPED_NO_KERNEL'
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_shared_rs16_original_owner_encode_repair_recovers_missing_source -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'Windows source-scoped shared Rust RS16 parity writer/recovery test FAIL'}
+          Write-Output 'M0_PLAN026_WINDOWS_ORIGINAL_TLS_RUST_SHARED_RS16_ENCODE_M3_RECOVER_REPLAY_STOP_PASS_SCOPED'
+          # SAME original M1/M3 AEAD+PN V5 kind1 ingress; no M2 budget PASS.
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_original_m3_kind1_aead_unique_pn_stages_only_once_then_stop -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'M0 original Windows M3 kind1 auth / replay / Stop test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_M3_AUTHENTIC_KIND1_TYPED_STAGE_PASS_SCOPED_NO_M2_SHADOW'
+          # M2 firstsend shadow is the ACTUAL original frozen M1 bytes only
+          # after a marked Npcap kernel success, then scoped kind1 retires it.
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'M0 real frozen M1 shadow / scoped authenticated kind1 M2 native test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_ORIGINAL_M1_M2_NPCAP_MARKED_FROZEN_SHADOW_AUTHENTIC_KIND1_RETIRE_PASS_SCOPED'
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_m2_original_frozen_two_repair_global_budget_and_abandoned -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'M0 Windows original frozen two-repair/global-budget test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_ORIGINAL_M1_M2_TWO_BYTE_EXACT_REPAIRS_GLOBAL_BUDGET_NO_THIRD_PASS_SCOPED'
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
           @'
           import ctypes,hashlib,pathlib
@@ -153,8 +249,32 @@ jobs:
           dll=ctypes.WinDLL(str(p.resolve()))
           for name in ("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare",
                       "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
-                      "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off"):
+                      "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off",
+                      "wbd_m0_win_owner_v5_open_data_or_kind1",
+                      "wbd_m0_win_owner_v6_arm_original_m2",
+                      "wbd_m0_win_owner_v6_report_npcap_firstsend",
+                      "wbd_m0_win_owner_v6_next_frozen_repair",
+                      "wbd_m0_win_owner_v6_finish_frozen_repair",
+                      "wbd_m0_win_owner_v6_m2_outstanding",
+                      "wbd_m0_win_owner_v4_game_join","wbd_m0_win_owner_v4_game_stage",
+                      "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop",
+                      "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open",
+                       "wbd_m0_win_owner_v4_fec2_encode_repair"):
               assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
+          class V4Modes(ctypes.Structure):
+              _fields_=[("version",ctypes.c_uint32),("size",ctypes.c_uint32),
+                        ("supported_modes",ctypes.c_uint32),
+                        ("authenticated_lanes",ctypes.c_uint32),
+                        ("reserved",ctypes.c_uint32)]
+          caps=V4Modes()
+          read=dll.wbd_m0_win_owner_v4_mode_capabilities
+          read.argtypes=[ctypes.POINTER(V4Modes),ctypes.c_uint32]
+          read.restype=ctypes.c_int32
+          assert read(ctypes.byref(caps),ctypes.sizeof(caps))==0
+          assert (caps.version,caps.size,caps.supported_modes,
+                  caps.authenticated_lanes,caps.reserved)==(
+                  4,ctypes.sizeof(caps),1,1,0)
+          print("M0_PLAN023_REAL_WINDOWS_NATIVE_RUST_MODE_ABI_PASS Normal=1 Fixed=NOT_WIRED Auto=NOT_WIRED Game2=NOT_WIRED Game4=NOT_WIRED")
           print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'native Rust original TLS M3 C-ABI export check FAIL'}
@@ -237,7 +357,11 @@ jobs:
           assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
           tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
           assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
-          assert 'windowsclient.N4NativeNetworkReady(ctx)' in tagged
+          assert 'if e=windowsclient.N4NativeNetworkReady(ctx)' not in tagged
+          assert 'receipt,e:=product.Apply(ctx)' in tagged
+          assert 'if !receipt.AllNativeOSApplied' in tagged
+          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged
+          assert 'stopErr:=cleanup()' in tagged
           for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
               # Native Go/Rust drivers are large PE binaries; genuine
@@ -254,7 +378,7 @@ jobs:
                         global_host_WFP_routes_DNS_IPv6_MTU_WAL="NOT_RUN",
                         native_public_CLI_real_first_app_Apply_Stop="NOT_RUN",
                         windows_production="OFF",fec2_production="OFF",game_production="OFF")
-          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\\n")
+          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\n")
           assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
           assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
           assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
@@ -275,3 +399,92 @@ jobs:
           path: result/
           if-no-files-found: warn
           retention-days: 30
+
+  # One source-locked Windows build/artifact is an admission prerequisite;
+  # then five real original-Go TLS -> signed-Wintun positive runs execute on
+  # five independent Windows2022 VMs in parallel. This is FUNCTIONAL ONLY.
+  # It cannot be reused as public WinForms OS Applied or sustained 10Mbps.
+  native-five-mode-parallel:
+    name: "SCOPED real TLS Wintun ${{ matrix.mode }}"
+    needs: original-go-native-wal
+    runs-on: windows-2022
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, fixed, auto, game2, game4]
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_M0_TRY_SCOPED_NATIVE_WINTUN: "1"
+    steps:
+      - name: Retrieve exact successful same-run original Windows binary bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          $name="m0-plan020-win-wal-${{ github.run_id }}-${{ github.run_attempt }}"
+          & gh run download ${{ github.run_id }} --repo ${{ github.repository }} --name $name --dir artifact
+          if ($LASTEXITCODE -ne 0) {throw 'upstream exact SOURCE Windows native artifact absent'}
+          $receipt=Get-Content artifact/portable/source-receipt.json -Raw | ConvertFrom-Json
+          if ($receipt.source_sha -ne '${{ github.sha }}' -or
+              $receipt.original_go -ne 'a7a82db31fe736ffedee330795a3234d358f1984') {
+            throw 'old source/artifact or unknown original Go donor'
+          }
+          foreach($file in @('artifact/portable/wbd_engine.dll','artifact/wintun-release/wintun.dll',
+                              'artifact/wintun-release/m0-original-peer-real.exe')) {
+            if (!(Test-Path -LiteralPath $file -PathType Leaf)) {throw ('missing same-source binary '+$file)}
+          }
+          $expected="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+          $zip='artifact/wintun-release/wintun-0.14.1.zip'
+          if ((Test-Path $zip) -and (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) {
+            throw 'official Wintun release original ZIP changed'
+          }
+          $sig=Get-AuthenticodeSignature -FilePath artifact/wintun-release/wintun.dll
+          if($sig.Status -ne 'Valid') {throw 'unsigned native Wintun DLL'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path artifact/portable/wbd_engine.dll).Path
+          "WBD_M0_WIN_OWNER_DLL=$env:WBD_M0_WIN_OWNER_DLL" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: One actual original TLS Rust Wintun native packet mode
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $mode='${{ matrix.mode }}'
+          $suite=if($mode -eq 'normal'){'^TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration$'}
+                 elseif($mode -eq 'fixed'){'^TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse$/^fixed$'}
+                 elseif($mode -eq 'auto'){'^TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse$/^auto$'}
+                 elseif($mode -eq 'game2'){'^TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse$/^game2$'}
+                 else{'^TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse$/^game4$'}
+          New-Item -ItemType Directory -Force -Path mode-result | Out-Null
+          & ./artifact/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=8m' ('-test.run='+$suite) 2>&1 |
+              Tee-Object -FilePath ('mode-result/'+$mode+'.log')
+          if($LASTEXITCODE -ne 0){throw ('actual Windows Wintun '+$mode+' positive test failed')}
+          $log=Get-Content ('mode-result/'+$mode+'.log') -Raw
+          $marker=switch($mode){
+            'normal' {'M0_PLAN020_REAL_ORIGINAL_GO_TLS_DUAL_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_UDP_APP_BOTH_DIRECTIONS_PASS'}
+            'fixed' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_fixed_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED'}
+            'auto' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_auto_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED'}
+            'game2' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME2_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
+            'game4' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME4_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
+          }
+          if ($mode -in @('fixed','auto') -and
+              !$log.Contains('M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_'+$mode+'_PASS_SCOPED')) {
+            throw ('native original Go Rust shared RS16 repair NOT_RUN mode='+$mode)
+          }
+          if(!$log.Contains($marker) -or $log -match '--- SKIP:|UNSUPPORTED' -or
+             $log -notmatch '--- PASS:') {throw ('real Windows native '+$mode+' never reached required kernel app or Stop marker')}
+          Write-Output ('M0_PLAN024_PARALLEL_SAME_SOURCE_ACTUAL_WINDOWS_SIGNED_WINTUN_'+$mode+'_PASS_SCOPED')
+          @{
+            source_sha='${{ github.sha }}'; mode=$mode; native_signed_wintun_real_tls='PASS_SCOPED';
+            official_public_mode_os_applied='NOT_RUN'; sustained_10mbps='NOT_RUN';
+            source_run_id='${{ github.run_id }}'; source_run_attempt='${{ github.run_attempt }}'
+          } | ConvertTo-Json | Out-File ('mode-result/'+$mode+'.json') -Encoding utf8
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "m0-native-mode-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: mode-result/
+          retention-days: 30
+          if-no-files-found: warn

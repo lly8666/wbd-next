@@ -1,0 +1,118 @@
+name: M0 WL Windows2025 WSL2 native capacity probe (NOT PRODUCT)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-wl-windows2025-wsl2-capability.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-wsl2-native-environment:
+    runs-on: windows-2025
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Exact SOURCE and genuine Windows host driver discovery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result/wl-env | Out-Null
+          $sha=(& git rev-parse HEAD).Trim()
+          if ($sha -ne $env:GITHUB_SHA) {throw 'checkout SOURCE mismatch'}
+          $pr=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+          $admin=$pr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          $np=Get-CimInstance Win32_SystemDriver -ErrorAction SilentlyContinue | Where-Object {$_.Name -match '^(npcap|npf)$'} | Select-Object -First 1 Name,State,Started
+          $dll=@("$env:WINDIR/System32/Npcap/wpcap.dll","$env:WINDIR/System32/wpcap.dll") | Where-Object {Test-Path $_}
+          $wt=Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object {$_.FriendlyName -match 'Wintun'} | Select-Object -First 1 FriendlyName,Status
+          $ifaces=Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | Where-Object {$_.Name -match 'vEthernet|WSL'} | Select-Object Name,InterfaceIndex,Status,MacAddress
+          @($ifaces) | ConvertTo-Json -Depth 4 | Set-Content result/wl-env/windows-vethernet.json
+          $caps=[ordered]@{
+            source_sha=$sha
+            kind='REAL_HOST_ENVIRONMENT_CAPABILITY_NOT_PRODUCT'
+            runner='windows-2025'
+            image_version=$env:ImageVersion
+            cpu_count=[Environment]::ProcessorCount
+            os=[Environment]::OSVersion.VersionString
+            admin=$admin
+            npcap_driver=if($np){"$($np.Name):$($np.State):$($np.Started)"}else{'NOT_FOUND'}
+            npcap_dll=if($dll){@($dll)[0]}else{'NOT_FOUND'}
+            npcap_vethernet_real_capture_send='NOT_RUN'
+            wintun_adapter=if($wt){"$($wt.FriendlyName):$($wt.Status)"}else{'NOT_FOUND'}
+            signed_wintun_dll='NOT_FOUND'
+            wsl_version=((& wsl.exe --version 2>&1 | Out-String) -replace '[\x00]','').Trim()
+            wsl_kernel='NOT_RUN'
+            linux_raw_tun_netns_veth_netem='NOT_RUN'
+            real_public_windows_linux_product='NOT_RUN'
+            wl_n0='NOT_RUN'
+            wl_n1='NOT_RUN'
+            wl_n5='NOT_RUN'
+          }
+          $caps | ConvertTo-Json -Depth 5 | Set-Content result/wl-env/capability.json
+          Write-Host "WL_NATIVE_HOST_DISCOVERY source=$sha admin=$admin npcap=$($caps.npcap_driver) wintun=$($caps.wintun_adapter)"
+      - name: Bounded single WSL2 attempt, actual TUN raw netns veth netem
+        shell: pwsh
+        timeout-minutes: 11
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference='Continue'
+          $caps=Get-Content result/wl-env/capability.json -Raw | ConvertFrom-Json
+          $distros=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          Set-Content result/wl-env/wsl-distros.txt $distros
+          if($distros -notmatch 'Ubuntu') {
+            Write-Host 'WL_ONE_BOUNDED_UBUNTU_INSTALL_ATTEMPT'
+            & wsl.exe --install --distribution Ubuntu --no-launch --web-download 2>&1 | Out-File result/wl-env/wsl-install.txt -Encoding utf8
+            Write-Host "WSL_DISTRO_INSTALL_EXIT=$LASTEXITCODE"
+          }
+          $probe=@'
+          set -eu
+          uname -a
+          test "$(uname -s)" = Linux
+          test -c /dev/net/tun
+          command -v ip
+          command -v tc
+          python3 -c 'import socket; x=socket.socket(socket.AF_PACKET,socket.SOCK_RAW);x.close()'
+          ip netns add wbdwlprobe
+          trap 'tc qdisc del dev wbdwla root 2>/dev/null || true; ip link del wbdwla 2>/dev/null || true; ip netns del wbdwlprobe 2>/dev/null || true' EXIT
+          ip link add wbdwla type veth peer name wbdwlb
+          ip link set wbdwlb netns wbdwlprobe
+          ip link set wbdwla up
+          ip netns exec wbdwlprobe ip link set lo up
+          ip netns exec wbdwlprobe ip link set wbdwlb up
+          tc qdisc add dev wbdwla root netem delay 1ms loss 1%
+          tc -s qdisc show dev wbdwla
+          echo WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_PASS
+          '@
+          $probe | Set-Content result/wl-env/linux-probe.sh
+          & wsl.exe -d Ubuntu -u root -- sh -lc $probe 2>&1 | Tee-Object -FilePath result/wl-env/linux-probe.txt
+          $exit=$LASTEXITCODE
+          if($exit -eq 0 -and (Select-String -LiteralPath result/wl-env/linux-probe.txt -SimpleMatch 'WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_PASS' -Quiet)) {
+            $caps.wsl_kernel='LINUX_KERNEL_EXECUTED'
+            $caps.linux_raw_tun_netns_veth_netem='PASS_ENV_ONLY'
+          } else {
+            $caps.wsl_kernel="BLOCKED_EXIT_$exit"
+            $caps.linux_raw_tun_netns_veth_netem="BLOCKED_EXIT_$exit"
+          }
+          $caps | ConvertTo-Json -Depth 5 | Set-Content result/wl-env/capability.json
+          Write-Host "WL_LINUX_ENV_CAPABILITY_EXIT=$exit"
+      - name: Persist exact environment blocker and product NOT_RUN
+        shell: pwsh
+        if: always()
+        run: |
+          if(-not (Test-Path result/wl-env/capability.json)) {throw 'missing env capability result'}
+          $caps=Get-Content result/wl-env/capability.json -Raw | ConvertFrom-Json
+          if($caps.npcap_driver -eq 'NOT_FOUND' -or $caps.npcap_dll -eq 'NOT_FOUND' -or $caps.linux_raw_tun_netns_veth_netem -ne 'PASS_ENV_ONLY') {
+            Write-Host 'WL_BLOCKED_ENVIRONMENT: Npcap and/or real Linux prerequisites unavailable. PRODUCT and WL-N0/N1/N5 NOT_RUN.'
+          } else {
+            Write-Host 'WL_ENV_STATIC_CANDIDATE_ONLY: real Npcap capture/send, signed Wintun packet session, original authenticated tunnel and impairment NOT_RUN.'
+          }
+          Get-Content result/wl-env/capability.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-native-environment-once
+          path: result/wl-env/
+          retention-days: 30
+          if-no-files-found: warn

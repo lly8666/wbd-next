@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_DRIVER_SOURCE_INTAKE_ENVIRONMENT_ONLY",
+  "source_sha": "46431010f46ea991e593da0eaf5055d14a3af3a1",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "workflow": ".github/workflows/m0-wl-legacy-driver-intake.yml",
+    "run_id": 39728097436,
+    "attempt": 1,
+    "job_id": 119656598084,
+    "conclusion": "FAIL",
+    "scope": "driver+WSL2 capability, NOT full public product"
+  },
+  "artifact": {
+    "id": 12404022760,
+    "name": "m0-wl-original-driver-native-env-only",
+    "sha256": "074c32cf4a4573dc92fdd71ada43942a000e28a1191e6731c3ea20c839376112"
+  },
+  "npcap": {
+    "version": "1.88",
+    "source": "wobuzhidao@a7a82... old approved signed test source+official userland",
+    "test_archive_sha256": "6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32",
+    "state": "REAL_SIGNED_DRIVER_SERVICE_RUNNING",
+    "driver_install_log": "WBD_NPCAP_DRIVER_CI_INSTALL_PASS",
+    "dll_sha256": {
+      "packet": "2793ce72f0e04d5885aaee1273a7373441d01934b2cff3886b031c13ca826345",
+      "wpcap": "d1ca7fcf9128d02a75eaf29ce9a9d85c5697377460f92420d976da187521cf39"
+    },
+    "capture_send": "NOT_RUN",
+    "cleanup": "REAL_DRIVER_UNINSTALLED_LOG_PASS_BUT_ACTION_WRAPPER_FAIL"
+  },
+  "wintun": {
+    "version": "0.14.1",
+    "archive_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+    "status": "SCOPED_CREATED_WINTUN_READ_ONLY_PASS",
+    "native_driver": "PASS_REAL_CREATED_WINTUN",
+    "real_os_luid_interface_dns": true,
+    "public_kernel_packet_business": "NOT_RUN"
+  },
+  "linux": {
+    "runner": "WSL2",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "tun_raw_socket_netns_veth_netem": "PASS_REAL_LINUX_ENV_ONLY",
+    "netem_qdisc": "delay 1ms loss 1%; Sent 0 bytes / 0 packets",
+    "real_impaired_business": "NOT_RUN"
+  },
+  "failure": {
+    "exact": "Cleanup step throws OWNED_NPCAP_DRIVER_CLEANUP_FAILED although output immediately before is WBD_NPCAP_DRIVER_CI_CLEANUP_PASS and 'Npcap Packet Driver (NPCAP) has been successfully uninstalled!'",
+    "root_cause": "workflow tested stale $LASTEXITCODE after an invoked PowerShell script; the script used Start-Process for native uninstall and checked its own ExitCode, but did not guarantee a fresh $LASTEXITCODE in caller. Wrapper wrongly equated stale inherited code with cleanup failure.",
+    "historical_fail_retained": true
+  },
+  "product": {
+    "windows_client_to_linux_server": "NOT_RUN",
+    "go_auth_rust_data": "NOT_RUN",
+    "npcap_capture_send": "NOT_RUN",
+    "wintun_public_ip": "NOT_RUN",
+    "real_10mbps": "NOT_RUN",
+    "stop": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next_action": "Fix wrapper to assert cleanup marker AND service absence rather than stale LASTEXITCODE, record corrected SOURCE/Action once; then tackle shared Rust M2 Windows authenticated receipt/shadow scheduling and Go HOL; no repeat five-mode WinSock loopback."
+}

@@ -8,7 +8,7 @@ import os,pathlib,subprocess
 root=pathlib.Path.cwd()
 dest=root/"legacy/internal/windowsownerlease"
 sha=os.environ["GITHUB_SHA"]
-for name in ("created_wintun_windows_test.go","original_go_tls_join_windows_test.go"):
+for name in ("created_wintun_windows_test.go","original_go_tls_join_windows_test.go","original_go_tls_fec2_windows_test.go","original_go_tls_game_windows_test.go"):
     src="r0/go_overlay/internal/windowsownerlease/"+name
     target=dest/name
     assert not target.exists(),"foreign original-Go test collision "+src
@@ -37,6 +37,33 @@ foreach ($marker in @(
 }
 if ($wire -match 'UNSUPPORTED|--- SKIP:') {throw 'real signed Wintun original TLS/Rust test was skipped'}
 Write-Output 'M0_PLAN020_SAME_SOURCE_REAL_GO_TLS_RUST_M3_WINTUN_KERNEL_APP_FIRST_REVERSE_PASS_SCOPED'
+
+# Positive original-Go TLS Fixed/Auto through signed Windows Wintun.
+& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=6m' '-test.run=^TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse$' 2>&1 | Tee-Object -FilePath result/m0-original-fec2-rust-wintun-kernel-actual.log
+if ($LASTEXITCODE -ne 0) {throw 'native Fixed/Auto original TLS signed Wintun positive FAIL'}
+$fec=Get-Content result/m0-original-fec2-rust-wintun-kernel-actual.log -Raw
+foreach($mode in @('fixed','auto')){
+  if (!$fec.Contains('M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_'+$mode+'_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED')){
+    throw ('native Fixed/Auto real first/reverse marker NOT_RUN mode='+$mode)
+  }
+  if (!$fec.Contains('M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_'+$mode+'_PASS_SCOPED')){
+    throw ('native Fixed/Auto actual lost source Rust RS16 repair NOT_RUN mode='+$mode)
+  }
+}
+if ($fec -match 'UNSUPPORTED|--- SKIP:') {throw 'Fixed/Auto positive was skipped'}
+Write-Output 'M0_PLAN024_WINDOWS_REAL_ORIGINAL_GO_FEC2_FIXED_AUTO_NATIVE_TLS_RUST_WINTUN_FIRST_REVERSE_PASS_SCOPED'
+
+# Positive original-Go TLS 2/4 independent Game lanes and native Wintun.
+& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=8m' '-test.run=^TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse$' 2>&1 | Tee-Object -FilePath result/m0-original-game-rust-wintun-kernel-actual.log
+if ($LASTEXITCODE -ne 0) {throw 'native Game2/4 original TLS signed Wintun positive FAIL'}
+$game=Get-Content result/m0-original-game-rust-wintun-kernel-actual.log -Raw
+foreach($lane in @(2,4)){
+  if (!$game.Contains('M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME'+$lane+'_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED')){
+    throw ('native Game2/4 real blocked lane marker NOT_RUN lanes='+$lane)
+  }
+}
+if ($game -match 'UNSUPPORTED|--- SKIP:') {throw 'Game2/4 positive was skipped'}
+Write-Output 'M0_PLAN024_WINDOWS_REAL_ORIGINAL_GO_GAME2_GAME4_NATIVE_TLS_RUST_WINTUN_FIRST_REVERSE_NOHOL_PASS_SCOPED'
 
 # M0-only exact SOURCE post-donor test override. This does not change the
 # 12 pinned Windows donor paths nor any production implementation. Check

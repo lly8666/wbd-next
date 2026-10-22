@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "a22c4e09baf7c42a39b4eab1d7c3febffc5a6836",
+  "result": "PASS_SCOPED_WINDOWS2022_ORIGINAL_GO_TLS_SHARED_RUST_RS16_PARITY_WINTUN_FIVE_PARALLEL_MODES_NOT_PRODUCT",
+  "test_type": "true Windows2022 signed Wintun kernel app with original pinned Go protected TLS and Rust M3",
+  "run_id": 39720987395,
+  "attempt": 1,
+  "conclusion": "success",
+  "build_job_id": 119634110169,
+  "parallel_jobs": [
+    {
+      "mode": "normal",
+      "id": 119635909973,
+      "conclusion": "success",
+      "artifact_id": 12401760386
+    },
+    {
+      "mode": "fixed",
+      "id": 119635909966,
+      "conclusion": "success",
+      "artifact_id": 12401181580
+    },
+    {
+      "mode": "auto",
+      "id": 119635909936,
+      "conclusion": "success",
+      "artifact_id": 12401052090
+    },
+    {
+      "mode": "game2",
+      "id": 119635909909,
+      "conclusion": "success",
+      "artifact_id": 12400977402
+    },
+    {
+      "mode": "game4",
+      "id": 119635909982,
+      "conclusion": "success",
+      "artifact_id": 12401277520
+    }
+  ],
+  "artifact": {
+    "id": 12400982219,
+    "name": "m0-plan020-win-wal-39720987395-1",
+    "bytes": 47423927,
+    "sha256": "3b4c403e2b28cb58d98e792a1cf2dd63fbfa3914e727c084475b5f4364e6eae4"
+  },
+  "exact_scope_tests": [
+    "Windows Rust source-locked m0_windows_shared_rs16_original_owner_encode_repair_recovers_missing_source PASSED",
+    "Fixed original Go credentials TLS > M3 native signed Wintun OS UDP app source0 + Rust shared RS16 parity M3 repair RECOVERS intentionally omitted source1, PN replay denied",
+    "Auto original Go credentials TLS > M3 native signed Wintun OS UDP app source0 + Rust shared RS16 parity M3 repair RECOVERS intentionally omitted source1, PN replay denied",
+    "Normal signed Wintun first and reverse native app and Stop PASSED",
+    "Game2/Game4 signed Wintun blocked lane1 other lane first delivery and Stop PASSED",
+    "PLAN025/026 original Windows Go real native carrier gap ACK/wrap, no one-lane Game downgrade, exhausted immutable ciphertext retry FAIL-CLOSED PASSED",
+    "S763 real Rust authenticated FrameBudget feature7 reserves 14 bytes once for source+repair and Go original owner wire caps; entire native source-locked Windows CI PASS",
+    "scoped host TEST-NET WFP foreign CAS and native IP/MTU/DNS WAL scoped PASS; full global host WFP/routes NOT_RUN"
+  ],
+  "truthful_limits": {
+    "public_original_go_CLI_mode_runtime": "Normal only release Rust mode ABI mask=1",
+    "fixed_auto_negotiated_authenticated_M2_applied_revision": "NOT_RUN",
+    "fixed_auto_continuous_sender_partial_block_schedule": "NOT_WIRED",
+    "game2_game4_public_independent_FakeTCP_Npcap_client_and_server_drivers": "NOT_WIRED",
+    "host_global_ipv6_dns_wfp_dual_1_routes_real_wal_and_winforms_applied": "NOT_RUN",
+    "sustained_public_v4_bidirectional_10mbps": "NOT_RUN",
+    "real_public_1pct_5pct_loss_long_gap_p99_cpu_rss_queues_drops_retrans": "NOT_RUN"
+  }
+}

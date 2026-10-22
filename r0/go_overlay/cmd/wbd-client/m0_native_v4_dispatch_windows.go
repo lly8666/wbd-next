@@ -22,5 +22,6 @@ type m0NativeV4Options struct {
  Direct4,Bypass4 []netip.Prefix
  TunnelMTU uint32
  ControlStdin bool
+ Mode m0WindowsV4Mode
 }
 var errM0NativeV4PacketBridge=errors.New("Windows original Go native V4 TLS authenticated, but public Rust M3 TCP/Wintun application packet bridge and full OS Applied/Stop remain NOT_RUN; refusing production network activation")

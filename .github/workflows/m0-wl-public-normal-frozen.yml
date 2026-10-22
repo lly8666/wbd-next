@@ -1,0 +1,272 @@
+name: M0 WL public Windows Linux frozen full product fast
+run-name: M0-WL-FULL-REUSE-EXACT-WINDOWS-SOURCE
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-wl-public-normal-frozen.yml
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  actual-public-two-os:
+    runs-on: windows-2025
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+      WIN_BINARY_SRC: abea7a1851e913ab5a64d592c4ed61e9d8478e10
+      LINUX_BINARY_SRC: 621bc733becbb4bbcf23bc4b10c6150d22b3a073
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Restore unchanged exact-source original-Go Windows TLS Rust M2 native product binaries
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force frozen,result/wl-public | Out-Null
+          & gh run download 39753469567 --repo $env:GITHUB_REPOSITORY --name m0-plan020-win-wal-39753469567-1 --dir frozen
+          if($LASTEXITCODE -ne 0){throw 'previous actual Windows original Go + Rust compiled product source unavailable'}
+          @'
+          import os,json,hashlib,pathlib,shutil
+          src=pathlib.Path('frozen/portable')
+          obj=json.loads((src/'source-receipt.json').read_text())
+          assert obj['source_sha']==os.environ['WIN_BINARY_SRC']
+          assert obj['original_go']==os.environ['GO_SRC']
+          for file,key in [('wbd-client.exe','native_v4_client_sha256'),('wbd_engine.dll','native_rust_m3_dll_sha256'),('wintun.dll','signed_wintun_0141_sha256')]:
+            raw=(src/file).read_bytes()
+            assert hashlib.sha256(raw).hexdigest()==obj[key],(file,key)
+            dest=pathlib.Path('result/wl-public')/('wbd-client-embedded.exe' if file=='wbd-client.exe' else file)
+            dest.write_bytes(raw)
+          print('WL_TRUE_FULL_PUBLIC_IMMUTABLE_WINDOWS_GO_TLS_RUST_M2_BINARIES_VERIFIED')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'real product Windows source/sha256 integrity fail'}
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Reuse verified public Linux V4 original Go server binary (separate exact SOURCE)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force linux-product | Out-Null
+          & gh run download 39397026210 --repo $env:GITHUB_REPOSITORY --name m0-v4-source-build-39397026210-1 --dir linux-product
+          if($LASTEXITCODE -ne 0){throw 'real Linux public V4 binary artifact unavailable'}
+          @'
+          import hashlib,json,pathlib,os
+          p=pathlib.Path("linux-product")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]
+          assert m["original_go_sha"]==os.environ["GO_SRC"]
+          for file in ("wbd-v4-server","libwbd_engine.so"):
+            v=p/file
+            assert v.is_file() and v.stat().st_size>100000
+            assert hashlib.sha256(v.read_bytes()).hexdigest()==m["sha256"][file]
+          print("WL_GENUINE_LINUX_PUBLIC_BINARIES_SOURCE_LOCKED")
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
+      - name: Launch actual WSL2 Linux and direct full public two-OS product
+        shell: pwsh
+        timeout-minutes: 22
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official pinned Ubuntu WSL tar image hash mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 native import failed'}
+            if(((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','') -notmatch 'Ubuntu'){throw 'real WSL2 distro not registered'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_WSL2_ROOTFS_IMPORTED'
+          }
+          & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
+          if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
+          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+          if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+          & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
+          if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
+          # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
+          # Linux eth0 does not. Admit only this host->WSL raw product flow
+          # across WSL's actual Hyper-V firewall; never change default policy.
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+            Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'exact WSL HyperV firewall VM creator unavailable'}
+          $guestText=(& wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $match=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $match.Success){throw 'actual WSL2 guest eth0 address missing'}
+          $guestIP=$match.Groups[1].Value
+          $nic=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop |
+            Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL2 vEthernet owner ambiguous'}
+          $source=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -ErrorAction Stop |
+            Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          if($source.Count -ne 1){throw 'host WSL2 source address ambiguous'}
+          $ruleName='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction SilentlyContinue){throw 'foreign same-name WSL hyperv rule'}
+          New-NetFirewallHyperVRule -Name $ruleName -DisplayName $ruleName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $source[0].IPAddress -LocalPorts 443 -RemotePorts 41031 -ErrorAction Stop | Out-Null
+          $live=Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction Stop
+          if($null -eq $live -or $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){throw 'original WSL HyperV per-flow rule not actually installed'}
+          [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_port=443;client_tcp_port=41031;scope='OWNED_SINGLE_WSL2_ORIGINAL_NPCAP_PRODUCT_FLOW'} |
+            ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
+          Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_ALLOW_INSTALLED'
+          # Real NPF header showed original product SYN destination MAC equals
+          # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+          # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+          $guestLink=(& wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          $guestMAC=[string]$guestLink.address
+          $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+          if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+          $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+          if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+          [ordered]@{owner=$ruleName;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+            ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+          & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+          if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+          $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+          if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+          Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+          $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
+          $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+          Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+          Get-NetFirewallHyperVVMSetting -PolicyStore ActiveStore -Name $creator[0].VMCreatorId -ErrorAction Continue |
+            Select-Object Name,Enabled,DefaultInboundAction,DefaultOutboundAction,LoopbackEnabled,AllowHostPolicyMerge |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-effective.json
+          Get-NetFirewallHyperVProfile -PolicyStore ActiveStore -ErrorAction Continue |
+            Select-Object Name,AllowLocalFirewallRules |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-profile.json
+          # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
+          $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
+          $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
+          $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
+          # These OS route witnesses are captured during the SAME public
+          # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
+          Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+            Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route.json
+          Get-NetAdapter -IncludeHidden -ErrorAction Continue |
+            Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
+          & wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+            Out-File result/wl-public/linux-eth0.json
+          & wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 |
+            Out-File result/wl-public/linux-eth0-link.json
+          $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
+          Start-Sleep -Milliseconds 800
+          try {
+            & python tools/m0_wl_public_normal_e2e.py 2>&1 |
+              Tee-Object result/wl-public/direct-full.log
+            $e2eExit=$LASTEXITCODE
+          } finally {
+            foreach($p in @($witness,$npf)){
+              if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
+            }
+            Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+          }
+          if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
+          $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
+          if($result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){throw 'real public product proof not emitted'}
+      - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP
+      - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          $installed=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $installed){
+            $cid=[string]$installed.VMCreatorId
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $cid){throw 'foreign HyperV VM creator refused cleanup'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
+            Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
+          }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
+      - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $path='result/wl-public/native-wsl-neighbor-owner.json'
+          if(Test-Path $path){
+            $owned=Get-Content $path -Raw | ConvertFrom-Json
+            if($owned.owner -ne ('WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)){throw 'foreign guest neighbor refused cleanup'}
+            & netsh.exe interface ipv4 delete neighbors "name=$($owned.interface_index)" "address=$($owned.guest_ip)"
+            if($LASTEXITCODE -ne 0){throw 'real WSL guest neighbor cleanup failed'}
+            Write-Output 'WL_REAL_GUEST_MAC_NEIGHBOR_OWNER_CLEARED'
+          }else{Write-Output 'WL_GUEST_MAC_NEIGHBOR_NOT_CREATED'}
+      - name: Restore Npcap owned Windows kernel service after product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 |
+            Tee-Object result/wl-public/npcap-cleanup.log
+          $result=Get-Content result/wl-public/npcap-cleanup.log -Raw
+          if(-not ($result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){throw 'Npcap owned cleanup unverified'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'Npcap native driver still installed'}
+      - name: Report only public business source result, not native scoped success
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/report.json){Get-Content result/wl-public/report.json}
+          else {Write-Output 'WL_PUBLIC_WINDOWS_LINUX_NORMAL_OFF=NOT_RUN_OR_FAILED_BEFORE_START'}
+          Write-Output 'WL_N0_N1_N5=NOT_RUN'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-full-public-normal-direct
+          path: |
+            result/wl-public/report.json
+            result/wl-public/assembly.json
+            result/wl-public/*log
+            result/wl-public/*.pid
+            result/wl-public/windows-route.json
+            result/wl-public/windows-adapters.json
+            result/wl-public/linux-eth0.json
+            result/wl-public/hyperv-rule.json
+            result/wl-public/native-wsl-neighbor-owner.json
+            result/wl-public/hyperv-effective.json
+            result/wl-public/hyperv-profile.json
+            result/wl-public/linux-eth0-link.json
+          retention-days: 30
+          if-no-files-found: warn

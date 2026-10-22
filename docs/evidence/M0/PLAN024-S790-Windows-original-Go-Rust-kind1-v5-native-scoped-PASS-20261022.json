@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "scope": "Windows original credential Go TLS Rust typed-kind1 M1/M3 native first delivery, ABI and scoped WAL, NOT public Windows to Linux and NOT completed M2 shadow",
+  "source_sha": "d7cccea092022464e8390e12fa41d082af3d852b",
+  "legacy_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "workflow": ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+  "github_action": {
+    "run_id": 39731587386,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "jobs": [
+      {
+        "id": 119667624257,
+        "name": "original-go-native-wal",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "id": 119669173484,
+        "name": "SCOPED TLS Wintun game2",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "id": 119669173491,
+        "name": "SCOPED TLS Wintun fixed",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "id": 119669173522,
+        "name": "SCOPED TLS Wintun normal",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "id": 119669173546,
+        "name": "SCOPED TLS Wintun game4",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "id": 119669173572,
+        "name": "SCOPED TLS Wintun auto",
+        "conclusion": "SUCCESS"
+      }
+    ]
+  },
+  "artefact": {
+    "id": 12405377642,
+    "name": "m0-plan020-win-wal-39731587386-1",
+    "sha256": "4305229d5a21631ade9f08f87b61490572ee46e3a1442537fd6f5ee6d42ff348",
+    "bytes": 47427156
+  },
+  "proof": [
+    "Original Go credential TLS scoped build and original Windows assembly exact pinned PASS",
+    "native cargo original M1/M3 Windows kind1 authenticated AEAD+unique PN, stale/replay corruption rejection and Stop staged-clear test PASS",
+    "wbd_m0_win_owner_v5_open_data_or_kind1 real release DLL export exists",
+    "Windows native Rust release wbd_engine.dll sha256 12583cf5944166a8170f3ca9e2239b5de28aa67b1f1e4e6ca0c5592707a3e153",
+    "original Go TLS→Rust→signed Wintun↔native UDP application scoped tests PASS",
+    "native five-stage WAL owner scoped tests PASS"
+  ],
+  "non_proofs": {
+    "windows_to_linux_public_business": "NOT_RUN",
+    "authenticated_kind1_to_actual_M2_on_receipt": "NOT_RUN",
+    "Windows_recovery_shadow_retirement": "NOT_RUN",
+    "two_repair_global_budget": "NOT_RUN",
+    "no_go_256_TCP_ACK_HOL": "NOT_RUN",
+    "host_global_WFP": "NOT_RUN",
+    "cross_platform_owned_Stop": "NOT_RUN",
+    "wl_n0": "NOT_RUN",
+    "wl_n1": "NOT_RUN",
+    "wl_n5": "NOT_RUN"
+  },
+  "preserve_fails": [
+    {
+      "run_id": 39730366101,
+      "source_sha": "aa2dcf2c32496b4220549b4dbdc7f4e90d6f439b",
+      "reason": "test Rust TxDispatch no Debug, fixed"
+    },
+    {
+      "run_id": 39731250348,
+      "source_sha": "551e01a3f250df306799a90d4aed21ea379a80cf",
+      "reason": "source-locked Go peer manifest blob mismatch, fixed"
+    },
+    {
+      "workflow": "g2-scoped-bootstrap",
+      "reason": "G2 registry revision changed independently, not product functional"
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+name: M0 PLAN024 old Npcap signed driver and Wintun native env
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-wl-legacy-driver-intake.yml
+      - tools/m0_wl_npcap_driver_ci.ps1
+      - tools/m0_wl_npcap_vethernet_probe.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-pinned-drivers:
+    runs-on: windows-2025
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: "1.23.12"
+          cache: false
+      - name: Exact SOURCE and initial NOT_RUN receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result/wl-driver | Out-Null
+          if ((& git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) {throw 'main SOURCE mismatch'}
+          if ((& git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984') {throw 'original Go SHA mismatch'}
+          [ordered]@{source_sha=$env:GITHUB_SHA;original_go_sha='a7a82db31fe736ffedee330795a3234d358f1984';runner='windows-2025';scope='REAL_DRIVER_ENV_NOT_PRODUCT';npcap='NOT_RUN';npcap_capture_send='NOT_RUN';wintun='NOT_RUN';linux_netem='NOT_RUN';windows_linux_public_normal_off='NOT_RUN';wl_n0='NOT_RUN';wl_n1='NOT_RUN';wl_n5='NOT_RUN'} |
+            ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json
+      - name: Old approved Npcap 1.88 driver installed with original signed installer contract
+        shell: pwsh
+        timeout-minutes: 7
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference='Stop'
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          try {
+            $root=Join-Path $env:RUNNER_TEMP 'wbd-wl-driver'
+            $zip=Join-Path $root 'old-npcap-test.zip'
+            $driver=Join-Path $root 'old-npcap'
+            $installer=Join-Path $root 'npcap-1.88.exe'
+            $userland=Join-Path $root 'userland'
+            New-Item -ItemType Directory -Force $root,$driver,$userland | Out-Null
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $zip
+            if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'OLD_NPCAP_ARCHIVE_HASH_MISMATCH'}
+            Expand-Archive -LiteralPath $zip -DestinationPath $driver -Force
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+            if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'OFFICIAL_NPCAP_INSTALLER_HASH_MISMATCH'}
+            $s=Get-AuthenticodeSignature -FilePath $installer
+            if($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'OFFICIAL_NPCAP_SIGNER_INVALID'}
+            & 7z x -y "-o$userland" $installer | Out-File result/wl-driver/npcap-extract.log
+            if($LASTEXITCODE -ne 0){throw 'OFFICIAL_NPCAP_USERLAND_EXTRACT_FAILED'}
+            & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $driver -UserlandExtractDir $userland 2>&1 |
+              Tee-Object result/wl-driver/npcap-install.log
+            & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Status 2>&1 |
+              Tee-Object result/wl-driver/npcap-status.log
+            if((Get-Service -Name npcap -ErrorAction Stop).Status -ne 'Running'){throw 'NPCAP_KERNEL_SERVICE_NOT_RUNNING'}
+            $r.npcap='PASS_REAL_SIGNED_DRIVER_SERVICE_ONLY'
+            Write-Output 'WL_OLD_NPCAP_188_REAL_SIGNED_DRIVER_READY_ENV_ONLY'
+          } catch {
+            $r.npcap="BLOCKED_$($_.Exception.Message)"
+            Write-Output "WL_NPCAP_DRIVER_BLOCKED $($_.Exception.Message)"
+          } finally {$r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json}
+      - name: Official signed Wintun 0.14.1 DLL verified and actual original Go native adapter probed
+        shell: pwsh
+        timeout-minutes: 8
+        continue-on-error: true
+        env:
+          WBD_N4_ADMIN_ISOLATED: "1"
+        run: |
+          $ErrorActionPreference='Stop'
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          try {
+            $zip=Join-Path $env:RUNNER_TEMP 'wintun-0.14.1.zip'
+            $dir=Join-Path $env:RUNNER_TEMP 'wintun-0.14.1-unpacked'
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $zip
+            if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'WINTUN_PINNED_ZIP_HASH_MISMATCH'}
+            Expand-Archive -LiteralPath $zip -DestinationPath $dir -Force
+            $dll=Join-Path $dir 'wintun/bin/amd64/wintun.dll'
+            $s=Get-AuthenticodeSignature -FilePath $dll
+            if($s.Status -ne 'Valid'){throw "WINTUN_SIGNED_DLL_STATUS_$($s.Status)"}
+            Copy-Item -LiteralPath $dll -Destination result/wl-driver/wintun.dll
+            Push-Location legacy
+            try {
+              & go test -mod=readonly -c -o ../result/wl-driver/old-wintun-native.test.exe ./internal/windowsclient
+              if($LASTEXITCODE -ne 0){throw 'OLD_NATIVE_WINTUN_GO_BUILD_FAILED'}
+            } finally {Pop-Location}
+            $env:WBD_N4_ADMIN_PROBE_REPORT=(Join-Path (Get-Location).Path 'result/wl-driver/wintun-native.json')
+            & ./result/wl-driver/old-wintun-native.test.exe '-test.v' '-test.timeout=4m' '-test.run=^TestN4WindowsHostedCreatedWintunReadOnlyCapability$' 2>&1 |
+              Tee-Object result/wl-driver/wintun-native.log
+            if($LASTEXITCODE -ne 0){throw "OLD_WINTUN_NATIVE_TEST_EXIT_$LASTEXITCODE"}
+            $g=Get-Content result/wl-driver/wintun-native.json -Raw | ConvertFrom-Json
+            $r.wintun="$($g.result):$($g.driver)"
+            Write-Output "WL_NATIVE_WIN_KERNEL_WINTUN_SCOPE=$($g.result)"
+          } catch {
+            $r.wintun="BLOCKED_$($_.Exception.Message)"
+            Write-Output "WL_REAL_WINTUN_PROBE_BLOCKED $($_.Exception.Message)"
+          } finally {$r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json}
+      - name: Correct previous shell CRLF and test ONE WSL2 Linux raw TUN netns netem
+        shell: pwsh
+        timeout-minutes: 7
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference='Continue'
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          $list=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($list -notmatch 'Ubuntu'){
+            & wsl.exe --install --distribution Ubuntu --no-launch --web-download 2>&1 | Out-File result/wl-driver/wsl-install.log
+            Write-Output "WL_ONE_WSL_INSTALL_EXIT=$LASTEXITCODE"
+          }
+          $linux=@'
+          set -eu
+          uname -a
+          test "$(uname -s)" = Linux
+          test -c /dev/net/tun
+          command -v ip
+          command -v tc
+          python3 -c 'import socket; x=socket.socket(socket.AF_PACKET,socket.SOCK_RAW);x.close()'
+          ip netns add wbdwlcap
+          trap 'tc qdisc del dev wbdwla root 2>/dev/null || true; ip link del wbdwla 2>/dev/null || true; ip netns del wbdwlcap 2>/dev/null || true' EXIT
+          ip link add wbdwla type veth peer name wbdwlb
+          ip link set wbdwlb netns wbdwlcap
+          ip link set wbdwla up
+          ip netns exec wbdwlcap ip link set lo up
+          ip netns exec wbdwlcap ip link set wbdwlb up
+          tc qdisc add dev wbdwla root netem delay 1ms loss 1%
+          tc -s qdisc show dev wbdwla
+          echo WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_AVAILABLE
+          '@
+          $lf=$linux.Replace([string][char]13,'')
+          [IO.File]::WriteAllText((Join-Path (Get-Location).Path 'result/wl-driver/wsl-native-probe.sh'),$lf,[Text.UTF8Encoding]::new($false))
+          & wsl.exe -d Ubuntu -u root -- sh -lc $lf 2>&1 | Tee-Object result/wl-driver/wsl-native.log
+          $exit=$LASTEXITCODE
+          $r.linux_netem=if($exit -eq 0 -and (Select-String -LiteralPath result/wl-driver/wsl-native.log -SimpleMatch 'WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_AVAILABLE' -Quiet)){'PASS_REAL_LINUX_ENV_ONLY'}else{"BLOCKED_EXIT_$exit"}
+          $r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json
+          Write-Output "WL_LINUX_KERNEL_NETEM_SCOPE=$($r.linux_netem)"
+      - name: Real Windows Npcap and Linux WSL2 Ethernet both directions (no product admission)
+        shell: pwsh
+        timeout-minutes: 4
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference='Continue'
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          if ($r.npcap -eq 'PASS_REAL_SIGNED_DRIVER_SERVICE_ONLY' -and
+              $r.linux_netem -eq 'PASS_REAL_LINUX_ENV_ONLY') {
+            & python ./tools/m0_wl_npcap_vethernet_probe.py 2>&1 |
+              Tee-Object result/wl-driver/pcap-native.log
+            if (Test-Path result/wl-driver/pcap-native.json) {
+              $p=Get-Content result/wl-driver/pcap-native.json -Raw | ConvertFrom-Json
+              if ($p.linux_to_windows -like 'PASS_REAL*' -and
+                  $p.windows_to_linux -like 'PASS_REAL*') {
+                $r.npcap_capture_send='PASS_REAL_WSL2_BIDIRECTIONAL_ETHERNET_ENV_ONLY'
+              } else {$r.npcap_capture_send="BLOCKED_REAL_CAPTURE_OR_SEND: $($p.failure)"}
+            } else {$r.npcap_capture_send='BLOCKED_PROBE_DID_NOT_EMIT_RECEIPT'}
+          } else {$r.npcap_capture_send='NOT_RUN_DRIVER_OR_WSL2_UNAVAILABLE'}
+          $r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json
+          Write-Output "WL_REAL_WINDOWS_NPCAP_LINUX_AF_PACKET=$($r.npcap_capture_send)"
+      - name: Restore this job's owned Npcap service
+        if: always()
+        shell: pwsh
+        run: |
+          # The original helper checks the actual NPFInstall.exe ExitCode itself.
+          # Never interpret pwsh's inherited LASTEXITCODE after a PowerShell script.
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 | Tee-Object result/wl-driver/npcap-cleanup.log
+          $cleanup=Get-Content result/wl-driver/npcap-cleanup.log -Raw
+          if(-not ($cleanup.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or
+              $cleanup.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))) {
+            throw 'NPCAP_OWNED_CLEANUP_COMPLETION_MISSING'
+          }
+          if(Get-Service -Name npcap -ErrorAction SilentlyContinue) {throw 'NPCAP_SERVICE_STILL_INSTALLED_AFTER_CLEANUP'}
+          Write-Output 'WL_NPCAP_OWNED_CLEANUP_VERIFIED_SERVICE_ABSENT'
+      - name: Publish truthful scope
+        if: always()
+        shell: pwsh
+        run: |
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          Write-Output "WL_DRIVER_ENV_SOURCE=$($r.source_sha) npcap=$($r.npcap) wintun=$($r.wintun) linux=$($r.linux_netem)"
+          Write-Output 'PUBLIC_WINDOWS_LINUX_NORMAL_OFF_NOT_RUN WL_N0_N1_N5_NOT_RUN'
+          Get-Content result/wl-driver/report.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-original-driver-native-env-only
+          path: |
+            result/wl-driver/report.json
+            result/wl-driver/*.log
+            result/wl-driver/pcap-native.json
+            result/wl-driver/wintun-native.json
+            result/wl-driver/wsl-native-probe.sh
+          retention-days: 30
+          if-no-files-found: warn

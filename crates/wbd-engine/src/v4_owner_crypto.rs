@@ -448,7 +448,7 @@ impl ProtectedScopedOwner {
     /// The exact Normal/off first-send observer is allocated only after the
     /// original Go credential-checked TLS/Detach commit. This identity is
     /// NOT a client-supplied receipt, ACK or permission to enable FEC2.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(any(target_os="windows",all(target_os="linux",target_arch="x86_64",target_env="gnu")))]
     pub(crate) fn normal_firstsend_identity(&self)->Option<(wbd_types::LaneKey,[u8;16])>{
         (self.state==OwnerPhase::Active && self.crypto.active
          && self.rx_tx.detached() && self.epoch!=[0u8;16])
@@ -1384,6 +1384,89 @@ impl ProtectedScopedOwner {
                     accept_link(record.pn,record.payload);
                     report.link_ready+=1;
                 }
+                Ok(_)=>report.control_ready+=1,
+                Err(_)=>report.rejected+=1,
+            }
+        }
+        Ok((borrowed.recycle(),report))
+    }
+
+    /// Windows M0's SAME original credential-TLS-scoped RX owner admits
+    /// canonical M2 kind1 only AFTER genuine M3 AEAD and UNIQUE replay-PN.
+    /// This does NOT construct a second opener, take Go's TCP ACK as trust,
+    /// or implement repair dispatch. The typed callback must be paired with
+    /// the current tunnel epoch/directional M2 receipt scope by its caller.
+    #[cfg(target_os="windows")]
+    pub(crate) fn drain_windows_authenticated_kind1<F,G>(
+        &mut self,now:MonoNs,storage:Vec<RxPacket>,
+        mut accept_link:F,mut accept_kind1:G,
+    )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
+               (ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,&[u8]), G:FnMut(u64,wbd_codec::Receipt) {
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut borrowed=self.rx_tx.drain_rx(&self.token,now,storage)
+            .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
+        let mut report=AuthenticatedRxReport::default();
+        for packet in borrowed.as_mut_slice(){
+            let Some(rx)=self.crypto.rx.as_mut() else{
+                report.rejected+=1;continue
+            };
+            match rx.open_unique_in_place(packet.wire_mut()){
+                Ok(record) if record.kind==AUTHENTICATED_LINK_KIND=>{
+                    accept_link(record.pn,record.payload);
+                    report.link_ready+=1;
+                },
+                Ok(record) if record.kind==
+                    wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND=>{
+                    if record.payload.len()>512 {
+                        report.rejected+=1;continue
+                    }
+                    match wbd_codec::decode_control(record.payload,512){
+                        Ok(mut items) if items.len()==1=>{
+                            if let wbd_codec::ControlTlv::Receipt(receipt)=items.remove(0){
+                                accept_kind1(record.pn,receipt);
+                                report.control_ready+=1;
+                            } else {report.rejected+=1}
+                        },
+                        _=>report.rejected+=1,
+                    }
+                },
+                Ok(_)=>report.rejected+=1,
+                Err(_)=>report.rejected+=1,
+            }
+        }
+        Ok((borrowed.recycle(),report))
+    }
+
+    /// Windows original-Go feature7: the exact SAME original M1 RX owner
+    /// and SAME protected M3 replay/AEAD opener admit FEC2 kind2/3.
+    /// No independent second PN bitmap is created; callbacks receive only
+    /// authenticated payloads. This alone is NOT a verified Go M2 APPLIED.
+    #[cfg(all(target_os="windows",feature="fec2_product_record"))]
+    pub(crate) fn drain_windows_authenticated_fec2<F>(
+        &mut self,now:MonoNs,storage:Vec<RxPacket>,mut accept:F,
+    )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
+               (ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,u8,&[u8]){
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut borrowed=self.rx_tx.drain_rx(&self.token,now,storage)
+            .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
+        let mut report=AuthenticatedRxReport::default();
+        for packet in borrowed.as_mut_slice(){
+            let Some(rx)=self.crypto.rx.as_mut()else{
+                report.rejected+=1;continue
+            };
+            match rx.open_unique_with_fec2_after_admission_in_place(
+                packet.wire_mut()
+            ){
+                Ok(record) if matches!(record.kind,2|3)=>{
+                    accept(record.pn,record.kind,record.payload);
+                    report.link_ready+=1;
+                },
                 Ok(_)=>report.control_ready+=1,
                 Err(_)=>report.rejected+=1,
             }

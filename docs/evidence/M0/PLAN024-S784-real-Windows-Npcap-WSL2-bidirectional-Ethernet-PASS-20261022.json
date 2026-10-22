@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_REAL_WINDOWS_NPCAP_WSL2_BIDIRECTIONAL_ETHERNET_PASS_ENV_ONLY",
+  "source_sha": "53c03cd1cd2fd74a03ddc9fd43fbbe0cbf8c94c7",
+  "old_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 39730546258,
+    "attempt": 1,
+    "job_id": 119664334209,
+    "workflow": ".github/workflows/m0-wl-legacy-driver-intake.yml",
+    "conclusion": "SUCCESS"
+  },
+  "artifact": {
+    "id": 12404988112,
+    "name": "m0-wl-original-driver-native-env-only",
+    "sha256": "58e3a4e537e80a5f6f9a7202410c004403aeee0f7c29ce27329a0de60098b13c",
+    "size_bytes": 4891
+  },
+  "real_capture": {
+    "linux_to_windows": "PASS_REAL_LINUX_AF_PACKET_TO_WINDOWS_NPF",
+    "windows_to_linux": "PASS_REAL_WINDOWS_NPF_TO_LINUX_AF_PACKET",
+    "method": "WSL2 Linux AF_PACKET sends raw authentic 0x88b5 marked Ethernet over eth0; Windows Npcap pcap_open_live on actual WSL vEthernet captures matching tuple/marker; reverse Windows pcap_sendpacket verified by Linux AF_PACKET, not local loopback or mock",
+    "nic_identity": "at most 8 actual WSL NPF candidates and choose only one observed to receive true Linux packet; first iteration SOURCE e53b08 Actions39730022264 selected by string count and was BLOCKED (two WSL NICs), preserved",
+    "payload_type": "TEST ETHERTYPE ONLY, not TCP credential TLS or Rust M3"
+  },
+  "native_prerequisites": {
+    "npcap": "v1.88 signed actual driver Running, signed Packet/wpcap",
+    "wintun": "SCOPED_CREATED_WINTUN_READ_ONLY_PASS genuine created adapter",
+    "wsl2": "real /dev/net/tun, AF_PACKET, netns, veth, tc netem installed",
+    "cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS and service absent"
+  },
+  "product": {
+    "original_go_tls_to_rust_peer": "NOT_RUN",
+    "normal_off_public_business": "NOT_RUN",
+    "linux_raw_tun_business": "NOT_RUN",
+    "go256_nohol_m2": "NOT_RUN",
+    "client_stop": "NOT_RUN",
+    "wl_n0": "NOT_RUN",
+    "wl_n1": "NOT_RUN",
+    "wl_n5": "NOT_RUN"
+  },
+  "next_action": "After native original Go credential-TLS Rust shared M2 kind1 shadow/retirement/2 repair and no 256 ACK gate, combine real tested native NPF vEthernet/WSL2 backend into public Normal/off and run actual kernel bidirectional business and Stop; only then individual N0/N1/N5."
+}

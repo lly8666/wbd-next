@@ -22,3 +22,5 @@ CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action �
 **产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。
 
 说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。
+
+**PLAN021 用户新硬门**：精确 SOURCE Actions 正向功能 PASS 可开放该已接线模式供显式网络试验，无须先跑物理/全矩阵；未接线不冒充 PASS，认证、WFP、owned WAL、Stop 仍强制。见 [PLAN021](docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md)。

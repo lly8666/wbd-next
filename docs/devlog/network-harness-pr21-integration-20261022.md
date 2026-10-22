@@ -1,0 +1,9 @@
+# PR21夹具集成与独立网络任务入口
+
+用户2026-10-22明确要求合并PR21，并让全新agent另建分支自主网络测试/记录/修复，无需向其他工位汇报。
+
+基于PR头4178dd25728d9e8f6f4ffb3c25ae7ef253278d52合入当前main。两处冲突：traffic.py采用main已增加的Windows Winsock、DF读回、未知socket drop、peer_port与时钟范围说明；TEST_PLAN同时保留主线PLAN021开放条件及PR夹具入口。没有回退M0产品、Windows接线或registry/cursor。
+
+补NETWORK_AUTONOMOUS_WORK长期入口，并更新矩阵/诊断的旧M0独占安排。明确现有夹具的x64 ELF和产物目录限制，ARM新任务首先做小范围runner/产物适配，不能误称直接支持ARM。未代替新任务建分支、dispatch网络矩阵或改产品算法。
+
+验证intent：更新PR后由Network harness contracts运行既有8项自检与真实内核netem检查；不重复产品性能矩阵。过去lossless通过、混合TCP背压INCONCLUSIVE及历史失败仍原样保留。最终merge前核查准确SOURCE检查状态；Actions未完成不提前标PASS。

@@ -12,6 +12,7 @@ import errno
 import hashlib
 import json
 import math
+import os
 import selectors
 import socket
 import struct
@@ -69,9 +70,10 @@ def fresh_stats():
 
 
 class Worker:
-    def __init__(self, config, role, local, peer, port, output, start_ns):
+    def __init__(self, config, role, local, peer, port, output, start_ns, peer_port=None):
         self.config, self.role, self.local, self.peer = config, role, local, peer
         self.port, self.output, self.start_ns = port, Path(output), start_ns
+        self.peer_port = port if peer_port is None else peer_port
         self.sel = selectors.DefaultSelector()
         self.phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
         self.ends, elapsed = [], 0
@@ -91,7 +93,9 @@ class Worker:
         self.rx_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.tx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.rx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
-        self.socket_drops = 0
+        # Windows Winsock offers no Linux SO_RXQ_OVFL ancillary counter;
+        # missing host queue drop telemetry is UNKNOWN, never asserted zero.
+        self.socket_drops = 0 if os.name == 'posix' else None
         self.probe_seq, self.probe_outstanding, self.probe_seen = 0, {}, set()
         self.streams = []
         self.read_buffers = {}
@@ -104,9 +108,20 @@ class Worker:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1024 * 1024)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1024 * 1024)
-        s.setsockopt(socket.SOL_SOCKET, 40, 1)  # SO_RXQ_OVFL Linux
-        if key == "udp":
-            s.setsockopt(socket.IPPROTO_IP, 10, 0 if self.config["traffic"]["allow_fragmentation"] else 2)
+        if os.name == "posix":
+            s.setsockopt(socket.SOL_SOCKET, 40, 1)  # Linux SO_RXQ_OVFL
+            if key == "udp":
+                s.setsockopt(socket.IPPROTO_IP, 10, 0 if self.config["traffic"]["allow_fragmentation"] else 2)
+        elif key == "udp" and not self.config["traffic"]["allow_fragmentation"]:
+            # Windows Winsock IP_DONTFRAGMENT; fail-closed when unsupported.
+            # Python 3.12's Windows socket module omits the name even
+            # though WinSock2 ws2tcpip.h defines IP_DONTFRAGMENT = 14.
+            # Microsoft documents the DWORD option; verify Winsock
+            # readback, never silently downgrade to IP fragmentation.
+            opt = getattr(socket, "IP_DONTFRAGMENT", 14)
+            s.setsockopt(socket.IPPROTO_IP, opt, 1)
+            if s.getsockopt(socket.IPPROTO_IP, opt) != 1:
+                raise RuntimeError("Windows IPv4 DF socket readback failed")
         s.bind((self.local, port))
         s.setblocking(False)
         self.effective_buffers[key] = {"rcvbuf": s.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF),
@@ -135,7 +150,7 @@ class Worker:
                     s.bind((self.local, 0))
                     s.settimeout(1)
                     try:
-                        s.connect((self.peer, self.port + 2))
+                        s.connect((self.peer, self.peer_port + 2))
                         self.streams.append(s)
                         break
                     except OSError:
@@ -176,7 +191,7 @@ class Worker:
             return
         if kind == PROBE:
             try:
-                self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.port + 1))
+                self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.peer_port + 1))
             except OSError:
                 self.errors["probe_echo_send_error"] += 1
             return
@@ -252,12 +267,17 @@ class Worker:
                             self.receive(bytes(b[4:4+size]), time.monotonic_ns(), "tcp")
                             del b[:4+size]
                     else:
-                        data, ancillary, flags, _ = s.recvmsg(65536, 128)
-                        for level, typ, value in ancillary:
-                            if level == socket.SOL_SOCKET and typ == 40:
-                                self.socket_drops = max(self.socket_drops, struct.unpack("I", value)[0])
-                        if flags & socket.MSG_TRUNC:
-                            self.errors["udp_truncated"] += 1
+                        if os.name == "posix":
+                            data, ancillary, flags, _ = s.recvmsg(65536, 128)
+                            for level, typ, value in ancillary:
+                                if level == socket.SOL_SOCKET and typ == 40:
+                                    self.socket_drops = max(self.socket_drops, struct.unpack("I", value)[0])
+                            if flags & socket.MSG_TRUNC:
+                                self.errors["udp_truncated"] += 1
+                        else:
+                            # Winsock lacks recvmsg; Windows socket drop
+                            # must come from independent ETW/interface readback.
+                            data, _ = s.recvfrom(65536)
                         self.receive(data, time.monotonic_ns(), "udp")
                 except BlockingIOError:
                     break
@@ -324,7 +344,7 @@ class Worker:
                             self.flush_tcp(s, now)
                         else:
                             try:
-                                n = self.udp.sendto(data, (self.peer, self.port))
+                                n = self.udp.sendto(data, (self.peer, self.peer_port))
                                 if n != size:
                                     raise RuntimeError("partial UDP send")
                                 self.seq[proto] += 1
@@ -344,7 +364,7 @@ class Worker:
                 timeout = .002
             self.io(timeout)
         result = {"role": self.role, "start_ns": self.start_ns, "end_ns": self.end_ns,
-                  "clock": "same Linux host monotonic_ns", "units": "application bytes including test header",
+                  "clock": "same host monotonic_ns; cross-host directional delay UNQUALIFIED unless independently synchronized", "units": "application bytes including test header",
                   "stats": {}, "tx_bins_10ms": self.tx_bins, "rx_bins_10ms": self.rx_bins,
                   "tx_bytes_bins_10ms": self.tx_byte_bins, "rx_bytes_bins_10ms": self.rx_byte_bins,
                   "socket_drops": self.socket_drops, "effective_buffers": self.effective_buffers,
@@ -364,6 +384,7 @@ if __name__ == "__main__":
         ap.add_argument("--" + name, required=True)
     ap.add_argument("--port", type=int, default=45901)
     ap.add_argument("--start-ns", type=int, required=True)
+    ap.add_argument("--peer-port", type=int)
     a = ap.parse_args()
     Worker(json.loads(Path(a.config).read_text()), a.role, a.local, a.peer,
-           a.port, a.output, a.start_ns).run()
+           a.port, a.output, a.start_ns, peer_port=a.peer_port).run()

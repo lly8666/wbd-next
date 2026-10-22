@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_ONE_REAL_WIN2025_NPCAP_WINTUN_WSL2_ENV_CAPABILITY_ONLY",
+  "source_sha": "64e8560ec3e9161c4e8976a27118cc1e1935f766",
+  "go_original_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "workflow": ".github/workflows/m0-wl-legacy-driver-intake.yml",
+    "run_id": 39728479563,
+    "attempt": 1,
+    "job_id": 119657802638,
+    "conclusion": "SUCCESS",
+    "scope": "SOURCE_PINNED_ENVIRONMENT_ONLY_NOT_PRODUCT"
+  },
+  "artifact": {
+    "id": 12403494003,
+    "name": "m0-wl-original-driver-native-env-only",
+    "sha256": "8d1e073ea1c443c0d2e7d84e149d28353dcb4bb66c4316565530a5177beb90ba"
+  },
+  "npcap": {
+    "version": "1.88",
+    "archive_hash": "6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32",
+    "official_installer_hash": "a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b",
+    "driver_script_original_git_blob": "c92d8f337a8d886cc20b90000126ca1c0f760e08",
+    "result": "WBD_NPCAP_DRIVER_CI_INSTALL_PASS and WBD_NPCAP_DRIVER_CI_READY",
+    "service": "REAL_RUNNING",
+    "packet_dll_sha256": "2793ce72f0e04d5885aaee1273a7373441d01934b2cff3886b031c13ca826345",
+    "wpcap_dll_sha256": "d1ca7fcf9128d02a75eaf29ce9a9d85c5697377460f92420d976da187521cf39",
+    "cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS + WL_NPCAP_OWNED_CLEANUP_VERIFIED_SERVICE_ABSENT",
+    "capture_send": "NOT_RUN"
+  },
+  "wintun": {
+    "official_archive_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+    "result": "SCOPED_CREATED_WINTUN_READ_ONLY_PASS",
+    "driver": "PASS_REAL_CREATED_WINTUN",
+    "verified": "original Go process creates Wintun, reads real LUID and native IPv4/DNS; no OS full product claim"
+  },
+  "linux": {
+    "kernel": "6.18.40.1-microsoft-standard-WSL2",
+    "result": "WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_AVAILABLE",
+    "tun": true,
+    "packet_raw": true,
+    "netns_veth": true,
+    "netem": "qdisc root delay 1ms loss 1%; sent 0 packets; capability only"
+  },
+  "product": {
+    "windows_to_linux_original_go_rust_public_normal_off": "NOT_RUN",
+    "npcap_real_vethernet_capture_send": "NOT_RUN",
+    "wintun_public_auth_business": "NOT_RUN",
+    "linux_server_business": "NOT_RUN",
+    "os_stop": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "preserved_fail": {
+    "run_id": 39728097436,
+    "attempt": 1,
+    "conclusion": "FAIL",
+    "reason": "cleanup wrapper stale $LASTEXITCODE despite true service cleanup; fixed S776 source, not erased"
+  },
+  "license": "No Npcap binary copied into repository/public artifact; test input old user-provided package and official signed binaries fetched ephemerally under applicable authorization. Npcap production redistribution requires separate license or end-user installation; Wintun bundled only as official verified signed DLL.",
+  "next_action": "Implement real Windows M0 Rust M2 original-Go TLS-bound authenticated kind1 RX/TX/ReceiptState and process-global repair quota, replace Go 256 unACK fresh gate/750ms×8 independent retries with Rust-driven independent fresh and at most 2 repairs, Actions functional; then real Npcap capture/send and public kernel Windows→Linux trial."
+}

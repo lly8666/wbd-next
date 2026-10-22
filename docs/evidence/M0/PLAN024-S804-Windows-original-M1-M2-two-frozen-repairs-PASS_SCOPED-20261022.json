@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_WINDOWS_ORIGINAL_M1_FROZEN_FIRSTSEND_M2_TWO_REPAIR_SCOPED_PASS",
+  "source_sha": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
+  "action": {
+    "workflow": ".github/workflows/m0-plan020-windows-native-os-receipt.yml",
+    "run_id": 39735101862,
+    "attempt": 1,
+    "conclusion": "SUCCESS",
+    "jobs": [
+      119678831158,
+      119680801920,
+      119680801991,
+      119680802070,
+      119680802083,
+      119680802086
+    ],
+    "job_conclusions": "ALL_SUCCESS"
+  },
+  "artifact": {
+    "id": 12407072047,
+    "name": "m0-plan020-win-wal-39735101862-1",
+    "sha256": "516631e6ed0380daacb23fbcfffd1eba1f56a633d78a2cb066ce1b410f589b7e",
+    "size_bytes": 47514455
+  },
+  "verified": [
+    "actual Windows native Rust original M1 FrozenRecord byte pointer preserved through original owner",
+    "m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire test PASS: explicit Npcap marked-success is required to register firstsend, scoped M3 AEAD/replay and kind1 positive retire, tamper/replay cannot",
+    "m0_windows_m2_original_frozen_two_repair_global_budget_and_abandoned test PASS: same seq/PN/immutable ciphertext, two accepted global-budget repair callbacks, no third, Stop retires",
+    "v6 native Rust FFI exported in actual Windows wbd_engine.dll; frozen Go overlay assembled exact, Windows real original-Go credential TLS native signed Wintun mode scope passed in distinct jobs"
+  ],
+  "limitations": [
+    "Rust test marks Npcap success as trusted platform input but does not itself drive cross-platform real Npcap network; prior separate actual Windows↔Linux Ethernet evidence SOURCE53c03cd is ENV_ONLY",
+    "Original Go normal integration source fd686... and long-BDP window source 15f... are distinct, do NOT treat this Action as their product PASS",
+    "Windows original Go M2 server peer feedback, continuous public Normal/off Windows client→Linux raw/TUN, owned Stop and netem impairment NOT_RUN",
+    "WL-N0 WL-N1 WL-N5 each 10Mbps bidirectional 60s NOT_RUN"
+  ],
+  "historical_fails_retained": [
+    {
+      "run_id": 39735660684,
+      "source_sha": "15f7a0f22e71de41624fd0503ff28339690f6f0f",
+      "reason": "Windows native serial-wrap test expected raw 200000 after anchor near 2^32; actual correct value 2^32+200000; fixed in SOURCE65ff81c, original FAIL retained"
+    },
+    {
+      "run_id": 39735078800,
+      "reason": "G2 registry revision changed, separate governance mismatch"
+    }
+  ],
+  "next_action": "Do not claim full no-HOL or 10Mbps before exact later S807 Actions and real public Windows→Linux Normal/off impairment. Receive ledger independent auth path and Rust M1 768-shadow BDP config separate S805→S807 sources."
+}

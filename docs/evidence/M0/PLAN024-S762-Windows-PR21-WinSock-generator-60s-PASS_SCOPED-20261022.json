@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "766e6a389f0591bd77671edfd03231c3d683ae44",
+  "result": "PASS_SCOPED_WIN2022_WINSOCK_LOCAL_LOOPBACK_GENERATOR_60S_NOT_V4_PRODUCT",
+  "run_id": 39720486837,
+  "attempt": 1,
+  "conclusion": "success",
+  "job_id": 119632558655,
+  "artifact_id": 12400218503,
+  "artifact_sha256": "96b88efe81ca6ce524de7edf82f43c0b61f3321fb9759bb5d75b182ecea0469c",
+  "scenario": {
+    "seed": 20261022,
+    "seconds": 60,
+    "offered_c2s_mbps": 10,
+    "offered_s2c_mbps": 10,
+    "same_vm": true,
+    "loopback_only": true,
+    "protocols": "PR21 TCP+UDP",
+    "message_sizes": [
+      96,
+      512,
+      1150
+    ],
+    "measured": {
+      "c2s_delivered_mbps": 9.99,
+      "s2c_delivered_mbps": 9.99,
+      "c2s_delivery_pct": 100,
+      "s2c_delivery_pct": 100
+    }
+  },
+  "scope": "PR21 network generator ONLY (real Windows WinSock, no Go TLS, Rust, Wintun, OS WFP, physical underlay or real tunnel applied)",
+  "prior_red": {
+    "source": "e6978326f1275c89596273879f22a20b0231f378",
+    "run_id": 39720381959,
+    "cause": "Windows Python3.12 socket does not expose IP_DONTFRAGMENT; known WinSock2 IPPROTO_IP DWORD option 14 verified via getsockopt under S762"
+  },
+  "not_run": [
+    "true V4 tunnel performance",
+    "1pct/5pct real network loss",
+    "real OS queue/drops",
+    "tunnel retrans",
+    "cross-source same VM A/B"
+  ]
+}

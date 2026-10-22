@@ -1,0 +1,58 @@
+name: M0 PLAN024 Windows PR21 traffic generator preflight (NOT V4 product)
+run-name: "M0|PLAN024-WIN-WINSOCK-PREFLIGHT|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan024-windows-winsock-preflight.yml"
+      - "tools/network_harness/traffic.py"
+      - "tools/network_harness/config.py"
+      - "tools/network_harness/windows_winsock_calibration.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  one-windows-vm-one-10mbps-duplex-preflight:
+    name: "WinSock PR21 only | single seed 20261022 | 10Mbps each direction"
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Pinned SHA and native Windows Python compatibility
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $sha=(& git rev-parse HEAD).Trim()
+          if ($sha -ne '${{ github.sha }}') {throw 'PR21 WinSock calibration source SHA mismatch'}
+          & python --version
+          if ($LASTEXITCODE -ne 0) {throw 'native Windows Python unavailable'}
+          & python -m py_compile tools/network_harness/traffic.py tools/network_harness/config.py tools/network_harness/windows_winsock_calibration.py
+          if ($LASTEXITCODE -ne 0) {throw 'ported PR21 Python compile failed'}
+      - name: Actual native WinSock 60s 10Mbps c2s+s2c pacing baseline (NO tunnel)
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          & python -m tools.network_harness.windows_winsock_calibration 2>&1 | Tee-Object -FilePath winsock-preflight.log
+          if ($LASTEXITCODE -ne 0) {throw 'PR21 WinSock traffic generator capacity preflight FAIL'}
+          if (!(Select-String -LiteralPath winsock-preflight.log -SimpleMatch 'M0_PLAN026_PR21_WINDOWS_WINSOCK_GENERATOR_10MBPS_BIDIRECTIONAL_60S_PREFLIGHT_PASS_NOT_PRODUCT' -Quiet)) {
+            throw 'actual single-scenario 60s real Winsock capacity NOT_RUN'
+          }
+          $json=Get-Content result/winsock-calibration/scope.json -Raw | ConvertFrom-Json
+          if ($json.source_sha -ne '${{ github.sha }}' -or
+              $json.real_v4_public_product -ne 'NOT_RUN' -or
+              $json.original_go_tls_rust_wintun -ne 'NOT_RUN' -or
+              $json.loss_1pct_5pct -ne 'NOT_RUN') {
+            throw 'WinSock traffic calibration falsely claimed public V4 or network loss qualification'
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "m0-pr21-native-winsock-preflight-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: |
+            winsock-preflight.log
+            result/winsock-calibration/
+          retention-days: 30
+          if-no-files-found: warn

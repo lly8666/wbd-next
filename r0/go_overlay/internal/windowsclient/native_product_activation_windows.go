@@ -21,6 +21,7 @@ type N4OriginalAuthenticatedPacketProof interface {
 // fully authenticated native session, not an alternative shell or mock guard.
 // The parent WAL durably writes intent BEFORE this stage mutates the host.
 type n4QualifiedWindowsWFPStage struct{ n4WindowsGuardStage }
+func(n4QualifiedWindowsWFPStage) n4IsQualifiedPersistentWFPGuard()bool{return true}
 func(s n4QualifiedWindowsWFPStage)Apply(ctx context.Context,id N4UnifiedIdentity,b json.RawMessage)error{
  if err:=s.valid(id,b);err!=nil{return err}
  state,err:=s.Guard.ownedState(ctx);if err!=nil{return err}
@@ -80,7 +81,7 @@ func(c *N4WindowsNativeProductController)Connect(ctx context.Context)(N4NativeLi
  // Cancelled startup is not permission to skip durable WFP cleanup.
  rollbackCtx,cancel:=context.WithTimeout(context.Background(),45*time.Second);defer cancel()
  drainErr:=c.proof.DrainCryptoAndKernelLoans(rollbackCtx,id)
- if drainErr==nil{drainErr=c.txn.Recover(rollbackCtx)}
+ if drainErr==nil{drainErr=c.txn.n4RecoverQualifiedGuardOnlyIntent(rollbackCtx)}
  if drainErr==nil{drainErr=c.txn.VerifyLiveOSDisconnected(rollbackCtx)}
  if drainErr!=nil{
   c.state="recovery_required"
@@ -97,7 +98,7 @@ func(c *N4WindowsNativeProductController)Disconnect(ctx context.Context)error{
  if c.state!="applied"&&c.state!="recovery_required"{return ErrN4JournalConflict}
  id:=c.txn.Identity
  if err:=c.proof.DrainCryptoAndKernelLoans(ctx,id);err!=nil{c.state="recovery_required";return err}
- if err:=c.txn.Recover(ctx);err!=nil{c.state="recovery_required";return err}
+ if err:=c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx);err!=nil{c.state="recovery_required";return err}
  if err:=c.txn.VerifyLiveOSDisconnected(ctx);err!=nil{c.state="recovery_required";return err}
  c.state="disconnected";return nil
 }

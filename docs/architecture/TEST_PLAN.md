@@ -1,10 +1,15 @@
 # Actions：先编译、复用产物、广覆盖而不穷举
 
+**2026-10-22网络矩阵新入口**：[NETWORK_MATRIX_20261022](../testing/NETWORK_MATRIX_20261022.md)。用户指定500Mbps/2%/单程200ms及50Mbps/30%/单程300ms，均按外层线路总容量计；最高FEC持续30%目标≤1%。该方案规定容量停止、37条有条件场景、独立Action并行、off修复预算/内层业务、Game相关损伤及宽松生命周期门，覆盖旧文中与之冲突的自动档选择目标和时间阈值。理论表是MODEL_ONLY，未跑不记PASS。
+
 FEC v2工作包按[FEC_V2_TEST_PLAN](FEC_V2_TEST_PLAN.md)的短块/新wire/自动曲线与跨平台专项执行，覆盖下文旧20:R/Go字节相等专属门；本页性能一Action一场景、同job AB/BA、功能合批、容量停止和真实证据规则不变。不可把专项规划当已执行资格。
 
 本文件是产品夹具与验收契约。当前已有治理、组件功能和专项测量 workflow；具体完成范围以精确 SOURCE 的 evidence 为准，不能把本文列出的工况或组件绿灯写成完整产品通过。
 
-可执行的公共V4持续业务入口与参数用法见 [NETWORK_HARNESS](../testing/NETWORK_HARNESS.md)：编译产物复用、独立双向UDP/TCP、单Action单场景、同job AB/BA及实际能力限制。预置工况不是已验资格，缺少的内部遥测必须保留NOT_OBSERVED。
+**测试开放顺序新授权（PLAN021）**：对已经真实接线的功能，一次精确 SOURCE 的 Actions 正向功能 PASS 就可先开放显式网络工况测试入口，**物理机、全局一体化验证、所有弱网矩阵和 p99 不是开放测试的前置硬门**。后续相应真实网络测试用于填补 `NOT_RUN`。切勿把原始 Go V3 的 Game 正例冒充新 Rust V4 公开 Game；未接线功能保持 `EXPOSED_NOT_WIRED`，并非 `PASS`。安全失败、WFP 原生持久化读回、owned WAL 外来/陈旧 CAS、认证/Stop 不随测试开放而放宽；Windows 现有真实 WFP CI 仅 TEST-NET scoped，不证明宿主全局 /1。
+
+
+可执行的公共V4持续业务入口与参数用法见 [NETWORK_HARNESS](../testing/NETWORK_HARNESS.md)：产物复用、独立双向UDP/TCP、单Action单场景、同job AB/BA及实际能力限制。独立网络测试任务按用户2026-10-22最新授权与[长期接班说明](../testing/NETWORK_AUTONOMOUS_WORK.md)执行；不等待Windows接通或M0逐次派单。
 
 ## 0. 按能力交付，及时进入持续业务（2026-10-16 修订）
 

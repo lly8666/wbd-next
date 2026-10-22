@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "0e6282fb097cbcab193153dc5ebda348358bf6d6",
+      "result_blob": "f7896888e7c5d6779298bde834d5c04835ef59f1",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -39,7 +39,7 @@
         },
         {
           "find": "\tdefer startQualificationCPUProfile()()",
-          "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+          "replace": "\tif !*nativeV4Product { if err := fec2Selection.RuntimeReady(); err != nil { return err } }\n\tdefer startQualificationCPUProfile()()"
         },
         {
           "find": "\t\"os/exec\"\n",
@@ -123,7 +123,7 @@
         },
         {
           "find": "\t// No legacy script fallback is permitted on original Windows runtime.",
-          "replace": "\t// Public native V4 now uses real original Go FakeTCP protected credential\n\t// TLS + the exact Rust M1/M3 native owner and actual signed Wintun PnP.\n\t// This path never calls the old V3 runtime or PowerShell fallback.\n\t// It must NOT announce product Applied before peer packet and OS WAL proof.\n\tif *nativeV4Product {\n\t\tif *lanes != 1 || *fecParity != 0 || *fecMode == \"auto\" || *fecMode == \"auto-aggressive\" ||\n\t\t\t*recordCipher != \"chacha20-poly1305\" || autoLease {\n\t\t\treturn errors.New(\"original Windows native V4 only supports explicit lease, one Normal lane, FEC off, ChaCha; no downgrade\")\n\t\t}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{\n\t\t\tServerIP:serverIP,ServerPort:uint16(*serverPort),SourcePort:uint16(*sourcePort),\n\t\t\tServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,\n\t\t\tTunnelID:[16]byte(tunnelID),Installation:[16]byte(installation),\n\t\t\tLease4:leasePrefix,AdapterAlias:*adapterAlias,StatePath:*statePath,\n\t\t\tDNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),\n\t\t\tControlStdin:*controlStdin,\n\t\t})\n\t}\n\t// No legacy script fallback is permitted on original Windows runtime."
+          "replace": "\t// Public native V4 now uses real original Go FakeTCP protected credential\n\t// TLS + the exact Rust M1/M3 native owner and actual signed Wintun PnP.\n\t// This path never calls the old V3 runtime or PowerShell fallback.\n\t// It must NOT announce product Applied before peer packet and OS WAL proof.\n\tif *nativeV4Product {\n\t\trequestedNativeMode, nativeModeErr := m0ParseWindowsV4Mode(*lanes, *fec2Selection.Mode, *fecMode, *fecParity)\n\t\tif nativeModeErr != nil { return nativeModeErr }\n\t\tif *recordCipher != \"chacha20-poly1305\" || autoLease {\n\t\t\treturn errors.New(\"original Windows V4 requires explicit lease and authenticated ChaCha; no downgrade\")\n\t\t}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{\n\t\t\tServerIP:serverIP,ServerPort:uint16(*serverPort),SourcePort:uint16(*sourcePort),\n\t\t\tServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,\n\t\t\tTunnelID:[16]byte(tunnelID),Installation:[16]byte(installation),\n\t\t\tLease4:leasePrefix,AdapterAlias:*adapterAlias,StatePath:*statePath,\n\t\t\tDNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),\n\t\t\tMode:requestedNativeMode,ControlStdin:*controlStdin,\n\t\t})\n\t}\n\t// No legacy script fallback is permitted on original Windows runtime."
         }
       ]
     },
@@ -611,7 +611,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_activation_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
-      "result_blob": "f07c0f77d823b73a6c01ed894cee359984afaf79"
+      "result_blob": "4d026bd5ce40535f928ebef862b81644996e5ee6"
     },
     {
       "kind": "create",
@@ -641,7 +641,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "2957a21a88e69ba76ae52ed0f1e111b07df17bfe"
+      "result_blob": "c18ebdbc75cc6afc15c585ab91bb1290720b88d5"
     },
     {
       "kind": "create",
@@ -653,19 +653,67 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "36f28e89e6a99e20428d8035a32c317a36613c6d"
+      "result_blob": "6682020350d1200d7e77d3d6d0d4c8eeaa1a8804"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "e6529a85b10fd722b65acfd5123088368eaf9b89"
+      "result_blob": "391bfa4ba72c4f12072f1719f37ea71cf581decd"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_orphan_ghost_terminal_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
       "result_blob": "e00ceb38d643604f55edd800b42043b732418e59"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+      "result_blob": "0e60ff71f36a50f86acb2c3530de7685ba0dce90"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go",
+      "result_blob": "426a8ce585a105a5a6062233374c7942d1f86bec"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_mode_selection.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+      "result_blob": "0ce3d5d22b75989d629f6da30be1e1f87176b1d0"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
+      "result_blob": "155e95d41eb06ba143d9b2212f8f6479fb0058ce"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_native_capabilities_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows.go",
+      "result_blob": "f2cc5175078cf004a6d38d4d8a0508262f301036"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go",
+      "result_blob": "e1b51b33832c7462e03da2ded2ada13c2e8975c0"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_rx_window_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows.go",
+      "result_blob": "91f61942595ef1dc5a5bfc7ffac087c82e3a9413"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
+      "result_blob": "982fe2c21eedd0ce52abbc615b3560d41c523205"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

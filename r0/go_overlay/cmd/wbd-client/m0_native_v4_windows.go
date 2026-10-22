@@ -2,16 +2,19 @@
 package main
 
 // Real PUBLIC native Windows CLI protected FakeTCP/TLS original-Go Rust
-// V4 admission. This is the new mainline pre-OS stage; no test-only
-// server channels or fake Rust tokens. Production WFP remains fail-closed
-// until the same true owner is wired to live M3 peer data plane.
+// V4 admission. Explicit --native-v4-product opens a PLAN021 network
+// test-channel trial after exact-source Actions validation, not automatic
+// host activation or any fake Applied result.
 import(
  "context"
  "crypto/rand"
  "encoding/binary"
+ "encoding/json"
  "errors"
  "fmt"
+ "net"
  "net/netip"
+ "strconv"
  "os"
  "os/signal"
  "path/filepath"
@@ -27,6 +30,13 @@ import(
 )
 
 func runM0NativeV4Windows(o m0NativeV4Options)error{
+ // Mode-specific original Rust capability is queried before Npcap,
+ // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
+ // own 2/4-lane original TLS socket group; do not run Normal by mistake.
+ if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
+ if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
+  return fmt.Errorf("%w: public Windows Game group requires 2/4 genuine simultaneous Npcap/TLS lanes and OS Stop; single-owner runtime is forbidden",windowsclient.ErrN4NativeGuard)
+ }
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
@@ -44,6 +54,39 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if err!=nil{return err}
  ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
+ // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
+ // SendARP returned the WINDOWS vEthernet source MAC for a real WSL2
+ // guest destination. This would send a SYN to ourselves, not the server.
+ // Only the single CI-owned, OS-readback-verified guest MAC may override
+ // that self resolution, and only when peer/interface/source all match.
+ // Original production discovery remains the default outside that scope.
+ guestMAC := os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC")
+ if guestMAC!=""{
+  idx,parseErr:=strconv.ParseUint(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_IFINDEX"),10,32)
+  parsedMAC,macErr:=net.ParseMAC(guestMAC)
+  guestIP,ipErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4"))
+  sourceIP,srcErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4"))
+  if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
+   len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
+   guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
+   sourceIP!=underlay.Source4{
+    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override",windowsclient.ErrN4NativeGuard)
+  }
+  var actual [6]byte
+  copy(actual[:],parsedMAC)
+  if actual==([6]byte{})||actual==ncfg.SourceMAC||actual[0]&1!=0{
+   return fmt.Errorf("%w: real WSL guest unicast MAC invalid",windowsclient.ErrN4NativeGuard)
+  }
+  // Genuine SendARP may already return the correct Linux MAC after
+  // Windows neighbor ownership changed. Both the previously proven
+  // host-self defect and an already correct same-guest resolution are
+  // acceptable. Any third, unverified Ethernet next hop remains denied.
+  if ncfg.NextHopMAC!=ncfg.SourceMAC&&ncfg.NextHopMAC!=actual{
+   return fmt.Errorf("%w: original Npcap next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
+  }
+  ncfg.NextHopMAC=actual
+  fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
+ }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
  defer endpoint.Close()
@@ -107,8 +150,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  // Original pinned TLS handshake, protected credentials, exact
  // FakeTCP Detach and native Rust M1/M3 Commit: no synthetic cold key.
- policy,e:=realityfront.FixedPolicyForClient(1,0)
- if e!=nil{return e}
+ var policy realityfront.AdmissionPolicy
+ switch o.Mode{
+ case m0WinModeNormal:
+  policy,err=realityfront.FixedPolicyForClient(1,0)
+ case m0WinModeFixed:
+  policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   1,"fixed",4,4,20,realityfront.CipherChaCha)
+ case m0WinModeAuto:
+  policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   1,"auto",0,4,20,realityfront.CipherChaCha)
+ default:
+  return windowsclient.ErrN4NativeGuard
+ }
+ if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
     RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second},
@@ -119,8 +174,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  dll:=filepath.Join(windowsExecutableDir(),"wbd_engine.dll")
  if !filepath.IsAbs(dll){return windowsclient.ErrN4NativeGuard}
- owner,session,e:=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
- if e!=nil{return fmt.Errorf("original credential TLS→native Rust V4 owner rejected: %w",e)}
+ var owner *realityfront.V4WindowsAuthenticatedClientOwner
+ var session *realityfront.V4ClientSession
+ if o.Mode==m0WinModeNormal{
+  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
+ }else{
+  // Protected feature7 is real original credential TLS->Rust M1/M3,
+  // not a caller-selected FEC switch. The release capability gate still
+  // denies production Fixed/Auto pending genuine M2 applied revision.
+  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth)
+ }
+ if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied
  // because the Wintun alias/process exists.
@@ -149,7 +213,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  })
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
- transport,e:=newM0NativeV4Peer(owner,endpoint,flow,nativeFrames)
+ transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
  if e!=nil{return e}
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
   ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
@@ -159,13 +223,14 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   defer c()
   return product.Stop(stop)
  }
- // A linked native entry is not a product qualification. Until isolated
- // OS WFP/default-route/DNS/MTU WAL + first-app/peer/recovery source gate
- // passes, THIS exact public path refuses host-global activation.
- // Never use a CLI flag or source-locked component build as a bypass.
- if e=windowsclient.N4NativeNetworkReady(ctx);e!=nil{
-  return errors.Join(e,cleanup())
- }
+ // PLAN021 explicit user authorization: exact-source GitHub Actions
+ // functional PASS admits opt-in --native-v4-product NETWORK TRIALS.
+ // The old frozen N4NativeNetworkReady is an unconditional V3 product
+ // barrier and cannot decide whether this V4 product's real per-session
+ // original TLS/Rust/Wintun/WFP/route WAL owner is valid. Do not call it.
+ // This is NOT an Applied grant: Apply/LiveReceipt/Stop remain the sole
+ // native generation/OS/crypto authorities, and an unsupported WFP, /1
+ // route, bad owner or failed packet remains a real error and retained WAL.
  receipt,e:=product.Apply(ctx)
  if e!=nil{return errors.Join(e,cleanup())}
  if !receipt.AllNativeOSApplied{return errors.Join(windowsclient.ErrN4NativeGuard,cleanup())}
@@ -177,11 +242,23 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Native OS readback and original Rust M3 peer first+reverse proved.
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
+ // Read-only producer counters are emitted at 1 Hz (never per packet)
+ // for isolated Windows sustained harness accounting. They do not grant
+ // application goodput, CPU/RSS, WFP or product OS receipt.
+ metricsTicker:=time.NewTicker(time.Second)
+ defer metricsTicker.Stop()
  var runtimeErr error
- select{
- case <-ctx.Done():
- case runtimeErr=<-failure:
- case runtimeErr=<-transport.Errors():
+waitNative:
+ for{
+  select{
+  case <-ctx.Done():break waitNative
+  case runtimeErr=<-failure:break waitNative
+  case runtimeErr=<-transport.Errors():break waitNative
+  case <-metricsTicker.C:
+   if line,mErr:=json.Marshal(transport.Stats());mErr==nil{
+    fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))
+   }
+  }
  }
  stopErr:=cleanup()
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}

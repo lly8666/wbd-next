@@ -186,6 +186,21 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
                     t.Fatalf("real original TLS Rust v3 test-only bind refused: %v",err)
                 }
                 runtime.KeepAlive(o.epoch)
+                // This scoped ABI fixture intentionally supplies a test-only
+                // Win32 interface token rather than claiming a real Wintun.
+                // It must now explicitly enrol the fixture's link MTU in the
+                // SAME Rust FrameBudget as production. Never use a default
+                // 576B fallback or claim OS Applied from this test.
+                mtuProc,findErr:=o.dll.FindProc("wbd_m0_win_owner_v4_bind_real_path_mtu")
+                if findErr!=nil{t.Fatalf("scoped Rust real-MTU ABI absent: %v",findErr)}
+                var ceiling uint32
+                if bindErr:=winOwnerCall(mtuProc,
+                    uintptr(o.handle),uintptr(unsafe.Pointer(&o.epoch[0])),16,
+                    uintptr(endpoint.luid),uintptr(endpoint.idx),1400,
+                    uintptr(unsafe.Pointer(&ceiling)));bindErr!=nil||ceiling<40{
+                    t.Fatalf("scoped Rust FrameBudget setup failed: limit=%d err=%v",ceiling,bindErr)
+                }
+                runtime.KeepAlive(o.epoch)
                 state,e:=o.realNativeDeviceState()
                 if e!=nil||state.Bound!=1||state.Applied!=0{
                     t.Fatalf("original-Go verified Rust peer ABI test bind status %+v err %v",state,e)

@@ -4,30 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 234,
-  "checkpoint_sha": "65171cd72c41354cef16fcd4fb6d5b26693b74c5",
+  "sequence": 255,
+  "checkpoint_sha": "59d8c5d5951605424a08391cc84ff1393daf599c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN020 M0 Windows full-product integration. S648 corrected post-Stop native WAL live OS authority: five-stage readback requires independent Snapshot+Inspect=Absent under generation and machine gate, not just WAL absence/readable Snapshot (DNS leftovers now fail closed). Same SOURCE native original Go credential TLS Rust M3 signed Wintun UDP both directions, IP/MTU/DNS WAL Apply/Recover/Stop and original pinned ghost crash remain PASS_SCOPED; strict new owned/partial/foreign post-Stop negative PASS. Real persistent host-global WFP Arm, two /1 routes and underlay escape, public WinForms OS Applied/Disconnect still NOT_RUN. Windows/FEC2/Game OFF.",
-  "why_now": "Recovered H233→HEAD cursor-only and unlogged H233 Governance PASS in S647. S648 source-locked Windows2022 Action39614119124/1 concluded SUCCESS, three exact required function tests including post-Stop residual-DNS/partial/foreign PASS; kernel TLS/Rust Wintun scoped APP tests PASS, artifact12352197588 SHA4eecca13... in S650. Governance39614119441 and maintenance39614119426 SUCCESS; prior donor immutability and crash 1168 FAIL retained. S649 PENDING superseded by S650 PASS_SCOPED evidence. Host-wide full product remains unverified.",
-  "done_when": "PLAN020 Windows product: one exact source on isolated native Windows2022 proves original credential TLS/Rust signed Wintun app first/reverse, persistent host-global WFP IPv6/DNS guard, both /1 capture and physical underlay escape, owned lease/MTU/DNS WAL Apply/Recover/Stop, real public Go CLI+WinForms truthful Applied/Disconnected and foreign/stale/crash negatives. S648 scoped component PASS not parent done_when; Windows product and physical NOT_RUN, FEC2/Game OFF.",
-  "next_action": "On a verified isolated Windows2022 host, implement and source-lock one combined full original-Go V4 native product transaction gate: durable real host-global WFP and two /1 capture with physical underlay escape plus Rust signed-Wintun kernel first/reverse and real WinForms Applied/Disconnected; require complete independent OS readback and foreign/stale/crash negatives before any product ON.",
+  "current_task": "PLAN024 true full public Windows original Go TLS/Rust M2 signed Npcap Wintun→WSL2 Linux original Go Rust raw/TUN Normal/off bidirectional UDP + both Stop. Source cda4cbb Action39753583163 FAIL before guest boot due Ubuntu WSL2 Store install hang WSL_E_DISTRO_NOT_FOUND, no public verdict. Sources 4b9c180 fresh and 7832cff frozen both full public two OS Actions39755736757/39756219904 RUNNING using official hash-pinned Ubuntu24.04.5 WSL2 direct import; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "The original Windows Npcap source MAC wrongly used as destination was fixed in exact source abea7a1 and handed true WSL guest MAC in cda4cbb. Real complete Action39753583163 compiled Windows client but timed out in Ubuntu WSL install and WSL_E_DISTRO_NOT_FOUND, not a product or M2 FAIL; artifact12415811237 sha256 e46e491f..., evidence S839. Direct Ubuntu24.04.5 WSL rootfs verified SHA256 and WSL2 --import now in fresh 4b9c180 Action39755736757 and corrected frozen binary 7832cff Action39756219904, both pending.",
+  "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
+  "next_action": "Inspect both full public genuine Windows2025+Ubuntu WSL2 Actions39755736757 and39756219904; if WSL2 imports, verify real Windows NPF dest MAC == actual guest eth0, original TLS, Windows OS Applied, continuous both UDP business and both genuine Stop. Fix only actual whole-path blocker; WL-N0/N1/N5 10Mbps60s only after full functional PASS.",
   "unverified": true,
-  "last_tested_source": "bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633",
+  "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN020-S648-independent-native-post-stop-Absent-SOURCE-Windows2022-PASS_SCOPED-20261021.json",
-    "docs/evidence/M0/PLAN020-same-SOURCE-real-Windows-Rust-signed-Wintun-native-WAL-pinned-ghost-terminal-PASS-S645-20261021.json"
+    "docs/evidence/M0/PLAN024-S804-Windows-original-M1-M2-two-frozen-repairs-PASS_SCOPED-20261022.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN012-Linux-real-Go-Game2-4-M4-kernel-and-public-CLI-gate-20261020.json",
-    "docs/devlog/M0/PLAN016-original-Go-public-FEC-Game-mode-real-app-intent-20261020.md",
-    "docs/decisions/M0-M4-Linux-connect-stop-gate-2026-10-20.md",
-    "docs/decisions/M0-PLAN013-Windows-M4-UI-and-M0-shared-unblock-2026-10-20.md",
-    "docs/evidence/M0/PLAN014-main-import-exact-M4-Windows-Go-20261020.json",
-    "docs/devlog/M0/PLAN017-recovered-H206-S443-20261020.md",
-    "docs/evidence/M0/PLAN016-original-Go-public-FEC-auto-Game-and-outer-retransmit-real-owner-20261020.json",
-    "docs/evidence/M0/PLAN018-public-V4-source-locked-Fixed-Auto-parallel-20261020.json"
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
+    "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json",
+    "docs/devlog/M0/PLAN024-S836-restore-public-OriginalGo-Npcap-cached-selfMAC-fix-20261022.md",
+    "docs/evidence/M0/PLAN024-S839-full-public-WinLinux-WSL2-distro-install-BLOCKED-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H234: S647 recovered H233 cursor-only + unlogged Governance39610491996 success. S648 SOURCE bad7b414e8f0a7b33cc431b749e4ab0f6b3c9633 Windows2022 native Action39614119124/1 SUCCESS: new genuine post-Stop independent Absent contract positive/owned/partial/foreign negatives 3/3 named Go tests, original-Go TLS Rust M3 signed-Wintun actual UDP both directions, IP/MTU/DNS WAL and pinned ghost crash all PASS_SCOPED; artifact12352197588 sha256:4eecca13...; S650 precise evidence. Prior S644 invalid donor SHA FAIL39608501406 and crash1168 FAIL39604806420 unchanged. Global production WFP/two /1/real public WinForms Applied/Disconnect/physical/perf NOT_RUN, Windows/FEC2/Game OFF. S650 workflow_run 39615061674 was in_progress at H composition and is not a product test."
+  "partial_summary": "Corrected original Go Npcap endpoint MAC cache and exact Ubuntu WSL2 environment import in two running FULL public product Actions. Earlier cda4cbb full source Action compiled but WSL distro registration failed before handshake, not public PASS. Windows native scoped six jobs PASSED distinct source; global Normal and WL performance NOT_RUN. H254 Governance bounded context refs passed."
 }

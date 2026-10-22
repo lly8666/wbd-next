@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "tested_source_sha": "de5048303d0f7c8d5314660314017b7ffd194fec",
+  "head_includes_unverified_pr21_windows_traffic_port": "7898d569964559279faadd003a7228e6877004da",
+  "result": "PASS_SCOPED_ORIGINAL_GO_TLS_RUST_M3_SIGNED_WINTUN_FIVE_MODE_PARALLEL_NOT_FULL_PUBLIC_OR_SUSTAINED",
+  "actions": {
+    "id": 39716823951,
+    "attempt": 1,
+    "source_sha": "de5048303d0f7c8d5314660314017b7ffd194fec",
+    "conclusion": "success",
+    "jobs": {
+      "build": {
+        "id": 119620808630,
+        "result": "success"
+      },
+      "normal": {
+        "id": 119622490193,
+        "result": "success",
+        "artifact_id": 12399646423,
+        "artifact_sha256": "8c90de5c96cab51f3935ac450a3b902fe714e940e33845a71ac5ac757c438f51"
+      },
+      "fixed": {
+        "id": 119622490276,
+        "result": "success",
+        "artifact_id": 12399512490,
+        "artifact_sha256": "56112182e7d0b0fb8ce219ec8931566eeda17e2b1343e16f1c58269a3abca1b6"
+      },
+      "auto": {
+        "id": 119622490259,
+        "result": "success",
+        "artifact_id": 12399198539,
+        "artifact_sha256": "876b5b586a420619972b9a0c9424859817b1a11d5b68e481120e148f0c98ccd8"
+      },
+      "game2": {
+        "id": 119622490252,
+        "result": "success",
+        "artifact_id": 12399347807,
+        "artifact_sha256": "363249a9f39f67ba293df3179fa2f3a1accc79c8b9c4b844e4864a846cdd1dcd"
+      },
+      "game4": {
+        "id": 119622490275,
+        "result": "success",
+        "artifact_id": 12398948748,
+        "artifact_sha256": "6837ca19b1d33d1deabf866ca4a60b8aa75cafe4c2a5c13889fcddd23b64b87f"
+      }
+    },
+    "build_artifact": {
+      "id": 12399407766,
+      "name": "m0-plan020-win-wal-39716823951-1",
+      "bytes": 47415594,
+      "sha256": "cb97ffd9f2e943007cf8c383371ff7bf5f4b822872ae0502201466044c7ec472"
+    }
+  },
+  "positives": [
+    "Normal scoped genuine original Go credential TLS and Windows signed Wintun actual UDP app packet first/reverse",
+    "Fixed scoped real original Go TLS -> feature7 Rust M1/M3 -> signed Wintun OS UDP first/reverse, M2 Applied NOT_RUN",
+    "Auto scoped real original Go TLS -> feature7 Rust M1/M3 -> signed Wintun OS UDP first/reverse, adaptive M2 revision NOT_RUN",
+    "Game2 and Game4 scoped per-lane authenticated original Go TLS, Rust GameAdapter native AEAD/PN, lane1 block other lane first, real signed Wintun app and exact Stop",
+    "Native Go Windows original TCP serial gap, wrap, duplicate and no false cumulative ACK regressions PASS",
+    "New original Go public mode-specific Fixed/Auto feature7 selectors and FEC source packet bridge COMPILED as part of same source, no public FEC mode Applied",
+    "New Windows per packet 32/2ms fair batch, busy-path retransmission chance, explicit 8-retry expiry and 1 Hz telemetry source compiled; NOT 10Mbps tested",
+    "host-scoped TEST-NET persistent WFP foreign CAS; real IP MTU DNS WAL scoped; NOT host-global WFP or dual /1",
+    "Go Windows CLI and WinForms exe build; GUI test-child state only"
+  ],
+  "failures_retained": [
+    {
+      "source": "5e1e9e40145b330085f452dd8e697bba275e3d28",
+      "run_id": 39715678627,
+      "subjobs": "5 separate FAIL while build SUCCESS",
+      "cause": "PowerShell ConvertFrom-Json rejected invalid literal backslash-n outside JSON in source-receipt producer; S744 corrected producer, no permissive reader"
+    },
+    {
+      "source": "171567d4bbdbdff7515a772927007ad1840d9af9",
+      "run_id": 39716143885,
+      "subjobs": "5 separate FAIL while build SUCCESS",
+      "cause": "same fixed-data source-receipt format before producer fix; exact sources preserved"
+    },
+    {
+      "source": "0b99189e7d27e17e5374f11f51359404586ac3bf",
+      "run_id": 39716324338,
+      "outcome": "6/6 SUCCESS after S744 JSON producer correction"
+    },
+    {
+      "source": "de5048303d0f7c8d5314660314017b7ffd194fec",
+      "run_id": 39716823951,
+      "outcome": "6/6 SUCCESS after S745-747 regression and strict manifest pin"
+    }
+  ],
+  "unverified": [
+    "Rust Windows public capability returns only Normal=1; feature7 M2 SetTxFec initial revision and applied readback NOT_WIRED",
+    "Windows public Game2/4 needs 2/4 real original FakeTCP/TLS/Npcap flows owned by same OS product; single lane product intentionally rejects rather than downgrade",
+    "full live public Windows original Go client + real server + WinForms Applied/Disconnected + global WFP IPv6 DNS dual /1 underlay + WAL and Stop in physically isolated test lab",
+    "sustained 10Mbps c2s+s2c lossless then 1% and 5% network impairment, unmocked RTT/p99, longest no-delivery, CPU/RSS/queue/drop, retrans and same-VM pinned old/new baseline NOT_RUN",
+    "PR21 shared config/traffic/report import/Windows WinSock adaptation S748 on main has no direct Windows full product performance run or source-locked qualification"
+  ],
+  "development_notes": [
+    "S735 parallel batch intent; S736 Mode typed same real peer pump authentic Rust FEC2 source/open multi-first deliveries and no cumulative ACK until Wintun writes",
+    "S737 real Windows original public Go mode-specific protected FEC2 authentication path; Game refusals require actual multi-lane product; Rust release mask still prevents unsupported mode mutations",
+    "S738 new one-build + 5 Windows2022 parallel scoped kernel mode positive jobs using exact same original-Go/Rust/Wintun artifact and SHA attestation",
+    "S740 busy-loop immutable retransmission never stalls merely because other flows are busy; eighth retry exhaustion explicit",
+    "S741-S742 authenticated 1 Hz source-specific telemetry, not app goodput, RTT or CPU",
+    "S743 and S747 pins exact source blobs; S744 literal source JSON producer repaired, S745-746 added actual regression for no downgrade or silent packet retry stall",
+    "S748 PR21 4178dd... common Python modules ported to Windows Winsock, source unverified on OS, do not import Linux results"
+  ],
+  "source_sha": "de5048303d0f7c8d5314660314017b7ffd194fec"
+}

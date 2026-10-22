@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_REAL_PUBLIC_WINDOWS_WSL_ORIGINAL_FAKETCP_WRONG_ETHERNET_DEST_MAC",
+  "source_sha": "f44ad24c6d27ef2a13b65be282f1f0c351eec772",
+  "actions": {
+    "run_id": 39748014730,
+    "attempt": 1,
+    "job_id": 119721245086,
+    "conclusion": "FAILURE",
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml"
+  },
+  "artifact": {
+    "id": 12412911667,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:69542d24d77788b46471766f0d3d1ff453f69f39d6b47666e3c79e96802fe89a"
+  },
+  "real_observation": {
+    "system": "windows-2025 signed original Npcap vEthernet WSL + WSL2 original Linux eth0 raw/TUN public Go TLS Rust",
+    "windows_original_npf_tcp": "Two actual TCP SYN frames src 172.31.224.1:41031 dst 172.31.233.220:443 flags=0x02",
+    "windows_npf_source_mac": "00:15:5d:1b:a2:9c",
+    "windows_npf_destination_mac": "00:15:5d:1b:a2:9c",
+    "wrong_address_diagnosis": "The original Go SendARP-derived next-hop Ethernet MAC is the SAME as the source Windows vEthernet adapter MAC, so packets are addressed to Windows itself, not guest NIC",
+    "linux_eth0_tcp443": "ZERO frames observed while AF_PACKET passive receiver armed",
+    "original_go_tls": "faketcp: bootstrap stream deadline exceeded",
+    "hyperv_guest_tcp443_exact_scoped_rule": "INSTALLED, then REMOVED, DID NOT repair self-destination Ethernet",
+    "windows_npcap_owned_cleanup": "SUCCESS"
+  },
+  "status": {
+    "public_normal_off": "FAIL_NOT_PASS",
+    "two_direction_udp": "NOT_RUN",
+    "windows_os_applied": "NOT_RUN",
+    "linux_original_server_authenticated_ready": "NOT_OBSERVED",
+    "public_owned_stop": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next": {
+    "source_sha": "85c1cf68af908fc29f9e89ed560a76315c0e2cc8",
+    "recovery": "Two independent true full Actions 39750030678 frozen verified Go/Rust and 39750030760 fresh original Go/Rust build. Both configure only exact active Windows vEthernet neighbor IP->genuine WSL2 eth0 MAC read from kernel link, check NetNeighbor after, run true original public TLS/Wintun/Npcap/Linux TUN UDP both directions Stop, then delete neighbor and scoped HyperV rule. NOT yet qualified; no product PASS claims."
+  }
+}
