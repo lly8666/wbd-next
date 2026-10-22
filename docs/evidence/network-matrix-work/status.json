@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S017-inflight-S018-default-off-sequential-AB-queued",
+  "phase": "S018-default-Normal-off-AB-in-progress",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,24 +25,9 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "arm64-fixed30-arena512-vs-expiryguard-S017",
-      "type": "TRUE_SINGLE_VM_SEQUENTIAL_AB",
-      "status": "IN_PROGRESS",
-      "path": "tests/network/request.json",
-      "trigger": "one changed request file push; no manual dispatch",
-      "A": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
-      "B": "66838c313ff9def6d4febedb61a018c372986154",
-      "scenario": "exact S015 Fixed Maximum 30pct IID 2Mbps each way 50/50 UDP TCP 120s, same ARM64 Actions VM sequential; B only M3 FEC RX post-retire protection",
-      "hard_gates": "duplicate, fixed applied, TCP, integrity, Stop remain mandatory",
-      "run_id": 39777563504,
-      "attempt": 1,
-      "harness_source": "24e02709066da736468947fb8772709d0f3c47a6",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39777563504"
-    },
-    {
       "id": "arm64-off-lossless90-arena512-vs-expiryguard-S018",
       "type": "NORMAL_OFF_SAME_HOST_SEQUENTIAL_AB",
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
       "path": "tests/network/request.json",
       "trigger": "single push changed request; no workflow_dispatch",
       "scenario": "Normal/off unchanged genuine public Go+Rust, 10Mbps/direction 50/50 UDP TCP 4flows, no netem damage, 90s steady 15s warmup+15s drain, two source-verified sequential legs",
@@ -56,13 +41,6 @@
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S011",
-      "result": "PASS_SCOPED_OBSERVATION",
-      "run": 39771806641,
-      "file": "S011-default-off-AB-pass.json",
-      "artifact_id": 12422916708
-    },
     {
       "id": "S011-contract",
       "result": "success",
@@ -116,6 +94,12 @@
       "result": "BUILD_AND_TWO_UNITS_PASS",
       "run": 39776576033,
       "file": "S016-native-rx-identity-build.json"
+    },
+    {
+      "id": "S017",
+      "result": "FAIL_BOTH_DUP_FIXED_B_HARD_PASS",
+      "run": 39777563504,
+      "file": "S017-fixed30-rxguard-AB-fail.json"
     }
   ],
   "open_issues": [
@@ -124,9 +108,9 @@
     "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported",
     "S015 confirmed FEC arena 128→512 eliminates ~5k/18k source/parity NoCapacity each side and improves actual UDP; old/new both FAIL under 30% IID; B still 2 application duplicates, client Fixed pending, TCP no delivery.",
-    "S016 post-retire identity guard proven by true distinct-PN AEAD native unit; actual Fixed30 network duplicate and readback regression NOT_YET_RUN"
+    "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next."
   ],
-  "next_action": "S017 Fixed30 A/B run39777563504 IN_PROGRESS and S018 default-off A/B run39778358622 PENDING, contract39778358651. Both are unique existing Actions, DO NOT dispatch again. Settle S017 first hard duplicate/applied/Stop and S018 default first delivery/CPU/RSS/Stop. No source tuning before evidence.",
+  "next_action": "S018 real default Normal/off 90s mixed same-job AB run 39778358622 IN_PROGRESS and contract39778358651 SUCCESS, don't redispatch. Settle product first arrivals/p99, CPU/RSS/Stop. Then tackle Fixed applied client pending & no TCP: inspect existing M2 coverage and FEC RX genuine pre/post-FEC records, add minimum real low-frequency counters before tuning; preserve S017 hard FAIL.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "66838c313ff9def6d4febedb61a018c372986154",
