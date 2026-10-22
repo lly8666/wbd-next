@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S022-real-authenticated-FEC-RX-M4-TUN-differential",
+  "phase": "S023-Fixed30-post-RX-decoder-reject-and-TCP-progress-triage",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,36 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [
-    {
-      "id": "arm64-fixed30-real-M3-FEC-RX-TUN-proof-S022",
-      "type": "ONE_TRUE_FIXED30_DIAGNOSTIC",
-      "status": "QUEUED",
-      "trigger": "single committed tests/network/request.json push starts one Action, do not manually dispatch",
-      "source": "370eb534621d76deda7888599bd089acc163acac",
-      "artifact_id": 12427229903,
-      "path": "tests/network/request.json",
-      "scenario": "Exactly S020 2Mbps/dir 50/50 UDP/TCP Fixed Maximum profile6 IID30% 300ms one-way 120s steady +15s warmup+30s drain, real original source/parity accepted→RS recovery candidate→M4 TUN writes",
-      "run_id": 39784149202,
-      "attempt": 1,
-      "harness_source": "2425431d5a3739bb3ba052da707d912559731046",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39784149202"
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "S012-contract-repair",
-      "result": "success",
-      "run": 39773549832,
-      "detail": "12+ harness contracts incl parsing genuine failure counters"
-    },
-    {
-      "id": "S012-one-new-ARM64-product-build",
-      "result": "success",
-      "run": 39773479071,
-      "artifact": 12423960905,
-      "source": "e63d38bd20466575675ca8b493a45882ec815a52"
-    },
     {
       "id": "S013",
       "result": "FAIL",
@@ -122,6 +94,13 @@
       "result": "success",
       "run": 39783756480,
       "file": "S021-native-RX-proof-build.json"
+    },
+    {
+      "id": "S022",
+      "result": "FAIL_REAL_FEC_RX_RECOVERY_PROVEN",
+      "run": 39784149202,
+      "artifact_id": 12427433885,
+      "file": "S022-genuine-RX-parity-recovered-TUN-Fail.json"
     }
   ],
   "open_issues": [
@@ -133,9 +112,12 @@
     "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next.",
     "S020 M2 real reverse reports 12047/12061, but unknown_2s 155/132 and censorship both; client Fixed pending, server applied1. Need bounded per-commit root/cause and FEC RX acceptance/decoding before changes.",
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
-    "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
+    "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED.",
+    "S022 real original M3 FEC RX 23,488/23,579 parity accepted, 5,669/5,714 recovered→TUN, no M4 failure and TUN counter exact; actual UDP still missing33.10/33.14%, reason cannot be 'no FEC recovery', class/retire/decoder reject and cohort split OPEN",
+    "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
+    "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence"
   ],
-  "next_action": "S022 exact one performance run 39784149202 QUEUED and companion harness contract 39784148896; no duplicate dispatch. Collect genuine M3 FEC source/parity seen/accepted, RS recovered candidate/M4 actual TUN and Fixed/TCP/Stop, preserve S020 FAIL S018 default PASS.",
+  "next_action": "S022 true Fixed30 Action 39784149202 FAIL archived, no repeat. Review Fec2LiveRx::accept_authenticated reject path and source route, original TCP kernel numeric cwnd/unacked/tun/probe; choose smallest differentiating per-reason RX/inner TCP counter OR minimal cause-specific fix, then same-source Actions and default off anchor. Avoid seed retries/queue growth; S018 default PASS and S017 duplicate fix preserved.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",
