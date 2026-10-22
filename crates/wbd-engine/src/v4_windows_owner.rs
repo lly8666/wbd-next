@@ -745,7 +745,9 @@ mod tests {
         assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(INVALID));
         assert_eq!(stop(&mut r,client),OK);
         assert_eq!(release(&mut r,client),OK);
-        assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(INVALID));
+        // Registry lookup after the exact generation was released must be UNKNOWN,
+        // not an admitted stale record or an already-present inactive session.
+        assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(UNKNOWN));
         assert_eq!(quiesce_wintun(&mut r,server,epoch,8,12),OK);
         assert_eq!(stop(&mut r,server),OK);
         assert_eq!(release(&mut r,server),OK);
