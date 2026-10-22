@@ -146,7 +146,9 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if seq!=p.sendNext{return false,windowsclient.ErrN4NativeGuard}
  if err=p.sendCarrier(seq,p.recvNext,ciphertext);err!=nil{return false,err}
  p.pending=append(p.pending,m0NativeV4Outbound{
-  seq:seq,wire:append([]byte(nil),ciphertext...),
+  // SealBound returns a fresh exact immutable Rust C-ABI record buffer.
+  // Retain it for byte-identical TCP retry instead of copying ciphertext twice.
+  seq:seq,wire:ciphertext,
   sentAt:time.Now(),lastSent:time.Now(),
  })
  p.sendNext=seq+uint32(len(ciphertext))
