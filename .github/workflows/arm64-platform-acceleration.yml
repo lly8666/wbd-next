@@ -28,7 +28,7 @@ jobs:
           cargo +1.85.1 metadata --locked --no-deps --format-version 1 >/dev/null
           cargo +1.85.1 test --locked -p wbd-platform --lib -- --test-threads=2
           cargo +1.85.1 test --locked -p wbd-codec --lib -- --test-threads=2
-          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_embedded_go
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           echo ARM64_NATIVE_DEFAULT_BUILD_COMPONENT_PASS
 
   arm64-isal:
