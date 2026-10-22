@@ -27,11 +27,11 @@ def slab(n):
     return next(s for s in (256, 512, 768, 1536, 2048, 4096, 8192, 16384, 65536) if s >= n)
 
 
-def packet_cost(sizes, ratio=0, k=16, lanes=1):
+def packet_cost(sizes, ratio=0, k=16, lanes=1, inner_mtu=1200):
     if not 1 <= k <= 16 or ratio not in (0, *RATIOS) or lanes not in (1, 2, 4):
         raise ValueError("unsupported FEC/lane model")
-    if not sizes or any(s < 1 or s > 1172 or w <= 0 for s, w in sizes):
-        raise ValueError("model requires unfragmented IPv4 UDP, payload <=1172")
+    if not 576 <= inner_mtu <= 9000 or not sizes or any(s < 1 or s > inner_mtu-28 or w <= 0 for s, w in sizes):
+        raise ValueError("model requires unfragmented IPv4 UDP, payload <= inner_mtu-28")
     weight = sum(w for _, w in sizes)
     game = 16 if lanes > 1 else 0
     repair = math.ceil(k * ratio) / k
@@ -57,14 +57,15 @@ def packet_cost(sizes, ratio=0, k=16, lanes=1):
         "fresh_records_per_logical_packet": lanes*(1+repair),
         "mean_frozen_slab_bytes": (source_slabs+repair*parity_slabs)/(1+repair),
         "k": k, "r": math.ceil(k*ratio), "lanes": lanes,
+        "inner_mtu": inner_mtu,
     }
 
 
 def envelope(line_mbps, one_way_ms, sizes, ratio=0, k=16, lanes=1,
-             utilization=.8, repair_allowance=.1, rttvar_ms=5):
+             utilization=.8, repair_allowance=.1, rttvar_ms=5, inner_mtu=1200):
     if line_mbps <= 0 or one_way_ms <= 0 or not 0 < utilization <= 1:
         raise ValueError("invalid capacity envelope")
-    c = packet_cost(sizes, ratio, k, lanes)
+    c = packet_cost(sizes, ratio, k, lanes, inner_mtu)
     timing = timers(2*one_way_ms, rttvar_ms, 10)
     fresh_bps = line_mbps*1e6/8*utilization/(1+repair_allowance)
     logical_pps = fresh_bps/c["fresh_outer_bytes_per_logical_packet"]
@@ -99,9 +100,14 @@ def suite():
     rows = []
     for c, d, p, ratio, lanes in [(500, 200, .02, 0, 1), (50, 300, .30, 1.25, 1),
                                  (50, 300, .30, 1, 4)]:
-        for name, sizes in PROFILES.items():
+        # New public CLI: outer1500, MSS1360. Reference1200 remains comparable
+        # with historic runs; this extra case is the automatic MTU large-packet target.
+        automatic_inner = 1360-31-(14 if ratio else 0)-(16 if lanes>1 else 0)
+        profiles = [(name,sizes,1200) for name,sizes in PROFILES.items()]
+        profiles.append(("auto_mtu_large",[[automatic_inner-28,1]],automatic_inner))
+        for name, sizes, inner in profiles:
             for k in ([16, 1] if ratio else [16]):
-                e = envelope(c, d, sizes, ratio, k, lanes)
+                e = envelope(c, d, sizes, ratio, k, lanes, inner_mtu=inner)
                 e.update(packet_profile=name, loss=p,
                          iid_source_residual_pct=100*fec_residual(k, math.ceil(k*ratio), p**lanes),
                          loss_model="IID copies independent; OFF value is before outer repair")
@@ -109,7 +115,8 @@ def suite():
     return {"qualification": "MODEL_ONLY_NOT_RUN", "rows": rows,
             "assumptions": ["80% line utilization incl 10% repair allowance; 20% left for control/options/model error",
                 "IPv4 UDP; outer headers40, record31, FEC source10/repair14, Game16",
-                "1200B inner IP maximum; FEC k=1 and k=16 are separate envelopes, not actual histograms",
+                "1200B reference plus auto MTU/MSS1360 large-packet target; pure-small is PPS diagnosis, not500M acceptance",
+                "FEC k=1 and k=16 are separate envelopes, not actual histograms",
                 "Memory uses worst full lifetime retention plus25%; normal ACK release lowers occupancy",
                 "512MiB endpoint total is shared, never granted independently to each client/lane",
                 "RX FEC horizon equal cache is an optional repair-inclusive model, not implemented policy",

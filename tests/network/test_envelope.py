@@ -34,6 +34,12 @@ class EnvelopeTests(unittest.TestCase):
         four = envelope(50, 300, [[256, 1]], lanes=4)
         self.assertLess(four["safe_app_mbps"], one["safe_app_mbps"]/4)
 
+    def test_automatic_large_mtu_matches_actual_encapsulation(self):
+        c = packet_cost([[1301,1]], inner_mtu=1329)
+        self.assertEqual(c["fresh_outer_bytes_per_logical_packet"],1400)
+        c = packet_cost([[1287,1]], ratio=1.25, inner_mtu=1315)
+        self.assertEqual(c["fresh_outer_bytes_per_logical_packet"],3146)
+
     def test_sparse_partial_not_full_group_recovery(self):
         rows = suite()["rows"]
         rows = [r for r in rows if r["lanes"] == 1 and r["line_mbps"] == 50 and r["packet_profile"] == "near_mtu1172"]

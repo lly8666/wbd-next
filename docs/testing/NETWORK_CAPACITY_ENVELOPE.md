@@ -25,6 +25,15 @@
 
 表中memory是假设整个修复寿命均被保留、加25%包数余量、96B/slot预算；不是健康平均占用，更不是必须实分配。真实layout、slab可否复用、扩容重叠、RX/FEC等另算；endpoint总512MiB共享，不能每方向/每client各领512。当前全2048 slab无法在512MiB内提供500M纯小包的完整寿命覆盖，需分级slab/更紧凑缓存或明确缩短可修复窗口；不能因此阻塞fresh。CPU能力仍须实测。
 
+本次自动MTU后的主大包预算如下；是80%线路预算、10%修复预留的**初次压测目标**，不是理论峰值或固定产品限速。实际外层可用容量、CPU与统计需校准。模型同时保留1200B参考行，避免与历史结果混口径。
+
+| 主工况 | UDP payload / TUN | 应用预算Mbps | fresh record/s | 健康flight / 最坏shadow槽 | 保留slab上界MiB/方向 | receipt历史页/方向 | netem最低估算包数 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 500M / RTT400 / off | 1301 / 1329 | 337.92 | 32,468 | 12,987 / 65,536 | 60.7 | 155 | 9,376 |
+| 50M / RTT600 / max16:20 | 1287 / 1315 | 14.88 | 3,251 | 1,951 / 8,192 | 8.8 | 24 | 1,409 |
+
+无control/重传预留的500M线上大包上限为44,643 records/s、约17,857个RTT flight；1.25×PPS×920ms仍落在65,536槽。别用健康flight当全部缓存寿命，也别用本表80%初始注入反过来压低产品能力目标。开启最高FEC时50M线路不是50M内层业务；协议冗余是容量账的组成部分。
+
 Game4 strong纯64B、逻辑3Mbps，仅首发已约89.5Mbps（尚未加repair/control），**不能要求50Mbps线路跑满这个业务**。同容量80%预算该包型约1.52Mbps逻辑上限；256B约3.04Mbps，1172B约4.10Mbps。保留3Mbps目标时，为纯小包场景显式提高线路容量并另记请求；不悄悄减业务刷绿。mixed按模型的实际weights计算。
 
 ## 2. 参数逐项闭环（先修实际构造，不只改模块默认）
@@ -38,16 +47,28 @@ Game4 strong纯64B、逻辑3Mbps，仅首发已约89.5Mbps（尚未加repair/con
 | 修复调度 | 8MTU burst；fresh:repair按字节10:1；候选排队<=20ms；grant金额按repair_rate*renew_interval+burst，免逐包全局锁 | max_grant32KiB/50ms等也要同账核算；不能只改最外cap、内部发放率仍封顶 |
 | PTO/重排/期限 | 使用上式，更新只影响未来计划，不使原有hard deadline无限续命；PTO尾探测有界，快速重传需真实后到证据 | 实际固定80ms PTO、15ms reorder、2s expiry；应接真实估计器，不能正常600msRTT下先耗尽两次重试 |
 | Receipt页 | 至少ceil(1.25*lane PN PPS*Tcache/256)+1页；8页是每报上限，不是全部历史容量。dirty gap<=2ms、顺序<=10ms，重复反馈有限 | 实际仅8 retained页/2048PN；高PPS覆盖期过短。默认重发间隔仍据8ms SRTT；要接实际RTT |
+| Auto质量/成熟观测 | 观测live-data覆盖至少PPS*实际统计horizon；用聚合计数/压缩页，不额外clone全payload。过载/未知须标样本无效，不能假装线路丢包并无限升档 | MatureFirstSend仍max_live_data4096；高时延高PPS也会把质量窗口挤满，需与receipt容量共同审核 |
 | Record去重 | nextpow2(1.25*PN PPS*(max(Tcache,FEC horizon)+2R))；PN包括控制、不把原PN重传再计PN；分页按需 | 原始owner仍1000PPS/8192窗口，500M近MTU约167ms即滚出；8KiB预算不是高吞吐方案 |
 | Fresh队列与批量 | ceil(PPS*2ms)，最低64最高8192；另限bytes/age。2ms是容量估算，不是定时攒包；batch先32、按调度耗时证据调 | 不能把数十MiB shadow变发送排队。500M小包按表约558槽；近MTU约72槽；两端/两向公平 |
 | FEC TX | 每class lambda更新250ms、T=min(C,max(Tmin,1.5*15/lambda))，Normal C=clamp(R/4,8,24ms)，Game C=clamp(R/8,4,12ms) | 模块有trusted_rtt，FixedStream产品接线未调用。64 pending jobs按job速率*可接受codec等待计算；3个open class与已封组积压分开 |
 | FEC RX | 按source block PPS*实际相对晚到horizon*1.25与字节双界；接收端共同传播延迟不等于额外等候。若要接纳两次outer repair，模型horizon可取Tcache；仅及时parity模式可以更短但需声明 | 32组/1MiB/150ms/128代均是固定接线值。不要机械改640；active heavy、completed compact和去重需分开计。接收horizon变长不允许延迟systematic交付 |
 | MTU/MSS | min(outerMTU-IP/TCP,peer MSS,local/peer record limit)-31-FEC预留14-Game16；参数只扣一次。LINK20仅fragment；正常TCP MSS=TUN-MTU-IP/TCP | 旧record cap1180给Fixed仅1135B，而TUN1200；S030每端约7k包被本地尺寸拒绝。见第3节 |
 | 内核缓冲与模拟链路 | 产品socket队列按服务中断PPS*bytes*暂态时间评估并看实际getsockopt/drop/age，不按线路BDP无限放大；内层TCP窗口则需要业务BDP | netem是延迟模拟存储，必须能容纳PPS*delay，完全不同于产品发送队列 |
+| TCP序号与时间单位 | 外层Seq32按record字节推进，所有比较必须模2^32；活跃未定界字节区间<2^31。PN/计数使用宽整数，ms/ns换算单一入口；定时wheel约1ms分辨率、到期任务有poll预算 | 500M大包在80%/repair预留模型下约97s一轮Seq；60s smoke不足以覆盖。未知旧80s中断根因不因数值相近而定案 |
 
 **不能把大N直接套现有全表扫描。** `ReceiptState::refresh_rack_wakes`在见证更新时扫描全部entries；扩到数十万前须改成发送顺序游标/有界增量索引，或给实际摊销成本证据。保留slot generation、固定密文重传、取消竞态。本次不是指示网络agent立刻重写全部模块：先使当前正确性通过，再按“时序与预算→缓存/去重容量→增量索引和slab”完整能力批次实施，同source回归，不逐数字拆几十个smoke。
 
 高吞吐参考metadata只要比payload小得多即可；无需保留所有记录一整段最坏寿命。数据已收到就回收，未知/过期明确Abandoned。CPU理论预算仅为上界：单核心全双工每外层收/发事件预算约`1e6/(2*PPS*1.1)`微秒（表500M小包约1.63us），尚含不到注入器/系统中断等，因此不承诺任何4核runner一定跑满。小包达不到应报告PPS瓶颈，不伪称带宽达标。
+
+实施优先级与边界：
+
+- **P0正确性**：自动MTU、真实mode与fixed-applied、UDP/TCP持续推进；先收口原失败。不得靠FEC掩盖本地oversize/重复TUN/错误receipt。
+- **P1低损高时延恢复**：真实RTT驱动PTO/W、两次修复寿命、repair字节预算、receipt历史/节奏、replay窗口作为同一完整能力批次。初始RTT未知先保守600ms，收到可归因样本后更新；不用注入器传netem真值。稀疏业务可超比例但绝对预算/次数/寿命仍有界；过期后的迟到systematic仍按首次到达规则交付。
+- **P2容量**：主大包按最大65,536 shadow槽/方向作为高带宽档参考，**不是所有lane启动时分配同等payload**。缓存payload按需保留并及时释放，整体512MiB预算（双方各自计算）内包含fresh/RX/FEC。低速与Game按每lane真实PPS设更小界；未证CPU扫描问题前不先做多级slab重构。扩大元数据前审全表扫描，改有界增量推进；fresh池与repair不可互相饿死。临时更小容量必须readback并写CAPACITY_LIMITED，不能暗改算法目标。
+- **调度绝对门**：两次修复上限不变；配置外层预算按实际发送字节结算；新包不用等ACK或等缓存空位；poll/batch有32包或约0.2ms起始budget（实测调，不定时攒32）；长耗时FEC工作拆量子，缺包只影响本逻辑恢复，不阻塞其他source/lane。已有有效budget优先复用，避免叠一套调度器。
+- **CPU收益**：记录每GiB首次交付CPU-s及每百万处理record CPU-s、p99/未到率，模型给单核工作预算而非跨VMCPU百分比比较。sameVM AB/BA只对实际改动做一次有意义对比；容量上限不同的VM不能直接相除。编译一次、多请求复用；源码变再重建。
+
+这些是待实施任务，当前提交只实现MTU和模型报告。接手者核对实验分支现有修复，已做部分直接复用。每批完成后测原反例+低损普通业务保护，然后继续矩阵；遇到容量或架构约束按证据调整计算前提并留痕，不无限追求一个预设数字。
 
 ## 3. 内层MTU随外层配置自动计算
 
@@ -75,6 +96,8 @@ Game4 strong纯64B、逻辑3Mbps，仅首发已约89.5Mbps（尚未加repair/con
 4. **最终高点**：H500 off/2%/200ms和H50 maximum/30%/300ms，均以大包为主+小包探针；Game4逻辑3M实际业务分布（先核总wire），独立/共同突发各一条。纯小包能力仅单列，不阻塞大包主目标。只在实际可用模式上跑；Game+FEC未接线记UNSUPPORTED。高点通过允许推断同配置、同类包分布、同宿主资源上界内更轻负载，结论写“覆盖推断”，不是实测PASS。
 5. **不能由极限推断的少量反例**：稀疏单包/尾包、上下行5%/0与0/5、低RTT重排、小/大业务竞争、Auto低→高→低、lane rotation、payload-idle与keepalive/重建、单/双向黑洞。每类一个代表波形；功能可同Action合批，性能每Action一个场景/一个测量job，独立场景可并行，AB/BA同VM顺序。
 6. **有限收口**：同一失败无新信息不刷seed；一轮修复跑原反例+受影响普通业务保护，不回到全套从头测。生产correctness失败和机器容量不足分开。修复字节/实际k/r/临界延迟缺测不宣布模型达成；只补当前归因需要字段。
+
+先60s steady定容量，主高点可行后单独做约240s持续大包（500M模型可跨两次Seq32回绕），记录实际byte/seq进展。若VM只能较低速，复用组件近回绕注入验证，不为了等待真实回绕无限延长Actions；长稳态/物理资格单列。质量报告/keepalive不算真实业务持续交付。
 
 两极端的理论：off2%两次修复理想残余0.0008%、额外2.04%；off5%为0.0125%、5.25%，只有反馈/寿命/预算充足且IID时成立。它是目标参考，不设“必须零损”。最高档30%满16理论0.02283%，k1为2.7%、k2约2.511%、k4约1.739%、k8约0.381%。按**源包权重**汇总actual(k,r_sent)而非按组数平均；低速partial目标>1%时报告目标不可达并保留可交付指标，不无限延长等待或伪造满组。TCP有自己的拥塞/重传，记录steady注入/反压、ACK/cwnd/RTO、业务到达；无效注入不能冒充满速，长期零进展需修复，不能只看幸存UDP p99。
 
