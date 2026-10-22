@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 270,
-  "checkpoint_sha": "efc9f891d1ce9234d78077fbd571e541f4f560c6",
+  "sequence": 271,
+  "checkpoint_sha": "ee420ccb1a47f40598ba164872e17d542866457e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 original Windows Go TLS/Rust NPF+signed Wintun↔Linux original Go/Rust raw/TUN Normal/off, S864 exact SOURCE5fcc genuine UDP duplex and owner Stop PASS. Linux original M2 authenticated_ack=0 remains. S865 SOURCE3e5 added bounded real Rust M3 unique-PN reverse kind1 feedback to NPF, exact full Action39801422682 and Windows owner ABI39801422162 in progress/queued; WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Recovered H268 after user-interrupted chat and read exact same-run Action39794445609 completed SUCCESS: source5fcc Windows true UDP sent24 recv34 Linux sent82 recv24, Rust/WAL/Stop both PASS, S864 evidence2077 exact source top-level PASS_SCOPED and artifact hash. H269 c7c... cursor. S865 intent4129aa after targeted 08-RECOVERY + real Windows Rust M3/v5 and Linux reverse feedback chain; atomic source3e5 original Rust feedback, Go original NPF API and manifest, no fake TCP-ACK M2; S865 evidence efc9 underway. Linux ACK baseline0, first82 frozen repairs164; cannot grant M2/10Mbps qualification until source3e5 real Actions finished.",
+  "current_task": "PLAN024 genuine original Go Windows Npcap+signed Wintun↔Linux raw/TUN Normal/off. S864 SOURCE5fcc dual kernel UDP and both-owned Stop PASS; Linux M2 ACK0 still open. S865 Windows Rust M2 feedback source3e5 default ABI E0599; S866 sourcebcf2 ungated original M1 authenticated Health sealing, Normal Common PASS, full real run39802119726 in progress; S867 workflow-only source83ad native FEC2-off Windows owner test39802457636 in progress. WL0/1/5 NOT_RUN.",
+  "why_now": "H270 checkpoint after first S865 original feedback wire change. Source3e5 Action39801422162 Windows default feature-off Rust unit compiler E0599 due seal_original_authenticated_receipt gated fec2_product_record. S866 intentfc236 and sourcebcf2 removed only cfg from the already-SAME protected M1 Health-kind sealer, all AEAD/PN and checks retained. S866 normal Common39802120008 PASS, governance39802119816 PASS; original Windows WAL39802119861 and full real native39802119726 in progress, exact Linux build success. S867 intent6929 and CI-only sha83ad added owner_crypto path to dedicated Windows FEC2-off Rust cargo ABI job39802457636 (in progress), no manual duplicate full. S867 evidence ee420, no M2 positive promotion yet.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Consume existing SOURCE3e5c8dc592d116834a858e41c08d6bb5a4baf153 Actions Windows Rust ABI39801422162, native WAL39801422270 and full original Windows/Linux39801422682. If compiler failure, preserve FAIL and fix exact regression once; if real full product succeeds inspect Linux authentic M2 authenticated_ack>0 and original UDP+Stop. Validate two-repair/Abandoned and >256 missing carrier ACK before independent WL-N0/N1/N5 10Mbps 60s kernel netem trials.",
+  "next_action": "Consume source83ad dedicated Windows Rust FEC2-off original owner Action39802457636 and sourcebcf2 real Windows→Linux original Go/Rust full Action39802119726 (and WAL39802119861). If fail preserve exact artifact and correct only first observed ABI/code/owner error; if genuine native UDP+owned Stop and Linux authenticated M2 ACK>0, record scoped feedback evidence. Subsequently test >256 carrier ACK gap and two-repair/Abandoned, then independent WL-N0/N1/N5 each 10Mbps 60s netem.",
   "unverified": true,
   "last_tested_source": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
   "evidence_refs": [
     "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN024-S865-original-Windows-Rust-M2-reverse-kind1-inflight-20261022.json",
-    "docs/devlog/M0/PLAN024-S865-Windows-original-M2-peer-reverse-receipt-wire-intent-20261022.md",
+    "docs/evidence/M0/PLAN024-S866-S867-Normal-Health-M2-owner-native-validation-20261022.json",
+    "docs/devlog/M0/PLAN024-S867-feature-off-Windows-owner-ABI-workflow-trigger-20261022.md",
+    "docs/devlog/M0/PLAN024-S866-Normal-off-original-owner-receipt-seal-feature-gate-intent-20261022.md",
     "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json",
-    "docs/architecture/modules/08-RECOVERY.md",
-    "docs/testing/NETWORK_TRIAGE.md"
+    "docs/architecture/modules/08-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H270 recovered H268: exact SOURCE5fcc Action39794445609 PASS original-Go Linux↔Windows real UDP and both-owned Stop, stored S864 artifact-source evidence, still Linux M2 authenticated_ack0 (first82/repaired164). H269 checkpoint preserved. S865 source3e5 adds one bounded original Windows Rust-M3 unique-PN feedback control via same original M1, Go NPF and real completion; Windows ABI39801422162 and full 2OS39801422682 in-flight. No unverified M2/2-repair/Abandoned/>256 ACK gap or native WL0/N1/N5 promotion."
+  "partial_summary": "H271: S864 SOURCE5fcc Windows↔Linux real original Go TLS M3 native Normal UDP+both owned Stop PASS with immutable Action39794445609; server M2 authentic ACK0 remains. S865 feedback source3e5 Windows default-feature cargo FAIL E0599 but Linux build PASS, no app claim. S866 SOURCEbcf2 remove only feature cfg from original protected Health control seal; NORMAL-COMMON39802120008 SUCCESS, governance39802119816 SUCCESS, full Action39802119726 in flight. S867 CI trigger-only source83ad native FEC2-off Windows Rust owner Action39802457636 pending, evidenceee420; no M2/repair/WL performance qualification."
 }
