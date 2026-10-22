@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 257,
-  "checkpoint_sha": "f88d72f52a452862607bb9e4be3aaa7e5431314e",
+  "sequence": 258,
+  "checkpoint_sha": "cafe7669d34fd2c0889a43d93c1e3d7ec72b777f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 actual Windows2025 original-Go TLS/Rust M2/Npcap/Wintun→real Ubuntu24.04.5 WSL2 original-Go Rust raw/TUN Normal/off two-way business plus both owned Stop. Full SOURCE7bf4d4b Action39757115561 FAIL genuine preTLS original Go exact verified guest MAC/route identity guard after real Ubuntu import, guest neighbor and HyperV scoped rule. S844 source e75c37d now prints exact discovered vs verified OS values with fail-closed guard, new full Action39759204820 running; parallel genuine frozen b5f4356 six-job PASS native binary full Action39758891147 running. WL N0/N1/N5 NOT_RUN.",
-  "why_now": "Interrupted task resumed at H256 main26f2e5 then latest full Action39757115561 completed FAIL: true Windows2025 original Go/Rust/Wintun/Npcap and pinned Ubuntu WSL2 imported; guest eth0 172.26.102.43/00:15:5d:c1:6b:88, Win host ifindex25 IP172.26.96.1, real neighbor guest MAC + scoped HyperV rule PASS and owned cleanup PASS. Original Go protected Npcap preTLS scope guard returned refused unscoped guest MAC override, no TLS/UDP. Evidence docs/evidence/M0/PLAN024-S843-true-full-public-Windows-Go-verified-guestMAC-identity-Fail-20261022.json. S844 retains exact original fail-closed guard but prints all compared route values; main e75c37d triggers full Action39759204820. S843 also runs real full frozen native b5f4356 source Action39758891147. Do not claim full product pass.",
+  "current_task": "PLAN024 true Windows original Go TLS Rust M2 Npcap Wintun→real Ubuntu24.04.5 WSL2 Linux raw/TUN Normal/off duplex+both Stop. Exact full e75c37d Action39759204820 FAIL pre TLS ONLY underlay.NextHop4=Windows host 172.22.96.1 while guest=172.22.98.189, verified original interface25 and source=host match, OS guest MAC validated; no TLS/app. Bounded source68d52a8 permits original host-self IPv4/MAC only under OS guest/host/if scope; full Action39761157254 RUNNING, scoped Rust Windows Action39761157133 RUNNING. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "H257 recovered two full Actions with original Go preTLS guard FAIL. Fresh full source e75c37d Action39759204820 produced decisive verified route identity log: verified_ifindex=original_ifindex25, guest==peer172.22.98.189, source==original_source172.22.96.1, all parsers nil; only original_next_hop was Windows own source. Native Ubuntu and signed drivers, guest MAC temporary neighbor and HyperV owner cleanup PASS. Artifact12416719982 sha256 06678e5ad02f2d7b7fc3f259b954647e7af08c4637834d9a2d0594aa4d279485; evidence S847. S846 source68d52a8 adds exact bounded host-self route acceptance conditional original SendARP MAC equals original sourceMAC, all verified OS identities, preserves foreign route fail-closed. Full source68d52a8 Action39761157254 RUNNING. No false product PASS.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read actual finished full Actions39758891147 and39759204820; use exact Windows original Go underlay.Source4/InterfaceIndex/NextHop4 and OS-verified guest IP/MAC/source printed only on failure. Correct genuine route identity mismatch without loosening TLS, Npcap guard or falsifying guest; rerun entire public Normal/off two OS native kernel UDP both directions + owned Stop. Only functional PASS permits separately WL-N0,N1,N5 10Mbps bidirectional 60s real netem.",
+  "next_action": "Read precise new full Action39761157254 source68d52a8 actual original Go TLS bootstrap, Windows OS Applied, Linux raw/TUN app UDP both directions and both Stop; fix first real failure with whole source-locked Action rerun, not unit tests. Only after actual Normal/off full PASS run WL-N0 0%300ms, N1 1%50ms, N5 5%50ms separate true kernel netem each 10Mbps bidirectional60s.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -19,10 +19,10 @@
   ],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/evidence/M0/PLAN024-S839-full-public-WinLinux-WSL2-distro-install-BLOCKED-20261022.json",
     "docs/evidence/M0/PLAN024-S842-real-Ubuntu-WSL2-import-PASS-but-original-Go-MAC-guard-FAIL-20261022.json",
-    "docs/evidence/M0/PLAN024-S843-true-full-public-Windows-Go-verified-guestMAC-identity-Fail-20261022.json"
+    "docs/evidence/M0/PLAN024-S843-true-full-public-Windows-Go-verified-guestMAC-identity-Fail-20261022.json",
+    "docs/evidence/M0/PLAN024-S847-full-original-Windows-Go-WSL-self-gateway-nextHop-BLOCKED-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H257: signed native Windows Npcap/Wintun + true pinned Ubuntu 24.04.5 WSL2 import and guest Ethernet MAC temporary host neighbor + hyperv rule PASS. Latest full Action39757115561 PRE_TLS original Go fail-closed OS route identity guard FAIL; no app/Stop/WL PASS. Native Windows mode suite source b5f4356 all six jobs PASS_SCOPED. Full Action39759204820 prints mismatched route fields, and frozen source b5f4356 full Action39758891147 both running. Historical FAIL preserved."
+  "partial_summary": "M0 H258: original Go route mismatch physically determined on real Windows2025 Ubuntu WSL2: Windows on-link guest route yields NextHop4 own Windows vEthernet IP; verified source/interface/guest match. Previous real full Actions preTLS FAIL retained, no app/Stop/N0N1N5. S846 exact self MAC next-hop special case protected by OS guest MAC/IP/if/source, main68d52a8 full Action39761157254 running. Native Rust M2 scoped unrelated PASS not product."
 }
