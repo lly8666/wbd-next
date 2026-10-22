@@ -6,6 +6,7 @@
 #![cfg(all(target_os="windows",feature="m0_v4_embedded_go"))]
 use std::collections::{BTreeMap,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
+use std::time::Instant;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 #[path = "v4_windows_game_owner.rs"]
 mod game;
@@ -14,14 +15,15 @@ mod game;
 mod fec2;
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::ProtectedScopedOwner;
-use crate::memory::Arena;
+use crate::memory::{Arena,FrozenRecord};
 use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::{TxDispatch,RxPacket};
-use wbd_types::MonoNs;
+use wbd_types::{MonoNs,RecordPn};
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
+use wbd_recovery::{BudgetDirection,WireDirection,ReceiptConfig,ReceiptState,ReceiptRouteScope,ReceiptOpenFacts,ReceiptPage,ScopedAuthenticatedReceipt,GlobalRepairAllocator,GlobalRepairConfig,RepairBudgetConfig};
 
 const OK:i32=0;
 const INVALID:i32=1;
@@ -32,6 +34,10 @@ const STOP_INCOMPLETE:i32=5;
 const MAX_SESSIONS:usize=16;
 // Genuine AEAD+unique-PN kind1 receives pending exact M2 route binding.
 const MAX_AUTHENTICATED_KIND1:usize=32;
+// Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
+// pending first-send while leaving room for RX and authentic control.
+const MAX_M2_FROZEN:usize=48;
+const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
 const PH_ACTIVE:u32=2;
@@ -43,6 +49,108 @@ const HANDLE_KIND:u64=0x574Eu64; // not a generic public engine token
 // Windows M4 device and OS WFP/route readback has not APPLIED a product.
 const PRODUCT_APPLIED:u32=0;
 
+// The SAME original protected TLS lane and M1 FrozenRecord handles are
+// authoritative. Fresh shadow admission is only after the synchronous real
+// Npcap pcap_sendpacket return; TCP cumulative ACK cannot call this owner.
+struct WindowsOriginalM2 {
+    shadow:ReceiptState<FrozenRecord>,
+    pending:BTreeMap<RecordPn,FrozenRecord>,
+    direction:BudgetDirection,
+    route:ReceiptRouteScope,
+}
+fn m2_clock()->MonoNs{
+    static START:OnceLock<Instant>=OnceLock::new();
+    let elapsed=START.get_or_init(Instant::now).elapsed().as_nanos();
+    MonoNs(elapsed.min(u128::from(u64::MAX)) as u64)
+}
+fn m2_global()->&'static Mutex<GlobalRepairAllocator>{
+    static GLOBAL:OnceLock<Mutex<GlobalRepairAllocator>>=OnceLock::new();
+    GLOBAL.get_or_init(||Mutex::new(GlobalRepairAllocator::new(
+        GlobalRepairConfig{
+            max_bytes_per_epoch:131_072,max_directions:32,
+            max_grant_bytes:32_768,max_grant_lifetime_ns:50_000_000,
+            max_pending:128,max_pending_bytes:131_072,
+        },MonoNs(0)).expect("bounded M2 process allocator")))
+}
+fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||e.m2.is_some()||e.feature7 {
+        return Err(BAD_STAGE)
+    }
+    let (lane,protected_epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
+    if protected_epoch!=epoch{return Err(INVALID)}
+    let outbound=if e.role_server{WireDirection::ServerToClient}
+        else{WireDirection::ClientToServer};
+    let direction=BudgetDirection{tunnel:lane.tunnel,direction:outbound};
+    let all=(RecordPn(0),RecordPn(u64::MAX));
+    let route=ReceiptRouteScope::checked(lane,lane,outbound,epoch,all,all)
+        .map_err(|_|INVALID)?;
+    let shadow=ReceiptState::new(lane,ReceiptConfig{
+        max_shadow_entries:MAX_M2_FROZEN,pto_ns:80_000_000,
+        reorder_window_ns:15_000_000,
+    }).map_err(|_|INVALID)?;
+    let now=m2_clock();
+    let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    g.register(direction,RepairBudgetConfig{
+        outer_mtu:u64::from(e.path_mtu).saturating_add(54),
+        max_repair_bytes_per_epoch:65_536,max_pending_reservations:128,
+        max_pending_bytes:131_072,io_timeout_ns:100_000_000,
+    },now).map_err(|_|BAD_STAGE)?;
+    if g.bind_receipt_route(direction,route,now).is_err(){
+        let _=g.retire_tunnel(lane.tunnel,now);
+        return Err(BAD_STAGE)
+    }
+    e.m2=Some(WindowsOriginalM2{
+        shadow,pending:BTreeMap::new(),direction,route,
+    });
+    Ok(())
+}
+fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,pn:u64,seq:u32,wire_len:usize,sent:u32,
+)->Result<u32,i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||sent>1{return Err(INVALID)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    let key=RecordPn(pn);
+    let row=m.pending.get(&key).ok_or(INVALID)?;
+    if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
+        ||row.bytes().len()!=wire_len {return Err(INVALID)}
+    let frozen=m.pending.remove(&key).ok_or(INVALID)?;
+    if sent==0{return Ok(0)}
+    // The caller's synchronous pcap_sendpacket success is a copied
+    // kernel submission, NEVER proof of remote peer delivery.
+    let now=m2_clock();
+    let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
+    let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
+    m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
+        .map_err(|_|FULL)?;
+    Ok(m.shadow.outstanding() as u32)
+}
+fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
+    receipt:&wbd_codec::Receipt,
+)->Result<u32,i32>{
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    let now=m2_clock();
+    let opened=ReceiptOpenFacts{
+        verified_reverse_lane:m.route.outbound_lane(),
+        verified_reverse_direction:if e.role_server {
+            WireDirection::ClientToServer
+        }else{WireDirection::ServerToClient},
+        verified_tunnel_epoch:e.authenticated_epoch,
+        control_record_pn:RecordPn(reverse_pn),
+    };
+    let pages=receipt.pages.iter().map(|p|ReceiptPage{
+        base_pn:RecordPn(p.base_pn),bitmap:p.bitmap,
+    }).collect();
+    let scoped=ScopedAuthenticatedReceipt::checked_after_open(
+        m.route,opened,RecordPn(receipt.largest_data_pn),
+        receipt.report_seq,pages,
+    ).map_err(|_|INVALID)?;
+    let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    let releases=global.observe_scoped_receipt(
+        m.direction,&mut m.shadow,&scoped,now
+    ).map_err(|_|INVALID)?;
+    Ok(releases.len() as u32)
+}
 struct Entry {
     generation:u32,
     phase:u32,
@@ -61,6 +169,7 @@ struct Entry {
     // Only the exact original Go TLS-derived M3 opener can append here.
     // This is a bounded M2 ingress staging lane, NOT an ACK or a repair grant.
     authenticated_kind1:VecDeque<(u64,wbd_codec::Receipt)>,
+    m2:Option<WindowsOriginalM2>,
     authenticated_epoch:[u8;16],
     peer_mss:u16,
     peer_mss_advertised:bool,
@@ -123,7 +232,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         rx_unwrapped_high:u64::from(handoff.rx_boundary),
         limit:rx_limit,count:0,bytes:0,
         owner,arena,tx_scratch:Vec::with_capacity(8),rx_scratch:Vec::with_capacity(8),
-        authenticated_kind1:VecDeque::with_capacity(MAX_AUTHENTICATED_KIND1),
+        authenticated_kind1:VecDeque::with_capacity(MAX_AUTHENTICATED_KIND1),m2:None,
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
@@ -235,6 +344,15 @@ fn stop(r:&mut Registry,h:u64)->i32{
     // has not ended its packet workers and completed the exact close fence.
     if e.device.is_some_and(|d|!d.quiesced){return STOP_INCOMPLETE}
     e.phase=PH_STOPPING;
+    if let Some(m)=e.m2.take(){
+        // Return original M1 frozen clones and retire the exact global
+        // direction before original owner retirement. No late kernel sender.
+        let Ok(mut global)=m2_global().lock()else{return STOP_INCOMPLETE};
+        if global.retire_tunnel(m.direction.tunnel,m2_clock()).is_err(){
+            return STOP_INCOMPLETE
+        }
+        drop(m);
+    }
     let Ok(retired)=e.owner.stop()else{return STOP_INCOMPLETE};
     if !retired.ready.batch_handles_released(){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
@@ -462,6 +580,10 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         return Err(INVALID)
     }
     let budget=normal_off_windows_budget(e)?;
+    if e.m2.as_ref().is_some_and(|m|
+        m.shadow.outstanding()+m.pending.len()>=MAX_M2_FROZEN) {
+        return Err(FULL)
+    }
     if ipv4.len()>budget.single_business_payload_mtu ||
         ipv4[0]&15<5{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
@@ -480,6 +602,14 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
         if ready.len()!=1 || ready[0].record.bytes().len()!=used {
             return Err(BAD_STAGE)
+        }
+        if let Some(m)=e.m2.as_mut(){
+            let original=&ready[0].record;
+            if original.metadata().pn!=RecordPn(pn) ||
+                original.metadata().seq.0 as u32!=seq ||
+                m.pending.insert(RecordPn(pn),original.clone()).is_some() {
+                return Err(BAD_STAGE)
+            }
         }
         out[..used].copy_from_slice(ready[0].record.bytes());
         Ok((used,seq,pn))
@@ -556,7 +686,13 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         if e.authenticated_kind1.len()>=MAX_AUTHENTICATED_KIND1 {
             return Err(FULL)
         }
-        e.authenticated_kind1.push_back((pn,receipt));
+        if e.m2.is_some(){
+            // Only real M3-authenticated kind1 can retire previously
+            // Npcap-confirmed FrozenRecord shadows. No raw Go TCP ACK.
+            m2_authenticated_kind1_entry(e,pn,&receipt)?;
+        }else{
+            e.authenticated_kind1.push_back((pn,receipt));
+        }
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
         Ok((0,2,pn)) // kind1 is not an IPv4 packet or M2 shadow-release grant
     } else {Err(INVALID)}
@@ -654,6 +790,48 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v3_open_normal_off(
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     match v3_open_entry(&mut e,exact,luid,ifindex,seq,data,dst){
         Ok(n)=>{unsafe{used.write(n)};OK},Err(e)=>e,
+    }
+}
+
+
+// V6 firstsend callback is valid only for the SAME activated, OS Wintun
+// epoch. Every callback matches exact original frozen PN/SEQ/len. Status 1
+// means actual Npcap pcap_sendpacket returned success, not remote Applied.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v6_arm_original_m2(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32
+)->i32{
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_arm_entry(&mut e,exact,luid,ifindex){
+        Ok(())=>OK,Err(err)=>err
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v6_report_npcap_firstsend(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    pn:u64,seq:u32,wire_len:usize,sent:u32,outstanding:*mut u32
+)->i32{
+    if outstanding.is_null()||wire_len<FIXED_WIRE_OVERHEAD||wire_len>2048{
+        return INVALID
+    }
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_kernel_firstsend_entry(
+        &mut e,exact,luid,ifindex,pn,seq,wire_len,sent
+    ){
+        Ok(n)=>{unsafe{outstanding.write(n)};OK},
+        Err(err)=>err
     }
 }
 
