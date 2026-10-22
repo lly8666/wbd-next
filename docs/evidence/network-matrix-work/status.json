@@ -27,9 +27,20 @@
     {
       "id": "S021-authentic-FEC-RX-batch-observer-build",
       "type": "PRODUCT_SOURCE_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED_OR_RUNNING",
       "trigger": "one original Rust and Go source push starts one native ARM64 build; no manual dispatch",
-      "scope": "feature7 only, 11 batch-aggregated per-session numeric AEAD-unique source/parity accepted, recovery candidate and actual M4 TUN writes; no codec/MTU/replay/FEC timers/mature-gate changes"
+      "scope": "feature7 only, 11 batch-aggregated per-session numeric AEAD-unique source/parity accepted, recovery candidate and actual M4 TUN writes; no codec/MTU/replay/FEC timers/mature-gate changes",
+      "run_id": 39783512063,
+      "attempt": 1,
+      "source": "370eb534621d76deda7888599bd089acc163acac",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39783512063"
+    },
+    {
+      "id": "S021-FEC-RX-parser-contract",
+      "type": "HARNESS_ONLY_ACTION",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "tools/network_harness/runner.py and tests/network/test_harness.py change, no product build",
+      "purpose": "strict authenticated source/parity recovered/TUN counters, conservative reject malformed and NOT_OBSERVED"
     }
   ],
   "recent_evidence": [
@@ -126,7 +137,7 @@
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
   ],
-  "next_action": "Resolve sole S021 native ARM64 build Action and verify source SHA/ELF/SHA256SUMS. Add harness strict parser with NOT_OBSERVED missing markers and Actions contract, then one unchanged Fixed30 real diagnostic. Preserve S020 FAIL and S018 default PASS; never dispatch twice.",
+  "next_action": "S021 builder 39783512063 running, harness parser contract pushed. Do not repeat. Verify build and test contracts, then one source-pinned unchanged Fixed30 real scene measuring actual FEC RX proof; preserve all previous FAIL and default off PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",

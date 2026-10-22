@@ -169,6 +169,21 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_original_fec_m3_m4_rx_numeric_receipt_contract(self):
+        from tools.network_harness.runner import public_fec_rx_proof,product_marker_line
+        row=("V4_PUBLIC_FEC2_RX_PROOF role=server source_seen=1809 "
+             "source_accepted=1710 parity_seen=2800 parity_accepted=2710 "
+             "systematic_candidate=1710 recovered_candidate=49 "
+             "systematic_tun=1690 recovered_tun=47 tun_failed=22 "
+             "decoder_rejected=111 admission_disabled=78")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_rx_proof(row)["recovered_tun"],47)
+        self.assertIsNone(public_fec_rx_proof(""))
+        self.assertIsNone(public_fec_rx_proof(row.replace("recovered_tun=47","renamed=47")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("recovered_tun=47","recovered_tun=50")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("source_seen=1809","source_seen=9")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("admission_disabled=78","admission_disabled=90000")))
+
     def test_original_m2_numeric_proof_and_tcp_state_only_no_addresses(self):
         from tools.network_harness.runner import (
             public_fec_m2_proof, product_marker_line, tcp_socket_state_counts)
