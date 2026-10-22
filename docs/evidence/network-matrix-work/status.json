@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S027b-minimal-Rust-CFG-syntax-fix-native-rebuild",
+  "phase": "S028-original-M1-ingress-one-native-fixed30-measurement",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,35 +25,18 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S027b-native-owner-M1-readout-build",
-      "type": "NEW_PRODUCT_SOURCE_BUILD_AFTER_COMPILER_FAILURE",
-      "status": "QUEUED",
-      "trigger": "product source push starts one new ARM64 builder automatically, no manual dispatch",
-      "recovered_failed_run": 39797003870,
-      "recovered_contract_pass_run": 39797003708,
-      "failed_source": "e2f833211ebf3fee678feba80028eda9b610176e",
-      "failure": "Rust cfg feature gated owner numeric getter had mismatched delimiter at v4_embedded_go.rs 4648-4650; exact syntax fix only",
-      "scope": "one extra ')' in cfg attribute; no mechanism, FEC, arena policy, Stop, or harness change",
+      "id": "arm64-fixed30-original-M1-TUN-ingress-S028",
+      "type": "SINGLE_ARM64_PRODUCT_PERFORMANCE_MEASUREMENT",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "ONE request.json push; no direct manual dispatch",
+      "scenario": "unchanged S026 Fixed profile6 2Mbps/direction 50/50 UDP/TCP four flows 30pct IID one-way 300ms warmup15 steady120 drain30",
       "source": "146f81ff70f49c0521dbc959beac5013219a8244",
-      "run_id": 39799604748,
-      "attempt": 1,
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39799604748"
+      "build_run": 39799604748,
+      "artifact_id": 12435082262,
+      "expected_observations": "true M1 TUN read/loan/prestage arena failure/jumbo/reject, FEC source acceptance/staging, M4 UDP/TCP real packets and kernel Input, TCPINFO/mode/duplicates/Stop"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S018",
-      "result": "PASS_BOTH_DEFAULT_OFF_AB",
-      "run": 39778358622,
-      "file": "S018-default-off-AB-pass.json"
-    },
-    {
-      "id": "S019-build",
-      "result": "success",
-      "run": 39780156107,
-      "artifact_id": 12426721086,
-      "file": "S019-native-original-M2-build.json"
-    },
     {
       "id": "S019-contract",
       "result": "success",
@@ -132,6 +115,18 @@
       "result": "success",
       "run": 39797003708,
       "file": "S027-compiler-failure-recovered.json"
+    },
+    {
+      "id": "S027b-build",
+      "result": "success",
+      "run": 39799604748,
+      "file": "S027b-native-verified-build.json"
+    },
+    {
+      "id": "S027-contract",
+      "result": "success",
+      "run": 39797003708,
+      "file": "S027b-native-verified-build.json"
     }
   ],
   "open_issues": [
@@ -147,14 +142,15 @@
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "S027b sole syntax-corrected source ARM64 build 39799604748 QUEUED. Do not dispatch duplicate. Verify source, native Rust/Go build, manifest/ELF SHA256, contract 39797003708 already PASS. Then schedule only one S028 S026-equivalent Fixed30 with original M1 five counters. S027 original run39797003870 compiler FAIL archived.",
+  "next_action": "Find sole S028 performance run id triggered by this pinned request push; no double dispatch. Verify real 30pct injected netem, genuine M1 TUN read+loan+NoCapacity / jumbo/Rejected against FEC accepted, M4 sys/rec UDP kernel and app first arrivals, TCP frozen ack/cwnd and Fixed pending, Stop. Retain all FAIL and NOT_OBSERVED; if input capacity gap not explained, inspect accounting/injector before modifying product. S018 default off PASS preserved.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
-    "run_id": 39792252773,
-    "artifact_id": 12432315624,
-    "zip_sha256": "a106160d88dbe85cb2d90d36110ada897f0b623abc936e0071aad49fb130a41b",
-    "build_status": "SUCCESS",
-    "backend_runtime": "NOT_OBSERVED"
+    "source": "146f81ff70f49c0521dbc959beac5013219a8244",
+    "run_id": 39799604748,
+    "attempt": 1,
+    "artifact_id": 12435082262,
+    "zip_sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705",
+    "arch": "aarch64",
+    "build_status": "success"
   }
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed30-post-TUN-IPv4-class-TCP-ACK-S026",
+  "id": "arm64-fixed30-original-M1-TUN-ingress-S028",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -62,11 +62,11 @@
   },
   "bundles": {
     "A": {
-      "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
-      "run_id": 39792252773,
+      "source": "146f81ff70f49c0521dbc959beac5013219a8244",
+      "run_id": 39799604748,
       "attempt": 1,
-      "artifact_id": 12432315624,
-      "sha256": "a106160d88dbe85cb2d90d36110ada897f0b623abc936e0071aad49fb130a41b"
+      "artifact_id": 12435082262,
+      "sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705"
     }
   },
   "order": "A"

@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "kind": "S027B_EXACT_NATIVE_ARM64_SUCCESS",
+  "status": "PASS_BUILD_ONLY",
+  "run_id": 39799604748,
+  "attempt": 1,
+  "source": "146f81ff70f49c0521dbc959beac5013219a8244",
+  "build_url": "https://github.com/lly8666/wbd-next/actions/runs/39799604748",
+  "artifact": {
+    "id": 12435082262,
+    "zip_sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705",
+    "github_artifact_digest_sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705",
+    "manifest_sha256": "293b48a6bfa5ce04240e8b52065567baffbef4a8f9ca58768deed9a2bd91e184",
+    "manifest_source": "146f81ff70f49c0521dbc959beac5013219a8244",
+    "manifest_arch": "aarch64",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "elf_machine": 183,
+    "files_sha256": {
+      "wbd-v4-client": "cb2669c2083280b3f2dae46528d8dae448f3fa050abcc4a94e6ef33224de2a61",
+      "wbd-v4-server": "d3acef8e00d88c748b13b8e2bb3b20321a2fdf9b5b4c985fc9948b838ec6cae9",
+      "libwbd_engine.so": "b6eef17b4e31747bf449324dd59a76f3473c20a728783227378e5db68bfc00ec"
+    },
+    "all_sha256sums_match": true
+  },
+  "steps": {
+    "exact_original_go_rust_build": "success",
+    "native_rust_product_tests": "success",
+    "artifact_upload": "success",
+    "smoke_job": "skipped_by_isolated_build_policy"
+  },
+  "harness_contract": {
+    "run_id": 39797003708,
+    "conclusion": "success",
+    "scope": "original M1 TUN ingress five-field strict parser; initial source e2f8332, syntax-only change did not touch harness"
+  },
+  "previous_failed_build": {
+    "run_id": 39797003870,
+    "source": "e2f833211ebf3fee678feba80028eda9b610176e",
+    "reason": "Rust cfg unmatched delimiter",
+    "artifact": "NONE"
+  },
+  "product_network_qualification": "NOT_RUN_BUILD_ONLY",
+  "native_isa_runtime_dispatch": "NOT_OBSERVED"
+}
