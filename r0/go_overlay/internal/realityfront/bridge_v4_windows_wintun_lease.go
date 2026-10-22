@@ -89,16 +89,20 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     // the M4 created-by-process Wintun handle remains held. The original
     // FakeTCP SYN peer MSS and TLS record limit remain independent Rust caps.
     live,lookupErr:=net.InterfaceByIndex(int(id.InterfaceIndex))
-    if lookupErr!=nil||live==nil||live.MTU<576||live.MTU>2048{
+    if lookupErr!=nil||live==nil||live.MTU<576{
         release()
         return nil,fmt.Errorf("%w: live native Wintun MTU cannot establish FrameBudget: %v",errV4WindowsOwner,lookupErr)
     }
+    // The observed Win32 MTU can exceed this Rust arena's 2048B finite
+    // frame ceiling; use the smaller bound, never claim the OS MTU is 2048.
+    effectiveMTU:=live.MTU
+    if effectiveMTU>2048{effectiveMTU=2048}
     proc,findErr:=b.dll.FindProc("wbd_m0_win_owner_v4_bind_real_path_mtu")
     if findErr!=nil{return nil,fmt.Errorf("%w: native Rust FrameBudget ABI: %v",errV4WindowsOwner,findErr)}
     var maxIPv4 uint32
     bindErr:=winOwnerCall(proc,uintptr(b.handle),
         uintptr(unsafe.Pointer(&b.epoch[0])),16,uintptr(id.LUID),
-        uintptr(id.InterfaceIndex),uintptr(live.MTU),
+        uintptr(id.InterfaceIndex),uintptr(effectiveMTU),
         uintptr(unsafe.Pointer(&maxIPv4)))
     runtime.KeepAlive(b.epoch)
     if bindErr!=nil||maxIPv4<20||maxIPv4>2048{
