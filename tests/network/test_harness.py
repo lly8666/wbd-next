@@ -7,6 +7,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from tools.network_harness.config import Unsupported, fec_residual, netem_args, validate
@@ -80,6 +81,41 @@ class Contracts(unittest.TestCase):
             wrong = dict(bundle, source="0" * 40)
             with self.assertRaises(ValueError):
                 verify(root, wrong)
+
+    def test_arm_native_manifest_sha256sums_and_source_provenance(self):
+        b = request()["bundles"]["A"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            names = ["wbd-v4-client", "wbd-v4-server", "libwbd_engine.so"]
+            hashes = {}
+            for name in names:
+                p = root / name
+                p.write_bytes(b"\x7fELF\x02\x01" + bytes(12) + b"\xb7\x00")
+                hashes[name] = sha(p)
+            (root / "SHA256SUMS").write_text("".join(
+                hashes[n] + "  " + n + "\n" for n in names))
+            manifest = {"source": b["source"], "architecture": "aarch64",
+                        "go_source": "1"*40, "isa_source": "2"*40,
+                        "backend_requested": "native_fec_acceleration (pinned ISA-L static)"}
+            (root / "manifest.json").write_text(json.dumps(manifest))
+            (root / "_verified-origin.json").write_text(json.dumps({
+                "source": b["source"], "run_id": b["run_id"], "attempt": b["attempt"],
+                "artifact_id": b["artifact_id"]}))
+            with patch("tools.network_harness.artifacts.platform.machine", return_value="aarch64"):
+                verify(root, b)
+                (root / "fixed-build").mkdir()
+                for name in names:
+                    (root / "fixed-build" / name).write_bytes((root / name).read_bytes())
+                verify(root, b)
+                (root / "fixed-build" / names[0]).write_bytes(b"tamper")
+                with self.assertRaises(ValueError):
+                    verify(root, b)
+                (root / "fixed-build" / names[0]).write_bytes((root / names[0]).read_bytes())
+                with self.assertRaises(ValueError):
+                    verify(root, dict(b, source="0"*40))
+            if sys.platform == "linux" and os.uname().machine != "aarch64":
+                with self.assertRaises(ValueError):
+                    verify(root, b)  # Native ARM64 cannot pass on x86_64 runner
 
     def test_histogram_empty_overflow_and_sparse_gap(self):
         h = Histogram()

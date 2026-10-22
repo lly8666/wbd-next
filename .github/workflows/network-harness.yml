@@ -10,7 +10,7 @@ on:
         type: string
   # Initial branch acceptance only. After merge, measurements are manual; never auto-fanout.
   push:
-    branches: [feat/network-scenario-harness-20261021]
+    branches: [feat/network-scenario-harness-20261021, experiment/network-matrix-tuning]
     paths: [tests/network/request.json]
 permissions: {contents: read, actions: read}
 concurrency:

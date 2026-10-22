@@ -1,0 +1,32 @@
+name: Network experiment exact-source ARM64 product build
+run-name: "ARM64 frozen public V4 source ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/network-matrix-tuning]
+    paths: [".github/workflows/network-arm64-product-build.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  frozen-product-build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build exact-source original Go public CLI and pinned native Rust owner once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          bash tools/arm64_public_go_rust_bundle.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: "network-arm64-public-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: arm64-public-bundle/
+          if-no-files-found: error
+          retention-days: 30

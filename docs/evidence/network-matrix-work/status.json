@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "branch": "experiment/network-matrix-tuning",
+  "phase": "arm64-adapter-and-frozen-product-build",
+  "recovered": false,
+  "initial_branch_absent_confirmed": true,
+  "sources": {
+    "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
+    "main_merged": "26f2e509a8e3c4055460a67960ea5462beec1622",
+    "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
+    "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
+    "frozen_product_source": null,
+    "harness_source": null
+  },
+  "build": {
+    "run_id": null,
+    "attempt": null,
+    "artifact_id": null,
+    "sha256": null,
+    "status": "PENDING_AUTOMATIC_BUILD_PUSH",
+    "architecture": "aarch64",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "native_feature_compiled": "REQUESTED_NOT_RUNTIME_VERIFIED"
+  },
+  "historical_reuse": [
+    {
+      "mode": "normal",
+      "run": 39755860617,
+      "scope": "native ARM64 60s UDP 10Mbps per direction; not mixed/p99"
+    },
+    {
+      "mode": "fec-fixed",
+      "run": 39754527848,
+      "scope": "real applied and 20 ICMP each side"
+    },
+    {
+      "mode": "fec-auto",
+      "run": 39755143674,
+      "scope": "real applied and 20 ICMP each side"
+    },
+    {
+      "mode": "game4",
+      "run": 39757760559,
+      "scope": "real four-lane traffic and Stop"
+    },
+    {
+      "mode": "game2",
+      "run": 39757506578,
+      "scope": "overall workflow FAIL retained; traffic markers positive"
+    }
+  ],
+  "open_requests": [],
+  "open_issues": [
+    "No runtime repair byte budget and actual FEC k/r readback; NOT_OBSERVED",
+    "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
+    "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
+  ],
+  "next_action": "Inspect adapter selfcheck and frozen build Actions; retrieve real artifact digest; commit one mixed UDP/TCP bidirectional request, not repeat ICMP."
+}
