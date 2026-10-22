@@ -1,3 +1,8 @@
+//! Narrow native-vs-Go/scalar oracle tests; do not repeat unrelated record/LINK.
+#![forbid(unsafe_code)]
+use crate::fec_math::{ReedSolomon20,FecBackendChoice,FecBackendUsed,FecMathError};
+use crate::link_fec_wire::{FecHeader,FecShardPhase,FEC_HEADER};
+
 // CPU feature reporting is diagnostic only. Architecture specific detection
 // must not be invoked on the wrong target, nor prove that ISA-L selected SIMD.
 #[cfg(all(feature="native-isal",any(target_arch="x86",target_arch="x86_64")))]
@@ -16,10 +21,7 @@ fn host_cpu_features()->String {
 #[cfg(all(feature="native-isal",not(any(target_arch="aarch64",target_arch="x86",target_arch="x86_64"))))]
 fn host_cpu_features()->String { "UNKNOWN_TARGET".into() }
 
-//! Narrow native-vs-Go/scalar oracle tests; do not repeat unrelated record/LINK.
-#![forbid(unsafe_code)]
-use crate::fec_math::{ReedSolomon20,FecBackendChoice,FecBackendUsed,FecMathError};
-use crate::link_fec_wire::{FecHeader,FecShardPhase,FEC_HEADER};
+
 
 fn originals(k:usize,len:usize)->Vec<Vec<u8>>{
     (0..k).map(|i|{
