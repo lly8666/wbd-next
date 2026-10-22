@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "type": "TRUE_SINGLE_VM_SEQUENTIAL_AB",
+  "event": "S015",
+  "result": "FAIL_BOTH",
+  "action": {
+    "id": 39775828660,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "artifact_id": 12425051461,
+    "zip_sha256": "28ce6f3f0ecaebae1146b4bad952d02c3bb034b0c233793062bc6978664a7c89",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39775828660"
+  },
+  "harness_source": "9f668034655ee012f511df4b47d9c55a9c60fe8f",
+  "machine": {
+    "architecture": "aarch64",
+    "kernel": "7.0.0-1017-azure",
+    "logical_cpus": 4,
+    "host_cpu_psi_mean_pct_near_zero": true
+  },
+  "requested": {
+    "fec": "fixed maximum profile6",
+    "each_direction_mbps": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "one_way_ms": 300,
+    "iid_loss_pct": 30,
+    "warmup_s": 15,
+    "steady_s": 120,
+    "drain_s": 30,
+    "seed": 5205,
+    "netem_rng": "unseeded_recorded"
+  },
+  "legs": {
+    "A": {
+      "source": "e63d38bd20466575675ca8b493a45882ec815a52",
+      "bundle": {
+        "run": 39773479071,
+        "artifact": 12423960905,
+        "zip_sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f"
+      },
+      "netem_actual_pct": {
+        "client": 30.07720960063149,
+        "server": 30.06991291549123
+      },
+      "fec_failures": {
+        "client": {
+          "source_arena": 5269,
+          "parity_arena": 18662,
+          "source_seal": 0,
+          "parity_seal": 0,
+          "parity_m4_noncopy": 0,
+          "source_m4_noncopy": 0
+        },
+        "server": {
+          "source_arena": 5153,
+          "parity_arena": 18405,
+          "source_seal": 0,
+          "parity_seal": 0,
+          "parity_m4_noncopy": 0,
+          "source_m4_noncopy": 0
+        }
+      },
+      "fec_tx": {
+        "client": {
+          "rsent": 8312,
+          "rplanned": 27080,
+          "notready": 5269,
+          "expired": 52
+        },
+        "server": {
+          "rsent": 8415,
+          "rplanned": 26935,
+          "notready": 5153,
+          "expired": 54
+        }
+      },
+      "udp": {
+        "c2s": {
+          "sent": 20751,
+          "received": 6247,
+          "duplicates": 4,
+          "first_arrived_p99_ms": 1234
+        },
+        "s2c": {
+          "sent": 20751,
+          "received": 6193,
+          "duplicates": 3,
+          "first_arrived_p99_ms": 1242.2
+        }
+      },
+      "tcp_received": 0,
+      "fixed_readback": {
+        "client": {
+          "requested": 1,
+          "applied": 0,
+          "pending": true
+        },
+        "server": {
+          "requested": 1,
+          "applied": 1,
+          "pending": false
+        }
+      },
+      "measured_cpu_seconds": {
+        "client": 2.27,
+        "server": 2.36
+      },
+      "outer_interface_tx_bytes": {
+        "client": 10512270,
+        "server": 10581467
+      },
+      "stop_drained": true,
+      "owned_namespace_absent": true,
+      "result": "FAIL"
+    },
+    "B": {
+      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+      "bundle": {
+        "run": 39775271407,
+        "artifact": 12424665752,
+        "zip_sha256": "c73b11e5801661399636827c7d6e590bbfd4ae6e3d78e771f2e8c9dfdbe4b1dd"
+      },
+      "netem_actual_pct": {
+        "client": 29.889488563351325,
+        "server": 30.219857341550867
+      },
+      "fec_failures": {
+        "client": {
+          "source_arena": 0,
+          "parity_arena": 0,
+          "source_seal": 0,
+          "parity_seal": 0,
+          "parity_m4_noncopy": 474,
+          "source_m4_noncopy": 328
+        },
+        "server": {
+          "source_arena": 34,
+          "parity_arena": 189,
+          "source_seal": 0,
+          "parity_seal": 0,
+          "parity_m4_noncopy": 82,
+          "source_m4_noncopy": 52
+        }
+      },
+      "fec_tx": {
+        "client": {
+          "rsent": 31744,
+          "rplanned": 35087,
+          "notready": 0,
+          "expired": 947
+        },
+        "server": {
+          "rsent": 31425,
+          "rplanned": 35038,
+          "notready": 34,
+          "expired": 1089
+        }
+      },
+      "udp": {
+        "c2s": {
+          "sent": 20751,
+          "received": 13691,
+          "duplicates": 0,
+          "first_arrived_p99_ms": 330.6
+        },
+        "s2c": {
+          "sent": 20751,
+          "received": 13810,
+          "duplicates": 2,
+          "first_arrived_p99_ms": 379.8
+        }
+      },
+      "tcp_received": 0,
+      "fixed_readback": {
+        "client": {
+          "requested": 1,
+          "applied": 0,
+          "pending": true
+        },
+        "server": {
+          "requested": 1,
+          "applied": 1,
+          "pending": false
+        }
+      },
+      "measured_cpu_seconds": {
+        "client": 4.15,
+        "server": 4.3
+      },
+      "outer_interface_tx_bytes": {
+        "client": 23474228,
+        "server": 23536755
+      },
+      "stop_drained": true,
+      "owned_namespace_absent": true,
+      "result": "FAIL"
+    }
+  },
+  "assessment": "Bounded FEC-only M1 arena512 vs128 demonstrably improves real source/parity allocation and incoming UDP first-delivery in same VM, with more actual work, CPU and outer bytes; not a general throughput speedup. B retains hard duplicate app S2C=2, client fixed pending and zero real TCP delivery. Survivor-only p99 excludes missing packets. Neither leg is full Fixed quality PASS; do not loosen applied/duplicate/Stop gates."
+}
