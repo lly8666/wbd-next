@@ -153,6 +153,12 @@ impl Fec2LiveRx{
         }
         self.highest_block=self.highest_block.max(id);
         self.retire(now);
+        // The current unique authenticated symbol can itself advance the
+        // monotonic clock beyond the previous block's absolute lifetime.
+        // retire() may have JUST evicted this same identity above. Never
+        // recreate it as a fresh FEC block and redeliver a source from a
+        // delayed parity (or a separately authenticated late source).
+        if self.retired.contains(&id){return Err(ReceiveError::Invalid)}
         if !self.blocks.contains_key(&id)&&self.blocks.len()>=MAX_ACTIVE{
             // Never allow old incomplete parity/source work to block a
             // freshly authenticated source. Evict ONE oldest incomplete
@@ -282,6 +288,40 @@ mod tests {
         blocks.stop();
         assert_eq!(blocks.accept_authenticated(epoch(),2,&payload,MonoNs(3)),
             Err(ReceiveError::Stopped));
+    }
+    #[test]
+    fn m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1(){
+        // Actual M3 AEAD accepts two DISTINCT legitimate record PNs.
+        // The first systematic source is delivered at time 1; an old k1
+        // parity arriving after the 150ms block lifetime MUST NOT revive
+        // this already-delivered block, even if retirement occurs inside
+        // the SAME accept_authenticated call, not on a prior packet.
+        let suite=RecordSuite::ChaCha20Poly1305;
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+        let mut rx=Fec2LiveRx::from_original_owner(
+            epoch(),opened(suite),1400).unwrap();
+        let frame=vec![0x63u8;120];
+        let source=fec_v2::source_owned(7,0,&frame,1369).unwrap();
+        let repair=Rs16::new().encode_owned(
+            7,&[frame.as_slice()],fec_v2::Profile::Maximum,
+            0,1,1369,BackendChoice::Scalar
+        ).unwrap().0.remove(0);
+        let mut systematic=seal(&mut tx,2,&source);
+        assert_eq!(rx.consume(epoch(),&mut systematic,MonoNs(1)).unwrap(),
+            vec![FirstDelivery{block_id:7,index:0,recovered:false,
+                frame:frame.clone()}]);
+        let mut late_parity=seal(&mut tx,3,&repair);
+        assert_eq!(rx.consume(epoch(),&mut late_parity,
+            MonoNs(MAX_BLOCK_AGE_NS+3)),Err(ReceiveError::Invalid));
+        assert_eq!(rx.evicted_blocks(),1);
+        assert_eq!(rx.active_blocks(),0);
+        // A later independent verified block remains free to deliver.
+        let later=fec_v2::source_owned(8,0,&[0x42u8;120],1369).unwrap();
+        let mut fresh=seal(&mut tx,2,&later);
+        assert_eq!(rx.consume(epoch(),&mut fresh,
+            MonoNs(MAX_BLOCK_AGE_NS+4)).unwrap().len(),1);
+        rx.stop();
+        assert_eq!(rx.stored_bytes(),0);
     }
     #[test]
     fn m0_fec2_live_rx_old_incomplete_blocks_cannot_head_of_line_fresh(){
