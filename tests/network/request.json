@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed30-original-m4-reason-split",
+  "id": "arm64-fixed30-arena128-vs512-samehost-AB-S015",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -67,7 +67,14 @@
       "attempt": 1,
       "artifact_id": 12423960905,
       "sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f"
+    },
+    "B": {
+      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+      "run_id": 39775271407,
+      "attempt": 1,
+      "artifact_id": 12424665752,
+      "sha256": "c73b11e5801661399636827c7d6e590bbfd4ae6e3d78e771f2e8c9dfdbe4b1dd"
     }
   },
-  "order": "A"
+  "order": "AB"
 }
