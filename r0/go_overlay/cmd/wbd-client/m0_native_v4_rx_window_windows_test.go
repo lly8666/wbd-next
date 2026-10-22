@@ -1,7 +1,12 @@
 //go:build windows && wbd_v4_embedded_go
 package main
 
-import "testing"
+import (
+ "testing"
+ "time"
+ "github.com/lly8666/wobuzhidao/internal/faketcp"
+ "github.com/lly8666/wobuzhidao/internal/realityfront"
+)
 
 func TestM0PLAN025WindowsNativeV4OutOfOrderFirstAndRealCumulativeACK(t *testing.T){
  w:=newM0V4RxWindow(1000)
@@ -31,4 +36,37 @@ func TestM0PLAN025WindowsNativeV4SerialWrapAndOutOfOrderNoFalseACK(t *testing.T)
   t.Fatalf("actual missing record did not advance wrapped cumulative ACK %d err %v",ack,e)
  }
  if w.Pending()!=0{t.Fatalf("unreleased verified receipt map %d",w.Pending())}
+}
+
+func TestM0PLAN026WindowsNativeV4ParallelModeDoesNotDowngradeAndStalledCarrierFails(t *testing.T){
+ flow:=faketcp.ClientFlow{
+  LocalIP:[4]byte{10,25,0,2},PeerIP:[4]byte{10,25,0,1},
+  LocalPort:41001,PeerPort:443,
+ }
+ owner:=&realityfront.V4WindowsAuthenticatedClientOwner{}
+ ep:=&faketcp.NpcapEndpoint{}
+ inbound:=make(chan faketcp.Segment,1)
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeGame2,m0WinModeGame4,"unknown"}{
+  if got,e:=newM0NativeV4PeerForMode(owner,ep,flow,inbound,mode);
+   e==nil||got!=nil{t.Fatalf("unsupported Game group silently downgraded to one-lane Normal mode=%s",mode)}
+ }
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
+  p,e:=newM0NativeV4PeerForMode(owner,ep,flow,inbound,mode)
+  if e!=nil||p==nil||p.mode!=mode||p.blockID!=1{
+   t.Fatalf("original TLS peer mode selection incorrect %s error %v",mode,e)
+  }
+  p.pending=append(p.pending,m0NativeV4Outbound{
+   seq:500,wire:[]byte{1,2,3},sentAt:time.Now().Add(-5*time.Second),
+   lastSent:time.Now().Add(-2*time.Second),retries:8,
+  })
+  // This path must never pretend a stalled TCP FrozenRecord was ACKed:
+  // the exact maximum retry exhaustion is an explicit bounded failure.
+  if tx,err:=p.retryOne(time.Now());tx||err==nil{
+   t.Fatalf("stalled original carrier silently accepted mode=%s",mode)
+  }
+  snap:=p.Stats()
+  if snap.Mode!=mode||snap.TxPackets!=0||snap.RxFirstDelivered!=0{
+   t.Fatalf("not a zero-delivery public performance receipt: %+v",snap)
+  }
+ }
 }
