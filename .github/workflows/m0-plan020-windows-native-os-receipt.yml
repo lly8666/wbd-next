@@ -225,6 +225,9 @@ jobs:
           & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop -- --nocapture
           if ($LASTEXITCODE -ne 0) {throw 'PLAN024 Windows native FEC2 M3 AES/PN/RS16/Stop real crypto test FAIL'}
           Write-Output 'M0_PLAN024_WINDOWS_NATIVE_RUST_FEC2_SOURCE_REPAIR_AEAD_RS16_RECOVERY_STOP_PASS_SCOPED_NO_KERNEL'
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_shared_rs16_original_owner_encode_repair_recovers_missing_source -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'Windows source-scoped shared Rust RS16 parity writer/recovery test FAIL'}
+          Write-Output 'M0_PLAN026_WINDOWS_ORIGINAL_TLS_RUST_SHARED_RS16_ENCODE_M3_RECOVER_REPLAY_STOP_PASS_SCOPED'
           & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
           @'
@@ -237,7 +240,8 @@ jobs:
                       "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off",
                       "wbd_m0_win_owner_v4_game_join","wbd_m0_win_owner_v4_game_stage",
                       "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop",
-                      "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open"):
+                      "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open",
+                       "wbd_m0_win_owner_v4_fec2_encode_repair"):
               assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
           class V4Modes(ctypes.Structure):
               _fields_=[("version",ctypes.c_uint32),("size",ctypes.c_uint32),
@@ -446,6 +450,10 @@ jobs:
             'auto' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_auto_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED'}
             'game2' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME2_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
             'game4' {'M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME4_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED'}
+          }
+          if ($mode -in @('fixed','auto') -and
+              !$log.Contains('M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_'+$mode+'_PASS_SCOPED')) {
+            throw ('native original Go Rust shared RS16 repair NOT_RUN mode='+$mode)
           }
           if(!$log.Contains($marker) -or $log -match '--- SKIP:|UNSUPPORTED' -or
              $log -notmatch '--- PASS:') {throw ('real Windows native '+$mode+' never reached required kernel app or Stop marker')}
