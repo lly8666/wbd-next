@@ -19,6 +19,7 @@ on:
       - "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_fec2_owner.go"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
@@ -98,6 +99,7 @@ jobs:
               "admission_v4.go",
               "bridge_v4_windows_private_owner.go",
               "bridge_v4_windows_game_group.go",
+              "bridge_v4_windows_fec2_owner.go",
               "bridge_v4_windows_wintun_lease.go",
               "bridge_v4_windows_scoped_client.go",
             )),
