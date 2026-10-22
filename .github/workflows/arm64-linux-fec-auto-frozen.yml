@@ -2,11 +2,8 @@
 # Never infer actual ISA-L backend or loss-recovery performance from Auto readback.
 name: Linux ARM64 pinned FEC2 Auto two-way netns
 run-name: ARM64 FEC2 Auto netns ${{ github.sha }}
+# Auto scoped positive run 39755143674; no more repeated success samples.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - '.github/workflows/arm64-linux-fec-auto-frozen.yml'
   workflow_dispatch:
 permissions:
   contents: read
