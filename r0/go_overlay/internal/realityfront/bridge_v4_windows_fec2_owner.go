@@ -80,7 +80,7 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,kind uint32,symbol []byte,
 )([]byte,uint32,uint64,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  kind!=2&&kind!=3||len(symbol)<10||len(symbol)>device.maxIPv4||
+  (kind!=2&&kind!=3)||len(symbol)<10||len(symbol)>device.maxIPv4{
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
