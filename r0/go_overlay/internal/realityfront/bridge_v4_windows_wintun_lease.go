@@ -8,6 +8,8 @@ package realityfront
 import (
     "context"
     "errors"
+    "net"
+    "fmt"
     "runtime"
     "unsafe"
 )
@@ -38,6 +40,7 @@ type v4WindowsRealDeviceLease struct{
     identity V4WindowsNativeDeviceIdentity
     release func()
     stopped bool
+    maxIPv4 int
 }
 type v4WindowsDeviceFenceV2 struct{
     Version,StructSize,Generation,Bound,Quiesced,Applied,IfIndex,Reserved uint32
@@ -82,7 +85,26 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
         uintptr(id.LUID),uintptr(id.InterfaceIndex))
     runtime.KeepAlive(b.epoch)
     if err!=nil{release();return nil,err}
-    lease:=&v4WindowsRealDeviceLease{bridge:b,device:device,identity:id,release:release}
+    // Bind the actual Win32 adapter MTU ONCE per protected owner, while
+    // the M4 created-by-process Wintun handle remains held. The original
+    // FakeTCP SYN peer MSS and TLS record limit remain independent Rust caps.
+    live,lookupErr:=net.InterfaceByIndex(int(id.InterfaceIndex))
+    if lookupErr!=nil||live==nil||live.MTU<576||live.MTU>2048{
+        release()
+        return nil,fmt.Errorf("%w: live native Wintun MTU cannot establish FrameBudget: %v",errV4WindowsOwner,lookupErr)
+    }
+    proc,findErr:=b.dll.FindProc("wbd_m0_win_owner_v4_bind_real_path_mtu")
+    if findErr!=nil{return nil,fmt.Errorf("%w: native Rust FrameBudget ABI: %v",errV4WindowsOwner,findErr)}
+    var maxIPv4 uint32
+    bindErr:=winOwnerCall(proc,uintptr(b.handle),
+        uintptr(unsafe.Pointer(&b.epoch[0])),16,uintptr(id.LUID),
+        uintptr(id.InterfaceIndex),uintptr(live.MTU),
+        uintptr(unsafe.Pointer(&maxIPv4)))
+    runtime.KeepAlive(b.epoch)
+    if bindErr!=nil||maxIPv4<20||maxIPv4>2048{
+        return nil,fmt.Errorf("%w: native FrameBudget original MTU/peer MSS: %v",errV4WindowsOwner,bindErr)
+    }
+    lease:=&v4WindowsRealDeviceLease{bridge:b,device:device,identity:id,release:release,maxIPv4:int(maxIPv4)}
     bound,err=b.realNativeDeviceState()
     if err!=nil||bound.Bound!=1||bound.Quiesced!=0||
         bound.LUID!=id.LUID||bound.IfIndex!=id.InterfaceIndex{
