@@ -10,7 +10,7 @@
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf"
+    "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d"
   },
   "build": {
     "run_id": 39759842150,
@@ -69,9 +69,13 @@
     {
       "id": "arm64-off-startup-diagnostic-12s",
       "path": "tests/network/request.json",
-      "status": "INTENT_RECORDED_NOT_DISPATCHED",
-      "run_id": null,
-      "reason": "one evidence-gathering shorter run with allowlisted startup error classifiers; same seed/mode/product; no performance qualification"
+      "status": "ACTION_QUEUED",
+      "run_id": 39761391815,
+      "reason": "one evidence-gathering shorter run with allowlisted startup error classifiers; same seed/mode/product; no performance qualification",
+      "attempt": 1,
+      "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d",
+      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761391815"
     }
   ],
   "open_issues": [
@@ -80,7 +84,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "First push diagnostic code/selfcheck, then same product/seed short startup diagnostic Action; do not rerun 90s or increase load until cause known.",
+  "next_action": "Inspect run 39761391815 allowlisted startup diagnostic and preserve exact result; no duplicate retry.",
   "actions": [
     {
       "run_id": 39759842064,
