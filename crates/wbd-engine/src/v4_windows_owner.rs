@@ -137,8 +137,8 @@ fn stage(r:&mut Registry,h:u64,seq:u32,bytes:&[u8])->i32{
         ||delta>=max||delta.saturating_add(len as u32)>max{return INVALID}
     let Ok(mut slab)=e.arena.allocate()else{return FULL};
     slab.writable()[..len].copy_from_slice(bytes);
-    match e.owner.offer_early(slab,0..len,
-        u64::from(e.rx_boundary)+u64::from(delta),MonoNs(0)){
+    let absolute=u64::from(e.rx_boundary)+u64::from(delta);
+    match e.owner.offer_early(slab,0..len,absolute,MonoNs(0)){
         Ok(EarlyAccepted::Staged)=>{
             e.count+=1;
             e.bytes+=len as u32;
@@ -199,8 +199,9 @@ fn quiesce_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32
     let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE{return BAD_STAGE}
+    if epoch!=e.authenticated_epoch{return INVALID}
     let Some(device)=e.device.as_mut()else{return BAD_STAGE};
-    if epoch!=e.authenticated_epoch||luid!=device.luid||ifindex!=device.ifindex{
+    if luid!=device.luid||ifindex!=device.ifindex{
         return INVALID
     }
     device.quiesced=true;
