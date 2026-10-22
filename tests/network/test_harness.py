@@ -160,6 +160,7 @@ class Contracts(unittest.TestCase):
         # FEC sender snapshot rather than treating a real result as unknown.
         from tools.network_harness.runner import product_marker_line
         self.assertTrue(product_marker_line(row))
+        self.assertTrue(product_marker_line("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client"))
         self.assertFalse(product_marker_line("password=secret role=client"))
         self.assertIsNone(public_fec_tx_snapshot(""))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))

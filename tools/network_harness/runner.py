@@ -28,7 +28,7 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
