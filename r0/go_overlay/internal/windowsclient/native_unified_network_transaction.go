@@ -224,8 +224,8 @@ func(n *N4NativeUnifiedTxn) Apply(ctx context.Context)error{
  var before [5]json.RawMessage
  for i,s:=range n.Stages{
   if err:=ctx.Err();err!=nil{return err}
-  v,err:=s.Snapshot(ctx,n.Identity);if err!=nil{return fmt.Errorf("native %s snapshot: %w",s.Name(),err)}
-  if len(v)==0 || len(v)>n4UnifiedReceiptMax || !json.Valid(v){return fmt.Errorf("native %s invalid snapshot receipt: %w",s.Name(),ErrNetworkPlan)}
+  v,err:=s.Snapshot(ctx,n.Identity);if err!=nil{return err}
+  if len(v)==0 || len(v)>n4UnifiedReceiptMax || !json.Valid(v){return ErrNetworkPlan}
   before[i]=append(json.RawMessage(nil),v...)
  }
  j:=n4UnifiedJournal{Schema:n4UnifiedSchema,Identity:n.Identity,Phase:"applying"}
@@ -236,8 +236,8 @@ func(n *N4NativeUnifiedTxn) Apply(ctx context.Context)error{
   if err:=n4UnifiedWrite(n.Path,j,false);err!=nil{return err}
   if err:=s.Apply(ctx,n.Identity,before[i]);err!=nil{return fmt.Errorf("native %s apply: %w",s.Name(),err)}
   observed,err:=s.Inspect(ctx,n.Identity,before[i])
-  if err!=nil{return fmt.Errorf("native %s applied OS inspect: %w",s.Name(),err)}
-  if observed!=N4UnifiedOwned{return fmt.Errorf("native %s applied OS readback=%s: %w",s.Name(),observed,ErrN4RouteAmbiguous)}
+  if err!=nil{return err}
+  if observed!=N4UnifiedOwned{return ErrN4RouteAmbiguous}
   j.Records[i].State="owned"
   if err:=n4UnifiedWrite(n.Path,j,false);err!=nil{return err}
  }

@@ -478,7 +478,7 @@
       "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
-      "result_blob": "cb5d5caad63a19c451ccc3a6de52279fb34d6bb0"
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
     },
     {
       "kind": "replace",
@@ -653,7 +653,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "13486147c4d3207f67533921729534dd0174ac0c"
+      "result_blob": "a9e0ee12536b5686861d137d6ee97546c7b0b570"
     },
     {
       "kind": "create",

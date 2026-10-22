@@ -222,6 +222,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // instead of a separate pre-binding that could outlive OS WAL.
  physical,e:=underlay.PhysicalPath()
  if e!=nil{return e}
+ // Original Go GetIpForwardTable on actual WSL2 returned the host's own
+ // vEthernet IPv4 as the next hop; the same scoped OS verified guest-MAC
+ // handoff above has already proved real guest IP, source, ifindex and L2
+ // identity. For THIS verified route only, use the real guest's IPv4
+ // for the Windows persistent underlay /32 escape; never install a route
+ // with Windows' own source IP as its gateway. The actual Npcap original
+ // link already emits genuine authenticated TCP443 frames to the guest.
+ if guestMAC!="" && physical.NextHop4==underlay.Source4{
+  physical.NextHop4=o.ServerIP
+  fmt.Printf("WBD_PLAN024_NATIVE_WSL_PUBLIC_OS_ROUTE_GUEST_NEXT_HOP scope=verified_guest_ethernet guest=%s ifindex=%d\\n",o.ServerIP,physical.InterfaceIndex)
+ }
  plan,e:=windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
   AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
   Lease4:o.Lease4,Server4:o.ServerIP,Physical:physical,
