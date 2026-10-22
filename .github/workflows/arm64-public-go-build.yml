@@ -6,7 +6,6 @@ on:
     paths:
       - '.github/workflows/arm64-public-go-build.yml'
       - 'tools/arm64_public_go_rust_bundle.sh'
-      - 'tools/arm64_linux_netns_smoke.sh'
       - 'r0/go_overlay/internal/realityfront/**'
       - 'r0/go_overlay/internal/v4productcli/**'
       - 'crates/wbd-engine/**'

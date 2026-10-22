@@ -10,7 +10,7 @@ mkdir -p "$out"
 # GitHub artifact ZIP extraction does not preserve executable mode.
 # chmod changes metadata only, leaving the source-checked binary SHA256 intact.
 chmod 0755 "$bundle/wbd-v4-client" "$bundle/wbd-v4-server"
-python3 - "$bundle/manifest.json" "$GITHUB_SHA" <<'PY'
+python3 - "$bundle/manifest.json" "${WBD_ARM64_FROZEN_SOURCE:-$GITHUB_SHA}" <<'PY'
 import json,sys
 m=json.load(open(sys.argv[1]))
 assert m["source"]==sys.argv[2] and m["architecture"]=="aarch64",m
@@ -102,11 +102,27 @@ ready=0
 for i in $(seq 1 200); do
   if grep -q V4_ORIGINAL_GO_CLIENT_NATIVE_READY "$out/client.log" \
     && grep -q V4_ORIGINAL_GO_SERVER_NATIVE_READY "$out/server.log"; then ready=1; break; fi
-  if ! kill -0 "$client_launcher" 2>/dev/null || ! kill -0 "$server_launcher" 2>/dev/null; then break; fi
+  # A just-forked sudo/ip-netns process can hand off to its child before
+  # the Go process prints anything. Avoid an empty-log false failure in <1s.
+  if [ "$i" -ge 10 ] && { ! kill -0 "$client_launcher" 2>/dev/null || ! kill -0 "$server_launcher" 2>/dev/null; }; then
+    echo "ARM64_LAUNCHER_EXITED_DURING_HANDSHAKE iteration=$i" >&2
+    sleep .3
+    break
+  fi
   sleep .2
 done
 if [ "$ready" -ne 1 ]; then
   echo 'ARM64_OS_REAL_GO_TLS_RUST_NOT_READY'
+  {
+    echo "snapshot_iteration=$i client_launcher=$client_launcher server_launcher=$server_launcher"
+    ps -p "$client_launcher,$server_launcher" -o pid,stat,comm || true
+    echo "client namespace PIDs"; sudo -n ip netns pids "$client_ns" || true
+    echo "server namespace PIDs"; sudo -n ip netns pids "$server_ns" || true
+    echo "client interfaces"; sudo -n ip -s -n "$client_ns" link show || true
+    echo "server interfaces"; sudo -n ip -s -n "$server_ns" link show || true
+    echo "log sizes"; wc -c "$out/client.log" "$out/server.log"
+  } >"$out/diagnostic.txt" 2>&1
+  cat "$out/diagnostic.txt"
   tail -n 50 "$out/client.log" || true
   tail -n 50 "$out/server.log" || true
   exit 1
@@ -136,7 +152,8 @@ import pathlib,json,hashlib,os
 p=pathlib.Path(os.environ["OUTPUT"])
 sha=lambda n:hashlib.sha256((p/n).read_bytes()).hexdigest()
 files=("client.log","server.log","c2s.log","s2c.log")
-d={"source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
+d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
+"test_harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
 "qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
 "bidirectional":"3_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN","logs_sha256":{f:sha(f) for f in files}}
