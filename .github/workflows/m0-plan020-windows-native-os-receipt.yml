@@ -16,6 +16,8 @@ on:
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go"
       - "crates/wbd-engine/src/v4_windows_owner.rs"
       - "crates/wbd-engine/src/v4_windows_game_owner.rs"
+      - "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
+      - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go"
       - "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
@@ -207,6 +209,9 @@ jobs:
           & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_native_game_two_four_original_owner_aead_no_hol_and_stop -- --nocapture
           if ($LASTEXITCODE -ne 0) {throw 'PLAN024 Windows native Game2/Game4 AEAD/PN/Stop positive test FAIL'}
           Write-Output 'M0_PLAN024_WINDOWS_NATIVE_RUST_GAME2_GAME4_GROUP_AEAD_REPLAY_STALLED_LANE_STOP_PASS_SCOPED_NO_KERNEL'
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'PLAN024 Windows native FEC2 M3 AES/PN/RS16/Stop real crypto test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_NATIVE_RUST_FEC2_SOURCE_REPAIR_AEAD_RS16_RECOVERY_STOP_PASS_SCOPED_NO_KERNEL'
           & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
           @'
@@ -218,7 +223,8 @@ jobs:
                       "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
                       "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off",
                       "wbd_m0_win_owner_v4_game_join","wbd_m0_win_owner_v4_game_stage",
-                      "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop"):
+                      "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop",
+                      "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open"):
               assert getattr(dll,name,None) is not None,"native Rust ABI missing "+name
           class V4Modes(ctypes.Structure):
               _fields_=[("version",ctypes.c_uint32),("size",ctypes.c_uint32),
