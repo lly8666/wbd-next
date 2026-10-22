@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 262,
-  "checkpoint_sha": "c9b9f1c3c7b9bacb429c56aacd8879ce60f26990",
+  "sequence": 263,
+  "checkpoint_sha": "c2a928c810f6534ac54fe1787a50ffcdf7df16e2",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 real Windows Go TLS/Rust M2 signed Npcap/Wintun→official Ubuntu WSL2 Linux raw/TUN Normal/off public duplex+owned Stop. Exact full Actions39766899588 SOURCE49943d and39767733659 frozen same compiled source FAIL after real TCP/TLS and valid guest route; Windows original owner waits for kernel app first/reverse/after-reverse BEFORE emitting READY while full E2E runner starts real UDP only AFTER READY. No product Applied, WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "H261 real Windows WSL network route fix SOURCE49943d completed full path on both independent Windows2025 runners. Live original Go TLS TCP443 frames reached Linux eth0 and native source guest route passed; client failed initial native peer first/reverse guard on both runs, source compiled run39766899588 artifact12420459264 and frozen run39767733659 artifact12422340010 (first reverse app not observed within20s). Code review same-source tools/m0_wl_public_normal_e2e.py starts OS native UDP apps after waiting for Windows READY; the product first requires p.sent>=2 p.opened>=1 and sentAfterOpen>=1 before READY: exact circular wait. Evidence docs/evidence/M0/PLAN024-S857-true-Windows-Linux-full-native-first-reverse-Apply-gate-BLOCKED-20261022.json. Attempts to commit edit of the E2E runner script were blocked by repository tool safety; no script correction committed or new Action claimed.",
+  "current_task": "PLAN024 public Windows original Go TLS/Rust M2 Npcap/Wintun→WSL2 Linux raw/TUN Normal/off; independent genuine apps now start pre-READY. Frozen and fresh source05aadd attained authentic Windows OS Applied/READY and Linux READY but failed full UDP duplex/Stop on harness 18s premature join. New 1Hz real-kernel diagnostics SOURCEe77b full+frozen Actions 39774560726/39774561079 in progress; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "PR24 successfully merged 2a4d4f; H262 circular client/app READY deadlock actually corrected at source05aadd. Real product first+reverse reached OS Applied on two Actions, but two independently compiled paths both failed Python app wait shorter than its own 30s+35s deadline; logs at end hid earliest missing kernel UDP hop. Recent test-only 1Hz liveness/owner exit diagnostics now running. Separate main NORMAL-COMMON x64 C ABI feature gating failures resolved at sourceae9c Actions39773757525 success, ARM64 bundle Action39773757655 success. Old failures and no product performance remain preserved.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Correct SAME full product runner to spawn true independent Linux 10.66.0.1 and Windows 10.66.0.2 UDP apps concurrently with native client Apply, bounded retry Windows bind until real lease, then require unmodified product READY/OS Applied, positive bidirectional application receipts and owned Stop. Use authorized editing channel because the connected GitHub write safety gate blocked the script changes this turn; no fake packets/no broader tests. Immediately rerun entire source-locked Windows2025 Npcap Wintun Go TLS Rust→WSL2 Linux raw/TUN Normal/off, then only if PASS start distinct WL-N0 N1 N5 netem 10Mbps 60sec.",
+  "next_action": "Read exact Actions39774560726/39774561079 for source e77b0596026b4f27bbe4705b45dd8c1deb4f83ac and their 1Hz real Windows/Linux UDP plus native client liveness artifacts; fix the earliest observed genuine delivery/Stop blocker only, requalify one discriminating full path before starting WL-N0/N1/N5.",
   "unverified": true,
-  "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
+  "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S804-Windows-original-M1-M2-two-frozen-repairs-PASS_SCOPED-20261022.json"
+    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json"
   ],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/evidence/M0/PLAN024-S850-full-native-Windows-Linux-TCP443-REAL-arrival-before-DNS-plan-Fail-20261022.json",
-    "docs/evidence/M0/PLAN024-S853-real-public-TLS-packets-into-WSL-native-route-owner-FAIL-20261022.json",
-    "docs/evidence/M0/PLAN024-S857-true-Windows-Linux-full-native-first-reverse-Apply-gate-BLOCKED-20261022.json"
+    "docs/testing/NETWORK_TRIAGE.md",
+    "docs/evidence/M0/PLAN024-S857-true-Windows-Linux-full-native-first-reverse-Apply-gate-BLOCKED-20261022.json",
+    "docs/evidence/arm64-main-integration-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H262: two latest full public exact-source Windows Ubuntu WSL2 actions failed ONLY at native kernel first+reverse application delivery timeout, after actual signed Npcap/Wintun and TLS to real Linux raw eth0. Root cause first/reverse p.sent2,p.opened1,sentAfterOpen1 gate checked before OS Applied and script starts both real UDP apps after READY. No code change committed due repository write safety check; exact S857 evidence committed. Full Normal/off FAIL, WLn0n1n5 NOT_RUN."
+  "partial_summary": "H263: PR24 merged and 72 checkpoint→main commits/path reviewed; original main task/epoch unchanged. Two first post-fix authentic Actions 39772660895/39772660900 FAIL full public duplex after TRUE Windows OS Applied/READY and Linux READY. Corrected test only 1Hz/bounded timing sourcee77b 39774560726/39774561079 pending. Rust/Go optional-FEC symbol gate fixed, NORMAL-COMMON sourceae9c success. Normal product, true two-way UDP and Stop unqualified; WL0/1/5 and physical NOT_RUN."
 }
