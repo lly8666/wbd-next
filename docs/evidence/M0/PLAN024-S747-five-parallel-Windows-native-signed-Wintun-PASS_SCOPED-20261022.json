@@ -103,5 +103,6 @@
     "S741-S742 authenticated 1 Hz source-specific telemetry, not app goodput, RTT or CPU",
     "S743 and S747 pins exact source blobs; S744 literal source JSON producer repaired, S745-746 added actual regression for no downgrade or silent packet retry stall",
     "S748 PR21 4178dd... common Python modules ported to Windows Winsock, source unverified on OS, do not import Linux results"
-  ]
+  ],
+  "source_sha": "de5048303d0f7c8d5314660314017b7ffd194fec"
 }
