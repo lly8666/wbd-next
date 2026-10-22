@@ -45,6 +45,7 @@ struct Entry {
     phase:u32,
     role_server:bool,
     rx_boundary:u32,
+    rx_unwrapped_high:u64, // original Go Detach boundary, serial wrap safe
     limit:u16,
     count:u32,
     bytes:u32,
@@ -108,7 +109,9 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     r.generation=next;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,phase:PH_PREPARED,role_server:server,
-        rx_boundary:handoff.rx_boundary,limit:rx_limit,count:0,bytes:0,
+        rx_boundary:handoff.rx_boundary,
+        rx_unwrapped_high:u64::from(handoff.rx_boundary),
+        limit:rx_limit,count:0,bytes:0,
         owner,arena,
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
@@ -461,6 +464,28 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let _unused_storage=batch.recycle();
     accepted
 }
+// Unfold exact captured TCP serial bytes against this original-Go-verified
+// owner only. No arbitrary wrapped seq can claim a different generation.
+fn m0_tcp_unwrap(e:&Entry,seq:u32,len:usize)->Result<u64,i32>{
+    let anchor=e.rx_unwrapped_high;
+    let base=(anchor&!0xffff_ffff)|u64::from(seq);
+    let next=base.saturating_add(1u64<<32);
+    let earlier=base.checked_sub(1u64<<32);
+    let distance=|x:u64|anchor.max(x)-anchor.min(x);
+    let mut choice=base;
+    if distance(next)<distance(choice){choice=next}
+    if let Some(x)=earlier{
+        if distance(x)<distance(choice){choice=x}
+    }
+    // Original TCP receive window is 128 KiB; M3 PN/replay remains
+    // independently authoritative. This does not create an ACK receipt.
+    if distance(choice)>128*1024 ||
+        choice<u64::from(e.rx_boundary) ||
+        choice.checked_add(len as u64).is_none(){
+        return Err(INVALID)
+    }
+    Ok(choice)
+}
 fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
 )->Result<usize,i32>{
@@ -469,7 +494,8 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         out.len()<wire.len(){return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
-    e.owner.offer_after_active(slab,0..wire.len(),u64::from(seq),MonoNs(0))
+    let unfolded=m0_tcp_unwrap(e,seq,wire.len())?;
+    e.owner.offer_after_active(slab,0..wire.len(),unfolded,MonoNs(0))
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
@@ -488,7 +514,10 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         }).map_err(|_|BAD_STAGE)?;
     drop(storage);
     if valid && report.link_ready==1 && report.rejected==0
-        && report.control_ready==0 {Ok(len)} else {Err(INVALID)}
+        && report.control_ready==0 {
+        e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
+        Ok(len)
+    } else {Err(INVALID)}
 }
 // Test helper; each production FFI clones a session Arc while the
 // registry mutex is briefly held, then releases it before AEAD and loans.
@@ -719,6 +748,22 @@ mod tests {
         assert_eq!(quiesce_wintun(&mut r,server,epoch,8,12),OK);
         assert_eq!(stop(&mut r,server),OK);
         assert_eq!(release(&mut r,server),OK);
+    }
+
+    #[test]
+    fn m0_windows_tcp_sequence_unwrap_gap_wrap_and_future_reject(){
+        let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let lane=r.entries.get(&h).unwrap();
+        let mut e=lane.lock().unwrap();
+        e.rx_unwrapped_high=(1u64<<32)-50;
+        assert_eq!(m0_tcp_unwrap(&e,30,100).unwrap(),(1u64<<32)+30);
+        assert_eq!(m0_tcp_unwrap(&e,u32::MAX-80,40).unwrap(),
+            u64::from(u32::MAX-80));
+        assert_eq!(m0_tcp_unwrap(&e,200_000,100),Err(INVALID));
+        e.rx_unwrapped_high=(1u64<<32)+120;
+        assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
+        assert_eq!(m0_tcp_unwrap(&e,150,40).unwrap(),(1u64<<32)+150);
     }
 
 }
