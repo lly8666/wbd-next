@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/m0-wl-legacy-driver-intake.yml
       - tools/m0_wl_npcap_driver_ci.ps1
+      - tools/m0_wl_npcap_vethernet_probe.py
   workflow_dispatch:
 permissions:
   contents: read
@@ -142,6 +143,27 @@ jobs:
           $r.linux_netem=if($exit -eq 0 -and (Select-String -LiteralPath result/wl-driver/wsl-native.log -SimpleMatch 'WL_NATIVE_LINUX_TUN_RAW_NETNS_VETH_NETEM_AVAILABLE' -Quiet)){'PASS_REAL_LINUX_ENV_ONLY'}else{"BLOCKED_EXIT_$exit"}
           $r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json
           Write-Output "WL_LINUX_KERNEL_NETEM_SCOPE=$($r.linux_netem)"
+      - name: Real Windows Npcap and Linux WSL2 Ethernet both directions (no product admission)
+        shell: pwsh
+        timeout-minutes: 4
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference='Continue'
+          $r=Get-Content result/wl-driver/report.json -Raw | ConvertFrom-Json
+          if ($r.npcap -eq 'PASS_REAL_SIGNED_DRIVER_SERVICE_ONLY' -and
+              $r.linux_netem -eq 'PASS_REAL_LINUX_ENV_ONLY') {
+            & python ./tools/m0_wl_npcap_vethernet_probe.py 2>&1 |
+              Tee-Object result/wl-driver/pcap-native.log
+            if (Test-Path result/wl-driver/pcap-native.json) {
+              $p=Get-Content result/wl-driver/pcap-native.json -Raw | ConvertFrom-Json
+              if ($p.linux_to_windows -like 'PASS_REAL*' -and
+                  $p.windows_to_linux -like 'PASS_REAL*') {
+                $r.npcap_capture_send='PASS_REAL_WSL2_BIDIRECTIONAL_ETHERNET_ENV_ONLY'
+              } else {$r.npcap_capture_send="BLOCKED_REAL_CAPTURE_OR_SEND: $($p.failure)"}
+            } else {$r.npcap_capture_send='BLOCKED_PROBE_DID_NOT_EMIT_RECEIPT'}
+          } else {$r.npcap_capture_send='NOT_RUN_DRIVER_OR_WSL2_UNAVAILABLE'}
+          $r | ConvertTo-Json -Depth 4 | Set-Content result/wl-driver/report.json
+          Write-Output "WL_REAL_WINDOWS_NPCAP_LINUX_AF_PACKET=$($r.npcap_capture_send)"
       - name: Restore this job's owned Npcap service
         if: always()
         shell: pwsh
@@ -171,6 +193,7 @@ jobs:
           path: |
             result/wl-driver/report.json
             result/wl-driver/*.log
+            result/wl-driver/pcap-native.json
             result/wl-driver/wintun-native.json
             result/wl-driver/wsl-native-probe.sh
           retention-days: 30
