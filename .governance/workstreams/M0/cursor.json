@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 252,
-  "checkpoint_sha": "e4ac8d9db6318c9b3e2f7dede3f4d526af448fb9",
+  "sequence": 253,
+  "checkpoint_sha": "eaa14547687f9496e23575386124af7a13bace3a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 genuine Windows original Go TLS Rust M2 Npcap Wintun→WSL2 Linux raw/TUN Normal/off public duplex+Stop. Source f44ad Action39748014730 exactly PROVES Windows NPF TCP443 SYN has same dstMAC==srcMAC 00:15:5d:1b:a2:9c, Linux eth0 zero, TLS deadline. Scoped HyperV rule works but cannot fix wrong L2 dst. Source85c1cf two independent full product Actions39750030678 and39750030760 run with exact guest eth0 MAC→Windows active neighbor and owned cleanup; PENDING. WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "User demanded direct full two OS path, no mock. S831 real full source f44ad Action39748014730 6 stage original-Go/Rust build PASS yet genuine public bootstrap FAIL; Npcap frame has same source/destination MAC, HyperV exact rule installs and removes but Linux eth0 no TCP443. Evidence docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json. First CI MAC-neighbor fix S829/S830 generated malformed frozen workflow (no jobs, original FAIL retained), restored valid workflows via git-tree source85c1cf; two distinct actual source-locked frozen and fresh Windows2025+WSL2 original product Actions in progress.",
+  "current_task": "PLAN024 full real Windows original Go credential TLS/Rust M2 Npcap Wintun→WSL2 Linux original Go Rust raw/TUN Normal/off duplex and Stop. Exact source f6ebc9 Actions39751418533/39751418559 FAIL: Windows neighbor guestMAC was installed, but original Go SendARP cached Windows self MAC and true NPF SYN eth_dst==eth_src, Linux eth0 zero, TLS deadline. S834/835 exact OS-verified WSL guest MAC now bound to actual original Go NpcapConfig before endpoint, full source cda4cbb Action39753583163 RUNNING; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "Recovered interruption M0 H252. Proven exact original client cached Windows host MAC despite OS neighbor. S834 Go source abea7a1 fixes real product Npcap endpoint only with explicit validated guest/host IP, physical ifIndex, original next-hop and verified guest unicast MAC; assembly SHA atomically pinned. S835 source cda4cbb passes only actual Windows/WSL guest os-readback neighbor identity into same public client. Full Windows→Linux original native Go TLS Rust M2/Npcap/Wintun and Linux raw/TUN Action39753583163/1 and Windows original source build Action39753469567/1 in progress; no public PASS.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read actual full source85c1cf Action39750030678 frozen and39750030760 fresh. Check host NetNeighbor now points to actual WSL eth0 guest MAC and real NPF SYN destMAC correct; repair only confirmed actual send/route/TLS/network failure, then complete real public Normal/off Wintun/Linux TUN UDP both directions and owned Stop. Only genuine functional PASS opens separate WL-N0/N1/N5 10Mbps60s with kernel netem.",
+  "next_action": "Inspect actual exact source cda4cbb full public Action39753583163/1: native Windows NPF SYN must use real Linux guest MAC and reach Linux eth0; original TLS+Rust M2+OS Applied and independent two-way UDP + native Stop all required. Fix first actual complete-run failure, directly rerun whole product, then WL-N0,N1,N5 own Action each 10Mbps/60s if functional PASS.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -25,8 +25,9 @@
     "docs/devlog/M0/PLAN024-S809-real-Windows-M2-BDP-Npcap-continuation-20261022.md",
     "docs/devlog/M0/PLAN024-S824-recovered-full-Windows-Linux-real-underlay-20261022.md",
     "docs/devlog/M0/PLAN024-S826-Windows-NPF-to-WSL-HyperV-port443-real-public-gate-20261022.md",
-    "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json"
+    "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json",
+    "docs/devlog/M0/PLAN024-S836-restore-public-OriginalGo-Npcap-cached-selfMAC-fix-20261022.md"
   ],
   "open_requests": [],
-  "partial_summary": "Exact new root cause: real Windows NPF SYN destination Ethernet MAC equals original Windows source, not guest; Linux raw AF_PACKET zero, TLS bootstrap timed out. Corrective source85c1cf installs readback/owned-cleanup only temporary verified guest MAC neighbor in BOTH full real product Actions, pending. No false Normal or WL perf PASS. Prior YAML corruption failure preserved and fixed by Git blob valid workflow restoration."
+  "partial_summary": "Original Go Npcap cached self-MAC despite real correct host ARP neighbor; previous true public Actions failed FakeTCP bootstrap, Linux eth0 empty. New source-locked original Go override from OS-confirmed actual WSL2 guest MAC fenced to exact guest IP/host IP/ifindex/self-MAC mismatch; full original Windows↔Linux product currently RUNNING. No false business PASS or perf."
 }
