@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "RECOVERED_COMPLETED_ACTIONS_AFTER_H271",
+  "recovery_checkpoint": "ee420ccb1a47f40598ba164872e17d542866457e",
+  "recovery_head_before_S": "05fd4790a93c35b33e89ca54ab42636651d0b341",
+  "commits_after_checkpoint": [
+    {
+      "sha": "05fd4790a93c35b33e89ca54ab42636651d0b341",
+      "paths": [
+        ".governance/workstreams/M0/cursor.json"
+      ],
+      "kind": "H_CURSOR_ONLY"
+    }
+  ],
+  "qualification": "PARTIAL_EXACT_SOURCE_SCOPED",
+  "public_source": {
+    "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+    "run_id": 39801422682,
+    "attempt": 1,
+    "jobs": [
+      {
+        "id": 119902844462,
+        "conclusion": "success",
+        "scope": "linux_source_build"
+      },
+      {
+        "id": 119903637897,
+        "conclusion": "success",
+        "scope": "real_original_Go_Windows_Npcap_Wintun_to_Linux_raw_TUN"
+      }
+    ],
+    "artifact": {
+      "id": 12436866360,
+      "name": "m0-wl-full-public-normal-direct",
+      "zip_sha256": "5b8a78d44cd142a253644edac8e1b644b1c7348d75585a5c3113e2673abbd958"
+    },
+    "report": {
+      "windows_sent": 24,
+      "windows_received": 25,
+      "linux_sent": 90,
+      "linux_received": 24,
+      "both_owned_stop": "PASS",
+      "normal_off": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
+    },
+    "server_log": {
+      "real_first_copy": 90,
+      "authenticated_ack": 3,
+      "original_frozen_retransmitted": 177,
+      "driver_uncertain": 0,
+      "retired_total": 82,
+      "max_retransmits": 2
+    },
+    "limitations": [
+      "ACK positive only at source3e5",
+      "2-repair/Abandoned not yet separately proven",
+      "WL-N0/N1/N5 NOT_RUN"
+    ]
+  },
+  "preserved_failure": {
+    "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+    "run_id": 39801422162,
+    "attempt": 1,
+    "job_id": 119902841676,
+    "conclusion": "failure",
+    "reason": "E0599 Windows default FEC2-off Rust owner API feature cfg"
+  },
+  "scoped_wal": {
+    "source_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+    "run_id": 39802119861,
+    "attempt": 1,
+    "job_id": 119905375825,
+    "conclusion": "success",
+    "artifact_id": 12435529641,
+    "zip_sha256": "f104ade0eeb6c6a02e0b1dbb67fffff8c11b6b386aab7e857eeaa653b4bcb064",
+    "scope": "SCOPED Windows five-stage WAL, not global WFP or physical"
+  },
+  "fixed_abi": {
+    "source_sha": "83ad73ee791ae983309cb415c797ffafc03b996a",
+    "run_id": 39802457636,
+    "attempt": 1,
+    "job_id": 119906589660,
+    "conclusion": "success",
+    "artifact_id": 12437895170,
+    "zip_sha256": "ba65c583a40bc02d70f671096875e6be7276fc2e8656d8ec70d978ef337dc414",
+    "scope": "Windows Rust default FEC2-off native ABI only"
+  },
+  "pending": {
+    "source_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+    "run_id": 39802119726,
+    "attempt": 1,
+    "linux_build_job": 119905374742,
+    "linux_build_conclusion": "success",
+    "windows_full_job": 119906092650,
+    "status_at_recovery": "in_progress",
+    "observed_step": "Launch actual WSL2 Linux and direct full public two-OS product"
+  },
+  "still_not_run": [
+    ">256 carrier ACK gap",
+    "two-repair/Abandoned under loss",
+    "WL-N0 0%/300ms 10Mbps/60s",
+    "WL-N1 1%/50ms 10Mbps/60s",
+    "WL-N5 5%/50ms 10Mbps/60s",
+    "global WFP/DNS/GUI product",
+    "physical"
+  ],
+  "recovery_log": "docs/devlog/M0/PLAN024-S868-H271-recovered-native-Actions-20261022.md"
+}
