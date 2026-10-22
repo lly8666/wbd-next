@@ -81,10 +81,13 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -subj '/CN=wbd.test' -addext 'subjectAltName=DNS:wbd.test' \
   -keyout "$work/server.key" -out "$work/server.crt" >"$out/certificate.log" 2>&1
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
+# Fixed and Normal are separate exact-source functional cases.
+mode="${WBD_V4_MODE:-normal}"
+case "$mode" in normal|fec-fixed) ;; *) echo "ARM64_MODE_UNSUPPORTED $mode" >&2; exit 2 ;; esac
 # Shared credentials via private fd-checked files only, never argv secret.
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
-  --tunnel-id 00112233445566778899aabbccddeeff --mode normal
+  --tunnel-id 00112233445566778899aabbccddeeff --mode "$mode" --fec-profile 1
 sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
@@ -148,7 +151,12 @@ stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
   if grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log" \
-    && grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"; then break; fi
+    && grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"
+if [ "$mode" = fec-fixed ]; then
+  # READBACK is an observation, not a proof that native ISA-L had nonzero parity.
+  grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
+  grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
+fi; then break; fi
   sleep .2
 done
 grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log"
@@ -166,6 +174,8 @@ files=("client.log","server.log","c2s.log","s2c.log")
 d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "test_harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
 "qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
+"mode":os.environ.get("WBD_V4_MODE","normal"),
+"native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
 "bidirectional":"3_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN","logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")

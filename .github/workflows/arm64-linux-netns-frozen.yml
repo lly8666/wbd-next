@@ -2,12 +2,9 @@
 # each test-harness diagnostic change. Product SHA and harness SHA are distinct.
 name: Linux ARM64 frozen-source network diagnosis
 run-name: ARM64 frozen netns ${{ github.sha }}
+# Normal/off native real-kernel scoped PASS fixed at action 39753488583.
+# No repeat of this successful sample on each test-harness edit.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - 'tools/arm64_linux_netns_smoke.sh'
-      - '.github/workflows/arm64-linux-netns-frozen.yml'
   workflow_dispatch:
 permissions:
   contents: read
