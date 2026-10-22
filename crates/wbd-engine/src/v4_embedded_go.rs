@@ -4647,7 +4647,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_proof(
 // No second device reader, data sampling or changed forwarding semantics.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl"))]
+    any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_m1_ingress(
     h:u64,out:*mut u64,len:usize

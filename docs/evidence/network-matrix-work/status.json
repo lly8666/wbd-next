@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S027-original-M1-TUN-prestage-owner-acceptance-build",
+  "phase": "S027b-minimal-Rust-CFG-syntax-fix-native-rebuild",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,26 +25,18 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S027-original-M1-ingress-numeric-build",
-      "status": "QUEUED_OR_RUNNING",
-      "type": "ONE_PRODUCT_SOURCE_BUILD",
-      "trigger": "only branch push to original Rust/Go source starts one ARM64 build; do not workflow_dispatch",
-      "previous_source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
-      "scope": "real M1 read IPv4/small loan/prestage arena fail/jumbo/read reject 5 bounded counters; feature7-only, no buffer or retry or security change",
-      "source": "e2f833211ebf3fee678feba80028eda9b610176e",
-      "run_id": 39797003870,
-      "attempt": 1,
-      "contract_run_id": 39797003708,
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39797003870"
+      "id": "S027b-native-owner-M1-readout-build",
+      "type": "NEW_PRODUCT_SOURCE_BUILD_AFTER_COMPILER_FAILURE",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "product source push starts one new ARM64 builder automatically, no manual dispatch",
+      "recovered_failed_run": 39797003870,
+      "recovered_contract_pass_run": 39797003708,
+      "failed_source": "e2f833211ebf3fee678feba80028eda9b610176e",
+      "failure": "Rust cfg feature gated owner numeric getter had mismatched delimiter at v4_embedded_go.rs 4648-4650; exact syntax fix only",
+      "scope": "one extra ')' in cfg attribute; no mechanism, FEC, arena policy, Stop, or harness change"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S017",
-      "result": "FAIL_BOTH_DUP_FIXED_B_HARD_PASS",
-      "run": 39777563504,
-      "file": "S017-fixed30-rxguard-AB-fail.json"
-    },
     {
       "id": "S018",
       "result": "PASS_BOTH_DEFAULT_OFF_AB",
@@ -124,6 +116,18 @@
       "run": 39793159261,
       "artifact_id": 12432471447,
       "file": "S026-original-M4-IPv4-class-Fail.json"
+    },
+    {
+      "id": "S027-build",
+      "result": "COMPILER_FAIL_NO_PRODUCT",
+      "run": 39797003870,
+      "file": "S027-compiler-failure-recovered.json"
+    },
+    {
+      "id": "S027-contract",
+      "result": "success",
+      "run": 39797003708,
+      "file": "S027-compiler-failure-recovered.json"
     }
   ],
   "open_issues": [
@@ -139,7 +143,7 @@
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "S027 exact SOURCE e2f833211ebf3fee678feba80028eda9b610176e native ARM64 builder 39797003870 queued/running and companion contract 39797003708; DO NOT redispatch. Verify all native original Go+Rust artifacts/manifest SHA/ELF, then one S028 unchanged 30% Fixed at 2Mbps/dir to measure genuine TunRead/small loan/prestage NoCapacity/jumbo/reject vs FEC source accepted and kernel UDP ledger. Preserve S026 FAIL and S018 Normal/off PASS.",
+  "next_action": "Recover exact S027b ARM64 builder ID created by syntax fix push; DO NOT redispatch original failed run39797003870 or already-PASS contract39797003708. Verify native Go/Rust build, unit, manifest and SHA256SUMS/ELF; then one S028 original Fixed30 real business scenario from frozen new source to observe M1 read/small loan/NoCapacity/jumbo/reject counts. Preserve S026 HARD_FAIL and S018 Normal/off same-job AB PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
