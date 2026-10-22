@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "kind": "RECOVERED_EXTERNAL_ACTION_RESULT",
+  "recorded_at_utc": "2026-10-22",
+  "request": "arm64-off-mixed-loss1-rtt50-75s",
+  "run_id": 39762360999,
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "failure",
+  "artifact_id": 12418478268,
+  "artifact_sha256": "bf5b1aa92deb7eff857c554d9fdb05ddaecd79f445de5ff4236d56778519b200",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/39762360999",
+  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "harness_source": "b1c6a0a160d3b041d799065847016c63db8bdba5",
+  "bundle": {
+    "run_id": 39759842150,
+    "attempt": 1,
+    "artifact_id": 12417786567,
+    "zip_sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b",
+    "arch": "aarch64",
+    "features_requested": "native_fec_acceleration; actual runtime backend NOT_OBSERVED"
+  },
+  "scene": {
+    "one_way_delay_ms": 25,
+    "iid_loss_pct": 1,
+    "duration_s": 75,
+    "warmup_s": 15,
+    "drain_s": 15,
+    "application_mbps_per_direction": 10,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "sizes_bytes": [
+      64,
+      256,
+      1024,
+      1172
+    ]
+  },
+  "measurements": {
+    "netem_loss_pct": {
+      "c2s": 0.9710615301797352,
+      "s2c": 1.0008857395925599
+    },
+    "udp": {
+      "c2s": {
+        "sent": 64855,
+        "delivered": 64001,
+        "missing": 854,
+        "loss_pct": 1.3167835941716135,
+        "first_arrival_p99_ms": 90.9
+      },
+      "s2c": {
+        "sent": 64855,
+        "delivered": 63864,
+        "missing": 991,
+        "loss_pct": 1.5280240536581604,
+        "first_arrival_p99_ms": 90.9
+      }
+    },
+    "tcp": {
+      "c2s": {
+        "injected_mbps": 3.86547712,
+        "delivered": 50138,
+        "missing_after_drain": 0,
+        "first_arrival_p99_ms": 1903.7,
+        "backpressure_slots": 30920
+      },
+      "s2c": {
+        "injected_mbps": 3.91862272,
+        "delivered": 50824,
+        "missing_after_drain": 0,
+        "first_arrival_p99_ms": 1275.8,
+        "backpressure_slots": 36815
+      }
+    },
+    "repair_packets_total": 3962,
+    "repair_byte_budget": "NOT_OBSERVED",
+    "repair_usefulness": "NOT_OBSERVED",
+    "actual_fec_k_r": "NOT_OBSERVED",
+    "host": {
+      "cpu_psi_some_mean_pct": 0.9613333333333333,
+      "steal_peak_pct": 0,
+      "product_cpu_s_measured": {
+        "client": 10.24,
+        "server": 10.23
+      },
+      "product_peak_rss_bytes": {
+        "client": 16150528,
+        "server": 16084992
+      },
+      "injector_cpu_s_including_setup": {
+        "client": 10.15,
+        "server": 10.18
+      },
+      "udp_socket_errors": 0
+    },
+    "stop_drained_both": true,
+    "owned_namespace_cleanup": true,
+    "integrity_or_duplicate_failure": false,
+    "flags": [
+      "UDP_MAX_RESIDUAL_0_1PCT_FAILED_BOTH_DIRECTIONS",
+      "TCP_BACKPRESSURED_BOTH_DIRECTIONS",
+      "NO_AB_COMPARE",
+      "NO_NATIVE_BACKEND_READBACK"
+    ]
+  },
+  "assessment": "FAIL; not host-limited on current evidence. Injected link loss matches planned 1%, but observed UDP residual exceeds both injection and declared 0.1% gate. TCP p99 is 1.3–1.9s. Source-path attribution requires targeted original-Go/Rust boundary and counter check; do not alter product/acceptance until differentiated. Do not redispatch run 39762360999.",
+  "related_harness_contract": {
+    "run": 39762361004,
+    "conclusion": "failure",
+    "reason": "test inherited require_retransmission=true from mutable request.json despite no product in selfcheck; test-only isolation targeted; actual pressure request unchanged"
+  }
+}

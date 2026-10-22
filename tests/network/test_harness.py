@@ -155,6 +155,11 @@ class Contracts(unittest.TestCase):
     def test_independent_udp_tcp_duplex_and_real_missing_accounting(self):
         r = request()
         r.update(warmup_s=1, drain_s=1, phases=[{"name": "test", "seconds": 2}])
+        # Synthetic socket selfcheck has no product or retransmission receipt.
+        # Do not inherit pressure-request repair gates into this independent contract.
+        r["acceptance"]["require_retransmission"] = False
+        r["acceptance"].pop("max_p99_ms", None)
+        r["acceptance"].pop("max_active_gap_ms", None)
         r["traffic"].update(c2s_mbps=1, s2c_mbps=1, udp_share=.5, sizes=[[64, 1], [800, 1]])
         r = validate(r)
         with tempfile.TemporaryDirectory() as tmp:
