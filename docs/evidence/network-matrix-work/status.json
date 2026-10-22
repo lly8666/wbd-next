@@ -9,15 +9,15 @@
     "main_merged": "26f2e509a8e3c4055460a67960ea5462beec1622",
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
-    "frozen_product_source": null,
+    "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
     "harness_source": null
   },
   "build": {
-    "run_id": null,
-    "attempt": null,
+    "run_id": 39759842150,
+    "attempt": 1,
     "artifact_id": null,
     "sha256": null,
-    "status": "PENDING_AUTOMATIC_BUILD_PUSH",
+    "status": "IN_PROGRESS",
     "architecture": "aarch64",
     "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
     "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
@@ -56,5 +56,19 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Inspect adapter selfcheck and frozen build Actions; retrieve real artifact digest; commit one mixed UDP/TCP bidirectional request, not repeat ICMP."
+  "next_action": "Inspect adapter selfcheck and frozen build Actions; retrieve real artifact digest; commit one mixed UDP/TCP bidirectional request, not repeat ICMP.",
+  "actions": [
+    {
+      "run_id": 39759842064,
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "conclusion": "success",
+      "detail": "9 harness contracts including simulated ARM native manifest; kernel netem checked, seeded unsupported; no product measurement"
+    },
+    {
+      "run_id": 39759842150,
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "conclusion": "IN_PROGRESS",
+      "detail": "one-time native ARM64 product build"
+    }
+  ]
 }

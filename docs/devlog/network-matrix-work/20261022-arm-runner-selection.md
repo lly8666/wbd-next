@@ -1,0 +1,5 @@
+# ARM native measurement runner correction
+
+Before launching any performance scenario, inspected `.github/workflows/network-harness.yml`: its `measure` job still selected `ubuntu-24.04` (x64), even with ARM64 ELF verification. This would reject a valid ARM product bundle at machine 183, rather than run native performance.
+
+Minimal workflow-only correction selects `ubuntu-24.04-arm` exactly on isolated `experiment/network-matrix-tuning`, retaining `ubuntu-24.04` for existing x86_64 branches. No second traffic generator, runner, FEC, or statistics code. A new commit of `tests/network/request.json` remains the only push-triggered experiment performance request. GH Actions has already completed harness contracts run [39759842064](https://github.com/lly8666/wbd-next/actions/runs/39759842064) PASS, 9 tests; seeded netem is unsupported on Ubuntu24.04 and `unseeded_recorded` remains explicit. One-time product build [39759842150](https://github.com/lly8666/wbd-next/actions/runs/39759842150) was in progress when this change was made, pinned source `3604d8e18f7fa6758444bc82c1b7f5f1bb546966`.
