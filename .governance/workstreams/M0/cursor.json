@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 249,
-  "checkpoint_sha": "7b5517dd463630f6063eb289b2821bbf6247b3b4",
+  "sequence": 250,
+  "checkpoint_sha": "41c6c035e461d357e0682b1203dae7974bbb151e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 public Windows→Linux Normal/off. Source ad86cdee Action39735101862/1 six jobs PASS_SCOPED Windows actual Rust M1 FrozenRecord marker-firstsend, M3 authenticated kind1 retire, global M2 exact 2 repairs/third denied, Stop. S805→S807 bounded 768 M1 shadow/4MiB AEAD and no Go ACK HOL code under exact native requalification. Public two-host real Npcap/Wintun→Linux TUN continuous business + WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "H248 base; S794 intent, S795-804 Windows original TLS-owner Rust M2 and Go live Npcap outcome. Exact ad86cdee Action39735101862/1 6 jobs SUCCESS including both native Rust scoped M2 tests, full original Go TLS Wintun scope, artifact12407072047 SHA256 516631e6ed0380daacb23fbcfffd1eba1f56a633d78a2cb066ce1b410f589b7e. S805 source15f7a0f serial-wrap test FAIL run39735660684/1 due wrong expected 200000 vs 4295167296, original FAIL preserved, S807 source65ff81c corrected; full fresh Windows native Actions39735948054 and39735948068 were in progress at checkpoint. S806 Go saturated ACK ledger gap release and strict independent Rust M3 auth; 768 frozen/1024 arena for 300ms BDP. No separate fake product PASS.",
+  "current_task": "PLAN024 direct original Windows Go TLS/Rust M2/Npcap/Wintun native CLI→actual WSL2 Linux original Go Rust raw/TUN Normal/off duplex and Stop. Exact two product full-run FAILS 39743807292 and 39744320641: Linux eth0 passive AF_PACKET armed but zero TCP443 packets, Windows FakeTCP bootstrap deadline. S823 fast complete rerun 39745406663 WITH live Windows NPF/route vs Linux eth0 witness pending; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "Interrupted execution recovered M0 H249 epoch1 rev3. S810-821 actual Windows2025+WSL2 two public binaries signed drivers, authenticated TLS full chain (not mock). S819-20 Action39743807292 SOURCE8e26831 full FAIL bootstrap; artifact12410926449 sha7851453d6... eth0 AF_PACKET armed zero TCP443. S821 independent frozen Windows binary source65ff81c Action39744320641 also full FAIL same with artifact12411565304. S822-S823 full live comparison of Windows original WSL NPF device/header, host routes vs real Linux eth0 in Action39745406663/1 (RUNNING). Product runtime unqualified.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Validate new native source65ff81c Windows Rust/Go assembly all steps, fix any genuine CI failures; then real original Go TLS Windows Npcap/Wintun-to-WSL2 Linux raw/TUN public Normal/off with kernel impairment and owned Stop. Audit server genuine reverse M2 feedback and hard-expiry Abandoned. Do NOT use scoped Rust or Npcap 0x88b5 tests as product PASS, nor widen any cap without M2 flow.",
+  "next_action": "Read same exact full public Action39745406663/1 Windows NPF header and host route vs Linux AF_PACKET and real TLS CLI logs; repair the proved NPF/WSL ingress or reverse route/RST failure then rerun SAME genuine public Windows→Linux Normal/off duplex+owned Stop job, no synthetic tests. Only if product hard gate PASS, independently WL-N0/N1/N5 10Mbps both directions 60sec kernel netem.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -22,8 +22,9 @@
     "docs/evidence/M0/PLAN024-S784-real-Windows-Npcap-WSL2-bidirectional-Ethernet-PASS-20261022.json",
     "docs/evidence/M0/PLAN024-S790-Windows-original-Go-Rust-kind1-v5-native-scoped-PASS-20261022.json",
     "docs/devlog/M0/PLAN024-S794-M2-native-shadow-parallel-intent-20261022.md",
-    "docs/devlog/M0/PLAN024-S809-real-Windows-M2-BDP-Npcap-continuation-20261022.md"
+    "docs/devlog/M0/PLAN024-S809-real-Windows-M2-BDP-Npcap-continuation-20261022.md",
+    "docs/devlog/M0/PLAN024-S824-recovered-full-Windows-Linux-real-underlay-20261022.md"
   ],
   "open_requests": [],
-  "partial_summary": "S804 Windows source ad86cdee genuine original Rust M1 Frozen shadow only after trusted Npcap syscall mark, scoped authentic M3 receipt releases, Rust M2 global 2 exact frozen repairs no third and Stop pass native six job Action39735101862. S805-S807 Go Normal worker Rust-only repairs instead of private 750ms8/256 TCP ACK gate; bounded 768 shadow 1024-slots for N0 RTT, 4MiB authenticated ahead but Go ACK map remains 256 and cannot ACK holes; original Rust serial-wrap assertion FAIL S805 corrected S807, new CI pending. Prior real signed Npcap<->WSL2 Ethernet PASS is environment only. PUBLIC Windows→Linux Normal/off+Stop and WL-N0/N1/N5 10Mbps60s all NOT_RUN."
+  "partial_summary": "Recovered to main S824. Original and frozen-product Windows2025 real Npcap/Wintun client + WSL2 original Linux Rust raw/TUN server have full Actions FAIL before TLS: original Go FakeTCP bootstrap deadline; Linux eth0 AF_PACKET shows zero real TCP443 frames. Independent frozen native source excludes rebuild as sole cause. Product and WL perf NOT_PASS/NOT_RUN. Next full fast Action S823 NPF-vs-Linux packet/route witness pending; only real full path runs."
 }
