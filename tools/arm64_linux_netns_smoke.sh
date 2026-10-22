@@ -62,12 +62,30 @@ sudo -n ip -n "$client_ns" addr add 198.18.7.1/30 dev v4ac
 sudo -n ip -n "$server_ns" addr add 198.18.7.2/30 dev v4as
 sudo -n ip -n "$client_ns" link set v4ac up
 sudo -n ip -n "$server_ns" link set v4as up
+# The exact tuple guard for Linux FakeTCP extends only to the authenticated
+# grouped Game lanes when this independent Game trial is selected.
+mode="${WBD_V4_MODE:-normal}"
+case "$mode" in
+  normal|fec-fixed|fec-auto) game_lanes=0; last_cport=50001; last_sport=443 ;;
+  game2) game_lanes=2; last_cport=50002; last_sport=444 ;;
+  game4) game_lanes=4; last_cport=50004; last_sport=446 ;;
+  *) echo "ARM64_MODE_UNSUPPORTED $mode" >&2; exit 2 ;;
+esac
+client_ready_marker=V4_ORIGINAL_GO_CLIENT_NATIVE_READY
+server_ready_marker=V4_ORIGINAL_GO_SERVER_NATIVE_READY
+stop_marker=V4_PUBLIC_NATIVE_STOP_DRAINED
+if [ "$game_lanes" -gt 0 ]; then
+  client_ready_marker=V4_ORIGINAL_GO_GAME_NATIVE_READY
+  server_ready_marker=V4_ORIGINAL_GO_GAME_NATIVE_READY
+  stop_marker=V4_PUBLIC_GAME_NATIVE_STOP_DRAINED
+fi
+export WBD_V4_GAME_LANES="$game_lanes"
 # Raw FakeTCP SYN/SYNACK uses no kernel TCP socket. The kernel otherwise emits
 # a real TCP RST to that unmatched tuple, and the original Go client closes.
 # Rules are tuple-exact, in two *ephemeral namespaces*, never on the host.
 # This is transport preflight, not a replacement for any Go/Rust business code.
-sudo -n ip netns exec "$client_ns" iptables -w -A OUTPUT -o v4ac -p tcp   -s 198.18.7.1 -d 198.18.7.2 --sport 50001 --dport 443   --tcp-flags RST RST -j DROP
-sudo -n ip netns exec "$server_ns" iptables -w -A OUTPUT -o v4as -p tcp   -s 198.18.7.2 -d 198.18.7.1 --sport 443 --dport 50001   --tcp-flags RST RST -j DROP
+sudo -n ip netns exec "$client_ns" iptables -w -A OUTPUT -o v4ac -p tcp   -s 198.18.7.1 -d 198.18.7.2 --sport "50001:$last_cport" --dport "443:$last_sport"   --tcp-flags RST RST -j DROP
+sudo -n ip netns exec "$server_ns" iptables -w -A OUTPUT -o v4as -p tcp   -s 198.18.7.2 -d 198.18.7.1 --sport "443:$last_sport" --dport "50001:$last_cport"   --tcp-flags RST RST -j DROP
 echo "ORIGINAL_LINUX_FAKE_TCP_KERNEL_RST_GUARD_SCOPED"
 sudo -n ip netns exec "$client_ns" iptables -w -nvxL OUTPUT >"$out/client-rst-preflight.txt"
 sudo -n ip netns exec "$server_ns" iptables -w -nvxL OUTPUT >"$out/server-rst-preflight.txt"
@@ -82,8 +100,6 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -keyout "$work/server.key" -out "$work/server.crt" >"$out/certificate.log" 2>&1
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
 # Fixed and Normal are separate exact-source functional cases.
-mode="${WBD_V4_MODE:-normal}"
-case "$mode" in normal|fec-fixed|fec-auto) ;; *) echo "ARM64_MODE_UNSUPPORTED $mode" >&2; exit 2 ;; esac
 # Shared credentials via private fd-checked files only, never argv secret.
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
@@ -112,8 +128,8 @@ sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4
 client_launcher=$!
 ready=0
 for i in $(seq 1 200); do
-  if grep -q V4_ORIGINAL_GO_CLIENT_NATIVE_READY "$out/client.log" \
-    && grep -q V4_ORIGINAL_GO_SERVER_NATIVE_READY "$out/server.log"; then ready=1; break; fi
+  if grep -q "$client_ready_marker" "$out/client.log" \
+    && grep -q "$server_ready_marker" "$out/server.log"; then ready=1; break; fi
   # A just-forked sudo/ip-netns process can hand off to its child before
   # the Go process prints anything. Avoid an empty-log false failure in <1s.
   if [ "$i" -ge 10 ] && { ! kill -0 "$client_launcher" 2>/dev/null || ! kill -0 "$server_launcher" 2>/dev/null; }; then
@@ -192,12 +208,12 @@ if [ "$mode" != normal ]; then sleep 3; fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
-  if grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log" \
-    && grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"; then break; fi
+  if grep -q "$stop_marker" "$out/client.log" \
+    && grep -q "$stop_marker" "$out/server.log"; then break; fi
   sleep .2
 done
-grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log"
-grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"
+grep -q "$stop_marker" "$out/client.log"
+grep -q "$stop_marker" "$out/server.log"
 if [ "$mode" != normal ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
@@ -228,6 +244,7 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
+"game_lanes":int(os.environ.get("WBD_V4_GAME_LANES","0")),
 "bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN",
 "capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
