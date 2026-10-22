@@ -9,6 +9,9 @@ use std::sync::{Mutex,OnceLock};
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 #[path = "v4_windows_game_owner.rs"]
 mod game;
+#[cfg(feature="fec2_product_record")]
+#[path = "v4_windows_fec2_owner.rs"]
+mod fec2;
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::ProtectedScopedOwner;
 use crate::memory::Arena;
@@ -55,6 +58,8 @@ struct Entry {
     feature7:bool,
     game_cold:Option<UntrustedColdV4>,
     game_group:Option<u64>,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx:Option<crate::v4_fec2_live_rx::Fec2LiveRx>,
 }
 // An original-Go-verified WintunReservation.Hold on the actual native OS
 // adapter is REQUIRED before this private record can be created. This C ABI
@@ -110,6 +115,8 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         feature7:handoff.negotiated_features==7,
         game_cold:if handoff.negotiated_features==7{Some(parsed)}else{None},
         game_group:None,
+        #[cfg(feature="fec2_product_record")]
+        fec2_rx:None,
     });
     Ok(handle)
 }
@@ -172,6 +179,8 @@ fn stop(r:&mut Registry,h:u64)->i32{
     e.phase=PH_STOPPING;
     let Ok(retired)=e.owner.stop()else{return STOP_INCOMPLETE};
     if !retired.ready.batch_handles_released(){return STOP_INCOMPLETE}
+    #[cfg(feature="fec2_product_record")]
+    if let Some(mut rx)=e.fec2_rx.take(){rx.stop()}
     // This STOP receipt covers Rust owner loans alone, never claims native
     // Windows WFP/TUN/route Stop; the product gate is permanently false.
     e.phase=PH_STOPPED;
