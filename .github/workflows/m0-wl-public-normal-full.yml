@@ -245,6 +245,14 @@ jobs:
           $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
           if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
           Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+          # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+          # verified by Windows NetNeighbor into this public Go/Npcap child.
+          # SendARP alone returned the host self MAC (proven wrong SYN L2).
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+          $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
+          $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+          Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
