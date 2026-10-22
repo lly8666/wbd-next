@@ -76,7 +76,7 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
     ctx context.Context,ipv4 []byte,
 )([]byte,uint32,uint64,error){
     if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
-        s.bridge.sealNormalProc==nil||len(ipv4)<20||len(ipv4)>512||
+        s.bridge.sealNormalProc==nil||len(ipv4)<20||len(ipv4)>s.device.maxIPv4||
         ipv4[0]>>4!=4{
         return nil,0,0,errV4WindowsOwner
     }
@@ -123,7 +123,7 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
     ctx context.Context,seq uint32,wire []byte,
 )([]byte,error){
     if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
-        s.bridge.openNormalProc==nil||len(wire)<51||len(wire)>543{
+        s.bridge.openNormalProc==nil||len(wire)<51||len(wire)>s.device.maxIPv4+31{
         return nil,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,err}
@@ -244,7 +244,7 @@ func(s *V4WindowsAuthenticatedServerOwner) checkedBound(
 func(s *V4WindowsAuthenticatedServerOwner) OpenBoundOriginalNormalOff(
     ctx context.Context,seq uint32,wire []byte,
 )([]byte,error){
-    if len(wire)<51||len(wire)>543{return nil,errV4WindowsOwner}
+    if s==nil||s.device==nil||len(wire)<51||len(wire)>s.device.maxIPv4+31{return nil,errV4WindowsOwner}
     if err:=s.checkedBound(ctx);err!=nil{return nil,err}
     plain:=make([]byte,len(wire))
     var used uintptr
@@ -274,7 +274,7 @@ func(s *V4WindowsAuthenticatedServerOwner) OpenBoundOriginalNormalOff(
 func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalNormalOff(
     ctx context.Context,ipv4 []byte,
 )([]byte,uint32,uint64,error){
-    if len(ipv4)<20||len(ipv4)>512||ipv4[0]>>4!=4{
+    if s==nil||s.device==nil||len(ipv4)<20||len(ipv4)>s.device.maxIPv4||ipv4[0]>>4!=4{
         return nil,0,0,errV4WindowsOwner
     }
     if err:=s.checkedBound(ctx);err!=nil{return nil,0,0,err}
@@ -322,4 +322,24 @@ func(s *V4WindowsAuthenticatedClientOwner) OriginalVerifiedTCPBoundaries()(
   return 0,0,errV4WindowsOwner
  }
  return s.bridge.tcpSendNext,s.bridge.tcpRecvNext,nil
+}
+
+// BoundOriginalIPv4Budget comes only from the original TLS Rust owner after
+// M4-verified native Wintun Hold and one Win32 real interface MTU readback.
+// A stale, quiesced or stopped generation MUST NOT use this cached ceiling.
+func(s *V4WindowsAuthenticatedClientOwner) BoundOriginalIPv4Budget(
+ ctx context.Context,
+)(int,error){
+ if ctx==nil||s==nil||s.device==nil||s.bridge==nil||
+  s.device.maxIPv4<20{return 0,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return 0,err}
+ if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+  return 0,err
+ }
+ state,err:=s.OriginalOwnerReadback()
+ if err!=nil||!state.OwnerActive||!state.DeviceBound||
+  state.DeviceQuiesced||state.ProductApplied{
+  return 0,errV4WindowsOwner
+ }
+ return s.device.maxIPv4,nil
 }
