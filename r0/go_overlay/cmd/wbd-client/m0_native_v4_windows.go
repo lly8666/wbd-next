@@ -9,6 +9,7 @@ import(
  "context"
  "crypto/rand"
  "encoding/binary"
+ "encoding/json"
  "errors"
  "fmt"
  "net/netip"
@@ -206,11 +207,23 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Native OS readback and original Rust M3 peer first+reverse proved.
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
+ // Read-only producer counters are emitted at 1 Hz (never per packet)
+ // for isolated Windows sustained harness accounting. They do not grant
+ // application goodput, CPU/RSS, WFP or product OS receipt.
+ metricsTicker:=time.NewTicker(time.Second)
+ defer metricsTicker.Stop()
  var runtimeErr error
- select{
- case <-ctx.Done():
- case runtimeErr=<-failure:
- case runtimeErr=<-transport.Errors():
+waitNative:
+ for{
+  select{
+  case <-ctx.Done():break waitNative
+  case runtimeErr=<-failure:break waitNative
+  case runtimeErr=<-transport.Errors():break waitNative
+  case <-metricsTicker.C:
+   if line,mErr:=json.Marshal(transport.Stats());mErr==nil{
+    fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))
+   }
+  }
  }
  stopErr:=cleanup()
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
