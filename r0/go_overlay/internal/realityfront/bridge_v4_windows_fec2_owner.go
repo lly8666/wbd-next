@@ -137,6 +137,64 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  }
  return out,nil
 }
+// EncodeBoundOriginalFEC2Repair uses ONLY shared Rust codec Rs16 on the
+// current original credential-TLS Wintun generation, not a duplicate Go
+// parity algorithm. Returns an UNSEALED canonical kind3 symbol. A valid
+// authenticated feature7 M2 applied profile/revision is required by the
+// public scheduler BEFORE it chooses profile and calls this helper.
+func(s *V4WindowsAuthenticatedClientOwner) EncodeBoundOriginalFEC2Repair(
+ ctx context.Context,blockID uint64,profile,row uint32,frames [][]byte,
+)([]byte,error){
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
+  blockID==0||profile>6||row>=16||len(frames)<1||len(frames)>16{
+  return nil,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return nil,err}
+ if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+  return nil,errors.Join(errV4WindowsOwner,err)
+ }
+ state,err:=s.OriginalOwnerReadback()
+ if err!=nil||!state.OwnerActive||!state.DeviceBound||
+  state.DeviceQuiesced||state.ServerSide{return nil,errV4WindowsOwner}
+ proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v4_fec2_encode_repair")
+ if err!=nil{return nil,fmt.Errorf("%w: original Rust RS16 writer ABI: %v",errV4WindowsOwner,err)}
+ // Fixed 2048B ABI slots with strict lengths, bounded 16 sources. Large
+ // buffers are ephemeral per block, not per packet or hidden Go keys.
+ slots:=make([]byte,2048*len(frames))
+ lengths:=make([]uint32,len(frames))
+ for i,frame:=range frames{
+  if len(frame)<20||len(frame)>s.device.maxIPv4-14||
+   frame[0]>>4!=4||frame[0]&15<5{return nil,errV4WindowsOwner}
+  copy(slots[i*2048:],frame)
+  lengths[i]=uint32(len(frame))
+ }
+ buffer:=make([]byte,2048)
+ var used uintptr
+ err=winOwnerCall(proc,uintptr(s.bridge.handle),
+  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+  uintptr(blockID),uintptr(profile),uintptr(row),
+  uintptr(unsafe.Pointer(&slots[0])),uintptr(unsafe.Pointer(&lengths[0])),
+  uintptr(len(frames)),uintptr(unsafe.Pointer(&buffer[0])),
+  uintptr(len(buffer)),uintptr(unsafe.Pointer(&used)))
+ runtime.KeepAlive(s.bridge.epoch);runtime.KeepAlive(slots)
+ runtime.KeepAlive(lengths);runtime.KeepAlive(buffer)
+ if err!=nil||used<34||used>uintptr(s.device.maxIPv4){
+  return nil,errors.Join(errV4WindowsOwner,err)
+ }
+ return buffer[:used],nil
+}
+// A parity packet MUST consume its own Rust AEAD packet number and its
+// canonical original TCP sequence. The repair generator cannot assert
+// an M2 Applied revision or mark a missing business frame received.
+func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFEC2Repair(
+ ctx context.Context,blockID uint64,profile,row uint32,frames [][]byte,
+)([]byte,uint32,uint64,error){
+ symbol,err:=s.EncodeBoundOriginalFEC2Repair(ctx,blockID,profile,row,frames)
+ if err!=nil{return nil,0,0,err}
+ return winFec2Sealer(ctx,s.bridge,s.device,3,symbol)
+}
+
 func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFEC2Source(
  ctx context.Context,blockID uint64,index uint8,ipv4 []byte,
 )([]byte,uint32,uint64,error){
