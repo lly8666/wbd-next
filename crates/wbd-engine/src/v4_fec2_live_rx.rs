@@ -211,7 +211,7 @@ impl Fec2LiveRx{
                     fec_v2::parse_repair(bytes,self.budget)
                 ).collect::<Result<Vec<_>,_>>().map_err(|_|ReceiveError::Codec)?;
                 let recovered=self.rs.recover_missing(id,&live,&repairs,
-                    self.budget,BackendChoice::Scalar)
+                    self.budget,BackendChoice::default())
                     .map_err(|_|ReceiveError::Codec)?.0;
                 let recovered_bytes=recovered.iter()
                     .try_fold(0usize,|total,(_,frame)|total.checked_add(frame.len()))

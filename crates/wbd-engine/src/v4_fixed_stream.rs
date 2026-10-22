@@ -146,7 +146,7 @@ impl FixedStream {
         }
         let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
         let rows=match cur.prepared.next_quantum(
-            &self.codec,self.record_payload_budget,BackendChoice::Scalar
+            &self.codec,self.record_payload_budget,BackendChoice::default()
         ){
             Ok(Some((rows,_)))=>rows,
             Ok(None)=>Vec::new(),

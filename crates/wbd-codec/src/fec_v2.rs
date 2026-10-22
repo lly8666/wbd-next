@@ -40,6 +40,9 @@ pub enum Error {
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BackendChoice { Scalar, PreferNative, RequireNative }
+// Public/runtime policy prefers a verified compiled backend; scalar when absent.
+// RequireNative remains a strict diagnostic rather than a product default.
+impl Default for BackendChoice { fn default() -> Self { Self::PreferNative } }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BackendUsed { Scalar, NativeIsaL }
 
