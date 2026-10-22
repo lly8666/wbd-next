@@ -12,7 +12,7 @@
   "all_declared_hashes_verified": true,
   "elf_machine": 183,
   "files_sha256": {
-    "wbd-v4-client": "7452c78a3e13607be39c19e551ebd4eed0d223eead2698ac700d358f1984",
+    "wbd-v4-client": "7452c78a3e13607be39c19e551ebd4eed0d223eead2698ac700d35828ea8a69e",
     "wbd-v4-server": "ad385273a3ce4c1f0338b1b81647224dd309c0cc0de5f4d624d4b5b20f78d54b",
     "libwbd_engine.so": "242a98dcd8adc3c6293ffb3834f3c0c4f85e3aa47ab680b4975fdd53326f4c1f"
   },
