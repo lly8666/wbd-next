@@ -47,6 +47,8 @@ for file in "${files[@]}"; do
 done
 mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
 cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
+cp r0/go_overlay/internal/v4productcli/game_disabled_linux.go legacy/internal/v4productcli/game_disabled_linux.go
 cp r0/go_overlay/internal/v4productcli/secret_linux_test.go legacy/internal/v4productcli/secret_linux_test.go
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
