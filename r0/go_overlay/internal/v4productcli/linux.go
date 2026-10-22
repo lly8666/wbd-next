@@ -246,6 +246,16 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         v.OriginalFrozenRepaired,v.DriverUncertain,
         v.BudgetOrCapacityBlocked,v.RetiredTotal)
 }
+func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_FEC2_TX_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_FEC2_TX role=%s accepted=%d notready=%d full=%d partial=%d k1=%d k2_4=%d k5_12=%d k13_16=%d rplanned=%d rsent=%d expired=%d pressure_jobs=%d pressure_sources=%d unknown_capacity=%d",
+        role,v.Accepted,v.SourceNotReady,v.Full,v.Partial,v.K1,v.K2To4,
+        v.K5To12,v.K13To16,v.RPlanned,v.RSent,v.ExpiredJobs,v.PressureJobs,
+        v.PressureSources,v.UnknownCapacity)
+}
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -309,6 +319,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     if c.fecMode!=realityfront.FecV2Off {
+        tx,txErr:=native.OriginalFecTxSnapshot()
+        logAuthenticFecTx("client",tx,txErr)
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
@@ -407,6 +419,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
         if c.fecMode!=realityfront.FecV2Off {
+            tx,txErr:=product.OriginalFecTxSnapshot()
+            logAuthenticFecTx("server",tx,txErr)
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}

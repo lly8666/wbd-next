@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S009-minimum-real-FEC-TX-observation",
+  "phase": "S009-ARM64-original-FEC-TX-class-counters-build",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -19,7 +19,15 @@
     "status": "SUCCESS"
   },
   "latest_harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S009-FEC-real-class-stats",
+      "type": "PRODUCT_SOURCE_BUILD",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "single existing ARM64 builder push from Go/Rust source; no dispatch",
+      "description": "true pre-Stop original FixedStream class k histogram + rplanned/rsent/pressure; source code modified so must build exact new SOURCE once"
+    }
+  ],
   "latest_actions": [
     {
       "run": 39763271808,
@@ -98,7 +106,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Expose existing real FixedStream OwnerReport as pre-Stop public readback (actual k1/k>=13/full/partial/rplanned/rsent/expired/pressure), no wire/mode/hard-gate changes; one new ARM64 SOURCE build. Then repeat bounded failing Fixed 30% with diagnostic off-CPU path and necessary default low-loss mixed anchor in same-machine AB for regression; do not pretend a parity-guard unit cures duplicates.",
+  "next_action": "Identify S009 one native ARM64 builder and harness-contract Action triggered by source push. If builder SUCCESS pin SHA/attempt/artifact/hash. Then one targeted diagnostic real Fixed/30% run and one default diagnostics-off same-job old/new performance anchor. Do not rerun identical S005 without new k/r info, never relax duplicate/Stop gates.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {

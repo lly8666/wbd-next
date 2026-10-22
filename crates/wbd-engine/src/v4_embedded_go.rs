@@ -2493,6 +2493,46 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
         OK
     }
 }
+// Pure read-only original FixedStream owner snapshot, taken once pre-Stop.
+// No per-packet observations, no cryptographic or queue authority.
+// ABI: accepted,notready,full,partial,k1,k2..4,k5..12,k13..16,
+// planned,confirmed,expired,pressure_jobs,pressure_sources,capacity_unknown.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_fec_tx_snapshot(r:crate::runtime::fec2_owner::OwnerReport)->[u64;14]{
+    let mut v=[0u64;14];
+    for st in &r.classes{
+        v[0]+=st.accepted;v[1]+=st.source_not_ready;
+        v[2]+=st.full;v[3]+=st.partial;
+        v[4]+=st.k_hist[1];
+        v[5]+=st.k_hist[2..=4].iter().sum::<u64>();
+        v[6]+=st.k_hist[5..=12].iter().sum::<u64>();
+        v[7]+=st.k_hist[13..=16].iter().sum::<u64>();
+        v[8]+=st.r_planned;v[9]+=st.r_sent;
+        v[10]+=st.expired_jobs;v[11]+=st.pressure_jobs;
+        v[12]+=st.pressure_sources;v[13]+=st.unknown_capacity;
+    }
+    v
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_snapshot(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=14{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+        let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
+        let v=original_fec_tx_snapshot(stream.report());
+        unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,14)}
+        OK
+    }
+}
 // Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested

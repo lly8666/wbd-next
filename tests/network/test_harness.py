@@ -149,6 +149,17 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(bad)
 
+    def test_real_fec_tx_pre_stop_marker_conserves_counts(self):
+        from tools.network_harness.runner import public_fec_tx_snapshot
+        row=("V4_PUBLIC_FEC2_TX role=server accepted=6 notready=0 "
+             "full=1 partial=1 k1=1 k2_4=0 k5_12=0 k13_16=1 "
+             "rplanned=22 rsent=20 expired=0 pressure_jobs=0 "
+             "pressure_sources=0 unknown_capacity=0")
+        self.assertEqual(public_fec_tx_snapshot(row)["k13_16"],1)
+        self.assertIsNone(public_fec_tx_snapshot(""))
+        self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
+        self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
+
     def test_safe_startup_failure_diagnostic_redacts_private_input(self):
         from tools.network_harness.runner import startup_diagnostic
         raw = "password=secret_value route-key=do-not-persist\nerror: no such device"

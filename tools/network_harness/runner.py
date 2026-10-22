@@ -25,6 +25,27 @@ from .report import markdown, summarize, network_accounting
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
 
+def public_fec_tx_snapshot(log_text):
+    """Parse complete original-Go pre-Stop owner marker or mark unknown."""
+    fields = ("accepted","notready","full","partial","k1","k2_4",
+              "k5_12","k13_16","rplanned","rsent","expired",
+              "pressure_jobs","pressure_sources","unknown_capacity")
+    rows = [line for line in log_text.splitlines()
+            if "V4_PUBLIC_FEC2_TX role=" in line]
+    if not rows:
+        return None
+    values = {k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if not all(k in values for k in fields):
+        return None
+    if values["full"]+values["partial"] != sum(values[k] for k in ("k1","k2_4","k5_12","k13_16")):
+        return None
+    if values["rsent"]>values["rplanned"]:
+        return None
+    return {k:values[k] for k in fields}
+
+
+
+
 
 def dump(path, value):
     Path(path).write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
@@ -288,11 +309,16 @@ class LinuxExperiment:
             lines = [s for s in log.splitlines() if "V4_PUBLIC_M2_OUTER " in s or "V4_PUBLIC_GAME_KERNEL " in s]
             counters[role] = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", lines[-1])} if lines else {}
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
+        fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
+        tx_available = all(v is not None for v in fec_tx.values())
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "repair_packets": repair, "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
-                "FEC_k_r_parity_queue_decode": "NOT_OBSERVED",
+                "FEC_k_r_parity_queue_decode": {
+                    "real_tx_owner_end_snapshot": fec_tx,
+                    "real_rx_decode_and_parity_age": "NOT_OBSERVED"
+                } if tx_available else "NOT_OBSERVED",
                 "owner_queue_age_lock_wait_raw_socket_drops": "NOT_EXPOSED_BY_CURRENT_PUBLIC_CLI",
                 "auto_runtime_curve": "NOT_OBSERVED_FINAL_READBACK_ONLY"}
 

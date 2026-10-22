@@ -147,6 +147,13 @@ func (p *V4LinuxServerProduct) OriginalFECReadback()(V4PublicFecReadback,error){
 // Go logical lane epoch may be reused. Errors remain retryable.
 // Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
 // operator can forge these numbers; every metric comes from original Rust.
+func (p *V4LinuxServerProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,error){
+    if p==nil{return V4PublicFecTxSnapshot{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicFecTxSnapshot()
+}
 func (p *V4LinuxServerProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
     if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}
     p.mu.Lock()

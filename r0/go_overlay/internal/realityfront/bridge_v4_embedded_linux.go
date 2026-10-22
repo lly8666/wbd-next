@@ -26,6 +26,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -305,6 +306,27 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         DriverUncertain:uint64(values[3]),
         BudgetOrCapacityBlocked:uint64(values[4]),
         RetiredTotal:uint64(values[5]),
+    },nil
+}
+// Read-only original Rust worker stats under the authenticated owner scope.
+type V4PublicFecTxSnapshot struct{
+    Accepted,SourceNotReady,Full,Partial uint64
+    K1,K2To4,K5To12,K13To16 uint64
+    RPlanned,RSent,ExpiredJobs,PressureJobs,PressureSources,UnknownCapacity uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicFecTxSnapshot()(V4PublicFecTxSnapshot,error){
+    var zero V4PublicFecTxSnapshot
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var v [14]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_tx_snapshot(C.uint64_t(b.handle),&v[0],14)
+    if rc!=0{return zero,fmt.Errorf("%w: FEC TX snapshot=%d",errV4Embedded,int(rc))}
+    return V4PublicFecTxSnapshot{
+        Accepted:uint64(v[0]),SourceNotReady:uint64(v[1]),
+        Full:uint64(v[2]),Partial:uint64(v[3]),
+        K1:uint64(v[4]),K2To4:uint64(v[5]),K5To12:uint64(v[6]),
+        K13To16:uint64(v[7]),RPlanned:uint64(v[8]),RSent:uint64(v[9]),
+        ExpiredJobs:uint64(v[10]),PressureJobs:uint64(v[11]),
+        PressureSources:uint64(v[12]),UnknownCapacity:uint64(v[13]),
     },nil
 }
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
