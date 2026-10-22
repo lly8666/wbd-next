@@ -360,4 +360,51 @@ mod tests{
         assert_eq!(release(&mut r,server),OK);
         assert_eq!(PRODUCT_APPLIED,0);
     }
+    #[test]
+    fn m0_windows_shared_rs16_original_owner_encode_repair_recovers_missing_source(){
+        let mut registry=Registry{
+            generation:1,entries:BTreeMap::new(),game_groups:BTreeMap::new(),
+        };
+        let c=setup(&mut registry,false,401,41);
+        let peer=setup(&mut registry,true,402,42);
+        let a=data(0x11);
+        let mut b=data(0x22);b.extend(vec![0x23;130]);
+        b[2..4].copy_from_slice(&(b.len() as u16).to_be_bytes());
+        let budget=normal_off_windows_budget(
+            &registry.entries[&c].lock().unwrap()).unwrap();
+        let source=fec_v2::source_owned(88,0,&a,budget.record_payload_mtu).unwrap();
+        let (record,seq,_)=send(&mut registry,c,401,41,2,&source);
+        let first=open_symbol(&mut registry,peer,[2;16],402,42,seq,&record).unwrap();
+        assert_eq!(first.len(),1);
+        assert_eq!(first[0].recovered,0);
+        let frames=[a.as_slice(),b.as_slice()];
+        let mut symbol=[0u8;2048];
+        let count={
+            let entry=registry.entries[&c].lock().unwrap();
+            assert_eq!(encode_repair_entry(&entry,[3;16],401,41,
+                88,3,0,&frames,&mut symbol),Err(INVALID));
+            assert_eq!(encode_repair_entry(&entry,[2;16],99,41,
+                88,3,0,&frames,&mut symbol),Err(INVALID));
+            encode_repair_entry(&entry,[2;16],401,41,
+                88,3,0,&frames,&mut symbol).unwrap()
+        };
+        assert_eq!(fec_v2::parse_repair(&symbol[..count],budget.record_payload_mtu)
+            .unwrap().actual_k,2);
+        let (parity,repair_seq,_)=send(&mut registry,c,401,41,3,&symbol[..count]);
+        let delivered=open_symbol(&mut registry,peer,[2;16],402,42,
+            repair_seq,&parity).unwrap();
+        assert_eq!(delivered.len(),1);
+        assert_eq!(delivered[0].recovered,1);
+        assert_eq!(&delivered[0].frame[..delivered[0].length as usize],b.as_slice());
+        assert!(open_symbol(&mut registry,peer,[2;16],402,42,
+            repair_seq,&parity).is_err());
+        assert_eq!(quiesce_wintun(&mut registry,c,[2;16],401,41),OK);
+        assert_eq!(quiesce_wintun(&mut registry,peer,[2;16],402,42),OK);
+        assert_eq!(stop(&mut registry,c),OK);
+        assert_eq!(stop(&mut registry,peer),OK);
+        assert_eq!(release(&mut registry,c),OK);
+        assert_eq!(release(&mut registry,peer),OK);
+        assert_eq!(PRODUCT_APPLIED,0);
+    }
+
 }
