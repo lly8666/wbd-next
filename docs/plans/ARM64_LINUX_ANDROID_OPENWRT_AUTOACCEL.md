@@ -1,6 +1,6 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
-**Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Remaining: actual FEC loss recovery, hardware backend CPU A/B, physical Linux ARM64. Android and OpenWrt remain deferred.
+**Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Now verified: 15.8–15.9× scoped codec encode / 15.6× scoped decode CPU cost, independent Fixed+Auto 2% outer-drop complete app delivery, and native/scalar authenticated Rust FEC2 missing-source recovery. Remaining: real Go/Rust product source-loss causal counters, actual owner backend invocation, product latency p99 and physical Linux ARM64. Android and OpenWrt remain deferred.
 
 ## Recovery update — Linux ARM64 scoped product functional
 - ARM64 genuine original Go + Rust + pinned ISA-L **BUILD PASS**: Action [39751199619](https://github.com/lly8666/wbd-next/actions/runs/39751199619), SOURCE `34f89d303710f7c0e1d9c1c89cfff038c9839b54`, artifact manifest contains two Go binaries, Rust shared engine, SHA256 hashes.
@@ -53,4 +53,4 @@
 - OpenWrt musl .ipk/procd client, SDK/real-router interoperability.
 - Any new Android/OpenWrt Actions are **manual only**, not part of Linux ARM64 required gates. Existing build-only results remain historical and are not OS or product-qualified.
 
-**Next action:** bounded ARM64 scalar/native FEC2 same-job CPU evidence and/or one specifically dropped-source recovery proof, without repeating already successful kernel samples.
+**Next action:** trace the real original-Go → Rust M3 opener → FEC2LiveRx → M4 TUN path and expose a *bounded end-of-session owner-sourced* recovered-source/backend-use witness without per-packet reporting. Then make exactly one source-specific drop/product-recovery test. Keep [the 2026-10-22 scoped run evidence](../evidence/arm64-linux-native-checkpoint-20261022.md) as authority, including the original FAILs. Do not rerun passed functional or ABBA samples. Android/OpenWrt remain deferred.
