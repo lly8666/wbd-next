@@ -259,6 +259,42 @@ receipt={"frozen_product_source":os.environ["WBD_ARM64_FROZEN_SOURCE"],
 (p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
 print("ARM64_SCOPED_REAL_NETEM_OUTER_DROP_AND_APP_DELIVERY_PROVEN",drops,apps)
 PY
+  if [ "${WBD_ARM64_FEC_BURST:-}" = "ping-burst" ]; then
+    # One independent, bounded Native path differentiator: 700 800-byte
+    # authenticated application frames at <=500 packets/s each direction.
+    # Within the existing 10 Mbps Normal discovery; do NOT make a new
+    # product scheduler or adapt thresholds to force ISA-L selection.
+    set +e
+    sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i .002 -s 800 -c 700 -W 2 10.188.18.2 >"$out/burst-c2s.log" 2>&1
+    burst_c2s_rc=$?
+    sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i .002 -s 800 -c 700 -W 2 10.188.18.1 >"$out/burst-s2c.log" 2>&1
+    burst_s2c_rc=$?
+    set -e
+    sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/burst-qdisc-client.txt"
+    sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/burst-qdisc-server.txt"
+    export ARM64_BURST_C2S_RC="$burst_c2s_rc" ARM64_BURST_S2C_RC="$burst_s2c_rc"
+    OUTPUT="$out" python3 - <<'PY'
+import re,os,json,pathlib
+p=pathlib.Path(os.environ['OUTPUT'])
+def parse(name):
+ s=(p/name).read_text()
+ m=re.search(r'(\d+) packets transmitted,\s*(\d+) received',s)
+ assert m,("missing real kernel ping sender/receiver summary",name)
+ return int(m.group(1)),int(m.group(2))
+apps={d:parse('burst-'+d+'.log') for d in ('c2s','s2c')}
+assert all(n==700 and 0<=r<=n for n,r in apps.values()),apps
+data={'frozen_product_source':os.environ['WBD_ARM64_FROZEN_SOURCE'],
+'harness_source':os.environ['GITHUB_SHA'],
+'scene':'500_pps_800_byte_icmp_two_real_ARM64_TUN_directions',
+'outer_loss':'kernel_2pct_netem',
+'result':'BUSINESS_BURST_OBSERVED_NOT_FEC_CAUSAL',
+'actual_app_counts':{k:dict(sent=v[0],received=v[1]) for k,v in apps.items()},
+'exit_codes':{k:int(os.environ['ARM64_BURST_'+k.upper()+'_RC']) for k in apps},
+'decoding_backend':'READBACK_FROM_ORIGINAL_RUST_OWNER_AFTER_STOP'}
+(p/'burst-observation.json').write_text(json.dumps(data,indent=2)+'\n')
+print('ARM64_REAL_FEC_BURST_ORIGINAL_KERNEL_OBSERVED',apps)
+PY
+  fi
 fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
