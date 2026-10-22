@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_TRUE_PUBLIC_UBUNTU_WSL2_IMPORT_PASS_GO_MAC_GUARD_FAIL",
+  "source_sha": "4b9c180d4ecdeefc17adfa8513eb2f166eb51228",
+  "action": {
+    "run_id": 39755736757,
+    "attempt": 1,
+    "job_id": 119747151415,
+    "conclusion": "FAILURE",
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml"
+  },
+  "artifact": {
+    "id": 12416202537,
+    "digest": "sha256:901589ab22d09ed20bd7924303d5f6a0afb734271e865b7d8922e6438bddb18a"
+  },
+  "observed": {
+    "windows": "Original-Go source locked client and Rust M2 native DLL built; signed Npcap and Wintun driver path setup",
+    "linux": "Official Ubuntu24.04.5 WSL2 image SHA256 pinned and imported successfully",
+    "linux_eth0": "172.28.155.202/20",
+    "linux_guest_eth_mac": "00:15:5d:0c:6b:05",
+    "windows_host_eth_mac": "00:15:5D:74:F1:49",
+    "windows_ethernet_interface_index": 18,
+    "windows_host_ipv4": "172.28.144.1",
+    "hyperv_rule": "Exact WSL creator inbound TCP443 rule installed and owned cleaned",
+    "real_windows_neighbor": "Temporary Linux guest 172.28.155.202 -> 00:15:5d:0c:6b:05 installed/OS readback and owned cleared",
+    "fatal": "Original Go protected Npcap endpoint rejected pre-handshake because the additional scope guard required SendARP next hop == source host MAC even when native neighbor may already have corrected to guest MAC",
+    "windows_original_TLS": "NOT_STARTED",
+    "true_app": "NOT_RUN",
+    "linux_server_ready": "NOT_OBSERVED"
+  },
+  "status": {
+    "normal_public": "FAIL_NOT_PASS_PRE_HANDSHAKE_GUARD",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next": {
+    "go_fix_source": "b5f43562e25c7e9d3ebc04d6871c2254c2d5424c",
+    "full_workflow_source": "7bf4d4b41ba3328b4588ff4bb05a16c2167914e5",
+    "full_action_run_id": 39757115561,
+    "policy": "Only accept verified guest MAC when SendARP returned host self OR already exactly matching verified guest. Reject any other unverified MAC; true public TLS duplex Stop still gates PASS."
+  }
+}
