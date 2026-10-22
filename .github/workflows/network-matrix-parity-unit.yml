@@ -1,0 +1,20 @@
+name: ARM64 product FEC2 maximum row contract
+on:
+  push:
+    branches: [experiment/network-matrix-tuning]
+    paths: [.github/workflows/network-matrix-parity-unit.yml]
+permissions: {contents: read}
+jobs:
+  native-fixed-maximum-row:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Run actual public Fixed Maximum row 0..19 Rust unit, no product compilation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_public_fixed_maximum_all_20_rows_supported -- --nocapture

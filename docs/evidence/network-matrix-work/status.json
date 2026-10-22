@@ -34,6 +34,14 @@
       "run_id": 39766278666,
       "attempt": 1,
       "url": "https://github.com/lly8666/wbd-next/actions/runs/39766278666"
+    },
+    {
+      "id": "S006-arm64-maximum-row-unit",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "ARM64_NATIVE_RUST_UNIT_ONLY",
+      "source": "CURRENT_BRANCH_CODE_IDENTICAL_TO_DF64",
+      "trigger": "push of new .github/workflows/network-matrix-parity-unit.yml; do not manually dispatch",
+      "note": "separate scalar-feature native unit if original frozen product builder's added test step fails from Bash escaped line continuation; not a product performance Action"
     }
   ],
   "latest_actions": [
@@ -87,5 +95,5 @@
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
-  "next_action": "S006 native build 39766278666 queued/running; do NOT redispatch. Verify actual 20-row Rust unit & product build, artifact digest; then consider one smallest failing Fixed mode replay hard-case on newly pinned SOURCE. Preserve S005 duplicates and applied mismatch; no qualification until both resolved."
+  "next_action": "S006 original native product build run 39766278666 in progress; its extra test step has accidentally doubled backslash; binary upload may still succeed and should be reused if manifest/hash sound. New separate ARM64 unit Action from parity-unit workflow is needed to validate actual Rust 20-row guard; do not repeat product build. Keep S005 HARD_FAIL."
 }
