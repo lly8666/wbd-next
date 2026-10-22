@@ -62,6 +62,15 @@ sudo -n ip -n "$client_ns" addr add 198.18.7.1/30 dev v4ac
 sudo -n ip -n "$server_ns" addr add 198.18.7.2/30 dev v4as
 sudo -n ip -n "$client_ns" link set v4ac up
 sudo -n ip -n "$server_ns" link set v4as up
+# Raw FakeTCP SYN/SYNACK uses no kernel TCP socket. The kernel otherwise emits
+# a real TCP RST to that unmatched tuple, and the original Go client closes.
+# Rules are tuple-exact, in two *ephemeral namespaces*, never on the host.
+# This is transport preflight, not a replacement for any Go/Rust business code.
+sudo -n ip netns exec "$client_ns" iptables -w -A OUTPUT -o v4ac -p tcp   -s 198.18.7.1 -d 198.18.7.2 --sport 50001 --dport 443   --tcp-flags RST RST -j DROP
+sudo -n ip netns exec "$server_ns" iptables -w -A OUTPUT -o v4as -p tcp   -s 198.18.7.2 -d 198.18.7.1 --sport 443 --dport 50001   --tcp-flags RST RST -j DROP
+echo "ORIGINAL_LINUX_FAKE_TCP_KERNEL_RST_GUARD_SCOPED"
+sudo -n ip netns exec "$client_ns" iptables -w -nvxL OUTPUT >"$out/client-rst-preflight.txt"
+sudo -n ip netns exec "$server_ns" iptables -w -nvxL OUTPUT >"$out/server-rst-preflight.txt"
 work="$RUNNER_TEMP/arm64-netns-secrets-$GITHUB_RUN_ID"
 mkdir -p "$work"
 chmod 0700 "$work"
@@ -121,6 +130,8 @@ if [ "$ready" -ne 1 ]; then
     echo "client interfaces"; sudo -n ip -s -n "$client_ns" link show || true
     echo "server interfaces"; sudo -n ip -s -n "$server_ns" link show || true
     echo "log sizes"; wc -c "$out/client.log" "$out/server.log"
+    echo "client RST counters"; sudo -n ip netns exec "$client_ns" iptables -w -nvxL OUTPUT || true
+    echo "server RST counters"; sudo -n ip netns exec "$server_ns" iptables -w -nvxL OUTPUT || true
   } >"$out/diagnostic.txt" 2>&1
   cat "$out/diagnostic.txt"
   tail -n 50 "$out/client.log" || true
