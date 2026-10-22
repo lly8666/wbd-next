@@ -1201,6 +1201,60 @@ mod tests {
         assert_eq!(release(&mut r,server),OK);
     }
 
+    #[test]
+    fn m0_windows_m2_original_frozen_two_repair_global_budget_and_abandoned(){
+        use std::time::Duration;
+        let mut r=Registry{generation:399,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let epoch=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        let mut ipv4=[0u8;90];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let mut original=[0u8;2048];
+        {
+            let mut entry=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut entry,epoch,91,19).is_ok());
+        }
+        let (used,seq,pn)=v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut original)
+            .unwrap();
+        assert_eq!(pn,0);
+        {
+            let mut entry=r.entries[&h].lock().unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(
+                &mut entry,epoch,91,19,pn,seq,used,1),Ok(1));
+        }
+        for attempt in 0..2 {
+            std::thread::sleep(Duration::from_millis(95));
+            let mut same=[0u8;2048];
+            let mut entry=r.entries[&h].lock().unwrap();
+            let retry=m2_next_repair_entry(&mut entry,epoch,91,19,&mut same)
+                .unwrap().expect("original frozen M1 same-PN M2 repair due");
+            assert_eq!(retry,(used,seq,pn));
+            assert_eq!(&same[..used],&original[..used]);
+            assert_eq!(m2_complete_repair_entry(
+                &mut entry,epoch,91,19,pn,1),Ok(1));
+            let m=entry.m2.as_ref().unwrap();
+            assert_eq!(m.shadow.outstanding(),1);
+            assert!(m.in_flight.is_none());
+            assert_eq!(attempt<2,true);
+        }
+        std::thread::sleep(Duration::from_millis(95));
+        let mut after=[0u8;2048];
+        let mut entry=r.entries[&h].lock().unwrap();
+        assert!(m2_next_repair_entry(&mut entry,epoch,91,19,&mut after)
+            .unwrap().is_none(),"third M2 repair was illegally issued");
+        assert_eq!(entry.m2.as_ref().unwrap().shadow.outstanding(),1);
+        drop(entry);
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+        // No resurrection of original M1 ciphertext across Stop generation.
+        assert_eq!(v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut original),Err(UNKNOWN));
+    }
+
     #[cfg(feature="fec2_product_record")]
     #[test]
     fn m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire(){
