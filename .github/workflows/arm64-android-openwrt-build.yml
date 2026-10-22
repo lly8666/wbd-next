@@ -66,6 +66,10 @@ jobs:
           test -x "$cc"
           export CC_aarch64_linux_android="$cc"
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$cc"
+          export AR_aarch64_linux_android="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+          export RANLIB_aarch64_linux_android="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
+          export AR="$AR_aarch64_linux_android"
+          test -x "$AR"
           cargo +1.85.1 build --release --locked --target aarch64-linux-android -p wbd-codec -p wbd-engine
           file target/aarch64-linux-android/release/libwbd_engine.so
           echo ANDROID_ARM64_RUST_CORE_CROSS_BUILD_ONLY_PASS
