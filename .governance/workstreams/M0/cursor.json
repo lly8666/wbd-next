@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 259,
-  "checkpoint_sha": "80347c04fe2a3c0ff43f71960f97cda8755122d7",
+  "sequence": 260,
+  "checkpoint_sha": "6a69364e63670c3c67ce7beb0e85baa10bf7d121",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 full authentic Windows2025 original Go TLS Rust M2 Npcap Wintun→true official Ubuntu24.04.5 WSL2 original Linux raw/TUN Normal/off continuous duplex and OS owned Stop. Original Go GetIpForwardTable next-hop Windows host self despite guest verified; S846 SOURCE68d52a8 permits ONLY scoped verified guestIP/MAC/ifIndex/Windows host route self and SendARP self MAC, rejects foreign gateways. Two independent full product Actions39761157254 compiled fresh and39761835173 exact native frozen68d both in REAL WSL2 product step IN_PROGRESS. WL-N0/N1/N5 all NOT_RUN.",
-  "why_now": "Real full sourcee75c37d Action39759204820 FAIL preTLS: verified guest172.22.98.189, original peer same, verified Windows ifindex25/source172.22.96.1 matches Go, original_next_hop equals Windows source172.22.96.1 only; OS guest MAC verified and rule/neighbor cleaned. Frozen b5f source Action39758891147 also FAIL same. S846 source68d52a8 exact host-self IPv4+MAC under verified guest scope fix, original Go overlay manifest pinned, native Windows actual Rust DLL source68d Action39761157133 main job SUCCESS SHA audited artifact12417988071; full Action39761157254 running. S848 main80347c updates frozen product bundle source68d SHA-audited Action39761835173 running. No public business verdict yet.",
+  "current_task": "PLAN024 actual Windows2025 original Go credential TLS Rust M2 signed Npcap/Wintun→genuine Ubuntu24.04.5 WSL2 original Linux Go Rust raw/TUN Normal/off duplex UDP and both Stop. Two full SRC68d52a8 Actions39761157254/39761835173 FAIL only after REAL Windows original FakeTCP TLS TCP443 SYN/ACK/data reached Linux eth0; Windows original five-stage WAL OS error invalid network plan, traced to CLI --dns-hijack=false leaving empty native DNS request. Full corrected script d7bfba9 Action39765279336 and independent verified frozen original Windows binaries Action39765311632 SOURCEad215441 both RUNNING. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "H259 resumed at head e521db. Full real Windows→Ubuntu WSL2 Actions39761157254/1 and39761835173/1 BOTH FAIL after original Go protected TLS/real Npcap SYN/ACK/TLS bytes observed on Linux raw eth0 and exact Linux guest MAC accepted. Windows applied failure was windowsclient: invalid network plan. Original Go main --dns-hijack=false deletes DNS, original 5-stage WAL n4AssembleWindowsNativeOwnedTxn calls n4StaticDNSRequest([]) which intentionally refuses zero. S849 runner switched to original CLI DNS-enabled defaults, not bypass of native DNS stage. Two real complete native client/server/UDP/Stop Actions39765279336 and39765311632 running, not PASS yet. Evidence docs/evidence/M0/PLAN024-S850-full-native-Windows-Linux-TCP443-REAL-arrival-before-DNS-plan-Fail-20261022.json.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read exact full current-source Action39761157254 and frozen same-source Action39761835173 after true Windows Npcap→WSL2 Linux raw/TUN run; if original TLS/Applied/duplex/Stop fails, fix FIRST proven product error and rerun identical real full job, no mock. Only after full Normal/off PASS independently WL-N0 0%300ms, WL-N1 1%50ms, WL-N5 5%50ms bidirectional 10Mbps60s each true netem.",
+  "next_action": "Read exact finished full Actions39765279336 and39765311632 with native IPv4 DNS stage enabled; if real public original TLS/Wintun OS Applied, bi-directional Linux TUN UDP and both owned Stop PASS then open three independent actual netem WL-N0/N1/N5 10Mbps bidirectional 60s. On FAIL fix first true product stage only and rerun complete same-source public path, never edge mock.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -19,10 +19,9 @@
   ],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/evidence/M0/PLAN024-S842-real-Ubuntu-WSL2-import-PASS-but-original-Go-MAC-guard-FAIL-20261022.json",
-    "docs/evidence/M0/PLAN024-S843-true-full-public-Windows-Go-verified-guestMAC-identity-Fail-20261022.json",
-    "docs/evidence/M0/PLAN024-S847-full-original-Windows-Go-WSL-self-gateway-nextHop-BLOCKED-20261022.json"
+    "docs/evidence/M0/PLAN024-S847-full-original-Windows-Go-WSL-self-gateway-nextHop-BLOCKED-20261022.json",
+    "docs/evidence/M0/PLAN024-S850-full-native-Windows-Linux-TCP443-REAL-arrival-before-DNS-plan-Fail-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H259 interruption-safe checkpoint: validated original Windows native GO TLS Rust/Npcap/Wintun SOURCE68d52a8 artifacts exact, newest original Go host-self WSL next hop bounded fix active. Two independent full real Windows2025↔Ubuntu24.04.5 WSL2 server product Actions39761157254 fresh and39761835173 frozen IN_PROGRESS. Previous exact preTLS guard failures persist in S847 evidence. Normal/off APP+Stop NOT_PASS until full proof, WL N0 N1 N5 NOT_RUN."
+  "partial_summary": "M0 H260. Real original Go Windows Npcap→Linux WSL2 native FakeTCP/TLS packets now observed on Linux eth0 in two separate full Actions, original scoped guest MAC route fixed. Both full results FAIL at Windows native invalid network plan from original 5-stage DNS WAL requiring nonempty DNS but E2E script disabled hijack. S849 restored native CLI DNS stage; full Actions fresh39765279336 frozen39765311632 in progress. Stop/duplex/WL perf not yet qualified. Precise prior FAIL retained, signed native drivers/owned cleanup."
 }
