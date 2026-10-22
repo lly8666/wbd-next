@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S026-Fixed30-original-FEC-M4-IPv4-class-TCP-ACK-analysis",
+  "phase": "S027-focused-original-M1-TUN-ingress-accounting",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,37 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [
-    {
-      "id": "arm64-fixed30-post-TUN-IPv4-class-TCP-ACK-S026",
-      "status": "QUEUED_OR_RUNNING",
-      "type": "ONE_PRODUCT_PERFORMANCE_ACTION",
-      "path": "tests/network/request.json",
-      "trigger": "one push request.json automatically launches one Actions measurement; no manual dispatch",
-      "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
-      "build_run": 39792252773,
-      "artifact_id": 12432315624,
-      "scope": "S024 2Mbps each direction 50% UDP+TCP 4 flows 30pct IID RTT600ms 120s +15s warmup +30s drain, new real post-M4 successful systematic/recovered IPv4 UDP/TCP ACK-only/data counts",
-      "run_id": 39793159261,
-      "attempt": 1,
-      "harness_source": "d2c7c25e6f3dbbeaab02875b6433d1540129d1b2",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39793159261",
-      "contract_run_id": 39793159285
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "S015",
-      "result": "FAIL_BOTH",
-      "run": 39775828660,
-      "file": "S015-fixed30-arena128-vs512-AB-fail.json"
-    },
-    {
-      "id": "S016-native",
-      "result": "BUILD_AND_TWO_UNITS_PASS",
-      "run": 39776576033,
-      "file": "S016-native-rx-identity-build.json"
-    },
     {
       "id": "S017",
       "result": "FAIL_BOTH_DUP_FIXED_B_HARD_PASS",
@@ -132,12 +103,16 @@
       "result": "success",
       "run": 39792252941,
       "file": "S025-native-FEC-IP-class-build.json"
+    },
+    {
+      "id": "S026",
+      "result": "FAIL_REAL_M4_UDP_KERNEL_CONSERVED_TCP_FREEZE",
+      "run": 39793159261,
+      "artifact_id": 12432471447,
+      "file": "S026-original-M4-IPv4-class-Fail.json"
     }
   ],
   "open_issues": [
-    "Hard: S010 30% Fixed max 8/9 duplicate app UDP, client requested1 applied0 pending true, steady TCP ~0; no FEC qualification",
-    "S002 mixed 1% normal off UDP residual 1.317/1.528% TCP tail, S004 UDP10 0.493/0.562%; source budget/expiry driver block split missing",
-    "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported",
     "S015 confirmed FEC arena 128→512 eliminates ~5k/18k source/parity NoCapacity each side and improves actual UDP; old/new both FAIL under 30% IID; B still 2 application duplicates, client Fixed pending, TCP no delivery.",
     "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next.",
@@ -147,9 +122,10 @@
     "S022 real original M3 FEC RX 23,488/23,579 parity accepted, 5,669/5,714 recovered→TUN, no M4 failure and TUN counter exact; actual UDP still missing33.10/33.14%, reason cannot be 'no FEC recovery', class/retire/decoder reject and cohort split OPEN",
     "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
-    "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning."
+    "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
+    "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "S026 real Fixed30 original product ACTION 39793159261 queued/running, companion harness contract39793159285. NO duplicate. Collect true FEC successful M4 per-IP UDP/TCP systematic/recovered and TCP ACK-only/data, compare kernel TCP bytes_acked and 30% netem, app first-delivery, Fixed readback, Stop. Preserve S024 FAIL S018 default PASS; do not infer app-recovered from IP counts.",
+  "next_action": "S026 action 39793159261 FAIL archived. Source-review original background_tun_once genuine TUN M1 read->small arena allocate->original_fixed_stage_source. Add minimal per-session native counts for TUN read, pre-stage arena failure and source enqueued (plus read rejects), real Go numeric pre-Stop entry; one new ARM64 exact SOURCE build, then one targeted Fixed30 to account ~7k TUN outgoing-vs-FEC received gap without guessing. Do not resize buffers or weaken M2. Existing S018 default PASS; S024/S026 FAIL.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
