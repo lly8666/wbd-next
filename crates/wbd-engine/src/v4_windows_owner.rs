@@ -741,6 +741,34 @@ mod tests {
         assert_eq!(v3_open_one(&mut r,server,epoch,8,12,seq+n as u32,&tampered[..n],&mut output),Err(INVALID));
         assert_eq!(v3_seal_one(&mut r,client,[9;16],7,11,&packet,&mut encrypted),Err(INVALID));
         assert_eq!(v3_seal_one(&mut r,client,epoch,9,11,&packet,&mut encrypted),Err(INVALID));
+        // Actual same M1 FrozenRecord/M3 AEAD/PN: beyond the obsolete 512B
+        // smoke limit, then a newer authenticated TCP record arriving FIRST.
+        // The gap must not make the newer independent business packet wait.
+        let mut large=vec![0x42u8;1100];
+        large[0]=0x45;large[2..4].copy_from_slice(&1100u16.to_be_bytes());
+        large[8]=64;large[9]=17;
+        let mut small=[0u8;84];
+        small[0]=0x45;small[2..4].copy_from_slice(&84u16.to_be_bytes());
+        small[8]=64;small[9]=17;
+        let mut big_cipher=[0u8;2048];
+        let mut small_cipher=[0u8;2048];
+        let (big_len,big_seq,big_pn)=v3_seal_one(
+            &r,client,epoch,7,11,&large,&mut big_cipher).unwrap();
+        let (short_len,short_seq,short_pn)=v3_seal_one(
+            &r,client,epoch,7,11,&small,&mut small_cipher).unwrap();
+        assert_eq!(big_len,large.len()+FIXED_WIRE_OVERHEAD);
+        assert_eq!(short_seq,big_seq+big_len as u32);
+        assert_eq!((big_pn,short_pn),(1,2));
+        let mut plaintext=[0u8;2048];
+        let first=v3_open_one(&r,server,epoch,8,12,short_seq,
+            &small_cipher[..short_len],&mut plaintext).unwrap();
+        assert_eq!(&plaintext[..first],small.as_slice());
+        assert_eq!(v3_open_one(&r,server,epoch,8,12,short_seq,
+            &small_cipher[..short_len],&mut plaintext),Err(INVALID));
+        let late=v3_open_one(&r,server,epoch,8,12,big_seq,
+            &big_cipher[..big_len],&mut plaintext).unwrap();
+        assert_eq!(&plaintext[..late],large.as_slice());
+
         assert_eq!(quiesce_wintun(&mut r,client,epoch,7,11),OK);
         assert_eq!(v3_seal_one(&mut r,client,epoch,7,11,&packet,&mut encrypted),Err(INVALID));
         assert_eq!(stop(&mut r,client),OK);
