@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "arm64-off-lossless90-old-new-default-AB",
+  "id": "arm64-fixed30-original-m4-reason-split",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
-    "mode": "normal",
-    "fec_profile": 1
+    "mode": "fec-fixed",
+    "fec_profile": 6
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
     "udp_share": 0.5,
     "sizes": [
       [
@@ -31,7 +31,7 @@
     ],
     "tcp_flows": 4,
     "probe_hz": 20,
-    "deadline_ms": 1000,
+    "deadline_ms": 3000,
     "max_packets": 20000000
   },
   "network": {
@@ -41,41 +41,33 @@
     "netem_rng": "unseeded_recorded"
   },
   "warmup_s": 15,
-  "drain_s": 15,
+  "drain_s": 30,
   "phases": [
     {
       "name": "steady",
-      "seconds": 90,
+      "seconds": 120,
       "c2s": {
-        "delay_ms": 0,
-        "loss_pct": 0
+        "delay_ms": 300,
+        "loss_pct": 30
       },
       "s2c": {
-        "delay_ms": 0,
-        "loss_pct": 0
+        "delay_ms": 300,
+        "loss_pct": 30
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0.1,
     "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "run_id": 39759842150,
+      "source": "e63d38bd20466575675ca8b493a45882ec815a52",
+      "run_id": 39773479071,
       "attempt": 1,
-      "artifact_id": 12417786567,
-      "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
-    },
-    "B": {
-      "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-      "run_id": 39770495489,
-      "attempt": 1,
-      "artifact_id": 12422077765,
-      "sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b"
+      "artifact_id": 12423960905,
+      "sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f"
     }
   },
-  "order": "AB"
+  "order": "A"
 }

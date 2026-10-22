@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S012-split-original-FEC-source-and-parity-failure-reasons-build",
+  "phase": "S013-FEC30-original-M4-reason-counters-live",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,15 +25,14 @@
   "latest_harness_source": "22086507a8bf5977a151730c86c4ff5c4049a985",
   "open_requests": [
     {
-      "id": "S012-real-TX-failure-reasons-build",
-      "type": "PRODUCT_SOURCE_BUILD",
-      "status": "IN_PROGRESS",
-      "trigger": "single source push auto ARM64 Go/Rust build; no manual dispatch",
-      "scope": "existing original Rust FixedSource callback, parity callback and M4 settlement reason counters only; no change to scheduler/arena size/parity generation",
-      "run_id": 39773479071,
-      "attempt": 1,
+      "id": "arm64-fixed30-original-m4-reason-split",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "ONE_PRODUCT_DIAGNOSTIC",
+      "request_path": "tests/network/request.json",
       "source": "e63d38bd20466575675ca8b493a45882ec815a52",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39773479071"
+      "artifact_id": 12423960905,
+      "trigger": "push of changed request.json only; no workflow_dispatch",
+      "difference": "S010 same Fixed30 2Mbps mixed120s, new original Rust source/seal/arena and M4 noncopied counters"
     }
   ],
   "recent_evidence": [
@@ -78,6 +77,13 @@
       "result": "success",
       "run": 39773549832,
       "detail": "12+ harness contracts incl parsing genuine failure counters"
+    },
+    {
+      "id": "S012-one-new-ARM64-product-build",
+      "result": "success",
+      "run": 39773479071,
+      "artifact": 12423960905,
+      "source": "e63d38bd20466575675ca8b493a45882ec815a52"
     }
   ],
   "open_issues": [
@@ -87,6 +93,13 @@
     "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported"
   ],
-  "next_action": "S012 ARM64 original Go/Rust binary build 39773479071 in progress; do not dispatch again. After SUCCESS record exact artifact ZIP/manifest SHA and source, then push ONE S013 Fixed30 real failure-reason diagnostic and read eight buckets/Stop. S012 harness contract 39773549832 SUCCESS; initial contract fail 39773479228 retained.",
-  "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/"
+  "next_action": "Resolve exactly one S013 performance run from request push, do NOT dispatch again; parse true V4_PUBLIC_FEC2_FAILURE and TX owner k/r, Stop, delivery, FEC APPLIED. Determine whether arena or seal/M4 dominates; only then smallest fix or documented hard boundary. S011 default anchor remains valid for prior instrumentation.",
+  "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
+  "product_current": {
+    "source": "e63d38bd20466575675ca8b493a45882ec815a52",
+    "run_id": 39773479071,
+    "artifact_id": 12423960905,
+    "zip_sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f",
+    "manifest_sha256": "171d710fe594dc53d44fd9cf7b4b05711001501ac4cb367f1b0f0973ae734a9c"
+  }
 }
