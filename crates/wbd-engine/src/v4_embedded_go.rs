@@ -394,6 +394,11 @@ struct Entry{
     fec2_copied_source:u64,
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     fec2_copied_repair:u64,
+    // Fixed-size existing TX-owner diagnosis, no payload or hot tracing.
+    // source: payload/arena/seal; parity: policy/arena/seal;
+    // real M4 noncopy: parity/source. Read once before Stop.
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    fec2_fail_reasons:[u64;8],
     // Original Go's EXACT applied policy controls the background FEC
     // receiver, not a second untrusted mode bit or a guessed TLS epoch.
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -603,6 +608,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         fec2_copied_source:0,
         #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         fec2_copied_repair:0,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        fec2_fail_reasons:[0;8],
         #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         fec2_rx_admit:Arc::new(AtomicBool::new(false)),
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2533,6 +2540,26 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_snapshot(
         OK
     }
 }
+// Side-band read-only reason ledger; FEC source/repair failure paths only.
+// Eight u64 are unambiguous and scoped to original active generation.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_failures(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=8{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+        if e.fec2_live_tx.is_none(){return BAD_STAGE}
+        unsafe{std::ptr::copy_nonoverlapping(e.fec2_fail_reasons.as_ptr(),out,8)}
+        OK
+    }
+}
 // Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested
@@ -3181,16 +3208,29 @@ fn original_fixed_stage_source(e:&mut Entry,
     let offered=stream.offer_source(slab,14..14+n,now,|ticket,source|{
         let attempt=(||->Result<(),i32>{
             if ticket.revision!=ConfigRevision(rev){return Err(BAD_STAGE)}
-            let payload=wbd_codec::fec_v2::source_owned(
-                ticket.block_id,ticket.index,source,budget.record_payload_mtu)
-                .map_err(|_|INVALID)?;
-            let mut sealed=e.arena.allocate().map_err(|_|FULL)?;
-            let end=14usize.checked_add(payload.len()).ok_or(INVALID)?;
-            if end>sealed.writable().len(){return Err(FULL)}
+            let payload=match wbd_codec::fec_v2::source_owned(
+                ticket.block_id,ticket.index,source,budget.record_payload_mtu
+            ){
+                Ok(payload)=>payload,
+                Err(_)=>{e.fec2_fail_reasons[0]+=1;return Err(INVALID)}
+            };
+            let mut sealed=match e.arena.allocate(){
+                Ok(slot)=>slot,
+                Err(_)=>{e.fec2_fail_reasons[1]+=1;return Err(FULL)}
+            };
+            let Some(end)=14usize.checked_add(payload.len())else{
+                e.fec2_fail_reasons[0]+=1;return Err(INVALID)
+            };
+            if end>sealed.writable().len(){
+                e.fec2_fail_reasons[0]+=1;return Err(FULL)
+            }
             sealed.writable()[14..end].copy_from_slice(&payload);
-            let (pn,_,_)=e.owner.seal_fec2_product_one(
-                sealed,payload.len(),2,budget,15,epoch,now)
-                .map_err(|_|BAD_STAGE)?;
+            let (pn,_,_)=match e.owner.seal_fec2_product_one(
+                sealed,payload.len(),2,budget,15,epoch,now
+            ){
+                Ok(x)=>x,
+                Err(_)=>{e.fec2_fail_reasons[2]+=1;return Err(BAD_STAGE)}
+            };
             e.fec2_staged_pns.push((pn,2));
             Ok(())
         })();
@@ -3210,15 +3250,27 @@ fn original_fixed_stage_due(e:&mut Entry,
     let mut failed=None;
     let result=stream.poll_parity(now,|parity,_block,row,revision|{
         if e.fixed_pending.or(e.fixed_applied).is_none_or(|(_,r)|r!=revision.0)
-            ||!original_public_fixed_row_allowed(row){return DriverProof::NotSent}
+            ||!original_public_fixed_row_allowed(row){
+            e.fec2_fail_reasons[3]+=1;return DriverProof::NotSent
+        }
         let attempt=(||->Result<(),i32>{
-            let mut sealed=e.arena.allocate().map_err(|_|FULL)?;
-            let end=14usize.checked_add(parity.len()).ok_or(INVALID)?;
-            if end>sealed.writable().len(){return Err(FULL)}
+            let mut sealed=match e.arena.allocate(){
+                Ok(slot)=>slot,
+                Err(_)=>{e.fec2_fail_reasons[4]+=1;return Err(FULL)}
+            };
+            let Some(end)=14usize.checked_add(parity.len())else{
+                e.fec2_fail_reasons[5]+=1;return Err(INVALID)
+            };
+            if end>sealed.writable().len(){
+                e.fec2_fail_reasons[5]+=1;return Err(FULL)
+            }
             sealed.writable()[14..end].copy_from_slice(parity);
-            let (pn,_,_)=e.owner.seal_fec2_product_one(
-                sealed,parity.len(),3,budget,15,epoch,now)
-                .map_err(|_|BAD_STAGE)?;
+            let (pn,_,_)=match e.owner.seal_fec2_product_one(
+                sealed,parity.len(),3,budget,15,epoch,now
+            ){
+                Ok(x)=>x,
+                Err(_)=>{e.fec2_fail_reasons[5]+=1;return Err(BAD_STAGE)}
+            };
             e.fec2_staged_pns.push((pn,3));
             Ok(())
         })();
@@ -3685,13 +3737,22 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                         e.fec2_copied_source=e.fec2_copied_source.saturating_add(1);
                     }else if uncertain{
                         source_uncertain=source_uncertain.saturating_add(1);
+                        e.fec2_fail_reasons[7]+=1;
+                    }else{
+                        e.fec2_fail_reasons[7]+=1;
                     }
                 }
             }else{
                 if copied{
                     parity_copied+=1;
                     e.fec2_copied_repair=e.fec2_copied_repair.saturating_add(1);
-                }else if uncertain{parity_uncertain+=1}else{parity_not_sent+=1}
+                }else if uncertain{
+                    parity_uncertain+=1;
+                    e.fec2_fail_reasons[6]+=1;
+                }else{
+                    parity_not_sent+=1;
+                    e.fec2_fail_reasons[6]+=1;
+                }
             }
         }
         // Only original M4 definitely-copied kind2 DATA becomes an M2

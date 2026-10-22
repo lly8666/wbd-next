@@ -27,6 +27,7 @@ extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -328,6 +329,21 @@ func (b *v4EmbeddedNativeBridge) originalPublicFecTxSnapshot()(V4PublicFecTxSnap
         ExpiredJobs:uint64(v[10]),PressureJobs:uint64(v[11]),
         PressureSources:uint64(v[12]),UnknownCapacity:uint64(v[13]),
     },nil
+}
+// Real generation-local failure reasons, never a guessed cause from aggregate M2.
+type V4PublicFecTxFailures struct{
+    SourcePayload,SourceArena,SourceSeal uint64
+    ParityPolicy,ParityArena,ParitySeal,ParityM4Noncopy,SourceM4Noncopy uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFailures,error){
+    var zero V4PublicFecTxFailures
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var v [8]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_tx_failures(C.uint64_t(b.handle),&v[0],8)
+    if rc!=0{return zero,fmt.Errorf("%w: FEC TX failure reasons=%d",errV4Embedded,int(rc))}
+    return V4PublicFecTxFailures{SourcePayload:uint64(v[0]),SourceArena:uint64(v[1]),
+        SourceSeal:uint64(v[2]),ParityPolicy:uint64(v[3]),ParityArena:uint64(v[4]),
+        ParitySeal:uint64(v[5]),ParityM4Noncopy:uint64(v[6]),SourceM4Noncopy:uint64(v[7])},nil
 }
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
     if b==nil||!b.committed||b.stopped||b.handle==0||

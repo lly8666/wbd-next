@@ -28,10 +28,23 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+
+
+def public_fec_failure_reasons(log_text):
+    """Read only the genuine pre-Stop counters, never infer missing as zero."""
+    fields=("source_payload","source_arena","source_seal","parity_policy",
+            "parity_arena","parity_seal","parity_m4_noncopy","source_m4_noncopy")
+    rows=[line for line in log_text.splitlines() if "V4_PUBLIC_FEC2_FAILURE role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\\d+)", rows[-1])}
+    if not all(k in values for k in fields):
+        return None
+    return {k:values[k] for k in fields}
 
 
 def public_fec_tx_snapshot(log_text):
@@ -320,12 +333,14 @@ class LinuxExperiment:
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
+        fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "repair_packets": repair, "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
                 "FEC_k_r_parity_queue_decode": {
                     "real_tx_owner_end_snapshot": fec_tx,
+                    "real_tx_fail_reasons": fec_failures,
                     "real_rx_decode_and_parity_age": "NOT_OBSERVED"
                 } if tx_available else "NOT_OBSERVED",
                 "owner_queue_age_lock_wait_raw_socket_drops": "NOT_EXPOSED_BY_CURRENT_PUBLIC_CLI",

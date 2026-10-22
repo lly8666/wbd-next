@@ -169,6 +169,16 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_real_fec_failure_reasons_negative_unknown(self):
+        from tools.network_harness.runner import public_fec_failure_reasons,product_marker_line
+        row=("V4_PUBLIC_FEC2_FAILURE role=client source_payload=0 source_arena=7 "
+             "source_seal=1 parity_policy=0 parity_arena=15 parity_seal=0 "
+             "parity_m4_noncopy=2 source_m4_noncopy=3")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_failure_reasons(row)["source_arena"],7)
+        self.assertIsNone(public_fec_failure_reasons(""))
+        self.assertIsNone(public_fec_failure_reasons(row.replace("source_arena=7","no_data=7")))
+
     def test_safe_startup_failure_diagnostic_redacts_private_input(self):
         from tools.network_harness.runner import startup_diagnostic
         raw = "password=secret_value route-key=do-not-persist\nerror: no such device"

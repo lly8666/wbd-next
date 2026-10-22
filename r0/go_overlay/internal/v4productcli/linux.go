@@ -256,6 +256,15 @@ func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err erro
         v.K5To12,v.K13To16,v.RPlanned,v.RSent,v.ExpiredJobs,v.PressureJobs,
         v.PressureSources,v.UnknownCapacity)
 }
+func logAuthenticFecFailures(role string,v realityfront.V4PublicFecTxFailures,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_FEC2_FAILURE_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_FEC2_FAILURE role=%s source_payload=%d source_arena=%d source_seal=%d parity_policy=%d parity_arena=%d parity_seal=%d parity_m4_noncopy=%d source_m4_noncopy=%d",
+        role,v.SourcePayload,v.SourceArena,v.SourceSeal,v.ParityPolicy,
+        v.ParityArena,v.ParitySeal,v.ParityM4Noncopy,v.SourceM4Noncopy)
+}
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -321,6 +330,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if c.fecMode!=realityfront.FecV2Off {
         tx,txErr:=native.OriginalFecTxSnapshot()
         logAuthenticFecTx("client",tx,txErr)
+        fail,failErr:=native.OriginalFecTxFailures()
+        logAuthenticFecFailures("client",fail,failErr)
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
@@ -421,6 +432,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         if c.fecMode!=realityfront.FecV2Off {
             tx,txErr:=product.OriginalFecTxSnapshot()
             logAuthenticFecTx("server",tx,txErr)
+            fail,failErr:=product.OriginalFecTxFailures()
+            logAuthenticFecFailures("server",fail,failErr)
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}

@@ -118,6 +118,13 @@ func (p *V4LinuxClientProduct) OriginalFECReadback()(V4PublicFecReadback,error){
 }
 // Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
 // operator can forge these numbers; every metric comes from original Rust.
+func (p *V4LinuxClientProduct) OriginalFecTxFailures()(V4PublicFecTxFailures,error){
+    if p==nil{return V4PublicFecTxFailures{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicFecTxFailures{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicFecTxFailures()
+}
 func (p *V4LinuxClientProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,error){
     if p==nil{return V4PublicFecTxSnapshot{},ErrAdmissionParams}
     p.mu.Lock()

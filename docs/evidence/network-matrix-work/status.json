@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S012-isolate-real-FEC-source-parity-notready-cause",
+  "phase": "S012-split-original-FEC-source-and-parity-failure-reasons-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,15 @@
     "build_status": "success"
   },
   "latest_harness_source": "2f0bdee88a2392b11e3704f1c66664b54a75014a",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S012-real-TX-failure-reasons-build",
+      "type": "PRODUCT_SOURCE_BUILD",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "single source push auto ARM64 Go/Rust build; no manual dispatch",
+      "scope": "existing original Rust FixedSource callback, parity callback and M4 settlement reason counters only; no change to scheduler/arena size/parity generation"
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S008",
@@ -63,6 +71,6 @@
     "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported"
   ],
-  "next_action": "Read real original fixed_stage_source/due, memory Arena::allocate and receipts; add ONLY bounded pre-Stop reason split (source arena/seal, parity arena/seal/driver and TUN consume) before any capacity parameter change, rebuild new SOURCE once and run one narrow S010-equivalent diagnostic plus default off A/B if actual product changed. Preserve S010/S011 originals; no duplicate runs or Windows takeover.",
+  "next_action": "Resolve one S012 native ARM64 build and harness contract Action from this exact commit; do not repeat. If pass pin manifest/artifact, run ONE representative S010-equivalent fixed30 with failure reason counts then decide smallest root cause; default A/B when source changes to real fix. Preserve S010 hard-fail and S011 default pass.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/"
 }
