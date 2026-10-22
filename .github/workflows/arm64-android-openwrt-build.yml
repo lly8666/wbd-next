@@ -1,16 +1,7 @@
 name: ARM64 OpenWrt musl and Android development builds
 run-name: ARM64 targets ${{ github.sha }}
+# Deferred Android/OpenWrt builds, manually runnable only; Linux ARM64 focus.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - '.github/workflows/arm64-android-openwrt-build.yml'
-      - '.cargo/config.toml'
-      - 'android/**'
-      - 'native/**'
-      - 'crates/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
