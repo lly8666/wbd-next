@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "cda4cbb98eccb039cdf48a82434b4bcc65de68d0",
+  "kind": "TRUE_PUBLIC_WINDOWS_WSL2_UBUNTU_INSTALL_BLOCKED",
+  "action": {
+    "run_id": 39753583163,
+    "attempt": 1,
+    "job_id": 119739886297,
+    "conclusion": "FAILURE",
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml"
+  },
+  "artifact": {
+    "id": 12415811237,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "e46e491fada56337a0570402afd3b7b9ff89a743d598a3f774b228c5d8e5e171"
+  },
+  "observed": [
+    "Original Go/TLS Rust M2 Windows native CLI rebuilt successfully from source-locked Go overlay with WSL guest MAC handoff",
+    "Signed Npcap 1.88 driver installed and owned cleanup completed",
+    "Windows2025 wsl --install Ubuntu --no-launch --web-download stuck until full-product launch step timed out; cleanup reports WSL_E_DISTRO_NOT_FOUND",
+    "No guest eth0, no actual product handshake, UDP/Wintun/TUN, or Stop qualification in this action"
+  ],
+  "status": {
+    "normal_public": "NOT_RUN_WSL2_ENVIRONMENT_UNAVAILABLE",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next": {
+    "full_source_sha": "4b9c180d4ecdeefc17adfa8513eb2f166eb51228",
+    "full_run_id": 39755736757,
+    "frozen_corrected_source_sha": "7832cff96cb6bf305e6a0b4ad1dd4fd32cb78625",
+    "frozen_run_id": 39756219904,
+    "fix": "Use genuine Ubuntu24.04.5 WSL filesystem downloaded from releases.ubuntu.com with pinned SHA256 bb415d... and WSL2 --import, not Store install; reattempt both public executable full chains with scoped verified guest Npcap MAC and owned Stop."
+  }
+}
