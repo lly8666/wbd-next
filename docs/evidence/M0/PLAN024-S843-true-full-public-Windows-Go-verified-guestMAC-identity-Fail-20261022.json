@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_DIRECT_FULL_PUBLIC_GUARDED_ORIGINAL_WINDOWS_TO_WSL2_BOOTSTRAP_FAIL",
+  "source_sha": "7bf4d4b41ba3328b4588ff4bb05a16c2167914e5",
+  "github_action": {
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "run_id": 39757115561,
+    "attempt": 1,
+    "job_id": 119751813929,
+    "conclusion": "FAILURE"
+  },
+  "artifact": {
+    "id": 12415984836,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:0bec0847ccc49a98aed280947032bd8cade549ef9a9d9df4455ed2fb0fc72c1d"
+  },
+  "actual_os": {
+    "windows": "windows-2025 Go original TLS Rust M1 M2 M3 compiled source-locked, signed Npcap 1.88 and Wintun0.14.1 installed",
+    "wsl2": "genuine pinned Ubuntu 24.04.5 downloaded with SHA256 and imported on WSL2 kernel; real eth0 and /dev/net/tun",
+    "guest_ip": "172.26.102.43",
+    "guest_eth0_mac": "00:15:5d:c1:6b:88",
+    "host_windows_wsl_ip": "172.26.96.1",
+    "host_wsl_interface_index": 25,
+    "host_mac": "00:15:5d:b9:f9:d1",
+    "neighbor_readback": "PASS_ACTUAL_WINDOWS_NEIGHBOR_FROM_GUEST_ETH0_MAC",
+    "hyperv_inbound_rule": "PASS_EXACT_SCOPE_INSTALLED_AND_REMOVED",
+    "cleanup": "PASS_WSL_HYPERV_NEIGHBOR_AND_NPCAP_OWNED_CLEANUP"
+  },
+  "first_actual_product_error": "windowsclient: crash-persistent native DNS and IPv6 guard required: refused unscoped Windows original Npcap guest MAC override",
+  "first_error_stage": "Windows original Go NextHop/Interface/source/guest identity compare PRE TLS. Linux server had no authenticated ready. This is not a post-TLS Rust M2 failure.",
+  "positive_tests": [
+    "actual Windows userland and kernel drivers installed",
+    "actual Linux Ubuntu WSL2 guest eth0 discovered",
+    "actual guest-MAC to Windows neighbor OS readback"
+  ],
+  "negative_tests": [
+    "original Go TLS NOT_STARTED",
+    "Rust data-plane NOT_RUN",
+    "Windows OS Applied NOT_RUN",
+    "Linux raw/TUN authenticated ready NOT_OBSERVED",
+    "two direction kernel UDP NOT_RUN",
+    "cross-platform owner Stop qualification NOT_RUN",
+    "WL-N0 WL-N1 WL-N5 each 10Mbps 60s NOT_RUN"
+  ],
+  "next": "S844 original Go guard now prints exact verified vs discovered route/interface/source/MAC differences WITHOUT relaxing original guard, full Action 39759204820; in parallel b5f4356 verified native original Windows Go/Rust artifact full Action39758891147. Examine actual full product failure, fix justified identity discrepancy only; keep all previous failures."
+}
