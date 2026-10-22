@@ -1051,6 +1051,100 @@ mod tests {
 
     #[cfg(feature="fec2_product_record")]
     #[test]
+    fn m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire(){
+        use wbd_codec::{ControlTlv,Receipt,ReceiptPage};
+        // Use the same production M1 frozen owner and genuine AEAD/PN
+        // crypto. Test fixture cold is NOT original TLS and proves no OS
+        // public connection, only exact-source recovery state transitions.
+        let mut r=Registry{generation:301,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let client=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let server=allocate(&mut r,&cold(true),&cmd(),true).unwrap();
+        let epoch=[2u8;16];
+        assert_eq!(commit(&mut r,client,0,0,500),OK);
+        assert_eq!(commit(&mut r,server,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,client,epoch,71,91),OK);
+        assert_eq!(bind_wintun(&mut r,server,epoch,72,92),OK);
+        assert!(set_path_mtu(&mut r,client,epoch,71,91,1400).is_ok());
+        assert!(set_path_mtu(&mut r,server,epoch,72,92,1400).is_ok());
+        {
+            let mut e=r.entries[&client].lock().unwrap();
+            assert_eq!(m2_arm_entry(&mut e,[9;16],71,91),Err(BAD_STAGE));
+            assert!(m2_arm_entry(&mut e,epoch,71,91).is_ok());
+            assert_eq!(m2_arm_entry(&mut e,epoch,71,91),Err(BAD_STAGE));
+        }
+        let mut ipv4=[0u8;80];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&80u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let mut wire=[0u8;2048];
+        let (size,seq,pn)=v3_seal_one(
+            &r,client,epoch,71,91,&ipv4,&mut wire).unwrap();
+        {
+            let e=r.entries[&client].lock().unwrap();
+            let m=e.m2.as_ref().unwrap();
+            assert_eq!(m.shadow.outstanding(),0); // sealing is NOT kernel send
+            assert_eq!(m.pending.len(),1); // same immutable M1 frozen handle
+            assert_eq!(m.pending[&RecordPn(pn)].bytes(),&wire[..size]);
+        }
+        {
+            let mut e=r.entries[&client].lock().unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(
+                &mut e,epoch,71,91,pn,seq,size+1,1),Err(INVALID));
+            assert_eq!(m2_kernel_firstsend_entry(
+                &mut e,epoch,71,91,pn,seq,size,1),Ok(1));
+            assert_eq!(m2_kernel_firstsend_entry(
+                &mut e,epoch,71,91,pn,seq,size,1),Err(INVALID));
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1);
+        }
+        // TCP presentation ACK never enters this recovery state.
+        let mut bitmap=[0u8;32];bitmap[0]=1;
+        let receipt=wbd_codec::encode_control(&[ControlTlv::Receipt(Receipt{
+            largest_data_pn:pn,ack_delay_us:0,report_seq:1,
+            pages:vec![ReceiptPage{base_pn:0,bitmap}]
+        })],512).unwrap();
+        let (rseq,rwire)={
+            let mut e=r.entries[&server].lock().unwrap();
+            let slab=e.arena.allocate().unwrap();
+            let budget=normal_off_windows_budget(&e).unwrap();
+            let (_,seq,len)=e.owner.seal_original_authenticated_receipt(
+                slab,&receipt,budget,0,MonoNs(0)).unwrap();
+            let storage=std::mem::take(&mut e.tx_scratch);
+            let batch=e.owner.drain_tx(MonoNs(0),storage)
+                .unwrap_or_else(|_|panic!("same protected M1 control missing"));
+            let out={
+                let rows=e.owner.checked_tx_ready(&batch).unwrap();
+                assert_eq!(rows.len(),1);
+                assert_eq!(rows[0].record.bytes().len(),len);
+                rows[0].record.bytes().to_vec()
+            };
+            e.tx_scratch=batch.recycle();
+            (seq,out)
+        };
+        let mut tamper=rwire.clone();*tamper.last_mut().unwrap()^=1;
+        let mut plain=[0u8;2048];
+        assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
+            &tamper,&mut plain),Err(INVALID));
+        assert_eq!(r.entries[&client].lock().unwrap()
+            .m2.as_ref().unwrap().shadow.outstanding(),1);
+        assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
+            &rwire,&mut plain),Ok((0,2,0)));
+        assert_eq!(r.entries[&client].lock().unwrap()
+            .m2.as_ref().unwrap().shadow.outstanding(),0);
+        assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
+            &rwire,&mut plain),Err(INVALID)); // PN replay not receipt reapply
+        {
+            let e=r.entries[&client].lock().unwrap();
+            assert!(e.authenticated_kind1.is_empty()); // consumed scoped M2
+        }
+        assert_eq!(quiesce_wintun(&mut r,client,epoch,71,91),OK);
+        assert_eq!(stop(&mut r,client),OK);
+        assert_eq!(release(&mut r,client),OK);
+        assert_eq!(quiesce_wintun(&mut r,server,epoch,72,92),OK);
+        assert_eq!(stop(&mut r,server),OK);
+        assert_eq!(release(&mut r,server),OK);
+    }
+
+    #[cfg(feature="fec2_product_record")]
+    #[test]
     fn m0_windows_original_m3_kind1_aead_unique_pn_stages_only_once_then_stop_retires(){
         use wbd_codec::{ControlTlv,Receipt,ReceiptPage};
         let mut r=Registry{generation:201,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
