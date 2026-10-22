@@ -14,7 +14,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
-      WIN_BINARY_SRC: 65ff81c723b11b2cdc5115bd0c66155275755ca4
+      WIN_BINARY_SRC: abea7a1851e913ab5a64d592c4ed61e9d8478e10
       LINUX_BINARY_SRC: 621bc733becbb4bbcf23bc4b10c6150d22b3a073
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -25,7 +25,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Force frozen,result/wl-public | Out-Null
-          & gh run download 39735948068 --repo $env:GITHUB_REPOSITORY --name m0-plan020-win-wal-39735948068-1 --dir frozen
+          & gh run download 39753469567 --repo $env:GITHUB_REPOSITORY --name m0-plan020-win-wal-39753469567-1 --dir frozen
           if($LASTEXITCODE -ne 0){throw 'previous actual Windows original Go + Rust compiled product source unavailable'}
           @'
           import os,json,hashlib,pathlib,shutil
@@ -96,13 +96,20 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
-        timeout-minutes: 10
+        timeout-minutes: 22
         run: |
           $ErrorActionPreference='Stop'
           $known=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
           if($known -notmatch 'Ubuntu'){
-            & wsl.exe --install --distribution Ubuntu --no-launch --web-download 2>&1 |
-              Out-File result/wl-public/wsl-install.log
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official pinned Ubuntu WSL tar image hash mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 native import failed'}
+            if(((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','') -notmatch 'Ubuntu'){throw 'real WSL2 distro not registered'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_WSL2_ROOTFS_IMPORTED'
           }
           & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
           if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
@@ -150,6 +157,11 @@ jobs:
           $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
           if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
           Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+          $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
+          $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+          Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
           Get-NetFirewallHyperVVMSetting -PolicyStore ActiveStore -Name $creator[0].VMCreatorId -ErrorAction Continue |
             Select-Object Name,Enabled,DefaultInboundAction,DefaultOutboundAction,LoopbackEnabled,AllowHostPolicyMerge |
             ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-effective.json
