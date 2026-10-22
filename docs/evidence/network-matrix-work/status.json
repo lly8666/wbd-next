@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S008-AB-attested-product-build-step-intent",
+  "phase": "S009-minimum-real-FEC-TX-observation",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -19,24 +19,7 @@
     "status": "SUCCESS"
   },
   "latest_harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
-  "open_requests": [
-    {
-      "id": "arm64-fixed-max-30pct-old-new-AB-attested",
-      "type": "PERFORMANCE_PAIR_SINGLE_JOB_AB_HARD_CASE",
-      "status": "IN_PROGRESS",
-      "path": "tests/network/request.json",
-      "sourceA": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "sourceB": "df64bab1d60ae684429a4330e5f09d06ff851019",
-      "buildA": 39759842150,
-      "buildB": 39766278666,
-      "trigger": "one request.json push, no manual dispatch",
-      "notes": "same hard S005 120s 30% fixed profile6; B narrowly attested from real successful product build and upload steps, workflow failure never called success",
-      "run_id": 39768614669,
-      "attempt": 1,
-      "harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39768614669"
-    }
-  ],
+  "open_requests": [],
   "latest_actions": [
     {
       "run": 39763271808,
@@ -90,6 +73,13 @@
       "conclusion": "failure",
       "detail": "Recovered: before measurement, B GH build workflow FAIL because optional unit shell command; provenance gate correctly blocked as unqualified",
       "evidence": "S007-before-prepare-fail.json"
+    },
+    {
+      "run": 39768614669,
+      "type": "S008-AB-same-job-fixed30",
+      "conclusion": "failure",
+      "evidence": "S008-AB-fixed30-both-fail.json",
+      "detail": "both A/B real 30pct FEC maximum hard failures; no meaningful regression claim"
     }
   ],
   "prior_success_reuse": {
@@ -101,14 +91,14 @@
     "game2_overall_failed_marker_only": 39757506578
   },
   "open_issues": [
-    "S005 HARD: 7/8 duplicate UDP deliveries at 30% IID fixed, no invalid bytes, client applied0/pending true while server applied1; pause fixed and auto broader qualification; inspect FEC/AEAD/first-delivery dedupe real path",
-    "S005 normal run diagnostic: >69% missing UDP and zero steady TCP send due actual backpressure, huge cumulative quota_or_capacity_blocked (not yet decomposed)",
-    "S002 mixed IID1 UDP 1.317/1.528% residual and TCP p99 1.3-1.9s; S004 UDP10 IID1 0.493/0.562% residual with product blocked 417/351; S003 UDP5 IID1 PASS; do not treat cross-VM as same-host A/B",
-    "No repair byte budget/usefulness, FEC actual k/r, auto curve or native ISA-L runtime backend; NOT_OBSERVED",
-    "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
+    "S008 matched-VM FEC30: both old/new ~70% UDP missing, duplicate 6/10 vs5/5, client FIXED applied=0 pending; STOP passes; needs real k/r and ingress/decode receipts before fix",
+    "S002 mixed loss1 excessive UDP residual/TCP tail and S004 UDP10 excess loss; S003 UDP5 pass; S004 product blocked aggregate cannot distinguish M2 budget vs shadow",
+    "30% sparse k1:r2 ideal residual 2.7%, so S005 1% loss gate is not universal; separately preserve duplicate/applied/zero TCP hard failures",
+    "Existing runtime FEC2 r_sent/k_hist ClassStats not exposed to public client/server CLI; instrument minimal pre-Stop counters from real owner, then rebuild once per SOURCE; native ISA-L actual dispatch still unknown",
+    "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Observe S008 single Action 39768614669, do not redispatch. Verify recovered B receipt carries workflow_conclusion=failure and step_attested=true; inspect A/B both legs against full S005 hard gates (duplicate, applied, source, Stop). If setup fails, inspect exact fail and fix only if necessary. S008 contracts 39768614569 separate, no product measurement.",
+  "next_action": "Expose existing real FixedStream OwnerReport as pre-Stop public readback (actual k1/k>=13/full/partial/rplanned/rsent/expired/pressure), no wire/mode/hard-gate changes; one new ARM64 SOURCE build. Then repeat bounded failing Fixed 30% with diagnostic off-CPU path and necessary default low-loss mixed anchor in same-machine AB for regression; do not pretend a parity-guard unit cures duplicates.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {
