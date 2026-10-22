@@ -30,7 +30,12 @@ func(w *m0V4RxWindow) Check(seq uint32,n int)(bool,error){
  if ahead>m0V4RxAheadMax||uint32(ahead)+uint32(n)>m0V4RxAheadMax{
   return false,errM0V4RxWindow
  }
- if len(w.received)>=m0V4RxSlots{return false,errM0V4RxWindow}
+ // A saturated map MUST still admit the exact missing head, because its
+ // immediate contiguous drain retires prior verified rows. At most one
+ // transient entry beyond the 256-slot ledger is reachable here.
+ if len(w.received)>=m0V4RxSlots && seq!=w.cumulative{
+  return false,errM0V4RxWindow
+ }
  a,b:=uint32(ahead),uint32(ahead)+uint32(n)
  for first,size:=range w.received{
   from:=uint32(first-w.cumulative)

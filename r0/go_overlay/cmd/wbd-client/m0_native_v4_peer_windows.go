@@ -136,7 +136,7 @@ func(p *m0NativeV4Peer) observePeerACK(ack uint32){
   p.pending=p.pending[:len(p.pending)-taken]
  }
  p.mu.Lock()
- p.pendingCount=len(p.pending)
+ if p.mode!=m0WinModeNormal{p.pendingCount=len(p.pending)}
  if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt
  }else{p.oldestUnackedAt=time.Time{}}
  p.mu.Unlock()

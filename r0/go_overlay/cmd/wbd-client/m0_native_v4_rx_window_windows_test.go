@@ -93,3 +93,22 @@ func TestM0PLAN024WindowsM2IndependentAuthenticatedAheadDoesNotForgeTCPACK(t *te
   t.Fatal("oversize record bypassed kernel/AEAD limit")
  }
 }
+
+func TestM0PLAN024WindowsBoundedPresentationACKLedgerFullMissingHeadReleases(t *testing.T){
+ w:=newM0V4RxWindow(2000)
+ for i:=1;i<=m0V4RxSlots;i++{
+  seq:=uint32(2000+i*100)
+  if ack,e:=w.Copied(seq,100);e!=nil||ack!=2000{
+   t.Fatalf("future slot %d falsely ACKed: %d %v",i,ack,e)
+  }
+ }
+ if w.Pending()!=m0V4RxSlots{t.Fatalf("expected full bounded bitmap, got %d",w.Pending())}
+ if w.IndependentAEADCandidate(2000+100*uint32(m0V4RxSlots+1),120)!=true{
+  t.Fatal("authentic independent candidate blocked by full ACK presentation map")
+ }
+ if ack,e:=w.Copied(2000,100);e!=nil||
+   ack!=uint32(2000+100*(m0V4RxSlots+1)){
+  t.Fatalf("late actual gap head failed to retire contiguous 256 rows: %d %v",ack,e)
+ }
+ if w.Pending()!=0 {t.Fatalf("late gap ACK did not drain bounded ledger %d",w.Pending())}
+}
