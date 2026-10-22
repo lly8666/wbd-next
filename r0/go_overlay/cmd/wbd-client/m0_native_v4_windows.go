@@ -69,9 +69,19 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // Runtime identities are only diagnostic here; the same exact guard
   // remains fail-closed. This is the real public product run, not a unit
   // fixture; a mismatched original route must never be silently replaced.
+  // Genuine Windows2025+WSL2 full product SOURCE e75c37d proved that
+  // GetIpForwardTable may return the Windows vEthernet OWN IPv4 as the
+  // original underlay next hop for the Linux guest. Only treat that as
+  // an on-link WSL guest route when SendARP also resolved the next hop
+  // to the ORIGINAL Windows source MAC. The caller already verified
+  // actual Linux eth0 IP/MAC and exact Windows ifindex/source via OS
+  // readback; third-party proxy/gateway MACs MUST continue to fail.
+  onLinkGuest:=guestIP==underlay.NextHop4
+  verifiedHostSelfNextHop:=underlay.NextHop4==underlay.Source4&&
+   ncfg.NextHopMAC==ncfg.SourceMAC
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
-   guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
+   guestIP!=o.ServerIP||(!onLinkGuest&&!verifiedHostSelfNextHop)||
    sourceIP!=underlay.Source4{
     return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
      windowsclient.ErrN4NativeGuard,idx,underlay.InterfaceIndex,
@@ -89,6 +99,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // acceptable. Any third, unverified Ethernet next hop remains denied.
   if ncfg.NextHopMAC!=ncfg.SourceMAC&&ncfg.NextHopMAC!=actual{
    return fmt.Errorf("%w: original Npcap next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
+  }
+  if verifiedHostSelfNextHop&&!onLinkGuest{
+   fmt.Printf("WBD_PLAN024_NATIVE_WSL_GUEST_MAC_OVER_HOST_SELF_NEXTHOP_VERIFIED ifindex=%d guest=%s host_gateway=%s original_self_mac=%x\\n",idx,guestIP,underlay.NextHop4,ncfg.SourceMAC)
   }
   ncfg.NextHopMAC=actual
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
