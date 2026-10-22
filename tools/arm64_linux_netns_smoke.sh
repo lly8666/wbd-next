@@ -32,6 +32,7 @@ client_ns="wac$GITHUB_RUN_ID"
 server_ns="was$GITHUB_RUN_ID"
 client_made=0
 server_made=0
+work=""
 stop_namespace(){
   ns="$1"
   for pid in $(sudo -n ip netns pids "$ns" 2>/dev/null || true); do
@@ -45,6 +46,8 @@ cleanup(){
   sleep 1
   if [ "$client_made" -eq 1 ]; then sudo -n ip netns del "$client_ns"; fi
   if [ "$server_made" -eq 1 ]; then sudo -n ip netns del "$server_ns"; fi
+  # Never leave generated TLS key or password under RUNNER_TEMP on Stop/FAIL.
+  if [ -n "$work" ] && [ -d "$work" ]; then rm -rf -- "$work"; fi
 }
 trap cleanup EXIT
 if ! sudo -n ip netns add "$client_ns"; then
@@ -99,6 +102,9 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -subj '/CN=wbd.test' -addext 'subjectAltName=DNS:wbd.test' \
   -keyout "$work/server.key" -out "$work/server.crt" >"$out/certificate.log" 2>&1
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
+# Public certificate fingerprint only. A pair of sessions must prove a
+# genuinely new TLS certificate/credential, never recycle frozen Go identity.
+openssl x509 -in "$work/server.crt" -noout -fingerprint -sha256 >"$out/tls-cert-fingerprint.txt"
 # Fixed and Normal are separate exact-source functional cases.
 # Shared credentials via private fd-checked files only, never argv secret.
 set -- --username smoke --password-file "$work/password" \
@@ -169,6 +175,21 @@ sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -
   >"$out/s2c.log" 2>&1
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
+if [ "${WBD_ARM64_IDLE_RESUME_S:-0}" != 0 ]; then
+  seconds="$WBD_ARM64_IDLE_RESUME_S"
+  case "$seconds" in 3|5|8|12|20|30) ;; *)
+    echo 'ARM64_IDLE_DURATION_UNSUPPORTED' >&2; exit 2;;
+  esac
+  # Do not reset the process or reauth just to survive an idle interval.
+  # This is a real pause with no application injection, followed by new
+  # kernel-generated ICMP in BOTH original product TUN directions.
+  sleep "$seconds"
+  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -c 4 -W 2 10.188.18.2     >"$out/idle-resume-c2s.log" 2>&1
+  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -c 4 -W 2 10.188.18.1     >"$out/idle-resume-s2c.log" 2>&1
+  grep -q '0% packet loss' "$out/idle-resume-c2s.log"
+  grep -q '0% packet loss' "$out/idle-resume-s2c.log"
+  echo "ARM64_ORIGINAL_PRODUCT_IDLE_RESUME_BIDIRECTIONAL_PASS duration_s=$seconds"
+fi
 export WBD_V4_EXPECTED_ICMP="$count"
 # One bounded, real-product capacity discovery; not codec A/B, first-arrival
 # p99, or a production rate guarantee. Do NOT repeat if capacity is insufficient.
@@ -347,6 +368,8 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN",
 "capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
+"idle_resume_seconds":os.environ.get("WBD_ARM64_IDLE_RESUME_S","NOT_RUN"),
+"secrets_cleanup":"RUNNER_TEMP_REMOVED",
 "logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
 print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")
