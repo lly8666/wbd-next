@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 246,
-  "checkpoint_sha": "815910f7b7cf47d1c05537b24b30bdf272dce917",
+  "sequence": 247,
+  "checkpoint_sha": "e34740b2d99be35bb934c3994c062e9413f88aa6",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024: PR22 merged. Public Windows2025 Npcap/Wintun→Linux WSL2 true Normal/off is blocked by missing installed Npcap service/DLL and Wintun adapter; WSL2 netem probe invalid due shell CRLF. Shared Rust M2 Windows recovery, Go 256-ACK noHOL/750ms×8 retirement, public kernel→kernel product traffic and WL-N0/N1/N5 remain NOT_RUN.",
-  "why_now": "S771 repaired H245 exact-source evidence grouping error: Governance39726574505/1 FAIL 'evidence is for a different SOURCE'. Env capability SOURCE bb19b3 is kept context-only; unchanged last_tested_source a22c4e and its frozen S763 evidence remain paired. H245 original FAIL retained. Also S768 Governance39726037943 PASS, S770 Governance39726499860 PASS; no public Windows→Linux product test.",
-  "done_when": "Main registry R0-M0-PLAN008 and docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md §2 govern: exact-source public original Go TLS/Rust Windows Wintun/Npcap→Linux raw/TUN Normal/off bidirectional continuous genuine netem and Stop, shared Rust M2 no ACK HOL; then individual WL-N0/N1/N5 or precise BLOCKED/NOT_RUN. Existing scoped product modes and WinSock loopback do not qualify.",
-  "next_action": "Wire Windows real original TLS-bound Rust M2 kind1 authenticated receipt/shadow/budget/fresh independent of Go TCP cumulative ACK; retire Go 256-unACK fresh gate and 750ms×8 local retries with targeted Windows Actions; only after a usable isolated installed Npcap/Wintun+Linux raw/TUN/netem endpoint becomes available, run genuine public Normal/off first then separate WL-N0/N1/N5.",
+  "current_task": "PLAN024 current public Windows→Linux Normal/off: reused old pinned Npcap signed driver and official Wintun on windows-2025; WSL2 real TUN/raw/netns/veth/netem exists. Driver environment PASS, but real Npcap capture/send, original Go TLS→Rust public Windows→Linux continuous business, M2 and WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "H246 source baseline ba63dee; checkpoint→main cursor-only H246. Original Go donor a7a82db3 tree contains no redistributable Npcap/Wintun Git binaries; S772 old approved CI installer ref, S773 exact old Npcap script, S774 workflow. First SOURCE4643101 Actions39728097436/1 driver+Wintun+WSL2 env positive but wrapper cleanup FAIL from stale LASTEXITCODE; script really uninstalled. S776 SOURCE64e8560 Actions39728479563/1/job119657802638 SUCCESS, artifact12403494003 SHA256 8d1e073ea1c443c0d2e7d84e149d28353dcb4bb66c4316565530a5177beb90ba: signed Npcap 1.88 real running service/cleanup absent, real Wintun created and native readback, WSL2 native netem capability. No binary redistributed; no product pass.",
+  "done_when": "Registry PLAN024 Windows2025 native Npcap/Wintun→Linux raw/TUN actual public original Go credential TLS plus Rust Normal/off bidirectional sustained, M2 authenticated receipt/repair noHOL and owned Stop with real impaired kernel; only then distinct WL-N0/N1/N5 exact Actions. Npcap capture/send currently NOT_RUN; win2025 env PASS does not qualify product.",
+  "next_action": "Implement original-verified Rust Windows M2 kind1 feedback RX/TX, frozen shadow/process-global two-repair budget with true kernel send outcomes; remove Go 256 ACK fresh gate and 750ms×8 private retries without enlarging mask, targeted Windows Actions, then real Npcap vEthernet capture/send plus public Windows→Linux Normal/off functional and individual WL-N0/N1/N5.",
   "unverified": true,
   "last_tested_source": "a22c4e09baf7c42a39b4eab1d7c3febffc5a6836",
   "evidence_refs": [
     "docs/evidence/M0/PLAN024-S763-shared-Rust-RS16-real-Wintun-five-mode-PASS_SCOPED-20261022.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN024-WL-matrix-recovery-and-integration-20261022.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/evidence/M0/PLAN024-WL-S767-windows2025-wsl2-native-env-BLOCKED-20261022.json"
+    "docs/devlog/M0/PLAN024-S772-original-npcap-wintun-reuse-intent-20261022.md",
+    "docs/evidence/M0/PLAN024-S774-old-Npcap-Wintun-WSL2-real-driver-env-FAIL-20261022.json",
+    "docs/evidence/M0/PLAN024-S776-reused-Npcap-Wintun-WSL2-native-env-PASS-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "PR22 merged; env-only Windows2025 Actions39725690761/1 artifact12403107809 shows no Npcap driver/DLL and no Wintun adapter, WSL sh CRLF harness exit2 (not netem platform finding). S763 a22c4e five-mode scoped evidence remains distinct. Windows→Linux real product/WL-N0/N1/N5 NOT_RUN; shared Rust Windows M2/Go 256 ACK gating unresolved. H245 cursor mixed two SOURCES, original Governance39726574505 FAIL preserved, H246 corrects references."
+  "partial_summary": "Legacy pinned a7a82: Npcap driver script is ported; signed Npcap 1.88, Wintun 0.14.1 actual adapter and WSL2 raw/TUN/netem PASS_ENV source64e8560 Actions39728479563 artifact12403494003; own driver cleanup verified. Original run39728097436 FAIL due false wrapper stale exit preserved. Npcap capture/send and actual public V4 Windows→Linux Normal/off, shared Rust M2, 10Mbps WL-N0/N1/N5 NOT_RUN. No Npcap binary shipped; license requires separately authorized deployment."
 }
