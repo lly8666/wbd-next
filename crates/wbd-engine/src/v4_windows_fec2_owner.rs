@@ -96,7 +96,7 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let mut failed=false;
     // Split the actual Entry fields, not the MutexGuard deref, so Rust
     // guarantees one unique RX owner and distinct bounded RS16 decoder.
-    let entry:&mut Entry=&mut e;
+    let entry:&mut Entry=e;
     let decoder=entry.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
     let (storage,report)=entry.owner.drain_windows_authenticated_fec2(
         MonoNs(0),Vec::with_capacity(1),|_pn,kind,plain|{
