@@ -1060,7 +1060,6 @@ impl ProtectedScopedOwner {
     /// original active lane AEAD/PN and M1 frozen kernel queue as real DATA.
     /// Control does not create another sealer or another epoch, and never
     /// authorizes an FEC APPLIED revision by itself.
-    #[cfg(feature="fec2_product_record")]
     pub(crate) fn seal_original_authenticated_receipt(
         &mut self,mut slab:UniqueBuffer,tlv:&[u8],budget:FrameBudget,
         carrier_snapshot:u64,now:MonoNs,

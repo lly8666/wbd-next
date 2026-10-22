@@ -13,6 +13,7 @@ on:
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go
       - crates/wbd-engine/src/v4_windows_owner.rs
+      - crates/wbd-engine/src/v4_owner_crypto.rs
       - crates/wbd-engine/src/v4_embedded_go.rs
       - r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go
       - r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go
