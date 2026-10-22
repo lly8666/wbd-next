@@ -157,6 +157,8 @@ jobs:
           & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
             Tee-Object result/wl-public/npcap-install.log
           if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
           $wzip=Join-Path $root 'wintun.zip'
           $wdir=Join-Path $root 'wintun'
           Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
