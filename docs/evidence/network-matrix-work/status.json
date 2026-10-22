@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S001-executable-mode-targeted-regression",
+  "phase": "off-low-loss-1pct-after-scoped-baseline",
   "recovered": false,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -53,50 +53,12 @@
   ],
   "open_requests": [
     {
-      "id": "arm64-off-duplex-mixed-10m-lossless-90s",
+      "id": "arm64-off-mixed-loss1-rtt50-75s",
       "path": "tests/network/request.json",
-      "scenario": "normal/off lossless 90s, UDP/TCP 50/50, 4 TCP flows, 64/256/1024/1172B, 20Hz probes; each direction 10Mbps",
-      "status": "FAIL_BEFORE_READY",
-      "run_id": 39760409329,
-      "attempt": 1,
-      "build_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "artifact_id": 12417786567,
-      "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39760409329",
-      "result_artifact_id": 12418065932,
-      "failure": "Go CLI exited before READY; input ZIP/native ARM/source checks succeeded, no business measured; namespace cleanup true"
-    },
-    {
-      "id": "arm64-off-startup-diagnostic-12s",
-      "path": "tests/network/request.json",
-      "status": "FAIL_EXIT126_PERMISSION_DENIED",
-      "run_id": 39761391815,
-      "reason": "one evidence-gathering shorter run with allowlisted startup error classifiers; same seed/mode/product; no performance qualification",
-      "attempt": 1,
-      "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d",
-      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761391815",
-      "failure": "both CLIs exit 126, permission denied, no TUN; prepared ARM normalized executables lacked executable mode",
-      "result_artifact_id": 12418840250,
-      "safe_classes": {
-        "client": [
-          "KERNEL_DENIED"
-        ],
-        "server": [
-          "KERNEL_DENIED"
-        ]
-      }
-    },
-    {
-      "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
-      "path": "tests/network/request.json",
-      "status": "IN_PROGRESS",
-      "run_id": 39761756907,
-      "attempt": 1,
-      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "scenario": "same S001 original 90s lossless, same seed/rate; permission-only fixture fix",
-      "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761756907"
+      "status": "INTENT_RECORDED_NOT_DISPATCHED",
+      "run_id": null,
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "scenario": "Normal/off 10Mbps per direction, UDP/TCP 50/50 4 streams 75s, 25ms one way netem 1% IID each direction, same seed 5205"
     }
   ],
   "open_issues": [
@@ -105,7 +67,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Inspect 39761756907 single full duration same-source regression; if failure artifact, triage earliest boundary and retain FAIL.",
+  "next_action": "Commit one low-loss request with explicit maximum remaining loss <=0.1%, require retransmission, watch same job; keep independent results and host/production counters.",
   "actions": [
     {
       "run_id": 39759842064,
@@ -119,6 +81,28 @@
       "conclusion": "success",
       "detail": "one-time native ARM64 product build",
       "artifact_id": 12417786567
+    }
+  ],
+  "completed": [
+    {
+      "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
+      "run_id": 39761756907,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48",
+      "artifact_id": 12417973654
+    },
+    {
+      "id": "arm64-off-duplex-mixed-10m-lossless-90s",
+      "run_id": 39760409329,
+      "result": "FAIL_BEFORE_READY",
+      "evidence": "S001-startup-failure.json"
+    },
+    {
+      "id": "arm64-off-startup-diagnostic-12s",
+      "run_id": 39761391815,
+      "result": "FAIL_EXIT126",
+      "evidence": "S001-startup-diagnostic.json"
     }
   ]
 }
