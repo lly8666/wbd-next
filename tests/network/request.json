@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-off-duplex-mixed-10m-lossless-90s",
+  "id": "arm64-off-startup-diagnostic-12s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -40,12 +40,12 @@
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded"
   },
-  "warmup_s": 15,
-  "drain_s": 15,
+  "warmup_s": 3,
+  "drain_s": 5,
   "phases": [
     {
       "name": "steady",
-      "seconds": 90,
+      "seconds": 12,
       "c2s": {},
       "s2c": {}
     }
