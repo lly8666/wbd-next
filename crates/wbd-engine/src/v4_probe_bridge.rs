@@ -18,20 +18,20 @@ use crate::v4_protected_handoff::{GoFlow,PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::net::Ipv4Addr;
 use wbd_types::buffer_contract::FrozenRecordHandle;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::net::{UdpSocket,SocketAddrV4};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_tun_sink::ScopedTunSink;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::os::fd::BorrowedFd;
 use crate::runtime::RxPacket;
 use crate::runtime::generation::LoanBatch;
@@ -309,9 +309,9 @@ pub unsafe extern "C" fn wbd_m0_test_probe_open_unique(
 // This is never a production cold installer or M4 socket sink.
 enum ProbeTxBudget {
     Caller {connection_mtu:u16,peer_mss:u16},
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     KernelLoopback {expected_ifindex:u32},
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     KernelRoute{expected_ifindex:u32,destination:Ipv4Addr},
 }
 fn probe_seal_tx_with_source(handle:u64,packet:&[u8],source:ProbeTxBudget,
@@ -333,13 +333,13 @@ fn probe_seal_tx_with_source(handle:u64,packet:&[u8],source:ProbeTxBudget,
             }).map_err(|_|INVALID)?;
             (value,None)
         }
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         ProbeTxBudget::KernelLoopback{expected_ifindex}=>{
             let v=p.owner.observe_linux_normal_off_budget("lo",expected_ifindex)
                 .map_err(|_|INVALID)?;
             (v.frame,Some(v))
         }
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         ProbeTxBudget::KernelRoute{expected_ifindex,destination}=>{
             let v=p.owner.observe_linux_normal_off_route_budget(
                 "lo",expected_ifindex,destination
@@ -402,7 +402,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_normal(
 // supply the frame budget, while the ordinary Rust owner enforces original
 // Go protected SYN MSS and its generation-scoped TxOwner. No actual raw I/O.
 #[no_mangle]
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_observed(
     handle:u64,packet:*const u8,len:usize,ifindex:u32,
     out:*mut u8,out_cap:usize,out_len:*mut u32,pn:*mut u64,seq:*mut u32,
@@ -425,7 +425,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_observed(
 
 // Test-tagged only: the destination is a candidate route lookup address,
 // not a trusted Go session address or a production socket/driver lease.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_route(
     handle:u64,packet:*const u8,len:usize,ifindex:u32,
@@ -457,7 +457,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_seal_linux_route(
 /// SAME scoped frozen TX batch through normal-build M4 ScopedUdpOwner.
 /// Go supplies the loopback UDP receiver's port and independently verifies
 /// the ciphertext arriving through the kernel. This is NOT raw/TUN app IO.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_udp_tx(handle:u64,payload:&[u8],ifindex:u32,receive_port:u16)
     ->Result<(u64,u32,u32),i32>{
     if payload.is_empty() || payload.len()>1400 || receive_port==0{
@@ -494,7 +494,7 @@ fn probe_udp_tx(handle:u64,payload:&[u8],ifindex:u32,receive_port:u16)
     Ok((pn,seq,u32::try_from(wire_len).map_err(|_|INVALID)?))
 }
 
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_send_kernel_udp(
     handle:u64,payload:*const u8,len:usize,ifindex:u32,receive_port:u16,
@@ -515,7 +515,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_send_kernel_udp(
 /// Bind a REAL Linux UDP receiver once after authenticated Go Detach and
 /// owner Commit. The caller sees only a local port, no OS handle or Rust
 /// slab. The receiver stays with the ORIGINAL owner until Stop/release.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_bind_kernel_rx(handle:u64)->Result<u16,i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -532,7 +532,7 @@ fn probe_bind_kernel_rx(handle:u64)->Result<u16,i32>{
 /// M4 recvmmsg directly writes into existing M1 arena UniqueBuffer, then
 /// the SAME ScopedOwner owns the borrowed encrypted RX batch, authenticates
 /// PN/AEAD, inspects/reassembles M3 LINK and emits a complete-packet digest.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_kernel_rx_once(handle:u64)->Result<(u64,u64),i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -554,7 +554,7 @@ fn probe_kernel_rx_once(handle:u64)->Result<(u64,u64),i32>{
         completed.ok_or(INVALID)
     }else{Err(INVALID)}
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_bind_kernel_rx(
     handle:u64,out_port:*mut u16
@@ -565,7 +565,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_bind_kernel_rx(
         Err(err)=>err,
     }
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_rx(
     handle:u64,out_pn:*mut u64,out_digest:*mut u64
@@ -584,7 +584,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_rx(
 // sink, writing an entire IPv4 packet into kernel's IFF_TUN/NO_PI FD.
 // The Go fixture must already configure/own the namespace and TUN. The
 // FFI is TEST ONLY; arbitrary C byte bundles remain untrusted.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_attach_tun(handle:u64,fd:i32,ifname:&str)->Result<(),i32>{
     if fd<3 {return Err(INVALID)}
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
@@ -599,7 +599,7 @@ fn probe_attach_tun(handle:u64,fd:i32,ifname:&str)->Result<(),i32>{
     p.tun_sink=Some(tun);
     Ok(())
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_kernel_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -619,7 +619,7 @@ fn probe_kernel_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
     }
     Ok((delivered,failed))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_attach_tun(
     handle:u64,fd:i32,name:*const u8,len:usize,
@@ -629,7 +629,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_attach_tun(
     let Ok(name)=std::str::from_utf8(name) else{return INVALID};
     match probe_attach_tun(handle,fd,name){Ok(())=>OK,Err(e)=>e}
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_to_tun(
     handle:u64,out_delivered:*mut u32,out_failed:*mut u32,
@@ -649,7 +649,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_receive_kernel_to_tun(
 /// M4's original sendmmsg sends it to Go's independent kernel UDP socket.
 /// A test-only FFI invokes this. No Go-provided business bytes are copied
 /// directly to Rust, no alternate encryption path or fake TUN.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_tun_to_kernel_udp(handle:u64,ifindex:u32,port:u16)
     ->Result<(u64,u32,u32,u32),i32>{
     if port==0 {return Err(INVALID)}
@@ -691,7 +691,7 @@ fn probe_tun_to_kernel_udp(handle:u64,ifindex:u32,port:u16)
     Ok((pn,seq,u32::try_from(wire_len).map_err(|_|INVALID)?,
         u32::try_from(packet_len).map_err(|_|INVALID)?))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_udp(
     handle:u64,ifindex:u32,receive_port:u16,
@@ -714,7 +714,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_udp(
 /// normal-build Rust AEAD FrozenRecord from actual kernel TUN app ingress.
 /// This constrained fixture uses lo and one local exact tuple. It remains
 /// a test-only orchestration call, not a native credential installer.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_tun_to_kernel_raw(handle:u64,ifindex:u32)
     ->Result<(u64,u32,u32,u32),i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
@@ -742,7 +742,7 @@ fn probe_tun_to_kernel_raw(handle:u64,ifindex:u32)
     Ok((pn,seq,u32::try_from(full).map_err(|_|INVALID)?,
         u32::try_from(app_len).map_err(|_|INVALID)?))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_raw(
     handle:u64,ifindex:u32,out_pn:*mut u64,out_seq:*mut u32,
@@ -764,7 +764,7 @@ pub unsafe extern "C" fn wbd_m0_test_probe_tun_to_kernel_raw(
 /// Go credential-checked V4 Detach, BEFORE Go submits first raw record.
 /// Exact tuple is a constrained isolated-loopback test fixture, NOT a
 /// production credential or live FakeTCP tuple authorization.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_bind_raw_rx(handle:u64,ifindex:u32)->Result<(),i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -773,7 +773,7 @@ fn probe_bind_raw_rx(handle:u64,ifindex:u32)->Result<(),i32>{
         .map_err(|_|INVALID)?);
     Ok(())
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn probe_raw_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
     let mut state=registry().lock().map_err(|_|BAD_STAGE)?;
     let p=state.slots.get_mut(&handle).ok_or(UNKNOWN)?;
@@ -796,12 +796,12 @@ fn probe_raw_rx_to_tun(handle:u64)->Result<(u32,u32),i32>{
         delivered!=1 || failed!=0 {return Err(INVALID)}
     Ok((delivered,failed))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_bind_raw_rx(
     handle:u64,ifindex:u32
 )->i32{match probe_bind_raw_rx(handle,ifindex){Ok(())=>OK,Err(e)=>e}}
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_test_probe_receive_raw_to_tun(
     handle:u64,out_delivered:*mut u32,out_failed:*mut u32
