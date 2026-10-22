@@ -1,5 +1,7 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
+**Latest 2026-10-22 update:** Same product's original Go/Rust TX and RX ISA-L use has positive evidence; [two real OS process generations + 8s idle-resume PASS](https://github.com/lly8666/wbd-next/actions/runs/39764396868). [Native-first and deliberate no-ISA-L Scalar-only builds + real Fixed 2% FEC source-recovery/TUN PASS](https://github.com/lly8666/wbd-next/actions/runs/39764728463), with independent [Native-first build regression PASS](https://github.com/lly8666/wbd-next/actions/runs/39764728263). See [precise evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Physical two hosts and per-ciphertext source-loss association NOT_RUN. Android/OpenWrt deferred.
+
 **Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Now verified: 15.8–15.9× scoped codec encode / 15.6× scoped decode CPU, Fixed+Auto 2% kernel loss and complete app delivery, authenticated original Go/Rust FEC2 recovery in TUN, actual original-TX Native **400** and Scalar **564** encoding quanta, original-RX Native **53** and Scalar **7** decoding calls on the same product SOURCE. Remaining: ciphertext-specific loss causality, product latency p99 and physical Linux ARM64; these are NOT_RUN. Android and OpenWrt remain deferred.
 
 ## Recovery update — Linux ARM64 scoped product functional
@@ -53,4 +55,4 @@
 - OpenWrt musl .ipk/procd client, SDK/real-router interoperability.
 - Any new Android/OpenWrt Actions are **manual only**, not part of Linux ARM64 required gates. Existing build-only results remain historical and are not OS or product-qualified.
 
-**Next action:** original Linux ARM64 Go/Rust product source-specific kernel loss identity or physical two-device validation, without fabricating packet-level causality. Actual product native/Scalar FEC2 encode, decode and TUN-recovered counters are verified under the scoped [latest exact-SOURCE checkpoint](../evidence/arm64-linux-native-checkpoint-20261022.md); do not rerun these successes. Android/OpenWrt remain deferred.
+**Next action:** exact original owner ciphertext-source-to-qdisc-drop identity with preserved AEAD/PN and no packet logs unless strictly diagnostic, OR two physical Linux ARM64 devices if available. Native-first, scalar-only fallback, actual product native encode/decode, full TUN FEC recovery, and two-stop/restart-with-idle qualified in scoped native Actions; avoid re-running. Android/OpenWrt remain deferred.
