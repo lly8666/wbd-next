@@ -2,11 +2,8 @@
 # same frozen public source as already qualified Normal/Fixed/Auto.
 name: Linux ARM64 public Game2 native two-lane
 run-name: ARM64 Game2 real-kernel ${{ github.sha }}
+# Single functional scene already observed: no automatic replay.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - '.github/workflows/arm64-linux-game2-frozen.yml'
   workflow_dispatch:
 permissions:
   contents: read

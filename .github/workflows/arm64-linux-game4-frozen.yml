@@ -3,11 +3,8 @@
 # but that workflow's final FEC readback predicate was invalid; preserve FAIL.
 name: Linux ARM64 public Game4 native four-lane
 run-name: ARM64 Game4 real-kernel ${{ github.sha }}
+# Single functional scene already observed: no automatic replay.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - '.github/workflows/arm64-linux-game4-frozen.yml'
   workflow_dispatch:
 permissions:
   contents: read

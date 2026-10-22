@@ -1,5 +1,7 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
+**Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Remaining: actual FEC loss recovery, hardware backend CPU A/B, physical Linux ARM64. Android and OpenWrt remain deferred.
+
 ## Recovery update — Linux ARM64 scoped product functional
 - ARM64 genuine original Go + Rust + pinned ISA-L **BUILD PASS**: Action [39751199619](https://github.com/lly8666/wbd-next/actions/runs/39751199619), SOURCE `34f89d303710f7c0e1d9c1c89cfff038c9839b54`, artifact manifest contains two Go binaries, Rust shared engine, SHA256 hashes.
 - ARM64 native platform/crypto/ISA-L test **PASS**: Action [39751199746](https://github.com/lly8666/wbd-next/actions/runs/39751199746), same SOURCE, no physical/product inference.
@@ -51,4 +53,4 @@
 - OpenWrt musl .ipk/procd client, SDK/real-router interoperability.
 - Any new Android/OpenWrt Actions are **manual only**, not part of Linux ARM64 required gates. Existing build-only results remain historical and are not OS or product-qualified.
 
-**Immediate next action at this update:** fix source-locked Go overlay compilation and deterministic Stop race fixture, then verify the ARM64 bundle from the exact new branch SHA. Never infer future work completion from this plan.
+**Next action:** bounded ARM64 scalar/native FEC2 same-job CPU evidence and/or one specifically dropped-source recovery proof, without repeating already successful kernel samples.
