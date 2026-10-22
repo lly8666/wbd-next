@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 250,
-  "checkpoint_sha": "41c6c035e461d357e0682b1203dae7974bbb151e",
+  "sequence": 256,
+  "checkpoint_sha": "e247f5c6fd3e45af4f3c1ba5adc1d8136547f765",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 direct original Windows Go TLS/Rust M2/Npcap/Wintun native CLI→actual WSL2 Linux original Go Rust raw/TUN Normal/off duplex and Stop. Exact two product full-run FAILS 39743807292 and 39744320641: Linux eth0 passive AF_PACKET armed but zero TCP443 packets, Windows FakeTCP bootstrap deadline. S823 fast complete rerun 39745406663 WITH live Windows NPF/route vs Linux eth0 witness pending; WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Interrupted execution recovered M0 H249 epoch1 rev3. S810-821 actual Windows2025+WSL2 two public binaries signed drivers, authenticated TLS full chain (not mock). S819-20 Action39743807292 SOURCE8e26831 full FAIL bootstrap; artifact12410926449 sha7851453d6... eth0 AF_PACKET armed zero TCP443. S821 independent frozen Windows binary source65ff81c Action39744320641 also full FAIL same with artifact12411565304. S822-S823 full live comparison of Windows original WSL NPF device/header, host routes vs real Linux eth0 in Action39745406663/1 (RUNNING). Product runtime unqualified.",
+  "current_task": "PLAN024 real Windows2025 original Go TLS/Rust M2 Npcap Wintun→actual Ubuntu24.04.5 WSL2 Linux original Go Rust raw/TUN Normal/off two-way UDP plus both owned Stop. Source4b9 Action39755736757 FAIL original Go pre-TLS guard after genuine Ubuntu import and OS guest-MAC readback. Fixed native Go source b5f4356 now allows previously host-self OR already correct guest MAC, but only with exact live guest/host IP and Windows ifIndex. Full SOURCE7bf4d4b Action39757115561 RUNNING, scoped Windows native source Action39757045499 RUNNING. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "Recovered H255. Actual Ubuntu WSL2 import with official SHA256 bb415d8... PASSED full source4b9 Action39755736757; native host 172.28.144.1 ifIndex18, Linux 172.28.155.202 eth0 MAC00:15:5d:0c:6b:05, Windows verified temporary neighbor and HyperV rule. Original Go rejected extra Npcap MAC guard BEFORE TLS. Evidence docs/evidence/M0/PLAN024-S842-real-Ubuntu-WSL2-import-PASS-but-original-Go-MAC-guard-FAIL-20261022.json. Source b5f4356 tightens guard to accept only original self MAC or genuine guest MAC. Whole product source7bf4d4b Action39757115561/1 now IN_PROGRESS. No public PASS yet.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read same exact full public Action39745406663/1 Windows NPF header and host route vs Linux AF_PACKET and real TLS CLI logs; repair the proved NPF/WSL ingress or reverse route/RST failure then rerun SAME genuine public Windows→Linux Normal/off duplex+owned Stop job, no synthetic tests. Only if product hard gate PASS, independently WL-N0/N1/N5 10Mbps both directions 60sec kernel netem.",
+  "next_action": "Read actual source7bf4d4b full public Action39757115561 with Windows NPF real destMAC, WSL2 eth0 SYN, original TLS/Rust Wintun Applied, both application UDP directions, and owned Stop. Fix first genuine full-path failure and rerun whole path; if true Normal/off PASS then independent WL-N0,N1,N5 kernel netem 10Mbps/60sec Actions.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -19,12 +19,10 @@
   ],
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/evidence/M0/PLAN024-S784-real-Windows-Npcap-WSL2-bidirectional-Ethernet-PASS-20261022.json",
-    "docs/evidence/M0/PLAN024-S790-Windows-original-Go-Rust-kind1-v5-native-scoped-PASS-20261022.json",
-    "docs/devlog/M0/PLAN024-S794-M2-native-shadow-parallel-intent-20261022.md",
-    "docs/devlog/M0/PLAN024-S809-real-Windows-M2-BDP-Npcap-continuation-20261022.md",
-    "docs/devlog/M0/PLAN024-S824-recovered-full-Windows-Linux-real-underlay-20261022.md"
+    "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json",
+    "docs/evidence/M0/PLAN024-S839-full-public-WinLinux-WSL2-distro-install-BLOCKED-20261022.json",
+    "docs/evidence/M0/PLAN024-S842-real-Ubuntu-WSL2-import-PASS-but-original-Go-MAC-guard-FAIL-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "Recovered to main S824. Original and frozen-product Windows2025 real Npcap/Wintun client + WSL2 original Linux Rust raw/TUN server have full Actions FAIL before TLS: original Go FakeTCP bootstrap deadline; Linux eth0 AF_PACKET shows zero real TCP443 frames. Independent frozen native source excludes rebuild as sole cause. Product and WL perf NOT_PASS/NOT_RUN. Next full fast Action S823 NPF-vs-Linux packet/route witness pending; only real full path runs."
+  "partial_summary": "Original 2025 WSL Ubuntu Store install blocked, direct official hash-verified Ubuntu24.04.5 WSL2 import worked. Full Action39755736757 then failed BEFORE TLS solely due overstrict original Go MAC guard on native read-back verified guest. Source-locked Go fix b5f4356 + current full source7bf4d4b running; Windows scoped jobs separate, no product Normal or WL performance PASS."
 }

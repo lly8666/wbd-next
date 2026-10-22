@@ -54,7 +54,7 @@ try:
    seen+=1
    if seen<=48 or seen%20==0:
     fmt=lambda b:".".join(map(str,b))
-    print("WL_WINDOWS_NPF_TCP443 "+json.dumps({"device":name,"src":fmt(data[26:30]),"dst":fmt(data[30:34]),"sport":sp,"dport":dp,"flags":data[pos+13],"num":seen}),flush=True)
+    print("WL_WINDOWS_NPF_TCP443 "+json.dumps({"device":name,"src":fmt(data[26:30]),"dst":fmt(data[30:34]),"source_mac":data[6:12].hex(":"),"dest_mac":data[:6].hex(":"),"sport":sp,"dport":dp,"flags":data[pos+13],"eth_src_mac":":".join(f"{v:02x}" for v in data[6:12]),"eth_dst_mac":":".join(f"{v:02x}" for v in data[0:6]),"num":seen}),flush=True)
 finally:
  for _,h in opened:dll.pcap_close(h)
 print("WL_WINDOWS_NPF_TCP443_COUNT="+str(seen),flush=True)

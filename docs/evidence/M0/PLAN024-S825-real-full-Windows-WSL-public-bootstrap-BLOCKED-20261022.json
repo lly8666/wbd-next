@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_FULL_PUBLIC_WIN_TO_WSL_PRODUCT_FAIL_EXACT_KERNEL_EGRESS_BLOCKED",
+  "result": "FAIL_PUBLIC_BOOTSTRAP",
+  "windows_owner": "Original Go credential TLS → signed Npcap/Wintun → original Rust M1 M2 M3",
+  "linux_server": "Original Go V4 raw/TUN public server on real WSL2 Linux eth0",
+  "windows_binary_source": "65ff81c723b11b2cdc5115bd0c66155275755ca4",
+  "linux_binary_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+  "attempts": [
+    {
+      "workflow": ".github/workflows/m0-wl-public-normal-frozen.yml",
+      "source_sha": "1445e2c9abe5016b71d1806bc4bb99f818425481",
+      "run_id": 39745406663,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "artifact": {
+        "id": 12411373443,
+        "digest": "sha256:09da4b70419384ad812cf5a7bd8ae808f1bfcbd1814d35170d1d8e6ab516b4e4"
+      },
+      "observed": {
+        "windows_npf_ethernet": "two real SYN source 172.20.160.1:41031 dest 172.20.171.251:443 on native vEthernet WSL",
+        "linux_eth0_af_packet_tcp443": "ZERO",
+        "original_windows_bootstrap": "faketcp: bootstrap stream deadline exceeded",
+        "linux_public_server_ready": "NOT_OBSERVED"
+      }
+    },
+    {
+      "workflow": ".github/workflows/m0-wl-public-normal-frozen.yml",
+      "source_sha": "7e8f56a4e79e29c71e3168d624e9383e4413519a",
+      "run_id": 39747114234,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "artifact": {
+        "id": 12412038507,
+        "digest": "sha256:a4d563d54f8220737834303f75dfd80a81b78bcb610f585bb8f419d7410eb1ac"
+      },
+      "observed": {
+        "windows_npf_ethernet": "two real SYN source 172.17.144.1:41031 dest 172.17.151.191:443 on native WSL vEthernet",
+        "linux_eth0_af_packet_tcp443": "ZERO",
+        "real_linux_guest": "172.17.151.191/20",
+        "real_windows_wsl_source": "172.17.144.1",
+        "hyperv_rule": "created exact WSL VM creator {40E0AC32-46A5-438A-A0B2-2B479E8F2E90}, TCP src 172.17.144.1:41031 dst 172.17.151.191:443 inbound allow, removed afterwards",
+        "original_windows_bootstrap": "faketcp: bootstrap stream deadline exceeded",
+        "linux_public_server_ready": "NOT_OBSERVED",
+        "owned_npcap_cleanup": "SUCCESS"
+      }
+    }
+  ],
+  "not_run": {
+    "real_public_normal_off": "FAIL not PASS",
+    "native_udp_both_directions": "NOT_RUN",
+    "windows_os_applied": "NOT_RUN",
+    "cross_platform_owned_stop": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next": "Full original Go/Rust compiled current-source Action 39748014730 pending with exact native Ethernet MACs; compare Windows emitted dest MAC vs Linux actual eth0 MAC, fix proven WSL virtual switching/adapter identity and rerun FULL public Windows-to-Linux, not fixture or mask."
+}
