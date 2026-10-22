@@ -46,6 +46,9 @@ foreach($mode in @('fixed','auto')){
   if (!$fec.Contains('M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_FEC2_'+$mode+'_RUST_M3_SIGNED_WINTUN_KERNEL_UDP_APP_FIRST_REVERSE_PASS_SCOPED')){
     throw ('native Fixed/Auto real first/reverse marker NOT_RUN mode='+$mode)
   }
+  if (!$fec.Contains('M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_'+$mode+'_PASS_SCOPED')){
+    throw ('native Fixed/Auto actual lost source Rust RS16 repair NOT_RUN mode='+$mode)
+  }
 }
 if ($fec -match 'UNSUPPORTED|--- SKIP:') {throw 'Fixed/Auto positive was skipped'}
 Write-Output 'M0_PLAN024_WINDOWS_REAL_ORIGINAL_GO_FEC2_FIXED_AUTO_NATIVE_TLS_RUST_WINTUN_FIRST_REVERSE_PASS_SCOPED'
