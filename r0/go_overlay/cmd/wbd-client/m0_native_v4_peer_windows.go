@@ -509,6 +509,8 @@ func(p *m0NativeV4Peer) Errors()<-chan error{
 // performance harness (the internal Go heap is not Windows process RSS).
 type m0NativeV4PacketStats struct{
  Mode m0WindowsV4Mode `json:"mode"`
+ // Exact LOCAL NPF pre-auth drop: not WAN loss or authenticated delivery.
+ NPFIngressLocalDrops uint64 `json:"npcap_ingress_local_drops"`
  TxPackets uint64 `json:"tx_records"`
  RxFirstDelivered uint64 `json:"rx_first_delivered_ipv4"`
  RetxRecords uint64 `json:"frozen_ciphertext_retransmits"`

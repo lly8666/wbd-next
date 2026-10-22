@@ -19,6 +19,7 @@ import(
  "os/signal"
  "path/filepath"
  "sync"
+ "sync/atomic"
  "syscall"
  "time"
 
@@ -124,6 +125,8 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  defer assoc.Close()
  failure:=make(chan error,2)
  nativeFrames:=make(chan faketcp.Segment,64)
+ // Explicit local pre-auth carrier pressure, not WAN loss or authenticated success.
+ var ingressLocalDrops atomic.Uint64
  var readers sync.WaitGroup
  readers.Add(1)
  go func(){
@@ -135,11 +138,16 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
     return
    }
    if assoc.State()==faketcp.ClientAssociationDetached{
-    // Verified original TLS hands the bounded real TCP frame to Rust M3.
+    // Fixed 64-slot original NPF ingress, Rust M3 remains the sole authenticator.
+    // A full pre-auth queue is an explicit LOCAL packet drop, not a valid
+    // Rust receipt, TCP carrier acknowledgement or connection-wide Stop.
     select{case nativeFrames<-seg:
     default:
-     select{case failure<-fmt.Errorf("%w: detached original NPF ingress queue full depth=%d capacity=%d",windowsclient.ErrN4NativeGuard,len(nativeFrames),cap(nativeFrames)):default:}
-     return
+     if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
+      select{case failure<-fmt.Errorf("%w: real peer FIN/RST on saturated original NPF ingress",windowsclient.ErrN4NativeGuard):default:}
+      return
+     }
+     ingressLocalDrops.Add(1)
     }
     continue
    }
@@ -285,13 +293,17 @@ waitNative:
   case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
   case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
   case <-metricsTicker.C:
-   if line,mErr:=json.Marshal(transport.Stats());mErr==nil{
+   metrics:=transport.Stats()
+   metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
+   if line,mErr:=json.Marshal(metrics);mErr==nil{
     fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))
    }
   }
  }
  if runtimeErr!=nil{
-  if snapshot,marshalErr:=json.Marshal(transport.Stats());marshalErr==nil{
+  metrics:=transport.Stats()
+  metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
+  if snapshot,marshalErr:=json.Marshal(metrics);marshalErr==nil{
    fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error()+" stats="+string(snapshot))
   }else{fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error())}
  }
