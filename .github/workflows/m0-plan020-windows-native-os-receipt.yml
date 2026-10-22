@@ -243,6 +243,8 @@ jobs:
                       "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
                       "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off",
                       "wbd_m0_win_owner_v5_open_data_or_kind1",
+                      "wbd_m0_win_owner_v6_arm_original_m2",
+                      "wbd_m0_win_owner_v6_report_npcap_firstsend",
                       "wbd_m0_win_owner_v4_game_join","wbd_m0_win_owner_v4_game_stage",
                       "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop",
                       "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open",

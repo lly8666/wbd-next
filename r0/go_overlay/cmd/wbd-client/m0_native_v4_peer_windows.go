@@ -100,6 +100,12 @@ func(p *m0NativeV4Peer) BindNativeRing(
  if p.ring!=nil||p.stopping||send==0||recv==0{
   return windowsclient.ErrN4NativeGuard
  }
+ // Register the single Rust M2 recovery direction ONLY when the live
+ // original Go credential TLS and the same M4-created Wintun are bound.
+ // Do not arm parallel FEC2 until its genuine public M2 mode is approved.
+ if p.mode==m0WinModeNormal{
+  if err:=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
+ }
  p.ring=ring;p.identity=id;p.sendNext=send;p.recvNext=recv
  p.peerAck=send
  p.rx=newM0V4RxWindow(recv)
@@ -168,8 +174,9 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  }
  var ciphertext []byte
  var seq uint32
+ var pn uint64
  if p.mode==m0WinModeNormal {
-  ciphertext,seq,_,err=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
+  ciphertext,seq,pn,err=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
  }else{
   if n>p.maxIPv4||p.blockID==0||p.blockID==^uint64(0){
    p.mu.Lock();p.oversize++;p.mu.Unlock()
@@ -185,7 +192,17 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if err!=nil{return false,err} // exact generation/cipher failure: Stop
 
  if seq!=p.sendNext{return false,windowsclient.ErrN4NativeGuard}
- if err=p.sendCarrier(seq,p.recvNext,ciphertext);err!=nil{return false,err}
+ err=p.sendCarrier(seq,p.recvNext,ciphertext)
+ if p.mode==m0WinModeNormal{
+  // A valid original NPF pcap_sendpacket return is the ONLY new M2
+  // data firstsend event. Negative error is NOT peer receipt or a
+  // definite acknowledgement; a failed callback fences this owner.
+  if _,receiptErr:=p.owner.ReportOriginalM2NpcapFirstsend(
+   ctx,pn,seq,len(ciphertext),err==nil);receiptErr!=nil{
+   return false,errors.Join(windowsclient.ErrN4NativeGuard,err,receiptErr)
+  }
+ }
+ if err!=nil{return false,err}
  p.pending=append(p.pending,m0NativeV4Outbound{
   // SealBound returns a fresh exact immutable Rust C-ABI record buffer.
   // Retain it for byte-identical TCP retry instead of copying ciphertext twice.

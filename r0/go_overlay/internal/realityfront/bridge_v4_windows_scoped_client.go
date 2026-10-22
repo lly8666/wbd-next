@@ -163,6 +163,54 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
 }
 
 
+
+// ArmBoundOriginalM2 verifies the current M4 Wintun OS generation and then
+// asks the SAME original post-credential-TLS Rust owner to bind its M2
+// FrozenRecord/receipt route; this is never a public OS Applied grant.
+func(s *V4WindowsAuthenticatedClientOwner) ArmBoundOriginalM2(ctx context.Context)error{
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.armM2Proc==nil{return errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
+        return errors.Join(errV4WindowsOwner,err)
+    }
+    state,err:=s.OriginalOwnerReadback()
+    if err!=nil||!state.OwnerActive||!state.DeviceBound||
+        state.DeviceQuiesced||state.ProductApplied{return errV4WindowsOwner}
+    err=winOwnerCall(s.bridge.armM2Proc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex))
+    runtime.KeepAlive(s.bridge.epoch)
+    return err
+}
+// Only call after the EXACT original Npcap synchronous sendpacket syscall:
+// sent=true means the native NPF accepted a frame, NOT the peer applied it.
+// Retains and moves the SAME M1 frozen AEAD PN/SEQ on the Rust side. The
+// CPU-side Go ciphertext is NEVER the authoritative M2 shadow.
+func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
+    ctx context.Context,pn uint64,seq uint32,wireLen int,sent bool,
+)(uint32,error){
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.reportM2Proc==nil||wireLen<31||wireLen>2048 {
+        return 0,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return 0,err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
+        return 0,errors.Join(errV4WindowsOwner,err)
+    }
+    var yes uintptr
+    if sent{yes=1}
+    var outstanding uint32
+    err:=winOwnerCall(s.bridge.reportM2Proc,
+        uintptr(s.bridge.handle),uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+        uintptr(pn),uintptr(seq),uintptr(wireLen),yes,
+        uintptr(unsafe.Pointer(&outstanding)))
+    runtime.KeepAlive(s.bridge.epoch)
+    return outstanding,err
+}
+
 // OpenBoundOriginalNormalOrKind1 calls the ONE original Rust M1/M3 AEAD+PN
 // opener and returns verified kind=1 IPv4 or kind=2 canonical staged M2
 // receipt. The latter has NO Wintun packet and is NOT an M2 ACK/repair
