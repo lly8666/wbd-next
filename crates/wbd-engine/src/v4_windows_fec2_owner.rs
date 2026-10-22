@@ -369,7 +369,8 @@ mod tests{
         let peer=setup(&mut registry,true,402,42);
         let a=data(0x11);
         let mut b=data(0x22);b.extend(vec![0x23;130]);
-        b[2..4].copy_from_slice(&(b.len() as u16).to_be_bytes());
+        let b_len=b.len() as u16;
+        b[2..4].copy_from_slice(&b_len.to_be_bytes());
         let budget=normal_off_windows_budget(
             &registry.entries[&c].lock().unwrap()).unwrap();
         let source=fec_v2::source_owned(88,0,&a,budget.record_payload_mtu).unwrap();
