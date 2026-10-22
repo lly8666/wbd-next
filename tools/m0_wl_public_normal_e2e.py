@@ -70,12 +70,14 @@ while True:
   if time.monotonic()>=bind_deadline:
    raise RuntimeError('real TUN/Wintun IPv4 lease bind failed on '+local) from e
   time.sleep(.15)
+print(json.dumps({'phase':'bound','local':local,'remote':remote,'source':'real_kernel_socket'}),flush=True)
 sock.setblocking(False)
 seen=set()
 sent=0
 start=time.monotonic()
 deadline=start+35
 last_send=0.
+last_diag=start
 ready_since=None
 while time.monotonic()<deadline:
  now=time.monotonic()
@@ -92,6 +94,9 @@ while time.monotonic()<deadline:
   except BlockingIOError:break
   if peer[0]==remote and payload.startswith(b'WBD-PUBLIC-NORMAL-'):
    seen.add(payload)
+ if now-last_diag>=1.:
+  print(json.dumps({'phase':'udp_1hz','local':local,'sent':sent,'received':len(seen),'public_ready_seen':ready_since is not None}),flush=True)
+  last_diag=now
  if pathlib.Path(ready_file).is_file():
   if ready_since is None:ready_since=now
   # Keep both genuine generators active beyond authenticated Apply.
@@ -112,7 +117,18 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
  done.write_text("observed authentic client and Linux server READY\n")
- wa.wait(timeout=18);la.wait(timeout=18)
+ # The actual UDP app has a 30s real OS bind bound plus 35s payload
+ # deadline. 18s parent wait previously killed it before it could report
+ # which true kernel side was missing. Observe only liveness at low cost.
+ until=time.monotonic()+70
+ while wa.poll() is None or la.poll() is None:
+  if w.poll() is not None:
+   raise RuntimeError("original Windows native product terminated before duplex: return="+str(w.returncode)+" client="+(out/"client.log").read_text(errors="replace")[-520:])
+  if s.poll() is not None:
+   raise RuntimeError("original Linux raw/TUN server terminated before duplex: return="+str(s.returncode)+" server="+(out/"server.log").read_text(errors="replace")[-520:])
+  if time.monotonic()>=until:
+   raise RuntimeError("bounded real UDP kernel duplex incomplete; windows="+(out/"windows-app.log").read_text(errors="replace")[-520:]+" linux="+(out/"linux-app.log").read_text(errors="replace")[-520:])
+  time.sleep(.2)
  if wa.returncode or la.returncode:
   raise RuntimeError("actual UDP app duplex failed win="+str(wa.returncode)+" linux="+str(la.returncode)+" logs="+(out/"windows-app.log").read_text(errors="replace")[-350:]+(out/"linux-app.log").read_text(errors="replace")[-350:])
  real={}
