@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
+      - tools/m0_wl_public_native_wire_trace.py
   workflow_dispatch:
 permissions:
   contents: read
@@ -203,9 +204,21 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
           & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
           if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
-          & python tools/m0_wl_public_normal_e2e.py 2>&1 |
-            Tee-Object result/wl-public/direct-full.log
-          if($LASTEXITCODE -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
+          # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
+          $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
+          $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
+          $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
+          Start-Sleep -Milliseconds 600
+          try {
+            & python tools/m0_wl_public_normal_e2e.py 2>&1 |
+              Tee-Object result/wl-public/direct-full.log
+            $e2eExit=$LASTEXITCODE
+          } finally {
+            if(-not $witness.HasExited){Stop-Process -Id $witness.Id -Force -ErrorAction SilentlyContinue}
+            Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-link-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+          }
+          if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
           if($result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){throw 'real public product proof not emitted'}
       - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
