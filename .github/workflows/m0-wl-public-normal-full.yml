@@ -7,6 +7,8 @@ on:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_public_native_wire_trace.py
+      - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
+      - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_wl_public_native_npf_trace.py
   workflow_dispatch:
 permissions:
