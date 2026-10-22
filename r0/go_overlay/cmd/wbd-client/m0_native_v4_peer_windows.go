@@ -45,6 +45,10 @@ type m0NativeV4Peer struct {
  maxIPv4 int
  pending []m0NativeV4Outbound
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize uint64
+ pendingCount int
+ oldestUnackedAt time.Time
+ lastRXAt time.Time
+ maxRXInterdeliveryMs int64
  running,stopping bool
  stop,done chan struct{}
  workerCancel context.CancelFunc
@@ -124,6 +128,11 @@ func(p *m0NativeV4Peer) observePeerACK(ack uint32){
   for i:=len(p.pending)-taken;i<len(p.pending);i++{p.pending[i]=m0NativeV4Outbound{}}
   p.pending=p.pending[:len(p.pending)-taken]
  }
+ p.mu.Lock()
+ p.pendingCount=len(p.pending)
+ if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt
+ }else{p.oldestUnackedAt=time.Time{}}
+ p.mu.Unlock()
 }
 func(p *m0NativeV4Peer) sendCarrier(seq,ack uint32,wire []byte)error{
  _,err:=p.endpoint.WriteSegment(1,faketcp.Segment{
@@ -185,7 +194,12 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  })
  p.sendNext=seq+uint32(len(ciphertext))
  if p.mode!=m0WinModeNormal{p.blockID++}
- p.mu.Lock();p.sent++;if p.opened>0{p.sentAfterOpen++};p.mu.Unlock()
+ p.mu.Lock()
+ p.sent++
+ if p.opened>0{p.sentAfterOpen++}
+ p.pendingCount=len(p.pending)
+ if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt}
+ p.mu.Unlock()
  return true,nil
 }
 func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error{
@@ -239,7 +253,17 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  ack,err:=p.rx.Copied(seg.Seq,len(seg.Payload))
  if err!=nil{return err}
  p.recvNext=ack
- p.mu.Lock();p.opened+=uint64(len(frames));p.mu.Unlock()
+ p.mu.Lock()
+ if len(frames)>0{
+  now:=time.Now()
+  if !p.lastRXAt.IsZero(){
+   gap:=now.Sub(p.lastRXAt).Milliseconds()
+   if gap>p.maxRXInterdeliveryMs{p.maxRXInterdeliveryMs=gap}
+  }
+  p.lastRXAt=now
+ }
+ p.opened+=uint64(len(frames))
+ p.mu.Unlock()
  // Critical: ACK is the *highest contiguous* Rust-authenticated and
  // Wintun-copied TCP interval. Delivered future packet cannot ACK a gap.
  return p.sendACK()
@@ -388,10 +412,43 @@ func(p *m0NativeV4Peer) DrainPeerAndKernelLoans(
  p.mu.Lock()
  for i:=range p.pending{p.pending[i]=m0NativeV4Outbound{}}
  p.pending=p.pending[:0]
+ p.pendingCount=0
+ p.oldestUnackedAt=time.Time{}
  p.mu.Unlock()
  return ctx.Err()
 }
 func(p *m0NativeV4Peer) Errors()<-chan error{
  if p==nil{return nil}
  return p.failure
+}
+
+// m0NativeV4PacketStats is a non-secret per-owner bounded producer snapshot,
+// NOT a Windows OS/WFP Applied receipt and NOT a proof of end-to-end goodput.
+// Host CPU/RSS, RTT and queue-drop counters must come from the isolated
+// performance harness (the internal Go heap is not Windows process RSS).
+type m0NativeV4PacketStats struct{
+ Mode m0WindowsV4Mode `json:"mode"`
+ TxPackets uint64 `json:"tx_records"`
+ RxFirstDelivered uint64 `json:"rx_first_delivered_ipv4"`
+ RetxRecords uint64 `json:"frozen_ciphertext_retransmits"`
+ DuplicateCarrier uint64 `json:"duplicate_tcp_carriers"`
+ RejectedAuth uint64 `json:"rejected_or_invalid_carriers"`
+ ExplicitOversize uint64 `json:"oversize_rejects"`
+ PendingRecords int `json:"unacked_carrier_records"`
+ OldestPendingMS int64 `json:"oldest_unacked_carrier_ms"`
+ MaxInterdeliveryMS int64 `json:"max_observed_interdelivery_ms"`
+}
+func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
+ if p==nil{return m0NativeV4PacketStats{}}
+ p.mu.Lock()
+ defer p.mu.Unlock()
+ now:=time.Now()
+ var age int64
+ if !p.oldestUnackedAt.IsZero(){age=now.Sub(p.oldestUnackedAt).Milliseconds()}
+ return m0NativeV4PacketStats{
+  Mode:p.mode,TxPackets:p.sent,RxFirstDelivered:p.opened,
+  RetxRecords:p.retries,DuplicateCarrier:p.duplicates,RejectedAuth:p.rejected,
+  ExplicitOversize:p.oversize,PendingRecords:p.pendingCount,
+  OldestPendingMS:age,MaxInterdeliveryMS:p.maxRXInterdeliveryMs,
+ }
 }
