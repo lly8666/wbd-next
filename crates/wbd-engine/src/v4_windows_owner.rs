@@ -75,7 +75,7 @@ struct ScopedWindowsWintunIdentity {
 struct Registry {
     generation:u32,
     entries:BTreeMap<u64,Arc<Mutex<Entry>>>,
-    game_groups:BTreeMap<u64,game::WinGameGroup>,
+    game_groups:BTreeMap<u64,Arc<Mutex<game::WinGameGroup>>>,
 }
 static REGISTRY:OnceLock<Mutex<Registry>>=OnceLock::new();
 fn registry()->&'static Mutex<Registry>{

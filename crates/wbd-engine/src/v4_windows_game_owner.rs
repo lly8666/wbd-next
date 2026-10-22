@@ -11,6 +11,7 @@ use wbd_types::{MonoNs,LaneKey,TunnelKey};
 pub(super) struct WinGameGroup {
     adapter:GameAdapter,
     handles:Vec<u64>,
+    lanes:Vec<Arc<Mutex<Entry>>>,
     generation:u32,
     epoch:[u8;16],
     tick:u64,
@@ -73,44 +74,50 @@ pub(super) fn join(
     for h in &ids {
         r.entries.get(h).ok_or(UNKNOWN)?.lock().map_err(|_|BAD_STAGE)?.game_group=Some(group);
     }
-    r.game_groups.insert(group,WinGameGroup{
-        adapter,handles:ids,generation,
+    let lanes=ids.iter().map(|h|r.entries.get(h).cloned().ok_or(UNKNOWN))
+        .collect::<Result<Vec<_>,_>>()?;
+    r.game_groups.insert(group,Arc::new(Mutex::new(WinGameGroup{
+        adapter,handles:ids,lanes,generation,
         epoch:scope.ok_or(INVALID)?,tick:0,
-    });
+    })));
     Ok(group)
 }
 fn stopped_group(r:&mut Registry,h:u64)->i32{
-    let Some(g)=r.game_groups.get(&h)else{return UNKNOWN};
-    if g.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
+    let Some(group)=r.game_groups.get(&h)else{return UNKNOWN};
+    let Ok(mut game)=group.lock()else{return BAD_STAGE};
+    if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|d.quiesced)))){
-        return STOP_INCOMPLETE
-    }
-    let Some(mut game)=r.game_groups.remove(&h)else{return UNKNOWN};
+        !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
     game.adapter.stop();
-    for lane in game.handles {
-        if let Some(e)=r.entries.get(&lane){if let Ok(mut e)=e.lock(){e.game_group=None}}
+    for lane in &game.lanes{
+        let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
+        e.game_group=None;
     }
+    drop(game);
+    r.game_groups.remove(&h);
     OK
 }
 pub(super) fn offer_records(
-    r:&mut Registry,h:u64,payload:&[u8],max:usize,
+    r:&Registry,h:u64,payload:&[u8],max:usize,
+)->Result<Vec<WbdWindowsGameRecordV4>,i32>{
+    let group=r.game_groups.get(&h).ok_or(UNKNOWN)?;
+    let mut game=group.lock().map_err(|_|BAD_STAGE)?;
+    offer_group(&mut game,h,payload,max)
+}
+fn offer_group(
+    game:&mut WinGameGroup,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
     if payload.len()<20||payload.len()>1200||payload[0]>>4!=4||
-        payload[0]&15<5||max<2||max>4{
+        payload[0]&15<5||max<2||max>4||max<game.handles.len(){
         return Err(INVALID)
     }
-    let game=r.game_groups.get_mut(&h).ok_or(UNKNOWN)?;
-    if max<game.handles.len(){return Err(INVALID)}
-    if game.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
+    if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|!d.quiesced)))){
-        return Err(BAD_STAGE)
-    }
+        !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
     game.tick=game.tick.checked_add(2).ok_or(FULL)?;
     let now=MonoNs(game.tick);
     game.adapter.offer(payload,now).map_err(|_|INVALID)?;
-    let mut staged=Vec::new();
+    let mut staged=Vec::with_capacity(game.handles.len());
     let copied=game.adapter.drain(MonoNs(game.tick+1),|lane,id,pn,wire|{
         if wire.len()>1536{return false}
         let mut record=WbdWindowsGameRecordV4{
@@ -119,7 +126,7 @@ pub(super) fn offer_records(
         };
         record.wire[..wire.len()].copy_from_slice(wire);
         staged.push(record);
-        true // copied to this bounded temporary, NOT to a kernel driver
+        true // bounded staging copy, NOT a kernel copy or Applied grant
     });
     if copied!=game.handles.len()||staged.len()!=copied{
         return Err(BAD_STAGE)
@@ -127,18 +134,22 @@ pub(super) fn offer_records(
     Ok(staged)
 }
 pub(super) fn receive_record(
-    r:&mut Registry,h:u64,lane:u32,wire:&[u8],
+    r:&Registry,h:u64,lane:u32,wire:&[u8],
 )->Result<Option<Vec<u8>>,i32>{
-    if wire.len()<32||wire.len()>1536{return Err(INVALID)}
-    let game=r.game_groups.get_mut(&h).ok_or(UNKNOWN)?;
-    if lane==0||usize::try_from(lane).ok().is_none_or(|v|v>game.handles.len()){
-        return Err(INVALID)
+    let group=r.game_groups.get(&h).ok_or(UNKNOWN)?;
+    let mut game=group.lock().map_err(|_|BAD_STAGE)?;
+    receive_group(&mut game,h,lane,wire)
+}
+fn receive_group(
+    game:&mut WinGameGroup,h:u64,lane:u32,wire:&[u8],
+)->Result<Option<Vec<u8>>,i32>{
+    if wire.len()<32||wire.len()>1536||
+       lane==0||usize::try_from(lane).ok().is_none_or(|v|v>game.handles.len()){
+       return Err(INVALID)
     }
-    if game.handles.iter().any(|id|r.entries.get(id).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
+    if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|!d.quiesced)))){
-        return Err(BAD_STAGE)
-    }
+        !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
     let key=LaneKey{
         tunnel:TunnelKey{slot:14,generation:game.generation},
         slot:lane,generation:game.generation,
@@ -167,8 +178,13 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_stage(
     if ipv4.is_null()||out.is_null()||count.is_null()||
         len<20||len>1200||capacity<2||capacity>4{return INVALID}
     let data=unsafe{std::slice::from_raw_parts(ipv4,len)};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    match offer_records(&mut r,group,data,capacity as usize){
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(owned)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(owned)
+    };
+    let Ok(mut game)=owned.lock()else{return BAD_STAGE};
+    match offer_group(&mut game,group,data,capacity as usize){
         Ok(records)=>{
             for (i,rec) in records.iter().enumerate(){
                 unsafe{out.add(i).write(*rec)}
@@ -187,8 +203,13 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_receive(
     if wire.is_null()||out.is_null()||used.is_null()||
         len<32||len>1536||capacity<1200||capacity>65535{return INVALID}
     let bytes=unsafe{std::slice::from_raw_parts(wire,len)};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    match receive_record(&mut r,group,lane,bytes){
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(owned)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(owned)
+    };
+    let Ok(mut game)=owned.lock()else{return BAD_STAGE};
+    match receive_group(&mut game,group,lane,bytes){
         Ok(Some(plain)) if plain.len()<=capacity=>{
             unsafe{
                 std::ptr::copy_nonoverlapping(plain.as_ptr(),out,plain.len());
