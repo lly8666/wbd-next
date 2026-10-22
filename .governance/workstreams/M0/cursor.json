@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 251,
-  "checkpoint_sha": "a4b3eb25938093d52817c24587c0a348e57bbd60",
+  "sequence": 252,
+  "checkpoint_sha": "e4ac8d9db6318c9b3e2f7dede3f4d526af448fb9",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 true public Windows original Go TLS Rust M2 Npcap Wintun→Linux WSL2 original Go Rust raw/TUN Normal/off, bidirectional app+Stop. Windows NPF captured authentic SYN outbound but Linux eth0 zero ingress at 1445e2c Action39745406663 FAIL. Scoped WSL HyperV TCP443 owner allow in full Action39747114234/1 (PENDING), not yet functional PASS. WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Recovered H250 epoch1 rev3. Definitive real original Windows NPF SYN src172.20.160.1:41031 to172.20.171.251:443 at vEthernet WSL HyperV; same full public Action39745406663/1 Linux eth0 AF_PACKET armed zero TCP443, bootstrap deadline and server log empty; artifact12411373443 sha09da4b70... Product did not authenticate Linux. S825 official Microsoft WSL HyperV rule scoped guest IP TCP443 source host41031 installed/readback/owned removal to test true gate, SOURCE7e8f56a Action39747114234 in_progress. No global firewall default change nor TLS/M2 bypass.",
+  "current_task": "PLAN024 genuine Windows original Go TLS Rust M2 Npcap Wintun→WSL2 Linux raw/TUN Normal/off public duplex+Stop. Source f44ad Action39748014730 exactly PROVES Windows NPF TCP443 SYN has same dstMAC==srcMAC 00:15:5d:1b:a2:9c, Linux eth0 zero, TLS deadline. Scoped HyperV rule works but cannot fix wrong L2 dst. Source85c1cf two independent full product Actions39750030678 and39750030760 run with exact guest eth0 MAC→Windows active neighbor and owned cleanup; PENDING. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "User demanded direct full two OS path, no mock. S831 real full source f44ad Action39748014730 6 stage original-Go/Rust build PASS yet genuine public bootstrap FAIL; Npcap frame has same source/destination MAC, HyperV exact rule installs and removes but Linux eth0 no TCP443. Evidence docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json. First CI MAC-neighbor fix S829/S830 generated malformed frozen workflow (no jobs, original FAIL retained), restored valid workflows via git-tree source85c1cf; two distinct actual source-locked frozen and fresh Windows2025+WSL2 original product Actions in progress.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read exact run39747114234 full product and scoped HyperV rule result/cleanup, Windows NPF vs Linux AF_PACKET, fix confirmed L2 firewall/routing blockage or next original TLS/Go/Rust data/Stop failure. Require real UDP both directions, Windows live Applied, actual M4 Stop before PASS; then distinct WL-N0/N1/N5 10Mbps 60s true netem. No fixture-only promotion.",
+  "next_action": "Read actual full source85c1cf Action39750030678 frozen and39750030760 fresh. Check host NetNeighbor now points to actual WSL eth0 guest MAC and real NPF SYN destMAC correct; repair only confirmed actual send/route/TLS/network failure, then complete real public Normal/off Wintun/Linux TUN UDP both directions and owned Stop. Only genuine functional PASS opens separate WL-N0/N1/N5 10Mbps60s with kernel netem.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -24,8 +24,9 @@
     "docs/devlog/M0/PLAN024-S794-M2-native-shadow-parallel-intent-20261022.md",
     "docs/devlog/M0/PLAN024-S809-real-Windows-M2-BDP-Npcap-continuation-20261022.md",
     "docs/devlog/M0/PLAN024-S824-recovered-full-Windows-Linux-real-underlay-20261022.md",
-    "docs/devlog/M0/PLAN024-S826-Windows-NPF-to-WSL-HyperV-port443-real-public-gate-20261022.md"
+    "docs/devlog/M0/PLAN024-S826-Windows-NPF-to-WSL-HyperV-port443-real-public-gate-20261022.md",
+    "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "Real full public SYN now observed on Windows NPF but not Linux AF_PACKET (Action39745406663/1 FAIL), targeted WSL HyperV inbound single flow source rule tried in full rerun39747114234 pending. Sources/artifacts frozen; product Normal/off/UDP/Stop and WL-N0/N1/N5 unverified, NOT_RUN. User priority direct whole chain, no peripheral tests."
+  "partial_summary": "Exact new root cause: real Windows NPF SYN destination Ethernet MAC equals original Windows source, not guest; Linux raw AF_PACKET zero, TLS bootstrap timed out. Corrective source85c1cf installs readback/owned-cleanup only temporary verified guest MAC neighbor in BOTH full real product Actions, pending. No false Normal or WL perf PASS. Prior YAML corruption failure preserved and fixed by Git blob valid workflow restoration."
 }
