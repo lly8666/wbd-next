@@ -1,35 +1,38 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S009-ARM64-original-FEC-TX-class-counters-build",
+  "phase": "S010-fixed30-real-FEC-k-r-telemetry",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
     "main_merged": "26f2e509a8e3c4055460a67960ea5462beec1622",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a"
   },
-  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "product_source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
   "build": {
-    "run_id": 39759842150,
+    "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+    "run_id": 39770495489,
     "attempt": 1,
-    "artifact_id": 12417786567,
-    "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b",
+    "artifact_id": 12422077765,
+    "sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
+    "manifest_sha256": "5f8d09144cfb9b48f0a394704de7d6000fd4a40e1bec9506209c213b270dcf32",
     "architecture": "aarch64",
-    "backend_runtime": "NOT_OBSERVED",
-    "status": "SUCCESS"
+    "all_binary_hashes_checked": true,
+    "build_conclusion": "success",
+    "scope": "read-only product FEC TX class stats; no hot-path modification"
   },
-  "latest_harness_source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+  "latest_harness_source": "94b16d7c211b92a67d32886416c3dbdd292d0b04",
   "open_requests": [
     {
-      "id": "S009-FEC-real-class-stats",
-      "type": "PRODUCT_SOURCE_BUILD",
-      "status": "IN_PROGRESS",
-      "trigger": "single existing ARM64 builder push from Go/Rust source; no dispatch",
-      "description": "true pre-Stop original FixedStream class k histogram + rplanned/rsent/pressure; source code modified so must build exact new SOURCE once",
-      "run_id": 39770495489,
-      "attempt": 1,
+      "id": "arm64-fixed30-k-r-owner-diagnostic",
+      "type": "REAL_PRODUCT_DIAGNOSTIC_SINGLE_SCENARIO",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "path": "tests/network/request.json",
       "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39770495489"
+      "build_run": 39770495489,
+      "artifact_id": 12422077765,
+      "trigger": "only push of request.json; no duplicate dispatch",
+      "description": "same 2Mbps per direction, 30% IID, 300ms one way, 120s sustained 50/50 UDP/TCP Fixed maximum. Read complete true FEC TX k/r pressure; no globally infeasible 1% loss gate, but hard mode/duplicate/Stop still active."
     }
   ],
   "latest_actions": [
@@ -92,6 +95,22 @@
       "conclusion": "failure",
       "evidence": "S008-AB-fixed30-both-fail.json",
       "detail": "both A/B real 30pct FEC maximum hard failures; no meaningful regression claim"
+    },
+    {
+      "run": 39770495489,
+      "type": "S009-native-Go-Rust-builder",
+      "conclusion": "success",
+      "evidence": "S009-new-build.json"
+    },
+    {
+      "run": 39770495497,
+      "type": "S009-harness-contract",
+      "conclusion": "success"
+    },
+    {
+      "run": 39770863746,
+      "type": "S009-sanitized-marker-contract",
+      "conclusion": "success"
     }
   ],
   "prior_success_reuse": {
@@ -110,7 +129,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "S009 product build 39770495489 still one SOURCE, while harness numeric FEC TX whitelist is corrected and selfcheck triggered; do not redispatch product build. Once artifact complete choose strict diagnostic S005 condition with actual FEC counters and compare to source-attested controls; S008 failures remain.",
+  "next_action": "Resolve exactly one S010 performance Action from source-locked new request, do not redispatch. Read authentic Go FEC2 TX snapshot k histogram and rplanned/rsent/expired/pressure for both sides plus duplicate/app/applied. If metric absent inspect whitelist/log, do not infer zero. Then locate exact M1 parity policy versus M3 receive/Go applied and proceed minimal fix; new/old default A/B only after diagnostic.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {

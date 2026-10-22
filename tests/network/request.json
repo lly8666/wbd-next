@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed-max-30pct-old-new-AB-attested",
+  "id": "arm64-fixed30-k-r-owner-diagnostic",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -58,25 +58,16 @@
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 1,
     "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "run_id": 39759842150,
+      "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+      "run_id": 39770495489,
       "attempt": 1,
-      "artifact_id": 12417786567,
-      "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
-    },
-    "B": {
-      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
-      "run_id": 39766278666,
-      "attempt": 1,
-      "artifact_id": 12419289653,
-      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398",
-      "step_attested_failure": true
+      "artifact_id": 12422077765,
+      "sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b"
     }
   },
-  "order": "AB"
+  "order": "A"
 }
