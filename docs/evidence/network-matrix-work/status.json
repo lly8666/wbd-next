@@ -22,15 +22,18 @@
   "open_requests": [
     {
       "id": "S006-arm64-fixed-maximum-row-guard-build",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED_OR_RUNNING",
       "type": "SOURCE_BUILD_AND_NATIVE_RUST_ASSERTION_NOT_PERFORMANCE_MEASUREMENT",
-      "source": "SELF_COMMIT_SHA_AFTER_PUSH",
+      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
       "paths": [
         "crates/wbd-engine/src/v4_embedded_go.rs",
         ".github/workflows/arm64-public-go-build.yml"
       ],
       "trigger": "branch push, do not manual dispatch",
-      "intent": "Preserve immutable security/PN/Stop and all hard failures. Change only rejected parity row threshold from 16 to codec MAX_R20, assert actual public code branch; old frozen product stays distinct."
+      "intent": "Preserve immutable security/PN/Stop and all hard failures. Change only rejected parity row threshold from 16 to codec MAX_R20, assert actual public code branch; old frozen product stays distinct.",
+      "run_id": 39766278666,
+      "attempt": 1,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39766278666"
     }
   ],
   "latest_actions": [
@@ -84,5 +87,5 @@
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
-  "next_action": "Native ARM64 product build Action from source commit fixing row16..19 guard (look up run triggered by this push); do not dispatch manually. Check Rust unit test, build artifact SHA, then run scoped S005 hard-case regression/new bounded functional without widening gate; legacy S005 hard failure remains OPEN. No Game4 performance until builder settled if same runner capacity contention."
+  "next_action": "S006 native build 39766278666 queued/running; do NOT redispatch. Verify actual 20-row Rust unit & product build, artifact digest; then consider one smallest failing Fixed mode replay hard-case on newly pinned SOURCE. Preserve S005 duplicates and applied mismatch; no qualification until both resolved."
 }
