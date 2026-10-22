@@ -26,14 +26,18 @@
   "open_requests": [
     {
       "id": "arm64-fixed30-arena128-vs512-samehost-AB-S015",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED",
       "type": "SINGLE_JOB_SEQUENTIAL_PRODUCT_AB",
       "trigger": "one push tests/network/request.json auto starts one perf Action; do not dispatch",
       "path": "tests/network/request.json",
       "A": "e63d38bd20466575675ca8b493a45882ec815a52",
       "B": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
       "scenario": "exact S013 Fixed maximum profile6 30pct IID 300ms one-way, 2Mbps/dir 50/50 UDP TCP 120s+15warmup+30drain, two isolated sequential legs",
-      "key_tests": "real source/parity arena counts, first delivery, duplicates, mode applied, TCP, 0 invalid, Stop cleanup, CPU/RSS"
+      "key_tests": "real source/parity arena counts, first delivery, duplicates, mode applied, TCP, 0 invalid, Stop cleanup, CPU/RSS",
+      "run_id": 39775828660,
+      "attempt": 1,
+      "harness_source": "9f668034655ee012f511df4b47d9c55a9c60fe8f",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39775828660"
     }
   ],
   "recent_evidence": [
@@ -108,7 +112,7 @@
     "S013 proved original M1 TX arena NoCapacity at source/parity ~5.1k/18.6k per side; bounded feature7-only 512 slot candidate requires same-source build and real regression; not yet PASS",
     "S013 hard: UDP duplicates 4/3, Fixed pending on both, TCP blocked, actual 30% loss; keep OPEN even if arena throughput fixes"
   ],
-  "next_action": "Resolve sole S015 AB performance run ID from request push. Collect both legs same job, source/manifest/digest, per-direction arena failures, rplanned/rsent, duplicates, mode applied, TCP, Stop, CPU/RSS and real link loss. Even if pool fixes NoCapacity, Fixed HARD FAIL remains until duplicates/readback pass. After targeted validation, default off mixed same-job AB anchor; no duplicate dispatch.",
+  "next_action": "S015 same-host 128-vs-512 sequential AB performance Action 39775828660 queued and harness contracts 39775828631; no redispatch. Collect two genuine legs’ NoCapacity eight counters, k/r, duplicates/mode, TCP goodput, p99, stop/host. If FEC still hard fails don't claim qualification or CPU improvement. Then default off mixed anchor.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
