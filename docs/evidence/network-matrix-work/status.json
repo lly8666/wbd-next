@@ -26,14 +26,19 @@
   "open_requests": [
     {
       "id": "arm64-fixed30-post-TUN-IPv4-class-TCP-ACK-S026",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED_OR_RUNNING",
       "type": "ONE_PRODUCT_PERFORMANCE_ACTION",
       "path": "tests/network/request.json",
       "trigger": "one push request.json automatically launches one Actions measurement; no manual dispatch",
       "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
       "build_run": 39792252773,
       "artifact_id": 12432315624,
-      "scope": "S024 2Mbps each direction 50% UDP+TCP 4 flows 30pct IID RTT600ms 120s +15s warmup +30s drain, new real post-M4 successful systematic/recovered IPv4 UDP/TCP ACK-only/data counts"
+      "scope": "S024 2Mbps each direction 50% UDP+TCP 4 flows 30pct IID RTT600ms 120s +15s warmup +30s drain, new real post-M4 successful systematic/recovered IPv4 UDP/TCP ACK-only/data counts",
+      "run_id": 39793159261,
+      "attempt": 1,
+      "harness_source": "d2c7c25e6f3dbbeaab02875b6433d1540129d1b2",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39793159261",
+      "contract_run_id": 39793159285
     }
   ],
   "recent_evidence": [
@@ -144,7 +149,7 @@
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning."
   ],
-  "next_action": "Resolve exactly one S026 performance run ID triggered by this request push, NO duplicate dispatch. Verify source/manifest/artifact SHA, netem, 8 authentic FEC systematic/recovered successful M4 TCP/UDP/ACK class totals versus original 11-field RX and TCP kernel ACK stall, app cohort/Stop. If ACK-only original TCP TUN copied yet inner kernel no ACK progress, inspect protocol TCP ack checksum/sequence/receive path; do not edit FEC/ACK blindly. S024 FAIL and S018 normal default PASS preserved.",
+  "next_action": "S026 real Fixed30 original product ACTION 39793159261 queued/running, companion harness contract39793159285. NO duplicate. Collect true FEC successful M4 per-IP UDP/TCP systematic/recovered and TCP ACK-only/data, compare kernel TCP bytes_acked and 30% netem, app first-delivery, Fixed readback, Stop. Preserve S024 FAIL S018 default PASS; do not infer app-recovered from IP counts.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
