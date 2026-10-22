@@ -23,6 +23,9 @@ m0_v4_embedded_go = []
 # Worker-frozen M1-012 direction SPSC; compile-time opt-in; default remains off.
 # Main-managed rtrb=0.3.2 workspace pin; no production TLS ABI change.
 m1_rtrb = []
+# Optional fixed-source ISA-L backend; runtime selects it automatically when compiled.
+# Default builds remain portable and do not require an external static library.
+native_fec_acceleration = ["wbd-codec/native-isal"]
 
 [dependencies]
 # M0-owned composition-only edges. Lower-layer workers must not depend on engine.

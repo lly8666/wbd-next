@@ -34,9 +34,15 @@ const SOL_SOCKET:c_int = 1;
 const SO_BINDTODEVICE:c_int = 25;
 const IPPROTO_IP:c_int = 0;
 const IP_MTU:c_int = 14;
+// Direct syscall numbers are architecture-specific (not libc function IDs).
+#[cfg(target_arch="x86_64")]
 const SYS_CAPGET: c_long = 125;
-#[cfg(test)]
+#[cfg(target_arch="aarch64")]
+const SYS_CAPGET: c_long = 90;
+#[cfg(all(test,target_arch="x86_64"))]
 const SYS_CAPSET: c_long = 126;
+#[cfg(all(test,target_arch="aarch64"))]
+const SYS_CAPSET: c_long = 91;
 const CAP_V3: u32 = 0x20080522;
 const CAP_NET_RAW: u32 = 13;
 const MIN_IPV4_MTU: u32 = 68;

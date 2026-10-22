@@ -17,23 +17,23 @@ use wbd_codec::record_crypto::{LaneTxCrypto, RecordSuite};
 use wbd_codec::record_frame::{AUTHENTICATED_LINK_KIND,FIXED_WIRE_OVERHEAD};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView,LINK_HEADER,LINK_MAGIC};
 use wbd_codec::path_budget::FrameBudget;
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_driver_outcome_lease::ScopedUdpOwner;
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunError};
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation,PacketPersona};
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::r1::BatchResult;
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_codec::path_budget::{FrameBudgetInput,FecReservation,MAX_CONNECTION_MTU};
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use wbd_platform::linux_packet_preflight::{
     observe_interface_mtu,observe_ipv4_route_mtu,
 };
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::net::Ipv4Addr;
 use wbd_codec::link_reassembly::{
     LinkDelivery,LinkDirection,ReassemblyScope,ReassemblyTable,
@@ -50,7 +50,7 @@ pub(crate) enum ProtectedCryptoError {
     Rx(ReplayConfigError),
     Inactive,
     Owner,
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     Tun(TunError),
     Early(EarlyError),
 }
@@ -123,7 +123,7 @@ impl ProtectedScopedCrypto {
 
     // Once the original protected Go Detach has committed, move rather
     // than clone the single actual AEAD+PN replay state to the RX owner.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     fn detach_rx_for_original_worker(&mut self)->Option<ReplayProtectedLaneRx>{
         if !self.active{return None}
         self.rx.take()
@@ -283,7 +283,7 @@ impl NormalOffReceive {
     }
 }
 
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 pub(crate) struct ProtectedBackgroundRx{
     rx:ReplayProtectedLaneRx,
     normal:NormalOffReceive,
@@ -295,7 +295,7 @@ pub(crate) struct ProtectedBackgroundRx{
         std::sync::Arc<std::sync::atomic::AtomicBool>,
     )>,
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Debug,Default)]
 pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_link:u32,
@@ -303,6 +303,18 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_accepted_source:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_accepted_repair:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_delivered_source:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_delivered_recovered:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_decode_native:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_decode_scalar:u32,
     // Exact peer data PN, only after this SAME protected original M3
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
@@ -310,13 +322,13 @@ pub(crate) struct BackgroundRxReceipt{
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Debug)]
 pub(crate) struct AuthenticatedNormalKind1{
     pub(crate) reverse_record_pn:u64,
     pub(crate) receipt:wbd_codec::Receipt,
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl ProtectedBackgroundRx{
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn arm_fec2_original_go_only(
@@ -368,14 +380,27 @@ impl ProtectedBackgroundRx{
                 receipt.invalid=1;return receipt
             }
             receipt.authenticated_link=1;
+            let before=blocks.decode_backend_calls();
             match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
                 Ok(deliveries)=>{
                     receipt.authenticated_data_pn=Some(opened.pn);
+                    if opened.kind==2{receipt.fec2_accepted_source=1}
+                    else{receipt.fec2_accepted_repair=1}
+                    let after=blocks.decode_backend_calls();
+                    receipt.fec2_decode_native=u32::try_from(after.0.saturating_sub(before.0))
+                        .unwrap_or(u32::MAX);
+                    receipt.fec2_decode_scalar=u32::try_from(after.1.saturating_sub(before.1))
+                        .unwrap_or(u32::MAX);
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
                         if tun.write_authenticated_ipv4(self.generation,&first.frame)
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
+                            if first.recovered{
+                                receipt.fec2_delivered_recovered=receipt.fec2_delivered_recovered.saturating_add(1);
+                            }else{
+                                receipt.fec2_delivered_source=receipt.fec2_delivered_source.saturating_add(1);
+                            }
                         }else{
                             // A well-formed FEC symbol is not necessarily
                             // a valid business IPv4 frame. M4 remains final
@@ -431,7 +456,7 @@ impl ProtectedBackgroundRx{
 /// Immutable owner-bound *kernel interface MTU*, not path PMTU, socket
 /// capability, driver lease or peer authentication. Private fields prevent
 /// a later caller from minting its own unrestricted FrameBudget.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 pub(crate) struct ScopedLinuxBudget {
     pub(crate) frame:FrameBudget,
     owner_id:u64,
@@ -448,7 +473,7 @@ impl ProtectedScopedOwner {
     /// The exact Normal/off first-send observer is allocated only after the
     /// original Go credential-checked TLS/Detach commit. This identity is
     /// NOT a client-supplied receipt, ACK or permission to enable FEC2.
-    #[cfg(any(target_os="windows",all(target_os="linux",target_arch="x86_64",target_env="gnu")))]
+    #[cfg(any(target_os="windows",all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
     pub(crate) fn normal_firstsend_identity(&self)->Option<(wbd_types::LaneKey,[u8;16])>{
         (self.state==OwnerPhase::Active && self.crypto.active
          && self.rx_tx.detached() && self.epoch!=[0u8;16])
@@ -457,7 +482,7 @@ impl ProtectedScopedOwner {
     /// Transfer the SAME protected Go-authenticated RX replay opener,
     /// original Normal-off table and generation to one RX worker exactly
     /// once; the original TX queue/sealer remain with the control Entry.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn detach_background_rx(&mut self,normal:NormalOffReceive)
       ->Result<ProtectedBackgroundRx,(ProtectedCryptoError,NormalOffReceive)>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()
@@ -632,7 +657,7 @@ impl ProtectedScopedOwner {
     /// is no caller MSS parameter and no operator-controlled cold authority.
     /// The caller must still independently verify OS routing / real peer
     /// path PMTU and own a driver lease before any product activation.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn observe_linux_normal_off_budget(
         &self,ifname:&str,expected_ifindex:u32,
     )->Result<ScopedLinuxBudget,ProtectedCryptoError>{
@@ -664,7 +689,7 @@ impl ProtectedScopedOwner {
     /// IP_MTU. No datagram is sent. This is a local kernel route PMTU
     /// snapshot and never evidence of a received business packet. Real
     /// M4 carrier lease / peer end-to-end PMTUD are still required.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn observe_linux_normal_off_route_budget(
         &self,ifname:&str,expected_ifindex:u32,destination:Ipv4Addr,
     )->Result<ScopedLinuxBudget,ProtectedCryptoError>{
@@ -697,7 +722,7 @@ impl ProtectedScopedOwner {
     /// No caller-invented budget can be substituted for this kernel-observed
     /// and original-owner-scoped constraint. This still does NOT submit any
     /// packet to a kernel device; M4 driver-held Stop remains unqualified.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn seal_normal_off_with_linux_budget(
         &mut self,buffer:UniqueBuffer,payload_len:usize,
         scoped:&ScopedLinuxBudget,carrier_snapshot:u64,now:MonoNs,
@@ -741,7 +766,7 @@ impl ProtectedScopedOwner {
     /// This removes exactly ONE duplicated per-DATA kernel ROUTE query in
     /// the autonomous S2C Rust owner, NOT the remaining per-packet route
     /// observation. Event-scoped revision caching is still task024 OPEN.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn seal_normal_off_with_fresh_route_budget(
         &mut self,buffer:UniqueBuffer,payload_len:usize,
         ifname:&str,expected_ifindex:u32,destination:Ipv4Addr,
@@ -766,7 +791,7 @@ impl ProtectedScopedOwner {
     /// Route/link netlink event invalidation is not wired yet: a bounded 1s
     /// refresh and M4 send-error invalidation are conservative interim gates.
     /// It is NOT a perpetual or caller-constructed MTU authorization.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn seal_normal_off_with_worker_snapshot(
         &mut self,buffer:UniqueBuffer,payload_len:usize,
         snapshot:&ScopedLinuxBudget,expected_ifindex:u32,
@@ -792,7 +817,7 @@ impl ProtectedScopedOwner {
     /// bounded TX turn. A fragment requires precisely the same generation,
     /// epoch, owner and original SYN MSS as an ordinary packet. The kernel
     /// raw sender independently enforces the live route/MTU at syscall time.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn seal_fragment_with_worker_snapshot(
         &mut self,buffer:UniqueBuffer,payload_len:usize,
         snapshot:&ScopedLinuxBudget,expected_ifindex:u32,
@@ -816,7 +841,7 @@ impl ProtectedScopedOwner {
     /// scoped FrozenRecord TX queue. Only packet sizes fitting the current
     /// underlying carrier are supported; oversized packets fail closed and
     /// require M3 fragmentation before production qualification.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn seal_tun_ipv4_normal_off(
         &mut self,tun:&ScopedTunSink,mut slab:UniqueBuffer,
         scoped:&ScopedLinuxBudget,carrier_snapshot:u64,now:MonoNs,
@@ -1083,7 +1108,7 @@ impl ProtectedScopedOwner {
     /// TCP/TUN adapter or proof of product business delivery. The whole
     /// driver lifetime, correct peer tuple and subsequent auth ingress
     /// remain work for the real runtime.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn submit_scoped_udp_tx(&mut self,
         driver:&ScopedUdpOwner,now:MonoNs,
     )->Result<BatchResult,ProtectedCryptoError>{
@@ -1113,7 +1138,7 @@ impl ProtectedScopedOwner {
     /// FrozenRecord after the protected V4 Detach/Commit. The TCP seq
     /// comes from original AEAD wire metadata; no caller-made TCP seq.
     /// Kernel acceptance is NOT peer receipt; no blind PN retransmission.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn submit_scoped_raw_tx(
         &mut self,driver:&ScopedRawIpv4Tx,
         tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
@@ -1135,7 +1160,7 @@ impl ProtectedScopedOwner {
     /// releases immutable frozen handles AND its generation-held lease,
     /// then returns the original Vec capacity to the same TX worker.
     /// Failed dispatch never leaks or silently retries ciphertext.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn submit_scoped_raw_tx_reusing(
         &mut self,driver:&ScopedRawIpv4Tx,
         tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
@@ -1171,7 +1196,7 @@ impl ProtectedScopedOwner {
     // Test-scope only: retain the exact M1 FrozenRecord that the original M4
     // raw driver definitely copied. No new PN, second seal, retransmission or
     // cloned ciphertext bytes. A failed/uncertain syscall grants NO shadow.
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn submit_scoped_raw_tx_shadow_probe_reusing(
         &mut self,driver:&ScopedRawIpv4Tx,
         tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
@@ -1232,7 +1257,7 @@ impl ProtectedScopedOwner {
     /// AEAD/PN or copied ciphertext. Kernel copy is NOT peer delivery.
     /// Returns the copied prefix and explicit uncertain classification;
     /// ALWAYS recycle original M1 generation-held loan on every outcome.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn submit_scoped_raw_tx_report_reusing(
         &mut self,driver:&ScopedRawIpv4Tx,
         tuple:Ipv4Tuple<'_>,presentation:Presentation,now:MonoNs,
@@ -1272,7 +1297,7 @@ impl ProtectedScopedOwner {
     /// Real raw IPv4/TCP RX directly into ORIGINAL M1 mutable slab, strict
     /// trusted FakeTCP tuple + TCP checksums + seq32 extension, followed
     /// by SAME scoped owner AEAD/PN replay and M3 LINK/TUN path.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn receive_scoped_raw_into_owner(
         &mut self,driver:&ScopedRawIpv4Rx,mut slab:UniqueBuffer,
         tuple:Ipv4Tuple<'_>,persona:PacketPersona,
@@ -1306,7 +1331,7 @@ impl ProtectedScopedOwner {
     /// RX AEAD/PN + M3 LINK drain may publish a complete business candidate.
     /// No temporary Go->Rust payload copy and no alternate RX queue.
     /// On no complete datagram the original UniqueBuffer is returned.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn receive_scoped_udp_into_owner(
         &mut self,driver:&ScopedUdpOwner,mut slab:UniqueBuffer,
         absolute_seq:u64,now:MonoNs,
@@ -1502,7 +1527,7 @@ impl ProtectedScopedOwner {
     /// No unauthenticated record, replay, malformed or pending fragment
     /// can reach the write. A syscall error is a LOST application delivery,
     /// not permission to reuse the consumed AEAD packet number.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     pub(crate) fn drain_normal_off_to_tun(
         &mut self,receiver:&mut NormalOffReceive,tun:&ScopedTunSink,
         now:MonoNs,storage:Vec<RxPacket>,

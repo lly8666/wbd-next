@@ -2,7 +2,7 @@
 //! The fake driver and fake clock live only in tests. This crate cannot
 //! depend on wbd-engine; only the engine will compose real clocks/drivers.
 //! No FFI types or wire layouts are defined here.
-// All modules deny unsafe except the audited, Linux x86_64 GNU sendmmsg FFI island.
+// All modules deny unsafe except the audited, Linux 64-bit GNU sendmmsg FFI island (x86_64/aarch64).
 // A crate-level forbid would also forbid that narrowly scoped native syscall.
 #![deny(unsafe_code)]
 
@@ -14,44 +14,44 @@ pub mod ipv4_tcp;
 pub mod rx_ipv4_tcp;
 
 // ABI island: the other platform modules still deny unsafe Rust code.
-#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[cfg(all(target_os = "linux", any(target_arch="x86_64",target_arch="aarch64"), any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_batch;
 /// Audited unprivileged Linux x86_64 GNU nonblocking recvmmsg UDP fixture.
-#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[cfg(all(target_os = "linux", any(target_arch="x86_64",target_arch="aarch64"), any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_rx_batch;
 /// Inactive AF_PACKET capability/FD preflight, no raw packet activation.
-#[cfg(all(target_os = "linux", target_arch = "x86_64", target_env = "gnu"))]
+#[cfg(all(target_os = "linux", any(target_arch="x86_64",target_arch="aarch64"), any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_packet_preflight;
 /// Strict pure AF_PACKET sockaddr_ll RX metadata gate and inert test-only RX.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_raw_rx_contract;
 /// Isolated lo-only AF_PACKET raw TX/RX fixture; never built in production.
-#[cfg(all(test,target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 mod linux_loopback_raw;
 /// Real unprivileged UDP fixture outcome + generation-tagged explicit driver lease.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 pub mod linux_driver_outcome_lease;
 
 /// Integration-compatible pinned M0 Linux scoped raw IPv4 carrier.
 /// Privileged real raw positives remain unsupported on normal CI.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_raw_carrier;
 /// Preconfigured TUN L3 sink with owned FD; no implicit privileged setup.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_tun_sink;
 /// Original single Linux route/link revision watcher; not a second listener.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]
 pub mod linux_route_events;
 /// Owner-local bounded MTU/PMTU revision cache using the same route watcher.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 pub mod linux_mtu_scope;
 
 use std::sync::{Arc, Condvar, Mutex};

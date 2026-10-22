@@ -1,5 +1,7 @@
 # 五工位接班总览（热索引，不是第二份任务数据库）
 
+**2026-10-22 ARM64主线集成入口**：[合并来源/回归记录](../evidence/arm64-main-integration-20261022.json)与[ARM64独立证据](../evidence/arm64-linux-native-checkpoint-20261022.md)。原生ARM64加速及真实Go/Rust收发已有独立Actions证据；以下2026-10-18表中的ARM64 NOT_RUN和“仅测试专用FEC路径”是当时历史，不能覆盖新证据。M0的Windows任务和独立网络分支继续各自推进，物理资格未被此合并认定通过。
+
 **2026-10-19解堵补充**：[PLAN-008](../decisions/M0-integration-unblock-2026-10-19.md)已核M0 H167和旧源实际目录；M1同HEAD中央审计已PASS，旧blocked需恢复留痕；M4可经registry分配真实产品冷层适配，M0不必亲写全部UI。以下2026-10-18表是历史快照，不覆盖更新的cursor/证据。详细来源只在[核验JSON](../evidence/M0/PLAN-008-integration-unblock.json)维护。
 
 > 最近核验：2026-10-18，main `dde964768d594774ff8d63893cd168fe22d9e41c`。**每次接手必须先刷新远端 main 和指定工作分支**。本页数字只描述此时事实；登记/权限以 main `registry.json` 为准，进度/next_action 以角色 cursor 为准，PASS 以精确 SOURCE 的证据和 Actions 为准，设计以决策/架构为准。更改任务、role 和下一动作不在本页操作。

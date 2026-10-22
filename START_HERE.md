@@ -19,7 +19,7 @@ CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action �
 
 写入：先 S（代码/收据/文档），精确 SOURCE Actions 验证，后 H（**只修改自己的 cursor**）；再次刷新远端确认。工作分支不得修改 main 的登记权限，不 force push，不擅自开展下一包。每个性能 Action 单一场景；AB/BA 必须同 job/VM。无新增信息的重复失败先缩小复现，不刷 seed。
 
-**产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。
+**模式与平台**：FEC2默认 **OFF**；公开Linux的Normal/Fixed/Auto/Game已有各自范围的Actions证据，不能再按旧快照断言仅有测试helper，也不能推广到所有配置或物理环境。ARM64公共构建默认native-first加速，实际编译/运行后端及主线集成资格读 `docs/evidence/arm64-main-integration-20261022.json`。Windows、完整自动档/生命周期、MTU/大UDP/p99等按各自最新证据；网络实验分支的失败/修复不因ARM合并自动关闭。历史仍见 `docs/history/INDEX.md`。
 
 说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。
 

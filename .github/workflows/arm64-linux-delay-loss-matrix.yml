@@ -1,0 +1,78 @@
+# Two independent real ARM64 runners, two non-duplicate network scenes.
+# RTT p99 proxy is NOT first useful packet p99. Do not falsify that gate.
+name: ARM64 parallel authentic damaged RTT and FEC source recovery
+run-name: ARM64 1pct/5pct 50ms native source ${{ github.sha }}
+on:
+  push:
+    branches: [feature/arm64-linux-android-openwrt-autoaccel]
+    paths: ['.github/workflows/arm64-linux-delay-loss-matrix.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bounded-real-os:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - scene: timing-1p50
+            mode: fec-fixed
+          - scene: timing-5p50
+            mode: fec-auto
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 19
+    env:
+      WBD_ARM64_FROZEN_SOURCE: 6c8a64ae247de61485ee004df4ed2cdfa31256b5
+      WBD_V4_MODE: ${{ matrix.mode }}
+      WBD_ARM64_DAMAGE_TRIAL: ${{ matrix.scene }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 39762732689
+          github-token: ${{ github.token }}
+          name: arm64-public-go-rust-39762732689-1
+          path: arm64-public-bundle/
+      - name: Original authenticated Go Rust native ICMP/RTT and egress netem
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables
+          bash tools/arm64_linux_netns_smoke.sh
+      - name: Validate two independent kernel netem counters and real RTT histogram
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,pathlib,re
+          p=pathlib.Path('arm64-netns-result')
+          d=json.loads((p/'loss-functional.json').read_text())
+          assert d['impairment']==os.environ['WBD_ARM64_DAMAGE_TRIAL']
+          assert d['kernel_delay_ms_each_direction']==50
+          assert d['kernel_loss_pct'] in (1,5)
+          assert min(d['qdisc_dropped_outer_packets'].values())>0
+          for role in ('c2s','s2c'):
+            q=d['icmp_rtt_round_trip_ms'][role]
+            assert q['received_rtt_samples']>=216
+            assert q['p50_ms']>30
+            assert q['p99_ms']>=q['p95_ms']>=q['p50_ms']
+          for role in ('client','server'):
+            log=(p/f'{role}.log').read_text()
+            assert re.search(r'V4_PUBLIC_FEC2_RX role='+role+r' .*source_authenticated=[1-9]\d*',log)
+            assert 'V4_PUBLIC_NATIVE_STOP_DRAINED' in log
+          assert json.loads((p/'receipt.json').read_text())['netns_cleanup']=='PASS'
+          print('ARM64_REAL_GO_RUST_NETEM_RTT_SCOPED_PASS',d['impairment'],d['icmp_rtt_round_trip_ms'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-delay-${{ matrix.scene }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-netns-result/
+          if-no-files-found: warn
+          retention-days: 30

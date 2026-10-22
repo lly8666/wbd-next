@@ -1,0 +1,83 @@
+# Independent ARM64 authenticated Rust receive-ownership erasure proof,
+# with and without pinned ISA-L. This is an owner/component qualification,
+# NOT a true original-Go network deliberately dropped source proof.
+name: ARM64 authenticated missing-source FEC2 owner matrix
+run-name: ARM64 authenticated FEC2 real RX ${{ github.sha }}
+on:
+  push:
+    branches: [feature/arm64-linux-android-openwrt-autoaccel]
+    paths:
+      - '.github/workflows/arm64-fec2-authenticated-rx-pair.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  verified-fec2-authenticated-rx:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        backend: [scalar, native]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fixed pinned ISA-L only in native leg
+        if: matrix.backend == 'native'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git "$RUNNER_TEMP/isal-rx-src"
+          git -C "$RUNNER_TEMP/isal-rx-src" checkout -q c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C "$RUNNER_TEMP/isal-rx-src" rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/isal-rx-build"
+          (cd "$RUNNER_TEMP/isal-rx-src" && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >>"$GITHUB_ENV"
+          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >>"$GITHUB_ENV"
+      - name: Real AEAD-unique PN and authenticated interleaved 4-block erasure / no HOL / Stop
+        shell: bash
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          feature=fec2_product_record
+          if [ "$BACKEND" = native ]; then
+            feature=fec2_product_record,native_fec_acceleration
+            test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          fi
+          mkdir -p arm64-rx-result
+          cargo +1.85.1 test --locked -p wbd-engine --lib --features "$feature"             m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop             -- --nocapture --test-threads=1 2>&1 | tee arm64-rx-result/erasure-owner.log
+          python3 - <<'PY'
+          import json,os,pathlib,re,hashlib
+          p=pathlib.Path('arm64-rx-result')
+          s=(p/'erasure-owner.log').read_text()
+          assert re.search(r'test .*m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop \.\.\. ok',s)
+          assert 'test result: ok. 1 passed; 0 failed;' in s
+          data={'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],
+                'platform':'aarch64-native','backend_build':os.environ['BACKEND'],
+                'authenticated_AEAD_unique_PN_and_replay':'TEST_ASSERTIONS_PASS',
+                'four_interleaved_missing_sources_per_suite':4,
+                'ciphers':['chacha20-poly1305','aes-128-gcm','aes-256-gcm'],
+                'recovered_exact_original_plaintext':'TEST_ASSERTIONS_PASS',
+                'bounded_no_cross_block_HOL_and_Stop':'TEST_ASSERTIONS_PASS',
+                'actual_native_backend_call_count':'NOT_INSTRUMENTED_IN_OWNER',
+                'Go_TLS_kernel_TUN_source_loss':'NOT_RUN',
+                'first_delivery_p99':'NOT_RUN',
+                'log_sha256':hashlib.sha256(s.encode()).hexdigest()}
+          (p/'receipt.json').write_text(json.dumps(data,indent=2)+'\n')
+          print('ARM64_AUTHENTICATED_FEC2_RX_ERASURE_SCOPED_PASS',os.environ['BACKEND'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-authenticated-fec2-${{ matrix.backend }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-rx-result/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,89 @@
+name: Linux ARM64 native acceleration and x64 regression
+run-name: Linux native acceleration proof ${{ github.sha }}
+on:
+  push:
+    branches: [main, feature/arm64-linux-android-openwrt-autoaccel, integrate/arm64-main-20261022]
+    paths:
+      - '.github/workflows/arm64-platform-acceleration.yml'
+      - '.cargo/config.toml'
+      - 'native/isal-safe/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  arm64-default:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Native ARM64 platform and record crypto golden tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 metadata --locked --no-deps --format-version 1 >/dev/null
+          cargo +1.85.1 test --locked -p wbd-platform --lib -- --test-threads=2
+          cargo +1.85.1 test --locked -p wbd-codec --lib -- --test-threads=2
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_fixed_stream_ -- --test-threads=1
+          cargo +1.85.1 test --release --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_fec2_live_rx_ -- --test-threads=1
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
+          echo ARM64_NATIVE_DEFAULT_BUILD_COMPONENT_PASS
+
+  native-isal:
+    # Functional/backend equality only; no cross-VM performance comparison.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
+          - {runner: ubuntu-24.04, arch: x86_64}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real pinned native ISA-L and scalar/native FEC2 equivalence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = '${{ matrix.arch }}'
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          git clone --quiet https://github.com/intel/isa-l.git "$RUNNER_TEMP/isa-l"
+          git -C "$RUNNER_TEMP/isa-l" checkout -q c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C "$RUNNER_TEMP/isa-l" rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/isal-install"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd "$RUNNER_TEMP/isa-l" && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          cargo +1.85.1 test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --lib r1_f2_ -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-platform --lib -- --test-threads=2
+          features=m0_v4_embedded_go,fec2_product_record,native_fec_acceleration
+          cargo +1.85.1 test --release --locked -p wbd-engine --features "$features" --lib m0_fixed_stream_ -- --test-threads=1
+          cargo +1.85.1 test --release --locked -p wbd-engine --features "$features" --lib m0_fec2_live_rx_ -- --test-threads=1
+          cargo +1.85.1 build --release --locked -p wbd-engine --features "$features"
+          echo LINUX_NATIVE_ISAL_FEC2_EQUIVALENCE_PASS
+      - name: Persist precise target receipt
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p arm64-evidence
+          echo "source=$GITHUB_SHA" > arm64-evidence/manifest.txt
+          echo "run=$GITHUB_RUN_ID attempt=$GITHUB_RUN_ATTEMPT" >> arm64-evidence/manifest.txt
+          uname -a >> arm64-evidence/manifest.txt
+          echo 'ISA-L upstream c387163fcbca62701d646149564c550c78a4f985' >> arm64-evidence/manifest.txt
+          echo 'Auto-dispatched ISA-specific instructions: NOT_PROVEN_BY_THIS_RECEIPT' >> arm64-evidence/manifest.txt
+          echo 'client/server raw/TUN product: NOT_RUN_IN_THIS_COMPONENT_JOB' >> arm64-evidence/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-isal-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-evidence/
+          if-no-files-found: error
+          retention-days: 30

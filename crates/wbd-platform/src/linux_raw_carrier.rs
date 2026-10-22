@@ -4,7 +4,7 @@
 //! needs CAP_NET_RAW and exact interface bound by kernel SO_BINDTODEVICE.
 //! STOP fences synchronously borrowed record until kernel copy completes.
 //! Kernel acceptance is NOT remote peer ACK or application delivery.
-#![cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#![cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::ffi::{c_int,c_void,CString};
 use std::io;
 use std::net::Ipv4Addr;

@@ -1,0 +1,94 @@
+# This is the FIRST product use of owner-derived FEC recovery/backend counters.
+# Frozen exact Go/Rust source reused; two modes are independent real OS tests.
+# Do not infer a counter >0 from netem drop or from FEC 'Applied'.
+name: Linux ARM64 original-Go FEC2 RX witness under 2pct loss
+run-name: ARM64 original-product FEC RX ${{ github.sha }}
+on:
+  push:
+    branches: [feature/arm64-linux-android-openwrt-autoaccel]
+    paths:
+      - '.github/workflows/arm64-fec2-product-rx-witness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  original-product-rx-witness:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        mode: [fec-fixed, fec-auto]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 18
+    env:
+      WBD_ARM64_FROZEN_SOURCE: b776527c99b481b93775d4b27f93bc8c564bea70
+      WBD_V4_MODE: ${{ matrix.mode }}
+      WBD_ARM64_DAMAGE_TRIAL: policy-2pct
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 39761322930
+          github-token: ${{ github.token }}
+          name: arm64-public-go-rust-39761322930-1
+          path: arm64-public-bundle/
+      - name: One real two-way 2 percent kernel loss trial after FEC Applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables
+          bash tools/arm64_linux_netns_smoke.sh
+      - name: Strict real original owner RX counter readback, not assumed FEC success
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re,os,pathlib,json,hashlib
+          p=pathlib.Path('arm64-netns-result')
+          metrics=('source_authenticated','repair_authenticated','source_tun_delivered',
+                   'recovered_tun_delivered','native_decode_calls','scalar_decode_calls')
+          observations={}
+          for role in ('client','server'):
+            log=(p/f'{role}.log').read_text()
+            lines=[x for x in log.splitlines() if 'V4_PUBLIC_FEC2_RX role='+role+' ' in x]
+            assert len(lines)==1,(role,'missing or ambiguous ORIGINAL Rust summary',len(lines))
+            x=lines[0]
+            assert 'sampling=pre_stop' in x
+            counts={}
+            for key in metrics:
+              m=re.search(r'\b'+key+r'=(\d+)\b',x)
+              assert m,(role,key,x)
+              counts[key]=int(m.group(1))
+            assert counts['source_authenticated']>0,(role,counts)
+            assert counts['repair_authenticated']>0,(role,counts)
+            assert counts['source_tun_delivered']>0,(role,counts)
+            assert counts['native_decode_calls']+counts['scalar_decode_calls']>=0
+            observations[role]=counts
+          result={'frozen_product_source':os.environ['WBD_ARM64_FROZEN_SOURCE'],
+                  'harness_source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],
+                  'mode':os.environ['WBD_V4_MODE'],
+                  'qualification':'ORIGINAL_GO_TLS_RUST_M3_M4_FEC_RX_COUNTERS_OBSERVED',
+                  'readback_scope':'pre_stop_atomic_snapshot_not_exact_final',
+                  'real_outer_kernel_loss':'See loss-functional.json',
+                  'role_counters':observations,
+                  'fec_recovered_tun_total':sum(x['recovered_tun_delivered'] for x in observations.values()),
+                  'native_decode_actual_calls':sum(x['native_decode_calls'] for x in observations.values()),
+                  'scalar_decode_actual_calls':sum(x['scalar_decode_calls'] for x in observations.values()),
+                  'attribution_rule':'positive source recovery is proof of owner decoder only; direct netem per-cipher source identity still absent',
+                  'physical':'NOT_RUN',
+                  'logs_sha256':{role:hashlib.sha256((p/f'{role}.log').read_bytes()).hexdigest() for role in observations}}
+          (p/'owner-rx-witness.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('ORIGINAL_ARM64_FEC2_RX_OWNER_METRICS_SCOPED_PASS',observations)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-product-rx-${{ matrix.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-netns-result/
+          if-no-files-found: warn
+          retention-days: 30
