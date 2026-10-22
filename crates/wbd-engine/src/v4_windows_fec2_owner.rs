@@ -160,3 +160,93 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_open(
         _=>INVALID,
     }
 }
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+    use wbd_codec::fec_v2::{Rs16,Profile,BackendChoice};
+    fn cold(server:bool)->[u8;COLD_V4_LEN]{
+        let mut a=[0;COLD_V4_LEN];
+        a[..4].copy_from_slice(b"WBCO");
+        a[4..6].copy_from_slice(&1u16.to_be_bytes());
+        a[6..8].copy_from_slice(&(COLD_V4_LEN as u16).to_be_bytes());
+        a[8]=u8::from(server);a[9]=1;a[10]=1;
+        a[12..28].fill(1);a[28..44].fill(2);a[44..60].fill(3);
+        a[60..62].copy_from_slice(&1400u16.to_be_bytes());
+        a[62..64].copy_from_slice(&1400u16.to_be_bytes());
+        a[64..96].fill(4);a[96..172].fill(5);a[172..].fill(6);a
+    }
+    fn cmd()->[u8;HANDOFF_V1_LEN]{
+        let mut a=[0;HANDOFF_V1_LEN];
+        a[..4].copy_from_slice(b"WBGH");
+        a[4..6].copy_from_slice(&2u16.to_be_bytes());
+        a[6..8].copy_from_slice(&(HANDOFF_V1_LEN as u16).to_be_bytes());
+        a[8..12].copy_from_slice(&[10,25,0,2]);a[12..16].copy_from_slice(&[10,25,0,1]);
+        a[16..18].copy_from_slice(&41001u16.to_be_bytes());
+        a[18..20].copy_from_slice(&443u16.to_be_bytes());
+        a[20..24].copy_from_slice(&500u32.to_be_bytes());
+        a[24..26].copy_from_slice(&1360u16.to_be_bytes());a[26]=1;
+        a[27..29].copy_from_slice(&7u16.to_be_bytes());a
+    }
+    fn setup(r:&mut Registry,server:bool,luid:u64,index:u32)->u64{
+        let h=allocate(r,&cold(server),&cmd(),server).unwrap();
+        assert_eq!(commit(r,h,0,0,600),OK);
+        assert_eq!(bind_wintun(r,h,[2;16],luid,index),OK);
+        h
+    }
+    fn data(byte:u8)->Vec<u8>{
+        let mut p=vec![0u8;40];p[0]=0x45;p[2..4].copy_from_slice(&40u16.to_be_bytes());
+        p[8]=64;p[9]=17;p[20..].fill(byte);p
+    }
+    fn send(r:&mut Registry,h:u64,luid:u64,ifindex:u32,kind:u8,plain:&[u8])
+        ->(Vec<u8>,u32,u64){
+        let mut out=[0u8;800];
+        let (n,seq,pn)=seal_symbol(r,h,[2;16],luid,ifindex,kind,plain,&mut out)
+            .expect("genuine original Rust M1 immutable M3 FEC AEAD");
+        (out[..n].to_vec(),seq,pn)
+    }
+    #[test]
+    fn m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop(){
+        let mut r=Registry{
+            generation:1,entries:BTreeMap::new(),game_groups:BTreeMap::new(),
+        };
+        let client=setup(&mut r,false,101,11);
+        let server=setup(&mut r,true,102,12);
+        let budget=normal_off_windows_budget(&r.entries[&client]).unwrap();
+        let a=data(1);let b=data(2);
+        let source=fec_v2::source_owned(1,0,&a,budget.record_payload_mtu).unwrap();
+        assert_eq!(seal_symbol(&mut r,client,[9;16],101,11,2,&source,&mut [0;800]),
+            Err(INVALID));
+        assert_eq!(seal_symbol(&mut r,client,[2;16],101,11,1,&source,&mut [0;800]),
+            Err(INVALID));
+        let (wire,seq,pn)=send(&mut r,client,101,11,2,&source);
+        assert_eq!(pn,0);
+        let delivered=open_symbol(&mut r,server,[2;16],102,12,seq,&wire).unwrap();
+        assert_eq!(delivered.len(),1);
+        assert_eq!(&delivered[0].frame[..delivered[0].length as usize],a.as_slice());
+        assert_eq!(delivered[0].recovered,0);
+        assert!(open_symbol(&mut r,server,[2;16],102,12,seq,&wire).is_err());
+        let s1=fec_v2::source_owned(2,1,&b,budget.record_payload_mtu).unwrap();
+        let (wire1,seq1,_)=send(&mut r,client,101,11,2,&s1);
+        let actual=open_symbol(&mut r,server,[2;16],102,12,seq1,&wire1).unwrap();
+        assert_eq!(actual.len(),1);
+        assert_eq!(&actual[0].frame[..actual[0].length as usize],b.as_slice());
+        let codec=Rs16::new();
+        let (repair,_)=codec.encode_owned(2,&[&a,&b],Profile::Strong,0,1,
+            budget.record_payload_mtu,BackendChoice::Scalar).unwrap();
+        let (sealed,repair_seq,_)=send(&mut r,client,101,11,3,&repair[0]);
+        let recovered=open_symbol(&mut r,server,[2;16],102,12,repair_seq,&sealed).unwrap();
+        assert_eq!(recovered.len(),1);
+        assert_eq!(&recovered[0].frame[..recovered[0].length as usize],a.as_slice());
+        assert_eq!(recovered[0].recovered,1);
+        let mut corrupt=sealed;*corrupt.last_mut().unwrap()^=1;
+        assert!(open_symbol(&mut r,server,[2;16],102,12,repair_seq+128,&corrupt).is_err());
+        assert_eq!(quiesce_wintun(&mut r,client,[2;16],101,11),OK);
+        assert_eq!(quiesce_wintun(&mut r,server,[2;16],102,12),OK);
+        assert_eq!(stop(&mut r,client),OK);
+        assert_eq!(stop(&mut r,server),OK);
+        assert_eq!(release(&mut r,client),OK);
+        assert_eq!(release(&mut r,server),OK);
+        assert_eq!(PRODUCT_APPLIED,0);
+    }
+}
