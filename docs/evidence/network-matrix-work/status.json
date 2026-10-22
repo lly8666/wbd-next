@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S030-real-Fixed30-original-postloan-stage-diagnosis",
+  "phase": "S031-fixed-auto-authenticated-record-wire-cap-native-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,30 +25,15 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "arm64-fixed30-original-M1-postloan-stage-S030",
-      "status": "IN_PROGRESS",
-      "type": "SINGLE_ONE_JOB_ONE_SCENARIO_PERFORMANCE_ACTION",
-      "trigger": "ONE changed request.json push only; do not manual dispatch",
-      "product_source": "2476b22f748a686907edfb995431a2b236ccebaa",
-      "build_run": 39803921701,
-      "artifact_id": 12436752126,
-      "scenario": "S028 exact Fixed Maximum profile6 30pct IID 300ms one way 2Mbps/direction mixed UDP/TCP four flows, 15s warmup 120s steady 30s drain",
-      "observations": "six authentic M1 stage counts, 5 genuine TUN reader counts, original FEC owner accepted and failure reasons, mode applied, TCP ACKs and duplicate/Stop",
-      "run_id": 39804670142,
-      "attempt": 1,
-      "harness_source": "2f6aef1c3844f973da942538a9d56bc688cd6aeb",
-      "harness_contract_run_id": 39804669759,
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39804670142"
+      "id": "S031-original-FEC-record-cap-build",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "type": "ONE_NATIVE_ARM64_PRODUCT_SOURCE_BUILD",
+      "trigger": "source change in original Go CLI auto-builds exactly once, no manual dispatch",
+      "previous_source": "2476b22f748a686907edfb995431a2b236ccebaa",
+      "scope": "raise negotiated client/server TLS record wire limit from1180 to1280 for Fixed/Auto only, keep Off/Game 1180; no change to Rust length/MTU/MSS/crypto/Stop gates"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S023-contract",
-      "result": "success",
-      "run": 39786357898,
-      "source": "b084206edaee3a874bc8b24e3e7b517be0830a28",
-      "file": "S023-kernel-TCP-INFO-contract.json"
-    },
     {
       "id": "S024",
       "result": "FAIL_TRUE_TCP_ACK_FREEZE",
@@ -125,6 +110,19 @@
       "run": 39803921828,
       "result": "success",
       "file": "S029-native-stage-build.json"
+    },
+    {
+      "id": "S030",
+      "result": "HARD_FAIL_REAL_SOURCE_OVERSIZE_7074_7068",
+      "run": 39804670142,
+      "artifact_id": 12437951924,
+      "file": "S030-original-record-oversize-Fail.json"
+    },
+    {
+      "id": "S030-contract",
+      "result": "success",
+      "run": 39804669759,
+      "file": "S030-original-record-oversize-Fail.json"
     }
   ],
   "open_issues": [
@@ -139,7 +137,7 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "S030 sole original Fixed30 perf run 39804670142 IN_PROGRESS, companion contract39804669759. NO duplicate dispatch. Resolve new real stage attempted/queued/not_ready/error/oversize/mode_skipped plus input M1 read/loan and existing FEC accepted. Check if 7k unmatched are record length reject; don't change MTU or data path without this evidence. Keep original S028 FAIL and S018 Normal/off PASS.",
+  "next_action": "Resolve unique S031 native build Action from Go record-wire cap source push. Confirm actual native Go test and Rust units, ZIP/SOURCE/hash/ELF. If success, one same-VM sequential S032 Fixed30 AB: A previous SOURCE2476b22f run39803921701/artifact12436752126 vs B capped Fixed wire1280. Verify 7074/7068 overbudget disappears, TCP bytes_acked/p99 and UDP first arrival, applied and hard Stop. Retain old FAIL and S018 off baseline PASS, no main merge.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2476b22f748a686907edfb995431a2b236ccebaa",

@@ -6,6 +6,8 @@ import (
     "path/filepath"
     "strings"
     "testing"
+
+    "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 
 func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
@@ -37,5 +39,23 @@ func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
     if _,err:=parse("client",shifted);err==nil{t.Fatal("symlink accepted")}
     if _,err:=parse("client",append(args,"--password","plaintext"));err==nil{
       t.Fatal("secret argv mixed with fd input")
+    }
+}
+
+// This is the ACTUAL public CLI TLS/record negotiation boundary used by both
+// directions, not a synthetic FEC encoder qualification or a relaxed MTU gate.
+func TestOriginalProductFecRecordWireBudgetKeeps1200BIPv4(t *testing.T){
+    const realTunL3=1200
+    const recordOverhead=31
+    const fecMaxRepairOverhead=14
+    for _,mode:=range []realityfront.FecV2Mode{realityfront.FecV2Fixed,realityfront.FecV2Auto}{
+        limit:=publicRecordWireLimit(mode)
+        if limit!=1280||int(limit)-recordOverhead-fecMaxRepairOverhead<realTunL3 {
+            t.Fatalf("mode=%s source cap=%d cannot carry 1200B native TUN packet",mode,int(limit)-recordOverhead-fecMaxRepairOverhead)
+        }
+        if limit>1360 || int(limit)+40>1500 {t.Fatalf("mode=%s exceeded FakeTCP MSS/outer MTU",mode)}
+    }
+    if publicRecordWireLimit(realityfront.FecV2Off)!=1180 {
+        t.Fatal("normal/off record contract unexpectedly changed")
     }
 }

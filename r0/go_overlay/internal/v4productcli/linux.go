@@ -265,6 +265,19 @@ func logAuthenticFecFailures(role string,v realityfront.V4PublicFecTxFailures,er
         role,v.SourcePayload,v.SourceArena,v.SourceSeal,v.ParityPolicy,
         v.ParityArena,v.ParitySeal,v.ParityM4Noncopy,v.SourceM4Noncopy)
 }
+// Product-only V4 record wire budget. The original TUN is 1200B L3 while
+// Fixed/Auto FEC requires 31B record framing plus 14B FEC repair headroom:
+// a 1180B record silently rejects every original IPv4 packet >1135B.
+// 1280B supports <=1200B L3 and stays below the independently negotiated
+// FakeTCP MSS=1360 and the real 1500B outer MTU. Never override the Rust
+// original owner route/peer MSS/MTU validation or the M4 kernel DF gate.
+func publicRecordWireLimit(mode realityfront.FecV2Mode)uint16{
+    if mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto {
+        return 1280
+    }
+    return 1180
+}
+
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -316,7 +329,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
-        ClientLimit:1180,DesiredLanes:1,LaneID:1,Policy:policy,
+        ClientLimit:publicRecordWireLimit(c.fecMode),DesiredLanes:1,LaneID:1,Policy:policy,
     }
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
     *connected=true
@@ -392,7 +405,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         TLS:realityfront.ServerConfig{ServerName:c.serverName,RouteKey:c.routeKey,
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{certificate}},
             Timeout:15*time.Second},
-        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:1180,
+        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:publicRecordWireLimit(c.fecMode),
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
             if len(req.TunnelID)!=16 || string(req.TunnelID)!=string(c.tunnel[:]) ||
                req.DesiredLanes!=1||req.LaneID!=1{return realityfront.ErrAdmissionParams}

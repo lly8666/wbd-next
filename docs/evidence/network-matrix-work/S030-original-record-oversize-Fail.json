@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "event": "S030",
+  "result": "FAIL_PRODUCT_LENGTH_GUARD",
+  "action": {
+    "run": 39804670142,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12437951924,
+    "zip_sha256": "9e99edbb4c611fea9e5a28c3ed14f77f5d2149b52e7a0aa53d00e1efa7ec59fb"
+  },
+  "sources": {
+    "product": "2476b22f748a686907edfb995431a2b236ccebaa",
+    "product_build": 39803921701,
+    "artifact": 12436752126,
+    "harness": "2f6aef1c3844f973da942538a9d56bc688cd6aeb",
+    "contract": 39804669759
+  },
+  "conditions": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "app_mbps_per_direction": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "one_way_ms": 300,
+    "loss_pct": 30,
+    "steady_s": 120
+  },
+  "real_m1": {
+    "client": {
+      "read": 28794,
+      "loan": 28794,
+      "stage_attempt": 28794,
+      "stage_queued": 21720,
+      "stage_error": 7074,
+      "stage_over_budget": 7074,
+      "notready": 0
+    },
+    "server": {
+      "read": 28741,
+      "loan": 28652,
+      "preloan_fail": 89,
+      "stage_attempt": 28652,
+      "stage_queued": 21537,
+      "stage_error": 7115,
+      "stage_over_budget": 7068,
+      "notready": 0,
+      "owner_source_arena": 47
+    }
+  },
+  "app": {
+    "udp_c2s": {
+      "sent": 20751,
+      "unique": 13560,
+      "missing": 7191,
+      "loss_pct": 34.65375162642764,
+      "duplicates": 0
+    },
+    "udp_s2c": {
+      "sent": 20751,
+      "unique": 13794,
+      "missing": 6957,
+      "loss_pct": 33.52609512794564,
+      "duplicates": 0
+    },
+    "tcp_steady_goodput_mbps": 0,
+    "fixed_client": "requested1 applied0 pending",
+    "fixed_server": "requested1 applied1",
+    "invalid_payload": 0,
+    "stop_clean": true
+  },
+  "proven_cause": "original authenticated Go CLI hardcodes 1180-byte V4 directional ClientLimit/ServerLimit; original route-budget FrameBudget subtracts fixed31 and FEC14 -> max1135-byte inner IPv4 source, while real Linux TUN MTU is1200. Postloan stage rejects >1135 BEFORE FEC offer_source, 7074/7068 actual rejected.",
+  "safe_repair": "Original Fixed/Auto TLS wire1280 (max source1235), less than true FakeTCP advertised MSS1360 and outer MTU1500; hold all original Rust budget/crypto/MTU checks unchanged. Normal/off remains1180.",
+  "qualification": "FAIL, cannot claim repaired until real same-host A/B and client Fixed effective."
+}
