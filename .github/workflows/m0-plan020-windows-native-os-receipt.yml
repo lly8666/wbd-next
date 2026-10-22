@@ -356,7 +356,7 @@ jobs:
                         global_host_WFP_routes_DNS_IPv6_MTU_WAL="NOT_RUN",
                         native_public_CLI_real_first_app_Apply_Stop="NOT_RUN",
                         windows_production="OFF",fec2_production="OFF",game_production="OFF")
-          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\\n")
+          pathlib.Path("result/portable/source-receipt.json").write_text(json.dumps(manifest,indent=2)+"\n")
           assert 'ShowState("待验证 · 原生系统 Applied 未确认")' in gui
           assert 'line == "WBD_WINDOWS_CLIENT_READY"' in gui
           assert not re.search(r'if \(line == "WBD_WINDOWS_CLIENT_READY"\).*ShowState\("已连接',gui)
