@@ -2541,6 +2541,21 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_backend(
     unsafe{std::ptr::copy_nonoverlapping(result.as_ptr(),out,2)}
     OK
 }
+// The original Go cgo object always links both optional read-only FEC2
+// counters, including the Normal/off build without feature7. Keep those ABI
+// symbols present but explicitly unavailable: never report fake zero FEC data.
+#[cfg(all(not(feature="fec2_product_record"),target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_rx_counters(
+    _handle:u64,_out:*mut u64,_len:usize
+)->i32{BAD_STAGE}
+#[cfg(all(not(feature="fec2_product_record"),target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_backend(
+    _handle:u64,_out:*mut u64,_len:usize
+)->i32{BAD_STAGE}
 // Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested
