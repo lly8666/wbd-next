@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "startup-failure-triage-S001",
+  "phase": "arm64-artifact-normalization-exec-permission-fix",
   "recovered": false,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -69,22 +69,32 @@
     {
       "id": "arm64-off-startup-diagnostic-12s",
       "path": "tests/network/request.json",
-      "status": "ACTION_QUEUED",
+      "status": "FAIL_EXIT126_PERMISSION_DENIED",
       "run_id": 39761391815,
       "reason": "one evidence-gathering shorter run with allowlisted startup error classifiers; same seed/mode/product; no performance qualification",
       "attempt": 1,
       "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d",
       "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761391815"
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761391815",
+      "failure": "both CLIs exit 126, permission denied, no TUN; prepared ARM normalized executables lacked executable mode",
+      "result_artifact_id": 12418840250,
+      "safe_classes": {
+        "client": [
+          "KERNEL_DENIED"
+        ],
+        "server": [
+          "KERNEL_DENIED"
+        ]
+      }
     }
   ],
   "open_issues": [
-    "S001 real ARM64 product exited before READY; root cause unknown; no traffic observations; inspect safe startup diagnostics before code modifications",
+    "S001 failed due to missing executable mode after ARM64 artifact normalization; exact-source retry required to verify correction",
     "No runtime repair byte budget and actual FEC k/r readback; NOT_OBSERVED",
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Inspect run 39761391815 allowlisted startup diagnostic and preserve exact result; no duplicate retry.",
+  "next_action": "Observe artifact executable mode selfcheck after isolated permission fix; then commit original 90s duplex S001 retry, frozen product unchanged. Do not repeat diagnostic.",
   "actions": [
     {
       "run_id": 39759842064,

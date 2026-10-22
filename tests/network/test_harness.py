@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import stat
 import time
 import unittest
 from unittest.mock import patch
@@ -107,6 +108,9 @@ class Contracts(unittest.TestCase):
                 for name in names:
                     (root / "fixed-build" / name).write_bytes((root / name).read_bytes())
                 verify(root, b)
+                for name in names:
+                    self.assertTrue((root / "fixed-build" / name).stat().st_mode & stat.S_IXUSR,
+                                    "ARM64 normalized binary must remain executable after hash verification")
                 (root / "fixed-build" / names[0]).write_bytes(b"tamper")
                 with self.assertRaises(ValueError):
                     verify(root, b)

@@ -109,8 +109,10 @@ def verify(root, bundle):
         path.chmod(0o700)
         # Normalized path consumed by LinuxExperiment is the original x64 interface.
         normalized = root / "fixed-build" / name
-        if machine == 183 and normalized != path and normalized.exists() and sha(normalized) != digest:
-            raise ValueError(f"normalized ARM64 binary digest mismatch: {name}")
+        if machine == 183 and normalized != path and normalized.exists():
+            if sha(normalized) != digest:
+                raise ValueError(f"normalized ARM64 binary digest mismatch: {name}")
+            normalized.chmod(0o700)  # shutil.copyfile strips ELF exec mode.
     return manifest
 
 def fetch(bundle, root):
@@ -163,7 +165,9 @@ def fetch(bundle, root):
     if (arm_root / "manifest.json").exists():
         (root / "fixed-build").mkdir(exist_ok=True)
         for name in REQUIRED:
-            shutil.copyfile(arm_root / name, root / "fixed-build" / name)
+            destination = root / "fixed-build" / name
+            shutil.copyfile(arm_root / name, destination)
+            destination.chmod(0o700)  # Verified ARM CLI must be executable after normalization.
         verify(root, bundle)  # Same hashes and native ELF after normalization.
         manifest_path = arm_root / "manifest.json"
         layout = "arm64-sha256sums"
