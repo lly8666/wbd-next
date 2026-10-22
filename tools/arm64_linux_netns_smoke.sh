@@ -154,6 +154,38 @@ sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
 export WBD_V4_EXPECTED_ICMP="$count"
+# One bounded, real-product capacity discovery; not codec A/B, first-arrival
+# p99, or a production rate guarantee. Do NOT repeat if capacity is insufficient.
+if [ "$(printenv WBD_ARM64_CAPACITY_TRIAL || true)" = "udp10m" ]; then
+  if [ "$mode" != normal ]; then echo 'ARM64_CAPACITY_NORMAL_ONLY' >&2; exit 2; fi
+  command -v iperf3 >/dev/null || { echo 'ARM64_CAPACITY_NO_IPERF3' >&2; exit 77; }
+  sudo -n ip netns exec "$server_ns" iperf3 -s -1 -B 10.188.18.2 -p 5201      >"$out/iperf-server.log" 2>&1 &
+  sleep 1
+  set +e
+  sudo -n ip netns exec "$client_ns" timeout 95s iperf3     -c 10.188.18.2 -B 10.188.18.1 -p 5201     --bidir -u -b 10M -l 1000 -t 60 -J     >"$out/iperf-client.json" 2>"$out/iperf-client.stderr"
+  trial_rc=$?
+  set -e
+  if [ "$trial_rc" -ne 0 ]; then
+    echo "ARM64_CAPACITY_TRIAL_FAILED exit=$trial_rc" >&2
+    tail -n 20 "$out/iperf-client.stderr" >&2 || true
+    exit 1
+  fi
+  OUTPUT="$out" python3 - <<'PY'
+import pathlib,json,os
+p=pathlib.Path(os.environ["OUTPUT"])
+d=json.loads((p/"iperf-client.json").read_text())
+if "error" in d: raise SystemExit("IPERF_ERROR "+str(d["error"]))
+e=d.get("end",{})
+assert isinstance(e,dict) and e.get("streams"),"iperf3 stream receipt missing"
+receipt={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
+"harness_source":os.environ["GITHUB_SHA"],"target_bps_each_direction":10000000,
+"duration_requested_sec":60,"iperf3_end":e,
+"qualifier":"CAPACITY_TRIAL_ONLY","first_arrival_p99":"NOT_RUN",
+"native_scalar_AB":"NOT_RUN","physical":"NOT_RUN"}
+(p/"capacity.json").write_text(json.dumps(receipt,indent=2)+"\n")
+print("ARM64_NORMAL_UDP_BIDIRECTIONAL_CAPACITY_TRIAL_RECORDED")
+PY
+fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" != normal ]; then sleep 3; fi
@@ -197,7 +229,9 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
 "bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
-"impairment":"NOT_RUN","physical":"NOT_RUN","logs_sha256":{f:sha(f) for f in files}}
+"impairment":"NOT_RUN","physical":"NOT_RUN",
+"capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
+"logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
 print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")
 PY
