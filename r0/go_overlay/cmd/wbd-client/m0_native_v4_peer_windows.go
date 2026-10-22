@@ -248,7 +248,13 @@ func(p *m0NativeV4Peer) retryOne(now time.Time)(bool,error){
  if len(p.pending)==0||p.stopped(){return false,nil}
  for i:=range p.pending{
   pending:=&p.pending[i]
-  if now.Sub(pending.lastSent)<m0V4RetxAfter||pending.retries>=8{continue}
+  if now.Sub(pending.lastSent)<m0V4RetxAfter{continue}
+  if pending.retries>=8{
+   // No silent permanent head-of-line stall. This specific original
+   // carrier exhausted its finite immutable-ciphertext retry budget;
+   // it is not an invented Go M2/FEC applied or packet acknowledgment.
+   return false,fmt.Errorf("%w: exact original TCP carrier retry exhausted",windowsclient.ErrN4NativeGuard)
+  }
   // Fixed ciphertext and original sequence; NEVER reseal or spend a PN.
   if err:=p.sendCarrier(pending.seq,p.recvNext,pending.wire);err!=nil{return false,err}
   pending.lastSent=now;pending.retries++
@@ -294,10 +300,13 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
   }
   if !changed{break}
  }
- if done==0{
+ // One bounded retransmission opportunity EACH fair drain round, even
+ // under continuously busy TX/RX. The prior idle-only retry starved all
+ // missing carrier segments at 10Mbps and under constant peer traffic.
+ if ctx.Err()==nil&&!p.stopped(){
   retried,err:=p.retryOne(time.Now())
-  if err!=nil{return 0,err}
-  if retried{return 1,nil}
+  if err!=nil{return done,err}
+  if retried{done++}
  }
  return done,nil
 }
