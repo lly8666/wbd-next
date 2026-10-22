@@ -18,6 +18,29 @@ type V4PublicFecReadback struct {
     Profile FecV2Profile
     Pending bool
 }
+// Read-only snapshot of the ORIGINAL rust owner's post-kernel firstsend and
+// authenticated reverse M2 coverage; no local Go receipt or guessed APPLIED.
+type V4PublicFecM2Proof struct {
+    Accepted,NotSent,Uncertain,Unknown2s,Unknown8s uint64
+    Covered2s,Covered8s,ReverseReports uint64
+    FirstCensored,CoverageCensored bool
+}
+func v4ReadOriginalFecM2Proof(b *v4EmbeddedNativeBridge)(V4PublicFecM2Proof,error){
+    var zero V4PublicFecM2Proof
+    first,err:=b.rustOwnerNormalM2Firstsend()
+    if err!=nil{return zero,err}
+    coverage,err:=b.rustOwnerNormalM2Coverage()
+    if err!=nil{return zero,err}
+    return V4PublicFecM2Proof{
+        Accepted:first.Accepted,NotSent:first.DefinitelyNotSent,
+        Uncertain:first.Uncertain,Unknown2s:first.Unknown2s,
+        Unknown8s:first.Unknown8s,Covered2s:coverage.Covered2s,
+        Covered8s:coverage.Covered8s,
+        ReverseReports:coverage.AuthenticatedReverseReports,
+        FirstCensored:first.Censored,CoverageCensored:coverage.Censored,
+    },nil
+}
+
 type v4ProductFecMonitor struct {
     epoch [16]byte
     state FecV2State

@@ -133,6 +133,15 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     if p.fec!=nil{p.fec.start(bridge)}
     return session,nil
 }
+// Only numeric true original M2 counters, once before Stop; never changes
+// TLS, ACK, FEC policy, mode revision or owner state.
+func (p *V4LinuxServerProduct) OriginalFecM2Proof()(V4PublicFecM2Proof,error){
+    if p==nil{return V4PublicFecM2Proof{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM2Proof{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecM2Proof(p.owner)
+}
 func (p *V4LinuxServerProduct) OriginalFECReadback()(V4PublicFecReadback,error){
     if p==nil{return V4PublicFecReadback{},ErrAdmissionParams}
     p.mu.Lock()

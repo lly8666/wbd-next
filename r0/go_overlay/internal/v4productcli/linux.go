@@ -335,6 +335,15 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+            proof,m2err:=native.OriginalFecM2Proof()
+            if m2err==nil {
+                firstCensored,coverCensored:=0,0
+                if proof.FirstCensored{firstCensored=1}
+                if proof.CoverageCensored{coverCensored=1}
+                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=client accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d",
+                    proof.Accepted,proof.NotSent,proof.Uncertain,proof.Unknown2s,proof.Unknown8s,
+                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored)
+            }
     }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
@@ -437,6 +446,15 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
+            proof,m2err:=product.OriginalFecM2Proof()
+            if m2err==nil {
+                firstCensored,coverCensored:=0,0
+                if proof.FirstCensored{firstCensored=1}
+                if proof.CoverageCensored{coverCensored=1}
+                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=server accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d",
+                    proof.Accepted,proof.NotSent,proof.Uncertain,proof.Unknown2s,proof.Unknown8s,
+                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored)
+            }
         }
         closeErr:=product.Close()
         if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=server")}
