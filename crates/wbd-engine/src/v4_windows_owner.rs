@@ -928,6 +928,24 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_finish_frozen_repair(
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v6_m2_outstanding(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    out:*mut u32
+)->i32{
+    if out.is_null(){return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,exact,luid,ifindex){return INVALID}
+    let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
+    unsafe{out.write(m.shadow.outstanding() as u32)};OK
+}
+
 // V6 firstsend callback is valid only for the SAME activated, OS Wintun
 // epoch. Every callback matches exact original frozen PN/SEQ/len. Status 1
 // means actual Npcap pcap_sendpacket returned success, not remote Applied.
