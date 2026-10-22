@@ -164,6 +164,78 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
 
 
 
+
+// BoundOriginalM2Outstanding is a read-only count of original Rust-owned
+// FrozenRecord shadows, not a TCP ACK or an application-delivery claim.
+func(s *V4WindowsAuthenticatedClientOwner) BoundOriginalM2Outstanding(
+    ctx context.Context,
+)(uint32,error){
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.queryM2Proc==nil{return 0,errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return 0,err}
+    var count uint32
+    err:=winOwnerCall(s.bridge.queryM2Proc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+        uintptr(unsafe.Pointer(&count)))
+    runtime.KeepAlive(s.bridge.epoch)
+    return count,err
+}
+
+// NextBoundOriginalM2Repair asks the SAME original Rust M2 ReceiptState to
+// schedule at most one previously frozen ciphertext under the GLOBAL repair
+// byte quota. This returns no new AEAD PN; call completion synchronously after
+// the true original Npcap frame send attempt.
+func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Repair(
+    ctx context.Context,maxWire int,
+)([]byte,uint32,uint64,error){
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.prepareRepairProc==nil||maxWire<51||maxWire>2048{
+        return nil,0,0,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return nil,0,0,err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    wire:=make([]byte,maxWire)
+    var used uintptr
+    var seq uint32
+    var pn uint64
+    err:=winOwnerCall(s.bridge.prepareRepairProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&used)),uintptr(unsafe.Pointer(&seq)),
+        uintptr(unsafe.Pointer(&pn)))
+    runtime.KeepAlive(wire)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used>uintptr(len(wire)) {
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    if used==0{return nil,0,0,nil}
+    if used<51{return nil,0,0,errV4WindowsOwner}
+    return wire[:used],seq,pn,nil
+}
+func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Repair(
+    ctx context.Context,pn uint64,npcapSent bool,
+)(uint32,error){
+    if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+        s.bridge.finishRepairProc==nil{return 0,errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return 0,err}
+    var sent uintptr
+    if npcapSent{sent=1}
+    var count uint32
+    err:=winOwnerCall(s.bridge.finishRepairProc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+        uintptr(pn),sent,uintptr(unsafe.Pointer(&count)))
+    runtime.KeepAlive(s.bridge.epoch)
+    return count,err
+}
+
 // ArmBoundOriginalM2 verifies the current M4 Wintun OS generation and then
 // asks the SAME original post-credential-TLS Rust owner to bind its M2
 // FrozenRecord/receipt route; this is never a public OS Applied grant.

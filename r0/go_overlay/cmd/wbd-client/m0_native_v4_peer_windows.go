@@ -20,7 +20,8 @@ const (
  m0V4BatchCPU=2*time.Millisecond
  m0V4IdlePoll=time.Millisecond
  m0V4RetxAfter=750*time.Millisecond
- m0V4TxPendingMax=256
+ m0V4TxPendingMax=256 // non-Normal legacy carrier path only
+ m0V4M2ShadowCredit=48 // Rust M1 arena64, Rx/receipt slots reserved
 )
 type m0NativeV4Outbound struct {
  seq uint32
@@ -159,7 +160,15 @@ func(p *m0NativeV4Peer) sendACK()error{
 }
 func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if p.stopped(){return false,context.Canceled}
- if len(p.pending)>=m0V4TxPendingMax{return false,nil}
+ if p.mode==m0WinModeNormal{
+  // This bounded status is from ORIGINAL Rust M2 frozen shadows, never
+  // the peer's cumulative TCP-appearance ACK. Fresh resumes on an
+  // authenticated kind1 receipt even with an earlier carrier gap.
+  outstanding,e:=p.owner.BoundOriginalM2Outstanding(ctx)
+  if e!=nil{return false,e}
+  p.mu.Lock();p.pendingCount=int(outstanding);p.mu.Unlock()
+  if outstanding>=m0V4M2ShadowCredit{return false,nil}
+ }else if len(p.pending)>=m0V4TxPendingMax{return false,nil}
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
  if err!=nil{
@@ -197,25 +206,29 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   // A valid original NPF pcap_sendpacket return is the ONLY new M2
   // data firstsend event. Negative error is NOT peer receipt or a
   // definite acknowledgement; a failed callback fences this owner.
-  if _,receiptErr:=p.owner.ReportOriginalM2NpcapFirstsend(
-   ctx,pn,seq,len(ciphertext),err==nil);receiptErr!=nil{
+  count,receiptErr:=p.owner.ReportOriginalM2NpcapFirstsend(
+   ctx,pn,seq,len(ciphertext),err==nil)
+  if receiptErr!=nil{
    return false,errors.Join(windowsclient.ErrN4NativeGuard,err,receiptErr)
   }
+  p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
  }
  if err!=nil{return false,err}
- p.pending=append(p.pending,m0NativeV4Outbound{
-  // SealBound returns a fresh exact immutable Rust C-ABI record buffer.
-  // Retain it for byte-identical TCP retry instead of copying ciphertext twice.
-  seq:seq,wire:ciphertext,
-  sentAt:time.Now(),lastSent:time.Now(),
- })
+ if p.mode!=m0WinModeNormal{
+  p.pending=append(p.pending,m0NativeV4Outbound{
+   // Non-Normal remains unqualified and never substitutes TCP retry for M2.
+   seq:seq,wire:ciphertext,sentAt:time.Now(),lastSent:time.Now(),
+  })
+ }
  p.sendNext=seq+uint32(len(ciphertext))
  if p.mode!=m0WinModeNormal{p.blockID++}
  p.mu.Lock()
  p.sent++
  if p.opened>0{p.sentAfterOpen++}
- p.pendingCount=len(p.pending)
- if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt}
+ if p.mode!=m0WinModeNormal{
+  p.pendingCount=len(p.pending)
+  if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt}
+ }
  p.mu.Unlock()
  return true,nil
 }
@@ -255,9 +268,13 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   if kind==1 {
    frames=[][]byte{plain}
   }else if kind==2 {
-   // AEAD/PN-verified M2 kind1 is staged ONLY in the original Rust owner.
-   // There is no Wintun delivery and no invented Rust M2 shadow retirement.
+   // Rust M3 alone authenticated this UNIQUE reverse kind1, then the
+   // exact scoped GLOBAL M2 ReceiptState retired any genuinely sent PN.
+   // It must not enter Wintun or impersonate an ordinary TCP ACK.
    frames=nil
+   count,countErr:=p.owner.BoundOriginalM2Outstanding(ctx)
+   if countErr!=nil{return countErr}
+   p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
   }else{return windowsclient.ErrN4NativeGuard}
  }else{
   delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
@@ -292,6 +309,27 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  // Critical: ACK is the *highest contiguous* Rust-authenticated and
  // Wintun-copied TCP interval. Delivered future packet cannot ACK a gap.
  return p.sendACK()
+}
+
+// Normal/off retries are *only* originally frozen Rust M2 candidates,
+// after process-global receipt/repair byte budget admission. Go copies
+// ciphertext byte-exact through the same original Npcap endpoint; no new
+// PN, seal call, or independent 750ms/8 retries can reach the Normal worker.
+func(p *m0NativeV4Peer) rustRepairOne(ctx context.Context)(bool,error){
+ if p.mode!=m0WinModeNormal{return false,nil}
+ if p.stopped(){return false,nil}
+ wire,seq,pn,err:=p.owner.NextBoundOriginalM2Repair(ctx,p.maxIPv4+31)
+ if err!=nil{return false,err}
+ if len(wire)==0{return false,nil}
+ sentErr:=p.sendCarrier(seq,p.recvNext,wire)
+ count,settleErr:=p.owner.CompleteBoundOriginalM2Repair(ctx,pn,sentErr==nil)
+ if settleErr!=nil{return false,errors.Join(windowsclient.ErrN4NativeGuard,sentErr,settleErr)}
+ p.mu.Lock()
+ p.pendingCount=int(count)
+ if sentErr==nil{p.retries++}
+ p.mu.Unlock()
+ if sentErr!=nil{return false,sentErr}
+ return true,nil
 }
 func(p *m0NativeV4Peer) retryOne(now time.Time)(bool,error){
  if len(p.pending)==0||p.stopped(){return false,nil}
@@ -353,7 +391,13 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
  // under continuously busy TX/RX. The prior idle-only retry starved all
  // missing carrier segments at 10Mbps and under constant peer traffic.
  if ctx.Err()==nil&&!p.stopped(){
-  retried,err:=p.retryOne(time.Now())
+  var retried bool
+  var err error
+  if p.mode==m0WinModeNormal{
+   retried,err=p.rustRepairOne(ctx)
+  }else{
+   retried,err=p.retryOne(time.Now())
+  }
   if err!=nil{return done,err}
   if retried{done++}
  }
@@ -459,7 +503,7 @@ type m0NativeV4PacketStats struct{
  DuplicateCarrier uint64 `json:"duplicate_tcp_carriers"`
  RejectedAuth uint64 `json:"rejected_or_invalid_carriers"`
  ExplicitOversize uint64 `json:"oversize_rejects"`
- PendingRecords int `json:"unacked_carrier_records"`
+ PendingRecords int `json:"pending_original_rust_frozen_or_unacked_legacy_carrier_records"`
  OldestPendingMS int64 `json:"oldest_unacked_carrier_ms"`
  MaxInterdeliveryMS int64 `json:"max_observed_interdelivery_ms"`
 }
