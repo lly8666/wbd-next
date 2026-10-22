@@ -1,4 +1,5 @@
 //! Opt-in, non-_test in-process Go→Rust V4 control adapter.
+//! Linux x86_64/aarch64 GNU share the audited 64-bit raw/TUN ABI; ARM64 requires native OS CI.
 //! This uses the ordinary ProtectedScopedOwner (real M1/M3 AEAD/PN).
 //! It is NOT a standalone credential validator: only package-private Go
 //! code after verified TLS credentials may call the feature-gated adapter.
@@ -7,9 +8,9 @@
 #![allow(clippy::missing_safety_doc)]
 use std::collections::{BTreeMap,VecDeque};
 use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU64,Ordering}};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::thread::{self,JoinHandle};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::ffi::c_int;
 use wbd_types::MonoNs;
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
@@ -17,33 +18,33 @@ use crate::memory::Arena;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use crate::v4_owner_crypto::ScopedLinuxBudget;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_codec::link_fec_wire::{LinkPacketPlan,LinkMode};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Rx,ScopedRawIpv4Tx};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry,TunError};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::os::fd::BorrowedFd;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::time::Instant;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::net::Ipv4Addr;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_platform::r1::StopResult;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use wbd_platform::rx_ipv4_tcp::extend_seq32;
 use crate::runtime::early_rx::EarlyAccepted;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use crate::runtime::RxPacket;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use crate::runtime::TxDispatch;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 use std::time::Duration;
 const OK:i32=0;
 const INVALID:i32=1;
@@ -57,7 +58,7 @@ const PH_PREPARED:u32=1;
 const PH_ACTIVE:u32=2;
 const PH_STOPPED:u32=3;
 const PH_STOPPING:u32=4;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct WorkerRouteBudget {
     scoped:ScopedLinuxBudget,
     observed_at:Instant,
@@ -146,7 +147,7 @@ impl Fec2ActualPeerRxProbe{
 // M0 single original-session TEST-ONLY sender shadow. It holds the exact
 // M1 frozen ciphertext cloned only after synchronous M4 raw kernel copy.
 // Receipt admission relies on original M3 reverse AEAD/unique-PN opener.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct Fec2ProbeReceiptSender{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -164,19 +165,19 @@ struct Fec2ProbeReceiptSender{
 // Underlying M2 allocator is original M2 and owns all directions/debt.
 // A single mutex is ONLY the M0 integration adapter; never hold it while
 // a blocking raw kernel syscall is in progress.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct Fec2ProbeProcessQuota{
     broker:wbd_recovery::GlobalRepairAllocator,
     now_ns:u64,
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 impl Fec2ProbeProcessQuota{
     fn at_least(&mut self,requested:u64)->MonoNs{
         self.now_ns=self.now_ns.max(requested);
         MonoNs(self.now_ns)
     }
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
     static QUOTA:OnceLock<Mutex<Fec2ProbeProcessQuota>>=OnceLock::new();
     QUOTA.get_or_init(||{
@@ -195,7 +196,7 @@ fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
 // Without authenticated reverse kind1 the matured result is UNKNOWN,
 // never zero loss or a fabricated receipt. All state is scoped to this
 // Go TLS credential-bound lane+epoch and bounded by M2 capacity.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct NormalFirstSendM2 {
     lane:wbd_types::LaneKey,
     route:wbd_recovery::ReceiptRouteScope,
@@ -206,7 +207,7 @@ struct NormalFirstSendM2 {
     covered_2s:u64,covered_8s:u64,positive_2s:u64,
     authenticated_reverse_reports:u64,censored:bool,
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 impl NormalFirstSendM2 {
     fn new(lane:wbd_types::LaneKey,epoch:[u8;16],server_side:bool,now:MonoNs)->Result<Self,i32>{
         use wbd_recovery::{ReceiptRouteScope,WireDirection,MaturityConfig,MatureFirstSend};
@@ -297,7 +298,7 @@ impl NormalFirstSendM2 {
 // immutable first-copied M1 frozen ciphertext per authenticated direction.
 // No separate sealer, PN allocator, or Go V3 retransmit is reachable.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -310,7 +311,7 @@ struct OriginalOuterRepair{
     retired:u64,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAllocator>{
     static BROKER:OnceLock<Mutex<wbd_recovery::GlobalRepairAllocator>>=OnceLock::new();
     BROKER.get_or_init(||{
@@ -331,28 +332,28 @@ struct Entry{
     protected_fec2_features:u16,
     #[cfg(feature="m0_fec2_owner_probe")]
     fec2_actual_peer_rx:Option<Fec2ActualPeerRxProbe>,
-    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_live_peer_rx:Option<crate::v4_fec2_live_rx::Fec2LiveRx>,
     // Developer-only separate original-Go TLS client TUN sink. Not a
     // product receive device or public capability grant.
     #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-        target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_live_peer_tun:Option<Arc<ScopedTunSink>>,
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_receipt_sender:Option<Fec2ProbeReceiptSender>,
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_probe_budget_direction:Option<wbd_recovery::BudgetDirection>,
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_probe_budget_start_ns:u64,
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_probe_pending_policy:Option<(u8,u64)>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     tx_route:Option<WorkerRouteBudget>,
     // Original Go TLS-scoped verified interface used by every M4 RX/TX,
     // route, MTU and worker turn. Never accept a different device at Stop.
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     raw_ifname:Option<String>,
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     // Authentic first-delivery feedback, generated by the original moved
     // M3 replay opener; the native TX owner seals on its own PN allocator.
@@ -364,11 +365,11 @@ struct Entry{
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
     #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
     // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     protected_features:u16,
     // One original credential-checked Go TLS GoLane snapshot. This remains
     // dormant until a complete original 2/4 lane set consumes it exactly
@@ -379,50 +380,50 @@ struct Entry{
     game_joined:bool,
     #[cfg(feature="fec2_product_record")]
     game_tx_boundary:u32,
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fixed_pending:Option<(u8,u64)>,
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fixed_applied:Option<(u8,u64)>,
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_live_tx:Option<crate::v4_fixed_stream::FixedStream>,
     // Actual pending driver loans, each tagged with its original same
     // M3 AEAD PN and source/repair kind. Reset only after synchronous M4.
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_staged_pns:Vec<(u64,u8)>,
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_copied_source:u64,
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_copied_repair:u64,
     // Original Go's EXACT applied policy controls the background FEC
     // receiver, not a second untrusted mode bit or a guessed TLS epoch.
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     fec2_rx_admit:Arc<AtomicBool>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     tx_route_revision:u64,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     raw_tx_lease_mtu:u32,
     // Generation/epoch-scoped, never wrap into an active fragment ID.
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     next_link_packet_id:u32,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     workers:Option<LoopWorkers>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     joining:bool,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     counters:Arc<LoopCounts>,
     arena:Arena,phase:u32,
     rx_boundary:u32,wire_limit:u16,staged_count:u32,staged_bytes:u32,
     // Extended only after this same-session AEAD+PN opener admits real data.
     // The fixed Go bootstrap boundary cannot serve as the seq32 anchor forever.
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     rx_seq_anchor:u64,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     flow:crate::v4_protected_handoff::GoFlow,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     raw_rx:Option<Arc<ScopedRawIpv4Rx>>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     raw_tx:Option<Arc<ScopedRawIpv4Tx>>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     tun_sink:Option<Arc<ScopedTunSink>>,
 }
 // Global registry only handles lifetime lookup. Once the original
@@ -431,13 +432,13 @@ struct Entry{
 struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     server:bool,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     flows:Vec<crate::v4_protected_handoff::GoFlow>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     tx_seqs:Vec<u64>,
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     drivers:Option<crate::v4_game_public_kernel::GameKernelOwner>,
 }
 // Dedicated group handles have different low tag from existing original
@@ -508,7 +509,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             first_sources:0,first_repairs:0,recovered_sources:0
         })
     }else{None};
-    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     let fec2_live_peer_rx=if handoff.negotiated_features==7{
         let (_,s2c)=data.internal_direction_keys();
         let suite=wbd_codec::record_crypto::RecordSuite::try_from(
@@ -548,29 +549,29 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         protected_fec2_features:handoff.negotiated_features,
         #[cfg(feature="m0_fec2_owner_probe")]
         fec2_actual_peer_rx,
-        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_live_peer_rx,
         #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+            target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_live_peer_tun:None,
-        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_receipt_sender:None,
-        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_probe_budget_direction:None,
-        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_probe_budget_start_ns:0,
-        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_probe_pending_policy:None,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:data.identity().server_limit,staged_count:0,staged_bytes:0,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         flow:handoff.flow,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         tx_route:None,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         raw_ifname:None,
-        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         normal_firstsend_m2:None,
         #[cfg(feature="fec2_product_record")]
         rx_feedback:None,
@@ -580,9 +581,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         feedback_queued:None,
         #[cfg(feature="fec2_product_record")]
         original_outer:None,
-        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         normal_off_applied_revision:0,
-        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         protected_features:handoff.negotiated_features,
         #[cfg(feature="fec2_product_record")]
         game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
@@ -590,37 +591,37 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         game_joined:false,
         #[cfg(feature="fec2_product_record")]
         game_tx_boundary:0,
-        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fixed_pending:None,
-        #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fixed_applied:None,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_live_tx:None,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_staged_pns:Vec::new(),
-        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_copied_source:0,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_copied_repair:0,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         fec2_rx_admit:Arc::new(AtomicBool::new(false)),
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         tx_route_revision:0,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         raw_tx_lease_mtu:0,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         next_link_packet_id:1,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         workers:None,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         joining:false,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         counters:Arc::new(LoopCounts::default()),
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         raw_rx:None,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         raw_tx:None,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         tun_sink:None,
     })));
     Ok(handle)
@@ -670,7 +671,7 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
 // Valid IPv4 UDP (127B total, 99B app), not a fake arbitrary RS symbol.
 // The Go kernel app independently checks the UDP delivery and payload.
 // Underlying original FEC2 parity geometry remains k2, e1.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_expected_udp_ipv4()->Vec<u8>{
     let mut b=vec![0u8;127];
     b[0]=0x45;b[8]=64;b[9]=17;
@@ -692,7 +693,7 @@ fn fec2_probe_expected_udp_ipv4()->Vec<u8>{
     b[10..12].copy_from_slice(&(!(sum as u16)).to_be_bytes());
     b
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_real_kernel_raw_once(
     handle:u64,ifindex:u32
 )->Result<[(u64,u32,usize);2],i32>{
@@ -932,7 +933,7 @@ fn fec2_probe_real_kernel_raw_once(
 // build. Go must still supply a real raw/TCP checked ingress and authenticated
 // M2 acknowledgment before this can become a product feature.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct ReleaseClientRx {
     epoch:[u8;16],generation:u32,
     rx:crate::v4_fec2_live_rx::Fec2LiveRx,
@@ -945,12 +946,12 @@ struct ReleaseClientRx {
     delivered:u64,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct ReleaseClientRegistry {
     next:u32,clients:BTreeMap<u64,ReleaseClientRx>,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn release_clients()->&'static Mutex<ReleaseClientRegistry>{
     static REG:OnceLock<Mutex<ReleaseClientRegistry>>=OnceLock::new();
     REG.get_or_init(||Mutex::new(ReleaseClientRegistry{
@@ -958,7 +959,7 @@ fn release_clients()->&'static Mutex<ReleaseClientRegistry>{
     }))
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
     cold:*const u8,cold_len:usize,fd:i32,
@@ -1015,7 +1016,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
     OK
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_receive(
     handle:u64,epoch:*const u8,epoch_len:usize,
@@ -1059,7 +1060,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_receive(
 // bounded feedback scheduler says due. The result is ONLY ciphertext:
 // Go's real kernel sender must report copied/unsent/uncertain separately.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_due(
     handle:u64,epoch:*const u8,epoch_len:usize,
@@ -1121,7 +1122,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_due(
     OK
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_result(
     handle:u64,epoch:*const u8,epoch_len:usize,pn:u64,outcome:u32
@@ -1147,7 +1148,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_feedback_result(
 }
 
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_stop(
     handle:u64,epoch:*const u8,epoch_len:usize
@@ -1170,7 +1171,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_stop(
 // IFF_TUN+NO_PI descriptor, moved to original M4 ScopedTunSink semantics.
 // Opt-in BOTH developer and release-code features, never public product.
 #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-    target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_attach_tun(
     h:u64,fd:i32,name:*const u8,name_len:usize
@@ -1196,7 +1197,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_attach_tun(
 // consumes ciphertext captured from actual M4 Linux raw socket. It is NOT
 // a product client, TUN applied ACK, nor a second server replay bitmap.
 #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-    target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_consume(
     handle:u64,wire:*const u8,wire_len:usize,
@@ -1242,7 +1243,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_live_peer_consume(
     }
     OK
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_raw_tx(
     handle:u64,ifindex:u32,source_pn:*mut u64,repair_pn:*mut u64,
@@ -1268,7 +1269,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_raw_tx(
 // kernel peer with the original Rust M3 AEAD+PN replay receiver and decode
 // exactly the missing original source1 using M3 RS16 (not a fixture result).
 // No FEC2 data is admitted before live owner grant or after Stop.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_peer_received_actual_cipher(
     handle:u64,wire:&[u8],out:&mut [u8]
 )->Result<(u64,u8,usize),i32>{
@@ -1294,7 +1295,7 @@ fn fec2_peer_received_actual_cipher(
     out[..frame.len()].copy_from_slice(&frame);
     Ok((pn,kind,frame.len()))
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
     handle:u64,wire:*const u8,wire_len:usize,
@@ -1319,7 +1320,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_peer_consume(
 //// ORIGINAL scoped owner M3 AEAD+unique PN. No independent decryptor or
 //// cold metadata may authorize a receipt. 52B test wire grammar only;
 //// product kind1 receipt encoder/peer application remains NOT_RUN.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
     use wbd_types::RecordPn;
     use wbd_recovery::{ReceiptOpenFacts,ReceiptPage,admit_opened_receipt};
@@ -1395,7 +1396,7 @@ fn fec2_probe_reverse_raw_one(handle:u64)->Result<(u32,u32),i32>{
     e.arena.drain_returns();
     Ok((count,left))
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
     handle:u64,released:*mut u32,outstanding:*mut u32
@@ -1409,7 +1410,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_reverse_raw_receipt(
         Err(err)=>err,
     }
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
     handle:u64,outstanding:*mut u32
@@ -1431,7 +1432,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_sender_shadow_status(
 // authenticated PN/Seq/ciphertext. Its synchronous copied prefix is
 // translated using M2's typed driver settlement (never peer delivery).
 // Ambiguous send failure is always Unproven and stays charged.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_real_frozen_repair_one(
     handle:u64
 )->Result<(u64,u32,u32,u64),i32>{
@@ -1526,7 +1527,7 @@ fn fec2_probe_real_frozen_repair_one(
         u32::try_from(candidate.frozen().bytes().len()).map_err(|_|INVALID)?,
         outer_bytes))
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
@@ -1543,7 +1544,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
 
 // Test-only original-Go-verified live session process capacity probe.
 // No forged cold, global grant cannot be minted per connection.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_process_quota_snapshot(handle:u64)->Result<(u32,u64,u64),i32>{
     let cell=session(handle)?;
     let e=cell.lock().map_err(|_|BAD_STAGE)?;
@@ -1554,7 +1555,7 @@ fn fec2_probe_process_quota_snapshot(handle:u64)->Result<(u32,u64,u64),i32>{
     Ok((snapshot.registered_directions as u32,
         snapshot.held_unused_grants,snapshot.hard_cap))
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
     handle:u64,count:*mut u32,held:*mut u64,cap:*mut u64
@@ -1565,7 +1566,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_snapshot(
         Err(v)=>v,
     }
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
     handle:u64,bytes:u64
@@ -1589,7 +1590,7 @@ pub extern "C" fn wbd_m0_embedded_go_fec2_probe_process_quota_hold(
 // errno, while EINTR/short-completion can be ambiguous. M0 conservatively
 // holds all not-positively-proven suffix reservation debt; only an
 // independently verified never-syscalled suffix may be NotSent.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn m0_fec2_observe_native_m4_repair_prefix(
     report:&wbd_platform::linux_batch::KernelSendReport,total:usize,
 )->Result<wbd_recovery::DriverPrefixObservation,wbd_recovery::GlobalRepairError>{
@@ -1613,7 +1614,7 @@ fn m0_fec2_observe_native_m4_repair_prefix(
 // the second suffix ProvenNotAttempted; EAGAIN/short/unknown can NEVER do so.
 // It is not a kernel sendmmsg prefix/uncertain classifier, and does not claim
 // production M4 batch completion semantics.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_probe_real_frozen_repair_prefix_two(
     handle:u64,actual_kernel_batch:bool,
 )->Result<(u64,u32,u32,u64,u64),i32>{
@@ -1758,7 +1759,7 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         u32::try_from(first.frozen().bytes().len()).map_err(|_|INVALID)?,
         charged,second_outer))
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
     handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
@@ -1779,7 +1780,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_prefix_two(
 // Same original session/FrozenRecord/M2 setup, but two messages in ONE
 // original M4 Linux sendmmsg kernel syscall. The second output denotes
 // per-slot outer bytes charged, NOT an unsent/refunded slot.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
     handle:u64,pn:*mut u64,seq:*mut u32,wire:*mut u32,
@@ -1801,7 +1802,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_kernel_multimsg_two(
 // Counts ONLY M3 AEAD/unique-PN first admissions. Incomplete data/repair
 // are NOT inferred as mature packet loss (and must not trigger auto).
 // Feature-gated integration, not deployed telemetry.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
     handle:u64,epoch:*const u8,len:usize,
@@ -1828,7 +1829,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_verified_peer_counts(
 // Actual M2 RX feedback draft created ONLY from authenticated M3 data
 // observed above. This stage is not a peer-authenticated receipt encoder,
 // not a control kind1 send, and not a quota release or kernel ACK.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn fec2_peer_feedback_draft(
     handle:u64,now_ns:u64,send_result:u8
 )->Result<(u32,u64,u64,u8),i32>{
@@ -1853,7 +1854,7 @@ fn fec2_peer_feedback_draft(
         .map_err(|_|INVALID)?;
     Ok(output)
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
     handle:u64,now_ns:u64,send_result:u8,
@@ -1873,7 +1874,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_actual_m2_rx_feedback(
 // this SAME original TLS/Detach owner. Eight words are
 // firstsent, covered, missing, uncovered for 2s and 8s. Ambiguous
 // repair observations are returned separately as CENSORED, never loss=0.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn m0_add_mature_window(
     dst:&mut wbd_recovery::MatureWindow,src:wbd_recovery::MatureWindow
 ){
@@ -1888,7 +1889,7 @@ fn m0_add_mature_window(
     dst.uncovered=dst.uncovered.saturating_add(src.uncovered);
     dst.uncovered_wire_bytes=dst.uncovered_wire_bytes.saturating_add(src.uncovered_wire_bytes);
 }
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_mature_firstsend(
     handle:u64,epoch:*const u8,len:usize,elapsed_ns:u64,
@@ -1946,7 +1947,7 @@ fn bind_fec2_from_private_go(
         ||features!=e.protected_fec2_features{return INVALID}
     if e.owner.bind_fec2_probe_from_private_go(
         features,epoch,profile,revision).is_err(){return INVALID}
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     {
         use wbd_recovery::{BudgetDirection,WireDirection,RepairBudgetConfig};
         if e.fec2_probe_budget_direction.is_some(){return INVALID}
@@ -1969,7 +1970,7 @@ fn bind_fec2_from_private_go(
 }
 // Pending means requested but NOT applied. The authenticated Go/Detach
 // owner, not cold metadata or a peer control frame, may stage a profile.
-#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_stage_policy(
     handle:u64,epoch:*const u8,len:usize,profile:u8,revision:u64
@@ -2065,7 +2066,7 @@ fn abort(handle:u64)->i32{
 fn stop(handle:u64)->i32{
     // Leave registry unlocked while joining. Driver handles and owner slabs
     // cannot be released while either Rust worker still references them.
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     {
         let Ok(cell)=session(handle)else{return UNKNOWN};
         let workers={
@@ -2078,7 +2079,7 @@ fn stop(handle:u64)->i32{
                 w.shutdown.store(true,Ordering::Release);
                 e.joining=true;
             }
-            #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+            #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
             e.fec2_rx_admit.store(false,Ordering::Release);
             e.phase=PH_STOPPING;
             w
@@ -2101,16 +2102,16 @@ fn stop(handle:u64)->i32{
     // Stop the REAL M4 raw driver and TUN sink before quiescing original
     // M1 owner. Both were opened on the same verified generation, never
     // inferred from cold248. A live in-flight kernel borrow must stay held.
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     {
         if let Some(ref raw)=e.raw_rx {raw.begin_stop()}
         if let Some(ref raw)=e.raw_tx {raw.begin_stop()}
         if let Some(ref tun)=e.tun_sink {tun.begin_stop()}
         #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+            target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         if let Some(ref tun)=e.fec2_live_peer_tun {tun.begin_stop()}
     }
-    #[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     {
         // Both kernel workers are joined: M1 retained FEC source/parity
         // slabs may now be retired exactly once, never while M4 borrows
@@ -2121,7 +2122,7 @@ fn stop(handle:u64)->i32{
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     {
         if let Some(ref raw)=e.raw_rx{
             drained &= raw.stop_until(Instant::now())==StopResult::Drained;
@@ -2133,7 +2134,7 @@ fn stop(handle:u64)->i32{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
         }
         #[cfg(all(feature="m0_fec2_owner_probe",feature="fec2_product_record",
-            target_os="linux",target_arch="x86_64",target_env="gnu"))]
+            target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         if let Some(ref tun)=e.fec2_live_peer_tun{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
         }
@@ -2142,7 +2143,7 @@ fn stop(handle:u64)->i32{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
-        target_arch="x86_64",target_env="gnu"))]
+        any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     if let Some(outer)=e.original_outer.take(){
         let Ok(active)=outer.lock()else{return BAD_STAGE};
         let Ok(mut broker)=original_process_repair_quota().lock()
@@ -2153,14 +2154,14 @@ fn stop(handle:u64)->i32{
         if broker.retire_tunnel(active.direction.tunnel,loop_now()).ok()
             !=Some(1){return BAD_STAGE}
     }
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     if let Some(first)=e.normal_firstsend_m2.take(){
         let Ok(mut first)=first.lock()else{return BAD_STAGE};
         let now=loop_now();
         first.poll(now);
         if first.state.stop(now).is_err(){return BAD_STAGE}
     }
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     if let Some(direction)=e.fec2_probe_budget_direction{
         let Ok(mut process)=fec2_probe_process_quota().lock()else{return BAD_STAGE};
         let prior=process.now_ns;
@@ -2205,7 +2206,7 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
            e.game_pending_cold.is_none(){
             return Err(BAD_STAGE)
         }
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         if e.workers.is_some()||e.raw_tx.is_some()||
            e.raw_rx.is_some()||e.tun_sink.is_some(){
             return Err(BAD_STAGE)
@@ -2239,7 +2240,7 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     let adapter=crate::v4_game_lane::GameAdapter::from_private_original_go_tls(
         cold,server,wbd_types::TunnelKey{slot:14,generation},generation
     ).map_err(|_|INVALID)?;
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     let (flows,tx_seqs)={
         let mut ordered=locks.iter().map(|e|{
             let lane=e.owner.normal_firstsend_identity()
@@ -2256,13 +2257,13 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     r.game_groups.insert(group_handle,GameGroupNative{
         adapter:Arc::new(Mutex::new(adapter)),handles:ids,
         stopped:false,stopping:false,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         server,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         flows,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         tx_seqs,
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         drivers:None,
     });
     Ok(group_handle)
@@ -2291,9 +2292,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
     if e.stopped{return BAD_STAGE}
     unsafe{
         lanes.write(e.handles.len() as u32);
-        #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
         drivers_installed.write(u32::from(e.drivers.is_some()));
-        #[cfg(not(all(target_arch="x86_64",target_env="gnu")))]
+        #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu")))]
         drivers_installed.write(0);
     }
     // Explicit zero is critical: this is authenticated shared crypto owner
@@ -2311,13 +2312,13 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
         e.stopping=true;
         (Arc::clone(&e.adapter),
          {
-             #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+             #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
              {e.drivers.take()}
-             #[cfg(not(all(target_arch="x86_64",target_env="gnu")))]
+             #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu")))]
              {None::<()>}
          })
     };
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     if let Some(ref mut native)=driver{
         if native.stop_and_drain().is_err(){
             let Ok(mut r)=registry().lock()else{return BAD_STAGE};
@@ -2332,7 +2333,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     e.stopped=true;e.stopping=false;OK
 }
-#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     group:u64,ifname:*const u8,ifname_len:usize,ifindex:u32,
@@ -2362,7 +2363,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     e.drivers=Some(owner);
     OK
 }
-#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
     group:u64,copied:*mut u64,delivered:*mut u64,rejected:*mut u64,
@@ -2377,7 +2378,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
     OK
 }
 
-#[cfg(all(feature="fec2_product_record",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_rx_diagnostics(
     group:u64,raw_copied:*mut u64,auth_rejected:*mut u64,
@@ -2471,7 +2472,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 //// Non-test public V4 original TLS owner counters. Only actual M4 copied
 /// records and SAME original M3 authenticated reverse receipts may advance
 /// these. No positive count from bootstrap ACK, queue acceptance, or Go caller.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
     h:u64,out:*mut u64,n:usize
@@ -2497,7 +2498,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
 /// This is a mode authorization, NOT a separate data plane or self-attested
 /// epoch: generation handle already required private protected Go Prepare,
 /// actual FakeTCP Detach/Commit, and original TX/RX owner activation.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     h:u64,epoch_ptr:*const u8,epoch_len:usize
@@ -2520,7 +2521,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
 
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
@@ -2530,7 +2531,7 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     e.raw_rx=Some(Arc::new(driver));
     e.raw_ifname=Some(ifname.to_owned());OK
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -2543,7 +2544,7 @@ fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     else{return INVALID};
     e.tun_sink=Some(Arc::new(tun));OK
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
@@ -2580,7 +2581,7 @@ fn raw_to_tun(handle:u64)->Result<(u32,u32),i32>{
     }
     Err(INVALID)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_attach_raw_rx(h:u64,ifindex:u32)->i32{
     // Existing exact-source developer ABI retained unchanged.
@@ -2588,7 +2589,7 @@ pub extern "C" fn wbd_m0_embedded_go_attach_raw_rx(h:u64,ifindex:u32)->i32{
 }
 /// Real product interface is bound ONCE to the same credential-verified Go
 /// generation. M4 opens the real kernel socket and checks ifname+ifindex.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
     h:u64,ifindex:u32,name:*const u8,len:usize
@@ -2598,7 +2599,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
     let Ok(ifname)=std::str::from_utf8(bytes)else{return INVALID};
     attach_raw(h,ifindex,ifname)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_attach_tun(
     h:u64,fd:i32,name:*const u8,len:usize
@@ -2608,7 +2609,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_attach_tun(
     let Ok(name)=std::str::from_utf8(raw)else{return INVALID};
     attach_tun(h,fd,name)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_raw_to_tun(
     h:u64,out_ok:*mut u32,out_failed:*mut u32
@@ -2625,7 +2626,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_raw_to_tun(
 /// LINK AEAD/PN, and real Linux M4 ScopedTunSink/ScopedRawIpv4Tx objects.
 /// One trusted Go session tuple and original Tx boundary; never resynthesize
 /// keys/seq/PN in the FFI or in Go. Driver is retained through Stop.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     let cell=session(handle)?;
     let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
@@ -2670,7 +2671,7 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
     Ok((pn,seq,u32::try_from(full).map_err(|_|INVALID)?,
         u32::try_from(app_len).map_err(|_|INVALID)?))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
     handle:u64,ifindex:u32,pn:*mut u64,seq:*mut u32,
@@ -2696,12 +2697,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 // Normal/off and kernel driver send use the exact existing Rust functions.
 // Unrelated raw TCP is discarded by M4; RX's actual mutable opener/PN,
 // reassembly and arena belong to RX alone after Go Detach, not Entry.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[repr(C)]
 struct PollFd {fd:c_int,events:i16,revents:i16}
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[derive(Default)]
 struct LoopCounts {
     rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
@@ -2712,21 +2713,21 @@ struct LoopCounts {
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct LoopWorkers{
     shutdown:Arc<AtomicBool>,
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
     route_events:Arc<wbd_platform::linux_route_events::RouteEvents>,
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[repr(C)]
 struct ClockTimespec {seconds:i64,nanoseconds:i64}
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 unsafe extern "C" {
     fn clock_gettime(clock_id:c_int,raw:*mut ClockTimespec)->c_int;
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn owner_thread_cpu_ns()->u64{
     let mut sample=ClockTimespec{seconds:0,nanoseconds:0};
     // Linux CLOCK_THREAD_CPUTIME_ID=3, measures ONLY this original Rust
@@ -2735,7 +2736,7 @@ fn owner_thread_cpu_ns()->u64{
     u64::try_from(sample.seconds).unwrap_or(0).saturating_mul(1_000_000_000)
         .saturating_add(u64::try_from(sample.nanoseconds).unwrap_or(0))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn loop_now()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     MonoNs(START.get_or_init(Instant::now).elapsed().as_nanos().min(u64::MAX as u128) as u64)
@@ -2744,9 +2745,9 @@ fn loop_now()->MonoNs{
 // Only Stop/report/quiescence/control paths may drain every outstanding item;
 // an arbitrarily long backlog must not monopolize the per-session TX/RX lock.
 // Arena::allocate already drains at most 64 before making a new loan.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 const M0_DATA_RETURN_TURN_CAP:usize=64;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn drain_data_turn_returns(arena:&mut Arena)->usize{
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP)
 }
@@ -2756,18 +2757,18 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
 // allocated ORIGINAL M1 UniqueBuffer via recvmmsg and checks trusted tuple and
 // TCP checksum. On reentry the ONLY decrypt/PN/LINK/TUN path is the original
 // Rust ScopedOwner. Stop joins worker before owner/slab/driver retirement.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 // Only a successfully authenticated (AEAD and unique PN) Normal/off LINK
 // admission may advance the seq32 reference. A raw TCP tuple/checksum/seq
 // is not proof: an attacker could otherwise jump the 64-bit high-water mark.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn authenticated_rx_anchor(anchor:u64,absolute_seq:u64,wire_len:usize,
     admitted_link:u32)->Option<u64>{
     if admitted_link!=1{return Some(anchor)}
     let end=absolute_seq.checked_add(u64::try_from(wire_len).ok()?)?;
     Some(anchor.max(end))
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn background_raw_once(
     owner:&mut crate::v4_owner_crypto::ProtectedBackgroundRx,
     arena:&mut Arena,anchor:&mut u64,
@@ -2902,7 +2903,7 @@ fn background_raw_once(
 // and M4 sendmmsg dispatch carries this kind1 receipt, including idle time.
 // The queued draft is terminally settled ONLY from actual kernel copied /
 // uncertain / definitely-not-sent evidence. Never fabricate a peer ACK.
-#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     if e.feedback_queued.is_some(){return Ok(false)}
     let Some(feedback)=e.rx_feedback.as_ref().map(Arc::clone)
@@ -2943,7 +2944,7 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
 // Independently wait for the REAL TUN application RX OUTSIDE registry lock.
 // Only original owner grants route-bound budget, seals AEAD/PN and submits
 // original frozen M1 record through genuine scoped M4 raw TX.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[derive(Debug,Default,Clone,Copy,Eq,PartialEq)]
 struct TxTurnCompletion{
     copied:u32,definitely_unsent:u32,uncertain:u32,
@@ -2952,7 +2953,7 @@ struct TxTurnCompletion{
 // The only completion translation on the original authenticated TX path.
 // Exactly the kernel-copied prefix counts, the untouched suffix is dropped
 // by the existing bounded owner drain; an uncertain record is NEVER retried.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn classify_tx_turn(report:Option<&wbd_platform::linux_batch::KernelSendReport>,
     ready:usize,seal_failed:bool)->TxTurnCompletion{
     use wbd_platform::linux_batch::KernelSendSignal as S;
@@ -2974,7 +2975,7 @@ fn classify_tx_turn(report:Option<&wbd_platform::linux_batch::KernelSendReport>,
             S::RouteUnavailable|S::DeviceUnavailable|S::MtuExceeded)),
     }
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn raw_driver_reopen_on_route_change(
     has_cache:bool,previous_refresh_count:u64,observed_mtu:u32,lease_mtu:u32
 )->bool{
@@ -2987,11 +2988,11 @@ fn raw_driver_reopen_on_route_change(
         && observed_mtu>=lease_mtu
 }
 
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 const M0_TUN_IPV4_MAX:usize=65_535;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 const M0_SMALL_ARENA_PAYLOAD:usize=2048-14;
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 const M0_MAX_PENDING_JUMBO:usize=4;
 
 // The sole background TX worker owns this logical packet. No self-referential
@@ -3000,12 +3001,12 @@ const M0_MAX_PENDING_JUMBO:usize=4;
 // Every failed/uncertain turn discards the remaining source and reserves
 // the old ID forever within this generation. Bound retained jumbo memory
 // to four complete IPv4 datagrams plus one currently active plan.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 struct PendingOriginalJumbo{
     source:Vec<u8>,packet_id:u32,frame_mtu:usize,
     issued:usize,total:usize,generation:u32,route_event_revision:u64,
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 impl PendingOriginalJumbo{
     fn new(source:Vec<u8>,packet_id:u32,frame_mtu:usize,
         generation:u32,route_event_revision:u64)->Result<Self,i32>{
@@ -3061,7 +3062,7 @@ impl PendingOriginalJumbo{
 // no partial packet is ever queued due to fragment materialization failure.
 // This remains a bounded 32-record SAME-turn staging step, NOT yet 64KiB
 // cross-turn scheduling or atomic kernel sendmmsg completion.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn stage_bounded_original_link(
     arena:&mut Arena, source:&[u8],frame_mtu:usize,
     packet_id:u32,available_records:usize
@@ -3086,7 +3087,7 @@ fn stage_bounded_original_link(
 // Production TUN worker cannot yet persist plan+source across turns.
 // On ANY failure caller must retire the whole plan/packet ID, not retry
 // after a partially issued cursor, to avoid mixed-stride logical packets.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn stage_next_original_link_turn(
     arena:&mut Arena,plan:&mut LinkPacketPlan<'_>,
     current_frame_mtu:usize,available_records:usize
@@ -3110,7 +3111,7 @@ fn stage_next_original_link_turn(
 // Genuine TLS-authorized Fixed/Normal product TX share original owner
 // M1 immutable FrozenRecord, M3 authenticated PN and M4 driver. This runs
 // ONLY after Go Fixed REQUESTED, not for a peer packet or a feature flag.
-#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn original_fixed_stage_source(e:&mut Entry,
     slab:crate::memory::UniqueBuffer,n:usize,
     budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<bool,i32>{
@@ -3152,7 +3153,7 @@ fn original_fixed_stage_source(e:&mut Entry,
     if let Some(err)=callback_error{return Err(err)}
     Ok(accepted.source_enqueued)
 }
-#[cfg(all(feature="fec2_product_record",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn original_fixed_stage_due(e:&mut Entry,
     budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<usize,i32>{
     use crate::v4_fixed_stream::DriverProof;
@@ -3182,7 +3183,7 @@ fn original_fixed_stage_due(e:&mut Entry,
     if let Some(err)=failed{return Err(err)}
     Ok(result.map_err(|_|BAD_STAGE)?.0)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
@@ -3719,7 +3720,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // after synchronous M4 sendmmsg completes; never reseal/reuse PN.
     Ok(finish)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -3733,7 +3734,7 @@ fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
 // Accept only a single definitely kernel-copied original FrozenRecord.
 // A partial, ambiguous, or backpressured M4 KernelSendReport is never a
 // success just because a syscall returned a positive prefix elsewhere.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn raw_ready_prefix_copied(report:&wbd_platform::linux_batch::KernelSendReport,
     expected:usize)->bool{
     report.outcome.accepted_prefix==expected
@@ -3741,7 +3742,7 @@ fn raw_ready_prefix_copied(report:&wbd_platform::linux_batch::KernelSendReport,
         && report.outcome.uncertain_index.is_none()
         && report.signal==wbd_platform::linux_batch::KernelSendSignal::None
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn raw_one_packet_copied(report:&wbd_platform::linux_batch::KernelSendReport)->bool{
     raw_ready_prefix_copied(report,1)
 }
@@ -3750,7 +3751,7 @@ fn raw_one_packet_copied(report:&wbd_platform::linux_batch::KernelSendReport)->b
 // Bounded by both 32 packets and roughly 100us of actual work, so Stop,
 // the opposite direction and later control work get regular opportunities.
 // The caller owns the packet buffer/driver; no extra packet Vector is built.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn ready_only_slice(
     stop:&AtomicBool,
     mut next_ready:impl FnMut()->bool,
@@ -3775,7 +3776,7 @@ fn ready_only_slice(
 // process-global sparse/10% byte grants and exact M4 raw syscall result.
 // No simulated receipt, alternative encoder or fresh PN is used anywhere.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn background_original_repair_once(
     cell:&Mutex<Entry>,stop:&AtomicBool
 )->Result<u32,i32>{
@@ -3895,7 +3896,7 @@ fn background_original_repair_once(
     }
     Ok(repaired)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn start_loop(handle:u64,ifindex:u32)->i32{
     // One shared Linux link/route listener for all live owner sessions.
     // This is only an invalidation signal; M4 still checks every raw send.
@@ -4167,12 +4168,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     e.workers=Some(LoopWorkers{shutdown,rx,tx,route_events:events});
     OK
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_loop_start(handle:u64,ifindex:u32)->i32{
     start_loop(handle,ifindex)
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
     h:u64,rx:*mut u64,tx:*mut u64,rx_err:*mut u64,tx_err:*mut u64)->i32{
@@ -4189,7 +4190,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
 }
 
 // Developer-only device netlink witness; event revision is NOT MTU authority.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
     h:u64,out_revision:*mut u64,out_healthy:*mut u32)->i32{
@@ -4209,7 +4210,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_events(
 // denominator comes only from the original kernel-copied prefix; until an
 // authenticated reverse kind1 is wired, mature windows are UNKNOWN, not
 // loss=0. No Go per-packet callback, no control or FEC2 activation.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
     h:u64,accepted:*mut u64,not_sent:*mut u64,uncertain:*mut u64,
@@ -4237,7 +4238,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2(
 // Exact original credential-bound Normal/OFF native mode acknowledgment.
 // This does not stage any FEC2 fixed/auto sender, nor activate a policy
 // from untrusted 248B cold metadata; actual Go TLS+Detach owns the handle.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn verified_normal_off_epoch(ptr:*const u8,len:usize)->Result<[u8;16],i32>{
     if ptr.is_null()||len!=16{return Err(INVALID)}
     let mut epoch=[0u8;16];
@@ -4245,13 +4246,13 @@ fn verified_normal_off_epoch(ptr:*const u8,len:usize)->Result<[u8;16],i32>{
     if epoch==[0u8;16]{return Err(INVALID)}
     Ok(epoch)
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 fn verified_normal_off_owner(e:&Entry,epoch:&[u8;16])->bool{
     e.phase==PH_ACTIVE&&!e.joining&&
         e.owner.normal_firstsend_identity()
         .is_some_and(|(_,real_epoch)|&real_epoch==epoch)
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     h:u64,epoch:*const u8,epoch_len:usize,revision:u64
@@ -4310,7 +4311,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
     }
     OK
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
     h:u64,epoch:*const u8,epoch_len:usize,out:*mut u64
@@ -4329,7 +4330,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
 // Fixed REQUEST/PENDING only for a negotiated TLS feature7 epoch, but has
 // NO authority to call this APPLIED until real source+parity kernel copies
 // and authenticated RX recovery are connected. No synthetic readiness flag.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
     h:u64,epoch:*const u8,len:usize,profile:u8,revision:u64
@@ -4365,7 +4366,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
     {e.fec2_probe_pending_policy=None;}
     OK
 }
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
     h:u64,epoch:*const u8,len:usize,profile:*mut u8,
@@ -4395,7 +4396,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
 // delivered M2, with a genuinely matured/covered first-send denominator.
 // This is NOT an external client-supplied success boolean.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    target_arch="x86_64",target_env="gnu"))]
+    any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     h:u64,epoch:*const u8,len:usize,revision:u64
@@ -4433,7 +4434,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
 // Explicit coverage counters are separate from UNKNOWN and kernel copied.
 // A positive number requires actual original C2S kind1 received, opened
 // with the moved M3 replay state and pinned into M2, not an RX count.
-#[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2_coverage(
     h:u64,covered_2s:*mut u64,covered_8s:*mut u64,
@@ -4459,7 +4460,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2_coverage(
 // must finish before the concurrent Go netlink MTU mutation is permitted.
 // Never blocks under the M0 registry or owner lock; no synthetic driver
 // result or alternate packet sender exists.
-#[cfg(all(feature="m0_v4_probe",target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(feature="m0_v4_probe",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_debug_pause_jumbo(
     handle:u64,enabled:u32,paused:*mut u32,loaned:*mut u32
@@ -4478,7 +4479,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_debug_pause_jumbo(
 // Developer-mode per-worker *actual Linux thread CPU time* for 10s+60s
 // receipt. Combined process CPU includes Go sender/reader; independent
 // exact user-vs-kernel attribution within that residual is NOT available.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_refresh(
     handle:u64,out:*mut u64)->i32{
@@ -4488,7 +4489,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_route_refresh(
     unsafe{out.write(e.counters.route_refresh.load(Ordering::Relaxed))}
     OK
 }
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
     h:u64,rx_ns:*mut u64,tx_ns:*mut u64)->i32{
@@ -4505,7 +4506,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
 // Query the real M1/M3 original Rust owner Route/PeerMSS budget after the
 // credential-verified private Go control Commit and exact M4 interface bind.
 // This value is NOT a cold-self-attested cap or a way to mutate the budget.
-#[cfg(all(target_arch="x86_64",target_env="gnu"))]
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     h:u64,ifindex:u32,out:*mut u32)->i32{
@@ -4530,7 +4531,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_original_wbc4_authenticated_kind1_m2_covered_vs_uncovered_and_replay_boundary(){
         use wbd_types::{LaneKey,TunnelKey,RecordPn};
@@ -4608,7 +4609,7 @@ mod tests{
             ||panic!("unexpected packet"),||true);
         assert_eq!(n,0);
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn r1_m0_live_authenticated_seq32_anchor_wrap_and_untrusted_no_advance(){
         // Same helper and wbd-platform::extend_seq32 used by background_raw_once:
@@ -4636,7 +4637,7 @@ mod tests{
         assert_eq!(extend_seq32(0,0x8000_0000),
             Err(wbd_platform::rx_ipv4_tcp::SeqExtendError::HalfSpaceAmbiguous));
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_link_65k_original_owner_cross_turn_48_fragment_gate_and_no_hol(){
         use wbd_codec::link_reassembly::{
@@ -4736,7 +4737,7 @@ mod tests{
         );
     }
 
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_link_original_m1_arena_two_turn_65k_32_plus_16_stop_mtu_nohol(){
         use wbd_codec::link_reassembly::{
@@ -4824,7 +4825,7 @@ mod tests{
     }
 
 
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_background_owned_jumbo_persists_65k_generation_32_16_nohol_mtu_stop(){
         use wbd_codec::link_reassembly::{
@@ -4887,7 +4888,7 @@ mod tests{
         println!("M0_BACKGROUND_OWNED_JUMBO_65K_32_PLUS_16_MTU_STOP_NOHOL_NATIVE_PASS real_tun_tls_m4_kernel=NOT_RUN");
     }
 
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_pending_jumbo_midflight_scope_stop_prefix_matrix(){
         use wbd_platform::linux_batch::{KernelSendReport,KernelSendSignal as S};
@@ -4967,7 +4968,7 @@ mod tests{
         assert_eq!(tested,65);
         println!("M0_ORIGINAL_JUMBO_MIDFLIGHT_PREFIX_SCOPE_STOP_MATRIX_PASS tested=65 generation=1 mtu_plus_minus=1 route_revision=1 loans=0 real_kernel=NOT_RUN");
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_link_materialization_never_admits_half_packet_on_arena_failure(){
         // Actual M1 unique loans + original M3 LINK20 planner. A synthetic
@@ -5021,7 +5022,7 @@ mod tests{
             &mut full,&original,20,41,3).err(),Some(INVALID));
         assert_eq!(full.report().loaned,0);
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn r1_m0_original_data_return_budget_yields_at_64_128_33(){
         // Exactly the M1 owner slab and ReturnPath used in authenticated
@@ -5042,7 +5043,7 @@ mod tests{
         let stopped=arena.stop();
         assert_eq!(stopped.loaned,0);
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_route_refresh_rearms_real_m4_only_after_change_or_invalidation(){
         assert!(!raw_driver_reopen_on_route_change(false,0,65536,65536));
@@ -5052,7 +5053,7 @@ mod tests{
         assert!(raw_driver_reopen_on_route_change(false,3,65536,1500));
         assert!(!raw_driver_reopen_on_route_change(false,3,65536,0));
     }
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_tx_turn_completion_preserves_prefix_tail_and_typed_path(){
         use wbd_platform::linux_batch::{KernelSendSignal as S,KernelSendReport};
@@ -5090,7 +5091,7 @@ mod tests{
         }
         assert!(classify_tx_turn(Some(&full),32,true).failed);
     }
-    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_fec2_original_m4_m2_batch_0_32_unknown_prefix_never_refunds(){
         use wbd_platform::linux_batch::{KernelSendReport,KernelSendSignal as S};
@@ -5175,7 +5176,7 @@ mod tests{
         println!("M0_FEC2_NATIVE_M4_M2_PREFIX_0_32_UNPROVEN_FAIL_CLOSED_PASS shapes={checked}");
     }
 
-    #[cfg(all(target_arch="x86_64",target_env="gnu"))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),target_env="gnu"))]
     #[test]
     fn m0_raw_original_owner_kernel_prefix_and_uncertain_never_conflate(){
         use wbd_platform::linux_batch::{KernelSendSignal,KernelSendReport};
