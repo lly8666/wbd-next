@@ -226,27 +226,40 @@ fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi
-if [ "${WBD_ARM64_DAMAGE_TRIAL:-}" = "policy-2pct" ]; then
+damage_scene="${WBD_ARM64_DAMAGE_TRIAL:-none}"
+if [ "$damage_scene" = policy-2pct ] || [ "$damage_scene" = timing-1p50 ] || [ "$damage_scene" = timing-5p50 ]; then
   if [ "$mode" != fec-fixed ] && [ "$mode" != fec-auto ]; then
     echo 'ARM64_DAMAGE_REQUIRES_FIXED_OR_AUTO_FEC2' >&2; exit 2
   fi
   command -v tc >/dev/null || { echo 'ARM64_DAMAGE_TC_MISSING' >&2; exit 77; }
   # Namespace-local egress qdiscs: *after* original Go authenticated TLS
   # and sufficient clean, real sources for FEC Applied maturity.
-  # 2% impairment is ONE bounded functional differentiation, not load testing.
-  sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss 2%
-  sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss 2%
+  # Separate exact-scope traffic probes; timing cases are paired kernel
+  # impairment, but RTT is *round-trip* proxy, not first useful packet p99.
+  local_loss=2; delay_ms=0; nprobe=120; pacing=.1
+  case "$damage_scene" in
+    policy-2pct) ;;
+    timing-1p50) local_loss=1; delay_ms=50; nprobe=240; pacing=.05 ;;
+    timing-5p50) local_loss=5; delay_ms=50; nprobe=240; pacing=.05 ;;
+  esac
+  if [ "$delay_ms" -gt 0 ]; then
+    sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss "$local_loss%" delay "${delay_ms}ms"
+    sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss "$local_loss%" delay "${delay_ms}ms"
+  else
+    sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss "$local_loss%"
+    sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss "$local_loss%"
+  fi
   set +e
-  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i .1 -c 120 -W 2 10.188.18.2 >"$out/loss-c2s.log" 2>&1
+  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i "$pacing" -c "$nprobe" -W 2 10.188.18.2 >"$out/loss-c2s.log" 2>&1
   loss_c2s_rc=$?
-  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i .1 -c 120 -W 2 10.188.18.1 >"$out/loss-s2c.log" 2>&1
+  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$pacing" -c "$nprobe" -W 2 10.188.18.1 >"$out/loss-s2c.log" 2>&1
   loss_s2c_rc=$?
   set -e
   sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/loss-qdisc-client.txt"
   sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/loss-qdisc-server.txt"
   # Capture without substituting wire drop for an authenticated source loss,
   # FEC recovery count, or a delivery improvement vs Normal baseline.
-  export ARM64_LOSS_C2S_RC="$loss_c2s_rc" ARM64_LOSS_S2C_RC="$loss_s2c_rc"
+  export ARM64_LOSS_C2S_RC="$loss_c2s_rc" ARM64_LOSS_S2C_RC="$loss_s2c_rc" ARM64_DAMAGE_PROBES="$nprobe" ARM64_NETEM_LOSS_PCT="$local_loss" ARM64_NETEM_DELAY_MS="$delay_ms"
   OUTPUT="$out" python3 - <<'PY'
 import os,pathlib,re,json
 p=pathlib.Path(os.environ["OUTPUT"])
@@ -264,21 +277,41 @@ drops={k:qdisc('loss-qdisc-'+k+'.txt') for k in ['client','server']}
 apps={k:ping('loss-'+k+'.log') for k in ['c2s','s2c']}
 if min(drops.values())<=0:
  raise SystemExit("NO_VERIFIED_KERNEL_NETEM_DROP_THIS_RUN "+repr(drops))
-if any(sent!=120 or recv<100 or recv>sent for sent,recv in apps.values()):
- raise SystemExit("UNEXPECTED_APP_DELIVERY "+repr(apps))
+probes=int(os.environ['ARM64_DAMAGE_PROBES'])
+minimum=int(probes*(.90 if int(os.environ['ARM64_NETEM_LOSS_PCT'])==5 else .95))
+if any(sent!=probes or recv<minimum or recv>sent for sent,recv in apps.values()):
+ raise SystemExit("UNEXPECTED_APP_DELIVERY "+repr((apps,minimum)))
 if any(os.environ[k]!="0" for k in ('ARM64_LOSS_C2S_RC','ARM64_LOSS_S2C_RC')):
  raise SystemExit("PING_COMMAND_EXIT_NONZERO despite summary")
 receipt={"frozen_product_source":os.environ["WBD_ARM64_FROZEN_SOURCE"],
 "harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
-"mode":os.environ["WBD_V4_MODE"],"impairment":"2pct_independent_kernel_netem_each_direction_after_authenticated_maturity",
+"mode":os.environ["WBD_V4_MODE"],
+"impairment":os.environ["WBD_ARM64_DAMAGE_TRIAL"],
+"kernel_loss_pct":int(os.environ["ARM64_NETEM_LOSS_PCT"]),
+"kernel_delay_ms_each_direction":int(os.environ["ARM64_NETEM_DELAY_MS"]),
 "qdisc_dropped_outer_packets":drops,
 "icmp_application_sent_received":{k:{"sent":v[0],"received":v[1]} for k,v in apps.items()},
 "status":"SCOPED_IMPAIRED_REAL_OS_INPUT_AND_APP_FUNCTIONAL",
 "exact_encrypted_source_loss":"NOT_PROVEN",
-"fec2_recovered_source_count":"NOT_EXPOSED",
+"fec2_recovered_source_count":"ORIGINAL_OWNER_PRE_STOP_IN_LOGS",
 "m2_or_fec_causal_attribution":"UNKNOWN","physical":"NOT_RUN"}
 (p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
 print("ARM64_SCOPED_REAL_NETEM_OUTER_DROP_AND_APP_DELIVERY_PROVEN",drops,apps)
+if int(os.environ["ARM64_NETEM_DELAY_MS"])>0:
+ import math,statistics
+ quantiles={}
+ for name in ('c2s','s2c'):
+  raw=(p/('loss-'+name+'.log')).read_text()
+  timings=sorted(float(v) for v in re.findall(r'time[=<]([0-9.]+)\s*ms',raw))
+  if len(timings)!=apps[name][1]: raise SystemExit("INCOMPLETE_RTT_SAMPLE "+repr((name,len(timings),apps[name])))
+  def percentile(q):return round(timings[min(len(timings)-1,max(0,math.ceil(len(timings)*q)-1))],3)
+  quantiles[name]={'received_rtt_samples':len(timings),'p50_ms':percentile(.5),'p95_ms':percentile(.95),'p99_ms':percentile(.99),'max_ms':round(timings[-1],3)}
+ receipt['icmp_rtt_round_trip_ms']=quantiles
+ receipt['first_useful_packet_one_way_p99']='NOT_RUN'
+ receipt['missing_replies_are_censored']=True
+ receipt['result_scope']='PASS_SCOPED_AARCH64_ICMP_RTT_DISTRIBUTION_NOT_PRODUCT_FIRST_PACKET_LATENCY'
+ (p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
+ print('ARM64_REAL_NETEM_ROUND_TRIP_PERCENTILES_SCOPED',quantiles)
 PY
   if [ "${WBD_ARM64_FEC_BURST:-}" = "ping-burst" ]; then
     # One independent, bounded Native path differentiator: 700 800-byte
