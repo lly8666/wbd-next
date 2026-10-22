@@ -37,6 +37,14 @@ type V4WindowsAuthenticatedGameGroup struct{
  stageProc,receiveProc,joinProc,stopProc *syscall.Proc
  closed bool
 }
+// Epoch exposes only the negotiated original-Go TLS generation marker,
+// never cold key material or a privilege to bind an arbitrary device.
+func(g *V4WindowsAuthenticatedGameGroup) Epoch()[16]byte{
+ if g==nil{return [16]byte{}}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed{return [16]byte{}}
+ return g.epoch
+}
 // Each FakeTCP association has completed its real original Go handshake;
 // no independent cold248, shared password shortcut, test-only KDF or fake
 // Rust owner can be submitted through this API.
