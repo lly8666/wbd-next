@@ -46,14 +46,16 @@ for file in "${files[@]}"; do
   cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
 done
 mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
-cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go\ncp r0/go_overlay/internal/v4productcli/secret_linux_test.go legacy/internal/v4productcli/secret_linux_test.go
+cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+cp r0/go_overlay/internal/v4productcli/secret_linux_test.go legacy/internal/v4productcli/secret_linux_test.go
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
 mkdir -p arm64-public-bundle
 export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-(cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)\n(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
+(cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
+(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
 cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
 (cd arm64-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
