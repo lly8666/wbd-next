@@ -94,8 +94,11 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         .map_err(|_|INVALID)?;
     let mut result=Vec::new();
     let mut failed=false;
-    let decoder=e.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
-    let (storage,report)=e.owner.drain_windows_authenticated_fec2(
+    // Split the actual Entry fields, not the MutexGuard deref, so Rust
+    // guarantees one unique RX owner and distinct bounded RS16 decoder.
+    let entry:&mut Entry=&mut e;
+    let decoder=entry.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
+    let (storage,report)=entry.owner.drain_windows_authenticated_fec2(
         MonoNs(0),Vec::with_capacity(1),|_pn,kind,plain|{
             match decoder.accept_authenticated(scope,kind,plain,MonoNs(0)){
                 Ok(deliveries)=>{
