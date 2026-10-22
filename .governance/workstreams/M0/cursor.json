@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 265,
-  "checkpoint_sha": "3bd4bc2e6fc637f3ac5e9aec82eb5adccf6b4f8e",
+  "sequence": 266,
+  "checkpoint_sha": "175ce91532d7e05550d88db414ecdeaf27e9f8d4",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 real Windows original Go TLS/Rust Npcap+signed Wintun→Ubuntu WSL2 Linux raw/TUN Normal/off; e77b harness true first/reverse unblocks OS Applied/READY but public sustained bidirectional/owned full Stop still FAIL. S859 exact SOURCE56ce errors now attributed by origin; full Action39778489109 and native WAL Action39778488947 running. WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Recovered H264 plus intent/source/evidence commits. Both exact harness sourcee77b Windows2025 original full39774560726 and frozen39774561079 concluded FAIL soon after real OS Applied/READY, Windows native product generic ErrN4NativeGuard as Stop completed; non-secret 1Hz genuine Windows UDP sent3/5, received0/22 and Linux sent64/73 received0. Current Go uses same ErrN4NativeGuard sentinel for multiple NPF queue, carrier, Rust peer, native M4 write failures; this text does not prove WFP/DNS actually went absent. S859 source56ce only adds non-hot-path contextual error evidence and one failure snapshot, atomically repins original-Go manifest; Action run in progress, no product PASS.",
+  "current_task": "PLAN024 Windows original Go TLS/Rust Npcap+Wintun→WSL2 Linux raw/TUN Normal/off. S859 real Action39778489109 fail on exact native NPF pre-auth 64/64 queue; S860 SOURCEbc80 preserves 64 cap/fail-closed Rust/WFP, counts packet-level local overflow instead of whole-owner fatal. Full Action39781312249 and WAL39781312185 in progress; WL0/1/5 NOT_RUN.",
+  "why_now": "H265 full original-Go Action39778489109/1 FAIL artifact12426127256 exact native NPF post-detach queue overflow depth64/64. Windows tx9 authenticated copies22 local repeated carriers42; Linux M2 first82 retransmitted163 authentic_ack0; early kernel UDP duplex still FAIL. Native WAL original-Go Action39778488947 six jobs SUCCESS. S860 intent28fc613 and sourcebc80 atomic Go CLI/packet metrics & exact manifest; no buffer enlargement or wire/receipt changes; local preauth loss counted and no global kill for DATA/ACK, FIN/RST+driver+crypto errors still hard fail. Real Actions auto launched; no functional PASS/promotion.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Consume already-running original-Go SOURCE56ce7127de4944810ea22770b56d066d69940fc0 full Windows2025 Action39778489109 and Windows native WAL Action39778488947. Read exact WBD_WINDOWS_NATIVE_FAILURE_SOURCE and true kernel 1Hz receipts to identify earliest failure; repair only that cause, then one discriminating full real Windows↔Linux functional validation. Do not start WL-N0/N1/N5 until public duplex and owned Stop PASS.",
+  "next_action": "Consume SOURCE bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2 full genuine two-OS Action39781312249 and Windows WAL39781312185. Inspect 1Hz npcap_ingress_local_drops, app bidirectional real kernel receipts, Rust M2 authenticated_ack, genuine owned Stop. If app or Stop still fails, trace earliest real Windows→Linux missing hop and resolve one issue; keep WL-N0/N1/N5 NOT_RUN until functional success.",
   "unverified": true,
   "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
   "evidence_refs": [],
   "context_refs": [
+    "docs/evidence/M0/PLAN024-S860-real-NPF-64-slot-overflow-repair-20261022.json",
+    "docs/devlog/M0/PLAN024-S860-original-NPF-bounded-burst-drop-no-global-kill-intent-20261022.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/evidence/M0/PLAN024-S859-real-native-failure-origin-probe-20261022.json",
-    "docs/devlog/M0/PLAN024-S859-frozen-guard-generic-sentinel-precise-failure-intent-20261022.md",
-    "docs/evidence/M0/PLAN024-S858-PR24-merge-main-READY-UDP-remaining-20261022.json"
+    "docs/evidence/M0/PLAN024-S859-real-native-failure-origin-probe-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "H265: H264→main 1 metadata commit, S859 read-only original-Go native failure origin study + atomic product error-attribution code SOURCE56ce + exact manifest pinned. Both earlier e77b original Windows↔Linux actions 39774560726/39774561079 FAIL after true OS Applied/READY due generic native guard sentinel and no continuous duplex, owned disconnection logged. Missing real failure provenance; new Actions 39778489109/39778488947 pending; governance39778489087 PASS. Product qualification OPEN, WL0/N1/N5/physical NOT_RUN; avoid treating same error string as proof WFP missing."
+  "partial_summary": "H266: New exact source56ce full original Windows→Linux run39778489109 FAIL at REAL NPF post-detach 64-slot ingress overflow, not absence of DNS/IPv6 WFP. Windows WAL Action39778488947 all six SUCCESS, 56ce governance 39779074242 SUCCESS. S860 correction sourcebc80 counts fixed64 pre-auth local discards rather than global session kill; FIN/RST and real auth/driver/WAL hard FAIL unaffected, exact Go assembly manifest repinned atomically. New real full39781312249 and WAL39781312185 in progress, bc80 governance39781312098 SUCCESS. No functional two-way, Stop, WL netem, physical qualification."
 }
