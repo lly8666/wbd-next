@@ -17,12 +17,14 @@ import (
     "errors"
     "flag"
     "fmt"
+    "io"
     "log"
     "net"
     "net/netip"
     "os"
     "os/exec"
     "os/signal"
+    "strings"
     "syscall"
     "time"
     "unsafe"
@@ -32,6 +34,35 @@ import (
 )
 
 const tunSetIFF=0x400454ca
+
+const maxPrivateArgBytes = 4096
+
+// Refuse symlinks, world/group-readable files, nonregular files and oversized
+// secrets. Kernel O_NOFOLLOW and f.Stat apply to the SAME opened descriptor;
+// caller never logs secret bytes or publishes their contents in argv.
+func readPrivateArgFile(path string)(string,error){
+    if path=="" {return "",fmt.Errorf("missing secret path")}
+    fd,err:=syscall.Open(path,syscall.O_RDONLY|syscall.O_CLOEXEC|syscall.O_NOFOLLOW,0)
+    if err!=nil{return "",err}
+    f:=os.NewFile(uintptr(fd),"private-credential")
+    defer f.Close()
+    st,err:=f.Stat()
+    if err!=nil{return "",err}
+    if !st.Mode().IsRegular()||st.Mode().Perm()&0077!=0{
+        return "",fmt.Errorf("secret must be a regular owner-only file")
+    }
+    b,err:=io.ReadAll(io.LimitReader(f,maxPrivateArgBytes+1))
+    if err!=nil{return "",err}
+    if len(b)==0||len(b)>maxPrivateArgBytes{
+        return "",fmt.Errorf("secret length invalid")
+    }
+    value:=strings.TrimSuffix(strings.TrimSuffix(string(b),"\n"),"\r")
+    if value==""||strings.IndexByte(value,0)>=0{
+        return "",fmt.Errorf("secret contents invalid")
+    }
+    return value,nil
+}
+
 
 type config struct{
     role string
@@ -70,11 +101,25 @@ func parse(role string,args []string)(config,error){
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
     user:=flags.String("username","","original protected admission user")
-    pass:=flags.String("password","","original protected admission password")
+    pass:=flags.String("password","","original protected admission password; prefer --password-file on shared devices")
+    passFile:=flags.String("password-file","","mode-0600 regular secret file, no symlinks")
+    routeFile:=flags.String("route-key-hex-file","","mode-0600 route key hex file, no symlinks")
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     if err:=flags.Parse(args);err!=nil{return c,err}
+    if *passFile!="" {
+        if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
+        value,e:=readPrivateArgFile(*passFile)
+        if e!=nil{return c,fmt.Errorf("invalid password-file: %w",e)}
+        *pass=value
+    }
+    if *routeFile!="" {
+        if *route!="" {return c,fmt.Errorf("route-key-hex and route-key-hex-file are mutually exclusive")}
+        value,e:=readPrivateArgFile(*routeFile)
+        if e!=nil{return c,fmt.Errorf("invalid route-key-hex-file: %w",e)}
+        *route=value
+    }
     switch *mode{
     case "normal":c.fecMode=realityfront.FecV2Off
     case "fec-fixed":c.fecMode=realityfront.FecV2Fixed
