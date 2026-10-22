@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 244,
-  "checkpoint_sha": "d5c6810220bdf5958a28267bb46aff7b050a83ca",
+  "sequence": 245,
+  "checkpoint_sha": "16178a10944aabff45f0c3632b0f312ffe34c101",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 Windows one-batch real native wire: authenticated original Go TLS feature7 fixed/auto source+shared Rust RS16 canonical parity (C ABI) M3 repair exact Rust PN, signed Wintun OS UDP app dropped business source recovered. S763 real MTU/peer MSS FrameBudget FEC 14-byte reservation repaired. Windows2022 source S763 Action39720987395/1 6/6 SUCCESS Normal Fixed Auto Game2 Game4 separate actual signed kernel functional jobs. PR21 original shared traffic config/report/worker WinSock port S762 actual 60s dual 10Mbps on one VM loopback source 766e6a Action39720486837/1 SUCCESS 9.99Mbps each direction 100% local. Still not real tunneled public 10Mbps or host impaired public product.",
-  "why_now": "H243 governance Action39721990198/1 FAIL structure: combined hot byte budget 32777 (max32768), nine bytes over. H244 reduces only cursor prose, leaves S764 and exact S763/S762 source results, scoped evidence and role unchanged. S763 Windows2022 Action39720987395/1 6/6 native original Go TLS Rust Wintun real RS16 Repair source recovery PASS_SCOPED; S762 WinSock Action39720486837/1 60s 9.99Mbps each direction LOCAL LOOPBACK ONLY. Public Game/M2/host global/real tunnel sustained unverified.",
-  "done_when": "User wants ALL Windows V4 modes public and sustained. Only 5 scoped native AES Wintun functional POSITIVE and WinSock generator preflight done. Real public CLI+WinForms Fixed/Auto must negotiate/verify original authenticated M2 SetTxFec Applied and Auto revision and continuously issue scheduled partial-block and parity via now-wired Rust shared RS16 codec; Game2/4 must have 2/4 simultaneous original FakeTCP/TLS real Npcap lane packet dispatch and host product Stop. Real public host-global WFP IPv6/DNS dual /1 physical underlay and live OS Applied/Disconnected must be tested in isolated Windows VM. Then one scenario seed per performance Action full public V4 Windows 10Mbps lossless sustained and separately 1%/5% impairment with one-way p99 RTT longest no-delivery CPU RSS queue/drop retrans and same-VM pinned old/new. Do not claim either from local WinSock generator.",
-  "next_action": "Single next SOURCE batch implement source-scoped original-Go M2 Fixed/Auto stage/ACK readback binding to Rust and use shared Rs16 Repair in true native public sender with current authentic applied profile, including partial-block flush and STOP; simultaneously implement full 2/4 original TLS Npcap per-lane public Game owner and real OS five-stage WAL proof, then qualify. Plug PR21 Windows worker to real physical isolated client/server and run true public 10Mbps lossless + independent 1/5pct impairment. Avoid host-global WFP and route mutations on shared GitHub Windows runner. Any missing original server or isolation must be explicit NOT_RUN.",
+  "current_task": "PLAN024: PR22 merged. Public Windows2025 Npcap/Wintun→Linux WSL2 true Normal/off is blocked by missing installed Npcap service/DLL and Wintun adapter; WSL2 netem probe invalid due shell CRLF. Shared Rust M2 Windows recovery, Go 256-ACK noHOL/750ms×8 retirement, public kernel→kernel product traffic and WL-N0/N1/N5 remain NOT_RUN.",
+  "why_now": "S765 recovered H244 checkpoint unique cursor-only commit. PR22 merge 2840296. S766 hot-byte structural FAIL original Actions preserved; S768 registry prose trim → Governance39726037943/1 SUCCESS. S767 first bounded real Windows2025 capability Action39725690761/1 SUCCESS ENV_DISCOVERY_ONLY, artifact12403107809 (sha256 cbd1cdec023b83b8512bf935c3268ff537f10887a2ac2394574eb32c2e3d2b09), Npcap/Wintun NOT_FOUND, WSL probe harness CRLF failure. G2 registry revision changed39726037963/1 FAIL preserved.",
+  "done_when": "Main registry R0-M0-PLAN008 and docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md §2 govern: exact-source public original Go TLS/Rust Windows Wintun/Npcap→Linux raw/TUN Normal/off bidirectional continuous genuine netem and Stop, shared Rust M2 no ACK HOL; then individual WL-N0/N1/N5 or precise BLOCKED/NOT_RUN. Existing scoped product modes and WinSock loopback do not qualify.",
+  "next_action": "Wire Windows real original TLS-bound Rust M2 kind1 authenticated receipt/shadow/budget/fresh independent of Go TCP cumulative ACK; retire Go 256-unACK fresh gate and 750ms×8 local retries with targeted Windows Actions; only after a usable isolated installed Npcap/Wintun+Linux raw/TUN/netem endpoint becomes available, run genuine public Normal/off first then separate WL-N0/N1/N5.",
   "unverified": true,
   "last_tested_source": "a22c4e09baf7c42a39b4eab1d7c3febffc5a6836",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S763-shared-Rust-RS16-real-Wintun-five-mode-PASS_SCOPED-20261022.json"
+    "docs/evidence/M0/PLAN024-S763-shared-Rust-RS16-real-Wintun-five-mode-PASS_SCOPED-20261022.json",
+    "docs/evidence/M0/PLAN024-WL-S767-windows2025-wsl2-native-env-BLOCKED-20261022.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN024-S762-Windows-PR21-WinSock-generator-60s-PASS_SCOPED-20261022.json",
-    "docs/devlog/M0/PLAN024-S764-parallel-shared-RS16-and-Windows-PR21-WinSock-proof-20261022.md",
-    "docs/evidence/M0/PLAN024-S747-five-parallel-Windows-native-signed-Wintun-PASS_SCOPED-20261022.json"
+    "docs/devlog/M0/PLAN024-WL-matrix-recovery-and-integration-20261022.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H244 original TLS/Rust RS16 real Wintun kernel scoped Fixed/Auto source-loss recovery; Normal,Game2,Game4 same exact S763 39720987395/1 6/6 PASS. PR21 S762 39720486837 60s 9.99Mbps each direction only WinSock loopback; not tunnel. Full public Fixed/Auto M2/partial-block parity, 2/4-lane Game OS product, WFP/routes/UI, 10Mbps public and 1/5pct impaired NOT_RUN. Prior H243 governance failure hot-byte budget +9 fixed here."
+  "partial_summary": "PR22 integrated. SOURCE bb19b3f Actions39725690761/1 artifact12403107809 confirms Npcap service/DLL and Wintun installed adapter absent; WSL2 Ubuntu install 0 but shell probe invalid (CRLF), not netem platform verdict. ENV only; public Windows→Linux product, real impairment, Stop, WL-N0/N1/N5 NOT_RUN. Windows 256-ACK/750ms×8 remains unfixed pending authenticated shared Rust M2 wiring. Governance S768 PASS; historical FAIL kept."
 }
