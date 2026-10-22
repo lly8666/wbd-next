@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S010-fixed30-real-FEC-k-r-telemetry",
+  "phase": "S010-live-real-FEC30-S011-default-off-AB-intent",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -37,6 +37,16 @@
       "attempt": 1,
       "harness_source": "d9f3aec913fddd4bc20a38f86c5a8af9c675b9a2",
       "url": "https://github.com/lly8666/wbd-next/actions/runs/39771281403"
+    },
+    {
+      "id": "arm64-off-lossless90-old-new-default-AB",
+      "type": "SAME_JOB_SEQUENTIAL_DEFAULT_PERFORMANCE_AB",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "path": "tests/network/request.json",
+      "sourceA": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "sourceB": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+      "trigger": "push request.json once, no manual dispatch",
+      "scenario": "Normal/off 10Mbps each direction 50/50 UDP/TCP, 4 flows 90s lossless, fixed packet sizes, default no diagnostics; same GitHub ARM64 job sequential A/B independent cleaned namespaces"
     }
   ],
   "latest_actions": [
@@ -139,7 +149,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "S010 Action 39771281403 in progress; no redispatch. Harness 39771281287 failed a B-only test fixture assumption; this commit tests single-A compatibility, new contract Action pending. Inspect S010 k/r readback after completion and preserve real duplicates/pending. Follow with default same-job perf A/B.",
+  "next_action": "Observe S010 run39771281403 (read k/r and real failure) and S011 one auto Action from new request push. Contract after B-only fixture correction run39771546355; no redispatch. Once both results resolved archive receipts, do not compare across VMs, preserve S008 hard failures.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {
