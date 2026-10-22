@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PR24_INTEGRATION_AND_PLAN024_PUBLIC_DUPEX_RECOVERY",
+  "prior_cursor_checkpoint": "c9b9f1c3c7b9bacb429c56aacd8879ce60f26990",
+  "main_registry_task_unchanged": true,
+  "pr24": {
+    "number": 24,
+    "merge_commit": "2a4d4f9d31c49f95f1034690d06e163eb343fdee",
+    "compiled_source": "bddfbdf06817e6a506bd4c310989b4565a2dc9a2",
+    "scoped_arm64_actions": [
+      {
+        "id": 39770439235,
+        "attempt": 1,
+        "result": "success",
+        "jobs": 3
+      },
+      {
+        "id": 39770439268,
+        "attempt": 1,
+        "result": "success",
+        "jobs": 2
+      }
+    ],
+    "evidence": "docs/evidence/arm64-main-integration-20261022.json"
+  },
+  "recovered_main_commits": 72,
+  "legacy_two_os_failure": {
+    "source_windows": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+    "source_linux": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+    "actions": [
+      39766899588,
+      39767733659
+    ],
+    "status": "FAIL native first-reverse before READY, NOT corrected retroactively"
+  },
+  "changes": [
+    {
+      "source": "05aadd0298ffbb9dc00ed114d3c6702048a46c83",
+      "kind": "harness launch real Windows and Linux UDP apps before authentic product READY"
+    },
+    {
+      "source": "c1582c8f608a973d114c1b51144dcb86e34b3481",
+      "kind": "gated Rust Game owner field on FEC2 feature"
+    },
+    {
+      "source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
+      "kind": "FEC2 feature-off C ABI counter functions return BAD_STAGE, never fake stats"
+    },
+    {
+      "source": "e77b0596026b4f27bbe4705b45dd8c1deb4f83ac",
+      "kind": "harness only, 1Hz real UDP receipts and premature original client exit and correct bounded application completion wait"
+    }
+  ],
+  "results": [
+    {
+      "run_id": 39772660895,
+      "attempt": 1,
+      "source": "05aadd0298ffbb9dc00ed114d3c6702048a46c83",
+      "compiled_windows": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+      "compiled_linux": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+      "job_id": 119803788288,
+      "artifact_id": 12423771509,
+      "conclusion": "FAILURE",
+      "windows_original_tls_os_applied_ready": "PASS_SCOPED",
+      "linux_native_ready": "PASS_SCOPED",
+      "duplex": "NOT_VERIFIED",
+      "stop": "NOT_VERIFIED",
+      "observed": "harness parent TimeoutExpired 18s vs genuine app 30s bind plus 35s window; zero application logs because generator prints at end; original client disconnected before app gate; Linux M2 original firstcopy=246 authenticated_ack=0"
+    },
+    {
+      "run_id": 39772660900,
+      "attempt": 1,
+      "source": "05aadd0298ffbb9dc00ed114d3c6702048a46c83",
+      "job_id": 119803788765,
+      "conclusion": "FAILURE",
+      "windows_original_tls_os_applied_ready": "PASS_SCOPED",
+      "duplex": "NOT_VERIFIED",
+      "stop": "NOT_VERIFIED",
+      "observed": "independent full rebuild of Windows original Go/Rust hit same 18s Python parent timeout"
+    },
+    {
+      "run_id": 39773757525,
+      "attempt": 1,
+      "source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
+      "conclusion": "success",
+      "scope": "NORMAL-COMMON actual original Go/native Rust ABI compile and functional job, not Windows↔Linux combined result"
+    },
+    {
+      "run_id": 39773757655,
+      "attempt": 1,
+      "source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
+      "conclusion": "success",
+      "scope": "ARM64 public bundle native/cross-build only"
+    },
+    {
+      "run_id": 39774560726,
+      "attempt": 1,
+      "source": "e77b0596026b4f27bbe4705b45dd8c1deb4f83ac",
+      "conclusion": "IN_PROGRESS_AT_CHECKPOINT",
+      "scope": "new original build actual Windows2025↔WSL2 Linux public Normal/off Action"
+    },
+    {
+      "run_id": 39774561079,
+      "attempt": 1,
+      "source": "e77b0596026b4f27bbe4705b45dd8c1deb4f83ac",
+      "conclusion": "IN_PROGRESS_AT_CHECKPOINT",
+      "scope": "new frozen actual Windows2025↔WSL2 Linux public Normal/off Action"
+    }
+  ],
+  "retained_other_failures": [
+    {
+      "run_id": 39771511190,
+      "conclusion": "FAILURE",
+      "scope": "Fixed build rustup download stage, product kernel NOT_RUN"
+    },
+    {
+      "run_id": 39771511325,
+      "conclusion": "FAILURE",
+      "scope": "old E0433 Game feature reference; superseded by passing compiled feature gate at 39773757525, not retroactive PASS"
+    },
+    {
+      "run_id": 39771511241,
+      "conclusion": "FAILURE",
+      "scope": "G2 registry revision changed despite Rust compilation; not a product failure"
+    }
+  ],
+  "gate_status": {
+    "native_arm64": "PASS_SCOPED",
+    "normal_common": "PASS_EXACT_SOURCE_ONLY",
+    "windows_linux_normal_off": "FAIL_AS_LAST_COMPLETED",
+    "windows_native_os_applied": "PASS_SCOPED_SOURCE05aadd",
+    "bidirectional_kernel_udp": "NOT_VERIFIED",
+    "both_owned_stop": "NOT_VERIFIED",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "Windows_Linux_physical_two_host": "NOT_RUN",
+    "Android_OpenWrt_product": "NOT_RUN"
+  },
+  "design_and_call_chain_review": [
+    "docs/testing/NETWORK_TRIAGE.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
+    "docs/architecture/modules/README.md",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::VerifyPeerFirstAndReverse",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go::runM0NativeV4Windows",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
+  ],
+  "devlog": "docs/devlog/M0/PLAN024-S858-PR24-merge-recovery-UDP-harness-intent-20261022.md",
+  "next_action": "Read exact e77b059 Actions 39774560726 and 39774561079 and bounded 1Hz real UDP logs, determine earliest outstanding true product blocker, then repair only that blocker."
+}
