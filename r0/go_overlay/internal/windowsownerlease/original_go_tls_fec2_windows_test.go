@@ -69,8 +69,13 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  }()
  store,e:=realityfront.NewV4EpochStore(1)
  if e!=nil{t.Fatal(e)}
+ // Preserve pinned original Go policy invariants: Fixed requires nonzero
+ // parity and minimum=4; Auto requires parity=0 and minimum=4.
+ // No test-only relaxed policy or forged M2 Applied state.
+ parity:=0
+ if mode=="fixed"{parity=4}
  policy,e:=realityfront.PolicyForClientWithInitialAndCipher(
-  1,mode,4,0,20,realityfront.CipherChaCha)
+  1,mode,parity,4,20,realityfront.CipherChaCha)
  if e!=nil{t.Fatalf("original Go policy=%s: %v",mode,e)}
  type response struct{
   session *realityfront.V4ServerSession
