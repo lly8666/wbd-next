@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S002-loss1-product-or-test-path-diagnosis",
+  "phase": "S003-udp-only-loss1-discriminating-action-intent",
   "recovered": true,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -51,14 +51,27 @@
       "scope": "overall workflow FAIL retained; traffic markers positive"
     }
   ],
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "arm64-off-udp-only-loss1-rtt50-75s",
+      "path": "tests/network/request.json",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "scenario": "S003 fixed same SOURCE and same 5Mbps UDP/direction as S002; no inner TCP, same sizes/1pct IID/25ms each/75s; discriminate TCP-dependent amplification vs off recovery alone",
+      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "build_run": 39759842150,
+      "artifact_id": 12417786567,
+      "attempt": 1,
+      "trigger": "push of this one changed tests/network/request.json invokes one network Action; DO NOT separately dispatch",
+      "seed_note": "business seed 5205 held; kernel netem unseeded_recorded, not bitwise paired"
+    }
+  ],
   "open_issues": [
     "S002 true measured UDP residual 1.317%/1.528% at injected 0.971%/1.001%, exceeds declared 0.1%; TCP both sides backpressured/p99 1.3-1.9s; causality OPEN",
     "Repair byte budget/usefulness, first-delivery split, FEC actual k/r and native runtime backend NOT_OBSERVED",
     "Game+FEC, cipher/repair runtime toggles, no-payload idle and Windows not wired in this Linux harness",
     "Native ARM64 source/run/attempt/ZIP/ELF adapt PASS in existing selfcheck; 39762361004 selfcheck failed from inherited repair gate; test-only fix pending fresh Actions"
   ],
-  "next_action": "Observe Actions harness contract check for isolated socket test fix; S002 remains FAIL. Review current recovery design, true public Go↔Rust→TUN source path, recent fixes and available counters; choose one discriminating instrument/functional run before any product tuning. Do not redispatch S002 unchanged.",
+  "next_action": "Resolve exactly one Actions run created by S003 request push; download source-bound artifact and record FAIL/PASS, qdisc, UDP first delivery/retransmit, Stop, host. No run ID yet; do not dispatch duplicate. If UDP-only still >0.1% continue recovery/source path diagnosis; otherwise test TCP interaction with real counters (not a product fix by inference).",
   "actions": [
     {
       "run_id": 39759842064,
@@ -84,6 +97,12 @@
       "source": "b1c6a0a160d3b041d799065847016c63db8bdba5",
       "conclusion": "failure",
       "detail": "RECOVERED selfcheck inherited real-product retransmission requirement; isolated contract fix"
+    },
+    {
+      "run_id": 39763271808,
+      "source": "45b08e0e015d7a3fa9146e393e4cc350ca0c17d7",
+      "conclusion": "success",
+      "detail": "network-harness contract after test-only require_retransmission isolation; no product measurement"
     }
   ],
   "completed": [
