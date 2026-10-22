@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "kind": "SAME_VM_DEFAULT_OFF_SEQUENTIAL_AB",
+  "run_id": 39778358622,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12426190925,
+  "zip_sha256": "64ef3821b2f5168d914a8e36829d2763bc8521671ab1917c925f07634ca9326c",
+  "harness_source": "1dd9d27b148299e52d980dbc836a4b4d0be34af6",
+  "host": {
+    "arch": "aarch64",
+    "netem_pct": 0,
+    "logical_cpus": 4
+  },
+  "scene": {
+    "mode": "normal",
+    "fec": "off",
+    "offered_mbps_per_direction": 10,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "steady_s": 90,
+    "warmup_s": 15,
+    "drain_s": 15,
+    "impairment": "no loss/no delay"
+  },
+  "legs": {
+    "A": {
+      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+      "bundle": {
+        "run": 39775271407,
+        "artifact": 12424665752
+      },
+      "result": "PASS_SCOPED_OBSERVATION",
+      "c2s_udp": {
+        "sent": 77825,
+        "unique": 77825,
+        "duplicates": 0,
+        "p99_ms": 0.5
+      },
+      "s2c_udp": {
+        "sent": 77825,
+        "unique": 77825,
+        "duplicates": 0,
+        "p99_ms": 0.5
+      },
+      "c2s_tcp": {
+        "sent": 77825,
+        "unique": 77825,
+        "p99_ms": 0.6
+      },
+      "s2c_tcp": {
+        "sent": 77825,
+        "unique": 77825,
+        "p99_ms": 0.6
+      },
+      "cpu_s": {
+        "client": 13.14,
+        "server": 13.11
+      },
+      "outer_bytes": {
+        "client": 149405672,
+        "server": 149372097
+      },
+      "psi_mean_pct": 1.9791111111111113,
+      "stop": true,
+      "cleanup": true
+    },
+    "B": {
+      "source": "66838c313ff9def6d4febedb61a018c372986154",
+      "bundle": {
+        "run": 39776576033,
+        "artifact": 12424288230
+      },
+      "result": "PASS_SCOPED_OBSERVATION",
+      "c2s_udp": {
+        "sent": 77825,
+        "unique": 77825,
+        "duplicates": 0,
+        "p99_ms": 0.5
+      },
+      "s2c_udp": {
+        "sent": 77825,
+        "unique": 77825,
+        "duplicates": 0,
+        "p99_ms": 0.5
+      },
+      "c2s_tcp": {
+        "sent": 77825,
+        "unique": 77825,
+        "p99_ms": 0.6
+      },
+      "s2c_tcp": {
+        "sent": 77825,
+        "unique": 77825,
+        "p99_ms": 0.6
+      },
+      "cpu_s": {
+        "client": 13.2,
+        "server": 13.09
+      },
+      "outer_bytes": {
+        "client": 149417380,
+        "server": 149409941
+      },
+      "psi_mean_pct": 2.034222222222222,
+      "stop": true,
+      "cleanup": true
+    }
+  },
+  "assessment": "Both real mixed UDP/TCP Normal/off 90s SOURCE-verified sequential legs PASS, all requested bytes/packets sent and delivered, no duplicates/invalid, stop/owned cleanup. Difference in process CPU <1% and no statistically material p99 difference, no default performance regression detected; no claim of speedup or cross-machine universality."
+}
