@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "arm64-artifact-normalization-exec-permission-fix",
+  "phase": "S001-executable-mode-targeted-regression",
   "recovered": false,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -86,6 +86,15 @@
           "KERNEL_DENIED"
         ]
       }
+    },
+    {
+      "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
+      "path": "tests/network/request.json",
+      "status": "INTENT_RECORDED_NOT_DISPATCHED",
+      "run_id": null,
+      "attempt": null,
+      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "scenario": "same S001 original 90s lossless, same seed/rate; permission-only fixture fix"
     }
   ],
   "open_issues": [
@@ -94,7 +103,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Observe artifact executable mode selfcheck after isolated permission fix; then commit original 90s duplex S001 retry, frozen product unchanged. Do not repeat diagnostic.",
+  "next_action": "After contracts 39761657875 SUCCESS, update one request file to retry S001 and pin new Action; do not rebuild product.",
   "actions": [
     {
       "run_id": 39759842064,
