@@ -2,12 +2,8 @@
 # functional candidate, not a throughput or parity-hardware benchmark.
 name: Linux ARM64 pinned FEC2 Fixed two-way netns
 run-name: ARM64 FEC2 Fixed netns ${{ github.sha }}
+# Scoped Fixed PASS frozen at Action 39754527848; do not repeat.
 on:
-  push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths:
-      - '.github/workflows/arm64-linux-fec-fixed-frozen.yml'
-      - 'tools/arm64_linux_netns_smoke.sh'
   workflow_dispatch:
 permissions:
   contents: read

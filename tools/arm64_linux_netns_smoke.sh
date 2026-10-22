@@ -83,7 +83,7 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
 # Fixed and Normal are separate exact-source functional cases.
 mode="${WBD_V4_MODE:-normal}"
-case "$mode" in normal|fec-fixed) ;; *) echo "ARM64_MODE_UNSUPPORTED $mode" >&2; exit 2 ;; esac
+case "$mode" in normal|fec-fixed|fec-auto) ;; *) echo "ARM64_MODE_UNSUPPORTED $mode" >&2; exit 2 ;; esac
 # Shared credentials via private fd-checked files only, never argv secret.
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
@@ -146,16 +146,17 @@ fi
 # One low-rate diagnostic (20 each way), NOT load/performance pressure.
 count=3
 interval=1
-if [ "$mode" = fec-fixed ]; then count=20; interval=0.1; fi
+if [ "$mode" != normal ]; then count=20; interval=0.1; fi
 sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i "$interval" -c "$count" -W 2 10.188.18.2 \
   >"$out/c2s.log" 2>&1
 sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -W 2 10.188.18.1 \
   >"$out/s2c.log" 2>&1
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
+export WBD_V4_EXPECTED_ICMP="$count"
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
-if [ "$mode" = fec-fixed ]; then sleep 3; fi
+if [ "$mode" != normal ]; then sleep 3; fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
@@ -165,14 +166,16 @@ for i in $(seq 1 75); do
 done
 grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/client.log"
 grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$out/server.log"
-if [ "$mode" = fec-fixed ]; then
+if [ "$mode" != normal ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
   grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
   grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
-  if ! grep -Eq 'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=[0-9]+ applied=[1-9][0-9]* .*pending=false' "$out/client.log" \
-    || ! grep -Eq 'V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=[0-9]+ applied=[1-9][0-9]* .*pending=false' "$out/server.log"; then
-    echo 'ARM64_FEC2_FIXED_REAL_PRODUCT_NOT_APPLIED (original requested vs applied)'
+  expected="$mode"
+  expected="${expected#fec-}"
+  if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=client mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/client.log" \
+    || ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=server mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/server.log"; then
+    echo "ARM64_FEC2_${expected}_REAL_PRODUCT_NOT_APPLIED (original requested vs applied)"
     tail -n 15 "$out/client.log" || true
     tail -n 15 "$out/server.log" || true
     exit 1
@@ -193,7 +196,7 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
-"bidirectional":"3_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
+"bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN","logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
 print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")
