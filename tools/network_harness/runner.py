@@ -41,7 +41,7 @@ def public_fec_failure_reasons(log_text):
     rows=[line for line in log_text.splitlines() if "V4_PUBLIC_FEC2_FAILURE role=" in line]
     if not rows:
         return None
-    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\\d+)", rows[-1])}
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)", rows[-1])}
     if not all(k in values for k in fields):
         return None
     return {k:values[k] for k in fields}
