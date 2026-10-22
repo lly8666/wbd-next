@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "56ce7127de4944810ea22770b56d066d69940fc0",
+  "harness_sha": "56ce7127de4944810ea22770b56d066d69940fc0",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "change_scope": "Windows original Go test-channel error attribution only. No network policy relaxation, no WAL/Stop change, no wire/latency/data-path branch change.",
+  "base_main": "4d386c9464fd1687a1c441dd8171a7cb7f42f30a",
+  "intent_commit": "241b283cf7ca03d191593c44e835c25f932cd70a",
+  "manifest_commit": "56ce7127de4944810ea22770b56d066d69940fc0",
+  "old_actions": [
+    {
+      "run_id": 39774561079,
+      "attempt": 1,
+      "conclusion": "failure",
+      "compiled_win_source": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+      "compiled_linux_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+      "harness_source": "e77b0596026b4f27bbe4705b45dd8c1deb4f83ac",
+      "artifact_id": 12424187118,
+      "observation": {
+        "real_windows_os_applied": "PASS_SCOPED",
+        "real_linux_native_ready": "PASS_SCOPED",
+        "windows_udp_sent_latest_sample": 5,
+        "windows_udp_received_latest_sample": 22,
+        "linux_udp_sent_latest_sample": 73,
+        "linux_udp_received_latest_sample": 0,
+        "cli_exit_code": 1,
+        "cli_last_error": "windowsclient: crash-persistent native DNS and IPv6 guard required",
+        "original_cli_owned_stop_marker": true,
+        "full_duplex": "FAIL",
+        "product_stop_complete": "NOT_VERIFIED"
+      }
+    },
+    {
+      "run_id": 39774560726,
+      "attempt": 1,
+      "conclusion": "failure",
+      "compiled_linux_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+      "harness_source": "e77b0596026b4f27bbe4705b45dd8c1deb4f83ac",
+      "artifact_id": 12424991781,
+      "observation": {
+        "real_windows_os_applied": "PASS_SCOPED",
+        "real_linux_native_ready": "PASS_SCOPED",
+        "windows_udp_sent_latest_sample": 3,
+        "windows_udp_received_latest_sample": 0,
+        "linux_udp_sent_latest_sample": 64,
+        "linux_udp_received_latest_sample": 0,
+        "cli_exit_code": 1,
+        "cli_last_error": "windowsclient: crash-persistent native DNS and IPv6 guard required",
+        "original_cli_owned_stop_marker": true,
+        "full_duplex": "FAIL",
+        "product_stop_complete": "NOT_VERIFIED"
+      }
+    }
+  ],
+  "current_actions": [
+    {
+      "run_id": 39778489109,
+      "attempt": 1,
+      "compiled_source": "56ce7127de4944810ea22770b56d066d69940fc0",
+      "kind": "real original-Go Windows2025 Npcap+signed Wintun→UbuntuWSL2 raw/TUN product",
+      "status_at_receipt": "IN_PROGRESS",
+      "conclusion": null
+    },
+    {
+      "run_id": 39778488947,
+      "attempt": 1,
+      "compiled_source": "56ce7127de4944810ea22770b56d066d69940fc0",
+      "kind": "Windows original Go native OS WAL regression",
+      "status_at_receipt": "IN_PROGRESS",
+      "conclusion": null
+    },
+    {
+      "run_id": 39778489087,
+      "attempt": 1,
+      "compiled_source": "56ce7127de4944810ea22770b56d066d69940fc0",
+      "kind": "main governance",
+      "status_at_receipt": "COMPLETED",
+      "conclusion": "success"
+    }
+  ],
+  "important_distinction": "ErrN4NativeGuard string is broad Go sentinel also used at Npcap ingest queue overflow, native Rust peer receiveOne guard, malformed M4 WriteAuthenticatedIPv4, carrier FIN/RST, and authenticated source sequence mismatch; current error is not independent WFP absence evidence.",
+  "runtime_invariants": [
+    "fail-closed WFP/DNS/IPv6 unchanged",
+    "original signed Wintun and true Npcap FFI unchanged",
+    "Rust M2 real receipts and two-repair budgets unchanged",
+    "WAL restore and owned Stop unchanged",
+    "no supplemental packet synthesis",
+    "no new performance load"
+  ],
+  "scope_not_qualified": [
+    "Normal/off sustained bidirectional",
+    "shared genuine M2 receipt/2 repair/Abandoned",
+    "fresh >256 lost carrier ACK",
+    "native netem",
+    "Stop full exact-mode end to end",
+    "WL-N0",
+    "WL-N1",
+    "WL-N5",
+    "physical dual machine",
+    "Android/OpenWrt"
+  ],
+  "related_log": "docs/devlog/M0/PLAN024-S859-frozen-guard-generic-sentinel-precise-failure-intent-20261022.md",
+  "next_action": "Settle completed exact new SOURCE Actions and read WBD_WINDOWS_NATIVE_FAILURE_SOURCE to locate the first concrete rejection; fix only that boundary while preserving existing failure receipts."
+}
