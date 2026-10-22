@@ -10,7 +10,7 @@
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": null
+    "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf"
   },
   "build": {
     "run_id": 39759842150,
@@ -56,11 +56,13 @@
       "id": "arm64-off-duplex-mixed-10m-lossless-90s",
       "path": "tests/network/request.json",
       "scenario": "normal/off lossless 90s, UDP/TCP 50/50, 4 TCP flows, 64/256/1024/1172B, 20Hz probes; each direction 10Mbps",
-      "status": "INTENT_RECORDED_NOT_DISPATCHED",
-      "run_id": null,
-      "attempt": null,
+      "status": "ACTION_QUEUED",
+      "run_id": 39760409329,
+      "attempt": 1,
       "build_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "artifact_id": 12417786567
+      "artifact_id": 12417786567,
+      "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39760409329"
     }
   ],
   "open_issues": [
@@ -68,7 +70,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Commit tests/network/request.json for first ARM64 duplex scenario; verify exactly one network performance Action, inspect artifact/host/generator/Stop before scaling.",
+  "next_action": "Observe actual S001 run 39760409329; do not redispatch; inspect one native ARM measure job/receipts, fix only evidence-based failures.",
   "actions": [
     {
       "run_id": 39759842064,
