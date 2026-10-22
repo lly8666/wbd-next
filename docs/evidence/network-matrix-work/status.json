@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S003-udp-only-loss1-discriminating-action-intent",
+  "phase": "S004-udp-only-match-mixed-total-offer",
   "recovered": true,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -53,19 +53,15 @@
   ],
   "open_requests": [
     {
-      "id": "arm64-off-udp-only-loss1-rtt50-75s",
+      "id": "arm64-off-udp10m-loss1-rtt50-75s",
       "path": "tests/network/request.json",
-      "status": "IN_PROGRESS",
-      "scenario": "S003 fixed same SOURCE and same 5Mbps UDP/direction as S002; no inner TCP, same sizes/1pct IID/25ms each/75s; discriminate TCP-dependent amplification vs off recovery alone",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "scenario": "S004 real Normal/off 10Mbps UDP per direction, no TCP; compares S002 total 10Mbps/direction mix vs S003 5Mbps UDP-only; same request loss/delay/sizes; same frozen SOURCE",
       "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
       "build_run": 39759842150,
       "artifact_id": 12417786567,
       "attempt": 1,
-      "trigger": "push of this one changed tests/network/request.json invokes one network Action; DO NOT separately dispatch",
-      "seed_note": "business seed 5205 held; kernel netem unseeded_recorded, not bitwise paired",
-      "run_id": 39763535951,
-      "harness_source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39763535951"
+      "trigger": "push request.json one automatic measurement; do not dispatch twice"
     }
   ],
   "open_issues": [
@@ -74,7 +70,7 @@
     "Game+FEC, cipher/repair runtime toggles, no-payload idle and Windows not wired in this Linux harness",
     "Native ARM64 source/run/attempt/ZIP/ELF adapt PASS in existing selfcheck; 39762361004 selfcheck failed from inherited repair gate; test-only fix pending fresh Actions"
   ],
-  "next_action": "S003 run 39763535951 IN_PROGRESS and contract run 39763536014; do not redispatch. Collect original artifact and compare injection, UDP loss, timer and product/host accounting to S002; decide whether concurrent TCP required for observed residual.",
+  "next_action": "Resolve sole S004 push run ID and actual result. If 10Mbps UDP-only passes, mixed TCP-specific effect remains strongest hypothesis; inspect true data boundary before modifying owner. If fails, quantify offered-load sensitivity without pretending same-VM A/B. Then proceed limited fixed/auto representative cases.",
   "actions": [
     {
       "run_id": 39759842064,
@@ -106,6 +102,18 @@
       "source": "45b08e0e015d7a3fa9146e393e4cc350ca0c17d7",
       "conclusion": "success",
       "detail": "network-harness contract after test-only require_retransmission isolation; no product measurement"
+    },
+    {
+      "run_id": 39763535951,
+      "source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
+      "conclusion": "success",
+      "detail": "S003 UDP-only 5Mbps/direction 1pct IID: 1/64853 c2s missing, 0/64855 s2c; Stop PASS; not same-host A/B"
+    },
+    {
+      "run_id": 39763536014,
+      "source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
+      "conclusion": "success",
+      "detail": "S003 request harness contracts all PASS"
     }
   ],
   "completed": [
@@ -135,6 +143,14 @@
       "result": "FAIL",
       "artifact_id": 12418478268,
       "evidence": "S002-recovered-loss1.json",
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
+    },
+    {
+      "id": "arm64-off-udp-only-loss1-rtt50-75s",
+      "run_id": 39763535951,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12419835358,
+      "evidence": "S003-udp-only-1pct-pass.json",
       "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
     }
   ]

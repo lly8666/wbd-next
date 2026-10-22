@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "source_of_evidence": "RECOVERED_LIVE_ACTION_ARTIFACT",
+  "request_id": "arm64-off-udp-only-loss1-rtt50-75s",
+  "action": {
+    "run_id": 39763535951,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12419835358,
+    "sha256": "d5e4e442e67176cbc9c182014d39ae6bfbf5fee7d42367290388d2ea378a0668",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39763535951"
+  },
+  "source": {
+    "product": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+    "harness": "242988e9f77f28337b34bee72a153a3ed31fefc5",
+    "build_run": 39759842150,
+    "artifact_id": 12417786567,
+    "zip_sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
+  },
+  "scene": {
+    "one_way_delay_ms": 25,
+    "netem_iid_loss_pct": 1,
+    "warmup_s": 15,
+    "steady_s": 75,
+    "drain_s": 15,
+    "udp_offered_mbps_per_direction": 5,
+    "udp_share": 1,
+    "tcp_enabled": false,
+    "sizes_bytes": [
+      64,
+      256,
+      1024,
+      1172
+    ]
+  },
+  "netem_measured_loss_pct": {
+    "c2s": 0.9859988168014199,
+    "s2c": 1.004887250278659
+  },
+  "udp": {
+    "c2s": {
+      "sent": 64853,
+      "delivered": 64852,
+      "missing": 1,
+      "loss_pct": 0.0015419487147857462,
+      "p99_ms": 90.7
+    },
+    "s2c": {
+      "sent": 64855,
+      "delivered": 64855,
+      "missing": 0,
+      "loss_pct": 0,
+      "p99_ms": 90.7
+    }
+  },
+  "product": {
+    "real_first_copy": {
+      "client": 104755,
+      "server": 104755
+    },
+    "retransmitted_packets": {
+      "client": 1095,
+      "server": 1091
+    },
+    "repair_wire_bytes": "NOT_OBSERVED",
+    "repair_success": "NOT_OBSERVED",
+    "native_dispatch": "NOT_OBSERVED",
+    "fec_k_r": "NOT_OBSERVED",
+    "measured_cpu_s": {
+      "client": 5.39,
+      "server": 5.33
+    },
+    "rss_peak_bytes": {
+      "client": 16175104,
+      "server": 16293888
+    }
+  },
+  "host": {
+    "cpu_psi_some_mean_pct": 0,
+    "steal_peak_pct": 0,
+    "udp_socket_errors": 0,
+    "generator_capacity_exceeded": false
+  },
+  "gates": {
+    "result": "PASS_SCOPED_OBSERVATION",
+    "integrity_invalid_or_duplicate": false,
+    "stop_drained_both": true,
+    "owned_namespace_cleanup": true
+  },
+  "interpretation": "S002 mixed scenario observed 1.317/1.528% UDP residual at identical UDP 5Mbps and 1pct nominal loss; S003 UDP-only got one/two-way zero or one missing. The host/total input/tcp mix all changed, so this is differentiating evidence but NOT same-machine A/B, not proof TCP caused loss and not CPU speedup. New S004 holds total input 10Mbps/direction and drops only TCP to distinguish gross offered throughput from protocol interaction."
+}

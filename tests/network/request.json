@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-off-udp-only-loss1-rtt50-75s",
+  "id": "arm64-off-udp10m-loss1-rtt50-75s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -8,8 +8,8 @@
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 5,
-    "s2c_mbps": 5,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 1,
     "sizes": [
       [
