@@ -10,7 +10,7 @@
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d"
+    "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48"
   },
   "build": {
     "run_id": 39759842150,
@@ -90,11 +90,13 @@
     {
       "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
       "path": "tests/network/request.json",
-      "status": "INTENT_RECORDED_NOT_DISPATCHED",
-      "run_id": null,
-      "attempt": null,
+      "status": "IN_PROGRESS",
+      "run_id": 39761756907,
+      "attempt": 1,
       "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "scenario": "same S001 original 90s lossless, same seed/rate; permission-only fixture fix"
+      "scenario": "same S001 original 90s lossless, same seed/rate; permission-only fixture fix",
+      "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39761756907"
     }
   ],
   "open_issues": [
@@ -103,7 +105,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "After contracts 39761657875 SUCCESS, update one request file to retry S001 and pin new Action; do not rebuild product.",
+  "next_action": "Inspect 39761756907 single full duration same-source regression; if failure artifact, triage earliest boundary and retain FAIL.",
   "actions": [
     {
       "run_id": 39759842064,
