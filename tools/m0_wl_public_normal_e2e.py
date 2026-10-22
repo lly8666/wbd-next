@@ -2,7 +2,7 @@
 """Run two actual public executables, then true Windows/WSL2 UDP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
-report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":"621bc733becbb4bbcf23bc4b10c6150d22b3a073","normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 def run(a,timeout=30):
  p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
@@ -46,7 +46,13 @@ try:
      "-keyout",result+"/key.pem","-out",result+"/cert.pem","-subj","/CN=wbd-v4.example.test",
      "-addext","subjectAltName=DNS:wbd-v4.example.test")
  linux=out/"start-linux.sh"
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode normal\n").encode("utf-8"))
+ # Match the immutable source-locked Linux Rust parser: the fresh original
+ # server supports explicit expected Windows11 persona, historical frozen
+ # Linux does NOT. This is a caller declaration, NEVER observed success.
+ fresh_linux=os.environ["LINUX_BINARY_SRC"]==os.environ["GITHUB_SHA"]
+ peer_persona=" --peer-persona windows11" if fresh_linux else ""
+ report["expected_original_tcp_persona"]="windows11" if fresh_linux else "legacy"
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode normal"+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.

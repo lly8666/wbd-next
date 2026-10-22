@@ -24,7 +24,7 @@ extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
-extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_rx_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_backend(uint64_t,uint64_t *,size_t);
@@ -337,12 +337,13 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         RetiredTotal:uint64(values[5]),
     },nil
 }
-func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
+func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
-        b.protectedEpoch==[16]byte{} {return errV4Embedded}
+        b.protectedEpoch==[16]byte{}||peerPersona>1||
+        (peerPersona==1&&!b.serverSide){return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_arm_public_original_m2_feedback(
         C.uint64_t(b.handle),
-        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16))
+        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),C.uint32_t(peerPersona))
     if rc!=0{return fmt.Errorf("%w: original public M2 feedback bind=%d",errV4Embedded,int(rc))}
     return nil
 }

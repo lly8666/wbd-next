@@ -8,6 +8,11 @@ on:
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go
+      - r0/go_overlay/internal/v4productcli/linux.go
       - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_wl_public_native_npf_trace.py
   workflow_dispatch:
@@ -15,14 +20,79 @@ permissions:
   contents: read
   actions: read
 jobs:
+  linux-source-locked-public:
+    name: Build true original Go and new Linux Rust peer persona from same SOURCE
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile source-pinned actual original-Go TLS and Rust M4 Linux binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C legacy rev-parse HEAD)" = "$GO_SRC"
+          mkdir -p linux-product legacy/internal/v4productcli legacy/cmd/wbd-v4-server legacy/cmd/wbd-v4-client
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          # The private original-Go credential logic remains pinned; only
+          # new V4 named overlay files from the identical checkout are added.
+          for f in r0/go_overlay/internal/realityfront/*.go; do
+            dst="legacy/internal/realityfront/$(basename "$f")"
+            test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
+            cp "$f" "$dst"
+          done
+          cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-server" ./cmd/wbd-v4-server)
+          cp target/release/libwbd_engine.so linux-product/libwbd_engine.so
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('linux-product')
+          names=('wbd-v4-client','wbd-v4-server','libwbd_engine.so')
+          checks={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
+          assert all((p/n).stat().st_size>100000 for n in names)
+          (p/'manifest.json').write_text(json.dumps({
+              'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
+              'original_go_sha':os.environ['GO_SRC'],'sha256':checks,
+              'go':'1.23.12','rust':'1.85.1',
+              'peer_persona':'selected_only_after_original_credential_TLS',
+              'binary_qualification':'BUILD_ONLY_NOT_PRODUCT'
+          },indent=2)+'\n')
+          print('M0_PLAN024_NEW_LINUX_ORIGINAL_GO_RUST_PEER_PERSONA_SOURCE_VERIFIED')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-plan024-linux-product
+          path: linux-product/
+          retention-days: 30
+
   native-public-two-os:
+    needs: [linux-source-locked-public]
     runs-on: windows-2025
     timeout-minutes: 60
     env:
       AWS_LC_SYS_PREBUILT_NASM: "1"
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
-      LINUX_BINARY_SRC: 621bc733becbb4bbcf23bc4b10c6150d22b3a073
+      LINUX_BINARY_SRC: ${{ github.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -171,26 +241,27 @@ jobs:
           $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
           if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
           Copy-Item $dll result/wl-public/wintun.dll
-      - name: Reuse verified public Linux V4 original Go server binary (separate exact SOURCE)
+      - name: Restore SAME-RUN new original Go Linux Rust binary with exact SHA checks
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Force linux-product | Out-Null
-          & gh run download 39397026210 --repo $env:GITHUB_REPOSITORY --name m0-v4-source-build-39397026210-1 --dir linux-product
-          if($LASTEXITCODE -ne 0){throw 'real Linux public V4 binary artifact unavailable'}
+          & gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name m0-plan024-linux-product --dir linux-product
+          if($LASTEXITCODE -ne 0){throw 'actual same-SOURCE original Linux build artifact missing'}
           @'
           import hashlib,json,pathlib,os
           p=pathlib.Path("linux-product")
           m=json.loads((p/"manifest.json").read_text())
-          assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]==os.environ["LINUX_BINARY_SRC"]
           assert m["original_go_sha"]==os.environ["GO_SRC"]
-          for file in ("wbd-v4-server","libwbd_engine.so"):
-            v=p/file
-            assert v.is_file() and v.stat().st_size>100000
-            assert hashlib.sha256(v.read_bytes()).hexdigest()==m["sha256"][file]
-          print("WL_GENUINE_LINUX_PUBLIC_BINARIES_SOURCE_LOCKED")
+          assert m["binary_qualification"]=="BUILD_ONLY_NOT_PRODUCT"
+          for name in ("wbd-v4-server","wbd-v4-client","libwbd_engine.so"):
+              f=p/name
+              assert f.is_file() and f.stat().st_size>100000
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==m["sha256"][name]
+          print("WL_NEW_LINUX_ORIGINAL_GO_RUST_SOURCE_MATCH_VERIFIED")
           '@ | python -
-          if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
+          if($LASTEXITCODE -ne 0){throw 'new exact Linux Go/Rust binary integrity failed'}
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
         timeout-minutes: 22

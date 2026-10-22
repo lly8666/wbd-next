@@ -81,6 +81,7 @@ type config struct{
     password string
     tunnel [16]byte
     fecMode realityfront.FecV2Mode
+    peerPersona realityfront.V4PublicNativePeerPersona
     fecProfile realityfront.FecV2Profile
     gameLanes uint8
 }
@@ -106,6 +107,7 @@ func parse(role string,args []string)(config,error){
     routeFile:=flags.String("route-key-hex-file","","mode-0600 route key hex file, no symlinks")
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
+    peerPersona:=flags.String("peer-persona","legacy","expected original-Go authenticated peer TCP envelope: legacy or windows11 (server only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
@@ -127,6 +129,13 @@ func parse(role string,args []string)(config,error){
     case "game2":c.gameLanes=2;c.fecMode=realityfront.FecV2Off
     case "game4":c.gameLanes=4;c.fecMode=realityfront.FecV2Off
     default:return c,fmt.Errorf("V4 mode %q not installed in native public owner",*mode)
+    }
+    switch *peerPersona {
+    case "legacy":c.peerPersona=realityfront.V4PeerLegacy
+    case "windows11":
+        if role!="server"{return c,fmt.Errorf("windows11 peer persona requires original Go server")}
+        c.peerPersona=realityfront.V4PeerWindows11
+    default:return c,fmt.Errorf("unsupported trusted peer persona %q",*peerPersona)
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
     c.fecProfile=realityfront.FecV2Profile(*profile)
@@ -354,6 +363,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             FECMode:c.fecMode,FECProfile:c.fecProfile,
+            PeerPersona:c.peerPersona,
         })
     if err!=nil{return err}
     table,err:=faketcp.NewServerAssociationTable(32,emit)

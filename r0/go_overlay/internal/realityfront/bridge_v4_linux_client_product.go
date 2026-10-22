@@ -97,7 +97,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
-    if err==nil{err=bridge.armOriginalPublicM2Feedback()}
+    if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(V4PeerLegacy))}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()

@@ -361,6 +361,10 @@ struct Entry{
     rx_feedback:Option<Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
+    // Immutable peer envelope selected after original-Go credential TLS,
+    // before M4 starts. Never guessed from an unauthenticated IPv4 header.
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    incoming_peer_persona:PacketPersona,
     #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
     #[cfg(feature="fec2_product_record")]
@@ -579,6 +583,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         rx_feedback:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+        incoming_peer_persona:PacketPersona::Legacy,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
         #[cfg(feature="fec2_product_record")]
@@ -2564,10 +2570,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_tx_backend(
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
-    h:u64,epoch_ptr:*const u8,epoch_len:usize
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,peer_persona:u32
 )->i32{
     #[cfg(not(feature="fec2_product_record"))]
-    {let _=(h,epoch_ptr,epoch_len);BAD_STAGE}
+    {let _=(h,epoch_ptr,epoch_len,peer_persona);BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
     {
         let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
@@ -2577,6 +2583,14 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
             e.workers.is_some()||e.original_public_feedback_armed||
             e.raw_rx.is_none()||e.tun_sink.is_none()||
             e.raw_ifname.is_none(){return BAD_STAGE}
+        // Keep one strict inherited Go sender envelope for this TLS epoch;
+        // only a server can explicitly accept original Windows11 TTL128.
+        let persona=match peer_persona{
+            0=>PacketPersona::Legacy,
+            1 if e.server_side=>PacketPersona::Windows11,
+            _=>return INVALID,
+        };
+        e.incoming_peer_persona=persona;
         e.original_public_feedback_armed=true;
         OK
     }
@@ -2850,7 +2864,7 @@ fn background_raw_once(
     owner:&mut crate::v4_owner_crypto::ProtectedBackgroundRx,
     arena:&mut Arena,anchor:&mut u64,
     flow:crate::v4_protected_handoff::GoFlow,generation:u32,
-    server_side:bool,
+    server_side:bool,peer_persona:PacketPersona,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
@@ -2884,7 +2898,7 @@ fn background_raw_once(
         *dst=slab.writable();
     }
     let batch=raw.receive_kernel_multimsg(
-        generation,&mut slots[..slot_count],tuple,PacketPersona::Legacy
+        generation,&mut slots[..slot_count],tuple,peer_persona
     ).map_err(|_|INVALID)?;
     drop(slots);
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
@@ -4136,6 +4150,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let mut rx_anchor=e.rx_seq_anchor;
     let rx_flow=e.flow;
     let rx_server_side=e.server_side;
+    let rx_peer_persona=e.incoming_peer_persona;
     let generation=e.generation;
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
@@ -4157,7 +4172,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if !loop_readiness(raw_fd,&stop_rx,10){continue}
                 match background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
-                    rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
+                    rx_flow,generation,rx_server_side,rx_peer_persona,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
                     stats_rx.as_ref(),
