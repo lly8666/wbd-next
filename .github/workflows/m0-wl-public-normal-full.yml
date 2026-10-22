@@ -7,6 +7,7 @@ on:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_public_native_wire_trace.py
+      - tools/m0_wl_public_native_npf_trace.py
   workflow_dispatch:
 permissions:
   contents: read
@@ -204,19 +205,57 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
           & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
           if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
+          # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
+          # Linux eth0 does not. Admit only this host->WSL raw product flow
+          # across WSL's actual Hyper-V firewall; never change default policy.
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+            Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'exact WSL HyperV firewall VM creator unavailable'}
+          $guestText=(& wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $match=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $match.Success){throw 'actual WSL2 guest eth0 address missing'}
+          $guestIP=$match.Groups[1].Value
+          $nic=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop |
+            Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL2 vEthernet owner ambiguous'}
+          $source=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -ErrorAction Stop |
+            Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          if($source.Count -ne 1){throw 'host WSL2 source address ambiguous'}
+          $ruleName='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction SilentlyContinue){throw 'foreign same-name WSL hyperv rule'}
+          New-NetFirewallHyperVRule -Name $ruleName -DisplayName $ruleName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $source[0].IPAddress -LocalPorts 443 -RemotePorts 41031 -ErrorAction Stop | Out-Null
+          $live=Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction Stop
+          if($null -eq $live -or $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){throw 'original WSL HyperV per-flow rule not actually installed'}
+          [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_port=443;client_tcp_port=41031;scope='OWNED_SINGLE_WSL2_ORIGINAL_NPCAP_PRODUCT_FLOW'} |
+            ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
+          Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_ALLOW_INSTALLED'
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
           $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
-          Start-Sleep -Milliseconds 600
+          # These OS route witnesses are captured during the SAME public
+          # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
+          Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+            Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route.json
+          Get-NetAdapter -IncludeHidden -ErrorAction Continue |
+            Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
+          & wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+            Out-File result/wl-public/linux-eth0.json
+          $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
+          Start-Sleep -Milliseconds 800
           try {
             & python tools/m0_wl_public_normal_e2e.py 2>&1 |
               Tee-Object result/wl-public/direct-full.log
             $e2eExit=$LASTEXITCODE
           } finally {
-            if(-not $witness.HasExited){Stop-Process -Id $witness.Id -Force -ErrorAction SilentlyContinue}
+            foreach($p in @($witness,$npf)){
+              if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
+            }
             Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
-            Get-Content result/wl-public/native-link-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
@@ -226,6 +265,21 @@ jobs:
         shell: pwsh
         run: |
           & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP
+      - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          $installed=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $installed){
+            $cid=[string]$installed.VMCreatorId
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $cid){throw 'foreign HyperV VM creator refused cleanup'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
+            Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
+          }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
       - name: Restore Npcap owned Windows kernel service after product Stop
         if: always()
         shell: pwsh
@@ -252,5 +306,9 @@ jobs:
             result/wl-public/assembly.json
             result/wl-public/*log
             result/wl-public/*.pid
+            result/wl-public/windows-route.json
+            result/wl-public/windows-adapters.json
+            result/wl-public/linux-eth0.json
+            result/wl-public/hyperv-rule.json
           retention-days: 30
           if-no-files-found: warn
