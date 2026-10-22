@@ -12,7 +12,9 @@ import(
  "encoding/json"
  "errors"
  "fmt"
+ "net"
  "net/netip"
+ "strconv"
  "os"
  "os/signal"
  "path/filepath"
@@ -52,6 +54,32 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if err!=nil{return err}
  ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
+ // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
+ // SendARP returned the WINDOWS vEthernet source MAC for a real WSL2
+ // guest destination. This would send a SYN to ourselves, not the server.
+ // Only the single CI-owned, OS-readback-verified guest MAC may override
+ // that self resolution, and only when peer/interface/source all match.
+ // Original production discovery remains the default outside that scope.
+ guestMAC := os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC")
+ if guestMAC!=""{
+  idx,parseErr:=strconv.ParseUint(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_IFINDEX"),10,32)
+  parsedMAC,macErr:=net.ParseMAC(guestMAC)
+  guestIP,ipErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4"))
+  sourceIP,srcErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4"))
+  if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
+   len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
+   guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
+   sourceIP!=underlay.Source4||ncfg.NextHopMAC!=ncfg.SourceMAC{
+    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override",windowsclient.ErrN4NativeGuard)
+  }
+  var actual [6]byte
+  copy(actual[:],parsedMAC)
+  if actual==([6]byte{})||actual==ncfg.SourceMAC||actual[0]&1!=0{
+   return fmt.Errorf("%w: real WSL guest unicast MAC invalid",windowsclient.ErrN4NativeGuard)
+  }
+  ncfg.NextHopMAC=actual
+  fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
+ }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
  defer endpoint.Close()
