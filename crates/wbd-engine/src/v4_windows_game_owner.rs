@@ -204,3 +204,105 @@ pub extern "C" fn wbd_m0_win_owner_v4_game_stop(group:u64)->i32{
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     stopped_group(&mut r,group)
 }
+
+#[cfg(all(test,feature="fec2_product_record"))]
+mod tests{
+    use super::*;
+    fn cold(server:bool,lane:u8)->[u8;COLD_V4_LEN]{
+        let mut a=[0;COLD_V4_LEN];
+        a[..4].copy_from_slice(b"WBCO");
+        a[4..6].copy_from_slice(&1u16.to_be_bytes());
+        a[6..8].copy_from_slice(&(COLD_V4_LEN as u16).to_be_bytes());
+        a[8]=u8::from(server);a[9]=lane;a[10]=1;
+        a[12..28].fill(1);a[28..44].fill(2);
+        a[44..60].fill(lane+3);
+        a[60..62].copy_from_slice(&1400u16.to_be_bytes());
+        a[62..64].copy_from_slice(&1400u16.to_be_bytes());
+        a[64..96].fill(4);
+        a[96..172].fill(lane+5);
+        a[172..].fill(lane+20);
+        a
+    }
+    fn cmd()->[u8;HANDOFF_V1_LEN]{
+        let mut a=[0;HANDOFF_V1_LEN];
+        a[..4].copy_from_slice(b"WBGH");
+        a[4..6].copy_from_slice(&2u16.to_be_bytes());
+        a[6..8].copy_from_slice(&(HANDOFF_V1_LEN as u16).to_be_bytes());
+        a[8..12].copy_from_slice(&[10,25,0,2]);
+        a[12..16].copy_from_slice(&[10,25,0,1]);
+        a[16..18].copy_from_slice(&41001u16.to_be_bytes());
+        a[18..20].copy_from_slice(&443u16.to_be_bytes());
+        a[20..24].copy_from_slice(&500u32.to_be_bytes());
+        a[24..26].copy_from_slice(&1360u16.to_be_bytes());
+        a[26]=1;
+        a[27..29].copy_from_slice(&7u16.to_be_bytes());
+        a
+    }
+    fn setup(r:&mut Registry,n:usize,server:bool)->Vec<u64>{
+        let mut hs=Vec::new();
+        for lane in 1..=n{
+            let h=allocate(r,&cold(server,lane as u8),&cmd(),server)
+                .expect("feature7 original TLS owner candidate");
+            assert_eq!(commit(r,h,0,0,600),OK);
+            assert_eq!(bind_wintun(r,h,[2;16],101+lane as u64,11+lane as u32),OK);
+            hs.push(h);
+        }
+        hs
+    }
+    #[test]
+    fn m0_windows_native_game_two_four_original_owner_aead_no_hol_and_stop(){
+        for n in [2,4]{
+            let mut r=Registry{
+                generation:1,entries:BTreeMap::new(),
+                game_groups:BTreeMap::new(),
+            };
+            let client=setup(&mut r,n,false);
+            let server=setup(&mut r,n,true);
+            assert_eq!(join(&mut r,&client[..1],false),Err(INVALID));
+            assert_eq!(join(&mut r,&[client[0],client[0]],false),Err(INVALID));
+            let c=join(&mut r,&client,false).expect("client native M4 group");
+            let s=join(&mut r,&server,true).expect("server native M4 group");
+            assert_ne!(c,s);
+            assert_eq!(join(&mut r,&client,false),Err(BAD_STAGE));
+            assert_eq!(stop(&mut r,client[0]),STOP_INCOMPLETE);
+            let mut ipv4=[0u8;40];ipv4[0]=0x45;
+            ipv4[2..4].copy_from_slice(&40u16.to_be_bytes());
+            ipv4[8]=64;ipv4[9]=17;ipv4[20..].fill(0x6a);
+            let records=offer_records(&mut r,c,&ipv4,n).unwrap();
+            assert_eq!(records.len(),n);
+            assert!(records.iter().all(|a|a.length>31));
+            assert!(records.windows(2).all(|pair|pair[0].wire!=pair[1].wire));
+            // A stalled first lane cannot block an independently
+            // authenticated later-lane first delivery.
+            let lane2=&records[1];
+            assert_eq!(receive_record(&mut r,s,lane2.lane,
+                &lane2.wire[..lane2.length as usize]).unwrap(),
+                Some(ipv4.to_vec()));
+            // Replayed authenticated PN may not deliver a second packet.
+            assert!(receive_record(&mut r,s,lane2.lane,
+                &lane2.wire[..lane2.length as usize]).is_err());
+            let records=offer_records(&mut r,c,&ipv4,n).unwrap();
+            let lane_last=records.last().unwrap();
+            let mut corrupt=lane_last.wire[..lane_last.length as usize].to_vec();
+            *corrupt.last_mut().unwrap()^=1;
+            assert_eq!(receive_record(&mut r,s,lane_last.lane,&corrupt),Err(INVALID));
+            assert_eq!(receive_record(&mut r,s,lane_last.lane,
+                &lane_last.wire[..lane_last.length as usize]).unwrap(),
+                Some(ipv4.to_vec()));
+            assert_eq!(stopped_group(&mut r,c),STOP_INCOMPLETE);
+            for h in client.iter().chain(server.iter()){
+                let dev=r.entries[h].device.unwrap();
+                assert_eq!(quiesce_wintun(&mut r,*h,[2;16],dev.luid,dev.ifindex),OK);
+            }
+            assert_eq!(stopped_group(&mut r,c),OK);
+            assert_eq!(stopped_group(&mut r,s),OK);
+            assert_eq!(stopped_group(&mut r,c),UNKNOWN);
+            for h in client.iter().chain(server.iter()){
+                assert_eq!(stop(&mut r,*h),OK);
+                assert_eq!(release(&mut r,*h),OK);
+            }
+            assert!(r.game_groups.is_empty());
+            assert_eq!(PRODUCT_APPLIED,0);
+        }
+    }
+}
