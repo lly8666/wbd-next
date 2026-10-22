@@ -1,180 +1,75 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S005-fixed-maximum-iid30-sustained-mixed-representative",
+  "phase": "S005-real-fixed30-hard-fail-investigation",
   "recovered": true,
-  "initial_branch_absent_confirmed": true,
-  "sources": {
+  "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
     "main_merged": "26f2e509a8e3c4055460a67960ea5462beec1622",
-    "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
-    "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
-    "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574"
+    "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a"
   },
+  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
   "build": {
     "run_id": 39759842150,
     "attempt": 1,
     "artifact_id": 12417786567,
     "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b",
-    "status": "SUCCESS",
     "architecture": "aarch64",
-    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
-    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
-    "native_feature_compiled": "REQUESTED_NOT_RUNTIME_VERIFIED",
-    "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/39759842150"
+    "backend_runtime": "NOT_OBSERVED",
+    "status": "SUCCESS"
   },
-  "historical_reuse": [
+  "latest_harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
+  "open_requests": [],
+  "latest_actions": [
     {
-      "mode": "normal",
-      "run": 39755860617,
-      "scope": "native ARM64 60s UDP 10Mbps per direction; not mixed/p99"
+      "run": 39763271808,
+      "type": "harness-contract",
+      "conclusion": "success"
     },
     {
-      "mode": "fec-fixed",
-      "run": 39754527848,
-      "scope": "real applied and 20 ICMP each side"
+      "run": 39763535951,
+      "type": "S003-UDP5-IID1",
+      "conclusion": "success",
+      "evidence": "S003-udp-only-1pct-pass.json"
     },
     {
-      "mode": "fec-auto",
-      "run": 39755143674,
-      "scope": "real applied and 20 ICMP each side"
+      "run": 39764098892,
+      "type": "S004-UDP10-IID1",
+      "conclusion": "failure",
+      "evidence": "S004-udp10m-loss1-fail.json"
     },
     {
-      "mode": "game4",
-      "run": 39757760559,
-      "scope": "real four-lane traffic and Stop"
+      "run": 39764098850,
+      "type": "harness-contract",
+      "conclusion": "success"
     },
     {
-      "mode": "game2",
-      "run": 39757506578,
-      "scope": "overall workflow FAIL retained; traffic markers positive"
+      "run": 39764730978,
+      "type": "S005-FixedMaximum-IID30",
+      "conclusion": "failure",
+      "evidence": "S005-fixed30-hard-fail.json"
+    },
+    {
+      "run": 39764731076,
+      "type": "harness-contract",
+      "conclusion": "success"
     }
   ],
-  "open_requests": [
-    {
-      "id": "arm64-fixed-maximum-30pct-rtt600-mixed-120s",
-      "path": "tests/network/request.json",
-      "status": "IN_PROGRESS",
-      "scenario": "Native ARM64 real fixed maximum (profile6) 2Mbps per direction 50% UDP/TCP 4 flows 120s 30% IID with 300ms one-way each; first low-capacity validation, not 50Mbps outer qualification; actual k/r NOT_OBSERVED",
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "build_run": 39759842150,
-      "artifact_id": 12417786567,
-      "attempt": 1,
-      "trigger": "single push of tests/network/request.json, DO NOT manual dispatch",
-      "run_id": 39764730978,
-      "harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39764730978"
-    }
-  ],
+  "prior_success_reuse": {
+    "normal_udp10m_60s": 39755860617,
+    "normal_mixed90s": 39761756907,
+    "mode_fixed_applied_lowloss": 39754527848,
+    "mode_auto_applied_lowloss": 39755143674,
+    "game4_smoke": 39757760559,
+    "game2_overall_failed_marker_only": 39757506578
+  },
   "open_issues": [
-    "S002 mixed 1% IID UDP loss 1.317%/1.528% and severe TCP tail: OPEN",
-    "S004 10Mbps all-UDP 1% IID residual 0.493%/0.562%; original product reports quota_or_capacity_blocked 417/351; need split reason/first-send and repair timing before changing quotas or locks",
-    "No repair wire byte budget/usefulness, FEC k/r/partial cadence or backend runtime dispatch: NOT_OBSERVED",
-    "Game+FEC, cipher/repair toggles, truly payload-free idle and Windows/physical not available on this runner"
+    "S005 HARD: 7/8 duplicate UDP deliveries at 30% IID fixed, no invalid bytes, client applied0/pending true while server applied1; pause fixed and auto broader qualification; inspect FEC/AEAD/first-delivery dedupe real path",
+    "S005 normal run diagnostic: >69% missing UDP and zero steady TCP send due actual backpressure, huge cumulative quota_or_capacity_blocked (not yet decomposed)",
+    "S002 mixed IID1 UDP 1.317/1.528% residual and TCP p99 1.3-1.9s; S004 UDP10 IID1 0.493/0.562% residual with product blocked 417/351; S003 UDP5 IID1 PASS; do not treat cross-VM as same-host A/B",
+    "No repair byte budget/usefulness, FEC actual k/r, auto curve or native ISA-L runtime backend; NOT_OBSERVED",
+    "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
-  "next_action": "S005 Action 39764730978 in progress; no duplicate. After completion check 30% actual netem, fixed profile6 requested=applied/pending false, traffic and Stop, then record result. Separate host/product limits and real partial FEC readback NOT_OBSERVED.",
-  "actions": [
-    {
-      "run_id": 39759842064,
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "conclusion": "success",
-      "detail": "9 harness contracts including simulated ARM native manifest; kernel netem checked, seeded unsupported; no product measurement"
-    },
-    {
-      "run_id": 39759842150,
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "conclusion": "success",
-      "detail": "one-time native ARM64 product build",
-      "artifact_id": 12417786567
-    },
-    {
-      "run_id": 39762360999,
-      "source": "b1c6a0a160d3b041d799065847016c63db8bdba5",
-      "conclusion": "failure",
-      "detail": "RECOVERED completed S002 1% IID per direction, true mixed data FAIL; 12418478268"
-    },
-    {
-      "run_id": 39762361004,
-      "source": "b1c6a0a160d3b041d799065847016c63db8bdba5",
-      "conclusion": "failure",
-      "detail": "RECOVERED selfcheck inherited real-product retransmission requirement; isolated contract fix"
-    },
-    {
-      "run_id": 39763271808,
-      "source": "45b08e0e015d7a3fa9146e393e4cc350ca0c17d7",
-      "conclusion": "success",
-      "detail": "network-harness contract after test-only require_retransmission isolation; no product measurement"
-    },
-    {
-      "run_id": 39763535951,
-      "source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
-      "conclusion": "success",
-      "detail": "S003 UDP-only 5Mbps/direction 1pct IID: 1/64853 c2s missing, 0/64855 s2c; Stop PASS; not same-host A/B"
-    },
-    {
-      "run_id": 39763536014,
-      "source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
-      "conclusion": "success",
-      "detail": "S003 request harness contracts all PASS"
-    },
-    {
-      "run_id": 39764098892,
-      "source": "973b01901bc27f8881710aca26f1626237aba4e8",
-      "conclusion": "failure",
-      "detail": "S004 10Mbps per direction all-UDP 1% IID loss: 0.493%/0.562% app UDP residual, product quota_or_capacity blocked 417/351, Stop PASS"
-    },
-    {
-      "run_id": 39764098850,
-      "source": "973b01901bc27f8881710aca26f1626237aba4e8",
-      "conclusion": "success",
-      "detail": "S004 request contracts successful 39764098850; separate from true product FAIL 39764098892"
-    }
-  ],
-  "completed": [
-    {
-      "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
-      "run_id": 39761756907,
-      "result": "PASS_SCOPED_OBSERVATION",
-      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48",
-      "artifact_id": 12417973654
-    },
-    {
-      "id": "arm64-off-duplex-mixed-10m-lossless-90s",
-      "run_id": 39760409329,
-      "result": "FAIL_BEFORE_READY",
-      "evidence": "S001-startup-failure.json"
-    },
-    {
-      "id": "arm64-off-startup-diagnostic-12s",
-      "run_id": 39761391815,
-      "result": "FAIL_EXIT126",
-      "evidence": "S001-startup-diagnostic.json"
-    },
-    {
-      "id": "arm64-off-mixed-loss1-rtt50-75s",
-      "run_id": 39762360999,
-      "result": "FAIL",
-      "artifact_id": 12418478268,
-      "evidence": "S002-recovered-loss1.json",
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
-    },
-    {
-      "id": "arm64-off-udp-only-loss1-rtt50-75s",
-      "run_id": 39763535951,
-      "result": "PASS_SCOPED_OBSERVATION",
-      "artifact_id": 12419835358,
-      "evidence": "S003-udp-only-1pct-pass.json",
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
-    },
-    {
-      "id": "arm64-off-udp10m-loss1-rtt50-75s",
-      "run_id": 39764098892,
-      "result": "FAIL",
-      "artifact_id": 12418609807,
-      "evidence": "S004-udp10m-loss1-fail.json",
-      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
-    }
-  ]
+  "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
+  "next_action": "Do NOT redispatch S005. FIRST read docs/architecture/modules/07-FEC.md, 09-PIPELINE-GAME.md if relevant, 08-RECOVERY.md and current real receive→FEC decode→TUN, duplicate suppression and recent changes; identify test-visible duplicate mechanism and missing fixed-applied readback. Create one minimal bounded functional differentiating Action before product fix, or if found fix specific root cause and rerun failing hard-case plus default anchor. Independently Game4/off representative may proceed, but never pronounce Fixed/Auto valid. Do not increase load on off low-loss issue."
 }
