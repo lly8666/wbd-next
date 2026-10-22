@@ -4,24 +4,26 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 268,
-  "checkpoint_sha": "cc00b15dc2e8f113ff1f0cc663a1b368c1e2ea80",
+  "sequence": 269,
+  "checkpoint_sha": "2077e32c8665a268e077aa2d0806d6156ecfe03a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 original Windows Go TLS/Rust Npcap+Wintun→Linux Rust raw/TUN Normal/off. S861 fixed post-TLS Windows11 TTL128 inbound Linux parser, S862 exact bdf Linux original Go/Rust build SUCCESS, but real two-OS Action39788345158 stopped at WSL2 guest boot environment hang before product. S863 SOURCE5fcc bounded boot probe+RST owned cleanup; Action39794445609 pending. WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "H267→S863 recovered 5 source/evidence commits; immutable SOURCE bdf574 full Action39788345158 Linux Go/Rust build SUCCESS job119857385428 artifact12429288564, Windows job119858353196 FAIL after 22min real WSL2 guest boot (Ubuntu import 13:57:34 but native /dev/net/tun first command never returned); no application or Go/Rust product START, classify ENVIRONMENT_BLOCKED, NOT product TCP persona FAIL. S863 source31d56 adds real bounded 90s guest probe with JSON, source5fcc workflow records boot fail and skips absent RST cleanup. Source5fcc exact fresh Windows/Linux product Action39794445609 queued; no duplicate dispatch, shared Linux binary reuse deferred for truthful same-SOURCE provenance.",
+  "current_task": "PLAN024 original-Go Windows Npcap/Wintun↔Linux Rust raw/TUN Normal/off: S863 exact SOURCE5fcc Action39794445609 genuine Windows→Linux 24 and Linux→Windows 34 UDP receive, both original owners and OS WAL Stop PASS. M2 server authenticated_ack=0, two-repair/Abandoned and >256 gap OPEN; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "Recovered H268→HEAD only one cursor commit. Original exact same-SOURCE 5fcc genuine Windows+Linux Action39794445609/1 SUCCESS, Linux compile job119878154964 success art12433495575, Windows actual job119878803540 success art12434340073 sha256 0ad0e1c02e2a67a2f06a9b18187b4fb30bf884c20770fbdd826f970df6f8aab4; report+authentic OS UDP apps show windows sent24 received34, Linux sent82 received24, Windows WAL rust stopped, Linux Rust Stop drained. S864 evidence pin 2077e32; main registry rev3 epoch1 unchanged. M2 server first82/repairs164/ack0 so full M2+netem qualification NOT granted.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read SOURCE5fcccae88cef676f5596bf80b8bb3f3a60a3e172 Action39794445609 final original Go/Rust same-source Linux build, bounded WSL2 guest probe result, true Windows→Linux/vice-versa UDP and owner Stops if preflight PASS. If WSL2 boot fails again, preserve ENVIRONMENT_BLOCKED, stop repeating same workflow and find alternative genuine native Windows↔Linux Actions environment. No WL-N0/N1/N5 without complete functional PASS.",
+  "next_action": "Read exact original Windows TLS-bound Rust M3 receive and reverse feedback control API plus Linux NormalFirstSendM2; verify why server authenticated_ack stays0 despite first-delivered S2C IPv4; design bounded original owner kind1 feedback after real M3 AEAD unique PN (not raw TCP ACK), preserve MTU, Stop, two-repair/Abandoned. Then dispatch one source-locked real two-OS run and only after scoped M2+fresh coverage proceed to independent 10Mbps 60s WL-N0/N1/N5 kernel netem Actions.",
   "unverified": true,
-  "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
-  "evidence_refs": [],
+  "last_tested_source": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json"
+  ],
   "context_refs": [
+    "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json",
     "docs/evidence/M0/PLAN024-S863-WSL2-boot-preflight-blocked-20261022.json",
-    "docs/devlog/M0/PLAN024-S863-WSL2-boot-timeout-immutable-binary-reuse-intent-20261022.md",
-    "docs/evidence/M0/PLAN024-S862-source-locked-authenticated-Windows11-persona-20261022.json",
+    "docs/architecture/modules/08-RECOVERY.md",
     "docs/testing/NETWORK_TRIAGE.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H268: H267 main delta reviewed five commits. Exact S862 SOURCEbdf original Go/Rust Linux build SUCCESS but full Windows2025 Action39788345158 FAIL before product: Ubuntu import succeeded, first WSL2 guest shell hung until step timeout; artifact12431114919 has only WSL import/Npcap logs. This is ENVIRONMENT_BLOCKED, no new Windows→Linux persona proof or Stop. S863 recorded intent f856, scoped Windows CLI-independent 90s genuine guest probe 31d56, workflow bounded-boot/owned RST clean 5fcc and evidence cc00. Original Go/Rust same-SOURCE build retained, no new protocol/route/packet changes; exact 5fcc Action39794445609 in progress or queued, governance pending; M2/dual app/Stop/WL-N0/N1/N5 remain OPEN/NOT_RUN."
+  "partial_summary": "H269 recovered H268: Action39794445609/1 fully SUCCESS on original Go TLS Windows2025 NPF+signed Wintun and WSL2 Linux Rust raw/TUN, source5fcc same-run binary build; true kernel UDP Windows sent24/recv34 Linux sent82/recv24, both native Stop+WAL and owned Npcap cleanup PASS. S864 source-exact artifact evidence PASS scoped. Linux original M2 authenticated_ack0, repaired164/first82, no M2 quota/Abandoned or >256 coverage, WL-N0/N1/N5 and physical NOT_RUN; main task still partial."
 }
