@@ -36,7 +36,7 @@ const MAX_SESSIONS:usize=16;
 const MAX_AUTHENTICATED_KIND1:usize=32;
 // Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
 // pending first-send while leaving room for RX and authentic control.
-const MAX_M2_FROZEN:usize=48;
+const MAX_M2_FROZEN:usize=768; // bounded ~600-packet 10Mbps / 300ms one-way BDP + headroom
 const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -311,7 +311,14 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     if r.entries.contains_key(&handle){return Err(FULL)}
     let owner=handoff.prepare_scoped_owner_for_side(
         &parsed,generation,handle,server).map_err(|_|INVALID)?;
-    let arena=Arena::new(generation,64,2048,64,1_000_000).map_err(|_|FULL)?;
+    // Normal/off M2 stores genuine M1 FrozenRecord slabs over the 300ms
+    // each-direction + reverse-feedback flight. 10Mb/s * 0.6s / ~1280B
+    // requires ~586 immutable in-flight records, not a 48-slot smoke pool.
+    // This is only safe after the authenticated M2 receipt+global repair
+    // actor is bound; no public bit is promoted, and all memory is bounded.
+    let slots=if handoff.negotiated_features==3{1024}else{64};
+    let arena=Arena::new(generation,slots,2048,64,3_000_000)
+        .map_err(|_|FULL)?;
     let rx_limit=if server{parsed.identity().server_limit}
         else{parsed.identity().client_limit};
     let record_wire_limit=usize::from(if server{
@@ -722,9 +729,11 @@ fn m0_tcp_unwrap(e:&Entry,seq:u32,len:usize)->Result<u64,i32>{
     if let Some(x)=earlier{
         if distance(x)<distance(choice){choice=x}
     }
-    // Original TCP receive window is 128 KiB; M3 PN/replay remains
-    // independently authoritative. This does not create an ACK receipt.
-    if distance(choice)>128*1024 ||
+    // Only the authentic M3 AEAD/unique PN decision may deliver a future
+    // record beyond Go's 128KiB *presentation* ACK ledger. Bound the
+    // unauthenticated serial input to 4MiB; do NOT advance Go TCP ACK
+    // across a hole or bypass Rust replay validation.
+    if distance(choice)>4*1024*1024 ||
         choice<u64::from(e.rx_boundary) ||
         choice.checked_add(len as u64).is_none(){
         return Err(INVALID)
@@ -1429,7 +1438,8 @@ mod tests {
         assert_eq!(m0_tcp_unwrap(&e,30,100).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,u32::MAX-80,40).unwrap(),
             u64::from(u32::MAX-80));
-        assert_eq!(m0_tcp_unwrap(&e,200_000,100),Err(INVALID));
+        assert_eq!(m0_tcp_unwrap(&e,200_000,100).unwrap(),200_000);
+        assert_eq!(m0_tcp_unwrap(&e,5*1024*1024,100),Err(INVALID));
         e.rx_unwrapped_high=(1u64<<32)+120;
         assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,150,40).unwrap(),(1u64<<32)+150);

@@ -70,3 +70,26 @@ func TestM0PLAN026WindowsNativeV4ParallelModeDoesNotDowngradeAndStalledCarrierFa
   }
  }
 }
+
+func TestM0PLAN024WindowsM2IndependentAuthenticatedAheadDoesNotForgeTCPACK(t *testing.T){
+ w:=newM0V4RxWindow(1000)
+ far:=uint32(1000+m0V4RxAheadMax+2048)
+ if w.IndependentAEADCandidate(far,120)!=true{
+  t.Fatal("bounded independent M3 authenticated out-of-order candidate denied")
+ }
+ if _,err:=w.Check(far,120);err==nil{
+  t.Fatal("too-far packet falsely added to 128KiB cumulative ACK ledger")
+ }
+ if w.Ack()!=1000||w.Pending()!=0{
+  t.Fatalf("presentation ACK falsely advanced: ack=%d pending=%d",w.Ack(),w.Pending())
+ }
+ if w.IndependentAEADCandidate(uint32(1000+m0V4IndependentAEADLookahead),120){
+  t.Fatal("unbounded untrusted serial candidate admitted")
+ }
+ if w.IndependentAEADCandidate(uint32(999),120){
+  t.Fatal("stale untrusted original before current cumulative ACK admitted")
+ }
+ if w.IndependentAEADCandidate(far,3000){
+  t.Fatal("oversize record bypassed kernel/AEAD limit")
+ }
+}

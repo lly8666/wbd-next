@@ -21,7 +21,7 @@ const (
  m0V4IdlePoll=time.Millisecond
  m0V4RetxAfter=750*time.Millisecond
  m0V4TxPendingMax=256 // non-Normal legacy carrier path only
- m0V4M2ShadowCredit=48 // Rust M1 arena64, Rx/receipt slots reserved
+ m0V4M2ShadowCredit=768 // Rust original M1 arena1024 for 300ms each-way BDP
 )
 type m0NativeV4Outbound struct {
  seq uint32
@@ -245,13 +245,19 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   return nil
  }
  ok,rangeErr:=p.rx.Check(seg.Seq,len(seg.Payload))
+ independent:=false
  if rangeErr!=nil{
-  p.mu.Lock();p.rejected++;p.mu.Unlock()
-  // A far-ahead/corrupt TCP sequence is not a valid ACK and cannot
-  // terminate the healthy later-lane/original owner connection.
-  return nil
+  // Presentation TCP bitmap remains fixed 256 entries / 128KiB. After
+  // true Rust M2 arming, a later record can be AEAD/PN-authenticated
+  // despite an old cumulative ACK hole, WITHOUT granting a fake ACK.
+  independent=p.mode==m0WinModeNormal &&
+   p.rx.IndependentAEADCandidate(seg.Seq,len(seg.Payload))
+  if !independent{
+   p.mu.Lock();p.rejected++;p.mu.Unlock()
+   return nil
+  }
  }
- if !ok{
+ if !ok&&!independent{
   p.mu.Lock();p.duplicates++;p.mu.Unlock()
   return nil
  }
@@ -292,9 +298,15 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
    return errors.Join(windowsclient.ErrN4NativeGuard,copyErr)
   }
  }
- ack,err:=p.rx.Copied(seg.Seq,len(seg.Payload))
- if err!=nil{return err}
- p.recvNext=ack
+ if independent{
+  // Only original Rust AEAD+unique PN allowed this forward delivery.
+  // Keep original Go cumulative ACK exactly at the verified gap.
+  p.recvNext=p.rx.Ack()
+ }else{
+  ack,ackErr:=p.rx.Copied(seg.Seq,len(seg.Payload))
+  if ackErr!=nil{return ackErr}
+  p.recvNext=ack
+ }
  p.mu.Lock()
  if len(frames)>0{
   now:=time.Now()

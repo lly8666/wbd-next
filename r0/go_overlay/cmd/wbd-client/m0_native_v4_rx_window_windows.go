@@ -52,3 +52,14 @@ func(w *m0V4RxWindow) Copied(seq uint32,n int)(uint32,error){
 }
 func(w *m0V4RxWindow) Ack()uint32{return w.cumulative}
 func(w *m0V4RxWindow) Pending()int{return len(w.received)}
+
+// A far-ahead or saturated presentation-ACK ledger may not hold more
+// intervals. Only the SAME original TLS-bound Rust M3 unique AEAD/PN
+// can deliver this bounded candidate independently; the TCP cumulative
+// ACK NEVER advances, and no new Go receipt-map slot is allocated.
+const m0V4IndependentAEADLookahead = 4 * 1024 * 1024
+func(w *m0V4RxWindow) IndependentAEADCandidate(seq uint32,n int)bool{
+ if w==nil||n<51||n>m0V4RxRecordMax{return false}
+ ahead:=int32(seq-w.cumulative)
+ return ahead>=0&&uint64(ahead)+uint64(n)<=m0V4IndependentAEADLookahead
+}
