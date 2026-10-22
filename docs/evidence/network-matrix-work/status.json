@@ -26,14 +26,19 @@
   "open_requests": [
     {
       "id": "arm64-fixed30-original-M1-postloan-stage-S030",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "type": "SINGLE_ONE_JOB_ONE_SCENARIO_PERFORMANCE_ACTION",
       "trigger": "ONE changed request.json push only; do not manual dispatch",
       "product_source": "2476b22f748a686907edfb995431a2b236ccebaa",
       "build_run": 39803921701,
       "artifact_id": 12436752126,
       "scenario": "S028 exact Fixed Maximum profile6 30pct IID 300ms one way 2Mbps/direction mixed UDP/TCP four flows, 15s warmup 120s steady 30s drain",
-      "observations": "six authentic M1 stage counts, 5 genuine TUN reader counts, original FEC owner accepted and failure reasons, mode applied, TCP ACKs and duplicate/Stop"
+      "observations": "six authentic M1 stage counts, 5 genuine TUN reader counts, original FEC owner accepted and failure reasons, mode applied, TCP ACKs and duplicate/Stop",
+      "run_id": 39804670142,
+      "attempt": 1,
+      "harness_source": "2f6aef1c3844f973da942538a9d56bc688cd6aeb",
+      "harness_contract_run_id": 39804669759,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39804670142"
     }
   ],
   "recent_evidence": [
@@ -134,7 +139,7 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "Find exactly one S030 performance Action run ID spawned by this request push. DO NOT redispatch. Compare authentic M1 read/loan/stage attempted and over_budget/Err/Ok(true)/Ok(false)/mode_gap to FEC ClassStats accepted, and real TCP stall plus UDP/Stop. If thousands of over_budget confirmed, inspect true route budget vs inner TUN MTU and select minimal correct product MSS/fragmentation fix without compromising MTU, rather than expand arena or relax hard modes. S028 overall FAIL and S018 default off AB PASS stand.",
+  "next_action": "S030 sole original Fixed30 perf run 39804670142 IN_PROGRESS, companion contract39804669759. NO duplicate dispatch. Resolve new real stage attempted/queued/not_ready/error/oversize/mode_skipped plus input M1 read/loan and existing FEC accepted. Check if 7k unmatched are record length reject; don't change MTU or data path without this evidence. Keep original S028 FAIL and S018 Normal/off PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2476b22f748a686907edfb995431a2b236ccebaa",
