@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "qualification": "NOT_PROMOTED",
+  "previous": {
+    "source_sha": "bdf57418f92db45d9164dd023301f874825042b1",
+    "run_id": 39788345158,
+    "attempt": 1,
+    "conclusion": "failure",
+    "linux_build": {
+      "job_id": 119857385428,
+      "conclusion": "success",
+      "artifact_id": 12429288564
+    },
+    "windows_run": {
+      "job_id": 119858353196,
+      "conclusion": "failure",
+      "artifact_id": 12431114919,
+      "error": "real Ubuntu 24.04.5 WSL2 import completed; first /dev/net/tun native guest command did not complete before 22-minute job-step timeout",
+      "class": "ENVIRONMENT_BLOCKED_BEFORE_PRODUCT_START"
+    },
+    "app_duplex": "NOT_RUN",
+    "native_product_stop": "NOT_RUN",
+    "rst_cleanup": "FAILED_SECONDARY_RULE_NOT_INSTALLED"
+  },
+  "cross_check": {
+    "baseline_action_39781312249": "WSL2 import 12:57:59Z, HyperV ready 12:58:21Z, real UDP app executed",
+    "baseline_action_39778489109": "WSL2 import 12:39:26Z, HyperV ready 12:40:15Z, real UDP app executed"
+  },
+  "current": {
+    "run_id": 39794445609,
+    "attempt": 1,
+    "status_at_record": "QUEUED",
+    "linux_product_build": "SAME_SOURCE_UNCHANGED_BUILD",
+    "intent": "docs/devlog/M0/PLAN024-S863-WSL2-boot-timeout-immutable-binary-reuse-intent-20261022.md",
+    "changed_files": [
+      "tools/m0_wl_real_wsl2_guest_probe.py",
+      ".github/workflows/m0-wl-public-normal-full.yml"
+    ],
+    "new_behavior": "90-second bounded real WSL2 kernel guest preflight emits JSON ENVIRONMENT_BLOCKED or PASS_PRECONDITION_ONLY; clean Linux RST only when owned rule created",
+    "product_logic_change": false,
+    "immutable_linux_reuse": "NOT_IMPLEMENTED; current Action retains honest same-SOURCE Linux Go/Rust build; no mixed source"
+  },
+  "open": [
+    "real Windows Linux two-OS Normal/off bidirectional",
+    "authentic two-way M2 feedback",
+    "fresh >256 carrier ACK gap",
+    "both owned Stop",
+    "WL-N0",
+    "WL-N1",
+    "WL-N5",
+    "physical Android OpenWrt"
+  ]
+}
