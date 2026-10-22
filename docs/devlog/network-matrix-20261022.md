@@ -15,3 +15,9 @@
 用户要求高效率发现堵点、强制在修复前复习历史设计，并决定是否新增工位。只读main到a22c4e09baf7c42a39b4eab1d7c3febffc5a6836及registry/GOVERNANCE，确认M0仍推进真实Windows接线，现有M4已reserved，M1/M2/M3范围有明确限制。决定不新增工位，网络测试优化继续M0、允许全新聊天接任；Actions并发提供测试并行，独立模块才一次派完整包。
 
 在同一PR #22补矩阵第9节及 `docs/testing/NETWORK_TRIAGE.md`：最低监测字段、1Hz有界快照/抽样成本、逻辑单位与in-flight/ready队列区分、可解释的故障特征、先定位再复习再修复、定向反例/默认性能复验、已有cursor热摘要和恢复/归档。M0长期提示词/GOVERNANCE只增加稳定入口；未改live registry/cursor、没有停止/发消息给其他聊天、没有启动性能测试或宣称监控已实现。
+
+## 后续授权：Windows→Linux快速开测
+
+复核main `1857e781dc3d5d1acb7a99d8d7f588773585a4e4`、H244、S764/S763证据与当前Windows公开调用链。五模式原组件PASS、Winsock loopback PASS均不等于公开跨OS持续测试；Windows模式mask仍1，公开适配层存在256未ACK停fresh/750ms/8次重试策略，偏离共享M2设计。新增`WINDOWS_LINUX_MATRIX_ENTRY.md`，明确先Normal完整链路+共享恢复+一个真实环境能力批次，三条独立持续场景后立即扩矩阵；Fixed/Auto/Game依次接入，不被全局OS/UI矩阵绑住。
+
+官方资料核Windows2025镜像列WSL2，但嵌套虚拟化无稳定保证，Npcap安装/抓发也必须实证。首选候选单Action Windows+WSL2 Linux损伤路由；失败据实记录，后备授权独占双机Actions编排（仓库当前self-hosted=0，未假称存在）。本次未创建runner、安装驱动、部署机器、改产品/cursor或dispatch。M0顺手修H244的S764 devlog不存在引用；不另开治理任务。文档与静态diff核对，不宣称任何运行测试PASS。

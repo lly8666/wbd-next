@@ -14,11 +14,13 @@
 
 ## 1. 真实入口和开跑门
 
+用户后续要求尽快以**Windows客户端→Linux服务端**开始矩阵：收口顺序、现存Windows适配阻塞和Actions拓扑按 [跨平台开测收口](WINDOWS_LINUX_MATRIX_ENTRY.md)。Normal/off先开放，不以Fixed/Auto/Game、全GUI或全局DNS验收齐全为前提；每个模式仍须自己的真实公共路径证据。
+
 现有PR #21提供Linux公共V4网络夹具；main已部分导入公共模块并改Windows可移植性。不可把“已导入traffic.py”视作Windows真实产品runner已完成。当前未公开Game+FEC、修复开关/比例等参数必须按最新CLI/API/readback确认；缺失就写 `BLOCKED_WIRING`，交对应owner一次补齐，不能通过测试helper悄悄替代产品。
 
-每个模式开测前只需一批廉价功能断言：正确来源二进制、实际配置回执、真实Go建连→Rust→真实TUN/raw或Wintun/Npcap路径、缺一DATA后新独立包仍交付、必要Stop。已存在同源码同路径证据直接复用。不要先把所有平台和UI都验完才能测Linux网络。
+每个模式开测前只需一批廉价功能断言：正确来源二进制、实际配置回执、真实Go建连→Rust→真实TUN/raw或Wintun/Npcap路径、缺一DATA后新独立包仍交付、必要Stop。已存在同源码同路径证据直接复用。不要先把所有平台和UI都验完才能测已接通的网络路径。
 
-固定源码构建一次，后续消费run/attempt/artifact ID/ZIP及manifest文件hash。记录native/scalar/SIMD后端、cipher、features、工具链及旧Go冷层SOURCE。Linux x64先跑完整网络代表矩阵；Windows和ARM只跑已接线真实路径的代表子集。cross-build、mock、组件PASS不能填native网络PASS。
+固定源码构建一次，后续消费run/attempt/artifact ID/ZIP及manifest文件hash。记录native/scalar/SIMD后端、cipher、features、工具链及旧Go冷层SOURCE。按后续用户授权，Windows→Linux已接通模式优先展开矩阵，Linux→Linux用于公共内核容量/算法辅助对照，不替代Windows资格；ARM继续代表子集。cross-build、mock、组件PASS不能填native网络PASS。
 
 Windows弱网若缺真实损伤桥/可验证后端，明确NOT_RUN；不在本轮无限开发虚拟化平台。Linux结果也不能覆盖Windows接线和驱动资格。平台有已验证损伤后端后，同一请求语义复用，不另写第二套FEC算法或统计口径。
 
