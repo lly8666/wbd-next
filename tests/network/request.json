@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed-maximum-30pct-rtt600-mixed-120s",
+  "id": "arm64-fixed-max-30pct-old-new-AB-hardcase",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -68,7 +68,14 @@
       "attempt": 1,
       "artifact_id": 12417786567,
       "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
+    },
+    "B": {
+      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+      "run_id": 39766278666,
+      "attempt": 1,
+      "artifact_id": 12419289653,
+      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398"
     }
   },
-  "order": "A"
+  "order": "AB"
 }

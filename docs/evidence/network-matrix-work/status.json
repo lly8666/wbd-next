@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S006-product-maxparity-row-guard-fix-build",
+  "phase": "S007-same-job-old-new-fixed-maximum-30pct-AB-hardcase",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -21,27 +21,16 @@
   "latest_harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
   "open_requests": [
     {
-      "id": "S006-arm64-fixed-maximum-row-guard-build",
-      "status": "QUEUED_OR_RUNNING",
-      "type": "SOURCE_BUILD_AND_NATIVE_RUST_ASSERTION_NOT_PERFORMANCE_MEASUREMENT",
-      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
-      "paths": [
-        "crates/wbd-engine/src/v4_embedded_go.rs",
-        ".github/workflows/arm64-public-go-build.yml"
-      ],
-      "trigger": "branch push, do not manual dispatch",
-      "intent": "Preserve immutable security/PN/Stop and all hard failures. Change only rejected parity row threshold from 16 to codec MAX_R20, assert actual public code branch; old frozen product stays distinct.",
-      "run_id": 39766278666,
-      "attempt": 1,
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39766278666"
-    },
-    {
-      "id": "S006-arm64-maximum-row-unit",
+      "id": "arm64-fixed-max-30pct-old-new-AB-hardcase",
+      "type": "PERFORMANCE_PAIR_SINGLE_JOB_AB_HARD_CASE",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "type": "ARM64_NATIVE_RUST_UNIT_ONLY",
-      "source": "CURRENT_BRANCH_CODE_IDENTICAL_TO_DF64",
-      "trigger": "push of new .github/workflows/network-matrix-parity-unit.yml; do not manually dispatch",
-      "note": "separate scalar-feature native unit if original frozen product builder's added test step fails from Bash escaped line continuation; not a product performance Action"
+      "path": "tests/network/request.json",
+      "sourceA": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "sourceB": "df64bab1d60ae684429a4330e5f09d06ff851019",
+      "buildA": 39759842150,
+      "buildB": 39766278666,
+      "scenario": "exact S005 2Mbps each dir 50/50 UDP TCP, profile6 IID30pct 300ms one-way 120sec, new/old sequential on same native ARM64 job, independent namespace cleanup",
+      "trigger": "push request.json only once, do not manual dispatch"
     }
   ],
   "latest_actions": [
@@ -77,6 +66,19 @@
       "run": 39764731076,
       "type": "harness-contract",
       "conclusion": "success"
+    },
+    {
+      "run": 39766278666,
+      "type": "S006-product-source-build",
+      "conclusion": "failure",
+      "evidence": "S006-build-artifact-recovered.json",
+      "detail": "release product build stage success and binary hashes good, appended shell test syntax failed"
+    },
+    {
+      "run": 39766569288,
+      "type": "S006-native-arm64-rust-unit",
+      "conclusion": "success",
+      "evidence": "S006-build-artifact-recovered.json"
     }
   ],
   "prior_success_reuse": {
@@ -95,5 +97,19 @@
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
-  "next_action": "S006 original native product build run 39766278666 in progress; its extra test step has accidentally doubled backslash; binary upload may still succeed and should be reused if manifest/hash sound. New separate ARM64 unit Action from parity-unit workflow is needed to validate actual Rust 20-row guard; do not repeat product build. Keep S005 HARD_FAIL."
+  "next_action": "Resolve exactly one S007 performance A/B run ID on request push; do not redispatch. Collect each leg's fixed applied/client, real duplicate count, mode/p99/host and cleanup; compare only same-job, do not claim S005 closed unless all hard gates pass. If still duplicates, restrict FEC qualification and inspect true application id boundary, not seed. Keep S002/S004 FAIL.",
+  "fixed_candidate": {
+    "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+    "build": {
+      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+      "run_id": 39766278666,
+      "attempt": 1,
+      "artifact_id": 12419289653,
+      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398"
+    },
+    "qualification": "UNVERIFIED_TEST_CANDIDATE",
+    "build_workflow_conclusion": "failure",
+    "file_integrity": "VERIFIED",
+    "native_unit": 39766569288
+  }
 }
