@@ -848,7 +848,8 @@ mod tests {
             let (pn,seq,used)=e.owner.seal_original_authenticated_receipt(
                 slab,&control,budget,0,MonoNs(0)).unwrap();
             let storage=std::mem::take(&mut e.tx_scratch);
-            let batch=e.owner.drain_tx(MonoNs(0),storage).unwrap();
+            let batch=e.owner.drain_tx(MonoNs(0),storage)
+                .unwrap_or_else(|_|panic!("actual M1 TX batch must drain"));
             let wire={
                 let ready=e.owner.checked_tx_ready(&batch).unwrap();
                 assert_eq!(ready.len(),1);
