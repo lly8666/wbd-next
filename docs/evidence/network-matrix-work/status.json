@@ -27,13 +27,17 @@
     {
       "id": "S027b-native-owner-M1-readout-build",
       "type": "NEW_PRODUCT_SOURCE_BUILD_AFTER_COMPILER_FAILURE",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED",
       "trigger": "product source push starts one new ARM64 builder automatically, no manual dispatch",
       "recovered_failed_run": 39797003870,
       "recovered_contract_pass_run": 39797003708,
       "failed_source": "e2f833211ebf3fee678feba80028eda9b610176e",
       "failure": "Rust cfg feature gated owner numeric getter had mismatched delimiter at v4_embedded_go.rs 4648-4650; exact syntax fix only",
-      "scope": "one extra ')' in cfg attribute; no mechanism, FEC, arena policy, Stop, or harness change"
+      "scope": "one extra ')' in cfg attribute; no mechanism, FEC, arena policy, Stop, or harness change",
+      "source": "146f81ff70f49c0521dbc959beac5013219a8244",
+      "run_id": 39799604748,
+      "attempt": 1,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39799604748"
     }
   ],
   "recent_evidence": [
@@ -143,7 +147,7 @@
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "Recover exact S027b ARM64 builder ID created by syntax fix push; DO NOT redispatch original failed run39797003870 or already-PASS contract39797003708. Verify native Go/Rust build, unit, manifest and SHA256SUMS/ELF; then one S028 original Fixed30 real business scenario from frozen new source to observe M1 read/small loan/NoCapacity/jumbo/reject counts. Preserve S026 HARD_FAIL and S018 Normal/off same-job AB PASS.",
+  "next_action": "S027b sole syntax-corrected source ARM64 build 39799604748 QUEUED. Do not dispatch duplicate. Verify source, native Rust/Go build, manifest/ELF SHA256, contract 39797003708 already PASS. Then schedule only one S028 S026-equivalent Fixed30 with original M1 five counters. S027 original run39797003870 compiler FAIL archived.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
