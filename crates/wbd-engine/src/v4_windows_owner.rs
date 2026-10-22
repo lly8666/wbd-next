@@ -1438,7 +1438,7 @@ mod tests {
         assert_eq!(m0_tcp_unwrap(&e,30,100).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,u32::MAX-80,40).unwrap(),
             u64::from(u32::MAX-80));
-        assert_eq!(m0_tcp_unwrap(&e,200_000,100).unwrap(),200_000);
+        assert_eq!(m0_tcp_unwrap(&e,200_000,100).unwrap(),(1u64<<32)+200_000);
         assert_eq!(m0_tcp_unwrap(&e,5*1024*1024,100),Err(INVALID));
         e.rx_unwrapped_high=(1u64<<32)+120;
         assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
