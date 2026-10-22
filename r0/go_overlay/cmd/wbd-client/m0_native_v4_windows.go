@@ -69,13 +69,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
    guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
-   sourceIP!=underlay.Source4||ncfg.NextHopMAC!=ncfg.SourceMAC{
+   sourceIP!=underlay.Source4{
     return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override",windowsclient.ErrN4NativeGuard)
   }
   var actual [6]byte
   copy(actual[:],parsedMAC)
   if actual==([6]byte{})||actual==ncfg.SourceMAC||actual[0]&1!=0{
    return fmt.Errorf("%w: real WSL guest unicast MAC invalid",windowsclient.ErrN4NativeGuard)
+  }
+  // Genuine SendARP may already return the correct Linux MAC after
+  // Windows neighbor ownership changed. Both the previously proven
+  // host-self defect and an already correct same-guest resolution are
+  // acceptable. Any third, unverified Ethernet next hop remains denied.
+  if ncfg.NextHopMAC!=ncfg.SourceMAC&&ncfg.NextHopMAC!=actual{
+   return fmt.Errorf("%w: original Npcap next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
   }
   ncfg.NextHopMAC=actual
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
