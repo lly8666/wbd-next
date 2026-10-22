@@ -27,13 +27,18 @@
     {
       "id": "arm64-fixed30-original-M1-TUN-ingress-S028",
       "type": "SINGLE_ARM64_PRODUCT_PERFORMANCE_MEASUREMENT",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED",
       "trigger": "ONE request.json push; no direct manual dispatch",
       "scenario": "unchanged S026 Fixed profile6 2Mbps/direction 50/50 UDP/TCP four flows 30pct IID one-way 300ms warmup15 steady120 drain30",
       "source": "146f81ff70f49c0521dbc959beac5013219a8244",
       "build_run": 39799604748,
       "artifact_id": 12435082262,
-      "expected_observations": "true M1 TUN read/loan/prestage arena failure/jumbo/reject, FEC source acceptance/staging, M4 UDP/TCP real packets and kernel Input, TCPINFO/mode/duplicates/Stop"
+      "expected_observations": "true M1 TUN read/loan/prestage arena failure/jumbo/reject, FEC source acceptance/staging, M4 UDP/TCP real packets and kernel Input, TCPINFO/mode/duplicates/Stop",
+      "run_id": 39801548685,
+      "attempt": 1,
+      "harness_source": "8125a019ef283300308f778c7b5755b357135d87",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39801548685",
+      "harness_contract_run_id": 39801548948
     }
   ],
   "recent_evidence": [
@@ -142,7 +147,7 @@
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending."
   ],
-  "next_action": "Find sole S028 performance run id triggered by this pinned request push; no double dispatch. Verify real 30pct injected netem, genuine M1 TUN read+loan+NoCapacity / jumbo/Rejected against FEC accepted, M4 sys/rec UDP kernel and app first arrivals, TCP frozen ack/cwnd and Fixed pending, Stop. Retain all FAIL and NOT_OBSERVED; if input capacity gap not explained, inspect accounting/injector before modifying product. S018 default off PASS preserved.",
+  "next_action": "S028 single original Fixed30 perf Action 39801548685 QUEUED, harness contract 39801548948 in progress; NO duplicate dispatch. Collect SOURCE-verified product and real M1 TUN intake read/loan/prestage arena fail/jumbo/reject, FEC accepted, kernel UDP/TCP/Stop. Compare accounting carefully; S026 hard FAIL remains.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "146f81ff70f49c0521dbc959beac5013219a8244",
