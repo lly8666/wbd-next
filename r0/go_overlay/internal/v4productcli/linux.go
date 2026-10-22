@@ -24,6 +24,7 @@ import (
     "os"
     "os/exec"
     "os/signal"
+    "strconv"
     "strings"
     "syscall"
     "time"
@@ -84,6 +85,9 @@ type config struct{
     peerPersona realityfront.V4PublicNativePeerPersona
     fecProfile realityfront.FecV2Profile
     gameLanes uint8
+    outerMTU int
+    recordLimit uint16
+    innerMTU int
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -109,6 +113,7 @@ func parse(role string,args []string)(config,error){
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     peerPersona:=flags.String("peer-persona","legacy","expected original-Go authenticated peer TCP envelope: legacy or windows11 (server only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
+    outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
@@ -138,6 +143,8 @@ func parse(role string,args []string)(config,error){
     default:return c,fmt.Errorf("unsupported trusted peer persona %q",*peerPersona)
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
+    if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
+    c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
        *tunCIDR==""||*name==""||*user==""||*pass==""||
@@ -183,9 +190,10 @@ type ownedTun struct{
     f *os.File
     name string
     cleaned bool
+    mtu int
 }
 // Original kernel-owned /dev/net/tun FD, never a synthetic traffic adapter.
-func openTun(name,cidr string)(*ownedTun,error){
+func openTun(name,cidr string,mtu int)(*ownedTun,error){
     fd,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
     if err!=nil{return nil,err}
     var ifr [40]byte
@@ -194,9 +202,9 @@ func openTun(name,cidr string)(*ownedTun,error){
     _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,fd.Fd(),tunSetIFF,
         uintptr(unsafe.Pointer(&ifr[0])))
     if errno!=0{_ = fd.Close();return nil,errno}
-    device:=&ownedTun{f:fd,name:name}
+    device:=&ownedTun{f:fd,name:name,mtu:mtu}
     if err=runIP("addr","add",cidr,"dev",name);err==nil{
-        err=runIP("link","set","dev",name,"mtu","1200","up")
+        err=runIP("link","set","dev",name,"mtu",strconv.Itoa(mtu),"up")
     }
     if err!=nil{_ = device.Close();return nil,err}
     return device,nil
@@ -220,7 +228,10 @@ func Run(role string,args []string)error{
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
-    tun,err:=openTun(cfg.tunName,cfg.tunCIDR)
+    cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
+        faketcp.DefaultMSS,0,cfg.fecMode,cfg.gameLanes!=0)
+    if err!=nil{return err}
+    tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
     // This fallback is ONLY used if no authenticated Rust owner was started.
     // An active owner's Close performs Stop->release->network cleanup instead.
@@ -276,6 +287,45 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         v.OriginalFrozenRepaired,v.DriverUncertain,
         v.BudgetOrCapacityBlocked,v.RetiredTotal)
 }
+// One cold-path budget, in bytes. Normal data uses IPv4/TCP20+20,
+// independent record31, FEC2 repair14, and optional logical Game envelope16.
+// LINK20 is charged ONLY by fragmentation, not deducted from every packet.
+// Auto reserves the maximum FEC2 framing even while its profile changes.
+// Peer MSS/record limit can only narrow the configured/interface envelope.
+func deriveMTUBudget(outer,device int,peerMSS,recordLimit uint16,
+    mode realityfront.FecV2Mode,game bool)(uint16,int,error){
+    if outer<576||outer>9000||device<576||peerMSS==0 {
+        return 0,0,fmt.Errorf("invalid outer/device MTU or peer MSS")
+    }
+    wire:=min(outer,device)-40
+    wire=min(wire,int(peerMSS))
+    if recordLimit!=0 {wire=min(wire,int(recordLimit))}
+    inner:=wire-31
+    if mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto {inner-=14}
+    if game {inner-=16}
+    if inner<576 {return 0,0,fmt.Errorf("effective inner MTU %d below product minimum 576 after framing; unsupported path budget",inner)}
+    return uint16(wire),inner,nil
+}
+// Called with authenticated record limits before Rust begins reading TUN.
+// Multiple Game lanes can only lower the shared TUN MTU. No per-packet work.
+func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
+    return func(peerMSS,clientLimit,serverLimit uint16)error{
+        iface,err:=net.InterfaceByName(c.rawInterface)
+        if err!=nil{return err}
+        limit:=min(clientLimit,serverLimit)
+        if limit==0{return fmt.Errorf("missing authenticated record limit")}
+        wire,inner,err:=deriveMTUBudget(c.outerMTU,iface.MTU,peerMSS,limit,c.fecMode,c.gameLanes!=0)
+        if err!=nil{return err}
+        if inner<tun.mtu {
+            if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
+            tun.mtu=inner
+        }
+        log.Printf("V4_PUBLIC_MTU role=%s outer_config=%d interface=%d peer_mss=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
+            c.role,c.outerMTU,iface.MTU,peerMSS,wire,tun.mtu,c.fecMode,c.gameLanes)
+        return nil
+    }
+}
+
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -321,13 +371,14 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
-        ClientLimit:1180,DesiredLanes:1,LaneID:1,Policy:policy,
+        ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
     *connected=true
@@ -362,6 +413,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,
             PeerPersona:c.peerPersona,
         })
@@ -372,7 +424,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         TLS:realityfront.ServerConfig{ServerName:c.serverName,RouteKey:c.routeKey,
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{certificate}},
             Timeout:15*time.Second},
-        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:1180,
+        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:c.recordLimit,
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
             if len(req.TunnelID)!=16 || string(req.TunnelID)!=string(c.tunnel[:]) ||
                req.DesiredLanes!=1||req.LaneID!=1{return realityfront.ErrAdmissionParams}

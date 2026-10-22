@@ -50,6 +50,41 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  native-mtu-boundary:
+    needs: native-go-rust-bundle
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: arm64-public-go-rust-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+      - name: Cheap real MTU functional boundaries, not performance comparisons
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables
+          failed=0
+          for case in normal:1500:1500 fec-fixed:1500:1500 fec-auto:1500:1500 normal:1280:1280 fec-fixed:1280:1280 fec-auto:1280:1280 fec-fixed:1500:1280 game2:1500:1500 game4:1280:1280; do
+            IFS=: read -r mode outer server_outer <<< "$case"
+            if WBD_V4_MODE="$mode" WBD_ARM64_OUTER_MTU="$outer" WBD_ARM64_SERVER_OUTER_MTU="$server_outer" WBD_ARM64_MTU_BOUNDARY=1 bash tools/arm64_linux_netns_smoke.sh; then
+              echo "MTU_MODE_PASS $case"
+            else
+              failed=1
+            fi
+            mv arm64-netns-result "arm64-mtu-$mode-$outer-$server_outer"
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-mtu-boundary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-mtu-*/
+          retention-days: 30
+
   native-linux-netns:
     needs: native-go-rust-bundle
     runs-on: ubuntu-24.04-arm

@@ -21,6 +21,7 @@ from pathlib import Path
 from .artifacts import fetch, sha, verify
 from .config import Unsupported, netem_args, validate
 from .report import markdown, summarize, network_accounting
+from .envelope import request_envelope
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
@@ -417,6 +418,7 @@ def main():
     if os.environ.get("GITHUB_ACTIONS") != "true" or platform.system() != "Linux":
         raise RuntimeError("execution validation is GitHub Actions Linux only")
     if a.command == "prepare":
+        dump(directory / "capacity-envelope.json", request_envelope(config))
         for label, bundle in config["bundles"].items():
             receipt = fetch(bundle, directory / ("bundle-" + label))
             dump(directory / ("bundle-" + label + "-receipt.json"), receipt)

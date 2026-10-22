@@ -16,6 +16,13 @@ jobs:
         with: {persist-credentials: false}
       - name: Request, model, integrity, phase accounting and independent UDP TCP selfcheck
         run: python3 -m unittest discover -s tests/network -p 'test_*.py' -v
+      - name: Publish size-aware theoretical capacity envelope
+        run: python3 -m tools.network_harness.envelope > capacity-envelope-model.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capacity-envelope-model-${{ github.run_id }}
+          path: capacity-envelope-model.json
+          retention-days: 30
       - name: Real kernel delay loss jitter duplicate reorder rate GE and lane classifier syntax
         run: sudo -n --preserve-env=GITHUB_ACTIONS python3 -m tools.network_harness.kernel_check
       - name: Verify actual kernel netem and report seeded capability without claiming replay

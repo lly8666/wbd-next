@@ -31,6 +31,8 @@ PR #21的Game+FEC、cipher/repair参数、生命周期等能力有明确未支�
 
 ## 自主执行顺序与停止条件
 
+用户新增要求与现有S030/S031修复的衔接见 [容量/MTU补充](NETWORK_CAPACITY_ENVELOPE.md) §3–4。先接续自己的唯一open request；已有MTU修复不重写、不重复dispatch。模型计算后对照产品实际构造参数；不能拿小规模80ms PTO/64KiB repair cap去判断500Mbps能力。源文件冲突保留本分支较新的观测/修复，只引入新增模型与必要边界验证。
+
 1. 复用已通过的基础功能。先运行真实双向混合大小包持续基线，确认注入、交付、模式与Stop；低开销记录产品/注入器CPU、RSS、p99/未到/迟到、10ms首到桶、socket/qdisc drops。iperf进程CPU不能冒充产品CPU，最终applied不能代替auto全程曲线。
 2. 按模型估算PPS、FEC/Game/修复膨胀、BDP和netem队列容量，再逐档发现机器容量。注入器不足、宿主争用、本地内核drop和产品单核瓶颈分开。容量不足停止更重负载并给有依据的PROJECTED_NOT_TESTED；不得以总CPU没到100%掩盖单核瓶颈。
 3. 按NETWORK_MATRIX关键集合覆盖off低损/预算上限、固定FEC中高损、auto升降与不对称、Game独立/相关损失，混合UDP/TCP/小包探针、稀疏/大包兼容、换lane、单/双向黑洞、payload idle/keepalive/有数据重建。先代表组合再针对问题扩展，不跑全笛卡尔积。真正idle测试须关闭业务探针；有探针不能声称无payload。

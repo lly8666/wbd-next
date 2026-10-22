@@ -61,6 +61,8 @@ UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效�
 
 ## 有限测试顺序与容量停止
 
+后续按 [包长与极限容量补充](NETWORK_CAPACITY_ENVELOPE.md) 选择少量代表点，覆盖同维度后可跳过中间档。prepare生成 `capacity-envelope.json`（UDP份额、FEC满组/单源组与netem队列估算），不在测量循环计算、不自动改队列或PASS门。TCP分段和分片另需真实统计。模型可单独用 `python3 -m tools.network_harness.envelope --request tests/network/request.json` 读取。
+
 1. 先跑示例 Normal/off、10Mbps/方向、lossless，确认生成器和实际产品有容量。需要业务混合，再跑相同速率真实多连接TCP+UDP。
 2. off 的1%、5%与双向非对称；RTT50/150/600ms，优先实际常用点。高损20%只要求新包不被修复拖死和预算可解释，别强求零丢包。
 3. 固定档以实际支持档位覆盖，选常用strong和低档弱网代表；auto跑低→高→低及上下行不对称，实时档位遥测未接入时保留曲线未验。

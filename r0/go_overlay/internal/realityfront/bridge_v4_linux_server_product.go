@@ -38,6 +38,7 @@ type V4LinuxServerProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
     FECProfile FecV2Profile
 }
@@ -122,6 +123,12 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.tunnel=verified.TunnelID()
     p.lane=verified.LaneID()
     p.epoch=verified.Epoch()
+    if p.cfg.ConfigureTunnelMTU!=nil {
+        clientLimit,serverLimit:=verified.RecordLimits()
+        if err=p.cfg.ConfigureTunnelMTU(assoc.PeerTCPProfile().MSS,clientLimit,serverLimit);err!=nil{
+            return nil,errors.Join(err,p.closeLocked())
+        }
+    }
     if err=bridge.attachRawRxOnInterface(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,
     );err==nil{
