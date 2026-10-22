@@ -1,0 +1,566 @@
+{
+  "schema_version": 1,
+  "status": "MODEL_ONLY_NOT_EXECUTED",
+  "date": "2026-10-22",
+  "reviewed_source": "5a6bf52521047184107e4c67a9a04016cf4a410f",
+  "assumptions": [
+    "Systematic MDS; IID equal erasure probability; received symbols within decoding lifetime; no outer repair in FEC model",
+    "Four-lane combined recovery requires same logical symbol shared across lanes and independent erasures of every copy",
+    "Retry model assumes perfect loss detection, two independent retries, sufficient lifetime, equal wire sizes and effective feedback",
+    "Bandwidth examples: UDP app 1172B, inner IPv4 1200B, outer IPv4+TCP40B, independent record31B, FEC source10B and repair14B, no TCP options/L2/padding/control"
+  ],
+  "formula": {
+    "fec": "p*Pr[Binomial(k+r-1,p)>=r]",
+    "retry_q": "p^3",
+    "retry_bytes_per_fresh": "p+p^2",
+    "budget_residual_lower_bound": "max(p^3,p-(1-p)*0.1,0)",
+    "game_joint": "q(k,r,product(p_lane)) only under stated joint recovery + IID assumptions"
+  },
+  "rows": [
+    {
+      "p": 0.01,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 0.012308985529944257
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 0.000034370301840530785
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 4.769850458791568e-8
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 4.288995608729999e-11
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 1.5127165354561753e-17
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 2.6080409268757338e-24
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 2.813705495446825e-31
+        }
+      ],
+      "retry_q_pct": 0.00010000000000000002,
+      "retry_fresh_pct": 1.01,
+      "budget_best_q_pct": 0.00010000000000000002
+    },
+    {
+      "p": 0.02,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 0.08917401763581098
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 0.0009749225952918236
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 0.000005362543382116597
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 1.9190207147544366e-8
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 1.0770676400500812e-13
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 2.962634804623602e-19
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 5.105009591864506e-25
+        }
+      ],
+      "retry_q_pct": 0.0008000000000000001,
+      "retry_fresh_pct": 2.04,
+      "budget_best_q_pct": 0.0008000000000000001
+    },
+    {
+      "p": 0.05,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 1.0388599821341085
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 0.0661800444137065
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 0.002207633125172384
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 0.00004856424418435662
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 1.0461243320701566e-8
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 1.1137261827684111e-12
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 7.454230484189559e-17
+        }
+      ],
+      "retry_q_pct": 0.012500000000000002,
+      "retry_fresh_pct": 5.250000000000001,
+      "budget_best_q_pct": 0.012500000000000002
+    },
+    {
+      "p": 0.1,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 5.182147508985216
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 1.1499755780436076
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 0.1444527027650445
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 0.01229826772843326
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 0.000040943878787563644
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 6.851203073978803e-8
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 7.257980118227632e-11
+        }
+      ],
+      "retry_q_pct": 0.10000000000000002,
+      "retry_fresh_pct": 11.000000000000002,
+      "budget_best_q_pct": 0.9999999999999996
+    },
+    {
+      "p": 0.2,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 17.63561019563051
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 10.898225153084235
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 4.614082377036538
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 1.4301167038390359
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 0.06912964584664753
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 0.001763099040565924
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 0.000029035693754894317
+        }
+      ],
+      "retry_q_pct": 0.8000000000000002,
+      "retry_fresh_pct": 24.000000000000004,
+      "budget_best_q_pct": 12
+    },
+    {
+      "p": 0.3,
+      "profiles": [
+        {
+          "name": "light",
+          "k": 16,
+          "r": 2,
+          "q_pct": 29.42174700808891
+        },
+        {
+          "name": "mild",
+          "k": 16,
+          "r": 4,
+          "q_pct": 26.004870018644816
+        },
+        {
+          "name": "medium",
+          "k": 16,
+          "r": 6,
+          "q_pct": 19.118642571704456
+        },
+        {
+          "name": "balanced",
+          "k": 16,
+          "r": 8,
+          "q_pct": 11.456149485290815
+        },
+        {
+          "name": "high",
+          "k": 16,
+          "r": 12,
+          "q_pct": 2.3941809152490245
+        },
+        {
+          "name": "strong",
+          "k": 16,
+          "r": 16,
+          "q_pct": 0.2862130773565017
+        },
+        {
+          "name": "maximum",
+          "k": 16,
+          "r": 20,
+          "q_pct": 0.022825761445090013
+        }
+      ],
+      "retry_q_pct": 2.6999999999999997,
+      "retry_fresh_pct": 39,
+      "budget_best_q_pct": 23
+    }
+  ],
+  "partial": [
+    {
+      "k": 1,
+      "r": 2,
+      "max30pct": 2.7,
+      "strong30pct": 9
+    },
+    {
+      "k": 2,
+      "r": 3,
+      "max30pct": 2.5109999999999992,
+      "strong30pct": 6.4799999999999995
+    },
+    {
+      "k": 3,
+      "r": 4,
+      "max30pct": 2.114099999999999,
+      "strong30pct": 4.8923999999999985
+    },
+    {
+      "k": 4,
+      "r": 5,
+      "max30pct": 1.7390294999999993,
+      "strong30pct": 3.7810799999999984
+    },
+    {
+      "k": 8,
+      "r": 10,
+      "max30pct": 0.38078174166831863,
+      "strong30pct": 1.500376201613279
+    },
+    {
+      "k": 16,
+      "r": 20,
+      "max30pct": 0.022825761445090013,
+      "strong30pct": 0.2862130773565017
+    }
+  ],
+  "multi": [
+    {
+      "lanes": 2,
+      "p": 0.05,
+      "effective": 0.0025000000000000005,
+      "off_pct": 0.25000000000000006,
+      "light_k16_pct": 0.00020725662602474033,
+      "strong_k16_pct": 1.688641627436093e-34,
+      "max_k16_pct": 7.125579368050488e-44
+    },
+    {
+      "lanes": 2,
+      "p": 0.2,
+      "effective": 0.04000000000000001,
+      "off_pct": 4.000000000000001,
+      "light_k16_pct": 0.5861568141879393,
+      "strong_k16_pct": 2.9052565939667853e-14,
+      "max_k16_pct": 7.980208539066117e-19
+    },
+    {
+      "lanes": 2,
+      "p": 0.3,
+      "effective": 0.09,
+      "off_pct": 9,
+      "light_k16_pct": 4.143821823563473,
+      "strong_k16_pct": 1.333049979214909e-8,
+      "max_k16_pct": 9.286932732753626e-12
+    },
+    {
+      "lanes": 2,
+      "p": 0.5,
+      "effective": 0.25,
+      "off_pct": 25,
+      "light_k16_pct": 23.74717553029768,
+      "strong_k16_pct": 0.03254063498857673,
+      "max_k16_pct": 0.001282921609731829
+    },
+    {
+      "lanes": 2,
+      "p": 0.7,
+      "effective": 0.48999999999999994,
+      "off_pct": 48.99999999999999,
+      "light_k16_pct": 48.99092657690397,
+      "strong_k16_pct": 22.30996649926557,
+      "max_k16_pct": 10.462600021200858
+    },
+    {
+      "lanes": 4,
+      "p": 0.05,
+      "effective": 0.000006250000000000001,
+      "off_pct": 0.0006250000000000001,
+      "light_k16_pct": 3.3201049872778394e-12,
+      "strong_k16_pct": 1.0181799449349945e-78,
+      "max_k16_pct": 1.678997340289943e-98
+    },
+    {
+      "lanes": 4,
+      "p": 0.2,
+      "effective": 0.0016000000000000003,
+      "off_pct": 0.16000000000000003,
+      "light_k16_pct": 0.000054821755871282804,
+      "strong_k16_pct": 8.672120218418199e-38,
+      "max_k16_pct": 6.140362287546221e-48
+    },
+    {
+      "lanes": 4,
+      "p": 0.3,
+      "effective": 0.0081,
+      "off_pct": 0.8099999999999999,
+      "light_k16_pct": 0.006666372707899082,
+      "strong_k16_pct": 7.452536944374127e-26,
+      "max_k16_pct": 3.462192270738581e-33
+    },
+    {
+      "lanes": 4,
+      "p": 0.5,
+      "effective": 0.0625,
+      "off_pct": 6.25,
+      "light_k16_pct": 1.7990733693525898,
+      "strong_k16_pct": 4.107372581764093e-11,
+      "max_k16_pct": 6.6946915086171636e-15
+    },
+    {
+      "lanes": 4,
+      "p": 0.7,
+      "effective": 0.24009999999999995,
+      "off_pct": 24.009999999999994,
+      "light_k16_pct": 22.572909301104367,
+      "strong_k16_pct": 0.01955221007483286,
+      "max_k16_pct": 0.0006585999640529302
+    }
+  ],
+  "bandwidth": [
+    {
+      "r": 0,
+      "app_amplification": 1.0844709897610922,
+      "max_app50_with10pctrepair": 41.914026178384944,
+      "safe_app50": 33.531220942707954,
+      "safe_app500": 335.31220942707955
+    },
+    {
+      "r": 0.125,
+      "app_amplification": 1.2300554607508531,
+      "max_app50_with10pctrepair": 36.953248780180196,
+      "safe_app50": 29.562599024144156,
+      "safe_app500": 295.62599024144157
+    },
+    {
+      "r": 1,
+      "app_amplification": 2.189419795221843,
+      "max_app50_with10pctrepair": 20.761000495996598,
+      "safe_app50": 16.608800396797278,
+      "safe_app500": 166.08800396797278
+    },
+    {
+      "r": 1.25,
+      "app_amplification": 2.463523890784983,
+      "max_app50_with10pctrepair": 18.45102685002243,
+      "safe_app50": 14.760821480017945,
+      "safe_app500": 147.60821480017944
+    }
+  ],
+  "auto": [
+    {
+      "p": 0.01,
+      "r": 2,
+      "q_pct": 0.012308985529944257
+    },
+    {
+      "p": 0.02,
+      "r": 2,
+      "q_pct": 0.08917401763581098
+    },
+    {
+      "p": 0.05,
+      "r": 4,
+      "q_pct": 0.0661800444137065
+    },
+    {
+      "p": 0.1,
+      "r": 6,
+      "q_pct": 0.1444527027650445
+    },
+    {
+      "p": 0.15,
+      "r": 8,
+      "q_pct": 0.22806052647747788
+    },
+    {
+      "p": 0.2,
+      "r": 12,
+      "q_pct": 0.06912964584664753
+    },
+    {
+      "p": 0.25,
+      "r": 16,
+      "q_pct": 0.03254063498857673
+    },
+    {
+      "p": 0.3,
+      "r": 16,
+      "q_pct": 0.2862130773565017
+    }
+  ],
+  "partial_needs": [
+    {
+      "k": 1,
+      "minimum_r_for_1pct": 3,
+      "minimum_r_for_halfpct": 4
+    },
+    {
+      "k": 2,
+      "minimum_r_for_1pct": 4,
+      "minimum_r_for_halfpct": 5
+    },
+    {
+      "k": 4,
+      "minimum_r_for_1pct": 6,
+      "minimum_r_for_halfpct": 7
+    },
+    {
+      "k": 8,
+      "minimum_r_for_1pct": 9,
+      "minimum_r_for_halfpct": 10
+    },
+    {
+      "k": 16,
+      "minimum_r_for_1pct": 14,
+      "minimum_r_for_halfpct": 16
+    }
+  ],
+  "correlated_example": {
+    "p_marginal": 0.3,
+    "common": 0.1,
+    "independent_remainder": 0.2222222222222222,
+    "qeff": 0.10219478737997258
+  },
+  "off2p_app500": 451.83681689752495,
+  "off2p_safeapp500": 361.46945351802,
+  "bdp": {
+    "wire500_mbps_rtt400_bytes": 25000000,
+    "wire50_mbps_rtt600_bytes": 3750000,
+    "pps500_1271": 49173.87883556255,
+    "pps500_135": 462962.962962963,
+    "delay_pkts500_1271": 9834.775767112511,
+    "delay_pkts500_135": 92592.5925925926
+  }
+}
