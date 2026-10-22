@@ -114,10 +114,14 @@ class Worker:
                 s.setsockopt(socket.IPPROTO_IP, 10, 0 if self.config["traffic"]["allow_fragmentation"] else 2)
         elif key == "udp" and not self.config["traffic"]["allow_fragmentation"]:
             # Windows Winsock IP_DONTFRAGMENT; fail-closed when unsupported.
-            opt = getattr(socket, "IP_DONTFRAGMENT", None)
-            if opt is None:
-                raise RuntimeError("Windows PMTU don't-fragment socket option unsupported")
+            # Python 3.12's Windows socket module omits the name even
+            # though WinSock2 ws2tcpip.h defines IP_DONTFRAGMENT = 14.
+            # Microsoft documents the DWORD option; verify Winsock
+            # readback, never silently downgrade to IP fragmentation.
+            opt = getattr(socket, "IP_DONTFRAGMENT", 14)
             s.setsockopt(socket.IPPROTO_IP, opt, 1)
+            if s.getsockopt(socket.IPPROTO_IP, opt) != 1:
+                raise RuntimeError("Windows IPv4 DF socket readback failed")
         s.bind((self.local, port))
         s.setblocking(False)
         self.effective_buffers[key] = {"rcvbuf": s.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF),
