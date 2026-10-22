@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "bdf57418f92db45d9164dd023301f874825042b1",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "qualification": "NOT_PROMOTED",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "prior_exact_full_product": {
+    "run_id": 39781312249,
+    "attempt": 1,
+    "source_sha": "bc80b161e0e7c2ffc3212b452bb9cf6e5cb2f2d2",
+    "linux_binary_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+    "conclusion": "failure",
+    "artifact_id": 12426599860,
+    "actual_app": {
+      "windows_udp_sent": 24,
+      "windows_udp_received": 25,
+      "linux_udp_sent": 368,
+      "linux_udp_received": 0
+    },
+    "observations": {
+      "windows_npf_local_drops": 98,
+      "windows_os_applied": "PASS_SCOPED",
+      "linux_raw_tun_ready": "PASS_SCOPED",
+      "linux_m2_authenticated_ack": 0,
+      "full_duplex": "FAIL",
+      "two_os_stop": "NOT_VERIFIED"
+    }
+  },
+  "root_cause_source_contract": {
+    "windows_original_go": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go NpcapConfig PacketPersonaWindows11 -> original Go faketcp packet.go IPv4 TTL128",
+    "linux_original_rust": "crates/wbd-engine/src/v4_embedded_go.rs frozen 621bc background_raw_once always PacketPersona::Legacy -> strict TTL64, calls linux_raw_carrier -> rx_ipv4_tcp parse_data_packet WrongPersona before Rust AEAD",
+    "qualification": "DETERMINISTIC_SOURCE_MISMATCH; corrected behavior NOT YET validated in real two-OS Action"
+  },
+  "s861": {
+    "intent_commit": "e0f2ae2795525d21fac258edd185b63aa9a10424",
+    "source_sha": "2457efe047ed5c05279834691c3b821523ea902e",
+    "full_action": {
+      "run_id": 39787549177,
+      "attempt": 1,
+      "conclusion": "failure",
+      "linux_job_id": 119854583188,
+      "windows_job_id": 119855253472,
+      "windows_job_conclusion": "skipped",
+      "error": "two new Rust cfg attributes missing a closing ), lines 366/586; mismatched closing delimiter ]"
+    },
+    "governance_run": 39787548969,
+    "governance_conclusion": "success"
+  },
+  "s862": {
+    "intent_commit": "4c8feeb361d7a8e37188b33880078b4f84b32783",
+    "source_sha": "bdf57418f92db45d9164dd023301f874825042b1",
+    "rust_file_sha": "d6555b26f20060af5585bd2e1473acbe2416952b",
+    "change": "only correct two cfg syntax delimiters; no owner/auth/packet/route/Stop logic change",
+    "full_action": {
+      "run_id": 39788345158,
+      "attempt": 1,
+      "status_at_record": "IN_PROGRESS",
+      "conclusion": null
+    },
+    "governance": {
+      "run_id": 39788345076,
+      "status_at_record": "COMPLETED",
+      "conclusion": "success"
+    }
+  },
+  "qualification_not_run": [
+    "new same-SOURCE Linux original Go/Rust build full verification",
+    "genuine Windows→Linux application UDP after fixed persona",
+    "both full native Stop after app",
+    "actual authentic M2 feedback closed loop",
+    "fresh >256 carrier ACK gap",
+    "WL-N0",
+    "WL-N1",
+    "WL-N5",
+    "physical machines",
+    "Android/OpenWrt"
+  ],
+  "next_action": "Consume newly started source bdf574... Action 39788345158; if build Go or Rust fails repair exact compilation only. If built, read original genuine two-OS result and first missing boundary; do not infer any functional pass from governance or build."
+}
