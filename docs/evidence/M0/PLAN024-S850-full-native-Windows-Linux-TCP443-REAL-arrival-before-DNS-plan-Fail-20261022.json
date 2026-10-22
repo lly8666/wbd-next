@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_FULL_WINDOWS_WSL_TRUE_LINUX_TCP_ARRIVED_WINDOWS_OS_NATIVE_DNS_PLAN_FAIL",
+  "windows_native_source": "68d52a8ace83ea7fb3ace9b41792b8d56c3f3484",
+  "linux_original_product_binary_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+  "actions": [
+    {
+      "run_id": 39761157254,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "sha": "68d52a8ace83ea7fb3ace9b41792b8d56c3f3484",
+      "job_id": 119765372596,
+      "artifact": {
+        "id": 12418937106,
+        "digest": "sha256:236f947ce59a3c8f30c5aa47947dc6f5757d4064c2fecc6cc765dec5296c4b23"
+      }
+    },
+    {
+      "run_id": 39761835173,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "sha": "80347c04fe2a3c0ff43f71960f97cda8755122d7",
+      "job_id": 119767629452,
+      "artifact": {
+        "id": 12419251288,
+        "digest": "sha256:785426fa2dd15de8ba5e3bcacb44e05ce0578f6ee836ce620c9c4961c32dae47"
+      }
+    }
+  ],
+  "real_observed": {
+    "windows": "Original-Go credential-protected TLS and Rust Windows M1/M2/M3 Windows2025 Npcap signed Wintun native full public executable executed on two independent Windows2025 runners",
+    "linux": "Genuine official Ubuntu24.04.5 WSL2 distribution imported; original Go Rust Linux public server on real eth0/raw and kernel TUN owner launched",
+    "mac_binding": "True Linux guest MAC verified via Windows NetNeighbor with precise host and guest identity, scoped HyperV allow and native Stop cleanup run",
+    "linux_kernel_wire": "Real Linux eth0 AF_PACKET observed Windows native original FakeTCP SYN, ACK and TLS payload TCP443 frames; e.g. run39761157254 172.22.64.1:41031→172.22.73.74:443 flags2/16/24 total9",
+    "original_windows_guard": "WBD_PLAN024_NATIVE_WSL_GUEST_MAC_OVER_HOST_SELF_NEXTHOP_VERIFIED + original Npcap next hop bound both emitted",
+    "failure": "windowsclient: invalid network plan before Windows OS Applied",
+    "root_cause_from_source": "Original main_windows.go --dns-hijack=false removes DNSServers4, but native five-stage original Go WAL n4AssembleWindowsNativeOwnedTxn calls n4StaticDNSRequest(plan.DNSServers4) that refuses 0 resolvers (ErrNetworkPlan). Recovered full product CLI uses original native static DNS defaults instead.",
+    "cleanup": "scoped HyperV and verified guest neighbor removed on failure; original Npcap teardown ownership reported",
+    "qualifying_product": "FAIL_FULL_PRODUCT_NO_APPLIED_OR_UDP_STOP"
+  },
+  "next": {
+    "corrected_runner_script_source_sha": "d7bfba9e54277f759b6bec5308de13e4056eb168",
+    "frozen_full_runner_source_sha": "ad21544110c671d73d307f4188c99538aa818c0e",
+    "real_full_actions": [
+      39765279336,
+      39765311632
+    ],
+    "requirements": "Original Go TLS, actual Windows OS Applied and genuine Linux raw/TUN both-way native UDP and strict owned Stop; only then independent WL-N0 N1 N5 10Mbps 60s actual netem. No mock.",
+    "current_status": "BOTH_RUNNING_NOT_PASS_YET"
+  }
+}
