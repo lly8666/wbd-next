@@ -134,6 +134,12 @@ jobs:
           [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_port=443;client_tcp_port=41031;scope='OWNED_SINGLE_WSL2_ORIGINAL_NPCAP_PRODUCT_FLOW'} |
             ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
           Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_ALLOW_INSTALLED'
+          Get-NetFirewallHyperVVMSetting -PolicyStore ActiveStore -Name $creator[0].VMCreatorId -ErrorAction Continue |
+            Select-Object Name,Enabled,DefaultInboundAction,DefaultOutboundAction,LoopbackEnabled,AllowHostPolicyMerge |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-effective.json
+          Get-NetFirewallHyperVProfile -PolicyStore ActiveStore -ErrorAction Continue |
+            Select-Object Name,AllowLocalFirewallRules |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-profile.json
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
@@ -148,6 +154,8 @@ jobs:
             ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
           & wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
             Out-File result/wl-public/linux-eth0.json
+          & wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 |
+            Out-File result/wl-public/linux-eth0-link.json
           $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
           Start-Sleep -Milliseconds 800
           try {
@@ -215,5 +223,8 @@ jobs:
             result/wl-public/windows-adapters.json
             result/wl-public/linux-eth0.json
             result/wl-public/hyperv-rule.json
+            result/wl-public/hyperv-effective.json
+            result/wl-public/hyperv-profile.json
+            result/wl-public/linux-eth0-link.json
           retention-days: 30
           if-no-files-found: warn
