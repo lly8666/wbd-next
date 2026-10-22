@@ -303,6 +303,18 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_accepted_source:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_accepted_repair:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_delivered_source:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_delivered_recovered:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_decode_native:u32,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec2_decode_scalar:u32,
     // Exact peer data PN, only after this SAME protected original M3
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
@@ -368,14 +380,27 @@ impl ProtectedBackgroundRx{
                 receipt.invalid=1;return receipt
             }
             receipt.authenticated_link=1;
+            let before=blocks.decode_backend_calls();
             match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
                 Ok(deliveries)=>{
                     receipt.authenticated_data_pn=Some(opened.pn);
+                    if opened.kind==2{receipt.fec2_accepted_source=1}
+                    else{receipt.fec2_accepted_repair=1}
+                    let after=blocks.decode_backend_calls();
+                    receipt.fec2_decode_native=u32::try_from(after.0.saturating_sub(before.0))
+                        .unwrap_or(u32::MAX);
+                    receipt.fec2_decode_scalar=u32::try_from(after.1.saturating_sub(before.1))
+                        .unwrap_or(u32::MAX);
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
                         if tun.write_authenticated_ipv4(self.generation,&first.frame)
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
+                            if first.recovered{
+                                receipt.fec2_delivered_recovered=receipt.fec2_delivered_recovered.saturating_add(1);
+                            }else{
+                                receipt.fec2_delivered_source=receipt.fec2_delivered_source.saturating_add(1);
+                            }
                         }else{
                             // A well-formed FEC symbol is not necessarily
                             // a valid business IPv4 frame. M4 remains final

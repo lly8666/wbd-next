@@ -26,6 +26,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_rx_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -290,6 +291,24 @@ type V4PublicOuterCounters struct{
     DriverUncertain uint64
     BudgetOrCapacityBlocked uint64
     RetiredTotal uint64
+}
+// One low-cost end-of-session snapshot, never a success/repair prediction.
+type V4PublicFecRxCounters struct {
+    AuthenticatedSource,AuthenticatedRepair uint64
+    TunDeliveredSource,TunDeliveredRecovered uint64
+    NativeDecodeCalls,ScalarDecodeCalls uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicFecRxCounters()(V4PublicFecRxCounters,error){
+    var zero V4PublicFecRxCounters
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var v [6]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_rx_counters(C.uint64_t(b.handle),&v[0],6)
+    if rc!=0{return zero,fmt.Errorf("%w: native FEC2 RX counters=%d",errV4Embedded,int(rc))}
+    return V4PublicFecRxCounters{
+        AuthenticatedSource:uint64(v[0]),AuthenticatedRepair:uint64(v[1]),
+        TunDeliveredSource:uint64(v[2]),TunDeliveredRecovered:uint64(v[3]),
+        NativeDecodeCalls:uint64(v[4]),ScalarDecodeCalls:uint64(v[5]),
+    },nil
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters

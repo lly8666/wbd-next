@@ -236,6 +236,19 @@ func Run(role string,args []string)error{
     }
     return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
+func logAuthenticFecRx(role string,v realityfront.V4PublicFecRxCounters,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_FEC2_RX_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    // This is one pre-Stop snapshot; original M4 worker may still be active.
+    // No claim that netem dropped an exact FEC source or that recovery alone
+    // caused application completeness.
+    log.Printf("V4_PUBLIC_FEC2_RX role=%s source_authenticated=%d repair_authenticated=%d source_tun_delivered=%d recovered_tun_delivered=%d native_decode_calls=%d scalar_decode_calls=%d sampling=pre_stop",
+        role,v.AuthenticatedSource,v.AuthenticatedRepair,
+        v.TunDeliveredSource,v.TunDeliveredRecovered,
+        v.NativeDecodeCalls,v.ScalarDecodeCalls)
+}
 func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err error){
     if err!=nil{
         log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
@@ -309,6 +322,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     if c.fecMode!=realityfront.FecV2Off {
+        measured,readErr:=native.OriginalFecRxCounters()
+        logAuthenticFecRx("client",measured,readErr)
         actual,e:=native.OriginalFECReadback()
         if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=client error=%v",e)}
         if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=client mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}
@@ -407,6 +422,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
         if c.fecMode!=realityfront.FecV2Off {
+            measured,readErr:=product.OriginalFecRxCounters()
+            logAuthenticFecRx("server",measured,readErr)
             actual,e:=product.OriginalFECReadback()
             if e!=nil {log.Printf("V4_PUBLIC_FEC2_READBACK_ERROR role=server error=%v",e)}
             if e==nil {log.Printf("V4_PUBLIC_FEC2_READBACK role=server mode=%s requested=%d applied=%d profile=%d pending=%t",actual.Mode,actual.RequestedRevision,actual.AppliedRevision,actual.Profile,actual.Pending)}

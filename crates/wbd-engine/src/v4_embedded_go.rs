@@ -2493,6 +2493,32 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
         OK
     }
 }
+// Read-only, generation-scoped original RX counters. Every positive value
+// comes from AEAD-unique FEC acceptance and/or successful M4 TUN write.
+// An unavailable mode/owner returns BAD_STAGE, never a misleading zero.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_rx_counters(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=6{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||
+       !e.original_public_feedback_armed||e.protected_features!=7||
+       !e.fec2_rx_admit.load(Ordering::Acquire){return BAD_STAGE}
+    let counts=[
+        e.counters.fec2_rx_source.load(Ordering::Relaxed),
+        e.counters.fec2_rx_repair.load(Ordering::Relaxed),
+        e.counters.fec2_rx_source_delivered.load(Ordering::Relaxed),
+        e.counters.fec2_rx_recovered_delivered.load(Ordering::Relaxed),
+        e.counters.fec2_rx_decode_native.load(Ordering::Relaxed),
+        e.counters.fec2_rx_decode_scalar.load(Ordering::Relaxed),
+    ];
+    unsafe{std::ptr::copy_nonoverlapping(counts.as_ptr(),out,6)}
+    OK
+}
 // Bind genuine public original-Go V4 TLS session to the SAME original
 /// Rust M1/M3/M4 kernel receive -> authenticated M2 feedback -> TX worker.
 /// This is a mode authorization, NOT a separate data plane or self-attested
@@ -2708,6 +2734,20 @@ struct LoopCounts {
     rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
+    // Original Go/TLS owner, true M3 AEAD+PN admission and final M4 TUN.
+    // Counts accumulated per kernel RX batch; no per-packet log or locks.
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_source:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_repair:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_source_delivered:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_recovered_delivered:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_decode_native:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_rx_decode_scalar:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
@@ -2778,6 +2818,8 @@ fn background_raw_once(
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
+    stats:&LoopCounts,
+    #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
@@ -2814,6 +2856,8 @@ fn background_raw_once(
     let mut pending_valid=false;
     let mut invalid_seen=false;
     let mut authenticated_control=false;
+    #[cfg(feature="fec2_product_record")]
+    let mut fec2_counts=[0u64;6];
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
@@ -2830,6 +2874,17 @@ fn background_raw_once(
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(slab,len,tun,when);
+        #[cfg(feature="fec2_product_record")]
+        {
+            let observed=[
+                receipt.fec2_accepted_source,receipt.fec2_accepted_repair,
+                receipt.fec2_delivered_source,receipt.fec2_delivered_recovered,
+                receipt.fec2_decode_native,receipt.fec2_decode_scalar,
+            ];
+            for (total,count) in fec2_counts.iter_mut().zip(observed){
+                *total=total.saturating_add(u64::from(count));
+            }
+        }
         let Some(next)=authenticated_rx_anchor(
             *anchor,absolute,len,receipt.authenticated_link
         )else{continue};
@@ -2890,6 +2945,17 @@ fn background_raw_once(
         }
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
+    #[cfg(feature="fec2_product_record")]
+    {
+        let destinations=[
+            &stats.fec2_rx_source,&stats.fec2_rx_repair,
+            &stats.fec2_rx_source_delivered,&stats.fec2_rx_recovered_delivered,
+            &stats.fec2_rx_decode_native,&stats.fec2_rx_decode_scalar,
+        ];
+        for (dest,n) in destinations.into_iter().zip(fec2_counts){
+            if n!=0{dest.fetch_add(n,Ordering::Relaxed);}
+        }
+    }
     // A unique authenticated LINK shard with no completed datagram is
     // healthy progress, not a spurious RX error. A malformed/discarded shard
     // must still register an error even if another pending shard was valid.
@@ -4056,6 +4122,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
                     rx_flow,generation,rx_server_side,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
+                    #[cfg(feature="fec2_product_record")]
+                    stats_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]

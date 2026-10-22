@@ -4,7 +4,7 @@
 //! emits first-delivery candidates. M4 must validate/submit each candidate.
 #![forbid(unsafe_code)]
 use std::collections::{BTreeMap,BTreeSet};
-use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
+use wbd_codec::fec_v2::{self,BackendChoice,BackendUsed,Rs16};
 // The authenticated original-owner RX opener is MOVED here; never minted
 // separately from keys, or duplicate normal/FEC PN windows could exist.
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
@@ -51,6 +51,9 @@ pub(crate) struct Fec2LiveRx {
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
     stored:usize,evicted:u64,
+    // Actual successful decode backend calls in THIS authenticated generation.
+    // No per-record log; not a claim about native encode, or Go traffic.
+    decoded_native:u64,decoded_scalar:u64,
 }
 impl Fec2LiveRx{
     // This evidence must be supplied by the same Rust Go TLS owner that
@@ -79,12 +82,15 @@ impl Fec2LiveRx{
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener:None,rs:Rs16::new(),budget,
             stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
-            stored:0,evicted:0})
+            stored:0,evicted:0,decoded_native:0,decoded_scalar:0})
     }
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
     /// Lost/expired old blocks are never counted as delivered or credited.
     pub(crate) fn evicted_blocks(&self)->u64{self.evicted}
+    pub(crate) fn decode_backend_calls(&self)->(u64,u64){
+        (self.decoded_native,self.decoded_scalar)
+    }
     pub(crate) fn stop(&mut self){
         self.stopped=true;self.blocks.clear();self.retired.clear();self.stored=0;
     }
@@ -210,9 +216,15 @@ impl Fec2LiveRx{
                 let repairs=b.repairs.values().map(|bytes|
                     fec_v2::parse_repair(bytes,self.budget)
                 ).collect::<Result<Vec<_>,_>>().map_err(|_|ReceiveError::Codec)?;
-                let recovered=self.rs.recover_missing(id,&live,&repairs,
+                let (recovered,backend)=self.rs.recover_missing(id,&live,&repairs,
                     self.budget,BackendChoice::default())
-                    .map_err(|_|ReceiveError::Codec)?.0;
+                    .map_err(|_|ReceiveError::Codec)?;
+                if !recovered.is_empty(){
+                    match backend{
+                        BackendUsed::NativeIsaL=>self.decoded_native=self.decoded_native.saturating_add(1),
+                        BackendUsed::Scalar=>self.decoded_scalar=self.decoded_scalar.saturating_add(1),
+                    }
+                }
                 let recovered_bytes=recovered.iter()
                     .try_fold(0usize,|total,(_,frame)|total.checked_add(frame.len()))
                     .ok_or(ReceiveError::Capacity)?;
@@ -346,6 +358,12 @@ mod tests {
                 recovered+=1;
             }
             assert_eq!(recovered,4);
+            let (native,scalar)=rx.decode_backend_calls();
+            assert_eq!(native+scalar,4,"exactly one successful decode per erasure block");
+            #[cfg(not(feature="native-isal"))]
+            assert_eq!((native,scalar),(0,4));
+            #[cfg(feature="native-isal")]
+            assert_eq!((native,scalar),(4,0));
             assert!(rx.stored_bytes()>0);
             rx.stop();assert_eq!(rx.active_blocks(),0);
             assert_eq!(rx.stored_bytes(),0);
