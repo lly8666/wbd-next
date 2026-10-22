@@ -37,9 +37,9 @@ define Build/Compile
 endef
 
 define Package/wbd-next-v4/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib $(1)/etc/init.d $(1)/etc/config
 	$(INSTALL_BIN) $(WBD_ARM64_STAGE)/wbd-v4-client $(1)/usr/bin/wbd-v4-client
-	$(INSTALL_DATA) $(WBD_ARM64_STAGE)/libwbd_engine.so $(1)/usr/lib/libwbd_engine.so
+	$(INSTALL_DATA) $(WBD_ARM64_STAGE)/libwbd_engine.so $(1)/usr/lib/libwbd_engine.so\n\t$(INSTALL_BIN) ./files/wbd-next-v4.init $(1)/etc/init.d/wbd-next-v4\n\t$(INSTALL_CONF) ./files/wbd-next-v4.config $(1)/etc/config/wbd_next_v4
 endef
 
 $(eval $(call BuildPackage,wbd-next-v4))
