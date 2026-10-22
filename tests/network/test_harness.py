@@ -14,7 +14,7 @@ from pathlib import Path
 from tools.network_harness.config import Unsupported, fec_residual, netem_args, validate
 from tools.network_harness.report import active_gap, summarize
 from tools.network_harness.traffic import Histogram, HEADER, UDP, Worker
-from tools.network_harness.artifacts import verify, sha
+from tools.network_harness.artifacts import verify, sha, attested_recovered_product_build
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -120,6 +120,34 @@ class Contracts(unittest.TestCase):
             if sys.platform == "linux" and os.uname().machine != "aarch64":
                 with self.assertRaises(ValueError):
                     verify(root, b)  # Native ARM64 cannot pass on x86_64 runner
+
+    def test_failed_builder_must_prove_only_optional_unit_failed(self):
+        run = {"path": ".github/workflows/arm64-public-go-build.yml",
+               "head_branch": "experiment/network-matrix-tuning",
+               "event": "push", "status": "completed", "conclusion": "failure"}
+        required = [
+            {"name": "Exact source native ARM64 original Go and Rust bundle", "conclusion": "success"},
+            {"name": "Verify product parity maximum row 0..19 on native ARM64", "conclusion": "failure"},
+            {"name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+             "conclusion": "success"},
+        ]
+        jobs = {"total_count": 2, "jobs": [
+            {"name": "native-go-rust-bundle", "conclusion": "failure",
+             "steps": required + [{"name": "Run actions/checkout@x", "conclusion": "success"}]},
+            {"name": "native-linux-netns", "conclusion": "skipped"}]}
+        self.assertTrue(attested_recovered_product_build(run, jobs))
+        broken = copy.deepcopy(jobs)
+        broken["jobs"][0]["steps"][0]["conclusion"] = "failure"
+        self.assertFalse(attested_recovered_product_build(run, broken))
+        broken = copy.deepcopy(jobs)
+        broken["jobs"][0]["steps"].append({"name": "another hidden failure", "conclusion": "failure"})
+        self.assertFalse(attested_recovered_product_build(run, broken))
+        self.assertFalse(attested_recovered_product_build({**run, "path": "unexpected.yml"}, jobs))
+        self.assertFalse(attested_recovered_product_build({**run, "conclusion": "success"}, jobs))
+        bad = request()
+        bad["bundles"]["B"]["step_attested_failure"] = "true"
+        with self.assertRaises(ValueError):
+            validate(bad)
 
     def test_safe_startup_failure_diagnostic_redacts_private_input(self):
         from tools.network_harness.runner import startup_diagnostic

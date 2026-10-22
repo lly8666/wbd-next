@@ -96,6 +96,9 @@ def verify(root, bundle):
         if any(receipt.get(k) != bundle[v] for k, v in
                [("source", "source"), ("run_id", "run_id"), ("attempt", "attempt"), ("artifact_id", "artifact_id")]):
             raise ValueError("ARM64 artifact GitHub run/attempt mismatch")
+        if bundle.get("step_attested_failure"):
+            if receipt.get("workflow_conclusion") != "failure" or not receipt.get("native_product_build_step_verified"):
+                raise ValueError("missing verified recovered product build steps")
         hashes, machine = _arm_hashes(binary_root / "SHA256SUMS"), 183
     else:
         raise ValueError("no supported product artifact manifest")
@@ -115,6 +118,40 @@ def verify(root, bundle):
             normalized.chmod(0o700)  # shutil.copyfile strips ELF exec mode.
     return manifest
 
+def attested_recovered_product_build(run, jobs):
+    """A narrow, negative default for an already-uploaded native product.
+
+    A failed *post-build* optional unit cannot turn its workflow green. Only
+    the original public ARM64 build and upload steps may be marked proven.
+    Source/run/attempt/artifact/digest/ELF verification still happens elsewhere.
+    """
+    if (run.get("path") != ".github/workflows/arm64-public-go-build.yml"
+            or run.get("head_branch") != "experiment/network-matrix-tuning"
+            or run.get("event") != "push"
+            or run.get("status") != "completed"
+            or run.get("conclusion") != "failure"
+            or jobs.get("total_count") != 2):
+        return False
+    by_name = {j.get("name"): j for j in jobs.get("jobs", [])}
+    if set(by_name) != {"native-go-rust-bundle", "native-linux-netns"}:
+        return False
+    job = by_name["native-go-rust-bundle"]
+    if (job.get("conclusion") != "failure"
+            or by_name["native-linux-netns"].get("conclusion") != "skipped"):
+        return False
+    steps = {s.get("name"): s.get("conclusion") for s in job.get("steps", [])}
+    expected = {
+        "Exact source native ARM64 original Go and Rust bundle": "success",
+        "Verify product parity maximum row 0..19 on native ARM64": "failure",
+        "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02": "success",
+    }
+    if any(steps.get(name) != outcome for name, outcome in expected.items()):
+        return False
+    # No unrecognized failing step may be masked.
+    return all(outcome != "failure" or name in expected and expected[name] == "failure"
+               for name, outcome in steps.items())
+
+
 def fetch(bundle, root):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=False)
@@ -127,11 +164,22 @@ def fetch(bundle, root):
     with get(f'/actions/runs/{bundle["run_id"]}') as f:
         run = json.load(f)
     if (run.get("head_sha") != bundle["source"] or run.get("run_attempt") != bundle["attempt"]
-            or run.get("status") != "completed" or run.get("conclusion") != "success"):
+            or run.get("status") != "completed"):
+        raise ValueError("GitHub build run SHA/attempt/status mismatch")
+    recovered = bundle.get("step_attested_failure", False)
+    if recovered:
+        if run.get("conclusion") != "failure":
+            raise ValueError("step-attested exception requires actual failed workflow")
+        with get(f'/actions/runs/{bundle["run_id"]}/jobs?per_page=100') as f:
+            jobs = json.load(f)
+        if not attested_recovered_product_build(run, jobs):
+            raise ValueError("failed build has no exact step-level product attestation")
+    elif run.get("conclusion") != "success":
         raise ValueError("GitHub build run SHA/attempt/status mismatch")
     (root / "_verified-origin.json").write_text(json.dumps({
         "source": bundle["source"], "run_id": run["id"], "attempt": run["run_attempt"],
-        "artifact_id": meta["id"]}) + "\n")
+        "artifact_id": meta["id"], "workflow_conclusion": run["conclusion"],
+        "native_product_build_step_verified": bool(recovered or run["conclusion"] == "success")}) + "\n")
     if meta.get("digest") and meta["digest"] != "sha256:" + bundle["sha256"]:
         raise ValueError("GitHub artifact digest mismatch")
     archive = root / "artifact.zip"
@@ -177,4 +225,6 @@ def fetch(bundle, root):
     archive.unlink()
     return {"artifact": meta["id"], "zip_sha256": bundle["sha256"],
             "manifest_sha256": sha(manifest_path), "layout": layout,
-            "run_attempt_verified": True, "manifest": manifest}
+            "run_attempt_verified": True, "manifest": manifest,
+            "workflow_conclusion": run["conclusion"],
+            "step_attested_failure": bool(recovered)}

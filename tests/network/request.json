@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed-max-30pct-old-new-AB-hardcase",
+  "id": "arm64-fixed-max-30pct-old-new-AB-attested",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -74,7 +74,8 @@
       "run_id": 39766278666,
       "attempt": 1,
       "artifact_id": 12419289653,
-      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398"
+      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398",
+      "step_attested_failure": true
     }
   },
   "order": "AB"

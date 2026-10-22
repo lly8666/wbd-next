@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S007-same-job-old-new-fixed-maximum-30pct-AB-hardcase",
+  "phase": "S008-AB-attested-product-build-step-intent",
   "recovered": true,
   "origins": {
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -21,7 +21,7 @@
   "latest_harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
   "open_requests": [
     {
-      "id": "arm64-fixed-max-30pct-old-new-AB-hardcase",
+      "id": "arm64-fixed-max-30pct-old-new-AB-attested",
       "type": "PERFORMANCE_PAIR_SINGLE_JOB_AB_HARD_CASE",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
       "path": "tests/network/request.json",
@@ -29,8 +29,8 @@
       "sourceB": "df64bab1d60ae684429a4330e5f09d06ff851019",
       "buildA": 39759842150,
       "buildB": 39766278666,
-      "scenario": "exact S005 2Mbps each dir 50/50 UDP TCP, profile6 IID30pct 300ms one-way 120sec, new/old sequential on same native ARM64 job, independent namespace cleanup",
-      "trigger": "push request.json only once, do not manual dispatch"
+      "trigger": "one request.json push, no manual dispatch",
+      "notes": "same hard S005 120s 30% fixed profile6; B narrowly attested from real successful product build and upload steps, workflow failure never called success"
     }
   ],
   "latest_actions": [
@@ -79,6 +79,13 @@
       "type": "S006-native-arm64-rust-unit",
       "conclusion": "success",
       "evidence": "S006-build-artifact-recovered.json"
+    },
+    {
+      "run": 39766933430,
+      "type": "S007-AB-before-preparation",
+      "conclusion": "failure",
+      "detail": "Recovered: before measurement, B GH build workflow FAIL because optional unit shell command; provenance gate correctly blocked as unqualified",
+      "evidence": "S007-before-prepare-fail.json"
     }
   ],
   "prior_success_reuse": {
@@ -96,8 +103,8 @@
     "No repair byte budget/usefulness, FEC actual k/r, auto curve or native ISA-L runtime backend; NOT_OBSERVED",
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
-  "evidence_index": "docs/evidence/network-matrix-work/ (S001..S005); docs/devlog/network-matrix-work/ per-scene logs",
-  "next_action": "Resolve exactly one S007 performance A/B run ID on request push; do not redispatch. Collect each leg's fixed applied/client, real duplicate count, mode/p99/host and cleanup; compare only same-job, do not claim S005 closed unless all hard gates pass. If still duplicates, restrict FEC qualification and inspect true application id boundary, not seed. Keep S002/S004 FAIL.",
+  "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
+  "next_action": "Find only S008 auto Action from request change; do not dispatch. Inspect both A/B real results, cleanup and exception receipt indicating workflow_failure/step_attested. Never mark S006 builder green; S005 duplicate/applied issue remains OPEN.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {
