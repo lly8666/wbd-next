@@ -317,14 +317,57 @@ print('ARM64_REAL_FEC_BURST_ORIGINAL_KERNEL_OBSERVED',apps)
 PY
   fi
 fi
-stop_namespace "$client_ns"
-stop_namespace "$server_ns"
+crash_variant="${WBD_ARM64_CRASH_VARIANT:-none}"
+case "$crash_variant" in
+  none) stop_namespace "$client_ns"; stop_namespace "$server_ns" ;;
+  sigkill-client)
+    # Fail closed: only kill the exact original-Go executable in the owned
+    # disposable CLIENT namespace. Never signal host or unrelated processes.
+    candidate=""
+    for pid in $(sudo -n ip netns pids "$client_ns"); do
+      exe="$(sudo -n readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
+      if [ "$exe" = "$bundle/wbd-v4-client" ]; then
+        if [ -n "$candidate" ]; then
+          echo 'ARM64_AMBIGUOUS_ORIGINAL_CLIENT_PID' >&2; exit 1
+        fi
+        candidate="$pid"
+      fi
+    done
+    if [ -z "$candidate" ]; then
+      echo 'ARM64_NO_REAL_CLIENT_TO_SIGKILL' >&2; exit 1
+    fi
+    printf 'owned_namespace=%s\nactual_original_client_pid=%s\nkill=SIGKILL\n' "$client_ns" "$candidate" >"$out/forced-client-kill.txt"
+    sudo -n kill -KILL "$candidate"
+    for n in $(seq 1 30); do
+      if ! sudo -n kill -0 "$candidate" 2>/dev/null; then break; fi
+      sleep .1
+    done
+    if sudo -n kill -0 "$candidate" 2>/dev/null; then
+      state="$(ps -p "$candidate" -o stat= || true)"
+      if [[ "$state" != Z* ]]; then
+        echo 'ARM64_ORIGINAL_CLIENT_FAILED_TO_DIE' >&2; exit 1
+      fi
+    fi
+    echo 'ARM64_REAL_GO_CLIENT_SIGKILL_CONFIRMED'
+    stop_namespace "$server_ns"
+    ;;
+  *) echo "ARM64_UNKNOWN_CRASH_VARIANT=$crash_variant" >&2; exit 2 ;;
+esac
 for i in $(seq 1 75); do
-  if grep -q "$stop_marker" "$out/client.log" \
+  if [ "$crash_variant" = sigkill-client ]; then
+    grep -q "$stop_marker" "$out/server.log" && break
+  elif grep -q "$stop_marker" "$out/client.log" \
     && grep -q "$stop_marker" "$out/server.log"; then break; fi
   sleep .2
 done
-grep -q "$stop_marker" "$out/client.log"
+if [ "$crash_variant" = sigkill-client ]; then
+  if grep -q "$stop_marker" "$out/client.log"; then
+    echo 'ARM64_SIGKILL_FAKE_CLIENT_STOP' >&2; exit 1
+  fi
+  test -s "$out/forced-client-kill.txt"
+else
+  grep -q "$stop_marker" "$out/client.log"
+fi
 grep -q "$stop_marker" "$out/server.log"
 if [ "$game_lanes" -gt 0 ]; then
   # Game2/4 use authenticated GameAdapter grouped lanes, NOT Normal FEC2
@@ -365,7 +408,9 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
 "game_lanes":int(os.environ.get("WBD_V4_GAME_LANES","0")),
-"bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
+"bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION",
+"owned_stop":"SERVER_DRAINED_CLIENT_FORCED_SIGKILL" if os.environ.get("WBD_ARM64_CRASH_VARIANT","none")=="sigkill-client" else "TWO_DRAINED",
+"crash_variant":os.environ.get("WBD_ARM64_CRASH_VARIANT","none"),"netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN",
 "capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
 "idle_resume_seconds":os.environ.get("WBD_ARM64_IDLE_RESUME_S","NOT_RUN"),

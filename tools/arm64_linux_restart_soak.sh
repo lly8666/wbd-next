@@ -13,8 +13,11 @@ test -n "${WBD_ARM64_FROZEN_SOURCE:?}"
 for iteration in 1 2; do
   if [ "$iteration" -eq 1 ]; then
     export WBD_ARM64_IDLE_RESUME_S=8
+    if [ "${WBD_ARM64_RESTART_FAULT:-}" = client-sigkill ]; then
+      export WBD_ARM64_CRASH_VARIANT=sigkill-client
+    fi
   else
-    unset WBD_ARM64_IDLE_RESUME_S
+    unset WBD_ARM64_IDLE_RESUME_S WBD_ARM64_CRASH_VARIANT
   fi
   echo "ARM64_RESTART_EPISODE_BEGIN $iteration"
   # Its trap destroys BOTH network namespaces on any early failure, and
@@ -24,7 +27,14 @@ for iteration in 1 2; do
   mv "$root/arm64-netns-result" "$output/episode-$iteration"
   ep="$output/episode-$iteration"
   test -s "$ep/tls-cert-fingerprint.txt"
-  grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$ep/client.log"
+  if [ "${WBD_ARM64_CRASH_VARIANT:-none}" = sigkill-client ]; then
+    test -s "$ep/forced-client-kill.txt"
+    if grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$ep/client.log"; then
+      echo 'ARM64_KILLED_CLIENT_CANNOT_REPORT_GRACEFUL_STOP' >&2; exit 1
+    fi
+  else
+    grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$ep/client.log"
+  fi
   grep -q V4_PUBLIC_NATIVE_STOP_DRAINED "$ep/server.log"
   test ! -d "$RUNNER_TEMP/arm64-netns-secrets-$GITHUB_RUN_ID"
   # Stop must truly retire the original M4 interfaces. The namespace name is
@@ -50,7 +60,8 @@ for n in (1,2):
     assert receipt["source"]==os.environ["WBD_ARM64_FROZEN_SOURCE"]
     assert receipt["mode"]=="fec-fixed"
     assert receipt["netns_cleanup"]=="PASS"
-    assert receipt["owned_stop"]=="TWO_DRAINED"
+    expected="SERVER_DRAINED_CLIENT_FORCED_SIGKILL" if n==1 and os.environ.get("WBD_ARM64_RESTART_FAULT")=="client-sigkill" else "TWO_DRAINED"
+    assert receipt["owned_stop"]==expected,(n,receipt["owned_stop"],expected)
     assert (d/"tls-cert-fingerprint.txt").read_text().strip()
     def ping(fn,expected):
         s=(d/fn).read_text()
@@ -62,7 +73,11 @@ for n in (1,2):
     for role in ("client","server"):
         log=(d/f"{role}.log").read_text()
         assert log.count("V4_ORIGINAL_GO_"+role.upper()+"_NATIVE_READY")==1
-        assert "V4_PUBLIC_NATIVE_STOP_DRAINED" in log
+        if n==1 and role=="client" and os.environ.get("WBD_ARM64_RESTART_FAULT")=="client-sigkill":
+            assert "V4_PUBLIC_NATIVE_STOP_DRAINED" not in log
+            assert (d/"forced-client-kill.txt").stat().st_size>0
+        else:
+            assert "V4_PUBLIC_NATIVE_STOP_DRAINED" in log
         assert re.search(r'V4_PUBLIC_FEC2_READBACK role='+role+
              r' mode=fixed requested=\d+ applied=[1-9]\d* .*pending=false',log)
     docs.append({"episode":n,"mode":"fec-fixed",
@@ -80,6 +95,7 @@ out={"qualification":"PASS_SCOPED_ARM64_TWO_SEQUENTIAL_REAL_GO_TLS_RUST_TUN_GENE
      "outer_kernel_fault":"NOT_RUN",
      "physical_two_hosts":"NOT_RUN",
      "long_duration_soak":"NOT_RUN",
+     "first_session_fault":os.environ.get("WBD_ARM64_RESTART_FAULT","none"),
      "episodes":docs}
 (p/"receipt.json").write_text(json.dumps(out,indent=2)+"\n")
 print("ARM64_ORIGINAL_GO_RUST_NATIVE_TWO_GENERATIONS_STOP_RECREATE_PASS")
