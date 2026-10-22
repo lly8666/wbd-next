@@ -314,7 +314,41 @@ pub(crate) struct BackgroundRxReceipt{
     // actual TUN writes 6,7; TUN failure 8, FEC reject 9, disabled 10.
     #[cfg(feature="fec2_product_record")]
     pub(crate) fec_rx:[u32;11],
+    // Successful real M4 TUN-write classification, no packet metadata stored.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec_rx_ip:[u32;8],
 }
+// Bounded numeric classification ONLY after authentic first delivery reaches
+// original M4 TUN. Do not retain addresses, ports, seq, ACK or payload.
+#[cfg(feature="fec2_product_record")]
+fn original_fec_tun_ip_class(frame:&[u8],recovered:bool,tally:&mut [u32;8]){
+    let index=usize::from(recovered);
+    if frame.len()<20 || frame[0]>>4!=4 {
+        tally[4]=tally[4].saturating_add(1);return
+    }
+    match frame[9]{
+        17=>tally[index]=tally[index].saturating_add(1),
+        6=>{
+            tally[2+index]=tally[2+index].saturating_add(1);
+            let ihl=usize::from(frame[0]&0x0f)*4;
+            if ihl<20||frame.len()<ihl+20{
+                tally[7]=tally[7].saturating_add(1);return
+            }
+            let tcp_h=usize::from(frame[ihl+12]>>4)*4;
+            let total=usize::from(u16::from_be_bytes([frame[2],frame[3]]));
+            if tcp_h<20||total>frame.len()||total<ihl+tcp_h{
+                tally[7]=tally[7].saturating_add(1);return
+            }
+            let data_len=total-ihl-tcp_h;
+            if data_len>0{tally[6]=tally[6].saturating_add(1)}
+            else if frame[ihl+13]&0x10!=0{
+                tally[5]=tally[5].saturating_add(1);
+            }else{tally[7]=tally[7].saturating_add(1)}
+        },
+        _=>tally[4]=tally[4].saturating_add(1),
+    }
+}
+
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Debug)]
 pub(crate) struct AuthenticatedNormalKind1{
@@ -385,6 +419,7 @@ impl ProtectedBackgroundRx{
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
                             if first.recovered{receipt.fec_rx[7]+=1}else{receipt.fec_rx[6]+=1}
+                            original_fec_tun_ip_class(&first.frame,first.recovered,&mut receipt.fec_rx_ip);
                         }else{
                             receipt.fec_rx[8]+=1;
                             // A well-formed FEC symbol is not necessarily
@@ -1553,6 +1588,32 @@ impl ProtectedScopedOwner {
         #[cfg(feature="m0_fec2_owner_probe")]
         {self.fec2_probe_scope=None;}
         self.rx_tx.stop(&self.token)
+    }
+}
+
+
+#[cfg(all(test,feature="fec2_product_record"))]
+mod m0_fec_rx_ip_class_contract {
+    use super::original_fec_tun_ip_class;
+    #[test]
+    fn m0_original_fec_tun_classifies_only_post_m4_ipv4_protocol(){
+        let mut c=[0u32;8];
+        let mut udp=[0u8;28];udp[0]=0x45;
+        udp[2..4].copy_from_slice(&28u16.to_be_bytes());udp[9]=17;
+        original_fec_tun_ip_class(&udp,false,&mut c);
+        original_fec_tun_ip_class(&udp,true,&mut c);
+        let mut tcp=[0u8;40];tcp[0]=0x45;
+        tcp[2..4].copy_from_slice(&40u16.to_be_bytes());
+        tcp[9]=6;tcp[32]=0x50;tcp[33]=0x10;
+        original_fec_tun_ip_class(&tcp,false,&mut c);
+        let mut data=tcp.to_vec();data.push(123);
+        data[2..4].copy_from_slice(&41u16.to_be_bytes());
+        original_fec_tun_ip_class(&data,true,&mut c);
+        let mut other=udp;other[9]=1;
+        original_fec_tun_ip_class(&other,false,&mut c);
+        assert_eq!(c,[1,1,1,1,1,1,1,0]);
+        original_fec_tun_ip_class(&[],true,&mut c);
+        assert_eq!(c[4],2);
     }
 }
 

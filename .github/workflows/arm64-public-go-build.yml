@@ -43,6 +43,9 @@ jobs:
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1 -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            m0_original_fec_tun_classifies_only_post_m4_ipv4_protocol -- --nocapture
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

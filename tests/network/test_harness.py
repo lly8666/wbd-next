@@ -169,6 +169,19 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
 
+    def test_original_m4_ipv4_packet_class_proof_not_business_goodput(self):
+        from tools.network_harness.runner import public_fec_rx_ip_class,product_marker_line
+        line=("V4_PUBLIC_FEC2_RX_IP_CLASS role=client sys_udp=12 rec_udp=8 "
+              "sys_tcp=3 rec_tcp=7 other_ip=0 tcp_ack_only=6 "
+              "tcp_data=4 tcp_other=0")
+        self.assertTrue(product_marker_line(line))
+        self.assertEqual(public_fec_rx_ip_class(line)["rec_tcp"],7)
+        self.assertEqual(public_fec_rx_ip_class(line)["tcp_ack_only"],6)
+        self.assertIsNone(public_fec_rx_ip_class(""))
+        self.assertIsNone(public_fec_rx_ip_class(line.replace("rec_udp=8","missing=8")))
+        self.assertIsNone(public_fec_rx_ip_class(line.replace("tcp_ack_only=6","tcp_ack_only=12")))
+        self.assertNotIn("private",str(public_fec_rx_ip_class(line)))
+
     def test_original_fec_m3_m4_rx_numeric_receipt_contract(self):
         from tools.network_harness.runner import public_fec_rx_proof,product_marker_line
         row=("V4_PUBLIC_FEC2_RX_PROOF role=server source_seen=1809 "

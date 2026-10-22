@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S025-scope-real-FEC-M4-IPv4-protocol-class-recovery",
+  "phase": "S025-authentic-post-M4-FEC-IPv4-protocol-class-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,16 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "S025-original-M3-M4-classification-build",
+      "type": "ONE_NEW_PRODUCT_SOURCE_BUILD",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "one branch push of original Rust and Go source runs a single native ARM64 product build, no manual dispatch",
+      "scope": "feature7-only eight bounded post-TUN-write numeric classes, no raw content, endpoint, packet/ACK replay changes",
+      "previous_source": "370eb534621d76deda7888599bd089acc163acac"
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S013",
@@ -132,7 +141,7 @@
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning."
   ],
-  "next_action": "S024 FAIL archived; no redispatch. Directed code review Fec2LiveRx M3→M4 actual IPv4 candidates and existing TCP checksum/de-dupe. Add minimum bounded per-session class totals for original FEC systematic/recovered successfully TUN-written UDP vs TCP, and TCP ACK-only vs data, plus reject code if necessary, no packet bodies/ports. Build new product SOURCE once; one targeted same Fixed30 measurement. S018 default mode PASS and S017 zero duplicates preserved. M2 mature gate not weakened.",
+  "next_action": "Resolve exactly one S025 native ARM64 product build run and S025 harness contract from this combined push; check both existing FEC units and new classification unit, SHA256SUMS and manifest/ELF. If build/test fails diagnose and minimally correct without starting duplicate product build of same SOURCE. After success run one source-bound original Fixed30 measuring real M3/M4 systematic/recovered TCP ACK-only/data vs UDP with TCPINFO and Stop. S024 hard FAIL and S018 default PASS retained.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",

@@ -28,10 +28,27 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+
+
+def public_fec_rx_ip_class(log_text):
+    """Original after-M4-write protocol/ACK type counts, never inferred."""
+    fields=("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip",
+            "tcp_ack_only","tcp_data","tcp_other")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_RX_IP_CLASS role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)", rows[-1])}
+    if any(k not in d for k in fields):
+        return None
+    if (d["tcp_ack_only"]+d["tcp_data"]+d["tcp_other"] !=
+        d["sys_tcp"]+d["rec_tcp"]):
+        return None
+    return {k:d[k] for k in fields}
 
 
 def public_fec_rx_proof(log_text):
@@ -439,11 +456,17 @@ class LinuxExperiment:
         fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
         fec_m2 = {role:public_fec_m2_proof(log) for role,log in logs.items()}
         fec_rx = {role:public_fec_rx_proof(log) for role,log in logs.items()}
+        fec_ip = {role:public_fec_rx_ip_class(log) for role,log in logs.items()}
+        fec_class_valid = all(fec_ip[role] is not None and fec_rx[role] is not None and
+            (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
+             fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
+            for role in logs)
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
+                "original_fec_rx_ipv4_classes": fec_ip if fec_class_valid else "NOT_OBSERVED",
                 "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
                 "FEC_k_r_parity_queue_decode": {

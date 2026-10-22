@@ -2793,6 +2793,8 @@ struct LoopCounts {
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
     #[cfg(feature="fec2_product_record")]
     fec_rx:[AtomicU64;11],
+    #[cfg(feature="fec2_product_record")]
+    fec_rx_ip:[AtomicU64;8],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -2899,6 +2901,8 @@ fn background_raw_once(
     let mut delivered_total=0u32;
     #[cfg(feature="fec2_product_record")]
     let mut fec_batch=[0u64;11];
+    #[cfg(feature="fec2_product_record")]
+    let mut fec_ip_batch=[0u64;8];
     let mut pending_valid=false;
     let mut invalid_seen=false;
     let mut authenticated_control=false;
@@ -2920,6 +2924,10 @@ fn background_raw_once(
         let receipt=owner.consume_original(slab,len,tun,when);
         #[cfg(feature="fec2_product_record")]
         for (dst,n) in fec_batch.iter_mut().zip(receipt.fec_rx.iter()){
+            *dst=dst.saturating_add(u64::from(*n));
+        }
+        #[cfg(feature="fec2_product_record")]
+        for (dst,n) in fec_ip_batch.iter_mut().zip(receipt.fec_rx_ip.iter()){
             *dst=dst.saturating_add(u64::from(*n));
         }
         let Some(next)=authenticated_rx_anchor(
@@ -2983,6 +2991,10 @@ fn background_raw_once(
     }
     #[cfg(feature="fec2_product_record")]
     for (dst,n) in fec_stats.fec_rx.iter().zip(fec_batch){
+        if n>0{dst.fetch_add(n,Ordering::Relaxed);}
+    }
+    #[cfg(feature="fec2_product_record")]
+    for (dst,n) in fec_stats.fec_rx_ip.iter().zip(fec_ip_batch){
         if n>0{dst.fetch_add(n,Ordering::Relaxed);}
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
@@ -4591,6 +4603,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_proof(
     }
     OK
 }
+// Read-only FEC M3→M4 IP class numbers from original copied packets.
+// Private feature7 owner, exact 8 fields. Does not alter admission or TUN.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_fec_rx_ip_classes(
+    h:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=8{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||e.protected_features!=7{
+        return BAD_STAGE
+    }
+    for (i,value) in e.counters.fec_rx_ip.iter().enumerate(){
+        unsafe{out.add(i).write(value.load(Ordering::Relaxed))};
+    }
+    OK
+}
+
 // Explicit coverage counters are separate from UNKNOWN and kernel copied.
 // A positive number requires actual original C2S kind1 received, opened
 // with the moved M3 replay state and pinned into M2, not an RX count.

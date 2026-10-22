@@ -46,6 +46,13 @@ type V4PublicFecRxProof struct {
     SystematicCandidate,RecoveredCandidate,SystematicTun,RecoveredTun uint64
     TunFailed,DecoderRejected,AdmissionDisabled uint64
 }
+// Original authenticated M3 FEC first-delivery bytes classified ONLY after
+// real TUN copied; does not include application receipt or raw packet data.
+type V4PublicFecRxIpClass struct {
+    SystematicUDP,RecoveredUDP,SystematicTCP,RecoveredTCP uint64
+    OtherIP,TCPAckOnly,TCPData,TCPOther uint64
+}
+
 type v4ProductFecMonitor struct {
     epoch [16]byte
     state FecV2State
