@@ -1,6 +1,6 @@
 # 可复用真实网络 Actions 夹具
 
-2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。实现只增加测试工具，不修改产品、M0 工作游标、权限或生产开关。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
+2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR #21最初实现只增加测试工具，没有修改产品、M0工作游标、权限或生产开关；这不是后续任务的“产品只读”限制。2026-10-22独立实验任务可按[NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)在本分支修产品和必要观测。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
 这落实 `docs/architecture/TEST_PLAN.md` 的持续业务、产物复用、单场景 Actions 和理论允许带原则，不替代它。已有小回显夹具继续作为便宜的功能回归。
 
@@ -40,7 +40,7 @@
 
 **当前 Game CLI 明确设置 FEC off。** 夹具不能将它标为 Game+FEC strong，也不能把 profile 参数被忽略当作档位生效。请求 Game FEC-on、cipher选择、重传开关/比例会明确拒绝为 UNSUPPORTED，直到产品暴露真实参数和 readback。不要为跑测试修改这条实际语义，更不能偷偷回到旧 Go 数据面。
 
-现有产品日志有 Normal/M2 首发、认证 ACK、修复次数、uncertain、blocked，以及 Game copied/delivered/raw_received/auth_rejected。**没有**足够公开数据观测修复字节预算、有效/多余重传、逐包修复延迟、FEC实际k/r/等待年龄、实时自动档曲线、owner锁等待等。结果相应填 NOT_OBSERVED；最终 applied 不证明中间升降曲线。M0 后续可以让产品按低频 JSON 暴露这些现有计数，再补一个解析器；本夹具不反向调用测试 ABI 或另造一套自适应控制器。
+PR #21接入时的产品日志有 Normal/M2 首发、认证 ACK、修复次数、uncertain、blocked，以及 Game copied/delivered/raw_received/auth_rejected；修复字节预算、有效/多余重传、修复延迟、FEC实际k/r/等待年龄、实时自动档曲线、owner锁等待等公开观测不足。执行时核当前源码，缺项仍填 NOT_OBSERVED；最终 applied 不证明中间升降曲线。缺项影响当前异常归因时，由本任务执行者在授权分支按低成本观测方式导出必要计数并补解析，不等M0，也不为不相关字段建全套监控。本夹具不反向调用测试 ABI 或另造自适应控制器。
 
 不支持的后续工况：Windows原生、ARM本机、真实外网、DNS互备/路由/UI、换代/休眠控制、cipher/repair运行时切换、外观抓包、DF超限拒绝的专门功能资格。这些继续用已有产品生命周期/物理夹具。本夹具的 `rate_scale=0` **仍有 RTT 探针**，不能冒充无真实 payload 的 idle 验收；黑洞恢复也不自动等于 lane重建功能通过。
 
