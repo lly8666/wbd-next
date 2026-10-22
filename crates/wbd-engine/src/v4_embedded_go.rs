@@ -438,7 +438,9 @@ struct GameGroupNative{
     flows:Vec<crate::v4_protected_handoff::GoFlow>,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     tx_seqs:Vec<u64>,
-    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    // The concrete kernel owner module exists only with FEC2 product record.
+    // Normal/off without that opt-in must not refer to the absent Game type.
+    #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     drivers:Option<crate::v4_game_public_kernel::GameKernelOwner>,
 }
 // Dedicated group handles have different low tag from existing original
