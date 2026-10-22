@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_EXACT_FULL_PUBLIC_WINDOWS_LINUX_AUTHENTICATED_APP_ADMISSION_STALL",
+  "windows_product_source": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+  "linux_binary_source": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+  "actions": [
+    {
+      "run_id": 39766899588,
+      "source_sha": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+      "attempt": 1,
+      "job_id": 119784489649,
+      "conclusion": "FAILURE",
+      "artifact_id": 12420459264,
+      "artifact_sha256": "dd3e9f872f50d5cf55ead2af19defce3343dc9b65b4c4bcbcddb9af2d7797f39",
+      "client_error": "context deadline exceeded"
+    },
+    {
+      "run_id": 39767733659,
+      "source_sha": "58a3b278bbec80f3acdf266cc97f57feb2a1cc45",
+      "windows_binary_source": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+      "attempt": 1,
+      "job_id": 119787265889,
+      "conclusion": "FAILURE",
+      "artifact_id": 12422340010,
+      "artifact_sha256": "45c6f9f7028232d38489bdfa2b5f2f4b779d7887155f36494adf79f2abc1a816",
+      "client_error": "native V4 actual kernel first+reverse app not observed: context deadline exceeded"
+    }
+  ],
+  "positive_real_evidence": [
+    "real Windows original Go credential TLS and Rust native product source compiled or byte-exact binary audit passed",
+    "signed Npcap 1.88 and signed Wintun 0.14.1 installed and owned OS cleanup verified",
+    "pinned real Ubuntu 24.04.5 WSL2 raw/TUN public server emits original authenticated server READY",
+    "real Windows client Npcap TCP SYN,ACK and protected payload arrive at actual WSL2 eth0 AF_PACKET",
+    "scoped original Go Windows real nextHop -> authenticated guest route SOURCE49943d passed previous unconfirmed route ownership stage on frozen product, reached first+reverse kernel gate"
+  ],
+  "observed_failure": "Original product Wintun authenticated first+reverse kernel application delivery was not observed before 20-second Apply deadline. Source runner tools/m0_wl_public_normal_e2e.py currently only launches real Windows/Linux UDP applications AFTER WBD_WINDOWS_CLIENT_READY, but original native Windows owner requires p.sent>=2, p.opened>=1, p.sentAfterOpen>=1 BEFORE it emits WBD_WINDOWS_CLIENT_READY; this circular dependency is borne out by current full runs. No mock or synthetic packet proof may substitute.",
+  "gate_result": {
+    "normal_off": "FAIL",
+    "windows_os_applied": "NOT_OBSERVED",
+    "bidirectional_native_udp": "NOT_RUN",
+    "windows_owned_stop": "NOT_VERIFIED",
+    "linux_owned_stop": "PASS_ON_FAILED_ROLLBACK_NOT_PRODUCT_FULL_PASS",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "required_fix": "In the SAME direct public E2E Action, start both distinct real Linux TUN and Windows Wintun bound UDP applications after spawning the actual original Go Windows client but BEFORE waiting for WBD_WINDOWS_CLIENT_READY. Windows app must bounded-retry real 10.66.0.2 bind until original OS lease exists. Allow enough real packets/time for true first/reverse/after-reverse M3 delivery. The product still owns the authoritative OS Applied and Stop receipts, and failure remains FAIL. The run's public UDP results and Stop must still be independently required. No proxy, loopback, fake ACK, capability mask or fabricated ready.",
+  "change_status": "UNCOMMITTED: attempted exact script source edits were blocked by repository write safety enforcement, therefore NOT RUN, NO PASS claims",
+  "next": "Use authorized project edit path to apply this genuine concurrent-app E2E orchestration correction, then run the existing full source-locked Windows2025 original Go TLS/Rust/Npcap/Wintun→WSL2 Linux raw/TUN public Normal/off Action. Do not restart unit tests."
+}
