@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S004-udp-only-match-mixed-total-offer",
+  "phase": "S005-fixed-maximum-iid30-sustained-mixed-representative",
   "recovered": true,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -53,27 +53,24 @@
   ],
   "open_requests": [
     {
-      "id": "arm64-off-udp10m-loss1-rtt50-75s",
+      "id": "arm64-fixed-maximum-30pct-rtt600-mixed-120s",
       "path": "tests/network/request.json",
-      "status": "QUEUED_OR_RUNNING",
-      "scenario": "S004 real Normal/off 10Mbps UDP per direction, no TCP; compares S002 total 10Mbps/direction mix vs S003 5Mbps UDP-only; same request loss/delay/sizes; same frozen SOURCE",
-      "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "scenario": "Native ARM64 real fixed maximum (profile6) 2Mbps per direction 50% UDP/TCP 4 flows 120s 30% IID with 300ms one-way each; first low-capacity validation, not 50Mbps outer qualification; actual k/r NOT_OBSERVED",
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
       "build_run": 39759842150,
       "artifact_id": 12417786567,
       "attempt": 1,
-      "trigger": "push request.json one automatic measurement; do not dispatch twice",
-      "run_id": 39764098892,
-      "harness_source": "973b01901bc27f8881710aca26f1626237aba4e8",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39764098892"
+      "trigger": "single push of tests/network/request.json, DO NOT manual dispatch"
     }
   ],
   "open_issues": [
-    "S002 true measured UDP residual 1.317%/1.528% at injected 0.971%/1.001%, exceeds declared 0.1%; TCP both sides backpressured/p99 1.3-1.9s; causality OPEN",
-    "Repair byte budget/usefulness, first-delivery split, FEC actual k/r and native runtime backend NOT_OBSERVED",
-    "Game+FEC, cipher/repair runtime toggles, no-payload idle and Windows not wired in this Linux harness",
-    "Native ARM64 source/run/attempt/ZIP/ELF adapt PASS in existing selfcheck; 39762361004 selfcheck failed from inherited repair gate; test-only fix pending fresh Actions"
+    "S002 mixed 1% IID UDP loss 1.317%/1.528% and severe TCP tail: OPEN",
+    "S004 10Mbps all-UDP 1% IID residual 0.493%/0.562%; original product reports quota_or_capacity_blocked 417/351; need split reason/first-send and repair timing before changing quotas or locks",
+    "No repair wire byte budget/usefulness, FEC k/r/partial cadence or backend runtime dispatch: NOT_OBSERVED",
+    "Game+FEC, cipher/repair toggles, truly payload-free idle and Windows/physical not available on this runner"
   ],
-  "next_action": "S004 run 39764098892 only (queued/running); collect results and archive, no duplicate dispatch. Compare quality with S002/S003 cautiously because not same host. Then representative Fixed/Auto/Game tests within observed ARM64 capacity.",
+  "next_action": "Resolve sole S005 Action for fixed maximum high-loss continuous mixed; verify true applied profile6, impairment/queue/Stop/CPU/UDP/TCP. If partial FEC k/r not observable, avoid asserting model matches or 50Mbps boundary. Preserve S002/S004 off failures and investigate bounded owner counters separately.",
   "actions": [
     {
       "run_id": 39759842064,
@@ -117,6 +114,18 @@
       "source": "242988e9f77f28337b34bee72a153a3ed31fefc5",
       "conclusion": "success",
       "detail": "S003 request harness contracts all PASS"
+    },
+    {
+      "run_id": 39764098892,
+      "source": "973b01901bc27f8881710aca26f1626237aba4e8",
+      "conclusion": "failure",
+      "detail": "S004 10Mbps per direction all-UDP 1% IID loss: 0.493%/0.562% app UDP residual, product quota_or_capacity blocked 417/351, Stop PASS"
+    },
+    {
+      "run_id": 39764098850,
+      "source": "973b01901bc27f8881710aca26f1626237aba4e8",
+      "conclusion": "unknown",
+      "detail": "S004 harness contracts result not separately checked at this exact commit; must verify if needed"
     }
   ],
   "completed": [
@@ -154,6 +163,14 @@
       "result": "PASS_SCOPED_OBSERVATION",
       "artifact_id": 12419835358,
       "evidence": "S003-udp-only-1pct-pass.json",
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
+    },
+    {
+      "id": "arm64-off-udp10m-loss1-rtt50-75s",
+      "run_id": 39764098892,
+      "result": "FAIL",
+      "artifact_id": 12418609807,
+      "evidence": "S004-udp10m-loss1-fail.json",
       "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966"
     }
   ]
