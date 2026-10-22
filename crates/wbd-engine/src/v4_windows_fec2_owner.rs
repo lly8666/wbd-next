@@ -79,7 +79,8 @@ pub(super) fn open_symbol(
     }
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
-    e.owner.offer_after_active(slab,0..wire.len(),u64::from(seq),MonoNs(0))
+    let unfolded=m0_tcp_unwrap(&e,seq,wire.len())?;
+    e.owner.offer_after_active(slab,0..wire.len(),unfolded,MonoNs(0))
         .map_err(|_|INVALID)?;
     let mut result=Vec::new();
     let mut failed=false;
@@ -109,6 +110,7 @@ pub(super) fn open_symbol(
     drop(storage);
     if failed||report.rejected!=0||report.link_ready!=1||
         report.control_ready!=0{return Err(INVALID)}
+    e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
     Ok(result)
 }
 fn epoch(ptr:*const u8,len:usize)->Option<[u8;16]>{
