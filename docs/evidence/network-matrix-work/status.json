@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "arm64-adapter-and-frozen-product-build",
+  "phase": "first-native-arm64-sustained-duplex-mixed-baseline",
   "recovered": false,
   "initial_branch_absent_confirmed": true,
   "sources": {
@@ -15,13 +15,14 @@
   "build": {
     "run_id": 39759842150,
     "attempt": 1,
-    "artifact_id": null,
-    "sha256": null,
-    "status": "IN_PROGRESS",
+    "artifact_id": 12417786567,
+    "sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b",
+    "status": "SUCCESS",
     "architecture": "aarch64",
     "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
     "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
-    "native_feature_compiled": "REQUESTED_NOT_RUNTIME_VERIFIED"
+    "native_feature_compiled": "REQUESTED_NOT_RUNTIME_VERIFIED",
+    "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/39759842150"
   },
   "historical_reuse": [
     {
@@ -50,13 +51,24 @@
       "scope": "overall workflow FAIL retained; traffic markers positive"
     }
   ],
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "arm64-off-duplex-mixed-10m-lossless-90s",
+      "path": "tests/network/request.json",
+      "scenario": "normal/off lossless 90s, UDP/TCP 50/50, 4 TCP flows, 64/256/1024/1172B, 20Hz probes; each direction 10Mbps",
+      "status": "INTENT_RECORDED_NOT_DISPATCHED",
+      "run_id": null,
+      "attempt": null,
+      "build_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "artifact_id": 12417786567
+    }
+  ],
   "open_issues": [
     "No runtime repair byte budget and actual FEC k/r readback; NOT_OBSERVED",
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Inspect adapter selfcheck and frozen build Actions; retrieve real artifact digest; commit one mixed UDP/TCP bidirectional request, not repeat ICMP.",
+  "next_action": "Commit tests/network/request.json for first ARM64 duplex scenario; verify exactly one network performance Action, inspect artifact/host/generator/Stop before scaling.",
   "actions": [
     {
       "run_id": 39759842064,
@@ -67,8 +79,9 @@
     {
       "run_id": 39759842150,
       "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "conclusion": "IN_PROGRESS",
-      "detail": "one-time native ARM64 product build"
+      "conclusion": "success",
+      "detail": "one-time native ARM64 product build",
+      "artifact_id": 12417786567
     }
   ]
 }
