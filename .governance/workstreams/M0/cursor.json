@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 245,
-  "checkpoint_sha": "16178a10944aabff45f0c3632b0f312ffe34c101",
+  "sequence": 246,
+  "checkpoint_sha": "815910f7b7cf47d1c05537b24b30bdf272dce917",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "PLAN024: PR22 merged. Public Windows2025 Npcap/Wintun→Linux WSL2 true Normal/off is blocked by missing installed Npcap service/DLL and Wintun adapter; WSL2 netem probe invalid due shell CRLF. Shared Rust M2 Windows recovery, Go 256-ACK noHOL/750ms×8 retirement, public kernel→kernel product traffic and WL-N0/N1/N5 remain NOT_RUN.",
-  "why_now": "S765 recovered H244 checkpoint unique cursor-only commit. PR22 merge 2840296. S766 hot-byte structural FAIL original Actions preserved; S768 registry prose trim → Governance39726037943/1 SUCCESS. S767 first bounded real Windows2025 capability Action39725690761/1 SUCCESS ENV_DISCOVERY_ONLY, artifact12403107809 (sha256 cbd1cdec023b83b8512bf935c3268ff537f10887a2ac2394574eb32c2e3d2b09), Npcap/Wintun NOT_FOUND, WSL probe harness CRLF failure. G2 registry revision changed39726037963/1 FAIL preserved.",
+  "why_now": "S771 repaired H245 exact-source evidence grouping error: Governance39726574505/1 FAIL 'evidence is for a different SOURCE'. Env capability SOURCE bb19b3 is kept context-only; unchanged last_tested_source a22c4e and its frozen S763 evidence remain paired. H245 original FAIL retained. Also S768 Governance39726037943 PASS, S770 Governance39726499860 PASS; no public Windows→Linux product test.",
   "done_when": "Main registry R0-M0-PLAN008 and docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md §2 govern: exact-source public original Go TLS/Rust Windows Wintun/Npcap→Linux raw/TUN Normal/off bidirectional continuous genuine netem and Stop, shared Rust M2 no ACK HOL; then individual WL-N0/N1/N5 or precise BLOCKED/NOT_RUN. Existing scoped product modes and WinSock loopback do not qualify.",
   "next_action": "Wire Windows real original TLS-bound Rust M2 kind1 authenticated receipt/shadow/budget/fresh independent of Go TCP cumulative ACK; retire Go 256-unACK fresh gate and 750ms×8 local retries with targeted Windows Actions; only after a usable isolated installed Npcap/Wintun+Linux raw/TUN/netem endpoint becomes available, run genuine public Normal/off first then separate WL-N0/N1/N5.",
   "unverified": true,
   "last_tested_source": "a22c4e09baf7c42a39b4eab1d7c3febffc5a6836",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S763-shared-Rust-RS16-real-Wintun-five-mode-PASS_SCOPED-20261022.json",
-    "docs/evidence/M0/PLAN024-WL-S767-windows2025-wsl2-native-env-BLOCKED-20261022.json"
+    "docs/evidence/M0/PLAN024-S763-shared-Rust-RS16-real-Wintun-five-mode-PASS_SCOPED-20261022.json"
   ],
   "context_refs": [
     "docs/devlog/M0/PLAN024-WL-matrix-recovery-and-integration-20261022.md",
-    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
+    "docs/evidence/M0/PLAN024-WL-S767-windows2025-wsl2-native-env-BLOCKED-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "PR22 integrated. SOURCE bb19b3f Actions39725690761/1 artifact12403107809 confirms Npcap service/DLL and Wintun installed adapter absent; WSL2 Ubuntu install 0 but shell probe invalid (CRLF), not netem platform verdict. ENV only; public Windows→Linux product, real impairment, Stop, WL-N0/N1/N5 NOT_RUN. Windows 256-ACK/750ms×8 remains unfixed pending authenticated shared Rust M2 wiring. Governance S768 PASS; historical FAIL kept."
+  "partial_summary": "PR22 merged; env-only Windows2025 Actions39725690761/1 artifact12403107809 shows no Npcap driver/DLL and no Wintun adapter, WSL sh CRLF harness exit2 (not netem platform finding). S763 a22c4e five-mode scoped evidence remains distinct. Windows→Linux real product/WL-N0/N1/N5 NOT_RUN; shared Rust Windows M2/Go 256 ACK gating unresolved. H245 cursor mixed two SOURCES, original Governance39726574505 FAIL preserved, H246 corrects references."
 }
