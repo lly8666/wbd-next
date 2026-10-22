@@ -821,6 +821,74 @@ mod tests {
         assert_eq!(release(&mut r,server),OK);
     }
 
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn m0_windows_original_m3_kind1_aead_unique_pn_stages_only_once_then_stop_retires(){
+        use wbd_codec::{ControlTlv,Receipt,ReceiptPage};
+        let mut r=Registry{generation:201,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let server=allocate(&mut r,&cold(true),&cmd(),true).unwrap();
+        let client=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,server,0,0,500),OK);
+        assert_eq!(commit(&mut r,client,0,0,500),OK);
+        let epoch=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,server,epoch,9,13),OK);
+        assert_eq!(bind_wintun(&mut r,client,epoch,8,12),OK);
+        assert!(set_path_mtu(&mut r,server,epoch,9,13,1400).is_ok());
+        assert!(set_path_mtu(&mut r,client,epoch,8,12,1400).is_ok());
+        let mut bitmap=[0u8;32];bitmap[0]=1;
+        let control= wbd_codec::encode_control(&[ControlTlv::Receipt(Receipt{
+            largest_data_pn:0,ack_delay_us:0,report_seq:1,
+            pages:vec![ReceiptPage{base_pn:0,bitmap}],
+        })],512).unwrap();
+        let (seq,pn,wire)={
+            let lane=r.entries.get(&server).unwrap();
+            let mut e=lane.lock().unwrap();
+            let budget=normal_off_windows_budget(&e).unwrap();
+            let slab=e.arena.allocate().unwrap();
+            let (pn,seq,used)=e.owner.seal_original_authenticated_receipt(
+                slab,&control,budget,0,MonoNs(0)).unwrap();
+            let storage=std::mem::take(&mut e.tx_scratch);
+            let batch=e.owner.drain_tx(MonoNs(0),storage).unwrap();
+            let wire={
+                let ready=e.owner.checked_tx_ready(&batch).unwrap();
+                assert_eq!(ready.len(),1);
+                assert_eq!(ready[0].record.bytes().len(),used);
+                ready[0].record.bytes().to_vec()
+            };
+            e.tx_scratch=batch.recycle();
+            (seq,pn,wire)
+        };
+        assert_eq!(pn,0);
+        assert!(wire.len()>FIXED_WIRE_OVERHEAD);
+        assert_ne!(&wire[..control.len()],control.as_slice());
+        let mut out=[0u8;2048];
+        // Legacy v3 boundary publishes business IPv4 ONLY. Exact same
+        // replay opener retains the authenticated kind1 for future M2.
+        assert_eq!(v3_open_one(&r,client,epoch,8,12,seq,&wire,&mut out),Err(INVALID));
+        {
+            let e=r.entries.get(&client).unwrap().lock().unwrap();
+            assert_eq!(e.authenticated_kind1.len(),1);
+            let (opened_pn,receipt)=e.authenticated_kind1.front().unwrap();
+            assert_eq!(*opened_pn,0);
+            assert_eq!(receipt.report_seq,1);
+            assert_eq!(receipt.pages.len(),1);
+            assert_eq!(receipt.pages[0].bitmap[0],1);
+        }
+        assert_eq!(v3_open_one(&r,client,epoch,8,12,seq,&wire,&mut out),Err(INVALID));
+        assert_eq!(r.entries[&client].lock().unwrap().authenticated_kind1.len(),1);
+        let mut corrupt=wire.clone();*corrupt.last_mut().unwrap()^=1;
+        assert_eq!(v3_open_one(&r,client,epoch,8,12,seq+wire.len() as u32,
+            &corrupt,&mut out),Err(INVALID));
+        assert_eq!(r.entries[&client].lock().unwrap().authenticated_kind1.len(),1);
+        assert_eq!(quiesce_wintun(&mut r,client,epoch,8,12),OK);
+        assert_eq!(stop(&mut r,client),OK);
+        assert_eq!(r.entries[&client].lock().unwrap().authenticated_kind1.len(),0);
+        assert_eq!(release(&mut r,client),OK);
+        assert_eq!(quiesce_wintun(&mut r,server,epoch,9,13),OK);
+        assert_eq!(stop(&mut r,server),OK);
+        assert_eq!(release(&mut r,server),OK);
+    }
+
     #[test]
     fn m0_windows_tcp_sequence_unwrap_gap_wrap_and_future_reject(){
         let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
