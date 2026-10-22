@@ -228,6 +228,10 @@ jobs:
           & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_shared_rs16_original_owner_encode_repair_recovers_missing_source -- --nocapture
           if ($LASTEXITCODE -ne 0) {throw 'Windows source-scoped shared Rust RS16 parity writer/recovery test FAIL'}
           Write-Output 'M0_PLAN026_WINDOWS_ORIGINAL_TLS_RUST_SHARED_RS16_ENCODE_M3_RECOVER_REPLAY_STOP_PASS_SCOPED'
+          # SAME original M1/M3 AEAD+PN V5 kind1 ingress; no M2 budget PASS.
+          & cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record m0_windows_original_m3_kind1_aead_unique_pn_stages_only_once_then_stop -- --nocapture
+          if ($LASTEXITCODE -ne 0) {throw 'M0 original Windows M3 kind1 auth / replay / Stop test FAIL'}
+          Write-Output 'M0_PLAN024_WINDOWS_M3_AUTHENTIC_KIND1_TYPED_STAGE_PASS_SCOPED_NO_M2_SHADOW'
           & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if ($LASTEXITCODE -ne 0) {throw 'native original Rust M1/M3 V4 release DLL build FAIL'}
           @'
@@ -238,6 +242,7 @@ jobs:
           for name in ("wbd_m0_win_owner_v1_query","wbd_m0_win_owner_v1_prepare",
                       "wbd_m0_win_owner_v1_commit","wbd_m0_win_owner_v1_stop",
                       "wbd_m0_win_owner_v3_seal_normal_off","wbd_m0_win_owner_v3_open_normal_off",
+                      "wbd_m0_win_owner_v5_open_data_or_kind1",
                       "wbd_m0_win_owner_v4_game_join","wbd_m0_win_owner_v4_game_stage",
                       "wbd_m0_win_owner_v4_game_receive","wbd_m0_win_owner_v4_game_stop",
                       "wbd_m0_win_owner_v4_fec2_seal","wbd_m0_win_owner_v4_fec2_open",
