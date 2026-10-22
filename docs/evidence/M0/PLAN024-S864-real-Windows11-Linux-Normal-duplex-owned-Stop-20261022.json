@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_ORIGINAL_TWO_OS_NORMAL_OFF_KERNEL_UDP_AND_OWNED_STOP_ONLY",
+  "run": {
+    "run_id": 39794445609,
+    "attempt": 1,
+    "workflow": "m0-wl-public-normal-full.yml",
+    "conclusion": "success",
+    "linux_same_source_build_job_id": 119878154964,
+    "linux_build_conclusion": "success",
+    "linux_build_artifact_id": 12433495575,
+    "windows_genuine_product_job_id": 119878803540,
+    "windows_job_conclusion": "success",
+    "windows_linux_product_artifact_id": 12434340073,
+    "windows_linux_product_artifact_sha256": "0ad0e1c02e2a67a2f06a9b18187b4fb30bf884c20770fbdd826f970df6f8aab4",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "windows_product_sha256": "baa25ad89d9421bf388a0ef95e32fa01b22dce67e12c968d1699d02fd023bf8a",
+    "linux_product_sha256": "9c0ba1be6e58457d9c9230bae75ece3e542e81350a4657c53a82cdbfd1383b1e"
+  },
+  "real_product": {
+    "original_go_tls_credentials": true,
+    "real_windows_original_rust_npcap_signed_wintun_os_wal_applied": true,
+    "real_linux_original_go_rust_raw_tun_ready": true,
+    "original_tcp_inbound_persona": "windows11",
+    "windows_kernel_udp": {
+      "address": "10.66.0.2",
+      "sent": 24,
+      "received_unique": 34,
+      "kernel_bind": "PASS",
+      "product_ready_seen": true
+    },
+    "linux_kernel_udp": {
+      "address": "10.66.0.1",
+      "sent": 82,
+      "received_unique": 24,
+      "kernel_bind": "PASS",
+      "product_ready_seen": true
+    },
+    "windows_original_native_stop": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "linux_original_native_stop": "V4_PUBLIC_NATIVE_STOP_DRAINED role=server",
+    "windows_npcap_driver_owned_cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS",
+    "original_kernel_app_and_stop_gate": "WBD_WL_TRUE_PUBLIC_NORMAL_OFF_WIN_LINUX_DUPLEX_STOP_PASS"
+  },
+  "remaining_authentic_m2": {
+    "linux_server_real_first_copy": 82,
+    "authenticated_ack": 0,
+    "original_frozen_retransmitted": 164,
+    "driver_uncertain": 0,
+    "quota_or_capacity_blocked": 0,
+    "retired_total": 71,
+    "max_retransmits": 2,
+    "assessment": "OPEN: real ACK=0 means first delivery feedback/retirement not qualified, despite app+Stop PASS; earlier first_copy/repair records are genuine but not all M2 obligations validated"
+  },
+  "windows_last_telemetry": {
+    "npcap_ingress_local_drops": 110,
+    "tx_records": 33,
+    "rx_first_delivered_ipv4": 46,
+    "frozen_ciphertext_retransmits": 0,
+    "duplicate_tcp_carriers": 84,
+    "rejected_or_invalid_carriers": 0,
+    "oldest_unacked_carrier_ms": 0
+  },
+  "prior_blocked": {
+    "run_id": 39788345158,
+    "conclusion": "failure",
+    "reason": "WSL2 guest boot environment blocked before product; no traffic result",
+    "source_sha": "bdf57418f92db45d9164dd023301f874825042b1"
+  },
+  "verification_scope": [
+    "Only actual products in Windows2025+WSL2 Ubuntu with same main SOURCE passed, no NPF/TUN synthetic networking or fake app receipts",
+    "Neither Native 10Mbps 60s WL scenes nor 2-repair/Abandoned and >256 missing carrier ACK tests executed by this result",
+    "Witness external TCP443 kernel packets and OS cleanup, but NPF monitor on one vSwitch was unavailable; passive capture not used to fake delivery"
+  ],
+  "still_open": [
+    "authentic Windows client→Linux server M2 kind1 receiver feedback, zero authenticated_ack",
+    "two-repair/Abandoned and fresh >256 TCP carrier ACK gap",
+    "real native netem WL-N0 0%/300ms 10Mbps 60s both ways",
+    "WL-N1 1%/50ms 10Mbps 60s",
+    "WL-N5 5%/50ms 10Mbps 60s",
+    "physical dual-system",
+    "Android/OpenWrt and global platform release"
+  ],
+  "next_action": "Diagnose missing original Windows client authenticated kind1 feedback generation on same TLS-scoped Rust owner, keep 2-repair/Abandoned and >256 pending, then separate true WL scene Actions. Do not relabel this limited functional PASS as full M2+netem qualification."
+}
