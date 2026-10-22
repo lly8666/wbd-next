@@ -27,10 +27,15 @@
     {
       "id": "S025-original-M3-M4-classification-build",
       "type": "ONE_NEW_PRODUCT_SOURCE_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED_OR_RUNNING",
       "trigger": "one branch push of original Rust and Go source runs a single native ARM64 product build, no manual dispatch",
       "scope": "feature7-only eight bounded post-TUN-write numeric classes, no raw content, endpoint, packet/ACK replay changes",
-      "previous_source": "370eb534621d76deda7888599bd089acc163acac"
+      "previous_source": "370eb534621d76deda7888599bd089acc163acac",
+      "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+      "run_id": 39792252773,
+      "attempt": 1,
+      "unit_contract_run_id": 39792252941,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39792252773"
     }
   ],
   "recent_evidence": [
@@ -141,7 +146,7 @@
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning."
   ],
-  "next_action": "Resolve exactly one S025 native ARM64 product build run and S025 harness contract from this combined push; check both existing FEC units and new classification unit, SHA256SUMS and manifest/ELF. If build/test fails diagnose and minimally correct without starting duplicate product build of same SOURCE. After success run one source-bound original Fixed30 measuring real M3/M4 systematic/recovered TCP ACK-only/data vs UDP with TCPINFO and Stop. S024 hard FAIL and S018 default PASS retained.",
+  "next_action": "S025 exact-source ARM64 build 39792252773 queued/running; companion harness contract39792252941. DO NOT redispatch. Verify real Rust classifier unit and existing units, Go/Rust native binary, manifest SOURCE/arch/ZIP/ELF hash; if any FAIL preserve and fix only observed error. After successful SOURCE one unchanged Fixed30 original business S026 to categorize M4 copied UDP systematic/recovered and inner TCP ACK-only/data; preserve S024 TCP ACK stall and S018 default PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",
