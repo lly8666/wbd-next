@@ -53,19 +53,75 @@ try:
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes","1","--fec-mode","off","--fec-parity","0","--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+ # Launch true independent Windows/Wintun and Linux/TUN kernel applications
+ # CONCURRENTLY with original authenticated client Apply. That product
+ # requires first, reverse and a post-reverse packet BEFORE emitting READY.
+ # No app packets, ACKs, READY or OS Applied are simulated by this harness.
+ app=out/"app.py"
+ app.write_text(r"""import socket,sys,time,json,pathlib
+local,remote,ready_file=sys.argv[1:4]
+sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+bind_deadline=time.monotonic()+30
+while True:
+ try:
+  sock.bind((local,45901))
+  break
+ except OSError as e:
+  if time.monotonic()>=bind_deadline:
+   raise RuntimeError('real TUN/Wintun IPv4 lease bind failed on '+local) from e
+  time.sleep(.15)
+sock.setblocking(False)
+seen=set()
+sent=0
+start=time.monotonic()
+deadline=start+35
+last_send=0.
+ready_since=None
+while time.monotonic()<deadline:
+ now=time.monotonic()
+ if now-last_send>=.09:
+  last_send=now
+  try:
+   sock.sendto(('WBD-PUBLIC-NORMAL-%s-%06d'%(local,sent)).encode(),(remote,45901))
+   sent+=1
+  except OSError:
+   # Route is not ready yet; only actual successful socket sends count.
+   pass
+ while True:
+  try: payload,peer=sock.recvfrom(2048)
+  except BlockingIOError:break
+  if peer[0]==remote and payload.startswith(b'WBD-PUBLIC-NORMAL-'):
+   seen.add(payload)
+ if pathlib.Path(ready_file).is_file():
+  if ready_since is None:ready_since=now
+  # Keep both genuine generators active beyond authenticated Apply.
+  if sent>=24 and len(seen)>=12 and now-ready_since>=2.:break
+ time.sleep(.03)
+print(json.dumps({'local':local,'remote':remote,'sent':sent,'received':len(seen),'kernel_bind':'PASS','public_ready_seen':ready_since is not None}),flush=True)
+sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
+""")
+ done=out/"public-ready.flag"
+ if done.exists():done.unlink()
+ llog=(out/"linux-app.log").open("w");logs.append(llog)
+ wlog=(out/"windows-app.log").open("w");logs.append(wlog)
+ la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
+ wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done)],stdout=wlog,stderr=subprocess.STDOUT)
+ # This READY remains owned exclusively by the unmodified real product.
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
  ready(out/"server.log","V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8);report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
- # Two independent real OS UDP generators, never echo, relay, or mock.
- app=out/"app.py"
- app.write_text("import socket,sys,time,json\na,b=sys.argv[1:3];s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.bind((a,45901));s.settimeout(6);seen=set()\nfor i in range(24):s.sendto(('WBD-PUBLIC-NORMAL-%s-%s'%(a,i)).encode(),(b,45901));time.sleep(.04)\ntry:\n while len(seen)<12: data,addr=s.recvfrom(2048);seen.add(data)\nexcept socket.timeout:pass\nprint(json.dumps({'received':len(seen),'src':a}),flush=True)\nsys.exit(0 if len(seen)>=12 else 8)\n")
- llog=(out/"linux-app.log").open("w");logs.append(llog)
- wlog=(out/"windows-app.log").open("w");logs.append(wlog)
- la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2"],stdout=llog,stderr=subprocess.STDOUT)
- wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1"],stdout=wlog,stderr=subprocess.STDOUT)
- wa.wait(timeout=20);la.wait(timeout=20)
- if wa.returncode or la.returncode:raise RuntimeError("actual UDP app duplex failed win="+str(wa.returncode)+" linux="+str(la.returncode))
+ done.write_text("observed authentic client and Linux server READY\n")
+ wa.wait(timeout=18);la.wait(timeout=18)
+ if wa.returncode or la.returncode:
+  raise RuntimeError("actual UDP app duplex failed win="+str(wa.returncode)+" linux="+str(la.returncode)+" logs="+(out/"windows-app.log").read_text(errors="replace")[-350:]+(out/"linux-app.log").read_text(errors="replace")[-350:])
+ real={}
+ for role in ("windows","linux"):
+  data=json.loads((out/(role+"-app.log")).read_text().strip().splitlines()[-1])
+  if data["received"]<12 or data["sent"]<24 or not data["public_ready_seen"] or data["kernel_bind"]!="PASS":
+   raise RuntimeError("true "+role+" kernel UDP receipt invalid: "+repr(data))
+  real[role]=data
+ report["actual_kernel_udp"]=real
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
  stop_windows(w)
  if w.returncode!=0 or "WBD_WINDOWS_NATIVE_DISCONNECTED_V1" not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")
