@@ -363,7 +363,7 @@ struct Entry{
     original_public_feedback_armed:bool,
     // Immutable peer envelope selected after original-Go credential TLS,
     // before M4 starts. Never guessed from an unauthenticated IPv4 header.
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     incoming_peer_persona:PacketPersona,
     #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
@@ -583,7 +583,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         rx_feedback:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         incoming_peer_persona:PacketPersona::Legacy,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
