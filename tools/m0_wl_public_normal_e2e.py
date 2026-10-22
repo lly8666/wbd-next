@@ -8,7 +8,9 @@ def run(a,timeout=30):
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
  return p.stdout.strip()
 def wsl(*a,timeout=30):return run(["wsl.exe","-d","Ubuntu","-u","root","--",*a],timeout)
-def unix(p):return wsl("wslpath","-a",str(pathlib.Path(p).resolve()))
+def unix(p):
+ q=pathlib.Path(p).resolve()
+ return "/mnt/"+q.drive[0].lower()+"/"+"/".join(q.relative_to(q.anchor).parts)
 def ready(path,marker,process,seconds):
  for _ in range(seconds*5):
   if path.exists() and marker in path.read_text(errors="replace"):return
