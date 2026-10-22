@@ -18,14 +18,18 @@
     "backend_runtime": "NOT_OBSERVED",
     "status": "SUCCESS"
   },
-  "latest_harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
+  "latest_harness_source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
   "open_requests": [
     {
       "id": "S009-FEC-real-class-stats",
       "type": "PRODUCT_SOURCE_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "trigger": "single existing ARM64 builder push from Go/Rust source; no dispatch",
-      "description": "true pre-Stop original FixedStream class k histogram + rplanned/rsent/pressure; source code modified so must build exact new SOURCE once"
+      "description": "true pre-Stop original FixedStream class k histogram + rplanned/rsent/pressure; source code modified so must build exact new SOURCE once",
+      "run_id": 39770495489,
+      "attempt": 1,
+      "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39770495489"
     }
   ],
   "latest_actions": [
@@ -106,7 +110,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Identify S009 one native ARM64 builder and harness-contract Action triggered by source push. If builder SUCCESS pin SHA/attempt/artifact/hash. Then one targeted diagnostic real Fixed/30% run and one default diagnostics-off same-job old/new performance anchor. Do not rerun identical S005 without new k/r info, never relax duplicate/Stop gates.",
+  "next_action": "S009 exact ARM64 bundle Action 39770495489 in progress, harness unit Action 39770495497 in progress. No redispatch. After build collect manifest/zip SHA, reuse artifact for one FEC30 diagnostic and one default low-loss same-VM source A/B regression. Preserve S008 FAIL and math limit.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {
