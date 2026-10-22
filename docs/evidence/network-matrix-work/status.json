@@ -22,14 +22,18 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "2f0bdee88a2392b11e3704f1c66664b54a75014a",
+  "latest_harness_source": "22086507a8bf5977a151730c86c4ff5c4049a985",
   "open_requests": [
     {
       "id": "S012-real-TX-failure-reasons-build",
       "type": "PRODUCT_SOURCE_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "trigger": "single source push auto ARM64 Go/Rust build; no manual dispatch",
-      "scope": "existing original Rust FixedSource callback, parity callback and M4 settlement reason counters only; no change to scheduler/arena size/parity generation"
+      "scope": "existing original Rust FixedSource callback, parity callback and M4 settlement reason counters only; no change to scheduler/arena size/parity generation",
+      "run_id": 39773479071,
+      "attempt": 1,
+      "source": "e63d38bd20466575675ca8b493a45882ec815a52",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39773479071"
     }
   ],
   "recent_evidence": [
@@ -62,6 +66,18 @@
       "id": "S010-single-A-unit-repair",
       "result": "success",
       "run": 39771546355
+    },
+    {
+      "id": "S012-initial-contract",
+      "result": "FAIL",
+      "run": 39773479228,
+      "detail": "new reason-parser incorrect raw regex escape; fixed harness only"
+    },
+    {
+      "id": "S012-contract-repair",
+      "result": "success",
+      "run": 39773549832,
+      "detail": "12+ harness contracts incl parsing genuine failure counters"
     }
   ],
   "open_issues": [
@@ -71,6 +87,6 @@
     "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported"
   ],
-  "next_action": "Resolve one S012 native ARM64 build and harness contract Action from this exact commit; do not repeat. If pass pin manifest/artifact, run ONE representative S010-equivalent fixed30 with failure reason counts then decide smallest root cause; default A/B when source changes to real fix. Preserve S010 hard-fail and S011 default pass.",
+  "next_action": "S012 ARM64 original Go/Rust binary build 39773479071 in progress; do not dispatch again. After SUCCESS record exact artifact ZIP/manifest SHA and source, then push ONE S013 Fixed30 real failure-reason diagnostic and read eight buckets/Stop. S012 harness contract 39773549832 SUCCESS; initial contract fail 39773479228 retained.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/"
 }
