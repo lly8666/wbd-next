@@ -205,9 +205,9 @@ fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi
-if [ "${WBD_ARM64_DAMAGE_TRIAL:-}" = "fixed-2pct" ]; then
-  if [ "$mode" != fec-fixed ]; then
-    echo 'ARM64_DAMAGE_REQUIRES_FIXED_FEC2' >&2; exit 2
+if [ "${WBD_ARM64_DAMAGE_TRIAL:-}" = "policy-2pct" ]; then
+  if [ "$mode" != fec-fixed ] && [ "$mode" != fec-auto ]; then
+    echo 'ARM64_DAMAGE_REQUIRES_FIXED_OR_AUTO_FEC2' >&2; exit 2
   fi
   command -v tc >/dev/null || { echo 'ARM64_DAMAGE_TC_MISSING' >&2; exit 77; }
   # Namespace-local egress qdiscs: *after* original Go authenticated TLS
@@ -249,7 +249,7 @@ if any(os.environ[k]!="0" for k in ('ARM64_LOSS_C2S_RC','ARM64_LOSS_S2C_RC')):
  raise SystemExit("PING_COMMAND_EXIT_NONZERO despite summary")
 receipt={"frozen_product_source":os.environ["WBD_ARM64_FROZEN_SOURCE"],
 "harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
-"mode":"fixed","impairment":"2pct_independent_kernel_netem_each_direction_after_authenticated_maturity",
+"mode":os.environ["WBD_V4_MODE"],"impairment":"2pct_independent_kernel_netem_each_direction_after_authenticated_maturity",
 "qdisc_dropped_outer_packets":drops,
 "icmp_application_sent_received":{k:{"sent":v[0],"received":v[1]} for k,v in apps.items()},
 "status":"SCOPED_IMPAIRED_REAL_OS_INPUT_AND_APP_FUNCTIONAL",
