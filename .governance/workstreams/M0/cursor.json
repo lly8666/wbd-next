@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 254,
-  "checkpoint_sha": "244b7c4a025ef50f8b7f0ded246689aa868524f1",
+  "sequence": 255,
+  "checkpoint_sha": "59d8c5d5951605424a08391cc84ff1393daf599c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 actual Windows original Go TLS Rust M2 Npcap Wintun→WSL2 Linux public raw/TUN Normal/off bidirectional business+both owned Stop. Full source cda4cbb Action39753583163 in progress after scoped original Go Npcap config actual guest MAC fix; WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Exact public original-Go FakeTCP on real Windows2025 Npcap cached the host source Ethernet MAC as destination despite active Windows neighbor mapping to actual WSL2 eth0 MAC. Full source f6ebc9 Action39751418559 FAILED real Linux eth0 zero SYN and TLS bootstrap deadline; no product PASS. Native original-Go repair source abea7a1, wired with exact readback-verified OS guest MAC in source cda4cbb, full public Action39753583163 RUNNING. Original Windows source Actions39753469567 scoped SUCCESS; public WL perf NOT_RUN. Prior H253 Governance39754018710 FAIL: unbounded 9 context_refs, fixed here to 4 distinct refs.",
+  "current_task": "PLAN024 true full public Windows original Go TLS/Rust M2 signed Npcap Wintun→WSL2 Linux original Go Rust raw/TUN Normal/off bidirectional UDP + both Stop. Source cda4cbb Action39753583163 FAIL before guest boot due Ubuntu WSL2 Store install hang WSL_E_DISTRO_NOT_FOUND, no public verdict. Sources 4b9c180 fresh and 7832cff frozen both full public two OS Actions39755736757/39756219904 RUNNING using official hash-pinned Ubuntu24.04.5 WSL2 direct import; WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "The original Windows Npcap source MAC wrongly used as destination was fixed in exact source abea7a1 and handed true WSL guest MAC in cda4cbb. Real complete Action39753583163 compiled Windows client but timed out in Ubuntu WSL install and WSL_E_DISTRO_NOT_FOUND, not a product or M2 FAIL; artifact12415811237 sha256 e46e491f..., evidence S839. Direct Ubuntu24.04.5 WSL rootfs verified SHA256 and WSL2 --import now in fresh 4b9c180 Action39755736757 and corrected frozen binary 7832cff Action39756219904, both pending.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read exact public full Action39753583163 and its native NPF MAC versus Linux eth0 packet evidence. If real TLS and two way app+both Stop pass, open three independent WL-N0/N1/N5 10Mbps/60s true kernel netem Actions. If fail, fix first real product barrier and rerun only same complete path.",
+  "next_action": "Inspect both full public genuine Windows2025+Ubuntu WSL2 Actions39755736757 and39756219904; if WSL2 imports, verify real Windows NPF dest MAC == actual guest eth0, original TLS, Windows OS Applied, continuous both UDP business and both genuine Stop. Fix only actual whole-path blocker; WL-N0/N1/N5 10Mbps60s only after full functional PASS.",
   "unverified": true,
   "last_tested_source": "ad86cdee9d339afdf505c2c4a714fd54af93b446",
   "evidence_refs": [
@@ -20,9 +20,9 @@
   "context_refs": [
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/evidence/M0/PLAN024-S831-original-Go-Windows-Npcap-selfMAC-WrongDst-BLOCKED-20261022.json",
-    "docs/devlog/M0/PLAN024-S826-Windows-NPF-to-WSL-HyperV-port443-real-public-gate-20261022.md",
-    "docs/devlog/M0/PLAN024-S836-restore-public-OriginalGo-Npcap-cached-selfMAC-fix-20261022.md"
+    "docs/devlog/M0/PLAN024-S836-restore-public-OriginalGo-Npcap-cached-selfMAC-fix-20261022.md",
+    "docs/evidence/M0/PLAN024-S839-full-public-WinLinux-WSL2-distro-install-BLOCKED-20261022.json"
   ],
   "open_requests": [],
-  "partial_summary": "Original Go captured host self next-hop MAC despite Windows native neighbor; new source-locked actual Go endpoint uses true guest MAC only after exact OS IP/ifindex readback, launched genuine full public Win2025↔WSL2 Action39753583163. No public PASS yet. Historical H253 Governance unbounded context_refs failure fixed to four."
+  "partial_summary": "Corrected original Go Npcap endpoint MAC cache and exact Ubuntu WSL2 environment import in two running FULL public product Actions. Earlier cda4cbb full source Action compiled but WSL distro registration failed before handshake, not public PASS. Windows native scoped six jobs PASSED distinct source; global Normal and WL performance NOT_RUN. H254 Governance bounded context refs passed."
 }
