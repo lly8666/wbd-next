@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
+  "id": "arm64-off-mixed-loss1-rtt50-75s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -45,14 +45,21 @@
   "phases": [
     {
       "name": "steady",
-      "seconds": 90,
-      "c2s": {},
-      "s2c": {}
+      "seconds": 75,
+      "c2s": {
+        "delay_ms": 25,
+        "loss_pct": 1
+      },
+      "s2c": {
+        "delay_ms": 25,
+        "loss_pct": 1
+      }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0.1
+    "max_loss_pct": 0.1,
+    "require_retransmission": true
   },
   "bundles": {
     "A": {
