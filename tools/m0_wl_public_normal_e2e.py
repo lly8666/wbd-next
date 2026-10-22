@@ -47,11 +47,12 @@ try:
  linux.write_text("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode normal\n")
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
- ready(out/"server.log","V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,30);report["linux_ready"]="PASS"
+ # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes","1","--fec-mode","off","--fec-parity","0","--dns-hijack=false","--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
+ ready(out/"server.log","V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8);report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
  # Two independent real OS UDP generators, never echo, relay, or mock.
