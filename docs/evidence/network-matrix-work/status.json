@@ -26,7 +26,7 @@
   "open_requests": [
     {
       "id": "S031-original-FEC-record-cap-build",
-      "status": "IN_PROGRESS",
+      "status": "NATIVE_JOB_SUCCESS_WORKFLOW_FINALIZING",
       "type": "ONE_NATIVE_ARM64_PRODUCT_SOURCE_BUILD",
       "trigger": "source change in original Go CLI auto-builds exactly once, no manual dispatch",
       "previous_source": "2476b22f748a686907edfb995431a2b236ccebaa",
@@ -34,7 +34,12 @@
       "run_id": 39807984023,
       "attempt": 1,
       "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39807984023"
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39807984023",
+      "artifact_id": 12438592249,
+      "zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
+      "original_go_test": "SUCCESS_NATIVE_BUILD_STEP",
+      "native_rust_units": "SUCCESS",
+      "all_elf_183_and_file_hashes_verified": true
     }
   ],
   "recent_evidence": [
@@ -141,14 +146,18 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "S031 original FEC record wire budget fix SOURCE c297a8052272b1cb7a326ae0281d773e4669ca99 sole ARM64 build 39807984023 in progress. NO duplicate dispatch. Check original Go native TestOriginalProductFecRecordWireBudgetKeeps1200BIPv4 and full build, verify ZIP/manifest/source/ELF. Then same-VM sequential Fixed30 old S029 vs new S031 S032 A/B. Preserve original S030 7074/7068 dropped oversized FAIL and S018 off PASS. Do not weaken Fixed applied/Stop.",
+  "next_action": "S031 native build run 39807984023 product compilation/Go unit/Rust units/ZIP+ELF hashes PASS; run workflow API was IN_PROGRESS at last fetch though native job success and smoke SKIPPED. Do not dispatch S032 until workflow state completed SUCCESS because harness requires it. Once success, ONE S032 30%-IID Fixed Maximum same-VM sequential AB with product A source2476b22f run39803921701 artifact12436752126 zip8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219 and B sourcec297a805 run39807984023 artifact12438592249 zip7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb. Verify stage oversize old7074/7068 vs new, genuine UDP cohort, TCP kernel ACK, Fixed applied, CPU/RSS/Stop. Do not repeat builder or existing tests, keep S030 FAIL and S018 default PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "2476b22f748a686907edfb995431a2b236ccebaa",
-    "run_id": 39803921701,
-    "artifact_id": 12436752126,
-    "zip_sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219",
-    "arch": "aarch64",
-    "build_status": "success"
+    "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+    "build_run": 39807984023,
+    "build_attempt": 1,
+    "artifact_id": 12438592249,
+    "zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
+    "architecture": "aarch64",
+    "workflow_status": "in_progress",
+    "workflow_conclusion": null,
+    "native_build_job": "success",
+    "network_validation": "NOT_RUN"
   }
 }
