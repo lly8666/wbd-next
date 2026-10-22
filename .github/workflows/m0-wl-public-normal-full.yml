@@ -229,6 +229,19 @@ jobs:
           [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_port=443;client_tcp_port=41031;scope='OWNED_SINGLE_WSL2_ORIGINAL_NPCAP_PRODUCT_FLOW'} |
             ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
           Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_ALLOW_INSTALLED'
+          # L2 product failure: real Windows original NPF SYN had dstMAC==srcMAC.
+          # Use the ACTUAL WSL guest NIC MAC in a temporary host neighbor entry.
+          $link=(& wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          $guestMAC=[string]$link.address
+          $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+          if($guestMAC -notmatch '^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}
+          Get-NetFirewallHyperVVMSetting -PolicyStore ActiveStore -Name $creator[0].VMCreatorId -ErrorAction Continue |
+            Select-Object Name,Enabled,DefaultInboundAction,DefaultOutboundAction,LoopbackEnabled,AllowHostPolicyMerge |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-effective.json
+          Get-NetFirewallHyperVProfile -PolicyStore ActiveStore -ErrorAction Continue |
+            Select-Object Name,AllowLocalFirewallRules |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/hyperv-profile.json
+
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
@@ -280,6 +293,19 @@ jobs:
             if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
             Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
           }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
+      - name: Delete only owned WSL2 guest neighbor after full product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $path='result/wl-public/native-wsl-neighbor-owner.json'
+          if(Test-Path $path){
+            $own=Get-Content $path -Raw | ConvertFrom-Json
+            if($own.owner -ne ('WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)){throw 'foreign neighbor owner refused cleanup'}
+            & netsh.exe interface ipv4 delete neighbors "interface=$($own.interface_index)" "address=$($own.guest_ip)" "store=active"
+            if($LASTEXITCODE -ne 0){throw 'exact owner WSL IPv4 neighbor not cleaned'}
+            Write-Output 'WL_REAL_WSL2_NEIGHBOR_OWNER_CLEANUP_PASS'
+          }else{Write-Output 'WL_REAL_WSL2_NEIGHBOR_NOT_CREATED'}
       - name: Restore Npcap owned Windows kernel service after product Stop
         if: always()
         shell: pwsh
@@ -310,5 +336,6 @@ jobs:
             result/wl-public/windows-adapters.json
             result/wl-public/linux-eth0.json
             result/wl-public/hyperv-rule.json
+            result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn
