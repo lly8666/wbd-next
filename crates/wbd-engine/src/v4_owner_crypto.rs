@@ -448,7 +448,7 @@ impl ProtectedScopedOwner {
     /// The exact Normal/off first-send observer is allocated only after the
     /// original Go credential-checked TLS/Detach commit. This identity is
     /// NOT a client-supplied receipt, ACK or permission to enable FEC2.
-    #[cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+    #[cfg(any(target_os="windows",all(target_os="linux",target_arch="x86_64",target_env="gnu")))]
     pub(crate) fn normal_firstsend_identity(&self)->Option<(wbd_types::LaneKey,[u8;16])>{
         (self.state==OwnerPhase::Active && self.crypto.active
          && self.rx_tx.detached() && self.epoch!=[0u8;16])
