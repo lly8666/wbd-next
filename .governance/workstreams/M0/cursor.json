@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 267,
-  "checkpoint_sha": "b7edbb07301701d01a57058b7b1bf2c2301b2ab3",
+  "sequence": 268,
+  "checkpoint_sha": "cc00b15dc2e8f113ff1f0cc663a1b368c1e2ea80",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 full original Go Windows Npcap/Wintun→Linux Rust raw/TUN Normal/off. S860 source bc80 removed false fatal NPF overflow; genuine new Windows→Linux app still 0/368, reverse25/24. S861 pinpointed Windows11 TTL128 vs Linux frozen Legacy TTL64 strict pre-AEAD parser, S862 fixed Linux exact-source compilation. New Action39788345158 Linux build SUCCESS, actual Windows2025 dual-OS in progress; WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "Refreshed H266→main five commits: S861 intent e0f2ae, source2457, S862 compiler recovery intent4c8fee, Rust syntax bdf574, S862 multi-SOURCE evidence b7edbb; original 2457 Linux build Action39787549177 FAIL compiler cfg ] mismatch at lines366/586, Windows job SKIPPED; bdf exact Linux original-Go+Rust source Action39788345158 Linux build SUCCESS, actual Windows↔Linux product job in progress. Earlier true Windows/Linux SOURCEbc80 Action39781312249 FAIL with genuine Windows app24send25recv, Linux368send0recv, local NPF drops98; source contract TTL mismatch confirmed. No product duplex or Stop PASS yet.",
+  "current_task": "PLAN024 original Windows Go TLS/Rust Npcap+Wintun→Linux Rust raw/TUN Normal/off. S861 fixed post-TLS Windows11 TTL128 inbound Linux parser, S862 exact bdf Linux original Go/Rust build SUCCESS, but real two-OS Action39788345158 stopped at WSL2 guest boot environment hang before product. S863 SOURCE5fcc bounded boot probe+RST owned cleanup; Action39794445609 pending. WL-N0/N1/N5 NOT_RUN.",
+  "why_now": "H267→S863 recovered 5 source/evidence commits; immutable SOURCE bdf574 full Action39788345158 Linux Go/Rust build SUCCESS job119857385428 artifact12429288564, Windows job119858353196 FAIL after 22min real WSL2 guest boot (Ubuntu import 13:57:34 but native /dev/net/tun first command never returned); no application or Go/Rust product START, classify ENVIRONMENT_BLOCKED, NOT product TCP persona FAIL. S863 source31d56 adds real bounded 90s guest probe with JSON, source5fcc workflow records boot fail and skips absent RST cleanup. Source5fcc exact fresh Windows/Linux product Action39794445609 queued; no duplicate dispatch, shared Linux binary reuse deferred for truthful same-SOURCE provenance.",
   "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Read exact SOURCE bdf57418f92db45d9164dd023301f874825042b1 Action39788345158 native-public-two-os job results after same-run Linux build. Compare kernel UDP Windows→Linux actual receive and original M2 authenticated ack; if real app duplex PASS verify both owned Stops and only then consider WL-N0/N1/N5 separate Scenes. Never promote from build-only or former FAIL.",
+  "next_action": "Read SOURCE5fcccae88cef676f5596bf80b8bb3f3a60a3e172 Action39794445609 final original Go/Rust same-source Linux build, bounded WSL2 guest probe result, true Windows→Linux/vice-versa UDP and owner Stops if preflight PASS. If WSL2 boot fails again, preserve ENVIRONMENT_BLOCKED, stop repeating same workflow and find alternative genuine native Windows↔Linux Actions environment. No WL-N0/N1/N5 without complete functional PASS.",
   "unverified": true,
   "last_tested_source": "ae9ccea6e45bf918c96fd1eda9d03730f5707cef",
   "evidence_refs": [],
   "context_refs": [
+    "docs/evidence/M0/PLAN024-S863-WSL2-boot-preflight-blocked-20261022.json",
+    "docs/devlog/M0/PLAN024-S863-WSL2-boot-timeout-immutable-binary-reuse-intent-20261022.md",
     "docs/evidence/M0/PLAN024-S862-source-locked-authenticated-Windows11-persona-20261022.json",
-    "docs/devlog/M0/PLAN024-S861-Windows11-authenticated-peer-persona-linux-raw-rx-intent-20261022.md",
-    "docs/devlog/M0/PLAN024-S862-build-syntax-repair-intent-20261022.md",
-    "docs/evidence/M0/PLAN024-S860-real-NPF-64-slot-overflow-repair-20261022.json",
-    "docs/testing/NETWORK_TRIAGE.md"
+    "docs/testing/NETWORK_TRIAGE.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H267: H266→main five checked commits. S861 typed ORIGINAL Go TLS-verified Windows11 inbound Linux parser + new SOURCE-locked same-run Linux Go/Rust build. First SOURCE2457 Linux compile FAIL due two cfg missing delimiters, Windows native skipped; S862 sourcebdf only fixes parentheses. New exact Action39788345158 Linux original Go/Rust same SOURCE build SUCCESS, Windows full product in progress. Governance 39788345076 SUCCESS. Historical NPF overflow gone but true application Linux uplink 0 and owner Stop combo NOT_VERIFIED; no WL-N0/N1/N5/physical promotion."
+  "partial_summary": "H268: H267 main delta reviewed five commits. Exact S862 SOURCEbdf original Go/Rust Linux build SUCCESS but full Windows2025 Action39788345158 FAIL before product: Ubuntu import succeeded, first WSL2 guest shell hung until step timeout; artifact12431114919 has only WSL import/Npcap logs. This is ENVIRONMENT_BLOCKED, no new Windows→Linux persona proof or Stop. S863 recorded intent f856, scoped Windows CLI-independent 90s genuine guest probe 31d56, workflow bounded-boot/owned RST clean 5fcc and evidence cc00. Original Go/Rust same-SOURCE build retained, no new protocol/route/packet changes; exact 5fcc Action39794445609 in progress or queued, governance pending; M2/dual app/Stop/WL-N0/N1/N5 remain OPEN/NOT_RUN."
 }
