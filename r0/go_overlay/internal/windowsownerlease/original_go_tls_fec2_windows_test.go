@@ -10,7 +10,6 @@ import (
  "crypto/tls"
  "errors"
  "fmt"
- "net"
  "os"
  "testing"
  "time"
