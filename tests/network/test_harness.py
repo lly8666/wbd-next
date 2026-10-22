@@ -156,6 +156,11 @@ class Contracts(unittest.TestCase):
              "rplanned=22 rsent=20 expired=0 pressure_jobs=0 "
              "pressure_sources=0 unknown_capacity=0")
         self.assertEqual(public_fec_tx_snapshot(row)["k13_16"],1)
+        # The sanitized product marker whitelist must preserve the numeric
+        # FEC sender snapshot rather than treating a real result as unknown.
+        from tools.network_harness.runner import product_marker_line
+        self.assertTrue(product_marker_line(row))
+        self.assertFalse(product_marker_line("password=secret role=client"))
         self.assertIsNone(public_fec_tx_snapshot(""))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
         self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))

@@ -110,7 +110,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "S009 exact ARM64 bundle Action 39770495489 in progress, harness unit Action 39770495497 in progress. No redispatch. After build collect manifest/zip SHA, reuse artifact for one FEC30 diagnostic and one default low-loss same-VM source A/B regression. Preserve S008 FAIL and math limit.",
+  "next_action": "S009 product build 39770495489 still one SOURCE, while harness numeric FEC TX whitelist is corrected and selfcheck triggered; do not redispatch product build. Once artifact complete choose strict diagnostic S005 condition with actual FEC counters and compare to source-attested controls; S008 failures remain.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {

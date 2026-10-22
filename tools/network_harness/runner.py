@@ -25,6 +25,15 @@ from .report import markdown, summarize, network_accounting
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
 
+def product_marker_line(line):
+    """Only documented public numeric/status marker families enter artifacts."""
+    return bool(re.search(
+        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\\w+_NATIVE_READY)",
+        line))
+
+
+
+
 def public_fec_tx_snapshot(log_text):
     """Parse complete original-Go pre-Stop owner marker or mark unknown."""
     fields = ("accepted","notready","full","partial","k1","k2_4",
@@ -286,7 +295,7 @@ class LinuxExperiment:
         logs = {}
         for role in self.ns:
             lines = [line for line in read(self.private / (role + ".log")).splitlines()
-                     if re.search(r"V4_(PUBLIC_(M2_OUTER |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)", line)]
+                     if product_marker_line(line)]
             logs[role] = "\n".join(lines[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
