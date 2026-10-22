@@ -552,11 +552,11 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // can this typed kind1 enter the bounded staging lane. It does not yet
     // authorize shadow retirement or Go TCP carrier receipt.
     else if report.link_ready==0&&report.control_ready==1&&report.rejected==0 {
-        let Some(receipt)=opened_kind1 else{return Err(INVALID)};
+        let Some((pn,receipt))=opened_kind1 else{return Err(INVALID)};
         if e.authenticated_kind1.len()>=MAX_AUTHENTICATED_KIND1 {
             return Err(FULL)
         }
-        e.authenticated_kind1.push_back(receipt);
+        e.authenticated_kind1.push_back((pn,receipt));
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
         Ok((0,2,pn)) // kind1 is not an IPv4 packet or M2 shadow-release grant
     } else {Err(INVALID)}
