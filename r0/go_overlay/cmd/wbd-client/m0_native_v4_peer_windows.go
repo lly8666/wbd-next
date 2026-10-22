@@ -32,6 +32,8 @@ type m0NativeV4Outbound struct {
 type m0NativeV4Peer struct {
  mu sync.Mutex
  owner *realityfront.V4WindowsAuthenticatedClientOwner
+ mode m0WindowsV4Mode
+ blockID uint64 // 1-based original TLS authenticated per-direction FEC2 source
  endpoint *faketcp.NpcapEndpoint
  flow faketcp.ClientFlow
  inbound <-chan faketcp.Segment
@@ -53,10 +55,24 @@ func newM0NativeV4Peer(
  endpoint *faketcp.NpcapEndpoint,flow faketcp.ClientFlow,
  inbound <-chan faketcp.Segment,
 )(*m0NativeV4Peer,error){
+ return newM0NativeV4PeerForMode(owner,endpoint,flow,inbound,m0WinModeNormal)
+}
+// The production TCP carrier and native Wintun worker are identical for
+// Normal and authenticated feature7 FEC2. Game requires 2/4 independent
+// original FakeTCP/TLS lanes and must NOT silently use one-lane fallback.
+func newM0NativeV4PeerForMode(
+ owner *realityfront.V4WindowsAuthenticatedClientOwner,
+ endpoint *faketcp.NpcapEndpoint,flow faketcp.ClientFlow,
+ inbound <-chan faketcp.Segment,mode m0WindowsV4Mode,
+)(*m0NativeV4Peer,error){
  if owner==nil||endpoint==nil||inbound==nil{return nil,windowsclient.ErrN4NativeGuard}
+ if mode!=m0WinModeNormal&&mode!=m0WinModeFixed&&mode!=m0WinModeAuto{
+  return nil,windowsclient.ErrN4NativeGuard
+ }
  if err:=flow.Validate();err!=nil{return nil,err}
  return &m0NativeV4Peer{
-  owner:owner,endpoint:endpoint,flow:flow,inbound:inbound,
+  owner:owner,mode:mode,blockID:1,
+  endpoint:endpoint,flow:flow,inbound:inbound,
   stop:make(chan struct{}),done:make(chan struct{}),
   failure:make(chan error,1),
   pending:make([]m0NativeV4Outbound,0,m0V4TxPendingMax),
@@ -141,8 +157,24 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if n<20||n>p.maxIPv4{
   p.mu.Lock();p.oversize++;p.mu.Unlock();return true,nil
  }
- ciphertext,seq,_,err:=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
- if err!=nil{return false,err} // identity/cipher/replay failure: stop this owner
+ var ciphertext []byte
+ var seq uint32
+ if p.mode==m0WinModeNormal {
+  ciphertext,seq,_,err=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
+ }else{
+  if n>p.maxIPv4-10||p.blockID==0||p.blockID==^uint64(0){
+   p.mu.Lock();p.oversize++;p.mu.Unlock()
+   return true,nil
+  }
+  // Source payload includes the canonical 10-byte FEC2 block/index header;
+  // Rust M1/M3 and RS16 decoder own all authenticated first deliveries.
+  // A missing M2 Applied revision MUST still deny mode activation via the
+  // actual public mode capability; this source path cannot fake parity.
+  ciphertext,seq,_,err=p.owner.SealBoundOriginalFEC2Source(
+   ctx,p.blockID,0,p.scratch[:n])
+ }
+ if err!=nil{return false,err} // exact generation/cipher failure: Stop
+
  if seq!=p.sendNext{return false,windowsclient.ErrN4NativeGuard}
  if err=p.sendCarrier(seq,p.recvNext,ciphertext);err!=nil{return false,err}
  p.pending=append(p.pending,m0NativeV4Outbound{
@@ -152,6 +184,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   sentAt:time.Now(),lastSent:time.Now(),
  })
  p.sendNext=seq+uint32(len(ciphertext))
+ if p.mode!=m0WinModeNormal{p.blockID++}
  p.mu.Lock();p.sent++;if p.opened>0{p.sentAfterOpen++};p.mu.Unlock()
  return true,nil
 }
@@ -176,22 +209,37 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   p.mu.Lock();p.duplicates++;p.mu.Unlock()
   return nil
  }
- plain,err:=p.owner.OpenBoundOriginalNormalOff(ctx,seg.Seq,seg.Payload)
- if err!=nil{
-  // Rust M3 owns real AEAD/PN replay rejection, never expose failed
-  // plaintext. Drop this invalid record but keep healthy lanes alive.
-  p.mu.Lock();p.rejected++;p.mu.Unlock()
-  return nil
+ // Native Rust authenticates each record and handles dedup/RS16 first
+ // delivery. A single repair ciphertext may release several IPv4 packets;
+ // commit cumulative TCP carrier receipt only after ALL Wintun copies.
+ var frames [][]byte
+ if p.mode==m0WinModeNormal{
+  plain,openErr:=p.owner.OpenBoundOriginalNormalOff(ctx,seg.Seq,seg.Payload)
+  if openErr!=nil{
+   p.mu.Lock();p.rejected++;p.mu.Unlock()
+   return nil
+  }
+  frames=[][]byte{plain}
+ }else{
+  delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
+  if openErr!=nil{
+   p.mu.Lock();p.rejected++;p.mu.Unlock()
+   return nil
+  }
+  frames=make([][]byte,0,len(delivered))
+  for _,frame:=range delivered{frames=append(frames,frame.IPv4)}
  }
- if len(plain)<20||len(plain)>p.maxIPv4{return windowsclient.ErrN4NativeGuard}
- copied,err:=p.ring.WriteAuthenticatedIPv4(ctx,plain)
- if err!=nil||copied!=len(plain){
-  return errors.Join(windowsclient.ErrN4NativeGuard,err)
+ for _,plain:=range frames{
+  if len(plain)<20||len(plain)>p.maxIPv4{return windowsclient.ErrN4NativeGuard}
+  copied,copyErr:=p.ring.WriteAuthenticatedIPv4(ctx,plain)
+  if copyErr!=nil||copied!=len(plain){
+   return errors.Join(windowsclient.ErrN4NativeGuard,copyErr)
+  }
  }
  ack,err:=p.rx.Copied(seg.Seq,len(seg.Payload))
  if err!=nil{return err}
  p.recvNext=ack
- p.mu.Lock();p.opened++;p.mu.Unlock()
+ p.mu.Lock();p.opened+=uint64(len(frames));p.mu.Unlock()
  // Critical: ACK is the *highest contiguous* Rust-authenticated and
  // Wintun-copied TCP interval. Delivered future packet cannot ACK a gap.
  return p.sendACK()
