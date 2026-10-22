@@ -27,12 +27,16 @@
     {
       "id": "arm64-fixed30-real-M3-FEC-RX-TUN-proof-S022",
       "type": "ONE_TRUE_FIXED30_DIAGNOSTIC",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED",
       "trigger": "single committed tests/network/request.json push starts one Action, do not manually dispatch",
       "source": "370eb534621d76deda7888599bd089acc163acac",
       "artifact_id": 12427229903,
       "path": "tests/network/request.json",
-      "scenario": "Exactly S020 2Mbps/dir 50/50 UDP/TCP Fixed Maximum profile6 IID30% 300ms one-way 120s steady +15s warmup+30s drain, real original source/parity accepted→RS recovery candidate→M4 TUN writes"
+      "scenario": "Exactly S020 2Mbps/dir 50/50 UDP/TCP Fixed Maximum profile6 IID30% 300ms one-way 120s steady +15s warmup+30s drain, real original source/parity accepted→RS recovery candidate→M4 TUN writes",
+      "run_id": 39784149202,
+      "attempt": 1,
+      "harness_source": "2425431d5a3739bb3ba052da707d912559731046",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39784149202"
     }
   ],
   "recent_evidence": [
@@ -131,7 +135,7 @@
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
   ],
-  "next_action": "Resolve exactly one S022 measurement Action run ID from this request push; don't redispatch. Inspect actual original FEC RX source/parity AEAD seen/accepted, recovered candidates/write and disabled/reject, compare original M2 proof and TCP states. Preserve S020 FAIL and S018 default PASS; if RX path not received or decoded identify precise culprit before any source tuning.",
+  "next_action": "S022 exact one performance run 39784149202 QUEUED and companion harness contract 39784148896; no duplicate dispatch. Collect genuine M3 FEC source/parity seen/accepted, RS recovered candidate/M4 actual TUN and Fixed/TCP/Stop, preserve S020 FAIL S018 default PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "370eb534621d76deda7888599bd089acc163acac",
