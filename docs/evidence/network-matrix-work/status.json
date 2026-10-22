@@ -18,19 +18,23 @@
     "backend_runtime": "NOT_OBSERVED",
     "status": "SUCCESS"
   },
-  "latest_harness_source": "07b6d3241a5d4b651ee07293bb0030b102096574",
+  "latest_harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
   "open_requests": [
     {
       "id": "arm64-fixed-max-30pct-old-new-AB-attested",
       "type": "PERFORMANCE_PAIR_SINGLE_JOB_AB_HARD_CASE",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "path": "tests/network/request.json",
       "sourceA": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
       "sourceB": "df64bab1d60ae684429a4330e5f09d06ff851019",
       "buildA": 39759842150,
       "buildB": 39766278666,
       "trigger": "one request.json push, no manual dispatch",
-      "notes": "same hard S005 120s 30% fixed profile6; B narrowly attested from real successful product build and upload steps, workflow failure never called success"
+      "notes": "same hard S005 120s 30% fixed profile6; B narrowly attested from real successful product build and upload steps, workflow failure never called success",
+      "run_id": 39768614669,
+      "attempt": 1,
+      "harness_source": "ca9aac51f2fb28418a50eea19e7c587613ee2b66",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39768614669"
     }
   ],
   "latest_actions": [
@@ -104,7 +108,7 @@
     "Game+FEC, cipher/repair toggles, no-payload idle and Windows/physical are not real wired in this Linux harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Find only S008 auto Action from request change; do not dispatch. Inspect both A/B real results, cleanup and exception receipt indicating workflow_failure/step_attested. Never mark S006 builder green; S005 duplicate/applied issue remains OPEN.",
+  "next_action": "Observe S008 single Action 39768614669, do not redispatch. Verify recovered B receipt carries workflow_conclusion=failure and step_attested=true; inspect A/B both legs against full S005 hard gates (duplicate, applied, source, Stop). If setup fails, inspect exact fail and fix only if necessary. S008 contracts 39768614569 separate, no product measurement.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {
