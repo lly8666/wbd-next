@@ -53,8 +53,11 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let (pn,seq,used)=e.owner.seal_fec2_product_one(
         slab,frame.len(),kind,budget,0,epoch,MonoNs(0)
     ).map_err(|_|BAD_STAGE)?;
-    let batch=e.owner.drain_tx(MonoNs(0),Vec::with_capacity(1))
-        .map_err(|_|BAD_STAGE)?;
+    let scratch=std::mem::take(&mut e.tx_scratch);
+    let batch=match e.owner.drain_tx(MonoNs(0),scratch){
+        Ok(batch)=>batch,
+        Err((_,scratch))=>{e.tx_scratch=scratch;return Err(BAD_STAGE)}
+    };
     let accepted=(||{
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
         if ready.len()!=1||ready[0].record.bytes().len()!=used ||
@@ -62,7 +65,7 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         out[..used].copy_from_slice(ready[0].record.bytes());
         Ok((used,seq,pn))
     })();
-    let _=batch.recycle();
+    e.tx_scratch=batch.recycle();
     accepted
 }
 pub(super) fn open_symbol(
@@ -98,8 +101,9 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     // guarantees one unique RX owner and distinct bounded RS16 decoder.
     let entry:&mut Entry=e;
     let decoder=entry.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
-    let (storage,report)=entry.owner.drain_windows_authenticated_fec2(
-        MonoNs(0),Vec::with_capacity(1),|_pn,kind,plain|{
+    let rx_storage=std::mem::take(&mut entry.rx_scratch);
+    let draining=entry.owner.drain_windows_authenticated_fec2(
+        MonoNs(0),rx_storage,|_pn,kind,plain|{
             match decoder.accept_authenticated(scope,kind,plain,MonoNs(0)){
                 Ok(deliveries)=>{
                     for d in deliveries {
@@ -119,8 +123,12 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
                 Err(_)=>failed=true,
             }
         }
-    ).map_err(|_|BAD_STAGE)?;
-    drop(storage);
+    );
+    let (storage,report)=match draining{
+        Ok(v)=>v,
+        Err((_,scratch))=>{entry.rx_scratch=scratch;return Err(BAD_STAGE)}
+    };
+    entry.rx_scratch=storage;
     if failed||report.rejected!=0||report.link_ready!=1||
         report.control_ready!=0{return Err(INVALID)}
     e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);

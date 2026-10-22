@@ -16,6 +16,7 @@ use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::ProtectedScopedOwner;
 use crate::memory::Arena;
 use crate::runtime::early_rx::EarlyAccepted;
+use crate::runtime::{TxDispatch,RxPacket};
 use wbd_types::MonoNs;
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
@@ -51,6 +52,10 @@ struct Entry {
     bytes:u32,
     owner:ProtectedScopedOwner,
     arena:Arena,
+    // Returned M1 loan containers are re-used across bounded records.
+    // Packet ownership still lives in the original generation arena.
+    tx_scratch:Vec<TxDispatch>,
+    rx_scratch:Vec<RxPacket>,
     authenticated_epoch:[u8;16],
     peer_mss:u16,
     peer_mss_advertised:bool,
@@ -112,7 +117,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         rx_boundary:handoff.rx_boundary,
         rx_unwrapped_high:u64::from(handoff.rx_boundary),
         limit:rx_limit,count:0,bytes:0,
-        owner,arena,
+        owner,arena,tx_scratch:Vec::with_capacity(8),rx_scratch:Vec::with_capacity(8),
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
@@ -452,8 +457,11 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
     // carrier buffer while its genuine LoanBatch remains borrowed; recycle
     // generation-scoped loans on *every* path, including rejected batches.
-    let batch=e.owner.drain_tx(MonoNs(0),Vec::with_capacity(1))
-        .map_err(|_|BAD_STAGE)?;
+    let tx_storage=std::mem::take(&mut e.tx_scratch);
+    let batch=match e.owner.drain_tx(MonoNs(0),tx_storage){
+        Ok(batch)=>batch,
+        Err((_,storage))=>{e.tx_scratch=storage;return Err(BAD_STAGE)}
+    };
     let accepted=(||{
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
         if ready.len()!=1 || ready[0].record.bytes().len()!=used {
@@ -462,7 +470,7 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         out[..used].copy_from_slice(ready[0].record.bytes());
         Ok((used,seq,pn))
     })();
-    let _unused_storage=batch.recycle();
+    e.tx_scratch=batch.recycle();
     accepted
 }
 // Unfold exact captured TCP serial bytes against this original-Go-verified
@@ -500,8 +508,9 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
-    let (storage,report)=e.owner.drain_authenticated(
-        MonoNs(0),Vec::with_capacity(1),|_pn,link|{
+    let rx_storage=std::mem::take(&mut e.rx_scratch);
+    let draining=e.owner.drain_authenticated(
+        MonoNs(0),rx_storage,|_pn,link|{
             // No unauthenticated DATA, replay, HEALTH or fragmented LINK
             // can reach a Windows kernel packet sink from this v3 boundary.
             // Fragmentation will be installed with the complete M3 table.
@@ -512,8 +521,12 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 out[..link.len()].copy_from_slice(link);
                 len=link.len();valid=true;
             }
-        }).map_err(|_|BAD_STAGE)?;
-    drop(storage);
+        });
+    let (storage,report)=match draining{
+        Ok(v)=>v,
+        Err((_,scratch))=>{e.rx_scratch=scratch;return Err(BAD_STAGE)}
+    };
+    e.rx_scratch=storage;
     if valid && report.link_ready==1 && report.rejected==0
         && report.control_ready==0 {
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
