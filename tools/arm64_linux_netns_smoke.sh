@@ -7,6 +7,9 @@ bundle="$GITHUB_WORKSPACE/arm64-public-bundle"
 out="$GITHUB_WORKSPACE/arm64-netns-result"
 mkdir -p "$out"
 (cd "$bundle" && sha256sum -c SHA256SUMS)
+# GitHub artifact ZIP extraction does not preserve executable mode.
+# chmod changes metadata only, leaving the source-checked binary SHA256 intact.
+chmod 0755 "$bundle/wbd-v4-client" "$bundle/wbd-v4-server"
 python3 - "$bundle/manifest.json" "$GITHUB_SHA" <<'PY'
 import json,sys
 m=json.load(open(sys.argv[1]))
