@@ -27,10 +27,14 @@
     {
       "id": "S014-FEC2-bounded-owner-pool-build",
       "type": "PRODUCT_SOURCE_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "QUEUED",
       "trigger": "source change crates/wbd-engine/src/v4_embedded_go.rs triggers ONE native ARM64 product build; do not separately dispatch",
       "scope": "only Linux authenticated feature7 TX arena128->512 with 1.2MB charged limit; off unchanged",
-      "fixed_issue": "S013 source arena ~5k and parity arena ~18k per side; no seal/M4 failures"
+      "fixed_issue": "S013 source arena ~5k and parity arena ~18k per side; no seal/M4 failures",
+      "run_id": 39775271407,
+      "attempt": 1,
+      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39775271407"
     }
   ],
   "recent_evidence": [
@@ -98,7 +102,7 @@
     "S013 proved original M1 TX arena NoCapacity at source/parity ~5.1k/18.6k per side; bounded feature7-only 512 slot candidate requires same-source build and real regression; not yet PASS",
     "S013 hard: UDP duplicates 4/3, Fixed pending on both, TCP blocked, actual 30% loss; keep OPEN even if arena throughput fixes"
   ],
-  "next_action": "Resolve one S014 ARM64 product builder and native unit from source-change push; pin exact manifest, ELF+ZIP hashes. Then same VM sequential A/B exact S013 high-loss business, A=S012 old, B=S014 bounded arena, collect arena reasons, FEC applied, duplicates, TCP/no HOL and Stop. Default off baseline old/new 90s mixed AB after targeted comparison. Never declare Fixed/Auto qualified while hard duplicate/mode issue remains.",
+  "next_action": "S014 exact SOURCE 4d739d957fdc0a7e2db7ecb27b84e26b880f10ae native product builder 39775271407 queued. Do not dispatch twice. Verify build ZIP/manifest/ELF SHA then same-job sequential S013 Fixed30 A old S012 vs B S014 target arena reasons and hard gates. Follow with default off A/B anchor.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "e63d38bd20466575675ca8b493a45882ec815a52",
