@@ -12,6 +12,11 @@ if [ ! -d legacy/.git ]; then
 fi
 git -C legacy checkout -q "$GO_SOURCE"
 test "$(git -C legacy rev-parse HEAD)" = "$GO_SOURCE"
+# Default auto-accelerated bundle links pinned ISA-L. An explicit
+# no-ISA-L build is a separate FALLBACK qualification, not a silent claim
+# that the native product passed when external silicon/library is missing.
+case "${WBD_ARM64_NO_NATIVE:-0}" in 0|1) ;; *) echo "INVALID_ARM64_ACCEL_SELECTION" >&2; exit 2;; esac
+if [ "${WBD_ARM64_NO_NATIVE:-0}" = 0 ]; then
 if [ ! -d "$RUNNER_TEMP/wbd-isa-l/.git" ]; then
   git clone --quiet https://github.com/intel/isa-l.git "$RUNNER_TEMP/wbd-isa-l"
 fi
@@ -21,8 +26,13 @@ export WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public"
 export WBD_ISAL_SOURCE_SHA="$ISA_SOURCE"
 (cd "$RUNNER_TEMP/wbd-isa-l" && ./autogen.sh &&   ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static &&   make -j2 && make install)
 test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+  features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
+else
+  unset WBD_ISAL_PREFIX WBD_ISAL_SOURCE_SHA
+  features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+fi
 rustup toolchain install 1.85.1 --profile minimal
-cargo +1.85.1 build --release --locked -p wbd-engine   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
+cargo +1.85.1 build --release --locked -p wbd-engine --features "$features"
 test -s target/release/libwbd_engine.so
 files=(
  bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go
@@ -69,9 +79,11 @@ cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
 python3 - <<'PY'
 import os,json,pathlib,platform
 d={"source":os.environ["GITHUB_SHA"],"go_source":"a7a82db31fe736ffedee330795a3234d358f1984",
-   "isa_source":"c387163fcbca62701d646149564c550c78a4f985",
+   "isa_source":"c387163fcbca62701d646149564c550c78a4f985" if os.environ.get("WBD_ARM64_NO_NATIVE","0")=="0" else None,
    "rust":"1.85.1","go":"1.23.12",
-   "architecture":platform.machine(),"backend_requested":"native_fec_acceleration (pinned ISA-L static)",
+   "architecture":platform.machine(),
+   "backend_requested":"native_fec_acceleration (pinned ISA-L static)" if os.environ.get("WBD_ARM64_NO_NATIVE","0")=="0" else "scalar_only_no_isal",
+   "native_isal_linked":os.environ.get("WBD_ARM64_NO_NATIVE","0")=="0",
    "scope":"NATIVE_ARM64_BINARY_BUILD_ONLY",
    "raw_tun_tls_app_stop":"NOT_RUN","android_vpn":"NOT_RUN","openwrt_device":"NOT_RUN"}
 pathlib.Path("arm64-public-bundle/manifest.json").write_text(json.dumps(d,indent=2)+"\n")

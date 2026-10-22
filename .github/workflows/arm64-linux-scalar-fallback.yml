@@ -1,0 +1,111 @@
+# Explicitly builds without native ISA-L to verify the real product's
+# compile-time fallback. The default production pipeline remains native-first.
+name: ARM64 Linux original Go scalar-only fallback
+run-name: ARM64 no-ISA-L scalar fallback ${{ github.sha }}
+on:
+  push:
+    branches: [feature/arm64-linux-android-openwrt-autoaccel]
+    paths:
+      - '.github/workflows/arm64-linux-scalar-fallback.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  frozen-scalar-bundle:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    env:
+      WBD_ARM64_NO_NATIVE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build original Go ARM64 client/server + Rust without ISA-L artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          bash tools/arm64_public_go_rust_bundle.sh
+          python3 - <<'PY'
+          import json
+          d=json.load(open('arm64-public-bundle/manifest.json'))
+          assert d['native_isal_linked'] is False and d['isa_source'] is None
+          assert d['backend_requested']=='scalar_only_no_isal'
+          print('ARM64_SCALAR_ONLY_SOURCE_BUILD_NO_NATIVE_ARCHIVE_PASS')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: arm64-scalar-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+          retention-days: 30
+
+  actual-scalar-fec-product:
+    needs: frozen-scalar-bundle
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 19
+    env:
+      WBD_ARM64_FROZEN_SOURCE: ${{ github.sha }}
+      WBD_V4_MODE: fec-fixed
+      WBD_ARM64_DAMAGE_TRIAL: policy-2pct
+      WBD_ARM64_FEC_BURST: ping-burst
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: arm64-scalar-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+      - name: Real Go authenticated Fixed FEC, kernel loss and TUN with no ISA-L
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables
+          bash tools/arm64_linux_netns_smoke.sh
+      - name: Fail closed if any native encode/decode or no real FEC recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,re,os,pathlib,hashlib
+          p=pathlib.Path('arm64-netns-result')
+          manifest=json.load(open('arm64-public-bundle/manifest.json'))
+          assert manifest['native_isal_linked'] is False
+          receipt={'binary_source':os.environ['GITHUB_SHA'],
+                   'native_archive':'ABSENT',
+                   'scenario':'REAL_GO_TLS_RUST_FIXED_2PCT_LOSS_700X800B_EACH_DIRECTION',
+                   'physical':'NOT_RUN','roles':{}}
+          recoveries=0
+          for side in ('client','server'):
+            log=(p/f'{side}.log').read_text()
+            keys=('native_encode_quanta','scalar_encode_quanta','native_decode_calls',
+                  'scalar_decode_calls','recovered_tun_delivered')
+            data={}
+            for name in keys:
+              matches=re.findall(r'\b'+name+r'=(\d+)\b',log)
+              assert len(matches)==1,(side,name,len(matches))
+              data[name]=int(matches[0])
+            assert data['native_encode_quanta']==0
+            assert data['native_decode_calls']==0
+            assert data['scalar_encode_quanta']>0
+            assert data['scalar_decode_calls']>0
+            assert data['recovered_tun_delivered']>0
+            recoveries+=data['recovered_tun_delivered']
+            receipt['roles'][side]=data
+          receipt['recovered_tun_total']=recoveries
+          receipt['qualification']='PASS_SCOPED_ARM64_SCALAR_ONLY_NO_ISAL_FULL_ORIGINAL_PRODUCT'
+          receipt['logs_sha256']={r:hashlib.sha256((p/f'{r}.log').read_bytes()).hexdigest() for r in receipt['roles']}
+          (p/'scalar-fallback-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print('ARM64_SCALAR_ONLY_NO_ISAL_REAL_PRODUCT_FEC_RECOVERY_PASS',receipt['roles'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-scalar-product-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-netns-result/
+          if-no-files-found: warn
+          retention-days: 30
