@@ -5,7 +5,7 @@
 //! This module reuses the normal M1/M3 ProtectedScopedOwner, not fake crypto.
 #![cfg(all(target_os="windows",feature="m0_v4_embedded_go"))]
 use std::collections::BTreeMap;
-use std::sync::{Mutex,OnceLock};
+use std::sync::{Arc,Mutex,OnceLock};
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 #[path = "v4_windows_game_owner.rs"]
 mod game;
@@ -73,7 +73,7 @@ struct ScopedWindowsWintunIdentity {
 #[derive(Default)]
 struct Registry {
     generation:u32,
-    entries:BTreeMap<u64,Entry>,
+    entries:BTreeMap<u64,Arc<Mutex<Entry>>>,
     game_groups:BTreeMap<u64,game::WinGameGroup>,
 }
 static REGISTRY:OnceLock<Mutex<Registry>>=OnceLock::new();
@@ -106,7 +106,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         parsed.identity().client_limit
     }else{parsed.identity().server_limit});
     r.generation=next;
-    r.entries.insert(handle,Entry{
+    r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,phase:PH_PREPARED,role_server:server,
         rx_boundary:handoff.rx_boundary,limit:rx_limit,count:0,bytes:0,
         owner,arena,
@@ -119,11 +119,12 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         game_group:None,
         #[cfg(feature="fec2_product_record")]
         fec2_rx:None,
-    });
+    })));
     Ok(handle)
 }
 fn stage(r:&mut Registry,h:u64,seq:u32,bytes:&[u8])->i32{
-    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_PREPARED{return BAD_STAGE}
     let len=bytes.len();
     let delta=seq.wrapping_sub(e.rx_boundary);
@@ -144,7 +145,8 @@ fn stage(r:&mut Registry,h:u64,seq:u32,bytes:&[u8])->i32{
     }
 }
 fn commit(r:&mut Registry,h:u64,count:u32,total:u32,tx_boundary:u32)->i32{
-    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_PREPARED{return BAD_STAGE}
     if count!=e.count||total!=e.bytes||count>MAX_EARLY{return INVALID}
     // Only original protected reply / Detach owns the actual SenderNext.
@@ -154,7 +156,8 @@ fn commit(r:&mut Registry,h:u64,count:u32,total:u32,tx_boundary:u32)->i32{
 }
 fn bind_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
     if luid==0||ifindex==0||epoch==[0;16]{return INVALID}
-    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.device.is_some(){return BAD_STAGE}
     if epoch!=e.authenticated_epoch{return INVALID}
     e.device=Some(ScopedWindowsWintunIdentity{luid,ifindex,quiesced:false});
@@ -164,12 +167,13 @@ fn bind_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
 fn set_path_mtu(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
     ifindex:u32,mtu:u16)->Result<u32,i32>{
     if !(576..=2048).contains(&mtu){return Err(INVALID)}
-    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
     if e.phase!=PH_ACTIVE||e.authenticated_epoch!=epoch||
         !e.device.is_some_and(|d|!d.quiesced&&d.luid==luid&&d.ifindex==ifindex)||
         e.path_mtu!=0 {return Err(BAD_STAGE)}
     e.path_mtu=mtu;
-    match normal_off_windows_budget(e){
+    match normal_off_windows_budget(&e){
         Ok(b) if b.single_business_payload_mtu>=20=>
             Ok(b.single_business_payload_mtu as u32),
         _=>{e.path_mtu=0;Err(INVALID)},
@@ -189,7 +193,8 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_bind_real_path_mtu(
     }
 }
 fn quiesce_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32{
-    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE{return BAD_STAGE}
     let Some(device)=e.device.as_mut()else{return BAD_STAGE};
     if epoch!=e.authenticated_epoch||luid!=device.luid||ifindex!=device.ifindex{
@@ -199,7 +204,8 @@ fn quiesce_wintun(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->i32
     OK
 }
 fn stop(r:&mut Registry,h:u64)->i32{
-    let Some(e)=r.entries.get_mut(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if e.phase==PH_STOPPED{return OK}
     if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
     if e.game_group.is_some(){return STOP_INCOMPLETE}
@@ -217,17 +223,21 @@ fn stop(r:&mut Registry,h:u64)->i32{
     OK
 }
 fn abort(r:&mut Registry,h:u64)->i32{
-    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
     // A half-prepared owner holds no published DATA or native device lease.
     // A failed original protected TLS/transition must discard this generation
     // rather than ever making a forged Detach/Stop look successful.
     if e.phase!=PH_PREPARED{return BAD_STAGE}
+    drop(e);
     r.entries.remove(&h);
     OK
 }
 fn release(r:&mut Registry,h:u64)->i32{
-    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
     if e.phase!=PH_STOPPED{return BAD_STAGE}
+    drop(e);
     r.entries.remove(&h);
     OK
 }
@@ -301,7 +311,8 @@ pub extern "C" fn wbd_m0_win_owner_v1_state(
         return INVALID
     }
     let Ok(r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
     unsafe{out.write(WbdOriginalWindowsOwnerStateV1{
         abi_version:ABI_V1,struct_size:out_size,generation:e.generation,
         phase:e.phase,role_server:u32::from(e.role_server),
@@ -354,7 +365,8 @@ pub extern "C" fn wbd_m0_win_owner_v2_device_state(
         return INVALID
     }
     let Ok(r)=registry().lock()else{return BAD_STAGE};
-    let Some(e)=r.entries.get(&h)else{return UNKNOWN};
+    let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
     let (bound,quiesced,ifindex,luid)=match e.device{
         Some(d)=>(1,u32::from(d.quiesced),d.ifindex,d.luid),
         None=>(0,0,0,0)
@@ -415,19 +427,17 @@ fn normal_off_windows_budget(e:&Entry)->Result<FrameBudget,i32>{
         fec:FecReservation::FixedOff,game:false,
     }).map_err(|_|INVALID)
 }
-fn v3_ready(r:&Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32)->bool{
-    r.entries.get(&h).is_some_and(|e|
-        e.phase==PH_ACTIVE && e.authenticated_epoch==epoch &&
-        e.device.is_some_and(|d|!d.quiesced && d.luid==luid && d.ifindex==ifindex))
+fn v3_ready(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)->bool{
+    e.phase==PH_ACTIVE && e.authenticated_epoch==epoch &&
+    e.device.is_some_and(|d|!d.quiesced && d.luid==luid && d.ifindex==ifindex)
 }
-fn v3_seal_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,ipv4:&[u8],out:&mut [u8]
 )->Result<(usize,u32,u64),i32>{
-    if !v3_ready(r,h,epoch,luid,ifindex)||ipv4.len()<20||
+    if !v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
         ipv4[0]>>4!=4 || ipv4.len()>2048 || out.len()<ipv4.len()+FIXED_WIRE_OVERHEAD{
         return Err(INVALID)
     }
-    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
     let budget=normal_off_windows_budget(e)?;
     if ipv4.len()>budget.single_business_payload_mtu ||
         ipv4[0]&15<5{return Err(INVALID)}
@@ -451,13 +461,12 @@ fn v3_seal_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
     let _unused_storage=batch.recycle();
     accepted
 }
-fn v3_open_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
 )->Result<usize,i32>{
-    if !v3_ready(r,h,epoch,luid,ifindex)||
+    if !v3_ready(e,epoch,luid,ifindex)||
         wire.len()<=FIXED_WIRE_OVERHEAD || wire.len()>2048 ||
         out.len()<wire.len(){return Err(INVALID)}
-    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
     e.owner.offer_after_active(slab,0..wire.len(),u64::from(seq),MonoNs(0))
@@ -481,6 +490,22 @@ fn v3_open_one(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
     if valid && report.link_ready==1 && report.rejected==0
         && report.control_ready==0 {Ok(len)} else {Err(INVALID)}
 }
+// Test helper; each production FFI clones a session Arc while the
+// registry mutex is briefly held, then releases it before AEAD and loans.
+fn v3_seal_one(r:&Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,ipv4:&[u8],out:&mut [u8],
+)->Result<(usize,u32,u64),i32>{
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    v3_seal_entry(&mut e,epoch,luid,ifindex,ipv4,out)
+}
+fn v3_open_one(r:&Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8],
+)->Result<usize,i32>{
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    v3_open_entry(&mut e,epoch,luid,ifindex,seq,wire,out)
+}
 fn v3_epoch(ptr:*const u8,len:usize)->Option<[u8;16]>{
     if ptr.is_null()||len!=16{return None}
     let mut epoch=[0;16];
@@ -501,14 +526,19 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v3_seal_normal_off(
         pn.is_null()||ipv4_len<20||ipv4_len>2048||
         capacity<ipv4_len+FIXED_WIRE_OVERHEAD||capacity>65535{return INVALID}
     let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     // No mutable-aliasing FFI: input and output must not overlap.
     let src_start=ipv4 as usize;let dst_start=out as usize;
     if src_start.checked_add(ipv4_len).is_none_or(|end|
         dst_start<end && src_start<dst_start.saturating_add(capacity)){return INVALID}
     let data=unsafe{std::slice::from_raw_parts(ipv4,ipv4_len)};
     let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
-    match v3_seal_one(&mut r,h,exact,luid,ifindex,data,dst){
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match v3_seal_entry(&mut e,exact,luid,ifindex,data,dst){
         Ok((n,s,p))=>{
             unsafe{used.write(n);seq.write(s);pn.write(p)};OK
         },
@@ -530,8 +560,13 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v3_open_normal_off(
         dst_start<end && src_start<dst_start.saturating_add(capacity)){return INVALID}
     let data=unsafe{std::slice::from_raw_parts(wire,wire_len)};
     let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    match v3_open_one(&mut r,h,exact,luid,ifindex,seq,data,dst){
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match v3_open_entry(&mut e,exact,luid,ifindex,seq,data,dst){
         Ok(n)=>{unsafe{used.write(n)};OK},Err(e)=>e,
     }
 }
@@ -569,16 +604,16 @@ mod tests {
         let mut r=Registry{generation:11,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_eq!(h>>32,11);
-        assert_eq!(r.entries[&h].phase,PH_PREPARED);
+        assert_eq!(r.entries[&h].lock().unwrap().phase,PH_PREPARED);
         assert_eq!(commit(&mut r,h,1,9,800),INVALID);
         assert_eq!(stop(&mut r,h),BAD_STAGE);
         assert_eq!(release(&mut r,h),BAD_STAGE);
         assert_eq!(commit(&mut r,h,0,0,800),OK);
-        assert_eq!(r.entries[&h].phase,PH_ACTIVE);
+        assert_eq!(r.entries[&h].lock().unwrap().phase,PH_ACTIVE);
         assert_eq!(commit(&mut r,h,0,0,800),BAD_STAGE);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(stop(&mut r,h),OK);
-        assert_eq!(r.entries[&h].phase,PH_STOPPED);
+        assert_eq!(r.entries[&h].lock().unwrap().phase,PH_STOPPED);
         assert_eq!(release(&mut r,h),OK);
         assert_eq!(commit(&mut r,h,0,0,801),UNKNOWN);
         let prepared=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
@@ -587,7 +622,7 @@ mod tests {
         let newer=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_ne!(newer,h);
         assert_eq!(stop(&mut r,h),UNKNOWN);
-        assert_eq!(r.entries[&newer].phase,PH_PREPARED);
+        assert_eq!(r.entries[&newer].lock().unwrap().phase,PH_PREPARED);
     }
     #[test]
     fn m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply(){

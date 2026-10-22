@@ -28,13 +28,14 @@ pub(super) fn seal_symbol(
     r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
     kind:u8,frame:&[u8],out:&mut [u8],
 )->Result<(usize,u32,u64),i32>{
-    if !v3_ready(r,h,epoch,luid,ifindex)||!matches!(kind,2|3)||
+    if !r.entries.get(&h).is_some_and(|lane|lane.lock().ok().is_some_and(|e|v3_ready(&e,epoch,luid,ifindex)))||!matches!(kind,2|3)||
        frame.len()<10||frame.len()>512||out.len()<frame.len()+31{
        return Err(INVALID)
     }
-    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
     if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
-    let budget=normal_off_windows_budget(e)?;
+    let budget=normal_off_windows_budget(&e)?;
     if frame.len()>budget.record_payload_mtu{return Err(INVALID)}
     let valid=match kind {
         2=>fec_v2::parse_source(frame,budget.record_payload_mtu).is_ok(),
@@ -63,15 +64,16 @@ pub(super) fn open_symbol(
     r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
     seq:u32,wire:&[u8],
 )->Result<Vec<WbdWindowsFec2FirstDeliveryV4>,i32>{
-    if !v3_ready(r,h,epoch,luid,ifindex)||
+    if !r.entries.get(&h).is_some_and(|lane|lane.lock().ok().is_some_and(|e|v3_ready(&e,epoch,luid,ifindex)))||
        wire.len()<=FIXED_WIRE_OVERHEAD||wire.len()>543{
        return Err(INVALID)
     }
-    let e=r.entries.get_mut(&h).ok_or(UNKNOWN)?;
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
     if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
-    let scope=frame_scope(e);
+    let scope=frame_scope(&e);
     if e.fec2_rx.is_none(){
-        let limit=normal_off_windows_budget(e)?.record_wire_mtu;
+        let limit=normal_off_windows_budget(&e)?.record_wire_mtu;
         e.fec2_rx=Some(Fec2LiveRx::from_authenticated_scope(scope,limit)
             .map_err(|_|INVALID)?);
     }
@@ -213,7 +215,7 @@ mod tests{
         };
         let client=setup(&mut r,false,101,11);
         let server=setup(&mut r,true,102,12);
-        let budget=normal_off_windows_budget(&r.entries[&client]).unwrap();
+        let budget=normal_off_windows_budget(&r.entries[&client].lock().unwrap()).unwrap();
         let a=data(1);let b=data(2);
         let source=fec_v2::source_owned(1,0,&a,budget.record_payload_mtu).unwrap();
         assert_eq!(seal_symbol(&mut r,client,[9;16],101,11,2,&source,&mut [0;800]),

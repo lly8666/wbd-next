@@ -37,7 +37,8 @@ pub(super) fn join(
     // distinct live kernel Wintun holds. No cold248 input arrives here.
     let mut scope=None;
     for h in &ids {
-        let e=r.entries.get(h).ok_or(UNKNOWN)?;
+        let lane=r.entries.get(h).ok_or(UNKNOWN)?;
+        let e=lane.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE||e.role_server!=server||
             e.game_group.is_some()||e.feature7!=true||
             e.game_cold.is_none()||
@@ -59,7 +60,7 @@ pub(super) fn join(
     // group-install authority. A failed independent-lane crypto constructor
     // is terminal for those lane sessions; no fallback/retry key duplication.
     let cold=ids.iter().map(|h|
-        r.entries.get_mut(h).and_then(|e|e.game_cold.take()).ok_or(BAD_STAGE)
+        r.entries.get(h).ok_or(BAD_STAGE).and_then(|lane|lane.lock().map_err(|_|BAD_STAGE).and_then(|mut e|e.game_cold.take().ok_or(BAD_STAGE)))
     ).collect::<Result<Vec<_>,_>>()?;
     let generation=r.generation;
     let next=generation.checked_add(1).ok_or(FULL)?;
@@ -70,7 +71,7 @@ pub(super) fn join(
     ).map_err(|_|INVALID)?;
     r.generation=next;
     for h in &ids {
-        r.entries.get_mut(h).ok_or(UNKNOWN)?.game_group=Some(group);
+        r.entries.get(h).ok_or(UNKNOWN)?.lock().map_err(|_|BAD_STAGE)?.game_group=Some(group);
     }
     r.game_groups.insert(group,WinGameGroup{
         adapter,handles:ids,generation,
@@ -80,15 +81,15 @@ pub(super) fn join(
 }
 fn stopped_group(r:&mut Registry,h:u64)->i32{
     let Some(g)=r.game_groups.get(&h)else{return UNKNOWN};
-    if g.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|e|
+    if g.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|d.quiesced))){
+        !e.device.is_some_and(|d|d.quiesced)))){
         return STOP_INCOMPLETE
     }
     let Some(mut game)=r.game_groups.remove(&h)else{return UNKNOWN};
     game.adapter.stop();
     for lane in game.handles {
-        if let Some(e)=r.entries.get_mut(&lane){e.game_group=None}
+        if let Some(e)=r.entries.get(&lane){if let Ok(mut e)=e.lock(){e.game_group=None}}
     }
     OK
 }
@@ -101,9 +102,9 @@ pub(super) fn offer_records(
     }
     let game=r.game_groups.get_mut(&h).ok_or(UNKNOWN)?;
     if max<game.handles.len(){return Err(INVALID)}
-    if game.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|e|
+    if game.handles.iter().any(|lane|r.entries.get(lane).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|!d.quiesced))){
+        !e.device.is_some_and(|d|!d.quiesced)))){
         return Err(BAD_STAGE)
     }
     game.tick=game.tick.checked_add(2).ok_or(FULL)?;
@@ -133,9 +134,9 @@ pub(super) fn receive_record(
     if lane==0||usize::try_from(lane).ok().is_none_or(|v|v>game.handles.len()){
         return Err(INVALID)
     }
-    if game.handles.iter().any(|id|r.entries.get(id).is_none_or(|e|
+    if game.handles.iter().any(|id|r.entries.get(id).is_none_or(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|!d.quiesced))){
+        !e.device.is_some_and(|d|!d.quiesced)))){
         return Err(BAD_STAGE)
     }
     let key=LaneKey{
@@ -291,7 +292,7 @@ mod tests{
                 Some(ipv4.to_vec()));
             assert_eq!(stopped_group(&mut r,c),STOP_INCOMPLETE);
             for h in client.iter().chain(server.iter()){
-                let dev=r.entries[h].device.unwrap();
+                let dev=r.entries[h].lock().unwrap().device.unwrap();
                 assert_eq!(quiesce_wintun(&mut r,*h,[2;16],dev.luid,dev.ifindex),OK);
             }
             assert_eq!(stopped_group(&mut r,c),OK);
