@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "PLAN024_REAL_FULL_WINDOWS_WSL2_GOT_OS_IDENTITY_DIFFERENCE_PRE_TLS",
+  "source_sha": "e75c37df46337ca59cbd47e38adbc12da46d3e9e",
+  "action": {
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "run_id": 39759204820,
+    "attempt": 1,
+    "job_id": 119758854736,
+    "conclusion": "FAILURE"
+  },
+  "artifact": {
+    "id": 12416719982,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:06678e5ad02f2d7b7fc3f259b954647e7af08c4637834d9a2d0594aa4d279485"
+  },
+  "native_verified": {
+    "host_os": "windows-2025",
+    "guest_os": "actual pinned Ubuntu24.04.5 WSL2",
+    "windows_ifindex": 25,
+    "original_go_selected_ifindex": 25,
+    "verified_guest_ipv4": "172.22.98.189",
+    "original_server_ipv4": "172.22.98.189",
+    "original_go_selected_nexthop_ipv4": "172.22.96.1",
+    "verified_windows_source_ipv4": "172.22.96.1",
+    "original_go_selected_source_ipv4": "172.22.96.1",
+    "verified_guest_eth0_mac": "00:15:5d:4f:bc:12",
+    "parsers": "all nil",
+    "hyperv_exact_scope_rule": "PASS_INSTALLED_AND_REMOVED",
+    "guest_neighbor": "PASS_VERIFIED_AND_REMOVED",
+    "npcap": "SIGNED_REAL_DRIVER_RUNNING_AND_OWNED_CLEANUP",
+    "linux_raw_tun": "REAL_WSL2_ENV_RUNNING"
+  },
+  "root_cause": "Windows original GetIpForwardTable chooses host self 172.22.96.1 as next hop for on-link WSL2 guest 172.22.98.189; pre-TLS guard erroneously required next hop equal guest; all interface/host/peer identities independently MATCH.",
+  "status": {
+    "product_normal_off": "FAIL_BEFORE_TLS",
+    "original_go_tls": "NOT_STARTED",
+    "windows_native_applied": "NOT_RUN",
+    "linux_server_authenticated_ready": "NOT_OBSERVED",
+    "true_bidirectional_udp": "NOT_RUN",
+    "owned_public_stop": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "next": {
+    "source_sha": "68d52a8ace83ea7fb3ace9b41792b8d56c3f3484",
+    "workflow_run_id": 39761157254,
+    "policy": "only when source/ifindex/guest verified and nextHop4 equals the same source4 with original SendARP MAC equal to sourceMAC can original Go use exact verified Linux guestMAC; third-party next-hop still rejected; full public job run then verify duplex+owned Stop"
+  }
+}
