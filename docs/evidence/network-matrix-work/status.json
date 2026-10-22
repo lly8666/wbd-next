@@ -26,11 +26,15 @@
   "open_requests": [
     {
       "id": "S031-original-FEC-record-cap-build",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "type": "ONE_NATIVE_ARM64_PRODUCT_SOURCE_BUILD",
       "trigger": "source change in original Go CLI auto-builds exactly once, no manual dispatch",
       "previous_source": "2476b22f748a686907edfb995431a2b236ccebaa",
-      "scope": "raise negotiated client/server TLS record wire limit from1180 to1280 for Fixed/Auto only, keep Off/Game 1180; no change to Rust length/MTU/MSS/crypto/Stop gates"
+      "scope": "raise negotiated client/server TLS record wire limit from1180 to1280 for Fixed/Auto only, keep Off/Game 1180; no change to Rust length/MTU/MSS/crypto/Stop gates",
+      "run_id": 39807984023,
+      "attempt": 1,
+      "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39807984023"
     }
   ],
   "recent_evidence": [
@@ -137,7 +141,7 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "Resolve unique S031 native build Action from Go record-wire cap source push. Confirm actual native Go test and Rust units, ZIP/SOURCE/hash/ELF. If success, one same-VM sequential S032 Fixed30 AB: A previous SOURCE2476b22f run39803921701/artifact12436752126 vs B capped Fixed wire1280. Verify 7074/7068 overbudget disappears, TCP bytes_acked/p99 and UDP first arrival, applied and hard Stop. Retain old FAIL and S018 off baseline PASS, no main merge.",
+  "next_action": "S031 original FEC record wire budget fix SOURCE c297a8052272b1cb7a326ae0281d773e4669ca99 sole ARM64 build 39807984023 in progress. NO duplicate dispatch. Check original Go native TestOriginalProductFecRecordWireBudgetKeeps1200BIPv4 and full build, verify ZIP/manifest/source/ELF. Then same-VM sequential Fixed30 old S029 vs new S031 S032 A/B. Preserve original S030 7074/7068 dropped oversized FAIL and S018 off PASS. Do not weaken Fixed applied/Stop.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2476b22f748a686907edfb995431a2b236ccebaa",
