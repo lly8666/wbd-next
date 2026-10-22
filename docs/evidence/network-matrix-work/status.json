@@ -10,7 +10,7 @@
     "common_ancestor": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "frozen_product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-    "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48"
+    "harness_source": "b1c6a0a160d3b041d799065847016c63db8bdba5"
   },
   "build": {
     "run_id": 39759842150,
@@ -55,10 +55,13 @@
     {
       "id": "arm64-off-mixed-loss1-rtt50-75s",
       "path": "tests/network/request.json",
-      "status": "INTENT_RECORDED_NOT_DISPATCHED",
-      "run_id": null,
+      "status": "IN_PROGRESS",
+      "run_id": 39762360999,
       "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "scenario": "Normal/off 10Mbps per direction, UDP/TCP 50/50 4 streams 75s, 25ms one way netem 1% IID each direction, same seed 5205"
+      "scenario": "Normal/off 10Mbps per direction, UDP/TCP 50/50 4 streams 75s, 25ms one way netem 1% IID each direction, same seed 5205",
+      "attempt": 1,
+      "harness_source": "b1c6a0a160d3b041d799065847016c63db8bdba5",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39762360999"
     }
   ],
   "open_issues": [
@@ -67,7 +70,7 @@
     "Game+FEC, cipher/repair toggles, true no-payload idle and Windows unavailable in public Linux runner",
     "ARM64 source/run/attempt+ZIP digest and native ELF adapter pending Actions check"
   ],
-  "next_action": "Commit one low-loss request with explicit maximum remaining loss <=0.1%, require retransmission, watch same job; keep independent results and host/production counters.",
+  "next_action": "Observe S002 39762360999; compare injected/netem/app repair/host and stop, do not redispatch. Use result to decide fixed 30%/auto or diagnose.",
   "actions": [
     {
       "run_id": 39759842064,
