@@ -134,6 +134,81 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
     Ok(result)
 }
+// The exact shared RS16 encoder is used for Windows parity; NO parallel
+// Go/C-ABI Reed-Solomon implementation or fake M2 policy ACK. Caller must
+// hold the original authenticated current Rust feature7 owner and real
+// process-created Wintun interface. This returns only an UNSEALED repair
+// symbol. Production caller must M3-seal it as kind3 with a fresh PN.
+fn encode_repair_entry(
+    e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    block_id:u64,profile:u32,row:u32,frames:&[&[u8]],out:&mut [u8],
+)->Result<usize,i32>{
+    use wbd_codec::fec_v2::{Rs16,Profile,BackendChoice};
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||
+        e.game_group.is_some()||block_id==0||
+        !(1..=16).contains(&frames.len())||profile>6||row>=16 {
+        return Err(INVALID)
+    }
+    let budget=normal_off_windows_budget(e)?.record_payload_mtu;
+    let policy=Profile::ALL[profile as usize];
+    let original_max=wbd_codec::fec_v2::max_original_for_record_budget(budget)
+        .map_err(|_|INVALID)?;
+    if frames.iter().any(|frame|frame.len()<20||
+        frame.len()>original_max||frame[0]>>4!=4||frame[0]&15<5){
+        return Err(INVALID)
+    }
+    let required=12usize+2usize+frames.iter().map(|f|f.len()).max().ok_or(INVALID)?;
+    if required>budget||out.len()<required{return Err(INVALID)}
+    let mut writable=[&mut out[..required]];
+    Rs16::new().encode_into(block_id,frames,policy,row as usize,
+        &mut writable,budget,BackendChoice::Scalar).map_err(|_|INVALID)?;
+    Ok(required)
+}
+
+// Packed separate frame vector: 16 fixed 2048B slots and a separate
+// 16-entry length array, no caller-controlled stride/pointer arithmetic.
+// 32KiB is bounded and never held beyond this call. The C ABI does not
+// accept any key/epoch except the one already stored in Rust by original Go.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_encode_repair(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    block_id:u64,profile:u32,row:u32,
+    slots:*const u8,lengths:*const u32,k:u32,
+    dst:*mut u8,cap:usize,used:*mut usize,
+)->i32{
+    if slots.is_null()||lengths.is_null()||dst.is_null()||
+        used.is_null()||k==0||k>16||cap<34||cap>2048 {
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let bytes=unsafe{std::slice::from_raw_parts(slots,k as usize*2048)};
+    let sizes=unsafe{std::slice::from_raw_parts(lengths,k as usize)};
+    if sizes.iter().any(|&v|v<20||v>2048){return INVALID}
+    let frames=bytes.chunks_exact(2048).zip(sizes).map(|(slot,&n)|
+        &slot[..n as usize]).collect::<Vec<_>>();
+    let dst_start=dst as usize;
+    let src_start=slots as usize;
+    let sizes_start=lengths as usize;
+    if src_start.checked_add(k as usize*2048).is_none_or(|end|
+           dst_start<end&&src_start<dst_start.saturating_add(cap))||
+       sizes_start.checked_add(k as usize*4).is_none_or(|end|
+           dst_start<end&&sizes_start<dst_start.saturating_add(cap)){
+       return INVALID
+    }
+    let lane={
+        let Ok(reg)=registry().lock()else{return BAD_STAGE};
+        let Some(e)=reg.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(e)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    let output=unsafe{std::slice::from_raw_parts_mut(dst,cap)};
+    match encode_repair_entry(&e,epoch,luid,ifindex,block_id,
+        profile,row,&frames,output){
+        Ok(n)=>{unsafe{used.write(n)};OK},
+        Err(err)=>err,
+    }
+}
+
 fn epoch(ptr:*const u8,len:usize)->Option<[u8;16]>{
     v3_epoch(ptr,len)
 }
