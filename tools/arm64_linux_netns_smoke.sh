@@ -141,12 +141,21 @@ if [ "$ready" -ne 1 ]; then
   tail -n 50 "$out/server.log" || true
   exit 1
 fi
-sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -c 3 -W 2 10.188.18.2 \
+# 3 request/reply observations certify Normal. Fixed needs enough authentic
+# sources to form at least one <=16-source block and mature M2 feedback.
+# One low-rate diagnostic (20 each way), NOT load/performance pressure.
+count=3
+interval=1
+if [ "$mode" = fec-fixed ]; then count=20; interval=0.1; fi
+sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i "$interval" -c "$count" -W 2 10.188.18.2 \
   >"$out/c2s.log" 2>&1
-sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -c 3 -W 2 10.188.18.1 \
+sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -W 2 10.188.18.1 \
   >"$out/s2c.log" 2>&1
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
+# Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
+# Give exactly one quiet maturity opportunity after the real 20+20 sources.
+if [ "$mode" = fec-fixed ]; then sleep 3; fi
 stop_namespace "$client_ns"
 stop_namespace "$server_ns"
 for i in $(seq 1 75); do
