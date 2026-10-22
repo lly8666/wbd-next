@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "phase": "PLAN024_PUBLIC_WINDOWS_LINUX",
+  "scope": "ENVIRONMENT_CAPABILITY_ONLY_NOT_PRODUCT",
+  "exact_source": "bb19b3f0a32b4b393bd6e7b82c2ee1eee7f1bebe",
+  "workflow": ".github/workflows/m0-wl-windows2025-wsl2-capability.yml",
+  "run": {
+    "id": 39725690761,
+    "attempt": 1,
+    "job_id": 119648930189,
+    "conclusion": "SUCCESS_ENV_CAPTURE_ONLY"
+  },
+  "artifact": {
+    "id": 12403107809,
+    "name": "m0-wl-native-environment-once",
+    "size_bytes": 1625,
+    "sha256": "cbd1cdec023b83b8512bf935c3268ff537f10887a2ac2394574eb32c2e3d2b09"
+  },
+  "host": {
+    "image": "windows-2025",
+    "image_version": "20261018.275.1",
+    "admin": true,
+    "logical_cpus": 4,
+    "npcap_driver": "NOT_FOUND",
+    "npcap_dll": "NOT_FOUND",
+    "wintun_installed_adapter": "NOT_FOUND",
+    "signed_wintun": "NOT_FOUND",
+    "npcap_real_capture_send": "NOT_RUN",
+    "wintun_kernel_io": "NOT_RUN"
+  },
+  "wsl": {
+    "version": "3.0.3.0",
+    "reported_kernel": "6.18.54.1-1",
+    "ubuntu_install_exit": 0,
+    "linux_probe_exit": 2,
+    "probe_error": "sh: 1: set: Illegal option -",
+    "explanation": "PowerShell multiline script passed to sh -lc with CRLF; probe failed at set -eu before checking Linux kernel/netem. This is a harness invocation error, NOT evidence that WSL2/kernel does not support netem.",
+    "tun_raw_netns_veth_netem": "NOT_RUN"
+  },
+  "full_product": {
+    "auth_go_tls": "NOT_RUN",
+    "windows_to_linux": "NOT_RUN",
+    "bidirectional_business": "NOT_RUN",
+    "kernel_loss": "NOT_RUN",
+    "stop": "NOT_RUN"
+  },
+  "performance": {
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN"
+  },
+  "qualification": "BLOCKED_ENV_NO_NPCAP_NO_WINTUN_AND_WSL_PROBE_INVALID",
+  "non_claims": [
+    "Actions top-level success means environmental discovery script executed; no full product PASS",
+    "Signed Wintun test DLL from previous native Actions does not imply this runner has installed, usable Wintun adapter",
+    "Previous 5-mode scoped component results and WinSock loopback are not crossplatform product evidence"
+  ],
+  "preserved_historical_actions": [
+    {
+      "run_id": 39720381959,
+      "result": "FAIL",
+      "reason": "WinSock DF named constant missing; older than fixed S762"
+    },
+    {
+      "run_id": 39721990198,
+      "result": "FAIL",
+      "reason": "H243 hot byte over limit"
+    },
+    {
+      "run_id": 39725464619,
+      "result": "FAIL",
+      "reason": "M0 registry hot-byte over limit introduced S766"
+    },
+    {
+      "run_id": 39725690792,
+      "result": "FAIL",
+      "reason": "same hot-byte before S768 repair"
+    },
+    {
+      "run_id": 39725690834,
+      "result": "FAIL",
+      "reason": "same hot-byte in maintenance unit regressions"
+    },
+    {
+      "run_id": 39726037943,
+      "result": "SUCCESS",
+      "source": "39f833ade7f9036f2fa161ca341340d97cbefda4",
+      "reason": "S768 repaired hot-byte structural budget"
+    },
+    {
+      "run_id": 39726037963,
+      "result": "FAIL",
+      "reason": "G2 registry revision changed; separate source-locked workspace baseline mismatch, not a Windows Linux product test"
+    }
+  ]
+}
