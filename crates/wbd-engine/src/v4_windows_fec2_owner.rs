@@ -14,7 +14,7 @@ pub struct WbdWindowsFec2FirstDeliveryV4 {
     pub index:u32,
     pub length:u32,
     pub recovered:u32,
-    pub frame:[u8;512],
+    pub frame:[u8;2048],
 }
 fn frame_scope(e:&Entry)->VerifiedReceiveEpoch{
     VerifiedReceiveEpoch{
@@ -25,15 +25,20 @@ fn frame_scope(e:&Entry)->VerifiedReceiveEpoch{
     }
 }
 pub(super) fn seal_symbol(
-    r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
+    r:&Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
     kind:u8,frame:&[u8],out:&mut [u8],
 )->Result<(usize,u32,u64),i32>{
-    if !r.entries.get(&h).is_some_and(|lane|lane.lock().ok().is_some_and(|e|v3_ready(&e,epoch,luid,ifindex)))||!matches!(kind,2|3)||
-       frame.len()<10||frame.len()>512||out.len()<frame.len()+31{
-       return Err(INVALID)
-    }
     let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
     let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    seal_symbol_entry(&mut e,epoch,luid,ifindex,kind,frame,out)
+}
+fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    kind:u8,frame:&[u8],out:&mut [u8]
+)->Result<(usize,u32,u64),i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||!matches!(kind,2|3)||
+       frame.len()<10||frame.len()>2048||out.len()<frame.len()+31{
+       return Err(INVALID)
+    }
     if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
     let budget=normal_off_windows_budget(&e)?;
     if frame.len()>budget.record_payload_mtu{return Err(INVALID)}
@@ -61,15 +66,20 @@ pub(super) fn seal_symbol(
     accepted
 }
 pub(super) fn open_symbol(
-    r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
+    r:&Registry,h:u64,epoch:[u8;16],luid:u64,ifindex:u32,
     seq:u32,wire:&[u8],
 )->Result<Vec<WbdWindowsFec2FirstDeliveryV4>,i32>{
-    if !r.entries.get(&h).is_some_and(|lane|lane.lock().ok().is_some_and(|e|v3_ready(&e,epoch,luid,ifindex)))||
-       wire.len()<=FIXED_WIRE_OVERHEAD||wire.len()>543{
-       return Err(INVALID)
-    }
     let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
     let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    open_symbol_entry(&mut e,epoch,luid,ifindex,seq,wire)
+}
+fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    seq:u32,wire:&[u8],
+)->Result<Vec<WbdWindowsFec2FirstDeliveryV4>,i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||
+       wire.len()<=FIXED_WIRE_OVERHEAD||wire.len()>2048{
+       return Err(INVALID)
+    }
     if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
     let scope=frame_scope(&e);
     if e.fec2_rx.is_none(){
@@ -90,14 +100,14 @@ pub(super) fn open_symbol(
             match decoder.accept_authenticated(scope,kind,plain,MonoNs(0)){
                 Ok(deliveries)=>{
                     for d in deliveries {
-                        if d.frame.len()>512||result.len()>=16{
+                        if d.frame.len()>2048||result.len()>=16{
                             failed=true;break
                         }
                         let mut out=WbdWindowsFec2FirstDeliveryV4{
                             block_id:d.block_id,index:u32::from(d.index),
                             length:d.frame.len() as u32,
                             recovered:u32::from(d.recovered),
-                            frame:[0;512],
+                            frame:[0;2048],
                         };
                         out.frame[..d.frame.len()].copy_from_slice(&d.frame);
                         result.push(out);
@@ -123,7 +133,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_seal(
     used:*mut usize,seq:*mut u32,pn:*mut u64,
 )->i32{
     if payload.is_null()||out.is_null()||used.is_null()||
-       seq.is_null()||pn.is_null()||len<10||len>512||
+       seq.is_null()||pn.is_null()||len<10||len>2048||
        capacity<len+31||capacity>65535||!matches!(kind,2|3){
        return INVALID
     }
@@ -133,8 +143,13 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_seal(
         dst<end&&src<dst.saturating_add(capacity)){return INVALID}
     let input=unsafe{std::slice::from_raw_parts(payload,len)};
     let buffer=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    match seal_symbol(&mut r,h,exact,luid,ifindex,kind as u8,input,buffer){
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match seal_symbol_entry(&mut e,exact,luid,ifindex,kind as u8,input,buffer){
         Ok((n,s,p))=>{unsafe{used.write(n);seq.write(s);pn.write(p)};OK},
         Err(e)=>e,
     }
@@ -147,13 +162,18 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_open(
     count:*mut u32,
 )->i32{
     if wire.is_null()||deliveries.is_null()||count.is_null()||
-       len<=FIXED_WIRE_OVERHEAD||len>543||capacity==0||capacity>16{
+       len<=FIXED_WIRE_OVERHEAD||len>2048||capacity==0||capacity>16{
        return INVALID
     }
     let Some(exact)=epoch(ep,ep_len)else{return INVALID};
     let input=unsafe{std::slice::from_raw_parts(wire,len)};
-    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
-    match open_symbol(&mut r,h,exact,luid,ifindex,seq,input){
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match open_symbol_entry(&mut e,exact,luid,ifindex,seq,input){
         Ok(out) if out.len()<=capacity as usize=>{
             for (i,record) in out.iter().enumerate(){
                 unsafe{deliveries.add(i).write(*record)}
