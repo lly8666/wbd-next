@@ -1,0 +1,232 @@
+name: M0 actual full public Windows Linux Normal off
+run-name: M0-WL-FULL-PUBLIC-NORMAL-REALSOURCE
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-wl-public-normal-full.yml
+      - tools/m0_wl_public_normal_e2e.py
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-public-two-os:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+      GH_TOKEN: ${{ github.token }}
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+      LINUX_BINARY_SRC: 621bc733becbb4bbcf23bc4b10c6150d22b3a073
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble exact original Go plus source-locked M0 Windows WAL and WinForms
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @'
+          import pathlib,json,subprocess,os,hashlib
+          root=pathlib.Path.cwd()
+          main=os.environ["GITHUB_SHA"]
+          original="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==main
+          assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()==original
+          spec=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text(encoding="utf8"))
+          assert spec["legacy_source"]==original
+          def gitblob(data):return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+          for op in spec["operations"]:
+              if op["kind"]=="replace":
+                  content=subprocess.check_output(["git","-C","legacy","show",original+":"+op["path"]])
+                  assert gitblob(content)==op["original_blob"],op["path"]
+                  destination=root/"legacy"/op["path"]
+                  assert destination.is_file()
+                  destination.write_bytes(content)
+              if op.get("overlay_path"):
+                  content=subprocess.check_output(["git","show",main+":"+op["overlay_path"]])
+                  assert gitblob(content)==op["result_blob"],op["overlay_path"]
+                  destination=root/op["overlay_path"]
+                  assert destination.is_file()
+                  destination.write_bytes(content)
+          print("M0_PLAN020_WIN_WAL_ORIGINAL_GO_PINNED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
+          & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
+          if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
+      - name: Compile linked ORIGINAL credential Go Rust + signed Wintun five-stage OS WAL production packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import os,pathlib,subprocess,hashlib
+          root=pathlib.Path.cwd()
+          sha=os.environ["GITHUB_SHA"]
+          # The frozen M4/Go assembly is already exact SOURCE verified.
+          # Copy ONLY the extra original Go credential-TLS Rust bridge
+          # necessary for the new M0 host-WFP WAL production package;
+          # no mock adapters, no original bytes overwritten.
+          for part,names in (
+            ("realityfront",(
+              "admission_v4.go",
+              "bridge_v4_windows_private_owner.go",
+              "bridge_v4_windows_game_group.go",
+              "bridge_v4_windows_game_server_group.go",
+              "bridge_v4_windows_fec2_owner.go",
+              "bridge_v4_windows_wintun_lease.go",
+              "bridge_v4_windows_scoped_client.go",
+            )),
+            ("windowsownerlease",(
+              "created_wintun_windows.go",
+              "scoped_original_tls_native_wintun_windows.go",
+            )),
+          ):
+              dest=root/"legacy"/"internal"/part
+              dest.mkdir(parents=True,exist_ok=True)
+              for name in names:
+                  relative="r0/go_overlay/internal/"+part+"/"+name
+                  target=dest/name
+                  assert not target.exists(), "frozen Go/M4 has an existing competing owner: "+relative
+                  raw=subprocess.check_output(["git","show",sha+":"+relative])
+                  assert len(raw)>60
+                  if name=="admission_v4.go":
+                      assert b"package realityfront" in raw
+                  else:
+                      assert raw.startswith(b"//go:build windows"),relative
+                  target.write_bytes(raw)
+          # The actual M0 product service and native kernel ring are
+          # supplied by the SAME manifest-plan020-m0.json assembly, not
+          # copied from another source/branch.
+          assert (root/"legacy/internal/windowsownerlease/original_tls_native_product_windows.go").is_file()
+          assert (root/"legacy/internal/windowsclient/native_real_product_service_windows.go").is_file()
+          assert (root/"legacy/internal/windowsclient/native_udp_kernel_driver_windows.go").is_file()
+          print("M0_PLAN020_ORIGINAL_TLS_RUST_TO_NATIVE_HOST_WAL_BUNDLE_EXACT_SAME_SOURCE")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'full native Go/V4 Rust source-locked assembly FAIL'}
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if ($LASTEXITCODE -ne 0) {throw 'actual Go TLS Rust Wintun to 5-stage WAL owner integration package build FAIL'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if ($LASTEXITCODE -ne 0) {throw 'actual original-Go native CLI fails to link Rust and Windows WAL packages'}
+          } finally {Pop-Location}
+          Write-Output 'M0_PLAN020_ORIGINAL_TLS_RUST_SIGNED_WINTUN_NATIVE_OS_PRODUCT_SERVICE_LINKED_GO_BUILD_PASS'
+      - name: Build actual original Windows Rust M1 M2 M3 release DLL
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain missing'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'actual Windows MSVC target missing'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
+          if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 production library build failed'}
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
+          Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Reuse verified public Linux V4 original Go server binary (separate exact SOURCE)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force linux-product | Out-Null
+          & gh run download 39397026210 --repo $env:GITHUB_REPOSITORY --name m0-v4-source-build-39397026210-1 --dir linux-product
+          if($LASTEXITCODE -ne 0){throw 'real Linux public V4 binary artifact unavailable'}
+          @'
+          import hashlib,json,pathlib,os
+          p=pathlib.Path("linux-product")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]
+          assert m["original_go_sha"]==os.environ["GO_SRC"]
+          for file in ("wbd-v4-server","libwbd_engine.so"):
+            v=p/file
+            assert v.is_file() and v.stat().st_size>100000
+            assert hashlib.sha256(v.read_bytes()).hexdigest()==m["sha256"][file]
+          print("WL_GENUINE_LINUX_PUBLIC_BINARIES_SOURCE_LOCKED")
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'real Linux binary hash mismatch'}
+      - name: Launch actual WSL2 Linux and direct full public two-OS product
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($known -notmatch 'Ubuntu'){
+            & wsl.exe --install --distribution Ubuntu --no-launch --web-download 2>&1 |
+              Out-File result/wl-public/wsl-install.log
+          }
+          & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
+          if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
+          & python tools/m0_wl_public_normal_e2e.py 2>&1 |
+            Tee-Object result/wl-public/direct-full.log
+          if($LASTEXITCODE -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
+          $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
+          if($result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){throw 'real public product proof not emitted'}
+      - name: Restore Npcap owned Windows kernel service after product Stop
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 |
+            Tee-Object result/wl-public/npcap-cleanup.log
+          $result=Get-Content result/wl-public/npcap-cleanup.log -Raw
+          if(-not ($result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){throw 'Npcap owned cleanup unverified'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'Npcap native driver still installed'}
+      - name: Report only public business source result, not native scoped success
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/report.json){Get-Content result/wl-public/report.json}
+          else {Write-Output 'WL_PUBLIC_WINDOWS_LINUX_NORMAL_OFF=NOT_RUN_OR_FAILED_BEFORE_START'}
+          Write-Output 'WL_N0_N1_N5=NOT_RUN'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-full-public-normal-direct
+          path: |
+            result/wl-public/report.json
+            result/wl-public/assembly.json
+            result/wl-public/*log
+            result/wl-public/*.pid
+          retention-days: 30
+          if-no-files-found: warn
