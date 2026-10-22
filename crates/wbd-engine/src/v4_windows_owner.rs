@@ -4,7 +4,7 @@
 //! cold248/WBGH bytes alone are NOT credentials or a kernel driver lease.
 //! This module reuses the normal M1/M3 ProtectedScopedOwner, not fake crypto.
 #![cfg(all(target_os="windows",feature="m0_v4_embedded_go"))]
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
 #[path = "v4_windows_game_owner.rs"]
@@ -30,6 +30,8 @@ const BAD_STAGE:i32=3;
 const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
 const MAX_SESSIONS:usize=16;
+// Genuine AEAD+unique-PN kind1 receives pending exact M2 route binding.
+const MAX_AUTHENTICATED_KIND1:usize=32;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
 const PH_ACTIVE:u32=2;
@@ -56,6 +58,9 @@ struct Entry {
     // Packet ownership still lives in the original generation arena.
     tx_scratch:Vec<TxDispatch>,
     rx_scratch:Vec<RxPacket>,
+    // Only the exact original Go TLS-derived M3 opener can append here.
+    // This is a bounded M2 ingress staging lane, NOT an ACK or a repair grant.
+    authenticated_kind1:VecDeque<(u64,wbd_codec::Receipt)>,
     authenticated_epoch:[u8;16],
     peer_mss:u16,
     peer_mss_advertised:bool,
@@ -118,6 +123,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         rx_unwrapped_high:u64::from(handoff.rx_boundary),
         limit:rx_limit,count:0,bytes:0,
         owner,arena,tx_scratch:Vec::with_capacity(8),rx_scratch:Vec::with_capacity(8),
+        authenticated_kind1:VecDeque::with_capacity(MAX_AUTHENTICATED_KIND1),
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
@@ -235,6 +241,7 @@ fn stop(r:&mut Registry,h:u64)->i32{
     if let Some(mut rx)=e.fec2_rx.take(){rx.stop()}
     // This STOP receipt covers Rust owner loans alone, never claims native
     // Windows WFP/TUN/route Stop; the product gate is permanently false.
+    e.authenticated_kind1.clear();
     e.phase=PH_STOPPED;
     OK
 }
@@ -515,8 +522,9 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
+    let mut opened_kind1=None;
     let rx_storage=std::mem::take(&mut e.rx_scratch);
-    let draining=e.owner.drain_authenticated(
+    let draining=e.owner.drain_windows_authenticated_kind1(
         MonoNs(0),rx_storage,|_pn,link|{
             // No unauthenticated DATA, replay, HEALTH or fragmented LINK
             // can reach a Windows kernel packet sink from this v3 boundary.
@@ -528,7 +536,7 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 out[..link.len()].copy_from_slice(link);
                 len=link.len();valid=true;
             }
-        });
+        },|pn,receipt|{opened_kind1=Some((pn,receipt))});
     let (storage,report)=match draining{
         Ok(v)=>v,
         Err((_,scratch))=>{e.rx_scratch=scratch;return Err(BAD_STAGE)}
@@ -538,6 +546,18 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         && report.control_ready==0 {
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
         Ok(len)
+    }
+    // Only after the SAME original protected M3 AEAD and replay admission
+    // can this typed kind1 enter the bounded staging lane. It does not yet
+    // authorize shadow retirement or Go TCP carrier receipt.
+    else if report.link_ready==0&&report.control_ready==1&&report.rejected==0 {
+        let Some(receipt)=opened_kind1 else{return Err(INVALID)};
+        if e.authenticated_kind1.len()>=MAX_AUTHENTICATED_KIND1 {
+            return Err(FULL)
+        }
+        e.authenticated_kind1.push_back(receipt);
+        e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
+        Err(INVALID) // legacy v3 is IPv4 ONLY; new M2 caller will own receipt
     } else {Err(INVALID)}
 }
 // Test helper; each production FFI clones a session Arc while the
