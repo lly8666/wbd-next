@@ -413,12 +413,15 @@ fi
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
-  grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
+  if [ "$crash_variant" != sigkill-client ]; then
+    grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
+  fi
   grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
   expected="$mode"
   expected="${expected#fec-}"
-  if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=client mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/client.log" \
-    || ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=server mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/server.log"; then
+  client_applied=true
+  if [ "$crash_variant" != sigkill-client ] && ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=client mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/client.log"; then client_applied=false; fi
+  if [ "$client_applied" != true ] || ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=server mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/server.log"; then
     echo "ARM64_FEC2_${expected}_REAL_PRODUCT_NOT_APPLIED (original requested vs applied)"
     tail -n 15 "$out/client.log" || true
     tail -n 15 "$out/server.log" || true

@@ -4,7 +4,7 @@ run-name: ARM64 real SIGKILL/rejoin ${{ github.sha }}
 on:
   push:
     branches: [feature/arm64-linux-android-openwrt-autoaccel]
-    paths: ['.github/workflows/arm64-linux-fault-restart.yml']
+    paths: ['.github/workflows/arm64-linux-fault-restart.yml', 'tools/arm64_linux_restart_soak.sh']
   workflow_dispatch:
 permissions:
   contents: read

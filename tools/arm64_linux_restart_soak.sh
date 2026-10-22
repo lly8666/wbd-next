@@ -22,7 +22,13 @@ for iteration in 1 2; do
   echo "ARM64_RESTART_EPISODE_BEGIN $iteration"
   # Its trap destroys BOTH network namespaces on any early failure, and
   # its success receipt is written only after both Go native Stops.
-  bash "$root/tools/arm64_linux_netns_smoke.sh"
+  if ! bash "$root/tools/arm64_linux_netns_smoke.sh"; then
+    if [ -d "$root/arm64-netns-result" ]; then
+      mv "$root/arm64-netns-result" "$output/episode-$iteration-FAILED"
+    fi
+    echo "ARM64_RESTART_EXPLICIT_FAILURE_AFTER_TEST episode=$iteration" >&2
+    exit 1
+  fi
   test -d "$root/arm64-netns-result"
   mv "$root/arm64-netns-result" "$output/episode-$iteration"
   ep="$output/episode-$iteration"
@@ -78,8 +84,9 @@ for n in (1,2):
             assert (d/"forced-client-kill.txt").stat().st_size>0
         else:
             assert "V4_PUBLIC_NATIVE_STOP_DRAINED" in log
-        assert re.search(r'V4_PUBLIC_FEC2_READBACK role='+role+
-             r' mode=fixed requested=\d+ applied=[1-9]\d* .*pending=false',log)
+        if not (n==1 and role=="client" and os.environ.get("WBD_ARM64_RESTART_FAULT")=="client-sigkill"):
+            assert re.search(r'V4_PUBLIC_FEC2_READBACK role='+role+
+                 r' mode=fixed requested=\d+ applied=[1-9]\d* .*pending=false',log)
     docs.append({"episode":n,"mode":"fec-fixed",
       "certificate_fingerprint_sha256":hashlib.sha256((d/"tls-cert-fingerprint.txt").read_bytes()).hexdigest(),
       "two_way_original_ICMP_20_of_20":True,
