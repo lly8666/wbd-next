@@ -26,13 +26,17 @@
     {
       "id": "arm64-fixed30-k-r-owner-diagnostic",
       "type": "REAL_PRODUCT_DIAGNOSTIC_SINGLE_SCENARIO",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "path": "tests/network/request.json",
       "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
       "build_run": 39770495489,
       "artifact_id": 12422077765,
       "trigger": "only push of request.json; no duplicate dispatch",
-      "description": "same 2Mbps per direction, 30% IID, 300ms one way, 120s sustained 50/50 UDP/TCP Fixed maximum. Read complete true FEC TX k/r pressure; no globally infeasible 1% loss gate, but hard mode/duplicate/Stop still active."
+      "description": "same 2Mbps per direction, 30% IID, 300ms one way, 120s sustained 50/50 UDP/TCP Fixed maximum. Read complete true FEC TX k/r pressure; no globally infeasible 1% loss gate, but hard mode/duplicate/Stop still active.",
+      "run_id": 39771281403,
+      "attempt": 1,
+      "harness_source": "d9f3aec913fddd4bc20a38f86c5a8af9c675b9a2",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39771281403"
     }
   ],
   "latest_actions": [
@@ -111,6 +115,12 @@
       "run": 39770863746,
       "type": "S009-sanitized-marker-contract",
       "conclusion": "success"
+    },
+    {
+      "run": 39771281287,
+      "type": "S010-harness-contract",
+      "conclusion": "failure",
+      "detail": "Test fixture KeyError:B when S010 request legitimately only bundle A, isolated schema test patched; real product Action independent"
     }
   ],
   "prior_success_reuse": {
@@ -129,7 +139,7 @@
     "Game FEC-on/Windows/physical/true idle unsupported in this harness"
   ],
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Resolve exactly one S010 performance Action from source-locked new request, do not redispatch. Read authentic Go FEC2 TX snapshot k histogram and rplanned/rsent/expired/pressure for both sides plus duplicate/app/applied. If metric absent inspect whitelist/log, do not infer zero. Then locate exact M1 parity policy versus M3 receive/Go applied and proceed minimal fix; new/old default A/B only after diagnostic.",
+  "next_action": "S010 Action 39771281403 in progress; no redispatch. Harness 39771281287 failed a B-only test fixture assumption; this commit tests single-A compatibility, new contract Action pending. Inspect S010 k/r readback after completion and preserve real duplicates/pending. Follow with default same-job perf A/B.",
   "fixed_candidate": {
     "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
     "build": {

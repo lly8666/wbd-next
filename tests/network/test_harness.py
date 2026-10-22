@@ -145,6 +145,9 @@ class Contracts(unittest.TestCase):
         self.assertFalse(attested_recovered_product_build({**run, "path": "unexpected.yml"}, jobs))
         self.assertFalse(attested_recovered_product_build({**run, "conclusion": "success"}, jobs))
         bad = request()
+        # A legitimate single-source scenario need not contain bundle B.
+        # Construct an independent B for this schema-negative test.
+        bad["bundles"]["B"] = dict(bad["bundles"]["A"])
         bad["bundles"]["B"]["step_attested_failure"] = "true"
         with self.assertRaises(ValueError):
             validate(bad)
