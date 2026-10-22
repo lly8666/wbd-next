@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "mode": "fec-fixed",
+  "profile": 6,
+  "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+  "harness_source": "d9f3aec913fddd4bc20a38f86c5a8af9c675b9a2",
+  "build": {
+    "run_id": 39770495489,
+    "attempt": 1,
+    "artifact_id": 12422077765,
+    "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b"
+  },
+  "action": {
+    "run_id": 39771281403,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "artifact_id": 12423050412,
+    "artifact_zip_sha256": "4125ee060e0c2714f73b7cd9d9bb21210aa0f806e794513df3cf3e9c32e7e2ec"
+  },
+  "scenario": {
+    "steady_s": 120,
+    "one_way_ms": 300,
+    "iid_loss_pct": 30,
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "drain_s": 30,
+    "loss_allowance_removed": "k1 maximum parity r2 ideal p^3=2.7%, but strict duplicate/mode/Stop remain"
+  },
+  "result": "FAIL",
+  "traffic": {
+    "c2s": {
+      "udp_sent": 20751,
+      "udp_unique_received": 6190,
+      "udp_missing": 14561,
+      "duplicates": 8,
+      "survivor_p99_ms": 1211.7,
+      "tcp_injected_mbps": 0.002064,
+      "tcp_received_mbps": 0
+    },
+    "s2c": {
+      "udp_sent": 20751,
+      "udp_unique_received": 6197,
+      "udp_missing": 14554,
+      "duplicates": 9,
+      "survivor_p99_ms": 1211.5,
+      "tcp_injected_mbps": 0,
+      "tcp_received_mbps": 0
+    }
+  },
+  "true_fixed_tx_owner_snapshot": {
+    "client": {
+      "accepted": 14684,
+      "source_not_ready": 5267,
+      "full_blocks": 0,
+      "partial_blocks": 11928,
+      "k1": 9461,
+      "k2_4": 2464,
+      "k5_12": 3,
+      "k13_16": 0,
+      "parity_r_planned": 26616,
+      "parity_r_copied": 8121,
+      "expired_jobs": 63,
+      "pressure_jobs": 0,
+      "pressure_sources": 0,
+      "unknown_capacity": 2
+    },
+    "server": {
+      "accepted": 14852,
+      "source_not_ready": 5074,
+      "full_blocks": 0,
+      "partial_blocks": 11985,
+      "k1": 9442,
+      "k2_4": 2541,
+      "k5_12": 2,
+      "k13_16": 0,
+      "parity_r_planned": 26839,
+      "parity_r_copied": 8318,
+      "expired_jobs": 49,
+      "pressure_jobs": 0,
+      "pressure_sources": 0,
+      "unknown_capacity": 9
+    }
+  },
+  "fec_readback": {
+    "client": {
+      "requested": 1,
+      "applied": 0,
+      "profile": 6,
+      "pending": true
+    },
+    "server": {
+      "requested": 1,
+      "applied": 1,
+      "profile": 6,
+      "pending": false
+    }
+  },
+  "host": {
+    "cpu_psi_mean_pct": 0,
+    "steal_peak_pct": 0,
+    "product_cpu_measurement_s": {
+      "client": 2.57,
+      "server": 2.7
+    },
+    "product_rss_peak_bytes": {
+      "client": 14880768,
+      "server": 15405056
+    }
+  },
+  "stop_drained_both": true,
+  "owned_namespace_cleanup": true,
+  "original_outer_repair_packets_total": 34014,
+  "assessment": "Real k/r received via public Go pre-Stop original Rust owner report, not synthetic. >79% groups k1; zero k13..16/full, therefore MAX_R20 tail not tested. Only 30–31% of planned parity reports kernel-copied; source_not_ready ~5k each; low expiry/zero queue pressure. Failure root category still unseparated between arena, seal, worker disposition. UDP duplicate and Fixed pending HARD_FAIL; low host contention not proof VM fault. Repair wire byte accounting and RX recovered identity not observed; do not loosen hard gates."
+}

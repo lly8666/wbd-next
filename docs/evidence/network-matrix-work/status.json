@@ -1,167 +1,68 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S010-live-real-FEC30-S011-default-off-AB-intent",
+  "phase": "S012-isolate-real-FEC-source-parity-notready-cause",
   "recovered": true,
   "origins": {
+    "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
-    "main_merged": "26f2e509a8e3c4055460a67960ea5462beec1622",
-    "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a"
+    "main_task_source": "26f2e509a8e3c4055460a67960ea5462beec1622",
+    "PR23_main_clarification": "abdc674f29712843a2307049565414201d7e26c5"
   },
-  "product_source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-  "build": {
+  "product_baseline": {
+    "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+    "run": 39759842150,
+    "artifact": 12417786567,
+    "zip_sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
+  },
+  "product_observed": {
     "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-    "run_id": 39770495489,
-    "attempt": 1,
-    "artifact_id": 12422077765,
-    "sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
-    "manifest_sha256": "5f8d09144cfb9b48f0a394704de7d6000fd4a40e1bec9506209c213b270dcf32",
-    "architecture": "aarch64",
-    "all_binary_hashes_checked": true,
-    "build_conclusion": "success",
-    "scope": "read-only product FEC TX class stats; no hot-path modification"
+    "run": 39770495489,
+    "artifact": 12422077765,
+    "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
+    "build_status": "success"
   },
-  "latest_harness_source": "94b16d7c211b92a67d32886416c3dbdd292d0b04",
-  "open_requests": [
+  "latest_harness_source": "2f0bdee88a2392b11e3704f1c66664b54a75014a",
+  "open_requests": [],
+  "recent_evidence": [
     {
-      "id": "arm64-fixed30-k-r-owner-diagnostic",
-      "type": "REAL_PRODUCT_DIAGNOSTIC_SINGLE_SCENARIO",
-      "status": "IN_PROGRESS",
-      "path": "tests/network/request.json",
-      "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-      "build_run": 39770495489,
-      "artifact_id": 12422077765,
-      "trigger": "only push of request.json; no duplicate dispatch",
-      "description": "same 2Mbps per direction, 30% IID, 300ms one way, 120s sustained 50/50 UDP/TCP Fixed maximum. Read complete true FEC TX k/r pressure; no globally infeasible 1% loss gate, but hard mode/duplicate/Stop still active.",
-      "run_id": 39771281403,
-      "attempt": 1,
-      "harness_source": "d9f3aec913fddd4bc20a38f86c5a8af9c675b9a2",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39771281403"
-    },
-    {
-      "id": "arm64-off-lossless90-old-new-default-AB",
-      "type": "SAME_JOB_SEQUENTIAL_DEFAULT_PERFORMANCE_AB",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "path": "tests/network/request.json",
-      "sourceA": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
-      "sourceB": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
-      "trigger": "push request.json once, no manual dispatch",
-      "scenario": "Normal/off 10Mbps each direction 50/50 UDP/TCP, 4 flows 90s lossless, fixed packet sizes, default no diagnostics; same GitHub ARM64 job sequential A/B independent cleaned namespaces"
-    }
-  ],
-  "latest_actions": [
-    {
-      "run": 39763271808,
-      "type": "harness-contract",
-      "conclusion": "success"
-    },
-    {
-      "run": 39763535951,
-      "type": "S003-UDP5-IID1",
-      "conclusion": "success",
-      "evidence": "S003-udp-only-1pct-pass.json"
-    },
-    {
-      "run": 39764098892,
-      "type": "S004-UDP10-IID1",
-      "conclusion": "failure",
-      "evidence": "S004-udp10m-loss1-fail.json"
-    },
-    {
-      "run": 39764098850,
-      "type": "harness-contract",
-      "conclusion": "success"
-    },
-    {
-      "run": 39764730978,
-      "type": "S005-FixedMaximum-IID30",
-      "conclusion": "failure",
-      "evidence": "S005-fixed30-hard-fail.json"
-    },
-    {
-      "run": 39764731076,
-      "type": "harness-contract",
-      "conclusion": "success"
-    },
-    {
-      "run": 39766278666,
-      "type": "S006-product-source-build",
-      "conclusion": "failure",
-      "evidence": "S006-build-artifact-recovered.json",
-      "detail": "release product build stage success and binary hashes good, appended shell test syntax failed"
-    },
-    {
-      "run": 39766569288,
-      "type": "S006-native-arm64-rust-unit",
-      "conclusion": "success",
-      "evidence": "S006-build-artifact-recovered.json"
-    },
-    {
-      "run": 39766933430,
-      "type": "S007-AB-before-preparation",
-      "conclusion": "failure",
-      "detail": "Recovered: before measurement, B GH build workflow FAIL because optional unit shell command; provenance gate correctly blocked as unqualified",
-      "evidence": "S007-before-prepare-fail.json"
-    },
-    {
+      "id": "S008",
+      "result": "FAIL",
       "run": 39768614669,
-      "type": "S008-AB-same-job-fixed30",
-      "conclusion": "failure",
-      "evidence": "S008-AB-fixed30-both-fail.json",
-      "detail": "both A/B real 30pct FEC maximum hard failures; no meaningful regression claim"
+      "file": "S008-AB-fixed30-both-fail.json"
     },
     {
-      "run": 39770495489,
-      "type": "S009-native-Go-Rust-builder",
-      "conclusion": "success",
-      "evidence": "S009-new-build.json"
+      "id": "S010",
+      "result": "FAIL",
+      "run": 39771281403,
+      "file": "S010-fixed30-owner-k-r-fail.json",
+      "artifact_id": 12423050412
     },
     {
-      "run": 39770495497,
-      "type": "S009-harness-contract",
-      "conclusion": "success"
+      "id": "S011",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "run": 39771806641,
+      "file": "S011-default-off-AB-pass.json",
+      "artifact_id": 12422916708
     },
     {
-      "run": 39770863746,
-      "type": "S009-sanitized-marker-contract",
-      "conclusion": "success"
+      "id": "S011-contract",
+      "result": "success",
+      "run": 39771806680
     },
     {
-      "run": 39771281287,
-      "type": "S010-harness-contract",
-      "conclusion": "failure",
-      "detail": "Test fixture KeyError:B when S010 request legitimately only bundle A, isolated schema test patched; real product Action independent"
+      "id": "S010-single-A-unit-repair",
+      "result": "success",
+      "run": 39771546355
     }
   ],
-  "prior_success_reuse": {
-    "normal_udp10m_60s": 39755860617,
-    "normal_mixed90s": 39761756907,
-    "mode_fixed_applied_lowloss": 39754527848,
-    "mode_auto_applied_lowloss": 39755143674,
-    "game4_smoke": 39757760559,
-    "game2_overall_failed_marker_only": 39757506578
-  },
   "open_issues": [
-    "S008 matched-VM FEC30: both old/new ~70% UDP missing, duplicate 6/10 vs5/5, client FIXED applied=0 pending; STOP passes; needs real k/r and ingress/decode receipts before fix",
-    "S002 mixed loss1 excessive UDP residual/TCP tail and S004 UDP10 excess loss; S003 UDP5 pass; S004 product blocked aggregate cannot distinguish M2 budget vs shadow",
-    "30% sparse k1:r2 ideal residual 2.7%, so S005 1% loss gate is not universal; separately preserve duplicate/applied/zero TCP hard failures",
-    "Existing runtime FEC2 r_sent/k_hist ClassStats not exposed to public client/server CLI; instrument minimal pre-Stop counters from real owner, then rebuild once per SOURCE; native ISA-L actual dispatch still unknown",
-    "Game FEC-on/Windows/physical/true idle unsupported in this harness"
+    "Hard: S010 30% Fixed max 8/9 duplicate app UDP, client requested1 applied0 pending true, steady TCP ~0; no FEC qualification",
+    "Real original FEC TX: k1 9461/9442 groups, k13-16=0, r_sent/planned 8121/26616 & 8318/26839, notready 5267/5074; exact bounded sender seal/arena/driver failure reason NOT_OBSERVED",
+    "S002 mixed 1% normal off UDP residual 1.317/1.528% TCP tail, S004 UDP10 0.493/0.562%; source budget/expiry driver block split missing",
+    "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
+    "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported"
   ],
-  "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/ S001 onward",
-  "next_action": "Observe S010 run39771281403 (read k/r and real failure) and S011 one auto Action from new request push. Contract after B-only fixture correction run39771546355; no redispatch. Once both results resolved archive receipts, do not compare across VMs, preserve S008 hard failures.",
-  "fixed_candidate": {
-    "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
-    "build": {
-      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
-      "run_id": 39766278666,
-      "attempt": 1,
-      "artifact_id": 12419289653,
-      "sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398"
-    },
-    "qualification": "UNVERIFIED_TEST_CANDIDATE",
-    "build_workflow_conclusion": "failure",
-    "file_integrity": "VERIFIED",
-    "native_unit": 39766569288
-  }
+  "next_action": "Read real original fixed_stage_source/due, memory Arena::allocate and receipts; add ONLY bounded pre-Stop reason split (source arena/seal, parity arena/seal/driver and TUN consume) before any capacity parameter change, rebuild new SOURCE once and run one narrow S010-equivalent diagnostic plus default off A/B if actual product changed. Preserve S010/S011 originals; no duplicate runs or Windows takeover.",
+  "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/"
 }
