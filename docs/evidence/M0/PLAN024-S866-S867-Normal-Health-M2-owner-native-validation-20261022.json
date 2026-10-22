@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "83ad73ee791ae983309cb415c797ffafc03b996a",
+  "result": "IN_PROGRESS",
+  "artifact_verified": false,
+  "qualification": "NO_NEW_M2_ACK_CLAIM",
+  "original_success": {
+    "source_sha": "5fcccae88cef676f5596bf80b8bb3f3a60a3e172",
+    "run_id": 39794445609,
+    "attempt": 1,
+    "conclusion": "success",
+    "evidence": "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json",
+    "app_windows_sent": 24,
+    "app_windows_received": 34,
+    "app_linux_sent": 82,
+    "app_linux_received": 24,
+    "both_owned_Stop": "PASS",
+    "linux_authenticated_m2_ack": 0
+  },
+  "s865": {
+    "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+    "win_default_ABI_run": 39801422162,
+    "win_default_ABI_conclusion": "failure",
+    "job_id": 119902841676,
+    "artifact_id": 12435278435,
+    "compiler_error": "E0599 ProtectedScopedOwner::seal_original_authenticated_receipt absent without fec2_product_record",
+    "full_source_locked_run": 39801422682,
+    "linux_build_job": 119902844462,
+    "linux_build_conclusion": "success",
+    "windows_full_job": 119903637897,
+    "status_at_record": "QUEUED"
+  },
+  "s866": {
+    "intent_commit": "fc236008f1fc7b49990d07a908d49b894d75faf1",
+    "source_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+    "change": "remove only erroneous FEC2 feature cfg around already-authenticated original M1 Health kind control receipt sealer, which itself calls existing unconditionally available protected seal_scoped_authenticated_one; no FEC mode enable",
+    "normal_common_run": 39802120008,
+    "normal_common_conclusion": "success",
+    "governance_run": 39802119816,
+    "governance_conclusion": "success",
+    "win_original_WAL_run": 39802119861,
+    "status_at_record": "IN_PROGRESS",
+    "full_run": 39802119726,
+    "linux_build_conclusion": "success",
+    "windows_full_status_at_record": "IN_PROGRESS"
+  },
+  "s867": {
+    "intent_commit": "6929c44784a94166ca1eeb64e9d560b4b71d3a08",
+    "source_sha": "83ad73ee791ae983309cb415c797ffafc03b996a",
+    "kind": "CI trigger-only correction; no product change from bcf2",
+    "change": "Add crates/wbd-engine/src/v4_owner_crypto.rs to original Windows Rust owner native feature-off cargo test path triggers",
+    "native_windows_rust_ABI_run": 39802457636,
+    "attempt": 1,
+    "status_at_record": "IN_PROGRESS",
+    "important": "This test uses --features m0_v4_embedded_go without fec2_product_record; the original full Windows product build includes fec2_product_record and cannot substitute."
+  },
+  "not_qualified": [
+    "Linux real original M2 authenticated_ack>0 from new source",
+    "fresh >256 carrier presentation ACK hole",
+    "two-repair and Abandoned under authentic client↔server receipt",
+    "WL-N0/WL-N1/WL-N5 10Mbps 60s actual Windows/Linux netem",
+    "physical, Android, OpenWrt"
+  ],
+  "next_action": "Consume actual Windows feature-off Rust cargo ABI Action39802457636 and SOURCEbcf2 exact Windows2025 full product Action39802119726; read actual Linux M2 first/ACK/retransmits and both kernel UDP+Stop receipts. Do not infer M2 PASS from build or old baseline; fix only first specific failure."
+}
