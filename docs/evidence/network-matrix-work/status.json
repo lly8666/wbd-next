@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S020-Fixed30-real-M2-coverage-tcp-connect-diagnostic",
+  "phase": "S021-original-M3-FEC-RX-identity-and-TUN-observer",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,22 +23,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
-  "open_requests": [
-    {
-      "id": "arm64-fixed30-original-M2-proof-and-tcp-state-S020",
-      "status": "IN_PROGRESS",
-      "type": "ONE_TRUE_FIXED30_DIAGNOSTIC",
-      "trigger": "single changed request.json push starts one performance Action; do not manual dispatch",
-      "request_path": "tests/network/request.json",
-      "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
-      "artifact_id": 12426721086,
-      "scenario": "S017 B exact Fixed Maximum 2Mbps/direction 50/50 UDP/TCP four flows 30pct IID 300ms one-way 120s measurement; read only original M2 covered/unknown/AEAD reverse and TCP socket state counts",
-      "run_id": 39780888799,
-      "attempt": 1,
-      "harness_source": "28fdf7bf8be6fd30856fd3a34c00ab1eb33f96ec",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39780888799"
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "S010-single-A-unit-repair",
@@ -113,6 +98,13 @@
       "result": "success",
       "run": 39780496810,
       "file": "S019-native-original-M2-build.json"
+    },
+    {
+      "id": "S020",
+      "result": "FAIL_DUPLICATE_SCOPED_PASS",
+      "run": 39780888799,
+      "file": "S020-fixed30-authentic-M2-TCP-state-fail.json",
+      "artifact_id": 12426133238
     }
   ],
   "open_issues": [
@@ -121,9 +113,12 @@
     "S006 MAX_R20 guard fixed+unit, but S010 no k13+, cannot assert real >16 parity row exercised",
     "Repair wire bytes/usefulness, FEC RX recovered/dedupe, native ISA backend & auto curve still NOT_OBSERVED; Game-FEC, Windows, true idle unsupported",
     "S015 confirmed FEC arena 128→512 eliminates ~5k/18k source/parity NoCapacity each side and improves actual UDP; old/new both FAIL under 30% IID; B still 2 application duplicates, client Fixed pending, TCP no delivery.",
-    "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next."
+    "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next.",
+    "S020 M2 real reverse reports 12047/12061, but unknown_2s 155/132 and censorship both; client Fixed pending, server applied1. Need bounded per-commit root/cause and FEC RX acceptance/decoding before changes.",
+    "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
+    "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED."
   ],
-  "next_action": "S020 true Fixed30 single performance job 39780888799 running, harness contract39780888598; no dispatch again. Inspect once-before-Stop genuine M2 proof (unknown_2s, covered_2s, reverse_reports, censored) plus phase TCP socket SYN/ESTAB counts; decide precise next diagnosis, no fake applied or quota tweaks. S017 FAIL, S018 default PASS.",
+  "next_action": "S020 true Fixed30 diagnosed FAIL and archived; no repeat. Read original RX moved M3 AEAD→Fec2LiveRx→M4 write path and add minimum bounded source vs parity admitted, decoded recovered and actual TUN write numerical counters plus first-send commit gate readback if necessary; compile one SOURCE and targeted real Fixed30. Do not loosen M2 genuine ACK/unknown gate or add queues; default off S018 remains PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",

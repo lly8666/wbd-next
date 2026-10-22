@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "event": "S020",
+  "kind": "REAL_ARM64_PUBLIC_FIXED30_ORIGINAL_M2_PROOF",
+  "result": "FAIL",
+  "duplicate_hard_gate": "PASS_ZERO_DUPLICATES_SCOPED",
+  "action": {
+    "id": 39780888799,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12426133238,
+    "artifact_zip_sha256": "f4c970cab1f45b8507916394a26edee31d199d8869c4257342e12fc8d8ac60cf",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39780888799"
+  },
+  "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
+  "harness_source": "28fdf7bf8be6fd30856fd3a34c00ab1eb33f96ec",
+  "build": {
+    "run": 39780156107,
+    "artifact": 12426721086,
+    "zip_sha256": "725e00e1bfe440a890034359d36f8de27fe634bd988e8533f01a13a8bbaf8dc8"
+  },
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "duration_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "each_direction_offered_mbps": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "one_way_ms": 300,
+    "loss_iid_pct": 30,
+    "netem_rng": "unseeded_recorded"
+  },
+  "netem_actual_pct": {
+    "client": 29.843233312921004,
+    "server": 29.910274047650933
+  },
+  "udp": {
+    "c2s": {
+      "sent": 20751,
+      "delivered": 14029,
+      "missing": 6722,
+      "loss_pct": 32.39361958459833,
+      "duplicates": 0,
+      "first_arrived_p99_ms": 330.4
+    },
+    "s2c": {
+      "sent": 20751,
+      "delivered": 13996,
+      "missing": 6755,
+      "loss_pct": 32.552648065153484,
+      "duplicates": 0,
+      "first_arrived_p99_ms": 330.4
+    }
+  },
+  "tcp": {
+    "steady_sent_each_side": 0,
+    "steady_received_each_side": 0,
+    "backpressure_scheduled_slots_each_side": 234374,
+    "socket_states": {
+      "warmup-start": {
+        "client": {
+          "ESTAB": 4
+        },
+        "server": {
+          "ESTAB": 4
+        }
+      },
+      "before-steady": {
+        "client": {
+          "ESTAB": 4
+        },
+        "server": {
+          "ESTAB": 4
+        }
+      },
+      "measurement-end": {
+        "client": {
+          "ESTAB": 4
+        },
+        "server": {
+          "ESTAB": 4
+        }
+      },
+      "drain-end": {
+        "client": {
+          "FIN-WAIT-1": 4
+        },
+        "server": {
+          "FIN-WAIT-1": 4
+        }
+      }
+    }
+  },
+  "m2_proof": {
+    "client": {
+      "accepted": 21655,
+      "not_sent": 56,
+      "uncertain": 0,
+      "unknown_2s": 155,
+      "unknown_8s": 155,
+      "covered_2s": 21500,
+      "covered_8s": 21500,
+      "authenticated_reverse_reports": 12047,
+      "first_censored": 1,
+      "cover_censored": 1
+    },
+    "server": {
+      "accepted": 21681,
+      "not_sent": 0,
+      "uncertain": 0,
+      "unknown_2s": 132,
+      "unknown_8s": 92,
+      "covered_2s": 21330,
+      "covered_8s": 20422,
+      "authenticated_reverse_reports": 12061,
+      "first_censored": 1,
+      "cover_censored": 1
+    }
+  },
+  "fec_config": {
+    "client": {
+      "requested": 1,
+      "applied": 0,
+      "pending": true
+    },
+    "server": {
+      "requested": 1,
+      "applied": 1,
+      "pending": false
+    }
+  },
+  "original_fec_tx": {
+    "client": {
+      "accepted": 21718,
+      "parity_sent": 33907,
+      "parity_planned": 35712,
+      "source_arena": 7,
+      "parity_arena": 29,
+      "source_m4_noncopy": 56,
+      "parity_m4_noncopy": 95
+    },
+    "server": {
+      "accepted": 21698,
+      "parity_sent": 33994,
+      "parity_planned": 35689,
+      "source_arena": 17,
+      "parity_arena": 65,
+      "source_m4_noncopy": 0,
+      "parity_m4_noncopy": 0
+    }
+  },
+  "host": {
+    "cpu_psi_some_mean_pct": 0,
+    "steal_peak_pct": 0,
+    "udp_kernel_errors": 0,
+    "product_cpu_s": {
+      "client": 5.17,
+      "server": 5.37
+    }
+  },
+  "stop_drained": true,
+  "owned_namespace_cleanup": true,
+  "invalid_application_payloads": 0,
+  "limits": [
+    "Real FEC systematic/recovered/valid TUN writes NOT_OBSERVED",
+    "FEC latest backend ISA-L runtime dispatch NOT_OBSERVED",
+    "M2 positive_2s/real commit gate per reason NOT_OBSERVED",
+    "TCP socket states do not measure cwnd/bytes_in_flight"
+  ],
+  "interpretation": "Both sides have >12k AEAD-authenticated reverse M2 reports; client cannot satisfy cumulative UNKNOWN=0 nor censored=false. Server applied earlier despite final censored. Four genuine TCP sockets stayed ESTAB throughout damaged measurement but sent zero full app messages due persistent backpressure; not an initial connect failure. 30% underlay and 32.4-32.6% UDP residual, zero application duplication; real FEC RX source/parity/decoded/TUN split missing. Do not weaken authenticated maturity or first-delivery hard gates based on aggregated final snapshot."
+}
