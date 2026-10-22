@@ -1391,6 +1391,40 @@ impl ProtectedScopedOwner {
         Ok((borrowed.recycle(),report))
     }
 
+    /// Windows original-Go feature7: the exact SAME original M1 RX owner
+    /// and SAME protected M3 replay/AEAD opener admit FEC2 kind2/3.
+    /// No independent second PN bitmap is created; callbacks receive only
+    /// authenticated payloads. This alone is NOT a verified Go M2 APPLIED.
+    #[cfg(all(target_os="windows",feature="fec2_product_record"))]
+    pub(crate) fn drain_windows_authenticated_fec2<F>(
+        &mut self,now:MonoNs,storage:Vec<RxPacket>,mut accept:F,
+    )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
+               (ProtectedCryptoError,Vec<RxPacket>)>
+    where F:FnMut(u64,u8,&[u8]){
+        if self.state!=OwnerPhase::Active {
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut borrowed=self.rx_tx.drain_rx(&self.token,now,storage)
+            .map_err(|(err,st)|(ProtectedCryptoError::Early(err),st))?;
+        let mut report=AuthenticatedRxReport::default();
+        for packet in borrowed.as_mut_slice(){
+            let Some(rx)=self.crypto.rx.as_mut()else{
+                report.rejected+=1;continue
+            };
+            match rx.open_unique_with_fec2_after_admission_in_place(
+                packet.wire_mut()
+            ){
+                Ok(record) if matches!(record.kind,2|3)=>{
+                    accept(record.pn,record.kind,record.payload);
+                    report.link_ready+=1;
+                },
+                Ok(_)=>report.control_ready+=1,
+                Err(_)=>report.rejected+=1,
+            }
+        }
+        Ok((borrowed.recycle(),report))
+    }
+
     /// Single normal-build ingress: owner LoanBatch -> AEAD & PN unique ->
     /// M3 LINK wire inspection / bounded reassembly -> complete packet sink.
     /// Incomplete, conflicting, stale and malformed fragments never call
