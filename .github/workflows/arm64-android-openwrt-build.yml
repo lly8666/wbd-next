@@ -32,7 +32,7 @@ jobs:
           command -v musl-gcc
           export CC_aarch64_unknown_linux_musl=musl-gcc
           export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc
-          cargo +1.85.1 build --release --locked --target aarch64-unknown-linux-musl -p wbd-codec -p wbd-engine --features wbd-engine/m0_v4_embedded_go
+          cargo +1.85.1 build --release --locked --target aarch64-unknown-linux-musl -p wbd-codec -p wbd-engine --features wbd-engine/m0_v4_embedded_go,wbd-engine/fec2_product_record
           file target/aarch64-unknown-linux-musl/release/libwbd_engine.so
           echo OPENWRT_ARM64_MUSL_BUILD_ONLY_PASS
       - name: Scope receipt
