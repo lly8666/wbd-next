@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "id": "normal-off-10m-mixed-tcp-udp-loss1-rtt50",
+  "owner": "network-harness",
+  "seed": 5205,
+  "product": {
+    "mode": "normal",
+    "fec_profile": 1
+  },
+  "traffic": {
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
+    "udp_share": 0.5,
+    "sizes": [
+      [
+        64,
+        2
+      ],
+      [
+        256,
+        2
+      ],
+      [
+        1024,
+        3
+      ],
+      [
+        1172,
+        3
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 10,
+    "deadline_ms": 250
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded"
+  },
+  "warmup_s": 10,
+  "drain_s": 5,
+  "phases": [
+    {
+      "name": "steady",
+      "seconds": 60,
+      "c2s": {
+        "loss_pct": 1,
+        "delay_ms": 25
+      },
+      "s2c": {
+        "loss_pct": 1,
+        "delay_ms": 25
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 3,
+    "require_retransmission": true
+  },
+  "bundles": {
+    "A": {
+      "source": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
+      "run_id": 39431226207,
+      "attempt": 1,
+      "artifact_id": 12268980051,
+      "sha256": "5fd581f4a5e6309e248fec415fadd1e8287700f81b8471179439e470dc825f79"
+    }
+  },
+  "order": "A"
+}

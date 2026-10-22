@@ -1,0 +1,35 @@
+name: Network harness contracts
+on:
+  push:
+    branches: [main, feat/network-scenario-harness-20261021]
+    paths: ["tools/network_harness/**", "tests/network/**", ".github/workflows/network-harness*.yml"]
+  pull_request:
+    paths: ["tools/network_harness/**", "tests/network/**", ".github/workflows/network-harness*.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  harness-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Request, model, integrity, phase accounting and independent UDP TCP selfcheck
+        run: python3 -m unittest discover -s tests/network -p 'test_*.py' -v
+      - name: Real kernel delay loss jitter duplicate reorder rate GE and lane classifier syntax
+        run: sudo -n --preserve-env=GITHUB_ACTIONS python3 -m tools.network_harness.kernel_check
+      - name: Verify actual kernel netem and report seeded capability without claiming replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          NS="wbn-self-${GITHUB_RUN_ID}"
+          trap 'sudo ip netns del "$NS" 2>/dev/null || true' EXIT
+          sudo ip netns add "$NS"
+          sudo ip -n "$NS" link set lo up
+          if sudo ip netns exec "$NS" tc qdisc add dev lo root netem delay 25ms loss random 1% seed 5205 limit 32768; then
+            echo 'KERNEL_SEEDED_NETEM_SUPPORTED'
+          else
+            echo 'KERNEL_SEEDED_NETEM_UNSUPPORTED; unseeded_recorded requests remain statistical experiments'
+            sudo ip netns exec "$NS" tc qdisc add dev lo root netem delay 25ms loss random 1% limit 32768
+          fi
+          sudo ip netns exec "$NS" tc -s -j qdisc show dev lo

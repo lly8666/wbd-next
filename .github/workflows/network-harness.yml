@@ -1,0 +1,70 @@
+name: Public V4 network scenario
+run-name: "NETWORK|${{ inputs.request || 'tests/network/request.json' }}|${{ github.sha }}"
+on:
+  workflow_dispatch:
+    inputs:
+      request:
+        description: Committed JSON request; ONE scenario/seed, A or same-job sequential AB/BA
+        required: true
+        default: tests/network/request.json
+        type: string
+  # Initial branch acceptance only. After merge, measurements are manual; never auto-fanout.
+  push:
+    branches: [feat/network-scenario-harness-20261021]
+    paths: [tests/network/request.json]
+permissions: {contents: read, actions: read}
+concurrency:
+  group: "network-harness-${{ github.ref }}-${{ inputs.request || 'tests/network/request.json' }}"
+  cancel-in-progress: false
+jobs:
+  measure:
+    name: One scenario on one VM
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      REQUEST: ${{ inputs.request || 'tests/network/request.json' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require a committed request inside the request directory
+        run: |
+          python3 - <<'PY'
+          import os,pathlib,subprocess
+          p=pathlib.Path(os.environ['REQUEST'])
+          root=pathlib.Path('tests/network').resolve()
+          assert p.suffix=='.json' and p.resolve().is_relative_to(root) and p.is_file()
+          subprocess.run(['git','ls-files','--error-unmatch','--',str(p)],check=True)
+          PY
+      - name: Fetch existing exact source binaries; verify ZIP, manifest and all binary hashes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -m tools.network_harness.runner prepare --request "$REQUEST" --directory network-result
+      - name: Install harness OS utilities (outside measurement; no product compilation)
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+      - name: Real public TLS Rust raw TUN business, independent directions, bounded observation
+        run: |
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_SHA,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_NAME,RUNNER_TEMP \
+            python3 -m tools.network_harness.runner run --request "$REQUEST" --directory network-result
+      - name: Surface the actual result, including failures
+        if: always()
+        run: |
+          if test -f network-result/summary.md; then cat network-result/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+          if test -f network-result/result.json; then
+            python3 - <<'PY'
+          import json
+          d=json.load(open('network-result/result.json'))
+          print('NETWORK_RESULT',d.get('result'),d.get('reason',''))
+          PY
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "network-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: |
+            network-result/**
+            !network-result/bundle-A/**
+            !network-result/bundle-B/**
+          retention-days: 14
+          if-no-files-found: warn

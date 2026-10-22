@@ -9,6 +9,8 @@ FEC v2工作包按[FEC_V2_TEST_PLAN](FEC_V2_TEST_PLAN.md)的短块/新wire/自�
 **测试开放顺序新授权（PLAN021）**：对已经真实接线的功能，一次精确 SOURCE 的 Actions 正向功能 PASS 就可先开放显式网络工况测试入口，**物理机、全局一体化验证、所有弱网矩阵和 p99 不是开放测试的前置硬门**。后续相应真实网络测试用于填补 `NOT_RUN`。切勿把原始 Go V3 的 Game 正例冒充新 Rust V4 公开 Game；未接线功能保持 `EXPOSED_NOT_WIRED`，并非 `PASS`。安全失败、WFP 原生持久化读回、owned WAL 外来/陈旧 CAS、认证/Stop 不随测试开放而放宽；Windows 现有真实 WFP CI 仅 TEST-NET scoped，不证明宿主全局 /1。
 
 
+可执行的公共V4持续业务入口与参数用法见 [NETWORK_HARNESS](../testing/NETWORK_HARNESS.md)：产物复用、独立双向UDP/TCP、单Action单场景、同job AB/BA及实际能力限制。独立网络测试任务按用户2026-10-22最新授权与[长期接班说明](../testing/NETWORK_AUTONOMOUS_WORK.md)执行；不等待Windows接通或M0逐次派单。
+
 ## 0. 按能力交付，及时进入持续业务（2026-10-16 修订）
 
 本节统一任务粒度与推进规则；旧日志/cursor 中更细的下一步只作历史计划。任务 ID、权限、原有硬门不变。
