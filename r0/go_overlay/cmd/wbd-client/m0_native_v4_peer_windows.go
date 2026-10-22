@@ -230,12 +230,18 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  // commit cumulative TCP carrier receipt only after ALL Wintun copies.
  var frames [][]byte
  if p.mode==m0WinModeNormal{
-  plain,openErr:=p.owner.OpenBoundOriginalNormalOff(ctx,seg.Seq,seg.Payload)
+  plain,kind,_,openErr:=p.owner.OpenBoundOriginalNormalOrKind1(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{
    p.mu.Lock();p.rejected++;p.mu.Unlock()
    return nil
   }
-  frames=[][]byte{plain}
+  if kind==1 {
+   frames=[][]byte{plain}
+  }else if kind==2 {
+   // AEAD/PN-verified M2 kind1 is staged ONLY in the original Rust owner.
+   // There is no Wintun delivery and no invented Rust M2 shadow retirement.
+   frames=nil
+  }else{return windowsclient.ErrN4NativeGuard}
  }else{
   delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{

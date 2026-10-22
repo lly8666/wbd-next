@@ -162,6 +162,60 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
     return plain[:used],nil
 }
 
+
+// OpenBoundOriginalNormalOrKind1 calls the ONE original Rust M1/M3 AEAD+PN
+// opener and returns verified kind=1 IPv4 or kind=2 canonical staged M2
+// receipt. The latter has NO Wintun packet and is NOT an M2 ACK/repair
+// until the same Rust owner scopes it to a frozen, definitely-sent shadow.
+// Go's carrier TCP ACK remains presentation-only.
+func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
+    ctx context.Context,seq uint32,wire []byte,
+)([]byte,uint32,uint64,error){
+    if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
+        s.bridge.openKind1Proc==nil||len(wire)<51||len(wire)>s.device.maxIPv4+31 {
+        return nil,0,0,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return nil,0,0,err}
+    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    state,err:=s.OriginalOwnerReadback()
+    if err!=nil||!state.OwnerActive||!state.DeviceBound||
+        state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
+        return nil,0,0,errV4WindowsOwner
+    }
+    plaintext:=make([]byte,len(wire))
+    var used uintptr
+    var kind uint32
+    var pn uint64
+    err=winOwnerCall(s.bridge.openKind1Proc,
+        uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),
+        uintptr(s.device.identity.InterfaceIndex),
+        uintptr(seq),
+        uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)),
+        uintptr(unsafe.Pointer(&plaintext[0])),uintptr(len(plaintext)),
+        uintptr(unsafe.Pointer(&used)),
+        uintptr(unsafe.Pointer(&kind)),
+        uintptr(unsafe.Pointer(&pn)),
+    )
+    runtime.KeepAlive(wire)
+    runtime.KeepAlive(plaintext)
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||used>uintptr(len(plaintext)) {
+        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    }
+    if kind==2 && used==0 {
+        return nil,kind,pn,nil // Rust retains decoded, authenticated kind1
+    }
+    if kind!=1||used<20||plaintext[0]>>4!=4||plaintext[0]&0xf<5||
+        int(plaintext[0]&0xf)*4>int(used) {
+        return nil,0,0,errV4WindowsOwner
+    }
+    return plaintext[:used],kind,pn,nil
+}
+
 // This only stops Rust M1/M3 after an M4-held CURRENT created Wintun has
 // separately quiesced (or without any device binding at all). It cannot be
 // promoted to V4OriginalOwnerStopper's "OwnerAndDriversDrained" product

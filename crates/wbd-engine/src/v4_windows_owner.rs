@@ -509,9 +509,9 @@ fn m0_tcp_unwrap(e:&Entry,seq:u32,len:usize)->Result<u64,i32>{
     }
     Ok(choice)
 }
-fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
-)->Result<usize,i32>{
+)->Result<(usize,u32,u64),i32>{
     if !v3_ready(e,epoch,luid,ifindex)||
         wire.len()<=FIXED_WIRE_OVERHEAD || wire.len()>2048 ||
         out.len()<wire.len(){return Err(INVALID)}
@@ -522,10 +522,11 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
+    let mut opened_data_pn=None;
     let mut opened_kind1=None;
     let rx_storage=std::mem::take(&mut e.rx_scratch);
     let draining=e.owner.drain_windows_authenticated_kind1(
-        MonoNs(0),rx_storage,|_pn,link|{
+        MonoNs(0),rx_storage,|pn,link|{
             // No unauthenticated DATA, replay, HEALTH or fragmented LINK
             // can reach a Windows kernel packet sink from this v3 boundary.
             // Fragmentation will be installed with the complete M3 table.
@@ -534,7 +535,7 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 link.len()>=20 && link[0]>>4==4 &&
                 link[0]&15>=5 && link.len()<=out.len(){
                 out[..link.len()].copy_from_slice(link);
-                len=link.len();valid=true;
+                len=link.len();valid=true;opened_data_pn=Some(pn);
             }
         },|pn,receipt|{opened_kind1=Some((pn,receipt))});
     let (storage,report)=match draining{
@@ -545,7 +546,7 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if valid && report.link_ready==1 && report.rejected==0
         && report.control_ready==0 {
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
-        Ok(len)
+        Ok((len,1,opened_data_pn.ok_or(INVALID)?))
     }
     // Only after the SAME original protected M3 AEAD and replay admission
     // can this typed kind1 enter the bounded staging lane. It does not yet
@@ -557,8 +558,16 @@ fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         }
         e.authenticated_kind1.push_back(receipt);
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
-        Err(INVALID) // legacy v3 is IPv4 ONLY; new M2 caller will own receipt
+        Ok((0,2,pn)) // kind1 is not an IPv4 packet or M2 shadow-release grant
     } else {Err(INVALID)}
+}
+// Existing v3 semantics remain data-only: even authenticated control may not
+// be reinterpreted as application IPv4 when a legacy caller uses this ABI.
+fn v3_open_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
+)->Result<usize,i32>{
+    let (size,kind,_pn)=v5_open_record_entry(e,epoch,luid,ifindex,seq,wire,out)?;
+    if kind==1 {Ok(size)} else {Err(INVALID)}
 }
 // Test helper; each production FFI clones a session Arc while the
 // registry mutex is briefly held, then releases it before AEAD and loans.
@@ -575,6 +584,13 @@ fn v3_open_one(r:&Registry,h:u64,epoch:[u8;16],luid:u64,
     let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
     let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
     v3_open_entry(&mut e,epoch,luid,ifindex,seq,wire,out)
+}
+fn v5_open_record_one(r:&Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,seq:u32,wire:&[u8],out:&mut [u8]
+)->Result<(usize,u32,u64),i32>{
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    v5_open_record_entry(&mut e,epoch,luid,ifindex,seq,wire,out)
 }
 fn v3_epoch(ptr:*const u8,len:usize)->Option<[u8;16]>{
     if ptr.is_null()||len!=16{return None}
@@ -638,6 +654,40 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v3_open_normal_off(
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     match v3_open_entry(&mut e,exact,luid,ifindex,seq,data,dst){
         Ok(n)=>{unsafe{used.write(n)};OK},Err(e)=>e,
+    }
+}
+
+// V5 returns TYPE only after the SAME real original M3 AEAD + unique PN
+// opener. Kind 1=verified business IPv4, 2=verified canonical M2 kind1;
+// kind2 is STAGED in the Rust owner and cannot authorize shadow release
+// until a separately scoped M2 recovery state consumes it.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v5_open_data_or_kind1(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    seq:u32,wire:*const u8,wire_len:usize,out:*mut u8,capacity:usize,
+    used:*mut usize,kind:*mut u32,pn:*mut u64,
+)->i32{
+    if wire.is_null()||out.is_null()||used.is_null()||kind.is_null()||
+        pn.is_null()||wire_len<=FIXED_WIRE_OVERHEAD||wire_len>2048||
+        capacity<wire_len||capacity>65535{return INVALID}
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let src_start=wire as usize;let dst_start=out as usize;
+    if src_start.checked_add(wire_len).is_none_or(|end|
+        dst_start<end && src_start<dst_start.saturating_add(capacity)){return INVALID}
+    let data=unsafe{std::slice::from_raw_parts(wire,wire_len)};
+    let dst=unsafe{std::slice::from_raw_parts_mut(out,capacity)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match v5_open_record_entry(&mut e,exact,luid,ifindex,seq,data,dst){
+        Ok((n,k,p)) if k==1||k==2=>{
+            unsafe{used.write(n);kind.write(k);pn.write(p)};OK
+        },
+        Ok(_)=>INVALID,
+        Err(err)=>err,
     }
 }
 
@@ -865,7 +915,8 @@ mod tests {
         let mut out=[0u8;2048];
         // Legacy v3 boundary publishes business IPv4 ONLY. Exact same
         // replay opener retains the authenticated kind1 for future M2.
-        assert_eq!(v3_open_one(&r,client,epoch,8,12,seq,&wire,&mut out),Err(INVALID));
+        assert_eq!(v5_open_record_one(&r,client,epoch,8,12,seq,&wire,&mut out),
+            Ok((0,2,0)));
         {
             let e=r.entries.get(&client).unwrap().lock().unwrap();
             assert_eq!(e.authenticated_kind1.len(),1);
