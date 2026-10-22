@@ -1,0 +1,82 @@
+{
+  "kind": "ARM64_MAIN_INTEGRATION",
+  "main_base": "58a3b278bbec80f3acdf266cc97f57feb2a1cc45",
+  "feature_source": "e94c08e6fd4939b78c4573b07da39f090a873aa1",
+  "merge_base": "5fd93440c42aeba8c64b4625b0d6b0f95adaa711",
+  "text_conflicts": 0,
+  "state": "INTEGRATION_REGRESSION_PASS_SCOPED_MERGE_INTENT",
+  "default_arm64_bundle": {
+    "workflow": ".github/workflows/arm64-public-go-build.yml",
+    "native_fec_acceleration": true,
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "selection": "PreferNative; Scalar when absent or workload selects Scalar",
+    "explicit_scalar_build": "WBD_ARM64_NO_NATIVE=1",
+    "fec_mode_changed": false
+  },
+  "verified_feature_runs": [
+    39764728263,
+    39764728463,
+    39763065400,
+    39764396868,
+    39766528723,
+    39766689735
+  ],
+  "integration_runs": [
+    {
+      "run": 39770439235,
+      "attempt": 1,
+      "conclusion": "success",
+      "source": "bddfbdf06817e6a506bd4c310989b4565a2dc9a2",
+      "jobs": [
+        {
+          "name": "arm64-default",
+          "conclusion": "success"
+        },
+        {
+          "name": "native-isal aarch64",
+          "conclusion": "success",
+          "artifact_id": 12422172188
+        },
+        {
+          "name": "native-isal x86_64",
+          "conclusion": "success",
+          "artifact_id": 12422237109
+        }
+      ]
+    },
+    {
+      "run": 39770439268,
+      "attempt": 1,
+      "conclusion": "success",
+      "source": "bddfbdf06817e6a506bd4c310989b4565a2dc9a2",
+      "jobs": [
+        {
+          "name": "native-go-rust-bundle",
+          "conclusion": "success",
+          "artifact_id": 12422112446
+        },
+        {
+          "name": "native-linux-netns",
+          "conclusion": "success",
+          "artifact_id": 12422486093
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Codec speedup is not whole-product CPU or first-arrival p99 speedup",
+    "Independent network matrix failures and candidate repairs remain open on their own branch",
+    "Physical, Android/OpenWrt product and Windows ARM64 are NOT_RUN/deferred",
+    "Integration CI successes apply to exact compiled SOURCE bddfbdf06817e6a506bd4c310989b4565a2dc9a2; evidence-only followup does not requalify changed product binaries",
+    "Normal/off ARM64 Linux original Go/Rust kernel raw/TUN and scoped Stop passed, not Windows↔Linux or complete mode/network matrix"
+  ],
+  "integration_source": "bddfbdf06817e6a506bd4c310989b4565a2dc9a2",
+  "merge_intent": {
+    "pr": 24,
+    "base_ref": "main",
+    "base_sha": "03e0043f34165300b0dcd617869de8e0554ac171",
+    "head_source": "bddfbdf06817e6a506bd4c310989b4565a2dc9a2",
+    "method": "merge",
+    "status": "INTENT_NOT_YET_EXECUTED"
+  }
+}

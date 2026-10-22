@@ -65,4 +65,27 @@ impl Tables{
   tbl.encode(&[&a,&b],&mut [&mut out]).unwrap();assert_eq!(out,[3u8;65]);
   println!("REAL_ISAL_V2311_EC_ENCODE_DATA_PASS");
  }
+ #[test]
+ #[cfg(all(feature="native",target_arch="aarch64"))]
+ fn actual_arm64_neon_backend_bytes_match_dispatch() {
+  // Fixed upstream ISA-L exports this real AArch64 SIMD implementation.
+  // It is called directly: this proves execution, not that every AUTO call
+  // selected NEON rather than SVE or basic on this particular CPU.
+  assert!(std::arch::is_aarch64_feature_detected!("neon"));
+  unsafe extern "C" {
+   fn ec_encode_data_neon(len:i32,k:i32,rows:i32,t:*const u8,
+     data:*mut *mut u8,dest:*mut *mut u8);
+  }
+  let tables=Tables::new(2,1,&[1,1]).unwrap();
+  let a=[0x55u8;128];let b=[0xaau8;128];
+  let mut native=[0u8;128];let mut dispatched=[0u8;128];
+  let mut src=[a.as_ptr() as *mut u8,b.as_ptr() as *mut u8];
+  let mut dst=[native.as_mut_ptr()];
+  unsafe {ec_encode_data_neon(128,2,1,tables.tbl.as_ptr(),src.as_mut_ptr(),dst.as_mut_ptr());}
+  tables.encode(&[&a,&b],&mut [&mut dispatched]).unwrap();
+  assert_eq!(native,[0xff;128]);
+  assert_eq!(native,dispatched);
+  println!("REAL_ISAL_ARM64_NEON_EXPLICIT_EQUIVALENCE_PASS");
+ }
+
 }

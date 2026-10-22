@@ -3,6 +3,26 @@
 use crate::fec_math::{ReedSolomon20,FecBackendChoice,FecBackendUsed,FecMathError};
 use crate::link_fec_wire::{FecHeader,FecShardPhase,FEC_HEADER};
 
+// CPU feature reporting is diagnostic only. Architecture specific detection
+// must not be invoked on the wrong target, nor prove that ISA-L selected SIMD.
+#[cfg(all(feature="native-isal",any(target_arch="x86",target_arch="x86_64")))]
+fn host_cpu_features()->String {
+    format!("SSE2={} SSSE3={} AVX2={} AVX512F={}",
+        std::is_x86_feature_detected!("sse2"),
+        std::is_x86_feature_detected!("ssse3"),
+        std::is_x86_feature_detected!("avx2"),
+        std::is_x86_feature_detected!("avx512f"))
+}
+#[cfg(all(feature="native-isal",target_arch="aarch64"))]
+fn host_cpu_features()->String {
+    format!("NEON={} (ISA-L dispatch not independently verified)",
+        std::arch::is_aarch64_feature_detected!("neon"))
+}
+#[cfg(all(feature="native-isal",not(any(target_arch="aarch64",target_arch="x86",target_arch="x86_64"))))]
+fn host_cpu_features()->String { "UNKNOWN_TARGET".into() }
+
+
+
 fn originals(k:usize,len:usize)->Vec<Vec<u8>>{
     (0..k).map(|i|{
         let size=if i==0{len}else{len-(i%5).min(len-1)};
@@ -137,10 +157,7 @@ fn r1_fec_selected_backend_actual_owner_20_20_and_no_fake_native(){
     {
         assert_eq!(native.last_parity_backend(),Some(FecBackendUsed::NativeIsaL));
         println!("M3_ACTUAL_ISAL_GO_MATRIX_NATIVE_ENCODE_AND_RECOVERY");
-        println!("M3_NATIVE_HOST_ARCH={} AVX2={} SSE2={}",
-            std::env::consts::ARCH,
-            std::is_x86_feature_detected!("avx2"),
-            std::is_x86_feature_detected!("sse2"));
+        println!("M3_NATIVE_HOST_ARCH={} FEATURES={}", std::env::consts::ARCH, host_cpu_features());
     }
 }
 
@@ -199,12 +216,8 @@ fn r1_fec_native_release_same_vm_scalar_isal_paired_cpu(){
         for (idx,b) in recovered{assert_eq!(b,data[idx]);}
         parity[0][0]
     };
-    println!("M3_FEC_CPU_HOST order={} arch={} SSE2={} SSSE3={} AVX2={} AVX512F={} source=PINNED_ACTION_MANIFEST",
-        order,std::env::consts::ARCH,
-        std::is_x86_feature_detected!("sse2"),
-        std::is_x86_feature_detected!("ssse3"),
-        std::is_x86_feature_detected!("avx2"),
-        std::is_x86_feature_detected!("avx512f"));
+    println!("M3_FEC_CPU_HOST order={} arch={} features={} source=PINNED_ACTION_MANIFEST",
+        order,std::env::consts::ARCH,host_cpu_features());
     for (leg,choice) in modes.into_iter().enumerate(){
         // Warmup excluded from both measurements; execute identical genuine
         // 20 original + 20 first-send parity + 4 recovered-source work.

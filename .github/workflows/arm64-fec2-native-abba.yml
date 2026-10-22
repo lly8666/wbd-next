@@ -1,0 +1,98 @@
+# One Linux ARM64 same-job same-ISA-L SOURCE codec CPU ABBA, C(k16,r16,1200B,e4).
+# No packet p99, product backend dispatch, Go transport or physical claim.
+name: ARM64 FEC2 scalar and pinned ISA-L one-scenario ABBA
+run-name: ARM64 FEC2 ABBA ${{ github.sha }}
+on:
+  push:
+    branches: [feature/arm64-linux-android-openwrt-autoaccel]
+    paths:
+      - '.github/workflows/arm64-fec2-native-abba.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-arm64-codec-abba:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 38
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Pin ISA-L and build exact-source ARM64 FEC2 scalar/native ABBA runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git "$RUNNER_TEMP/isa-l-arm64-fec"
+          git -C "$RUNNER_TEMP/isa-l-arm64-fec" checkout -q c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C "$RUNNER_TEMP/isa-l-arm64-fec" rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/isal-arm64-abba"
+          # A new Actions step is a new shell: persist the exact pinned
+          # archive path and SHA for the actual timed run, fail-closed.
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >>"$GITHUB_ENV"
+          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >>"$GITHUB_ENV"
+          (cd "$RUNNER_TEMP/isa-l-arm64-fec" && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install)
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          mkdir -p crates/wbd-codec/tests arm64-fec-abba
+          cp r0/fec2_codec_abba_probe.rs crates/wbd-codec/tests/arm64_fec2_abba.rs
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --test arm64_fec2_abba --no-run
+          lscpu >arm64-fec-abba/lscpu.txt
+          (cat /sys/fs/cgroup/cpu.max || echo UNKNOWN) >arm64-fec-abba/cpu-quota.txt
+          getconf CLK_TCK >arm64-fec-abba/cpu-hz.txt
+          printf 'source=%s\nisa_l=%s\nrunner=%s\n' "$GITHUB_SHA" "$WBD_ISAL_SOURCE_SHA" "$(uname -m)" >arm64-fec-abba/sources.txt
+      - name: ONE C16 R16 1200-byte 4-erasure ABBA; real native and scalar same executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.1 test --release --locked -p wbd-codec --features native-isal --test arm64_fec2_abba             m0_f2_codec_k16_r16_1200_abba -- --ignored --exact --nocapture --test-threads=1             2>&1 | tee arm64-fec-abba/abba.log
+          python3 - <<'PY'
+          import re,json,os,pathlib,hashlib
+          p=pathlib.Path('arm64-fec-abba')
+          s=(p/'abba.log').read_text()
+          regex=r'F2_ABBA_RESULT leg=(\d+) mode=(A|B) backend=(Scalar|NativeIsaL) blocks=(\d+) recoveries=(\d+) e=4 k=16 r=16 frame_bytes=1200 parity_symbols=(\d+) encode_checksum=(\d+) recovery_checksum=(\d+) encode_wall_ns=(\d+) encode_cpu_ticks=(UNKNOWN|\d+) recovery_wall_ns=(\d+) recovery_cpu_ticks=(UNKNOWN|\d+)'
+          rows=re.findall(regex,s)
+          assert len(rows)==4,rows
+          assert [r[1] for r in rows]==['A','B','B','A'],rows
+          assert [r[2] for r in rows]==['Scalar','NativeIsaL','NativeIsaL','Scalar'],rows
+          assert len({r[6] for r in rows})==1 and len({r[7] for r in rows})==1
+          assert all(int(r[3])==400000 and int(r[4])==400000 and int(r[5])==6400000 for r in rows)
+          assert 'F2_ABBA_SCENARIO_DONE' in s and 'test result: ok. 1 passed; 0 failed;' in s
+          hz=int((p/'cpu-hz.txt').read_text())
+          legs=[]
+          for row in rows:
+            stage={}
+            for k,t,w in [('encode',9,8),('recovery',11,10)]:
+              ticks=None if row[t]=='UNKNOWN' else int(row[t])
+              stage[k+'_ticks']=ticks
+              stage[k+'_wall_ns']=int(row[w])
+              stage[k+'_cpu_ns_per_block']=None if ticks is None else round(ticks*1e9/hz/400000)
+            legs.append(dict(leg=int(row[0]),backend=row[2],**stage))
+          qualified=all(v[f'{k}_ticks'] is not None and v[f'{k}_ticks']>=hz and v[f'{k}_wall_ns']>=1e9 for v in legs for k in ['encode','recovery'])
+          ratios={}
+          if qualified:
+            for k in ['encode','recovery']:
+              ratios[k+'_AB_scalar_over_native']=round(legs[0][k+'_ticks']/legs[1][k+'_ticks'],3)
+              ratios[k+'_BA_scalar_over_native']=round(legs[3][k+'_ticks']/legs[2][k+'_ticks'],3)
+          result={'source':os.environ['GITHUB_SHA'],'isa_l':'c387163fcbca62701d646149564c550c78a4f985',
+                  'run_id':os.environ['GITHUB_RUN_ID'],'platform':'aarch64-native',
+                  'scenario':'C(k16,r16,1200B,e4), 400000 encode+recover blocks per ABBA leg',
+                  'backend_leg_order':['Scalar','NativeIsaL','NativeIsaL','Scalar'],
+                  'backend_actual_invocation':'ASSERTED_IN_TEST','matching_wire_checksums':True,
+                  'cpu_hz':hz,'cpu_budget':(p/'cpu-quota.txt').read_text().strip(),
+                  'cost_qualification':'QUALIFIED_CPU_ABBA' if qualified else 'INCONCLUSIVE_CLOCK_OR_CAPACITY',
+                  'cpu_ratios':ratios,'legs':legs,
+                  'abba_log_sha256':hashlib.sha256(s.encode()).hexdigest(),
+                  'product_FEC_native_ratio':'NOT_RUN','first_packet_p99':'NOT_RUN','physical':'NOT_RUN'}
+          (p/'receipt.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('ARM64_FEC2_ABBA_SCOPED_COMPONENT_FUNCTIONAL_PASS',result['cost_qualification'],ratios)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-fec2-abba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-fec-abba/
+          if-no-files-found: warn
+          retention-days: 30

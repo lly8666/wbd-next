@@ -1,0 +1,78 @@
+name: ARM64 original Go client/server plus pinned ISA-L Rust owner
+run-name: ARM64 public bundle ${{ github.sha }}
+on:
+  push:
+    branches: [main, feature/arm64-linux-android-openwrt-autoaccel, integrate/arm64-main-20261022]
+    paths:
+      - '.github/workflows/arm64-public-go-build.yml'
+      - 'tools/arm64_public_go_rust_bundle.sh'
+      - 'tools/arm64_linux_netns_smoke.sh'
+      - '.cargo/config.toml'
+      - 'native/isal-safe/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'r0/go_overlay/internal/realityfront/**'
+      - 'r0/go_overlay/internal/v4productcli/**'
+      - 'crates/wbd-engine/**'
+      - 'crates/wbd-codec/**'
+      - 'crates/wbd-platform/**'
+      - 'crates/wbd-recovery/**'
+      - 'crates/wbd-types/**'
+      - 'r0/go_overlay/cmd/wbd-v4-client/**'
+      - 'r0/go_overlay/cmd/wbd-v4-server/**'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-go-rust-bundle:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 38
+    env:
+      GO_SOURCE: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact source native ARM64 original Go and Rust bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          bash tools/arm64_public_go_rust_bundle.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-public-go-rust-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+          if-no-files-found: warn
+          retention-days: 30
+
+  native-linux-netns:
+    needs: native-go-rust-bundle
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: arm64-public-go-rust-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+      - name: Native ARM64 two-side original Go TLS / Rust raw-TUN, real app and Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables
+          bash tools/arm64_linux_netns_smoke.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: arm64-linux-netns-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-netns-result/
+          if-no-files-found: warn
+          retention-days: 30

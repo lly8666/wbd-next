@@ -366,7 +366,12 @@ mod tests {
                 Ok(loan) => drop(loan), Err((BorrowError::Stopping,_)) => return true,
                 Err(_) => return false,
             }}
-            f2.is_stopping()
+            // The worker may finish all 500 trials before this thread is
+            // scheduled to call begin_stop(). Never fail from scheduling alone:
+            // observe Stop, then assert the next acquisition is rejected.
+            while !f2.is_stopping() { thread::yield_now(); }
+            matches!(f2.try_loan(frame(b"post-stop", 501)),
+                Err((BorrowError::Stopping, _)))
         });
         fence.begin_stop();
         assert!(t.join().unwrap());

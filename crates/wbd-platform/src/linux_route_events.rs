@@ -3,7 +3,7 @@
 //! new MTU or permission to send. The owner must re-observe its existing M4
 //! route and link constraints before accepting another DATA packet.
 //! This opt-in development path retains M4's per-send kernel/MTU protection.
-#![cfg(all(target_os="linux",target_arch="x86_64",target_env="gnu"))]
+#![cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::ffi::{c_int,c_void};
 use std::io;
 use std::os::fd::{AsRawFd,FromRawFd,OwnedFd};

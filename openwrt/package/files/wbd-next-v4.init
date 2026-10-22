@@ -1,0 +1,43 @@
+#!/bin/sh /etc/rc.common
+# Deliberately disabled until a user configures the trusted OS/network owner.
+START=95
+STOP=10
+USE_PROCD=1
+
+start_service() {
+    config_load wbd_next_v4
+    local enabled iface local_ip peer_ip src_port peer_port tun_ip sni user keyfile passfile tunnel_id
+    config_get_bool enabled client enabled 0
+    [ "$enabled" -eq 1 ] || return 0
+
+    config_get iface client raw_interface
+    config_get local_ip client local_ip
+    config_get peer_ip client peer_ip
+    config_get src_port client local_port
+    config_get peer_port client peer_port
+    config_get tun_ip client tun_ip
+    config_get sni client server_name
+    config_get user client username
+    config_get keyfile client route_key_file
+    config_get passfile client password_file
+    config_get tunnel_id client tunnel_id
+    [ -n "$iface" ] && [ -n "$local_ip" ] && [ -n "$peer_ip" ] || return 1
+    [ -n "$src_port" ] && [ -n "$peer_port" ] && [ -n "$tun_ip" ] || return 1
+    [ -n "$sni" ] && [ -n "$user" ] && [ -n "$tunnel_id" ] || return 1
+    [ -f "$keyfile" ] && [ -f "$passfile" ] || return 1
+    # No secrets appear in argv; Go reads owner-only files with O_NOFOLLOW.
+    procd_open_instance
+    procd_set_param command /usr/bin/wbd-v4-client \
+      --raw-interface "$iface" --local-ip "$local_ip" --peer-ip "$peer_ip" \
+      --local-port "$src_port" --peer-port "$peer_port" \
+      --tun-name wbd4 --tun-ipv4 "$tun_ip" \
+      --server-name "$sni" --username "$user" \
+      --route-key-hex-file "$keyfile" --password-file "$passfile" \
+      --tunnel-id "$tunnel_id" --mode normal
+    procd_set_param env LD_LIBRARY_PATH=/usr/lib
+    procd_set_param respawn 3600 5 3
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+}
+service_triggers() { procd_add_reload_trigger wbd_next_v4; }
