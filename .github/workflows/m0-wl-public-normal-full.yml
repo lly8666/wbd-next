@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
+      - tools/m0_wl_real_wsl2_guest_probe.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
       - crates/wbd-engine/src/v4_embedded_go.rs
@@ -285,12 +286,16 @@ jobs:
             if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
             Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
           }
-          & wsl.exe -d Ubuntu -u root -- sh -c 'test -c /dev/net/tun && command -v ip && command -v openssl && command -v python3 && test "$(uname -s)" = Linux'
-          if($LASTEXITCODE -ne 0){throw 'true Linux raw/TUN server not present'}
+          # One real Linux-kernel preflight, now bounded: past SOURCE bdf574
+          # imported Ubuntu but its first guest command hung until 22m timeout.
+          # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
+          & python tools/m0_wl_real_wsl2_guest_probe.py
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
           & wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
           & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
           if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
+          'owned' | Set-Content result/wl-public/linux-rst-rule-owned.flag
           # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
           # Linux eth0 does not. Admit only this host->WSL raw product flow
           # across WSL's actual Hyper-V firewall; never change default policy.
@@ -374,7 +379,11 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP
+          if(Test-Path result/wl-public/linux-rst-rule-owned.flag){
+            & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'owned real WSL2 Linux RST rule removal failed'}
+            Write-Output 'WL_REAL_LINUX_RST_OWNED_RULE_REMOVED'
+          }else{Write-Output 'WL_REAL_LINUX_RST_RULE_NOT_INSTALLED_SKIP_CLEANUP'}
       - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
         if: always()
         shell: pwsh
