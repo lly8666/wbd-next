@@ -613,8 +613,13 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // >11k deferred reads per side and 819/936 TUN TX drops during steady.
     // RX unique-to-TUN and successful TX sealing conserve; this is a source
     // flight-capacity boundary, not lost encrypted packets or VM pressure.
-    // Raise the fixed public Linux backing to 1024 small slabs (~2.2MiB
-    // charged per endpoint); this is not a 500Mbps payload-pool design.
+    // At Normal/off TCP1 10Mbps/direction, 0% netem loss and RTT ~400ms,
+    // actual M1 peak reached 1009/1024 with 16 feedback slots reserved;
+    // source TUN kernel TX drops rose 132/359 and inner TCP retransmitted
+    // 97/303 times (run39937279597). Enlarging the fixed small-slab backing
+    // to 2048 (~4.5MiB charged per endpoint) restores spare source flight
+    // capacity without allowing TUN reads before an owned slab exists.
+    // This is not the 500Mbps lazy-payload-pool design.
     // FEC feature7 shares the constructor, so its passive cold backing also
     // grows; FEC data algorithms/configuration and tests are not changed.
     // Neither receipt expiry, retry quota, crypto nor Stop changes.
@@ -625,7 +630,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let public_normal_pool=cfg!(target_os="linux")
         && cfg!(feature="fec2_product_record");
     let (slots,bytes)=if fec2_product_pool || public_normal_pool {
-        (1024,2_400_000)
+        (2048,4_800_000)
     }else{(128,1_000_000)};
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
