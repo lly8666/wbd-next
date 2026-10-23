@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-Normaloff-10Mbps-zero-loss-feedback-reserve-AB-60s",
+  "id": "P2-Normaloff-10Mbps-zero-loss-512v1024-owner-M1-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5206,
   "product": {
@@ -68,19 +68,19 @@
   },
   "bundles": {
     "A": {
-      "source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "run_id": 39913063383,
-      "attempt": 1,
-      "artifact_id": 12483243411,
-      "sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
-      "recovery_policy": "outer-single-repair-v2"
-    },
-    "B": {
       "source": "1605c32d5f5bdc99da792959dde99294a13cec77",
       "run_id": 39918681489,
       "attempt": 1,
       "artifact_id": 12486896723,
       "sha256": "28a2f6270fcaa8fa4675822b8455579d571ae8abc661df5fd6dc15ef59465804",
+      "recovery_policy": "outer-single-repair-v2"
+    },
+    "B": {
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "run_id": 39921718042,
+      "attempt": 1,
+      "artifact_id": 12486939897,
+      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
       "recovery_policy": "outer-single-repair-v2"
     }
   },
