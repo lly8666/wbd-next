@@ -17,3 +17,9 @@
 第二轮产品SOURCE 1be5eb8e6832a59e7980cf8030435b9d71efd7ca，ARM run39875322487：构建/Go单测/Rust Game单测/Normal基础PASS；九种MTU正向与DF负向全部逐包通过，但整批8/9组合PASS。Game2的最终严格rejected=0门失败，两端各rejected=2，真实业务64/64、auth_rejected=0、Stop均通过。比原1200TUN变大后跨过IPv6最小接口MTU，推断Linux自动link-local/RS控制流量进入IPv4-only入口；不是业务大包边界再次失败。下一修复仅在新建owned IPv4 TUN启动前禁用其IPv6自动配置（不改host/global），保持原拒绝门复验；不得仅把rejected门调宽刷绿。原始artifact12468048305保留。
 
 夹具兼容修正：只有显式WBD_ARM64_OUTER_MTU的用例传新flag，默认旧冻结包smoke保持原argv；增加bash语法检查。仅改变夹具时不需要重编旧二进制；本轮确实改了IPv4 TUN初始化，因此创建新精确SOURCE包。
+
+## 用户要求立即交接（2026-10-23）
+
+停止本聊天继续开发/dispatch；剩余验证与修复由独立测试agent接续。当前产品源码 b42b8fa2dd1793a056a6242ec4d349cc9e8a250a；其唯一ARM构建/九组合验证 run39875959734 最后观察仍IN_PROGRESS，不能标整体PASS。其network-harness-check run39875964598已SUCCESS。上一轮Game2边界正向/负向均过，但rejected严格门FAIL，详见前文，等待最新run验证owned-TUN IPv6修正；失败必须保留，不盲目重复。
+
+最后交接提交仅补夹具按真实TUN MTU输出capacity-envelope-observed-mtu.json、保留V4_PUBLIC_MTU日志及算术反例；产品源码不变，夹具最新SOURCE的PR合同测试另看实际结果。所有计算/执行顺序见docs/testing/NETWORK_CAPACITY_ENVELOPE.md，长期任务入口docs/testing/NETWORK_AUTONOMOUS_WORK.md，交付PR #25。测试agent在experiment/network-matrix-tuning自己的安全点合入本分支，保留其已有更近的产品修复、status和在途请求，不覆盖、不重置，不等M0派单。P0正确性→P1时序/预算/receipt→P2容量，再回代表网络矩阵；本文数字是设计预算，非已实现/实测的500M资格。Windows自动MTU仍待其原入口接线。

@@ -123,9 +123,9 @@ def suite():
                 "TCP segmentation/ACK, fragmentation, correlated loss, host speed need actual observations"]}
 
 
-def request_envelope(request):
+def request_envelope(request, inner_mtu=1200):
     t = request["traffic"]
-    if t["allow_fragmentation"] or max(s for s, _ in t["sizes"]) > 1172:
+    if t["allow_fragmentation"] or max(s for s, _ in t["sizes"]) > inner_mtu-28:
         return {"qualification": "NOT_MODELED_FRAGMENTATION_OR_LARGER_TUN", "rows": []}
     mode = request["product"]["mode"]
     lanes = {"game2": 2, "game4": 4}.get(mode, 1)
@@ -137,7 +137,7 @@ def request_envelope(request):
             d = ph[direction]
             for ratio in ratios:
                 for k in ([16, 1] if ratio else [16]):
-                    c = packet_cost(t["sizes"], ratio, k, lanes)
+                    c = packet_cost(t["sizes"], ratio, k, lanes, inner_mtu)
                     logical = t[direction+"_mbps"]*ph["rate_scale"]*t["udp_share"]*1e6/8/c["app_bytes_per_logical_packet"]
                     pps = logical*c["fresh_records_per_logical_packet"]
                     divisor = lanes if request["network"]["lane_loss"] == "independent" else 1
@@ -147,7 +147,7 @@ def request_envelope(request):
                         estimated_queue_per_netem=need,
                         requested_queue=request["network"]["queue_packets"],
                         queue_model_short=need>request["network"]["queue_packets"]))
-    return {"qualification": "ESTIMATE_ONLY_NO_VERDICT_CHANGE", "rows": rows,
+    return {"qualification": "ESTIMATE_ONLY_NO_VERDICT_CHANGE", "inner_mtu_input": inner_mtu, "rows": rows,
         "limits": ["UDP portion only; TCP write sizes are not TCP segment sizes",
                    "Measure control/ACK/parity k/r_sent; independent netem rate is per lane, not a shared line cap",
                    "Queue short is a preflight warning to review, never proof of product failure"]}

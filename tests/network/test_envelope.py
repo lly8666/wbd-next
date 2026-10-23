@@ -61,3 +61,11 @@ class EnvelopeTests(unittest.TestCase):
         r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
         r["traffic"].update(sizes=[[4096, 1]], allow_fragmentation=True)
         self.assertEqual(request_envelope(r)["rows"], [])
+
+    def test_observed_inner_mtu_unblocks_large_packet_model(self):
+        r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
+        r["traffic"]["sizes"] = [[1287,1]]
+        self.assertEqual(request_envelope(r)["rows"], [])
+        report = request_envelope(r, inner_mtu=1315)
+        self.assertTrue(report["rows"])
+        self.assertEqual(report["inner_mtu_input"],1315)

@@ -185,6 +185,8 @@ class LinuxExperiment:
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
         dump(self.out / "effective-config.json", self.effective)
+        inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
+        dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def configure(self, phase, index, initial=False):
         event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "commands": []}
@@ -241,7 +243,7 @@ class LinuxExperiment:
         logs = {}
         for role in self.ns:
             lines = [line for line in read(self.private / (role + ".log")).splitlines()
-                     if re.search(r"V4_(PUBLIC_(M2_OUTER |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)", line)]
+                     if re.search(r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)", line)]
             logs[role] = "\n".join(lines[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
