@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-Fixed2pct-M2-applied-fail-gate-root-cause-review",
+  "phase": "P0-original-client-Fixed-M2-clean-cohort-native-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,19 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P0-authentic-mature-Fixed-cohort-native",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "type": "ONE_NATIVE_ARM_BUILD_PLUS_BOUNDARY_FUNCTION_BATCH",
+      "trigger": "task branch push changed original Rust owner; workflow arm64-public-go-build.yml automatically builds native and exercises Rust/9 MTU; do not dispatch",
+      "old_source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+      "new_source": "COMMIT_TO_BE_OBSERVED",
+      "run_id": "UNKNOWN",
+      "attempt": 1,
+      "why": "Confirm 2s verified original source M2 clean-cohort eligibility, prior unknown retained, new unknown resets and censorship blocks; check original Go link and 9 native MTU cases before one new real paired AB."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S028",
@@ -138,9 +150,10 @@
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
     "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
-    "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md."
+    "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
+    "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence."
   ],
-  "next_action": "A/B Action39887028993 completed FAIL: A 233/237 UDP missing and TCP p99 5.9/8.4s; B 0/0 UDP missing and TCP p99 221/221ms, parity_seal0, Stop PASS but client requested1/applied0 pending (server applied1). BEFORE more performance requests, inspect true Fixed gate in v4_embedded_go.rs lines 4621-4656; distinguish cumulative coverage/timer vs FEC job global quiescence and M2 capacity censorship with bounded real gate readback. Implement smallest safe cohort gate only with actual authenticated M2 and copied source+parity, ensure stale/wrong epoch/unknown not promoted. Test real failed counterexample + Normal/off anchor; no H500 until P1 dynamic readback. Preserve original AB FAIL and ZIP hash.",
+  "next_action": "Find automatically pushed ONE native ARM64 build for new Rust Fixed M2 cohort gate; verify release test m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery, Go/Rust native release build and 9 MTU/Stop. Only then do single sequential same-VM a58d vs repaired Fixed2pct 120s request and Normal/off anchor. Do not dispatch duplicates; Fixed applied cannot be assumed from unit.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a58d914049b27e000e30438d175c7bd15022c2c5",

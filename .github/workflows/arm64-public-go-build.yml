@@ -49,6 +49,9 @@ jobs:
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_fec2_kind3_full_mtu_repair_budget_invariant -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery -- --nocapture
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

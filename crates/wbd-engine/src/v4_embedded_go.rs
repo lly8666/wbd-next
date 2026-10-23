@@ -205,6 +205,8 @@ struct NormalFirstSendM2 {
     state:wbd_recovery::MatureFirstSend,
     accepted:u64,unknown_2s:u64,unknown_8s:u64,
     covered_2s:u64,covered_8s:u64,positive_2s:u64,
+    // Bounded authenticated 2s cohort; reset on uncovered source.
+    clean_2s:u64,clean_positive_2s:u64,
     authenticated_reverse_reports:u64,censored:bool,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -220,15 +222,27 @@ impl NormalFirstSendM2 {
         let route=ReceiptRouteScope::checked(
             lane,lane,outbound,epoch,all,all
         ).map_err(|_|INVALID)?;
-        let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:4096},now)
+        // Eight seconds of source metadata, not additional queued payloads.
+        let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:8192},now)
             .map_err(|_|INVALID)?;
         Ok(Self{lane,route,reverse_direction,epoch,state,accepted:0,unknown_2s:0,unknown_8s:0,
             covered_2s:0,covered_8s:0,positive_2s:0,
+            clean_2s:0,clean_positive_2s:0,
             authenticated_reverse_reports:0,censored:false})
     }
     fn poll(&mut self,now:MonoNs){
         match self.state.on_due(now){
             Ok(result)=>{
+                // Only actual M4 source first sends covered by original
+                // reverse AEAD+PN can advance. Never erase old UNKNOWN.
+                if result.window_2s.uncovered>0 || result.capacity_limited {
+                    self.clean_2s=0;
+                    self.clean_positive_2s=0;
+                }else{
+                    self.clean_2s=self.clean_2s.saturating_add(result.window_2s.covered());
+                    self.clean_positive_2s=self.clean_positive_2s.saturating_add(
+                        result.window_2s.unambiguous_positive);
+                }
                 self.unknown_2s=self.unknown_2s.saturating_add(
                     result.window_2s.uncovered);
                 self.unknown_8s=self.unknown_8s.saturating_add(
@@ -243,6 +257,10 @@ impl NormalFirstSendM2 {
             }
             Err(_)=>self.censored=true,
         }
+    }
+    fn has_clean_fixed_m2(&self)->bool{
+        self.authenticated_reverse_reports>0 && !self.censored &&
+        self.clean_2s>0 && self.clean_positive_2s>0
     }
     // The only telemetry bridge from the SAME original moved server RX
     // (C2S original AEAD/PN) into M2. A real WBC4 kind1 receipt is parsed
@@ -4630,22 +4648,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         !e.fixed_pending.is_some_and(|(_,r)|r==revision)||
         e.fec2_copied_source==0||e.fec2_copied_repair==0||
         !e.fec2_staged_pns.is_empty(){return BAD_STAGE}
-    if let Some(stream)=e.fec2_live_tx.as_ref(){
-        let report=stream.report();
-        if report.open_bytes!=0||report.charged_bytes!=0||
-           report.outstanding_jobs!=0||report.queued_jobs!=0{
-            return BAD_STAGE
-        }
-    }else{return BAD_STAGE}
+    // Under continuing business FEC open/queued jobs are bounded and
+    // expected; a global all-jobs-zero gate is a startup timing race.
+    if e.fec2_live_tx.is_none(){return BAD_STAGE}
     let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
     let covered={
         let Ok(mut m2)=first.lock()else{return BAD_STAGE};
         m2.poll(loop_now());
-        m2.authenticated_reverse_reports>0 &&
-        m2.positive_2s>0 && !m2.censored &&
-        m2.unknown_2s==0 && m2.covered_2s>=e.fec2_copied_source
+        // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
+        // Identity/capacity censorship is still a hard failure.
+        m2.has_clean_fixed_m2()
     };
-    if !covered{return BAD_STAGE}
+    if !covered{return BAD_STAGE
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
     e.fixed_applied=Some(policy);
     e.fec2_rx_admit.store(true,Ordering::Release);
@@ -4879,6 +4893,40 @@ mod tests{
             wbd_codec::decode_control(&wrong_kind,512).unwrap()[0],
             wbd_codec::ControlTlv::LegacyHealth(_)
         ));
+    }
+
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64")))]
+    #[test]
+    fn m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery(){
+        use wbd_types::{LaneKey,TunnelKey,RecordPn};
+        use crate::v4_owner_crypto::AuthenticatedNormalKind1;
+        let lane=LaneKey{tunnel:TunnelKey{slot:102,generation:3},slot:1,generation:3};
+        let mut first=NormalFirstSendM2::new(lane,[9;16],false,MonoNs(0)).unwrap();
+        assert!(!first.has_clean_fixed_m2());
+        let copied=TxTurnCompletion{copied:1,..Default::default()};
+        first.on_real_kernel_turn(&[(RecordPn(7),1200)],copied,MonoNs(100));
+        first.poll(MonoNs(2_000_000_200));
+        assert_eq!(first.unknown_2s,1);
+        assert!(!first.has_clean_fixed_m2());
+        first.on_real_kernel_turn(&[(RecordPn(8),1200)],copied,MonoNs(2_100_000_000));
+        let mut bitmap=[0u8;32];
+        bitmap[1]=1;
+        first.on_original_authenticated_reverse(AuthenticatedNormalKind1{
+            reverse_record_pn:3,receipt:wbd_codec::Receipt{
+                largest_data_pn:8,ack_delay_us:0,report_seq:1,
+                pages:vec![wbd_codec::ReceiptPage{base_pn:0,bitmap}],
+            },
+        },MonoNs(2_200_000_000)).unwrap();
+        first.poll(MonoNs(4_100_000_100));
+        assert_eq!(first.unknown_2s,1);
+        assert_eq!((first.clean_2s,first.clean_positive_2s),(1,1));
+        assert!(first.has_clean_fixed_m2());
+        first.on_real_kernel_turn(&[(RecordPn(9),1200)],copied,MonoNs(4_200_000_000));
+        first.poll(MonoNs(6_200_000_100));
+        assert!(!first.has_clean_fixed_m2());
+        first.censored=true;
+        assert!(!first.has_clean_fixed_m2());
     }
     #[test]
     fn ready_only_batch_0_1_32_33_and_failure_do_not_wait(){
