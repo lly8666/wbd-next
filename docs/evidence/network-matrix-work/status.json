@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-single-TCP-MSS-vs-CUBIC-window-congestion-attributed-with-lossless-TUN-drop-risk",
+  "phase": "P2-TCP1-2pct-A-B-oversized-windows-real-test",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,15 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P2-TCP1-2pct-default-v-large-window-AB",
+      "status": "ACTION_AUTO_39940459163",
+      "run": 39940459163,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "why": "Same VM A/B fixed native product, Normal/off, one inner TCP/dir target10Mbps, 2% loss and200ms one-way. A default, B per-netns tcp_[rw]mem max16MiB and pre-SYN SO_SNDBUF/SO_RCVBUF8MiB (effective readback). Exact source TUN drop check + TCP_INFO metrics; do not test FEC or change product policy."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-TCP4-only-invalid-request",
@@ -68,7 +76,7 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Do not duplicate lossless TCP1 run39937279597 or lossy TCP1 run39932398428. Sources frozen; no product code fix has been validated. Existing 1024 arena Normal reaches censored peak1009 and source TUN TX drop132/359 in zero-loss, so separately implement Normal-only bounded headroom (e.g.1536 slabs, FEC feature7 unchanged) and make future harness report source TUN tx-drop deltas as qualification limits. First preserve proof & verify Actions native/MTU/real AB; no 2pct loss miracle claim. To improve lossy one TCP, gather real TCP segment data-vs-ACK repair timeliness/late repair & kernel cc/cwnd, current CC cubic available reno cubic only, no system-wide tuning. No FEC performance tests.",
+  "next_action": "Reconcile exact one auto Action39940459163 and contracts; never re-dispatch. Check both AB have actual baseline/large policy; numeric SO buffer readback, sysctl, TCP cwnd/notsent/rtt/RTO, injected TCP rate vs10Mbps, source kernel TUN TX drops, owner pre-read deferral, recovery quota, product CPU/RSS. A/B time windows on same VM, netem unseeded so loss independent approximate2%. If enlarged windows do not move throughput, stop tuning buffer sizes and instrument real TCP ACK/data timely outer repairs. No FEC.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
