@@ -2606,6 +2606,21 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             v.shadow.policy_limits().2/1_000,
         ];
         unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,34)}
+        // A single read-only per-generation marker before Stop; counts are
+        // RX-owner only, batched atomics, not an ACK or business qualification.
+        let rx=&e.counters.rx_chain;
+        let snapshot:Vec<u64>=rx.iter().map(|n|n.load(Ordering::Relaxed)).collect();
+        let feedback=e.rx_feedback.as_ref()
+            .and_then(|f|f.lock().ok().map(|g|(
+                g.retained_pages() as u64,g.feedback_drop()
+            ))).unwrap_or((0,0));
+        eprintln!(
+            "V4_PUBLIC_RX_CHAIN role={} raw_observed={} raw_tuple={} data_unique={} data_lagged32={} link_completed={} tun_delivered={} link_pending={} link_malformed={} link_discarded={} tun_failed={} replay_duplicate={} replay_retired={} open_invalid={} feedback_retained_pages={} feedback_dropped={}",
+            if e.server_side{"server"}else{"client"},
+            snapshot[0],snapshot[1],snapshot[2],snapshot[3],
+            snapshot[4],snapshot[5],snapshot[6],snapshot[7],
+            snapshot[8],snapshot[9],snapshot[10],snapshot[11],snapshot[12],
+            feedback.0,feedback.1);
         OK
     }
 }
@@ -2898,6 +2913,12 @@ struct LoopCounts {
     // mode_skipped. Only per-session numeric counters, not packet data.
     #[cfg(feature="fec2_product_record")]
     fec_m1_stage:[AtomicU64;6],
+    // RX chain aggregates (normal/off) updated per <=32-record kernel batch:
+    // observed, tuple, unique, lagged_unique, LINK complete, TUN delivery,
+    // pending, malformed, discarded, TUN failed, replay duplicate,
+    // replay retired, AEAD/record invalid. No packet identifiers leave owner.
+    #[cfg(feature="fec2_product_record")]
+    rx_chain:[AtomicU64;13],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -3003,6 +3024,10 @@ fn background_raw_once(
     if batch.observed==0{return Err(INVALID)}
     let mut delivered_total=0u32;
     #[cfg(feature="fec2_product_record")]
+    let mut rx_chain_batch=[0u64;13];
+    #[cfg(feature="fec2_product_record")]
+    {rx_chain_batch[0]=batch.observed as u64;}
+    #[cfg(feature="fec2_product_record")]
     let mut fec_batch=[0u64;11];
     #[cfg(feature="fec2_product_record")]
     let mut fec_ip_batch=[0u64;8];
@@ -3019,12 +3044,27 @@ fn background_raw_once(
             _=>{drop(slab);continue},
         };
         if stop.load(Ordering::Acquire){break}
+        #[cfg(feature="fec2_product_record")]
+        {rx_chain_batch[1]+=1;}
         let absolute=match extend_seq32(*anchor,seq){
             Ok(n)=>n,Err(_)=>{drop(slab);continue}
         };
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(slab,len,tun,when);
+        #[cfg(feature="fec2_product_record")]
+        {
+            let items=[
+                0,0,receipt.normal_unique,receipt.normal_late_unique,
+                receipt.normal_completed,receipt.delivered,receipt.pending,
+                receipt.normal_malformed,receipt.normal_discarded,
+                receipt.failed,receipt.open_duplicate,
+                receipt.open_retired,receipt.open_invalid,
+            ];
+            for (v,n) in rx_chain_batch.iter_mut().zip(items){
+                *v+=u64::from(n);
+            }
+        }
         #[cfg(feature="fec2_product_record")]
         for (dst,n) in fec_batch.iter_mut().zip(receipt.fec_rx.iter()){
             *dst=dst.saturating_add(u64::from(*n));
@@ -3091,6 +3131,10 @@ fn background_raw_once(
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
+    }
+    #[cfg(feature="fec2_product_record")]
+    for (dst,n) in fec_stats.rx_chain.iter().zip(rx_chain_batch){
+        if n>0{dst.fetch_add(n,Ordering::Relaxed);}
     }
     #[cfg(feature="fec2_product_record")]
     for (dst,n) in fec_stats.fec_rx.iter().zip(fec_batch){
@@ -4445,14 +4489,24 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 }
                 let tun_ready=loop_readiness(tun_fd,&stop_tx,10);
                 #[cfg(feature="fec2_product_record")]
-                let fec_due=tx_cell.lock().ok().is_some_and(|e|
-                    e.fec2_live_tx.as_ref().is_some_and(|s|
-                        s.report().queued_jobs>0 ||
-                        s.next_deadline().is_some_and(|d|d.0<=loop_now().0)));
+                let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
+                    (false,false),|e|{
+                        let now=loop_now();
+                        let fec=e.fec2_live_tx.as_ref().is_some_and(|s|
+                            s.report().queued_jobs>0 ||
+                            s.next_deadline().is_some_and(|d|d<=now));
+                        // Authenticated feedback is independently due, even
+                        // for strictly one-way data with an idle local TUN.
+                        let fb=e.feedback_queued.is_none() &&
+                            e.rx_feedback.as_ref().is_some_and(|f|
+                                f.lock().ok().and_then(|rx|rx.next_deadline())
+                                .is_some_and(|d|d<=now));
+                        (fec,fb)
+                    });
                 #[cfg(not(feature="fec2_product_record"))]
-                let fec_due=false;
+                let (fec_due,feedback_due)=(false,false);
                 if !tun_ready && active_jumbo.is_none() &&
-                    jumbo_queue.is_empty()&&!fec_due{
+                    jumbo_queue.is_empty()&&!fec_due&&!feedback_due{
                     #[cfg(feature="fec2_product_record")]
                     if background_original_repair_once(&tx_cell,&stop_tx).is_err(){
                         stats.tx_error.fetch_add(1,Ordering::Relaxed);

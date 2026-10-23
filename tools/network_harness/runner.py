@@ -45,7 +45,7 @@ def verify_outer_recovery_policy(expected, observed):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -518,6 +518,18 @@ class LinuxExperiment:
                         **{k: int(v) for k, v in re.findall(
                             r"(repair_attempt_limit|shadow_limit|retain_cap_us)=(\d+)", outer[-1])},
                     }
+        rx_chain={}
+        required_rx=("raw_observed","raw_tuple","data_unique","data_lagged32",
+                     "link_completed","tun_delivered","link_pending",
+                     "link_malformed","link_discarded","tun_failed",
+                     "replay_duplicate","replay_retired","open_invalid",
+                     "feedback_retained_pages","feedback_dropped")
+        for role,log in logs.items():
+            chain=[line for line in log.splitlines() if "V4_PUBLIC_RX_CHAIN " in line]
+            if chain:
+                row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\\d+)",chain[-1])}
+                if all(k in row for k in required_rx):
+                    rx_chain[role]=row
         requested_policy = self.config["bundles"][self.label].get(
             "recovery_policy", self.config.get("policy"))
         policy_verified = verify_outer_recovery_policy(
@@ -540,6 +552,7 @@ class LinuxExperiment:
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "recovery_policy_readback": recovery_policy,
+                "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
                 "recovery_policy_verified": policy_verified,
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,

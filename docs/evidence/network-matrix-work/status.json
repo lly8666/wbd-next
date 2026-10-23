@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-single-repair-v2-Normal2pct-AB-failed-attributed-bounds",
+  "phase": "P1-single-repair-v2-RX-chain-idle-feedback-source",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,15 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P1-single-repair-v2-rx-chain-native",
+      "type": "ONE_NATIVE_BUILD_AND_MTU9_PLUS_UNIT",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "source": "COMMIT_TBD",
+      "reason": "Causal code proof: idle TX bypasses due authenticated feedback, and prior AB lacks open/replay/TUN evidence. Minimal idle trigger fix plus 13 batched RX stage counters and authenticated feedback diagnostics; do not infer sustained business success from native pass."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "S028",
@@ -303,7 +311,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Representative Normal2pct same-VM AB completed as FAIL at run39907046412 (artifact12481288207). No duplicate dispatch or blind quota/PTO/second-repair patch. Next information-gain step, only if continuing this specific open business failure: bound and correlate authenticated first-delivery vs spurious repair, real M4 completion, RX/TUN recovered counts and per-epoch quota blocks using existing M2 owner metadata; run one focused Actions observation, then compute first and minimally fix evidenced root. Keep 0.25% v2 gate, strict Stop/MTU/capacity; H500 and no-cross-business-HOL remain NOT_QUALIFIED.",
+  "next_action": "Discover exact automatic native ARM64 Action from updated engine source, do not redispatch. Require native recovery lib/full applicable owner tests and MTU9, then use exact new bundle for ONE real Normal 2pct observation (B-only) with instrumented RX_CHAIN and Stop. Different VM cannot establish CPU AB improvement. Compute ingress loss vs replay/late unique vs TUN failure, ACK page discard, quota concentration before any additional tuning; keep business <=0.25% gate.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",

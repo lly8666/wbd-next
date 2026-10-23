@@ -311,6 +311,16 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
+    // Diagnostic-only bounded aggregates; no PN, IP, payload or per-packet
+    // logging leaves the RX owner. All are after the original M4 tuple gate.
+    pub(crate) open_duplicate:u32,
+    pub(crate) open_retired:u32,
+    pub(crate) open_invalid:u32,
+    pub(crate) normal_unique:u32,
+    pub(crate) normal_late_unique:u32,
+    pub(crate) normal_completed:u32,
+    pub(crate) normal_malformed:u32,
+    pub(crate) normal_discarded:u32,
     // Exact peer data PN, only after this SAME protected original M3
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
@@ -390,6 +400,10 @@ impl ProtectedBackgroundRx{
         let mut receipt=BackgroundRxReceipt::default();
         if tun.generation()!=self.generation||tun.is_stopping()
             ||len==0||len>slab.writable().len(){return receipt}
+        // Diagnostic high-water BEFORE unique admission. A legitimate
+        // backward PN beyond 32 source records is a late first arrival,
+        // consistent with either network reordering or a useful repair.
+        let rx_high_before=self.rx.max_seen();
         // Under the opt-in release feature, both kind1 and FEC kinds2/3
         // consume the SAME moved original Go-authenticated replay window.
         #[cfg(feature="fec2_product_record")]
@@ -401,7 +415,18 @@ impl ProtectedBackgroundRx{
         let open_result=self.rx.open_unique_in_place(&mut slab.writable()[..len]);
         let opened=match open_result{
             Ok(opened)=>opened,
-            Err(_)=>return receipt,
+            Err(wbd_codec::record_replay::UniqueOpenError::Duplicate)=>{
+                receipt.open_duplicate=1;
+                return receipt
+            },
+            Err(wbd_codec::record_replay::UniqueOpenError::Retired)=>{
+                receipt.open_retired=1;
+                return receipt
+            },
+            Err(wbd_codec::record_replay::UniqueOpenError::InvalidRecord(_))=>{
+                receipt.open_invalid=1;
+                return receipt
+            },
         };
         #[cfg(feature="fec2_product_record")]
         if opened.kind==2||opened.kind==3{
@@ -464,6 +489,9 @@ impl ProtectedBackgroundRx{
         }
         if opened.kind!=AUTHENTICATED_LINK_KIND{return receipt}
         receipt.authenticated_link=1;
+        receipt.normal_unique=1;
+        receipt.normal_late_unique=u32::from(rx_high_before.is_some_and(
+            |high|high.saturating_sub(opened.pn)>32 && opened.pn<high));
         let mut link_report=NormalOffReport::default();
         self.normal.accept_authenticated_link(
             opened.pn,opened.payload,now.0/1_000_000,
@@ -473,6 +501,9 @@ impl ProtectedBackgroundRx{
                 }else{receipt.failed+=1}
             },&mut link_report);
         receipt.pending=link_report.pending;
+        receipt.normal_completed=link_report.completed;
+        receipt.normal_malformed=link_report.malformed;
+        receipt.normal_discarded=link_report.discarded;
         receipt.invalid=link_report.malformed.saturating_add(link_report.discarded);
         if receipt.invalid==0 && receipt.failed==0 {
             receipt.authenticated_data_pn=Some(opened.pn);
