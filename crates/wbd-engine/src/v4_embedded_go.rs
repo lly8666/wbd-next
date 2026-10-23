@@ -2570,7 +2570,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
     h:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=27{return INVALID}
+    if out.is_null()||n!=29{return INVALID}
     #[cfg(not(feature="fec2_product_record"))]
     {let _=h;BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
@@ -2594,8 +2594,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             v.block_reasons[3],v.block_reasons[4],v.block_reasons[5],
             v.block_reasons[6],v.block_reasons[7],v.block_reasons[8],
             v.block_reasons[9],
+            d.pacing_deferrals,d.pacing_fallback_pto,
         ];
-        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,27)}
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,29)}
         OK
     }
 }
@@ -4145,9 +4146,14 @@ fn background_original_repair_once(
                         },
                         Err(err)=>{
                             let _=global.revoke(lease,now);
-                            own.note_block(original_repair_reserve_block_reason(err));
-                            let _=own.shadow.on_send_result(
-                                &candidate,RepairSendResult::NotSent,now);
+                            let reason=original_repair_reserve_block_reason(err);
+                            own.note_block(reason);
+                            if reason==OriginalRepairBlockReason::Burst{
+                                let _=own.shadow.on_pacing_blocked(&candidate,now);
+                            }else{
+                                let _=own.shadow.on_send_result(
+                                    &candidate,RepairSendResult::NotSent,now);
+                            }
                             None
                         }
                     }

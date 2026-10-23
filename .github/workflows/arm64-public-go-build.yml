@@ -57,6 +57,8 @@ jobs:
             r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
             r2_diagnostics_split_no_repair_one_repair_two_repair_retirement -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-recovery \
+            r2_burstpaced_candidate_gets_one_20ms_deferral_per_attempt_without_extra_repair -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_original_repair_block_reason_classifier_is_stable -- --nocapture
