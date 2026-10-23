@@ -128,13 +128,13 @@ def validate(raw):
         raise ValueError("tcp_window_profiles must be baseline or large")
     qlens=n.setdefault("tun_txqlen_profiles",{})
     keys(qlens,["A","B"],"tun_txqlen_profiles")
-    # Explicitly TEST-ONLY against the observed Linux TUN default500.
-    # 1024 packets at 500Mbps near-MTU is ~23ms of maximum queued bytes,
-    # NOT permission to grow product queues without proven benefit.
+    # STRICT TEST-ONLY options to distinguish a short kernel TUN burst
+    # against its default500 ring. 1024 ~23ms and 2048 ~47ms of near-MTU
+    # at 500Mbps; never change product default or use unbounded sizes.
     for leg,qlen in qlens.items():
-        integer(qlen,500,1024,"tun_txqlen_profiles."+leg)
-        if qlen not in (500,1024):
-            raise ValueError("diagnostic TUN queue must be 500 or 1024")
+        integer(qlen,500,2048,"tun_txqlen_profiles."+leg)
+        if qlen not in (500,1024,2048):
+            raise ValueError("diagnostic TUN queue must be 500, 1024 or 2048")
     qdiscs=n.setdefault("tun_qdisc_profiles",{})
     keys(qdiscs,["A","B"],"tun_qdisc_profiles")
     if any(value not in ("fq_codel","fq") for value in qdiscs.values()):
