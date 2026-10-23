@@ -1,19 +1,19 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "MODEL_ONLY_NOT_EXECUTED",
-  "date": "2026-10-22",
+  "date": "2026-10-23",
   "reviewed_source": "5a6bf52521047184107e4c67a9a04016cf4a410f",
   "assumptions": [
     "Systematic MDS; IID equal erasure probability; received symbols within decoding lifetime; no outer repair in FEC model",
     "Four-lane combined recovery requires same logical symbol shared across lanes and independent erasures of every copy",
-    "Retry model assumes perfect loss detection, two independent retries, sufficient lifetime, equal wire sizes and effective feedback",
+    "Outer repair model assumes perfect loss detection, one independent repair, sufficient lifetime, equal wire sizes and effective feedback",
     "Bandwidth examples: UDP app 1172B, inner IPv4 1200B, outer IPv4+TCP40B, independent record31B, FEC source10B and repair14B, no TCP options/L2/padding/control"
   ],
   "formula": {
     "fec": "p*Pr[Binomial(k+r-1,p)>=r]",
-    "retry_q": "p^3",
-    "retry_bytes_per_fresh": "p+p^2",
-    "budget_residual_lower_bound": "max(p^3,p-(1-p)*0.1,0)",
+    "retry_q": "p^2",
+    "retry_bytes_per_fresh": "p",
+    "budget_residual_lower_bound": "max(p^2,p-(1-p)*0.1,0)",
     "game_joint": "q(k,r,product(p_lane)) only under stated joint recovery + IID assumptions"
   },
   "rows": [
@@ -63,9 +63,9 @@
           "q_pct": 2.813705495446825e-31
         }
       ],
-      "retry_q_pct": 0.00010000000000000002,
-      "retry_fresh_pct": 1.01,
-      "budget_best_q_pct": 0.00010000000000000002
+      "retry_q_pct": 0.01,
+      "retry_fresh_pct": 1,
+      "budget_best_q_pct": 0.01
     },
     {
       "p": 0.02,
@@ -113,9 +113,9 @@
           "q_pct": 5.105009591864506e-25
         }
       ],
-      "retry_q_pct": 0.0008000000000000001,
-      "retry_fresh_pct": 2.04,
-      "budget_best_q_pct": 0.0008000000000000001
+      "retry_q_pct": 0.04,
+      "retry_fresh_pct": 2,
+      "budget_best_q_pct": 0.04
     },
     {
       "p": 0.05,
@@ -163,9 +163,9 @@
           "q_pct": 7.454230484189559e-17
         }
       ],
-      "retry_q_pct": 0.012500000000000002,
-      "retry_fresh_pct": 5.250000000000001,
-      "budget_best_q_pct": 0.012500000000000002
+      "retry_q_pct": 0.25,
+      "retry_fresh_pct": 5,
+      "budget_best_q_pct": 0.25000000000000006
     },
     {
       "p": 0.1,
@@ -213,9 +213,9 @@
           "q_pct": 7.257980118227632e-11
         }
       ],
-      "retry_q_pct": 0.10000000000000002,
-      "retry_fresh_pct": 11.000000000000002,
-      "budget_best_q_pct": 0.9999999999999996
+      "retry_q_pct": 1,
+      "retry_fresh_pct": 10,
+      "budget_best_q_pct": 1.0000000000000002
     },
     {
       "p": 0.2,
@@ -263,8 +263,8 @@
           "q_pct": 0.000029035693754894317
         }
       ],
-      "retry_q_pct": 0.8000000000000002,
-      "retry_fresh_pct": 24.000000000000004,
+      "retry_q_pct": 4,
+      "retry_fresh_pct": 20,
       "budget_best_q_pct": 12
     },
     {
@@ -313,8 +313,8 @@
           "q_pct": 0.022825761445090013
         }
       ],
-      "retry_q_pct": 2.6999999999999997,
-      "retry_fresh_pct": 39,
+      "retry_q_pct": 9,
+      "retry_fresh_pct": 30,
       "budget_best_q_pct": 23
     }
   ],
@@ -562,5 +562,10 @@
     "pps500_135": 462962.962962963,
     "delay_pkts500_1271": 9834.775767112511,
     "delay_pkts500_135": 92592.5925925926
-  }
+  },
+  "policy": "outer-single-repair-v2",
+  "repair_attempt_limit": 1,
+  "max_one_way_ms_design": 300,
+  "fixed_shadow_slots_per_direction": 131072,
+  "note": "FEC rows and historical bandwidth/FEC structure retained; outer retry fields above use 2026-10-23 single-repair policy. Product qualification requires Actions."
 }

@@ -1,0 +1,9 @@
+# 2026-10-23 single-repair-v2 safe integration intent
+
+User superseded the prior two-repair tuning with PR25 decision d1ac35ed. The last legacy native SOURCE f8b29e built successfully in Action39902074456 (product artifact12479730545) and had **no** follow-up performance Action, so the switch is at a safe node. Historical failures and causal experiments stay unchanged.
+
+New shared recovery semantics: one actual/uncertain outer repair maximum; terminal repair completion releases sender payload shadow after real synchronous M4 completion, while auth receipt/replay/maturity metadata remain independent. Quota/local abandonment also drops only repair payload state and never fabricates ACK. No second-repair timer remains. ACK-driven full-table wake rebuild is removed; only entries touched by that receipt are re-indexed. Expiry/queued cleanup is capped to32 owner events/turn. Existing arena Arc return path is reused; no cleaner thread, busy poll, per-packet allocator or new global hot lock.
+
+Constructors/readback: max design one-way300ms, adaptive bootstrap RTT600ms/RTTVAR50ms, retain hard cap1.5s, logical shadow limit131072/direction, feedback512 pages/2s, replay100kPN/s with3s horizon metadata. This does **not** yet claim H500 payload capacity: the current Arena still has much smaller eagerly allocated slab counts and is an explicit P2 gap after the low-rate one-repair A/B.
+
+Model/harness are versioned to p², repair/fresh≈p and new off1/2/5 thresholds0.15/0.25/0.75%. New request policy readback is mandatory; old requests/results keep historical semantics. First validation is a native release-race/correctness batch + full wbd-recovery library sweep + MTU9. Only after that passes: one same-VM legacy f8b29e vs new SOURCE exact Normal2%/200ms/60s scenario, one performance Action only.

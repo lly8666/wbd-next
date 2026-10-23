@@ -29,6 +29,8 @@ PR #21的Game+FEC、cipher/repair参数、生命周期等能力有明确未支�
 
 ## 自主执行顺序与停止条件
 
+**2026-10-23最新用户决定优先**：外层恢复改为最多一次实际/不确定网络修复，最大设计单程300ms；容量按极限+余量固定逻辑上限，payload按需占用/复用并在真实ACK、唯一repair completion、预算放弃或硬到期后安全回收。完整契约见 [NETWORK-ONE-REPAIR-20261023](../decisions/NETWORK-ONE-REPAIR-20261023.md)。旧“两次修复”探索结果全部保留，但不再继续为第二次机会调度/配额；先验证一次修复释放竞态和同VM原失败A/B，再继续P2。CPU优先：复用现有索引timer/arena return path，不新增全表扫描、逐包分配、全局热锁或空闲忙轮询。
+
 用户新增要求与现有S030/S031修复的衔接见 [容量/MTU补充](NETWORK_CAPACITY_ENVELOPE.md) §3–4。先接续自己的唯一open request；已有MTU修复不重写、不重复dispatch。模型计算后对照产品实际构造参数；不能拿小规模80ms PTO/64KiB repair cap去判断500Mbps能力。源文件冲突保留本分支较新的观测/修复，只引入新增模型与必要边界验证。
 
 2026-10-23接续任务： [PR #25](https://github.com/lly8666/wbd-next/pull/25) / `fix/capacity-budget-mtu-20261022` 提供自动内层MTU与容量计算。先核PR最新证据与本分支在途请求，选择安全点合入；不要覆盖自己较新的S031/S032数据面改动或把固定1280重新覆盖自动预算。大流量以接近实际MTU的大包为主+少量小探针；纯小包只是PPS诊断，不承担500Mbps指标。具体工作顺序为容量方案P0→P1→P2，每批有因果问题才加测试，不逐参数制造新工作包。

@@ -1,5 +1,7 @@
 # 可复用真实网络 Actions 夹具
 
+**2026-10-23新外层策略**：新SOURCE请求显式 `policy=outer-single-repair-v2`；双端必须回读同名policy、`repair_attempt_limit=1`、固定shadow逻辑上限和retain硬帽。IID外层一次修复理想残余为p²、repair/fresh≈p；Normal/off 1/2/5%新稳态参考分别≤0.15/0.25/0.75%。旧请求未声明policy时仍按历史证据解释，绝不用新门槛重标旧PASS/FAIL。详见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)。
+
 2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。实现只增加测试工具，不修改产品、M0 工作游标、权限或生产开关。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
 这落实 `docs/architecture/TEST_PLAN.md` 的持续业务、产物复用、单场景 Actions 和理论允许带原则，不替代它。已有小回显夹具继续作为便宜的功能回归。
@@ -57,7 +59,7 @@ UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效�
 
 `cohort_delivered_app_mbps` 按发送阶段归属，包含 drain 内迟到交付，**不是阶段内即时 goodput**；`arrival_window_app_mbps` 和10ms首到字节桶另报实际时段交付，不能用drain掩盖阶段停顿。总进程CPU（处理双向）按本进程收到业务归一化 CPU-s/GiB 和 CPU-s/Mrecords，并公开分母；需与交付数量、发送比例一同对比。接口外层字节含控制/修复/冗余，但不能把总包数除首发包数当“重传字节超过10%”。稀疏业务还另有比例豁免。
 
-理论参考只解释，不充当万能门槛：IID下两次重传的理想残余为p³，期望修复为p+p²；p=5%时分别0.0125%、5.25%。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
+理论参考只解释，不充当万能门槛：新 `outer-single-repair-v2` 下IID理想残余为p²、期望repair/fresh≈p；p=5%时分别0.25%、5%。旧两次策略的p³/p+p²仅用于历史SOURCE解释。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
 
 ## 有限测试顺序与容量停止
 

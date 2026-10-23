@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "id": "P1-single-repair-v2-integration-intent-20261023",
+  "decision_source": "d1ac35eda2a74afdc743b92a8a7fbe4bc77978cf",
+  "previous_latest": {
+    "source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
+    "native_run": 39902074456,
+    "product_artifact": 12479730545,
+    "product_sha256": "c10c39ccae16fe3e01bcb844f4c6b5892d49df404d049cf890244b4da7cbbc1d",
+    "mtu_artifact": 12479336554,
+    "mtu_sha256": "79442d13400c918ccfb518bfe452f3ca33b95aaf8bdee5bde406c57ce765b8a5",
+    "performance": "NOT_DISPATCHED_BEFORE_POLICY_SWITCH"
+  },
+  "policy": {
+    "name": "outer-single-repair-v2",
+    "repair_attempt_limit": 1,
+    "max_one_way_ms": 300,
+    "max_retain_ms": 1500,
+    "fixed_shadow_slots_per_direction": 131072,
+    "payload_pool_direction_hard_mib": 192,
+    "endpoint_repair_pool_hard_mib": 384,
+    "endpoint_total_hard_mib": 512
+  },
+  "cpu_contract": [
+    "no receipt full-table reindex",
+    "expiry/queue cleanup <=32 owner events per turn",
+    "existing indexed timers and Arena return path reused",
+    "no new per-packet allocator/global hot lock/idle polling thread"
+  ],
+  "correctness": [
+    "same immutable PN/ciphertext",
+    "Accepted or Uncertain consumes one repair opportunity",
+    "repair completion retires payload only after synchronous driver completion",
+    "auth receipt/replay/maturity remain independent",
+    "fresh traffic never waits for repair",
+    "Stop and MTU gates unchanged"
+  ],
+  "validation": "PENDING_NATIVE_ACTION"
+}
