@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A-30pct-PASS-B-Normal1500-PASS-C-TCP500-blocked-D-UDP-noHOL-scoped",
+  "phase": "V3-C-capacity-directTCP-counterfactual-native-Actions-in-progress",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,7 +25,18 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-C-direct200-RTT400-MTU1429-control",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 39989048165,
+      "attempt": 1,
+      "request_source": "ee09ca4e7ba9f02641077684c6ee37b0105b30f0",
+      "test": "native ARM64 direct veth TCP200Mbps RTT400ms netem700Mbps MTU1429 namespaces with TCP r/wmem64MiB, matching C source TCP MSS and sender rate but bypassing WBD product; 15s warmup 60s steady",
+      "purpose": "discriminate runner/host TCP transport from product data-path bottleneck before heavier TCP500",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -120,7 +131,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "NO INFLIGHT ACTIONS. V3-A done scoped: 0loss v2->v3 singleTCP 10M/dir outer repairs298->0, kernel TCP retrans0, TUN0; standard 30pct line50Mbps/dir, app offered33.7Mbps/dir delivered25.63/25.67Mbps/dir (sum51.30; line duplex capacity100), F/C~72.7%, R/F8.879/8.865%, R/C6.457/6.447% PASS. V3-B native dynamic MSS record and 1500/normal/off real UDP1401 per-dir10M pass. V3-C single TCP200/400ms/0loss fails target due TCP BACKPRESSURED: accepted/injected175.11Mbps, p99 2567.8ms; TUN warmup drops client8446, steady both0, M1 peak32, TCP notsent median27.6MB, kernel TCP retrans0, host PSIpeak19.82 steal0. HARD STOP TCP500 pending a discriminating per-stage/TCP pacing/direct same RTT baseline instrument: don't blame host or blindly enlarge memory. V3-D lossless mixed TCP70/UDP30+~1%small per dir15M PASS, steady 10ms bins no shared empties. V3-D 0/30/0 waveform in same Actions run39986170337 (after INVALID_REQUEST drain40 preparerun39985836341) OVERALL INCONCLUSIVE because TCP backpressured (loss30 actual0.65/0.81Mbps vs targets3.5), but UDP steady offered1.5Mbps/dir, delivered1.166/1.176 in30, max 10ms-bin gap40/50ms while TCP longest 2790/1990ms, source TUN steady0, scoped no cross-business HOL evidence; recovered 0% UDP has 1 missing C2S at boundary, do not claim strict-zero. Repair R/C 6% requirement applies only saturated standard case not this low F/C. OPEN: TCP500 stage bottleneck, asymmetric path/Windows/native parity-FEC integration left independent, highloss recovery TCP user-CC not tunnel crossHOL, lifecycle/rotation/blackhole NOT_RUN, CPU matched no-loss vs high-loss equal offered normal scenario not yet qualified. Model v3 source e67635 contracts39985008020 PASS. All execution Actions; no FEC branch overlap; no old lossy singleTCP fullspeed SLA, no main merge/deployment.",
+  "next_action": "Recovered exact V3 status from HEAD b49f5392: zero-loss v3 10Mbps TCP0retrans repair0, standard30% R/F<10 and R/C>6 PASS; Normal/MTU1500 UDP1401 PASS; mixed0% no crossHOL PASS, mixed0/30/0 per TCP_BACKPRESSURED overall INCONCLUSIVE but UDP max no-delivery40/50ms while TCP2-3s, lifecycle rotation/blackhole NOT_RUN. V3-C product 200Mbps C2S single TCP RTT400 0loss produced175.1078Mbps and firstarr p99 2.568s, client TUN warmup drops8446 (steady0), M1 peak32, client TCP notsent median27.65MB and backpressure5698, sender cwnd median10315MSS ~14.2MB and advertised snd_wnd33.8MB; host PSIpeak19.82 no steal. New Action native ARM64 DIRECT same RTT400/MTU1429/window64M TCP200 baseline run39989048165 launched from source ee09ca4e. It is a control ONLY, not product pass. If DIRECT<190Mbps classify environment/tester, if DIRECT>=190 then product stage bottleneck likely and add source/sink bounded packet handling/queue delay counters rather than blindly bump M1/TCPlimits. No TCP500 product until C bottleneck distinguished. Scope after C: lifecycle/rotation/blackhole representative, native Windows/MTU asym readback outstanding, no FEC independent work. All Actions only, no main merge.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
