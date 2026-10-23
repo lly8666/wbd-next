@@ -1,8 +1,10 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-lossless-TCP1-M1-flight-capacity-fix-under-native-validation",
-  "recovered": true,
+  "phase": "P2-lossless-TCP1-10Mbps-drop-and-inner-retrans-resolved-scoped-CPU-open",
+  "recovered": {
+    "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
+  },
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
     "arm_seed": "2da255b49c115681d5fe9b97b0af874d82f44b1d",
@@ -22,24 +24,8 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "31835d7f454bc716a051deca1c41d6671a71fe05",
-  "open_requests": [
-    {
-      "id": "P2-TCP1-0loss-M1-2048-source-drop-AB",
-      "state": "ACTIONS_IN_PROGRESS",
-      "run": 39967951884,
-      "attempt": 1,
-      "request_source": "5cbd0164fac06442c6bc42d9a512d9104d0ee0b2",
-      "one_scenario": true,
-      "one_VM_sequential_AB": true,
-      "source_A": "1818e01285e3cdbace09a0e2db187077dd387804",
-      "source_B": "b179fd0ef83814a05e41833a1f312a8792625b3b",
-      "run_B_build": 39967257701,
-      "artifact_A": 12500084357,
-      "artifact_B": 12507646828,
-      "validation": "Source TUN TX drop steady both zero, TCP RetransSegs per role, actual TCP 10Mbps both, feedback and M1 peak, CPU/host clean, Stop; do not redispatch."
-    }
-  ],
+  "latest_harness_source": "5cbd0164fac06442c6bc42d9a512d9104d0ee0b2",
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -83,6 +69,18 @@
       "source_A": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "source_B": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
       "file": "docs/evidence/network-matrix-work/P2-TCP1-2pct-product-ceilings-10x-AB-20261023.json"
+    },
+    {
+      "id": "P2-TCP1-0loss-M1-2048-source-drop-AB-20261023",
+      "run": 39967951884,
+      "attempt": 1,
+      "artifact_id": 12508340683,
+      "artifact_zip_sha256": "e86638b48e2f036d05ae4ffd7983b02b98ff54597511af96125325bb151f0733",
+      "request_source": "5cbd0164fac06442c6bc42d9a512d9104d0ee0b2",
+      "source_A": "1818e01285e3cdbace09a0e2db187077dd387804",
+      "source_B": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+      "result": "A_INCONCLUSIVE_UPSTREAM_TUN_DROP_574_TCP_RETRANS_545_B_SCOPED_PASS_TUN_DROP0_TCP_RETRANS0_BOTH",
+      "file": "P2-TCP1-0loss-M1-2048-drop-retrans-AB-20261023.json"
     }
   ],
   "open_issues": [
@@ -94,9 +92,10 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass.",
     "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain.",
-    "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness."
+    "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
+    "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Zero-loss inner TCP retrans priority. Exact native ARM64 b179fd0e with M1 pool2048 and byte_budget4.8MB build success run39967257701 attempt1 artifact12507646828 (sha256 ZIP c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef); native MTU boundary PASS. Matched single VM AB test running run39967951884 from request source5cbd0164fac0: A previous pool1024 source1818e012 native bundle run39951475090/artifact12500084357 sha875683fa; B sourceb179fd0 native bundle run39967257701/artifact12507646828; Normal/off TCP1 10Mbps/dir 0% netem 200ms one-way warm10 steady60 drain30. Check precise Action attempt + artifact/hash and both A/B result.json; assert per-side TUN TX steady zero in B plus improvements in TCP retrans, pool peak, pre-read deferred with no CPU/host regressions. If residual retrans despite TUN zero, investigate packet queues and TCP timeline, not blind further slot growth. No changes to outer R2/FEC.",
+  "next_action": "P2 Normal/off 0% netem single inner TCP 10Mbps/dir 200ms one-way SOURCE-M1 local-TUN-drop defect is RESOLVED_SCOPED: commit b179fd0e M1 1024->2048, native ARM64 build39967257701 PASS incl MTU9, matched same-VM sequential AB39967951884/attempt1 artifact12508340683 ZIPsha e86638b4: A 574 client source TUN dropped+545 kernel TCP retrans, B source TUN drops0 and Tcp.RetransSegs0 both, pre-read deferred0 both, TCP10Mbps/dir, p99 200.3ms, Stop PASS. Evidence JSON P2-TCP1-0loss-M1-2048-drop-retrans-AB-20261023.json. Caveats: run Action conclusion failure because A invalid for full performance; B CPU8.88/8.80s vs A6.20/5.16s, A source-loss limited so no CPU causality; B accepted 387 outer repair duplicates at0 netem. No repeat of identical scenario. Next independent cost task only if prioritized: bounded zero-loss Normal-only outer candidate/receipt-age CPU timing then eliminate spurious cost with R2 auth, one repair,10% quota intact. Higher-rate lossless M1/500Mbps remains NOT_RUN; separate lossy2% TCP1 still unqualified. Do not start previously postponed opportunistic ARQ redesign/FEC or change sysctls without explicit new priority.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -139,10 +138,21 @@
     "other_autobuild": {
       "run": 39951475040,
       "attempt": 1,
-      "status": "in_progress",
-      "conclusion": "NOT_YET_COMPLETED",
+      "status": "completed",
+      "conclusion": "success",
       "product_artifact_id": 12501000501,
       "product_artifact_zip_sha256": "ec4b549382c4047bf48ab3c96b15c4cd3a865331628a32321c7729391cc1fb49"
     }
+  },
+  "lossless_tcp1_current": {
+    "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+    "build_run": 39967257701,
+    "build_artifact_id": 12507646828,
+    "build_artifact_zip_sha256": "c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef",
+    "business_run": 39967951884,
+    "business_attempt": 1,
+    "artifact_id": 12508340683,
+    "artifact_zip_sha256": "e86638b48e2f036d05ae4ffd7983b02b98ff54597511af96125325bb151f0733",
+    "business_scope": "Normal/off native ARM64 TCP1 each direction10Mbps 0% injected loss one-way200ms steady60s; 0 TUN source kernel drops, 0 Tcp.RetransSegs client and server, pre-read deferred0, p99 200.3ms both; PASS_SCOPED_OBSERVATION_B; CPU not yet qualified"
   }
 }
