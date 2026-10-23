@@ -27,7 +27,7 @@
     {
       "id": "P1-Normal2pct-authRTT-old-new-AB-60s",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "A": {
         "source": "18860b9dfe4931d8aba05943fad484677590571c",
         "run_id": 39889364428,
@@ -43,7 +43,12 @@
         "sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17"
       },
       "scenario": "same Normal 2Mbps/direction, 50/50 UDP/TCP, 99%1287B, 2% IID, one-way200ms, 60s",
-      "why": "Causal check of proven RTT400/PTO80 bottleneck. B changes coherent recovery timing/envelopes only; no seed or traffic change."
+      "why": "Causal check of proven RTT400/PTO80 bottleneck. B changes coherent recovery timing/envelopes only; no seed or traffic change.",
+      "run_id": 39892580264,
+      "attempt": 1,
+      "harness_source": "762fc1071b488a4fa20c9dab2f4de68411fcdb6e",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39892580264",
+      "contract_run_id": 39892580304
     }
   ],
   "recent_evidence": [
@@ -191,7 +196,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push exactly one same-VM Normal AB request. Discover unique performance run; do not redispatch. On completion compare A/B UDP missing, TCP p99/backpressure, original_frozen_retransmitted, quota_or_capacity_blocked, product CPU/RSS, netem actual loss and Stop. If B meets <=1% loss and materially reduces repair storm, P0 Normal closes and P1 timing accepted for this RTT400 point; then add effective timing readback before H500/P2.",
+  "next_action": "ONE same-VM Normal A/B Action39892580264 attempt1, harness SOURCE762fc1071, outstanding; contract39892580304. Do not redispatch. On completion compare repair storm, UDP residual, TCP p99/backpressure, CPU/RSS, actual netem and Stop.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
