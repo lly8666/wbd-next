@@ -107,7 +107,8 @@ def validate(raw):
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
-             "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline"], "network")
+             "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
+             "tun_txqlen_profiles"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
@@ -125,6 +126,15 @@ def validate(raw):
     keys(profiles,["A","B"],"tcp_window_profiles")
     if not all(v in ("baseline","large","bdp500") for v in profiles.values()):
         raise ValueError("tcp_window_profiles must be baseline or large")
+    qlens=n.setdefault("tun_txqlen_profiles",{})
+    keys(qlens,["A","B"],"tun_txqlen_profiles")
+    # Explicitly TEST-ONLY against the observed Linux TUN default500.
+    # 1024 packets at 500Mbps near-MTU is ~23ms of maximum queued bytes,
+    # NOT permission to grow product queues without proven benefit.
+    for leg,qlen in qlens.items():
+        integer(qlen,500,1024,"tun_txqlen_profiles."+leg)
+        if qlen not in (500,1024):
+            raise ValueError("diagnostic TUN queue must be 500 or 1024")
     reorder=n.setdefault("tcp_reordering_profiles",{})
     keys(reorder,["A","B"],"tcp_reordering_profiles")
     if not all(v in ("baseline","outer_repair_tolerant") for v in reorder.values()):
