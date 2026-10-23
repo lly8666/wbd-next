@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A-native-PASS-V3-B-1500-PASS-V3-C-500M-blocked-V3-D-mixed-loss30-underway",
+  "phase": "V3-A-30pct-PASS-B-Normal1500-PASS-C-TCP500-blocked-D-UDP-noHOL-scoped",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,20 +25,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [
-    {
-      "id": "V3-D-30pct-mixed-UDP-progress-against-TCP-degradation",
-      "state": "ACTIONS_IN_PROGRESS",
-      "run": 39986170337,
-      "attempt": 1,
-      "request_source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
-      "previous_preflight_only_rejected_run": 39985836341,
-      "previous_preflight_only_rejected_source": "7b976a4b1bba261d4653d33760648ac1506557c5",
-      "previous_reject_reason": "INVALID_REQUEST drain_s40 exceeds 30s schema maximum; no actual packets measured",
-      "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
-      "do_not_redispatch": true
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -110,6 +97,15 @@
       "artifact_id": 12515485281,
       "result": "INCONCLUSIVE_175Mbps_BACKPRESSURE_AND_WARMUP_TUN_DROPS_8446",
       "file": "V3-C-TCP1-200M-calibration-20261023.json"
+    },
+    {
+      "id": "V3-D-mixed-0-30-0-UDP-vs-TCP-20261023",
+      "run": 39986170337,
+      "attempt": 1,
+      "artifact_id": 12515203305,
+      "artifact_zip_sha256": "afdcb1224c5a1f5eb117f271256a87484bca8e0e628584784508b41abbcbc6ee",
+      "result": "ACTION_INCONCLUSIVE_TCP_BACKPRESSURED_SCOPED_UDP_PROGRESS_WHILE_TCP_STALLS",
+      "file": "V3-D-mixed-0-30-0-UDP-vs-TCP-20261023.json"
     }
   ],
   "open_issues": [
@@ -124,7 +120,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-D zero-loss mixed passed run39985073396 evidence V3-D-lossless-mixed-70-29-1-20261023.json, 10ms no simultaneous TCP/UDP stall in trimmed steady and TUN source drops0. First v3-D highloss mixed multi-phase run39985836341/attempt1 INVALID_REQUEST at prepare due drain_s40 exceeding30; no product launched and no valid performance data. Corrected same intent drain_s30 exact source b21c9645 and new run39986170337 in progress (one scenario 0%20s->30%60s->0%20s, 300ms one-way, 5Mbps offered/dir, 50Mbps line cap/dir, 70/30 TCP/UDP and~1% small). Check run, exact artifact, UDP per-phase loss/progress, 10ms bins, TCP backpressure, any warmup/source TUN losses; no redisp. V3-C TCP200 run39983733109 INCONCLUSIVE app175.1Mbps kernel notsent27.6MB median, source TUN warmup TX drops8446 but steady0, host steal0, false to qualify500. V3-B MTU1500 real UDP1401 per-direction10M PASS. V3-A0/30 verified. Avoid FEC branch, old low-loss SLA, global sysctls; all exec Actions.",
+  "next_action": "NO INFLIGHT ACTIONS. V3-A done scoped: 0loss v2->v3 singleTCP 10M/dir outer repairs298->0, kernel TCP retrans0, TUN0; standard 30pct line50Mbps/dir, app offered33.7Mbps/dir delivered25.63/25.67Mbps/dir (sum51.30; line duplex capacity100), F/C~72.7%, R/F8.879/8.865%, R/C6.457/6.447% PASS. V3-B native dynamic MSS record and 1500/normal/off real UDP1401 per-dir10M pass. V3-C single TCP200/400ms/0loss fails target due TCP BACKPRESSURED: accepted/injected175.11Mbps, p99 2567.8ms; TUN warmup drops client8446, steady both0, M1 peak32, TCP notsent median27.6MB, kernel TCP retrans0, host PSIpeak19.82 steal0. HARD STOP TCP500 pending a discriminating per-stage/TCP pacing/direct same RTT baseline instrument: don't blame host or blindly enlarge memory. V3-D lossless mixed TCP70/UDP30+~1%small per dir15M PASS, steady 10ms bins no shared empties. V3-D 0/30/0 waveform in same Actions run39986170337 (after INVALID_REQUEST drain40 preparerun39985836341) OVERALL INCONCLUSIVE because TCP backpressured (loss30 actual0.65/0.81Mbps vs targets3.5), but UDP steady offered1.5Mbps/dir, delivered1.166/1.176 in30, max 10ms-bin gap40/50ms while TCP longest 2790/1990ms, source TUN steady0, scoped no cross-business HOL evidence; recovered 0% UDP has 1 missing C2S at boundary, do not claim strict-zero. Repair R/C 6% requirement applies only saturated standard case not this low F/C. OPEN: TCP500 stage bottleneck, asymmetric path/Windows/native parity-FEC integration left independent, highloss recovery TCP user-CC not tunnel crossHOL, lifecycle/rotation/blackhole NOT_RUN, CPU matched no-loss vs high-loss equal offered normal scenario not yet qualified. Model v3 source e67635 contracts39985008020 PASS. All execution Actions; no FEC branch overlap; no old lossy singleTCP fullspeed SLA, no main merge/deployment.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -187,8 +183,8 @@
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "AUTHORIZED_PLAN_IMPLEMENTATION_PENDING",
-    "actions": "NOT_RUN_FOR_V3",
+    "status": "V3_PARTIALLY_IMPLEMENTED_AND_SCOPED_TESTED_NOT_FULL_SOURCE_QUALIFIED",
+    "actions": "V3-A_NATIVE_ZERO_30PCT_PASS_B_NATIVE_MTU1500_PASS_C200_INCONCLUSIVE_500_NOT_RUN_D_MIXED_UDP_NOHOL_SCOPED",
     "supersedes": "v2 low-loss recovery SLA and DATA RACK/PTO; previous next_action postponing opportunistic redesign",
     "preserve_baseline": "lossless_tcp1_current exact SOURCE/artifacts remain prior scoped evidence, not v3 PASS",
     "arithmetic": "docs/evidence/network-matrix-work/V3-opportunistic-plan-model-20261023.json",
@@ -275,9 +271,18 @@
       "lossless_evidence": "V3-D-lossless-mixed-70-29-1-20261023.json",
       "lossless_artifact_id": 12515571537,
       "lossless_artifact_sha256": "c8b881ec8aab3897406fed992ad2929f95c2f41e39f582f34ccf380d1b72f10a",
-      "highloss_run": 39985836341,
-      "highloss_request_source": "7b976a4b1bba261d4653d33760648ac1506557c5",
-      "highloss_result": "ACTIONS_IN_PROGRESS"
+      "highloss_run": 39986170337,
+      "highloss_request_source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
+      "highloss_result": "INCONCLUSIVE_OVERALL_TCP_BACKPRESSURED; SCOPED_UDP_NO_CROSS_BUSINESS_HOL_40_50MS_MAX_ZERO_TICKS_WHILE_TCP_2790_1990MS_GAP",
+      "highloss_attempt": 1,
+      "highloss_artifact_id": 12515203305,
+      "highloss_artifact_zip_sha256": "afdcb1224c5a1f5eb117f271256a87484bca8e0e628584784508b41abbcbc6ee",
+      "highloss_evidence": "V3-D-mixed-0-30-0-UDP-vs-TCP-20261023.json",
+      "highloss_recovered_phase_udp_missing_c2s_s2c": [
+        1,
+        0
+      ],
+      "highloss_tcp_after_recovery": "SLOW_CC_RECOVERY_NOT_FULL_3_5Mbps"
     },
     "math_model": {
       "source": "e67635e76f86a0515099aef599ee38a13e54c555",
@@ -285,5 +290,21 @@
       "contracts_run": 39985008020,
       "contract_result": "success"
     }
+  },
+  "product_latest_v3": {
+    "source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+    "build_run": 39981175602,
+    "attempt": 1,
+    "artifact_id": 12513677330,
+    "artifact_zip_sha256": "649016a15eda2f8ded9628dc7ebd3eca93ee5b83a0bf2e25b7da583e7c3f5f16",
+    "architecture": "aarch64",
+    "native_build": "PASS",
+    "native_mtu": "PASS",
+    "go_dynamic_local_mss": true,
+    "go_record_offer_actual": true,
+    "detached_v3_shadow_from_2048_M1": true,
+    "policy": "outer-opportunistic-v3",
+    "repair_limit": 1,
+    "qualification": "V3B_1500_NORMAL_OFF_UDP1401_PASS; V3D_0LOSS_MIXED_PASS; V3D_30PCT_TCP_BACKPRESSURED_UDP_SCOPED_PASS; V3C_TCP500_NOT_RUN"
   }
 }
