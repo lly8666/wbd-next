@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-4flow-TCP-only-valid-request",
+  "phase": "P2-Normaloff-10Mbps-2pct-representative-completed-with-TCP4-boundary",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,22 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P2-Normal-TCP4-only-5M-2pct-200ms",
-      "status": "IN_FLIGHT_ACTION_39928829670",
-      "run": 39928829670,
-      "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "why": "Actual real TCP-only business running. Contract39928829676 red ONLY because test_queue_check_is_report_only accidentally inherited udp_share=0 from committed request; fixture now makes udp_share=1 before testing queue. Do not dispatch new business."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "P2-512v1024-premature-prepare",
-      "run": 39922151331,
-      "result": "HARNESS_PREPARE_REJECTED_NO_BUSINESS",
-      "why": "Native source run in_progress, strict artifact verifier required completed success. Neither AB leg executed; not product failure."
-    },
     {
       "id": "P2-Normaloff-512v1024-10Mbps-zero-loss-AB-PASS-20261023",
       "run": 39922365049,
@@ -70,27 +56,27 @@
       "contracts_run": 39928595502,
       "source": "b4b4cb01b4ceac970af6c5e79c50d00f9b6aec23",
       "note": "ID regex [A-Za-z0-9_.-]{1,64}; failed before fetching any product binary or measuring. No product conclusion."
+    },
+    {
+      "id": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023",
+      "run": 39928829670,
+      "result": "INCONCLUSIVE_TCP4_ONLY_5M_2PCT_KERN_CWND_LIMIT_WITHOUT_UDP_BULK",
+      "artifact_id": 12491146172,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "file": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023.json"
     }
   ],
   "open_issues": [
-    "S020 M2 real reverse reports 12047/12061, but unknown_2s 155/132 and censorship both; client Fixed pending, server applied1. Need bounded per-commit root/cause and FEC RX acceptance/decoding before changes.",
-    "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
-    "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED.",
-    "S022 real original M3 FEC RX 23,488/23,579 parity accepted, 5,669/5,714 recovered→TUN, no M4 failure and TUN counter exact; actual UDP still missing33.10/33.14%, reason cannot be 'no FEC recovery', class/retire/decoder reject and cohort split OPEN",
-    "S022 ~4.3k M3 FEC symbol reject each side (aggregated identity/expired/conflict/capacity), no per-reason yet; TCP4 ESTAB but 0 steady app, exact cwnd/notsent and application ACK state unobserved",
-    "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
-    "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
-    "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
-    "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples.",
-    "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
     "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
-    "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
+    "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN.",
+    "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
+    "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Read exact existing TCP-only run39928829670 first. Distinguish product/kernel TCP 4flow goodput vs mixed UDP competition; contract rerun from fixture fix is separate, no new business. Do not dispatch same scenario again if measured. No FEC tests.",
+  "next_action": "Scoped Normal/off 10Mbps each direction 2% 200ms near-MTU UDP/TCP EIGHT-flow real PASS at exact product281f6c64 (run39927659556), no further same-scenario dispatch. TCP4-only 5Mbps/dir remains INCONCLUSIVE from genuine kernel TCP congestion/backpressure with NO M1/TUN/auth/feedback loss; stop rerunning. Existing 1024 M1 peak910; future additional rate needs fixed endpoint-shared on-demand backing and CPU cost model, not blind 1280 bump or FEC-shared constructor change. 500Mbps/RTT600ms PROJECTED_NOT_TESTED, large rate not sent on this 4-core VM. Do not work on FEC tests; preserve UDP low-tail vs TCP high-tail caveats and exact CPU/RSS in final report.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -107,7 +93,7 @@
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "PASS_SCOPED_NORMALOFF_10MBPS_2PCT_EIGHT_TCP_FLOWS_WITH_TAIL_WARNING",
+    "business_qualification": "PASS_SCOPED_NORMAL_10MBPS_2PCT_EIGHT_TCP_FLOWS_ONLY",
     "business_run_id": 39927659556,
     "business_artifact_id": 12490421685,
     "business_source": "8a0c3cd239af12700fbc265fc44b216098253f39",
