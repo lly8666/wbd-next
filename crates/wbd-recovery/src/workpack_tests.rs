@@ -85,7 +85,6 @@ fn r2_pack_009_lost_receipts_single_uncertain_repair_retires_payload() {
     assert_eq!(quota.snapshot().fresh_confirmed_bytes,2800);
 }
 #[test]
-fn r2_pack_009_reported_scope_only_no_cumulative_hole_or_cross_lane_release() {#[test]
 fn r2_pack_009_reported_scope_only_no_cumulative_hole_or_cross_lane_release() {
     let mut tx=sender(3);
     tx.on_sent(make_frozen(1),MonoNs(0),MonoNs(120_000_000)).unwrap();
