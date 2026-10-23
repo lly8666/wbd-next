@@ -277,7 +277,7 @@ func startV3ProductTimeline(ctx context.Context,role string,
                 if e!=nil{continue}
                 o,e:=outer()
                 if e!=nil{continue}
-                log.Printf("V4_PUBLIC_TIMELINE role=%s monotonic_ns=%d rx_records=%d tx_records=%d rx_err=%d tx_err=%d rust_rx_cpu_ns=%d rust_tx_cpu_ns=%d first_wire_bytes=%d repair_wire_bytes=%d",
+                log.Printf("V4_PUBLIC_TIMELINE role=%s unix_ns=%d rx_records=%d tx_records=%d rx_err=%d tx_err=%d rust_rx_cpu_ns=%d rust_tx_cpu_ns=%d first_wire_bytes=%d repair_wire_bytes=%d",
                     role,time.Now().UnixNano(),s.RxRecords,s.TxRecords,s.RxErrors,s.TxErrors,
                     s.RxThreadCPUns,s.TxThreadCPUns,o.FirstWireBytes,o.RepairAcceptedWireBytes)
             }
