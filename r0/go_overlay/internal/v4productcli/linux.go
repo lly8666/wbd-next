@@ -224,9 +224,15 @@ func Run(role string,args []string)error{
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    // Product SYN MSS and initial record offer are computed from the same
+    // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
+    publicMSS:=min(cfg.outerMTU,iface.MTU)-40
+    if publicMSS<536||publicMSS>8960{return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
+    if err=faketcp.SetPublicV4AdvertisedMSS(uint16(publicMSS));err!=nil{return err}
     cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
-        faketcp.DefaultMSS,0,cfg.fecMode,cfg.gameLanes!=0)
+        uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0)
     if err!=nil{return err}
+    log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
     // This fallback is ONLY used if no authenticated Rust owner was started.
@@ -292,18 +298,8 @@ func logAuthenticFecFailures(role string,v realityfront.V4PublicFecTxFailures,er
         role,v.SourcePayload,v.SourceArena,v.SourceSeal,v.ParityPolicy,
         v.ParityArena,v.ParitySeal,v.ParityM4Noncopy,v.SourceM4Noncopy)
 }
-// Product-only V4 record wire budget. The original TUN is 1200B L3 while
-// Fixed/Auto FEC requires 31B record framing plus 14B FEC repair headroom:
-// a 1180B record silently rejects every original IPv4 packet >1135B.
-// 1280B supports <=1200B L3 and stays below the independently negotiated
-// FakeTCP MSS=1360 and the real 1500B outer MTU. Never override the Rust
-// original owner route/peer MSS/MTU validation or the M4 kernel DF gate.
-func publicRecordWireLimit(mode realityfront.FecV2Mode)uint16{
-    if mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto {
-        return 1280
-    }
-    return 1180
-}
+// No legacy 1180/1280 default record cap: deriveMTUBudget is the
+// single cold-path source of the actual offer and authenticated TUN ceiling.
 
 // One cold-path budget, in bytes. Normal data uses IPv4/TCP20+20,
 // independent record31, FEC2 repair14, and optional logical Game envelope16.
@@ -338,8 +334,9 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
             if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
             tun.mtu=inner
         }
-        log.Printf("V4_PUBLIC_MTU role=%s outer_config=%d interface=%d peer_mss=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
-            c.role,c.outerMTU,iface.MTU,peerMSS,wire,tun.mtu,c.fecMode,c.gameLanes)
+        log.Printf("V4_PUBLIC_MTU role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d peer_mss=%d local_record_cap=%d peer_record_cap=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
+            c.role,c.outerMTU,iface.MTU,faketcp.PublicV4AdvertisedMSS(),peerMSS,
+            c.recordLimit,limit,wire,tun.mtu,c.fecMode,c.gameLanes)
         return nil
     }
 }
