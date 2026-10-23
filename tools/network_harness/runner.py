@@ -476,7 +476,9 @@ class LinuxExperiment:
         (self.private / "key.pem").chmod(0o600)
         route, password, tunnel = secrets.token_hex(32), secrets.token_hex(16), secrets.token_hex(16)
         for role in ["server", "client"]:
-            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle), str(self.bundle / ("wbd-v4-" + role)),
+            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle),
+                *(["WBD_V3_TIMELINE=1"] if self.config["network"].get("v3_timeline",False) else []),
+                str(self.bundle / ("wbd-v4-" + role)),
                 "--raw-interface", self.iface[role], "--local-ip", self.ip[role],
                 "--local-port", "443" if role == "server" else "41031",
                 "--tun-name", "wbntun0", "--tun-ipv4", self.inner[role] + "/24",
@@ -511,6 +513,7 @@ class LinuxExperiment:
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
         self.effective["tcp_window_profile"]=self.tcp_profile
         self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
         self.effective["tcp_window_override"]=(
