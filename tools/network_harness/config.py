@@ -120,7 +120,7 @@ def validate(raw):
         raise ValueError("lane_loss must be shared or independent")
     profiles=n.setdefault("tcp_window_profiles",{})
     keys(profiles,["A","B"],"tcp_window_profiles")
-    if not all(v in ("baseline","large") for v in profiles.values()):
+    if not all(v in ("baseline","large","bdp500") for v in profiles.values()):
         raise ValueError("tcp_window_profiles must be baseline or large")
     reorder=n.setdefault("tcp_reordering_profiles",{})
     keys(reorder,["A","B"],"tcp_reordering_profiles")
