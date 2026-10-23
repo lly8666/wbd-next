@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-single-repair-v2-RX-chain-idle-feedback-source",
+  "phase": "P1-single-repair-v2-rx-chain-Normal2pct-real-observation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,11 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-single-repair-v2-rx-chain-native",
-      "type": "ONE_NATIVE_BUILD_AND_MTU9_PLUS_UNIT",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "id": "P1-single-repair-v2-rx-chain-fault-diagnosis-Normal2pct-60s",
+      "type": "ONE_REAL_BIDIRECTIONAL_SCENARIO",
+      "status": "INTENT_COMMITTED_AUTORUN_PENDING",
       "source": "COMMIT_TBD",
-      "reason": "Causal code proof: idle TX bypasses due authenticated feedback, and prior AB lacks open/replay/TUN evidence. Minimal idle trigger fix plus 13 batched RX stage counters and authenticated feedback diagnostics; do not infer sustained business success from native pass."
+      "product_source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
+      "native_artifact": 12482940081,
+      "observation": "original_rx_chain plus existing first/repair/ACK/quota, true mixed UDP/TCP delivered, netem/kernel/Stop; no new CPU AB claims"
     }
   ],
   "recent_evidence": [
@@ -311,24 +313,24 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Discover exact automatic native ARM64 Action from updated engine source, do not redispatch. Require native recovery lib/full applicable owner tests and MTU9, then use exact new bundle for ONE real Normal 2pct observation (B-only) with instrumented RX_CHAIN and Stop. Different VM cannot establish CPU AB improvement. Compute ingress loss vs replay/late unique vs TUN failure, ACK page discard, quota concentration before any additional tuning; keep business <=0.25% gate.",
+  "next_action": "Discover exactly ONE push-triggered network Action for the new tests/network/request.json; do not redispatch. When completed, read exact artifact B-only source3701f49a RX_CHAIN/UDP and first-copy/ACK/quota, compute causal stage counts before making further product changes. If B remains bad, identify bottleneck and minimally fix; if stage failures absent, examine source ingress and authenticated feedback timing, do not relax 0.25% acceptance.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
-    "run_id": 39906119466,
+    "source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
+    "run_id": 39909891952,
     "attempt": 1,
-    "artifact_id": 12480718285,
-    "zip_sha256": "c86acd5769ca26a4b4a95562f1ae0e406cf5e311b1d53414f2e2a18fe66ddb6c",
+    "artifact_id": 12482940081,
+    "zip_sha256": "c37ed8613162a9b4cb7225cdfa6f2e3f168b62692fcdf5dff2ccc7808c88d718",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
-    "mtu_artifact_id": 12480489828,
-    "mtu_zip_sha256": "fff034ab09300edfa9b57c82061f8a227d5f288b894e1765448b4116473873b1",
+    "mtu_artifact_id": 12482179211,
+    "mtu_zip_sha256": "e52498f4282cdec451bb05a11f4ee4637c2166e0657ad4dda8cefcdaa2142cea",
     "recovery_policy": "outer-single-repair-v2",
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "FAIL_NORMAL2PCT_V2_B_C2S_2_481PCT_S2C_2_532PCT",
+    "business_qualification": "PENDING_RX_CHAIN_NEW_SOURCE_NO_BUSINESS_PASS",
     "business_run_id": 39907046412,
     "business_artifact_id": 12481288207,
     "business_source": "5890776f85a34373bc0c71ebdea43df97f59e52a"
