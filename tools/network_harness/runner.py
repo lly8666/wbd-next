@@ -639,6 +639,13 @@ class LinuxExperiment:
                 if all(k in v for k in ("slots","peak_loaned","charged_bytes",
                                         "normal_control_reserve")):
                     m1_pool[role]=v
+        diag_expected=self.config["bundles"][self.label].get("diagnostic_10x")
+        diag_readback=({role:row.get("diagnostic_10x") for role,row in m1_pool.items()}
+                       if len(m1_pool)==2 else {})
+        diag_verified=(diag_expected is None or
+            (len(diag_readback)==2 and all(n==int(diag_expected) for n in diag_readback.values())))
+        if not diag_verified:
+            verified=False
         requested_policy = self.config["bundles"][self.label].get(
             "recovery_policy", self.config.get("policy"))
         policy_verified = verify_outer_recovery_policy(
@@ -664,6 +671,9 @@ class LinuxExperiment:
                 "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
                 "original_tx_chain": tx_chain if len(tx_chain)==2 else "NOT_OBSERVED",
                 "original_m1_pool": m1_pool if len(m1_pool)==2 else "NOT_OBSERVED",
+                "diagnostic_10x_expected":diag_expected,
+                "diagnostic_10x_readback":diag_readback,
+                "diagnostic_10x_verified":diag_verified,
                 "recovery_policy_verified": policy_verified,
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
