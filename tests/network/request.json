@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "P2-TCP1-2pct-window-AB-netns-only",
+  "id": "P2-TCP1-2pct-reorder192-AB",
   "owner": "network-matrix-work",
-  "seed": 5231,
+  "seed": 5237,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -35,7 +35,11 @@
     "netem_rng": "unseeded_recorded",
     "tcp_window_profiles": {
       "A": "baseline",
-      "B": "large"
+      "B": "baseline"
+    },
+    "tcp_reordering_profiles": {
+      "A": "baseline",
+      "B": "outer_repair_tolerant"
     }
   },
   "warmup_s": 10,
