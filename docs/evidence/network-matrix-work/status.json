@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal-block-reason-native-build",
+  "phase": "P1-Normal-exact-block-reason-real-observation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,14 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-exact-block-reason-native",
-      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
-      "status": "IN_PROGRESS",
+      "id": "P1-Normal2pct-exact-block-reasons-B-60s",
+      "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
       "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
-      "run_id": 39896777307,
-      "attempt": 1,
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39896777307",
-      "why": "Verify burst behavior is reverted and only read-only block-reason counters are added. Classifier unit + existing adaptive/retirement/FixedM2 + MTU9."
+      "bundle_run": 39896777307,
+      "artifact_id": 12476734780,
+      "why": "Behavior equals pre-burst authentic-RTT product plus read-only exact block reason counters. One leg identifies earliest blocked stage; no A/B needed."
     }
   ],
   "recent_evidence": [
@@ -196,6 +195,13 @@
       "run": 39896018098,
       "artifact_id": 12476398356,
       "file": "P1-Normal2pct-sparseburst-AB-negative-blockreason-intent-20261023.json"
+    },
+    {
+      "id": "P1-block-reason-native",
+      "result": "PASS_BUILD_CLASSIFIER_MTU9",
+      "run": 39896777307,
+      "artifact_id": 12476734780,
+      "file": "P1-block-reason-native-pass-B-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -215,14 +221,14 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Do not rerun burst AB. Settle native Action39896777307. If pass, one B-only exact Normal2pct60s diagnostic on d9dc; read 10 block reason buckets whose sum must equal quota_or_capacity_blocked, plus prior retirement/timing. Change only dominant earliest class.",
+  "next_action": "Push one B-only exact Normal2pct60s diagnostic and pin unique run. Read blocked_fresh_global/fresh_shadow/grant/burst/quota/capacity/stale/local_other/global_other/invariant; their sum must equal quota_or_capacity_blocked. Also preserve expired0/1/2/timing/UDP residual. Change only dominant earliest reason.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
-    "run_id": 39895511143,
+    "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+    "run_id": 39896777307,
     "attempt": 1,
-    "artifact_id": 12476119650,
-    "zip_sha256": "711026721bab51faa2a91ecb71990ce5f2edfbb83242a7af86af66dd8b34fe79",
+    "artifact_id": 12476734780,
+    "zip_sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",

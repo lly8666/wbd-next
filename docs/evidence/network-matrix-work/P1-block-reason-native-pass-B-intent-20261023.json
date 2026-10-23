@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "P1-block-reason-native-pass-B-intent-20261023",
+  "native": {
+    "run_id": 39896777307,
+    "attempt": 1,
+    "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+    "conclusion": "success",
+    "product_artifact_id": 12476734780,
+    "product_sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f",
+    "mtu_artifact_id": 12477038098,
+    "mtu_sha256": "e35f7f55cd28a959c8727797e9a224aca06e14c5ec612c0bf7a3d7cabb81db73",
+    "classifier_unit": "PASS",
+    "adaptive_rtt_unit": "PASS",
+    "retirement_unit": "PASS",
+    "fixed_m2_unit": "PASS",
+    "mtu9": "PASS"
+  },
+  "behavior": "Burst experiment reverted; same recovery behavior as pre-burst source except read-only block-reason counters and CI-path correction.",
+  "experiment": {
+    "id": "P1-Normal2pct-exact-block-reasons-B-60s",
+    "single_product": true,
+    "scenario": "exact Normal 2Mbps/direction 50/50 UDP/TCP 99%1287B 2% IID 200ms one-way 60s seed5205",
+    "decision": "Bucket sum must equal aggregate blocked. Dominant bucket determines next single change."
+  }
+}
