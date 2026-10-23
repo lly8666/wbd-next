@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P1-Normal2pct-exact-block-reasons-B-60s",
+  "id": "P1-Normal2pct-BurstPaced-short-rearm-old-new-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -73,7 +73,14 @@
       "attempt": 1,
       "artifact_id": 12476734780,
       "sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f"
+    },
+    "B": {
+      "source": "396c5ae6434c18eecb16599f5966574716c604a9",
+      "run_id": 39897775082,
+      "attempt": 1,
+      "artifact_id": 12477318789,
+      "sha256": "0070cc62106aac883817f7600a1dc0f82340d8463a6fd38c797148c7cde1c1ea"
     }
   },
-  "order": "A"
+  "order": "AB"
 }
