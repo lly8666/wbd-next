@@ -33,14 +33,21 @@ def verify_outer_recovery_policy(expected, observed):
     Historical legacy bundles lack this native marker: never certify them as
     v2, but do not invalidate an otherwise useful same-VM AB control.
     """
-    if expected != "outer-single-repair-v2":
+    if expected not in ("outer-single-repair-v2", "outer-opportunistic-v3"):
         return None
-    return len(observed) == 2 and all(
-        v.get("policy") == expected
-        and v.get("repair_attempt_limit") == 1
-        and v.get("shadow_limit") == 131072
-        and v.get("retain_cap_us") == 1500000
-        for v in observed.values())
+    def verified(v):
+        if v.get("policy") != expected or v.get("repair_attempt_limit") != 1 or v.get("retain_cap_us") != 1500000:
+            return False
+        if expected == "outer-single-repair-v2":
+            return v.get("shadow_limit") == 131072
+        return (v.get("shadow_limit") == 65536
+                and v.get("loss_trigger") == "authenticated_mature_gap"
+                and v.get("data_pto") == "false"
+                and all(v.get(k) == n for k,n in (
+                    ("shadow_sampling_numerator",1),("shadow_sampling_denominator",2),
+                    ("admission_pps",32768),("repair_pps",8192),
+                    ("byte_credit_pct",9),("byte_cap_pct",10))))
+    return len(observed) == 2 and all(verified(v) for v in observed.values())
 
 
 def product_marker_line(line):
