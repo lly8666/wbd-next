@@ -123,6 +123,7 @@ def model(config):
                 config.get("repair_payload_mib", 128))))
     p, rate, packet = 0.05, config["inner_ip_mbps_per_direction"], 1200
     overhead = config["record_overhead"] + config["ip_tcp_overhead"]
+    v3_repair = opportunistic_v3_iid(p)["ideal_repair_over_fresh"]
     return {"scope": "THEORY_ONLY_NOT_PRODUCT_QUALIFICATION", "product_result": "NOT_RUN",
             "policy": "outer-opportunistic-v3", "repair_attempt_limit": 1,
             "loss_trigger": "authenticated_mature_gap", "data_pto": False,
@@ -147,10 +148,10 @@ def model(config):
                 "recommended_outer_mbps_per_direction": 700,
                 "qualification": "PROJECTED_NOT_TESTED"},
             "example_1200": {
-                "off_p05_outer_ip_mbps": rate * (packet + overhead) / packet * (1 + p),
-                "fec2020_first_outer_ip_mbps": rate * 2 * (packet + overhead + config["fec_header"]) / packet,
+                "off_p05_outer_ip_mbps": rate * (packet + overhead) / packet * (1 + v3_repair),
+                "legacy_v1_fec2020_first_outer_ip_mbps": rate * 2 * (packet + overhead + config["fec_header"]) / packet,
                 "seq32_wrap_seconds_off": 2**32 / (rate * 1e6 / 8 * (packet + config["record_overhead"]) / packet),
-                "cpu_budget_ns_event_07core_duplex_off": 0.7e9 / (2 * rate * 1e6 / (8 * packet) * (1 + p))}}
+                "cpu_budget_ns_event_07core_duplex_off": 0.7e9 / (2 * rate * 1e6 / (8 * packet) * (1 + v3_repair))}}
 
 
 if __name__ == "__main__":
