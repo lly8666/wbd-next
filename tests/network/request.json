@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P1-Normal2pct-residual-diagnostics-B-60s",
+  "id": "P1-Normal2pct-sparseburst-old-new-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -73,7 +73,14 @@
       "attempt": 1,
       "artifact_id": 12475394629,
       "sha256": "029af2ffe2b49da194e6265a3e1212c94b54ae02ffe0d98dd55cace977704120"
+    },
+    "B": {
+      "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
+      "run_id": 39895511143,
+      "attempt": 1,
+      "artifact_id": 12476119650,
+      "sha256": "711026721bab51faa2a91ecb71990ce5f2edfbb83242a7af86af66dd8b34fe79"
     }
   },
-  "order": "A"
+  "order": "AB"
 }
