@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "P2-Normal-TCP4-only-5M-2pct-200ms",
+  "id": "P2-Normal-TCP1-10M-2pct-200ms",
   "owner": "network-matrix-work",
-  "seed": 5207,
+  "seed": 5213,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 5,
-    "s2c_mbps": 5,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 0,
     "sizes": [
       [
@@ -21,7 +21,7 @@
         99
       ]
     ],
-    "tcp_flows": 4,
+    "tcp_flows": 1,
     "probe_hz": 20,
     "deadline_ms": 3000,
     "burst_ms": 0,
