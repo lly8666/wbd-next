@@ -27,11 +27,16 @@
     {
       "id": "P1-Normal2pct-exact-block-reasons-B-60s",
       "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
       "bundle_run": 39896777307,
       "artifact_id": 12476734780,
-      "why": "Behavior equals pre-burst authentic-RTT product plus read-only exact block reason counters. One leg identifies earliest blocked stage; no A/B needed."
+      "why": "Behavior equals pre-burst authentic-RTT product plus read-only exact block reason counters. One leg identifies earliest blocked stage; no A/B needed.",
+      "run_id": 39897262285,
+      "attempt": 1,
+      "harness_source": "ade70e5b6324a6cade37d208d09f877d5af45506",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39897262285",
+      "contract_run_id": 39897262256
     }
   ],
   "recent_evidence": [
@@ -221,7 +226,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push one B-only exact Normal2pct60s diagnostic and pin unique run. Read blocked_fresh_global/fresh_shadow/grant/burst/quota/capacity/stale/local_other/global_other/invariant; their sum must equal quota_or_capacity_blocked. Also preserve expired0/1/2/timing/UDP residual. Change only dominant earliest reason.",
+  "next_action": "ONE B-only exact block-reason Action39897262285 attempt1 in progress; contract39897262256 PASS. Do not redispatch. Require ten reason bucket sum == aggregate blocked, then use dominant earliest bucket only.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
