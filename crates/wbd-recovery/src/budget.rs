@@ -104,6 +104,9 @@ pub struct RepairBudget {
     cfg: RepairBudgetConfig,
     current: Epoch,
     previous: Option<Epoch>,
+    // At most one epoch of UNUSED allowance can cross the boundary, capped
+    // at the sparse floor. It cannot accumulate across multiple epochs.
+    carry_credit: u64,
     pending: BTreeMap<ReservationId, Pending>,
     pending_bytes: u64,
     next_id: u64,
@@ -128,6 +131,7 @@ impl RepairBudget {
         }
         Ok(Self {
             direction, current: Epoch::new(now.0 / SECOND_NS), previous: None,
+            carry_credit:0,
             tokens: cfg.outer_mtu * 8, cfg,
             pending: BTreeMap::new(), pending_bytes: 0, next_id: 0,
             last_now: now, fractional_token_ns: 0,
@@ -136,10 +140,15 @@ impl RepairBudget {
     }
 
     fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
+    fn base_epoch_limit(&self,e:Epoch)->u64{
+        (e.fresh/10).max(SPARSE_FLOOR_BYTES)
+            .min(self.cfg.max_repair_bytes_per_epoch)
+    }
     fn epoch_limit(&self) -> u64 {
-        // The 32KiB sparse allowance is a floor, not an additional bonus.
-        (self.current.fresh / 10)
-            .max(SPARSE_FLOOR_BYTES)
+        // A one-epoch unused credit absorbs timer/receipt phase bunching
+        // without raising two-epoch repair bytes or accumulating idle credit.
+        self.base_epoch_limit(self.current)
+            .saturating_add(self.carry_credit)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }
     fn pace_rate(&self) -> u64 {
@@ -180,12 +189,16 @@ impl RepairBudget {
         let epoch = now.0 / SECOND_NS;
         if epoch > self.current.number {
             let old = self.current;
+            let adjacent=old.number.checked_add(1)==Some(epoch);
+            // Transfer only allowance that was truly unused at rollover.
+            // Late NotSent refunds never retroactively mint carry, and a
+            // skipped epoch deliberately drops all credit.
+            self.carry_credit=if adjacent{
+                self.base_epoch_limit(old).saturating_sub(old.charged)
+                    .min(SPARSE_FLOOR_BYTES)
+            }else{0};
             self.current = Epoch::new(epoch);
-            self.previous = if old.number.checked_add(1) == Some(epoch) {
-                Some(old)
-            } else {
-                None
-            };
+            self.previous = if adjacent {Some(old)} else {None};
         }
         Ok(())
     }
@@ -477,6 +490,33 @@ mod tests {
         // Fresh accounting remains independent from repair smoothing.
         b.on_fresh_accepted(100,MonoNs(4)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes,100);
+    }
+    #[test]
+    fn r2_budget_one_epoch_unused_sparse_credit_absorbs_phase_burst_without_accumulating() {
+        let mut b=ledger(1500,0);
+        // Epoch0 uses 12KiB of its 32KiB sparse allowance.
+        for i in 0..8 {
+            let c=candidate(i,1);
+            let id=b.reserve(&c,1500,MonoNs(1)).unwrap();
+            b.on_send_result(id,RepairSendResult::Accepted,MonoNs(1)).unwrap();
+        }
+        assert_eq!(b.snapshot().charged_repair_bytes,12_000);
+        b.on_timer(MonoNs(1_000_000_000)).unwrap();
+        // Only the unused 20,768B crosses one adjacent boundary.
+        assert_eq!(b.snapshot().epoch_repair_limit,53_536);
+        for i in 0..35 {
+            let c=candidate(100+i,1_000_000_001);
+            let id=b.reserve(&c,1500,MonoNs(1_000_000_001)).unwrap();
+            b.on_send_result(id,RepairSendResult::Accepted,MonoNs(1_000_000_001)).unwrap();
+        }
+        assert_eq!(b.snapshot().charged_repair_bytes,52_500);
+        let over=candidate(999,1_000_000_001);
+        assert_eq!(b.reserve(&over,1500,MonoNs(1_000_000_001)),
+            Err(BudgetError::QuotaExhausted));
+        // Epoch1 spent more than its own base by consuming carried credit,
+        // therefore epoch2 receives NO second-generation carry.
+        b.on_timer(MonoNs(2_000_000_000)).unwrap();
+        assert_eq!(b.snapshot().epoch_repair_limit,32_768);
     }
     #[test]
     fn r2_budget_capacity_timeout_conservative_debt_and_clock_reversal() {
