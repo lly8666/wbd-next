@@ -457,7 +457,7 @@ type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
 // queries real native worker completion counters and CPU; no packet or
 // authentication path is redirected to Go.
 type V4PublicLoopPulse struct{
-    RxTurns,TxTurns,RxErrors,TxErrors uint64
+    RxRecords,TxRecords,RxErrors,TxErrors uint64
     RxThreadCPUns,TxThreadCPUns uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
@@ -469,7 +469,7 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
     rx,tx,err:=b.rustOwnerWorkerCPU()
     if err!=nil{return V4PublicLoopPulse{},err}
     return V4PublicLoopPulse{
-        RxTurns:stats.RxOK,TxTurns:stats.TxOK,
+        RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,
         RxThreadCPUns:rx,TxThreadCPUns:tx,
     },nil
