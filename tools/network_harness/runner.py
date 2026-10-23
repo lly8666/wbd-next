@@ -736,7 +736,12 @@ class LinuxExperiment:
             self.setup()
             self.configure({**self.config["phases"][0], "name": "warmup"}, 0, True)
             config_path = self.private / "effective-request.json"
-            dump(config_path, self.config)
+            traffic_config=copy.deepcopy(self.config)
+            warm_scale=self.config["network"].get("warmup_rate_scale_profiles",{}).get(self.label,1)
+            traffic_config["traffic"]["warmup_rate_scale"]=warm_scale
+            self.effective["test_only_warmup_rate_scale"]=warm_scale
+            dump(self.out/"effective-config.json",self.effective)
+            dump(config_path, traffic_config)
             start_ns = time.monotonic_ns() + 20_000_000_000
             for role in ["server", "client"]:
                 peer = "server" if role == "client" else "client"
