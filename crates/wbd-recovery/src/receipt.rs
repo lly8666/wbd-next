@@ -20,6 +20,13 @@ pub struct AdaptiveTimingSnapshot{
     pub samples:u64,pub srtt_ns:u64,pub rttvar_ns:u64,pub recent_rtt_ns:u64,
     pub reorder_window_ns:u64,pub pto_ns:u64,pub cache_ns:u64,
 }
+#[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
+pub struct ReceiptDiagnosticSnapshot{
+    pub candidate_first:u64,pub candidate_retry:u64,
+    pub acked_attempt0:u64,pub acked_attempt1:u64,pub acked_attempt2:u64,
+    pub expired_attempt0:u64,pub expired_attempt1:u64,pub expired_attempt2:u64,
+    pub late_positive_expired:u64,
+}
 #[derive(Clone,Copy)]
 struct AdaptiveTiming{
     samples:u64,srtt_ns:u64,rttvar_ns:u64,recent_rtt_ns:u64,
@@ -290,6 +297,7 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     witnesses: Vec<Witness>, // latest three distinct, verified data sends
     rack_ack_ns: Option<u64>,
     adaptive:Option<AdaptiveTiming>,
+    diagnostics:ReceiptDiagnosticSnapshot,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
     let d = seq.wrapping_sub(prev);
@@ -309,6 +317,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             last_timer_index_pops: 0,
             last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,adaptive:None,
+            diagnostics:ReceiptDiagnosticSnapshot::default(),
         })
     }
     pub fn enable_adaptive_timing(&mut self,bootstrap_rtt_ns:u64,
@@ -319,6 +328,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     }
     pub fn timing_snapshot(&self)->Option<AdaptiveTimingSnapshot>{
         self.adaptive.map(|x|x.snapshot())
+    }
+    pub fn diagnostic_snapshot(&self)->ReceiptDiagnosticSnapshot{
+        self.diagnostics
     }
     fn effective_pto_ns(&self)->u64{
         self.adaptive.map_or(self.config.pto_ns,|x|x.snapshot().pto_ns)
@@ -406,6 +418,22 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     if let Some(entry)=self.entries.remove(&key) {
                         self.remove_indexes(key,&entry,false);
                         let within_lifetime=now<entry.hard_expiry;
+                        let bucket=usize::from(entry.repair_attempts.min(2));
+                        if within_lifetime{
+                            match bucket{
+                                0=>self.diagnostics.acked_attempt0=self.diagnostics.acked_attempt0.saturating_add(1),
+                                1=>self.diagnostics.acked_attempt1=self.diagnostics.acked_attempt1.saturating_add(1),
+                                _=>self.diagnostics.acked_attempt2=self.diagnostics.acked_attempt2.saturating_add(1),
+                            }
+                        }else{
+                            match bucket{
+                                0=>self.diagnostics.expired_attempt0=self.diagnostics.expired_attempt0.saturating_add(1),
+                                1=>self.diagnostics.expired_attempt1=self.diagnostics.expired_attempt1.saturating_add(1),
+                                _=>self.diagnostics.expired_attempt2=self.diagnostics.expired_attempt2.saturating_add(1),
+                            }
+                            self.diagnostics.late_positive_expired=
+                                self.diagnostics.late_positive_expired.saturating_add(1);
+                        }
                         if fresh && within_lifetime && entry.repair_attempts==0 {
                             let sample=now.elapsed_since(entry.last_sent).max(1);
                             timing_sample=Some(timing_sample.map_or(sample,|old|old.min(sample)));
@@ -478,6 +506,11 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             self.expiry_index.pop_first();
             let entry=self.entries.remove(&pn).expect("expiry index synchronized");
             self.remove_indexes(pn,&entry,true);
+            match entry.repair_attempts.min(2){
+                0=>self.diagnostics.expired_attempt0=self.diagnostics.expired_attempt0.saturating_add(1),
+                1=>self.diagnostics.expired_attempt1=self.diagnostics.expired_attempt1.saturating_add(1),
+                _=>self.diagnostics.expired_attempt2=self.diagnostics.expired_attempt2.saturating_add(1),
+            }
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
             releases.push(Release {
@@ -500,6 +533,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             let entry=self.entries.get_mut(&pn).expect("wake index synchronized");
             assert_eq!(entry.indexed_wake,Some(wake));
             entry.indexed_wake=None;
+            let mut newly_queued_attempt=None;
             if entry.queued.as_ref().is_some_and(|q| now>=q.until) {
                 entry.queued=None;
                 entry.rearm_at=MonoNs(now.0.saturating_add(current_pto));
@@ -509,10 +543,20 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 let until=MonoNs(entry.hard_expiry.0.min(
                     now.0.saturating_add(QUEUE_LIFETIME_NS)));
                 entry.queued=Some(Queued {epoch:entry.retry_epoch,until});
+                newly_queued_attempt=Some(entry.repair_attempts);
                 candidates.push(RepairCandidate {
                     pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
                     dispatch_by:until,frozen:entry.frozen.clone()
                 });
+            }
+            if let Some(attempt)=newly_queued_attempt{
+                if attempt==0{
+                    self.diagnostics.candidate_first=
+                        self.diagnostics.candidate_first.saturating_add(1);
+                }else{
+                    self.diagnostics.candidate_retry=
+                        self.diagnostics.candidate_retry.saturating_add(1);
+                }
             }
             self.refresh_wake(pn);
         }
@@ -644,6 +688,33 @@ mod tests {
         assert!(s.on_timer(MonoNs(1_439_999_999)).releases.is_empty());
         assert_eq!(s.on_timer(MonoNs(1_440_000_000)).releases.len(),1);
         assert!(s.on_timer(MonoNs(1_500_000_000)).candidates.is_empty());
+    }
+
+    #[test]
+    fn r2_diagnostics_split_no_repair_one_repair_two_repair_retirement(){
+        let mut s=state(8,10);
+        add(&mut s,1,0,100);
+        assert_eq!(s.on_receipt(&receipt(1,1,vec![page(0,&[1])]),MonoNs(5)).unwrap().len(),1);
+
+        add(&mut s,2,100,200);
+        let one=s.on_timer(MonoNs(110)).candidates.remove(0);
+        s.on_send_result(&one,RepairSendResult::Accepted,MonoNs(110)).unwrap();
+        assert_eq!(s.on_receipt(&receipt(2,2,vec![page(0,&[2])]),MonoNs(120)).unwrap().len(),1);
+
+        add(&mut s,3,200,230);
+        let first=s.on_timer(MonoNs(210)).candidates.remove(0);
+        s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(210)).unwrap();
+        let second=s.on_timer(MonoNs(220)).candidates.remove(0);
+        s.on_send_result(&second,RepairSendResult::Accepted,MonoNs(220)).unwrap();
+        assert_eq!(s.on_timer(MonoNs(230)).releases.len(),1);
+
+        add(&mut s,4,300,305);
+        assert_eq!(s.on_timer(MonoNs(305)).releases.len(),1);
+        let d=s.diagnostic_snapshot();
+        assert_eq!((d.candidate_first,d.candidate_retry),(2,1));
+        assert_eq!((d.acked_attempt0,d.acked_attempt1,d.acked_attempt2),(1,1,0));
+        assert_eq!((d.expired_attempt0,d.expired_attempt1,d.expired_attempt2),(1,0,1));
+        assert_eq!(d.late_positive_expired,0);
     }
 
     #[test]

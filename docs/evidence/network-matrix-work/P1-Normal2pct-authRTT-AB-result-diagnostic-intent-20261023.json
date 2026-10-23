@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "id": "P1-Normal2pct-authRTT-AB-result-diagnostic-intent-20261023",
+  "action": {
+    "run_id": 39892580264,
+    "attempt": 1,
+    "harness_source": "762fc1071b488a4fa20c9dab2f4de68411fcdb6e",
+    "artifact_id": 12475074444,
+    "artifact_sha256": "348e6f096b0df7fd6d66cff7f9bca6fa99e059ed108c6da2644a6c0bc60e0458",
+    "conclusion": "failure"
+  },
+  "scenario": {
+    "same_vm": true,
+    "order": "AB",
+    "seed": 5205,
+    "one_way_ms": 200,
+    "loss_pct": 2,
+    "app_mbps_per_direction": 2,
+    "steady_s": 60
+  },
+  "A": {
+    "source": "18860b9dfe4931d8aba05943fad484677590571c",
+    "netem_loss_pct": {
+      "client": 2.0781619811810885,
+      "server": 2.0477914554670527
+    },
+    "udp_missing": {
+      "c2s": 147,
+      "s2c": 139
+    },
+    "udp_loss_pct": {
+      "c2s": 2.4983004758667575,
+      "s2c": 2.362338545207342
+    },
+    "tcp_p99_ms": {
+      "c2s": 8522.2,
+      "s2c": 6616.4
+    },
+    "tcp_backpressure": {
+      "c2s": 727,
+      "s2c": 25
+    },
+    "outer": {
+      "client": {
+        "fresh": 19059,
+        "ack": 18800,
+        "repair": 12161,
+        "blocked": 60672,
+        "retired": 19055
+      },
+      "server": {
+        "fresh": 19482,
+        "ack": 19231,
+        "repair": 11532,
+        "blocked": 63385,
+        "retired": 19478
+      }
+    },
+    "cpu_s": {
+      "client": 2.3,
+      "server": 2.34
+    },
+    "stop": true
+  },
+  "B": {
+    "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+    "netem_loss_pct": {
+      "client": 1.919,
+      "server": 1.836
+    },
+    "udp_missing": {
+      "c2s": 125,
+      "s2c": 149
+    },
+    "udp_loss_pct": {
+      "c2s": 2.124405166553365,
+      "s2c": 2.532290958531611
+    },
+    "tcp_p99_ms": {
+      "c2s": 4340.6,
+      "s2c": 4541.2
+    },
+    "tcp_backpressure": {
+      "c2s": 0,
+      "s2c": 20
+    },
+    "outer": {
+      "client": {
+        "fresh": 19677,
+        "ack": 19412,
+        "repair": 665,
+        "blocked": 258,
+        "retired": 19673,
+        "not_ack_retired": 261
+      },
+      "server": {
+        "fresh": 19730,
+        "ack": 19462,
+        "repair": 631,
+        "blocked": 287,
+        "retired": 19726,
+        "not_ack_retired": 264
+      }
+    },
+    "cpu_s": {
+      "client": 1.97,
+      "server": 2.01
+    },
+    "stop": true,
+    "warning": "HOST_CONTENTION_OBSERVED on probe tail only; p50 RTT400.3ms, do not excuse product residual"
+  },
+  "conclusion": "P1 authentic timing mechanism materially fixes the repair storm and improves TCP/CPU, but does NOT close Normal UDP residual <=1%. No parameter or seed retry is justified before classifying the ~261/264 non-ACK retirements by repair attempt and reading effective timing.",
+  "diagnostics_added": [
+    "candidate_first",
+    "candidate_retry",
+    "acked0/1/2",
+    "expired0/1/2",
+    "late_positive_expired",
+    "timing_samples",
+    "srtt_us",
+    "rttvar_us",
+    "recent_rtt_us",
+    "reorder_us",
+    "pto_us",
+    "cache_us",
+    "shadow_outstanding"
+  ],
+  "behavior_change": "NONE; counters/readback only",
+  "next": "Native build diagnostic ABI/unit. If pass, one B-only exact Normal2pct 60s observation; no old A needed because causal timing effect already proven."
+}

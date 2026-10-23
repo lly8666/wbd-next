@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal2pct-authRTT-real-AB",
+  "phase": "P1-Normal-residual-readonly-diagnostics-native",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,30 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-Normal2pct-authRTT-old-new-AB-60s",
-      "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "QUEUED_OR_IN_PROGRESS",
-      "A": {
-        "source": "18860b9dfe4931d8aba05943fad484677590571c",
-        "run_id": 39889364428,
-        "attempt": 1,
-        "artifact_id": 12474012306,
-        "sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf"
-      },
-      "B": {
-        "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
-        "run_id": 39892105601,
-        "attempt": 1,
-        "artifact_id": 12475695809,
-        "sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17"
-      },
-      "scenario": "same Normal 2Mbps/direction, 50/50 UDP/TCP, 99%1287B, 2% IID, one-way200ms, 60s",
-      "why": "Causal check of proven RTT400/PTO80 bottleneck. B changes coherent recovery timing/envelopes only; no seed or traffic change.",
-      "run_id": 39892580264,
-      "attempt": 1,
-      "harness_source": "762fc1071b488a4fa20c9dab2f4de68411fcdb6e",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39892580264",
-      "contract_run_id": 39892580304
+      "id": "P1-Normal-residual-readonly-diagnostics-native",
+      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_9_MTU",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "trigger": "read-only Rust/Go diagnostic source push; no manual dispatch",
+      "baseline_product": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+      "new_source": "COMMIT_TBD",
+      "why": "No recovery behavior change. Split remaining non-ACK retirement by 0/1/2 repair attempts and expose learned SRTT/PTO/Tcache before any further tuning. Harness already parses added numeric fields from same public M2 marker."
     }
   ],
   "recent_evidence": [
@@ -177,6 +160,13 @@
       "run": 39892105601,
       "artifact_id": 12475695809,
       "file": "P1-authRTT-native-pass-AB-intent-20261023.json"
+    },
+    {
+      "id": "P1-Normal2pct-authRTT-AB",
+      "result": "TIMING_IMPROVED_BUT_UDP_RESIDUAL_FAIL",
+      "run": 39892580264,
+      "artifact_id": 12475074444,
+      "file": "P1-Normal2pct-authRTT-AB-result-diagnostic-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -196,7 +186,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE same-VM Normal A/B Action39892580264 attempt1, harness SOURCE762fc1071, outstanding; contract39892580304. Do not redispatch. On completion compare repair storm, UDP residual, TCP p99/backpressure, CPU/RSS, actual netem and Stop.",
+  "next_action": "Locate exactly one automatic ARM64 native build for read-only residual diagnostics. Require new diagnostics unit, adaptive timing unit, Fixed M2 unit, release bundle and 9 MTU PASS. Then run ONE B-only Normal2pct 60s observation using new diagnostic product; do not repeat A and do not tune parameters before reading expired0/1/2 + acked0/1/2 + effective timing.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",

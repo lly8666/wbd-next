@@ -2534,6 +2534,38 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
         OK
     }
 }
+// Read-only slow-path recovery classifier, sampled once pre-Stop by the
+// public CLI. No packet contents, identity, scheduler decision or mutation.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=17{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE{return BAD_STAGE}
+        let Some(outer)=e.original_outer.as_ref()else{return BAD_STAGE};
+        let Ok(v)=outer.lock()else{return BAD_STAGE};
+        let d=v.shadow.diagnostic_snapshot();
+        let Some(t)=v.shadow.timing_snapshot()else{return BAD_STAGE};
+        let vals=[
+            d.candidate_first,d.candidate_retry,
+            d.acked_attempt0,d.acked_attempt1,d.acked_attempt2,
+            d.expired_attempt0,d.expired_attempt1,d.expired_attempt2,
+            d.late_positive_expired,
+            t.samples,t.srtt_ns/1_000,t.rttvar_ns/1_000,t.recent_rtt_ns/1_000,
+            t.reorder_window_ns/1_000,t.pto_ns/1_000,t.cache_ns/1_000,
+            v.shadow.outstanding() as u64,
+        ];
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,17)}
+        OK
+    }
+}
 // Pure read-only original FixedStream owner snapshot, taken once pre-Stop.
 // No per-packet observations, no cryptographic or queue authority.
 // ABI: accepted,notready,full,partial,k1,k2..4,k5..12,k13..16,

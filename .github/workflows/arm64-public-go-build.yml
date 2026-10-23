@@ -54,6 +54,8 @@ jobs:
             m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
             r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-recovery \
+            r2_diagnostics_split_no_repair_one_repair_two_repair_retirement -- --nocapture
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

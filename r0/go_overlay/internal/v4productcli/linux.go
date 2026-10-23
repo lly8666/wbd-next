@@ -257,10 +257,15 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
         return
     }
-    log.Printf("V4_PUBLIC_M2_OUTER role=%s real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d max_retransmits=2",
+    log.Printf("V4_PUBLIC_M2_OUTER role=%s real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d max_retransmits=2 candidate_first=%d candidate_retry=%d acked0=%d acked1=%d acked2=%d expired0=%d expired1=%d expired2=%d late_positive_expired=%d timing_samples=%d srtt_us=%d rttvar_us=%d recent_rtt_us=%d reorder_us=%d pto_us=%d cache_us=%d shadow_outstanding=%d",
         role,v.FirstKernelCopied,v.AuthenticatedAckRetired,
         v.OriginalFrozenRepaired,v.DriverUncertain,
-        v.BudgetOrCapacityBlocked,v.RetiredTotal)
+        v.BudgetOrCapacityBlocked,v.RetiredTotal,
+        v.CandidateFirst,v.CandidateRetry,
+        v.AckedAttempt0,v.AckedAttempt1,v.AckedAttempt2,
+        v.ExpiredAttempt0,v.ExpiredAttempt1,v.ExpiredAttempt2,
+        v.LatePositiveExpired,v.TimingSamples,v.SRTTus,v.RTTVarus,
+        v.RecentRTTus,v.Reorderus,v.PTOus,v.Cacheus,v.ShadowOutstanding)
 }
 func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err error){
     if err!=nil{

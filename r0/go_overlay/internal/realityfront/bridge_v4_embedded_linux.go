@@ -26,6 +26,7 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_outer_diagnostics(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
@@ -292,6 +293,12 @@ type V4PublicOuterCounters struct{
     DriverUncertain uint64
     BudgetOrCapacityBlocked uint64
     RetiredTotal uint64
+    CandidateFirst,CandidateRetry uint64
+    AckedAttempt0,AckedAttempt1,AckedAttempt2 uint64
+    ExpiredAttempt0,ExpiredAttempt1,ExpiredAttempt2 uint64
+    LatePositiveExpired uint64
+    TimingSamples,SRTTus,RTTVarus,RecentRTTus,Reorderus,PTOus,Cacheus uint64
+    ShadowOutstanding uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
@@ -300,6 +307,10 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
         C.uint64_t(b.handle),&values[0],6)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
+    var d [17]C.uint64_t
+    rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
+        C.uint64_t(b.handle),&d[0],17)
+    if rc!=0{return zero,fmt.Errorf("%w: native original M2 diagnostics=%d",errV4Embedded,int(rc))}
     return V4PublicOuterCounters{
         FirstKernelCopied:uint64(values[0]),
         AuthenticatedAckRetired:uint64(values[1]),
@@ -307,6 +318,13 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         DriverUncertain:uint64(values[3]),
         BudgetOrCapacityBlocked:uint64(values[4]),
         RetiredTotal:uint64(values[5]),
+        CandidateFirst:uint64(d[0]),CandidateRetry:uint64(d[1]),
+        AckedAttempt0:uint64(d[2]),AckedAttempt1:uint64(d[3]),AckedAttempt2:uint64(d[4]),
+        ExpiredAttempt0:uint64(d[5]),ExpiredAttempt1:uint64(d[6]),ExpiredAttempt2:uint64(d[7]),
+        LatePositiveExpired:uint64(d[8]),TimingSamples:uint64(d[9]),
+        SRTTus:uint64(d[10]),RTTVarus:uint64(d[11]),RecentRTTus:uint64(d[12]),
+        Reorderus:uint64(d[13]),PTOus:uint64(d[14]),Cacheus:uint64(d[15]),
+        ShadowOutstanding:uint64(d[16]),
     },nil
 }
 // Read-only original Rust worker stats under the authenticated owner scope.
