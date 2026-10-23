@@ -489,9 +489,29 @@ class LinuxExperiment:
                 and int(v[2]) > 0 and v[4] == "false" and (mode != "fec-fixed" or int(v[3]) == self.config["product"]["fec_profile"])
                 for v in applied.values())
         counters = {}
+        recovery_policy = {}
         for role, log in logs.items():
             lines = [s for s in log.splitlines() if "V4_PUBLIC_M2_OUTER " in s or "V4_PUBLIC_GAME_KERNEL " in s]
             counters[role] = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", lines[-1])} if lines else {}
+            outer = [s for s in log.splitlines() if "V4_PUBLIC_M2_OUTER " in s]
+            if outer:
+                m = re.search(r"policy=([A-Za-z0-9_.-]+)", outer[-1])
+                if m:
+                    recovery_policy[role] = {
+                        "policy": m.group(1),
+                        **{k: int(v) for k, v in re.findall(
+                            r"(repair_attempt_limit|shadow_limit|retain_cap_us)=(\d+)", outer[-1])},
+                    }
+        requested_policy = self.config.get("policy")
+        policy_verified = True
+        if requested_policy == "outer-single-repair-v2":
+            policy_verified = len(recovery_policy) == 2 and all(
+                v.get("policy") == requested_policy
+                and v.get("repair_attempt_limit") == 1
+                and v.get("shadow_limit") == 131072
+                and v.get("retain_cap_us") == 1500000
+                for v in recovery_policy.values())
+            verified = verified and policy_verified
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
@@ -507,6 +527,8 @@ class LinuxExperiment:
             for role in logs)
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
+                "recovery_policy_readback": recovery_policy,
+                "recovery_policy_verified": policy_verified,
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",

@@ -125,7 +125,7 @@ def summarize(config, client, server, telemetry, host):
     if not telemetry["stop_drained_both"]:
         failures.append("public Rust Stop not drained on both sides")
     if not telemetry["effective_config_verified"]:
-        failures.append("requested mode/profile has no matching product readback")
+        failures.append("requested mode/profile/recovery policy has no matching product readback")
     if a["require_retransmission"] and (telemetry["repair_packets"] is None or telemetry["repair_packets"] <= 0):
         failures.append("requested retransmission observation absent")
     if any(row["target_app_mbps"] > 0 and row["delivered"] == 0 for row in observed):
