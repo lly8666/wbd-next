@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal-exact-block-reason-real-observation",
+  "phase": "P1-BurstPaced-bounded-rearm-native-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,18 +25,14 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-Normal2pct-exact-block-reasons-B-60s",
-      "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
-      "status": "IN_PROGRESS",
-      "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
-      "bundle_run": 39896777307,
-      "artifact_id": 12476734780,
-      "why": "Behavior equals pre-burst authentic-RTT product plus read-only exact block reason counters. One leg identifies earliest blocked stage; no A/B needed.",
-      "run_id": 39897262285,
+      "id": "P1-burstpaced-one-short-rearm-native",
+      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
+      "status": "QUEUED_OR_IN_PROGRESS",
+      "source": "396c5ae6434c18eecb16599f5966574716c604a9",
+      "run_id": 39897775082,
       "attempt": 1,
-      "harness_source": "ade70e5b6324a6cade37d208d09f877d5af45506",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39897262285",
-      "contract_run_id": 39897262256
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39897775082",
+      "why": "Verify exactly one <=20ms pacer rearm per repair-attempt stage, then original PTO fallback; no extra repair attempts/quota/burst cap. Preserve authRTT, diagnostics, Fixed M2, MTU/Stop."
     }
   ],
   "recent_evidence": [
@@ -207,6 +203,13 @@
       "run": 39896777307,
       "artifact_id": 12476734780,
       "file": "P1-block-reason-native-pass-B-intent-20261023.json"
+    },
+    {
+      "id": "P1-exact-block-reasons",
+      "result": "FAIL_BURSTPACED_DOMINANT",
+      "run": 39897262285,
+      "artifact_id": 12477427307,
+      "file": "P1-Normal2pct-block-reasons-result-pacing-rearm-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -226,7 +229,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE B-only exact block-reason Action39897262285 attempt1 in progress; contract39897262256 PASS. Do not redispatch. Require ten reason bucket sum == aggregate blocked, then use dominant earliest bucket only.",
+  "next_action": "Do not change quota/burst cap. Settle native39897775082. Require pacing unit + prior adaptive/diagnostic/block-classifier/FixedM2 + MTU9. If pass, one same-VM A=d9dc old fallback vs B=396c bounded rearm exact Normal2pct60s. Compare UDP residual, expired0, burst blocks, pacing_deferrals/fallback, repair volume, TCP tail, CPU, Stop.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
