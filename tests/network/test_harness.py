@@ -36,6 +36,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_warmup_rate_is_isolated_and_does_not_mutate_steady_offer(self):
+        r=request()
+        r["network"]["warmup_rate_scale_profiles"]={"A":1,"B":0.30}
+        self.assertEqual(validate(r)["network"]["warmup_rate_scale_profiles"],
+                         {"A":1,"B":0.30})
+        r["network"]["warmup_rate_scale_profiles"]["B"]=1.4
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["warmup_rate_scale_profiles"]={"C":0.30}
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_native_tun_ring_profile_is_bound_and_per_leg(self):
         q=request()
         q["network"]["tun_txqlen_profiles"]={"A":500,"B":1024}
