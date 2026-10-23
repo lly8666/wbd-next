@@ -722,6 +722,17 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            steady_start=next((p for p in self.snapshots if
+                p["name"]=="before-"+self.config["phases"][0]["name"]),None)
+            steady_end=next((p for p in self.snapshots if
+                p["name"]=="measurement-end"),None)
+            if steady_start is not None and steady_end is not None:
+                drops=source_tun_tx_drops_by_role(steady_start,steady_end)
+                result["source_tun_tx_drops_steady"]=drops
+                if any(isinstance(n,int) and n>0 for n in drops.values()):
+                    result["limits"].append("SOURCE_TUN_TX_DROPS: kernel upstream loss before product")
+                    if result["result"]=="PASS_SCOPED_OBSERVATION":
+                        result["result"]="INCONCLUSIVE"
             result["tcp_window_profile"]=self.tcp_profile
             result["socket_effective_buffers"]={
                 role:json.loads((self.out/(role+"-traffic.json")).read_text()).get("effective_buffers",{})
@@ -800,6 +811,21 @@ class LinuxExperiment:
             f.close()
 
 
+def source_tun_tx_drops_by_role(before,after):
+    """Exact steady kernel source TUN TX loss, before product can read it."""
+    result={}
+    for role in ("client","server"):
+        def count(snapshot):
+            links=snapshot.get("network",{}).get(role,{}).get("links",[])
+            dev=next((p for p in links if p.get("ifname")=="wbntun0"),None)
+            if not dev: return None
+            stats=dev.get("stats64",dev.get("stats",{}))
+            return stats.get("tx",{}).get("dropped")
+        x,y=count(before),count(after)
+        result[role]=y-x if isinstance(x,int) and isinstance(y,int) and y>=x else "NOT_OBSERVED"
+    return result
+
+
 def capacity_action_digest(leg):
     """Small source-bounded numeric evidence in the Actions log, in addition
     to the ordinary artifact. No packet payloads, addresses or credentials.
@@ -846,6 +872,7 @@ def capacity_action_digest(leg):
                    "outer_tx_bytes":
                         costs.get(role, {}).get("outer_interface_tx_bytes")}
             for role in ("client", "server")},
+        "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
         "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
         "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
         "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
