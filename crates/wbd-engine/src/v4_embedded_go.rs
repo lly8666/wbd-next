@@ -380,6 +380,9 @@ struct OriginalOuterRepair{
     direction:wbd_recovery::BudgetDirection,
     route:wbd_recovery::ReceiptRouteScope,
     sent_fresh:u64,
+    sent_first_wire_bytes:u64,
+    repair_accepted_wire_bytes:u64,
+    repair_uncertain_wire_bytes:u64,
     authentic_ack:u64,
     repair_copied:u64,
     repair_uncertain:u64,
@@ -2602,7 +2605,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
     h:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=6{return INVALID}
+    if out.is_null()||(n!=6 && n!=9){return INVALID}
     #[cfg(not(feature="fec2_product_record"))]
     {let _=h;BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
@@ -2613,8 +2616,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
         let Some(outer)=e.original_outer.as_ref()else{return BAD_STAGE};
         let Ok(v)=outer.lock()else{return BAD_STAGE};
         let vals=[v.sent_fresh,v.authentic_ack,v.repair_copied,
-            v.repair_uncertain,v.repair_blocked,v.retired];
-        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,6)}
+            v.repair_uncertain,v.repair_blocked,v.retired,
+            v.sent_first_wire_bytes,v.repair_accepted_wire_bytes,
+            v.repair_uncertain_wire_bytes];
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,n)}
         OK
     }
 }
@@ -4047,6 +4052,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 original.note_block(OriginalRepairBlockReason::FreshShadow);
             }
         }
+        original.sent_first_wire_bytes=original.sent_first_wire_bytes
+            .saturating_add(fresh_bytes);
         if fresh_bytes!=0 && global.on_fresh_accepted_batch(
             original.direction,fresh_bytes,now).is_err(){
             original.note_block(OriginalRepairBlockReason::FreshGlobal);
@@ -4384,6 +4391,13 @@ fn background_original_repair_once(
                 Err(_)=>RepairSendResult::Uncertain,
             };
             let _=global.revoke(lease,now);
+            if status==RepairSendResult::Accepted {
+                own.repair_accepted_wire_bytes=own.repair_accepted_wire_bytes
+                    .saturating_add(wire_bytes);
+            }else if status==RepairSendResult::Uncertain {
+                own.repair_uncertain_wire_bytes=own.repair_uncertain_wire_bytes
+                    .saturating_add(wire_bytes);
+            }
             if copied && status==RepairSendResult::Accepted{
                 repaired+=1;
                 own.repair_copied=own.repair_copied.saturating_add(1);
@@ -4493,7 +4507,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         if global.enable_opportunistic_v3(direction).is_err()
             || global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
-            shadow,direction,route,sent_fresh:0,authentic_ack:0,
+            shadow,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
+            repair_accepted_wire_bytes:0,repair_uncertain_wire_bytes:0,
+            authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,
             block_reasons:[0;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],retired:0,
         }));
