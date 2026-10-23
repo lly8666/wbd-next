@@ -54,7 +54,7 @@ const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
 // Explicit compile-time marker: only the dedicated Actions diagnostic build
 // can overprovision buffers and the native repair broker. Not a CLI knob.
-const NETWORK_DIAG_10X:bool=matches!(option_env!("WBD_NETWORK_DIAG_10X"),Some("1"));
+const NETWORK_DIAG_10X:bool=option_env!("WBD_NETWORK_DIAG_10X").is_some();
 const MAX_SESSIONS:usize=16;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;

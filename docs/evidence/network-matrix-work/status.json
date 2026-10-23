@@ -31,7 +31,13 @@
       "baseline_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "baseline_artifact_id": 12486939897,
       "scenario": "one-inner-TCP-per-direction 10Mbps/dir 2%IID loss 200ms one-way 60s",
-      "plan": "Build diag ARM64 B (compile-time only), exact SHA artifact + zip hash, then same VM sequential AB against A. Never repeat socket/reordering AB. No FEC/production tuning."
+      "plan": "Build diag ARM64 B (compile-time only), exact SHA artifact + zip hash, then same VM sequential AB against A. Never repeat socket/reordering AB. No FEC/production tuning.",
+      "build_failure": {
+        "run": 39949668566,
+        "attempt": 1,
+        "result": "FAIL_COMPILE_RUST_1_85_1_const_str_match_E0015",
+        "action": "fixed_const_Option_is_some_then_new_exact_source_build"
+      }
     }
   ],
   "recent_evidence": [

@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       # Build-time only: all ordinary bundles have unset WBD_NETWORK_DIAG_10X.
-      WBD_NETWORK_DIAG_10X: "1"
+      WBD_NETWORK_DIAG_10X: "1" # Rust 1.85 supports const Option::is_some (diagnostic build only)
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262

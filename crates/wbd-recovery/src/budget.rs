@@ -18,7 +18,7 @@ use crate::receipt::{RepairCandidate, RepairSendResult};
 // Build-time-only overprovision experiment. Standard artifacts never enable it.
 // This intentionally relaxes the 10% repair-bandwidth policy ONLY in the
 // separately labelled GitHub Actions diagnostic binary; never production.
-const NETWORK_DIAG_10X: bool = matches!(option_env!("WBD_NETWORK_DIAG_10X"), Some("1"));
+const NETWORK_DIAG_10X: bool = option_env!("WBD_NETWORK_DIAG_10X").is_some();
 
 const SECOND_NS: u64 = 1_000_000_000;
 const SPARSE_FLOOR_BYTES: u64 = 32_768;
