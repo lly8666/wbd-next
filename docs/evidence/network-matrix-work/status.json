@@ -27,11 +27,14 @@
     {
       "id": "P1-one-epoch-unused-quota-credit-native",
       "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "trigger": "wbd-recovery path auto-build",
       "baseline_source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
-      "new_source": "COMMIT_TBD",
-      "why": "Verify at most one adjacent epoch unused credit capped32KiB; no multi-epoch accumulation, no long-run 10% increase, first-priority/retry-pacer/auth/Stop unchanged."
+      "why": "Verify at most one adjacent epoch unused credit capped32KiB; no multi-epoch accumulation, no long-run 10% increase, first-priority/retry-pacer/auth/Stop unchanged.",
+      "run_id": 39900920663,
+      "attempt": 1,
+      "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39900920663"
     }
   ],
   "recent_evidence": [
@@ -256,7 +259,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Find exactly one native ARM64 build for one-epoch carry. Require new carry unit + first-priority/adaptive/diagnostic/block classifier/FixedM2 + MTU9. If pass, one same-VM A=6746 first-priority vs B=new carry exact Normal2pct60s; no seed/timing/quota-rate changes.",
+  "next_action": "ONE native ARM64 build39900920663 attempt1 SOURCEa05e0596 outstanding. Do not redispatch. Require one-epoch carry unit + first-priority/adaptive/diagnostic/block-classifier/FixedM2 + MTU9. If pass, one same-VM A=6746 vs B=a05e exact Normal2pct60s.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
