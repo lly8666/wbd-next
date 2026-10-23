@@ -108,7 +108,7 @@ def validate(raw):
     n = r.setdefault("network", {})
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
-             "tun_txqlen_profiles", "warmup_rate_scale_profiles"], "network")
+             "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
@@ -135,6 +135,10 @@ def validate(raw):
         integer(qlen,500,1024,"tun_txqlen_profiles."+leg)
         if qlen not in (500,1024):
             raise ValueError("diagnostic TUN queue must be 500 or 1024")
+    qdiscs=n.setdefault("tun_qdisc_profiles",{})
+    keys(qdiscs,["A","B"],"tun_qdisc_profiles")
+    if any(value not in ("fq_codel","fq") for value in qdiscs.values()):
+        raise ValueError("tun_qdisc_profiles only fq_codel and fq for owned namespace")
     warm_scales=n.setdefault("warmup_rate_scale_profiles",{})
     keys(warm_scales,["A","B"],"warmup_rate_scale_profiles")
     for leg,scale in warm_scales.items():
