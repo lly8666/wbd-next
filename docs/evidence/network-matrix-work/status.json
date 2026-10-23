@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-singleTCP-10x-capacity-experiment-did-not-qualify",
+  "phase": "P2-lossless-TCP1-M1-flight-capacity-fix-under-native-validation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,13 +25,13 @@
   "latest_harness_source": "31835d7f454bc716a051deca1c41d6671a71fe05",
   "open_requests": [
     {
-      "id": "automatic-post-restoration-MTU-functional",
+      "id": "P2-lossless-TCP1-M1-2048-native-build",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 39951475040,
+      "run": 39967257701,
       "attempt": 1,
-      "source": "1818e01285e3cdbace09a0e2db187077dd387804",
-      "not_performance_measurement": true,
-      "do_not_dispatch_duplicate": true
+      "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+      "artifact_id": null,
+      "action": "Original Go ARM64 native public bundle auto-triggered by narrow M1 pool change; check run and artifact; do not redispatch."
     }
   ],
   "recent_evidence": [
@@ -90,7 +90,7 @@
     "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain.",
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness."
   ],
-  "next_action": "The 10x single-TCP diagnostic is CLOSED INCONCLUSIVE: run39950439687/attempt1/artifact12500491341, A 1.199/0.723Mbps vs B 1.108/1.346Mbps, repair quota denies197->21, M1/TUN capacity clean. Product and build workflow fully RESTORED at source1818e01285e3 to 10% budget and same pre-experiment blobs; separate post-restore ARM64 build run39951475090 PASS. Reconcile any remaining automatic MTU check run39951475040 (no redispatch); then next full task: bounded authenticated Normal-only M2 TCP DATA-vs-ACK first-delivery and repair timing, spurious PTO/per-second quota denies before changing earliest loss witness. Investigate separate lossless high-rate M1 source TUN drops. No repeat of 10x, socket-buffer or reordering AB; no FEC specialism.",
+  "next_action": "User explicitly prioritized 0%-loss inner TCP retrans over experimental repair policy. Historical run39937279597 (source281f6c64, artifact12493294457) at TCP1 10Mbps/dir, 200ms one-way, 0% netem had TUN kernel source drops client132/server359, TCP kernel retrans client97/server303, M1 peak1009/1024, pre-read deferred9700/4249. Narrow first fix b179fd0ef838 doubles public Linux M1 small-slab pool1024->2048 and charged budget2.4->4.8MB, no R2 policy/timer/retrans/MTU/FEC changes. Await exact native bundle run39967257701 then issue ONE matched same-VM sequential Normal/off 0loss TCP1 10Mbps/dir AB with sourceA1818e012/run39951475090 and sourceB b179fd0e/new build. Explicitly require source TUN TX drops delta0, both-direction TCP retrans improvement, no product feedback starvation, valid injected/delivered and Stop; if retrans remains despite TUN0, inspect TUN queue/host kernel and TCP retrans timeline rather than blindly raising more slots. No FEC experiment and no more quota/window/reordering AB.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
