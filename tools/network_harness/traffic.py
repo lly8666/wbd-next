@@ -75,7 +75,8 @@ class Worker:
         self.port, self.output, self.start_ns = port, Path(output), start_ns
         self.peer_port = port if peer_port is None else peer_port
         self.sel = selectors.DefaultSelector()
-        self.phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
+        self.phases = [{"name": "warmup", "seconds": config["warmup_s"],
+                        "rate_scale": config["traffic"].get("warmup_rate_scale",1)}] + config["phases"]
         self.ends, elapsed = [], 0
         for ph in self.phases:
             elapsed += ph["seconds"]
