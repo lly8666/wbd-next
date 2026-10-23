@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A-qualified-two-native-scenarios-V3-B-dynamic-MTU-native-PASS-V3-C-capacity-pending",
+  "phase": "V3-A-PASS-V3-B-MTU-VALIDATED-V3-C-200M-CALIBRATION-IN-ACTIONS",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,7 +25,20 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-C-lossless-TCP1-200M-400ms-early-capacity",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 39983733109,
+      "attempt": 1,
+      "request_source": "d05043ec4159b1b377a0f8b3c5caf68939e3f150",
+      "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+      "build_run": 39981175602,
+      "artifact_id": 12513677330,
+      "artifact_zip_sha256": "649016a15eda2f8ded9628dc7ebd3eca93ee5b83a0bf2e25b7da583e7c3f5f16",
+      "purpose": "200Mbps application single C2S TCP flow; outer700Mbps/dir, RTT400ms, netem0, namespaced TCP64MiB autotune, 60s steady. Distinguish injector/VM/product; no duplicate dispatch. Stop heavier500 if host/throughput incapable."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -95,7 +108,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-A CLOSED SCOPED: same-VM 0loss TCP1 AB39978337012 298->0 outer repairs CPU18.07->17.27s, both sides inner TCP retrans0/TUN drops0; highloss native ARM64 50M/30%/300ms run39979596886 artifact12512458869 SHA4a56... PASS real per-direction R/F8.879/8.865%, R/C6.457/6.447%, UDP loss <30%, TUN drops0. V3-B dynamic Go local SYN MSS/record offer exact product source86d35af native build39978760399/MTU9 PASS, but codec V3Fec2Fixed 14B tests and sustained max packet NOT_RUN. Next: add 64MiB namespaced TCP BDP socket profile, calibrate suitable outer line >=700Mbps + host capacity and drive scoped singleTCP 500M/200ms/0loss with actual product, stop higher if host/injector limited; M1 2048 may saturate at 500M, don't declare PASS without source TUN0. Then V3-B largest unfragmented real UDP/MTU boundaries, V3-D mixed/lifecycle. Do not retune lossy TCP full speed or work on FEC independent branch. Keep one-action-one-scenario, no duplicate dispatch. Status evidence scope not production deployment.",
+  "next_action": "Resume after interruption: highloss 50Mbps is PER_DIRECTION LINE cap, NOT aggregate or guaranteed saturated throughput: UDP25.63/25.67Mbps delivered from UDP offered33.70/33.70Mbps; outer first-send36.36Mbps and repairs3.23Mbps per direction = ~79.2% capacity, ~20% headroom intentionally reserved. Highloss V3-A R/F8.879/8.865%, R/C6.457/6.447% confirmed; not 50Mbps application throughput. Product latest verified detached-shadow source bb9a036873 native build39981175602 PASS, artifact12513677330. V3-C first intermediate 200Mbps 0loss single C2S TCP, one-way200ms line700Mbps each, 64MiB namespaced autotune, run39983733109 in progress, request source d05043ec; validate injection, direct/injector pressure, M1/TUN kernel drops, steady cwnd, CPU/PSI, p99/Stop and only then 500M if host has capacity. Independent V3-B largest UDP1500 and MTU boundary V3-D mixing still NOT_RUN; no FEC branch changes. Preserve authenticated mature-gap/9% and source-TUN2048 repair; no v2 lowloss SLA.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
