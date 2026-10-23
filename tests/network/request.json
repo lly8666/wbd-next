@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P0-Normal2pct-protective-anchor-60s",
+  "id": "P1-Normal2pct-authRTT-old-new-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -73,7 +73,14 @@
       "attempt": 1,
       "artifact_id": 12474012306,
       "sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf"
+    },
+    "B": {
+      "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+      "run_id": 39892105601,
+      "attempt": 1,
+      "artifact_id": 12475695809,
+      "sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17"
     }
   },
-  "order": "A"
+  "order": "AB"
 }

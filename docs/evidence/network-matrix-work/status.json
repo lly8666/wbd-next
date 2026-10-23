@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-authenticated-RTT-recovery-batch-native-build",
+  "phase": "P1-Normal2pct-authRTT-real-AB",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,17 +25,25 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-authenticated-RTT-recovery-batch-native",
-      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_9_MTU",
-      "status": "QUEUED_OR_IN_PROGRESS",
-      "trigger": "task branch source push; do not manual dispatch",
-      "baseline_source": "18860b9dfe4931d8aba05943fad484677590571c",
-      "new_source": "COMMIT_TBD",
-      "why": "Authentic fresh receipt RTT drives SRTT/RTTVAR→W/PTO/Tcache; same <=2 immutable retries; repair hard ceilings sized for high-rate while local 10% remains; bounded 512-page/3s feedback and 100kPN/s/256KiB replay. Shadow remains4096 pending P2 scan work.",
-      "run_id": 39892105601,
-      "attempt": 1,
-      "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39892105601"
+      "id": "P1-Normal2pct-authRTT-old-new-AB-60s",
+      "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "A": {
+        "source": "18860b9dfe4931d8aba05943fad484677590571c",
+        "run_id": 39889364428,
+        "attempt": 1,
+        "artifact_id": 12474012306,
+        "sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf"
+      },
+      "B": {
+        "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+        "run_id": 39892105601,
+        "attempt": 1,
+        "artifact_id": 12475695809,
+        "sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17"
+      },
+      "scenario": "same Normal 2Mbps/direction, 50/50 UDP/TCP, 99%1287B, 2% IID, one-way200ms, 60s",
+      "why": "Causal check of proven RTT400/PTO80 bottleneck. B changes coherent recovery timing/envelopes only; no seed or traffic change."
     }
   ],
   "recent_evidence": [
@@ -157,6 +165,13 @@
       "run": 39891326352,
       "artifact_id": 12475340090,
       "file": "P0-Normal2pct-static-PTO-fail-20261023.json"
+    },
+    {
+      "id": "P1-authRTT-native",
+      "result": "PASS_BUILD_UNIT_MTU9",
+      "run": 39892105601,
+      "artifact_id": 12475695809,
+      "file": "P1-authRTT-native-pass-AB-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -176,14 +191,14 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE native ARM64 build Action39892105601 attempt1 source2a388f743cde0ab6d69fb47e2c3f6cd9a6127301 outstanding; do not redispatch. Verify adaptive timing unit, Fixed cohort unit, release bundle and 9 MTU. Only after full PASS run one old18860/new P1 Normal2pct AB.",
+  "next_action": "Push exactly one same-VM Normal AB request. Discover unique performance run; do not redispatch. On completion compare A/B UDP missing, TCP p99/backpressure, original_frozen_retransmitted, quota_or_capacity_blocked, product CPU/RSS, netem actual loss and Stop. If B meets <=1% loss and materially reduces repair storm, P0 Normal closes and P1 timing accepted for this RTT400 point; then add effective timing readback before H500/P2.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "18860b9dfe4931d8aba05943fad484677590571c",
-    "run_id": 39889364428,
+    "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+    "run_id": 39892105601,
     "attempt": 1,
-    "artifact_id": 12474012306,
-    "zip_sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf",
+    "artifact_id": 12475695809,
+    "zip_sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
