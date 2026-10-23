@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P0-kind3-12B-parity-AB-nearMTU-120s",
+  "id": "P0-Fixed2pct-M2-applied-old-vs-cohortfix-AB",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -55,18 +55,18 @@
   },
   "bundles": {
     "A": {
-      "source": "d64be28591c3752af06be399ff598266ecf4d664",
-      "run_id": 39881938976,
-      "attempt": 1,
-      "artifact_id": 12470698437,
-      "sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef"
-    },
-    "B": {
       "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
       "run_id": 39886303564,
       "attempt": 1,
       "artifact_id": 12473520038,
       "sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6"
+    },
+    "B": {
+      "source": "18860b9dfe4931d8aba05943fad484677590571c",
+      "run_id": 39889364428,
+      "attempt": 1,
+      "artifact_id": 12474012306,
+      "sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf"
     }
   },
   "order": "AB"
