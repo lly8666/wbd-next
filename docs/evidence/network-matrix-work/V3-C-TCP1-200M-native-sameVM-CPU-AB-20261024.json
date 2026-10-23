@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_TCP200_V3_C_SUSTAINED",
+  "request_id": "V3-C-TCP1-200M-CPU-thread-stage-AB",
+  "request_source": "be569e1c3cb3f47371ad751b5d8b8b8c00a85e31",
+  "run": 39991452116,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12517394712,
+  "artifact_zip_sha256": "3475690d8baaada309e90b7c7debe89afe6e50df348824d4e6dff92f632400b1",
+  "zip_locally_verified": true,
+  "scope": {
+    "app_target_mbps_c2s": 200,
+    "other_dir_app_mbps": 0,
+    "one_tcp_flow": true,
+    "loss_pct": 0,
+    "one_way_ms": 200,
+    "outer_mtu": 1500,
+    "inner_mtu": 1429,
+    "outer_line_cap_mbps_each_direction": 700,
+    "namespace_tcp_rmem_wmem_max": 67108864,
+    "application_write_size": 32768,
+    "warmup_s": 15,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB"
+  },
+  "A": {
+    "source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+    "native_build_run": 39981175602,
+    "build_artifact_id": 12513677330,
+    "app_injected_mbps": 200.0027648,
+    "app_delivered_mbps": 200.0027648,
+    "tcp_send_backpressure_events": 0,
+    "p99_firstarrival_ms": 200.9,
+    "source_tun_kernel_drop_steady_client_server": [
+      0,
+      0
+    ],
+    "m1_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "product_cpu_s_steady_client_server": [
+      18.49,
+      30.42
+    ],
+    "result": "PASS_SCOPED_OBSERVATION"
+  },
+  "B": {
+    "source": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
+    "native_build_run": 39990605291,
+    "build_artifact_id": 12517028689,
+    "app_injected_mbps": 196.7259648,
+    "app_delivered_mbps": 196.7259648,
+    "tcp_send_backpressure_events": 750,
+    "p99_firstarrival_ms": 1642.3,
+    "source_tun_kernel_drop_steady_client_server": [
+      0,
+      0
+    ],
+    "m1_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "product_cpu_s_steady_client_server": [
+      17.69,
+      29.99
+    ],
+    "result": "PASS_SCOPED_OBSERVATION",
+    "native_thread_cpu_numeric_exposed_in_real_cli_but_not_artifact": "NOT_OBSERVED because existing artifact whitelist omitted V4_PUBLIC_WORKER_CPU terminal marker; harness whitelist fixed later commit dd3bc6b, separate opt-in timeline 516e..."
+  },
+  "prior_product_run": {
+    "run": 39983733109,
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED",
+    "app_injected_and_delivered_mbps": 175.10782293333332,
+    "warmup_tun_kernel_drop_client": 8446,
+    "steady_tun_drops_client_server": [
+      0,
+      0
+    ],
+    "firstarrival_p99_ms": 2567.8
+  },
+  "direct_control_run": {
+    "run": 39989048165,
+    "app_c2s_mbps": 199.99839573333333
+  },
+  "interpretation": [
+    "A original unchanged source bb9a on one ARM64 host now sustained 200.003Mbps with TCP backpressure 0, which disproves interpreting previous 175.1Mbps observation as a repeatable hard cap of this exact product.",
+    "B with stop-only Rust thread CPU readback sustained196.73Mbps with 750 backpressure events and p99 firstarrival 1.64s; same config/VM but sequential order/host scheduling variability remains, cannot causally attribute B decrease to terminal readback.",
+    "Both have no source TUN kernel drops during steady, V3 outer loss0, no data repair storm. Product 500Mbps remains NOT_TESTED, and a 200Mbps pass does not extrapolate to 500.",
+    "Existing harness marker whitelist originally stripped V4_PUBLIC_WORKER_CPU, so per-thread CPU samples from this run are not available to user artifacts and must not be invented. New whitelist + explicitly enabled bounded 4Hz V3 owner timeline is implemented and pending native build/testing."
+  ],
+  "qualification": "V3C_200M_SCOPED_A_PASS_B_98PCT_TARGET_NOT_500M; RATE_AND_TAIL_VARIABILITY_REMAINS_OPEN"
+}
