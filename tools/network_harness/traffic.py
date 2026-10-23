@@ -308,7 +308,9 @@ class Worker:
         rate = t["c2s_mbps" if self.role == "client" else "s2c_mbps"] * 1e6 / 8
         shares = {"udp": t["udp_share"], "tcp": 1-t["udp_share"]}
         due = {p: self.start_ns for p in shares}
-        probe_due = self.start_ns
+        # Explicit 0Hz is a genuine idle/keepalive experiment: no
+        # application probing packets anywhere in its observation horizon.
+        probe_due = self.start_ns if t["probe_hz"] else (1 << 63) - 1
         while time.monotonic_ns() < self.end_ns + int(self.config["drain_s"] * 1e9):
             now = time.monotonic_ns()
             phase = bisect.bisect_right(self.ends, now)
