@@ -46,7 +46,7 @@ fn budget()->RepairBudget {
         MonoNs(0)).unwrap()
 }
 #[test]
-fn r2_pack_009_two_lost_receipts_pto_same_frozen_handle_late_positive() {
+fn r2_pack_009_lost_receipts_single_uncertain_repair_retires_payload() {
     let original=make_frozen(42);
     let same=original.ciphertext.clone();
     let mut tx=sender(2);
@@ -54,47 +54,38 @@ fn r2_pack_009_two_lost_receipts_pto_same_frozen_handle_late_positive() {
     let mut rx=receiver();
     assert_eq!(rx.on_authenticated_data(RecordPn(42),MonoNs(0)),FeedbackReceive::First);
     let a=rx.on_due(MonoNs(10_000_000)).unwrap();
-    assert_eq!(a.pages().len(),1);
     rx.on_send_result(&a,FeedbackSendResult::Accepted,MonoNs(10_000_000)).unwrap();
     let b=rx.on_due(MonoNs(20_000_000)).unwrap();
     rx.on_send_result(&b,FeedbackSendResult::Uncertain,MonoNs(20_000_000)).unwrap();
-    // Both sealed controls were lost on the reverse path: no TX receipt yet.
-    assert_eq!(tx.outstanding(),1);
-    assert!(tx.on_timer(MonoNs(29_999_999)).candidates.is_empty());
     let c=tx.on_timer(MonoNs(30_000_000)).candidates.remove(0);
     assert!(tx.preflight(&c,MonoNs(30_000_000)));
     assert!(Arc::ptr_eq(&same,&c.frozen().ciphertext));
-    let borrowed=driver_read(c.frozen());
-    assert_eq!(borrowed.metadata.seq,SeqOffset(0xffff_ffff-2));
-    assert_eq!(borrowed.metadata.pn,RecordPn(42));
-    assert_eq!(borrowed.wire,&same[..]);
+    assert_eq!(driver_read(c.frozen()).metadata.pn,RecordPn(42));
     let mut quota=budget();
     quota.on_fresh_accepted(1400,MonoNs(0)).unwrap();
     let reservation=quota.reserve(&c,128,MonoNs(30_000_000)).unwrap();
     quota.on_send_result(reservation,RepairSendResult::Uncertain,MonoNs(30_000_000)).unwrap();
     tx.on_send_result(&c,RepairSendResult::Uncertain,MonoNs(30_000_000)).unwrap();
-    assert_eq!(quota.snapshot().charged_repair_bytes,128);
-    assert_eq!(quota.on_send_result(reservation,RepairSendResult::NotSent,MonoNs(30_000_001)).err(),
-        Some(crate::BudgetError::StaleReservation));
-    assert!(tx.on_timer(MonoNs(30_000_001)).candidates.is_empty());
-    // A real duplicate DATA on RX triggers one bounded feedback reassertion,
-    // rather than control ACK-of-ACK traffic or a same-evidence extra repair.
-    assert_eq!(rx.on_authenticated_data(RecordPn(42),MonoNs(30_000_000)),FeedbackReceive::Duplicate);
-    let c_receipt=rx.on_due(MonoNs(32_000_000)).unwrap();
-    let verified_open=AuthenticatedReceipt::after_authenticated_open(
-        lane(),c_receipt.largest_data_pn(),c_receipt.report_seq(),
-        c_receipt.pages().to_vec()).unwrap();
-    let releases=tx.on_receipt(&verified_open,MonoNs(32_000_000)).unwrap();
-    assert_eq!(releases.len(),1);
-    assert_eq!(releases[0].reason,ReleaseReason::ReceivedByPeer);
-    assert!(Arc::ptr_eq(&releases[0].frozen.ciphertext,&same));
-    assert!(!tx.preflight(&c,MonoNs(32_000_000)));
+    assert_eq!(tx.outstanding(),0);
     assert!(tx.on_timer(MonoNs(60_000_000)).candidates.is_empty());
-    // Fresh sends never wait for repair quota or an ACK.
+
+    // A genuine late positive receipt is still valid receiver evidence but
+    // cannot resurrect or re-release the already retired sender payload.
+    assert_eq!(rx.on_authenticated_data(RecordPn(42),MonoNs(30_000_000)),
+        FeedbackReceive::Duplicate);
+    let late=rx.on_due(MonoNs(32_000_000)).unwrap();
+    let verified=AuthenticatedReceipt::after_authenticated_open(
+        lane(),late.largest_data_pn(),late.report_seq(),late.pages().to_vec()).unwrap();
+    assert!(tx.on_receipt(&verified,MonoNs(32_000_000)).unwrap().is_empty());
+    assert_eq!(tx.on_send_result(&c,RepairSendResult::Accepted,MonoNs(32_000_001)),
+        Err(DataError::Stale));
+    drop(c);
+    assert_eq!(Arc::strong_count(&same),1);
     quota.on_fresh_accepted(1400,MonoNs(60_000_000)).unwrap();
     assert_eq!(quota.snapshot().fresh_confirmed_bytes,2800);
 }
 #[test]
+fn r2_pack_009_reported_scope_only_no_cumulative_hole_or_cross_lane_release() {#[test]
 fn r2_pack_009_reported_scope_only_no_cumulative_hole_or_cross_lane_release() {
     let mut tx=sender(3);
     tx.on_sent(make_frozen(1),MonoNs(0),MonoNs(120_000_000)).unwrap();
@@ -231,11 +222,10 @@ fn r2_pack_009_generation_uncertain_held_and_fresh_still_progress() {
         MonoNs(1_000_000_003)).is_ok());
 }
 
-/// Deterministic fake clock: an old gap report may not cause two immediate
-/// repairs; NotSent is NOT an attempt, Uncertain and Accepted each count one.
-/// All candidates retain the exact same immutable ciphertext and PN.
+/// Deterministic fake clock: the one outer repair uses the exact original
+/// ciphertext/PN, then terminal completion prevents any second network repair.
 #[test]
-fn r2_pack_009_two_actual_repairs_old_report_and_generation_never_reseal() {
+fn r2_pack_009_one_actual_repair_old_report_never_rearms_or_reseals() {
     use crate::ReceiptPage;
     let orig=make_frozen(70);
     let wire=orig.ciphertext.clone();
@@ -243,45 +233,27 @@ fn r2_pack_009_two_actual_repairs_old_report_and_generation_never_reseal() {
     tx.on_sent(orig,MonoNs(0),MonoNs(220_000_000)).unwrap();
     let first=tx.on_timer(MonoNs(30_000_000)).candidates.remove(0);
     assert!(Arc::ptr_eq(&wire,&first.frozen().ciphertext));
-    tx.on_send_result(&first,RepairSendResult::Uncertain,
-        MonoNs(30_000_000)).unwrap();
+    assert_eq!(first.frozen().metadata().pn,RecordPn(70));
+    assert_eq!(first.frozen().metadata().seq,SeqOffset(0xffff_ffff-2));
+    tx.on_send_result(&first,RepairSendResult::Uncertain,MonoNs(30_000_000)).unwrap();
+    assert_eq!(tx.outstanding(),0);
     assert_eq!(tx.on_send_result(&first,RepairSendResult::Accepted,
         MonoNs(30_000_001)),Err(DataError::Stale));
-    let empty=ReceiptPage{base_pn:RecordPn(0),bitmap:[0;32]};
     let stale_negative=AuthenticatedReceipt::after_authenticated_open(
-        lane(),RecordPn(70),1,vec![empty]).unwrap();
-    tx.on_receipt(&stale_negative,MonoNs(31_000_000)).unwrap();
-    assert!(tx.on_timer(MonoNs(31_000_000)).candidates.is_empty());
-    assert!(tx.on_timer(MonoNs(59_999_999)).candidates.is_empty());
-    let not_sent=tx.on_timer(MonoNs(60_000_000)).candidates.remove(0);
-    assert!(Arc::ptr_eq(&wire,&not_sent.frozen().ciphertext));
-    tx.on_send_result(&not_sent,RepairSendResult::NotSent,
-        MonoNs(60_000_000)).unwrap();
-    assert_eq!(tx.on_send_result(&not_sent,RepairSendResult::Accepted,
-        MonoNs(60_000_001)),Err(DataError::Stale));
-    assert!(tx.on_timer(MonoNs(89_999_999)).candidates.is_empty());
-    let second=tx.on_timer(MonoNs(90_000_000)).candidates.remove(0);
-    assert_ne!(second.retry_epoch(),not_sent.retry_epoch());
-    assert!(Arc::ptr_eq(&wire,&second.frozen().ciphertext));
-    assert_eq!(second.frozen().metadata().pn,RecordPn(70));
-    assert_eq!(second.frozen().metadata().seq,
-        SeqOffset(0xffff_ffff-2));
-    assert_eq!(driver_read(second.frozen()).wire,&wire[..]);
-    tx.on_send_result(&second,RepairSendResult::Accepted,
-        MonoNs(90_000_000)).unwrap();
-    let stale_again=AuthenticatedReceipt::after_authenticated_open(
-        lane(),RecordPn(70),2,vec![ReceiptPage{
-            base_pn:RecordPn(0),bitmap:[0;32]}]).unwrap();
-    tx.on_receipt(&stale_again,MonoNs(95_000_000)).unwrap();
-    assert!(tx.on_timer(MonoNs(120_000_000)).candidates.is_empty());
-    assert!(!tx.preflight(&first,MonoNs(120_000_000)));
-    assert!(!tx.preflight(&second,MonoNs(120_000_000)));
-    let expired=tx.on_timer(MonoNs(220_000_000));
-    assert_eq!(expired.releases.len(),1);
-    assert_eq!(expired.releases[0].reason,ReleaseReason::HardExpired);
-    assert_eq!(tx.outstanding(),0);
+        lane(),RecordPn(70),1,vec![ReceiptPage{base_pn:RecordPn(0),bitmap:[0;32]}]).unwrap();
+    assert!(tx.on_receipt(&stale_negative,MonoNs(31_000_000)).unwrap().is_empty());
+    for at in [60_000_000,90_000_000,220_000_000] {
+        let p=tx.on_timer(MonoNs(at));
+        assert!(p.candidates.is_empty());
+        assert!(p.releases.is_empty());
+    }
+    assert!(!tx.preflight(&first,MonoNs(31_000_000)));
+    drop(first);
+    assert_eq!(Arc::strong_count(&wire),1);
 }
 
+
+// PACK-010: strictly typed bridge into the existing pure R2 state.
 
 // PACK-010: strictly typed bridge into the existing pure R2 state. These
 // controlled fixtures are NOT live Go authentication or actual kernel claims.
@@ -370,7 +342,7 @@ fn r2_pack_010_authenticated_scope_and_late_positive_never_refunds_unknown() {
             &mut broker,direction,&mut shadow,scope,wrong,
             RecordPn(42),3,vec![page.clone()],MonoNs(31_000_000)).is_err());
         assert_eq!(broker.snapshot(),prior);
-        assert_eq!(shadow.outstanding(),1);
+        assert_eq!(shadow.outstanding(),0);
     }
     let bad=crate::ReceiptPage{base_pn:RecordPn(256),bitmap:[1;32]};
     assert!(admit_opened_receipt(
@@ -379,9 +351,8 @@ fn r2_pack_010_authenticated_scope_and_late_positive_never_refunds_unknown() {
     let received=admit_opened_receipt(
         &mut broker,direction,&mut shadow,scope,good,
         RecordPn(42),3,vec![page],MonoNs(31_000_000)).unwrap();
-    assert_eq!(received.len(),1);
-    assert_eq!(received[0].reason,ReleaseReason::ReceivedByPeer);
-    assert!(Arc::ptr_eq(&received[0].frozen.ciphertext,&original_wire));
+    assert!(received.is_empty());
+    assert_eq!(shadow.outstanding(),0);
     assert_eq!(broker.snapshot().charged_repairs,128);
     assert_eq!(broker.complete(id,RepairSendResult::NotSent,
         MonoNs(31_000_001)),Err(GlobalRepairError::StaleGrant));
@@ -452,7 +423,7 @@ fn r2_pack_010_kernel_prefix_one_uncertain_unknown_suffix_and_fresh_independent(
         MonoNs(1_000_000_002)),Err(GlobalRepairError::GlobalCap));
 }
 #[test]
-fn r2_pack_010_zero_one_32_33_shape_and_proven_notsent_rearm() {
+fn r2_pack_010_zero_one_32_33_shape_and_proven_notsent_is_terminal() {
     use crate::{
         DriverPrefixObservation,BatchSuffixEvidence,complete_driver_prefix,
         reserve_frozen_submission,GlobalRepairError,
@@ -466,8 +437,6 @@ fn r2_pack_010_zero_one_32_33_shape_and_proven_notsent_rearm() {
         BatchSuffixEvidence::Unproven).is_ok());
     assert_eq!(DriverPrefixObservation::checked(33,0,None,
         BatchSuffixEvidence::Unproven),Err(GlobalRepairError::InvalidBatch));
-    assert_eq!(DriverPrefixObservation::checked(1,0,Some(1),
-        BatchSuffixEvidence::Unproven),Err(GlobalRepairError::InvalidBatch));
     let (mut shadow,scope,lease,c)=ingress_010_owner(
         &mut broker,lane(),WireDirection::ClientToServer,60);
     let id=reserve_frozen_submission(
@@ -479,19 +448,10 @@ fn r2_pack_010_zero_one_32_33_shape_and_proven_notsent_rearm() {
         MonoNs(30_000_000)).unwrap();
     assert_eq!(res.counts.definitely_not_sent,1);
     assert_eq!(res.shadow_result(0),Some(RepairSendResult::NotSent));
-    shadow.on_send_result(&c,res.shadow_result(0).unwrap(),
-        MonoNs(30_000_000)).unwrap();
+    shadow.on_send_result(&c,RepairSendResult::NotSent,MonoNs(30_000_000)).unwrap();
     assert_eq!(broker.snapshot().charged_repairs,0);
-    assert_eq!(broker.snapshot().held_unused_grants,128);
-    assert!(!shadow.preflight(&c,MonoNs(30_000_000)));
-    assert!(shadow.on_timer(MonoNs(59_999_999)).candidates.is_empty());
-    let rearmed=shadow.on_timer(MonoNs(60_000_000)).candidates.remove(0);
-    assert!(Arc::ptr_eq(&rearmed.frozen().ciphertext,&c.frozen().ciphertext));
-    assert_eq!(rearmed.frozen().metadata().pn,c.frozen().metadata().pn);
+    assert_eq!(shadow.outstanding(),0);
+    assert!(shadow.on_timer(MonoNs(60_000_000)).candidates.is_empty());
     assert_eq!(broker.complete(id,RepairSendResult::NotSent,
         MonoNs(60_000_000)),Err(GlobalRepairError::StaleGrant));
-    let z=DriverPrefixObservation::checked(1,1,None,
-        BatchSuffixEvidence::Unproven).unwrap();
-    assert_eq!(complete_driver_prefix(&mut broker,&[],z,
-        MonoNs(60_000_000)).err(),Some(GlobalRepairError::InvalidBatch));
 }

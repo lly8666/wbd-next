@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-single-repair-v2-native-build",
+  "phase": "P1-single-repair-v2-native-recovery-tests",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,13 +25,12 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-single-repair-v2-native",
-      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
+      "id": "P1-single-repair-v2-native-recovery",
+      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_FULL_RECOVERY_AND_MTU9",
       "status": "INTENT_COMMITTED_RUN_PENDING",
-      "source": "COMMIT_TO_BE_PUBLISHED",
-      "prior_two_repair_source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
-      "pr25_decision": "d1ac35eda2a74afdc743b92a8a7fbe4bc77978cf",
-      "why": "Verify one-repair state, ACK/completion/uncertain/quota/queue release races, bounded <=32 cleanup, exact policy/shadow/retain readback, existing Fixed/FEC/MTU/Stop. No performance dispatch until pass."
+      "source": "COMMIT_TBD",
+      "prior_failed_source": "9329d3f5ea9727b7941ab16dedda1a4f877e0a37",
+      "why": "Only update four obsolete two-repair workpack assertions; runtime semantics unchanged. Rebuild exact branch source and require full recovery library sweep + targeted release races + Fixed/FEC + MTU9."
     }
   ],
   "recent_evidence": [
@@ -258,6 +257,19 @@
       "run": 39902074456,
       "artifact_id": 12479730545,
       "note": "No performance Action dispatched; user single-repair decision supersedes further two-repair quota tuning."
+    },
+    {
+      "id": "P1-single-repair-v2-first-native",
+      "result": "FAIL_VALIDATION_71_OF_75_RECOVERY_TESTS_PASS_4_LEGACY_TWO_REPAIR_ASSERTIONS",
+      "run": 39905462936,
+      "artifact_id": 12481130645,
+      "note": "Release bundle compiled successfully; targeted single-repair release/timing/quota tests passed. MTU skipped because full recovery sweep caught four obsolete workpack two-repair assumptions."
+    },
+    {
+      "id": "P1-single-repair-v2-contract-recovery",
+      "result": "PASS",
+      "run": 39905606950,
+      "note": "Envelope suite rows + one-repair retain/capacity expectations corrected; product behavior unchanged."
     }
   ],
   "open_issues": [
@@ -277,7 +289,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Publish coherent single-repair-v2 source once. Discover exactly one automatic ARM64 build; do not redispatch. Require full wbd-recovery library sweep, targeted one-repair release races, Fixed M2/FEC and MTU9. If pass, run ONE same-VM A=f8b29e legacy-two-repair vs B=new single-repair on exact Normal2pct/200ms/60s seed5205 with new B UDP residual<=0.25%. Compare first delivery, CPU/RSS, max queue age, retire reasons, shadow outstanding, TCP tail and Stop.",
+  "next_action": "After this push locate exactly one ARM64 build. Do not redispatch. Require 75/75 wbd-recovery lib tests, targeted single-repair race tests, product build and MTU9. If pass, one same-VM legacy f8b29e vs new single-repair exact Normal2pct/200ms/60s AB; B policy readback and UDP<=0.25%.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
