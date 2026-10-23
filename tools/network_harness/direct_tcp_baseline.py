@@ -128,6 +128,7 @@ def run():
     a, b = NS_PREFIX + "a" + unique, NS_PREFIX + "b" + unique
     devices = ("vdca" + unique[-5:], "vdcb" + unique[-5:])
     tasks = []
+    offload_readback = {}
     def ip(*parts):
         return call("ip", *parts)
     try:
@@ -142,6 +143,20 @@ def run():
             ip("-n", n, "addr", "add", addr, "dev", dev)
             ip("-n", n, "link", "set", "dev", dev, "mtu", str(DEV_MTU))
             ip("-n", n, "link", "set", "dev", dev, "up")
+            # Parity with the REAL product harness: without this, default
+            # veth GRO/GSO/TSO coalescing can hide the ~45kpps demand at500M.
+            call("ip", "netns", "exec", n, "ethtool", "-K", dev,
+                 "gro", "off", "gso", "off", "tso", "off")
+            offloads=call("ip", "netns", "exec", n, "ethtool", "-k", dev).stdout
+            for key in ("generic-receive-offload",
+                        "generic-segmentation-offload",
+                        "tcp-segmentation-offload"):
+                if not any(line.strip().startswith(key+": off")
+                           for line in offloads.splitlines()):
+                    raise RuntimeError("offload readback mismatch: "+n+" "+key)
+            offload_readback[n] = {
+                "namespace":n,"ifname":dev,"gro":False,"gso":False,"tso":False,
+                "verified_with":"ethtool -k"}
             for field in ("tcp_rmem", "tcp_wmem"):
                 expected = "4096 4194304 67108864"
                 actual = call("ip", "netns", "exec", n, "sysctl", "-w",
@@ -194,7 +209,8 @@ def run():
         result = {"scope": "DIRECT_TCP_CONTROL_NOT_WBD_PRODUCT",
             "host_arch": os.uname().machine,
             "scenario": f"{RATE_MBPS}Mbps TCP app, RTT400ms, MTU1429, 700Mbps line per dir",
-            "sender": sender, "receiver": receiver, "ss_and_netem": snapshots,
+            "sender": sender, "receiver": receiver,
+            "veth_offload_readback": offload_readback, "ss_and_netem": snapshots,
             "sender_target_pass": sender["measured_mbps"] >= 0.95 * RATE_MBPS,
             "receiver_target_pass": receiver["measured_mbps"] >= 0.95 * RATE_MBPS}
         (folder / "result.json").write_text(json.dumps(result, indent=2))
