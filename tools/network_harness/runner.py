@@ -615,7 +615,9 @@ class LinuxExperiment:
                     recovery_policy[role] = {
                         "policy": m.group(1),
                         **{k: int(v) for k, v in re.findall(
-                            r"(repair_attempt_limit|shadow_limit|retain_cap_us)=(\d+)", outer[-1])},
+                            r"(repair_attempt_limit|shadow_limit|retain_cap_us|shadow_sampling_numerator|shadow_sampling_denominator|admission_pps|repair_pps|byte_credit_pct|byte_cap_pct)=(\d+)", outer[-1])},
+                        **{k: v for k, v in re.findall(
+                            r"(loss_trigger|data_pto)=([A-Za-z0-9_-]+)", outer[-1])},
                     }
         rx_chain={}
         required_rx=("raw_observed","raw_tuple","data_unique","data_lagged32",
