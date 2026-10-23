@@ -55,6 +55,29 @@ class Contracts(unittest.TestCase):
         self.assertEqual(report["original_tx_chain"]["client"]["pre_read_deferred"], 8)
         self.assertNotIn("DO_NOT_EXPOSE", json.dumps(report))
 
+    def test_isolated_tcp_window_profiles_and_source_tun_loss(self):
+        from tools.network_harness.runner import source_tun_tx_drops_by_role
+        a = request()
+        a["network"]["tcp_window_profiles"]={"A":"large"}
+        self.assertEqual(validate(a)["network"]["tcp_window_profiles"],{"A":"large"})
+        a["network"]["tcp_window_profiles"]={"A":"huge"}
+        with self.assertRaises(ValueError):
+            validate(a)
+        a["network"]["tcp_window_profiles"]={"C":"large"}
+        with self.assertRaises(ValueError):
+            validate(a)
+        def snap(x,y):
+            return {"network":{"client":{"links":[{"ifname":"wbntun0",
+                "stats64":{"tx":{"dropped":x}}}]},
+                "server":{"links":[{"ifname":"wbntun0",
+                "stats64":{"tx":{"dropped":y}}}]}}}
+        self.assertEqual(source_tun_tx_drops_by_role(snap(30,90),snap(45,90)),
+            {"client":15,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(snap(30,90),snap(29,95)),
+            {"client":"NOT_OBSERVED","server":5})
+        self.assertEqual(source_tun_tx_drops_by_role({"network":{}},snap(0,0)),
+            {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
+
     def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
         from tools.network_harness.runner import verify_outer_recovery_policy
         expected = "outer-single-repair-v2"
