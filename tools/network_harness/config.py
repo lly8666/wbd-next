@@ -107,7 +107,7 @@ def validate(raw):
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
-             "tcp_window_profiles"], "network")
+             "tcp_window_profiles", "tcp_reordering_profiles"], "network")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
@@ -122,6 +122,10 @@ def validate(raw):
     keys(profiles,["A","B"],"tcp_window_profiles")
     if not all(v in ("baseline","large") for v in profiles.values()):
         raise ValueError("tcp_window_profiles must be baseline or large")
+    reorder=n.setdefault("tcp_reordering_profiles",{})
+    keys(reorder,["A","B"],"tcp_reordering_profiles")
+    if not all(v in ("baseline","outer_repair_tolerant") for v in reorder.values()):
+        raise ValueError("tcp_reordering_profiles must be baseline or outer_repair_tolerant")
     r.setdefault("warmup_s", 10)
     r.setdefault("drain_s", 5)
     number(r["warmup_s"], 1, 60, "warmup_s")
