@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "P2-TCP1-0loss-M1-2048-source-drop-AB",
+  "id": "V3-A-TCP1-0loss-10M-mature-gap-AB",
   "owner": "network-matrix-work",
-  "seed": 5238,
+  "seed": 6301,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -71,27 +71,27 @@
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0.25,
+    "max_loss_pct": 0,
     "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "1818e01285e3cdbace09a0e2db187077dd387804",
-      "run_id": 39951475090,
-      "attempt": 1,
-      "artifact_id": 12500084357,
-      "sha256": "875683faa3aaad86567f6e55d8ce9666a04ef4b9597c34d35f0c2702bc806783",
-      "recovery_policy": "outer-single-repair-v2"
-    },
-    "B": {
       "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
       "run_id": 39967257701,
       "attempt": 1,
       "artifact_id": 12507646828,
       "sha256": "c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef",
       "recovery_policy": "outer-single-repair-v2"
+    },
+    "B": {
+      "source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
+      "run_id": 39977358138,
+      "attempt": 1,
+      "artifact_id": 12511253952,
+      "sha256": "6bc78db2933a812576501f94888a70f5d2a424f6f9efd861bbad6fbf50feeed7",
+      "recovery_policy": "outer-opportunistic-v3"
     }
   },
   "order": "AB",
-  "policy": "outer-single-repair-v2"
+  "policy": "outer-opportunistic-v3"
 }
