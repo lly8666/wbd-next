@@ -107,7 +107,10 @@ def validate(raw):
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
-             "tcp_window_profiles", "tcp_reordering_profiles"], "network")
+             "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline"], "network")
+    n.setdefault("v3_timeline", False)
+    if type(n["v3_timeline"]) is not bool:
+        raise ValueError("network.v3_timeline must be boolean")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
