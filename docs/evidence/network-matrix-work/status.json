@@ -27,11 +27,14 @@
     {
       "id": "P1-first-repair-hard-quota-priority-native",
       "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "trigger": "recovery+engine/go changes auto-trigger native build",
       "baseline_source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
-      "new_source": "COMMIT_TBD",
-      "why": "Verify stage identity is owner-bound/preflighted; first repair may use existing hard epoch quota despite empty smoothing tokens without minting refund; retry remains BurstPaced. Failed 20ms product path reverted."
+      "why": "Verify stage identity is owner-bound/preflighted; first repair may use existing hard epoch quota despite empty smoothing tokens without minting refund; retry remains BurstPaced. Failed 20ms product path reverted.",
+      "run_id": 39899738046,
+      "attempt": 1,
+      "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39899738046"
     }
   ],
   "recent_evidence": [
@@ -242,7 +245,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Find exactly one automatic native ARM64 build from first-repair priority commit. Require new budget unit + adaptive/diagnostic/block classifier/FixedM2 + 9 MTU. If pass, ONE same-VM A=d9dc vs B=new exact Normal2pct60s; expect blocked_burst on first stage/expired0 and UDP residual down while epoch quota, repair volume, CPU and Stop stay bounded.",
+  "next_action": "ONE native ARM64 build39899738046 attempt1 SOURCE6746e32e in progress. Do not redispatch. Require first-repair priority unit + adaptive/diagnostic/block classifier/FixedM2 + 9 MTU. If pass, one same-VM d9dc vs new exact Normal2pct60s AB.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
