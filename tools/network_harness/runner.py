@@ -395,7 +395,9 @@ class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):
         self.config=copy.deepcopy(config)
         self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
+        self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
         self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
+        self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
         self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
@@ -439,6 +441,15 @@ class LinuxExperiment:
                     actual=self.nscommand(role,["sysctl","-n",k]).strip()
                     if actual.split()!=value.split():
                         raise RuntimeError("namespaced TCP window readback mismatch "+k)
+        if self.tcp_reorder_profile=="outer_repair_tolerant":
+            # Experimental per-netns Linux TCP threshold. Not product default.
+            # At 10Mbps/MSS1277, 192 in-flight segments span ~196ms,
+            # comparable to the extra forward path of one outer repair.
+            for role in self.ns:
+                key="net.ipv4.tcp_reordering"
+                self.nscommand(role,["sysctl","-w",key+"=192"])
+                if self.nscommand(role,["sysctl","-n",key]).strip()!="192":
+                    raise RuntimeError("namespaced TCP reordering readback mismatch")
         # Create veth inside the owned namespace, never touch host routes/firewall.
         self.nscommand("client", ["ip", "link", "add", "wbnc0", "type", "veth", "peer", "name", "wbns0"])
         self.nscommand("client", ["ip", "link", "set", "wbns0", "netns", self.ns["server"]])
@@ -493,6 +504,7 @@ class LinuxExperiment:
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
         self.effective["tcp_window_profile"]=self.tcp_profile
+        self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
         self.effective["tcp_window_override"]="namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)" if self.tcp_profile=="large" else "untouched baseline"
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
@@ -545,7 +557,8 @@ class LinuxExperiment:
         if name.startswith("before-"):
             settings=("tcp_congestion_control","tcp_available_congestion_control",
                       "tcp_mtu_probing","tcp_sack","tcp_timestamps",
-                      "tcp_window_scaling","tcp_rmem","tcp_wmem")
+                      "tcp_window_scaling","tcp_rmem","tcp_wmem",
+                      "tcp_reordering","tcp_max_reordering","tcp_recovery")
             row["tcp_kernel_settings"]={
                 role:{**{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
                       or "NOT_OBSERVED" for k in settings},
@@ -734,6 +747,7 @@ class LinuxExperiment:
                     if result["result"]=="PASS_SCOPED_OBSERVATION":
                         result["result"]="INCONCLUSIVE"
             result["tcp_window_profile"]=self.tcp_profile
+            result["tcp_reordering_profile"]=self.tcp_reorder_profile
             result["socket_effective_buffers"]={
                 role:json.loads((self.out/(role+"-traffic.json")).read_text()).get("effective_buffers",{})
                 for role in ("client","server")}
@@ -874,6 +888,7 @@ def capacity_action_digest(leg):
             for role in ("client", "server")},
         "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
         "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
+        "tcp_reordering_profile":leg.get("tcp_reordering_profile","NOT_OBSERVED"),
         "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
         "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
         "host": {"tcp_window_summary":host.get("tcp_window_summary","NOT_OBSERVED"),
