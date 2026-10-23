@@ -27,15 +27,18 @@
     {
       "id": "P0-M2-cohort-rebuild-after-confirmed-syntax-fail",
       "type": "ONE_ARM64_SOURCE_BUILD_AUTOMATIC",
-      "status": "INTENT_COMMITTED_NEW_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "previous_run": 39889123489,
       "previous_result": "FAIL_COMPILER_UNCLOSED_DELIMITER",
       "previous_source": "4ffeb875fc2ccac3ed3a35a2c79ad0caefb07293",
       "failed_step": "Exact source native ARM64 original Go and Rust bundle",
       "previous_no_artifact": true,
       "trigger": "same task branch owner src push automatically triggers one native build; do not manual dispatch",
-      "source": "COMMIT_TBD",
-      "intent": "Only close missing brace after BAD_STAGE at ~4662. Preserve bounded true M2 clean cohort, original Go/auth+Stop and Rust native test, then verify 9 MTU/DF/Stop. No performance dispatch until pass."
+      "source": "18860b9dfe4931d8aba05943fad484677590571c",
+      "intent": "Only close missing brace after BAD_STAGE at ~4662. Preserve bounded true M2 clean cohort, original Go/auth+Stop and Rust native test, then verify 9 MTU/DF/Stop. No performance dispatch until pass.",
+      "run_id": 39889364428,
+      "attempt": 1,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39889364428"
     }
   ],
   "recent_evidence": [
@@ -161,7 +164,7 @@
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence."
   ],
-  "next_action": "Native build39889123489 FAILED compiler only (unclosed delimiter in v4_embedded_go.rs near 4662); missing brace now exact fixed in new source pending. Find automatic one native run at next push, verify genuine Go/Rust release, unit m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery and all 9 MTU cases. If succeeds, log artifact exact SHA then run single same-VM Fixed2pct old a58d vs new source; DO NOT dispatch build again.",
+  "next_action": "ONE native ARM64 build 39889364428 attempt1 source18860b9dfe4931d8aba05943fad484677590571c in progress after compiler-only syntax correction. Do NOT redispatch. Confirm exact Rust unit and 9 MTU native; only then product artifact zip/hash and 1 Fixed2pct same-VM AB. Previous 39889123489 compiler FAIL archived.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
