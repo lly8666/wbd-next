@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "id": "V3-A-TCP1-0loss-10M-mature-gap-AB",
+  "id": "V3-A-30pct-50M-300ms-repair-budget",
   "owner": "network-matrix-work",
-  "seed": 6301,
+  "seed": 6320,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
-    "udp_share": 0,
+    "c2s_mbps": 33.7,
+    "s2c_mbps": 33.7,
+    "udp_share": 1,
     "sizes": [
       [
         64,
@@ -32,15 +32,7 @@
     "outer_mtu": 1500,
     "lane_loss": "shared",
     "queue_packets": 32768,
-    "netem_rng": "unseeded_recorded",
-    "tcp_window_profiles": {
-      "A": "baseline",
-      "B": "baseline"
-    },
-    "tcp_reordering_profiles": {
-      "A": "baseline",
-      "B": "baseline"
-    }
+    "netem_rng": "unseeded_recorded"
   },
   "warmup_s": 10,
   "drain_s": 30,
@@ -50,48 +42,42 @@
       "seconds": 60,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 30,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       },
       "s2c": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 30,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0,
-    "require_retransmission": false
+    "max_loss_pct": 30.5,
+    "require_retransmission": true,
+    "max_repair_fresh_pct": 10,
+    "min_repair_line_pct": 6
   },
   "bundles": {
     "A": {
-      "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
-      "run_id": 39967257701,
+      "source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
+      "run_id": 39978760399,
       "attempt": 1,
-      "artifact_id": 12507646828,
-      "sha256": "c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef",
-      "recovery_policy": "outer-single-repair-v2"
-    },
-    "B": {
-      "source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
-      "run_id": 39977358138,
-      "attempt": 1,
-      "artifact_id": 12511253952,
-      "sha256": "6bc78db2933a812576501f94888a70f5d2a424f6f9efd861bbad6fbf50feeed7",
+      "artifact_id": 12513355204,
+      "sha256": "98cf89f1f693fd31fc66f22d36071d5a1424f0d2fb0f62d1dbb6c274fc980f18",
       "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "AB",
+  "order": "A",
   "policy": "outer-opportunistic-v3"
 }
