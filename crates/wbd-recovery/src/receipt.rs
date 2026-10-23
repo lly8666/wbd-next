@@ -26,7 +26,6 @@ pub struct ReceiptDiagnosticSnapshot{
     pub acked_attempt0:u64,pub acked_attempt1:u64,pub acked_attempt2:u64,
     pub expired_attempt0:u64,pub expired_attempt1:u64,pub expired_attempt2:u64,
     pub late_positive_expired:u64,
-    pub pacing_deferrals:u64,pub pacing_fallback_pto:u64,
 }
 #[derive(Clone,Copy)]
 struct AdaptiveTiming{
@@ -239,12 +238,17 @@ pub struct RepairCandidate<H: FrozenRecordHandle> {
     pn: RecordPn,
     origin: BufferOrigin,
     retry_epoch: u32,
+    // Actual network repair attempts already consumed before THIS candidate.
+    // This is owner state, not caller input; budget uses it only to prioritize
+    // the first repair while preflight rechecks the same entry stage.
+    repair_attempt_stage: u8,
     dispatch_by: MonoNs,
     frozen: H,
 }
 impl<H: FrozenRecordHandle> RepairCandidate<H> {
     pub fn pn(&self) -> RecordPn { self.pn }
     pub fn retry_epoch(&self) -> u32 { self.retry_epoch }
+    pub fn repair_attempt_stage(&self) -> u8 { self.repair_attempt_stage }
     pub fn dispatch_by(&self) -> MonoNs { self.dispatch_by }
     pub fn frozen(&self) -> &H { &self.frozen }
 }
@@ -275,10 +279,6 @@ struct Entry<H: FrozenRecordHandle> {
     hard_expiry: MonoNs,
     repair_attempts: u8,
     retry_epoch: u32,
-    // At most one short pacer deferral for each actual repair-attempt stage
-    // (bit0 before first repair, bit1 before second). This is scheduler
-    // metadata only; it never increments repair_attempts.
-    pacing_deferred_mask:u8,
     missing_reported: bool,
     rearm_at: MonoNs,
     queued: Option<Queued>,
@@ -362,8 +362,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         }
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
-            retry_epoch: 0,pacing_deferred_mask:0,
-            missing_reported: false, rearm_at: at, queued: None,
+            retry_epoch: 0, missing_reported: false, rearm_at: at, queued: None,
             indexed_wake: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
@@ -552,6 +551,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 newly_queued_attempt=Some(entry.repair_attempts);
                 candidates.push(RepairCandidate {
                     pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
+                    repair_attempt_stage:entry.repair_attempts,
                     dispatch_by:until,frozen:entry.frozen.clone()
                 });
             }
@@ -579,36 +579,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     q.epoch == candidate.retry_epoch
                         && q.until == candidate.dispatch_by
                         && now <= q.until && now < e.hard_expiry)
+                && candidate.repair_attempt_stage == e.repair_attempts
                 && e.repair_attempts < 2
         })
-    }
-
-    /// A local pacer miss is not a driver attempt. Keep the candidate out
-    /// of any data queue and allow ONE short re-index within its already
-    /// bounded 20ms dispatch window for this repair-attempt stage. If pacing
-    /// blocks the same stage again, fall back to the ordinary PTO path.
-    pub fn on_pacing_blocked(&mut self,candidate:&RepairCandidate<H>,
-        now:MonoNs)->Result<(),DataError>{
-        if !self.preflight(candidate,now){return Err(DataError::Stale)}
-        let current_pto=self.effective_pto_ns();
-        let e=self.entries.get_mut(&candidate.pn).expect("preflight verified");
-        e.queued=None;
-        let bit=1u8.checked_shl(u32::from(e.repair_attempts)).unwrap_or(0);
-        let short=candidate.dispatch_by;
-        let can_short=bit!=0 && e.pacing_deferred_mask&bit==0
-            && short>now && short<e.hard_expiry;
-        if can_short{
-            e.pacing_deferred_mask|=bit;
-            e.rearm_at=short;
-            self.diagnostics.pacing_deferrals=
-                self.diagnostics.pacing_deferrals.saturating_add(1);
-        }else{
-            e.rearm_at=MonoNs(now.0.saturating_add(current_pto));
-            self.diagnostics.pacing_fallback_pto=
-                self.diagnostics.pacing_fallback_pto.saturating_add(1);
-        }
-        self.refresh_wake(candidate.pn);
-        Ok(())
     }
 
     pub fn on_send_result(&mut self, candidate: &RepairCandidate<H>,
@@ -835,31 +808,6 @@ mod tests {
         assert!(!s.preflight(&c, MonoNs(12)));
         assert_eq!(s.on_send_result(&c, RepairSendResult::Accepted, MonoNs(12)),
             Err(DataError::Stale));
-    }
-
-    #[test]
-    fn r2_burstpaced_candidate_gets_one_20ms_deferral_per_attempt_without_extra_repair() {
-        let mut s=state(2,100_000_000);
-        add(&mut s,4,0,600_000_000);
-        let first=s.on_timer(MonoNs(100_000_000)).candidates.remove(0);
-        assert_eq!(first.dispatch_by(),MonoNs(120_000_000));
-        s.on_pacing_blocked(&first,MonoNs(100_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(119_999_999)).candidates.is_empty());
-        let again=s.on_timer(MonoNs(120_000_000)).candidates.remove(0);
-        // Same attempt stage gets no second short deferral.
-        s.on_pacing_blocked(&again,MonoNs(120_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(219_999_999)).candidates.is_empty());
-        let actual=s.on_timer(MonoNs(220_000_000)).candidates.remove(0);
-        s.on_send_result(&actual,RepairSendResult::Accepted,MonoNs(220_000_000)).unwrap();
-        // After one actual repair, the second repair stage independently
-        // receives at most one bounded pacing deferral.
-        let second=s.on_timer(MonoNs(320_000_000)).candidates.remove(0);
-        s.on_pacing_blocked(&second,MonoNs(320_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(339_999_999)).candidates.is_empty());
-        let d=s.diagnostic_snapshot();
-        assert_eq!(d.pacing_deferrals,2);
-        assert_eq!(d.pacing_fallback_pto,1);
-        assert_eq!(s.entries.get(&RecordPn(4)).unwrap().repair_attempts,1);
     }
 
     #[test]
