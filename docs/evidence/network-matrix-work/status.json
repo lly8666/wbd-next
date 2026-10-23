@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-zero-loss-control-starvation-root-repair",
+  "phase": "P2-Normaloff-zero-loss-feedback-reserve-sameVM-AB",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,12 +25,12 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-reserved-feedback-slots",
-      "type": "NATIVE_BUILD_THEN_SAME_VM_AB",
-      "status": "ROOT_CONFIRMED_FIX_SOURCE_PENDING",
-      "observed_run": 39917051708,
-      "artifact_id": 12484844980,
-      "why": "0% loss 10Mbps generated 69,837/64,629 TUN pre-read deferrals, 278,718/282,025 feedback NotSent/expiry page counts, 13,960/13,837 replay duplicates, 27,797 repairs, UDP missed333/533, netem0 and valid injector/host. stage_original_reverse_feedback and DATA borrow same exhausted M1 arena, feedback blocked -> PTO storm -> more occupancy. Reserve16 for Normal-only receipt before TUN data admission; leave 512 capacity unchanged initially."
+      "id": "P2-Normaloff-10Mbps-zero-loss-feedback-reserve-AB-60s",
+      "type": "ONE_SAME_VM_NORMAL_ONLY_PERFORMANCE_ACTION",
+      "status": "PUSH_INTENT_PENDING_AUTORUN",
+      "A_source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "B_source": "1605c32d5f5bdc99da792959dde99294a13cec77",
+      "why": "Root known: 10Mbps 0% loss old source had 278718/282025 feedback NotSent/expiry, 13960/13837 replay duplicates, 27797 repair packets, 69837/64629 pre-read backpressure, despite no kernel/netem loss, valid 5Mbps UDP+TCP injection and host PSI0. New source reserves 16/512 M1 slabs for original authenticated receipts, native 75/75 & MTU9 PASS. Same VM AB exact 10Mbps 200ms zero-loss isolates causal feedback improvement and CPU/RSS versus old."
     }
   ],
   "recent_evidence": [
@@ -97,24 +97,24 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Commit minimal Normal-only control reservation before M1 fresh TUN loan using bounded Arena allocate-preserving reserve16. Exact native Actions build and bounded unit check, then reuse artifact for one same-VM 10Mbps 0% loss A/B. Do not touch FEC performance or blindly grow M1 512 slots. Require eliminated feedback failure/replay flood, valid UDP/TCP injection, CPU/RSS, Stop; if still capacity limited compute headroom then fix only proven boundary.",
+  "next_action": "Find one automatically triggered real AB Action from changed request. Do not dispatch. Read bound NETWORK_CAPACITY_LEG for each A/B, source hashes, 0% actual netem, injector sent, CPU/RSS, real UDP loss, TCP p99/backpressure, feedback_drop, replay duplicates, original TUN read/staged, pre_read_deferred, repair packets, Stop/cleanup. B must not be reported PASS by native/MTU. If B still starves, analyze 512 M1 capacity and control staging order; never blindly lift quota/PTO or blame VM. No FEC performance tests.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "de55a1322b4580c60e77322d2d38843caefeec79",
-    "run_id": 39913063383,
+    "source": "1605c32d5f5bdc99da792959dde99294a13cec77",
+    "run_id": 39918681489,
     "attempt": 1,
-    "artifact_id": 12483243411,
-    "zip_sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
+    "artifact_id": 12486896723,
+    "zip_sha256": "28a2f6270fcaa8fa4675822b8455579d571ae8abc661df5fd6dc15ef59465804",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
-    "mtu_artifact_id": 12483528926,
-    "mtu_zip_sha256": "b3fa5fa40092d6499f02b9c6b3e253f4e8166c784cc318666fb5b01756058b31",
+    "mtu_artifact_id": 12486996617,
+    "mtu_zip_sha256": "940f7df13f9d73e1b2a1b1275652e140c5fe68dc885c5e774509e438ae1e3d36",
     "recovery_policy": "outer-single-repair-v2",
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "PASS_SCOPED_NORMAL_OFF_2PCT_TWO_WAY_0_08498_0_06798",
+    "business_qualification": "UNVERIFIED_NEW_SOURCE",
     "business_run_id": 39913690718,
     "business_artifact_id": 12484331372,
     "business_source": "6f4acf937d8003ac6471ae6b690d018b46458ccd",
