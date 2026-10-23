@@ -27,7 +27,7 @@
     {
       "id": "P1-Normal2pct-one-epoch-quota-carry-old-new-AB-60s",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "A": {
         "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
         "run_id": 39899738046,
@@ -42,7 +42,12 @@
         "artifact_id": 12478957278,
         "sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a"
       },
-      "why": "Only test one-generation unused quota carry capped32KiB on top of already-verified first-repair priority. Same Normal2pct/200ms/60s seed5205; no rate/PTO/load changes."
+      "why": "Only test one-generation unused quota carry capped32KiB on top of already-verified first-repair priority. Same Normal2pct/200ms/60s seed5205; no rate/PTO/load changes.",
+      "run_id": 39901422471,
+      "attempt": 1,
+      "harness_source": "48708cd64b327f1f588eb0a773554b953c6e1081",
+      "contract_run_id": 39901422460,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39901422471"
     }
   ],
   "recent_evidence": [
@@ -274,7 +279,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push exactly once, discover unique harness run, do not redispatch. Compare blocked_quota/burst, expired0, repairs, UDP residual, TCP p99/backpressure, CPU/RSS, netem actual, learned timing, Stop. PASS target B <=1% UDP residual both directions with no repair-rate/Stop/capacity regression.",
+  "next_action": "ONE same-VM one-epoch carry AB Action39901422471 attempt1, contract39901422460 outstanding. Do not redispatch. Settle quota/burst/expired0/repair/UDP/TCP/CPU/netem/Stop. If B <=1% both directions and bounded, close P1 low-loss Normal point and start P2 capacity prerequisite batch.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
