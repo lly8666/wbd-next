@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-500M-driver-nonblocking-read-AB-running-queue1024-bounded",
+  "phase": "V3-B-real-1280-PASS-V3-C-TCP500-startup-ramp-sameVM-AB-in-progress",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,32 +27,17 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-TCP1-500M-same-qlen1024-driver-poll-AB",
-      "state": "ACTIONS_QUEUED",
-      "run": 40037435905,
+      "id": "V3-C-TCP500-warmup-ramp-loss-isolation-AB",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 40038167186,
       "attempt": 1,
-      "request_source": "995cd84fd5966d54fbf9c10a3c282fbd544ad44f",
-      "A_source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
-      "A_build_run": 39998272925,
-      "A_artifact_id": 12520568152,
-      "A_zip_sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
-      "B_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "B_build_run": 40001498261,
-      "B_artifact_id": 12521858079,
-      "B_zip_sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
-      "control": "same VM AB both qlen1024 strict readback, Normal/off TCP1 C2S500Mbps 0loss RTT400 native4Hz original progress 20s warm60steady",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "V3-B-outer1280-full-UDP1181-zero-loss-Normal-off",
-      "run": 40037686584,
-      "attempt": 1,
-      "state": "ACTIONS_QUEUED",
-      "source": "00f09878c536367accf5632a410143ad56ac4702",
-      "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "product_build": 40001498261,
-      "artifact_id": 12521858079,
-      "scope": "separate native ARM64 VM real outer MTU1280, expected TUN1209, UDP application payload1181, both directions offered10Mbps each one packet no fragmentation, 0loss, Normal/off, warm10 steady60 drain30",
+      "request_source": "9e1027f9d6144ebe636148da0d00a53e1c66398f",
+      "product_source_A_and_B": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "native_build_run": 40001498261,
+      "product_artifact_id": 12521858079,
+      "product_zip_sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
+      "ring_client_server_both": 1024,
+      "sole_difference": "native same ARM64 VM sequential A warmup500Mbps/B warmup150Mbps for20s, both steady TCP single flow target500Mbps for60s, 0% netem loss/200ms one-way",
       "do_not_redispatch": true
     }
   ],
@@ -150,6 +135,20 @@
       "result": "PASS_DIRECT500Mbps_GRO_GSO_TSO_OFF_NOT_PRODUCT",
       "artifact_id": 12522525878,
       "file": "V3-C-direct-TCP500-GRO-GSO-TSO-off-control-20261024.json"
+    },
+    {
+      "id": "V3-C-TCP500-native-TUN-read-O-NONBLOCK-AB",
+      "run": 40037435905,
+      "artifact_id": 12538440127,
+      "result": "A366.320Mbps B426.456Mbps both TCP_BACKPRESSURED warmupTUNdrops, steady0, <500",
+      "file": "V3-C-TCP500-native-TUN-read-O-NONBLOCK-AB-20261024.json"
+    },
+    {
+      "id": "V3-B-outer1280-max-UDP1181",
+      "run": 40037686584,
+      "artifact_id": 12538465372,
+      "result": "PASS_SCOPED_REAL_1280/TUN1209/UDP1181_both10Mbps_missing0",
+      "file": "V3-B-outer1280-max-UDP1181-20261024.json"
     }
   ],
   "open_issues": [
@@ -164,7 +163,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Recovered from remote HEAD0d1c, no outstanding previous runs. Completed same-VM Linux TUN txqlen500->1024 AB run40000388953 source31e3 A218.28Mbps/30965 TUN steady drops, B381.80Mbps/0 steady drops but 11096 warmup drops, 27055 TCP backpressure, p99 2028ms, neither qualifies TCP500. Direct TCP500 control with GRO/GSO/TSO explicitly off and readback run40001002971 PASS sender/receiver500.000Mbps (direct != product). Native platform TunSink O_NONBLOCK driver removed poll(0) in source b8dfc native ARM64+MTU PASS run40001498261 art12521858079 sha864a..., compared against source31e3 old per-read poll on exactly sameVM same controlled qlen1024 A/B run40037435905 source995cd now QUEUED; do NOT dispatch again. Judge actual application throughput target>=475Mbps, no source TUN kernel drops incl warmup, TCP backpressure, latency p99 and CPU per delivered byte/packet. If <500, do not automatically increase queue beyond1024; inspect native stage TX/RX and host. V3-D true probe0 idle30/wake30 run40000054306 PASS both UDP2Mbps/missing0; blackhole 0/100/0 scoped resume +200ms run39997661008 PASS but old rare C2S+1150ms anomaly not generalized. No FEC independent work, no main merge/deploy. Independent V3-B native actual outer1280 full UDP1181 no-frag 10Mbps/dir Action40037686584 source00f098 now queued; compare actual MTU/TUN readback rather than infer from model. Independent scenario okay parallel with V3-C. Do not requeue either.",
+  "next_action": "Native ARM64 1280 outer MTU/1209 TUN/1181 app UDP no fragmentation Normal/off real business run40037686584 PASS both ~10Mbps, source TUN0 and business loss0 p99200.3, evidence V3-B-outer1280-max-UDP1181-20261024.json. V3-C real sameVM singleTCP500 0loss fixed qlen1024 DRIVER read0 vs prior poll0 A366.320Mbps warmup local TUN drop5440, steady0, TCP backpressure30598 p991884ms; B426.456Mbps local warmup drop10830, steady0, backpressure16833 p991332ms, source B b8df, A31e3, Action40037435905. Still <475Mbps, cannot call TCP500 PASS or reduce CPU cost on measured events. Independent host-direct500 GRO/GSO/TSO off passes500.000Mbps, but WBD TUN+product exact stage capacity remains open; b8df production queue default still500, 1024 is ONLY Actions diagnostic. To distinguish warmup TUN loss collapse vs sustained capacity, strictly TEST-ONLY per-leg warmup_rate_scale_profiles A1 (500Mbps) B0.30 (150Mbps) with same source b8df, qlen1024 both, same VM steady500 for60s Action40038167186 in progress; harness contract run40038167313 PASS, do not redispatch. Compare full 20s warmup TUN drops, steady500 injected/delivered, cwnd >=25MB, p99, total process CPU and host PSI. If warmup-light B steady500 passes without kernel loss, design safe product rapid startup backpressure strategy instead of silently using test-only pacing as production success. If both fail, stop repeated 500 and isolate native M4 ingress/service vs host scheduling via timeline/CPU, no broad queue expansion. No FEC independent job, no main merge or deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -271,7 +270,12 @@
       "native_max_udp_artifact_id": 12515760162,
       "native_max_udp_artifact_zip_sha256": "0d4e81b52d32801860bc26174336c50050a5c169e8d5486b2e1320b95a73665b",
       "native_max_udp_result": "PASS_SCOPED_NORMAL_OFF_outerMTU1500_TUN1429_UDPapplication1401; both UDP10Mbps delivered missing0 TUNsteady0 p99 200.2ms",
-      "evidence": "V3-B-1500-full-UDP-20261023.json"
+      "evidence": "V3-B-1500-full-UDP-20261023.json",
+      "outer1280_normal_udp1181_run": 40037686584,
+      "outer1280_normal_udp1181_artifact_id": 12538465372,
+      "outer1280_normal_udp1181_zip_sha256": "3853f9085b779249ea1f4bb1f2a35c396c60518471967a6987e35773a3ad14fb",
+      "outer1280_normal_udp1181_result": "PASS_SCOPED_OBSERVATION TUN MTU1209 both UDP actual10.000078/9.999921Mbps zero loss no fragmentation p99 200.3ms both",
+      "outer1280_normal_udp1181_evidence": "V3-B-outer1280-max-UDP1181-20261024.json"
     },
     "phase_C": {
       "source": "bb9a036873d186a84ca9e64727df342d68e59df0",
@@ -385,7 +389,19 @@
       "next_native_build_run": 40001498261,
       "next_native_build_result": "SUCCESS_NATIVE_ARM64_AND_MTU",
       "next_AB_run": 40037435905,
-      "next_AB_status": "QUEUED"
+      "next_AB_status": "QUEUED",
+      "driver_poll_AB_run": 40037435905,
+      "driver_poll_AB_artifact_id": 12538440127,
+      "driver_poll_AB_artifact_zip_sha256": "83a1b1ed47ef5fa5d947a3960a0d8bc623d6bd7f9462bae05de3d2f92d8e232c",
+      "driver_poll_AB_result": "A legacy ScopedTunSink poll0 source31e3 throughput366.320Mbps backpressure30598 warmupTUNdrop5440 steady0; B O_NONBLOCK direct-read sourceb8df throughput426.456Mbps backpressure16833 warmupTUNdrop10830 steady0; both fail500",
+      "driver_poll_AB_evidence": "V3-C-TCP500-native-TUN-read-O-NONBLOCK-AB-20261024.json",
+      "warmup_ramp_run": 40038167186,
+      "warmup_ramp_source": "9e1027f9d6144ebe636148da0d00a53e1c66398f",
+      "warmup_ramp_status": "ACTIONS_IN_PROGRESS",
+      "warmup_scale_test_only_A_B": [
+        1,
+        0.3
+      ]
     },
     "phase_D": {
       "run": 39985073396,
