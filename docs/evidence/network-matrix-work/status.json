@@ -27,11 +27,15 @@
     {
       "id": "P1-authenticated-RTT-recovery-batch-native",
       "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_9_MTU",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "trigger": "task branch source push; do not manual dispatch",
       "baseline_source": "18860b9dfe4931d8aba05943fad484677590571c",
       "new_source": "COMMIT_TBD",
-      "why": "Authentic fresh receipt RTT drives SRTT/RTTVAR→W/PTO/Tcache; same <=2 immutable retries; repair hard ceilings sized for high-rate while local 10% remains; bounded 512-page/3s feedback and 100kPN/s/256KiB replay. Shadow remains4096 pending P2 scan work."
+      "why": "Authentic fresh receipt RTT drives SRTT/RTTVAR→W/PTO/Tcache; same <=2 immutable retries; repair hard ceilings sized for high-rate while local 10% remains; bounded 512-page/3s feedback and 100kPN/s/256KiB replay. Shadow remains4096 pending P2 scan work.",
+      "run_id": 39892105601,
+      "attempt": 1,
+      "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39892105601"
     }
   ],
   "recent_evidence": [
@@ -172,7 +176,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Locate the single automatic ARM64 build from this P1 source push. Require adaptive timing unit + Fixed cohort unit + product release build + 9 MTU PASS. No perf dispatch until native pass. Then one same-VM Normal2pct old18860/new AB; judge UDP missing, TCP p99/backpressure, retransmitted, quota-blocked, CPU/RSS, Stop. Do not expand shadow above4096 yet.",
+  "next_action": "ONE native ARM64 build Action39892105601 attempt1 source2a388f743cde0ab6d69fb47e2c3f6cd9a6127301 outstanding; do not redispatch. Verify adaptive timing unit, Fixed cohort unit, release bundle and 9 MTU. Only after full PASS run one old18860/new P1 Normal2pct AB.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "18860b9dfe4931d8aba05943fad484677590571c",
