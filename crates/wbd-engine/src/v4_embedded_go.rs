@@ -2615,12 +2615,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
                 g.retained_pages() as u64,g.feedback_drop()
             ))).unwrap_or((0,0));
         eprintln!(
-            "V4_PUBLIC_RX_CHAIN role={} raw_observed={} raw_tuple={} data_unique={} data_lagged32={} link_completed={} tun_delivered={} link_pending={} link_malformed={} link_discarded={} tun_failed={} replay_duplicate={} replay_retired={} open_invalid={} feedback_retained_pages={} feedback_dropped={}",
+            "V4_PUBLIC_RX_CHAIN role={} raw_observed={} raw_tuple={} data_unique={} data_lagged32={} link_completed={} tun_delivered={} link_pending={} link_malformed={} link_discarded={} tun_failed={} replay_duplicate={} replay_retired={} open_invalid={} feedback_retained_pages={} feedback_dropped={} tun_udp={} tun_tcp={} tun_other={}",
             if e.server_side{"server"}else{"client"},
             snapshot[0],snapshot[1],snapshot[2],snapshot[3],
             snapshot[4],snapshot[5],snapshot[6],snapshot[7],
             snapshot[8],snapshot[9],snapshot[10],snapshot[11],snapshot[12],
-            feedback.0,feedback.1);
+            feedback.0,feedback.1,snapshot[13],snapshot[14],snapshot[15]);
+        let tx=&e.counters.tx_chain;
+        let t:Vec<u64>=tx.iter().map(|n|n.load(Ordering::Relaxed)).collect();
+        eprintln!(
+            "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={}",
+            if e.server_side{"server"}else{"client"},
+            t[0],t[1],t[2],t[3],t[4],t[5],t[6]);
         OK
     }
 }
@@ -2918,7 +2924,12 @@ struct LoopCounts {
     // pending, malformed, discarded, TUN failed, replay duplicate,
     // replay retired, AEAD/record invalid. No packet identifiers leave owner.
     #[cfg(feature="fec2_product_record")]
-    rx_chain:[AtomicU64;13],
+    rx_chain:[AtomicU64;16],
+    // Real TUN IPv4 ingress classifications and successful immutable
+    // Normal/off source staging, batched once per worker turn.
+    // UDP,TCP,other,rejected,arena_failed,staged_UDP,staged_TCP.
+    #[cfg(feature="fec2_product_record")]
+    tx_chain:[AtomicU64;7],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -3024,7 +3035,7 @@ fn background_raw_once(
     if batch.observed==0{return Err(INVALID)}
     let mut delivered_total=0u32;
     #[cfg(feature="fec2_product_record")]
-    let mut rx_chain_batch=[0u64;13];
+    let mut rx_chain_batch=[0u64;16];
     #[cfg(feature="fec2_product_record")]
     {rx_chain_batch[0]=batch.observed as u64;}
     #[cfg(feature="fec2_product_record")]
@@ -3060,6 +3071,9 @@ fn background_raw_once(
                 receipt.normal_malformed,receipt.normal_discarded,
                 receipt.failed,receipt.open_duplicate,
                 receipt.open_retired,receipt.open_invalid,
+                receipt.normal_udp_delivered,
+                receipt.normal_tcp_delivered,
+                receipt.normal_other_delivered,
             ];
             for (v,n) in rx_chain_batch.iter_mut().zip(items){
                 *v+=u64::from(n);
@@ -3520,6 +3534,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     }
     let mut ingress_error=false;
     let mut observed=0usize;
+    // One stack-local numeric batch, no packet identity or per-packet atomic.
+    #[cfg(feature="fec2_product_record")]
+    let mut tx_trace=[0u64;7];
     if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
         if recovered_small{break}
@@ -3537,6 +3554,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         match read {
             Ok(batch)=>match batch.entry(0) {
                 Some(TunReadyEntry::UntrustedIpv4{len})=>{
+                    #[cfg(feature="fec2_product_record")]
+                    match jumbo_read.get(9).copied(){
+                        Some(17)=>tx_trace[0]+=1,
+                        Some(6)=>tx_trace[1]+=1,
+                        _=>tx_trace[2]+=1,
+                    }
                     #[cfg(feature="fec2_product_record")]
                     if fec_ingress_on{
                         ingress.fec_m1_ingress[0].fetch_add(1,Ordering::Relaxed);
@@ -3565,6 +3588,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                             }
                             Err(_)=>{
                                 #[cfg(feature="fec2_product_record")]
+                                {tx_trace[4]+=1;}
+                                #[cfg(feature="fec2_product_record")]
                                 if fec_ingress_on{
                                     ingress.fec_m1_ingress[2].fetch_add(1,Ordering::Relaxed);
                                 }
@@ -3574,6 +3599,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                     }
                 }
                 Some(TunReadyEntry::Rejected)=>{
+                    #[cfg(feature="fec2_product_record")]
+                    {tx_trace[3]+=1;}
                     #[cfg(feature="fec2_product_record")]
                     if fec_ingress_on{
                         ingress.fec_m1_ingress[4].fetch_add(1,Ordering::Relaxed);
@@ -3726,11 +3753,23 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 e.counters.fec_m1_stage[5].fetch_add(1,Ordering::Relaxed);
             }
             if n<=frame_mtu {
+                // Exact inner IPv4 protocol is in original owned M1 slab.
+                // Stage-success does not claim a kernel copy or delivery.
+                #[cfg(feature="fec2_product_record")]
+                let proto=slab.writable().get(14+9).copied();
                 let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
                 let result=e.owner.seal_normal_off_with_worker_snapshot(
                     slab,n,scoped,ifindex,destination,15,loop_now()
                 );
-                if result.is_ok(){accepted+=1}else{failed=true}
+                if result.is_ok(){
+                    accepted+=1;
+                    #[cfg(feature="fec2_product_record")]
+                    match proto{
+                        Some(17)=>tx_trace[5]+=1,
+                        Some(6)=>tx_trace[6]+=1,
+                        _=>{},
+                    }
+                }else{failed=true}
                 continue;
             }
             let id=e.next_link_packet_id;
@@ -3835,6 +3874,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }
         }
         if accepted==0{
+            #[cfg(feature="fec2_product_record")]
+            for (slot,count) in ingress.tx_chain.iter().zip(tx_trace) {
+                if count>0{slot.fetch_add(count,Ordering::Relaxed);}
+            }
             drain_data_turn_returns(&mut e.arena);
             return if failed{Err(INVALID)}else{Ok(TxTurnCompletion::default())}
         }
@@ -4065,6 +4108,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         active_jumbo.take();
     }
     drain_data_turn_returns(&mut e.arena);
+    #[cfg(feature="fec2_product_record")]
+    for (slot,count) in ingress.tx_chain.iter().zip(tx_trace){
+        if count>0{slot.fetch_add(count,Ordering::Relaxed);}
+    }
     // Even when the tail failed, the definite prefix remains copied and
     // accounted. Dropped/uncertain immutable records are only released
     // after synchronous M4 sendmmsg completes; never reseal/reuse PN.

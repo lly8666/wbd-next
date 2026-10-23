@@ -321,6 +321,9 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) normal_completed:u32,
     pub(crate) normal_malformed:u32,
     pub(crate) normal_discarded:u32,
+    pub(crate) normal_udp_delivered:u32,
+    pub(crate) normal_tcp_delivered:u32,
+    pub(crate) normal_other_delivered:u32,
     // Exact peer data PN, only after this SAME protected original M3
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
@@ -498,6 +501,13 @@ impl ProtectedBackgroundRx{
             &mut |_pn,business|{
                 if tun.write_authenticated_ipv4(self.generation,business).is_ok(){
                     receipt.delivered+=1;
+                    if business.len()>9{
+                        match business[9]{
+                            17=>receipt.normal_udp_delivered+=1,
+                            6=>receipt.normal_tcp_delivered+=1,
+                            _=>receipt.normal_other_delivered+=1,
+                        }
+                    }
                 }else{receipt.failed+=1}
             },&mut link_report);
         receipt.pending=link_report.pending;
