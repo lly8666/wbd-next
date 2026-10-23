@@ -27,11 +27,15 @@
     {
       "id": "P0-Fixed2pct-parity-kind3-boundary-fix-native-build",
       "type": "ONE_NEW_EXACT_SOURCE_PRODUCT_BUILD",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "trigger": "branch push Rust owner + existing native builder workflow invokes one ARM64 original Go/Rust build and actual Rust unit; no manual dispatch",
       "previous_run": 39885059364,
       "previous_result": "HARD_FAIL",
-      "intent": "Fix already-validated 12B REPAIR_HEADER body guard, preserve 14B source reservation, AEAD/PN/MTU/FEC and Stop gates; prove scalar codec boundary actual Rust test, then one exact high-information same-VM old/new Fixed2% AB. M2 applied remains OPEN."
+      "intent": "Fix already-validated 12B REPAIR_HEADER body guard, preserve 14B source reservation, AEAD/PN/MTU/FEC and Stop gates; prove scalar codec boundary actual Rust test, then one exact high-information same-VM old/new Fixed2% AB. M2 applied remains OPEN.",
+      "run_id": 39886303564,
+      "attempt": 1,
+      "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39886303564"
     }
   ],
   "recent_evidence": [
@@ -135,7 +139,7 @@
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
     "P0 Fixed2% original merged PR25 source parity_seal 33648/33502 real send failures (budget-14 wrong for repair body length budget-12), UDP missing1.91/1.83% vs target1%, TCP tail4.1/8.1s and client applied0 with M2 unknown/censored. Repair boundary fix under native validation, NOT YET QUALIFIED."
   ],
-  "next_action": "Identify the ONE ARM64 product build triggered by parity-body guard source fix push; do not repeat original 39885059364 or build39881938976. Inspect Rust codec exact-MTU kind3 regression, Go/Rust build, 9 scoped MTU functional cases, ZIP/manifest/ELF hashes. If SUCCESS, pin fresh product and set ONE same-VM sequential Fixed2% A old d64be vs B new source AB (99% 1287B, RTT400,2%IID,120s) to compare parity seal/actual sent, UDP loss, TCP p99, Fixed readback and CPU. Keep M2 unknown/censored pending hard gate and S032 high loss FAIL.",
+  "next_action": "Native ARM64 build Action39886303564 in progress for exact parity kind3 budget fix source a58d9140. Do NOT duplicate build. Check real filtered Rust unit m0_fec2_kind3_full_mtu_repair_budget_invariant and Go build, 9 ARM64 MTU cases; verify ZIP SHA/ELF+manifest. If successful schedule one same runner sequential Fixed2pct old d64be vs new a58d (99%1287B, RTT400,2%IID,120s), preserve both client Fixed readback/applied hard gate, TCP tail, Repair seal counts, actual CPU and existing S032 FAIL.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d64be28591c3752af06be399ff598266ecf4d664",
