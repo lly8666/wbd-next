@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P1-Normal2pct-preloan-TUN-arena-old-new-sameVM-AB",
+  "id": "P2-Normaloff-10Mbps-owner-flight-boundary-2pct-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -8,8 +8,8 @@
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 2,
-    "s2c_mbps": 2,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 0.5,
     "sizes": [
       [
@@ -68,14 +68,6 @@
   },
   "bundles": {
     "A": {
-      "source": "99042008e8f42f334ed635df92945e00e53c45dd",
-      "run_id": 39911318918,
-      "attempt": 1,
-      "artifact_id": 12482468452,
-      "sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
-      "recovery_policy": "outer-single-repair-v2"
-    },
-    "B": {
       "source": "de55a1322b4580c60e77322d2d38843caefeec79",
       "run_id": 39913063383,
       "attempt": 1,
@@ -84,6 +76,6 @@
       "recovery_policy": "outer-single-repair-v2"
     }
   },
-  "order": "AB",
+  "order": "A",
   "policy": "outer-single-repair-v2"
 }

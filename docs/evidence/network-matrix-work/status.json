@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal2pct-TUN-preloan-real-business-PASS-scoped",
+  "phase": "P2-Normaloff-capacity-10Mbps-source-calibration",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,16 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P2-Normaloff-10Mbps-owner-flight-boundary-2pct-60s",
+      "type": "ONE_SCENARIO_ONE_ACTION",
+      "status": "INTENT_COMMITTED_AUTO_RUN_PENDING",
+      "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "product_artifact": 12483243411,
+      "why": "Only Normal/off extreme-capacity probe, 10Mbps/dir 2pct loss/200ms delay, 99pct near-MTU, UDP/TCP mixed. At 2M prior outer first source ~31k per100s (~156 events/s/Mbps); at 10M and 400ms RTT projected >=~625 concurrent M1 loans without batch/repair, exceeds real fixed512. Determine actual first failing boundary, CPU/core/RSS and injector quality. No FEC tests or build."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P1-single-repair-v2-native-verified",
@@ -87,7 +96,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Normal/off 2% RTT~400ms representative real capability DONE at exact source de55a132; no additional same-scenario dispatch. Retain qualifying per-direction UDP 0.08498%/0.06798%, zero postread arena loss, 75/75 and MTU9, but do NOT extrapolate to 500Mbps, Fixed/Auto sustained business, cross-client HOL or CPU improvement. If next independent authorized capacity capability is pursued: compute owner M1 slab headroom at target PPS/RTT, benchmark within actual Actions machine limits using 99% near-MTU packets, stop at capacity and report source/pool/bytes/CPU; do not silently enlarge pools. Preserve historic A/B FAIL and scoped 2% PASS independently.",
+  "next_action": "Find exactly one auto Action triggered by P2 Normal/off 10Mbps request; do not dispatch. Recover full artifact injection and host/cgroup CPU/PSI/steal, per-role product CPU/RSS, client/server send lag, TUN protocol read/stage, arena_failed/pre_read_deferred, RX chain, authentic quota/feedback, kernel/netem drops and Stop. Distinguish VM/generator from product; if 512 loan pressure causes business underdelivery at 10M, stop higher Actions until evidenced bounded capacity strategy. No FEC.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "de55a1322b4580c60e77322d2d38843caefeec79",
