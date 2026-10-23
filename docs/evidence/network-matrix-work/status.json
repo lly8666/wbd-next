@@ -27,11 +27,16 @@
     {
       "id": "P1-Normal2pct-residual-diagnostics-B-60s",
       "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
       "bundle_run": 39893574791,
       "artifact_id": 12475394629,
-      "why": "Same exact failed Normal2pct point, behavior-identical to P1 source except read-only counters. One leg is enough. Read repair-attempt retirement buckets and learned timing before any tuning."
+      "why": "Same exact failed Normal2pct point, behavior-identical to P1 source except read-only counters. One leg is enough. Read repair-attempt retirement buckets and learned timing before any tuning.",
+      "run_id": 39894058072,
+      "attempt": 1,
+      "harness_source": "1942cd062176fc966cfe9a52cbb697b472a322e0",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39894058072",
+      "contract_run_id": 39894057928
     }
   ],
   "recent_evidence": [
@@ -193,7 +198,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push one B-only diagnostic request, discover unique performance run and do not redispatch. On completion classify residual: expired0 dominant=>candidate/feedback/history gap; expired1 dominant=>second repair scheduling/lifetime; expired2 dominant=>repair carrier/delivery/independent loss; acked1/2 high with UDP missing=>business delivery/replay/LINK mismatch. Also validate srtt/pto/cache against ~400ms RTT. Choose only the earliest evidenced stage.",
+  "next_action": "ONE B-only residual diagnostic Action39894058072, contract39894057928, outstanding. Do not redispatch. Read repair-attempt retirement buckets and effective SRTT/PTO/cache, then change only the earliest evidenced stage.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
