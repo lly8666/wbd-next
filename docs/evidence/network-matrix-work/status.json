@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-capacity-PR25-integrated-with-S032-pinned-AB-inflight",
+  "phase": "P0-merged-PR25-shell-build-fix-reverify",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,69 +25,16 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "arm64-fixed30-record-cap-S032-same-host-AB",
-      "type": "ONE_PERFORMANCE_ACTION_ONE_MEASUREMENT_JOB",
-      "status": "IN_PROGRESS",
-      "trigger": "one changed request.json push; no manual dispatch; same VM sequential AB",
-      "comparison": "Old 1180 record/FEC1135 early rejection vs B1280 record valid up to1235, all other network parameters unchanged",
-      "A": {
-        "source": "2476b22f748a686907edfb995431a2b236ccebaa",
-        "run_id": 39803921701,
-        "attempt": 1,
-        "artifact_id": 12436752126,
-        "sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219"
-      },
-      "B": {
-        "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
-        "run_id": 39807984023,
-        "attempt": 1,
-        "artifact_id": 12438592249,
-        "sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb"
-      },
-      "run_id": 39877362034,
-      "attempt": 1,
-      "contract_run_id": 39877362037,
-      "request_source": "b169ad07c5b293168925af2a65f1b7fed41338af",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39877362034"
-    },
-    {
-      "id": "P0-PR25-experiment-integrated-native-build",
-      "type": "ONE_EXACT_SOURCE_ARM64_NATIVE_MTU_BOUNDARY_ACTION",
+      "id": "P0-merged-PR25-native-build-script-fix",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "trigger": "merge commit changes Rust/Go source and ARM build workflow; one native product build with nine MTU boundary/DF cases, no manual dispatch",
-      "merged_fix_ref": "ae73332d4814edc1c8669a44cbe38fc1b134c367",
-      "baseline_experiment_head": "b169ad07c5b293168925af2a65f1b7fed41338af",
-      "scope": "automatically derived live TUN inner MTU, authenticated record RX/TX direction, Game 1200 ceiling removal; preserve S031 1280 and all instrumentation"
+      "type": "EXACT_SOURCE_ARM64_BUNDLE_AND_9_MTU_BOUNDARY_FUNCTIONAL",
+      "trigger": "one push fixing tools/arm64_public_go_rust_bundle.sh on experiment branch; no manual workflow_dispatch",
+      "failed_run": 39878062135,
+      "contract_pass_run": 39878062164,
+      "scope": "fix Bash undefined features only; merged Rust/Go code unchanged; new exact SOURCE build and nine real MTU/DF/Stop cases"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S024",
-      "result": "FAIL_TRUE_TCP_ACK_FREEZE",
-      "run": 39788742492,
-      "file": "S024-fixed30-TCP-INFO-ACK-stall.json",
-      "artifact_id": 12430711286
-    },
-    {
-      "id": "S025-build",
-      "result": "success",
-      "run": 39792252773,
-      "file": "S025-native-FEC-IP-class-build.json",
-      "artifact_id": 12432315624
-    },
-    {
-      "id": "S025-contract",
-      "result": "success",
-      "run": 39792252941,
-      "file": "S025-native-FEC-IP-class-build.json"
-    },
-    {
-      "id": "S026",
-      "result": "FAIL_REAL_M4_UDP_KERNEL_CONSERVED_TCP_FREEZE",
-      "run": 39793159261,
-      "artifact_id": 12432471447,
-      "file": "S026-original-M4-IPv4-class-Fail.json"
-    },
     {
       "id": "S027-build",
       "result": "COMPILER_FAIL_NO_PRODUCT",
@@ -150,6 +97,25 @@
       "result": "success",
       "run": 39804669759,
       "file": "S030-original-record-oversize-Fail.json"
+    },
+    {
+      "id": "P0-PR25-capacity-native",
+      "result": "success_other_source",
+      "run": 39875959734,
+      "file": "P0-PR25-S032-recovered-20261023.json"
+    },
+    {
+      "id": "P0-merged-native",
+      "result": "FAIL_SCRIPT_UNBOUND_FEATURES",
+      "run": 39878062135,
+      "file": "P0-PR25-S032-recovered-20261023.json"
+    },
+    {
+      "id": "S032-AB",
+      "result": "FAIL_BOTH_OLD_OVERSIZE_FIXED_NEW_CAPACITY_AND_APPLIED",
+      "run": 39877362034,
+      "artifact_id": 12468862630,
+      "file": "P0-PR25-S032-recovered-20261023.json"
     }
   ],
   "open_issues": [
@@ -162,9 +128,11 @@
     "S022 client Fixed requested1 applied0 pending with auth reverse M2 reports11769 but unknown2s206/censored1; don't loosen gate without time-window evidence",
     "S024 true 30% Fixed native TCP established 4+4, kernel ACK bytes frozen 4840/4836 for 120s, cwnd1 and RTO117s; not just generator full-frame zero. Need real successful M4 TCP payload vs ACK class, then per-receiver kernel TCP drops; no unproved tuning.",
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
-    "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
+    "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples.",
+    "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
+    "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS."
   ],
-  "next_action": "Resolve P0 integrated native ARM run and strict network harness contract once, plus pinned S032 same-host AB39877362034; NEVER repeat dispatch. Verify merged Go/Rust SOURCE, native jobs and nine actual MTU/DF/Stop functional cases; record failure if any. After S032 AB result evaluate fixed length/ TCP applied. P0 correctness first; then P1 actual RTT/repair/receipt/replay budget and only then near-MTU P2 load envelope; no large load before calibrated effective values. Keep S030 7074/7068 oversize historical FAIL and Windows separate.",
+  "next_action": "Recover exactly one Action from this script-fix push; no repeated dispatch of b42b8 capacity P0 PASS, ce70 integrated FAIL, or S032 AB both FAIL. Check native Go/Rust exact SOURCE, real Game unit, nine MTU boundary/DF/Stop examples and CLI TUN/MSS/record readback. If build succeeds document SHA256/ELF/source and remaining hard fails; if not read actual failing step, correct only observed defect. Then P0 targeted Fixed first-delivery/readback, P1 effective RTT/recovery budgets before any near-MTU P2 pressure; no rerunning same Fixed30 unchanged.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",

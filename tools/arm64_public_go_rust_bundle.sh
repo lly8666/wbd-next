@@ -22,6 +22,8 @@ export WBD_ISAL_SOURCE_SHA="$ISA_SOURCE"
 (cd "$RUNNER_TEMP/wbd-isa-l" && ./autogen.sh &&   ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static &&   make -j2 && make install)
 test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
 rustup toolchain install 1.85.1 --profile minimal
+# Keep the native feature set identical for the real bundle and its Game unit.
+features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
 cargo +1.85.1 build --release --locked -p wbd-engine   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
 cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
 test -s target/release/libwbd_engine.so
