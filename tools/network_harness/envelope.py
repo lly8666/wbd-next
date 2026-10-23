@@ -132,7 +132,8 @@ def suite():
                 "Memory uses worst full lifetime retention plus25%; normal ACK release lowers occupancy",
                 "512MiB endpoint total is shared, never granted independently to each client/lane",
                 "RX FEC horizon equal cache is an optional repair-inclusive model, not implemented policy",
-                "TCP segmentation/ACK, fragmentation, correlated loss, host speed need actual observations"]}
+                "TCP segmentation/ACK, fragmentation, correlated loss, host speed need actual observations"],
+            "rows": rows}
 
 
 def request_envelope(request, inner_mtu=1200):

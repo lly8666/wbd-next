@@ -22,12 +22,16 @@ class EnvelopeTests(unittest.TestCase):
         small = envelope(500, 200, PROFILES["small64"])
         large = envelope(500, 200, PROFILES["near_mtu1172"])
         self.assertGreater(small["aggregate_fresh_record_pps"], 7*large["aggregate_fresh_record_pps"])
-        self.assertGreater(small["shadow_current_2048_slab_worst_mib"], 512)
+        self.assertTrue(small["shadow_capacity_limited"])
+        self.assertGreater(small["shadow_current_2048_slab_worst_mib"],
+                           small["payload_pool_direction_hard_mib"])
+        self.assertFalse(large["shadow_capacity_limited"])
         self.assertEqual(large["outer_bdp_bytes"], 25_000_000)
 
     def test_pto_does_not_expire_before_path_feedback(self):
         self.assertAlmostEqual(timers(400, 5, 10)["pto_ms"], 435)
-        self.assertAlmostEqual(timers(600, 5, 10)["cache_ms"], 1345)
+        self.assertAlmostEqual(timers(600, 5, 10)["retain_ms"], 850)
+        self.assertLessEqual(timers(600, 50, 10)["retain_ms"], 1500)
 
     def test_lane_replication_does_not_multiply_line_capacity(self):
         one = envelope(50, 300, [[256, 1]])
