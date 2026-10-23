@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-D-lossless-TCP2-UDP70-29-1-mixed",
+  "id": "V3-D-30pct-mixed-UDP-progress-against-TCP-degradation",
   "owner": "network-matrix-work",
-  "seed": 6514,
+  "seed": 6583,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 15,
-    "s2c_mbps": 15,
+    "c2s_mbps": 5,
+    "s2c_mbps": 5,
     "udp_share": 0.3,
     "sizes": [
       [
@@ -23,7 +23,7 @@
     ],
     "tcp_flows": 2,
     "probe_hz": 20,
-    "deadline_ms": 1200,
+    "deadline_ms": 5000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -41,36 +41,82 @@
     }
   },
   "warmup_s": 10,
-  "drain_s": 30,
+  "drain_s": 40,
   "phases": [
     {
-      "name": "steady",
-      "seconds": 60,
+      "name": "healthy_before",
+      "seconds": 20,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       },
       "s2c": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": []
+      }
+    },
+    {
+      "name": "loss30",
+      "seconds": 60,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "jitter_ms": 0,
+        "loss_pct": 30,
+        "duplicate_pct": 0,
+        "reorder_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": []
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "jitter_ms": 0,
+        "loss_pct": 30,
+        "duplicate_pct": 0,
+        "reorder_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": []
+      }
+    },
+    {
+      "name": "recovered_zero",
+      "seconds": 20,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "jitter_ms": 0,
+        "loss_pct": 0,
+        "duplicate_pct": 0,
+        "reorder_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": []
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "jitter_ms": 0,
+        "loss_pct": 0,
+        "duplicate_pct": 0,
+        "reorder_pct": 0,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 0,
-    "require_retransmission": false,
+    "max_loss_pct": 31,
+    "require_retransmission": true,
     "max_repair_fresh_pct": 10
   },
   "bundles": {
