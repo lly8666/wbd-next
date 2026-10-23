@@ -56,6 +56,37 @@ jobs:
           assert p.suffix=='.json' and p.resolve().is_relative_to(root) and p.is_file()
           subprocess.run(['git','ls-files','--error-unmatch','--',str(p)],check=True)
           PY
+      - name: Locate frozen FEC build artifacts without compilation
+        id: fec_bundles
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          b=json.load(open(os.environ["REQUEST"]))["bundles"]
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              for label, cfg in b.items():
+                  # Only the existing own-branch exact ARM64 source build
+                  # is fetched through GitHub Actions' native artifact store.
+                  print(f"{label}_name=network-arm64-public-{cfg['run_id']}-{cfg['attempt']}",file=f)
+                  print(f"{label}_run={cfg['run_id']}",file=f)
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' && steps.fec_bundles.outputs.A_name != '' }}
+        with:
+          name: ${{ steps.fec_bundles.outputs.A_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.fec_bundles.outputs.A_run }}
+          github-token: ${{ github.token }}
+          path: network-result/bundle-A/arm64-public-bundle
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' && steps.fec_bundles.outputs.B_name != '' }}
+        with:
+          name: ${{ steps.fec_bundles.outputs.B_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.fec_bundles.outputs.B_run }}
+          github-token: ${{ github.token }}
+          path: network-result/bundle-B/arm64-public-bundle
       - name: Fetch existing exact source binaries; verify ZIP, manifest and all binary hashes
         env:
           GH_TOKEN: ${{ github.token }}

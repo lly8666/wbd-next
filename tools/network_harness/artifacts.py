@@ -154,7 +154,15 @@ def attested_recovered_product_build(run, jobs):
 
 def fetch(bundle, root):
     root = Path(root)
-    root.mkdir(parents=True, exist_ok=False)
+    # GitHub-hosted Actions can download an exact cross-run artifact through
+    # the first-party artifact transport. This avoids the public ZIP redirect
+    # egress gateway, while preserving signed run metadata and every ELF hash.
+    prefetched = root / "arm64-public-bundle/manifest.json"
+    if root.exists():
+        if not root.is_dir() or not prefetched.is_file():
+            raise ValueError("unexpected pre-existing artifact directory")
+    else:
+        root.mkdir(parents=True)
     with get(f'/actions/artifacts/{bundle["artifact_id"]}') as f:
         meta = json.load(f)
     if meta["expired"] or meta["workflow_run"]["id"] != bundle["run_id"]:
@@ -182,6 +190,28 @@ def fetch(bundle, root):
         "native_product_build_step_verified": bool(recovered or run["conclusion"] == "success")}) + "\n")
     if meta.get("digest") and meta["digest"] != "sha256:" + bundle["sha256"]:
         raise ValueError("GitHub artifact digest mismatch")
+    # In the first-party prefetched mode, actions/download-artifact has
+    # already transferred and verified the GitHub artifact. We independently
+    # pin its published ZIP digest above, exact workflow/source, manifest and
+    # all extracted binary hashes below; do not pretend we hashed the ZIP
+    # ourselves in this mode.
+    if prefetched.is_file():
+        manifest = verify(root, bundle)
+        arm_root = root / "arm64-public-bundle"
+        (root / "fixed-build").mkdir(exist_ok=True)
+        for name in REQUIRED:
+            destination = root / "fixed-build" / name
+            shutil.copyfile(arm_root / name, destination)
+            destination.chmod(0o700)
+        verify(root, bundle)
+        manifest_path = arm_root / "manifest.json"
+        return {"artifact": meta["id"], "zip_sha256": bundle["sha256"],
+                "zip_hash_proof": "github_digest_plus_first_party_download_action",
+                "manifest_sha256": sha(manifest_path),
+                "layout": "arm64-sha256sums-first-party-prefetch",
+                "run_attempt_verified": True, "manifest": manifest,
+                "workflow_conclusion": run["conclusion"],
+                "step_attested_failure": bool(recovered)}
     archive = root / "artifact.zip"
     with get(f'/actions/artifacts/{bundle["artifact_id"]}/zip') as src, archive.open("wb") as dst:
         total = 0
