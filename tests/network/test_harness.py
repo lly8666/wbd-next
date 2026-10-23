@@ -36,6 +36,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
+        self.assertEqual(validate(r)["network"]["tun_qdisc_profiles"],
+                         {"A":"fq_codel","B":"fq"})
+        r["network"]["tun_qdisc_profiles"]["B"]="pfifo_fast"
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_qdisc_profiles"]={"C":"fq"}
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_warmup_rate_is_isolated_and_does_not_mutate_steady_offer(self):
         r=request()
         r["network"]["warmup_rate_scale_profiles"]={"A":1,"B":0.30}
