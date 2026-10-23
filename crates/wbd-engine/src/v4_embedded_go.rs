@@ -3698,7 +3698,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         if observed>=32 || stop.load(Ordering::Acquire){break}
         if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
-        if !loop_readiness(tun.readiness_fd(),stop,0){break}
+        // A second readiness poll is redundant: read_ready_batch already
+        // performs a zero-time poll and the exclusively owned TUN fd is
+        // O_NONBLOCK. At 500Mbps this path sees ~45k packets/sec, so an
+        // additional poll syscall per record competes with draining the
+        // kernel TUN ring and can induce LOCAL packet drops/TCP cwnd cuts.
+        // Probe the next packet via the driver's own nonblocking readiness;
+        // WouldBlock exits the loop immediately without business blocking.
     }
     if pending.is_empty() && jumbo_queue.is_empty() && active_jumbo.is_none(){
         #[cfg(feature="fec2_product_record")]
