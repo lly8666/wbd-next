@@ -1,5 +1,7 @@
 # 可复用真实网络 Actions 夹具
 
+2026-10-23外层改为一次修复：新模型p²、低损允许带和policy/readback迁移见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)。本页旧p³说明及模型工具输出属于旧两次策略，接手者须同步工具/请求/判定器，不能用新门槛重标历史产物；本docs变更不代表产品已生效。
+
 2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR #21最初实现只增加测试工具，没有修改产品、M0工作游标、权限或生产开关；这不是后续任务的“产品只读”限制。2026-10-22独立实验任务可按[NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)在本分支修产品和必要观测。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
 这落实 `docs/architecture/TEST_PLAN.md` 的持续业务、产物复用、单场景 Actions 和理论允许带原则，不替代它。已有小回显夹具继续作为便宜的功能回归。

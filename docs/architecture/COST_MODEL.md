@@ -1,5 +1,7 @@
 # 成本、容量与验收允许带
 
+2026-10-23用户将外层改为最多一次修复；[新决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)覆盖本文两次/p³、旧Tcache及off低损门。一次理想repair/fresh=p、残余p²；容量上限按极限固定而payload按需回收。本文旧具体成本数值与现有脚本保留作历史比较，待实施agent生成带policy版本的新模型；通用成本拆分和真实计账原则不变。
+
 2026-10-18 FEC v2的新k/r、期限、头部和理论残余模型见[FEC_V2_BALANCED](FEC_V2_BALANCED.md)，可复现计算器为`tools/fec_v2_model.py`。本文旧20源/56B等示例仅作旧基线，不能作V2固定常量；通用BDP/CPU/线速计账原则保留。
 
 这里的数字是设计计算，**不是 Rust 产品实测结果**。输入与计算在 `model-inputs.json`、`tools/cost_model.py`；Actions 输出 `cost-model.json`。所有带宽先明确“应用 payload / 内层 IP / 外层 IP / Ethernet”，所有延迟明确 RTT 或单程。
