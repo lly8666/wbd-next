@@ -4165,9 +4165,9 @@ fn background_original_repair_once(
                                 if own.shadow.on_quota_exhausted(&candidate,now).is_ok(){
                                     own.retired=own.retired.saturating_add(1);
                                 }
-                            }else{
-                                let _=own.shadow.on_send_result(
-                                    &candidate,RepairSendResult::NotSent,now);
+                            }else if own.shadow.on_send_result(
+                                &candidate,RepairSendResult::NotSent,now).is_ok(){
+                                own.retired=own.retired.saturating_add(1);
                             }
                             None
                         }
@@ -4192,32 +4192,41 @@ fn background_original_repair_once(
             1,usize::from(copied),if copied{None}else{Some(0)},
             BatchSuffixEvidence::Unproven
         ).map_err(|_|BAD_STAGE)?;
-        let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
-        let mut global=original_process_repair_quota().lock()
-            .map_err(|_|BAD_STAGE)?;
-        let results=complete_driver_prefix(
-            &mut global,&[(id,route)],observation,now
-        );
-        let status=match results {
-            Ok(s)=>s.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
-            Err(_)=>RepairSendResult::Uncertain, // conservative debt
+        // Complete quota/accounting under the established outer->global
+        // lock order, then release both before touching maturity. RX uses
+        // maturity->outer->global, so never invert that order here.
+        let status={
+            let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
+            let mut global=original_process_repair_quota().lock()
+                .map_err(|_|BAD_STAGE)?;
+            let results=complete_driver_prefix(
+                &mut global,&[(id,route)],observation,now
+            );
+            let status=match results {
+                Ok(s)=>s.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
+                Err(_)=>RepairSendResult::Uncertain,
+            };
+            let _=global.revoke(lease,now);
+            if copied && status==RepairSendResult::Accepted{
+                repaired+=1;
+                own.repair_copied=own.repair_copied.saturating_add(1);
+            }else{
+                own.repair_uncertain=own.repair_uncertain.saturating_add(1);
+            }
+            status
         };
-        // Preserve first-delivery attribution in independent maturity
-        // metadata before retiring the repair payload shadow.
+        // Candidate clone keeps immutable payload alive across this metadata
+        // update even if a concurrent authentic receipt already retired the
+        // shadow. No owner/global lock is held here.
         if let Ok(mut m)=mature.lock(){
             m.on_possible_recovery(candidate.pn(),status,now);
         }
-        // ACK may race completion; stale is legitimate. Accepted/Uncertain
-        // consumes the single repair opportunity after synchronous M4 return.
-        if own.shadow.on_send_result(&candidate,status,now).is_ok(){
-            own.retired=own.retired.saturating_add(1);
-        }
-        let _=global.revoke(lease,now); // unused grant only, not send debit
-        if copied && status==RepairSendResult::Accepted{
-            repaired+=1;
-            own.repair_copied=own.repair_copied.saturating_add(1);
-        }else{
-            own.repair_uncertain=own.repair_uncertain.saturating_add(1);
+        // Re-acquire only the outer owner for idempotent payload retirement.
+        // A racing receipt may have won; stale completion never resurrects.
+        if let Ok(mut own)=shared.lock(){
+            if own.shadow.on_send_result(&candidate,status,now).is_ok(){
+                own.retired=own.retired.saturating_add(1);
+            }
         }
     }
     Ok(repaired)

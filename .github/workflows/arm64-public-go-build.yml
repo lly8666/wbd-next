@@ -63,6 +63,11 @@ jobs:
             r2_quota_exhausted_releases_repair_shadow_without_faking_ack -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
             r2_queue_timeout_retires_payload_without_second_timer -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-recovery \
+            r2_budget_single_repair_stage_uses_existing_epoch_quota_without_second_stage -- --nocapture
+          # One cheap library sweep catches stale two-repair assumptions in
+          # the same already-compiled crate; no network or performance work.
+          cargo +1.85.1 test --release --locked -p wbd-recovery --lib -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_original_repair_block_reason_classifier_is_stable -- --nocapture

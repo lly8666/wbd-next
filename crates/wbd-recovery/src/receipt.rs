@@ -499,8 +499,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         #[cfg(test)]
         { self.last_timer_index_pops=0; }
 
-        let mut expiry_events=0usize;
-        while expiry_events<MAX_POLL_CANDIDATES {
+        let mut owner_events=0usize;
+        while owner_events<MAX_POLL_CANDIDATES {
             let Some(&(expiry,pn))=self.expiry_index.first() else {break;};
             if expiry>now.0 {break;}
             self.expiry_index.pop_first();
@@ -508,7 +508,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             self.remove_indexes(pn,&entry,true);
             self.diagnostics.expired_attempt0=
                 self.diagnostics.expired_attempt0.saturating_add(1);
-            expiry_events+=1;
+            owner_events+=1;
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
             releases.push(Release {
@@ -516,13 +516,12 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             });
         }
 
-        let mut wake_events=0usize;
         while candidates.len()<MAX_POLL_CANDIDATES
-            && wake_events<MAX_POLL_CANDIDATES
+            && owner_events<MAX_POLL_CANDIDATES
         {
             let Some(&(wake,pn))=self.wake_index.first() else {break;};
             if wake>now.0 {break;}
-            wake_events+=1;
+            owner_events+=1;
             self.wake_index.pop_first();
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
