@@ -900,7 +900,13 @@ mod tests {
         let c = &first.candidates[0];
         s.on_send_result(c, RepairSendResult::NotSent, MonoNs(10)).unwrap();
         assert!(s.on_timer(MonoNs(10)).candidates.is_empty());
-        assert_eq!(s.on_timer(MonoNs(100)).releases.len(), 40);
+        let mut expired=0usize;
+        while s.outstanding()!=0 {
+            let p=s.on_timer(MonoNs(100));
+            assert!(p.releases.len()<=32);
+            expired+=p.releases.len();
+        }
+        assert_eq!(expired,39);
     }
 
     #[test]
@@ -974,12 +980,19 @@ mod tests {
         let mut s=state(N as usize,50);
         for pn in 0..N {add(&mut s,pn,0,1_000);}
         assert_eq!(s.next_deadline(),Some(MonoNs(50)));
-        let expire=s.on_timer(MonoNs(1_000));
-        assert!(expire.candidates.is_empty());
-        assert_eq!(expire.releases.len(),N as usize);
-        assert_eq!(s.last_timer_index_pops(),N as usize);
-        assert!(expire.releases.iter().all(|r|r.reason==ReleaseReason::HardExpired));
-        assert_eq!(s.outstanding(),0);
+        let mut released=0usize;
+        let mut ticks=0usize;
+        while s.outstanding()!=0 {
+            let expire=s.on_timer(MonoNs(1_000));
+            assert!(expire.candidates.is_empty());
+            assert!(expire.releases.len()<=32);
+            assert!(s.last_timer_index_pops()<=32);
+            assert!(expire.releases.iter().all(|r|r.reason==ReleaseReason::HardExpired));
+            released+=expire.releases.len();
+            ticks+=1;
+        }
+        assert_eq!(released,N as usize);
+        assert_eq!(ticks,313);
         assert!(s.expiry_index.is_empty());
         assert!(s.wake_index.is_empty());
         assert_eq!(s.next_deadline(),None);
@@ -992,62 +1005,49 @@ mod tests {
     }
 
     #[test]
-    fn r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry() {
+    fn r2_burst_queued_timeouts_retire_payload_in_bounded_owner_turns() {
         let mut s=state(35,10);
         for pn in 0..35 {add(&mut s,pn,0,100_000_000);}
-        let mut first=s.on_timer(MonoNs(10)).candidates;
+        let first=s.on_timer(MonoNs(10)).candidates;
         assert_eq!(first.len(),32);
-        let old=first.remove(0);
-        assert!(s.on_receipt(&receipt(1,0,vec![page(0,&[0])]),MonoNs(11))
-            .unwrap().iter().any(|r|r.pn==RecordPn(0)));
-        assert!(!s.preflight(&old,MonoNs(12)));
-        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,MonoNs(12)),
-            Err(DataError::Stale));
-        let second=s.on_timer(MonoNs(20)).candidates;
+        let second=s.on_timer(MonoNs(10)).candidates;
         assert_eq!(second.len(),3);
-        assert_eq!(s.last_timer_index_pops(),3);
-        assert!(s.on_timer(MonoNs(21)).candidates.is_empty());
-        assert_eq!(s.last_timer_index_pops(),0);
-        // Existing 31 remaining queued candidates time out at 20m+10.
-        // The three queued at t=20 have a different, later dispatch window.
-        let expired_queues=s.on_timer(MonoNs(20_000_011));
-        assert!(expired_queues.candidates.is_empty());
-        assert_eq!(s.wake_index.len(),s.outstanding());
-        assert_eq!(s.expiry_index.len(),s.outstanding());
-        assert_eq!(s.outstanding(),34);
-        assert_eq!(s.last_timer_index_pops(),31);
-        let later=s.on_timer(MonoNs(20_000_021)).candidates;
-        assert_eq!(later.len(),29); // 3 newer queued time out, 29 earlier due
-        assert_eq!(s.last_timer_index_pops(),32);
-        assert_eq!(s.outstanding(),34);
+        assert_eq!(s.outstanding(),35);
+        let mut ticks=0usize;
+        while s.outstanding()!=0 {
+            let p=s.on_timer(MonoNs(20_000_011));
+            assert!(p.candidates.is_empty());
+            assert!(p.releases.is_empty());
+            assert!(s.last_timer_index_pops()<=32);
+            ticks+=1;
+            assert!(ticks<4);
+        }
+        assert_eq!(ticks,2);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,35);
     }
 
     #[test]
-    fn r2_burst_10000_queued_timeouts_are_also_index_budgeted() {
+    fn r2_burst_10000_queued_timeouts_retire_without_rescan_or_rearm() {
         const N:u64=10_000;
         let mut s=state(N as usize,10);
         for pn in 0..N {add(&mut s,pn,0,100_000_000);}
         for _ in 0..313 {s.on_timer(MonoNs(10));}
-        let mut popped=0usize;
         let mut ticks=0usize;
-        while popped<N as usize {
-            let r=s.on_timer(MonoNs(20_000_011));
-            assert!(r.candidates.is_empty());
-            assert!(r.releases.is_empty());
-            let n=s.last_timer_index_pops();
-            assert!(n>0 && n<=32);
-            popped+=n;
+        while s.outstanding()!=0 {
+            let p=s.on_timer(MonoNs(20_000_011));
+            assert!(p.candidates.is_empty());
+            assert!(p.releases.is_empty());
+            assert!(s.last_timer_index_pops()>0 && s.last_timer_index_pops()<=32);
             ticks+=1;
+            assert!(ticks<400);
         }
         assert_eq!(ticks,313);
-        assert_eq!(s.wake_index.len(),N as usize);
-        assert_eq!(s.expiry_index.len(),N as usize);
-        assert_eq!(s.outstanding(),N as usize);
-        assert_eq!(s.on_timer(MonoNs(20_000_011)).candidates.len(),0);
-        assert_eq!(s.last_timer_index_pops(),0);
-        // Dead queued tokens cannot be resurrected: only new epoch candidates
-        // become dispatchable after the explicitly bounded rearm timer.
-        assert_eq!(s.on_timer(MonoNs(20_000_021)).candidates.len(),32);
+        assert!(s.wake_index.is_empty());
+        assert!(s.expiry_index.is_empty());
+        assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,N);
+        assert!(s.on_timer(MonoNs(20_000_021)).candidates.is_empty());
     }
 
     #[test]

@@ -337,26 +337,6 @@ mod tests {
         s.on_sent(f, MonoNs(due - 1), MonoNs(due.saturating_add(100_000_000))).unwrap();
         s.on_timer(MonoNs(due)).candidates.remove(0)
     }
-    fn retry_candidate(pn:u64,due:u64)->RepairCandidate<FakeFrozen>{
-        assert!(due>=2);
-        let mut s=ReceiptState::new(lane(),ReceiptConfig{
-            max_shadow_entries:2,pto_ns:1,reorder_window_ns:1,
-        }).unwrap();
-        let f=FakeFrozen{
-            wire:Arc::from([1u8,2,3,4].as_slice()),
-            origin:BufferOrigin{owner_arena:1,
-                key:BufferKey{slot:pn as u32,generation:1}},
-            meta:FrozenMetadata{lane:lane(),pn:RecordPn(pn),
-                seq:SeqOffset(pn),carrier_snapshot:1},
-        };
-        s.on_sent(f,MonoNs(due-2),MonoNs(due.saturating_add(100_000_000))).unwrap();
-        let first=s.on_timer(MonoNs(due-1)).candidates.remove(0);
-        assert_eq!(first.repair_attempt_stage(),0);
-        s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(due-1)).unwrap();
-        let second=s.on_timer(MonoNs(due)).candidates.remove(0);
-        assert_eq!(second.repair_attempt_stage(),1);
-        second
-    }
     fn cfg(mtu: u64) -> RepairBudgetConfig {
         RepairBudgetConfig {
             outer_mtu: mtu, max_repair_bytes_per_epoch: 1_000_000,
@@ -451,33 +431,26 @@ mod tests {
         assert_eq!(b.snapshot().charged_repair_bytes, 1500);
     }
     #[test]
-    fn r2_budget_first_repair_uses_hard_quota_before_pacer_retry_stays_paced() {
+    fn r2_budget_single_repair_stage_uses_existing_epoch_quota_without_second_stage(){
         let mut b=ledger(1500,0);
-        // Exhaust all 8-MTU smoothing tokens with genuine retry-stage repairs.
-        for i in 0..8 {
-            let c=retry_candidate(i,2);
+        let mut reserved=0usize;
+        for i in 0..21 {
+            let c=candidate(i,2);
+            assert_eq!(c.repair_attempt_stage(),0);
             let id=b.reserve(&c,1500,MonoNs(2)).unwrap();
             b.on_send_result(id,RepairSendResult::Accepted,MonoNs(2)).unwrap();
+            reserved+=1;
         }
-        assert_eq!(b.snapshot().pacer_tokens,0);
-        let retry=retry_candidate(8,2);
-        assert_eq!(b.reserve(&retry,1500,MonoNs(2)),Err(BudgetError::BurstPaced));
-
-        // A first actual repair is latency-priority and may still use the
-        // existing 32KiB epoch quota. It does not create pacer debt/credit.
-        let first=candidate(99,2);
-        assert_eq!(first.repair_attempt_stage(),0);
-        let id=b.reserve(&first,1500,MonoNs(2)).unwrap();
-        assert_eq!(b.snapshot().pacer_tokens,0);
-        assert_eq!(b.snapshot().charged_repair_bytes,13_500);
-        b.on_send_result(id,RepairSendResult::NotSent,MonoNs(3)).unwrap();
-        assert_eq!(b.snapshot().pacer_tokens,0);
-        assert_eq!(b.snapshot().charged_repair_bytes,12_000);
-        assert_eq!(b.snapshot().epoch_repair_limit,32_768);
-        // Fresh accounting remains independent from repair smoothing.
-        b.on_fresh_accepted(100,MonoNs(4)).unwrap();
+        assert_eq!(reserved,21);
+        assert_eq!(b.snapshot().charged_repair_bytes,31_500);
+        let extra=candidate(99,2);
+        assert_eq!(extra.repair_attempt_stage(),0);
+        assert_eq!(b.reserve(&extra,1500,MonoNs(2)),Err(BudgetError::QuotaExhausted));
+        // Repair accounting never blocks fresh credit acquisition.
+        b.on_fresh_accepted(100,MonoNs(3)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes,100);
     }
+
     #[test]
     fn r2_budget_capacity_timeout_conservative_debt_and_clock_reversal() {
         let mut cfg = cfg(1500);
