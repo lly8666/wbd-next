@@ -27,7 +27,7 @@
     {
       "id": "P0-Fixed2pct-M2-applied-old-vs-cohortfix-AB",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_ONE_MEASUREMENT_JOB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "why": "Only distinguish whether bounded authenticated mature M2 cohort fixes real client requested1/applied0 without regressing delivery/Stop. Same VM sequential A old a58d -> B new 18860; no other parameter changes.",
       "A": {
         "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
@@ -45,7 +45,10 @@
       },
       "seed": 5205,
       "scenario": "2Mbps/direction, 99%1287B+1%64B UDP packets, UDP/TCP50/50, 4 TCP streams, 2% IID, 200ms one-way, 120s steady",
-      "expected_run": "UNKNOWN_UNTIL_PUSH"
+      "run_id": 39890061224,
+      "attempt": 1,
+      "harness_source": "0374aa45fa08a67a8dcd5b16b7473deb6a5d4617",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39890061224"
     }
   ],
   "recent_evidence": [
@@ -171,7 +174,7 @@
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence."
   ],
-  "next_action": "Push exact request and discover unique network-harness run. Do not redispatch. On completion compare A/B: client/server requested/applied, M2 unknown/censored/coverage, UDP missing+p99, TCP p99, parity/source failures, CPU/RSS, Stop. If B client applied=1 and correctness stays clean, P0 Fixed closes and next is one Normal/off protective anchor then P1 timing/budget; if pending remains, inspect exact censored origin only.",
+  "next_action": "ONE performance Action39890061224 attempt1, harness SOURCE0374aa45, exact same-VM sequential A a58d vs B18860 Fixed2pct is outstanding. Do not redispatch. Settle client/server applied, M2 coverage/censor, delivery/tail, parity failures, CPU/RSS, Stop. If B applied both sides and clean, P0 Fixed closes; next one Normal/off anchor then P1.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "18860b9dfe4931d8aba05943fad484677590571c",
