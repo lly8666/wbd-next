@@ -27,7 +27,7 @@
     {
       "id": "P1-Normal2pct-BurstPaced-short-rearm-old-new-AB-60s",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "A": {
         "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
         "run_id": 39896777307,
@@ -42,7 +42,12 @@
         "artifact_id": 12477318789,
         "sha256": "0070cc62106aac883817f7600a1dc0f82340d8463a6fd38c797148c7cde1c1ea"
       },
-      "why": "Causal test of one short <=20ms BurstPaced rearm per repair stage only. Same Normal2pct/200ms/60s seed5205; no quota/burst/timing/load changes."
+      "why": "Causal test of one short <=20ms BurstPaced rearm per repair stage only. Same Normal2pct/200ms/60s seed5205; no quota/burst/timing/load changes.",
+      "run_id": 39898816654,
+      "attempt": 1,
+      "harness_source": "a88f33bfdd85c0aa464edebdbea22774763d320e",
+      "contract_run_id": 39898816658,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39898816654"
     }
   ],
   "recent_evidence": [
@@ -246,7 +251,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push request once, discover unique harness run, do not redispatch. Compare exact blocked_burst/quota, pacing deferral/fallback counters, candidate_first/retry, expired0/1/2, actual repairs, UDP residual, TCP p99/backpressure, CPU/RSS, learned timing and Stop. PASS target B <=1% UDP residual both directions without repair storm or Stop/capacity regression.",
+  "next_action": "ONE same-VM BurstPaced bounded-rearm AB Action39898816654 attempt1, contract39898816658, outstanding. Do not redispatch. Settle exact block reasons, pacing deferral/fallback, expired0, UDP residual, TCP tail, repair volume, CPU/RSS, learned timing, Stop. If B <=1% both directions and no regression, close this P1 point and proceed to P2 capacity.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "396c5ae6434c18eecb16599f5966574716c604a9",
