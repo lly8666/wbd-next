@@ -22,7 +22,7 @@ jobs:
       - name: Install network namespace and qdisc tools
         run: |
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 ethtool
       - name: Direct inner-TCP counterpart only, no WBD application
         run: sudo -n --preserve-env=GITHUB_RUN_ID python3 tools/network_harness/direct_tcp_baseline.py
       - name: Show actual scope and result
