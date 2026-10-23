@@ -1,0 +1,43 @@
+name: V3-C native ARM64 direct TCP500 host control
+run-name: "V3-C-DIRECT-TCP500|${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/network-matrix-tuning]
+    paths:
+      - .github/workflows/network-v3-direct-tcp500-control.yml
+permissions: {contents: read}
+concurrency:
+  group: v3-c-direct-tcp500-control-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  direct-tcp500-control:
+    name: One native VM one TCP500 host control at same RTT400 / MTU1429
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Install network namespace and qdisc tools
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
+      - name: Direct TCP control only, no WBD, 500Mbps C2S, RTT400ms
+        run: sudo -n env WBD_DIRECT_TCP_RATE_MBPS=500 GITHUB_RUN_ID="${{ github.run_id }}" python3 tools/network_harness/direct_tcp_baseline.py
+      - name: Show control's actual measured bytes
+        if: always()
+        run: |
+          if test -f direct-tcp-result/result.json; then
+            python3 - <<'PY'
+          import json
+          d=json.load(open('direct-tcp-result/result.json'))
+          print('DIRECT_TCP500_CONTROL',d['scope'],d['sender']['measured_mbps'],d['receiver']['measured_mbps'])
+          PY
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v3-c-direct500-${{ github.run_id }}-${{ github.run_attempt }}
+          path: direct-tcp-result/**
+          retention-days: 14
+          if-no-files-found: warn
