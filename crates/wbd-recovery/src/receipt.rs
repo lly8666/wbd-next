@@ -739,6 +739,58 @@ mod tests {
     }
 
     #[test]
+    fn v3_no_data_pto_without_authenticated_later_positive() {
+        let mut s=state(8,80_000_000);
+        s.enable_adaptive_timing(400_000_000,5_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
+        // A negative bit by itself is not a proof without a later delivered DATA.
+        s.on_receipt(&receipt(1,1,vec![page(0,&[])]),MonoNs(405_000_000)).unwrap();
+        assert!(s.on_timer(MonoNs(600_000_000)).candidates.is_empty());
+        // No PTO can invent a repair; only the frozen absolute expiry runs.
+        let expired=s.on_timer(MonoNs(720_000_000));
+        assert_eq!(expired.releases.len(),1);
+        assert!(expired.candidates.is_empty());
+    }
+
+    #[test]
+    fn v3_mature_negative_single_repair_and_positive_cancellation() {
+        let mut s=state(16,80_000_000);
+        s.enable_adaptive_timing(400_000_000,5_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
+        s.on_sent_adaptive(frozen(3),MonoNs(0)).unwrap();
+        s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(400_000_000)).unwrap();
+        assert!(s.on_timer(MonoNs(439_999_999)).candidates.is_empty());
+        let mut candidates=s.on_timer(MonoNs(440_000_000)).candidates;
+        assert_eq!(candidates.len(),1);
+        assert_eq!(candidates[0].pn(),RecordPn(1));
+        let candidate=candidates.remove(0);
+        // Authentic positive wins a candidate-versus-dispatch race.
+        s.on_receipt(&receipt(2,3,vec![page(0,&[1,3])]),MonoNs(440_000_001)).unwrap();
+        assert!(!s.preflight(&candidate,MonoNs(440_000_002)));
+        assert_eq!(s.outstanding(),0);
+        assert!(s.on_timer(MonoNs(1_000_000_000)).candidates.is_empty());
+    }
+
+    #[test]
+    fn v3_stale_report_cannot_arm_and_mature_single_chance_retires() {
+        let mut s=state(8,80_000_000);
+        s.enable_adaptive_timing(600_000_000,5_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        s.on_sent_adaptive(frozen(2),MonoNs(0)).unwrap();
+        s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(600_000_000)).unwrap();
+        s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(610_000_000)).unwrap();
+        assert!(s.on_timer(MonoNs(639_999_999)).candidates.is_empty());
+        let candidate=s.on_timer(MonoNs(640_000_000)).candidates.remove(0);
+        assert_eq!(candidate.pn(),RecordPn(2));
+        s.on_send_result(&candidate,RepairSendResult::Uncertain,
+            MonoNs(640_000_001)).unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert_eq!(s.diagnostic_snapshot().repair_uncertain_retired,1);
+        assert!(s.on_timer(MonoNs(2_000_000_000)).candidates.is_empty());
+    }
+    #[test]
     fn r2_adaptive_authenticated_rtt_drives_single_repair_retain_without_unbounded_retry(){
         let mut s=state(8,80_000_000);
         s.enable_adaptive_timing(650_000_000,20_000_000).unwrap();
