@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-single-repair-v2-Normal2pct-same-VM-AB",
+  "phase": "P1-single-repair-v2-Normal2pct-AB-failed-attributed-bounds",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,18 +23,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P1-Normal2pct-single-repair-v2-old-new-AB-60s",
-      "type": "ONE_SAME_VM_SEQUENTIAL_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
-      "source": "COMMIT_PENDING",
-      "policy": "outer-single-repair-v2",
-      "A_source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
-      "B_source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
-      "why": "Exact prior Normal2pct/oneway200ms/60s seed5205 with frozen native A/B bundles and strict B v2 readback. The declared 0.25% gate is v2; historical A can fail it without being retroactively relabeled."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "S028",
@@ -286,6 +275,14 @@
       "artifact_id": 12480718285,
       "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
       "file": "P1-single-repair-v2-native-pass-AB-policy-gate-20261023.json"
+    },
+    {
+      "id": "P1-single-repair-v2-Normal2pct-AB-FAIL-20261023",
+      "result": "FAIL_REAL_BIDIRECTIONAL_BUSINESS_BOTH_AB",
+      "run": 39907046412,
+      "artifact_id": 12481288207,
+      "source": "5890776f85a34373bc0c71ebdea43df97f59e52a",
+      "note": "B v2 policy proven; UDP c2s2.481% s2c2.532% vs0.25% gate. Native+MTU9 PASS do not upgrade to product business PASS. 341 quota blocks across endpoints; repair usefulness not observed. See structured evidence."
     }
   ],
   "open_issues": [
@@ -303,9 +300,10 @@
     "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
-    "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
+    "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
+    "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Discover ONE automatic network scenario Action triggered by the committed tests/network/request.json. Do NOT dispatch again. Verify exact bundle artifact hashes, same VM sequential AB, real bidirectional UDP/TCP packet-byte injection/delivery, B outer-single-repair-v2 readback, <=0.25% steady UDP loss each direction, first-delivery/TCP tail/CPU/RSS/queue-age/Stop and host netem. Preserve A historical baseline; treat A FAIL under v2 gate as legacy baseline not a v2 qualification. Triage meaningful B FAIL using new evidence, no blind tuning/repeat.",
+  "next_action": "Representative Normal2pct same-VM AB completed as FAIL at run39907046412 (artifact12481288207). No duplicate dispatch or blind quota/PTO/second-repair patch. Next information-gain step, only if continuing this specific open business failure: bound and correlate authenticated first-delivery vs spurious repair, real M4 completion, RX/TUN recovered counts and per-epoch quota blocks using existing M2 owner metadata; run one focused Actions observation, then compute first and minimally fix evidenced root. Keep 0.25% v2 gate, strict Stop/MTU/capacity; H500 and no-cross-business-HOL remain NOT_QUALIFIED.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
@@ -321,6 +319,10 @@
     "recovery_policy": "outer-single-repair-v2",
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
-    "runtime_isa": "NOT_OBSERVED"
+    "runtime_isa": "NOT_OBSERVED",
+    "business_qualification": "FAIL_NORMAL2PCT_V2_B_C2S_2_481PCT_S2C_2_532PCT",
+    "business_run_id": 39907046412,
+    "business_artifact_id": 12481288207,
+    "business_source": "5890776f85a34373bc0c71ebdea43df97f59e52a"
   }
 }
