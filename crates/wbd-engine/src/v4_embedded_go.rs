@@ -317,6 +317,27 @@ impl NormalFirstSendM2 {
 // No separate sealer, PN allocator, or Go V3 retransmit is reachable.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[repr(usize)]
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+enum OriginalRepairBlockReason{
+    FreshGlobal=0,FreshShadow=1,Grant=2,Burst=3,Quota=4,
+    Capacity=5,Stale=6,LocalOther=7,GlobalOther=8,Invariant=9,
+}
+const ORIGINAL_REPAIR_BLOCK_REASON_COUNT:usize=10;
+fn original_repair_reserve_block_reason(
+    err:wbd_recovery::GlobalRepairError
+)->OriginalRepairBlockReason{
+    use wbd_recovery::{BudgetError as B,GlobalRepairError as G};
+    match err{
+        G::Local(B::BurstPaced)=>OriginalRepairBlockReason::Burst,
+        G::Local(B::QuotaExhausted)=>OriginalRepairBlockReason::Quota,
+        G::Local(B::NoCapacity)|G::PendingCapacity|G::GlobalCap=>
+            OriginalRepairBlockReason::Capacity,
+        G::StaleCandidate|G::StaleGrant=>OriginalRepairBlockReason::Stale,
+        G::Local(_)=>OriginalRepairBlockReason::LocalOther,
+        _=>OriginalRepairBlockReason::GlobalOther,
+    }
+}
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -326,7 +347,15 @@ struct OriginalOuterRepair{
     repair_copied:u64,
     repair_uncertain:u64,
     repair_blocked:u64,
+    block_reasons:[u64;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],
     retired:u64,
+}
+impl OriginalOuterRepair{
+    fn note_block(&mut self,reason:OriginalRepairBlockReason){
+        self.repair_blocked=self.repair_blocked.saturating_add(1);
+        let slot=&mut self.block_reasons[reason as usize];
+        *slot=slot.saturating_add(1);
+    }
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2541,7 +2570,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
     h:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=17{return INVALID}
+    if out.is_null()||n!=27{return INVALID}
     #[cfg(not(feature="fec2_product_record"))]
     {let _=h;BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
@@ -2561,8 +2590,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             t.samples,t.srtt_ns/1_000,t.rttvar_ns/1_000,t.recent_rtt_ns/1_000,
             t.reorder_window_ns/1_000,t.pto_ns/1_000,t.cache_ns/1_000,
             v.shadow.outstanding() as u64,
+            v.block_reasons[0],v.block_reasons[1],v.block_reasons[2],
+            v.block_reasons[3],v.block_reasons[4],v.block_reasons[5],
+            v.block_reasons[6],v.block_reasons[7],v.block_reasons[8],
+            v.block_reasons[9],
         ];
-        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,17)}
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,27)}
         OK
     }
 }
@@ -3828,15 +3861,17 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         for record in frozen_for_outer.iter().take(copied.min(data_count)){
             let frame_bytes=(record.bytes().len()+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
-            let registered=global.on_fresh_accepted(
+            match global.on_fresh_accepted(
                 original.direction,frame_bytes,now
-            ).is_ok();
-            if registered && original.shadow.on_sent_adaptive(
-                record.clone(),now
-            ).is_ok(){
-                original.sent_fresh=original.sent_fresh.saturating_add(1);
-            }else{
-                original.repair_blocked=original.repair_blocked.saturating_add(1);
+            ){
+                Ok(())=>{
+                    if original.shadow.on_sent_adaptive(record.clone(),now).is_ok(){
+                        original.sent_fresh=original.sent_fresh.saturating_add(1);
+                    }else{
+                        original.note_block(OriginalRepairBlockReason::FreshShadow);
+                    }
+                },
+                Err(_)=>original.note_block(OriginalRepairBlockReason::FreshGlobal),
             }
         }
     }
@@ -4100,7 +4135,7 @@ fn background_original_repair_once(
                             if submission.driver.metadata!=candidate.frozen().metadata()
                                 ||submission.driver.wire.as_ptr()!=
                                     candidate.frozen().bytes().as_ptr(){
-                                own.repair_blocked=own.repair_blocked.saturating_add(1);
+                                own.note_block(OriginalRepairBlockReason::Invariant);
                                 let _=global.revoke(lease,now);
                                 let _=own.shadow.on_send_result(
                                     &candidate,RepairSendResult::NotSent,now);
@@ -4108,9 +4143,9 @@ fn background_original_repair_once(
                             }
                             Some((lease,submission.reservation_id,route))
                         },
-                        Err(_)=>{
+                        Err(err)=>{
                             let _=global.revoke(lease,now);
-                            own.repair_blocked=own.repair_blocked.saturating_add(1);
+                            own.note_block(original_repair_reserve_block_reason(err));
                             let _=own.shadow.on_send_result(
                                 &candidate,RepairSendResult::NotSent,now);
                             None
@@ -4118,7 +4153,7 @@ fn background_original_repair_once(
                     }
                 },
                 Err(_)=>{
-                    own.repair_blocked=own.repair_blocked.saturating_add(1);
+                    own.note_block(OriginalRepairBlockReason::Grant);
                     let _=own.shadow.on_send_result(
                         &candidate,RepairSendResult::NotSent,now);
                     None
@@ -4229,9 +4264,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             return INVALID
         }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
-        // RepairBudget derives its finite instantaneous burst from the same
-        // sparse/10% ledger. The large configured ceiling remains only an
-        // absolute safety cap; it is not extra repair credit or fresh HOL.
+        // RepairBudget independently enforces its finite local burst and
+        // sparse/10% epoch ledger. The large configured ceiling remains only
+        // an absolute safety cap; it is not extra repair credit or fresh HOL.
         if global.register(direction,wbd_recovery::RepairBudgetConfig{
             outer_mtu:u64::from(e.raw_tx_lease_mtu),
             max_repair_bytes_per_epoch:8*1024*1024,
@@ -4241,7 +4276,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
             shadow,direction,route,sent_fresh:0,authentic_ack:0,
-            repair_copied:0,repair_uncertain:0,repair_blocked:0,retired:0,
+            repair_copied:0,repair_uncertain:0,repair_blocked:0,
+            block_reasons:[0;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],retired:0,
         }));
         e.original_outer=Some(Arc::clone(&active));
         Some(active)
@@ -4960,6 +4996,30 @@ mod tests{
         assert!(!first.has_clean_fixed_m2());
         first.censored=true;
         assert!(!first.has_clean_fixed_m2());
+    }
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64")))]
+    #[test]
+    fn m0_original_repair_block_reason_classifier_is_stable(){
+        use wbd_recovery::{BudgetError as B,GlobalRepairError as G};
+        assert_eq!(original_repair_reserve_block_reason(G::Local(B::BurstPaced)),
+            OriginalRepairBlockReason::Burst);
+        assert_eq!(original_repair_reserve_block_reason(G::Local(B::QuotaExhausted)),
+            OriginalRepairBlockReason::Quota);
+        assert_eq!(original_repair_reserve_block_reason(G::Local(B::NoCapacity)),
+            OriginalRepairBlockReason::Capacity);
+        assert_eq!(original_repair_reserve_block_reason(G::PendingCapacity),
+            OriginalRepairBlockReason::Capacity);
+        assert_eq!(original_repair_reserve_block_reason(G::GlobalCap),
+            OriginalRepairBlockReason::Capacity);
+        assert_eq!(original_repair_reserve_block_reason(G::StaleCandidate),
+            OriginalRepairBlockReason::Stale);
+        assert_eq!(original_repair_reserve_block_reason(G::StaleGrant),
+            OriginalRepairBlockReason::Stale);
+        assert_eq!(original_repair_reserve_block_reason(G::Local(B::InvalidFrame)),
+            OriginalRepairBlockReason::LocalOther);
+        assert_eq!(original_repair_reserve_block_reason(G::WrongReceiptScope),
+            OriginalRepairBlockReason::GlobalOther);
     }
     #[test]
     fn ready_only_batch_0_1_32_33_and_failure_do_not_wait(){

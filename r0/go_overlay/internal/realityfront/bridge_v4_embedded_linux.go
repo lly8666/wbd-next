@@ -299,6 +299,9 @@ type V4PublicOuterCounters struct{
     LatePositiveExpired uint64
     TimingSamples,SRTTus,RTTVarus,RecentRTTus,Reorderus,PTOus,Cacheus uint64
     ShadowOutstanding uint64
+    BlockedFreshGlobal,BlockedFreshShadow,BlockedGrant uint64
+    BlockedBurst,BlockedQuota,BlockedCapacity,BlockedStale uint64
+    BlockedLocalOther,BlockedGlobalOther,BlockedInvariant uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
@@ -307,9 +310,9 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
         C.uint64_t(b.handle),&values[0],6)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
-    var d [17]C.uint64_t
+    var d [27]C.uint64_t
     rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
-        C.uint64_t(b.handle),&d[0],17)
+        C.uint64_t(b.handle),&d[0],27)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 diagnostics=%d",errV4Embedded,int(rc))}
     return V4PublicOuterCounters{
         FirstKernelCopied:uint64(values[0]),
@@ -325,6 +328,11 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         SRTTus:uint64(d[10]),RTTVarus:uint64(d[11]),RecentRTTus:uint64(d[12]),
         Reorderus:uint64(d[13]),PTOus:uint64(d[14]),Cacheus:uint64(d[15]),
         ShadowOutstanding:uint64(d[16]),
+        BlockedFreshGlobal:uint64(d[17]),BlockedFreshShadow:uint64(d[18]),
+        BlockedGrant:uint64(d[19]),BlockedBurst:uint64(d[20]),
+        BlockedQuota:uint64(d[21]),BlockedCapacity:uint64(d[22]),
+        BlockedStale:uint64(d[23]),BlockedLocalOther:uint64(d[24]),
+        BlockedGlobalOther:uint64(d[25]),BlockedInvariant:uint64(d[26]),
     },nil
 }
 // Read-only original Rust worker stats under the authenticated owner scope.
