@@ -129,12 +129,20 @@ class Worker:
         self.sel.register(s, selectors.EVENT_READ, key)
         return s
 
+    def tcp_preconnect_buffers(self, sock):
+        # Apply before SYN/accept so window-scale negotiation sees desired RX size.
+        # Normal baseline deliberately leaves socket defaults untouched.
+        if self.config["network"].get("tcp_window_profile_selected")=="large":
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF,8*1024*1024)
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,8*1024*1024)
+
     def connect_streams(self):
         if self.config["traffic"]["udp_share"] == 1:
             return
         if self.role == "server":
             listen = socket.socket()
             listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.tcp_preconnect_buffers(listen)
             listen.bind((self.local, self.port + 2))
             listen.listen(32)
             listen.settimeout(15)
@@ -147,6 +155,7 @@ class Worker:
                 deadline = time.monotonic() + 15
                 while True:
                     s = socket.socket()
+                    self.tcp_preconnect_buffers(s)
                     s.bind((self.local, 0))
                     s.settimeout(1)
                     try:
@@ -160,6 +169,9 @@ class Worker:
                         time.sleep(.1)
         for s in self.streams:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self.effective_buffers.setdefault("tcp",[]).append({
+                "sndbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF),
+                "rcvbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)})
             s.setblocking(False)
             self.sel.register(s, selectors.EVENT_READ, "tcp")
             self.read_buffers[s] = bytearray()
