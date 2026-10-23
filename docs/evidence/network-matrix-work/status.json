@@ -27,7 +27,7 @@
     {
       "id": "P1-Normal2pct-sparseburst-old-new-AB-60s",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "A": {
         "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
         "run_id": 39893574791,
@@ -42,7 +42,12 @@
         "artifact_id": 12476119650,
         "sha256": "711026721bab51faa2a91ecb71990ce5f2edfbb83242a7af86af66dd8b34fe79"
       },
-      "why": "Causal test of instantaneous sparse-floor burst only. Exact prior Normal residual scenario; old diagnostic source vs new bounded burst, same RTT learning/seed/load/loss/delay."
+      "why": "Causal test of instantaneous sparse-floor burst only. Exact prior Normal residual scenario; old diagnostic source vs new bounded burst, same RTT learning/seed/load/loss/delay.",
+      "run_id": 39896018098,
+      "attempt": 1,
+      "harness_source": "cfac7d71745bc99aba04418740651bd168549521",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39896018098",
+      "contract_run_id": 39896018083
     }
   ],
   "recent_evidence": [
@@ -218,7 +223,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push request once and discover unique harness run. Do not redispatch. Compare blocked, expired0, candidate_first/retry, actual repairs, UDP missing/loss, TCP p99/backpressure, CPU/RSS, learned timing, Stop. PASS requires B <=1% UDP residual both directions with no repair storm/Stop/capacity regression.",
+  "next_action": "ONE same-VM AB Action39896018098 attempt1 harness SOURCEcfac7d71 in progress; contract39896018083. Do not redispatch. Compare blocked/expired0/UDP residual first, then repair volume, TCP tail, CPU/RSS, timing and Stop. If B <=1% both UDP directions without repair storm or regression, close this P1 bottleneck and move to next static capacity/readback gate.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
