@@ -15,11 +15,6 @@ use wbd_types::buffer_contract::{BufferOrigin, FrozenRecordHandle};
 use wbd_types::{LaneKey, MonoNs, RecordPn, TunnelKey};
 use crate::receipt::{RepairCandidate, RepairSendResult};
 
-// Build-time-only overprovision experiment. Standard artifacts never enable it.
-// This intentionally relaxes the 10% repair-bandwidth policy ONLY in the
-// separately labelled GitHub Actions diagnostic binary; never production.
-const NETWORK_DIAG_10X: bool = option_env!("WBD_NETWORK_DIAG_10X").is_some();
-
 const SECOND_NS: u64 = 1_000_000_000;
 const SPARSE_FLOOR_BYTES: u64 = 32_768;
 
@@ -124,7 +119,7 @@ impl RepairBudget {
     pub fn new(direction: BudgetDirection, cfg: RepairBudgetConfig, now: MonoNs)
         -> Result<Self, BudgetError>
     {
-        if cfg.outer_mtu == 0 || cfg.outer_mtu.checked_mul(if NETWORK_DIAG_10X { 80 } else { 8 }).is_none()
+        if cfg.outer_mtu == 0 || cfg.outer_mtu.checked_mul(8).is_none()
             || cfg.max_repair_bytes_per_epoch < SPARSE_FLOOR_BYTES
             || cfg.max_pending_reservations == 0 || cfg.max_pending_bytes < cfg.outer_mtu
             || cfg.io_timeout_ns == 0 || cfg.io_timeout_ns > SECOND_NS
@@ -133,17 +128,17 @@ impl RepairBudget {
         }
         Ok(Self {
             direction, current: Epoch::new(now.0 / SECOND_NS), previous: None,
-            tokens: cfg.outer_mtu * if NETWORK_DIAG_10X { 80 } else { 8 }, cfg,
+            tokens: cfg.outer_mtu * 8, cfg,
             pending: BTreeMap::new(), pending_bytes: 0, next_id: 0,
             last_now: now, fractional_token_ns: 0,
             overdue_uncertain_bytes: 0, overdue_uncertain_count: 0,
         })
     }
 
-    fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * if NETWORK_DIAG_10X { 80 } else { 8 } }
+    fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
-        (self.current.fresh / if NETWORK_DIAG_10X { 1 } else { 10 })
+        (self.current.fresh / 10)
             .max(SPARSE_FLOOR_BYTES)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }
@@ -152,7 +147,7 @@ impl RepairBudget {
         // its unused byte allowance into the new epoch.
         let recent_f = self.previous.map_or(self.current.fresh,
             |e| e.fresh.max(self.current.fresh));
-        (recent_f / if NETWORK_DIAG_10X { 1 } else { 10 }).max(SPARSE_FLOOR_BYTES)
+        (recent_f / 10).max(SPARSE_FLOOR_BYTES)
     }
 
     fn advance(&mut self, now: MonoNs) -> Result<(), BudgetError> {

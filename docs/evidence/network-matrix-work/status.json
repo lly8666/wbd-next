@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-single-innerTCP-2pct-buffers-and-reorder-falsified",
+  "phase": "P2-singleTCP-10x-capacity-experiment-did-not-qualify",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -22,31 +22,8 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "4b33513d9742acaa20b0bd7752d51dd2cb3785de",
-  "open_requests": [
-    {
-      "id": "P2-TCP1-2pct-product-ceilings-10x-AB",
-      "state": "ACTION_PUSH_REQUESTED",
-      "type": "TEMP_DIAGNOSTIC_NOT_QUALIFICATION",
-      "baseline_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "baseline_artifact_id": 12486939897,
-      "scenario": "one-inner-TCP-per-direction 10Mbps/dir 2%IID loss 200ms one-way 60s",
-      "plan": "Build diag ARM64 B (compile-time only), exact SHA artifact + zip hash, then same VM sequential AB against A. Never repeat socket/reordering AB. No FEC/production tuning.",
-      "build_failure": {
-        "run": 39949668566,
-        "attempt": 1,
-        "result": "FAIL_COMPILE_RUST_1_85_1_const_str_match_E0015",
-        "action": "fixed_const_Option_is_some_then_new_exact_source_build"
-      },
-      "harness_commit": "NEXT_COMMIT_REQUEST_PUSH",
-      "diagnostic_build_source": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
-      "diagnostic_build_run": 39949934400,
-      "diagnostic_build_attempt": 1,
-      "diagnostic_artifact_id": 12500346228,
-      "diagnostic_artifact_zip_sha256": "9ba229750d62a6e32b6965ee9d2ab28eaee03aee74914cb719b42c0685a7fba3",
-      "diagnostic_build_status": "success"
-    }
-  ],
+  "latest_harness_source": "31835d7f454bc716a051deca1c41d6671a71fe05",
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -79,6 +56,17 @@
       "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "result": "A_INCONCLUSIVE_B_INCONCLUSIVE_REORDER192_C2S_WORSE_P99_WORSE",
       "file": "P2-TCP1-2pct-reordering192-AB-rejected-20261023.json"
+    },
+    {
+      "id": "P2-TCP1-2pct-product-ceilings-10x-AB-20261023",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURED_BOTH_LEGS_NO_10MBPS_QUALIFICATION",
+      "run": 39950439687,
+      "attempt": 1,
+      "artifact_id": 12500491341,
+      "artifact_zip_sha256": "9e88daea80e6a7a611992dd6464c5f36c081ff22d025c70e518248690784f552",
+      "source_A": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "source_B": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
+      "file": "docs/evidence/network-matrix-work/P2-TCP1-2pct-product-ceilings-10x-AB-20261023.json"
     }
   ],
   "open_issues": [
@@ -89,9 +77,10 @@
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN.",
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass.",
-    "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain."
+    "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain.",
+    "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness."
   ],
-  "next_action": "P2-TCP1-2pct-product-ceilings-10x-AB one-scene one-job real TCP diagnostic requested via tests/network/request.json push. Resolve Actions run/attempt for this exact request and pin result; do not repeat dispatch. A original product281f6c64 vs B build7d8f6eb2 100% temporary repair quota and 8192 sender slots, same ARM64 VM sequential. Require B m1 marker diagnostic_10x=1, inspect throughput both ways, TCP p99, cwnd, M1 peak, repair quota denied, TUN drops, CPU and RSS. Experimental profile never qualifies production; after evidence restore build workflow and nominal behavior, resume evidence-led M2 repair-timeliness diagnosis.",
+  "next_action": "10x one-off requested experiment CONCLUDED INCONCLUSIVE (run39950439687 attempt1 artifact12500491341). Do not rerun blind quota/window/reordering. Baseline Normal/off 10% + one repair remains approved, optional diagnostic source retained only in Git evidence; restore code+ARM64 build workflow from preexperiment 71e70864. Next complete task: bounded authenticated Normal-only M2 inner TCP DATA-versus-ACK loss/repair age + per-second quota denies and spurious PTO, distinguish kernel CUBIC cwnd collapse from too-late outer repair, then narrow policy. Separately diagnose high-rate lossless M1 TUN drop; do not treat multistream PASS as TCP1.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
