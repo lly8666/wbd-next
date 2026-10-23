@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "id": "P1-one-epoch-quota-carry-native-pass-AB-intent-20261023",
+  "native": {
+    "run_id": 39900920663,
+    "attempt": 1,
+    "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+    "conclusion": "success",
+    "product_artifact_id": 12478957278,
+    "product_sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a",
+    "mtu_artifact_id": 12479295557,
+    "mtu_sha256": "7782214f2e349d41a14f71755abd2ca33923fa97a558b7a771ba8892d4aa1bc2",
+    "units": {
+      "one_epoch_carry": "PASS",
+      "first_repair_priority": "PASS",
+      "adaptive_rtt": "PASS",
+      "retirement_diagnostics": "PASS",
+      "block_reason_classifier": "PASS",
+      "fixed_m2": "PASS"
+    },
+    "mtu9": "PASS",
+    "runtime_native_dispatch": "NOT_OBSERVED"
+  },
+  "mechanism": "At adjacent 1s rollover only true unused base allowance may carry, capped32KiB and absolute max config. If current epoch consumes carried credit it cannot pass that credit onward; skipped epochs drop it; late refunds do not retroactively mint carry. Two-adjacent-epoch total allowance unchanged.",
+  "experiment": {
+    "id": "P1-Normal2pct-one-epoch-quota-carry-old-new-AB-60s",
+    "order": "AB",
+    "same_vm": true,
+    "A": {
+      "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+      "run_id": 39899738046,
+      "attempt": 1,
+      "artifact_id": 12477859860,
+      "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
+    },
+    "B": {
+      "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+      "run_id": 39900920663,
+      "attempt": 1,
+      "artifact_id": 12478957278,
+      "sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a"
+    },
+    "scenario": "Normal 2Mbps/direction 50/50 UDP/TCP 99%1287B IID2% one-way200ms 60s seed5205",
+    "decision": "B should reduce QuotaExhausted/expired0 and UDP residual without increasing long-run repair rate or regressing CPU/Stop."
+  },
+  "scope": "Native functional gate PASS only; business qualification pending AB."
+}

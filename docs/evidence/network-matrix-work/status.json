@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-one-epoch-unused-quota-credit-native-build",
+  "phase": "P1-one-epoch-unused-quota-credit-real-AB",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,16 +25,24 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-one-epoch-unused-quota-credit-native",
-      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_MTU9",
-      "status": "QUEUED_OR_IN_PROGRESS",
-      "trigger": "wbd-recovery path auto-build",
-      "baseline_source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
-      "why": "Verify at most one adjacent epoch unused credit capped32KiB; no multi-epoch accumulation, no long-run 10% increase, first-priority/retry-pacer/auth/Stop unchanged.",
-      "run_id": 39900920663,
-      "attempt": 1,
-      "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39900920663"
+      "id": "P1-Normal2pct-one-epoch-quota-carry-old-new-AB-60s",
+      "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "A": {
+        "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+        "run_id": 39899738046,
+        "attempt": 1,
+        "artifact_id": 12477859860,
+        "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
+      },
+      "B": {
+        "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+        "run_id": 39900920663,
+        "attempt": 1,
+        "artifact_id": 12478957278,
+        "sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a"
+      },
+      "why": "Only test one-generation unused quota carry capped32KiB on top of already-verified first-repair priority. Same Normal2pct/200ms/60s seed5205; no rate/PTO/load changes."
     }
   ],
   "recent_evidence": [
@@ -240,6 +248,13 @@
       "run": 39900235569,
       "artifact_id": 12478751133,
       "file": "P1-first-repair-priority-AB-quota-carry-intent-20261023.json"
+    },
+    {
+      "id": "P1-one-epoch-quota-carry-native",
+      "result": "PASS_BUILD_UNITS_MTU9",
+      "run": 39900920663,
+      "artifact_id": 12478957278,
+      "file": "P1-one-epoch-quota-carry-native-pass-AB-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -259,14 +274,14 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE native ARM64 build39900920663 attempt1 SOURCEa05e0596 outstanding. Do not redispatch. Require one-epoch carry unit + first-priority/adaptive/diagnostic/block-classifier/FixedM2 + MTU9. If pass, one same-VM A=6746 vs B=a05e exact Normal2pct60s.",
+  "next_action": "Push exactly once, discover unique harness run, do not redispatch. Compare blocked_quota/burst, expired0, repairs, UDP residual, TCP p99/backpressure, CPU/RSS, netem actual, learned timing, Stop. PASS target B <=1% UDP residual both directions with no repair-rate/Stop/capacity regression.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
-    "run_id": 39899738046,
+    "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+    "run_id": 39900920663,
     "attempt": 1,
-    "artifact_id": 12477859860,
-    "zip_sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40",
+    "artifact_id": 12478957278,
+    "zip_sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",

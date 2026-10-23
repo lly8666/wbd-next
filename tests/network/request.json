@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P1-Normal2pct-first-repair-priority-old-new-AB-60s",
+  "id": "P1-Normal2pct-one-epoch-quota-carry-old-new-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -68,18 +68,18 @@
   },
   "bundles": {
     "A": {
-      "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
-      "run_id": 39896777307,
-      "attempt": 1,
-      "artifact_id": 12476734780,
-      "sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f"
-    },
-    "B": {
       "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
       "run_id": 39899738046,
       "attempt": 1,
       "artifact_id": 12477859860,
       "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
+    },
+    "B": {
+      "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+      "run_id": 39900920663,
+      "attempt": 1,
+      "artifact_id": 12478957278,
+      "sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a"
     }
   },
   "order": "AB"
