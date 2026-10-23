@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-Fixed2pct-parity-repair-budget-boundary-fix-build",
+  "phase": "P0-Fixed2pct-kind3-sameVM-AB-intent",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -22,20 +22,39 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
+  "latest_harness_source": "REQUEST_COMMIT_PENDING",
   "open_requests": [
     {
-      "id": "P0-Fixed2pct-parity-kind3-boundary-fix-native-build",
-      "type": "ONE_NEW_EXACT_SOURCE_PRODUCT_BUILD",
-      "status": "IN_PROGRESS",
-      "trigger": "branch push Rust owner + existing native builder workflow invokes one ARM64 original Go/Rust build and actual Rust unit; no manual dispatch",
-      "previous_run": 39885059364,
-      "previous_result": "HARD_FAIL",
-      "intent": "Fix already-validated 12B REPAIR_HEADER body guard, preserve 14B source reservation, AEAD/PN/MTU/FEC and Stop gates; prove scalar codec boundary actual Rust test, then one exact high-information same-VM old/new Fixed2% AB. M2 applied remains OPEN.",
-      "run_id": 39886303564,
-      "attempt": 1,
-      "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39886303564"
+      "id": "P0-kind3-nearMTU-original-vs-fix-AB",
+      "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_ONE_MEASUREMENT_JOB",
+      "status": "INTENT_COMMITTED_RUN_ID_NOT_YET_OBSERVED",
+      "trigger": "push of tests/network/request.json on experiment branch; no manual dispatch",
+      "why": "Distinguish parity kind3 12B seal boundary as cause of near-MTU FEC2 losses from remaining M2 applied/receipt and TCP tail; if parity failures vanish and residual improves, proceed to P1; otherwise inspect earliest remaining boundary.",
+      "A": {
+        "source": "d64be28591c3752af06be399ff598266ecf4d664",
+        "run_id": 39881938976,
+        "artifact_id": 12470698437,
+        "zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+        "build_status": "success",
+        "architecture": "aarch64",
+        "scope": "native-verified-plus-9-MTU-functional"
+      },
+      "B": {
+        "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+        "run_id": 39886303564,
+        "attempt": 1,
+        "artifact_id": 12473520038,
+        "zip_sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6",
+        "build_status": "success",
+        "architecture": "aarch64",
+        "scope": "native Go/Rust + 1 repair budget Rust unit + 9/9 MTU functions (not mixed traffic)",
+        "runtime_isa": "NOT_OBSERVED"
+      },
+      "seed": 5205,
+      "scenario": "2Mbps/direction, 99% 1287B UDP, 1%64B, UDP/TCP50/50, 4 TCP streams, 2%IID,200ms one-way,120s steady",
+      "expected_run": "UNKNOWN_FIND_AFTER_PUSH",
+      "expected_request_commit": "UNKNOWN_UNTIL_PUSH",
+      "cleanup_hard_gate": true
     }
   ],
   "recent_evidence": [
@@ -123,6 +142,13 @@
       "run": 39885059364,
       "artifact_id": 12472073637,
       "file": "P0-PR25-Fixed2pct-nearMTU-120s-fail-20261023.json"
+    },
+    {
+      "id": "P0-kind3-native-build-MTU9",
+      "result": "SUCCESS_FUNCTIONAL_NOT_PERFORMANCE",
+      "run": 39886303564,
+      "artifact_id": 12473520038,
+      "file": "P0-kind3-native-boundary-pass-AB-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -137,17 +163,19 @@
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples.",
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
-    "P0 Fixed2% original merged PR25 source parity_seal 33648/33502 real send failures (budget-14 wrong for repair body length budget-12), UDP missing1.91/1.83% vs target1%, TCP tail4.1/8.1s and client applied0 with M2 unknown/censored. Repair boundary fix under native validation, NOT YET QUALIFIED."
+    "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal."
   ],
-  "next_action": "Native ARM64 build Action39886303564 in progress for exact parity kind3 budget fix source a58d9140. Do NOT duplicate build. Check real filtered Rust unit m0_fec2_kind3_full_mtu_repair_budget_invariant and Go build, 9 ARM64 MTU cases; verify ZIP SHA/ELF+manifest. If successful schedule one same runner sequential Fixed2pct old d64be vs new a58d (99%1287B, RTT400,2%IID,120s), preserve both client Fixed readback/applied hard gate, TCP tail, Repair seal counts, actual CPU and existing S032 FAIL.",
+  "next_action": "Automatic ONE test on request.json push: discover unique network-harness run for the exact request commit; verify its same-job A=d64be native ZIP and B=a58d native ZIP, ELF183/manifest/ZIP and per-binary hashes. Read both legs parity_seal, k/r, UDP residual, TCP tail, product CPU/RSS, client+server mode applied and M2 unknown/censored and Stop. Preserve remaining FAIL; only then decide minimal next action. Do not dispatch again on timeout.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "d64be28591c3752af06be399ff598266ecf4d664",
-    "run_id": 39881938976,
-    "artifact_id": 12470698437,
-    "zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+    "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+    "run_id": 39886303564,
+    "attempt": 1,
+    "artifact_id": 12473520038,
+    "zip_sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6",
     "build_status": "success",
     "architecture": "aarch64",
-    "scope": "native-verified-plus-9-MTU-functional"
+    "scope": "native Go/Rust + 1 repair budget Rust unit + 9/9 MTU functions (not mixed traffic)",
+    "runtime_isa": "NOT_OBSERVED"
   }
 }

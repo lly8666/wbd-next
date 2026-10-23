@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-P0-merged-MTU-Fixed2pct-large99-120s",
+  "id": "P0-kind3-12B-parity-AB-nearMTU-120s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -60,7 +60,14 @@
       "attempt": 1,
       "artifact_id": 12470698437,
       "sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef"
+    },
+    "B": {
+      "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+      "run_id": 39886303564,
+      "attempt": 1,
+      "artifact_id": 12473520038,
+      "sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6"
     }
   },
-  "order": "A"
+  "order": "AB"
 }
