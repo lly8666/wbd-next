@@ -27,11 +27,15 @@
     {
       "id": "P1-Normal-residual-readonly-diagnostics-native",
       "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_9_MTU",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "QUEUED_OR_IN_PROGRESS",
       "trigger": "read-only Rust/Go diagnostic source push; no manual dispatch",
       "baseline_product": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
       "new_source": "COMMIT_TBD",
-      "why": "No recovery behavior change. Split remaining non-ACK retirement by 0/1/2 repair attempts and expose learned SRTT/PTO/Tcache before any further tuning. Harness already parses added numeric fields from same public M2 marker."
+      "why": "No recovery behavior change. Split remaining non-ACK retirement by 0/1/2 repair attempts and expose learned SRTT/PTO/Tcache before any further tuning. Harness already parses added numeric fields from same public M2 marker.",
+      "run_id": 39893574791,
+      "attempt": 1,
+      "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39893574791"
     }
   ],
   "recent_evidence": [
@@ -186,7 +190,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Locate exactly one automatic ARM64 native build for read-only residual diagnostics. Require new diagnostics unit, adaptive timing unit, Fixed M2 unit, release bundle and 9 MTU PASS. Then run ONE B-only Normal2pct 60s observation using new diagnostic product; do not repeat A and do not tune parameters before reading expired0/1/2 + acked0/1/2 + effective timing.",
+  "next_action": "ONE diagnostic native Action39893574791 source21b1a9c attempt1 outstanding; do not redispatch. Require diagnostics split unit + adaptive unit + Fixed cohort unit + native release + 9 MTU PASS. Then one B-only Normal2pct 60s diagnostic observation.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
