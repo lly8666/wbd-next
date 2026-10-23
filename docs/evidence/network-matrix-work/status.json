@@ -27,7 +27,7 @@
     {
       "id": "P1-Normal2pct-first-repair-priority-old-new-AB-60s",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_SAME_VM_AB",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "A": {
         "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
         "run_id": 39896777307,
@@ -42,7 +42,12 @@
         "artifact_id": 12477859860,
         "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
       },
-      "why": "Only test first actual repair latency-priority within unchanged hard epoch/global quota; retry stage keeps 8-MTU pacer. Same Normal2pct/200ms/60s seed5205, no timing/load/quota changes."
+      "why": "Only test first actual repair latency-priority within unchanged hard epoch/global quota; retry stage keeps 8-MTU pacer. Same Normal2pct/200ms/60s seed5205, no timing/load/quota changes.",
+      "run_id": 39900235569,
+      "attempt": 1,
+      "harness_source": "429e33b41ad7d03b679e6ea38b10045ffc94a3d7",
+      "contract_run_id": 39900235850,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39900235569"
     }
   ],
   "recent_evidence": [
@@ -260,7 +265,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "Push request once and discover unique harness run. Do not redispatch. Compare blocked_burst/quota, candidate_first/retry, expired0/1/2, actual repairs, UDP residual, TCP p99/backpressure, CPU/RSS, learned timing, Stop. PASS target B <=1% UDP residual both directions without quota/repair storm or Stop/capacity regression.",
+  "next_action": "ONE same-VM first-repair priority AB Action39900235569 attempt1, contract39900235850, in progress. Do not redispatch. Settle blocked_burst/quota, expired0, actual repairs, UDP residual, TCP tail, CPU/RSS, learned timing, host warning and Stop. If B <=1% both directions and bounded, close P1 low-loss point and move to P2 capacity prerequisites.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
