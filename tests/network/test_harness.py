@@ -78,6 +78,16 @@ class Contracts(unittest.TestCase):
         self.assertEqual(source_tun_tx_drops_by_role({"network":{}},snap(0,0)),
             {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
 
+    def test_tcp_reordering_profile_is_bounded_test_only(self):
+        r=request()
+        r["network"]["tcp_reordering_profiles"]={"A":"baseline","B":"outer_repair_tolerant"}
+        r["bundles"]["B"]=dict(r["bundles"]["A"])
+        r["order"]="AB"
+        self.assertEqual(validate(r)["network"]["tcp_reordering_profiles"]["B"],
+                         "outer_repair_tolerant")
+        r["network"]["tcp_reordering_profiles"]["B"]="unbounded"
+        with self.assertRaises(ValueError): validate(r)
+
     def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
         from tools.network_harness.runner import verify_outer_recovery_policy
         expected = "outer-single-repair-v2"
