@@ -23,7 +23,17 @@
     "build_status": "success"
   },
   "latest_harness_source": "31835d7f454bc716a051deca1c41d6671a71fe05",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "automatic-post-restoration-MTU-functional",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 39951475040,
+      "attempt": 1,
+      "source": "1818e01285e3cdbace09a0e2db187077dd387804",
+      "not_performance_measurement": true,
+      "do_not_dispatch_duplicate": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -80,7 +90,7 @@
     "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain.",
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness."
   ],
-  "next_action": "10x one-off requested experiment CONCLUDED INCONCLUSIVE (run39950439687 attempt1 artifact12500491341). Do not rerun blind quota/window/reordering. Baseline Normal/off 10% + one repair remains approved, optional diagnostic source retained only in Git evidence; restore code+ARM64 build workflow from preexperiment 71e70864. Next complete task: bounded authenticated Normal-only M2 inner TCP DATA-versus-ACK loss/repair age + per-second quota denies and spurious PTO, distinguish kernel CUBIC cwnd collapse from too-late outer repair, then narrow policy. Separately diagnose high-rate lossless M1 TUN drop; do not treat multistream PASS as TCP1.",
+  "next_action": "The 10x single-TCP diagnostic is CLOSED INCONCLUSIVE: run39950439687/attempt1/artifact12500491341, A 1.199/0.723Mbps vs B 1.108/1.346Mbps, repair quota denies197->21, M1/TUN capacity clean. Product and build workflow fully RESTORED at source1818e01285e3 to 10% budget and same pre-experiment blobs; separate post-restore ARM64 build run39951475090 PASS. Reconcile any remaining automatic MTU check run39951475040 (no redispatch); then next full task: bounded authenticated Normal-only M2 TCP DATA-vs-ACK first-delivery and repair timing, spurious PTO/per-second quota denies before changing earliest loss witness. Investigate separate lossless high-rate M1 source TUN drops. No repeat of 10x, socket-buffer or reordering AB; no FEC specialism.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -103,5 +113,30 @@
     "business_source": "8a0c3cd239af12700fbc265fc44b216098253f39",
     "business_artifact_zip_sha256": "8f38508a9da256cb924120df7a596b0f967443ea4a64ef3bb90b77df8bee7151",
     "policy_readback_verified": true
+  },
+  "restoration": {
+    "source": "1818e01285e3cdbace09a0e2db187077dd387804",
+    "product_and_build_sources_identical_to": "71e70864344e1c63e38a8eacfed359da41ccef4e",
+    "paths_verified": [
+      "crates/wbd-recovery/src/budget.rs",
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      ".github/workflows/network-arm64-product-build.yml"
+    ],
+    "normal_repair_share_restored": 0.1,
+    "verification_action": {
+      "run": 39951475090,
+      "attempt": 1,
+      "result": "success",
+      "artifact_id": 12500084357,
+      "artifact_zip_sha256": "875683faa3aaad86567f6e55d8ce9666a04ef4b9597c34d35f0c2702bc806783"
+    },
+    "other_autobuild": {
+      "run": 39951475040,
+      "attempt": 1,
+      "status": "in_progress",
+      "conclusion": "NOT_YET_COMPLETED",
+      "product_artifact_id": 12501000501,
+      "product_artifact_zip_sha256": "ec4b549382c4047bf48ab3c96b15c4cd3a865331628a32321c7729391cc1fb49"
+    }
   }
 }
