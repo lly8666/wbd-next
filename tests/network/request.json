@@ -1,37 +1,29 @@
 {
   "version": 1,
-  "id": "arm64-fixed30-record-cap-S032-same-host-AB",
+  "id": "arm64-P0-merged-MTU-normal-large99-smoke-90s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
-    "mode": "fec-fixed",
-    "fec_profile": 6
+    "mode": "normal",
+    "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 2,
-    "s2c_mbps": 2,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 0.5,
     "sizes": [
       [
         64,
-        2
+        1
       ],
       [
-        256,
-        2
-      ],
-      [
-        1024,
-        3
-      ],
-      [
-        1172,
-        3
+        1301,
+        99
       ]
     ],
     "tcp_flows": 4,
     "probe_hz": 20,
-    "deadline_ms": 3000,
+    "deadline_ms": 1000,
     "max_packets": 20000000
   },
   "network": {
@@ -41,40 +33,34 @@
     "netem_rng": "unseeded_recorded"
   },
   "warmup_s": 15,
-  "drain_s": 30,
+  "drain_s": 15,
   "phases": [
     {
       "name": "steady",
-      "seconds": 120,
+      "seconds": 90,
       "c2s": {
-        "delay_ms": 300,
-        "loss_pct": 30
+        "delay_ms": 0,
+        "loss_pct": 0
       },
       "s2c": {
-        "delay_ms": 300,
-        "loss_pct": 30
+        "delay_ms": 0,
+        "loss_pct": 0
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
+    "max_loss_pct": 0.1,
     "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "2476b22f748a686907edfb995431a2b236ccebaa",
-      "run_id": 39803921701,
+      "source": "d64be28591c3752af06be399ff598266ecf4d664",
+      "run_id": 39881938976,
       "attempt": 1,
-      "artifact_id": 12436752126,
-      "sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219"
-    },
-    "B": {
-      "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
-      "run_id": 39807984023,
-      "attempt": 1,
-      "artifact_id": 12438592249,
-      "sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb"
+      "artifact_id": 12470698437,
+      "sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef"
     }
   },
-  "order": "AB"
+  "order": "A"
 }
