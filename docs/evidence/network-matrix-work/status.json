@@ -42,6 +42,18 @@
       "B_zip_sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
       "control": "same VM AB both qlen1024 strict readback, Normal/off TCP1 C2S500Mbps 0loss RTT400 native4Hz original progress 20s warm60steady",
       "do_not_redispatch": true
+    },
+    {
+      "id": "V3-B-outer1280-full-UDP1181-zero-loss-Normal-off",
+      "run": 40037686584,
+      "attempt": 1,
+      "state": "ACTIONS_QUEUED",
+      "source": "00f09878c536367accf5632a410143ad56ac4702",
+      "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "product_build": 40001498261,
+      "artifact_id": 12521858079,
+      "scope": "separate native ARM64 VM real outer MTU1280, expected TUN1209, UDP application payload1181, both directions offered10Mbps each one packet no fragmentation, 0loss, Normal/off, warm10 steady60 drain30",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -152,7 +164,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Recovered from remote HEAD0d1c, no outstanding previous runs. Completed same-VM Linux TUN txqlen500->1024 AB run40000388953 source31e3 A218.28Mbps/30965 TUN steady drops, B381.80Mbps/0 steady drops but 11096 warmup drops, 27055 TCP backpressure, p99 2028ms, neither qualifies TCP500. Direct TCP500 control with GRO/GSO/TSO explicitly off and readback run40001002971 PASS sender/receiver500.000Mbps (direct != product). Native platform TunSink O_NONBLOCK driver removed poll(0) in source b8dfc native ARM64+MTU PASS run40001498261 art12521858079 sha864a..., compared against source31e3 old per-read poll on exactly sameVM same controlled qlen1024 A/B run40037435905 source995cd now QUEUED; do NOT dispatch again. Judge actual application throughput target>=475Mbps, no source TUN kernel drops incl warmup, TCP backpressure, latency p99 and CPU per delivered byte/packet. If <500, do not automatically increase queue beyond1024; inspect native stage TX/RX and host. V3-D true probe0 idle30/wake30 run40000054306 PASS both UDP2Mbps/missing0; blackhole 0/100/0 scoped resume +200ms run39997661008 PASS but old rare C2S+1150ms anomaly not generalized. No FEC independent work, no main merge/deploy.",
+  "next_action": "Recovered from remote HEAD0d1c, no outstanding previous runs. Completed same-VM Linux TUN txqlen500->1024 AB run40000388953 source31e3 A218.28Mbps/30965 TUN steady drops, B381.80Mbps/0 steady drops but 11096 warmup drops, 27055 TCP backpressure, p99 2028ms, neither qualifies TCP500. Direct TCP500 control with GRO/GSO/TSO explicitly off and readback run40001002971 PASS sender/receiver500.000Mbps (direct != product). Native platform TunSink O_NONBLOCK driver removed poll(0) in source b8dfc native ARM64+MTU PASS run40001498261 art12521858079 sha864a..., compared against source31e3 old per-read poll on exactly sameVM same controlled qlen1024 A/B run40037435905 source995cd now QUEUED; do NOT dispatch again. Judge actual application throughput target>=475Mbps, no source TUN kernel drops incl warmup, TCP backpressure, latency p99 and CPU per delivered byte/packet. If <500, do not automatically increase queue beyond1024; inspect native stage TX/RX and host. V3-D true probe0 idle30/wake30 run40000054306 PASS both UDP2Mbps/missing0; blackhole 0/100/0 scoped resume +200ms run39997661008 PASS but old rare C2S+1150ms anomaly not generalized. No FEC independent work, no main merge/deploy. Independent V3-B native actual outer1280 full UDP1181 no-frag 10Mbps/dir Action40037686584 source00f098 now queued; compare actual MTU/TUN readback rather than infer from model. Independent scenario okay parallel with V3-C. Do not requeue either.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
