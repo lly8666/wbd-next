@@ -147,11 +147,12 @@ def validate(raw):
         raise ValueError("one run maximum 1200 measured seconds")
     a = r.setdefault("acceptance", {})
     keys(a, ["injection_tolerance_pct", "max_loss_pct", "max_p99_ms",
-             "max_active_gap_ms", "require_retransmission"], "acceptance")
+             "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     number(a["injection_tolerance_pct"], 0.1, 10, "injection tolerance")
-    for k, hi in [("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000)]:
+    for k, hi in [("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000),
+                  ("max_repair_fresh_pct", 100), ("min_repair_line_pct", 100)]:
         if k in a:
             number(a[k], 0, hi, k)
     if type(a["require_retransmission"]) is not bool:
