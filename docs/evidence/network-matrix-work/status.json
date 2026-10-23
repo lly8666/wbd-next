@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-local-TUN-drop-duplicate-poll-AB-on-native-Actions",
+  "phase": "V3-C-first-500-failed-TUN-drops-direct500-and-poll-AB-running",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,19 +27,29 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-TCP1-500M-remove-redundant-TUN-poll-AB",
-      "state": "ACTIONS_IN_PROGRESS",
-      "run": 39998892067,
+      "id": "V3-C-TCP1-500M-remove-redundant-TUN-poll-AB-qualified",
+      "state": "ACTIONS_QUEUED",
+      "run": 39999237272,
       "attempt": 1,
-      "request_source": "0ea7c7f7615bfeebec8ecd14cbee45363aa1a327",
+      "request_source": "38101d188586000b03e7a8f470fe4856db0ff068",
+      "previous_preflight_run": 39998892067,
+      "previous_preflight_status": "INVALID_BUILD_STATUS_BEFORE_B_BUILD_ACTION_COMPLETED_NO_PERFORMANCE",
       "source_A": "63adb210f724d4b2812d75a292617103ac735b53",
-      "build_A": 39992871952,
-      "artifact_A": 12517549925,
       "source_B": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
-      "build_B": 39998272925,
-      "artifact_B": 12520568152,
-      "artifact_B_sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
-      "scope": "one native ARM64 job same VM sequential AB single TCP c2s500Mbps, RTT400, 0loss, outer700Mbps, timed20warm60steady30drain, native 4Hz Rust TX RX CPU, compare TUN source drop/inner cwnd/CPU/p99",
+      "product_native_build_A": 39992871952,
+      "product_native_build_B": 39998272925,
+      "product_B_artifact_id": 12520568152,
+      "product_B_sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
+      "build_B_final_status": "NATIVE_ARM64_BUILD_AND_MTU_SUCCESS",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-C-directTCP500-RTT400-host-control",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 39999139775,
+      "attempt": 1,
+      "source": "23fe61141b124f0fd35010a4e09acdadec0bee20",
+      "scope": "Independent native ARM64 direct one TCP500 0loss RTT400 MTU1429 outer700Mbps target>=475Mbps, not WBD product",
       "do_not_redispatch": true
     }
   ],
@@ -137,7 +147,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C first real TCP500 native source63adb run39997296538 FAIL/inconclusive: only292.557Mbps, 47481 app TCP backpressure, 2932 client TUN warmup drop +11283 steady, kernel TUN qlen500, pre-read deferred0, M1 peak32/2048, netem drop0, repair0; cwnd median12218*1377=16.824MB <500Mbps RTT400 BDP25MB; p99 1713.9ms, host CPU PSI peak13.93 but 0% host steal; saved evidence V3-C-TCP1-500M-first-native-0loss-20261024.json. Code identifies a source TUN hotpath EXTRA poll(0) after each read_ready_batch which already polls0 on an owned O_NONBLOCK FD; isolated removal product source31e3c9, native ARM64 build run39998272925 bundle artifact12520568152 sha7cf0..., native MTU suite pending. One true paired same-VM A/B source0ea7c7 run39998892067 in progress; do NOT redispatch. Need measure actual A/B source TUN 500 queue drop, TCP throughput, p99 and CPU; no unlabeled high-rate repeats. D scoped 0/100/0 4Hz run39997661008 verified PASS ~2Mbps/dir after restored zero, 5/8 near transition missing and native 200ms first delivery (old 1.15s stall not repeated), evidence V3-D-blackhole-4Hz-timeline-20261024.json. Prior A/B200 sourcebb9a direct control200 PASS; V3-A/B and mixed partial status unchanged. Do not modify FEC independent branch nor deploy/merge main.",
+  "next_action": "TCP500 first product run39997296538 source63adb delivered292.557Mbps with source TUN drops11283/60s, qlen500, M1peak32, pre_read_deferred0; inner cwnd median16.824MB below BDP25MB, p99 1.714s, outer no drops and no ARQ storm. Controlled v3 source31e3 removes extra TUN poll0 each packet; build39998272925 full success native ARM64+MTU, artifact12520568152 sha7cf0f88. First paired AB attempt39998892067 stopped at PREPARE before business because build Action not finished then, correctly labeled INVALID_BUILD_STATUS, don't treat as product failure. Corrected same-VM qualified A/B from request source38101d run39999237272 queued, no duplicate; A63adb B31e3, same 500/RTT400, record source TUN drops/cwnd/p99/CPU. Independent direct TCP500 0loss RTT400 same MTU host-only Action39999139775 in progress, source23fe611, don't compare VM core percent cross-job but direct host capability yes. Prior directTCP200 199.998 and product200 A200.003 scoped PASS. V3-D blackhole retest source63adb 0/100/0 run39997661008 PASS scoped restored C2S and S2C by+200ms recovered missing5/8 (phase edge not 0 guarantee), old +1.15s gap not reproduced. FEC separate; no main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
