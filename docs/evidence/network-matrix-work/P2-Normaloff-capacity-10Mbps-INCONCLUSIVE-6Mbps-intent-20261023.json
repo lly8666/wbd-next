@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-capacity-10Mbps-inconclusive-6Mbps-intent-20261023",
+  "previous_run": {
+    "id": 39915315299,
+    "result": "INCONCLUSIVE",
+    "artifact_id": 12484209330,
+    "artifact_digest": "sha256:e25b87fde2066af6026c7d38f76d80a4c2b37c9a888827267732529488096f8d",
+    "download": "UNAVAILABLE_TOOL_INTERNAL_ERROR",
+    "cause": "NOT_OBSERVED; no definitive source-limited or host conclusion"
+  },
+  "next_probe": {
+    "id": "P2-Normaloff-6Mbps-diagnostic-with-capacity-stdout-2pct",
+    "rate_mbps_each_direction": 6,
+    "mode": "normal",
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "duration_seconds": 60,
+    "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+    "source_artifact": 12483243411,
+    "why": "6Mbps approx 375 concurrent M1 slots estimated from 2Mbps source-rate and RTT, vs512 fixed. Diagnostic stdout captures numerical cause even if artifact service unavailable.",
+    "no_fec_tests": true
+  },
+  "hard_gates": [
+    "Product+injector CPU/RSS separated",
+    "Source actual UDP read/staged and RX delivered",
+    "0.25% UDP loss remains unchanged",
+    "Stop and no owned namespace leak",
+    "No repetition of 10Mbps exact request"
+  ]
+}

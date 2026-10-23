@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-Normaloff-10Mbps-owner-flight-boundary-2pct-60s",
+  "id": "P2-Normaloff-6Mbps-diagnostic-with-capacity-stdout-2pct",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -8,8 +8,8 @@
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
+    "c2s_mbps": 6,
+    "s2c_mbps": 6,
     "udp_share": 0.5,
     "sizes": [
       [

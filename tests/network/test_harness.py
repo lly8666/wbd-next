@@ -36,6 +36,25 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_capacity_action_digest_source_fields_and_no_raw_body(self):
+        from tools.network_harness.runner import capacity_action_digest
+        leg = {"label": "A", "result": "INCONCLUSIVE",
+               "limits": ["c2s: INVALID_INJECTOR_RATE"],
+               "observed": [{"direction": "c2s", "protocol": "udp",
+                   "phase": "steady", "target_app_mbps": 3.0,
+                   "injected_app_mbps": 2.5, "send_lag_ms": {"p99_ms": 4.0},
+                   "first_arrival_ms": {"p99_ms": 600},
+                   "payload_secret": "DO_NOT_EXPOSE"}],
+               "host": {"cpu_psi_some_peak": 0.0, "processes":
+                   {"client": {"rss_peak_bytes": 17000000}}},
+               "telemetry": {"original_tx_chain": {"client":
+                   {"arena_failed": 0, "pre_read_deferred": 8}}}}
+        report = capacity_action_digest(leg)
+        self.assertEqual(report["observed"][0]["injected_mbps"], 2.5)
+        self.assertEqual(report["host"]["processes"]["client"]["peak_rss_bytes"], 17000000)
+        self.assertEqual(report["original_tx_chain"]["client"]["pre_read_deferred"], 8)
+        self.assertNotIn("DO_NOT_EXPOSE", json.dumps(report))
+
     def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
         from tools.network_harness.runner import verify_outer_recovery_policy
         expected = "outer-single-repair-v2"

@@ -706,6 +706,69 @@ class LinuxExperiment:
             f.close()
 
 
+def capacity_action_digest(leg):
+    """Small source-bounded numeric evidence in the Actions log, in addition
+    to the ordinary artifact. No packet payloads, addresses or credentials.
+    The log must distinguish host, injector and product capacity even when
+    a result is INCONCLUSIVE and artifact retrieval is unavailable.
+    """
+    host = leg.get("host", {})
+    proc = host.get("processes", {})
+    costs = leg.get("measurement_cost", {})
+    telemetry = leg.get("telemetry", {})
+    rows = []
+    for row in leg.get("observed", []):
+        rows.append({
+            "direction": row.get("direction"), "protocol": row.get("protocol"),
+            "phase": row.get("phase"),
+            "target_mbps": row.get("target_app_mbps"),
+            "injected_mbps": row.get("injected_app_mbps"),
+            "delivered_mbps": row.get("cohort_delivered_app_mbps"),
+            "missing": row.get("missing_after_drain"),
+            "arrival_p99_ms": row.get("first_arrival_ms", {}).get("p99_ms"),
+            "send_lag_p99_ms": row.get("send_lag_ms", {}).get("p99_ms"),
+            "tcp_backpressure": row.get("tcp_backpressure_slots"),
+            "app_send_errors": row.get("send_errors"),
+        })
+    netem = []
+    for item in leg.get("network_accounting", []):
+        for q in item.get("netem", []):
+            netem.append({"role": item.get("role"),
+                "phase": item.get("phase"), "netem_drop_pct": q.get("approx_loss_pct"),
+                "backlog_packets": q.get("end_qlen"),
+                "backlog_bytes": q.get("end_backlog_bytes"),
+                "kernel_delta": item.get("kernel_delta", {})})
+    return {
+        "label": leg.get("label"), "result": leg.get("result"),
+        "limits": leg.get("limits", [])[:16],
+        "failures": leg.get("failures", [])[:16],
+        "warnings": leg.get("warnings", [])[:8],
+        "stop_heavier_resource_cases": leg.get("stop_heavier_resource_cases"),
+        "observed": rows, "netem": netem,
+        "measurement_cpu": {
+            role: {"cpu_s": costs.get(role, {}).get("cpu_s"),
+                   "cpu_s_per_delivered_GiB":
+                        costs.get(role, {}).get("cpu_s_per_delivered_GiB"),
+                   "outer_tx_bytes":
+                        costs.get(role, {}).get("outer_interface_tx_bytes")}
+            for role in ("client", "server")},
+        "host": {"cpu_psi_peak": host.get("cpu_psi_some_peak"),
+                 "cpu_psi_over20_fraction": host.get("cpu_psi_over20_fraction"),
+                 "steal_pct_peak": host.get("steal_pct_peak"),
+                 "processes": {
+                     name: {"cpu_s_including_setup":
+                                proc.get(name, {}).get("cpu_s_observed_including_warmup_setup_drain"),
+                            "peak_rss_bytes": proc.get(name, {}).get("rss_peak_bytes")}
+                     for name in ("client", "server", "client-injector", "server-injector")}},
+        "original_tx_chain": telemetry.get("original_tx_chain", "NOT_OBSERVED"),
+        "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
+        "repair_packets": telemetry.get("repair_packets"),
+        "stop_drained_both": telemetry.get("stop_drained_both"),
+        "policy_verified": telemetry.get("recovery_policy_verified"),
+        "owned_cleanup": leg.get("cleanup", {}).get("owned_namespaces_absent"),
+    }
+
+
 def host_identity():
     cpu = read("/proc/cpuinfo")
     return {"kernel": platform.release(), "machine": platform.machine(), "logical_cpus": os.cpu_count(),
@@ -752,6 +815,11 @@ def main():
         results.append(LinuxExperiment(config, directory / ("bundle-" + label), directory / label, label).run())
         if not results[-1]["cleanup"]["owned_namespaces_absent"]:
             break  # never contaminate the second measurement
+    # The bounded digest survives in the job log when an artifact retrieval
+    # backend fails; do not make a different Action just to fetch raw results.
+    for leg in results:
+        print("NETWORK_CAPACITY_LEG " +
+              json.dumps(capacity_action_digest(leg), sort_keys=True), flush=True)
     statuses = [r["result"] for r in results]
     status = "PASS_SCOPED_OBSERVATION" if all(s == "PASS_SCOPED_OBSERVATION" for s in statuses) else (
         "FAIL" if "FAIL" in statuses else "INCONCLUSIVE")

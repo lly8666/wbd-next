@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-capacity-10Mbps-source-calibration",
+  "phase": "P2-Normaloff-6Mbps-capacity-evidence",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,23 +25,15 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-owner-flight-boundary-2pct-60s",
-      "type": "ONE_SCENARIO_ONE_ACTION",
-      "status": "INTENT_COMMITTED_AUTO_RUN_PENDING",
+      "id": "P2-Normaloff-6Mbps-diagnostic-with-capacity-stdout-2pct",
+      "type": "ONE_NORMAL_OFF_REAL_SCENARIO",
+      "status": "COMMITTED_ACTION_PENDING",
       "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "product_artifact": 12483243411,
-      "why": "Only Normal/off extreme-capacity probe, 10Mbps/dir 2pct loss/200ms delay, 99pct near-MTU, UDP/TCP mixed. At 2M prior outer first source ~31k per100s (~156 events/s/Mbps); at 10M and 400ms RTT projected >=~625 concurrent M1 loans without batch/repair, exceeds real fixed512. Determine actual first failing boundary, CPU/core/RSS and injector quality. No FEC tests or build."
+      "build_artifact_id": 12483243411,
+      "why": "10Mbps run39915315299 reports INCONCLUSIVE, artifact12484209330 download backend unavailable. Lower independent 6Mbps/dir 2pct 200ms and include bounded CPU/RSS/injector/raw owner counters in Action log to determine first exact capacity boundary; no FEC test."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "P1-single-repair-v2-native-verified",
-      "result": "PASS_NATIVE_75_OF_75_MTU9",
-      "run": 39906119466,
-      "artifact_id": 12480718285,
-      "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
-      "file": "P1-single-repair-v2-native-pass-AB-policy-gate-20261023.json"
-    },
     {
       "id": "P1-single-repair-v2-Normal2pct-AB-FAIL-20261023",
       "result": "FAIL_REAL_BIDIRECTIONAL_BUSINESS_BOTH_AB",
@@ -76,6 +68,15 @@
       "source": "de55a1322b4580c60e77322d2d38843caefeec79",
       "request_source": "6f4acf937d8003ac6471ae6b690d018b46458ccd",
       "reference": "P1-TUN-preloan-Normal2pct-sameVM-AB-result-20261023.json"
+    },
+    {
+      "id": "P2-Normaloff-10Mbps-capacity",
+      "result": "INCONCLUSIVE_LIMITS_NOT_YET_RECOVERED",
+      "run": 39915315299,
+      "artifact_id": 12484209330,
+      "artifact_zip_sha256": "e25b87fde2066af6026c7d38f76d80a4c2b37c9a888827267732529488096f8d",
+      "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "note": "10Mbps real run completed INCONCLUSIVE, artifact download tool internally failed repeatedly, cannot attribute injector/host/product without source data; do not declare product failure or pass and do not blindly increase load."
     }
   ],
   "open_issues": [
@@ -96,7 +97,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Find exactly one auto Action triggered by P2 Normal/off 10Mbps request; do not dispatch. Recover full artifact injection and host/cgroup CPU/PSI/steal, per-role product CPU/RSS, client/server send lag, TUN protocol read/stage, arena_failed/pre_read_deferred, RX chain, authentic quota/feedback, kernel/netem drops and Stop. Distinguish VM/generator from product; if 512 loan pressure causes business underdelivery at 10M, stop higher Actions until evidenced bounded capacity strategy. No FEC.",
+  "next_action": "Find EXACT one Action for 6Mbps Normal/off (no FEC), collect NETWORK_CAPACITY_LEG bounded stdout and original artifact if available. Diagnose injector offered vs target, product per-role CPU/RSS, TUN pre_read_deferred/arena_failed, rx, netem backlog, CPU PSI, stop. Do not run >6 until clear capacity; previous 10Mbps INCONCLUSIVE original artifact12484209330 download unavailable. If product near M1 512 slot capacity, study strictly bounded owner slab expansion vs CPU memory and same-VM old/new; do not assert 500Mbps qualification.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "de55a1322b4580c60e77322d2d38843caefeec79",
