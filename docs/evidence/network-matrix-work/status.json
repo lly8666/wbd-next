@@ -45,6 +45,16 @@
       "product_source_A_and_B": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
       "sole_knob": "both TUN txqlen1024 readback, full500Mbps warmup20 and steady60 singleTCP RTT400ms, A fq_codel root B fq TCP pacing root, set/readback tc -j qdisc only in owned netns, no production qdisc changes",
       "do_not_redispatch": true
+    },
+    {
+      "id": "V3-A-lossless-TCP1-latest-native-0-repair-regression",
+      "run": 40039093306,
+      "attempt": 1,
+      "state": "ACTIONS_QUEUED",
+      "request_source": "6672d32b29e1be4232b60a7a81dd8fbf22621f21",
+      "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "scope": "Independent native ARM64 actual source V3 lossless0% one-way200ms TCP1 each direction10Mbps, TUN default txqlen500, no synthetic policy toggles, verify zero true TCP retrans/source TUN drop and near-zero outer repair; CPU/process",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -162,6 +172,13 @@
       "artifact_id": 12538371856,
       "result": "A420Mbps/13339 local TUN warmup drops B500.000Mbps/zero TUN drops after test-only gentle warmup150",
       "file": "V3-C-TCP500-warmup-start-loss-AB-20261024.json"
+    },
+    {
+      "id": "V3-A-latest-driver-30pct-standard",
+      "run": 40038668625,
+      "artifact_id": 12537983762,
+      "result": "PASS_30pct_R/F8.877_R/C6.456_sourceTUN0_both",
+      "file": "V3-A-latest-driver-30pct-standard-20261024.json"
     }
   ],
   "open_issues": [
@@ -176,7 +193,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C sustained single TCP500 0loss RTT400 IS PROVEN under TEST-ONLY gentle warmup: source b8df sameVM A full500 warm20 -> steady419.915Mbps, 13339 kernel client TUN drops in warmup, p99 1326, backpressure18331; B warm150 warm20 -> steady500.0003584Mbps, client kernel TUN drop0 whole run, p99 202.7, backpressure0, source unchanged qlen1024. Evidence V3-C-TCP500-warmup-start-loss-AB-20261024.json/run40038167186/art12538371856 zip1eee. DO NOT claim abrupt source500 product qualification; B workload ramp is test-only and production default TUN qlen500. To test actual startup without workload artifice, test-only owned TUN fq_codel vs TCP pacing fq root A/B sameVM, qlen1024 both, full500 warmup and steady, run40038882744 source d087642 now QUEUED; accept only if warmup and steady zero TUN drop, steady>=475, p99 low/CPU measured. Native V3-A 30% standard R/C6/R/F10 budget regression sourceb8df run40038668625 ongoing independently, no duplicate. V3-B latest1280/TUN1209/UDP1181 both10Mbps no-loss PASS, V3-D true idle/no probes and highloss cross UDP no HOL scoped PASS, Windows and asymmetric/rotation not fully qualified. No FEC independent work or main merge.",
+  "next_action": "V3-C sustained single TCP500 0loss RTT400 IS PROVEN under TEST-ONLY gentle warmup: source b8df sameVM A full500 warm20 -> steady419.915Mbps, 13339 kernel client TUN drops in warmup, p99 1326, backpressure18331; B warm150 warm20 -> steady500.0003584Mbps, client kernel TUN drop0 whole run, p99 202.7, backpressure0, source unchanged qlen1024. Evidence V3-C-TCP500-warmup-start-loss-AB-20261024.json/run40038167186/art12538371856 zip1eee. DO NOT claim abrupt source500 product qualification; B workload ramp is test-only and production default TUN qlen500. To test actual startup without workload artifice, test-only owned TUN fq_codel vs TCP pacing fq root A/B sameVM, qlen1024 both, full500 warmup and steady, run40038882744 source d087642 now QUEUED; accept only if warmup and steady zero TUN drop, steady>=475, p99 low/CPU measured. Native V3-A 30% standard R/C6/R/F10 budget regression sourceb8df run40038668625 ongoing independently, no duplicate. V3-B latest1280/TUN1209/UDP1181 both10Mbps no-loss PASS, V3-D true idle/no probes and highloss cross UDP no HOL scoped PASS, Windows and asymmetric/rotation not fully qualified. No FEC independent work or main merge. Latest same production source b8df 30% standard Action40038668625 PASS at R/F8.877% and R/C6.456% both directions, source TUN0, UDP delivered25.67Mbps/dir; evidence V3-A-latest-driver-30pct-standard-20261024.json. Independent latest source 0loss10Mbps/dir TCP1 near-zero outer repair/TCP retrans regression Action40039093306 QUEUED, no duplicate; fq qdisc full500 A/B Action40038882744 still in progress; both separate native VM. Never deploy/test production qdisc until sameVM A/B supports it and cold-path owned TUN API readback exists.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -262,7 +279,15 @@
       "highloss_artifact": 12512458869,
       "highloss_artifact_sha256": "4a56dc00cc1e2f43802dce6e8011de307e1764261d6a5c3146dcce4e5db779b4",
       "highloss_result": "PASS: 30% IID one-way300ms line50Mbps/dir UDP33.7Mbps, R/F8.879%/8.865%, R/C6.457%/6.447%, TUN drops0",
-      "highloss_evidence": "V3-A-30pct-50M-300ms-repair-budget-20261023.json"
+      "highloss_evidence": "V3-A-30pct-50M-300ms-repair-budget-20261023.json",
+      "latest_30pct_regression_run": 40038668625,
+      "latest_30pct_regression_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "latest_30pct_regression_result": "PASS_R_F8.877pct_R_C6.456pct_both_TUN0_UDP_deliv25.67each",
+      "latest_30pct_regression_artifact_id": 12537983762,
+      "latest_30pct_regression_zip_sha256": "e007781f087358270d8c968dd06791d530d9bfdeaf9d51589361de42c644729c",
+      "latest_30pct_regression_evidence": "V3-A-latest-driver-30pct-standard-20261024.json",
+      "latest_0loss_regression_run": 40039093306,
+      "latest_0loss_regression_status": "QUEUED"
     },
     "phase_B": {
       "source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
