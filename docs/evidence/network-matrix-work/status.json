@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal2pct-residual-diagnostic-observation",
+  "phase": "P1-Normal-repair-sparse-burst-native-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,18 +25,15 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-Normal2pct-residual-diagnostics-B-60s",
-      "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
-      "status": "QUEUED_OR_IN_PROGRESS",
-      "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
-      "bundle_run": 39893574791,
-      "artifact_id": 12475394629,
-      "why": "Same exact failed Normal2pct point, behavior-identical to P1 source except read-only counters. One leg is enough. Read repair-attempt retirement buckets and learned timing before any tuning.",
-      "run_id": 39894058072,
+      "id": "P1-repair-sparse-floor-burst-native",
+      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_MTU9",
+      "status": "IN_PROGRESS",
+      "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
+      "run_id": 39895511143,
       "attempt": 1,
-      "harness_source": "1942cd062176fc966cfe9a52cbb697b472a322e0",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39894058072",
-      "contract_run_id": 39894057928
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39895511143",
+      "old_source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+      "why": "Verify bounded instantaneous burst uses existing legal 32KiB sparse floor while 10% epoch quota/pace remain unchanged. Preserve authRTT, <=2 repairs, immutable cipher, auth/scope/Stop and MTU."
     }
   ],
   "recent_evidence": [
@@ -179,6 +176,13 @@
       "run": 39893574791,
       "artifact_id": 12475394629,
       "file": "P1-residual-diagnostics-native-pass-B-intent-20261023.json"
+    },
+    {
+      "id": "P1-Normal2pct-residual-diagnostics",
+      "result": "FAIL_PRE_FIRST_REPAIR_BURST_PACING_BOTTLENECK",
+      "run": 39894058072,
+      "artifact_id": 12475982496,
+      "file": "P1-Normal2pct-residual-diagnostics-result-burstfix-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -198,7 +202,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE B-only residual diagnostic Action39894058072, contract39894057928, outstanding. Do not redispatch. Read repair-attempt retirement buckets and effective SRTT/PTO/cache, then change only the earliest evidenced stage.",
+  "next_action": "ONE native ARM64 build39895511143 attempt1 SOURCEdce9d230 in progress. Do not redispatch. Require sparse-burst unit + prior adaptive/diagnostic/Fixed M2 units + 9 MTU pass. Then one same-VM old21b1 vs new dce9 exact Normal2pct60s AB.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
