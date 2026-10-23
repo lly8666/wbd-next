@@ -1,29 +1,25 @@
 {
   "version": 1,
-  "id": "V3-A-30pct-50M-300ms-repair-budget",
+  "id": "V3-C-lossless-TCP1-200M-400ms-early-capacity",
   "owner": "network-matrix-work",
-  "seed": 6320,
+  "seed": 6374,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 33.7,
-    "s2c_mbps": 33.7,
-    "udp_share": 1,
+    "c2s_mbps": 200,
+    "s2c_mbps": 0,
+    "udp_share": 0,
     "sizes": [
       [
-        64,
+        32768,
         1
-      ],
-      [
-        1287,
-        99
       ]
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 3000,
+    "deadline_ms": 5000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -32,9 +28,15 @@
     "outer_mtu": 1500,
     "lane_loss": "shared",
     "queue_packets": 32768,
-    "netem_rng": "unseeded_recorded"
+    "netem_rng": "unseeded_recorded",
+    "tcp_window_profiles": {
+      "A": "bdp500"
+    },
+    "tcp_reordering_profiles": {
+      "A": "baseline"
+    }
   },
-  "warmup_s": 10,
+  "warmup_s": 15,
   "drain_s": 30,
   "phases": [
     {
@@ -42,39 +44,38 @@
       "seconds": 60,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 300,
+        "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 30,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 50,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       },
       "s2c": {
-        "delay_ms": 300,
+        "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 30,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 50,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 30.5,
-    "require_retransmission": true,
-    "max_repair_fresh_pct": 10,
-    "min_repair_line_pct": 6
+    "max_loss_pct": 0,
+    "require_retransmission": false,
+    "max_repair_fresh_pct": 10
   },
   "bundles": {
     "A": {
-      "source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
-      "run_id": 39978760399,
+      "source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+      "run_id": 39981175602,
       "attempt": 1,
-      "artifact_id": 12513355204,
-      "sha256": "98cf89f1f693fd31fc66f22d36071d5a1424f0d2fb0f62d1dbb6c274fc980f18",
+      "artifact_id": 12513677330,
+      "sha256": "649016a15eda2f8ded9628dc7ebd3eca93ee5b83a0bf2e25b7da583e7c3f5f16",
       "recovery_policy": "outer-opportunistic-v3"
     }
   },
