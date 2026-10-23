@@ -63,12 +63,14 @@ class EnvelopeTests(unittest.TestCase):
 
     def test_large_udp_does_not_assume_one_wire_packet(self):
         r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
-        r["traffic"].update(sizes=[[4096, 1]], allow_fragmentation=True)
+        # Model contract tests are UDP-specific; the mutable live request
+        # may legitimately be a pure TCP500/BDP calibration scenario.
+        r["traffic"].update(udp_share=1, sizes=[[4096, 1]], allow_fragmentation=True)
         self.assertEqual(request_envelope(r)["rows"], [])
 
     def test_observed_inner_mtu_unblocks_large_packet_model(self):
         r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
-        r["traffic"]["sizes"] = [[1287,1]]
+        r["traffic"].update(udp_share=1, sizes=[[1287,1]])
         self.assertEqual(request_envelope(r)["rows"], [])
         report = request_envelope(r, inner_mtu=1315)
         self.assertTrue(report["rows"])
