@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P1-Normal2pct-one-epoch-quota-carry-old-new-AB-60s",
+  "id": "P1-Normal2pct-single-repair-v2-old-new-AB-60s",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -63,24 +63,27 @@
   ],
   "acceptance": {
     "injection_tolerance_pct": 3,
-    "max_loss_pct": 1,
+    "max_loss_pct": 0.25,
     "require_retransmission": true
   },
   "bundles": {
     "A": {
-      "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
-      "run_id": 39899738046,
+      "source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
+      "run_id": 39902074456,
       "attempt": 1,
-      "artifact_id": 12477859860,
-      "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
+      "artifact_id": 12479730545,
+      "sha256": "c10c39ccae16fe3e01bcb844f4c6b5892d49df404d049cf890244b4da7cbbc1d",
+      "recovery_policy": "legacy-two-repair-v1"
     },
     "B": {
-      "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
-      "run_id": 39900920663,
+      "source": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
+      "run_id": 39906119466,
       "attempt": 1,
-      "artifact_id": 12478957278,
-      "sha256": "47115e0e874a3fca25bef9fa430d6760c1d5c28ed60cfb3ed66dab4e23e41c0a"
+      "artifact_id": 12480718285,
+      "sha256": "c86acd5769ca26a4b4a95562f1ae0e406cf5e311b1d53414f2e2a18fe66ddb6c",
+      "recovery_policy": "outer-single-repair-v2"
     }
   },
-  "order": "AB"
+  "order": "AB",
+  "policy": "outer-single-repair-v2"
 }
