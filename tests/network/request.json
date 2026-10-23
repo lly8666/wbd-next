@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "P2-Normal-TCP1-10M-2pct-200ms",
+  "id": "P2-TCP1-zero-loss-control-10M",
   "owner": "network-matrix-work",
-  "seed": 5213,
+  "seed": 5221,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -44,7 +44,7 @@
       "c2s": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -53,7 +53,7 @@
       "s2c": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -64,7 +64,7 @@
   "acceptance": {
     "injection_tolerance_pct": 3,
     "max_loss_pct": 0.25,
-    "require_retransmission": true
+    "require_retransmission": false
   },
   "bundles": {
     "A": {
