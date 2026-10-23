@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-Normaloff-10Mbps-2pct-8TCP-flows-BDP-headroom-60s",
+  "id": "P2-Normaloff-5Mbps-TCP-only-4flows-isolate-inner-congestion-2pct-60s",
   "owner": "network-matrix-work",
   "seed": 5207,
   "product": {
@@ -8,9 +8,9 @@
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
-    "udp_share": 0.5,
+    "c2s_mbps": 5,
+    "s2c_mbps": 5,
+    "udp_share": 0,
     "sizes": [
       [
         64,
@@ -21,7 +21,7 @@
         99
       ]
     ],
-    "tcp_flows": 8,
+    "tcp_flows": 4,
     "probe_hz": 20,
     "deadline_ms": 3000,
     "burst_ms": 0,

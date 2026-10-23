@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-highRTT-TCP-window-concurrency-isolation",
+  "phase": "P2-Normaloff-TCP-only-fourflow-window-vs-cross-flow-isolation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,32 +25,15 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-2pct-8TCP-flows-BDP-headroom-60s",
-      "status": "INTENT_COMMITTED_AUTO_ACTION_PENDING",
-      "type": "ONE_NORMAL_OFF_REAL_SCENARIO",
-      "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "id": "P2-Normaloff-5Mbps-TCP-only-4flows-isolate-inner-congestion-2pct-60s",
+      "status": "INTENT_COMMITTED_AUTO_RUN_PENDING",
+      "type": "ONE_TCP_ONLY_NORMAL_OFF_SCENARIO",
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "artifact_id": 12486939897,
-      "why": "4-flow 10Mbps/2% test INCONCLUSIVE exclusively due TCP C2S 3.874/5 Mbps 6561 backpressure, tcp p99 up to14s. No TUN/arena/feedback/host bottleneck. At RTT410.8ms/MSS1289/5Mbps TCP BDP256750B, four flows require~49.8 MSS per flow (62.2 w/25% margin), eight ~24.9 (31.1 margin). Isolate TCP per-flow congestion/window with identical packet profile, no FEC, no product code changes."
+      "why": "Mixed 4-flow 10Mbps total failed TCP 5Mbps per direction under 2%/200ms; mixed 8-flow same 10Mbps succeeded but separate VM and latency remains high. One TCP-only 5Mbps/dir with original 4 flows same transport impairment tests intrinsic per-flow cwnd/RTO vs competition with simultaneously injected 5Mbps UDP. In result do not assign causal CPU across VMs or claim UDP qualification."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "P2-Normaloff-10Mbps-feedback-reserve-AB",
-      "result": "A_FAIL_B_FAIL_FEEDBACK_FIXED_DATA_CAPACITY_BLOCKED",
-      "run": 39920539877,
-      "artifact_id": 12487087003,
-      "source_B": "1605c32d5f5bdc99da792959dde99294a13cec77",
-      "note": "B feedback drops0/0 vs A 284419/280354, dup98/97 vs 13759/13550, frozen repairs195 vs27309. B 11233/11250 pre-read defer, no post-read loss; TUN tx drop steady +819/+936, netem0, UDP miss305/330. B product cpu2.71/2.78s steady; RSS18,276,352/18,345,984B. Need bounded data flight headroom, not more control reserve."
-    },
-    {
-      "id": "P2-M1-1024-native-green",
-      "run": 39921718042,
-      "result": "PASS_75_RECOVERY_MTU9",
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "artifact_id": 12486939897,
-      "mtu_artifact_id": 12487457929,
-      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11"
-    },
     {
       "id": "P2-512v1024-premature-prepare",
       "run": 39922151331,
@@ -72,6 +55,14 @@
       "artifact_id": 12488855638,
       "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "why": "UDP 24/15 of29417=0.082/0.051pct, peak M1 699/733 of1024, no admission/backpressure/drops. TCP 4 streams C2S only3.874/5Mbps, 6561 backpressure, p99=4.6s/14s. Kernel retrans +400/+614, server notsent1.97MB. Run next distinct 8flow scenario."
+    },
+    {
+      "id": "P2-Normaloff-10Mbps-2pct-eight-TCP-flows-PASS-20261023",
+      "run": 39927659556,
+      "artifact_id": 12490421685,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "result": "PASS_NORMAL_10MBPS_2PCT_8_TCP_STREAMS_UDP0_034PCT_EACH_TCP_TARGET_5MBPS_BOTH",
+      "note": "BUT_TCP_P99_2349_1078MS; M1 peak910/908 of1024, source conserved and no TUN/feedback failures; 4flow earlier INCONCLUSIVE preserved."
     }
   ],
   "open_issues": [
@@ -92,7 +83,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Reconcile one auto Normal/off 8-TCP-flow 10Mbps/dir 2%/200ms performance Action, reuse native281f6c64 bundle; no duplicate dispatch or new FEC tests. Inspect TCP actual sender rate/4v8 limited inference, kernel sampled cwnd/retrans/notsent/RTO and app backpressure, TCP p99, UDP residual<=0.25%, original M1 peak+defers, feedback, CPU/RSS, host and Stop. Do not claim same-VM CPU causality from separate 4-flow run. If 8 flows still TCP limited, prefer confirm reverse ACK/loss timing over blind pool/quota changes.",
+  "next_action": "Check EXACT one Action from four-flow TCP-only 5Mbps/dir 2%/200ms request; do not dispatch twice. Check 4-stream kernel TCP_INFO cwnd/notsent/RTO/retrans, actual TCP injection and first-arrival p99 plus M1 occupancy and cleanup. If TCP-only 4-flow still backpressures, inner TCP per-flow congestion limits the 4-flow target, not UDP-specific HOL; if succeeds, investigate same-owner UDP/TCP scheduling competition using existing counters before code changes. 8flow mixed 10M PASS scoped, 4flow mixed INCONCLUSIVE retained. Do NOT run FEC tests, no ungrounded buffer growth or sameVM causal CPU claims.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -109,11 +100,11 @@
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "PASS_SCOPED_10MBPS_ZERO_LOSS_200MS",
-    "business_run_id": 39922365049,
-    "business_artifact_id": 12488186644,
-    "business_source": "6f4acf937d8003ac6471ae6b690d018b46458ccd",
-    "business_artifact_zip_sha256": "5a689f6ebd0dde500585f56fc83381a108f9c65b9b5f2de0bfa6639795d2c241",
+    "business_qualification": "PASS_SCOPED_NORMALOFF_10MBPS_2PCT_EIGHT_TCP_FLOWS_WITH_TAIL_WARNING",
+    "business_run_id": 39927659556,
+    "business_artifact_id": 12490421685,
+    "business_source": "8a0c3cd239af12700fbc265fc44b216098253f39",
+    "business_artifact_zip_sha256": "8f38508a9da256cb924120df7a596b0f967443ea4a64ef3bb90b77df8bee7151",
     "policy_readback_verified": true
   }
 }
