@@ -405,6 +405,12 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
+    cpu,cpuErr:=native.OriginalWorkerCPU()
+    if cpuErr==nil {
+        log.Printf("V4_PUBLIC_WORKER_CPU role=client rx_thread_cpu_ns=%d tx_thread_cpu_ns=%d",cpu.RxNs,cpu.TxNs)
+    }else{
+        log.Printf("V4_PUBLIC_WORKER_CPU_UNAVAILABLE role=client reason=%v",cpuErr)
+    }
     if c.fecMode!=realityfront.FecV2Off {
         tx,txErr:=native.OriginalFecTxSnapshot()
         logAuthenticFecTx("client",tx,txErr)
@@ -540,6 +546,12 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if *connected{
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
+        cpu,cpuErr:=product.OriginalWorkerCPU()
+        if cpuErr==nil {
+            log.Printf("V4_PUBLIC_WORKER_CPU role=server rx_thread_cpu_ns=%d tx_thread_cpu_ns=%d",cpu.RxNs,cpu.TxNs)
+        }else{
+            log.Printf("V4_PUBLIC_WORKER_CPU_UNAVAILABLE role=server reason=%v",cpuErr)
+        }
         if c.fecMode!=realityfront.FecV2Off {
             tx,txErr:=product.OriginalFecTxSnapshot()
             logAuthenticFecTx("server",tx,txErr)
