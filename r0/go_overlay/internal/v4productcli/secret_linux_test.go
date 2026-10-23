@@ -8,8 +8,6 @@ import (
     "testing"
 
     "github.com/lly8666/wobuzhidao/internal/realityfront"
-
-    "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 
 func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {

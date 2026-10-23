@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-merged-PR25-shell-build-fix-reverify",
+  "phase": "P0-PR25-merge-Go-import-fix-native-validate",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,22 +25,16 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "P0-merged-PR25-native-build-script-fix",
+      "id": "P0-merged-PR25-Go-test-duplicate-import-build",
       "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
-      "type": "EXACT_SOURCE_ARM64_BUNDLE_AND_9_MTU_BOUNDARY_FUNCTIONAL",
-      "trigger": "one push fixing tools/arm64_public_go_rust_bundle.sh on experiment branch; no manual workflow_dispatch",
-      "failed_run": 39878062135,
-      "contract_pass_run": 39878062164,
-      "scope": "fix Bash undefined features only; merged Rust/Go code unchanged; new exact SOURCE build and nine real MTU/DF/Stop cases"
+      "type": "ONE_EXACT_SOURCE_NATIVE_ARM64_BUILD_WITH_NINE_MTU_CASES",
+      "trigger": "one product test file push; no manual dispatch",
+      "previous_failed_run": 39881519475,
+      "previous_failed_source": "e614eaf8ca9d7edb1b8c3ba1417943bcfbdf4bc2",
+      "scope": "remove duplicated realityfront import from merged Go CLI secret+MTU test file, no product behavior, security assertion or MTU model changes"
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S027-build",
-      "result": "COMPILER_FAIL_NO_PRODUCT",
-      "run": 39797003870,
-      "file": "S027-compiler-failure-recovered.json"
-    },
     {
       "id": "S027-contract",
       "result": "success",
@@ -116,6 +110,12 @@
       "run": 39877362034,
       "artifact_id": 12468862630,
       "file": "P0-PR25-S032-recovered-20261023.json"
+    },
+    {
+      "id": "P0-merged-syntax",
+      "result": "FAIL_GO_REDECLARED_IMPORT_AFTER_GAME_PASS",
+      "run": 39881519475,
+      "file": "P0-PR25-builder-compiler-recovery-20261023.json"
     }
   ],
   "open_issues": [
@@ -132,7 +132,7 @@
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS."
   ],
-  "next_action": "Recover exactly one Action from this script-fix push; no repeated dispatch of b42b8 capacity P0 PASS, ce70 integrated FAIL, or S032 AB both FAIL. Check native Go/Rust exact SOURCE, real Game unit, nine MTU boundary/DF/Stop examples and CLI TUN/MSS/record readback. If build succeeds document SHA256/ELF/source and remaining hard fails; if not read actual failing step, correct only observed defect. Then P0 targeted Fixed first-delivery/readback, P1 effective RTT/recovery budgets before any near-MTU P2 pressure; no rerunning same Fixed30 unchanged.",
+  "next_action": "Resolve sole native builder run auto-triggered by removing Go import duplication. Do not re-dispatch old runs39878062135/39881519475, S032 AB39877362034, or capacity branch PASS39875959734. Verify Go product tests, Rust unit, nine ARM64 real MTU/DF/Stop case results, manifest/SHA256/ELF. If failure, inspect exact log and fix minimum. Preserve S032 B corrected oversize but Fixed client applied0 and arena pressure; P1/P2 not started.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",

@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "event": "P0-integrated-builder-follow-up",
+  "history": [
+    {
+      "run_id": 39878062135,
+      "source": "ce70f53b6ed26fc431d427ba9a9062aa63380a68",
+      "conclusion": "failure",
+      "stage": "Bash orchestration",
+      "cause": "unbound features variable",
+      "product_bundle": false
+    },
+    {
+      "run_id": 39881519475,
+      "source": "e614eaf8ca9d7edb1b8c3ba1417943bcfbdf4bc2",
+      "conclusion": "failure",
+      "failed_job": 120179740095,
+      "stage": "Go v4productcli test compilation",
+      "cause": "realityfront imported twice in r0/go_overlay/internal/v4productcli/secret_linux_test.go (merged original and PR #25 identical import)",
+      "rust_result": "native Rust release built; Game unit 4 tests passed",
+      "product_bundle": false
+    }
+  ],
+  "reference_proof": {
+    "capacity_branch_run": 39875959734,
+    "source": "b42b8fa2dd1793a056a6242ec4d349cc9e8a250a",
+    "conclusion": "success",
+    "nine_mtu_cases": "success on separate source"
+  },
+  "correction": "remove duplicate imported same realityfront path only; preserve all test assertions and authenticated budget/credential guards; new exact SOURCE required"
+}
