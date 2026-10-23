@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-Fixed2pct-kind3-sameVM-AB-intent",
+  "phase": "P0-Fixed2pct-M2-applied-fail-gate-root-cause-review",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,42 +23,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P0-kind3-nearMTU-original-vs-fix-AB",
-      "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_ONE_MEASUREMENT_JOB",
-      "status": "IN_PROGRESS_MEASUREMENT",
-      "trigger": "push of tests/network/request.json on experiment branch; no manual dispatch",
-      "why": "Distinguish parity kind3 12B seal boundary as cause of near-MTU FEC2 losses from remaining M2 applied/receipt and TCP tail; if parity failures vanish and residual improves, proceed to P1; otherwise inspect earliest remaining boundary.",
-      "A": {
-        "source": "d64be28591c3752af06be399ff598266ecf4d664",
-        "run_id": 39881938976,
-        "artifact_id": 12470698437,
-        "zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
-        "build_status": "success",
-        "architecture": "aarch64",
-        "scope": "native-verified-plus-9-MTU-functional"
-      },
-      "B": {
-        "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
-        "run_id": 39886303564,
-        "attempt": 1,
-        "artifact_id": 12473520038,
-        "zip_sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6",
-        "build_status": "success",
-        "architecture": "aarch64",
-        "scope": "native Go/Rust + 1 repair budget Rust unit + 9/9 MTU functions (not mixed traffic)",
-        "runtime_isa": "NOT_OBSERVED"
-      },
-      "seed": 5205,
-      "scenario": "2Mbps/direction, 99% 1287B UDP, 1%64B, UDP/TCP50/50, 4 TCP streams, 2%IID,200ms one-way,120s steady",
-      "cleanup_hard_gate": true,
-      "run_id": 39887028993,
-      "attempt": 1,
-      "source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39887028993"
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "S028",
@@ -151,6 +116,13 @@
       "run": 39886303564,
       "artifact_id": 12473520038,
       "file": "P0-kind3-native-boundary-pass-AB-intent-20261023.json"
+    },
+    {
+      "id": "P0-kind3-Fixed2pct-AB",
+      "result": "B_REAL_BUSINESS_PASS_BUT_CLIENT_APPLIED_HARD_FAIL",
+      "run": 39887028993,
+      "artifact_id": 12473581118,
+      "file": "P0-kind3-sameVM-AB-business-fail-20261023.json"
     }
   ],
   "open_issues": [
@@ -168,7 +140,7 @@
     "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md."
   ],
-  "next_action": "ONE outstanding P0 Fixed2pct same-VM AB Action39887028993 on exact request/harness SOURCE 39cb2783, attempt1; already dispatched by push. Check completion/artifact+per-leg actual result, do not redispatch. A=d64be native bundle vs B=a58d native bundle, 120s each, one measurement VM; confirm parity_seal, UDP loss/p99, TCP p99, per-side applied, M2 censored, CPU/RSS/PSI, Stop and queued drops, then classify and archive. P1 static limitation recorded in 20261023-P1-static-construction-audit.md; DO NOT run H500 before P0 and dynamic effective readback.",
+  "next_action": "A/B Action39887028993 completed FAIL: A 233/237 UDP missing and TCP p99 5.9/8.4s; B 0/0 UDP missing and TCP p99 221/221ms, parity_seal0, Stop PASS but client requested1/applied0 pending (server applied1). BEFORE more performance requests, inspect true Fixed gate in v4_embedded_go.rs lines 4621-4656; distinguish cumulative coverage/timer vs FEC job global quiescence and M2 capacity censorship with bounded real gate readback. Implement smallest safe cohort gate only with actual authenticated M2 and copied source+parity, ensure stale/wrong epoch/unknown not promoted. Test real failed counterexample + Normal/off anchor; no H500 until P1 dynamic readback. Preserve original AB FAIL and ZIP hash.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
