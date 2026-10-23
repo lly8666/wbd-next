@@ -110,9 +110,19 @@ openssl x509 -in "$work/server.crt" -noout -fingerprint -sha256 >"$out/tls-cert-
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
   --tunnel-id 00112233445566778899aabbccddeeff --mode "$mode" --fec-profile 1
+client_mtu_args=(); server_mtu_args=()
+# Older frozen bundles do not expose this flag. Default smoke keeps their
+# original argv; explicit MTU tests require the new real CLI capability.
+if [ -n "${WBD_ARM64_OUTER_MTU+x}" ]; then
+  client_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+fi
+if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
+fi
 sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
-  --outer-mtu "${WBD_ARM64_SERVER_OUTER_MTU:-${WBD_ARM64_OUTER_MTU:-1500}}" \
+  "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
   --tls-cert "$work/server.crt" --tls-key "$work/server.key" \
   >"$out/server.log" 2>&1 &
@@ -130,7 +140,7 @@ if [ "$found" -ne 1 ]; then
 fi
 sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
-  --outer-mtu "${WBD_ARM64_OUTER_MTU:-1500}" \
+  "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
   >"$out/client.log" 2>&1 &
 client_launcher=$!

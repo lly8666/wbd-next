@@ -13,3 +13,7 @@
 首轮SOURCE 37bea82516b06f850663c4bc0a0e5aabda9f9b49：network-harness-check run39874672789 PASS；ARM run39874672683 编译/Go预算单测与Normal原生双向/Stop PASS。九组合边界中7 PASS；两个FAIL原样保留（artifact12467328308）。Fixed客户端outer1500/服务端1280在prepare失败：Rust client rx_wire_limit错误取server_limit，与按client_limit建立的LINK RX矛盾。Game2/1500小包正常、大于1200拒绝：GameAdapter与kernel入口仍硬编码1200/1216。它们是实际路径预算bug，不是VM容量或随机丢包。
 
 下一SOURCE定向修复：Rust RX/TX限额取各自已认证方向，Game统一由每lane record预算扣31+16推导上限；保留既有2048slab和所有认证/路径门。加入Game超过旧1200的边界单测，重跑相同九组合而不重启压力矩阵。模型/文档后续提交f2c5811d未改产品，不影响首轮SOURCE归因。
+
+第二轮产品SOURCE 1be5eb8e6832a59e7980cf8030435b9d71efd7ca，ARM run39875322487：构建/Go单测/Rust Game单测/Normal基础PASS；九种MTU正向与DF负向全部逐包通过，但整批8/9组合PASS。Game2的最终严格rejected=0门失败，两端各rejected=2，真实业务64/64、auth_rejected=0、Stop均通过。比原1200TUN变大后跨过IPv6最小接口MTU，推断Linux自动link-local/RS控制流量进入IPv4-only入口；不是业务大包边界再次失败。下一修复仅在新建owned IPv4 TUN启动前禁用其IPv6自动配置（不改host/global），保持原拒绝门复验；不得仅把rejected门调宽刷绿。原始artifact12468048305保留。
+
+夹具兼容修正：只有显式WBD_ARM64_OUTER_MTU的用例传新flag，默认旧冻结包smoke保持原argv；增加bash语法检查。仅改变夹具时不需要重编旧二进制；本轮确实改了IPv4 TUN初始化，因此创建新精确SOURCE包。

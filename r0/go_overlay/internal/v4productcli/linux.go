@@ -203,6 +203,11 @@ func openTun(name,cidr string,mtu int)(*ownedTun,error){
         uintptr(unsafe.Pointer(&ifr[0])))
     if errno!=0{_ = fd.Close();return nil,errno}
     device:=&ownedTun{f:fd,name:name,mtu:mtu}
+    // This public TUN is IPv4-only. At MTU>=1280 Linux would otherwise create
+    // IPv6 link-local/RS traffic, which the IPv4 driver correctly rejects.
+    // Set only our newly-owned device, before bringing it up; no host sysctl.
+    err=os.WriteFile("/proc/sys/net/ipv6/conf/"+name+"/disable_ipv6",[]byte("1\n"),0)
+    if err!=nil&&!errors.Is(err,os.ErrNotExist){_ = device.Close();return nil,err}
     if err=runIP("addr","add",cidr,"dev",name);err==nil{
         err=runIP("link","set","dev",name,"mtu",strconv.Itoa(mtu),"up")
     }

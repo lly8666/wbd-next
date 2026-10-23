@@ -16,6 +16,8 @@ jobs:
         with: {persist-credentials: false}
       - name: Request, model, integrity, phase accounting and independent UDP TCP selfcheck
         run: python3 -m unittest discover -s tests/network -p 'test_*.py' -v
+      - name: ARM functional harness syntax, including frozen-bundle compatibility
+        run: bash -n tools/arm64_linux_netns_smoke.sh tools/arm64_public_go_rust_bundle.sh
       - name: Publish size-aware theoretical capacity envelope
         run: python3 -m tools.network_harness.envelope > capacity-envelope-model.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
