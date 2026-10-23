@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-10Mbps-2pct-real-followup",
+  "phase": "P2-Normaloff-highRTT-TCP-window-concurrency-isolation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,12 +25,12 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-2pct-residual-and-resource-boundary-60s",
-      "status": "COMMITTED_ONE_SCENARIO_AUTORUN_PENDING",
-      "type": "ONE_REAL_NORMAL_ONLY_10MBPS_2PCT",
+      "id": "P2-Normaloff-10Mbps-2pct-8TCP-flows-BDP-headroom-60s",
+      "status": "INTENT_COMMITTED_AUTO_ACTION_PENDING",
+      "type": "ONE_NORMAL_OFF_REAL_SCENARIO",
       "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "product_artifact_id": 12486939897,
-      "why": "Zero-loss 10Mbps source281f6c64 1024-loan measured valid without TUN drops, highwater846/845; now isolate 2% IID repair additional occupancy and 10% quota, validate <=0.25% UDP residual under same 200ms one-way and 60s, CPU/RSS/tail/Stop. Separate VM vs zero-loss AB; no causal CPU comparison or FEC tests."
+      "artifact_id": 12486939897,
+      "why": "4-flow 10Mbps/2% test INCONCLUSIVE exclusively due TCP C2S 3.874/5 Mbps 6561 backpressure, tcp p99 up to14s. No TUN/arena/feedback/host bottleneck. At RTT410.8ms/MSS1289/5Mbps TCP BDP256750B, four flows require~49.8 MSS per flow (62.2 w/25% margin), eight ~24.9 (31.1 margin). Isolate TCP per-flow congestion/window with identical packet profile, no FEC, no product code changes."
     }
   ],
   "recent_evidence": [
@@ -64,6 +64,14 @@
       "source_B": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "result": "B_PASS_10MBPS_ZEROLOSS_ZERO_TUN_DROP_NO_DEFER_PEAK846_OF1024",
       "file": "P2-Normaloff-512v1024-10Mbps-zero-loss-AB-PASS-20261023.json"
+    },
+    {
+      "id": "P2-Normaloff-10Mbps-2pct-4flow-INCONCLUSIVE-20261023",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURED_UDP_CORRECT",
+      "run": 39923334085,
+      "artifact_id": 12488855638,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "why": "UDP 24/15 of29417=0.082/0.051pct, peak M1 699/733 of1024, no admission/backpressure/drops. TCP 4 streams C2S only3.874/5Mbps, 6561 backpressure, p99=4.6s/14s. Kernel retrans +400/+614, server notsent1.97MB. Run next distinct 8flow scenario."
     }
   ],
   "open_issues": [
@@ -84,7 +92,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Find one auto Action for 10Mbps each way Normal/off 2% loss 200ms, native B source281f6c64 1024-loan; do NOT dispatch twice. Inspect actual injection, packet/byte counts, recovery receipt quota, original pool peak, TUN drops, UDP missing <=0.25% each way, TCP p99, product/injector CPU, RSS, netem queue, Stop. If fails capacity, explain and stop higher rate. FEC performance/tests intentionally excluded.",
+  "next_action": "Reconcile one auto Normal/off 8-TCP-flow 10Mbps/dir 2%/200ms performance Action, reuse native281f6c64 bundle; no duplicate dispatch or new FEC tests. Inspect TCP actual sender rate/4v8 limited inference, kernel sampled cwnd/retrans/notsent/RTO and app backpressure, TCP p99, UDP residual<=0.25%, original M1 peak+defers, feedback, CPU/RSS, host and Stop. Do not claim same-VM CPU causality from separate 4-flow run. If 8 flows still TCP limited, prefer confirm reverse ACK/loss timing over blind pool/quota changes.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
