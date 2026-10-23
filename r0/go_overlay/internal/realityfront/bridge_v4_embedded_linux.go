@@ -453,6 +453,27 @@ func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uin
 // One readback on stop/diagnostic only: native Linux per-thread CPU time,
 // kept separate from total Go+Rust process CPU in the Actions monitor.
 type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
+// Low-frequency terminal or explicitly enabled diagnostic only. This method
+// queries real native worker completion counters and CPU; no packet or
+// authentication path is redirected to Go.
+type V4PublicLoopPulse struct{
+    RxTurns,TxTurns,RxErrors,TxErrors uint64
+    RxThreadCPUns,TxThreadCPUns uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0 {
+        return V4PublicLoopPulse{},errV4Embedded
+    }
+    stats,err:=b.rustOwnerLoopStats()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    return V4PublicLoopPulse{
+        RxTurns:stats.RxOK,TxTurns:stats.TxOK,
+        RxErrors:stats.RxErr,TxErrors:stats.TxErr,
+        RxThreadCPUns:rx,TxThreadCPUns:tx,
+    },nil
+}
 func (b *v4EmbeddedNativeBridge) originalPublicWorkerCPU()(V4PublicWorkerCPU,error){
     rx,tx,err:=b.rustOwnerWorkerCPU()
     return V4PublicWorkerCPU{RxNs:rx,TxNs:tx},err
