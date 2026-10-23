@@ -279,6 +279,9 @@ struct Entry<H: FrozenRecordHandle> {
     hard_expiry: MonoNs,
     repair_attempts: u8,
     retry_epoch: u32,
+    // Hard repair-budget denial abandons future repair scheduling for this
+    // record, but NEVER releases the immutable shadow or fakes an attempt.
+    repair_abandoned: bool,
     missing_reported: bool,
     rearm_at: MonoNs,
     queued: Option<Queued>,
@@ -362,7 +365,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         }
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
-            retry_epoch: 0, missing_reported: false, rearm_at: at, queued: None,
+            retry_epoch: 0,repair_abandoned:false,
+            missing_reported: false, rearm_at: at, queued: None,
             indexed_wake: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
@@ -375,7 +379,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// This key is always removed on ACK, expiry or a state transition.
     fn wake_at(&self, e: &Entry<H>) -> Option<u64> {
         if let Some(q) = &e.queued { Some(q.until.0) }
-        else if e.repair_attempts < 2 && e.retry_epoch < u32::MAX {
+        else if !e.repair_abandoned
+            && e.repair_attempts < 2 && e.retry_epoch < u32::MAX {
             Some(self.due_at(e).0)
         } else { None }
     }
@@ -580,8 +585,22 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                         && q.until == candidate.dispatch_by
                         && now <= q.until && now < e.hard_expiry)
                 && candidate.repair_attempt_stage == e.repair_attempts
+                && !e.repair_abandoned
                 && e.repair_attempts < 2
         })
+    }
+
+    /// Hard local quota denial is an explicit Abandoned repair decision.
+    /// Keep the frozen record solely for authentic peer ACK or hard expiry;
+    /// do not burn an actual repair attempt and do not requeue at PTO.
+    pub fn on_quota_exhausted(&mut self,candidate:&RepairCandidate<H>,
+        now:MonoNs)->Result<(),DataError>{
+        if !self.preflight(candidate,now){return Err(DataError::Stale)}
+        let e=self.entries.get_mut(&candidate.pn).expect("preflight verified");
+        e.queued=None;
+        e.repair_abandoned=true;
+        self.refresh_wake(candidate.pn);
+        Ok(())
     }
 
     pub fn on_send_result(&mut self, candidate: &RepairCandidate<H>,
@@ -810,6 +829,25 @@ mod tests {
             Err(DataError::Stale));
     }
 
+    #[test]
+    fn r2_quota_exhausted_abandons_repair_without_faking_attempt_or_ack_release() {
+        let mut s=state(2,10);
+        add(&mut s,4,0,100);
+        let c=s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert_eq!(c.repair_attempt_stage(),0);
+        s.on_quota_exhausted(&c,MonoNs(10)).unwrap();
+        // No PTO requeue after a hard quota decision.
+        assert!(s.on_timer(MonoNs(99)).candidates.is_empty());
+        // The immutable shadow still waits for genuine peer evidence.
+        let released=s.on_receipt(
+            &receipt(1,4,vec![page(0,&[4])]),MonoNs(20)).unwrap();
+        assert_eq!(released.len(),1);
+        assert_eq!(released[0].reason,ReleaseReason::ReceivedByPeer);
+        let d=s.diagnostic_snapshot();
+        assert_eq!(d.acked_attempt0,1);
+        assert_eq!(d.acked_attempt1,0);
+        assert_eq!(s.outstanding(),0);
+    }
     #[test]
     fn r2_queue_timeout_revokes_old_candidate_and_rearms_boundedly() {
         let mut s = state(2, 10);

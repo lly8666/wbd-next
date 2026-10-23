@@ -60,7 +60,7 @@ jobs:
           cargo +1.85.1 test --release --locked -p wbd-recovery \
             r2_budget_first_repair_uses_hard_quota_before_pacer_retry_stays_paced -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
-            r2_budget_one_epoch_unused_sparse_credit_absorbs_phase_burst_without_accumulating -- --nocapture
+            r2_quota_exhausted_abandons_repair_without_faking_attempt_or_ack_release -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_original_repair_block_reason_classifier_is_stable -- --nocapture

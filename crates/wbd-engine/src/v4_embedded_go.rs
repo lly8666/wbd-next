@@ -4145,9 +4145,14 @@ fn background_original_repair_once(
                         },
                         Err(err)=>{
                             let _=global.revoke(lease,now);
-                            own.note_block(original_repair_reserve_block_reason(err));
-                            let _=own.shadow.on_send_result(
-                                &candidate,RepairSendResult::NotSent,now);
+                            let reason=original_repair_reserve_block_reason(err);
+                            own.note_block(reason);
+                            if reason==OriginalRepairBlockReason::Quota{
+                                let _=own.shadow.on_quota_exhausted(&candidate,now);
+                            }else{
+                                let _=own.shadow.on_send_result(
+                                    &candidate,RepairSendResult::NotSent,now);
+                            }
                             None
                         }
                     }
