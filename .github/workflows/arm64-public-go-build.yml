@@ -54,13 +54,15 @@ jobs:
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
-            r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry -- --nocapture
+            r2_adaptive_authenticated_rtt_drives_single_repair_retain_without_unbounded_retry -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
-            r2_diagnostics_split_no_repair_one_repair_two_repair_retirement -- --nocapture
+            r2_single_repair_completion_release_race_is_idempotent -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
-            r2_budget_first_repair_uses_hard_quota_before_pacer_retry_stays_paced -- --nocapture
+            r2_single_repair_diagnostics_no_second_network_attempt -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
-            r2_quota_exhausted_abandons_repair_without_faking_attempt_or_ack_release -- --nocapture
+            r2_quota_exhausted_releases_repair_shadow_without_faking_ack -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-recovery \
+            r2_queue_timeout_retires_payload_without_second_timer -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             m0_original_repair_block_reason_classifier_is_stable -- --nocapture

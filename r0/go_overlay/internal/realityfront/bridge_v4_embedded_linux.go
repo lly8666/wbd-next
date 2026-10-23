@@ -302,6 +302,8 @@ type V4PublicOuterCounters struct{
     BlockedFreshGlobal,BlockedFreshShadow,BlockedGrant uint64
     BlockedBurst,BlockedQuota,BlockedCapacity,BlockedStale uint64
     BlockedLocalOther,BlockedGlobalOther,BlockedInvariant uint64
+    RepairAcceptedRetired,RepairUncertainRetired,RepairAbandonedRetired uint64
+    MaxQueueAgeus,RepairAttemptLimit,ShadowLimit,RetainCapus uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
@@ -310,9 +312,9 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
         C.uint64_t(b.handle),&values[0],6)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
-    var d [27]C.uint64_t
+    var d [34]C.uint64_t
     rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
-        C.uint64_t(b.handle),&d[0],27)
+        C.uint64_t(b.handle),&d[0],34)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 diagnostics=%d",errV4Embedded,int(rc))}
     return V4PublicOuterCounters{
         FirstKernelCopied:uint64(values[0]),
@@ -333,6 +335,10 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         BlockedQuota:uint64(d[21]),BlockedCapacity:uint64(d[22]),
         BlockedStale:uint64(d[23]),BlockedLocalOther:uint64(d[24]),
         BlockedGlobalOther:uint64(d[25]),BlockedInvariant:uint64(d[26]),
+        RepairAcceptedRetired:uint64(d[27]),RepairUncertainRetired:uint64(d[28]),
+        RepairAbandonedRetired:uint64(d[29]),MaxQueueAgeus:uint64(d[30]),
+        RepairAttemptLimit:uint64(d[31]),ShadowLimit:uint64(d[32]),
+        RetainCapus:uint64(d[33]),
     },nil
 }
 // Read-only original Rust worker stats under the authenticated owner scope.
