@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "kind": "ACTIONS_NATIVE_ARM64_DIRECT_TCP_CONTROL_ONLY_NOT_PRODUCT",
+  "run": 39989048165,
+  "attempt": 1,
+  "conclusion": "success",
+  "source": "ee09ca4e7ba9f02641077684c6ee37b0105b30f0",
+  "artifact_id": 12516767356,
+  "artifact_digest": "sha256:702d27ae8fb403b5f3d359a928e952d34a76d38f5d0b4f0d3ca10d28f03d2876",
+  "artifact_sha256_locally_verified": true,
+  "script": "tools/network_harness/direct_tcp_baseline.py",
+  "workflow": ".github/workflows/network-v3-direct-tcp-control.yml",
+  "scope": {
+    "host_arch": "aarch64",
+    "topology": "veth IPv4 direct, 2 owned namespaces; no WBD product",
+    "one_tcp_stream": true,
+    "direction": "c2s",
+    "target_application_mbps": 200,
+    "one_way_ms_each": 200,
+    "rtt_ms_approx": 400,
+    "mtu": 1429,
+    "tcp_advmss": 1377,
+    "per_direction_qdisc_rate_mbps": 700,
+    "netem_loss_pct": 0,
+    "tcp_rmem_wmem_max_bytes": 67108864,
+    "socket_readback_initial_sndbuf_rcvbuf_bytes": [
+      4194304,
+      4194304
+    ],
+    "warmup_s": 15,
+    "steady_s": 60,
+    "application_chunk_size": 32768
+  },
+  "observed": {
+    "sender_app_steady_mbps": 199.99839573333333,
+    "receiver_app_steady_mbps": 199.99839573333333,
+    "sender_blocked_nonblocking_write_attempts": 1754,
+    "receiver_app_missing_bytes": 0,
+    "ss_t5": {
+      "cwnd": 24700,
+      "unacked": 7320,
+      "snd_wnd_bytes": 28620800,
+      "delivery_rate_bps": 314488832,
+      "app_limited": true
+    },
+    "ss_t30": {
+      "cwnd": 24700,
+      "unacked": 7320,
+      "snd_wnd_bytes": 28620800,
+      "delivery_rate_bps": 314488832,
+      "app_limited": true
+    },
+    "ss_t55": {
+      "cwnd": 24700,
+      "unacked": 7344,
+      "snd_wnd_bytes": 28620800,
+      "delivery_rate_bps": 314488832,
+      "app_limited": true
+    }
+  },
+  "comparison": {
+    "product_run": 39983733109,
+    "product_steady_app_mbps": 175.10782293333332,
+    "product_firstarrival_p99_ms": 2567.8,
+    "product_client_notsent_median_bytes": 27648155,
+    "product_warmup_tun_drop_client": 8446,
+    "product_steady_tun_drops_both": 0,
+    "interpretation": "Native ARM direct control passes200 at same RTT/MTU/windows; general host/TCP baseline below200 eliminated, but direct bypasses product path and therefore does not isolate specific product/loop stage. Product TCP500 remains NOT_RUN."
+  },
+  "disposition": "DIRECT_TCP200_PASS_PRODUCT_TCP200_INCONCLUSIVE_FIRST_PRODUCT_BOTTLENECK_OPEN"
+}
