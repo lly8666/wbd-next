@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-outer-business-protocol-conservation-source-build",
+  "phase": "P1-normal2pct-UDP-protocol-chain-real",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,11 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-normal2pct-UDP-TCP-protocol-chain",
-      "status": "INTENT_COMMITTED_AUTOBUILD_PENDING",
-      "type": "NATIVE_BUNDLE_AND_MTU9_THEN_FOCUSED_BUSINESS",
+      "id": "P1-normal2pct-UDP-TUN-protocol-conservation-60s",
+      "status": "INTENT_COMMITTED_ACTION_PENDING",
+      "type": "ONE_REAL_BIDIRECTIONAL_SCENARIO",
       "source": "COMMIT_TBD",
-      "why": "Previous original M3 RX shows only 16/21 missing outer records but inner UDP loses120/126 application datagrams. Instrument TUN input and successful staging per inner IP protocol plus M3 TUN output by protocol, distinguish TX ingress vs RX post-TUN. No quota/repair policy change."
+      "product_source": "99042008e8f42f334ed635df92945e00e53c45dd",
+      "artifact_id": 12482468452,
+      "why": "Actual v2 A-only same loss 2% with new exact UDP/TCP TUN ingress/staging and authenticated TUN sink markers. Differentiate application 2% gaps upstream of rust TX vs under firstsend vs after RX TUN; no performance AB or quota tuning."
     }
   ],
   "recent_evidence": [
@@ -319,14 +321,14 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Find unique automatic native build from source with per-protocol TX/RX chain; no duplicate dispatch. Require native 75/75 and MTU9. Then one exact 2% mixed real business Actions with frozen new binary and per protocol readback. Compute UDP source ingress vs app offered and UDP TUN sink vs app received; locate first nonconserving boundary. Fix only observed cause.",
+  "next_action": "Find exact one auto scenario Action after committing tests/network/request.json. Do not redispatch. Download artifact and calculate per-role TUN UDP ingress, staged UDP, RX tun_udp, application send/deliver and errors. If ingress already lacks offered UDP, inspect kernel app-to-TUN/socket injection route; if ingress full but stage loses, fix owner; if RX TUN full but app misses, inspect socket/driver and TUN route. Preserve v2 0.25% FAIL and Stop.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
-    "run_id": 39909891952,
+    "source": "99042008e8f42f334ed635df92945e00e53c45dd",
+    "run_id": 39911318918,
     "attempt": 1,
-    "artifact_id": 12482940081,
-    "zip_sha256": "c37ed8613162a9b4cb7225cdfa6f2e3f168b62692fcdf5dff2ccc7808c88d718",
+    "artifact_id": 12482468452,
+    "zip_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
@@ -336,7 +338,7 @@
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "PENDING_RX_CHAIN_NEW_SOURCE_NO_BUSINESS_PASS",
+    "business_qualification": "PENDING_UDP_CHAIN_2PCT",
     "business_run_id": 39907046412,
     "business_artifact_id": 12481288207,
     "business_source": "5890776f85a34373bc0c71ebdea43df97f59e52a"

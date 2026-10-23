@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "id": "P1-normal2pct-UDP-protocol-chain-intent-20261023",
+  "source": "99042008e8f42f334ed635df92945e00e53c45dd",
+  "build_run": 39911318918,
+  "bundle_artifact": 12482468452,
+  "bundle_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
+  "build": "SUCCESS_75_OF_75_AND_MTU9",
+  "mtu_artifact": 12482503619,
+  "request": {
+    "version": 1,
+    "id": "P1-normal2pct-UDP-TUN-protocol-conservation-60s",
+    "owner": "network-matrix-work",
+    "seed": 5205,
+    "product": {
+      "mode": "normal",
+      "fec_profile": 1
+    },
+    "traffic": {
+      "c2s_mbps": 2,
+      "s2c_mbps": 2,
+      "udp_share": 0.5,
+      "sizes": [
+        [
+          64,
+          1
+        ],
+        [
+          1287,
+          99
+        ]
+      ],
+      "tcp_flows": 4,
+      "probe_hz": 20,
+      "deadline_ms": 3000,
+      "burst_ms": 0,
+      "max_packets": 20000000,
+      "allow_fragmentation": false
+    },
+    "network": {
+      "outer_mtu": 1500,
+      "lane_loss": "shared",
+      "queue_packets": 32768,
+      "netem_rng": "unseeded_recorded"
+    },
+    "warmup_s": 10,
+    "drain_s": 30,
+    "phases": [
+      {
+        "name": "steady",
+        "seconds": 60,
+        "rate_scale": 1,
+        "c2s": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 2,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        },
+        "s2c": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 2,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        }
+      }
+    ],
+    "acceptance": {
+      "injection_tolerance_pct": 3,
+      "max_loss_pct": 0.25,
+      "require_retransmission": true
+    },
+    "bundles": {
+      "A": {
+        "source": "99042008e8f42f334ed635df92945e00e53c45dd",
+        "run_id": 39911318918,
+        "attempt": 1,
+        "artifact_id": 12482468452,
+        "sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
+        "recovery_policy": "outer-single-repair-v2"
+      }
+    },
+    "order": "A",
+    "policy": "outer-single-repair-v2"
+  },
+  "one_scenario": true,
+  "question": "Which actual source/destination TUN UDP counts first depart from offered/received 5884 packets each direction? Previous raw record chain showed 0.08/0.10% losses despite 2% UDP application misses.",
+  "result": "NOT_RUN_AT_COMMIT"
+}
