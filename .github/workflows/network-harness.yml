@@ -8,6 +8,12 @@ on:
         required: true
         default: tests/network/request.json
         type: string
+      target_arch:
+        description: Native runner architecture; must match the frozen product artifact
+        required: true
+        default: arm64
+        type: choice
+        options: [arm64, amd64]
   # Initial branch acceptance only. After merge, measurements are manual; never auto-fanout.
   push:
     branches: [feat/network-scenario-harness-20261021, experiment/network-matrix-tuning]
@@ -19,8 +25,8 @@ concurrency:
 jobs:
   measure:
     name: One scenario on one VM
-    # Experiment branch consumes native AArch64 bundles; existing x64 workflow stays x64.
-    runs-on: ${{ github.ref_name == 'experiment/network-matrix-tuning' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    # Manual tests use explicit target; retain legacy automatic-push runner selection.
+    runs-on: ${{ (inputs.target_arch == 'arm64' || (github.event_name != 'workflow_dispatch' && github.ref_name == 'experiment/network-matrix-tuning')) && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 50
     env:
       REQUEST: ${{ inputs.request || 'tests/network/request.json' }}

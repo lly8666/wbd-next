@@ -1,5 +1,7 @@
 # WBD Next：所有 agent 的共同入口
 
+**当前分支的独立FEC授权**：用户2026-10-23指定 `experiment/fec-network-tuning` 在关闭外层数据重传时独立修复/验证FEC。该岗位按 `docs/testing/FEC_AUTONOMOUS_WORK.md` 和自己的 `docs/evidence/fec-network-work/status.json` 接续；不是M0–M4，也不执行原network-matrix-work的next_action。可自主做相关FEC、最小开关接线和Actions，不等外层恢复岗位；不得覆盖其分支/状态或并行重写外层算法。
+
 1. 用户最新明确要求优先；根章程定义产品目的与硬约束。设计入口为 `docs/architecture/README.md`；按角色正式分配开工；已实现/已测范围以当前证据为准，不把方案或组件 PASS 当产品资格。
 2. 每个新聊天、恢复轮次、上下文压缩后，先读 `START_HERE.md`，刷新远端 main 的 registry 和自己精确工作分支的 cursor。不要依赖旧聊天或缓存 ref。
 3. 先核 Git 提交、Actions 与未结束 intent，再继续；遗漏日志须事实重建，注明 recovered，不猜原作者意图。

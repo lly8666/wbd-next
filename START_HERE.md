@@ -1,5 +1,7 @@
 # WBD Next｜新 agent 唯一启动入口
 
+当前独立FEC岗位直接读 [FEC_AUTONOMOUS_WORK](docs/testing/FEC_AUTONOMOUS_WORK.md) 和 `docs/evidence/fec-network-work/status.json`；其用户授权覆盖下方正式角色派单流程。外层重传岗位的status仅作只读共性证据，不能当本岗位下一任务。
+
 仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
 
 ## 最小热读取（不超过 8 文件）

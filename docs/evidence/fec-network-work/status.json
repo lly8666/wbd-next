@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "branch": "experiment/fec-network-tuning",
+  "phase": "FEC_ONLY_BOOTSTRAP_READY",
+  "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
+  "upstream_snapshot": {
+    "branch": "experiment/network-matrix-tuning",
+    "sha": "45325c9c965e56080f2035bafcf235aa02a1a6c0",
+    "product_source": "99042008e8f42f334ed635df92945e00e53c45dd",
+    "build_run": 39911318918,
+    "artifact_id": 12482468452,
+    "zip_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
+    "qualification": "UPSTREAM_SINGLE_REPAIR_NOT_FEC_ONLY"
+  },
+  "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
+  "outer_repair_disabled_verified": false,
+  "product_current": null,
+  "open_requests": [],
+  "open_issues": [
+    "Public runtime repair-disable switch is not verified. Harness currently rejects explicit repair_enabled; implement minimal truthful end-to-end switch without disabling receipts/RTT/keepalive or FEC parity.",
+    "Upstream Normal reports record-vs-UDP delivery discrepancy under 2% damage. Preserve it as a common-path qualification boundary; do not assume all residual is FEC failure or duplicate upstream dispatches.",
+    "FEC fixed/auto/fullstack capability and performance under actual zero outer data repairs remain NOT_RUN for this task."
+  ],
+  "next_action": "Read task entry, recover exact branch and build evidence; implement/reuse real outer-repair OFF with two-sided readback/counters, retain feedback and minimal quality metadata, then native functional and one FEC-only true-business positive case. Reuse existing codec tests and artifacts where applicable; all execution in Actions.",
+  "evidence_directory": "docs/evidence/fec-network-work/",
+  "devlog_directory": "docs/devlog/fec-network-work/"
+}
