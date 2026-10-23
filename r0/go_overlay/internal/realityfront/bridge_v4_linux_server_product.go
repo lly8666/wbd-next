@@ -207,6 +207,13 @@ func (p *V4LinuxServerProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,err
     if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
     return p.owner.originalPublicFecTxSnapshot()
 }
+func (p *V4LinuxServerProduct) OriginalWorkerCPU()(V4PublicWorkerCPU,error){
+    if p==nil{return V4PublicWorkerCPU{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicWorkerCPU{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicWorkerCPU()
+}
 func (p *V4LinuxServerProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
     if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}
     p.mu.Lock()
