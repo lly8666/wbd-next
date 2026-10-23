@@ -51,6 +51,7 @@ class Contracts(unittest.TestCase):
         ab["policy"] = expected
         ab["bundles"]["A"]["recovery_policy"] = "legacy-two-repair-v1"
         ab["bundles"]["B"] = dict(ab["bundles"]["A"], recovery_policy=expected)
+        ab["order"] = "AB"  # Independent of current committed A-only observation request.
         valid = validate(ab)
         self.assertEqual(valid["bundles"]["A"]["recovery_policy"], "legacy-two-repair-v1")
         self.assertEqual(valid["bundles"]["B"]["recovery_policy"], expected)
