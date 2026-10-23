@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal2pct-TUN-preloan-root-fix-native-pending",
+  "phase": "P1-Normal2pct-TUN-preloan-same-VM-AB-running",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,253 +25,18 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-TUN-preloan-normal-2pct",
-      "type": "ONE_ARM64_NATIVE_AND_MTU9_THEN_REAL_SCENARIO",
-      "status": "COMMITTED_AUTORUN_PENDING",
-      "product_source": "COMMIT_PENDING",
-      "failure_run": 39911913234,
-      "failure_artifact": 12483556117,
-      "why": "Measured 227/234 valid original business TUN datagrams irreversibly lost postread when 128-slot owner M1 pool was full. Pre-read arena reservation and existing feature7 512-slot fixed pool are the minimal correct-boundary fix."
+      "id": "P1-Normal2pct-preloan-TUN-arena-old-new-sameVM-AB",
+      "status": "COMMITTED_AUTO_SCENARIO_PENDING",
+      "type": "ONE_SAME_VM_SEQUENTIAL_AB_REAL_BUSINESS",
+      "intent_source": "COMMIT_PENDING",
+      "A_product": "99042008e8f42f334ed635df92945e00e53c45dd",
+      "B_product": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "legacy_fail_run": 39911913234,
+      "native_pass_run": 39913063383,
+      "why": "Distinguish caused fresh TUN postread NoCapacity loss from network repair residual with identical valid mode, one VM sequential old/new, 2pct/200ms/60s, 99pct near-MTU and mixed UDP/TCP. B must have no consumed-postread arena loss; compare no hidden TUN or kernel backlog."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "S028",
-      "result": "FAIL_EARLY_ARENA_GAP_DISPROVED",
-      "run": 39801548685,
-      "artifact_id": 12436311228,
-      "file": "S028-M1-TUN-loan-accounting-fail.json"
-    },
-    {
-      "id": "S028-contract",
-      "result": "success",
-      "run": 39801548948,
-      "file": "S028-M1-TUN-loan-accounting-fail.json"
-    },
-    {
-      "id": "S029-build",
-      "run": 39803921701,
-      "result": "success",
-      "artifact_id": 12436752126,
-      "file": "S029-native-stage-build.json"
-    },
-    {
-      "id": "S029-contract",
-      "run": 39803921828,
-      "result": "success",
-      "file": "S029-native-stage-build.json"
-    },
-    {
-      "id": "S030",
-      "result": "HARD_FAIL_REAL_SOURCE_OVERSIZE_7074_7068",
-      "run": 39804670142,
-      "artifact_id": 12437951924,
-      "file": "S030-original-record-oversize-Fail.json"
-    },
-    {
-      "id": "S030-contract",
-      "result": "success",
-      "run": 39804669759,
-      "file": "S030-original-record-oversize-Fail.json"
-    },
-    {
-      "id": "P0-PR25-capacity-native",
-      "result": "success_other_source",
-      "run": 39875959734,
-      "file": "P0-PR25-S032-recovered-20261023.json"
-    },
-    {
-      "id": "P0-merged-native",
-      "result": "FAIL_SCRIPT_UNBOUND_FEATURES",
-      "run": 39878062135,
-      "file": "P0-PR25-S032-recovered-20261023.json"
-    },
-    {
-      "id": "S032-AB",
-      "result": "FAIL_BOTH_OLD_OVERSIZE_FIXED_NEW_CAPACITY_AND_APPLIED",
-      "run": 39877362034,
-      "artifact_id": 12468862630,
-      "file": "P0-PR25-S032-recovered-20261023.json"
-    },
-    {
-      "id": "P0-merged-syntax",
-      "result": "FAIL_GO_REDECLARED_IMPORT_AFTER_GAME_PASS",
-      "run": 39881519475,
-      "file": "P0-PR25-builder-compiler-recovery-20261023.json"
-    },
-    {
-      "id": "P0-merged-native-nine-MTU",
-      "result": "SUCCESS_SCOPED",
-      "run": 39881938976,
-      "product_artifact_id": 12470698437,
-      "mtu_artifact_id": 12470328990,
-      "file": "P0-PR25-merged-nine-MTU-verified-20261023.json"
-    },
-    {
-      "id": "P0-Normal-nearMTU-90s",
-      "result": "PASS_SCOPED",
-      "run": 39884432309,
-      "file": "P0-PR25-Normal-nearMTU-90s-pass-20261023.json"
-    },
-    {
-      "id": "P0-Fixed2pct-largest",
-      "result": "FAIL_PARITY_SEAL_M2_PENDING_AND_TCP_P99",
-      "run": 39885059364,
-      "artifact_id": 12472073637,
-      "file": "P0-PR25-Fixed2pct-nearMTU-120s-fail-20261023.json"
-    },
-    {
-      "id": "P0-kind3-native-build-MTU9",
-      "result": "SUCCESS_FUNCTIONAL_NOT_PERFORMANCE",
-      "run": 39886303564,
-      "artifact_id": 12473520038,
-      "file": "P0-kind3-native-boundary-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P0-kind3-Fixed2pct-AB",
-      "result": "B_REAL_BUSINESS_PASS_BUT_CLIENT_APPLIED_HARD_FAIL",
-      "run": 39887028993,
-      "artifact_id": 12473581118,
-      "file": "P0-kind3-sameVM-AB-business-fail-20261023.json"
-    },
-    {
-      "id": "P0-M2-cohort-first-build",
-      "result": "FAIL_RUST_SYNTAX_UNCLOSED_BRACE_NO_PRODUCT_ARTIFACT",
-      "run": 39889123489,
-      "file": "P0-M2-cohort-native-compile-recovery-20261023.json"
-    },
-    {
-      "id": "P0-Fixed2pct-M2-cohort-real-AB",
-      "result": "B_PASS_SCOPED_A_EXPECTED_FAIL_CONTROL",
-      "run": 39890061224,
-      "artifact_id": 12474930297,
-      "file": "P0-Fixed2pct-M2-cohort-real-AB-result-20261023.json"
-    },
-    {
-      "id": "P0-Normal2pct-static-PTO",
-      "result": "FAIL_RECOVERY_TIMING_BOTTLENECK",
-      "run": 39891326352,
-      "artifact_id": 12475340090,
-      "file": "P0-Normal2pct-static-PTO-fail-20261023.json"
-    },
-    {
-      "id": "P1-authRTT-native",
-      "result": "PASS_BUILD_UNIT_MTU9",
-      "run": 39892105601,
-      "artifact_id": 12475695809,
-      "file": "P1-authRTT-native-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P1-Normal2pct-authRTT-AB",
-      "result": "TIMING_IMPROVED_BUT_UDP_RESIDUAL_FAIL",
-      "run": 39892580264,
-      "artifact_id": 12475074444,
-      "file": "P1-Normal2pct-authRTT-AB-result-diagnostic-intent-20261023.json"
-    },
-    {
-      "id": "P1-residual-diagnostics-native",
-      "result": "PASS_BUILD_UNITS_MTU9",
-      "run": 39893574791,
-      "artifact_id": 12475394629,
-      "file": "P1-residual-diagnostics-native-pass-B-intent-20261023.json"
-    },
-    {
-      "id": "P1-Normal2pct-residual-diagnostics",
-      "result": "FAIL_PRE_FIRST_REPAIR_BURST_PACING_BOTTLENECK",
-      "run": 39894058072,
-      "artifact_id": 12475982496,
-      "file": "P1-Normal2pct-residual-diagnostics-result-burstfix-intent-20261023.json"
-    },
-    {
-      "id": "P1-sparse-burst-native",
-      "result": "PASS_BUILD_UNITS_MTU9",
-      "run": 39895511143,
-      "artifact_id": 12476119650,
-      "file": "P1-sparse-burst-native-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P1-sparse-burst-AB",
-      "result": "FAIL_HYPOTHESIS_FALSIFIED_REVERTED",
-      "run": 39896018098,
-      "artifact_id": 12476398356,
-      "file": "P1-Normal2pct-sparseburst-AB-negative-blockreason-intent-20261023.json"
-    },
-    {
-      "id": "P1-block-reason-native",
-      "result": "PASS_BUILD_CLASSIFIER_MTU9",
-      "run": 39896777307,
-      "artifact_id": 12476734780,
-      "file": "P1-block-reason-native-pass-B-intent-20261023.json"
-    },
-    {
-      "id": "P1-exact-block-reasons",
-      "result": "FAIL_BURSTPACED_DOMINANT",
-      "run": 39897262285,
-      "artifact_id": 12477427307,
-      "file": "P1-Normal2pct-block-reasons-result-pacing-rearm-intent-20261023.json"
-    },
-    {
-      "id": "P1-BurstPaced-bounded-rearm-native",
-      "result": "PASS_BUILD_UNITS_MTU9",
-      "run": 39897775082,
-      "artifact_id": 12477318789,
-      "file": "P1-BurstPaced-bounded-rearm-native-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P1-BurstPaced-short-rearm-AB",
-      "result": "FAIL_HYPOTHESIS_FALSIFIED_FIRST_STAGE_PACING_PROVEN",
-      "run": 39898816654,
-      "artifact_id": 12478455486,
-      "file": "P1-BurstPaced-short-rearm-AB-fail-first-priority-intent-20261023.json"
-    },
-    {
-      "id": "P1-first-repair-priority-native",
-      "result": "PASS_BUILD_UNITS_MTU9",
-      "run": 39899738046,
-      "artifact_id": 12477859860,
-      "file": "P1-first-repair-priority-native-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P1-first-repair-priority-AB",
-      "result": "FAIL_PACER_FIXED_QUOTA_ALIAS_EXPOSED",
-      "run": 39900235569,
-      "artifact_id": 12478751133,
-      "file": "P1-first-repair-priority-AB-quota-carry-intent-20261023.json"
-    },
-    {
-      "id": "P1-one-epoch-quota-carry-native",
-      "result": "PASS_BUILD_UNITS_MTU9",
-      "run": 39900920663,
-      "artifact_id": 12478957278,
-      "file": "P1-one-epoch-quota-carry-native-pass-AB-intent-20261023.json"
-    },
-    {
-      "id": "P1-one-epoch-quota-carry-AB",
-      "result": "FAIL_CARRY_NO_EFFECT_REPEATED_QUOTA_CANDIDATES",
-      "run": 39901422471,
-      "artifact_id": 12478987197,
-      "file": "P1-one-epoch-carry-AB-fail-quota-abandon-intent-20261023.json"
-    },
-    {
-      "id": "P1-hard-quota-abandon-native",
-      "result": "PASS_BUILD_SUPERSEDED_BY_SINGLE_REPAIR_POLICY",
-      "run": 39902074456,
-      "artifact_id": 12479730545,
-      "note": "No performance Action dispatched; user single-repair decision supersedes further two-repair quota tuning."
-    },
-    {
-      "id": "P1-single-repair-v2-first-native",
-      "result": "FAIL_VALIDATION_71_OF_75_RECOVERY_TESTS_PASS_4_LEGACY_TWO_REPAIR_ASSERTIONS",
-      "run": 39905462936,
-      "artifact_id": 12481130645,
-      "note": "Release bundle compiled successfully; targeted single-repair release/timing/quota tests passed. MTU skipped because full recovery sweep caught four obsolete workpack two-repair assumptions."
-    },
-    {
-      "id": "P1-single-repair-v2-contract-recovery",
-      "result": "PASS",
-      "run": 39905606950,
-      "note": "Envelope suite rows + one-repair retain/capacity expectations corrected; product behavior unchanged."
-    },
     {
       "id": "P1-single-repair-v2-compiler-recovery",
       "result": "FAIL_DUPLICATED_UNCLOSED_TEST_HEADER",
@@ -301,6 +66,16 @@
       "artifact_id": 12482169974,
       "source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
       "note": "B UDP 2.141%/2.039% vs0.25%; source first copies 20460/20555, peer unique normal 20444/20534, no LINK/TUN failure, lagged unique 393/415, receiver feedback_dropped 222/231. Record vs app discrepancy demands per-protocol TUN input/output, not blind quota."
+    },
+    {
+      "id": "P1-normal-preloan-native",
+      "result": "PASS_BUILD_RECOVERY75_MTU9",
+      "run": 39913063383,
+      "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "product_artifact": 12483243411,
+      "mtu_artifact": 12483528926,
+      "sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
+      "file": "P1-TUN-preloan-root-cause-fix-20261023.json"
     }
   ],
   "open_issues": [
@@ -321,24 +96,24 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Confirm unique auto ARM64 Action exact SOURCE; 75/75 full recovery, owner and MTU9. After PASS use frozen bundle for ONE original 2pct 60s real scenario with same parameters, require ZERO postread arena_failed and compare UDP stage/TUN sink to injection and app delivered, host/kernel/Stop. Do not manually redispatch identical failure or relax 0.25% gate. 500Mbps still NOT_QUALIFIED.",
+  "next_action": "Identify exactly one automatically triggered NETWORK Action for this AB intent; DO NOT dispatch. Compare precise A/B per-role TX tun_udp/tun_tcp, staged_udp/staged_tcp, arena_failed and new pre_read_deferred, remote authenticated RX tun_udp/tun_tcp, steady UDP lost/late, netem packet drop, receiver feedback and quota, CPU/RSS, p99 first delivery/TCP, Stop. B must hold <=0.25% steady UDP each direction for qualification; failure must be isolated, not blamed on VM; never call native/MTU PASS a full business PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "COMMIT_PENDING",
-    "run_id": 39911318918,
+    "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+    "run_id": 39913063383,
     "attempt": 1,
-    "artifact_id": 12482468452,
-    "zip_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
+    "artifact_id": 12483243411,
+    "zip_sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
-    "mtu_artifact_id": 12482179211,
-    "mtu_zip_sha256": "e52498f4282cdec451bb05a11f4ee4637c2166e0657ad4dda8cefcdaa2142cea",
+    "mtu_artifact_id": 12483528926,
+    "mtu_zip_sha256": "b3fa5fa40092d6499f02b9c6b3e253f4e8166c784cc318666fb5b01756058b31",
     "recovery_policy": "outer-single-repair-v2",
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "NOT_MEASURED_AFTER_PRELOAN",
+    "business_qualification": "PENDING_SAME_VM_AB",
     "business_run_id": 39907046412,
     "business_artifact_id": 12481288207,
     "business_source": "5890776f85a34373bc0c71ebdea43df97f59e52a"
