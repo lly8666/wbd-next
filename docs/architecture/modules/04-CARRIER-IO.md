@@ -20,7 +20,7 @@ MTU/route预算在可信安装和变化/错误路径观测，owner持带generati
 
 `TxBatchOutcome`必须区分：明确成功prefix、明确未发送suffix、单个不确定项。首次提交成功才计F/first_sent并安装正常repair状态；不确定发送保留同密文和seq，计独立unknown_tx，预留预算按已占用处理，不能当新包再seal。后续若收到真实receipt可消除不确定。完全失败可短期保留同cipher再送，仍不重复记一次fresh成功。
 
-首次发送的本地重试与网络repair分别计数；若之前可能已上网，后续发送按repair预算/两次上限保守算。避免用“系统调用重试”绕过10%。timestamp采用提交完成近似时刻并报告其界限，不把进入软件队列时间当wire发送时间。
+首次发送的本地重试与网络repair分别计数；若之前可能已上网，后续发送按repair预算/一次上限保守算（2026-10-23[新决策](../../decisions/NETWORK-ONE-REPAIR-20261023.md)）。唯一repair提交后不再保留重试资格，借用buffer须等安全completion再回收；避免用“系统调用重试”绕过次数或10%。timestamp采用提交完成近似时刻并报告其界限，不把进入软件队列时间当wire发送时间。
 
 ## Linux后端
 
