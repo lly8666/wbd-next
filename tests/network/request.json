@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-TCP1-2pct-default-v-large-window-AB",
+  "id": "P2-TCP1-2pct-window-AB-netns-only",
   "owner": "network-matrix-work",
   "seed": 5231,
   "product": {
