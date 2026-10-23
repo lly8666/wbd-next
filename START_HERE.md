@@ -4,6 +4,8 @@
 
 ## 最小热读取（不超过 8 文件）
 
+**用户直接授权的独立网络测试任务例外**：按 [NETWORK_AUTONOMOUS_WORK](docs/testing/NETWORK_AUTONOMOUS_WORK.md)读取任务分支的当前计划与 `docs/evidence/network-matrix-work/status.json`，不领取M0–M4身份、不创建正式角色cursor、不等待registry派单。下列正式角色流程仅用于避冲突，不覆盖该独立任务已有的自主修复与Actions授权。
+
 1. `AGENTS.md`、`PROJECT_CHARTER.md`。
 2. main 的 `.governance/project.json`、`.governance/registry.json`。
 3. **`docs/handoff/README.md`**：五工位概览、产品硬门与证据导航（这是带日期的索引，非实时权威）。
