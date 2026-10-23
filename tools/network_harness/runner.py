@@ -527,7 +527,7 @@ class LinuxExperiment:
         for role,log in logs.items():
             chain=[line for line in log.splitlines() if "V4_PUBLIC_RX_CHAIN " in line]
             if chain:
-                row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\\d+)",chain[-1])}
+                row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",chain[-1])}
                 if all(k in row for k in required_rx):
                     rx_chain[role]=row
         requested_policy = self.config["bundles"][self.label].get(
