@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-zero-loss-512v1024-M1-sameVM-AB",
+  "phase": "P2-Normaloff-10Mbps-512v1024-native-green-AB",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,25 +25,16 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-zero-loss-512v1024-owner-M1-AB-60s",
-      "type": "ONE_SAME_VM_NORMAL_ONLY_PERFORMANCE_ACTION",
-      "status": "PUSH_INTENT_PENDING_AUTORUN",
-      "A_source": "1605c32d5f5bdc99da792959dde99294a13cec77",
-      "B_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "extra_native_mtu_run": 39921718042,
-      "why": "After control reserve 16 fixed feedback_drop to0/0, old 512-owner still had source pre-read deferred11233/11250, kernel TUN tx dropped +819/+936, real UDP missing305/330 despite 0% netem. New fixed1024 backing plus O(1) peak occupancy. One same VM AB isolates buffer capacity, CPU/RSS, active gap and TUN drops; no FEC performance tests."
+      "id": "P2-Normaloff-10Mbps-zero-loss-512v1024-AB-native-green-60s",
+      "type": "ONE_VALID_SAME_VM_NORMAL_OFF_AB",
+      "status": "PUSH_INTENT_PENDING",
+      "native_green_run": 39921718042,
+      "source_A": "1605c32d5f5bdc99da792959dde99294a13cec77",
+      "source_B": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "reason": "The earlier one ACTION 39922151331 did NOT run business: prepare rejected product artifact while native run39921718042 was still in_progress (run SHA/attempt/status mismatch). Native is now fully successful, same frozen product artifact, test unchanged; rerun only valid prepared business once. No FEC scenario."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "P1-TUN-preloan-Normal2pct-sameVM-AB-result-20261023",
-      "run": 39913690718,
-      "artifact_id": 12484331372,
-      "result": "A_FAIL_B_PASS_SCOPED_NORMAL2PCT",
-      "source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "request_source": "6f4acf937d8003ac6471ae6b690d018b46458ccd",
-      "reference": "P1-TUN-preloan-Normal2pct-sameVM-AB-result-20261023.json"
-    },
     {
       "id": "P2-Normaloff-10Mbps-capacity",
       "result": "INCONCLUSIVE_LIMITS_NOT_YET_RECOVERED",
@@ -76,6 +67,21 @@
       "artifact_id": 12487087003,
       "source_B": "1605c32d5f5bdc99da792959dde99294a13cec77",
       "note": "B feedback drops0/0 vs A 284419/280354, dup98/97 vs 13759/13550, frozen repairs195 vs27309. B 11233/11250 pre-read defer, no post-read loss; TUN tx drop steady +819/+936, netem0, UDP miss305/330. B product cpu2.71/2.78s steady; RSS18,276,352/18,345,984B. Need bounded data flight headroom, not more control reserve."
+    },
+    {
+      "id": "P2-M1-1024-native-green",
+      "run": 39921718042,
+      "result": "PASS_75_RECOVERY_MTU9",
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "artifact_id": 12486939897,
+      "mtu_artifact_id": 12487457929,
+      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11"
+    },
+    {
+      "id": "P2-512v1024-premature-prepare",
+      "run": 39922151331,
+      "result": "HARNESS_PREPARE_REJECTED_NO_BUSINESS",
+      "why": "Native source run in_progress, strict artifact verifier required completed success. Neither AB leg executed; not product failure."
     }
   ],
   "open_issues": [
@@ -96,7 +102,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Reconcile one automatic performance Action for current request and native MTU job of run39921718042; DO NOT dispatch twice. Read B original_m1_pool slots=1024 peak_loaned, CPU/RSS, kernel TUN TX dropped steady vs A, pre-read deferred and UDP/TCP stage/sink, feedback_drop0, zero netem, strict real loss<=0.25%, TCP p99, Stop. If B source still saturates, stop adding rate and explain fixed slot/higher target vs endpoint cost; no FEC performance tests.",
+  "next_action": "Find exactly one new network Action for native-green 512v1024 Normal/off AB (same VM, same zero-loss 10Mbps). Do not dispatch once more. Report legitimate business measurements, owner peak_lent readback, per-role CPU/RSS, kernel TUN TX drops, feedback_drop, original TUN receive/stage/sink, UDP/TCP app first/late/missing, Stop. Baseline 39922151331 invalid due prepare-only failure. No FEC performance tests.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -106,9 +112,9 @@
     "zip_sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
     "architecture": "aarch64",
     "build_status": "success",
-    "mtu9": "PENDING_NATIVE_AUTOMATIC",
-    "mtu_artifact_id": 12486996617,
-    "mtu_zip_sha256": "940f7df13f9d73e1b2a1b1275652e140c5fe68dc885c5e774509e438ae1e3d36",
+    "mtu9": "PASS",
+    "mtu_artifact_id": 12487457929,
+    "mtu_zip_sha256": "4e9050affda7d0a911b937187606353b11ff8b6cf0de38d5fa78a6b365358588",
     "recovery_policy": "outer-single-repair-v2",
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
