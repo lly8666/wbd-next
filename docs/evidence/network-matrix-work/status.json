@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S031-fixed-auto-authenticated-record-wire-cap-native-build",
+  "phase": "S032-same-VM-Fixed30-source-limit-repair-A-B",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,21 +25,25 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "S031-original-FEC-record-cap-build",
-      "status": "NATIVE_JOB_SUCCESS_WORKFLOW_FINALIZING",
-      "type": "ONE_NATIVE_ARM64_PRODUCT_SOURCE_BUILD",
-      "trigger": "source change in original Go CLI auto-builds exactly once, no manual dispatch",
-      "previous_source": "2476b22f748a686907edfb995431a2b236ccebaa",
-      "scope": "raise negotiated client/server TLS record wire limit from1180 to1280 for Fixed/Auto only, keep Off/Game 1180; no change to Rust length/MTU/MSS/crypto/Stop gates",
-      "run_id": 39807984023,
-      "attempt": 1,
-      "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39807984023",
-      "artifact_id": 12438592249,
-      "zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
-      "original_go_test": "SUCCESS_NATIVE_BUILD_STEP",
-      "native_rust_units": "SUCCESS",
-      "all_elf_183_and_file_hashes_verified": true
+      "id": "arm64-fixed30-record-cap-S032-same-host-AB",
+      "type": "ONE_PERFORMANCE_ACTION_ONE_MEASUREMENT_JOB",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "one changed request.json push; no manual dispatch; same VM sequential AB",
+      "comparison": "Old 1180 record/FEC1135 early rejection vs B1280 record valid up to1235, all other network parameters unchanged",
+      "A": {
+        "source": "2476b22f748a686907edfb995431a2b236ccebaa",
+        "run_id": 39803921701,
+        "attempt": 1,
+        "artifact_id": 12436752126,
+        "sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219"
+      },
+      "B": {
+        "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+        "run_id": 39807984023,
+        "attempt": 1,
+        "artifact_id": 12438592249,
+        "sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb"
+      }
     }
   ],
   "recent_evidence": [
@@ -146,18 +150,13 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "S031 native build run 39807984023 product compilation/Go unit/Rust units/ZIP+ELF hashes PASS; run workflow API was IN_PROGRESS at last fetch though native job success and smoke SKIPPED. Do not dispatch S032 until workflow state completed SUCCESS because harness requires it. Once success, ONE S032 30%-IID Fixed Maximum same-VM sequential AB with product A source2476b22f run39803921701 artifact12436752126 zip8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219 and B sourcec297a805 run39807984023 artifact12438592249 zip7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb. Verify stage oversize old7074/7068 vs new, genuine UDP cohort, TCP kernel ACK, Fixed applied, CPU/RSS/Stop. Do not repeat builder or existing tests, keep S030 FAIL and S018 default PASS.",
+  "next_action": "Resolve ONE S032 native same-host sequential AB Action id from request push, no duplicate. Judge application UDP/TCP, original M1 oversize, Fixed applied both roles, M2 unknown and CPU/PSI/Stop; pre/post same-host underlay loss distributions unseeded. After it completes and status archived, integrate PR25 fix/capacity-budget-mtu-20261022 at safe node by 3-way preserving experiment source/observations; run P0 nine MTU function cases and then P1/P2. PR25 ARM39875959734 success; do not repeat.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
-    "build_run": 39807984023,
-    "build_attempt": 1,
+    "run_id": 39807984023,
     "artifact_id": 12438592249,
     "zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
-    "architecture": "aarch64",
-    "workflow_status": "in_progress",
-    "workflow_conclusion": null,
-    "native_build_job": "success",
-    "network_validation": "NOT_RUN"
+    "build_status": "success"
   }
 }

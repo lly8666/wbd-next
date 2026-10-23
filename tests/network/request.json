@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "arm64-fixed30-original-M1-postloan-stage-S030",
+  "id": "arm64-fixed30-record-cap-S032-same-host-AB",
   "owner": "network-matrix-work",
   "seed": 5205,
   "product": {
@@ -67,7 +67,14 @@
       "attempt": 1,
       "artifact_id": 12436752126,
       "sha256": "8b3a6c51940580b0ec89734749d8f069c63382318c398eaa052abc902a69a219"
+    },
+    "B": {
+      "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+      "run_id": 39807984023,
+      "attempt": 1,
+      "artifact_id": 12438592249,
+      "sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb"
     }
   },
-  "order": "A"
+  "order": "AB"
 }
