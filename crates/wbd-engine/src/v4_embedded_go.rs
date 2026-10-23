@@ -4659,7 +4659,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         // Identity/capacity censorship is still a hard failure.
         m2.has_clean_fixed_m2()
     };
-    if !covered{return BAD_STAGE
+    if !covered{return BAD_STAGE}
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
     e.fixed_applied=Some(policy);
     e.fec2_rx_admit.store(true,Ordering::Release);

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-original-client-Fixed-M2-clean-cohort-native-build",
+  "phase": "P0-M2-bounded-cohort-compiler-repair-native-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,15 +25,17 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P0-authentic-mature-Fixed-cohort-native",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
-      "type": "ONE_NATIVE_ARM_BUILD_PLUS_BOUNDARY_FUNCTION_BATCH",
-      "trigger": "task branch push changed original Rust owner; workflow arm64-public-go-build.yml automatically builds native and exercises Rust/9 MTU; do not dispatch",
-      "old_source": "a58d914049b27e000e30438d175c7bd15022c2c5",
-      "new_source": "COMMIT_TO_BE_OBSERVED",
-      "run_id": "UNKNOWN",
-      "attempt": 1,
-      "why": "Confirm 2s verified original source M2 clean-cohort eligibility, prior unknown retained, new unknown resets and censorship blocks; check original Go link and 9 native MTU cases before one new real paired AB."
+      "id": "P0-M2-cohort-rebuild-after-confirmed-syntax-fail",
+      "type": "ONE_ARM64_SOURCE_BUILD_AUTOMATIC",
+      "status": "INTENT_COMMITTED_NEW_RUN_PENDING",
+      "previous_run": 39889123489,
+      "previous_result": "FAIL_COMPILER_UNCLOSED_DELIMITER",
+      "previous_source": "4ffeb875fc2ccac3ed3a35a2c79ad0caefb07293",
+      "failed_step": "Exact source native ARM64 original Go and Rust bundle",
+      "previous_no_artifact": true,
+      "trigger": "same task branch owner src push automatically triggers one native build; do not manual dispatch",
+      "source": "COMMIT_TBD",
+      "intent": "Only close missing brace after BAD_STAGE at ~4662. Preserve bounded true M2 clean cohort, original Go/auth+Stop and Rust native test, then verify 9 MTU/DF/Stop. No performance dispatch until pass."
     }
   ],
   "recent_evidence": [
@@ -135,6 +137,12 @@
       "run": 39887028993,
       "artifact_id": 12473581118,
       "file": "P0-kind3-sameVM-AB-business-fail-20261023.json"
+    },
+    {
+      "id": "P0-M2-cohort-first-build",
+      "result": "FAIL_RUST_SYNTAX_UNCLOSED_BRACE_NO_PRODUCT_ARTIFACT",
+      "run": 39889123489,
+      "file": "P0-M2-cohort-native-compile-recovery-20261023.json"
     }
   ],
   "open_issues": [
@@ -153,7 +161,7 @@
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence."
   ],
-  "next_action": "Find automatically pushed ONE native ARM64 build for new Rust Fixed M2 cohort gate; verify release test m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery, Go/Rust native release build and 9 MTU/Stop. Only then do single sequential same-VM a58d vs repaired Fixed2pct 120s request and Normal/off anchor. Do not dispatch duplicates; Fixed applied cannot be assumed from unit.",
+  "next_action": "Native build39889123489 FAILED compiler only (unclosed delimiter in v4_embedded_go.rs near 4662); missing brace now exact fixed in new source pending. Find automatic one native run at next push, verify genuine Go/Rust release, unit m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery and all 9 MTU cases. If succeeds, log artifact exact SHA then run single same-VM Fixed2pct old a58d vs new source; DO NOT dispatch build again.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
