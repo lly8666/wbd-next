@@ -11,3 +11,7 @@ Test single scenario: Normal/off, 1 real kernel TCP flow/dir, 10Mbps target/dir,
 ## Build recovery
 
 Build Action [39949668566](https://github.com/lly8666/wbd-next/actions/runs/39949668566) attempt1 failed during Rust 1.85.1 compile (E0015 constant matching a string literal in `matches!(option_env!)`). No diagnostic product artifact or performance measurement was produced. Subsequent source changes compile-time check to `option_env!(...).is_some()`; the dedicated workflow is the sole env setter with value 1.
+
+## Diagnostic build and dispatch
+
+Recovery build [39949934400](https://github.com/lly8666/wbd-next/actions/runs/39949934400) attempt 1 **success**, B SOURCE `7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72`, artifact `12500346228`, artifact ZIP SHA256 `9ba229750d62a6e32b6965ee9d2ab28eaee03aee74914cb719b42c0685a7fba3`. A source/artifact unchanged. Request `tests/network/request.json` now explicitly sets both A/B to baseline kernel TCP windows and reorder thresholds, `diagnostic_10x=true` only for B with mandatory product readback. Single push dispatch; see subsequent result entry; do not repeat if this Action fails.

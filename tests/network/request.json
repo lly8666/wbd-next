@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-TCP1-2pct-reorder192-AB",
+  "id": "P2-TCP1-2pct-product-ceilings-10x-AB",
   "owner": "network-matrix-work",
   "seed": 5237,
   "product": {
@@ -39,7 +39,7 @@
     },
     "tcp_reordering_profiles": {
       "A": "baseline",
-      "B": "outer_repair_tolerant"
+      "B": "baseline"
     }
   },
   "warmup_s": 10,
@@ -84,12 +84,13 @@
       "recovery_policy": "outer-single-repair-v2"
     },
     "B": {
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "run_id": 39921718042,
+      "source": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
+      "run_id": 39949934400,
       "attempt": 1,
-      "artifact_id": 12486939897,
-      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
-      "recovery_policy": "outer-single-repair-v2"
+      "artifact_id": 12500346228,
+      "sha256": "9ba229750d62a6e32b6965ee9d2ab28eaee03aee74914cb719b42c0685a7fba3",
+      "recovery_policy": "outer-single-repair-v2",
+      "diagnostic_10x": true
     }
   },
   "order": "AB",
