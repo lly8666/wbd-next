@@ -76,20 +76,27 @@ func TestOriginalProductAutomaticTunnelMTU(t *testing.T){
     }
 }
 
-// This is the ACTUAL public CLI TLS/record negotiation boundary used by both
-// directions, not a synthetic FEC encoder qualification or a relaxed MTU gate.
-func TestOriginalProductFecRecordWireBudgetKeeps1200BIPv4(t *testing.T){
-    const realTunL3=1200
-    const recordOverhead=31
-    const fecMaxRepairOverhead=14
-    for _,mode:=range []realityfront.FecV2Mode{realityfront.FecV2Fixed,realityfront.FecV2Auto}{
-        limit:=publicRecordWireLimit(mode)
-        if limit!=1280||int(limit)-recordOverhead-fecMaxRepairOverhead<realTunL3 {
-            t.Fatalf("mode=%s source cap=%d cannot carry 1200B native TUN packet",mode,int(limit)-recordOverhead-fecMaxRepairOverhead)
-        }
-        if limit>1360 || int(limit)+40>1500 {t.Fatalf("mode=%s exceeded FakeTCP MSS/outer MTU",mode)}
+// Real v3 cold path derives the maximum record offer from outer MTU and
+// advertised SYN MSS. Legacy 1180/1280 are no longer product ceilings.
+func TestV3PublicDynamicRecordWireBudget(t *testing.T){
+    cases:=[]struct{
+        outer,peer,record uint16
+        mode realityfront.FecV2Mode
+        wantWire,wantTun int
+    }{
+        {1500,1460,0,realityfront.FecV2Off,1460,1429},
+        {1500,1460,0,realityfront.FecV2Fixed,1460,1415},
+        {1500,1460,0,realityfront.FecV2Auto,1460,1415},
+        {1400,1360,0,realityfront.FecV2Off,1360,1329},
+        {1280,1240,0,realityfront.FecV2Fixed,1240,1195},
+        {1500,1360,0,realityfront.FecV2Off,1360,1329},
+        {1500,1460,1280,realityfront.FecV2Off,1280,1249},
     }
-    if publicRecordWireLimit(realityfront.FecV2Off)!=1180 {
-        t.Fatal("normal/off record contract unexpectedly changed")
+    for _,tt:=range cases{
+        wire,tun,err:=deriveMTUBudget(int(tt.outer),int(tt.outer),tt.peer,tt.record,tt.mode,false)
+        if err!=nil||int(wire)!=tt.wantWire||tun!=tt.wantTun{
+            t.Fatalf("outer=%d peer=%d record=%d mode=%s wire=%d tun=%d err=%v want=%d/%d",
+                tt.outer,tt.peer,tt.record,tt.mode,wire,tun,err,tt.wantWire,tt.wantTun)
+        }
     }
 }
