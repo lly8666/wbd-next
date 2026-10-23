@@ -759,7 +759,8 @@ mod tests {
         s.enable_adaptive_timing(400_000_000,5_000_000).unwrap();
         s.enable_opportunistic_v3().unwrap();
         s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
-        s.on_sent_adaptive(frozen(3),MonoNs(0)).unwrap();
+        // A later authenticated DATA PN can witness this gap even when that
+        // later record was not selected into the optional repair shadow.
         s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(400_000_000)).unwrap();
         assert!(s.on_timer(MonoNs(439_999_999)).candidates.is_empty());
         let mut candidates=s.on_timer(MonoNs(440_000_000)).candidates;
