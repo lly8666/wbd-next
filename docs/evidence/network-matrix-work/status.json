@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-lossless-10Mbps-flight-isolation",
+  "phase": "P2-Normaloff-zero-loss-control-starvation-root-repair",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,12 +25,12 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-lossless-flight-vs-repair-isolation-60s",
-      "type": "ONE_REAL_NORMAL_OFF_SCENARIO",
-      "status": "COMMITTED_ACTION_PENDING",
-      "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "build_artifact": 12483243411,
-      "why": "6Mbps/2pct clean source TUN no capacity deferrals but C2S TCP p99 5.87s / backpressure243; 10Mbps/2pct INCONCLUSIVE artifact inaccessible. Distinguish 10Mbps raw fixed512 owner flight capacity from repair/loss by zero-loss 200ms RTT high-throughput. Only Normal/off and Actions bounded digest; no FEC test."
+      "id": "P2-Normaloff-reserved-feedback-slots",
+      "type": "NATIVE_BUILD_THEN_SAME_VM_AB",
+      "status": "ROOT_CONFIRMED_FIX_SOURCE_PENDING",
+      "observed_run": 39917051708,
+      "artifact_id": 12484844980,
+      "why": "0% loss 10Mbps generated 69,837/64,629 TUN pre-read deferrals, 278,718/282,025 feedback NotSent/expiry page counts, 13,960/13,837 replay duplicates, 27,797 repairs, UDP missed333/533, netem0 and valid injector/host. stage_original_reverse_feedback and DATA borrow same exhausted M1 arena, feedback blocked -> PTO storm -> more occupancy. Reserve16 for Normal-only receipt before TUN data admission; leave 512 capacity unchanged initially."
     }
   ],
   "recent_evidence": [
@@ -69,6 +69,14 @@
       "result": "PASS_SCOPED_6MBPS_2PCT_UDP_0_028PCT_0_051PCT_TCP_P99_WARN",
       "artifact_id": 12484269045,
       "reference": "P2-Normaloff-6Mbps-capacity-result-20261023.json"
+    },
+    {
+      "id": "P2-Normaloff-lossless10-fail",
+      "run": 39917051708,
+      "artifact_id": 12484844980,
+      "result": "FAIL_ZERO_NETEM_CONTROL_STARVATION",
+      "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "file": "P2-Normaloff-10Mbps-lossless-FAIL-20261023.json"
     }
   ],
   "open_issues": [
@@ -89,7 +97,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Discover EXACT one auto 10Mbps/dir lossless Normal-only action under request new source. Read bounded NETWORK_CAPACITY_LEG job-log and original artifact. If injector is valid but pre_read_deferred rises or TCP throughput collapses, model M1 512-slot flight headroom; change bounded Normal-only owner backing only after proof (do not touch FEC modes). If even clean 10M passes, isolate 2% repair/receipt impact with later single distinct action. No >10Mbps action until valid capacity evidence. Preserve 6M scoped PASS and TCP p99 warning.",
+  "next_action": "Commit minimal Normal-only control reservation before M1 fresh TUN loan using bounded Arena allocate-preserving reserve16. Exact native Actions build and bounded unit check, then reuse artifact for one same-VM 10Mbps 0% loss A/B. Do not touch FEC performance or blindly grow M1 512 slots. Require eliminated feedback failure/replay flood, valid UDP/TCP injection, CPU/RSS, Stop; if still capacity limited compute headroom then fix only proven boundary.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "de55a1322b4580c60e77322d2d38843caefeec79",
