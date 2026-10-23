@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "kind": "ACTIONS_NATIVE_ARM64_NORMAL_OFF_0_100_0_BLACKHOLE_LIFECYCLE_SCOPED",
+  "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+  "run": 39989342662,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12516064991,
+  "artifact_sha256": "8745618ad239ac31f7d353b35843cfc09f39ce81e6b89edadd52eb74d5a9f306",
+  "artifact_verified_locally": true,
+  "request_source": "a53fb9c394e393becc90337185e238c2b1f652e7",
+  "scope": {
+    "normal_off": true,
+    "both_directions_app_udp_mbps": 2,
+    "one_way_ms": 200,
+    "phases": [
+      {
+        "name": "healthy_before",
+        "seconds": 15,
+        "loss_pct": 0
+      },
+      {
+        "name": "control_blackhole",
+        "seconds": 10,
+        "loss_pct": 100
+      },
+      {
+        "name": "recovered_zero",
+        "seconds": 30,
+        "loss_pct": 0
+      }
+    ],
+    "warmup_s": 10,
+    "drain_s": 30
+  },
+  "observed": {
+    "before_udp_mbps_c2s_s2c": [
+      1.99994,
+      1.99994
+    ],
+    "blackhole_udp_mbps_c2s_s2c": [
+      0.0231424,
+      0.0239616
+    ],
+    "after_udp_mbps_c2s_s2c": [
+      1.9733162666666666,
+      1.9920213333333332
+    ],
+    "recovered_phase_missing_c2s_s2c": [
+      391,
+      116
+    ],
+    "recovered_phase_p99_ms_c2s_s2c": [
+      200.9,
+      200.8
+    ],
+    "source_tun_drops_steady_both": 0,
+    "action_status": "PASS_SCOPED_OBSERVATION"
+  },
+  "measurement_boundary_issue": {
+    "observation": "The pre-switch full network snapshot took >110ms; qdisc still carried the OLD 100% loss for the first 111.50..119.27ms of the cohort labeled recovered_zero.",
+    "healthy_before_actual_switch_after_boundary_ms": [
+      113.96524,
+      121.711552
+    ],
+    "blackhole_actual_switch_after_boundary_ms": [
+      111.962902,
+      119.656708
+    ],
+    "recovered_zero_actual_switch_after_boundary_ms": [
+      111.503693,
+      119.274481
+    ],
+    "effect": "Some packets labeled recovered_zero were actually sent under old blackhole condition. This is a discovered harness scheduling defect, not proof of product recovered-phase loss.",
+    "harness_fix_commit": "014a513f1c1cf06cfc20431889ca52437eca4ad9",
+    "corrected_action": "NOT_YET_RUN"
+  },
+  "qualification": "LIFECYCLE_RESTART_AND_UDP_TRAFFIC_RESUMES_SCOPED_PASS_EXACT_RECOVERY_ZERO_DROP_NOT_VERIFIED; BOUNDARY_INSTRUMENTATION_DEFECT_FIXED_PENDING_REPEAT"
+}
