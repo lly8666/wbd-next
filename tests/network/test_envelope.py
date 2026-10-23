@@ -77,6 +77,9 @@ class EnvelopeTests(unittest.TestCase):
         p = Path(__file__).parent/"request.json"
         r = validate(json.loads(p.read_text()))
         r["traffic"].update(c2s_mbps=100, udp_share=1, sizes=[[64, 1]])
+        # The current live request may be true idle with rate_scale=0:
+        # force this model-only capacity fixture to actively offer traffic.
+        r["phases"][0]["rate_scale"]=1
         r["phases"][0]["c2s"].update(delay_ms=200)
         r["network"]["queue_packets"] = 1024
         report = request_envelope(r)
