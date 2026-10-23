@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-direct200-control-PASS-product-stage-CPU-AB-prepared-V3-D-blackhole-recovery-open",
+  "phase": "V3-C-matched-200Mbps-native-CPU-stage-AB-IN_PROGRESS",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,7 +25,23 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-C-TCP1-200M-CPU-thread-stage-AB",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 39991452116,
+      "attempt": 1,
+      "request_source": "be569e1c3cb3f47371ad751b5d8b8b8c00a85e31",
+      "source_A": "bb9a036873d186a84ca9e64727df342d68e59df0",
+      "source_B": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
+      "build_A": 39981175602,
+      "artifact_A": 12513677330,
+      "build_B": 39990605291,
+      "artifact_B": 12517028689,
+      "scope": "single TCP C2S offered200Mbps, 0loss, one-way200ms, outer700Mbps, netns64MiB; sourceB only adds per-Rust RX/TX CPU ns at Stop; A/B same runner ARM64 VM",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -120,7 +136,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C native direct control 200Mbps sender/receiver 199.998Mbps at 400ms RTT, 1429MTU, TCP window profile BDP500, native ARM64 run39989048165 verified. This rules out generic host TCP inability, not yet product stage root. V3 CPU native readback source de420809 Go product Rust RX/TX worker CPU final markers compile+MTU PASS run39990605291 artifact12517028689 ZIPdigest821aaf. Next one matched native same-VM product AB at C2S TCP1 target200Mbps no loss RTT400 on 700Mbps outer; A old detached V3 bb9a artifact12513677330 and B de420 artifact12517028689, 15 warm60 steady30. Compare actual input/delivered/TUN warmup and steady drops, thread CPU RX/TX at B and process CPU/host PSI; do not blindly run 500. V3-D after netem phase timing fix014a qdisc change now begin0.07ms/end8ms of boundary, but Action39990331827 C2S delivery starts +1150ms, S2C+200ms after 100% 10s blackhole. UDP recovers mostly but miss762/8 in recovered phase; problem is NOT just harness phase lag, need trace earliest true packet delivery and qdisc behavior, avoid claiming all lifecycle pass. V3-A/B PASS preserved. No merger/main/deploy or FEC role interference.",
+  "next_action": "V3-C actual same-VM 200Mbps scope A/B run39991452116 IN_PROGRESS, exact source be569e. A old product bb9a compiled artifact12513677330, B de420 compiled native ARM64 run39990605291 artifact12517028689 sha821aaf... plus MTU suite PASS. B adds V4_PUBLIC_WORKER_CPU role rx_thread_cpu_ns tx_thread_cpu_ns on stop; full process CPU already measured by harness. Diagnose whether product TX or RX worker CPU serial saturation vs kernel/Go; DIRECT native control 200Mbps PASS run39989048165, so not general host TCP limit; product175 prior run39983733109 remains unresolved. Avoid rerun or heavier500 until exact matched AB artifacts and stage-specific info read. V3-D 0/100/0 blackhole corrected Actions run39990331827 PASS overall at 2Mbps/dir, qdisc applied by8ms not120ms. Still C2S first RX only at+1.15s and phase missing762, S2C by+0.20s and missing8, TUN source steady0. Received C2S catchup burst => not purely scheduler; record in V3-D-0-100-0-control-blackhole-boundary-20261024.json; not full lifecycle PASS. All Actions only, FEC independent unchanged, no main merge.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
