@@ -100,11 +100,10 @@ impl ProtectedScopedCrypto {
         };
         let tx = LaneTxCrypto::new_for_suite(tx_keys, usize::from(tx_limit), suite)
             .map_err(|_| ProtectedCryptoError::Tx)?;
-        // Bounded preliminary replay parameters; NOT a production throughput
-        // selection. Effective values must be recorded before qualification.
+        // Bounded high-rate envelope; real AEAD still precedes replay.
         let replay = ReplayWindowConfig {
-            pn_per_second: 1000, cache_horizon_ms: 3000,
-            fec_horizon_ms: 0, rtt_ms: 500, metadata_budget_bytes: 8192,
+            pn_per_second: 100_000, cache_horizon_ms: 3000,
+            fec_horizon_ms: 0, rtt_ms: 650, metadata_budget_bytes: 256*1024,
         };
         let rx = ReplayProtectedLaneRx::new_for_suite(
             rx_keys, usize::from(rx_limit), suite, replay,

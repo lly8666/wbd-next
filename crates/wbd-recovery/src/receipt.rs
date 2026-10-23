@@ -9,6 +9,56 @@ const PAGE_BITS: u64 = 256;
 const MAX_PAGES: usize = 8;
 const MAX_POLL_CANDIDATES: usize = 32;
 const QUEUE_LIFETIME_NS: u64 = 20_000_000;
+const MIN_REORDER_NS:u64=2_000_000;
+const MAX_REORDER_NS:u64=20_000_000;
+const FEEDBACK_ALLOWANCE_NS:u64=10_000_000;
+const MIN_PTO_VARIATION_NS:u64=4_000_000;
+const MAX_CACHE_NS:u64=3_000_000_000;
+
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct AdaptiveTimingSnapshot{
+    pub samples:u64,pub srtt_ns:u64,pub rttvar_ns:u64,pub recent_rtt_ns:u64,
+    pub reorder_window_ns:u64,pub pto_ns:u64,pub cache_ns:u64,
+}
+#[derive(Clone,Copy)]
+struct AdaptiveTiming{
+    samples:u64,srtt_ns:u64,rttvar_ns:u64,recent_rtt_ns:u64,
+}
+impl AdaptiveTiming{
+    fn new(bootstrap_rtt_ns:u64,bootstrap_rttvar_ns:u64)->Result<Self,DataError>{
+        if bootstrap_rtt_ns==0||bootstrap_rttvar_ns==0{return Err(DataError::Malformed)}
+        Ok(Self{samples:0,srtt_ns:bootstrap_rtt_ns,
+            rttvar_ns:bootstrap_rttvar_ns,recent_rtt_ns:bootstrap_rtt_ns})
+    }
+    fn observe(&mut self,sample_ns:u64){
+        let sample=sample_ns.max(1);
+        if self.samples==0{
+            self.srtt_ns=sample;
+            self.rttvar_ns=(sample/4).clamp(1_000_000,20_000_000);
+        }else{
+            let delta=self.srtt_ns.abs_diff(sample);
+            self.rttvar_ns=self.rttvar_ns.saturating_mul(3)
+                .saturating_add(delta)/4;
+            self.srtt_ns=self.srtt_ns.saturating_mul(7)
+                .saturating_add(sample)/8;
+        }
+        self.recent_rtt_ns=sample;
+        self.samples=self.samples.saturating_add(1);
+    }
+    fn snapshot(&self)->AdaptiveTimingSnapshot{
+        let r=self.srtt_ns.max(self.recent_rtt_ns).max(1);
+        let w=(r/32).clamp(MIN_REORDER_NS,MAX_REORDER_NS);
+        let variation=self.rttvar_ns.saturating_mul(4)
+            .max(w.saturating_mul(2)).max(MIN_PTO_VARIATION_NS);
+        let pto=r.saturating_add(variation).saturating_add(FEEDBACK_ALLOWANCE_NS);
+        let cache=pto.saturating_mul(2).saturating_add(50_000_000)
+            .max(r.saturating_mul(2).saturating_add(100_000_000))
+            .min(MAX_CACHE_NS);
+        AdaptiveTimingSnapshot{samples:self.samples,srtt_ns:self.srtt_ns,
+            rttvar_ns:self.rttvar_ns,recent_rtt_ns:self.recent_rtt_ns,
+            reorder_window_ns:w,pto_ns:pto,cache_ns:cache}
+    }
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReceiptPage {
@@ -239,6 +289,7 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     last_report_seq: Option<u32>,
     witnesses: Vec<Witness>, // latest three distinct, verified data sends
     rack_ack_ns: Option<u64>,
+    adaptive:Option<AdaptiveTiming>,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
     let d = seq.wrapping_sub(prev);
@@ -257,8 +308,28 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             #[cfg(test)]
             last_timer_index_pops: 0,
             last_report_seq: None,
-            witnesses: Vec::with_capacity(3), rack_ack_ns: None,
+            witnesses: Vec::with_capacity(3), rack_ack_ns: None,adaptive:None,
         })
+    }
+    pub fn enable_adaptive_timing(&mut self,bootstrap_rtt_ns:u64,
+        bootstrap_rttvar_ns:u64)->Result<(),DataError>{
+        if !self.entries.is_empty(){return Err(DataError::Malformed)}
+        self.adaptive=Some(AdaptiveTiming::new(bootstrap_rtt_ns,bootstrap_rttvar_ns)?);
+        Ok(())
+    }
+    pub fn timing_snapshot(&self)->Option<AdaptiveTimingSnapshot>{
+        self.adaptive.map(|x|x.snapshot())
+    }
+    fn effective_pto_ns(&self)->u64{
+        self.adaptive.map_or(self.config.pto_ns,|x|x.snapshot().pto_ns)
+    }
+    fn effective_reorder_ns(&self)->u64{
+        self.adaptive.map_or(self.config.reorder_window_ns,
+            |x|x.snapshot().reorder_window_ns)
+    }
+    pub fn on_sent_adaptive(&mut self,frozen:H,at:MonoNs)->Result<(),DataError>{
+        let Some(t)=self.timing_snapshot()else{return Err(DataError::Malformed)};
+        self.on_sent(frozen,at,MonoNs(at.0.saturating_add(t.cache_ns)))
     }
 
     /// Register only an already frozen, actually submitted data record.
@@ -324,6 +395,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         let mut releases = Vec::new();
         let mut dirty = Vec::new();
         let mut rack_changed = false;
+        let mut timing_sample=None::<u64>;
         for page in &receipt.pages {
             let base = page.base_pn.0;
             if base > receipt.largest.0 { continue; }
@@ -335,7 +407,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                         self.remove_indexes(key,&entry,false);
                         let within_lifetime=now<entry.hard_expiry;
                         if fresh && within_lifetime && entry.repair_attempts==0 {
-                            self.rack_ack_ns=Some(now.elapsed_since(entry.last_sent).max(1));
+                            let sample=now.elapsed_since(entry.last_sent).max(1);
+                            timing_sample=Some(timing_sample.map_or(sample,|old|old.min(sample)));
                             self.observe_witness(Witness {pn:key,sent_at:entry.last_sent});
                             rack_changed=true;
                         }
@@ -357,6 +430,10 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 }
             }
         }
+        if let Some(sample)=timing_sample{
+            self.rack_ack_ns=Some(sample);
+            if let Some(adaptive)=self.adaptive.as_mut(){adaptive.observe(sample);}
+        }
         if rack_changed {
             self.refresh_rack_wakes();
         } else {
@@ -373,14 +450,14 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     }
 
     fn due_at(&self, entry: &Entry<H>) -> MonoNs {
-        let pto = entry.last_sent.0.saturating_add(self.config.pto_ns);
+        let pto = entry.last_sent.0.saturating_add(self.effective_pto_ns());
         let mut due = pto;
         if entry.repair_attempts == 0 && entry.missing_reported
             && self.witnesses.iter().filter(|w| w.sent_at > entry.last_sent).count() == 3
         {
             if let Some(rack_ack) = self.rack_ack_ns {
                 due = due.min(entry.last_sent.0.saturating_add(rack_ack)
-                    .saturating_add(self.config.reorder_window_ns));
+                    .saturating_add(self.effective_reorder_ns()));
             }
         }
         MonoNs(due.max(entry.rearm_at.0))
@@ -409,6 +486,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         }
         // Timeouts and new candidate dispatches share the SAME per-tick
         // cap: 10k previously queued deadlines cannot monopolize one tick.
+        let current_pto=self.effective_pto_ns();
         let mut wake_events=0usize;
         while candidates.len()<MAX_POLL_CANDIDATES
             && wake_events<MAX_POLL_CANDIDATES
@@ -424,7 +502,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             entry.indexed_wake=None;
             if entry.queued.as_ref().is_some_and(|q| now>=q.until) {
                 entry.queued=None;
-                entry.rearm_at=MonoNs(now.0.saturating_add(self.config.pto_ns));
+                entry.rearm_at=MonoNs(now.0.saturating_add(current_pto));
             } else {
                 assert!(entry.queued.is_none() && entry.repair_attempts<2);
                 entry.retry_epoch+=1;
@@ -459,6 +537,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         result: RepairSendResult, now: MonoNs) -> Result<(), DataError>
     {
         if !self.preflight(candidate, now) { return Err(DataError::Stale); }
+        let current_pto=self.effective_pto_ns();
         let e = self.entries.get_mut(&candidate.pn).expect("preflight verified");
         e.queued = None;
         match result {
@@ -466,11 +545,11 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 e.repair_attempts += 1;
                 e.last_sent = now;
                 e.missing_reported = false; // same old bitmap cannot fast-retry
-                e.rearm_at = MonoNs(now.0.saturating_add(self.config.pto_ns));
+                e.rearm_at = MonoNs(now.0.saturating_add(current_pto));
             }
             RepairSendResult::NotSent => {
                 // No attempt charged; avoid a same-tick infinite requeue.
-                e.rearm_at = MonoNs(now.0.saturating_add(self.config.pto_ns));
+                e.rearm_at = MonoNs(now.0.saturating_add(current_pto));
             }
         }
         self.refresh_wake(candidate.pn);
@@ -537,6 +616,34 @@ mod tests {
     }
     fn add(s: &mut ReceiptState<FakeFrozen>, pn: u64, at: u64, expiry: u64) {
         s.on_sent(frozen(pn), MonoNs(at), MonoNs(expiry)).unwrap();
+    }
+
+    #[test]
+    fn r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry(){
+        let mut s=state(8,80_000_000);
+        s.enable_adaptive_timing(650_000_000,20_000_000).unwrap();
+        let boot=s.timing_snapshot().unwrap();
+        assert_eq!((boot.reorder_window_ns,boot.pto_ns,boot.cache_ns),
+            (20_000_000,740_000_000,1_530_000_000));
+        s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
+        assert_eq!(s.next_deadline(),Some(MonoNs(740_000_000)));
+        assert_eq!(s.on_receipt(&receipt(1,1,vec![page(0,&[1])]),
+            MonoNs(400_000_000)).unwrap().len(),1);
+        let learned=s.timing_snapshot().unwrap();
+        assert_eq!(learned.samples,1);
+        assert_eq!((learned.srtt_ns,learned.rttvar_ns,learned.reorder_window_ns,
+            learned.pto_ns,learned.cache_ns),
+            (400_000_000,20_000_000,12_500_000,490_000_000,1_030_000_000));
+        s.on_sent_adaptive(frozen(2),MonoNs(410_000_000)).unwrap();
+        assert_eq!(s.next_deadline(),Some(MonoNs(900_000_000)));
+        let first=s.on_timer(MonoNs(900_000_000)).candidates.remove(0);
+        s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(900_000_000)).unwrap();
+        assert_eq!(s.next_deadline(),Some(MonoNs(1_390_000_000)));
+        let second=s.on_timer(MonoNs(1_390_000_000)).candidates.remove(0);
+        s.on_send_result(&second,RepairSendResult::Accepted,MonoNs(1_390_000_000)).unwrap();
+        assert!(s.on_timer(MonoNs(1_439_999_999)).releases.is_empty());
+        assert_eq!(s.on_timer(MonoNs(1_440_000_000)).releases.len(),1);
+        assert!(s.on_timer(MonoNs(1_500_000_000)).candidates.is_empty());
     }
 
     #[test]

@@ -334,9 +334,9 @@ fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAll
     static BROKER:OnceLock<Mutex<wbd_recovery::GlobalRepairAllocator>>=OnceLock::new();
     BROKER.get_or_init(||{
         let cfg=wbd_recovery::GlobalRepairConfig{
-            max_bytes_per_epoch:131_072,max_directions:32,
-            max_grant_bytes:32_768,max_grant_lifetime_ns:50_000_000,
-            max_pending:128,max_pending_bytes:131_072,
+            max_bytes_per_epoch:16*1024*1024,max_directions:32,
+            max_grant_bytes:256*1024,max_grant_lifetime_ns:50_000_000,
+            max_pending:256,max_pending_bytes:4*1024*1024,
         };
         Mutex::new(wbd_recovery::GlobalRepairAllocator::new(
             cfg,MonoNs(0)).expect("constant bounded global M2 repair config"))
@@ -3799,8 +3799,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             let registered=global.on_fresh_accepted(
                 original.direction,frame_bytes,now
             ).is_ok();
-            if registered && original.shadow.on_sent(
-                record.clone(),now,MonoNs(now.0.saturating_add(2_000_000_000))
+            if registered && original.shadow.on_sent_adaptive(
+                record.clone(),now
             ).is_ok(){
                 original.sent_fresh=original.sent_fresh.saturating_add(1);
             }else{
@@ -4187,17 +4187,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             direction:first.route.outbound_direction(),
         };
         let route=first.route;
-        let Ok(shadow)=wbd_recovery::ReceiptState::new(
+        let Ok(mut shadow)=wbd_recovery::ReceiptState::new(
             lane,wbd_recovery::ReceiptConfig{
-                max_shadow_entries:4096,pto_ns:80_000_000,
-                reorder_window_ns:15_000_000,
+                max_shadow_entries:4096,pto_ns:740_000_000,
+                reorder_window_ns:20_000_000,
             }
         )else{return INVALID};
+        if shadow.enable_adaptive_timing(650_000_000,20_000_000).is_err(){
+            return INVALID
+        }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
         if global.register(direction,wbd_recovery::RepairBudgetConfig{
             outer_mtu:u64::from(e.raw_tx_lease_mtu),
-            max_repair_bytes_per_epoch:65_536,
-            max_pending_reservations:128,max_pending_bytes:131_072,
+            max_repair_bytes_per_epoch:8*1024*1024,
+            max_pending_reservations:128,max_pending_bytes:4*1024*1024,
             io_timeout_ns:100_000_000,
         },now).is_err(){return BAD_STAGE}
         if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
@@ -4218,13 +4221,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let feedback_rx=if e.original_public_feedback_armed{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
-                max_retained_pages:8,max_pages_per_report:8,
-                // Receipt page = 256 PN. 100ms expiry retired the
-                // entire still-active PN page: after ~19 app packets
-                // all later authentic DATA/feedback were classified Late.
-                // Keep exactly <=8 bounded pages until newer-page
-                // eviction or original Go owner Stop; no memory growth.
-                retention_ns:u64::MAX/4,srtt_ns:8_000_000,
+                max_retained_pages:512,max_pages_per_report:8,
+                retention_ns:3_000_000_000,srtt_ns:650_000_000,
             }
         )else{return INVALID};
         let shared=Arc::new(Mutex::new(state));

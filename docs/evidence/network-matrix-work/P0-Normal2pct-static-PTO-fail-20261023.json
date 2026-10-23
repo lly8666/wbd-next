@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "P0-Normal2pct-static-PTO-fail-20261023",
+  "action": {
+    "run_id": 39891326352,
+    "attempt": 1,
+    "harness_source": "4522d962010f14eac04ba424c2086df1a1db39fe",
+    "artifact_id": 12475340090,
+    "artifact_sha256": "c2f84e1326cdc384e07ad3c828edd90ce224bb5d00a445b31d5ede144cbb7bfb",
+    "conclusion": "failure"
+  },
+  "source": "18860b9dfe4931d8aba05943fad484677590571c",
+  "observed": {
+    "probe_rtt_p50_ms": {
+      "client": 400.3,
+      "server": 400.3
+    },
+    "udp_missing": {
+      "c2s": 155,
+      "s2c": 138
+    },
+    "udp_loss_pct": {
+      "c2s": 2.634262406526173,
+      "s2c": 2.345343303874915
+    },
+    "tcp_p99_ms": {
+      "c2s": 7160.1,
+      "s2c": 5631.6
+    },
+    "tcp_backpressure_slots": {
+      "c2s": 351,
+      "s2c": 495
+    },
+    "outer_retransmitted": {
+      "client": 11751,
+      "server": 11671
+    },
+    "quota_or_capacity_blocked": {
+      "client": 61241,
+      "server": 60769
+    },
+    "fresh_copy": {
+      "client": 19114,
+      "server": 19014
+    },
+    "stop": true,
+    "host_contention": false
+  },
+  "code_before": {
+    "pto_ms": 80,
+    "reorder_ms": 15,
+    "shadow_entries": 4096,
+    "per_direction_repair_cap_bytes_per_s": 65536,
+    "global_repair_cap_bytes_per_s": 131072,
+    "feedback_pages": 8,
+    "feedback_repeat_srtt_ms": 8,
+    "replay_pn_per_second": 1000,
+    "replay_metadata_bytes": 8192
+  },
+  "diagnosis": "RTT≈400ms exceeds fixed 80ms PTO by 5x. Healthy records become repair candidates before any authentic receipt returns, flooding bounded repair quota; genuine losses remain largely unrecovered and TCP tails/backpressure explode. Host/Stop are healthy.",
+  "next": "Native validate coherent authenticated-RTT P1 batch, then one same-VM old/new Normal2pct AB."
+}
