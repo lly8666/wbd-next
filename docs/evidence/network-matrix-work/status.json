@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-single-inner-TCP10Mbps-comparison",
+  "phase": "P2-TCP1-10M-2pct-historical-logic-comparison-complete",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,25 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P2-Normal-TCP1-10M-2pct-200ms",
-      "status": "INTENT_COMMITTED_AUTO_ACTION_PENDING",
-      "type": "ONE_NORMAL_OFF_TCP1_REAL_BUSINESS",
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "artifact_id": 12486939897,
-      "reason": "User asks whether old Go one TCP under 10Mbps 2% did better; old 'single public flow' is OUTER fakeTCP session, not validated single inner TCP10Mbps/2pct; old formal E0 4flow10Mbps/0loss failed. Freeze source281f6c64 test exactly one genuine Linux INNER TCP per direction at10Mbps/dir, one-way200ms 2% IID, test inject/head-of-line RTT/cwnd/RTO, CPU/RSS, Stop. No FEC scenarios."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "P2-Normaloff-512v1024-10Mbps-zero-loss-AB-PASS-20261023",
-      "run": 39922365049,
-      "artifact_id": 12488186644,
-      "source_B": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "result": "B_PASS_10MBPS_ZEROLOSS_ZERO_TUN_DROP_NO_DEFER_PEAK846_OF1024",
-      "file": "P2-Normaloff-512v1024-10Mbps-zero-loss-AB-PASS-20261023.json"
-    },
     {
       "id": "P2-Normaloff-10Mbps-2pct-4flow-INCONCLUSIVE-20261023",
       "result": "INCONCLUSIVE_TCP_BACKPRESSURED_UDP_CORRECT",
@@ -73,6 +56,13 @@
       "artifact_id": 12491146172,
       "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "file": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023.json"
+    },
+    {
+      "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
+      "result": "NEW_TCP1_10M2PCT_INCONCLUSIVE_1_008_1_127MBPS_OLD_MATCHING_PASS_NOT_FOUND",
+      "run": 39932398428,
+      "artifact_id": 12492127816,
+      "file": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct.json"
     }
   ],
   "open_issues": [
@@ -85,7 +75,7 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Read exactly one Action for TCP1 vs 10Mbps/dir at loss2pct one-way200ms under frozen Normal product281f6c64; check product TCP single app injected vs target, kernel cwnd/notsent/retrans, any original TUN/feedback/slot limitation, CPU/RSS and 60s p99. No duplicate dispatch. Explicitly retain lack of comparable old Go TCP1 10Mbps/2pct PASS. Investigate old platformflow software TCP-ARQ vs single outer fakeTCP but do NOT port 8 network retries or modify FEC.",
+  "next_action": "Legacy single-flow is single OUTER FakeTCP 4tuple, not single INNER TCP; old UDP100M example not comparable, old four-TCP lossless 10M run37762364098 FAIL. New TCP1 10M/dir2% run39932398428 INCONCLUSIVE:1.008/1.127Mbps, cwnd43/49MSS vs model388, source stage/receipt/CPU/memory healthy. No duplicate Action. To improve, instrument authenticated outer repair arrival timing separately for inner TCP DATA vs ACK, and confirm Linux TCP congestion algorithm. No FEC tests, no blind M1 or retry inflation.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",

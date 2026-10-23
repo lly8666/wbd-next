@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
+  "native_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "native_run": 39932398428,
+  "artifact_id": 12492127816,
+  "artifact_sha256": "1c4bb0fcc1083ffb4a1aad6b6d2ed49bbde250881de4d25c58ac7cc564b022b3",
+  "source_request_commit": "b153aedf5b5221e6dfebe5757f28653cb1058940",
+  "verdict": "INCONCLUSIVE_TCP_BACKPRESSURED",
+  "input": {
+    "mode": "Normal/off",
+    "inner_tcp_flows_each_direction": 1,
+    "target_app_mbps_each_direction": 10,
+    "bulk_udp_mbps": 0,
+    "one_way_ms": 200,
+    "netem_loss_pct": 2,
+    "steady_seconds": 60,
+    "seed": 5213
+  },
+  "observed": {
+    "c2s": {
+      "injected_mbps": 1.0084818666666666,
+      "delivered_mbps": 1.0084818666666666,
+      "backpressure": 52398,
+      "p99_ms": 6865.1,
+      "tcp_retrans_steady_delta": 152,
+      "meas_end_cwnd_mss": 43,
+      "meas_end_notsent_bytes": 449940,
+      "meas_end_rto_ms": 1743
+    },
+    "s2c": {
+      "injected_mbps": 1.1269541333333333,
+      "delivered_mbps": 1.1269541333333333,
+      "backpressure": 69483,
+      "p99_ms": 3235.9,
+      "tcp_retrans_steady_delta": 136,
+      "meas_end_cwnd_mss": 49,
+      "meas_end_notsent_bytes": 205188,
+      "meas_end_rto_ms": 1188
+    },
+    "product_client": {
+      "cpu_s_measured_60s": 1.41,
+      "rss_peak_bytes": 16887808,
+      "peak_m1_loaned": 222,
+      "m1_slots": 1024,
+      "arena_failed": 0,
+      "pre_read_deferred": 0,
+      "feedback_dropped": 0,
+      "raw_tcp_read_equals_staged": true
+    },
+    "product_server": {
+      "cpu_s_measured_60s": 1.42,
+      "rss_peak_bytes": 17358848,
+      "peak_m1_loaned": 143,
+      "m1_slots": 1024,
+      "arena_failed": 0,
+      "pre_read_deferred": 0,
+      "feedback_dropped": 0,
+      "raw_tcp_read_equals_staged": true
+    },
+    "netem_loss_client_pct": 1.9641825534373194,
+    "netem_loss_server_pct": 2.017091868794772,
+    "kernel_udp_errors": 0,
+    "rx_tun_failed": 0,
+    "host_cpu_psi_peak": 0,
+    "host_steal_peak": 0,
+    "stop_and_owned_cleanup": true
+  },
+  "historical_go": {
+    "pinned_repo": "lly8666/wobuzhidao",
+    "ref": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "single_flow_doc": "old/docs/development/2026-08-29-single-flow-exact-head-qualification.md",
+    "single_flow_semantics": "one OUTER FakeTCP association and SYN; after TLS bootstrap passes datagram traffic, not an INNER single Linux TCP10Mbps benchmark",
+    "hundred_mbps_benchmark": "old/scripts/bench_mux_two_session_single_flow_100m.py -- two inner UDP streams",
+    "platform_tcp": "internal/platformflow/tcp_reliability.go -- app-layer reliable TCPTransmit default16 outstanding chunks, RTO500ms, up to8 app retransmits",
+    "outer_owner": "internal/runtimeowner/runtime.go -- initial outer RTO1s, min200ms, expiry3s, ACK delay2ms, outer SACK/RACK",
+    "actual_old_tcp_counterexample": {
+      "run": 37762364098,
+      "source": "bf11fbfbe64d518e7ba189d51bfb4512df4df733",
+      "result": "FAIL",
+      "loss_pct": 0,
+      "one_way_ms": 300,
+      "flows": "4 long TCP +300 short +20 HTTP/HTTPS",
+      "target_mbps_per_direction": 10,
+      "actual_sent_mbps_c2s": 7.71652608,
+      "actual_sent_mbps_s2c": 7.746338986666666,
+      "artifact": 11543356424
+    },
+    "equivalent_old_inner_tcp10Mbps2pct200ms_pass": "NOT_FOUND"
+  },
+  "model": {
+    "rtt_s": 0.4,
+    "mss_assumed_bytes": 1289,
+    "target_10Mbps_inflight_bytes": 500000,
+    "target_10Mbps_MSS": 387.8975950349108,
+    "outer_iid2pct_one_repair_ideal_residual_pct": 0.04,
+    "reno_sqrt_heuristic_mss": 61.237243569579455,
+    "reno_sqrt_heuristic_mbps": 1.5786961392237584,
+    "status": "HEURISTIC_ONLY_NOT_LINUX_CUBIC_CAP"
+  },
+  "limits": [
+    "Legacy single public flow is not a single inner TCP: no equivalent historical 10Mbps+2% success proven",
+    "Current single inner TCP is receiver-correct for what was injected but input rate badly invalid; not a business pass",
+    "No product/host/local buffer errors; kernel cwnd43/49 far below ~388MSS modeled for target",
+    "Do not confuse default old app-layer 8 retries with currently authorised one OUTER repair",
+    "No FEC tests or product settings changed"
+  ],
+  "next": "Class-specific authenticated original TCP DATA/ACK recovery timeliness and Linux congestion control readback required before claiming an actionable product improvement; do not increase arena or retrofit old app ARQ without evidence."
+}
