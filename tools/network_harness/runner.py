@@ -435,13 +435,14 @@ class LinuxExperiment:
         for ns in self.ns.values():
             command(["ip", "netns", "add", ns])
             self.created.append(ns)
-        if self.tcp_profile=="large":
+        if self.tcp_profile in ("large","bdp500"):
             # Restrict writes to per-netns IPv4 TCP autotuning limits.
             # Do NOT attempt net.core *mem_max writes: the ARM runner failed
             # that readback before business; user socket SO_*BUF is clamped,
             # so report actual getsockopt bytes instead of claiming 8MiB.
-            settings=(("net.ipv4.tcp_rmem","4096 4194304 16777216"),
-                      ("net.ipv4.tcp_wmem","4096 4194304 16777216"))
+            max_window=67108864 if self.tcp_profile=="bdp500" else 16777216
+            settings=(("net.ipv4.tcp_rmem",f"4096 4194304 {max_window}"),
+                      ("net.ipv4.tcp_wmem",f"4096 4194304 {max_window}"))
             for role in self.ns:
                 for k,value in settings:
                     self.nscommand(role,["sysctl","-w",k+"="+value])
@@ -512,7 +513,11 @@ class LinuxExperiment:
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
         self.effective["tcp_window_profile"]=self.tcp_profile
         self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
-        self.effective["tcp_window_override"]="namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)" if self.tcp_profile=="large" else "untouched baseline"
+        self.effective["tcp_window_override"]=(
+            "namespaced tcp_[rw]mem 64MiB max; NO SO_*BUF override; preserve Linux TCP autotuning, read actual TCP_INFO and advertised window"
+            if self.tcp_profile=="bdp500" else (
+            "namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)"
+            if self.tcp_profile=="large" else "untouched baseline"))
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
