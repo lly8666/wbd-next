@@ -605,15 +605,21 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // sends/s, 600ms RTT and partial feedback, the original 128-slot pool
     // starved BOTH fresh systematic and parity (S013 measured 5k/18k
     // NoCapacity failures per side with zero seal/driver failures).
-    // Preallocate a bounded ~1.1MiB owner-local FEC pool only for negotiated
-    // Linux feature7; ordinary/off and non-Linux retain 128-slot cost.
-    // Neither receipt expiry nor global retry quota nor original Stop changes.
+    // In the real 2Mbps/408ms RTT Normal scenario the 128 shared M1 slabs
+    // were exhausted (227/234 already-consumed TUN packets lost). The shadow
+    // retains immutable M1 slab references until verified ACK or completion.
+    // Use the existing bounded 512-slot feature7 pool for Linux normal too:
+    // ~1.1MiB/session, NOT a 500Mbps or endpoint 512MiB capacity proof.
+    // Neither receipt expiry nor global repair quota nor Stop changes.
     #[cfg(all(feature="fec2_product_record",target_os="linux"))]
     let fec2_product_pool=handoff.negotiated_features==7;
     #[cfg(not(all(feature="fec2_product_record",target_os="linux")))]
     let fec2_product_pool=false;
-    let (slots,bytes)=if fec2_product_pool{(512,1_200_000)}
-        else{(128,1_000_000)};
+    let public_normal_pool=cfg!(target_os="linux")
+        && cfg!(feature="fec2_product_record");
+    let (slots,bytes)=if fec2_product_pool || public_normal_pool {
+        (512,1_200_000)
+    }else{(128,1_000_000)};
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
@@ -2624,9 +2630,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
         let tx=&e.counters.tx_chain;
         let t:Vec<u64>=tx.iter().map(|n|n.load(Ordering::Relaxed)).collect();
         eprintln!(
-            "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={}",
+            "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={} pre_read_deferred={}",
             if e.server_side{"server"}else{"client"},
-            t[0],t[1],t[2],t[3],t[4],t[5],t[6]);
+            t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7]);
         OK
     }
 }
@@ -2927,9 +2933,10 @@ struct LoopCounts {
     rx_chain:[AtomicU64;16],
     // Real TUN IPv4 ingress classifications and successful immutable
     // Normal/off source staging, batched once per worker turn.
-    // UDP,TCP,other,rejected,arena_failed,staged_UDP,staged_TCP.
+    // UDP,TCP,other,rejected,postread_arena_failed,staged_UDP,
+    // staged_TCP,pre_read_deferred (NOT consumed or dropped).
     #[cfg(feature="fec2_product_record")]
-    tx_chain:[AtomicU64;7],
+    tx_chain:[AtomicU64;8],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
@@ -3536,7 +3543,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let mut observed=0usize;
     // One stack-local numeric batch, no packet identity or per-packet atomic.
     #[cfg(feature="fec2_product_record")]
-    let mut tx_trace=[0u64;7];
+    let mut tx_trace=[0u64;8];
     if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
         if recovered_small{break}
@@ -3546,6 +3553,29 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // Only jumbo copies are retained; ordinary traffic moves into the
         // original generation-scoped M1 arena immediately after kernel read.
         if jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
+        // Linux TUN read is destructive. Reserve a real owner slab BEFORE
+        // consuming a business datagram; deferred packets stay in kernel TUN.
+        // The jumbo/rejected/no-data branch drops the unused reservation.
+        let pre_read={
+            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+            e.arena.allocate()
+        };
+        let mut reserved=match pre_read{
+            Ok(slot)=>slot,
+            Err(wbd_types::buffer_contract::BufferContractError::NoCapacity)=>{
+                #[cfg(feature="fec2_product_record")]
+                {tx_trace[7]+=1;}
+                // An already-ready TUN fd is level-triggered. No-spin on
+                // saturation, but do not delay other pending work this turn.
+                if pending.is_empty() && jumbo_queue.is_empty()
+                    && active_jumbo.is_none() && !stop.load(Ordering::Acquire){
+                    thread::sleep(Duration::from_millis(1));
+                }
+                break
+            },
+            Err(_)=>{ingress_error=true;break}
+        };
         let read={
             let mut slots=[&mut jumbo_read[..M0_TUN_IPV4_MAX]];
             tun.read_ready_batch(generation,&mut slots)
@@ -3571,30 +3601,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                         }
                         jumbo_queue.push_back(jumbo_read[..len].to_vec());
                     }else{
-                        let slab={
-                            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
-                            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-                            e.arena.allocate()
-                        };
-                        match slab{
-                            Ok(mut slot)=>{
-                                slot.writable()[14..14+len]
-                                    .copy_from_slice(&jumbo_read[..len]);
-                                pending.push((slot,len));
-                                #[cfg(feature="fec2_product_record")]
-                                if fec_ingress_on{
-                                    ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
-                                }
-                            }
-                            Err(_)=>{
-                                #[cfg(feature="fec2_product_record")]
-                                {tx_trace[4]+=1;}
-                                #[cfg(feature="fec2_product_record")]
-                                if fec_ingress_on{
-                                    ingress.fec_m1_ingress[2].fetch_add(1,Ordering::Relaxed);
-                                }
-                                ingress_error=true;break
-                            }
+                        // Small fresh packet always owns an M1 loan before
+                        // kernel TUN consumption. No post-read slot failure.
+                        reserved.writable()[14..14+len]
+                            .copy_from_slice(&jumbo_read[..len]);
+                        pending.push((reserved,len));
+                        #[cfg(feature="fec2_product_record")]
+                        if fec_ingress_on{
+                            ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
                         }
                     }
                 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-normal2pct-UDP-protocol-chain-real",
+  "phase": "P1-Normal2pct-TUN-preloan-root-fix-native-pending",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,13 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-normal2pct-UDP-TUN-protocol-conservation-60s",
-      "status": "INTENT_COMMITTED_ACTION_PENDING",
-      "type": "ONE_REAL_BIDIRECTIONAL_SCENARIO",
-      "source": "COMMIT_TBD",
-      "product_source": "99042008e8f42f334ed635df92945e00e53c45dd",
-      "artifact_id": 12482468452,
-      "why": "Actual v2 A-only same loss 2% with new exact UDP/TCP TUN ingress/staging and authenticated TUN sink markers. Differentiate application 2% gaps upstream of rust TX vs under firstsend vs after RX TUN; no performance AB or quota tuning."
+      "id": "P1-TUN-preloan-normal-2pct",
+      "type": "ONE_ARM64_NATIVE_AND_MTU9_THEN_REAL_SCENARIO",
+      "status": "COMMITTED_AUTORUN_PENDING",
+      "product_source": "COMMIT_PENDING",
+      "failure_run": 39911913234,
+      "failure_artifact": 12483556117,
+      "why": "Measured 227/234 valid original business TUN datagrams irreversibly lost postread when 128-slot owner M1 pool was full. Pre-read arena reservation and existing feature7 512-slot fixed pool are the minimal correct-boundary fix."
     }
   ],
   "recent_evidence": [
@@ -321,10 +321,10 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "P1 outer-single-repair-v2 Normal2pct real business FAIL Action39907046412: B UDP c2s2.481%, s2c2.532% vs <=0.25% despite native75/75+MTU9 and exact policy readback. 513/510 accepted repairs plus 169/172 quota-retired; actual useful vs spurious and per-epoch concentration not observed, cannot infer quota alone explains residual. Focus bounded authentic RX/M4 observability instead of same-seed rerun; TCP p99 4.49s/5.96s, no HOL qualification, B host PSI caveat."
   ],
-  "next_action": "Find exact one auto scenario Action after committing tests/network/request.json. Do not redispatch. Download artifact and calculate per-role TUN UDP ingress, staged UDP, RX tun_udp, application send/deliver and errors. If ingress already lacks offered UDP, inspect kernel app-to-TUN/socket injection route; if ingress full but stage loses, fix owner; if RX TUN full but app misses, inspect socket/driver and TUN route. Preserve v2 0.25% FAIL and Stop.",
+  "next_action": "Confirm unique auto ARM64 Action exact SOURCE; 75/75 full recovery, owner and MTU9. After PASS use frozen bundle for ONE original 2pct 60s real scenario with same parameters, require ZERO postread arena_failed and compare UDP stage/TUN sink to injection and app delivered, host/kernel/Stop. Do not manually redispatch identical failure or relax 0.25% gate. 500Mbps still NOT_QUALIFIED.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "99042008e8f42f334ed635df92945e00e53c45dd",
+    "source": "COMMIT_PENDING",
     "run_id": 39911318918,
     "attempt": 1,
     "artifact_id": 12482468452,
@@ -338,7 +338,7 @@
     "repair_attempt_limit": 1,
     "recovery_lib": "75/75_PASS",
     "runtime_isa": "NOT_OBSERVED",
-    "business_qualification": "PENDING_UDP_CHAIN_2PCT",
+    "business_qualification": "NOT_MEASURED_AFTER_PRELOAN",
     "business_run_id": 39907046412,
     "business_artifact_id": 12481288207,
     "business_source": "5890776f85a34373bc0c71ebdea43df97f59e52a"
