@@ -27,11 +27,16 @@
     {
       "id": "P0-Normal2pct-protective-anchor-60s",
       "type": "ONE_PERFORMANCE_ACTION_SINGLE_NEW_PRODUCT",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
+      "status": "IN_PROGRESS",
       "source": "18860b9dfe4931d8aba05943fad484677590571c",
       "bundle_run": 39889364428,
       "artifact_id": 12474012306,
-      "why": "Protect non-FEC original Go/Rust Normal business path after M2 Fixed admission change. Same 2%/200ms near-MTU traffic, 60s; requires actual bounded outer retransmission, <=1% residual, Stop and no product/harness capacity defect. No comparison or tuning."
+      "why": "Protect non-FEC original Go/Rust Normal business path after M2 Fixed admission change. Same 2%/200ms near-MTU traffic, 60s; requires actual bounded outer retransmission, <=1% residual, Stop and no product/harness capacity defect. No comparison or tuning.",
+      "run_id": 39891326352,
+      "attempt": 1,
+      "harness_source": "4522d962010f14eac04ba424c2086df1a1db39fe",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39891326352",
+      "contract_run_id": 39891326300
     }
   ],
   "recent_evidence": [
@@ -164,7 +169,7 @@
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence."
   ],
-  "next_action": "Push exactly one Normal/off protective anchor request; discover unique run and do not redispatch. If Normal has continuous UDP/TCP delivery, <=1% residual, real bounded retransmission and Stop PASS, mark P0 Fixed/Normal closed for tested ARM64 Linux points and move immediately to P1 coherent RTT-driven receipt/replay/budget batch. Do not repeat Fixed.",
+  "next_action": "ONE Normal/off anchor Action39891326352 attempt1 is in progress; contract Action39891326300 accompanies it. Do not redispatch. If delivery/retransmission/Stop clean, mark P0 closed and begin P1 coherent RTT-driven recovery timing/capacity changes.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "18860b9dfe4931d8aba05943fad484677590571c",
