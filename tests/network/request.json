@@ -1,25 +1,29 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-warmup-ramp-loss-isolation-AB",
+  "id": "V3-A-30pct-standard-latest-driver-regression",
   "owner": "network-matrix-work",
-  "seed": 6944,
+  "seed": 6986,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 500,
-    "s2c_mbps": 0,
-    "udp_share": 0,
+    "c2s_mbps": 33.7,
+    "s2c_mbps": 33.7,
+    "udp_share": 1,
     "sizes": [
       [
-        32768,
+        64,
         1
+      ],
+      [
+        1287,
+        99
       ]
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 5000,
+    "deadline_ms": 3000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -28,26 +32,9 @@
     "outer_mtu": 1500,
     "lane_loss": "shared",
     "queue_packets": 32768,
-    "netem_rng": "unseeded_recorded",
-    "tcp_window_profiles": {
-      "A": "bdp500",
-      "B": "bdp500"
-    },
-    "tcp_reordering_profiles": {
-      "A": "baseline",
-      "B": "baseline"
-    },
-    "tun_txqlen_profiles": {
-      "A": 1024,
-      "B": 1024
-    },
-    "warmup_rate_scale_profiles": {
-      "A": 1,
-      "B": 0.3
-    },
-    "v3_timeline": true
+    "netem_rng": "unseeded_recorded"
   },
-  "warmup_s": 20,
+  "warmup_s": 10,
   "drain_s": 30,
   "phases": [
     {
@@ -55,30 +42,31 @@
       "seconds": 60,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 30,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       },
       "s2c": {
-        "delay_ms": 200,
+        "delay_ms": 300,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 30,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 50,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
-    "injection_tolerance_pct": 5,
-    "max_loss_pct": 0,
-    "require_retransmission": false,
-    "max_repair_fresh_pct": 10
+    "injection_tolerance_pct": 3,
+    "max_loss_pct": 30.5,
+    "require_retransmission": true,
+    "max_repair_fresh_pct": 10,
+    "min_repair_line_pct": 6
   },
   "bundles": {
     "A": {
@@ -88,16 +76,8 @@
       "artifact_id": 12521858079,
       "sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
       "recovery_policy": "outer-opportunistic-v3"
-    },
-    "B": {
-      "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "run_id": 40001498261,
-      "attempt": 1,
-      "artifact_id": 12521858079,
-      "sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
-      "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "AB",
+  "order": "A",
   "policy": "outer-opportunistic-v3"
 }
