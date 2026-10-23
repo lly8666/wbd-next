@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "OUTER_REPAIR_OFF_WIRING_PENDING_ACTIONS",
+  "phase": "FEC_ONLY_INITIAL_NATIVE_ACTIONS_PASS_FIRST_PRODUCT_SCENARIO_REQUESTED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -14,20 +14,59 @@
   },
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": false,
-  "product_current": null,
-  "open_requests": [],
+  "product_current": {
+    "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+    "run_id": 39915080968,
+    "attempt": 1,
+    "artifact_id": 12484770973,
+    "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4",
+    "recovery_policy": "outer-single-repair-v2",
+    "platform": "native-aarch64",
+    "build_action": "SUCCESS",
+    "arch_attested_by": "tools/network_harness/artifacts.py ELF+manifest",
+    "runtime_fec_only": "NOT_YET_OBSERVED"
+  },
+  "open_requests": [
+    {
+      "path": "tests/network/fec-work/W1-fixed-max-off-loss5-arm64.json",
+      "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
+      "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+      "build_run": 39915080968,
+      "expectation": "ONE push-triggered ARM64 measure job with committed immutable request; both native OFF readbacks and original_frozen_retransmitted zero; FEC r_sent and real rx applied, authentic receipts and first delivery",
+      "state": "SUBMITTED_IN_COMMIT_PENDING_ACTIONS"
+    }
+  ],
   "open_issues": [
     "OFF policy is source-wired for genuine Linux Normal/FEC V4 owners but exact ARM64 build, two-side runtime readback, zero DATA retransmits under injected loss and retained first-send feedback are NOT_YET_VERIFIED; never mark FEC-only PASS until Action.",
     "FEC fixed/auto actual k/r, recovery, first TUN delivery, CPU/RSS and sustained p99 are NOT_RUN on this source; prior upstream evidence is not a pure FEC qualifier.",
     "Upstream 2% Normal record-vs-UDP discrepancy remains COMMON_PATH_UNRESOLVED and outside FEC math attribution.",
     "Public Game, Windows UI/platform, cipher choices and outer OFF beyond installed Linux Normal/FEC are UNSUPPORTED/NOT_WIRED; no claim of all-platform switch."
   ],
-  "next_action": "Inspect native ARM64 build and harness contract Actions triggered by this isolated push; repair compile/contract failures first. Pin exact successful build run/artifact/SHA, create tests/network/fec-work/<unique-case>.json with repair_enabled:false, dispatch ONE cheap no-loss/known-missing-source case and verify both native outer-repair readbacks/counters plus FEC parity and authentic feedback. Do not dispatch heavier performance scenarios before this gate; one scenario per performance Action, build artifact reuse.",
+  "next_action": "Fetch network-harness Action triggered by W1 request and review exact one-job result/artifact. Gate both native repair_enabled=0 and zero DATA copies/shadows, FEC readback and genuine parity/recovered TUN; investigate compile/native/readback/first delivery before any high load. Reuse pinned ARM64 build 39915080968 artifact 12484770973; only then schedule separate scenario per Action, never shadow upstream.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
     "started_from": "486db552b40c17ab52b1248eef64fd3e61ae84ef",
     "note": "Source patch staged; no Action run or runtime receipt for the new source yet.",
-    "verified": false
+    "verified": false,
+    "build_checked": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+    "actions": [
+      {
+        "run": 39915080968,
+        "result": "success",
+        "type": "native-aarch64-product-build"
+      },
+      {
+        "run": 39915081006,
+        "result": "success",
+        "type": "harness-contracts"
+      },
+      {
+        "run": 39915080946,
+        "result": "success",
+        "type": "fixed-max-parity-unit"
+      }
+    ],
+    "runtime_verified": false
   }
 }

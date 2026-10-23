@@ -16,23 +16,34 @@ on:
         options: [arm64, amd64]
   # Initial branch acceptance only. After merge, measurements are manual; never auto-fanout.
   push:
-    branches: [feat/network-scenario-harness-20261021, experiment/network-matrix-tuning]
-    paths: [tests/network/request.json]
+    branches: [feat/network-scenario-harness-20261021, experiment/network-matrix-tuning, experiment/fec-network-tuning]
+    paths:
+      - tests/network/request.json
+      - tests/network/fec-work/*.json
 permissions: {contents: read, actions: read}
 concurrency:
-  group: "network-harness-${{ github.ref }}-${{ inputs.request || 'tests/network/request.json' }}"
+  group: "network-harness-${{ github.ref }}-${{ (github.ref_name == 'experiment/fec-network-tuning' && github.event_name == 'push' && github.sha) || inputs.request || 'tests/network/request.json' }}"
   cancel-in-progress: false
 jobs:
   measure:
     name: One scenario on one VM
     # Manual tests use explicit target; retain legacy automatic-push runner selection.
-    runs-on: ${{ (inputs.target_arch == 'arm64' || (github.event_name != 'workflow_dispatch' && github.ref_name == 'experiment/network-matrix-tuning')) && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ (inputs.target_arch == 'arm64' || (github.event_name != 'workflow_dispatch' && (github.ref_name == 'experiment/network-matrix-tuning' || github.ref_name == 'experiment/fec-network-tuning'))) && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 50
     env:
       REQUEST: ${{ inputs.request || 'tests/network/request.json' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      - name: Select exactly one immutable own-branch FEC request on push
+        if: ${{ github.event_name == 'push' && github.ref_name == 'experiment/fec-network-tuning' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t requests < <(git diff-tree --no-commit-id --name-only -r HEAD -- tests/network/fec-work/)
+          test "${#requests[@]}" -eq 1
+          [[ "${requests[0]}" =~ ^tests/network/fec-work/[A-Za-z0-9_.-]+\.json$ ]]
+          echo "REQUEST=${requests[0]}" >> "$GITHUB_ENV"
       - name: Require a committed request inside the request directory
         run: |
           python3 - <<'PY'
