@@ -59,7 +59,7 @@ def validate(raw):
     r = copy.deepcopy(raw)
     keys(r, ["version", "id", "owner", "seed", "policy", "product", "traffic", "network",
              "warmup_s", "drain_s", "phases", "acceptance", "bundles", "order"], "request")
-    if "policy" in r and r["policy"] not in ["legacy-two-repair-v1", "outer-single-repair-v2"]:
+    if "policy" in r and r["policy"] not in ["legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"]:
         raise ValueError("unknown recovery policy")
     if r.get("version") != 1:
         raise ValueError("version must be 1")
@@ -166,7 +166,7 @@ def validate(raw):
             raise ValueError("step_attested_failure must be boolean")
         if "diagnostic_10x" in b and type(b["diagnostic_10x"]) is not bool:
             raise ValueError("diagnostic_10x must be boolean")
-        if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2"):
+        if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"):
             raise ValueError("invalid per-bundle recovery policy")
         for k, length in [("source", 40), ("sha256", 64)]:
             if not re.fullmatch("[0-9a-f]{%d}" % length, b.get(k, "")):
