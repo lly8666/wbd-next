@@ -8,6 +8,12 @@
  use std::ops::Range;
  use std::sync::{mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError}, Arc, Mutex, OnceLock};
  use crate::runtime::wake::WakeGate;
+use std::sync::atomic::{AtomicUsize,Ordering};
+
+const V3_REPAIR_MAX_BYTES:usize=128*1024*1024;
+const V3_REPAIR_MAX_SLOTS:usize=65_536;
+static V3_REPAIR_BYTES:AtomicUsize=AtomicUsize::new(0);
+static V3_REPAIR_SLOTS:AtomicUsize=AtomicUsize::new(0);
  use wbd_types::{next_generation, BufferKey};
  use wbd_types::buffer_contract::{
      checked_wire_range, BufferContractError, BufferOrigin, FrozenMetadata,
@@ -93,7 +99,8 @@
          let slab = self.slab.take().unwrap();
          Ok(FrozenRecord(Arc::new(FrozenPayload {
              origin: self.origin, wire: checked, metadata,
-             slab: Some(slab), return_path: Arc::clone(&self.return_path),
+             slab: Some(slab), return_path: Some(Arc::clone(&self.return_path)),
+             detached_charge:0,
          })))
      }
  }
@@ -103,12 +110,19 @@
      metadata: FrozenMetadata,
      wire: Range<usize>,
      slab: Option<Box<[u8]>>,
-     return_path: Arc<ReturnPath>,
+     return_path: Option<Arc<ReturnPath>>,
+     detached_charge:usize,
  }
  impl Drop for FrozenPayload {
      fn drop(&mut self) {
-         if let Some(slab) = self.slab.take() {
-             self.return_path.post(Returned { origin: self.origin, slab });
+         if self.detached_charge!=0 {
+             V3_REPAIR_BYTES.fetch_sub(self.detached_charge,Ordering::Relaxed);
+             V3_REPAIR_SLOTS.fetch_sub(1,Ordering::Relaxed);
+         }
+         if let Some(slab)=self.slab.take() {
+             if let Some(path)=self.return_path.as_ref(){
+                 path.post(Returned{origin:self.origin,slab});
+             }
          }
      }
  }
@@ -120,7 +134,39 @@
              .field("metadata", &self.0.metadata).finish()
      }
  }
- impl FrozenRecordHandle for FrozenRecord {
+ impl FrozenRecord {
+    /// Only after definite M4 fresh copy: bounded immutable shadow snapshot
+    /// does not pin original M1 source slab or create a new PN/encryption.
+    pub(crate) fn try_v3_repair_snapshot(&self)->Option<Self>{
+        let wire=self.bytes();
+        let len=wire.len();
+        if len==0 || len>V3_REPAIR_MAX_BYTES{return None}
+        V3_REPAIR_SLOTS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,
+            |x|(x<V3_REPAIR_MAX_SLOTS).then_some(x+1)).ok()?;
+        if V3_REPAIR_BYTES.fetch_update(Ordering::Relaxed,Ordering::Relaxed,
+            |x|(x<=V3_REPAIR_MAX_BYTES-len).then_some(x+len)).is_err(){
+            V3_REPAIR_SLOTS.fetch_sub(1,Ordering::Relaxed);
+            return None
+        }
+        let mut bytes=Vec::new();
+        if bytes.try_reserve_exact(len).is_err(){
+            V3_REPAIR_BYTES.fetch_sub(len,Ordering::Relaxed);
+            V3_REPAIR_SLOTS.fetch_sub(1,Ordering::Relaxed);
+            return None
+        }
+        bytes.extend_from_slice(wire);
+        Some(Self(Arc::new(FrozenPayload{
+            origin:self.origin(),metadata:self.metadata(),wire:0..len,
+            slab:Some(bytes.into_boxed_slice()),return_path:None,
+            detached_charge:len,
+        })))
+    }
+    pub(crate) fn v3_repair_global_live()->(usize,usize){
+        (V3_REPAIR_SLOTS.load(Ordering::Relaxed),
+         V3_REPAIR_BYTES.load(Ordering::Relaxed))
+    }
+}
+impl FrozenRecordHandle for FrozenRecord {
      fn origin(&self) -> BufferOrigin { self.0.origin }
      fn metadata(&self) -> FrozenMetadata { self.0.metadata }
      fn bytes(&self) -> &[u8] {
@@ -313,6 +359,26 @@
      }
      fn arena(count: usize, return_size: usize) -> Arena {
          Arena::new(7, count, 256, return_size, 1_000_000).unwrap()
+     }
+     #[test]
+     fn v3_detached_repair_keeps_ciphertext_and_frees_source_m1(){
+         let (before_n,before_b)=FrozenRecord::v3_repair_global_live();
+         let mut a=arena(2,1);
+         let mut original=a.allocate().unwrap();
+         original.writable()[10..14].copy_from_slice(&[7,3,1,9]);
+         let f=original.freeze(10..14,metadata()).unwrap();
+         let shadow=f.try_v3_repair_snapshot().expect("bounded headroom");
+         assert_eq!(shadow.bytes(),f.bytes());
+         assert_eq!(shadow.metadata(),f.metadata());
+         assert_eq!(shadow.origin(),f.origin());
+         assert_ne!(shadow.bytes().as_ptr(),f.bytes().as_ptr());
+         assert_eq!(FrozenRecord::v3_repair_global_live(),(before_n+1,before_b+4));
+         drop(f);
+         assert_eq!(a.drain_returns(),1);
+         assert_eq!(a.report().loaned,0);
+         assert_eq!(shadow.bytes(),&[7,3,1,9]);
+         drop(shadow);
+         assert_eq!(FrozenRecord::v3_repair_global_live(),(before_n,before_b));
      }
      #[test]
      fn r1_buffer_contract_freeze_shares_allocation_and_metadata() {
