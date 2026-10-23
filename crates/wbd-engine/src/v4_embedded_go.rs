@@ -344,6 +344,37 @@ fn original_repair_reserve_block_reason(
         _=>OriginalRepairBlockReason::GlobalOther,
     }
 }
+/// Process-wide v3 packet admission/send caps. One atomic counter per 1s
+/// epoch, no RNG, heap allocation, syscalls or global hot-path Mutex.
+#[cfg(feature="fec2_product_record")]
+fn v3_pps_permit(counter:&std::sync::atomic::AtomicU64,
+    now:MonoNs,max_packets:u64)->bool{
+    use std::sync::atomic::Ordering;
+    let epoch=(now.0/1_000_000_000)&0xffff_ffff;
+    counter.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|prev|{
+        let count=if (prev>>32)==epoch {prev&0xffff_ffff}else{0};
+        (count<max_packets).then_some((epoch<<32)|(count+1))
+    }).is_ok()
+}
+#[cfg(feature="fec2_product_record")]
+fn v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool{
+    use std::sync::atomic::AtomicU64;
+    static ADMISSIONS:AtomicU64=AtomicU64::new(0);
+    let key=pn^((lane.tunnel.slot as u64)<<48)
+        ^((lane.tunnel.generation as u64)<<32)
+        ^((lane.slot as u64)<<16)^(lane.generation as u64);
+    let mut x=key.wrapping_add(0x9e3779b97f4a7c15);
+    x=(x^(x>>30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    x=(x^(x>>27)).wrapping_mul(0x94d049bb133111eb);
+    x^=x>>31;
+    x&1==0 && v3_pps_permit(&ADMISSIONS,now,32_768)
+}
+#[cfg(feature="fec2_product_record")]
+fn v3_send_pps_permit(now:MonoNs)->bool{
+    use std::sync::atomic::AtomicU64;
+    static REPAIRS:AtomicU64=AtomicU64::new(0);
+    v3_pps_permit(&REPAIRS,now,8192)
+}
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -3999,26 +4030,26 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             .map_err(|_|BAD_STAGE)?;
         let now=loop_now();
         let copied=(finish.copied as usize).min(frozen_for_outer.len());
-        // Fresh ciphertext is registered only for the actual M4 definite
-        // copied prefix; never register health-control kind1, driver-unknown,
-        // or definitely-not-sent as missing data.
+        // All actual DATA first-copies contribute F once; only one half,
+        // mixed by PN+generation, may pin a frozen repair shadow. This
+        // unconditionally preserves the independent first-send fast path.
         let control_last=e.feedback_queued.is_some();
         let data_count=frozen_for_outer.len()-usize::from(control_last);
-        for record in frozen_for_outer.iter().take(copied.min(data_count)){
-            let frame_bytes=(record.bytes().len()+
-                wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
-            match global.on_fresh_accepted(
-                original.direction,frame_bytes,now
-            ){
-                Ok(())=>{
-                    if original.shadow.on_sent_adaptive(record.clone(),now).is_ok(){
-                        original.sent_fresh=original.sent_fresh.saturating_add(1);
-                    }else{
-                        original.note_block(OriginalRepairBlockReason::FreshShadow);
-                    }
-                },
-                Err(_)=>original.note_block(OriginalRepairBlockReason::FreshGlobal),
+        let real_copied=copied.min(data_count);
+        let mut fresh_bytes=0u64;
+        for record in frozen_for_outer.iter().take(real_copied){
+            let meta=record.metadata();
+            fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
+                wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
+            original.sent_fresh=original.sent_fresh.saturating_add(1);
+            if v3_admit_shadow(meta.pn.0,meta.lane,now)
+                && original.shadow.on_sent_adaptive(record.clone(),now).is_err(){
+                original.note_block(OriginalRepairBlockReason::FreshShadow);
             }
+        }
+        if fresh_bytes!=0 && global.on_fresh_accepted_batch(
+            original.direction,fresh_bytes,now).is_err(){
+            original.note_block(OriginalRepairBlockReason::FreshGlobal);
         }
     }
     // Keep M2 original outbound DATA denominator separate from a native
@@ -4272,6 +4303,12 @@ fn background_original_repair_once(
         let reserved={
             let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
             if !own.shadow.preflight(&candidate,now){continue}
+            if !v3_send_pps_permit(now){
+                own.note_block(OriginalRepairBlockReason::Capacity);
+                let _=own.shadow.on_quota_exhausted(&candidate,now);
+                own.retired=own.retired.saturating_add(1);
+                continue
+            }
             let dir=own.direction;
             let route=own.route;
             let mut global=original_process_repair_quota().lock()
@@ -4435,11 +4472,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let route=first.route;
         let Ok(mut shadow)=wbd_recovery::ReceiptState::new(
             lane,wbd_recovery::ReceiptConfig{
-                max_shadow_entries:131_072,pto_ns:810_000_000,
+                max_shadow_entries:65_536,pto_ns:810_000_000,
                 reorder_window_ns:20_000_000,
             }
         )else{return INVALID};
-        if shadow.enable_adaptive_timing(600_000_000,50_000_000).is_err(){
+        if shadow.enable_adaptive_timing(600_000_000,50_000_000).is_err()
+            || shadow.enable_opportunistic_v3().is_err(){
             return INVALID
         }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
@@ -4452,7 +4490,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             max_pending_reservations:128,max_pending_bytes:4*1024*1024,
             io_timeout_ns:100_000_000,
         },now).is_err(){return BAD_STAGE}
-        if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
+        if global.enable_opportunistic_v3(direction).is_err()
+            || global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
             shadow,direction,route,sent_fresh:0,authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,
