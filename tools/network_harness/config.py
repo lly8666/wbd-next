@@ -57,8 +57,10 @@ def impairment(raw, lanes):
 
 def validate(raw):
     r = copy.deepcopy(raw)
-    keys(r, ["version", "id", "owner", "seed", "product", "traffic", "network",
+    keys(r, ["version", "id", "owner", "seed", "policy", "product", "traffic", "network",
              "warmup_s", "drain_s", "phases", "acceptance", "bundles", "order"], "request")
+    if "policy" in r and r["policy"] not in ["legacy-two-repair-v1", "outer-single-repair-v2"]:
+        raise ValueError("unknown recovery policy")
     if r.get("version") != 1:
         raise ValueError("version must be 1")
     for k in ["id", "owner"]:

@@ -70,25 +70,32 @@ def envelope(line_mbps, one_way_ms, sizes, ratio=0, k=16, lanes=1,
     fresh_bps = line_mbps*1e6/8*utilization/(1+repair_allowance)
     logical_pps = fresh_bps/c["fresh_outer_bytes_per_logical_packet"]
     pps = logical_pps*c["fresh_records_per_logical_packet"]
-    retained = math.ceil(1.25*pps*timing["cache_ms"]/1000)
+    retained = math.ceil(1.25*pps*timing["retain_ms"]/1000)
     slots = power2(retained)
-    # 5% PN allowance for controls is a declared estimate; retransmits reuse PN.
-    replay = power2(1.25*pps*1.05*(timing["cache_ms"]+4*one_way_ms)/1000)
-    rx_blocks = math.ceil(1.25*logical_pps/k*timing["cache_ms"]/1000)+3 if ratio else 0
+    fixed_shadow_limit = 131072
+    # Receiver replay history is independent from sender payload retention.
+    # One repair reuses PN; 3s is the initial authenticated late-arrival horizon.
+    replay = power2(1.25*pps*1.05*3.0)
+    rx_blocks = math.ceil(1.25*logical_pps/k*timing["retain_ms"]/1000)+3 if ratio else 0
     per_lane = pps/lanes
     return dict(c, **timing,
         line_mbps=line_mbps, one_way_ms=one_way_ms,
         safe_app_mbps=logical_pps*c["app_bytes_per_logical_packet"]*8/1e6,
         logical_source_pps=logical_pps, aggregate_fresh_record_pps=pps,
         outer_bdp_bytes=line_mbps*1e6/8*2*one_way_ms/1000,
+        policy="outer-single-repair-v2", repair_attempt_limit=1,
         shadow_slots_aggregate=slots,
+        fixed_shadow_slots_per_direction=fixed_shadow_limit,
+        shadow_capacity_limited=retained>fixed_shadow_limit,
+        payload_pool_direction_hard_mib=192,
+        endpoint_repair_pool_hard_mib=384, endpoint_total_hard_mib=512,
         shadow_worst_mib=(retained*c["mean_frozen_slab_bytes"]+slots*96)/MIB,
         shadow_current_2048_slab_worst_mib=(retained*2048+slots*96)/MIB,
         replay_pn_aggregate=replay, replay_metadata_mib=(replay/256+lanes)*40/MIB,
         fresh_queue_slots=max(64, min(8192, math.ceil(pps*.002))),
         fec_rx_worst_active_blocks=rx_blocks,
-        fec_rx_horizon_model_ms=timing["cache_ms"] if ratio else 0,
-        feedback_pages_per_lane=math.ceil(1.25*per_lane*1.05*timing["cache_ms"]/1000/256)+1,
+        fec_rx_horizon_model_ms=timing["retain_ms"] if ratio else 0,
+        feedback_pages_per_lane=math.ceil(1.25*per_lane*1.05*2.0/256)+1,
         # Delay emulator has to hold the bandwidth-delay product. It is NOT a product queue.
         netem_shared_queue_packets=math.ceil(1.25*pps*(1+repair_allowance)*1.05*one_way_ms/1000),
         wire_repair_cap_bytes_s=fresh_bps*.1,
@@ -112,8 +119,13 @@ def suite():
                          iid_source_residual_pct=100*fec_residual(k, math.ceil(k*ratio), p**lanes),
                          loss_model="IID copies independent; OFF value is before outer repair")
                 rows.append(e)
-    return {"qualification": "MODEL_ONLY_NOT_RUN", "rows": rows,
+    return {"qualification": "MODEL_ONLY_NOT_RUN",
+            "policy": "outer-single-repair-v2", "repair_attempt_limit": 1,
+            "fixed_shadow_slots_per_direction": 131072,
+            "max_one_way_ms_design": 300,
             "assumptions": ["80% line utilization incl 10% repair allowance; 20% left for control/options/model error",
+                "single outer repair: ideal IID residual p^2 and repair/fresh about p",
+                "sender retain <=1.5s; receiver replay/receipt history is independent",
                 "IPv4 UDP; outer headers40, record31, FEC source10/repair14, Game16",
                 "1200B reference plus auto MTU/MSS1360 large-packet target; pure-small is PPS diagnosis, not500M acceptance",
                 "FEC k=1 and k=16 are separate envelopes, not actual histograms",
@@ -147,7 +159,10 @@ def request_envelope(request, inner_mtu=1200):
                         estimated_queue_per_netem=need,
                         requested_queue=request["network"]["queue_packets"],
                         queue_model_short=need>request["network"]["queue_packets"]))
-    return {"qualification": "ESTIMATE_ONLY_NO_VERDICT_CHANGE", "inner_mtu_input": inner_mtu, "rows": rows,
+    return {"qualification": "ESTIMATE_ONLY_NO_VERDICT_CHANGE",
+        "policy": request.get("policy", "legacy-two-repair-v1"),
+        "repair_attempt_limit": 1 if request.get("policy") == "outer-single-repair-v2" else 2,
+        "inner_mtu_input": inner_mtu, "rows": rows,
         "limits": ["UDP portion only; TCP write sizes are not TCP segment sizes",
                    "Measure control/ACK/parity k/r_sent; independent netem rate is per lane, not a shared line cap",
                    "Queue short is a preflight warning to review, never proof of product failure"]}
