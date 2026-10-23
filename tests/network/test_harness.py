@@ -36,6 +36,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_true_idle_phase_has_no_synthetic_probe_sends(self):
+        r=request()
+        r["traffic"]["probe_hz"]=0
+        r["traffic"]["udp_share"]=1
+        r["phases"][0]["rate_scale"]=0
+        q=validate(r)
+        self.assertEqual(q["traffic"]["probe_hz"],0)
+        self.assertEqual(q["phases"][0]["rate_scale"],0)
+        r["traffic"]["probe_hz"]=-1
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_opt_in_v3_owner_timeline_strict_and_privacy_whitelist(self):
         from tools.network_harness.runner import product_marker_line
         good = request()
