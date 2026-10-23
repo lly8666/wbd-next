@@ -505,14 +505,25 @@ class LinuxExperiment:
             time.sleep(.1)
         else:
             raise RuntimeError("real native READY timeout")
+        qlen_profile=self.config["network"].get("tun_txqlen_profiles",{}).get(self.label)
+        if qlen_profile is not None:
+            # Strict namespace-only, matched one-leg A/B diagnostic. No host
+            # sysctl and no production default change. Apply before warmup.
+            for role in self.ns:
+                self.nscommand(role,["ip","link","set","dev","wbntun0",
+                                     "txqueuelen",str(qlen_profile)])
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
                           "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
             self.effective["inner_links"][role] = links
+            if qlen_profile is not None and links[0].get("txqlen")!=qlen_profile:
+                raise RuntimeError("diagnostic TUN queue readback mismatch "+role)
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["test_only_tun_txqlen_profile"]=(
+            qlen_profile if qlen_profile is not None else "product_default")
         self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
         self.effective["tcp_window_profile"]=self.tcp_profile
         self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
