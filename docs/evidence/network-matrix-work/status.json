@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P1-Normal-residual-readonly-diagnostics-native",
+  "phase": "P1-Normal2pct-residual-diagnostic-observation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,17 +25,13 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P1-Normal-residual-readonly-diagnostics-native",
-      "type": "ONE_NATIVE_ARM64_BUILD_PLUS_EXISTING_9_MTU",
-      "status": "QUEUED_OR_IN_PROGRESS",
-      "trigger": "read-only Rust/Go diagnostic source push; no manual dispatch",
-      "baseline_product": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
-      "new_source": "COMMIT_TBD",
-      "why": "No recovery behavior change. Split remaining non-ACK retirement by 0/1/2 repair attempts and expose learned SRTT/PTO/Tcache before any further tuning. Harness already parses added numeric fields from same public M2 marker.",
-      "run_id": 39893574791,
-      "attempt": 1,
+      "id": "P1-Normal2pct-residual-diagnostics-B-60s",
+      "type": "ONE_PERFORMANCE_ACTION_SINGLE_PRODUCT_DIAGNOSTIC",
+      "status": "INTENT_COMMITTED_RUN_PENDING",
       "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39893574791"
+      "bundle_run": 39893574791,
+      "artifact_id": 12475394629,
+      "why": "Same exact failed Normal2pct point, behavior-identical to P1 source except read-only counters. One leg is enough. Read repair-attempt retirement buckets and learned timing before any tuning."
     }
   ],
   "recent_evidence": [
@@ -171,6 +167,13 @@
       "run": 39892580264,
       "artifact_id": 12475074444,
       "file": "P1-Normal2pct-authRTT-AB-result-diagnostic-intent-20261023.json"
+    },
+    {
+      "id": "P1-residual-diagnostics-native",
+      "result": "PASS_BUILD_UNITS_MTU9",
+      "run": 39893574791,
+      "artifact_id": 12475394629,
+      "file": "P1-residual-diagnostics-native-pass-B-intent-20261023.json"
     }
   ],
   "open_issues": [
@@ -190,14 +193,14 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "ONE diagnostic native Action39893574791 source21b1a9c attempt1 outstanding; do not redispatch. Require diagnostics split unit + adaptive unit + Fixed cohort unit + native release + 9 MTU PASS. Then one B-only Normal2pct 60s diagnostic observation.",
+  "next_action": "Push one B-only diagnostic request, discover unique performance run and do not redispatch. On completion classify residual: expired0 dominant=>candidate/feedback/history gap; expired1 dominant=>second repair scheduling/lifetime; expired2 dominant=>repair carrier/delivery/independent loss; acked1/2 high with UDP missing=>business delivery/replay/LINK mismatch. Also validate srtt/pto/cache against ~400ms RTT. Choose only the earliest evidenced stage.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
-    "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
-    "run_id": 39892105601,
+    "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+    "run_id": 39893574791,
     "attempt": 1,
-    "artifact_id": 12475695809,
-    "zip_sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17",
+    "artifact_id": 12475394629,
+    "zip_sha256": "029af2ffe2b49da194e6265a3e1212c94b54ae02ffe0d98dd55cace977704120",
     "architecture": "aarch64",
     "build_status": "success",
     "mtu9": "PASS",
