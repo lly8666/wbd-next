@@ -26,7 +26,7 @@
   "open_requests": [
     {
       "id": "arm64-P0-merged-MTU-normal-large99-smoke-90s",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "type": "ONE_ARM64_MEASUREMENT_JOB",
       "trigger": "request.json push only; no workflow_dispatch",
       "path": "tests/network/request.json",
@@ -34,7 +34,12 @@
       "build_run": 39881938976,
       "artifact_id": 12470698437,
       "scenario": "Normal/off lossless 10Mbps each direction, 50/50 UDP TCP four flows, UDP sizes packet-count 99%1301B+1%64B, 90s steady, 15s warmup and drain; actual TUN1329 at outer1500",
-      "qualification": "new merged-source real mixed sustained business protection, not old-vs-new perf speedup"
+      "qualification": "new merged-source real mixed sustained business protection, not old-vs-new perf speedup",
+      "run_id": 39884432309,
+      "attempt": 1,
+      "harness_source": "4eb464beea50b9d6ccc5c9130d1247f3c6de2bd2",
+      "contract_run_id": 39884431923,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39884432309"
     }
   ],
   "recent_evidence": [
@@ -131,7 +136,7 @@
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS."
   ],
-  "next_action": "Resolve unique Normal near-MTU P0 real business run triggered by this request push; DO NOT dispatch duplicate or rebuild SOURCE. Examine business UDP/TCP first delivery, full-rate injection, TUN1329, actual sizes/MTU, p99, CPU/RSS/PSI/Stop. If it FAILS, diagnose earliest genuine boundary then minimum fix. If PASS, still address Fixed applied and single-side arena pressure from S032 before P1/P2; do not jump to 500Mbps/30% or pure small packet tests. Nine source-locked MTU cases PASS scoped only.",
+  "next_action": "P0 merged-source near-MTU Normal continuous mixed 90s perf Action39884432309 IN_PROGRESS and harness contract39884431923; no dispatch again. Settle actual first-delivery, injected rate, CPU/RSS, backlog/Stop, TUN size; if PASS, check true low-loss Fixed applied vs S032 HIGH-LOSS FAIL and read effective PTO/repair/receipt sizing before P1. No P2 until correctness/runner limits.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d64be28591c3752af06be399ff598266ecf4d664",
