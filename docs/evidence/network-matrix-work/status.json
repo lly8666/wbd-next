@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-6Mbps-capacity-evidence",
+  "phase": "P2-Normaloff-lossless-10Mbps-flight-isolation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,31 +25,15 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-6Mbps-diagnostic-with-capacity-stdout-2pct",
-      "type": "ONE_NORMAL_OFF_REAL_SCENARIO",
+      "id": "P2-Normaloff-10Mbps-lossless-flight-vs-repair-isolation-60s",
+      "type": "ONE_REAL_NORMAL_OFF_SCENARIO",
       "status": "COMMITTED_ACTION_PENDING",
       "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "build_artifact_id": 12483243411,
-      "why": "10Mbps run39915315299 reports INCONCLUSIVE, artifact12484209330 download backend unavailable. Lower independent 6Mbps/dir 2pct 200ms and include bounded CPU/RSS/injector/raw owner counters in Action log to determine first exact capacity boundary; no FEC test."
+      "build_artifact": 12483243411,
+      "why": "6Mbps/2pct clean source TUN no capacity deferrals but C2S TCP p99 5.87s / backpressure243; 10Mbps/2pct INCONCLUSIVE artifact inaccessible. Distinguish 10Mbps raw fixed512 owner flight capacity from repair/loss by zero-loss 200ms RTT high-throughput. Only Normal/off and Actions bounded digest; no FEC test."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "P1-single-repair-v2-Normal2pct-AB-FAIL-20261023",
-      "result": "FAIL_REAL_BIDIRECTIONAL_BUSINESS_BOTH_AB",
-      "run": 39907046412,
-      "artifact_id": 12481288207,
-      "source": "5890776f85a34373bc0c71ebdea43df97f59e52a",
-      "note": "B v2 policy proven; UDP c2s2.481% s2c2.532% vs0.25% gate. Native+MTU9 PASS do not upgrade to product business PASS. 341 quota blocks across endpoints; repair usefulness not observed. See structured evidence."
-    },
-    {
-      "id": "P1-rx-chain-2pct-action",
-      "result": "FAIL_BUSINESS_WITH_RECORD_LAYER_RECOVERY",
-      "run": 39910493761,
-      "artifact_id": 12482169974,
-      "source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
-      "note": "B UDP 2.141%/2.039% vs0.25%; source first copies 20460/20555, peer unique normal 20444/20534, no LINK/TUN failure, lagged unique 393/415, receiver feedback_dropped 222/231. Record vs app discrepancy demands per-protocol TUN input/output, not blind quota."
-    },
     {
       "id": "P1-normal-preloan-native",
       "result": "PASS_BUILD_RECOVERY75_MTU9",
@@ -77,6 +61,14 @@
       "artifact_zip_sha256": "e25b87fde2066af6026c7d38f76d80a4c2b37c9a888827267732529488096f8d",
       "source": "de55a1322b4580c60e77322d2d38843caefeec79",
       "note": "10Mbps real run completed INCONCLUSIVE, artifact download tool internally failed repeatedly, cannot attribute injector/host/product without source data; do not declare product failure or pass and do not blindly increase load."
+    },
+    {
+      "id": "P2-Normaloff-6Mbps-measured-PASS-20261023",
+      "run": 39916201119,
+      "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+      "result": "PASS_SCOPED_6MBPS_2PCT_UDP_0_028PCT_0_051PCT_TCP_P99_WARN",
+      "artifact_id": 12484269045,
+      "reference": "P2-Normaloff-6Mbps-capacity-result-20261023.json"
     }
   ],
   "open_issues": [
@@ -97,7 +89,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Find EXACT one Action for 6Mbps Normal/off (no FEC), collect NETWORK_CAPACITY_LEG bounded stdout and original artifact if available. Diagnose injector offered vs target, product per-role CPU/RSS, TUN pre_read_deferred/arena_failed, rx, netem backlog, CPU PSI, stop. Do not run >6 until clear capacity; previous 10Mbps INCONCLUSIVE original artifact12484209330 download unavailable. If product near M1 512 slot capacity, study strictly bounded owner slab expansion vs CPU memory and same-VM old/new; do not assert 500Mbps qualification.",
+  "next_action": "Discover EXACT one auto 10Mbps/dir lossless Normal-only action under request new source. Read bounded NETWORK_CAPACITY_LEG job-log and original artifact. If injector is valid but pre_read_deferred rises or TCP throughput collapses, model M1 512-slot flight headroom; change bounded Normal-only owner backing only after proof (do not touch FEC modes). If even clean 10M passes, isolate 2% repair/receipt impact with later single distinct action. No >10Mbps action until valid capacity evidence. Preserve 6M scoped PASS and TCP p99 warning.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "de55a1322b4580c60e77322d2d38843caefeec79",

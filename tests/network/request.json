@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "P2-Normaloff-6Mbps-diagnostic-with-capacity-stdout-2pct",
+  "id": "P2-Normaloff-10Mbps-lossless-flight-vs-repair-isolation-60s",
   "owner": "network-matrix-work",
-  "seed": 5205,
+  "seed": 5206,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 6,
-    "s2c_mbps": 6,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 0.5,
     "sizes": [
       [
@@ -44,7 +44,7 @@
       "c2s": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -53,7 +53,7 @@
       "s2c": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -64,7 +64,7 @@
   "acceptance": {
     "injection_tolerance_pct": 3,
     "max_loss_pct": 0.25,
-    "require_retransmission": true
+    "require_retransmission": false
   },
   "bundles": {
     "A": {
