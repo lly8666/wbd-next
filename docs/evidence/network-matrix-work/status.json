@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-single-TCP-lossless-window-isolation",
+  "phase": "P2-single-TCP-MSS-vs-CUBIC-window-congestion-attributed-with-lossless-TUN-drop-risk",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,33 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P2-TCP1-zero-loss-control-10M",
-      "status": "ACTION_AUTO_39937279597",
-      "run": 39937279597,
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "native_artifact_id": 12486939897,
-      "reason": "Single INNER TCP at10Mbps EACH under2% netem failed1.008/1.127Mbps; fresh harness numeric every2s CC/mss/pmtu/cwnd/RTT+CPU, now identical product in 0% loss under same200ms one-way. No FEC tests. Existing 2% Action39932398428 is source evidence, not duplicate."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "P2-Normaloff-10Mbps-2pct-4flow-INCONCLUSIVE-20261023",
-      "result": "INCONCLUSIVE_TCP_BACKPRESSURED_UDP_CORRECT",
-      "run": 39923334085,
-      "artifact_id": 12488855638,
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "why": "UDP 24/15 of29417=0.082/0.051pct, peak M1 699/733 of1024, no admission/backpressure/drops. TCP 4 streams C2S only3.874/5Mbps, 6561 backpressure, p99=4.6s/14s. Kernel retrans +400/+614, server notsent1.97MB. Run next distinct 8flow scenario."
-    },
-    {
-      "id": "P2-Normaloff-10Mbps-2pct-eight-TCP-flows-PASS-20261023",
-      "run": 39927659556,
-      "artifact_id": 12490421685,
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "result": "PASS_NORMAL_10MBPS_2PCT_8_TCP_STREAMS_UDP0_034PCT_EACH_TCP_TARGET_5MBPS_BOTH",
-      "note": "BUT_TCP_P99_2349_1078MS; M1 peak910/908 of1024, source conserved and no TUN/feedback failures; 4flow earlier INCONCLUSIVE preserved."
-    },
     {
       "id": "P2-TCP4-only-invalid-request",
       "result": "HARNESS_INVALID_ID_NO_BUSINESS_EXECUTED",
@@ -72,6 +47,15 @@
       "run": 39932398428,
       "artifact_id": 12492127816,
       "file": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct.json"
+    },
+    {
+      "id": "P2-TCP1-10M-lossless-mss-cwnd-observed",
+      "run": 39937279597,
+      "artifact_id": 12493294457,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "result": "PASS_SCOPED_APP_TCP10MBPS_BOTH_BUT_SOURCE_TUN_DROP_132_359",
+      "zip_sha256": "4a983544bf4881a28f56029794933047190e2b4b63b280d0da8be049b44b96b7",
+      "note": "MSS1277, PMTU1329, CUBIC, cwnd median787/2874 vs loss2pct at same source had end43/49, original 0loss source capacity TUN TX dropped steady132/359, pre-read deferral9700/4249, M1 peak1009/1024. Historical scoped PASS masked inner TCP retrans and source drop. Lossy1Mbps is primarily kernel congestion under residual/reorder, not tiny MSS, worker CPU or received wnd."
     }
   ],
   "open_issues": [
@@ -84,7 +68,7 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Reconcile exact action39937279597 and its contracts. Analyze real 0% single TCP cwnd/mss/advmss/pmtu/snd_wnd and sysctl CC vs lossy Action39932398428. If lossless also under-injected, prioritize socket sndbuf/receiver window and MSS TUN route. If lossless passes, prioritize outer repair budget timeliness and inner TCP SACK/reordering; do not change 10% budget or outer one-repair blindly. No FEC tests.",
+  "next_action": "Do not duplicate lossless TCP1 run39937279597 or lossy TCP1 run39932398428. Sources frozen; no product code fix has been validated. Existing 1024 arena Normal reaches censored peak1009 and source TUN TX drop132/359 in zero-loss, so separately implement Normal-only bounded headroom (e.g.1536 slabs, FEC feature7 unchanged) and make future harness report source TUN tx-drop deltas as qualification limits. First preserve proof & verify Actions native/MTU/real AB; no 2pct loss miracle claim. To improve lossy one TCP, gather real TCP segment data-vs-ACK repair timeliness/late repair & kernel cc/cwnd, current CC cubic available reno cubic only, no system-wide tuning. No FEC performance tests.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
