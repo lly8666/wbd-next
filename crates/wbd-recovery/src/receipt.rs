@@ -15,6 +15,9 @@ const FEEDBACK_ALLOWANCE_NS:u64=10_000_000;
 const MIN_PTO_VARIATION_NS:u64=4_000_000;
 pub const OUTER_REPAIR_ATTEMPT_LIMIT:u64=1;
 const MAX_RETAIN_NS:u64=1_500_000_000;
+const V3_GAP_MIN_NS:u64=20_000_000;
+const V3_GAP_MAX_NS:u64=100_000_000;
+const V3_FEEDBACK_MARGIN_NS:u64=20_000_000;
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct AdaptiveTimingSnapshot{
@@ -286,6 +289,7 @@ struct Entry<H: FrozenRecordHandle> {
     repair_attempts: u8,
     retry_epoch: u32,
     missing_reported: bool,
+    negative_since: Option<MonoNs>,
     queued: Option<Queued>,
     indexed_wake: Option<u64>,
 }
@@ -307,6 +311,7 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     witnesses: Vec<Witness>, // latest three distinct, verified data sends
     rack_ack_ns: Option<u64>,
     adaptive:Option<AdaptiveTiming>,
+    opportunistic_v3:bool,
     diagnostics:ReceiptDiagnosticSnapshot,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
@@ -327,7 +332,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             last_timer_index_pops: 0,
             last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,adaptive:None,
-            diagnostics:ReceiptDiagnosticSnapshot::default(),
+            opportunistic_v3:false,diagnostics:ReceiptDiagnosticSnapshot::default(),
         })
     }
     pub fn enable_adaptive_timing(&mut self,bootstrap_rtt_ns:u64,
@@ -335,6 +340,16 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         if !self.entries.is_empty(){return Err(DataError::Malformed)}
         self.adaptive=Some(AdaptiveTiming::new(bootstrap_rtt_ns,bootstrap_rttvar_ns)?);
         Ok(())
+    }
+    /// Opt-in v3 only; historical v2 component tests retain their old timers.
+    pub fn enable_opportunistic_v3(&mut self)->Result<(),DataError>{
+        if !self.entries.is_empty(){return Err(DataError::Malformed)}
+        self.opportunistic_v3=true;
+        Ok(())
+    }
+    fn v3_guard_ns(&self)->u64{
+        self.adaptive.map_or(V3_GAP_MIN_NS,|x|
+            x.rttvar_ns.saturating_mul(4).clamp(V3_GAP_MIN_NS,V3_GAP_MAX_NS))
     }
     pub fn timing_snapshot(&self)->Option<AdaptiveTimingSnapshot>{
         self.adaptive.map(|x|x.snapshot())
@@ -351,7 +366,12 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     }
     pub fn on_sent_adaptive(&mut self,frozen:H,at:MonoNs)->Result<(),DataError>{
         let Some(t)=self.timing_snapshot()else{return Err(DataError::Malformed)};
-        self.on_sent(frozen,at,MonoNs(at.0.saturating_add(t.cache_ns)))
+        let cache=if self.opportunistic_v3 {
+            let r=t.srtt_ns.max(t.recent_rtt_ns);
+            r.saturating_add(r/2).saturating_add(t.rttvar_ns.saturating_mul(4))
+                .saturating_add(100_000_000).clamp(250_000_000,MAX_RETAIN_NS)
+        }else{t.cache_ns};
+        self.on_sent(frozen,at,MonoNs(at.0.saturating_add(cache)))
     }
 
     /// Register only an already frozen, actually submitted data record.
@@ -367,7 +387,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         }
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
-            retry_epoch: 0, missing_reported: false, queued: None,
+            retry_epoch: 0, missing_reported: false,negative_since:None,queued: None,
             indexed_wake: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
@@ -381,7 +401,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     fn wake_at(&self, e: &Entry<H>) -> Option<u64> {
         if let Some(q) = &e.queued { Some(q.until.0) }
         else if e.repair_attempts < OUTER_REPAIR_ATTEMPT_LIMIT as u8
-            && e.retry_epoch < u32::MAX {
+            && e.retry_epoch < u32::MAX
+            && (!self.opportunistic_v3 || e.negative_since.is_some()) {
             Some(self.due_at(e).0)
         } else { None }
     }
@@ -410,6 +431,17 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         let mut releases = Vec::new();
         let mut dirty = Vec::new();
         let mut timing_sample=None::<u64>;
+        // Only a later verified positive DATA PN within a fresh receipt can
+        // witness a missing DATA bit. Unknown/stale feedback never arms repair.
+        let newest_positive=if fresh && self.opportunistic_v3 {
+            receipt.pages.iter().flat_map(|page|{
+                let base=page.base_pn.0;
+                (0..256).filter_map(move |bit|{
+                    let pn=base+bit;
+                    (pn<=receipt.largest.0 && page.received(pn)).then_some(pn)
+                })
+            }).max()
+        }else{None};
         for page in &receipt.pages {
             let base = page.base_pn.0;
             if base > receipt.largest.0 { continue; }
@@ -451,8 +483,11 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     }
                 } else if fresh {
                     if let Some(e)=self.entries.get_mut(&key) {
-                        if now<e.hard_expiry && !e.missing_reported {
+                        if now<e.hard_expiry && !e.missing_reported
+                            && (!self.opportunistic_v3 ||
+                                newest_positive.is_some_and(|later|later>pn)) {
                             e.missing_reported=true;
+                            e.negative_since=Some(now);
                             dirty.push(key);
                         }
                     }
@@ -477,6 +512,17 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     }
 
     fn due_at(&self, entry: &Entry<H>) -> MonoNs {
+        if self.opportunistic_v3 {
+            let Some(negative)=entry.negative_since else {
+                return entry.hard_expiry;
+            };
+            let srtt=self.adaptive.map_or(self.config.pto_ns,|x|
+                x.srtt_ns.max(x.recent_rtt_ns));
+            let guard=self.v3_guard_ns();
+            return MonoNs(entry.last_sent.0.saturating_add(srtt)
+                .saturating_add(guard).saturating_add(V3_FEEDBACK_MARGIN_NS)
+                .max(negative.0.saturating_add(guard)));
+        }
         let pto = entry.last_sent.0.saturating_add(self.effective_pto_ns());
         let mut due = pto;
         if entry.repair_attempts == 0 && entry.missing_reported
@@ -636,6 +682,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.last_timer_index_pops
     }
     pub fn outstanding(&self) -> usize { self.entries.len() }
+    pub fn is_opportunistic_v3(&self)->bool{self.opportunistic_v3}
     pub fn policy_limits(&self)->(u64,usize,u64){
         (OUTER_REPAIR_ATTEMPT_LIMIT,self.config.max_shadow_entries,MAX_RETAIN_NS)
     }
