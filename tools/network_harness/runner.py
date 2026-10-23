@@ -765,6 +765,56 @@ class LinuxExperiment:
                     result["limits"].append("SOURCE_TUN_TX_DROPS: kernel upstream loss before product")
                     if result["result"]=="PASS_SCOPED_OBSERVATION":
                         result["result"]="INCONCLUSIVE"
+            # Authentic public counters include post-M4 accepted first/repair
+            # *IP bytes*, not just packets. V3 cost gates are explicitly scoped:
+            # both numerator and full offered-capacity horizon include warmup
+            # plus the declared phases; no inferred steady-only R/C is claimed.
+            policy=self.config["bundles"][self.label].get(
+                "recovery_policy",self.config.get("policy"))
+            if policy=="outer-opportunistic-v3":
+                v3={}
+                horizon=[{"seconds":self.config["warmup_s"],
+                          "c2s":self.config["phases"][0]["c2s"],
+                          "s2c":self.config["phases"][0]["s2c"]},
+                         *self.config["phases"]]
+                for role,direction in (("client","c2s"),("server","s2c")):
+                    counters=result["telemetry"].get("counters",{}).get(role,{})
+                    fbytes=counters.get("first_wire_bytes")
+                    accepted=counters.get("repair_accepted_wire_bytes")
+                    uncertain=counters.get("repair_uncertain_wire_bytes")
+                    capacities=[p[direction]["rate_mbps"] for p in horizon]
+                    capacity=(sum(cap*1e6*p["seconds"]/8 for p,cap in
+                                  zip(horizon,capacities))
+                              if all(cap>0 for cap in capacities) else None)
+                    if not (isinstance(fbytes,int) and isinstance(accepted,int)
+                            and isinstance(uncertain,int) and fbytes>0):
+                        v3[direction]={"status":"NOT_OBSERVED"}
+                        result["limits"].append("V3_AUTHENTIC_BYTE_LEDGER_NOT_OBSERVED_"+direction)
+                        continue
+                    charged=accepted+uncertain
+                    over_f=100*charged/fbytes
+                    over_c=(100*charged/capacity if capacity else None)
+                    v3[direction]={"status":"OBSERVED_FULL_WARMUP_PLUS_PHASES",
+                        "first_wire_bytes":fbytes,"accepted_repair_wire_bytes":accepted,
+                        "uncertain_repair_wire_bytes":uncertain,
+                        "conservative_charged_wire_bytes":charged,
+                        "repair_over_fresh_pct":over_f,"declared_line_capacity_bytes":capacity,
+                        "repair_over_line_pct":over_c,"horizon_seconds":sum(p["seconds"] for p in horizon)}
+                    if over_f>self.config["acceptance"].get("max_repair_fresh_pct",10)+1e-9:
+                        # The normal percentage applies only in sustained load,
+                        # not the product's explicit 32KiB/s sparse exception.
+                        if fbytes>=327680*sum(p["seconds"] for p in horizon):
+                            result["failures"].append("V3_REPAIR_OVER_10PCT_"+direction)
+                    if "min_repair_line_pct" in self.config["acceptance"]:
+                        if over_c is None:
+                            result["limits"].append("V3_LINE_CAPACITY_NOT_OBSERVED_"+direction)
+                        elif over_c+1e-9<self.config["acceptance"]["min_repair_line_pct"]:
+                            result["failures"].append("V3_REPAIR_LINE_BELOW_MIN_"+direction)
+                result["v3_repair_accounting"]=v3
+                if result["failures"]:
+                    result["result"]="FAIL"
+                elif result["limits"] and result["result"]=="PASS_SCOPED_OBSERVATION":
+                    result["result"]="INCONCLUSIVE"
             result["tcp_window_profile"]=self.tcp_profile
             result["tcp_reordering_profile"]=self.tcp_reorder_profile
             result["socket_effective_buffers"]={
@@ -923,6 +973,7 @@ def capacity_action_digest(leg):
         "original_m1_pool": telemetry.get("original_m1_pool", "NOT_OBSERVED"),
         "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
         "repair_packets": telemetry.get("repair_packets"),
+        "v3_repair_accounting": leg.get("v3_repair_accounting","NOT_OBSERVED"),
         "stop_drained_both": telemetry.get("stop_drained_both"),
         "policy_verified": telemetry.get("recovery_policy_verified"),
         "owned_cleanup": leg.get("cleanup", {}).get("owned_namespaces_absent"),
