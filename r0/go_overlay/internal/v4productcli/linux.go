@@ -258,6 +258,32 @@ func Run(role string,args []string)error{
     }
     return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
+// Opt-in native V3 diagnostic, OFF by default. Samples only every 250ms;
+ // no packet timestamps, packet payloads, heap per-record work or control ACK
+ // changes. A bounded series can distinguish TUN-M4 progress from raw-M4 RX
+ // and native worker CPU across netem blackhole/restore transitions.
+func startV3ProductTimeline(ctx context.Context,role string,
+    pulse func()(realityfront.V4PublicLoopPulse,error),
+    outer func()(realityfront.V4PublicOuterCounters,error)){
+    if os.Getenv("WBD_V3_TIMELINE")!="1"{return}
+    go func(){
+        ticker:=time.NewTicker(250*time.Millisecond)
+        defer ticker.Stop()
+        for{
+            select{
+            case <-ctx.Done(): return
+            case <-ticker.C:
+                s,e:=pulse()
+                if e!=nil{continue}
+                o,e:=outer()
+                if e!=nil{continue}
+                log.Printf("V4_PUBLIC_TIMELINE role=%s monotonic_ns=%d rx_records=%d tx_records=%d rx_err=%d tx_err=%d rust_rx_cpu_ns=%d rust_tx_cpu_ns=%d first_wire_bytes=%d repair_wire_bytes=%d",
+                    role,time.Now().UnixNano(),s.RxRecords,s.TxRecords,s.RxErrors,s.TxErrors,
+                    s.RxThreadCPUns,s.TxThreadCPUns,o.FirstWireBytes,o.RepairAcceptedWireBytes)
+            }
+        }
+    }()
+}
 func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err error){
     if err!=nil{
         log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
@@ -399,6 +425,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
+    startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
     select{
     case <-ctx.Done():
     case err=<-errs:
@@ -536,6 +563,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                         if e==nil{
                             *connected=true
                             log.Printf("V4_ORIGINAL_GO_SERVER_NATIVE_READY role=server Rust_owner=active real_raw_tun=1")
+                            startV3ProductTimeline(ctx,"server",product.OriginalLoopPulse,product.OriginalOuterCounters)
                         }
                     }()
                 default:}
