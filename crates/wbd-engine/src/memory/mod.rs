@@ -205,8 +205,15 @@
          self.returns.wake.set(gate).is_ok()
      }
      pub fn allocate(&mut self) -> Result<UniqueBuffer, BufferContractError> {
+         self.allocate_preserving(0)
+     }
+     /// Preserve `reserve` free owner slots for higher-priority authenticated
+     /// control. No heap allocation or new lock; same bounded return drain.
+     pub fn allocate_preserving(&mut self, reserve:usize)
+         -> Result<UniqueBuffer, BufferContractError> {
          if self.stopping { return Err(BufferContractError::OwnerStopping); }
          self.drain_returns_bounded(64);
+         if self.free.len() <= reserve { return Err(BufferContractError::NoCapacity); }
          let idx = self.free.pop().ok_or(BufferContractError::NoCapacity)?;
          let slot = &mut self.slots[idx];
          debug_assert!(!slot.loaned);
@@ -321,6 +328,27 @@
          assert_eq!(a.report().loaned, 0);
          assert_ne!(a.allocate().unwrap().origin().key, origin.key);
      }
+     #[test]
+     fn r1_receipt_reservation_stays_free_under_fresh_saturation(){
+         let mut arena=arena(4,2);
+         let mut data=Vec::new();
+         for _ in 0..3 {data.push(arena.allocate_preserving(1).unwrap());}
+         assert!(matches!(arena.allocate_preserving(1),
+             Err(BufferContractError::NoCapacity)));
+         // Even at the fresh limit, control keeps its owned slab.
+         let feedback=arena.allocate().unwrap();
+         assert!(matches!(arena.allocate(),Err(BufferContractError::NoCapacity)));
+         drop(feedback);
+         let repeated_control=arena.allocate().unwrap();
+         assert!(matches!(arena.allocate_preserving(1),
+             Err(BufferContractError::NoCapacity)));
+         drop(repeated_control);
+         drop(data);
+         let report=arena.report();
+         assert_eq!(report.free,4);
+         assert_eq!(report.loaned,0);
+     }
+
      #[test]
      fn r1_arena_capacity_budget_classes_and_invalid_window() {
          assert_eq!(class_for(257), Some(512));

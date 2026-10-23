@@ -3270,6 +3270,10 @@ const M0_TUN_IPV4_MAX:usize=65_535;
 const M0_SMALL_ARENA_PAYLOAD:usize=2048-14;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const M0_MAX_PENDING_JUMBO:usize=4;
+#[cfg(all(feature="fec2_product_record",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+const M0_NORMAL_FEEDBACK_SLAB_RESERVE:usize=16;
 
 // The sole background TX worker owns this logical packet. No self-referential
 // borrowed plan crosses worker calls: rehydrate M3's immutable planner and
@@ -3559,7 +3563,20 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let pre_read={
             let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
             if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-            e.arena.allocate()
+            // Normal/off DATA and authenticated reverse receipts use the
+            // SAME M1 frozen arena. With all loans held by sender shadow,
+            // reverse ACK staging cannot acquire a slab, so 2ms NotSent
+            // retries and PTO duplicates amplify capacity exhaustion even
+            // on a zero-loss wire. Reserve small, REAL owner slots for ACK.
+            // Fixed/Auto data staging keeps its existing arena admission.
+            #[cfg(feature="fec2_product_record")]
+            let control_floor=if e.rx_feedback.is_some()
+                && e.fixed_pending.is_none() && e.fixed_applied.is_none() {
+                M0_NORMAL_FEEDBACK_SLAB_RESERVE
+            }else{0};
+            #[cfg(not(feature="fec2_product_record"))]
+            let control_floor=0;
+            e.arena.allocate_preserving(control_floor)
         };
         let mut reserved=match pre_read{
             Ok(slot)=>slot,
