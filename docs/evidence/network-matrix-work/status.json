@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-direct200-PASS-stage-CPU-probe-building-V3-D-phase-corrected-blackhole-Actions",
+  "phase": "V3-C-direct200-control-PASS-product-stage-CPU-AB-prepared-V3-D-blackhole-recovery-open",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,27 +25,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [
-    {
-      "id": "V3-D-0-100-0-recovery-after-phase-order-fix",
-      "run": 39990331827,
-      "attempt": 1,
-      "state": "ACTIONS_IN_PROGRESS",
-      "request_source": "7826082d88bc0ddb2b5a7949f2041f578d9b6bcd",
-      "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
-      "purpose": "recheck old qdisc active into recovered cohort due snapshot-before-configure, original recovered C2S missing391 S2C116; new config first; same seed but changed test controller",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "V3-C-per-Rust-RX-TX-threadCPU-native-build",
-      "run": 39990605291,
-      "attempt": 1,
-      "state": "ACTIONS_IN_PROGRESS",
-      "source": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
-      "purpose": "CPU attribution for product 175M vs DIRECT 200 at same RTT and TCP windows; no product semantics change",
-      "do_not_redispatch": true
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -140,7 +120,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Direct native TCP counterpart run39989048165 PASS sender=receiver199.9984Mbps at RTT400/MSS1377/MTU1429, 200Mbps, 64MiB TCP autotune; full evidence V3-C-direct-TCP200-RTT400-control-20261024.json. Product at same envelope run39983733109 only175.1078Mbps with notsent27.6MB, source TUN warmup8446/steady0, M1peak32. General host TCP inability ruled out; product RX/TX stage bottleneck NOT yet isolated. Product V3 native RX/TX CPU instrumentation added only at stop in Go/readback source de420809, build run39990605291 active, do not accidentally compare runs on different VM as CPU AB; after native build success issue one same-VM 200M performance diagnostic, compare with matched old within same job only if CPU attribution required. Independent V3-D 0/100/0 lifecycle run39989342662 UDP recovers to1.973/1.992Mbps 30s but recovered miss391/116, original tc impairment switched119.27ms after cohort due expensive before-phase snapshot; fix runner phase configure-first commit014a513f, new run39990331827 IN_PROGRESS, no duplicate. Native build triggered at earlier intermediary source commits too; prefer newest exact source build only. V3-A/B/lowloss mixed prior PASS retained; no high-rate500 dispatch until root; no FEC independent work.",
+  "next_action": "V3-C native direct control 200Mbps sender/receiver 199.998Mbps at 400ms RTT, 1429MTU, TCP window profile BDP500, native ARM64 run39989048165 verified. This rules out generic host TCP inability, not yet product stage root. V3 CPU native readback source de420809 Go product Rust RX/TX worker CPU final markers compile+MTU PASS run39990605291 artifact12517028689 ZIPdigest821aaf. Next one matched native same-VM product AB at C2S TCP1 target200Mbps no loss RTT400 on 700Mbps outer; A old detached V3 bb9a artifact12513677330 and B de420 artifact12517028689, 15 warm60 steady30. Compare actual input/delivered/TUN warmup and steady drops, thread CPU RX/TX at B and process CPU/host PSI; do not blindly run 500. V3-D after netem phase timing fix014a qdisc change now begin0.07ms/end8ms of boundary, but Action39990331827 C2S delivery starts +1150ms, S2C+200ms after 100% 10s blackhole. UDP recovers mostly but miss762/8 in recovered phase; problem is NOT just harness phase lag, need trace earliest true packet delivery and qdisc behavior, avoid claiming all lifecycle pass. V3-A/B PASS preserved. No merger/main/deploy or FEC role interference.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -289,7 +269,11 @@
       "direct_baseline_evidence": "V3-C-direct-TCP200-RTT400-control-20261024.json",
       "native_cpu_probe_source": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
       "native_cpu_probe_build_run": 39990605291,
-      "native_cpu_probe_status": "ACTIONS_IN_PROGRESS"
+      "native_cpu_probe_status": "NATIVE_ARM64_BUILD_AND_MTU_PASS",
+      "native_cpu_probe_product_artifact": 12517028689,
+      "native_cpu_probe_zip_digest": "sha256:821aaf1fd3777cc33cb13823a2e1a15c768cfc7d51583d6bb13efd5092742720",
+      "native_cpu_probe_mtu_artifact": 12517607804,
+      "native_cpu_probe_next": "matched AB same VM 200Mbps 0loss 200ms one-way; A bb9a original v3, B de420 CPU per-worker terminal readback; 64MiB netns bdp500, no change of product crypto/ARQ"
     },
     "phase_D": {
       "run": 39985073396,
@@ -321,8 +305,10 @@
       "blackhole_boundary_harness_fix": "014a513f1c1cf06cfc20431889ca52437eca4ad9",
       "blackhole_recheck_run": 39990331827,
       "blackhole_recheck_source": "7826082d88bc0ddb2b5a7949f2041f578d9b6bcd",
-      "blackhole_recheck_status": "ACTIONS_IN_PROGRESS",
-      "blackhole_evidence": "V3-D-0-100-0-control-blackhole-boundary-20261024.json"
+      "blackhole_recheck_status": "PASS_SCOPED_RESUME_BUT_C2S_RESTORE_PAUSE_REMINS_OPEN",
+      "blackhole_evidence": "V3-D-0-100-0-control-blackhole-boundary-20261024.json",
+      "blackhole_recheck_artifact_id": 12517572497,
+      "blackhole_recheck_result": "0/100/0 corrected qdisc phase begin 0.07ms end8.1ms, but C2S first UDP delivery at +1.15s vs S2C +0.20s, C2S 762 phase missing and S2C8, source TUN0. Need distinguish held TX/RX vs outer control before claiming zero-loss recovery."
     },
     "math_model": {
       "source": "e67635e76f86a0515099aef599ee38a13e54c555",
