@@ -13,7 +13,8 @@ const MIN_REORDER_NS:u64=2_000_000;
 const MAX_REORDER_NS:u64=20_000_000;
 const FEEDBACK_ALLOWANCE_NS:u64=10_000_000;
 const MIN_PTO_VARIATION_NS:u64=4_000_000;
-const MAX_CACHE_NS:u64=3_000_000_000;
+pub const OUTER_REPAIR_ATTEMPT_LIMIT:u64=1;
+const MAX_RETAIN_NS:u64=1_500_000_000;
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct AdaptiveTimingSnapshot{
@@ -26,6 +27,8 @@ pub struct ReceiptDiagnosticSnapshot{
     pub acked_attempt0:u64,pub acked_attempt1:u64,pub acked_attempt2:u64,
     pub expired_attempt0:u64,pub expired_attempt1:u64,pub expired_attempt2:u64,
     pub late_positive_expired:u64,
+    pub repair_accepted_retired:u64,pub repair_uncertain_retired:u64,
+    pub repair_abandoned_retired:u64,pub max_queue_age_ns:u64,
 }
 #[derive(Clone,Copy)]
 struct AdaptiveTiming{
@@ -58,9 +61,11 @@ impl AdaptiveTiming{
         let variation=self.rttvar_ns.saturating_mul(4)
             .max(w.saturating_mul(2)).max(MIN_PTO_VARIATION_NS);
         let pto=r.saturating_add(variation).saturating_add(FEEDBACK_ALLOWANCE_NS);
-        let cache=pto.saturating_mul(2).saturating_add(50_000_000)
-            .max(r.saturating_mul(2).saturating_add(100_000_000))
-            .min(MAX_CACHE_NS);
+        // Single-repair policy: retain only long enough to launch the
+        // unique repair opportunity. ACK/repair completion retires earlier.
+        let cache=pto.saturating_add(100_000_000)
+            .max(r.saturating_add(r/4).saturating_add(100_000_000))
+            .min(MAX_RETAIN_NS);
         AdaptiveTimingSnapshot{samples:self.samples,srtt_ns:self.srtt_ns,
             rttvar_ns:self.rttvar_ns,recent_rtt_ns:self.recent_rtt_ns,
             reorder_window_ns:w,pto_ns:pto,cache_ns:cache}
@@ -272,6 +277,7 @@ pub struct ReceiptConfig {
 struct Queued {
     epoch: u32,
     until: MonoNs,
+    started: MonoNs,
 }
 struct Entry<H: FrozenRecordHandle> {
     frozen: H,
@@ -279,11 +285,7 @@ struct Entry<H: FrozenRecordHandle> {
     hard_expiry: MonoNs,
     repair_attempts: u8,
     retry_epoch: u32,
-    // Hard repair-budget denial abandons future repair scheduling for this
-    // record, but NEVER releases the immutable shadow or fakes an attempt.
-    repair_abandoned: bool,
     missing_reported: bool,
-    rearm_at: MonoNs,
     queued: Option<Queued>,
     indexed_wake: Option<u64>,
 }
@@ -365,8 +367,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         }
         self.entries.insert(meta.pn, Entry {
             frozen, last_sent: at, hard_expiry, repair_attempts: 0,
-            retry_epoch: 0,repair_abandoned:false,
-            missing_reported: false, rearm_at: at, queued: None,
+            retry_epoch: 0, missing_reported: false, queued: None,
             indexed_wake: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
@@ -379,8 +380,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// This key is always removed on ACK, expiry or a state transition.
     fn wake_at(&self, e: &Entry<H>) -> Option<u64> {
         if let Some(q) = &e.queued { Some(q.until.0) }
-        else if !e.repair_abandoned
-            && e.repair_attempts < 2 && e.retry_epoch < u32::MAX {
+        else if e.repair_attempts < OUTER_REPAIR_ATTEMPT_LIMIT as u8
+            && e.retry_epoch < u32::MAX {
             Some(self.due_at(e).0)
         } else { None }
     }
@@ -397,14 +398,6 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             assert!(self.wake_index.remove(&(at,pn)));
         }
     }
-    /// Genuine new RTT witnesses can advance a RACK timer. Reindex only at
-    /// this authenticated receipt event, not on every timer/fresh callback.
-    /// Full rebuild remains bounded by configured max_shadow_entries.
-    fn refresh_rack_wakes(&mut self) {
-        let keys:Vec<_>=self.entries.keys().copied().collect();
-        for pn in keys {self.refresh_wake(pn);}
-    }
-
     /// Positive bitmap bits may release once even from an old report.
     /// Only new report_seq can establish negative evidence or RTT witnesses.
     /// Unreported pages, PN > largest and absent/control/burned PN do nothing.
@@ -416,7 +409,6 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         if fresh { self.last_report_seq = Some(receipt.report_seq); }
         let mut releases = Vec::new();
         let mut dirty = Vec::new();
-        let mut rack_changed = false;
         let mut timing_sample=None::<u64>;
         for page in &receipt.pages {
             let base = page.base_pn.0;
@@ -448,7 +440,6 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                             let sample=now.elapsed_since(entry.last_sent).max(1);
                             timing_sample=Some(timing_sample.map_or(sample,|old|old.min(sample)));
                             self.observe_witness(Witness {pn:key,sent_at:entry.last_sent});
-                            rack_changed=true;
                         }
                         releases.push(Release {
                             pn:key,
@@ -472,11 +463,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             self.rack_ack_ns=Some(sample);
             if let Some(adaptive)=self.adaptive.as_mut(){adaptive.observe(sample);}
         }
-        if rack_changed {
-            self.refresh_rack_wakes();
-        } else {
-            for key in dirty {self.refresh_wake(key);}
-        }
+        // Never scan every shadow on an ACK/RTT update. Re-index only
+        // entries whose loss evidence changed in this authenticated report.
+        for key in dirty {self.refresh_wake(key);}
         Ok(releases)
     }
 
@@ -498,77 +487,82 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     .saturating_add(self.effective_reorder_ns()));
             }
         }
-        MonoNs(due.max(entry.rearm_at.0))
+        MonoNs(due)
     }
 
-    /// Called with an injected monotonic clock. At most 32 candidates per
-    /// poll, each queued once. Next poll can handle remaining due records.
+    /// Called with an injected monotonic clock. At most 32 expiry/queue
+    /// events and at most 32 new repair candidates are handled per owner turn.
+    /// There is no full-table scan and no second network-repair timer.
     pub fn on_timer(&mut self, now: MonoNs) -> PollResult<H> {
         let mut releases=Vec::new();
         let mut candidates=Vec::with_capacity(MAX_POLL_CANDIDATES);
         #[cfg(test)]
         { self.last_timer_index_pops=0; }
-        // Expiry is independent of candidate throttling: a monotonic jump
-        // releases every expired shadow once, with work proportional only
-        // to the expired entries, never a scan of still-live shadows.
-        while let Some(&(expiry,pn))=self.expiry_index.first() {
+
+        let mut expiry_events=0usize;
+        while expiry_events<MAX_POLL_CANDIDATES {
+            let Some(&(expiry,pn))=self.expiry_index.first() else {break;};
             if expiry>now.0 {break;}
             self.expiry_index.pop_first();
             let entry=self.entries.remove(&pn).expect("expiry index synchronized");
             self.remove_indexes(pn,&entry,true);
-            match entry.repair_attempts.min(2){
-                0=>self.diagnostics.expired_attempt0=self.diagnostics.expired_attempt0.saturating_add(1),
-                1=>self.diagnostics.expired_attempt1=self.diagnostics.expired_attempt1.saturating_add(1),
-                _=>self.diagnostics.expired_attempt2=self.diagnostics.expired_attempt2.saturating_add(1),
-            }
+            self.diagnostics.expired_attempt0=
+                self.diagnostics.expired_attempt0.saturating_add(1);
+            expiry_events+=1;
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
             releases.push(Release {
                 pn,reason:ReleaseReason::HardExpired,frozen:entry.frozen
             });
         }
-        // Timeouts and new candidate dispatches share the SAME per-tick
-        // cap: 10k previously queued deadlines cannot monopolize one tick.
-        let current_pto=self.effective_pto_ns();
+
         let mut wake_events=0usize;
         while candidates.len()<MAX_POLL_CANDIDATES
             && wake_events<MAX_POLL_CANDIDATES
         {
             let Some(&(wake,pn))=self.wake_index.first() else {break;};
-            wake_events+=1;
             if wake>now.0 {break;}
+            wake_events+=1;
             self.wake_index.pop_first();
             #[cfg(test)]
             { self.last_timer_index_pops+=1; }
-            let entry=self.entries.get_mut(&pn).expect("wake index synchronized");
-            assert_eq!(entry.indexed_wake,Some(wake));
-            entry.indexed_wake=None;
-            let mut newly_queued_attempt=None;
-            if entry.queued.as_ref().is_some_and(|q| now>=q.until) {
-                entry.queued=None;
-                entry.rearm_at=MonoNs(now.0.saturating_add(current_pto));
-            } else {
-                assert!(entry.queued.is_none() && entry.repair_attempts<2);
-                entry.retry_epoch+=1;
+
+            let timed_out={
+                let entry=self.entries.get_mut(&pn).expect("wake index synchronized");
+                assert_eq!(entry.indexed_wake,Some(wake));
+                entry.indexed_wake=None;
+                entry.queued.as_ref().and_then(|q|
+                    (now>=q.until).then_some(q.started))
+            };
+            if let Some(started)=timed_out {
+                let entry=self.entries.remove(&pn).expect("queued entry present");
+                assert!(self.expiry_index.remove(&(entry.hard_expiry.0,pn)));
+                self.diagnostics.repair_abandoned_retired=
+                    self.diagnostics.repair_abandoned_retired.saturating_add(1);
+                self.diagnostics.max_queue_age_ns=self.diagnostics.max_queue_age_ns
+                    .max(now.elapsed_since(started));
+                continue;
+            }
+
+            {
+                let entry=self.entries.get_mut(&pn).expect("wake entry present");
+                assert!(entry.queued.is_none()
+                    && entry.repair_attempts<OUTER_REPAIR_ATTEMPT_LIMIT as u8);
+                entry.retry_epoch=entry.retry_epoch.checked_add(1)
+                    .expect("queue generation exhausted before PN");
                 let until=MonoNs(entry.hard_expiry.0.min(
                     now.0.saturating_add(QUEUE_LIFETIME_NS)));
-                entry.queued=Some(Queued {epoch:entry.retry_epoch,until});
-                newly_queued_attempt=Some(entry.repair_attempts);
+                entry.queued=Some(Queued {
+                    epoch:entry.retry_epoch,until,started:now
+                });
                 candidates.push(RepairCandidate {
                     pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
-                    repair_attempt_stage:entry.repair_attempts,
-                    dispatch_by:until,frozen:entry.frozen.clone()
+                    repair_attempt_stage:0,dispatch_by:until,
+                    frozen:entry.frozen.clone()
                 });
             }
-            if let Some(attempt)=newly_queued_attempt{
-                if attempt==0{
-                    self.diagnostics.candidate_first=
-                        self.diagnostics.candidate_first.saturating_add(1);
-                }else{
-                    self.diagnostics.candidate_retry=
-                        self.diagnostics.candidate_retry.saturating_add(1);
-                }
-            }
+            self.diagnostics.candidate_first=
+                self.diagnostics.candidate_first.saturating_add(1);
             self.refresh_wake(pn);
         }
         PollResult {releases,candidates,next_deadline:self.next_deadline()}
@@ -584,45 +578,52 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                     q.epoch == candidate.retry_epoch
                         && q.until == candidate.dispatch_by
                         && now <= q.until && now < e.hard_expiry)
-                && candidate.repair_attempt_stage == e.repair_attempts
-                && !e.repair_abandoned
-                && e.repair_attempts < 2
+                && candidate.repair_attempt_stage == 0
+                && e.repair_attempts < OUTER_REPAIR_ATTEMPT_LIMIT as u8
         })
     }
 
-    /// Hard local quota denial is an explicit Abandoned repair decision.
-    /// Keep the frozen record solely for authentic peer ACK or hard expiry;
-    /// do not burn an actual repair attempt and do not requeue at PTO.
+    /// Hard quota/pressure denial retires only the repair payload shadow.
+    /// It is NOT an ACK and does not alter independent receipt/replay history.
     pub fn on_quota_exhausted(&mut self,candidate:&RepairCandidate<H>,
         now:MonoNs)->Result<(),DataError>{
         if !self.preflight(candidate,now){return Err(DataError::Stale)}
-        let e=self.entries.get_mut(&candidate.pn).expect("preflight verified");
-        e.queued=None;
-        e.repair_abandoned=true;
-        self.refresh_wake(candidate.pn);
+        let entry=self.entries.remove(&candidate.pn).expect("preflight verified");
+        self.remove_indexes(candidate.pn,&entry,false);
+        let started=entry.queued.as_ref().map_or(now,|q|q.started);
+        self.diagnostics.repair_abandoned_retired=
+            self.diagnostics.repair_abandoned_retired.saturating_add(1);
+        self.diagnostics.max_queue_age_ns=self.diagnostics.max_queue_age_ns
+            .max(now.elapsed_since(started));
         Ok(())
     }
 
+    /// Completion of the unique network repair opportunity is terminal for
+    /// payload retention. Accepted and Uncertain both consume that opportunity;
+    /// NotSent abandons it in this minimal product path.
     pub fn on_send_result(&mut self, candidate: &RepairCandidate<H>,
         result: RepairSendResult, now: MonoNs) -> Result<(), DataError>
     {
         if !self.preflight(candidate, now) { return Err(DataError::Stale); }
-        let current_pto=self.effective_pto_ns();
-        let e = self.entries.get_mut(&candidate.pn).expect("preflight verified");
-        e.queued = None;
+        let entry=self.entries.remove(&candidate.pn).expect("preflight verified");
+        self.remove_indexes(candidate.pn,&entry,false);
+        let started=entry.queued.as_ref().map_or(now,|q|q.started);
+        self.diagnostics.max_queue_age_ns=self.diagnostics.max_queue_age_ns
+            .max(now.elapsed_since(started));
         match result {
-            RepairSendResult::Accepted | RepairSendResult::Uncertain => {
-                e.repair_attempts += 1;
-                e.last_sent = now;
-                e.missing_reported = false; // same old bitmap cannot fast-retry
-                e.rearm_at = MonoNs(now.0.saturating_add(current_pto));
+            RepairSendResult::Accepted=>{
+                self.diagnostics.repair_accepted_retired=
+                    self.diagnostics.repair_accepted_retired.saturating_add(1);
             }
-            RepairSendResult::NotSent => {
-                // No attempt charged; avoid a same-tick infinite requeue.
-                e.rearm_at = MonoNs(now.0.saturating_add(current_pto));
+            RepairSendResult::Uncertain=>{
+                self.diagnostics.repair_uncertain_retired=
+                    self.diagnostics.repair_uncertain_retired.saturating_add(1);
+            }
+            RepairSendResult::NotSent=>{
+                self.diagnostics.repair_abandoned_retired=
+                    self.diagnostics.repair_abandoned_retired.saturating_add(1);
             }
         }
-        self.refresh_wake(candidate.pn);
         Ok(())
     }
 
@@ -636,6 +637,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.last_timer_index_pops
     }
     pub fn outstanding(&self) -> usize { self.entries.len() }
+    pub fn policy_limits(&self)->(u64,usize,u64){
+        (OUTER_REPAIR_ATTEMPT_LIMIT,self.config.max_shadow_entries,MAX_RETAIN_NS)
+    }
 }
 
 #[cfg(test)]
@@ -689,58 +693,72 @@ mod tests {
     }
 
     #[test]
-    fn r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry(){
+    fn r2_adaptive_authenticated_rtt_drives_single_repair_retain_without_unbounded_retry(){
         let mut s=state(8,80_000_000);
         s.enable_adaptive_timing(650_000_000,20_000_000).unwrap();
         let boot=s.timing_snapshot().unwrap();
         assert_eq!((boot.reorder_window_ns,boot.pto_ns,boot.cache_ns),
-            (20_000_000,740_000_000,1_530_000_000));
+            (20_000_000,740_000_000,912_500_000));
         s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
-        assert_eq!(s.next_deadline(),Some(MonoNs(740_000_000)));
         assert_eq!(s.on_receipt(&receipt(1,1,vec![page(0,&[1])]),
             MonoNs(400_000_000)).unwrap().len(),1);
         let learned=s.timing_snapshot().unwrap();
-        assert_eq!(learned.samples,1);
         assert_eq!((learned.srtt_ns,learned.rttvar_ns,learned.reorder_window_ns,
             learned.pto_ns,learned.cache_ns),
-            (400_000_000,20_000_000,12_500_000,490_000_000,1_030_000_000));
+            (400_000_000,20_000_000,12_500_000,490_000_000,600_000_000));
         s.on_sent_adaptive(frozen(2),MonoNs(410_000_000)).unwrap();
         assert_eq!(s.next_deadline(),Some(MonoNs(900_000_000)));
-        let first=s.on_timer(MonoNs(900_000_000)).candidates.remove(0);
-        s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(900_000_000)).unwrap();
-        assert_eq!(s.next_deadline(),Some(MonoNs(1_390_000_000)));
-        let second=s.on_timer(MonoNs(1_390_000_000)).candidates.remove(0);
-        s.on_send_result(&second,RepairSendResult::Accepted,MonoNs(1_390_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(1_439_999_999)).releases.is_empty());
-        assert_eq!(s.on_timer(MonoNs(1_440_000_000)).releases.len(),1);
+        let one=s.on_timer(MonoNs(900_000_000)).candidates.remove(0);
+        s.on_send_result(&one,RepairSendResult::Accepted,MonoNs(900_000_000)).unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert_eq!(s.next_deadline(),None);
         assert!(s.on_timer(MonoNs(1_500_000_000)).candidates.is_empty());
+        assert!(s.on_receipt(&receipt(2,2,vec![page(0,&[2])]),
+            MonoNs(1_000_000_000)).unwrap().is_empty());
+        let d=s.diagnostic_snapshot();
+        assert_eq!(d.repair_accepted_retired,1);
+        assert_eq!(d.candidate_retry,0);
     }
 
     #[test]
-    fn r2_diagnostics_split_no_repair_one_repair_two_repair_retirement(){
+    fn r2_single_repair_completion_release_race_is_idempotent(){
+        let mut s=state(8,10);
+        let original=frozen(7);
+        let shared=original.bytes.clone();
+        s.on_sent(original,MonoNs(0),MonoNs(100)).unwrap();
+        let c=s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert!(s.preflight(&c,MonoNs(10)));
+        s.on_send_result(&c,RepairSendResult::Uncertain,MonoNs(11)).unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert!(s.on_timer(MonoNs(100)).releases.is_empty());
+        assert!(s.on_receipt(&receipt(1,7,vec![page(0,&[7])]),MonoNs(20))
+            .unwrap().is_empty());
+        assert_eq!(s.on_send_result(&c,RepairSendResult::Accepted,MonoNs(12)),
+            Err(DataError::Stale));
+        drop(c);
+        assert_eq!(Arc::strong_count(&shared),1);
+        let d=s.diagnostic_snapshot();
+        assert_eq!(d.repair_uncertain_retired,1);
+        assert_eq!(d.repair_accepted_retired,0);
+        assert_eq!(d.candidate_retry,0);
+    }
+
+    #[test]
+    fn r2_single_repair_diagnostics_no_second_network_attempt(){
         let mut s=state(8,10);
         add(&mut s,1,0,100);
-        assert_eq!(s.on_receipt(&receipt(1,1,vec![page(0,&[1])]),MonoNs(5)).unwrap().len(),1);
-
+        assert_eq!(s.on_receipt(&receipt(1,1,vec![page(0,&[1])]),MonoNs(5))
+            .unwrap().len(),1);
         add(&mut s,2,100,200);
         let one=s.on_timer(MonoNs(110)).candidates.remove(0);
         s.on_send_result(&one,RepairSendResult::Accepted,MonoNs(110)).unwrap();
-        assert_eq!(s.on_receipt(&receipt(2,2,vec![page(0,&[2])]),MonoNs(120)).unwrap().len(),1);
-
-        add(&mut s,3,200,230);
-        let first=s.on_timer(MonoNs(210)).candidates.remove(0);
-        s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(210)).unwrap();
-        let second=s.on_timer(MonoNs(220)).candidates.remove(0);
-        s.on_send_result(&second,RepairSendResult::Accepted,MonoNs(220)).unwrap();
-        assert_eq!(s.on_timer(MonoNs(230)).releases.len(),1);
-
-        add(&mut s,4,300,305);
-        assert_eq!(s.on_timer(MonoNs(305)).releases.len(),1);
+        add(&mut s,3,200,205);
+        assert_eq!(s.on_timer(MonoNs(205)).releases.len(),1);
         let d=s.diagnostic_snapshot();
-        assert_eq!((d.candidate_first,d.candidate_retry),(2,1));
-        assert_eq!((d.acked_attempt0,d.acked_attempt1,d.acked_attempt2),(1,1,0));
-        assert_eq!((d.expired_attempt0,d.expired_attempt1,d.expired_attempt2),(1,0,1));
-        assert_eq!(d.late_positive_expired,0);
+        assert_eq!((d.candidate_first,d.candidate_retry),(1,0));
+        assert_eq!((d.acked_attempt0,d.acked_attempt1,d.acked_attempt2),(1,0,0));
+        assert_eq!((d.expired_attempt0,d.expired_attempt1,d.expired_attempt2),(1,0,0));
+        assert_eq!(d.repair_accepted_retired,1);
     }
 
     #[test]
@@ -795,26 +813,20 @@ mod tests {
     }
 
     #[test]
-    fn r2_uncertain_counts_attempts_no_same_evidence_double_retry_original_cipher() {
-        let mut s = state(2, 100);
-        let original = frozen(8);
-        let shared = original.bytes.clone();
-        s.on_sent(original, MonoNs(0), MonoNs(500)).unwrap();
-        let first = s.on_timer(MonoNs(100)).candidates.remove(0);
-        assert!(s.preflight(&first, MonoNs(100)));
-        assert!(Arc::ptr_eq(&first.frozen.bytes, &shared));
-        assert_eq!(first.frozen.metadata.pn, RecordPn(8));
-        s.on_send_result(&first, RepairSendResult::Uncertain, MonoNs(100)).unwrap();
-        assert_eq!(s.on_send_result(&first, RepairSendResult::Accepted, MonoNs(101)),
+    fn r2_uncertain_consumes_unique_repair_and_releases_shadow(){
+        let mut s=state(2,100);
+        let original=frozen(8);
+        let shared=original.bytes.clone();
+        s.on_sent(original,MonoNs(0),MonoNs(500)).unwrap();
+        let first=s.on_timer(MonoNs(100)).candidates.remove(0);
+        assert!(Arc::ptr_eq(&first.frozen.bytes,&shared));
+        s.on_send_result(&first,RepairSendResult::Uncertain,MonoNs(100)).unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert!(s.on_timer(MonoNs(500)).releases.is_empty());
+        assert_eq!(s.on_send_result(&first,RepairSendResult::Accepted,MonoNs(101)),
             Err(DataError::Stale));
-        assert!(s.on_timer(MonoNs(101)).candidates.is_empty());
-        assert!(s.on_timer(MonoNs(199)).candidates.is_empty());
-        let second = s.on_timer(MonoNs(200)).candidates.remove(0);
-        assert!(Arc::ptr_eq(&second.frozen.bytes, &shared));
-        assert_ne!(second.retry_epoch, first.retry_epoch);
-        s.on_send_result(&second, RepairSendResult::Accepted, MonoNs(200)).unwrap();
-        assert!(s.on_timer(MonoNs(300)).candidates.is_empty());
-        assert_eq!(s.on_timer(MonoNs(500)).releases.len(), 1);
+        drop(first);
+        assert_eq!(Arc::strong_count(&shared),1);
     }
 
     #[test]
@@ -830,37 +842,30 @@ mod tests {
     }
 
     #[test]
-    fn r2_quota_exhausted_abandons_repair_without_faking_attempt_or_ack_release() {
+    fn r2_quota_exhausted_releases_repair_shadow_without_faking_ack(){
         let mut s=state(2,10);
         add(&mut s,4,0,100);
         let c=s.on_timer(MonoNs(10)).candidates.remove(0);
-        assert_eq!(c.repair_attempt_stage(),0);
         s.on_quota_exhausted(&c,MonoNs(10)).unwrap();
-        // No PTO requeue after a hard quota decision.
-        assert!(s.on_timer(MonoNs(99)).candidates.is_empty());
-        // The immutable shadow still waits for genuine peer evidence.
-        let released=s.on_receipt(
-            &receipt(1,4,vec![page(0,&[4])]),MonoNs(20)).unwrap();
-        assert_eq!(released.len(),1);
-        assert_eq!(released[0].reason,ReleaseReason::ReceivedByPeer);
-        let d=s.diagnostic_snapshot();
-        assert_eq!(d.acked_attempt0,1);
-        assert_eq!(d.acked_attempt1,0);
         assert_eq!(s.outstanding(),0);
+        assert!(s.on_timer(MonoNs(99)).candidates.is_empty());
+        assert!(s.on_receipt(&receipt(1,4,vec![page(0,&[4])]),MonoNs(20))
+            .unwrap().is_empty());
+        assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,1);
     }
+
     #[test]
-    fn r2_queue_timeout_revokes_old_candidate_and_rearms_boundedly() {
-        let mut s = state(2, 10);
-        add(&mut s, 4, 0, 100_000_000);
-        let old = s.on_timer(MonoNs(10)).candidates.remove(0);
-        assert!(s.preflight(&old, MonoNs(20_000_009)));
-        assert!(!s.preflight(&old, MonoNs(20_000_011)));
+    fn r2_queue_timeout_retires_payload_without_second_timer(){
+        let mut s=state(2,10);
+        add(&mut s,4,0,100_000_000);
+        let old=s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert!(s.preflight(&old,MonoNs(20_000_009)));
+        assert!(!s.preflight(&old,MonoNs(20_000_011)));
         assert!(s.on_timer(MonoNs(20_000_011)).candidates.is_empty());
-        assert!(s.on_timer(MonoNs(20_000_020)).candidates.is_empty());
-        let renewed = s.on_timer(MonoNs(20_000_021)).candidates.remove(0);
-        assert_ne!(renewed.retry_epoch(), old.retry_epoch());
-        assert_eq!(s.on_send_result(&old, RepairSendResult::Accepted, MonoNs(20_000_021)),
-            Err(DataError::Stale));
+        assert_eq!(s.outstanding(),0);
+        assert_eq!(s.on_send_result(&old,RepairSendResult::Accepted,
+            MonoNs(20_000_011)),Err(DataError::Stale));
+        assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,1);
     }
 
     #[test]
