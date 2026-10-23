@@ -103,7 +103,7 @@ impl ProtectedScopedCrypto {
         // Bounded high-rate envelope; real AEAD still precedes replay.
         let replay = ReplayWindowConfig {
             pn_per_second: 100_000, cache_horizon_ms: 3000,
-            fec_horizon_ms: 0, rtt_ms: 650, metadata_budget_bytes: 256*1024,
+            fec_horizon_ms: 0, rtt_ms: 600, metadata_budget_bytes: 256*1024,
         };
         let rx = ReplayProtectedLaneRx::new_for_suite(
             rx_keys, usize::from(rx_limit), suite, replay,

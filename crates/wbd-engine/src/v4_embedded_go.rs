@@ -222,8 +222,8 @@ impl NormalFirstSendM2 {
         let route=ReceiptRouteScope::checked(
             lane,lane,outbound,epoch,all,all
         ).map_err(|_|INVALID)?;
-        // Eight seconds of source metadata, not additional queued payloads.
-        let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:8192},now)
+        // Fixed high-rate logical metadata ceiling; payload shadow is separate.
+        let state=MatureFirstSend::new(route,MaturityConfig{max_live_data:131_072},now)
             .map_err(|_|INVALID)?;
         Ok(Self{lane,route,reverse_direction,epoch,state,accepted:0,unknown_2s:0,unknown_8s:0,
             covered_2s:0,covered_8s:0,positive_2s:0,
@@ -291,6 +291,12 @@ impl NormalFirstSendM2 {
         }
         self.authenticated_reverse_reports=self.authenticated_reverse_reports.saturating_add(1);
         Ok(scoped)
+    }
+    fn on_possible_recovery(&mut self,pn:wbd_types::RecordPn,
+        result:wbd_recovery::RepairSendResult,now:MonoNs){
+        if self.state.on_possible_recovery(self.lane,pn,result,now).is_err(){
+            self.censored=true;
+        }
     }
     fn on_real_kernel_turn(&mut self,records:&[(wbd_types::RecordPn,u64)],
         result:TxTurnCompletion,now:MonoNs){
@@ -2570,7 +2576,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
     h:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=27{return INVALID}
+    if out.is_null()||n!=34{return INVALID}
     #[cfg(not(feature="fec2_product_record"))]
     {let _=h;BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
@@ -2594,8 +2600,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             v.block_reasons[3],v.block_reasons[4],v.block_reasons[5],
             v.block_reasons[6],v.block_reasons[7],v.block_reasons[8],
             v.block_reasons[9],
+            d.repair_accepted_retired,d.repair_uncertain_retired,
+            d.repair_abandoned_retired,d.max_queue_age_ns/1_000,
+            v.shadow.policy_limits().0,v.shadow.policy_limits().1 as u64,
+            v.shadow.policy_limits().2/1_000,
         ];
-        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,27)}
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,34)}
         OK
     }
 }
@@ -4068,7 +4078,7 @@ fn ready_only_slice(
     count
 }
 // REAL original TLS V4 public product outer retransmission, for either
-// direction, using M2's EXISTING <=2 PTO/RACK immutable candidate producer,
+// direction, using M2's EXISTING single-repair PTO/RACK immutable candidate producer,
 // process-global sparse/10% byte grants and exact M4 raw syscall result.
 // No simulated receipt, alternative encoder or fresh PN is used anywhere.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -4081,15 +4091,17 @@ fn background_original_repair_once(
         DriverPrefixObservation,BatchSuffixEvidence,RepairSendResult
     };
     if stop.load(Ordering::Acquire){return Ok(0)}
-    let (shared,raw,flow,server,generation)={
+    let (shared,raw,flow,server,generation,mature)={
         let e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE||e.workers.is_none(){return Ok(0)}
         let Some(shared)=e.original_outer.as_ref().map(Arc::clone)
             else{return Ok(0)};
         let Some(raw)=e.raw_tx.as_ref().map(Arc::clone)
             else{return Err(BAD_STAGE)};
+        let Some(mature)=e.normal_firstsend_m2.as_ref().map(Arc::clone)
+            else{return Err(BAD_STAGE)};
         if raw.is_stopping()||e.tx_route.is_none(){return Ok(0)}
-        (shared,raw,e.flow,e.server_side,e.generation)
+        (shared,raw,e.flow,e.server_side,e.generation,mature)
     };
     let now=loop_now();
     let candidates={
@@ -4137,8 +4149,10 @@ fn background_original_repair_once(
                                     candidate.frozen().bytes().as_ptr(){
                                 own.note_block(OriginalRepairBlockReason::Invariant);
                                 let _=global.revoke(lease,now);
-                                let _=own.shadow.on_send_result(
-                                    &candidate,RepairSendResult::NotSent,now);
+                                if own.shadow.on_send_result(
+                                    &candidate,RepairSendResult::NotSent,now).is_ok(){
+                                    own.retired=own.retired.saturating_add(1);
+                                }
                                 continue
                             }
                             Some((lease,submission.reservation_id,route))
@@ -4148,7 +4162,9 @@ fn background_original_repair_once(
                             let reason=original_repair_reserve_block_reason(err);
                             own.note_block(reason);
                             if reason==OriginalRepairBlockReason::Quota{
-                                let _=own.shadow.on_quota_exhausted(&candidate,now);
+                                if own.shadow.on_quota_exhausted(&candidate,now).is_ok(){
+                                    own.retired=own.retired.saturating_add(1);
+                                }
                             }else{
                                 let _=own.shadow.on_send_result(
                                     &candidate,RepairSendResult::NotSent,now);
@@ -4159,8 +4175,10 @@ fn background_original_repair_once(
                 },
                 Err(_)=>{
                     own.note_block(OriginalRepairBlockReason::Grant);
-                    let _=own.shadow.on_send_result(
-                        &candidate,RepairSendResult::NotSent,now);
+                    if own.shadow.on_send_result(
+                        &candidate,RepairSendResult::NotSent,now).is_ok(){
+                        own.retired=own.retired.saturating_add(1);
+                    }
                     None
                 }
             }
@@ -4184,9 +4202,16 @@ fn background_original_repair_once(
             Ok(s)=>s.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
             Err(_)=>RepairSendResult::Uncertain, // conservative debt
         };
-        // Authenticated peer ACK may race this actual kernel send and
-        // retire shadow; stale here is legitimate, NEVER resurrect record.
-        let _=own.shadow.on_send_result(&candidate,status,now);
+        // Preserve first-delivery attribution in independent maturity
+        // metadata before retiring the repair payload shadow.
+        if let Ok(mut m)=mature.lock(){
+            m.on_possible_recovery(candidate.pn(),status,now);
+        }
+        // ACK may race completion; stale is legitimate. Accepted/Uncertain
+        // consumes the single repair opportunity after synchronous M4 return.
+        if own.shadow.on_send_result(&candidate,status,now).is_ok(){
+            own.retired=own.retired.saturating_add(1);
+        }
         let _=global.revoke(lease,now); // unused grant only, not send debit
         if copied && status==RepairSendResult::Accepted{
             repaired+=1;
@@ -4261,11 +4286,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let route=first.route;
         let Ok(mut shadow)=wbd_recovery::ReceiptState::new(
             lane,wbd_recovery::ReceiptConfig{
-                max_shadow_entries:4096,pto_ns:740_000_000,
+                max_shadow_entries:131_072,pto_ns:810_000_000,
                 reorder_window_ns:20_000_000,
             }
         )else{return INVALID};
-        if shadow.enable_adaptive_timing(650_000_000,20_000_000).is_err(){
+        if shadow.enable_adaptive_timing(600_000_000,50_000_000).is_err(){
             return INVALID
         }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
@@ -4298,7 +4323,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
                 max_retained_pages:512,max_pages_per_report:8,
-                retention_ns:3_000_000_000,srtt_ns:650_000_000,
+                retention_ns:2_000_000_000,srtt_ns:600_000_000,
             }
         )else{return INVALID};
         let shared=Arc::new(Mutex::new(state));
