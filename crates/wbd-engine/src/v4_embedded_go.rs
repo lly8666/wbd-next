@@ -4047,9 +4047,16 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
             original.sent_fresh=original.sent_fresh.saturating_add(1);
-            if v3_admit_shadow(meta.pn.0,meta.lane,now)
-                && original.shadow.on_sent_adaptive(record.clone(),now).is_err(){
-                original.note_block(OriginalRepairBlockReason::FreshShadow);
+            if v3_admit_shadow(meta.pn.0,meta.lane,now){
+                // A selected once-repair must never pin the shared source
+                // M1 slab for a whole RTT. Copy ciphertext exactly once into
+                // bounded process-shared repair-only backing after M4 copy.
+                // No new PN, AEAD or business HOL on admission failure.
+                let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
+                    original.shadow.on_sent_adaptive(frozen,now).is_ok());
+                if !tracked{
+                    original.note_block(OriginalRepairBlockReason::FreshShadow);
+                }
             }
         }
         original.sent_first_wire_bytes=original.sent_first_wire_bytes
