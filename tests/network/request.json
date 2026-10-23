@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "P2-TCP1-2pct-product-ceilings-10x-AB",
+  "id": "P2-TCP1-0loss-M1-2048-source-drop-AB",
   "owner": "network-matrix-work",
-  "seed": 5237,
+  "seed": 5238,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -52,7 +52,7 @@
       "c2s": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -61,7 +61,7 @@
       "s2c": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 2,
+        "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -72,25 +72,24 @@
   "acceptance": {
     "injection_tolerance_pct": 3,
     "max_loss_pct": 0.25,
-    "require_retransmission": true
+    "require_retransmission": false
   },
   "bundles": {
     "A": {
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "run_id": 39921718042,
+      "source": "1818e01285e3cdbace09a0e2db187077dd387804",
+      "run_id": 39951475090,
       "attempt": 1,
-      "artifact_id": 12486939897,
-      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
+      "artifact_id": 12500084357,
+      "sha256": "875683faa3aaad86567f6e55d8ce9666a04ef4b9597c34d35f0c2702bc806783",
       "recovery_policy": "outer-single-repair-v2"
     },
     "B": {
-      "source": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
-      "run_id": 39949934400,
+      "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+      "run_id": 39967257701,
       "attempt": 1,
-      "artifact_id": 12500346228,
-      "sha256": "9ba229750d62a6e32b6965ee9d2ab28eaee03aee74914cb719b42c0685a7fba3",
-      "recovery_policy": "outer-single-repair-v2",
-      "diagnostic_10x": true
+      "artifact_id": 12507646828,
+      "sha256": "c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef",
+      "recovery_policy": "outer-single-repair-v2"
     }
   },
   "order": "AB",
