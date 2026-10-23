@@ -106,7 +106,8 @@ def validate(raw):
     if sum(w for _, w in t["sizes"]) > 512:
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
-    keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng"], "network")
+    keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
+             "tcp_window_profiles"], "network")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
@@ -117,6 +118,10 @@ def validate(raw):
     integer(n["queue_packets"], 1024, 131072, "queue_packets")
     if n["lane_loss"] not in ["shared", "independent"]:
         raise ValueError("lane_loss must be shared or independent")
+    profiles=n.setdefault("tcp_window_profiles",{})
+    keys(profiles,["A","B"],"tcp_window_profiles")
+    if not all(v in ("baseline","large") for v in profiles.values()):
+        raise ValueError("tcp_window_profiles must be baseline or large")
     r.setdefault("warmup_s", 10)
     r.setdefault("drain_s", 5)
     number(r["warmup_s"], 1, 60, "warmup_s")
