@@ -56,6 +56,19 @@ class Contracts(unittest.TestCase):
             with self.assertRaises(Unsupported):
                 validate(trial)
 
+    def test_same_vm_frozen_legacy_on_and_new_off_have_distinct_real_flags(self):
+        from tools.network_harness.runner import requested_outer_repair
+        ab = request()
+        ab["product"].pop("repair_enabled", None)
+        ab["bundles"]["B"] = dict(ab["bundles"]["A"], repair_enabled=False)
+        ab["order"] = "AB"
+        v = validate(ab)
+        self.assertIsNone(requested_outer_repair(v, "A"))
+        self.assertIs(requested_outer_repair(v, "B"), False)
+        ab["bundles"]["B"]["repair_enabled"] = "false"
+        with self.assertRaises(ValueError):
+            validate(ab)
+
     def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
         from tools.network_harness.runner import verify_outer_recovery_policy
         expected = "outer-single-repair-v2"

@@ -156,7 +156,11 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure", "recovery_policy"], f"bundle {label}")
+                 "step_attested_failure", "recovery_policy", "repair_enabled"], f"bundle {label}")
+        if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
+            raise ValueError("per-bundle repair_enabled must be boolean")
+        if b.get("repair_enabled") is False and p["mode"] in ("game2","game4"):
+            raise Unsupported("per-bundle outer OFF is not wired to Game")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
         if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2"):

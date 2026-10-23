@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_ONLY_BUNDLE_TRANSPORT_BLOCKED_FIRST_PARTY_DOWNLOAD_TRIAL",
+  "phase": "BLOCKED_ARTIFACT_EGRESS_NO_RUNTIME_PRODUCT_OBSERVATION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -24,34 +24,38 @@
     "platform": "native-aarch64",
     "build_action": "SUCCESS",
     "arch_attested_by": "tools/network_harness/artifacts.py ELF+manifest",
-    "runtime_fec_only": "NOT_YET_OBSERVED"
+    "runtime_fec_only": "BLOCKED_GITHUB_ARTIFACT_DOWNLOAD_AFTER_SUCCESSFUL_NATIVE_BUILD"
   },
   "open_requests": [
     {
+      "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
       "path": "tests/network/fec-work/W1-fixed-max-off-loss5-arm64.json",
-      "run": 39915604295,
-      "result": "FAIL_HARNESS_PREFLIGHT_ONLY"
+      "run_id": 39915604295,
+      "result": "FAIL_PREP_REQUEST_SELECTION_SHALLOW_CLONE",
+      "product_started": false
     },
     {
+      "id": "FEC-W1R-fixed-max-outeroff-baseline-loss5-arm64",
       "path": "tests/network/fec-work/W1R-fixed-max-off-loss5-arm64.json",
-      "run": 39915779256,
-      "result": "FAIL_BUNDLE_EGRESS_503_BEFORE_PRODUCT"
+      "run_id": 39915779256,
+      "result": "FAIL_PREP_GITHUB_ZIP_HTTP_503_EGRESS_ACCOUNT_LIMIT",
+      "product_started": false
     },
     {
+      "id": "FEC-W1RR-fixed-max-off-loss5-archive-download-action",
       "path": "tests/network/fec-work/W1RR-fixed-max-off-loss5-arm64.json",
-      "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
-      "state": "SUBMITTED_PREFER_NATIVE_ARTIFACT_TRANSPORT",
-      "artifact_id": 12484770973
+      "run_id": 39916080164,
+      "result": "FAIL_PREP_FIRST_PARTY_ARTIFACT_DOWNLOAD_AFTER_FIVE_RETRIES",
+      "product_started": false
     }
   ],
   "open_issues": [
-    "OFF policy is source-wired for genuine Linux Normal/FEC V4 owners but exact ARM64 build, two-side runtime readback, zero DATA retransmits under injected loss and retained first-send feedback are NOT_YET_VERIFIED; never mark FEC-only PASS until Action.",
-    "FEC fixed/auto actual k/r, recovery, first TUN delivery, CPU/RSS and sustained p99 are NOT_RUN on this source; prior upstream evidence is not a pure FEC qualifier.",
-    "Upstream 2% Normal record-vs-UDP discrepancy remains COMMON_PATH_UNRESOLVED and outside FEC math attribution.",
-    "Public Game, Windows UI/platform, cipher choices and outer OFF beyond installed Linux Normal/FEC are UNSUPPORTED/NOT_WIRED; no claim of all-platform switch.",
-    "Cross-run raw ZIP download blocked by HTTP 503 Egress is over account limit in W1R; attempting existing actions/download-artifact transport with independently validated exact provenance, manifest and binary hashes. No product measurement yet."
+    "FEC-only original Go/Rust real public TLS/TUN performance and recovery gate NOT_RUN: artifact transfer unavailable. Native build and unit PASS do not qualify product.",
+    "Raw GitHub artifact ZIP reroute returned HTTP 503 Egress is over the account limit (Action 39915779256); first-party actions/download-artifact to Azure blob failed after five retries (39916080164). Stop pressure.",
+    "Two-side native OFF readback, zero retransmit under loss, authentic feedback, FEC parity recovered TUN, actual k/r, CPU/RSS/p99 and auto transitions NOT_OBSERVED.",
+    "Public Game and Windows outer-off wiring unsupported; upstream 2% Normal RX class conservation unresolved and may confound product results, separate from FEC codec."
   ],
-  "next_action": "Check W1RR Action GitHub first-party download and exact-source manifest/ELF digests. If artifact transport succeeds, inspect full real fixed maximum FEC-only product loss 0->5% scenario (native both off and zero retransmit, actual parity, receipts, source delivery, CPU/RSS). If account egress and native artifact store both fail, leave run blocked and do not burn repeated clones or pressure tests.",
+  "next_action": "STOP all new performance scenario Actions while artifact egress is blocked. On restored GitHub/Azure artifact download capacity rerun ONLY the existing immutable W1RR action 39916080164 (or one successor request after restoring, never multiple concurrent duplicate cases) with pinned ARM64 build 39915080968 artifact 12484770973. Require both native repair_enabled=0 readbacks, zero original frozen retransmitted and zero shadow candidates, real M2 feedback, live FEC parity/recovered_tun, first delivery and CPU/RSS before fixed/auto or A/B scenario expansion. Then same-VM AB/BA with explicit per-bundle repair_enabled override; old baseline has no new CLI flag. Do not update original network next_action.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -76,6 +80,27 @@
         "type": "fixed-max-parity-unit"
       }
     ],
-    "runtime_verified": false
-  }
+    "runtime_verified": false,
+    "runtime_attempts": [
+      {
+        "run": 39915604295,
+        "reason": "shallow parent request selection",
+        "product_started": false
+      },
+      {
+        "run": 39915779256,
+        "reason": "zip redirect HTTP 503 egress over account limit",
+        "product_started": false
+      },
+      {
+        "run": 39916080164,
+        "reason": "first-party download after five retries",
+        "product_started": false
+      }
+    ],
+    "same_vm_AB_bundle_switch_supported": true
+  },
+  "merge_ready": false,
+  "recovery_qualified": false,
+  "capacity_stop": true
 }

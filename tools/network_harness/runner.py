@@ -26,6 +26,13 @@ from .envelope import request_envelope
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
 
+def requested_outer_repair(config, label):
+    # A frozen legacy binary must never receive a flag it did not ship with.
+    # Pair A may omit the knob (historical ON); B may explicitly request OFF.
+    return config["bundles"][label].get(
+        "repair_enabled", config["product"].get("repair_enabled"))
+
+
 def verify_outer_recovery_policy(expected, observed):
     """Only single-repair sources can prove the v2 readback.
 
@@ -396,8 +403,10 @@ class LinuxExperiment:
                 "--tun-name", "wbntun0", "--tun-ipv4", self.inner[role] + "/24",
                 "--server-name", "wbd-v4.example.test", "--route-key-hex", route,
                 "--username", "ephemeral-harness", "--password", password, "--tunnel-id", tunnel,
-                "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"]),
-                "--outer-repair", "on" if self.config["product"].get("repair_enabled", True) else "off"]
+                "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"])]
+            repair_switch = requested_outer_repair(self.config, self.label)
+            if repair_switch is not None:
+                args += ["--outer-repair", "on" if repair_switch else "off"]
             if role == "server":
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
@@ -420,7 +429,7 @@ class LinuxExperiment:
             raise RuntimeError("real native READY timeout")
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
                           "game_fec": "off (public CLI explicitly sets off)",
-                          "outer_repair_requested": self.config["product"].get("repair_enabled", True),
+                          "outer_repair_requested": requested_outer_repair(self.config, self.label),
                           "outer_repair_applied": "NOT_OBSERVED_UNTIL_NATIVE_STOP", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
@@ -550,7 +559,7 @@ class LinuxExperiment:
             verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         # Missing native readback is NOT zero DATA retransmission.
-        requested_repair = self.config["product"].get("repair_enabled")
+        requested_repair = requested_outer_repair(self.config, self.label)
         repair_readback_verified = None
         if requested_repair is not None:
             repair_readback_verified = len(counters) == 2 and all(

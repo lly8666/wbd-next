@@ -188,6 +188,8 @@ def fetch(bundle, root):
         "source": bundle["source"], "run_id": run["id"], "attempt": run["run_attempt"],
         "artifact_id": meta["id"], "workflow_conclusion": run["conclusion"],
         "native_product_build_step_verified": bool(recovered or run["conclusion"] == "success")}) + "\n")
+    if prefetched.is_file() and meta.get("digest") != "sha256:" + bundle["sha256"]:
+        raise ValueError("first-party prefetched archive needs exact GitHub ZIP digest")
     if meta.get("digest") and meta["digest"] != "sha256:" + bundle["sha256"]:
         raise ValueError("GitHub artifact digest mismatch")
     # In the first-party prefetched mode, actions/download-artifact has
