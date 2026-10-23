@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A-PASS-V3-B-MTU-VALIDATED-V3-C-200M-CALIBRATION-IN-ACTIONS",
+  "phase": "V3-A-native-PASS-V3-B-Normal1500-PASS-V3-C-TCP200-backpressure-V3-D-mixed-in-progress",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,16 +27,14 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-lossless-TCP1-200M-400ms-early-capacity",
+      "id": "V3-D-lossless-TCP2-UDP70-29-1-mixed",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 39983733109,
+      "run": 39985073396,
       "attempt": 1,
-      "request_source": "d05043ec4159b1b377a0f8b3c5caf68939e3f150",
+      "request_source": "3032e000aa363dd6a958b262aed95e204e5db0b3",
       "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
-      "build_run": 39981175602,
-      "artifact_id": 12513677330,
-      "artifact_zip_sha256": "649016a15eda2f8ded9628dc7ebd3eca93ee5b83a0bf2e25b7da583e7c3f5f16",
-      "purpose": "200Mbps application single C2S TCP flow; outer700Mbps/dir, RTT400ms, netem0, namespaced TCP64MiB autotune, 60s steady. Distinguish injector/VM/product; no duplicate dispatch. Stop heavier500 if host/throughput incapable."
+      "scope": "one V3-D standalone 0%-loss mixed TCP70/UDP29/small~1% native ARM64 Normal/off 15Mbps/dir, 200ms one-way, strict first delivery and cross-flow no-HOL inspection",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -94,6 +92,22 @@
       "source_B": "b179fd0ef83814a05e41833a1f312a8792625b3b",
       "result": "A_INCONCLUSIVE_UPSTREAM_TUN_DROP_574_TCP_RETRANS_545_B_SCOPED_PASS_TUN_DROP0_TCP_RETRANS0_BOTH",
       "file": "P2-TCP1-0loss-M1-2048-drop-retrans-AB-20261023.json"
+    },
+    {
+      "id": "V3-B-1500-UDP",
+      "run": 39983912729,
+      "attempt": 1,
+      "artifact_id": 12515760162,
+      "result": "PASS_1401B_UDP_10Mbps_both_lossless",
+      "file": "V3-B-1500-full-UDP-20261023.json"
+    },
+    {
+      "id": "V3-C-TCP1-200M",
+      "run": 39983733109,
+      "attempt": 1,
+      "artifact_id": 12515485281,
+      "result": "INCONCLUSIVE_175Mbps_BACKPRESSURE_AND_WARMUP_TUN_DROPS_8446",
+      "file": "V3-C-TCP1-200M-calibration-20261023.json"
     }
   ],
   "open_issues": [
@@ -108,7 +122,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Resume after interruption: highloss 50Mbps is PER_DIRECTION LINE cap, NOT aggregate or guaranteed saturated throughput: UDP25.63/25.67Mbps delivered from UDP offered33.70/33.70Mbps; outer first-send36.36Mbps and repairs3.23Mbps per direction = ~79.2% capacity, ~20% headroom intentionally reserved. Highloss V3-A R/F8.879/8.865%, R/C6.457/6.447% confirmed; not 50Mbps application throughput. Product latest verified detached-shadow source bb9a036873 native build39981175602 PASS, artifact12513677330. V3-C first intermediate 200Mbps 0loss single C2S TCP, one-way200ms line700Mbps each, 64MiB namespaced autotune, run39983733109 in progress, request source d05043ec; validate injection, direct/injector pressure, M1/TUN kernel drops, steady cwnd, CPU/PSI, p99/Stop and only then 500M if host has capacity. Independent V3-B largest UDP1500 and MTU boundary V3-D mixing still NOT_RUN; no FEC branch changes. Preserve authenticated mature-gap/9% and source-TUN2048 repair; no v2 lowloss SLA.",
+  "next_action": "V3-A 30% standard is per-direction outer line50Mbps and intentionally F/C72.7%, R/F8.879/8.865%, R/C6.457/6.447%; UDP app offered33.7Mbps/dir, delivered25.63/25.67Mbps/dir: sum51.31Mbps, not saturated100Mbps duplex, ideal IID one-repair output≈25.7Mbps/dir. V3-B real 1500/Normal/off UDP1401 singlepacket PASS run39983912729 artifact12515760162. V3-C calibration zero-loss single TCP offered200 only actually injects/delivers175.11Mbps, TCP_BACKPRESSURE5698, p99 2567.8ms, client TUN warmup kernel drop8446 (steady0), kernel TCP retrans steady0, host steal0/PSIpeak19.82. Stop TCP500 heavier PROJECTED_NOT_TESTED until root cause distinguished; record evidence V3-C-TCP1-200M-calibration-20261023.json and do NOT claim product500 PASS. V3-D 70/29/~1 mix zero loss test run39985073396 RUNNING no redispatch; inspect cross-flow progress and output if completed. Add highloss mix only if host capacity acceptable. No FEC independent branch work, no deprecated low-loss TCP1 SLA. Real v3 cost_model and model_inputs now updated; contracts run39985008020 PASS.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -207,12 +221,59 @@
         "FEC2 separate 14B codec reservation added later untested"
       ],
       "pending": [
-        "specific1500 max UDP/TCP continuous",
-        "real on-wire and asymmetric peer MSS edge",
-        "Windows shared config/readback"
-      ]
+        "FEC2 parity real on-wire and asym peer capabilities",
+        "Windows shared configuration and physical native qualification",
+        "lossless near-max UDP on additional outer MTU lengths"
+      ],
+      "native_max_udp_run": 39983912729,
+      "native_max_udp_artifact_id": 12515760162,
+      "native_max_udp_artifact_zip_sha256": "0d4e81b52d32801860bc26174336c50050a5c169e8d5486b2e1320b95a73665b",
+      "native_max_udp_result": "PASS_SCOPED_NORMAL_OFF_outerMTU1500_TUN1429_UDPapplication1401; both UDP10Mbps delivered missing0 TUNsteady0 p99 200.2ms",
+      "evidence": "V3-B-1500-full-UDP-20261023.json"
     },
-    "phase_C": "NOT_RUN_TCP500",
-    "phase_D": "NOT_RUN_MIXED"
+    "phase_C": {
+      "source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+      "native_build_run": 39981175602,
+      "artifact_id": 12513677330,
+      "tcp200_run": 39983733109,
+      "tcp200_artifact_id": 12515485281,
+      "tcp200_artifact_zip_sha256": "24ca56ad370cc29c6480f953abd1690f137e964b47c3bd6003946517e478e232",
+      "result": "INCONCLUSIVE_175_1Mbps_vs_200Mbps_target_TCP_BACKPRESSURE",
+      "tcp200_observed": {
+        "delivered_mbps": 175.10782293333332,
+        "app_input_mbps": 175.10782293333332,
+        "first_arrival_p99_ms": 2567.8,
+        "tcp_backpressure_slots": 5698,
+        "tun_kernel_drop_warmup_client": 8446,
+        "tun_kernel_drop_steady_client": 0,
+        "tun_kernel_drop_steady_server": 0,
+        "netem_drop_steady": 0,
+        "tcp_kernel_retrans_steady": 0,
+        "m1_peak_loans_client_server": [
+          32,
+          32
+        ],
+        "tcp_notsent_median_bytes": 27648155,
+        "client_product_cpu_steady_s": 16.52,
+        "server_product_cpu_steady_s": 25.25
+      },
+      "evidence": "V3-C-TCP1-200M-calibration-20261023.json",
+      "tcp500": "PROJECTED_NOT_TESTED_STOPPED_HEAVIER_200M_INCONCLUSIVE",
+      "reason": "Must isolate source TUN warmup loss, harness TCP notsent backlog and product/receiver pacing vs host; no fake full capacity from max CWND or PSI."
+    },
+    "phase_D": {
+      "run": 39985073396,
+      "attempt": 1,
+      "scenario": "mixed 0 loss TCP 70% UDP 30%; ~1% small bytes by packet-size weights, two TCP streams",
+      "result": "ACTIONS_IN_PROGRESS",
+      "highloss_mixed": "NOT_RUN",
+      "lifecycle": "NOT_RUN"
+    },
+    "math_model": {
+      "source": "e67635e76f86a0515099aef599ee38a13e54c555",
+      "policy": "outer-opportunistic-v3",
+      "contracts_run": 39985008020,
+      "contract_result": "success"
+    }
   }
 }
