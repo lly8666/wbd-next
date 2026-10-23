@@ -26,11 +26,10 @@
   "open_requests": [
     {
       "id": "P2-Normal-TCP4-only-5M-2pct-200ms",
-      "status": "INTENT_COMMITTED_AUTO_ACTION_PENDING",
-      "type": "ONE_TCP_ONLY_NORMAL_SCENARIO",
+      "status": "IN_FLIGHT_ACTION_39928829670",
+      "run": 39928829670,
       "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "artifact_id": 12486939897,
-      "why": "Correct pure request ID length <=64; earlier run39928595426 VALIDATION_FAIL_BEFORE_BUSINESS, contracts39928595502 fail solely invalid id, no native execution. Otherwise identical 4flows/5M TCP-only/2pct/200ms."
+      "why": "Actual real TCP-only business running. Contract39928829676 red ONLY because test_queue_check_is_report_only accidentally inherited udp_share=0 from committed request; fixture now makes udp_share=1 before testing queue. Do not dispatch new business."
     }
   ],
   "recent_evidence": [
@@ -91,7 +90,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Discover one auto Action for validated short-ID TCP-only Normal request and its contracts; do not re-dispatch. If valid, read actual TCP goodput/p99/backpressure and native source M1 data, kernel cwnd/notsent/retrans; old 39928595426 invalid request, no business. No FEC.",
+  "next_action": "Read exact existing TCP-only run39928829670 first. Distinguish product/kernel TCP 4flow goodput vs mixed UDP competition; contract rerun from fixture fix is separate, no new business. Do not dispatch same scenario again if measured. No FEC tests.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
