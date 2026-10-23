@@ -9,6 +9,7 @@ on:
       - 'r0/go_overlay/internal/v4productcli/**'
       - 'crates/wbd-engine/**'
       - 'crates/wbd-recovery/**'
+      - 'crates/wbd-platform/**'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
