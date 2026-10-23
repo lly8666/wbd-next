@@ -15,7 +15,10 @@ import subprocess
 import sys
 import time
 
-RATE = 200_000_000
+RATE_MBPS = int(os.environ.get("WBD_DIRECT_TCP_RATE_MBPS", "200"))
+if RATE_MBPS not in (200, 500):
+    raise ValueError("only scoped 200 or 500Mbps direct native baseline supported")
+RATE = RATE_MBPS * 1_000_000
 WARM_S = 15
 STEADY_S = 60
 DRAIN_S = 5
@@ -31,7 +34,7 @@ def call(*args, check=True):
 def worker(args):
     target = float(args.start)
     end = target + WARM_S + STEADY_S
-    result = {"role": args.worker, "app_mtu": DEV_MTU, "requested_mbps": 200}
+    result = {"role": args.worker, "app_mtu": DEV_MTU, "requested_mbps": RATE_MBPS}
     if args.worker == "server":
         listen = socket.socket()
         listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -190,10 +193,10 @@ def run():
         receiver = json.loads((folder / "server.json").read_text())
         result = {"scope": "DIRECT_TCP_CONTROL_NOT_WBD_PRODUCT",
             "host_arch": os.uname().machine,
-            "scenario": "200Mbps TCP app, RTT400ms, MTU1429, 700Mbps line per dir",
+            "scenario": f"{RATE_MBPS}Mbps TCP app, RTT400ms, MTU1429, 700Mbps line per dir",
             "sender": sender, "receiver": receiver, "ss_and_netem": snapshots,
-            "sender_target_pass": sender["measured_mbps"] >= 190,
-            "receiver_target_pass": receiver["measured_mbps"] >= 190}
+            "sender_target_pass": sender["measured_mbps"] >= 0.95 * RATE_MBPS,
+            "receiver_target_pass": receiver["measured_mbps"] >= 0.95 * RATE_MBPS}
         (folder / "result.json").write_text(json.dumps(result, indent=2))
         print("DIRECT_TCP_BASELINE", json.dumps({
             "sender_mbps": sender["measured_mbps"],
