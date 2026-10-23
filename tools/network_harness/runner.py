@@ -526,7 +526,7 @@ class LinuxExperiment:
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def configure(self, phase, index, initial=False):
-        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "commands": []}
+        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "wall_begin_ns": time.time_ns(), "commands": []}
         for role, direction in [("client", "c2s"), ("server", "s2c")]:
             dev, d = self.iface[role], phase[direction]
             self.nscommand(role, ["iptables", "-F", "WBN_LOSS"])
@@ -555,6 +555,7 @@ class LinuxExperiment:
                         "pref", str(10+lane), "flower", "ip_proto", "tcp", "dst_port" if role == "client" else "src_port",
                         str(443+lane), "classid", f"1:{lane+1}"])
         event["end_ns"] = time.monotonic_ns()
+        event["wall_end_ns"] = time.time_ns()
         self.config_events.append(event)
 
     def snapshot(self, name):
