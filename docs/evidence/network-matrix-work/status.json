@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-TCP1-2pct-A-B-oversized-windows-real-test",
+  "phase": "P2-singleTCP-two-parameter-AB-causes-isolated",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,11 +25,11 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-TCP1-2pct-default-v-large-window-AB",
-      "status": "ACTION_AUTO_39940459163",
-      "run": 39940459163,
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "why": "Same VM A/B fixed native product, Normal/off, one inner TCP/dir target10Mbps, 2% loss and200ms one-way. A default, B per-netns tcp_[rw]mem max16MiB and pre-SYN SO_SNDBUF/SO_RCVBUF8MiB (effective readback). Exact source TUN drop check + TCP_INFO metrics; do not test FEC or change product policy."
+      "id": "P2-TCP1-2pct-reorder192-AB",
+      "status": "AUTO_ACTION_39941976324",
+      "run": 39941976324,
+      "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "why": "Same VM original one-outer-repair source10Mbps/dir inner single TCP,2%loss,200ms one-way. Previous expanded socket window A/B run39940890996 proved B real sndbuf425984/rcvbuf2097152 and snd_wnd 1.15MB vs baseline, still only.93/1.04Mbps. Now separate hypothesis: per-netns tcp_reordering baseline vs192 may avoid Linux TCP premature fast recovery while authentic outer one-repair arrives; risk worse RTO/p99. No FEC testing."
     }
   ],
   "recent_evidence": [
@@ -64,6 +64,14 @@
       "result": "PASS_SCOPED_APP_TCP10MBPS_BOTH_BUT_SOURCE_TUN_DROP_132_359",
       "zip_sha256": "4a983544bf4881a28f56029794933047190e2b4b63b280d0da8be049b44b96b7",
       "note": "MSS1277, PMTU1329, CUBIC, cwnd median787/2874 vs loss2pct at same source had end43/49, original 0loss source capacity TUN TX dropped steady132/359, pre-read deferral9700/4249, M1 peak1009/1024. Historical scoped PASS masked inner TCP retrans and source drop. Lossy1Mbps is primarily kernel congestion under residual/reorder, not tiny MSS, worker CPU or received wnd."
+    },
+    {
+      "id": "P2-TCP1-2pct-large-window-AB-no-improvement-20261023",
+      "run": 39940890996,
+      "artifact_id": 12496675342,
+      "result": "FAIL_BOTH_TCP_INPUT~1MBPS_DESPITE_9X_SOCKET_SNDBUF_16X_RCVBUF",
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "file": "P2-TCP1-2pct-large-window-AB-no-improvement-20261023.json"
     }
   ],
   "open_issues": [
@@ -76,7 +84,7 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Reconcile exact one auto Action39940459163 and contracts; never re-dispatch. Check both AB have actual baseline/large policy; numeric SO buffer readback, sysctl, TCP cwnd/notsent/rtt/RTO, injected TCP rate vs10Mbps, source kernel TUN TX drops, owner pre-read deferral, recovery quota, product CPU/RSS. A/B time windows on same VM, netem unseeded so loss independent approximate2%. If enlarged windows do not move throughput, stop tuning buffer sizes and instrument real TCP ACK/data timely outer repairs. No FEC.",
+  "next_action": "Find EXACT one automatic ACTION39941976324 and contracts for Normal/off single inner TCP10Mbps/dir2pct/200ms matched AB: A baseline, B namespaced tcp_reordering192, both baseline socket buffers. Do not redispatch. Inspect real kernel tcp_reordering sysctl readback, cwnd/RTO/ssthresh and recovery timing, actual app injection/p99, CPU/RSS, original M1/feedback/TUN drops and final stop. Large TCP window 16MiB requested earlier NO performance benefit, no further blind window bump. If B fails/worsens, abandon this tuning and record irreducible once-repair residual with class-specific next observation; no FEC, no main merge.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
