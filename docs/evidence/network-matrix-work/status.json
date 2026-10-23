@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-292Mbps-TUN-kernel-drop-root-scoped-FAST_READ_optimization-building",
+  "phase": "V3-C-TCP500-local-TUN-drop-duplicate-poll-AB-on-native-Actions",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,13 +27,19 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-skip-redundant-source-TUN-poll0-build",
+      "id": "V3-C-TCP1-500M-remove-redundant-TUN-poll-AB",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 39998272925,
+      "run": 39998892067,
       "attempt": 1,
-      "product_source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
-      "source_before": "63adb210f724d4b2812d75a292617103ac735b53",
-      "purpose": "One-hotpath source TUN read loop removal of redundant second poll0; driver read_ready_batch itself performs poll0 on owned O_NONBLOCK fd, safely returns WouldBlock; preserve M1 pool2048 and v3 actual policy. Native ARM64 build and MTU before matched TCP500 AB.",
+      "request_source": "0ea7c7f7615bfeebec8ecd14cbee45363aa1a327",
+      "source_A": "63adb210f724d4b2812d75a292617103ac735b53",
+      "build_A": 39992871952,
+      "artifact_A": 12517549925,
+      "source_B": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
+      "build_B": 39998272925,
+      "artifact_B": 12520568152,
+      "artifact_B_sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
+      "scope": "one native ARM64 job same VM sequential AB single TCP c2s500Mbps, RTT400, 0loss, outer700Mbps, timed20warm60steady30drain, native 4Hz Rust TX RX CPU, compare TUN source drop/inner cwnd/CPU/p99",
       "do_not_redispatch": true
     }
   ],
@@ -131,7 +137,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C real single TCP500 0loss RTT400 run39997296538 source63adb Native ARM, delivered292.557 vs target500 FAIL, client source TUN kernel tx dropped2932 warmup+11283 steady, TUN txqlen500, M1 peak32/2048 pre_read_deferred0, outer qdisc dropped0, v3 repair0; inner TCP cwnd median12218*1377=16.824MB below 25MB BDP, p99 1713.9ms; CPU native RX/TX 4Hz timeline recorded, not evidence of full 1core bottleneck. See V3-C-TCP1-500M-first-native-0loss-20261024.json. Source code background_tun_once TUN poll0 after every read though driver read_ready_batch already polls0 on owned O_NONBLOCK TUN fd; duplicate per-packet syscall removed isolated source31e3c9 native ARM bundle run39998272925 in progress. After successful build and cheap MTU check, run one EXACT matched same-VM TCP500 old source63adb vs new31e3c9 A/B, same 20warm60steady30drain, check actual local TUN source drops, p99, CPU, positive B>=475, stop further identical overload if fails, no blind bigger qdisc/TUN queue. V3-D blackhole 0/100/0 2Mbps/dir native 4Hz timeline run39997661008 PASS scoped both dir resumed within forward200ms, only5/8 missing in recovered cohort, no local TUN drops; old +1.15s C2S stall was not repeated, not a proven corrected product defect; evidence V3-D-blackhole-4Hz-timeline-20261024.json. V3-A30pct6-10 and0loss nearzero, B nativeMTU1500, D lossless mixed continue PASS. No FEC role or main merge.",
+  "next_action": "V3-C first real TCP500 native source63adb run39997296538 FAIL/inconclusive: only292.557Mbps, 47481 app TCP backpressure, 2932 client TUN warmup drop +11283 steady, kernel TUN qlen500, pre-read deferred0, M1 peak32/2048, netem drop0, repair0; cwnd median12218*1377=16.824MB <500Mbps RTT400 BDP25MB; p99 1713.9ms, host CPU PSI peak13.93 but 0% host steal; saved evidence V3-C-TCP1-500M-first-native-0loss-20261024.json. Code identifies a source TUN hotpath EXTRA poll(0) after each read_ready_batch which already polls0 on an owned O_NONBLOCK FD; isolated removal product source31e3c9, native ARM64 build run39998272925 bundle artifact12520568152 sha7cf0..., native MTU suite pending. One true paired same-VM A/B source0ea7c7 run39998892067 in progress; do NOT redispatch. Need measure actual A/B source TUN 500 queue drop, TCP throughput, p99 and CPU; no unlabeled high-rate repeats. D scoped 0/100/0 4Hz run39997661008 verified PASS ~2Mbps/dir after restored zero, 5/8 near transition missing and native 200ms first delivery (old 1.15s stall not repeated), evidence V3-D-blackhole-4Hz-timeline-20261024.json. Prior A/B200 sourcebb9a direct control200 PASS; V3-A/B and mixed partial status unchanged. Do not modify FEC independent branch nor deploy/merge main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
