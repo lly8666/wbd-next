@@ -1,29 +1,29 @@
 {
   "version": 1,
-  "id": "V3-B-1500-MTU-1401B-UDP-no-fragment",
+  "id": "V3-D-lossless-TCP2-UDP70-29-1-mixed",
   "owner": "network-matrix-work",
-  "seed": 6471,
+  "seed": 6514,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
-    "udp_share": 1,
+    "c2s_mbps": 15,
+    "s2c_mbps": 15,
+    "udp_share": 0.3,
     "sizes": [
       [
-        1401,
-        99
+        64,
+        18
       ],
       [
-        64,
-        1
+        1401,
+        82
       ]
     ],
-    "tcp_flows": 1,
+    "tcp_flows": 2,
     "probe_hz": 20,
-    "deadline_ms": 1000,
+    "deadline_ms": 1200,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -32,7 +32,13 @@
     "outer_mtu": 1500,
     "lane_loss": "shared",
     "queue_packets": 32768,
-    "netem_rng": "unseeded_recorded"
+    "netem_rng": "unseeded_recorded",
+    "tcp_window_profiles": {
+      "A": "baseline"
+    },
+    "tcp_reordering_profiles": {
+      "A": "baseline"
+    }
   },
   "warmup_s": 10,
   "drain_s": 30,
