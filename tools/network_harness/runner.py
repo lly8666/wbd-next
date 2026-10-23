@@ -601,7 +601,7 @@ class LinuxExperiment:
                 (self.out / (role+"-v3-timeline.log")).write_text(
                     "\n".join(timeline[-1200:])+"\n")
             logs[role] = "\n".join(
-                line for line in lines[-40:] if "V4_PUBLIC_TIMELINE " not in line)
+                [line for line in lines if "V4_PUBLIC_TIMELINE " not in line][-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
