@@ -92,7 +92,7 @@ def validate(raw):
         t.setdefault(k, v)
     number(t["udp_share"], 0, 1, "udp_share")
     integer(t["tcp_flows"], 1, 16, "tcp_flows")
-    number(t["probe_hz"], 1, 100, "probe_hz")
+    number(t["probe_hz"], 0, 100, "probe_hz")
     number(t["deadline_ms"], 1, 10000, "deadline_ms")
     number(t["burst_ms"], 0, 100, "burst_ms")
     integer(t["max_packets"], 1, 20000000, "max_packets")
